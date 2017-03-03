@@ -1,0 +1,11 @@
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.VC.opendb
+*.VC.db
+
+build
+bin
+lib
+CMakeCache.txt
+CMakeFiles
