@@ -1,0 +1,23 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "0.1.0",
+	"FriendlyName": "CARLA",
+	"Description": "",
+	"Category": "Science",
+	"CreatedBy": "CVC",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": true,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "Carla",
+			"Type": "Developer",
+			"LoadingPhase": "Default"
+		}
+	]
+}
