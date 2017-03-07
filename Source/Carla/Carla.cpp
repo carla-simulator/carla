@@ -4,6 +4,8 @@
 
 #define LOCTEXT_NAMESPACE "FCarlaModule"
 
+DEFINE_LOG_CATEGORY(LogCarla);
+
 void FCarlaModule::StartupModule()
 {
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
@@ -16,5 +18,5 @@ void FCarlaModule::ShutdownModule()
 }
 
 #undef LOCTEXT_NAMESPACE
-	
+
 IMPLEMENT_MODULE(FCarlaModule, Carla)
