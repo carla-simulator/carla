@@ -9,7 +9,7 @@
 
 ECityMapMeshTag CityMapMeshTag::GetBaseMeshTag()
 {
-  return ECityMapMeshTag::RoadTwoLanes;
+  return ECityMapMeshTag::RoadTwoLanes_LaneLeft;
 }
 
 uint32 CityMapMeshTag::GetRoadIntersectionSize()

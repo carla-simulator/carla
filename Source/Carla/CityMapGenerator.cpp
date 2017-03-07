@@ -102,12 +102,6 @@ void ACityMapGenerator::GenerateGraph() {
 }
 
 void ACityMapGenerator::GenerateRoads() {
-  constexpr auto basicRoadTag = ECityMapMeshTag::RoadTwoLanes;
-  constexpr auto basicIntersectionTag = ECityMapMeshTag::RoadXIntersection;
-
-  // Rotation for vertical roads.
-  const FQuat rotation(FVector(0.0f, 0.0f, 1.0f), HALF_PI);
-
   check(Dcel != nullptr);
   using Graph = MapGen::DoublyConnectedEdgeList;
   const Graph &graph = *Dcel;
@@ -124,46 +118,53 @@ void ACityMapGenerator::GenerateRoads() {
       auto y = 1u + margin + std::min(source.y, target.y);
       auto end = std::max(source.y, target.y) - margin;
       for (; y < end; ++y) {
-        AddInstance(basicRoadTag, source.x, y, HALF_PI);
+        AddInstance(ECityMapMeshTag::RoadTwoLanes_LaneLeft,      source.x, y, HALF_PI);
+        AddInstance(ECityMapMeshTag::RoadTwoLanes_LaneRight,     source.x, y, HALF_PI);
+        AddInstance(ECityMapMeshTag::RoadTwoLanes_SidewalkLeft,  source.x, y, HALF_PI);
+        AddInstance(ECityMapMeshTag::RoadTwoLanes_SidewalkRight, source.x, y, HALF_PI);
       }
     } else if (source.y == target.y) {
       // horizontal
       auto x = 1u + margin + std::min(source.x, target.x);
       auto end = std::max(source.x, target.x) - margin;
       for (; x < end; ++x) {
-        AddInstance(basicRoadTag, x, source.y);
+        AddInstance(ECityMapMeshTag::RoadTwoLanes_LaneLeft,      x, source.y);
+        AddInstance(ECityMapMeshTag::RoadTwoLanes_LaneRight,     x, source.y);
+        AddInstance(ECityMapMeshTag::RoadTwoLanes_SidewalkLeft,  x, source.y);
+        AddInstance(ECityMapMeshTag::RoadTwoLanes_SidewalkRight, x, source.y);
       }
     } else {
       UE_LOG(LogCarla, Warning, TEXT("Diagonal edge ignored"));
     }
   }
 
+#define ADD_INTERSECTION(tag, x, y, angle) \
+    AddInstance(tag ##_Lane0, x, y, angle); \
+    AddInstance(tag ##_Lane1, x, y, angle); \
+    AddInstance(tag ##_Lane2, x, y, angle); \
+    AddInstance(tag ##_Lane3, x, y, angle); \
+    AddInstance(tag ##_Sidewalk0, x, y, angle); \
+    AddInstance(tag ##_Sidewalk1, x, y, angle); \
+    AddInstance(tag ##_Sidewalk2, x, y, angle); \
+    AddInstance(tag ##_Sidewalk3, x, y, angle);
+
   // For each node add the intersection.
   for (auto &node : graph.GetNodes()) {
     const auto coords = node.GetPosition();
-    ECityMapMeshTag tag = basicIntersectionTag;
     switch (node.IntersectionType) {
       case MapGen::EIntersectionType::Turn90Deg:
-        tag = ECityMapMeshTag::Road90DegTurn;
+        ADD_INTERSECTION(ECityMapMeshTag::Road90DegTurn, coords.x, coords.y, node.Rotation);
         break;
       case MapGen::EIntersectionType::TIntersection:
-        tag = ECityMapMeshTag::RoadTIntersection;
+        ADD_INTERSECTION(ECityMapMeshTag::RoadTIntersection, coords.x, coords.y, node.Rotation);
         break;
       case MapGen::EIntersectionType::XIntersection:
-        tag = ECityMapMeshTag::RoadXIntersection;
+        ADD_INTERSECTION(ECityMapMeshTag::RoadXIntersection, coords.x, coords.y, node.Rotation);
         break;
       default:
         UE_LOG(LogCarla, Warning, TEXT("Intersection type not implemented"));
     }
-    FString tagStr = CityMapMeshTag::ToString(tag);
-    std::wstringstream sout;
-    for (float a : node.Rots)
-      sout << a << " ";
-    UE_LOG(
-        LogCarla,
-        Log,
-        TEXT("Add instance \"%s\" at {%d, %d} with rotation %f, { %s }"),
-        *tagStr, coords.x, coords.y, node.Rotation, sout.str().c_str());
-    AddInstance(tag, coords.x, coords.y, node.Rotation);
   }
+
+#undef ADD_INTERSECTION
 }
