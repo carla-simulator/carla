@@ -30,6 +30,9 @@ protected:
   /// tile.
   FVector GetTileLocation(uint32 X, uint32 Y) const;
 
+  /// Set the static mesh associated with @a Tag.
+  void SetStaticMesh(ECityMapMeshTag Tag, UStaticMesh *Mesh);
+
   /// Return the static mesh corresponding to @a Tag.
   const UStaticMesh *GetStaticMesh(ECityMapMeshTag Tag) const;
 

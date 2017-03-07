@@ -63,6 +63,11 @@ void ACityMapMeshHolder::PostEditChangeProperty(FPropertyChangedEvent& PropertyC
 }
 #endif
 
+void ACityMapMeshHolder::SetStaticMesh(ECityMapMeshTag Tag, UStaticMesh *Mesh)
+{
+  StaticMeshes[Tag] = Mesh;
+}
+
 const UStaticMesh *ACityMapMeshHolder::GetStaticMesh(ECityMapMeshTag Tag) const
 {
   return StaticMeshes[Tag];
