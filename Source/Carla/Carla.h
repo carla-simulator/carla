@@ -6,7 +6,7 @@
 
 #include "ModuleManager.h"
 
-#include "../Common/NonCopyable.h"
+#include "NonCopyable.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogCarla, Log, All);
 

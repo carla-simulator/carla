@@ -2,4 +2,4 @@
 
 #define CARLA_API
 
-#include "../../Common/NonCopyable.h"
+#include "NonCopyable.h"
