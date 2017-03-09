@@ -17,7 +17,11 @@
 		{
 			"Name": "Carla",
 			"Type": "Developer",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine",
+				"PhysXVehicles"
+			]
 		}
 	]
 }

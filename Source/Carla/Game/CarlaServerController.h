@@ -2,45 +2,15 @@
 
 #pragma once
 
-#include "GameFramework/PlayerController.h"
+#include "CarlaVehicleController.h"
 #include "CarlaServerController.generated.h"
-
-class USpringArmComponent;
-class UCameraComponent;
 
 /**
  *
  */
 UCLASS()
-class CARLA_API ACarlaServerController : public APlayerController
+class CARLA_API ACarlaServerController : public ACarlaVehicleController
 {
   GENERATED_BODY()
 
-public:
-
-  ACarlaServerController();
-
-  ~ACarlaServerController();
-
-  virtual void SetupInputComponent() override;
-
-  virtual void Possess(APawn *aPawn) override;
-
-  // virtual void UnPossess() override;
-
-  virtual void CalcCamera(float DeltaTime, FMinimalViewInfo& OutResult) override;
-
-private:
-
-  void ChangeCameraZoom(float Value);
-
-  void ChangeCameraUp(float Value);
-
-  void ChangeCameraRight(float Value);
-
-  UPROPERTY()
-  USpringArmComponent *SpringArm;
-
-  UPROPERTY()
-  UCameraComponent *PlayerCamera;
 };
