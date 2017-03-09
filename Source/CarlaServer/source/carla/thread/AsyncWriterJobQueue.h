@@ -23,7 +23,8 @@ namespace thread {
         _done(false),
         _job(std::move(job)),
         _queue(),
-        _thread(new std::thread(&AsyncWriterJobQueue::workerThread, this)) {}
+        _thread(new std::thread(&AsyncWriterJobQueue::workerThread, this))
+	{}
 
     ~AsyncWriterJobQueue() {
       _done = true;
@@ -48,6 +49,7 @@ namespace thread {
     ThreadSafeQueue<T> _queue;
 
     const ThreadUniquePointer _thread;
+
   };
 
 } // namespace thread

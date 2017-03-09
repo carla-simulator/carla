@@ -1,0 +1,45 @@
+#pragma once
+
+#include "carla/server/Protocol.h"
+#include "carla/server/TCPServer.h"
+
+#include "carla/thread/AsyncReaderJobQueue.h"
+#include "carla/thread/AsyncWriterJobQueue.h"
+#include "carla/thread/AsyncreadWriteJobQueue.h"
+
+namespace carla {
+	namespace server {
+		class CarlaCommunication : private NonCopyable {
+			public:
+
+				explicit CarlaCommunication(int writePort, int readPort, int worldPort);
+
+				void sendReward(const Reward &reward);
+
+				bool tryReadControl(std::string &control);
+
+				void sendScene(const Scene &scene);
+
+				void sendReset(const EpisodeReady &ready);
+
+				void sendWorld(const World &world);
+
+				bool tryReadWorldInfo(std::string &info);
+
+			private:
+
+				TCPServer _server;
+
+				TCPServer _client;
+
+				TCPServer _world;
+
+				thread::AsyncReaderJobQueue<std::string> _serverThread;
+
+				thread::AsyncWriterJobQueue<std::string> _clientThread;
+
+				thread::AsyncReadWriteJobQueue<std::string, std::string> _worldThread;
+
+		};
+	}
+}
