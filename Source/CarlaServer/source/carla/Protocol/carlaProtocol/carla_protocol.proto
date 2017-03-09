@@ -1,0 +1,94 @@
+
+
+// Client Messages  
+message EpisodeStart {
+
+
+  optional int32 start_index =1;
+  optional int32 end_index =2;
+
+
+}
+
+message SceneInit {
+
+
+  optional int32 mode =1;
+  optional int32 scene =2;
+
+  
+}
+
+message Control {
+
+  optional float steer = 1;
+  optional float gas = 2;
+
+
+}
+
+
+// Server messages
+
+message World {
+
+  repeated int32 modes = 1;
+  repeated int32 scenes = 2; 
+ 
+
+}
+
+message Scene {
+
+
+
+  message Projection_Matrix{
+
+    repeated float cam_param = 1;
+    
+
+  }
+  message Position{
+
+    required float pos_x = 1;
+    required float pos_y = 2;
+    
+
+  }
+
+  repeated Position position =1;
+  repeated Projection_Matrix camera_matrix =2;
+
+
+
+
+}
+
+message EpisodeReady{
+
+    optional bool ready =1;
+}
+
+
+
+
+
+message Reward {
+
+  optional float player_x = 1;
+  optional float player_y = 2;
+  optional float speed = 3;
+  optional float collision_gen = 4;
+  optional float collision_ped = 5;
+  optional float collision_car = 6;
+  optional float intersect = 7;
+  optional float inertia_x = 8;
+  optional float inertia_y = 9;
+  optional float inertia_z = 10;
+  optional int32 timestamp = 11;
+  optional float ori_x = 12;
+  optional float ori_y = 13;
+  optional float ori_z = 14;
+  repeated bytes image = 15;
+  repeated bytes depth = 16;
+}
