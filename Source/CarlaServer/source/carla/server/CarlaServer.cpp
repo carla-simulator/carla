@@ -3,86 +3,106 @@
 #include "Carla.h"
 #include "CarlaServer.h"
 
-#include <carla/server/TCPServer.h>
-#include <carla/thread/AsyncReaderJobQueue.h>
-#include <carla/thread/AsyncWriterJobQueue.h>
-
 #include <iostream>
 #include <memory>
 
 namespace carla {
+
 namespace server {
-
-  template <typename ERROR_CODE>
-  static void logTCPError(const std::string &text, const ERROR_CODE &errorCode) {
-    std::cerr << "CarlaServer - TCP Server: " << text << ": " << errorCode.message() << std::endl;
-  }
-
-  // -- Static methods ---------------------------------------------------------
-
-  // This is the thread that sends a string over the TCP socket.
-  static void serverWorkerThread(TCPServer &server, const std::string &message) {
-    TCPServer::error_code error;
-    server.writeString(message, error);
-    if (error)
-      logTCPError("Failed to send", error);
-  }
-
-  // This is the thread that listens for string over the TCP socket.
-  static std::string clientWorkerThread(TCPServer &server) {
-    std::string message;
-    TCPServer::error_code error;
-    server.readString(message, error);
-    if (error && (error != boost::asio::error::eof)) { // eof is expected.
-      logTCPError("Failed to read", error);
-      return std::string();
-    }
-    return message;
-  }
-
-  // -- CarlaServer::Pimpl -----------------------------------------------------
-
-  class CarlaServer::Pimpl : private NonCopyable {
-  public:
-
-    explicit Pimpl(int writePort, int readPort) :
-      _server(writePort),
-      _client(readPort),
-      _serverThread([this](const std::string &str){ serverWorkerThread(this->_server, str); }),
-      _clientThread([this](){ return clientWorkerThread(this->_client); }) {}
-
-    void writeString(const std::string &message) {
-      _serverThread.push(message);
-    }
-
-    bool tryReadString(std::string &message) {
-      return _clientThread.tryPop(message);
-    }
-
-  private:
-
-    TCPServer _server;
-
-    TCPServer _client;
-
-    thread::AsyncReaderJobQueue<std::string> _serverThread;
-
-    thread::AsyncWriterJobQueue<std::string> _clientThread;
-  };
 
   // -- CarlaServer ------------------------------------------------------------
 
-  CarlaServer::CarlaServer(int writePort, int readPort) :
-    _pimpl(std::make_unique<Pimpl>(writePort, readPort)) {}
+  CarlaServer::CarlaServer(int writePort, int readPort, int worldPort, int modesCount, int scenesCount) :
+	  _communication(std::make_unique<CarlaCommunication>(writePort, readPort, worldPort)), _proto(std::make_unique<Protocol>(this)),
+	  _modes(modesCount),
+	  _scenes(scenesCount){}
 
   CarlaServer::~CarlaServer() {}
 
-  void CarlaServer::writeString(const std::string &message) {
-    _pimpl->writeString(message);
+  void CarlaServer::sendReward(const Reward_Values &values) {
+	  Reward reward = _proto->LoadReward(values);
+	  _communication->sendReward(reward);
   }
 
-  bool CarlaServer::tryReadString(std::string &message) {
-    return _pimpl->tryReadString(message);
+  void CarlaServer::sendSceneValues(const Scene_Values &values) {
+	  Scene scene = _proto->LoadScene(values);
+	  _communication->sendScene(scene);
+  }
+
+  void CarlaServer::sendEndReset() {
+	  EpisodeReady eReady;
+	  eReady.set_ready(true);
+	  _communication->sendReset(eReady);
+  }
+
+  void CarlaServer::sendWord() {
+	  World world = _proto->LoadWorld();
+	  _communication->sendWorld(world);
+  }
+
+  bool CarlaServer::tryReadControl(float &steer, float &gas) {
+	std::string controlMessage;
+    bool error = !_communication->tryReadControl(controlMessage);
+	Control control;
+	error &= !control.ParseFromString(controlMessage);
+	steer = control.steer();
+	gas = control.gas();
+
+	return !error;
+  }
+
+  bool CarlaServer::tryReadSceneInit(int &mode, int &scene) {
+	  std::string initMessage;
+	  bool error = !_communication->tryReadWorldInfo(initMessage);
+	  SceneInit sceneInit;
+	  error &= !sceneInit.ParseFromString(initMessage);
+	  mode = sceneInit.mode();
+	  scene = sceneInit.scene();
+
+	  return !error;
+  }
+
+  bool CarlaServer::tryReadEpisodeStart(float &start_index, float &end_index) {
+	  std::string startData;
+	  bool error = !_communication->tryReadWorldInfo(startData);
+	  EpisodeStart episodeStart;
+	  error &= !episodeStart.ParseFromString(startData);
+	  start_index = episodeStart.start_index();
+	  end_index = episodeStart.end_index();
+
+	  return !error;
+  }
+
+  void CarlaServer::setMode(Mode mode) {
+	  _mode = mode;
+  }
+
+  Mode CarlaServer::GetMode() const {
+	  return _mode;
+  }
+
+  void CarlaServer::SetScene(int scene) {
+	  _scene = scene;
+  }
+
+  int CarlaServer::GetScene() const {
+	  return _scene;
+  }
+
+  int CarlaServer::GetModesCount() const {
+	  return _modes;
+  }
+
+  int CarlaServer::GetScenesCount() const {
+	  return _scenes;
+  }
+
+  void CarlaServer::SetReset(bool reset) {
+	  _reset = reset;
+  }
+
+  bool CarlaServer::Reset() const {
+	  return _reset;
   }
 
 } // namespace server
