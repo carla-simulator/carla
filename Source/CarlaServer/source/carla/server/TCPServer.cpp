@@ -51,8 +51,10 @@ namespace server {
     _acceptor.accept(socket);
 
 	myfile.open("TCP" + std::to_string(_port) + ".txt", std::ios::app);
+	myfile << " Connected " << std::endl;
 	myfile << " Message: " << message << " // length: " << message.length() << " // byte: "<< GetBytes(message.length()) <<std::endl;
 	myfile.close();
+	
 
 	//Sleep(500);
 	std::string outMessage (GetBytes(message.length()) + message);
@@ -68,12 +70,16 @@ namespace server {
   }
 
   void TCPServer::readString(std::string &message, error_code &error) {
+	  myfile.open("TCP" + std::to_string(_port) + ".txt", std::ios::app);
+	  myfile << "--> READ <--" << std::endl;
+	  myfile << " Create socket " << std::endl;
+	  myfile.close();
+
     tcp::socket socket(_service);
     _acceptor.accept(socket);
 
 	myfile.open("TCP" + std::to_string(_port) + ".txt", std::ios::app);
-	myfile << "--> READ <--" << std::endl;
-	myfile << " Create socket " << std::endl;
+	myfile << " Connected " << std::endl;
 	myfile.close();
 
     for (;; ) {

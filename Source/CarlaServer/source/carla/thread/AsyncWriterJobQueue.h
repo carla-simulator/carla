@@ -39,6 +39,7 @@ namespace thread {
     void workerThread() {
       while (!_done) {
         _queue.push(_job());
+		Sleep(10);
       }
     }
 

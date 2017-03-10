@@ -140,14 +140,14 @@ int main(int argc, char* argv[]) {
     for (;;) {
 
 	  Sleep(50);
-      std::cout << "Sending..." << std::endl;
+      //std::cout << "Sending..." << std::endl;
       auto time = daytimeString();
 	 // server.reward = testData;
 	  server.sendReward(testData);
       using namespace std::chrono_literals;
 
 	  Sleep(50);
-      std::cout << "Listening..." << std::endl;
+      //std::cout << "Listening..." << std::endl;
 	  float steer, gas;
       if (server.tryReadControl(steer, gas)) {
         /*if ((message == "q") || (message == "quit"))

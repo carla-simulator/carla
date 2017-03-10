@@ -47,6 +47,7 @@ namespace thread {
 		  _readQueue.wait_and_pop(value);
 		  _readJob(value);
 		  _writeQueue.push(_writeJob());
+		  Sleep(10);
       }
     }
 
