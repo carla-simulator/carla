@@ -15,10 +15,10 @@ namespace server {
 
 
 	struct Color {
-		std::uint8_t red;
-		std::uint8_t green;
-		std::uint8_t blue;
-		std::uint8_t alpha;
+		char red;
+		char green;
+		char blue;
+		//char alpha;
 	};
 
 	struct Position {
@@ -73,7 +73,7 @@ namespace server {
 	//// Send a signal to the client to notify that the car is ready
 	void sendEndReset();
 
-	void sendWord();
+	void sendWorld();
 
     ///// Try to read the response of the client. Return false if the queue
     ///// is empty.
@@ -103,7 +103,7 @@ namespace server {
   private:
 
 	
-	std::mutex _mutex;
+	//std::mutex _mutex;
 
 	std::atomic<Mode> _mode = MONO;
 	std::atomic_int _scene;

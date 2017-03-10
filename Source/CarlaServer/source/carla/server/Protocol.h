@@ -24,6 +24,7 @@ namespace server {
 
 	  World LoadWorld();
 
+	  const char* GetBytes(int n);
 
   private:
 

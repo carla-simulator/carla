@@ -43,10 +43,10 @@ namespace thread {
 
     void workerThread() {
       while (!_done) {
-		  _writeQueue.push(_writeJob());
 		  R value;
-		  _readQueue.try_pop(value);
+		  _readQueue.wait_and_pop(value);
 		  _readJob(value);
+		  _writeQueue.push(_writeJob());
       }
     }
 

@@ -4,7 +4,7 @@
 
 #include <string>
 
-#include <boost/asio.hpp>
+#include <boost\asio.hpp>
 
 namespace carla {
 namespace server {
@@ -21,6 +21,8 @@ namespace server {
 
     ~TCPServer();
 
+	void startAccept();
+
     void writeString(const std::string &message, error_code &error);
 
     void readString(std::string &message, error_code &error);
@@ -30,6 +32,8 @@ namespace server {
     boost::asio::io_service _service;
 
     boost::asio::ip::tcp::acceptor _acceptor;
+
+	const int _port;
   };
 
 } // namespace server

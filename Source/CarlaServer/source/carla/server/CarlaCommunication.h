@@ -12,7 +12,7 @@ namespace carla {
 		class CarlaCommunication : private NonCopyable {
 			public:
 
-				explicit CarlaCommunication(int writePort, int readPort, int worldPort);
+				explicit CarlaCommunication(int worldPort, int writePort, int readPort);
 
 				void sendReward(const Reward &reward);
 

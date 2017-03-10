@@ -22,12 +22,13 @@ namespace carla {
 			//IMAGE 1
 			std::string* image = reward.add_image();
 			std::vector<Color> img = values.img;
-
 			for (int i = 0; i < img.size(); ++i) {
-				image->append((const char*)img[i].red);
-				image->append((const char*)img[i].green);
-				image->append((const char*)img[i].blue);
-				image->append((const char*)img[i].alpha);
+				(*image) += img[i].red;
+				(*image) += img[i].green;
+				(*image) += img[i].blue;
+				//image->append(GetBytes((img[i].green)));
+				//image->append(GetBytes((img[i].blue)));
+				//image->append(GetBytes((img[i].alpha)));
 			}
 
 
@@ -38,32 +39,41 @@ namespace carla {
 				img = values.img_2;
 
 				for (int i = 0; i < img.size(); ++i) {
-					image->append((const char*)img[i].red);
-					image->append((const char*)img[i].green);
-					image->append((const char*)img[i].blue);
-					image->append((const char*)img[i].alpha);
+					(*image) += img[i].red;
+					(*image) += img[i].green;
+					(*image) += img[i].blue;
+					/*image->append(GetBytes((img[i].red)));
+					image->append(GetBytes((img[i].green)));
+					image->append(GetBytes((img[i].blue)));*/
+					//image->append(GetBytes((img[i].alpha)));
 				}
 
 				//DEPTH 1
-				image = reward.add_image();
+				image = reward.add_depth();
 				img = values.depth_1;
 
 				for (int i = 0; i < img.size(); ++i) {
-					image->append((const char*)img[i].red);
-					image->append((const char*)img[i].green);
-					image->append((const char*)img[i].blue);
-					image->append((const char*)img[i].alpha);
+					(*image) += img[i].red;
+					(*image) += img[i].green;
+					(*image) += img[i].blue;
+					/*image->append(GetBytes((img[i].red)));
+					image->append(GetBytes((img[i].green)));
+					image->append(GetBytes((img[i].blue)));*/
+					//image->append(GetBytes((img[i].alpha)));
 				}
 
 				//DEPTH 2
-				image = reward.add_image();
+				image = reward.add_depth();
 				img = values.depth_2;
 
 				for (int i = 0; i < img.size(); ++i) {
-					image->append((const char*)img[i].red);
-					image->append((const char*)img[i].green);
-					image->append((const char*)img[i].blue);
-					image->append((const char*)img[i].alpha);
+					(*image) += img[i].red;
+					(*image) += img[i].green;
+					(*image) += img[i].blue;
+					/*image->append(GetBytes((img[i].red)));
+					image->append(GetBytes((img[i].green)));
+					image->append(GetBytes((img[i].blue)));*/
+					//image->append(GetBytes((img[i].alpha)));
 				}
 			}
 
@@ -108,8 +118,19 @@ namespace carla {
 		World Protocol::LoadWorld() {
 			World world;
 			world.add_modes(_server->GetModesCount());
-			world.add_scenes(_server->GetModesCount());
+			world.add_scenes(_server->GetScenesCount());
 			return world;
+		}
+
+		const char* Protocol::GetBytes(int n) {
+			char bytes[4];
+
+			bytes[0] = (n >> 24) & 0xFF;
+			bytes[1] = (n >> 16) & 0xFF;
+			bytes[2] = (n >> 8) & 0xFF;
+			bytes[3] = n & 0xFF;
+
+			return bytes;
 		}
 	}
 }

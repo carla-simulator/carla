@@ -31,7 +31,7 @@ static std::string daytimeString() {
 
 int main(int argc, char* argv[]) {
   try {
-    if (argc != 3) {
+    if (argc != 6) {
       std::cerr << "Usage: server <send-port> <read-port>" << std::endl;
       return InvalidArguments;
     }
@@ -45,37 +45,40 @@ int main(int argc, char* argv[]) {
 
 
 	 Color c1;
-	c1.red = 1;
-	c1.green = 2;
-	c1.blue = 3;
-	c1.alpha = 0;
+	c1.red = 255;
+	c1.green = 0;
+	c1.blue = 0;
+	//c1.alpha = 0;
 
 	 Color c2;
-	c2.red = 1;
-	c2.green = 2;
-	c2.blue = 3;
-	c2.alpha = 0;
+	c2.red = 4;
+	c2.green = 5;
+	c2.blue = 6;
+	//c2.alpha = 0;
 
 	 Color c3;
-	c3.red = 1;
-	c3.green = 2;
-	c3.blue = 3;
-	c3.alpha = 0;
+	c3.red = 7;
+	c3.green = 8;
+	c3.blue = 9;
+	//c3.alpha = 0;
 
 	 Color c4;
-	c4.red = 1;
-	c4.green = 2;
-	c4.blue = 3;
-	c4.alpha = 0;
+	c4.red = 10;
+	c4.green = 11;
+	c4.blue = 12;
+	//c4.alpha = 0;
 
 	std::vector<Color> img;
-	img.push_back(c1);
+	for (int i=0; i < 1024; ++i) img.push_back(c1);
+	
 	std::vector<Color> img_2;
-	img_2.push_back(c2);
+	for (int i = 0; i < 1024; ++i) img_2.push_back(c2);
+
 	std::vector<Color> depth_1;
-	depth_1.push_back(c3);
+	for (int i = 0; i < 1024; ++i) depth_1.push_back(c3);
+
 	std::vector<Color> depth_2;
-	depth_2.push_back(c4);
+	for (int i = 0; i < 1024; ++i) depth_2.push_back(c4);
 
 	Reward_Values testData;
 	testData.player_x = 1.0f;
@@ -98,13 +101,14 @@ int main(int argc, char* argv[]) {
 	testData.depth_2 = depth_2;
 
 
-	server.sendWord();
+	
+	server.sendWorld();
 
 	int mode, scene;
-	while (!server.tryReadSceneInit(mode, scene));
-
-	std::cout << "Mode: " << mode << " Scene: " << scene << std::endl;
-
+	bool end = false;
+	do {
+		end = server.tryReadSceneInit(mode, scene);
+	}while (!end);
 
 	std::vector<Position> positions;
 	std::vector<const float*> pMatrix;
@@ -124,25 +128,28 @@ int main(int argc, char* argv[]) {
 
 	server.sendSceneValues(sceneVal);
 	
-	float start, end;
-	while (!server.tryReadEpisodeStart(start, end));
-
-	std::cout << "Start: " << start << " End: " << end << std::endl;
+	end = false;
+	float startPoint, endPoint;
+	do {
+		end = server.tryReadEpisodeStart(startPoint, endPoint);
+	}
+	while (!end);
 
 	server.sendEndReset();
 
     for (;;) {
+
+	  Sleep(50);
       std::cout << "Sending..." << std::endl;
       auto time = daytimeString();
 	 // server.reward = testData;
 	  server.sendReward(testData);
       using namespace std::chrono_literals;
-      std::this_thread::sleep_for(1s);
 
+	  Sleep(50);
       std::cout << "Listening..." << std::endl;
 	  float steer, gas;
       if (server.tryReadControl(steer, gas)) {
-        std::cout << "Received: steer: " << steer << " gas: " << gas << std::endl;
         /*if ((message == "q") || (message == "quit"))
           break;*/
       }

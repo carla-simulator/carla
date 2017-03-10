@@ -50,9 +50,11 @@ namespace thread {
       if (_queue.empty()) {
         return false;
       }
-      value = _queue.front();
-      _queue.pop();
-      return true;
+	  else {
+		  value = _queue.front();
+		  _queue.pop();
+		  return true;
+	  }
     }
 
     // std::shared_ptr<T> try_pop() {

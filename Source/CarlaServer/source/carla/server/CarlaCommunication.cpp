@@ -65,21 +65,30 @@ namespace carla {
 
 		}
 
-		CarlaCommunication::CarlaCommunication(int writePort, int readPort, int worldPort) :
+		CarlaCommunication::CarlaCommunication(int worldPort, int writePort, int readPort) :
 			_server(writePort),
 			_client(readPort),
 			_world(worldPort),
-			_serverThread([this](std::string &str) { serverWorkerThread(this->_server, str); }),
-			_clientThread([this]() { return clientWorkerThread(this->_client); }),
 			_worldThread([this]() {return worldReceiveThread(this->_world); },
-				[this](std::string &msg) { worldSendThread(this->_world, msg); })
-			//_worldThread([this](const std::string &str) { serverWorkerThread(this->_server, str); })
-			{}
+				[this](std::string &msg) { worldSendThread(this->_world, msg); }),
+			_serverThread([this](std::string &str) { serverWorkerThread(this->_server, str); }),
+			_clientThread([this]() { return clientWorkerThread(this->_client); })
+			{
+		
+
+			std::cout << "WorldPort: " << worldPort << std::endl;
+			std::cout << "writePort: " << writePort << std::endl;
+			std::cout << "readPort: " << readPort << std::endl;
+		
+		}
 
 		void CarlaCommunication::sendReward(const Reward &reward) {
 			std::string message;
 			bool error = !reward.SerializeToString(&message);
-			_serverThread.push(message);
+			if (!error) {
+				_serverThread.push(message);
+				std::cout << "Send Reward" << std::endl;
+			}
 		}
 
 		bool CarlaCommunication::tryReadControl(std::string &control) {
@@ -101,7 +110,13 @@ namespace carla {
 		void CarlaCommunication::sendReset(const EpisodeReady &ready) {
 			std::string message;
 			bool error = !ready.SerializeToString(&message);
-			_worldThread.push(message);
+			if (!error) {
+				std::cout << "Send End Reset" << std::endl;
+				_worldThread.push(message);
+			}
+			else {
+				std::cout << " >> SEND RESET ERROR <<" << std::endl;
+			}
 		}
 
 		bool CarlaCommunication::tryReadWorldInfo(std::string &info) {

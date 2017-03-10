@@ -12,10 +12,12 @@ namespace server {
 
   // -- CarlaServer ------------------------------------------------------------
 
-  CarlaServer::CarlaServer(int writePort, int readPort, int worldPort, int modesCount, int scenesCount) :
-	  _communication(std::make_unique<CarlaCommunication>(writePort, readPort, worldPort)), _proto(std::make_unique<Protocol>(this)),
+  CarlaServer::CarlaServer(int worldPort, int writePort, int readPort, int modesCount, int scenesCount) :
+	  _communication(std::make_unique<CarlaCommunication>(worldPort, writePort, readPort)), _proto(std::make_unique<Protocol>(this)),
 	  _modes(modesCount),
-	  _scenes(scenesCount){}
+	  _scenes(scenesCount){
+
+  }
 
   CarlaServer::~CarlaServer() {}
 
@@ -25,6 +27,8 @@ namespace server {
   }
 
   void CarlaServer::sendSceneValues(const Scene_Values &values) {
+
+	  std::cout << "Send Scene Values" << std::endl;
 	  Scene scene = _proto->LoadScene(values);
 	  _communication->sendScene(scene);
   }
@@ -35,7 +39,8 @@ namespace server {
 	  _communication->sendReset(eReady);
   }
 
-  void CarlaServer::sendWord() {
+  void CarlaServer::sendWorld() {
+	  std::cout << "Send World" << std::endl;
 	  World world = _proto->LoadWorld();
 	  _communication->sendWorld(world);
   }
@@ -44,9 +49,21 @@ namespace server {
 	std::string controlMessage;
     bool error = !_communication->tryReadControl(controlMessage);
 	Control control;
-	error &= !control.ParseFromString(controlMessage);
+	if (!error) {
+		error &= !control.ParseFromString(controlMessage);
+	}
 	steer = control.steer();
 	gas = control.gas();
+
+	if (error) {
+		steer = 0.0f;
+		gas = 0.0f;
+	}
+	else {
+		steer = control.steer();
+		gas = control.gas();
+		std::cout << "Steer: " << steer << " Gas: " << gas << std::endl;
+	}
 
 	return !error;
   }
@@ -55,9 +72,20 @@ namespace server {
 	  std::string initMessage;
 	  bool error = !_communication->tryReadWorldInfo(initMessage);
 	  SceneInit sceneInit;
-	  error &= !sceneInit.ParseFromString(initMessage);
-	  mode = sceneInit.mode();
-	  scene = sceneInit.scene();
+
+	  if (!error) {
+		  error &= !sceneInit.ParseFromString(initMessage);
+	  }
+	  
+	  if (error) {
+		  mode = -1; 
+		  scene = -1;
+	  }
+	  else {
+		  mode = sceneInit.mode();
+		  scene = sceneInit.scene();
+		  std::cout << "Mode: " << mode << " Scene: " << scene << std::endl;
+	  }
 
 	  return !error;
   }
@@ -67,8 +95,16 @@ namespace server {
 	  bool error = !_communication->tryReadWorldInfo(startData);
 	  EpisodeStart episodeStart;
 	  error &= !episodeStart.ParseFromString(startData);
-	  start_index = episodeStart.start_index();
-	  end_index = episodeStart.end_index();
+
+	  if (error) {
+		  start_index = 0.0f;
+		  end_index = 0.0f;
+	  }
+	  else {
+		  start_index = episodeStart.start_index();
+		  end_index = episodeStart.end_index();
+		  std::cout << "Start: " << start_index << " End: " << end_index << std::endl;
+	  }
 
 	  return !error;
   }
