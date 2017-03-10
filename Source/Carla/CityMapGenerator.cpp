@@ -16,16 +16,19 @@
 // =============================================================================
 
 ACityMapGenerator::ACityMapGenerator(const FObjectInitializer& ObjectInitializer)
-  : Super(ObjectInitializer)
-{
-  UpdateMap();
-}
+  : Super(ObjectInitializer) {}
 
 ACityMapGenerator::~ACityMapGenerator() {}
 
 // =============================================================================
-// -- Private methods ----------------------------------------------------------
+// -- Map construction and update related methods ------------------------------
 // =============================================================================
+
+void ACityMapGenerator::OnConstruction(const FTransform &Transform)
+{
+  Super::OnConstruction(Transform);
+  UpdateMap();
+}
 
 #if WITH_EDITOR
 void ACityMapGenerator::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
@@ -54,7 +57,6 @@ void ACityMapGenerator::UpdateSeeds() {
   }
   if (!bUseMultipleFixedSeeds) {
     RoadPlanningSeed = Seed;
-    BuildingGenerationSeed = Seed;
   }
 }
 

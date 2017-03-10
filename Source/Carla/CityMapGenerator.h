@@ -7,23 +7,40 @@
 #include "MapGen/GraphParser.h"
 #include "CityMapGenerator.generated.h"
 
+/// Generates a random city using the meshes provided.
+///
+/// @note At this point it only generates roads and sidewalks.
 UCLASS(HideCategories=(Rendering, Input))
 class CARLA_API ACityMapGenerator : public ACityMapMeshHolder
 {
   GENERATED_BODY()
 
+  // ===========================================================================
+  /// @name Constructor and destructor
+  // ===========================================================================
+  /// @{
 public:
 
   ACityMapGenerator(const FObjectInitializer& ObjectInitializer);
 
   ~ACityMapGenerator();
 
-private:
+  /// @}
+  // ===========================================================================
+  /// @name Map construction and update related methods
+  // ===========================================================================
+  /// @{
+protected:
+
+  /// Called after the actor has been constructed and spawned.
+  virtual void OnConstruction(const FTransform &Transform) override;
 
 #if WITH_EDITOR
   /// Called after a property change in editor.
   virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
+
+private:
 
   /// Update the map based on the current settings.
   void UpdateMap();
@@ -37,8 +54,13 @@ private:
   /// Add the road meshes to the scene based on the current DCEL.
   void GenerateRoads();
 
-  /// @name Map Generation
+  /// @}
+  // ===========================================================================
+  /// @name Map generation properties
+  // ===========================================================================
   /// @{
+private:
+
   UPROPERTY(Category = "Map Generation", EditAnywhere, meta = (ClampMin = "10", ClampMax = "200"))
   uint32 MapSizeX = 20u;
 
@@ -53,22 +75,27 @@ private:
 
   UPROPERTY(Category = "Map Generation", EditAnywhere, meta = (EditCondition = bUseFixedSeed))
   int32 Seed = 123456789;
-  /// @}
 
-  /// @name Map Generation - Advance Display
+  /// @}
+  // ===========================================================================
+  /// @name Map generation properties - advance display
+  // ===========================================================================
   /// @{
+private:
+
   UPROPERTY(Category = "Map Generation", EditAnywhere, AdvancedDisplay, meta = (EditCondition = bUseFixedSeed))
   bool bUseMultipleFixedSeeds = false;
 
   UPROPERTY(Category = "Map Generation", EditAnywhere, AdvancedDisplay, meta = (EditCondition = bUseMultipleFixedSeeds))
   int32 RoadPlanningSeed;
 
-  UPROPERTY(Category = "Map Generation", EditAnywhere, AdvancedDisplay, meta = (EditCondition = bUseMultipleFixedSeeds))
-  int32 BuildingGenerationSeed;
   /// @}
-
+  // ===========================================================================
   /// @name Other private members
+  // ===========================================================================
   /// @{
+private:
+
   TUniquePtr<MapGen::DoublyConnectedEdgeList> Dcel;
 
   TUniquePtr<MapGen::GraphParser> DcelParser;

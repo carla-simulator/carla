@@ -3,6 +3,7 @@
 #include "Carla.h"
 #include "DoublyConnectedEdgeList.h"
 
+#include <cmath>
 #include <map>
 
 #ifdef WITH_EDITOR

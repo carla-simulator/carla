@@ -13,7 +13,7 @@ using tag_size_t = std::underlying_type<ECityMapMeshTag>::type;
 constexpr static tag_size_t NUMBER_OF_TAGS = CityMapMeshTag::GetNumberOfTags();
 
 // =============================================================================
-// -- Constructor --------------------------------------------------------------
+// -- Construction and update related methods ----------------------------------
 // =============================================================================
 
 ACityMapMeshHolder::ACityMapMeshHolder(const FObjectInitializer& ObjectInitializer)
@@ -29,28 +29,24 @@ ACityMapMeshHolder::ACityMapMeshHolder(const FObjectInitializer& ObjectInitializ
   for (tag_size_t i = 0u; i < NUMBER_OF_TAGS; ++i) {
     // Add static mesh holder.
     StaticMeshes.Add(CityMapMeshTag::FromUInt(i));
-    // Create an instantiator for each mesh.
-    const FString name = CityMapMeshTag::ToString(i) + "Instantiator";
-    auto instantiator = CreateDefaultSubobject<UInstancedStaticMeshComponent>(*name);
-    instantiator->SetMobility(EComponentMobility::Static);
-    instantiator->SetupAttachment(SceneRootComponent);
-    MeshInstatiators.Add(instantiator);
-    instantiator->RegisterComponent();
   }
 }
 
-// =============================================================================
-// -- Public methods -----------------------------------------------------------
-// =============================================================================
-
-FVector ACityMapMeshHolder::GetTileLocation(uint32 X, uint32 Y) const
+void ACityMapMeshHolder::OnConstruction(const FTransform &Transform)
 {
-  return {X * MapScale, Y * MapScale, 0.0f};
-}
+  Super::OnConstruction(Transform);
 
-// =============================================================================
-// -- Protected methods --------------------------------------------------------
-// =============================================================================
+  for (tag_size_t i = 0u; i < NUMBER_OF_TAGS; ++i) {
+    // Create an instantiator for each mesh.
+    auto instantiator = NewObject<UInstancedStaticMeshComponent>(this);
+    instantiator->SetMobility(EComponentMobility::Static);
+    instantiator->SetupAttachment(SceneRootComponent);
+    instantiator->SetStaticMesh(GetStaticMesh(CityMapMeshTag::FromUInt(i)));
+    MeshInstatiators.Add(instantiator);
+    instantiator->RegisterComponent();
+  }
+  UpdateMapScale();
+}
 
 #if WITH_EDITOR
 void ACityMapMeshHolder::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
@@ -63,9 +59,23 @@ void ACityMapMeshHolder::PostEditChangeProperty(FPropertyChangedEvent& PropertyC
 }
 #endif
 
+// =============================================================================
+// -- Other protected methods --------------------------------------------------
+// =============================================================================
+
+FVector ACityMapMeshHolder::GetTileLocation(uint32 X, uint32 Y) const
+{
+  return {X * MapScale, Y * MapScale, 0.0f};
+}
+
 void ACityMapMeshHolder::SetStaticMesh(ECityMapMeshTag Tag, UStaticMesh *Mesh)
 {
   StaticMeshes[Tag] = Mesh;
+}
+
+UStaticMesh *ACityMapMeshHolder::GetStaticMesh(ECityMapMeshTag Tag)
+{
+  return StaticMeshes[Tag];
 }
 
 const UStaticMesh *ACityMapMeshHolder::GetStaticMesh(ECityMapMeshTag Tag) const
@@ -103,7 +113,7 @@ void ACityMapMeshHolder::ResetInstantiators()
     UInstancedStaticMeshComponent *instantiator = MeshInstatiators[i];
     check(instantiator != nullptr);
     instantiator->ClearInstances();
-    instantiator->SetStaticMesh(StaticMeshes[CityMapMeshTag::FromUInt(i)]);
+    instantiator->SetStaticMesh(GetStaticMesh(CityMapMeshTag::FromUInt(i)));
   }
 }
 

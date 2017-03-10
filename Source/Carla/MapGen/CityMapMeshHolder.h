@@ -8,23 +8,35 @@
 
 class UInstancedStaticMeshComponent;
 
-/// Holds the static meshes and instances necessary for building the city map.
+/// Holds the static meshes and instances necessary for building a city map.
 UCLASS(Abstract)
 class CARLA_API ACityMapMeshHolder : public AActor
 {
   GENERATED_BODY()
 
+  // ===========================================================================
+  // -- Construction and update related methods --------------------------------
+  // ===========================================================================
 public:
 
-  // Sets default values for this actor's properties
+  /// Initializes the mesh holders. It is safe to call SetStaticMesh after this.
+  /// However, instances cannot be added until OnConstruction is called.
   ACityMapMeshHolder(const FObjectInitializer& ObjectInitializer);
 
 protected:
 
+  /// Initializes the instantiators.
+  virtual void OnConstruction(const FTransform &Transform) override;
+
 #if WITH_EDITOR
-  /// Called after a property change in editor.
+  /// Clears and updates the instantiators.
   virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
+
+  // ===========================================================================
+  // -- Other protected methods ------------------------------------------------
+  // ===========================================================================
+protected:
 
   /// Return the 3D world location (relative to this actor) of the given 2D
   /// tile.
@@ -32,6 +44,9 @@ protected:
 
   /// Set the static mesh associated with @a Tag.
   void SetStaticMesh(ECityMapMeshTag Tag, UStaticMesh *Mesh);
+
+  /// Return the static mesh corresponding to @a Tag.
+  UStaticMesh *GetStaticMesh(ECityMapMeshTag Tag);
 
   /// Return the static mesh corresponding to @a Tag.
   const UStaticMesh *GetStaticMesh(ECityMapMeshTag Tag) const;
@@ -54,6 +69,9 @@ protected:
   ///   @param Transform Transform that will be applied to the mesh
   void AddInstance(ECityMapMeshTag Tag, FTransform Transform);
 
+  // ===========================================================================
+  // -- Private methods and members --------------------------------------------
+  // ===========================================================================
 private:
 
   /// Clear all instances in the instantiators and update the static meshes.
