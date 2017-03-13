@@ -5,7 +5,7 @@
 
 #include "carla/thread/AsyncReaderJobQueue.h"
 #include "carla/thread/AsyncWriterJobQueue.h"
-#include "carla/thread/AsyncreadWriteJobQueue.h"
+#include "carla/thread/AsyncReadWriteJobQueue.h"
 
 namespace carla {
 	namespace server {
