@@ -7,12 +7,10 @@
 #include "EngineUtils.h"
 #include "GameFramework/PlayerStart.h"
 
-#include "CarlaGameController.h"
+#include "CarlaGameInstance.h"
 #include "CarlaGameState.h"
 #include "CarlaPlayerState.h"
-#include "CarlaPlayerState.h"
 #include "CarlaVehicleController.h"
-#include "MockGameController.h"
 
 ACarlaGameMode::ACarlaGameMode() :
   Super(),
@@ -21,6 +19,7 @@ ACarlaGameMode::ACarlaGameMode() :
   PlayerControllerClass = ACarlaVehicleController::StaticClass();
   GameStateClass = ACarlaGameState::StaticClass();
   PlayerStateClass = ACarlaPlayerState::StaticClass();
+
   PrimaryActorTick.bCanEverTick = true;
 }
 
@@ -31,12 +30,12 @@ void ACarlaGameMode::InitGame(
 {
   Super::InitGame(MapName, Options, ErrorMessage);
 
-  if (bUseMockController) {
-    GameController = MakeUnique<MockGameController>();
-    UE_LOG(LogCarla, Warning, TEXT("Using mock CARLA controller"));
-  } else {
-    GameController = MakeUnique<CarlaGameController>();
-  }
+  UCarlaGameInstance *GameInstance = Cast<UCarlaGameInstance>(GetGameInstance());
+  checkf(
+      GameInstance != nullptr,
+      TEXT("GameInstance is not a UCarlaGameInstance, did you forget to set it in the project settings?"));
+  GameInstance->InitializeGameControllerIfNotPresent(bUseMockController);
+  GameController = &GameInstance->GetGameController();
 }
 
 void ACarlaGameMode::RestartPlayer(AController* NewPlayer)

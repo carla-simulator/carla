@@ -40,5 +40,5 @@ private:
       AController *Player,
       TArray<APlayerStart *> &UnOccupiedStartPoints);
 
-  TUniquePtr<CarlaGameControllerBase> GameController;
+  CarlaGameControllerBase *GameController;
 };
