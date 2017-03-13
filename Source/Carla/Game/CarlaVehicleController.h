@@ -38,6 +38,8 @@ public:
 
   virtual void Possess(APawn *aPawn) override;
 
+  virtual void Tick(float DeltaTime) override;
+
   virtual void CalcCamera(float DeltaTime, FMinimalViewInfo& OutResult) override;
 
   /// @}
@@ -105,7 +107,7 @@ public:
 private:
 
   UFUNCTION()
-  virtual void OnCollisionEvent(
+  void OnCollisionEvent(
       AActor* Actor,
       AActor* OtherActor,
       FVector NormalImpulse,
@@ -150,4 +152,7 @@ private:
 
   UPROPERTY()
   UWheeledVehicleMovementComponent *MovementComponent;
+
+  // Cast for quick access to the custom player state.
+  ACarlaPlayerState *CarlaPlayerState;
 };

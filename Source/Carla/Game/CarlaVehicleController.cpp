@@ -13,7 +13,9 @@
 // -- Constructor and destructor -----------------------------------------------
 // =============================================================================
 
-ACarlaVehicleController::ACarlaVehicleController()
+ACarlaVehicleController::ACarlaVehicleController() :
+  Super(),
+  MovementComponent(nullptr)
 {
   bAutoManageActiveCameraTarget = false;
 
@@ -60,14 +62,35 @@ void ACarlaVehicleController::SetupInputComponent()
 void ACarlaVehicleController::Possess(APawn *aPawn)
 {
   Super::Possess(aPawn);
+  if (IsPossessingAVehicle()) {
+    UE_LOG(LogCarla, Error, TEXT("Controller already possessing a pawn!"));
+    return;
+  }
   auto *WheeledVehicle = Cast<AWheeledVehicle>(aPawn);
   if (WheeledVehicle != nullptr) {
+    // Attach the camera's spring arm to the pawn.
     SpringArm->AttachToComponent(
        aPawn->GetRootComponent(),
        FAttachmentTransformRules::KeepRelativeTransform);
+    // Bind hit events.
     aPawn->OnActorHit.AddDynamic(this, &ACarlaVehicleController::OnCollisionEvent);
+    // Get vehicle movement component.
     MovementComponent = WheeledVehicle->GetVehicleMovementComponent();
     check(MovementComponent != nullptr);
+    // Get custom player state.
+    CarlaPlayerState = Cast<ACarlaPlayerState>(PlayerState);
+    check(CarlaPlayerState != nullptr);
+  }
+}
+
+void ACarlaVehicleController::Tick(float DeltaTime)
+{
+  Super::PlayerTick(DeltaTime);
+
+  if (IsPossessingAVehicle()) {
+    CarlaPlayerState->Location = GetVehicleLocation();
+    CarlaPlayerState->Orientation = GetVehicleOrientation();
+    CarlaPlayerState->ForwardSpeed = GetVehicleForwardSpeed();
   }
 }
 
@@ -142,10 +165,13 @@ void ACarlaVehicleController::ToggleManualMode()
 // =============================================================================
 
 void ACarlaVehicleController::OnCollisionEvent(
-    AActor* Actor,
+    AActor* /*Actor*/,
     AActor* OtherActor,
     FVector NormalImpulse,
-    const FHitResult& Hit) {}
+    const FHitResult& /*Hit*/)
+{
+  CarlaPlayerState->RegisterCollision(OtherActor, NormalImpulse);
+}
 
 // =============================================================================
 // -- Input bindings -----------------------------------------------------------
