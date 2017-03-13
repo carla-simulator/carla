@@ -19,11 +19,13 @@ namespace thread {
 
     using WritingJob = std::function<W()>;
 	using ReadingJob = std::function<void(R)>;
+	using ConnectJob = std::function<void()>;
 
-    explicit AsyncReadWriteJobQueue(WritingJob &&writingJob, ReadingJob &&readingJob) :
+	explicit AsyncReadWriteJobQueue(WritingJob &&writingJob, ReadingJob &&readingJob, ConnectJob &&connectJob) :
         _done(false),
 		_writeJob(std::move(writingJob)),
 		_readJob(std::move(readingJob)),
+		_connectJob(std::move(connectJob)),
 		_writeQueue(),
         _thread(new std::thread(&AsyncReadWriteJobQueue::workerThread, this)) {}
 
@@ -42,12 +44,12 @@ namespace thread {
   private:
 
     void workerThread() {
+		_connectJob();
       while (!_done) {
 		  R value;
 		  _readQueue.wait_and_pop(value);
 		  _readJob(value);
 		  _writeQueue.push(_writeJob());
-		  Sleep(10);
       }
     }
 
@@ -55,6 +57,7 @@ namespace thread {
 
 	WritingJob _writeJob;
 	ReadingJob _readJob;
+	ConnectJob _connectJob; 
 
     ThreadSafeQueue<W> _writeQueue;
 	ThreadSafeQueue<R> _readQueue;

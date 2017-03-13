@@ -34,7 +34,7 @@ namespace thread {
       std::unique_lock<std::mutex> lock(_mutex);
       _condition.wait(lock, [this] {return !_queue.empty(); });
       value = _queue.front();
-      _queue.pop();
+	  _queue.pop();
     }
 
     // std::shared_ptr<T> wait_and_pop() {

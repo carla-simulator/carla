@@ -3,7 +3,7 @@
 #pragma once
 
 #include <string>
-
+#include <mutex>
 #include <boost\asio.hpp>
 
 namespace carla {
@@ -21,11 +21,15 @@ namespace server {
 
     ~TCPServer();
 
-	void startAccept();
-
     void writeString(const std::string &message, error_code &error);
 
     void readString(std::string &message, error_code &error);
+
+	void AcceptSocket();
+
+	bool Connected();
+
+	const int _port;
 
   private:
 
@@ -33,7 +37,9 @@ namespace server {
 
     boost::asio::ip::tcp::acceptor _acceptor;
 
-	const int _port;
+	boost::asio::ip::tcp::socket _socket;
+	
+	bool _connected;
   };
 
 } // namespace server

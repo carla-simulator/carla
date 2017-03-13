@@ -20,10 +20,12 @@ namespace thread {
   public:
 
     using Job = std::function<void(T)>;
+	using ConnectJob = std::function<void()>;
 
-    explicit AsyncReaderJobQueue(Job &&job) :
-        _done(false),
-        _job(std::move(job)),
+	explicit AsyncReaderJobQueue(Job &&job, ConnectJob &&connectionJob) :
+		_done(false),
+		_job(std::move(job)),
+		_connectionJob(std::move(connectionJob)),
         _queue(),
         _thread(new std::thread(&AsyncReaderJobQueue::workerThread, this)) {}
 
@@ -38,6 +40,7 @@ namespace thread {
   private:
 
     void workerThread() {
+		_connectionJob();
       while (!_done) {
         T value;
         _queue.wait_and_pop(value);
@@ -49,6 +52,8 @@ namespace thread {
     std::atomic_bool _done;
 
     Job _job;
+	ConnectJob _connectionJob;
+
 
     ThreadSafeQueue<T> _queue;
 

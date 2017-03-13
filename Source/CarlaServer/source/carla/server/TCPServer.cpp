@@ -6,104 +6,143 @@
 #include <fstream>
 
 namespace carla {
-namespace server {
+	namespace server {
 
-  using boost::asio::ip::tcp;
+		using boost::asio::ip::tcp;
 
-  std::ofstream myfile;
+		std::string GetBytes(int n) {
+			std::string bytes;
+
+			bytes = (n >> 24) & 0xFF;
+			bytes += (n >> 16) & 0xFF;
+			bytes += (n >> 8) & 0xFF;
+			bytes += n & 0xFF;
+
+			return bytes;
+		}
+
+		int GetInt(char b1, char b2, char b3, char b4) {
+			int result = 0;
+			result = (result << 8) + b1;
+			result = (result << 8) + b2;
+			result = (result << 8) + b3;
+			result = (result << 8) + b4;
+
+			return result;
+		}
 
 
-  std::string GetBytes(int n) {
-	  std::string bytes;
+		TCPServer::TCPServer(int port) :
+			_service(),
+			_acceptor(_service, tcp::endpoint(tcp::v4(), port)),
+			_port(port),
+			_socket(_service),
+			_connected(false){
+			/*std::ofstream myfile;
+			myfile.open("TCP" + std::to_string(_port) + ".txt");
+			myfile << " INIT TCP_SERVER " << std::to_string(_port) << std::endl;
+			myfile.close();*/
+		}
 
-	  bytes = (n >> 24) & 0xFF;
-	  bytes += (n >> 16) & 0xFF;
-	  bytes += (n >> 8) & 0xFF;
-	  bytes += n & 0xFF;
+		TCPServer::~TCPServer() {
+		
+			/*std::ofstream myfile;
+			myfile.open("TCP" + std::to_string(_port) + ".txt");
+			myfile << " Y VOLO " << std::to_string(_port) << std::endl;
+			myfile.close();*/
 
-	  return bytes;
-  }
+		}
+
+		void TCPServer::AcceptSocket() {
+			/*std::ofstream myfile;
+			myfile.open("TCP" + std::to_string(_port) + ".txt", std::ios::app);
+			myfile << " Create socket " << std::to_string(_port)  <<std::endl;
+			myfile.close();*/
+
+			try {
+				_acceptor.accept(_socket);
+
+				_connected = true;
+			}
+
+			catch (boost::system::system_error) {
+				/*myfile.open("TCP" + std::to_string(_port) + ".txt", std::ios::app);
+				myfile << " >>>>> ACCEPT ERROR <<<<<" << std::endl;
+				myfile.close();*/
+			};
 
 
-  TCPServer::TCPServer(int port) :
-    _service(),
-    _acceptor(_service, tcp::endpoint(tcp::v4(), port)),
-	_port(port){
+			/*myfile.open("TCP" + std::to_string(_port) + ".txt", std::ios::app);
+			myfile << " CONNECTED... " << std::to_string(_port) << std::endl;
+			myfile.close();*/
+		}
 
-	  myfile.open("TCP" + std::to_string(_port) + ".txt");
-	  myfile << " INIT TCP_SERVER " << std::to_string(_port) << std::endl;
-	  myfile.close();
+		bool TCPServer::Connected() {
+			return _connected;
+		}
 
-  }
+		void TCPServer::writeString(const std::string &message, error_code &error) {
 
-  TCPServer::~TCPServer() {}
+			/*std::ofstream myfile;
+			myfile.open("TCP" + std::to_string(_port) + ".txt", std::ios::app);
+			myfile << "--> WRITE <--" << std::endl;
+			myfile << " Message: " << message << " // length: " << message.length() << " // byte: " << GetBytes(message.length()) << std::endl;
+			myfile.close();*/
 
-  void TCPServer::writeString(const std::string &message, error_code &error) {
+			std::string outMessage(GetBytes(message.length()) + message);
 
-	  myfile.open("TCP" + std::to_string(_port) + ".txt", std::ios::app);
-	  myfile << "--> WRITE <--" << std::endl;
-	  myfile << " Create socket " << std::endl;
-	  myfile.close();
+			boost::asio::write(_socket, boost::asio::buffer(outMessage), error);
 
-	  //Sleep(500);
+			/*myfile.open("TCP" + std::to_string(_port) + ".txt", std::ios::app);
+			myfile << "------- DONE ------" << std::endl;
+			myfile.close();*/
+		}
 
-    tcp::socket socket(_service);
-    _acceptor.accept(socket);
+		void TCPServer::readString(std::string &message, error_code &error) {
 
-	myfile.open("TCP" + std::to_string(_port) + ".txt", std::ios::app);
-	myfile << " Connected " << std::endl;
-	myfile << " Message: " << message << " // length: " << message.length() << " // byte: "<< GetBytes(message.length()) <<std::endl;
-	myfile.close();
-	
+			/*tcp::socket socket(_service);
+			_acceptor.accept(socket);*/
 
-	//Sleep(500);
-	std::string outMessage (GetBytes(message.length()) + message);
+			/*std::ofstream myfile;
+			myfile.open("TCP" + std::to_string(_port) + ".txt", std::ios::app);
+			myfile << "--> READ <--" << std::endl;
+			myfile << " Create socket " << std::endl;
+			myfile.close();
 
-    boost::asio::write(socket, boost::asio::buffer(outMessage), error);
+			myfile.open("TCP" + std::to_string(_port) + ".txt", std::ios::app);
+			myfile << "--> READ <--" << std::endl;
+			myfile.close();*/
 
-	myfile.open("TCP" + std::to_string(_port) + ".txt", std::ios::app);
-	myfile << "------- DONE ------" << std::endl;
-	myfile.close();
+			bool end = false, readedBytes = false;
+			int readedSize = 0, sizeToRead = -1;
+			do {
 
-	//Sleep(500);
-	//std::cout <<  _port << ": DONE " << std::endl;
-  }
+				std::array<char, 128> buf;
 
-  void TCPServer::readString(std::string &message, error_code &error) {
-	  myfile.open("TCP" + std::to_string(_port) + ".txt", std::ios::app);
-	  myfile << "--> READ <--" << std::endl;
-	  myfile << " Create socket " << std::endl;
-	  myfile.close();
+				size_t len = _socket.read_some(boost::asio::buffer(buf), error);
 
-    tcp::socket socket(_service);
-    _acceptor.accept(socket);
+				  // @todo find a better way.
+				for (size_t i = 0; i < len && !end; ++i) {
+					if (!readedBytes) {
+						sizeToRead = GetInt(buf[0], buf[1], buf[2], buf[3]);
+						i = 3;
+						readedBytes = true;
+					}
+					else {
+						message += buf[i];
+						++readedSize;
+					}
 
-	myfile.open("TCP" + std::to_string(_port) + ".txt", std::ios::app);
-	myfile << " Connected " << std::endl;
-	myfile.close();
+				}
 
-    for (;; ) {
-      std::array<char, 128> buf;
+			} while (!readedBytes || sizeToRead > readedSize);
 
-      size_t len = socket.read_some(boost::asio::buffer(buf), error);
+			/*myfile.open("TCP" + std::to_string(_port) + ".txt", std::ios::app);
+			myfile << "Receive Message: " << message << std::endl;
+			myfile << "------ DONE ------" << message << std::endl;
+			myfile.close();*/
 
-      if (error == boost::asio::error::eof) {
-        break; // Connection closed cleanly by peer.
-      } else if (error) {
-        return;
-      }
+		}
 
-      // @todo find a better way.
-      for (size_t i = 0u; i < len; ++i) {
-        message += buf[i];
-      }
-    }
-
-	myfile.open("TCP" + std::to_string(_port) + ".txt", std::ios::app);
-	myfile << "Receive Message: " << message << std::endl;
-	myfile << "------ DONE ------" << message << std::endl;
-	myfile.close();
-  }
-
-} // namespace server
+	} // namespace server
 } // namespace carla

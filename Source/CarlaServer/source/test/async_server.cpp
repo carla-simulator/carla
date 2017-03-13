@@ -100,12 +100,14 @@ int main(int argc, char* argv[]) {
 	testData.depth_1 = depth_1;
 	testData.depth_2 = depth_2;
 
-
 	
+	std::cout << "Server send World" << std::endl;
 	server.sendWorld();
 
 	int mode, scene;
 	bool end = false;
+
+	std::cout << "Server wait scene init" << std::endl;
 	do {
 		end = server.tryReadSceneInit(mode, scene);
 	}while (!end);
@@ -126,33 +128,49 @@ int main(int argc, char* argv[]) {
 		pMatrix,
 	};
 
+	std::cout << "Server send positions" << std::endl;
+
 	server.sendSceneValues(sceneVal);
 	
 	end = false;
 	float startPoint, endPoint;
+
+	std::cout << "Server wait new episode" << std::endl;
+
 	do {
+
 		end = server.tryReadEpisodeStart(startPoint, endPoint);
 	}
 	while (!end);
 
+	std::cout << "Server send end reset" << std::endl;
+
 	server.sendEndReset();
 
+	float steer, gas;
+	bool wait_control = false;
     for (;;) {
 
-	  Sleep(50);
-      //std::cout << "Sending..." << std::endl;
-      auto time = daytimeString();
-	 // server.reward = testData;
-	  server.sendReward(testData);
-      using namespace std::chrono_literals;
+		if (server.tryReadEpisodeStart(startPoint, endPoint)) {
+			std::cout << "------> RESET <------" << std::endl;
+			std::cout << " --> Start: " << startPoint << " End: " << endPoint << std::endl;
+			server.sendEndReset();
+		}
+		else {
 
-	  Sleep(50);
-      //std::cout << "Listening..." << std::endl;
-	  float steer, gas;
-      if (server.tryReadControl(steer, gas)) {
-        /*if ((message == "q") || (message == "quit"))
-          break;*/
-      }
+			if (wait_control && server.tryReadControl(steer, gas)) {
+				std::cout << "Steer: " << steer << "Gas: " << gas << std::endl;
+				wait_control = false;
+			}
+			else if (!wait_control) {
+				server.sendReward(testData);
+				wait_control = true;
+			}
+
+		}
+
+		Sleep(100);
+
     }
 
   } catch (const std::exception &e) {

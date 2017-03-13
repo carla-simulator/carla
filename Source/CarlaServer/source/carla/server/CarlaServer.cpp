@@ -19,7 +19,8 @@ namespace server {
 
   }
 
-  CarlaServer::~CarlaServer() {}
+  CarlaServer::~CarlaServer() {
+  }
 
   void CarlaServer::sendReward(const Reward_Values &values) {
 	  Reward reward = _proto->LoadReward(values);
@@ -27,8 +28,6 @@ namespace server {
   }
 
   void CarlaServer::sendSceneValues(const Scene_Values &values) {
-
-	  std::cout << "Send Scene Values" << std::endl;
 	  Scene scene = _proto->LoadScene(values);
 	  _communication->sendScene(scene);
   }
@@ -40,73 +39,72 @@ namespace server {
   }
 
   void CarlaServer::sendWorld() {
-	  std::cout << "Send World" << std::endl;
 	  World world = _proto->LoadWorld();
 	  _communication->sendWorld(world);
   }
 
   bool CarlaServer::tryReadControl(float &steer, float &gas) {
 	std::string controlMessage;
-    bool error = !_communication->tryReadControl(controlMessage);
+    bool success = _communication->tryReadControl(controlMessage);
 	Control control;
-	if (!error) {
-		error &= !control.ParseFromString(controlMessage);
+	if (success) {
+		success &= control.ParseFromString(controlMessage);
 	}
 	steer = control.steer();
 	gas = control.gas();
 
-	if (error) {
+	if (!success) {
 		steer = 0.0f;
 		gas = 0.0f;
 	}
 	else {
 		steer = control.steer();
 		gas = control.gas();
-		std::cout << "Steer: " << steer << " Gas: " << gas << std::endl;
+		//std::cout << "Steer: " << steer << " Gas: " << gas << std::endl;
 	}
 
-	return !error;
+	return success;
   }
 
   bool CarlaServer::tryReadSceneInit(int &mode, int &scene) {
 	  std::string initMessage;
-	  bool error = !_communication->tryReadWorldInfo(initMessage);
+	  bool success = _communication->tryReadWorldInfo(initMessage);
 	  SceneInit sceneInit;
 
-	  if (!error) {
-		  error &= !sceneInit.ParseFromString(initMessage);
+	  if (success) {
+		  success &= sceneInit.ParseFromString(initMessage);
 	  }
 	  
-	  if (error) {
+	  if (!success) {
 		  mode = -1; 
 		  scene = -1;
 	  }
 	  else {
 		  mode = sceneInit.mode();
 		  scene = sceneInit.scene();
-		  std::cout << "Mode: " << mode << " Scene: " << scene << std::endl;
+		  //std::cout << "Mode: " << mode << " Scene: " << scene << std::endl;
 	  }
 
-	  return !error;
+	  return success;
   }
 
   bool CarlaServer::tryReadEpisodeStart(float &start_index, float &end_index) {
 	  std::string startData;
-	  bool error = !_communication->tryReadWorldInfo(startData);
+	  bool success = _communication->tryReadWorldInfo(startData);
 	  EpisodeStart episodeStart;
-	  error &= !episodeStart.ParseFromString(startData);
+	  success &= episodeStart.ParseFromString(startData);
 
-	  if (error) {
-		  start_index = 0.0f;
-		  end_index = 0.0f;
+	  if (!success) {
+		  start_index = -1.0f;
+		  end_index = -1.0f;
 	  }
 	  else {
 		  start_index = episodeStart.start_index();
 		  end_index = episodeStart.end_index();
-		  std::cout << "Start: " << start_index << " End: " << end_index << std::endl;
+		  //std::cout << "Start: " << start_index << " End: " << end_index << std::endl;
 	  }
 
-	  return !error;
+	  return success;
   }
 
   void CarlaServer::setMode(Mode mode) {
