@@ -19,6 +19,8 @@ namespace MapGen {
 
     number_type y;
 
+    Position() = default;
+
     constexpr Position(T X, T Y) : x(X), y(Y) {}
 
     constexpr bool operator==(const Position &rhs) const {

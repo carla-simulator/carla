@@ -96,11 +96,11 @@ namespace MapGen {
       const int32 Seed)
   {
     using Position = typename DoublyConnectedEdgeList::Position;
-    std::array<Position, 4u> box = {
-        Position(0, 0),
-        Position(0, SizeY),
-        Position(SizeX, SizeY),
-        Position(SizeX, 0)};
+    std::array<Position, 4u> box;
+    box[0u] = Position(0, 0);
+    box[1u] = Position(0, SizeY);
+    box[2u] = Position(SizeX, SizeY);
+    box[3u] = Position(SizeX, 0);
     auto Dcel = MakeUnique<DoublyConnectedEdgeList>(box);
     randomize(*Dcel, Seed);
     return Dcel;
