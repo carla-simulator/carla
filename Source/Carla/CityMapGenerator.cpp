@@ -120,20 +120,22 @@ void ACityMapGenerator::GenerateRoads() {
       auto y = 1u + margin + std::min(source.y, target.y);
       auto end = std::max(source.y, target.y) - margin;
       for (; y < end; ++y) {
-        AddInstance(ECityMapMeshTag::RoadTwoLanes_LaneLeft,      source.x, y, HALF_PI);
-        AddInstance(ECityMapMeshTag::RoadTwoLanes_LaneRight,     source.x, y, HALF_PI);
-        AddInstance(ECityMapMeshTag::RoadTwoLanes_SidewalkLeft,  source.x, y, HALF_PI);
-        AddInstance(ECityMapMeshTag::RoadTwoLanes_SidewalkRight, source.x, y, HALF_PI);
+        AddInstance(ECityMapMeshTag::RoadTwoLanes_LaneLeft,          source.x, y, HALF_PI);
+        AddInstance(ECityMapMeshTag::RoadTwoLanes_LaneRight,         source.x, y, HALF_PI);
+        AddInstance(ECityMapMeshTag::RoadTwoLanes_SidewalkLeft,      source.x, y, HALF_PI);
+        AddInstance(ECityMapMeshTag::RoadTwoLanes_SidewalkRight,     source.x, y, HALF_PI);
+        AddInstance(ECityMapMeshTag::RoadTwoLanes_LaneMarkingBroken, source.x, y, HALF_PI);
       }
     } else if (source.y == target.y) {
       // horizontal
       auto x = 1u + margin + std::min(source.x, target.x);
       auto end = std::max(source.x, target.x) - margin;
       for (; x < end; ++x) {
-        AddInstance(ECityMapMeshTag::RoadTwoLanes_LaneLeft,      x, source.y);
-        AddInstance(ECityMapMeshTag::RoadTwoLanes_LaneRight,     x, source.y);
-        AddInstance(ECityMapMeshTag::RoadTwoLanes_SidewalkLeft,  x, source.y);
-        AddInstance(ECityMapMeshTag::RoadTwoLanes_SidewalkRight, x, source.y);
+        AddInstance(ECityMapMeshTag::RoadTwoLanes_LaneLeft,          x, source.y);
+        AddInstance(ECityMapMeshTag::RoadTwoLanes_LaneRight,         x, source.y);
+        AddInstance(ECityMapMeshTag::RoadTwoLanes_SidewalkLeft,      x, source.y);
+        AddInstance(ECityMapMeshTag::RoadTwoLanes_SidewalkRight,     x, source.y);
+        AddInstance(ECityMapMeshTag::RoadTwoLanes_LaneMarkingBroken, x, source.y);
       }
     } else {
       UE_LOG(LogCarla, Warning, TEXT("Diagonal edge ignored"));
@@ -148,7 +150,8 @@ void ACityMapGenerator::GenerateRoads() {
     AddInstance(tag ##_Sidewalk0, x, y, angle); \
     AddInstance(tag ##_Sidewalk1, x, y, angle); \
     AddInstance(tag ##_Sidewalk2, x, y, angle); \
-    AddInstance(tag ##_Sidewalk3, x, y, angle);
+    AddInstance(tag ##_Sidewalk3, x, y, angle); \
+    AddInstance(tag ##_LaneMarking, x, y, angle);
 
   // For each node add the intersection.
   for (auto &node : graph.GetNodes()) {

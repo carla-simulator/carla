@@ -13,6 +13,8 @@ enum class ECityMapMeshTag : uint8
   RoadTwoLanes_LaneRight              UMETA(DisplayName = "Road: Two Lanes - Lane Right"),
   RoadTwoLanes_SidewalkLeft           UMETA(DisplayName = "Road: Two Lanes - Sidewalk Left"),
   RoadTwoLanes_SidewalkRight          UMETA(DisplayName = "Road: Two Lanes - Sidewalk Right"),
+  RoadTwoLanes_LaneMarkingSolid       UMETA(DisplayName = "Road: Two Lanes - Lane Marking Solid"),
+  RoadTwoLanes_LaneMarkingBroken      UMETA(DisplayName = "Road: Two Lanes - Lane Marking Broken"),
 
   Road90DegTurn_Lane0                 UMETA(DisplayName = "Road: 90 Degree Turn - Lane 0"),
   Road90DegTurn_Lane1                 UMETA(DisplayName = "Road: 90 Degree Turn - Lane 1"),
@@ -22,6 +24,7 @@ enum class ECityMapMeshTag : uint8
   Road90DegTurn_Sidewalk1             UMETA(DisplayName = "Road: 90 Degree Turn - Sidewalk 1"),
   Road90DegTurn_Sidewalk2             UMETA(DisplayName = "Road: 90 Degree Turn - Sidewalk 2"),
   Road90DegTurn_Sidewalk3             UMETA(DisplayName = "Road: 90 Degree Turn - Sidewalk 3"),
+  Road90DegTurn_LaneMarking           UMETA(DisplayName = "Road: 90 Degree Turn - Lane Marking"),
 
   RoadTIntersection_Lane0             UMETA(DisplayName = "Road: T-Intersection - Lane 0"),
   RoadTIntersection_Lane1             UMETA(DisplayName = "Road: T-Intersection - Lane 1"),
@@ -31,6 +34,7 @@ enum class ECityMapMeshTag : uint8
   RoadTIntersection_Sidewalk1         UMETA(DisplayName = "Road: T-Intersection - Sidewalk 1"),
   RoadTIntersection_Sidewalk2         UMETA(DisplayName = "Road: T-Intersection - Sidewalk 2"),
   RoadTIntersection_Sidewalk3         UMETA(DisplayName = "Road: T-Intersection - Sidewalk 3"),
+  RoadTIntersection_LaneMarking       UMETA(DisplayName = "Road: T-Intersection - Lane Marking"),
 
   RoadXIntersection_Lane0             UMETA(DisplayName = "Road: X-Intersection - Lane 0"),
   RoadXIntersection_Lane1             UMETA(DisplayName = "Road: X-Intersection - Lane 1"),
@@ -40,6 +44,7 @@ enum class ECityMapMeshTag : uint8
   RoadXIntersection_Sidewalk1         UMETA(DisplayName = "Road: X-Intersection - Sidewalk 1"),
   RoadXIntersection_Sidewalk2         UMETA(DisplayName = "Road: X-Intersection - Sidewalk 2"),
   RoadXIntersection_Sidewalk3         UMETA(DisplayName = "Road: X-Intersection - Sidewalk 3"),
+  RoadXIntersection_LaneMarking       UMETA(DisplayName = "Road: X-Intersection - Lane Marking"),
 
   NUMBER_OF_TAGS         UMETA(Hidden)
 };
