@@ -45,7 +45,7 @@ namespace thread {
         T value;
         _queue.wait_and_pop(value);
         _job(value);
-		Sleep(10);
+		//Sleep(10);
       }
     }
 

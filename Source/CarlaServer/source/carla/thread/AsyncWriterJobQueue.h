@@ -42,7 +42,7 @@ namespace thread {
 		_connectJob();
       while (!_done) {
         _queue.push(_job());
-		Sleep(10);
+		//Sleep(10);
       }
     }
 
