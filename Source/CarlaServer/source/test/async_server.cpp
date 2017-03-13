@@ -3,6 +3,7 @@
 #include "Carla.h"
 
 #include "carla/server/CarlaServer.h"
+#include "lodepng.h"
 
 #include <ctime>
 #include <iostream>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "carla\Protocol\carlaProtocol\carla_protocol.pb.h"
+#include "carla/Protocol/carlaProtocol/carla_protocol.pb.h"
 
 //#include "carla\server\CarlaServer.h"
 #include <string>
