@@ -42,7 +42,25 @@ public:
 
   /// @}
   // ===========================================================================
-  /// @name Car input
+  /// @name Vehicle pawn info
+  // ===========================================================================
+  /// @{
+
+  bool IsPossessingAVehicle() const
+  {
+    return MovementComponent != nullptr;
+  }
+
+  FVector GetVehicleLocation() const;
+
+  /// Speed forward in km/h. Might be negative if goes backwards.
+  float GetVehicleForwardSpeed() const;
+
+  FVector GetVehicleOrientation() const;
+
+  /// @}
+  // ===========================================================================
+  /// @name Vehicle movement
   // ===========================================================================
   /// @{
 public:
@@ -53,11 +71,13 @@ public:
 
   void SetHandbrakeInput(bool Value);
 
-  void HoldHandbrake() {
+  void HoldHandbrake()
+  {
     SetHandbrakeInput(true);
   }
 
-  void ReleaseHandbrake() {
+  void ReleaseHandbrake()
+  {
     SetHandbrakeInput(false);
   }
 
@@ -76,6 +96,20 @@ public:
   void SetManualMode(bool On);
 
   void ToggleManualMode();
+
+  /// @}
+  // ===========================================================================
+  /// @name Events
+  // ===========================================================================
+  /// @{
+private:
+
+  UFUNCTION()
+  virtual void OnCollisionEvent(
+      AActor* Actor,
+      AActor* OtherActor,
+      FVector NormalImpulse,
+      const FHitResult& Hit);
 
   /// @}
   // ===========================================================================

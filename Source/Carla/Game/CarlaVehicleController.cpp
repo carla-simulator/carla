@@ -65,6 +65,7 @@ void ACarlaVehicleController::Possess(APawn *aPawn)
     SpringArm->AttachToComponent(
        aPawn->GetRootComponent(),
        FAttachmentTransformRules::KeepRelativeTransform);
+    aPawn->OnActorHit.AddDynamic(this, &ACarlaVehicleController::OnCollisionEvent);
     MovementComponent = WheeledVehicle->GetVehicleMovementComponent();
     check(MovementComponent != nullptr);
   }
@@ -76,7 +77,29 @@ void ACarlaVehicleController::CalcCamera(float DeltaTime, FMinimalViewInfo& OutR
 }
 
 // =============================================================================
-// -- Car movement methods -----------------------------------------------------
+// -- Vehicle pawn info --------------------------------------------------------
+// =============================================================================
+
+FVector ACarlaVehicleController::GetVehicleLocation() const
+{
+  check(GetPawn() != nullptr);
+  return GetPawn()->GetActorLocation();
+}
+
+float ACarlaVehicleController::GetVehicleForwardSpeed() const
+{
+  check(MovementComponent != nullptr);
+  return MovementComponent->GetForwardSpeed() * 0.036f;
+}
+
+FVector ACarlaVehicleController::GetVehicleOrientation() const
+{
+  check(GetPawn() != nullptr);
+  return GetPawn()->GetTransform().GetRotation().GetForwardVector();
+}
+
+// =============================================================================
+// -- Vehicle movement methods -------------------------------------------------
 // =============================================================================
 
 void ACarlaVehicleController::SetThrottleInput(float Value)
@@ -113,6 +136,16 @@ void ACarlaVehicleController::ToggleManualMode()
 {
   SetManualMode(!bManualMode);
 }
+
+// =============================================================================
+// -- Events -------------------------------------------------------------------
+// =============================================================================
+
+void ACarlaVehicleController::OnCollisionEvent(
+    AActor* Actor,
+    AActor* OtherActor,
+    FVector NormalImpulse,
+    const FHitResult& Hit) {}
 
 // =============================================================================
 // -- Input bindings -----------------------------------------------------------
