@@ -3,43 +3,44 @@
 #include "carla/server/Protocol.h"
 #include "carla/server/TCPServer.h"
 
+#include "carla/thread/AsyncReadWriteJobQueue.h"
 #include "carla/thread/AsyncReaderJobQueue.h"
 #include "carla/thread/AsyncWriterJobQueue.h"
-#include "carla/thread/AsyncReadWriteJobQueue.h"
 
 namespace carla {
-	namespace server {
-		class CarlaCommunication : private NonCopyable {
-			public:
+namespace server {
 
-				explicit CarlaCommunication(int worldPort, int writePort, int readPort);
+  class CarlaCommunication : private NonCopyable {
+  public:
 
-				void sendReward(const Reward &reward);
+    explicit CarlaCommunication(int worldPort, int writePort, int readPort);
 
-				bool tryReadControl(std::string &control);
+    void sendReward(const Reward &reward);
 
-				void sendScene(const Scene &scene);
+    bool tryReadControl(std::string &control);
 
-				void sendReset(const EpisodeReady &ready);
+    void sendScene(const Scene &scene);
 
-				void sendWorld(const World &world);
+    void sendReset(const EpisodeReady &ready);
 
-				bool tryReadWorldInfo(std::string &info);
+    void sendWorld(const World &world);
 
-			private:
+    bool tryReadWorldInfo(std::string &info);
 
-				TCPServer _server;
+  private:
 
-				TCPServer _client;
+    TCPServer _server;
 
-				TCPServer _world;
+    TCPServer _client;
 
-				thread::AsyncReaderJobQueue<std::string> _serverThread;
+    TCPServer _world;
 
-				thread::AsyncWriterJobQueue<std::string> _clientThread;
+    thread::AsyncReaderJobQueue<std::string> _serverThread;
 
-				thread::AsyncReadWriteJobQueue<std::string, std::string> _worldThread;
+    thread::AsyncWriterJobQueue<std::string> _clientThread;
 
-		};
-	}
+    thread::AsyncReadWriteJobQueue<std::string, std::string> _worldThread;
+  };
+
+}
 }

@@ -13,21 +13,24 @@ namespace thread {
 
   /// Executes the given job asynchronously. Every item that the job returns is
   /// added to the queue.
-  template <typename W, typename R>
+  template<typename W, typename R>
   class CARLA_API AsyncReadWriteJobQueue {
   public:
 
     using WritingJob = std::function<W()>;
-	using ReadingJob = std::function<void(R)>;
-	using ConnectJob = std::function<void()>;
+    using ReadingJob = std::function<void(R)>;
+    using ConnectJob = std::function<void()>;
 
-	explicit AsyncReadWriteJobQueue(WritingJob &&writingJob, ReadingJob &&readingJob, ConnectJob &&connectJob) :
-        _done(false),
-		_writeJob(std::move(writingJob)),
-		_readJob(std::move(readingJob)),
-		_connectJob(std::move(connectJob)),
-		_writeQueue(),
-        _thread(new std::thread(&AsyncReadWriteJobQueue::workerThread, this)) {}
+    explicit AsyncReadWriteJobQueue(
+        WritingJob && writingJob,
+        ReadingJob && readingJob,
+        ConnectJob && connectJob) :
+      _done(false),
+      _writeJob(std::move(writingJob)),
+      _readJob(std::move(readingJob)),
+      _connectJob(std::move(connectJob)),
+      _writeQueue(),
+      _thread(new std::thread(&AsyncReadWriteJobQueue::workerThread, this)) {}
 
     ~AsyncReadWriteJobQueue() {
       _done = true;
@@ -37,30 +40,30 @@ namespace thread {
       return _writeQueue.try_pop(value);
     }
 
-	void push(R item) {
-		_readQueue.push(item);
-	}
+    void push(R item) {
+      _readQueue.push(item);
+    }
 
   private:
 
     void workerThread() {
-		_connectJob();
+      _connectJob();
       while (!_done) {
-		  R value;
-		  _readQueue.wait_and_pop(value);
-		  _readJob(value);
-		  _writeQueue.push(_writeJob());
+        R value;
+        _readQueue.wait_and_pop(value);
+        _readJob(value);
+        _writeQueue.push(_writeJob());
       }
     }
 
     std::atomic_bool _done;
 
-	WritingJob _writeJob;
-	ReadingJob _readJob;
-	ConnectJob _connectJob; 
+    WritingJob _writeJob;
+    ReadingJob _readJob;
+    ConnectJob _connectJob;
 
     ThreadSafeQueue<W> _writeQueue;
-	ThreadSafeQueue<R> _readQueue;
+    ThreadSafeQueue<R> _readQueue;
 
     const ThreadUniquePointer _thread;
   };

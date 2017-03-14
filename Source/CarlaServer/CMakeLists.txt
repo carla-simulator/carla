@@ -1,6 +1,10 @@
 cmake_minimum_required (VERSION 2.6)
 project (CarlaServer)
 
+SET(CMAKE_CXX_COMPILER clang++)
+SET(CMAKE_CXX_STANDARD 14)
+SET(CMAKE_CXX_STANDARD_REQUIRED 14)
+
 # Boost configuration
 SET(Boost_USE_STATIC_LIBS ON)
 find_package(Boost REQUIRED system date_time regex)
