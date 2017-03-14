@@ -5,6 +5,7 @@
 #include "GameFramework/PlayerController.h"
 #include "CarlaVehicleController.generated.h"
 
+class ACarlaPlayerState;
 class UCameraComponent;
 class USpringArmComponent;
 class UWheeledVehicleMovementComponent;

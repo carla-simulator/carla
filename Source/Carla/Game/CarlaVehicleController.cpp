@@ -38,6 +38,9 @@ ACarlaVehicleController::ACarlaVehicleController() :
   PlayerCamera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
   PlayerCamera->bUsePawnControlRotation = false;
   PlayerCamera->FieldOfView = 90.f;
+
+  PrimaryActorTick.bCanEverTick = true;
+  PrimaryActorTick.TickGroup = TG_PrePhysics;
 }
 
 ACarlaVehicleController::~ACarlaVehicleController() {}

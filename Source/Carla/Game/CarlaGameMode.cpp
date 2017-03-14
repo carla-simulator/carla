@@ -21,6 +21,7 @@ ACarlaGameMode::ACarlaGameMode() :
   PlayerStateClass = ACarlaPlayerState::StaticClass();
 
   PrimaryActorTick.bCanEverTick = true;
+  PrimaryActorTick.TickGroup = TG_PrePhysics;
 }
 
 void ACarlaGameMode::InitGame(

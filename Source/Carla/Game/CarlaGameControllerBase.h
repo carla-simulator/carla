@@ -14,18 +14,9 @@ public:
 
   virtual ~CarlaGameControllerBase() {}
 
-  bool CanEverTick() const
-  {
-    return bCanEverTick;
-  }
-
   virtual APlayerStart *ChoosePlayerStart(const TArray<APlayerStart *> &AvailableStartSpots) = 0;
 
   virtual void RegisterPlayer(AController *NewPlayer) = 0;
 
   virtual void Tick(float DeltaSeconds) {}
-
-protected:
-
-  bool bCanEverTick = false;
 };

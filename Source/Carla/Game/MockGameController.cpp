@@ -3,11 +3,6 @@
 #include "Carla.h"
 #include "MockGameController.h"
 
-MockGameController::MockGameController()
-{
-  bCanEverTick = false;
-}
-
 APlayerStart *MockGameController::ChoosePlayerStart(
     const TArray<APlayerStart *> &AvailableStartSpots)
 {
