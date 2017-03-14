@@ -182,7 +182,7 @@ void protobuf_AssignDesc_carla_5fprotocol_2eproto() {
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(EpisodeReady));
   Reward_descriptor_ = file->message_type(6);
-  static const int Reward_offsets_[18] = {
+  static const int Reward_offsets_[16] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Reward, player_x_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Reward, player_y_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Reward, speed_),
@@ -197,8 +197,6 @@ void protobuf_AssignDesc_carla_5fprotocol_2eproto() {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Reward, ori_x_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Reward, ori_y_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Reward, ori_z_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Reward, img_width_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Reward, img_height_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Reward, image_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Reward, depth_),
   };
@@ -285,15 +283,14 @@ void protobuf_AddDesc_carla_5fprotocol_2eproto() {
     "ection_Matrix\032&\n\021Projection_Matrix\022\021\n\tca"
     "m_param\030\001 \003(\002\032(\n\010Position\022\r\n\005pos_x\030\001 \002(\002"
     "\022\r\n\005pos_y\030\002 \002(\002\"\035\n\014EpisodeReady\022\r\n\005ready"
-    "\030\001 \001(\010\"\321\002\n\006Reward\022\020\n\010player_x\030\001 \001(\002\022\020\n\010p"
+    "\030\001 \001(\010\"\252\002\n\006Reward\022\020\n\010player_x\030\001 \001(\002\022\020\n\010p"
     "layer_y\030\002 \001(\002\022\r\n\005speed\030\003 \001(\002\022\025\n\rcollisio"
     "n_gen\030\004 \001(\002\022\025\n\rcollision_ped\030\005 \001(\002\022\025\n\rco"
     "llision_car\030\006 \001(\002\022\021\n\tintersect\030\007 \001(\002\022\021\n\t"
     "inertia_x\030\010 \001(\002\022\021\n\tinertia_y\030\t \001(\002\022\021\n\tin"
     "ertia_z\030\n \001(\002\022\021\n\ttimestamp\030\013 \001(\005\022\r\n\005ori_"
-    "x\030\014 \001(\002\022\r\n\005ori_y\030\r \001(\002\022\r\n\005ori_z\030\016 \001(\002\022\021\n"
-    "\timg_width\030\017 \002(\005\022\022\n\nimg_height\030\020 \002(\005\022\r\n\005"
-    "image\030\021 \003(\014\022\r\n\005depth\030\022 \003(\014", 746);
+    "x\030\014 \001(\002\022\r\n\005ori_y\030\r \001(\002\022\r\n\005ori_z\030\016 \001(\002\022\r\n"
+    "\005image\030\017 \003(\014\022\r\n\005depth\030\020 \003(\014", 707);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "carla_protocol.proto", &protobuf_RegisterTypes);
   EpisodeStart::default_instance_ = new EpisodeStart();
@@ -2401,8 +2398,6 @@ const int Reward::kTimestampFieldNumber;
 const int Reward::kOriXFieldNumber;
 const int Reward::kOriYFieldNumber;
 const int Reward::kOriZFieldNumber;
-const int Reward::kImgWidthFieldNumber;
-const int Reward::kImgHeightFieldNumber;
 const int Reward::kImageFieldNumber;
 const int Reward::kDepthFieldNumber;
 #endif  // !_MSC_VER
@@ -2440,8 +2435,6 @@ void Reward::SharedCtor() {
   ori_x_ = 0;
   ori_y_ = 0;
   ori_z_ = 0;
-  img_width_ = 0;
-  img_height_ = 0;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -2490,8 +2483,8 @@ void Reward::Clear() {
   if (_has_bits_[0 / 32] & 255) {
     ZR_(player_x_, inertia_x_);
   }
-  if (_has_bits_[8 / 32] & 65280) {
-    ZR_(inertia_y_, img_height_);
+  if (_has_bits_[8 / 32] & 16128) {
+    ZR_(inertia_y_, ori_z_);
   }
 
 #undef OFFSET_OF_FIELD_
@@ -2718,64 +2711,34 @@ bool Reward::MergePartialFromCodedStream(
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(120)) goto parse_img_width;
+        if (input->ExpectTag(122)) goto parse_image;
         break;
       }
 
-      // required int32 img_width = 15;
+      // repeated bytes image = 15;
       case 15: {
-        if (tag == 120) {
-         parse_img_width:
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &img_width_)));
-          set_has_img_width();
-        } else {
-          goto handle_unusual;
-        }
-        if (input->ExpectTag(128)) goto parse_img_height;
-        break;
-      }
-
-      // required int32 img_height = 16;
-      case 16: {
-        if (tag == 128) {
-         parse_img_height:
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &img_height_)));
-          set_has_img_height();
-        } else {
-          goto handle_unusual;
-        }
-        if (input->ExpectTag(138)) goto parse_image;
-        break;
-      }
-
-      // repeated bytes image = 17;
-      case 17: {
-        if (tag == 138) {
+        if (tag == 122) {
          parse_image:
           DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
                 input, this->add_image()));
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(138)) goto parse_image;
-        if (input->ExpectTag(146)) goto parse_depth;
+        if (input->ExpectTag(122)) goto parse_image;
+        if (input->ExpectTag(130)) goto parse_depth;
         break;
       }
 
-      // repeated bytes depth = 18;
-      case 18: {
-        if (tag == 146) {
+      // repeated bytes depth = 16;
+      case 16: {
+        if (tag == 130) {
          parse_depth:
           DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
                 input, this->add_depth()));
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(146)) goto parse_depth;
+        if (input->ExpectTag(130)) goto parse_depth;
         if (input->ExpectAtEnd()) goto success;
         break;
       }
@@ -2875,26 +2838,16 @@ void Reward::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteFloat(14, this->ori_z(), output);
   }
 
-  // required int32 img_width = 15;
-  if (has_img_width()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(15, this->img_width(), output);
-  }
-
-  // required int32 img_height = 16;
-  if (has_img_height()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(16, this->img_height(), output);
-  }
-
-  // repeated bytes image = 17;
+  // repeated bytes image = 15;
   for (int i = 0; i < this->image_size(); i++) {
     ::google::protobuf::internal::WireFormatLite::WriteBytes(
-      17, this->image(i), output);
+      15, this->image(i), output);
   }
 
-  // repeated bytes depth = 18;
+  // repeated bytes depth = 16;
   for (int i = 0; i < this->depth_size(); i++) {
     ::google::protobuf::internal::WireFormatLite::WriteBytes(
-      18, this->depth(i), output);
+      16, this->depth(i), output);
   }
 
   if (!unknown_fields().empty()) {
@@ -2977,26 +2930,16 @@ void Reward::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::WriteFloatToArray(14, this->ori_z(), target);
   }
 
-  // required int32 img_width = 15;
-  if (has_img_width()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(15, this->img_width(), target);
-  }
-
-  // required int32 img_height = 16;
-  if (has_img_height()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(16, this->img_height(), target);
-  }
-
-  // repeated bytes image = 17;
+  // repeated bytes image = 15;
   for (int i = 0; i < this->image_size(); i++) {
     target = ::google::protobuf::internal::WireFormatLite::
-      WriteBytesToArray(17, this->image(i), target);
+      WriteBytesToArray(15, this->image(i), target);
   }
 
-  // repeated bytes depth = 18;
+  // repeated bytes depth = 16;
   for (int i = 0; i < this->depth_size(); i++) {
     target = ::google::protobuf::internal::WireFormatLite::
-      WriteBytesToArray(18, this->depth(i), target);
+      WriteBytesToArray(16, this->depth(i), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -3085,29 +3028,15 @@ int Reward::ByteSize() const {
       total_size += 1 + 4;
     }
 
-    // required int32 img_width = 15;
-    if (has_img_width()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int32Size(
-          this->img_width());
-    }
-
-    // required int32 img_height = 16;
-    if (has_img_height()) {
-      total_size += 2 +
-        ::google::protobuf::internal::WireFormatLite::Int32Size(
-          this->img_height());
-    }
-
   }
-  // repeated bytes image = 17;
-  total_size += 2 * this->image_size();
+  // repeated bytes image = 15;
+  total_size += 1 * this->image_size();
   for (int i = 0; i < this->image_size(); i++) {
     total_size += ::google::protobuf::internal::WireFormatLite::BytesSize(
       this->image(i));
   }
 
-  // repeated bytes depth = 18;
+  // repeated bytes depth = 16;
   total_size += 2 * this->depth_size();
   for (int i = 0; i < this->depth_size(); i++) {
     total_size += ::google::protobuf::internal::WireFormatLite::BytesSize(
@@ -3186,12 +3115,6 @@ void Reward::MergeFrom(const Reward& from) {
     if (from.has_ori_z()) {
       set_ori_z(from.ori_z());
     }
-    if (from.has_img_width()) {
-      set_img_width(from.img_width());
-    }
-    if (from.has_img_height()) {
-      set_img_height(from.img_height());
-    }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
@@ -3209,7 +3132,6 @@ void Reward::CopyFrom(const Reward& from) {
 }
 
 bool Reward::IsInitialized() const {
-  if ((_has_bits_[0] & 0x0000c000) != 0x0000c000) return false;
 
   return true;
 }
@@ -3230,8 +3152,6 @@ void Reward::Swap(Reward* other) {
     std::swap(ori_x_, other->ori_x_);
     std::swap(ori_y_, other->ori_y_);
     std::swap(ori_z_, other->ori_z_);
-    std::swap(img_width_, other->img_width_);
-    std::swap(img_height_, other->img_height_);
     image_.Swap(&other->image_);
     depth_.Swap(&other->depth_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
