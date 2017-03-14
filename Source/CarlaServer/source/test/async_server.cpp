@@ -140,7 +140,7 @@ int main(int argc, char* argv[]) {
     server.sendSceneValues(sceneVal);
 
     end = false;
-    float startPoint, endPoint;
+    size_t startPoint, endPoint;
 
     std::cout << "Server wait new episode" << std::endl;
 
@@ -154,7 +154,6 @@ int main(int argc, char* argv[]) {
     server.sendEndReset();
 
     float steer, gas;
-    bool wait_control = false;
     for (;;) {
 
       if (server.tryReadEpisodeStart(startPoint, endPoint)) {
@@ -164,14 +163,11 @@ int main(int argc, char* argv[]) {
       }
       else {
 
-        if (wait_control && server.tryReadControl(steer, gas)) {
+        if (server.tryReadControl(steer, gas)) {
           std::cout << "Steer: " << steer << "Gas: " << gas << std::endl;
-          wait_control = false;
         }
-        else if (!wait_control) {
-          server.sendReward(testData);
-          wait_control = true;
-        }
+
+       server.sendReward(testData);
 
       }
 
@@ -189,3 +185,8 @@ int main(int argc, char* argv[]) {
     return UnknownException;
   }
 }
+
+
+//TODO:
+//pmatrix float 16
+//start_index size_t 

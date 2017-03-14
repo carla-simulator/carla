@@ -87,15 +87,15 @@ namespace server {
     return success;
   }
 
-  bool CarlaServer::tryReadEpisodeStart(float &start_index, float &end_index) {
+  bool CarlaServer::tryReadEpisodeStart(size_t &start_index, size_t &end_index) {
     std::string startData;
     bool success = _communication->tryReadWorldInfo(startData);
     EpisodeStart episodeStart;
     success &= episodeStart.ParseFromString(startData);
 
     if (!success) {
-      start_index = -1.0f;
-      end_index = -1.0f;
+      start_index = 0.0;
+      end_index = 0.0;
     }
     else {
       start_index = episodeStart.start_index();

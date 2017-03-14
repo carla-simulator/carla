@@ -77,7 +77,7 @@ namespace carla {
       bool tryReadSceneInit(int &mode, int &scene);
 
       ////Try to read if the client has selected an end & start point. Return false if the queue is empty
-      bool tryReadEpisodeStart(float &start_index, float &end_index);
+      bool tryReadEpisodeStart(size_t &start_index, size_t &end_index);
 
       int GetModesCount() const;
 
@@ -92,6 +92,7 @@ namespace carla {
       int GetScene() const;
 
       void SetReset(bool reset);
+
 
       bool Reset() const;
 

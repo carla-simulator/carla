@@ -15,24 +15,12 @@ namespace carla {
 
     // This is the thread that sends a string over the TCP socket.
     static void serverWorkerThread(TCPServer &server, Reward &rwd) {
-      TCPServer::error_code error;
-      //message = message.size.c_ + message;
-
-      //if (!server.Connected()) server.AcceptSocket();
-      lodepng::State state;
-
-      std::vector<unsigned char> png;
-
-      for (int i = 0; i < rwd.image_size(); ++i) {
-        std::string image = rwd.image(i);
-        std::vector<unsigned char> data(image.begin(), image.end());
-        lodepng::encode(png, data, rwd.img_width(), rwd.img_height(), state);
-        rwd.set_image(i, std::string(png.begin(), png.end()));
-      }
 
       std::string message;
       bool correctSerialize = rwd.SerializeToString(&message);
 
+      TCPServer::error_code error;
+      
       if (correctSerialize) {
         server.writeString(message, error);
         if (error) logTCPError("Failed to send", error);

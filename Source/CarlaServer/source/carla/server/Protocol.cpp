@@ -2,6 +2,9 @@
 #include "Protocol.h"
 
 #include "CarlaServer.h"
+#include "lodepng.h"
+
+#include <iostream>
 
 namespace carla {
 	namespace server {
@@ -20,15 +23,27 @@ namespace carla {
 			reward.set_collision_gen(values.collision_gen);
 			reward.set_collision_ped(values.collision_ped);
 
+      lodepng::State state;
+
 			//IMAGE 1
 			std::string* image = reward.add_image();
+
 			std::vector<unsigned char> img = values.img;
-			for (int i = 0; i < img.size(); ++i) {
-				(*image) += img[i];
-				//image->append(GetBytes((img[i].green)));
-				//image->append(GetBytes((img[i].blue)));
-				//image->append(GetBytes((img[i].alpha)));
-			}
+
+      std::vector<unsigned char> png;
+      unsigned error = lodepng::encode(png, img, values.img_width, values.img_height, state);
+
+      if (!error) {
+        for (int i = 0; i < png.size(); ++i) {
+          (*image) += png[i];
+          //image->append(GetBytes((img[i].green)));
+          //image->append(GetBytes((img[i].blue)));
+          //image->append(GetBytes((img[i].alpha)));
+        }
+      }
+      else std::cout << "No se pudo cargar img" << std::endl;
+
+      
 
 
 			if (_server->GetMode() == STEREO) {
@@ -37,8 +52,11 @@ namespace carla {
 				image = reward.add_image();
 				img = values.img_2;
 
-				for (int i = 0; i < img.size(); ++i) {
-					(*image) += img[i];
+        png.clear();
+        unsigned error = lodepng::encode(png, img, values.img_width, values.img_height, state);
+
+				for (int i = 0; i < png.size(); ++i) {
+					(*image) += png[i];
 					/*image->append(GetBytes((img[i].red)));
 					image->append(GetBytes((img[i].green)));
 					image->append(GetBytes((img[i].blue)));*/
@@ -49,8 +67,11 @@ namespace carla {
 				image = reward.add_depth();
 				img = values.depth_1;
 
-				for (int i = 0; i < img.size(); ++i) {
-					(*image) += img[i];
+        png.clear();
+        unsigned error = lodepng::encode(png, img, values.img_width, values.img_height, state);
+
+				for (int i = 0; i < png.size(); ++i) {
+					(*image) += png[i];
 					/*image->append(GetBytes((img[i].red)));
 					image->append(GetBytes((img[i].green)));
 					image->append(GetBytes((img[i].blue)));*/
@@ -61,8 +82,11 @@ namespace carla {
 				image = reward.add_depth();
 				img = values.depth_2;
 
-				for (int i = 0; i < img.size(); ++i) {
-					(*image) += img[i];
+        png.clear();
+        unsigned error = lodepng::encode(png, img, values.img_width, values.img_height, state);
+
+				for (int i = 0; i < png.size(); ++i) {
+					(*image) += png[i];
 					/*image->append(GetBytes((img[i].red)));
 					image->append(GetBytes((img[i].green)));
 					image->append(GetBytes((img[i].blue)));*/

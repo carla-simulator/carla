@@ -15,7 +15,7 @@ namespace server {
 
     explicit CarlaCommunication(int worldPort, int writePort, int readPort);
 
-    void sendReward(const Reward &reward);
+    void sendReward(const Reward &values);
 
     bool tryReadControl(std::string &control);
 
