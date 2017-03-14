@@ -11,111 +11,105 @@
 #include <atomic>
 
 namespace carla {
-namespace server {
+  namespace server {
 
-  struct Color {
-    char red;
-    char green;
-    char blue;
-    //char alpha;
-  };
+    struct Position {
+      float x, y;
+    };
 
-  struct Position {
-    float x, y;
-  };
+    struct Reward_Values {
+      float player_x, player_y;
+      float speed;
+      float collision_gen, collision_ped, collision_car;
+      float intersect;
+      float inertia_x, inertia_y, inertia_z;
+      std::int32_t timestamp;
+      float ori_x = 0, ori_y, ori_z;
+      int img_width, img_height;
+      std::vector<unsigned char> img;
+      std::vector<unsigned char> img_2;
+      std::vector<unsigned char> depth_1;
+      std::vector<unsigned char> depth_2;
+    };
 
-  struct Reward_Values {
-    float player_x, player_y;
-    float speed;
-    float collision_gen, collision_ped, collision_car;
-    float intersect;
-    float inertia_x, inertia_y, inertia_z;
-    std::int32_t timestamp;
-    float ori_x = 0, ori_y, ori_z;
-    std::vector<Color> img;
-    std::vector<Color> img_2;
-    std::vector<Color> depth_1;
-    std::vector<Color> depth_2;
-  };
+    struct Scene_Values {
+      std::vector<Position> _possible_Positions;
+      std::vector<const float*> _projection_Matrix;
+    };
 
-  struct Scene_Values {
-    std::vector<Position> _possible_Positions;
-    std::vector<const float *> _projection_Matrix;
-  };
+    enum Mode {
+      MONO = 0,
+      STEREO = 1
+    };
 
-  enum Mode {
-    MONO = 0,
-    STEREO = 1
-  };
+    /// Asynchronous TCP server. Uses two ports, one for sending messages (write)
+    /// and one for receiving messages (read).
+    ///
+    /// Writing and reading are executed in two different threads. Each thread has
+    /// its own queue of messages.
+    ///
+    /// Note that a new socket is created for every connection (every write and
+    /// read).
+    class CARLA_API CarlaServer : private NonCopyable {
+    public:
 
-  /// Asynchronous TCP server. Uses two ports, one for sending messages (write)
-  /// and one for receiving messages (read).
-  ///
-  /// Writing and reading are executed in two different threads. Each thread has
-  /// its own queue of messages.
-  ///
-  /// Note that a new socket is created for every connection (every write and
-  /// read).
-  class CARLA_API CarlaServer : private NonCopyable {
-  public:
+      /// Starts two threads for writing and reading.
+      explicit CarlaServer(int writePort, int readPort, int worldPort, int modesCount, int scenesCount);
 
-    /// Starts two threads for writing and reading.
-    explicit CarlaServer(int writePort, int readPort, int worldPort, int modesCount, int scenesCount);
+      ~CarlaServer();
 
-    ~CarlaServer();
+      ///// Send values of the current player status
+      void sendReward(const Reward_Values &values);
 
-    ///// Send values of the current player status
-    void sendReward( const Reward_Values &values);
+      //// Send the values of the generated scene
+      void sendSceneValues(const Scene_Values &values);
 
-    //// Send the values of the generated scene
-    void sendSceneValues( const Scene_Values &values);
+      //// Send a signal to the client to notify that the car is ready
+      void sendEndReset();
 
-    //// Send a signal to the client to notify that the car is ready
-    void sendEndReset();
+      void sendWorld();
 
-    void sendWorld();
+      ///// Try to read the response of the client. Return false if the queue
+      ///// is empty.
+      bool tryReadControl(float &steer, float &gas);
 
-    ///// Try to read the response of the client. Return false if the queue
-    ///// is empty.
-    bool tryReadControl(float &steer, float &gas);
+      ////Try to read if the client has selected an scene and mode. Return false if the queue is empty
+      bool tryReadSceneInit(int &mode, int &scene);
 
-    ////Try to read if the client has selected an scene and mode. Return false if the queue is empty
-    bool tryReadSceneInit(int &mode, int &scene);
+      ////Try to read if the client has selected an end & start point. Return false if the queue is empty
+      bool tryReadEpisodeStart(float &start_index, float &end_index);
 
-    ////Try to read if the client has selected an end & start point. Return false if the queue is empty
-    bool tryReadEpisodeStart(float &start_index, float &end_index);
+      int GetModesCount() const;
 
-    int GetModesCount() const;
+      int GetScenesCount() const;
 
-    int GetScenesCount() const;
+      void setMode(Mode mode);
 
-    void setMode(Mode mode);
+      Mode GetMode() const;
 
-    Mode GetMode() const;
+      void SetScene(int scene);
 
-    void SetScene(int scene);
+      int GetScene() const;
 
-    int GetScene() const;
+      void SetReset(bool reset);
 
-    void SetReset(bool reset);
+      bool Reset() const;
 
-    bool Reset() const;
+    private:
 
-  private:
+      //std::mutex _mutex;
 
-    //std::mutex _mutex;
+      std::atomic<Mode> _mode{ MONO };
+      std::atomic_int _scene;
+      std::atomic_bool _reset;
 
-    std::atomic<Mode> _mode {MONO};
-    std::atomic_int _scene;
-    std::atomic_bool _reset;
+      const int _modes;
+      const int _scenes;
 
-    const int _modes;
-    const int _scenes;
+      const std::unique_ptr<CarlaCommunication> _communication;
 
-    const std::unique_ptr<CarlaCommunication> _communication;
+      const std::unique_ptr<Protocol> _proto;
+    };
 
-    const std::unique_ptr<Protocol> _proto;
-  };
-
-} // namespace server
+  } // namespace server
 } // namespace carla

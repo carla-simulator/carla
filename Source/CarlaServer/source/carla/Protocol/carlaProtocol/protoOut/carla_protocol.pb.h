@@ -904,10 +904,24 @@ class Reward : public ::google::protobuf::Message {
   inline float ori_z() const;
   inline void set_ori_z(float value);
 
-  // repeated bytes image = 15;
+  // required int32 img_width = 15;
+  inline bool has_img_width() const;
+  inline void clear_img_width();
+  static const int kImgWidthFieldNumber = 15;
+  inline ::google::protobuf::int32 img_width() const;
+  inline void set_img_width(::google::protobuf::int32 value);
+
+  // required int32 img_height = 16;
+  inline bool has_img_height() const;
+  inline void clear_img_height();
+  static const int kImgHeightFieldNumber = 16;
+  inline ::google::protobuf::int32 img_height() const;
+  inline void set_img_height(::google::protobuf::int32 value);
+
+  // repeated bytes image = 17;
   inline int image_size() const;
   inline void clear_image();
-  static const int kImageFieldNumber = 15;
+  static const int kImageFieldNumber = 17;
   inline const ::std::string& image(int index) const;
   inline ::std::string* mutable_image(int index);
   inline void set_image(int index, const ::std::string& value);
@@ -920,10 +934,10 @@ class Reward : public ::google::protobuf::Message {
   inline const ::google::protobuf::RepeatedPtrField< ::std::string>& image() const;
   inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_image();
 
-  // repeated bytes depth = 16;
+  // repeated bytes depth = 18;
   inline int depth_size() const;
   inline void clear_depth();
-  static const int kDepthFieldNumber = 16;
+  static const int kDepthFieldNumber = 18;
   inline const ::std::string& depth(int index) const;
   inline ::std::string* mutable_depth(int index);
   inline void set_depth(int index, const ::std::string& value);
@@ -966,6 +980,10 @@ class Reward : public ::google::protobuf::Message {
   inline void clear_has_ori_y();
   inline void set_has_ori_z();
   inline void clear_has_ori_z();
+  inline void set_has_img_width();
+  inline void clear_has_img_width();
+  inline void set_has_img_height();
+  inline void clear_has_img_height();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -985,6 +1003,8 @@ class Reward : public ::google::protobuf::Message {
   float ori_x_;
   float ori_y_;
   float ori_z_;
+  ::google::protobuf::int32 img_width_;
+  ::google::protobuf::int32 img_height_;
   ::google::protobuf::RepeatedPtrField< ::std::string> image_;
   ::google::protobuf::RepeatedPtrField< ::std::string> depth_;
   friend void  protobuf_AddDesc_carla_5fprotocol_2eproto();
@@ -1735,7 +1755,55 @@ inline void Reward::set_ori_z(float value) {
   // @@protoc_insertion_point(field_set:Reward.ori_z)
 }
 
-// repeated bytes image = 15;
+// required int32 img_width = 15;
+inline bool Reward::has_img_width() const {
+  return (_has_bits_[0] & 0x00004000u) != 0;
+}
+inline void Reward::set_has_img_width() {
+  _has_bits_[0] |= 0x00004000u;
+}
+inline void Reward::clear_has_img_width() {
+  _has_bits_[0] &= ~0x00004000u;
+}
+inline void Reward::clear_img_width() {
+  img_width_ = 0;
+  clear_has_img_width();
+}
+inline ::google::protobuf::int32 Reward::img_width() const {
+  // @@protoc_insertion_point(field_get:Reward.img_width)
+  return img_width_;
+}
+inline void Reward::set_img_width(::google::protobuf::int32 value) {
+  set_has_img_width();
+  img_width_ = value;
+  // @@protoc_insertion_point(field_set:Reward.img_width)
+}
+
+// required int32 img_height = 16;
+inline bool Reward::has_img_height() const {
+  return (_has_bits_[0] & 0x00008000u) != 0;
+}
+inline void Reward::set_has_img_height() {
+  _has_bits_[0] |= 0x00008000u;
+}
+inline void Reward::clear_has_img_height() {
+  _has_bits_[0] &= ~0x00008000u;
+}
+inline void Reward::clear_img_height() {
+  img_height_ = 0;
+  clear_has_img_height();
+}
+inline ::google::protobuf::int32 Reward::img_height() const {
+  // @@protoc_insertion_point(field_get:Reward.img_height)
+  return img_height_;
+}
+inline void Reward::set_img_height(::google::protobuf::int32 value) {
+  set_has_img_height();
+  img_height_ = value;
+  // @@protoc_insertion_point(field_set:Reward.img_height)
+}
+
+// repeated bytes image = 17;
 inline int Reward::image_size() const {
   return image_.size();
 }
@@ -1789,7 +1857,7 @@ Reward::mutable_image() {
   return &image_;
 }
 
-// repeated bytes depth = 16;
+// repeated bytes depth = 18;
 inline int Reward::depth_size() const {
   return depth_.size();
 }

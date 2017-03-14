@@ -89,6 +89,8 @@ message Reward {
   optional float ori_x = 12;
   optional float ori_y = 13;
   optional float ori_z = 14;
-  repeated bytes image = 15;
-  repeated bytes depth = 16;
+  required int32 img_width = 15;
+  required int32 img_height = 16;
+  repeated bytes image = 17;
+  repeated bytes depth = 18;
 }

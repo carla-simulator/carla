@@ -5,6 +5,7 @@
 
 namespace carla {
 	namespace server {
+
 		Protocol::Protocol(carla::server::CarlaServer *server) {
 			_server = server;
 		}
@@ -21,11 +22,9 @@ namespace carla {
 
 			//IMAGE 1
 			std::string* image = reward.add_image();
-			std::vector<Color> img = values.img;
+			std::vector<unsigned char> img = values.img;
 			for (int i = 0; i < img.size(); ++i) {
-				(*image) += img[i].red;
-				(*image) += img[i].green;
-				(*image) += img[i].blue;
+				(*image) += img[i];
 				//image->append(GetBytes((img[i].green)));
 				//image->append(GetBytes((img[i].blue)));
 				//image->append(GetBytes((img[i].alpha)));
@@ -39,9 +38,7 @@ namespace carla {
 				img = values.img_2;
 
 				for (int i = 0; i < img.size(); ++i) {
-					(*image) += img[i].red;
-					(*image) += img[i].green;
-					(*image) += img[i].blue;
+					(*image) += img[i];
 					/*image->append(GetBytes((img[i].red)));
 					image->append(GetBytes((img[i].green)));
 					image->append(GetBytes((img[i].blue)));*/
@@ -53,9 +50,7 @@ namespace carla {
 				img = values.depth_1;
 
 				for (int i = 0; i < img.size(); ++i) {
-					(*image) += img[i].red;
-					(*image) += img[i].green;
-					(*image) += img[i].blue;
+					(*image) += img[i];
 					/*image->append(GetBytes((img[i].red)));
 					image->append(GetBytes((img[i].green)));
 					image->append(GetBytes((img[i].blue)));*/
@@ -67,9 +62,7 @@ namespace carla {
 				img = values.depth_2;
 
 				for (int i = 0; i < img.size(); ++i) {
-					(*image) += img[i].red;
-					(*image) += img[i].green;
-					(*image) += img[i].blue;
+					(*image) += img[i];
 					/*image->append(GetBytes((img[i].red)));
 					image->append(GetBytes((img[i].green)));
 					image->append(GetBytes((img[i].blue)));*/
@@ -88,6 +81,8 @@ namespace carla {
 			reward.set_player_x(values.player_x);
 			reward.set_speed(values.speed);
 			reward.set_timestamp(values.timestamp);
+			reward.set_img_width(values.img_width);
+			reward.set_img_height(values.img_height);
 
 			return reward;
 		}
@@ -120,17 +115,6 @@ namespace carla {
 			world.add_modes(_server->GetModesCount());
 			world.add_scenes(_server->GetScenesCount());
 			return world;
-		}
-
-		const char* Protocol::GetBytes(int n) {
-			char bytes[4];
-
-			bytes[0] = (n >> 24) & 0xFF;
-			bytes[1] = (n >> 16) & 0xFF;
-			bytes[2] = (n >> 8) & 0xFF;
-			bytes[3] = n & 0xFF;
-
-			return bytes;
 		}
 	}
 }

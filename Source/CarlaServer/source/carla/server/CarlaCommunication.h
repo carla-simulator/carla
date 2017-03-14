@@ -35,7 +35,7 @@ namespace server {
 
     TCPServer _world;
 
-    thread::AsyncReaderJobQueue<std::string> _serverThread;
+		thread::AsyncReaderJobQueue<Reward> _serverThread;
 
     thread::AsyncWriterJobQueue<std::string> _clientThread;
 
