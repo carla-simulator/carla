@@ -1,6 +1,6 @@
+syntax = "proto2";
 
-
-// Client Messages  
+// Client Messages
 message EpisodeStart {
 
 
@@ -16,7 +16,7 @@ message SceneInit {
   optional int32 mode =1;
   optional int32 scene =2;
 
-  
+
 }
 
 message Control {
@@ -33,8 +33,8 @@ message Control {
 message World {
 
   repeated int32 modes = 1;
-  repeated int32 scenes = 2; 
- 
+  repeated int32 scenes = 2;
+
 
 }
 
@@ -45,14 +45,14 @@ message Scene {
   message Projection_Matrix{
 
     repeated float cam_param = 1;
-    
+
 
   }
   message Position{
 
     required float pos_x = 1;
     required float pos_y = 2;
-    
+
 
   }
 

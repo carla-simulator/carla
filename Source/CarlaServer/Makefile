@@ -1,21 +1,20 @@
 BUILD_FOLDER=build
+PROTOBUF_SRC_DIR=source/carla/protocol
 
-vsproject:
+default: build
+	cd build && ninja && ninja install
+
+build: protobuf
+	cmake -H. -B$(BUILD_FOLDER) -G "Ninja"
+
+vsproject: protobuf
 	cmake -H. -B$(BUILD_FOLDER) -G "Visual Studio 14 2015 Win64"
 
-stproject:
-	cmake -H. -B$(BUILD_FOLDER) -G "Sublime Text 2 - Ninja"
-	
-	cd protobuf-2.6.1
-	./autogen.sh
-	./configure --prefix= ${PROJECT_SOURCE_DIR}/lib
-	make
-	make check
-	sudo make install
-	sudo ldconfig # refresh shared library cache
+protobuf:
+	protoc -I=$(PROTOBUF_SRC_DIR) --cpp_out=$(PROTOBUF_SRC_DIR) $(PROTOBUF_SRC_DIR)/carla_protocol.proto
 
 clean:
 	rm -Rf build CMakeFiles
 
 clean-all: clean
-	rm -Rf bin lib
+	rm -Rf bin lib include

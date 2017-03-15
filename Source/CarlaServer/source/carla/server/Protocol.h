@@ -1,6 +1,6 @@
 #pragma once
 
-#include "carla/Protocol/carlaProtocol/carla_protocol.pb.h"
+#include <carla/protocol/carla_protocol.pb.h>
 
 #include <string>
 
@@ -9,7 +9,7 @@ namespace server {
 
   class CarlaServer;
   struct Reward_Values;
-  struct Scene_Values; 
+  struct Scene_Values;
 
   class Protocol {
 
