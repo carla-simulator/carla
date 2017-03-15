@@ -18,11 +18,10 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
-set(Protobuf_LIBRARY carla_protocol -lprotobuf)
+set(Protobuf_LIBRARY -lprotobuf)
 
 include_directories("${PROJECT_SOURCE_DIR}/source")
 
-add_subdirectory(source/carla/protocol)
 add_subdirectory(source/carla/server)
 add_subdirectory(source/test)
 
