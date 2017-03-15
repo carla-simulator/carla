@@ -80,6 +80,9 @@ private:
   /// Set the scale to the dimensions of the base mesh.
   void UpdateMapScale();
 
+  /// Creates a new one if necessary.
+  UInstancedStaticMeshComponent &GetInstantiator(ECityMapMeshTag Tag);
+
   UPROPERTY()
   USceneComponent *SceneRootComponent;
 

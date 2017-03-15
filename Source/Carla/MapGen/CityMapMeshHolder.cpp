@@ -38,12 +38,7 @@ void ACityMapMeshHolder::OnConstruction(const FTransform &Transform)
 
   for (tag_size_t i = 0u; i < NUMBER_OF_TAGS; ++i) {
     // Create an instantiator for each mesh.
-    auto instantiator = NewObject<UInstancedStaticMeshComponent>(this);
-    instantiator->SetMobility(EComponentMobility::Static);
-    instantiator->SetupAttachment(SceneRootComponent);
-    instantiator->SetStaticMesh(GetStaticMesh(CityMapMeshTag::FromUInt(i)));
-    MeshInstatiators.Add(instantiator);
-    instantiator->RegisterComponent();
+    GetInstantiator(CityMapMeshTag::FromUInt(i));
   }
   UpdateMapScale();
 }
@@ -98,9 +93,8 @@ void ACityMapMeshHolder::AddInstance(ECityMapMeshTag Tag, uint32 X, uint32 Y, fl
 
 void ACityMapMeshHolder::AddInstance(ECityMapMeshTag Tag, FTransform Transform)
 {
-  auto instantiator = MeshInstatiators[CityMapMeshTag::ToUInt(Tag)];
-  check(instantiator != nullptr);
-  instantiator->AddInstance(Transform);
+  auto &instantiator = GetInstantiator(Tag);
+  instantiator.AddInstance(Transform);
 }
 
 // =============================================================================
@@ -110,10 +104,9 @@ void ACityMapMeshHolder::AddInstance(ECityMapMeshTag Tag, FTransform Transform)
 void ACityMapMeshHolder::ResetInstantiators()
 {
   for (tag_size_t i = 0u; i < NUMBER_OF_TAGS; ++i) {
-    UInstancedStaticMeshComponent *instantiator = MeshInstatiators[i];
-    check(instantiator != nullptr);
-    instantiator->ClearInstances();
-    instantiator->SetStaticMesh(GetStaticMesh(CityMapMeshTag::FromUInt(i)));
+    auto &instantiator = GetInstantiator(CityMapMeshTag::FromUInt(i));
+    instantiator.ClearInstances();
+    instantiator.SetStaticMesh(GetStaticMesh(CityMapMeshTag::FromUInt(i)));
   }
 }
 
@@ -139,4 +132,20 @@ void ACityMapMeshHolder::UpdateMapScale()
     }
     MapScale = size.X;
   }
+}
+
+UInstancedStaticMeshComponent &ACityMapMeshHolder::GetInstantiator(ECityMapMeshTag Tag)
+{
+  UInstancedStaticMeshComponent *instantiator = MeshInstatiators[CityMapMeshTag::ToUInt(Tag)];
+  if (instantiator == nullptr) {
+    // Create and register an instantiator.
+    instantiator = NewObject<UInstancedStaticMeshComponent>(this);
+    instantiator->SetMobility(EComponentMobility::Static);
+    instantiator->SetupAttachment(SceneRootComponent);
+    instantiator->SetStaticMesh(GetStaticMesh(Tag));
+    MeshInstatiators[CityMapMeshTag::ToUInt(Tag)] = instantiator;
+    instantiator->RegisterComponent();
+  }
+  check(instantiator != nullptr);
+  return *instantiator;
 }
