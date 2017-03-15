@@ -8,7 +8,7 @@ stproject:
 	
 	cd protobuf-2.6.1
 	./autogen.sh
-	./configure --prefix=/usr
+	./configure --prefix= ${PROJECT_SOURCE_DIR}/lib
 	make
 	make check
 	sudo make install
