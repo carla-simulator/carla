@@ -9,7 +9,7 @@
 namespace carla {
 namespace server {
 
-  /// Synchronous TCP server.
+  /// { TCP server.
   ///
   /// A new socket is created for every connection (every write and read).
   class CARLA_API TCPServer : private NonCopyable {

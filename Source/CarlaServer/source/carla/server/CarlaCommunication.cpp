@@ -14,7 +14,7 @@ namespace carla {
     }
 
     // This is the thread that sends a string over the TCP socket.
-    static void serverWorkerThread(TCPServer &server, Reward &rwd) {
+    static void serverWorkerThread(TCPServer &server, const Reward &rwd) {
 
       std::string message;
       bool correctSerialize = rwd.SerializeToString(&message);
@@ -91,7 +91,7 @@ namespace carla {
           [this](const std::string &msg) { worldSendThread(this->_world, msg); },
           [this]() { Connect(this->_world); } },
           _serverThread{
-              [this](Reward &rwd) { serverWorkerThread(this->_server, rwd); },
+              [this](const Reward &rwd) { serverWorkerThread(this->_server, rwd); },
               [this]() { Connect(this->_server); } },
               _clientThread{
                   [this]() { return clientWorkerThread(this->_client); },
