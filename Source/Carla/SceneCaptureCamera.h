@@ -20,30 +20,37 @@ class CARLA_API ASceneCaptureCamera : public AActor
 {
   GENERATED_BODY()
 
-  float ElapsedTimeSinceLastCapture = 0.0f;
+public:
 
-  size_t CaptureFileNameCount = 0u;
+  ASceneCaptureCamera(const FObjectInitializer& ObjectInitializer);
+
+protected:
+
+  virtual void PostActorCreated() override;
 
 public:
-  UPROPERTY(Category = SceneCapture, EditAnywhere)
-  bool bCaptureScene = true;
 
-  UPROPERTY(Category = SceneCapture, EditAnywhere, meta = (EditCondition = bCaptureScene))
-  FString SaveToFolder;
+  virtual void BeginPlay() override;
 
-  UPROPERTY(Category = SceneCapture, EditAnywhere, meta = (EditCondition = bCaptureScene))
-  FString FileName;
+  virtual void Tick(float Delta) override;
 
-  UPROPERTY(Category = SceneCapture, EditAnywhere, meta = (EditCondition = bCaptureScene))
-  float CapturesPerSecond;
-
-  UPROPERTY(Category = SceneCapture, EditAnywhere, meta = (EditCondition = bCaptureScene))
-  uint32 SizeX;
-
-  UPROPERTY(Category = SceneCapture, EditAnywhere, meta = (EditCondition = bCaptureScene))
-  uint32 SizeY;
+  const TArray<FColor> &GetImage() const
+  {
+    return ImageBitMap;
+  }
 
 private:
+
+  /// Used to synchronize the DrawFrustumComponent with the
+  /// SceneCaptureComponent2D settings.
+  void UpdateDrawFrustum();
+
+  UPROPERTY(Category = SceneCapture, EditAnywhere)
+  uint32 SizeX;
+
+  UPROPERTY(Category = SceneCapture, EditAnywhere)
+  uint32 SizeY;
+
   /** To display the 3d camera in the editor. */
   UPROPERTY()
   class UStaticMeshComponent* MeshComp;
@@ -60,30 +67,6 @@ private:
   UPROPERTY(Transient)
   class USceneCaptureComponent2D* CaptureComponent2D;
 
-public:
-
-  ASceneCaptureCamera(const FObjectInitializer& ObjectInitializer);
-
-  ~ASceneCaptureCamera();
-
-  virtual void PostActorCreated() override;
-
-  virtual void BeginPlay() override;
-
-  virtual void Tick(float Delta) override;
-
-  /** Used to synchronize the DrawFrustumComponent with the SceneCaptureComponent2D settings. */
-  void UpdateDrawFrustum();
-
-  UFUNCTION(BlueprintCallable, Category="Rendering")
-  void OnInterpToggle(bool bEnable);
-
-  /** Returns CaptureComponent2D subobject **/
-  USceneCaptureComponent2D* GetCaptureComponent2D() const;
-
-  /** Returns DrawFrustum subobject **/
-  UDrawFrustumComponent* GetDrawFrustum() const;
-
-  /** Returns MeshComp subobject **/
-  UStaticMeshComponent* GetMeshComp() const;
+  UPROPERTY()
+  TArray<FColor> ImageBitMap;
 };

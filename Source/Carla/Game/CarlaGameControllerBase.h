@@ -4,8 +4,9 @@
 
 #include "Array.h"
 
-class APlayerStart;
 class AController;
+class APlayerStart;
+class ASceneCaptureCamera;
 
 /// Base class for a CARLA game controller.
 class CARLA_API CarlaGameControllerBase
@@ -16,7 +17,9 @@ public:
 
   virtual APlayerStart *ChoosePlayerStart(const TArray<APlayerStart *> &AvailableStartSpots) = 0;
 
-  virtual void RegisterPlayer(AController *NewPlayer) = 0;
+  virtual void RegisterPlayer(AController &NewPlayer) = 0;
 
-  virtual void Tick(float DeltaSeconds) {}
+  virtual void RegisterCaptureCamera(const ASceneCaptureCamera &CaptureCamera) = 0;
+
+  virtual void Tick(float DeltaSeconds) = 0;
 };

@@ -16,7 +16,9 @@ public:
 
   virtual APlayerStart *ChoosePlayerStart(const TArray<APlayerStart *> &AvailableStartSpots) override;
 
-  virtual void RegisterPlayer(AController *NewPlayer) override;
+  virtual void RegisterPlayer(AController &NewPlayer) override;
+
+  virtual void RegisterCaptureCamera(const ASceneCaptureCamera &CaptureCamera) override;
 
   virtual void Tick(float DeltaSeconds) override;
 

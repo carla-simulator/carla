@@ -102,10 +102,15 @@ APlayerStart *CarlaGameController::ChoosePlayerStart(
   return AvailableStartSpots[0u];
 }
 
-void CarlaGameController::RegisterPlayer(AController *NewPlayer)
+void CarlaGameController::RegisterPlayer(AController &NewPlayer)
 {
-  Player = Cast<ACarlaVehicleController>(NewPlayer);
+  Player = Cast<ACarlaVehicleController>(&NewPlayer);
   check(Player != nullptr);
+}
+
+void CarlaGameController::RegisterCaptureCamera(const ASceneCaptureCamera &CaptureCamera)
+{
+
 }
 
 void CarlaGameController::Tick(float DeltaSeconds)

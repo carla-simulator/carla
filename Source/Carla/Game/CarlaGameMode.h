@@ -7,6 +7,7 @@
 #include "CarlaGameMode.generated.h"
 
 class APlayerStart;
+class ASceneCaptureCamera;
 
 /**
  *
@@ -30,7 +31,11 @@ public:
 
   virtual void Tick(float DeltaSeconds) override;
 
+  void RegisterCaptureCamera(ASceneCaptureCamera &CaptureCamera);
+
 private:
+
+  void RegisterPlayer(AController &NewPlayer);
 
   /// Iterate all the APlayerStart present in the world and add the ones with
   /// unoccupied locations to @a UnOccupiedStartPoints.
