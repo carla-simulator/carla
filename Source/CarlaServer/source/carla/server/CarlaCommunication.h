@@ -15,7 +15,7 @@ namespace server {
 
     explicit CarlaCommunication(int worldPort, int writePort, int readPort);
 
-    void sendReward(const Reward &reward);
+    void sendReward(const Reward &values);
 
     bool tryReadControl(std::string &control);
 
@@ -35,7 +35,7 @@ namespace server {
 
     TCPServer _world;
 
-    thread::AsyncReaderJobQueue<std::string> _serverThread;
+		thread::AsyncReaderJobQueue<Reward> _serverThread;
 
     thread::AsyncWriterJobQueue<std::string> _clientThread;
 

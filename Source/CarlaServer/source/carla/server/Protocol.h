@@ -1,15 +1,15 @@
 #pragma once
 
-#include "carla/Protocol/carlaProtocol/carla_protocol.pb.h"
+#include "carla_protocol.pb.h"
 
-//#include "carla\server\CarlaServer.h"
 #include <string>
 
 namespace carla {
 namespace server {
+
   class CarlaServer;
   struct Reward_Values;
-  struct Scene_Values; 
+  struct Scene_Values;
 
   class Protocol {
 
@@ -23,8 +23,6 @@ namespace server {
 	  Scene LoadScene(const Scene_Values &values);
 
 	  World LoadWorld();
-
-	  const char* GetBytes(int n);
 
   private:
 

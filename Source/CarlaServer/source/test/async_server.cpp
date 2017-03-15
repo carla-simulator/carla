@@ -3,7 +3,6 @@
 #include "Carla.h"
 
 #include "carla/server/CarlaServer.h"
-#include "lodepng.h"
 
 #include <ctime>
 #include <iostream>
@@ -30,7 +29,7 @@ static std::string daytimeString() {
   return str;
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   try {
     if (argc != 6) {
       std::cerr << "Usage: server <send-port> <read-port>" << std::endl;
@@ -44,41 +43,47 @@ int main(int argc, char *argv[]) {
 
     // Let's simulate the game loop.
 
-    Color c1;
-    c1.red = 255;
-    c1.green = 0;
-    c1.blue = 0;
-    //c1.alpha = 0;
+    int imageWidth = 512, imageHeight = 512;
 
-    Color c2;
-    c2.red = 4;
-    c2.green = 5;
-    c2.blue = 6;
-    //c2.alpha = 0;
+    std::vector<unsigned char> img;
+    img.resize(imageWidth * imageHeight * 4);
+    for (int i = 0; i < imageHeight; ++i)
+      for (int e = 0; e < imageWidth; ++e) {
+        img[4 * imageWidth * i + 4 * e + 0] = 255 * !(e & i);
+        img[4 * imageWidth * i + 4 * e + 1] = e ^ i;
+        img[4 * imageWidth * i + 4 * e + 2] = e | i;
+        img[4 * imageWidth * i + 4 * e + 3] = 255;
+      }
 
-    Color c3;
-    c3.red = 7;
-    c3.green = 8;
-    c3.blue = 9;
-    //c3.alpha = 0;
+    std::vector<unsigned char> img_2;
+    img_2.resize(imageWidth * imageHeight * 4);
+    for (int i = 0; i < imageHeight; ++i)
+      for (int e = 0; e < imageWidth; ++e) {
+        img_2[4 * imageWidth * i + 4 * e + 0] = 255 * !(e & i);
+        img_2[4 * imageWidth * i + 4 * e + 1] = e ^ i;
+        img_2[4 * imageWidth * i + 4 * e + 2] = e | i;
+        img_2[4 * imageWidth * i + 4 * e + 3] = 255;
+      }
 
-    Color c4;
-    c4.red = 10;
-    c4.green = 11;
-    c4.blue = 12;
-    //c4.alpha = 0;
+    std::vector<unsigned char> depth_1;
+    depth_1.resize(imageWidth * imageHeight * 4);
+    for (int i = 0; i < imageHeight; ++i)
+      for (int e = 0; e < imageWidth; ++e) {
+        depth_1[4 * imageWidth * i + 4 * e + 0] = 255 * !(e & i);
+        depth_1[4 * imageWidth * i + 4 * e + 1] = e ^ i;
+        depth_1[4 * imageWidth * i + 4 * e + 2] = e | i;
+        depth_1[4 * imageWidth * i + 4 * e + 3] = 255;
+      }
 
-    std::vector<Color> img;
-    for (int i = 0; i < 1024; ++i) img.push_back(c1);
-
-    std::vector<Color> img_2;
-    for (int i = 0; i < 1024; ++i) img_2.push_back(c2);
-
-    std::vector<Color> depth_1;
-    for (int i = 0; i < 1024; ++i) depth_1.push_back(c3);
-
-    std::vector<Color> depth_2;
-    for (int i = 0; i < 1024; ++i) depth_2.push_back(c4);
+    std::vector<unsigned char> depth_2;
+    depth_2.resize(imageWidth * imageHeight * 4);
+    for (int i = 0; i < imageHeight; ++i)
+      for (int e = 0; e < imageWidth; ++e) {
+        depth_2[4 * imageWidth * i + 4 * e + 0] = 255 * !(e & i);
+        depth_2[4 * imageWidth * i + 4 * e + 1] = e ^ i;
+        depth_2[4 * imageWidth * i + 4 * e + 2] = e | i;
+        depth_2[4 * imageWidth * i + 4 * e + 3] = 255;
+      }
 
     Reward_Values testData;
     testData.player_x = 1.0f;
@@ -95,10 +100,13 @@ int main(int argc, char *argv[]) {
     testData.ori_x = 10.0f;
     testData.ori_y = 20.0f;
     testData.ori_z = 30.0f;
+    testData.img_height = imageHeight;
+    testData.img_width = imageWidth;
     testData.img = img;
     testData.img_2 = img_2;
     testData.depth_1 = depth_1;
     testData.depth_2 = depth_2;
+
 
     std::cout << "Server send World" << std::endl;
     server.sendWorld();
@@ -112,13 +120,13 @@ int main(int argc, char *argv[]) {
     } while (!end);
 
     std::vector<Position> positions;
-    std::vector<const float *> pMatrix;
+    std::vector<const float*> pMatrix;
 
-    positions.push_back(Position { 0.0f, 0.0f });
-    positions.push_back(Position { 1.0f, 2.0f });
-    positions.push_back(Position { 3.0f, 4.0f });
+    positions.push_back(Position{ 0.0f, 0.0f });
+    positions.push_back(Position{ 1.0f, 2.0f });
+    positions.push_back(Position{ 3.0f, 4.0f });
 
-    float list[16] = { 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0 };
+    float list[16] = { 10.0, 10.0,10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0 };
 
     pMatrix.push_back(list);
 
@@ -132,7 +140,7 @@ int main(int argc, char *argv[]) {
     server.sendSceneValues(sceneVal);
 
     end = false;
-    float startPoint, endPoint;
+    size_t startPoint, endPoint;
 
     std::cout << "Server wait new episode" << std::endl;
 
@@ -146,36 +154,37 @@ int main(int argc, char *argv[]) {
     server.sendEndReset();
 
     float steer, gas;
-    bool wait_control = false;
     for (;;) {
 
       if (server.tryReadEpisodeStart(startPoint, endPoint)) {
         std::cout << "------> RESET <------" << std::endl;
         std::cout << " --> Start: " << startPoint << " End: " << endPoint << std::endl;
         server.sendEndReset();
-      } else {
+      }
+      else {
 
-        if (wait_control && server.tryReadControl(steer, gas)) {
+        if (server.tryReadControl(steer, gas)) {
           std::cout << "Steer: " << steer << "Gas: " << gas << std::endl;
-          wait_control = false;
-        } else if (!wait_control) {
-          server.sendReward(testData);
-          wait_control = true;
         }
 
+       server.sendReward(testData);
+
       }
 
-      {
-        using namespace std::chrono_literals;
-        std::this_thread::sleep_for(100ms);
-      }
     }
 
-  } catch (const std::exception &e) {
+  }
+  catch (const std::exception &e) {
     std::cerr << e.what() << std::endl;
     return STLException;
-  } catch (...) {
+  }
+  catch (...) {
     std::cerr << "Unknown exception thrown" << std::endl;
     return UnknownException;
   }
 }
+
+
+//TODO:
+//pmatrix float 16
+//start_index size_t 

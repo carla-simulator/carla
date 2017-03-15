@@ -4,8 +4,10 @@
 *.VC.opendb
 *.VC.db
 
-build
-bin
-lib
 CMakeCache.txt
 CMakeFiles
+
+bin
+build
+include
+lib

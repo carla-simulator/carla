@@ -2,9 +2,13 @@
 #include "Protocol.h"
 
 #include "CarlaServer.h"
+#include "lodepng.h"
+
+#include <iostream>
 
 namespace carla {
 	namespace server {
+
 		Protocol::Protocol(carla::server::CarlaServer *server) {
 			_server = server;
 		}
@@ -18,76 +22,95 @@ namespace carla {
 			reward.set_collision_car(values.collision_car);
 			reward.set_collision_gen(values.collision_gen);
 			reward.set_collision_ped(values.collision_ped);
+      reward.set_inertia_x(values.inertia_x);
+      reward.set_inertia_y(values.inertia_y);
+      reward.set_inertia_z(values.inertia_z);
+      reward.set_intersect(values.intersect);
+      reward.set_ori_x(values.ori_x);
+      reward.set_ori_y(values.ori_y);
+      reward.set_ori_z(values.ori_z);
+      reward.set_player_y(values.player_y);
+      reward.set_player_x(values.player_x);
+      reward.set_speed(values.speed);
+      reward.set_timestamp(values.timestamp);
+
+      lodepng::State state;
 
 			//IMAGE 1
-			std::string* image = reward.add_image();
-			std::vector<Color> img = values.img;
-			for (int i = 0; i < img.size(); ++i) {
-				(*image) += img[i].red;
-				(*image) += img[i].green;
-				(*image) += img[i].blue;
-				//image->append(GetBytes((img[i].green)));
-				//image->append(GetBytes((img[i].blue)));
-				//image->append(GetBytes((img[i].alpha)));
-			}
+      //std::string image = reward.add_image();
+
+			std::vector<unsigned char> img = values.img;
+
+      std::vector<unsigned char> png;
+      unsigned error = lodepng::encode(png, img, values.img_width, values.img_height, state);
+
+
+      if (!error) {
+        reward.add_image(std::string(png.begin(), png.end()));
+        //for (int i = 0; i < png.size(); ++i) {
+        //  (*image) += png[i];
+        //  //image->append(GetBytes((img[i].green)));
+        //  //image->append(GetBytes((img[i].blue)));
+        //  //image->append(GetBytes((img[i].alpha)));
+        //}
+      }
+      else std::cout << "No se pudo cargar img" << std::endl;
+
+      
 
 
 			if (_server->GetMode() == STEREO) {
 
 				//IMAGE 2
-				image = reward.add_image();
+				//image = reward.add_image();
 				img = values.img_2;
 
-				for (int i = 0; i < img.size(); ++i) {
-					(*image) += img[i].red;
-					(*image) += img[i].green;
-					(*image) += img[i].blue;
-					/*image->append(GetBytes((img[i].red)));
-					image->append(GetBytes((img[i].green)));
-					image->append(GetBytes((img[i].blue)));*/
-					//image->append(GetBytes((img[i].alpha)));
-				}
+        png.clear();
+        error = lodepng::encode(png, img, values.img_width, values.img_height, state);
+
+        reward.add_image(std::string(png.begin(), png.end()));
+
+				//for (int i = 0; i < png.size(); ++i) {
+
+				//	//(*image) += png[i];
+				//	/*image->append(GetBytes((img[i].red)));
+				//	image->append(GetBytes((img[i].green)));
+				//	image->append(GetBytes((img[i].blue)));*/
+				//	//image->append(GetBytes((img[i].alpha)));
+				//}
 
 				//DEPTH 1
-				image = reward.add_depth();
+				//image = reward.add_depth();
 				img = values.depth_1;
 
-				for (int i = 0; i < img.size(); ++i) {
-					(*image) += img[i].red;
-					(*image) += img[i].green;
-					(*image) += img[i].blue;
-					/*image->append(GetBytes((img[i].red)));
-					image->append(GetBytes((img[i].green)));
-					image->append(GetBytes((img[i].blue)));*/
-					//image->append(GetBytes((img[i].alpha)));
-				}
+        png.clear();
+        error = lodepng::encode(png, img, values.img_width, values.img_height, state);
+        reward.add_image(std::string(png.begin(), png.end()));
+				//for (int i = 0; i < png.size(); ++i) {
+				//	//(*image) += png[i];
+				//	/*image->append(GetBytes((img[i].red)));
+				//	image->append(GetBytes((img[i].green)));
+				//	image->append(GetBytes((img[i].blue)));*/
+				//	//image->append(GetBytes((img[i].alpha)));
+				//}
 
 				//DEPTH 2
-				image = reward.add_depth();
+				//image = reward.add_depth();
 				img = values.depth_2;
 
-				for (int i = 0; i < img.size(); ++i) {
-					(*image) += img[i].red;
-					(*image) += img[i].green;
-					(*image) += img[i].blue;
-					/*image->append(GetBytes((img[i].red)));
-					image->append(GetBytes((img[i].green)));
-					image->append(GetBytes((img[i].blue)));*/
-					//image->append(GetBytes((img[i].alpha)));
-				}
+        png.clear();
+        error = lodepng::encode(png, img, values.img_width, values.img_height, state);
+        reward.add_image(std::string(png.begin(), png.end()));
+				//for (int i = 0; i < png.size(); ++i) {
+				//	//(*image) += png[i];
+				//	/*image->append(GetBytes((img[i].red)));
+				//	image->append(GetBytes((img[i].green)));
+				//	image->append(GetBytes((img[i].blue)));*/
+				//	//image->append(GetBytes((img[i].alpha)));
+				//}
 			}
 
-			reward.set_inertia_x(values.inertia_x);
-			reward.set_inertia_y(values.inertia_y);
-			reward.set_inertia_z(values.inertia_z);
-			reward.set_intersect(values.intersect);
-			reward.set_ori_x(values.ori_x);
-			reward.set_ori_y(values.ori_y);
-			reward.set_ori_z(values.ori_z);
-			reward.set_player_y(values.player_y);
-			reward.set_player_x(values.player_x);
-			reward.set_speed(values.speed);
-			reward.set_timestamp(values.timestamp);
+			
 
 			return reward;
 		}
@@ -120,17 +143,6 @@ namespace carla {
 			world.add_modes(_server->GetModesCount());
 			world.add_scenes(_server->GetScenesCount());
 			return world;
-		}
-
-		const char* Protocol::GetBytes(int n) {
-			char bytes[4];
-
-			bytes[0] = (n >> 24) & 0xFF;
-			bytes[1] = (n >> 16) & 0xFF;
-			bytes[2] = (n >> 8) & 0xFF;
-			bytes[3] = n & 0xFF;
-
-			return bytes;
 		}
 	}
 }

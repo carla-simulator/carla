@@ -4,6 +4,7 @@
 #include "TCPServer.h"
 
 #include <fstream>
+#include <iostream>
 
 namespace carla {
 	namespace server {
@@ -90,6 +91,8 @@ namespace carla {
 			myfile.close();*/
 
 			std::string outMessage(GetBytes(message.length()) + message);
+
+      std::cout << message.length() << std::endl;
 
 			boost::asio::write(_socket, boost::asio::buffer(outMessage), error);
 

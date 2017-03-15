@@ -34,6 +34,9 @@ namespace thread {
     }
 
     void push(T item) {
+      // Empty the queue before push a new item
+      T temp;
+      while (_queue.try_pop(temp));
       _queue.push(item);
     }
 
