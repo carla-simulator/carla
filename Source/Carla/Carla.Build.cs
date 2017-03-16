@@ -60,7 +60,9 @@ public class Carla : ModuleRules
     PublicAdditionalLibraries.AddRange(
       new string[]
       {
-        Path.Combine(ModuleDirectory, "..", CarlaServerLibPath, "libcarla_server.a")
+        Path.Combine(ModuleDirectory, "..", CarlaServerLibPath, "libcarla_server.a"),
+        "boost_system",
+        "protobuf"
         // ... add any modules that your module loads dynamically here ...
       }
       );

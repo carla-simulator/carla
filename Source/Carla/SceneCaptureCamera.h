@@ -34,6 +34,16 @@ public:
 
   virtual void Tick(float Delta) override;
 
+  uint32 GetImageSizeX() const
+  {
+    return SizeX;
+  }
+
+  uint32 GetImageSizeY() const
+  {
+    return SizeY;
+  }
+
   const TArray<FColor> &GetImage() const
   {
     return ImageBitMap;

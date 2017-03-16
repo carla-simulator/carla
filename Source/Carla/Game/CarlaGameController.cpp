@@ -7,6 +7,7 @@
 
 #include "CarlaPlayerState.h"
 #include "CarlaVehicleController.h"
+#include "SceneCaptureCamera.h"
 
 #include <carla/CarlaServer.h>
 
@@ -29,10 +30,25 @@ static inline void Set(carla::Vector2D &cVector, const FVector &uVector)
   cVector = {uVector.X, uVector.Y};
 }
 
+static void Set(std::vector<carla::Color> &cImage, const ASceneCaptureCamera *Camera)
+{
+  if (Camera != nullptr) {
+    cImage.reserve(Camera->GetImage().Num());
+    for (const auto &color : Camera->GetImage()) {
+      cImage.emplace_back();
+      cImage.back().R = color.R;
+      cImage.back().G = color.G;
+      cImage.back().B = color.B;
+      cImage.back().A = color.A;
+    }
+  }
+}
+
 static void ReadSceneInit(carla::CarlaServer &Server)
 {
   carla::Mode mode;
   uint32 scene;
+  UE_LOG(LogCarla, Log, TEXT("Waiting for tryReadSceneInit..."));
   while (!Server.tryReadSceneInit(mode, scene)) {
     // wait.
   }
@@ -41,11 +57,13 @@ static void ReadSceneInit(carla::CarlaServer &Server)
 static void SendSceneValues(carla::CarlaServer &Server, const TArray<FTransform> &Transforms)
 {
   carla::Scene_Values sceneValues;
-  sceneValues.possible_Positions.reserve(Transforms.Num());
+  sceneValues.possible_positions.reserve(Transforms.Num());
   for (const FTransform &Transform : Transforms) {
     const FVector &Location = Transform.GetLocation();
-    sceneValues.possible_Positions.push_back({Location.X, Location.Y});
+    UE_LOG(LogCarla, Log, TEXT("Start position {%f, %f}"), Location.X, Location.Y);
+    sceneValues.possible_positions.push_back({Location.X, Location.Y});
   }
+  UE_LOG(LogCarla, Log, TEXT("Send scene values"));
   Server.sendSceneValues(sceneValues);
 }
 
@@ -53,19 +71,25 @@ static uint32 ReadEpisodeStart(carla::CarlaServer &Server)
 {
   uint32 StartIndex;
   uint32 EndIndex;
+  UE_LOG(LogCarla, Log, TEXT("Waiting for tryReadEpisodeStart..."));
   while (!Server.tryReadEpisodeStart(StartIndex, EndIndex)) {
     // wait.
   }
+  UE_LOG(LogCarla, Log, TEXT("tryReadEpisodeStart received: %d - %d"), StartIndex, EndIndex);
   return StartIndex;
 }
 
 static bool TryReadEpisodeStart(carla::CarlaServer &Server, uint32 &StartIndex)
 {
   uint32 EndIndex;
+  UE_LOG(LogCarla, Log, TEXT("tryReadEpisodeStart"));
   return Server.tryReadEpisodeStart(StartIndex, EndIndex);
 }
 
-static void SendReward(carla::CarlaServer &Server, const ACarlaPlayerState &PlayerState)
+static void SendReward(
+    carla::CarlaServer &Server,
+    const ACarlaPlayerState &PlayerState,
+    const std::array<const ASceneCaptureCamera *, 2u> &Cameras)
 {
   carla::Reward_Values reward;
   reward.timestamp = FMath::RoundHalfToZero(FPlatformTime::Seconds());
@@ -79,12 +103,15 @@ static void SendReward(carla::CarlaServer &Server, const ACarlaPlayerState &Play
   Set(reward.collision_general, PlayerState.GetCollisionIntensityOther());
   // Set(reward.intersect_other_lane, );
   // Set(reward.intersect_offroad, );
-  // Set(reward.image_width, );
-  // Set(reward.image_height, );
-  // Set(reward.image_rgb_0, );
-  // Set(reward.image_rgb_1, );
+  if (Cameras[0u] != nullptr) {
+    reward.image_width = Cameras[0u]->GetImageSizeX();
+    reward.image_height = Cameras[0u]->GetImageSizeY();
+  }
+  Set(reward.image_rgb_0, Cameras[0u]);
+  Set(reward.image_rgb_1, Cameras[1u]);
   // Set(reward.image_depth_0, );
   // Set(reward.image_depth_1, );
+  UE_LOG(LogCarla, Log, TEXT("Send reward"));
   Server.sendReward(reward);
 }
 
@@ -92,6 +119,7 @@ static void ReadControl(carla::CarlaServer &Server, ACarlaVehicleController &Pla
 {
   float steer;
   float throttle;
+  UE_LOG(LogCarla, Log, TEXT("Read control"));
   if (Server.tryReadControl(steer, throttle)) {
     Player.SetSteeringInput(steer);
     Player.SetThrottleInput(throttle);
@@ -106,9 +134,11 @@ static void ReadControl(carla::CarlaServer &Server, ACarlaVehicleController &Pla
 // =============================================================================
 
 CarlaGameController::CarlaGameController() :
-  Server(MakeUnique<carla::CarlaServer>(2000u, 2001u, 2002u)),
-  Player(nullptr)
+  Server(MakeUnique<carla::CarlaServer>(2001u, 2002u, 2000u)),
+  Player(nullptr),
+  Cameras({{nullptr}})
 {
+  UE_LOG(LogCarla, Log, TEXT("Initializing CarlaServer"));
   Server->init(1u);
 }
 
@@ -132,7 +162,18 @@ void CarlaGameController::RegisterPlayer(AController &NewPlayer)
 
 void CarlaGameController::RegisterCaptureCamera(const ASceneCaptureCamera &CaptureCamera)
 {
-
+  for (auto i = 0u; i < Cameras.size(); ++i) {
+    if (Cameras[i] == nullptr) {
+      Cameras[i] = &CaptureCamera;
+      UE_LOG(LogCarla, Log, TEXT("Registered capture camera %d"), i);
+      return;
+    }
+  }
+  UE_LOG(
+      LogCarla,
+      Warning,
+      TEXT("Attempting to register a camera but already have %d, captures from this camera won't be send"),
+      Cameras.size());
 }
 
 void CarlaGameController::Tick(float DeltaSeconds)
@@ -140,6 +181,7 @@ void CarlaGameController::Tick(float DeltaSeconds)
   check(Player != nullptr);
   uint32 StartIndex;
   if (bIsResetting) {
+    UE_LOG(LogCarla, Log, TEXT("Resetting the world"));
     // Resetting the world.
     ReadSceneInit(*Server);
     SendSceneValues(*Server, AvailableStartTransforms);
@@ -149,11 +191,13 @@ void CarlaGameController::Tick(float DeltaSeconds)
     bIsResetting = false;
   } else if (TryReadEpisodeStart(*Server, StartIndex)) {
     // Handle request for resetting the world.
+    UE_LOG(LogCarla, Log, TEXT("Handle request for resetting the world"));
     Player->SetActorTransform(AvailableStartTransforms[StartIndex]);
     Server->sendEndReset();
   } else {
     // Regular tick.
-    SendReward(*Server, Player->GetPlayerState());
+    UE_LOG(LogCarla, Log, TEXT("Tick!"));
+    SendReward(*Server, Player->GetPlayerState(), Cameras);
     ReadControl(*Server, *Player);
   }
 }

@@ -31,6 +31,8 @@ private:
 
   ACarlaVehicleController *Player;
 
+  std::array<const ASceneCaptureCamera *, 2u> Cameras;
+
   TArray<FTransform> AvailableStartTransforms;
 
   bool bIsResetting = true;
