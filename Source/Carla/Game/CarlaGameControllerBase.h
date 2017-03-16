@@ -4,8 +4,9 @@
 
 #include "Array.h"
 
-class APlayerStart;
 class AController;
+class APlayerStart;
+class ASceneCaptureCamera;
 
 /// Base class for a CARLA game controller.
 class CARLA_API CarlaGameControllerBase
@@ -14,18 +15,11 @@ public:
 
   virtual ~CarlaGameControllerBase() {}
 
-  bool CanEverTick() const
-  {
-    return bCanEverTick;
-  }
-
   virtual APlayerStart *ChoosePlayerStart(const TArray<APlayerStart *> &AvailableStartSpots) = 0;
 
-  virtual void RegisterPlayer(AController *NewPlayer) = 0;
+  virtual void RegisterPlayer(AController &NewPlayer) = 0;
 
-  virtual void Tick(float DeltaSeconds) {}
+  virtual void RegisterCaptureCamera(const ASceneCaptureCamera &CaptureCamera) = 0;
 
-protected:
-
-  bool bCanEverTick = false;
+  virtual void Tick(float DeltaSeconds) = 0;
 };

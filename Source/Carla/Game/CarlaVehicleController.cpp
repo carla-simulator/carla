@@ -38,6 +38,9 @@ ACarlaVehicleController::ACarlaVehicleController() :
   PlayerCamera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
   PlayerCamera->bUsePawnControlRotation = false;
   PlayerCamera->FieldOfView = 90.f;
+
+  PrimaryActorTick.bCanEverTick = true;
+  PrimaryActorTick.TickGroup = TG_PrePhysics;
 }
 
 ACarlaVehicleController::~ACarlaVehicleController() {}
@@ -90,6 +93,7 @@ void ACarlaVehicleController::Tick(float DeltaTime)
   if (IsPossessingAVehicle()) {
     CarlaPlayerState->Location = GetVehicleLocation();
     CarlaPlayerState->Orientation = GetVehicleOrientation();
+    CarlaPlayerState->Acceleration = GetVehicleAcceleration();
     CarlaPlayerState->ForwardSpeed = GetVehicleForwardSpeed();
   }
 }
@@ -119,6 +123,12 @@ FVector ACarlaVehicleController::GetVehicleOrientation() const
 {
   check(GetPawn() != nullptr);
   return GetPawn()->GetTransform().GetRotation().GetForwardVector();
+}
+
+FVector ACarlaVehicleController::GetVehicleAcceleration() const
+{
+  check(GetPawn() != nullptr);
+  return {0.0f, 0.0f, 0.0f};
 }
 
 // =============================================================================

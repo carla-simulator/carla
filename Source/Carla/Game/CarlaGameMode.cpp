@@ -7,6 +7,8 @@
 #include "EngineUtils.h"
 #include "GameFramework/PlayerStart.h"
 
+#include "SceneCaptureCamera.h"
+
 #include "CarlaGameInstance.h"
 #include "CarlaGameState.h"
 #include "CarlaPlayerState.h"
@@ -16,11 +18,12 @@ ACarlaGameMode::ACarlaGameMode() :
   Super(),
   GameController(nullptr)
 {
+  PrimaryActorTick.bCanEverTick = true;
+  PrimaryActorTick.TickGroup = TG_PrePhysics;
+
   PlayerControllerClass = ACarlaVehicleController::StaticClass();
   GameStateClass = ACarlaGameState::StaticClass();
   PlayerStateClass = ACarlaPlayerState::StaticClass();
-
-  PrimaryActorTick.bCanEverTick = true;
 }
 
 void ACarlaGameMode::InitGame(
@@ -40,17 +43,18 @@ void ACarlaGameMode::InitGame(
 
 void ACarlaGameMode::RestartPlayer(AController* NewPlayer)
 {
+  check(NewPlayer != nullptr);
   TArray<APlayerStart *> UnOccupiedStartPoints;
   APlayerStart *PlayFromHere = FindUnOccupiedStartPoints(NewPlayer, UnOccupiedStartPoints);
   if (PlayFromHere != nullptr) {
     RestartPlayerAtPlayerStart(NewPlayer, PlayFromHere);
-    GameController->RegisterPlayer(NewPlayer);
+    RegisterPlayer(*NewPlayer);
     return;
   } else if (UnOccupiedStartPoints.Num() > 0u) {
     APlayerStart *StartSpot = GameController->ChoosePlayerStart(UnOccupiedStartPoints);
     if (StartSpot != nullptr) {
       RestartPlayerAtPlayerStart(NewPlayer, UnOccupiedStartPoints[0u]);
-      GameController->RegisterPlayer(NewPlayer);
+      RegisterPlayer(*NewPlayer);
       return;
     }
   }
@@ -61,6 +65,20 @@ void ACarlaGameMode::Tick(float DeltaSeconds)
 {
   Super::Tick(DeltaSeconds);
   GameController->Tick(DeltaSeconds);
+}
+
+void ACarlaGameMode::RegisterCaptureCamera(ASceneCaptureCamera &CaptureCamera)
+{
+  check(GameController != nullptr);
+  AddTickPrerequisiteActor(&CaptureCamera);
+  GameController->RegisterCaptureCamera(CaptureCamera);
+}
+
+void ACarlaGameMode::RegisterPlayer(AController &NewPlayer)
+{
+  check(GameController != nullptr);
+  AddTickPrerequisiteActor(&NewPlayer);
+  GameController->RegisterPlayer(NewPlayer);
 }
 
 APlayerStart *ACarlaGameMode::FindUnOccupiedStartPoints(

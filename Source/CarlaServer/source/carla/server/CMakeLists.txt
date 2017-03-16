@@ -5,4 +5,4 @@ file(GLOB carla_server_SRC
     "*.pb.cc"
 )
 
-add_library(carla_server ../CarlaServer.cpp ${carla_server_SRC})
+add_library(carla_server STATIC ../CarlaServer.cpp ${carla_server_SRC})

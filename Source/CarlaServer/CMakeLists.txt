@@ -3,6 +3,7 @@ project (CarlaServer)
 
 if (UNIX)
   set(CMAKE_CXX_COMPILER clang++)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
   find_package(Threads)
 endif (UNIX)
 

@@ -3,24 +3,29 @@
 #include "Carla.h"
 #include "MockGameController.h"
 
-MockGameController::MockGameController()
-{
-  bCanEverTick = false;
-}
-
 APlayerStart *MockGameController::ChoosePlayerStart(
     const TArray<APlayerStart *> &AvailableStartSpots)
 {
   return AvailableStartSpots[0u];
 }
 
-void MockGameController::RegisterPlayer(AController *NewPlayer)
+void MockGameController::RegisterPlayer(AController &NewPlayer)
 {
-  ACarlaVehicleController *VehicleController = Cast<ACarlaVehicleController>(NewPlayer);
+  ACarlaVehicleController *VehicleController = Cast<ACarlaVehicleController>(&NewPlayer);
   if (VehicleController != nullptr) {
     if (!VehicleController->IsInManualMode())
       VehicleController->SetManualMode(true);
   } else {
     UE_LOG(LogCarla, Warning, TEXT("Player is not a ACarlaVehicleController"));
   }
+}
+
+void MockGameController::RegisterCaptureCamera(const ASceneCaptureCamera &CaptureCamera)
+{
+
+}
+
+void MockGameController::Tick(float DeltaSeconds)
+{
+
 }
