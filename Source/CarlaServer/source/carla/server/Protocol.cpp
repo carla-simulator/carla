@@ -17,6 +17,10 @@ namespace server {
       std::vector<unsigned char> &outPNG) {
     if (in.empty())
       return false;
+    if (in.size() != width * height) {
+      std::cerr << "Invalid image size" << std::endl;
+      return false;
+    }
     // Convert to char array RGBA.
     std::vector<unsigned char> color_img;
     color_img.reserve(4u * in.size());
@@ -28,11 +32,13 @@ namespace server {
     }
     // Compress to png.
     lodepng::State state;
-    const bool success = lodepng::encode(outPNG, color_img, width, height, state);
-    if (!success) {
-      std::cerr << "Error compressing image to PNG" << std::endl;
+    outPNG.reserve(color_img.size());
+    const int error = lodepng::encode(outPNG, color_img, width, height, state);
+    if (error) {
+      std::cerr << "Error compressing image to PNG: error " << error << std::endl;
+      return false;
     }
-    return success;
+    return true;
   }
 
   Protocol::Protocol(carla::server::Server *server) {

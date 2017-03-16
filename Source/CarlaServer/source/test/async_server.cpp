@@ -28,9 +28,23 @@ static std::string daytimeString() {
 }
 
 static std::vector<carla::Color> makeImage(uint32_t width, uint32_t height) {
-  std::vector<carla::Color> image(4u * width * height);
+  // Xisco's magic image generator.
+  std::vector<unsigned char> img(width * height * 4);
+  for (int i = 0; i < height; ++i) {
+   for (int e = 0; e < width; ++e) {
+     img[4 * width * i + 4 * e + 0] = 255 * !(e & i);
+     img[4 * width * i + 4 * e + 1] = e ^ i;
+     img[4 * width * i + 4 * e + 2] = e | i;
+     img[4 * width * i + 4 * e + 3] = 255;
+   }
+  }
+  std::vector<carla::Color> image(width * height);
+  size_t i = 0u;
   for (carla::Color &color : image) {
-    color = {255u, 255u, 255u, 255u};
+    color.R = img[i++];
+    color.G = img[i++];
+    color.B = img[i++];
+    color.A = img[i++];
   }
   return image;
 }
