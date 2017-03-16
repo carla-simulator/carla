@@ -1,37 +1,35 @@
 #pragma once
 
-#include "carla_protocol.pb.h"
-
-#include <string>
+class Reward;
+class Scene;
+class World;
 
 namespace carla {
-namespace server {
 
-  class CarlaServer;
   struct Reward_Values;
   struct Scene_Values;
 
-  class Protocol {
+namespace server {
 
+  class Server;
+
+  class Protocol {
   public:
 
-	  Protocol(CarlaServer *server);
+	  explicit Protocol(Server *server);
+
 	  ~Protocol();
 
-	  Reward LoadReward(const Reward_Values &values);
+	  void LoadReward(Reward &reward, const Reward_Values &values);
 
-	  Scene LoadScene(const Scene_Values &values);
+	  void LoadScene(Scene &scene, const Scene_Values &values);
 
-	  World LoadWorld();
+	  void LoadWorld(World &world, const int modes, const int scenes);
 
   private:
 
-	  carla::server::CarlaServer *_server;
-
+	  carla::server::Server *_server;
   };
 
 }
 }
-
-
-

@@ -1,11 +1,15 @@
 #pragma once
 
+#include <carla/NonCopyable.h>
+
 #include "carla/server/Protocol.h"
 #include "carla/server/TCPServer.h"
 
 #include "carla/thread/AsyncReadWriteJobQueue.h"
 #include "carla/thread/AsyncReaderJobQueue.h"
 #include "carla/thread/AsyncWriterJobQueue.h"
+
+class EpisodeReady;
 
 namespace carla {
 namespace server {

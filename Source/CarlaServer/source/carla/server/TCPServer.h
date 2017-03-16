@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <carla/NonCopyable.h>
+
 #include <string>
 #include <mutex>
 #include <boost/asio.hpp>
@@ -12,7 +14,7 @@ namespace server {
   /// { TCP server.
   ///
   /// A new socket is created for every connection (every write and read).
-  class CARLA_API TCPServer : private NonCopyable {
+  class TCPServer : private NonCopyable {
   public:
 
     using error_code = boost::system::error_code;
@@ -38,7 +40,7 @@ namespace server {
     boost::asio::ip::tcp::acceptor _acceptor;
 
 	boost::asio::ip::tcp::socket _socket;
-	
+
 	bool _connected;
   };
 

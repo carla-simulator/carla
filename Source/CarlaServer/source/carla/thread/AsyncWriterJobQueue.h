@@ -14,7 +14,7 @@ namespace thread {
   /// Executes the given job asynchronously. Every item that the job returns is
   /// added to the queue.
   template <typename T>
-  class CARLA_API AsyncWriterJobQueue {
+  class AsyncWriterJobQueue {
   public:
 
     using Job = std::function<T()>;
