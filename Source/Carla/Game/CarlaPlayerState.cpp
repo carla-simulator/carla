@@ -3,6 +3,7 @@
 #include "Carla.h"
 #include "CarlaPlayerState.h"
 
+void RegisterCollision(AActor *Actor, FVector NormalImpulse)
+{
 
-
-
+}

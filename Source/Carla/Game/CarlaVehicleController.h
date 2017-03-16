@@ -54,12 +54,22 @@ public:
     return MovementComponent != nullptr;
   }
 
+  /// World location of the vehicle.
   FVector GetVehicleLocation() const;
 
   /// Speed forward in km/h. Might be negative if goes backwards.
   float GetVehicleForwardSpeed() const;
 
+  /// Orientation vector of the vehicle, pointing forward.
   FVector GetVehicleOrientation() const;
+
+  /// Acceleration vector of the vehicle.
+  FVector GetVehicleAcceleration() const;
+
+  const ACarlaPlayerState &GetPlayerState() const
+  {
+    return *CarlaPlayerState;
+  }
 
   /// @}
   // ===========================================================================
@@ -155,5 +165,6 @@ private:
   UWheeledVehicleMovementComponent *MovementComponent;
 
   // Cast for quick access to the custom player state.
+  UPROPERTY()
   ACarlaPlayerState *CarlaPlayerState;
 };

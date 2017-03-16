@@ -19,11 +19,58 @@ public:
   // virtual void Reset();
   // virtual void CopyProperties(APlayerState *PlayerState);
 
-  void RegisterCollision(AActor *Actor, FVector NormalImpulse) {}
+  void RegisterCollision(AActor *Actor, FVector NormalImpulse);
+
+  const FVector &GetLocation() const
+  {
+    return Location;
+  }
+
+  const FVector &GetOrientation() const
+  {
+    return Orientation;
+  }
+
+  const FVector &GetAcceleration() const
+  {
+    return Acceleration;
+  }
+
+  float GetForwardSpeed() const
+  {
+    return ForwardSpeed;
+  }
+
+  float GetCollisionIntensityCars() const
+  {
+    return CollisionIntensityCars;
+  }
+
+  float GetCollisionIntensityPedestrians() const
+  {
+    return CollisionIntensityPedestrians;
+  }
+
+  float GetCollisionIntensityOther() const
+  {
+    return CollisionIntensityOther;
+  }
+
+private:
+
+  friend class ACarlaVehicleController;
 
   FVector Location;
 
   FVector Orientation;
 
+  FVector Acceleration;
+
   float ForwardSpeed;
+
+  float CollisionIntensityCars = 0.0f;
+
+  float CollisionIntensityPedestrians = 0.0f;
+
+  float CollisionIntensityOther = 0.0f;
 };

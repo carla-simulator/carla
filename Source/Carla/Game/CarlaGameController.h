@@ -4,8 +4,11 @@
 
 #include "CarlaGameControllerBase.h"
 
-class CarlaServer;
 class ACarlaVehicleController;
+
+namespace carla {
+  class CarlaServer;
+}
 
 /// Implements remote control of game and player.
 class CARLA_API CarlaGameController : public CarlaGameControllerBase
@@ -24,7 +27,7 @@ public:
 
 private:
 
-  TUniquePtr<CarlaServer> Server;
+  TUniquePtr<carla::CarlaServer> Server;
 
   ACarlaVehicleController *Player;
 

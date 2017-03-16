@@ -5,78 +5,100 @@
 
 #include "GameFramework/PlayerStart.h"
 
+#include "CarlaPlayerState.h"
 #include "CarlaVehicleController.h"
 
-// -----------------------------------------------------------------------------
-
-#include <vector>
-
-struct Position {
-  float x;
-  float y;
-};
-
-struct Scene_Values {
-  std::vector<Position> _possible_Positions;
-};
-
-class CarlaServer {
-public:
-  void sendWorld() {}
-  bool tryReadSceneInit(int &mode, int &scene) { mode = 0; return true; }
-  void sendSceneValues(const Scene_Values &) {}
-  bool tryReadEpisodeStart(size_t &start_index, size_t &end_index) { start_index = 0u; return true; }
-  void sendEndReset() {}
-};
+#include <carla/CarlaServer.h>
 
 // =============================================================================
 // -- static local methods -----------------------------------------------------
 // =============================================================================
 
-static void ReadSceneInit(CarlaServer &Server)
+static inline void Set(float &lhs, float rhs)
 {
-  int mode;
-  int scene;
+  lhs = rhs;
+}
+
+static inline void Set(carla::Vector3D &cVector, const FVector &uVector)
+{
+  cVector = {uVector.X, uVector.Y, uVector.Z};
+}
+
+static inline void Set(carla::Vector2D &cVector, const FVector &uVector)
+{
+  cVector = {uVector.X, uVector.Y};
+}
+
+static void ReadSceneInit(carla::CarlaServer &Server)
+{
+  carla::Mode mode;
+  uint32 scene;
   while (!Server.tryReadSceneInit(mode, scene)) {
     // wait.
   }
 }
 
-static void SendSceneValues(CarlaServer &Server, const TArray<FTransform> &Transforms)
+static void SendSceneValues(carla::CarlaServer &Server, const TArray<FTransform> &Transforms)
 {
-  Scene_Values sceneValues;
-  sceneValues._possible_Positions.reserve(Transforms.Num());
+  carla::Scene_Values sceneValues;
+  sceneValues.possible_Positions.reserve(Transforms.Num());
   for (const FTransform &Transform : Transforms) {
     const FVector &Location = Transform.GetLocation();
-    sceneValues._possible_Positions.push_back({Location.X, Location.Y});
+    sceneValues.possible_Positions.push_back({Location.X, Location.Y});
   }
   Server.sendSceneValues(sceneValues);
 }
 
-static size_t ReadEpisodeStart(CarlaServer &Server)
+static uint32 ReadEpisodeStart(carla::CarlaServer &Server)
 {
-  size_t StartIndex;
-  size_t EndIndex;
+  uint32 StartIndex;
+  uint32 EndIndex;
   while (!Server.tryReadEpisodeStart(StartIndex, EndIndex)) {
     // wait.
   }
   return StartIndex;
 }
 
-static bool TryReadEpisodeStart(CarlaServer &Server, size_t &StartIndex)
+static bool TryReadEpisodeStart(carla::CarlaServer &Server, uint32 &StartIndex)
 {
-  size_t EndIndex;
+  uint32 EndIndex;
   return Server.tryReadEpisodeStart(StartIndex, EndIndex);
 }
 
-static void SendReward(CarlaServer &Server, ACarlaVehicleController &Player)
+static void SendReward(carla::CarlaServer &Server, const ACarlaPlayerState &PlayerState)
 {
-
+  carla::Reward_Values reward;
+  reward.timestamp = FMath::RoundHalfToZero(FPlatformTime::Seconds());
+  Set(reward.player_location, PlayerState.GetLocation());
+  Set(reward.player_orientation, PlayerState.GetOrientation());
+  Set(reward.player_acceleration, PlayerState.GetAcceleration());
+  // Set(reward.player_acceleration, );
+  Set(reward.forward_speed, PlayerState.GetForwardSpeed());
+  Set(reward.collision_car, PlayerState.GetCollisionIntensityCars());
+  Set(reward.collision_pedestrian, PlayerState.GetCollisionIntensityPedestrians());
+  Set(reward.collision_general, PlayerState.GetCollisionIntensityOther());
+  // Set(reward.intersect_other_lane, );
+  // Set(reward.intersect_offroad, );
+  // Set(reward.image_width, );
+  // Set(reward.image_height, );
+  // Set(reward.image_rgb_0, );
+  // Set(reward.image_rgb_1, );
+  // Set(reward.image_depth_0, );
+  // Set(reward.image_depth_1, );
+  Server.sendReward(reward);
 }
 
-static void ReadControl(CarlaServer &Server, ACarlaVehicleController &Player)
+static void ReadControl(carla::CarlaServer &Server, ACarlaVehicleController &Player)
 {
-
+  float steer;
+  float throttle;
+  if (Server.tryReadControl(steer, throttle)) {
+    Player.SetSteeringInput(steer);
+    Player.SetThrottleInput(throttle);
+#ifdef WITH_EDITOR
+    UE_LOG(LogCarla, Log, TEXT("Read control: steer = %f, throttle = %f"), steer, throttle);
+#endif // WITH_EDITOR
+  }
 }
 
 // =============================================================================
@@ -84,10 +106,10 @@ static void ReadControl(CarlaServer &Server, ACarlaVehicleController &Player)
 // =============================================================================
 
 CarlaGameController::CarlaGameController() :
-  Server(MakeUnique<CarlaServer>()),
+  Server(MakeUnique<carla::CarlaServer>(2000u, 2001u, 2002u)),
   Player(nullptr)
 {
-  Server->sendWorld();
+  Server->init(1u);
 }
 
 APlayerStart *CarlaGameController::ChoosePlayerStart(
@@ -116,7 +138,7 @@ void CarlaGameController::RegisterCaptureCamera(const ASceneCaptureCamera &Captu
 void CarlaGameController::Tick(float DeltaSeconds)
 {
   check(Player != nullptr);
-  size_t StartIndex;
+  uint32 StartIndex;
   if (bIsResetting) {
     // Resetting the world.
     ReadSceneInit(*Server);
@@ -131,7 +153,7 @@ void CarlaGameController::Tick(float DeltaSeconds)
     Server->sendEndReset();
   } else {
     // Regular tick.
-    SendReward(*Server, *Player);
+    SendReward(*Server, Player->GetPlayerState());
     ReadControl(*Server, *Player);
   }
 }
