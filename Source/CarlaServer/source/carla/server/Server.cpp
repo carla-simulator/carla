@@ -35,9 +35,9 @@ namespace server {
   }
 
   void Server::sendSceneValues(const Scene_Values &values) {
-    Scene scene;
-    _proto->LoadScene(scene, values);
-    _communication->sendScene(scene);
+    Scene *scene = new Scene;
+    _proto->LoadScene(*scene, values);
+    _communication->sendScene(*scene);
   }
 
   void Server::sendEndReset() {

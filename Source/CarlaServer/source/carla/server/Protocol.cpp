@@ -63,21 +63,21 @@ namespace server {
     reward.set_speed(values.forward_speed);
     reward.set_timestamp(values.timestamp);
 
-    auto images = {values.image_rgb_0, values.image_rgb_1};
+    auto images = {values.image_rgb_0/*, values.image_rgb_1*/};
     for (const std::vector<Color> &image : images) {
       std::vector<unsigned char> png_image;
       if (getPNGImage(image, values.image_width, values.image_height, png_image)) {
-        reward.add_image(std::string(png_image.begin(), png_image.end()));
+        reward.set_image(std::string(png_image.begin(), png_image.end()));
       }
     }
 
-    auto depths = {values.image_depth_0, values.image_depth_1};
-    for (const std::vector<Color> &image : depths) {
-      std::vector<unsigned char> png_image;
-      if (getPNGImage(image, values.image_width, values.image_height, png_image)) {
-        reward.add_depth(std::string(png_image.begin(), png_image.end()));
-      }
-    }
+    // auto depths = {values.image_depth_0, values.image_depth_1};
+    // for (const std::vector<Color> &image : depths) {
+    //   std::vector<unsigned char> png_image;
+    //   if (getPNGImage(image, values.image_width, values.image_height, png_image)) {
+    //     reward.add_depth(std::string(png_image.begin(), png_image.end()));
+    //   }
+    // }
   }
 
   void Protocol::LoadScene(Scene &scene, const Scene_Values &values) {

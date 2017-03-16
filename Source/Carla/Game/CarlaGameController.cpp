@@ -108,7 +108,7 @@ static void SendReward(
     reward.image_height = Cameras[0u]->GetImageSizeY();
   }
   Set(reward.image_rgb_0, Cameras[0u]);
-  Set(reward.image_rgb_1, Cameras[1u]);
+  // Set(reward.image_rgb_1, Cameras[1u]);
   // Set(reward.image_depth_0, );
   // Set(reward.image_depth_1, );
   UE_LOG(LogCarla, Log, TEXT("Send reward"));
