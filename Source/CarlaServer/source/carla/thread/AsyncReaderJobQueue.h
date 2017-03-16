@@ -24,6 +24,7 @@ namespace thread {
 
 	explicit AsyncReaderJobQueue(Job &&job, ConnectJob &&connectionJob) :
 		_done(false),
+    _restart(true),
 		_job(std::move(job)),
 		_connectionJob(std::move(connectionJob)),
         _queue(),
@@ -40,19 +41,26 @@ namespace thread {
       _queue.push(item);
     }
 
-  private:
+    void restart(){
+      _restart = true;
+    }
 
+  private:
     void workerThread() {
-		_connectionJob();
-      while (!_done) {
-        T value;
-        _queue.wait_and_pop(value);
-        _job(value);
-		//Sleep(10);
+      while (!_done){
+        _restart = false;
+    		_connectionJob();
+        while (!_restart && !_done) {
+          T value;
+          _queue.wait_and_pop(value);
+          _job(value);
+    		  //Sleep(10);
+        }
       }
     }
 
     std::atomic_bool _done;
+    std::atomic_bool _restart;
 
     Job _job;
 	ConnectJob _connectionJob;

@@ -22,6 +22,7 @@ namespace thread {
 
 	explicit AsyncWriterJobQueue(Job &&job, ConnectJob &&connectJob) :
 		_done(false),
+    _restart(true),
 		_job(std::move(job)),
 		_connectJob(std::move(connectJob)),
         _queue(),
@@ -36,17 +37,25 @@ namespace thread {
       return _queue.try_pop(value);
     }
 
+    void restart(){
+      _restart = true;
+    }
+
   private:
 
     void workerThread() {
-		_connectJob();
-      while (!_done) {
-        _queue.push(_job());
-		//Sleep(10);
+      while (!_done){
+        _restart = false;
+		    _connectJob();
+        while (!_restart && !_done) {
+          _queue.push(_job());
+		      //Sleep(10);
+        }
       }
     }
 
     std::atomic_bool _done;
+    std::atomic_bool _restart;
 
     Job _job;
 	ConnectJob _connectJob;

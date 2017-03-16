@@ -14,7 +14,7 @@ namespace carla {
     _pimpl(std::make_unique<Pimpl>(worldPort, writePort, readPort)) {}
 
   CarlaServer::~CarlaServer() {}
-
+  
   void CarlaServer::init(uint32_t LevelCount) {
     _pimpl->sendWorld(static_cast<uint32_t>(Mode::NUMBER_OF_MODES), LevelCount);
   }

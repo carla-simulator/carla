@@ -44,6 +44,8 @@ namespace server {
     thread::AsyncWriterJobQueue<std::string> _clientThread;
 
     thread::AsyncReadWriteJobQueue<std::string, std::string> _worldThread;
+
+    bool communicationEnabled;
   };
 
 }

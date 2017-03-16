@@ -16,26 +16,27 @@ namespace server {
   }
 
   // This is the thread that sends a string over the TCP socket.
-  static void serverWorkerThread(TCPServer &server, const Reward &rwd) {
+  static void serverWorkerThread(TCPServer &server, thread::AsyncReaderJobQueue<Reward> &thr, const Reward &rwd) {
+      std::string message;
+      bool correctSerialize = rwd.SerializeToString(&message);
 
-    std::string message;
-    bool correctSerialize = rwd.SerializeToString(&message);
+      TCPServer::error_code error;
 
-    TCPServer::error_code error;
+      if (correctSerialize) {
+        server.writeString(message, error);
+        if (error) { logTCPError("Failed to send", error); }
+      } else {
+        logTCPError("Falied to serialize", error);
+      }
 
-    if (correctSerialize) {
-      server.writeString(message, error);
-      if (error) { logTCPError("Failed to send", error); }
-    } else {
-      logTCPError("Falied to serialize", error);
-    }
+      if (!server.Connected()) thr.restart();
 
   }
 
   //TODO:
   // Sortida amb google protocol
   // This is the thread that listens for string over the TCP socket.
-  static std::string clientWorkerThread(TCPServer &server) {
+  static std::string clientWorkerThread(TCPServer &server, thread::AsyncWriterJobQueue<std::string> &thr) {
 
     //if (!server.Connected()) server.AcceptSocket();
 
@@ -43,16 +44,19 @@ namespace server {
     TCPServer::error_code error;
 
     server.readString(message, error);
+
     if (error && (error != boost::asio::error::eof)) { // eof is expected.
       logTCPError("Failed to read", error);
       return std::string();
     }
 
+    if (!server.Connected()) thr.restart();
+
     return message;
   }
 
   // This is the thread that listens & sends a string over the TCP world socket.
-  static std::string worldReceiveThread(TCPServer &server) {
+  static std::string worldReceiveThread(TCPServer &server, thread::AsyncReadWriteJobQueue<std::string, std::string> &thr) {
     std::string message;
     TCPServer::error_code error;
 
@@ -63,11 +67,14 @@ namespace server {
       logTCPError("Failed to read world", error);
       return std::string();
     }
+   
+    if (!server.Connected()) thr.restart();
+
     return message;
 
   }
 
-  static void worldSendThread(TCPServer &server, const std::string &message) {
+  static void worldSendThread(TCPServer &server, thread::AsyncReadWriteJobQueue<std::string, std::string> &thr, const std::string &message) {
     TCPServer::error_code error;
     //message = message.size + message;
 
@@ -77,6 +84,8 @@ namespace server {
     if (error) {
       logTCPError("Failed to send world", error);
     }
+
+    if (!server.Connected()) thr.restart();
 
   }
 
@@ -89,16 +98,16 @@ namespace server {
     _server(writePort),
     _client(readPort),
     _worldThread {
-    [this]() { return worldReceiveThread(this->_world); },
-    [this](const std::string & msg) { worldSendThread(this->_world, msg); },
+    [this]() { return worldReceiveThread(this->_world, this->_worldThread); },
+    [this](const std::string & msg) { worldSendThread(this->_world, this->_worldThread, msg); },
     [this]() { Connect(this->_world); }
   },
   _serverThread {
-    [this](const Reward &rwd) { serverWorkerThread(this->_server, rwd); },
+    [this](const Reward &rwd) { serverWorkerThread(this->_server, this->_serverThread, rwd); },
     [this]() { Connect(this->_server); }
   },
   _clientThread {
-    [this]() { return clientWorkerThread(this->_client); },
+    [this]() { return clientWorkerThread(this->_client, this->_clientThread); },
     [this]() { Connect(this->_client); }
   }
   {

@@ -67,7 +67,6 @@ namespace carla {
             if ((boost::asio::error::eof == error) ||
                 (boost::asio::error::connection_reset == error))
             {
-              std::cout<<"Client disconected"<<std::endl;
               _connected = false;
             }
         }
@@ -86,7 +85,6 @@ namespace carla {
                 if ((boost::asio::error::eof == error) ||
                 (boost::asio::error::connection_reset == error))
                 {
-                  std::cerr<<"Client disconected"<<std::endl;
                   _connected = false;
                 }
                 else

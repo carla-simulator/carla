@@ -26,6 +26,7 @@ namespace thread {
         ReadingJob && readingJob,
         ConnectJob && connectJob) :
       _done(false),
+      _restart(true),
       _writeJob(std::move(writingJob)),
       _readJob(std::move(readingJob)),
       _connectJob(std::move(connectJob)),
@@ -44,19 +45,27 @@ namespace thread {
       _readQueue.push(item);
     }
 
+    void restart(){
+      _restart = true;
+    }
+
   private:
 
     void workerThread() {
-      _connectJob();
-      while (!_done) {
-        R value;
-        _readQueue.wait_and_pop(value);
-        _readJob(value);
-        _writeQueue.push(_writeJob());
+      while(!_done){
+        _restart = false; 
+        _connectJob();
+        while (!_restart && !_done) {
+          R value;
+          _readQueue.wait_and_pop(value);
+          _readJob(value);
+          _writeQueue.push(_writeJob());
+        }
       }
     }
 
     std::atomic_bool _done;
+    std::atomic_bool _restart;
 
     WritingJob _writeJob;
     ReadingJob _readJob;

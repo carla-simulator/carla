@@ -35,13 +35,13 @@ namespace server {
 
   private:
 
-    boost::asio::io_service _service;
+   boost::asio::io_service _service;
 
-    boost::asio::ip::tcp::acceptor _acceptor;
+   boost::asio::ip::tcp::acceptor _acceptor;
 
-	boost::asio::ip::tcp::socket _socket;
+	 boost::asio::ip::tcp::socket _socket;
 
-	bool _connected;
+	 bool _connected;
   };
 
 } // namespace server
