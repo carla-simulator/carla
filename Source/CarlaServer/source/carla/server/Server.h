@@ -4,6 +4,8 @@
 
 #include "CarlaCommunication.h"
 
+#include "../CarlaServer.h"
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -13,35 +15,6 @@
 namespace carla {
   namespace server {
 
-    struct Position {
-      float x, y;
-    };
-
-    struct Reward_Values {
-      float player_x, player_y;
-      float speed;
-      float collision_gen, collision_ped, collision_car;
-      float intersect;
-      float inertia_x, inertia_y, inertia_z;
-      std::int32_t timestamp;
-      float ori_x = 0, ori_y, ori_z;
-      int img_width, img_height;
-      std::vector<unsigned char> img;
-      std::vector<unsigned char> img_2;
-      std::vector<unsigned char> depth_1;
-      std::vector<unsigned char> depth_2;
-    };
-
-    struct Scene_Values {
-      std::vector<Position> _possible_Positions;
-      std::vector<const float*> _projection_Matrix;
-    };
-
-    enum Mode {
-      MONO = 0,
-      STEREO = 1
-    };
-
     /// Asynchronous TCP server. Uses two ports, one for sending messages (write)
     /// and one for receiving messages (read).
     ///
@@ -50,13 +23,13 @@ namespace carla {
     ///
     /// Note that a new socket is created for every connection (every write and
     /// read).
-    class CARLA_API CarlaServer : private NonCopyable {
+    class CARLA_API Server : private NonCopyable {
     public:
 
       /// Starts two threads for writing and reading.
-      explicit CarlaServer(int writePort, int readPort, int worldPort, int modesCount, int scenesCount);
+      explicit Server(int worldPort, int writePort, int readPort);
 
-      ~CarlaServer();
+      ~Server();
 
       ///// Send values of the current player status
       void sendReward(const Reward_Values &values);
@@ -67,7 +40,7 @@ namespace carla {
       //// Send a signal to the client to notify that the car is ready
       void sendEndReset();
 
-      void sendWorld();
+      void sendWorld(const int modes, const int scenes);
 
       ///// Try to read the response of the client. Return false if the queue
       ///// is empty.
@@ -78,10 +51,6 @@ namespace carla {
 
       ////Try to read if the client has selected an end & start point. Return false if the queue is empty
       bool tryReadEpisodeStart(size_t &start_index, size_t &end_index);
-
-      int GetModesCount() const;
-
-      int GetScenesCount() const;
 
       void setMode(Mode mode);
 
@@ -100,12 +69,9 @@ namespace carla {
 
       //std::mutex _mutex;
 
-      std::atomic<Mode> _mode{ MONO };
+      std::atomic<Mode> _mode { Mode::MONO };
       std::atomic_int _scene;
       std::atomic_bool _reset;
-
-      const int _modes;
-      const int _scenes;
 
       const std::unique_ptr<CarlaCommunication> _communication;
 

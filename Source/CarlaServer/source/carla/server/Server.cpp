@@ -1,7 +1,7 @@
 // CARLA, Copyright (C) 2017 Computer Vision Center (CVC)
 
 #include "Carla.h"
-#include "CarlaServer.h"
+#include "Server.h"
 
 #include <iostream>
 #include <memory>
@@ -11,38 +11,35 @@ namespace server {
 
   // -- CarlaServer ------------------------------------------------------------
 
-  CarlaServer::CarlaServer(int worldPort, int writePort, int readPort, int modesCount, int scenesCount) :
-    _communication(std::make_unique<CarlaCommunication>(worldPort, writePort, readPort)), _proto(std::make_unique<Protocol>(this)),
-    _modes(modesCount),
-    _scenes(scenesCount){
+  Server::Server(int worldPort, int writePort, int readPort) :
+    _communication(std::make_unique<CarlaCommunication>(worldPort, writePort, readPort)),
+     _proto(std::make_unique<Protocol>(this)){}
 
+  Server::~Server() {
   }
 
-  CarlaServer::~CarlaServer() {
-  }
-
-  void CarlaServer::sendReward(const Reward_Values &values) {
+  void Server::sendReward(const Reward_Values &values) {
     Reward reward = _proto->LoadReward(values);
     _communication->sendReward(reward);
   }
 
-  void CarlaServer::sendSceneValues(const Scene_Values &values) {
+  void Server::sendSceneValues(const Scene_Values &values) {
     Scene scene = _proto->LoadScene(values);
     _communication->sendScene(scene);
   }
 
-  void CarlaServer::sendEndReset() {
+  void Server::sendEndReset() {
     EpisodeReady eReady;
     eReady.set_ready(true);
     _communication->sendReset(eReady);
   }
 
-  void CarlaServer::sendWorld() {
-    World world = _proto->LoadWorld();
+  void Server::sendWorld(const int modes, const int scenes) {
+    World world = _proto->LoadWorld(modes, scenes);
     _communication->sendWorld(world);
   }
 
-  bool CarlaServer::tryReadControl(float &steer, float &gas) {
+  bool Server::tryReadControl(float &steer, float &gas) {
   std::string controlMessage;
     bool success = _communication->tryReadControl(controlMessage);
   Control control;
@@ -65,7 +62,7 @@ namespace server {
   return success;
   }
 
-  bool CarlaServer::tryReadSceneInit(int &mode, int &scene) {
+  bool Server::tryReadSceneInit(int &mode, int &scene) {
     std::string initMessage;
     bool success = _communication->tryReadWorldInfo(initMessage);
     SceneInit sceneInit;
@@ -87,7 +84,7 @@ namespace server {
     return success;
   }
 
-  bool CarlaServer::tryReadEpisodeStart(size_t &start_index, size_t &end_index) {
+  bool Server::tryReadEpisodeStart(size_t &start_index, size_t &end_index) {
     std::string startData;
     bool success = _communication->tryReadWorldInfo(startData);
     EpisodeStart episodeStart;
@@ -106,35 +103,27 @@ namespace server {
     return success;
   }
 
-  void CarlaServer::setMode(Mode mode) {
+  void Server::setMode(Mode mode) {
     _mode = mode;
   }
 
-  Mode CarlaServer::GetMode() const {
+  Mode Server::GetMode() const {
     return _mode;
   }
 
-  void CarlaServer::SetScene(int scene) {
+  void Server::SetScene(int scene) {
     _scene = scene;
   }
 
-  int CarlaServer::GetScene() const {
+  int Server::GetScene() const {
     return _scene;
   }
 
-  int CarlaServer::GetModesCount() const {
-    return _modes;
-  }
-
-  int CarlaServer::GetScenesCount() const {
-    return _scenes;
-  }
-
-  void CarlaServer::SetReset(bool reset) {
+  void Server::SetReset(bool reset) {
     _reset = reset;
   }
 
-  bool CarlaServer::Reset() const {
+  bool Server::Reset() const {
     return _reset;
   }
 

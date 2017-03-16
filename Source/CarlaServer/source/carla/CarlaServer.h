@@ -117,6 +117,9 @@ namespace carla {
 
     class Pimpl;
     std::unique_ptr<Pimpl> _pimpl;
+
+    class Server;
+    std::unique_ptr<Server> _server;
   };
 
 } // namespace carla

@@ -32,8 +32,8 @@ message Control {
 
 message World {
 
-  repeated int32 modes = 1;
-  repeated int32 scenes = 2;
+  optional int32 modes = 1; // the number of modes
+  optional int32 scenes = 2;
 
 
 }
@@ -81,14 +81,15 @@ message Reward {
   optional float collision_gen = 4;
   optional float collision_ped = 5;
   optional float collision_car = 6;
-  optional float intersect = 7;
-  optional float inertia_x = 8;
-  optional float inertia_y = 9;
-  optional float inertia_z = 10;
-  optional int32 timestamp = 11;
-  optional float ori_x = 12;
-  optional float ori_y = 13;
-  optional float ori_z = 14;
-  repeated bytes image = 15;
-  repeated bytes depth = 16;
+  optional float road_intersect = 7;
+  optional float sidewalk_intersect = 8;
+  optional float acceleration_x = 9;
+  optional float acceleration_y = 10;
+  optional float acceleration_z = 11;
+  optional int32 timestamp = 12;
+  optional float ori_x = 13;
+  optional float ori_y = 14;
+  optional float ori_z = 15;
+  repeated bytes image = 16;
+  repeated bytes depth = 17;
 }

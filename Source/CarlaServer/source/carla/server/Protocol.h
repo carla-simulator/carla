@@ -5,28 +5,30 @@
 #include <string>
 
 namespace carla {
-namespace server {
 
-  class CarlaServer;
   struct Reward_Values;
   struct Scene_Values;
+
+namespace server {
+
+  class Server;
 
   class Protocol {
 
   public:
 
-	  Protocol(CarlaServer *server);
+	  Protocol(Server *server);
 	  ~Protocol();
 
 	  Reward LoadReward(const Reward_Values &values);
 
 	  Scene LoadScene(const Scene_Values &values);
 
-	  World LoadWorld();
+	  World LoadWorld(const int modes, const int scenes);
 
   private:
 
-	  carla::server::CarlaServer *_server;
+	  carla::server::Server *_server;
 
   };
 
