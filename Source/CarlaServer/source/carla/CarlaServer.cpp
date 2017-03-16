@@ -1,39 +1,46 @@
-#include "server/Server.h"
+#include "CarlaServer.h"
 
-explicit CarlaServer::CarlaServer(uint32 writePort, uint32 readPort, uint32 worldPort):
-_server(std::make_unique<Server>(worldPort, writePort, readPort)){}
+#include <carla/server/Server.h>
 
-CarlaServer::~CarlaServer(){}
+namespace carla {
 
-void CarlaServer::init(uint32 LevelCount) {
-  _server->sendWorld(Mode::NUMBER_OF_MODES, LevelCount);
-}
+  class CarlaServer::Pimpl : public carla::server::Server {
+  public:
+    Pimpl(uint32_t worldPort, uint32_t writePort, uint32_t readPort) :
+      carla::server::Server(worldPort, writePort, readPort) {}
+  };
 
+  CarlaServer::CarlaServer(uint32_t writePort, uint32_t readPort, uint32_t worldPort) :
+    _pimpl(std::make_unique<Pimpl>(worldPort, writePort, readPort)) {}
 
-bool tryReadSceneInit(Mode &mode, int &scene){
-  _server->tryReadSceneInit(mode, scene);
-}
+  CarlaServer::~CarlaServer() {}
 
+  void CarlaServer::init(uint32_t LevelCount) {
+    _pimpl->sendWorld(static_cast<uint32_t>(Mode::NUMBER_OF_MODES), LevelCount);
+  }
 
-bool tryReadEpisodeStart(uint32 &startIndex, uint32 &endIndex){
-  _server->tryReadEpisodeStart(startIndex, endIndex);
-}
+  bool CarlaServer::tryReadSceneInit(Mode &mode, uint32_t &scene) {
+    return _pimpl->tryReadSceneInit(mode, scene);
+  }
 
-bool tryReadControl(float &steer, float &throttle){
-  return _server->tryReadControl(steer, throttle);
-}
+  bool CarlaServer::tryReadEpisodeStart(uint32_t &startIndex, uint32_t &endIndex) {
+    return _pimpl->tryReadEpisodeStart(startIndex, endIndex);
+  }
 
+  bool CarlaServer::tryReadControl(float &steer, float &throttle) {
+    return _pimpl->tryReadControl(steer, throttle);
+  }
 
-void sendReward(const Reward_Values &values){
-  _server->sendReward(values);
-}
+  void CarlaServer::sendReward(const Reward_Values &values) {
+    _pimpl->sendReward(values);
+  }
 
-    /// Send the values of the generated scene.
-void sendSceneValues(const Scene_Values &values){
-  _server->sendSceneValues(values);
-}
+  void CarlaServer::sendSceneValues(const Scene_Values &values) {
+    _pimpl->sendSceneValues(values);
+  }
 
-void sendEndReset(){
-  _server->sendEndReset();
-}
+  void CarlaServer::sendEndReset() {
+    _pimpl->sendEndReset();
+  }
 
+} // namespace carla

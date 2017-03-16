@@ -1,6 +1,5 @@
 // CARLA, Copyright (C) 2017 Computer Vision Center (CVC)
 
-#include "Carla.h"
 #include "TCPServer.h"
 
 #include <fstream>
@@ -46,7 +45,7 @@ namespace carla {
 		}
 
 		TCPServer::~TCPServer() {
-		
+
 			/*std::ofstream myfile;
 			myfile.open("TCP" + std::to_string(_port) + ".txt");
 			myfile << " Y VOLO " << std::to_string(_port) << std::endl;

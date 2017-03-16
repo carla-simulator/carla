@@ -1,8 +1,6 @@
 // CARLA, Copyright (C) 2017 Computer Vision Center (CVC)
 
-#include "Carla.h"
-
-#include "carla/server/CarlaServer.h"
+#include <carla/CarlaServer.h>
 
 #include <ctime>
 #include <iostream>
@@ -18,7 +16,7 @@ enum ErrorCodes {
   ErrorReading
 };
 
-static int toInt(const std::string &str) {
+static uint32_t toInt(const std::string &str) {
   return std::stoi(str);
 }
 
@@ -29,162 +27,112 @@ static std::string daytimeString() {
   return str;
 }
 
-int main(int argc, char* argv[]) {
+static std::vector<carla::Color> makeImage(uint32_t width, uint32_t height) {
+  std::vector<carla::Color> image(4u * width * height);
+  for (carla::Color &color : image) {
+    color = {255u, 255u, 255u, 255u};
+  }
+  return image;
+}
+
+int main(int argc, char *argv[]) {
   try {
-    if (argc != 6) {
-      std::cerr << "Usage: server <send-port> <read-port>" << std::endl;
+    if (argc != 4) {
+      std::cerr << "Usage: server <world-port> <write-port> <read-port>" << std::endl;
       return InvalidArguments;
     }
 
-    using namespace carla::server;
+    const uint32_t worldPort = toInt(argv[1u]);
+    const uint32_t writePort = toInt(argv[2u]);
+    const uint32_t readPort  = toInt(argv[3u]);
+    // const uint32_t mode      = toInt(argv[4u]);
+    // const uint32_t scene     = toInt(argv[5u]);
 
     // This already starts the two threads.
-    CarlaServer server(toInt(argv[1u]), toInt(argv[2u]), toInt(argv[3u]), toInt(argv[4u]), toInt(argv[5u]));
+    carla::CarlaServer server(writePort, readPort, worldPort);
 
     // Let's simulate the game loop.
 
-    int imageWidth = 512, imageHeight = 512;
+    const uint32_t imageWidth = 512u;
+    const uint32_t imageHeight = 512u;
 
-    std::vector<unsigned char> img;
-    img.resize(imageWidth * imageHeight * 4);
-    for (int i = 0; i < imageHeight; ++i)
-      for (int e = 0; e < imageWidth; ++e) {
-        img[4 * imageWidth * i + 4 * e + 0] = 255 * !(e & i);
-        img[4 * imageWidth * i + 4 * e + 1] = e ^ i;
-        img[4 * imageWidth * i + 4 * e + 2] = e | i;
-        img[4 * imageWidth * i + 4 * e + 3] = 255;
-      }
-
-    std::vector<unsigned char> img_2;
-    img_2.resize(imageWidth * imageHeight * 4);
-    for (int i = 0; i < imageHeight; ++i)
-      for (int e = 0; e < imageWidth; ++e) {
-        img_2[4 * imageWidth * i + 4 * e + 0] = 255 * !(e & i);
-        img_2[4 * imageWidth * i + 4 * e + 1] = e ^ i;
-        img_2[4 * imageWidth * i + 4 * e + 2] = e | i;
-        img_2[4 * imageWidth * i + 4 * e + 3] = 255;
-      }
-
-    std::vector<unsigned char> depth_1;
-    depth_1.resize(imageWidth * imageHeight * 4);
-    for (int i = 0; i < imageHeight; ++i)
-      for (int e = 0; e < imageWidth; ++e) {
-        depth_1[4 * imageWidth * i + 4 * e + 0] = 255 * !(e & i);
-        depth_1[4 * imageWidth * i + 4 * e + 1] = e ^ i;
-        depth_1[4 * imageWidth * i + 4 * e + 2] = e | i;
-        depth_1[4 * imageWidth * i + 4 * e + 3] = 255;
-      }
-
-    std::vector<unsigned char> depth_2;
-    depth_2.resize(imageWidth * imageHeight * 4);
-    for (int i = 0; i < imageHeight; ++i)
-      for (int e = 0; e < imageWidth; ++e) {
-        depth_2[4 * imageWidth * i + 4 * e + 0] = 255 * !(e & i);
-        depth_2[4 * imageWidth * i + 4 * e + 1] = e ^ i;
-        depth_2[4 * imageWidth * i + 4 * e + 2] = e | i;
-        depth_2[4 * imageWidth * i + 4 * e + 3] = 255;
-      }
-
-    Reward_Values testData;
-    testData.player_x = 1.0f;
-    testData.player_y = 1.0f;
-    testData.speed = 100.0f;
-    testData.collision_gen = 10.0f;
-    testData.collision_ped = 10.0f;
-    testData.collision_car = 10.0f;
-    testData.intersect = 50.0f;
-    testData.inertia_x = 0.5f;
-    testData.inertia_y = 0.1f;
-    testData.inertia_z = 0.02f;
-    testData.timestamp = 1;
-    testData.ori_x = 10.0f;
-    testData.ori_y = 20.0f;
-    testData.ori_z = 30.0f;
-    testData.img_height = imageHeight;
-    testData.img_width = imageWidth;
-    testData.img = img;
-    testData.img_2 = img_2;
-    testData.depth_1 = depth_1;
-    testData.depth_2 = depth_2;
-
+    carla::Reward_Values reward;
+    reward.player_location = {1.0f, 1.0f};
+    reward.player_orientation = {1.0f, 1.0f};
+    reward.player_acceleration = {1.0f, 1.0f};
+    reward.forward_speed = 100.0f;
+    reward.collision_general = 10.0f;
+    reward.collision_pedestrian = 10.0f;
+    reward.collision_car = 10.0f;
+    reward.intersect_other_lane = 0.5f;
+    reward.intersect_offroad = 0.5f;
+    reward.image_width = imageWidth;
+    reward.image_height = imageHeight;
+    reward.image_rgb_0 = makeImage(imageWidth, imageHeight);
+    reward.image_rgb_1 = makeImage(imageWidth, imageHeight);
+    reward.image_depth_0 = makeImage(imageWidth, imageHeight);
+    reward.image_depth_1 = makeImage(imageWidth, imageHeight);
 
     std::cout << "Server send World" << std::endl;
-    server.sendWorld();
+    server.init(1u);
 
-    int mode, scene;
-    bool end = false;
+    {
+      std::cout << "Server wait scene init" << std::endl;
+      carla::Mode mode;
+      uint32_t scene;
+      while (!server.tryReadSceneInit(mode, scene)) {}
+      std::cout << "Received: mode = "
+                << (mode == carla::Mode::MONO ? "MONO" : "STEREO")
+                << ", scene = "
+                << scene << std::endl;
+    }
+    {
+      carla::Scene_Values sceneValues;
+      sceneValues.possible_positions.push_back({0.0f, 0.0f});
+      sceneValues.possible_positions.push_back({1.0f, 2.0f});
+      sceneValues.possible_positions.push_back({3.0f, 4.0f});
+      const std::array<float, 16u> pMatrix = {{ 10.0 }};
+      sceneValues.projection_matrices.push_back(pMatrix);
 
-    std::cout << "Server wait scene init" << std::endl;
-    do {
-      end = server.tryReadSceneInit(mode, scene);
-    } while (!end);
+      std::cout << "Server send positions" << std::endl;
+      server.sendSceneValues(sceneValues);
 
-    std::vector<Position> positions;
-    std::vector<const float*> pMatrix;
-
-    positions.push_back(Position{ 0.0f, 0.0f });
-    positions.push_back(Position{ 1.0f, 2.0f });
-    positions.push_back(Position{ 3.0f, 4.0f });
-
-    float list[16] = { 10.0, 10.0,10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0 };
-
-    pMatrix.push_back(list);
-
-    Scene_Values sceneVal = {
-      positions,
-      pMatrix,
-    };
-
-    std::cout << "Server send positions" << std::endl;
-
-    server.sendSceneValues(sceneVal);
-
-    end = false;
-    size_t startPoint, endPoint;
-
-    std::cout << "Server wait new episode" << std::endl;
-
-    do {
-
-      end = server.tryReadEpisodeStart(startPoint, endPoint);
-    } while (!end);
+      std::cout << "Server wait new episode" << std::endl;
+      uint32_t start, end;
+      while (!server.tryReadEpisodeStart(start, end)) {}
+      std::cout << "Received: startIndex = " << start
+                << ", endIndex = " << end << std::endl;
+    }
 
     std::cout << "Server send end reset" << std::endl;
-
     server.sendEndReset();
 
-    float steer, gas;
     for (;;) {
-
+      float steer, gas;
+      uint32_t startPoint, endPoint;
       if (server.tryReadEpisodeStart(startPoint, endPoint)) {
         std::cout << "------> RESET <------" << std::endl;
         std::cout << " --> Start: " << startPoint << " End: " << endPoint << std::endl;
         server.sendEndReset();
-      }
-      else {
-
+      } else {
         if (server.tryReadControl(steer, gas)) {
           std::cout << "Steer: " << steer << "Gas: " << gas << std::endl;
         }
-
-       server.sendReward(testData);
-
+        static decltype(carla::Reward_Values::timestamp) timestamp = 0u;
+        reward.timestamp = timestamp++;
+        server.sendReward(reward);
       }
-
     }
 
-  }
-  catch (const std::exception &e) {
+  } catch (const std::exception &e) {
     std::cerr << e.what() << std::endl;
     return STLException;
-  }
-  catch (...) {
+  } catch (...) {
     std::cerr << "Unknown exception thrown" << std::endl;
     return UnknownException;
   }
 }
 
-
 //TODO:
 //pmatrix float 16
-//start_index size_t 
+//start_index size_t

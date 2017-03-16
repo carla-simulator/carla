@@ -14,7 +14,7 @@ namespace thread {
   ///
   /// From "C++ Concurrency In Action", Anthony Williams, listing 4.5.
   template<typename T>
-  class CARLA_API ThreadSafeQueue {
+  class ThreadSafeQueue {
   public:
 
     ThreadSafeQueue() = default;

@@ -1,7 +1,9 @@
 // CARLA, Copyright (C) 2017 Computer Vision Center (CVC)
 
-#include "Carla.h"
 #include "Server.h"
+
+#include "CarlaCommunication.h"
+#include "carla_protocol.pb.h"
 
 #include <iostream>
 #include <memory>
@@ -9,9 +11,17 @@
 namespace carla {
 namespace server {
 
+  static Mode getMode(int modeInt) {
+    switch (modeInt) {
+      case 1:   return Mode::MONO;
+      case 2:   return Mode::STEREO;
+      default:  return Mode::INVALID;
+    }
+  }
+
   // -- CarlaServer ------------------------------------------------------------
 
-  Server::Server(int worldPort, int writePort, int readPort) :
+  Server::Server(uint32_t worldPort, uint32_t writePort, uint32_t readPort) :
     _communication(std::make_unique<CarlaCommunication>(worldPort, writePort, readPort)),
      _proto(std::make_unique<Protocol>(this)){}
 
@@ -19,12 +29,14 @@ namespace server {
   }
 
   void Server::sendReward(const Reward_Values &values) {
-    Reward reward = _proto->LoadReward(values);
+    Reward reward;
+    _proto->LoadReward(reward, values);
     _communication->sendReward(reward);
   }
 
   void Server::sendSceneValues(const Scene_Values &values) {
-    Scene scene = _proto->LoadScene(values);
+    Scene scene;
+    _proto->LoadScene(scene, values);
     _communication->sendScene(scene);
   }
 
@@ -34,8 +46,9 @@ namespace server {
     _communication->sendReset(eReady);
   }
 
-  void Server::sendWorld(const int modes, const int scenes) {
-    World world = _proto->LoadWorld(modes, scenes);
+  void Server::sendWorld(const uint32_t modes, const uint32_t scenes) {
+    World world;
+    _proto->LoadWorld(world, modes, scenes);
     _communication->sendWorld(world);
   }
 
@@ -62,7 +75,7 @@ namespace server {
   return success;
   }
 
-  bool Server::tryReadSceneInit(int &mode, int &scene) {
+  bool Server::tryReadSceneInit(Mode &mode, uint32_t &scene) {
     std::string initMessage;
     bool success = _communication->tryReadWorldInfo(initMessage);
     SceneInit sceneInit;
@@ -72,11 +85,11 @@ namespace server {
     }
 
     if (!success) {
-      mode = -1;
-      scene = -1;
+      mode = Mode::INVALID;
+      scene = 0u;
     }
     else {
-      mode = sceneInit.mode();
+      mode = getMode(sceneInit.mode());
       scene = sceneInit.scene();
       //std::cout << "Mode: " << mode << " Scene: " << scene << std::endl;
     }
@@ -84,7 +97,7 @@ namespace server {
     return success;
   }
 
-  bool Server::tryReadEpisodeStart(size_t &start_index, size_t &end_index) {
+  bool Server::tryReadEpisodeStart(uint32_t &start_index, uint32_t &end_index) {
     std::string startData;
     bool success = _communication->tryReadWorldInfo(startData);
     EpisodeStart episodeStart;

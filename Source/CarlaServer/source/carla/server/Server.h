@@ -2,81 +2,82 @@
 
 #pragma once
 
-#include "CarlaCommunication.h"
+#include <carla/NonCopyable.h>
+#include <carla/CarlaServer.h>
 
-#include "../CarlaServer.h"
-
+#include <atomic>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
-#include <mutex>
-#include <atomic>
 
 namespace carla {
-  namespace server {
+namespace server {
 
-    /// Asynchronous TCP server. Uses two ports, one for sending messages (write)
-    /// and one for receiving messages (read).
-    ///
-    /// Writing and reading are executed in two different threads. Each thread has
-    /// its own queue of messages.
-    ///
-    /// Note that a new socket is created for every connection (every write and
-    /// read).
-    class CARLA_API Server : private NonCopyable {
-    public:
+  class CarlaCommunication;
+  class Protocol;
 
-      /// Starts two threads for writing and reading.
-      explicit Server(int worldPort, int writePort, int readPort);
+  /// Asynchronous TCP server. Uses two ports, one for sending messages (write)
+  /// and one for receiving messages (read).
+  ///
+  /// Writing and reading are executed in two different threads. Each thread has
+  /// its own queue of messages.
+  ///
+  /// Note that a new socket is created for every connection (every write and
+  /// read).
+  class Server : private NonCopyable {
+  public:
 
-      ~Server();
+    /// Starts two threads for writing and reading.
+    explicit Server(uint32_t worldPort, uint32_t writePort, uint32_t readPort);
 
-      ///// Send values of the current player status
-      void sendReward(const Reward_Values &values);
+    ~Server();
 
-      //// Send the values of the generated scene
-      void sendSceneValues(const Scene_Values &values);
+    ///// Send values of the current player status
+    void sendReward(const Reward_Values &values);
 
-      //// Send a signal to the client to notify that the car is ready
-      void sendEndReset();
+    //// Send the values of the generated scene
+    void sendSceneValues(const Scene_Values &values);
 
-      void sendWorld(const int modes, const int scenes);
+    //// Send a signal to the client to notify that the car is ready
+    void sendEndReset();
 
-      ///// Try to read the response of the client. Return false if the queue
-      ///// is empty.
-      bool tryReadControl(float &steer, float &gas);
+    void sendWorld(uint32_t modes, uint32_t scenes);
 
-      ////Try to read if the client has selected an scene and mode. Return false if the queue is empty
-      bool tryReadSceneInit(int &mode, int &scene);
+    ///// Try to read the response of the client. Return false if the queue
+    ///// is empty.
+    bool tryReadControl(float &steer, float &gas);
 
-      ////Try to read if the client has selected an end & start point. Return false if the queue is empty
-      bool tryReadEpisodeStart(size_t &start_index, size_t &end_index);
+    ////Try to read if the client has selected an scene and mode. Return false if the queue is empty
+    bool tryReadSceneInit(Mode &mode, uint32_t &scene);
 
-      void setMode(Mode mode);
+    ////Try to read if the client has selected an end & start point. Return false if the queue is empty
+    bool tryReadEpisodeStart(uint32_t &start_index, uint32_t &end_index);
 
-      Mode GetMode() const;
+    void setMode(Mode mode);
 
-      void SetScene(int scene);
+    Mode GetMode() const;
 
-      int GetScene() const;
+    void SetScene(int scene);
 
-      void SetReset(bool reset);
+    int GetScene() const;
 
+    void SetReset(bool reset);
 
-      bool Reset() const;
+    bool Reset() const;
 
-    private:
+  private:
 
-      //std::mutex _mutex;
+    //std::mutex _mutex;
 
-      std::atomic<Mode> _mode { Mode::MONO };
-      std::atomic_int _scene;
-      std::atomic_bool _reset;
+    std::atomic<Mode> _mode { Mode::MONO };
+    std::atomic_int _scene;
+    std::atomic_bool _reset;
 
-      const std::unique_ptr<CarlaCommunication> _communication;
+    const std::unique_ptr<CarlaCommunication> _communication;
 
-      const std::unique_ptr<Protocol> _proto;
-    };
+    const std::unique_ptr<Protocol> _proto;
+  };
 
-  } // namespace server
+} // namespace server
 } // namespace carla

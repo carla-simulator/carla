@@ -16,7 +16,7 @@ namespace thread {
   /// The job gets called each time an item is added to the queue, the item is
   /// passed as argument.
   template <typename T>
-  class CARLA_API AsyncReaderJobQueue {
+  class AsyncReaderJobQueue {
   public:
 
     using Job = std::function<void(T)>;

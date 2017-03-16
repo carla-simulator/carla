@@ -1,8 +1,8 @@
 #pragma once
 
-#include "carla_protocol.pb.h"
-
-#include <string>
+class Reward;
+class Scene;
+class World;
 
 namespace carla {
 
@@ -14,26 +14,22 @@ namespace server {
   class Server;
 
   class Protocol {
-
   public:
 
-	  Protocol(Server *server);
+	  explicit Protocol(Server *server);
+
 	  ~Protocol();
 
-	  Reward LoadReward(const Reward_Values &values);
+	  void LoadReward(Reward &reward, const Reward_Values &values);
 
-	  Scene LoadScene(const Scene_Values &values);
+	  void LoadScene(Scene &scene, const Scene_Values &values);
 
-	  World LoadWorld(const int modes, const int scenes);
+	  void LoadWorld(World &world, const int modes, const int scenes);
 
   private:
 
 	  carla::server::Server *_server;
-
   };
 
 }
 }
-
-
-

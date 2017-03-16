@@ -3,6 +3,7 @@
 #pragma once
 
 #include <array>
+#include <cstdint>
 #include <memory>
 #include <vector>
 
@@ -20,15 +21,15 @@ namespace carla {
   };
 
   struct Color {
-    uint8 B;
-    uint8 G;
-    uint8 R;
-    uint8 A;
+    uint8_t B;
+    uint8_t G;
+    uint8_t R;
+    uint8_t A;
   };
 
   struct Reward_Values {
     /// Time-stamp of the current frame.
-    int32 timestamp;
+    int32_t timestamp;
     /// World location of the player.
     Vector2D player_location;
     /// Orientation of the player.
@@ -48,27 +49,28 @@ namespace carla {
     /// Percentage of the car off-road.
     float intersect_offroad;
     /// Width and height of the images.
-    int32 image_width, image_height;
+    uint32_t image_width, image_height;
     /// RGB images.
     std::vector<Color> image_rgb_0;
     std::vector<Color> image_rgb_1;
     /// Depth images.
+    std::vector<Color> image_depth_0;
     std::vector<Color> image_depth_1;
-    std::vector<Color> image_depth_2;
   };
 
   struct Scene_Values {
     /// Possible world positions to spawn the player.
-    std::vector<Vector2D> possible_Positions;
+    std::vector<Vector2D> possible_positions;
     /// Projection matrices of the cameras (1 in mode mono, 2 in stereo).
-    std::vector<std::array<float, 16u>> projection_Matrices;
+    std::vector<std::array<float, 16u>> projection_matrices;
   };
 
-  enum class Mode : int8 {
-    MONO = 0,
-    STEREO = 1,
+  enum class Mode : int8_t {
+    MONO,
+    STEREO,
 
-    NUMBER_OF_MODES
+    NUMBER_OF_MODES,
+    INVALID = -1
   };
 
   /// Asynchronous TCP server. Uses three ports, one for sending messages
@@ -80,7 +82,7 @@ namespace carla {
   class CarlaServer {
   public:
 
-    explicit CarlaServer(uint32 writePort, uint32 readPort, uint32 worldPort);
+    explicit CarlaServer(uint32_t writePort, uint32_t readPort, uint32_t worldPort);
 
     ~CarlaServer();
 
@@ -90,15 +92,17 @@ namespace carla {
     /// Initialize the server.
     ///
     /// @param LevelCount Number of levels available.
-    void init(uint32 LevelCount);
+    void init(uint32_t LevelCount);
 
     /// Try to read if the client has selected an scene and mode. Return false
     /// if the queue is empty.
-    bool tryReadSceneInit(Mode &mode, int &scene);
+    ///
+    /// If returned mode INVALID, ignore scene.
+    bool tryReadSceneInit(Mode &mode, uint32_t &scene);
 
     /// Try to read if the client has selected an end & start point. Return
     /// false if the queue is empty.
-    bool tryReadEpisodeStart(uint32 &startIndex, uint32 &endIndex);
+    bool tryReadEpisodeStart(uint32_t &startIndex, uint32_t &endIndex);
 
     /// Try to read the response of the client. Return false if the queue
     /// is empty.
@@ -116,10 +120,7 @@ namespace carla {
   private:
 
     class Pimpl;
-    std::unique_ptr<Pimpl> _pimpl;
-
-    class Server;
-    std::unique_ptr<Server> _server;
+    const std::unique_ptr<Pimpl> _pimpl;
   };
 
 } // namespace carla
