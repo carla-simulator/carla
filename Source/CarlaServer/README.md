@@ -8,9 +8,9 @@ Building
 
 #### Linux
 
-Install boost, protobuf, and ninja.
+Install boost, protobuf, cmake and ninja.
 
-    $ sudo apt-get install libprotobuf-dev protobuf-compiler libboost-all-dev ninja-build
+    $ sudo apt-get install libprotobuf-dev protobuf-compiler libboost-all-dev cmake ninja-build
 
 Run make
 
@@ -18,10 +18,23 @@ Run make
 
 #### Windows
 
-Install boost and protobuf.
+Install and compile [boost](http://www.boost.org/).
+
+Install and compile [protobuf](https://developers.google.com/protocol-buffers/).
+While compiling protobuf, use `-Dprotobuf_MSVC_STATIC_RUNTIME=OFF` when calling
+CMake in order to use the static runtime library, otherwise may give errors
+while trying to link with CarlaServer.
+
+CMake looks at the following environment variables
+
+  * `CMAKE_INCLUDE_PATH` should contain the protobuf include folder.
+  * `CMAKE_LIBRARY_PATH` should contain "libprotobuf" "libprotobuf-lite" "liteprotoc" .lib files.
+  * `BOOST_ROOT` root of the boost folder.
 
 To generate the Visual Studio solution
 
     $ make vsproject
 
-The solution gets generated at `./build/CarlaServer.sln`.
+The solution gets generated at `./build/CarlaServer.sln`. Change the solution
+configuration to match protobuf (release, most probably). Don't forget to build
+the project INSTALL, it doesn't build when building the solution.

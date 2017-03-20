@@ -9,6 +9,8 @@
 #include "carla/thread/AsyncReaderJobQueue.h"
 #include "carla/thread/AsyncWriterJobQueue.h"
 
+#include "carla_protocol.pb.h"
+
 class EpisodeReady;
 
 namespace carla {
