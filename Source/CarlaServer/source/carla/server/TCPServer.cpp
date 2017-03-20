@@ -34,8 +34,7 @@ namespace carla {
 
         TCPServer::TCPServer(int port) :
             _service(),
-            _acceptor(_service, tcp::endpoint(tcp::v4(), port)),
-            _port(port),
+            port(port),
             _socket(_service),
             _connected(false){}
 
@@ -44,9 +43,11 @@ namespace carla {
         void TCPServer::AcceptSocket() {
 
             try {
-                _acceptor.accept(_socket);
-
-                _connected = true;
+              boost::asio::ip::tcp::acceptor acceptor(_service, tcp::endpoint(tcp::v4(), port));
+              acceptor.accept(_socket);
+              _connected = true;
+              _service.run();
+              std::cout << "Connected port " << port << std::endl;
             }
 
             catch (boost::system::system_error) {std::cerr<<"Socket System error"<<std::endl;};
@@ -64,48 +65,66 @@ namespace carla {
 
             boost::asio::write(_socket, boost::asio::buffer(outMessage), error);
 
-            if ((boost::asio::error::eof == error) ||
-                (boost::asio::error::connection_reset == error))
+            if (boost::asio::error::connection_reset == error)
             {
               _connected = false;
             }
         }
 
-        void TCPServer::readString(std::string &message, error_code &error) {
+        bool TCPServer::readString(std::string &message, error_code &error) {
 
             bool end = false, readedBytes = false;
             int readedSize = 0, sizeToRead = -1;
-            do {
 
-                std::array<char, 128> buf;
+            if (_socket.available() > 0){
+              do {
 
-                size_t len = _socket.read_some(boost::asio::buffer(buf), error);
+                  std::array<char, 128> buf;
+
+                  size_t len = _socket.read_some(boost::asio::buffer(buf), error);
 
 
-                if ((boost::asio::error::eof == error) ||
-                (boost::asio::error::connection_reset == error))
-                {
-                  _connected = false;
-                }
-                else
-                {
-                     // @todo find a better way.
-                    for (size_t i = 0; i < len && !end; ++i) {
-                        if (!readedBytes) {
-                            sizeToRead = GetInt(buf[0], buf[1], buf[2], buf[3]);
-                            i = 3;
-                            readedBytes = true;
-                        }
-                        else {
-                            message += buf[i];
-                            ++readedSize;
-                        }
+                  if (boost::asio::error::connection_reset == error)
+                  {
+                    _connected = false;
+                  }
+                  else if (!error){
+                       // @todo find a better way.
+                      for (size_t i = 0; i < len && !end; ++i) {
+                          if (!readedBytes) {
+                              sizeToRead = GetInt(buf[0], buf[1], buf[2], buf[3]);
+                              i = 3;
+                              readedBytes = true;
+                          }
+                          else {
+                              message += buf[i];
+                              ++readedSize;
+                          }
 
-                    }
-                }
+                      }
+                  }
 
-            } while (!readedBytes || sizeToRead > readedSize);
+              } while ((!readedBytes || sizeToRead > readedSize) && _connected);
+              return true;
+            }
+            else return false;
 
+        }
+
+        void TCPServer::close(){
+
+          _connected = false;
+          // flush the socket buffer
+          std::string message;
+          TCPServer::error_code error;
+          readString(message, error);
+          _service.stop();
+          _socket.close();
+          /*_socket.cancel();
+          _socket.close();
+          _socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+          _acceptor.cancel();*/
+        
         }
 
     } // namespace server

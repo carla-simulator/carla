@@ -31,7 +31,27 @@ namespace server {
 
     bool tryReadWorldInfo(std::string &info);
 
+    void restartServer();
+
+    void restartWorld();
+
+    void restartClient();
+
+    thread::AsyncReaderJobQueue<Reward>& getServerThread();
+    thread::AsyncWriterJobQueue<std::string>& getClientThread();
+    thread::AsyncReadWriteJobQueue<std::string, std::string>& getWorldThread();
+
+    bool worldConnected();
+    bool clientConnected();
+    bool serverConnected();
+
+    std::mutex getGeneralMutex();
+
+    bool NeedRestart();
+    void Restart();
+
   private:
+
 
     TCPServer _server;
 
@@ -39,13 +59,16 @@ namespace server {
 
     TCPServer _world;
 
-		thread::AsyncReaderJobQueue<Reward> _serverThread;
+    int _worldPort, _clientPort, _serverPort;
+
+	thread::AsyncReaderJobQueue<Reward> _serverThread;
 
     thread::AsyncWriterJobQueue<std::string> _clientThread;
 
     thread::AsyncReadWriteJobQueue<std::string, std::string> _worldThread;
 
-    bool communicationEnabled;
+    std::atomic_bool _needRestart;
+
   };
 
 }

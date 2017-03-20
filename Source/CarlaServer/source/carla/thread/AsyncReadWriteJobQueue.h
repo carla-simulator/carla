@@ -7,6 +7,7 @@
 
 #include <atomic>
 #include <functional>
+#include <iostream>
 
 namespace carla {
 namespace thread {
@@ -20,16 +21,19 @@ namespace thread {
     using WritingJob = std::function<W()>;
     using ReadingJob = std::function<void(R)>;
     using ConnectJob = std::function<void()>;
+    using ReconnectJob = std::function<void()>;
 
     explicit AsyncReadWriteJobQueue(
         WritingJob && writingJob,
         ReadingJob && readingJob,
-        ConnectJob && connectJob) :
+        ConnectJob && connectJob,
+        ReconnectJob && reconnectJob) :
       _done(false),
       _restart(true),
       _writeJob(std::move(writingJob)),
       _readJob(std::move(readingJob)),
       _connectJob(std::move(connectJob)),
+      _reconnectJob(std::move(reconnectJob)),
       _writeQueue(),
       _thread(new std::thread(&AsyncReadWriteJobQueue::workerThread, this)) {}
 
@@ -45,22 +49,41 @@ namespace thread {
       _readQueue.push(item);
     }
 
+    void reconnect(){
+      _reconnectJob();
+    }
+
     void restart(){
       _restart = true;
+      _readQueue.canWait(false);
+      _writeQueue.canWait(false);
+      //_thread->detach();
+      //_thread = ThreadUniquePointer(new std::thread(&AsyncReadWriteJobQueue::workerThread, this));
+      std::cout << " --> Thread World restart "<<std::endl;
+    }
+
+    bool getRestart(){
+      return _restart;
     }
 
   private:
 
     void workerThread() {
       while(!_done){
-        _restart = false; 
         _connectJob();
+        _restart = false; 
+        _readQueue.canWait(true);
         while (!_restart && !_done) {
           R value;
-          _readQueue.wait_and_pop(value);
-          _readJob(value);
-          _writeQueue.push(_writeJob());
+          if (_readQueue.wait_and_pop(value)) {
+            _readJob(value);
+          }
+          if (!_restart){
+            _writeQueue.push(_writeJob());
+          }
+
         }
+        std::cout << " >> RESTART WORLD THREAD << " << std::endl;
       }
     }
 
@@ -70,11 +93,12 @@ namespace thread {
     WritingJob _writeJob;
     ReadingJob _readJob;
     ConnectJob _connectJob;
+    ReconnectJob _reconnectJob;
 
     ThreadSafeQueue<W> _writeQueue;
     ThreadSafeQueue<R> _readQueue;
 
-    const ThreadUniquePointer _thread;
+    ThreadUniquePointer _thread;
   };
 
 } // namespace thread

@@ -43,4 +43,20 @@ namespace carla {
     _pimpl->sendEndReset();
   }
 
+  bool CarlaServer::worldConnected(){
+    return _pimpl->worldConnected();
+  }
+
+  bool CarlaServer::clientConnected(){
+    return _pimpl->clientConnected();
+  }
+
+  bool CarlaServer::serverConnected(){
+    return _pimpl->serverConnected();
+  }
+
+  bool CarlaServer::needRestart() {
+    return _pimpl->needRestart();
+  }
+
 } // namespace carla

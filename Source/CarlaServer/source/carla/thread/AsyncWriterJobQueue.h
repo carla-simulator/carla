@@ -19,12 +19,14 @@ namespace thread {
 
     using Job = std::function<T()>;
 	using ConnectJob = std::function<void()>;
+  using ReconnectJob = std::function<void()>;
 
-	explicit AsyncWriterJobQueue(Job &&job, ConnectJob &&connectJob) :
+	explicit AsyncWriterJobQueue(Job &&job, ConnectJob &&connectJob, ReconnectJob &&reconnectJob) :
 		_done(false),
     _restart(true),
 		_job(std::move(job)),
 		_connectJob(std::move(connectJob)),
+    _reconnectJob(std::move(reconnectJob)),
         _queue(),
         _thread(new std::thread(&AsyncWriterJobQueue::workerThread, this))
 	{}
@@ -39,18 +41,32 @@ namespace thread {
 
     void restart(){
       _restart = true;
+      _queue.canWait(false);
+      //_thread->detach();
+      //_thread = ThreadUniquePointer(new std::thread(&AsyncWriterJobQueue::workerThread, this));
+      std::cout << "Thread Client restart "<<std::endl;
+    }
+
+    bool getRestart(){
+      return _restart;
+    }
+
+    void reconnect(){
+      _reconnectJob();
     }
 
   private:
 
     void workerThread() {
       while (!_done){
-        _restart = false;
 		    _connectJob();
+        _restart = false;
+        _queue.canWait(true);
         while (!_restart && !_done) {
           _queue.push(_job());
 		      //Sleep(10);
         }
+        std::cout << "RESTART CLIENT THREAD" << std::endl;
       }
     }
 
@@ -58,11 +74,12 @@ namespace thread {
     std::atomic_bool _restart;
 
     Job _job;
-	ConnectJob _connectJob;
+    ConnectJob _connectJob;
+    ReconnectJob _reconnectJob;
 
     ThreadSafeQueue<T> _queue;
 
-    const ThreadUniquePointer _thread;
+    ThreadUniquePointer _thread;
 
   };
 

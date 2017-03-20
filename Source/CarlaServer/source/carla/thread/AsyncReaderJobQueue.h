@@ -21,12 +21,14 @@ namespace thread {
 
     using Job = std::function<void(T)>;
 	using ConnectJob = std::function<void()>;
+  using ReconnectJob = std::function<void()>;
 
-	explicit AsyncReaderJobQueue(Job &&job, ConnectJob &&connectionJob) :
+	explicit AsyncReaderJobQueue(Job &&job, ConnectJob &&connectionJob, ReconnectJob &&reconnectJob) :
 		_done(false),
     _restart(true),
 		_job(std::move(job)),
 		_connectionJob(std::move(connectionJob)),
+    _reconnectJob(std::move(reconnectJob)),
         _queue(),
         _thread(new std::thread(&AsyncReaderJobQueue::workerThread, this)) {}
 
@@ -43,19 +45,32 @@ namespace thread {
 
     void restart(){
       _restart = true;
+      _queue.canWait(false);
+      //_thread->detach();
+      //_thread = ThreadUniquePointer(new std::thread(&AsyncReaderJobQueue::workerThread, this));
+      std::cout << "Thread Server restart "<<std::endl;
     }
 
+    bool getRestart(){
+      return _restart;
+    }
+
+    void reconnect(){
+      _reconnectJob();
+    }
+    
   private:
     void workerThread() {
       while (!_done){
-        _restart = false;
     		_connectionJob();
+        _restart = false;
+        _queue.canWait(true);
         while (!_restart && !_done) {
           T value;
-          _queue.wait_and_pop(value);
-          _job(value);
+          if (_queue.wait_and_pop(value)) _job(value);
     		  //Sleep(10);
         }
+        std::cout << "RESTART SERVER THREAD" << std::endl;
       }
     }
 
@@ -63,12 +78,13 @@ namespace thread {
     std::atomic_bool _restart;
 
     Job _job;
-	ConnectJob _connectionJob;
+    ConnectJob _connectionJob;
+    ReconnectJob _reconnectJob;
 
 
     ThreadSafeQueue<T> _queue;
 
-    const ThreadUniquePointer _thread;
+    ThreadUniquePointer _thread;
   };
 
 } // namespace thread

@@ -62,9 +62,13 @@ namespace server {
 
     int GetScene() const;
 
-    void SetReset(bool reset);
+    bool worldConnected() const;
 
-    bool Reset() const;
+    bool clientConnected() const;
+
+    bool serverConnected() const;
+
+    bool needRestart() const;
 
   private:
 
@@ -72,7 +76,6 @@ namespace server {
 
     std::atomic<Mode> _mode { Mode::MONO };
     std::atomic_int _scene;
-    std::atomic_bool _reset;
 
     const std::unique_ptr<CarlaCommunication> _communication;
 

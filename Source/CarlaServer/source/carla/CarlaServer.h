@@ -117,6 +117,18 @@ namespace carla {
     /// Send a signal to the client to notify that the car is ready.
     void sendEndReset();
 
+    /// return true if client thread is connected
+    bool clientConnected();
+
+    /// return true if server thread is connected
+    bool serverConnected();
+
+    /// return true if world thread is connected
+    bool worldConnected();
+
+    // Returns true if the server needs to restart the communication protocol
+    bool needRestart();
+
   private:
 
     class Pimpl;

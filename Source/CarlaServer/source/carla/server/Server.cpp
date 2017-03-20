@@ -132,12 +132,20 @@ namespace server {
     return _scene;
   }
 
-  void Server::SetReset(bool reset) {
-    _reset = reset;
+  bool Server::worldConnected() const{
+    return _communication->worldConnected();
   }
 
-  bool Server::Reset() const {
-    return _reset;
+  bool Server::clientConnected() const{
+    return _communication->clientConnected();
+  }
+
+  bool Server::serverConnected() const{
+    return _communication->serverConnected();
+  }
+
+  bool Server::needRestart() const {
+    return _communication->NeedRestart();
   }
 
 } // namespace server
