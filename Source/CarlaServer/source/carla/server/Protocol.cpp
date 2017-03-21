@@ -29,7 +29,7 @@ namespace server {
       color_img.emplace_back(color.R);
       color_img.emplace_back(color.G);
       color_img.emplace_back(color.B);
-      color_img.emplace_back(color.A);
+      color_img.emplace_back(255u);
     }
     // Compress to png.
     lodepng::State state;
