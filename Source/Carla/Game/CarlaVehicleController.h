@@ -63,13 +63,12 @@ public:
   /// Orientation vector of the vehicle, pointing forward.
   FVector GetVehicleOrientation() const;
 
-  /// Acceleration vector of the vehicle.
-  FVector GetVehicleAcceleration() const;
-
   const ACarlaPlayerState &GetPlayerState() const
   {
     return *CarlaPlayerState;
   }
+
+  void ResetPlayerState();
 
   /// @}
   // ===========================================================================

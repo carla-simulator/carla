@@ -92,9 +92,11 @@ void ACarlaVehicleController::Tick(float DeltaTime)
 
   if (IsPossessingAVehicle()) {
     CarlaPlayerState->Location = GetVehicleLocation();
+    const FVector PreviousSpeed = CarlaPlayerState->ForwardSpeed * CarlaPlayerState->Orientation;
     CarlaPlayerState->Orientation = GetVehicleOrientation();
-    CarlaPlayerState->Acceleration = GetVehicleAcceleration();
     CarlaPlayerState->ForwardSpeed = GetVehicleForwardSpeed();
+    const FVector CurrentSpeed = CarlaPlayerState->ForwardSpeed * CarlaPlayerState->Orientation;
+    CarlaPlayerState->Acceleration = (CurrentSpeed - PreviousSpeed) / DeltaTime;
   }
 }
 
@@ -125,10 +127,10 @@ FVector ACarlaVehicleController::GetVehicleOrientation() const
   return GetPawn()->GetTransform().GetRotation().GetForwardVector();
 }
 
-FVector ACarlaVehicleController::GetVehicleAcceleration() const
+void ACarlaVehicleController::ResetPlayerState()
 {
-  check(GetPawn() != nullptr);
-  return {0.0f, 0.0f, 0.0f};
+  check(CarlaPlayerState != nullptr);
+  CarlaPlayerState->Reset();
 }
 
 // =============================================================================
