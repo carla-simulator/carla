@@ -49,6 +49,12 @@ public class Carla : ModuleRules
     AddBoostDependency(Target);
     AddProtobufDependency(Target);
     AddCarlaServerDependency(Target);
+
+    if (Target.Platform == UnrealTargetPlatform.Linux)
+    {
+      // Fails to link the std libraries.
+      PublicAdditionalLibraries.Add("stdc++");
+    }
   }
 
   private bool IsWindows(TargetInfo Target)
