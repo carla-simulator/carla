@@ -91,19 +91,21 @@ int main(int argc, char *argv[]) {
     for (;;){
       if (server.worldConnected()){
 
-        std::cout << "Server send World" << std::endl;
         server.init(1u);
 
         {
-          std::cout << "Server wait scene init" << std::endl;
           carla::Mode mode;
           uint32_t scene;
-          while (!server.tryReadSceneInit(mode, scene)) {}
+          
+          while(!server.needRestart() && !server.tryReadSceneInit(mode, scene));
+
           std::cout << "Received: mode = "
                     << (mode == carla::Mode::MONO ? "MONO" : "STEREO")
                     << ", scene = "
                     << scene << std::endl;
         }
+
+
         {
           carla::Scene_Values sceneValues;
           sceneValues.possible_positions.push_back({0.0f, 0.0f});
@@ -112,29 +114,28 @@ int main(int argc, char *argv[]) {
           const std::array<float, 16u> pMatrix = {{ 10.0 }};
           sceneValues.projection_matrices.push_back(pMatrix);
 
-          std::cout << "Server send positions" << std::endl;
-          server.sendSceneValues(sceneValues);
+          if(!server.needRestart())
+            server.sendSceneValues(sceneValues);
 
-          std::cout << "Server wait new episode" << std::endl;
+          std::cout << "New episode" << std::endl;
           uint32_t start, end;
-          while (!server.tryReadEpisodeStart(start, end)) {}
+          while (!server.needRestart() && !server.tryReadEpisodeStart(start, end));
           std::cout << "Received: startIndex = " << start
                     << ", endIndex = " << end << std::endl;
         }
 
-        std::cout << "Server send end reset" << std::endl;
         server.sendEndReset();
         while (!server.needRestart()) {
           if (server.clientConnected() && server.serverConnected()){
             float steer, gas;
             uint32_t startPoint, endPoint;
             if (server.tryReadEpisodeStart(startPoint, endPoint)) {
-              std::cout << "------> RESET <------" << std::endl;
-              std::cout << " --> Start: " << startPoint << " End: " << endPoint << std::endl;
+              std::cout << "-------- RESET --------" << std::endl;
+              std::cout << "--> Start: " << startPoint << " End: " << endPoint << " <--" << std::endl;
               server.sendEndReset();
             } else {
               if (server.tryReadControl(steer, gas)) {
-                std::cout << "Steer: " << steer << "Gas: " << gas << std::endl;
+                std::cout << "Steer: " << steer << " Gas: " << gas << std::endl;
               }
               static decltype(carla::Reward_Values::timestamp) timestamp = 0u;
               reward.timestamp = timestamp++;
@@ -143,7 +144,7 @@ int main(int argc, char *argv[]) {
           }
         }
 
-        std::cout << "----  RESTARTING ----" <<  std::endl;
+        std::cout << " -----  RESTARTING -----" <<  std::endl;
       }
     }
   } catch (const std::exception &e) {
