@@ -61,8 +61,6 @@ namespace carla {
 
             std::string outMessage(GetBytes(message.length()) + message);
 
-            std::cout << message.length() << std::endl;
-
             boost::asio::write(_socket, boost::asio::buffer(outMessage), error);
 
             if (error)

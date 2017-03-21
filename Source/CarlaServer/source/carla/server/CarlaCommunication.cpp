@@ -15,8 +15,8 @@ namespace server {
 
   static Mode getMode(int modeInt) {
     switch (modeInt) {
-      case 1:   return Mode::MONO;
-      case 2:   return Mode::STEREO;
+      case 0:   return Mode::MONO;
+      case 1:   return Mode::STEREO;
       default:  return Mode::INVALID;
     }
   }
