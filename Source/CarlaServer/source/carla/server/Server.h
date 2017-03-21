@@ -15,7 +15,6 @@ namespace carla {
 namespace server {
 
   class CarlaCommunication;
-  class Protocol;
 
   /// Asynchronous TCP server. Uses two ports, one for sending messages (write)
   /// and one for receiving messages (read).
@@ -62,21 +61,24 @@ namespace server {
 
     int GetScene() const;
 
-    void SetReset(bool reset);
+    bool worldConnected() const;
 
-    bool Reset() const;
+    bool clientConnected() const;
+
+    bool serverConnected() const;
+
+    bool needRestart() const;
 
   private:
 
     //std::mutex _mutex;
 
-    std::atomic<Mode> _mode { Mode::MONO };
+    
     std::atomic_int _scene;
-    std::atomic_bool _reset;
 
     const std::unique_ptr<CarlaCommunication> _communication;
 
-    const std::unique_ptr<Protocol> _proto;
+    //const std::unique_ptr<Protocol> _proto;
   };
 
 } // namespace server

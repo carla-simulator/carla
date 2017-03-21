@@ -7,6 +7,8 @@
 #include <mutex>
 #include <queue>
 
+#include <iostream>
+
 namespace carla {
 namespace thread {
 
@@ -22,6 +24,7 @@ namespace thread {
     ThreadSafeQueue(const ThreadSafeQueue &other) {
       std::lock_guard<std::mutex> lock(other._mutex);
       _queue = other._queue;
+      _canWait = true;
     }
 
     void push(T new_value) {
@@ -30,55 +33,61 @@ namespace thread {
       _condition.notify_one();
     }
 
-    void wait_and_pop(T &value) {
-      std::unique_lock<std::mutex> lock(_mutex);
-      _condition.wait(lock, [this] {return !_queue.empty(); });
-      value = _queue.front();
-	  _queue.pop();
+    void canWait(bool wait){
+      //std::lock_guard<std::mutex> lock(_mutex);
+      _canWait = wait;
+      _condition.notify_one();
     }
 
-    // std::shared_ptr<T> wait_and_pop() {
-    //   std::unique_lock<std::mutex> lock(_mutex);
-    //   _condition.wait(lock, [this] {return !_queue.empty(); });
-    //   std::shared_ptr<T> res(std::make_shared<T>(_queue.front()));
-    //   _queue.pop();
-    //   return res;
-    // }
+    bool wait_and_pop(T &value) {
+      std::unique_lock<std::mutex> lock(_mutex);
+      _condition.wait(lock, [this] {
+        return !_queue.empty() || !_canWait; 
+      });
+
+      //while(_queue.empty()  && _canWait);
+
+      if (!_queue.empty() && _canWait) {
+        value = _queue.front();
+        _queue.pop();
+        return true;
+      }
+
+      else return false;
+    }
 
     bool try_pop(T &value) {
       std::lock_guard<std::mutex> lock(_mutex);
       if (_queue.empty()) {
         return false;
       }
-	  else {
-		  value = _queue.front();
-		  _queue.pop();
-		  return true;
-	  }
+  	  else {
+  		  value = _queue.front();
+  		  _queue.pop();
+  		  return true;
+	    }
     }
-
-    // std::shared_ptr<T> try_pop() {
-    //   std::lock_guard<std::mutex> lock(_mutex);
-    //   if (_queue.empty()) {
-    //     return std::shared_ptr<T>();
-    //   }
-    //   std::shared_ptr<T> res(std::make_shared<T>(_queue.front()));
-    //   _queue.pop();
-    //   return res;
-    // }
-
+    
     bool empty() const {
       std::lock_guard<std::mutex> lock(_mutex);
       return _queue.empty();
     }
 
+
+    
+
+
+
   private:
 
     mutable std::mutex _mutex;
 
+    std::atomic_bool _canWait;
+
     std::queue<T> _queue;
 
     std::condition_variable _condition;
+
   };
 
 } // namespace thread

@@ -109,13 +109,25 @@ namespace carla {
     bool tryReadControl(float &steer, float &throttle);
 
     /// Send values of the current player status.
-    void sendReward(const Reward_Values &values);
+    bool sendReward(const Reward_Values &values);
 
     /// Send the values of the generated scene.
-    void sendSceneValues(const Scene_Values &values);
+    bool sendSceneValues(const Scene_Values &values);
 
     /// Send a signal to the client to notify that the car is ready.
-    void sendEndReset();
+    bool sendEndReset();
+
+    /// return true if client thread is connected
+    bool clientConnected();
+
+    /// return true if server thread is connected
+    bool serverConnected();
+
+    /// return true if world thread is connected
+    bool worldConnected();
+
+    // Returns true if the server needs to restart the communication protocol
+    bool needRestart();
 
   private:
 

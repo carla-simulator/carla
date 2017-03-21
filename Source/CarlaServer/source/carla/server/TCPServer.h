@@ -14,7 +14,7 @@ namespace server {
   /// { TCP server.
   ///
   /// A new socket is created for every connection (every write and read).
-  class TCPServer : private NonCopyable {
+  class TCPServer {
   public:
 
     using error_code = boost::system::error_code;
@@ -25,23 +25,24 @@ namespace server {
 
     void writeString(const std::string &message, error_code &error);
 
-    void readString(std::string &message, error_code &error);
+    bool readString(std::string &message, error_code &error);
 
 	void AcceptSocket();
 
 	bool Connected();
 
-	const int _port;
+  void close();
+
+	const int port;
 
   private:
+  
+   boost::asio::io_service _service;
 
-    boost::asio::io_service _service;
 
-    boost::asio::ip::tcp::acceptor _acceptor;
+	 boost::asio::ip::tcp::socket _socket;
 
-	boost::asio::ip::tcp::socket _socket;
-
-	bool _connected;
+   std::atomic_bool _connected;
   };
 
 } // namespace server

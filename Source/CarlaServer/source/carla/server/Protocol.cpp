@@ -1,6 +1,7 @@
 #include "Protocol.h"
 
-#include "Server.h"
+#include "CarlaCommunication.h"
+#include "carla/CarlaServer.h"
 #include "lodepng.h"
 
 #include "carla_protocol.pb.h"
@@ -28,7 +29,7 @@ namespace server {
       color_img.emplace_back(color.R);
       color_img.emplace_back(color.G);
       color_img.emplace_back(color.B);
-      color_img.emplace_back(color.A);
+      color_img.emplace_back(255u);
     }
     // Compress to png.
     lodepng::State state;
@@ -41,8 +42,8 @@ namespace server {
     return true;
   }
 
-  Protocol::Protocol(carla::server::Server *server) {
-    _server = server;
+  Protocol::Protocol(carla::server::CarlaCommunication *communication) {
+    _communication = communication;
   }
 
   Protocol::~Protocol() {}
@@ -71,13 +72,13 @@ namespace server {
       }
     }
 
-    // auto depths = {values.image_depth_0, values.image_depth_1};
-    // for (const std::vector<Color> &image : depths) {
-    //   std::vector<unsigned char> png_image;
-    //   if (getPNGImage(image, values.image_width, values.image_height, png_image)) {
-    //     reward.add_depth(std::string(png_image.begin(), png_image.end()));
-    //   }
-    // }
+    auto depths = {values.image_depth_0, values.image_depth_1};
+    for (const std::vector<Color> &image : depths) {
+      std::vector<unsigned char> png_image;
+      if (getPNGImage(image, values.image_width, values.image_height, png_image)) {
+        reward.set_depth(std::string(png_image.begin(), png_image.end()));
+      }
+    }
   }
 
   void Protocol::LoadScene(Scene &scene, const Scene_Values &values) {
@@ -89,7 +90,7 @@ namespace server {
       point->set_pos_y(positions[i].y);
     }
 
-    if (_server->GetMode() == Mode::STEREO) {
+    if (_communication->GetMode() == Mode::STEREO) {
       Scene::Projection_Matrix* matrix;
       std::vector<std::array<float,16>> projection_matrix = values.projection_matrices;
       for (int i = 0; i < projection_matrix.size(); ++i) {

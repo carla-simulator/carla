@@ -11,12 +11,12 @@ namespace carla {
 
 namespace server {
 
-  class Server;
+  class CarlaCommunication;
 
   class Protocol {
   public:
 
-	  explicit Protocol(Server *server);
+	  explicit Protocol(CarlaCommunication *communication);
 
 	  ~Protocol();
 
@@ -28,7 +28,7 @@ namespace server {
 
   private:
 
-	  carla::server::Server *_server;
+	  carla::server::CarlaCommunication *_communication;
   };
 
 }
