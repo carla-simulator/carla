@@ -59,7 +59,6 @@ namespace thread {
       _writeQueue.canWait(false);
       //_thread->detach();
       //_thread = ThreadUniquePointer(new std::thread(&AsyncReadWriteJobQueue::workerThread, this));
-      std::cout << " --> Thread World restart "<<std::endl;
     }
 
     bool getRestart(){
@@ -83,7 +82,6 @@ namespace thread {
           }
 
         }
-        std::cout << " >> RESTART WORLD THREAD << " << std::endl;
       }
     }
 

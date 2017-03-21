@@ -12,6 +12,11 @@
 class EpisodeReady;
 
 namespace carla {
+
+    struct Scene_Values;
+    struct Reward_Values;
+    enum class Mode : int8_t;
+
 namespace server {
 
   class CarlaCommunication : private NonCopyable {
@@ -19,17 +24,20 @@ namespace server {
 
     explicit CarlaCommunication(int worldPort, int writePort, int readPort);
 
-    void sendReward(const Reward &values);
+    void sendReward(const Reward_Values &values);
 
-    bool tryReadControl(std::string &control);
+    bool tryReadControl(float &steer, float &gas);
 
-    void sendScene(const Scene &scene);
+    void sendScene(const Scene_Values &scene);
 
-    void sendReset(const EpisodeReady &ready);
+    void sendReset();
 
-    void sendWorld(const World &world);
+    //void sendWorld(const World &world);
+    void sendWorld(const uint32_t modes, const uint32_t scenes);
 
-    bool tryReadWorldInfo(std::string &info);
+    bool tryReadSceneInit(Mode &mode, uint32_t &scene);
+
+    bool tryReadEpisodeStart(uint32_t &start_index, uint32_t &end_index);
 
     void restartServer();
 
@@ -37,7 +45,7 @@ namespace server {
 
     void restartClient();
 
-    thread::AsyncReaderJobQueue<Reward>& getServerThread();
+    thread::AsyncReaderJobQueue<Reward_Values>& getServerThread();
     thread::AsyncWriterJobQueue<std::string>& getClientThread();
     thread::AsyncReadWriteJobQueue<std::string, std::string>& getWorldThread();
 
@@ -46,6 +54,8 @@ namespace server {
     bool serverConnected();
 
     std::mutex getGeneralMutex();
+
+    Mode GetMode();
 
     bool NeedRestart();
     void Restart();
@@ -61,7 +71,7 @@ namespace server {
 
     int _worldPort, _clientPort, _serverPort;
 
-	thread::AsyncReaderJobQueue<Reward> _serverThread;
+	thread::AsyncReaderJobQueue<Reward_Values> _serverThread;
 
     thread::AsyncWriterJobQueue<std::string> _clientThread;
 
@@ -69,6 +79,9 @@ namespace server {
 
     std::atomic_bool _needRestart;
 
+    std::atomic<Mode> _mode;
+
+    const std::unique_ptr<Protocol> _proto;
   };
 
 }

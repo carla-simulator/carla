@@ -2,6 +2,7 @@
 #include "lodepng.h"
 
 #include "carla_protocol.pb.h"
+#include "../CarlaServer.h"
 
 #include <iostream>
 
@@ -12,6 +13,14 @@ namespace server {
 
   std::mutex _generalMutex;
 
+  static Mode getMode(int modeInt) {
+    switch (modeInt) {
+      case 1:   return Mode::MONO;
+      case 2:   return Mode::STEREO;
+      default:  return Mode::INVALID;
+    }
+  }
+
 
   template<typename ERROR_CODE>
   static void logTCPError(const std::string &text, const ERROR_CODE &errorCode) {
@@ -19,11 +28,20 @@ namespace server {
   }
 
   // This is the thread that sends a string over the TCP socket.
-  static void serverWorkerThread(TCPServer &server, thread::AsyncReaderJobQueue<Reward> &thr, const Reward &rwd) {
+  static void serverWorkerThread(
+    TCPServer &server, 
+    thread::AsyncReaderJobQueue<Reward_Values> &thr,
+    const std::unique_ptr<Protocol> &proto ,
+    const Reward_Values &rwd
+    ) {
 
     if (!thr.getRestart()){
       std::string message;
-      bool correctSerialize = rwd.SerializeToString(&message);
+
+      Reward reward;
+      proto->LoadReward(reward, rwd);
+
+      bool correctSerialize = reward.SerializeToString(&message);
 
       TCPServer::error_code error;
 
@@ -169,6 +187,7 @@ namespace server {
     _server(writePort),
     _client(readPort),
     _needRestart(false),
+    _proto(std::make_unique<Protocol>(this)),
     _worldThread {
     [this]() { return worldReceiveThread(this->_world, this->_worldThread); },
     [this](const std::string & msg) { worldSendThread(this->_world, this->_worldThread, msg); },
@@ -176,7 +195,7 @@ namespace server {
     [this]() { ReconnectAll(*this);}
   },
   _serverThread {
-    [this](const Reward &rwd) { serverWorkerThread(this->_server, this->_serverThread, rwd); },
+    [this](const Reward_Values &rwd) { serverWorkerThread(this->_server, this->_serverThread, this->_proto, rwd); },
     [this]() { Connect(this->_server); },
     [this]() { ReconnectAll(*this);}
   },
@@ -186,48 +205,102 @@ namespace server {
     [this]() { ReconnectAll(*this);}
   }
   {
-
+    _mode = Mode::MONO;
     /*std::cout << "WorldPort: " << worldPort << std::endl;
     std::cout << "writePort: " << writePort << std::endl;
     std::cout << "readPort: " << readPort << std::endl;*/
 
   }
 
-  void CarlaCommunication::sendReward(const Reward &reward) {
-    _serverThread.push(reward);
-    std::cout << "Send Reward" << std::endl;
+  void CarlaCommunication::sendReward(const Reward_Values &values) {
+    _serverThread.push(values);
   }
 
-  bool CarlaCommunication::tryReadControl(std::string &control) {
-    return _clientThread.tryPop(control);
+  bool CarlaCommunication::tryReadControl(float &steer, float &gas) {
+
+    steer = 0.0f;
+    gas = 0.0f;
+    std::string controlMessage;
+
+    if (!_clientThread.tryPop(controlMessage)) return false;
+
+    Control control;
+    if (!control.ParseFromString(controlMessage)) return false;
+
+    steer = control.steer();
+    gas = control.gas();
+
+    return true;
+
   }
 
-  void CarlaCommunication::sendWorld(const World &world) {
+  void CarlaCommunication::sendWorld(const uint32_t modes,const uint32_t scenes) {
 
     _needRestart = false;
 
+    World world;
+    _proto->LoadWorld(world, modes, scenes);
+
     std::string message;
     bool error = !world.SerializeToString(&message);
+
     _worldThread.push(message);
   }
 
-  void CarlaCommunication::sendScene(const Scene &scene) {
+  void CarlaCommunication::sendScene(const Scene_Values &values) {
+    Scene scene;
+    _proto -> LoadScene(scene, values);
+
     std::string message;
     bool error = !scene.SerializeToString(&message);
     _worldThread.push(message);
   }
 
-  void CarlaCommunication::sendReset(const EpisodeReady &ready) {
+  void CarlaCommunication::sendReset() {
+
+    EpisodeReady eReady;
+    eReady.set_ready(true);
+
     std::string message;
-    bool error = !ready.SerializeToString(&message);
-    if (!error) {
-      //std::cout << "Send End Reset" << std::endl;
+    if (eReady.SerializeToString(&message)) {
       _worldThread.push(message);
     }
   }
 
-  bool CarlaCommunication::tryReadWorldInfo(std::string &info) {
-    return _worldThread.tryPop(info);
+  bool CarlaCommunication::tryReadSceneInit(Mode &mode, uint32_t &scene) {
+
+    mode = Mode::INVALID;
+    scene = 0u;
+
+    std::string info;
+    if (!_worldThread.tryPop(info)) return false;
+
+    SceneInit sceneInit;
+
+    if (!sceneInit.ParseFromString(info)) return false;
+
+    mode = getMode(sceneInit.mode());
+    scene = sceneInit.scene();
+
+    _mode = mode;
+
+    return true;
+  }
+
+  bool CarlaCommunication::tryReadEpisodeStart(uint32_t &start_index, uint32_t &end_index){
+    start_index = 0;
+    end_index = 0;
+
+    std::string startData;
+    if (!_worldThread.tryPop(startData)) return false;
+
+    EpisodeStart episodeStart;
+    if(!episodeStart.ParseFromString(startData)) return false;
+
+    start_index = episodeStart.start_index();
+    end_index = episodeStart.end_index();
+
+    return true;
   }
 
   void CarlaCommunication::restartServer(){
@@ -245,7 +318,7 @@ namespace server {
     //_client = TCPServer(_clientPort); 
   }
 
-  thread::AsyncReaderJobQueue<Reward>& CarlaCommunication::getServerThread(){
+  thread::AsyncReaderJobQueue<Reward_Values>& CarlaCommunication::getServerThread(){
     return _serverThread;
   }
 
@@ -267,6 +340,10 @@ namespace server {
     
   bool CarlaCommunication::serverConnected(){
     return _server.Connected();
+  }
+
+  Mode CarlaCommunication::GetMode(){
+    return _mode;
   }
 
   bool CarlaCommunication::NeedRestart(){

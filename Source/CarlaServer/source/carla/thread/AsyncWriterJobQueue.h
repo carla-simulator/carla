@@ -42,9 +42,6 @@ namespace thread {
     void restart(){
       _restart = true;
       _queue.canWait(false);
-      //_thread->detach();
-      //_thread = ThreadUniquePointer(new std::thread(&AsyncWriterJobQueue::workerThread, this));
-      std::cout << "Thread Client restart "<<std::endl;
     }
 
     bool getRestart(){
@@ -66,7 +63,6 @@ namespace thread {
           _queue.push(_job());
 		      //Sleep(10);
         }
-        std::cout << "RESTART CLIENT THREAD" << std::endl;
       }
     }
 

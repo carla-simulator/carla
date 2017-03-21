@@ -1,6 +1,7 @@
 #include "Protocol.h"
 
-#include "Server.h"
+#include "CarlaCommunication.h"
+#include "carla/CarlaServer.h"
 #include "lodepng.h"
 
 #include "carla_protocol.pb.h"
@@ -41,8 +42,8 @@ namespace server {
     return true;
   }
 
-  Protocol::Protocol(carla::server::Server *server) {
-    _server = server;
+  Protocol::Protocol(carla::server::CarlaCommunication *communication) {
+    _communication = communication;
   }
 
   Protocol::~Protocol() {}
@@ -89,7 +90,7 @@ namespace server {
       point->set_pos_y(positions[i].y);
     }
 
-    if (_server->GetMode() == Mode::STEREO) {
+    if (_communication->GetMode() == Mode::STEREO) {
       Scene::Projection_Matrix* matrix;
       std::vector<std::array<float,16>> projection_matrix = values.projection_matrices;
       for (int i = 0; i < projection_matrix.size(); ++i) {

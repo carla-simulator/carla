@@ -56,14 +56,6 @@ namespace thread {
       else return false;
     }
 
-    // std::shared_ptr<T> wait_and_pop() {
-    //   std::unique_lock<std::mutex> lock(_mutex);
-    //   _condition.wait(lock, [this] {return !_queue.empty(); });
-    //   std::shared_ptr<T> res(std::make_shared<T>(_queue.front()));
-    //   _queue.pop();
-    //   return res;
-    // }
-
     bool try_pop(T &value) {
       std::lock_guard<std::mutex> lock(_mutex);
       if (_queue.empty()) {
@@ -75,17 +67,7 @@ namespace thread {
   		  return true;
 	    }
     }
-
-    // std::shared_ptr<T> try_pop() {
-    //   std::lock_guard<std::mutex> lock(_mutex);
-    //   if (_queue.empty()) {
-    //     return std::shared_ptr<T>();
-    //   }
-    //   std::shared_ptr<T> res(std::make_shared<T>(_queue.front()));
-    //   _queue.pop();
-    //   return res;
-    // }
-
+    
     bool empty() const {
       std::lock_guard<std::mutex> lock(_mutex);
       return _queue.empty();
