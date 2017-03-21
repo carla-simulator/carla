@@ -31,16 +31,22 @@ namespace carla {
     return _pimpl->tryReadControl(steer, throttle);
   }
 
-  void CarlaServer::sendReward(const Reward_Values &values) {
+  bool CarlaServer::sendReward(const Reward_Values &values) {
+    if (needRestart()) return false;
     _pimpl->sendReward(values);
+    return true;
   }
 
-  void CarlaServer::sendSceneValues(const Scene_Values &values) {
+  bool CarlaServer::sendSceneValues(const Scene_Values &values) {
+    if (needRestart()) return false;
     _pimpl->sendSceneValues(values);
+    return true;
   }
 
-  void CarlaServer::sendEndReset() {
+  bool CarlaServer::sendEndReset() {
+    if (needRestart()) return false;
     _pimpl->sendEndReset();
+    return true;
   }
 
   bool CarlaServer::worldConnected(){

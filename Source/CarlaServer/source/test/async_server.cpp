@@ -114,8 +114,7 @@ int main(int argc, char *argv[]) {
           const std::array<float, 16u> pMatrix = {{ 10.0 }};
           sceneValues.projection_matrices.push_back(pMatrix);
 
-          if(!server.needRestart())
-            server.sendSceneValues(sceneValues);
+          server.sendSceneValues(sceneValues);
 
           std::cout << "New episode" << std::endl;
           uint32_t start, end;
