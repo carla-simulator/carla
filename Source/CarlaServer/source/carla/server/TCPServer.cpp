@@ -65,7 +65,7 @@ namespace carla {
 
             boost::asio::write(_socket, boost::asio::buffer(outMessage), error);
 
-            if (boost::asio::error::connection_reset == error)
+            if (error)
             {
               _connected = false;
             }

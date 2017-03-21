@@ -67,7 +67,7 @@ namespace server {
     for (const std::vector<Color> &image : images) {
       std::vector<unsigned char> png_image;
       if (getPNGImage(image, values.image_width, values.image_height, png_image)) {
-        reward.add_image(std::string(png_image.begin(), png_image.end()));
+        reward.set_image(std::string(png_image.begin(), png_image.end()));
       }
     }
 
@@ -75,7 +75,7 @@ namespace server {
     for (const std::vector<Color> &image : depths) {
       std::vector<unsigned char> png_image;
       if (getPNGImage(image, values.image_width, values.image_height, png_image)) {
-        reward.add_depth(std::string(png_image.begin(), png_image.end()));
+        reward.set_depth(std::string(png_image.begin(), png_image.end()));
       }
     }
   }

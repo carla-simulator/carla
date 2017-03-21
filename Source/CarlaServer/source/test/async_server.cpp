@@ -38,6 +38,7 @@ static std::vector<carla::Color> makeImage(uint32_t width, uint32_t height) {
      img[4 * width * i + 4 * e + 3] = 255;
    }
   }
+  
   std::vector<carla::Color> image(width * height);
   size_t i = 0u;
   for (carla::Color &color : image) {
