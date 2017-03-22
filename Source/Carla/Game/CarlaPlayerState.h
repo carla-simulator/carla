@@ -15,9 +15,9 @@ class CARLA_API ACarlaPlayerState : public APlayerState
 
 public:
 
-  /// @todo ?
-  // virtual void Reset();
-  // virtual void CopyProperties(APlayerState *PlayerState);
+  virtual void Reset() override;
+
+  virtual void CopyProperties(APlayerState *PlayerState) override;
 
   void RegisterCollision(AActor *Actor, FVector NormalImpulse);
 

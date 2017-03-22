@@ -1,4 +1,3 @@
-syntax = "proto2";
 
 // Client Messages
 message EpisodeStart {

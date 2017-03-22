@@ -96,7 +96,6 @@ static void SendReward(
   Set(reward.player_location, PlayerState.GetLocation());
   Set(reward.player_orientation, PlayerState.GetOrientation());
   Set(reward.player_acceleration, PlayerState.GetAcceleration());
-  // Set(reward.player_acceleration, );
   Set(reward.forward_speed, PlayerState.GetForwardSpeed());
   Set(reward.collision_car, PlayerState.GetCollisionIntensityCars());
   Set(reward.collision_pedestrian, PlayerState.GetCollisionIntensityPedestrians());
@@ -108,7 +107,7 @@ static void SendReward(
     reward.image_height = Cameras[0u]->GetImageSizeY();
   }
   Set(reward.image_rgb_0, Cameras[0u]);
-  Set(reward.image_rgb_1, Cameras[1u]);
+  // Set(reward.image_rgb_1, Cameras[1u]);
   // Set(reward.image_depth_0, );
   // Set(reward.image_depth_1, );
   UE_LOG(LogCarla, Log, TEXT("Send reward"));
@@ -129,6 +128,18 @@ static void ReadControl(carla::CarlaServer &Server, ACarlaVehicleController &Pla
   }
 }
 
+static void SetActorTransform(
+    ACarlaVehicleController &Player,
+    const TArray<FTransform> &AvailableStartTransforms,
+    uint32 Index)
+{
+  if (Index >= AvailableStartTransforms.Num()) {
+    Index = 0u;
+  }
+  check(AvailableStartTransforms.Num() > 0);
+  Player.SetActorTransform(AvailableStartTransforms[Index]);
+}
+
 // =============================================================================
 // -- CarlaGameController ------------------------------------------------------
 // =============================================================================
@@ -136,11 +147,7 @@ static void ReadControl(carla::CarlaServer &Server, ACarlaVehicleController &Pla
 CarlaGameController::CarlaGameController() :
   Server(MakeUnique<carla::CarlaServer>(2001u, 2002u, 2000u)),
   Player(nullptr),
-  Cameras({{nullptr}})
-{
-  UE_LOG(LogCarla, Log, TEXT("Initializing CarlaServer"));
-  Server->init(1u);
-}
+  Cameras({{nullptr}}) {}
 
 APlayerStart *CarlaGameController::ChoosePlayerStart(
     const TArray<APlayerStart *> &AvailableStartSpots)
@@ -179,20 +186,27 @@ void CarlaGameController::RegisterCaptureCamera(const ASceneCaptureCamera &Captu
 void CarlaGameController::Tick(float DeltaSeconds)
 {
   check(Player != nullptr);
+  if (!Server->clientConnected() || !Server->serverConnected() || !Server->worldConnected())
+    return;
+
   uint32 StartIndex;
-  if (bIsResetting) {
+  if (bIsResetting || Server->needRestart()) {
+    UE_LOG(LogCarla, Log, TEXT("Initializing CarlaServer"));
+    Server->init(1u);
     UE_LOG(LogCarla, Log, TEXT("Resetting the world"));
     // Resetting the world.
     ReadSceneInit(*Server);
     SendSceneValues(*Server, AvailableStartTransforms);
     StartIndex = ReadEpisodeStart(*Server);
-    Player->SetActorTransform(AvailableStartTransforms[StartIndex]);
+    SetActorTransform(*Player, AvailableStartTransforms, StartIndex);
+    Player->ResetPlayerState();
     Server->sendEndReset();
     bIsResetting = false;
   } else if (TryReadEpisodeStart(*Server, StartIndex)) {
     // Handle request for resetting the world.
     UE_LOG(LogCarla, Log, TEXT("Handle request for resetting the world"));
-    Player->SetActorTransform(AvailableStartTransforms[StartIndex]);
+    SetActorTransform(*Player, AvailableStartTransforms, StartIndex);
+    Player->ResetPlayerState();
     Server->sendEndReset();
   } else {
     // Regular tick.

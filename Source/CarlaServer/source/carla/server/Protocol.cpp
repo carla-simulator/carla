@@ -64,7 +64,7 @@ namespace server {
     reward.set_speed(values.forward_speed);
     reward.set_timestamp(values.timestamp);
 
-    auto images = {values.image_rgb_0, values.image_rgb_1};
+    auto images = {values.image_rgb_0/*, values.image_rgb_1*/};
     for (const std::vector<Color> &image : images) {
       std::vector<unsigned char> png_image;
       if (getPNGImage(image, values.image_width, values.image_height, png_image)) {
