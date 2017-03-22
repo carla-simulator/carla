@@ -27,13 +27,13 @@ public:
 
 private:
 
+  void RestartLevel(bool ServerNeedsRestart);
+
   TUniquePtr<carla::CarlaServer> Server;
 
   ACarlaVehicleController *Player;
 
   std::array<const ASceneCaptureCamera *, 2u> Cameras;
 
-  TArray<FTransform> AvailableStartTransforms;
-
-  bool bIsResetting = true;
+  bool bServerNeedsRestart = true;
 };

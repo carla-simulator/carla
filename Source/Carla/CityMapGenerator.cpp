@@ -27,7 +27,7 @@ ACityMapGenerator::~ACityMapGenerator() {}
 void ACityMapGenerator::OnConstruction(const FTransform &Transform)
 {
   Super::OnConstruction(Transform);
-  UpdateMap();
+  // UpdateMap(); /// @todo Do we need to update the map here?
 }
 
 #if WITH_EDITOR
