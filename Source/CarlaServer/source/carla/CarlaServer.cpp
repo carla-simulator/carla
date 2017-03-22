@@ -70,7 +70,7 @@ namespace carla {
   }*/
 
   bool CarlaServer::needsRestart(){
-    return _pimpl->needsRestart() && _pimpl->worldConnected() && _pimpl->clientConnected() && _pimpl->serverConnected();
+    return _pimpl->needsRestart() || (!_pimpl->worldConnected() || !_pimpl->clientConnected() || !_pimpl->serverConnected());
   }
 
 } // namespace carla

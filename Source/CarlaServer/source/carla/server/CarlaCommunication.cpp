@@ -132,6 +132,15 @@ namespace server {
 
       server.writeString(message, error);
 
+       
+       Scene demo_scene;
+       if (demo_scene.ParseFromString(message)){
+        std::cout << "POSSIBLE POSITIONS 5"<< std::endl;
+          for (int i=0; i<demo_scene.position_size(); ++i){
+            std::cout << "   x: " << demo_scene.position(i).pos_x() << " y: " << demo_scene.position(i).pos_y() << std::endl;
+          }
+        }
+
       if (error) {
         logTCPError("Failed to send world", error);
       }
@@ -142,9 +151,12 @@ namespace server {
     }
   }
 
-  static void Connect(TCPServer &server) {
+  static void Connect(TCPServer &server, CarlaCommunication &communication) {
       std::cout << "Waiting... port: " << server.port << std::endl;
       server.AcceptSocket(); 
+
+      communication.checkRestart();
+
   }
 
   static void ReconnectAll(CarlaCommunication &communication){
@@ -192,17 +204,17 @@ namespace server {
     _worldThread {
     [this]() { return worldReceiveThread(this->_world, this->_worldThread); },
     [this](const std::string & msg) { worldSendThread(this->_world, this->_worldThread, msg); },
-    [this]() { Connect(this->_world); },
+    [this]() { Connect(this->_world, *this); },
     [this]() { ReconnectAll(*this);}
   },
   _serverThread {
     [this](const Reward_Values &rwd) { serverWorkerThread(this->_server, this->_serverThread, this->_proto, rwd); },
-    [this]() { Connect(this->_server); },
+    [this]() { Connect(this->_server, *this); },
     [this]() { ReconnectAll(*this);}
   },
   _clientThread {
     [this]() { return clientWorkerThread(this->_client, this->_clientThread); },
-    [this]() { Connect(this->_client); },
+    [this]() { Connect(this->_client, *this); },
     [this]() { ReconnectAll(*this);}
   }
   {
@@ -242,8 +254,6 @@ namespace server {
   }
 
   void CarlaCommunication::sendWorld(const uint32_t modes,const uint32_t scenes) {
-
-    _needsRestart = false;
 
     World world;
     _proto->LoadWorld(world, modes, scenes);
@@ -334,6 +344,13 @@ namespace server {
   void CarlaCommunication::restartClient(){
     _client.close();
     //_client = TCPServer(_clientPort); 
+  }
+
+
+  void CarlaCommunication::checkRestart(){
+     if (_needsRestart && _world.Connected() && 
+          _client.Connected() && _server.Connected())
+        _needsRestart = false;
   }
 
   thread::AsyncReaderJobQueue<Reward_Values>& CarlaCommunication::getServerThread(){

@@ -55,6 +55,8 @@ namespace server {
     thread::AsyncWriterJobQueue<std::string>& getClientThread();
     thread::AsyncReadWriteJobQueue<std::string, std::string>& getWorldThread();
 
+    void checkRestart();
+
     bool worldConnected();
     bool clientConnected();
     bool serverConnected();

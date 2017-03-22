@@ -60,6 +60,8 @@ namespace thread {
         _restart = false;
         _queue.canWait(true);
         while (!_restart && !_done) {
+          T temp;
+          while(_queue.try_pop(temp));
           _queue.push(_job());
 		      //Sleep(10);
         }

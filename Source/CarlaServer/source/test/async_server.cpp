@@ -107,7 +107,7 @@ int main(int argc, char *argv[]) {
 
           carla::Scene_Values sceneValues;
 
-        {
+        
           sceneValues.possible_positions.push_back({0.0f, 0.0f});
           sceneValues.possible_positions.push_back({1.0f, 2.0f});
           sceneValues.possible_positions.push_back({3.0f, 4.0f});
@@ -127,7 +127,7 @@ int main(int argc, char *argv[]) {
           while (!server.needsRestart() && !server.tryReadEpisodeStart(start, end));
           std::cout << "Received: startIndex = " << start
                     << ", endIndex = " << end << std::endl;
-        }
+        
 
         server.sendEndReset();
         while (!server.needsRestart()) {
@@ -139,17 +139,16 @@ int main(int argc, char *argv[]) {
             while (!server.needsRestart() && !server.tryReadEpisodeStart(startPoint, endPoint));
             std::cout << "--> Start: " << startPoint << " End: " << endPoint << " <--" << std::endl;
             server.sendEndReset();
-            }else {
-              if (server.tryReadControl(steer, gas)) {
-                std::cout << "Steer: " << steer << " Gas: " << gas << std::endl;
-              }
-              static decltype(carla::Reward_Values::timestamp) timestamp = 0u;
-              reward.timestamp = timestamp++;
-              server.sendReward(reward);
+          }else {
+            if (server.tryReadControl(steer, gas)) {
+              std::cout << "Steer: " << steer << " Gas: " << gas << std::endl;
             }
+            static decltype(carla::Reward_Values::timestamp) timestamp = 0u;
+            reward.timestamp = timestamp++;
+            server.sendReward(reward);
+          }
         }
-
-        std::cout << " -----  RESTARTING -----" <<  std::endl;
+      std::cout << " -----  RESTARTING -----" <<  std::endl;
       }
     }
   } catch (const std::exception &e) {

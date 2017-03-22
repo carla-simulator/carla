@@ -80,6 +80,8 @@ namespace thread {
             _readJob(value);
           }
           if (!_restart){
+            W temp;
+            while(_writeQueue.try_pop(temp));
             _writeQueue.push(_writeJob());
           }
 
