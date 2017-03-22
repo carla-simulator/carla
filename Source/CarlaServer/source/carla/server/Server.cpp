@@ -32,6 +32,13 @@ namespace server {
     //Scene scene;
     //_proto->LoadScene(scene, values);
     //_communication->sendScene(scene);
+
+    /*std::cout << "POSSIBLE POSITIONS 1"<< std::endl;
+
+    for (int i=0; i<values.possible_positions.size(); ++i){
+      std::cout << "   x: " << values.possible_positions[i].x << " y: " << values.possible_positions[i].y << std::endl;
+    }*/
+
     _communication->sendScene(values);
   }
 

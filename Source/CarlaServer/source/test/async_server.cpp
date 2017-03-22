@@ -114,6 +114,12 @@ int main(int argc, char *argv[]) {
           const std::array<float, 16u> pMatrix = {{ 10.0 }};
           sceneValues.projection_matrices.push_back(pMatrix);
 
+          std::cout << "POSSIBLE POSITIONS "<< std::endl;
+
+          for (int i=0; i<sceneValues.possible_positions.size(); ++i){
+            std::cout << "   x: " << sceneValues.possible_positions[i].x << " y: " << sceneValues.possible_positions[i].y << std::endl;
+          }
+
           server.sendSceneValues(sceneValues);
 
           std::cout << "New episode" << std::endl;

@@ -83,11 +83,22 @@ namespace server {
 
   void Protocol::LoadScene(Scene &scene, const Scene_Values &values) {
     std::vector<Vector2D> positions = values.possible_positions;
+
+
+/*    std::cout << "POSSIBLE POSITIONS 3"<< std::endl;
+
+    for (int i=0; i<values.possible_positions.size(); ++i){
+      std::cout << "   x: " << values.possible_positions[i].x << " y: " << values.possible_positions[i].y << std::endl;
+    }
+
+    std::cout << "POSSIBLE POSITIONS 4"<< std::endl;
+*/
     for (int i = 0; i < positions.size(); ++i) {
-      Scene::Position* point;
-      point = scene.add_position();
+      Scene::Position* point = scene.add_position();
       point->set_pos_x(positions[i].x);
       point->set_pos_y(positions[i].y);
+      
+      //std::cout << "   x: " << point->pos_x() << " y: " << point->pos_y() << std::endl;
     }
 
     if (_communication->GetMode() == Mode::STEREO) {

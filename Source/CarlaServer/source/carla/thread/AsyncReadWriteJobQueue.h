@@ -46,6 +46,8 @@ namespace thread {
     }
 
     void push(R item) {
+      R temp;
+      while (_readQueue.try_pop(temp));
       _readQueue.push(item);
     }
 

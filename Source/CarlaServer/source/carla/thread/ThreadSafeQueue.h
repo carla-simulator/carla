@@ -34,7 +34,7 @@ namespace thread {
     }
 
     void canWait(bool wait){
-      //std::lock_guard<std::mutex> lock(_mutex);
+      std::lock_guard<std::mutex> lock(_mutex);
       _canWait = wait;
       _condition.notify_one();
     }

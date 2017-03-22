@@ -131,6 +131,7 @@ namespace server {
       TCPServer::error_code error;
 
       server.writeString(message, error);
+
       if (error) {
         logTCPError("Failed to send world", error);
       }
@@ -248,12 +249,14 @@ namespace server {
   }
 
   void CarlaCommunication::sendScene(const Scene_Values &values) {
+
+
     Scene scene;
     _proto -> LoadScene(scene, values);
 
     std::string message;
-    bool error = !scene.SerializeToString(&message);
-    _worldThread.push(message);
+    if (scene.SerializeToString(&message))_worldThread.push(message);
+
   }
 
   void CarlaCommunication::sendReset() {
