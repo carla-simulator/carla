@@ -213,6 +213,12 @@ namespace server {
 
   }
 
+  CarlaCommunication::~CarlaCommunication(){
+    delete &_worldThread;
+    delete &_serverThread;
+    delete &_clientThread;
+  }
+
   void CarlaCommunication::sendReward(const Reward_Values &values) {
     _serverThread.push(values);
   }

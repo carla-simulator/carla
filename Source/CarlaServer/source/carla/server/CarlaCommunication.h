@@ -26,6 +26,8 @@ namespace server {
 
     explicit CarlaCommunication(int worldPort, int writePort, int readPort);
 
+    ~CarlaCommunication();
+
     void sendReward(const Reward_Values &values);
 
     bool tryReadControl(float &steer, float &gas);
