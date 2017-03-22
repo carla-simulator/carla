@@ -63,7 +63,7 @@ static void SendSceneValues(carla::CarlaServer &Server, const TArray<FTransform>
     UE_LOG(LogCarla, Log, TEXT("Start position {%f, %f}"), Location.X, Location.Y);
     sceneValues.possible_positions.push_back({Location.X, Location.Y});
   }
-  UE_LOG(LogCarla, Log, TEXT("Send scene values"));
+  UE_LOG(LogCarla, Log, TEXT("Send scene values: %d positions"), sceneValues.possible_positions.size());
   Server.sendSceneValues(sceneValues);
 }
 
@@ -83,7 +83,11 @@ static bool TryReadEpisodeStart(carla::CarlaServer &Server, uint32 &StartIndex)
 {
   uint32 EndIndex;
   UE_LOG(LogCarla, Log, TEXT("tryReadEpisodeStart"));
-  return Server.tryReadEpisodeStart(StartIndex, EndIndex);
+  if (Server.tryReadEpisodeStart(StartIndex, EndIndex)) {
+    UE_LOG(LogCarla, Warning, TEXT("Requested new episode"));
+    return true;
+  }
+  return false;
 }
 
 static void SendReward(
@@ -92,7 +96,7 @@ static void SendReward(
     const std::array<const ASceneCaptureCamera *, 2u> &Cameras)
 {
   carla::Reward_Values reward;
-  reward.timestamp = FMath::RoundHalfToZero(FPlatformTime::Seconds());
+  reward.timestamp = FMath::RoundHalfToZero(1000.0 * FPlatformTime::Seconds());
   Set(reward.player_location, PlayerState.GetLocation());
   Set(reward.player_orientation, PlayerState.GetOrientation());
   Set(reward.player_acceleration, PlayerState.GetAcceleration());
@@ -107,7 +111,7 @@ static void SendReward(
     reward.image_height = Cameras[0u]->GetImageSizeY();
   }
   Set(reward.image_rgb_0, Cameras[0u]);
-  // Set(reward.image_rgb_1, Cameras[1u]);
+  Set(reward.image_rgb_1, Cameras[1u]);
   // Set(reward.image_depth_0, );
   // Set(reward.image_depth_1, );
   UE_LOG(LogCarla, Log, TEXT("Send reward"));
@@ -137,7 +141,13 @@ static void SetActorTransform(
     Index = 0u;
   }
   check(AvailableStartTransforms.Num() > 0);
-  Player.SetActorTransform(AvailableStartTransforms[Index]);
+  UE_LOG(LogCarla, Log, TEXT("Before: Pawn position = %s"), *Player.GetPawn()->GetActorLocation().ToString());
+  if (!Player.GetPawn()->SetActorTransform(AvailableStartTransforms[Index], false)) {
+    UE_LOG(LogCarla, Error, TEXT("Failed to set actor transform"));
+  } else {
+    Player.GetPawn()->MarkComponentsRenderStateDirty();
+  }
+  UE_LOG(LogCarla, Log, TEXT("After: Pawn position = %s"), *Player.GetPawn()->GetActorLocation().ToString());
 }
 
 // =============================================================================
