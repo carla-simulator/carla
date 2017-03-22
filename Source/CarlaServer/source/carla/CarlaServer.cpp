@@ -14,7 +14,7 @@ namespace carla {
     _pimpl(std::make_unique<Pimpl>(worldPort, writePort, readPort)) {}
 
   CarlaServer::~CarlaServer() {}
-  
+
   void CarlaServer::init(uint32_t LevelCount) {
     _pimpl->sendWorld(static_cast<uint32_t>(Mode::NUMBER_OF_MODES), LevelCount);
   }
@@ -30,8 +30,8 @@ namespace carla {
   bool CarlaServer::tryReadControl(float &steer, float &throttle) {
     return _pimpl->tryReadControl(steer, throttle);
   }
-  
-  bool CarlaServer::tryReadRequestNewEpisode(){
+
+  bool CarlaServer::newEpisodeRequested() {
     return _pimpl->tryReadRequestNewEpisode();
   }
 
@@ -45,7 +45,7 @@ namespace carla {
     if (needsRestart()) return false;
     _pimpl->sendSceneValues(values);
     return true;
-  }  
+  }
 
   bool CarlaServer::sendEndReset() {
     if (needsRestart()) return false;

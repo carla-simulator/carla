@@ -38,7 +38,7 @@ static std::vector<carla::Color> makeImage(uint32_t width, uint32_t height) {
      img[4 * width * i + 4 * e + 3] = 255;
    }
   }
-  
+
   std::vector<carla::Color> image(width * height);
   size_t i = 0u;
   for (carla::Color &color : image) {
@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
         {
           carla::Mode mode;
           uint32_t scene;
-          
+
           while(!server.needsRestart() && !server.tryReadSceneInit(mode, scene));
 
           std::cout << "Received: mode = "
@@ -107,7 +107,7 @@ int main(int argc, char *argv[]) {
 
           carla::Scene_Values sceneValues;
 
-        
+
           sceneValues.possible_positions.push_back({0.0f, 0.0f});
           sceneValues.possible_positions.push_back({1.0f, 2.0f});
           sceneValues.possible_positions.push_back({3.0f, 4.0f});
@@ -127,13 +127,13 @@ int main(int argc, char *argv[]) {
           while (!server.needsRestart() && !server.tryReadEpisodeStart(start, end));
           std::cout << "Received: startIndex = " << start
                     << ", endIndex = " << end << std::endl;
-        
+
 
         server.sendEndReset();
         while (!server.needsRestart()) {
           float steer, gas;
           uint32_t startPoint, endPoint;
-          if (server.tryReadRequestNewEpisode()){
+          if (server.newEpisodeRequested()){
             std::cout << "-------- RESET --------" << std::endl;
             server.sendSceneValues(sceneValues);
             while (!server.needsRestart() && !server.tryReadEpisodeStart(startPoint, endPoint));
