@@ -57,6 +57,8 @@ namespace thread {
     void workerThread() {
       while (!_done){
 		    _connectJob();
+        T temp;
+        while(_queue.try_pop(temp));
         _restart = false;
         _queue.canWait(true);
         while (!_restart && !_done) {

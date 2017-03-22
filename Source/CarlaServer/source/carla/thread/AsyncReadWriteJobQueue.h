@@ -73,6 +73,9 @@ namespace thread {
       while(!_done){
         _connectJob();
         _restart = false; 
+        W temp1; R temp2;
+        while(_writeQueue.try_pop(temp1));
+        while(_readQueue.try_pop(temp2));
         _readQueue.canWait(true);
         while (!_restart && !_done) {
           R value;
@@ -80,9 +83,10 @@ namespace thread {
             _readJob(value);
           }
           if (!_restart){
+            W write = _writeJob();
             W temp;
-            while(_writeQueue.try_pop(temp));
-            _writeQueue.push(_writeJob());
+            while (_writeQueue.try_pop(temp));
+            _writeQueue.push(write);
           }
 
         }

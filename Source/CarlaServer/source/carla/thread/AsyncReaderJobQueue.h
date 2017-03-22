@@ -61,6 +61,8 @@ namespace thread {
       while (!_done){
     		_connectionJob();
         _restart = false;
+        T temp;
+        while(_queue.try_pop(temp));
         _queue.canWait(true);
         while (!_restart && !_done) {
           T value;
