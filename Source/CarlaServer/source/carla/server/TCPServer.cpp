@@ -82,7 +82,7 @@ namespace carla {
                   size_t len = _socket.read_some(boost::asio::buffer(buf), error);
 
 
-                  if (boost::asio::error::connection_reset == error)
+                  if (error)
                   {
                     _connected = false;
                   }
