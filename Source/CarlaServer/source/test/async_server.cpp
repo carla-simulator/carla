@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
 
 
     for (;;){
-      if (server.worldConnected()){
+      if (!server.needsRestart()){
 
         server.init(1u);
 
@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
           carla::Mode mode;
           uint32_t scene;
           
-          while(!server.needRestart() && !server.tryReadSceneInit(mode, scene));
+          while(!server.needsRestart() && !server.tryReadSceneInit(mode, scene));
 
           std::cout << "Received: mode = "
                     << (mode == carla::Mode::MONO ? "MONO" : "STEREO")
@@ -105,9 +105,9 @@ int main(int argc, char *argv[]) {
                     << scene << std::endl;
         }
 
+          carla::Scene_Values sceneValues;
 
         {
-          carla::Scene_Values sceneValues;
           sceneValues.possible_positions.push_back({0.0f, 0.0f});
           sceneValues.possible_positions.push_back({1.0f, 2.0f});
           sceneValues.possible_positions.push_back({3.0f, 4.0f});
@@ -124,21 +124,22 @@ int main(int argc, char *argv[]) {
 
           std::cout << "New episode" << std::endl;
           uint32_t start, end;
-          while (!server.needRestart() && !server.tryReadEpisodeStart(start, end));
+          while (!server.needsRestart() && !server.tryReadEpisodeStart(start, end));
           std::cout << "Received: startIndex = " << start
                     << ", endIndex = " << end << std::endl;
         }
 
         server.sendEndReset();
-        while (!server.needRestart()) {
-          if (server.clientConnected() && server.serverConnected()){
-            float steer, gas;
-            uint32_t startPoint, endPoint;
-            if (server.tryReadEpisodeStart(startPoint, endPoint)) {
-              std::cout << "-------- RESET --------" << std::endl;
-              std::cout << "--> Start: " << startPoint << " End: " << endPoint << " <--" << std::endl;
-              server.sendEndReset();
-            } else {
+        while (!server.needsRestart()) {
+          float steer, gas;
+          uint32_t startPoint, endPoint;
+          if (server.tryReadRequestNewEpisode()){
+            std::cout << "-------- RESET --------" << std::endl;
+            server.sendSceneValues(sceneValues);
+            while (!server.needsRestart() && !server.tryReadEpisodeStart(startPoint, endPoint));
+            std::cout << "--> Start: " << startPoint << " End: " << endPoint << " <--" << std::endl;
+            server.sendEndReset();
+            }else {
               if (server.tryReadControl(steer, gas)) {
                 std::cout << "Steer: " << steer << " Gas: " << gas << std::endl;
               }
@@ -146,7 +147,6 @@ int main(int argc, char *argv[]) {
               reward.timestamp = timestamp++;
               server.sendReward(reward);
             }
-          }
         }
 
         std::cout << " -----  RESTARTING -----" <<  std::endl;

@@ -1,5 +1,15 @@
 
 // Client Messages
+
+
+message RequestNewEpisode {
+
+
+  optional bool request =1;
+
+
+}
+
 message EpisodeStart {
 
 

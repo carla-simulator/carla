@@ -66,6 +66,10 @@ namespace server {
     return _communication->tryReadEpisodeStart(start_index, end_index);
   }
 
+  bool Server::tryReadRequestNewEpisode(){
+    return _communication->tryReadRequestNewEpisode();
+  }
+
   Mode Server::GetMode() const {
     return _communication->GetMode();
   }
@@ -86,8 +90,8 @@ namespace server {
     return _communication->serverConnected();
   }
 
-  bool Server::needRestart() const {
-    return _communication->NeedRestart();
+  bool Server::needsRestart() const {
+    return _communication->NeedsRestart();
   }
 
 } // namespace server

@@ -153,7 +153,7 @@ namespace server {
 
 
 
-    if (!communication.NeedRestart()){
+    if (!communication.NeedsRestart()){
 
       std::cout << " ---- RECONNECT ALL ...." << std::endl;
 
@@ -187,7 +187,7 @@ namespace server {
     _world(worldPort),
     _server(writePort),
     _client(readPort),
-    _needRestart(false),
+    _needsRestart(false),
     _proto(std::make_unique<Protocol>(this)),
     _worldThread {
     [this]() { return worldReceiveThread(this->_world, this->_worldThread); },
@@ -214,9 +214,9 @@ namespace server {
   }
 
   CarlaCommunication::~CarlaCommunication(){
-    delete &_worldThread;
-    delete &_serverThread;
-    delete &_clientThread;
+    //delete &_worldThread;
+    //delete &_serverThread;
+    //delete &_clientThread;
   }
 
   void CarlaCommunication::sendReward(const Reward_Values &values) {
@@ -243,7 +243,7 @@ namespace server {
 
   void CarlaCommunication::sendWorld(const uint32_t modes,const uint32_t scenes) {
 
-    _needRestart = false;
+    _needsRestart = false;
 
     World world;
     _proto->LoadWorld(world, modes, scenes);
@@ -312,6 +312,15 @@ namespace server {
     return true;
   }
 
+  bool CarlaCommunication::tryReadRequestNewEpisode(){
+    std::string request;
+    if(!_worldThread.tryPop(request)) return false;
+
+    RequestNewEpisode reqEpisode;
+
+    return reqEpisode.ParseFromString(request);
+  }
+
   void CarlaCommunication::restartServer(){
     _server.close();
     //_server =  TCPServer(_serverPort);
@@ -355,12 +364,12 @@ namespace server {
     return _mode;
   }
 
-  bool CarlaCommunication::NeedRestart(){
-    return _needRestart;
+  bool CarlaCommunication::NeedsRestart(){
+    return _needsRestart;
   }
 
   void CarlaCommunication::Restart(){
-    _needRestart = true;
+    _needsRestart = true;
   }
 }
 }

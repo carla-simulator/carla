@@ -30,26 +30,30 @@ namespace carla {
   bool CarlaServer::tryReadControl(float &steer, float &throttle) {
     return _pimpl->tryReadControl(steer, throttle);
   }
+  
+  bool CarlaServer::tryReadRequestNewEpisode(){
+    return _pimpl->tryReadRequestNewEpisode();
+  }
 
   bool CarlaServer::sendReward(const Reward_Values &values) {
-    if (needRestart()) return false;
+    if (needsRestart()) return false;
     _pimpl->sendReward(values);
     return true;
   }
 
   bool CarlaServer::sendSceneValues(const Scene_Values &values) {
-    if (needRestart()) return false;
+    if (needsRestart()) return false;
     _pimpl->sendSceneValues(values);
     return true;
-  }
+  }  
 
   bool CarlaServer::sendEndReset() {
-    if (needRestart()) return false;
+    if (needsRestart()) return false;
     _pimpl->sendEndReset();
     return true;
   }
 
-  bool CarlaServer::worldConnected(){
+  /*bool CarlaServer::worldConnected(){
     return _pimpl->worldConnected();
   }
 
@@ -63,6 +67,10 @@ namespace carla {
 
   bool CarlaServer::needRestart() {
     return _pimpl->needRestart();
+  }*/
+
+  bool CarlaServer::needsRestart(){
+    return _pimpl->needsRestart() && _pimpl->worldConnected() && _pimpl->clientConnected() && _pimpl->serverConnected();
   }
 
 } // namespace carla

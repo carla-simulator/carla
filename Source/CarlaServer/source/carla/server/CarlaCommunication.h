@@ -43,6 +43,8 @@ namespace server {
 
     bool tryReadEpisodeStart(uint32_t &start_index, uint32_t &end_index);
 
+    bool tryReadRequestNewEpisode();
+
     void restartServer();
 
     void restartWorld();
@@ -61,7 +63,7 @@ namespace server {
 
     Mode GetMode();
 
-    bool NeedRestart();
+    bool NeedsRestart();
     void Restart();
 
   private:
@@ -81,7 +83,7 @@ namespace server {
 
     thread::AsyncReadWriteJobQueue<std::string, std::string> _worldThread;
 
-    std::atomic_bool _needRestart;
+    std::atomic_bool _needsRestart;
 
     std::atomic<Mode> _mode;
 

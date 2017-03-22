@@ -53,6 +53,9 @@ namespace server {
     ////Try to read if the client has selected an end & start point. Return false if the queue is empty
     bool tryReadEpisodeStart(uint32_t &start_index, uint32_t &end_index);
 
+
+    bool tryReadRequestNewEpisode();
+
     void setMode(Mode mode);
 
     Mode GetMode() const;
@@ -67,7 +70,7 @@ namespace server {
 
     bool serverConnected() const;
 
-    bool needRestart() const;
+    bool needsRestart() const;
 
   private:
 

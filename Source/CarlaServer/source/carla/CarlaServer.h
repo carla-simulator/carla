@@ -108,6 +108,8 @@ namespace carla {
     /// is empty.
     bool tryReadControl(float &steer, float &throttle);
 
+    bool tryReadRequestNewEpisode();
+
     /// Send values of the current player status.
     bool sendReward(const Reward_Values &values);
 
@@ -127,7 +129,7 @@ namespace carla {
     bool worldConnected();
 
     // Returns true if the server needs to restart the communication protocol
-    bool needRestart();
+    bool needsRestart();
 
   private:
 
