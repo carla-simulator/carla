@@ -153,12 +153,11 @@ APlayerStart *CarlaGameController::ChoosePlayerStart(
       RestartLevel(true);
     }
   }
-  uint32 StartIndex;
-  if (SendAndReadSceneValues(*Server, AvailableStartSpots, StartIndex)) {
-    return AvailableStartSpots[StartIndex];
-  } else {
+  uint32 StartIndex = 0u;
+  if (!SendAndReadSceneValues(*Server, AvailableStartSpots, StartIndex)) {
     RestartLevel(true);
   }
+  return AvailableStartSpots[StartIndex];
 }
 
 void CarlaGameController::RegisterPlayer(AController &NewPlayer)

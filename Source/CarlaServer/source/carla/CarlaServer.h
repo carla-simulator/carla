@@ -108,7 +108,7 @@ namespace carla {
     /// is empty.
     bool tryReadControl(float &steer, float &throttle);
 
-    bool tryReadRequestNewEpisode();
+    bool newEpisodeRequested();
 
     /// Send values of the current player status.
     bool sendReward(const Reward_Values &values);
