@@ -70,6 +70,7 @@ static bool SendAndReadSceneValues(
   carla::Scene_Values sceneValues;
   sceneValues.possible_positions.reserve(AvailableStartSpots.Num());
   for (APlayerStart *StartSpot : AvailableStartSpots) {
+    check(StartSpot != nullptr);
     const FVector &Location = StartSpot->GetActorLocation();
     UE_LOG(LogCarla, Log, TEXT("Found start position {%f, %f}"), Location.X, Location.Y);
     sceneValues.possible_positions.push_back({Location.X, Location.Y});
@@ -141,8 +142,12 @@ CarlaGameController::CarlaGameController() :
   Player(nullptr),
   Cameras({{nullptr}}) {}
 
-APlayerStart *CarlaGameController::ChoosePlayerStart(
-    const TArray<APlayerStart *> &AvailableStartSpots)
+CarlaGameController::~CarlaGameController()
+{
+  UE_LOG(LogCarla, Log, TEXT("Destroying CarlaGameController..."));
+}
+
+void CarlaGameController::Initialize()
 {
   if (bServerNeedsRestart) {
     UE_LOG(LogCarla, Log, TEXT("Initializing CarlaServer"));
@@ -150,12 +155,19 @@ APlayerStart *CarlaGameController::ChoosePlayerStart(
     if (ReadSceneInit(*Server)) {
       bServerNeedsRestart = false;
     } else {
-      RestartLevel(true);
+      UE_LOG(LogCarla, Warning, TEXT("Read scene init failed, server needs restart"));
     }
   }
-  uint32 StartIndex = 0u;
+  Cameras = {{nullptr}};
+}
+
+APlayerStart *CarlaGameController::ChoosePlayerStart(
+    const TArray<APlayerStart *> &AvailableStartSpots)
+{
+  uint32 StartIndex;
   if (!SendAndReadSceneValues(*Server, AvailableStartSpots, StartIndex)) {
-    RestartLevel(true);
+    UE_LOG(LogCarla, Warning, TEXT("Read scene values failed, server needs restart"));
+    StartIndex = 0u;
   }
   return AvailableStartSpots[StartIndex];
 }
@@ -182,10 +194,15 @@ void CarlaGameController::RegisterCaptureCamera(const ASceneCaptureCamera &Captu
       Cameras.size());
 }
 
+void CarlaGameController::BeginPlay()
+{
+  Server->sendEndReset();
+}
+
 void CarlaGameController::Tick(float DeltaSeconds)
 {
   check(Player != nullptr);
-  if (Server->needsRestart()) {
+  if (bServerNeedsRestart || Server->needsRestart()) {
     RestartLevel(true);
     return;
   }

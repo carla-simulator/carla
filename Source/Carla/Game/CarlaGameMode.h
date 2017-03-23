@@ -29,6 +29,8 @@ public:
 
   virtual void RestartPlayer(AController *NewPlayer) override;
 
+  virtual void BeginPlay() override;
+
   virtual void Tick(float DeltaSeconds) override;
 
   void RegisterCaptureCamera(ASceneCaptureCamera &CaptureCamera);

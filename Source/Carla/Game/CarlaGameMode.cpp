@@ -39,6 +39,7 @@ void ACarlaGameMode::InitGame(
       TEXT("GameInstance is not a UCarlaGameInstance, did you forget to set it in the project settings?"));
   GameInstance->InitializeGameControllerIfNotPresent(bUseMockController);
   GameController = &GameInstance->GetGameController();
+  GameController->Initialize();
 }
 
 void ACarlaGameMode::RestartPlayer(AController* NewPlayer)
@@ -51,6 +52,7 @@ void ACarlaGameMode::RestartPlayer(AController* NewPlayer)
     RegisterPlayer(*NewPlayer);
     return;
   } else if (UnOccupiedStartPoints.Num() > 0u) {
+    check(GameController != nullptr);
     APlayerStart *StartSpot = GameController->ChoosePlayerStart(UnOccupiedStartPoints);
     if (StartSpot != nullptr) {
       RestartPlayerAtPlayerStart(NewPlayer, UnOccupiedStartPoints[0u]);
@@ -59,6 +61,12 @@ void ACarlaGameMode::RestartPlayer(AController* NewPlayer)
     }
   }
   UE_LOG(LogCarla, Error, TEXT("No start spot found!"));
+}
+
+void ACarlaGameMode::BeginPlay()
+{
+  Super::BeginPlay();
+  GameController->BeginPlay();
 }
 
 void ACarlaGameMode::Tick(float DeltaSeconds)

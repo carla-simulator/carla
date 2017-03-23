@@ -3,10 +3,15 @@
 #include "Carla.h"
 #include "MockGameController.h"
 
+void MockGameController::Initialize()
+{
+
+}
+
 APlayerStart *MockGameController::ChoosePlayerStart(
     const TArray<APlayerStart *> &AvailableStartSpots)
 {
-  return AvailableStartSpots[0u];
+  return AvailableStartSpots[FMath::RandRange(0, AvailableStartSpots.Num() - 1)];
 }
 
 void MockGameController::RegisterPlayer(AController &NewPlayer)
@@ -20,6 +25,11 @@ void MockGameController::RegisterPlayer(AController &NewPlayer)
 }
 
 void MockGameController::RegisterCaptureCamera(const ASceneCaptureCamera &CaptureCamera)
+{
+
+}
+
+void MockGameController::BeginPlay()
 {
 
 }
