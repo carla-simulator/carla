@@ -15,7 +15,16 @@ class UDrawFrustumComponent;
 class USceneCaptureComponent2D;
 class UStaticMeshComponent;
 
-UCLASS(hidecategories=(Collision, Material, Attachment, Actor))
+UENUM(BlueprintType)
+enum class EPostProcessEffect : uint8
+{
+  None            UMETA(DisplayName = "RGB"),
+  Depth           UMETA(DisplayName = "Depth Map"),
+
+  SIZE            UMETA(Hidden)
+};
+
+UCLASS(hidecategories=(Collision, Attachment, Actor))
 class CARLA_API ASceneCaptureCamera : public AActor
 {
   GENERATED_BODY()
@@ -44,6 +53,13 @@ public:
     return SizeY;
   }
 
+  EPostProcessEffect GetPostProcessEffect() const
+  {
+    return PostProcessEffect;
+  }
+
+  FString GetPostProcessEffectAsString() const;
+
   const TArray<FColor> &GetImage() const
   {
     return ImageBitMap;
@@ -61,6 +77,9 @@ private:
   UPROPERTY(Category = SceneCapture, EditAnywhere)
   uint32 SizeY;
 
+  UPROPERTY(Category = SceneCapture, EditAnywhere)
+  EPostProcessEffect PostProcessEffect;
+
   /** To display the 3d camera in the editor. */
   UPROPERTY()
   class UStaticMeshComponent* MeshComp;
@@ -74,7 +93,7 @@ private:
   class UTextureRenderTarget2D* CaptureRenderTarget;
 
   /** Scene capture component. */
-  UPROPERTY(Transient)
+  UPROPERTY(EditAnywhere)
   class USceneCaptureComponent2D* CaptureComponent2D;
 
   UPROPERTY()

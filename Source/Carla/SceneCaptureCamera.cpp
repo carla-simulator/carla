@@ -17,7 +17,8 @@
 ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer& ObjectInitializer) :
   Super(ObjectInitializer),
   SizeX(200u),
-  SizeY(200u)
+  SizeY(200u),
+  PostProcessEffect(EPostProcessEffect::None)
 {
   PrimaryActorTick.bCanEverTick = true;
   PrimaryActorTick.TickGroup = TG_PrePhysics;
@@ -90,6 +91,14 @@ void ASceneCaptureCamera::Tick(float Delta)
   FReadSurfaceDataFlags ReadPixelFlags(RCM_UNorm);
   ReadPixelFlags.SetLinearToGamma(true);
   RTResource->ReadPixels(ImageBitMap, ReadPixelFlags);
+}
+
+FString ASceneCaptureCamera::GetPostProcessEffectAsString() const
+{
+  const UEnum* ptr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EPostProcessEffect"), true);
+  if(!ptr)
+    return FString("Invalid");
+  return ptr->GetEnumName(static_cast<int32>(PostProcessEffect));
 }
 
 void ASceneCaptureCamera::UpdateDrawFrustum()

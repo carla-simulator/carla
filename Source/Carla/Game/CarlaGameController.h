@@ -39,7 +39,9 @@ private:
 
   ACarlaVehicleController *Player;
 
-  std::array<const ASceneCaptureCamera *, 2u> Cameras;
+  std::array<const ASceneCaptureCamera *, 2u> RGBCameras;
+
+  std::array<const ASceneCaptureCamera *, 2u> DepthCameras;
 
   bool bServerNeedsRestart = true;
 };
