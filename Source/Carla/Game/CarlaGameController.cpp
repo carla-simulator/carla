@@ -32,11 +32,11 @@ static inline void Set(carla::Vector2D &cVector, const FVector &uVector)
   cVector = {uVector.X, uVector.Y};
 }
 
-static void Set(std::vector<carla::Color> &cImage, const ASceneCaptureCamera *Camera)
+static void Set(std::vector<carla::Color> &cImage, const TArray<FColor> &BitMap)
 {
-  if (Camera != nullptr) {
-    cImage.reserve(Camera->GetImage().Num());
-    for (const auto &color : Camera->GetImage()) {
+  if (BitMap.Num() > 0) {
+    cImage.reserve(BitMap.Num());
+    for (const auto &color : BitMap) {
       cImage.emplace_back();
       cImage.back().R = color.R;
       cImage.back().G = color.G;
@@ -98,12 +98,10 @@ static bool SendAndReadSceneValues(
 
 static void SendReward(
     carla::CarlaServer &Server,
-    const ACarlaPlayerState &PlayerState,
-    const std::array<const ASceneCaptureCamera *, 2u> &RGBCameras,
-    const std::array<const ASceneCaptureCamera *, 2u> &DepthCameras)
+    const ACarlaPlayerState &PlayerState)
 {
   carla::Reward_Values reward;
-  reward.timestamp = FMath::RoundHalfToZero(1000.0 * FPlatformTime::Seconds());
+  reward.timestamp = PlayerState.GetTimeStamp();
   Set(reward.player_location, PlayerState.GetLocation());
   Set(reward.player_orientation, PlayerState.GetOrientation());
   Set(reward.player_acceleration, PlayerState.GetAcceleration());
@@ -111,15 +109,21 @@ static void SendReward(
   Set(reward.collision_car, PlayerState.GetCollisionIntensityCars());
   Set(reward.collision_pedestrian, PlayerState.GetCollisionIntensityPedestrians());
   Set(reward.collision_general, PlayerState.GetCollisionIntensityOther());
-  // Set(reward.intersect_other_lane, );
-  // Set(reward.intersect_offroad, );
-  if (RGBCameras[0u] != nullptr) { // Do not add any camera if first is invalid.
-    reward.image_width = RGBCameras[0u]->GetImageSizeX();
-    reward.image_height = RGBCameras[0u]->GetImageSizeY();
-    Set(reward.image_rgb_0, RGBCameras[0u]);
-    Set(reward.image_rgb_1, RGBCameras[1u]);
-    Set(reward.image_depth_0, DepthCameras[0u]);
-    Set(reward.image_depth_1, DepthCameras[1u]);
+  Set(reward.intersect_other_lane, PlayerState.GetOtherLaneIntersectionFactor());
+  Set(reward.intersect_offroad, PlayerState.GetOffRoadIntersectionFactor());
+  { // Add images.
+    using CPS = ACarlaPlayerState;
+    auto &ImageRGB0 = PlayerState.GetImage(CPS::ImageRGB0);
+    if (ImageRGB0.BitMap.Num() > 0) {
+      // Do not add any camera if first is invalid, also assume all the images
+      // have the same size.
+      reward.image_width = ImageRGB0.SizeX;
+      reward.image_height = ImageRGB0.SizeY;
+      Set(reward.image_rgb_0, ImageRGB0.BitMap);
+      Set(reward.image_rgb_1, PlayerState.GetImage(CPS::ImageRGB1).BitMap);
+      Set(reward.image_depth_0, PlayerState.GetImage(CPS::ImageDepth0).BitMap);
+      Set(reward.image_depth_1, PlayerState.GetImage(CPS::ImageDepth1).BitMap);
+    }
   }
   UE_LOG(LogCarla, Log, CSTEXT("Sending reward"));
   Server.sendReward(reward);
@@ -142,9 +146,7 @@ static void TryReadControl(carla::CarlaServer &Server, ACarlaVehicleController &
 
 CarlaGameController::CarlaGameController() :
   Server(MakeUnique<carla::CarlaServer>(2001u, 2002u, 2000u)),
-  Player(nullptr),
-  RGBCameras({{nullptr}}),
-  DepthCameras({{nullptr}}) {}
+  Player(nullptr) {}
 
 CarlaGameController::~CarlaGameController()
 {
@@ -162,8 +164,6 @@ void CarlaGameController::Initialize()
       UE_LOG(LogCarla, Warning, CSTEXT("Read scene init failed, server needs restart"));
     }
   }
-  RGBCameras = {{nullptr}};
-  DepthCameras = {{nullptr}};
 }
 
 APlayerStart *CarlaGameController::ChoosePlayerStart(
@@ -181,32 +181,6 @@ void CarlaGameController::RegisterPlayer(AController &NewPlayer)
 {
   Player = Cast<ACarlaVehicleController>(&NewPlayer);
   check(Player != nullptr);
-}
-
-void CarlaGameController::RegisterCaptureCamera(const ASceneCaptureCamera &CaptureCamera)
-{
-  const auto Effect = CaptureCamera.GetPostProcessEffect();
-  check((Effect == EPostProcessEffect::None) || (Effect == EPostProcessEffect::Depth))
-  auto &Cameras = (Effect == EPostProcessEffect::None ? RGBCameras : DepthCameras);
-
-  for (auto i = 0u; i < Cameras.size(); ++i) {
-    if (Cameras[i] == nullptr) {
-      Cameras[i] = &CaptureCamera;
-      UE_LOG(
-          LogCarla,
-          Log,
-          CSTEXT("Registered capture camera %d with postprocess \"%s\""),
-          i,
-          *CaptureCamera.GetPostProcessEffectAsString());
-      return;
-    }
-  }
-  UE_LOG(
-      LogCarla,
-      Warning,
-      CSTEXT("Attempting to register a capture camera of type \"%d\" but already have %d, captures from this camera won't be sent"),
-      *CaptureCamera.GetPostProcessEffectAsString(),
-      Cameras.size());
 }
 
 void CarlaGameController::BeginPlay()
@@ -228,7 +202,7 @@ void CarlaGameController::Tick(float DeltaSeconds)
     return;
   }
 
-  SendReward(*Server, Player->GetPlayerState(), RGBCameras, DepthCameras);
+  SendReward(*Server, Player->GetPlayerState());
   TryReadControl(*Server, *Player);
 }
 

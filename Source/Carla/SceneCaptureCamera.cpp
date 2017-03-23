@@ -20,7 +20,7 @@ ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer& ObjectInitial
   SizeY(200u),
   PostProcessEffect(EPostProcessEffect::None)
 {
-  PrimaryActorTick.bCanEverTick = true;
+  PrimaryActorTick.bCanEverTick = true; /// @todo Does it need to tick?
   PrimaryActorTick.TickGroup = TG_PrePhysics;
 
   MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CamMesh0"));
@@ -83,22 +83,20 @@ void ASceneCaptureCamera::BeginPlay()
     GameMode->RegisterCaptureCamera(*this);
 }
 
-void ASceneCaptureCamera::Tick(float Delta)
-{
-  Super::Tick(Delta);
-  // Update the image bitmap.
-  FTextureRenderTargetResource* RTResource = CaptureRenderTarget->GameThread_GetRenderTargetResource();
-  FReadSurfaceDataFlags ReadPixelFlags(RCM_UNorm);
-  ReadPixelFlags.SetLinearToGamma(true);
-  RTResource->ReadPixels(ImageBitMap, ReadPixelFlags);
-}
-
 FString ASceneCaptureCamera::GetPostProcessEffectAsString() const
 {
   const UEnum* ptr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EPostProcessEffect"), true);
   if(!ptr)
     return FString("Invalid");
   return ptr->GetEnumName(static_cast<int32>(PostProcessEffect));
+}
+
+bool ASceneCaptureCamera::ReadPixels(TArray<FColor> &BitMap) const
+{
+  FTextureRenderTargetResource* RTResource = CaptureRenderTarget->GameThread_GetRenderTargetResource();
+  FReadSurfaceDataFlags ReadPixelFlags(RCM_UNorm);
+  ReadPixelFlags.SetLinearToGamma(true);
+  return RTResource->ReadPixels(BitMap, ReadPixelFlags);
 }
 
 void ASceneCaptureCamera::UpdateDrawFrustum()

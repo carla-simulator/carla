@@ -15,8 +15,6 @@ public:
 
   virtual void RegisterPlayer(AController &NewPlayer) override;
 
-  virtual void RegisterCaptureCamera(const ASceneCaptureCamera &CaptureCamera) override;
-
   virtual void BeginPlay() override;
 
   virtual void Tick(float DeltaSeconds) override;

@@ -41,8 +41,6 @@ public:
 
   virtual void BeginPlay() override;
 
-  virtual void Tick(float Delta) override;
-
   uint32 GetImageSizeX() const
   {
     return SizeX;
@@ -60,10 +58,7 @@ public:
 
   FString GetPostProcessEffectAsString() const;
 
-  const TArray<FColor> &GetImage() const
-  {
-    return ImageBitMap;
-  }
+  bool ReadPixels(TArray<FColor> &BitMap) const;
 
 private:
 
@@ -95,7 +90,4 @@ private:
   /** Scene capture component. */
   UPROPERTY(EditAnywhere)
   class USceneCaptureComponent2D* CaptureComponent2D;
-
-  UPROPERTY()
-  TArray<FColor> ImageBitMap;
 };

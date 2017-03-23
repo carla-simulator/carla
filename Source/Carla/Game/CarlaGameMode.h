@@ -48,4 +48,6 @@ private:
       TArray<APlayerStart *> &UnOccupiedStartPoints);
 
   CarlaGameControllerBase *GameController;
+
+  AController *PlayerController;
 };
