@@ -18,8 +18,8 @@ namespace thread {
   class AsyncReadWriteJobQueue {
   public:
 
-    using WritingJob = std::function<W()>;
-    using ReadingJob = std::function<void(R)>;
+    using WritingJob = std::function<std::unique_ptr<W>()>;
+    using ReadingJob = std::function<void(const R &)>;
     using ConnectJob = std::function<void()>;
     using ReconnectJob = std::function<void()>;
 
@@ -38,17 +38,20 @@ namespace thread {
       _thread(new std::thread(&AsyncReadWriteJobQueue::workerThread, this)) {}
 
     ~AsyncReadWriteJobQueue() {
+      std::cout << "Destroyed thread world"<< std::endl;
       _done = true;
     }
 
-    bool tryPop(W &value) {
-      return _writeQueue.try_pop(value);
+    std::unique_ptr<W>  tryPop() {
+      return _writeQueue.try_pop();
     }
 
-    void push(R item) {
-      R temp;
-      while (_readQueue.try_pop(temp));
-      _readQueue.push(item);
+    void undoPop(std::unique_ptr<W> value){
+      _writeQueue.push(std::move(value)); 
+    }
+
+    void push(std::unique_ptr<R> item) {
+      _readQueue.push(std::move(item));
     }
 
     void reconnect(){
@@ -73,20 +76,17 @@ namespace thread {
       while(!_done){
         _connectJob();
         _restart = false; 
-        W temp1; R temp2;
-        while(_writeQueue.try_pop(temp1));
-        while(_readQueue.try_pop(temp2));
         _readQueue.canWait(true);
         while (!_restart && !_done) {
-          R value;
-          if (_readQueue.wait_and_pop(value)) {
-            _readJob(value);
+
+          std::cout << "1" << std::endl;
+
+          auto value = _readQueue.wait_and_pop();
+          if (value != nullptr) {
+            _readJob(*value);
           }
           if (!_restart){
-            W write = _writeJob();
-            W temp;
-            while (_writeQueue.try_pop(temp));
-            _writeQueue.push(write);
+            _writeQueue.push(std::move(_writeJob()));
           }
 
         }

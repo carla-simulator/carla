@@ -21,11 +21,11 @@ namespace server {
   Server::~Server() {
   }
 
-  void Server::sendReward(const Reward_Values &values) {
+  void Server::sendReward( std::unique_ptr<Reward_Values> values) {
     //Reward reward;
     //_proto->LoadReward(reward, values);
     //_communication->sendReward(reward);
-    _communication->sendReward(values);
+    _communication->sendReward(std::move(values));
   }
 
   void Server::sendSceneValues(const Scene_Values &values) {

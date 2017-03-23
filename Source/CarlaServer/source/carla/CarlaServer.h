@@ -92,26 +92,26 @@ namespace carla {
     /// Initialize the server.
     ///
     /// @param LevelCount Number of levels available.
-    void init(uint32_t LevelCount);
+    bool init(uint32_t LevelCount);
 
     /// Try to read if the client has selected an scene and mode. Return false
     /// if the queue is empty.
     ///
     /// If returned mode INVALID, ignore scene.
-    bool tryReadSceneInit(Mode &mode, uint32_t &scene);
+    bool tryReadSceneInit(Mode &mode, uint32_t &scene, bool &readed);
 
     /// Try to read if the client has selected an end & start point. Return
     /// false if the queue is empty.
-    bool tryReadEpisodeStart(uint32_t &startIndex, uint32_t &endIndex);
+    bool tryReadEpisodeStart(uint32_t &startIndex, uint32_t &endIndex, bool &readed);
 
     /// Try to read the response of the client. Return false if the queue
     /// is empty.
-    bool tryReadControl(float &steer, float &throttle);
+    bool tryReadControl(float &steer, float &throttle, bool &readed);
 
-    bool newEpisodeRequested();
+    bool newEpisodeRequested(bool &newEpisode);
 
     /// Send values of the current player status.
-    bool sendReward(const Reward_Values &values);
+    bool sendReward(std::unique_ptr<Reward_Values> values);
 
     /// Send the values of the generated scene.
     bool sendSceneValues(const Scene_Values &values);

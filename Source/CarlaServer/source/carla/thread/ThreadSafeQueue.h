@@ -8,6 +8,7 @@
 #include <queue>
 
 #include <iostream>
+#include "../CarlaServer.h"
 
 namespace carla {
 namespace thread {
@@ -19,21 +20,15 @@ namespace thread {
   class ThreadSafeQueue {
   public:
 
-    ThreadSafeQueue() = default;
+    ThreadSafeQueue(): _canWait(true), _empty(true){}
 
-    ThreadSafeQueue(const ThreadSafeQueue &other) {
-      std::lock_guard<std::mutex> lock(other._mutex);
-      _queue = other._queue;
-      _canWait = true;
-      _empty = true;
-    }
+    ThreadSafeQueue(const ThreadSafeQueue &other) = delete;
 
-    void push(T new_value) {
+    void push(std::unique_ptr<T> new_value) {
       std::lock_guard<std::mutex> lock(_mutex);
       //_queue.push(new_value);
       //_condition.notify_one();
-      _value = new_value;
-      _empty = false;
+      _value = std::move(new_value);
     }
 
     void canWait(bool wait){
@@ -42,46 +37,36 @@ namespace thread {
       _condition.notify_one();
     }
 
-    bool wait_and_pop(T &value) {
+    std::unique_ptr<T> wait_and_pop() {
       std::unique_lock<std::mutex> lock(_mutex);
-      _condition.wait(lock, [this] {
-        //return !_queue.empty() || !_canWait; 
-        return !_empty || !_canWait;
+      _condition.wait(lock, [this]() {
+        return _value != nullptr || !_canWait;
       });
 
-      //while(_queue.empty()  && _canWait);
-
-      //if (!_queue.empty() && _canWait) {
-      if (!_empty && _canWait){
-       // value = _queue.front();
-        //_queue.pop();
-        value = _value;
-        _empty = true;
-        return true;
-      }
-
-      else return false;
+      return std::move(_value);
     }
 
-    bool try_pop(T &value) {
+    std::unique_ptr<T> try_pop() {
       std::lock_guard<std::mutex> lock(_mutex);
       //if (_queue.empty()) {
-      if(_empty){
+      return std::move(_value);
+
+      /*if(_empty){
         return false;
       }
   	  else {
   		  //value = _queue.front();
   		  //_queue.pop();
         value = _value;
-        empty = true;
+        _empty = true;
   		  return true;
-	    }
+	    }*/
     }
     
     bool empty() const {
       std::lock_guard<std::mutex> lock(_mutex);
       //return _queue.empty();
-      return _empty;
+      return _value == nullptr;
     }
 
 
@@ -98,7 +83,7 @@ namespace thread {
     //std::queue<T> _queue;
     ///////
     bool _empty;
-    T _value;
+    std::unique_ptr<T> _value;
     ///////
 
     std::condition_variable _condition;
