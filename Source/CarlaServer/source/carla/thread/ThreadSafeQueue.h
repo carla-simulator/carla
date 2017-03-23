@@ -25,12 +25,15 @@ namespace thread {
       std::lock_guard<std::mutex> lock(other._mutex);
       _queue = other._queue;
       _canWait = true;
+      _empty = true;
     }
 
     void push(T new_value) {
       std::lock_guard<std::mutex> lock(_mutex);
-      _queue.push(new_value);
-      _condition.notify_one();
+      //_queue.push(new_value);
+      //_condition.notify_one();
+      _value = new_value;
+      _empty = false;
     }
 
     void canWait(bool wait){
@@ -42,14 +45,18 @@ namespace thread {
     bool wait_and_pop(T &value) {
       std::unique_lock<std::mutex> lock(_mutex);
       _condition.wait(lock, [this] {
-        return !_queue.empty() || !_canWait; 
+        //return !_queue.empty() || !_canWait; 
+        return !_empty || !_canWait;
       });
 
       //while(_queue.empty()  && _canWait);
 
-      if (!_queue.empty() && _canWait) {
-        value = _queue.front();
-        _queue.pop();
+      //if (!_queue.empty() && _canWait) {
+      if (!_empty && _canWait){
+       // value = _queue.front();
+        //_queue.pop();
+        value = _value;
+        _empty = true;
         return true;
       }
 
@@ -58,19 +65,23 @@ namespace thread {
 
     bool try_pop(T &value) {
       std::lock_guard<std::mutex> lock(_mutex);
-      if (_queue.empty()) {
+      //if (_queue.empty()) {
+      if(_empty){
         return false;
       }
   	  else {
-  		  value = _queue.front();
-  		  _queue.pop();
+  		  //value = _queue.front();
+  		  //_queue.pop();
+        value = _value;
+        empty = true;
   		  return true;
 	    }
     }
     
     bool empty() const {
       std::lock_guard<std::mutex> lock(_mutex);
-      return _queue.empty();
+      //return _queue.empty();
+      return _empty;
     }
 
 
@@ -84,7 +95,11 @@ namespace thread {
 
     std::atomic_bool _canWait;
 
-    std::queue<T> _queue;
+    //std::queue<T> _queue;
+    ///////
+    bool _empty;
+    T _value;
+    ///////
 
     std::condition_variable _condition;
 
