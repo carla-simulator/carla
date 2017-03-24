@@ -29,6 +29,7 @@ namespace thread {
       //_queue.push(new_value);
       //_condition.notify_one();
       _value = std::move(new_value);
+      _condition.notify_one();
     }
 
     void canWait(bool wait){
@@ -42,7 +43,6 @@ namespace thread {
       _condition.wait(lock, [this]() {
         return _value != nullptr || !_canWait;
       });
-
       return std::move(_value);
     }
 

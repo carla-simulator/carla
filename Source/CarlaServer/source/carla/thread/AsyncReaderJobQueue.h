@@ -58,21 +58,17 @@ namespace thread {
   private:
     void workerThread() {
       while (!_done){
-        std::cout << "2.1" << std::endl;
     		_connectionJob();
         _restart = false;
         _queue.canWait(true);
         while (!_restart && !_done) {
-
-          std::cout << "2.2" << std::endl;
-
           auto value = _queue.wait_and_pop();
-          if (value != nullptr) _job(*value);
-    		  //Sleep(10);
+          if (value != nullptr) {
+            _job(*value);
+    		  }//Sleep(10);
         }
-      }
 
-          std::cout << "2.3" << std::endl;
+      }
     }
 
     std::atomic_bool _done;

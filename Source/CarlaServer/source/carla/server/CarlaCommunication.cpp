@@ -136,13 +136,13 @@ namespace server {
       //server.writeString("world", error);
 
        
-      //Scene demo_scene;
-      //if (demo_scene.ParseFromString(message)){
-        //std::cout << "POSSIBLE POSITIONS"<< std::endl;
-        //for (int i=0; i<demo_scene.position_size(); ++i){
-        //  std::cout << "   x: " << demo_scene.position(i).pos_x() << " y: " << demo_scene.position(i).pos_y() << std::endl;
-        //}
-      //}
+      Scene demo_scene;
+      if (demo_scene.ParseFromString(message)){
+        std::cout << "POSSIBLE POSITIONS THREAD"<< std::endl;
+        for (int i=0; i<demo_scene.position_size(); ++i){
+          std::cout << "   x: " << demo_scene.position(i).pos_x() << " y: " << demo_scene.position(i).pos_y() << std::endl;
+        }
+      }
 
       if (error) {
         logTCPError("Failed to send world", error);
@@ -266,8 +266,10 @@ namespace server {
     _proto -> LoadScene(scene, values);
 
     auto message = std::make_unique<std::string>();
-    if (scene.SerializeToString(message.get()))
+
+    if (scene.SerializeToString(message.get())){
       _worldThread.push(std::move(message));
+    }
 
   }
 
@@ -320,6 +322,7 @@ namespace server {
 
   bool CarlaCommunication::tryReadRequestNewEpisode(){
     std::unique_ptr <std::string> request = _worldThread.tryPop();
+    
     if (request == nullptr) return false;
 
     RequestNewEpisode reqEpisode;

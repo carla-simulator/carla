@@ -57,22 +57,14 @@ namespace thread {
 
     void workerThread() {
       while (!_done){
-                  std::cout << "3.1" << std::endl;
-
 		    _connectJob();
         _restart = false;
         _queue.canWait(true);
         while (!_restart && !_done) {
-
-          std::cout << "3.2" << std::endl;
-
           _queue.push(std::move(_job()));
 		      //Sleep(10);
         }
       }
-
-      std::cout << "3.3" << std::endl;
-
     }
 
     std::atomic_bool _done;

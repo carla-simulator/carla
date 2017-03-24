@@ -51,7 +51,8 @@ namespace thread {
     }
 
     void push(std::unique_ptr<R> item) {
-      _readQueue.push(std::move(item));
+      
+      if (item != nullptr) _readQueue.push(std::move(item));
     }
 
     void reconnect(){
@@ -78,9 +79,6 @@ namespace thread {
         _restart = false; 
         _readQueue.canWait(true);
         while (!_restart && !_done) {
-
-          std::cout << "1" << std::endl;
-
           auto value = _readQueue.wait_and_pop();
           if (value != nullptr) {
             _readJob(*value);
