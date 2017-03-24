@@ -28,6 +28,7 @@ namespace carla {
   };
 
   struct Reward_Values {
+    ~Reward_Values();
     /// Time-stamp of the current frame.
     int32_t timestamp;
     /// World location of the player.
@@ -59,6 +60,7 @@ namespace carla {
   };
 
   struct Scene_Values {
+    ~Scene_Values();
     /// Possible world positions to spawn the player.
     std::vector<Vector2D> possible_positions;
     /// Projection matrices of the cameras (1 in mode mono, 2 in stereo).
@@ -79,6 +81,8 @@ namespace carla {
   ///
   /// Writing and reading are executed in different threads. Each thread has its
   /// own queue of messages.
+  ///
+  /// Functions return false if the server needs restart.
   class CarlaServer {
   public:
 
@@ -111,7 +115,9 @@ namespace carla {
     bool newEpisodeRequested(bool &newEpisode);
 
     /// Send values of the current player status.
-    bool sendReward(std::unique_ptr<Reward_Values> values);
+    ///
+    /// @warning This function takes ownership of the @a values object.
+    bool sendReward(Reward_Values *values);
 
     /// Send the values of the generated scene.
     bool sendSceneValues(const Scene_Values &values);

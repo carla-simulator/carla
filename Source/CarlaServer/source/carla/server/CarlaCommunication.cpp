@@ -21,7 +21,6 @@ namespace server {
     }
   }
 
-
   template<typename ERROR_CODE>
   static void logTCPError(const std::string &text, const ERROR_CODE &errorCode) {
     std::cerr << "CarlaConnection - TCP Server: " << text << ": " << errorCode.message() << std::endl;
@@ -29,13 +28,12 @@ namespace server {
 
   // This is the thread that sends a string over the TCP socket.
   static void serverWorkerThread(
-    TCPServer &server, 
-    thread::AsyncReaderJobQueue<Reward_Values> &thr,
-    const std::unique_ptr<Protocol> &proto ,
-    const Reward_Values &rwd
-    ) {
-
-    if (!thr.getRestart()){
+      TCPServer &server,
+      thread::AsyncReaderJobQueue<Reward_Values> &thr,
+      const std::unique_ptr<Protocol> &proto,
+      const Reward_Values &rwd
+      ) {
+    if (!thr.getRestart()) {
       std::string message;
 
       Reward reward;
@@ -49,7 +47,7 @@ namespace server {
         server.writeString(message, error);
         //server.writeString("reward", error);
 
-        if (error) logTCPError("Failed to send", error); 
+        if (error) { logTCPError("Failed to send", error); }
 
         if (!server.Connected()) {
           thr.reconnect();
@@ -58,8 +56,6 @@ namespace server {
       } else {
         logTCPError("Falied to serialize", error);
       }
-
-     
     }
   }
 
@@ -67,15 +63,14 @@ namespace server {
   // Sortida amb google protocol
   // This is the thread that listens for string over the TCP socket.
   static std::unique_ptr<std::string> clientWorkerThread(TCPServer &server, thread::AsyncWriterJobQueue<std::string> &thr) {
-
     //if (!server.Connected()) server.AcceptSocket();
 
     auto message = std::make_unique<std::string>();
     bool success = false;
 
-    do{
+    do {
 
-      if (!thr.getRestart()){
+      if (!thr.getRestart()) {
         TCPServer::error_code error;
 
         success = server.readString(*message, error);
@@ -85,7 +80,7 @@ namespace server {
           return nullptr;
         }
 
-        if (!server.Connected()) { 
+        if (!server.Connected()) {
           thr.reconnect();
           break;
         }
@@ -98,14 +93,12 @@ namespace server {
 
   // This is the thread that listens & sends a string over the TCP world socket.
   static std::unique_ptr<std::string> worldReceiveThread(TCPServer &server, thread::AsyncReadWriteJobQueue<std::string, std::string> &thr) {
-    //std::lock_guard<std::mutex> lock(server.getMutex());
-
     auto message = std::make_unique<std::string>();
     bool success = false;
 
-    do{
+    do {
 
-      if (!thr.getRestart()){
+      if (!thr.getRestart()) {
         TCPServer::error_code error;
 
         success = server.readString(*message, error);
@@ -113,36 +106,23 @@ namespace server {
           logTCPError("Failed to read world", error);
           return nullptr;
         }
-       
+
         if (!server.Connected()) {
           thr.reconnect();
           break;
         }
       }
-      
-    }while (!success);
+
+    } while (!success);
 
     return message;
-
   }
 
   static void worldSendThread(TCPServer &server, thread::AsyncReadWriteJobQueue<std::string, std::string> &thr, const std::string &message) {
-
-    if (!thr.getRestart()){
+    if (!thr.getRestart()) {
       TCPServer::error_code error;
 
       server.writeString(message, error);
-
-      //server.writeString("world", error);
-
-       
-      Scene demo_scene;
-      if (demo_scene.ParseFromString(message)){
-        std::cout << "POSSIBLE POSITIONS THREAD"<< std::endl;
-        for (int i=0; i<demo_scene.position_size(); ++i){
-          std::cout << "   x: " << demo_scene.position(i).pos_x() << " y: " << demo_scene.position(i).pos_y() << std::endl;
-        }
-      }
 
       if (error) {
         logTCPError("Failed to send world", error);
@@ -155,41 +135,38 @@ namespace server {
   }
 
   static void Connect(TCPServer &server, CarlaCommunication &communication) {
-      std::cout << "Waiting... port: " << server.port << std::endl;
-      server.AcceptSocket(); 
+    std::cout << "Waiting... port: " << server.port << std::endl;
+    server.AcceptSocket();
 
-      communication.checkRestart();
-
+    communication.checkRestart();
   }
 
-  static void ReconnectAll(CarlaCommunication &communication){
-
+  static void ReconnectAll(CarlaCommunication &communication) {
     std::lock_guard<std::mutex> lock(_generalMutex);
 
-    if (!communication.NeedsRestart()){
+    if (!communication.NeedsRestart()) {
 
       std::cout << " ---- RECONNECT ALL ...." << std::endl;
 
-      if (!communication.getWorldThread().getRestart()){
+      if (!communication.getWorldThread().getRestart()) {
         std::cout << " ---- RESTART WORLD ...." << std::endl;
         communication.restartWorld();
         communication.getWorldThread().restart();
       }
 
-      if (!communication.getServerThread().getRestart()){
+      if (!communication.getServerThread().getRestart()) {
         std::cout << " ---- RESTART SERVER ...." << std::endl;
         communication.restartServer();
         communication.getServerThread().restart();
       }
 
-      if (!communication.getClientThread().getRestart()){
+      if (!communication.getClientThread().getRestart()) {
         std::cout << " ---- RESTART CLIENT ...." << std::endl;
         communication.restartClient();
         communication.getClientThread().restart();
       }
 
       communication.Restart();
-
     }
   }
 
@@ -204,19 +181,19 @@ namespace server {
     _proto(std::make_unique<Protocol>(this)),
     _worldThread  {
     [this]() { return worldReceiveThread(this->_world, this->_worldThread); },
-    [this](const std::string &msg) { worldSendThread(this->_world, this->_worldThread, msg); },
+    [this](const std::string & msg) { worldSendThread(this->_world, this->_worldThread, msg); },
     [this]() { Connect(this->_world, *this); },
-    [this]() { ReconnectAll(*this);}
+    [this]() { ReconnectAll(*this); }
   },
   _serverThread {
     [this](const Reward_Values &rwd) { serverWorkerThread(this->_server, this->_serverThread, this->_proto, rwd); },
     [this]() { Connect(this->_server, *this); },
-    [this]() { ReconnectAll(*this);}
+    [this]() { ReconnectAll(*this); }
   },
   _clientThread {
     [this]() { return clientWorkerThread(this->_client, this->_clientThread); },
     [this]() { Connect(this->_client, *this); },
-    [this]() { ReconnectAll(*this);}
+    [this]() { ReconnectAll(*this); }
   }
 
   {
@@ -224,7 +201,6 @@ namespace server {
     /*std::cout << "WorldPort: " << worldPort << std::endl;
     std::cout << "writePort: " << writePort << std::endl;
     std::cout << "readPort: " << readPort << std::endl;*/
-
   }
 
   void CarlaCommunication::sendReward(std::unique_ptr<Reward_Values> values) {
@@ -232,25 +208,22 @@ namespace server {
   }
 
   bool CarlaCommunication::tryReadControl(float &steer, float &gas) {
-
     steer = 0.0f;
     gas = 0.0f;
 
     auto message = _clientThread.tryPop();
-    if (message == nullptr) return false;
+    if (message == nullptr) { return false; }
 
     Control control;
-    if (!control.ParseFromString(*message)) return false;
+    if (!control.ParseFromString(*message)) { return false; }
 
     steer = control.steer();
     gas = control.gas();
 
     return true;
-
   }
 
-  void CarlaCommunication::sendWorld(const uint32_t modes,const uint32_t scenes) {
-
+  void CarlaCommunication::sendWorld(const uint32_t modes, const uint32_t scenes) {
     //ClearThreads
     _worldThread.clear();
     _clientThread.clear();
@@ -260,26 +233,27 @@ namespace server {
     _proto->LoadWorld(world, modes, scenes);
 
     auto message = std::make_unique<std::string>();
-    if (world.SerializeToString(message.get()))
+    if (world.SerializeToString(message.get())) {
       _worldThread.push(std::move(message));
+    }
   }
 
   void CarlaCommunication::sendScene(const Scene_Values &values) {
-
-
-    Scene scene;
-    _proto -> LoadScene(scene, values);
+    // Protobuf produces a segmentation fault in the destructor of the Scene
+    // when called from Unreal Engine in Linux. As a workaround, we added this
+    // cute memory leak.
+    /// @todo Fix the memory leak!
+    Scene *scene = new Scene;
+    _proto->LoadScene(*scene, values);
 
     auto message = std::make_unique<std::string>();
 
-    if (scene.SerializeToString(message.get())){
+    if (scene->SerializeToString(message.get())) {
       _worldThread.push(std::move(message));
     }
-
   }
 
   void CarlaCommunication::sendReset() {
-
     EpisodeReady eReady;
     eReady.set_ready(true);
 
@@ -290,16 +264,15 @@ namespace server {
   }
 
   bool CarlaCommunication::tryReadSceneInit(Mode &mode, uint32_t &scene) {
-
     mode = Mode::INVALID;
     scene = 0u;
 
     std::unique_ptr<std::string> info = _worldThread.tryPop();
-    if (info == nullptr) return false;
+    if (info == nullptr) { return false; }
 
     SceneInit sceneInit;
 
-    if (!sceneInit.ParseFromString(*info)) return false;
+    if (!sceneInit.ParseFromString(*info)) { return false; }
 
     mode = getMode(sceneInit.mode());
     scene = sceneInit.scene();
@@ -309,15 +282,15 @@ namespace server {
     return true;
   }
 
-  bool CarlaCommunication::tryReadEpisodeStart(uint32_t &start_index, uint32_t &end_index){
+  bool CarlaCommunication::tryReadEpisodeStart(uint32_t &start_index, uint32_t &end_index) {
     start_index = 0;
     end_index = 0;
 
     std::unique_ptr<std::string> startData = _worldThread.tryPop();
-    if (startData == nullptr) return false;
+    if (startData == nullptr) { return false; }
 
     EpisodeStart episodeStart;
-    if(!episodeStart.ParseFromString(*startData)) return false;
+    if (!episodeStart.ParseFromString(*startData)) { return false; }
 
     start_index = episodeStart.start_index();
     end_index = episodeStart.end_index();
@@ -325,76 +298,76 @@ namespace server {
     return true;
   }
 
-  bool CarlaCommunication::tryReadRequestNewEpisode(){
-    std::unique_ptr <std::string> request = _worldThread.tryPop();
-    
-    if (request == nullptr) return false;
+  bool CarlaCommunication::tryReadRequestNewEpisode() {
+    std::unique_ptr<std::string> request = _worldThread.tryPop();
+
+    if (request == nullptr) { return false; }
 
     RequestNewEpisode reqEpisode;
 
-    if (!reqEpisode.ParseFromString(*request)){
+    if (!reqEpisode.ParseFromString(*request)) {
       _worldThread.undoPop(std::move(request));
       return false;
-    }
-    else return true;
+    } else { return true; }
   }
 
-  void CarlaCommunication::restartServer(){
+  void CarlaCommunication::restartServer() {
     _server.close();
     //_server =  TCPServer(_serverPort);
   }
 
-  void CarlaCommunication::restartWorld(){
+  void CarlaCommunication::restartWorld() {
     _world.close();
     //_world = TCPServer(_worldPort);
   }
 
-  void CarlaCommunication::restartClient(){
+  void CarlaCommunication::restartClient() {
     _client.close();
-    //_client = TCPServer(_clientPort); 
+    //_client = TCPServer(_clientPort);
   }
 
-
-  void CarlaCommunication::checkRestart(){
-     if (_needsRestart && _world.Connected() && 
-          _client.Connected() && _server.Connected())
-        _needsRestart = false;
+  void CarlaCommunication::checkRestart() {
+    if (_needsRestart && _world.Connected() &&
+        _client.Connected() && _server.Connected()) {
+      _needsRestart = false;
+    }
   }
 
-  thread::AsyncReaderJobQueue<Reward_Values>& CarlaCommunication::getServerThread(){
+  thread::AsyncReaderJobQueue<Reward_Values> &CarlaCommunication::getServerThread() {
     return _serverThread;
   }
 
-  thread::AsyncWriterJobQueue<std::string>& CarlaCommunication::getClientThread(){
+  thread::AsyncWriterJobQueue<std::string> &CarlaCommunication::getClientThread() {
     return _clientThread;
   }
-  
-  thread::AsyncReadWriteJobQueue<std::string, std::string>& CarlaCommunication::getWorldThread(){
+
+  thread::AsyncReadWriteJobQueue<std::string, std::string> &CarlaCommunication::getWorldThread() {
     return _worldThread;
   }
 
-  bool CarlaCommunication::worldConnected(){
+  bool CarlaCommunication::worldConnected() {
     return _world.Connected();
   }
 
-  bool CarlaCommunication::clientConnected(){
+  bool CarlaCommunication::clientConnected() {
     return _client.Connected();
   }
-    
-  bool CarlaCommunication::serverConnected(){
+
+  bool CarlaCommunication::serverConnected() {
     return _server.Connected();
   }
 
-  Mode CarlaCommunication::GetMode(){
+  Mode CarlaCommunication::GetMode() {
     return _mode;
   }
 
-  bool CarlaCommunication::NeedsRestart(){
+  bool CarlaCommunication::NeedsRestart() {
     return _needsRestart;
   }
 
-  void CarlaCommunication::Restart(){
+  void CarlaCommunication::Restart() {
     _needsRestart = true;
   }
+
 }
 }

@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
 
     // Let's simulate the game loop.
 
-    
+
 
     for (;;){
       if (server.init(1u)){
@@ -194,13 +194,13 @@ int main(int argc, char *argv[]) {
               std::cout << "CONTROL -->  gas: " << gas << " steer: " << steer << std::endl;
 
 
-            
 
-            if (!server.sendReward(makeReward())) {
+
+            if (!server.sendReward(makeReward().release())) {
               std::cerr << "ERROR while sending Reward" << std::endl;
               break;
             }
-            
+
           }
         }
 

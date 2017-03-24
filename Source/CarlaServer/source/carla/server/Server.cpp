@@ -11,7 +11,7 @@
 namespace carla {
 namespace server {
 
-  
+
 
   // -- CarlaServer ------------------------------------------------------------
 
@@ -29,21 +29,11 @@ namespace server {
   }
 
   void Server::sendSceneValues(const Scene_Values &values) {
-    //Scene scene;
-    //_proto->LoadScene(scene, values);
-    //_communication->sendScene(scene);
-
-    /*std::cout << "POSSIBLE POSITIONS 1"<< std::endl;
-
-    for (int i=0; i<values.possible_positions.size(); ++i){
-      std::cout << "   x: " << values.possible_positions[i].x << " y: " << values.possible_positions[i].y << std::endl;
-    }*/
-
     _communication->sendScene(values);
   }
 
   void Server::sendEndReset() {
-    
+
     _communication->sendReset();
   }
 

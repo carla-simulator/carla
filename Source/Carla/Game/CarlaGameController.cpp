@@ -145,14 +145,13 @@ static bool TryReadControl(carla::CarlaServer &Server, ACarlaVehicleController &
   float Steer;
   float Throttle;
   bool Success = false;
-  bool bServerNeedsRestart = Server.tryReadControl(Steer, Throttle, Success);
-  if (Success) {
-    check(!bServerNeedsRestart);
+  bool Result = Server.tryReadControl(Steer, Throttle, Success);
+  if (Result && Success) {
     UE_LOG(LogCarlaServer, Log, TEXT("Read control: { Steer = %f, Throttle = %f }"), Steer, Throttle);
     Player.SetSteeringInput(Steer);
     Player.SetThrottleInput(Throttle);
   }
-  return bServerNeedsRestart;
+  return Result;
 }
 
 // =============================================================================

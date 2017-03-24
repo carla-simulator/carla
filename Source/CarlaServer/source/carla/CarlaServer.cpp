@@ -4,6 +4,10 @@
 
 namespace carla {
 
+  Reward_Values::~Reward_Values() {}
+
+  Scene_Values::~Scene_Values() {}
+
   class CarlaServer::Pimpl : public carla::server::Server {
   public:
     Pimpl(uint32_t worldPort, uint32_t writePort, uint32_t readPort) :
@@ -45,9 +49,10 @@ namespace carla {
     return true;
   }
 
-  bool CarlaServer::sendReward(std::unique_ptr<Reward_Values> values) {
+  bool CarlaServer::sendReward(Reward_Values *values) {
+    std::unique_ptr<Reward_Values> ptr(values);
     if (!serverConnected()) return false;
-    _pimpl->sendReward(std::move(values));
+    _pimpl->sendReward(std::move(ptr));
     return true;
   }
 
