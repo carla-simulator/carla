@@ -17,7 +17,7 @@ namespace thread {
   class AsyncWriterJobQueue {
   public:
 
-    using Job = std::function<T()>;
+    using Job = std::function<std::unique_ptr<T>()>;
 	using ConnectJob = std::function<void()>;
   using ReconnectJob = std::function<void()>;
 
@@ -32,11 +32,12 @@ namespace thread {
 	{}
 
     ~AsyncWriterJobQueue() {
+      std::cout << "Destroyed thread server"<< std::endl;
       _done = true;
     }
 
-    bool tryPop(T &value) {
-      return _queue.try_pop(value);
+    std::unique_ptr<T> tryPop() {
+      return std::move(_queue.try_pop());
     }
 
     void restart(){
@@ -57,15 +58,10 @@ namespace thread {
     void workerThread() {
       while (!_done){
 		    _connectJob();
-        T temp;
-        while(_queue.try_pop(temp));
         _restart = false;
         _queue.canWait(true);
         while (!_restart && !_done) {
-          T item  = _job();
-          T temp;
-          while(_queue.try_pop(temp));
-          _queue.push(item);
+          _queue.push(std::move(_job()));
 		      //Sleep(10);
         }
       }

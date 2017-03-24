@@ -33,7 +33,7 @@ namespace server {
     ~Server();
 
     ///// Send values of the current player status
-    void sendReward(const Reward_Values &values);
+    void sendReward(std::unique_ptr<Reward_Values> values);
 
     //// Send the values of the generated scene
     void sendSceneValues(const Scene_Values &values);

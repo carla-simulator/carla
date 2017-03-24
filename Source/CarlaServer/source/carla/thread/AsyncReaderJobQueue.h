@@ -19,7 +19,7 @@ namespace thread {
   class AsyncReaderJobQueue {
   public:
 
-    using Job = std::function<void(T)>;
+    using Job = std::function<void(const T &)>;
 	using ConnectJob = std::function<void()>;
   using ReconnectJob = std::function<void()>;
 
@@ -33,14 +33,13 @@ namespace thread {
         _thread(new std::thread(&AsyncReaderJobQueue::workerThread, this)) {}
 
     ~AsyncReaderJobQueue() {
+      std::cout << "Destroyed thread client"<< std::endl;
       _done = true;
     }
 
-    void push(T item) {
+    void push(std::unique_ptr<T> item) {
       // Empty the queue before push a new item
-      T temp;
-      while (_queue.try_pop(temp));
-      _queue.push(item);
+      _queue.push(std::move(item));
     }
 
     void restart(){
@@ -61,14 +60,14 @@ namespace thread {
       while (!_done){
     		_connectionJob();
         _restart = false;
-        T temp;
-        while(_queue.try_pop(temp));
         _queue.canWait(true);
         while (!_restart && !_done) {
-          T value;
-          if (_queue.wait_and_pop(value)) _job(value);
-    		  //Sleep(10);
+          auto value = _queue.wait_and_pop();
+          if (value != nullptr) {
+            _job(*value);
+    		  }//Sleep(10);
         }
+
       }
     }
 

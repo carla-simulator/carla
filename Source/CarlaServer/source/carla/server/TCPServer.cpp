@@ -45,9 +45,9 @@ namespace carla {
             try {
               boost::asio::ip::tcp::acceptor acceptor(_service, tcp::endpoint(tcp::v4(), port));
               acceptor.accept(_socket);
-              _connected = true;
               _service.run();
               std::cout << "Connected port " << port << std::endl;
+              _connected = true;
             }
 
             catch (boost::system::system_error) {std::cerr<<"Socket System error"<<std::endl;};
@@ -65,6 +65,7 @@ namespace carla {
 
             if (error)
             {
+              std::cout << "DESCONECTED port " << port << std::endl;
               _connected = false;
             }
         }
@@ -84,6 +85,7 @@ namespace carla {
 
                   if (error)
                   {
+                    std::cout << "DESCONECTED port " << port << std::endl;
                     _connected = false;
                   }
                   else if (!error){

@@ -26,9 +26,9 @@ namespace server {
 
     explicit CarlaCommunication(int worldPort, int writePort, int readPort);
 
-    ~CarlaCommunication();
+    //~CarlaCommunication();
 
-    void sendReward(const Reward_Values &values);
+    void sendReward(std::unique_ptr<Reward_Values> values);
 
     bool tryReadControl(float &steer, float &gas);
 
@@ -83,7 +83,7 @@ namespace server {
 
     thread::AsyncWriterJobQueue<std::string> _clientThread;
 
-    thread::AsyncReadWriteJobQueue<std::string, std::string> _worldThread;
+    thread::AsyncReadWriteJobQueue< std::string, std::string> _worldThread;
 
     std::atomic_bool _needsRestart;
 
