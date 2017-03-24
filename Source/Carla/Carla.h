@@ -9,6 +9,7 @@
 #include "NonCopyable.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogCarla, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(LogCarlaServer, Log, All);
 
 class FCarlaModule : public IModuleInterface
 {

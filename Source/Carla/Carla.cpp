@@ -5,6 +5,7 @@
 #define LOCTEXT_NAMESPACE "FCarlaModule"
 
 DEFINE_LOG_CATEGORY(LogCarla);
+DEFINE_LOG_CATEGORY(LogCarlaServer);
 
 void FCarlaModule::StartupModule()
 {

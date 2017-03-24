@@ -31,7 +31,10 @@ public:
 
 private:
 
-  void RestartLevel(bool ServerNeedsRestart);
+  /// Return false if the server needs restart.
+  bool TickServer();
+
+  void RestartLevel();
 
   TUniquePtr<carla::CarlaServer> Server;
 
