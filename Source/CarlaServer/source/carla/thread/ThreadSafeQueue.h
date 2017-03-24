@@ -63,6 +63,10 @@ namespace thread {
 	    }*/
     }
     
+    void clear(){
+      _value = nullptr;
+    }
+
     bool empty() const {
       std::lock_guard<std::mutex> lock(_mutex);
       //return _queue.empty();

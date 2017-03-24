@@ -54,6 +54,10 @@ namespace thread {
     void reconnect(){
       _reconnectJob();
     }
+
+    void clear(){
+      _queue.clear();
+    }
     
   private:
     void workerThread() {

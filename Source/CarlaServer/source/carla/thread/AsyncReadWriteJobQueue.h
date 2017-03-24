@@ -71,6 +71,11 @@ namespace thread {
       return _restart;
     }
 
+    void clear(){
+      _readQueue.clear();
+      _writeQueue.clear();
+    }
+
   private:
 
     void workerThread() {

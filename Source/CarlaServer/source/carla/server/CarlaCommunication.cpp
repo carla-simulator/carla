@@ -251,6 +251,11 @@ namespace server {
 
   void CarlaCommunication::sendWorld(const uint32_t modes,const uint32_t scenes) {
 
+    //ClearThreads
+    _worldThread.clear();
+    _clientThread.clear();
+    _serverThread.clear();
+
     World world;
     _proto->LoadWorld(world, modes, scenes);
 
