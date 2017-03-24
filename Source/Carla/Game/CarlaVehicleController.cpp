@@ -86,17 +86,36 @@ void ACarlaVehicleController::Possess(APawn *aPawn)
   }
 }
 
+static void ReadCameraPixels(const ASceneCaptureCamera *Camera, ACarlaPlayerState::Image &Image)
+{
+  if (Camera != nullptr) {
+    if (Camera->ReadPixels(Image.BitMap)) {
+      Image.SizeX = Camera->GetImageSizeX();
+      Image.SizeY = Camera->GetImageSizeY();
+    } else {
+      Image.BitMap.Empty(); // Clears the array.
+    }
+  }
+}
+
 void ACarlaVehicleController::Tick(float DeltaTime)
 {
   Super::PlayerTick(DeltaTime);
 
   if (IsPossessingAVehicle()) {
+    CarlaPlayerState->UpdateTimeStamp();
     CarlaPlayerState->Location = GetVehicleLocation();
     const FVector PreviousSpeed = CarlaPlayerState->ForwardSpeed * CarlaPlayerState->Orientation;
     CarlaPlayerState->Orientation = GetVehicleOrientation();
     CarlaPlayerState->ForwardSpeed = GetVehicleForwardSpeed();
     const FVector CurrentSpeed = CarlaPlayerState->ForwardSpeed * CarlaPlayerState->Orientation;
     CarlaPlayerState->Acceleration = (CurrentSpeed - PreviousSpeed) / DeltaTime;
+    /// @todo Set intersection factors.
+    using CPS = ACarlaPlayerState;
+    ReadCameraPixels(RGBCameras[0u], CarlaPlayerState->Images[CPS::ImageRGB0]);
+    ReadCameraPixels(RGBCameras[1u], CarlaPlayerState->Images[CPS::ImageRGB1]);
+    ReadCameraPixels(DepthCameras[0u], CarlaPlayerState->Images[CPS::ImageDepth0]);
+    ReadCameraPixels(DepthCameras[1u], CarlaPlayerState->Images[CPS::ImageDepth1]);
   }
 }
 
@@ -127,10 +146,34 @@ FVector ACarlaVehicleController::GetVehicleOrientation() const
   return GetPawn()->GetTransform().GetRotation().GetForwardVector();
 }
 
-void ACarlaVehicleController::ResetPlayerState()
+// =============================================================================
+// -- Scene capture ------------------------------------------------------------
+// =============================================================================
+
+void ACarlaVehicleController::RegisterCaptureCamera(const ASceneCaptureCamera &CaptureCamera)
 {
-  check(CarlaPlayerState != nullptr);
-  CarlaPlayerState->Reset();
+  const auto Effect = CaptureCamera.GetPostProcessEffect();
+  check((Effect == EPostProcessEffect::None) || (Effect == EPostProcessEffect::Depth))
+  auto &Cameras = (Effect == EPostProcessEffect::None ? RGBCameras : DepthCameras);
+
+  for (auto i = 0u; i < Cameras.size(); ++i) {
+    if (Cameras[i] == nullptr) {
+      Cameras[i] = &CaptureCamera;
+      UE_LOG(
+          LogCarla,
+          Log,
+          TEXT("Registered capture camera %d with postprocess \"%s\""),
+          i,
+          *CaptureCamera.GetPostProcessEffectAsString());
+      return;
+    }
+  }
+  UE_LOG(
+      LogCarla,
+      Warning,
+      TEXT("Attempting to register a capture camera of type \"%d\" but already have %d, captures from this camera won't be sent"),
+      *CaptureCamera.GetPostProcessEffectAsString(),
+      Cameras.size());
 }
 
 // =============================================================================

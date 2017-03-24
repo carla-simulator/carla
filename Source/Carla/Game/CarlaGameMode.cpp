@@ -16,7 +16,8 @@
 
 ACarlaGameMode::ACarlaGameMode() :
   Super(),
-  GameController(nullptr)
+  GameController(nullptr),
+  PlayerController(nullptr)
 {
   PrimaryActorTick.bCanEverTick = true;
   PrimaryActorTick.TickGroup = TG_PrePhysics;
@@ -79,7 +80,10 @@ void ACarlaGameMode::RegisterCaptureCamera(ASceneCaptureCamera &CaptureCamera)
 {
   check(GameController != nullptr);
   AddTickPrerequisiteActor(&CaptureCamera);
-  GameController->RegisterCaptureCamera(CaptureCamera);
+  ACarlaVehicleController *Player = Cast<ACarlaVehicleController>(PlayerController);
+  if (Player != nullptr) {
+    Player->RegisterCaptureCamera(CaptureCamera);
+  }
 }
 
 void ACarlaGameMode::RegisterPlayer(AController &NewPlayer)
@@ -87,6 +91,7 @@ void ACarlaGameMode::RegisterPlayer(AController &NewPlayer)
   check(GameController != nullptr);
   AddTickPrerequisiteActor(&NewPlayer);
   GameController->RegisterPlayer(NewPlayer);
+  PlayerController = &NewPlayer;
 }
 
 APlayerStart *ACarlaGameMode::FindUnOccupiedStartPoints(

@@ -6,6 +6,7 @@
 #include "CarlaVehicleController.generated.h"
 
 class ACarlaPlayerState;
+class ASceneCaptureCamera;
 class UCameraComponent;
 class USpringArmComponent;
 class UWheeledVehicleMovementComponent;
@@ -48,6 +49,7 @@ public:
   /// @name Vehicle pawn info
   // ===========================================================================
   /// @{
+public:
 
   bool IsPossessingAVehicle() const
   {
@@ -68,7 +70,14 @@ public:
     return *CarlaPlayerState;
   }
 
-  void ResetPlayerState();
+  /// @}
+  // ===========================================================================
+  /// @name Scene Capture
+  // ===========================================================================
+  /// @{
+public:
+
+  void RegisterCaptureCamera(const ASceneCaptureCamera &CaptureCamera);
 
   /// @}
   // ===========================================================================
@@ -166,4 +175,10 @@ private:
   // Cast for quick access to the custom player state.
   UPROPERTY()
   ACarlaPlayerState *CarlaPlayerState;
+
+  using CaptureCameraArray = std::array<const ASceneCaptureCamera *, 2u>;
+
+  CaptureCameraArray RGBCameras;
+
+  CaptureCameraArray DepthCameras;
 };

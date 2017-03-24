@@ -24,11 +24,6 @@ void MockGameController::RegisterPlayer(AController &NewPlayer)
   }
 }
 
-void MockGameController::RegisterCaptureCamera(const ASceneCaptureCamera &CaptureCamera)
-{
-
-}
-
 void MockGameController::BeginPlay()
 {
 

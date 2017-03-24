@@ -25,21 +25,20 @@ public:
 
   virtual void RegisterPlayer(AController &NewPlayer) override;
 
-  virtual void RegisterCaptureCamera(const ASceneCaptureCamera &CaptureCamera) override;
-
   virtual void BeginPlay() override;
 
   virtual void Tick(float DeltaSeconds) override;
 
 private:
 
-  void RestartLevel(bool ServerNeedsRestart);
+  /// Return false if the server needs restart.
+  bool TickServer();
+
+  void RestartLevel();
 
   TUniquePtr<carla::CarlaServer> Server;
 
   ACarlaVehicleController *Player;
-
-  std::array<const ASceneCaptureCamera *, 2u> Cameras;
 
   bool bServerNeedsRestart = true;
 };
