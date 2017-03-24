@@ -56,7 +56,7 @@ void ACarlaGameMode::RestartPlayer(AController* NewPlayer)
     check(GameController != nullptr);
     APlayerStart *StartSpot = GameController->ChoosePlayerStart(UnOccupiedStartPoints);
     if (StartSpot != nullptr) {
-      RestartPlayerAtPlayerStart(NewPlayer, UnOccupiedStartPoints[0u]);
+      RestartPlayerAtPlayerStart(NewPlayer, StartSpot);
       RegisterPlayer(*NewPlayer);
       return;
     }
