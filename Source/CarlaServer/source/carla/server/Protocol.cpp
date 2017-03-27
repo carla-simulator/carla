@@ -2,45 +2,87 @@
 
 #include "CarlaCommunication.h"
 #include "carla/CarlaServer.h"
-#include "lodepng.h"
+//#include "lodepng.h"
 
 #include "carla_protocol.pb.h"
 
 #include <iostream>
 
+#include <stdio.h>
+#include <stdlib.h>
+
+
+#include <turbojpeg.h> 
+//#include "jpeglib.h"
+
+
 namespace carla {
 namespace server {
 
-  static bool getPNGImage(
-      const std::vector<Color> &in,
-      uint32_t width,
-      uint32_t height,
-      std::vector<unsigned char> &outPNG) {
-    if (in.empty())
+
+
+  static void WriteImage(const unsigned char *image, long unsigned int size){
+    FILE *out;
+    out = fopen("test.jpeg","w");
+    fwrite(image,1,size,out);
+    fclose(out);
+  }
+
+
+  //static bool getPNGImage(
+  //    const std::vector<Color> &in,
+  //    uint32_t width,
+  //    uint32_t height,
+  //    std::vector<unsigned char> &outPNG) {
+  static bool getJPEGImage(
+    const int jpeg_quality,
+    const int color_components, 
+    const int width,
+    const int height,
+    const std::vector<Color> &image,
+    bool depth,
+    Reward &rwd
+    ){
+
+    long unsigned int jpegSize = 0;
+
+    unsigned char *compressedImage;
+
+    if (image.empty())
       return false;
-    if (in.size() != width * height) {
+
+
+    if (image.size() != width * height) {
       std::cerr << "Invalid image size" << std::endl;
       return false;
     }
     // Convert to char array RGBA.
-    std::vector<unsigned char> color_img;
-    color_img.reserve(4u * in.size());
-    for (const Color &color : in) {
-      color_img.emplace_back(color.R);
-      color_img.emplace_back(color.G);
-      color_img.emplace_back(color.B);
-      color_img.emplace_back(255u);
+    int size = 3u * image.size();
+    unsigned char color_img[size];
+
+    for (int i = 0, color_it = 0; i < size; ++color_it){
+      color_img[i++] = image[color_it].R;
+      color_img[i++] = image[color_it].G;
+      color_img[i++] = image[color_it].B;
     }
-    // Compress to png.
-    lodepng::State state;
-    outPNG.reserve(color_img.size());
-    const int error = lodepng::encode(outPNG, color_img, width, height, state);
-    if (error) {
-      std::cerr << "Error compressing image to PNG: error " << error << std::endl;
-      return false;
-    }
+
+    tjhandle jpegCompressor = tjInitCompress();
+
+    tjCompress2(jpegCompressor, color_img, width, 0, height, TJPF_RGB,
+      &compressedImage, &jpegSize, TJSAMP_444, jpeg_quality, TJFLAG_FASTDCT);
+
+
+    tjDestroy(jpegCompressor);
+
+    WriteImage(compressedImage, jpegSize);
+
+    if (!depth) rwd.set_image(compressedImage, jpegSize);
+
+    else rwd.set_depth(compressedImage, jpegSize);
+
     return true;
   }
+
 
   Protocol::Protocol(carla::server::CarlaCommunication *communication) {
     _communication = communication;
@@ -66,17 +108,22 @@ namespace server {
 
     auto images = {values.image_rgb_0/*, values.image_rgb_1*/};
     for (const std::vector<Color> &image : images) {
-      std::vector<unsigned char> png_image;
-      if (getPNGImage(image, values.image_width, values.image_height, png_image)) {
-        reward.set_image(std::string(png_image.begin(), png_image.end()));
+      unsigned char *png_image;
+      long unsigned int jpegSize = 0;
+      if (!getJPEGImage(75, 3, values.image_width, values.image_height, image, false, reward)){
+
+        std::cout << "ERROR" << std::endl;
       }
     }
 
-    auto depths = {values.image_depth_0, values.image_depth_1};
-    for (const std::vector<Color> &image : depths) {
-      std::vector<unsigned char> png_image;
-      if (getPNGImage(image, values.image_width, values.image_height, png_image)) {
-        reward.set_depth(std::string(png_image.begin(), png_image.end()));
+
+    if (_communication -> GetMode() == Mode::STEREO){
+      auto depths = {values.image_depth_0, values.image_depth_1};
+      for (const std::vector<Color> &image : depths) {
+        //if (getPNGImage(image, values.image_width, values.image_height, png_image)) {
+        if (getJPEGImage(75, 3, values.image_width, values.image_height, image, true, reward)){
+          std::cout << "ERROR" << std::endl;
+        }
       }
     }
   }

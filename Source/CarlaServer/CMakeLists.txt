@@ -15,12 +15,14 @@ set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost REQUIRED system date_time regex)
 include_directories(${Boost_INCLUDE_DIRS})
 
+#TurboJPEG
+
 # Protobuf.
 include(FindProtobuf)
 find_package(Protobuf REQUIRED)
 include_directories(${PROTOBUF_INCLUDE_DIR})
 if (UNIX)
-  set(Protobuf_LIBRARIES ${Protobuf_LIBRARIES} protobuf)
+  set(Protobuf_LIBRARIES ${Protobuf_LIBRARIES} protobuf turbojpeg)
 endif (UNIX)
 
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)

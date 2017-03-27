@@ -6,3 +6,4 @@ file(GLOB carla_server_SRC
 )
 
 add_library(carla_server STATIC ../CarlaServer.cpp ${carla_server_SRC})
+add_library(libjpeg-trurbo8 STATIC Protocol.cpp ${carla_server_SRC})
