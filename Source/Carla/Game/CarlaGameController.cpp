@@ -48,6 +48,36 @@ static void Set(std::vector<carla::Color> &cImage, const TArray<FColor> &BitMap)
 // -- Other static methods -----------------------------------------------------
 // =============================================================================
 
+#ifdef WITH_EDITOR
+
+static bool CheckImage(
+  const FString &Tag,
+  const ACarlaPlayerState::Image &Image,
+  const std::vector<carla::Color> &ImageReward,
+  uint32 SizeX,
+  uint32 SizeY)
+{
+  const auto size = Image.BitMap.Num();
+  UE_LOG(LogCarlaServer, Log, TEXT("PlayerState.%s %dx%d size %d"), *Tag, Image.SizeX, Image.SizeY, size);
+  UE_LOG(LogCarlaServer, Log, TEXT("Reward.%s size %d"), *Tag, ImageReward.size());
+  if (size == 0u)
+    return true;
+  return (Image.SizeX == SizeX) && (Image.SizeY == SizeY) && (size == SizeX * SizeY) && (size == ImageReward.size());
+}
+
+static bool CheckImageValidity(const ACarlaPlayerState &Player, const carla::Reward_Values &Reward)
+{
+  using CPS = ACarlaPlayerState;
+  const uint32 SizeX = Player.GetImage(CPS::ImageRGB0).SizeX;
+  const uint32 SizeY = Player.GetImage(CPS::ImageRGB0).SizeY;
+  return CheckImage("ImageRGB0", Player.GetImage(CPS::ImageRGB0), Reward.image_rgb_0, SizeX, SizeY) &&
+         CheckImage("ImageRGB1", Player.GetImage(CPS::ImageRGB1), Reward.image_rgb_1, SizeX, SizeY) &&
+         CheckImage("ImageDepth0", Player.GetImage(CPS::ImageDepth0), Reward.image_depth_0, SizeX, SizeY) &&
+         CheckImage("ImageDepth1", Player.GetImage(CPS::ImageDepth1), Reward.image_depth_1, SizeX, SizeY);
+}
+
+#endif // WITH_EDITOR
+
 // Wait for the scene init to be sent, return false if we need to restart the
 // server.
 /// @todo At the moment we just ignored what it is sent.
@@ -136,6 +166,9 @@ static bool SendReward(
       Set(reward->image_depth_1, PlayerState.GetImage(CPS::ImageDepth1).BitMap);
     }
   }
+#ifdef WITH_EDITOR
+  check(CheckImageValidity(PlayerState, *reward));
+#endif // WITH_EDITOR
   UE_LOG(LogCarlaServer, Log, TEXT("Sending reward"));
   return Server.sendReward(reward.release());
 }
