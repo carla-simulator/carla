@@ -11,6 +11,7 @@
 
 #include "CarlaGameInstance.h"
 #include "CarlaGameState.h"
+#include "CarlaHUD.h"
 #include "CarlaPlayerState.h"
 #include "CarlaVehicleController.h"
 
@@ -25,6 +26,7 @@ ACarlaGameMode::ACarlaGameMode() :
   PlayerControllerClass = ACarlaVehicleController::StaticClass();
   GameStateClass = ACarlaGameState::StaticClass();
   PlayerStateClass = ACarlaPlayerState::StaticClass();
+  HUDClass = ACarlaHUD::StaticClass();
 }
 
 void ACarlaGameMode::InitGame(

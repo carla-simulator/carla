@@ -73,6 +73,11 @@ public:
     return ForwardSpeed;
   }
 
+  int32 GetCurrentGear() const
+  {
+    return CurrentGear;
+  }
+
   float GetCollisionIntensityCars() const
   {
     return CollisionIntensityCars;
@@ -129,6 +134,8 @@ private:
   FVector Orientation;
 
   FVector Acceleration;
+
+  int32 CurrentGear;
 
   float ForwardSpeed = 0.0f;
 

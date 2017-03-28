@@ -83,10 +83,19 @@ void ACarlaVehicleController::Possess(APawn *aPawn)
     // Get custom player state.
     CarlaPlayerState = Cast<ACarlaPlayerState>(PlayerState);
     check(CarlaPlayerState != nullptr);
+    // Set HUD input.
+    CarlaHUD = Cast<ACarlaHUD>(GetHUD());
+    if (CarlaHUD != nullptr) {
+      InputComponent->BindAction("ToggleHUD", IE_Pressed, CarlaHUD, &ACarlaHUD::ToggleHUDView);
+    } else {
+      UE_LOG(LogCarla, Warning, TEXT("Current HUD is not a ACarlaHUD"));
+    }
   }
 }
 
-static void ReadCameraPixels(const ASceneCaptureCamera *Camera, ACarlaPlayerState::Image &Image)
+static void ReadCameraPixels(
+    const ASceneCaptureCamera *Camera,
+    ACarlaPlayerState::Image &Image)
 {
   if (Camera != nullptr) {
     if (Camera->ReadPixels(Image.BitMap)) {
@@ -110,6 +119,7 @@ void ACarlaVehicleController::Tick(float DeltaTime)
     CarlaPlayerState->ForwardSpeed = GetVehicleForwardSpeed();
     const FVector CurrentSpeed = CarlaPlayerState->ForwardSpeed * CarlaPlayerState->Orientation;
     CarlaPlayerState->Acceleration = (CurrentSpeed - PreviousSpeed) / DeltaTime;
+    CarlaPlayerState->CurrentGear = GetVehicleCurrentGear();
     /// @todo Set intersection factors.
     using CPS = ACarlaPlayerState;
     ReadCameraPixels(RGBCameras[0u], CarlaPlayerState->Images[CPS::ImageRGB0]);
@@ -144,6 +154,12 @@ FVector ACarlaVehicleController::GetVehicleOrientation() const
 {
   check(GetPawn() != nullptr);
   return GetPawn()->GetTransform().GetRotation().GetForwardVector();
+}
+
+int32 ACarlaVehicleController::GetVehicleCurrentGear() const
+{
+  check(MovementComponent != nullptr);
+  return MovementComponent->GetCurrentGear();
 }
 
 // =============================================================================

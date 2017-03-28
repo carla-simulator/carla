@@ -5,6 +5,7 @@
 #include "GameFramework/PlayerController.h"
 #include "CarlaVehicleController.generated.h"
 
+class ACarlaHUD;
 class ACarlaPlayerState;
 class ASceneCaptureCamera;
 class UCameraComponent;
@@ -64,6 +65,8 @@ public:
 
   /// Orientation vector of the vehicle, pointing forward.
   FVector GetVehicleOrientation() const;
+
+  int32 GetVehicleCurrentGear() const;
 
   const ACarlaPlayerState &GetPlayerState() const
   {
@@ -175,6 +178,10 @@ private:
   // Cast for quick access to the custom player state.
   UPROPERTY()
   ACarlaPlayerState *CarlaPlayerState;
+
+  // Cast for quick access to the custom HUD.
+  UPROPERTY()
+  ACarlaHUD *CarlaHUD;
 
   using CaptureCameraArray = std::array<const ASceneCaptureCamera *, 2u>;
 
