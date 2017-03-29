@@ -40,7 +40,7 @@ void ACarlaPlayerState::CopyProperties(APlayerState *PlayerState)
   }
 }
 
-void ACarlaPlayerState::RegisterCollision(AActor */*Actor*/, FVector NormalImpulse)
+void ACarlaPlayerState::RegisterCollision(AActor * /*Actor*/, FVector NormalImpulse)
 {
   CollisionIntensityOther += NormalImpulse.Size();
 }

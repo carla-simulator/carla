@@ -1,14 +1,35 @@
-BUILD_FOLDER=build
 PROTOBUF_SRC_DIR=source/carla/server
 
-default: build
-	cd build && ninja && ninja install
+MY_CMAKE_FLAGS=-H. -B$(BUILD_FOLDER)
 
-build: protobuf
-	cmake -H. -B$(BUILD_FOLDER) -G "Ninja"
+ifeq ($(OS),Windows_NT)
+DEFAULT_RULE=build_windows
+else
+DEFAULT_RULE=build_linux
+endif
 
+default: release
+
+debug: BUILD_FOLDER=build/debug
+debug: MY_CMAKE_FLAGS+=-DCMAKE_BUILD_TYPE=Debug
+debug: $(DEFAULT_RULE)
+
+release: BUILD_FOLDER=build/release
+release: MY_CMAKE_FLAGS+=-DCMAKE_BUILD_TYPE=Release
+release: $(DEFAULT_RULE)
+
+build_linux: protobuf
+	cmake $(MY_CMAKE_FLAGS) -G "Ninja"
+	cd $(BUILD_FOLDER) && ninja && ninja install
+
+build_windows: protobuf
+	cmake $(MY_CMAKE_FLAGS) -G "NMake Makefiles"
+	cd $(BUILD_FOLDER) && nmake && nmake install
+
+vsproject: BUILD_FOLDER=build/visualstudio
+vsproject: MY_CMAKE_FLAGS+=-DCMAKE_BUILD_TYPE=Debug
 vsproject: protobuf
-	cmake -H. -B$(BUILD_FOLDER) -G "Visual Studio 14 2015 Win64"
+	cmake $(MY_CMAKE_FLAGS) -G "Visual Studio 14 2015 Win64"
 
 protobuf: $(PROTOBUF_SRC_DIR)/carla_protocol.pb.cc
 
@@ -20,4 +41,4 @@ clean:
 	rm -Rf build CMakeFiles
 
 clean-all: clean
-	rm -Rf bin lib include
+	rm -Rf bin bin_debug lib include

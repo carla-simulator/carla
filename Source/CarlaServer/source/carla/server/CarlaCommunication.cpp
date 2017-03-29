@@ -1,5 +1,4 @@
 #include "CarlaCommunication.h"
-#include "lodepng.h"
 
 #include "carla_protocol.pb.h"
 #include "../CarlaServer.h"

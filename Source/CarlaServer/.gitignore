@@ -8,6 +8,7 @@ CMakeCache.txt
 CMakeFiles
 
 bin
+bin_debug
 build
 include
 lib

@@ -5,6 +5,8 @@ using UnrealBuildTool;
 
 public class Carla : ModuleRules
 {
+  private readonly bool bUseDebugLibs = false;
+
   public Carla(TargetInfo Target)
   {
     PublicIncludePaths.AddRange(
@@ -48,6 +50,7 @@ public class Carla : ModuleRules
 
     AddBoostDependency(Target);
     AddProtobufDependency(Target);
+    AddTurboJPEGDependency(Target);
     AddCarlaServerDependency(Target);
 
     if (Target.Platform == UnrealTargetPlatform.Linux)
@@ -55,7 +58,6 @@ public class Carla : ModuleRules
       // Fails to link the std libraries.
       PublicAdditionalLibraries.Add("stdc++");
     }
-    PublicAdditionalLibraries.Add("turbojpeg");
   }
 
   private bool IsWindows(TargetInfo Target)
@@ -97,12 +99,23 @@ public class Carla : ModuleRules
     if (IsWindows(Target))
     {
       string ProtobufRoot = System.Environment.GetEnvironmentVariable("PROTOBUF_ROOT");
+      string ProtobufLib;
+      if (bUseDebugLibs)
+      {
+        ProtobufRoot = Path.Combine(ProtobufRoot, "Debug");
+        ProtobufLib = "libprotobufd.lib";
+      }
+      else
+      {
+        ProtobufRoot = Path.Combine(ProtobufRoot, "Release");
+        ProtobufLib = "libprotobuf.lib";
+      }
       if (string.IsNullOrEmpty(ProtobufRoot) || !System.IO.Directory.Exists(ProtobufRoot))
       {
         throw new System.Exception("PROTOBUF_ROOT is not defined, or points to a non-existant directory, please set this environment variable.");
       }
       PrivateIncludePaths.Add(Path.Combine(ProtobufRoot, "include"));
-      PublicAdditionalLibraries.Add(Path.Combine(ProtobufRoot, "lib", "libprotobuf.lib"));
+      PublicAdditionalLibraries.Add(Path.Combine(ProtobufRoot, "lib", ProtobufLib));
     }
     else
     {
@@ -110,31 +123,41 @@ public class Carla : ModuleRules
     }
   }
 
-  public void AddCarlaServerDependency(TargetInfo Target)
+  private void AddTurboJPEGDependency(TargetInfo Target)
   {
-    string CarlaServerIncludePath;
-    string CarlaServerLibPath;
-    string CarlaServerLib;
-    string TurboJpegLib;
-
-    if (IsWindows(Target))
+    if (Target.Platform == UnrealTargetPlatform.Linux)
     {
-      CarlaServerIncludePath = "CarlaServer/include";
-      CarlaServerLibPath = "CarlaServer/lib/Release";
-      CarlaServerLib = Path.Combine(ModuleDirectory, "..", CarlaServerLibPath, "carla_server.lib");
-      TurboJpegLib = Path.Combine(ModuleDirectory, "..", CarlaServerLibPath, "turbojpeg.lib");
+      PublicAdditionalLibraries.Add("turbojpeg");
+    }
+  }
+
+  private void AddCarlaServerDependency(TargetInfo Target)
+  {
+    string CarlaServerIncludePath = "CarlaServer/include";
+    string CarlaServerLibPath = Path.Combine(ModuleDirectory, "..", "CarlaServer/lib");
+
+    string CarlaServerLibBaseName;
+    if (bUseDebugLibs)
+    {
+      CarlaServerLibBaseName = "carlaserverd";
     }
     else
     {
-      CarlaServerIncludePath = "CarlaServer/include";
-      CarlaServerLibPath = "CarlaServer/lib";
-      CarlaServerLib = Path.Combine(ModuleDirectory, "..", CarlaServerLibPath, "libcarla_server.a");
-      TurboJpegLib = Path.Combine(ModuleDirectory, "..", CarlaServerLibPath, "libturbojpeg.a");
+      CarlaServerLibBaseName = "carlaserver";
+    }
+
+    string CarlaServerLib;
+    if (IsWindows(Target))
+    {
+      CarlaServerLib = Path.Combine(CarlaServerLibPath, CarlaServerLibBaseName + ".lib");
+    }
+    else
+    {
+      CarlaServerLib = Path.Combine(CarlaServerLibPath, "lib" + CarlaServerLibBaseName + ".a");
     }
 
     PublicIncludePaths.Add(CarlaServerIncludePath);
     PrivateIncludePaths.Add(CarlaServerIncludePath);
     PublicAdditionalLibraries.Add(CarlaServerLib);
-    PublicAdditionalLibraries.Add(TurboJpegLib);
   }
 }

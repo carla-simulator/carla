@@ -116,7 +116,7 @@ static bool SendAndReadSceneValues(
   if (!Server.sendSceneValues(sceneValues))
     return false;
   // Wait till we receive an answer.
-  uint32 EndIndex;
+  uint32 EndIndex = 0u;
   bool Success = false;
   UE_LOG(LogCarlaServer, Log, TEXT("(tryReadEpisodeStart) Waiting for client..."));
   while (!Success) {
@@ -125,7 +125,7 @@ static bool SendAndReadSceneValues(
   }
   UE_LOG(LogCarlaServer, Log, TEXT("Episode start received: { StartIndex = %d, EndIndex = %d }"), StartIndex, EndIndex);
   // Make sure the index is in range.
-  if (StartIndex >= AvailableStartSpots.Num()) {
+  if (StartIndex >= static_cast<uint32>(AvailableStartSpots.Num())) {
     UE_LOG(
         LogCarlaServer,
         Error,

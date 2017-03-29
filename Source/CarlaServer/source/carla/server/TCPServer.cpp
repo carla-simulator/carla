@@ -58,8 +58,8 @@ namespace carla {
         }
 
         void TCPServer::writeString(const std::string &message, error_code &error) {
-
-            std::string outMessage(GetBytes(message.length()) + message);
+            const int messageSize = static_cast<int>(message.length());
+            std::string outMessage(GetBytes(messageSize) + message);
 
             boost::asio::write(_socket, boost::asio::buffer(outMessage), error);
 
@@ -124,7 +124,7 @@ namespace carla {
           _socket.close();
           _socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
           _acceptor.cancel();*/
-        
+
         }
 
     } // namespace server
