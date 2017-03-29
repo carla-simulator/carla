@@ -192,8 +192,23 @@ static bool TryReadControl(carla::CarlaServer &Server, ACarlaVehicleController &
 // =============================================================================
 
 CarlaGameController::CarlaGameController() :
-  Server(MakeUnique<carla::CarlaServer>(2001u, 2002u, 2000u)),
-  Player(nullptr) {}
+  Server(nullptr),
+  Player(nullptr) {
+  uint32 WorldPort;
+  if (!FParse::Value(FCommandLine::Get(), TEXT("-world-port="), WorldPort)) {
+    WorldPort = 2000u;
+  }
+  const uint32 WritePort = WorldPort + 1u;
+  const uint32 ReadPort = WorldPort + 2u;
+  UE_LOG(
+      LogCarlaServer,
+      Log,
+      TEXT("Creating CarlaServer with ports: world %d, write %d, read %d"),
+      WorldPort,
+      WritePort,
+      ReadPort);
+  Server = MakeUnique<carla::CarlaServer>(WritePort, ReadPort, WorldPort);
+}
 
 CarlaGameController::~CarlaGameController()
 {
