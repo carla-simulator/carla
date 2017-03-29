@@ -34,7 +34,7 @@ public class Carla : ModuleRules
         "Engine",
         "Slate",
         "SlateCore",
-        "PhysXVehicles",
+        "PhysXVehicles"
         // ... add private dependencies that you statically link with here ...
       }
       );
@@ -55,6 +55,7 @@ public class Carla : ModuleRules
       // Fails to link the std libraries.
       PublicAdditionalLibraries.Add("stdc++");
     }
+    PublicAdditionalLibraries.Add("turbojpeg");
   }
 
   private bool IsWindows(TargetInfo Target)
@@ -114,22 +115,26 @@ public class Carla : ModuleRules
     string CarlaServerIncludePath;
     string CarlaServerLibPath;
     string CarlaServerLib;
+    string TurboJpegLib;
 
     if (IsWindows(Target))
     {
       CarlaServerIncludePath = "CarlaServer/include";
       CarlaServerLibPath = "CarlaServer/lib/Release";
       CarlaServerLib = Path.Combine(ModuleDirectory, "..", CarlaServerLibPath, "carla_server.lib");
+      TurboJpegLib = Path.Combine(ModuleDirectory, "..", CarlaServerLibPath, "turbojpeg.lib");
     }
     else
     {
       CarlaServerIncludePath = "CarlaServer/include";
       CarlaServerLibPath = "CarlaServer/lib";
       CarlaServerLib = Path.Combine(ModuleDirectory, "..", CarlaServerLibPath, "libcarla_server.a");
+      TurboJpegLib = Path.Combine(ModuleDirectory, "..", CarlaServerLibPath, "libturbojpeg.a");
     }
 
     PublicIncludePaths.Add(CarlaServerIncludePath);
     PrivateIncludePaths.Add(CarlaServerIncludePath);
     PublicAdditionalLibraries.Add(CarlaServerLib);
+    PublicAdditionalLibraries.Add(TurboJpegLib);
   }
 }

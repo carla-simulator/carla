@@ -16,7 +16,18 @@ Run make
 
     $ make
 
+Requires to manually compile
+[TurboJPEG](https://github.com/libjpeg-turbo/libjpeg-turbo).
+Follow the instructions
+[here](https://github.com/libjpeg-turbo/libjpeg-turbo/blob/master/BUILDING.md).
+At the configure step add PIC compile option
+
+    $ {source_directory}/configure CFLAGS='-fPIC'
+    $ make
+
 #### Windows
+
+Warning: Outdated
 
 Install and compile [boost](http://www.boost.org/).
 
