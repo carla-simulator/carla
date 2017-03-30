@@ -12,17 +12,25 @@ Install boost, protobuf, cmake and ninja.
 
     $ sudo apt-get install libprotobuf-dev protobuf-compiler libboost-all-dev cmake ninja-build
 
-Run make
-
-    $ make
-
 Requires to manually compile
 [TurboJPEG](https://github.com/libjpeg-turbo/libjpeg-turbo).
 Follow the instructions
-[here](https://github.com/libjpeg-turbo/libjpeg-turbo/blob/master/BUILDING.md).
-At the configure step add PIC compile option
+[here](https://github.com/libjpeg-turbo/libjpeg-turbo/blob/master/BUILDING.md),
+but at the configure step make sure to use the compile option -fPIC otherwise
+Unreal is not able to link
 
     $ {source_directory}/configure CFLAGS='-fPIC'
+    $ make
+
+Most probably libraries are generated under `.lib` folder.
+
+Set the environment variable `TURBOJPEG_LIB_PATH` to a folder containing the
+generated `libturbojpeg.a` (e.g., add
+`export TURBOJPEG_LIB_PATH=<path-to-the-folder>` to your `~/.bashrc`). This way
+we can find the right version of the library from Unreal Build Tool.
+
+Back to CarlaServer folder, run make
+
     $ make
 
 #### Windows

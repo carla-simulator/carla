@@ -90,8 +90,12 @@ endif (UNIX)
 
 if (UNIX)
 
-  set(TurboJPEG_LIBRARIES ${TurboJPEG_LIBRARIES} turbojpeg)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DWITH_TURBOJPEG")
+  if (EXISTS $ENV{TURBOJPEG_LIB_PATH})
+    set(TurboJPEG_LIBRARIES ${TurboJPEG_LIBRARIES} $ENV{TURBOJPEG_LIB_PATH}/libturbojpeg.a)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DWITH_TURBOJPEG")
+  else (EXISTS $ENV{TURBOJPEG_LIB_PATH})
+    message(FATAL_ERROR "TURBOJPEG_LIB_PATH is not defined, or points to a non-existant directory, please set this environment variable.")
+  endif (EXISTS $ENV{TURBOJPEG_LIB_PATH})
 
 elseif (WIN32)
 
