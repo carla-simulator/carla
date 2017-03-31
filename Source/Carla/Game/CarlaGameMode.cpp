@@ -40,7 +40,7 @@ void ACarlaGameMode::InitGame(
   checkf(
       GameInstance != nullptr,
       TEXT("GameInstance is not a UCarlaGameInstance, did you forget to set it in the project settings?"));
-  GameInstance->InitializeGameControllerIfNotPresent(bUseMockController);
+  GameInstance->InitializeGameControllerIfNotPresent();
   GameController = &GameInstance->GetGameController();
   GameController->Initialize();
 }

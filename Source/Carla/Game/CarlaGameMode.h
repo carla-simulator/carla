@@ -17,10 +17,6 @@ class CARLA_API ACarlaGameMode : public AGameModeBase
 {
   GENERATED_BODY()
 
-  /** Use a mock controller instead of connecting to a client */
-  UPROPERTY(Category = "CARLA Game Controller", EditAnywhere)
-  bool bUseMockController = false;
-
 public:
 
   ACarlaGameMode();

@@ -3,6 +3,11 @@ CARLA UE4 Plugin
 
 Plugin for Unreal Engine 4.
 
+Settings
+--------
+
+See [Resources/Example.CarlaSettings.ini](Resources/Example.CarlaSettings.ini).
+
 Compiling a UE4 project with CARLA plugin
 -----------------------------------------
 

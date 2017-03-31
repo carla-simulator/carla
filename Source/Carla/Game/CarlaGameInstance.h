@@ -6,6 +6,8 @@
 #include "CarlaGameControllerBase.h"
 #include "CarlaGameInstance.generated.h"
 
+class UCarlaSettings;
+
 /**
  *
  */
@@ -16,9 +18,11 @@ class CARLA_API UCarlaGameInstance : public UGameInstance
 
 public:
 
+  UCarlaGameInstance();
+
   ~UCarlaGameInstance();
 
-  void InitializeGameControllerIfNotPresent(bool bUseMockController);
+  void InitializeGameControllerIfNotPresent();
 
   CarlaGameControllerBase &GetGameController()
   {
@@ -26,7 +30,16 @@ public:
     return *GameController;
   }
 
+  const UCarlaSettings &GetCarlaSettings() const
+  {
+    check(CarlaSettings != nullptr);
+    return *CarlaSettings;
+  }
+
 private:
+
+  UPROPERTY(Category = "CARLA Settings", EditAnywhere)
+  UCarlaSettings *CarlaSettings;
 
   TUniquePtr<CarlaGameControllerBase> GameController;
 };

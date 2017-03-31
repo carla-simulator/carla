@@ -15,7 +15,7 @@ class CARLA_API CarlaGameController : public CarlaGameControllerBase
 {
 public:
 
-  CarlaGameController();
+  CarlaGameController(uint32 WorldPort, uint32 WritePort, uint32 ReadPort);
 
   ~CarlaGameController();
 
