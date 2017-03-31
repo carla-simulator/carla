@@ -5,6 +5,8 @@ using UnrealBuildTool;
 
 public class Carla : ModuleRules
 {
+  // Apparently, Unreal uses the Release C++ Runtime (CRT) even in debug mode,
+  // so unless we recompile the engine we cannot link the debug libraries.
   private readonly bool bUseDebugLibs = false;
 
   public Carla(TargetInfo Target)
@@ -138,7 +140,7 @@ public class Carla : ModuleRules
 
   private void AddCarlaServerDependency(TargetInfo Target)
   {
-    string CarlaServerIncludePath = "CarlaServer/include";
+    string CarlaServerIncludePath = Path.Combine(ModuleDirectory, "..", "CarlaServer/include");
     string CarlaServerLibPath = Path.Combine(ModuleDirectory, "..", "CarlaServer/lib");
 
     string CarlaServerLibBaseName;
