@@ -33,8 +33,8 @@ namespace carla {
 
 
         TCPServer::TCPServer(int port) :
-            _service(),
             port(port),
+            _service(),
             _socket(_service),
             _connected(false){}
 

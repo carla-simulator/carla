@@ -170,37 +170,28 @@ namespace server {
   }
 
   CarlaCommunication::CarlaCommunication(int worldPort, int writePort, int readPort) :
-    _serverPort(writePort),
-    _clientPort(readPort),
-    _worldPort(worldPort),
     _world(worldPort),
     _server(writePort),
     _client(readPort),
     _needsRestart(false),
+    _mode(Mode::MONO),
     _proto(std::make_unique<Protocol>(this)),
-    _worldThread  {
-    [this]() { return worldReceiveThread(this->_world, this->_worldThread); },
-    [this](const std::string & msg) { worldSendThread(this->_world, this->_worldThread, msg); },
-    [this]() { Connect(this->_world, *this); },
-    [this]() { ReconnectAll(*this); }
-  },
-  _serverThread {
-    [this](const Reward_Values &rwd) { serverWorkerThread(this->_server, this->_serverThread, this->_proto, rwd); },
-    [this]() { Connect(this->_server, *this); },
-    [this]() { ReconnectAll(*this); }
-  },
-  _clientThread {
-    [this]() { return clientWorkerThread(this->_client, this->_clientThread); },
-    [this]() { Connect(this->_client, *this); },
-    [this]() { ReconnectAll(*this); }
-  }
-
-  {
-    _mode = Mode::MONO;
-    /*std::cout << "WorldPort: " << worldPort << std::endl;
-    std::cout << "writePort: " << writePort << std::endl;
-    std::cout << "readPort: " << readPort << std::endl;*/
-  }
+    _worldThread{
+      [this]() { return worldReceiveThread(this->_world, this->_worldThread); },
+      [this](const std::string & msg) { worldSendThread(this->_world, this->_worldThread, msg); },
+      [this]() { Connect(this->_world, *this); },
+      [this]() { ReconnectAll(*this); }
+    },
+    _serverThread{
+      [this](const Reward_Values &rwd) { serverWorkerThread(this->_server, this->_serverThread, this->_proto, rwd); },
+      [this]() { Connect(this->_server, *this); },
+      [this]() { ReconnectAll(*this); }
+    },
+    _clientThread{
+      [this]() { return clientWorkerThread(this->_client, this->_clientThread); },
+      [this]() { Connect(this->_client, *this); },
+      [this]() { ReconnectAll(*this); }
+    } {}
 
   void CarlaCommunication::sendReward(std::unique_ptr<Reward_Values> values) {
     _serverThread.push(std::move(values));

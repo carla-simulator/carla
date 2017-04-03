@@ -70,26 +70,23 @@ namespace server {
 
   private:
 
+    TCPServer _world;
 
     TCPServer _server;
 
     TCPServer _client;
-
-    TCPServer _world;
-
-    int _worldPort, _clientPort, _serverPort;
-
-	thread::AsyncReaderJobQueue<Reward_Values> _serverThread;
-
-    thread::AsyncWriterJobQueue<std::string> _clientThread;
-
-    thread::AsyncReadWriteJobQueue< std::string, std::string> _worldThread;
 
     std::atomic_bool _needsRestart;
 
     std::atomic<Mode> _mode;
 
     const std::unique_ptr<Protocol> _proto;
+
+    thread::AsyncReadWriteJobQueue< std::string, std::string> _worldThread;
+
+    thread::AsyncReaderJobQueue<Reward_Values> _serverThread;
+
+    thread::AsyncWriterJobQueue<std::string> _clientThread;
   };
 
 }

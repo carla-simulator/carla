@@ -17,17 +17,15 @@
 namespace carla {
 namespace server {
 
+#ifdef WITH_TURBOJPEG
+
   static bool getJPEGImage(
       const int jpeg_quality,
-      const int color_components,
-      const int width,
-      const int height,
+      const size_t width,
+      const size_t height,
       const std::vector<Color> &image,
       bool depth,
       Reward &rwd){
-#ifndef WITH_TURBOJPEG
-    return false;
-#else
     long unsigned int jpegSize = 0;
     unsigned char *compressedImage;
     if (image.empty())
@@ -54,8 +52,9 @@ namespace server {
       rwd.set_depth(compressedImage, jpegSize);
     }
     return true;
-#endif // WITH_TURBOJPEG
   }
+
+#endif // WITH_TURBOJPEG
 
 
   Protocol::Protocol(carla::server::CarlaCommunication *communication) {
@@ -80,40 +79,56 @@ namespace server {
     reward.set_speed(values.forward_speed);
     reward.set_timestamp(values.timestamp);
 
-    auto images = {values.image_rgb_0/*, values.image_rgb_1*/};
-    for (const std::vector<Color> &image : images) {
-      long unsigned int jpegSize = 0;
-      if (!getJPEGImage(75, 3, values.image_width, values.image_height, image, false, reward)) {
-        std::cout << "ERROR" << std::endl;
-      }
+#ifdef WITH_TURBOJPEG
+    // Compress images to JPEG
+
+    struct ImageHolder {
+      bool isDepth;
+      const decltype(values.image_rgb_0) &image;
+    };
+
+    std::vector<ImageHolder> images;
+    if (_communication->GetMode() == Mode::MONO) {
+      images.push_back({false, values.image_rgb_0});
+    } else if (_communication->GetMode() == Mode::STEREO) {
+      images.reserve(4u);
+      images.push_back({false, values.image_rgb_0});
+      images.push_back({false, values.image_rgb_1});
+      images.push_back({true, values.image_depth_0});
+      images.push_back({true, values.image_depth_1});
+    } else {
+      std::cerr << "Error, invalid mode" << std::endl;
+      return;
     }
 
-
-    if (_communication -> GetMode() == Mode::STEREO){
-      auto depths = {values.image_depth_0, values.image_depth_1};
-      for (const std::vector<Color> &image : depths) {
-        //if (getPNGImage(image, values.image_width, values.image_height, png_image)) {
-        if (getJPEGImage(75, 3, values.image_width, values.image_height, image, true, reward)){
-          std::cout << "ERROR" << std::endl;
-        }
+    constexpr int JPEG_QUALITY = 75;
+    for (const auto &holder : images) {
+      if (!getJPEGImage(
+            JPEG_QUALITY,
+            values.image_width,
+            values.image_height,
+            holder.image,
+            holder.isDepth,
+            reward)) {
+        std::cerr << "Error compressing image to JPEG" << std::endl;
       }
     }
+#endif // WITH_TURBOJPEG
   }
 
   void Protocol::LoadScene(Scene &scene, const Scene_Values &values) {
-    std::vector<Vector2D> positions = values.possible_positions;
-    for (int i = 0; i < positions.size(); ++i) {
-      Scene::Position* point = scene.add_position();
-      point->set_pos_x(positions[i].x);
-      point->set_pos_y(positions[i].y);
+    for (auto i = 0u; i < values.possible_positions.size(); ++i) {
+      Scene::Position *point = scene.add_position();
+      point->set_pos_x(values.possible_positions[i].x);
+      point->set_pos_y(values.possible_positions[i].y);
     }
 
     if (_communication->GetMode() == Mode::STEREO) {
-      Scene::Projection_Matrix* matrix;
-      std::vector<std::array<float,16>> projection_matrix = values.projection_matrices;
-      for (int i = 0; i < projection_matrix.size(); ++i) {
-        matrix = scene.add_camera_matrix();
-        for (int e = 0; e < 16; ++e) matrix->add_cam_param(projection_matrix[i][e]);
+      for (auto i = 0u; i < values.projection_matrices.size(); ++i) {
+        Scene::Projection_Matrix *matrix = scene.add_camera_matrix();
+        for (auto e = 0u; e < 16u; ++e) {
+          matrix->add_cam_param(values.projection_matrices[i][e]);
+        }
       }
     }
   }

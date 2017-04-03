@@ -4,7 +4,11 @@
 
 namespace carla {
 
+  Reward_Values::Reward_Values() {}
+
   Reward_Values::~Reward_Values() {}
+
+  Scene_Values::Scene_Values() {}
 
   Scene_Values::~Scene_Values() {}
 

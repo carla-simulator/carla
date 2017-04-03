@@ -28,6 +28,7 @@ namespace carla {
   };
 
   struct Reward_Values {
+    Reward_Values();
     ~Reward_Values();
     /// Time-stamp of the current frame.
     int32_t timestamp;
@@ -60,6 +61,7 @@ namespace carla {
   };
 
   struct Scene_Values {
+    Scene_Values();
     ~Scene_Values();
     /// Possible world positions to spawn the player.
     std::vector<Vector2D> possible_positions;

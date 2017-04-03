@@ -20,13 +20,6 @@ static uint32_t toInt(const std::string &str) {
   return std::stoi(str);
 }
 
-static std::string daytimeString() {
-  using namespace std;
-  time_t now = time(0);
-  std::string str = ctime(&now);
-  return str;
-}
-
 static std::vector<carla::Color> makeImage(uint32_t width, uint32_t height) {
   // Xisco's magic image generator.
   std::vector<unsigned char> img(width * height * 4);
@@ -58,8 +51,8 @@ std::unique_ptr<carla::Reward_Values> makeReward(){
     const uint32_t imageHeight = 512u;
 
     reward->player_location = {1.0f, 1.0f};
-    reward->player_orientation = {1.0f, 1.0f};
-    reward->player_acceleration = {1.0f, 1.0f};
+    reward->player_orientation = {1.0f, 0.0f, 0.0f};
+    reward->player_acceleration = {1.0f, 0.0f, 0.0f};
     reward->forward_speed = 100.0f;
     reward->collision_general = 10.0f;
     reward->collision_pedestrian = 10.0f;
@@ -185,7 +178,7 @@ int main(int argc, char *argv[]) {
 
           }else {
 
-            bool error = false, readed = false;
+            bool readed = false;
             if (!server.tryReadControl(steer, gas, readed)){
               std::cerr << "ERROR while reading Control" << std::endl;
               break;
