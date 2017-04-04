@@ -30,20 +30,10 @@ public:
   /// @name Map construction and update related methods
   // ===========================================================================
   /// @{
-protected:
-
-  /// Called after the actor has been constructed and spawned.
-  virtual void OnConstruction(const FTransform &Transform) override;
-
-#if WITH_EDITOR
-  /// Called after a property change in editor.
-  virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
-#endif // WITH_EDITOR
-
 private:
 
   /// Update the map based on the current settings.
-  void UpdateMap();
+  virtual void UpdateMap() override;
 
   /// Update the random seeds. Generate random if no fixed seed is used.
   void UpdateSeeds();

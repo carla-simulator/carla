@@ -74,6 +74,9 @@ protected:
   // ===========================================================================
 private:
 
+  /// Here does nothing, implement in derived classes.
+  virtual void UpdateMap();
+
   /// Clear all instances in the instantiators and update the static meshes.
   void ResetInstantiators();
 

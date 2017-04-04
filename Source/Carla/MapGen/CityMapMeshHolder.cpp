@@ -36,11 +36,11 @@ void ACityMapMeshHolder::OnConstruction(const FTransform &Transform)
 {
   Super::OnConstruction(Transform);
 
-  for (tag_size_t i = 0u; i < NUMBER_OF_TAGS; ++i) {
-    // Create an instantiator for each mesh.
-    GetInstantiator(CityMapMeshTag::FromUInt(i));
+  if (MeshInstatiators.Num() == 0) {
+    ResetInstantiators();
+    UpdateMapScale();
+    UpdateMap();
   }
-  UpdateMapScale();
 }
 
 #if WITH_EDITOR
@@ -50,6 +50,7 @@ void ACityMapMeshHolder::PostEditChangeProperty(FPropertyChangedEvent& PropertyC
   if (PropertyChangedEvent.Property) {
     ResetInstantiators();
     UpdateMapScale();
+    UpdateMap();
   }
 }
 #endif // WITH_EDITOR
@@ -101,11 +102,22 @@ void ACityMapMeshHolder::AddInstance(ECityMapMeshTag Tag, FTransform Transform)
 // -- Private methods ----------------------------------------------------------
 // =============================================================================
 
+void ACityMapMeshHolder::UpdateMap() {}
+
 void ACityMapMeshHolder::ResetInstantiators()
 {
+  for (auto *instantiator : MeshInstatiators) {
+    if (instantiator != nullptr) {
+      instantiator->ClearInstances();
+    }
+  }
+  if (MeshInstatiators.Num() != NUMBER_OF_TAGS) {
+    MeshInstatiators.Empty();
+    MeshInstatiators.Init(nullptr, NUMBER_OF_TAGS);
+  }
+  check(MeshInstatiators.Num() == NUMBER_OF_TAGS);
   for (tag_size_t i = 0u; i < NUMBER_OF_TAGS; ++i) {
     auto &instantiator = GetInstantiator(CityMapMeshTag::FromUInt(i));
-    instantiator.ClearInstances();
     instantiator.SetStaticMesh(GetStaticMesh(CityMapMeshTag::FromUInt(i)));
   }
 }

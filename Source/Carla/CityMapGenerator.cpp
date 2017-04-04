@@ -24,22 +24,6 @@ ACityMapGenerator::~ACityMapGenerator() {}
 // -- Map construction and update related methods ------------------------------
 // =============================================================================
 
-void ACityMapGenerator::OnConstruction(const FTransform &Transform)
-{
-  Super::OnConstruction(Transform);
-  // UpdateMap(); /// @todo Do we need to update the map here?
-}
-
-#if WITH_EDITOR
-void ACityMapGenerator::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
-{
-  Super::PostEditChangeProperty(PropertyChangedEvent);
-  if (PropertyChangedEvent.Property) {
-    UpdateMap();
-  }
-}
-#endif // WITH_EDITOR
-
 void ACityMapGenerator::UpdateMap() {
   UpdateSeeds();
   GenerateGraph();
