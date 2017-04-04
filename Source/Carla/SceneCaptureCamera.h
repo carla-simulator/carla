@@ -56,6 +56,10 @@ public:
     return PostProcessEffect;
   }
 
+  void SetImageSize(uint32 SizeX, uint32 SizeY);
+
+  void SetPostProcessEffect(EPostProcessEffect PostProcessEffect);
+
   FString GetPostProcessEffectAsString() const;
 
   bool ReadPixels(TArray<FColor> &BitMap) const;

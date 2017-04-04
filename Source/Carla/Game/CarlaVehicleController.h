@@ -80,7 +80,7 @@ public:
   /// @{
 public:
 
-  void RegisterCaptureCamera(const ASceneCaptureCamera &CaptureCamera);
+  void RegisterCaptureCamera(ASceneCaptureCamera &CaptureCamera);
 
   /// @}
   // ===========================================================================

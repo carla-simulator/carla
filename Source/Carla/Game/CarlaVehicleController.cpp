@@ -166,8 +166,9 @@ int32 ACarlaVehicleController::GetVehicleCurrentGear() const
 // -- Scene capture ------------------------------------------------------------
 // =============================================================================
 
-void ACarlaVehicleController::RegisterCaptureCamera(const ASceneCaptureCamera &CaptureCamera)
+void ACarlaVehicleController::RegisterCaptureCamera(ASceneCaptureCamera &CaptureCamera)
 {
+  AddTickPrerequisiteActor(&CaptureCamera);
   const auto Effect = CaptureCamera.GetPostProcessEffect();
   check((Effect == EPostProcessEffect::None) || (Effect == EPostProcessEffect::Depth))
   auto &Cameras = (Effect == EPostProcessEffect::None ? RGBCameras : DepthCameras);

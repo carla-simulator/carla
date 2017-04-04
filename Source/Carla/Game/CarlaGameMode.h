@@ -29,11 +29,13 @@ public:
 
   virtual void Tick(float DeltaSeconds) override;
 
-  void RegisterCaptureCamera(ASceneCaptureCamera &CaptureCamera);
-
 private:
 
   void RegisterPlayer(AController &NewPlayer);
+
+  void RegisterCaptureCamera(ASceneCaptureCamera &CaptureCamera, AController &Player);
+
+  void AttachCaptureCamerasToPlayer(AController &Player);
 
   /// Iterate all the APlayerStart present in the world and add the ones with
   /// unoccupied locations to @a UnOccupiedStartPoints.
@@ -44,6 +46,8 @@ private:
       TArray<APlayerStart *> &UnOccupiedStartPoints);
 
   CarlaGameControllerBase *GameController;
+
+  UCarlaGameInstance *GameInstance;
 
   AController *PlayerController;
 };

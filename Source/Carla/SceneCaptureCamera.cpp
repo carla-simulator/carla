@@ -8,7 +8,6 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/CollisionProfile.h"
 #include "Engine/TextureRenderTarget2D.h"
-#include "Game/CarlaGameMode.h"
 #include "HighResScreenshot.h"
 #include "Paths.h"
 #include "StaticMeshResources.h"
@@ -76,11 +75,17 @@ void ASceneCaptureCamera::BeginPlay()
   CaptureComponent2D->TextureTarget = CaptureRenderTarget;
   CaptureComponent2D->UpdateContent();
   CaptureComponent2D->Activate();
+}
 
-  // Register this camera with the game mode.
-  ACarlaGameMode *GameMode = Cast<ACarlaGameMode>(GetWorld()->GetAuthGameMode());
-  if (GameMode != nullptr)
-    GameMode->RegisterCaptureCamera(*this);
+void ASceneCaptureCamera::SetImageSize(uint32 otherSizeX, uint32 otherSizeY)
+{
+  SizeX = otherSizeX;
+  SizeY = otherSizeY;
+}
+
+void ASceneCaptureCamera::SetPostProcessEffect(EPostProcessEffect otherPostProcessEffect)
+{
+  PostProcessEffect = otherPostProcessEffect;
 }
 
 FString ASceneCaptureCamera::GetPostProcessEffectAsString() const
@@ -94,6 +99,10 @@ FString ASceneCaptureCamera::GetPostProcessEffectAsString() const
 bool ASceneCaptureCamera::ReadPixels(TArray<FColor> &BitMap) const
 {
   FTextureRenderTargetResource* RTResource = CaptureRenderTarget->GameThread_GetRenderTargetResource();
+  if (RTResource == nullptr) {
+    UE_LOG(LogCarla, Error, TEXT("SceneCaptureCamera: Missing render target"));
+    return false;
+  }
   FReadSurfaceDataFlags ReadPixelFlags(RCM_UNorm);
   ReadPixelFlags.SetLinearToGamma(true);
   return RTResource->ReadPixels(BitMap, ReadPixelFlags);

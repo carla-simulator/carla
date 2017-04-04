@@ -13,6 +13,7 @@
 #include "CarlaGameState.h"
 #include "CarlaHUD.h"
 #include "CarlaPlayerState.h"
+#include "CarlaSettings.h"
 #include "CarlaVehicleController.h"
 
 ACarlaGameMode::ACarlaGameMode() :
@@ -36,7 +37,7 @@ void ACarlaGameMode::InitGame(
 {
   Super::InitGame(MapName, Options, ErrorMessage);
 
-  UCarlaGameInstance *GameInstance = Cast<UCarlaGameInstance>(GetGameInstance());
+  GameInstance = Cast<UCarlaGameInstance>(GetGameInstance());
   checkf(
       GameInstance != nullptr,
       TEXT("GameInstance is not a UCarlaGameInstance, did you forget to set it in the project settings?"));
@@ -78,22 +79,41 @@ void ACarlaGameMode::Tick(float DeltaSeconds)
   GameController->Tick(DeltaSeconds);
 }
 
-void ACarlaGameMode::RegisterCaptureCamera(ASceneCaptureCamera &CaptureCamera)
-{
-  check(GameController != nullptr);
-  AddTickPrerequisiteActor(&CaptureCamera);
-  ACarlaVehicleController *Player = Cast<ACarlaVehicleController>(PlayerController);
-  if (Player != nullptr) {
-    Player->RegisterCaptureCamera(CaptureCamera);
-  }
-}
-
 void ACarlaGameMode::RegisterPlayer(AController &NewPlayer)
 {
   check(GameController != nullptr);
   AddTickPrerequisiteActor(&NewPlayer);
   GameController->RegisterPlayer(NewPlayer);
   PlayerController = &NewPlayer;
+  AttachCaptureCamerasToPlayer(NewPlayer);
+}
+
+void ACarlaGameMode::RegisterCaptureCamera(
+    ASceneCaptureCamera &CaptureCamera,
+    AController &Player)
+{
+  AddTickPrerequisiteActor(&CaptureCamera);
+  ACarlaVehicleController *Vehicle = Cast<ACarlaVehicleController>(&Player);
+  if (Vehicle != nullptr) {
+    Vehicle->RegisterCaptureCamera(CaptureCamera);
+  } else {
+    UE_LOG(LogCarla, Warning, TEXT("Trying to register camera but player is not a ACarlaVehicleController"));
+  }
+}
+
+void ACarlaGameMode::AttachCaptureCamerasToPlayer(AController &Player)
+{
+  auto &Settings = GameInstance->GetCarlaSettings();
+  if (Settings.SceneCaptureMode == ESceneCaptureMode::Stereo) {
+    UE_LOG(LogCarla, Error, TEXT("Stereo mode not yet implemented"));
+  } else if (Settings.SceneCaptureMode == ESceneCaptureMode::Mono) {
+    auto TheCamera = GetWorld()->SpawnActor<ASceneCaptureCamera>();
+    TheCamera->SetPostProcessEffect(EPostProcessEffect::None);
+    TheCamera->SetImageSize(Settings.ImageSizeX, Settings.ImageSizeY);
+    TheCamera->AttachToActor(Player.GetPawn(), FAttachmentTransformRules::KeepRelativeTransform);
+    TheCamera->SetOwner(Player.GetPawn());
+    RegisterCaptureCamera(*TheCamera, Player);
+  }
 }
 
 APlayerStart *ACarlaGameMode::FindUnOccupiedStartPoints(
