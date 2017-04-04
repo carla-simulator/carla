@@ -232,7 +232,7 @@ namespace server {
     // Protobuf produces a segmentation fault in the destructor of the Scene
     // when called from Unreal Engine in Linux. As a workaround, we added this
     // cute memory leak.
-    /// @todo Fix the memory leak!
+    /// @todo #10 Fix the memory leak!
     Scene *scene = new Scene;
     _proto->LoadScene(*scene, values);
 

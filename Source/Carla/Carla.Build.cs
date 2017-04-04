@@ -5,10 +5,6 @@ using UnrealBuildTool;
 
 public class Carla : ModuleRules
 {
-  // Apparently, Unreal uses the Release C++ Runtime (CRT) even in debug mode,
-  // so unless we recompile the engine we cannot link the debug libraries.
-  private readonly bool bUseDebugLibs = false;
-
   public Carla(TargetInfo Target)
   {
     PublicIncludePaths.AddRange(
@@ -67,6 +63,23 @@ public class Carla : ModuleRules
     return (Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32);
   }
 
+  private bool UseDebugLibs(TargetInfo Target)
+  {
+    if (IsWindows(Target))
+    {
+      // In Windows, Unreal uses the Release C++ Runtime (CRT) even in debug
+      // mode, so unless we recompile the engine we cannot link the debug
+      // libraries.
+      return false;
+    }
+    else
+    {
+      // On Linux on the other hand, we need to use the version of the libraries
+      // without optimizations due to the crash in the std::string destructor.
+      return true;
+    }
+  }
+
   private void AddBoostDependency(TargetInfo Target)
   {
     if (IsWindows(Target))
@@ -102,7 +115,7 @@ public class Carla : ModuleRules
     {
       string ProtobufRoot = System.Environment.GetEnvironmentVariable("PROTOBUF_ROOT");
       string ProtobufLib;
-      if (bUseDebugLibs)
+      if (UseDebugLibs(Target))
       {
         ProtobufRoot = Path.Combine(ProtobufRoot, "Debug");
         ProtobufLib = "libprotobufd.lib";
@@ -144,7 +157,7 @@ public class Carla : ModuleRules
     string CarlaServerLibPath = Path.Combine(ModuleDirectory, "..", "CarlaServer/lib");
 
     string CarlaServerLibBaseName;
-    if (bUseDebugLibs)
+    if (UseDebugLibs(Target))
     {
       CarlaServerLibBaseName = "carlaserverd";
     }
