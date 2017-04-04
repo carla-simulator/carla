@@ -135,13 +135,6 @@ void ACityMapMeshHolder::UpdateMapScale()
     MapScale = 1.0f;
   } else {
     FVector size = mesh->GetBoundingBox().GetSize();
-    if (size.X != size.Y) {
-      UE_LOG(
-          LogCarla,
-          Warning,
-          TEXT("Base mesh \"%s\" is not squared"),
-          *CityMapMeshTag::ToString(Tag));
-    }
     MapScale = size.X;
   }
 }
