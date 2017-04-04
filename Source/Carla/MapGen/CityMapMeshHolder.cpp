@@ -52,7 +52,7 @@ void ACityMapMeshHolder::PostEditChangeProperty(FPropertyChangedEvent& PropertyC
     UpdateMapScale();
   }
 }
-#endif
+#endif // WITH_EDITOR
 
 // =============================================================================
 // -- Other protected methods --------------------------------------------------

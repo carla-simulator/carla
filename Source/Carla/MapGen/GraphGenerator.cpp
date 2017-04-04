@@ -80,9 +80,9 @@ namespace MapGen {
     Graph::Face *face = &*(++graph.GetFaces().begin());
     do {
       face = splitFace(graph, *face, random);
-#ifdef WITH_EDITOR
+#ifdef CARLA_ROAD_GENERATOR_PRINT_OUT
       graph.PrintToLog();
-#endif // WITH_EDITOR
+#endif // CARLA_ROAD_GENERATOR_PRINT_OUT
     } while (face != nullptr);
   }
 

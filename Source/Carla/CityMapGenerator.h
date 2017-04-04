@@ -38,7 +38,7 @@ protected:
 #if WITH_EDITOR
   /// Called after a property change in editor.
   virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
-#endif
+#endif // WITH_EDITOR
 
 private:
 

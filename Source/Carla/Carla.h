@@ -11,6 +11,12 @@
 DECLARE_LOG_CATEGORY_EXTERN(LogCarla, Log, All);
 DECLARE_LOG_CATEGORY_EXTERN(LogCarlaServer, Log, All);
 
+// Options to compile with extra debug options.
+#ifdef WITH_EDITOR
+// #define CARLA_ROAD_GENERATOR_PRINT_OUT /// @todo #1 Crashes in Linux.
+// #define CARLA_SERVER_CHECK_IMAGES
+#endif // WITH_EDITOR
+
 class FCarlaModule : public IModuleInterface
 {
 public:

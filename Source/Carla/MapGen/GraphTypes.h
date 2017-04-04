@@ -8,7 +8,7 @@
 
 namespace MapGen {
 
-#ifdef WITH_EDITOR
+#ifdef CARLA_ROAD_GENERATOR_PRINT_OUT
 
   /// For debug only purposes.
   template <char C>
@@ -37,7 +37,7 @@ namespace MapGen {
 #  define INHERIT_GRAPH_TYPE_BASE_CLASS(c) : public DataIndex<c>
 #else
 #  define INHERIT_GRAPH_TYPE_BASE_CLASS(c) : private NonCopyable
-#endif // WITH_EDITOR
+#endif // CARLA_ROAD_GENERATOR_PRINT_OUT
 
   struct GraphNode INHERIT_GRAPH_TYPE_BASE_CLASS('n')
   {

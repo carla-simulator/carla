@@ -31,7 +31,7 @@ protected:
 #if WITH_EDITOR
   /// Clears and updates the instantiators.
   virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
-#endif
+#endif // WITH_EDITOR
 
   // ===========================================================================
   // -- Other protected methods ------------------------------------------------

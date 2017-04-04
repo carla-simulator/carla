@@ -5,12 +5,12 @@
 
 namespace MapGen {
 
-#ifdef WITH_EDITOR
+#ifdef CARLA_ROAD_GENERATOR_PRINT_OUT
 
   template <> uint32 DataIndex<'n'>::NEXT_INDEX = 0u;
   template <> uint32 DataIndex<'e'>::NEXT_INDEX = 0u;
   template <> uint32 DataIndex<'f'>::NEXT_INDEX = 0u;
 
-#endif // WITH_EDITOR
+#endif // CARLA_ROAD_GENERATOR_PRINT_OUT
 
 } // namespace MapGen

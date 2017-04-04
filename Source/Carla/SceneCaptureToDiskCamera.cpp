@@ -104,7 +104,7 @@ void ASceneCaptureToDiskCamera::PostActorCreated()
       }
     }
   }
-#endif
+#endif // WITH_EDITOR
 
   // Sync component with CameraActor frustum settings.
   UpdateDrawFrustum();

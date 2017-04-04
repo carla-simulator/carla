@@ -48,7 +48,7 @@ static void Set(std::vector<carla::Color> &cImage, const TArray<FColor> &BitMap)
 // -- Other static methods -----------------------------------------------------
 // =============================================================================
 
-#ifdef WITH_EDITOR
+#ifdef CARLA_SERVER_CHECK_IMAGES
 
 static bool CheckImage(
   const FString &Tag,
@@ -76,7 +76,7 @@ static bool CheckImageValidity(const ACarlaPlayerState &Player, const carla::Rew
          CheckImage("ImageDepth1", Player.GetImage(CPS::ImageDepth1), Reward.image_depth_1, SizeX, SizeY);
 }
 
-#endif // WITH_EDITOR
+#endif // CARLA_SERVER_CHECK_IMAGES
 
 // Wait for the scene init to be sent, return false if we need to restart the
 // server.
@@ -166,9 +166,9 @@ static bool SendReward(
       Set(reward->image_depth_1, PlayerState.GetImage(CPS::ImageDepth1).BitMap);
     }
   }
-#ifdef WITH_EDITOR
+#ifdef CARLA_SERVER_CHECK_IMAGES
   check(CheckImageValidity(PlayerState, *reward));
-#endif // WITH_EDITOR
+#endif // CARLA_SERVER_CHECK_IMAGES
   UE_LOG(LogCarlaServer, Log, TEXT("Sending reward"));
   return Server.sendReward(reward.release());
 }
