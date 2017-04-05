@@ -100,6 +100,8 @@ message Reward {
   optional float ori_x = 13;
   optional float ori_y = 14;
   optional float ori_z = 15;
-  repeated bytes image = 16;
-  repeated bytes depth = 17;
+  optional bytes image1 = 16;
+  optional bytes image2 = 17;
+  optional bytes depth1 = 18;
+  optional bytes depth2 = 19;
 }

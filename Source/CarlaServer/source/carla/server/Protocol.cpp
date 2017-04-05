@@ -19,12 +19,19 @@ namespace server {
 
 #ifdef WITH_TURBOJPEG
 
+  enum ImageType{
+    IMAGE_1,
+    IMAGE_2,
+    DEPTH_1,
+    DEPTH_2,
+  };
+
   static bool getJPEGImage(
       const int jpeg_quality,
       const size_t width,
       const size_t height,
       const std::vector<Color> &image,
-      bool depth,
+      ImageType image_type,
       Reward &rwd){
     long unsigned int jpegSize = 0;
     unsigned char *compressedImage;
@@ -47,10 +54,20 @@ namespace server {
       &compressedImage, &jpegSize, TJSAMP_444, jpeg_quality, TJFLAG_FASTDCT);
     tjDestroy(jpegCompressor);
 
-    if (!depth) {
-      rwd.add_image((char*)compressedImage);
-    } else {
-      rwd.add_depth((char*)compressedImage);
+
+    switch (image_type){
+      case IMAGE_1:
+        rwd.set_image1(compressedImage, jpegSize);
+      break;
+      case IMAGE_2:
+        rwd.set_image2(compressedImage, jpegSize);
+      break;
+      case DEPTH_1:
+        rwd.set_depth1(compressedImage, jpegSize);
+      break;
+      case DEPTH_2:
+        rwd.set_depth2(compressedImage, jpegSize);
+      break;
     }
 
     return true;
@@ -85,19 +102,20 @@ namespace server {
     // Compress images to JPEG
 
     struct ImageHolder {
-      bool isDepth;
+      ImageType type;
       const decltype(values.image_rgb_0) &image;
     };
 
     std::vector<ImageHolder> images;
     if (_communication->GetMode() == Mode::MONO) {
-      images.push_back({false, values.image_rgb_0});
+      images.push_back({IMAGE_1, values.image_rgb_0});
+
     } else if (_communication->GetMode() == Mode::STEREO) {
       images.reserve(4u);
-      images.push_back({false, values.image_rgb_0});
-      images.push_back({false, values.image_rgb_1});
-      images.push_back({true, values.image_depth_0});
-      images.push_back({true, values.image_depth_1});
+      images.push_back({IMAGE_1, values.image_rgb_0});
+      images.push_back({IMAGE_2, values.image_rgb_1});
+      images.push_back({DEPTH_1, values.image_depth_0});
+      images.push_back({DEPTH_2, values.image_depth_1});
     } else {
       std::cerr << "Error, invalid mode" << std::endl;
       return;
@@ -110,7 +128,7 @@ namespace server {
             values.image_width,
             values.image_height,
             holder.image,
-            holder.isDepth,
+            holder.type,
             reward)) {
         std::cerr << "Error compressing image to JPEG" << std::endl;
       }
