@@ -129,7 +129,7 @@ void ACarlaGameMode::AttachCaptureCamerasToPlayer(AController &Player)
             Settings.Mono_CameraRotation,
             Settings.Mono_ImageSizeX,
             Settings.Mono_ImageSizeY,
-            EPostProcessEffect::None);
+            EPostProcessEffect::SceneFinal);
     RegisterCaptureCamera(*TheCamera, Player);
   } else if (Settings.SceneCaptureMode == ESceneCaptureMode::Stereo) {
     auto RGBCamera0 =
@@ -139,7 +139,7 @@ void ACarlaGameMode::AttachCaptureCamerasToPlayer(AController &Player)
             Settings.Stereo_Camera0Rotation,
             Settings.Stereo_ImageSizeX,
             Settings.Stereo_ImageSizeY,
-            EPostProcessEffect::None);
+            EPostProcessEffect::SceneFinal);
     auto DepthCamera0 =
         SpawnAndAttachCamera(
             Player,
@@ -155,7 +155,7 @@ void ACarlaGameMode::AttachCaptureCamerasToPlayer(AController &Player)
             Settings.Stereo_Camera1Rotation,
             Settings.Stereo_ImageSizeX,
             Settings.Stereo_ImageSizeY,
-            EPostProcessEffect::None);
+            EPostProcessEffect::SceneFinal);
     auto DepthCamera1 =
         SpawnAndAttachCamera(
             Player,

@@ -170,8 +170,7 @@ void ACarlaVehicleController::RegisterCaptureCamera(ASceneCaptureCamera &Capture
 {
   AddTickPrerequisiteActor(&CaptureCamera);
   const auto Effect = CaptureCamera.GetPostProcessEffect();
-  check((Effect == EPostProcessEffect::None) || (Effect == EPostProcessEffect::Depth))
-  auto &Cameras = (Effect == EPostProcessEffect::None ? RGBCameras : DepthCameras);
+  auto &Cameras = (Effect == EPostProcessEffect::Depth ? DepthCameras : RGBCameras);
 
   for (auto i = 0u; i < Cameras.size(); ++i) {
     if (Cameras[i] == nullptr) {

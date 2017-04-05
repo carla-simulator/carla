@@ -14,11 +14,13 @@
 class UDrawFrustumComponent;
 class USceneCaptureComponent2D;
 class UStaticMeshComponent;
+class UTextureRenderTarget2D;
 
 UENUM(BlueprintType)
 enum class EPostProcessEffect : uint8
 {
-  None            UMETA(DisplayName = "RGB"),
+  None            UMETA(DisplayName = "RGB without any post-processing"),
+  SceneFinal      UMETA(DisplayName = "RGB with post-processing present at the scene"),
   Depth           UMETA(DisplayName = "Depth Map"),
 
   SIZE            UMETA(Hidden)
@@ -81,17 +83,20 @@ private:
 
   /** To display the 3d camera in the editor. */
   UPROPERTY()
-  class UStaticMeshComponent* MeshComp;
+  UStaticMeshComponent* MeshComp;
 
   /** To allow drawing the camera frustum in the editor. */
   UPROPERTY()
-  class UDrawFrustumComponent* DrawFrustum;
+  UDrawFrustumComponent* DrawFrustum;
 
   /** Render target necessary for scene capture */
   UPROPERTY(Transient)
-  class UTextureRenderTarget2D* CaptureRenderTarget;
+  UTextureRenderTarget2D* CaptureRenderTarget;
 
   /** Scene capture component. */
   UPROPERTY(EditAnywhere)
-  class USceneCaptureComponent2D* CaptureComponent2D;
+  USceneCaptureComponent2D* CaptureComponent2D;
+
+  UPROPERTY()
+  UMaterial *PostProcessDepth;
 };

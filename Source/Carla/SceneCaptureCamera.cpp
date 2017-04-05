@@ -9,15 +9,18 @@
 #include "Engine/CollisionProfile.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "HighResScreenshot.h"
+#include "Materials/Material.h"
 #include "Paths.h"
 #include "StaticMeshResources.h"
 #include "TextureResource.h"
 
+static constexpr auto DEPTH_MAT_PATH = TEXT("Material'/Carla/PostProcessingMaterials/DepthEffectMaterial.DepthEffectMaterial'");
+
 ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer& ObjectInitializer) :
   Super(ObjectInitializer),
-  SizeX(200u),
-  SizeY(200u),
-  PostProcessEffect(EPostProcessEffect::None)
+  SizeX(720u),
+  SizeY(512u),
+  PostProcessEffect(EPostProcessEffect::SceneFinal)
 {
   PrimaryActorTick.bCanEverTick = true; /// @todo Does it need to tick?
   PrimaryActorTick.TickGroup = TG_PrePhysics;
@@ -39,6 +42,10 @@ ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer& ObjectInitial
 
   CaptureComponent2D = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("SceneCaptureComponent2D"));
   CaptureComponent2D->SetupAttachment(MeshComp);
+
+  // Load post-processing materials.
+  static ConstructorHelpers::FObjectFinder<UMaterial> DEPTH(DEPTH_MAT_PATH);
+  PostProcessDepth = DEPTH.Object;
 }
 
 void ASceneCaptureCamera::PostActorCreated()
@@ -73,6 +80,11 @@ void ASceneCaptureCamera::BeginPlay()
 
   CaptureComponent2D->Deactivate();
   CaptureComponent2D->TextureTarget = CaptureRenderTarget;
+  if (PostProcessEffect == EPostProcessEffect::SceneFinal) {
+    CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
+  } else if (PostProcessEffect == EPostProcessEffect::Depth) {
+    CaptureComponent2D->PostProcessSettings.AddBlendable(PostProcessDepth, 1.0f);
+  }
   CaptureComponent2D->UpdateContent();
   CaptureComponent2D->Activate();
 }
