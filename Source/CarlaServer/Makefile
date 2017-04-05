@@ -3,20 +3,22 @@ PROTOBUF_SRC_DIR=source/carla/server
 MY_CMAKE_FLAGS=-H. -B$(BUILD_FOLDER)
 
 ifeq ($(OS),Windows_NT)
-DEFAULT_RULE=build_windows
+DEFAULT_RULE=release
+BUILD_RULE=build_windows
 else
-DEFAULT_RULE=build_linux
+DEFAULT_RULE=debug
+BUILD_RULE=build_linux
 endif
 
-default: release
+default: $(DEFAULT_RULE)
 
 debug: BUILD_FOLDER=build/debug
 debug: MY_CMAKE_FLAGS+=-DCMAKE_BUILD_TYPE=Debug
-debug: $(DEFAULT_RULE)
+debug: $(BUILD_RULE)
 
 release: BUILD_FOLDER=build/release
 release: MY_CMAKE_FLAGS+=-DCMAKE_BUILD_TYPE=Release
-release: $(DEFAULT_RULE)
+release: $(BUILD_RULE)
 
 build_linux: protobuf
 	cmake $(MY_CMAKE_FLAGS) -G "Ninja"
