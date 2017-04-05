@@ -19,6 +19,14 @@ class CARLA_API UCarlaSettings : public UObject
 {
   GENERATED_BODY()
 
+public:
+
+  /** Load the settings based on the command-line arguments and the INI file if provided. */
+  void LoadSettings();
+
+  /** Log settings values. */
+  void LogSettings();
+
 private:
 
   /** File name of the settings file used to load this settings. Empty if none used. */
@@ -58,25 +66,59 @@ public:
   UPROPERTY(Category = "Scene Capture", EditDefaultsOnly)
   ESceneCaptureMode SceneCaptureMode = ESceneCaptureMode::Mono;
 
-  /** X size in pixels of the captured image. */
-  UPROPERTY(Category = "Scene Capture", EditDefaultsOnly)
-  uint32 ImageSizeX = 720u;
-
-  /** Y size in pixels of the captured image. */
-  UPROPERTY(Category = "Scene Capture", EditDefaultsOnly)
-  uint32 ImageSizeY = 512u;
-
   /// @}
-
   // ===========================================================================
-  // -- Other ------------------------------------------------------------------
+  /// @name Scene Capture - Mono
   // ===========================================================================
-
+  /// @{
 public:
 
-  /** Load the settings based on the command-line arguments and the INI file if provided . */
-  void LoadSettings();
+  /** X size in pixels of the captured image. */
+  UPROPERTY(Category = "Scene Capture|Mono", EditDefaultsOnly)
+  uint32 Mono_ImageSizeX = 720u;
 
-  /** Log settings values . */
-  void LogSettings();
+  /** Y size in pixels of the captured image. */
+  UPROPERTY(Category = "Scene Capture|Mono", EditDefaultsOnly)
+  uint32 Mono_ImageSizeY = 512u;
+
+  /** Camera position relative to the car. */
+  UPROPERTY(Category = "Scene Capture|Mono", EditDefaultsOnly)
+  FVector Mono_CameraPosition = {170.0f, 0.0f, 150.0f};
+
+  /** Camera rotation relative to the car. */
+  UPROPERTY(Category = "Scene Capture|Mono", EditDefaultsOnly)
+  FRotator Mono_CameraRotation = {0.0f, 0.0f, 0.0f};
+
+  /// @}
+  // ===========================================================================
+  /// @name Scene Capture - Stereo
+  // ===========================================================================
+  /// @{
+public:
+
+  /** X size in pixels of the captured image. */
+  UPROPERTY(Category = "Scene Capture|Stereo", EditDefaultsOnly)
+  uint32 Stereo_ImageSizeX = 720u;
+
+  /** Y size in pixels of the captured image. */
+  UPROPERTY(Category = "Scene Capture|Stereo", EditDefaultsOnly)
+  uint32 Stereo_ImageSizeY = 512u;
+
+  /** Camera0 position relative to the car. */
+  UPROPERTY(Category = "Scene Capture|Stereo", EditDefaultsOnly)
+  FVector Stereo_Camera0Position = {170.0f, 30.0f, 150.0f};
+
+  /** Camera0 rotation relative to the car. */
+  UPROPERTY(Category = "Scene Capture|Stereo", EditDefaultsOnly)
+  FRotator Stereo_Camera0Rotation = {0.0f, 0.0f, 0.0f};
+
+  /** Camera1 position relative to the car. */
+  UPROPERTY(Category = "Scene Capture|Stereo", EditDefaultsOnly)
+  FVector Stereo_Camera1Position = {170.0f, -30.0f, 150.0f};
+
+  /** Camera1 rotation relative to the car. */
+  UPROPERTY(Category = "Scene Capture|Stereo", EditDefaultsOnly)
+  FRotator Stereo_Camera1Rotation = {0.0f, 0.0f, 0.0f};
+
+  /// @}
 };

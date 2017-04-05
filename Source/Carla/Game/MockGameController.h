@@ -9,7 +9,7 @@ class CARLA_API MockGameController : public CarlaGameControllerBase
 {
 public:
 
-  virtual void Initialize() override;
+  virtual void Initialize(UCarlaSettings &CarlaSettings) override;
 
   virtual APlayerStart *ChoosePlayerStart(const TArray<APlayerStart *> &AvailableStartSpots) override;
 

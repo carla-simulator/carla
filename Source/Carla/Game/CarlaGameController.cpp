@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerStart.h"
 
 #include "CarlaPlayerState.h"
+#include "CarlaSettings.h"
 #include "CarlaVehicleController.h"
 #include "SceneCaptureCamera.h"
 
@@ -81,7 +82,7 @@ static bool CheckImageValidity(const ACarlaPlayerState &Player, const carla::Rew
 // Wait for the scene init to be sent, return false if we need to restart the
 // server.
 /// @todo At the moment we just ignored what it is sent.
-static bool ReadSceneInit(carla::CarlaServer &Server)
+static bool ReadSceneInit(carla::CarlaServer &Server, ESceneCaptureMode &CaptureMode)
 {
   carla::Mode Mode;
   uint32 Scene;
@@ -90,6 +91,13 @@ static bool ReadSceneInit(carla::CarlaServer &Server)
   while (!Success) {
     if (!Server.tryReadSceneInit(Mode, Scene, Success))
       return false;
+  }
+  if (Mode == carla::Mode::MONO) {
+    CaptureMode = ESceneCaptureMode::Mono;
+  } else if (Mode == carla::Mode::STEREO) {
+    CaptureMode = ESceneCaptureMode::Stereo;
+  } else {
+    CaptureMode = ESceneCaptureMode::NoCapture;
   }
   return true;
 }
@@ -200,11 +208,11 @@ CarlaGameController::~CarlaGameController()
   UE_LOG(LogCarlaServer, Log, TEXT("Destroying CarlaGameController..."));
 }
 
-void CarlaGameController::Initialize()
+void CarlaGameController::Initialize(UCarlaSettings &CarlaSettings)
 {
   if (bServerNeedsRestart) {
     UE_LOG(LogCarlaServer, Log, TEXT("Initializing CarlaServer"));
-    if (Server->init(1u) && ReadSceneInit(*Server)) {
+    if (Server->init(1u) && ReadSceneInit(*Server, CarlaSettings.SceneCaptureMode)) {
       bServerNeedsRestart = false;
     } else {
       UE_LOG(LogCarlaServer, Warning, TEXT("Failed to initialize, server needs restart"));

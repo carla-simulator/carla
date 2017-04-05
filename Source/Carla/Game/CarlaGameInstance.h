@@ -8,9 +8,8 @@
 
 class UCarlaSettings;
 
-/**
- *
- */
+/// The game instance contains elements that must be kept alive in between
+/// levels. It is instantiate once per game.
 UCLASS()
 class CARLA_API UCarlaGameInstance : public UGameInstance
 {
@@ -28,6 +27,12 @@ public:
   {
     check(GameController != nullptr);
     return *GameController;
+  }
+
+  UCarlaSettings &GetCarlaSettings()
+  {
+    check(CarlaSettings != nullptr);
+    return *CarlaSettings;
   }
 
   const UCarlaSettings &GetCarlaSettings() const

@@ -3,7 +3,7 @@
 #include "Carla.h"
 #include "MockGameController.h"
 
-void MockGameController::Initialize()
+void MockGameController::Initialize(UCarlaSettings & /*CarlaSettings*/)
 {
 
 }
@@ -29,7 +29,7 @@ void MockGameController::BeginPlay()
 
 }
 
-void MockGameController::Tick(float DeltaSeconds)
+void MockGameController::Tick(float /*DeltaSeconds*/)
 {
 
 }

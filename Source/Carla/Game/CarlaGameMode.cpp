@@ -43,7 +43,8 @@ void ACarlaGameMode::InitGame(
       TEXT("GameInstance is not a UCarlaGameInstance, did you forget to set it in the project settings?"));
   GameInstance->InitializeGameControllerIfNotPresent();
   GameController = &GameInstance->GetGameController();
-  GameController->Initialize();
+  GameController->Initialize(GameInstance->GetCarlaSettings());
+  GameInstance->GetCarlaSettings().LogSettings();
 }
 
 void ACarlaGameMode::RestartPlayer(AController* NewPlayer)
@@ -85,7 +86,7 @@ void ACarlaGameMode::RegisterPlayer(AController &NewPlayer)
   AddTickPrerequisiteActor(&NewPlayer);
   GameController->RegisterPlayer(NewPlayer);
   PlayerController = &NewPlayer;
-  AttachCaptureCamerasToPlayer(NewPlayer);
+  AttachCaptureCamerasToPlayer(*PlayerController);
 }
 
 void ACarlaGameMode::RegisterCaptureCamera(
@@ -101,18 +102,72 @@ void ACarlaGameMode::RegisterCaptureCamera(
   }
 }
 
+static ASceneCaptureCamera *SpawnAndAttachCamera(
+    AController &Player,
+    const FVector &RelativeLocation,
+    const FRotator &RelativeRotation,
+    uint32 ImageSizeX,
+    uint32 ImageSizeY,
+    EPostProcessEffect PostProcessEffect)
+{
+  auto Camera = Player.GetWorld()->SpawnActor<ASceneCaptureCamera>(RelativeLocation, RelativeRotation);
+  Camera->SetImageSize(ImageSizeX, ImageSizeY);
+  Camera->SetPostProcessEffect(PostProcessEffect);
+  Camera->AttachToActor(Player.GetPawn(), FAttachmentTransformRules::KeepRelativeTransform);
+  Camera->SetOwner(Player.GetPawn());
+  return Camera;
+}
+
 void ACarlaGameMode::AttachCaptureCamerasToPlayer(AController &Player)
 {
   auto &Settings = GameInstance->GetCarlaSettings();
-  if (Settings.SceneCaptureMode == ESceneCaptureMode::Stereo) {
-    UE_LOG(LogCarla, Error, TEXT("Stereo mode not yet implemented"));
-  } else if (Settings.SceneCaptureMode == ESceneCaptureMode::Mono) {
-    auto TheCamera = GetWorld()->SpawnActor<ASceneCaptureCamera>();
-    TheCamera->SetPostProcessEffect(EPostProcessEffect::None);
-    TheCamera->SetImageSize(Settings.ImageSizeX, Settings.ImageSizeY);
-    TheCamera->AttachToActor(Player.GetPawn(), FAttachmentTransformRules::KeepRelativeTransform);
-    TheCamera->SetOwner(Player.GetPawn());
+  if (Settings.SceneCaptureMode == ESceneCaptureMode::Mono) {
+    auto TheCamera =
+        SpawnAndAttachCamera(
+            Player,
+            Settings.Mono_CameraPosition,
+            Settings.Mono_CameraRotation,
+            Settings.Mono_ImageSizeX,
+            Settings.Mono_ImageSizeY,
+            EPostProcessEffect::None);
     RegisterCaptureCamera(*TheCamera, Player);
+  } else if (Settings.SceneCaptureMode == ESceneCaptureMode::Stereo) {
+    auto RGBCamera0 =
+        SpawnAndAttachCamera(
+            Player,
+            Settings.Stereo_Camera0Position,
+            Settings.Stereo_Camera0Rotation,
+            Settings.Stereo_ImageSizeX,
+            Settings.Stereo_ImageSizeY,
+            EPostProcessEffect::None);
+    auto DepthCamera0 =
+        SpawnAndAttachCamera(
+            Player,
+            Settings.Stereo_Camera0Position,
+            Settings.Stereo_Camera0Rotation,
+            Settings.Stereo_ImageSizeX,
+            Settings.Stereo_ImageSizeY,
+            EPostProcessEffect::Depth);
+    auto RGBCamera1 =
+        SpawnAndAttachCamera(
+            Player,
+            Settings.Stereo_Camera1Position,
+            Settings.Stereo_Camera1Rotation,
+            Settings.Stereo_ImageSizeX,
+            Settings.Stereo_ImageSizeY,
+            EPostProcessEffect::None);
+    auto DepthCamera1 =
+        SpawnAndAttachCamera(
+            Player,
+            Settings.Stereo_Camera1Position,
+            Settings.Stereo_Camera1Rotation,
+            Settings.Stereo_ImageSizeX,
+            Settings.Stereo_ImageSizeY,
+            EPostProcessEffect::Depth);
+    RegisterCaptureCamera(*RGBCamera0, Player);
+    RegisterCaptureCamera(*DepthCamera0, Player);
+    RegisterCaptureCamera(*RGBCamera1, Player);
+    RegisterCaptureCamera(*DepthCamera1, Player);
   }
 }
 
