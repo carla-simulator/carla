@@ -46,11 +46,13 @@ namespace server {
     tjCompress2(jpegCompressor, color_image.data(), width, 0, height, TJPF_RGB,
       &compressedImage, &jpegSize, TJSAMP_444, jpeg_quality, TJFLAG_FASTDCT);
     tjDestroy(jpegCompressor);
+
     if (!depth) {
-      rwd.set_image(compressedImage, jpegSize);
+      rwd.add_image((char*)compressedImage);
     } else {
-      rwd.set_depth(compressedImage, jpegSize);
+      rwd.add_depth((char*)compressedImage);
     }
+
     return true;
   }
 
