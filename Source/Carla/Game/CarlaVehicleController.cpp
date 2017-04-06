@@ -30,6 +30,7 @@ ACarlaVehicleController::ACarlaVehicleController() :
   SpringArm->CameraRotationLagSpeed = 7.f;
   SpringArm->bInheritPitch = false;
   SpringArm->bInheritRoll = false;
+  SpringArm->bInheritYaw = true;
 
   // Do not collide, may clip into level.
   SpringArm->bDoCollisionTest = false;
