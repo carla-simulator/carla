@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include <array>
 #include "GameFramework/PlayerState.h"
+#include "CapturedImage.h"
 #include "CarlaPlayerState.generated.h"
 
 /// Current state of the player, updated every frame by ACarlaVehicleController.
@@ -20,19 +20,6 @@ class CARLA_API ACarlaPlayerState : public APlayerState
   // ===========================================================================
 public:
 
-  enum ImageTag {
-    ImageRGB0,
-    ImageRGB1,
-    ImageDepth0,
-    ImageDepth1,
-    NUMBER_OF_IMAGES
-  };
-
-  struct Image {
-    uint32 SizeX = 0u;
-    uint32 SizeY = 0u;
-    TArray<FColor> BitMap;
-  };
 
   // ===========================================================================
   // -- APlayerState -----------------------------------------------------------
@@ -48,64 +35,76 @@ public:
   // ===========================================================================
 public:
 
+  UFUNCTION()
   int32 GetTimeStamp() const
   {
     return TimeStamp;
   }
 
+  UFUNCTION()
   const FVector &GetLocation() const
   {
     return Location;
   }
 
+  UFUNCTION()
   const FVector &GetOrientation() const
   {
     return Orientation;
   }
 
+  UFUNCTION()
   const FVector &GetAcceleration() const
   {
     return Acceleration;
   }
 
+  UFUNCTION()
   float GetForwardSpeed() const
   {
     return ForwardSpeed;
   }
 
+  UFUNCTION()
   int32 GetCurrentGear() const
   {
     return CurrentGear;
   }
 
+  UFUNCTION()
   float GetCollisionIntensityCars() const
   {
     return CollisionIntensityCars;
   }
 
+  UFUNCTION()
   float GetCollisionIntensityPedestrians() const
   {
     return CollisionIntensityPedestrians;
   }
 
+  UFUNCTION()
   float GetCollisionIntensityOther() const
   {
     return CollisionIntensityOther;
   }
 
+  UFUNCTION()
   float GetOtherLaneIntersectionFactor() const
   {
     return OtherLaneIntersectionFactor;
   }
 
+  UFUNCTION()
   float GetOffRoadIntersectionFactor() const
   {
     return OffRoadIntersectionFactor;
   }
 
-  const Image &GetImage(ImageTag Tag) const
+  UFUNCTION()
+  const TArray<FCapturedImage> &GetImages() const
   {
-    return Images[Tag];
+    return Images;
   }
 
   // ===========================================================================
@@ -127,27 +126,39 @@ private:
   // If you add another variable here, don't forget to copy it inside
   // CopyProperties if necessary.
 
+  UPROPERTY(VisibleAnywhere)
   int32 TimeStamp;
 
+  UPROPERTY(VisibleAnywhere)
   FVector Location;
 
+  UPROPERTY(VisibleAnywhere)
   FVector Orientation;
 
+  UPROPERTY(VisibleAnywhere)
   FVector Acceleration;
 
+  UPROPERTY(VisibleAnywhere)
   int32 CurrentGear;
 
+  UPROPERTY(VisibleAnywhere)
   float ForwardSpeed = 0.0f;
 
+  UPROPERTY(VisibleAnywhere)
   float CollisionIntensityCars = 0.0f;
 
+  UPROPERTY(VisibleAnywhere)
   float CollisionIntensityPedestrians = 0.0f;
 
+  UPROPERTY(VisibleAnywhere)
   float CollisionIntensityOther = 0.0f;
 
+  UPROPERTY(VisibleAnywhere)
   float OtherLaneIntersectionFactor = 0.0f;
 
+  UPROPERTY(VisibleAnywhere)
   float OffRoadIntersectionFactor = 0.0f;
 
-  std::array<Image, NUMBER_OF_IMAGES> Images;
+  UPROPERTY(VisibleAnywhere)
+  TArray<FCapturedImage> Images;
 };

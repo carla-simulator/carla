@@ -11,8 +11,6 @@
 // INI file sections.
 #define S_CARLA_SERVER                 TEXT("CARLA/Server")
 #define S_CARLA_SCENECAPTURE           TEXT("CARLA/SceneCapture")
-#define S_CARLA_SCENECAPTURE_MONO      TEXT("CARLA/SceneCapture/Mono")
-#define S_CARLA_SCENECAPTURE_STEREO    TEXT("CARLA/SceneCapture/Stereo")
 
 template <typename TARGET, typename SOURCE>
 static void SafeCastTo(SOURCE source, TARGET &target)
@@ -62,16 +60,19 @@ public:
     }
   }
 
-  void GetSceneCaptureMode(const TCHAR* Section, const TCHAR* Key, ESceneCaptureMode &Target) const
+  void GetPostProcessEffect(const TCHAR* Section, const TCHAR* Key, EPostProcessEffect &Target) const
   {
-    FString ModeString;
-    if (ConfigFile.GetString(Section, Key, ModeString)) {
-      if (ModeString == "Stereo") {
-        Target = ESceneCaptureMode::Stereo;
-      } else if (ModeString == "Mono") {
-        Target = ESceneCaptureMode::Mono;
-      } else if (ModeString == "NoCapture") {
-        Target = ESceneCaptureMode::NoCapture;
+    FString ValueString;
+    if (ConfigFile.GetString(Section, Key, ValueString)) {
+      if (ValueString == "None") {
+        Target = EPostProcessEffect::None;
+      } else if (ValueString == "SceneFinal") {
+        Target = EPostProcessEffect::SceneFinal;
+      } else if (ValueString == "Depth") {
+        Target = EPostProcessEffect::Depth;
+      } else {
+        UE_LOG(LogCarla, Error, TEXT("Invalid post-processing \"%s\" in INI file"), *ValueString);
+        Target = EPostProcessEffect::INVALID;
       }
     }
   }
@@ -85,6 +86,22 @@ private:
 // -- Other static methods -----------------------------------------------------
 // =============================================================================
 
+static void GetCameraDescription(
+    const INIFile &ConfigFile,
+    const TCHAR* Section,
+    FCameraDescription &Camera)
+{
+  ConfigFile.GetInt(Section, TEXT("ImageSizeX"), Camera.ImageSizeX);
+  ConfigFile.GetInt(Section, TEXT("ImageSizeY"), Camera.ImageSizeY);
+  ConfigFile.GetInt(Section, TEXT("CameraPositionX"), Camera.Position.X);
+  ConfigFile.GetInt(Section, TEXT("CameraPositionY"), Camera.Position.Y);
+  ConfigFile.GetInt(Section, TEXT("CameraPositionZ"), Camera.Position.Z);
+  ConfigFile.GetInt(Section, TEXT("CameraRotationPitch"), Camera.Rotation.Pitch);
+  ConfigFile.GetInt(Section, TEXT("CameraRotationRoll"), Camera.Rotation.Roll);
+  ConfigFile.GetInt(Section, TEXT("CameraRotationYaw"), Camera.Rotation.Yaw);
+  ConfigFile.GetPostProcessEffect(Section, TEXT("PostProcessing"), Camera.PostProcessEffect);
+}
+
 static void LoadSettingsFromFile(const FString &FileName, UCarlaSettings &Settings)
 {
   UE_LOG(LogCarla, Log, TEXT("Loading settings from \"%s\""), *FileName);
@@ -95,35 +112,24 @@ static void LoadSettingsFromFile(const FString &FileName, UCarlaSettings &Settin
   ConfigFile.GetInt(S_CARLA_SERVER, TEXT("WritePort"), Settings.WritePort);
   ConfigFile.GetInt(S_CARLA_SERVER, TEXT("ReadPort"), Settings.ReadPort);
   // SceneCapture.
-  ConfigFile.GetSceneCaptureMode(S_CARLA_SCENECAPTURE, TEXT("Mode"), Settings.SceneCaptureMode);
-  // SceneCapture - Mono.
-  ConfigFile.GetInt(S_CARLA_SCENECAPTURE, TEXT("ImageSizeX"), Settings.Mono_ImageSizeX);
-  ConfigFile.GetInt(S_CARLA_SCENECAPTURE, TEXT("ImageSizeY"), Settings.Mono_ImageSizeY);
-  ConfigFile.GetInt(S_CARLA_SCENECAPTURE_MONO, TEXT("ImageSizeX"), Settings.Mono_ImageSizeX);
-  ConfigFile.GetInt(S_CARLA_SCENECAPTURE_MONO, TEXT("ImageSizeY"), Settings.Mono_ImageSizeY);
-  ConfigFile.GetInt(S_CARLA_SCENECAPTURE_MONO, TEXT("CameraPositionX"), Settings.Mono_CameraPosition.X);
-  ConfigFile.GetInt(S_CARLA_SCENECAPTURE_MONO, TEXT("CameraPositionY"), Settings.Mono_CameraPosition.Y);
-  ConfigFile.GetInt(S_CARLA_SCENECAPTURE_MONO, TEXT("CameraPositionZ"), Settings.Mono_CameraPosition.Z);
-  ConfigFile.GetInt(S_CARLA_SCENECAPTURE_MONO, TEXT("CameraRotationPitch"), Settings.Mono_CameraRotation.Pitch);
-  ConfigFile.GetInt(S_CARLA_SCENECAPTURE_MONO, TEXT("CameraRotationRoll"), Settings.Mono_CameraRotation.Roll);
-  ConfigFile.GetInt(S_CARLA_SCENECAPTURE_MONO, TEXT("CameraRotationYaw"), Settings.Mono_CameraRotation.Yaw);
-  // SceneCapture - Stereo.
-  ConfigFile.GetInt(S_CARLA_SCENECAPTURE, TEXT("ImageSizeX"), Settings.Stereo_ImageSizeX);
-  ConfigFile.GetInt(S_CARLA_SCENECAPTURE, TEXT("ImageSizeY"), Settings.Stereo_ImageSizeY);
-  ConfigFile.GetInt(S_CARLA_SCENECAPTURE_STEREO, TEXT("ImageSizeX"), Settings.Stereo_ImageSizeX);
-  ConfigFile.GetInt(S_CARLA_SCENECAPTURE_STEREO, TEXT("ImageSizeY"), Settings.Stereo_ImageSizeY);
-  ConfigFile.GetInt(S_CARLA_SCENECAPTURE_STEREO, TEXT("Camera0PositionX"), Settings.Stereo_Camera0Position.X);
-  ConfigFile.GetInt(S_CARLA_SCENECAPTURE_STEREO, TEXT("Camera0PositionY"), Settings.Stereo_Camera0Position.Y);
-  ConfigFile.GetInt(S_CARLA_SCENECAPTURE_STEREO, TEXT("Camera0PositionZ"), Settings.Stereo_Camera0Position.Z);
-  ConfigFile.GetInt(S_CARLA_SCENECAPTURE_STEREO, TEXT("Camera1PositionX"), Settings.Stereo_Camera1Position.X);
-  ConfigFile.GetInt(S_CARLA_SCENECAPTURE_STEREO, TEXT("Camera1PositionY"), Settings.Stereo_Camera1Position.Y);
-  ConfigFile.GetInt(S_CARLA_SCENECAPTURE_STEREO, TEXT("Camera1PositionZ"), Settings.Stereo_Camera1Position.Z);
-  ConfigFile.GetInt(S_CARLA_SCENECAPTURE_STEREO, TEXT("Camera0RotationPitch"), Settings.Stereo_Camera0Rotation.Pitch);
-  ConfigFile.GetInt(S_CARLA_SCENECAPTURE_STEREO, TEXT("Camera0RotationRoll"), Settings.Stereo_Camera0Rotation.Roll);
-  ConfigFile.GetInt(S_CARLA_SCENECAPTURE_STEREO, TEXT("Camera0RotationYaw"), Settings.Stereo_Camera0Rotation.Yaw);
-  ConfigFile.GetInt(S_CARLA_SCENECAPTURE_STEREO, TEXT("Camera1RotationPitch"), Settings.Stereo_Camera1Rotation.Pitch);
-  ConfigFile.GetInt(S_CARLA_SCENECAPTURE_STEREO, TEXT("Camera1RotationRoll"), Settings.Stereo_Camera1Rotation.Roll);
-  ConfigFile.GetInt(S_CARLA_SCENECAPTURE_STEREO, TEXT("Camera1RotationYaw"), Settings.Stereo_Camera1Rotation.Yaw);
+  FString Cameras;
+  ConfigFile.GetString(S_CARLA_SCENECAPTURE, TEXT("Cameras"), Cameras);
+  TArray<FString> CameraNames;
+  Cameras.ParseIntoArray(CameraNames, TEXT(","), true);
+  for (FString &Name : CameraNames) {
+    FCameraDescription &Camera = Settings.CameraDescriptions.FindOrAdd(Name);
+    GetCameraDescription(ConfigFile, S_CARLA_SCENECAPTURE, Camera);
+
+    TArray<FString> SubSections;
+    Name.ParseIntoArray(SubSections, TEXT("/"), true);
+    check(SubSections.Num() > 0);
+    FString Section = S_CARLA_SCENECAPTURE;
+    for (FString &SubSection : SubSections) {
+      Section += TEXT("/");
+      Section += SubSection;
+      GetCameraDescription(ConfigFile, *Section, Camera);
+    }
+  }
 }
 
 static bool GetSettingsFileName(FString &Value)
@@ -167,14 +173,6 @@ void UCarlaSettings::LoadSettings()
 
 void UCarlaSettings::LogSettings()
 {
-  auto ModeAsString = [](ESceneCaptureMode Mode) {
-    switch (Mode) {
-      case ESceneCaptureMode::Mono:      return TEXT("Mono");
-      case ESceneCaptureMode::Stereo:    return TEXT("Stereo");
-      case ESceneCaptureMode::NoCapture: return TEXT("NoCapture");
-      default:                           return TEXT("INVALID");
-    };
-  };
   UE_LOG(LogCarla, Log, TEXT("== CARLA Settings =============================================================="));
   UE_LOG(LogCarla, Log, TEXT("Settings file: %s"), *CurrentFileName);
   UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_SERVER);
@@ -183,21 +181,16 @@ void UCarlaSettings::LogSettings()
   UE_LOG(LogCarla, Log, TEXT("Write Port = %d"), WritePort);
   UE_LOG(LogCarla, Log, TEXT("Read Port = %d"), ReadPort);
   UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_SCENECAPTURE);
-  UE_LOG(LogCarla, Log, TEXT("Mode = %s"), ModeAsString(SceneCaptureMode));
-  UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_SCENECAPTURE_MONO);
-  UE_LOG(LogCarla, Log, TEXT("Image Size = %dx%d"), Mono_ImageSizeX, Mono_ImageSizeY);
-  UE_LOG(LogCarla, Log, TEXT("Camera Position = (%s)"), *Mono_CameraPosition.ToString());
-  UE_LOG(LogCarla, Log, TEXT("Camera Rotation = (%s)"), *Mono_CameraRotation.ToString());
-  UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_SCENECAPTURE_STEREO);
-  UE_LOG(LogCarla, Log, TEXT("ImageSize = %dx%d"), Stereo_ImageSizeX, Stereo_ImageSizeY);
-  UE_LOG(LogCarla, Log, TEXT("Camera0 Position = (%s)"), *Stereo_Camera0Position.ToString());
-  UE_LOG(LogCarla, Log, TEXT("Camera0 Rotation = (%s)"), *Stereo_Camera0Rotation.ToString());
-  UE_LOG(LogCarla, Log, TEXT("Camera1 Position = (%s)"), *Stereo_Camera1Position.ToString());
-  UE_LOG(LogCarla, Log, TEXT("Camera1 Rotation = (%s)"), *Stereo_Camera1Rotation.ToString());
+  UE_LOG(LogCarla, Log, TEXT("Added %d cameras."), CameraDescriptions.Num());
+  for (auto &Item : CameraDescriptions) {
+    UE_LOG(LogCarla, Log, TEXT("[%s/%s]"), S_CARLA_SCENECAPTURE, *Item.Key);
+    UE_LOG(LogCarla, Log, TEXT("Image Size = %dx%d"), Item.Value.ImageSizeX, Item.Value.ImageSizeY);
+    UE_LOG(LogCarla, Log, TEXT("Camera Position = (%s)"), *Item.Value.Position.ToString());
+    UE_LOG(LogCarla, Log, TEXT("Camera Rotation = (%s)"), *Item.Value.Rotation.ToString());
+    UE_LOG(LogCarla, Log, TEXT("Post-Processing = %s"), *PostProcessEffect::ToString(Item.Value.PostProcessEffect));
+  }
   UE_LOG(LogCarla, Log, TEXT("================================================================================"));
 }
 
 #undef S_CARLA_SERVER
 #undef S_CARLA_SCENECAPTURE
-#undef S_CARLA_SCENECAPTURE_MONO
-#undef S_CARLA_SCENECAPTURE_STEREO

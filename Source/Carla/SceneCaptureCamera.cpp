@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// CARLA, Copyright (C) 2017 Computer Vision Center (CVC)
 
 #include "Carla.h"
 #include "SceneCaptureCamera.h"
@@ -100,12 +100,10 @@ void ASceneCaptureCamera::SetPostProcessEffect(EPostProcessEffect otherPostProce
   PostProcessEffect = otherPostProcessEffect;
 }
 
-FString ASceneCaptureCamera::GetPostProcessEffectAsString() const
+void ASceneCaptureCamera::Set(const FCameraDescription &CameraDescription)
 {
-  const UEnum* ptr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EPostProcessEffect"), true);
-  if(!ptr)
-    return FString("Invalid");
-  return ptr->GetEnumName(static_cast<int32>(PostProcessEffect));
+  SetImageSize(CameraDescription.ImageSizeX, CameraDescription.ImageSizeY);
+  SetPostProcessEffect(CameraDescription.PostProcessEffect);
 }
 
 bool ASceneCaptureCamera::ReadPixels(TArray<FColor> &BitMap) const

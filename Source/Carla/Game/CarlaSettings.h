@@ -3,15 +3,8 @@
 #pragma once
 
 #include "UObject/NoExportTypes.h"
+#include "CameraDescription.h"
 #include "CarlaSettings.generated.h"
-
-UENUM(BlueprintType)
-enum class ESceneCaptureMode : uint8
-{
-  Mono       UMETA(DisplayName = "Mono: Single RGB capture"),
-  Stereo     UMETA(DisplayName = "Stereo: Stereo RGB captures and Depth maps"),
-  NoCapture  UMETA(DisplayName = "No capture")
-};
 
 /// Global settings for CARLA.
 UCLASS()
@@ -62,63 +55,9 @@ public:
   /// @{
 public:
 
-  /** Controls the number and type of scene capture cameras that are added to the player. */
+  /** Descriptions of the cameras to be attached to the player. */
   UPROPERTY(Category = "Scene Capture", EditDefaultsOnly)
-  ESceneCaptureMode SceneCaptureMode = ESceneCaptureMode::Mono;
-
-  /// @}
-  // ===========================================================================
-  /// @name Scene Capture - Mono
-  // ===========================================================================
-  /// @{
-public:
-
-  /** X size in pixels of the captured image. */
-  UPROPERTY(Category = "Scene Capture|Mono", EditDefaultsOnly)
-  uint32 Mono_ImageSizeX = 720u;
-
-  /** Y size in pixels of the captured image. */
-  UPROPERTY(Category = "Scene Capture|Mono", EditDefaultsOnly)
-  uint32 Mono_ImageSizeY = 512u;
-
-  /** Camera position relative to the car. */
-  UPROPERTY(Category = "Scene Capture|Mono", EditDefaultsOnly)
-  FVector Mono_CameraPosition = {170.0f, 0.0f, 150.0f};
-
-  /** Camera rotation relative to the car. */
-  UPROPERTY(Category = "Scene Capture|Mono", EditDefaultsOnly)
-  FRotator Mono_CameraRotation = {0.0f, 0.0f, 0.0f};
-
-  /// @}
-  // ===========================================================================
-  /// @name Scene Capture - Stereo
-  // ===========================================================================
-  /// @{
-public:
-
-  /** X size in pixels of the captured image. */
-  UPROPERTY(Category = "Scene Capture|Stereo", EditDefaultsOnly)
-  uint32 Stereo_ImageSizeX = 720u;
-
-  /** Y size in pixels of the captured image. */
-  UPROPERTY(Category = "Scene Capture|Stereo", EditDefaultsOnly)
-  uint32 Stereo_ImageSizeY = 512u;
-
-  /** Camera0 position relative to the car. */
-  UPROPERTY(Category = "Scene Capture|Stereo", EditDefaultsOnly)
-  FVector Stereo_Camera0Position = {170.0f, 30.0f, 150.0f};
-
-  /** Camera0 rotation relative to the car. */
-  UPROPERTY(Category = "Scene Capture|Stereo", EditDefaultsOnly)
-  FRotator Stereo_Camera0Rotation = {0.0f, 0.0f, 0.0f};
-
-  /** Camera1 position relative to the car. */
-  UPROPERTY(Category = "Scene Capture|Stereo", EditDefaultsOnly)
-  FVector Stereo_Camera1Position = {170.0f, -30.0f, 150.0f};
-
-  /** Camera1 rotation relative to the car. */
-  UPROPERTY(Category = "Scene Capture|Stereo", EditDefaultsOnly)
-  FRotator Stereo_Camera1Rotation = {0.0f, 0.0f, 0.0f};
+  TMap<FString, FCameraDescription> CameraDescriptions;
 
   /// @}
 };

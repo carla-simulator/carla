@@ -33,8 +33,6 @@ private:
 
   void RegisterPlayer(AController &NewPlayer);
 
-  void RegisterCaptureCamera(ASceneCaptureCamera &CaptureCamera, AController &Player);
-
   void AttachCaptureCamerasToPlayer(AController &Player);
 
   /// Iterate all the APlayerStart present in the world and add the ones with

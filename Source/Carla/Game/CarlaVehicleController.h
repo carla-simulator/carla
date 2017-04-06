@@ -11,6 +11,7 @@ class ASceneCaptureCamera;
 class UCameraComponent;
 class USpringArmComponent;
 class UWheeledVehicleMovementComponent;
+struct FCameraDescription;
 
 /**
  *
@@ -40,6 +41,8 @@ public:
   virtual void SetupInputComponent() override;
 
   virtual void Possess(APawn *aPawn) override;
+
+  virtual void BeginPlay() override;
 
   virtual void Tick(float DeltaTime) override;
 
@@ -80,7 +83,7 @@ public:
   /// @{
 public:
 
-  void RegisterCaptureCamera(ASceneCaptureCamera &CaptureCamera);
+  void AddSceneCaptureCamera(const FCameraDescription &CameraDescription);
 
   /// @}
   // ===========================================================================
@@ -175,6 +178,9 @@ private:
   UPROPERTY()
   UWheeledVehicleMovementComponent *MovementComponent;
 
+  UPROPERTY()
+  TArray<ASceneCaptureCamera *> SceneCaptureCameras;
+
   // Cast for quick access to the custom player state.
   UPROPERTY()
   ACarlaPlayerState *CarlaPlayerState;
@@ -182,10 +188,4 @@ private:
   // Cast for quick access to the custom HUD.
   UPROPERTY()
   ACarlaHUD *CarlaHUD;
-
-  using CaptureCameraArray = std::array<const ASceneCaptureCamera *, 2u>;
-
-  CaptureCameraArray RGBCameras;
-
-  CaptureCameraArray DepthCameras;
 };

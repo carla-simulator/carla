@@ -1,14 +1,10 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-/**
- * Own SceneCapture, re-implementing some of the methods since ASceneCapture
- * cannot be subclassed.
- */
+// CARLA, Copyright (C) 2017 Computer Vision Center (CVC)
 
 #pragma once
 
 #include "GameFramework/Actor.h"
 #include "StaticMeshResources.h"
+#include "Game/CameraDescription.h"
 #include "SceneCaptureCamera.generated.h"
 
 class UDrawFrustumComponent;
@@ -16,16 +12,8 @@ class USceneCaptureComponent2D;
 class UStaticMeshComponent;
 class UTextureRenderTarget2D;
 
-UENUM(BlueprintType)
-enum class EPostProcessEffect : uint8
-{
-  None            UMETA(DisplayName = "RGB without any post-processing"),
-  SceneFinal      UMETA(DisplayName = "RGB with post-processing present at the scene"),
-  Depth           UMETA(DisplayName = "Depth Map"),
-
-  SIZE            UMETA(Hidden)
-};
-
+/// Own SceneCapture, re-implementing some of the methods since ASceneCapture
+/// cannot be subclassed.
 UCLASS(hidecategories=(Collision, Attachment, Actor))
 class CARLA_API ASceneCaptureCamera : public AActor
 {
@@ -62,7 +50,7 @@ public:
 
   void SetPostProcessEffect(EPostProcessEffect PostProcessEffect);
 
-  FString GetPostProcessEffectAsString() const;
+  void Set(const FCameraDescription &CameraDescription);
 
   bool ReadPixels(TArray<FColor> &BitMap) const;
 

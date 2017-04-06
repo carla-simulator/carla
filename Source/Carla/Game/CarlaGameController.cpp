@@ -53,7 +53,7 @@ static void Set(std::vector<carla::Color> &cImage, const TArray<FColor> &BitMap)
 
 static bool CheckImage(
   const FString &Tag,
-  const ACarlaPlayerState::Image &Image,
+  const FCapturedImage &Image,
   const std::vector<carla::Color> &ImageReward,
   uint32 SizeX,
   uint32 SizeY)
@@ -82,7 +82,7 @@ static bool CheckImageValidity(const ACarlaPlayerState &Player, const carla::Rew
 // Wait for the scene init to be sent, return false if we need to restart the
 // server.
 /// @todo At the moment we just ignored what it is sent.
-static bool ReadSceneInit(carla::CarlaServer &Server, ESceneCaptureMode &CaptureMode)
+static bool ReadSceneInit(carla::CarlaServer &Server)
 {
   carla::Mode Mode;
   uint32 Scene;
@@ -91,13 +91,6 @@ static bool ReadSceneInit(carla::CarlaServer &Server, ESceneCaptureMode &Capture
   while (!Success) {
     if (!Server.tryReadSceneInit(Mode, Scene, Success))
       return false;
-  }
-  if (Mode == carla::Mode::MONO) {
-    CaptureMode = ESceneCaptureMode::Mono;
-  } else if (Mode == carla::Mode::STEREO) {
-    CaptureMode = ESceneCaptureMode::Stereo;
-  } else {
-    CaptureMode = ESceneCaptureMode::NoCapture;
   }
   return true;
 }
@@ -160,19 +153,8 @@ static bool SendReward(
   Set(reward->collision_general, PlayerState.GetCollisionIntensityOther());
   Set(reward->intersect_other_lane, PlayerState.GetOtherLaneIntersectionFactor());
   Set(reward->intersect_offroad, PlayerState.GetOffRoadIntersectionFactor());
-  { // Add images.
-    using CPS = ACarlaPlayerState;
-    auto &ImageRGB0 = PlayerState.GetImage(CPS::ImageRGB0);
-    if (ImageRGB0.BitMap.Num() > 0) {
-      // Do not add any camera if first is invalid, also assume all the images
-      // have the same size.
-      reward->image_width = ImageRGB0.SizeX;
-      reward->image_height = ImageRGB0.SizeY;
-      Set(reward->image_rgb_0, ImageRGB0.BitMap);
-      Set(reward->image_rgb_1, PlayerState.GetImage(CPS::ImageRGB1).BitMap);
-      Set(reward->image_depth_0, PlayerState.GetImage(CPS::ImageDepth0).BitMap);
-      Set(reward->image_depth_1, PlayerState.GetImage(CPS::ImageDepth1).BitMap);
-    }
+  for (const auto &Image : PlayerState.GetImages()) {
+    /// @todo #13 Add images to reward.
   }
 #ifdef CARLA_SERVER_CHECK_IMAGES
   check(CheckImageValidity(PlayerState, *reward));
@@ -212,7 +194,7 @@ void CarlaGameController::Initialize(UCarlaSettings &CarlaSettings)
 {
   if (bServerNeedsRestart) {
     UE_LOG(LogCarlaServer, Log, TEXT("Initializing CarlaServer"));
-    if (Server->init(1u) && ReadSceneInit(*Server, CarlaSettings.SceneCaptureMode)) {
+    if (Server->init(1u) && ReadSceneInit(*Server)) {
       bServerNeedsRestart = false;
     } else {
       UE_LOG(LogCarlaServer, Warning, TEXT("Failed to initialize, server needs restart"));

@@ -7,8 +7,6 @@
 #include "EngineUtils.h"
 #include "GameFramework/PlayerStart.h"
 
-#include "SceneCaptureCamera.h"
-
 #include "CarlaGameInstance.h"
 #include "CarlaGameState.h"
 #include "CarlaHUD.h"
@@ -89,85 +87,16 @@ void ACarlaGameMode::RegisterPlayer(AController &NewPlayer)
   AttachCaptureCamerasToPlayer(*PlayerController);
 }
 
-void ACarlaGameMode::RegisterCaptureCamera(
-    ASceneCaptureCamera &CaptureCamera,
-    AController &Player)
-{
-  AddTickPrerequisiteActor(&CaptureCamera);
-  ACarlaVehicleController *Vehicle = Cast<ACarlaVehicleController>(&Player);
-  if (Vehicle != nullptr) {
-    Vehicle->RegisterCaptureCamera(CaptureCamera);
-  } else {
-    UE_LOG(LogCarla, Warning, TEXT("Trying to register camera but player is not a ACarlaVehicleController"));
-  }
-}
-
-static ASceneCaptureCamera *SpawnAndAttachCamera(
-    AController &Player,
-    const FVector &RelativeLocation,
-    const FRotator &RelativeRotation,
-    uint32 ImageSizeX,
-    uint32 ImageSizeY,
-    EPostProcessEffect PostProcessEffect)
-{
-  auto Camera = Player.GetWorld()->SpawnActor<ASceneCaptureCamera>(RelativeLocation, RelativeRotation);
-  Camera->SetImageSize(ImageSizeX, ImageSizeY);
-  Camera->SetPostProcessEffect(PostProcessEffect);
-  Camera->AttachToActor(Player.GetPawn(), FAttachmentTransformRules::KeepRelativeTransform);
-  Camera->SetOwner(Player.GetPawn());
-  return Camera;
-}
-
 void ACarlaGameMode::AttachCaptureCamerasToPlayer(AController &Player)
 {
+  ACarlaVehicleController *Vehicle = Cast<ACarlaVehicleController>(&Player);
+  if (Vehicle == nullptr) {
+    UE_LOG(LogCarla, Warning, TEXT("Trying to add capture cameras but player is not a ACarlaVehicleController"));
+    return;
+  }
   auto &Settings = GameInstance->GetCarlaSettings();
-  if (Settings.SceneCaptureMode == ESceneCaptureMode::Mono) {
-    auto TheCamera =
-        SpawnAndAttachCamera(
-            Player,
-            Settings.Mono_CameraPosition,
-            Settings.Mono_CameraRotation,
-            Settings.Mono_ImageSizeX,
-            Settings.Mono_ImageSizeY,
-            EPostProcessEffect::SceneFinal);
-    RegisterCaptureCamera(*TheCamera, Player);
-  } else if (Settings.SceneCaptureMode == ESceneCaptureMode::Stereo) {
-    auto RGBCamera0 =
-        SpawnAndAttachCamera(
-            Player,
-            Settings.Stereo_Camera0Position,
-            Settings.Stereo_Camera0Rotation,
-            Settings.Stereo_ImageSizeX,
-            Settings.Stereo_ImageSizeY,
-            EPostProcessEffect::SceneFinal);
-    auto DepthCamera0 =
-        SpawnAndAttachCamera(
-            Player,
-            Settings.Stereo_Camera0Position,
-            Settings.Stereo_Camera0Rotation,
-            Settings.Stereo_ImageSizeX,
-            Settings.Stereo_ImageSizeY,
-            EPostProcessEffect::Depth);
-    auto RGBCamera1 =
-        SpawnAndAttachCamera(
-            Player,
-            Settings.Stereo_Camera1Position,
-            Settings.Stereo_Camera1Rotation,
-            Settings.Stereo_ImageSizeX,
-            Settings.Stereo_ImageSizeY,
-            EPostProcessEffect::SceneFinal);
-    auto DepthCamera1 =
-        SpawnAndAttachCamera(
-            Player,
-            Settings.Stereo_Camera1Position,
-            Settings.Stereo_Camera1Rotation,
-            Settings.Stereo_ImageSizeX,
-            Settings.Stereo_ImageSizeY,
-            EPostProcessEffect::Depth);
-    RegisterCaptureCamera(*RGBCamera0, Player);
-    RegisterCaptureCamera(*DepthCamera0, Player);
-    RegisterCaptureCamera(*RGBCamera1, Player);
-    RegisterCaptureCamera(*DepthCamera1, Player);
+  for (const auto &Item : Settings.CameraDescriptions) {
+    Vehicle->AddSceneCaptureCamera(Item.Value);
   }
 }
 

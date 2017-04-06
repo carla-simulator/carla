@@ -10,10 +10,7 @@ void ACarlaPlayerState::Reset()
   CollisionIntensityCars = 0.0f;
   CollisionIntensityPedestrians = 0.0f;
   CollisionIntensityOther = 0.0f;
-  // Invalidate images.
-  for (auto &image : Images) {
-    image = Image(); // Reset.
-  }
+  Images.Empty();
 }
 
 void ACarlaPlayerState::CopyProperties(APlayerState *PlayerState)

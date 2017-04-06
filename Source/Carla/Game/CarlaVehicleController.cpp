@@ -6,6 +6,7 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "SceneCaptureCamera.h"
 #include "WheeledVehicle.h"
 #include "WheeledVehicleMovementComponent.h"
 
@@ -93,16 +94,19 @@ void ACarlaVehicleController::Possess(APawn *aPawn)
   }
 }
 
-static void ReadCameraPixels(
-    const ASceneCaptureCamera *Camera,
-    ACarlaPlayerState::Image &Image)
+void ACarlaVehicleController::BeginPlay()
 {
-  if (Camera != nullptr) {
-    if (Camera->ReadPixels(Image.BitMap)) {
+  CarlaPlayerState->Images.Empty();
+  const auto NumberOfCameras = SceneCaptureCameras.Num();
+  if (NumberOfCameras > 0) {
+    CarlaPlayerState->Images.AddDefaulted(NumberOfCameras);
+    for (auto i = 0; i < NumberOfCameras; ++i) {
+      auto *Camera = SceneCaptureCameras[i];
+      check(Camera != nullptr);
+      auto &Image = CarlaPlayerState->Images[i];
       Image.SizeX = Camera->GetImageSizeX();
       Image.SizeY = Camera->GetImageSizeY();
-    } else {
-      Image.BitMap.Empty(); // Clears the array.
+      Image.PostProcessEffect = Camera->GetPostProcessEffect();
     }
   }
 }
@@ -120,12 +124,15 @@ void ACarlaVehicleController::Tick(float DeltaTime)
     const FVector CurrentSpeed = CarlaPlayerState->ForwardSpeed * CarlaPlayerState->Orientation;
     CarlaPlayerState->Acceleration = (CurrentSpeed - PreviousSpeed) / DeltaTime;
     CarlaPlayerState->CurrentGear = GetVehicleCurrentGear();
-    /// @todo Set intersection factors.
-    using CPS = ACarlaPlayerState;
-    ReadCameraPixels(RGBCameras[0u], CarlaPlayerState->Images[CPS::ImageRGB0]);
-    ReadCameraPixels(RGBCameras[1u], CarlaPlayerState->Images[CPS::ImageRGB1]);
-    ReadCameraPixels(DepthCameras[0u], CarlaPlayerState->Images[CPS::ImageDepth0]);
-    ReadCameraPixels(DepthCameras[1u], CarlaPlayerState->Images[CPS::ImageDepth1]);
+    /// @todo #15 Set intersection factors.
+    const auto NumberOfCameras = SceneCaptureCameras.Num();
+    check(NumberOfCameras == CarlaPlayerState->Images.Num());
+    for (auto i = 0; i < NumberOfCameras; ++i) {
+      auto &Image = CarlaPlayerState->Images[i];
+      if (!SceneCaptureCameras[i]->ReadPixels(Image.BitMap)) {
+        Image.BitMap.Empty();
+      }
+    }
   }
 }
 
@@ -166,30 +173,20 @@ int32 ACarlaVehicleController::GetVehicleCurrentGear() const
 // -- Scene capture ------------------------------------------------------------
 // =============================================================================
 
-void ACarlaVehicleController::RegisterCaptureCamera(ASceneCaptureCamera &CaptureCamera)
+void ACarlaVehicleController::AddSceneCaptureCamera(const FCameraDescription &Description)
 {
-  AddTickPrerequisiteActor(&CaptureCamera);
-  const auto Effect = CaptureCamera.GetPostProcessEffect();
-  auto &Cameras = (Effect == EPostProcessEffect::Depth ? DepthCameras : RGBCameras);
-
-  for (auto i = 0u; i < Cameras.size(); ++i) {
-    if (Cameras[i] == nullptr) {
-      Cameras[i] = &CaptureCamera;
-      UE_LOG(
-          LogCarla,
-          Log,
-          TEXT("Registered capture camera %d with postprocess \"%s\""),
-          i,
-          *CaptureCamera.GetPostProcessEffectAsString());
-      return;
-    }
-  }
+  auto Camera = GetWorld()->SpawnActor<ASceneCaptureCamera>(Description.Position, Description.Rotation);
+  Camera->Set(Description);
+  Camera->AttachToActor(GetPawn(), FAttachmentTransformRules::KeepRelativeTransform);
+  Camera->SetOwner(GetPawn());
+  AddTickPrerequisiteActor(Camera);
+  SceneCaptureCameras.Add(Camera);
   UE_LOG(
       LogCarla,
-      Warning,
-      TEXT("Attempting to register a capture camera of type \"%d\" but already have %d, captures from this camera won't be sent"),
-      *CaptureCamera.GetPostProcessEffectAsString(),
-      Cameras.size());
+      Log,
+      TEXT("Created capture camera %d with postprocess \"%s\""),
+      SceneCaptureCameras.Num() - 1,
+      *PostProcessEffect::ToString(Camera->GetPostProcessEffect()));
 }
 
 // =============================================================================
