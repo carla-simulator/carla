@@ -36,9 +36,15 @@ public:
 public:
 
   UFUNCTION()
-  int32 GetTimeStamp() const
+  int32 GetPlatformTimeStamp() const
   {
-    return TimeStamp;
+    return PlatformTimeStamp;
+  }
+
+  UFUNCTION()
+  int32 GetGameTimeStamp() const
+  {
+    return GameTimeStamp;
   }
 
   UFUNCTION()
@@ -120,7 +126,7 @@ private:
 
   void RegisterCollision(AActor *Actor, FVector NormalImpulse);
 
-  void UpdateTimeStamp();
+  void UpdateTimeStamp(float DeltaSeconds);
 
   // ===========================================================================
   // -- Private members --------------------------------------------------------
@@ -133,7 +139,10 @@ private:
   // CopyProperties if necessary.
 
   UPROPERTY(VisibleAnywhere)
-  int32 TimeStamp;
+  int32 PlatformTimeStamp;
+
+  UPROPERTY(VisibleAnywhere)
+  int32 GameTimeStamp;
 
   UPROPERTY(VisibleAnywhere)
   FVector Location;

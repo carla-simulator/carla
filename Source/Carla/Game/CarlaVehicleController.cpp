@@ -117,7 +117,7 @@ void ACarlaVehicleController::Tick(float DeltaTime)
   Super::PlayerTick(DeltaTime);
 
   if (IsPossessingAVehicle()) {
-    CarlaPlayerState->UpdateTimeStamp();
+    CarlaPlayerState->UpdateTimeStamp(DeltaTime);
     CarlaPlayerState->Location = GetVehicleLocation();
     const FVector PreviousSpeed = CarlaPlayerState->ForwardSpeed * CarlaPlayerState->Orientation;
     CarlaPlayerState->Orientation = GetVehicleOrientation();

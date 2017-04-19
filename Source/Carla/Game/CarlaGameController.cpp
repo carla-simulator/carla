@@ -130,7 +130,7 @@ static bool SendReward(
     const ACarlaPlayerState &PlayerState)
 {
   auto reward = std::make_unique<carla::Reward_Values>();
-  reward->timestamp = PlayerState.GetTimeStamp();
+  reward->timestamp = PlayerState.GetPlatformTimeStamp();
   Set(reward->player_location, PlayerState.GetLocation());
   Set(reward->player_orientation, PlayerState.GetOrientation());
   Set(reward->player_acceleration, PlayerState.GetAcceleration());

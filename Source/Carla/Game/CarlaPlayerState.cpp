@@ -21,7 +21,8 @@ void ACarlaPlayerState::CopyProperties(APlayerState *PlayerState)
     ACarlaPlayerState *Other = Cast<ACarlaPlayerState>(PlayerState);
     if (Other != nullptr)
     {
-      TimeStamp = Other->TimeStamp;
+      PlatformTimeStamp = Other->PlatformTimeStamp;
+      GameTimeStamp = Other->GameTimeStamp;
       Location = Other->Location;
       Orientation = Other->Orientation;
       Acceleration = Other->Acceleration;
@@ -42,7 +43,13 @@ void ACarlaPlayerState::RegisterCollision(AActor * /*Actor*/, FVector NormalImpu
   CollisionIntensityOther += NormalImpulse.Size();
 }
 
-void ACarlaPlayerState::UpdateTimeStamp()
+static int32 RoundToMilliseconds(float Seconds)
 {
-  TimeStamp = FMath::RoundHalfToZero(1000.0 * FPlatformTime::Seconds());
+  return FMath::RoundHalfToZero(1000.0 * Seconds);
+}
+
+void ACarlaPlayerState::UpdateTimeStamp(float DeltaSeconds)
+{
+  PlatformTimeStamp = RoundToMilliseconds(FPlatformTime::Seconds());
+  GameTimeStamp += RoundToMilliseconds(DeltaSeconds);
 }
