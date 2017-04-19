@@ -17,12 +17,8 @@
 namespace carla {
 namespace server {
 
-
-#ifdef WITH_TURBOJPEG
-
   template<typename Type>
   static std::string GetBytes(Type n) {
-
     union{
       Type num;
       unsigned char bytes[4];
@@ -36,15 +32,7 @@ namespace server {
     return out_bytes;
   }
 
-/*  
-static bool getJPEGImage(
-      const int jpeg_quality,
-      const size_t width,
-      const size_t height,
-      const std::vector<Color> &image,
-      ImageType image_type,
-      Reward &rwd){
-*/
+#ifdef WITH_TURBOJPEG
 
   static bool GetImage(const int jpeg_quality, const Image &image_info, unsigned char **compressedImage, long unsigned int &jpegSize){
     if (image_info.image.empty())
@@ -72,7 +60,6 @@ static bool getJPEGImage(
 
 
 static bool getJPEGImages(const int jpeg_quality, const std::vector<Image> &images, Reward &rwd){
-
     std::string image_data;
     std::string depth_data;
     std::string image_size_data;
@@ -87,25 +74,17 @@ static bool getJPEGImages(const int jpeg_quality, const std::vector<Image> &imag
         return false;
       }
 
-
       switch (img.type){
-
         case IMAGE:
-
           for (unsigned long int i = 0; i < jpegSize; ++i) image_data += compressedImage[i];
           image_size_data += GetBytes(jpegSize);
-
-        break;
-
+          break;
         case DEPTH:
           for (unsigned long int i = 0; i < jpegSize; ++i) depth_data += compressedImage[i];
           depth_size_data += GetBytes(jpegSize);
-        break;
+          break;
       }
-
     }
-
-
     std::cout << "send depth size: " << depth_size_data.size() <<
     " send image size: " << image_size_data.size()<<
     " send image: " << image_data.size()<<
@@ -114,13 +93,10 @@ static bool getJPEGImages(const int jpeg_quality, const std::vector<Image> &imag
     rwd.set_image_sizes(image_size_data);
     rwd.set_images(image_data);
     rwd.set_depths(depth_data);
-
-
     return true;
   }
 
 #endif // WITH_TURBOJPEG
-
 
   Protocol::Protocol(carla::server::CarlaCommunication *communication) {
     _communication = communication;
@@ -174,7 +150,7 @@ static bool getJPEGImages(const int jpeg_quality, const std::vector<Image> &imag
 
       std::cout << "x: " << x << " byte size: " << sizeof(float) << " bytes: " << GetBytes(x) << std::endl;
       std::cout << "y: " << y << " byte size: " << sizeof(float) << " bytes: " << GetBytes(y) << std::endl;
-      
+
     }
     std::cout << "---------------" << std::endl;
     std::cout << "Final string: "<< positions_bytes << std::endl;
