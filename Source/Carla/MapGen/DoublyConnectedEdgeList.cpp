@@ -6,9 +6,9 @@
 #include <cmath>
 #include <map>
 
-#ifdef CARLA_ROAD_GENERATOR_PRINT_OUT
+#ifdef CARLA_ROAD_GENERATOR_EXTRA_LOG
 #include <sstream>
-#endif // CARLA_ROAD_GENERATOR_PRINT_OUT
+#endif // CARLA_ROAD_GENERATOR_EXTRA_LOG
 
 namespace MapGen {
 
@@ -16,7 +16,7 @@ namespace MapGen {
   // -- Local static methods ---------------------------------------------------
   // ===========================================================================
 
-#ifdef CARLA_ROAD_GENERATOR_PRINT_OUT
+#ifdef CARLA_ROAD_GENERATOR_EXTRA_LOG
 
   static void ResetIndices() {
     GraphNode::ResetIndex();
@@ -24,7 +24,7 @@ namespace MapGen {
     GraphFace::ResetIndex();
   }
 
-#endif // CARLA_ROAD_GENERATOR_PRINT_OUT
+#endif // CARLA_ROAD_GENERATOR_EXTRA_LOG
 
   /// Return the pair {prev, next}, where prev/next is the previous/next edge
   /// counterclockwise around edge's source node. I.e., edge's position is in
@@ -97,9 +97,9 @@ namespace MapGen {
 
   DoublyConnectedEdgeList::~DoublyConnectedEdgeList()
   {
-#ifdef CARLA_ROAD_GENERATOR_PRINT_OUT
+#ifdef CARLA_ROAD_GENERATOR_EXTRA_LOG
     ResetIndices();
-#endif // CARLA_ROAD_GENERATOR_PRINT_OUT
+#endif // CARLA_ROAD_GENERATOR_EXTRA_LOG
   }
 
   // ===========================================================================
@@ -250,7 +250,7 @@ namespace MapGen {
     return std::atan2(static_cast<double>(dir.y), static_cast<double>(dir.x));
   }
 
-#ifdef CARLA_ROAD_GENERATOR_PRINT_OUT
+#ifdef CARLA_ROAD_GENERATOR_EXTRA_LOG
 
   void DoublyConnectedEdgeList::PrintToLog() const
   {
@@ -311,6 +311,6 @@ namespace MapGen {
     UE_LOG(LogCarla, Log, TEXT("\n%s"), sout.str().c_str());
   }
 
-#endif // CARLA_ROAD_GENERATOR_PRINT_OUT
+#endif // CARLA_ROAD_GENERATOR_EXTRA_LOG
 
 } // namespace MapGen

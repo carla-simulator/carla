@@ -31,17 +31,35 @@ static inline void Set(carla::Vector2D &cVector, const FVector &uVector)
   cVector = {uVector.X, uVector.Y};
 }
 
-static void Set(std::vector<carla::Color> &cImage, const TArray<FColor> &BitMap)
+static carla::ImageType GetImageType(EPostProcessEffect PostProcessEffect)
 {
-  if (BitMap.Num() > 0) {
-    cImage.reserve(BitMap.Num());
-    for (const auto &color : BitMap) {
-      cImage.emplace_back();
-      cImage.back().R = color.R;
-      cImage.back().G = color.G;
-      cImage.back().B = color.B;
-      cImage.back().A = color.A;
+  return (PostProcessEffect == EPostProcessEffect::Depth ? carla::DEPTH : carla::IMAGE);
+}
+
+static void Set(carla::Image &cImage, const FCapturedImage &uImage)
+{
+  if (uImage.BitMap.Num() > 0) {
+    cImage.width = uImage.SizeX;
+    cImage.height = uImage.SizeY;
+    cImage.type = GetImageType(uImage.PostProcessEffect);
+    cImage.image.reserve(uImage.BitMap.Num());
+    for (const auto &color : uImage.BitMap) {
+      cImage.image.emplace_back();
+      cImage.image.back().R = color.R;
+      cImage.image.back().G = color.G;
+      cImage.image.back().B = color.B;
+      cImage.image.back().A = color.A;
     }
+    check(cImage.image.size() == (cImage.width * cImage.height));
+#ifdef CARLA_SERVER_EXTRA_LOG
+    {
+      const auto Size = cImage.image.size();
+      const FString Type = (cImage.type == carla::IMAGE ? TEXT("IMAGE") : TEXT("DEPTH"));
+      UE_LOG(LogCarlaServer, Log, TEXT("Sending image %dx%d (%d) %s"), cImage.width, cImage.height, Size, *Type);
+    }
+  } else {
+    UE_LOG(LogCarlaServer, Warning, TEXT("Sending empty image"));
+#endif // CARLA_SERVER_EXTRA_LOG
   }
 }
 
@@ -49,47 +67,16 @@ static void Set(std::vector<carla::Color> &cImage, const TArray<FColor> &BitMap)
 // -- Other static methods -----------------------------------------------------
 // =============================================================================
 
-#ifdef CARLA_SERVER_CHECK_IMAGES
-
-static bool CheckImage(
-  const FString &Tag,
-  const FCapturedImage &Image,
-  const std::vector<carla::Color> &ImageReward,
-  uint32 SizeX,
-  uint32 SizeY)
-{
-  const auto size = Image.BitMap.Num();
-  UE_LOG(LogCarlaServer, Log, TEXT("PlayerState.%s %dx%d size %d"), *Tag, Image.SizeX, Image.SizeY, size);
-  UE_LOG(LogCarlaServer, Log, TEXT("Reward.%s size %d"), *Tag, ImageReward.size());
-  if (size == 0u)
-    return true;
-  return (Image.SizeX == SizeX) && (Image.SizeY == SizeY) && (size == SizeX * SizeY) && (size == ImageReward.size());
-}
-
-static bool CheckImageValidity(const ACarlaPlayerState &Player, const carla::Reward_Values &Reward)
-{
-  using CPS = ACarlaPlayerState;
-  const uint32 SizeX = Player.GetImage(CPS::ImageRGB0).SizeX;
-  const uint32 SizeY = Player.GetImage(CPS::ImageRGB0).SizeY;
-  return CheckImage("ImageRGB0", Player.GetImage(CPS::ImageRGB0), Reward.image_rgb_0, SizeX, SizeY) &&
-         CheckImage("ImageRGB1", Player.GetImage(CPS::ImageRGB1), Reward.image_rgb_1, SizeX, SizeY) &&
-         CheckImage("ImageDepth0", Player.GetImage(CPS::ImageDepth0), Reward.image_depth_0, SizeX, SizeY) &&
-         CheckImage("ImageDepth1", Player.GetImage(CPS::ImageDepth1), Reward.image_depth_1, SizeX, SizeY);
-}
-
-#endif // CARLA_SERVER_CHECK_IMAGES
-
 // Wait for the scene init to be sent, return false if we need to restart the
 // server.
 /// @todo At the moment we just ignored what it is sent.
 static bool ReadSceneInit(carla::CarlaServer &Server)
 {
-  carla::Mode Mode;
   uint32 Scene;
   bool Success = false;
   UE_LOG(LogCarlaServer, Log, TEXT("(tryReadSceneInit) Waiting for client..."));
   while (!Success) {
-    if (!Server.tryReadSceneInit(Mode, Scene, Success))
+    if (!Server.tryReadSceneInit(Scene, Success))
       return false;
   }
   return true;
@@ -153,13 +140,16 @@ static bool SendReward(
   Set(reward->collision_general, PlayerState.GetCollisionIntensityOther());
   Set(reward->intersect_other_lane, PlayerState.GetOtherLaneIntersectionFactor());
   Set(reward->intersect_offroad, PlayerState.GetOffRoadIntersectionFactor());
-  for (const auto &Image : PlayerState.GetImages()) {
-    /// @todo #13 Add images to reward.
+  if (PlayerState.HasImages()) {
+    reward->images.reserve(PlayerState.GetImages().Num());
+    for (const auto &Image : PlayerState.GetImages()) {
+      reward->images.emplace_back();
+      Set(reward->images.back(), Image);
+    }
   }
-#ifdef CARLA_SERVER_CHECK_IMAGES
-  check(CheckImageValidity(PlayerState, *reward));
-#endif // CARLA_SERVER_CHECK_IMAGES
+#ifdef CARLA_SERVER_EXTRA_LOG
   UE_LOG(LogCarlaServer, Log, TEXT("Sending reward"));
+#endif // CARLA_SERVER_EXTRA_LOG
   return Server.sendReward(reward.release());
 }
 
@@ -170,7 +160,9 @@ static bool TryReadControl(carla::CarlaServer &Server, ACarlaVehicleController &
   bool Success = false;
   bool Result = Server.tryReadControl(Steer, Throttle, Success);
   if (Result && Success) {
+#ifdef CARLA_SERVER_EXTRA_LOG
     UE_LOG(LogCarlaServer, Log, TEXT("Read control: { Steer = %f, Throttle = %f }"), Steer, Throttle);
+#endif // CARLA_SERVER_EXTRA_LOG
     Player.SetSteeringInput(Steer);
     Player.SetThrottleInput(Throttle);
   }

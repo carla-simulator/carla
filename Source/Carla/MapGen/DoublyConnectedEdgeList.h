@@ -311,9 +311,9 @@ namespace MapGen {
     /// Return the angle [-pi, pi] of the half-edge.
     static float GetAngle(const HalfEdge &halfEdge);
 
-#ifdef CARLA_ROAD_GENERATOR_PRINT_OUT
+#ifdef CARLA_ROAD_GENERATOR_EXTRA_LOG
     void PrintToLog() const;
- #endif // CARLA_ROAD_GENERATOR_PRINT_OUT
+ #endif // CARLA_ROAD_GENERATOR_EXTRA_LOG
 
     /// @}
     // =========================================================================

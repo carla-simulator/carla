@@ -3,6 +3,7 @@
 #pragma once
 
 #include "GraphTypes.h"
+#include "NonCopyable.h"
 
 #include <vector>
 

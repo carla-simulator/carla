@@ -7,9 +7,9 @@
 
 #include <algorithm>
 
-#ifdef CARLA_ROAD_GENERATOR_PRINT_OUT
+#ifdef CARLA_ROAD_GENERATOR_EXTRA_LOG
 #include <sstream>
-#endif // CARLA_ROAD_GENERATOR_PRINT_OUT
+#endif // CARLA_ROAD_GENERATOR_EXTRA_LOG
 
 // =============================================================================
 // -- Constructor and destructor -----------------------------------------------
@@ -50,10 +50,10 @@ void ACityMapGenerator::GenerateGraph() {
     MapSizeY = 5u;
     UE_LOG(LogCarla, Warning, TEXT("Map size changed, was too small"));
   }
-#ifdef CARLA_ROAD_GENERATOR_PRINT_OUT
+#ifdef CARLA_ROAD_GENERATOR_EXTRA_LOG
   // Delete the dcel before the new one is created so indices are restored.
   Dcel.Reset(nullptr);
-#endif // CARLA_ROAD_GENERATOR_PRINT_OUT
+#endif // CARLA_ROAD_GENERATOR_EXTRA_LOG
   Dcel = MapGen::GraphGenerator::Generate(MapSizeX, MapSizeY, RoadPlanningSeed);
   UE_LOG(LogCarla, Log,
       TEXT("Generated DCEL with: { %d vertices, %d half-edges, %d faces }"),
@@ -61,7 +61,7 @@ void ACityMapGenerator::GenerateGraph() {
       Dcel->CountHalfEdges(),
       Dcel->CountFaces());
   DcelParser = MakeUnique<MapGen::GraphParser>(*Dcel);
-#ifdef CARLA_ROAD_GENERATOR_PRINT_OUT
+#ifdef CARLA_ROAD_GENERATOR_EXTRA_LOG
   { // print the results of the parser.
     std::wstringstream sout;
     sout << "\nGenerated " << DcelParser->CityAreaCount() << " city areas: ";
@@ -84,7 +84,7 @@ void ACityMapGenerator::GenerateGraph() {
     }
     UE_LOG(LogCarla, Log, TEXT("\n%s"), sout.str().c_str());
   }
-#endif // CARLA_ROAD_GENERATOR_PRINT_OUT
+#endif // CARLA_ROAD_GENERATOR_EXTRA_LOG
 }
 
 void ACityMapGenerator::GenerateRoads() {

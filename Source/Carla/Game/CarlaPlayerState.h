@@ -102,6 +102,12 @@ public:
   }
 
   UFUNCTION()
+  bool HasImages() const
+  {
+    return Images.Num() > 0;
+  }
+
+  UFUNCTION()
   const TArray<FCapturedImage> &GetImages() const
   {
     return Images;
