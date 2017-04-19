@@ -3,4 +3,3 @@ CarlaServer:
 
 clean:
 	cd Source/CarlaServer && $(MAKE) clean-all
-	rm -Rf Binaries Intermediate
