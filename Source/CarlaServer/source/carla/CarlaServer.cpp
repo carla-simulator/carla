@@ -1,8 +1,12 @@
 #include "CarlaServer.h"
 
-#include <carla/server/Server.h>
+#include <carla/server/CarlaCommunication.h>
 
 namespace carla {
+
+  Image::Image() {}
+
+  Image::~Image() {}
 
   Reward_Values::Reward_Values() {}
 
@@ -12,10 +16,13 @@ namespace carla {
 
   Scene_Values::~Scene_Values() {}
 
-  class CarlaServer::Pimpl : public carla::server::Server {
+  class CarlaServer::Pimpl {
   public:
-    Pimpl(uint32_t worldPort, uint32_t writePort, uint32_t readPort) :
-      carla::server::Server(worldPort, writePort, readPort) {}
+
+    template<typename... Args>
+    Pimpl(Args&&... args) : communication(std::forward<Args>(args)...) {}
+
+    carla::server::CarlaCommunication communication;
   };
 
   CarlaServer::CarlaServer(uint32_t writePort, uint32_t readPort, uint32_t worldPort) :
@@ -23,69 +30,77 @@ namespace carla {
 
   CarlaServer::~CarlaServer() {}
 
-  bool CarlaServer::init(uint32_t LevelCount) {
-    if (!worldConnected() && !clientConnected() && !serverConnected()) return false;
-    _pimpl->sendWorld(static_cast<uint32_t>(Mode::NUMBER_OF_MODES), LevelCount);
+  bool CarlaServer::init(uint32_t levelCount) {
+    if (!worldConnected() && !clientConnected() && !serverConnected())
+      return false;
+    _pimpl->communication.sendWorld(levelCount);
     return true;
   }
 
-  bool CarlaServer::tryReadSceneInit(Mode &mode, uint32_t &scene, bool &readed) {
-    if (!worldConnected()) return false;
-    readed = _pimpl->tryReadSceneInit(mode, scene);
+  bool CarlaServer::tryReadSceneInit(uint32_t &scene, bool &readed) {
+    if (!worldConnected())
+      return false;
+    readed = _pimpl->communication.tryReadSceneInit(scene);
     return true;
   }
 
   bool CarlaServer::tryReadEpisodeStart(uint32_t &startIndex, uint32_t &endIndex, bool &readed) {
-    if (!worldConnected()) return false;
-    readed = _pimpl->tryReadEpisodeStart(startIndex, endIndex);
+    if (!worldConnected())
+      return false;
+    readed = _pimpl->communication.tryReadEpisodeStart(startIndex, endIndex);
     return true;
   }
 
   bool CarlaServer::tryReadControl(float &steer, float &throttle, bool &readed) {
-    if (!clientConnected()) return false;
-    readed = _pimpl->tryReadControl(steer, throttle);
+    if (!clientConnected())
+      return false;
+    readed = _pimpl->communication.tryReadControl(steer, throttle);
     return true;
   }
 
   bool CarlaServer::newEpisodeRequested(bool &newEpisode) {
-    if (!worldConnected()) return false;
-    newEpisode = _pimpl->tryReadRequestNewEpisode();
+    if (!worldConnected())
+      return false;
+    newEpisode = _pimpl->communication.tryReadRequestNewEpisode();
     return true;
   }
 
   bool CarlaServer::sendReward(Reward_Values *values) {
     std::unique_ptr<Reward_Values> ptr(values);
-    if (!serverConnected()) return false;
-    _pimpl->sendReward(std::move(ptr));
+    if (!serverConnected())
+      return false;
+    _pimpl->communication.sendReward(std::move(ptr));
     return true;
   }
 
   bool CarlaServer::sendSceneValues(const Scene_Values &values) {
-    if (!worldConnected()) return false;
-    _pimpl->sendSceneValues(values);
+    if (!worldConnected())
+      return false;
+    _pimpl->communication.sendScene(values);
     return true;
   }
 
   bool CarlaServer::sendEndReset() {
-    if (!worldConnected()) return false;
-    _pimpl->sendEndReset();
+    if (!worldConnected())
+      return false;
+    _pimpl->communication.sendReset();
     return true;
   }
 
   bool CarlaServer::worldConnected(){
-    return _pimpl->worldConnected() && !_pimpl->needsRestart();
+    return _pimpl->communication.worldConnected() && !_pimpl->communication.needsRestart();
   }
 
   bool CarlaServer::clientConnected(){
-    return _pimpl->clientConnected() && !_pimpl->needsRestart();
+    return _pimpl->communication.clientConnected() && !_pimpl->communication.needsRestart();
   }
 
   bool CarlaServer::serverConnected(){
-    return _pimpl->serverConnected() && !_pimpl->needsRestart();
+    return _pimpl->communication.serverConnected() && !_pimpl->communication.needsRestart();
   }
 
   bool CarlaServer::needsRestart(){
-    return _pimpl->needsRestart();
+    return _pimpl->communication.needsRestart();
   }
 
 } // namespace carla

@@ -27,12 +27,14 @@ namespace carla {
     uint8_t A;
   };
 
-  enum ImageType{
+  enum ImageType {
     IMAGE,
     DEPTH,
   };
 
   struct Image {
+    Image();
+    ~Image();
     std::vector<Color> image;
     ImageType type;
     uint32_t width, height;
@@ -61,14 +63,8 @@ namespace carla {
     float intersect_other_lane;
     /// Percentage of the car off-road.
     float intersect_offroad;
-    /// Width and height of the images.
-    //uint32_t image_width, image_height; 
-    /// RGB images.
+    /// Captured images.
     std::vector<Image> images;
-    //std::vector<Color> image_rgb_1;
-    /// Depth images.
-    //std::vector<Color> image_depth_0;
-    //std::vector<Color> image_depth_1;
   };
 
   struct Scene_Values {
@@ -76,16 +72,8 @@ namespace carla {
     ~Scene_Values();
     /// Possible world positions to spawn the player.
     std::vector<Vector2D> possible_positions;
-    /// Projection matrices of the cameras (1 in mode mono, 2 in stereo).
+    /// Projection matrices of the cameras.
     std::vector<std::array<float, 16u>> projection_matrices;
-  };
-
-  enum class Mode : int8_t {
-    MONO,
-    STEREO,
-
-    NUMBER_OF_MODES,
-    INVALID = -1
   };
 
   /// Asynchronous TCP server. Uses three ports, one for sending messages
@@ -109,13 +97,11 @@ namespace carla {
     /// Initialize the server.
     ///
     /// @param LevelCount Number of levels available.
-    bool init(uint32_t LevelCount);
+    bool init(uint32_t levelCount);
 
     /// Try to read if the client has selected an scene and mode. Return false
     /// if the queue is empty.
-    ///
-    /// If returned mode INVALID, ignore scene.
-    bool tryReadSceneInit(Mode &mode, uint32_t &scene, bool &readed);
+    bool tryReadSceneInit(uint32_t &scene, bool &readed);
 
     /// Try to read if the client has selected an end & start point. Return
     /// false if the queue is empty.

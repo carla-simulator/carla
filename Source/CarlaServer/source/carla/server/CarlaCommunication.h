@@ -36,10 +36,9 @@ namespace server {
 
     void sendReset();
 
-    //void sendWorld(const World &world);
-    void sendWorld(const uint32_t modes, const uint32_t scenes);
+    void sendWorld(const uint32_t scenes);
 
-    bool tryReadSceneInit(Mode &mode, uint32_t &scene);
+    bool tryReadSceneInit(uint32_t &scene);
 
     bool tryReadEpisodeStart(uint32_t &start_index, uint32_t &end_index);
 
@@ -63,10 +62,9 @@ namespace server {
 
     std::mutex getGeneralMutex();
 
-    Mode GetMode();
+    bool needsRestart();
 
-    bool NeedsRestart();
-    void Restart();
+    void restart();
 
   private:
 
@@ -77,8 +75,6 @@ namespace server {
     TCPServer _client;
 
     std::atomic_bool _needsRestart;
-
-    std::atomic<Mode> _mode;
 
     const std::unique_ptr<Protocol> _proto;
 

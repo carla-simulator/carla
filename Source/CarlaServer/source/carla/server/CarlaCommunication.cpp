@@ -10,16 +10,6 @@ namespace server {
 
   // -- Static methods ---------------------------------------------------------
 
-  std::mutex _generalMutex;
-
-  static Mode getMode(int modeInt) {
-    switch (modeInt) {
-      case 0:   return Mode::MONO;
-      case 1:   return Mode::STEREO;
-      default:  return Mode::INVALID;
-    }
-  }
-
   template<typename ERROR_CODE>
   static void logTCPError(const std::string &text, const ERROR_CODE &errorCode) {
     std::cerr << "CarlaConnection - TCP Server: " << text << ": " << errorCode.message() << std::endl;
@@ -141,9 +131,11 @@ namespace server {
   }
 
   static void ReconnectAll(CarlaCommunication &communication) {
-    std::lock_guard<std::mutex> lock(_generalMutex);
+    /// @todo This blocks every CarlaCommunication with a single mutex.
+    static std::mutex MUTEX;
+    std::lock_guard<std::mutex> lock(MUTEX);
 
-    if (!communication.NeedsRestart()) {
+    if (!communication.needsRestart()) {
 
       std::cout << " ---- RECONNECT ALL ...." << std::endl;
 
@@ -165,7 +157,7 @@ namespace server {
         communication.getClientThread().restart();
       }
 
-      communication.Restart();
+      communication.restart();
     }
   }
 
@@ -174,7 +166,6 @@ namespace server {
     _server(writePort),
     _client(readPort),
     _needsRestart(false),
-    _mode(Mode::MONO),
     _proto(std::make_unique<Protocol>(this)),
     _worldThread{
       [this]() { return worldReceiveThread(this->_world, this->_worldThread); },
@@ -213,13 +204,14 @@ namespace server {
     return true;
   }
 
-  void CarlaCommunication::sendWorld(const uint32_t modes, const uint32_t scenes) {
+  void CarlaCommunication::sendWorld(const uint32_t scenes) {
     //ClearThreads
     _worldThread.clear();
     _clientThread.clear();
     _serverThread.clear();
 
     World world;
+    constexpr int modes = 0; /// @todo #18
     _proto->LoadWorld(world, modes, scenes);
 
     auto message = std::make_unique<std::string>();
@@ -253,8 +245,7 @@ namespace server {
     }
   }
 
-  bool CarlaCommunication::tryReadSceneInit(Mode &mode, uint32_t &scene) {
-    mode = Mode::INVALID;
+  bool CarlaCommunication::tryReadSceneInit(uint32_t &scene) {
     scene = 0u;
 
     std::unique_ptr<std::string> info = _worldThread.tryPop();
@@ -264,11 +255,7 @@ namespace server {
 
     if (!sceneInit.ParseFromString(*info)) { return false; }
 
-    mode = getMode(sceneInit.mode());
     scene = sceneInit.scene();
-
-    _mode = mode;
-
     return true;
   }
 
@@ -303,17 +290,14 @@ namespace server {
 
   void CarlaCommunication::restartServer() {
     _server.close();
-    //_server =  TCPServer(_serverPort);
   }
 
   void CarlaCommunication::restartWorld() {
     _world.close();
-    //_world = TCPServer(_worldPort);
   }
 
   void CarlaCommunication::restartClient() {
     _client.close();
-    //_client = TCPServer(_clientPort);
   }
 
   void CarlaCommunication::checkRestart() {
@@ -347,15 +331,11 @@ namespace server {
     return _server.Connected();
   }
 
-  Mode CarlaCommunication::GetMode() {
-    return _mode;
-  }
-
-  bool CarlaCommunication::NeedsRestart() {
+  bool CarlaCommunication::needsRestart() {
     return _needsRestart;
   }
 
-  void CarlaCommunication::Restart() {
+  void CarlaCommunication::restart() {
     _needsRestart = true;
   }
 
