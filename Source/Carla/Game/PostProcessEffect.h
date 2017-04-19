@@ -7,12 +7,13 @@
 UENUM(BlueprintType)
 enum class EPostProcessEffect : uint8
 {
-  None            UMETA(DisplayName = "RGB without any post-processing"),
-  SceneFinal      UMETA(DisplayName = "RGB with post-processing present at the scene"),
-  Depth           UMETA(DisplayName = "Depth Map"),
+  None                  UMETA(DisplayName = "RGB without any post-processing"),
+  SceneFinal            UMETA(DisplayName = "RGB with post-processing present at the scene"),
+  Depth                 UMETA(DisplayName = "Depth Map"),
+  SemanticSegmentation  UMETA(DisplayName = "Semantic Segmentation"),
 
-  SIZE            UMETA(Hidden),
-  INVALID         UMETA(Hidden),
+  SIZE                  UMETA(Hidden),
+  INVALID               UMETA(Hidden),
 };
 
 /// Helper class for working with EPostProcessEffect.

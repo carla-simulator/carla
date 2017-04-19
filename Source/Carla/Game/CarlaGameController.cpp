@@ -33,6 +33,7 @@ static inline void Set(carla::Vector2D &cVector, const FVector &uVector)
 
 static carla::ImageType GetImageType(EPostProcessEffect PostProcessEffect)
 {
+  /// @todo #19
   return (PostProcessEffect == EPostProcessEffect::Depth ? carla::DEPTH : carla::IMAGE);
 }
 

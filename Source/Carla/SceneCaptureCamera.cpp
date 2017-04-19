@@ -14,7 +14,10 @@
 #include "StaticMeshResources.h"
 #include "TextureResource.h"
 
-static constexpr auto DEPTH_MAT_PATH = TEXT("Material'/Carla/PostProcessingMaterials/DepthEffectMaterial.DepthEffectMaterial'");
+static constexpr auto DEPTH_MAT_PATH =
+    TEXT("Material'/Carla/PostProcessingMaterials/DepthEffectMaterial.DepthEffectMaterial'");
+static constexpr auto SEMANTIC_SEGMENTATION_MAT_PATH =
+    TEXT("Material'/Carla/PostProcessingMaterials/GTMaterial.GTMaterial'");
 
 ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer& ObjectInitializer) :
   Super(ObjectInitializer),
@@ -46,6 +49,8 @@ ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer& ObjectInitial
   // Load post-processing materials.
   static ConstructorHelpers::FObjectFinder<UMaterial> DEPTH(DEPTH_MAT_PATH);
   PostProcessDepth = DEPTH.Object;
+  static ConstructorHelpers::FObjectFinder<UMaterial> SEMANTIC_SEGMENTATION(SEMANTIC_SEGMENTATION_MAT_PATH);
+  PostProcessSemanticSegmentation = SEMANTIC_SEGMENTATION.Object;
 }
 
 void ASceneCaptureCamera::PostActorCreated()
@@ -84,6 +89,8 @@ void ASceneCaptureCamera::BeginPlay()
     CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
   } else if (PostProcessEffect == EPostProcessEffect::Depth) {
     CaptureComponent2D->PostProcessSettings.AddBlendable(PostProcessDepth, 1.0f);
+  } else if (PostProcessEffect == EPostProcessEffect::SemanticSegmentation) {
+    CaptureComponent2D->PostProcessSettings.AddBlendable(PostProcessSemanticSegmentation, 1.0f);
   }
   CaptureComponent2D->UpdateContent();
   CaptureComponent2D->Activate();

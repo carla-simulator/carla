@@ -70,6 +70,8 @@ public:
         Target = EPostProcessEffect::SceneFinal;
       } else if (ValueString == "Depth") {
         Target = EPostProcessEffect::Depth;
+      } else if (ValueString == "SemanticSegmentation") {
+        Target = EPostProcessEffect::SemanticSegmentation;
       } else {
         UE_LOG(LogCarla, Error, TEXT("Invalid post-processing \"%s\" in INI file"), *ValueString);
         Target = EPostProcessEffect::INVALID;

@@ -87,4 +87,7 @@ private:
 
   UPROPERTY()
   UMaterial *PostProcessDepth;
+
+  UPROPERTY()
+  UMaterial *PostProcessSemanticSegmentation;
 };
