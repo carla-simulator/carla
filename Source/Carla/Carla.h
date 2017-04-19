@@ -15,6 +15,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogCarlaServer, Log, All);
 #ifdef WITH_EDITOR
 // #define CARLA_ROAD_GENERATOR_EXTRA_LOG /// @todo #1 Crashes in Linux.
 // #define CARLA_SERVER_EXTRA_LOG
+// #define CARLA_TAGGER_EXTRA_LOG
 #endif // WITH_EDITOR
 
 class FCarlaModule : public IModuleInterface
