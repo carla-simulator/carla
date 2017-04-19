@@ -50,27 +50,9 @@ message World {
 
 message Scene {
 
-
-
-  message Projection_Matrix{
-
-    repeated float cam_param = 1;
-
-
-  }
-  message Position{
-
-    required float pos_x = 1;
-    required float pos_y = 2;
-
-
-  }
-
-  repeated Position position =1;
-  repeated Projection_Matrix camera_matrix =2;
-
-
-
+  optional int32 number_of_cameras = 1;
+  optional bytes positions = 2;
+  optional bytes projection_matrices = 3;
 
 }
 
@@ -100,6 +82,9 @@ message Reward {
   optional float ori_x = 13;
   optional float ori_y = 14;
   optional float ori_z = 15;
-  optional bytes image = 16;
-  optional bytes depth = 17;
+  optional bytes image_sizes = 16;
+  optional bytes depth_sizes = 17;
+  optional bytes images = 18;
+  optional bytes depths = 19;
+
 }

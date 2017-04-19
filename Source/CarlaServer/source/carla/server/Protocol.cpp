@@ -17,40 +17,105 @@
 namespace carla {
 namespace server {
 
+
 #ifdef WITH_TURBOJPEG
 
-  static bool getJPEGImage(
+  template<typename Type>
+  static std::string GetBytes(Type n) {
+
+    union{
+      Type num;
+      unsigned char bytes[4];
+    } value;
+
+    value.num = n;
+
+    std::string out_bytes;
+    for (int i = 0 ; i < 4 ; ++i) out_bytes += value.bytes[i];
+
+    return out_bytes;
+  }
+
+/*  
+static bool getJPEGImage(
       const int jpeg_quality,
       const size_t width,
       const size_t height,
       const std::vector<Color> &image,
-      bool depth,
+      ImageType image_type,
       Reward &rwd){
-    long unsigned int jpegSize = 0;
-    unsigned char *compressedImage;
-    if (image.empty())
+*/
+
+  static bool GetImage(const int jpeg_quality, const Image &image_info, unsigned char **compressedImage, long unsigned int &jpegSize){
+    if (image_info.image.empty())
       return false;
-    if (image.size() != width * height) {
+    if (image_info.image.size() != image_info.width * image_info.height) {
       std::cerr << "Invalid image size" << std::endl;
       return false;
     }
-    // Convert to char array RGBA.
+
     std::vector<unsigned char> color_image;
-    color_image.reserve(3u * image.size());
-    for (const Color &color : image) {
+    color_image.reserve(3u * image_info.image.size());
+    for (const Color &color : image_info.image) {
       color_image.push_back(color.R);
       color_image.push_back(color.G);
       color_image.push_back(color.B);
     }
+
     tjhandle jpegCompressor = tjInitCompress();
-    tjCompress2(jpegCompressor, color_image.data(), width, 0, height, TJPF_RGB,
-      &compressedImage, &jpegSize, TJSAMP_444, jpeg_quality, TJFLAG_FASTDCT);
+    tjCompress2(jpegCompressor, color_image.data(), image_info.width, 0, image_info.height, TJPF_RGB,
+      compressedImage, &jpegSize, TJSAMP_444, jpeg_quality, TJFLAG_FASTDCT);
     tjDestroy(jpegCompressor);
-    if (!depth) {
-      rwd.set_image(compressedImage, jpegSize);
-    } else {
-      rwd.set_depth(compressedImage, jpegSize);
+
+    return true;
+  }
+
+
+static bool getJPEGImages(const int jpeg_quality, const std::vector<Image> &images, Reward &rwd){
+
+    std::string image_data;
+    std::string depth_data;
+    std::string image_size_data;
+    std::string depth_size_data;
+    //nt images_count = 0, depth_count = 0;
+
+    for (const Image &img : images){
+      unsigned char *compressedImage;
+      long unsigned int jpegSize = 0;
+      if (!GetImage(jpeg_quality, img, &compressedImage, jpegSize)) {
+        std::cerr << "Error while encoding image" << std::endl;
+        return false;
+      }
+
+
+      switch (img.type){
+
+        case IMAGE:
+
+          for (unsigned long int i = 0; i < jpegSize; ++i) image_data += compressedImage[i];
+          image_size_data += GetBytes(jpegSize);
+
+        break;
+
+        case DEPTH:
+          for (unsigned long int i = 0; i < jpegSize; ++i) depth_data += compressedImage[i];
+          depth_size_data += GetBytes(jpegSize);
+        break;
+      }
+
     }
+
+
+    std::cout << "send depth size: " << depth_size_data.size() <<
+    " send image size: " << image_size_data.size()<<
+    " send image: " << image_data.size()<<
+    " send depth: " << depth_data.size() << std::endl;
+    rwd.set_depth_sizes(depth_size_data);
+    rwd.set_image_sizes(image_size_data);
+    rwd.set_images(image_data);
+    rwd.set_depths(depth_data);
+
+
     return true;
   }
 
@@ -80,57 +145,59 @@ namespace server {
     reward.set_timestamp(values.timestamp);
 
 #ifdef WITH_TURBOJPEG
-    // Compress images to JPEG
-
-    struct ImageHolder {
-      bool isDepth;
-      const decltype(values.image_rgb_0) &image;
-    };
-
-    std::vector<ImageHolder> images;
-    if (_communication->GetMode() == Mode::MONO) {
-      images.push_back({false, values.image_rgb_0});
-    } else if (_communication->GetMode() == Mode::STEREO) {
-      images.reserve(4u);
-      images.push_back({false, values.image_rgb_0});
-      images.push_back({false, values.image_rgb_1});
-      images.push_back({true, values.image_depth_0});
-      images.push_back({true, values.image_depth_1});
-    } else {
-      std::cerr << "Error, invalid mode" << std::endl;
-      return;
-    }
 
     constexpr int JPEG_QUALITY = 75;
-    for (const auto &holder : images) {
-      if (!getJPEGImage(
-            JPEG_QUALITY,
-            values.image_width,
-            values.image_height,
-            holder.image,
-            holder.isDepth,
-            reward)) {
+
+    if (!getJPEGImages(JPEG_QUALITY, values.images, reward)) {
         std::cerr << "Error compressing image to JPEG" << std::endl;
-      }
     }
+
 #endif // WITH_TURBOJPEG
+
   }
 
   void Protocol::LoadScene(Scene &scene, const Scene_Values &values) {
-    for (auto i = 0u; i < values.possible_positions.size(); ++i) {
-      Scene::Position *point = scene.add_position();
-      point->set_pos_x(values.possible_positions[i].x);
-      point->set_pos_y(values.possible_positions[i].y);
-    }
 
-    if (_communication->GetMode() == Mode::STEREO) {
-      for (auto i = 0u; i < values.projection_matrices.size(); ++i) {
-        Scene::Projection_Matrix *matrix = scene.add_camera_matrix();
-        for (auto e = 0u; e < 16u; ++e) {
-          matrix->add_cam_param(values.projection_matrices[i][e]);
-        }
+    scene.set_number_of_cameras(values.projection_matrices.size());
+
+    std::string positions_bytes = "";
+
+    std::cout << "------- POSITIONS--------" << std::endl;
+
+
+    for (auto i = 0u; i < values.possible_positions.size(); ++i) {
+
+      float x = values.possible_positions[i].x;
+      float y = values.possible_positions[i].y;
+
+      positions_bytes += GetBytes(x) + GetBytes(y);
+
+      std::cout << "x: " << x << " byte size: " << sizeof(float) << " bytes: " << GetBytes(x) << std::endl;
+      std::cout << "y: " << y << " byte size: " << sizeof(float) << " bytes: " << GetBytes(y) << std::endl;
+      
+    }
+    std::cout << "---------------" << std::endl;
+    std::cout << "Final string: "<< positions_bytes << std::endl;
+    std::cout << "---------------" << std::endl;
+
+    scene.set_positions(positions_bytes);
+
+    std::string matrices;
+
+    for (auto i = 0u; i < values.projection_matrices.size(); ++i) {
+      for (auto e = 0u; e < 16u; ++e){
+
+        float value = values.projection_matrices[i][e];
+
+        char data [sizeof(float)];
+        memcpy(data, &value, sizeof value);
+        matrices.append(data);
+
       }
     }
+
+    scene.set_projection_matrices(matrices);
+
   }
 
   void Protocol::LoadWorld(World &world, const int modes, const int scenes) {

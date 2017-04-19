@@ -10,7 +10,7 @@ namespace carla {
 
         using boost::asio::ip::tcp;
 
-        std::string GetBytes(int n) {
+        static std::string GetBytes(int n) {
             std::string bytes;
 
             bytes = (n >> 24) & 0xFF;
@@ -21,7 +21,7 @@ namespace carla {
             return bytes;
         }
 
-        int GetInt(char b1, char b2, char b3, char b4) {
+        static int GetInt(char b1, char b2, char b3, char b4) {
             int result = 0;
             result = (result << 8) + b1;
             result = (result << 8) + b2;

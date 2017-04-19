@@ -27,6 +27,17 @@ namespace carla {
     uint8_t A;
   };
 
+  enum ImageType{
+    IMAGE,
+    DEPTH,
+  };
+
+  struct Image {
+    std::vector<Color> image;
+    ImageType type;
+    uint32_t width, height;
+  };
+
   struct Reward_Values {
     Reward_Values();
     ~Reward_Values();
@@ -51,13 +62,13 @@ namespace carla {
     /// Percentage of the car off-road.
     float intersect_offroad;
     /// Width and height of the images.
-    uint32_t image_width, image_height;
+    //uint32_t image_width, image_height; 
     /// RGB images.
-    std::vector<Color> image_rgb_0;
-    std::vector<Color> image_rgb_1;
+    std::vector<Image> images;
+    //std::vector<Color> image_rgb_1;
     /// Depth images.
-    std::vector<Color> image_depth_0;
-    std::vector<Color> image_depth_1;
+    //std::vector<Color> image_depth_0;
+    //std::vector<Color> image_depth_1;
   };
 
   struct Scene_Values {

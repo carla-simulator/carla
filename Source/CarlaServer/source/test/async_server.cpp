@@ -59,13 +59,22 @@ std::unique_ptr<carla::Reward_Values> makeReward(){
     reward->collision_car = 10.0f;
     reward->intersect_other_lane = 0.5f;
     reward->intersect_offroad = 0.5f;
-    reward->image_width = imageWidth;
-    reward->image_height = imageHeight;
+    
+    for (int i = 0; i < 4; ++i){
+      carla::Image img;
+      img.image = makeImage(imageWidth, imageHeight);
+      img.width = imageWidth;
+      img.height = imageHeight;
+      if (i < 2) img.type = carla::IMAGE;
+      else  img.type = carla::DEPTH;
+      reward->images.push_back(img);
+    }
+/*
     reward->image_rgb_0 = makeImage(imageWidth, imageHeight);
     reward->image_rgb_1 = makeImage(imageWidth, imageHeight);
     reward->image_depth_0 = makeImage(imageWidth, imageHeight);
     reward->image_depth_1 = makeImage(imageWidth, imageHeight);
-
+*/
     static decltype(carla::Reward_Values::timestamp) timestamp = 0u;
     reward->timestamp = timestamp++;
 
@@ -185,8 +194,6 @@ int main(int argc, char *argv[]) {
             }
             else if (readed)
               std::cout << "CONTROL -->  gas: " << gas << " steer: " << steer << std::endl;
-
-
 
 
             if (!server.sendReward(makeReward().release())) {
