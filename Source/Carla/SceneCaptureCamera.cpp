@@ -15,7 +15,14 @@
 #include "TextureResource.h"
 
 static constexpr auto DEPTH_MAT_PATH =
+#if PLATFORM_LINUX
+    TEXT("Material'/Carla/PostProcessingMaterials/DepthEffectMaterial_GLSL.DepthEffectMaterial_GLSL'");
+#elif PLATFORM_WINDOWS
     TEXT("Material'/Carla/PostProcessingMaterials/DepthEffectMaterial.DepthEffectMaterial'");
+#else
+#  error No depth material defined for this platform
+#endif
+
 static constexpr auto SEMANTIC_SEGMENTATION_MAT_PATH =
     TEXT("Material'/Carla/PostProcessingMaterials/GTMaterial.GTMaterial'");
 
@@ -88,8 +95,10 @@ void ASceneCaptureCamera::BeginPlay()
   if (PostProcessEffect == EPostProcessEffect::SceneFinal) {
     CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
   } else if (PostProcessEffect == EPostProcessEffect::Depth) {
+    CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
     CaptureComponent2D->PostProcessSettings.AddBlendable(PostProcessDepth, 1.0f);
   } else if (PostProcessEffect == EPostProcessEffect::SemanticSegmentation) {
+    CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
     CaptureComponent2D->PostProcessSettings.AddBlendable(PostProcessSemanticSegmentation, 1.0f);
   }
   CaptureComponent2D->UpdateContent();
