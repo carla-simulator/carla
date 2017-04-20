@@ -21,7 +21,7 @@ enum class Label : uint8
 template <typename T>
 static auto cast(T label)
 {
-  return static_cast<std::underlying_type<T>::type>(label);
+  return static_cast<typename std::underlying_type<T>::type>(label);
 }
 
 ATagger::ATagger()
@@ -87,13 +87,16 @@ void ATagger::TagObjects()
       /*for (int32 i = 0; i < stringArray.Num(); i++) {
       UE_LOG(LogCarla, Warning, TEXT("  -\"%s\""), *stringArray[i]);
       }*/
-      Label lab = GetLabel(stringArray[3]);
+      if (stringArray.Num() > 3)
+      {
+        Label lab = GetLabel(stringArray[3]);
 
 #ifdef CARLA_TAGGER_EXTRA_LOG
-      UE_LOG(LogCarla, Warning, TEXT("    - Label: \"%s\""), *stringArray[3]);
+        UE_LOG(LogCarla, Warning, TEXT("    - Label: \"%s\""), *stringArray[3]);
 #endif // CARLA_TAGGER_EXTRA_LOG
 
-      setStencilValue(meshIt, lab);
+        setStencilValue(meshIt, lab);
+      }
     }
 
     /// get USkeletalMeshComponents
@@ -108,13 +111,16 @@ void ATagger::TagObjects()
       FString Path = meshIt->GetPhysicsAsset()->GetPathName();
       TArray<FString> stringArray;
       Path.ParseIntoArray(stringArray, TEXT("/"), false);
-      Label lab = GetLabel(stringArray[3]);
+      if (stringArray.Num() > 3)
+      {
+        Label lab = GetLabel(stringArray[3]);
 
 #ifdef CARLA_TAGGER_EXTRA_LOG
-      UE_LOG(LogCarla, Warning, TEXT("    - Label: \"%s\""), *stringArray[3]);
+        UE_LOG(LogCarla, Warning, TEXT("    - Label: \"%s\""), *stringArray[3]);
 #endif // CARLA_TAGGER_EXTRA_LOG
 
-      setStencilValue(meshIt, lab);
+        setStencilValue(meshIt, lab);
+      }
     }
   }
 }
