@@ -7,6 +7,7 @@ void ACarlaPlayerState::Reset()
 {
   Super::Reset();
   // Reset incremental values.
+  GameTimeStamp = 0.0f;
   CollisionIntensityCars = 0.0f;
   CollisionIntensityPedestrians = 0.0f;
   CollisionIntensityOther = 0.0f;
@@ -50,6 +51,7 @@ static int32 RoundToMilliseconds(float Seconds)
 
 void ACarlaPlayerState::UpdateTimeStamp(float DeltaSeconds)
 {
+  FramesPerSecond = 1.0f / DeltaSeconds;
   PlatformTimeStamp = RoundToMilliseconds(FPlatformTime::Seconds());
   GameTimeStamp += RoundToMilliseconds(DeltaSeconds);
 }
