@@ -16,6 +16,7 @@ enum class Label : uint8
   Cars      = 20,
   Poles     = 30,
   Roads     = 40,
+  Other     = 50,
 };
 
 template <typename T>
@@ -45,13 +46,16 @@ void ATagger::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent
 static Label GetLabel(const FString &str) {
   if (str == "Buildings")
     return Label::Buildings;
-  if (str == "Vehicles")
+  else if (str == "Vehicles")
     return Label::Cars;
-  if (str == "Roads")
+  else if (str == "Roads")
     return Label::Roads;
-  if (str == "Props")
+  else if (str == "Pole")
     return Label::Poles;
-  return Label::None;
+  else if (str == "Props")
+    return Label::Other;
+  else
+    return Label::None;
 }
 
 static void setStencilValue(UPrimitiveComponent *comp, const Label &label) {
