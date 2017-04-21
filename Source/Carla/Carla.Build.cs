@@ -48,7 +48,7 @@ public class Carla : ModuleRules
 
     AddBoostDependency(Target);
     AddProtobufDependency(Target);
-    AddTurboJPEGDependency(Target);
+    AddLibPNGDependency(Target);
     AddCarlaServerDependency(Target);
 
     if (Target.Platform == UnrealTargetPlatform.Linux)
@@ -138,16 +138,11 @@ public class Carla : ModuleRules
     }
   }
 
-  private void AddTurboJPEGDependency(TargetInfo Target)
+  private void AddLibPNGDependency(TargetInfo Target)
   {
     if (Target.Platform == UnrealTargetPlatform.Linux)
     {
-      string TurboJPEGLibPath = System.Environment.GetEnvironmentVariable("TURBOJPEG_LIB_PATH");
-      if (string.IsNullOrEmpty(TurboJPEGLibPath) || !System.IO.Directory.Exists(TurboJPEGLibPath))
-      {
-        throw new System.Exception("TURBOJPEG_LIB_PATH is not defined, or points to a non-existant directory, please set this environment variable.");
-      }
-      PublicAdditionalLibraries.Add(Path.Combine(TurboJPEGLibPath, "libturbojpeg.a"));
+      PublicAdditionalLibraries.Add("png");
     }
   }
 

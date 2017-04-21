@@ -193,7 +193,7 @@ namespace server {
   }
 
 
-static bool getJPEGImages(const std::vector<Image> &images, Reward &rwd){
+static bool getPNGImages(const std::vector<Image> &images, Reward &rwd) {
     std::string image_data;
     std::string depth_data;
     std::string image_size_data;
@@ -214,7 +214,7 @@ static bool getJPEGImages(const std::vector<Image> &images, Reward &rwd){
       double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
       cout << "Time to encode the image: " << elapsed_secs << " sec" << endl;
       }*/
-      
+
 
       if (!GetImage(img, compressedImage)) {
         std::cerr << "Error while encoding image" << std::endl;
@@ -271,16 +271,9 @@ static bool getJPEGImages(const std::vector<Image> &images, Reward &rwd){
     reward.set_speed(values.forward_speed);
     reward.set_timestamp(values.timestamp);
 
-#ifdef WITH_TURBOJPEG
-
-    //constexpr int JPEG_QUALITY = 75;
-
-    if (!getJPEGImages(values.images, reward)) {
-        std::cerr << "Error compressing image to JPEG" << std::endl;
+    if (!getPNGImages(values.images, reward)) {
+        std::cerr << "Error compressing image to PNG" << std::endl;
     }
-
-#endif // WITH_TURBOJPEG
-
   }
 
   void Protocol::LoadScene(Scene &scene, const Scene_Values &values) {
