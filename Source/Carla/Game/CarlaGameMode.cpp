@@ -13,6 +13,7 @@
 #include "CarlaPlayerState.h"
 #include "CarlaSettings.h"
 #include "CarlaVehicleController.h"
+#include "Tagger.h"
 
 ACarlaGameMode::ACarlaGameMode() :
   Super(),
@@ -69,6 +70,7 @@ void ACarlaGameMode::RestartPlayer(AController* NewPlayer)
 void ACarlaGameMode::BeginPlay()
 {
   Super::BeginPlay();
+  TagObjectsForSemanticSegmentation();
   GameController->BeginPlay();
 }
 
@@ -98,6 +100,13 @@ void ACarlaGameMode::AttachCaptureCamerasToPlayer(AController &Player)
   for (const auto &Item : Settings.CameraDescriptions) {
     Vehicle->AddSceneCaptureCamera(Item.Value);
   }
+}
+
+void ACarlaGameMode::TagObjectsForSemanticSegmentation()
+{
+  auto Tagger = GetWorld()->SpawnActor<ATagger>();
+  Tagger->TagObjects();
+  Tagger->Destroy(); // We don't need you anymore.
 }
 
 APlayerStart *ACarlaGameMode::FindUnOccupiedStartPoints(
