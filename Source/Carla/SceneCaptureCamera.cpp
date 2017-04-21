@@ -116,10 +116,17 @@ void ASceneCaptureCamera::SetPostProcessEffect(EPostProcessEffect otherPostProce
   PostProcessEffect = otherPostProcessEffect;
 }
 
+void ASceneCaptureCamera::SetFOVAngle(float FOVAngle)
+{
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->FOVAngle = FOVAngle;
+}
+
 void ASceneCaptureCamera::Set(const FCameraDescription &CameraDescription)
 {
   SetImageSize(CameraDescription.ImageSizeX, CameraDescription.ImageSizeY);
   SetPostProcessEffect(CameraDescription.PostProcessEffect);
+  SetFOVAngle(CameraDescription.FOVAngle);
 }
 
 bool ASceneCaptureCamera::ReadPixels(TArray<FColor> &BitMap) const

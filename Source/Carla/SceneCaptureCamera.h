@@ -50,6 +50,8 @@ public:
 
   void SetPostProcessEffect(EPostProcessEffect PostProcessEffect);
 
+  void SetFOVAngle(float FOVAngle);
+
   void Set(const FCameraDescription &CameraDescription);
 
   bool ReadPixels(TArray<FColor> &BitMap) const;
