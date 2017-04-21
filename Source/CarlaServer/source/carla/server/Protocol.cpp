@@ -8,11 +8,12 @@
 #include <iostream>
 
 #include <stdio.h>
-#include <stdlib.h>
 
-#ifdef WITH_TURBOJPEG
-#include <turbojpeg.h>
-#endif // WITH_TURBOJPEG
+#include <png.h>
+#include <stdlib.h>
+#include <stdint.h>
+
+//#include <ctime>
 
 namespace carla {
 namespace server {
@@ -32,9 +33,87 @@ namespace server {
     return out_bytes;
   }
 
-#ifdef WITH_TURBOJPEG
+  typedef struct {
+    uint8_t red;
+    uint8_t green;
+    uint8_t blue;
+  } pixel_t;
 
-  static bool GetImage(const int jpeg_quality, const Image &image_info, unsigned char **compressedImage, long unsigned int &jpegSize){
+  typedef struct {
+    pixel_t* pixels;
+    size_t width;
+    size_t height;
+
+  } bitmap_t;
+
+
+  struct img_encode{
+    char* buffer;
+    size_t size;
+  };
+
+  struct TPngDestructor {
+    png_struct *p;
+    TPngDestructor(png_struct *p) : p(p)  {}
+    ~TPngDestructor() { if (p) {  png_destroy_write_struct(&p, NULL); } }
+  };
+
+  static pixel_t * pixel_at (bitmap_t * bitmap, int x, int y)
+  {
+    return bitmap->pixels + bitmap->width * y + x;
+  }
+
+  void loadPNGData(png_structp png_ptr, png_bytep data, png_size_t length)
+  {
+    /* with libpng15 next line causes pointer deference error; use libpng12 */
+    img_encode* p=(img_encode*)png_get_io_ptr(png_ptr); /* was png_ptr->io_ptr */
+    size_t nsize = p->size + length;
+
+    /* allocate or grow buffer */
+    if(p->buffer)
+      p->buffer = (char*) realloc(p->buffer, nsize);
+    else
+      p->buffer = (char*) malloc(nsize);
+
+    if(!p->buffer)
+      png_error(png_ptr, "Write Error");
+
+    /* copy new bytes to end of buffer */
+    memcpy(p->buffer + p->size, data, length);
+    p->size += length;
+
+
+  }
+
+  bool LoadBitmap (bitmap_t &bitmap, const Image &image_info){
+
+    bitmap.width = image_info.width;
+    bitmap.height = image_info.height;
+    bitmap.pixels = (pixel_t*) calloc (bitmap.width * bitmap.height, sizeof(pixel_t));
+
+    if (!bitmap.pixels) return false;
+
+    size_t x = 0, y = 0;
+    for (const Color &color : image_info.image) {
+
+      if (x >= bitmap.width) {
+        x = 0;
+        ++y;
+      }
+
+      pixel_t* pixel = pixel_at(&bitmap, x, y);
+      pixel->red = color.R;
+      pixel->green = color.G;
+      pixel->blue = color.B;
+      ++x;
+      //pixel->alpha = color.A;
+    }
+
+    return true;
+  }
+
+
+  static bool GetImage(const Image &image_info, img_encode &compressedImage){
     if (image_info.image.empty())
       return false;
     if (image_info.image.size() != image_info.width * image_info.height) {
@@ -42,61 +121,133 @@ namespace server {
       return false;
     }
 
-    std::vector<unsigned char> color_image;
-    color_image.reserve(3u * image_info.image.size());
-    for (const Color &color : image_info.image) {
-      color_image.push_back(color.R);
-      color_image.push_back(color.G);
-      color_image.push_back(color.B);
+    bitmap_t bitmap;
+    if (!LoadBitmap(bitmap, image_info)) return false;
+
+    int depth = 8;
+    int pixel_size = 3;
+    png_structp png = NULL;
+    png_infop info = NULL;
+    size_t x,y;
+    png_byte ** row_pointers = NULL;
+
+    png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (!png) {
+      std::cerr << "Cannot create png_struct" << std::endl;
+      return false;
     }
 
-    tjhandle jpegCompressor = tjInitCompress();
-    tjCompress2(jpegCompressor, color_image.data(), image_info.width, 0, image_info.height, TJPF_RGB,
-      compressedImage, &jpegSize, TJSAMP_444, jpeg_quality, TJFLAG_FASTDCT);
-    tjDestroy(jpegCompressor);
+    TPngDestructor destroyPng(png);
+
+    info = png_create_info_struct(png);
+    if (!info){
+      std::cerr << "Cannot create info_struct" << std::endl;
+      return false;
+    }
+
+    if (setjmp(png_jmpbuf(png))) return false;
+
+    png_set_IHDR (png,
+                  info,
+                  bitmap.width,
+                  bitmap.height,
+                  depth,
+                  PNG_COLOR_TYPE_RGB,
+                  PNG_INTERLACE_NONE,
+                  PNG_COMPRESSION_TYPE_DEFAULT,
+                  PNG_FILTER_TYPE_DEFAULT);
+
+
+    /* Initialize rows of PNG. */
+    row_pointers = (png_byte **) png_malloc (png, bitmap.height * sizeof (png_byte *));
+    for (y = 0; y < bitmap.height; ++y) {
+        png_byte *row = (png_byte *) png_malloc (png, sizeof (uint8_t) * bitmap.width * pixel_size);
+        row_pointers[y] = row;
+        for (x = 0; x < bitmap.width; ++x) {
+            pixel_t * pixel = pixel_at (&bitmap, x, y);
+            *row++ = pixel->red;
+            *row++ = pixel->green;
+            *row++ = pixel->blue;
+        }
+    }
+
+    compressedImage.buffer = NULL;
+    compressedImage.size = 0;
+
+
+    png_set_write_fn(png, &compressedImage, loadPNGData, NULL);
+
+    png_set_rows (png, info, row_pointers);
+    png_write_png(png, info, PNG_TRANSFORM_IDENTITY, NULL);
+
+
+    for (size_t y = 0; y < bitmap.height; y++) {
+        png_free (png, row_pointers[y]);
+    }
+
+    png_free (png, row_pointers);
+    free(bitmap.pixels);
+    free(info);
 
     return true;
   }
 
 
-static bool getJPEGImages(const int jpeg_quality, const std::vector<Image> &images, Reward &rwd){
+static bool getJPEGImages(const std::vector<Image> &images, Reward &rwd){
     std::string image_data;
     std::string depth_data;
     std::string image_size_data;
     std::string depth_size_data;
-    //nt images_count = 0, depth_count = 0;
 
     for (const Image &img : images){
-      unsigned char *compressedImage;
-      long unsigned int jpegSize = 0;
-      if (!GetImage(jpeg_quality, img, &compressedImage, jpegSize)) {
+      img_encode compressedImage;
+
+      /*
+      {
+      using namespace std;
+      clock_t begin = clock();
+      if (!GetImage(img, compressedImage)) {
+        std::cerr << "Error while encoding image" << std::endl;
+        return false;
+      }
+      clock_t end = clock();
+      double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+      cout << "Time to encode the image: " << elapsed_secs << " sec" << endl;
+      }*/
+      
+
+      if (!GetImage(img, compressedImage)) {
         std::cerr << "Error while encoding image" << std::endl;
         return false;
       }
 
       switch (img.type){
         case IMAGE:
-          for (unsigned long int i = 0; i < jpegSize; ++i) image_data += compressedImage[i];
-          image_size_data += GetBytes(jpegSize);
+          for (unsigned long int i = 0; i < compressedImage.size; ++i) image_data += compressedImage.buffer[i];
+          image_size_data += GetBytes(compressedImage.size);
           break;
         case DEPTH:
-          for (unsigned long int i = 0; i < jpegSize; ++i) depth_data += compressedImage[i];
-          depth_size_data += GetBytes(jpegSize);
+          for (unsigned long int i = 0; i < compressedImage.size; ++i) depth_data += compressedImage.buffer[i];
+          depth_size_data += GetBytes(compressedImage.size);
           break;
       }
+
+      free (compressedImage.buffer);
+
     }
+
     std::cout << "send depth size: " << depth_size_data.size() <<
     " send image size: " << image_size_data.size()<<
     " send image: " << image_data.size()<<
     " send depth: " << depth_data.size() << std::endl;
+
     rwd.set_depth_sizes(depth_size_data);
     rwd.set_image_sizes(image_size_data);
     rwd.set_images(image_data);
     rwd.set_depths(depth_data);
+
     return true;
   }
-
-#endif // WITH_TURBOJPEG
 
   Protocol::Protocol(carla::server::CarlaCommunication *communication) {
     _communication = communication;
@@ -122,9 +273,9 @@ static bool getJPEGImages(const int jpeg_quality, const std::vector<Image> &imag
 
 #ifdef WITH_TURBOJPEG
 
-    constexpr int JPEG_QUALITY = 75;
+    //constexpr int JPEG_QUALITY = 75;
 
-    if (!getJPEGImages(JPEG_QUALITY, values.images, reward)) {
+    if (!getJPEGImages(values.images, reward)) {
         std::cerr << "Error compressing image to JPEG" << std::endl;
     }
 
