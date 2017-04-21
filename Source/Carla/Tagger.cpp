@@ -11,13 +11,34 @@
 
 enum class Label : uint8
 {
-  None      = 0,
-  Buildings = 10,
-  Cars      = 20,
-  Poles     = 30,
-  Roads     = 40,
-  Other     = 50,
+  None = 0,
+  Buildings,
+  Fences,
+  Other,
+  Pedestrians,
+  Poles,
+  RoadLines,
+  Roads,
+  Sidewalks,
+  Vegetation,
+  Vehicles,
+  Walls,
 };
+
+static Label GetLabel(const FString &str) {
+  if (str == "Buildings")            return Label::Buildings;
+  else if (str == "Fences")          return Label::Fences;
+  else if (str == "Pedestrians")     return Label::Pedestrians;
+  else if (str == "Pole")            return Label::Poles;
+  else if (str == "Props")           return Label::Other;
+  else if (str == "Road")            return Label::Roads;
+  else if (str == "RoadLines")       return Label::RoadLines;
+  else if (str == "SideWalk")        return Label::Sidewalks;
+  else if (str == "Vegetation")      return Label::Vegetation;
+  else if (str == "Vehicles")        return Label::Vehicles;
+  else if (str == "Walls")           return Label::Walls;
+  else                               return Label::None;
+}
 
 template <typename T>
 static auto cast(T label)
@@ -42,21 +63,6 @@ void ATagger::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent
   bTriggerTagObjects = false;
 }
 #endif // WITH_EDITOR
-
-static Label GetLabel(const FString &str) {
-  if (str == "Buildings")
-    return Label::Buildings;
-  else if (str == "Vehicles")
-    return Label::Cars;
-  else if (str == "Roads")
-    return Label::Roads;
-  else if (str == "Pole")
-    return Label::Poles;
-  else if (str == "Props")
-    return Label::Other;
-  else
-    return Label::None;
-}
 
 static void setStencilValue(UPrimitiveComponent *comp, const Label &label) {
   if (label != Label::None)
