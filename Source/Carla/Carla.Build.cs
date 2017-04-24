@@ -142,7 +142,7 @@ public class Carla : ModuleRules
   {
     if (Target.Platform == UnrealTargetPlatform.Linux)
     {
-      PublicAdditionalLibraries.Add("png");
+      PublicAdditionalLibraries.Add("png16");
     }
   }
 

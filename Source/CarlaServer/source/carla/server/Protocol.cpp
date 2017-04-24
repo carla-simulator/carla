@@ -6,14 +6,13 @@
 #include "carla_protocol.pb.h"
 
 #include <iostream>
-
-#include <stdio.h>
-
-#include <png.h>
-#include <stdlib.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-//#include <ctime>
+#ifdef CARLA_WITH_PNG_COMPRESSION
+#include <png.h>
+#endif // CARLA_WITH_PNG_COMPRESSION
 
 namespace carla {
 namespace server {
@@ -51,6 +50,12 @@ namespace server {
     char* buffer;
     size_t size;
   };
+
+  // ===========================================================================
+  // -- PNG related functions --------------------------------------------------
+  // ===========================================================================
+
+#ifdef CARLA_WITH_PNG_COMPRESSION
 
   struct TPngDestructor {
     png_struct *p;
@@ -249,6 +254,12 @@ static bool getPNGImages(const std::vector<Image> &images, Reward &rwd) {
     return true;
   }
 
+#endif // CARLA_WITH_PNG_COMPRESSION
+
+  // ===========================================================================
+  // -- Protocol ---------------------------------------------------------------
+  // ===========================================================================
+
   Protocol::Protocol(carla::server::CarlaCommunication *communication) {
     _communication = communication;
   }
@@ -271,9 +282,11 @@ static bool getPNGImages(const std::vector<Image> &images, Reward &rwd) {
     reward.set_speed(values.forward_speed);
     reward.set_timestamp(values.timestamp);
 
+#ifdef CARLA_WITH_PNG_COMPRESSION
     if (!getPNGImages(values.images, reward)) {
         std::cerr << "Error compressing image to PNG" << std::endl;
     }
+#endif // CARLA_WITH_PNG_COMPRESSION
   }
 
   void Protocol::LoadScene(Scene &scene, const Scene_Values &values) {

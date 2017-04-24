@@ -94,11 +94,12 @@ endif (UNIX)
 
 if (UNIX)
 
-  set(Png_LIBRARY png)
+  set(Png_LIBRARY png16)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_WITH_PNG_COMPRESSION")
 
 elseif (WIN32)
 
-  message(WARNING "libpng not available for Windows yet")
+  message(WARNING "PNG compression not available for Windows yet")
 
 endif (UNIX)
 
