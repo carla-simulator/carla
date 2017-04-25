@@ -44,7 +44,8 @@ namespace carla {
     Reward_Values();
     ~Reward_Values();
     /// Time-stamp of the current frame.
-    int32_t timestamp;
+    int32_t platform_timestamp;
+    int32_t game_timestamp;
     /// World location of the player.
     Vector2D player_location;
     /// Orientation of the player.

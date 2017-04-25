@@ -58,6 +58,7 @@ std::unique_ptr<carla::Reward_Values> makeReward() {
   reward->collision_car = 10.0f;
   reward->intersect_other_lane = 0.5f;
   reward->intersect_offroad = 0.5f;
+  reward->game_timestamp = 0u;
 
   for (int i = 0; i < 4; ++i) {
     carla::Image img;
@@ -74,8 +75,9 @@ std::unique_ptr<carla::Reward_Values> makeReward() {
   reward->image_depth_0 = makeImage(imageWidth, imageHeight);
   reward->image_depth_1 = makeImage(imageWidth, imageHeight);
 */
-  static decltype(carla::Reward_Values::timestamp) timestamp = 0u;
-  reward->timestamp = timestamp++;
+  static decltype(carla::Reward_Values::platform_timestamp) timestamp = 0u;
+
+  reward->platform_timestamp = timestamp++;
 
   return reward;
 }
@@ -162,7 +164,11 @@ int main(int argc, char *argv[]) {
             uint32_t startPoint, endPoint;
             bool error = false, readed = false;
             do {
+              
+              std::cout << "Try read episode Start: ";
               error = !server.tryReadEpisodeStart(startPoint, endPoint, readed);
+              std::cout << error << std::endl; 
+
             } while (!readed && !error);
 
             if (error) {
@@ -181,12 +187,13 @@ int main(int argc, char *argv[]) {
               break;
             } else if (readed) {
               std::cout << "CONTROL -->  gas: " << gas << " steer: " << steer << std::endl;
-            }
+            }      
 
-            if (!server.sendReward(makeReward().release())) {
-              std::cerr << "ERROR while sending Reward" << std::endl;
-              break;
-            }
+              if (!server.sendReward(makeReward().release())) {
+                std::cerr << "ERROR while sending Reward" << std::endl;
+                break;
+              }
+
           }
         }
         std::cout << " -----  RESTARTING -----" <<  std::endl;

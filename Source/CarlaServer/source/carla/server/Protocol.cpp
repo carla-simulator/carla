@@ -241,11 +241,6 @@ static bool getPNGImages(const std::vector<Image> &images, Reward &rwd) {
 
     }
 
-    std::cout << "send depth size: " << depth_size_data.size() <<
-    " send image size: " << image_size_data.size()<<
-    " send image: " << image_data.size()<<
-    " send depth: " << depth_data.size() << std::endl;
-
     rwd.set_depth_sizes(depth_size_data);
     rwd.set_image_sizes(image_size_data);
     rwd.set_images(image_data);
@@ -280,7 +275,8 @@ static bool getPNGImages(const std::vector<Image> &images, Reward &rwd) {
     reward.set_player_y(values.player_location.y);
     reward.set_player_x(values.player_location.x);
     reward.set_speed(values.forward_speed);
-    reward.set_timestamp(values.timestamp);
+    reward.set_platform_timestamp(values.platform_timestamp);
+    reward.set_game_timestamp(values.game_timestamp);
 
 #ifdef CARLA_WITH_PNG_COMPRESSION
     if (!getPNGImages(values.images, reward)) {

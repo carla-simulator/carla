@@ -36,7 +36,12 @@ namespace carla {
             port(port),
             _service(),
             _socket(_service),
-            _connected(false){}
+            _connected(false){
+
+              //int32_t timeout = 500;
+              //setsockopt(_socket.native(), SOL_SOCKET, SO_SNDTIMEO, (const char*)&timeout, sizeof(timeout));
+
+            }
 
         TCPServer::~TCPServer() {}
 
@@ -60,7 +65,6 @@ namespace carla {
         void TCPServer::writeString(const std::string &message, error_code &error) {
             const int messageSize = static_cast<int>(message.length());
             std::string outMessage(GetBytes(messageSize) + message);
-
             boost::asio::write(_socket, boost::asio::buffer(outMessage), error);
 
             if (error)
