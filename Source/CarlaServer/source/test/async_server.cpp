@@ -58,6 +58,7 @@ std::unique_ptr<carla::Reward_Values> makeReward() {
   reward->collision_car = 10.0f;
   reward->intersect_other_lane = 0.5f;
   reward->intersect_offroad = 0.5f;
+  reward->game_timestamp = 0u;
 
   for (int i = 0; i < 4; ++i) {
     carla::Image img;
@@ -74,8 +75,9 @@ std::unique_ptr<carla::Reward_Values> makeReward() {
   reward->image_depth_0 = makeImage(imageWidth, imageHeight);
   reward->image_depth_1 = makeImage(imageWidth, imageHeight);
 */
-  static decltype(carla::Reward_Values::timestamp) timestamp = 0u;
-  reward->timestamp = timestamp++;
+  static decltype(carla::Reward_Values::platform_timestamp) timestamp = 0u;
+
+  reward->platform_timestamp = timestamp++;
 
   return reward;
 }

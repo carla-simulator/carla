@@ -264,7 +264,8 @@ static bool getPNGImages(const std::vector<Image> &images, Reward &rwd){
     reward.set_player_y(values.player_location.y);
     reward.set_player_x(values.player_location.x);
     reward.set_speed(values.forward_speed);
-    reward.set_timestamp(values.timestamp);
+    reward.set_platform_timestamp(values.platform_timestamp);
+    reward.set_game_timestamp(values.game_timestamp);
 
 #ifdef WITH_TURBOJPEG
 

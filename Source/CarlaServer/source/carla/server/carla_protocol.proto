@@ -78,13 +78,14 @@ message Reward {
   optional float acceleration_x = 9;
   optional float acceleration_y = 10;
   optional float acceleration_z = 11;
-  optional int32 timestamp = 12;
-  optional float ori_x = 13;
-  optional float ori_y = 14;
-  optional float ori_z = 15;
-  optional bytes image_sizes = 16;
-  optional bytes depth_sizes = 17;
-  optional bytes images = 18;
-  optional bytes depths = 19;
+  optional int32 platform_timestamp = 12;
+  optional int32 game_timestamp = 13;
+  optional float ori_x = 14;
+  optional float ori_y = 15;
+  optional float ori_z = 16;
+  optional bytes image_sizes = 17;
+  optional bytes depth_sizes = 18;
+  optional bytes images = 19;
+  optional bytes depths = 20;
 
 }
