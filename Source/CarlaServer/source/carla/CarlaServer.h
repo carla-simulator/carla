@@ -43,8 +43,10 @@ namespace carla {
   struct Reward_Values {
     Reward_Values();
     ~Reward_Values();
-    /// Time-stamp of the current frame.
+    /// Time-stamp of the current frame, in milliseconds as given by the OS.
     int32_t platform_timestamp;
+    /// In-game time-stamp, milliseconds elapsed since the beginning of the
+    /// current level.
     int32_t game_timestamp;
     /// World location of the player.
     Vector2D player_location;
