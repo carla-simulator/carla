@@ -221,20 +221,21 @@ namespace server {
   }
 
   void CarlaCommunication::sendScene(const Scene_Values &values) {
+
     // Protobuf produces a segmentation fault in the destructor of the Scene
     // when called from Unreal Engine in Linux. As a workaround, we added this
     // cute memory leak.
     /// @todo #10 Fix the memory leak!
-    Scene *scene = new Scene;
-    _proto->LoadScene(*scene, values);
+
+    Scene scene;
+    _proto->LoadScene(scene, values);
 
     auto message = std::make_unique<std::string>();
 
-    if (scene->SerializeToString(message.get())) {
+    if (scene.SerializeToString(message.get())) {
       _worldThread.push(std::move(message));
     }
 
-    free(scene);
   }
 
   void CarlaCommunication::sendReset() {
