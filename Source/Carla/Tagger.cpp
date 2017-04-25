@@ -11,18 +11,18 @@
 
 enum class Label : uint8
 {
-  None = 0,
-  Buildings,
-  Fences,
-  Other,
-  Pedestrians,
-  Poles,
-  RoadLines,
-  Roads,
-  Sidewalks,
-  Vegetation,
-  Vehicles,
-  Walls,
+  None         =   0u,
+  Buildings    =   1u,
+  Fences       =   2u,
+  Other        =   3u,
+  Pedestrians  =   4u,
+  Poles        =   5u,
+  RoadLines    =   6u,
+  Roads        =   7u,
+  Sidewalks    =   8u,
+  Vegetation   =   9u,
+  Vehicles     =  10u,
+  Walls        =  11u,
 };
 
 static Label GetLabel(const FString &str) {
