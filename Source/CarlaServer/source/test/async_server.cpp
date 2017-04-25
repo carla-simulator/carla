@@ -162,7 +162,11 @@ int main(int argc, char *argv[]) {
             uint32_t startPoint, endPoint;
             bool error = false, readed = false;
             do {
+              
+              std::cout << "Try read episode Start: ";
               error = !server.tryReadEpisodeStart(startPoint, endPoint, readed);
+              std::cout << error << std::endl; 
+
             } while (!readed && !error);
 
             if (error) {
@@ -181,12 +185,13 @@ int main(int argc, char *argv[]) {
               break;
             } else if (readed) {
               std::cout << "CONTROL -->  gas: " << gas << " steer: " << steer << std::endl;
-            }
+            }      
 
-            if (!server.sendReward(makeReward().release())) {
-              std::cerr << "ERROR while sending Reward" << std::endl;
-              break;
-            }
+              if (!server.sendReward(makeReward().release())) {
+                std::cerr << "ERROR while sending Reward" << std::endl;
+                break;
+              }
+
           }
         }
         std::cout << " -----  RESTARTING -----" <<  std::endl;

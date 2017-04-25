@@ -193,7 +193,7 @@ namespace server {
   }
 
 
-static bool getJPEGImages(const std::vector<Image> &images, Reward &rwd){
+static bool getPNGImages(const std::vector<Image> &images, Reward &rwd){
     std::string image_data;
     std::string depth_data;
     std::string image_size_data;
@@ -236,11 +236,6 @@ static bool getJPEGImages(const std::vector<Image> &images, Reward &rwd){
 
     }
 
-    std::cout << "send depth size: " << depth_size_data.size() <<
-    " send image size: " << image_size_data.size()<<
-    " send image: " << image_data.size()<<
-    " send depth: " << depth_data.size() << std::endl;
-
     rwd.set_depth_sizes(depth_size_data);
     rwd.set_image_sizes(image_size_data);
     rwd.set_images(image_data);
@@ -273,10 +268,8 @@ static bool getJPEGImages(const std::vector<Image> &images, Reward &rwd){
 
 #ifdef WITH_TURBOJPEG
 
-    //constexpr int JPEG_QUALITY = 75;
-
-    if (!getJPEGImages(values.images, reward)) {
-        std::cerr << "Error compressing image to JPEG" << std::endl;
+    if (!getPNGImages(values.images, reward)) {
+        std::cerr << "Error compressing image to PNG" << std::endl;
     }
 
 #endif // WITH_TURBOJPEG
