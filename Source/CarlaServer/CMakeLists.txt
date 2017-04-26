@@ -87,15 +87,62 @@ elseif (WIN32)
 
 endif (UNIX)
 
-
 # ==============================================================================
-# -- Libpng --------------------------------------------------------------------
+# -- LibPNG --------------------------------------------------------------------
 # ==============================================================================
 
 if (UNIX)
 
-  set(Png_LIBRARY png16)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_WITH_PNG_COMPRESSION")
+  if (EXISTS $ENV{UE4_ROOT})
+
+    # Use Unreal Engine's libpng and libz.
+
+    set(LIBPNG_ROOT $ENV{UE4_ROOT}/Engine/Source/ThirdParty/libPNG/libPNG-1.5.2)
+    set(LIBZ_ROOT $ENV{UE4_ROOT}/Engine/Source/ThirdParty/zlib/v1.2.8)
+
+    if (NOT EXISTS ${LIBPNG_ROOT})
+      message(FATAL_ERROR "Unable to find Unreal Engine's libpng")
+    elseif (NOT EXISTS ${LIBZ_ROOT})
+      message(FATAL_ERROR "Unable to find Unreal Engine's libz")
+    endif (NOT EXISTS ${LIBPNG_ROOT})
+    message(STATUS "Using libPNG-1.5.2 within Unreal Engine's installation folder")
+
+    set(PNG_LIBRARIES
+        ${LIBPNG_ROOT}/lib/Linux/x86_64-unknown-linux-gnu/libpng.a
+        ${LIBZ_ROOT}/lib/Linux/x86_64-unknown-linux-gnu/libz_fPIC.a)
+
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_WITH_PNG_COMPRESSION")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_INCLUDE=\\\"${LIBPNG_ROOT}/png.h\\\"")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_VERSION_MAJOR=1")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_VERSION_MINOR=5")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_VERSION_RELEASE=2")
+
+  else (EXISTS $ENV{UE4_ROOT})
+
+    # Use system's libpng and libz.
+
+    message(WARNING
+        "Using system's libpng, this won't work with Unreal Engine. "
+        "Please define the environment variable UE4_ROOT pointing to "
+        "Unreal Engine's installation folder so we can link against "
+        "the right version of libpng")
+
+    include(FindPNG)
+    find_package(PNG REQUIRED)
+
+    # Retrieve version number for extra check.
+    string(REPLACE "." ";" PNG_VERSION_LIST ${PNG_VERSION_STRING})
+    list(GET PNG_VERSION_LIST 0 PNG_VERSION_MAJOR)
+    list(GET PNG_VERSION_LIST 1 PNG_VERSION_MINOR)
+    list(GET PNG_VERSION_LIST 2 PNG_VERSION_RELEASE)
+
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_WITH_PNG_COMPRESSION")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_INCLUDE=\\\"png.h\\\"")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_VERSION_MAJOR=${PNG_VERSION_MAJOR}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_VERSION_MINOR=${PNG_VERSION_MINOR}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_VERSION_RELEASE=${PNG_VERSION_RELEASE}")
+
+  endif (EXISTS $ENV{UE4_ROOT})
 
 elseif (WIN32)
 
@@ -108,7 +155,7 @@ endif (UNIX)
 # ==============================================================================
 
 set(CarlaServer_Deps_LIBRARIES
-    ${Png_LIBRARY}
+    ${PNG_LIBRARIES}
     ${Protobuf_LIBRARIES}
     ${Boost_DATE_TIME_LIBRARY}
     ${Boost_REGEX_LIBRARY}

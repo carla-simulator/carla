@@ -140,10 +140,7 @@ public class Carla : ModuleRules
 
   private void AddLibPNGDependency(TargetInfo Target)
   {
-    if (Target.Platform == UnrealTargetPlatform.Linux)
-    {
-      PublicAdditionalLibraries.Add("png16");
-    }
+    // Nothing to be done here.
   }
 
   private void AddCarlaServerDependency(TargetInfo Target)
