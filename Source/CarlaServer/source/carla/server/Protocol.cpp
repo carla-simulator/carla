@@ -6,14 +6,13 @@
 #include "carla_protocol.pb.h"
 
 #include <iostream>
-
-#include <stdio.h>
-
-#include <png.h>
-#include <stdlib.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-//#include <ctime>
+#ifdef CARLA_WITH_PNG_COMPRESSION
+#include <png.h>
+#endif // CARLA_WITH_PNG_COMPRESSION
 
 namespace carla {
 namespace server {
@@ -51,6 +50,12 @@ namespace server {
       char* buffer;
       size_t size;
   };
+
+  // ===========================================================================
+  // -- PNG related functions --------------------------------------------------
+  // ===========================================================================
+
+#ifdef CARLA_WITH_PNG_COMPRESSION
 
   struct TPngDestructor {
     png_struct *p;
@@ -191,8 +196,8 @@ namespace server {
     return true;
   }
 
+static bool getPNGImages(const std::vector<Image> &images, Reward &rwd) {
 
-static bool getPNGImages(const std::vector<Image> &images, Reward &rwd){
     std::string image_data;
     std::string depth_data;
     std::string image_size_data;
@@ -213,7 +218,7 @@ static bool getPNGImages(const std::vector<Image> &images, Reward &rwd){
       double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
       cout << "Time to encode the image: " << elapsed_secs << " sec" << endl;
       }*/
-      
+
 
       if (!GetImage(img, compressedImage)) {
         std::cerr << "Error while encoding image" << std::endl;
@@ -231,7 +236,7 @@ static bool getPNGImages(const std::vector<Image> &images, Reward &rwd){
           break;
       }
 
-      delete compressedImage.buffer;
+      free(compressedImage.buffer);
 
     }
 
@@ -242,6 +247,12 @@ static bool getPNGImages(const std::vector<Image> &images, Reward &rwd){
 
     return true;
   }
+
+#endif // CARLA_WITH_PNG_COMPRESSION
+
+  // ===========================================================================
+  // -- Protocol ---------------------------------------------------------------
+  // ===========================================================================
 
   Protocol::Protocol(carla::server::CarlaCommunication *communication) {
     _communication = communication;
@@ -266,14 +277,12 @@ static bool getPNGImages(const std::vector<Image> &images, Reward &rwd){
     reward.set_platform_timestamp(values.platform_timestamp);
     reward.set_game_timestamp(values.game_timestamp);
 
-#ifdef WITH_TURBOJPEG
+#ifdef CARLA_WITH_PNG_COMPRESSION
 
     if (!getPNGImages(values.images, reward)) {
         std::cerr << "Error compressing image to PNG" << std::endl;
     }
-
-#endif // WITH_TURBOJPEG
-
+#endif // CARLA_WITH_PNG_COMPRESSION
   }
 
   void Protocol::LoadScene(Scene &scene, const Scene_Values &values) {

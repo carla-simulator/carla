@@ -14,6 +14,8 @@ public:
 
   ATagger();
 
+  void TagObjects();
+
 protected:
 
 #if WITH_EDITOR
@@ -21,8 +23,6 @@ protected:
 #endif // WITH_EDITOR
 
 private:
-
-  void TagObjects();
 
   UPROPERTY(Category = "Tagger", EditAnywhere)
   bool bTriggerTagObjects = false;

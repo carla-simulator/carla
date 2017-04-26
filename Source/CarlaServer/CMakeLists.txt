@@ -93,28 +93,13 @@ endif (UNIX)
 # ==============================================================================
 
 if (UNIX)
-  set(png_LIBRARY png)
 
-elseif (WIN32)
-  message( WARNING "Not linked in windows yet")
-endif (UNIX)
-
-# ==============================================================================
-# -- TurboJPEG -----------------------------------------------------------------
-# ==============================================================================
-
-if (UNIX)
-
-  if (EXISTS $ENV{TURBOJPEG_LIB_PATH})
-    set(TurboJPEG_LIBRARIES ${TurboJPEG_LIBRARIES} $ENV{TURBOJPEG_LIB_PATH}/libturbojpeg.a)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DWITH_TURBOJPEG")
-  else (EXISTS $ENV{TURBOJPEG_LIB_PATH})
-    message(FATAL_ERROR "TURBOJPEG_LIB_PATH is not defined, or points to a non-existant directory, please set this environment variable.")
-  endif (EXISTS $ENV{TURBOJPEG_LIB_PATH})
+  set(Png_LIBRARY png16)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_WITH_PNG_COMPRESSION")
 
 elseif (WIN32)
 
-  message(WARNING "TurboJPEG not available for Windows yet")
+  message(WARNING "PNG compression not available for Windows yet")
 
 endif (UNIX)
 
@@ -123,7 +108,7 @@ endif (UNIX)
 # ==============================================================================
 
 set(CarlaServer_Deps_LIBRARIES
-    ${png_LIBRARY}
+    ${Png_LIBRARY}
     ${Protobuf_LIBRARIES}
     ${Boost_DATE_TIME_LIBRARY}
     ${Boost_REGEX_LIBRARY}

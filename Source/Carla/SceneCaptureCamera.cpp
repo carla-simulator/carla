@@ -15,9 +15,18 @@
 #include "TextureResource.h"
 
 static constexpr auto DEPTH_MAT_PATH =
+#if PLATFORM_LINUX
+    TEXT("Material'/Carla/PostProcessingMaterials/DepthEffectMaterial_GLSL.DepthEffectMaterial_GLSL'");
+#elif PLATFORM_WINDOWS
     TEXT("Material'/Carla/PostProcessingMaterials/DepthEffectMaterial.DepthEffectMaterial'");
+#else
+#  error No depth material defined for this platform
+#endif
+
 static constexpr auto SEMANTIC_SEGMENTATION_MAT_PATH =
     TEXT("Material'/Carla/PostProcessingMaterials/GTMaterial.GTMaterial'");
+
+static void RemoveShowFlags(FEngineShowFlags &ShowFlags);
 
 ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer& ObjectInitializer) :
   Super(ObjectInitializer),
@@ -78,22 +87,33 @@ void ASceneCaptureCamera::PostActorCreated()
 
 void ASceneCaptureCamera::BeginPlay()
 {
-  Super::BeginPlay();
+  const bool bRemovePostProcessing = (PostProcessEffect != EPostProcessEffect::SceneFinal);
 
-  CaptureRenderTarget->InitCustomFormat(SizeX, SizeY, PF_B8G8R8A8, false);
-  CaptureRenderTarget->UpdateResource();
+  // Setup render target.
+  const bool bInForceLinearGamma = bRemovePostProcessing;
+  CaptureRenderTarget->bHDR = !bRemovePostProcessing;
+  CaptureRenderTarget->InitCustomFormat(SizeX, SizeY, PF_B8G8R8A8, bInForceLinearGamma);
 
   CaptureComponent2D->Deactivate();
   CaptureComponent2D->TextureTarget = CaptureRenderTarget;
-  if (PostProcessEffect == EPostProcessEffect::SceneFinal) {
+
+  // Setup camera post-processing.
+  if (PostProcessEffect != EPostProcessEffect::None) {
     CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
-  } else if (PostProcessEffect == EPostProcessEffect::Depth) {
+  }
+  if (bRemovePostProcessing) {
+    RemoveShowFlags(CaptureComponent2D->ShowFlags);
+  }
+  if (PostProcessEffect == EPostProcessEffect::Depth) {
     CaptureComponent2D->PostProcessSettings.AddBlendable(PostProcessDepth, 1.0f);
   } else if (PostProcessEffect == EPostProcessEffect::SemanticSegmentation) {
     CaptureComponent2D->PostProcessSettings.AddBlendable(PostProcessSemanticSegmentation, 1.0f);
   }
+
   CaptureComponent2D->UpdateContent();
   CaptureComponent2D->Activate();
+
+  Super::BeginPlay();
 }
 
 void ASceneCaptureCamera::SetImageSize(uint32 otherSizeX, uint32 otherSizeY)
@@ -107,10 +127,17 @@ void ASceneCaptureCamera::SetPostProcessEffect(EPostProcessEffect otherPostProce
   PostProcessEffect = otherPostProcessEffect;
 }
 
+void ASceneCaptureCamera::SetFOVAngle(float FOVAngle)
+{
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->FOVAngle = FOVAngle;
+}
+
 void ASceneCaptureCamera::Set(const FCameraDescription &CameraDescription)
 {
   SetImageSize(CameraDescription.ImageSizeX, CameraDescription.ImageSizeY);
   SetPostProcessEffect(CameraDescription.PostProcessEffect);
+  SetFOVAngle(CameraDescription.FOVAngle);
 }
 
 bool ASceneCaptureCamera::ReadPixels(TArray<FColor> &BitMap) const
@@ -138,4 +165,154 @@ void ASceneCaptureCamera::UpdateDrawFrustum()
     DrawFrustum->FrustumAngle = CaptureComponent2D->FOVAngle;
     //DrawFrustum->FrustumAspectRatio = CaptureComponent2D->AspectRatio;
   }
+}
+
+// Remove the show flags that might interfere with post-processing effects like
+// depth and semantic segmentation.
+static void RemoveShowFlags(FEngineShowFlags &ShowFlags)
+{
+  ShowFlags.SetAmbientOcclusion(false);
+  ShowFlags.SetAntiAliasing(false);
+  ShowFlags.SetAtmosphericFog(false);
+  // ShowFlags.SetAudioRadius(false);
+  // ShowFlags.SetBillboardSprites(false);
+  ShowFlags.SetBloom(false);
+  // ShowFlags.SetBounds(false);
+  // ShowFlags.SetBrushes(false);
+  // ShowFlags.SetBSP(false);
+  // ShowFlags.SetBSPSplit(false);
+  // ShowFlags.SetBSPTriangles(false);
+  // ShowFlags.SetBuilderBrush(false);
+  // ShowFlags.SetCameraAspectRatioBars(false);
+  // ShowFlags.SetCameraFrustums(false);
+  ShowFlags.SetCameraImperfections(false);
+  ShowFlags.SetCameraInterpolation(false);
+  // ShowFlags.SetCameraSafeFrames(false);
+  // ShowFlags.SetCollision(false);
+  // ShowFlags.SetCollisionPawn(false);
+  // ShowFlags.SetCollisionVisibility(false);
+  ShowFlags.SetColorGrading(false);
+  // ShowFlags.SetCompositeEditorPrimitives(false);
+  // ShowFlags.SetConstraints(false);
+  // ShowFlags.SetCover(false);
+  // ShowFlags.SetDebugAI(false);
+  // ShowFlags.SetDecals(false);
+  // ShowFlags.SetDeferredLighting(false);
+  ShowFlags.SetDepthOfField(false);
+  ShowFlags.SetDiffuse(false);
+  ShowFlags.SetDirectionalLights(false);
+  ShowFlags.SetDirectLighting(false);
+  // ShowFlags.SetDistanceCulledPrimitives(false);
+  // ShowFlags.SetDistanceFieldAO(false);
+  // ShowFlags.SetDistanceFieldGI(false);
+  ShowFlags.SetDynamicShadows(false);
+  // ShowFlags.SetEditor(false);
+  ShowFlags.SetEyeAdaptation(false);
+  ShowFlags.SetFog(false);
+  // ShowFlags.SetGame(false);
+  // ShowFlags.SetGameplayDebug(false);
+  // ShowFlags.SetGBufferHints(false);
+  ShowFlags.SetGlobalIllumination(false);
+  ShowFlags.SetGrain(false);
+  // ShowFlags.SetGrid(false);
+  // ShowFlags.SetHighResScreenshotMask(false);
+  // ShowFlags.SetHitProxies(false);
+  ShowFlags.SetHLODColoration(false);
+  ShowFlags.SetHMDDistortion(false);
+  // ShowFlags.SetIndirectLightingCache(false);
+  // ShowFlags.SetInstancedFoliage(false);
+  // ShowFlags.SetInstancedGrass(false);
+  // ShowFlags.SetInstancedStaticMeshes(false);
+  // ShowFlags.SetLandscape(false);
+  // ShowFlags.SetLargeVertices(false);
+  ShowFlags.SetLensFlares(false);
+  ShowFlags.SetLevelColoration(false);
+  ShowFlags.SetLightComplexity(false);
+  ShowFlags.SetLightFunctions(false);
+  ShowFlags.SetLightInfluences(false);
+  ShowFlags.SetLighting(false);
+  ShowFlags.SetLightMapDensity(false);
+  ShowFlags.SetLightRadius(false);
+  ShowFlags.SetLightShafts(false);
+  // ShowFlags.SetLOD(false);
+  ShowFlags.SetLODColoration(false);
+  // ShowFlags.SetMaterials(false);
+  // ShowFlags.SetMaterialTextureScaleAccuracy(false);
+  // ShowFlags.SetMeshEdges(false);
+  // ShowFlags.SetMeshUVDensityAccuracy(false);
+  // ShowFlags.SetModeWidgets(false);
+  ShowFlags.SetMotionBlur(false);
+  // ShowFlags.SetNavigation(false);
+  ShowFlags.SetOnScreenDebug(false);
+  // ShowFlags.SetOutputMaterialTextureScales(false);
+  // ShowFlags.SetOverrideDiffuseAndSpecular(false);
+  // ShowFlags.SetPaper2DSprites(false);
+  ShowFlags.SetParticles(false);
+  // ShowFlags.SetPivot(false);
+  ShowFlags.SetPointLights(false);
+  // ShowFlags.SetPostProcessing(false);
+  // ShowFlags.SetPostProcessMaterial(false);
+  // ShowFlags.SetPrecomputedVisibility(false);
+  // ShowFlags.SetPrecomputedVisibilityCells(false);
+  // ShowFlags.SetPreviewShadowsIndicator(false);
+  // ShowFlags.SetPrimitiveDistanceAccuracy(false);
+  ShowFlags.SetPropertyColoration(false);
+  // ShowFlags.SetQuadOverdraw(false);
+  // ShowFlags.SetReflectionEnvironment(false);
+  // ShowFlags.SetReflectionOverride(false);
+  ShowFlags.SetRefraction(false);
+  // ShowFlags.SetRendering(false);
+  ShowFlags.SetSceneColorFringe(false);
+  // ShowFlags.SetScreenPercentage(false);
+  ShowFlags.SetScreenSpaceAO(false);
+  ShowFlags.SetScreenSpaceReflections(false);
+  // ShowFlags.SetSelection(false);
+  // ShowFlags.SetSelectionOutline(false);
+  // ShowFlags.SetSeparateTranslucency(false);
+  // ShowFlags.SetShaderComplexity(false);
+  // ShowFlags.SetShaderComplexityWithQuadOverdraw(false);
+  // ShowFlags.SetShadowFrustums(false);
+  // ShowFlags.SetSkeletalMeshes(false);
+  // ShowFlags.SetSkinCache(false);
+  ShowFlags.SetSkyLighting(false);
+  // ShowFlags.SetSnap(false);
+  // ShowFlags.SetSpecular(false);
+  // ShowFlags.SetSplines(false);
+  ShowFlags.SetSpotLights(false);
+  // ShowFlags.SetStaticMeshes(false);
+  ShowFlags.SetStationaryLightOverlap(false);
+  // ShowFlags.SetStereoRendering(false);
+  // ShowFlags.SetStreamingBounds(false);
+  ShowFlags.SetSubsurfaceScattering(false);
+  // ShowFlags.SetTemporalAA(false);
+  // ShowFlags.SetTessellation(false);
+  // ShowFlags.SetTestImage(false);
+  // ShowFlags.SetTextRender(false);
+  // ShowFlags.SetTexturedLightProfiles(false);
+  ShowFlags.SetTonemapper(false);
+  // ShowFlags.SetTranslucency(false);
+  // ShowFlags.SetVectorFields(false);
+  // ShowFlags.SetVertexColors(false);
+  // ShowFlags.SetVignette(false);
+  // ShowFlags.SetVisLog(false);
+  ShowFlags.SetVisualizeAdaptiveDOF(false);
+  ShowFlags.SetVisualizeBloom(false);
+  ShowFlags.SetVisualizeBuffer(false);
+  ShowFlags.SetVisualizeDistanceFieldAO(false);
+  ShowFlags.SetVisualizeDistanceFieldGI(false);
+  ShowFlags.SetVisualizeDOF(false);
+  ShowFlags.SetVisualizeHDR(false);
+  ShowFlags.SetVisualizeLightCulling(false);
+  ShowFlags.SetVisualizeLPV(false);
+  ShowFlags.SetVisualizeMeshDistanceFields(false);
+  ShowFlags.SetVisualizeMotionBlur(false);
+  ShowFlags.SetVisualizeOutOfBoundsPixels(false);
+  ShowFlags.SetVisualizeSenses(false);
+  ShowFlags.SetVisualizeShadingModels(false);
+  ShowFlags.SetVisualizeSSR(false);
+  ShowFlags.SetVisualizeSSS(false);
+  // ShowFlags.SetVolumeLightingSamples(false);
+  // ShowFlags.SetVolumes(false);
+  // ShowFlags.SetWidgetComponents(false);
+  // ShowFlags.SetWireframe(false);
 }

@@ -36,6 +36,12 @@ public:
 public:
 
   UFUNCTION()
+  float GetFramesPerSecond() const
+  {
+    return FramesPerSecond;
+  }
+
+  UFUNCTION()
   int32 GetPlatformTimeStamp() const
   {
     return PlatformTimeStamp;
@@ -139,10 +145,13 @@ private:
   // CopyProperties if necessary.
 
   UPROPERTY(VisibleAnywhere)
+  float FramesPerSecond;
+
+  UPROPERTY(VisibleAnywhere)
   int32 PlatformTimeStamp;
 
   UPROPERTY(VisibleAnywhere)
-  int32 GameTimeStamp;
+  int32 GameTimeStamp = 0.0f;
 
   UPROPERTY(VisibleAnywhere)
   FVector Location;

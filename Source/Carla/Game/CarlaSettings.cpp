@@ -95,6 +95,7 @@ static void GetCameraDescription(
 {
   ConfigFile.GetInt(Section, TEXT("ImageSizeX"), Camera.ImageSizeX);
   ConfigFile.GetInt(Section, TEXT("ImageSizeY"), Camera.ImageSizeY);
+  ConfigFile.GetInt(Section, TEXT("CameraFOV"), Camera.FOVAngle);
   ConfigFile.GetInt(Section, TEXT("CameraPositionX"), Camera.Position.X);
   ConfigFile.GetInt(Section, TEXT("CameraPositionY"), Camera.Position.Y);
   ConfigFile.GetInt(Section, TEXT("CameraPositionZ"), Camera.Position.Z);
@@ -102,6 +103,13 @@ static void GetCameraDescription(
   ConfigFile.GetInt(Section, TEXT("CameraRotationRoll"), Camera.Rotation.Roll);
   ConfigFile.GetInt(Section, TEXT("CameraRotationYaw"), Camera.Rotation.Yaw);
   ConfigFile.GetPostProcessEffect(Section, TEXT("PostProcessing"), Camera.PostProcessEffect);
+}
+
+static void ValidateCameraDescription(FCameraDescription &Camera)
+{
+  FMath::Clamp(Camera.FOVAngle, 0.001f, 360.0f);
+  Camera.ImageSizeX = (Camera.ImageSizeX == 0u ? 720u : Camera.ImageSizeX);
+  Camera.ImageSizeY = (Camera.ImageSizeY == 0u ? 512u : Camera.ImageSizeY);
 }
 
 static void LoadSettingsFromFile(const FString &FileName, UCarlaSettings &Settings)
@@ -131,6 +139,8 @@ static void LoadSettingsFromFile(const FString &FileName, UCarlaSettings &Settin
       Section += SubSection;
       GetCameraDescription(ConfigFile, *Section, Camera);
     }
+
+    ValidateCameraDescription(Camera);
   }
 }
 
