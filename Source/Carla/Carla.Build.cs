@@ -142,7 +142,20 @@ public class Carla : ModuleRules
   {
     if (Target.Platform == UnrealTargetPlatform.Linux)
     {
-      PublicAdditionalLibraries.Add("png16");
+      string UE4Root = System.Environment.GetEnvironmentVariable("UE4_ROOT");
+      if (string.IsNullOrEmpty(UE4Root))
+      {
+        PublicAdditionalLibraries.Add("png");
+      }
+      else
+      {
+        if (!System.IO.Directory.Exists(UE4Root))
+        {
+          throw new System.Exception("UE4_ROOT points to a non-existant directory, please correct this environment variable.");
+        }
+        PublicAdditionalLibraries.Add("ThirdParty/libPNG/libPNG-1.5.2/lib/Linux/x86_64-unknown-linux-gnu/libpng.a");
+        PublicAdditionalLibraries.Add("ThirdParty/zlib/v1.2.8/lib/Linux/x86_64-unknown-linux-gnu/libz_fPIC.a");
+      }
     }
   }
 

@@ -97,6 +97,7 @@ void ACarlaVehicleController::Possess(APawn *aPawn)
 
 void ACarlaVehicleController::BeginPlay()
 {
+  check(CarlaPlayerState != nullptr);
   CarlaPlayerState->Images.Empty();
   const auto NumberOfCameras = SceneCaptureCameras.Num();
   if (NumberOfCameras > 0) {

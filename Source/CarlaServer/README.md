@@ -12,6 +12,10 @@ Install boost, protobuf, cmake and ninja.
 
     $ sudo apt-get install libpng16-dev libprotobuf-dev protobuf-compiler libboost-all-dev cmake ninja-build
 
+**IMPORTANT:** Please define environment variable `UE4_ROOT` pointing to Unreal
+Engine's installation folder so we can link against the right version of libpng,
+otherwise the PNG compression won't work with Unreal Engine.
+
 Run make in this folder
 
     $ make

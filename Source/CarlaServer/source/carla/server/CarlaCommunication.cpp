@@ -228,7 +228,6 @@ namespace server {
     if (scene.SerializeToString(message.get())) {
       _worldThread.push(std::move(message));
     }
-
   }
 
   void CarlaCommunication::sendReset() {
