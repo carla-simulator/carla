@@ -48,8 +48,8 @@ namespace server {
 
 
   struct img_encode{
-    char* buffer;
-    size_t size;
+      char* buffer;
+      size_t size;
   };
 
   struct TPngDestructor {
@@ -66,7 +66,8 @@ namespace server {
   void loadPNGData(png_structp png_ptr, png_bytep data, png_size_t length)
   {
     /* with libpng15 next line causes pointer deference error; use libpng12 */
-    img_encode* p=(img_encode*)png_get_io_ptr(png_ptr); /* was png_ptr->io_ptr */
+    img_encode* p = (img_encode*) png_get_io_ptr(png_ptr);
+
     size_t nsize = p->size + length;
 
     /* allocate or grow buffer */
@@ -81,8 +82,6 @@ namespace server {
     /* copy new bytes to end of buffer */
     memcpy(p->buffer + p->size, data, length);
     p->size += length;
-
-
   }
 
   bool LoadBitmap (bitmap_t &bitmap, const Image &image_info){
@@ -232,7 +231,7 @@ static bool getPNGImages(const std::vector<Image> &images, Reward &rwd){
           break;
       }
 
-      free (compressedImage.buffer);
+      delete compressedImage.buffer;
 
     }
 

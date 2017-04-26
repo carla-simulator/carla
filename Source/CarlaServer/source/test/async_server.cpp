@@ -115,11 +115,14 @@ int main(int argc, char *argv[]) {
 
         carla::Scene_Values sceneValues;
 
-        sceneValues.possible_positions.push_back({0.0f, 0.0f});
-        sceneValues.possible_positions.push_back({1.0f, 2.0f});
-        sceneValues.possible_positions.push_back({3.0f, 4.0f});
+        for (int i = 0; i < 1; ++i){
+          sceneValues.possible_positions.push_back({0.0f, 0.0f});
+          sceneValues.possible_positions.push_back({1.0f, 2.0f});
+          sceneValues.possible_positions.push_back({3.0f, 4.0f});
+        }
+
         const std::array<float, 16u> pMatrix = {{ 10.0 }};
-        sceneValues.projection_matrices.push_back(pMatrix);
+        for (int i = 0; i < 100; ++i) sceneValues.projection_matrices.push_back(pMatrix);
 
         if (!server.sendSceneValues(sceneValues)) {
           std::cerr << "ERROR while sending SceneValues" << std::endl;
@@ -159,15 +162,10 @@ int main(int argc, char *argv[]) {
               break;
             }
 
-            std::cout << "Waiting Episode Start" << std::endl;
-
             uint32_t startPoint, endPoint;
             bool error = false, readed = false;
             do {
-              
-              std::cout << "Try read episode Start: ";
               error = !server.tryReadEpisodeStart(startPoint, endPoint, readed);
-              std::cout << error << std::endl; 
 
             } while (!readed && !error);
 

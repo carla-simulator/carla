@@ -48,7 +48,6 @@ namespace carla {
     if (!worldConnected())
       return false;
     readed = _pimpl->communication.tryReadEpisodeStart(startIndex, endIndex);
-    std::cout << "Episode Start: " << readed << std::endl;
     return true;
   }
 
@@ -63,7 +62,6 @@ namespace carla {
     if (!worldConnected())
       return false;
     newEpisode = _pimpl->communication.tryReadRequestNewEpisode();
-    std::cout << "New Episode Request: " << newEpisode << std::endl;
     return true;
   }
 
@@ -79,8 +77,6 @@ namespace carla {
     if (!worldConnected())
       return false;
     _pimpl->communication.sendScene(values);
-
-    std::cout << "Send scene values" << std::endl;
     return true;
   }
 
@@ -88,9 +84,6 @@ namespace carla {
     if (!worldConnected())
       return false;
     _pimpl->communication.sendReset();
-
-    std::cout << "Send end reset" << std::endl;
-
     return true;
   }
 

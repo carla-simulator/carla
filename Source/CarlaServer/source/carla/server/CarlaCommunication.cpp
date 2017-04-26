@@ -15,6 +15,7 @@ namespace server {
     std::cerr << "CarlaConnection - TCP Server: " << text << ": " << errorCode.message() << std::endl;
   }
 
+
   // This is the thread that sends a string over the TCP socket.
   static void serverWorkerThread(
       TCPServer &server,
@@ -48,12 +49,8 @@ namespace server {
     }
   }
 
-  //TODO:
-  // Sortida amb google protocol
   // This is the thread that listens for string over the TCP socket.
   static std::unique_ptr<std::string> clientWorkerThread(TCPServer &server, thread::AsyncWriterJobQueue<std::string> &thr) {
-    //if (!server.Connected()) server.AcceptSocket();
-
     auto message = std::make_unique<std::string>();
     bool success = false;
 
@@ -80,7 +77,7 @@ namespace server {
     return message;
   }
 
-  // This is the thread that listens & sends a string over the TCP world socket.
+  // This is the thread that listens  a string over the TCP world socket.
   static std::unique_ptr<std::string> worldReceiveThread(TCPServer &server, thread::AsyncReadWriteJobQueue<std::string, std::string> &thr) {
     auto message = std::make_unique<std::string>();
     bool success = false;
@@ -107,6 +104,7 @@ namespace server {
     return message;
   }
 
+  // This is the thread that sends a string over the TCP world socket.
   static void worldSendThread(TCPServer &server, thread::AsyncReadWriteJobQueue<std::string, std::string> &thr, const std::string &message) {
     if (!thr.getRestart()) {
       TCPServer::error_code error;
@@ -221,11 +219,6 @@ namespace server {
   }
 
   void CarlaCommunication::sendScene(const Scene_Values &values) {
-
-    // Protobuf produces a segmentation fault in the destructor of the Scene
-    // when called from Unreal Engine in Linux. As a workaround, we added this
-    // cute memory leak.
-    /// @todo #10 Fix the memory leak!
 
     Scene scene;
     _proto->LoadScene(scene, values);
