@@ -70,7 +70,7 @@ void ACarlaGameMode::RestartPlayer(AController* NewPlayer)
 void ACarlaGameMode::BeginPlay()
 {
   Super::BeginPlay();
-  TagObjectsForSemanticSegmentation();
+  TagActorsForSemanticSegmentation();
   GameController->BeginPlay();
 }
 
@@ -102,11 +102,10 @@ void ACarlaGameMode::AttachCaptureCamerasToPlayer(AController &Player)
   }
 }
 
-void ACarlaGameMode::TagObjectsForSemanticSegmentation()
+void ACarlaGameMode::TagActorsForSemanticSegmentation()
 {
-  auto Tagger = GetWorld()->SpawnActor<ATagger>();
-  Tagger->TagObjects();
-  Tagger->Destroy(); // We don't need you anymore.
+  check(GetWorld() != nullptr);
+  ATagger::TagActorsInLevel(*GetWorld());
 }
 
 APlayerStart *ACarlaGameMode::FindUnOccupiedStartPoints(
