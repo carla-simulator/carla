@@ -21,7 +21,7 @@ protected:
 
   uint32 GetNumberOfInstantiators() const
   {
-    return MeshInstatiators.Num();
+    return MeshInstantiators.Num();
   }
 
   void PushBackInstantiator(UStaticMesh *Mesh);
@@ -38,5 +38,5 @@ protected:
 private:
 
   UPROPERTY(Category = "Instanced Static Mesh Collection", VisibleAnywhere)
-  TArray<UInstancedStaticMeshComponent *> MeshInstatiators;
+  TArray<UInstancedStaticMeshComponent *> MeshInstantiators;
 };

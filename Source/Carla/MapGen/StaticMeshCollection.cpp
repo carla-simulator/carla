@@ -24,30 +24,34 @@ void AStaticMeshCollection::PushBackInstantiator(UStaticMesh *Mesh)
   Instantiator->SetupAttachment(RootComponent);
   Instantiator->SetStaticMesh(Mesh);
   Instantiator->RegisterComponent();
-  MeshInstatiators.Add(Instantiator);
+  MeshInstantiators.Add(Instantiator);
 }
 
 void AStaticMeshCollection::SetStaticMesh(uint32 i, UStaticMesh *Mesh)
 {
-  check(GetNumberOfInstantiators() > i);
-  MeshInstatiators[i]->SetStaticMesh(Mesh);
+  if ((GetNumberOfInstantiators() > i) && (MeshInstantiators[i] != nullptr)) {
+    MeshInstantiators[i]->SetStaticMesh(Mesh);
+  }
 }
 
 void AStaticMeshCollection::AddInstance(uint32 i, const FTransform &Transform)
 {
-  check(GetNumberOfInstantiators() > i);
-  MeshInstatiators[i]->AddInstance(Transform);
+  if ((GetNumberOfInstantiators() > i) && (MeshInstantiators[i] != nullptr)) {
+    MeshInstantiators[i]->AddInstance(Transform);
+  }
 }
 
 void AStaticMeshCollection::ClearInstances()
 {
-  for (auto *Instantiator : MeshInstatiators) {
-    Instantiator->ClearInstances();
+  for (auto *Instantiator : MeshInstantiators) {
+    if (Instantiator != nullptr) {
+      Instantiator->ClearInstances();
+    }
   }
 }
 
 void AStaticMeshCollection::ClearInstantiators()
 {
   ClearInstances();
-  MeshInstatiators.Empty();
+  MeshInstantiators.Empty();
 }
