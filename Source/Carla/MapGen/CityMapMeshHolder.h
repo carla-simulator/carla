@@ -38,6 +38,11 @@ protected:
   // ===========================================================================
 protected:
 
+  float GetMapScale() const
+  {
+    return MapScale;
+  }
+
   /// Return the 3D world location (relative to this actor) of the given 2D
   /// tile.
   FVector GetTileLocation(uint32 X, uint32 Y) const;
@@ -50,6 +55,9 @@ protected:
 
   /// Return the static mesh corresponding to @a Tag.
   const UStaticMesh *GetStaticMesh(ECityMapMeshTag Tag) const;
+
+  /// Return the tag corresponding to @a StaticMesh.
+  ECityMapMeshTag GetTag(const UStaticMesh &StaticMesh) const;
 
   /// Add an instance of a mesh with a given tile location.
   ///   @param Tag The mesh' tag
@@ -91,6 +99,9 @@ private:
 
   UPROPERTY(Category = "Meshes", EditAnywhere)
   TMap<ECityMapMeshTag, UStaticMesh *> StaticMeshes;
+
+  UPROPERTY()
+  TMap<UStaticMesh *, ECityMapMeshTag> TagMap;
 
   UPROPERTY(Category = "Meshes|Debug", VisibleAnywhere)
   float MapScale;

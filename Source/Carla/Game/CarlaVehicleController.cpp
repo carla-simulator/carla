@@ -3,10 +3,13 @@
 #include "Carla.h"
 #include "CarlaVehicleController.h"
 
+#include "SceneCaptureCamera.h"
+
 #include "Camera/CameraComponent.h"
+#include "Components/BoxComponent.h"
+#include "EngineUtils.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "SceneCaptureCamera.h"
 #include "WheeledVehicle.h"
 #include "WheeledVehicleMovementComponent.h"
 
@@ -82,6 +85,14 @@ void ACarlaVehicleController::Possess(APawn *aPawn)
     // Get vehicle movement component.
     MovementComponent = WheeledVehicle->GetVehicleMovementComponent();
     check(MovementComponent != nullptr);
+    // Get vehicle box component.
+    TArray<UBoxComponent *> BoundingBoxes;
+    WheeledVehicle->GetComponents<UBoxComponent>(BoundingBoxes);
+    if (BoundingBoxes.Num() > 0) {
+      VehicleBounds = BoundingBoxes[0];
+    } else {
+      UE_LOG(LogCarla, Error, TEXT("Pawn is missing the bounding box!"));
+    }
     // Get custom player state.
     CarlaPlayerState = Cast<ACarlaPlayerState>(PlayerState);
     check(CarlaPlayerState != nullptr);
@@ -111,6 +122,11 @@ void ACarlaVehicleController::BeginPlay()
       Image.PostProcessEffect = Camera->GetPostProcessEffect();
     }
   }
+
+  TActorIterator<ACityMapGenerator> It(GetWorld());
+  if (It) {
+    RoadMap = It->GetRoadMap();
+  }
 }
 
 void ACarlaVehicleController::Tick(float DeltaTime)
@@ -126,7 +142,7 @@ void ACarlaVehicleController::Tick(float DeltaTime)
     const FVector CurrentSpeed = CarlaPlayerState->ForwardSpeed * CarlaPlayerState->Orientation;
     CarlaPlayerState->Acceleration = (CurrentSpeed - PreviousSpeed) / DeltaTime;
     CarlaPlayerState->CurrentGear = GetVehicleCurrentGear();
-    /// @todo #15 Set intersection factors.
+    IntersectPlayerWithRoadMap();
     const auto NumberOfCameras = SceneCaptureCameras.Num();
     check(NumberOfCameras == CarlaPlayerState->Images.Num());
     for (auto i = 0; i < NumberOfCameras; ++i) {
@@ -282,4 +298,30 @@ void ACarlaVehicleController::ChangeCameraRight(float Value)
   auto Rotation = SpringArm->GetRelativeTransform().Rotator();
   Rotation.Yaw -= Value;
   SpringArm->SetRelativeRotation(Rotation);
+}
+
+// =============================================================================
+// -- Other --------------------------------------------------------------------
+// =============================================================================
+
+void ACarlaVehicleController::IntersectPlayerWithRoadMap()
+{
+  if (RoadMap == nullptr) {
+    UE_LOG(LogCarla, Error, TEXT("Controller doesn't have a road map"));
+    return;
+  } else if (VehicleBounds == nullptr) {
+    UE_LOG(LogCarla, Error, TEXT("Vehicle doesn't have a bounding box"));
+    return;
+  }
+
+  constexpr float ChecksPerCentimeter = 0.1f;
+  constexpr bool LeftHandDriving = false;
+  auto Result = RoadMap->Intersect(
+      GetPawn()->GetTransform(),
+      VehicleBounds->GetScaledBoxExtent(),
+      ChecksPerCentimeter,
+      LeftHandDriving);
+
+  CarlaPlayerState->OffRoadIntersectionFactor = Result.OffRoad;
+  CarlaPlayerState->OtherLaneIntersectionFactor = Result.OppositeLane;
 }

@@ -47,7 +47,9 @@ private:
 
   CarlaGameControllerBase *GameController;
 
+  UPROPERTY()
   UCarlaGameInstance *GameInstance;
 
+  UPROPERTY()
   AController *PlayerController;
 };

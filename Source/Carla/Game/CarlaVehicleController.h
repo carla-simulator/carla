@@ -8,7 +8,9 @@
 class ACarlaHUD;
 class ACarlaPlayerState;
 class ASceneCaptureCamera;
+class UBoxComponent;
 class UCameraComponent;
+class URoadMap;
 class USpringArmComponent;
 class UWheeledVehicleMovementComponent;
 struct FCameraDescription;
@@ -162,6 +164,22 @@ private:
 
   /// @}
   // ===========================================================================
+  /// @name Other
+  // ===========================================================================
+  /// @{
+public:
+
+  void SetRoadMap(URoadMap *inRoadMap)
+  {
+    RoadMap = inRoadMap;
+  }
+
+private:
+
+  void IntersectPlayerWithRoadMap();
+
+  /// @}
+  // ===========================================================================
   // -- Member variables -------------------------------------------------------
   // ===========================================================================
 private:
@@ -180,6 +198,12 @@ private:
 
   UPROPERTY()
   TArray<ASceneCaptureCamera *> SceneCaptureCameras;
+
+  UPROPERTY()
+  URoadMap *RoadMap;
+
+  UPROPERTY()
+  UBoxComponent *VehicleBounds;
 
   // Cast for quick access to the custom player state.
   UPROPERTY()

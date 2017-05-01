@@ -4,6 +4,12 @@
 #include "CityMapGenerator.h"
 
 #include "MapGen/GraphGenerator.h"
+#include "MapGen/RoadMap.h"
+#include "Tagger.h"
+
+#include "Components/InstancedStaticMeshComponent.h"
+#include "Engine/World.h"
+#include "Paths.h"
 
 #include <algorithm>
 
@@ -16,7 +22,10 @@
 // =============================================================================
 
 ACityMapGenerator::ACityMapGenerator(const FObjectInitializer& ObjectInitializer)
-  : Super(ObjectInitializer) {}
+  : Super(ObjectInitializer)
+{
+  RoadMap = ObjectInitializer.CreateDefaultSubobject<URoadMap>(this, TEXT("RoadMap"));
+}
 
 ACityMapGenerator::~ACityMapGenerator() {}
 
@@ -24,15 +33,31 @@ ACityMapGenerator::~ACityMapGenerator() {}
 // -- Map construction and update related methods ------------------------------
 // =============================================================================
 
-void ACityMapGenerator::UpdateMap() {
+void ACityMapGenerator::BeginPlay()
+{
+  Super::BeginPlay();
+
+  // We definitively need the map at this point.
+  check(RoadMap != nullptr);
+  if (!RoadMap->IsValid()) {
+    GenerateRoadMap();
+  }
+}
+
+void ACityMapGenerator::UpdateMap()
+{
   UpdateSeeds();
   GenerateGraph();
   if (bGenerateRoads) {
     GenerateRoads();
   }
+  if (bGenerateRoadMap) {
+    GenerateRoadMap();
+  }
 }
 
-void ACityMapGenerator::UpdateSeeds() {
+void ACityMapGenerator::UpdateSeeds()
+{
   if (!bUseFixedSeed) {
     bUseMultipleFixedSeeds = false;
     FRandomStream randomStream;
@@ -44,7 +69,8 @@ void ACityMapGenerator::UpdateSeeds() {
   }
 }
 
-void ACityMapGenerator::GenerateGraph() {
+void ACityMapGenerator::GenerateGraph()
+{
   if ((MapSizeX < 5u) || (MapSizeY < 5u)) {
     MapSizeX = 5u;
     MapSizeY = 5u;
@@ -87,7 +113,8 @@ void ACityMapGenerator::GenerateGraph() {
 #endif // CARLA_ROAD_GENERATOR_EXTRA_LOG
 }
 
-void ACityMapGenerator::GenerateRoads() {
+void ACityMapGenerator::GenerateRoads()
+{
   check(Dcel != nullptr);
   using Graph = MapGen::DoublyConnectedEdgeList;
   const Graph &graph = *Dcel;
@@ -156,4 +183,106 @@ void ACityMapGenerator::GenerateRoads() {
   }
 
 #undef ADD_INTERSECTION
+}
+
+// Find first component of type road (checking at its stencil value).
+static bool LineTrace(
+    UWorld *World,
+    const FVector &Start,
+    const FVector &End,
+    FHitResult &HitResult)
+{
+  TArray <FHitResult> OutHits;
+  static FName TraceTag = FName(TEXT("RoadTrace"));
+  const bool Success = World->LineTraceMultiByObjectType(
+        OutHits,
+        Start,
+        End,
+        FCollisionObjectQueryParams(ECollisionChannel::ECC_WorldDynamic),
+        FCollisionQueryParams(TraceTag, true));
+
+  if (Success) {
+    for (FHitResult &Item : OutHits) {
+      if (Item.Component->CustomDepthStencilValue == static_cast<uint8>(CityObjectLabel::Roads)) {
+        HitResult = Item;
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+void ACityMapGenerator::GenerateRoadMap()
+{
+  UE_LOG(LogCarla, Log, TEXT("Generating road map..."));
+
+  auto World = GetWorld();
+  check(GetWorld() != nullptr);
+  check(RoadMap != nullptr);
+
+  ATagger::TagActorsInLevel(*GetWorld()); // We need the tags.
+
+  const float IntersectionSize = CityMapMeshTag::GetRoadIntersectionSize();
+  const uint32 Margin = IntersectionSize / 2u;
+  const float Offset = GetMapScale() * Margin;
+
+  const float CmPerPixel = GetMapScale() / static_cast<float>(PixelsPerMapUnit);
+
+  const uint32 SizeX = PixelsPerMapUnit * (MapSizeX + 2u * Margin);
+  const uint32 SizeY = PixelsPerMapUnit * (MapSizeY + 2u * Margin);
+
+  const FTransform &ActorTransform = GetActorTransform();
+
+  RoadMap->RoadMap.Empty();
+  for (uint32 PixelY = 0u; PixelY < SizeY; ++PixelY) {
+    for (uint32 PixelX = 0u; PixelX < SizeX; ++PixelX) {
+      const float X = static_cast<float>(PixelX) * CmPerPixel - Offset;
+      const float Y = static_cast<float>(PixelY) * CmPerPixel - Offset;
+      const FVector Start = ActorTransform.TransformPosition(FVector(X, Y, 50.0f));
+      const FVector End = ActorTransform.TransformPosition(FVector(X, Y, -50.0f));
+
+      bool Success = false;
+
+      // Do the ray tracing.
+      FHitResult Hit;
+      if (LineTrace(World, Start, End, Hit)) {
+        auto InstancedStaticMeshComponent = Cast<UInstancedStaticMeshComponent>(Hit.Component.Get());
+        if (InstancedStaticMeshComponent == nullptr) {
+          UE_LOG(LogCarla, Error, TEXT("Road component is not UInstancedStaticMeshComponent"));
+        } else {
+          FTransform InstanceTransform;
+          if (!InstancedStaticMeshComponent->GetInstanceTransform(Hit.Item, InstanceTransform, true)) {
+            UE_LOG(LogCarla, Error, TEXT("Failed to get instance's transform"));
+          } else {
+            RoadMap->AppendPixel(
+                GetTag(*InstancedStaticMeshComponent->GetStaticMesh()),
+                InstanceTransform);
+            Success = true;
+          }
+        }
+      }
+
+      if (!Success) {
+        RoadMap->AppendEmptyPixel();
+      }
+    }
+  }
+
+  const FTransform FinalTransform(
+      ActorTransform.GetRotation(),
+      ActorTransform.GetTranslation() - FVector(Offset, Offset, 0.0f),
+      ActorTransform.GetScale3D());
+  RoadMap->Set(SizeX, SizeY, 1.0f / CmPerPixel, FinalTransform.Inverse());
+  UE_LOG(LogCarla, Log, TEXT("Generated road map %dx%d (%d)"), RoadMap->GetWidth(), RoadMap->GetHeight(), RoadMap->RoadMap.Num());
+
+  if (!RoadMap->IsValid()) {
+    UE_LOG(LogCarla, Error, TEXT("Error generating road map"));
+    return;
+  }
+
+  if (bSaveRoadMapToDisk) {
+    const FString MapName = World->GetMapName() + TEXT(".png");
+    const FString FilePath = FPaths::Combine(FPaths::GameSavedDir(), MapName);
+    RoadMap->SaveAsPNG(FilePath);
+  }
 }

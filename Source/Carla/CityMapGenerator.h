@@ -7,10 +7,12 @@
 #include "MapGen/GraphParser.h"
 #include "CityMapGenerator.generated.h"
 
+class URoadMap;
+
 /// Generates a random city using the meshes provided.
 ///
 /// @note At this point it only generates roads and sidewalks.
-UCLASS(HideCategories=(Rendering, Input))
+UCLASS(HideCategories=(Input))
 class CARLA_API ACityMapGenerator : public ACityMapMeshHolder
 {
   GENERATED_BODY()
@@ -30,7 +32,16 @@ public:
   /// @name Map construction and update related methods
   // ===========================================================================
   /// @{
+public:
+
+  URoadMap *GetRoadMap()
+  {
+    return RoadMap;
+  }
+
 private:
+
+  virtual void BeginPlay() override;
 
   /// Update the map based on the current settings.
   virtual void UpdateMap() override;
@@ -43,6 +54,9 @@ private:
 
   /// Add the road meshes to the scene based on the current DCEL.
   void GenerateRoads();
+
+  /// Generate the road map image and save to disk if requested.
+  void GenerateRoadMap();
 
   /// @}
   // ===========================================================================
@@ -78,6 +92,25 @@ private:
 
   UPROPERTY(Category = "Map Generation", EditAnywhere, AdvancedDisplay, meta = (EditCondition = bUseMultipleFixedSeeds))
   int32 RoadPlanningSeed;
+
+  /// @}
+  // ===========================================================================
+  /// @name Road Map
+  // ===========================================================================
+  /// @{
+private:
+
+  UPROPERTY(Category = "Road Map", EditAnywhere)
+  bool bGenerateRoadMap = false;
+
+  UPROPERTY(Category = "Road Map", EditAnywhere, meta = (ClampMin = "1", ClampMax = "500", EditCondition = bGenerateRoadMap))
+  uint32 PixelsPerMapUnit = 50u;
+
+  UPROPERTY(Category = "Road Map", EditAnywhere, meta = (EditCondition = bGenerateRoadMap))
+  bool bSaveRoadMapToDisk = true;
+
+  UPROPERTY(Category = "Road Map", VisibleAnywhere, AdvancedDisplay)
+  URoadMap *RoadMap;
 
   /// @}
   // ===========================================================================

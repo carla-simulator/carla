@@ -46,7 +46,8 @@ enum class ECityMapMeshTag : uint8
   RoadXIntersection_Sidewalk3         UMETA(DisplayName = "Road: X-Intersection - Sidewalk 3"),
   RoadXIntersection_LaneMarking       UMETA(DisplayName = "Road: X-Intersection - Lane Marking"),
 
-  NUMBER_OF_TAGS         UMETA(Hidden)
+  NUMBER_OF_TAGS         UMETA(Hidden),
+  INVALID                UMETA(Hidden)
 };
 
 /// Helper class for working with ECityMapMeshTag.
