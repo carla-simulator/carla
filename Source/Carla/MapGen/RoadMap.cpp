@@ -12,9 +12,10 @@ static uint32 ClampFloatToUInt(const float Value, int32 Min, int32 Max)
 
 const FRoadMapPixelData &URoadMap::GetDataAt(const FVector &WorldLocation) const
 {
+  check(IsValid());
   const FVector Location = WorldToMap.TransformPosition(WorldLocation);
-  uint32 X = ClampFloatToUInt(PixelsPerCentimeter * Location.X, 0, Width);
-  uint32 Y = ClampFloatToUInt(PixelsPerCentimeter * Location.Y, 0, Height);
+  uint32 X = ClampFloatToUInt(PixelsPerCentimeter * Location.X, 0, Width - 1);
+  uint32 Y = ClampFloatToUInt(PixelsPerCentimeter * Location.Y, 0, Height - 1);
   return GetDataAt(X, Y);
 }
 
