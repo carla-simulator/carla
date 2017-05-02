@@ -273,7 +273,17 @@ void ACityMapGenerator::GenerateRoadMap()
       ActorTransform.GetTranslation() - FVector(Offset, Offset, 0.0f),
       ActorTransform.GetScale3D());
   RoadMap->Set(SizeX, SizeY, 1.0f / CmPerPixel, FinalTransform.Inverse());
-  UE_LOG(LogCarla, Log, TEXT("Generated road map %dx%d (%d)"), RoadMap->GetWidth(), RoadMap->GetHeight(), RoadMap->RoadMap.Num());
+  const float MapSizeInMB = // Only map data, not the class itself.
+      static_cast<float>(sizeof(FRoadMapPixelData) * RoadMap->RoadMap.Num()) /
+      (1024.0f * 1024.0f);
+  UE_LOG(
+      LogCarla,
+      Log,
+      TEXT("Generated road map %dx%d (%.2fMB) with %.2f cm/pixel"),
+      RoadMap->GetWidth(),
+      RoadMap->GetHeight(),
+      MapSizeInMB,
+      CmPerPixel);
 
   if (!RoadMap->IsValid()) {
     UE_LOG(LogCarla, Error, TEXT("Error generating road map"));
