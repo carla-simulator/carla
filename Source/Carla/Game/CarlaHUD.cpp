@@ -12,7 +12,7 @@
 
 static FText RoundedFloatAsText(float Value)
 {
-  return FText::AsNumber(FMath::FloorToInt(Value));
+  return FText::AsNumber(FMath::RoundHalfFromZero(Value));
 }
 
 static FText GetVectorAsText(const FVector &Vector)
