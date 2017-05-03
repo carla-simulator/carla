@@ -268,11 +268,8 @@ void ACityMapGenerator::GenerateRoadMap()
     }
   }
 
-  const FTransform FinalTransform(
-      ActorTransform.GetRotation(),
-      ActorTransform.GetTranslation() - FVector(Offset, Offset, 0.0f),
-      ActorTransform.GetScale3D());
-  RoadMap->Set(SizeX, SizeY, 1.0f / CmPerPixel, FinalTransform.Inverse());
+  const FVector MapOffset(-Offset, -Offset, 0.0f);
+  RoadMap->Set(SizeX, SizeY, 1.0f / CmPerPixel, ActorTransform.Inverse(), MapOffset);
   const float MapSizeInMB = // Only map data, not the class itself.
       static_cast<float>(sizeof(FRoadMapPixelData) * RoadMap->RoadMap.Num()) /
       (1024.0f * 1024.0f);
@@ -294,5 +291,9 @@ void ACityMapGenerator::GenerateRoadMap()
     const FString MapName = World->GetMapName() + TEXT(".png");
     const FString FilePath = FPaths::Combine(FPaths::GameSavedDir(), MapName);
     RoadMap->SaveAsPNG(FilePath);
+  }
+
+  if (bDrawDebugPixelsToLevel) {
+    RoadMap->DrawDebugPixelsToLevel(GetWorld());
   }
 }

@@ -103,11 +103,14 @@ private:
   UPROPERTY(Category = "Road Map", EditAnywhere)
   bool bGenerateRoadMap = false;
 
-  UPROPERTY(Category = "Road Map", EditAnywhere, meta = (ClampMin = "1", ClampMax = "500", EditCondition = bGenerateRoadMap))
+  UPROPERTY(Category = "Road Map", EditAnywhere, meta = (ClampMin = "1", ClampMax = "500"))
   uint32 PixelsPerMapUnit = 50u;
 
-  UPROPERTY(Category = "Road Map", EditAnywhere, meta = (EditCondition = bGenerateRoadMap))
+  UPROPERTY(Category = "Road Map", EditAnywhere)
   bool bSaveRoadMapToDisk = true;
+
+  UPROPERTY(Category = "Road Map", EditAnywhere)
+  bool bDrawDebugPixelsToLevel = false;
 
   UPROPERTY(Category = "Road Map", VisibleAnywhere, AdvancedDisplay)
   URoadMap *RoadMap;

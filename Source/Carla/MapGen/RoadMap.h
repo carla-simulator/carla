@@ -59,10 +59,12 @@ public:
     return Height;
   }
 
+  FVector GetWorldLocation(uint32 PixelX, uint32 PixelY) const;
+
   const FRoadMapPixelData &GetDataAt(uint32 PixelX, uint32 PixelY) const
   {
     check(IsValid());
-    return RoadMap[PixelX + Height * PixelY];
+    return RoadMap[PixelX + Width * PixelY];
   }
 
   /** Clamps value if lies outside map limits */
@@ -84,6 +86,10 @@ public:
   UFUNCTION(BlueprintCallable)
   bool SaveAsPNG(const FString &Path) const;
 
+  /** Draw every pixel of the image as debug point */
+  UFUNCTION(BlueprintCallable)
+  void DrawDebugPixelsToLevel(UWorld *World) const;
+
 private:
 
   friend class ACityMapGenerator;
@@ -95,10 +101,18 @@ private:
 
   void AppendPixel(ECityMapMeshTag Tag, const FTransform &Transform);
 
-  void Set(uint32 Width, uint32 Height, float PixelsPerCentimeter, const FTransform &WorldToMap);
+  void Set(
+      uint32 Width,
+      uint32 Height,
+      float PixelsPerCentimeter,
+      const FTransform &WorldToMap,
+      const FVector &MapOffset);
 
   UPROPERTY(VisibleAnywhere)
   FTransform WorldToMap;
+
+  UPROPERTY(VisibleAnywhere)
+  FVector MapOffset;
 
   UPROPERTY(VisibleAnywhere)
   float PixelsPerCentimeter = 0.0f;

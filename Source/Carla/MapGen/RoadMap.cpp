@@ -3,6 +3,7 @@
 #include "Carla.h"
 #include "RoadMap.h"
 
+#include "DrawDebugHelpers.h"
 #include "HighResScreenshot.h"
 
 static uint32 ClampFloatToUInt(const float Value, int32 Min, int32 Max)
@@ -10,10 +11,19 @@ static uint32 ClampFloatToUInt(const float Value, int32 Min, int32 Max)
   return FMath::Clamp(FMath::FloorToInt(Value), Min, Max);
 }
 
+FVector URoadMap::GetWorldLocation(uint32 PixelX, uint32 PixelY) const
+{
+  const FVector RelativePosition(
+      static_cast<float>(PixelX) / PixelsPerCentimeter,
+      static_cast<float>(PixelY) / PixelsPerCentimeter,
+      0.0f);
+  return WorldToMap.InverseTransformPosition(RelativePosition + MapOffset);
+}
+
 const FRoadMapPixelData &URoadMap::GetDataAt(const FVector &WorldLocation) const
 {
   check(IsValid());
-  const FVector Location = WorldToMap.TransformPosition(WorldLocation);
+  const FVector Location = WorldToMap.TransformPosition(WorldLocation) - MapOffset;
   uint32 X = ClampFloatToUInt(PixelsPerCentimeter * Location.X, 0, Width - 1);
   uint32 Y = ClampFloatToUInt(PixelsPerCentimeter * Location.Y, 0, Height - 1);
   return GetDataAt(X, Y);
@@ -90,6 +100,18 @@ bool URoadMap::SaveAsPNG(const FString &Path) const
   return true;
 }
 
+void URoadMap::DrawDebugPixelsToLevel(UWorld *World) const
+{
+  FlushPersistentDebugLines(World);
+  for (auto X = 0u; X < Width; ++X) {
+    for (auto Y = 0u; Y < Height; ++Y) {
+      auto Location = GetWorldLocation(X, Y);
+      auto Color = Encode(GetDataAt(X, Y));
+      DrawDebugPoint(World, Location, 20.0f, Color, true);
+    }
+  }
+}
+
 void URoadMap::AppendPixel(ECityMapMeshTag Tag, const FTransform &Transform)
 {
   AppendEmptyPixel();
@@ -126,10 +148,12 @@ void URoadMap::Set(
     const uint32 inWidth,
     const uint32 inHeight,
     const float inPinxelsPerCentimeter,
-    const FTransform &inWorldToMap)
+    const FTransform &inWorldToMap,
+    const FVector &inMapOffset)
 {
   Width = inWidth;
   Height = inHeight;
   PixelsPerCentimeter = inPinxelsPerCentimeter;
   WorldToMap = inWorldToMap;
+  MapOffset = inMapOffset;
 }
