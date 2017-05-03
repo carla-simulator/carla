@@ -315,12 +315,10 @@ void ACarlaVehicleController::IntersectPlayerWithRoadMap()
   }
 
   constexpr float ChecksPerCentimeter = 0.1f;
-  constexpr bool LeftHandDriving = false;
   auto Result = RoadMap->Intersect(
       GetPawn()->GetTransform(),
       VehicleBounds->GetScaledBoxExtent(),
-      ChecksPerCentimeter,
-      LeftHandDriving);
+      ChecksPerCentimeter);
 
   CarlaPlayerState->OffRoadIntersectionFactor = Result.OffRoad;
   CarlaPlayerState->OtherLaneIntersectionFactor = Result.OppositeLane;

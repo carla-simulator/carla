@@ -43,6 +43,8 @@ class CARLA_API URoadMap : public UObject
 
 public:
 
+  URoadMap(const FObjectInitializer& ObjectInitializer);
+
   UFUNCTION(BlueprintCallable)
   bool IsValid() const
   {
@@ -80,15 +82,14 @@ public:
   FRoadMapIntersectionResult Intersect(
       const FTransform &BoxTransform,
       const FVector &BoxExtent,
-      float ChecksPerCentimeter,
-      bool LeftHandDriving) const;
+      float ChecksPerCentimeter) const;
 
   UFUNCTION(BlueprintCallable)
   bool SaveAsPNG(const FString &Path) const;
 
   /** Draw every pixel of the image as debug point */
   UFUNCTION(BlueprintCallable)
-  void DrawDebugPixelsToLevel(UWorld *World) const;
+  void DrawDebugPixelsToLevel(UWorld *World, bool bJustFlushDoNotDraw = false) const;
 
 private:
 
@@ -99,7 +100,10 @@ private:
     RoadMap.AddDefaulted(1);
   }
 
-  void AppendPixel(ECityMapMeshTag Tag, const FTransform &Transform);
+  void AppendPixel(
+      ECityMapMeshTag Tag,
+      const FTransform &Transform,
+      bool bInvertDirection);
 
   void Set(
       uint32 Width,
@@ -115,15 +119,15 @@ private:
   FVector MapOffset;
 
   UPROPERTY(VisibleAnywhere)
-  float PixelsPerCentimeter = 0.0f;
+  float PixelsPerCentimeter;
 
   /** Width of the map in pixels */
   UPROPERTY(VisibleAnywhere)
-  uint32 Width = 0u;
+  uint32 Width;
 
   /** Height of the map in pixels */
   UPROPERTY(VisibleAnywhere)
-  uint32 Height = 0u;
+  uint32 Height;
 
   UPROPERTY()
   TArray<FRoadMapPixelData> RoadMap;

@@ -30,19 +30,22 @@ ACityMapGenerator::ACityMapGenerator(const FObjectInitializer& ObjectInitializer
 ACityMapGenerator::~ACityMapGenerator() {}
 
 // =============================================================================
-// -- Map construction and update related methods ------------------------------
+// -- Overriden from UObject ---------------------------------------------------
 // =============================================================================
 
-void ACityMapGenerator::BeginPlay()
+void ACityMapGenerator::PreSave(const ITargetPlatform *TargetPlatform)
 {
-  Super::BeginPlay();
-
-  // We definitively need the map at this point.
-  check(RoadMap != nullptr);
-  if (!RoadMap->IsValid()) {
+  if (bGenerateRoadMapOnSave) {
+    check(RoadMap != nullptr);
     GenerateRoadMap();
   }
+
+  Super::PreSave(TargetPlatform);
 }
+
+// =============================================================================
+// -- Overriden from ACityMapMeshHolder ----------------------------------------
+// =============================================================================
 
 void ACityMapGenerator::UpdateMap()
 {
@@ -51,21 +54,22 @@ void ACityMapGenerator::UpdateMap()
   if (bGenerateRoads) {
     GenerateRoads();
   }
-  if (bGenerateRoadMap) {
+  if (bTriggerRoadMapGeneration) {
+    bTriggerRoadMapGeneration = false;
     GenerateRoadMap();
   }
 }
 
+// =============================================================================
+// -- Map construction and update related methods ------------------------------
+// =============================================================================
+
 void ACityMapGenerator::UpdateSeeds()
 {
   if (!bUseFixedSeed) {
-    bUseMultipleFixedSeeds = false;
     FRandomStream randomStream;
     randomStream.GenerateNewSeed();
     Seed = randomStream.GetCurrentSeed();
-  }
-  if (!bUseMultipleFixedSeeds) {
-    RoadPlanningSeed = Seed;
   }
 }
 
@@ -80,7 +84,7 @@ void ACityMapGenerator::GenerateGraph()
   // Delete the dcel before the new one is created so indices are restored.
   Dcel.Reset(nullptr);
 #endif // CARLA_ROAD_GENERATOR_EXTRA_LOG
-  Dcel = MapGen::GraphGenerator::Generate(MapSizeX, MapSizeY, RoadPlanningSeed);
+  Dcel = MapGen::GraphGenerator::Generate(MapSizeX, MapSizeY, Seed);
   UE_LOG(LogCarla, Log,
       TEXT("Generated DCEL with: { %d vertices, %d half-edges, %d faces }"),
       Dcel->CountNodes(),
@@ -256,7 +260,8 @@ void ACityMapGenerator::GenerateRoadMap()
           } else {
             RoadMap->AppendPixel(
                 GetTag(*InstancedStaticMeshComponent->GetStaticMesh()),
-                InstanceTransform);
+                InstanceTransform,
+                bLeftHandTraffic);
             Success = true;
           }
         }
@@ -293,7 +298,5 @@ void ACityMapGenerator::GenerateRoadMap()
     RoadMap->SaveAsPNG(FilePath);
   }
 
-  if (bDrawDebugPixelsToLevel) {
-    RoadMap->DrawDebugPixelsToLevel(GetWorld());
-  }
+  RoadMap->DrawDebugPixelsToLevel(GetWorld(), !bDrawDebugPixelsToLevel);
 }

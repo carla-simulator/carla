@@ -97,15 +97,15 @@ private:
   UPROPERTY()
   USceneComponent *SceneRootComponent;
 
+  UPROPERTY(Category = "Map Generation", VisibleAnywhere)
+  float MapScale;
+
   UPROPERTY(Category = "Meshes", EditAnywhere)
   TMap<ECityMapMeshTag, UStaticMesh *> StaticMeshes;
 
   UPROPERTY()
   TMap<UStaticMesh *, ECityMapMeshTag> TagMap;
 
-  UPROPERTY(Category = "Meshes|Debug", VisibleAnywhere)
-  float MapScale;
-
-  UPROPERTY(Category = "Meshes|Debug", VisibleAnywhere)
+  UPROPERTY(Category = "Meshes", VisibleAnywhere)
   TArray<UInstancedStaticMeshComponent *> MeshInstatiators;
 };

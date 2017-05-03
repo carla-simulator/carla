@@ -11,6 +11,16 @@ static uint32 ClampFloatToUInt(const float Value, int32 Min, int32 Max)
   return FMath::Clamp(FMath::FloorToInt(Value), Min, Max);
 }
 
+// Creates a valid empty map (every point is off-road).
+URoadMap::URoadMap(const FObjectInitializer& ObjectInitializer) :
+  Super(ObjectInitializer),
+  PixelsPerCentimeter(1.0f),
+  Width(1u),
+  Height(1u)
+{
+  AppendEmptyPixel();
+}
+
 FVector URoadMap::GetWorldLocation(uint32 PixelX, uint32 PixelY) const
 {
   const FVector RelativePosition(
@@ -32,14 +42,9 @@ const FRoadMapPixelData &URoadMap::GetDataAt(const FVector &WorldLocation) const
 FRoadMapIntersectionResult URoadMap::Intersect(
     const FTransform &BoxTransform,
     const FVector &BoxExtent,
-    float ChecksPerCentimeter,
-    const bool LeftHandDriving) const
+    float ChecksPerCentimeter) const
 {
-  auto DirectionOfMovement = BoxTransform.GetRotation().GetForwardVector();
-  if (LeftHandDriving) {
-    DirectionOfMovement *= -1.0f;
-  }
-
+  const auto &DirectionOfMovement = BoxTransform.GetRotation().GetForwardVector();
   uint32 CheckCount = 0u;
   FRoadMapIntersectionResult Result = {0.0f, 0.0f};
   const float Step = 1.0f / ChecksPerCentimeter;
@@ -100,19 +105,24 @@ bool URoadMap::SaveAsPNG(const FString &Path) const
   return true;
 }
 
-void URoadMap::DrawDebugPixelsToLevel(UWorld *World) const
+void URoadMap::DrawDebugPixelsToLevel(UWorld *World, const bool bJustFlushDoNotDraw) const
 {
   FlushPersistentDebugLines(World);
-  for (auto X = 0u; X < Width; ++X) {
-    for (auto Y = 0u; Y < Height; ++Y) {
-      auto Location = GetWorldLocation(X, Y);
-      auto Color = Encode(GetDataAt(X, Y));
-      DrawDebugPoint(World, Location, 20.0f, Color, true);
+  if (!bJustFlushDoNotDraw) {
+    for (auto X = 0u; X < Width; ++X) {
+      for (auto Y = 0u; Y < Height; ++Y) {
+        auto Location = GetWorldLocation(X, Y);
+        auto Color = Encode(GetDataAt(X, Y));
+        DrawDebugPoint(World, Location, 20.0f, Color, true);
+      }
     }
   }
 }
 
-void URoadMap::AppendPixel(ECityMapMeshTag Tag, const FTransform &Transform)
+void URoadMap::AppendPixel(
+    ECityMapMeshTag Tag,
+    const FTransform &Transform,
+    const bool bInvertDirection)
 {
   AppendEmptyPixel();
   auto &Data = RoadMap.Last();
@@ -141,6 +151,9 @@ void URoadMap::AppendPixel(ECityMapMeshTag Tag, const FTransform &Transform)
   if (Data.bHasDirection) {
     FQuat Rotation(Rotator);
     Data.Direction = Rotation.GetForwardVector();
+    if (bInvertDirection) {
+      Data.Direction *= -1.0f;
+    }
   }
 }
 
