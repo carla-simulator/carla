@@ -206,6 +206,3 @@ int main(int argc, char *argv[]) {
   }
 }
 
-//TODO:
-//pmatrix float 16
-//start_index size_t

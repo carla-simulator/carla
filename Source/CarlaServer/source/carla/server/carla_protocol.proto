@@ -82,8 +82,12 @@ message Reward {
   optional float ori_y = 15;
   optional float ori_z = 16;
   optional bytes image_sizes = 17;
-  optional bytes depth_sizes = 18;
-  optional bytes images = 19;
-  optional bytes depths = 20;
+  optional bytes finalImage_sizes = 18;
+  optional bytes depth_sizes = 19;
+  optional bytes semanticSeg_sizes = 20;
+  optional bytes images = 21;
+  optional bytes finalImages = 22;
+  optional bytes depths = 23;
+  optional bytes semanticSegs = 24;
 
 }

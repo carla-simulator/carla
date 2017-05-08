@@ -29,7 +29,9 @@ namespace carla {
 
   enum ImageType {
     IMAGE,
+    SCENE_FINAL,
     DEPTH,
+    SEMANTIC_SEG,
   };
 
   struct Image {
