@@ -22,8 +22,6 @@ message EpisodeStart {
 
 message SceneInit {
 
-
-  optional int32 mode =1;
   optional int32 scene =2;
 
 

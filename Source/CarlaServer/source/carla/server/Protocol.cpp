@@ -11,12 +11,7 @@
 #include <stdlib.h>
 
 #ifdef CARLA_WITH_PNG_COMPRESSION
-#include CARLA_LIBPNG_INCLUDE
-static_assert(
-        CARLA_LIBPNG_VERSION_MAJOR == PNG_LIBPNG_VER_MAJOR &&
-        CARLA_LIBPNG_VERSION_MINOR == PNG_LIBPNG_VER_MINOR &&
-        CARLA_LIBPNG_VERSION_RELEASE == PNG_LIBPNG_VER_RELEASE,
-    "PNG versions do not match");
+#include <png.h>
 #endif // CARLA_WITH_PNG_COMPRESSION
 
 namespace carla {
