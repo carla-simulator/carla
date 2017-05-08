@@ -237,15 +237,15 @@ void ACityMapGenerator::GenerateRoadMap()
 
   const FTransform &ActorTransform = GetActorTransform();
 
-  RoadMap->RoadMap.Empty();
+  const FVector MapOffset(-Offset, -Offset, 0.0f);
+  RoadMap->Reset(SizeX, SizeY, 1.0f / CmPerPixel, ActorTransform.Inverse(), MapOffset);
+
   for (uint32 PixelY = 0u; PixelY < SizeY; ++PixelY) {
     for (uint32 PixelX = 0u; PixelX < SizeX; ++PixelX) {
       const float X = static_cast<float>(PixelX) * CmPerPixel - Offset;
       const float Y = static_cast<float>(PixelY) * CmPerPixel - Offset;
       const FVector Start = ActorTransform.TransformPosition(FVector(X, Y, 50.0f));
       const FVector End = ActorTransform.TransformPosition(FVector(X, Y, -50.0f));
-
-      bool Success = false;
 
       // Do the ray tracing.
       FHitResult Hit;
@@ -258,39 +258,21 @@ void ACityMapGenerator::GenerateRoadMap()
           if (!InstancedStaticMeshComponent->GetInstanceTransform(Hit.Item, InstanceTransform, true)) {
             UE_LOG(LogCarla, Error, TEXT("Failed to get instance's transform"));
           } else {
-            RoadMap->AppendPixel(
+            RoadMap->SetPixelAt(
+                PixelX,
+                PixelY,
                 GetTag(*InstancedStaticMeshComponent->GetStaticMesh()),
                 InstanceTransform,
                 bLeftHandTraffic);
-            Success = true;
           }
         }
-      }
-
-      if (!Success) {
-        RoadMap->AppendEmptyPixel();
       }
     }
   }
 
-  const FVector MapOffset(-Offset, -Offset, 0.0f);
-  RoadMap->Set(SizeX, SizeY, 1.0f / CmPerPixel, ActorTransform.Inverse(), MapOffset);
-  const float MapSizeInMB = // Only map data, not the class itself.
-      static_cast<float>(sizeof(FRoadMapPixelData) * RoadMap->RoadMap.Num()) /
-      (1024.0f * 1024.0f);
-  UE_LOG(
-      LogCarla,
-      Log,
-      TEXT("Generated road map %dx%d (%.2fMB) with %.2f cm/pixel"),
-      RoadMap->GetWidth(),
-      RoadMap->GetHeight(),
-      MapSizeInMB,
-      CmPerPixel);
-
-  if (!RoadMap->IsValid()) {
-    UE_LOG(LogCarla, Error, TEXT("Error generating road map"));
-    return;
-  }
+#ifdef WITH_EDITOR
+  RoadMap->Log();
+#endif // WITH_EDITOR
 
   if (bSaveRoadMapToDisk) {
     const FString MapName = World->GetMapName() + TEXT(".png");
@@ -298,5 +280,7 @@ void ACityMapGenerator::GenerateRoadMap()
     RoadMap->SaveAsPNG(FilePath);
   }
 
+#ifdef WITH_EDITOR
   RoadMap->DrawDebugPixelsToLevel(GetWorld(), !bDrawDebugPixelsToLevel);
+#endif // WITH_EDITOR
 }
