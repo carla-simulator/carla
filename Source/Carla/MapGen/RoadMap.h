@@ -40,14 +40,14 @@ public:
   /// Whether this pixel lies in-road.
   bool IsRoad() const
   {
-    return (Value & (1 << IsRoadRow));
+    return (Value & (1 << IsRoadRow)) != 0;
   }
 
   /// Whether this pixel has a direction defined (e.g. road intersections are
   /// not off-road but neither have defined direction).
   bool HasDirection() const
   {
-    return (Value & (1 << HasDirectionRow));
+    return (Value & (1 << HasDirectionRow)) != 0;
   }
 
   /// Get the azimuth angle [-PI, PI] of the road direction (in spherical
