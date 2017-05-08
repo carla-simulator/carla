@@ -9,42 +9,111 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "PhysicsEngine/PhysicsAsset.h"
 
-enum class Label : uint8
+#ifdef CARLA_TAGGER_EXTRA_LOG
+static FString GetLabelAsString(const CityObjectLabel Label)
 {
-  None         =   0u,
-  Buildings    =   1u,
-  Fences       =   2u,
-  Other        =   3u,
-  Pedestrians  =   4u,
-  Poles        =   5u,
-  RoadLines    =   6u,
-  Roads        =   7u,
-  Sidewalks    =   8u,
-  Vegetation   =   9u,
-  Vehicles     =  10u,
-  Walls        =  11u,
-};
-
-static Label GetLabel(const FString &str) {
-  if (str == "Buildings")            return Label::Buildings;
-  else if (str == "Fences")          return Label::Fences;
-  else if (str == "Pedestrians")     return Label::Pedestrians;
-  else if (str == "Pole")            return Label::Poles;
-  else if (str == "Props")           return Label::Other;
-  else if (str == "Road")            return Label::Roads;
-  else if (str == "RoadLines")       return Label::RoadLines;
-  else if (str == "SideWalk")        return Label::Sidewalks;
-  else if (str == "Vegetation")      return Label::Vegetation;
-  else if (str == "Vehicles")        return Label::Vehicles;
-  else if (str == "Walls")           return Label::Walls;
-  else                               return Label::None;
+  switch (Label) {
+#define CARLA_GET_LABEL_STR(lbl) case CityObjectLabel:: lbl : return #lbl;
+    default:
+    CARLA_GET_LABEL_STR(None)
+    CARLA_GET_LABEL_STR(Buildings)
+    CARLA_GET_LABEL_STR(Fences)
+    CARLA_GET_LABEL_STR(Other)
+    CARLA_GET_LABEL_STR(Pedestrians)
+    CARLA_GET_LABEL_STR(Poles)
+    CARLA_GET_LABEL_STR(RoadLines)
+    CARLA_GET_LABEL_STR(Roads)
+    CARLA_GET_LABEL_STR(Sidewalks)
+    CARLA_GET_LABEL_STR(Vegetation)
+    CARLA_GET_LABEL_STR(Vehicles)
+    CARLA_GET_LABEL_STR(Walls)
+#undef CARLA_GET_LABEL_STR
+  }
 }
+#endif // CARLA_TAGGER_EXTRA_LOG
 
 template <typename T>
-static auto cast(T label)
+static auto CastEnum(T label)
 {
   return static_cast<typename std::underlying_type<T>::type>(label);
 }
+
+static CityObjectLabel GetLabelByFolderName(const FString &String) {
+  if      (String == "Buildings")       return CityObjectLabel::Buildings;
+  else if (String == "Fences")          return CityObjectLabel::Fences;
+  else if (String == "Pedestrians")     return CityObjectLabel::Pedestrians;
+  else if (String == "Pole")            return CityObjectLabel::Poles;
+  else if (String == "Props")           return CityObjectLabel::Other;
+  else if (String == "Road")            return CityObjectLabel::Roads;
+  else if (String == "RoadLines")       return CityObjectLabel::RoadLines;
+  else if (String == "SideWalk")        return CityObjectLabel::Sidewalks;
+  else if (String == "Vegetation")      return CityObjectLabel::Vegetation;
+  else if (String == "Vehicles")        return CityObjectLabel::Vehicles;
+  else if (String == "Walls")           return CityObjectLabel::Walls;
+  else                                  return CityObjectLabel::None;
+}
+
+template <typename T>
+static CityObjectLabel GetLabelByPath(const T *Object)
+{
+  const FString Path = Object->GetPathName();
+  TArray<FString> StringArray;
+  Path.ParseIntoArray(StringArray, TEXT("/"), false);
+  return (StringArray.Num() > 3 ? GetLabelByFolderName(StringArray[3]) : CityObjectLabel::None);
+}
+
+static void SetStencilValue(UPrimitiveComponent *comp, const CityObjectLabel &Label) {
+  if (Label != CityObjectLabel::None) {
+    comp->SetRenderCustomDepth(true);
+    comp->SetCustomDepthStencilValue(CastEnum(Label));
+  }
+}
+
+// =============================================================================
+// -- static ATagger functions -------------------------------------------------
+// =============================================================================
+
+void ATagger::TagActor(const AActor &Actor)
+{
+#ifdef CARLA_TAGGER_EXTRA_LOG
+  UE_LOG(LogCarla, Log, TEXT("Actor: %s"), *Actor.GetName());
+#endif // CARLA_TAGGER_EXTRA_LOG
+
+  // Iterate static meshes.
+  TArray<UStaticMeshComponent *> StaticMeshComponents;
+  Actor.GetComponents<UStaticMeshComponent>(StaticMeshComponents);
+  for (UStaticMeshComponent *Component : StaticMeshComponents) {
+    const auto Label = GetLabelByPath(Component->GetStaticMesh());
+    SetStencilValue(Component, Label);
+#ifdef CARLA_TAGGER_EXTRA_LOG
+    UE_LOG(LogCarla, Log, TEXT("  + StaticMeshComponent: %s"), *Component->GetName());
+    UE_LOG(LogCarla, Log, TEXT("    - Label: \"%s\""), *GetLabelAsString(Label));
+#endif // CARLA_TAGGER_EXTRA_LOG
+  }
+
+  // Iterate skeletal meshes.
+  TArray<USkeletalMeshComponent *> SkeletalMeshComponents;
+  Actor.GetComponents<USkeletalMeshComponent>(SkeletalMeshComponents);
+  for (USkeletalMeshComponent *Component : SkeletalMeshComponents) {
+    const auto Label = GetLabelByPath(Component->GetPhysicsAsset());
+    SetStencilValue(Component, Label);
+#ifdef CARLA_TAGGER_EXTRA_LOG
+    UE_LOG(LogCarla, Log, TEXT("  + SkeletalMeshComponent: %s"), *Component->GetName());
+    UE_LOG(LogCarla, Log, TEXT("    - Label: \"%s\""), *GetLabelAsString(Label));
+#endif // CARLA_TAGGER_EXTRA_LOG
+  }
+}
+
+void ATagger::TagActorsInLevel(UWorld &World)
+{
+  for (TActorIterator<AActor> it(&World); it; ++it) {
+    TagActor(**it);
+  }
+}
+
+// =============================================================================
+// -- non-static ATagger functions ---------------------------------------------
+// =============================================================================
 
 ATagger::ATagger()
 {
@@ -56,81 +125,10 @@ void ATagger::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent
 {
   Super::PostEditChangeProperty(PropertyChangedEvent);
   if (PropertyChangedEvent.Property) {
-    if (bTriggerTagObjects) {
-      TagObjects();
+    if (bTriggerTagObjects && (GetWorld() != nullptr)) {
+      TagActorsInLevel(*GetWorld());
     }
   }
   bTriggerTagObjects = false;
 }
 #endif // WITH_EDITOR
-
-static void setStencilValue(UPrimitiveComponent *comp, const Label &label) {
-  if (label != Label::None)
-  {
-    comp->SetRenderCustomDepth(true);
-    comp->SetCustomDepthStencilValue(cast(label));
-  }
-}
-
-void ATagger::TagObjects()
-{
-  for (TActorIterator<AActor> it(GetWorld()); it; ++it) {
-
-#ifdef CARLA_TAGGER_EXTRA_LOG
-    UE_LOG(LogCarla, Warning, TEXT("Actor: %s"), *it->GetName());
-#endif // CARLA_TAGGER_EXTRA_LOG
-
-    /// get UStaticMeshComponents
-    TArray<UStaticMeshComponent*> staticComponents;
-    it->GetComponents<UStaticMeshComponent>(staticComponents);
-
-    for (auto& meshIt : staticComponents)
-    {
-
-#ifdef CARLA_TAGGER_EXTRA_LOG
-      UE_LOG(LogCarla, Warning, TEXT("  + StaticMeshComponent: %s"), *meshIt->GetName());
-#endif // CARLA_TAGGER_EXTRA_LOG
-
-      FString Path = meshIt->GetStaticMesh()->GetPathName();
-      TArray<FString> stringArray;
-      Path.ParseIntoArray(stringArray, TEXT("/"), false);
-      /*for (int32 i = 0; i < stringArray.Num(); i++) {
-      UE_LOG(LogCarla, Warning, TEXT("  -\"%s\""), *stringArray[i]);
-      }*/
-      if (stringArray.Num() > 3)
-      {
-        Label lab = GetLabel(stringArray[3]);
-
-#ifdef CARLA_TAGGER_EXTRA_LOG
-        UE_LOG(LogCarla, Warning, TEXT("    - Label: \"%s\""), *stringArray[3]);
-#endif // CARLA_TAGGER_EXTRA_LOG
-
-        setStencilValue(meshIt, lab);
-      }
-    }
-
-    /// get USkeletalMeshComponents
-    TArray<USkeletalMeshComponent*> skeletalComponents;
-    it->GetComponents<USkeletalMeshComponent>(skeletalComponents);
-
-    for (auto& meshIt : skeletalComponents)
-    {
-#ifdef CARLA_TAGGER_EXTRA_LOG
-      UE_LOG(LogCarla, Warning, TEXT("  + SkeletalMeshComponent: %s"), *meshIt->GetName());
-#endif // CARLA_TAGGER_EXTRA_LOG
-      FString Path = meshIt->GetPhysicsAsset()->GetPathName();
-      TArray<FString> stringArray;
-      Path.ParseIntoArray(stringArray, TEXT("/"), false);
-      if (stringArray.Num() > 3)
-      {
-        Label lab = GetLabel(stringArray[3]);
-
-#ifdef CARLA_TAGGER_EXTRA_LOG
-        UE_LOG(LogCarla, Warning, TEXT("    - Label: \"%s\""), *stringArray[3]);
-#endif // CARLA_TAGGER_EXTRA_LOG
-
-        setStencilValue(meshIt, lab);
-      }
-    }
-  }
-}

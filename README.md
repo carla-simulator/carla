@@ -3,6 +3,8 @@ CARLA UE4 Plugin
 
 Plugin for Unreal Engine 4.
 
+See [CHANGELOG](CHANGELOG.md).
+
 Settings
 --------
 

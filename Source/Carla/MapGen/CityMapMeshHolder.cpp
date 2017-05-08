@@ -67,6 +67,9 @@ FVector ACityMapMeshHolder::GetTileLocation(uint32 X, uint32 Y) const
 void ACityMapMeshHolder::SetStaticMesh(ECityMapMeshTag Tag, UStaticMesh *Mesh)
 {
   StaticMeshes[Tag] = Mesh;
+  if (Mesh != nullptr) {
+    TagMap.Add(Mesh, Tag);
+  }
 }
 
 UStaticMesh *ACityMapMeshHolder::GetStaticMesh(ECityMapMeshTag Tag)
@@ -77,6 +80,12 @@ UStaticMesh *ACityMapMeshHolder::GetStaticMesh(ECityMapMeshTag Tag)
 const UStaticMesh *ACityMapMeshHolder::GetStaticMesh(ECityMapMeshTag Tag) const
 {
   return StaticMeshes[Tag];
+}
+
+ECityMapMeshTag ACityMapMeshHolder::GetTag(const UStaticMesh &StaticMesh) const
+{
+  const ECityMapMeshTag *Tag = TagMap.Find(&StaticMesh);
+  return (Tag != nullptr ? *Tag : ECityMapMeshTag::INVALID);
 }
 
 void ACityMapMeshHolder::AddInstance(ECityMapMeshTag Tag, uint32 X, uint32 Y)

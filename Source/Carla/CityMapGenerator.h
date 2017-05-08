@@ -7,10 +7,12 @@
 #include "MapGen/GraphParser.h"
 #include "CityMapGenerator.generated.h"
 
+class URoadMap;
+
 /// Generates a random city using the meshes provided.
 ///
 /// @note At this point it only generates roads and sidewalks.
-UCLASS(HideCategories=(Rendering, Input))
+UCLASS(HideCategories=(Input,Rendering,Actor))
 class CARLA_API ACityMapGenerator : public ACityMapMeshHolder
 {
   GENERATED_BODY()
@@ -27,13 +29,41 @@ public:
 
   /// @}
   // ===========================================================================
-  /// @name Map construction and update related methods
+  /// @name Overriden from UObject
+  // ===========================================================================
+  /// @{
+public:
+
+  virtual void PreSave(const ITargetPlatform *TargetPlatform) override;
+
+  /// @}
+  // ===========================================================================
+  /// @name Overriden from ACityMapMeshHolder
   // ===========================================================================
   /// @{
 private:
 
-  /// Update the map based on the current settings.
   virtual void UpdateMap() override;
+
+  /// @}
+  // ===========================================================================
+  /// @name Road map
+  // ===========================================================================
+  /// @{
+public:
+
+  UFUNCTION(BlueprintCallable)
+  URoadMap *GetRoadMap()
+  {
+    return RoadMap;
+  }
+
+  /// @}
+  // ===========================================================================
+  /// @name Map construction and update related methods
+  // ===========================================================================
+  /// @{
+private:
 
   /// Update the random seeds. Generate random if no fixed seed is used.
   void UpdateSeeds();
@@ -44,6 +74,9 @@ private:
   /// Add the road meshes to the scene based on the current DCEL.
   void GenerateRoads();
 
+  /// Generate the road map image and save to disk if requested.
+  void GenerateRoadMap();
+
   /// @}
   // ===========================================================================
   /// @name Map generation properties
@@ -51,33 +84,76 @@ private:
   /// @{
 private:
 
+  /** Size X of the map in map units. The map unit is calculated based in the
+    * tile mesh of the road (see Map Scale).
+    */
   UPROPERTY(Category = "Map Generation", EditAnywhere, meta = (ClampMin = "10", ClampMax = "200"))
   uint32 MapSizeX = 20u;
 
+  /** Size Y of the map in map units. The map unit is calculated based in the
+    * tile mesh of the road (see Map Scale).
+    */
   UPROPERTY(Category = "Map Generation", EditAnywhere, meta = (ClampMin = "10", ClampMax = "200"))
   uint32 MapSizeY = 20u;
 
+  /** If false, no mesh is added, only the internal representation of road is
+    * generated.
+    */
   UPROPERTY(Category = "Map Generation", EditAnywhere)
   bool bGenerateRoads = true;
 
+  /** If false, a random seed is generated each time. */
   UPROPERTY(Category = "Map Generation", EditAnywhere)
   bool bUseFixedSeed = true;
 
+  /** Seed of the random map generated. */
   UPROPERTY(Category = "Map Generation", EditAnywhere, meta = (EditCondition = bUseFixedSeed))
   int32 Seed = 123456789;
 
   /// @}
   // ===========================================================================
-  /// @name Map generation properties - advance display
+  /// @name Road Map
   // ===========================================================================
   /// @{
 private:
 
-  UPROPERTY(Category = "Map Generation", EditAnywhere, AdvancedDisplay, meta = (EditCondition = bUseFixedSeed))
-  bool bUseMultipleFixedSeeds = false;
+  /** Trigger the generation a the road map image of the current layout (used
+    * for off-road and opposite lane invasion detection).
+    */
+  UPROPERTY(Category = "Road Map", EditAnywhere)
+  bool bTriggerRoadMapGeneration = false;
 
-  UPROPERTY(Category = "Map Generation", EditAnywhere, AdvancedDisplay, meta = (EditCondition = bUseMultipleFixedSeeds))
-  int32 RoadPlanningSeed;
+  /** The resolution in pixels per map unit of the road map. The map unit is
+    * calculated based in the tile mesh of the road (see Map Scale).
+    */
+  UPROPERTY(Category = "Road Map", EditAnywhere, meta = (ClampMin = "1", ClampMax = "500"))
+  uint32 PixelsPerMapUnit = 50u;
+
+  /** Whether the road map should be generated based on left-hand traffic. */
+  UPROPERTY(Category = "Road Map", EditAnywhere)
+  bool bLeftHandTraffic = false;
+
+  /** If true, the road map encoded as an image is saved to disk. The image is
+    * saved to the "Saved" folder of the project.
+    */
+  UPROPERTY(Category = "Road Map", EditAnywhere)
+  bool bSaveRoadMapToDisk = true;
+
+  /** If true, a debug point is drawn in the level for each pixel of the road
+    * map.
+    */
+  UPROPERTY(Category = "Road Map", EditAnywhere)
+  bool bDrawDebugPixelsToLevel = false;
+
+  /** The road map is re-computed on save so we always store an up-to-date
+    * version. Uncheck this only for testing purposes as the road map might get
+    * out-of-sync with the current road layout.
+    */
+  UPROPERTY(Category = "Road Map", EditAnywhere, AdvancedDisplay)
+  bool bGenerateRoadMapOnSave = true;
+
+  UPROPERTY()
+  URoadMap *RoadMap;
 
   /// @}
   // ===========================================================================

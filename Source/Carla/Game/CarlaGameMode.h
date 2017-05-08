@@ -35,7 +35,7 @@ private:
 
   void AttachCaptureCamerasToPlayer(AController &Player);
 
-  void TagObjectsForSemanticSegmentation();
+  void TagActorsForSemanticSegmentation();
 
   /// Iterate all the APlayerStart present in the world and add the ones with
   /// unoccupied locations to @a UnOccupiedStartPoints.
@@ -47,7 +47,9 @@ private:
 
   CarlaGameControllerBase *GameController;
 
+  UPROPERTY()
   UCarlaGameInstance *GameInstance;
 
+  UPROPERTY()
   AController *PlayerController;
 };
