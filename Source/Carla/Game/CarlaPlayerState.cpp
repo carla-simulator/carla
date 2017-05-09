@@ -39,9 +39,23 @@ void ACarlaPlayerState::CopyProperties(APlayerState *PlayerState)
   }
 }
 
-void ACarlaPlayerState::RegisterCollision(AActor * /*Actor*/, FVector NormalImpulse)
+void ACarlaPlayerState::RegisterCollision(
+    AActor */*Actor*/,
+    AActor */*OtherActor*/,
+    const FVector &NormalImpulse,
+    const FHitResult &Hit)
 {
-  CollisionIntensityOther += NormalImpulse.Size();
+  switch (ATagger::GetTagOfTaggedComponent(*Hit.Component)) {
+    case ECityObjectLabel::Vehicles:
+      CollisionIntensityCars += NormalImpulse.Size();
+      break;
+    case ECityObjectLabel::Pedestrians:
+      CollisionIntensityPedestrians += NormalImpulse.Size();
+      break;
+    default:
+      CollisionIntensityOther += NormalImpulse.Size();
+      break;
+  }
 }
 
 static int32 RoundToMilliseconds(float Seconds)

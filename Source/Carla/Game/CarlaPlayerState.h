@@ -130,7 +130,11 @@ public:
   // ===========================================================================
 private:
 
-  void RegisterCollision(AActor *Actor, FVector NormalImpulse);
+  void RegisterCollision(
+      AActor *Actor,
+      AActor *OtherActor,
+      const FVector &NormalImpulse,
+      const FHitResult &Hit);
 
   void UpdateTimeStamp(float DeltaSeconds);
 

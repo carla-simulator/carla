@@ -5,7 +5,7 @@
 #include "GameFramework/Actor.h"
 #include "Tagger.generated.h"
 
-enum class CityObjectLabel : uint8
+enum class ECityObjectLabel : uint8
 {
   None         =   0u,
   Buildings    =   1u,
@@ -33,9 +33,23 @@ class CARLA_API ATagger : public AActor
 
 public:
 
+  /// Set the tag of an actor.
   static void TagActor(const AActor &Actor);
 
+  /// Set the tag of every actor in level.
   static void TagActorsInLevel(UWorld &World);
+
+  /// Retrieve the tag of an already tagged component.
+  static ECityObjectLabel GetTagOfTaggedComponent(const UPrimitiveComponent &Component);
+
+  /// Retrieve the tags of an already tagged actor.
+  static void GetTagsOfTaggedActor(const AActor &Actor, TArray<ECityObjectLabel> &Tags);
+
+  /// Return true if @a Component has been tagged with the given @a Tag.
+  static bool MatchComponent(const UPrimitiveComponent &Component, ECityObjectLabel Tag)
+  {
+    return (Tag == GetTagOfTaggedComponent(Component));
+  }
 
   ATagger();
 

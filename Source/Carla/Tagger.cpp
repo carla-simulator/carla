@@ -10,10 +10,10 @@
 #include "PhysicsEngine/PhysicsAsset.h"
 
 #ifdef CARLA_TAGGER_EXTRA_LOG
-static FString GetLabelAsString(const CityObjectLabel Label)
+static FString GetLabelAsString(const ECityObjectLabel Label)
 {
   switch (Label) {
-#define CARLA_GET_LABEL_STR(lbl) case CityObjectLabel:: lbl : return #lbl;
+#define CARLA_GET_LABEL_STR(lbl) case ECityObjectLabel:: lbl : return #lbl;
     default:
     CARLA_GET_LABEL_STR(None)
     CARLA_GET_LABEL_STR(Buildings)
@@ -38,32 +38,32 @@ static auto CastEnum(T label)
   return static_cast<typename std::underlying_type<T>::type>(label);
 }
 
-static CityObjectLabel GetLabelByFolderName(const FString &String) {
-  if      (String == "Buildings")       return CityObjectLabel::Buildings;
-  else if (String == "Fences")          return CityObjectLabel::Fences;
-  else if (String == "Pedestrians")     return CityObjectLabel::Pedestrians;
-  else if (String == "Pole")            return CityObjectLabel::Poles;
-  else if (String == "Props")           return CityObjectLabel::Other;
-  else if (String == "Road")            return CityObjectLabel::Roads;
-  else if (String == "RoadLines")       return CityObjectLabel::RoadLines;
-  else if (String == "SideWalk")        return CityObjectLabel::Sidewalks;
-  else if (String == "Vegetation")      return CityObjectLabel::Vegetation;
-  else if (String == "Vehicles")        return CityObjectLabel::Vehicles;
-  else if (String == "Walls")           return CityObjectLabel::Walls;
-  else                                  return CityObjectLabel::None;
+static ECityObjectLabel GetLabelByFolderName(const FString &String) {
+  if      (String == "Buildings")       return ECityObjectLabel::Buildings;
+  else if (String == "Fences")          return ECityObjectLabel::Fences;
+  else if (String == "Pedestrians")     return ECityObjectLabel::Pedestrians;
+  else if (String == "Pole")            return ECityObjectLabel::Poles;
+  else if (String == "Props")           return ECityObjectLabel::Other;
+  else if (String == "Road")            return ECityObjectLabel::Roads;
+  else if (String == "RoadLines")       return ECityObjectLabel::RoadLines;
+  else if (String == "SideWalk")        return ECityObjectLabel::Sidewalks;
+  else if (String == "Vegetation")      return ECityObjectLabel::Vegetation;
+  else if (String == "Vehicles")        return ECityObjectLabel::Vehicles;
+  else if (String == "Walls")           return ECityObjectLabel::Walls;
+  else                                  return ECityObjectLabel::None;
 }
 
 template <typename T>
-static CityObjectLabel GetLabelByPath(const T *Object)
+static ECityObjectLabel GetLabelByPath(const T *Object)
 {
   const FString Path = Object->GetPathName();
   TArray<FString> StringArray;
   Path.ParseIntoArray(StringArray, TEXT("/"), false);
-  return (StringArray.Num() > 3 ? GetLabelByFolderName(StringArray[3]) : CityObjectLabel::None);
+  return (StringArray.Num() > 3 ? GetLabelByFolderName(StringArray[3]) : ECityObjectLabel::None);
 }
 
-static void SetStencilValue(UPrimitiveComponent *comp, const CityObjectLabel &Label) {
-  if (Label != CityObjectLabel::None) {
+static void SetStencilValue(UPrimitiveComponent *comp, const ECityObjectLabel &Label) {
+  if (Label != ECityObjectLabel::None) {
     comp->SetRenderCustomDepth(true);
     comp->SetCustomDepthStencilValue(CastEnum(Label));
   }
@@ -108,6 +108,28 @@ void ATagger::TagActorsInLevel(UWorld &World)
 {
   for (TActorIterator<AActor> it(&World); it; ++it) {
     TagActor(**it);
+  }
+}
+
+ECityObjectLabel ATagger::GetTagOfTaggedComponent(const UPrimitiveComponent &Component)
+{
+  return
+      (Component.bRenderCustomDepth ?
+          static_cast<ECityObjectLabel>(Component.CustomDepthStencilValue) :
+          ECityObjectLabel::None);
+}
+
+void ATagger::GetTagsOfTaggedActor(const AActor &Actor, TArray<ECityObjectLabel> &Tags)
+{
+  TArray<UPrimitiveComponent *> Components;
+  Actor.GetComponents<UPrimitiveComponent>(Components);
+  for (auto *Component : Components) {
+    if (Component != nullptr) {
+      const auto Tag = GetTagOfTaggedComponent(*Component);
+      if (Tag != ECityObjectLabel::None) {
+        Tags.Add(Tag);
+      }
+    }
   }
 }
 

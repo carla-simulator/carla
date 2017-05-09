@@ -207,7 +207,7 @@ static bool LineTrace(
 
   if (Success) {
     for (FHitResult &Item : OutHits) {
-      if (Item.Component->CustomDepthStencilValue == static_cast<uint8>(CityObjectLabel::Roads)) {
+      if (ATagger::MatchComponent(*Item.Component, ECityObjectLabel::Roads)) {
         HitResult = Item;
         return true;
       }
