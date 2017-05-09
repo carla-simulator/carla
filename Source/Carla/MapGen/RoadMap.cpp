@@ -3,8 +3,11 @@
 #include "Carla.h"
 #include "RoadMap.h"
 
-#include "DrawDebugHelpers.h"
 #include "HighResScreenshot.h"
+
+#ifdef WITH_EDITOR
+#include "DrawDebugHelpers.h"
+#endif // WITH_EDITOR
 
 #include <type_traits>
 
@@ -104,22 +107,22 @@ void URoadMap::SetPixelAt(
     case ECityMapMeshTag::Road90DegTurn_Lane0:
       bIsRoad = true;
       bHasDirection = true;
+      Rotator.Yaw += 180.0f;
       break;
     case ECityMapMeshTag::RoadTwoLanes_LaneLeft:
     case ECityMapMeshTag::Road90DegTurn_Lane1:
       bIsRoad = true;
       bHasDirection = true;
-      Rotator.Yaw += 180.0f;
       break;
     case ECityMapMeshTag::Road90DegTurn_Lane2:
       bIsRoad = true;
       bHasDirection = true;
-      Rotator.Yaw += 90.0f;
+      Rotator.Yaw += 270.0f;
       break;
     case ECityMapMeshTag::Road90DegTurn_Lane3:
       bIsRoad = true;
       bHasDirection = true;
-      Rotator.Yaw += 270.0f;
+      Rotator.Yaw += 90.0f;
       break;
     case ECityMapMeshTag::RoadTIntersection_Lane0:
     case ECityMapMeshTag::RoadTIntersection_Lane1:
@@ -180,7 +183,7 @@ FRoadMapIntersectionResult URoadMap::Intersect(
       if (!Data.IsRoad()) {
         Result.OffRoad += 1.0f;
       } else if (Data.HasDirection() &&
-                 0.0f < FVector::DotProduct(Data.GetDirection(), DirectionOfMovement)) {
+                 0.0f > FVector::DotProduct(Data.GetDirection(), DirectionOfMovement)) {
         Result.OppositeLane += 1.0f;
       }
     }
@@ -240,13 +243,20 @@ void URoadMap::Log() const
 
 void URoadMap::DrawDebugPixelsToLevel(UWorld *World, const bool bJustFlushDoNotDraw) const
 {
+  const FVector ZOffset(0.0f, 0.0f, 50.0f);
   FlushPersistentDebugLines(World);
   if (!bJustFlushDoNotDraw) {
     for (auto X = 0u; X < Width; ++X) {
       for (auto Y = 0u; Y < Height; ++Y) {
-        auto Location = GetWorldLocation(X, Y);
-        auto Color = GetDataAt(X, Y).EncodeAsColor();
-        DrawDebugPoint(World, Location, 20.0f, Color, true);
+        auto Location = GetWorldLocation(X, Y) + ZOffset;
+        const auto &Data = GetDataAt(X, Y);
+        auto Color = Data.EncodeAsColor();
+        if (Data.HasDirection()) {
+          const FVector ArrowEnd = Location + 50.0f * Data.GetDirection();
+          DrawDebugDirectionalArrow(World, Location, ArrowEnd, 60.0f, Color, true);
+        } else {
+          DrawDebugPoint(World, Location, 6.0f, Color, true);
+        }
       }
     }
   }

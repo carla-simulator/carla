@@ -189,7 +189,7 @@ void ACityMapGenerator::GenerateRoads()
 #undef ADD_INTERSECTION
 }
 
-// Find first component of type road (checking at its stencil value).
+// Find first component of type road.
 static bool LineTrace(
     UWorld *World,
     const FVector &Start,
