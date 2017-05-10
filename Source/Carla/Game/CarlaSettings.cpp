@@ -154,6 +154,9 @@ static bool GetSettingsFileName(FString &Value)
 {
   // Try to get it from the command-line arguments.
   if (FParse::Value(FCommandLine::Get(), TEXT("-carla-settings="), Value)) {
+    if (FPaths::IsRelative(Value)) {
+      Value = FPaths::ConvertRelativePathToFull(FPaths::LaunchDir(), Value);
+    }
     if (FPaths::FileExists(Value)) {
       return true;
     }
