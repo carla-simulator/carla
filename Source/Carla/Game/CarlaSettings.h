@@ -18,7 +18,7 @@ public:
   void LoadSettings();
 
   /** Log settings values. */
-  void LogSettings();
+  void LogSettings() const;
 
 private:
 
@@ -58,6 +58,13 @@ public:
   /** Descriptions of the cameras to be attached to the player. */
   UPROPERTY(Category = "Scene Capture", EditDefaultsOnly)
   TMap<FString, FCameraDescription> CameraDescriptions;
+
+  /** Whether semantic segmentation should be activated. The mechanisms for
+    * semantic segmentation impose some performance penalties even if it is not
+    * used, we only enable it if necessary.
+    */
+  UPROPERTY(Category = "Scene Capture", EditDefaultsOnly)
+  bool bSemanticSegmentationEnabled = false;
 
   /// @}
 };

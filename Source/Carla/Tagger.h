@@ -3,6 +3,7 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
+#include "Components/PrimitiveComponent.h"
 #include "Tagger.generated.h"
 
 enum class ECityObjectLabel : uint8
@@ -34,15 +35,29 @@ class CARLA_API ATagger : public AActor
 public:
 
   /// Set the tag of an actor.
-  static void TagActor(const AActor &Actor);
+  ///
+  /// If bTagForSemanticSegmentation true, activate the custom depth pass. This
+  /// pass is necessary for rendering the semantic segmentation. However, it may
+  /// add a performance penalty since occlusion doesn't seem to be applied to
+  /// objects having this value active.
+  static void TagActor(const AActor &Actor, bool bTagForSemanticSegmentation);
 
   /// Set the tag of every actor in level.
-  static void TagActorsInLevel(UWorld &World);
+  ///
+  /// If bTagForSemanticSegmentation true, activate the custom depth pass. This
+  /// pass is necessary for rendering the semantic segmentation. However, it may
+  /// add a performance penalty since occlusion doesn't seem to be applied to
+  /// objects having this value active.
+  static void TagActorsInLevel(UWorld &World, bool bTagForSemanticSegmentation);
 
   /// Retrieve the tag of an already tagged component.
-  static ECityObjectLabel GetTagOfTaggedComponent(const UPrimitiveComponent &Component);
+  static ECityObjectLabel GetTagOfTaggedComponent(const UPrimitiveComponent &Component)
+  {
+    return static_cast<ECityObjectLabel>(Component.CustomDepthStencilValue);
+  }
 
-  /// Retrieve the tags of an already tagged actor.
+  /// Retrieve the tags of an already tagged actor. ECityObjectLabel::None is
+  /// not added to the array.
   static void GetTagsOfTaggedActor(const AActor &Actor, TArray<ECityObjectLabel> &Tags);
 
   /// Return true if @a Component has been tagged with the given @a Tag.
@@ -63,4 +78,7 @@ private:
 
   UPROPERTY(Category = "Tagger", EditAnywhere)
   bool bTriggerTagObjects = false;
+
+  UPROPERTY(Category = "Tagger", EditAnywhere)
+  bool bTagForSemanticSegmentation = false;
 };

@@ -70,7 +70,9 @@ void ACarlaGameMode::RestartPlayer(AController* NewPlayer)
 void ACarlaGameMode::BeginPlay()
 {
   Super::BeginPlay();
-  TagActorsForSemanticSegmentation();
+  if (GameInstance->GetCarlaSettings().bSemanticSegmentationEnabled) {
+    TagActorsForSemanticSegmentation();
+  }
   GameController->BeginPlay();
 }
 
@@ -105,7 +107,7 @@ void ACarlaGameMode::AttachCaptureCamerasToPlayer(AController &Player)
 void ACarlaGameMode::TagActorsForSemanticSegmentation()
 {
   check(GetWorld() != nullptr);
-  ATagger::TagActorsInLevel(*GetWorld());
+  ATagger::TagActorsInLevel(*GetWorld(), true);
 }
 
 APlayerStart *ACarlaGameMode::FindUnOccupiedStartPoints(

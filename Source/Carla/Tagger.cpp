@@ -62,18 +62,21 @@ static ECityObjectLabel GetLabelByPath(const T *Object)
   return (StringArray.Num() > 3 ? GetLabelByFolderName(StringArray[3]) : ECityObjectLabel::None);
 }
 
-static void SetStencilValue(UPrimitiveComponent *comp, const ECityObjectLabel &Label) {
-  if (Label != ECityObjectLabel::None) {
-    comp->SetRenderCustomDepth(true);
-    comp->SetCustomDepthStencilValue(CastEnum(Label));
-  }
+static void SetStencilValue(
+    UPrimitiveComponent &Component,
+    const ECityObjectLabel &Label,
+    const bool bSetRenderCustomDepth) {
+  Component.SetRenderCustomDepth(
+      bSetRenderCustomDepth &&
+      !ATagger::MatchComponent(Component, ECityObjectLabel::None));
+  Component.SetCustomDepthStencilValue(CastEnum(Label));
 }
 
 // =============================================================================
 // -- static ATagger functions -------------------------------------------------
 // =============================================================================
 
-void ATagger::TagActor(const AActor &Actor)
+void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation)
 {
 #ifdef CARLA_TAGGER_EXTRA_LOG
   UE_LOG(LogCarla, Log, TEXT("Actor: %s"), *Actor.GetName());
@@ -84,7 +87,7 @@ void ATagger::TagActor(const AActor &Actor)
   Actor.GetComponents<UStaticMeshComponent>(StaticMeshComponents);
   for (UStaticMeshComponent *Component : StaticMeshComponents) {
     const auto Label = GetLabelByPath(Component->GetStaticMesh());
-    SetStencilValue(Component, Label);
+    SetStencilValue(*Component, Label, bTagForSemanticSegmentation);
 #ifdef CARLA_TAGGER_EXTRA_LOG
     UE_LOG(LogCarla, Log, TEXT("  + StaticMeshComponent: %s"), *Component->GetName());
     UE_LOG(LogCarla, Log, TEXT("    - Label: \"%s\""), *GetLabelAsString(Label));
@@ -96,7 +99,7 @@ void ATagger::TagActor(const AActor &Actor)
   Actor.GetComponents<USkeletalMeshComponent>(SkeletalMeshComponents);
   for (USkeletalMeshComponent *Component : SkeletalMeshComponents) {
     const auto Label = GetLabelByPath(Component->GetPhysicsAsset());
-    SetStencilValue(Component, Label);
+    SetStencilValue(*Component, Label, bTagForSemanticSegmentation);
 #ifdef CARLA_TAGGER_EXTRA_LOG
     UE_LOG(LogCarla, Log, TEXT("  + SkeletalMeshComponent: %s"), *Component->GetName());
     UE_LOG(LogCarla, Log, TEXT("    - Label: \"%s\""), *GetLabelAsString(Label));
@@ -104,19 +107,11 @@ void ATagger::TagActor(const AActor &Actor)
   }
 }
 
-void ATagger::TagActorsInLevel(UWorld &World)
+void ATagger::TagActorsInLevel(UWorld &World, bool bTagForSemanticSegmentation)
 {
   for (TActorIterator<AActor> it(&World); it; ++it) {
-    TagActor(**it);
+    TagActor(**it, bTagForSemanticSegmentation);
   }
-}
-
-ECityObjectLabel ATagger::GetTagOfTaggedComponent(const UPrimitiveComponent &Component)
-{
-  return
-      (Component.bRenderCustomDepth ?
-          static_cast<ECityObjectLabel>(Component.CustomDepthStencilValue) :
-          ECityObjectLabel::None);
 }
 
 void ATagger::GetTagsOfTaggedActor(const AActor &Actor, TArray<ECityObjectLabel> &Tags)
@@ -148,7 +143,7 @@ void ATagger::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent
   Super::PostEditChangeProperty(PropertyChangedEvent);
   if (PropertyChangedEvent.Property) {
     if (bTriggerTagObjects && (GetWorld() != nullptr)) {
-      TagActorsInLevel(*GetWorld());
+      TagActorsInLevel(*GetWorld(), bTagForSemanticSegmentation);
     }
   }
   bTriggerTagObjects = false;

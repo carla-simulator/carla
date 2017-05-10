@@ -224,7 +224,7 @@ void ACityMapGenerator::GenerateRoadMap()
   check(GetWorld() != nullptr);
   check(RoadMap != nullptr);
 
-  ATagger::TagActorsInLevel(*GetWorld()); // We need the tags.
+  ATagger::TagActorsInLevel(*GetWorld(), bTagForSemanticSegmentation); // We need the tags.
 
   const float IntersectionSize = CityMapMeshTag::GetRoadIntersectionSize();
   const uint32 Margin = IntersectionSize / 2u;
