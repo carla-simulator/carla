@@ -40,8 +40,8 @@ void ACarlaPlayerState::CopyProperties(APlayerState *PlayerState)
 }
 
 void ACarlaPlayerState::RegisterCollision(
-    AActor */*Actor*/,
-    AActor */*OtherActor*/,
+    AActor * /*Actor*/,
+    AActor * /*OtherActor*/,
     const FVector &NormalImpulse,
     const FHitResult &Hit)
 {
