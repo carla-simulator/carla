@@ -101,37 +101,79 @@ void URoadMap::SetPixelAt(
 
   switch (Tag) {
     default:
-      // Is not road.
+      // It's not road.
       break;
     case ECityMapMeshTag::RoadTwoLanes_LaneRight:
-    case ECityMapMeshTag::Road90DegTurn_Lane0:
+    case ECityMapMeshTag::Road90DegTurn_Lane1:
+    case ECityMapMeshTag::RoadTIntersection_Lane1:
+    case ECityMapMeshTag::RoadTIntersection_Lane9:
+    case ECityMapMeshTag::RoadXIntersection_Lane1:
+    case ECityMapMeshTag::RoadXIntersection_Lane9:
       bIsRoad = true;
       bHasDirection = true;
       Rotator.Yaw += 180.0f;
       break;
     case ECityMapMeshTag::RoadTwoLanes_LaneLeft:
-    case ECityMapMeshTag::Road90DegTurn_Lane1:
+    case ECityMapMeshTag::Road90DegTurn_Lane0:
+    case ECityMapMeshTag::RoadTIntersection_Lane0:
+    case ECityMapMeshTag::RoadTIntersection_Lane2:
+    case ECityMapMeshTag::RoadTIntersection_Lane5:
+    case ECityMapMeshTag::RoadTIntersection_Lane8:
+    case ECityMapMeshTag::RoadXIntersection_Lane0:
+    case ECityMapMeshTag::RoadXIntersection_Lane8:
       bIsRoad = true;
       bHasDirection = true;
       break;
-    case ECityMapMeshTag::Road90DegTurn_Lane2:
-      bIsRoad = true;
-      bHasDirection = true;
-      Rotator.Yaw += 270.0f;
-      break;
-    case ECityMapMeshTag::Road90DegTurn_Lane3:
+    case ECityMapMeshTag::Road90DegTurn_Lane9:
+    case ECityMapMeshTag::RoadTIntersection_Lane7:
+    case ECityMapMeshTag::RoadXIntersection_Lane7:
+    case ECityMapMeshTag::RoadXIntersection_Lane5:
       bIsRoad = true;
       bHasDirection = true;
       Rotator.Yaw += 90.0f;
       break;
-    case ECityMapMeshTag::RoadTIntersection_Lane0:
-    case ECityMapMeshTag::RoadTIntersection_Lane1:
-    case ECityMapMeshTag::RoadTIntersection_Lane2:
-    case ECityMapMeshTag::RoadTIntersection_Lane3:
-    case ECityMapMeshTag::RoadXIntersection_Lane0:
-    case ECityMapMeshTag::RoadXIntersection_Lane1:
+    case ECityMapMeshTag::Road90DegTurn_Lane7:
+      bIsRoad = true;
+      bHasDirection = true;
+      Rotator.Yaw += 90.0f + 22.5f;
+      break;
+    case ECityMapMeshTag::Road90DegTurn_Lane5:
+      bIsRoad = true;
+      bHasDirection = true;
+      Rotator.Yaw += 90.0f + 45.0f;
+      break;
+    case ECityMapMeshTag::Road90DegTurn_Lane3:
+      bIsRoad = true;
+      bHasDirection = true;
+      Rotator.Yaw += 90.0f + 45.0f + 22.5f;
+      break;
+    case ECityMapMeshTag::Road90DegTurn_Lane8:
+    case ECityMapMeshTag::RoadTIntersection_Lane4:
     case ECityMapMeshTag::RoadXIntersection_Lane2:
+    case ECityMapMeshTag::RoadXIntersection_Lane4:
+      bIsRoad = true;
+      bHasDirection = true;
+      Rotator.Yaw += 270.0f;
+      break;
+    case ECityMapMeshTag::Road90DegTurn_Lane6:
+      bIsRoad = true;
+      bHasDirection = true;
+      Rotator.Yaw += 270.0f + 22.5f;
+      break;
+    case ECityMapMeshTag::Road90DegTurn_Lane4:
+      bIsRoad = true;
+      bHasDirection = true;
+      Rotator.Yaw += 270.0f + 45.0f;
+      break;
+    case ECityMapMeshTag::Road90DegTurn_Lane2:
+      bIsRoad = true;
+      bHasDirection = true;
+      Rotator.Yaw += 270.0f + 45.0f + 22.5f;
+      break;
+    case ECityMapMeshTag::RoadTIntersection_Lane3:
+    case ECityMapMeshTag::RoadTIntersection_Lane6:
     case ECityMapMeshTag::RoadXIntersection_Lane3:
+    case ECityMapMeshTag::RoadXIntersection_Lane6:
       bIsRoad = true;
       bHasDirection = false;
       break;

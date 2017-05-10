@@ -162,6 +162,12 @@ void ACityMapGenerator::GenerateRoads()
     AddInstance(tag ##_Lane1, x, y, angle); \
     AddInstance(tag ##_Lane2, x, y, angle); \
     AddInstance(tag ##_Lane3, x, y, angle); \
+    AddInstance(tag ##_Lane4, x, y, angle); \
+    AddInstance(tag ##_Lane5, x, y, angle); \
+    AddInstance(tag ##_Lane6, x, y, angle); \
+    AddInstance(tag ##_Lane7, x, y, angle); \
+    AddInstance(tag ##_Lane8, x, y, angle); \
+    AddInstance(tag ##_Lane9, x, y, angle); \
     AddInstance(tag ##_Sidewalk0, x, y, angle); \
     AddInstance(tag ##_Sidewalk1, x, y, angle); \
     AddInstance(tag ##_Sidewalk2, x, y, angle); \
