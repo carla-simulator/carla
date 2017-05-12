@@ -1,3 +1,7 @@
+## CARLA 0.2.4
+
+  * Fixed serialization of road map resulting in a huge map size.
+
 ## CARLA 0.2.3
 
   * Fixed rounding errors in HUD (100% was shown as 99%, 30 FPS as 29 FPS).

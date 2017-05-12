@@ -152,6 +152,14 @@ private:
   UPROPERTY(Category = "Road Map", EditAnywhere, AdvancedDisplay)
   bool bGenerateRoadMapOnSave = true;
 
+  /** If true, activate the custom depth pass of each tagged actor in the level.
+    * This pass is necessary for rendering the semantic segmentation. However,
+    * it may add a performance penalty since occlusion doesn't seem to be
+    * applied to objects having this value active.
+    */
+  UPROPERTY(Category = "Road Map", EditAnywhere, AdvancedDisplay)
+  bool bTagForSemanticSegmentation = false;
+
   UPROPERTY()
   URoadMap *RoadMap;
 

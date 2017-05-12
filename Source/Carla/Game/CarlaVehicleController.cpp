@@ -251,12 +251,12 @@ void ACarlaVehicleController::ToggleManualMode()
 // =============================================================================
 
 void ACarlaVehicleController::OnCollisionEvent(
-    AActor* /*Actor*/,
+    AActor* Actor,
     AActor* OtherActor,
     FVector NormalImpulse,
-    const FHitResult& /*Hit*/)
+    const FHitResult& Hit)
 {
-  CarlaPlayerState->RegisterCollision(OtherActor, NormalImpulse);
+  CarlaPlayerState->RegisterCollision(Actor, OtherActor, NormalImpulse, Hit);
 }
 
 // =============================================================================

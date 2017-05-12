@@ -3,22 +3,190 @@
 #include "Carla.h"
 #include "RoadMap.h"
 
-#include "DrawDebugHelpers.h"
 #include "HighResScreenshot.h"
+
+#ifdef WITH_EDITOR
+#include "DrawDebugHelpers.h"
+#endif // WITH_EDITOR
+
+#include <type_traits>
+
+/// ============================================================================
+/// -- Static local methods ----------------------------------------------------
+/// ============================================================================
 
 static uint32 ClampFloatToUInt(const float Value, int32 Min, int32 Max)
 {
   return FMath::Clamp(FMath::FloorToInt(Value), Min, Max);
 }
 
-// Creates a valid empty map (every point is off-road).
+// Return the azimuth angle (in spherical coordinates) rotated by PI so it lies
+// in the range [0, 2*PI].
+static float GetRotatedAzimuthAngle(const FVector &Direction)
+{
+  const FVector2D SphericalCoords = Direction.UnitCartesianToSpherical();
+  return SphericalCoords.Y + PI;
+}
+
+/// ============================================================================
+/// -- FRoadMapPixelData -------------------------------------------------------
+/// ============================================================================
+
+uint16 FRoadMapPixelData::Encode(bool IsRoad, bool HasDirection, const FVector &Direction)
+{
+  const uint16 AngleAsUInt = MaximumEncodedAngle * GetRotatedAzimuthAngle(Direction) / (2.0f * PI);
+  check(!(AngleAsUInt & (1 << IsRoadRow)));
+  check(!(AngleAsUInt & (1 << HasDirectionRow)));
+  return (IsRoad << IsRoadRow) | (HasDirection << HasDirectionRow) | (AngleAsUInt);
+}
+
+FColor FRoadMapPixelData::EncodeAsColor() const
+{
+  if (!IsRoad()) {
+    return FColor(0u, 0u, 0u, 255u);
+  } else if (!HasDirection()) {
+    return FColor(255u, 255u, 255u, 255u);
+  } else {
+    auto ToColor = [](float X){
+      return FMath::FloorToInt(256.0 * (X + PI) / (2.0f * PI)) % 256;
+    };
+    const float Azimuth = GetDirectionAzimuthalAngle();
+    return FColor(0u, 255u, ToColor(Azimuth), 255u);
+  }
+}
+
+/// ============================================================================
+/// -- URoadMap ----------------------------------------------------------------
+/// ============================================================================
+
 URoadMap::URoadMap(const FObjectInitializer& ObjectInitializer) :
   Super(ObjectInitializer),
   PixelsPerCentimeter(1.0f),
   Width(1u),
   Height(1u)
 {
-  AppendEmptyPixel();
+  RoadMapData.Add(0u);
+  static_assert(
+      std::is_same<decltype(FRoadMapPixelData::Value), typename decltype(RoadMapData)::ElementType>::value,
+      "Declaration map of FRoadMapPixelData's value does not match current serialization type");
+}
+
+void URoadMap::Reset(
+    const uint32 inWidth,
+    const uint32 inHeight,
+    const float inPixelsPerCentimeter,
+    const FTransform &inWorldToMap,
+    const FVector &inMapOffset)
+{
+  RoadMapData.Init(0u, inWidth * inHeight);
+  Width = inWidth;
+  Height = inHeight;
+  PixelsPerCentimeter = inPixelsPerCentimeter;
+  WorldToMap = inWorldToMap;
+  MapOffset = inMapOffset;
+}
+
+void URoadMap::SetPixelAt(
+    const uint32 PixelX,
+    const uint32 PixelY,
+    const ECityMapMeshTag Tag,
+    const FTransform &Transform,
+    const bool bInvertDirection)
+{
+  bool bIsRoad = false;
+  bool bHasDirection = false;
+  FVector Direction(0.0f, 0.0f, 0.0f);
+
+  auto Rotator = Transform.GetRotation().Rotator();
+
+  switch (Tag) {
+    default:
+      // It's not road.
+      break;
+    case ECityMapMeshTag::RoadTwoLanes_LaneRight:
+    case ECityMapMeshTag::Road90DegTurn_Lane1:
+    case ECityMapMeshTag::RoadTIntersection_Lane1:
+    case ECityMapMeshTag::RoadTIntersection_Lane9:
+    case ECityMapMeshTag::RoadXIntersection_Lane1:
+    case ECityMapMeshTag::RoadXIntersection_Lane9:
+      bIsRoad = true;
+      bHasDirection = true;
+      Rotator.Yaw += 180.0f;
+      break;
+    case ECityMapMeshTag::RoadTwoLanes_LaneLeft:
+    case ECityMapMeshTag::Road90DegTurn_Lane0:
+    case ECityMapMeshTag::RoadTIntersection_Lane0:
+    case ECityMapMeshTag::RoadTIntersection_Lane2:
+    case ECityMapMeshTag::RoadTIntersection_Lane5:
+    case ECityMapMeshTag::RoadTIntersection_Lane8:
+    case ECityMapMeshTag::RoadXIntersection_Lane0:
+    case ECityMapMeshTag::RoadXIntersection_Lane8:
+      bIsRoad = true;
+      bHasDirection = true;
+      break;
+    case ECityMapMeshTag::Road90DegTurn_Lane9:
+    case ECityMapMeshTag::RoadTIntersection_Lane7:
+    case ECityMapMeshTag::RoadXIntersection_Lane7:
+    case ECityMapMeshTag::RoadXIntersection_Lane5:
+      bIsRoad = true;
+      bHasDirection = true;
+      Rotator.Yaw += 90.0f;
+      break;
+    case ECityMapMeshTag::Road90DegTurn_Lane7:
+      bIsRoad = true;
+      bHasDirection = true;
+      Rotator.Yaw += 90.0f + 22.5f;
+      break;
+    case ECityMapMeshTag::Road90DegTurn_Lane5:
+      bIsRoad = true;
+      bHasDirection = true;
+      Rotator.Yaw += 90.0f + 45.0f;
+      break;
+    case ECityMapMeshTag::Road90DegTurn_Lane3:
+      bIsRoad = true;
+      bHasDirection = true;
+      Rotator.Yaw += 90.0f + 45.0f + 22.5f;
+      break;
+    case ECityMapMeshTag::Road90DegTurn_Lane8:
+    case ECityMapMeshTag::RoadTIntersection_Lane4:
+    case ECityMapMeshTag::RoadXIntersection_Lane2:
+    case ECityMapMeshTag::RoadXIntersection_Lane4:
+      bIsRoad = true;
+      bHasDirection = true;
+      Rotator.Yaw += 270.0f;
+      break;
+    case ECityMapMeshTag::Road90DegTurn_Lane6:
+      bIsRoad = true;
+      bHasDirection = true;
+      Rotator.Yaw += 270.0f + 22.5f;
+      break;
+    case ECityMapMeshTag::Road90DegTurn_Lane4:
+      bIsRoad = true;
+      bHasDirection = true;
+      Rotator.Yaw += 270.0f + 45.0f;
+      break;
+    case ECityMapMeshTag::Road90DegTurn_Lane2:
+      bIsRoad = true;
+      bHasDirection = true;
+      Rotator.Yaw += 270.0f + 45.0f + 22.5f;
+      break;
+    case ECityMapMeshTag::RoadTIntersection_Lane3:
+    case ECityMapMeshTag::RoadTIntersection_Lane6:
+    case ECityMapMeshTag::RoadXIntersection_Lane3:
+    case ECityMapMeshTag::RoadXIntersection_Lane6:
+      bIsRoad = true;
+      bHasDirection = false;
+      break;
+  }
+  if (bHasDirection) {
+    FQuat Rotation(Rotator);
+    Direction = Rotation.GetForwardVector();
+    if (bInvertDirection) {
+      Direction *= -1.0f;
+    }
+  }
+  const auto Value = FRoadMapPixelData::Encode(bIsRoad, bHasDirection, Direction);
+  RoadMapData[GetIndex(PixelX, PixelY)] = Value;
 }
 
 FVector URoadMap::GetWorldLocation(uint32 PixelX, uint32 PixelY) const
@@ -30,7 +198,7 @@ FVector URoadMap::GetWorldLocation(uint32 PixelX, uint32 PixelY) const
   return WorldToMap.InverseTransformPosition(RelativePosition + MapOffset);
 }
 
-const FRoadMapPixelData &URoadMap::GetDataAt(const FVector &WorldLocation) const
+FRoadMapPixelData URoadMap::GetDataAt(const FVector &WorldLocation) const
 {
   check(IsValid());
   const FVector Location = WorldToMap.TransformPosition(WorldLocation) - MapOffset;
@@ -44,7 +212,8 @@ FRoadMapIntersectionResult URoadMap::Intersect(
     const FVector &BoxExtent,
     float ChecksPerCentimeter) const
 {
-  const auto &DirectionOfMovement = BoxTransform.GetRotation().GetForwardVector();
+  auto DirectionOfMovement = BoxTransform.GetRotation().GetForwardVector();
+  DirectionOfMovement.Z = 0.0f; // Project to XY plane (won't be normalized anymore).
   uint32 CheckCount = 0u;
   FRoadMapIntersectionResult Result = {0.0f, 0.0f};
   const float Step = 1.0f / ChecksPerCentimeter;
@@ -52,11 +221,11 @@ FRoadMapIntersectionResult URoadMap::Intersect(
     for (float Y = -BoxExtent.Y; Y < BoxExtent.Y; Y += Step) {
       ++CheckCount;
       auto Location = BoxTransform.TransformPosition(FVector(X, Y, 0.0f));
-      auto &Data = GetDataAt(Location);
-      if (Data.bIsOffRoad) {
+      const auto &Data = GetDataAt(Location);
+      if (!Data.IsRoad()) {
         Result.OffRoad += 1.0f;
-      } else if (Data.bHasDirection &&
-                 0.0f < FVector::DotProduct(Data.Direction, DirectionOfMovement)) {
+      } else if (Data.HasDirection() &&
+                 0.0f > FVector::DotProduct(Data.GetDirection(), DirectionOfMovement)) {
         Result.OppositeLane += 1.0f;
       }
     }
@@ -70,21 +239,6 @@ FRoadMapIntersectionResult URoadMap::Intersect(
   return Result;
 }
 
-static FColor Encode(const FRoadMapPixelData &Data)
-{
-  if (Data.bIsOffRoad) {
-    return FColor(0u, 0u, 0u, 255u);
-  } else if (!Data.bHasDirection) {
-    return FColor(255u, 255u, 255u, 255u);
-  } else {
-    // Assumes normalized direction.
-    auto ToColor = [](float X){
-      return FMath::FloorToInt(255.0 * (X + 1.0f) / 2.0f);
-    };
-    return FColor(ToColor(Data.Direction.X), ToColor(Data.Direction.Y), ToColor(Data.Direction.Z));
-  }
-}
-
 bool URoadMap::SaveAsPNG(const FString &Path) const
 {
   if (!IsValid()) {
@@ -93,80 +247,61 @@ bool URoadMap::SaveAsPNG(const FString &Path) const
   }
 
   TArray<FColor> BitMap;
-  for (auto &Data : RoadMap) {
-    BitMap.Emplace(Encode(Data));
+  for (auto Value : RoadMapData) {
+    BitMap.Emplace(FRoadMapPixelData(Value).EncodeAsColor());
   }
 
   FIntPoint DestSize(Width, Height);
   FString ResultPath;
-  FHighResScreenshotConfig& HighResScreenshotConfig = GetHighResScreenshotConfig();
+  FHighResScreenshotConfig &HighResScreenshotConfig = GetHighResScreenshotConfig();
+  HighResScreenshotConfig.SetHDRCapture(false);
   HighResScreenshotConfig.SaveImage(Path, BitMap, DestSize, &ResultPath);
+
   UE_LOG(LogCarla, Log, TEXT("Saved road map to \"%s\""), *ResultPath);
   return true;
 }
 
+#ifdef WITH_EDITOR
+
+void URoadMap::Log() const
+{
+  const float MapSizeInMB = // Only map data, not the class itself.
+      static_cast<float>(sizeof(decltype(RoadMapData)::ElementType) * RoadMapData.Num()) /
+      (1024.0f * 1024.0f);
+  UE_LOG(
+      LogCarla,
+      Log,
+      TEXT("Generated road map %dx%d (%.2fMB) with %.2f cm/pixel"),
+      GetWidth(),
+      GetHeight(),
+      MapSizeInMB,
+      1.0f / PixelsPerCentimeter);
+
+  if (!IsValid()) {
+    UE_LOG(LogCarla, Error, TEXT("Error generating road map"));
+    return;
+  }
+}
+
 void URoadMap::DrawDebugPixelsToLevel(UWorld *World, const bool bJustFlushDoNotDraw) const
 {
+  const FVector ZOffset(0.0f, 0.0f, 50.0f);
   FlushPersistentDebugLines(World);
   if (!bJustFlushDoNotDraw) {
     for (auto X = 0u; X < Width; ++X) {
       for (auto Y = 0u; Y < Height; ++Y) {
-        auto Location = GetWorldLocation(X, Y);
-        auto Color = Encode(GetDataAt(X, Y));
-        DrawDebugPoint(World, Location, 20.0f, Color, true);
+        auto Location = GetWorldLocation(X, Y) + ZOffset;
+        const auto &Data = GetDataAt(X, Y);
+        auto Color = Data.EncodeAsColor();
+        if (Data.HasDirection()) {
+          const FVector ArrowEnd = Location + 50.0f * Data.GetDirection();
+          DrawDebugDirectionalArrow(World, Location, ArrowEnd, 60.0f, Color, true);
+        } else {
+          DrawDebugPoint(World, Location, 6.0f, Color, true);
+        }
       }
     }
   }
 }
 
-void URoadMap::AppendPixel(
-    ECityMapMeshTag Tag,
-    const FTransform &Transform,
-    const bool bInvertDirection)
-{
-  AppendEmptyPixel();
-  auto &Data = RoadMap.Last();
-  Data.bIsOffRoad = false;
-
-  auto Rotator = Transform.GetRotation().Rotator();
-  switch (Tag) {
-    case ECityMapMeshTag::RoadTwoLanes_LaneRight:
-    case ECityMapMeshTag::Road90DegTurn_Lane0:
-      Data.bHasDirection = true;
-      break;
-    case ECityMapMeshTag::RoadTwoLanes_LaneLeft:
-    case ECityMapMeshTag::Road90DegTurn_Lane1:
-      Rotator.Yaw += 180.0f;
-      Data.bHasDirection = true;
-      break;
-    case ECityMapMeshTag::Road90DegTurn_Lane2:
-      Rotator.Yaw += 90.0f;
-      Data.bHasDirection = true;
-      break;
-    case ECityMapMeshTag::Road90DegTurn_Lane3:
-      Rotator.Yaw += 270.0f;
-      Data.bHasDirection = true;
-      break;
-  }
-  if (Data.bHasDirection) {
-    FQuat Rotation(Rotator);
-    Data.Direction = Rotation.GetForwardVector();
-    if (bInvertDirection) {
-      Data.Direction *= -1.0f;
-    }
-  }
-}
-
-void URoadMap::Set(
-    const uint32 inWidth,
-    const uint32 inHeight,
-    const float inPinxelsPerCentimeter,
-    const FTransform &inWorldToMap,
-    const FVector &inMapOffset)
-{
-  Width = inWidth;
-  Height = inHeight;
-  PixelsPerCentimeter = inPinxelsPerCentimeter;
-  WorldToMap = inWorldToMap;
-  MapOffset = inMapOffset;
-}
+#endif // WITH_EDITOR

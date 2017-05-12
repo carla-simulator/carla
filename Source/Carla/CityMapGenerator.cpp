@@ -162,6 +162,12 @@ void ACityMapGenerator::GenerateRoads()
     AddInstance(tag ##_Lane1, x, y, angle); \
     AddInstance(tag ##_Lane2, x, y, angle); \
     AddInstance(tag ##_Lane3, x, y, angle); \
+    AddInstance(tag ##_Lane4, x, y, angle); \
+    AddInstance(tag ##_Lane5, x, y, angle); \
+    AddInstance(tag ##_Lane6, x, y, angle); \
+    AddInstance(tag ##_Lane7, x, y, angle); \
+    AddInstance(tag ##_Lane8, x, y, angle); \
+    AddInstance(tag ##_Lane9, x, y, angle); \
     AddInstance(tag ##_Sidewalk0, x, y, angle); \
     AddInstance(tag ##_Sidewalk1, x, y, angle); \
     AddInstance(tag ##_Sidewalk2, x, y, angle); \
@@ -189,7 +195,7 @@ void ACityMapGenerator::GenerateRoads()
 #undef ADD_INTERSECTION
 }
 
-// Find first component of type road (checking at its stencil value).
+// Find first component of type road.
 static bool LineTrace(
     UWorld *World,
     const FVector &Start,
@@ -207,7 +213,7 @@ static bool LineTrace(
 
   if (Success) {
     for (FHitResult &Item : OutHits) {
-      if (Item.Component->CustomDepthStencilValue == static_cast<uint8>(CityObjectLabel::Roads)) {
+      if (ATagger::MatchComponent(*Item.Component, ECityObjectLabel::Roads)) {
         HitResult = Item;
         return true;
       }
@@ -224,7 +230,7 @@ void ACityMapGenerator::GenerateRoadMap()
   check(GetWorld() != nullptr);
   check(RoadMap != nullptr);
 
-  ATagger::TagActorsInLevel(*GetWorld()); // We need the tags.
+  ATagger::TagActorsInLevel(*GetWorld(), bTagForSemanticSegmentation); // We need the tags.
 
   const float IntersectionSize = CityMapMeshTag::GetRoadIntersectionSize();
   const uint32 Margin = IntersectionSize / 2u;
@@ -237,15 +243,15 @@ void ACityMapGenerator::GenerateRoadMap()
 
   const FTransform &ActorTransform = GetActorTransform();
 
-  RoadMap->RoadMap.Empty();
+  const FVector MapOffset(-Offset, -Offset, 0.0f);
+  RoadMap->Reset(SizeX, SizeY, 1.0f / CmPerPixel, ActorTransform.Inverse(), MapOffset);
+
   for (uint32 PixelY = 0u; PixelY < SizeY; ++PixelY) {
     for (uint32 PixelX = 0u; PixelX < SizeX; ++PixelX) {
       const float X = static_cast<float>(PixelX) * CmPerPixel - Offset;
       const float Y = static_cast<float>(PixelY) * CmPerPixel - Offset;
       const FVector Start = ActorTransform.TransformPosition(FVector(X, Y, 50.0f));
       const FVector End = ActorTransform.TransformPosition(FVector(X, Y, -50.0f));
-
-      bool Success = false;
 
       // Do the ray tracing.
       FHitResult Hit;
@@ -258,39 +264,21 @@ void ACityMapGenerator::GenerateRoadMap()
           if (!InstancedStaticMeshComponent->GetInstanceTransform(Hit.Item, InstanceTransform, true)) {
             UE_LOG(LogCarla, Error, TEXT("Failed to get instance's transform"));
           } else {
-            RoadMap->AppendPixel(
+            RoadMap->SetPixelAt(
+                PixelX,
+                PixelY,
                 GetTag(*InstancedStaticMeshComponent->GetStaticMesh()),
                 InstanceTransform,
                 bLeftHandTraffic);
-            Success = true;
           }
         }
-      }
-
-      if (!Success) {
-        RoadMap->AppendEmptyPixel();
       }
     }
   }
 
-  const FVector MapOffset(-Offset, -Offset, 0.0f);
-  RoadMap->Set(SizeX, SizeY, 1.0f / CmPerPixel, ActorTransform.Inverse(), MapOffset);
-  const float MapSizeInMB = // Only map data, not the class itself.
-      static_cast<float>(sizeof(FRoadMapPixelData) * RoadMap->RoadMap.Num()) /
-      (1024.0f * 1024.0f);
-  UE_LOG(
-      LogCarla,
-      Log,
-      TEXT("Generated road map %dx%d (%.2fMB) with %.2f cm/pixel"),
-      RoadMap->GetWidth(),
-      RoadMap->GetHeight(),
-      MapSizeInMB,
-      CmPerPixel);
-
-  if (!RoadMap->IsValid()) {
-    UE_LOG(LogCarla, Error, TEXT("Error generating road map"));
-    return;
-  }
+#ifdef WITH_EDITOR
+  RoadMap->Log();
+#endif // WITH_EDITOR
 
   if (bSaveRoadMapToDisk) {
     const FString MapName = World->GetMapName() + TEXT(".png");
@@ -298,5 +286,7 @@ void ACityMapGenerator::GenerateRoadMap()
     RoadMap->SaveAsPNG(FilePath);
   }
 
+#ifdef WITH_EDITOR
   RoadMap->DrawDebugPixelsToLevel(GetWorld(), !bDrawDebugPixelsToLevel);
+#endif // WITH_EDITOR
 }

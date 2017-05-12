@@ -112,6 +112,11 @@ static void ValidateCameraDescription(FCameraDescription &Camera)
   Camera.ImageSizeY = (Camera.ImageSizeY == 0u ? 512u : Camera.ImageSizeY);
 }
 
+static bool RequestedSemanticSegmentation(const FCameraDescription &Camera)
+{
+  return (Camera.PostProcessEffect == EPostProcessEffect::SemanticSegmentation);
+}
+
 static void LoadSettingsFromFile(const FString &FileName, UCarlaSettings &Settings)
 {
   UE_LOG(LogCarla, Log, TEXT("Loading settings from \"%s\""), *FileName);
@@ -141,6 +146,7 @@ static void LoadSettingsFromFile(const FString &FileName, UCarlaSettings &Settin
     }
 
     ValidateCameraDescription(Camera);
+    Settings.bSemanticSegmentationEnabled |= RequestedSemanticSegmentation(Camera);
   }
 }
 
@@ -148,6 +154,9 @@ static bool GetSettingsFileName(FString &Value)
 {
   // Try to get it from the command-line arguments.
   if (FParse::Value(FCommandLine::Get(), TEXT("-carla-settings="), Value)) {
+    if (FPaths::IsRelative(Value)) {
+      Value = FPaths::ConvertRelativePathToFull(FPaths::LaunchDir(), Value);
+    }
     if (FPaths::FileExists(Value)) {
       return true;
     }
@@ -183,7 +192,7 @@ void UCarlaSettings::LoadSettings()
   }
 }
 
-void UCarlaSettings::LogSettings()
+void UCarlaSettings::LogSettings() const
 {
   UE_LOG(LogCarla, Log, TEXT("== CARLA Settings =============================================================="));
   UE_LOG(LogCarla, Log, TEXT("Settings file: %s"), *CurrentFileName);
@@ -194,6 +203,7 @@ void UCarlaSettings::LogSettings()
   UE_LOG(LogCarla, Log, TEXT("Read Port = %d"), ReadPort);
   UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_SCENECAPTURE);
   UE_LOG(LogCarla, Log, TEXT("Added %d cameras."), CameraDescriptions.Num());
+  UE_LOG(LogCarla, Log, TEXT("Semantic Segmentation = %s"), (bSemanticSegmentationEnabled ? TEXT("enabled") : TEXT("disabled")));
   for (auto &Item : CameraDescriptions) {
     UE_LOG(LogCarla, Log, TEXT("[%s/%s]"), S_CARLA_SCENECAPTURE, *Item.Key);
     UE_LOG(LogCarla, Log, TEXT("Image Size = %dx%d"), Item.Value.ImageSizeX, Item.Value.ImageSizeY);
