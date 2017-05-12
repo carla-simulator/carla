@@ -15,6 +15,9 @@ class CARLA_API ADynamicWeather : public AActor
 
 public:
 
+  /// If none is found return the default one.
+  static TArray<FWeatherDescription> LoadWeatherDescriptionsFromFile();
+
   ADynamicWeather(const FObjectInitializer& ObjectInitializer);
 
   virtual void OnConstruction(const FTransform &Transform) override;
@@ -50,11 +53,27 @@ private:
 
   void AdjustSunPositionBasedOnActorRotation();
 
+#if WITH_EDITOR
+
+  bool LoadFromConfigFile();
+
+  bool SaveToConfigFile() const;
+
+#endif // WITH_EDITOR
+
 #if WITH_EDITORONLY_DATA
   UPROPERTY()
-  UArrowComponent* ArrowComponent;
+  UArrowComponent *ArrowComponent;
 #endif // WITH_EDITORONLY_DATA
 
-  UPROPERTY(Category = "Weather", EditAnywhere)
+#if WITH_EDITOR
+  UPROPERTY(Category = "Weather Description", EditAnywhere)
+  bool bLoadFromConfigFile = false;
+
+  UPROPERTY(Category = "Weather Description", EditAnywhere)
+  bool bSaveToConfigFile = false;
+#endif // WITH_EDITOR
+
+  UPROPERTY(Category = "Weather Description", EditAnywhere)
   FWeatherDescription Weather;
 };

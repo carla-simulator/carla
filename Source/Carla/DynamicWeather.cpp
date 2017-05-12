@@ -3,7 +3,53 @@
 #include "Carla.h"
 #include "DynamicWeather.h"
 
+#include "IniFile.h"
+
 #include "Components/ArrowComponent.h"
+
+static bool GetWeatherIniFileName(FString &FileName)
+{
+  FileName = FPaths::Combine(FPaths::GameConfigDir(), TEXT("CarlaWeather.ini"));
+  const bool bFileExists = FPaths::FileExists(FileName);
+  if (!bFileExists) {
+    UE_LOG(LogCarla, Error, TEXT("\"%s\" no such file"), *FileName);
+  }
+  return bFileExists;
+}
+
+static bool CheckWeatherValidity(const FWeatherDescription &Weather)
+{
+  if (Weather.Name.IsEmpty()) {
+    UE_LOG(LogCarla, Error, TEXT("Weather doesn't have a name, please provide one"));
+    return false;
+  }
+  return true;
+}
+
+TArray<FWeatherDescription> ADynamicWeather::LoadWeatherDescriptionsFromFile()
+{
+  TArray<FWeatherDescription> Descriptions;
+
+  // Try to load config file.
+  FString FileName;
+  if (GetWeatherIniFileName(FileName)) {
+    IniFile ConfigFile(FileName);
+
+    // For every section in the config file add a weather description.
+    for (auto &Item : ConfigFile.GetFConfigFile()) {
+      Descriptions.AddDefaulted(1u);
+      Descriptions.Last().ReadFromConfigFile(ConfigFile, Item.Key);
+    }
+  }
+
+  // If no description was found, append a defaulted one.
+  if (Descriptions.Num() == 0) {
+    UE_LOG(LogCarla, Warning, TEXT("No weather description found"));
+    Descriptions.AddDefaulted(1u);
+  }
+
+  return Descriptions;
+}
 
 ADynamicWeather::ADynamicWeather(const FObjectInitializer& ObjectInitializer)
 {
@@ -41,6 +87,22 @@ void ADynamicWeather::PostEditChangeProperty(FPropertyChangedEvent &Event)
     Update();
   } else {
     AdjustSunPositionBasedOnActorRotation();
+  }
+  if (bSaveToConfigFile) {
+    bSaveToConfigFile = false;
+    if (SaveToConfigFile()) {
+      UE_LOG(LogCarla, Log, TEXT("Weather \"%s\" saved to config file"), *Weather.Name);
+    } else {
+      UE_LOG(LogCarla, Error, TEXT("Error saving weather to config file"));
+    }
+  }
+  if (bLoadFromConfigFile) {
+    bLoadFromConfigFile = false;
+    if (LoadFromConfigFile()) {
+      UE_LOG(LogCarla, Log, TEXT("Weather \"%s\" loaded from config file"), *Weather.Name);
+    } else {
+      UE_LOG(LogCarla, Error, TEXT("Error loading weather from config file"));
+    }
   }
 }
 
@@ -81,3 +143,35 @@ void ADynamicWeather::AdjustSunPositionBasedOnActorRotation()
   Weather.SunPolarAngle = FMath::RadiansToDegrees(SphericalCoords.X);
   Weather.SunAzimuthAngle = FMath::RadiansToDegrees(SphericalCoords.Y);
 }
+
+#if WITH_EDITOR
+
+bool ADynamicWeather::LoadFromConfigFile()
+{
+  FString FileName;
+  if (GetWeatherIniFileName(FileName) && CheckWeatherValidity(Weather)) {
+    IniFile ConfigFile(FileName);
+    if (!ConfigFile.HasSection(Weather.Name)) {
+      UE_LOG(LogCarla, Error, TEXT("Weather \"%s\" is not present in config file"), *Weather.Name);
+      return false;
+    }
+    Weather.ReadFromConfigFile(ConfigFile, Weather.Name);
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool ADynamicWeather::SaveToConfigFile() const
+{
+  FString FileName;
+  if (GetWeatherIniFileName(FileName) && CheckWeatherValidity(Weather)) {
+    IniFile ConfigFile(FileName);
+    Weather.WriteToConfigFile(ConfigFile);
+    return ConfigFile.Write(FileName);
+  } else {
+    return false;
+  }
+}
+
+#endif // WITH_EDITOR
