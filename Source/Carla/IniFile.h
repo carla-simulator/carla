@@ -41,14 +41,16 @@ public:
   // ===========================================================================
   /// @{
 
-  void AddSectionIfMissing(const FString &Section)
-  {
-    ConfigFile.FindOrAddSection(Section);
-  }
-
   bool HasSection(const FString &Section) const
   {
     return (ConfigFile.Num() > 0) && (ConfigFile.Find(Section) != nullptr);
+  }
+
+  void AddSectionIfMissing(const FString &Section)
+  {
+    if (!HasSection(Section)) {
+      ConfigFile.Add(Section, FConfigSection());
+    }
   }
 
   /// Write contents to disk.
