@@ -17,6 +17,7 @@ enum class ECityObjectLabel : uint8
   RoadLines    =   6u,
   Roads        =   7u,
   Sidewalks    =   8u,
+  TrafficSigns =  12u,
   Vegetation   =   9u,
   Vehicles     =  10u,
   Walls        =  11u,
