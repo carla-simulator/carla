@@ -24,6 +24,7 @@ static FString GetLabelAsString(const ECityObjectLabel Label)
     CARLA_GET_LABEL_STR(RoadLines)
     CARLA_GET_LABEL_STR(Roads)
     CARLA_GET_LABEL_STR(Sidewalks)
+    CARLA_GET_LABEL_STR(TrafficSigns)
     CARLA_GET_LABEL_STR(Vegetation)
     CARLA_GET_LABEL_STR(Vehicles)
     CARLA_GET_LABEL_STR(Walls)
@@ -47,6 +48,7 @@ static ECityObjectLabel GetLabelByFolderName(const FString &String) {
   else if (String == "Road")            return ECityObjectLabel::Roads;
   else if (String == "RoadLines")       return ECityObjectLabel::RoadLines;
   else if (String == "SideWalk")        return ECityObjectLabel::Sidewalks;
+  else if (String == "TrafficSigns")    return ECityObjectLabel::TrafficSigns;
   else if (String == "Vegetation")      return ECityObjectLabel::Vegetation;
   else if (String == "Vehicles")        return ECityObjectLabel::Vehicles;
   else if (String == "Walls")           return ECityObjectLabel::Walls;

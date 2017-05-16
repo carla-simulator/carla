@@ -4,16 +4,22 @@
 
 #include "WeatherDescription.generated.h"
 
+class IniFile;
+
 UENUM(BlueprintType)
 enum class EPrecipitationType : uint8
 {
-  Rain                  UMETA(DisplayName = "Rain"),
+  Rain                  UMETA(DisplayName = "Rain")
 };
 
 USTRUCT(BlueprintType)
 struct FWeatherDescription
 {
   GENERATED_USTRUCT_BODY()
+
+  void ReadFromConfigFile(const IniFile &ConfigFile, const FString &Section);
+
+  void WriteToConfigFile(IniFile &ConfigFile) const;
 
   // ===========================================================================
   /// @name Weather

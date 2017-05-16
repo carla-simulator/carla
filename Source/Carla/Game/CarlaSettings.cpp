@@ -4,66 +4,25 @@
 #include "CarlaSettings.h"
 
 #include "CommandLine.h"
-#include "ConfigCacheIni.h"
-
-#include <limits>
+#include "IniFile.h"
 
 // INI file sections.
 #define S_CARLA_SERVER                 TEXT("CARLA/Server")
 #define S_CARLA_SCENECAPTURE           TEXT("CARLA/SceneCapture")
 
-template <typename TARGET, typename SOURCE>
-static void SafeCastTo(SOURCE source, TARGET &target)
-{
-  if ((source >= std::numeric_limits<TARGET>::lowest()) &&
-      (source <= std::numeric_limits<TARGET>::max())) {
-    target = static_cast<TARGET>(source);
-  } else {
-    UE_LOG(LogCarla, Error, TEXT("CarlaSettings: Type cast failed"));
-  }
-}
-
 // =============================================================================
-// -- INIFile ------------------------------------------------------------------
+// -- MyIniFile ----------------------------------------------------------------
 // =============================================================================
 
-class INIFile {
+class MyIniFile : public IniFile {
 public:
 
-  explicit INIFile(const FString &FileName)
-  {
-    ConfigFile.Read(FileName);
-  }
-
-  void GetBool(const TCHAR* Section, const TCHAR* Key, bool &Target) const
-  {
-    bool Value;
-    if (ConfigFile.GetBool(Section, Key, Value)) {
-      Target = Value;
-    }
-  }
-
-  template <typename T>
-  void GetInt(const TCHAR* Section, const TCHAR* Key, T &Target) const
-  {
-    int64 Value;
-    if (ConfigFile.GetInt64(Section, Key, Value)) {
-      SafeCastTo<T>(Value, Target);
-    }
-  }
-
-  void GetString(const TCHAR* Section, const TCHAR* Key, FString &Target) const
-  {
-    FString Value;
-    if (ConfigFile.GetString(Section, Key, Value)) {
-      Target = Value;
-    }
-  }
+  explicit MyIniFile(const FString &FileName) : IniFile(FileName) {}
 
   void GetPostProcessEffect(const TCHAR* Section, const TCHAR* Key, EPostProcessEffect &Target) const
   {
     FString ValueString;
-    if (ConfigFile.GetString(Section, Key, ValueString)) {
+    if (GetFConfigFile().GetString(Section, Key, ValueString)) {
       if (ValueString == "None") {
         Target = EPostProcessEffect::None;
       } else if (ValueString == "SceneFinal") {
@@ -78,18 +37,14 @@ public:
       }
     }
   }
-
-private:
-
-  FConfigFile ConfigFile;
 };
 
 // =============================================================================
-// -- Other static methods -----------------------------------------------------
+// -- Static methods -----------------------------------------------------------
 // =============================================================================
 
 static void GetCameraDescription(
-    const INIFile &ConfigFile,
+    const MyIniFile &ConfigFile,
     const TCHAR* Section,
     FCameraDescription &Camera)
 {
@@ -120,7 +75,7 @@ static bool RequestedSemanticSegmentation(const FCameraDescription &Camera)
 static void LoadSettingsFromFile(const FString &FileName, UCarlaSettings &Settings)
 {
   UE_LOG(LogCarla, Log, TEXT("Loading settings from \"%s\""), *FileName);
-  INIFile ConfigFile(FileName);
+  MyIniFile ConfigFile(FileName);
   // CarlaServer.
   ConfigFile.GetBool(S_CARLA_SERVER, TEXT("UseNetworking"), Settings.bUseNetworking);
   ConfigFile.GetInt(S_CARLA_SERVER, TEXT("WorldPort"), Settings.WorldPort);

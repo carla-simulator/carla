@@ -108,18 +108,19 @@ void ACarlaVehicleController::Possess(APawn *aPawn)
 
 void ACarlaVehicleController::BeginPlay()
 {
-  check(CarlaPlayerState != nullptr);
-  CarlaPlayerState->Images.Empty();
-  const auto NumberOfCameras = SceneCaptureCameras.Num();
-  if (NumberOfCameras > 0) {
-    CarlaPlayerState->Images.AddDefaulted(NumberOfCameras);
-    for (auto i = 0; i < NumberOfCameras; ++i) {
-      auto *Camera = SceneCaptureCameras[i];
-      check(Camera != nullptr);
-      auto &Image = CarlaPlayerState->Images[i];
-      Image.SizeX = Camera->GetImageSizeX();
-      Image.SizeY = Camera->GetImageSizeY();
-      Image.PostProcessEffect = Camera->GetPostProcessEffect();
+  if (CarlaPlayerState != nullptr) {
+    CarlaPlayerState->Images.Empty();
+    const auto NumberOfCameras = SceneCaptureCameras.Num();
+    if (NumberOfCameras > 0) {
+      CarlaPlayerState->Images.AddDefaulted(NumberOfCameras);
+      for (auto i = 0; i < NumberOfCameras; ++i) {
+        auto *Camera = SceneCaptureCameras[i];
+        check(Camera != nullptr);
+        auto &Image = CarlaPlayerState->Images[i];
+        Image.SizeX = Camera->GetImageSizeX();
+        Image.SizeY = Camera->GetImageSizeY();
+        Image.PostProcessEffect = Camera->GetPostProcessEffect();
+      }
     }
   }
 
