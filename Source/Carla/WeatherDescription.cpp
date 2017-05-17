@@ -55,6 +55,10 @@ void FWeatherDescription::ReadFromConfigFile(const IniFile &ConfigFile, const FS
   LoadPrecipitationType(ConfigFile, *Section, TEXT("PrecipitationType"), PrecipitationType);
   CARLA_LOAD_FROM_INI(Float, PrecipitationAmount)
   CARLA_LOAD_FROM_INI(Float, PrecipitationAccumulation)
+  // Wind.
+  CARLA_LOAD_FROM_INI(Bool, bWind)
+  CARLA_LOAD_FROM_INI(Float, WindIntensity)
+  CARLA_LOAD_FROM_INI(Float, WindAngle)
 #undef CARLA_LOAD_FROM_INI
 }
 
@@ -84,5 +88,9 @@ void FWeatherDescription::WriteToConfigFile(IniFile &ConfigFile) const
   ConfigFile.SetString(*Section, TEXT("PrecipitationType"), PrecipitationTypeToString(PrecipitationType));
   CARLA_WRITE_TO_INI(Float, PrecipitationAmount)
   CARLA_WRITE_TO_INI(Float, PrecipitationAccumulation)
+  // Wind.
+  CARLA_WRITE_TO_INI(Bool, bWind)
+  CARLA_WRITE_TO_INI(Float, WindIntensity)
+  CARLA_WRITE_TO_INI(Float, WindAngle)
 #undef CARLA_WRITE_TO_INI
 }
