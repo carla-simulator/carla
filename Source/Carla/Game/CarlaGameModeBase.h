@@ -3,8 +3,10 @@
 #pragma once
 
 #include "GameFramework/GameModeBase.h"
+#include "AI/WalkerSpawnerBase.h"
 #include "CarlaGameControllerBase.h"
-#include "CarlaGameMode.generated.h"
+#include "DynamicWeather.h"
+#include "CarlaGameModeBase.generated.h"
 
 class APlayerStart;
 class ASceneCaptureCamera;
@@ -14,13 +16,13 @@ class UTaggerDelegate;
  *
  */
 UCLASS()
-class CARLA_API ACarlaGameMode : public AGameModeBase
+class CARLA_API ACarlaGameModeBase : public AGameModeBase
 {
   GENERATED_BODY()
 
 public:
 
-  ACarlaGameMode(const FObjectInitializer& ObjectInitializer);
+  ACarlaGameModeBase(const FObjectInitializer& ObjectInitializer);
 
   virtual void InitGame(const FString &MapName, const FString &Options, FString &ErrorMessage) override;
 
@@ -29,6 +31,16 @@ public:
   virtual void BeginPlay() override;
 
   virtual void Tick(float DeltaSeconds) override;
+
+protected:
+
+  /** The class of DynamicWeather to spawn. */
+  UPROPERTY(Category = "CARLA Classes", EditAnywhere, BlueprintReadOnly)
+  TSubclassOf<ADynamicWeather> DynamicWeatherClass;
+
+  /** The class of WalkerSpawner to spawn. */
+  UPROPERTY(Category = "CARLA Classes", EditAnywhere, BlueprintReadOnly)
+  TSubclassOf<AWalkerSpawnerBase> WalkerSpawnerClass;
 
 private:
 
@@ -56,4 +68,10 @@ private:
 
   UPROPERTY()
   UTaggerDelegate *TaggerDelegate;
+
+  UPROPERTY()
+  ADynamicWeather *DynamicWeather;
+
+  UPROPERTY()
+  AWalkerSpawnerBase *WalkerSpawner;
 };

@@ -88,6 +88,16 @@ void AWalkerSpawnerBase::Tick(float DeltaTime)
 // -- Other member functions ---------------------------------------------------
 // =============================================================================
 
+void AWalkerSpawnerBase::SetNumberOfWalkers(const int32 Count)
+{
+  if (Count > 0) {
+    bSpawnWalkers = true;
+    NumberOfWalkers = Count;
+  } else {
+    bSpawnWalkers = false;
+  }
+}
+
 void AWalkerSpawnerBase::TryToSpawnRandomWalker()
 {
   auto SpawnPoint = GetRandomSpawnPoint();

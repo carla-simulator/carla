@@ -62,10 +62,7 @@ protected:
   /// @{
 public:
 
-  void SetNumberOfWalkers(int32 Count)
-  {
-    NumberOfWalkers = Count;
-  }
+  void SetNumberOfWalkers(int32 Count);
 
 private:
 

@@ -26,10 +26,8 @@ static bool CheckWeatherValidity(const FWeatherDescription &Weather)
   return true;
 }
 
-TArray<FWeatherDescription> ADynamicWeather::LoadWeatherDescriptionsFromFile()
+void ADynamicWeather::LoadWeatherDescriptionsFromFile(TArray<FWeatherDescription> &Descriptions)
 {
-  TArray<FWeatherDescription> Descriptions;
-
   // Try to load config file.
   FString FileName;
   if (GetWeatherIniFileName(FileName)) {
@@ -46,9 +44,8 @@ TArray<FWeatherDescription> ADynamicWeather::LoadWeatherDescriptionsFromFile()
   if (Descriptions.Num() == 0) {
     UE_LOG(LogCarla, Warning, TEXT("No weather description found"));
     Descriptions.AddDefaulted(1u);
+    Descriptions.Last().Name = TEXT("Default");
   }
-
-  return Descriptions;
 }
 
 ADynamicWeather::ADynamicWeather(const FObjectInitializer& ObjectInitializer)

@@ -4,10 +4,12 @@
 #include "CarlaSettings.h"
 
 #include "CommandLine.h"
+#include "DynamicWeather.h"
 #include "IniFile.h"
 
 // INI file sections.
 #define S_CARLA_SERVER                 TEXT("CARLA/Server")
+#define S_CARLA_LEVELSETTINGS          TEXT("CARLA/LevelSettings")
 #define S_CARLA_SCENECAPTURE           TEXT("CARLA/SceneCapture")
 
 // =============================================================================
@@ -81,6 +83,17 @@ static void LoadSettingsFromFile(const FString &FileName, UCarlaSettings &Settin
   ConfigFile.GetInt(S_CARLA_SERVER, TEXT("WorldPort"), Settings.WorldPort);
   ConfigFile.GetInt(S_CARLA_SERVER, TEXT("WritePort"), Settings.WritePort);
   ConfigFile.GetInt(S_CARLA_SERVER, TEXT("ReadPort"), Settings.ReadPort);
+  // LevelSettings.
+  ConfigFile.GetInt(S_CARLA_LEVELSETTINGS, TEXT("NumberOfVehicles"), Settings.NumberOfVehicles);
+  ConfigFile.GetInt(S_CARLA_LEVELSETTINGS, TEXT("NumberOfPedestrians"), Settings.NumberOfPedestrians);
+  ConfigFile.GetInt(S_CARLA_LEVELSETTINGS, TEXT("WeatherId"), Settings.WeatherId);
+  Settings.WeatherDescriptions.Empty();
+  ADynamicWeather::LoadWeatherDescriptionsFromFile(Settings.WeatherDescriptions);
+  check(Settings.WeatherDescriptions.Num() > 0);
+  if (static_cast<int32>(Settings.WeatherId) >= Settings.WeatherDescriptions.Num()) {
+    UE_LOG(LogCarla, Error, TEXT("Provided weather id %d cannot be found"), Settings.WeatherId);
+    Settings.WeatherId = 0u;
+  }
   // SceneCapture.
   FString Cameras;
   ConfigFile.GetString(S_CARLA_SCENECAPTURE, TEXT("Cameras"), Cameras);
@@ -152,13 +165,21 @@ void UCarlaSettings::LogSettings() const
   UE_LOG(LogCarla, Log, TEXT("== CARLA Settings =============================================================="));
   UE_LOG(LogCarla, Log, TEXT("Settings file: %s"), *CurrentFileName);
   UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_SERVER);
-  UE_LOG(LogCarla, Log, TEXT("Use Networking = %s"), (bUseNetworking ? TEXT("true") : TEXT("false")));
+  UE_LOG(LogCarla, Log, TEXT("Use Networking = %s"), (bUseNetworking ? TEXT("True") : TEXT("False")));
   UE_LOG(LogCarla, Log, TEXT("World Port = %d"), WorldPort);
   UE_LOG(LogCarla, Log, TEXT("Write Port = %d"), WritePort);
-  UE_LOG(LogCarla, Log, TEXT("Read Port = %d"), ReadPort);
+  UE_LOG(LogCarla, Log, TEXT("Read Port  = %d"), ReadPort);
+  UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_LEVELSETTINGS);
+  UE_LOG(LogCarla, Log, TEXT("Number Of Vehicles    = %d"), NumberOfVehicles);
+  UE_LOG(LogCarla, Log, TEXT("Number Of Pedestrians = %d"), NumberOfPedestrians);
+  UE_LOG(LogCarla, Log, TEXT("Weather Id = %d"), WeatherId);
+  UE_LOG(LogCarla, Log, TEXT("Found %d available weather settings."), WeatherDescriptions.Num());
+  for (auto i = 0; i < WeatherDescriptions.Num(); ++i) {
+    UE_LOG(LogCarla, Log, TEXT("  * %d - %s"), i, *WeatherDescriptions[i].Name);
+  }
   UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_SCENECAPTURE);
   UE_LOG(LogCarla, Log, TEXT("Added %d cameras."), CameraDescriptions.Num());
-  UE_LOG(LogCarla, Log, TEXT("Semantic Segmentation = %s"), (bSemanticSegmentationEnabled ? TEXT("enabled") : TEXT("disabled")));
+  UE_LOG(LogCarla, Log, TEXT("Semantic Segmentation = %s"), (bSemanticSegmentationEnabled ? TEXT("Enabled") : TEXT("Disabled")));
   for (auto &Item : CameraDescriptions) {
     UE_LOG(LogCarla, Log, TEXT("[%s/%s]"), S_CARLA_SCENECAPTURE, *Item.Key);
     UE_LOG(LogCarla, Log, TEXT("Image Size = %dx%d"), Item.Value.ImageSizeX, Item.Value.ImageSizeY);
@@ -170,4 +191,5 @@ void UCarlaSettings::LogSettings() const
 }
 
 #undef S_CARLA_SERVER
+#undef S_CARLA_LEVELSETTINGS
 #undef S_CARLA_SCENECAPTURE

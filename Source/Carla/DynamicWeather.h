@@ -15,8 +15,8 @@ class CARLA_API ADynamicWeather : public AActor
 
 public:
 
-  /// If none is found return the default one.
-  static TArray<FWeatherDescription> LoadWeatherDescriptionsFromFile();
+  /// If none is found, the default one is added.
+  static void LoadWeatherDescriptionsFromFile(TArray<FWeatherDescription> &Descriptions);
 
   ADynamicWeather(const FObjectInitializer& ObjectInitializer);
 
@@ -62,17 +62,17 @@ private:
 #endif // WITH_EDITOR
 
 #if WITH_EDITORONLY_DATA
+
   UPROPERTY()
   UArrowComponent *ArrowComponent;
-#endif // WITH_EDITORONLY_DATA
 
-#if WITH_EDITOR
   UPROPERTY(Category = "Weather Description", EditAnywhere)
   bool bLoadFromConfigFile = false;
 
   UPROPERTY(Category = "Weather Description", EditAnywhere)
   bool bSaveToConfigFile = false;
-#endif // WITH_EDITOR
+
+#endif // WITH_EDITORONLY_DATA
 
   UPROPERTY(Category = "Weather Description", EditAnywhere)
   FWeatherDescription Weather;
