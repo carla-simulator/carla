@@ -101,6 +101,7 @@ void ACarlaGameModeBase::BeginPlay()
     const auto &Weather = CarlaSettings.GetActiveWeatherDescription();
     UE_LOG(LogCarla, Log, TEXT("Changing weather settings to \"%s\""), *Weather.Name);
     DynamicWeather->SetWeatherDescription(Weather);
+    DynamicWeather->RefreshWeather();
   }
 
   // Setup walkers.
