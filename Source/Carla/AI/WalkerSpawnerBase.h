@@ -87,6 +87,10 @@ private:
   UPROPERTY(Category = "Walker Spawner", EditAnywhere, meta = (EditCondition = bSpawnWalkers, ClampMin = "1"))
   int32 NumberOfWalkers = 10;
 
+  /** Minimum walk distance in centimeters. */
+  UPROPERTY(Category = "Walker Spawner", EditAnywhere, meta = (EditCondition = bSpawnWalkers))
+  float MinimumWalkDistance = 1500.0f;
+
   /** If false, a random seed is generated each time. */
   UPROPERTY(Category = "Walker Spawner", EditAnywhere, meta = (EditCondition = bSpawnWalkers))
   bool bUseFixedSeed = true;
