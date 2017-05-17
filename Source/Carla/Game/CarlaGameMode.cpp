@@ -14,9 +14,10 @@
 #include "CarlaSettings.h"
 #include "CarlaVehicleController.h"
 #include "Tagger.h"
+#include "TaggerDelegate.h"
 
-ACarlaGameMode::ACarlaGameMode() :
-  Super(),
+ACarlaGameMode::ACarlaGameMode(const FObjectInitializer& ObjectInitializer) :
+  Super(ObjectInitializer),
   GameController(nullptr),
   PlayerController(nullptr)
 {
@@ -27,6 +28,8 @@ ACarlaGameMode::ACarlaGameMode() :
   GameStateClass = ACarlaGameState::StaticClass();
   PlayerStateClass = ACarlaPlayerState::StaticClass();
   HUDClass = ACarlaHUD::StaticClass();
+
+  TaggerDelegate = CreateDefaultSubobject<UTaggerDelegate>(TEXT("TaggerDelegate"));
 }
 
 void ACarlaGameMode::InitGame(
@@ -44,6 +47,12 @@ void ACarlaGameMode::InitGame(
   GameController = &GameInstance->GetGameController();
   GameController->Initialize(GameInstance->GetCarlaSettings());
   GameInstance->GetCarlaSettings().LogSettings();
+
+  if (TaggerDelegate != nullptr) {
+    TaggerDelegate->RegisterSpawnHandler(GetWorld());
+  } else {
+    UE_LOG(LogCarla, Error, TEXT("Missing TaggerDelegate!"));
+  }
 }
 
 void ACarlaGameMode::RestartPlayer(AController* NewPlayer)
@@ -72,6 +81,7 @@ void ACarlaGameMode::BeginPlay()
   Super::BeginPlay();
   if (GameInstance->GetCarlaSettings().bSemanticSegmentationEnabled) {
     TagActorsForSemanticSegmentation();
+    TaggerDelegate->SetSemanticSegmentationEnabled();
   }
   GameController->BeginPlay();
 }
