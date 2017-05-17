@@ -8,6 +8,7 @@
 
 class APlayerStart;
 class ASceneCaptureCamera;
+class UTaggerDelegate;
 
 /**
  *
@@ -19,7 +20,7 @@ class CARLA_API ACarlaGameMode : public AGameModeBase
 
 public:
 
-  ACarlaGameMode();
+  ACarlaGameMode(const FObjectInitializer& ObjectInitializer);
 
   virtual void InitGame(const FString &MapName, const FString &Options, FString &ErrorMessage) override;
 
@@ -52,4 +53,7 @@ private:
 
   UPROPERTY()
   AController *PlayerController;
+
+  UPROPERTY()
+  UTaggerDelegate *TaggerDelegate;
 };
