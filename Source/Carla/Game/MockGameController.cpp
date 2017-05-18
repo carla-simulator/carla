@@ -3,15 +3,37 @@
 #include "Carla.h"
 #include "MockGameController.h"
 
-void MockGameController::Initialize(UCarlaSettings & /*CarlaSettings*/)
-{
+MockGameController::MockGameController(const FMockGameControllerSettings &Settings) :
+  Settings(Settings) {}
 
+void MockGameController::Initialize(UCarlaSettings & CarlaSettings)
+{
+  if (Settings.bChangeWeatherOnBeginPlay && (CarlaSettings.WeatherDescriptions.Num() > 0)) {
+    static uint32 StaticIndex = 0u;
+    CarlaSettings.WeatherId = StaticIndex % CarlaSettings.WeatherDescriptions.Num();
+    ++StaticIndex;
+  } else {
+    CarlaSettings.WeatherId = -1;
+  }
+
+  if (Settings.bForceEnableSemanticSegmentation) {
+    CarlaSettings.bSemanticSegmentationEnabled = true;
+  }
 }
 
 APlayerStart *MockGameController::ChoosePlayerStart(
     const TArray<APlayerStart *> &AvailableStartSpots)
 {
-  return AvailableStartSpots[FMath::RandRange(0, AvailableStartSpots.Num() - 1)];
+  check(AvailableStartSpots.Num() > 0);
+  uint32 Index;
+  if (Settings.bRandomPlayerStart) {
+    Index = FMath::RandRange(0, AvailableStartSpots.Num() - 1);
+  } else {
+    static uint32 StaticIndex = 0u;
+    Index = StaticIndex % AvailableStartSpots.Num();
+    ++StaticIndex;
+  }
+  return AvailableStartSpots[Index];
 }
 
 void MockGameController::RegisterPlayer(AController &NewPlayer)

@@ -7,6 +7,7 @@
 #include "CarlaGameInstance.generated.h"
 
 class UCarlaSettings;
+struct FMockGameControllerSettings;
 
 /// The game instance contains elements that must be kept alive in between
 /// levels. It is instantiate once per game.
@@ -21,7 +22,8 @@ public:
 
   ~UCarlaGameInstance();
 
-  void InitializeGameControllerIfNotPresent();
+  void InitializeGameControllerIfNotPresent(
+      const FMockGameControllerSettings &MockControllerSettings);
 
   CarlaGameControllerBase &GetGameController()
   {
