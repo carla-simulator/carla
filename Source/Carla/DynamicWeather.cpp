@@ -68,6 +68,22 @@ ADynamicWeather::ADynamicWeather(const FObjectInitializer& ObjectInitializer)
 #endif // WITH_EDITORONLY_DATA
 }
 
+void ADynamicWeather::OnConstruction(const FTransform &Transform)
+{
+  Super::OnConstruction(Transform);
+#if WITH_EDITOR
+  Update();
+#endif // WITH_EDITOR
+}
+
+void ADynamicWeather::BeginPlay()
+{
+  Super::BeginPlay();
+#if WITH_EDITOR
+  Update();
+#endif // WITH_EDITOR
+}
+
 #if WITH_EDITOR
 
 void ADynamicWeather::PostEditChangeProperty(FPropertyChangedEvent &Event)
@@ -121,16 +137,6 @@ FVector ADynamicWeather::GetSunDirection() const
   return - SphericalCoords.SphericalToUnitCartesian();
 }
 
-void ADynamicWeather::Update()
-{
-  // Modify this actor's rotation according to Sun position.
-  if (!SetActorRotation(FQuat(GetSunDirection().Rotation()), ETeleportType::None)) {
-    UE_LOG(LogCarla, Warning, TEXT("Unable to rotate actor"));
-  }
-
-  RefreshWeather();
-}
-
 void ADynamicWeather::AdjustSunPositionBasedOnActorRotation()
 {
   const FVector Direction = - GetActorQuat().GetForwardVector();
@@ -140,6 +146,18 @@ void ADynamicWeather::AdjustSunPositionBasedOnActorRotation()
 }
 
 #if WITH_EDITOR
+
+void ADynamicWeather::Update()
+{
+  // Modify this actor's rotation according to Sun position.
+  if (!SetActorRotation(FQuat(GetSunDirection().Rotation()), ETeleportType::None)) {
+    UE_LOG(LogCarla, Warning, TEXT("Unable to rotate actor"));
+  }
+
+  if (bRefreshAutomatically) {
+    RefreshWeather();
+  }
+}
 
 bool ADynamicWeather::LoadFromConfigFile()
 {
