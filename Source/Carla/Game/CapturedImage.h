@@ -11,7 +11,7 @@
 USTRUCT()
 struct FCapturedImage
 {
-  GENERATED_BODY()
+  GENERATED_USTRUCT_BODY()
 
   UPROPERTY(VisibleAnywhere)
   uint32 SizeX = 0u;

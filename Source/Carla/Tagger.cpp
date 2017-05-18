@@ -68,10 +68,10 @@ static void SetStencilValue(
     UPrimitiveComponent &Component,
     const ECityObjectLabel &Label,
     const bool bSetRenderCustomDepth) {
+  Component.SetCustomDepthStencilValue(CastEnum(Label));
   Component.SetRenderCustomDepth(
       bSetRenderCustomDepth &&
-      !ATagger::MatchComponent(Component, ECityObjectLabel::None));
-  Component.SetCustomDepthStencilValue(CastEnum(Label));
+      (Label != ECityObjectLabel::None));
 }
 
 // =============================================================================

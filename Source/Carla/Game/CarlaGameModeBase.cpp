@@ -1,7 +1,7 @@
 // CARLA, Copyright (C) 2017 Computer Vision Center (CVC)
 
 #include "Carla.h"
-#include "CarlaGameMode.h"
+#include "CarlaGameModeBase.h"
 
 #include "Engine/PlayerStartPIE.h"
 #include "EngineUtils.h"
@@ -14,9 +14,10 @@
 #include "CarlaSettings.h"
 #include "CarlaVehicleController.h"
 #include "Tagger.h"
+#include "TaggerDelegate.h"
 
-ACarlaGameMode::ACarlaGameMode() :
-  Super(),
+ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializer) :
+  Super(ObjectInitializer),
   GameController(nullptr),
   PlayerController(nullptr)
 {
@@ -27,9 +28,11 @@ ACarlaGameMode::ACarlaGameMode() :
   GameStateClass = ACarlaGameState::StaticClass();
   PlayerStateClass = ACarlaPlayerState::StaticClass();
   HUDClass = ACarlaHUD::StaticClass();
+
+  TaggerDelegate = CreateDefaultSubobject<UTaggerDelegate>(TEXT("TaggerDelegate"));
 }
 
-void ACarlaGameMode::InitGame(
+void ACarlaGameModeBase::InitGame(
     const FString &MapName,
     const FString &Options,
     FString &ErrorMessage)
@@ -44,9 +47,23 @@ void ACarlaGameMode::InitGame(
   GameController = &GameInstance->GetGameController();
   GameController->Initialize(GameInstance->GetCarlaSettings());
   GameInstance->GetCarlaSettings().LogSettings();
+
+  if (TaggerDelegate != nullptr) {
+    TaggerDelegate->RegisterSpawnHandler(GetWorld());
+  } else {
+    UE_LOG(LogCarla, Error, TEXT("Missing TaggerDelegate!"));
+  }
+
+  if (DynamicWeatherClass != nullptr) {
+    DynamicWeather = GetWorld()->SpawnActor<ADynamicWeather>(DynamicWeatherClass);
+  }
+
+  if (WalkerSpawnerClass != nullptr) {
+    WalkerSpawner = GetWorld()->SpawnActor<AWalkerSpawnerBase>(WalkerSpawnerClass);
+  }
 }
 
-void ACarlaGameMode::RestartPlayer(AController* NewPlayer)
+void ACarlaGameModeBase::RestartPlayer(AController* NewPlayer)
 {
   check(NewPlayer != nullptr);
   TArray<APlayerStart *> UnOccupiedStartPoints;
@@ -67,22 +84,40 @@ void ACarlaGameMode::RestartPlayer(AController* NewPlayer)
   UE_LOG(LogCarla, Error, TEXT("No start spot found!"));
 }
 
-void ACarlaGameMode::BeginPlay()
+void ACarlaGameModeBase::BeginPlay()
 {
   Super::BeginPlay();
-  if (GameInstance->GetCarlaSettings().bSemanticSegmentationEnabled) {
+
+  const auto &CarlaSettings = GameInstance->GetCarlaSettings();
+
+  // Setup semantic segmentation if necessary.
+  if (CarlaSettings.bSemanticSegmentationEnabled) {
     TagActorsForSemanticSegmentation();
+    TaggerDelegate->SetSemanticSegmentationEnabled();
   }
+
+  // Change weather.
+  if (DynamicWeather != nullptr) {
+    const auto &Weather = CarlaSettings.GetActiveWeatherDescription();
+    UE_LOG(LogCarla, Log, TEXT("Changing weather settings to \"%s\""), *Weather.Name);
+    DynamicWeather->SetWeatherDescription(Weather);
+  }
+
+  // Setup walkers.
+  if (WalkerSpawner != nullptr) {
+    WalkerSpawner->SetNumberOfWalkers(CarlaSettings.NumberOfPedestrians);
+  }
+
   GameController->BeginPlay();
 }
 
-void ACarlaGameMode::Tick(float DeltaSeconds)
+void ACarlaGameModeBase::Tick(float DeltaSeconds)
 {
   Super::Tick(DeltaSeconds);
   GameController->Tick(DeltaSeconds);
 }
 
-void ACarlaGameMode::RegisterPlayer(AController &NewPlayer)
+void ACarlaGameModeBase::RegisterPlayer(AController &NewPlayer)
 {
   check(GameController != nullptr);
   AddTickPrerequisiteActor(&NewPlayer);
@@ -91,7 +126,7 @@ void ACarlaGameMode::RegisterPlayer(AController &NewPlayer)
   AttachCaptureCamerasToPlayer(*PlayerController);
 }
 
-void ACarlaGameMode::AttachCaptureCamerasToPlayer(AController &Player)
+void ACarlaGameModeBase::AttachCaptureCamerasToPlayer(AController &Player)
 {
   ACarlaVehicleController *Vehicle = Cast<ACarlaVehicleController>(&Player);
   if (Vehicle == nullptr) {
@@ -104,13 +139,13 @@ void ACarlaGameMode::AttachCaptureCamerasToPlayer(AController &Player)
   }
 }
 
-void ACarlaGameMode::TagActorsForSemanticSegmentation()
+void ACarlaGameModeBase::TagActorsForSemanticSegmentation()
 {
   check(GetWorld() != nullptr);
   ATagger::TagActorsInLevel(*GetWorld(), true);
 }
 
-APlayerStart *ACarlaGameMode::FindUnOccupiedStartPoints(
+APlayerStart *ACarlaGameModeBase::FindUnOccupiedStartPoints(
     AController *Player,
     TArray<APlayerStart *> &UnOccupiedStartPoints)
 {

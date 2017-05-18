@@ -30,11 +30,12 @@ public class Carla : ModuleRules
     PrivateDependencyModuleNames.AddRange(
       new string[]
       {
+        "AIModule",
         "CoreUObject",
         "Engine",
+        "PhysXVehicles",
         "Slate",
-        "SlateCore",
-        "PhysXVehicles"
+        "SlateCore"
         // ... add private dependencies that you statically link with here ...
       }
       );

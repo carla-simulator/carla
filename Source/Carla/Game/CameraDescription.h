@@ -8,7 +8,7 @@
 USTRUCT()
 struct FCameraDescription
 {
-  GENERATED_BODY()
+  GENERATED_USTRUCT_BODY()
 
   /** X size in pixels of the captured image. */
   UPROPERTY(Category = "Camera Description", EditDefaultsOnly, meta=(ClampMin = "1"))

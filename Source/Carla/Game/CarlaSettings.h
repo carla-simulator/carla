@@ -2,8 +2,10 @@
 
 #pragma once
 
-#include "UObject/NoExportTypes.h"
 #include "CameraDescription.h"
+#include "WeatherDescription.h"
+
+#include "UObject/NoExportTypes.h"
 #include "CarlaSettings.generated.h"
 
 /// Global settings for CARLA.
@@ -19,6 +21,11 @@ public:
 
   /** Log settings values. */
   void LogSettings() const;
+
+  const FWeatherDescription &GetActiveWeatherDescription() const
+  {
+    return WeatherDescriptions[WeatherId];
+  }
 
 private:
 
@@ -47,6 +54,29 @@ public:
   /** If networking is active, controls are read from this port. */
   UPROPERTY(Category = "CARLA Server", EditDefaultsOnly, meta = (EditCondition = bUseNetworking))
   uint32 ReadPort = 2002u;
+
+  /// @}
+  // ===========================================================================
+  /// @name Level Settings
+  // ===========================================================================
+  /// @{
+public:
+
+  /** Number of NPC vehicles to be spawned into the level. */
+  UPROPERTY(Category = "Level Settings", EditDefaultsOnly)
+  uint32 NumberOfVehicles = 5u;
+
+  /** Number of NPC pedestrians to be spawned into the level. */
+  UPROPERTY(Category = "Level Settings", EditDefaultsOnly)
+  uint32 NumberOfPedestrians = 15u;
+
+  /** Index of the weather setting to use. */
+  UPROPERTY(Category = "Level Settings", EditDefaultsOnly)
+  uint32 WeatherId = 0;
+
+  /** Available weather settings. */
+  UPROPERTY(Category = "Level Settings", EditDefaultsOnly)
+  TArray<FWeatherDescription> WeatherDescriptions;
 
   /// @}
   // ===========================================================================

@@ -46,19 +46,19 @@ struct FWeatherDescription
 
   /**  */
   UPROPERTY(Category = "Weather|Sun", EditAnywhere, BlueprintReadWrite, meta=(ClampMin = "0.0", ClampMax = "100.0"))
-  float SunBrightness;
+  float SunBrightness = 50.0f;
 
   /**  */
   UPROPERTY(Category = "Weather|Sun", EditAnywhere, BlueprintReadWrite, meta=(ClampMin = "0.0", ClampMax = "100.0"))
-  float SunDirectionalLightIntensity;
+  float SunDirectionalLightIntensity = 5.0f;
 
   /**  */
   UPROPERTY(Category = "Weather|Sun", EditAnywhere, BlueprintReadWrite)
-  FLinearColor SunDirectionalLightColor;
+  FLinearColor SunDirectionalLightColor = FLinearColor(255.0f, 240.0f, 195.0f);
 
   /**  */
   UPROPERTY(Category = "Weather|Sun", EditAnywhere, BlueprintReadWrite, meta=(ClampMin = "0.0", ClampMax = "100.0"))
-  float SunIndirectLightIntensity;
+  float SunIndirectLightIntensity = 6.0f;
 
   /// @}
   // ===========================================================================
@@ -68,35 +68,35 @@ struct FWeatherDescription
 
   /**  */
   UPROPERTY(Category = "Weather|Sky", EditAnywhere, BlueprintReadWrite, meta=(ClampMin = "0.0", ClampMax = "100.0"))
-  float CloudOpacity;
+  float CloudOpacity = 10.0f;
 
   /**  */
   UPROPERTY(Category = "Weather|Sky", EditAnywhere, BlueprintReadWrite, meta=(ClampMin = "0.0", ClampMax = "100.0"))
-  float HorizontFalloff;
+  float HorizontFalloff = 3.0f;
 
   /**  */
   UPROPERTY(Category = "Weather|Sky", EditAnywhere, BlueprintReadWrite)
-  FLinearColor ZenithColor;
+  FLinearColor ZenithColor = FLinearColor(0.0340f, 0.1092f, 0.2950f);
 
   /**  */
   UPROPERTY(Category = "Weather|Sky", EditAnywhere, BlueprintReadWrite)
-  FLinearColor HorizonColor;
+  FLinearColor HorizonColor = FLinearColor(0.6599f, 0.8622f, 1.0f);
 
   /**  */
   UPROPERTY(Category = "Weather|Sky", EditAnywhere, BlueprintReadWrite)
-  FLinearColor CloudColor;
+  FLinearColor CloudColor = FLinearColor(0.8558f, 0.9190f, 1.0f);
 
   /**  */
   UPROPERTY(Category = "Weather|Sky", EditAnywhere, BlueprintReadWrite)
-  FLinearColor OverallSkyColor;
+  FLinearColor OverallSkyColor = FLinearColor(1.0f, 1.0f, 1.0f);
 
   /**  */
   UPROPERTY(Category = "Weather|Sky", EditAnywhere, BlueprintReadWrite, meta=(ClampMin = "0.0", ClampMax = "100.0"))
-  float SkyLightIntensity;
+  float SkyLightIntensity = 4.0f;
 
   /**  */
   UPROPERTY(Category = "Weather|Sky", EditAnywhere, BlueprintReadWrite)
-  FLinearColor SkyLightColor;
+  FLinearColor SkyLightColor = FLinearColor(0.1950f, 0.1851f, 0.1413f, 0.0f);
 
   /// @}
   // ===========================================================================
@@ -114,11 +114,29 @@ struct FWeatherDescription
 
   /**  */
   UPROPERTY(Category = "Weather|Precipitation", EditAnywhere, BlueprintReadWrite, meta=(EditCondition="bPrecipitation", ClampMin = "0.0", ClampMax = "100.0"))
-  float PrecipitationAmount = 0.0f;
+  float PrecipitationAmount = 50.0f;
 
   /**  */
   UPROPERTY(Category = "Weather|Precipitation", EditAnywhere, BlueprintReadWrite, meta=(EditCondition="bPrecipitation", ClampMin = "0.0", ClampMax = "100.0"))
-  float PrecipitationAccumulation = 0.0f;
+  float PrecipitationAccumulation = 50.0f;
+
+  /// @}
+  // ===========================================================================
+  /// @name Weather - Wind
+  // ===========================================================================
+  /// @{
+
+  /**  */
+  UPROPERTY(Category = "Weather|Wind", EditAnywhere, BlueprintReadWrite)
+  bool bWind = false;
+
+  /**  */
+  UPROPERTY(Category = "Weather|Wind", EditAnywhere, BlueprintReadWrite, meta=(EditCondition="bWind", ClampMin = "0.0", ClampMax = "100.0"))
+  float WindIntensity = 20.0f;
+
+  /**  */
+  UPROPERTY(Category = "Weather|Wind", EditAnywhere, BlueprintReadWrite, meta=(EditCondition="bWind", ClampMin = "-180.0", ClampMax = "180.0"))
+  float WindAngle = 0.0f;
 
   /// @}
 };
