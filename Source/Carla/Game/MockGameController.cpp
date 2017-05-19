@@ -8,7 +8,7 @@ MockGameController::MockGameController(const FMockGameControllerSettings &InSett
 
 void MockGameController::Initialize(UCarlaSettings & CarlaSettings)
 {
-#ifdef WITH_EDITOR
+#if WITH_EDITOR
   if (Settings.bOverrideCarlaSettings) {
     CarlaSettings.NumberOfVehicles = Settings.NumberOfVehicles;
     CarlaSettings.NumberOfPedestrians = Settings.NumberOfPedestrians;
@@ -20,13 +20,13 @@ void MockGameController::Initialize(UCarlaSettings & CarlaSettings)
     static uint32 StaticIndex = 0u;
     CarlaSettings.WeatherId = StaticIndex % CarlaSettings.WeatherDescriptions.Num();
     ++StaticIndex;
-  } else {
-    CarlaSettings.WeatherId = -1;
   }
 
+#if WITH_EDITOR
   if (Settings.bForceEnableSemanticSegmentation) {
     CarlaSettings.bSemanticSegmentationEnabled = true;
   }
+#endif // WITH_EDITOR
 }
 
 APlayerStart *MockGameController::ChoosePlayerStart(
