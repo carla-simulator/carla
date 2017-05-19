@@ -20,3 +20,32 @@ following
 [/Script/Engine.RendererSettings]
 r.CustomDepth=3
 ```
+
+Weather presets
+---------------
+
+To change the weather and sun light, set `WeatherId` in CarlaSettings.ini
+from the following
+
+  * 0 - Default
+  * 1 - ClearNoon
+  * 2 - CloudyNoon
+  * 3 - WetNoon
+  * 4 - WetCloudyNoon
+  * 5 - MidRainyNoon
+  * 6 - HardRainNoon
+  * 7 - SoftRainNoon
+  * 8 - ClearSunset
+  * 9 - CloudySunset
+  * 10 - WetSunset
+  * 11 - WetCloudySunset
+  * 12 - MidRainSunset
+  * 13 - HardRainSunset
+  * 14 - SoftRainSunset
+
+E.g., to choose the weather to be hard-rain at noon, add to CarlaSettings.ini
+
+```
+[CARLA/LevelSettings]
+WeatherId=6
+```
