@@ -1,3 +1,16 @@
+## CARLA 0.3.0
+
+  * Added basic dynamic weather functionality.
+    - Weather and sun light can be changed during game.
+    - Presets stored in config file CarlaWeather.ini.
+  * Add basic functionality to spawn pedestrians.
+  * Split road meshes for intersections and turns for better precission of the road map.
+  * Better debug for road map.
+  * Implemented collision count for other cars and pedestrians.
+  * Command line argument -carla-settings now accepts relative paths.
+  * Improved performance when semantic segmentation is disabled.
+  * Improved tagger system.
+
 ## CARLA 0.2.4
 
   * Fixed serialization of road map resulting in a huge map size.
