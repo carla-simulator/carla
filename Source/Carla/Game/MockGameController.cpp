@@ -3,8 +3,8 @@
 #include "Carla.h"
 #include "MockGameController.h"
 
-MockGameController::MockGameController(const FMockGameControllerSettings &Settings) :
-  Settings(Settings) {}
+MockGameController::MockGameController(const FMockGameControllerSettings &InSettings) :
+  Settings(InSettings) {}
 
 void MockGameController::Initialize(UCarlaSettings & CarlaSettings)
 {
