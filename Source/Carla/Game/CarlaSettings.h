@@ -24,7 +24,7 @@ public:
 
   const FWeatherDescription *GetActiveWeatherDescription() const
   {
-    if ((WeatherId > 0) && (WeatherId < WeatherDescriptions.Num())) {
+    if ((WeatherId >= 0) && (WeatherId < WeatherDescriptions.Num())) {
       return &WeatherDescriptions[WeatherId];
     }
     return nullptr;
