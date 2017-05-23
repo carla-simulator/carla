@@ -5,7 +5,7 @@
 
 #include "HighResScreenshot.h"
 
-#ifdef WITH_EDITOR
+#if WITH_EDITOR
 #include "DrawDebugHelpers.h"
 #endif // WITH_EDITOR
 
@@ -261,7 +261,7 @@ bool URoadMap::SaveAsPNG(const FString &Path) const
   return true;
 }
 
-#ifdef WITH_EDITOR
+#if WITH_EDITOR
 
 void URoadMap::Log() const
 {
