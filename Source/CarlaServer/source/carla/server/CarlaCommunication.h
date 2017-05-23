@@ -26,7 +26,7 @@ namespace server {
 
     explicit CarlaCommunication(int worldPort, int writePort, int readPort);
 
-    //~CarlaCommunication();
+    ~CarlaCommunication();
 
     void sendReward(std::unique_ptr<Reward_Values> values);
 

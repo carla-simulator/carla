@@ -181,6 +181,13 @@ namespace server {
       [this]() { ReconnectAll(*this); }
     } {}
 
+
+  CarlaCommunication::~CarlaCommunication(){
+    _worldThread.done = true;
+    _serverThread.done = true;
+    _clientThread.done = true;
+  }
+
   void CarlaCommunication::sendReward(std::unique_ptr<Reward_Values> values) {
     _serverThread.push(std::move(values));
   }
@@ -275,7 +282,6 @@ namespace server {
     std::unique_ptr<std::string> request = _worldThread.tryPop();
 
     if (request == nullptr) { 
-      std::cout << "NO NEW EPISODE " << std::endl;
       return false; 
     }
 

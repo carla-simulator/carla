@@ -34,9 +34,11 @@ namespace thread {
 
     std::unique_ptr<T> wait_and_pop() {
       std::unique_lock<std::mutex> lock(_mutex);
+    
       _condition.wait(lock, [this]() {
         return _value != nullptr || !_canWait;
       });
+    
       return std::move(_value);
     }
 

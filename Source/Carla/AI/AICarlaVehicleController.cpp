@@ -227,13 +227,6 @@ void AAICarlaVehicleController::Tick(float DeltaTime){
   MovementComponent->SetSteeringInput(steering);
   MovementComponent->SetThrottleInput(throttle);
 
-
-  UE_LOG(LogCarla, Log,
-        TEXT("Throttle: %f        Steering: %f "),
-        throttle,
-        steering
-        );
-
 }
 
 float AAICarlaVehicleController::GoTo(FVector objective){
@@ -390,6 +383,13 @@ void AAICarlaVehicleController::RedTrafficLight(bool state){
 
 void AAICarlaVehicleController::NewSpeedLimit(float speed){
   MAX_SPEED = speed;
+
+
+
+  UE_LOG(LogCarla, Log,
+        TEXT("New Speed: %f"),
+        MAX_SPEED
+        );
 }
 
 
