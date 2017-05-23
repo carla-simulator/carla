@@ -78,7 +78,7 @@ namespace carla {
     /// Possible world positions to spawn the player.
     std::vector<Vector2D> possible_positions;
     /// Projection matrices of the cameras.
-    std::vector<std::array<float, 16u>> projection_matrices;
+    //std::vector<std::array<float, 16u>> projection_matrices;
   };
 
   /// Asynchronous TCP server. Uses three ports, one for sending messages
@@ -102,11 +102,11 @@ namespace carla {
     /// Initialize the server.
     ///
     /// @param LevelCount Number of levels available.
-    bool init(uint32_t levelCount);
+    //bool init(uint32_t levelCount);
 
     /// Try to read if the client has selected an scene and mode. Return false
     /// if the queue is empty.
-    bool tryReadSceneInit(uint32_t &scene, bool &readed);
+    //bool tryReadSceneInit(uint32_t &scene, bool &readed);
 
     /// Try to read if the client has selected an end & start point. Return
     /// false if the queue is empty.
@@ -116,7 +116,7 @@ namespace carla {
     /// is empty.
     bool tryReadControl(float &steer, float &throttle, bool &readed);
 
-    bool newEpisodeRequested(bool &newEpisode);
+    bool newEpisodeRequested(std::string &init_file, bool &readed);
 
     /// Send values of the current player status.
     ///

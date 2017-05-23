@@ -294,7 +294,7 @@ static bool getPNGImages(const std::vector<Image> &images, Reward &rwd) {
 
   void Protocol::LoadScene(Scene &scene, const Scene_Values &values) {
 
-    scene.set_number_of_cameras(values.projection_matrices.size());
+    //scene.set_number_of_cameras(values.projection_matrices.size());
 
     std::string positions_bytes = "";
 
@@ -318,7 +318,7 @@ static bool getPNGImages(const std::vector<Image> &images, Reward &rwd) {
 
     scene.set_positions(positions_bytes);
 
-    std::string matrices;
+   /* std::string matrices;
 
     for (auto i = 0u; i < values.projection_matrices.size(); ++i) {
       for (auto e = 0u; e < 16u; ++e){
@@ -332,14 +332,15 @@ static bool getPNGImages(const std::vector<Image> &images, Reward &rwd) {
       }
     }
 
-    scene.set_projection_matrices(matrices);
+    scene.set_projection_matrices(matrices);*/
 
   }
 
+/*
   void Protocol::LoadWorld(World &world, const int modes, const int scenes) {
     world.set_modes(modes);
     world.set_scenes(scenes);
   }
-
+*/
 }
 }

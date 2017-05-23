@@ -81,7 +81,6 @@ namespace server {
   static std::unique_ptr<std::string> worldReceiveThread(TCPServer &server, thread::AsyncReadWriteJobQueue<std::string, std::string> &thr) {
     auto message = std::make_unique<std::string>();
     bool success = false;
-
     do {
 
       if (!thr.getRestart()) {
@@ -201,7 +200,7 @@ namespace server {
 
     return true;
   }
-
+/*
   void CarlaCommunication::sendWorld(const uint32_t scenes) {
     //ClearThreads
     _worldThread.clear();
@@ -217,7 +216,7 @@ namespace server {
       _worldThread.push(std::move(message));
     }
   }
-
+*/
   void CarlaCommunication::sendScene(const Scene_Values &values) {
 
     Scene scene;
@@ -240,6 +239,7 @@ namespace server {
     }
   }
 
+/*
   bool CarlaCommunication::tryReadSceneInit(uint32_t &scene) {
     scene = 0u;
 
@@ -253,6 +253,7 @@ namespace server {
     scene = sceneInit.scene();
     return true;
   }
+*/
 
   bool CarlaCommunication::tryReadEpisodeStart(uint32_t &start_index, uint32_t &end_index) {
     start_index = 0;
@@ -270,17 +271,29 @@ namespace server {
     return true;
   }
 
-  bool CarlaCommunication::tryReadRequestNewEpisode() {
+  bool CarlaCommunication::tryReadRequestNewEpisode(std::string &init_file) {
     std::unique_ptr<std::string> request = _worldThread.tryPop();
 
-    if (request == nullptr) { return false; }
+    if (request == nullptr) { 
+      std::cout << "NO NEW EPISODE " << std::endl;
+      return false; 
+    }
 
     RequestNewEpisode reqEpisode;
 
     if (!reqEpisode.ParseFromString(*request)) {
+
       _worldThread.undoPop(std::move(request));
+
       return false;
-    } else { return true; }
+    } else { 
+      
+      init_file = reqEpisode.init_file();
+
+      std::cout << init_file << std::endl;
+
+      return true; 
+    }
   }
 
   void CarlaCommunication::restartServer() {

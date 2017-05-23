@@ -36,13 +36,13 @@ namespace server {
 
     void sendReset();
 
-    void sendWorld(const uint32_t scenes);
+    //void sendWorld(const uint32_t scenes);
 
-    bool tryReadSceneInit(uint32_t &scene);
+    //bool tryReadSceneInit(uint32_t &scene);
 
     bool tryReadEpisodeStart(uint32_t &start_index, uint32_t &end_index);
 
-    bool tryReadRequestNewEpisode();
+    bool tryReadRequestNewEpisode(std::string &init_file);
 
     void restartServer();
 

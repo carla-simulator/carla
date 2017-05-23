@@ -97,9 +97,14 @@ int main(int argc, char *argv[]) {
     carla::CarlaServer server(writePort, readPort, worldPort);
 
     // Let's simulate the game loop.
-    for (;;) {
-      if (server.init(1u)) {
+    std::string file;
+    bool read;
 
+    for (;;) {
+      if (server.newEpisodeRequested(file, read) && read) {
+
+        std::cout << "Entra" << std::endl;
+/*
         {
           uint32_t scene;
           bool error = false, readed = false;
@@ -112,7 +117,7 @@ int main(int argc, char *argv[]) {
           }
           else std::cout << "Received: scene = " << scene << std::endl;
         }
-
+*/
         carla::Scene_Values sceneValues;
 
         for (int i = 0; i < 1; ++i){
@@ -121,8 +126,8 @@ int main(int argc, char *argv[]) {
           sceneValues.possible_positions.push_back({3.0f, 4.0f});
         }
 
-        const std::array<float, 16u> pMatrix = {{ 10.0 }};
-        for (int i = 0; i < 100; ++i) sceneValues.projection_matrices.push_back(pMatrix);
+        //const std::array<float, 16u> pMatrix = {{ 10.0 }};
+        //for (int i = 0; i < 100; ++i) sceneValues.projection_matrices.push_back(pMatrix);
 
         if (!server.sendSceneValues(sceneValues)) {
           std::cerr << "ERROR while sending SceneValues" << std::endl;
@@ -149,13 +154,14 @@ int main(int argc, char *argv[]) {
 
         while (true) {
           float steer, gas;
-          bool newEpisode = false;
-          if (!server.newEpisodeRequested(newEpisode)){
+          bool readed = false;
+          std::string newConfigFile;
+          if (!server.newEpisodeRequested(newConfigFile, readed)){
             std::cerr << "ERROR while checking for newEpisode request" << std::endl;
             break;
           }
 
-          if (newEpisode){
+          if (readed){
             std::cout << "-------- NEW EPISODE --------" << std::endl;
             if (!server.sendSceneValues(sceneValues)){
               std::cerr << "ERROR while sending SceneValues" << std::endl;

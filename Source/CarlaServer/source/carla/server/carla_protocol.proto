@@ -6,8 +6,7 @@ syntax = "proto2";
 message RequestNewEpisode {
 
 
-  optional bool request =1;
-
+  optional bytes init_file = 1;
 
 }
 
@@ -20,12 +19,6 @@ message EpisodeStart {
 
 }
 
-message SceneInit {
-
-  optional int32 scene =2;
-
-
-}
 
 message Control {
 
@@ -38,19 +31,13 @@ message Control {
 
 // Server messages
 
-message World {
 
-  optional int32 modes = 1; // the number of modes
-  optional int32 scenes = 2;
-
-
-}
 
 message Scene {
 
-  optional int32 number_of_cameras = 1;
-  optional bytes positions = 2;
-  optional bytes projection_matrices = 3;
+  //optional int32 number_of_cameras = 1;
+  optional bytes positions = 1;
+  //optional bytes projection_matrices = 3;
 
 }
 
@@ -58,6 +45,7 @@ message EpisodeReady{
 
     optional bool ready =1;
 }
+
 
 
 
