@@ -13,6 +13,8 @@
 #include "CityMapGenerator.h"
 #include "Tagger.h"
 #include "TrafficLight.h"
+#include "math.h"
+#include <DrawDebugHelpers.h>
 
 #include "MapGen/RoadMap.h"
 
@@ -52,11 +54,12 @@ static bool RayTrace(
 
 
 
-AAICarlaVehicleController::AAICarlaVehicleController() :
+AAICarlaVehicleController::AAICarlaVehicleController() : 
   Super(),
   MovementComponent(nullptr)
 {
   bAutoManageActiveCameraTarget = false;
+  //MAX_SPEED = ((rand() * 10) - 5) + MAX_SPEED; 
 }
 
 AAICarlaVehicleController::~AAICarlaVehicleController() {}
@@ -95,9 +98,62 @@ void AAICarlaVehicleController::Possess(APawn *aPawn)
       UE_LOG(LogCarla, Error, TEXT("Pawn is missing the bounding box!"));
     }
 
-     TArray<USphereComponent *> ControlPoints;
+/*
+    ////////////////////////////////
+    if (VehicleBounds != nullptr){
+      FVector BoxExtent = VehicleBounds->GetScaledBoxExtent();
+
+
+       USphereComponent* rightSphere = NewObject<USphereComponent>(VehicleBounds, TEXT("Right"));
+       if(rightSphere)
+       {
+           rightSphere->RegisterComponent();
+           rightSphere->SetupAttachment(RootComponent);
+           //rightSphere->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+       }
+
+       USphereComponent* leftSphere = NewObject<USphereComponent>(VehicleBounds, TEXT("Left"));
+       if(leftSphere)
+       {
+           leftSphere->RegisterComponent();
+           leftSphere->SetupAttachment(RootComponent);
+           //leftSphere->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+       }
+
+
+        //CompClass can be a BP
+        //USphereComponent* SphereVisual = ConstructObject<USphereComponent>(USphereComponent::StaticClass, this, name);
+        USphereComponent* rightSphere = GetOwner() -> CreateDefaultSubobject<USphereComponent>(TEXT("Right"));
+        RootComponent = rightSphere;
+
+         //could use different than Root Comp
+      if (rightSphere)
+      {
+          //SphereVisual->SetStaticMesh(SphereVisualAsset.Object);
+          rightSphere->RegisterComponent();
+          rightSphere->SetRelativeLocation(FVector(BoxExtent.X/2.0, 50.0 + BoxExtent.Y/2.0, 0.0));
+          rightSphere->SetWorldScale3D(FVector(1.0f));
+          rightSphere->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform); 
+      }
+
+      USphereComponent* leftSphere = GetOwner() -> CreateDefaultSubobject<USphereComponent>(TEXT("Left"));
+        RootComponent = leftSphere;
+
+         //could use different than Root Comp
+      if (leftSphere)
+      {
+          //SphereVisual->SetStaticMesh(SphereVisualAsset.Object);
+          leftSphere->RegisterComponent();
+          leftSphere->SetRelativeLocation(FVector(BoxExtent.X/2.0, 50.0 + BoxExtent.Y/2.0, 0.0));
+          leftSphere->SetWorldScale3D(FVector(1.0f));
+          leftSphere->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform); 
+      }
+
+    }
+///////////////////////////////////
+    TArray<USphereComponent *> ControlPoints;
     WheeledVehicle->GetComponents<USphereComponent>(ControlPoints);
-    if (ControlPoints.Num() >= 0) {
+    if (ControlPoints.Num() > 0) {
       if (ControlPoints[0]->GetName().Equals("Right")){
         VehicleRightControl = ControlPoints[0];
         VehicleLeftControl = ControlPoints[1];
@@ -109,8 +165,9 @@ void AAICarlaVehicleController::Possess(APawn *aPawn)
     }else{
       UE_LOG(LogCarla, Error, TEXT("Vehicle control point not found!"));
     }
-
+*/
   }
+
 }
 
 void AAICarlaVehicleController::BeginPlay()
@@ -218,12 +275,50 @@ float AAICarlaVehicleController::GoTo(FVector objective){
 float AAICarlaVehicleController::CalcStreeringValue(){
 
     float steering = 0;
+/*
+    if (VehicleRightControl == nullptr || VehicleLeftControl == nullptr){
+      UE_LOG(LogCarla, Error, TEXT("Vehicle control point not found!"));
+      return 0;
+    } 
+*/
+    FVector BoxExtent = VehicleBounds->GetScaledBoxExtent();
+    FVector forward = GetPawn()->GetActorForwardVector();
+
+    FVector rightSensorPosition (BoxExtent.X/2.0f, (BoxExtent.Y/2.0f) + 150.0f, 0.0f);
+    FVector leftSensorPosition (BoxExtent.X/2.0f, -(BoxExtent.Y/2.0f) - 150.0f, 0.0f);
+
+    
 
 
-    FRoadMapPixelData rightRoadData = RoadMap->GetDataAt(VehicleRightControl->GetComponentLocation());
+    float forwardMagnitude = BoxExtent.X/2.0f;
+
+    float Magnitude = (float) sqrt(pow((double)leftSensorPosition.X,2.0) + pow((double)leftSensorPosition.Y,2.0));
+
+    //same for the right and left
+    float offset = FGenericPlatformMath::Acos(forwardMagnitude/Magnitude);
+
+    float actorAngle = forward.UnitCartesianToSpherical().Y;
+    
+    float sinR = FGenericPlatformMath::Sin(actorAngle+offset);
+    float cosR = FGenericPlatformMath::Cos(actorAngle+offset);
+    
+
+    float sinL = FGenericPlatformMath::Sin(actorAngle-offset);
+    float cosL = FGenericPlatformMath::Cos(actorAngle-offset);
+
+    rightSensorPosition.Y = sinR * Magnitude;
+    rightSensorPosition.X = cosR * Magnitude;
+
+    leftSensorPosition.Y = sinL * Magnitude;
+    leftSensorPosition.X = cosL * Magnitude;
+
+    FVector rightPositon = GetPawn()->GetActorLocation() + FVector(rightSensorPosition.X, rightSensorPosition.Y, 0.0f);
+    FVector leftPosition = GetPawn()->GetActorLocation() + FVector(leftSensorPosition.X, leftSensorPosition.Y, 0.0f);
+
+    FRoadMapPixelData rightRoadData = RoadMap->GetDataAt(rightPositon);
     if (!rightRoadData.IsRoad()) steering -= 0.2f;
 
-    FRoadMapPixelData leftRoadData = RoadMap->GetDataAt(VehicleLeftControl->GetComponentLocation());
+    FRoadMapPixelData leftRoadData = RoadMap->GetDataAt(leftPosition);
     if (!leftRoadData.IsRoad()) steering += 0.2f;
 
     FRoadMapPixelData roadData = RoadMap->GetDataAt(GetPawn()->GetActorLocation());
@@ -236,46 +331,17 @@ float AAICarlaVehicleController::CalcStreeringValue(){
       FVector right = rightRoadData.GetDirection();
       FVector left = leftRoadData.GetDirection();
 
-      FVector forward = GetPawn()->GetActorForwardVector();
 
       forward.Z = 0.0f;
 
       float dirAngle = direction.UnitCartesianToSpherical().Y;
-      float actorAngle = forward.UnitCartesianToSpherical().Y;
       float rightAngle = right.UnitCartesianToSpherical().Y;
       float leftAngle = left.UnitCartesianToSpherical().Y;
 
       dirAngle *= (180.0f/PI);
-      actorAngle *= (180.0/PI);
       rightAngle *= (180.0/PI);
       leftAngle *= (180.0/PI);
-
-      UE_LOG(LogCarla, Log,
-              TEXT("direction: X: %f    Y: %f  Z: %f --> %f"),
-              direction.X,
-              direction.Y,
-              direction.Z,
-              dirAngle
-              );
-
-
-      UE_LOG(LogCarla, Log,
-              TEXT("right: X: %f    Y: %f  Z: %f --> %f"),
-              right.X,
-              right.Y,
-              right.Z,
-              rightAngle
-              );
-
-
-      UE_LOG(LogCarla, Log,
-              TEXT("Left: X: %f    Y: %f  Z: %f --> %f"),
-              left.X,
-              left.Y,
-              left.Z,
-              leftAngle
-              );
-
+      actorAngle *= (180.0/PI);
 
       float min = dirAngle - 90.0f;
       if (min < -180.0f) min = 180.0f + (min + 180.0f);

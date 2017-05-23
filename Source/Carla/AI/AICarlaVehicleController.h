@@ -67,6 +67,9 @@ public:
 
   	int32 GetVehicleCurrentGear() const;
 
+private:
+    void InitVehilceValues();
+
   	/// @}
   	// ===========================================================================
   	/// @name Vehicle movement
