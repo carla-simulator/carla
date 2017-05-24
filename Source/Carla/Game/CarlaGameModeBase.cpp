@@ -172,7 +172,7 @@ APlayerStart *ACarlaGameModeBase::FindUnOccupiedStartPoints(
       if (!GetWorld()->EncroachingBlockingGeometry(PawnToFit, ActorLocation, ActorRotation)) {
         UnOccupiedStartPoints.Add(PlayerStart);
       }
-#ifdef WITH_EDITOR
+#if WITH_EDITOR
       else if (GetWorld()->FindTeleportSpot(PawnToFit, ActorLocation, ActorRotation)) {
         UE_LOG(
             LogCarla,
