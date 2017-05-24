@@ -276,7 +276,7 @@ void ACityMapGenerator::GenerateRoadMap()
     }
   }
 
-#ifdef WITH_EDITOR
+#if WITH_EDITOR
   RoadMap->Log();
 #endif // WITH_EDITOR
 
@@ -286,7 +286,7 @@ void ACityMapGenerator::GenerateRoadMap()
     RoadMap->SaveAsPNG(FilePath);
   }
 
-#ifdef WITH_EDITOR
+#if WITH_EDITOR
   RoadMap->DrawDebugPixelsToLevel(GetWorld(), !bDrawDebugPixelsToLevel);
 #endif // WITH_EDITOR
 }

@@ -22,9 +22,12 @@ public:
   /** Log settings values. */
   void LogSettings() const;
 
-  const FWeatherDescription &GetActiveWeatherDescription() const
+  const FWeatherDescription *GetActiveWeatherDescription() const
   {
-    return WeatherDescriptions[WeatherId];
+    if ((WeatherId >= 0) && (WeatherId < WeatherDescriptions.Num())) {
+      return &WeatherDescriptions[WeatherId];
+    }
+    return nullptr;
   }
 
 private:
@@ -70,9 +73,9 @@ public:
   UPROPERTY(Category = "Level Settings", EditDefaultsOnly)
   uint32 NumberOfPedestrians = 15u;
 
-  /** Index of the weather setting to use. */
+  /** Index of the weather setting to use. If negative, weather won't be changed. */
   UPROPERTY(Category = "Level Settings", EditDefaultsOnly)
-  uint32 WeatherId = 0;
+  int32 WeatherId = -1;
 
   /** Available weather settings. */
   UPROPERTY(Category = "Level Settings", EditDefaultsOnly)

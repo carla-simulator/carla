@@ -23,6 +23,7 @@ ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializ
 {
   PrimaryActorTick.bCanEverTick = true;
   PrimaryActorTick.TickGroup = TG_PrePhysics;
+  bAllowTickBeforeBeginPlay = false;
 
   PlayerControllerClass = ACarlaVehicleController::StaticClass();
   GameStateClass = ACarlaGameState::StaticClass();
@@ -43,7 +44,7 @@ void ACarlaGameModeBase::InitGame(
   checkf(
       GameInstance != nullptr,
       TEXT("GameInstance is not a UCarlaGameInstance, did you forget to set it in the project settings?"));
-  GameInstance->InitializeGameControllerIfNotPresent();
+  GameInstance->InitializeGameControllerIfNotPresent(MockGameControllerSettings);
   GameController = &GameInstance->GetGameController();
   GameController->Initialize(GameInstance->GetCarlaSettings());
   GameInstance->GetCarlaSettings().LogSettings();
@@ -98,14 +99,21 @@ void ACarlaGameModeBase::BeginPlay()
 
   // Change weather.
   if (DynamicWeather != nullptr) {
-    const auto &Weather = CarlaSettings.GetActiveWeatherDescription();
-    UE_LOG(LogCarla, Log, TEXT("Changing weather settings to \"%s\""), *Weather.Name);
-    DynamicWeather->SetWeatherDescription(Weather);
+    const auto *Weather = CarlaSettings.GetActiveWeatherDescription();
+    if (Weather != nullptr) {
+      UE_LOG(LogCarla, Log, TEXT("Changing weather settings to \"%s\""), *Weather->Name);
+      DynamicWeather->SetWeatherDescription(*Weather);
+      DynamicWeather->RefreshWeather();
+    }
+  } else {
+    UE_LOG(LogCarla, Error, TEXT("Missing dynamic weather actor!"));
   }
 
   // Setup walkers.
   if (WalkerSpawner != nullptr) {
     WalkerSpawner->SetNumberOfWalkers(CarlaSettings.NumberOfPedestrians);
+  } else {
+    UE_LOG(LogCarla, Error, TEXT("Missing walker spawner actor!"));
   }
 
   GameController->BeginPlay();
@@ -164,7 +172,7 @@ APlayerStart *ACarlaGameModeBase::FindUnOccupiedStartPoints(
       if (!GetWorld()->EncroachingBlockingGeometry(PawnToFit, ActorLocation, ActorRotation)) {
         UnOccupiedStartPoints.Add(PlayerStart);
       }
-#ifdef WITH_EDITOR
+#if WITH_EDITOR
       else if (GetWorld()->FindTeleportSpot(PawnToFit, ActorLocation, ActorRotation)) {
         UE_LOG(
             LogCarla,

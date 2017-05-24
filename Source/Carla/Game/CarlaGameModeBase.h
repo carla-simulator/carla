@@ -6,6 +6,7 @@
 #include "AI/WalkerSpawnerBase.h"
 #include "CarlaGameControllerBase.h"
 #include "DynamicWeather.h"
+#include "MockGameControllerSettings.h"
 #include "CarlaGameModeBase.generated.h"
 
 class APlayerStart;
@@ -15,7 +16,7 @@ class UTaggerDelegate;
 /**
  *
  */
-UCLASS()
+UCLASS(HideCategories=(ActorTick))
 class CARLA_API ACarlaGameModeBase : public AGameModeBase
 {
   GENERATED_BODY()
@@ -33,6 +34,10 @@ public:
   virtual void Tick(float DeltaSeconds) override;
 
 protected:
+
+  /** Used only when networking is disabled. */
+  UPROPERTY(Category = "Mock CARLA Controller", EditAnywhere, BlueprintReadOnly, meta = (ExposeFunctionCategories = "Mock CARLA Controller"))
+  FMockGameControllerSettings MockGameControllerSettings;
 
   /** The class of DynamicWeather to spawn. */
   UPROPERTY(Category = "CARLA Classes", EditAnywhere, BlueprintReadOnly)

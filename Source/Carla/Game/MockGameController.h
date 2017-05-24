@@ -3,11 +3,14 @@
 #pragma once
 
 #include "CarlaGameControllerBase.h"
+#include "MockGameControllerSettings.h"
 
 /// Mocks the CARLA game controller class for testing purposes.
 class CARLA_API MockGameController : public CarlaGameControllerBase
 {
 public:
+
+  explicit MockGameController(const FMockGameControllerSettings &Settings);
 
   virtual void Initialize(UCarlaSettings &CarlaSettings) override;
 
@@ -18,4 +21,8 @@ public:
   virtual void BeginPlay() override;
 
   virtual void Tick(float DeltaSeconds) override;
+
+private:
+
+  FMockGameControllerSettings Settings;
 };

@@ -6,6 +6,7 @@
 #include "WalkerSpawnerBase.generated.h"
 
 class AWalkerSpawnPoint;
+class AWalkerSpawnPointBase;
 class UBoxComponent;
 
 /// Base class for spawning walkers. Implement SpawnWalker in derived
@@ -64,13 +65,20 @@ public:
 
   void SetNumberOfWalkers(int32 Count);
 
+  int32 GetCurrentNumberOfWalkers() const
+  {
+    return Walkers.Num() + WalkersBlackList.Num();
+  }
+
 private:
 
-  void TryToSpawnRandomWalker();
+  const AWalkerSpawnPointBase &GetRandomSpawnPoint() const;
 
-  void SpawnWalkerAtSpawnPoint(const AWalkerSpawnPoint &SpawnPoint, const FVector &Destination);
+  bool TryGetValidDestination(const FVector &Origin, FVector &Destination) const;
 
-  AWalkerSpawnPoint *GetRandomSpawnPoint() const;
+  bool TryToSpawnWalkerAt(const AWalkerSpawnPointBase &SpawnPoint);
+
+  bool TrySetDestination(ACharacter &Walker) const;
 
   /// @}
 
@@ -104,6 +112,9 @@ private:
 
   UPROPERTY(Category = "Walker Spawner", VisibleAnywhere, AdvancedDisplay)
   TArray<ACharacter *> Walkers;
+
+  UPROPERTY(Category = "Walker Spawner", VisibleAnywhere, AdvancedDisplay)
+  TArray<ACharacter *> WalkersBlackList;
 
   uint32 CurrentIndexToCheck = 0u;
 };

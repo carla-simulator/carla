@@ -16,7 +16,8 @@ UCarlaGameInstance::UCarlaGameInstance() {
 
 UCarlaGameInstance::~UCarlaGameInstance() {}
 
-void UCarlaGameInstance::InitializeGameControllerIfNotPresent()
+void UCarlaGameInstance::InitializeGameControllerIfNotPresent(
+    const FMockGameControllerSettings &MockControllerSettings)
 {
   if (GameController == nullptr) {
     if (CarlaSettings->bUseNetworking) {
@@ -25,8 +26,8 @@ void UCarlaGameInstance::InitializeGameControllerIfNotPresent()
           CarlaSettings->WritePort,
           CarlaSettings->ReadPort);
     } else {
-      GameController = MakeUnique<MockGameController>();
-      UE_LOG(LogCarla, Warning, TEXT("Using mock CARLA controller"));
+      GameController = MakeUnique<MockGameController>(MockControllerSettings);
+      UE_LOG(LogCarla, Log, TEXT("Using mock CARLA controller"));
     }
   }
 }

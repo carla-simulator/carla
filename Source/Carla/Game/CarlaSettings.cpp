@@ -90,9 +90,9 @@ static void LoadSettingsFromFile(const FString &FileName, UCarlaSettings &Settin
   Settings.WeatherDescriptions.Empty();
   ADynamicWeather::LoadWeatherDescriptionsFromFile(Settings.WeatherDescriptions);
   check(Settings.WeatherDescriptions.Num() > 0);
-  if (static_cast<int32>(Settings.WeatherId) >= Settings.WeatherDescriptions.Num()) {
+  if (Settings.WeatherId >= Settings.WeatherDescriptions.Num()) {
     UE_LOG(LogCarla, Error, TEXT("Provided weather id %d cannot be found"), Settings.WeatherId);
-    Settings.WeatherId = 0u;
+    Settings.WeatherId = -1;
   }
   // SceneCapture.
   FString Cameras;

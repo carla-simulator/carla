@@ -3,15 +3,46 @@
 #include "Carla.h"
 #include "MockGameController.h"
 
-void MockGameController::Initialize(UCarlaSettings & /*CarlaSettings*/)
-{
+MockGameController::MockGameController(const FMockGameControllerSettings &InSettings) :
+  Settings(InSettings) {}
 
+void MockGameController::Initialize(UCarlaSettings & CarlaSettings)
+{
+#if WITH_EDITOR
+  if (Settings.bOverrideCarlaSettings) {
+    CarlaSettings.NumberOfVehicles = Settings.NumberOfVehicles;
+    CarlaSettings.NumberOfPedestrians = Settings.NumberOfPedestrians;
+    CarlaSettings.WeatherId = Settings.WeatherId;
+  }
+#endif // WITH_EDITOR
+
+  if (Settings.bChangeWeatherOnBeginPlay && (CarlaSettings.WeatherDescriptions.Num() > 0)) {
+    static uint32 StaticIndex = 0u;
+    CarlaSettings.WeatherId = StaticIndex % CarlaSettings.WeatherDescriptions.Num();
+    ++StaticIndex;
+  }
+
+#if WITH_EDITOR
+  if (Settings.bForceEnableSemanticSegmentation) {
+    CarlaSettings.bSemanticSegmentationEnabled = true;
+  }
+#endif // WITH_EDITOR
 }
 
 APlayerStart *MockGameController::ChoosePlayerStart(
     const TArray<APlayerStart *> &AvailableStartSpots)
 {
-  return AvailableStartSpots[FMath::RandRange(0, AvailableStartSpots.Num() - 1)];
+  check(AvailableStartSpots.Num() > 0);
+  uint32 Index;
+  if (Settings.bRandomPlayerStart) {
+    Index = FMath::RandRange(0, AvailableStartSpots.Num() - 1);
+  } else {
+    static uint32 StaticIndex = 0u;
+    Index = StaticIndex % AvailableStartSpots.Num();
+    ++StaticIndex;
+  }
+  UE_LOG(LogCarla, Log, TEXT("Spawning player at player start %d/%d"), Index, AvailableStartSpots.Num());
+  return AvailableStartSpots[Index];
 }
 
 void MockGameController::RegisterPlayer(AController &NewPlayer)

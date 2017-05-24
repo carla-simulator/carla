@@ -12,7 +12,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogCarla, Log, All);
 DECLARE_LOG_CATEGORY_EXTERN(LogCarlaServer, Log, All);
 
 // Options to compile with extra debug options.
-#ifdef WITH_EDITOR
+#if WITH_EDITOR
 // #define CARLA_ROAD_GENERATOR_EXTRA_LOG /// @todo #1 Crashes in Linux.
 // #define CARLA_SERVER_EXTRA_LOG
 // #define CARLA_TAGGER_EXTRA_LOG

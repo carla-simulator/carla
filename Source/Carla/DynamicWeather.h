@@ -22,6 +22,8 @@ public:
 
   virtual void OnConstruction(const FTransform &Transform) override;
 
+  virtual void BeginPlay() override;
+
 #if WITH_EDITOR
 
   virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
@@ -49,11 +51,11 @@ public:
 
 private:
 
-  void Update();
-
   void AdjustSunPositionBasedOnActorRotation();
 
 #if WITH_EDITOR
+
+  void Update();
 
   bool LoadFromConfigFile();
 
@@ -66,9 +68,17 @@ private:
   UPROPERTY()
   UArrowComponent *ArrowComponent;
 
+  /** If true, the weather is refreshed on construction and at begin play.
+    * Useful for editing the weather (Editor only).
+    */
+  UPROPERTY(Category = "Weather Description", EditAnywhere)
+  bool bRefreshAutomatically = false;
+
+  /** Load the section with the currently set name. */
   UPROPERTY(Category = "Weather Description", EditAnywhere)
   bool bLoadFromConfigFile = false;
 
+  /** Save current settings to disk. */
   UPROPERTY(Category = "Weather Description", EditAnywhere)
   bool bSaveToConfigFile = false;
 

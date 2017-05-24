@@ -141,7 +141,7 @@ public:
   /// Save the current map as PNG with the pixel data encoded as color.
   bool SaveAsPNG(const FString &Path) const;
 
-#ifdef WITH_EDITOR
+#if WITH_EDITOR
 
   /// Log status of the map to the console.
   void Log() const;

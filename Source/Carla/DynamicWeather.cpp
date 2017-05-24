@@ -71,7 +71,17 @@ ADynamicWeather::ADynamicWeather(const FObjectInitializer& ObjectInitializer)
 void ADynamicWeather::OnConstruction(const FTransform &Transform)
 {
   Super::OnConstruction(Transform);
+#if WITH_EDITOR
   Update();
+#endif // WITH_EDITOR
+}
+
+void ADynamicWeather::BeginPlay()
+{
+  Super::BeginPlay();
+#if WITH_EDITOR
+  Update();
+#endif // WITH_EDITOR
 }
 
 #if WITH_EDITOR
@@ -82,6 +92,9 @@ void ADynamicWeather::PostEditChangeProperty(FPropertyChangedEvent &Event)
   const FName PropertyName = (Event.Property != NULL ? Event.Property->GetFName() : NAME_None);
   if (PropertyName == GET_MEMBER_NAME_CHECKED(ADynamicWeather, Weather)) {
     Update();
+  } else if ((PropertyName == GET_MEMBER_NAME_CHECKED(ADynamicWeather, bSaveToConfigFile)) ||
+             (PropertyName == GET_MEMBER_NAME_CHECKED(ADynamicWeather, bLoadFromConfigFile))) {
+    // Do nothing.
   } else {
     AdjustSunPositionBasedOnActorRotation();
   }
@@ -97,6 +110,7 @@ void ADynamicWeather::PostEditChangeProperty(FPropertyChangedEvent &Event)
     bLoadFromConfigFile = false;
     if (LoadFromConfigFile()) {
       UE_LOG(LogCarla, Log, TEXT("Weather \"%s\" loaded from config file"), *Weather.Name);
+      Update();
     } else {
       UE_LOG(LogCarla, Error, TEXT("Error loading weather from config file"));
     }
@@ -123,16 +137,6 @@ FVector ADynamicWeather::GetSunDirection() const
   return - SphericalCoords.SphericalToUnitCartesian();
 }
 
-void ADynamicWeather::Update()
-{
-  // Modify this actor's rotation according to Sun position.
-  if (!SetActorRotation(FQuat(GetSunDirection().Rotation()), ETeleportType::None)) {
-    UE_LOG(LogCarla, Warning, TEXT("Unable to rotate actor"));
-  }
-
-  RefreshWeather();
-}
-
 void ADynamicWeather::AdjustSunPositionBasedOnActorRotation()
 {
   const FVector Direction = - GetActorQuat().GetForwardVector();
@@ -142,6 +146,18 @@ void ADynamicWeather::AdjustSunPositionBasedOnActorRotation()
 }
 
 #if WITH_EDITOR
+
+void ADynamicWeather::Update()
+{
+  // Modify this actor's rotation according to Sun position.
+  if (!SetActorRotation(FQuat(GetSunDirection().Rotation()), ETeleportType::None)) {
+    UE_LOG(LogCarla, Warning, TEXT("Unable to rotate actor"));
+  }
+
+  if (bRefreshAutomatically) {
+    RefreshWeather();
+  }
+}
 
 bool ADynamicWeather::LoadFromConfigFile()
 {
