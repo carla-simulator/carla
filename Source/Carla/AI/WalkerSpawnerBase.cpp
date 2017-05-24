@@ -86,9 +86,13 @@ void AWalkerSpawnerBase::BeginPlay()
   }
 
   if (bSpawnWalkers) {
+    uint32 Count = 0u;
     for (auto i = 0; i < NumberOfWalkers; ++i) {
-      TryToSpawnWalkerAt(*BeginSpawnPoints[i % BeginSpawnPoints.Num()]);
+      if (TryToSpawnWalkerAt(*BeginSpawnPoints[i % BeginSpawnPoints.Num()])) {
+        ++Count;
+      }
     }
+    UE_LOG(LogCarla, Log, TEXT("Spawned %d walkers at begin play."), Count);
   }
 }
 
