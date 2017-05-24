@@ -130,6 +130,7 @@ void AWalkerSpawnerBase::Tick(float DeltaTime)
         Walker->Destroy();
       }
     } else if (Controller->GetMoveStatus() != EPathFollowingStatus::Moving) {
+      TrySetDestination(*Walker);
       WalkersBlackList.Add(Walker);
       Walkers.RemoveAtSwap(Index);
     }
