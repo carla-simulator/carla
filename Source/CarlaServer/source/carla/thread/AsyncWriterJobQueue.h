@@ -17,7 +17,7 @@ namespace thread {
   class AsyncWriterJobQueue {
   public:
 
-    using Job = std::function<std::unique_ptr<T>()>;
+  using Job = std::function<std::unique_ptr<T>()>;
 	using ConnectJob = std::function<void()>;
   using ReconnectJob = std::function<void()>;
 
@@ -67,8 +67,11 @@ namespace thread {
 		    _connectJob();
         _restart = false;
         _queue.canWait(true);
-        while (!_restart && !done) {
-          _queue.push(std::move(_job()));
+
+        while (!_restart && !_done) {
+          //_queue.wait_and_push(_job);
+          _queue.push(std::move(_job())); 
+		      //Sleep(10);
         }
       }
     }

@@ -83,13 +83,14 @@ namespace carla {
             bool end = false, readedBytes = false;
             int readedSize = 0, sizeToRead = -1;
 
-            if (_socket.available() > 0){
+                  std::cout << "Try to read " << std::endl;
+            //if (_socket.available() > 0){
               do {
 
                   std::array<char, 128> buf;
 
-                  size_t len = _socket.read_some(boost::asio::buffer(buf), error);
 
+                  size_t len = _socket.read_some(boost::asio::buffer(buf), error);
 
                   if (error)
                   {
@@ -113,9 +114,12 @@ namespace carla {
                   }
 
               } while ((!readedBytes || sizeToRead > readedSize) && _connected);
+
+              std::cout << "End read" << std::endl;
+
               return true;
-            }
-            else return false;
+            //}
+            //else return false;
 
         }
 

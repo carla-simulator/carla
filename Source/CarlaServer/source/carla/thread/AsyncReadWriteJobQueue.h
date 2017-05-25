@@ -85,9 +85,14 @@ namespace thread {
         _connectJob();
         _restart = false; 
         _readQueue.canWait(true);
-        while (!_restart && !done) {
+        while (!_restart && !_done) {
+          auto value = _readQueue.wait_and_pop();
+          if (value != nullptr) {
+            _readJob(*value);
+          }
 
           if (!_restart){
+            //_writeQueue.wait_and_push(_writeJob);
             _writeQueue.push(std::move(_writeJob()));
           }
 

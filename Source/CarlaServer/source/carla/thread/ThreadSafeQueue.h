@@ -12,7 +12,10 @@ namespace thread {
   /// A thread safe buffer.
   template<typename T>
   class ThreadSafeQueue {
+
   public:
+
+    using Job = std::function<std::unique_ptr<T>()>;
 
     ThreadSafeQueue() : _canWait(true) {}
 
@@ -22,6 +25,16 @@ namespace thread {
     void push(std::unique_ptr<T> new_value) {
       std::lock_guard<std::mutex> lock(_mutex);
       _value = std::move(new_value);
+      _condition.notify_one();
+    }
+
+
+    void wait_and_push(Job job){
+      std::unique_lock<std::mutex> lock(_mutex);
+      _condition.wait(lock, [this, job]() {
+        _value = std::move(job());
+        return _value != nullptr || !_canWait;
+      });
       _condition.notify_one();
     }
 
