@@ -231,8 +231,14 @@ void AAICarlaVehicleController::Tick(float DeltaTime){
 
 float AAICarlaVehicleController::GoTo(FVector objective){
 
+
+    UE_LOG(LogCarla, Log,
+        TEXT("it: %i"),
+        route_it
+        );
+
     float steering = 0;
-    if (objective.Equals(GetPawn()->GetActorLocation(), 40.0f)){
+    if (objective.Equals(GetPawn()->GetActorLocation(), 80.0f)){
         ++route_it;
       if (route_it == route.Num()){
         route.Empty();
