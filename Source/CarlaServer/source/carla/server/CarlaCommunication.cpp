@@ -54,8 +54,6 @@ namespace server {
     auto message = std::make_unique<std::string>();
     bool success = false;
 
-    do {
-
       if (!thr.getRestart()) {
         TCPServer::error_code error;
 
@@ -68,13 +66,16 @@ namespace server {
 
         if (!server.Connected()) {
           thr.reconnect();
-          break;
+          return nullptr;
         }
       }
 
-    } while (!success);
-
-    return message;
+    if (!success){
+      return nullptr;
+    }
+    else{
+      return message;
+    }
   }
 
   // This is the thread that listens  a string over the TCP world socket.
@@ -82,7 +83,6 @@ namespace server {
     auto message = std::make_unique<std::string>();
     bool success = false;
 
-    do {
 
       if (!thr.getRestart()) {
         TCPServer::error_code error;
@@ -95,13 +95,16 @@ namespace server {
 
         if (!server.Connected()) {
           thr.reconnect();
-          break;
+          return nullptr;
         }
       }
 
-    } while (!success);
-
-    return message;
+    if (!success) {
+      return nullptr;
+    }
+    else {
+      return message;
+    }
   }
 
   // This is the thread that sends a string over the TCP world socket.

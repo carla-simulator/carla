@@ -88,7 +88,9 @@ namespace thread {
           if (value != nullptr) {
             _readJob(*value);
           }
+
           if (!_restart){
+            //_writeQueue.wait_and_push(_writeJob);
             _writeQueue.push(std::move(_writeJob()));
           }
 
