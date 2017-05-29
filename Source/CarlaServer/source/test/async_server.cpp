@@ -100,10 +100,10 @@ int main(int argc, char *argv[]) {
     std::string file;
     bool read;
 
+
     for (;;) {
       if (server.newEpisodeRequested(file, read) && read) {
 
-        std::cout << "Entra" << std::endl;
 /*
         {
           uint32_t scene;
@@ -153,7 +153,7 @@ int main(int argc, char *argv[]) {
         }
 
         while (true) {
-          float steer, gas;
+          //float steer, gas;
           bool readed = false;
           std::string newConfigFile;
           if (!server.newEpisodeRequested(newConfigFile, readed)){
@@ -186,11 +186,13 @@ int main(int argc, char *argv[]) {
           } else {
 
             bool readed = false;
-            if (!server.tryReadControl(steer, gas, readed)){
+            carla::Control_Values control;
+            if (!server.tryReadControl(control, readed)){
               std::cerr << "ERROR while reading Control" << std::endl;
               break;
             } else if (readed) {
-              std::cout << "CONTROL -->  gas: " << gas << " steer: " << steer << std::endl;
+              std::cout << "CONTROL -->  gas: " << control.gas << " steer: " << control.steer << 
+              " brake: " << control.brake << " hand_brake: " << control.hand_brake << " gear: " << control.gear << std::endl;
             }      
 
               if (!server.sendReward(makeReward().release())) {

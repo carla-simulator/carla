@@ -42,6 +42,15 @@ namespace carla {
     uint32_t width, height;
   };
 
+  struct Control_Values {
+
+    float steer;
+    float gas;
+    float brake;
+    float hand_brake;
+    float gear;
+  };
+
   struct Reward_Values {
     Reward_Values();
     ~Reward_Values();
@@ -114,7 +123,7 @@ namespace carla {
 
     /// Try to read the response of the client. Return false if the queue
     /// is empty.
-    bool tryReadControl(float &steer, float &throttle, bool &readed);
+    bool tryReadControl(Control_Values &control, bool &readed);
 
     bool newEpisodeRequested(std::string &init_file, bool &readed);
 

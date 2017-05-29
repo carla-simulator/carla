@@ -68,7 +68,7 @@ namespace thread {
         _restart = false;
         _queue.canWait(true);
 
-        while (!_restart && !_done) {
+        while (!_restart && !done) {
           //_queue.wait_and_push(_job);
           _queue.push(std::move(_job())); 
 		      //Sleep(10);

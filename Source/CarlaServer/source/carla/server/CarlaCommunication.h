@@ -17,6 +17,7 @@ namespace carla {
 
     struct Scene_Values;
     struct Reward_Values;
+    struct Control_Values;
     enum class Mode : int8_t;
 
 namespace server {
@@ -30,7 +31,7 @@ namespace server {
 
     void sendReward(std::unique_ptr<Reward_Values> values);
 
-    bool tryReadControl(float &steer, float &gas);
+    bool tryReadControl(Control_Values &control);
 
     void sendScene(const Scene_Values &scene);
 

@@ -24,7 +24,9 @@ message Control {
 
   optional float steer = 1;
   optional float gas = 2;
-
+  optional float brake = 3;
+  optional float hand_brake = 4;
+  optional float gear = 5;
 
 }
 
@@ -70,12 +72,12 @@ message Reward {
   optional float ori_y = 15;
   optional float ori_z = 16;
   optional bytes image_sizes = 17;
-  optional bytes finalImage_sizes = 18;
+  optional bytes final_image_sizes = 18;
   optional bytes depth_sizes = 19;
-  optional bytes semanticSeg_sizes = 20;
+  optional bytes semantic_seg_sizes = 20;
   optional bytes images = 21;
-  optional bytes finalImages = 22;
+  optional bytes final_images = 22;
   optional bytes depths = 23;
-  optional bytes semanticSegs = 24;
+  optional bytes semantic_segs = 24;
 
 }

@@ -244,13 +244,13 @@ static bool getPNGImages(const std::vector<Image> &images, Reward &rwd) {
     }
 
     rwd.set_depth_sizes(depth_size_data);
-    rwd.set_finalimage_sizes(sceneFinal_size_data);
+    rwd.set_final_image_sizes(sceneFinal_size_data);
     rwd.set_image_sizes(image_size_data);
-    rwd.set_semanticseg_sizes(semanticSeg_size_data);
+    rwd.set_semantic_seg_sizes(semanticSeg_size_data);
     rwd.set_images(image_data);
-    rwd.set_finalimages(sceneFinal_data);
+    rwd.set_final_images(sceneFinal_data);
     rwd.set_depths(depth_data);
-    rwd.set_semanticsegs(semanticSeg_data);
+    rwd.set_semantic_segs(semanticSeg_data);
 
     return true;
   }

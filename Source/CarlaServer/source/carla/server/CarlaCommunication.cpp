@@ -195,9 +195,12 @@ namespace server {
     _serverThread.push(std::move(values));
   }
 
-  bool CarlaCommunication::tryReadControl(float &steer, float &gas) {
-    steer = 0.0f;
-    gas = 0.0f;
+  bool CarlaCommunication::tryReadControl(Control_Values &control_values) {
+    control_values.steer = 0.0f;
+    control_values.gas = 0.0f;
+    control_values.brake = 0.0f;
+    control_values.hand_brake = 0.0f;
+    control_values.gear = 0.0f;
 
     auto message = _clientThread.tryPop();
     if (message == nullptr) { return false; }
@@ -205,8 +208,11 @@ namespace server {
     Control control;
     if (!control.ParseFromString(*message)) { return false; }
 
-    steer = control.steer();
-    gas = control.gas();
+    control_values.steer = control.steer();
+    control_values.gas = control.gas();
+    control_values.brake = control.brake();
+    control_values.hand_brake = control.hand_brake();
+    control_values.gear = control.gear();
 
     return true;
   }

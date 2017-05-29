@@ -53,10 +53,10 @@ namespace carla {
     return true;
   }
 
-  bool CarlaServer::tryReadControl(float &steer, float &throttle, bool &readed) {
+  bool CarlaServer::tryReadControl(Control_Values &control, bool &readed) {
     if (!clientConnected())
       return false;
-    readed = _pimpl->communication.tryReadControl(steer, throttle);
+    readed = _pimpl->communication.tryReadControl(control);
     return true;
   }
 
