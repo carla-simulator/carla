@@ -48,7 +48,7 @@ namespace carla {
     float gas;
     float brake;
     bool hand_brake;
-    bool gear;
+    bool reverse;
   };
 
   struct Reward_Values {

@@ -191,9 +191,9 @@ int main(int argc, char *argv[]) {
               std::cerr << "ERROR while reading Control" << std::endl;
               break;
             } else if (readed) {
-              std::cout << "CONTROL -->  gas: " << control.gas << " steer: " << control.steer << 
-              " brake: " << control.brake << " hand_brake: " << control.hand_brake << " gear: " << control.gear << std::endl;
-            }      
+              std::cout << "CONTROL -->  gas: " << control.gas << " steer: " << control.steer <<
+              " brake: " << control.brake << " hand_brake: " << (control.hand_brake ? "true" : "false") << " reverse: " << (control.reverse ? "true" : "false") << std::endl;
+            }
 
               if (!server.sendReward(makeReward().release())) {
                 std::cerr << "ERROR while sending Reward" << std::endl;
