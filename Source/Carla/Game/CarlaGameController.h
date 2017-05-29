@@ -38,7 +38,9 @@ private:
 
   TUniquePtr<carla::CarlaServer> Server;
 
-  ACarlaVehicleController *Player;
+  ACarlaVehicleController *Player = nullptr;
+
+  UCarlaSettings *CarlaSettings = nullptr;
 
   bool bServerNeedsRestart = true;
 };

@@ -68,19 +68,34 @@ static void Set(carla::Image &cImage, const FCapturedImage &uImage)
 // -- Other static methods -----------------------------------------------------
 // =============================================================================
 
-// Wait for the scene init to be sent, return false if we need to restart the
-// server.
-/// @todo At the moment we just ignored what it is sent.
-static bool ReadSceneInit(carla::CarlaServer &Server)
+// Wait for a new episode to be received and update CarlaSettings. Return false
+// if we need to restart the server.
+static bool WaitForNewEpisode(
+    carla::CarlaServer &Server,
+    UCarlaSettings &CarlaSettings)
 {
-  uint32 Scene;
+  std::string IniStr;
   bool Success = false;
-  UE_LOG(LogCarlaServer, Log, TEXT("(tryReadSceneInit) Waiting for client..."));
-  /*while (!Success) {
-    if (!Server.tryReadSceneInit(Scene, Success))
+  while (!Success) {
+    if (!Server.newEpisodeRequested(IniStr, Success))
       return false;
-  }*/
+  }
+  CarlaSettings.LoadSettingsFromString(IniStr.c_str());
   return true;
+}
+
+static bool TryReadNewEpisode(
+    carla::CarlaServer &Server,
+    UCarlaSettings &CarlaSettings,
+    bool &bNewEpisodeRequested)
+{
+  std::string IniStr;
+  bool Success = false;
+  bool Result = Server.newEpisodeRequested(IniStr, Success);
+  if (Result && Success) {
+    CarlaSettings.LoadSettingsFromString(IniStr.c_str());
+  }
+  return Result;
 }
 
 // Send the available start spots to the client and wait for them to answer.
@@ -100,7 +115,6 @@ static bool SendAndReadSceneValues(
     sceneValues.possible_positions.push_back({Location.X, Location.Y});
   }
   // Send the positions.
-  /// @todo At the moment we don't send the cameras' projection matrices.
   UE_LOG(LogCarlaServer, Log, TEXT("Sending %d available start positions"), sceneValues.possible_positions.size());
   if (!Server.sendSceneValues(sceneValues))
     return false;
@@ -157,16 +171,26 @@ static bool SendReward(
 
 static bool TryReadControl(carla::CarlaServer &Server, ACarlaVehicleController &Player)
 {
-  float Steer;
-  float Throttle;
+  carla::Control_Values Control;
   bool Success = false;
-  bool Result = Server.tryReadControl(Steer, Throttle, Success);
+  bool Result = Server.tryReadControl(Control, Success);
   if (Result && Success) {
 #ifdef CARLA_SERVER_EXTRA_LOG
-    UE_LOG(LogCarlaServer, Log, TEXT("Read control: { Steer = %f, Throttle = %f }"), Steer, Throttle);
+    UE_LOG(
+        LogCarlaServer,
+        Log,
+        TEXT("Read control: { Steer = %f, Throttle = %f, Brake = %f, Handbrake = %s, Reverse = %s }"),
+        Control.steer,
+        Control.gas,
+        Control.brake,
+        (Control.hand_brake ? TEXT("True") : TEXT("False")),
+        (Control.reverse ? TEXT("True") : TEXT("False")));
 #endif // CARLA_SERVER_EXTRA_LOG
-    Player.SetSteeringInput(Steer);
-    Player.SetThrottleInput(Throttle);
+    Player.SetSteeringInput(Control.steer);
+    Player.SetThrottleInput(Control.gas);
+    Player.SetBrakeInput(Control.brake);
+    Player.SetHandbrakeInput(Control.hand_brake);
+    Player.SetReverse(Control.reverse);
   }
   return Result;
 }
@@ -179,20 +203,18 @@ CarlaGameController::CarlaGameController(uint32 WorldPort, uint32 WritePort, uin
   Server(MakeUnique<carla::CarlaServer>(WritePort, ReadPort, WorldPort)),
   Player(nullptr) {}
 
-CarlaGameController::~CarlaGameController()
-{
-  UE_LOG(LogCarlaServer, Log, TEXT("Destroying CarlaGameController..."));
-}
+CarlaGameController::~CarlaGameController() {}
 
-void CarlaGameController::Initialize(UCarlaSettings &CarlaSettings)
+void CarlaGameController::Initialize(UCarlaSettings &InCarlaSettings)
 {
+  CarlaSettings = &InCarlaSettings;
   if (bServerNeedsRestart) {
     UE_LOG(LogCarlaServer, Log, TEXT("Initializing CarlaServer"));
-    /*if (Server->init(1u) && ReadSceneInit(*Server)) {
+    if (WaitForNewEpisode(*Server, *CarlaSettings)) {
       bServerNeedsRestart = false;
     } else {
       UE_LOG(LogCarlaServer, Warning, TEXT("Failed to initialize, server needs restart"));
-    }*/
+    }
   }
 }
 
@@ -238,13 +260,13 @@ bool CarlaGameController::TickServer()
 {
   // Check if the client requested a new episode.
   bool bNewEpisodeRequested = false;
-  /*if (!Server->newEpisodeRequested(bNewEpisodeRequested)) {
+  if (!TryReadNewEpisode(*Server, *CarlaSettings, bNewEpisodeRequested)) {
     return false;
   } else if (bNewEpisodeRequested) {
     UE_LOG(LogCarlaServer, Log, TEXT("New episode requested"));
     RestartLevel();
     return true;
-  }*/
+  }
 
   // Send reward and try to read control.
   return
