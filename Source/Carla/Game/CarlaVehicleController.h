@@ -2,16 +2,14 @@
 
 #pragma once
 
-#include "GameFramework/PlayerController.h"
+#include "PlayerCameraController.h"
 #include "CarlaVehicleController.generated.h"
 
 class ACarlaHUD;
 class ACarlaPlayerState;
 class ASceneCaptureCamera;
 class UBoxComponent;
-class UCameraComponent;
 class URoadMap;
-class USpringArmComponent;
 class UWheeledVehicleMovementComponent;
 struct FCameraDescription;
 
@@ -19,7 +17,7 @@ struct FCameraDescription;
  *
  */
 UCLASS()
-class CARLA_API ACarlaVehicleController : public APlayerController
+class CARLA_API ACarlaVehicleController : public APlayerCameraController
 {
   GENERATED_BODY()
 
@@ -29,7 +27,7 @@ class CARLA_API ACarlaVehicleController : public APlayerController
   /// @{
 public:
 
-  ACarlaVehicleController();
+  ACarlaVehicleController(const FObjectInitializer& ObjectInitializer);
 
   ~ACarlaVehicleController();
 
@@ -47,8 +45,6 @@ public:
   virtual void BeginPlay() override;
 
   virtual void Tick(float DeltaTime) override;
-
-  virtual void CalcCamera(float DeltaTime, FMinimalViewInfo& OutResult) override;
 
   /// @}
   // ===========================================================================
@@ -155,19 +151,6 @@ private:
 
   /// @}
   // ===========================================================================
-  /// @name Camera input
-  // ===========================================================================
-  /// @{
-private:
-
-  void ChangeCameraZoom(float Value);
-
-  void ChangeCameraUp(float Value);
-
-  void ChangeCameraRight(float Value);
-
-  /// @}
-  // ===========================================================================
   /// @name Input bindings
   // ===========================================================================
   /// @{
@@ -204,12 +187,6 @@ private:
 
   UPROPERTY()
   bool bIsInReverse = false;
-
-  UPROPERTY()
-  USpringArmComponent *SpringArm;
-
-  UPROPERTY()
-  UCameraComponent *PlayerCamera;
 
   UPROPERTY()
   UWheeledVehicleMovementComponent *MovementComponent;

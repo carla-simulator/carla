@@ -5,11 +5,9 @@
 
 #include "SceneCaptureCamera.h"
 
-#include "Camera/CameraComponent.h"
 #include "Components/BoxComponent.h"
 #include "EngineUtils.h"
 #include "GameFramework/Pawn.h"
-#include "GameFramework/SpringArmComponent.h"
 #include "WheeledVehicle.h"
 #include "WheeledVehicleMovementComponent.h"
 
@@ -17,33 +15,10 @@
 // -- Constructor and destructor -----------------------------------------------
 // =============================================================================
 
-ACarlaVehicleController::ACarlaVehicleController() :
-  Super(),
+ACarlaVehicleController::ACarlaVehicleController(const FObjectInitializer& ObjectInitializer) :
+  Super(ObjectInitializer),
   MovementComponent(nullptr)
 {
-  bAutoManageActiveCameraTarget = false;
-
-  // Create the spring arm component
-  SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm0"));
-  SpringArm->TargetOffset = FVector(0.f, 0.f, 200.f);
-  SpringArm->SetRelativeRotation(FRotator(-15.f, 0.f, 0.f));
-  SpringArm->SetupAttachment(RootComponent);
-  SpringArm->TargetArmLength = 600.0f;
-  SpringArm->bEnableCameraRotationLag = true;
-  SpringArm->CameraRotationLagSpeed = 7.f;
-  SpringArm->bInheritPitch = false;
-  SpringArm->bInheritRoll = false;
-  SpringArm->bInheritYaw = true;
-
-  // Do not collide, may clip into level.
-  SpringArm->bDoCollisionTest = false;
-
-  // Create the camera component
-  PlayerCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera0"));
-  PlayerCamera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
-  PlayerCamera->bUsePawnControlRotation = false;
-  PlayerCamera->FieldOfView = 90.f;
-
   PrimaryActorTick.bCanEverTick = true;
   PrimaryActorTick.TickGroup = TG_PrePhysics;
 }
@@ -57,14 +32,9 @@ ACarlaVehicleController::~ACarlaVehicleController() {}
 void ACarlaVehicleController::SetupInputComponent()
 {
   Super::SetupInputComponent();
-  check(InputComponent != nullptr);
-  // Camera.
-  InputComponent->BindAxis("CameraZoom", this, &ACarlaVehicleController::ChangeCameraZoom);
-  InputComponent->BindAxis("CameraUp", this, &ACarlaVehicleController::ChangeCameraUp);
-  InputComponent->BindAxis("CameraRight", this, &ACarlaVehicleController::ChangeCameraRight);
-  // Global options.
-  InputComponent->BindAction("RestartLevel", IE_Pressed, this, &ACarlaVehicleController::RestartLevel);
-  InputComponent->BindAction("ToggleManualMode", IE_Pressed, this, &ACarlaVehicleController::ToggleManualMode);
+  if (InputComponent != nullptr) {
+    InputComponent->BindAction("ToggleManualMode", IE_Pressed, this, &ACarlaVehicleController::ToggleManualMode);
+  }
 }
 
 void ACarlaVehicleController::Possess(APawn *aPawn)
@@ -76,10 +46,6 @@ void ACarlaVehicleController::Possess(APawn *aPawn)
   }
   auto *WheeledVehicle = Cast<AWheeledVehicle>(aPawn);
   if (WheeledVehicle != nullptr) {
-    // Attach the camera's spring arm to the pawn.
-    SpringArm->AttachToComponent(
-       aPawn->GetRootComponent(),
-       FAttachmentTransformRules::KeepRelativeTransform);
     // Bind hit events.
     aPawn->OnActorHit.AddDynamic(this, &ACarlaVehicleController::OnCollisionEvent);
     // Get vehicle movement component.
@@ -154,11 +120,6 @@ void ACarlaVehicleController::Tick(float DeltaTime)
       }
     }
   }
-}
-
-void ACarlaVehicleController::CalcCamera(float DeltaTime, FMinimalViewInfo& OutResult)
-{
-  PlayerCamera->GetCameraView(DeltaTime, OutResult);
 }
 
 // =============================================================================
@@ -295,29 +256,6 @@ void ACarlaVehicleController::SetupControllerInput()
   } else {
     UE_LOG(LogCarla, Error, TEXT("Not implemented")); /// @todo
   }
-}
-
-// =============================================================================
-// -- Camera movement methods --------------------------------------------------
-// =============================================================================
-
-void ACarlaVehicleController::ACarlaVehicleController::ChangeCameraZoom(float Value)
-{
-  SpringArm->TargetArmLength = FMath::Clamp(SpringArm->TargetArmLength + Value, 200.0f, 1e4f);
-}
-
-void ACarlaVehicleController::ChangeCameraUp(float Value)
-{
-  auto Rotation = SpringArm->GetRelativeTransform().Rotator();
-  Rotation.Pitch = FMath::Clamp(Rotation.Pitch - Value, -80.0f, 0.0f);
-  SpringArm->SetRelativeRotation(Rotation);
-}
-
-void ACarlaVehicleController::ChangeCameraRight(float Value)
-{
-  auto Rotation = SpringArm->GetRelativeTransform().Rotator();
-  Rotation.Yaw -= Value;
-  SpringArm->SetRelativeRotation(Rotation);
 }
 
 // =============================================================================
