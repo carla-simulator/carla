@@ -202,3 +202,16 @@ void UCarlaSettings::LogSettings() const
 #undef S_CARLA_SERVER
 #undef S_CARLA_LEVELSETTINGS
 #undef S_CARLA_SCENECAPTURE
+
+void UCarlaSettings::GetActiveWeatherDescription(
+    bool &bWeatherWasChanged,
+    FWeatherDescription &WeatherDescription) const
+{
+  auto WeatherPtr = GetActiveWeatherDescription();
+  if (WeatherPtr != nullptr) {
+    WeatherDescription = *WeatherPtr;
+    bWeatherWasChanged = true;
+  } else {
+    bWeatherWasChanged = false;
+  }
+}

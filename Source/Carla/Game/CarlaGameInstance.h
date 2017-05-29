@@ -43,6 +43,13 @@ public:
     return *CarlaSettings;
   }
 
+  // Extra overload just for blueprints.
+  UFUNCTION(BlueprintCallable)
+  UCarlaSettings *GetCARLASettings()
+  {
+    return CarlaSettings;
+  }
+
 private:
 
   UPROPERTY(Category = "CARLA Settings", EditAnywhere)

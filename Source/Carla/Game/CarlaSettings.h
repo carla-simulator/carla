@@ -33,6 +33,12 @@ public:
     return nullptr;
   }
 
+  // Special overload for blueprints.
+  UFUNCTION(BlueprintCallable)
+  void GetActiveWeatherDescription(
+      bool &bWeatherWasChanged,
+      FWeatherDescription &WeatherDescription) const;
+
 private:
 
   /** File name of the settings file used to load this settings. Empty if none used. */
@@ -46,19 +52,19 @@ private:
 public:
 
   /** If active, wait for the client to connect and control the pawn. */
-  UPROPERTY(Category = "CARLA Server", EditDefaultsOnly)
+  UPROPERTY(Category = "CARLA Server", VisibleAnywhere)
   bool bUseNetworking = true;
 
   /** World port to listen for client connections. */
-  UPROPERTY(Category = "CARLA Server", EditDefaultsOnly, meta = (EditCondition = bUseNetworking))
+  UPROPERTY(Category = "CARLA Server", VisibleAnywhere, meta = (EditCondition = bUseNetworking))
   uint32 WorldPort = 2000u;
 
   /** If networking is active, rewards are sent to this port. */
-  UPROPERTY(Category = "CARLA Server", EditDefaultsOnly, meta = (EditCondition = bUseNetworking))
+  UPROPERTY(Category = "CARLA Server", VisibleAnywhere, meta = (EditCondition = bUseNetworking))
   uint32 WritePort = 2001u;
 
   /** If networking is active, controls are read from this port. */
-  UPROPERTY(Category = "CARLA Server", EditDefaultsOnly, meta = (EditCondition = bUseNetworking))
+  UPROPERTY(Category = "CARLA Server", VisibleAnywhere, meta = (EditCondition = bUseNetworking))
   uint32 ReadPort = 2002u;
 
   /// @}
@@ -69,19 +75,19 @@ public:
 public:
 
   /** Number of NPC vehicles to be spawned into the level. */
-  UPROPERTY(Category = "Level Settings", EditDefaultsOnly)
+  UPROPERTY(Category = "Level Settings", VisibleAnywhere)
   uint32 NumberOfVehicles = 5u;
 
   /** Number of NPC pedestrians to be spawned into the level. */
-  UPROPERTY(Category = "Level Settings", EditDefaultsOnly)
+  UPROPERTY(Category = "Level Settings", VisibleAnywhere)
   uint32 NumberOfPedestrians = 15u;
 
   /** Index of the weather setting to use. If negative, weather won't be changed. */
-  UPROPERTY(Category = "Level Settings", EditDefaultsOnly)
+  UPROPERTY(Category = "Level Settings", VisibleAnywhere)
   int32 WeatherId = -1;
 
   /** Available weather settings. */
-  UPROPERTY(Category = "Level Settings", EditDefaultsOnly)
+  UPROPERTY(Category = "Level Settings", VisibleAnywhere)
   TArray<FWeatherDescription> WeatherDescriptions;
 
   /// @}
@@ -92,14 +98,14 @@ public:
 public:
 
   /** Descriptions of the cameras to be attached to the player. */
-  UPROPERTY(Category = "Scene Capture", EditDefaultsOnly)
+  UPROPERTY(Category = "Scene Capture", VisibleAnywhere)
   TMap<FString, FCameraDescription> CameraDescriptions;
 
   /** Whether semantic segmentation should be activated. The mechanisms for
     * semantic segmentation impose some performance penalties even if it is not
     * used, we only enable it if necessary.
     */
-  UPROPERTY(Category = "Scene Capture", EditDefaultsOnly)
+  UPROPERTY(Category = "Scene Capture", VisibleAnywhere)
   bool bSemanticSegmentationEnabled = false;
 
   /// @}
