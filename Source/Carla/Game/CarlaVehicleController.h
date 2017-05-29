@@ -98,6 +98,15 @@ public:
 
   void SetSteeringInput(float Value);
 
+  void SetBrakeInput(float Value);
+
+  void SetReverse(bool Value);
+
+  void ToggleReverse()
+  {
+    SetReverse(!bIsInReverse);
+  }
+
   void SetHandbrakeInput(bool Value);
 
   void HoldHandbrake()
@@ -113,6 +122,10 @@ public:
   /// @}
   // ===========================================================================
   /// @name Manual mode
+  ///
+  /// Manual mode refers here to whether the car can be controlled from the
+  /// server side. This is disabled by default when the client connects since it
+  /// interferes with the client input.
   // ===========================================================================
   /// @{
 public:
@@ -184,8 +197,13 @@ private:
   // ===========================================================================
 private:
 
+  /// Manual input mode. Not to be mistaken with the vehicle manual/automatic
+  /// transmission.
   UPROPERTY()
   bool bManualMode = false;
+
+  UPROPERTY()
+  bool bIsInReverse = false;
 
   UPROPERTY()
   USpringArmComponent *SpringArm;

@@ -84,6 +84,7 @@ void ACarlaVehicleController::Possess(APawn *aPawn)
     aPawn->OnActorHit.AddDynamic(this, &ACarlaVehicleController::OnCollisionEvent);
     // Get vehicle movement component.
     MovementComponent = WheeledVehicle->GetVehicleMovementComponent();
+    MovementComponent->bReverseAsBrake = false;
     check(MovementComponent != nullptr);
     // Get vehicle box component.
     TArray<UBoxComponent *> BoundingBoxes;
@@ -224,6 +225,22 @@ void ACarlaVehicleController::SetSteeringInput(float Value)
   MovementComponent->SetSteeringInput(Value);
 }
 
+void ACarlaVehicleController::SetBrakeInput(float Value)
+{
+  check(MovementComponent != nullptr);
+  MovementComponent->SetBrakeInput(Value);
+}
+
+void ACarlaVehicleController::SetReverse(bool Value)
+{
+  if (Value != bIsInReverse) {
+    check(MovementComponent != nullptr);
+    bIsInReverse = Value;
+    MovementComponent->SetUseAutoGears(!bIsInReverse);
+    MovementComponent->SetTargetGear(bIsInReverse ? -1 : 1, true);
+  }
+}
+
 void ACarlaVehicleController::SetHandbrakeInput(bool Value)
 {
   check(MovementComponent != nullptr);
@@ -271,6 +288,8 @@ void ACarlaVehicleController::SetupControllerInput()
   if (IsInManualMode()) {
     InputComponent->BindAxis("MoveForward", this, &ACarlaVehicleController::SetThrottleInput);
     InputComponent->BindAxis("MoveRight", this, &ACarlaVehicleController::SetSteeringInput);
+    InputComponent->BindAxis("Brake", this, &ACarlaVehicleController::SetBrakeInput);
+    InputComponent->BindAction("ToggleReverse", IE_Pressed, this, &ACarlaVehicleController::ToggleReverse);
     InputComponent->BindAction("Handbrake", IE_Pressed, this, &ACarlaVehicleController::HoldHandbrake);
     InputComponent->BindAction("Handbrake", IE_Released, this, &ACarlaVehicleController::ReleaseHandbrake);
   } else {
