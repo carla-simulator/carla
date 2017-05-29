@@ -25,8 +25,8 @@ message Control {
   optional float steer = 1;
   optional float gas = 2;
   optional float brake = 3;
-  optional float hand_brake = 4;
-  optional float gear = 5;
+  optional bool hand_brake = 4;
+  optional bool reverse = 5;
 
 }
 
