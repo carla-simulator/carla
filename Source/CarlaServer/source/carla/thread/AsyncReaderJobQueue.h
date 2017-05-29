@@ -24,7 +24,7 @@ namespace thread {
   using ReconnectJob = std::function<void()>;
 
 	explicit AsyncReaderJobQueue(Job &&job, ConnectJob &&connectionJob, ReconnectJob &&reconnectJob) :
-		_done(false),
+		done(false),
     _restart(true),
 		_job(std::move(job)),
 		_connectionJob(std::move(connectionJob)),
@@ -34,7 +34,7 @@ namespace thread {
 
     ~AsyncReaderJobQueue() {
       std::cout << "Destroyed thread client"<< std::endl;
-      _done = true;
+      done = true;
     }
 
     void push(std::unique_ptr<T> item) {
@@ -58,14 +58,16 @@ namespace thread {
     void clear(){
       _queue.clear();
     }
+
+    std::atomic_bool done;
     
   private:
     void workerThread() {
-      while (!_done){
+      while (!done){
     		_connectionJob();
         _restart = false;
         _queue.canWait(true);
-        while (!_restart && !_done) {
+        while (!_restart && !done) {
           auto value = _queue.wait_and_pop();
           if (value != nullptr) {
             _job(*value);
@@ -75,7 +77,7 @@ namespace thread {
       }
     }
 
-    std::atomic_bool _done;
+    
     std::atomic_bool _restart;
 
     Job _job;

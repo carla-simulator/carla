@@ -76,10 +76,10 @@ static bool ReadSceneInit(carla::CarlaServer &Server)
   uint32 Scene;
   bool Success = false;
   UE_LOG(LogCarlaServer, Log, TEXT("(tryReadSceneInit) Waiting for client..."));
-  while (!Success) {
+  /*while (!Success) {
     if (!Server.tryReadSceneInit(Scene, Success))
       return false;
-  }
+  }*/
   return true;
 }
 
@@ -188,11 +188,11 @@ void CarlaGameController::Initialize(UCarlaSettings &CarlaSettings)
 {
   if (bServerNeedsRestart) {
     UE_LOG(LogCarlaServer, Log, TEXT("Initializing CarlaServer"));
-    if (Server->init(1u) && ReadSceneInit(*Server)) {
+    /*if (Server->init(1u) && ReadSceneInit(*Server)) {
       bServerNeedsRestart = false;
     } else {
       UE_LOG(LogCarlaServer, Warning, TEXT("Failed to initialize, server needs restart"));
-    }
+    }*/
   }
 }
 
@@ -238,13 +238,13 @@ bool CarlaGameController::TickServer()
 {
   // Check if the client requested a new episode.
   bool bNewEpisodeRequested = false;
-  if (!Server->newEpisodeRequested(bNewEpisodeRequested)) {
+  /*if (!Server->newEpisodeRequested(bNewEpisodeRequested)) {
     return false;
   } else if (bNewEpisodeRequested) {
     UE_LOG(LogCarlaServer, Log, TEXT("New episode requested"));
     RestartLevel();
     return true;
-  }
+  }*/
 
   // Send reward and try to read control.
   return

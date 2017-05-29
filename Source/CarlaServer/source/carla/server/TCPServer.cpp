@@ -43,7 +43,11 @@ namespace carla {
 
             }
 
-        TCPServer::~TCPServer() {}
+        TCPServer::~TCPServer() {
+
+          close();
+
+        }
 
         void TCPServer::AcceptSocket() {
 

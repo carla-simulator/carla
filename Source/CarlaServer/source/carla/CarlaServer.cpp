@@ -30,6 +30,7 @@ namespace carla {
 
   CarlaServer::~CarlaServer() {}
 
+/*
   bool CarlaServer::init(uint32_t levelCount) {
     if (!worldConnected() && !clientConnected() && !serverConnected())
       return false;
@@ -43,6 +44,7 @@ namespace carla {
     readed = _pimpl->communication.tryReadSceneInit(scene);
     return true;
   }
+*/
 
   bool CarlaServer::tryReadEpisodeStart(uint32_t &startIndex, uint32_t &endIndex, bool &readed) {
     if (!worldConnected())
@@ -51,17 +53,19 @@ namespace carla {
     return true;
   }
 
-  bool CarlaServer::tryReadControl(float &steer, float &throttle, bool &readed) {
+  bool CarlaServer::tryReadControl(Control_Values &control, bool &readed) {
     if (!clientConnected())
       return false;
-    readed = _pimpl->communication.tryReadControl(steer, throttle);
+    readed = _pimpl->communication.tryReadControl(control);
     return true;
   }
 
-  bool CarlaServer::newEpisodeRequested(bool &newEpisode) {
+  bool CarlaServer::newEpisodeRequested(std::string &init_file, bool &readed) {
     if (!worldConnected())
       return false;
-    newEpisode = _pimpl->communication.tryReadRequestNewEpisode();
+    
+    readed = _pimpl->communication.tryReadRequestNewEpisode(init_file);
+
     return true;
   }
 

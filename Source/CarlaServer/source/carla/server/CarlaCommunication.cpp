@@ -82,8 +82,7 @@ namespace server {
   static std::unique_ptr<std::string> worldReceiveThread(TCPServer &server, thread::AsyncReadWriteJobQueue<std::string, std::string> &thr) {
     auto message = std::make_unique<std::string>();
     bool success = false;
-
-
+    
       if (!thr.getRestart()) {
         TCPServer::error_code error;
 
@@ -185,13 +184,23 @@ namespace server {
       [this]() { ReconnectAll(*this); }
     } {}
 
+
+  CarlaCommunication::~CarlaCommunication(){
+    _worldThread.done = true;
+    _serverThread.done = true;
+    _clientThread.done = true;
+  }
+
   void CarlaCommunication::sendReward(std::unique_ptr<Reward_Values> values) {
     _serverThread.push(std::move(values));
   }
 
-  bool CarlaCommunication::tryReadControl(float &steer, float &gas) {
-    steer = 0.0f;
-    gas = 0.0f;
+  bool CarlaCommunication::tryReadControl(Control_Values &control_values) {
+    control_values.steer = 0.0f;
+    control_values.gas = 0.0f;
+    control_values.brake = 0.0f;
+    control_values.hand_brake = 0.0f;
+    control_values.gear = 0.0f;
 
     auto message = _clientThread.tryPop();
     if (message == nullptr) { return false; }
@@ -199,12 +208,15 @@ namespace server {
     Control control;
     if (!control.ParseFromString(*message)) { return false; }
 
-    steer = control.steer();
-    gas = control.gas();
+    control_values.steer = control.steer();
+    control_values.gas = control.gas();
+    control_values.brake = control.brake();
+    control_values.hand_brake = control.hand_brake();
+    control_values.gear = control.gear();
 
     return true;
   }
-
+/*
   void CarlaCommunication::sendWorld(const uint32_t scenes) {
     //ClearThreads
     _worldThread.clear();
@@ -220,7 +232,7 @@ namespace server {
       _worldThread.push(std::move(message));
     }
   }
-
+*/
   void CarlaCommunication::sendScene(const Scene_Values &values) {
 
     Scene scene;
@@ -243,6 +255,7 @@ namespace server {
     }
   }
 
+/*
   bool CarlaCommunication::tryReadSceneInit(uint32_t &scene) {
     scene = 0u;
 
@@ -256,6 +269,7 @@ namespace server {
     scene = sceneInit.scene();
     return true;
   }
+*/
 
   bool CarlaCommunication::tryReadEpisodeStart(uint32_t &start_index, uint32_t &end_index) {
     start_index = 0;
@@ -273,17 +287,28 @@ namespace server {
     return true;
   }
 
-  bool CarlaCommunication::tryReadRequestNewEpisode() {
+  bool CarlaCommunication::tryReadRequestNewEpisode(std::string &init_file) {
     std::unique_ptr<std::string> request = _worldThread.tryPop();
 
-    if (request == nullptr) { return false; }
+    if (request == nullptr) { 
+      return false; 
+    }
 
     RequestNewEpisode reqEpisode;
 
     if (!reqEpisode.ParseFromString(*request)) {
+
       _worldThread.undoPop(std::move(request));
+
       return false;
-    } else { return true; }
+    } else { 
+      
+      init_file = reqEpisode.init_file();
+
+      std::cout << init_file << std::endl;
+
+      return true; 
+    }
   }
 
   void CarlaCommunication::restartServer() {

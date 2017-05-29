@@ -135,7 +135,7 @@ void URoadMap::SetPixelAt(
     case ECityMapMeshTag::Road90DegTurn_Lane7:
       bIsRoad = true;
       bHasDirection = true;
-      Rotator.Yaw += 90.0f + 22.5f;
+      Rotator.Yaw += 90.0f; //+ 15.5f;
       break;
     case ECityMapMeshTag::Road90DegTurn_Lane5:
       bIsRoad = true;
@@ -145,7 +145,7 @@ void URoadMap::SetPixelAt(
     case ECityMapMeshTag::Road90DegTurn_Lane3:
       bIsRoad = true;
       bHasDirection = true;
-      Rotator.Yaw += 90.0f + 45.0f + 22.5f;
+      Rotator.Yaw += 90.0f + 45.0f + 20.5f;
       break;
     case ECityMapMeshTag::Road90DegTurn_Lane8:
     case ECityMapMeshTag::RoadTIntersection_Lane4:
@@ -158,17 +158,17 @@ void URoadMap::SetPixelAt(
     case ECityMapMeshTag::Road90DegTurn_Lane6:
       bIsRoad = true;
       bHasDirection = true;
-      Rotator.Yaw += 270.0f + 22.5f;
+      Rotator.Yaw += 270.0f + 30.0f;
       break;
     case ECityMapMeshTag::Road90DegTurn_Lane4:
       bIsRoad = true;
       bHasDirection = true;
-      Rotator.Yaw += 270.0f + 45.0f;
+      Rotator.Yaw += 270.0f + 50.0f;
       break;
     case ECityMapMeshTag::Road90DegTurn_Lane2:
       bIsRoad = true;
       bHasDirection = true;
-      Rotator.Yaw += 270.0f + 45.0f + 22.5f;
+      Rotator.Yaw += 270.0f + 70.0f;
       break;
     case ECityMapMeshTag::RoadTIntersection_Lane3:
     case ECityMapMeshTag::RoadTIntersection_Lane6:

@@ -17,6 +17,7 @@ namespace carla {
 
     struct Scene_Values;
     struct Reward_Values;
+    struct Control_Values;
     enum class Mode : int8_t;
 
 namespace server {
@@ -26,23 +27,23 @@ namespace server {
 
     explicit CarlaCommunication(int worldPort, int writePort, int readPort);
 
-    //~CarlaCommunication();
+    ~CarlaCommunication();
 
     void sendReward(std::unique_ptr<Reward_Values> values);
 
-    bool tryReadControl(float &steer, float &gas);
+    bool tryReadControl(Control_Values &control);
 
     void sendScene(const Scene_Values &scene);
 
     void sendReset();
 
-    void sendWorld(const uint32_t scenes);
+    //void sendWorld(const uint32_t scenes);
 
-    bool tryReadSceneInit(uint32_t &scene);
+    //bool tryReadSceneInit(uint32_t &scene);
 
     bool tryReadEpisodeStart(uint32_t &start_index, uint32_t &end_index);
 
-    bool tryReadRequestNewEpisode();
+    bool tryReadRequestNewEpisode(std::string &init_file);
 
     void restartServer();
 

@@ -11,12 +11,7 @@
 #include <stdlib.h>
 
 #ifdef CARLA_WITH_PNG_COMPRESSION
-#include CARLA_LIBPNG_INCLUDE
-static_assert(
-        CARLA_LIBPNG_VERSION_MAJOR == PNG_LIBPNG_VER_MAJOR &&
-        CARLA_LIBPNG_VERSION_MINOR == PNG_LIBPNG_VER_MINOR &&
-        CARLA_LIBPNG_VERSION_RELEASE == PNG_LIBPNG_VER_RELEASE,
-    "PNG versions do not match");
+#include <png.h>
 #endif // CARLA_WITH_PNG_COMPRESSION
 
 namespace carla {
@@ -204,25 +199,16 @@ namespace server {
 static bool getPNGImages(const std::vector<Image> &images, Reward &rwd) {
 
     std::string image_data;
+    std::string sceneFinal_data;
     std::string depth_data;
+    std::string semanticSeg_data;
     std::string image_size_data;
+    std::string sceneFinal_size_data;
     std::string depth_size_data;
+    std::string semanticSeg_size_data;
 
     for (const Image &img : images){
       img_encode compressedImage;
-
-      /*
-      {
-      using namespace std;
-      clock_t begin = clock();
-      if (!GetImage(img, compressedImage)) {
-        std::cerr << "Error while encoding image" << std::endl;
-        return false;
-      }
-      clock_t end = clock();
-      double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
-      cout << "Time to encode the image: " << elapsed_secs << " sec" << endl;
-      }*/
 
 
       if (!GetImage(img, compressedImage)) {
@@ -231,13 +217,25 @@ static bool getPNGImages(const std::vector<Image> &images, Reward &rwd) {
       }
 
       switch (img.type){
+
         case IMAGE:
           for (unsigned long int i = 0; i < compressedImage.size; ++i) image_data += compressedImage.buffer[i];
           image_size_data += GetBytes(compressedImage.size);
           break;
+
+        case SCENE_FINAL:
+          for (unsigned long int i = 0; i < compressedImage.size; ++i) sceneFinal_data += compressedImage.buffer[i];
+          sceneFinal_size_data += GetBytes(compressedImage.size);
+          break;
+
         case DEPTH:
           for (unsigned long int i = 0; i < compressedImage.size; ++i) depth_data += compressedImage.buffer[i];
           depth_size_data += GetBytes(compressedImage.size);
+          break;
+
+        case SEMANTIC_SEG:
+          for (unsigned long int i = 0; i < compressedImage.size; ++i) semanticSeg_data += compressedImage.buffer[i];
+          semanticSeg_size_data += GetBytes(compressedImage.size);
           break;
       }
 
@@ -246,9 +244,13 @@ static bool getPNGImages(const std::vector<Image> &images, Reward &rwd) {
     }
 
     rwd.set_depth_sizes(depth_size_data);
+    rwd.set_final_image_sizes(sceneFinal_size_data);
     rwd.set_image_sizes(image_size_data);
+    rwd.set_semantic_seg_sizes(semanticSeg_size_data);
     rwd.set_images(image_data);
+    rwd.set_final_images(sceneFinal_data);
     rwd.set_depths(depth_data);
+    rwd.set_semantic_segs(semanticSeg_data);
 
     return true;
   }
@@ -292,7 +294,7 @@ static bool getPNGImages(const std::vector<Image> &images, Reward &rwd) {
 
   void Protocol::LoadScene(Scene &scene, const Scene_Values &values) {
 
-    scene.set_number_of_cameras(values.projection_matrices.size());
+    //scene.set_number_of_cameras(values.projection_matrices.size());
 
     std::string positions_bytes = "";
 
@@ -316,7 +318,7 @@ static bool getPNGImages(const std::vector<Image> &images, Reward &rwd) {
 
     scene.set_positions(positions_bytes);
 
-    std::string matrices;
+   /* std::string matrices;
 
     for (auto i = 0u; i < values.projection_matrices.size(); ++i) {
       for (auto e = 0u; e < 16u; ++e){
@@ -330,14 +332,15 @@ static bool getPNGImages(const std::vector<Image> &images, Reward &rwd) {
       }
     }
 
-    scene.set_projection_matrices(matrices);
+    scene.set_projection_matrices(matrices);*/
 
   }
 
+/*
   void Protocol::LoadWorld(World &world, const int modes, const int scenes) {
     world.set_modes(modes);
     world.set_scenes(scenes);
   }
-
+*/
 }
 }

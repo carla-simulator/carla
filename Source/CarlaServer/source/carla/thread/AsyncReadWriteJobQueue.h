@@ -28,7 +28,7 @@ namespace thread {
         ReadingJob && readingJob,
         ConnectJob && connectJob,
         ReconnectJob && reconnectJob) :
-      _done(false),
+      done(false),
       _restart(true),
       _writeJob(std::move(writingJob)),
       _readJob(std::move(readingJob)),
@@ -39,7 +39,7 @@ namespace thread {
 
     ~AsyncReadWriteJobQueue() {
       std::cout << "Destroyed thread world"<< std::endl;
-      _done = true;
+      done = true;
     }
 
     std::unique_ptr<W>  tryPop() {
@@ -76,29 +76,36 @@ namespace thread {
       _writeQueue.clear();
     }
 
+    std::atomic_bool done;
+
   private:
 
     void workerThread() {
-      while(!_done){
+      while(!done){
         _connectJob();
         _restart = false; 
         _readQueue.canWait(true);
-        while (!_restart && !_done) {
-          auto value = _readQueue.wait_and_pop();
+        while (!_restart && !done) {
+      /* auto value = _readQueue.wait_and_pop();
           if (value != nullptr) {
             _readJob(*value);
           }
-
+*/
           if (!_restart){
             //_writeQueue.wait_and_push(_writeJob);
             _writeQueue.push(std::move(_writeJob()));
+          }
+
+          auto value = _readQueue.wait_and_pop();
+          if (value != nullptr) {
+            _readJob(*value);
           }
 
         }
       }
     }
 
-    std::atomic_bool _done;
+    
     std::atomic_bool _restart;
 
     WritingJob _writeJob;

@@ -29,7 +29,9 @@ namespace carla {
 
   enum ImageType {
     IMAGE,
+    SCENE_FINAL,
     DEPTH,
+    SEMANTIC_SEG,
   };
 
   struct Image {
@@ -38,6 +40,15 @@ namespace carla {
     std::vector<Color> image;
     ImageType type;
     uint32_t width, height;
+  };
+
+  struct Control_Values {
+
+    float steer;
+    float gas;
+    float brake;
+    float hand_brake;
+    float gear;
   };
 
   struct Reward_Values {
@@ -76,7 +87,7 @@ namespace carla {
     /// Possible world positions to spawn the player.
     std::vector<Vector2D> possible_positions;
     /// Projection matrices of the cameras.
-    std::vector<std::array<float, 16u>> projection_matrices;
+    //std::vector<std::array<float, 16u>> projection_matrices;
   };
 
   /// Asynchronous TCP server. Uses three ports, one for sending messages
@@ -100,11 +111,11 @@ namespace carla {
     /// Initialize the server.
     ///
     /// @param LevelCount Number of levels available.
-    bool init(uint32_t levelCount);
+    //bool init(uint32_t levelCount);
 
     /// Try to read if the client has selected an scene and mode. Return false
     /// if the queue is empty.
-    bool tryReadSceneInit(uint32_t &scene, bool &readed);
+    //bool tryReadSceneInit(uint32_t &scene, bool &readed);
 
     /// Try to read if the client has selected an end & start point. Return
     /// false if the queue is empty.
@@ -112,9 +123,9 @@ namespace carla {
 
     /// Try to read the response of the client. Return false if the queue
     /// is empty.
-    bool tryReadControl(float &steer, float &throttle, bool &readed);
+    bool tryReadControl(Control_Values &control, bool &readed);
 
-    bool newEpisodeRequested(bool &newEpisode);
+    bool newEpisodeRequested(std::string &init_file, bool &readed);
 
     /// Send values of the current player status.
     ///

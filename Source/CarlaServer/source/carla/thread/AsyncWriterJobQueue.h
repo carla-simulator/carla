@@ -22,7 +22,7 @@ namespace thread {
   using ReconnectJob = std::function<void()>;
 
 	explicit AsyncWriterJobQueue(Job &&job, ConnectJob &&connectJob, ReconnectJob &&reconnectJob) :
-		_done(false),
+		done(false),
     _restart(true),
 		_job(std::move(job)),
 		_connectJob(std::move(connectJob)),
@@ -33,7 +33,7 @@ namespace thread {
 
     ~AsyncWriterJobQueue() {
       std::cout << "Destroyed thread server"<< std::endl;
-      _done = true;
+      done = true;
     }
 
     std::unique_ptr<T> tryPop() {
@@ -57,14 +57,18 @@ namespace thread {
       _queue.clear();
     }
     
+
+    std::atomic_bool done;
+
   private:
 
     void workerThread() {
-      while (!_done){
+      while (!done){
 		    _connectJob();
         _restart = false;
         _queue.canWait(true);
-        while (!_restart && !_done) {
+
+        while (!_restart && !done) {
           //_queue.wait_and_push(_job);
           _queue.push(std::move(_job())); 
 		      //Sleep(10);
@@ -72,7 +76,7 @@ namespace thread {
       }
     }
 
-    std::atomic_bool _done;
+    
     std::atomic_bool _restart;
 
     Job _job;
