@@ -19,6 +19,8 @@
 class MyIniFile : public IniFile {
 public:
 
+  MyIniFile() = default;
+
   explicit MyIniFile(const FString &FileName) : IniFile(FileName) {}
 
   void GetPostProcessEffect(const TCHAR* Section, const TCHAR* Key, EPostProcessEffect &Target) const
@@ -74,10 +76,8 @@ static bool RequestedSemanticSegmentation(const FCameraDescription &Camera)
   return (Camera.PostProcessEffect == EPostProcessEffect::SemanticSegmentation);
 }
 
-static void LoadSettingsFromFile(const FString &FileName, UCarlaSettings &Settings)
+static void LoadSettingsFromConfig(const MyIniFile &ConfigFile, UCarlaSettings &Settings)
 {
-  UE_LOG(LogCarla, Log, TEXT("Loading settings from \"%s\""), *FileName);
-  MyIniFile ConfigFile(FileName);
   // CarlaServer.
   ConfigFile.GetBool(S_CARLA_SERVER, TEXT("UseNetworking"), Settings.bUseNetworking);
   ConfigFile.GetInt(S_CARLA_SERVER, TEXT("WorldPort"), Settings.WorldPort);
@@ -146,7 +146,9 @@ void UCarlaSettings::LoadSettings()
 {
   FString FileName;
   if (GetSettingsFileName(FileName)) {
-    LoadSettingsFromFile(FileName, *this);
+    UE_LOG(LogCarla, Log, TEXT("Loading settings from \"%s\""), *FileName);
+    const MyIniFile ConfigFile(FileName);
+    LoadSettingsFromConfig(ConfigFile, *this);
     CurrentFileName = FileName;
   } else {
     CurrentFileName = TEXT("");
@@ -158,6 +160,13 @@ void UCarlaSettings::LoadSettings()
     WritePort = Value + 1u;
     ReadPort = Value + 2u;
   }
+}
+
+void UCarlaSettings::LoadSettingsFromString(const FString &INIFileContents)
+{
+  MyIniFile ConfigFile;
+  ConfigFile.ProcessInputFileContents(INIFileContents);
+  LoadSettingsFromConfig(ConfigFile, *this);
 }
 
 void UCarlaSettings::LogSettings() const

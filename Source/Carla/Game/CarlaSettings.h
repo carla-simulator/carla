@@ -19,6 +19,9 @@ public:
   /** Load the settings based on the command-line arguments and the INI file if provided. */
   void LoadSettings();
 
+  /** Load the settings from the given string (formatted as INI). */
+  void LoadSettingsFromString(const FString &INIFileContents);
+
   /** Log settings values. */
   void LogSettings() const;
 

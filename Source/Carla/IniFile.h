@@ -30,6 +30,8 @@ public:
   // ===========================================================================
   /// @{
 
+  IniFile() = default;
+
   explicit IniFile(const FString &FileName)
   {
     ConfigFile.Read(FileName);
@@ -40,6 +42,11 @@ public:
   /// @name Other functions
   // ===========================================================================
   /// @{
+
+  void ProcessInputFileContents(const FString &INIFileContents)
+  {
+    ConfigFile.ProcessInputFileContents(INIFileContents);
+  }
 
   bool HasSection(const FString &Section) const
   {
