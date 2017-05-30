@@ -20,7 +20,7 @@ public:
   void LoadSettings();
 
   /** Load the settings from the given string (formatted as INI). */
-  void LoadSettingsFromString(const FString &INIFileContents);
+  void LoadSettingsFromString(const FString &INIFileContents, bool bLoadCarlaServerSection = false);
 
   /** Log settings values. */
   void LogSettings() const;

@@ -76,13 +76,18 @@ static bool RequestedSemanticSegmentation(const FCameraDescription &Camera)
   return (Camera.PostProcessEffect == EPostProcessEffect::SemanticSegmentation);
 }
 
-static void LoadSettingsFromConfig(const MyIniFile &ConfigFile, UCarlaSettings &Settings)
+static void LoadSettingsFromConfig(
+    const MyIniFile &ConfigFile,
+    UCarlaSettings &Settings,
+    const bool bLoadCarlaServerSection)
 {
   // CarlaServer.
-  ConfigFile.GetBool(S_CARLA_SERVER, TEXT("UseNetworking"), Settings.bUseNetworking);
-  ConfigFile.GetInt(S_CARLA_SERVER, TEXT("WorldPort"), Settings.WorldPort);
-  ConfigFile.GetInt(S_CARLA_SERVER, TEXT("WritePort"), Settings.WritePort);
-  ConfigFile.GetInt(S_CARLA_SERVER, TEXT("ReadPort"), Settings.ReadPort);
+  if (bLoadCarlaServerSection) {
+    ConfigFile.GetBool(S_CARLA_SERVER, TEXT("UseNetworking"), Settings.bUseNetworking);
+    ConfigFile.GetInt(S_CARLA_SERVER, TEXT("WorldPort"), Settings.WorldPort);
+    ConfigFile.GetInt(S_CARLA_SERVER, TEXT("WritePort"), Settings.WritePort);
+    ConfigFile.GetInt(S_CARLA_SERVER, TEXT("ReadPort"), Settings.ReadPort);
+  }
   // LevelSettings.
   ConfigFile.GetInt(S_CARLA_LEVELSETTINGS, TEXT("NumberOfVehicles"), Settings.NumberOfVehicles);
   ConfigFile.GetInt(S_CARLA_LEVELSETTINGS, TEXT("NumberOfPedestrians"), Settings.NumberOfPedestrians);
@@ -148,7 +153,7 @@ void UCarlaSettings::LoadSettings()
   if (GetSettingsFileName(FileName)) {
     UE_LOG(LogCarla, Log, TEXT("Loading settings from \"%s\""), *FileName);
     const MyIniFile ConfigFile(FileName);
-    LoadSettingsFromConfig(ConfigFile, *this);
+    LoadSettingsFromConfig(ConfigFile, *this, true);
     CurrentFileName = FileName;
   } else {
     CurrentFileName = TEXT("");
@@ -162,11 +167,17 @@ void UCarlaSettings::LoadSettings()
   }
 }
 
-void UCarlaSettings::LoadSettingsFromString(const FString &INIFileContents)
+void UCarlaSettings::LoadSettingsFromString(
+    const FString &INIFileContents,
+    const bool bLoadCarlaServerSection)
 {
+  // Reset cameras.
+  CameraDescriptions.Empty();
+  bSemanticSegmentationEnabled = false;
+  // Load config from string.
   MyIniFile ConfigFile;
   ConfigFile.ProcessInputFileContents(INIFileContents);
-  LoadSettingsFromConfig(ConfigFile, *this);
+  LoadSettingsFromConfig(ConfigFile, *this, bLoadCarlaServerSection);
 }
 
 void UCarlaSettings::LogSettings() const
