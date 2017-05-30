@@ -32,6 +32,7 @@ ACarlaVehicleController::~ACarlaVehicleController() {}
 void ACarlaVehicleController::SetupInputComponent()
 {
   Super::SetupInputComponent();
+
   if (InputComponent != nullptr) {
     InputComponent->BindAction("ToggleManualMode", IE_Pressed, this, &ACarlaVehicleController::ToggleManualMode);
   }
@@ -40,6 +41,7 @@ void ACarlaVehicleController::SetupInputComponent()
 void ACarlaVehicleController::Possess(APawn *aPawn)
 {
   Super::Possess(aPawn);
+
   if (IsPossessingAVehicle()) {
     UE_LOG(LogCarla, Error, TEXT("Controller already possessing a pawn!"));
     return;
@@ -75,6 +77,8 @@ void ACarlaVehicleController::Possess(APawn *aPawn)
 
 void ACarlaVehicleController::BeginPlay()
 {
+  Super::BeginPlay();
+
   if (CarlaPlayerState != nullptr) {
     CarlaPlayerState->Images.Empty();
     const auto NumberOfCameras = SceneCaptureCameras.Num();
