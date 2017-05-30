@@ -151,7 +151,7 @@ void UCarlaSettings::LoadSettings()
 {
   FString FileName;
   if (GetSettingsFileName(FileName)) {
-    UE_LOG(LogCarla, Log, TEXT("Loading settings from \"%s\""), *FileName);
+    UE_LOG(LogCarla, Log, TEXT("Loading CARLA settings from \"%s\""), *FileName);
     const MyIniFile ConfigFile(FileName);
     LoadSettingsFromConfig(ConfigFile, *this, true);
     CurrentFileName = FileName;
@@ -174,6 +174,7 @@ void UCarlaSettings::LoadSettingsFromString(
     const FString &INIFileContents,
     const bool bLoadCarlaServerSection)
 {
+  UE_LOG(LogCarla, Log, TEXT("Loading CARLA settings from string"));
   // Reset cameras.
   CameraDescriptions.Empty();
   bSemanticSegmentationEnabled = false;
