@@ -33,8 +33,13 @@ static inline void Set(carla::Vector2D &cVector, const FVector &uVector)
 
 static carla::ImageType GetImageType(EPostProcessEffect PostProcessEffect)
 {
-  /// @todo #19
-  return (PostProcessEffect == EPostProcessEffect::Depth ? carla::DEPTH : carla::IMAGE);
+  static_assert(
+      (PostProcessEffect::ToUInt(EPostProcessEffect::None) == carla::IMAGE) &&
+      (PostProcessEffect::ToUInt(EPostProcessEffect::SceneFinal) == carla::SCENE_FINAL) &&
+      (PostProcessEffect::ToUInt(EPostProcessEffect::Depth) == carla::DEPTH) &&
+      (PostProcessEffect::ToUInt(EPostProcessEffect::SemanticSegmentation) == carla::SEMANTIC_SEG),
+      "Enum values do not match");
+  return carla::ImageType(PostProcessEffect::ToUInt(PostProcessEffect));
 }
 
 static void Set(carla::Image &cImage, const FCapturedImage &uImage)
@@ -54,9 +59,17 @@ static void Set(carla::Image &cImage, const FCapturedImage &uImage)
     check(cImage.image.size() == (cImage.width * cImage.height));
 #ifdef CARLA_SERVER_EXTRA_LOG
     {
+      auto GetImageType = [](carla::ImageType Type) {
+        switch (Type) {
+          case carla::IMAGE:        return TEXT("IMAGE");
+          case carla::SCENE_FINAL:  return TEXT("SCENE_FINAL");
+          case carla::DEPTH:        return TEXT("DEPTH");
+          case carla::SEMANTIC_SEG: return TEXT("SEMANTIC_SEG");
+          default:                  return TEXT("ERROR!");
+        }
+      };
       const auto Size = cImage.image.size();
-      const FString Type = (cImage.type == carla::IMAGE ? TEXT("IMAGE") : TEXT("DEPTH"));
-      UE_LOG(LogCarlaServer, Log, TEXT("Sending image %dx%d (%d) %s"), cImage.width, cImage.height, Size, *Type);
+      UE_LOG(LogCarlaServer, Log, TEXT("Sending image %dx%d (%d) %s"), cImage.width, cImage.height, Size, GetImageType(Type));
     }
   } else {
     UE_LOG(LogCarlaServer, Warning, TEXT("Sending empty image"));

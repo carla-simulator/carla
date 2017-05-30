@@ -20,5 +20,12 @@ enum class EPostProcessEffect : uint8
 class CARLA_API PostProcessEffect {
 public:
 
+  using uint_type = typename std::underlying_type<EPostProcessEffect>::type;
+
   static FString ToString(EPostProcessEffect PostProcessEffect);
+
+  static constexpr uint_type ToUInt(EPostProcessEffect PostProcessEffect)
+  {
+    return static_cast<uint_type>(PostProcessEffect);
+  }
 };

@@ -28,7 +28,7 @@ namespace carla {
     uint8_t A;
   };
 
-  enum ImageType {
+  enum ImageType : uint8_t {
     IMAGE,
     SCENE_FINAL,
     DEPTH,
