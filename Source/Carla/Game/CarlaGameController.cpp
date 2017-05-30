@@ -69,7 +69,7 @@ static void Set(carla::Image &cImage, const FCapturedImage &uImage)
         }
       };
       const auto Size = cImage.image.size();
-      UE_LOG(LogCarlaServer, Log, TEXT("Sending image %dx%d (%d) %s"), cImage.width, cImage.height, Size, GetImageType(Type));
+      UE_LOG(LogCarlaServer, Log, TEXT("Sending image %dx%d (%d) %s"), cImage.width, cImage.height, Size, GetImageType(cImage.type));
     }
   } else {
     UE_LOG(LogCarlaServer, Warning, TEXT("Sending empty image"));
