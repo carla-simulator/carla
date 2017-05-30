@@ -281,9 +281,7 @@ void ACityMapGenerator::GenerateRoadMap()
 #endif // WITH_EDITOR
 
   if (bSaveRoadMapToDisk) {
-    const FString MapName = World->GetMapName() + TEXT(".png");
-    const FString FilePath = FPaths::Combine(FPaths::GameSavedDir(), MapName);
-    RoadMap->SaveAsPNG(FilePath);
+    RoadMap->SaveAsPNG(FPaths::GameSavedDir(), World->GetMapName());
   }
 
 #if WITH_EDITOR

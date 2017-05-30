@@ -139,7 +139,7 @@ public:
       float ChecksPerCentimeter) const;
 
   /// Save the current map as PNG with the pixel data encoded as color.
-  bool SaveAsPNG(const FString &Path) const;
+  bool SaveAsPNG(const FString &Folder, const FString &MapName) const;
 
 #if WITH_EDITOR
 

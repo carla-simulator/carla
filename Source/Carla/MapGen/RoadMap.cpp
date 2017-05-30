@@ -3,6 +3,7 @@
 #include "Carla.h"
 #include "RoadMap.h"
 
+#include "FileHelper.h"
 #include "HighResScreenshot.h"
 
 #if WITH_EDITOR
@@ -10,6 +11,8 @@
 #endif // WITH_EDITOR
 
 #include <type_traits>
+
+#define LOCTEXT_NAMESPACE "CarlaRoadMap"
 
 /// ============================================================================
 /// -- Static local methods ----------------------------------------------------
@@ -239,7 +242,7 @@ FRoadMapIntersectionResult URoadMap::Intersect(
   return Result;
 }
 
-bool URoadMap::SaveAsPNG(const FString &Path) const
+bool URoadMap::SaveAsPNG(const FString &Folder, const FString &MapName) const
 {
   if (!IsValid()) {
     UE_LOG(LogCarla, Error, TEXT("Cannot save invalid road map to disk"));
@@ -251,11 +254,34 @@ bool URoadMap::SaveAsPNG(const FString &Path) const
     BitMap.Emplace(FRoadMapPixelData(Value).EncodeAsColor());
   }
 
-  FIntPoint DestSize(Width, Height);
+  const FString ImagePath = FPaths::Combine(Folder, MapName + TEXT(".png"));
+  const FString MetadataPath = FPaths::Combine(Folder, MapName + TEXT(".txt"));
+
+  const FIntPoint DestSize(Width, Height);
   FString ResultPath;
   FHighResScreenshotConfig &HighResScreenshotConfig = GetHighResScreenshotConfig();
   HighResScreenshotConfig.SetHDRCapture(false);
-  HighResScreenshotConfig.SaveImage(Path, BitMap, DestSize, &ResultPath);
+  HighResScreenshotConfig.SaveImage(ImagePath, BitMap, DestSize, &ResultPath);
+
+  // Save metadata.
+  FFormatNamedArguments Args;
+  Args.Add("MapName", FText::FromString(MapName));
+  Args.Add("Width", GetWidth());
+  Args.Add("Height", GetHeight());
+  Args.Add("CmPerPixel", 1.0f / PixelsPerCentimeter);
+  Args.Add("Transform", FText::FromString(WorldToMap.ToString()));
+  Args.Add("Offset", FText::FromString(MapOffset.ToString()));
+  const auto Contents = FText::Format(
+      LOCTEXT("RoadMapMetadata",
+          "Map name = {MapName}\n"
+          "Size = {Width}x{Height} pixels\n"
+          "Density = {CmPerPixel} cm/pixel\n"
+          "World-To-Map Transform (T|R|S) = ({Transform})\n"
+          "Map Offset = ({Offset})\n"),
+      Args);
+  if (!FFileHelper::SaveStringToFile(Contents.ToString(), *MetadataPath)) {
+    UE_LOG(LogCarla, Error, TEXT("Failed to save map metadata"));
+  }
 
   UE_LOG(LogCarla, Log, TEXT("Saved road map to \"%s\""), *ResultPath);
   return true;
@@ -305,3 +331,5 @@ void URoadMap::DrawDebugPixelsToLevel(UWorld *World, const bool bJustFlushDoNotD
 }
 
 #endif // WITH_EDITOR
+
+#undef LOCTEXT_NAMESPACE
