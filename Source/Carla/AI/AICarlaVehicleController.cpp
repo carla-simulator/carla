@@ -31,7 +31,7 @@ static bool RayTrace(
   TArray <FHitResult> OutHits;
   static FName TraceTag = FName(TEXT("VehicleTrace"));
   
-  //World->DebugDrawTraceTag = TraceTag;
+  World->DebugDrawTraceTag = TraceTag;
   
   const bool Success = World->LineTraceMultiByObjectType(
         OutHits,
@@ -56,7 +56,8 @@ static bool RayTrace(
 
 AAICarlaVehicleController::AAICarlaVehicleController() : 
   Super(),
-  MovementComponent(nullptr)
+  MovementComponent(nullptr),
+  TrafficLightStop(false)
 {
   bAutoManageActiveCameraTarget = false;
   //MAX_SPEED = ((rand() * 10) - 5) + MAX_SPEED; 
@@ -203,8 +204,8 @@ void AAICarlaVehicleController::Tick(float DeltaTime){
     steering = CalcStreeringValue();
   }
 
-  const FVector Start = GetPawn()->GetActorLocation() + (GetPawn()->GetActorForwardVector().GetSafeNormal() * 250.0) + FVector(0.0, 0.0, 50.0);
-  const FVector End = Start + GetPawn()->GetActorForwardVector().GetSafeNormal() * 400.0;
+  const FVector Start = GetPawn()->GetActorLocation() + (GetPawn()->GetActorForwardVector().GetSafeNormal() * (200.0f + VehicleBounds->GetScaledBoxExtent().X/2.0f)) + FVector(0.0f, 0.0f, 50.0f);
+  const FVector End = Start + GetPawn()->GetActorForwardVector().GetSafeNormal() * (300.0f + VehicleBounds->GetScaledBoxExtent().X/2.0f);
 
 
   auto speed = MovementComponent->GetForwardSpeed() * 0.036f;

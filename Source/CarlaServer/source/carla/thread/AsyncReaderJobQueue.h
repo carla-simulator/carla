@@ -8,6 +8,8 @@
 #include <atomic>
 #include <functional>
 
+#include <ctime>
+
 namespace carla {
 namespace thread {
 
@@ -68,9 +70,20 @@ namespace thread {
         _restart = false;
         _queue.canWait(true);
         while (!_restart && !done) {
-          auto value = _queue.wait_and_pop();
-          if (value != nullptr) {
-            _job(*value);
+          {
+            using namespace std;
+            clock_t start = clock();
+
+             auto value = _queue.wait_and_pop();
+             if (value != nullptr) {
+             _job(*value);
+
+            clock_t end = clock();
+            double elapsed_secs = double(end- start) / CLOCKS_PER_SEC;
+            cout<< "Send Thread: " << elapsed_secs << endl;
+
+          }
+
     		  }//Sleep(10);
         }
 

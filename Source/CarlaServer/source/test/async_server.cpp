@@ -25,9 +25,9 @@ static std::vector<carla::Color> makeImage(uint32_t width, uint32_t height) {
   std::vector<unsigned char> img(width * height * 4);
   for (uint32_t i = 0; i < height; ++i) {
    for (uint32_t e = 0; e < width; ++e) {
-     img[4 * width * i + 4 * e + 0] = 255 * !(e & i);
-     img[4 * width * i + 4 * e + 1] = e ^ i;
-     img[4 * width * i + 4 * e + 2] = e | i;
+     img[4 * width * i + 4 * e + 0] = rand() % 256;//255 * !(e & i);
+     img[4 * width * i + 4 * e + 1] = rand() % 256;//e ^ i;
+     img[4 * width * i + 4 * e + 2] = rand() % 256;//e | i;
      img[4 * width * i + 4 * e + 3] = 255;
    }
   }
@@ -46,8 +46,8 @@ static std::vector<carla::Color> makeImage(uint32_t width, uint32_t height) {
 std::unique_ptr<carla::Reward_Values> makeReward() {
   auto reward = std::make_unique<carla::Reward_Values>();
 
-  const uint32_t imageWidth = 512u;
-  const uint32_t imageHeight = 512u;
+  const uint32_t imageWidth = 800u;
+  const uint32_t imageHeight = 600u;
 
   reward->player_location = {1.0f, 1.0f};
   reward->player_orientation = {1.0f, 0.0f, 0.0f};
@@ -60,7 +60,7 @@ std::unique_ptr<carla::Reward_Values> makeReward() {
   reward->intersect_offroad = 0.5f;
   reward->game_timestamp = 0u;
 
-  for (int i = 0; i < 4; ++i) {
+  for (int i = 0; i < 1; ++i) {
     carla::Image img;
     img.image = makeImage(imageWidth, imageHeight);
     img.width = imageWidth;
@@ -104,20 +104,6 @@ int main(int argc, char *argv[]) {
     for (;;) {
       if (server.newEpisodeRequested(file, read) && read) {
 
-/*
-        {
-          uint32_t scene;
-          bool error = false, readed = false;
-          do {
-            error = !server.tryReadSceneInit(scene, readed);
-          } while (!readed && !error);
-
-          if (error) {
-            std::cerr << "ERROR while sending SceneValues" << std::endl;
-          }
-          else std::cout << "Received: scene = " << scene << std::endl;
-        }
-*/
         carla::Scene_Values sceneValues;
 
         for (int i = 0; i < 1; ++i){
