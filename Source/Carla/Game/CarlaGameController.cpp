@@ -79,7 +79,11 @@ static void Set(carla::Image &cImage, const FCapturedImage &uImage)
 
 static FString ToFString(const carla::CarlaString &String)
 {
-  return FString(ANSI_TO_TCHAR(String.data()));
+  const auto Result = FString(ANSI_TO_TCHAR(String.data()));
+#ifdef CARLA_SERVER_EXTRA_LOG
+  UE_LOG(LogCarlaServer, Log, TEXT("Received CarlaString:\n%s"), *Result);
+#endif // CARLA_SERVER_EXTRA_LOG
+  return Result;
 }
 
 // Wait for a new episode to be received and update CarlaSettings. Return false
