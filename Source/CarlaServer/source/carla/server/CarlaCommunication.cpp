@@ -23,11 +23,28 @@ namespace server {
       const std::unique_ptr<Protocol> &proto,
       const Reward_Values &rwd
       ) {
-    if (!thr.getRestart()) {
+
+    {
+      using namespace std;
+
+
+
+      if (!thr.getRestart()) {
       std::string message;
+
+
+      clock_t start = clock();
 
       Reward reward;
       proto->LoadReward(reward, rwd);
+
+
+      clock_t end = clock();
+
+      double elapsed_secs = double(end- start) / CLOCKS_PER_SEC;
+
+
+      cout << "Send time: " << elapsed_secs << " (s)" << endl;
 
       bool correctSerialize = reward.SerializeToString(&message);
 
@@ -47,6 +64,9 @@ namespace server {
         logTCPError("Falied to serialize", error);
       }
     }
+
+    }
+
   }
 
   // This is the thread that listens for string over the TCP socket.

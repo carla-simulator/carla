@@ -131,7 +131,7 @@ private:
   UPROPERTY(EditAnywhere)
   float MAX_SPEED = 30.0f;
 
-  bool TrafficLightStop = false;
+  bool TrafficLightStop;
 
   int route_it = 0;
   TArray<FVector> route;
