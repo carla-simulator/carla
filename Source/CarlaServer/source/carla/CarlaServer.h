@@ -2,13 +2,13 @@
 
 #pragma once
 
-#include <array>
 #include <cstdint>
-#include <memory>
-#include <string>
-#include <vector>
 
 namespace carla {
+
+  // ===========================================================================
+  // -- Basic types ------------------------------------------------------------
+  // ===========================================================================
 
   struct Vector2D {
     float x;
@@ -35,16 +35,151 @@ namespace carla {
     SEMANTIC_SEG,
   };
 
-  struct Image {
-    Image();
+  // ===========================================================================
+  // -- Image ------------------------------------------------------------------
+  // ===========================================================================
+
+  class Image {
+  public:
+
     ~Image();
-    std::vector<Color> image;
-    ImageType type;
-    uint32_t width, height;
+
+    /// Creates an uninitialized image of the given size.
+    void make(ImageType type, uint32_t width, uint32_t height);
+
+    ImageType type() const {
+      return _type;
+    }
+
+    uint32_t width() const {
+      return _width;
+    }
+
+    uint32_t height() const {
+      return _height;
+    }
+
+    uint32_t size() const {
+      return _width * _height;
+    }
+
+    Color &operator[](uint32_t index) {
+      return _image[index];
+    }
+
+    const Color &operator[](uint32_t index) const {
+      return _image[index];
+    }
+
+    Color *begin() {
+      return _image;
+    }
+
+    const Color *begin() const {
+      return _image;
+    }
+
+    Color *end() {
+      return _image + size();
+    }
+
+    const Color *end() const {
+      return _image + size();
+    }
+
+  private:
+
+    ImageType _type;
+
+    uint32_t _width = 0u;
+
+    uint32_t _height = 0u;
+
+    Color *_image = nullptr;
   };
 
-  struct Control_Values {
+  // ===========================================================================
+  // -- Collection -------------------------------------------------------------
+  // ===========================================================================
 
+  /// Basic dynamic array. To avoid using STL containers. Collection<char> is
+  /// always null terminated.
+  //
+  // All dynamic memory management done in the cpp file.
+  template <typename T>
+  class Collection {
+  public:
+
+    Collection() = default;
+
+    explicit Collection(uint32_t count);
+
+    ~Collection();
+
+    Collection(const Collection &) = delete;
+    Collection &operator=(const Collection &) = delete;
+
+    void clear();
+
+    void clearAndResize(uint32_t count);
+
+    /// Copy the contents of the array @a other till @a size.
+    void copyContents(const T *other, uint32_t size);
+
+    /// Takes over the ownership of the array @a other, and sets size to
+    /// @a size.
+    void takeOver(T *other, uint32_t size);
+
+    T &operator[](uint32_t index) {
+      return _array[index];
+    }
+
+    const T &operator[](uint32_t index) const {
+      return _array[index];
+    }
+
+    uint32_t size() const {
+      return _size;
+    }
+
+    T *begin() {
+      return _array;
+    }
+
+    const T *begin() const {
+      return _array;
+    }
+
+    T *end() {
+      return _array + size();
+    }
+
+    const T *end() const {
+      return _array + size();
+    }
+
+    const T *data() const {
+      return _array;
+    }
+
+  private:
+
+    T *_array = nullptr;
+
+    uint32_t _size = 0u;
+  };
+
+  // ===========================================================================
+  // -- CarlaString ------------------------------------------------------------
+  // ===========================================================================
+
+  using CarlaString = Collection<char>;
+
+  // ===========================================================================
+  // -- Control_Values ---------------------------------------------------------
+  // ===========================================================================
+
+  struct Control_Values {
     float steer;
     float gas;
     float brake;
@@ -52,9 +187,11 @@ namespace carla {
     bool reverse;
   };
 
+  // ===========================================================================
+  // -- Reward_Values ----------------------------------------------------------
+  // ===========================================================================
+
   struct Reward_Values {
-    Reward_Values();
-    ~Reward_Values();
     /// Time-stamp of the current frame, in milliseconds as given by the OS.
     int32_t platform_timestamp;
     /// In-game time-stamp, milliseconds elapsed since the beginning of the
@@ -79,17 +216,21 @@ namespace carla {
     /// Percentage of the car off-road.
     float intersect_offroad;
     /// Captured images.
-    std::vector<Image> images;
+    Collection<Image> images;
   };
 
+  // ===========================================================================
+  // -- Scene_Values -----------------------------------------------------------
+  // ===========================================================================
+
   struct Scene_Values {
-    Scene_Values();
-    ~Scene_Values();
     /// Possible world positions to spawn the player.
-    std::vector<Vector2D> possible_positions;
-    /// Projection matrices of the cameras.
-    //std::vector<std::array<float, 16u>> projection_matrices;
+    Collection<Vector2D> possible_positions;
   };
+
+  // ===========================================================================
+  // -- CarlaServer ------------------------------------------------------------
+  // ===========================================================================
 
   /// Asynchronous TCP server. Uses three ports, one for sending messages
   /// (write), one for receiving messages (read), and one for world level
@@ -107,16 +248,7 @@ namespace carla {
     ~CarlaServer();
 
     CarlaServer(const CarlaServer &) = delete;
-    CarlaServer &operator=(const CarlaServer &x) = delete;
-
-    /// Initialize the server.
-    ///
-    /// @param LevelCount Number of levels available.
-    //bool init(uint32_t levelCount);
-
-    /// Try to read if the client has selected an scene and mode. Return false
-    /// if the queue is empty.
-    //bool tryReadSceneInit(uint32_t &scene, bool &readed);
+    CarlaServer &operator=(const CarlaServer &) = delete;
 
     /// Try to read if the client has selected an end & start point. Return
     /// false if the queue is empty.
@@ -126,7 +258,7 @@ namespace carla {
     /// is empty.
     bool tryReadControl(Control_Values &control, bool &readed);
 
-    bool newEpisodeRequested(std::string &init_file, bool &readed);
+    bool newEpisodeRequested(CarlaString &init_file, bool &readed);
 
     /// Send values of the current player status.
     ///
@@ -154,7 +286,7 @@ namespace carla {
   private:
 
     class Pimpl;
-    const std::unique_ptr<Pimpl> _pimpl;
+    Pimpl * const _pimpl;
   };
 
 } // namespace carla

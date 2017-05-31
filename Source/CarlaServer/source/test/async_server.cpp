@@ -20,7 +20,7 @@ static uint32_t toInt(const std::string &str) {
   return std::stoi(str);
 }
 
-static std::vector<carla::Color> makeImage(uint32_t width, uint32_t height) {
+static void makeImage(uint32_t width, uint32_t height, carla::Image &image) {
   // Xisco's magic image generator.
   std::vector<unsigned char> img(width * height * 4);
   for (uint32_t i = 0; i < height; ++i) {
@@ -32,7 +32,8 @@ static std::vector<carla::Color> makeImage(uint32_t width, uint32_t height) {
    }
   }
 
-  std::vector<carla::Color> image(width * height);
+  // Convert to carla::Image.
+  image.make(carla::ImageType::IMAGE, width, height);
   size_t i = 0u;
   for (carla::Color &color : image) {
     color.R = img[i++];
@@ -40,7 +41,6 @@ static std::vector<carla::Color> makeImage(uint32_t width, uint32_t height) {
     color.B = img[i++];
     color.A = img[i++];
   }
-  return image;
 }
 
 std::unique_ptr<carla::Reward_Values> makeReward() {
@@ -60,14 +60,9 @@ std::unique_ptr<carla::Reward_Values> makeReward() {
   reward->intersect_offroad = 0.5f;
   reward->game_timestamp = 0u;
 
-  for (int i = 0; i < 4; ++i) {
-    carla::Image img;
-    img.image = makeImage(imageWidth, imageHeight);
-    img.width = imageWidth;
-    img.height = imageHeight;
-    if (i < 2) img.type = carla::IMAGE;
-    else  img.type = carla::DEPTH;
-    reward->images.push_back(img);
+  reward->images.clearAndResize(4u);
+  for (carla::Image &img : reward->images) {
+    makeImage(imageWidth, imageHeight, img);
   }
 /*
   reward->image_rgb_0 = makeImage(imageWidth, imageHeight);
@@ -97,7 +92,7 @@ int main(int argc, char *argv[]) {
     carla::CarlaServer server(writePort, readPort, worldPort);
 
     // Let's simulate the game loop.
-    std::string file;
+    carla::CarlaString file;
     bool read;
 
 
@@ -120,11 +115,10 @@ int main(int argc, char *argv[]) {
 */
         carla::Scene_Values sceneValues;
 
-        for (int i = 0; i < 1; ++i){
-          sceneValues.possible_positions.push_back({0.0f, 0.0f});
-          sceneValues.possible_positions.push_back({1.0f, 2.0f});
-          sceneValues.possible_positions.push_back({3.0f, 4.0f});
-        }
+        sceneValues.possible_positions.clearAndResize(3u);
+        sceneValues.possible_positions[0u] = {0.0f, 0.0f};
+        sceneValues.possible_positions[1u] = {1.0f, 2.0f};
+        sceneValues.possible_positions[2u] = {3.0f, 4.0f};
 
         //const std::array<float, 16u> pMatrix = {{ 10.0 }};
         //for (int i = 0; i < 100; ++i) sceneValues.projection_matrices.push_back(pMatrix);
@@ -155,7 +149,7 @@ int main(int argc, char *argv[]) {
         while (true) {
           //float steer, gas;
           bool readed = false;
-          std::string newConfigFile;
+          carla::CarlaString newConfigFile;
           if (!server.newEpisodeRequested(newConfigFile, readed)){
             std::cerr << "ERROR while checking for newEpisode request" << std::endl;
             break;

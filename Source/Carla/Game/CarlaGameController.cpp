@@ -45,18 +45,14 @@ static carla::ImageType GetImageType(EPostProcessEffect PostProcessEffect)
 static void Set(carla::Image &cImage, const FCapturedImage &uImage)
 {
   if (uImage.BitMap.Num() > 0) {
-    cImage.width = uImage.SizeX;
-    cImage.height = uImage.SizeY;
-    cImage.type = GetImageType(uImage.PostProcessEffect);
-    cImage.image.reserve(uImage.BitMap.Num());
-    for (const auto &color : uImage.BitMap) {
-      cImage.image.emplace_back();
-      cImage.image.back().R = color.R;
-      cImage.image.back().G = color.G;
-      cImage.image.back().B = color.B;
-      cImage.image.back().A = color.A;
+    cImage.make(GetImageType(uImage.PostProcessEffect), uImage.SizeX, uImage.SizeY);
+    for (auto i = 0u; i < cImage.size(); ++i) {
+      cImage[i].R = uImage.BitMap[i].R;
+      cImage[i].G = uImage.BitMap[i].G;
+      cImage[i].B = uImage.BitMap[i].B;
+      cImage[i].A = uImage.BitMap[i].A;
     }
-    check(cImage.image.size() == (cImage.width * cImage.height));
+    check(cImage.size() == (cImage.width() * cImage.height()));
 #ifdef CARLA_SERVER_EXTRA_LOG
     {
       auto GetImageType = [](carla::ImageType Type) {
@@ -68,8 +64,8 @@ static void Set(carla::Image &cImage, const FCapturedImage &uImage)
           default:                  return TEXT("ERROR!");
         }
       };
-      const auto Size = cImage.image.size();
-      UE_LOG(LogCarlaServer, Log, TEXT("Sending image %dx%d (%d) %s"), cImage.width, cImage.height, Size, GetImageType(cImage.type));
+      const auto Size = cImage.size();
+      UE_LOG(LogCarlaServer, Log, TEXT("Sending image %dx%d (%d) %s"), cImage.width(), cImage.height(), Size, GetImageType(cImage.type()));
     }
   } else {
     UE_LOG(LogCarlaServer, Warning, TEXT("Sending empty image"));
@@ -81,19 +77,24 @@ static void Set(carla::Image &cImage, const FCapturedImage &uImage)
 // -- Other static methods -----------------------------------------------------
 // =============================================================================
 
+static FString ToFString(const carla::CarlaString &String)
+{
+  return FString(ANSI_TO_TCHAR(String.data()));
+}
+
 // Wait for a new episode to be received and update CarlaSettings. Return false
 // if we need to restart the server.
 static bool WaitForNewEpisode(
     carla::CarlaServer &Server,
     UCarlaSettings &CarlaSettings)
 {
-  std::string IniStr;
+  carla::CarlaString IniStr;
   bool Success = false;
   while (!Success) {
     if (!Server.newEpisodeRequested(IniStr, Success))
       return false;
   }
-  CarlaSettings.LoadSettingsFromString(IniStr.c_str());
+  CarlaSettings.LoadSettingsFromString(ToFString(IniStr));
   return true;
 }
 
@@ -102,11 +103,11 @@ static bool TryReadNewEpisode(
     UCarlaSettings &CarlaSettings,
     bool &bNewEpisodeRequested)
 {
-  std::string IniStr;
+  carla::CarlaString IniStr;
   bool Success = false;
   bool Result = Server.newEpisodeRequested(IniStr, Success);
   if (Result && Success) {
-    CarlaSettings.LoadSettingsFromString(IniStr.c_str());
+    CarlaSettings.LoadSettingsFromString(ToFString(IniStr));
   }
   return Result;
 }
@@ -121,11 +122,12 @@ static bool SendAndReadSceneValues(
   check(AvailableStartSpots.Num() > 0);
   // Retrieve the location of each player start.
   carla::Scene_Values sceneValues;
-  sceneValues.possible_positions.reserve(AvailableStartSpots.Num());
-  for (APlayerStart *StartSpot : AvailableStartSpots) {
+  sceneValues.possible_positions.clearAndResize(AvailableStartSpots.Num());
+  for (auto i = 0u; i < sceneValues.possible_positions.size(); ++i) {
+    auto *StartSpot = AvailableStartSpots[i];
     check(StartSpot != nullptr);
     const FVector &Location = StartSpot->GetActorLocation();
-    sceneValues.possible_positions.push_back({Location.X, Location.Y});
+    sceneValues.possible_positions[i] = {Location.X, Location.Y};
   }
   // Send the positions.
   UE_LOG(LogCarlaServer, Log, TEXT("Sending %d available start positions"), sceneValues.possible_positions.size());
@@ -157,7 +159,7 @@ static bool SendReward(
     carla::CarlaServer &Server,
     const ACarlaPlayerState &PlayerState)
 {
-  auto reward = std::make_unique<carla::Reward_Values>();
+  auto reward = MakeUnique<carla::Reward_Values>();
   reward->platform_timestamp = PlayerState.GetPlatformTimeStamp();
   reward->game_timestamp = PlayerState.GetGameTimeStamp();
   Set(reward->player_location, PlayerState.GetLocation());
@@ -170,16 +172,15 @@ static bool SendReward(
   Set(reward->intersect_other_lane, PlayerState.GetOtherLaneIntersectionFactor());
   Set(reward->intersect_offroad, PlayerState.GetOffRoadIntersectionFactor());
   if (PlayerState.HasImages()) {
-    reward->images.reserve(PlayerState.GetImages().Num());
-    for (const auto &Image : PlayerState.GetImages()) {
-      reward->images.emplace_back();
-      Set(reward->images.back(), Image);
+    reward->images.clearAndResize(PlayerState.GetImages().Num());
+    for (auto i = 0u; i < reward->images.size(); ++i) {
+      Set(reward->images[i], PlayerState.GetImages()[i]);
     }
   }
 #ifdef CARLA_SERVER_EXTRA_LOG
   UE_LOG(LogCarlaServer, Log, TEXT("Sending reward"));
 #endif // CARLA_SERVER_EXTRA_LOG
-  return Server.sendReward(reward.release());
+  return Server.sendReward(reward.Release());
 }
 
 static bool TryReadControl(carla::CarlaServer &Server, ACarlaVehicleController &Player)
