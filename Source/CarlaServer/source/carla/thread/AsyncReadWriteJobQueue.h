@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <carla/Logging.h>
 #include <carla/thread/ThreadSafeQueue.h>
 #include <carla/thread/ThreadUniquePointer.h>
 
@@ -38,7 +39,7 @@ namespace thread {
       _thread(new std::thread(&AsyncReadWriteJobQueue::workerThread, this)) {}
 
     ~AsyncReadWriteJobQueue() {
-      std::cout << "Destroyed thread world"<< std::endl;
+      log_debug("Destroyed thread world");
       done = true;
     }
 
@@ -47,11 +48,11 @@ namespace thread {
     }
 
     void undoPop(std::unique_ptr<W> value){
-      _writeQueue.push(std::move(value)); 
+      _writeQueue.push(std::move(value));
     }
 
     void push(std::unique_ptr<R> item) {
-      
+
       if (item != nullptr) _readQueue.push(std::move(item));
     }
 
@@ -83,7 +84,7 @@ namespace thread {
     void workerThread() {
       while(!done){
         _connectJob();
-        _restart = false; 
+        _restart = false;
         _readQueue.canWait(true);
         while (!_restart && !done) {
       /* auto value = _readQueue.wait_and_pop();
@@ -105,7 +106,7 @@ namespace thread {
       }
     }
 
-    
+
     std::atomic_bool _restart;
 
     WritingJob _writeJob;

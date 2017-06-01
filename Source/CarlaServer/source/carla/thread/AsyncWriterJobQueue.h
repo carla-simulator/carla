@@ -32,7 +32,7 @@ namespace thread {
 	{}
 
     ~AsyncWriterJobQueue() {
-      std::cout << "Destroyed thread server"<< std::endl;
+      log_debug("Destroyed thread server");
       done = true;
     }
 
@@ -56,7 +56,7 @@ namespace thread {
     void clear(){
       _queue.clear();
     }
-    
+
 
     std::atomic_bool done;
 
@@ -70,13 +70,13 @@ namespace thread {
 
         while (!_restart && !done) {
           //_queue.wait_and_push(_job);
-          _queue.push(std::move(_job())); 
+          _queue.push(std::move(_job()));
 		      //Sleep(10);
         }
       }
     }
 
-    
+
     std::atomic_bool _restart;
 
     Job _job;

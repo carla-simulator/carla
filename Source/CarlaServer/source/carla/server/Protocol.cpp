@@ -3,6 +3,8 @@
 #include "CarlaCommunication.h"
 #include "carla/CarlaServer.h"
 
+#include <carla/Logging.h>
+
 #include "carla_protocol.pb.h"
 
 #include <iostream>
@@ -122,7 +124,7 @@ namespace server {
     if (image_info.empty())
       return false;
     if (image_info.size() != image_info.width() * image_info.height()) {
-      std::cerr << "Invalid image size" << std::endl;
+      log_error("Invalid image size:", image_info.size(), "!=", image_info.width(), '*', image_info.height());
       return false;
     }
 
@@ -138,7 +140,7 @@ namespace server {
 
     png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (!png) {
-      std::cerr << "Cannot create png_struct" << std::endl;
+      log_error("Cannot create png_struct");
       return false;
     }
 
@@ -146,7 +148,7 @@ namespace server {
 
     info = png_create_info_struct(png);
     if (!info){
-      std::cerr << "Cannot create info_struct" << std::endl;
+      log_error("Cannot create info_struct");
       return false;
     }
 
@@ -212,7 +214,7 @@ namespace server {
 
 
       if (!GetImage(img, compressedImage)) {
-        std::cerr << "Error while encoding image" << std::endl;
+        log_error("Error while encoding image");
         return false;
       }
 
@@ -271,12 +273,12 @@ namespace server {
 
   static bool getBitMapImage(const Image &image_info, char* image){
     if (image_info.empty()){
-      std::cerr << "Error: Empty image" << std::endl;
+      log_error("Empty image");
       return false;
     }
 
     if (image_info.size() != image_info.width() * image_info.height()) {
-      std::cerr << "Invalid image size" << std::endl;
+      log_error("Invalid image size:", image_info.size(), "!=", image_info.width(), '*', image_info.height());
       return false;
     }
 
@@ -305,7 +307,7 @@ static bool getBitMapImages(const Collection<Image> &images, Reward &rwd) {
       char image[image_size];
 
       if (!getBitMapImage(img, image)){
-        std::cerr << "Error while encoding image" << std::endl;
+        log_error("Error while encoding image");
         return false;
       }
 
@@ -385,13 +387,13 @@ static bool getBitMapImages(const Collection<Image> &images, Reward &rwd) {
 #ifdef CARLA_WITH_PNG_COMPRESSION
 
     if (!getPNGImages(values.images, reward)) {
-        std::cerr << "Error compressing image to PNG" << std::endl;
+        log_error("Error compressing image to PNG");
     }
 
 #else
 
     if (!getBitMapImages(values.images, reward)) {
-        std::cerr << "Error encoding bitmap image" << std::endl;
+        log_error("Error encoding bitmap image");
     }
 
 #endif // CARLA_WITH_PNG_COMPRESSION
@@ -405,7 +407,7 @@ static bool getBitMapImages(const Collection<Image> &images, Reward &rwd) {
 
     std::string positions_bytes = "";
 
-    std::cout << "------- POSITIONS--------" << std::endl;
+    log_debug("------- POSITIONS--------");
 
 
     for (auto i = 0u; i < values.possible_positions.size(); ++i) {
@@ -415,13 +417,13 @@ static bool getBitMapImages(const Collection<Image> &images, Reward &rwd) {
 
       positions_bytes += GetBytes(x) + GetBytes(y);
 
-      std::cout << "x: " << x << " byte size: " << sizeof(float) << " bytes: " << GetBytes(x) << std::endl;
-      std::cout << "y: " << y << " byte size: " << sizeof(float) << " bytes: " << GetBytes(y) << std::endl;
+      log_debug("x:", x, "byte size:", sizeof(float), "bytes:", GetBytes(x));
+      log_debug("y:", y, "byte size:", sizeof(float), "bytes:", GetBytes(y));
 
     }
-    std::cout << "---------------" << std::endl;
-    std::cout << "Final string: "<< positions_bytes << std::endl;
-    std::cout << "---------------" << std::endl;
+    log_debug("---------------");
+    log_debug("Final string:", positions_bytes);
+    log_debug("---------------");
 
     scene.set_positions(positions_bytes);
 
