@@ -16,9 +16,17 @@ debug: BUILD_FOLDER=build/debug
 debug: MY_CMAKE_FLAGS+=-DCMAKE_BUILD_TYPE=Debug
 debug: $(BUILD_RULE)
 
+debug_png: BUILD_FOLDER=build/debug_png
+debug_png: MY_CMAKE_FLAGS+=-DCMAKE_BUILD_TYPE=DebugPNG
+debug_png: $(BUILD_RULE)
+
 release: BUILD_FOLDER=build/release
 release: MY_CMAKE_FLAGS+=-DCMAKE_BUILD_TYPE=Release
 release: $(BUILD_RULE)
+
+release_png: BUILD_FOLDER=build/release_png
+release_png: MY_CMAKE_FLAGS+=-DCMAKE_BUILD_TYPE=ReleasePNG
+release_png: $(BUILD_RULE)
 
 build_linux: protobuf
 	cmake $(MY_CMAKE_FLAGS) -G "Ninja"
