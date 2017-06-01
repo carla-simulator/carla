@@ -7,6 +7,7 @@
 
 #include <iostream>
 
+#include <carla/Logging.h>
 #include <carla/server/CarlaCommunication.h>
 
 namespace carla {
@@ -142,7 +143,7 @@ namespace carla {
     if (str.size() < std::numeric_limits<uint32_t>::max()) {
       init_file.copyContents(str.data(), static_cast<uint32_t>(str.size()));
     } else {
-      std::cerr << "Received string is too big!" << std::endl;
+      log_error("Received string is too big!");
     }
 
     return true;

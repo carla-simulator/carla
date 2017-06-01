@@ -91,64 +91,68 @@ endif (UNIX)
 # -- LibPNG --------------------------------------------------------------------
 # ==============================================================================
 
-if (UNIX)
+if (CMAKE_BUILD_TYPE MATCHES "(Debug|Release)PNG")
 
-  if (EXISTS $ENV{UE4_ROOT})
+  if (UNIX)
 
-    # Use Unreal Engine's libpng and libz.
+    if (EXISTS $ENV{UE4_ROOT})
 
-    set(LIBPNG_ROOT $ENV{UE4_ROOT}/Engine/Source/ThirdParty/libPNG/libPNG-1.5.2)
-    set(LIBZ_ROOT $ENV{UE4_ROOT}/Engine/Source/ThirdParty/zlib/v1.2.8)
+      # Use Unreal Engine's libpng and libz.
 
-    if (NOT EXISTS ${LIBPNG_ROOT})
-      message(FATAL_ERROR "Unable to find Unreal Engine's libpng")
-    elseif (NOT EXISTS ${LIBZ_ROOT})
-      message(FATAL_ERROR "Unable to find Unreal Engine's libz")
-    endif (NOT EXISTS ${LIBPNG_ROOT})
-    message(STATUS "Using libPNG-1.5.2 within Unreal Engine's installation folder")
+      set(LIBPNG_ROOT $ENV{UE4_ROOT}/Engine/Source/ThirdParty/libPNG/libPNG-1.5.2)
+      set(LIBZ_ROOT $ENV{UE4_ROOT}/Engine/Source/ThirdParty/zlib/v1.2.8)
 
-    set(PNG_LIBRARIES
-        ${LIBPNG_ROOT}/lib/Linux/x86_64-unknown-linux-gnu/libpng.a
-        ${LIBZ_ROOT}/lib/Linux/x86_64-unknown-linux-gnu/libz_fPIC.a)
+      if (NOT EXISTS ${LIBPNG_ROOT})
+        message(FATAL_ERROR "Unable to find Unreal Engine's libpng")
+      elseif (NOT EXISTS ${LIBZ_ROOT})
+        message(FATAL_ERROR "Unable to find Unreal Engine's libz")
+      endif (NOT EXISTS ${LIBPNG_ROOT})
+      message(STATUS "Using libPNG-1.5.2 within Unreal Engine's installation folder")
 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_WITH_PNG_COMPRESSION")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_INCLUDE=\\\"${LIBPNG_ROOT}/png.h\\\"")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_VERSION_MAJOR=1")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_VERSION_MINOR=5")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_VERSION_RELEASE=2")
+      set(PNG_LIBRARIES
+          ${LIBPNG_ROOT}/lib/Linux/x86_64-unknown-linux-gnu/libpng.a
+          ${LIBZ_ROOT}/lib/Linux/x86_64-unknown-linux-gnu/libz_fPIC.a)
 
-  else (EXISTS $ENV{UE4_ROOT})
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_WITH_PNG_COMPRESSION")
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_INCLUDE=\\\"${LIBPNG_ROOT}/png.h\\\"")
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_VERSION_MAJOR=1")
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_VERSION_MINOR=5")
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_VERSION_RELEASE=2")
 
-    # Use system's libpng and libz.
+    else (EXISTS $ENV{UE4_ROOT})
 
-    message(WARNING
-        "Using system's libpng, this won't work with Unreal Engine. "
-        "Please define the environment variable UE4_ROOT pointing to "
-        "Unreal Engine's installation folder so we can link against "
-        "the right version of libpng")
+      # Use system's libpng and libz.
 
-    include(FindPNG)
-    find_package(PNG REQUIRED)
+      message(WARNING
+          "Using system's libpng, this won't work with Unreal Engine. "
+          "Please define the environment variable UE4_ROOT pointing to "
+          "Unreal Engine's installation folder so we can link against "
+          "the right version of libpng")
 
-    # Retrieve version number for extra check.
-    string(REPLACE "." ";" PNG_VERSION_LIST ${PNG_VERSION_STRING})
-    list(GET PNG_VERSION_LIST 0 PNG_VERSION_MAJOR)
-    list(GET PNG_VERSION_LIST 1 PNG_VERSION_MINOR)
-    list(GET PNG_VERSION_LIST 2 PNG_VERSION_RELEASE)
+      include(FindPNG)
+      find_package(PNG REQUIRED)
 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_WITH_PNG_COMPRESSION")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_INCLUDE=\\\"png.h\\\"")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_VERSION_MAJOR=${PNG_VERSION_MAJOR}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_VERSION_MINOR=${PNG_VERSION_MINOR}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_VERSION_RELEASE=${PNG_VERSION_RELEASE}")
+      # Retrieve version number for extra check.
+      string(REPLACE "." ";" PNG_VERSION_LIST ${PNG_VERSION_STRING})
+      list(GET PNG_VERSION_LIST 0 PNG_VERSION_MAJOR)
+      list(GET PNG_VERSION_LIST 1 PNG_VERSION_MINOR)
+      list(GET PNG_VERSION_LIST 2 PNG_VERSION_RELEASE)
 
-  endif (EXISTS $ENV{UE4_ROOT})
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_WITH_PNG_COMPRESSION")
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_INCLUDE=\\\"png.h\\\"")
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_VERSION_MAJOR=${PNG_VERSION_MAJOR}")
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_VERSION_MINOR=${PNG_VERSION_MINOR}")
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_VERSION_RELEASE=${PNG_VERSION_RELEASE}")
 
-elseif (WIN32)
+    endif (EXISTS $ENV{UE4_ROOT})
 
-  message(WARNING "PNG compression not available for Windows yet")
+  elseif (WIN32)
 
-endif (UNIX)
+    message(WARNING "PNG compression not available for Windows yet")
+
+  endif (UNIX)
+
+endif (CMAKE_BUILD_TYPE MATCHES "(Debug|Release)PNG")
 
 # ==============================================================================
 # -- Project config ------------------------------------------------------------
@@ -163,13 +167,19 @@ set(CarlaServer_Deps_LIBRARIES
     ${CMAKE_THREAD_LIBS_INIT})
 
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
-if (CMAKE_BUILD_TYPE MATCHES Debug)
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin_debug)
   set(CarlaServer_LIBRARIES carlaserverd ${CarlaServer_Deps_LIBRARIES})
-elseif (CMAKE_BUILD_TYPE MATCHES Release)
+elseif (CMAKE_BUILD_TYPE STREQUAL "DebugPNG")
+  set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin_debug)
+  set(CarlaServer_LIBRARIES carlaserverpngd ${CarlaServer_Deps_LIBRARIES})
+elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
   set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
   set(CarlaServer_LIBRARIES carlaserver ${CarlaServer_Deps_LIBRARIES})
-endif (CMAKE_BUILD_TYPE MATCHES Debug)
+elseif (CMAKE_BUILD_TYPE STREQUAL "ReleasePNG")
+  set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+  set(CarlaServer_LIBRARIES carlaserverpng ${CarlaServer_Deps_LIBRARIES})
+endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
 
 include_directories("${PROJECT_SOURCE_DIR}/source")
 

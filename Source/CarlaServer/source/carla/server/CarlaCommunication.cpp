@@ -3,6 +3,8 @@
 #include "carla_protocol.pb.h"
 #include "../CarlaServer.h"
 
+#include <carla/Logging.h>
+
 #include <iostream>
 
 namespace carla {
@@ -12,7 +14,7 @@ namespace server {
 
   template<typename ERROR_CODE>
   static void logTCPError(const std::string &text, const ERROR_CODE &errorCode) {
-    std::cerr << "CarlaConnection - TCP Server: " << text << ": " << errorCode.message() << std::endl;
+    log_error("CarlaConnection - TCP Server:", text, ':', errorCode.message());
   }
 
 
@@ -43,8 +45,7 @@ namespace server {
 
       double elapsed_secs = double(end- start) / CLOCKS_PER_SEC;
 
-
-      cout << "Send time: " << elapsed_secs << " (s)" << endl;
+      log_info("Send time:", elapsed_secs, "(s)");
 
       bool correctSerialize = reward.SerializeToString(&message);
 
@@ -102,7 +103,7 @@ namespace server {
   static std::unique_ptr<std::string> worldReceiveThread(TCPServer &server, thread::AsyncReadWriteJobQueue<std::string, std::string> &thr) {
     auto message = std::make_unique<std::string>();
     bool success = false;
-    
+
       if (!thr.getRestart()) {
         TCPServer::error_code error;
 
@@ -144,7 +145,7 @@ namespace server {
   }
 
   static void Connect(TCPServer &server, CarlaCommunication &communication) {
-    std::cout << "Waiting... port: " << server.port << std::endl;
+    log_info("Waiting... port:", server.port);
     server.AcceptSocket();
 
     communication.checkRestart();
@@ -157,22 +158,22 @@ namespace server {
 
     if (!communication.needsRestart()) {
 
-      std::cout << " ---- RECONNECT ALL ...." << std::endl;
+      log_debug("---- RECONNECT ALL ....");
 
       if (!communication.getWorldThread().getRestart()) {
-        std::cout << " ---- RESTART WORLD ...." << std::endl;
+        log_debug("---- RESTART WORLD ....");
         communication.restartWorld();
         communication.getWorldThread().restart();
       }
 
       if (!communication.getServerThread().getRestart()) {
-        std::cout << " ---- RESTART SERVER ...." << std::endl;
+        log_debug("---- RESTART SERVER ....");
         communication.restartServer();
         communication.getServerThread().restart();
       }
 
       if (!communication.getClientThread().getRestart()) {
-        std::cout << " ---- RESTART CLIENT ...." << std::endl;
+        log_debug("---- RESTART CLIENT ....");
         communication.restartClient();
         communication.getClientThread().restart();
       }
@@ -310,8 +311,8 @@ namespace server {
   bool CarlaCommunication::tryReadRequestNewEpisode(std::string &init_file) {
     std::unique_ptr<std::string> request = _worldThread.tryPop();
 
-    if (request == nullptr) { 
-      return false; 
+    if (request == nullptr) {
+      return false;
     }
 
     RequestNewEpisode reqEpisode;
@@ -321,13 +322,13 @@ namespace server {
       _worldThread.undoPop(std::move(request));
 
       return false;
-    } else { 
-      
+    } else {
+
       init_file = reqEpisode.init_file();
 
-      std::cout << init_file << std::endl;
+      log_debug("Received init file:\n", init_file);
 
-      return true; 
+      return true;
     }
   }
 

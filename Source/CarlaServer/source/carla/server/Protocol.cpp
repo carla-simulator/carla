@@ -3,15 +3,17 @@
 #include "CarlaCommunication.h"
 #include "carla/CarlaServer.h"
 
+#include <carla/Logging.h>
+
 #include "carla_protocol.pb.h"
 
+#include <ctime>
 #include <iostream>
+#include <memory>
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-
-#include <ctime>
 
 #ifdef CARLA_WITH_PNG_COMPRESSION
 #include CARLA_LIBPNG_INCLUDE
@@ -40,6 +42,12 @@ namespace server {
     return out_bytes;
   }
 
+  // ===========================================================================
+  // -- PNG related functions --------------------------------------------------
+  // ===========================================================================
+
+#ifdef CARLA_WITH_PNG_COMPRESSION
+
   typedef struct {
     uint8_t red;
     uint8_t green;
@@ -50,34 +58,24 @@ namespace server {
     pixel_t* pixels;
     size_t width;
     size_t height;
-
   } bitmap_t;
 
-
   struct img_encode{
-      char* buffer;
-      size_t size;
+    char* buffer;
+    size_t size;
   };
-
-  // ===========================================================================
-  // -- PNG related functions --------------------------------------------------
-  // ===========================================================================
-
-#ifdef CARLA_WITH_PNG_COMPRESSION
 
   struct TPngDestructor {
     png_struct *p;
     TPngDestructor(png_struct *p) : p(p)  {}
     ~TPngDestructor() { if (p) {  png_destroy_write_struct(&p, NULL); } }
   };
-/*
-  static pixel_t * pixel_at (bitmap_t * bitmap, int x, int y)
-  {
+
+  static pixel_t * pixel_at(bitmap_t * bitmap, int x, int y) {
     return bitmap->pixels + bitmap->width * y + x;
   }
-*/
-  void loadPNGData(png_structp png_ptr, png_bytep data, png_size_t length)
-  {
+
+  void loadPNGData(png_structp png_ptr, png_bytep data, png_size_t length) {
     /* with libpng15 next line causes pointer deference error; use libpng12 */
     img_encode* p = (img_encode*) png_get_io_ptr(png_ptr);
 
@@ -96,17 +94,16 @@ namespace server {
     memcpy(p->buffer + p->size, data, length);
     p->size += length;
   }
-/*
-  bool LoadBitmap (bitmap_t &bitmap, const Image &image_info){
 
-    bitmap.width = image_info.width;
-    bitmap.height = image_info.height;
+  bool LoadBitmap (bitmap_t &bitmap, const Image &image_info) {
+    bitmap.width = image_info.width();
+    bitmap.height = image_info.height();
     bitmap.pixels = (pixel_t*) calloc (bitmap.width * bitmap.height, sizeof(pixel_t));
 
     if (!bitmap.pixels) return false;
 
     size_t x = 0, y = 0;
-    for (const Color &color : image_info.image) {
+    for (const Color &color : image_info) {
 
       if (x >= bitmap.width) {
         x = 0;
@@ -123,44 +120,18 @@ namespace server {
 
     return true;
   }
-*/
 
-
-  static bool LoadBitmap (char* image, const Image &image_info){
-
-    size_t x = 0, y = 0;
-    int it = 0;
-    for (const Color &color : image_info.image) {
-
-      if (x >= image_info.width) {
-        x = 0;
-        ++y;
-      }
-
-      image[it] = color.R;
-      image[++it] = color.G;
-      image[++it] = color.B;
-      ++x;
-      //pixel->alpha = color.A;
-    }
-
-    return true;
-  }
-
-
-/*
-  static bool GetPNGImage(const Image &image_info, img_encode &compressedImage){
-    if (image_info.image.empty())
+  static bool GetImage(const Image &image_info, img_encode &compressedImage){
+    if (image_info.empty())
       return false;
-    if (image_info.image.size() != image_info.width * image_info.height) {
-      std::cerr << "Invalid image size" << std::endl;
+    if (image_info.size() != image_info.width() * image_info.height()) {
+      log_error("Invalid image size:", image_info.size(), "!=", image_info.width(), '*', image_info.height());
       return false;
     }
 
     bitmap_t bitmap;
-
     if (!LoadBitmap(bitmap, image_info)) return false;
-      
+
     int depth = 8;
     int pixel_size = 3;
     png_structp png = NULL;
@@ -170,7 +141,7 @@ namespace server {
 
     png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (!png) {
-      std::cerr << "Cannot create png_struct" << std::endl;
+      log_error("Cannot create png_struct");
       return false;
     }
 
@@ -178,7 +149,7 @@ namespace server {
 
     info = png_create_info_struct(png);
     if (!info){
-      std::cerr << "Cannot create info_struct" << std::endl;
+      log_error("Cannot create info_struct");
       return false;
     }
 
@@ -195,7 +166,7 @@ namespace server {
                   PNG_FILTER_TYPE_DEFAULT);
 
 
-    // Initialize rows of PNG. 
+    // Initialize rows of PNG.
     row_pointers = (png_byte **) png_malloc (png, bitmap.height * sizeof (png_byte *));
     for (y = 0; y < bitmap.height; ++y) {
         png_byte *row = (png_byte *) png_malloc (png, sizeof (uint8_t) * bitmap.width * pixel_size);
@@ -211,8 +182,8 @@ namespace server {
     compressedImage.buffer = NULL;
     compressedImage.size = 0;
 
-    png_set_write_fn(png, &compressedImage, loadPNGData, NULL);
 
+    png_set_write_fn(png, &compressedImage, loadPNGData, NULL);
 
     png_set_rows (png, info, row_pointers);
     png_write_png(png, info, PNG_TRANSFORM_IDENTITY, NULL);
@@ -228,29 +199,8 @@ namespace server {
 
     return true;
   }
-*/
 
-
-  static bool GetBitMapImage(const Image &image_info, char* image){
-    if (image_info.image.empty()){
-      std::cerr << "Error: Empty image" << std::endl;
-      return false;
-    }
-    if (image_info.image.size() != image_info.width * image_info.height) {
-      std::cerr << "Invalid image size" << std::endl;
-      return false;
-    }
-
-    if (!LoadBitmap(image, image_info)) {
-      std::cerr << "Error loaging the bitmap" << std::endl;
-      return false;
-    }
-
-    return true;
-  }
-
-static bool getPNGImages(const std::vector<Image> &images, Reward &rwd) {
-
+  static bool getPNGImages(const Collection<Image> &images, Reward &rwd) {
     std::string image_data;
     std::string sceneFinal_data;
     std::string depth_data;
@@ -261,57 +211,136 @@ static bool getPNGImages(const std::vector<Image> &images, Reward &rwd) {
     std::string semanticSeg_size_data;
 
     for (const Image &img : images){
-
-//      img_encode compressedImage;
-      size_t image_size = img.width * img.height * 3;
-      char image[image_size] ;
+      img_encode compressedImage;
 
 
-/*
-        if (!GetImage(img, compressedImage)) {
-          std::cerr << "Error while encoding image" << std::endl;
-          return false;
-        }
-*/
-
-      if (!GetBitMapImage(img, image)){
-        std::cerr << "Error while encoding image" << std::endl;
+      if (!GetImage(img, compressedImage)) {
+        log_error("Error while encoding image");
         return false;
       }
-      
 
-      switch (img.type){
+      switch (img.type()){
 
         case IMAGE:
-          //for (unsigned long int i = 0; i < compressedImage.size; ++i) image_data += compressedImage.buffer[i];
-          //image_size_data += GetBytes(compressedImage.size);
-          for (unsigned long int i = 0; i < image_size; ++i) image_data += image[i];
+          for (unsigned long int i = 0; i < compressedImage.size; ++i) {
+            image_data += compressedImage.buffer[i];
+          }
+          image_size_data += GetBytes(compressedImage.size);
+          break;
+
+        case SCENE_FINAL:
+          for (unsigned long int i = 0; i < compressedImage.size; ++i) {
+            sceneFinal_data += compressedImage.buffer[i];
+          }
+          sceneFinal_size_data += GetBytes(compressedImage.size);
+          break;
+
+        case DEPTH:
+          for (unsigned long int i = 0; i < compressedImage.size; ++i) {
+            depth_data += compressedImage.buffer[i];
+          }
+          depth_size_data += GetBytes(compressedImage.size);
+          break;
+
+        case SEMANTIC_SEG:
+          for (unsigned long int i = 0; i < compressedImage.size; ++i) {
+            semanticSeg_data += compressedImage.buffer[i];
+          }
+          semanticSeg_size_data += GetBytes(compressedImage.size);
+          break;
+      }
+
+      free(compressedImage.buffer);
+
+    }
+
+    rwd.set_depth_sizes(depth_size_data);
+    rwd.set_final_image_sizes(sceneFinal_size_data);
+    rwd.set_image_sizes(image_size_data);
+    rwd.set_semantic_seg_sizes(semanticSeg_size_data);
+    rwd.set_images(image_data);
+    rwd.set_final_images(sceneFinal_data);
+    rwd.set_depths(depth_data);
+    rwd.set_semantic_segs(semanticSeg_data);
+
+    return true;
+  }
+
+#else // if not CARLA_WITH_PNG_COMPRESSION, then use bitmap with no compression.
+
+  // ===========================================================================
+  // -- Bitmap related functions -----------------------------------------------
+  // ===========================================================================
+
+  static bool getBitMapImage(const Image &image_info, char* image){
+    if (image_info.empty()){
+      log_error("Empty image");
+      return false;
+    }
+
+    if (image_info.size() != image_info.width() * image_info.height()) {
+      log_error("Invalid image size:", image_info.size(), "!=", image_info.width(), '*', image_info.height());
+      return false;
+    }
+
+    size_t it = 0u;
+    for (const Color &color : image_info) {
+      image[it++] = color.R;
+      image[it++] = color.G;
+      image[it++] = color.B;
+    }
+
+    return true;
+  }
+
+static bool getBitMapImages(const Collection<Image> &images, Reward &rwd) {
+    std::string image_data;
+    std::string sceneFinal_data;
+    std::string depth_data;
+    std::string semanticSeg_data;
+    std::string image_size_data;
+    std::string sceneFinal_size_data;
+    std::string depth_size_data;
+    std::string semanticSeg_size_data;
+
+    for (const Image &img : images){
+      const size_t image_size = img.width() * img.height() * 3u;
+      auto image = std::make_unique<char[]>(image_size);
+
+      if (!getBitMapImage(img, image.get())){
+        log_error("Error while encoding image");
+        return false;
+      }
+
+      switch (img.type()){
+        case IMAGE:
+          for (unsigned long int i = 0u; i < image_size; ++i) {
+            image_data += image[i];
+          }
           image_size_data += GetBytes(image_size);
           break;
 
         case SCENE_FINAL:
-          //for (unsigned long int i = 0; i < compressedImage.size; ++i) sceneFinal_data += compressedImage.buffer[i];
-          //sceneFinal_size_data += GetBytes(compressedImage.size);
-          for (unsigned long int i = 0; i < image_size; ++i) sceneFinal_data += image[i];
+          for (unsigned long int i = 0u; i < image_size; ++i) {
+            sceneFinal_data += image[i];
+          }
           sceneFinal_size_data += GetBytes(image_size);
           break;
 
         case DEPTH:
-          //for (unsigned long int i = 0; i < compressedImage.size; ++i) depth_data += compressedImage.buffer[i];
-          //depth_size_data += GetBytes(compressedImage.size);
-          for (unsigned long int i = 0; i < image_size; ++i) sceneFinal_data += image[i];
+          for (unsigned long int i = 0u; i < image_size; ++i) {
+            sceneFinal_data += image[i];
+          }
           sceneFinal_size_data += GetBytes(image_size);
           break;
 
         case SEMANTIC_SEG:
-          //for (unsigned long int i = 0; i < compressedImage.size; ++i) semanticSeg_data += compressedImage.buffer[i];
-          //semanticSeg_size_data += GetBytes(compressedImage.size);
-          for (unsigned long int i = 0; i < image_size; ++i) sceneFinal_data += image[i];
+          for (unsigned long int i = 0u; i < image_size; ++i) {
+            sceneFinal_data += image[i];
+          }
           sceneFinal_size_data += GetBytes(image_size);
           break;
       }
-
-      //free(compressedImage.buffer);
     }
 
     rwd.set_depth_sizes(depth_size_data);
@@ -359,9 +388,15 @@ static bool getPNGImages(const std::vector<Image> &images, Reward &rwd) {
 #ifdef CARLA_WITH_PNG_COMPRESSION
 
     if (!getPNGImages(values.images, reward)) {
-        std::cerr << "Error compressing image to PNG" << std::endl;
+        log_error("Error compressing image to PNG");
     }
-    
+
+#else
+
+    if (!getBitMapImages(values.images, reward)) {
+        log_error("Error encoding bitmap image");
+    }
+
 #endif // CARLA_WITH_PNG_COMPRESSION
 
 
@@ -373,7 +408,7 @@ static bool getPNGImages(const std::vector<Image> &images, Reward &rwd) {
 
     std::string positions_bytes = "";
 
-    std::cout << "------- POSITIONS--------" << std::endl;
+    log_debug("------- POSITIONS--------");
 
 
     for (auto i = 0u; i < values.possible_positions.size(); ++i) {
@@ -383,13 +418,13 @@ static bool getPNGImages(const std::vector<Image> &images, Reward &rwd) {
 
       positions_bytes += GetBytes(x) + GetBytes(y);
 
-      std::cout << "x: " << x << " byte size: " << sizeof(float) << " bytes: " << GetBytes(x) << std::endl;
-      std::cout << "y: " << y << " byte size: " << sizeof(float) << " bytes: " << GetBytes(y) << std::endl;
+      log_debug("x:", x, "byte size:", sizeof(float), "bytes:", GetBytes(x));
+      log_debug("y:", y, "byte size:", sizeof(float), "bytes:", GetBytes(y));
 
     }
-    std::cout << "---------------" << std::endl;
-    std::cout << "Final string: "<< positions_bytes << std::endl;
-    std::cout << "---------------" << std::endl;
+    log_debug("---------------");
+    log_debug("Final string:", positions_bytes);
+    log_debug("---------------");
 
     scene.set_positions(positions_bytes);
 

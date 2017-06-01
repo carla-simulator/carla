@@ -5,6 +5,8 @@
 #include <fstream>
 #include <iostream>
 
+#include <carla/Logging.h>
+
 namespace carla {
     namespace server {
 
@@ -55,11 +57,13 @@ namespace carla {
               boost::asio::ip::tcp::acceptor acceptor(_service, tcp::endpoint(tcp::v4(), port));
               acceptor.accept(_socket);
               _service.run();
-              std::cout << "Connected port " << port << std::endl;
+              log_info("Connected port", port);;
               _connected = true;
             }
 
-            catch (boost::system::system_error) {std::cerr<<"Socket System error"<<std::endl;};
+            catch (const boost::system::system_error &e) {
+              log_error("Socket System error: ", e.what());
+            };
         }
 
         bool TCPServer::Connected() {
@@ -73,7 +77,7 @@ namespace carla {
 
             if (error)
             {
-              std::cout << "DESCONECTED port " << port << std::endl;
+              log_info("DESCONECTED port", port);
               _connected = false;
             }
         }
@@ -83,7 +87,7 @@ namespace carla {
             bool end = false, readedBytes = false;
             int readedSize = 0, sizeToRead = -1;
 
-                  std::cout << "Try to read " << std::endl;
+              log_debug("Try to read");
             //if (_socket.available() > 0){
               do {
 
@@ -94,7 +98,7 @@ namespace carla {
 
                   if (error)
                   {
-                    std::cout << "DESCONECTED port " << port << std::endl;
+                    log_info("DESCONECTED port", port);
                     _connected = false;
                   }
                   else if (!error){
@@ -115,7 +119,7 @@ namespace carla {
 
               } while ((!readedBytes || sizeToRead > readedSize) && _connected);
 
-              std::cout << "End read" << std::endl;
+              log_debug("End read");
 
               return true;
             //}

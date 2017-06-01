@@ -35,7 +35,7 @@ namespace thread {
         _thread(new std::thread(&AsyncReaderJobQueue::workerThread, this)) {}
 
     ~AsyncReaderJobQueue() {
-      std::cout << "Destroyed thread client"<< std::endl;
+      log_debug("Destroyed thread client");
       done = true;
     }
 
@@ -62,7 +62,7 @@ namespace thread {
     }
 
     std::atomic_bool done;
-    
+
   private:
     void workerThread() {
       while (!done){
@@ -90,7 +90,7 @@ namespace thread {
       }
     }
 
-    
+
     std::atomic_bool _restart;
 
     Job _job;

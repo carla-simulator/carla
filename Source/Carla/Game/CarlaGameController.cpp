@@ -209,6 +209,8 @@ static bool TryReadControl(carla::CarlaServer &Server, ACarlaVehicleController &
     Player.SetBrakeInput(Control.brake);
     Player.SetHandbrakeInput(Control.hand_brake);
     Player.SetReverse(Control.reverse);
+  } else {
+    UE_LOG(LogCarlaServer, Warning, TEXT("No control received from client this frame!"));
   }
   return Result;
 }

@@ -63,6 +63,10 @@ namespace carla {
       return _width * _height;
     }
 
+    bool empty() const {
+      return size() == 0u;
+    }
+
     Color &operator[](uint32_t index) {
       return _image[index];
     }
