@@ -7,12 +7,13 @@
 
 #include "carla_protocol.pb.h"
 
+#include <ctime>
 #include <iostream>
+#include <memory>
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#include <ctime>
 
 #ifdef CARLA_WITH_PNG_COMPRESSION
 #include CARLA_LIBPNG_INCLUDE
@@ -303,10 +304,10 @@ static bool getBitMapImages(const Collection<Image> &images, Reward &rwd) {
     std::string semanticSeg_size_data;
 
     for (const Image &img : images){
-      size_t image_size = img.width() * img.height() * 3u;
-      char image[image_size];
+      const size_t image_size = img.width() * img.height() * 3u;
+      auto image = std::make_unique<char[]>(image_size);
 
-      if (!getBitMapImage(img, image)){
+      if (!getBitMapImage(img, image.get())){
         log_error("Error while encoding image");
         return false;
       }
