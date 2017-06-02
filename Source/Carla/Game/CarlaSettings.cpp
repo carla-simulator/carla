@@ -165,7 +165,7 @@ void UCarlaSettings::LoadSettings()
     WritePort = Value + 1u;
     ReadPort = Value + 2u;
   }
-  if (FParse::Param(FCommandLine::Get(), TEXT("-carla-no-networking"))) {
+  if (FParse::Param(FCommandLine::Get(), TEXT("carla-no-networking"))) {
     bUseNetworking = false;
   }
 }
