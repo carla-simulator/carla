@@ -59,6 +59,10 @@ void ACarlaGameModeBase::InitGame(
     DynamicWeather = GetWorld()->SpawnActor<ADynamicWeather>(DynamicWeatherClass);
   }
 
+  if (VehicleSpawnerClass != nullptr) {
+    VehicleSpawner = GetWorld()->SpawnActor<AVehicleSpawnerBase>(VehicleSpawnerClass);
+  }
+
   if (WalkerSpawnerClass != nullptr) {
     WalkerSpawner = GetWorld()->SpawnActor<AWalkerSpawnerBase>(WalkerSpawnerClass);
   }
@@ -107,6 +111,13 @@ void ACarlaGameModeBase::BeginPlay()
     }
   } else {
     UE_LOG(LogCarla, Error, TEXT("Missing dynamic weather actor!"));
+  }
+
+  // Setup other vehicles.
+  if (VehicleSpawner != nullptr) {
+    VehicleSpawner->SetNumberOfVehicles(CarlaSettings.NumberOfVehicles);
+  } else {
+    UE_LOG(LogCarla, Error, TEXT("Missing vehicle spawner actor!"));
   }
 
   // Setup walkers.
