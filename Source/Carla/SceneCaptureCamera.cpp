@@ -125,7 +125,8 @@ void ASceneCaptureCamera::SetImageSize(uint32 otherSizeX, uint32 otherSizeY)
 void ASceneCaptureCamera::SetPostProcessEffect(EPostProcessEffect otherPostProcessEffect)
 {
   PostProcessEffect = otherPostProcessEffect;
-  if (PostProcessEffect != PostProcessEffect::SceneFinal) {
+  auto &PostProcessSettings = CaptureComponent2D->PostProcessSettings;
+  if (PostProcessEffect != EPostProcessEffect::SceneFinal) {
     PostProcessSettings.bOverride_AutoExposureMethod = false;
     PostProcessSettings.bOverride_AutoExposureMinBrightness = false;
     PostProcessSettings.bOverride_AutoExposureMaxBrightness = false;
