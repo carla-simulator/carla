@@ -54,6 +54,10 @@ public:
 
   void Set(const FCameraDescription &CameraDescription);
 
+  void Set(
+      const FCameraDescription &CameraDescription,
+      const FCameraPostProcessParameters &OverridePostProcessParameters);
+
   bool ReadPixels(TArray<FColor> &BitMap) const;
 
 private:

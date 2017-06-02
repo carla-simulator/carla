@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "CameraPostProcessParameters.h"
 #include "WeatherDescription.generated.h"
 
 class IniFile;
@@ -137,6 +138,20 @@ struct FWeatherDescription
   /**  */
   UPROPERTY(Category = "Weather|Wind", EditAnywhere, BlueprintReadWrite, meta=(EditCondition="bWind", ClampMin = "-180.0", ClampMax = "180.0"))
   float WindAngle = 0.0f;
+
+  /// @}
+  // ===========================================================================
+  /// @name Weather - Camera Post-Process Parameters
+  // ===========================================================================
+  /// @{
+
+  /** If disabled the camera default values will be used instead. */
+  UPROPERTY(Category = "Weather|Camera Post-Process Parameters", EditAnywhere, BlueprintReadWrite)
+  bool bOverrideCameraPostProcessParameters = false;
+
+  /** Camera post-process parameters to be overriden. */
+  UPROPERTY(Category = "Weather|Camera Post-Process Parameters", EditAnywhere, BlueprintReadWrite, meta=(EditCondition = "bOverrideCameraPostProcessParameters"))
+  FCameraPostProcessParameters CameraPostProcessParameters;
 
   /// @}
 };

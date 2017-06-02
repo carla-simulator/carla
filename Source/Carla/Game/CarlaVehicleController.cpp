@@ -158,10 +158,16 @@ int32 ACarlaVehicleController::GetVehicleCurrentGear() const
 // -- Scene capture ------------------------------------------------------------
 // =============================================================================
 
-void ACarlaVehicleController::AddSceneCaptureCamera(const FCameraDescription &Description)
+void ACarlaVehicleController::AddSceneCaptureCamera(
+    const FCameraDescription &Description,
+    const FCameraPostProcessParameters *OverridePostProcessParameters)
 {
   auto Camera = GetWorld()->SpawnActor<ASceneCaptureCamera>(Description.Position, Description.Rotation);
-  Camera->Set(Description);
+  if (OverridePostProcessParameters != nullptr) {
+    Camera->Set(Description, *OverridePostProcessParameters);
+  } else {
+    Camera->Set(Description);
+  }
   Camera->AttachToActor(GetPawn(), FAttachmentTransformRules::KeepRelativeTransform);
   Camera->SetOwner(GetPawn());
   AddTickPrerequisiteActor(Camera);

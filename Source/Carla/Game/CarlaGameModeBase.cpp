@@ -141,9 +141,14 @@ void ACarlaGameModeBase::AttachCaptureCamerasToPlayer(AController &Player)
     UE_LOG(LogCarla, Warning, TEXT("Trying to add capture cameras but player is not a ACarlaVehicleController"));
     return;
   }
-  auto &Settings = GameInstance->GetCarlaSettings();
+  const auto &Settings = GameInstance->GetCarlaSettings();
+  const auto *Weather = Settings.GetActiveWeatherDescription();
+  const FCameraPostProcessParameters *OverridePostProcessParameters = nullptr;
+  if ((Weather != nullptr) && (Weather->bOverrideCameraPostProcessParameters)) {
+    OverridePostProcessParameters = &Weather->CameraPostProcessParameters;
+  }
   for (const auto &Item : Settings.CameraDescriptions) {
-    Vehicle->AddSceneCaptureCamera(Item.Value);
+    Vehicle->AddSceneCaptureCamera(Item.Value, OverridePostProcessParameters);
   }
 }
 
