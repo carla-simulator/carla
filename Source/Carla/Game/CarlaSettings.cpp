@@ -123,24 +123,15 @@ static void LoadSettingsFromConfig(
   }
 }
 
-static bool GetSettingsFileName(FString &Value)
+static FString GetSettingsFilePathFromCommandLine()
 {
-  // Try to get it from the command-line arguments.
+  FString Value;
   if (FParse::Value(FCommandLine::Get(), TEXT("-carla-settings="), Value)) {
     if (FPaths::IsRelative(Value)) {
       Value = FPaths::ConvertRelativePathToFull(FPaths::LaunchDir(), Value);
     }
-    if (FPaths::FileExists(Value)) {
-      return true;
-    }
-    UE_LOG(LogCarla, Error, TEXT("Unable to find settings file \"%s\", falling back to default values"), *Value);
   }
-  // If fails, check if there is one in the config folder.
-  Value = FPaths::Combine(FPaths::GameConfigDir(), TEXT("CarlaSettings.ini"));
-  if (FPaths::FileExists(Value)) {
-    return true;
-  }
-  return false;
+  return Value;
 }
 
 // =============================================================================
@@ -149,45 +140,41 @@ static bool GetSettingsFileName(FString &Value)
 
 void UCarlaSettings::LoadSettings()
 {
-  FString FileName;
-  if (GetSettingsFileName(FileName)) {
-    UE_LOG(LogCarla, Log, TEXT("Loading CARLA settings from \"%s\""), *FileName);
-    const MyIniFile ConfigFile(FileName);
-    LoadSettingsFromConfig(ConfigFile, *this, true);
-    CurrentFileName = FileName;
-  } else {
-    CurrentFileName = TEXT("");
-  }
+  CurrentFileName = TEXT("");
+  // Load settings from project Config folder if present.
+  LoadSettingsFromFile(FPaths::Combine(FPaths::GameConfigDir(), TEXT("CarlaSettings.ini")), false);
+  // Load settings given by command-line arg if provided.
+  LoadSettingsFromFile(GetSettingsFilePathFromCommandLine(), true);
   // Override settings from command-line.
-  uint32 Value;
-  if (FParse::Value(FCommandLine::Get(), TEXT("-world-port="), Value)) {
-    WorldPort = Value;
-    WritePort = Value + 1u;
-    ReadPort = Value + 2u;
-  }
-  if (FParse::Param(FCommandLine::Get(), TEXT("carla-no-networking"))) {
-    bUseNetworking = false;
+  {
+    uint32 Value;
+    if (FParse::Value(FCommandLine::Get(), TEXT("-world-port="), Value)) {
+      WorldPort = Value;
+      WritePort = Value + 1u;
+      ReadPort = Value + 2u;
+      bUseNetworking = true;
+    }
+    if (FParse::Param(FCommandLine::Get(), TEXT("carla-no-networking"))) {
+      bUseNetworking = false;
+    }
   }
 }
 
-void UCarlaSettings::LoadSettingsFromString(
-    const FString &INIFileContents,
-    const bool bLoadCarlaServerSection)
+void UCarlaSettings::LoadSettingsFromString(const FString &INIFileContents)
 {
   UE_LOG(LogCarla, Log, TEXT("Loading CARLA settings from string"));
-  // Reset cameras.
-  CameraDescriptions.Empty();
-  bSemanticSegmentationEnabled = false;
-  // Load config from string.
+  ResetCameraDescriptions();
   MyIniFile ConfigFile;
   ConfigFile.ProcessInputFileContents(INIFileContents);
+  constexpr bool bLoadCarlaServerSection = false;
   LoadSettingsFromConfig(ConfigFile, *this, bLoadCarlaServerSection);
+  CurrentFileName = TEXT("<string-provided-by-client>");
 }
 
 void UCarlaSettings::LogSettings() const
 {
   UE_LOG(LogCarla, Log, TEXT("== CARLA Settings =============================================================="));
-  UE_LOG(LogCarla, Log, TEXT("Settings file: %s"), *CurrentFileName);
+  UE_LOG(LogCarla, Log, TEXT("Last settings file loaded: %s"), *CurrentFileName);
   UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_SERVER);
   UE_LOG(LogCarla, Log, TEXT("Use Networking = %s"), (bUseNetworking ? TEXT("True") : TEXT("False")));
   UE_LOG(LogCarla, Log, TEXT("World Port = %d"), WorldPort);
@@ -228,5 +215,25 @@ void UCarlaSettings::GetActiveWeatherDescription(
     bWeatherWasChanged = true;
   } else {
     bWeatherWasChanged = false;
+  }
+}
+
+void UCarlaSettings::ResetCameraDescriptions()
+{
+  CameraDescriptions.Empty();
+  bSemanticSegmentationEnabled = false;
+}
+
+void UCarlaSettings::LoadSettingsFromFile(const FString &FilePath, const bool bLogOnFailure)
+{
+  if (FPaths::FileExists(FilePath)) {
+    UE_LOG(LogCarla, Log, TEXT("Loading CARLA settings from \"%s\""), *FilePath);
+    ResetCameraDescriptions();
+    const MyIniFile ConfigFile(FilePath);
+    constexpr bool bLoadCarlaServerSection = true;
+    LoadSettingsFromConfig(ConfigFile, *this, bLoadCarlaServerSection);
+    CurrentFileName = FilePath;
+  } else if (bLogOnFailure) {
+    UE_LOG(LogCarla, Error, TEXT("Unable to find settings file \"%s\""), *FilePath);
   }
 }

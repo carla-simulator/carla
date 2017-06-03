@@ -4,6 +4,7 @@
   * Changed server-client protocol
     - CarlaSettings.ini is sent for every new episode
     - Control is extended with brake, reverse and handbrake
+  * Set a clearer hierarchy for loading settings files
   * Made camera post-process settings able to change depending on the weather
   * Added basic functionality for NPC vehicles
   * Some improvements to the walker spawner

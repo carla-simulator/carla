@@ -19,8 +19,8 @@ public:
   /** Load the settings based on the command-line arguments and the INI file if provided. */
   void LoadSettings();
 
-  /** Load the settings from the given string (formatted as INI). */
-  void LoadSettingsFromString(const FString &INIFileContents, bool bLoadCarlaServerSection = false);
+  /** Load the settings from the given string (formatted as INI). CarlaServer section is ignored. */
+  void LoadSettingsFromString(const FString &INIFileContents);
 
   /** Log settings values. */
   void LogSettings() const;
@@ -40,6 +40,10 @@ public:
       FWeatherDescription &WeatherDescription) const;
 
 private:
+
+  void LoadSettingsFromFile(const FString &FilePath, bool bLogOnFailure);
+
+  void ResetCameraDescriptions();
 
   /** File name of the settings file used to load this settings. Empty if none used. */
   UPROPERTY(Category = "CARLA Settings|Debug", VisibleAnywhere)
