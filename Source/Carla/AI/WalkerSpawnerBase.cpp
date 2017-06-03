@@ -111,7 +111,7 @@ void AWalkerSpawnerBase::Tick(float DeltaTime)
     auto Walker = WalkersBlackList[Index];
     auto Controller = GetController(Walker);
     if ((Controller == nullptr) ||
-        (Controller->GetMoveStatus() != EPathFollowingStatus::Moving)) {
+        (Controller->WalkerIsStuck())) {
       WalkersBlackList.RemoveAtSwap(Index);
       if (Walker != nullptr) {
         Walker->Destroy();
@@ -129,7 +129,7 @@ void AWalkerSpawnerBase::Tick(float DeltaTime)
       if (Walker != nullptr) {
         Walker->Destroy();
       }
-    } else if (Controller->GetMoveStatus() != EPathFollowingStatus::Moving) {
+    } else if (Controller->WalkerIsStuck()) {
       TrySetDestination(*Walker);
       WalkersBlackList.Add(Walker);
       Walkers.RemoveAtSwap(Index);
