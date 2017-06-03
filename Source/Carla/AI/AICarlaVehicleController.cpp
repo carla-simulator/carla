@@ -30,9 +30,9 @@ static bool RayTrace(
   FHitResult Hit;
   TArray <FHitResult> OutHits;
   static FName TraceTag = FName(TEXT("VehicleTrace"));
-  
+
   World->DebugDrawTraceTag = TraceTag;
-  
+
   const bool Success = World->LineTraceMultiByObjectType(
         OutHits,
         Start,
@@ -54,13 +54,13 @@ static bool RayTrace(
 
 
 
-AAICarlaVehicleController::AAICarlaVehicleController() : 
+AAICarlaVehicleController::AAICarlaVehicleController() :
   Super(),
   MovementComponent(nullptr),
   TrafficLightStop(false)
 {
   bAutoManageActiveCameraTarget = false;
-  //MAX_SPEED = ((rand() * 10) - 5) + MAX_SPEED; 
+  //MAX_SPEED = ((rand() * 10) - 5) + MAX_SPEED;
 }
 
 AAICarlaVehicleController::~AAICarlaVehicleController() {}
@@ -74,7 +74,7 @@ void AAICarlaVehicleController::SetupInputComponent(){ Super::SetupInputComponen
 void AAICarlaVehicleController::Possess(APawn *aPawn)
 {
   Super::Possess(aPawn);
-  
+
   if (IsPossessingAVehicle()) {
     UE_LOG(LogCarla, Error, TEXT("Controller already possessing a pawn!"));
     return;
@@ -134,7 +134,7 @@ void AAICarlaVehicleController::Possess(APawn *aPawn)
           rightSphere->RegisterComponent();
           rightSphere->SetRelativeLocation(FVector(BoxExtent.X/2.0, 50.0 + BoxExtent.Y/2.0, 0.0));
           rightSphere->SetWorldScale3D(FVector(1.0f));
-          rightSphere->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform); 
+          rightSphere->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
       }
 
       USphereComponent* leftSphere = GetOwner() -> CreateDefaultSubobject<USphereComponent>(TEXT("Left"));
@@ -147,7 +147,7 @@ void AAICarlaVehicleController::Possess(APawn *aPawn)
           leftSphere->RegisterComponent();
           leftSphere->SetRelativeLocation(FVector(BoxExtent.X/2.0, 50.0 + BoxExtent.Y/2.0, 0.0));
           leftSphere->SetWorldScale3D(FVector(1.0f));
-          leftSphere->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform); 
+          leftSphere->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
       }
 
     }
@@ -183,10 +183,10 @@ void AAICarlaVehicleController::BeginPlay()
 
 
 void AAICarlaVehicleController::Tick(float DeltaTime){
-	Super::PlayerTick(DeltaTime);
+  Super::PlayerTick(DeltaTime);
 
   check(MovementComponent != nullptr);
-  
+
   if (RoadMap == nullptr) {
     UE_LOG(LogCarla, Error, TEXT("Controller doesn't have a road map"));
     return;
@@ -209,7 +209,7 @@ void AAICarlaVehicleController::Tick(float DeltaTime){
 
 
   auto speed = MovementComponent->GetForwardSpeed() * 0.036f;
-  
+
   //RayTrace to detect trafficLights or Vehicles
   bool stop;
   auto World = GetWorld();
@@ -223,7 +223,7 @@ void AAICarlaVehicleController::Tick(float DeltaTime){
        throttle = Move(speed);
     }
   }
-  
+
 
   MovementComponent->SetSteeringInput(steering);
   MovementComponent->SetThrottleInput(throttle);
@@ -232,11 +232,9 @@ void AAICarlaVehicleController::Tick(float DeltaTime){
 
 float AAICarlaVehicleController::GoTo(FVector objective){
 
-
-    UE_LOG(LogCarla, Log,
-        TEXT("it: %i"),
-        route_it
-        );
+#ifdef CARLA_AI_VEHICLES_EXTRA_LOG
+    UE_LOG(LogCarla, Log, TEXT("it: %i"), route_it);
+#endif // CARLA_AI_VEHICLES_EXTRA_LOG
 
     float steering = 0;
     if (objective.Equals(GetPawn()->GetActorLocation(), 80.0f)){
@@ -279,7 +277,7 @@ float AAICarlaVehicleController::CalcStreeringValue(){
     if (VehicleRightControl == nullptr || VehicleLeftControl == nullptr){
       UE_LOG(LogCarla, Error, TEXT("Vehicle control point not found!"));
       return 0;
-    } 
+    }
 */
     FVector BoxExtent = VehicleBounds->GetScaledBoxExtent();
     FVector forward = GetPawn()->GetActorForwardVector();
@@ -287,7 +285,7 @@ float AAICarlaVehicleController::CalcStreeringValue(){
     FVector rightSensorPosition (BoxExtent.X/2.0f, (BoxExtent.Y/2.0f) + 150.0f, 0.0f);
     FVector leftSensorPosition (BoxExtent.X/2.0f, -(BoxExtent.Y/2.0f) - 150.0f, 0.0f);
 
-    
+
 
 
     float forwardMagnitude = BoxExtent.X/2.0f;
@@ -298,10 +296,10 @@ float AAICarlaVehicleController::CalcStreeringValue(){
     float offset = FGenericPlatformMath::Acos(forwardMagnitude/Magnitude);
 
     float actorAngle = forward.UnitCartesianToSpherical().Y;
-    
+
     float sinR = FGenericPlatformMath::Sin(actorAngle+offset);
     float cosR = FGenericPlatformMath::Cos(actorAngle+offset);
-    
+
 
     float sinL = FGenericPlatformMath::Sin(actorAngle-offset);
     float cosL = FGenericPlatformMath::Cos(actorAngle-offset);
@@ -348,7 +346,7 @@ float AAICarlaVehicleController::CalcStreeringValue(){
 
       float max = dirAngle + 90.0f;
       if (max > 180.0f) max = -180.0f + (max - 180.0f);
-      
+
       if (dirAngle < -90.0 || dirAngle > 90.0){
         if (rightAngle < min && rightAngle > max) steering -= 0.2f;
         if (leftAngle < min && leftAngle > max) steering += 0.2f;
@@ -377,7 +375,7 @@ float AAICarlaVehicleController::Stop(float &speed){
   else return 0;
 }
 
-float AAICarlaVehicleController::Move(float &speed){ 
+float AAICarlaVehicleController::Move(float &speed){
   return  1.0f - (speed/MAX_SPEED);
 }
 
@@ -391,12 +389,9 @@ void AAICarlaVehicleController::RedTrafficLight(bool state){
 void AAICarlaVehicleController::NewSpeedLimit(float speed){
   MAX_SPEED = speed;
 
-
-
-  UE_LOG(LogCarla, Log,
-        TEXT("New Speed: %f"),
-        MAX_SPEED
-        );
+#ifdef CARLA_AI_VEHICLES_EXTRA_LOG
+  UE_LOG(LogCarla, Log, TEXT("New Speed: %f"), MAX_SPEED);
+#endif // CARLA_AI_VEHICLES_EXTRA_LOG
 }
 
 
@@ -409,12 +404,12 @@ void AAICarlaVehicleController::NewRoute(TArray<FVector> positions){
  {
     FHitResult RV_Hit(ForceInit);
 
- 
+
     FVector Start = GetPawn()->GetActorLocation() + (GetPawn()->GetActorForwardVector() * 250) + FVector(0.0, 0.0, 50.0);
-    
+
     // you need to add a uproperty to the header file for a float PlayerInteractionDistance
     FVector End = Start + (GetPawn()->GetActorForwardVector() * 500);
- 
+
     //If Trace Hits anything
     if(  UMyStaticFunctionLibrary::Trace(GetWorld(),GetPawn(),Start,End,HitData)  )
     {
@@ -422,13 +417,13 @@ void AAICarlaVehicleController::NewRoute(TArray<FVector> positions){
       if(HitData.GetActor())
       {
         ClientMessage(HitData.GetActor()->GetName());
-     
+
               //Print out distance from start of trace to impact point
               ClientMessage("Trace Distance: " + FString::SanitizeFloat(HitData.Distance));
       }
       return true;
     }
- 
+
     return false;
  }
 */
