@@ -123,15 +123,15 @@ static void LoadSettingsFromConfig(
   }
 }
 
-static FString GetSettingsFilePathFromCommandLine()
+static bool GetSettingsFilePathFromCommandLine(FString &Value)
 {
-  FString Value;
   if (FParse::Value(FCommandLine::Get(), TEXT("-carla-settings="), Value)) {
     if (FPaths::IsRelative(Value)) {
       Value = FPaths::ConvertRelativePathToFull(FPaths::LaunchDir(), Value);
+      return true;
     }
   }
-  return Value;
+  return false;
 }
 
 // =============================================================================
@@ -144,7 +144,12 @@ void UCarlaSettings::LoadSettings()
   // Load settings from project Config folder if present.
   LoadSettingsFromFile(FPaths::Combine(FPaths::GameConfigDir(), TEXT("CarlaSettings.ini")), false);
   // Load settings given by command-line arg if provided.
-  LoadSettingsFromFile(GetSettingsFilePathFromCommandLine(), true);
+  {
+    FString FilePath;
+    if (GetSettingsFilePathFromCommandLine(FilePath)) {
+      LoadSettingsFromFile(FilePath, true);
+    }
+  }
   // Override settings from command-line.
   {
     uint32 Value;
