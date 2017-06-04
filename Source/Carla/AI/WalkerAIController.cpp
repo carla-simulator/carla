@@ -72,7 +72,7 @@ static bool VehicleIsMoving(const AWheeledVehicle *Vehicle)
       (Vehicle != nullptr ? Vehicle->GetVehicleMovementComponent() : nullptr);
   return
       (MovementComponent != nullptr) &&
-      (MovementComponent->GetForwardSpeed() > 0.0f);
+      (FMath::Abs(MovementComponent->GetForwardSpeed()) > 0.0f);
 }
 
 static bool ContainsAMovingVehicle(const TArray<AActor *> &Actors)
