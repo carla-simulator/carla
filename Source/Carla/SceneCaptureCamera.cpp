@@ -125,6 +125,13 @@ void ASceneCaptureCamera::SetImageSize(uint32 otherSizeX, uint32 otherSizeY)
 void ASceneCaptureCamera::SetPostProcessEffect(EPostProcessEffect otherPostProcessEffect)
 {
   PostProcessEffect = otherPostProcessEffect;
+  auto &PostProcessSettings = CaptureComponent2D->PostProcessSettings;
+  if (PostProcessEffect != EPostProcessEffect::SceneFinal) {
+    PostProcessSettings.bOverride_AutoExposureMethod = false;
+    PostProcessSettings.bOverride_AutoExposureMinBrightness = false;
+    PostProcessSettings.bOverride_AutoExposureMaxBrightness = false;
+    PostProcessSettings.bOverride_AutoExposureBias = false;
+  }
 }
 
 void ASceneCaptureCamera::SetFOVAngle(float FOVAngle)
@@ -138,6 +145,22 @@ void ASceneCaptureCamera::Set(const FCameraDescription &CameraDescription)
   SetImageSize(CameraDescription.ImageSizeX, CameraDescription.ImageSizeY);
   SetPostProcessEffect(CameraDescription.PostProcessEffect);
   SetFOVAngle(CameraDescription.FOVAngle);
+}
+
+void ASceneCaptureCamera::Set(
+    const FCameraDescription &CameraDescription,
+    const FCameraPostProcessParameters &OverridePostProcessParameters)
+{
+  auto &PostProcessSettings = CaptureComponent2D->PostProcessSettings;
+  PostProcessSettings.bOverride_AutoExposureMethod = true;
+  PostProcessSettings.AutoExposureMethod = OverridePostProcessParameters.AutoExposureMethod;
+  PostProcessSettings.bOverride_AutoExposureMinBrightness = true;
+  PostProcessSettings.AutoExposureMinBrightness = OverridePostProcessParameters.AutoExposureMinBrightness;
+  PostProcessSettings.bOverride_AutoExposureMaxBrightness = true;
+  PostProcessSettings.AutoExposureMaxBrightness = OverridePostProcessParameters.AutoExposureMaxBrightness;
+  PostProcessSettings.bOverride_AutoExposureBias = true;
+  PostProcessSettings.AutoExposureBias = OverridePostProcessParameters.AutoExposureBias;
+  Set(CameraDescription);
 }
 
 bool ASceneCaptureCamera::ReadPixels(TArray<FColor> &BitMap) const

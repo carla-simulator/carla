@@ -30,6 +30,31 @@ static void LoadPrecipitationType(
   }
 }
 
+static FString AutoExposureMethodToString(EAutoExposureMethod AutoExposureMethod)
+{
+  switch (AutoExposureMethod) {
+    case AEM_Histogram: return "Histogram";
+    case AEM_Basic:     return "Basic";
+    default:            return "INVALID";
+  };
+}
+
+static void LoadAutoExposureMethod(
+    const IniFile &ConfigFile,
+    const TCHAR* Section,
+    const TCHAR* Key,
+    EAutoExposureMethod &Target)
+{
+  FString ValueString;
+  if (ConfigFile.GetFConfigFile().GetString(Section, Key, ValueString)) {
+    if (ValueString == "Basic") {
+      Target = AEM_Basic;
+    } else {
+      Target = AEM_Histogram;
+    }
+  }
+}
+
 void FWeatherDescription::ReadFromConfigFile(const IniFile &ConfigFile, const FString &Section)
 {
   Name = Section;
@@ -59,6 +84,19 @@ void FWeatherDescription::ReadFromConfigFile(const IniFile &ConfigFile, const FS
   CARLA_LOAD_FROM_INI(Bool, bWind)
   CARLA_LOAD_FROM_INI(Float, WindIntensity)
   CARLA_LOAD_FROM_INI(Float, WindAngle)
+  // Camera Post-Process Parameters.
+  CARLA_LOAD_FROM_INI(Bool, bOverrideCameraPostProcessParameters)
+  CARLA_LOAD_FROM_INI(Float, CameraPostProcessParameters.TargetGamma)
+  EAutoExposureMethod AutoExposureMethod;
+  LoadAutoExposureMethod(
+      ConfigFile,
+      *Section,
+      TEXT("CameraPostProcessParameters.AutoExposureMethod"),
+      AutoExposureMethod);
+  CameraPostProcessParameters.AutoExposureMethod = AutoExposureMethod;
+  CARLA_LOAD_FROM_INI(Float, CameraPostProcessParameters.AutoExposureMinBrightness)
+  CARLA_LOAD_FROM_INI(Float, CameraPostProcessParameters.AutoExposureMaxBrightness)
+  CARLA_LOAD_FROM_INI(Float, CameraPostProcessParameters.AutoExposureBias)
 #undef CARLA_LOAD_FROM_INI
 }
 
@@ -92,5 +130,15 @@ void FWeatherDescription::WriteToConfigFile(IniFile &ConfigFile) const
   CARLA_WRITE_TO_INI(Bool, bWind)
   CARLA_WRITE_TO_INI(Float, WindIntensity)
   CARLA_WRITE_TO_INI(Float, WindAngle)
+  // Camera Post-Process Parameters.
+  CARLA_WRITE_TO_INI(Bool, bOverrideCameraPostProcessParameters)
+  CARLA_WRITE_TO_INI(Float, CameraPostProcessParameters.TargetGamma)
+  ConfigFile.SetString(
+      *Section,
+      TEXT("CameraPostProcessParameters.AutoExposureMethod"),
+      AutoExposureMethodToString(CameraPostProcessParameters.AutoExposureMethod.GetValue()));
+  CARLA_WRITE_TO_INI(Float, CameraPostProcessParameters.AutoExposureMinBrightness)
+  CARLA_WRITE_TO_INI(Float, CameraPostProcessParameters.AutoExposureMaxBrightness)
+  CARLA_WRITE_TO_INI(Float, CameraPostProcessParameters.AutoExposureBias)
 #undef CARLA_WRITE_TO_INI
 }

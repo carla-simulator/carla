@@ -59,6 +59,10 @@ void ACarlaGameModeBase::InitGame(
     DynamicWeather = GetWorld()->SpawnActor<ADynamicWeather>(DynamicWeatherClass);
   }
 
+  if (VehicleSpawnerClass != nullptr) {
+    VehicleSpawner = GetWorld()->SpawnActor<AVehicleSpawnerBase>(VehicleSpawnerClass);
+  }
+
   if (WalkerSpawnerClass != nullptr) {
     WalkerSpawner = GetWorld()->SpawnActor<AWalkerSpawnerBase>(WalkerSpawnerClass);
   }
@@ -109,6 +113,13 @@ void ACarlaGameModeBase::BeginPlay()
     UE_LOG(LogCarla, Error, TEXT("Missing dynamic weather actor!"));
   }
 
+  // Setup other vehicles.
+  if (VehicleSpawner != nullptr) {
+    VehicleSpawner->SetNumberOfVehicles(CarlaSettings.NumberOfVehicles);
+  } else {
+    UE_LOG(LogCarla, Error, TEXT("Missing vehicle spawner actor!"));
+  }
+
   // Setup walkers.
   if (WalkerSpawner != nullptr) {
     WalkerSpawner->SetNumberOfWalkers(CarlaSettings.NumberOfPedestrians);
@@ -141,9 +152,14 @@ void ACarlaGameModeBase::AttachCaptureCamerasToPlayer(AController &Player)
     UE_LOG(LogCarla, Warning, TEXT("Trying to add capture cameras but player is not a ACarlaVehicleController"));
     return;
   }
-  auto &Settings = GameInstance->GetCarlaSettings();
+  const auto &Settings = GameInstance->GetCarlaSettings();
+  const auto *Weather = Settings.GetActiveWeatherDescription();
+  const FCameraPostProcessParameters *OverridePostProcessParameters = nullptr;
+  if ((Weather != nullptr) && (Weather->bOverrideCameraPostProcessParameters)) {
+    OverridePostProcessParameters = &Weather->CameraPostProcessParameters;
+  }
   for (const auto &Item : Settings.CameraDescriptions) {
-    Vehicle->AddSceneCaptureCamera(Item.Value);
+    Vehicle->AddSceneCaptureCamera(Item.Value, OverridePostProcessParameters);
   }
 }
 

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "GameFramework/GameModeBase.h"
+#include "AI/VehicleSpawnerBase.h"
 #include "AI/WalkerSpawnerBase.h"
 #include "CarlaGameControllerBase.h"
 #include "DynamicWeather.h"
@@ -43,6 +44,10 @@ protected:
   UPROPERTY(Category = "CARLA Classes", EditAnywhere, BlueprintReadOnly)
   TSubclassOf<ADynamicWeather> DynamicWeatherClass;
 
+  /** The class of VehicleSpawner to spawn. */
+  UPROPERTY(Category = "CARLA Classes", EditAnywhere, BlueprintReadOnly)
+  TSubclassOf<AVehicleSpawnerBase> VehicleSpawnerClass;
+
   /** The class of WalkerSpawner to spawn. */
   UPROPERTY(Category = "CARLA Classes", EditAnywhere, BlueprintReadOnly)
   TSubclassOf<AWalkerSpawnerBase> WalkerSpawnerClass;
@@ -76,6 +81,9 @@ private:
 
   UPROPERTY()
   ADynamicWeather *DynamicWeather;
+
+  UPROPERTY()
+  AVehicleSpawnerBase *VehicleSpawner;
 
   UPROPERTY()
   AWalkerSpawnerBase *WalkerSpawner;

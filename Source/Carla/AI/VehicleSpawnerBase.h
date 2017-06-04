@@ -12,18 +12,17 @@ class APlayerStart;
 UCLASS(Abstract)
 class CARLA_API AVehicleSpawnerBase : public AActor
 {
-	GENERATED_BODY()
-	
+  GENERATED_BODY()
 
-public:	
-	// Sets default values for this actor's properties
-	AVehicleSpawnerBase(const FObjectInitializer& ObjectInitializer);
+public:
 
-
+  // Sets default values for this actor's properties
+  AVehicleSpawnerBase(const FObjectInitializer& ObjectInitializer);
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+
+  // Called when the game starts or when spawned
+  virtual void BeginPlay() override;
 
   UFUNCTION(BlueprintCallable)
   const FRandomStream &GetRandomStream() const
@@ -40,11 +39,7 @@ protected:
   UFUNCTION(BlueprintImplementableEvent)
   AAICarlaVehicleController* GetVehicleController(AWheeledVehicle* Vechicle);
 
-
-
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+public:
 
    void SetNumberOfVehicles(int32 Count);
 
@@ -77,7 +72,7 @@ protected:
   UPROPERTY()
   FRandomStream RandomStream;
 
-  //UPROPERTY(Category = "Vechicle Spawner", VisibleAnywhere, AdvancedDisplay)
+  UPROPERTY(Category = "Vechicle Spawner", VisibleAnywhere, AdvancedDisplay)
   TArray<APlayerStart *> SpawnPoints;
 /*
   UPROPERTY(Category = "Vechicle Spawner", BlueprintReadOnly, EditAnywhere, AdvancedDisplay)
@@ -85,6 +80,6 @@ protected:
 */
   UPROPERTY(Category = "Vehicle Spawner", BlueprintReadOnly, VisibleAnywhere, AdvancedDisplay)
   TArray< AWheeledVehicle *> Vehicles;
-	
-	
+
+
 };

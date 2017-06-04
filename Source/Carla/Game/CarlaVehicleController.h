@@ -81,7 +81,9 @@ public:
   /// @{
 public:
 
-  void AddSceneCaptureCamera(const FCameraDescription &CameraDescription);
+  void AddSceneCaptureCamera(
+      const FCameraDescription &CameraDescription,
+      const FCameraPostProcessParameters *OverridePostProcessParameters = nullptr);
 
   /// @}
   // ===========================================================================

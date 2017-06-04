@@ -11,17 +11,13 @@
 // Sets default values
 AVehicleSpawnerBase::AVehicleSpawnerBase(const FObjectInitializer& ObjectInitializer) :
   Super(ObjectInitializer),
-  RandomStream(Seed)
-{
-  PrimaryActorTick.bCanEverTick = true;
-  PrimaryActorTick.TickGroup = TG_PrePhysics;
-
-}
-
+  RandomStream(Seed) {}
 
 void AVehicleSpawnerBase::BeginPlay()
 {
   Super::BeginPlay();
+
+  NumberOfVehicles = FMath::Max(0, NumberOfVehicles);
 
   // Allocate space for walkers.
   Vehicles.Reserve(NumberOfVehicles);
@@ -38,22 +34,26 @@ void AVehicleSpawnerBase::BeginPlay()
     SpawnPoints.Add(*It);
   }
 
-  UE_LOG(LogCarla, Log, TEXT("Found %d positions for spawning vehilces"), SpawnPoints.Num());
+  UE_LOG(LogCarla, Log, TEXT("Found %d positions for spawning vehicles"), SpawnPoints.Num());
 
-  if (SpawnPoints.Num() < 2) {
+  if (SpawnPoints.Num() < NumberOfVehicles) {
     bSpawnVehicles = false;
     UE_LOG(LogCarla, Error, TEXT("We don't have enough spawn points for vehicles!"));
   }
 
-  while (bSpawnVehicles && (NumberOfVehicles > Vehicles.Num())) {
-    // Try to spawn one walker.
-    TryToSpawnRandomVehicle();
+  if (bSpawnVehicles) {
+    const int32 MaximumNumberOfAttempts = 4 * NumberOfVehicles;
+    int32 NumberOfAttempts = 0;
+    while ((NumberOfVehicles > Vehicles.Num()) && (NumberOfAttempts < MaximumNumberOfAttempts)) {
+      // Try to spawn one vehicle.
+      TryToSpawnRandomVehicle();
+      ++NumberOfAttempts;
+    }
   }
-}
 
-void AVehicleSpawnerBase::Tick(float DeltaTime)
-{
-  Super::Tick(DeltaTime);
+  if (NumberOfVehicles > Vehicles.Num()) {
+    UE_LOG(LogCarla, Error, TEXT("Requested %d vehicles, but we were only able to spawn %d"), NumberOfVehicles, Vehicles.Num());
+  }
 }
 
 // =============================================================================
