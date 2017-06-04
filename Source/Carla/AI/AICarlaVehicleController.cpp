@@ -126,7 +126,7 @@ void AAICarlaVehicleController::Tick(float DeltaTime){
   FRoadMapPixelData roadData = RoadMap->GetDataAt(GetPawn()->GetActorLocation());
 
 
-  float steering = 2.0, throttle = 1.0f, brake = 0.0f;
+  float steering = 2.0, throttle = 1.0f;//, brake = 0.0f;
 
   if (route.Num() > 0){
     steering = GoTo(route[route_it]);
@@ -145,15 +145,11 @@ void AAICarlaVehicleController::Tick(float DeltaTime){
   bool stop;
   auto World = GetWorld();
   if (TrafficLightStop) {
-    brake = Stop(speed);
-    throttle = 0.0f; 
+    throttle = Stop(speed); 
   }
   else {
     if (RayTrace(World, Start, End, stop)) {
-      if (stop) {
-        brake = Stop(speed);
-        throttle = 0.0f;
-      }
+      if (stop)throttle = Stop(speed);
       else throttle = Move(speed);
     }
     else{
@@ -168,7 +164,9 @@ void AAICarlaVehicleController::Tick(float DeltaTime){
 */
   MovementComponent->SetSteeringInput(steering);
   MovementComponent->SetThrottleInput(throttle);
-  MovementComponent->SetBrakeInput(brake);
+  
+  //if (throttle == 0.0) brake = 1.0f;//Stop(speed);
+  //MovementComponent->SetBrakeInput(brake);
 
 }
 
@@ -304,10 +302,13 @@ float AAICarlaVehicleController::CalcStreeringValue(){
 
 // return throttle value
 float AAICarlaVehicleController::Stop(float &speed){
-  float brake = 1.0f - (speed/MAX_SPEED);
+  /*float brake = 1.0f - (speed/MAX_SPEED);
 
   if (brake < 0.2f) return 0.2f;
-  else return brake;
+  else return brake;*/
+  //return 100.0f;
+  if (speed >= 1.0) return -speed/MAX_SPEED;
+  return 0.0f;
 }
 
 // return throttle value
@@ -318,8 +319,12 @@ float AAICarlaVehicleController::Move(float &speed){
         speed
         );
 
-  if (speed >= MAX_SPEED) return 0.0f;
-  else if (speed >= MAX_SPEED-10.0f) return 0.5;
+  if (speed >= MAX_SPEED){
+    return 0.0f;
+  }
+  else if (speed >= MAX_SPEED-10.0f){ 
+    return 0.5;
+  }
   return  1.0f;
 }
 
