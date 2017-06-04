@@ -31,7 +31,7 @@ static bool RayTrace(
   TArray <FHitResult> OutHits;
   static FName TraceTag = FName(TEXT("VehicleTrace"));
 
-  World->DebugDrawTraceTag = TraceTag;
+  // World->DebugDrawTraceTag = TraceTag;
 
   const bool Success = World->LineTraceMultiByObjectType(
         OutHits,
