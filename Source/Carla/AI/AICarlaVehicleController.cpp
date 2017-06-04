@@ -288,7 +288,6 @@ float AAICarlaVehicleController::CalcStreeringValue(){
 
     FVector rightSensorPosition (BoxExtent.X/2.0f, (BoxExtent.Y/2.0f) + 150.0f, 0.0f);
     FVector leftSensorPosition (BoxExtent.X/2.0f, -(BoxExtent.Y/2.0f) - 150.0f, 0.0f);    
-    FVector leftSensorPosition (BoxExtent.X/2.0f, -(BoxExtent.Y/2.0f) - 150.0f, 0.0f);
 
     float forwardMagnitude = BoxExtent.X/2.0f;
 
