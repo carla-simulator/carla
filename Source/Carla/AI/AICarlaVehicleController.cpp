@@ -392,7 +392,7 @@ float AAICarlaVehicleController::Move(float &speed){
         );
 
   if (speed >= MAX_SPEED){
-    return 0.0f;
+    return Stop(speed);
   }
   else if (speed >= MAX_SPEED-10.0f){ 
     return 0.5;
