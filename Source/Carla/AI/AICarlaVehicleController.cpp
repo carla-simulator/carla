@@ -98,75 +98,6 @@ void AAICarlaVehicleController::Possess(APawn *aPawn)
     } else {
       UE_LOG(LogCarla, Error, TEXT("Pawn is missing the bounding box!"));
     }
-
-/*
-    ////////////////////////////////
-    if (VehicleBounds != nullptr){
-      FVector BoxExtent = VehicleBounds->GetScaledBoxExtent();
-
-
-       USphereComponent* rightSphere = NewObject<USphereComponent>(VehicleBounds, TEXT("Right"));
-       if(rightSphere)
-       {
-           rightSphere->RegisterComponent();
-           rightSphere->SetupAttachment(RootComponent);
-           //rightSphere->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
-       }
-
-       USphereComponent* leftSphere = NewObject<USphereComponent>(VehicleBounds, TEXT("Left"));
-       if(leftSphere)
-       {
-           leftSphere->RegisterComponent();
-           leftSphere->SetupAttachment(RootComponent);
-           //leftSphere->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
-       }
-
-
-        //CompClass can be a BP
-        //USphereComponent* SphereVisual = ConstructObject<USphereComponent>(USphereComponent::StaticClass, this, name);
-        USphereComponent* rightSphere = GetOwner() -> CreateDefaultSubobject<USphereComponent>(TEXT("Right"));
-        RootComponent = rightSphere;
-
-         //could use different than Root Comp
-      if (rightSphere)
-      {
-          //SphereVisual->SetStaticMesh(SphereVisualAsset.Object);
-          rightSphere->RegisterComponent();
-          rightSphere->SetRelativeLocation(FVector(BoxExtent.X/2.0, 50.0 + BoxExtent.Y/2.0, 0.0));
-          rightSphere->SetWorldScale3D(FVector(1.0f));
-          rightSphere->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
-      }
-
-      USphereComponent* leftSphere = GetOwner() -> CreateDefaultSubobject<USphereComponent>(TEXT("Left"));
-        RootComponent = leftSphere;
-
-         //could use different than Root Comp
-      if (leftSphere)
-      {
-          //SphereVisual->SetStaticMesh(SphereVisualAsset.Object);
-          leftSphere->RegisterComponent();
-          leftSphere->SetRelativeLocation(FVector(BoxExtent.X/2.0, 50.0 + BoxExtent.Y/2.0, 0.0));
-          leftSphere->SetWorldScale3D(FVector(1.0f));
-          leftSphere->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
-      }
-
-    }
-///////////////////////////////////
-    TArray<USphereComponent *> ControlPoints;
-    WheeledVehicle->GetComponents<USphereComponent>(ControlPoints);
-    if (ControlPoints.Num() > 0) {
-      if (ControlPoints[0]->GetName().Equals("Right")){
-        VehicleRightControl = ControlPoints[0];
-        VehicleLeftControl = ControlPoints[1];
-      }
-      else{
-        VehicleRightControl = ControlPoints[1];
-        VehicleLeftControl = ControlPoints[0];
-      }
-    }else{
-      UE_LOG(LogCarla, Error, TEXT("Vehicle control point not found!"));
-    }
-*/
   }
 
 }
@@ -288,8 +219,8 @@ float AAICarlaVehicleController::CalcStreeringValue(){
     FVector BoxExtent = VehicleBounds->GetScaledBoxExtent();
     FVector forward = GetPawn()->GetActorForwardVector();
 
-    FVector rightSensorPosition (BoxExtent.X/2.0f, (BoxExtent.Y/2.0f) + 150.0f, 0.0f);
-    FVector leftSensorPosition (BoxExtent.X/2.0f, -(BoxExtent.Y/2.0f) - 150.0f, 0.0f);    
+    FVector rightSensorPosition (BoxExtent.X/2.0f, (BoxExtent.Y/2.0f) + 100.0f, 0.0f);
+    FVector leftSensorPosition (BoxExtent.X/2.0f, -(BoxExtent.Y/2.0f) - 100.0f, 0.0f);    
 
     float forwardMagnitude = BoxExtent.X/2.0f;
 
@@ -387,11 +318,11 @@ float AAICarlaVehicleController::Stop(float &speed){
 
 // return throttle value
 float AAICarlaVehicleController::Move(float &speed){ 
-  UE_LOG(LogCarla, Log,
-        TEXT("MAX_SPEED: %f   SPEED: %f"),
-        MAX_SPEED,
-        speed
-        );
+ /// UE_LOG(LogCarla, Log,
+ //       TEXT("MAX_SPEED: %f   SPEED: %f"),
+ //       MAX_SPEED,
+ //       speed
+ //       );
 
   if (speed >= MAX_SPEED){
     return Stop(speed);
