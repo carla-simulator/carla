@@ -31,7 +31,7 @@ static bool RayTrace(
   TArray <FHitResult> OutHits;
   static FName TraceTag = FName(TEXT("VehicleTrace"));
 
-  // World->DebugDrawTraceTag = TraceTag;
+  //World->DebugDrawTraceTag = TraceTag;
 
   const bool Success = World->LineTraceMultiByObjectType(
         OutHits,
@@ -204,11 +204,13 @@ void AAICarlaVehicleController::Tick(float DeltaTime){
     steering = CalcStreeringValue();
   }
 
-  const FVector Start = GetPawn()->GetActorLocation() + (GetPawn()->GetActorForwardVector().GetSafeNormal() * (200.0f + VehicleBounds->GetScaledBoxExtent().X/2.0f)) + FVector(0.0f, 0.0f, 50.0f);
-  const FVector End = Start + GetPawn()->GetActorForwardVector().GetSafeNormal() * (300.0f + VehicleBounds->GetScaledBoxExtent().X/2.0f);
-
 
   auto speed = MovementComponent->GetForwardSpeed() * 0.036f;
+
+
+  const FVector Start = GetPawn()->GetActorLocation() + (GetPawn()->GetActorForwardVector().GetSafeNormal() * (200.0f + VehicleBounds->GetScaledBoxExtent().X/2.0f)) + FVector(0.0f, 0.0f, 50.0f);
+  const FVector End = Start + GetPawn()->GetActorForwardVector().GetSafeNormal() * (/*300*/speed*20.0f + VehicleBounds->GetScaledBoxExtent().X/2.0f);
+
 
   //RayTrace to detect trafficLights or Vehicles
   bool stop;
