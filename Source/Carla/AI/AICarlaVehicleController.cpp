@@ -31,7 +31,7 @@ static bool RayTrace(
   TArray <FHitResult> OutHits;
   static FName TraceTag = FName(TEXT("VehicleTrace"));
 
-  //World->DebugDrawTraceTag = TraceTag;
+  World->DebugDrawTraceTag = TraceTag;
 
   const bool Success = World->LineTraceMultiByObjectType(
         OutHits,
@@ -43,7 +43,7 @@ static bool RayTrace(
 
   if (Success) {
     for (FHitResult &Item : OutHits) {
-      if (ATagger::MatchComponent(*Item.Component, ECityObjectLabel::Vehicles)) {
+      if (ATagger::MatchComponent(*Item.Component, ECityObjectLabel::Vehicles) || ATagger::MatchComponent(*Item.Component, ECityObjectLabel::Pedestrians)) {
         Stop = true;
         return true;
       }
@@ -98,6 +98,9 @@ void AAICarlaVehicleController::Possess(APawn *aPawn)
     } else {
       UE_LOG(LogCarla, Error, TEXT("Pawn is missing the bounding box!"));
     }
+
+    steerAngle = 70.0f;
+
   }
 
 }
@@ -206,9 +209,9 @@ float AAICarlaVehicleController::GoTo(FVector objective, FVector &direction){
     if (angle > 180.0f) angle -= 360.0f;
     else if (angle < -180.0f) angle += 360.0f;
 
-    if (angle < -70.0f) steering = -1.0f;
-    else if (angle > 70.0f) steering = 1.0f;
-    else steering += angle/70.0f;
+    if (angle < -steerAngle) steering = -1.0f;
+    else if (angle > steerAngle) steering = 1.0f;
+    else steering += angle/steerAngle;
 
   return steering;
 }
@@ -301,9 +304,9 @@ float AAICarlaVehicleController::CalcStreeringValue(FVector &direction){
       if (angle > 180.0f) angle -= 360.0f;
       else if (angle < -180.0f) angle += 360.0f;
 
-      if (angle < -70.0f) steering = -1.0f;
-      else if (angle > 70.0f) steering = 1.0f;
-      else steering += angle/70.0f;
+      if (angle < -steerAngle) steering = -1.0f;
+      else if (angle > steerAngle) steering = 1.0f;
+      else steering += angle/steerAngle;
 
     }
 
@@ -360,33 +363,3 @@ void AAICarlaVehicleController::NewRoute(TArray<FVector> positions){
   this->route = positions;
   route_it = 0;
 }
-
-/*
-
- bool AAICarlaVehicleController::DoTrace()
- {
-    FHitResult RV_Hit(ForceInit);
-
-
-    FVector Start = GetPawn()->GetActorLocation() + (GetPawn()->GetActorForwardVector() * 250) + FVector(0.0, 0.0, 50.0);
-
-    // you need to add a uproperty to the header file for a float PlayerInteractionDistance
-    FVector End = Start + (GetPawn()->GetActorForwardVector() * 500);
-
-    //If Trace Hits anything
-    if(  UMyStaticFunctionLibrary::Trace(GetWorld(),GetPawn(),Start,End,HitData)  )
-    {
-      //Print out the name of the traced actor
-      if(HitData.GetActor())
-      {
-        ClientMessage(HitData.GetActor()->GetName());
-
-              //Print out distance from start of trace to impact point
-              ClientMessage("Trace Distance: " + FString::SanitizeFloat(HitData.Distance));
-      }
-      return true;
-    }
-
-    return false;
- }
-*/
