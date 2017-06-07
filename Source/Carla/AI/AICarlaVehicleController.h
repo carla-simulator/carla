@@ -101,8 +101,8 @@ public:
 
 
 private:
-  float CalcStreeringValue();
-  float GoTo(FVector objective);
+  float CalcStreeringValue(FVector &direction);
+  float GoTo(FVector objective, FVector &direction);
   float Stop(float &speed);
   float Move(float &speed);
 

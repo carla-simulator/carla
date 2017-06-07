@@ -128,11 +128,14 @@ void AAICarlaVehicleController::Tick(float DeltaTime){
 
   float steering = 2.0, throttle = 1.0f;//, brake = 0.0f;
 
+
+  FVector direction;
+
   if (route.Num() > 0){
-    steering = GoTo(route[route_it]);
+    steering = GoTo(route[route_it], direction);
   }
   else{
-    steering = CalcStreeringValue();
+    steering = CalcStreeringValue(direction);
   }
 
 
@@ -140,7 +143,10 @@ void AAICarlaVehicleController::Tick(float DeltaTime){
 
 
   const FVector Start = GetPawn()->GetActorLocation() + (GetPawn()->GetActorForwardVector().GetSafeNormal() * (200.0f + VehicleBounds->GetScaledBoxExtent().X/2.0f)) + FVector(0.0f, 0.0f, 50.0f);
-  const FVector End = Start + GetPawn()->GetActorForwardVector().GetSafeNormal() * (/*300*/speed*20.0f + VehicleBounds->GetScaledBoxExtent().X/2.0f);
+  const FVector End = Start + direction * (/*300*/speed*20.0f + VehicleBounds->GetScaledBoxExtent().X/2.0f);
+
+
+  //const FVector RightEnd = Start + GetPawn()->GetActorForwardVector().GetSafeNormal() * (200 + VehicleBounds->GetScaledBoxExtent().X/2.0f);
 
 
   //RayTrace to detect trafficLights or Vehicles
@@ -167,7 +173,7 @@ void AAICarlaVehicleController::Tick(float DeltaTime){
 
 }
 
-float AAICarlaVehicleController::GoTo(FVector objective){
+float AAICarlaVehicleController::GoTo(FVector objective, FVector &direction){
 
 #ifdef CARLA_AI_VEHICLES_EXTRA_LOG
     UE_LOG(LogCarla, Log, TEXT("it: %i"), route_it);
@@ -179,12 +185,12 @@ float AAICarlaVehicleController::GoTo(FVector objective){
       if (route_it == route.Num()){
         route.Empty();
         route_it = 0;
-        return CalcStreeringValue();
+        return CalcStreeringValue(direction);
       }
     }
 
 
-    FVector direction = objective - GetPawn()->GetActorLocation();
+    direction = objective - GetPawn()->GetActorLocation();
     direction = direction.GetSafeNormal();
 
     FVector forward = GetPawn()->GetActorForwardVector();
@@ -207,7 +213,7 @@ float AAICarlaVehicleController::GoTo(FVector objective){
   return steering;
 }
 
-float AAICarlaVehicleController::CalcStreeringValue(){
+float AAICarlaVehicleController::CalcStreeringValue(FVector &direction){
 
     float steering = 0;
 /*
@@ -259,7 +265,7 @@ float AAICarlaVehicleController::CalcStreeringValue(){
     }
     else if (roadData.HasDirection()){
 
-      FVector direction = roadData.GetDirection();
+      direction = roadData.GetDirection();
       FVector right = rightRoadData.GetDirection();
       FVector left = leftRoadData.GetDirection();
 
