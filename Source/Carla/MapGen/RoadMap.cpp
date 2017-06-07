@@ -161,12 +161,12 @@ void URoadMap::SetPixelAt(
     case ECityMapMeshTag::Road90DegTurn_Lane6:
       bIsRoad = true;
       bHasDirection = true;
-      Rotator.Yaw += 270.0f + 30.0f;
+      Rotator.Yaw += 270.0f + 60.0f;
       break;
     case ECityMapMeshTag::Road90DegTurn_Lane4:
       bIsRoad = true;
       bHasDirection = true;
-      Rotator.Yaw += 270.0f + 70.0f;
+      Rotator.Yaw += 270.0f + 80.0f;
       break;
     case ECityMapMeshTag::Road90DegTurn_Lane2:
       bIsRoad = true;
