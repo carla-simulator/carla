@@ -94,7 +94,7 @@ namespace server {
     if (!success){
       return nullptr;
     }
-    else{
+    else{ 
       return message;
     }
   }
@@ -123,6 +123,7 @@ namespace server {
       return nullptr;
     }
     else {
+
       return message;
     }
   }
@@ -318,6 +319,8 @@ namespace server {
     RequestNewEpisode reqEpisode;
 
     if (!reqEpisode.ParseFromString(*request)) {
+
+  //    log_debug("Communication: TryReadRequestNewEpisode --> error parsing from string");
 
       _worldThread.undoPop(std::move(request));
 

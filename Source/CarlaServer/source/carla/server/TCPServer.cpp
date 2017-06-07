@@ -23,12 +23,21 @@ namespace carla {
             return bytes;
         }
 
-        static int GetInt(char b1, char b2, char b3, char b4) {
+        static int GetInt(unsigned char b1, unsigned char b2, unsigned char b3, unsigned char b4) {
             int result = 0;
+            int byte;
+            byte = b1;
             result = (result << 8) + b1;
+            log_debug(byte);
+            byte = b2;
             result = (result << 8) + b2;
+            log_debug(byte);
+            byte = b3;
             result = (result << 8) + b3;
+            log_debug(byte);
+            byte = b4;
             result = (result << 8) + b4;
+            log_debug(byte);
 
             return result;
         }
@@ -91,7 +100,7 @@ namespace carla {
             //if (_socket.available() > 0){
               do {
 
-                  std::array<char, 128> buf;
+                  std::array<unsigned char, 128> buf;
 
 
                   size_t len = _socket.read_some(boost::asio::buffer(buf), error);
@@ -105,13 +114,14 @@ namespace carla {
                        // @todo find a better way.
                       for (size_t i = 0; i < len && !end; ++i) {
                           if (!readedBytes) {
-                              sizeToRead = GetInt(buf[0], buf[1], buf[2], buf[3]);
                               i = 3;
                               readedBytes = true;
                           }
                           else {
+                              std::cout << std::dec;
                               message += buf[i];
                               ++readedSize;
+                              if (readedSize >= sizeToRead) end = true;
                           }
 
                       }
