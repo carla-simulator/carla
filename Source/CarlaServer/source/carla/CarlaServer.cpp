@@ -134,18 +134,21 @@ namespace carla {
   }
 
   bool CarlaServer::newEpisodeRequested(CarlaString &init_file, bool &readed) {
+    readed = false;
     if (!worldConnected())
       return false;
 
     std::string str;
-    readed = _pimpl->communication.tryReadRequestNewEpisode(str);
+    if (_pimpl->communication.tryReadRequestNewEpisode(str)) {
 
-    if (str.size() < std::numeric_limits<uint32_t>::max()) {
-      init_file.copyContents(str.data(), static_cast<uint32_t>(str.size()));
-    } else {
-      log_error("Received string is too big!");
+      if (str.size() < std::numeric_limits<uint32_t>::max()) {
+        init_file.copyContents(str.data(), static_cast<uint32_t>(str.size()));
+        readed = true;
+      } else {
+        log_error("Received string is too big!");
+      }
+
     }
-
     return true;
   }
 
