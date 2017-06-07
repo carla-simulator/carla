@@ -108,9 +108,8 @@ static bool TryReadNewEpisode(
     bool &bNewEpisodeRequested)
 {
   carla::CarlaString IniStr;
-  bool Success = false;
-  bool Result = Server.newEpisodeRequested(IniStr, Success);
-  if (Result && Success) {
+  const bool Result = Server.newEpisodeRequested(IniStr, bNewEpisodeRequested);
+  if (Result && bNewEpisodeRequested) {
     CarlaSettings.LoadSettingsFromString(ToFString(IniStr));
   }
   return Result;

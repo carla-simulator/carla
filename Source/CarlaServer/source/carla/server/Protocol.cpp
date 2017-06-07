@@ -329,16 +329,16 @@ static bool getBitMapImages(const Collection<Image> &images, Reward &rwd) {
 
         case DEPTH:
           for (unsigned long int i = 0u; i < image_size; ++i) {
-            sceneFinal_data += image[i];
+            depth_data += image[i];
           }
-          sceneFinal_size_data += GetBytes(image_size);
+          depth_size_data += GetBytes(image_size);
           break;
 
         case SEMANTIC_SEG:
           for (unsigned long int i = 0u; i < image_size; ++i) {
-            sceneFinal_data += image[i];
+            semanticSeg_data += image[i];
           }
-          sceneFinal_size_data += GetBytes(image_size);
+          semanticSeg_size_data += GetBytes(image_size);
           break;
       }
     }
