@@ -52,8 +52,8 @@ void ACarlaVehicleController::Possess(APawn *aPawn)
     aPawn->OnActorHit.AddDynamic(this, &ACarlaVehicleController::OnCollisionEvent);
     // Get vehicle movement component.
     MovementComponent = WheeledVehicle->GetVehicleMovementComponent();
-    MovementComponent->bReverseAsBrake = false;
     check(MovementComponent != nullptr);
+    MovementComponent->bReverseAsBrake = false;
     // Get vehicle box component.
     TArray<UBoxComponent *> BoundingBoxes;
     WheeledVehicle->GetComponents<UBoxComponent>(BoundingBoxes);

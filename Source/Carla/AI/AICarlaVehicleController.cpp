@@ -31,7 +31,7 @@ static bool RayTrace(
   TArray <FHitResult> OutHits;
   static FName TraceTag = FName(TEXT("VehicleTrace"));
 
-  //World->DebugDrawTraceTag = TraceTag;
+  // World->DebugDrawTraceTag = TraceTag;
 
   const bool Success = World->LineTraceMultiByObjectType(
         OutHits,
@@ -88,6 +88,7 @@ void AAICarlaVehicleController::Possess(APawn *aPawn)
     // Get vehicle movement component.
     MovementComponent = WheeledVehicle->GetVehicleMovementComponent();
     check(MovementComponent != nullptr);
+    MovementComponent->bReverseAsBrake = true;
 
     // Get vehicle box component.
     TArray<UBoxComponent *> BoundingBoxes;
@@ -117,7 +118,7 @@ void AAICarlaVehicleController::BeginPlay()
 
 
 void AAICarlaVehicleController::Tick(float DeltaTime){
-  Super::PlayerTick(DeltaTime);
+  Super::Tick(DeltaTime);
 
   check(MovementComponent != nullptr);
 
@@ -163,7 +164,7 @@ void AAICarlaVehicleController::Tick(float DeltaTime){
   bool stop;
   auto World = GetWorld();
   if (TrafficLightStop) {
-    throttle = Stop(speed); 
+    throttle = Stop(speed);
   }
   else {
     if (RayTrace(World, StartCenter, EndCenter, stop)
@@ -179,9 +180,9 @@ void AAICarlaVehicleController::Tick(float DeltaTime){
 
   MovementComponent->SetSteeringInput(steering);
   MovementComponent->SetThrottleInput(throttle);
-  
-  //if (throttle == 0.0) brake = 1.0f;//Stop(speed);
-  //MovementComponent->SetBrakeInput(brake);
+
+  // if (throttle == 0.0f) brake = Stop(speed);
+  // MovementComponent->SetBrakeInput(brake);
 
 }
 
@@ -238,7 +239,7 @@ float AAICarlaVehicleController::CalcStreeringValue(FVector &direction){
     FVector forward = GetPawn()->GetActorForwardVector();
 
     FVector rightSensorPosition (BoxExtent.X/2.0f, (BoxExtent.Y/2.0f) + 100.0f, 0.0f);
-    FVector leftSensorPosition (BoxExtent.X/2.0f, -(BoxExtent.Y/2.0f) - 100.0f, 0.0f);    
+    FVector leftSensorPosition (BoxExtent.X/2.0f, -(BoxExtent.Y/2.0f) - 100.0f, 0.0f);
 
     float forwardMagnitude = BoxExtent.X/2.0f;
 
@@ -323,19 +324,16 @@ float AAICarlaVehicleController::CalcStreeringValue(FVector &direction){
 }
 
 // return throttle value
-float AAICarlaVehicleController::Stop(float &speed){
-  /*float brake = 1.0f - (speed/MAX_SPEED);
-
-  if (brake < 0.2f) return 0.2f;
-  else return brake;*/
-  //return 100.0f;
+float AAICarlaVehicleController::Stop(const float speed){
+  // const float brake = 1.0f - (speed/MAX_SPEED);
+  // return FMath::Max(0.2f, brake);
   if (speed >= 1.0) return -speed/MAX_SPEED;
   return 0.0f;
 }
 
 
 // return throttle value
-float AAICarlaVehicleController::Move(float &speed){ 
+float AAICarlaVehicleController::Move(const float speed){
  /// UE_LOG(LogCarla, Log,
  //       TEXT("MAX_SPEED: %f   SPEED: %f"),
  //       MAX_SPEED,
@@ -345,7 +343,7 @@ float AAICarlaVehicleController::Move(float &speed){
   if (speed >= MAX_SPEED){
     return Stop(speed);
   }
-  else if (speed >= MAX_SPEED-10.0f){ 
+  else if (speed >= MAX_SPEED-10.0f){
     return 0.5;
   }
   return  1.0f;
