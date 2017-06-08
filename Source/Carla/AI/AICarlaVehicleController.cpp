@@ -37,16 +37,16 @@ static bool RayTrace(
         OutHits,
         Start,
         End,
-        FCollisionObjectQueryParams(ECollisionChannel::ECC_Vehicle),
+        FCollisionObjectQueryParams(ECollisionChannel::ECC_WorldDynamic),
         FCollisionQueryParams(TraceTag, true));
 
 
   if (Success) {
     for (FHitResult &Item : OutHits) {
-      if (ATagger::MatchComponent(*Item.Component, ECityObjectLabel::Vehicles) || ATagger::MatchComponent(*Item.Component, ECityObjectLabel::Pedestrians)) {
+      //if (ATagger::MatchComponent(*Item.Component, ECityObjectLabel::Vehicles) || ATagger::MatchComponent(*Item.Component, ECityObjectLabel::Pedestrians)) {
         Stop = true;
         return true;
-      }
+      //}
     }
   }
   return false;
@@ -144,9 +144,16 @@ void AAICarlaVehicleController::Tick(float DeltaTime){
 
   auto speed = MovementComponent->GetForwardSpeed() * 0.036f;
 
+  FVector forwardVector = GetPawn()->GetActorForwardVector().GetSafeNormal();
 
-  const FVector Start = GetPawn()->GetActorLocation() + (GetPawn()->GetActorForwardVector().GetSafeNormal() * (200.0f + VehicleBounds->GetScaledBoxExtent().X/2.0f)) + FVector(0.0f, 0.0f, 50.0f);
-  const FVector End = Start + direction * (/*300*/speed*20.0f + VehicleBounds->GetScaledBoxExtent().X/2.0f);
+  const FVector StartCenter = GetPawn()->GetActorLocation() + (forwardVector * (250.0f + VehicleBounds->GetScaledBoxExtent().X/2.0f)) + FVector(0.0f, 0.0f, 50.0f);
+  const FVector EndCenter = StartCenter + direction * (/*300*/speed*20.0f + VehicleBounds->GetScaledBoxExtent().X/2.0f);
+
+  const FVector StartRight = StartCenter + (FVector(forwardVector.Y, -forwardVector.X, forwardVector.Z) * 100.0f);
+  const FVector EndRight = StartRight + direction * (/*300*/speed*20.0f + VehicleBounds->GetScaledBoxExtent().X/2.0f);
+
+  const FVector StartLeft = StartCenter + (FVector(-forwardVector.Y, forwardVector.X, forwardVector.Z) * 100.0f);
+  const FVector EndLeft = StartLeft + direction * (/*300*/speed*20.0f + VehicleBounds->GetScaledBoxExtent().X/2.0f);
 
 
   //const FVector RightEnd = Start + GetPawn()->GetActorForwardVector().GetSafeNormal() * (200 + VehicleBounds->GetScaledBoxExtent().X/2.0f);
@@ -159,7 +166,9 @@ void AAICarlaVehicleController::Tick(float DeltaTime){
     throttle = Stop(speed); 
   }
   else {
-    if (RayTrace(World, Start, End, stop)) {
+    if (RayTrace(World, StartCenter, EndCenter, stop)
+       || RayTrace(World, StartRight, EndRight, stop)
+       || RayTrace(World, StartLeft, EndLeft, stop)) {
       if (stop)throttle = Stop(speed);
       else throttle = Move(speed);
     }

@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "Engine/Scene.h"
 #include "CameraPostProcessParameters.generated.h"
 
 /**

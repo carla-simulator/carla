@@ -136,5 +136,5 @@ private:
   int route_it = 0;
   TArray<FVector> route;
 	
-  float steerAngle;
+  float steerAngle; 
 };
