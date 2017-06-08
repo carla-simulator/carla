@@ -88,6 +88,7 @@ namespace server {
         // @todo find a better way.
         for (size_t i = 0; i < len && !end; ++i) {
           if (!readedBytes) {
+            sizeToRead = GetInt(buf[0], buf[1], buf[2], buf[3]);
             i = 3;
             readedBytes = true;
           } else {
