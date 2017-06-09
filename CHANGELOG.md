@@ -1,3 +1,12 @@
+## CARLA 0.4.2
+
+  * Fixed issues with the server-client protocol
+  * More improvements to the AI of other vehicles, now they barely crash
+
+## CARLA 0.4.1
+
+  * Improved AI of other vehicles, still needs some adjustment, but now they crash much less
+
 ## CARLA 0.4.0
 
   * Made vehicle input more realistic, now reverse and brake use different input
