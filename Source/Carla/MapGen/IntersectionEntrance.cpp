@@ -37,6 +37,11 @@ TArray<FVector> AIntersectionEntrance::GetRoute(int it)
 	return route;
 }
 
+float AIntersectionEntrance::GetProbability(int it)
+{
+  return Routes[it].probability;
+}
+
 /*
 #if WITH_EDITOR
 

@@ -12,6 +12,9 @@ struct FRoute {
 
 	UPROPERTY(BlueprintReadWrite, Category=TrafficRoutes, EditAnywhere)
 	TArray < AActor *> points;
+	
+	UPROPERTY(BlueprintReadWrite, Category=TrafficRoutes, EditAnywhere)
+	float probability = 0.0f;
 };
 
 
@@ -36,6 +39,9 @@ protected:
 
 UFUNCTION(BlueprintCallable, Category="Trigger")
     TArray<FVector> GetRoute(int route);
+
+UFUNCTION(BlueprintCallable, Category="Trigger")
+    float GetProbability(int route);
 /*
 #if WITH_EDITOR
   virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
