@@ -31,7 +31,7 @@ static bool RayTrace(
   TArray <FHitResult> OutHits;
   static FName TraceTag = FName(TEXT("VehicleTrace"));
 
-  // World->DebugDrawTraceTag = TraceTag;
+  //World->DebugDrawTraceTag = TraceTag;
 
   const bool Success = World->LineTraceMultiByObjectType(
         OutHits,
@@ -132,7 +132,6 @@ void AAICarlaVehicleController::Tick(float DeltaTime){
 
   float steering = 2.0, throttle = 1.0f;//, brake = 0.0f;
 
-
   FVector direction;
 
   if (route.Num() > 0){
@@ -147,14 +146,26 @@ void AAICarlaVehicleController::Tick(float DeltaTime){
 
   FVector forwardVector = GetPawn()->GetActorForwardVector().GetSafeNormal();
 
+  float distance;
+  if (speed < 30.0f) distance = 400.0f;
+  else {
+    distance = pow(speed/10.0f,2) * 100.0f;
+  }
+
+  UE_LOG(LogCarla, Log,
+        TEXT("SPEED: %f  DISTANCE: %f"),
+        speed,
+        distance
+        );
+
   const FVector StartCenter = GetPawn()->GetActorLocation() + (forwardVector * (250.0f + VehicleBounds->GetScaledBoxExtent().X/2.0f)) + FVector(0.0f, 0.0f, 50.0f);
-  const FVector EndCenter = StartCenter + direction * (/*300*/speed*20.0f + VehicleBounds->GetScaledBoxExtent().X/2.0f);
+  const FVector EndCenter = StartCenter + direction * (distance + VehicleBounds->GetScaledBoxExtent().X/2.0f);
 
   const FVector StartRight = StartCenter + (FVector(forwardVector.Y, -forwardVector.X, forwardVector.Z) * 100.0f);
-  const FVector EndRight = StartRight + direction * (/*300*/speed*20.0f + VehicleBounds->GetScaledBoxExtent().X/2.0f);
+  const FVector EndRight = StartRight + direction * (distance + VehicleBounds->GetScaledBoxExtent().X/2.0f);
 
   const FVector StartLeft = StartCenter + (FVector(-forwardVector.Y, forwardVector.X, forwardVector.Z) * 100.0f);
-  const FVector EndLeft = StartLeft + direction * (/*300*/speed*20.0f + VehicleBounds->GetScaledBoxExtent().X/2.0f);
+  const FVector EndLeft = StartLeft + direction * (distance + VehicleBounds->GetScaledBoxExtent().X/2.0f);
 
 
   //const FVector RightEnd = Start + GetPawn()->GetActorForwardVector().GetSafeNormal() * (200 + VehicleBounds->GetScaledBoxExtent().X/2.0f);
