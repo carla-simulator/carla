@@ -20,37 +20,6 @@
 
 
 // Find first component of type road.
-static bool RayTrace(
-    UWorld *World,
-    const FVector &Start,
-    const FVector &End,
-    bool &Stop)
-{
-
-  FHitResult Hit;
-  TArray <FHitResult> OutHits;
-  static FName TraceTag = FName(TEXT("VehicleTrace"));
-
-  //World->DebugDrawTraceTag = TraceTag;
-
-  const bool Success = World->LineTraceMultiByObjectType(
-        OutHits,
-        Start,
-        End,
-        FCollisionObjectQueryParams(ECollisionChannel::ECC_WorldDynamic),
-        FCollisionQueryParams(TraceTag, true));
-
-
-  if (Success) {
-    for (FHitResult &Item : OutHits) {
-      //if (ATagger::MatchComponent(*Item.Component, ECityObjectLabel::Vehicles) || ATagger::MatchComponent(*Item.Component, ECityObjectLabel::Pedestrians)) {
-        Stop = true;
-        return true;
-      //}
-    }
-  }
-  return false;
-}
 
 
 
@@ -117,6 +86,44 @@ void AAICarlaVehicleController::BeginPlay()
 }
 
 
+bool AAICarlaVehicleController::RayTrace(
+    UWorld *World,
+    const FVector &Start,
+    const FVector &End,
+    bool &Stop)
+{
+
+  //FHitResult Hit;
+  FHitResult OutHit;
+  static FName TraceTag = FName(TEXT("VehicleTrace"));
+
+  //World->DebugDrawTraceTag = TraceTag;
+
+  FCollisionQueryParams collisionParams (TraceTag, true);
+  collisionParams.AddIgnoredActor(this);
+
+  const bool Success = World->LineTraceSingleByObjectType(
+        OutHit,
+        Start,
+        End,
+        FCollisionObjectQueryParams(ECollisionChannel::ECC_WorldDynamic),
+        collisionParams);
+
+
+  if (Success) {
+    if (OutHit.bBlockingHit)
+    //for (FHitResult &Item : OutHits) {
+      //if (ATagger::MatchComponent(*Item.Component, ECityObjectLabel::Vehicles) || ATagger::MatchComponent(*Item.Component, ECityObjectLabel::Pedestrians)) {
+        Stop = true;
+        return true;
+      //}
+    //}
+  }
+  return false;
+}
+
+
+
 void AAICarlaVehicleController::Tick(float DeltaTime){
   Super::Tick(DeltaTime);
 
@@ -147,16 +154,10 @@ void AAICarlaVehicleController::Tick(float DeltaTime){
   FVector forwardVector = GetPawn()->GetActorForwardVector().GetSafeNormal();
 
   float distance;
-  if (speed < 30.0f) distance = 400.0f;
+  if (speed < 10.0f) distance = 50.0f;
   else {
     distance = pow(speed/10.0f,2) * 100.0f;
   }
-
-  UE_LOG(LogCarla, Log,
-        TEXT("SPEED: %f  DISTANCE: %f"),
-        speed,
-        distance
-        );
 
   const FVector StartCenter = GetPawn()->GetActorLocation() + (forwardVector * (250.0f + VehicleBounds->GetScaledBoxExtent().X/2.0f)) + FVector(0.0f, 0.0f, 50.0f);
   const FVector EndCenter = StartCenter + direction * (distance + VehicleBounds->GetScaledBoxExtent().X/2.0f);
@@ -213,6 +214,7 @@ float AAICarlaVehicleController::GoTo(FVector objective, FVector &direction){
       }
     }
 
+    objective.Z = GetPawn()->GetActorLocation().Z;
 
     direction = objective - GetPawn()->GetActorLocation();
     direction = direction.GetSafeNormal();

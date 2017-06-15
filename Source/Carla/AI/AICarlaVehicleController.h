@@ -83,6 +83,10 @@ public:
 
   	void SetHandbrakeInput(bool Value);
 
+private:
+
+    bool RayTrace( UWorld *World, const FVector &Start, const FVector &End, bool &Stop); 
+
     /// @}
     // ===========================================================================
     /// @name Blueprint functions
