@@ -154,7 +154,7 @@ void AAICarlaVehicleController::Tick(float DeltaTime){
   FVector forwardVector = GetPawn()->GetActorForwardVector().GetSafeNormal();
 
   float distance;
-  if (speed < 30.0f) distance = 400.0f;
+  if (speed < 10.0f) distance = 50.0f;
   else {
     distance = pow(speed/10.0f,2) * 100.0f;
   }
