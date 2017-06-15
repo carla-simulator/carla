@@ -376,6 +376,7 @@ static bool getBitMapImages(const Collection<Image> &images, Reward &rwd) {
     reward.set_acceleration_y(values.player_acceleration.y);
     reward.set_acceleration_z(values.player_acceleration.z);
     reward.set_sidewalk_intersect(values.intersect_offroad);
+    reward.set_road_intersect(values.intersect_other_lane);
     reward.set_ori_x(values.player_orientation.x);
     reward.set_ori_y(values.player_orientation.y);
     reward.set_ori_z(values.player_orientation.z);
