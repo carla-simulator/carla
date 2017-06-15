@@ -14,7 +14,7 @@
 // -- Static local methods -----------------------------------------------------
 // =============================================================================
 
-static bool WalkerIsValid(ACharacter *Walker)
+static bool WalkerIsValid(const ACharacter *Walker)
 {
   return ((Walker != nullptr) && !Walker->IsPendingKill());
 }
@@ -32,6 +32,12 @@ static float GetDistance(const FVector &Location0, const FVector &Location1)
 static float GetDistance(const AActor &Actor0, const AActor &Actor1)
 {
   return GetDistance(Actor0.GetActorLocation(), Actor1.GetActorLocation());
+}
+
+static EWalkerStatus GetWalkerStatus(ACharacter *Walker)
+{
+  const auto *Controller = GetController(Walker);
+  return (Controller == nullptr ? EWalkerStatus::Invalid : Controller->GetWalkerStatus());
 }
 
 // =============================================================================
@@ -109,11 +115,10 @@ void AWalkerSpawnerBase::Tick(float DeltaTime)
     // If still stuck in the black list, just kill it.
     const int32 Index = (++CurrentIndexToCheck % WalkersBlackList.Num());
     auto Walker = WalkersBlackList[Index];
-    auto Controller = GetController(Walker);
-    if ((Controller == nullptr) ||
-        (Controller->WalkerIsStuck())) {
+    const auto Status = GetWalkerStatus(Walker);
+    if (Status != EWalkerStatus::Moving) {
       WalkersBlackList.RemoveAtSwap(Index);
-      if (Walker != nullptr) {
+      if ((Walker != nullptr) && (Status != EWalkerStatus::RunOver)) {
         Walker->Destroy();
       }
     }
@@ -123,13 +128,19 @@ void AWalkerSpawnerBase::Tick(float DeltaTime)
     // Check one walker, if fails black-list it or kill it.
     const int32 Index = (++CurrentIndexToCheck % Walkers.Num());
     auto Walker = Walkers[Index];
-    auto Controller = GetController(Walker);
-    if (Controller == nullptr) {
+    const auto Status = GetWalkerStatus(Walker);
+
+    if ((Status == EWalkerStatus::MoveCompleted) ||
+        (Status == EWalkerStatus::Invalid) ||
+        (Status == EWalkerStatus::RunOver)) {
+      // Kill it.
       Walkers.RemoveAtSwap(Index);
-      if (Walker != nullptr) {
+      // If it was run over will self-destroy.
+      if ((Walker != nullptr) && (Status != EWalkerStatus::RunOver)) {
         Walker->Destroy();
       }
-    } else if (Controller->WalkerIsStuck()) {
+    } else if (Status == EWalkerStatus::Stuck) {
+      // Black-list it.
       TrySetDestination(*Walker);
       WalkersBlackList.Add(Walker);
       Walkers.RemoveAtSwap(Index);
