@@ -208,7 +208,7 @@ static bool LineTrace(
         OutHits,
         Start,
         End,
-        FCollisionObjectQueryParams(ECollisionChannel::ECC_WorldDynamic),
+        FCollisionObjectQueryParams(ECollisionChannel::ECC_WorldStatic),
         FCollisionQueryParams(TraceTag, true));
 
   if (Success) {

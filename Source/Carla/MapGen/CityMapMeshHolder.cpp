@@ -155,6 +155,7 @@ UInstancedStaticMeshComponent &ACityMapMeshHolder::GetInstantiator(ECityMapMeshT
     // Create and register an instantiator.
     instantiator = NewObject<UInstancedStaticMeshComponent>(this);
     instantiator->SetMobility(EComponentMobility::Static);
+    instantiator->SetCollisionObjectType(ECollisionChannel::ECC_WorldStatic);
     instantiator->SetupAttachment(SceneRootComponent);
     instantiator->SetStaticMesh(GetStaticMesh(Tag));
     MeshInstatiators[CityMapMeshTag::ToUInt(Tag)] = instantiator;

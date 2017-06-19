@@ -1,3 +1,10 @@
+## CARLA 0.4.3
+
+  * Fixed issue with reward, intersect other lane wasn't sent to the client
+  * Improvements to the AI of other vehicles, and how they detect pedestrians
+  * Improvements to the AI of the pedestrians, trying to avoid slightly better the cars
+  * Made roads collision channel WorldStatic
+
 ## CARLA 0.4.2
 
   * Fixed issues with the server-client protocol

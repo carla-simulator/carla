@@ -129,8 +129,7 @@ static bool SendAndReadSceneValues(
   for (auto i = 0u; i < sceneValues.possible_positions.size(); ++i) {
     auto *StartSpot = AvailableStartSpots[i];
     check(StartSpot != nullptr);
-    const FVector &Location = StartSpot->GetActorLocation();
-    sceneValues.possible_positions[i] = {Location.X, Location.Y};
+    Set(sceneValues.possible_positions[i], StartSpot->GetActorLocation());
   }
   // Send the positions.
   UE_LOG(LogCarlaServer, Log, TEXT("Sending %d available start positions"), sceneValues.possible_positions.size());
