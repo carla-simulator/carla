@@ -5,13 +5,14 @@
 
 #include "Engine/PlayerStartPIE.h"
 #include "EngineUtils.h"
-#include "GameFramework/PlayerStart.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/PlayerStart.h"
+
+#include "Util/RandomEngine.h"
 
 // Sets default values
 AVehicleSpawnerBase::AVehicleSpawnerBase(const FObjectInitializer& ObjectInitializer) :
-  Super(ObjectInitializer),
-  RandomStream(Seed) {}
+  Super(ObjectInitializer) {}
 
 void AVehicleSpawnerBase::BeginPlay()
 {
@@ -21,13 +22,6 @@ void AVehicleSpawnerBase::BeginPlay()
 
   // Allocate space for walkers.
   Vehicles.Reserve(NumberOfVehicles);
-
-  // Set seed for random numbers.
-  if (!bUseFixedSeed) {
-    RandomStream.GenerateNewSeed();
-  } else {
-    RandomStream.Initialize(Seed);
-  }
 
   // Find spawn points present in level.
   for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It) {
@@ -98,9 +92,7 @@ void AVehicleSpawnerBase::SpawnVehicleAtSpawnPoint(
   }
 }
 
-APlayerStart *AVehicleSpawnerBase::GetRandomSpawnPoint() const
+APlayerStart *AVehicleSpawnerBase::GetRandomSpawnPoint()
 {
-  return (SpawnPoints.Num() > 0 ?
-      SpawnPoints[RandomStream.RandRange(0, SpawnPoints.Num() - 1)] :
-      nullptr);
+  return (SpawnPoints.Num() > 0 ? GetRandomEngine()->PickOne(SpawnPoints) : nullptr);
 }

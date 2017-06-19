@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "GameFramework/Actor.h"
+#include "Util/ActorWithRandomEngine.h"
 #include "WalkerSpawnerBase.generated.h"
 
 class AWalkerSpawnPoint;
@@ -15,7 +15,7 @@ class UBoxComponent;
 /// Walkers are spawned at a random AWalkerSpawnPoint present in the level, and
 /// walk until its destination is reached at another random AWalkerSpawnPoint.
 UCLASS(Abstract)
-class CARLA_API AWalkerSpawnerBase : public AActor
+class CARLA_API AWalkerSpawnerBase : public AActorWithRandomEngine
 {
   GENERATED_BODY()
 
@@ -47,12 +47,6 @@ public:
   /// @{
 protected:
 
-  UFUNCTION(BlueprintCallable)
-  const FRandomStream &GetRandomStream() const
-  {
-    return RandomStream;
-  }
-
   UFUNCTION(BlueprintImplementableEvent)
   void SpawnWalker(const FTransform &SpawnTransform, ACharacter *&SpawnedCharacter);
 
@@ -72,13 +66,13 @@ public:
 
 private:
 
-  const AWalkerSpawnPointBase &GetRandomSpawnPoint() const;
+  const AWalkerSpawnPointBase &GetRandomSpawnPoint();
 
-  bool TryGetValidDestination(const FVector &Origin, FVector &Destination) const;
+  bool TryGetValidDestination(const FVector &Origin, FVector &Destination);
 
   bool TryToSpawnWalkerAt(const AWalkerSpawnPointBase &SpawnPoint);
 
-  bool TrySetDestination(ACharacter &Walker) const;
+  bool TrySetDestination(ACharacter &Walker);
 
   /// @}
 
@@ -95,17 +89,6 @@ private:
   /** Minimum walk distance in centimeters. */
   UPROPERTY(Category = "Walker Spawner", EditAnywhere, meta = (EditCondition = bSpawnWalkers))
   float MinimumWalkDistance = 1500.0f;
-
-  /** If false, a random seed is generated each time. */
-  UPROPERTY(Category = "Walker Spawner", EditAnywhere, meta = (EditCondition = bSpawnWalkers))
-  bool bUseFixedSeed = true;
-
-  /** Seed for spawning random walkers. */
-  UPROPERTY(Category = "Walker Spawner", EditAnywhere, meta = (EditCondition = bUseFixedSeed))
-  int32 Seed = 123456789;
-
-  UPROPERTY()
-  FRandomStream RandomStream;
 
   UPROPERTY(Category = "Walker Spawner", VisibleAnywhere, AdvancedDisplay)
   TArray<AWalkerSpawnPoint *> SpawnPoints;

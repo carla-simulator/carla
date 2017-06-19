@@ -7,6 +7,7 @@
 #include "EngineUtils.h"
 #include "GameFramework/Character.h"
 
+#include "Util/RandomEngine.h"
 #include "WalkerAIController.h"
 #include "WalkerSpawnPoint.h"
 
@@ -45,8 +46,7 @@ static EWalkerStatus GetWalkerStatus(ACharacter *Walker)
 // =============================================================================
 
 AWalkerSpawnerBase::AWalkerSpawnerBase(const FObjectInitializer& ObjectInitializer) :
-  Super(ObjectInitializer),
-  RandomStream(Seed)
+  Super(ObjectInitializer)
 {
   PrimaryActorTick.bCanEverTick = true;
   PrimaryActorTick.TickGroup = TG_PrePhysics;
@@ -64,13 +64,6 @@ void AWalkerSpawnerBase::BeginPlay()
 
   // Allocate space for walkers.
   Walkers.Reserve(NumberOfWalkers);
-
-  // Set seed for random numbers.
-  if (!bUseFixedSeed) {
-    RandomStream.GenerateNewSeed();
-  } else {
-    RandomStream.Initialize(Seed);
-  }
 
   // Find spawn points present in level.
   TArray<AWalkerSpawnPointBase *> BeginSpawnPoints;
@@ -90,6 +83,8 @@ void AWalkerSpawnerBase::BeginPlay()
   } else if (BeginSpawnPoints.Num() < NumberOfWalkers) {
     UE_LOG(LogCarla, Warning, TEXT("Requested %d walkers, but we only have %d spawn points. Some will fail to spawn."), NumberOfWalkers, BeginSpawnPoints.Num());
   }
+
+  GetRandomEngine()->Shuffle(BeginSpawnPoints);
 
   if (bSpawnWalkers) {
     uint32 Count = 0u;
@@ -164,13 +159,13 @@ void AWalkerSpawnerBase::SetNumberOfWalkers(const int32 Count)
   }
 }
 
-const AWalkerSpawnPointBase &AWalkerSpawnerBase::GetRandomSpawnPoint() const
+const AWalkerSpawnPointBase &AWalkerSpawnerBase::GetRandomSpawnPoint()
 {
   check(SpawnPoints.Num() > 0);
-  return *SpawnPoints[RandomStream.RandRange(0, SpawnPoints.Num() - 1)];
+  return *GetRandomEngine()->PickOne(SpawnPoints);
 }
 
-bool AWalkerSpawnerBase::TryGetValidDestination(const FVector &Origin, FVector &Destination) const
+bool AWalkerSpawnerBase::TryGetValidDestination(const FVector &Origin, FVector &Destination)
 {
   const auto &DestinationPoint = GetRandomSpawnPoint();
   Destination = DestinationPoint.GetActorLocation();
@@ -208,7 +203,7 @@ bool AWalkerSpawnerBase::TryToSpawnWalkerAt(const AWalkerSpawnPointBase &SpawnPo
   return true;
 }
 
-bool AWalkerSpawnerBase::TrySetDestination(ACharacter &Walker) const
+bool AWalkerSpawnerBase::TrySetDestination(ACharacter &Walker)
 {
   // Try to retrieve controller.
   auto Controller = GetController(&Walker);
