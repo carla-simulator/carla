@@ -204,10 +204,10 @@ void AWalkerAIController::OnMoveCompleted(
 void AWalkerAIController::SenseActors(const TArray<AActor *> Actors)
 {
   const auto *aPawn = GetPawn();
-  if ((aPawn != nullptr) && IntersectsWithVehicle(*aPawn, Actors)) {
+  if ((Status == EWalkerStatus::Moving) &&
+      (aPawn != nullptr) &&
+      IntersectsWithVehicle(*aPawn, Actors)) {
     TryPauseMovement();
-  } else if (Status == EWalkerStatus::Paused) {
-    TryResumeMovement();
   }
 }
 
