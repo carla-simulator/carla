@@ -116,7 +116,9 @@ void AWalkerSpawnerBase::Tick(float DeltaTime)
     const int32 Index = (++CurrentIndexToCheck % WalkersBlackList.Num());
     auto Walker = WalkersBlackList[Index];
     const auto Status = GetWalkerStatus(Walker);
-    if (Status != EWalkerStatus::Moving) {
+    if ((Status == EWalkerStatus::MoveCompleted) ||
+        (Status == EWalkerStatus::Invalid) ||
+        (Status == EWalkerStatus::RunOver)) {
       WalkersBlackList.RemoveAtSwap(Index);
       if ((Walker != nullptr) && (Status != EWalkerStatus::RunOver)) {
         Walker->Destroy();
