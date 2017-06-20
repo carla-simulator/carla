@@ -1,3 +1,8 @@
+## CARLA 0.4.5
+
+  * Add random seeds to config file
+  * Improve logging
+
 ## CARLA 0.4.4
 
   * Fixed regression walkers despawning when stopping after seeing a car
