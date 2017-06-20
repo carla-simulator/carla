@@ -94,6 +94,14 @@ public:
   UPROPERTY(Category = "Level Settings", VisibleAnywhere)
   TArray<FWeatherDescription> WeatherDescriptions;
 
+  /** Random seed for the pedestrian spawner. */
+  UPROPERTY(Category = "Level Settings", VisibleAnywhere)
+  int32 SeedPedestrians = 123456789;
+
+  /** Random seed for the vehicle spawner. */
+  UPROPERTY(Category = "Level Settings", VisibleAnywhere)
+  int32 SeedVehicles = 123456789;
+
   /// @}
   // ===========================================================================
   /// @name Scene Capture

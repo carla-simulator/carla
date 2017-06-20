@@ -2,15 +2,13 @@
 
 #pragma once
 
-#include "GameFramework/Actor.h"
+#include "Util/ActorWithRandomEngine.h"
 #include "VehicleSpawnerBase.generated.h"
-//#include "Content/Blueprints/BaseVehiclePawn.h"
-
 
 class APlayerStart;
 
 UCLASS(Abstract)
-class CARLA_API AVehicleSpawnerBase : public AActor
+class CARLA_API AVehicleSpawnerBase : public AActorWithRandomEngine
 {
   GENERATED_BODY()
 
@@ -23,12 +21,6 @@ protected:
 
   // Called when the game starts or when spawned
   virtual void BeginPlay() override;
-
-  UFUNCTION(BlueprintCallable)
-  const FRandomStream &GetRandomStream() const
-  {
-    return RandomStream;
-  }
 
   UFUNCTION(BlueprintImplementableEvent)
   void SpawnVehicle(const FTransform &SpawnTransform, AWheeledVehicle *&SpawnedCharacter);
@@ -43,7 +35,7 @@ public:
 
    void SetNumberOfVehicles(int32 Count);
 
-   APlayerStart* GetRandomSpawnPoint() const;
+   APlayerStart* GetRandomSpawnPoint();
 
    void SpawnVehicleAtSpawnPoint(const APlayerStart &SpawnPoint);
 
@@ -57,29 +49,9 @@ protected:
   UPROPERTY(Category = "Vehicle Spawner", EditAnywhere, meta = (EditCondition = bSpawnVehicles, ClampMin = "1"))
   int32 NumberOfVehicles = 10;
 
-  /** Minimum walk distance in centimeters. */
-  /*UPROPERTY(Category = "Vechicle Spawner", EditAnywhere, meta = (EditCondition = bSpawnWalkers))
-  float MinimumWalkDistance = 1500.0f;
-*/
-  /** If false, a random seed is generated each time. */
-  UPROPERTY(Category = "Vehicle Spawner", EditAnywhere, meta = (EditCondition = bSpawnVehicles))
-  bool bUseFixedSeed = true;
-
-  /** Seed for spawning random walkers. */
-  UPROPERTY(Category = "Vehicle Spawner", EditAnywhere, meta = (EditCondition = bUseFixedSeed))
-  int32 Seed = 123456789;
-
-  UPROPERTY()
-  FRandomStream RandomStream;
-
   UPROPERTY(Category = "Vechicle Spawner", VisibleAnywhere, AdvancedDisplay)
   TArray<APlayerStart *> SpawnPoints;
-/*
-  UPROPERTY(Category = "Vechicle Spawner", BlueprintReadOnly, EditAnywhere, AdvancedDisplay)
-  TArray<AWheeledVehicle *> Vehicles;
-*/
+
   UPROPERTY(Category = "Vehicle Spawner", BlueprintReadOnly, VisibleAnywhere, AdvancedDisplay)
-  TArray< AWheeledVehicle *> Vehicles;
-
-
+  TArray<AWheeledVehicle *> Vehicles;
 };
