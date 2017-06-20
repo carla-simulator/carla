@@ -70,23 +70,18 @@ namespace thread {
         _restart = false;
         _queue.canWait(true);
         while (!_restart && !done) {
-          {
-            using namespace std;
-            clock_t start = clock();
+          using namespace std;
+          LOG_DEBUG_ONLY(clock_t start = clock();)
 
-             auto value = _queue.wait_and_pop();
-             if (value != nullptr) {
-             _job(*value);
+          auto value = _queue.wait_and_pop();
+          if (value != nullptr) {
+            _job(*value);
 
-            clock_t end = clock();
-            double elapsed_secs = double(end- start) / CLOCKS_PER_SEC;
-            cout<< "Send Thread: " << elapsed_secs << endl;
-
+            LOG_DEBUG_ONLY(clock_t end = clock();)
+            LOG_DEBUG_ONLY(double elapsed_secs = double(end - start) / CLOCKS_PER_SEC;)
+            LOG_DEBUG_ONLY(log_debug("Send Thread:", elapsed_secs);)
           }
-
-    		  }//Sleep(10);
         }
-
       }
     }
 

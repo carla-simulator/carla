@@ -187,7 +187,12 @@ FPathFollowingRequestResult AWalkerAIController::MoveTo(
       const FAIMoveRequest& MoveRequest,
       FNavPathSharedPtr* OutPath)
 {
-  LOG_AI_WALKER(Log, "requested to move");
+#ifdef CARLA_AI_WALKERS_EXTRA_LOG
+  UE_LOG(LogCarla, Log, TEXT("Walker %s requested move from (%s) to (%s)"),
+      *GetPawn()->GetName(),
+      *GetPawn()->GetActorLocation().ToString(),
+      *MoveRequest.GetGoalLocation().ToString());
+#endif // CARLA_AI_WALKERS_EXTRA_LOG
   Status = EWalkerStatus::Moving;
   return Super::MoveTo(MoveRequest, OutPath);
 }
@@ -197,7 +202,11 @@ void AWalkerAIController::OnMoveCompleted(
     const FPathFollowingResult &Result)
 {
   Super::OnMoveCompleted(RequestID, Result);
-  LOG_AI_WALKER(Log, "completed move");
+#ifdef CARLA_AI_WALKERS_EXTRA_LOG
+  UE_LOG(LogCarla, Log, TEXT("Walker %s completed move at (%s)"),
+      *GetPawn()->GetName(),
+      *GetPawn()->GetActorLocation().ToString());
+#endif // CARLA_AI_WALKERS_EXTRA_LOG
   Status = EWalkerStatus::MoveCompleted;
 }
 

@@ -162,7 +162,9 @@ void AWalkerSpawnerBase::SetNumberOfWalkers(const int32 Count)
 const AWalkerSpawnPointBase &AWalkerSpawnerBase::GetRandomSpawnPoint()
 {
   check(SpawnPoints.Num() > 0);
-  return *GetRandomEngine()->PickOne(SpawnPoints);
+  const auto *SpawnPoint = GetRandomEngine()->PickOne(SpawnPoints);
+  check(SpawnPoint != nullptr);
+  return *SpawnPoint;
 }
 
 bool AWalkerSpawnerBase::TryGetValidDestination(const FVector &Origin, FVector &Destination)

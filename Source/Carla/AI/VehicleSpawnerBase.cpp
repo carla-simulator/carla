@@ -43,10 +43,10 @@ void AVehicleSpawnerBase::BeginPlay()
       TryToSpawnRandomVehicle();
       ++NumberOfAttempts;
     }
-  }
 
-  if (NumberOfVehicles > Vehicles.Num()) {
-    UE_LOG(LogCarla, Error, TEXT("Requested %d vehicles, but we were only able to spawn %d"), NumberOfVehicles, Vehicles.Num());
+    if (NumberOfVehicles > Vehicles.Num()) {
+      UE_LOG(LogCarla, Error, TEXT("Requested %d vehicles, but we were only able to spawn %d"), NumberOfVehicles, Vehicles.Num());
+    }
   }
 }
 

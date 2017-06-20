@@ -11,6 +11,22 @@
 // Choose here the log level.
 #define LOG_LEVEL LOG_LEVEL_ERROR
 
+// The following log functions are available, they are only active if LOG_LEVEL
+// is greater equal the function's log level.
+//
+//  * log_debug
+//  * log_info
+//  * log_error
+//  * log_critical
+//
+// And macros
+//
+//  * LOG_DEBUG_ONLY(/* code here */)
+//  * LOG_INFO_ONLY(/* code here */)
+
+// =============================================================================
+// -- Implementation of log functions ------------------------------------------
+// =============================================================================
 
 #include <iostream>
 
@@ -20,7 +36,7 @@ namespace detail {
 
   // https://stackoverflow.com/a/27375675
   template <typename Arg, typename ... Args>
-  void print_args(std::ostream &out, Arg &&arg, Args &&... args) {
+  static void print_args(std::ostream &out, Arg &&arg, Args &&... args) {
     out << std::forward<Arg>(arg);
     using expander = int[];
     (void)expander{0, (void(out << ' ' << std::forward<Args>(args)),0)...};
@@ -85,3 +101,19 @@ namespace detail {
 #endif
 
 } // namespace carla
+
+// =============================================================================
+// -- Implementation of macros -------------------------------------------------
+// =============================================================================
+
+#if LOG_LEVEL <= LOG_LEVEL_DEBUG
+#  define LOG_DEBUG_ONLY(code) code
+#else
+#  define LOG_DEBUG_ONLY(code)
+#endif
+
+#if LOG_LEVEL <= LOG_LEVEL_INFO
+#  define LOG_INFO_ONLY(code) code
+#else
+#  define LOG_INFO_ONLY(code)
+#endif
