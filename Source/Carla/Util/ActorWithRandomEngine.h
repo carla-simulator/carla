@@ -25,7 +25,7 @@ protected:
   virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif // WITH_EDITOR
 
-protected:
+public:
 
   UFUNCTION(BlueprintCallable)
   URandomEngine *GetRandomEngine()

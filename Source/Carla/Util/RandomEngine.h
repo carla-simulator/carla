@@ -6,7 +6,7 @@
 
 #include "RandomEngine.generated.h"
 
-UCLASS()
+UCLASS(Blueprintable,BlueprintType)
 class URandomEngine : public UObject
 {
   GENERATED_BODY()

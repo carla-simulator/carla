@@ -116,6 +116,7 @@ void ACarlaGameModeBase::BeginPlay()
   // Setup other vehicles.
   if (VehicleSpawner != nullptr) {
     VehicleSpawner->SetNumberOfVehicles(CarlaSettings.NumberOfVehicles);
+    VehicleSpawner->SetSeed(CarlaSettings.SeedVehicles);
   } else {
     UE_LOG(LogCarla, Error, TEXT("Missing vehicle spawner actor!"));
   }
@@ -123,6 +124,7 @@ void ACarlaGameModeBase::BeginPlay()
   // Setup walkers.
   if (WalkerSpawner != nullptr) {
     WalkerSpawner->SetNumberOfWalkers(CarlaSettings.NumberOfPedestrians);
+    WalkerSpawner->SetSeed(CarlaSettings.SeedPedestrians);
   } else {
     UE_LOG(LogCarla, Error, TEXT("Missing walker spawner actor!"));
   }
