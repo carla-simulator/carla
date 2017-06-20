@@ -7,5 +7,5 @@ public:
 
   NonCopyable(const NonCopyable &) = delete;
 
-  void operator=(const NonCopyable &x) = delete;
+  void operator=(const NonCopyable &) = delete;
 };

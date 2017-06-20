@@ -1,3 +1,9 @@
+## CARLA 0.4.4
+
+  * Fixed regression walkers despawning when stopping after seeing a car
+  * Changed, collision is only registered if player moves faster than 1 km/h
+  * Fixed issue walkers resume movement after sensing nothing, but the car is still there sometimes
+
 ## CARLA 0.4.3
 
   * Fixed issue with reward, intersect other lane wasn't sent to the client

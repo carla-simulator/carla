@@ -3,8 +3,8 @@
 #pragma once
 
 #include "GraphTypes.h"
-#include "ListView.h"
 #include "Position.h"
+#include "Util/ListView.h"
 
 #include <array>
 #include <list>
