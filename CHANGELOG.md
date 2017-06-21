@@ -1,3 +1,7 @@
+## CARLA 0.4.6
+
+  * Add weather presets specific for each level
+
 ## CARLA 0.4.5
 
   * Add random seeds to config file
