@@ -46,8 +46,27 @@ void ACarlaGameModeBase::InitGame(
       TEXT("GameInstance is not a UCarlaGameInstance, did you forget to set it in the project settings?"));
   GameInstance->InitializeGameControllerIfNotPresent(MockGameControllerSettings);
   GameController = &GameInstance->GetGameController();
-  GameController->Initialize(GameInstance->GetCarlaSettings());
-  GameInstance->GetCarlaSettings().LogSettings();
+
+  { // Load weather descriptions and initialize game controller.
+    auto &CarlaSettings = GameInstance->GetCarlaSettings();
+#if WITH_EDITOR
+    {
+      // Hack to be able to test level-specific weather descriptions in editor.
+      // When playing in editor the map name gets an extra prefix, here we
+      // remove it.
+      FString CorrectedMapName = MapName;
+      constexpr auto PIEPrefix = TEXT("UEDPIE_0_");
+      CorrectedMapName.RemoveFromStart(PIEPrefix);
+      UE_LOG(LogCarla, Log, TEXT("Corrected map name from %s to %s"), *MapName, *CorrectedMapName);
+      CarlaSettings.LoadWeatherDescriptions(CorrectedMapName);
+    }
+#else
+    CarlaSettings.LoadWeatherDescriptions(MapName);
+#endif // WITH_EDITOR
+    GameController->Initialize(CarlaSettings);
+    CarlaSettings.ValidateWeatherId();
+    CarlaSettings.LogSettings();
+  }
 
   if (TaggerDelegate != nullptr) {
     TaggerDelegate->RegisterSpawnHandler(GetWorld());

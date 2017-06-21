@@ -15,8 +15,18 @@ class CARLA_API ADynamicWeather : public AActor
 
 public:
 
-  /// If none is found, the default one is added.
-  static void LoadWeatherDescriptionsFromFile(TArray<FWeatherDescription> &Descriptions);
+  /// Load weather descriptions from config file.
+  ///
+  /// Settings are loaded in order from the following file list, with values
+  /// later in the list overriding earlier values
+  ///
+  ///  * Config/CarlaWeather.ini
+  ///  * Config/<MapName>.CarlaWeather.ini
+  ///
+  /// If no description is found, the default one is added.
+  static void LoadWeatherDescriptionsFromFile(
+      const FString &MapName,
+      TArray<FWeatherDescription> &Descriptions);
 
   ADynamicWeather(const FObjectInitializer& ObjectInitializer);
 
@@ -81,6 +91,10 @@ private:
   /** Save current settings to disk. */
   UPROPERTY(Category = "Weather Description", EditAnywhere)
   bool bSaveToConfigFile = false;
+
+  /** Name of the file to load and save. File must exist in Config folder. */
+  UPROPERTY(Category = "Weather Description", EditAnywhere)
+  FString FileName;
 
 #endif // WITH_EDITORONLY_DATA
 

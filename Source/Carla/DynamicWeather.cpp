@@ -7,12 +7,20 @@
 
 #include "Components/ArrowComponent.h"
 
-static bool GetWeatherIniFileName(FString &FileName)
+static FString GetIniFileName(const FString &MapName = TEXT(""))
 {
-  FileName = FPaths::Combine(FPaths::GameConfigDir(), TEXT("CarlaWeather.ini"));
-  const bool bFileExists = FPaths::FileExists(FileName);
+  const FString BaseName = TEXT("CarlaWeather");
+  constexpr auto Sep = TEXT(".");
+  constexpr auto Ext = TEXT(".ini");
+  return (MapName.IsEmpty() ? (BaseName + Ext) : (BaseName + Sep + MapName + Ext));
+}
+
+static bool GetWeatherIniFilePath(const FString &FileName, FString &FilePath)
+{
+  FilePath = FPaths::Combine(FPaths::GameConfigDir(), FileName);
+  const bool bFileExists = FPaths::FileExists(FilePath);
   if (!bFileExists) {
-    UE_LOG(LogCarla, Error, TEXT("\"%s\" no such file"), *FileName);
+    UE_LOG(LogCarla, Warning, TEXT("\"%s\" not found"), *FilePath);
   }
   return bFileExists;
 }
@@ -26,12 +34,23 @@ static bool CheckWeatherValidity(const FWeatherDescription &Weather)
   return true;
 }
 
-void ADynamicWeather::LoadWeatherDescriptionsFromFile(TArray<FWeatherDescription> &Descriptions)
+void ADynamicWeather::LoadWeatherDescriptionsFromFile(
+    const FString &MapName,
+    TArray<FWeatherDescription> &Descriptions)
 {
   // Try to load config file.
-  FString FileName;
-  if (GetWeatherIniFileName(FileName)) {
-    IniFile ConfigFile(FileName);
+  FString DefaultFilePath;
+  if (GetWeatherIniFilePath(GetIniFileName(), DefaultFilePath)) {
+    UE_LOG(LogCarla, Log, TEXT("Loading weather description from %s"), *DefaultFilePath);
+    IniFile ConfigFile(DefaultFilePath);
+
+    { // Override map specific presets.
+      FString MapOverridesFilePath;
+      if (GetWeatherIniFilePath(GetIniFileName(MapName), MapOverridesFilePath)) {
+        UE_LOG(LogCarla, Log, TEXT("Loading weather description from %s"), *MapOverridesFilePath);
+        ConfigFile.Combine(MapOverridesFilePath);
+      }
+    }
 
     // For every section in the config file add a weather description.
     for (auto &Item : ConfigFile.GetFConfigFile()) {
@@ -48,7 +67,9 @@ void ADynamicWeather::LoadWeatherDescriptionsFromFile(TArray<FWeatherDescription
   }
 }
 
-ADynamicWeather::ADynamicWeather(const FObjectInitializer& ObjectInitializer)
+ADynamicWeather::ADynamicWeather(const FObjectInitializer& ObjectInitializer) :
+  Super(ObjectInitializer),
+  FileName(GetIniFileName())
 {
   PrimaryActorTick.bCanEverTick = false;
 
@@ -161,9 +182,9 @@ void ADynamicWeather::Update()
 
 bool ADynamicWeather::LoadFromConfigFile()
 {
-  FString FileName;
-  if (GetWeatherIniFileName(FileName) && CheckWeatherValidity(Weather)) {
-    IniFile ConfigFile(FileName);
+  FString FilePath;
+  if (GetWeatherIniFilePath(FileName, FilePath) && CheckWeatherValidity(Weather)) {
+    IniFile ConfigFile(FilePath);
     if (!ConfigFile.HasSection(Weather.Name)) {
       UE_LOG(LogCarla, Error, TEXT("Weather \"%s\" is not present in config file"), *Weather.Name);
       return false;
@@ -177,11 +198,11 @@ bool ADynamicWeather::LoadFromConfigFile()
 
 bool ADynamicWeather::SaveToConfigFile() const
 {
-  FString FileName;
-  if (GetWeatherIniFileName(FileName) && CheckWeatherValidity(Weather)) {
-    IniFile ConfigFile(FileName);
+  FString FilePath;
+  if (GetWeatherIniFilePath(FileName, FilePath) && CheckWeatherValidity(Weather)) {
+    IniFile ConfigFile(FilePath);
     Weather.WriteToConfigFile(ConfigFile);
-    return ConfigFile.Write(FileName);
+    return ConfigFile.Write(FilePath);
   } else {
     return false;
   }

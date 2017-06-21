@@ -95,13 +95,6 @@ static void LoadSettingsFromConfig(
   ConfigFile.GetInt(S_CARLA_LEVELSETTINGS, TEXT("WeatherId"), Settings.WeatherId);
   ConfigFile.GetInt(S_CARLA_LEVELSETTINGS, TEXT("SeedVehicles"), Settings.SeedVehicles);
   ConfigFile.GetInt(S_CARLA_LEVELSETTINGS, TEXT("SeedPedestrians"), Settings.SeedPedestrians);
-  Settings.WeatherDescriptions.Empty();
-  ADynamicWeather::LoadWeatherDescriptionsFromFile(Settings.WeatherDescriptions);
-  check(Settings.WeatherDescriptions.Num() > 0);
-  if (Settings.WeatherId >= Settings.WeatherDescriptions.Num()) {
-    UE_LOG(LogCarla, Error, TEXT("Provided weather id %d cannot be found"), Settings.WeatherId);
-    Settings.WeatherId = -1;
-  }
   // SceneCapture.
   FString Cameras;
   ConfigFile.GetString(S_CARLA_SCENECAPTURE, TEXT("Cameras"), Cameras);
@@ -177,6 +170,21 @@ void UCarlaSettings::LoadSettingsFromString(const FString &INIFileContents)
   constexpr bool bLoadCarlaServerSection = false;
   LoadSettingsFromConfig(ConfigFile, *this, bLoadCarlaServerSection);
   CurrentFileName = TEXT("<string-provided-by-client>");
+}
+
+void UCarlaSettings::LoadWeatherDescriptions(const FString &MapName)
+{
+  WeatherDescriptions.Empty();
+  ADynamicWeather::LoadWeatherDescriptionsFromFile(MapName, WeatherDescriptions);
+  check(WeatherDescriptions.Num() > 0);
+}
+
+void UCarlaSettings::ValidateWeatherId()
+{
+  if (WeatherId >= WeatherDescriptions.Num()) {
+    UE_LOG(LogCarla, Error, TEXT("Provided weather id %d cannot be found"), WeatherId);
+    WeatherId = -1;
+  }
 }
 
 void UCarlaSettings::LogSettings() const

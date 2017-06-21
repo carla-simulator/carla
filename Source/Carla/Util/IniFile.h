@@ -43,6 +43,11 @@ public:
   // ===========================================================================
   /// @{
 
+  bool Combine(const FString &FileName)
+  {
+    return ConfigFile.Combine(FileName);
+  }
+
   void ProcessInputFileContents(const FString &INIFileContents)
   {
     ConfigFile.ProcessInputFileContents(INIFileContents);

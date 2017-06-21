@@ -22,6 +22,12 @@ public:
   /** Load the settings from the given string (formatted as INI). CarlaServer section is ignored. */
   void LoadSettingsFromString(const FString &INIFileContents);
 
+  /** Load weather description from config files. (There may be overrides for each map). */
+  void LoadWeatherDescriptions(const FString &MapName);
+
+  /** Check if requested weather id is present in WeatherDescriptions. */
+  void ValidateWeatherId();
+
   /** Log settings values. */
   void LogSettings() const;
 
