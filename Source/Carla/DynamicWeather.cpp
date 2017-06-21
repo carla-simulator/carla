@@ -68,8 +68,10 @@ void ADynamicWeather::LoadWeatherDescriptionsFromFile(
 }
 
 ADynamicWeather::ADynamicWeather(const FObjectInitializer& ObjectInitializer) :
-  Super(ObjectInitializer),
-  FileName(GetIniFileName())
+  Super(ObjectInitializer)
+#if WITH_EDITORONLY_DATA
+  , FileName(GetIniFileName())
+#endif // WITH_EDITORONLY_DATA
 {
   PrimaryActorTick.bCanEverTick = false;
 
