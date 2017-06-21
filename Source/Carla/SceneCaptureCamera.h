@@ -4,7 +4,7 @@
 
 #include "GameFramework/Actor.h"
 #include "StaticMeshResources.h"
-#include "Game/CameraDescription.h"
+#include "Settings/CameraDescription.h"
 #include "SceneCaptureCamera.generated.h"
 
 class UDrawFrustumComponent;

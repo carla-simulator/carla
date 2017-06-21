@@ -3,7 +3,7 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
-#include "WeatherDescription.h"
+#include "Settings/WeatherDescription.h"
 #include "DynamicWeather.generated.h"
 
 class UArrowComponent;

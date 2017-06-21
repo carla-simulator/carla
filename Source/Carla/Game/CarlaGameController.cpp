@@ -6,9 +6,9 @@
 #include "GameFramework/PlayerStart.h"
 
 #include "CarlaPlayerState.h"
-#include "CarlaSettings.h"
 #include "CarlaVehicleController.h"
 #include "SceneCaptureCamera.h"
+#include "Settings/CarlaSettings.h"
 
 #include <carla/CarlaServer.h>
 

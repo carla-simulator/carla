@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "PostProcessEffect.h"
+#include "Settings/PostProcessEffect.h"
 #include "CapturedImage.generated.h"
 
 /// Bitmap and meta info of a scene capture.

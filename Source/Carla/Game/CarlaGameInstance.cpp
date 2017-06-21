@@ -4,8 +4,8 @@
 #include "CarlaGameInstance.h"
 
 #include "CarlaGameController.h"
-#include "CarlaSettings.h"
 #include "MockGameController.h"
+#include "Settings/CarlaSettings.h"
 
 UCarlaGameInstance::UCarlaGameInstance() {
   CarlaSettings = CreateDefaultSubobject<UCarlaSettings>(TEXT("CarlaSettings"));

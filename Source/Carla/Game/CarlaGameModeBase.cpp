@@ -11,8 +11,8 @@
 #include "CarlaGameState.h"
 #include "CarlaHUD.h"
 #include "CarlaPlayerState.h"
-#include "CarlaSettings.h"
 #include "CarlaVehicleController.h"
+#include "Settings/CarlaSettings.h"
 #include "Tagger.h"
 #include "TaggerDelegate.h"
 

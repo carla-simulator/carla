@@ -1,10 +1,11 @@
 // CARLA, Copyright (C) 2017 Computer Vision Center (CVC)
 
 #include "Carla.h"
-#include "CarlaSettings.h"
 
 #include "CommandLine.h"
+
 #include "DynamicWeather.h"
+#include "Settings/CarlaSettings.h"
 #include "Util/IniFile.h"
 
 // INI file sections.
