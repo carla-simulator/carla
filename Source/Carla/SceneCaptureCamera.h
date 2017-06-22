@@ -66,13 +66,13 @@ private:
   /// SceneCaptureComponent2D settings.
   void UpdateDrawFrustum();
 
-  UPROPERTY(Category = SceneCapture, EditAnywhere)
+  UPROPERTY(Category = "Scene Capture", EditAnywhere)
   uint32 SizeX;
 
-  UPROPERTY(Category = SceneCapture, EditAnywhere)
+  UPROPERTY(Category = "Scene Capture", EditAnywhere)
   uint32 SizeY;
 
-  UPROPERTY(Category = SceneCapture, EditAnywhere)
+  UPROPERTY(Category = "Scene Capture", EditAnywhere)
   EPostProcessEffect PostProcessEffect;
 
   /** To display the 3d camera in the editor. */
