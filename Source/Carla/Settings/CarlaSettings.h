@@ -84,6 +84,10 @@ public:
   /// @{
 public:
 
+  /** Path to the pawn class of the player. */
+  UPROPERTY(Category = "Level Settings", VisibleAnywhere)
+  FString PlayerVehicle;
+
   /** Number of NPC vehicles to be spawned into the level. */
   UPROPERTY(Category = "Level Settings", VisibleAnywhere)
   uint32 NumberOfVehicles = 5u;

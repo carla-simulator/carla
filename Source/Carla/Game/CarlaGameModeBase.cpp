@@ -3,6 +3,7 @@
 #include "Carla.h"
 #include "CarlaGameModeBase.h"
 
+#include "ConstructorHelpers.h"
 #include "Engine/PlayerStartPIE.h"
 #include "EngineUtils.h"
 #include "GameFramework/PlayerStart.h"
@@ -44,11 +45,12 @@ void ACarlaGameModeBase::InitGame(
   checkf(
       GameInstance != nullptr,
       TEXT("GameInstance is not a UCarlaGameInstance, did you forget to set it in the project settings?"));
+
   GameInstance->InitializeGameControllerIfNotPresent(MockGameControllerSettings);
   GameController = &GameInstance->GetGameController();
+  auto &CarlaSettings = GameInstance->GetCarlaSettings();
 
   { // Load weather descriptions and initialize game controller.
-    auto &CarlaSettings = GameInstance->GetCarlaSettings();
 #if WITH_EDITOR
     {
       // Hack to be able to test level-specific weather descriptions in editor.
@@ -66,6 +68,16 @@ void ACarlaGameModeBase::InitGame(
     GameController->Initialize(CarlaSettings);
     CarlaSettings.ValidateWeatherId();
     CarlaSettings.LogSettings();
+  }
+
+  // Set default pawn class.
+  if (!CarlaSettings.PlayerVehicle.IsEmpty()) {
+    auto Class = FindObject<UClass>(ANY_PACKAGE, *CarlaSettings.PlayerVehicle);
+    if (Class) {
+      DefaultPawnClass = Class;
+    } else {
+      UE_LOG(LogCarla, Error, TEXT("Failed to load player pawn class \"%s\""), *CarlaSettings.PlayerVehicle)
+    }
   }
 
   if (TaggerDelegate != nullptr) {
