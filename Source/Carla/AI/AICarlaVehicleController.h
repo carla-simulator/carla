@@ -4,7 +4,6 @@
 
 #include "GameFramework/PlayerController.h"
 #include "AICarlaVehicleController.generated.h"
-//#include "TrafficLight.h"
 
 class UBoxComponent;
 class USphereComponent;
@@ -17,120 +16,150 @@ class UWheeledVehicleMovementComponent;
 UCLASS()
 class CARLA_API AAICarlaVehicleController : public APlayerController
 {
-	GENERATED_BODY()
+  GENERATED_BODY()
 
-	// ===========================================================================
-  	/// @name Constructor and destructor
-  	// ===========================================================================
-  	/// @{
+  // ===========================================================================
+  /// @name Constructor and destructor
+  // ===========================================================================
+  /// @{
+
 public:
 
-  	AAICarlaVehicleController();
+  AAICarlaVehicleController();
 
-  	~AAICarlaVehicleController();
+  ~AAICarlaVehicleController();
 
-	/// @}
-  	// ===========================================================================
-  	/// @name APlayerController overrides
-  	// ===========================================================================
-  	/// @{
+  /// @}
+  // ===========================================================================
+  /// @name APlayerController overrides
+  // ===========================================================================
+  /// @{
+
 public:
 
-  	virtual void SetupInputComponent() override;
+  virtual void SetupInputComponent() override;
 
-  	virtual void Possess(APawn *aPawn) override;
+  virtual void Possess(APawn *aPawn) override;
 
-  	virtual void BeginPlay() override;
+  virtual void BeginPlay() override;
 
-  	virtual void Tick(float DeltaTime) override;
+  virtual void Tick(float DeltaTime) override;
 
-  	/// @}
-  	// ===========================================================================
-  	/// @name Vehicle pawn info
-  	// ===========================================================================
-  	/// @{
+  /// @}
+  // ===========================================================================
+  /// @name Vehicle pawn info
+  // ===========================================================================
+  /// @{
+
 public:
 
-  	bool IsPossessingAVehicle() const
-  	{
-  	  return MovementComponent != nullptr;
-  	}
+  bool IsPossessingAVehicle() const {
+    return MovementComponent != nullptr;
+  }
 
-  	/// World location of the vehicle.
-  	FVector GetVehicleLocation() const;
+  /// World location of the vehicle.
+  FVector GetVehicleLocation() const;
 
-  	/// Speed forward in km/h. Might be negative if goes backwards.
-  	float GetVehicleForwardSpeed() const;
+  /// Speed forward in km/h. Might be negative if goes backwards.
+  float GetVehicleForwardSpeed() const;
 
-  	/// Orientation vector of the vehicle, pointing forward.
-  	FVector GetVehicleOrientation() const;
+  /// Orientation vector of the vehicle, pointing forward.
+  FVector GetVehicleOrientation() const;
 
-  	int32 GetVehicleCurrentGear() const;
-
-private:
-    void InitVehilceValues();
-
-  	/// @}
-  	// ===========================================================================
-  	/// @name Vehicle movement
-  	// ===========================================================================
-  	/// @{
-public:
-
-  	void SetThrottleInput(float Value);
-
-  	void SetSteeringInput(float Value);
-
-  	void SetHandbrakeInput(bool Value);
+  int32 GetVehicleCurrentGear() const;
 
 private:
 
-    bool RayTrace( UWorld *World, const FVector &Start, const FVector &End, bool &Stop); 
+  void InitVehilceValues();
 
-    /// @}
-    // ===========================================================================
-    /// @name Blueprint functions
-    // ===========================================================================
-    /// @{
+  /// @}
+  // ===========================================================================
+  /// @name Vehicle movement
+  // ===========================================================================
+  /// @{
+
 public:
 
-    UFUNCTION(BlueprintCallable, Category="Trigger")
-    void RedTrafficLight(bool state);
+  void SetThrottleInput(float Value);
 
-    UFUNCTION(BlueprintCallable, Category="Trigger")
-    void NewSpeedLimit(float speed);
+  void SetSteeringInput(float Value);
 
-    UFUNCTION(BlueprintCallable, Category="Trigger")
-    void NewRoute(TArray<FVector> positions);
+  void SetHandbrakeInput(bool Value);
 
+  private:
+
+  bool RayTrace( UWorld *World, const FVector &Start, const FVector &End, bool &Stop);
+
+  /// @}
+  // ===========================================================================
+  /// @name Blueprint functions
+  // ===========================================================================
+  /// @{
+
+public:
+
+  UFUNCTION(BlueprintCallable, Category = "Trigger")
+  void RedTrafficLight(bool state);
+
+  UFUNCTION(BlueprintCallable, Category = "Trigger")
+  void NewSpeedLimit(float speed);
+
+  UFUNCTION(BlueprintCallable, Category = "Trigger")
+  void NewRoute(TArray<FVector> positions);
+
+  /// @}
+  // ===========================================================================
+  /// @name Random engine
+  // ===========================================================================
+  /// @{
+
+public:
+
+  void SetRandomEngine(URandomEngine *InRandomEngine) {
+    RandomEngine = InRandomEngine;
+  }
+
+  UFUNCTION(BlueprintCallable, Category = "Random Engine")
+  URandomEngine * GetRandomEngine() {
+    return RandomEngine;
+  }
+
+  /// @}
 
 private:
+
   float CalcStreeringValue(FVector &direction);
+
   float GoTo(FVector objective, FVector &direction);
+
   float Stop(float speed);
+
   float Move(float speed);
 
   bool DoTrace();
 
-private:
-
-	UPROPERTY()
-  	UBoxComponent *VehicleBounds;
+  private:
 
   UPROPERTY()
-    USphereComponent* VehicleRightControl;
+  UBoxComponent * VehicleBounds;
 
   UPROPERTY()
-    USphereComponent* VehicleLeftControl;
+  USphereComponent * VehicleRightControl;
 
   UPROPERTY()
-    AActor *forwardTrigger;
-
-	UPROPERTY()
-  URoadMap *RoadMap;
+  USphereComponent * VehicleLeftControl;
 
   UPROPERTY()
-  	UWheeledVehicleMovementComponent *MovementComponent;
+  AActor * forwardTrigger;
+
+  UPROPERTY()
+  URoadMap * RoadMap;
+
+  UPROPERTY()
+  UWheeledVehicleMovementComponent * MovementComponent;
+
+  UPROPERTY()
+  URandomEngine * RandomEngine;
 
   UPROPERTY(EditAnywhere)
   float MAX_SPEED = 30.0f;

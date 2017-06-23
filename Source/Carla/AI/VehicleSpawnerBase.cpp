@@ -84,8 +84,9 @@ void AVehicleSpawnerBase::SpawnVehicleAtSpawnPoint(
     Vehicle->SpawnDefaultController();
     auto Controller = GetVehicleController(Vehicle);
     if (Controller != nullptr) { // Sometimes fails...
+      Controller->SetRandomEngine(GetRandomEngine());
       Vehicles.Add(Vehicle);
-      } else {
+    } else {
       UE_LOG(LogCarla, Error, TEXT("Something went wrong creating the controller for the new vehicle"));
       Vehicle->Destroy();
     }
