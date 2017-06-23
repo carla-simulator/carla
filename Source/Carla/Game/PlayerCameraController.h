@@ -27,6 +27,15 @@ public:
 
   /// @}
   // ===========================================================================
+  /// @name AActor overrides
+  // ===========================================================================
+  /// @{
+public:
+
+  virtual void BeginPlay() override;
+
+  /// @}
+  // ===========================================================================
   /// @name APlayerController overrides
   // ===========================================================================
   /// @{
@@ -51,15 +60,28 @@ private:
 
   void ChangeCameraRight(float Value);
 
+  void EnableOnBoardCamera(bool bEnable = true, bool bForce = false);
+
+  void ToggleCamera()
+  {
+    EnableOnBoardCamera(!bOnBoardCameraIsActive);
+  }
+
   /// @}
   // ===========================================================================
   // -- Member variables -------------------------------------------------------
   // ===========================================================================
 private:
 
-  UPROPERTY()
+  UPROPERTY(EditAnywhere)
   USpringArmComponent *SpringArm;
 
-  UPROPERTY()
+  UPROPERTY(EditAnywhere)
   UCameraComponent *PlayerCamera;
+
+  UPROPERTY(EditAnywhere)
+  UCameraComponent *OnBoardCamera;
+
+  UPROPERTY()
+  bool bOnBoardCameraIsActive = false;
 };
