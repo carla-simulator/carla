@@ -62,6 +62,22 @@ static FText GetHUDText(const ACarlaPlayerState &Vehicle)
   Args.Add("IntersectionOtherLane", RoundedFloatAsText(100.0f * Vehicle.GetOtherLaneIntersectionFactor()));
   Args.Add("IntersectionOffRoad", RoundedFloatAsText(100.0f * Vehicle.GetOffRoadIntersectionFactor()));
   return FText::Format(
+#ifdef CARLA_CINEMATIC_MODE
+      LOCTEXT("HUDTextFormat",
+          "Speed:         {Speed} km/h\n"
+          "Gear:          {Gear}\n"
+          "\n"
+          "Location:      {Location}\n"
+          "Orientation:   {Orientation}\n"
+          "Acceleration:  {Acceleration}\n"
+          "\n"
+          "Collision (Cars):       {CollisionCars}\n"
+          "Collision (Pedestrian): {CollisionPedestrians}\n"
+          "Collision (Other):      {CollisionOther}\n"
+          "\n"
+          "Intersection (Lane):    {IntersectionOtherLane}%\n"
+          "Intersection (OffRoad): {IntersectionOffRoad}%")
+#else
       LOCTEXT("HUDTextFormat",
           "FPS: {FPS}\n"
           "\n"
@@ -69,20 +85,26 @@ static FText GetHUDText(const ACarlaPlayerState &Vehicle)
           "Gear:          {Gear}\n"
           "\n"
           "Location:      {Location}\n"
-          "Acceleration:  {Acceleration}\n"
           "Orientation:   {Orientation}\n"
+          "Acceleration:  {Acceleration}\n"
           "\n"
           "Collision (Cars):       {CollisionCars}\n"
           "Collision (Pedestrian): {CollisionPedestrians}\n"
           "Collision (Other):      {CollisionOther}\n"
           "\n"
           "Intersection (Lane):    {IntersectionOtherLane}%\n"
-          "Intersection (OffRoad): {IntersectionOffRoad}%"
-      ),
+          "Intersection (OffRoad): {IntersectionOffRoad}%")
+#endif // CARLA_CINEMATIC_MODE
+      ,
       Args);
 }
 
-ACarlaHUD::ACarlaHUD()
+ACarlaHUD::ACarlaHUD() :
+#ifdef CARLA_CINEMATIC_MODE
+  bIsVisible(false)
+#else
+  bIsVisible(true)
+#endif // CARLA_CINEMATIC_MODE
 {
   static ConstructorHelpers::FObjectFinder<UFont> Font(TEXT("/Engine/EngineFonts/DroidSansMono"));
   HUDFont = Font.Object;
@@ -111,16 +133,6 @@ void ACarlaHUD::DrawHUD()
     HUDTextItem.Scale = ScaleVec;
     Canvas->DrawItem(HUDTextItem);
   }
-}
-
-void ACarlaHUD::ToggleHUDView()
-{
-  SetVisible(!bIsVisible);
-}
-
-void ACarlaHUD::SetVisible(bool IsVisible)
-{
-  bIsVisible = IsVisible;
 }
 
 #undef LOCTEXT_NAMESPACE

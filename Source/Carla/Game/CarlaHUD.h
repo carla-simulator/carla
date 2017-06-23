@@ -21,18 +21,25 @@ public:
 
   virtual void DrawHUD() override;
 
+  UFUNCTION(BlueprintCallable)
   bool IsVisible() const
   {
     return bIsVisible;
   }
 
-  UFUNCTION()
-  void ToggleHUDView();
+  UFUNCTION(BlueprintCallable)
+  void SetVisible(bool bInIsVisible)
+  {
+    bIsVisible = bInIsVisible;
+  }
 
-  UFUNCTION()
-  void SetVisible(bool IsVisible);
+  UFUNCTION(BlueprintCallable)
+  void ToggleHUDView()
+  {
+    SetVisible(!bIsVisible);
+  }
 
 private:
 
-  bool bIsVisible = true;
+  bool bIsVisible;
 };
