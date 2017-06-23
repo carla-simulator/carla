@@ -14,11 +14,15 @@ struct FMockGameControllerSettings
     * Has precedence over options in "Override CARLA Settings".
     */
   UPROPERTY(EditAnywhere, Category = "Mock CARLA Controller")
-  bool bChangeWeatherOnBeginPlay = true;
+  bool bChangeWeatherOnBeginPlay = false;
 
   /** If true, a random player start position will be chosen every time we start the level. */
   UPROPERTY(EditAnywhere, Category = "Mock CARLA Controller")
-  bool bRandomPlayerStart = true;
+  bool bRandomPlayerStart = false;
+
+  /** Index of the player start position. */
+  UPROPERTY(EditAnywhere, Category = "Mock CARLA Controller", meta = (EditCondition = "!bRandomPlayerStart", ClampMin = 0))
+  int32 PlayerStartIndex = 0;
 
   /** If true, semantic segmentation will be always enabled even if no camera needs it. */
   UPROPERTY(EditAnywhere, Category = "Mock CARLA Controller")

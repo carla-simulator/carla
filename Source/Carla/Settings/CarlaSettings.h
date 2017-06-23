@@ -45,6 +45,9 @@ public:
       bool &bWeatherWasChanged,
       FWeatherDescription &WeatherDescription) const;
 
+  UFUNCTION(BlueprintCallable)
+  const FWeatherDescription &GetWeatherDescriptionByIndex(int32 Index);
+
 private:
 
   void LoadSettingsFromFile(const FString &FilePath, bool bLogOnFailure);

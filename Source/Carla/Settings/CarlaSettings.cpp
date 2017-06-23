@@ -3,6 +3,7 @@
 #include "Carla.h"
 
 #include "CommandLine.h"
+#include "UnrealMathUtility.h"
 
 #include "DynamicWeather.h"
 #include "Settings/CarlaSettings.h"
@@ -236,6 +237,13 @@ void UCarlaSettings::GetActiveWeatherDescription(
   } else {
     bWeatherWasChanged = false;
   }
+}
+
+const FWeatherDescription &UCarlaSettings::GetWeatherDescriptionByIndex(int32 Index)
+{
+  check(WeatherDescriptions.Num() > 0);
+  FMath::Clamp(Index, 0, WeatherDescriptions.Num());
+  return WeatherDescriptions[Index];
 }
 
 void UCarlaSettings::ResetCameraDescriptions()

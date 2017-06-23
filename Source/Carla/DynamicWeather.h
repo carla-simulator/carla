@@ -53,6 +53,13 @@ public:
     return Weather;
   }
 
+  UFUNCTION(BlueprintCallable)
+  void ActivateWeatherDescription(const FWeatherDescription &WeatherDescription)
+  {
+    SetWeatherDescription(WeatherDescription);
+    RefreshWeather();
+  }
+
   UFUNCTION(BlueprintImplementableEvent)
   void RefreshWeather();
 

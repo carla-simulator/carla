@@ -33,14 +33,10 @@ APlayerStart *MockGameController::ChoosePlayerStart(
     const TArray<APlayerStart *> &AvailableStartSpots)
 {
   check(AvailableStartSpots.Num() > 0);
-  uint32 Index;
-  if (Settings.bRandomPlayerStart) {
-    Index = FMath::RandRange(0, AvailableStartSpots.Num() - 1);
-  } else {
-    static uint32 StaticIndex = 0u;
-    Index = StaticIndex % AvailableStartSpots.Num();
-    ++StaticIndex;
-  }
+  const uint32 Index =
+      (Settings.bRandomPlayerStart ?
+          FMath::RandRange(0, AvailableStartSpots.Num() - 1) :
+          Settings.PlayerStartIndex % AvailableStartSpots.Num());
   UE_LOG(LogCarla, Log, TEXT("Spawning player at player start %d/%d"), Index, AvailableStartSpots.Num());
   return AvailableStartSpots[Index];
 }
