@@ -35,10 +35,12 @@ ACityMapGenerator::~ACityMapGenerator() {}
 
 void ACityMapGenerator::PreSave(const ITargetPlatform *TargetPlatform)
 {
+#if WITH_EDITOR
   if (bGenerateRoadMapOnSave) {
     check(RoadMap != nullptr);
     GenerateRoadMap();
   }
+#endif // WITH_EDITOR
 
   Super::PreSave(TargetPlatform);
 }
