@@ -47,7 +47,8 @@ $(PROTOBUF_SRC_DIR)/%.pb.cc: $(PROTOBUF_SRC_DIR)/%.proto
 	protoc -I=$(PROTOBUF_SRC_DIR) --cpp_out=$(PROTOBUF_SRC_DIR) $<
 
 clean:
-	rm -f $(PROTOBUF_SRC_DIR)/carla_protocol.pb.*
+	rm -f $(PROTOBUF_SRC_DIR)/carla_protocol.pb.h
+	rm -f $(PROTOBUF_SRC_DIR)/carla_protocol.pb.cc
 	rm -Rf build CMakeFiles
 
 clean-all: clean
