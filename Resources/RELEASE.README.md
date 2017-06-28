@@ -3,11 +3,11 @@ CARLA UE4
 
 To run the game with the second city
 
-    $ CarlaUE4.sh /Game/Maps/CARLA_ORIGIN_1
+    $ ./CarlaUE4.sh /Game/Maps/CARLA_ORIGIN_1
 
 To run the game at fixed time-step, e.g. 30 FPS
 
-    $ CarlaUE4.sh -benchmark -fps=30
+    $ ./CarlaUE4.sh -benchmark -fps=30
 
 Other CARLA related command-line options
 
