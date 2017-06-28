@@ -86,7 +86,7 @@ void AWalkerSpawnerBase::BeginPlay()
 
   GetRandomEngine()->Shuffle(BeginSpawnPoints);
 
-  if (bSpawnWalkers) {
+  if (bSpawnWalkers && bSpawnWalkersAtBeginPlay) {
     uint32 Count = 0u;
     for (auto i = 0; i < NumberOfWalkers; ++i) {
       if (TryToSpawnWalkerAt(*BeginSpawnPoints[i % BeginSpawnPoints.Num()])) {

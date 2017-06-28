@@ -78,9 +78,13 @@ private:
 
 private:
 
-  /** If false, no walker will be spawned. */
+  /** If false, no walker will be spawned at all. */
   UPROPERTY(Category = "Walker Spawner", EditAnywhere)
   bool bSpawnWalkers = true;
+
+  /** If false, no walker will be spawned at begin play. */
+  UPROPERTY(Category = "Walker Spawner", EditAnywhere, meta = (EditCondition = bSpawnWalkers))
+  bool bSpawnWalkersAtBeginPlay = true;
 
   /** Number of walkers to be present within the volume. */
   UPROPERTY(Category = "Walker Spawner", EditAnywhere, meta = (EditCondition = bSpawnWalkers, ClampMin = "1"))
