@@ -1,7 +1,7 @@
 CarlaServer
 ===========
 
-Library for socket communications.
+Library for asynchronous socket communications.
 
 Building
 --------
@@ -10,7 +10,7 @@ Building
 
 Install boost, protobuf, cmake and ninja.
 
-    $ sudo apt-get install libpng16-dev libprotobuf-dev protobuf-compiler libboost-all-dev cmake ninja-build
+    $ sudo apt-get install libprotobuf-dev protobuf-compiler libboost-all-dev cmake ninja-build
 
 **IMPORTANT:** Please define environment variable `UE4_ROOT` pointing to Unreal
 Engine's installation folder so we can link against the right version of libpng,
@@ -22,8 +22,7 @@ Run make in this folder
 
 #### Windows
 
-Note: PNG compression is not implemented on Windows, the server won't send any
-images.
+Note: PNG compression is not implemented on Windows.
 
 Compile and install [boost](http://www.boost.org/).
 

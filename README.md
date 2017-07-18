@@ -5,8 +5,8 @@ Plugin for Unreal Engine 4.
 
 See [CHANGELOG](CHANGELOG.md).
 
-Settings
---------
+Run-time settings
+-----------------
 
 See [Resources/Example.CarlaSettings.ini](Resources/Example.CarlaSettings.ini).
 
