@@ -4,7 +4,7 @@
 
 #include <memory>
 
-#include <carla/carla_server.h>
+#include "carla/server/CarlaServerAPI.h"
 
 namespace carla {
 namespace server {

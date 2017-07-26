@@ -163,7 +163,7 @@ def test_carla_client():
                 logging.info('connecting secondary clients')
                 client.connect_secondary_clients()
 
-                for x in xrange(0, 20):
+                for x in xrange(0, 100):
                     logging.info('waiting for measurements')
                     data = client.read_measurements()
                     if not data:
@@ -176,8 +176,9 @@ def test_carla_client():
                     data = client.read_images()
                     logging.info('received %d bytes of images', len(data) if data is not None else 0)
 
-                    # logging.info('Taking a nap...')
-                    # time.sleep(10)
+                    if (x+1) % 10 == 0:
+                        logging.info('Taking a nap...')
+                        time.sleep(2)
 
                     logging.info('sending control')
                     client.write_control(steer=-2.3, throttle=1.0, reverse=True)

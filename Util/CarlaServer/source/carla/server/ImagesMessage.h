@@ -5,10 +5,9 @@
 #include <cstdint>
 #include <memory>
 
-#include <carla/carla_server.h>
-
 #include "carla/ArrayView.h"
 #include "carla/NonCopyable.h"
+#include "carla/server/CarlaServerAPI.h"
 #include "carla/server/ServerTraits.h"
 
 namespace carla {

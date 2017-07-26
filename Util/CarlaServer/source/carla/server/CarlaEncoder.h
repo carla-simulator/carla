@@ -2,8 +2,7 @@
 
 #pragma once
 
-#include <carla/carla_server.h>
-
+#include "carla/server/CarlaServerAPI.h"
 #include "carla/server/Protobuf.h"
 #include "carla/server/RequestNewEpisode.h"
 
