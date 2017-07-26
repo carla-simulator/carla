@@ -1,6 +1,5 @@
 // Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
 
-using System;
 using System.IO;
 using UnrealBuildTool;
 
@@ -76,7 +75,6 @@ public class Carla : ModuleRules
   private void AddCarlaServerDependency(TargetInfo Target)
   {
     string CarlaServerInstallPath = Path.GetFullPath(Path.Combine(ModuleDirectory, "../../Util/Install"));
-    Console.WriteLine("CarlaServer install path = " + CarlaServerInstallPath);
 
     string CarlaServerLib;
     if (UseDebugLibs(Target))
