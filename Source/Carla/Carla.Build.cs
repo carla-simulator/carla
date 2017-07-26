@@ -1,5 +1,6 @@
 // Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
 
+using System;
 using System.IO;
 using UnrealBuildTool;
 
@@ -47,16 +48,7 @@ public class Carla : ModuleRules
       }
       );
 
-    AddBoostDependency(Target);
-    AddProtobufDependency(Target);
-    AddLibPNGDependency(Target);
     AddCarlaServerDependency(Target);
-
-    if (Target.Platform == UnrealTargetPlatform.Linux)
-    {
-      // Fails to link the std libraries.
-      PublicAdditionalLibraries.Add("stdc++");
-    }
   }
 
   private bool IsWindows(TargetInfo Target)
@@ -75,118 +67,46 @@ public class Carla : ModuleRules
     }
     else
     {
-      // On Linux on the other hand, we need to use the version of the libraries
-      // without optimizations due to the crash in the std::string destructor.
       return true;
     }
   }
 
-  private void AddBoostDependency(TargetInfo Target)
-  {
-    if (IsWindows(Target))
-    {
-      string BoostRoot = System.Environment.GetEnvironmentVariable("BOOST_ROOT");
-      if (string.IsNullOrEmpty(BoostRoot) || !System.IO.Directory.Exists(BoostRoot))
-      {
-        throw new System.Exception("BOOST_ROOT is not defined, or points to a non-existant directory, please set this environment variable.");
-      }
-      PrivateIncludePaths.Add(BoostRoot);
-
-      string BoostLib = Path.Combine(BoostRoot, "stage", "lib");
-      if (!System.IO.Directory.Exists(BoostLib))
-      {
-        throw new System.Exception("Please build boost and make sure the libraries are at " + BoostLib + ". ");
-      }
-      bool found = System.IO.Directory.GetFiles(BoostLib, "libboost_system-*.lib").Length > 0;
-      if (!found)
-      {
-        throw new System.Exception("Not finding libboost_system-*.lib in " + BoostLib + ".");
-      }
-      PublicLibraryPaths.Add(Path.Combine(BoostLib));
-    }
-    else
-    {
-      PublicAdditionalLibraries.Add("boost_system");
-    }
-  }
-
-  private void AddProtobufDependency(TargetInfo Target)
-  {
-    if (IsWindows(Target))
-    {
-      string ProtobufRoot = System.Environment.GetEnvironmentVariable("PROTOBUF_ROOT");
-      string ProtobufLib;
-      if (UseDebugLibs(Target))
-      {
-        ProtobufRoot = Path.Combine(ProtobufRoot, "Debug");
-        ProtobufLib = "libprotobufd.lib";
-      }
-      else
-      {
-        ProtobufRoot = Path.Combine(ProtobufRoot, "Release");
-        ProtobufLib = "libprotobuf.lib";
-      }
-      if (string.IsNullOrEmpty(ProtobufRoot) || !System.IO.Directory.Exists(ProtobufRoot))
-      {
-        throw new System.Exception("PROTOBUF_ROOT is not defined, or points to a non-existant directory, please set this environment variable.");
-      }
-      PrivateIncludePaths.Add(Path.Combine(ProtobufRoot, "include"));
-      PublicAdditionalLibraries.Add(Path.Combine(ProtobufRoot, "lib", ProtobufLib));
-    }
-    else
-    {
-      PublicAdditionalLibraries.Add("protobuf");
-    }
-  }
-
-  private void AddLibPNGDependency(TargetInfo Target)
-  {
-    if (Target.Platform == UnrealTargetPlatform.Linux)
-    {
-      string UE4Root = System.Environment.GetEnvironmentVariable("UE4_ROOT");
-      if (string.IsNullOrEmpty(UE4Root))
-      {
-        PublicAdditionalLibraries.Add("png");
-      }
-      else
-      {
-        if (!System.IO.Directory.Exists(UE4Root))
-        {
-          throw new System.Exception("UE4_ROOT points to a non-existant directory, please correct this environment variable.");
-        }
-        PublicAdditionalLibraries.Add("ThirdParty/libPNG/libPNG-1.5.2/lib/Linux/x86_64-unknown-linux-gnu/libpng.a");
-        PublicAdditionalLibraries.Add("ThirdParty/zlib/v1.2.8/lib/Linux/x86_64-unknown-linux-gnu/libz_fPIC.a");
-      }
-    }
-  }
+  delegate string ADelegate(string s);
 
   private void AddCarlaServerDependency(TargetInfo Target)
   {
-    string CarlaServerIncludePath = Path.Combine(ModuleDirectory, "..", "CarlaServer/include");
-    string CarlaServerLibPath = Path.Combine(ModuleDirectory, "..", "CarlaServer/lib");
-
-    string CarlaServerLibBaseName;
-    if (UseDebugLibs(Target))
-    {
-      CarlaServerLibBaseName = "carlaserverd";
-    }
-    else
-    {
-      CarlaServerLibBaseName = "carlaserver";
-    }
+    string CarlaServerInstallPath = Path.GetFullPath(Path.Combine(ModuleDirectory, "../../Util/Install"));
+    Console.WriteLine("CarlaServer install path = " + CarlaServerInstallPath);
 
     string CarlaServerLib;
-    if (IsWindows(Target))
+    if (UseDebugLibs(Target))
     {
-      CarlaServerLib = Path.Combine(CarlaServerLibPath, CarlaServerLibBaseName + ".lib");
+      CarlaServerLib = "carlaserverd";
     }
     else
     {
-      CarlaServerLib = Path.Combine(CarlaServerLibPath, "lib" + CarlaServerLibBaseName + ".a");
+      CarlaServerLib = "carlaserver";
     }
 
+    ADelegate GetSharedLibName = (string BaseName) => {
+      if (IsWindows(Target))
+      {
+        return BaseName + ".dll";
+      }
+      else
+      {
+        return "lib" + BaseName + ".so";
+      }
+    };
+
+    // Link dependencies.
+    PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetSharedLibName("boost_system")));
+    PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetSharedLibName("protobuf")));
+    PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetSharedLibName(CarlaServerLib)));
+
+    // Include path.
+    string CarlaServerIncludePath = Path.Combine(CarlaServerInstallPath, "include");
     PublicIncludePaths.Add(CarlaServerIncludePath);
     PrivateIncludePaths.Add(CarlaServerIncludePath);
-    PublicAdditionalLibraries.Add(CarlaServerLib);
   }
 }

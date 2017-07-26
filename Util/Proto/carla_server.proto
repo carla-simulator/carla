@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package carla_protocol;
+package carla_server;
 
 option cc_enable_arenas = true;
 

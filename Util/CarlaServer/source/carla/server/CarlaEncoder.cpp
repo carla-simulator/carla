@@ -7,13 +7,15 @@
 #include "carla/Debug.h"
 #include "carla/Logging.h"
 
-#include "carla/server/carla_protocol.pb.h"
+#include "carla/server/carla_server.pb.h"
+
+namespace cs = carla_server;
 
 namespace carla {
 namespace server {
 
   std::string CarlaEncoder::Encode(const carla_scene_description &values) {
-    auto *message = _protobuf.CreateMessage<carla_protocol::SceneDescription>();
+    auto *message = _protobuf.CreateMessage<cs::SceneDescription>();
     DEBUG_ASSERT(message != nullptr);
     message->set_player_start_locations(
         values.player_start_locations,
@@ -22,13 +24,13 @@ namespace server {
   }
 
   std::string CarlaEncoder::Encode(const carla_episode_ready &values) {
-    auto *message = _protobuf.CreateMessage<carla_protocol::EpisodeReady>();
+    auto *message = _protobuf.CreateMessage<cs::EpisodeReady>();
     DEBUG_ASSERT(message != nullptr);
     message->set_ready(values.ready);
     return Protobuf::Encode(*message);
   }
 
-  static void SetVector3D(carla_protocol::Vector3D *lhs, const carla_vector3d &rhs) {
+  static void SetVector3D(cs::Vector3D *lhs, const carla_vector3d &rhs) {
     DEBUG_ASSERT(lhs != nullptr);
     lhs->set_x(rhs.x);
     lhs->set_y(rhs.y);
@@ -36,7 +38,7 @@ namespace server {
   }
 
   std::string CarlaEncoder::Encode(const carla_measurements &values) {
-    static thread_local auto *message = _protobuf.CreateMessage<carla_protocol::Measurements>();
+    static thread_local auto *message = _protobuf.CreateMessage<cs::Measurements>();
     DEBUG_ASSERT(message != nullptr);
     message->set_platform_timestamp(values.platform_timestamp);
     message->set_game_timestamp(values.game_timestamp);
@@ -55,7 +57,7 @@ namespace server {
   }
 
   bool CarlaEncoder::Decode(const std::string &str, RequestNewEpisode &values) {
-    auto *message = _protobuf.CreateMessage<carla_protocol::RequestNewEpisode>();
+    auto *message = _protobuf.CreateMessage<cs::RequestNewEpisode>();
     DEBUG_ASSERT(message != nullptr);
     message->ParseFromString(str);
     if (message->IsInitialized()) {
@@ -73,7 +75,7 @@ namespace server {
   }
 
   bool CarlaEncoder::Decode(const std::string &str, carla_episode_start &values) {
-    auto *message = _protobuf.CreateMessage<carla_protocol::EpisodeStart>();
+    auto *message = _protobuf.CreateMessage<cs::EpisodeStart>();
     DEBUG_ASSERT(message != nullptr);
     message->ParseFromString(str);
     if (message->IsInitialized()) {
@@ -86,7 +88,7 @@ namespace server {
   }
 
   bool CarlaEncoder::Decode(const std::string &str, carla_control &values) {
-    static thread_local auto *message = _protobuf.CreateMessage<carla_protocol::Control>();
+    static thread_local auto *message = _protobuf.CreateMessage<cs::Control>();
     DEBUG_ASSERT(message != nullptr);
     message->ParseFromString(str);
     if (message->IsInitialized()) {

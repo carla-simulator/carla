@@ -8,3 +8,8 @@ Saved
 
 # Other
 Doxygen
+Util/Build
+Util/Install
+
+*.log
+*.pid

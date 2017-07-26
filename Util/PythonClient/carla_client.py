@@ -176,9 +176,9 @@ def test_carla_client():
                     data = client.read_images()
                     logging.info('received %d bytes of images', len(data) if data is not None else 0)
 
-                    if (x+1) % 10 == 0:
-                        logging.info('Taking a nap...')
-                        time.sleep(2)
+                    # if (x+1) % 10 == 0:
+                    #     logging.info('Taking a nap...')
+                    #     time.sleep(2)
 
                     logging.info('sending control')
                     client.write_control(steer=-2.3, throttle=1.0, reverse=True)
