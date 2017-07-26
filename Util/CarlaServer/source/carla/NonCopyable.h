@@ -1,3 +1,5 @@
+// CARLA, Copyright (C) 2017 Computer Vision Center (CVC)
+
 #pragma once
 
 namespace carla {
@@ -10,7 +12,6 @@ namespace carla {
     NonCopyable(const NonCopyable &) = delete;
 
     void operator=(const NonCopyable &x) = delete;
-
   };
 
 } // namespace carla

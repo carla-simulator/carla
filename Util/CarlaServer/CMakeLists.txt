@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.0.2)
+cmake_minimum_required (VERSION 3.4.2)
 project (CarlaServer)
 
 # ==============================================================================
@@ -7,9 +7,15 @@ project (CarlaServer)
 
 if (UNIX)
 
-  set(CMAKE_CXX_COMPILER clang++)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -std=c++14 -Werror -Wall -Wextra")
+  set(CMAKE_CXX_COMPILER /usr/bin/clang++)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -std=c++14 -Werror -Wall -Wextra -Wno-unused-parameter")
   find_package(Threads)
+
+  if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_DEBUG -O0")
+  elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNDEBUG -O3")
+  endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
 
 endif (UNIX)
 
@@ -88,79 +94,49 @@ elseif (WIN32)
 endif (UNIX)
 
 # ==============================================================================
-# -- LibPNG --------------------------------------------------------------------
+# -- GTest ---------------------------------------------------------------------
 # ==============================================================================
 
-if (CMAKE_BUILD_TYPE MATCHES "(Debug|Release)PNG")
+# Download and unpack googletest at configure time.
+configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
+execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+  RESULT_VARIABLE result
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/googletest-download )
+if(result)
+  message(FATAL_ERROR "CMake step for googletest failed: ${result}")
+endif()
+execute_process(COMMAND ${CMAKE_COMMAND} --build .
+  RESULT_VARIABLE result
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/googletest-download )
+if(result)
+  message(FATAL_ERROR "Build step for googletest failed: ${result}")
+endif()
 
-  if (UNIX)
+# Prevent overriding the parent project's compiler/linker
+# settings on Windows.
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
-    if (EXISTS $ENV{UE4_ROOT})
+# Add googletest directly to our build. This defines
+# the gtest and gtest_main targets.
+add_subdirectory(${CMAKE_BINARY_DIR}/googletest-src
+                 ${CMAKE_BINARY_DIR}/googletest-build)
 
-      # Use Unreal Engine's libpng and libz.
+# The gtest/gtest_main targets carry header search path
+# dependencies automatically when using CMake 2.8.11 or
+# later. Otherwise we have to add them here ourselves.
+if (CMAKE_VERSION VERSION_LESS 2.8.11)
+  include_directories("${gtest_SOURCE_DIR}/include")
+endif()
 
-      set(LIBPNG_ROOT $ENV{UE4_ROOT}/Engine/Source/ThirdParty/libPNG/libPNG-1.5.2)
-      set(LIBZ_ROOT $ENV{UE4_ROOT}/Engine/Source/ThirdParty/zlib/v1.2.8)
-
-      if (NOT EXISTS ${LIBPNG_ROOT})
-        message(FATAL_ERROR "Unable to find Unreal Engine's libpng")
-      elseif (NOT EXISTS ${LIBZ_ROOT})
-        message(FATAL_ERROR "Unable to find Unreal Engine's libz")
-      endif (NOT EXISTS ${LIBPNG_ROOT})
-      message(STATUS "Using libPNG-1.5.2 within Unreal Engine's installation folder")
-
-      set(PNG_LIBRARIES
-          ${LIBPNG_ROOT}/lib/Linux/x86_64-unknown-linux-gnu/libpng.a
-          ${LIBZ_ROOT}/lib/Linux/x86_64-unknown-linux-gnu/libz_fPIC.a)
-
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_WITH_PNG_COMPRESSION")
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_INCLUDE=\\\"${LIBPNG_ROOT}/png.h\\\"")
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_VERSION_MAJOR=1")
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_VERSION_MINOR=5")
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_VERSION_RELEASE=2")
-
-    else (EXISTS $ENV{UE4_ROOT})
-
-      # Use system's libpng and libz.
-
-      message(WARNING
-          "Using system's libpng, this won't work with Unreal Engine. "
-          "Please define the environment variable UE4_ROOT pointing to "
-          "Unreal Engine's installation folder so we can link against "
-          "the right version of libpng")
-
-      include(FindPNG)
-      find_package(PNG REQUIRED)
-
-      # Retrieve version number for extra check.
-      string(REPLACE "." ";" PNG_VERSION_LIST ${PNG_VERSION_STRING})
-      list(GET PNG_VERSION_LIST 0 PNG_VERSION_MAJOR)
-      list(GET PNG_VERSION_LIST 1 PNG_VERSION_MINOR)
-      list(GET PNG_VERSION_LIST 2 PNG_VERSION_RELEASE)
-
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_WITH_PNG_COMPRESSION")
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_INCLUDE=\\\"png.h\\\"")
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_VERSION_MAJOR=${PNG_VERSION_MAJOR}")
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_VERSION_MINOR=${PNG_VERSION_MINOR}")
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCARLA_LIBPNG_VERSION_RELEASE=${PNG_VERSION_RELEASE}")
-
-    endif (EXISTS $ENV{UE4_ROOT})
-
-  elseif (WIN32)
-
-    message(WARNING "PNG compression not available for Windows yet")
-
-  endif (UNIX)
-
-endif (CMAKE_BUILD_TYPE MATCHES "(Debug|Release)PNG")
+set(GTest_LIBRARIES gtest_main)
 
 # ==============================================================================
 # -- Project config ------------------------------------------------------------
 # ==============================================================================
 
 set(CarlaServer_Deps_LIBRARIES
-    ${PNG_LIBRARIES}
     ${Protobuf_LIBRARIES}
+    ${GTest_LIBRARIES}
     ${Boost_DATE_TIME_LIBRARY}
     ${Boost_REGEX_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}
@@ -170,20 +146,13 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin_debug)
   set(CarlaServer_LIBRARIES carlaserverd ${CarlaServer_Deps_LIBRARIES})
-elseif (CMAKE_BUILD_TYPE STREQUAL "DebugPNG")
-  set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin_debug)
-  set(CarlaServer_LIBRARIES carlaserverpngd ${CarlaServer_Deps_LIBRARIES})
 elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
   set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
   set(CarlaServer_LIBRARIES carlaserver ${CarlaServer_Deps_LIBRARIES})
-elseif (CMAKE_BUILD_TYPE STREQUAL "ReleasePNG")
-  set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-  set(CarlaServer_LIBRARIES carlaserverpng ${CarlaServer_Deps_LIBRARIES})
 endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
 
 include_directories("${PROJECT_SOURCE_DIR}/source")
+include_directories("${PROJECT_SOURCE_DIR}/include")
 
 add_subdirectory(source/carla/server)
 add_subdirectory(source/test)
-
-install(FILES ${PROJECT_SOURCE_DIR}/source/carla/CarlaServer.h DESTINATION ${PROJECT_SOURCE_DIR}/include/carla)

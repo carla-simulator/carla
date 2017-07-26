@@ -1,121 +1,159 @@
-// CARLA, Copyright (C) 2017 Computer Vision Center (CVC)
+// CARLA, Copyright (C) 2017 Computer Vision Center (CVC) Project Settings.
+//
+// This is a modification of boost example, blocking_tcp_client.cpp
+//
+// Copyright (c) 2003-2012 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+//
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include "TCPServer.h"
+#include "carla/server/TCPServer.h"
 
-#include <fstream>
-#include <iostream>
+#include <boost/asio/read.hpp>
+#include <boost/asio/write.hpp>
+#include <boost/lambda/bind.hpp>
+#include <boost/lambda/lambda.hpp>
+#include <boost/system/error_code.hpp>
+#include <boost/system/system_error.hpp>
 
-#include <carla/Logging.h>
+#include "carla/Logging.h"
+
+using boost::lambda::_1;
+using boost::lambda::var;
+using namespace boost::asio::ip;
 
 namespace carla {
 namespace server {
 
-  using boost::asio::ip::tcp;
+  // ===========================================================================
+  // -- Static local methods ---------------------------------------------------
+  // ===========================================================================
 
-  static std::string GetBytes(int n) {
-    std::string bytes;
-
-    bytes = (n >> 24) & 0xFF;
-    bytes += (n >> 16) & 0xFF;
-    bytes += (n >> 8) & 0xFF;
-    bytes += n & 0xFF;
-
-    return bytes;
+  static inline int GetPort(const tcp::socket &socket) {
+    return (socket.is_open() ? socket.local_endpoint().port() : 0);
   }
 
-  static int GetInt(unsigned char b1, unsigned char b2, unsigned char b3, unsigned char b4) {
-    int result = 0;
-    result = (result << 8) + b1;
-    result = (result << 8) + b2;
-    result = (result << 8) + b3;
-    result = (result << 8) + b4;
-    
-    return result;
+#define LOG_PREFIX "tcpserver", GetPort(_socket), ':'
+
+  static void CloseConnection(tcp::acceptor &_acceptor, tcp::socket &_socket) {
+    log_info(LOG_PREFIX, "disconnecting");
+    if (_acceptor.is_open()) {
+      _acceptor.close();
+    }
+    if (_socket.is_open()) {
+      _socket.close();
+    }
   }
 
-  TCPServer::TCPServer(int port) :
-    port(port),
-    _service(),
-    _socket(_service),
-    _connected(false) {}
+  // ===========================================================================
+  // -- TCPServer --------------------------------------------------------------
+  // ===========================================================================
+
+  TCPServer::TCPServer()
+      : _service(),
+        _acceptor(_service),
+        _socket(_service),
+        _deadline(_service) {
+    // No deadline is required until the first socket operation is started. We
+    // set the deadline to positive infinity so that the actor takes no action
+    // until a specific deadline is set.
+    _deadline.expires_at(boost::posix_time::pos_infin);
+    // Start the persistent actor that checks for deadline expiry.
+    CheckDeadline();
+  }
 
   TCPServer::~TCPServer() {
-    close();
+    CloseConnection(_acceptor, _socket);
   }
 
-  void TCPServer::AcceptSocket() {
+  void TCPServer::Disconnect() {
+    log_debug(LOG_PREFIX, "request close connection");
+    _service.post([this](){ CloseConnection(_acceptor, _socket); });
+  }
+
+  error_code TCPServer::Connect(uint32_t port, time_duration timeout) {
+    // Set the deadline, it will close the socket when expired.
+    _deadline.expires_from_now(timeout);
+
+    if (_acceptor.is_open()) {
+      log_error(LOG_PREFIX, "already connected");
+      return boost::asio::error::already_connected;
+    }
+
+    // Create an acceptor at the given port.
     try {
-      boost::asio::ip::tcp::acceptor acceptor(_service, tcp::endpoint(tcp::v4(), port));
-      acceptor.accept(_socket);
-      _service.run();
-      log_info("Connected port", port);
-      _connected = true;
-    } catch (const boost::system::system_error &e) {
-      log_error("Socket System error: ", e.what());
+      _acceptor = tcp::acceptor(_service, tcp::endpoint(tcp::v4(), port));
+    } catch (const boost::system::system_error &exception) {
+      log_error(LOG_PREFIX, "unable to accept connection:", exception.what());
+      return exception.code();
     }
-  }
 
-  bool TCPServer::Connected() {
-    return _connected;
-  }
+    // Asio guarantees that its asynchronous operations will never fail with
+    // would_block, so any other value in ec indicates completion.
+    error_code ec = boost::asio::error::would_block;
 
-  void TCPServer::writeString(const std::string &message, error_code &error) {
-    const int messageSize = static_cast<int>(message.length());
-    std::string outMessage(GetBytes(messageSize) + message);
-    boost::asio::write(_socket, boost::asio::buffer(outMessage), error);
+    // Start the asynchronous operation.
+    _acceptor.async_accept(_socket, var(ec) = _1);
 
-    if (error) {
-      log_info("DESCONECTED port", port);
-      _connected = false;
-    }
-  }
-
-  bool TCPServer::readString(std::string &message, error_code &error) {
-    bool end = false, readedBytes = false;
-    int readedSize = 0, sizeToRead = -1;
-
-    log_debug("Try to read");
+    // Block until the asynchronous operation has completed.
     do {
+      _service.run_one();
+    } while (ec == boost::asio::error::would_block);
 
-      std::array<unsigned char, 128> buf;
-
-      size_t len = _socket.read_some(boost::asio::buffer(buf), error);
-
-      if (error) {
-        log_info("DESCONECTED port", port);
-        _connected = false;
-      } else if (!error) {
-        // @todo find a better way.
-        for (size_t i = 0; i < len && !end; ++i) {
-          if (!readedBytes) {
-            sizeToRead = GetInt(buf[0], buf[1], buf[2], buf[3]);
-            i = 3;
-            readedBytes = true;
-          } else {
-            std::cout << std::dec;
-            message += buf[i];
-            ++readedSize;
-            if (readedSize >= sizeToRead) { end = true;}
-          }
-
-        }
-      }
-
-    } while ((!readedBytes || sizeToRead > readedSize) && _connected);
-
-    log_debug("End read");
-    return true;
+    // Determine whether a connection was successfully established.
+    if (ec) {
+      log_error(LOG_PREFIX, "connection failed:", ec.message());
+      Disconnect(); // Will disconnect on the next run.
+    } else {
+      log_info(LOG_PREFIX, "connected");
+    }
+    return ec;
   }
 
-  void TCPServer::close() {
-    _connected = false;
-    // flush the socket buffer
-    std::string message;
-    TCPServer::error_code error;
-    readString(message, error);
-    _service.stop();
-    _socket.close();
+  error_code TCPServer::Read(mutable_buffer buffer, time_duration timeout) {
+    log_debug(LOG_PREFIX, "receiving to buffer of length", boost::asio::buffer_size(buffer));
+    _deadline.expires_from_now(timeout);
+
+    error_code ec = boost::asio::error::would_block;
+    boost::asio::async_read(_socket, boost::asio::buffer(buffer), var(ec) = _1);
+
+    do {
+      _service.run_one();
+    } while (ec == boost::asio::error::would_block);
+
+    if (ec) {
+      log_error(LOG_PREFIX, "error reading message:", ec.message());
+    }
+    return ec;
   }
-  
+
+  error_code TCPServer::Write(const_buffer buffer, time_duration timeout) {
+    log_debug(LOG_PREFIX, "sending from buffer of length", boost::asio::buffer_size(buffer));
+    _deadline.expires_from_now(timeout);
+
+    error_code ec = boost::asio::error::would_block;
+    boost::asio::async_write(_socket, boost::asio::buffer(buffer), var(ec) = _1);
+
+    do {
+      _service.run_one();
+    } while (ec == boost::asio::error::would_block);
+
+    if (ec) {
+      log_error(LOG_PREFIX, "error writing message:", ec.message());
+    }
+    return ec;
+  }
+
+  void TCPServer::CheckDeadline() {
+    if (_deadline.expires_at() <= boost::asio::deadline_timer::traits_type::now()) {
+      log_info(LOG_PREFIX, "timed out");
+      CloseConnection(_acceptor, _socket);
+      _deadline.expires_at(boost::posix_time::pos_infin);
+    }
+    _deadline.async_wait(boost::lambda::bind(&TCPServer::CheckDeadline, this));
+  }
+
+#undef LOG_PREFIX
+
 } // namespace server
 } // namespace carla

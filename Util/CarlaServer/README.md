@@ -1,62 +1,49 @@
-CarlaServer
-===========
+CARLA Server
+============
 
-Library for asynchronous socket communications.
-
-Building
+Protocol
 --------
 
-#### Linux
+All the messages are prepended by a 32 bits unsigned integer (assumed little-
+endian) indicating the size of the coming message.
 
-Install boost, protobuf, cmake and ninja.
+Three consecutive ports are used,
 
-    $ sudo apt-get install libprotobuf-dev protobuf-compiler libboost-all-dev cmake ninja-build
+  * world-port (default 2000)
+  * stream-port = world-port + 1
+  * control-port = world-port + 2
 
-**IMPORTANT:** Please define environment variable `UE4_ROOT` pointing to Unreal
-Engine's installation folder so we can link against the right version of libpng,
-otherwise the PNG compression won't work with Unreal Engine.
+###### World thread
 
-Run make in this folder
+Server reads one, writes one. Always protobuf messages.
 
-    $ make
+    [client] RequestNewEpisode
+    [server] SceneDescription
+    [client] EpisodeStart
+    [server] EpisodeReady
+    ...repeat...
 
-#### Windows
+###### Stream thread
 
-Note: PNG compression is not implemented on Windows.
+Server only writes, first measurements then the raw images.
 
-Compile and install [boost](http://www.boost.org/).
+    [server] Measurements
+    [server] raw images
+    ...repeat...
 
-Compile [protobuf](https://developers.google.com/protocol-buffers/). While
-compiling protobuf, use `-Dprotobuf_MSVC_STATIC_RUNTIME=OFF` when calling CMake
-in order to use the static runtime library, otherwise may give errors while
-trying to link with CarlaServer. Generate both debug and release and install
-under `$PROTOBUF_ROOT/Debug` and `$PROTOBUF_ROOT/Release` respectively.
+Every image is an array of uint32's
 
-The Makefile uses cmake to generate project files. Under Windows, it requires
-the following environment variables set
+    [width, height, type, color[0], color[1],...]
 
-  * `BOOST_ROOT` root of the boost folder.
-  * `PROTOBUF_ROOT` contains two folder `Debug` and `Release`, each of them with subfolders `lib` and `include`.
+where each color is an [FColor](fcolorlink) (BGRA) as stored in Unreal Engine.
 
-Before calling make you need to set up the environment calling `vcvarsall.bat`,
-usually located at the Visual Studio installation folder. Call it (don't forget
-the amd64 at the end)
+[fcolorlink]: https://docs.unrealengine.com/latest/INT/API/Runtime/Core/Math/FColor/index.html
 
-    $ "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
+###### Control thread
 
-Then build either debug or release
+Server only reads, client sends Control every frame.
 
-    $ make debug
+    [client] Control
+    ...repeat...
 
-or
-
-    $ make release
-
-To generate the Visual Studio project
-
-    $ make vsproject
-
-The solution gets generated at `./build/visualstudio/CarlaServer.sln`. Change
-the solution configuration to match protobuf (release, most probably). Don't
-forget to build the project INSTALL, it doesn't build when building the
-solution.
+In the synchronous mode, the server waits each frame for a Control message.

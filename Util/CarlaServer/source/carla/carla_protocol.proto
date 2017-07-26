@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package carla_protocol;
+
+option cc_enable_arenas = true;
+
+message Vector3D {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+}
+
+message RequestNewEpisode {
+  bytes ini_file = 1;
+}
+
+message SceneDescription {
+  bytes player_start_locations = 1;
+}
+
+message EpisodeStart {
+  int32 player_start_location_index = 1;
+}
+
+message EpisodeReady {
+  bool ready = 1;
+}
+
+message Control {
+  float steer = 1;
+  float throttle = 2;
+  float brake = 3;
+  bool hand_brake = 4;
+  bool reverse = 5;
+}
+
+message Measurements {
+  message PlayerMeasurements {
+    Vector3D location = 1;
+    Vector3D orientation = 2;
+
+    Vector3D acceleration = 3;
+    float forward_speed = 4;
+
+    float collision_vehicles = 5;
+    float collision_pedestrians = 6;
+    float collision_other = 7;
+
+    float intersection_otherlane = 8;
+    float intersection_offroad = 9;
+  }
+
+  int32 platform_timestamp = 1;
+  int32 game_timestamp = 2;
+
+  PlayerMeasurements player_measurements = 3;
+}

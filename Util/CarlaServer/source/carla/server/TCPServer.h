@@ -1,48 +1,46 @@
-// CARLA, Copyright (C) 2017 Computer Vision Center (CVC)
+// CARLA, Copyright (C) 2017 Computer Vision Center (CVC) Project Settings.
 
 #pragma once
 
-#include <carla/NonCopyable.h>
+#include <boost/asio/deadline_timer.hpp>
+#include <boost/asio/io_service.hpp>
+#include <boost/asio/ip/tcp.hpp>
 
-#include <string>
-#include <mutex>
-#include <boost/asio.hpp>
+#include "carla/NonCopyable.h"
+#include "carla/server/ServerTraits.h"
 
 namespace carla {
 namespace server {
 
-  /// { TCP server.
-  ///
-  /// A new socket is created for every connection (every write and read).
-  class TCPServer {
+  /// Basic blocking TCP server with time-out. It is safe to call disconnect
+  /// in a separate thread.
+  class TCPServer : private NonCopyable {
   public:
 
-    using error_code = boost::system::error_code;
-
-    explicit TCPServer(int port);
+    TCPServer();
 
     ~TCPServer();
 
-    void writeString(const std::string &message, error_code &error);
+    /// Posts a job to disconnect the server.
+    void Disconnect();
 
-    bool readString(std::string &message, error_code &error);
+    error_code Connect(uint32_t port, time_duration timeout);
 
-	void AcceptSocket();
+    error_code Read(mutable_buffer buffer, time_duration timeout);
 
-	bool Connected();
-
-  void close();
-
-	const int port;
+    error_code Write(const_buffer buffer, time_duration timeout);
 
   private:
-  
-   boost::asio::io_service _service;
 
+    void CheckDeadline();
 
-	 boost::asio::ip::tcp::socket _socket;
+    boost::asio::io_service _service;
 
-   std::atomic_bool _connected;
+    boost::asio::ip::tcp::acceptor _acceptor;
+
+    boost::asio::ip::tcp::socket _socket;
+
+    boost::asio::deadline_timer _deadline;
   };
 
 } // namespace server

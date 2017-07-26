@@ -2,17 +2,23 @@
 
 #pragma once
 
-#define LOG_LEVEL_DEBUG      10
-#define LOG_LEVEL_INFO       20
-#define LOG_LEVEL_ERROR      30
-#define LOG_LEVEL_CRITICAL   40
-#define LOG_LEVEL_NONE      100
+#define CARLA_SERVER_LOG_LEVEL_DEBUG        10
+#define CARLA_SERVER_LOG_LEVEL_INFO         20
+#define CARLA_SERVER_LOG_LEVEL_WARNING      30
+#define CARLA_SERVER_LOG_LEVEL_ERROR        40
+#define CARLA_SERVER_LOG_LEVEL_CRITICAL     50
+#define CARLA_SERVER_LOG_LEVEL_NONE        100
 
-// Choose here the log level.
-#define LOG_LEVEL LOG_LEVEL_ERROR
+#ifndef CARLA_SERVER_LOG_LEVEL
+#  ifdef NDEBUG
+#    define CARLA_SERVER_LOG_LEVEL CARLA_SERVER_LOG_LEVEL_WARNING
+#  else
+#    define CARLA_SERVER_LOG_LEVEL CARLA_SERVER_LOG_LEVEL_INFO
+#  endif // NDEBUG
+#endif // CARLA_SERVER_LOG_LEVEL
 
-// The following log functions are available, they are only active if LOG_LEVEL
-// is greater equal the function's log level.
+// The following log functions are available, they are only active if
+// CARLA_SERVER_LOG_LEVEL is greater equal the function's log level.
 //
 //  * log_debug
 //  * log_info
@@ -32,23 +38,23 @@
 
 namespace carla {
 
-namespace detail {
+namespace logging {
 
   // https://stackoverflow.com/a/27375675
   template <typename Arg, typename ... Args>
-  static void print_args(std::ostream &out, Arg &&arg, Args &&... args) {
-    out << std::forward<Arg>(arg);
+  static void print(std::ostream &out, Arg &&arg, Args &&... args) {
+    out << std::boolalpha << std::forward<Arg>(arg);
     using expander = int[];
     (void)expander{0, (void(out << ' ' << std::forward<Args>(args)),0)...};
   }
 
-} // namespace detail
+} // namespace logging
 
-#if LOG_LEVEL <= LOG_LEVEL_DEBUG
+#if CARLA_SERVER_LOG_LEVEL <= CARLA_SERVER_LOG_LEVEL_DEBUG
 
   template <typename ... Args>
   static inline void log_debug(Args &&... args) {
-    detail::print_args(std::cout, "DEBUG:", std::forward<Args>(args)..., '\n');
+    logging::print(std::cout, "DEBUG:", std::forward<Args>(args)..., '\n');
   }
 
 #else
@@ -58,11 +64,11 @@ namespace detail {
 
 #endif
 
-#if LOG_LEVEL <= LOG_LEVEL_INFO
+#if CARLA_SERVER_LOG_LEVEL <= CARLA_SERVER_LOG_LEVEL_INFO
 
   template <typename ... Args>
   static inline void log_info(Args &&... args) {
-    detail::print_args(std::cout, "INFO:", std::forward<Args>(args)..., '\n');
+    logging::print(std::cout, "INFO: ", std::forward<Args>(args)..., '\n');
   }
 
 #else
@@ -72,11 +78,25 @@ namespace detail {
 
 #endif
 
-#if LOG_LEVEL <= LOG_LEVEL_ERROR
+#if CARLA_SERVER_LOG_LEVEL <= CARLA_SERVER_LOG_LEVEL_WARNING
+
+  template <typename ... Args>
+  static inline void log_warning(Args &&... args) {
+    logging::print(std::cerr, "WARNING:", std::forward<Args>(args)..., '\n');
+  }
+
+#else
+
+  template <typename ... Args>
+  static inline void log_warning(Args &&...) {}
+
+#endif
+
+#if CARLA_SERVER_LOG_LEVEL <= CARLA_SERVER_LOG_LEVEL_ERROR
 
   template <typename ... Args>
   static inline void log_error(Args &&... args) {
-    detail::print_args(std::cerr, "ERROR:", std::forward<Args>(args)..., '\n');
+    logging::print(std::cerr, "ERROR:", std::forward<Args>(args)..., '\n');
   }
 
 #else
@@ -86,11 +106,11 @@ namespace detail {
 
 #endif
 
-#if LOG_LEVEL <= LOG_LEVEL_CRITICAL
+#if CARLA_SERVER_LOG_LEVEL <= CARLA_SERVER_LOG_LEVEL_CRITICAL
 
   template <typename ... Args>
   static inline void log_critical(Args &&... args) {
-    detail::print_args(std::cerr, "CRITICAL:", std::forward<Args>(args)..., '\n');
+    logging::print(std::cerr, "CRITICAL:", std::forward<Args>(args)..., '\n');
   }
 
 #else
@@ -106,13 +126,13 @@ namespace detail {
 // -- Implementation of macros -------------------------------------------------
 // =============================================================================
 
-#if LOG_LEVEL <= LOG_LEVEL_DEBUG
+#if CARLA_SERVER_LOG_LEVEL <= CARLA_SERVER_LOG_LEVEL_DEBUG
 #  define LOG_DEBUG_ONLY(code) code
 #else
 #  define LOG_DEBUG_ONLY(code)
 #endif
 
-#if LOG_LEVEL <= LOG_LEVEL_INFO
+#if CARLA_SERVER_LOG_LEVEL <= CARLA_SERVER_LOG_LEVEL_INFO
 #  define LOG_INFO_ONLY(code) code
 #else
 #  define LOG_INFO_ONLY(code)
