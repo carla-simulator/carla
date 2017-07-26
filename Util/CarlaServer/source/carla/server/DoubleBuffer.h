@@ -69,7 +69,11 @@ namespace detail {
     /// Returns an unique_ptr to the buffer to be read. The given buffer will
     /// be locked for reading until the unique_ptr is destroyed.
     ///
-    /// Returns nullptr if there appears to be no more data to read yet.
+    /// Blocks until there is some data to read in one of the buffer, or the
+    /// time-out is met.
+    ///
+    /// Returns nullptr if the time-out was met, or the DoubleBuffer is marked
+    /// as done.
     auto TryMakeReader(timeout_t timeout) {
       const auto deleter = [this](const T *ptr) { if (ptr) EndReading(); };
       ActiveBuffer active = NUMBER_OF_BUFFERS;

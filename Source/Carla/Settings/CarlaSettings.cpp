@@ -87,8 +87,8 @@ static void LoadSettingsFromConfig(
   if (bLoadCarlaServerSection) {
     ConfigFile.GetBool(S_CARLA_SERVER, TEXT("UseNetworking"), Settings.bUseNetworking);
     ConfigFile.GetInt(S_CARLA_SERVER, TEXT("WorldPort"), Settings.WorldPort);
-    ConfigFile.GetInt(S_CARLA_SERVER, TEXT("WritePort"), Settings.WritePort);
-    ConfigFile.GetInt(S_CARLA_SERVER, TEXT("ReadPort"), Settings.ReadPort);
+    ConfigFile.GetInt(S_CARLA_SERVER, TEXT("ServerTimeOut"), Settings.ServerTimeOut);
+    ConfigFile.GetBool(S_CARLA_SERVER, TEXT("SynchronousMode"), Settings.bSynchronousMode);
   }
   // LevelSettings.
   ConfigFile.GetString(S_CARLA_LEVELSETTINGS, TEXT("PlayerVehicle"), Settings.PlayerVehicle);
@@ -151,10 +151,14 @@ void UCarlaSettings::LoadSettings()
   // Override settings from command-line.
   {
     uint32 Value;
-    if (FParse::Value(FCommandLine::Get(), TEXT("-world-port="), Value)) {
+    if (FParse::Value(FCommandLine::Get(), TEXT("-world-port="), Value) ||
+        FParse::Value(FCommandLine::Get(), TEXT("-carla-world-port="), Value)) {
       WorldPort = Value;
-      WritePort = Value + 1u;
-      ReadPort = Value + 2u;
+      bUseNetworking = true;
+    }
+    if (FParse::Param(FCommandLine::Get(), TEXT("carla-sync-mode")) ||
+        FParse::Param(FCommandLine::Get(), TEXT("carla-synchronous-mode"))) {
+      bSynchronousMode = true;
       bUseNetworking = true;
     }
     if (FParse::Param(FCommandLine::Get(), TEXT("carla-no-networking"))) {
@@ -191,13 +195,14 @@ void UCarlaSettings::ValidateWeatherId()
 
 void UCarlaSettings::LogSettings() const
 {
+  auto EnabledDisabled = [](bool bValue) { return (bValue ? TEXT("Enabled") : TEXT("Disabled")); };
   UE_LOG(LogCarla, Log, TEXT("== CARLA Settings =============================================================="));
   UE_LOG(LogCarla, Log, TEXT("Last settings file loaded: %s"), *CurrentFileName);
   UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_SERVER);
-  UE_LOG(LogCarla, Log, TEXT("Use Networking = %s"), (bUseNetworking ? TEXT("True") : TEXT("False")));
+  UE_LOG(LogCarla, Log, TEXT("Networking = %s"), EnabledDisabled(bUseNetworking));
   UE_LOG(LogCarla, Log, TEXT("World Port = %d"), WorldPort);
-  UE_LOG(LogCarla, Log, TEXT("Write Port = %d"), WritePort);
-  UE_LOG(LogCarla, Log, TEXT("Read Port  = %d"), ReadPort);
+  UE_LOG(LogCarla, Log, TEXT("Server Time-out = %d ms"), ServerTimeOut);
+  UE_LOG(LogCarla, Log, TEXT("Synchronous Mode = %s"), EnabledDisabled(bSynchronousMode));
   UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_LEVELSETTINGS);
   UE_LOG(LogCarla, Log, TEXT("Player Vehicle        = %s"), (PlayerVehicle.IsEmpty() ? TEXT("default") : *PlayerVehicle));
   UE_LOG(LogCarla, Log, TEXT("Number Of Vehicles    = %d"), NumberOfVehicles);
@@ -211,7 +216,7 @@ void UCarlaSettings::LogSettings() const
   }
   UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_SCENECAPTURE);
   UE_LOG(LogCarla, Log, TEXT("Added %d cameras."), CameraDescriptions.Num());
-  UE_LOG(LogCarla, Log, TEXT("Semantic Segmentation = %s"), (bSemanticSegmentationEnabled ? TEXT("Enabled") : TEXT("Disabled")));
+  UE_LOG(LogCarla, Log, TEXT("Semantic Segmentation = %s"), EnabledDisabled(bSemanticSegmentationEnabled));
   for (auto &Item : CameraDescriptions) {
     UE_LOG(LogCarla, Log, TEXT("[%s/%s]"), S_CARLA_SCENECAPTURE, *Item.Key);
     UE_LOG(LogCarla, Log, TEXT("Image Size = %dx%d"), Item.Value.ImageSizeX, Item.Value.ImageSizeY);

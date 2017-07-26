@@ -5,6 +5,10 @@
 
 #include <stdint.h>
 
+#ifndef CARLA_SERVER_API
+#  define CARLA_SERVER_API extern
+#endif // CARLA_SERVER_API
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -134,20 +138,20 @@ extern "C" {
 
   typedef void* CarlaServerPtr;
 
-  extern const int32_t CARLA_SERVER_SUCCESS;
-  extern const int32_t CARLA_SERVER_TRY_AGAIN;
-  extern const int32_t CARLA_SERVER_TIMED_OUT;
-  extern const int32_t CARLA_SERVER_OPERATION_ABORTED;
+  CARLA_SERVER_API const int32_t CARLA_SERVER_SUCCESS;
+  CARLA_SERVER_API const int32_t CARLA_SERVER_TRY_AGAIN;
+  CARLA_SERVER_API const int32_t CARLA_SERVER_TIMED_OUT;
+  CARLA_SERVER_API const int32_t CARLA_SERVER_OPERATION_ABORTED;
 
   /* -- Creation and destruction -------------------------------------------- */
 
   /** Create a CARLA server instance. */
-  extern CarlaServerPtr carla_make_server();
+  CARLA_SERVER_API CarlaServerPtr carla_make_server();
 
   /** Destroy a CARLA server instance (disconnects all running servers
     * associated with this instance).
     */
-  extern void carla_free_server(CarlaServerPtr self);
+  CARLA_SERVER_API void carla_free_server(CarlaServerPtr self);
 
   /* -- Connecting and disconnecting ---------------------------------------- */
 
@@ -159,40 +163,40 @@ extern "C" {
     * The non-blocking version returns immediately while the blocking version
     * waits until the connection is established successfully.
     */
-  extern int32_t carla_server_connect(
+  CARLA_SERVER_API int32_t carla_server_connect(
       CarlaServerPtr self,
       uint32_t world_port,
       uint32_t server_timeout_milliseconds);
-  extern int32_t carla_server_connect_non_blocking(
+  CARLA_SERVER_API int32_t carla_server_connect_non_blocking(
       CarlaServerPtr self,
       uint32_t world_port,
       uint32_t server_timeout_milliseconds);
 
   /** Signal the world server to disconnect. */
-  extern void carla_disconnect_server(CarlaServerPtr self);
+  CARLA_SERVER_API void carla_disconnect_server(CarlaServerPtr self);
 
   /* -- Write and read functions -------------------------------------------- */
 
   /** If the new episode request is received, blocks until the agent server is
     * terminated.
     */
-  extern int32_t carla_read_request_new_episode(
+  CARLA_SERVER_API int32_t carla_read_request_new_episode(
       CarlaServerPtr self,
       carla_request_new_episode &values,
       uint32_t timeout_milliseconds);
 
-  extern int32_t carla_write_scene_description(
+  CARLA_SERVER_API int32_t carla_write_scene_description(
       CarlaServerPtr self,
       const carla_scene_description &values,
       uint32_t timeout_milliseconds);
 
-  extern int32_t carla_read_episode_start(
+  CARLA_SERVER_API int32_t carla_read_episode_start(
       CarlaServerPtr self,
       carla_episode_start &values,
       uint32_t timeout_milliseconds);
 
   /** This launches the agent server. */
-  extern int32_t carla_write_episode_ready(
+  CARLA_SERVER_API int32_t carla_write_episode_ready(
       CarlaServerPtr self,
       const carla_episode_ready &values,
       const uint32_t timeout);
@@ -202,7 +206,7 @@ extern "C" {
     *   CARLA_SERVER_TRY_AGAIN Nothing received yet.
     *   CARLA_SERVER_OPERATION_ABORTED Agent server is missing.
     */
-  extern int32_t carla_read_control(
+  CARLA_SERVER_API int32_t carla_read_control(
       CarlaServerPtr self,
       carla_control &values,
       uint32_t timeout_milliseconds);
@@ -211,7 +215,7 @@ extern "C" {
     *   CARLA_SERVER_SUCCESS Value was posted for sending.
     *   CARLA_SERVER_OPERATION_ABORTED Agent server is missing.
     */
-  extern int32_t carla_write_measurements(
+  CARLA_SERVER_API int32_t carla_write_measurements(
       CarlaServerPtr self,
       const carla_measurements &values,
       const struct carla_image *images,

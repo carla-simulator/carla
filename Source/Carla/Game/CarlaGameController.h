@@ -5,17 +5,14 @@
 #include "CarlaGameControllerBase.h"
 
 class ACarlaVehicleController;
-
-namespace carla {
-  class CarlaServer;
-}
+class CarlaServer;
 
 /// Implements remote control of game and player.
 class CARLA_API CarlaGameController : public CarlaGameControllerBase
 {
 public:
 
-  CarlaGameController(uint32 WorldPort, uint32 WritePort, uint32 ReadPort);
+  explicit CarlaGameController();
 
   ~CarlaGameController();
 
@@ -31,16 +28,11 @@ public:
 
 private:
 
-  /// Return false if the server needs restart.
-  bool TickServer();
-
   void RestartLevel();
 
-  TUniquePtr<carla::CarlaServer> Server;
+  TUniquePtr<CarlaServer> Server;
 
   ACarlaVehicleController *Player = nullptr;
 
   UCarlaSettings *CarlaSettings = nullptr;
-
-  bool bServerNeedsRestart = true;
 };

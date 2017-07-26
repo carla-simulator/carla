@@ -11,7 +11,8 @@
 namespace carla {
 namespace server {
 
-  /// Wrapper around a server for encoding and decoding the messages.
+  /// Wrapper around a server for encoding and decoding the messages with a
+  /// CarlaEncoder.
   template <typename SERVER>
   class EncoderServer : private NonCopyable {
   public:

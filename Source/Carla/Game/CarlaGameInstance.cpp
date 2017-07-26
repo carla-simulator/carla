@@ -21,10 +21,7 @@ void UCarlaGameInstance::InitializeGameControllerIfNotPresent(
 {
   if (GameController == nullptr) {
     if (CarlaSettings->bUseNetworking) {
-      GameController = MakeUnique<CarlaGameController>(
-          CarlaSettings->WorldPort,
-          CarlaSettings->WritePort,
-          CarlaSettings->ReadPort);
+      GameController = MakeUnique<CarlaGameController>();
     } else {
       GameController = MakeUnique<MockGameController>(MockControllerSettings);
       UE_LOG(LogCarla, Log, TEXT("Using mock CARLA controller"));

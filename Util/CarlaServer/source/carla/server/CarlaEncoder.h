@@ -10,6 +10,8 @@
 namespace carla {
 namespace server {
 
+  /// Converts the data between the C interface types and the Protobuf message
+  /// that is going to be sent and received through the socket.
   class CarlaEncoder {
   public:
 

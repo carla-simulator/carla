@@ -114,9 +114,15 @@ public:
   }
 
   UFUNCTION()
+  int32 GetNumberOfImages() const
+  {
+    return Images.Num();
+  }
+
+  UFUNCTION()
   bool HasImages() const
   {
-    return Images.Num() > 0;
+    return GetNumberOfImages() > 0;
   }
 
   UFUNCTION()

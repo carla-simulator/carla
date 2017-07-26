@@ -72,13 +72,15 @@ public:
   UPROPERTY(Category = "CARLA Server", VisibleAnywhere, meta = (EditCondition = bUseNetworking))
   uint32 WorldPort = 2000u;
 
-  /** If networking is active, rewards are sent to this port. */
+  /** Time-out in milliseconds for the networking operations. */
   UPROPERTY(Category = "CARLA Server", VisibleAnywhere, meta = (EditCondition = bUseNetworking))
-  uint32 WritePort = 2001u;
+  uint32 ServerTimeOut = 10000u;
 
-  /** If networking is active, controls are read from this port. */
+  /** In synchronous mode, CARLA waits every tick until the control from the
+    * client is received.
+    */
   UPROPERTY(Category = "CARLA Server", VisibleAnywhere, meta = (EditCondition = bUseNetworking))
-  uint32 ReadPort = 2002u;
+  bool bSynchronousMode = false;
 
   /// @}
   // ===========================================================================

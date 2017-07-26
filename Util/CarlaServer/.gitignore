@@ -1,0 +1,7 @@
+*.log
+*.pid
+*.sublime-workspace
+bin
+bin_debug
+build
+lib

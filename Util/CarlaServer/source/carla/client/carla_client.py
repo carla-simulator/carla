@@ -15,6 +15,13 @@ from tcp_client import TCPClient
 import carla_protocol_pb2 as carla_protocol
 
 
+CarlaSettings = """
+[CARLA/LevelSettings]
+NumberOfVehicles=10
+NumberOfPedestrians=20
+WeatherId=3
+"""
+
 class CarlaClient(object):
     def __init__(self, host, world_port, timeout):
         self._timeout = timeout
@@ -77,8 +84,8 @@ class CarlaClient(object):
 
     def write_control(self, **kwargs):
         pb_message = carla_protocol.Control()
-        pb_message.steer = kwargs.get('steer', 0.0)
-        pb_message.throttle = kwargs.get('throttle', 0.0)
+        pb_message.steer = kwargs.get('steer', 0.3)
+        pb_message.throttle = kwargs.get('throttle', 1.0)
         pb_message.brake = kwargs.get('brake', 0.0)
         pb_message.hand_brake = kwargs.get('hand_brake', False)
         pb_message.reverse = kwargs.get('reverse', False)
@@ -134,7 +141,7 @@ def test_carla_client():
                     client.write_request_new_episode(fd.read())
             else:
                 logging.info('sending empty ini file')
-                client.write_request_new_episode('Dummy empty ini file')
+                client.write_request_new_episode(CarlaSettings)
 
             while True:
 
@@ -156,7 +163,7 @@ def test_carla_client():
                 logging.info('connecting secondary clients')
                 client.connect_secondary_clients()
 
-                for x in xrange(0, 5):
+                for x in xrange(0, 20):
                     logging.info('waiting for measurements')
                     data = client.read_measurements()
                     if not data:
@@ -168,6 +175,9 @@ def test_carla_client():
                     logging.info('waiting for images')
                     data = client.read_images()
                     logging.info('received %d bytes of images', len(data) if data is not None else 0)
+
+                    # logging.info('Taking a nap...')
+                    # time.sleep(10)
 
                     logging.info('sending control')
                     client.write_control(steer=-2.3, throttle=1.0, reverse=True)
