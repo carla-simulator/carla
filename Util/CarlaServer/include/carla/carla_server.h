@@ -35,11 +35,6 @@ extern "C" {
     struct carla_vector3d orientation;
   };
 
-  struct carla_bounding_box {
-    struct carla_transform transform;
-    struct carla_vector3d extent;
-  };
-
 #define CARLA_SERVER_AGENT_UNKNOWN    0u
 #define CARLA_SERVER_AGENT_VEHICLE    1u
 #define CARLA_SERVER_AGENT_PEDESTRIAN 2u
@@ -48,7 +43,7 @@ extern "C" {
     uint32_t id;
     uint32_t type;
     struct carla_transform transform;
-    struct carla_bounding_box bounding_box;
+    struct carla_vector3d box_extent;
     float forward_speed;
   };
 

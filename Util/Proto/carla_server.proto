@@ -22,11 +22,6 @@ message Transform {
   Vector3D orientation = 2;
 }
 
-message BoundingBox {
-  Transform transform = 1;
-  Vector3D extent = 2;
-}
-
 message Agent {
   enum Type {
     UNKNOWN = 0;
@@ -37,7 +32,7 @@ message Agent {
   uint32 id = 1;
   Type type = 2;
   Transform transform = 3;
-  BoundingBox bounding_box = 4;
+  Vector3D box_extent = 4;
   float forward_speed = 5;
 }
 

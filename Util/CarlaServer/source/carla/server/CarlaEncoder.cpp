@@ -36,12 +36,6 @@ namespace server {
     Set(lhs->mutable_orientation(), rhs.orientation);
   }
 
-  static void Set(cs::BoundingBox *lhs, const carla_bounding_box &rhs) {
-    DEBUG_ASSERT(lhs != nullptr);
-    Set(lhs->mutable_transform(), rhs.transform);
-    Set(lhs->mutable_extent(), rhs.extent);
-  }
-
   static cs::Agent::Type GetAgentType(const uint32_t type) {
     switch (type) {
       case CARLA_SERVER_AGENT_VEHICLE:    return cs::Agent::VEHICLE;
@@ -55,7 +49,7 @@ namespace server {
     lhs->set_id(rhs.id);
     lhs->set_type(GetAgentType(rhs.type));
     Set(lhs->mutable_transform(), rhs.transform);
-    Set(lhs->mutable_bounding_box(), rhs.bounding_box);
+    Set(lhs->mutable_box_extent(), rhs.box_extent);
     lhs->set_forward_speed(rhs.forward_speed);
   }
 
