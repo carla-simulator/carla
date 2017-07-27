@@ -56,11 +56,11 @@ TEST(CarlaServerAPI, SimBlocking) {
     {2u, 3u, 1u, image1}
   };
 
-  const carla_vector3d start_locations[] = {
-    {0.0f, 0.0f, 0.0f},
-    {1.0f, 0.0f, 0.0f},
-    {0.0f, 1.0f, 0.0f},
-    {1.0f, 1.0f, 0.0f}
+  const carla_transform start_locations[] = {
+    {carla_vector3d{0.0f, 0.0f, 0.0f}, carla_vector3d{0.0f, 0.0f, 0.0f}},
+    {carla_vector3d{1.0f, 0.0f, 0.0f}, carla_vector3d{1.0f, 0.0f, 0.0f}},
+    {carla_vector3d{0.0f, 1.0f, 0.0f}, carla_vector3d{0.0f, 1.0f, 0.0f}},
+    {carla_vector3d{1.0f, 1.0f, 0.0f}, carla_vector3d{1.0f, 1.0f, 0.0f}}
   };
 
   const auto S = CARLA_SERVER_SUCCESS;

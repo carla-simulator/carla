@@ -4,27 +4,66 @@ package carla_server;
 
 option cc_enable_arenas = true;
 
+// =============================================================================
+// -- Basic types --------------------------------------------------------------
+// =============================================================================
+
 message Vector3D {
   float x = 1;
   float y = 2;
   float z = 3;
 }
 
+message Transform {
+  Vector3D location = 1;
+  // For now, orientation as the cartesian coordinates X, Y, Z. But we are
+  // probably better off using Roll, Pitch, Yaw in the future as it gives more
+  // info.
+  Vector3D orientation = 2;
+}
+
+message BoundingBox {
+  Transform transform = 1;
+  Vector3D extent = 2;
+}
+
+message Agent {
+  enum Type {
+    UNKNOWN = 0;
+    VEHICLE = 1;
+    PEDESTRIAN = 2;
+  }
+
+  uint32 id = 1;
+  Type type = 2;
+  Transform transform = 3;
+  BoundingBox bounding_box = 4;
+  float forward_speed = 5;
+}
+
+// =============================================================================
+// -- World Server Messages ----------------------------------------------------
+// =============================================================================
+
 message RequestNewEpisode {
-  bytes ini_file = 1;
+  string ini_file = 1;
 }
 
 message SceneDescription {
-  bytes player_start_locations = 1;
+  repeated Transform player_start_spots = 1;
 }
 
 message EpisodeStart {
-  int32 player_start_location_index = 1;
+  uint32 player_start_spot_index = 1;
 }
 
 message EpisodeReady {
   bool ready = 1;
 }
+
+// =============================================================================
+// -- Agent Server Messages ----------------------------------------------------
+// =============================================================================
 
 message Control {
   float steer = 1;
@@ -36,8 +75,7 @@ message Control {
 
 message Measurements {
   message PlayerMeasurements {
-    Vector3D location = 1;
-    Vector3D orientation = 2;
+    Transform transform = 1;
 
     Vector3D acceleration = 3;
     float forward_speed = 4;
@@ -50,8 +88,11 @@ message Measurements {
     float intersection_offroad = 9;
   }
 
-  int32 platform_timestamp = 1;
-  int32 game_timestamp = 2;
+  uint32 platform_timestamp = 1;
+
+  uint32 game_timestamp = 2;
 
   PlayerMeasurements player_measurements = 3;
+
+  repeated Agent non_player_agents = 4;
 }

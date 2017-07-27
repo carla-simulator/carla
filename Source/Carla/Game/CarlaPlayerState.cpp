@@ -24,8 +24,7 @@ void ACarlaPlayerState::CopyProperties(APlayerState *PlayerState)
     {
       PlatformTimeStamp = Other->PlatformTimeStamp;
       GameTimeStamp = Other->GameTimeStamp;
-      Location = Other->Location;
-      Orientation = Other->Orientation;
+      Transform = Other->Transform;
       Acceleration = Other->Acceleration;
       ForwardSpeed = Other->ForwardSpeed;
       CollisionIntensityCars = Other->CollisionIntensityCars;

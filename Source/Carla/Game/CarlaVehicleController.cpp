@@ -107,11 +107,10 @@ void ACarlaVehicleController::Tick(float DeltaTime)
 
   if (IsPossessingAVehicle()) {
     CarlaPlayerState->UpdateTimeStamp(DeltaTime);
-    CarlaPlayerState->Location = GetVehicleLocation();
-    const FVector PreviousSpeed = CarlaPlayerState->ForwardSpeed * CarlaPlayerState->Orientation;
-    CarlaPlayerState->Orientation = GetVehicleOrientation();
+    const FVector PreviousSpeed = CarlaPlayerState->ForwardSpeed * CarlaPlayerState->GetOrientation();
+    CarlaPlayerState->Transform = GetVehicleTransform();
     CarlaPlayerState->ForwardSpeed = GetVehicleForwardSpeed();
-    const FVector CurrentSpeed = CarlaPlayerState->ForwardSpeed * CarlaPlayerState->Orientation;
+    const FVector CurrentSpeed = CarlaPlayerState->ForwardSpeed * CarlaPlayerState->GetOrientation();
     CarlaPlayerState->Acceleration = (CurrentSpeed - PreviousSpeed) / DeltaTime;
     CarlaPlayerState->CurrentGear = GetVehicleCurrentGear();
     IntersectPlayerWithRoadMap();
@@ -130,6 +129,12 @@ void ACarlaVehicleController::Tick(float DeltaTime)
 // -- Vehicle pawn info --------------------------------------------------------
 // =============================================================================
 
+FTransform ACarlaVehicleController::GetVehicleTransform() const
+{
+  check(GetPawn() != nullptr);
+  return GetPawn()->GetActorTransform();
+}
+
 FVector ACarlaVehicleController::GetVehicleLocation() const
 {
   check(GetPawn() != nullptr);
@@ -144,8 +149,7 @@ float ACarlaVehicleController::GetVehicleForwardSpeed() const
 
 FVector ACarlaVehicleController::GetVehicleOrientation() const
 {
-  check(GetPawn() != nullptr);
-  return GetPawn()->GetTransform().GetRotation().GetForwardVector();
+  return GetVehicleTransform().GetRotation().GetForwardVector();
 }
 
 int32 ACarlaVehicleController::GetVehicleCurrentGear() const

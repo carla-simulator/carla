@@ -91,4 +91,18 @@ namespace detail {
   template <typename T>
   using const_array_view = detail::ArrayView<const std::remove_const_t<T>>;
 
+namespace array_view {
+
+  template <typename T, typename V = mutable_array_view<T>>
+  static inline auto make_mutable(T *data, typename V::size_type size) {
+    return V(data, size);
+  }
+
+  template <typename T, typename V = const_array_view<T>>
+  static inline auto make_const(const T *data, typename V::size_type size) {
+    return V(data, size);
+  }
+
+} // namespace array_view
+
 } // namespace carla

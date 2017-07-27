@@ -54,15 +54,21 @@ public:
   }
 
   UFUNCTION()
-  const FVector &GetLocation() const
+  const FTransform &GetTransform() const
   {
-    return Location;
+    return Transform;
   }
 
   UFUNCTION()
-  const FVector &GetOrientation() const
+  FVector GetLocation() const
   {
-    return Orientation;
+    return Transform.GetLocation();
+  }
+
+  UFUNCTION()
+  FVector GetOrientation() const
+  {
+    return Transform.GetRotation().GetForwardVector();
   }
 
   UFUNCTION()
@@ -164,10 +170,7 @@ private:
   int32 GameTimeStamp = 0.0f;
 
   UPROPERTY(VisibleAnywhere)
-  FVector Location;
-
-  UPROPERTY(VisibleAnywhere)
-  FVector Orientation;
+  FTransform Transform;
 
   UPROPERTY(VisibleAnywhere)
   FVector Acceleration;

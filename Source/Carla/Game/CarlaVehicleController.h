@@ -58,6 +58,9 @@ public:
     return MovementComponent != nullptr;
   }
 
+  /// World transform of the vehicle.
+  FTransform GetVehicleTransform() const;
+
   /// World location of the vehicle.
   FVector GetVehicleLocation() const;
 

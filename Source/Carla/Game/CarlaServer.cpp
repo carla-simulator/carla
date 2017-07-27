@@ -41,9 +41,15 @@ static inline void Set(float &lhs, float rhs)
   lhs = rhs;
 }
 
-static inline void Set(carla_vector3d &cVector, const FVector &uVector)
+static inline void Set(carla_vector3d &lhs, const FVector &rhs)
 {
-  cVector = {uVector.X, uVector.Y, uVector.Z};
+  lhs = {rhs.X, rhs.Y, rhs.Z};
+}
+
+static inline void Set(carla_transform &lhs, const FTransform &rhs)
+{
+  Set(lhs.location, rhs.GetLocation());
+  Set(lhs.orientation, rhs.GetRotation().GetForwardVector());
 }
 
 static void Set(carla_image &cImage, const FCapturedImage &uImage)
@@ -92,7 +98,7 @@ CarlaServer::~CarlaServer()
 
 CarlaServer::ErrorCode CarlaServer::Connect()
 {
-  UE_LOG(LogCarlaServer, Log, TEXT("Waiting for client to connect..."));
+  UE_LOG(LogCarlaServer, Log, TEXT("Waiting for the client to connect..."));
   return ParseErrorCode(carla_server_connect(Server, WorldPort, TimeOut));
 }
 
@@ -115,17 +121,17 @@ CarlaServer::ErrorCode CarlaServer::SendSceneDescription(
       const TArray<APlayerStart *> &AvailableStartSpots,
       const bool bBlocking)
 {
-  const int32 NumberOfStartPositions = AvailableStartSpots.Num();
-  auto Positions = MakeUnique<carla_vector3d[]>(NumberOfStartPositions);
+  const int32 NumberOfStartSpots = AvailableStartSpots.Num();
+  auto StartSpots = MakeUnique<carla_transform[]>(NumberOfStartSpots);
 
-  for (auto i = 0u; i < NumberOfStartPositions; ++i) {
-    Set(Positions[i], AvailableStartSpots[i]->GetActorLocation());
+  for (auto i = 0u; i < NumberOfStartSpots; ++i) {
+    Set(StartSpots[i], AvailableStartSpots[i]->GetActorTransform());
   }
 
-  UE_LOG(LogCarlaServer, Log, TEXT("Sending %d available start positions"), NumberOfStartPositions);
+  UE_LOG(LogCarlaServer, Log, TEXT("Sending %d available start positions"), NumberOfStartSpots);
   carla_scene_description scene;
-  scene.player_start_locations = Positions.Get();
-  scene.number_of_player_start_locations = NumberOfStartPositions;
+  scene.player_start_spots = StartSpots.Get();
+  scene.number_of_player_start_spots = NumberOfStartSpots;
 
   return ParseErrorCode(carla_write_scene_description(Server, scene, GetTimeOut(TimeOut, bBlocking)));
 }
@@ -135,7 +141,7 @@ CarlaServer::ErrorCode CarlaServer::ReadEpisodeStart(uint32 &StartPositionIndex,
   carla_episode_start values;
   auto ec = ParseErrorCode(carla_read_episode_start(Server, values, GetTimeOut(TimeOut, bBlocking)));
   if (Success == ec) {
-    StartPositionIndex = values.player_start_location_index;
+    StartPositionIndex = values.player_start_spot_index;
     UE_LOG(LogCarlaServer, Log, TEXT("Episode start received: { StartIndex = %d }"), StartPositionIndex);
   }
   return ec;
@@ -182,8 +188,7 @@ CarlaServer::ErrorCode CarlaServer::SendMeasurements(const ACarlaPlayerState &Pl
   values.platform_timestamp = PlayerState.GetPlatformTimeStamp();
   values.game_timestamp = PlayerState.GetGameTimeStamp();
   auto &player = values.player_measurements;
-  Set(player.location, PlayerState.GetLocation());
-  Set(player.orientation, PlayerState.GetOrientation());
+  Set(player.transform, PlayerState.GetTransform());
   Set(player.acceleration, PlayerState.GetAcceleration());
   Set(player.forward_speed, PlayerState.GetForwardSpeed());
   Set(player.collision_vehicles, PlayerState.GetCollisionIntensityCars());

@@ -30,6 +30,28 @@ extern "C" {
     const uint32_t *data;
   };
 
+  struct carla_transform {
+    struct carla_vector3d location;
+    struct carla_vector3d orientation;
+  };
+
+  struct carla_bounding_box {
+    struct carla_transform transform;
+    struct carla_vector3d extent;
+  };
+
+#define CARLA_SERVER_AGENT_UNKNOWN    0u
+#define CARLA_SERVER_AGENT_VEHICLE    1u
+#define CARLA_SERVER_AGENT_PEDESTRIAN 2u
+
+  struct carla_agent {
+    uint32_t id;
+    uint32_t type;
+    struct carla_transform transform;
+    struct carla_bounding_box bounding_box;
+    float forward_speed;
+  };
+
   /* ======================================================================== */
   /* -- carla_request_new_episode ------------------------------------------- */
   /* ======================================================================== */
@@ -52,8 +74,8 @@ extern "C" {
 
   struct carla_scene_description {
     /** Collection of the initial player start locations. */
-    const struct carla_vector3d *player_start_locations;
-    uint32_t number_of_player_start_locations;
+    const struct carla_transform *player_start_spots;
+    uint32_t number_of_player_start_spots;
   };
 
   /* ======================================================================== */
@@ -61,7 +83,7 @@ extern "C" {
   /* ======================================================================== */
 
   struct carla_episode_start {
-    uint32_t player_start_location_index;
+    uint32_t player_start_spot_index;
   };
 
   /* ======================================================================== */
@@ -89,10 +111,8 @@ extern "C" {
   /* ======================================================================== */
 
   struct carla_player_measurements {
-    /** World location of the player. */
-    struct carla_vector3d location;
-    /** Orientation of the player. */
-    struct carla_vector3d orientation;
+    /** World transform of the player. */
+    struct carla_transform transform;
     /** Current acceleration of the player. */
     struct carla_vector3d acceleration;
     /** Forward speed in km/h. */
@@ -120,6 +140,9 @@ extern "C" {
     uint32_t game_timestamp;
     /** Player measurements. */
     struct carla_player_measurements player_measurements;
+    /** Non-player agents. */
+    const struct carla_agent *non_player_agents;
+    uint32_t number_of_non_player_agents;
   };
 
   /* ======================================================================== */
