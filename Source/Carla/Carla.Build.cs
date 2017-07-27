@@ -98,6 +98,8 @@ public class Carla : ModuleRules
     };
 
     // Link dependencies.
+    PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetSharedLibName("c++")));
+    PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetSharedLibName("c++abi")));
     PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetSharedLibName("boost_system")));
     PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetSharedLibName("protobuf")));
     PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetSharedLibName(CarlaServerLib)));
