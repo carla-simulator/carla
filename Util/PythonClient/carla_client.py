@@ -12,7 +12,7 @@ import time
 
 from tcp_client import TCPClient
 
-import carla_protocol_pb2 as carla_protocol
+import carla_server_pb2 as carla_protocol
 
 
 CarlaSettings = """
@@ -57,7 +57,7 @@ class CarlaClient(object):
 
     def write_episode_start(self, player_start_location_index):
         pb_message = carla_protocol.EpisodeStart()
-        pb_message.player_start_location_index = player_start_location_index
+        pb_message.player_start_spot_index = player_start_location_index
         self._world_client.write(pb_message.SerializeToString())
 
     def read_episode_ready(self):
@@ -147,7 +147,7 @@ def test_carla_client():
 
                 logging.info('waiting for the scene description')
                 data = client.read_scene_description()
-                data = data.player_start_locations
+                data = data.player_start_spots
                 logging.info('received %d bytes of player start locations', len(data) if data is not None else 0)
 
                 logging.info('sending episode start')
