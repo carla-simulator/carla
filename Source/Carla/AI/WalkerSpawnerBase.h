@@ -64,6 +64,14 @@ public:
     return Walkers.Num() + WalkersBlackList.Num();
   }
 
+  const TArray<ACharacter *> &GetWalkersWhiteList() const {
+    return Walkers;
+  }
+
+  const TArray<ACharacter *> &GetWalkersBlackList() const {
+    return WalkersBlackList;
+  }
+
 private:
 
   const AWalkerSpawnPointBase &GetRandomSpawnPoint();

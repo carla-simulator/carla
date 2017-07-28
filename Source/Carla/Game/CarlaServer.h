@@ -36,7 +36,9 @@ public:
 
   ErrorCode ReadControl(ACarlaVehicleController &Player, bool bBlocking);
 
-  ErrorCode SendMeasurements(const ACarlaPlayerState &PlayerState);
+  ErrorCode SendMeasurements(
+      const ACarlaGameState &GameState,
+      const ACarlaPlayerState &PlayerState);
 
 private:
 

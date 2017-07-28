@@ -6,7 +6,7 @@
 MockGameController::MockGameController(const FMockGameControllerSettings &InSettings) :
   Settings(InSettings) {}
 
-void MockGameController::Initialize(UCarlaSettings & CarlaSettings)
+void MockGameController::Initialize(UCarlaSettings &CarlaSettings)
 {
 #if WITH_EDITOR
   if (Settings.bOverrideCarlaSettings) {

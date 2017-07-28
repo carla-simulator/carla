@@ -124,6 +124,17 @@ void ACarlaGameModeBase::BeginPlay()
 {
   Super::BeginPlay();
 
+  auto CarlaGameState = Cast<ACarlaGameState>(GameState);
+  checkf(
+      CarlaGameState != nullptr,
+      TEXT("GameState is not a ACarlaGameState, did you forget to set it in the project settings?"));
+  if (WalkerSpawner != nullptr) {
+    CarlaGameState->WalkerSpawner = WalkerSpawner;
+  }
+  if (VehicleSpawner != nullptr) {
+    CarlaGameState->VehicleSpawner = VehicleSpawner;
+  }
+
   const auto &CarlaSettings = GameInstance->GetCarlaSettings();
 
   // Setup semantic segmentation if necessary.

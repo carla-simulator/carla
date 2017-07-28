@@ -4,6 +4,7 @@
 
 #include "CarlaGameControllerBase.h"
 
+class ACarlaGameState;
 class ACarlaVehicleController;
 class CarlaServer;
 
@@ -33,6 +34,8 @@ private:
   TUniquePtr<CarlaServer> Server;
 
   ACarlaVehicleController *Player = nullptr;
+
+  const ACarlaGameState *GameState = nullptr;
 
   UCarlaSettings *CarlaSettings = nullptr;
 };

@@ -75,6 +75,9 @@ void CarlaGameController::RegisterPlayer(AController &NewPlayer)
 
 void CarlaGameController::BeginPlay()
 {
+  check(Player != nullptr);
+  GameState = Cast<ACarlaGameState>(Player->GetWorld()->GetGameState());
+  check(GameState != nullptr);
   if (Server != nullptr) {
     if (Errc::Success != Server->SendEpisodeReady(BLOCKING)) {
       UE_LOG(LogCarlaServer, Warning, TEXT("Failed to read episode start, server needs restart"));
@@ -108,7 +111,10 @@ void CarlaGameController::Tick(float DeltaSeconds)
 
   // Send measurements.
   if (Server != nullptr) {
-    if (Errc::Error == Server->SendMeasurements(Player->GetPlayerState())) {
+    check(GameState != nullptr);
+    if (Errc::Error == Server->SendMeasurements(
+            *GameState,
+            Player->GetPlayerState())) {
       Server = nullptr;
     }
   }

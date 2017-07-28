@@ -33,15 +33,24 @@ protected:
 
 public:
 
-   void SetNumberOfVehicles(int32 Count);
+  void SetNumberOfVehicles(int32 Count);
 
-   APlayerStart* GetRandomSpawnPoint();
+  int32 GetNumberOfSpawnedVehicles() const
+  {
+    return Vehicles.Num();
+  }
 
-   void SpawnVehicleAtSpawnPoint(const APlayerStart &SpawnPoint);
+  const TArray<AWheeledVehicle *> &GetVehicles() const {
+    return Vehicles;
+  }
 
 protected:
 
-/** If false, no walker will be spawned. */
+  APlayerStart* GetRandomSpawnPoint();
+
+  void SpawnVehicleAtSpawnPoint(const APlayerStart &SpawnPoint);
+
+  /** If false, no walker will be spawned. */
   UPROPERTY(Category = "Vehicle Spawner", EditAnywhere)
   bool bSpawnVehicles = true;
 

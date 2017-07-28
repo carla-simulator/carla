@@ -13,7 +13,23 @@ class CARLA_API ACarlaGameState : public AGameStateBase
 {
 	GENERATED_BODY()
 
+public:
 
+  const AVehicleSpawnerBase *GetVehicleSpawner() const {
+    return VehicleSpawner;
+  }
 
+  const AWalkerSpawnerBase *GetWalkerSpawner() const {
+    return WalkerSpawner;
+  }
 
+private:
+
+  friend class ACarlaGameModeBase;
+
+  UPROPERTY()
+  AVehicleSpawnerBase *VehicleSpawner = nullptr;
+
+  UPROPERTY()
+  AWalkerSpawnerBase *WalkerSpawner = nullptr;
 };

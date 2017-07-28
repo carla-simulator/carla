@@ -181,7 +181,68 @@ CarlaServer::ErrorCode CarlaServer::ReadControl(ACarlaVehicleController &Player,
   return ec;
 }
 
-CarlaServer::ErrorCode CarlaServer::SendMeasurements(const ACarlaPlayerState &PlayerState)
+static void SetBoxAndSpeed(carla_agent &values, const ACharacter *Walker)
+{
+  values.forward_speed = FVector::DotProduct(Walker->GetVelocity(), Walker->GetActorRotation().Vector()) * 0.036f;
+  /// @todo Perhaps the box it is not the same for every walker...
+  values.box_extent = {45.0f, 35.0f, 100.0f};
+}
+
+static void SetBoxAndSpeed(carla_agent &values, const AWheeledVehicle *Vehicle)
+{
+  /// @todo This is very slow and the code is duplicated at
+  /// ACarlaVehicleController.
+  values.forward_speed = Vehicle->GetVehicleMovementComponent()->GetForwardSpeed() * 0.036f;
+  TArray<UBoxComponent *> BoundingBoxes;
+  Vehicle->GetComponents<UBoxComponent>(BoundingBoxes);
+  if (BoundingBoxes.Num() > 0) {
+    Set(values.box_extent, BoundingBoxes[0]->GetScaledBoxExtent());
+  } else {
+    UE_LOG(LogCarla, Error, TEXT("Vehicle is missing the bounding box!"));
+  }
+}
+
+template <typename T>
+static void AddAgents(TArray<carla_agent> &Agents, const TArray<T> &Actors, uint32 type)
+{
+  for (auto &&Actor : Actors) {
+    Agents.Emplace();
+    auto &values = Agents.Last();
+    values.id = GetTypeHash(Actor);
+    values.type = type;
+    Set(values.transform, Actor->GetActorTransform());
+    SetBoxAndSpeed(values, Actor);
+  }
+}
+
+static void GetAgentInfo(
+    const ACarlaGameState &GameState,
+    TArray<carla_agent> &Agents)
+{
+  auto *WalkerSpawner = GameState.GetWalkerSpawner();
+  auto *VehicleSpawner = GameState.GetVehicleSpawner();
+
+  uint32 NumberOfAgents = 0u;
+  if (WalkerSpawner != nullptr) {
+    NumberOfAgents += WalkerSpawner->GetCurrentNumberOfWalkers();
+  }
+  if (VehicleSpawner != nullptr) {
+    NumberOfAgents += VehicleSpawner->GetNumberOfSpawnedVehicles();
+  }
+  Agents.Reserve(NumberOfAgents);
+
+  if (WalkerSpawner != nullptr) {
+    AddAgents(Agents, WalkerSpawner->GetWalkersWhiteList(), CARLA_SERVER_AGENT_PEDESTRIAN);
+    AddAgents(Agents, WalkerSpawner->GetWalkersBlackList(), CARLA_SERVER_AGENT_PEDESTRIAN);
+  }
+  if (VehicleSpawner != nullptr) {
+    AddAgents(Agents, VehicleSpawner->GetVehicles(), CARLA_SERVER_AGENT_VEHICLE);
+  }
+}
+
+CarlaServer::ErrorCode CarlaServer::SendMeasurements(
+    const ACarlaGameState &GameState,
+    const ACarlaPlayerState &PlayerState)
 {
   // Measurements.
   carla_measurements values;
@@ -196,6 +257,11 @@ CarlaServer::ErrorCode CarlaServer::SendMeasurements(const ACarlaPlayerState &Pl
   Set(player.collision_other, PlayerState.GetCollisionIntensityOther());
   Set(player.intersection_otherlane, PlayerState.GetOtherLaneIntersectionFactor());
   Set(player.intersection_offroad, PlayerState.GetOffRoadIntersectionFactor());
+
+  TArray<carla_agent> Agents;
+  GetAgentInfo(GameState, Agents);
+  values.non_player_agents = (Agents.Num() > 0 ? Agents.GetData() : nullptr);
+  values.number_of_non_player_agents = Agents.Num();
 
   // Images.
   const auto NumberOfImages = PlayerState.GetNumberOfImages();
