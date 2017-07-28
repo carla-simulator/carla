@@ -16,6 +16,9 @@ import carla_server_pb2 as carla_protocol
 
 
 CarlaSettings = """
+[CARLA/Server]
+SynchronousMode=true
+SendNonPlayerAgentsInfo=false
 [CARLA/LevelSettings]
 NumberOfVehicles=10
 NumberOfPedestrians=20
@@ -172,6 +175,7 @@ def test_carla_client():
                         logging.info('received non-initialized measurements')
                     else:
                         logging.info('received valid measurements')
+                        logging.info('received info of %d agents', len(data.non_player_agents))
                     logging.info('waiting for images')
                     data = client.read_images()
                     logging.info('received %d bytes of images', len(data) if data is not None else 0)

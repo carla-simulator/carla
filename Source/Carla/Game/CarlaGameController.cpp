@@ -114,7 +114,8 @@ void CarlaGameController::Tick(float DeltaSeconds)
     check(GameState != nullptr);
     if (Errc::Error == Server->SendMeasurements(
             *GameState,
-            Player->GetPlayerState())) {
+            Player->GetPlayerState(),
+            CarlaSettings->bSendNonPlayerAgentsInfo)) {
       Server = nullptr;
     }
   }

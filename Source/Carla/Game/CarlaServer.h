@@ -38,7 +38,8 @@ public:
 
   ErrorCode SendMeasurements(
       const ACarlaGameState &GameState,
-      const ACarlaPlayerState &PlayerState);
+      const ACarlaPlayerState &PlayerState,
+      bool bSendNonPlayerAgentsInfo);
 
 private:
 

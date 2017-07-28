@@ -80,7 +80,11 @@ public:
     * client is received.
     */
   UPROPERTY(Category = "CARLA Server", VisibleAnywhere, meta = (EditCondition = bUseNetworking))
-  bool bSynchronousMode = false;
+  bool bSynchronousMode = true;
+
+  /** Send info about every non-player agent in the scene every frame. */
+  UPROPERTY(Category = "CARLA Server", VisibleAnywhere, meta = (EditCondition = bUseNetworking))
+  bool bSendNonPlayerAgentsInfo = false;
 
   /// @}
   // ===========================================================================

@@ -242,7 +242,8 @@ static void GetAgentInfo(
 
 CarlaServer::ErrorCode CarlaServer::SendMeasurements(
     const ACarlaGameState &GameState,
-    const ACarlaPlayerState &PlayerState)
+    const ACarlaPlayerState &PlayerState,
+    const bool bSendNonPlayerAgentsInfo)
 {
   // Measurements.
   carla_measurements values;
@@ -259,7 +260,9 @@ CarlaServer::ErrorCode CarlaServer::SendMeasurements(
   Set(player.intersection_offroad, PlayerState.GetOffRoadIntersectionFactor());
 
   TArray<carla_agent> Agents;
-  GetAgentInfo(GameState, Agents);
+  if (bSendNonPlayerAgentsInfo) {
+    GetAgentInfo(GameState, Agents);
+  }
   values.non_player_agents = (Agents.Num() > 0 ? Agents.GetData() : nullptr);
   values.number_of_non_player_agents = Agents.Num();
 
