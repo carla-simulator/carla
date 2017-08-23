@@ -19,9 +19,14 @@
 			"Type": "Developer",
 			"LoadingPhase": "Default",
 			"AdditionalDependencies": [
-				"Engine",
-				"PhysXVehicles"
+				"Engine"
 			]
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "PhysXVehicles",
+			"Enabled": true
 		}
 	]
 }

@@ -6,7 +6,7 @@
 #include "RoadMap.generated.h"
 
 /// Road map intersection result. See URoadMap.
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FRoadMapIntersectionResult
 {
   GENERATED_BODY()

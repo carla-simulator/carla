@@ -9,7 +9,7 @@
   * Some post-process parameters that can be overriden per camera depending on
   * the weather and lighting conditions.
   */
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FCameraPostProcessParameters
 {
   GENERATED_USTRUCT_BODY()

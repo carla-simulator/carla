@@ -10,7 +10,7 @@ static FString PrecipitationTypeToString(EPrecipitationType PrecipitationType)
   const UEnum* ptr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EPrecipitationType"), true);
   if(!ptr)
     return FString("Rain");
-  return ptr->GetEnumName(static_cast<int32>(PrecipitationType));
+  return ptr->GetNameStringByIndex(static_cast<int32>(PrecipitationType));
 }
 
 static void LoadPrecipitationType(

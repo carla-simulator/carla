@@ -5,7 +5,7 @@ using UnrealBuildTool;
 
 public class Carla : ModuleRules
 {
-  public Carla(TargetInfo Target)
+  public Carla(ReadOnlyTargetRules Target) : base(Target)
   {
     PublicIncludePaths.AddRange(
       new string[] {
@@ -50,12 +50,12 @@ public class Carla : ModuleRules
     AddCarlaServerDependency(Target);
   }
 
-  private bool IsWindows(TargetInfo Target)
+  private bool IsWindows(ReadOnlyTargetRules Target)
   {
     return (Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32);
   }
 
-  private bool UseDebugLibs(TargetInfo Target)
+  private bool UseDebugLibs(ReadOnlyTargetRules Target)
   {
     if (IsWindows(Target))
     {
@@ -72,7 +72,7 @@ public class Carla : ModuleRules
 
   delegate string ADelegate(string s);
 
-  private void AddCarlaServerDependency(TargetInfo Target)
+  private void AddCarlaServerDependency(ReadOnlyTargetRules Target)
   {
     string CarlaServerInstallPath = Path.GetFullPath(Path.Combine(ModuleDirectory, "../../Util/Install"));
 

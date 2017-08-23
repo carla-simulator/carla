@@ -22,17 +22,17 @@ You may need to change your default clang version to compile Unreal
     sudo ln -s /usr/bin/clang-3.9 /usr/bin/clang
     sudo ln -s /usr/bin/clang++-3.9 /usr/bin/clang++
 
-Download and install Unreal Engine 4.15
+Download and install Unreal Engine 4.17
 
-    git clone --depth=1 -b 4.15 https://github.com/Epic... ~/UnrealEngine_4.15
-    cd ~/UnrealEngine_4.15
+    git clone --depth=1 -b 4.17 https://github.com/EpicGames/UnrealEngine.git ~/UnrealEngine_4.17
+    cd ~/UnrealEngine_4.17
     ./Setup.sh && ./GenerateProjects.sh && make
 
 Clone CARLA to your project
 
     cd path/to/your/ue4-project
     mkdir -p Plugins && cd Plugins
-    git clone --depth=1 ......  Carla
+    git clone --depth=1 https://bitbucket.org/carla-cvc/carla-ue4-plugin  Carla
     cd Carla
 
 Now run Setup,sh (will build all the dependencies, takes a while) and make

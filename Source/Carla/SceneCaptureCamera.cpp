@@ -91,7 +91,6 @@ void ASceneCaptureCamera::BeginPlay()
 
   // Setup render target.
   const bool bInForceLinearGamma = bRemovePostProcessing;
-  CaptureRenderTarget->bHDR = !bRemovePostProcessing;
   CaptureRenderTarget->InitCustomFormat(SizeX, SizeY, PF_B8G8R8A8, bInForceLinearGamma);
 
   CaptureComponent2D->Deactivate();

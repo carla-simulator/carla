@@ -9,5 +9,5 @@ FString PostProcessEffect::ToString(EPostProcessEffect PostProcessEffect)
   const UEnum* ptr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EPostProcessEffect"), true);
   if(!ptr)
     return FString("Invalid");
-  return ptr->GetEnumName(static_cast<int32>(PostProcessEffect));
+  return ptr->GetNameStringByIndex(static_cast<int32>(PostProcessEffect));
 }

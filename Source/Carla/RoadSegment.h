@@ -14,7 +14,7 @@ enum class ELaneMarkingType : uint8
 };
 
 /// Description of a road segment piece.
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FRoadSegmentPiece
 {
   GENERATED_BODY()
