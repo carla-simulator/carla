@@ -18,7 +18,7 @@ import carla_server_pb2 as carla_protocol
 CarlaSettings = """
 [CARLA/Server]
 SynchronousMode=true
-SendNonPlayerAgentsInfo=false
+SendNonPlayerAgentsInfo=true
 [CARLA/LevelSettings]
 NumberOfVehicles=10
 NumberOfPedestrians=20
@@ -150,8 +150,9 @@ def test_carla_client():
 
                 logging.info('waiting for the scene description')
                 data = client.read_scene_description()
-                data = data.player_start_spots
-                logging.info('received %d bytes of player start locations', len(data) if data is not None else 0)
+                logging.info('received %d player start locations', len(data.player_start_spots))
+                for spot in data.player_start_spots:
+                    logging.info(spot)
 
                 logging.info('sending episode start')
                 client.write_episode_start(2)
@@ -176,6 +177,8 @@ def test_carla_client():
                     else:
                         logging.info('received valid measurements')
                         logging.info('received info of %d agents', len(data.non_player_agents))
+                        for agent in data.non_player_agents:
+                            logging.info(agent)
                     logging.info('waiting for images')
                     data = client.read_images()
                     logging.info('received %d bytes of images', len(data) if data is not None else 0)
