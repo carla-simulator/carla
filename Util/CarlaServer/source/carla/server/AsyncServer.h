@@ -50,9 +50,9 @@ namespace server {
 
   private:
 
-    AsyncService _service;
-
     server_type _server;
+
+    AsyncService _service;
   };
 
   // ===========================================================================
