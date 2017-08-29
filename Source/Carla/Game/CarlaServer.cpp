@@ -124,7 +124,7 @@ CarlaServer::ErrorCode CarlaServer::SendSceneDescription(
   const int32 NumberOfStartSpots = AvailableStartSpots.Num();
   auto StartSpots = MakeUnique<carla_transform[]>(NumberOfStartSpots);
 
-  for (auto i = 0u; i < NumberOfStartSpots; ++i) {
+  for (auto i = 0; i < NumberOfStartSpots; ++i) {
     Set(StartSpots[i], AvailableStartSpots[i]->GetActorTransform());
   }
 
@@ -271,7 +271,7 @@ CarlaServer::ErrorCode CarlaServer::SendMeasurements(
   TUniquePtr<carla_image[]> images;
   if (NumberOfImages > 0) {
     images = MakeUnique<carla_image[]>(NumberOfImages);
-    for (auto i = 0u; i < NumberOfImages; ++i) {
+    for (auto i = 0; i < NumberOfImages; ++i) {
       Set(images[i], PlayerState.GetImages()[i]);
     }
   }

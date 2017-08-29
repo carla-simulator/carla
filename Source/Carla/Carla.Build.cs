@@ -98,10 +98,21 @@ public class Carla : ModuleRules
     };
 
     // Link dependencies.
-    PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetLibName("c++abi")));
-    PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetLibName("boost_system")));
-    PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetLibName("protobuf")));
-    PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetLibName(CarlaServerLib)));
+    if (IsWindows(Target))
+    {
+      // Auto-links boost libraries in folder.
+      PublicLibraryPaths.Add(Path.Combine(CarlaServerInstallPath, "lib"));
+
+      PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetLibName("libprotobuf")));
+      PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetLibName(CarlaServerLib)));
+    }
+    else
+    {
+      PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetLibName("c++abi")));
+      PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetLibName("boost_system")));
+      PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetLibName("protobuf")));
+      PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetLibName(CarlaServerLib)));
+    }
 
     // Include path.
     string CarlaServerIncludePath = Path.Combine(CarlaServerInstallPath, "include");

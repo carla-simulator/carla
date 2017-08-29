@@ -34,17 +34,14 @@ if (UNIX)
   include_directories("${CARLA_LIBCXX_INSTALL_PATH}/include/c++/v1")
   link_directories("${CARLA_LIBCXX_INSTALL_PATH}/lib")
   file(GLOB LibCXX_Static_Libraries "${CARLA_LIBCXX_INSTALL_PATH}/lib/libc++*.a")
-  file(GLOB LibCXX_Shared_Libraries "${CARLA_LIBCXX_INSTALL_PATH}/lib/libc++*.so")
 
   # Setup boost.
   include_directories("${CARLA_BOOST_INSTALL_PATH}/include")
   set(Boost_Static_Libraries "${CARLA_BOOST_INSTALL_PATH}/lib/libboost_system.a")
-  file(GLOB Boost_Shared_Libraries "${CARLA_BOOST_INSTALL_PATH}/lib/libboost_system.so*")
 
   # Setup protobuf.
   include_directories("${CARLA_PROTOBUF_INSTALL_PATH}/include")
   set(Protobuf_Static_Libraries "${CARLA_PROTOBUF_INSTALL_PATH}/lib/libprotobuf.a")
-  file(GLOB Protobuf_Shared_Libraries "${CARLA_PROTOBUF_INSTALL_PATH}/lib/libprotobuf.so*")
 
   # Setup googletest.
   include_directories("${CARLA_GOOGLETEST_INSTALL_PATH}/include")
@@ -52,6 +49,29 @@ if (UNIX)
 
   install(FILES
       ${LibCXX_Static_Libraries}
+      ${Boost_Static_Libraries}
+      ${Protobuf_Static_Libraries}
+    DESTINATION lib)
+
+elseif (WIN32)
+
+  # Setup boost.
+  include_directories("${CARLA_BOOST_INSTALL_PATH}")
+  file(GLOB Boost_System_Static_Libraries "${CARLA_BOOST_INSTALL_PATH}/stage/lib/libboost_system*.lib")
+  file(GLOB Boost_DateTime_Static_Libraries "${CARLA_BOOST_INSTALL_PATH}/stage/lib/libboost_date_time*.lib")
+  set(Boost_Static_Libraries
+      "${Boost_System_Static_Libraries}"
+      "${Boost_DateTime_Static_Libraries}")
+
+  # Setup protobuf.
+  include_directories("${CARLA_PROTOBUF_INSTALL_PATH}/include")
+  set(Protobuf_Static_Libraries "${CARLA_PROTOBUF_INSTALL_PATH}/lib/libprotobuf.lib")
+
+  # Setup googletest.
+  include_directories("${CARLA_GOOGLETEST_INSTALL_PATH}/include")
+  set(GTest_Static_Libraries "${CARLA_GOOGLETEST_INSTALL_PATH}/lib/gtest.lib")
+
+  install(FILES
       ${Boost_Static_Libraries}
       ${Protobuf_Static_Libraries}
     DESTINATION lib)
@@ -97,6 +117,8 @@ set(CarlaServer_Static_LIBRARIES
     ${Boost_Static_Libraries}
     ${CMAKE_THREAD_LIBS_INIT})
 
-add_executable(${CarlaServer_Test_Target} ${test_carlaserver_SRC})
-target_link_libraries(${CarlaServer_Test_Target} ${CarlaServer_Static_LIBRARIES})
-install(TARGETS ${CarlaServer_Test_Target} DESTINATION bin)
+if (UNIX)
+  add_executable(${CarlaServer_Test_Target} ${test_carlaserver_SRC})
+  target_link_libraries(${CarlaServer_Test_Target} ${CarlaServer_Static_LIBRARIES})
+  install(TARGETS ${CarlaServer_Test_Target} DESTINATION bin)
+endif (UNIX)

@@ -1,15 +1,17 @@
-INSTALL_FOLDER=$(PWD)/Util/Install
-PYTHON_CLIENT_FOLDER=$(PWD)/Util/PythonClient
-BASE_BUILD_FOLDER=$(PWD)/Util/Build/carlaserver-build
-MY_CMAKE_FOLDER=$(PWD)/Util/cmake
+INSTALL_FOLDER=$(CURDIR)/Util/Install
+PYTHON_CLIENT_FOLDER=$(CURDIR)/Util/PythonClient
+BASE_BUILD_FOLDER=$(CURDIR)/Util/Build/carlaserver-build
+MY_CMAKE_FOLDER=$(CURDIR)/Util/cmake
 MY_CMAKE_FLAGS=-B"$(BUILD_FOLDER)" -DCMAKE_INSTALL_PREFIX="$(INSTALL_FOLDER)"
 
 ifeq ($(OS),Windows_NT)
 BUILD_RULE=build_windows
-PROTOC_CALL=echo "Error!"
+PROTOC_COMPILE=cmd.exe /k "cd Util & call Protoc.bat & exit"
+PROTOC_CLEAN=cmd.exe /k "cd Util & call Protoc.bat --clean & exit"
 else
 BUILD_RULE=build_linux
-PROTOC_CALL=./Util/Protoc.sh
+PROTOC_COMPILE=./Util/Protoc.sh
+PROTOC_CLEAN=./Util/Protoc.sh --clean
 endif
 
 default: release
@@ -42,7 +44,7 @@ call_cmake: protobuf
 	cd $(BUILD_FOLDER) && cmake $(MY_CMAKE_FLAGS) "$(MY_CMAKE_FOLDER)"
 
 protobuf:
-	$(PROTOC_CALL)
+	$(PROTOC_COMPILE)
 
 ### Docs #######################################################################
 
@@ -54,7 +56,7 @@ docs:
 
 clean:
 	rm -Rf $(BASE_BUILD_FOLDER) $(INSTALL_FOLDER) Doxygen
-	$(PROTOC_CALL) --clean
+	$(PROTOC_CLEAN)
 
 ### Test #######################################################################
 
