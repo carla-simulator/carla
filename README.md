@@ -48,7 +48,19 @@ Now build your project with Unreal normally.
 
 #### Windows
 
-Not yet available.
+A setup script is not yet available. You need to compile yourself boost,
+protobuf and googletest, and install them under ./Util/Build as
+
+    Util/
+        Build/
+            boost-install/
+            googletest-install/
+            protobuf-install/
+
+Once the dependencies are there, run
+
+    "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
+    make
 
 Run-time settings
 -----------------
