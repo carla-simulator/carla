@@ -18,7 +18,7 @@ if (UNIX)
   find_package(Threads)
 
   set(CMAKE_CXX_COMPILER /usr/bin/clang++-3.9)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -std=c++14")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -std=c++14 -pthread")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra -Wno-unused-parameter")
 
   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -33,7 +33,8 @@ if (UNIX)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
   include_directories("${CARLA_LIBCXX_INSTALL_PATH}/include/c++/v1")
   link_directories("${CARLA_LIBCXX_INSTALL_PATH}/lib")
-  file(GLOB LibCXX_Shared_Libraries "${CARLA_LIBCXX_INSTALL_PATH}/lib/libc++*.so*")
+  file(GLOB LibCXX_Static_Libraries "${CARLA_LIBCXX_INSTALL_PATH}/lib/libc++*.a")
+  file(GLOB LibCXX_Shared_Libraries "${CARLA_LIBCXX_INSTALL_PATH}/lib/libc++*.so")
 
   # Setup boost.
   include_directories("${CARLA_BOOST_INSTALL_PATH}/include")
@@ -50,9 +51,9 @@ if (UNIX)
   set(GTest_Static_Libraries "${CARLA_GOOGLETEST_INSTALL_PATH}/lib/libgtest.a")
 
   install(FILES
-      ${LibCXX_Shared_Libraries}
-      ${Boost_Shared_Libraries}
-      ${Protobuf_Shared_Libraries}
+      ${LibCXX_Static_Libraries}
+      ${Boost_Static_Libraries}
+      ${Protobuf_Static_Libraries}
     DESTINATION lib)
 
 else (UNIX)
@@ -79,7 +80,7 @@ file(GLOB carlaserver_SRC
     "${CarlaServer_Path}/source/carla/server/*.pb.h"
     "${CarlaServer_Path}/source/carla/server/*.pb.cc")
 
-add_library(${CarlaServer_Lib_Target} SHARED ${carlaserver_SRC})
+add_library(${CarlaServer_Lib_Target} STATIC ${carlaserver_SRC})
 install(DIRECTORY "${CarlaServer_Path}/include/carla" DESTINATION include)
 install(TARGETS ${CarlaServer_Lib_Target} DESTINATION lib)
 

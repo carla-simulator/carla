@@ -98,7 +98,6 @@ namespace server {
         if (future::wait_and_get(*message, message_value, timeout_t::milliseconds(1))) {
           return _server.Write(message_value, timeout);
         }
-        log_debug("is valid");
       }
       return errc::operation_aborted();
     };

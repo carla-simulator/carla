@@ -2,7 +2,7 @@
 
 #pragma once
 
-// #define CARLA_WITH_PROFILER
+#define CARLA_WITH_PROFILER
 
 #ifdef CARLA_WITH_PROFILER
 

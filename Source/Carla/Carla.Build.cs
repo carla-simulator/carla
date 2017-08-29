@@ -86,23 +86,22 @@ public class Carla : ModuleRules
       CarlaServerLib = "carlaserver";
     }
 
-    ADelegate GetSharedLibName = (string BaseName) => {
+    ADelegate GetLibName = (string BaseName) => {
       if (IsWindows(Target))
       {
-        return BaseName + ".dll";
+        return BaseName + ".lib";
       }
       else
       {
-        return "lib" + BaseName + ".so";
+        return "lib" + BaseName + ".a";
       }
     };
 
     // Link dependencies.
-    PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetSharedLibName("c++")));
-    PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetSharedLibName("c++abi")));
-    PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetSharedLibName("boost_system")));
-    PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetSharedLibName("protobuf")));
-    PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetSharedLibName(CarlaServerLib)));
+    PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetLibName("c++abi")));
+    PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetLibName("boost_system")));
+    PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetLibName("protobuf")));
+    PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetLibName(CarlaServerLib)));
 
     // Include path.
     string CarlaServerIncludePath = Path.Combine(CarlaServerInstallPath, "include");
