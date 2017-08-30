@@ -8,6 +8,7 @@
 
 import argparse
 import logging
+import random
 import time
 
 from tcp_client import TCPClient
@@ -17,12 +18,34 @@ import carla_server_pb2 as carla_protocol
 
 CarlaSettings = """
 [CARLA/Server]
-SynchronousMode=true
+UseNetworking=true
+WorldPort=2000
+ServerTimeOut=10000
+SynchronousMode=false
 SendNonPlayerAgentsInfo=true
+
 [CARLA/LevelSettings]
-NumberOfVehicles=10
-NumberOfPedestrians=20
-WeatherId=3
+PlayerVehicle=
+NumberOfVehicles=20
+NumberOfPedestrians=30
+WeatherId=1
+SeedVehicles=123456789
+SeedPedestrians=123456789
+
+[CARLA/SceneCapture]
+Cameras=MyCamera
+
+[CARLA/SceneCapture/MyCamera]
+PostProcessing=SceneFinal
+ImageSizeX=800
+ImageSizeY=600
+CameraFOV=90
+CameraPositionX=15
+CameraPositionY=0
+CameraPositionZ=123
+CameraRotationPitch=8
+CameraRotationRoll=0
+CameraRotationYaw=0
 """
 
 class CarlaClient(object):
@@ -150,12 +173,13 @@ def test_carla_client():
 
                 logging.info('waiting for the scene description')
                 data = client.read_scene_description()
-                logging.info('received %d player start locations', len(data.player_start_spots))
+                number_of_start_spots = len(data.player_start_spots)
+                logging.info('received %d player start locations', number_of_start_spots)
                 for spot in data.player_start_spots:
                     logging.info(spot)
 
                 logging.info('sending episode start')
-                client.write_episode_start(2)
+                client.write_episode_start(random.randint(0, max(0, number_of_start_spots - 1)))
 
                 logging.info('waiting for episode to be ready')
                 data = client.read_episode_ready()
@@ -167,7 +191,7 @@ def test_carla_client():
                 logging.info('connecting secondary clients')
                 client.connect_secondary_clients()
 
-                for x in xrange(0, 100):
+                for x in xrange(0, 1000):
                     logging.info('waiting for measurements')
                     data = client.read_measurements()
                     if not data:
@@ -177,8 +201,8 @@ def test_carla_client():
                     else:
                         logging.info('received valid measurements')
                         logging.info('received info of %d agents', len(data.non_player_agents))
-                        for agent in data.non_player_agents:
-                            logging.info(agent)
+                        # for agent in data.non_player_agents:
+                        #     logging.info(agent)
                     logging.info('waiting for images')
                     data = client.read_images()
                     logging.info('received %d bytes of images', len(data) if data is not None else 0)
@@ -188,7 +212,7 @@ def test_carla_client():
                     #     time.sleep(2)
 
                     logging.info('sending control')
-                    client.write_control(steer=-2.3, throttle=1.0, reverse=True)
+                    client.write_control(steer=random.uniform(-1.0, 1.0), throttle=0.5, reverse=False)
 
                 if os.path.isfile(args.ini_file):
                     logging.info('sending file %s', args.ini_file)
