@@ -206,12 +206,14 @@ template <typename T>
 static void AddAgents(TArray<carla_agent> &Agents, const TArray<T> &Actors, uint32 type)
 {
   for (auto &&Actor : Actors) {
-    Agents.Emplace();
-    auto &values = Agents.Last();
-    values.id = GetTypeHash(Actor);
-    values.type = type;
-    Set(values.transform, Actor->GetActorTransform());
-    SetBoxAndSpeed(values, Actor);
+    if (Actor != nullptr) {
+      Agents.Emplace();
+      auto &values = Agents.Last();
+      values.id = GetTypeHash(Actor);
+      values.type = type;
+      Set(values.transform, Actor->GetActorTransform());
+      SetBoxAndSpeed(values, Actor);
+    }
   }
 }
 
