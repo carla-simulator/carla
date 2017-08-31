@@ -3,12 +3,13 @@
 #include "Carla.h"
 #include "VehicleSpawnerBase.h"
 
+#include "CarlaWheeledVehicle.h"
+#include "Util/RandomEngine.h"
+
 #include "Engine/PlayerStartPIE.h"
 #include "EngineUtils.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/PlayerStart.h"
-
-#include "Util/RandomEngine.h"
 
 // Sets default values
 AVehicleSpawnerBase::AVehicleSpawnerBase(const FObjectInitializer& ObjectInitializer) :
@@ -77,7 +78,7 @@ void AVehicleSpawnerBase::TryToSpawnRandomVehicle()
 void AVehicleSpawnerBase::SpawnVehicleAtSpawnPoint(
     const APlayerStart &SpawnPoint)
 {
-  AWheeledVehicle *Vehicle;
+  ACarlaWheeledVehicle *Vehicle;
   SpawnVehicle(SpawnPoint.GetActorTransform(), Vehicle);
   if ((Vehicle != nullptr) && !Vehicle->IsPendingKill()) {
     Vehicle->AIControllerClass = AAICarlaVehicleController::StaticClass();

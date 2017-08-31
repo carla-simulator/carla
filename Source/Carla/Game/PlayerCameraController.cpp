@@ -31,13 +31,13 @@ APlayerCameraController::APlayerCameraController(const FObjectInitializer& Objec
   // Do not collide, may clip into level.
   SpringArm->bDoCollisionTest = false;
 
-  // Create the camera component
+  // Create the camera component.
   PlayerCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera0"));
   PlayerCamera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
   PlayerCamera->bUsePawnControlRotation = false;
   PlayerCamera->FieldOfView = 90.f;
 
-  // Create the on-board camera component
+  // Create the on-board camera component.
   OnBoardCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("OnBoardCamera0"));
   OnBoardCamera->SetRelativeLocation(FVector(140.f, 0.f, 140.f));
   OnBoardCamera->SetRelativeRotation(FRotator(-10.f, 0.f, 0.f));

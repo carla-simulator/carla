@@ -16,8 +16,7 @@
 // =============================================================================
 
 ACarlaVehicleController::ACarlaVehicleController(const FObjectInitializer& ObjectInitializer) :
-  Super(ObjectInitializer),
-  MovementComponent(nullptr)
+  Super(ObjectInitializer)
 {
   PrimaryActorTick.bCanEverTick = true;
   PrimaryActorTick.TickGroup = TG_PrePhysics;
@@ -43,25 +42,17 @@ void ACarlaVehicleController::Possess(APawn *aPawn)
   Super::Possess(aPawn);
 
   if (IsPossessingAVehicle()) {
-    UE_LOG(LogCarla, Error, TEXT("Controller already possessing a pawn!"));
+    UE_LOG(LogCarla, Error, TEXT("Controller already possessing a vehicle!"));
     return;
   }
-  auto *WheeledVehicle = Cast<AWheeledVehicle>(aPawn);
-  if (WheeledVehicle != nullptr) {
+  Vehicle = Cast<ACarlaWheeledVehicle>(aPawn);
+  if (Vehicle != nullptr) {
     // Bind hit events.
     aPawn->OnActorHit.AddDynamic(this, &ACarlaVehicleController::OnCollisionEvent);
     // Get vehicle movement component.
-    MovementComponent = WheeledVehicle->GetVehicleMovementComponent();
+    auto *MovementComponent = Vehicle->GetVehicleMovementComponent();
     check(MovementComponent != nullptr);
     MovementComponent->bReverseAsBrake = false;
-    // Get vehicle box component.
-    TArray<UBoxComponent *> BoundingBoxes;
-    WheeledVehicle->GetComponents<UBoxComponent>(BoundingBoxes);
-    if (BoundingBoxes.Num() > 0) {
-      VehicleBounds = BoundingBoxes[0];
-    } else {
-      UE_LOG(LogCarla, Error, TEXT("Pawn is missing the bounding box!"));
-    }
     // Get custom player state.
     CarlaPlayerState = Cast<ACarlaPlayerState>(PlayerState);
     check(CarlaPlayerState != nullptr);
@@ -108,11 +99,11 @@ void ACarlaVehicleController::Tick(float DeltaTime)
   if (IsPossessingAVehicle()) {
     CarlaPlayerState->UpdateTimeStamp(DeltaTime);
     const FVector PreviousSpeed = CarlaPlayerState->ForwardSpeed * CarlaPlayerState->GetOrientation();
-    CarlaPlayerState->Transform = GetVehicleTransform();
-    CarlaPlayerState->ForwardSpeed = GetVehicleForwardSpeed();
+    CarlaPlayerState->Transform = Vehicle->GetActorTransform();
+    CarlaPlayerState->ForwardSpeed = Vehicle->GetVehicleForwardSpeed();
     const FVector CurrentSpeed = CarlaPlayerState->ForwardSpeed * CarlaPlayerState->GetOrientation();
     CarlaPlayerState->Acceleration = (CurrentSpeed - PreviousSpeed) / DeltaTime;
-    CarlaPlayerState->CurrentGear = GetVehicleCurrentGear();
+    CarlaPlayerState->CurrentGear = Vehicle->GetVehicleCurrentGear();
     IntersectPlayerWithRoadMap();
     const auto NumberOfCameras = SceneCaptureCameras.Num();
     check(NumberOfCameras == CarlaPlayerState->Images.Num());
@@ -123,39 +114,6 @@ void ACarlaVehicleController::Tick(float DeltaTime)
       }
     }
   }
-}
-
-// =============================================================================
-// -- Vehicle pawn info --------------------------------------------------------
-// =============================================================================
-
-FTransform ACarlaVehicleController::GetVehicleTransform() const
-{
-  check(GetPawn() != nullptr);
-  return GetPawn()->GetActorTransform();
-}
-
-FVector ACarlaVehicleController::GetVehicleLocation() const
-{
-  check(GetPawn() != nullptr);
-  return GetPawn()->GetActorLocation();
-}
-
-float ACarlaVehicleController::GetVehicleForwardSpeed() const
-{
-  check(MovementComponent != nullptr);
-  return MovementComponent->GetForwardSpeed() * 0.036f;
-}
-
-FVector ACarlaVehicleController::GetVehicleOrientation() const
-{
-  return GetVehicleTransform().GetRotation().GetForwardVector();
-}
-
-int32 ACarlaVehicleController::GetVehicleCurrentGear() const
-{
-  check(MovementComponent != nullptr);
-  return MovementComponent->GetCurrentGear();
 }
 
 // =============================================================================
@@ -182,44 +140,6 @@ void ACarlaVehicleController::AddSceneCaptureCamera(
       TEXT("Created capture camera %d with postprocess \"%s\""),
       SceneCaptureCameras.Num() - 1,
       *PostProcessEffect::ToString(Camera->GetPostProcessEffect()));
-}
-
-// =============================================================================
-// -- Vehicle movement methods -------------------------------------------------
-// =============================================================================
-
-void ACarlaVehicleController::SetThrottleInput(float Value)
-{
-  check(MovementComponent != nullptr);
-  MovementComponent->SetThrottleInput(Value);
-}
-
-void ACarlaVehicleController::SetSteeringInput(float Value)
-{
-  check(MovementComponent != nullptr);
-  MovementComponent->SetSteeringInput(Value);
-}
-
-void ACarlaVehicleController::SetBrakeInput(float Value)
-{
-  check(MovementComponent != nullptr);
-  MovementComponent->SetBrakeInput(Value);
-}
-
-void ACarlaVehicleController::SetReverse(bool Value)
-{
-  if (Value != bIsInReverse) {
-    check(MovementComponent != nullptr);
-    bIsInReverse = Value;
-    MovementComponent->SetUseAutoGears(!bIsInReverse);
-    MovementComponent->SetTargetGear(bIsInReverse ? -1 : 1, true);
-  }
-}
-
-void ACarlaVehicleController::SetHandbrakeInput(bool Value)
-{
-  check(MovementComponent != nullptr);
-  MovementComponent->SetHandbrakeInput(Value);
 }
 
 // =============================================================================
@@ -250,7 +170,7 @@ void ACarlaVehicleController::OnCollisionEvent(
     const FHitResult& Hit)
 {
   // Register collision only if we are moving faster than 1 km/h.
-  if (FMath::Abs(GetVehicleForwardSpeed()) > 1.0f) {
+  if (FMath::Abs(Vehicle->GetVehicleForwardSpeed()) > 1.0f) {
     CarlaPlayerState->RegisterCollision(Actor, OtherActor, NormalImpulse, Hit);
   }
 }
@@ -262,14 +182,15 @@ void ACarlaVehicleController::OnCollisionEvent(
 void ACarlaVehicleController::SetupControllerInput()
 {
   check(InputComponent != nullptr);
+  check(IsPossessingAVehicle());
   // Vehicle movement.
   if (IsInManualMode()) {
-    InputComponent->BindAxis("MoveForward", this, &ACarlaVehicleController::SetThrottleInput);
-    InputComponent->BindAxis("MoveRight", this, &ACarlaVehicleController::SetSteeringInput);
-    InputComponent->BindAxis("Brake", this, &ACarlaVehicleController::SetBrakeInput);
-    InputComponent->BindAction("ToggleReverse", IE_Pressed, this, &ACarlaVehicleController::ToggleReverse);
-    InputComponent->BindAction("Handbrake", IE_Pressed, this, &ACarlaVehicleController::HoldHandbrake);
-    InputComponent->BindAction("Handbrake", IE_Released, this, &ACarlaVehicleController::ReleaseHandbrake);
+    InputComponent->BindAxis("MoveForward", Vehicle, &ACarlaWheeledVehicle::SetThrottleInput);
+    InputComponent->BindAxis("MoveRight", Vehicle, &ACarlaWheeledVehicle::SetSteeringInput);
+    InputComponent->BindAxis("Brake", Vehicle, &ACarlaWheeledVehicle::SetBrakeInput);
+    InputComponent->BindAction("ToggleReverse", IE_Pressed, Vehicle, &ACarlaWheeledVehicle::ToggleReverse);
+    InputComponent->BindAction("Handbrake", IE_Pressed, Vehicle, &ACarlaWheeledVehicle::HoldHandbrake);
+    InputComponent->BindAction("Handbrake", IE_Released, Vehicle, &ACarlaWheeledVehicle::ReleaseHandbrake);
   } else {
     UE_LOG(LogCarla, Error, TEXT("Not implemented")); /// @todo
   }
@@ -284,15 +205,12 @@ void ACarlaVehicleController::IntersectPlayerWithRoadMap()
   if (RoadMap == nullptr) {
     UE_LOG(LogCarla, Error, TEXT("Controller doesn't have a road map"));
     return;
-  } else if (VehicleBounds == nullptr) {
-    UE_LOG(LogCarla, Error, TEXT("Vehicle doesn't have a bounding box"));
-    return;
   }
 
   constexpr float ChecksPerCentimeter = 0.1f;
   auto Result = RoadMap->Intersect(
-      GetPawn()->GetTransform(),
-      VehicleBounds->GetScaledBoxExtent(),
+      Vehicle->GetActorTransform(),
+      Vehicle->GetVehicleBoundsExtent(),
       ChecksPerCentimeter);
 
   CarlaPlayerState->OffRoadIntersectionFactor = Result.OffRoad;

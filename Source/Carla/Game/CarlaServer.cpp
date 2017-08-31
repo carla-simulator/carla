@@ -6,7 +6,7 @@
 #include "GameFramework/PlayerStart.h"
 
 #include "CarlaPlayerState.h"
-#include "CarlaVehicleController.h"
+#include "CarlaWheeledVehicle.h"
 #include "SceneCaptureCamera.h"
 #include "Settings/CarlaSettings.h"
 
@@ -154,7 +154,7 @@ CarlaServer::ErrorCode CarlaServer::SendEpisodeReady(const bool bBlocking)
   return ParseErrorCode(carla_write_episode_ready(Server, values, GetTimeOut(TimeOut, bBlocking)));
 }
 
-CarlaServer::ErrorCode CarlaServer::ReadControl(ACarlaVehicleController &Player, const bool bBlocking)
+CarlaServer::ErrorCode CarlaServer::ReadControl(ACarlaWheeledVehicle &Player, const bool bBlocking)
 {
   carla_control values;
   auto ec = ParseErrorCode(carla_read_control(Server, values, GetTimeOut(TimeOut, bBlocking)));
@@ -188,18 +188,10 @@ static void SetBoxAndSpeed(carla_agent &values, const ACharacter *Walker)
   values.box_extent = {45.0f, 35.0f, 100.0f};
 }
 
-static void SetBoxAndSpeed(carla_agent &values, const AWheeledVehicle *Vehicle)
+static void SetBoxAndSpeed(carla_agent &values, const ACarlaWheeledVehicle *Vehicle)
 {
-  /// @todo This is very slow and the code is duplicated at
-  /// ACarlaVehicleController.
-  values.forward_speed = Vehicle->GetVehicleMovementComponent()->GetForwardSpeed() * 0.036f;
-  TArray<UBoxComponent *> BoundingBoxes;
-  Vehicle->GetComponents<UBoxComponent>(BoundingBoxes);
-  if (BoundingBoxes.Num() > 0) {
-    Set(values.box_extent, BoundingBoxes[0]->GetScaledBoxExtent());
-  } else {
-    UE_LOG(LogCarla, Error, TEXT("Vehicle is missing the bounding box!"));
-  }
+  values.forward_speed = Vehicle->GetVehicleForwardSpeed();
+  Set(values.box_extent, Vehicle->GetVehicleBoundsExtent());
 }
 
 template <typename T>

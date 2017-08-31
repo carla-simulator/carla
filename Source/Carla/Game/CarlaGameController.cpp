@@ -123,7 +123,8 @@ void CarlaGameController::Tick(float DeltaSeconds)
   // Read control, block if the settings say so.
   if (Server != nullptr) {
     const bool bShouldBlock = CarlaSettings->bSynchronousMode;
-    if (Errc::Error == Server->ReadControl(*Player, bShouldBlock)) {
+    check(Player->IsPossessingAVehicle());
+    if (Errc::Error == Server->ReadControl(*Player->GetPossessedVehicle(), bShouldBlock)) {
       Server = nullptr;
     }
   }

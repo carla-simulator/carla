@@ -88,7 +88,7 @@ public:
 
   private:
 
-  bool RayTrace( UWorld *World, const FVector &Start, const FVector &End, bool &Stop);
+  bool RayTrace(UWorld *World, const FVector &Start, const FVector &End);
 
   /// @}
   // ===========================================================================

@@ -7,10 +7,9 @@
 
 class ACarlaHUD;
 class ACarlaPlayerState;
+class ACarlaWheeledVehicle;
 class ASceneCaptureCamera;
-class UBoxComponent;
 class URoadMap;
-class UWheeledVehicleMovementComponent;
 struct FCameraDescription;
 
 /**
@@ -48,29 +47,20 @@ public:
 
   /// @}
   // ===========================================================================
-  /// @name Vehicle pawn info
+  /// @name Player state
   // ===========================================================================
   /// @{
 public:
 
   bool IsPossessingAVehicle() const
   {
-    return MovementComponent != nullptr;
+    return Vehicle != nullptr;
   }
 
-  /// World transform of the vehicle.
-  FTransform GetVehicleTransform() const;
-
-  /// World location of the vehicle.
-  FVector GetVehicleLocation() const;
-
-  /// Speed forward in km/h. Might be negative if goes backwards.
-  float GetVehicleForwardSpeed() const;
-
-  /// Orientation vector of the vehicle, pointing forward.
-  FVector GetVehicleOrientation() const;
-
-  int32 GetVehicleCurrentGear() const;
+  ACarlaWheeledVehicle *GetPossessedVehicle() const
+  {
+    return Vehicle;
+  }
 
   const ACarlaPlayerState &GetPlayerState() const
   {
@@ -87,38 +77,6 @@ public:
   void AddSceneCaptureCamera(
       const FCameraDescription &CameraDescription,
       const FCameraPostProcessParameters *OverridePostProcessParameters = nullptr);
-
-  /// @}
-  // ===========================================================================
-  /// @name Vehicle movement
-  // ===========================================================================
-  /// @{
-public:
-
-  void SetThrottleInput(float Value);
-
-  void SetSteeringInput(float Value);
-
-  void SetBrakeInput(float Value);
-
-  void SetReverse(bool Value);
-
-  void ToggleReverse()
-  {
-    SetReverse(!bIsInReverse);
-  }
-
-  void SetHandbrakeInput(bool Value);
-
-  void HoldHandbrake()
-  {
-    SetHandbrakeInput(true);
-  }
-
-  void ReleaseHandbrake()
-  {
-    SetHandbrakeInput(false);
-  }
 
   /// @}
   // ===========================================================================
@@ -168,13 +126,6 @@ private:
   /// @name Other
   // ===========================================================================
   /// @{
-public:
-
-  void SetRoadMap(URoadMap *inRoadMap)
-  {
-    RoadMap = inRoadMap;
-  }
-
 private:
 
   void IntersectPlayerWithRoadMap();
@@ -191,19 +142,13 @@ private:
   bool bManualMode = false;
 
   UPROPERTY()
-  bool bIsInReverse = false;
-
-  UPROPERTY()
-  UWheeledVehicleMovementComponent *MovementComponent;
+  ACarlaWheeledVehicle *Vehicle;
 
   UPROPERTY()
   TArray<ASceneCaptureCamera *> SceneCaptureCameras;
 
   UPROPERTY()
   URoadMap *RoadMap;
-
-  UPROPERTY()
-  UBoxComponent *VehicleBounds;
 
   // Cast for quick access to the custom player state.
   UPROPERTY()

@@ -2,6 +2,8 @@
 
 #pragma once
 
+class ACarlaGameState;
+class ACarlaWheeledVehicle;
 class APlayerStart;
 class UCarlaSettings;
 
@@ -34,7 +36,7 @@ public:
 
   ErrorCode SendEpisodeReady(bool bBlocking);
 
-  ErrorCode ReadControl(ACarlaVehicleController &Player, bool bBlocking);
+  ErrorCode ReadControl(ACarlaWheeledVehicle &Player, bool bBlocking);
 
   ErrorCode SendMeasurements(
       const ACarlaGameState &GameState,

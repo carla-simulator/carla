@@ -5,6 +5,7 @@
 #include "Util/ActorWithRandomEngine.h"
 #include "VehicleSpawnerBase.generated.h"
 
+class ACarlaWheeledVehicle;
 class APlayerStart;
 
 UCLASS(Abstract)
@@ -23,13 +24,13 @@ protected:
   virtual void BeginPlay() override;
 
   UFUNCTION(BlueprintImplementableEvent)
-  void SpawnVehicle(const FTransform &SpawnTransform, AWheeledVehicle *&SpawnedCharacter);
+  void SpawnVehicle(const FTransform &SpawnTransform, ACarlaWheeledVehicle *&SpawnedCharacter);
 
   //UFUNCTION(BlueprintImplementableEvent)
   void TryToSpawnRandomVehicle();
 
   UFUNCTION(BlueprintImplementableEvent)
-  AAICarlaVehicleController* GetVehicleController(AWheeledVehicle* Vechicle);
+  AAICarlaVehicleController* GetVehicleController(ACarlaWheeledVehicle* Vechicle);
 
 public:
 
@@ -40,7 +41,7 @@ public:
     return Vehicles.Num();
   }
 
-  const TArray<AWheeledVehicle *> &GetVehicles() const {
+  const TArray<ACarlaWheeledVehicle *> &GetVehicles() const {
     return Vehicles;
   }
 
@@ -62,5 +63,5 @@ protected:
   TArray<APlayerStart *> SpawnPoints;
 
   UPROPERTY(Category = "Vehicle Spawner", BlueprintReadOnly, VisibleAnywhere, AdvancedDisplay)
-  TArray<AWheeledVehicle *> Vehicles;
+  TArray<ACarlaWheeledVehicle *> Vehicles;
 };
