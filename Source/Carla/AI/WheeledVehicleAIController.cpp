@@ -89,7 +89,7 @@ void AWheeledVehicleAIController::Possess(APawn *aPawn)
 
 void AWheeledVehicleAIController::Tick(const float DeltaTime)
 {
-  Super::PlayerTick(DeltaTime);
+  Super::Tick(DeltaTime);
 
   if (bAutopilotEnabled) {
     TickAutopilotController();
@@ -103,6 +103,17 @@ void AWheeledVehicleAIController::Tick(const float DeltaTime)
 void AWheeledVehicleAIController::SetAutopilot(const bool Enabled)
 {
   bAutopilotEnabled = Enabled;
+
+  // Reset state.
+  Vehicle->SetSteeringInput(0.0f);
+  Vehicle->SetThrottleInput(0.0f);
+  Vehicle->SetBrakeInput(0.0f);
+  Vehicle->SetReverse(false);
+  Vehicle->SetHandbrakeInput(false);
+  TrafficLightState = ETrafficLightState::Green;
+  decltype(TargetLocations) EmptyQueue;
+  TargetLocations.swap(EmptyQueue);
+
   // We need reverse-as-brake behaviour when the AI is enabled only.
   auto *MovementComponent = Vehicle->GetVehicleMovementComponent();
   check(MovementComponent != nullptr);

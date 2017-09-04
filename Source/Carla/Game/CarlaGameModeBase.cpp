@@ -155,14 +155,23 @@ void ACarlaGameModeBase::BeginPlay()
     UE_LOG(LogCarla, Error, TEXT("Missing dynamic weather actor!"));
   }
 
+  // Find road map.
+  TActorIterator<ACityMapGenerator> It(GetWorld());
+  URoadMap *RoadMap = (It ? It->GetRoadMap() : nullptr);
+
+  auto Controller = Cast<AWheeledVehicleAIController>(PlayerController);
+  if (Controller != nullptr) {
+    Controller->SetRoadMap(RoadMap);
+  } else {
+    UE_LOG(LogCarla, Error, TEXT("Player controller is not a AWheeledVehicleAIController!"));
+  }
+
   // Setup other vehicles.
   if (VehicleSpawner != nullptr) {
     VehicleSpawner->SetNumberOfVehicles(CarlaSettings.NumberOfVehicles);
     VehicleSpawner->SetSeed(CarlaSettings.SeedVehicles);
     TActorIterator<ACityMapGenerator> It(GetWorld());
-    if (It) {
-      VehicleSpawner->SetRoadMap(It->GetRoadMap());
-    }
+    VehicleSpawner->SetRoadMap(RoadMap);
   } else {
     UE_LOG(LogCarla, Error, TEXT("Missing vehicle spawner actor!"));
   }

@@ -2,21 +2,17 @@
 
 #pragma once
 
-#include "PlayerCameraController.h"
+#include "WheeledVehicleController.h"
 #include "CarlaVehicleController.generated.h"
 
 class ACarlaHUD;
 class ACarlaPlayerState;
-class ACarlaWheeledVehicle;
 class ASceneCaptureCamera;
-class URoadMap;
 struct FCameraDescription;
 
-/**
- *
- */
+/// The CARLA player controller.
 UCLASS()
-class CARLA_API ACarlaVehicleController : public APlayerCameraController
+class CARLA_API ACarlaVehicleController : public AWheeledVehicleController
 {
   GENERATED_BODY()
 
@@ -37,9 +33,14 @@ public:
   /// @{
 public:
 
-  virtual void SetupInputComponent() override;
-
   virtual void Possess(APawn *aPawn) override;
+
+  /// @}
+  // ===========================================================================
+  /// @name AActor overrides
+  // ===========================================================================
+  /// @{
+public:
 
   virtual void BeginPlay() override;
 
@@ -51,16 +52,6 @@ public:
   // ===========================================================================
   /// @{
 public:
-
-  bool IsPossessingAVehicle() const
-  {
-    return Vehicle != nullptr;
-  }
-
-  ACarlaWheeledVehicle *GetPossessedVehicle() const
-  {
-    return Vehicle;
-  }
 
   const ACarlaPlayerState &GetPlayerState() const
   {
@@ -80,26 +71,6 @@ public:
 
   /// @}
   // ===========================================================================
-  /// @name Manual mode
-  ///
-  /// Manual mode refers here to whether the car can be controlled from the
-  /// server side. This is disabled by default when the client connects since it
-  /// interferes with the client input.
-  // ===========================================================================
-  /// @{
-public:
-
-  bool IsInManualMode() const
-  {
-    return bManualMode;
-  }
-
-  void SetManualMode(bool On);
-
-  void ToggleManualMode();
-
-  /// @}
-  // ===========================================================================
   /// @name Events
   // ===========================================================================
   /// @{
@@ -114,16 +85,7 @@ private:
 
   /// @}
   // ===========================================================================
-  /// @name Input bindings
-  // ===========================================================================
-  /// @{
-private:
-
-  void SetupControllerInput();
-
-  /// @}
-  // ===========================================================================
-  /// @name Other
+  /// @name Private methods
   // ===========================================================================
   /// @{
 private:
@@ -136,19 +98,8 @@ private:
   // ===========================================================================
 private:
 
-  /// Manual input mode. Not to be mistaken with the vehicle manual/automatic
-  /// transmission.
-  UPROPERTY()
-  bool bManualMode = false;
-
-  UPROPERTY()
-  ACarlaWheeledVehicle *Vehicle;
-
   UPROPERTY()
   TArray<ASceneCaptureCamera *> SceneCaptureCameras;
-
-  UPROPERTY()
-  URoadMap *RoadMap;
 
   // Cast for quick access to the custom player state.
   UPROPERTY()

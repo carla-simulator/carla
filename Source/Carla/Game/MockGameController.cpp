@@ -45,7 +45,7 @@ void MockGameController::RegisterPlayer(AController &NewPlayer)
 {
   ACarlaVehicleController *VehicleController = Cast<ACarlaVehicleController>(&NewPlayer);
   if (VehicleController != nullptr) {
-    VehicleController->SetManualMode(true);
+    VehicleController->EnableUserInput(true);
   } else {
     UE_LOG(LogCarla, Warning, TEXT("Player is not a ACarlaVehicleController"));
   }

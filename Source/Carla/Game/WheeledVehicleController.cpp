@@ -1,7 +1,7 @@
 // CARLA, Copyright (C) 2017 Computer Vision Center (CVC)
 
 #include "Carla.h"
-#include "PlayerCameraController.h"
+#include "WheeledVehicleController.h"
 
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Pawn.h"
@@ -11,7 +11,7 @@
 // -- Constructor and destructor -----------------------------------------------
 // =============================================================================
 
-APlayerCameraController::APlayerCameraController(const FObjectInitializer& ObjectInitializer) :
+AWheeledVehicleController::AWheeledVehicleController(const FObjectInitializer& ObjectInitializer) :
   Super(ObjectInitializer)
 {
   bAutoManageActiveCameraTarget = false;
@@ -46,13 +46,13 @@ APlayerCameraController::APlayerCameraController(const FObjectInitializer& Objec
   OnBoardCamera->FieldOfView = 100.f;
 }
 
-APlayerCameraController::~APlayerCameraController() {}
+AWheeledVehicleController::~AWheeledVehicleController() {}
 
 // =============================================================================
 // -- AActor -------------------------------------------------------------------
 // =============================================================================
 
-void APlayerCameraController::BeginPlay()
+void AWheeledVehicleController::BeginPlay()
 {
   Super::BeginPlay();
   EnableOnBoardCamera(bOnBoardCameraIsActive, true);
@@ -62,19 +62,28 @@ void APlayerCameraController::BeginPlay()
 // -- APlayerController --------------------------------------------------------
 // =============================================================================
 
-void APlayerCameraController::SetupInputComponent()
+void AWheeledVehicleController::SetupInputComponent()
 {
   Super::SetupInputComponent();
   if (InputComponent != nullptr) {
-    InputComponent->BindAxis("CameraZoom", this, &APlayerCameraController::ChangeCameraZoom);
-    InputComponent->BindAxis("CameraUp", this, &APlayerCameraController::ChangeCameraUp);
-    InputComponent->BindAxis("CameraRight", this, &APlayerCameraController::ChangeCameraRight);
-    InputComponent->BindAction("ToggleCamera", IE_Pressed, this, &APlayerCameraController::ToggleCamera);
-    InputComponent->BindAction("RestartLevel", IE_Pressed, this, &APlayerCameraController::RestartLevel);
+    // Camera movement.
+    InputComponent->BindAxis("CameraZoom", this, &AWheeledVehicleController::ChangeCameraZoom);
+    InputComponent->BindAxis("CameraUp", this, &AWheeledVehicleController::ChangeCameraUp);
+    InputComponent->BindAxis("CameraRight", this, &AWheeledVehicleController::ChangeCameraRight);
+    InputComponent->BindAction("ToggleCamera", IE_Pressed, this, &AWheeledVehicleController::ToggleCamera);
+    InputComponent->BindAction("RestartLevel", IE_Pressed, this, &AWheeledVehicleController::RestartLevel);
+    // Vehicle movement.
+    InputComponent->BindAction("ToggleAutopilot", IE_Pressed, this, &AWheeledVehicleAIController::ToggleAutopilot);
+    InputComponent->BindAxis("MoveForward", this, &AWheeledVehicleController::SetThrottleInput);
+    InputComponent->BindAxis("MoveRight", this, &AWheeledVehicleController::SetSteeringInput);
+    InputComponent->BindAxis("Brake", this, &AWheeledVehicleController::SetBrakeInput);
+    InputComponent->BindAction("ToggleReverse", IE_Pressed, this, &AWheeledVehicleController::ToggleReverse);
+    InputComponent->BindAction("Handbrake", IE_Pressed, this, &AWheeledVehicleController::HoldHandbrake);
+    InputComponent->BindAction("Handbrake", IE_Released, this, &AWheeledVehicleController::ReleaseHandbrake);
   }
 }
 
-void APlayerCameraController::Possess(APawn *aPawn)
+void AWheeledVehicleController::Possess(APawn *aPawn)
 {
   Super::Possess(aPawn);
   SpringArm->AttachToComponent(
@@ -85,7 +94,7 @@ void APlayerCameraController::Possess(APawn *aPawn)
       FAttachmentTransformRules::KeepRelativeTransform);
 }
 
-void APlayerCameraController::CalcCamera(float DeltaTime, FMinimalViewInfo& OutResult)
+void AWheeledVehicleController::CalcCamera(float DeltaTime, FMinimalViewInfo& OutResult)
 {
   if (bOnBoardCameraIsActive) {
     OnBoardCamera->GetCameraView(DeltaTime, OutResult);
@@ -95,29 +104,41 @@ void APlayerCameraController::CalcCamera(float DeltaTime, FMinimalViewInfo& OutR
 }
 
 // =============================================================================
+// -- User input ---------------------------------------------------------------
+// =============================================================================
+
+void AWheeledVehicleController::EnableUserInput(const bool On)
+{
+  bAllowUserInput = On;
+  if (bAllowUserInput) {
+    Super::SetAutopilot(false);
+  }
+}
+
+// =============================================================================
 // -- Camera movement methods --------------------------------------------------
 // =============================================================================
 
-void APlayerCameraController::APlayerCameraController::ChangeCameraZoom(float Value)
+void AWheeledVehicleController::AWheeledVehicleController::ChangeCameraZoom(float Value)
 {
   SpringArm->TargetArmLength = FMath::Clamp(SpringArm->TargetArmLength + Value, 150.0f, 2e4f);
 }
 
-void APlayerCameraController::ChangeCameraUp(float Value)
+void AWheeledVehicleController::ChangeCameraUp(float Value)
 {
   auto Rotation = SpringArm->GetRelativeTransform().Rotator();
   Rotation.Pitch = FMath::Clamp(Rotation.Pitch - Value, -85.0f, 0.0f);
   SpringArm->SetRelativeRotation(Rotation);
 }
 
-void APlayerCameraController::ChangeCameraRight(float Value)
+void AWheeledVehicleController::ChangeCameraRight(float Value)
 {
   auto Rotation = SpringArm->GetRelativeTransform().Rotator();
   Rotation.Yaw -= Value;
   SpringArm->SetRelativeRotation(Rotation);
 }
 
-void APlayerCameraController::EnableOnBoardCamera(const bool bEnable, const bool bForce)
+void AWheeledVehicleController::EnableOnBoardCamera(const bool bEnable, const bool bForce)
 {
   if (bForce || (bOnBoardCameraIsActive != bEnable)) {
     bOnBoardCameraIsActive = bEnable;
@@ -128,5 +149,51 @@ void APlayerCameraController::EnableOnBoardCamera(const bool bEnable, const bool
       OnBoardCamera->Deactivate();
       PlayerCamera->Activate();
     }
+  }
+}
+
+// =============================================================================
+// -- Vehicle movement methods -------------------------------------------------
+// =============================================================================
+
+void AWheeledVehicleController::SetThrottleInput(const float Value)
+{
+  if (bAllowUserInput && !IsAutopilotEnabled()) {
+    GetPossessedVehicle()->SetThrottleInput(Value);
+  }
+}
+
+void AWheeledVehicleController::SetSteeringInput(const float Value)
+{
+  if (bAllowUserInput && !IsAutopilotEnabled()) {
+    GetPossessedVehicle()->SetSteeringInput(Value);
+  }
+}
+
+void AWheeledVehicleController::SetBrakeInput(const float Value)
+{
+  if (bAllowUserInput && !IsAutopilotEnabled()) {
+    GetPossessedVehicle()->SetBrakeInput(Value);
+  }
+}
+
+void AWheeledVehicleController::ToggleReverse()
+{
+  if (bAllowUserInput && !IsAutopilotEnabled()) {
+    GetPossessedVehicle()->ToggleReverse();
+  }
+}
+
+void AWheeledVehicleController::HoldHandbrake()
+{
+  if (bAllowUserInput && !IsAutopilotEnabled()) {
+    GetPossessedVehicle()->HoldHandbrake();
+  }
+}
+
+void AWheeledVehicleController::ReleaseHandbrake()
+{
+  if (bAllowUserInput && !IsAutopilotEnabled()) {
+    GetPossessedVehicle()->ReleaseHandbrake();
   }
 }
