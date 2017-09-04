@@ -42,6 +42,16 @@ static FText GetGearAsText(int32 Gear)
   }
 }
 
+static FText GetTrafficLightAsText(ETrafficLightState State)
+{
+  switch (State) {
+    case ETrafficLightState::Green:  return FText(LOCTEXT("GreenTrafficLight",   "Green"));
+    case ETrafficLightState::Yellow: return FText(LOCTEXT("YellowTrafficLight",  "Yellow"));
+    case ETrafficLightState::Red:    return FText(LOCTEXT("RedTrafficLight",     "Red"));
+    default:                         return FText(LOCTEXT("InvalidTrafficLight", "INVALID"));
+  }
+}
+
 static FText GetHUDText(const ACarlaPlayerState &Vehicle)
 {
   // Set number precision.
@@ -56,6 +66,8 @@ static FText GetHUDText(const ACarlaPlayerState &Vehicle)
   Args.Add("Orientation", GetVectorAsText(Vehicle.GetOrientation(), HighPrecision));
   Args.Add("Speed", RoundedFloatAsText(Vehicle.GetForwardSpeed()));
   Args.Add("Gear", GetGearAsText(Vehicle.GetCurrentGear()));
+  Args.Add("SpeedLimit", RoundedFloatAsText(Vehicle.GetSpeedLimit()));
+  Args.Add("TrafficLightState", GetTrafficLightAsText(Vehicle.GetTrafficLightState()));
   Args.Add("CollisionCars", RoundedFloatAsText(Vehicle.GetCollisionIntensityCars()));
   Args.Add("CollisionPedestrians", RoundedFloatAsText(Vehicle.GetCollisionIntensityPedestrians()));
   Args.Add("CollisionOther", RoundedFloatAsText(Vehicle.GetCollisionIntensityOther()));
@@ -66,6 +78,9 @@ static FText GetHUDText(const ACarlaPlayerState &Vehicle)
       LOCTEXT("HUDTextFormat",
           "Speed:         {Speed} km/h\n"
           "Gear:          {Gear}\n"
+          "\n"
+          "Speed Limit:   {SpeedLimit} km/h\n"
+          "Traffic Light: {TrafficLightState}\n"
           "\n"
           "Location:      {Location}\n"
           "Orientation:   {Orientation}\n"
@@ -83,6 +98,9 @@ static FText GetHUDText(const ACarlaPlayerState &Vehicle)
           "\n"
           "Speed:         {Speed} km/h\n"
           "Gear:          {Gear}\n"
+          "\n"
+          "Speed Limit:   {SpeedLimit} km/h\n"
+          "Traffic Light: {TrafficLightState}\n"
           "\n"
           "Location:      {Location}\n"
           "Orientation:   {Orientation}\n"
@@ -129,7 +147,7 @@ void ACarlaHUD::DrawHUD()
     FVector2D ScaleVec(HUDYRatio * 1.4f, HUDYRatio * 1.4f);
 
     auto Text = GetHUDText(Vehicle->GetPlayerState());
-    FCanvasTextItem HUDTextItem(FVector2D(HUDXRatio * 100.0f, HUDYRatio * 400.0f), Text, HUDFont, FLinearColor::White);
+    FCanvasTextItem HUDTextItem(FVector2D(HUDXRatio * 50.0f, HUDYRatio * 330.0f), Text, HUDFont, FLinearColor::White);
     HUDTextItem.Scale = ScaleVec;
     Canvas->DrawItem(HUDTextItem);
   }

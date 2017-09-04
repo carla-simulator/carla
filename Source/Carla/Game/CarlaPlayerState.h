@@ -3,6 +3,7 @@
 #pragma once
 
 #include "GameFramework/PlayerState.h"
+#include "AI/TrafficLightState.h"
 #include "CapturedImage.h"
 #include "CarlaPlayerState.generated.h"
 
@@ -14,12 +15,6 @@ UCLASS()
 class CARLA_API ACarlaPlayerState : public APlayerState
 {
   GENERATED_BODY()
-
-  // ===========================================================================
-  // -- Types ------------------------------------------------------------------
-  // ===========================================================================
-public:
-
 
   // ===========================================================================
   // -- APlayerState -----------------------------------------------------------
@@ -35,103 +30,114 @@ public:
   // ===========================================================================
 public:
 
-  UFUNCTION()
+  UFUNCTION(BlueprintCallable)
   float GetFramesPerSecond() const
   {
     return FramesPerSecond;
   }
 
-  UFUNCTION()
+  UFUNCTION(BlueprintCallable)
   int32 GetPlatformTimeStamp() const
   {
     return PlatformTimeStamp;
   }
 
-  UFUNCTION()
+  UFUNCTION(BlueprintCallable)
   int32 GetGameTimeStamp() const
   {
     return GameTimeStamp;
   }
 
-  UFUNCTION()
+  UFUNCTION(BlueprintCallable)
   const FTransform &GetTransform() const
   {
     return Transform;
   }
 
-  UFUNCTION()
+  UFUNCTION(BlueprintCallable)
   FVector GetLocation() const
   {
     return Transform.GetLocation();
   }
 
-  UFUNCTION()
+  UFUNCTION(BlueprintCallable)
   FVector GetOrientation() const
   {
     return Transform.GetRotation().GetForwardVector();
   }
 
-  UFUNCTION()
+  UFUNCTION(BlueprintCallable)
   const FVector &GetAcceleration() const
   {
     return Acceleration;
   }
 
-  UFUNCTION()
-  float GetForwardSpeed() const
-  {
-    return ForwardSpeed;
-  }
-
-  UFUNCTION()
+  UFUNCTION(BlueprintCallable)
   int32 GetCurrentGear() const
   {
     return CurrentGear;
   }
 
-  UFUNCTION()
+  UFUNCTION(BlueprintCallable)
+  float GetForwardSpeed() const
+  {
+    return ForwardSpeed;
+  }
+
+  UFUNCTION(BlueprintCallable)
+  float GetSpeedLimit() const
+  {
+    return SpeedLimit;
+  }
+
+  UFUNCTION(BlueprintCallable)
+  ETrafficLightState GetTrafficLightState() const
+  {
+    return TrafficLightState;
+  }
+
+  UFUNCTION(BlueprintCallable)
   float GetCollisionIntensityCars() const
   {
     return CollisionIntensityCars;
   }
 
-  UFUNCTION()
+  UFUNCTION(BlueprintCallable)
   float GetCollisionIntensityPedestrians() const
   {
     return CollisionIntensityPedestrians;
   }
 
-  UFUNCTION()
+  UFUNCTION(BlueprintCallable)
   float GetCollisionIntensityOther() const
   {
     return CollisionIntensityOther;
   }
 
-  UFUNCTION()
+  UFUNCTION(BlueprintCallable)
   float GetOtherLaneIntersectionFactor() const
   {
     return OtherLaneIntersectionFactor;
   }
 
-  UFUNCTION()
+  UFUNCTION(BlueprintCallable)
   float GetOffRoadIntersectionFactor() const
   {
     return OffRoadIntersectionFactor;
   }
 
-  UFUNCTION()
+  UFUNCTION(BlueprintCallable)
   int32 GetNumberOfImages() const
   {
     return Images.Num();
   }
 
-  UFUNCTION()
+  UFUNCTION(BlueprintCallable)
   bool HasImages() const
   {
     return GetNumberOfImages() > 0;
   }
 
-  UFUNCTION()
   const TArray<FCapturedImage> &GetImages() const
   {
     return Images;
@@ -180,6 +186,12 @@ private:
 
   UPROPERTY(VisibleAnywhere)
   float ForwardSpeed = 0.0f;
+
+  UPROPERTY(VisibleAnywhere)
+  float SpeedLimit = -1.0f;
+
+  UPROPERTY(VisibleAnywhere)
+  ETrafficLightState TrafficLightState = ETrafficLightState::Green;
 
   UPROPERTY(VisibleAnywhere)
   float CollisionIntensityCars = 0.0f;

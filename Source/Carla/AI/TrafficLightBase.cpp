@@ -77,12 +77,13 @@ void ATrafficLightBase::SwitchTrafficLightState()
 
 void ATrafficLightBase::NotifyWheeledVehicle(ACarlaWheeledVehicle *Vehicle)
 {
-  // If green, do not notify vehicle.
-  if ((State != ETrafficLightState::Green) && IsValid(Vehicle)) {
+  if (IsValid(Vehicle)) {
     auto Controller = Cast<AWheeledVehicleAIController>(Vehicle->GetController());
     if (Controller != nullptr) {
       Controller->SetTrafficLightState(State);
-      Vehicles.Add(Controller);
+      if (State != ETrafficLightState::Green) {
+        Vehicles.Add(Controller);
+      }
     }
   }
 }

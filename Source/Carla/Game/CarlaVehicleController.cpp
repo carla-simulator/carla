@@ -85,6 +85,8 @@ void ACarlaVehicleController::Tick(float DeltaTime)
     const FVector CurrentSpeed = CarlaPlayerState->ForwardSpeed * CarlaPlayerState->GetOrientation();
     CarlaPlayerState->Acceleration = (CurrentSpeed - PreviousSpeed) / DeltaTime;
     CarlaPlayerState->CurrentGear = Vehicle->GetVehicleCurrentGear();
+    CarlaPlayerState->SpeedLimit = GetSpeedLimit();
+    CarlaPlayerState->TrafficLightState = GetTrafficLightState();
     IntersectPlayerWithRoadMap();
     const auto NumberOfCameras = SceneCaptureCameras.Num();
     check(NumberOfCameras == CarlaPlayerState->Images.Num());
