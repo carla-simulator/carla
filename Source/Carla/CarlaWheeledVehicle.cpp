@@ -45,6 +45,15 @@ FVector ACarlaWheeledVehicle::GetVehicleBoundsExtent() const
   return VehicleBounds->GetScaledBoxExtent();
 }
 
+float ACarlaWheeledVehicle::GetMaximumSteerAngle() const
+{
+  const auto &Wheels = GetVehicleMovementComponent()->Wheels;
+  check(Wheels.Num() > 0);
+  const auto *FrontWheel = Wheels[0];
+  check(FrontWheel != nullptr);
+  return FrontWheel->SteerAngle;
+}
+
 // =============================================================================
 // -- Set functions ------------------------------------------------------------
 // =============================================================================

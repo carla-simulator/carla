@@ -3,6 +3,7 @@
 #pragma once
 
 #include "UObject/NoExportTypes.h"
+#include "MapGen/CityMapMeshTag.h"
 #include "RoadMap.generated.h"
 
 /// Road map intersection result. See URoadMap.

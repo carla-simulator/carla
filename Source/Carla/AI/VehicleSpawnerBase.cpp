@@ -3,6 +3,7 @@
 #include "Carla.h"
 #include "VehicleSpawnerBase.h"
 
+#include "AI/WheeledVehicleAIController.h"
 #include "CarlaWheeledVehicle.h"
 #include "Util/RandomEngine.h"
 
@@ -10,6 +11,24 @@
 #include "EngineUtils.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/PlayerStart.h"
+
+// =============================================================================
+// -- Static local methods -----------------------------------------------------
+// =============================================================================
+
+static bool VehicleIsValid(const ACarlaWheeledVehicle *Vehicle)
+{
+  return ((Vehicle != nullptr) && !Vehicle->IsPendingKill());
+}
+
+static AWheeledVehicleAIController *GetController(ACarlaWheeledVehicle *Vehicle)
+{
+  return (VehicleIsValid(Vehicle) ? Cast<AWheeledVehicleAIController>(Vehicle->GetController()) : nullptr);
+}
+
+// =============================================================================
+// -- AVehicleSpawnerBase ------------------------------------------------------
+// =============================================================================
 
 // Sets default values
 AVehicleSpawnerBase::AVehicleSpawnerBase(const FObjectInitializer& ObjectInitializer) :
@@ -51,10 +70,6 @@ void AVehicleSpawnerBase::BeginPlay()
   }
 }
 
-// =============================================================================
-// -- Other member functions ---------------------------------------------------
-// =============================================================================
-
 void AVehicleSpawnerBase::SetNumberOfVehicles(const int32 Count)
 {
   if (Count > 0) {
@@ -81,11 +96,13 @@ void AVehicleSpawnerBase::SpawnVehicleAtSpawnPoint(
   ACarlaWheeledVehicle *Vehicle;
   SpawnVehicle(SpawnPoint.GetActorTransform(), Vehicle);
   if ((Vehicle != nullptr) && !Vehicle->IsPendingKill()) {
-    Vehicle->AIControllerClass = AAICarlaVehicleController::StaticClass();
+    Vehicle->AIControllerClass = AWheeledVehicleAIController::StaticClass();
     Vehicle->SpawnDefaultController();
-    auto Controller = GetVehicleController(Vehicle);
+    auto Controller = GetController(Vehicle);
     if (Controller != nullptr) { // Sometimes fails...
       Controller->SetRandomEngine(GetRandomEngine());
+      Controller->SetRoadMap(GetRoadMap());
+      Controller->SetAutopilot(true);
       Vehicles.Add(Vehicle);
     } else {
       UE_LOG(LogCarla, Error, TEXT("Something went wrong creating the controller for the new vehicle"));

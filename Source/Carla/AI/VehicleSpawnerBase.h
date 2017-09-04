@@ -29,9 +29,6 @@ protected:
   //UFUNCTION(BlueprintImplementableEvent)
   void TryToSpawnRandomVehicle();
 
-  UFUNCTION(BlueprintImplementableEvent)
-  AAICarlaVehicleController* GetVehicleController(ACarlaWheeledVehicle* Vechicle);
-
 public:
 
   void SetNumberOfVehicles(int32 Count);
@@ -45,11 +42,25 @@ public:
     return Vehicles;
   }
 
+  void SetRoadMap(URoadMap *InRoadMap)
+  {
+    RoadMap = InRoadMap;
+  }
+
+  UFUNCTION(Category = "Road Map", BlueprintCallable)
+  URoadMap *GetRoadMap()
+  {
+    return RoadMap;
+  }
+
 protected:
 
   APlayerStart* GetRandomSpawnPoint();
 
   void SpawnVehicleAtSpawnPoint(const APlayerStart &SpawnPoint);
+
+  UPROPERTY()
+  URoadMap *RoadMap;
 
   /** If false, no walker will be spawned. */
   UPROPERTY(Category = "Vehicle Spawner", EditAnywhere)

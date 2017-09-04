@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "AI/CarlaWheeledVehicleState.h"
 #include "CoreMinimal.h"
 #include "WheeledVehicle.h"
 #include "CarlaWheeledVehicle.generated.h"
@@ -47,6 +48,10 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   FVector GetVehicleBoundsExtent() const;
 
+  /// Get the maximum angle at which the front wheel can steer.
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  float GetMaximumSteerAngle() const;
+
   /// @}
   // ===========================================================================
   /// @name Set functions
@@ -87,7 +92,16 @@ public:
     SetHandbrakeInput(false);
   }
 
+  void SetAIVehicleState(ECarlaWheeledVehicleState InState)
+  {
+    State = InState;
+  }
+
 private:
+
+  /// Current state of the vehicle controller (for debugging purposes).
+  UPROPERTY(Category = "AI Controller", VisibleAnywhere)
+  ECarlaWheeledVehicleState State = ECarlaWheeledVehicleState::UNKNOWN;
 
   UPROPERTY(EditAnywhere)
   UBoxComponent *VehicleBounds;
