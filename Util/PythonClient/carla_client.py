@@ -115,6 +115,7 @@ class CarlaClient(object):
         pb_message.brake = kwargs.get('brake', 0.0)
         pb_message.hand_brake = kwargs.get('hand_brake', False)
         pb_message.reverse = kwargs.get('reverse', False)
+        pb_message.autopilot = kwargs.get('autopilot', False)
         self._control_client.write(pb_message.SerializeToString())
 
 
@@ -175,8 +176,8 @@ def test_carla_client():
                 data = client.read_scene_description()
                 number_of_start_spots = len(data.player_start_spots)
                 logging.info('received %d player start locations', number_of_start_spots)
-                for spot in data.player_start_spots:
-                    logging.info(spot)
+                # for spot in data.player_start_spots:
+                #     logging.info(spot)
 
                 logging.info('sending episode start')
                 client.write_episode_start(random.randint(0, max(0, number_of_start_spots - 1)))
@@ -190,6 +191,8 @@ def test_carla_client():
                 time.sleep(1) # Give some time to the server ;)
                 logging.info('connecting secondary clients')
                 client.connect_secondary_clients()
+
+                autopilot = random.choice([True, False])
 
                 for x in xrange(0, 1000):
                     logging.info('waiting for measurements')
@@ -207,12 +210,15 @@ def test_carla_client():
                     data = client.read_images()
                     logging.info('received %d bytes of images', len(data) if data is not None else 0)
 
-                    # if (x+1) % 10 == 0:
+                    # if (x+1) % 100 == 0:
                     #     logging.info('Taking a nap...')
                     #     time.sleep(2)
 
                     logging.info('sending control')
-                    client.write_control(steer=random.uniform(-1.0, 1.0), throttle=0.5, reverse=False)
+                    if autopilot:
+                        client.write_control(autopilot=True)
+                    else:
+                        client.write_control(steer=random.uniform(-1.0, 1.0), throttle=0.3, reverse=False)
 
                 if os.path.isfile(args.ini_file):
                     logging.info('sending file %s', args.ini_file)

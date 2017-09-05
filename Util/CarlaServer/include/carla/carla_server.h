@@ -99,6 +99,7 @@ extern "C" {
     float brake;
     bool hand_brake;
     bool reverse;
+    bool autopilot;
   };
 
   /* ======================================================================== */

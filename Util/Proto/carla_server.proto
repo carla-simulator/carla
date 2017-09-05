@@ -66,6 +66,7 @@ message Control {
   float brake = 3;
   bool hand_brake = 4;
   bool reverse = 5;
+  bool autopilot = 6;
 }
 
 message Measurements {

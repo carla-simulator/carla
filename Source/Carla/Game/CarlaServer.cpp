@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerStart.h"
 
 #include "CarlaPlayerState.h"
+#include "CarlaVehicleController.h"
 #include "CarlaWheeledVehicle.h"
 #include "SceneCaptureCamera.h"
 #include "Settings/CarlaSettings.h"
@@ -62,17 +63,8 @@ static void Set(carla_image &cImage, const FCapturedImage &uImage)
 
 #ifdef CARLA_SERVER_EXTRA_LOG
     {
-      auto GetImageType = [](carla::ImageType Type) {
-        switch (Type) {
-          case carla::IMAGE:        return TEXT("IMAGE");
-          case carla::SCENE_FINAL:  return TEXT("SCENE_FINAL");
-          case carla::DEPTH:        return TEXT("DEPTH");
-          case carla::SEMANTIC_SEG: return TEXT("SEMANTIC_SEG");
-          default:                  return TEXT("ERROR!");
-        }
-      };
       const auto Size = uImage.BitMap.Num();
-      UE_LOG(LogCarlaServer, Log, TEXT("Sending image %dx%d (%d) %s"), cImage.width, cImage.height, Size, GetImageType(cImage.type()));
+      UE_LOG(LogCarlaServer, Log, TEXT("Sending image %dx%d (%d) type %d"), cImage.width, cImage.height, Size, cImage.type);
     }
   } else {
     UE_LOG(LogCarlaServer, Warning, TEXT("Sending empty image"));
@@ -154,27 +146,34 @@ CarlaServer::ErrorCode CarlaServer::SendEpisodeReady(const bool bBlocking)
   return ParseErrorCode(carla_write_episode_ready(Server, values, GetTimeOut(TimeOut, bBlocking)));
 }
 
-CarlaServer::ErrorCode CarlaServer::ReadControl(ACarlaWheeledVehicle &Player, const bool bBlocking)
+CarlaServer::ErrorCode CarlaServer::ReadControl(ACarlaVehicleController &Player, const bool bBlocking)
 {
   carla_control values;
   auto ec = ParseErrorCode(carla_read_control(Server, values, GetTimeOut(TimeOut, bBlocking)));
   if (Success == ec) {
-    Player.SetSteeringInput(values.steer);
-    Player.SetThrottleInput(values.throttle);
-    Player.SetBrakeInput(values.brake);
-    Player.SetHandbrakeInput(values.hand_brake);
-    Player.SetReverse(values.reverse);
+    Player.SetAutopilot(values.autopilot);
+    if (!values.autopilot) {
+      check(Player.IsPossessingAVehicle());
+      auto Vehicle = Player.GetPossessedVehicle();
+      Vehicle->SetSteeringInput(values.steer);
+      Vehicle->SetThrottleInput(values.throttle);
+      Vehicle->SetBrakeInput(values.brake);
+      Vehicle->SetHandbrakeInput(values.hand_brake);
+      Vehicle->SetReverse(values.reverse);
 #ifdef CARLA_SERVER_EXTRA_LOG
-    UE_LOG(
-        LogCarlaServer,
-        Log,
-        TEXT("Read control: { Steer = %f, Throttle = %f, Brake = %f, Handbrake = %s, Reverse = %s }"),
-        values.steer,
-        values.throttle,
-        values.brake,
-        (values.hand_brake ? TEXT("True") : TEXT("False")),
-        (values.reverse ? TEXT("True") : TEXT("False")));
+      UE_LOG(
+          LogCarlaServer,
+          Log,
+          TEXT("Read control: { Steer = %f, Throttle = %f, Brake = %f, Handbrake = %s, Reverse = %s }"),
+          values.steer,
+          values.throttle,
+          values.brake,
+          (values.hand_brake ? TEXT("True") : TEXT("False")),
+          (values.reverse ? TEXT("True") : TEXT("False")));
+    } else {
+      UE_LOG(LogCarlaServer, Log, TEXT("Read control: { Autopilot = On }"));
 #endif // CARLA_SERVER_EXTRA_LOG
+    }
   } else if ((!bBlocking) && (TryAgain == ec)) {
     UE_LOG(LogCarlaServer, Warning, TEXT("No control received from the client this frame!"));
   }

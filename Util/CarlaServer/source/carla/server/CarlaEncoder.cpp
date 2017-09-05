@@ -134,6 +134,7 @@ namespace server {
       values.brake = message->brake();
       values.hand_brake = message->hand_brake();
       values.reverse = message->reverse();
+      values.autopilot = message->autopilot();
       return true;
     } else {
       log_error("invalid protobuf message: control");
