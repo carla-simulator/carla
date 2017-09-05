@@ -170,7 +170,6 @@ void ACarlaGameModeBase::BeginPlay()
   if (VehicleSpawner != nullptr) {
     VehicleSpawner->SetNumberOfVehicles(CarlaSettings.NumberOfVehicles);
     VehicleSpawner->SetSeed(CarlaSettings.SeedVehicles);
-    TActorIterator<ACityMapGenerator> It(GetWorld());
     VehicleSpawner->SetRoadMap(RoadMap);
   } else {
     UE_LOG(LogCarla, Error, TEXT("Missing vehicle spawner actor!"));
