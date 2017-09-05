@@ -10,6 +10,7 @@
 #include "MockGameControllerSettings.h"
 #include "CarlaGameModeBase.generated.h"
 
+class ACarlaVehicleController;
 class APlayerStart;
 class ASceneCaptureCamera;
 class UTaggerDelegate;
@@ -56,7 +57,7 @@ private:
 
   void RegisterPlayer(AController &NewPlayer);
 
-  void AttachCaptureCamerasToPlayer(AController &Player);
+  void AttachCaptureCamerasToPlayer();
 
   void TagActorsForSemanticSegmentation();
 
@@ -74,7 +75,7 @@ private:
   UCarlaGameInstance *GameInstance;
 
   UPROPERTY()
-  AController *PlayerController;
+  ACarlaVehicleController *PlayerController;
 
   UPROPERTY()
   UTaggerDelegate *TaggerDelegate;

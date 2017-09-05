@@ -159,9 +159,8 @@ void ACarlaGameModeBase::BeginPlay()
   TActorIterator<ACityMapGenerator> It(GetWorld());
   URoadMap *RoadMap = (It ? It->GetRoadMap() : nullptr);
 
-  auto Controller = Cast<AWheeledVehicleAIController>(PlayerController);
-  if (Controller != nullptr) {
-    Controller->SetRoadMap(RoadMap);
+  if (PlayerController != nullptr) {
+    PlayerController->SetRoadMap(RoadMap);
   } else {
     UE_LOG(LogCarla, Error, TEXT("Player controller is not a AWheeledVehicleAIController!"));
   }
@@ -171,6 +170,9 @@ void ACarlaGameModeBase::BeginPlay()
     VehicleSpawner->SetNumberOfVehicles(CarlaSettings.NumberOfVehicles);
     VehicleSpawner->SetSeed(CarlaSettings.SeedVehicles);
     VehicleSpawner->SetRoadMap(RoadMap);
+    if (PlayerController != nullptr) {
+      PlayerController->SetRandomEngine(VehicleSpawner->GetRandomEngine());
+    }
   } else {
     UE_LOG(LogCarla, Error, TEXT("Missing vehicle spawner actor!"));
   }
@@ -197,14 +199,13 @@ void ACarlaGameModeBase::RegisterPlayer(AController &NewPlayer)
   check(GameController != nullptr);
   AddTickPrerequisiteActor(&NewPlayer);
   GameController->RegisterPlayer(NewPlayer);
-  PlayerController = &NewPlayer;
-  AttachCaptureCamerasToPlayer(*PlayerController);
+  PlayerController = Cast<ACarlaVehicleController>(&NewPlayer);
+  AttachCaptureCamerasToPlayer();
 }
 
-void ACarlaGameModeBase::AttachCaptureCamerasToPlayer(AController &Player)
+void ACarlaGameModeBase::AttachCaptureCamerasToPlayer()
 {
-  ACarlaVehicleController *Vehicle = Cast<ACarlaVehicleController>(&Player);
-  if (Vehicle == nullptr) {
+  if (PlayerController == nullptr) {
     UE_LOG(LogCarla, Warning, TEXT("Trying to add capture cameras but player is not a ACarlaVehicleController"));
     return;
   }
@@ -215,7 +216,7 @@ void ACarlaGameModeBase::AttachCaptureCamerasToPlayer(AController &Player)
     OverridePostProcessParameters = &Weather->CameraPostProcessParameters;
   }
   for (const auto &Item : Settings.CameraDescriptions) {
-    Vehicle->AddSceneCaptureCamera(Item.Value, OverridePostProcessParameters);
+    PlayerController->AddSceneCaptureCamera(Item.Value, OverridePostProcessParameters);
   }
 }
 
