@@ -17,6 +17,8 @@ ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectIniti
   VehicleBounds->SetupAttachment(RootComponent);
   VehicleBounds->SetHiddenInGame(true);
   VehicleBounds->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
+
+  GetVehicleMovementComponent()->bReverseAsBrake = false;
 }
 
 ACarlaWheeledVehicle::~ACarlaWheeledVehicle() {}

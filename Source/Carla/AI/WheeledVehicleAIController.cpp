@@ -84,7 +84,7 @@ void AWheeledVehicleAIController::Possess(APawn *aPawn)
   check(Vehicle != nullptr);
   MaximumSteerAngle = Vehicle->GetMaximumSteerAngle();
   check(MaximumSteerAngle > 0.0f);
-  SetAutopilot(bAutopilotEnabled);
+  ConfigureAutopilot(bAutopilotEnabled);
 }
 
 void AWheeledVehicleAIController::Tick(const float DeltaTime)
@@ -100,10 +100,9 @@ void AWheeledVehicleAIController::Tick(const float DeltaTime)
 // -- Autopilot ----------------------------------------------------------------
 // =============================================================================
 
-void AWheeledVehicleAIController::SetAutopilot(const bool Enabled)
+void AWheeledVehicleAIController::ConfigureAutopilot(const bool Enable)
 {
-  bAutopilotEnabled = Enabled;
-
+  bAutopilotEnabled = Enable;
   // Reset state.
   Vehicle->SetSteeringInput(0.0f);
   Vehicle->SetThrottleInput(0.0f);
@@ -113,12 +112,6 @@ void AWheeledVehicleAIController::SetAutopilot(const bool Enabled)
   TrafficLightState = ETrafficLightState::Green;
   decltype(TargetLocations) EmptyQueue;
   TargetLocations.swap(EmptyQueue);
-
-  // We need reverse-as-brake behaviour when the AI is enabled only.
-  auto *MovementComponent = Vehicle->GetVehicleMovementComponent();
-  check(MovementComponent != nullptr);
-  MovementComponent->bReverseAsBrake = bAutopilotEnabled;
-
   Vehicle->SetAIVehicleState(
       bAutopilotEnabled ?
           ECarlaWheeledVehicleState::FreeDriving :
@@ -170,8 +163,14 @@ void AWheeledVehicleAIController::TickAutopilotController()
     Throttle = Move(Speed);
   }
 
+  if (Throttle < 0.001f) {
+    Vehicle->SetBrakeInput(1.0f);
+    Vehicle->SetThrottleInput(0.0f);
+  } else {
+    Vehicle->SetBrakeInput(0.0f);
+    Vehicle->SetThrottleInput(Throttle);
+  }
   Vehicle->SetSteeringInput(Steering);
-  Vehicle->SetThrottleInput(Throttle);
 }
 
 float AWheeledVehicleAIController::GoToNextTargetLocation(FVector &Direction)

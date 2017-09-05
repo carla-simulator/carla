@@ -113,13 +113,22 @@ public:
   }
 
   UFUNCTION(Category = "Wheeled Vehicle Controller", BlueprintCallable)
-  void SetAutopilot(bool Enabled);
+  void SetAutopilot(bool Enable)
+  {
+    if (IsAutopilotEnabled() != Enable) {
+      ConfigureAutopilot(Enable);
+    }
+  }
 
   UFUNCTION(Category = "Wheeled Vehicle Controller", BlueprintCallable)
   void ToggleAutopilot()
   {
-    SetAutopilot(!bAutopilotEnabled);
+    ConfigureAutopilot(!bAutopilotEnabled);
   }
+
+private:
+
+  void ConfigureAutopilot(bool Enable);
 
   /// @}
   // ===========================================================================
