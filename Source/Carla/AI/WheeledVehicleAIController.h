@@ -63,6 +63,12 @@ public:
     return Vehicle;
   }
 
+  UFUNCTION(Category = "Wheeled Vehicle Controller", BlueprintCallable)
+  virtual bool IsPossessingThePlayer() const
+  {
+    return false;
+  }
+
   /// @}
   // ===========================================================================
   /// @name Road map
