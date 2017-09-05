@@ -47,7 +47,7 @@ public:
 protected:
 
   UFUNCTION(Category = "Traffic Light", BlueprintImplementableEvent)
-  void OnTrafficLightStateChanged(ETrafficLightState State);
+  void OnTrafficLightStateChanged(ETrafficLightState TrafficLightState);
 
 private:
 
