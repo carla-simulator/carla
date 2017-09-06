@@ -97,12 +97,15 @@ TEST(CarlaServerAPI, SimBlocking) {
       ASSERT_EQ(S, carla_write_episode_ready(CarlaServer, values, TIMEOUT));
     }
 
+    std::array<carla_agent, 10u> agents_data;
+
     std::atomic_bool done{false};
     auto agent_thread_result = std::async(std::launch::async, [&](){
       while (!done) {
         {
           carla_measurements measurements;
-          // test_log("write measurements and images");
+          measurements.non_player_agents = agents_data.data();
+          measurements.number_of_non_player_agents = agents_data.size();
           auto ec = carla_write_measurements(CarlaServer, measurements, images, SIZE_OF_ARRAY(images));
           if (ec != S)
             break;
