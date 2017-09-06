@@ -33,6 +33,7 @@ if (UNIX)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
   include_directories("${CARLA_LIBCXX_INSTALL_PATH}/include/c++/v1")
   link_directories("${CARLA_LIBCXX_INSTALL_PATH}/lib")
+  file(GLOB LibCXX_Shared_Libraries "${CARLA_LIBCXX_INSTALL_PATH}/lib/libc++*.so*")
   file(GLOB LibCXX_Static_Libraries "${CARLA_LIBCXX_INSTALL_PATH}/lib/libc++*.a")
 
   # Setup boost.
@@ -46,6 +47,10 @@ if (UNIX)
   # Setup googletest.
   include_directories("${CARLA_GOOGLETEST_INSTALL_PATH}/include")
   set(GTest_Static_Libraries "${CARLA_GOOGLETEST_INSTALL_PATH}/lib/libgtest.a")
+
+  install(FILES
+      ${LibCXX_Shared_Libraries}
+    DESTINATION shared)
 
   install(FILES
       ${LibCXX_Static_Libraries}
