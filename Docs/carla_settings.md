@@ -8,10 +8,10 @@ started (every time the level is loaded).
 Settings are loaded following the next hierarchy, with values later in the
 hierarchy overriding earlier values.
 
-  1) `{ProjectFolder}/Config/CarlaSettings.ini`
-  2) File provided by command-line argument `-carla-settings=<path-to-ini-file>`
-  3) Other command-line arguments as `-world-port`, or `-carla-no-networking`
-  4) Settings file sent by the client on every new episode.
+  1. `{ProjectFolder}/Config/CarlaSettings.ini`
+  2. File provided by command-line argument `-carla-settings=<path-to-ini-file>`
+  3. Other command-line arguments as `-world-port`, or `-carla-no-networking`
+  4. Settings file sent by the client on every new episode.
 
 Take a look at the [CARLA Settings example](Example.CarlaSettings.ini).
 

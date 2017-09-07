@@ -35,9 +35,9 @@ Every image is an array of uint32's
 
     [width, height, type, color[0], color[1],...]
 
-where each color is an [FColor](fcolorlink) (BGRA) as stored in Unreal Engine.
+where each color is an [FColor][fcolorlink] (BGRA) as stored in Unreal Engine.
 
-[fcolorlink]: https://docs.unrealengine.com/latest/INT/API/Runtime/Core/Math/FColor/index.html
+[fcolorlink]: https://docs.unrealengine.com/latest/INT/API/Runtime/Core/Math/FColor/index.html "FColor API Documentation"
 
 ###### Control thread
 

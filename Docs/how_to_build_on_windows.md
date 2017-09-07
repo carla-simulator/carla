@@ -53,8 +53,8 @@ Dependencies need to be installed under ./Util/Build.
 Configure your environment running "vcvarsall.bat". For Visual Studio 2015, this
 script is located at (don't forget the "amd64" part)
 
-    "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
+    $ "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
 
 Then run make
 
-    make
+    $ make
