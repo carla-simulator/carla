@@ -1,3 +1,33 @@
+## CARLA 0.5.0
+
+  * Upgraded to Unreal Engine 4.17
+    - Fixes memory leaks
+    - Fixes crashes with C++ std classes
+  * Redesigned CarlaServer
+    - Faster, avoids unnecessary copies
+    - Sends images as raw data (no compression)
+    - Supports synchronous and asynchronous mode
+    - Networking operation have a time-out
+    - Synchronous methods have a time-out
+    - Pure C interface for better compatibility
+    - Unit tests with GoogleTest
+  * New server-client protocol
+    - Upgraded to proto3
+    - Supports repeated fields
+    - Optionally send information about all dynamic agents in the scene
+    - Now sends transforms instead of locations only
+    - Autopilot mode added to control
+  * New build system to avoid linkage issues
+  * Added autopilot mode
+  * Added an on-board camera to the car
+  * Added traffic lights and speed limit to player state
+  * Added player pawn selection to config file
+  * Improved blueprint interface of the C++ classes
+  * Some performance improvements to vehicle controllers
+  * Fix issues with depth material in Windows
+  * Fix issues with random engine not being available for vehicles
+  * Fixed issue that compiling a release hang when saving the road map
+
 ## CARLA 0.4.6
 
   * Add weather presets specific for each level
