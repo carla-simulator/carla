@@ -4,8 +4,8 @@ CARLA Server
 Protocol
 --------
 
-All the messages are prepended by a 32 bits unsigned integer (assumed little-
-endian) indicating the size of the coming message.
+All the messages are prepended by a 32 bits unsigned integer (assumed
+little-endian) indicating the size of the coming message.
 
 Three consecutive ports are used,
 

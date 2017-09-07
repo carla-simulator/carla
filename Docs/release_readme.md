@@ -9,6 +9,10 @@ To run the game at fixed time-step, e.g. 30 FPS
 
     $ ./CarlaUE4.sh -benchmark -fps=30
 
+To run the game windowed at a given resolution
+
+    $ ./CarlaUE4.sh -windowed -ResX=800 -ResY=600
+
 Other CARLA related command-line options
 
   * `-carla-settings=<ini-file-path>` Load settings from the given INI file. See Example.CarlaSettings.ini.
@@ -54,3 +58,26 @@ E.g., to choose the weather to be hard-rain at noon, add to CarlaSettings.ini
 [CARLA/LevelSettings]
 WeatherId=6
 ```
+
+In-game controls
+----------------
+
+    W            : throttle
+    S            : brake
+    AD           : steer
+    Q            : toggle reverse
+    Space        : hand-brake
+
+    P            : toggle autopilot
+
+    Arrow keys   : move camera
+    PgUp PgDn    : zoom in and out
+    mouse wheel  : zoom in and out
+    Tab          : toggle on-board camera
+
+    R            : restart level
+    G            : toggle HUD
+    C            : change weather/lighting
+
+    Enter        : jump
+    F            : use the force
