@@ -27,20 +27,14 @@ void CarlaGameController::Initialize(UCarlaSettings &InCarlaSettings)
 {
   CarlaSettings = &InCarlaSettings;
 
-  bool bServerStartedSuccessfully = false;
-
+  // Initialize server if missing.
   if (Server == nullptr) {
     Server = MakeUnique<CarlaServer>(CarlaSettings->WorldPort, CarlaSettings->ServerTimeOut);
-    if (Errc::Success == Server->Connect()) {
-      if (Errc::Success == Server->ReadNewEpisode(*CarlaSettings, BLOCKING)) {
-        bServerStartedSuccessfully = true;
-      }
+    if ((Errc::Success != Server->Connect()) ||
+        (Errc::Success != Server->ReadNewEpisode(*CarlaSettings, BLOCKING))) {
+      UE_LOG(LogCarlaServer, Warning, TEXT("Failed to initialize, server needs restart"));
+      Server = nullptr;
     }
-  }
-
-  if (!bServerStartedSuccessfully) {
-    UE_LOG(LogCarlaServer, Warning, TEXT("Failed to initialize, server needs restart"));
-    Server = nullptr;
   }
 }
 
@@ -94,37 +88,42 @@ void CarlaGameController::Tick(float DeltaSeconds)
   if (Server == nullptr) {
     UE_LOG(LogCarlaServer, Warning, TEXT("Client disconnected, server needs restart"));
     RestartLevel();
+    return;
   }
 
   // Check if the client requested a new episode.
-  if (Server != nullptr) {
+  {
     auto ec = Server->ReadNewEpisode(*CarlaSettings, NON_BLOCKING);
     switch (ec) {
       case Errc::Success:
         RestartLevel();
-        break;
+        return;
       case Errc::Error:
         Server = nullptr;
-        break;
+        return;
+      default:
+        break; // fallthrough...
     }
   }
 
   // Send measurements.
-  if (Server != nullptr) {
+  {
     check(GameState != nullptr);
     if (Errc::Error == Server->SendMeasurements(
             *GameState,
             Player->GetPlayerState(),
             CarlaSettings->bSendNonPlayerAgentsInfo)) {
       Server = nullptr;
+      return;
     }
   }
 
   // Read control, block if the settings say so.
-  if (Server != nullptr) {
+  {
     const bool bShouldBlock = CarlaSettings->bSynchronousMode;
     if (Errc::Error == Server->ReadControl(*Player, bShouldBlock)) {
       Server = nullptr;
+      return;
     }
   }
 }

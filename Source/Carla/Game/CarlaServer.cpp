@@ -85,6 +85,9 @@ CarlaServer::CarlaServer(const uint32 InWorldPort, const uint32 InTimeOut) :
 
 CarlaServer::~CarlaServer()
 {
+#ifdef CARLA_SERVER_EXTRA_LOG
+  UE_LOG(LogCarlaServer, Warning, TEXT("Destroying CarlaServer"));
+#endif // CARLA_SERVER_EXTRA_LOG
   carla_free_server(Server);
 }
 

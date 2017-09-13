@@ -49,5 +49,5 @@ private:
 
   const uint32 TimeOut;
 
-  void* Server;
+  void* const Server;
 };

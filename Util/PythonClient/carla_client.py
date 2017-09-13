@@ -167,7 +167,7 @@ def test_carla_client():
                 with open(args.ini_file, 'r') as fd:
                     client.write_request_new_episode(fd.read())
             else:
-                logging.info('sending empty ini file')
+                logging.info('sending default ini file')
                 client.write_request_new_episode(CarlaSettings)
 
             while True:
@@ -194,7 +194,7 @@ def test_carla_client():
 
                 autopilot = random.choice([True, False])
 
-                for x in xrange(0, 1000):
+                for x in xrange(0, 100):
                     logging.info('waiting for measurements')
                     data = client.read_measurements()
                     if not data:
@@ -225,8 +225,8 @@ def test_carla_client():
                     with open(args.ini_file, 'r') as fd:
                         client.write_request_new_episode(fd.read())
                 else:
-                    logging.info('sending empty ini file')
-                    client.write_request_new_episode('Dummy empty ini file')
+                    logging.info('sending default ini file')
+                    client.write_request_new_episode(CarlaSettings)
 
                 client.disconnect_secondary_clients()
 
