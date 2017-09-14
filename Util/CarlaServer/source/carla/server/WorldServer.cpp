@@ -103,7 +103,6 @@ namespace server {
 
   void WorldServer::StartAgentServer() {
     _agent_server = std::make_unique<AgentServer>(_encoder, _port + 1u, _port + 2u, _timeout);
-    ResetProtocol();
   }
 
   void WorldServer::KillAgentServer() {

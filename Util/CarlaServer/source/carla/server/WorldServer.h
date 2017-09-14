@@ -36,7 +36,7 @@ namespace server {
     std::future<error_code> Write(const carla_episode_ready &episode_ready);
 
     /// This assumes you have entered the loop of write measurements, read
-    /// control. Automatically resets the protocol to start over.
+    /// control.
     void StartAgentServer();
 
     AgentServer *GetAgentServer() {
@@ -44,6 +44,8 @@ namespace server {
     }
 
     void KillAgentServer();
+
+    void ResetProtocol();
 
   private:
 
@@ -56,8 +58,6 @@ namespace server {
       ReadTask<carla_episode_start> episode_start;
       WriteTask<carla_episode_ready> episode_ready;
     };
-
-    void ResetProtocol();
 
     void ExecuteProtocol(Protocol &&protocol);
 

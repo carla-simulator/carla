@@ -87,14 +87,15 @@ int32_t carla_write_episode_ready(
       CarlaServerPtr self,
       const carla_episode_ready &values,
       const uint32_t timeout) {
-  auto result = Cast(self)->Write(values);
   if (values.ready) {
     Cast(self)->StartAgentServer();
   } else {
     log_error("start agent server cancelled: episode_ready = false");
   }
   error_code ec = errc::timed_out();
+  auto result = Cast(self)->Write(values);
   future::wait_and_get(result, ec, timeout_t::milliseconds(timeout));
+  Cast(self)->ResetProtocol();
   return ec.value();
 }
 
