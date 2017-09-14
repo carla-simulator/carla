@@ -167,14 +167,19 @@ CarlaServer::ErrorCode CarlaServer::ReadControl(ACarlaVehicleController &Player,
       UE_LOG(
           LogCarlaServer,
           Log,
-          TEXT("Read control: { Steer = %f, Throttle = %f, Brake = %f, Handbrake = %s, Reverse = %s }"),
+          TEXT("Read control (%s): { Steer = %f, Throttle = %f, Brake = %f, Handbrake = %s, Reverse = %s }"),
+          (bBlocking ? TEXT("Sync") : TEXT("Async")),
           values.steer,
           values.throttle,
           values.brake,
           (values.hand_brake ? TEXT("True") : TEXT("False")),
           (values.reverse ? TEXT("True") : TEXT("False")));
     } else {
-      UE_LOG(LogCarlaServer, Log, TEXT("Read control: { Autopilot = On }"));
+      UE_LOG(
+          LogCarlaServer,
+          Log,
+          TEXT("Read control (%s): { Autopilot = On }"),
+          (bBlocking ? TEXT("Sync") : TEXT("Async")));
 #endif // CARLA_SERVER_EXTRA_LOG
     }
   } else if ((!bBlocking) && (TryAgain == ec)) {
@@ -261,6 +266,10 @@ CarlaServer::ErrorCode CarlaServer::SendMeasurements(
   }
   values.non_player_agents = (Agents.Num() > 0 ? Agents.GetData() : nullptr);
   values.number_of_non_player_agents = Agents.Num();
+
+#ifdef CARLA_SERVER_EXTRA_LOG
+  UE_LOG(LogCarlaServer, Log, TEXT("Sending data of %d agents"), values.number_of_non_player_agents);
+#endif // CARLA_SERVER_EXTRA_LOG
 
   // Images.
   const auto NumberOfImages = PlayerState.GetNumberOfImages();

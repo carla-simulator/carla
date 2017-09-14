@@ -1,6 +1,6 @@
 # CARLA, Copyright (C) 2017 Computer Vision Center (CVC)
 
-import logging
+import datetime
 
 from contextlib import contextmanager
 
@@ -20,3 +20,15 @@ def make_client(client_type, *args, **kwargs):
     finally:
         if client is not None:
             client.disconnect()
+
+
+class StopWatch(object):
+    def __init__(self):
+        self.start = datetime.datetime.now()
+        self.end = None
+
+    def stop(self):
+        self.end = datetime.datetime.now()
+
+    def milliseconds(self):
+        return 1000.0 * (self.end - self.start).total_seconds()

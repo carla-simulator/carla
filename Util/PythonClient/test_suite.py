@@ -17,11 +17,14 @@ import os
 
 
 from lib.carla_util import TestCarlaClientBase
+from lib.util import StopWatch
 from lib.util import make_client
 
 
 from test import CarlaServerTest
 
+# Modified by command-line args.
+VERBOSE = False
 
 # Output.
 GREEN    = '\x1b[0;32m%s\x1b[0m'
@@ -38,7 +41,10 @@ FAILED = RED   % '[  FAILED  ]'
 
 
 def log_test(prep, message, *args):
-    print(prep + ' ' + message % args)
+    message = prep + ' ' + message % args
+    print(message)
+    if not VERBOSE:
+        logging.info(message)
 
 
 class TestProxy(object):
@@ -56,18 +62,6 @@ class TestProxy(object):
             return False
         result = self.instance.run(*args, **kwargs)
         return True if result is None else result
-
-
-class StopWatch(object):
-    def __init__(self):
-        self.start = datetime.datetime.now()
-        self.end = None
-
-    def stop(self):
-        self.end = datetime.datetime.now()
-
-    def milliseconds(self):
-        return 1000.0 * (self.end - self.start).total_seconds()
 
 
 def iterate_tests():
@@ -106,7 +100,7 @@ def run_test(test, args):
         timer.stop()
     except Exception as exception:
         timer.stop()
-        logging.error('exception running test %r: %s', test.name, exception)
+        logging.error('exception: %s', exception)
         result = False
     log_test(OK if result else FAILED, '%s (%d ms)', test.name, timer.milliseconds())
     return result
@@ -125,7 +119,7 @@ def do_the_tests(args):
             succeeded.append(test)
         else:
             failed.append(test)
-    log_test(SEP0, '%d tests run.', len(tests))
+    log_test(SEP0, '%d tests ran.', len(tests))
     if succeeded:
         log_test(PASSED, '%d tests.', len(succeeded))
     if failed:
@@ -146,10 +140,6 @@ def main():
         action='store_true',
         help='print debug extra information to log')
     argparser.add_argument(
-        '-i', '--info',
-        action='store_true',
-        help='print extra information to log')
-    argparser.add_argument(
         '--host',
         metavar='H',
         default='127.0.0.1',
@@ -163,17 +153,12 @@ def main():
 
     args = argparser.parse_args()
 
-    if args.debug:
-        args.info = True
-        loglevel = logging.DEBUG
-    elif args.info:
-        loglevel = logging.INFO
-    else:
-        loglevel = logging.WARNING
+    global VERBOSE
+    VERBOSE = args.verbose
 
     logging_config = {
         'format': '%(levelname)s: %(message)s',
-        'level': loglevel
+        'level': logging.DEBUG if args.debug else logging.INFO
     }
     if not args.verbose:
         logging_config['filename'] = 'test_suite.log'
