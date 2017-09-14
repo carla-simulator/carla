@@ -118,24 +118,26 @@ class TestCarlaClientBase(object):
 
         reverse = random.choice([True, False])
 
+        logging.info('running episode with %d iterations', iterations)
+
         for x in xrange(0, iterations):
-            logging.info('waiting for measurements')
+            logging.debug('waiting for measurements')
             data = self.client.read_measurements()
             if not data:
                 raise RuntimeError('received empty measurements')
             if not data.IsInitialized():
                 raise RuntimeError('received non-initialized measurements')
             else:
-                logging.info('received valid measurements')
-                logging.info('received info of %d agents', len(data.non_player_agents))
+                logging.debug('received valid measurements')
+                logging.debug('received info of %d agents', len(data.non_player_agents))
                 if self.args.debug:
                     for agent in data.non_player_agents:
                         logging.debug(agent)
-            logging.info('waiting for images')
+            logging.debug('waiting for images')
             data = self.client.read_images()
-            logging.info('received %d bytes of images', len(data) if data is not None else 0)
+            logging.debug('received %d bytes of images', len(data) if data is not None else 0)
 
-            logging.info('sending control')
+            logging.debug('sending control')
             if autopilot:
                 self.client.write_control(autopilot=True)
             else:
