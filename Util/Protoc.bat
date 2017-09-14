@@ -2,7 +2,7 @@
 
 set PROTOBUF_SRC_DIR=Proto
 set PROTOBUF_CPP_OUT_DIR=CarlaServer/source/carla/server
-set PROTOBUF_PY_OUT_DIR=PythonClient
+set PROTOBUF_PY_OUT_DIR=PythonClient/lib
 set PROTO_BASENAME=carla_server
 
 if "%1" == "--clean" (

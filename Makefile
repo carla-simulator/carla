@@ -65,10 +65,10 @@ check: debug launch_test_clients run_test_debug kill_test_clients
 check_release: release launch_test_clients run_test_release kill_test_clients
 
 run_test_debug:
-	@-LD_LIBRARY_PATH=$(INSTALL_FOLDER)/shared $(INSTALL_FOLDER)/bin/test_carlaserverd --gtest_shuffle
+	@-LD_LIBRARY_PATH=$(INSTALL_FOLDER)/shared $(INSTALL_FOLDER)/bin/test_carlaserverd --gtest_shuffle $(GTEST_ARGS)
 
 run_test_release:
-	@-LD_LIBRARY_PATH=$(INSTALL_FOLDER)/shared $(INSTALL_FOLDER)/bin/test_carlaserver --gtest_shuffle
+	@-LD_LIBRARY_PATH=$(INSTALL_FOLDER)/shared $(INSTALL_FOLDER)/bin/test_carlaserver --gtest_shuffle $(GTEST_ARGS)
 
 launch_test_clients:
 	@echo "Launch echo_client.py"

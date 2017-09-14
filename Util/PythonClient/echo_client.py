@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 # CARLA, Copyright (C) 2017 Computer Vision Center (CVC)
 
@@ -10,14 +10,15 @@ import argparse
 import logging
 import time
 
-from tcp_client import connect_to_tcp_server
+from lib.tcp_client import TCPClient
+from lib.util import make_client
 
 
 def launch_echo_client(host, port):
     while True:
         try:
             logging.debug('connecting...')
-            with connect_to_tcp_server(host, port, timeout=20) as client:
+            with make_client(TCPClient, host, port, timeout=20) as client:
                 while True:
                     logging.debug('reading...')
                     data = client.read()
