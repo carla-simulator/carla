@@ -125,7 +125,7 @@ class TestCarlaClientBase(object):
         if autopilot is None:
             autopilot = random.choice([True, False])
 
-        reverse = random.choice([True, False])
+        reverse = (random.random() < 0.2)
 
         logging.info('running episode with %d iterations', iterations)
 

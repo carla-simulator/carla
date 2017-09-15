@@ -7,13 +7,13 @@
 
 
 import argparse
-import datetime
-import time
 import glob
 import imp
 import inspect
 import logging
 import os
+import random
+import time
 
 
 from lib.carla_util import TestCarlaClientBase
@@ -108,6 +108,7 @@ def run_test(test, args):
 
 def do_the_tests(args):
     tests = [t for t in iterate_tests()]
+    random.shuffle(tests)
     succeeded = []
     failed = []
     log_test(SEP0, 'Running %d tests.', len(tests))
