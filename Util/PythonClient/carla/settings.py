@@ -1,11 +1,9 @@
 # CARLA, Copyright (C) 2017 Computer Vision Center (CVC)
 
-
 """CARLA Settings"""
 
-
-import ConfigParser
-import StringIO
+import configparser
+import io
 import random
 
 
@@ -13,6 +11,7 @@ MAX_NUMBER_OF_WEATHER_IDS = 14
 
 
 class Camera(object):
+    """Camera description. To be added to CarlaSettings."""
     def __init__(self, name, **kwargs):
         self.CameraName = name
         self.PostProcessing = 'SceneFinal'
@@ -28,7 +27,7 @@ class Camera(object):
         self.set(**kwargs)
 
     def set(self, **kwargs):
-        for key, value in kwargs.iteritems():
+        for key, value in kwargs.items():
             if not hasattr(self, key):
                 raise ValueError('CarlaSettings.Camera: no key named %r' % key)
             setattr(self, key, value)
@@ -49,6 +48,7 @@ class Camera(object):
 
 
 class CarlaSettings(object):
+    """CARLA settings object. Convertible to str as CarlaSettings.ini."""
     def __init__(self, **kwargs):
         # [CARLA/Server]
         self.SynchronousMode = False
@@ -57,14 +57,15 @@ class CarlaSettings(object):
         self.PlayerVehicle = None
         self.NumberOfVehicles = 20
         self.NumberOfPedestrians = 30
-        self.WeatherId = random.randint(-1, MAX_NUMBER_OF_WEATHER_IDS)
+        self.WeatherId = -1
         self.SeedVehicles = None
         self.SeedPedestrians = None
+        self.randomize_weather()
         self.set(**kwargs)
         self._cameras = []
 
     def set(self, **kwargs):
-        for key, value in kwargs.iteritems():
+        for key, value in kwargs.items():
             if not hasattr(self, key):
                 raise ValueError('CarlaSettings: no key named %r' % key)
             setattr(self, key, value)
@@ -74,9 +75,18 @@ class CarlaSettings(object):
             return 0
         return self.NumberOfVehicles + self.NumberOfPedestrians
 
+    def get_images_byte_size(self):
+        size = 0
+        for camera in self._cameras:
+            size += 3 + int(camera.ImageSizeX) * int(camera.ImageSizeY)
+        return 4 * size
+
     def randomize_seeds(self):
-        self.SeedVehicles = random.getrandbits(64)
-        self.SeedPedestrians = random.getrandbits(64)
+        self.SeedVehicles = random.getrandbits(32)
+        self.SeedPedestrians = random.getrandbits(32)
+
+    def randomize_weather(self):
+        self.WeatherId = random.randint(-1, MAX_NUMBER_OF_WEATHER_IDS)
 
     def add_camera(self, camera):
         if not isinstance(camera, Camera):
@@ -84,7 +94,7 @@ class CarlaSettings(object):
         self._cameras.append(camera)
 
     def __str__(self):
-        ini = ConfigParser.RawConfigParser()
+        ini = configparser.ConfigParser()
         ini.optionxform=str
         S_SERVER = 'CARLA/Server'
         S_LEVEL = 'CARLA/LevelSettings'
@@ -95,7 +105,7 @@ class CarlaSettings(object):
                 if hasattr(obj, key) and getattr(obj, key) is not None:
                     if not ini.has_section(section):
                         ini.add_section(section)
-                    ini.set(section, key, getattr(obj, key))
+                    ini.set(section, key, str(getattr(obj, key)))
 
         add_section(S_SERVER, self, [
             'SynchronousMode',
@@ -123,20 +133,6 @@ class CarlaSettings(object):
                 'CameraRotationRoll',
                 'CameraRotationYaw'])
 
-        text = StringIO.StringIO()
+        text = io.StringIO()
         ini.write(text)
         return text.getvalue().replace(' = ', '=')
-
-
-if __name__ == '__main__':
-
-    settings = CarlaSettings(NumberOfVehicles=200, SendNonPlayerAgentsInfo=True)
-    settings.randomize_seeds()
-    camera1 = Camera('Camera1')
-    camera1.set_image_size(1920, 1080)
-    camera1.set_position(20, 0, 100)
-    settings.add_camera(camera1)
-    camera2 = Camera('Camera2')
-    camera2.set(CameraFOV=120, PostProcessing='Depth')
-    settings.add_camera(camera2)
-    print(settings)

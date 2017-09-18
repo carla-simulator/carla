@@ -1,10 +1,8 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 # CARLA, Copyright (C) 2017 Computer Vision Center (CVC)
 
-
 """Test suite for testing CARLAUE4."""
-
 
 import argparse
 import glob
@@ -16,15 +14,14 @@ import random
 import time
 
 
-from lib.carla_util import TestCarlaClientBase
-from lib.util import StopWatch
-from lib.util import make_client
+import carla
 
+from carla.util import StopWatch
 
 from test import CarlaServerTest
 
 # Modified by command-line args.
-VERBOSE = False
+LOGGING_TO_FILE = False
 
 # Output.
 GREEN    = '\x1b[0;32m%s\x1b[0m'
@@ -43,7 +40,7 @@ FAILED = RED   % '[  FAILED  ]'
 def log_test(prep, message, *args):
     message = prep + ' ' + message % args
     print(message)
-    if not VERBOSE:
+    if LOGGING_TO_FILE:
         logging.info(message)
 
 
@@ -72,14 +69,15 @@ def iterate_tests():
     folder = os.path.join(os.path.dirname(__file__), 'test')
     modules = glob.glob(os.path.join(folder, "*.py"))
 
-    for module_name in set(strip_ext(m) for m in modules if not m.endswith('__init__.py')):
+    for module_name in set(strip_ext(m) for m in modules if not m.startswith('_')):
         logging.debug('parsing module %r', module_name)
         try:
             module_info = imp.find_module(module_name, [folder])
             # This do a reload if already imported.
             module = imp.load_module(module_name, *module_info)
             for name, declaration in inspect.getmembers(module, is_valid):
-                yield TestProxy(name, declaration, module_name)
+                if not name.startswith('_'):
+                    yield TestProxy(name, declaration, module_name)
         except Exception as exception:
             logging.error('failed to load module %r: %s', module_name, exception)
         finally:
@@ -135,36 +133,40 @@ def main():
     argparser.add_argument(
         '-v', '--verbose',
         action='store_true',
-        help='print debug information to console instead of log file')
+        dest='debug',
+        help='print debug information')
     argparser.add_argument(
-        '-d', '--debug',
-        action='store_true',
-        help='print debug extra information to log')
+        '--log',
+        metavar='LOG_FILE',
+        default=None,
+        help='print output to file')
     argparser.add_argument(
         '--host',
         metavar='H',
         default='127.0.0.1',
-        help='IP of the host server (default 127.0.0.1)')
+        help='IP of the host server (default: 127.0.0.1)')
     argparser.add_argument(
         '-p', '--port',
         metavar='P',
         default=2000,
         type=int,
-        help='TCP port to listen to (default 2000)')
+        help='TCP port to listen to (default: 2000)')
 
     args = argparser.parse_args()
 
-    global VERBOSE
-    VERBOSE = args.verbose
+    global LOGGING_TO_FILE
+    LOGGING_TO_FILE = args.log is not None
 
     logging_config = {
         'format': '%(levelname)s: %(message)s',
         'level': logging.DEBUG if args.debug else logging.INFO
     }
-    if not args.verbose:
-        logging_config['filename'] = 'test_suite.log'
+    if args.log:
+        logging_config['filename'] = args.log
         logging_config['filemode'] = 'w+'
     logging.basicConfig(**logging_config)
+
+    logging.info('listening to server %s:%s', args.host, args.port)
 
     print('Running the CARLAUE4 test suite (looks like GTest but is not).')
     do_the_tests(args)
@@ -172,4 +174,7 @@ def main():
 
 if __name__ == '__main__':
 
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print('\nCancelled by user. Bye!')

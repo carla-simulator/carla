@@ -1,0 +1,93 @@
+# CARLA, Copyright (C) 2017 Computer Vision Center (CVC)
+
+"""CARLA Client."""
+
+from . import tcp
+
+from . import carla_server_pb2 as carla_protocol
+
+
+class CarlaClient(object):
+    def __init__(self, host, world_port, timeout=15):
+        self._world_client = tcp.TCPClient(host, world_port, timeout)
+        self._stream_client = tcp.TCPClient(host, world_port + 1, timeout)
+        self._control_client = tcp.TCPClient(host, world_port + 2, timeout)
+
+    def connect(self):
+        self._world_client.connect()
+
+    def disconnect(self):
+        self._control_client.disconnect()
+        self._stream_client.disconnect()
+        self._world_client.disconnect()
+
+    def request_new_episode(self, carla_settings):
+        """Request a new episode. carla_settings object must be convertible to
+        a str holding a CarlaSettings.ini.
+
+        Returns a protobuf object holding the scene description.
+        """
+        # Disconnect agent clients.
+        self._stream_client.disconnect()
+        self._control_client.disconnect()
+        # Send new episode request.
+        pb_message = carla_protocol.RequestNewEpisode()
+        pb_message.ini_file = str(carla_settings)
+        self._world_client.write(pb_message.SerializeToString())
+        # Read scene description.
+        data = self._world_client.read()
+        if not data:
+            raise RuntimeError('failed to read data from server')
+        pb_message = carla_protocol.SceneDescription()
+        pb_message.ParseFromString(data)
+        if len(pb_message.player_start_spots) < 1:
+            raise RuntimeError("received 0 player start spots")
+        return pb_message
+
+    def start_episode(self, player_start_index):
+        """Start the new episode at the player start given by the
+        player_start_index. The list of player starts is retrieved by
+        request_new_episode().
+
+        This function waits until the server answers with an EpisodeReady.
+        """
+        pb_message = carla_protocol.EpisodeStart()
+        pb_message.player_start_spot_index = player_start_index
+        self._world_client.write(pb_message.SerializeToString())
+        # Wait for EpisodeReady.
+        data = self._world_client.read()
+        if not data:
+            raise RuntimeError('failed to read data from server')
+        pb_message = carla_protocol.EpisodeReady()
+        pb_message.ParseFromString(data)
+        if not pb_message.ready:
+            raise RuntimeError('cannot start episode: server failed to start episode')
+        # We can start the agent clients now.
+        self._stream_client.connect()
+        self._control_client.connect()
+
+    def read_measurements(self):
+        """Read measuremnts of current frame. The episode must be started.
+        Return the protobuf object with the measurements followed by the raw
+        data with the images.
+        """
+        # Read measurements.
+        data = self._stream_client.read()
+        if not data:
+            raise RuntimeError('failed to read data from server')
+        pb_message = carla_protocol.Measurements()
+        pb_message.ParseFromString(data)
+        # Read images.
+        images_raw_data = self._stream_client.read()
+        return pb_message, images_raw_data
+
+    def send_control(self, **kwargs):
+        """Send vehicle control for the current frame."""
+        pb_message = carla_protocol.Control()
+        pb_message.steer = kwargs.get('steer', 0.0)
+        pb_message.throttle = kwargs.get('throttle', 0.0)
+        pb_message.brake = kwargs.get('brake', 0.0)
+        pb_message.hand_brake = kwargs.get('hand_brake', False)
+        pb_message.reverse = kwargs.get('reverse', False)
+        pb_message.autopilot = kwargs.get('autopilot', False)
+        self._control_client.write(pb_message.SerializeToString())

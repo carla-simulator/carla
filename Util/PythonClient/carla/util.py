@@ -10,8 +10,8 @@ def to_hex_str(header):
 
 
 @contextmanager
-def make_client(client_type, *args, **kwargs):
-    """Context manager to create a client."""
+def make_connection(client_type, *args, **kwargs):
+    """Context manager to create and connect a networking object."""
     client = None
     try:
         client = client_type(*args, **kwargs)

@@ -71,13 +71,13 @@ run_test_release:
 	@-LD_LIBRARY_PATH=$(INSTALL_FOLDER)/shared $(INSTALL_FOLDER)/bin/test_carlaserver --gtest_shuffle $(GTEST_ARGS)
 
 launch_test_clients:
-	@echo "Launch echo_client.py"
-	@python $(PYTHON_CLIENT_FOLDER)/echo_client.py -p 4000 & echo $$! > echo_client.pid
-	@echo "Launch carla_client.py"
-	@python $(PYTHON_CLIENT_FOLDER)/carla_client.py -p 2000 & echo $$! > carla_client.pid
+	@echo "Launch echo client"
+	@python3 $(PYTHON_CLIENT_FOLDER)/client_test.py --echo -p 4000 --log echo_client.log & echo $$! > echo_client.pid
+	@echo "Launch carla client"
+	@python3 $(PYTHON_CLIENT_FOLDER)/client_test.py -p 2000 --log carla_client.log & echo $$! > carla_client.pid
 
 kill_test_clients:
-	@echo "Kill echo_client.py"
+	@echo "Kill echo client"
 	@kill `cat echo_client.pid` && rm echo_client.pid
-	@echo "Kill carla_client.py"
+	@echo "Kill carla client"
 	@kill `cat carla_client.pid` && rm carla_client.pid
