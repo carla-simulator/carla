@@ -75,12 +75,6 @@ class CarlaSettings(object):
             return 0
         return self.NumberOfVehicles + self.NumberOfPedestrians
 
-    def get_images_byte_size(self):
-        size = 0
-        for camera in self._cameras:
-            size += 3 + int(camera.ImageSizeX) * int(camera.ImageSizeY)
-        return 4 * size
-
     def randomize_seeds(self):
         self.SeedVehicles = random.getrandbits(32)
         self.SeedPedestrians = random.getrandbits(32)

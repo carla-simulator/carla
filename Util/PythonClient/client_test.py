@@ -17,15 +17,20 @@ from carla.tcp import TCPClient
 from carla.util import make_connection
 
 
-def run_carla_server(host, port):
-    with make_connection(CarlaClient, host, port, timeout=15) as client:
+def run_carla_server(args):
+    with make_connection(CarlaClient, args.host, args.port, timeout=15) as client:
         logging.info('CarlaClient connected')
+        filename = '_images/episode_{:0>3d}/image_{:0>5d}.png'
         frames_per_episode = 300
+        episode = 0
         while True:
+            episode += 1
             settings = CarlaSettings()
-            settings.set(SendNonPlayerAgentsInfo=True)
+            settings.set(SendNonPlayerAgentsInfo=True,SynchronousMode=args.synchronous)
             settings.randomize_seeds()
-            settings.add_camera(Camera('DefaultCamera'))
+            camera = Camera('DefaultCamera')
+            camera.set_image_size(300, 200)
+            settings.add_camera(camera)
 
             logging.debug('sending CarlaSettings:\n%s', settings)
             logging.info('new episode requested')
@@ -45,12 +50,16 @@ def run_carla_server(host, port):
             autopilot = (random.random() < 0.5)
             reverse = (random.random() < 0.2)
 
-            for _ in range(0, frames_per_episode):
+            for frame in range(0, frames_per_episode):
                 logging.debug('reading measurements...')
                 measurements, images = client.read_measurements()
 
                 logging.debug('received data of %d agents', len(measurements.non_player_agents))
-                logging.debug('received %d bytes of images', len(images))
+                assert len(images) == 1
+                assert (images[0].width, images[0].height) == (camera.ImageSizeX, camera.ImageSizeY)
+
+                if args.images_to_disk:
+                    images[0].save_to_disk(filename.format(episode, frame))
 
                 logging.debug('sending control...')
                 client.send_control(
@@ -83,6 +92,14 @@ def main():
         default=2000,
         type=int,
         help='TCP port to listen to (default: 2000)')
+    argparser.add_argument(
+        '-s', '--synchronous',
+        action='store_true',
+        help='enable synchronous mode')
+    argparser.add_argument(
+        '-i', '--images-to-disk',
+        action='store_true',
+        help='save images to disk')
     argparser.add_argument(
         '--echo',
         action='store_true',
@@ -118,11 +135,15 @@ def main():
 
             else:
 
-                run_carla_server(args.host, args.port)
+                run_carla_server(args)
 
-        except Exception as exception:
+        except AssertionError as assertion:
+            raise assertion
+        except ConnectionRefusedError as exception:
             logging.error('exception: %s', exception)
             time.sleep(1)
+        except Exception as exception:
+            raise exception
 
 
 if __name__ == '__main__':

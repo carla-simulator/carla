@@ -2,6 +2,10 @@
 
 """CARLA Client."""
 
+import logging
+import os
+import struct
+
 from . import tcp
 
 from . import carla_server_pb2 as carla_protocol
@@ -79,7 +83,7 @@ class CarlaClient(object):
         pb_message.ParseFromString(data)
         # Read images.
         images_raw_data = self._stream_client.read()
-        return pb_message, images_raw_data
+        return pb_message, CarlaImage.parse_raw_data(images_raw_data)
 
     def send_control(self, **kwargs):
         """Send vehicle control for the current frame."""
@@ -91,3 +95,49 @@ class CarlaClient(object):
         pb_message.reverse = kwargs.get('reverse', False)
         pb_message.autopilot = kwargs.get('autopilot', False)
         self._control_client.write(pb_message.SerializeToString())
+
+
+class CarlaImage(object):
+    @staticmethod
+    def parse_raw_data(raw_data):
+        getval = lambda index: struct.unpack('<L', raw_data[index*4:index*4+4])[0]
+        images = []
+        total_size = len(raw_data) / 4
+        index = 0
+        while index < total_size:
+            width = getval(index)
+            height = getval(index + 1)
+            image_type = getval(index + 2)
+            begin = index + 3
+            end = begin + width * height
+            images.append(CarlaImage(width, height, image_type, raw_data[begin*4:end*4]))
+            index = end
+        return images
+
+    def __init__(self, width, height, image_type, raw_data):
+        logging.debug('parsed image %dx%d type %d (%d bytes)', width, height, image_type, len(raw_data))
+        assert len(raw_data) == 4 * width * height
+        self.width = width
+        self.height = height
+        self.image_type = image_type
+        self.raw = raw_data
+
+    def save_to_disk(self, filename):
+        try:
+            from PIL import Image
+        except ImportError:
+            raise RuntimeError('cannot import PIL, make sure pillow package is installed')
+
+        image = Image.frombytes(
+            mode='RGBA',
+            size=(self.width, self.height),
+            data=self.raw,
+            decoder_name='raw')
+        b, g, r, a = image.split()
+        image = Image.merge("RGB", (r, g, b))
+
+        folder = os.path.dirname(filename)
+        if not os.path.isdir(folder):
+            os.makedirs(folder)
+        logging.debug('saving image to %r...', filename)
+        image.save(filename)
