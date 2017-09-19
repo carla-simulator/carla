@@ -7,8 +7,9 @@ set PROTO_BASENAME=carla_server
 
 if "%1" == "--clean" (
   rem Delete existing ones.
-  rm -f %PROTOBUF_CPP_OUT_DIR%/*.pb.h %PROTOBUF_CPP_OUT_DIR%/*.pb.cc
-  rm -f %PROTOBUF_PY_OUT_DIR%/*_pb2.py
+  rm -f %PROTOBUF_CPP_OUT_DIR%/carla_server.pb.h
+  rm -f %PROTOBUF_CPP_OUT_DIR%/carla_server.pb.cc
+  rm -f %PROTOBUF_PY_OUT_DIR%/carla_server_pb2.py
   goto end
 )
 
