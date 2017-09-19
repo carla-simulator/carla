@@ -19,6 +19,7 @@ enum MainFunctionReturnValues {
 };
 
 namespace fs = boost::filesystem;
+namespace po = boost::program_options;
 
 using pixel_converter_function = std::function<void(boost::gil::rgb8_pixel_t &)>;
 
@@ -30,7 +31,7 @@ static pixel_converter_function get_pixel_converter(const std::string &name) {
   } else if (name == "logdepth") {
     return image_converter::logarithmic_depth_pixel_converter();
   } else {
-    throw std::invalid_argument("invalid converter, please choose \"semseg\", \"depth\", or \"logdepth\"");
+    throw po::error("invalid converter, please choose \"semseg\", \"depth\", or \"logdepth\"");
   }
 }
 
@@ -99,7 +100,6 @@ int main(int argc, char *argv[]) {
     fs::path output_folder;
 
     // Fill program options.
-    namespace po = boost::program_options;
     po::options_description desc("Allowed options");
     desc.add_options()
       ("help,h", "produce help message")
@@ -138,7 +138,7 @@ int main(int argc, char *argv[]) {
 
       do_the_thing(input_folder, output_folder, converter);
 
-    } catch (const std::invalid_argument &e) {
+    } catch (const po::error &e) {
       std::cerr << desc << "\n" << e.what() << std::endl;
       return InvalidArgument;
     }

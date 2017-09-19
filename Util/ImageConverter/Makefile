@@ -8,10 +8,12 @@ EXE=image_converter
 build: release
 
 release: $(SOURCES) $(HEADERS)
-	$(CXX) $(FLAGS) -O3 -DNDEBUG -o $(EXE) $(SOURCES) $(LIBS)
+	@mkdir -p bin
+	$(CXX) $(FLAGS) -O3 -DNDEBUG -o bin/$(EXE) $(SOURCES) $(LIBS)
 
 debug: $(SOURCES) $(HEADERS)
-	$(CXX) $(FLAGS) -O0 -g -D_DEBUG -o $(EXE)_debug $(SOURCES) $(LIBS)
+	@mkdir -p bin
+	$(CXX) $(FLAGS) -O0 -g -D_DEBUG -o bin/$(EXE)_debug $(SOURCES) $(LIBS)
 
 clean:
 	rm -f $(EXE) $(EXE)_debug
