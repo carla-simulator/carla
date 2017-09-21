@@ -24,6 +24,7 @@ Build and package latest version
   * Pull latest version of CarlaUE4 AND Plugins/Carla (probably should be on branch dev)
     - `git pull && (cd Plugins/Carla/ && git pull)`
   * Run `./Rebuild.sh`, this deletes all intermediate data and rebuilds CarlaServer and CarlaUE4 (including plugins). It will launch the editor when it's done.
+  * Remove or comment-out `Config/CarlaSettings.ini`
   * For each level that is going to be packaged
     - Open the level, select the road generator
     - Check "Save Road Map to Disk"

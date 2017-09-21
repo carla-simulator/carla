@@ -1,3 +1,11 @@
+## CARLA 0.5.1
+
+  * Fixed issue server was destroyed on every reset, closing the connection
+  * Fixed issue agent servers connect too late
+  * Improvements to the python client
+  * Added python client test suite for testing the release
+  * Added image converter
+
 ## CARLA 0.5.0
 
   * Upgraded to Unreal Engine 4.17
