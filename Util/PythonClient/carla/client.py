@@ -2,7 +2,6 @@
 
 """CARLA Client."""
 
-import logging
 import os
 import struct
 
@@ -24,6 +23,9 @@ class CarlaClient(object):
         self._control_client.disconnect()
         self._stream_client.disconnect()
         self._world_client.disconnect()
+
+    def connected(self):
+        return self._world_client.connected()
 
     def request_new_episode(self, carla_settings):
         """Request a new episode. carla_settings object must be convertible to
@@ -115,7 +117,6 @@ class CarlaImage(object):
         return images
 
     def __init__(self, width, height, image_type, raw_data):
-        logging.debug('parsed image %dx%d type %d (%d bytes)', width, height, image_type, len(raw_data))
         assert len(raw_data) == 4 * width * height
         self.width = width
         self.height = height
@@ -139,5 +140,4 @@ class CarlaImage(object):
         folder = os.path.dirname(filename)
         if not os.path.isdir(folder):
             os.makedirs(folder)
-        logging.debug('saving image to %r...', filename)
         image.save(filename)

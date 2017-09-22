@@ -12,6 +12,7 @@ import time
 import carla
 
 from carla.client import CarlaClient
+from carla.console import CarlaClientConsole
 from carla.settings import CarlaSettings, Camera
 from carla.tcp import TCPClient
 from carla.util import make_connection
@@ -29,7 +30,7 @@ def run_carla_server(args):
             settings.set(SendNonPlayerAgentsInfo=True,SynchronousMode=args.synchronous)
             settings.randomize_seeds()
             camera = Camera('DefaultCamera')
-            camera.set_image_size(300, 200)
+            camera.set_image_size(300, 200) # Do not change this, hard-coded in test.
             settings.add_camera(camera)
 
             logging.debug('sending CarlaSettings:\n%s', settings)
@@ -104,6 +105,10 @@ def main():
         '--echo',
         action='store_true',
         help='start a client that just echoes what the server sends')
+    argparser.add_argument(
+        '-c', '--console',
+        action='store_true',
+        help='start the client console')
 
     args = argparser.parse_args()
 
@@ -118,6 +123,14 @@ def main():
     logging.basicConfig(**logging_config)
 
     logging.info('listening to server %s:%s', args.host, args.port)
+
+    if args.console:
+        cmd = CarlaClientConsole(args)
+        try:
+            cmd.cmdloop()
+        finally:
+            cmd.cleanup()
+        return
 
     while True:
         try:
@@ -139,11 +152,9 @@ def main():
 
         except AssertionError as assertion:
             raise assertion
-        except ConnectionRefusedError as exception:
+        except Exception as exception:
             logging.error('exception: %s', exception)
             time.sleep(1)
-        except Exception as exception:
-            raise exception
 
 
 if __name__ == '__main__':

@@ -23,8 +23,14 @@ class TCPClient(object):
         if self._socket is not None:
             self._log('disconnecting...')
             self._socket.close()
+            self._socket = None
+
+    def connected(self):
+        return self._socket is not None
 
     def write(self, message):
+        if self._socket is None:
+            raise RuntimeError('%s:%s not connected' % (self._host, self._port))
         header = struct.pack('<L', len(message))
         self._socket.sendall(header + message)
 
@@ -37,6 +43,8 @@ class TCPClient(object):
         return data
 
     def _read_n(self, length):
+        if self._socket is None:
+            raise RuntimeError('%s:%s not connected' % (self._host, self._port))
         buf = bytes()
         while length > 0:
             data = self._socket.recv(length)
