@@ -35,10 +35,8 @@ class _BasicTestBase(test.CarlaServerTest):
                     measurements, images = client.read_measurements()
                     number_of_agents = len(measurements.non_player_agents)
                     expected_number_of_agents = carla_settings.get_number_of_agents()
-                    logging.debug('received data of %d/%d agents', number_of_agents, expected_number_of_agents)
+                    logging.debug('received data of %d agents', number_of_agents)
                     logging.debug('received %d images', len(images))
-                    if number_of_agents > expected_number_of_agents or number_of_agents + 10 < expected_number_of_agents:
-                        raise RuntimeError('received data for %d agents, but %d was requested' % (number_of_agents, expected_number_of_agents))
                     if len(images) != len(carla_settings._cameras):
                         raise RuntimeError('received %d images, expected %d' % (len(images), len(carla_settings._cameras)))
                     logging.debug('sending control...')

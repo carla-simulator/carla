@@ -40,7 +40,7 @@ class _Control(object):
     @staticmethod
     def _parse(atype, value):
         if atype == bool:
-            false_keys = ['f', 'false', '0', 'n', 'no', 'disable']
+            false_keys = ['f', 'false', '0', 'n', 'no', 'disable', 'off']
             return value not in false_keys
         return atype(value)
 
@@ -57,11 +57,16 @@ def get_default_carla_settings(args):
 
 
 def edit_text(text):
+    editor = 'vim'
     with tempfile.NamedTemporaryFile('w+', suffix='.ini') as fp:
         fp.write(text)
         fp.flush()
-        if 0 != subprocess.run(['vim', fp.name]).returncode:
-            print('Cancelled.')
+        try:
+            if 0 != subprocess.run([editor, fp.name]).returncode:
+                print('Cancelled.')
+                return None
+        except FileNotFoundError:
+            logging.error('error opening text editor, is %r installed?', editor)
             return None
         fp.seek(0)
         return fp.read()
