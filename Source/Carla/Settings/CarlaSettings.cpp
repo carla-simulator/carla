@@ -157,11 +157,6 @@ void UCarlaSettings::LoadSettings()
       WorldPort = Value;
       bUseNetworking = true;
     }
-    if (FParse::Param(FCommandLine::Get(), TEXT("carla-sync-mode")) ||
-        FParse::Param(FCommandLine::Get(), TEXT("carla-synchronous-mode"))) {
-      bSynchronousMode = true;
-      bUseNetworking = true;
-    }
     if (FParse::Param(FCommandLine::Get(), TEXT("carla-no-networking"))) {
       bUseNetworking = false;
     }
