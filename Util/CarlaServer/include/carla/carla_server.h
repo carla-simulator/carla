@@ -35,10 +35,21 @@ extern "C" {
     struct carla_vector3d orientation;
   };
 
-#define CARLA_SERVER_AGENT_UNKNOWN    0u
-#define CARLA_SERVER_AGENT_VEHICLE    1u
-#define CARLA_SERVER_AGENT_PEDESTRIAN 2u
+#define CARLA_SERVER_AGENT_UNKNOWN            0u
+#define CARLA_SERVER_AGENT_VEHICLE           10u
+#define CARLA_SERVER_AGENT_PEDESTRIAN        20u
+#define CARLA_SERVER_AGENT_SPEEDLIMITSIGN    30u
+#define CARLA_SERVER_AGENT_TRAFFICLIGHT      40u
 
+#define CARLA_SERVER_AGENT_TRAFFICLIGHT_GREEN   41u
+#define CARLA_SERVER_AGENT_TRAFFICLIGHT_YELLOW  42u
+#define CARLA_SERVER_AGENT_TRAFFICLIGHT_RED     43u
+
+  /** @todo This is a bit tricky:
+    * - If type is a traffic light, box extent and forward speed are ignored.
+    * - If type is a speed limit sign, box extent is ignored. Forward speed is speed limit.
+    * - If type is a vehicle or a pedestrian, every field is valid.
+    */
   struct carla_agent {
     uint32_t id;
     uint32_t type;

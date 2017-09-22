@@ -188,30 +188,80 @@ CarlaServer::ErrorCode CarlaServer::ReadControl(ACarlaVehicleController &Player,
   return ec;
 }
 
-static void SetBoxAndSpeed(carla_agent &values, const ACharacter *Walker)
+static void SetBoxSpeedAndType(carla_agent &values, const ACharacter *Walker)
 {
+  values.type = CARLA_SERVER_AGENT_PEDESTRIAN;
   values.forward_speed = FVector::DotProduct(Walker->GetVelocity(), Walker->GetActorRotation().Vector()) * 0.036f;
   /// @todo Perhaps the box it is not the same for every walker...
   values.box_extent = {45.0f, 35.0f, 100.0f};
 }
 
-static void SetBoxAndSpeed(carla_agent &values, const ACarlaWheeledVehicle *Vehicle)
+static void SetBoxSpeedAndType(carla_agent &values, const ACarlaWheeledVehicle *Vehicle)
 {
+  values.type = CARLA_SERVER_AGENT_VEHICLE;
   values.forward_speed = Vehicle->GetVehicleForwardSpeed();
   Set(values.box_extent, Vehicle->GetVehicleBoundsExtent());
 }
 
+static void SetBoxSpeedAndType(carla_agent &values, const ATrafficSignBase *TrafficSign)
+{
+  switch (TrafficSign->GetTrafficSignState()) {
+    case ETrafficSignState::TrafficLightRed:
+      values.type = CARLA_SERVER_AGENT_TRAFFICLIGHT_RED;
+      break;
+    case ETrafficSignState::TrafficLightYellow:
+      values.type = CARLA_SERVER_AGENT_TRAFFICLIGHT_YELLOW;
+      break;
+    case ETrafficSignState::TrafficLightGreen:
+      values.type = CARLA_SERVER_AGENT_TRAFFICLIGHT_GREEN;
+      break;
+    case ETrafficSignState::SpeedLimit_30:
+      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
+      values.forward_speed = 30.0f;
+      break;
+    case ETrafficSignState::SpeedLimit_40:
+      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
+      values.forward_speed = 40.0f;
+      break;
+    case ETrafficSignState::SpeedLimit_50:
+      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
+      values.forward_speed = 50.0f;
+      break;
+    case ETrafficSignState::SpeedLimit_60:
+      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
+      values.forward_speed = 60.0f;
+      break;
+    case ETrafficSignState::SpeedLimit_90:
+      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
+      values.forward_speed = 90.0f;
+      break;
+    case ETrafficSignState::SpeedLimit_100:
+      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
+      values.forward_speed = 100.0f;
+      break;
+    case ETrafficSignState::SpeedLimit_120:
+      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
+      values.forward_speed = 120.0f;
+      break;
+    case ETrafficSignState::SpeedLimit_130:
+      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
+      values.forward_speed = 130.0f;
+      break;
+    default:
+      UE_LOG(LogCarla, Error, TEXT("Unknown traffic sign!"));
+  }
+}
+
 template <typename T>
-static void AddAgents(TArray<carla_agent> &Agents, const TArray<T> &Actors, uint32 type)
+static void AddAgents(TArray<carla_agent> &Agents, const TArray<T> &Actors)
 {
   for (auto &&Actor : Actors) {
     if (Actor != nullptr) {
       Agents.Emplace();
       auto &values = Agents.Last();
       values.id = GetTypeHash(Actor);
-      values.type = type;
       Set(values.transform, Actor->GetActorTransform());
-      SetBoxAndSpeed(values, Actor);
+      SetBoxSpeedAndType(values, Actor);
     }
   }
 }
@@ -220,10 +270,11 @@ static void GetAgentInfo(
     const ACarlaGameState &GameState,
     TArray<carla_agent> &Agents)
 {
-  auto *WalkerSpawner = GameState.GetWalkerSpawner();
-  auto *VehicleSpawner = GameState.GetVehicleSpawner();
+  const auto *WalkerSpawner = GameState.GetWalkerSpawner();
+  const auto *VehicleSpawner = GameState.GetVehicleSpawner();
+  const auto &TrafficSigns = GameState.GetTrafficSigns();
 
-  uint32 NumberOfAgents = 0u;
+  auto NumberOfAgents = TrafficSigns.Num();
   if (WalkerSpawner != nullptr) {
     NumberOfAgents += WalkerSpawner->GetCurrentNumberOfWalkers();
   }
@@ -232,12 +283,13 @@ static void GetAgentInfo(
   }
   Agents.Reserve(NumberOfAgents);
 
+  AddAgents(Agents, TrafficSigns);
   if (WalkerSpawner != nullptr) {
-    AddAgents(Agents, WalkerSpawner->GetWalkersWhiteList(), CARLA_SERVER_AGENT_PEDESTRIAN);
-    AddAgents(Agents, WalkerSpawner->GetWalkersBlackList(), CARLA_SERVER_AGENT_PEDESTRIAN);
+    AddAgents(Agents, WalkerSpawner->GetWalkersWhiteList());
+    AddAgents(Agents, WalkerSpawner->GetWalkersBlackList());
   }
   if (VehicleSpawner != nullptr) {
-    AddAgents(Agents, VehicleSpawner->GetVehicles(), CARLA_SERVER_AGENT_VEHICLE);
+    AddAgents(Agents, VehicleSpawner->GetVehicles());
   }
 }
 

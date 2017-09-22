@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "GameFramework/Actor.h"
+#include "TrafficSignBase.h"
 #include "TrafficLightState.h"
 #include "TrafficLightBase.generated.h"
 
@@ -10,7 +10,7 @@ class ACarlaWheeledVehicle;
 class AWheeledVehicleAIController;
 
 UCLASS()
-class CARLA_API ATrafficLightBase : public AActor {
+class CARLA_API ATrafficLightBase : public ATrafficSignBase {
 
   GENERATED_BODY()
 

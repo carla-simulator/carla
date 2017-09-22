@@ -49,11 +49,11 @@ TEST(CarlaServerAPI, SimBlocking) {
   CarlaServerPtr CarlaServer = CarlaServerGuard.get();
   ASSERT_TRUE(CarlaServer != nullptr);
 
-  const uint32_t image0[] = {1u, 2u, 3u, 4u};
-  const uint32_t image1[] = {1u, 2u, 3u, 4u, 5u, 6u};
+  constexpr uint32_t ImageSizeX = 300u;
+  constexpr uint32_t ImageSizeY = 200u;
+  const uint32_t image0[ImageSizeX*ImageSizeY] = {0u};
   const carla_image images[] = {
-    {2u, 2u, 0u, image0},
-    {2u, 3u, 1u, image1}
+    {ImageSizeX, ImageSizeY, 1u, image0}
   };
 
   const carla_transform start_locations[] = {

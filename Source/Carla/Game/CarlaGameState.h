@@ -3,11 +3,11 @@
 #pragma once
 
 #include "GameFramework/GameStateBase.h"
+#include "AI/TrafficSignBase.h"
+#include "AI/VehicleSpawnerBase.h"
+#include "AI/WalkerSpawnerBase.h"
 #include "CarlaGameState.generated.h"
 
-/**
- *
- */
 UCLASS()
 class CARLA_API ACarlaGameState : public AGameStateBase
 {
@@ -15,12 +15,24 @@ class CARLA_API ACarlaGameState : public AGameStateBase
 
 public:
 
-  const AVehicleSpawnerBase *GetVehicleSpawner() const {
+  const AVehicleSpawnerBase *GetVehicleSpawner() const
+  {
     return VehicleSpawner;
   }
 
-  const AWalkerSpawnerBase *GetWalkerSpawner() const {
+  const AWalkerSpawnerBase *GetWalkerSpawner() const
+  {
     return WalkerSpawner;
+  }
+
+  const TArray<ATrafficSignBase *> &GetTrafficSigns() const
+  {
+    return TrafficSigns;
+  }
+
+  void RegisterTrafficSign(ATrafficSignBase *TrafficSign)
+  {
+    TrafficSigns.Add(TrafficSign);
   }
 
 private:
@@ -32,4 +44,7 @@ private:
 
   UPROPERTY()
   AWalkerSpawnerBase *WalkerSpawner = nullptr;
+
+  UPROPERTY()
+  TArray<ATrafficSignBase *> TrafficSigns;
 };

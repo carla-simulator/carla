@@ -15,6 +15,18 @@ static bool IsValid(const ACarlaWheeledVehicle *Vehicle)
   return ((Vehicle != nullptr) && !Vehicle->IsPendingKill());
 }
 
+static ETrafficSignState ToTrafficSignState(ETrafficLightState State) {
+  switch (State) {
+    case ETrafficLightState::Green:
+      return ETrafficSignState::TrafficLightGreen;
+    case ETrafficLightState::Yellow:
+      return ETrafficSignState::TrafficLightYellow;
+    default:
+    case ETrafficLightState::Red:
+      return ETrafficSignState::TrafficLightRed;
+  }
+}
+
 // =============================================================================
 // -- ATrafficLightBase --------------------------------------------------------
 // =============================================================================
@@ -45,6 +57,7 @@ void ATrafficLightBase::PostEditChangeProperty(FPropertyChangedEvent &Event)
 void ATrafficLightBase::SetTrafficLightState(const ETrafficLightState InState)
 {
   State = InState;
+  SetTrafficSignState(ToTrafficSignState(State));
   for (auto Controller : Vehicles) {
     if (Controller != nullptr) {
       Controller->SetTrafficLightState(State);

@@ -41,7 +41,7 @@ class _Control(object):
     def _parse(atype, value):
         if atype == bool:
             false_keys = ['f', 'false', '0', 'n', 'no', 'disable']
-            return value.lower() not in false_keys
+            return value not in false_keys
         return atype(value)
 
 
@@ -74,6 +74,7 @@ class CarlaClientConsole(cmd.Cmd):
         self.prompt = '\x1b[1;34m%s\x1b[0m ' % '(carla)'
         self.client = CarlaClient(args.host, args.port)
         self.settings = get_default_carla_settings(args)
+        self.print_measurements = False
         self.control = _Control()
         self.thread = threading.Thread(target=self._agent_thread_worker)
         self.done = False
@@ -148,11 +149,17 @@ class CarlaClientConsole(cmd.Cmd):
         if result is not None:
             self.settings = result
 
+    def do_print_measurements(self, line):
+        """Print received measurements to console.\nusage: print_measurements [t/f]"""
+        self.print_measurements = True if not line else _Control._parse(bool, line)
+
     def _agent_thread_worker(self):
         filename = '_images/console/camera_{:0>3d}/image_{:0>8d}.png'
         while not self.done:
             try:
                 measurements, images = self.client.read_measurements()
+                if self.print_measurements:
+                    print(measurements)
 
                 if self.args.images_to_disk:
                     for n, image in enumerate(images):

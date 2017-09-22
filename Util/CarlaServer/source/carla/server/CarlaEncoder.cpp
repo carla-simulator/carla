@@ -36,21 +36,49 @@ namespace server {
     Set(lhs->mutable_orientation(), rhs.orientation);
   }
 
-  static cs::Agent::Type GetAgentType(const uint32_t type) {
-    switch (type) {
-      case CARLA_SERVER_AGENT_VEHICLE:    return cs::Agent::VEHICLE;
-      case CARLA_SERVER_AGENT_PEDESTRIAN: return cs::Agent::PEDESTRIAN;
-      default:                            return cs::Agent::UNKNOWN;
-    }
+  static void SetVehicle(cs::Vehicle *lhs, const carla_agent &rhs) {
+    DEBUG_ASSERT(lhs != nullptr);
+    Set(lhs->mutable_transform(), rhs.transform);
+    Set(lhs->mutable_box_extent(), rhs.box_extent);
+    lhs->set_forward_speed(rhs.forward_speed);
+  }
+
+  static void SetPedestrian(cs::Pedestrian *lhs, const carla_agent &rhs) {
+    DEBUG_ASSERT(lhs != nullptr);
+    Set(lhs->mutable_transform(), rhs.transform);
+    Set(lhs->mutable_box_extent(), rhs.box_extent);
+    lhs->set_forward_speed(rhs.forward_speed);
+  }
+
+  static void SetSpeedLimitSign(cs::SpeedLimitSign *lhs, const carla_agent &rhs) {
+    DEBUG_ASSERT(lhs != nullptr);
+    Set(lhs->mutable_transform(), rhs.transform);
+    lhs->set_speed_limit(rhs.forward_speed);
+  }
+
+  static void SetTrafficLight(cs::TrafficLight *lhs, const carla_agent &rhs, cs::TrafficLight::State state) {
+    DEBUG_ASSERT(lhs != nullptr);
+    Set(lhs->mutable_transform(), rhs.transform);
+    lhs->set_state(state);
   }
 
   static void Set(cs::Agent *lhs, const carla_agent &rhs) {
     DEBUG_ASSERT(lhs != nullptr);
     lhs->set_id(rhs.id);
-    lhs->set_type(GetAgentType(rhs.type));
-    Set(lhs->mutable_transform(), rhs.transform);
-    Set(lhs->mutable_box_extent(), rhs.box_extent);
-    lhs->set_forward_speed(rhs.forward_speed);
+    switch (rhs.type) {
+      case CARLA_SERVER_AGENT_VEHICLE:
+        return SetVehicle(lhs->mutable_vehicle(), rhs);
+      case CARLA_SERVER_AGENT_PEDESTRIAN:
+        return SetPedestrian(lhs->mutable_pedestrian(), rhs);
+      case CARLA_SERVER_AGENT_SPEEDLIMITSIGN:
+        return SetSpeedLimitSign(lhs->mutable_speed_limit_sign(), rhs);
+      case CARLA_SERVER_AGENT_TRAFFICLIGHT_GREEN:
+        return SetTrafficLight(lhs->mutable_traffic_light(), rhs, cs::TrafficLight::GREEN);
+      case CARLA_SERVER_AGENT_TRAFFICLIGHT_YELLOW:
+        return SetTrafficLight(lhs->mutable_traffic_light(), rhs, cs::TrafficLight::YELLOW);
+      case CARLA_SERVER_AGENT_TRAFFICLIGHT_RED:
+        return SetTrafficLight(lhs->mutable_traffic_light(), rhs, cs::TrafficLight::RED);
+    }
   }
 
   std::string CarlaEncoder::Encode(const carla_scene_description &values) {

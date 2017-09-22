@@ -22,18 +22,41 @@ message Transform {
   Vector3D orientation = 2;
 }
 
-message Agent {
-  enum Type {
-    UNKNOWN = 0;
-    VEHICLE = 1;
-    PEDESTRIAN = 2;
-  }
+message Vehicle {
+  Transform transform = 1;
+  Vector3D box_extent = 2;
+  float forward_speed = 3;
+}
 
-  uint32 id = 1;
-  Type type = 2;
-  Transform transform = 3;
-  Vector3D box_extent = 4;
-  float forward_speed = 5;
+message Pedestrian {
+  Transform transform = 1;
+  Vector3D box_extent = 2;
+  float forward_speed = 3;
+}
+
+message TrafficLight {
+  enum State {
+    GREEN = 0;
+    YELLOW = 1;
+    RED = 2;
+  }
+  Transform transform = 1;
+  State state = 2;
+}
+
+message SpeedLimitSign {
+  Transform transform = 1;
+  float speed_limit = 2;
+}
+
+message Agent {
+  fixed32 id = 1;
+  oneof agent {
+    Vehicle vehicle = 2;
+    Pedestrian pedestrian = 3;
+    TrafficLight traffic_light = 4;
+    SpeedLimitSign speed_limit_sign = 5;
+  }
 }
 
 // =============================================================================
