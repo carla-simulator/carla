@@ -76,8 +76,8 @@ class CarlaSettings(object):
         return self.NumberOfVehicles + self.NumberOfPedestrians
 
     def randomize_seeds(self):
-        self.SeedVehicles = random.getrandbits(32)
-        self.SeedPedestrians = random.getrandbits(32)
+        self.SeedVehicles = random.getrandbits(16)
+        self.SeedPedestrians = random.getrandbits(16)
 
     def randomize_weather(self):
         self.WeatherId = random.randint(-1, MAX_NUMBER_OF_WEATHER_IDS)
