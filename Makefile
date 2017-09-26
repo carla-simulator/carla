@@ -48,7 +48,9 @@ protobuf:
 
 ### Docs #######################################################################
 
-docs:
+docs: doxygen
+
+doxygen:
 	doxygen
 	@echo "Documentation index at ./Doxygen/html/index.html"
 
