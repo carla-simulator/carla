@@ -22,11 +22,19 @@ void ACarlaPlayerState::CopyProperties(APlayerState *PlayerState)
     ACarlaPlayerState *Other = Cast<ACarlaPlayerState>(PlayerState);
     if (Other != nullptr)
     {
+      FramesPerSecond = Other->FramesPerSecond;
       PlatformTimeStamp = Other->PlatformTimeStamp;
       GameTimeStamp = Other->GameTimeStamp;
       Transform = Other->Transform;
-      Acceleration = Other->Acceleration;
       ForwardSpeed = Other->ForwardSpeed;
+      Acceleration = Other->Acceleration;
+      Throttle = Other->Throttle;
+      Steer = Other->Steer;
+      Brake = Other->Brake;
+      bHandBrake = Other->bHandBrake;
+      CurrentGear = Other->CurrentGear;
+      SpeedLimit = Other->SpeedLimit;
+      TrafficLightState = Other->TrafficLightState;
       CollisionIntensityCars = Other->CollisionIntensityCars;
       CollisionIntensityPedestrians = Other->CollisionIntensityPedestrians;
       CollisionIntensityOther = Other->CollisionIntensityOther;

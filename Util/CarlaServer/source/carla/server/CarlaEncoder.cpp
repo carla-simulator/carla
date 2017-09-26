@@ -36,6 +36,15 @@ namespace server {
     Set(lhs->mutable_orientation(), rhs.orientation);
   }
 
+  static void Set(cs::Control *lhs, const carla_control &rhs) {
+    DEBUG_ASSERT(lhs != nullptr);
+    lhs->set_steer(rhs.steer);
+    lhs->set_throttle(rhs.throttle);
+    lhs->set_brake(rhs.brake);
+    lhs->set_hand_brake(rhs.hand_brake);
+    lhs->set_reverse(rhs.reverse);
+  }
+
   static void SetVehicle(cs::Vehicle *lhs, const carla_agent &rhs) {
     DEBUG_ASSERT(lhs != nullptr);
     Set(lhs->mutable_transform(), rhs.transform);
@@ -113,6 +122,7 @@ namespace server {
     player->set_collision_other(values.player_measurements.collision_other);
     player->set_intersection_otherlane(values.player_measurements.intersection_otherlane);
     player->set_intersection_offroad(values.player_measurements.intersection_offroad);
+    Set(player->mutable_ai_control(), values.player_measurements.ai_control);
     // Non-player agents.
     message->clear_non_player_agents(); // we need to clear as we cache the message.
     for (auto &agent : agents(values)) {
@@ -162,7 +172,6 @@ namespace server {
       values.brake = message->brake();
       values.hand_brake = message->hand_brake();
       values.reverse = message->reverse();
-      values.autopilot = message->autopilot();
       return true;
     } else {
       log_error("invalid protobuf message: control");

@@ -89,7 +89,6 @@ message Control {
   float brake = 3;
   bool hand_brake = 4;
   bool reverse = 5;
-  bool autopilot = 6;
 }
 
 message Measurements {
@@ -105,6 +104,8 @@ message Measurements {
 
     float intersection_otherlane = 8;
     float intersection_offroad = 9;
+
+    Control ai_control = 10;
   }
 
   uint32 platform_timestamp = 1;

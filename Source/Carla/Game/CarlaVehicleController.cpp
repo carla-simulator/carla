@@ -84,6 +84,11 @@ void ACarlaVehicleController::Tick(float DeltaTime)
     CarlaPlayerState->ForwardSpeed = Vehicle->GetVehicleForwardSpeed();
     const FVector CurrentSpeed = CarlaPlayerState->ForwardSpeed * CarlaPlayerState->GetOrientation();
     CarlaPlayerState->Acceleration = (CurrentSpeed - PreviousSpeed) / DeltaTime;
+    const auto &AutopilotControl = GetAutopilotControl();
+    CarlaPlayerState->Steer = AutopilotControl.Steer;
+    CarlaPlayerState->Throttle = AutopilotControl.Throttle;
+    CarlaPlayerState->Brake = AutopilotControl.Brake;
+    CarlaPlayerState->bHandBrake = AutopilotControl.HandBrake;
     CarlaPlayerState->CurrentGear = Vehicle->GetVehicleCurrentGear();
     CarlaPlayerState->SpeedLimit = GetSpeedLimit();
     CarlaPlayerState->TrafficLightState = GetTrafficLightState();

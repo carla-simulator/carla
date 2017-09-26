@@ -110,7 +110,6 @@ extern "C" {
     float brake;
     bool hand_brake;
     bool reverse;
-    bool autopilot;
   };
 
   /* ======================================================================== */
@@ -134,6 +133,8 @@ extern "C" {
     float intersection_otherlane;
     /** Percentage of the car off-road. */
     float intersection_offroad;
+    /** Vehicle's AI control that would apply this frame. */
+    struct carla_control ai_control;
   };
 
   /* ======================================================================== */

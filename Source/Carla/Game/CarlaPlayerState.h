@@ -30,6 +30,11 @@ public:
   // ===========================================================================
 public:
 
+  // ===========================================================================
+  /// @name Timing
+  // ===========================================================================
+  /// @{
+
   UFUNCTION(BlueprintCallable)
   float GetFramesPerSecond() const
   {
@@ -47,6 +52,12 @@ public:
   {
     return GameTimeStamp;
   }
+
+  /// @}
+  // ===========================================================================
+  /// @name Transform and dynamics
+  // ===========================================================================
+  /// @{
 
   UFUNCTION(BlueprintCallable)
   const FTransform &GetTransform() const
@@ -67,21 +78,51 @@ public:
   }
 
   UFUNCTION(BlueprintCallable)
+  float GetForwardSpeed() const
+  {
+    return ForwardSpeed;
+  }
+
+  UFUNCTION(BlueprintCallable)
   const FVector &GetAcceleration() const
   {
     return Acceleration;
+  }
+
+  /// @}
+  // ===========================================================================
+  /// @name Vehicle control
+  // ===========================================================================
+  /// @{
+
+  UFUNCTION(BlueprintCallable)
+  float GetThrottle() const
+  {
+    return Throttle;
+  }
+
+  UFUNCTION(BlueprintCallable)
+  float GetSteer() const
+  {
+    return Steer;
+  }
+
+  UFUNCTION(BlueprintCallable)
+  float GetBrake() const
+  {
+    return Brake;
+  }
+
+  UFUNCTION(BlueprintCallable)
+  bool GetHandBrake() const
+  {
+    return bHandBrake;
   }
 
   UFUNCTION(BlueprintCallable)
   int32 GetCurrentGear() const
   {
     return CurrentGear;
-  }
-
-  UFUNCTION(BlueprintCallable)
-  float GetForwardSpeed() const
-  {
-    return ForwardSpeed;
   }
 
   UFUNCTION(BlueprintCallable)
@@ -95,6 +136,12 @@ public:
   {
     return TrafficLightState;
   }
+
+  /// @}
+  // ===========================================================================
+  /// @name Collision
+  // ===========================================================================
+  /// @{
 
   UFUNCTION(BlueprintCallable)
   float GetCollisionIntensityCars() const
@@ -114,6 +161,12 @@ public:
     return CollisionIntensityOther;
   }
 
+  /// @}
+  // ===========================================================================
+  /// @name Road intersection
+  // ===========================================================================
+  /// @{
+
   UFUNCTION(BlueprintCallable)
   float GetOtherLaneIntersectionFactor() const
   {
@@ -125,6 +178,12 @@ public:
   {
     return OffRoadIntersectionFactor;
   }
+
+  /// @}
+  // ===========================================================================
+  /// @name Images
+  // ===========================================================================
+  /// @{
 
   UFUNCTION(BlueprintCallable)
   int32 GetNumberOfImages() const
@@ -143,6 +202,7 @@ public:
     return Images;
   }
 
+  /// @}
   // ===========================================================================
   // -- Modifiers --------------------------------------------------------------
   // ===========================================================================
@@ -179,13 +239,25 @@ private:
   FTransform Transform;
 
   UPROPERTY(VisibleAnywhere)
+  float ForwardSpeed = 0.0f;
+
+  UPROPERTY(VisibleAnywhere)
   FVector Acceleration;
 
   UPROPERTY(VisibleAnywhere)
-  int32 CurrentGear;
+  float Throttle = 0.0f;
 
   UPROPERTY(VisibleAnywhere)
-  float ForwardSpeed = 0.0f;
+  float Steer = 0.0f;
+
+  UPROPERTY(VisibleAnywhere)
+  float Brake = 0.0f;
+
+  UPROPERTY(VisibleAnywhere)
+  bool bHandBrake = false;
+
+  UPROPERTY(VisibleAnywhere)
+  int32 CurrentGear;
 
   UPROPERTY(VisibleAnywhere)
   float SpeedLimit = -1.0f;

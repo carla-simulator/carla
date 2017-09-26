@@ -180,6 +180,20 @@ public:
   /// @name AI
   // ===========================================================================
   /// @{
+protected:
+
+  struct FAutopilotControl {
+    float Throttle = 0.0f;
+    float Steer = 0.0f;
+    float Brake = 0.0f;
+    float HandBrake = false;
+  };
+
+  const FAutopilotControl &GetAutopilotControl() const
+  {
+    return AutopilotControl;
+  }
+
 private:
 
   void TickAutopilotController();
@@ -222,6 +236,8 @@ private:
 
   UPROPERTY(VisibleAnywhere)
   float MaximumSteerAngle = -1.0f;
+
+  FAutopilotControl AutopilotControl;
 
   std::queue<FVector> TargetLocations;
 };

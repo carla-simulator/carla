@@ -95,7 +95,6 @@ class CarlaClient(object):
         pb_message.brake = kwargs.get('brake', 0.0)
         pb_message.hand_brake = kwargs.get('hand_brake', False)
         pb_message.reverse = kwargs.get('reverse', False)
-        pb_message.autopilot = kwargs.get('autopilot', False)
         self._control_client.write(pb_message.SerializeToString())
 
 

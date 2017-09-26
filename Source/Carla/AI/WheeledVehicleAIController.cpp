@@ -91,8 +91,12 @@ void AWheeledVehicleAIController::Tick(const float DeltaTime)
 {
   Super::Tick(DeltaTime);
 
+  TickAutopilotController();
+
   if (bAutopilotEnabled) {
-    TickAutopilotController();
+    Vehicle->SetThrottleInput(AutopilotControl.Throttle);
+    Vehicle->SetSteeringInput(AutopilotControl.Steer);
+    Vehicle->SetBrakeInput(AutopilotControl.Brake);
   }
 }
 
@@ -164,13 +168,13 @@ void AWheeledVehicleAIController::TickAutopilotController()
   }
 
   if (Throttle < 0.001f) {
-    Vehicle->SetBrakeInput(1.0f);
-    Vehicle->SetThrottleInput(0.0f);
+    AutopilotControl.Brake = 1.0f;
+    AutopilotControl.Throttle = 0.0f;
   } else {
-    Vehicle->SetBrakeInput(0.0f);
-    Vehicle->SetThrottleInput(Throttle);
+    AutopilotControl.Brake = 0.0f;
+    AutopilotControl.Throttle = Throttle;
   }
-  Vehicle->SetSteeringInput(Steering);
+  AutopilotControl.Steer = Steering;
 }
 
 float AWheeledVehicleAIController::GoToNextTargetLocation(FVector &Direction)

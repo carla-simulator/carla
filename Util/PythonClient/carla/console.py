@@ -22,7 +22,6 @@ class _Control(object):
         self.c_brake = 0.0
         self.c_hand_brake = False
         self.c_reverse = False
-        self.c_autopilot = False
 
     def action_list(self):
         return [x[2:] for x in dir(self) if x.startswith('c_')]
