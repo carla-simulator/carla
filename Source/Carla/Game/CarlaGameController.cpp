@@ -41,6 +41,7 @@ void CarlaGameController::Initialize(UCarlaSettings &InCarlaSettings)
 APlayerStart *CarlaGameController::ChoosePlayerStart(
     const TArray<APlayerStart *> &AvailableStartSpots)
 {
+  check(AvailableStartSpots.Num() > 0);
   // Send scene description.
   if (Server != nullptr) {
     if (Errc::Success != Server->SendSceneDescription(AvailableStartSpots, BLOCKING)) {
@@ -56,6 +57,11 @@ APlayerStart *CarlaGameController::ChoosePlayerStart(
       UE_LOG(LogCarlaServer, Warning, TEXT("Failed to read episode start, server needs restart"));
       Server = nullptr;
     }
+  }
+
+  if (StartIndex >= AvailableStartSpots.Num()) {
+    UE_LOG(LogCarlaServer, Warning, TEXT("Client requested an invalid player start, using default one instead."));
+    StartIndex = 0u;
   }
 
   return AvailableStartSpots[StartIndex];
