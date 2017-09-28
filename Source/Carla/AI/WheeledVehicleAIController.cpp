@@ -139,7 +139,15 @@ void AWheeledVehicleAIController::SetFixedRoute(const TArray<FVector> &Locations
 
 void AWheeledVehicleAIController::TickAutopilotController()
 {
+#if WITH_EDITOR
+  if (Vehicle == nullptr) { // This happens in simulation mode in editor.
+    bAutopilotEnabled = false;
+    return;
+  }
+#endif // WITH_EDITOR
+
   check(Vehicle != nullptr);
+
   if (RoadMap == nullptr) {
     UE_LOG(LogCarla, Error, TEXT("Controller doesn't have a road map!"));
     return;
