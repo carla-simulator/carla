@@ -3,9 +3,10 @@ How to build CARLA on Linux
 
 This guide has been tested only on Ubuntu 16.04.
 
-Install the build tools
+Install the build tools and dependencies
 
-    $ sudo apt-get install build-essential cmake ninja-build
+    $ sudo apt-get install build-essential cmake ninja-build python3-pip
+    $ sudo pip3 install protobuf
 
 To avoid compatibility issues between Unreal Engine and the CARLA dependencies,
 the best configuration is to compile everything with the same compiler version
@@ -58,9 +59,6 @@ It is recommended to do a check to see if everything worked fine
 
 Build and launch CARLAUE4
 -------------------------
-
-Define the environment variable `UE4_ROOT` pointing to Unreal Engine's
-installation folder.
 
 In the root folder of CARLAUE4 you can find "Rebuild.sh" script. This deletes
 all intermediate files, rebuilds whole CARLA, and launches the editor. Use it
