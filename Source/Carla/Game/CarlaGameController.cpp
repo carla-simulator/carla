@@ -59,7 +59,7 @@ APlayerStart *CarlaGameController::ChoosePlayerStart(
     }
   }
 
-  if (StartIndex >= AvailableStartSpots.Num()) {
+  if (static_cast<int64>(StartIndex) >= AvailableStartSpots.Num()) {
     UE_LOG(LogCarlaServer, Warning, TEXT("Client requested an invalid player start, using default one instead."));
     StartIndex = 0u;
   }
