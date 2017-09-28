@@ -35,7 +35,7 @@ to add your GitHub username when you sign up at https://unrealengine.com.
 
     $ git clone --depth=1 -b 4.17 https://github.com/EpicGames/UnrealEngine.git ~/UnrealEngine_4.17
     $ cd ~/UnrealEngine_4.17
-    $ ./Setup.sh && ./GenerateProjects.sh && make
+    $ ./Setup.sh && ./GenerateProjectFiles.sh && make
 
 Check Unreal's documentation
 ["Building On Linux"](https://wiki.unrealengine.com/Building_On_Linux) if any of
