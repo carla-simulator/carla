@@ -1,3 +1,10 @@
+## CARLA 0.5.2
+
+  * Autopilot mode has been removed, now server sends AI control together with measurements every frame
+  * State and position of traffic lights and signs are now included in the measurements too
+  * Added a python console client
+  * Fixed crash when client sends an invalid player start
+
 ## CARLA 0.5.1
 
   * Fixed issue server was destroyed on every reset, closing the connection
