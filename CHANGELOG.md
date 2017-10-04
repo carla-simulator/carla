@@ -1,3 +1,7 @@
+## CARLA 0.5.3
+
+  * Version increases just to keep in sync with CARLAUE4 Unreal Project
+
 ## CARLA 0.5.2
 
   * Autopilot mode has been removed, now server sends AI control together with measurements every frame
