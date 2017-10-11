@@ -73,7 +73,7 @@ C API
 -----
 
 The library is encapsulated behind a single include file in C,
-["carla/carla_server.h"](carlaserverhlink).
+["carla/carla_server.h"][carlaserverhlink].
 
 This file contains the basic interface for reading and writing messages to the
 client, hiding the networking and multi-threading part. Most of the functions
