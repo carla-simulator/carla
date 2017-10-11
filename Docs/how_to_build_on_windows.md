@@ -1,9 +1,15 @@
 How to build CARLA on Windows
 =============================
 
+**Building CARLA on Windows is not yet fully supported. Compilation is tedious
+and fails often. We recommend to use the Linux version if possible.**
+
 Install Unreal Engine 4.17 and Visual Studio 2015. (Later versions of Visual
 Studio work, but you will need to adapt "Rebuild.bat" to find the right
 "vcvarsall.bat").
+
+For running Rebuild.bat some Linux utilities are required (like make, cmake,
+rm...), it is recommended to install Cygwin or a similar environment.
 
 Setup CARLA plugin
 ------------------

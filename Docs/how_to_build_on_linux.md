@@ -45,15 +45,16 @@ Setup CARLA plugin
 ------------------
 
 Go to "CARLAUE4/Plugins/Carla" folder and run the setup script. This downloads
-and compile all the dependencies, takes a while but you only need to do this
-once
+and compile all the dependencies, takes a while
 
     $ ./Setup.sh
 
 Now you can use the Makefile to compile and test the code. However, the rebuild
 script of the main project will do that already, see next section.
 
-It is recommended to do a check to see if everything worked fine
+You can run the unit tests to check if everything worked fine (note that these
+tests launch the python client, they require python3 and protobuf for python3
+installed)
 
     $ make check
 
