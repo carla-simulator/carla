@@ -86,7 +86,6 @@ void FWeatherDescription::ReadFromConfigFile(const IniFile &ConfigFile, const FS
   CARLA_LOAD_FROM_INI(Float, WindAngle)
   // Camera Post-Process Parameters.
   CARLA_LOAD_FROM_INI(Bool, bOverrideCameraPostProcessParameters)
-  CARLA_LOAD_FROM_INI(Float, CameraPostProcessParameters.TargetGamma)
   EAutoExposureMethod AutoExposureMethod;
   LoadAutoExposureMethod(
       ConfigFile,
@@ -132,7 +131,6 @@ void FWeatherDescription::WriteToConfigFile(IniFile &ConfigFile) const
   CARLA_WRITE_TO_INI(Float, WindAngle)
   // Camera Post-Process Parameters.
   CARLA_WRITE_TO_INI(Bool, bOverrideCameraPostProcessParameters)
-  CARLA_WRITE_TO_INI(Float, CameraPostProcessParameters.TargetGamma)
   ConfigFile.SetString(
       *Section,
       TEXT("CameraPostProcessParameters.AutoExposureMethod"),

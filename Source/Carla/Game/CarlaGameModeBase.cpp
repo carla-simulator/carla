@@ -7,6 +7,7 @@
 #include "Engine/PlayerStartPIE.h"
 #include "EngineUtils.h"
 #include "GameFramework/PlayerStart.h"
+#include "SceneViewport.h"
 
 #include "CarlaGameInstance.h"
 #include "CarlaGameState.h"
@@ -203,6 +204,19 @@ void ACarlaGameModeBase::RegisterPlayer(AController &NewPlayer)
   AttachCaptureCamerasToPlayer();
 }
 
+static float GetPlayerDisplayGamma(const APlayerCameraManager *PlayerCameraManager)
+{
+  if (PlayerCameraManager == nullptr) {
+    return 0.0f;
+  }
+  UGameViewportClient* ViewportClient = PlayerCameraManager->PCOwner->GetLocalPlayer()->ViewportClient;
+  if (ViewportClient == nullptr) {
+    return 0.0f;
+  }
+  FSceneViewport* SceneViewport = ViewportClient->GetGameViewport();
+  return SceneViewport ? SceneViewport->GetDisplayGamma() : 0.0f;
+}
+
 void ACarlaGameModeBase::AttachCaptureCamerasToPlayer()
 {
   if (PlayerController == nullptr) {
@@ -215,8 +229,11 @@ void ACarlaGameModeBase::AttachCaptureCamerasToPlayer()
   if ((Weather != nullptr) && (Weather->bOverrideCameraPostProcessParameters)) {
     OverridePostProcessParameters = &Weather->CameraPostProcessParameters;
   }
+
+  const float TargetGamma = GetPlayerDisplayGamma(PlayerController->PlayerCameraManager);
+
   for (const auto &Item : Settings.CameraDescriptions) {
-    PlayerController->AddSceneCaptureCamera(Item.Value, OverridePostProcessParameters);
+    PlayerController->AddSceneCaptureCamera(Item.Value, OverridePostProcessParameters, TargetGamma);
   }
 }
 

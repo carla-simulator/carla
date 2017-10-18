@@ -52,6 +52,8 @@ public:
 
   void SetFOVAngle(float FOVAngle);
 
+  void SetTargetGamma(float TargetGamma);
+
   void Set(const FCameraDescription &CameraDescription);
 
   void Set(

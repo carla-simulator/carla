@@ -79,7 +79,8 @@ public:
 
   void AddSceneCaptureCamera(
       const FCameraDescription &CameraDescription,
-      const FCameraPostProcessParameters *OverridePostProcessParameters = nullptr);
+      const FCameraPostProcessParameters *OverridePostProcessParameters,
+      float TargetGamma);
 
   /// @}
   // ===========================================================================

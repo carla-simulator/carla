@@ -133,10 +133,16 @@ void ASceneCaptureCamera::SetPostProcessEffect(EPostProcessEffect otherPostProce
   }
 }
 
-void ASceneCaptureCamera::SetFOVAngle(float FOVAngle)
+void ASceneCaptureCamera::SetFOVAngle(const float FOVAngle)
 {
   check(CaptureComponent2D != nullptr);
   CaptureComponent2D->FOVAngle = FOVAngle;
+}
+
+void ASceneCaptureCamera::SetTargetGamma(const float TargetGamma)
+{
+  check(CaptureRenderTarget != nullptr);
+  CaptureRenderTarget->TargetGamma = TargetGamma;
 }
 
 void ASceneCaptureCamera::Set(const FCameraDescription &CameraDescription)

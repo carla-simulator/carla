@@ -14,10 +14,6 @@ struct FCameraPostProcessParameters
 {
   GENERATED_USTRUCT_BODY()
 
-  /** Will override FTextureRenderTarget2DResource::GetDisplayGamma if > 0. */
-  UPROPERTY(Category = "Camera Parameters", EditAnywhere, BlueprintReadWrite)
-  float TargetGamma = 0.0f;
-
   /** Luminance computation method */
   UPROPERTY(Category = "Camera Parameters", EditAnywhere, BlueprintReadWrite)
   TEnumAsByte<enum EAutoExposureMethod> AutoExposureMethod = AEM_Histogram;
