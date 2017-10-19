@@ -110,8 +110,7 @@ void ACarlaVehicleController::Tick(float DeltaTime)
 
 void ACarlaVehicleController::AddSceneCaptureCamera(
     const FCameraDescription &Description,
-    const FCameraPostProcessParameters *OverridePostProcessParameters,
-    const float TargetGamma)
+    const FCameraPostProcessParameters *OverridePostProcessParameters)
 {
   auto Camera = GetWorld()->SpawnActor<ASceneCaptureCamera>(Description.Position, Description.Rotation);
   if (OverridePostProcessParameters != nullptr) {
@@ -119,7 +118,6 @@ void ACarlaVehicleController::AddSceneCaptureCamera(
   } else {
     Camera->Set(Description);
   }
-  Camera->SetTargetGamma(TargetGamma);
   Camera->AttachToActor(GetPawn(), FAttachmentTransformRules::KeepRelativeTransform);
   Camera->SetOwner(GetPawn());
   AddTickPrerequisiteActor(Camera);
