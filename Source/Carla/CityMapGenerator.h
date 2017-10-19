@@ -150,7 +150,7 @@ private:
     * out-of-sync with the current road layout.
     */
   UPROPERTY(Category = "Road Map", EditAnywhere, AdvancedDisplay)
-  bool bGenerateRoadMapOnSave = true;
+  bool bGenerateRoadMapOnSave = false;
 
   /** If true, activate the custom depth pass of each tagged actor in the level.
     * This pass is necessary for rendering the semantic segmentation. However,
