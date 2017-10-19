@@ -77,6 +77,70 @@ static void Set(carla_image &cImage, const FCapturedImage &uImage)
   }
 }
 
+static void SetBoxSpeedAndType(carla_agent &values, const ACharacter *Walker)
+{
+  values.type = CARLA_SERVER_AGENT_PEDESTRIAN;
+  values.forward_speed = FVector::DotProduct(Walker->GetVelocity(), Walker->GetActorRotation().Vector()) * 0.036f;
+  /// @todo Perhaps the box it is not the same for every walker...
+  values.box_extent = {45.0f, 35.0f, 100.0f};
+}
+
+static void SetBoxSpeedAndType(carla_agent &values, const ACarlaWheeledVehicle *Vehicle)
+{
+  values.type = CARLA_SERVER_AGENT_VEHICLE;
+  values.forward_speed = Vehicle->GetVehicleForwardSpeed();
+  Set(values.box_extent, Vehicle->GetVehicleBoundsExtent());
+}
+
+static void SetBoxSpeedAndType(carla_agent &values, const ATrafficSignBase *TrafficSign)
+{
+  switch (TrafficSign->GetTrafficSignState()) {
+    case ETrafficSignState::TrafficLightRed:
+      values.type = CARLA_SERVER_AGENT_TRAFFICLIGHT_RED;
+      break;
+    case ETrafficSignState::TrafficLightYellow:
+      values.type = CARLA_SERVER_AGENT_TRAFFICLIGHT_YELLOW;
+      break;
+    case ETrafficSignState::TrafficLightGreen:
+      values.type = CARLA_SERVER_AGENT_TRAFFICLIGHT_GREEN;
+      break;
+    case ETrafficSignState::SpeedLimit_30:
+      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
+      values.forward_speed = 30.0f;
+      break;
+    case ETrafficSignState::SpeedLimit_40:
+      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
+      values.forward_speed = 40.0f;
+      break;
+    case ETrafficSignState::SpeedLimit_50:
+      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
+      values.forward_speed = 50.0f;
+      break;
+    case ETrafficSignState::SpeedLimit_60:
+      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
+      values.forward_speed = 60.0f;
+      break;
+    case ETrafficSignState::SpeedLimit_90:
+      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
+      values.forward_speed = 90.0f;
+      break;
+    case ETrafficSignState::SpeedLimit_100:
+      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
+      values.forward_speed = 100.0f;
+      break;
+    case ETrafficSignState::SpeedLimit_120:
+      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
+      values.forward_speed = 120.0f;
+      break;
+    case ETrafficSignState::SpeedLimit_130:
+      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
+      values.forward_speed = 130.0f;
+      break;
+    default:
+      UE_LOG(LogCarla, Error, TEXT("Unknown traffic sign!"));
+  }
+}
+
 // =============================================================================
 // -- CarlaServer --------------------------------------------------------------
 // =============================================================================
@@ -182,70 +246,6 @@ CarlaServer::ErrorCode CarlaServer::ReadControl(ACarlaVehicleController &Player,
     UE_LOG(LogCarlaServer, Warning, TEXT("No control received from the client this frame!"));
   }
   return ec;
-}
-
-static void SetBoxSpeedAndType(carla_agent &values, const ACharacter *Walker)
-{
-  values.type = CARLA_SERVER_AGENT_PEDESTRIAN;
-  values.forward_speed = FVector::DotProduct(Walker->GetVelocity(), Walker->GetActorRotation().Vector()) * 0.036f;
-  /// @todo Perhaps the box it is not the same for every walker...
-  values.box_extent = {45.0f, 35.0f, 100.0f};
-}
-
-static void SetBoxSpeedAndType(carla_agent &values, const ACarlaWheeledVehicle *Vehicle)
-{
-  values.type = CARLA_SERVER_AGENT_VEHICLE;
-  values.forward_speed = Vehicle->GetVehicleForwardSpeed();
-  Set(values.box_extent, Vehicle->GetVehicleBoundsExtent());
-}
-
-static void SetBoxSpeedAndType(carla_agent &values, const ATrafficSignBase *TrafficSign)
-{
-  switch (TrafficSign->GetTrafficSignState()) {
-    case ETrafficSignState::TrafficLightRed:
-      values.type = CARLA_SERVER_AGENT_TRAFFICLIGHT_RED;
-      break;
-    case ETrafficSignState::TrafficLightYellow:
-      values.type = CARLA_SERVER_AGENT_TRAFFICLIGHT_YELLOW;
-      break;
-    case ETrafficSignState::TrafficLightGreen:
-      values.type = CARLA_SERVER_AGENT_TRAFFICLIGHT_GREEN;
-      break;
-    case ETrafficSignState::SpeedLimit_30:
-      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      values.forward_speed = 30.0f;
-      break;
-    case ETrafficSignState::SpeedLimit_40:
-      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      values.forward_speed = 40.0f;
-      break;
-    case ETrafficSignState::SpeedLimit_50:
-      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      values.forward_speed = 50.0f;
-      break;
-    case ETrafficSignState::SpeedLimit_60:
-      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      values.forward_speed = 60.0f;
-      break;
-    case ETrafficSignState::SpeedLimit_90:
-      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      values.forward_speed = 90.0f;
-      break;
-    case ETrafficSignState::SpeedLimit_100:
-      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      values.forward_speed = 100.0f;
-      break;
-    case ETrafficSignState::SpeedLimit_120:
-      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      values.forward_speed = 120.0f;
-      break;
-    case ETrafficSignState::SpeedLimit_130:
-      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      values.forward_speed = 130.0f;
-      break;
-    default:
-      UE_LOG(LogCarla, Error, TEXT("Unknown traffic sign!"));
-  }
 }
 
 template <typename T>
