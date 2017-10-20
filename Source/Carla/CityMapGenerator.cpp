@@ -37,8 +37,12 @@ void ACityMapGenerator::PreSave(const ITargetPlatform *TargetPlatform)
 {
 #if WITH_EDITOR
   if (bGenerateRoadMapOnSave) {
-    check(RoadMap != nullptr);
-    GenerateRoadMap();
+    // Generate road map only if we are not cooking.
+    FCoreUObjectDelegates::OnObjectSaved.Broadcast(this);
+    if (!GIsCookerLoadingPackage) {
+      check(RoadMap != nullptr);
+      GenerateRoadMap();
+    }
   }
 #endif // WITH_EDITOR
 
