@@ -20,8 +20,6 @@ DECLARE_LOG_CATEGORY_EXTERN(LogCarlaServer, Log, All);
 // #define CARLA_TAGGER_EXTRA_LOG
 #endif // WITH_EDITOR
 
-// #define CARLA_CINEMATIC_MODE
-
 class FCarlaModule : public IModuleInterface
 {
 public:

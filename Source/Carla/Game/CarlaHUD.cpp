@@ -4,11 +4,16 @@
 #include "CarlaHUD.h"
 
 #include "CarlaVehicleController.h"
+#include "CommandLine.h"
 #include "ConstructorHelpers.h"
 #include "Engine/Canvas.h"
 #include "Engine/Font.h"
 
 #define LOCTEXT_NAMESPACE "CarlaHUD"
+
+static bool GetDefaultHUDVisibility() {
+  return !FParse::Param(FCommandLine::Get(), TEXT("carla-no-hud"));
+}
 
 static FText RoundedFloatAsText(float Value)
 {
@@ -74,25 +79,6 @@ static FText GetHUDText(const ACarlaPlayerState &Vehicle)
   Args.Add("IntersectionOtherLane", RoundedFloatAsText(100.0f * Vehicle.GetOtherLaneIntersectionFactor()));
   Args.Add("IntersectionOffRoad", RoundedFloatAsText(100.0f * Vehicle.GetOffRoadIntersectionFactor()));
   return FText::Format(
-#ifdef CARLA_CINEMATIC_MODE
-      LOCTEXT("HUDTextFormat",
-          "Speed:         {Speed} km/h\n"
-          "Gear:          {Gear}\n"
-          "\n"
-          "Speed Limit:   {SpeedLimit} km/h\n"
-          "Traffic Light: {TrafficLightState}\n"
-          "\n"
-          "Location:      {Location}\n"
-          "Orientation:   {Orientation}\n"
-          "Acceleration:  {Acceleration}\n"
-          "\n"
-          "Collision (Cars):       {CollisionCars}\n"
-          "Collision (Pedestrian): {CollisionPedestrians}\n"
-          "Collision (Other):      {CollisionOther}\n"
-          "\n"
-          "Intersection (Lane):    {IntersectionOtherLane}%\n"
-          "Intersection (OffRoad): {IntersectionOffRoad}%")
-#else
       LOCTEXT("HUDTextFormat",
           "FPS: {FPS}\n"
           "\n"
@@ -112,17 +98,12 @@ static FText GetHUDText(const ACarlaPlayerState &Vehicle)
           "\n"
           "Intersection (Lane):    {IntersectionOtherLane}%\n"
           "Intersection (OffRoad): {IntersectionOffRoad}%")
-#endif // CARLA_CINEMATIC_MODE
       ,
       Args);
 }
 
 ACarlaHUD::ACarlaHUD() :
-#ifdef CARLA_CINEMATIC_MODE
-  bIsVisible(false)
-#else
-  bIsVisible(true)
-#endif // CARLA_CINEMATIC_MODE
+  bIsVisible(GetDefaultHUDVisibility())
 {
   static ConstructorHelpers::FObjectFinder<UFont> Font(TEXT("/Engine/EngineFonts/DroidSansMono"));
   HUDFont = Font.Object;
