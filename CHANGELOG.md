@@ -1,3 +1,10 @@
+## CARLA 0.5.4
+
+  * Added command-line parameter -carla-no-hud
+  * Remove override gamma from weather settings
+  * Fixed issue road map generation hangs cooking command
+  * Organise Python client and make sample script
+
 ## CARLA 0.5.3
 
   * Version increases just to keep in sync with CARLAUE4 Unreal Project
