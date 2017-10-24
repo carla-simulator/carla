@@ -1,5 +1,5 @@
 INSTALL_FOLDER=$(CURDIR)/Util/Install
-PYTHON_CLIENT_FOLDER=$(CURDIR)/Util/PythonClient
+PYTHON_CLIENT_FOLDER=$(CURDIR)/Util/PythonClient/test
 BASE_BUILD_FOLDER=$(CURDIR)/Util/Build/carlaserver-build
 MY_CMAKE_FOLDER=$(CURDIR)/Util/cmake
 MY_CMAKE_FLAGS=-B"$(BUILD_FOLDER)" -DCMAKE_INSTALL_PREFIX="$(INSTALL_FOLDER)"
@@ -74,9 +74,9 @@ run_test_release:
 
 launch_test_clients:
 	@echo "Launch echo client"
-	@python3 $(PYTHON_CLIENT_FOLDER)/client_test.py --echo -p 4000 --log echo_client.log & echo $$! > echo_client.pid
+	@python3 $(PYTHON_CLIENT_FOLDER)/test_client.py --echo -p 4000 --log echo_client.log & echo $$! > echo_client.pid
 	@echo "Launch carla client"
-	@python3 $(PYTHON_CLIENT_FOLDER)/client_test.py -p 2000 --log carla_client.log & echo $$! > carla_client.pid
+	@python3 $(PYTHON_CLIENT_FOLDER)/test_client.py -p 2000 --log carla_client.log & echo $$! > carla_client.pid
 
 kill_test_clients:
 	@echo "Kill echo client"

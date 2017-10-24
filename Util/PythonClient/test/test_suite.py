@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 
-# CARLA, Copyright (C) 2017 Computer Vision Center (CVC)
+# Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Barcelona (UAB), and the INTEL Visual Computing Lab.
+#
+# This work is licensed under the terms of the MIT license.
+# For a copy, see <https://opensource.org/licenses/MIT>.
 
 """Test suite for testing CARLAUE4."""
 
@@ -11,14 +15,16 @@ import inspect
 import logging
 import os
 import random
+import sys
 import time
 
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 import carla
 
 from carla.util import StopWatch
 
-from test import CarlaServerTest
+from unit_tests import CarlaServerTest
 
 # Modified by command-line args.
 LOGGING_TO_FILE = False
@@ -66,7 +72,7 @@ def iterate_tests():
     strip_ext = lambda f: os.path.splitext(os.path.basename(f))[0]
     is_valid = lambda obj: inspect.isclass(obj) and issubclass(obj, interface)
 
-    folder = os.path.join(os.path.dirname(__file__), 'test')
+    folder = os.path.join(os.path.dirname(__file__), 'unit_tests')
     modules = glob.glob(os.path.join(folder, "*.py"))
 
     for module_name in set(strip_ext(m) for m in modules if not m.startswith('_')):
@@ -113,7 +119,7 @@ def do_the_tests(args):
     for test in tests:
         if succeeded or failed:
             logging.info('waiting for the server to be ready again')
-            time.sleep(5)
+            time.sleep(6)
         if run_test(test, args):
             succeeded.append(test)
         else:

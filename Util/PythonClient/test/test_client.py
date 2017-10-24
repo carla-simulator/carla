@@ -1,13 +1,21 @@
 #!/usr/bin/env python3
 
-# CARLA, Copyright (C) 2017 Computer Vision Center (CVC)
+# Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Barcelona (UAB), and the INTEL Visual Computing Lab.
+#
+# This work is licensed under the terms of the MIT license.
+# For a copy, see <https://opensource.org/licenses/MIT>.
 
-"""Basic CARLA client."""
+"""A CARLA client for testing."""
 
 import argparse
 import logging
+import os
 import random
+import sys
 import time
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 import carla
 
@@ -18,7 +26,7 @@ from carla.tcp import TCPClient
 from carla.util import make_connection
 
 
-def run_carla_server(args):
+def run_carla_client(args):
     with make_connection(CarlaClient, args.host, args.port, timeout=15) as client:
         logging.info('CarlaClient connected')
         filename = '_images/episode_{:0>3d}/image_{:0>5d}.png'
@@ -155,7 +163,7 @@ def main():
 
             else:
 
-                run_carla_server(args)
+                run_carla_client(args)
 
         except AssertionError as assertion:
             raise assertion

@@ -1,4 +1,10 @@
-import test
+# Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Barcelona (UAB), and the INTEL Visual Computing Lab.
+#
+# This work is licensed under the terms of the MIT license.
+# For a copy, see <https://opensource.org/licenses/MIT>.
+
+import unit_tests
 
 import logging
 import random
@@ -10,7 +16,7 @@ from carla.settings import CarlaSettings, Camera
 from carla.util import make_connection
 
 
-class _BasicTestBase(test.CarlaServerTest):
+class _BasicTestBase(unit_tests.CarlaServerTest):
     def run_carla_client(self, carla_settings, number_of_episodes, number_of_frames, use_ai_control=None):
         with make_connection(CarlaClient, self.args.host, self.args.port, timeout=15) as client:
             logging.info('CarlaClient connected, running %d episodes', number_of_episodes)

@@ -1,4 +1,8 @@
-# CARLA, Copyright (C) 2017 Computer Vision Center (CVC)
+# Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Barcelona (UAB), and the INTEL Visual Computing Lab.
+#
+# This work is licensed under the terms of the MIT license.
+# For a copy, see <https://opensource.org/licenses/MIT>.
 
 """CARLA Settings"""
 
@@ -51,7 +55,7 @@ class CarlaSettings(object):
     """CARLA settings object. Convertible to str as CarlaSettings.ini."""
     def __init__(self, **kwargs):
         # [CARLA/Server]
-        self.SynchronousMode = False
+        self.SynchronousMode = True
         self.SendNonPlayerAgentsInfo = False
         # [CARLA/LevelSettings]
         self.PlayerVehicle = None
@@ -80,7 +84,7 @@ class CarlaSettings(object):
         self.SeedPedestrians = random.getrandbits(16)
 
     def randomize_weather(self):
-        self.WeatherId = random.randint(-1, MAX_NUMBER_OF_WEATHER_IDS)
+        self.WeatherId = random.randint(0, MAX_NUMBER_OF_WEATHER_IDS)
 
     def add_camera(self, camera):
         if not isinstance(camera, Camera):

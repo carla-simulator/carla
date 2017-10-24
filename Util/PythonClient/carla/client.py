@@ -1,13 +1,29 @@
-# CARLA, Copyright (C) 2017 Computer Vision Center (CVC)
+# Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Barcelona (UAB), and the INTEL Visual Computing Lab.
+#
+# This work is licensed under the terms of the MIT license.
+# For a copy, see <https://opensource.org/licenses/MIT>.
 
 """CARLA Client."""
 
 import os
 import struct
 
-from . import tcp
+from contextlib import contextmanager
 
-from . import carla_server_pb2 as carla_protocol
+from . import tcp
+from . import util
+
+try:
+    from . import carla_server_pb2 as carla_protocol
+except ImportError:
+    raise RuntimeError('cannot import "carla_server_pb2.py", run the protobuf compiler to generate this file')
+
+
+@contextmanager
+def make_carla_client(host, world_port, timeout=15):
+    with util.make_connection(CarlaClient, host, world_port, timeout) as client:
+        yield client
 
 
 class CarlaClient(object):
@@ -87,14 +103,17 @@ class CarlaClient(object):
         images_raw_data = self._stream_client.read()
         return pb_message, CarlaImage.parse_raw_data(images_raw_data)
 
-    def send_control(self, **kwargs):
+    def send_control(self, *args, **kwargs):
         """Send vehicle control for the current frame."""
-        pb_message = carla_protocol.Control()
-        pb_message.steer = kwargs.get('steer', 0.0)
-        pb_message.throttle = kwargs.get('throttle', 0.0)
-        pb_message.brake = kwargs.get('brake', 0.0)
-        pb_message.hand_brake = kwargs.get('hand_brake', False)
-        pb_message.reverse = kwargs.get('reverse', False)
+        if isinstance(args[0] if args else None, carla_protocol.Control):
+            pb_message = args[0]
+        else:
+            pb_message = carla_protocol.Control()
+            pb_message.steer = kwargs.get('steer', 0.0)
+            pb_message.throttle = kwargs.get('throttle', 0.0)
+            pb_message.brake = kwargs.get('brake', 0.0)
+            pb_message.hand_brake = kwargs.get('hand_brake', False)
+            pb_message.reverse = kwargs.get('reverse', False)
         self._control_client.write(pb_message.SerializeToString())
 
 
