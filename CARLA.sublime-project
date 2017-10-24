@@ -1,0 +1,131 @@
+{
+	"folders":
+	[
+		{
+			"path": ".",
+			"folder_exclude_patterns":
+			[
+				"__pycache__",
+				".clang",
+				".codelite",
+				".kdev4",
+				".vs",
+				"Build",
+				"Binaries",
+				"Content",
+				"DerivedDataCache",
+				"Intermediate",
+				"Saved"
+			],
+			"file_exclude_patterns":
+			[
+				"*.VC.db",
+				"*.VC.opendb",
+				"*.kdev4",
+				"*.pri",
+				"*.pro",
+				"*.py[cod]",
+				"*.sln",
+				"*.stackdump",
+				"*.sublime-workspace",
+				"*.uasset",
+				"*.umap",
+				"*.workspace",
+				"*CodeCompletionFolders.txt",
+				"*CodeLitePreProcessor.txt",
+				".tags*",
+				"core"
+			]
+		}
+	],
+	"settings":
+	{
+		"tab_size": 2,
+		"translate_tabs_to_spaces": true
+	},
+	"build_systems":
+	[
+		{
+			"name": "CARLA - Rebuild script",
+			"working_dir": "${project_path}",
+			"file_regex": "^(..[^:]*):([0-9]+):?([0-9]+)?:? (.*)$",
+			"linux":
+			{
+				"shell_cmd": "./Rebuild.sh"
+			},
+			"windows":
+			{
+				"shell_cmd": "start Rebuild.bat"
+			}
+		},
+		{
+			"name": "CARLA - make CarlaUE4",
+			"working_dir": "${project_path}/Unreal/CarlaUE4",
+			"file_regex": "^(..[^:]*):([0-9]+):?([0-9]+)?:? (.*)$",
+			"syntax": "Packages/Makefile/Make Output.sublime-syntax",
+			"linux":
+			{
+				"shell_cmd": "make CarlaUE4"
+			}
+		},
+		{
+			"name": "CARLA - make CarlaUE4 ARGS=-clean",
+			"working_dir": "${project_path}/Unreal/CarlaUE4",
+			"file_regex": "^(..[^:]*):([0-9]+):?([0-9]+)?:? (.*)$",
+			"syntax": "Packages/Makefile/Make Output.sublime-syntax",
+			"linux":
+			{
+				"shell_cmd": "make CarlaUE4 ARGS=-clean"
+			}
+		},
+		{
+			"name": "CARLA - make CarlaUE4Editor",
+			"working_dir": "${project_path}/Unreal/CarlaUE4",
+			"file_regex": "^(..[^:]*):([0-9]+):?([0-9]+)?:? (.*)$",
+			"syntax": "Packages/Makefile/Make Output.sublime-syntax",
+			"linux":
+			{
+				"shell_cmd": "make CarlaUE4Editor"
+			}
+		},
+		{
+			"name": "CARLA - make CarlaUE4Editor ARGS=-clean",
+			"working_dir": "${project_path}/Unreal/CarlaUE4",
+			"file_regex": "^(..[^:]*):([0-9]+):?([0-9]+)?:? (.*)$",
+			"syntax": "Packages/Makefile/Make Output.sublime-syntax",
+			"linux":
+			{
+				"shell_cmd": "make CarlaUE4Editor ARGS=-clean"
+			}
+		},
+		{
+			"name": "CARLA - make CarlaServer",
+			"working_dir": "${project_path}",
+			"file_regex": "^(..[^:]*):([0-9]+):?([0-9]+)?:? (.*)$",
+			"syntax": "Packages/Makefile/Make Output.sublime-syntax",
+			"linux":
+			{
+				"shell_cmd": "make"
+			}
+		},
+		{
+			"name": "CARLA - check CarlaServer",
+			"working_dir": "${project_path}",
+			"file_regex": "^(..[^:]*):([0-9]+):?([0-9]+)?:? (.*)$",
+			"syntax": "Packages/Makefile/Make Output.sublime-syntax",
+			"linux":
+			{
+				"shell_cmd": "make check"
+			}
+		},
+		{
+			"name": "CARLA - clean CarlaServer",
+			"working_dir": "${project_path}",
+			"syntax": "Packages/Makefile/Make Output.sublime-syntax",
+			"linux":
+			{
+				"shell_cmd": "make clean"
+			}
+		}
+	]
+}

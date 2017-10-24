@@ -1,16 +1,27 @@
-# Unreal folders
-Binaries
-Build
-Debug
-DerivedDataCache
-Intermediate
-Saved
+./Dist
+./Doxygen
+./Util/Build
+./Util/Install
 
-# Other
-Doxygen
-Util/Build
-Util/Install
-
+*.VC.db
+*.VC.opendb
+*.kdev4
 *.log
+*.pb.cc
+*.pb.h
 *.pid
-_*
+*.pri
+*.pro
+*.py[cod]
+*.sln
+*.stackdump
+*.sublime-workspace
+*.workspace
+*CodeCompletionFolders.txt
+*CodeLitePreProcessor.txt
+*_pb2.py
+.codelite
+.tags*
+.vs
+__pycache__
+core

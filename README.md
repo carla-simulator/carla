@@ -1,6 +1,4 @@
-CARLA
-=====
-
-Plugin for Unreal Engine 4.
+CARLA Simulator
+===============
 
 See [CARLA Documentation](Docs/index.md).
