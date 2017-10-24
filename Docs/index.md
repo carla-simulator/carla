@@ -25,9 +25,9 @@ Index
 
 #### Setup
 
+  * [How to run CarlaUE4 binary](release_readme.md)
   * [How to build on Linux](how_to_build_on_linux.md)
   * [How to build on Windows](how_to_build_on_windows.md)
-  * [How to run CarlaUE4 binary](release_readme.md)
   * [CARLA Settings](carla_settings.md)
 
 #### Development
