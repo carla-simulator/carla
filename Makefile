@@ -1,5 +1,5 @@
-INSTALL_FOLDER=$(CURDIR)/Util/Install
-PYTHON_CLIENT_FOLDER=$(CURDIR)/Util/PythonClient/test
+INSTALL_FOLDER=$(CURDIR)/Unreal/CarlaUE4/Plugins/Carla/CarlaServer
+PYTHON_CLIENT_FOLDER=$(CURDIR)/PythonClient/test
 BASE_BUILD_FOLDER=$(CURDIR)/Util/Build/carlaserver-build
 MY_CMAKE_FOLDER=$(CURDIR)/Util/cmake
 MY_CMAKE_FLAGS=-B"$(BUILD_FOLDER)" -DCMAKE_INSTALL_PREFIX="$(INSTALL_FOLDER)"
@@ -28,11 +28,11 @@ release: $(BUILD_RULE)
 
 build_linux: MY_CMAKE_FLAGS+=-G "Ninja"
 build_linux: call_cmake
-	cd $(BUILD_FOLDER) && ninja && ninja install
+	@cd $(BUILD_FOLDER) && ninja && ninja install
 
 build_windows: MY_CMAKE_FLAGS+=-G "NMake Makefiles"
 build_windows: call_cmake
-	cd $(BUILD_FOLDER) && nmake && nmake install
+	@cd $(BUILD_FOLDER) && nmake && nmake install
 
 vsproject: BUILD_FOLDER=$(BASE_BUILD_FOLDER)/visualstudio
 vsproject: MY_CMAKE_FLAGS+=-DCMAKE_BUILD_TYPE=Debug
@@ -40,25 +40,25 @@ vsproject: MY_CMAKE_FLAGS+=-G "Visual Studio 14 2015 Win64"
 vsproject: call_cmake
 
 call_cmake: protobuf
-	mkdir -p $(BUILD_FOLDER)
-	cd $(BUILD_FOLDER) && cmake $(MY_CMAKE_FLAGS) "$(MY_CMAKE_FOLDER)"
+	@mkdir -p $(BUILD_FOLDER)
+	@cd $(BUILD_FOLDER) && cmake $(MY_CMAKE_FLAGS) "$(MY_CMAKE_FOLDER)"
 
 protobuf:
-	$(PROTOC_COMPILE)
+	@$(PROTOC_COMPILE)
 
 ### Docs #######################################################################
 
 docs: doxygen
 
 doxygen:
-	doxygen
+	@doxygen
 	@echo "Documentation index at ./Doxygen/html/index.html"
 
 ### Clean ######################################################################
 
 clean:
-	rm -Rf $(BASE_BUILD_FOLDER) $(INSTALL_FOLDER) Doxygen
-	$(PROTOC_CLEAN)
+	@rm -Rf $(BASE_BUILD_FOLDER) $(INSTALL_FOLDER) Doxygen
+	@$(PROTOC_CLEAN)
 
 ### Test #######################################################################
 

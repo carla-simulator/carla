@@ -74,7 +74,7 @@ public class Carla : ModuleRules
 
   private void AddCarlaServerDependency(ReadOnlyTargetRules Target)
   {
-    string CarlaServerInstallPath = Path.GetFullPath(Path.Combine(ModuleDirectory, "../../Util/Install"));
+    string CarlaServerInstallPath = Path.GetFullPath(Path.Combine(ModuleDirectory, "../../CarlaServer"));
 
     string CarlaServerLib;
     if (UseDebugLibs(Target))

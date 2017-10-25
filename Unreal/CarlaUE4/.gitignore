@@ -1,18 +1,19 @@
-./Binaries
-./Build
-./Debug
-./DerivedDataCache
-./Intermediate
-./Saved
-./Plugins/Carla/Binaries
-./Plugins/Carla/Build
-./Plugins/Carla/Debug
-./Plugins/Carla/DerivedDataCache
-./Plugins/Carla/Intermediate
-./Plugins/Carla/Saved
+Binaries
+Build
+Debug
+DerivedDataCache
+Intermediate
+Saved
+Plugins/Carla/Binaries
+Plugins/Carla/Build
+Plugins/Carla/CarlaServer
+Plugins/Carla/Debug
+Plugins/Carla/DerivedDataCache
+Plugins/Carla/Intermediate
+Plugins/Carla/Saved
 
-./Content
-./Config/CarlaSettings.ini
+Content*
+Config/CarlaSettings.ini
 
-./CMakeLists.txt
-./Makefile
+CMakeLists.txt
+Makefile

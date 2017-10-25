@@ -12,8 +12,9 @@
 				".vs",
 				"Build",
 				"Binaries",
-				"Content",
+				"Unreal/CarlaUE4/Content*",
 				"DerivedDataCache",
+				"Doxygen",
 				"Intermediate",
 				"Saved"
 			],

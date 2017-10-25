@@ -1,0 +1,7 @@
+# Here we keep a list of the Google Drive id's of the Content files. The last id
+# in the list it's picked up by the Setup.sh script to download the last version
+# of the contents.
+#
+# You can direct download with https://drive.google.com/open?id=PUT_FILE_ID_HERE
+
+Demo: 0B2HFV-VuKn3PN2s5ZWdIc2VNWVU

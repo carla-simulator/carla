@@ -1,7 +1,6 @@
-./Dist
-./Doxygen
-./Util/Build
-./Util/Install
+Dist
+Doxygen
+Util/Build
 
 *.VC.db
 *.VC.opendb
