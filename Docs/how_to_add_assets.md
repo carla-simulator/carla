@@ -1,12 +1,6 @@
 How to add assets
 =================
 
-Static content should be added to `Content/Static` to be processed as LFS.
-Static content includes
-
-  * Files that once added won't change (often), like the meshes, materials, etc.
-  * Big files (~ >1MB).
-
 Adding a vehicle
 ----------------
 

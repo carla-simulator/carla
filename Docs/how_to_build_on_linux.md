@@ -41,31 +41,36 @@ Check Unreal's documentation
 ["Building On Linux"](https://wiki.unrealengine.com/Building_On_Linux) if any of
 the steps above fail.
 
-Setup CARLA plugin
-------------------
+Build CARLA
+-----------
 
-Go to "CARLAUE4/Plugins/Carla" folder and run the setup script. This downloads
-and compile all the dependencies, takes a while
+Run the setup script to download the content and build all dependencies. It
+takes a while
 
     $ ./Setup.sh
 
-Now you can use the Makefile to compile and test the code. However, the rebuild
-script of the main project will do that already, see next section.
+Download Epic Games' Automotive Materials package and install it under
+"Unreal/CarlaUE4/Content/AutomotiveMaterials".
+[How to download automotive materials](how_to_download_automotive_materials.md).
 
-You can run the unit tests to check if everything worked fine (note that these
-tests launch the python client, they require python3 and protobuf for python3
-installed)
+NOTE: Due to license restrictions, pedestrians are not include in the CARLA open
+source project (only in the compiled binaries). Some warnings may appear when
+starting the project related to this. We are working to find a solution.
 
-    $ make check
-
-Build and launch CARLAUE4
--------------------------
-
-In the root folder of CARLAUE4 you can find "Rebuild.sh" script. This deletes
-all intermediate files, rebuilds whole CARLA, and launches the editor. Use it
-every time you update CARLA.
+To build CARLA, use the rebuild script. This script deletes all intermediate
+files, rebuilds whole CARLA, and launches the editor. Use it too for making a
+clean rebuild of CARLA
 
     $ UE4_ROOT=~/UnrealEngine_4.17 ./Rebuild.sh
 
 It looks at the environment variable `UE4_ROOT` to find the right version of
 Unreal Engine. You can also add this variable to your "~/.bashrc" or similar.
+
+Test (Optional)
+---------------
+
+A set of unit tests is available for testing the CarlaServer library (note that
+these tests launch the python client, they require python3 and protobuf for
+python3 installed, as well as ports 2000 and 4000 available)
+
+    $ make check

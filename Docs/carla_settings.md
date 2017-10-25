@@ -16,6 +16,5 @@ hierarchy overriding earlier values.
 Take a look at the [CARLA Settings example](Example.CarlaSettings.ini).
 
 IMPORTANT: If you are in editor, you most probably want to disable networking.
-Otherwise the game will hang until a client connects. Copy
-"Example.CarlaSettings.ini" to "CARLAUE4/Config/CarlaSettings.ini" and set
-`UseNetworking=false`.
+Otherwise the game will hang until a client connects. Set `UseNetworking=false`
+in "./Unreal/CarlaUE4/Config/CarlaSettings.ini".

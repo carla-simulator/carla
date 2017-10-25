@@ -4,10 +4,11 @@ CARLA Server
 Build
 -----
 
-Some scripts are provided for building CarlaServer on Linux
+Some scripts are provided for building and testing CarlaServer on Linux
 
     $ Setup.sh
     $ make
+    $ make check
 
 The setup script downloads and compiles all the required dependencies. The
 Makefile calls CMake to build CarlaServer and installs it under "Util/Install".
