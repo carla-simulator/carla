@@ -13,7 +13,7 @@ Requires Python 3 and the protobuf module installed, saving images to disk
 requires the PIL module too.
 
     $ sudo apt-get install python3 python3-pip
-    $ sudo pip install protobuf
+    $ sudo pip3 install protobuf
 
 A sample Python script is provided at `PythonClient/client_example.py`. The
 script is well commented explaining how to use the client API.
