@@ -23,6 +23,13 @@ vehicle and saving images to disk. Run the help command to see options available
 
     $ ./client_example.py --help
 
+A second Python script is provided at `PythonClient/client_manual_control.py`. The
+script is pygame dependent and servers as an interactive example where the user controls
+the car with a keyboard Run the help command to see options available
+
+    $ ./client_manual_control.py --help
+
+
 Running the server
 ------------------
 
