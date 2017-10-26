@@ -35,6 +35,21 @@ import pygame
 from pygame.locals import *
 
 
+
+def join_classes(labels_image):
+  
+    classes_join = {0:[0,0,0],1:[64,64,64],2:[96,96,96],3:[255,255,255],5:[128,128,128],12:2,9:[0,255,0],\
+    11:[32,32,32],4:[255,0,0],10:[0,0,255],8:[255,0,255],6:[196,196,196],7:[128,0,128]}
+
+
+    compressed_labels_image = np.zeros((labels_image.shape[0],labels_image.shape[1],3)) 
+    for key,value in classes_join.iteritems():
+        compressed_labels_image[np.where(labels_image==key)] = value
+
+
+    return compressed_labels_image
+
+
 # Function for making colormaps
 
 def grayscale_colormap(img,colormap):
@@ -51,8 +66,8 @@ def grayscale_colormap(img,colormap):
 def convert_depth(depth):
 
     depth = depth.astype(np.float32)
-    gray_depth = ((depth[:,:,0] +  depth[:,:,1]*256.0 +  depth[:,:,2]*256.0*256.0)/(256.0*256.0*256.0 -1))
-    color_depth =grayscale_colormap(gray_depth,'jet')*256
+    gray_depth = ((depth[:,:,0] +  depth[:,:,1]*256.0 +  depth[:,:,2]*256.0*256.0)/(256.0*256.0*256.0 ))
+    color_depth =grayscale_colormap(gray_depth,'jet')*255
 
     return color_depth
 
@@ -178,7 +193,7 @@ class App:
             pos_x += self.img_vec[0].shape[1]
 
         if len(self.labels_vec) > 0:
-            self.labels_vec[0] = self.labels_vec[0][:,:,:3]*30
+            self.labels_vec[0] = join_classes(self.labels_vec[0][:,:,2])
             surface = pygame.surfarray.make_surface(np.transpose(self.labels_vec[0], (1,0,2)))
             self._display_surf.blit(surface,(pos_x,0))
             pos_x += self.labels_vec[0].shape[1]
