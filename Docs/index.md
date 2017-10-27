@@ -10,6 +10,7 @@ CARLA Documentation
 
   * [How to build on Linux](how_to_build_on_linux.md)
   * [How to build on Windows](how_to_build_on_windows.md)
+  * [How to add Automotive Materials](how_to_add_automotive_materials.md)
 
 #### Development
 
