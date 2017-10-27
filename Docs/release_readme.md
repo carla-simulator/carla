@@ -13,7 +13,7 @@ Requires Python 3 and the protobuf module installed, saving images to disk
 requires the PIL module too.
 
     $ sudo apt-get install python3 python3-pip
-    $ sudo pip install protobuf
+    $ sudo pip3 install protobuf
 
 A sample Python script is provided at `PythonClient/client_example.py`. The
 script is well commented explaining how to use the client API.
@@ -23,14 +23,17 @@ vehicle and saving images to disk. Run the help command to see options available
 
     $ ./client_example.py --help
 
+A second Python script is provided at `PythonClient/client_manual_control.py`. The
+script is pygame dependent and servers as an interactive example where the user controls
+the car with a keyboard Run the help command to see options available
+
+    $ ./client_manual_control.py --help
+
 Running the server
 ------------------
 
 IMPORTANT: By default the game starts in networking mode. It will hang until a
 client is connected. See below how to run it without client.
-
-IMPORTANT: Semantic segmentation ground-truth is disabled by default due to its
-impact on performance. See below how to enable it.
 
 The server can be started by running the `CarlaUE4.sh` script. When run in
 networking mode (controlled by the CARLA client), it is highly recommended to
@@ -63,24 +66,6 @@ frame-rate to get a more realistic feeling)
   * `-carla-world-port=<port-number>` Listen for client connections at <port-number>, agent ports are set to <port-number>+1 and <port-number>+2 respectively. Activates networking.
   * `-carla-no-networking` Disable networking. Overrides other settings.
   * `-carla-no-hud` Do not display the HUD by default.
-
-#### Enable semantic segmentation ground-truth
-
-Semantic segmentation ground-truth is disabled by default due to its impact on
-performance. When disabled, semantic segmentation images will display a single
-red color for every object. To make the engine draw the right tags we need to
-activate the custom depth in the configuration file.
-
-Open the configuration file `CarlaUE4/Saved/Config/LinuxNoEditor/Engine.ini`,
-and add the following
-
-```
-[/Script/Engine.RendererSettings]
-r.CustomDepth=3
-```
-
-Now run the game as usual and semantic segmentation images will be produced with
-the right tags.
 
 #### In-game controls
 

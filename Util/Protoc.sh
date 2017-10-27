@@ -7,13 +7,15 @@ pushd "$SCRIPT_DIR" >/dev/null
 
 PROTOBUF_SRC_DIR=Proto
 PROTOBUF_CPP_OUT_DIR=CarlaServer/source/carla/server
-PROTOBUF_PY_OUT_DIR=../PythonClient/carla
+PROTOBUF_PY_OUT_DIR0=../PythonClient/carla/protoc
+PROTOBUF_PY_OUT_DIR1=TestingClient/carla
 PROTO_BASENAME=carla_server
 
 if [ "$1" == "--clean" ]; then
   # Delete existing ones.
   rm -f ${PROTOBUF_CPP_OUT_DIR}/*.pb.h ${PROTOBUF_CPP_OUT_DIR}/*.pb.cc
-  rm -f ${PROTOBUF_PY_OUT_DIR}/*_pb2.py
+  rm -f ${PROTOBUF_PY_OUT_DIR0}/*_pb2.py
+  rm -f ${PROTOBUF_PY_OUT_DIR1}/*_pb2.py
   exit 0
 fi
 
@@ -31,7 +33,8 @@ echo "Compiling ${PROTO_BASENAME}.proto..."
 ${PROTOC} \
     -I=${PROTOBUF_SRC_DIR} \
     --cpp_out=${PROTOBUF_CPP_OUT_DIR} \
-    --python_out=${PROTOBUF_PY_OUT_DIR} \
+    --python_out=${PROTOBUF_PY_OUT_DIR0} \
+    --python_out=${PROTOBUF_PY_OUT_DIR1} \
   ${PROTOBUF_SRC_DIR}/${PROTO_BASENAME}.proto
 
 popd >/dev/null
