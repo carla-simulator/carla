@@ -51,7 +51,10 @@ takes a while
 
 Download Epic Games' Automotive Materials package and install it under
 "Unreal/CarlaUE4/Content/AutomotiveMaterials".
-[How to download automotive materials](how_to_download_automotive_materials.md).
+[How to download automotive materials](how_to_add_automotive_materials.md).
+
+IMPORTANT: Do not forget to link the automotive materials after opening the
+project.
 
 NOTE: Due to license restrictions, pedestrians are not include in the CARLA open
 source project (only in the compiled binaries). Some warnings may appear when
@@ -65,6 +68,10 @@ clean rebuild of CARLA
 
 It looks at the environment variable `UE4_ROOT` to find the right version of
 Unreal Engine. You can also add this variable to your "~/.bashrc" or similar.
+
+Once the project is opened, it is required to manually link Epic's Automotive
+Material to our vehicles.
+[How to link automotive materials](how_to_add_automotive_materials.md).
 
 Test (Optional)
 ---------------
