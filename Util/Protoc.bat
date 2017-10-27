@@ -2,14 +2,16 @@
 
 set PROTOBUF_SRC_DIR=Proto
 set PROTOBUF_CPP_OUT_DIR=CarlaServer/source/carla/server
-set PROTOBUF_PY_OUT_DIR=TestingClient/carla
+set PROTOBUF_PY_OUT_DIR0=../PythonClient/carla/protoc
+set PROTOBUF_PY_OUT_DIR1=TestingClient/carla
 set PROTO_BASENAME=carla_server
 
 if "%1" == "--clean" (
   rem Delete existing ones.
   rm -f %PROTOBUF_CPP_OUT_DIR%/carla_server.pb.h
   rm -f %PROTOBUF_CPP_OUT_DIR%/carla_server.pb.cc
-  rm -f %PROTOBUF_PY_OUT_DIR%/carla_server_pb2.py
+  rm -f %PROTOBUF_PY_OUT_DIR0%/carla_server_pb2.py
+  rm -f %PROTOBUF_PY_OUT_DIR1%/carla_server_pb2.py
   goto end
 )
 
@@ -22,7 +24,8 @@ if exist %PROTOC% (
   %PROTOC% ^
       -I=%PROTOBUF_SRC_DIR% ^
       --cpp_out=%PROTOBUF_CPP_OUT_DIR% ^
-      --python_out=%PROTOBUF_PY_OUT_DIR% ^
+      --python_out=%PROTOBUF_PY_OUT_DIR0% ^
+      --python_out=%PROTOBUF_PY_OUT_DIR1% ^
     %PROTOBUF_SRC_DIR%/%PROTO_BASENAME%.proto
 
   echo done.
