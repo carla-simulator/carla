@@ -23,9 +23,10 @@ vehicle and saving images to disk. Run the help command to see options available
 
     $ ./client_example.py --help
 
-A second Python script is provided at `PythonClient/client_manual_control.py`. The
-script is pygame dependent and servers as an interactive example where the user controls
-the car with a keyboard Run the help command to see options available
+A second Python script is provided at `PythonClient/client_manual_control.py`.
+The script is pygame dependent and servers as an interactive example where the
+user controls the car with a keyboard Run the help command to see options
+available
 
     $ ./client_manual_control.py --help
 
@@ -66,6 +67,21 @@ frame-rate to get a more realistic feeling)
   * `-carla-world-port=<port-number>` Listen for client connections at <port-number>, agent ports are set to <port-number>+1 and <port-number>+2 respectively. Activates networking.
   * `-carla-no-networking` Disable networking. Overrides other settings.
   * `-carla-no-hud` Do not display the HUD by default.
+
+#### Running CARLA off-screen
+
+CARLA can be run in a display-less computer without any further configuration.
+However, CARLA will render to the default GPU. This can be inconvenient on
+multi-GPU setups.
+
+Selecting the GPU can be achieved with VirtualGL and TurboVNC.
+
+  1. Install X-server.
+  2. Create a xorg.conf with `nvidia-xconfig -a --use-display-device=none` (first back up existing one if necessary).
+  3. Kill all running Xorg instances (`sudo service lightdm stop && sudo killall -9 Xorg`).
+  4. Check that X works `sudo Xorg :0` (it might be necessary to update nvidia drivers), then kill it.
+  5. Install [VirtualGL](https://sourceforge.net/projects/virtualgl/files/2.5.2/) and [TurboVNC](https://sourceforge.net/projects/turbovnc/files/2.1.1/) from deb packages (`sudo dpkg -i XXX.deb`).
+  6. Start CARLA.
 
 #### In-game controls
 
