@@ -1,0 +1,8 @@
+site_name: CARLA Simulator
+repo_url: https://github.com/carla-simulator/carla
+
+pages:
+- 'Home': 'index.md'
+
+markdown_extensions:
+- admonition
