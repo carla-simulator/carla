@@ -5,6 +5,7 @@ CARLA Documentation
 
   * [How to run CARLA server and client](release_readme.md)
   * [CARLA Settings](carla_settings.md)
+  * [Troubleshooting](troubleshooting.md)
 
 #### Compiling
 
