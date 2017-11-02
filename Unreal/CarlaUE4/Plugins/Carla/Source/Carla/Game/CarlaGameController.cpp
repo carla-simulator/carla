@@ -1,13 +1,13 @@
-// CARLA, Copyright (C) 2017 Computer Vision Center (CVC)
+// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB), and the INTEL Visual Computing Lab.
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
 #include "CarlaGameController.h"
 
-// #include "GameFramework/PlayerStart.h"
-
-// #include "CarlaPlayerState.h"
 #include "CarlaVehicleController.h"
-// #include "SceneCaptureCamera.h"
 
 #include "Settings/CarlaSettings.h"
 #include "CarlaServer.h"
