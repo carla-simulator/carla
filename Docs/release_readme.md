@@ -107,6 +107,9 @@ Note that vehicle controls are only available when networking is disabled.
     Enter        : jump
     F            : use the force
 
+    F11          : toggle fullscreen
+    Alt+F4       : quit
+
 Settings
 --------
 
