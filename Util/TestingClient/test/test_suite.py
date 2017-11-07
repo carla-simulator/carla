@@ -19,6 +19,7 @@ import sys
 import time
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '.'))
 
 import carla
 
@@ -174,7 +175,7 @@ def main():
 
     logging.info('listening to server %s:%s', args.host, args.port)
 
-    print('Running the CARLAUE4 test suite (looks like GTest but is not).')
+    print('Running the CARLAUE4 test suite (looks like GTest but it\'s not).')
     do_the_tests(args)
 
 
