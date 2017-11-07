@@ -9,11 +9,10 @@ Linux.
 Running the Python client
 -------------------------
 
-Requires Python 3 and the protobuf module installed, saving images to disk
-requires the PIL module too.
+Requires Python 3 with some extra modules installed
 
     $ sudo apt-get install python3 python3-pip
-    $ sudo pip3 install protobuf
+    $ sudo pip3 install protobuf numpy Pillow
 
 A sample Python script is provided at `PythonClient/client_example.py`. The
 script is well commented explaining how to use the client API.
@@ -21,14 +20,14 @@ script is well commented explaining how to use the client API.
 The script can be run and provides basic functionality for controlling the
 vehicle and saving images to disk. Run the help command to see options available
 
-    $ ./client_example.py --help
+    $ ./carla_example.py --help
 
-A second Python script is provided at `PythonClient/client_manual_control.py`.
+A second Python script is provided at `PythonClient/carla_manual_control.py`.
 The script is pygame dependent and servers as an interactive example where the
 user controls the car with a keyboard Run the help command to see options
 available
 
-    $ ./client_manual_control.py --help
+    $ ./carla_manual_control.py --help
 
 Running the server
 ------------------
