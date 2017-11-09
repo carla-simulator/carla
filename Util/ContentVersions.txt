@@ -5,3 +5,4 @@
 # You can direct download with https://drive.google.com/open?id=PUT_FILE_ID_HERE
 
 0.5.4: 0B2HFV-VuKn3PYUFFanlmZ2VMTW8
+0.6.0: 1Gw8sw01hDEV4FtpHEZZwvS-6XN0jmaLT
