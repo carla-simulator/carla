@@ -92,7 +92,7 @@ void ACarlaVehicleController::Tick(float DeltaTime)
     CarlaPlayerState->Steer = AutopilotControl.Steer;
     CarlaPlayerState->Throttle = AutopilotControl.Throttle;
     CarlaPlayerState->Brake = AutopilotControl.Brake;
-    CarlaPlayerState->bHandBrake = AutopilotControl.HandBrake;
+    CarlaPlayerState->bHandBrake = AutopilotControl.bHandBrake;
     CarlaPlayerState->CurrentGear = Vehicle->GetVehicleCurrentGear();
     CarlaPlayerState->SpeedLimit = GetSpeedLimit();
     CarlaPlayerState->TrafficLightState = GetTrafficLightState();
