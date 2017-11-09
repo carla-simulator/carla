@@ -29,8 +29,9 @@ Manually link the materials
 Right after opening the project, you should link the automotive materials you
 just downloaded.
 
-In the content browser, go to "Content/Static/Vehicles/MaterialRedirectors" and
-open "RedirectorInstance".
+In the content browser, go to
+"Content/Static/Vehicles/GeneralMaterials/MaterialRedirectors" and open
+"RedirectorInstance".
 
 ![Unreal Engine Screenshot 1](img/materials_screenshot_00.png)
 
