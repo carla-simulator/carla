@@ -190,7 +190,7 @@ protected:
     float Throttle = 0.0f;
     float Steer = 0.0f;
     float Brake = 0.0f;
-    float HandBrake = false;
+    bool bHandBrake = false;
   };
 
   const FAutopilotControl &GetAutopilotControl() const
