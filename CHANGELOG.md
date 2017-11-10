@@ -1,3 +1,11 @@
+## CARLA 0.6.0
+
+  * Included Unreal project and reorganised folders
+  * Enabled semantic segmentation by default
+  * Added Felipe's Pyhton client
+  * New build system (Linux only)
+  * Few fixes to city assets
+
 ## CARLA 0.5.4
 
   * Added command-line parameter -carla-no-hud
