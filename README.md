@@ -9,7 +9,7 @@ vehicles) that were created for this purpose and can be used freely. The
 simulation platform supports flexible specification of sensor suites and
 environmental conditions.
 
-[![CARLA Video](Docs/img/video_thumbnail.png)](https://youtu.be/dj7AmsLq1Gk)
+[![CARLA Video](Docs/img/video_thumbnail.png)](https://youtu.be/Hp8Dz-Zek2E)
 
 [Get the latest release here.](https://github.com/carla-simulator/carla/releases/latest)
 
