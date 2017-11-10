@@ -120,7 +120,7 @@ def do_the_tests(args):
     for test in tests:
         if succeeded or failed:
             logging.info('waiting for the server to be ready again')
-            time.sleep(6)
+            time.sleep(7)
         if run_test(test, args):
             succeeded.append(test)
         else:
