@@ -3,6 +3,14 @@ repo_url: https://github.com/carla-simulator/carla
 
 pages:
 - 'Home': 'Docs/index.md'
+- 'CARLA Settings': Docs/carla_settings.md
+- 'CarlaServer documentation': Docs/carla_server.md
+- 'How to add Automotive Materials': Docs/how_to_add_automotive_materials.md
+- 'How to add assets': Docs/how_to_add_assets.md
+- 'How to build on Linux': Docs/how_to_build_on_linux.md
+- 'How to build on Windows': Docs/how_to_build_on_windows.md
+- 'How to run CARLA server and client': Docs/release_readme.md
+- 'Troubleshooting': Docs/troubleshooting.md
 
 markdown_extensions:
 - admonition
