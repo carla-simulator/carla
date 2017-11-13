@@ -13,8 +13,11 @@ hierarchy overriding earlier values.
   3. Other command-line arguments as `-world-port`, or `-carla-no-networking`
   4. Settings file sent by the client on every new episode.
 
-Take a look at the [CARLA Settings example](Example.CarlaSettings.ini).
+Take a look at the [CARLA Settings example][settingslink].
 
-IMPORTANT: If you are in editor, you most probably want to disable networking.
-Otherwise the game will hang until a client connects. Set `UseNetworking=false`
-in "./Unreal/CarlaUE4/Config/CarlaSettings.ini".
+[settingslink]: https://github.com/carla-simulator/carla/blob/master/Docs/Example.CarlaSettings.ini
+
+!!! tip
+    If you are in editor, you most probably want to disable networking.
+    Otherwise the game will hang until a client connects. Set
+    `UseNetworking=false` in "./Unreal/CarlaUE4/Config/CarlaSettings.ini".

@@ -1,16 +1,20 @@
 site_name: CARLA Simulator
 repo_url: https://github.com/carla-simulator/carla
+docs_dir: Docs
 
 pages:
-- 'Home': 'Docs/index.md'
-- 'CARLA Settings': 'Docs/carla_settings.md'
-- 'CarlaServer documentation': 'Docs/carla_server.md'
-- 'How to add Automotive Materials': 'Docs/how_to_add_automotive_materials.md'
-- 'How to add assets': 'Docs/how_to_add_assets.md'
-- 'How to build on Linux': 'Docs/how_to_build_on_linux.md'
-- 'How to build on Windows': 'Docs/how_to_build_on_windows.md'
-- 'How to run CARLA server and client': 'Docs/release_readme.md'
-- 'Troubleshooting': 'Docs/troubleshooting.md'
+- Home: 'index.md'
+- Using CARLA:
+  - 'How to run CARLA server and client': 'how_to_run.md'
+  - 'CARLA Settings': 'carla_settings.md'
+  - 'Troubleshooting': 'troubleshooting.md'
+- Building from source:
+  - 'How to build on Linux': 'how_to_build_on_linux.md'
+  - 'How to build on Windows': 'how_to_build_on_windows.md'
+  - 'How to add Automotive Materials': 'how_to_add_automotive_materials.md'
+- Development:
+  - 'How to add assets': 'how_to_add_assets.md'
+  - 'CarlaServer documentation': 'carla_server.md'
 
 markdown_extensions:
-- admonition
+  - admonition

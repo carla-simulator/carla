@@ -32,8 +32,9 @@ available
 Running the server
 ------------------
 
-IMPORTANT: By default the game starts in networking mode. It will hang until a
-client is connected. See below how to run it without client.
+!!! note
+    By default the game starts in networking mode. It will hang until a client
+    is connected. See below how to run it without client.
 
 The server can be started by running the `CarlaUE4.sh` script. When run in
 networking mode (controlled by the CARLA client), it is highly recommended to
