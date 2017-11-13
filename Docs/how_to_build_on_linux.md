@@ -1,22 +1,18 @@
 How to build CARLA on Linux
 ===========================
 
-This guide has been tested only on Ubuntu 16.04.
+!!! note
+    CARLA requires Ubuntu 16.04 or later.
 
 Install the build tools and dependencies
 
-    $ sudo apt-get install build-essential cmake ninja-build python3-pip python-dev curl autoconf libtool
+    $ sudo apt-get install build-essential clang-3.9 git cmake ninja-build python3-pip python3-requests python-dev tzdata curl wget unzip autoconf libtool
     $ sudo pip3 install protobuf
 
 To avoid compatibility issues between Unreal Engine and the CARLA dependencies,
 the best configuration is to compile everything with the same compiler version
-and C++ runtime library. We use clang 3.9 and LLVM's libc++.
-
-Install clang 3.9
-
-    $ sudo apt-get install clang-3.9
-
-You may need to change your default clang version to compile Unreal
+and C++ runtime library. We use clang 3.9 and LLVM's libc++. You may need to
+change your default clang version to compile Unreal
 
     $ sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-3.9/bin/clang++ 100
     $ sudo update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-3.9/bin/clang 100
