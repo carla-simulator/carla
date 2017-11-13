@@ -6,7 +6,7 @@ Build
 
 Some scripts are provided for building and testing CarlaServer on Linux
 
-    $ Setup.sh
+    $ ./Setup.sh
     $ make
     $ make check
 
@@ -85,7 +85,7 @@ non-blocking call.
 A CarlaServer instance is created with `carla_make_server()` and should be
 destroyed after use with `carla_server_free(ptr)`.
 
-[carlaserverhlink]: ../Util/CarlaServer/include/carla/carla_server.h
+[carlaserverhlink]: https://github.com/carla-simulator/carla/blob/master/Util/CarlaServer/include/carla/carla_server.h
 
 Design
 ------

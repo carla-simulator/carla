@@ -3,7 +3,7 @@ CARLA Documentation
 
 #### Using CARLA
 
-  * [How to run CARLA server and client](release_readme.md)
+  * [How to run CARLA server and client](how_to_run.md)
   * [CARLA Settings](carla_settings.md)
   * [Troubleshooting](troubleshooting.md)
 
