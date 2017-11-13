@@ -14,7 +14,7 @@ environmental conditions.
 [Get the latest release here.](https://github.com/carla-simulator/carla/releases/latest)
 
 For instructions on how to use and compile CARLA, check out
-[CARLA Documentation](Docs/index.md).
+[CARLA Documentation](http://carla.readthedocs.io).
 
 Paper
 -----
