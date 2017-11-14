@@ -4,7 +4,13 @@ CARLA Simulator
 Welcome to CARLA simulator.
 
 This file contains the instructions to run the CARLA simulator binaries on
-Linux.
+Linux. [Get the latest release here.][releaselink]
+
+For building CARLA from source, please check out the
+[CARLA Documentation][docslink].
+
+[releaselink]: https://github.com/carla-simulator/carla/releases/latest
+[docslink]: http://carla.readthedocs.io
 
 Running the Python client
 -------------------------
