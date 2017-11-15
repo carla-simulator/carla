@@ -1,6 +1,9 @@
 CARLA Simulator
 ===============
 
+!!! note
+    CARLA requires Ubuntu 16.04 or later.
+
 Welcome to CARLA simulator.
 
 This file contains the instructions to run the CARLA simulator binaries on
