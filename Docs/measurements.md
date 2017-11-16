@@ -39,7 +39,7 @@ ai_control                 | Control   | Vehicle's AI control that would apply t
 
 The transform contains two Vector3D objects, location and orientation.
 Currently, the orientation is represented as the Cartesian coordinates X, Y, Z.
-_We will probably change this in the future to Roll, Pitch, and Yaw_
+_We will probably change this in the future to Roll, Pitch, and Yaw._
 
 ###### Collision
 
