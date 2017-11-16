@@ -1,0 +1,77 @@
+Cameras and sensors
+===================
+
+Cameras and sensors can be added to the player vehicle by defining them in the
+settings file sent by the client on every new episode. Check out the examples at
+[CARLA Settings example][settingslink].
+
+This document describes the details of the different cameras/sensors currently
+available as well as the resulting images produced by them.
+
+Although we plan to extend the sensor suite of CARLA in the near future, at the
+moment there are three different sensors available. These three sensors are
+implemented as different post-processing effects applied to scene capture
+cameras.
+
+  * [Scene final](#Scene final)
+  * [Depth map](#Depth map)
+  * [Semantic segmentation](#Semantic segmentation)
+
+!!! note
+    The images are sent by the server as a BGRA array of bytes. The provided
+    Python client retrieves the images in this format, it's up to the users to
+    parse the images and convert them to the desired format. There are some
+    examples in the PythonClient folder showing how to parse the images.
+
+There is a fourth post-processing effect available, _None_, which provides a
+view with of the scene with no effect, not even lens effects like flares or DOF;
+we will skip this one in the following descriptions.
+
+We provide a tool to convert raw depth and semantic segmentation images to a
+more human readable palette of colors. It can be found at
+["Util/ImageConverter"][imgconvlink].
+
+[settingslink]: https://github.com/carla-simulator/carla/blob/master/Docs/Example.CarlaSettings.ini
+
+[imgconvlink]: https://github.com/carla-simulator/carla/tree/master/Util/ImageConverter
+
+Scene final
+-----------
+
+The "scene final" camera provides a view of the scene after applying some
+post-processing effects to create a more realistic feel.
+
+Depth map
+---------
+
+Semantic segmentation
+---------------------
+
+The "semantic segmentation" camera classifies every object in the view by
+displaying it in a different color according to the object class. E.g.,
+pedestrians appear in a different color than vehicles.
+
+The server provides an image with the tag information encoded in the red
+channel. A pixel with a red value of x displays an object with tag x. The
+following tags are currently available
+
+Value | Tag
+-----:|:-----
+   0  | None
+   1  | Buildings
+   2  | Fences
+   3  | Other
+   4  | Pedestrians
+   5  | Poles
+   6  | RoadLines
+   7  | Roads
+   8  | Sidewalks
+   9  | Vegetation
+  10  | Vehicles
+  11  | Walls
+  12  | TrafficSigns
+
+This is implemented by tagging every object in the scene before hand (either at
+begin play or on spawn). The objects are classified by their relative file
+system path in the project. E.g., every mesh stored in the "pedestrians" folder
+it's tagged as pedestrian.

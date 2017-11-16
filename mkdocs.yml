@@ -8,6 +8,7 @@ pages:
   - 'How to run CARLA server and client': 'how_to_run.md'
   - 'CARLA Settings': 'carla_settings.md'
   - 'Measurements': 'measurements.md'
+  - 'Cameras and sensors': 'cameras_and_sensors.md'
   - 'Troubleshooting': 'troubleshooting.md'
 - Building from source:
   - 'How to build on Linux': 'how_to_build_on_linux.md'
