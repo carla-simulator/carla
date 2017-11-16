@@ -13,9 +13,9 @@ moment there are three different sensors available. These three sensors are
 implemented as different post-processing effects applied to scene capture
 cameras.
 
-  * [Scene final](#Scene final)
-  * [Depth map](#Depth map)
-  * [Semantic segmentation](#Semantic segmentation)
+  * Scene final
+  * Depth map
+  * Semantic segmentation
 
 !!! note
     The images are sent by the server as a BGRA array of bytes. The provided
@@ -43,6 +43,28 @@ post-processing effects to create a more realistic feel.
 
 Depth map
 ---------
+
+The "depth map" camera provides an image with 24 bit floating precision point codified in the 3 channels of the RGB color space.  
+The order from less to more significant bytes is R -> G -> B.
+
+| R        | G        | B        | int24    |            |
+|----------|----------|----------|----------|------------|
+| 00000000 | 00000000 | 00000000 | 0        | min (near) |
+| 11111111 | 11111111 | 11111111 | 16777215 | max (far)  |
+
+Our max render distance (far) is 1km.
+
+1. To decodify our depth first we get the int24.
+
+        R + G*256 + B*256*256
+
+2. Then normalize it in the range [0, 1].
+
+        Ans / ( 256*256*256 - 1 )
+
+3. And finally multiply for the units that we want to get. We have set the far plane at 1000 metres.
+
+        Ans * far
 
 Semantic segmentation
 ---------------------
