@@ -5,6 +5,7 @@ CARLA Documentation
 
   * [How to run CARLA server and client](how_to_run.md)
   * [CARLA Settings](carla_settings.md)
+  * [Measurements](measurements.md)
   * [Troubleshooting](troubleshooting.md)
 
 #### Building from source
