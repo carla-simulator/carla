@@ -58,6 +58,8 @@ and the possible types of images are
     type = 2  Depth                 (Depth Map)
     type = 3  SemanticSegmentation  (Semantic Segmentation)
 
+The measurements message is explained in detail [here](measurements.md).
+
 [fcolorlink]: https://docs.unrealengine.com/latest/INT/API/Runtime/Core/Math/FColor/index.html "FColor API Documentation"
 
 ###### Control thread
