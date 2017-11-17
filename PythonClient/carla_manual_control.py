@@ -43,21 +43,22 @@ from carla import CARLA
 from carla import Control
 
 
+
 def join_classes(labels_image):
     classes_join = {
-        0: [0, 0, 0],
-        1: [64, 64, 64],
-        2: [96, 96, 96],
-        3: [255, 255, 255],
-        4: [255, 0, 0],
-        5: [128, 128, 128],
-        6: [196, 196, 196],
-        7: [128, 0, 128],
-        8: [255, 0, 255],
-        9: [0, 255, 0],
-        10: [0, 0, 255],
-        11: [32, 32, 32],
-        12: [220, 220, 0]
+        0: [0, 0, 0],        # None
+        1: [70, 70, 70],     # Buildings
+        2: [190, 153, 153],  # Fences
+        3: [72, 0, 90],      # Other
+        4: [220, 20, 60],    # Pedestrians
+        5: [153, 153, 153],  # Poles
+        6: [157, 234, 50],   # RoadLines
+        7: [128, 64, 128],   # Roads
+        8: [244, 35, 232],   # Sidewalks
+        9: [107, 142, 35],   # Vegetation
+        10: [0, 0, 255],     # Vehicles
+        11: [102, 102, 156], # Walls
+        12: [220, 220, 0]    # TrafficSigns
     }
     compressed_labels_image = np.zeros((labels_image.shape[0], labels_image.shape[1], 3))
     for (key, value) in classes_join.items():
@@ -102,7 +103,7 @@ class App(object):
             port=2000,
             host='127.0.0.1',
             config='./CarlaSettings.ini',
-            resolution=(2400, 600),
+            resolution=(800, 600),
             verbose=True):
         self._running = True
         self._display_surf = None
@@ -215,7 +216,19 @@ class App(object):
         The render method plots the First RGB, the First Depth and First
         Semantic Segmentation Camera.
         """
-        pos_x = 0
+
+        auxImgResolution = (320, 180)
+        auxImgYPos = self.height - auxImgResolution[1] - 25
+        nImages = 2
+        f = ((self.weight - nImages * auxImgResolution[0]) / (nImages + 1) + auxImgResolution[0])
+        x_pos = (self.weight - nImages * auxImgResolution[0]) / (nImages + 1)
+
+        if self.img_vec:
+            self.img_vec[0] = self.img_vec[0][:, :, :3]
+            self.img_vec[0] = self.img_vec[0][:, :, ::-1]
+            surface = pygame.surfarray.make_surface(
+                np.transpose(self.img_vec[0], (1, 0, 2)))
+            self._display_surf.blit(surface, (0, 0))
 
         if self.depth_vec:
             self.depth_vec[0] = self.depth_vec[0][:, :, :3]
@@ -223,23 +236,21 @@ class App(object):
             self.depth_vec[0] = convert_depth(self.depth_vec[0])
             surface = pygame.surfarray.make_surface(
                 np.transpose(self.depth_vec[0], (1, 0, 2)))
-            self._display_surf.blit(surface, (pos_x, 0))
-            pos_x += self.depth_vec[0].shape[1]
-
-        if self.img_vec:
-            self.img_vec[0] = self.img_vec[0][:, :, :3]
-            self.img_vec[0] = self.img_vec[0][:, :, ::-1]
-            surface = pygame.surfarray.make_surface(
-                np.transpose(self.img_vec[0], (1, 0, 2)))
-            self._display_surf.blit(surface, (pos_x, 0))
-            pos_x += self.img_vec[0].shape[1]
+            # Resize image
+            auxImgXPos = (self.weight / 4) - (auxImgResolution[0] / 2)
+            surface = pygame.transform.scale(surface, auxImgResolution)
+            self._display_surf.blit(surface, (x_pos, auxImgYPos))
+            x_pos += f
 
         if self.labels_vec:
             self.labels_vec[0] = join_classes(self.labels_vec[0][:, :, 2])
             surface = pygame.surfarray.make_surface(
                 np.transpose(self.labels_vec[0], (1, 0, 2)))
-            self._display_surf.blit(surface, (pos_x, 0))
-            pos_x += self.labels_vec[0].shape[1]
+            # Resize image
+            auxImgXPos = ((self.weight / 4) * 3) - (auxImgResolution[0] / 2)
+            surface = pygame.transform.scale(surface, auxImgResolution)
+            self._display_surf.blit(surface, (x_pos, auxImgYPos))
+            x_pos += f
 
         pygame.display.flip()
 
