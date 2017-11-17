@@ -39,7 +39,22 @@ Scene final
 -----------
 
 The "scene final" camera provides a view of the scene after applying some
-post-processing effects to create a more realistic feel.
+post-processing effects to create a more realistic feel. Theese are actually stored on the Level, in an actor called [PostProcessVolume](https://docs.unrealengine.com/latest/INT/Engine/Rendering/PostProcessEffects/)  and not in the Camera. We use the following post process effects:
+
+
+- Vignette
+Darkens the border of the screen.
+- grain jitter
+Adds a bit of noise to the render.
+- Bloom
+Intense lights burn the area arround them.
+- AutoExposure
+Modifies the image gamma to simulate the eye adaptation to darker or brighter areas.
+- Lens Flares
+Siumlates the reflection of bright objects on the lens.
+- Depth of Field
+Blurs objects near or very far away of the camera.
+
 
 Depth map
 ---------
