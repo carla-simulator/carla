@@ -1,5 +1,6 @@
 # Map customization
 
+This are the specific blueprint assets created to help building the environment.
 
 ## MultipleFloorBuilding:
 
@@ -19,6 +20,8 @@ This blueprint is controlled by this 6 specific Parameters:
 All of This parameters can be modified once this blueprint is placed in the world.
 
 ## SplinemeshRepeater:
+!!! Bug
+    See [#35 SplineMeshRepeater loses its collider mesh](https://github.com/carla-simulator/carla/issues/35)
 ### Standard use:
 
 SplineMeshRepeater "Content/Blueprints/SplineMeshRepeater" is a tool included in the Carla Project to help building urban environments; It repeats and aligns a specific choosen mesh along a [Spline](https://docs.unrealengine.com/latest/INT/Engine/BlueprintSplines/Reference/SplineEditorTool/index.html) (Unreal Component). Its principal function is to build Tipicaly tiled and repetitive structures as Walls, Roads, Bridges, Fences... Once the actor is placed into the world the spline can be modified so the object gets the desired form. Each Point Defining the spline Generates a new tile so that as more points the Spline has, the more defined it will be, but also heavyer on the world. This actor is defined by the following parameters:
@@ -27,7 +30,7 @@ SplineMeshRepeater "Content/Blueprints/SplineMeshRepeater" is a tool included in
   - StaticMesh: The mesh to be repeated along the spline.
   - ForWardAxis: Changes the mesh axis to be alingned with the spline.
   - Material: Overrides the mesh' default material.
-  - Colission Enabled: Chooses the tipe of colission to use with this all
+  - Colission Enabled: Chooses the tipe of colission to use.
   - Gap distance: Places a Gap between each repeated mesh, for repetitive non continuous walls: bush chains, bollards...
 
 
