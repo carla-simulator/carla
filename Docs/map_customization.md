@@ -4,8 +4,8 @@
 ## MultipleFloorBuilding:
 
 The purpose of this blueprint is to make repeating and varying tall buildings a bit easier. Provided a Base, a MiddleFloor and a roof; this blueprint repeats the middle floor to the desired number of stores and tops it whith the last floor given some conditions:
-- All model pivots should be in the bottom center of the Specific mesh.
-- Al models must start and end exactly where the repetition happen.
+  - All model pivots should be in the bottom center of the Specific mesh.
+  - Al models must start and end exactly where the repetition happen.
 
 This blueprint is controlled by this 6 specific Parameters:
 
@@ -42,14 +42,14 @@ In the project folder "Content/Static/Walls" are included some specific assets t
   - DetailsColor: Change the color of the details (if any)
   - TopWallColor: Cambia el color de la cubierta del muro (if any)
 
-   to add elements that profit from this functions exist in the (Carpeta) folder the GardenWallMask File that defines the uv space to place the materials: (Blue space: MainMaterial; green space: Details; red space TopWall).
+   To add elements that profit from this functions exist in the (Carpeta) folder the GardenWallMask File that defines the uv space to place the materials: (Blue space: MainMaterial; green space: Details; red space TopWall).
 
 Between the material masters is WallMaster which is going to be the master of the materials using this function. An instance of this material will be created and the correspondent textures will be added. This material includes the following parameters to be modified by the material to use:
 
   - Normal Flattener: Slightly modifies the normal map values to exagerate it or flatten it.
   - RoughnessCorrection: Para corregir El valor de rugosidad dado por la textura.
 
-  the rest of the parameters are the mask the textures and the color corrections that won't be modified in this instance but in the blueprint that will be launched into the world.
+  The rest of the parameters are the mask the textures and the color corrections that won't be modified in this instance but in the blueprint that will be launched into the world.
 
 
 
