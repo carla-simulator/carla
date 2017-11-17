@@ -47,7 +47,7 @@ Note that UE4 itself and the UE4 free automotive materials follow their own
 license terms.
 
 CARLA uses free automotive materials from Epic Games. For compiling CARLA, these
-materials must be dowloanded from the UE4 marketplace and manually linked in
+materials must be downloaded from the UE4 marketplace and manually linked in
 CARLA following the instructions provided in the documentation.
 
 CARLA uses pedestrians created with Adobe Fuse, which is a free tool for that

@@ -13,9 +13,9 @@ moment there are three different sensors available. These three sensors are
 implemented as different post-processing effects applied to scene capture
 cameras.
 
-  * Scene final
-  * Depth map
-  * Semantic segmentation
+  * [Scene final](#scene-final)
+  * [Depth map](#depth-map)
+  * [Semantic segmentation](#semantic-segmentation)
 
 !!! note
     The images are sent by the server as a BGRA array of bytes. The provided
@@ -24,8 +24,8 @@ cameras.
     examples in the PythonClient folder showing how to parse the images.
 
 There is a fourth post-processing effect available, _None_, which provides a
-view with of the scene with no effect, not even lens effects like flares or DOF;
-we will skip this one in the following descriptions.
+view with of the scene with no effect, not even lens effects like flares or
+depth of field; we will skip this one in the following descriptions.
 
 We provide a tool to convert raw depth and semantic segmentation images to a
 more human readable palette of colors. It can be found at
@@ -39,28 +39,25 @@ Scene final
 -----------
 
 The "scene final" camera provides a view of the scene after applying some
-post-processing effects to create a more realistic feel. Theese are actually stored on the Level, in an actor called [PostProcessVolume](https://docs.unrealengine.com/latest/INT/Engine/Rendering/PostProcessEffects/)  and not in the Camera. We use the following post process effects:
+post-processing effects to create a more realistic feel. These are actually
+stored on the Level, in an actor called [PostProcessVolume][postprolink] and not
+in the Camera. We use the following post process effects:
 
+  * **Vignette** Darkens the border of the screen.
+  * **Grain jitter** Adds a bit of noise to the render.
+  * **Bloom** Intense lights burn the area around them.
+  * **Auto exposure** Modifies the image gamma to simulate the eye adaptation to darker or brighter areas.
+  * **Lens flares** Simulates the reflection of bright objects on the lens.
+  * **Depth of field** Blurs objects near or very far away of the camera.
 
-- Vignette
-Darkens the border of the screen.
-- grain jitter
-Adds a bit of noise to the render.
-- Bloom
-Intense lights burn the area arround them.
-- AutoExposure
-Modifies the image gamma to simulate the eye adaptation to darker or brighter areas.
-- Lens Flares
-Siumlates the reflection of bright objects on the lens.
-- Depth of Field
-Blurs objects near or very far away of the camera.
-
+[postprolink]: https://docs.unrealengine.com/latest/INT/Engine/Rendering/PostProcessEffects/
 
 Depth map
 ---------
 
-The "depth map" camera provides an image with 24 bit floating precision point codified in the 3 channels of the RGB color space.  
-The order from less to more significant bytes is R -> G -> B.
+The "depth map" camera provides an image with 24 bit floating precision point
+codified in the 3 channels of the RGB color space. The order from less to more
+significant bytes is R -> G -> B.
 
 | R        | G        | B        | int24    |            |
 |----------|----------|----------|----------|------------|
