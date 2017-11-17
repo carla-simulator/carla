@@ -17,5 +17,6 @@ CARLA Documentation
 
 #### Development
 
+  * [Map customization](map_customization.md)
   * [How to add assets](how_to_add_assets.md)
   * [CarlaServer documentation](carla_server.md)
