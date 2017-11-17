@@ -29,7 +29,6 @@ from __future__ import print_function
 
 import argparse
 import logging
-import shutil
 import sys
 import time
 
@@ -83,6 +82,18 @@ def convert_depth(depth):
     gray_depth /= (256.0 * 256.0 * 256.0 - 1)
     color_depth = grayscale_colormap(gray_depth, 'jet') * 255
     return color_depth
+
+if sys.version_info >= (3, 3):
+
+    import shutil
+
+    def get_terminal_width():
+        return shutil.get_terminal_size((80, 20)).columns
+
+else:
+
+    def get_terminal_width():
+        return 120
 
 
 class App(object):
@@ -184,7 +195,8 @@ class App(object):
                 speed=pack.forward_speed,
                 other_lane=100 * pack.intersection_otherlane,
                 offroad=100 * pack.intersection_offroad)
-            empty_space = shutil.get_terminal_size((80, 20)).columns - len(message)
+
+            empty_space = max(0, get_terminal_width() - len(message))
             sys.stdout.write('\r' + message + empty_space * ' ')
             sys.stdout.flush()
 
