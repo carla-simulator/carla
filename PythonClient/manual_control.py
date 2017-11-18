@@ -140,6 +140,7 @@ class CarlaGame(object):
         player_start = np.random.randint(number_of_player_starts)
         self.client.start_episode(player_start)
         self._timer = Timer()
+        self._is_on_reverse = False
 
     def _on_loop(self):
         self._timer.tick()
@@ -220,7 +221,7 @@ class CarlaGame(object):
 
 
 def main():
-    argparser = argparse.ArgumentParser(description=__doc__)
+    argparser = argparse.ArgumentParser(description='CARLA Manual Control Client')
     argparser.add_argument(
         '-v', '--verbose',
         action='store_true',
