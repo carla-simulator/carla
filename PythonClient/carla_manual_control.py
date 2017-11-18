@@ -39,9 +39,12 @@ import matplotlib.pyplot as plt
 import pygame
 from pygame.locals import *
 
-from carla import CARLA
-from carla import Control
+from carla.client import CarlaClient
 
+try:
+    from carla.carla_server_pb2 import Control
+except ImportError:
+    raise RuntimeError('cannot import "carla_server_pb2.py", run the protobuf compiler to generate this file')
 
 
 def join_classes(labels_image):
@@ -84,6 +87,12 @@ def convert_depth(depth):
     color_depth = grayscale_colormap(gray_depth, 'jet') * 255
     return color_depth
 
+
+def get_image_array(image):
+    new_image = np.frombuffer(image.raw, dtype=np.dtype("uint8"))
+    return [np.reshape(new_image, (image.height, image.width, 4))]
+
+
 if sys.version_info >= (3, 3):
 
     import shutil
@@ -109,7 +118,8 @@ class App(object):
         self._display_surf = None
         self.port = port
         self.host = host
-        self.config = config
+        with open(config, 'r') as fp:
+            self.config = fp.read()
         self.verbose = verbose
         self.resolution = resolution
         self.size = self.weight, self.height = resolution
@@ -127,12 +137,20 @@ class App(object):
         self.prev_step = 0
         self.prev_time = time.time()
 
-        self.carla = CARLA(self.host, self.port)
+        self.carla = CarlaClient(self.host, self.port)
+        while True:
+            try:
+                self.carla.connect()
+                break
+            except Exception as e:
+                logging.error("Cannot connect: %s", e)
+                time.sleep(1)
 
-        positions = self.carla.loadConfigurationFile(self.config)
-        self.num_pos = len(positions)
-        print("Staring Episode on Position ", self.num_pos)
-        self.carla.newEpisode(np.random.randint(self.num_pos))
+        scene = self.carla.request_new_episode(self.config)
+        self.num_pos = len(scene.player_start_spots)
+        player_start = np.random.randint(self.num_pos)
+        print("Starting episode...")
+        self.carla.start_episode(player_start)
         self.prev_restart_time = time.time()
 
     def on_event(self, event):
@@ -176,13 +194,15 @@ class App(object):
             control.steer = 0.0
 
         control.reverse = self.reverse_gear
-        self.carla.sendCommand(control)
 
-        measurements = self.carla.getMeasurements()
-        pack = measurements['PlayerMeasurements']
-        self.img_vec = measurements['BGRA']
-        self.depth_vec = measurements['Depth']
-        self.labels_vec = measurements['Labels']
+        measurements, images = self.carla.read_measurements()
+
+        self.carla.send_control(control)
+
+        pack = measurements.player_measurements
+        self.img_vec = get_image_array(images[0])
+        self.depth_vec = get_image_array(images[1])
+        self.labels_vec = get_image_array(images[2])
 
         if time.time() - self.prev_time > 1.:
             message = 'Step {step} ({fps:.1f} FPS): '
@@ -255,7 +275,7 @@ class App(object):
         pygame.display.flip()
 
     def on_cleanup(self):
-        self.carla.closeConections()
+        self.carla.disconnect()
         pygame.quit()
 
     def on_execute(self):
