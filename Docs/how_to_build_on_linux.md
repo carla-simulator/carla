@@ -6,7 +6,7 @@ How to build CARLA on Linux
 
 Install the build tools and dependencies
 
-    $ sudo apt-get install build-essential clang-3.9 git cmake ninja-build python3-pip python3-requests python-dev tzdata curl wget unzip autoconf libtool
+    $ sudo apt-get install build-essential clang-3.9 git cmake ninja-build python3-pip python3-requests python-dev tzdata sed curl wget unzip autoconf libtool
     $ sudo pip3 install protobuf
 
 To avoid compatibility issues between Unreal Engine and the CARLA dependencies,

@@ -7,10 +7,26 @@ CARLA Simulator
 Welcome to CARLA simulator.
 
 This file contains the instructions to run the CARLA simulator binaries on
-Linux. [Get the latest release here.][releaselink]
+Linux.
+
+[Get the latest release here.][releaselink]
 
 For building CARLA from source, please check out the
 [CARLA Documentation][docslink].
+
+CARLA can be run directly by running the "CarlaUE4.sh" script provided in the
+release package.
+
+There are currently two scenarios available, the desired scenario can be chosen
+from the command-line
+
+    $ ./CarlaUE4.sh /Game/Maps/Town01
+
+or
+
+    $ ./CarlaUE4.sh /Game/Maps/Town02
+
+To run CARLA as server, see ["Running the server"](#running-the-server) below.
 
 [releaselink]: https://github.com/carla-simulator/carla/releases/latest
 [docslink]: http://carla.readthedocs.io
@@ -45,41 +61,33 @@ Run the help command to see options available
 Running the server
 ------------------
 
-!!! note
-    By default the game starts in networking mode. It will hang until a client
-    is connected. See below how to run it without client.
+The server can be started by running the `CarlaUE4.sh` script with some extra
+arguments. When run in server mode (controlled by the CARLA client), it is
+highly recommended to run it at fixed time-step
 
-The server can be started by running the `CarlaUE4.sh` script. When run in
-networking mode (controlled by the CARLA client), it is highly recommended to
-run it at fixed time-step
-
-    $ ./CarlaUE4.sh /Game/Maps/Town01 -benchmark -fps=15
+    $ ./CarlaUE4.sh /Game/Maps/Town01 -carla-server -benchmark -fps=15
 
 The arguments `-benchmark -fps=15` make the engine run at a fixed time-step of
 1/15 seconds. In this mode, game-time decouples from real-time and the
 simulation runs as fast as possible.
 
-To run the game on the second city, just change the command to select the
-"Town02"
+To run the game on the second town, just change the command to select the
+"Town02" map
 
-    $ ./CarlaUE4.sh /Game/Maps/Town02 -benchmark -fps=15
+    $ ./CarlaUE4.sh /Game/Maps/Town02 -carla-server -benchmark -fps=15
 
-To run the game windowed at a given resolution
+When run as server is sometimes useful to run the game in a smaller window, this
+can be chosen with
 
-    $ ./CarlaUE4.sh /Game/Maps/Town01 -benchmark -fps=15 -windowed -ResX=800 -ResY=600
+    $ ./CarlaUE4.sh /Game/Maps/Town01 -carla-server -benchmark -fps=15 -windowed -ResX=800 -ResY=600
 
-The game can also be run without a client, this way you can drive around the
-city just using the keyboard (in this mode is not recommended to use fixed
-frame-rate to get a more realistic feeling)
+#### CARLA specific command-line options
 
-    $ ./CarlaUE4.sh /Game/Maps/Town02 -carla-no-networking
-
-#### CARLA command-line options
-
+  * `-carla-server` Launches CARLA as server, the execution hangs until a client connects.
   * `-carla-settings=<ini-file-path>` Load settings from the given INI file. See Example.CarlaSettings.ini.
-  * `-carla-world-port=<port-number>` Listen for client connections at <port-number>, agent ports are set to <port-number>+1 and <port-number>+2 respectively. Activates networking.
-  * `-carla-no-networking` Disable networking. Overrides other settings.
+  * `-carla-world-port=<port-number>` Listen for client connections at <port-number>, agent ports are set to <port-number>+1 and <port-number>+2 respectively. Activates server.
   * `-carla-no-hud` Do not display the HUD by default.
+  * `-carla-no-networking` Disable networking. Overrides `-carla-server` if present.
 
 #### Running CARLA off-screen
 
