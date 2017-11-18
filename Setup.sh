@@ -175,7 +175,8 @@ popd >/dev/null
 CARLA_SETTINGS_FILE="./Unreal/CarlaUE4/Config/CarlaSettings.ini"
 
 if [[ ! -f $CARLA_SETTINGS_FILE ]]; then
-  cp -v ./Docs/Example.CarlaSettings.ini $CARLA_SETTINGS_FILE
+  echo "Copying CarlaSettings.ini..."
+  sed -e 's/UseNetworking=true/UseNetworking=false/' ./Docs/Example.CarlaSettings.ini > $CARLA_SETTINGS_FILE
 fi
 
 ./Util/Protoc.sh

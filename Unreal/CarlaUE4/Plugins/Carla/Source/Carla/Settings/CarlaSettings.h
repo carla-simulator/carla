@@ -70,7 +70,7 @@ public:
 
   /** If active, wait for the client to connect and control the pawn. */
   UPROPERTY(Category = "CARLA Server", VisibleAnywhere)
-  bool bUseNetworking = true;
+  bool bUseNetworking = false;
 
   /** World port to listen for client connections. */
   UPROPERTY(Category = "CARLA Server", VisibleAnywhere, meta = (EditCondition = bUseNetworking))

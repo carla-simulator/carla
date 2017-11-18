@@ -16,8 +16,3 @@ hierarchy overriding earlier values.
 Take a look at the [CARLA Settings example][settingslink].
 
 [settingslink]: https://github.com/carla-simulator/carla/blob/master/Docs/Example.CarlaSettings.ini
-
-!!! tip
-    If you are in editor, you most probably want to disable networking.
-    Otherwise the game will hang until a client connects. Set
-    `UseNetworking=false` in "./Unreal/CarlaUE4/Config/CarlaSettings.ini".

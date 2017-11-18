@@ -3,9 +3,14 @@ Troubleshooting
 
 #### Editor hangs after hitting Play
 
-By default, when CARLA is started it waits for a client to be connected and
-control the vehicle. This is the intended behavior. This can be changed in
-"./Unreal/CarlaUE4/Config/CarlaSettings.ini" changing `UseNetworking=false`.
+This is most probably happening because CARLA is started in server mode. Check
+in your CarlaSettings.ini file ("./Unreal/CarlaUE4/Config/CarlaSettings.ini")
+and set
+
+```ini
+[CARLA/Server]
+UseNetworking=false
+```
 
 #### Very low FPS in editor when not in focus
 
