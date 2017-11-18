@@ -13,7 +13,6 @@ from __future__ import print_function
 import argparse
 import logging
 import random
-import shutil
 import sys
 import time
 
@@ -21,6 +20,7 @@ import time
 from carla.client import make_carla_client
 from carla.settings import CarlaSettings, Camera
 from carla.tcp import TCPConnectionError
+from carla.util import print_over_same_line
 
 
 def run_carla_client(host, port, autopilot_on, save_images_to_disk, image_filename_format, settings):
@@ -140,9 +140,7 @@ def print_player_measurements(player_measurements):
         speed=player_measurements.forward_speed,
         other_lane=100 * player_measurements.intersection_otherlane,
         offroad=100 * player_measurements.intersection_offroad)
-    empty_space = shutil.get_terminal_size((80, 20)).columns - len(message)
-    sys.stdout.write('\r' + message + empty_space * ' ')
-    sys.stdout.flush()
+    print_over_same_line(message)
 
 
 def main():
