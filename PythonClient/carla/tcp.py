@@ -11,21 +11,29 @@ import socket
 import struct
 
 
+class TCPConnectionError(Exception):
+    pass
+
+
 class TCPClient(object):
     def __init__(self, host, port, timeout):
         self._host = host
         self._port = port
         self._timeout = timeout
         self._socket = None
+        self._logprefix = '(%s:%s) ' % (self._host, self._port)
 
     def connect(self):
-        self._socket = socket.create_connection(address=(self._host, self._port), timeout=self._timeout)
-        self._socket.settimeout(self._timeout)
-        self._log('connected')
+        try:
+            self._socket = socket.create_connection(address=(self._host, self._port), timeout=self._timeout)
+            self._socket.settimeout(self._timeout)
+            logging.debug(self._logprefix + 'connected')
+        except Exception as exception:
+            self._reraise_exception_as_tcp_error('failed to connect', exception)
 
     def disconnect(self):
         if self._socket is not None:
-            self._log('disconnecting...')
+            logging.debug(self._logprefix + 'disconnecting')
             self._socket.close()
             self._socket = None
 
@@ -34,29 +42,35 @@ class TCPClient(object):
 
     def write(self, message):
         if self._socket is None:
-            raise RuntimeError('%s:%s not connected' % (self._host, self._port))
+            raise TCPConnectionError(self._logprefix + 'not connected')
         header = struct.pack('<L', len(message))
-        self._socket.sendall(header + message)
+        try:
+            self._socket.sendall(header + message)
+        except Exception as exception:
+            self._reraise_exception_as_tcp_error('failed to write data', exception)
 
     def read(self):
         header = self._read_n(4)
         if not header:
-            raise RuntimeError('%s:%s connection closed' % (self._host, self._port))
+            raise TCPConnectionError(self._logprefix + 'connection closed')
         length = struct.unpack('<L', header)[0]
         data = self._read_n(length)
         return data
 
     def _read_n(self, length):
         if self._socket is None:
-            raise RuntimeError('%s:%s not connected' % (self._host, self._port))
+            raise TCPConnectionError(self._logprefix + 'not connected')
         buf = bytes()
         while length > 0:
-            data = self._socket.recv(length)
+            try:
+                data = self._socket.recv(length)
+            except Exception as exception:
+                self._reraise_exception_as_tcp_error('failed to read data', exception)
             if not data:
-                raise RuntimeError('%s:%s connection closed' % (self._host, self._port))
+                raise TCPConnectionError(self._logprefix + 'connection closed')
             buf += data
             length -= len(data)
         return buf
 
-    def _log(self, message, *args):
-        logging.debug('tcpclient %s:%d - ' + message, self._host, self._port, *args)
+    def _reraise_exception_as_tcp_error(self, message, exception):
+        raise TCPConnectionError('%s%s: %s' % (self._logprefix, message, exception))

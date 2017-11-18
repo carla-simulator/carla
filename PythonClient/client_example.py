@@ -8,6 +8,7 @@
 
 """Basic CARLA client example."""
 
+from __future__ import print_function
 
 import argparse
 import logging
@@ -18,11 +19,11 @@ import time
 
 
 from carla.client import make_carla_client
-from carla.console import CarlaClientConsole
 from carla.settings import CarlaSettings, Camera
+from carla.tcp import TCPConnectionError
 
 
-def run_carla_client(host, port, autopilot_on, save_images_to_disk, image_filename_format):
+def run_carla_client(host, port, autopilot_on, save_images_to_disk, image_filename_format, settings):
     # Here we will run 3 episodes with 300 frames each.
     number_of_episodes = 3
     frames_per_episode = 300
@@ -38,40 +39,42 @@ def run_carla_client(host, port, autopilot_on, save_images_to_disk, image_filena
         for episode in range(0, number_of_episodes):
             # Start a new episode.
 
-            # Create a CarlaSettings object. This object is a handy wrapper
-            # around the CarlaSettings.ini file. Here we set the configuration
-            # we want for the new episode.
-            settings = CarlaSettings()
-            settings.set(
-                SynchronousMode=True,
-                NumberOfVehicles=30,
-                NumberOfPedestrians=50,
-                WeatherId=random.choice([1, 3, 7, 8, 14]))
-            settings.randomize_seeds()
+            if settings is None:
+                # Create a CarlaSettings object. This object is a handy wrapper
+                # around the CarlaSettings.ini file. Here we set the
+                # configuration we want for the new episode.
+                settings = CarlaSettings()
+                settings.set(
+                    SynchronousMode=True,
+                    NumberOfVehicles=20,
+                    NumberOfPedestrians=40,
+                    WeatherId=random.choice([1, 3, 7, 8, 14]))
+                settings.randomize_seeds()
 
-            # Now we want to add a couple of cameras to the player vehicle. We
-            # will collect the images produced by these cameras every frame.
+                # Now we want to add a couple of cameras to the player vehicle.
+                # We will collect the images produced by these cameras every
+                # frame.
 
-            # The default camera captures RGB images of the scene.
-            camera0 = Camera('CameraRGB')
-            # Set image resolution in pixels.
-            camera0.set_image_size(800, 600)
-            # Set its position relative to the car in centimeters.
-            camera0.set_position(30, 0, 130)
-            settings.add_camera(camera0)
+                # The default camera captures RGB images of the scene.
+                camera0 = Camera('CameraRGB')
+                # Set image resolution in pixels.
+                camera0.set_image_size(800, 600)
+                # Set its position relative to the car in centimeters.
+                camera0.set_position(30, 0, 130)
+                settings.add_camera(camera0)
 
-            # Let's add another camera producing ground-truth depth.
-            camera1 = Camera('CameraDepth', PostProcessing='Depth')
-            camera1.set_image_size(800, 600)
-            camera1.set_position(30, 0, 130)
-            settings.add_camera(camera1)
+                # Let's add another camera producing ground-truth depth.
+                camera1 = Camera('CameraDepth', PostProcessing='Depth')
+                camera1.set_image_size(800, 600)
+                camera1.set_position(30, 0, 130)
+                settings.add_camera(camera1)
 
             print('Requesting new episode...')
 
             # Now we request a new episode with these settings. The server
             # replies with a scene description containing the available start
             # spots for the player. Here instead of a CarlaSettings object we
-            # could also provide a CarlaSettings.ini file as string.
+            # can also provide a CarlaSettings.ini file as string.
             scene = client.request_new_episode(settings)
 
             # Choose one player start at random.
@@ -152,8 +155,8 @@ def main():
     argparser.add_argument(
         '--host',
         metavar='H',
-        default='127.0.0.1',
-        help='IP of the host server (default: 127.0.0.1)')
+        default='localhost',
+        help='IP of the host server (default: localhost)')
     argparser.add_argument(
         '-p', '--port',
         metavar='P',
@@ -169,25 +172,24 @@ def main():
         action='store_true',
         help='save images to disk')
     argparser.add_argument(
-        '-c', '--console',
-        action='store_true',
-        help='start the client console')
+        '-c', '--carla-settings',
+        metavar='PATH',
+        default=None,
+        help='Path to a "CarlaSettings.ini" file')
 
     args = argparser.parse_args()
 
     log_level = logging.DEBUG if args.debug else logging.INFO
-    logging.basicConfig(format='carla_client: %(levelname)s: %(message)s', level=log_level)
+    logging.basicConfig(format='%(levelname)s: %(message)s', level=log_level)
 
     logging.info('listening to server %s:%s', args.host, args.port)
 
-    if args.console:
-        args.synchronous = True
-        cmd = CarlaClientConsole(args)
-        try:
-            cmd.cmdloop()
-        finally:
-            cmd.cleanup()
-        return
+    if args.carla_settings is not None:
+        logging.info('reading CarlaSettings from %r', args.carla_settings)
+        with open(args.carla_settings, 'r') as fp:
+            settings = fp.read()
+    else:
+        settings = None
 
     while True:
         try:
@@ -197,14 +199,18 @@ def main():
                 port=args.port,
                 autopilot_on=args.autopilot,
                 save_images_to_disk=args.images_to_disk,
-                image_filename_format='_images/episode_{:0>3d}/camera_{:0>3d}/image_{:0>5d}.png')
+                image_filename_format='_images/episode_{:0>3d}/camera_{:0>3d}/image_{:0>5d}.png',
+                settings=settings)
 
             if end:
                 return
 
-        except Exception as exception:
-            logging.error('exception: %s', exception)
+        except TCPConnectionError as error:
+            logging.error(error)
             time.sleep(1)
+        except Exception as exception:
+            logging.exception(exception)
+            sys.exit(1)
 
 
 if __name__ == '__main__':

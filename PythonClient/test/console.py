@@ -15,8 +15,8 @@ import threading
 import time
 
 
-from .client import CarlaClient
-from .settings import CarlaSettings, Camera
+from carla.client import CarlaClient
+from carla.settings import CarlaSettings, Camera
 
 
 class _Control(object):
@@ -87,7 +87,6 @@ class CarlaClientConsole(cmd.Cmd):
         self.thread = threading.Thread(target=self._agent_thread_worker)
         self.done = False
         self.thread.start()
-
 
     def cleanup(self):
         self.do_disconnect()

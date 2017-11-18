@@ -20,6 +20,9 @@ except ImportError:
     raise RuntimeError('cannot import "carla_server_pb2.py", run the protobuf compiler to generate this file')
 
 
+VehicleControl = carla_protocol.Control
+
+
 @contextmanager
 def make_carla_client(host, world_port, timeout=15):
     with util.make_connection(CarlaClient, host, world_port, timeout) as client:
@@ -101,7 +104,7 @@ class CarlaClient(object):
         pb_message.ParseFromString(data)
         # Read images.
         images_raw_data = self._stream_client.read()
-        return pb_message, CarlaImage.parse_raw_data(images_raw_data)
+        return pb_message, CarlaImage._parse_raw_data(images_raw_data)
 
     def send_control(self, *args, **kwargs):
         """Send vehicle control for the current frame."""
@@ -119,7 +122,7 @@ class CarlaClient(object):
 
 class CarlaImage(object):
     @staticmethod
-    def parse_raw_data(raw_data):
+    def _parse_raw_data(raw_data):
         getval = lambda index: struct.unpack('<L', raw_data[index*4:index*4+4])[0]
         images = []
         total_size = len(raw_data) / 4
@@ -142,6 +145,7 @@ class CarlaImage(object):
         self.raw = raw_data
 
     def save_to_disk(self, filename):
+        """Save this image to disk (requires PIL installed)."""
         try:
             from PIL import Image
         except ImportError:

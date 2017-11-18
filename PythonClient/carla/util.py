@@ -5,12 +5,9 @@
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
 import datetime
+import sys
 
 from contextlib import contextmanager
-
-
-def to_hex_str(header):
-    return ':'.join('{:02x}'.format(ord(c)) for c in header)
 
 
 @contextmanager
@@ -36,3 +33,29 @@ class StopWatch(object):
 
     def milliseconds(self):
         return 1000.0 * (self.end - self.start).total_seconds()
+
+
+def to_hex_str(header):
+    return ':'.join('{:02x}'.format(ord(c)) for c in header)
+
+
+if sys.version_info >= (3, 3):
+
+    import shutil
+
+    def print_over_same_line(text):
+        terminal_width = shutil.get_terminal_size((80, 20)).columns
+        empty_space = max(0, terminal_width - len(text))
+        sys.stdout.write('\r' + text + empty_space * ' ')
+        sys.stdout.flush()
+
+else:
+
+    # Workaround for older Python versions.
+    def print_over_same_line(text):
+        line_length = max(print_over_same_line._last_line_length, len(text))
+        empty_space = max(0, line_length - len(text))
+        sys.stdout.write('\r' + text + empty_space * ' ')
+        sys.stdout.flush()
+        print_over_same_line._last_line_length = line_length
+    print_over_same_line._last_line_length = 0
