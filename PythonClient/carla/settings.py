@@ -6,9 +6,17 @@
 
 """CARLA Settings"""
 
-import configparser
 import io
 import random
+import sys
+
+try:
+
+    from configparser import ConfigParser
+
+except ImportError:
+
+    from ConfigParser import RawConfigParser as ConfigParser
 
 
 MAX_NUMBER_OF_WEATHER_IDS = 14
@@ -22,10 +30,10 @@ class Camera(object):
         self.ImageSizeX = 800
         self.ImageSizeY = 600
         self.CameraFOV = 90
-        self.CameraPositionX = 15
+        self.CameraPositionX = 140
         self.CameraPositionY = 0
-        self.CameraPositionZ = 123
-        self.CameraRotationPitch = 8
+        self.CameraPositionZ = 140
+        self.CameraRotationPitch = 0
         self.CameraRotationRoll = 0
         self.CameraRotationYaw = 0
         self.set(**kwargs)
@@ -92,7 +100,7 @@ class CarlaSettings(object):
         self._cameras.append(camera)
 
     def __str__(self):
-        ini = configparser.ConfigParser()
+        ini = ConfigParser()
         ini.optionxform=str
         S_SERVER = 'CARLA/Server'
         S_LEVEL = 'CARLA/LevelSettings'
@@ -131,6 +139,9 @@ class CarlaSettings(object):
                 'CameraRotationRoll',
                 'CameraRotationYaw'])
 
-        text = io.StringIO()
+        if sys.version_info >= (3, 0):
+            text = io.StringIO()
+        else:
+            text = io.BytesIO()
         ini.write(text)
         return text.getvalue().replace(' = ', '=')

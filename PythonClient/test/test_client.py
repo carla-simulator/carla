@@ -20,10 +20,11 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import carla
 
 from carla.client import CarlaClient
-from carla.console import CarlaClientConsole
 from carla.settings import CarlaSettings, Camera
 from carla.tcp import TCPClient
 from carla.util import make_connection
+
+import console
 
 
 def run_carla_client(args):
@@ -140,7 +141,7 @@ def main():
     logging.info('listening to server %s:%s', args.host, args.port)
 
     if args.console:
-        cmd = CarlaClientConsole(args)
+        cmd = console.CarlaClientConsole(args)
         try:
             cmd.cmdloop()
         finally:

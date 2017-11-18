@@ -6,8 +6,8 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-# Keyboard controlling for carla. Please refer to carla_use_example for a
-# simpler and more documented example.
+# Keyboard controlling for carla. Please refer to client_example for a simpler
+# and more documented example.
 
 """
 Welcome to CARLA manual control.
@@ -29,324 +29,237 @@ from __future__ import print_function
 
 import argparse
 import logging
+import random
 import sys
 import time
 
-import numpy as np
-
-import matplotlib.pyplot as plt
-
-import pygame
-from pygame.locals import *
-
-from carla.client import CarlaClient
+try:
+    import pygame
+    from pygame.locals import *
+except ImportError:
+    raise RuntimeError('cannot import pygame, make sure pygame package is installed')
 
 try:
-    from carla.carla_server_pb2 import Control
+    import numpy as np
 except ImportError:
-    raise RuntimeError('cannot import "carla_server_pb2.py", run the protobuf compiler to generate this file')
+    raise RuntimeError('cannot import numpy, make sure numpy package is installed')
+
+from carla import image_converter
+from carla.client import make_carla_client, VehicleControl
+from carla.settings import CarlaSettings, Camera
+from carla.tcp import TCPConnectionError
+from carla.util import print_over_same_line
 
 
-def join_classes(labels_image):
-    classes_join = {
-        0: [0, 0, 0],        # None
-        1: [70, 70, 70],     # Buildings
-        2: [190, 153, 153],  # Fences
-        3: [72, 0, 90],      # Other
-        4: [220, 20, 60],    # Pedestrians
-        5: [153, 153, 153],  # Poles
-        6: [157, 234, 50],   # RoadLines
-        7: [128, 64, 128],   # Roads
-        8: [244, 35, 232],   # Sidewalks
-        9: [107, 142, 35],   # Vegetation
-        10: [0, 0, 255],     # Vehicles
-        11: [102, 102, 156], # Walls
-        12: [220, 220, 0]    # TrafficSigns
-    }
-    compressed_labels_image = np.zeros((labels_image.shape[0], labels_image.shape[1], 3))
-    for (key, value) in classes_join.items():
-        compressed_labels_image[np.where(labels_image == key)] = value
-    return compressed_labels_image
+WINDOW_WIDTH = 800
+WINDOW_HEIGHT = 600
+MINI_WINDOW_WIDTH = 320
+MINI_WINDOW_HEIGHT = 180
 
 
-def grayscale_colormap(img, colormap):
-    """Make colormaps from grayscale."""
-    cmap = plt.get_cmap(colormap)
-    rgba_img = cmap(img)
-    rgb_img = np.delete(rgba_img, 3, 2)
-    return rgb_img
+def make_carla_settings():
+    settings = CarlaSettings()
+    settings.set(
+        SynchronousMode=False,
+        NumberOfVehicles=15,
+        NumberOfPedestrians=30,
+        WeatherId=random.choice([1, 3, 7, 8, 14]))
+    settings.randomize_seeds()
+    camera0 = Camera('CameraRGB')
+    camera0.set_image_size(WINDOW_WIDTH, WINDOW_HEIGHT)
+    camera0.set_position(200, 0, 140)
+    camera0.set_rotation(0.0, 0.0, 0.0)
+    settings.add_camera(camera0)
+    camera1 = Camera('CameraDepth', PostProcessing='Depth')
+    camera1.set_image_size(MINI_WINDOW_WIDTH, MINI_WINDOW_HEIGHT)
+    camera1.set_position(200, 0, 140)
+    camera1.set_rotation(0.0, 0.0, 0.0)
+    settings.add_camera(camera1)
+    camera2 = Camera('CameraSemSeg', PostProcessing='SemanticSegmentation')
+    camera2.set_image_size(MINI_WINDOW_WIDTH, MINI_WINDOW_HEIGHT)
+    camera2.set_position(200, 0, 140)
+    camera2.set_rotation(0.0, 0.0, 0.0)
+    settings.add_camera(camera2)
+    return settings
 
 
-def convert_depth(depth):
-    """Convert depth to human readable format."""
-    depth = depth.astype(np.float32)
-    gray_depth = ((depth[:, :, 0] +                 # Red
-                   depth[:, :, 1] * 256.0 +         # Green
-                   depth[:, :, 2] * 256.0 * 256.0)) # Blue
-    gray_depth /= (256.0 * 256.0 * 256.0 - 1)
-    color_depth = grayscale_colormap(gray_depth, 'jet') * 255
-    return color_depth
-
-
-def get_image_array(image):
-    new_image = np.frombuffer(image.raw, dtype=np.dtype("uint8"))
-    return [np.reshape(new_image, (image.height, image.width, 4))]
-
-
-if sys.version_info >= (3, 3):
-
-    import shutil
-
-    def get_terminal_width():
-        return shutil.get_terminal_size((80, 20)).columns
-
-else:
-
-    def get_terminal_width():
-        return 120
-
-
-class App(object):
-    def __init__(
-            self,
-            port=2000,
-            host='127.0.0.1',
-            config='./CarlaSettings.ini',
-            resolution=(800, 600),
-            verbose=True):
-        self._running = True
-        self._display_surf = None
-        self.port = port
-        self.host = host
-        with open(config, 'r') as fp:
-            self.config = fp.read()
-        self.verbose = verbose
-        self.resolution = resolution
-        self.size = self.weight, self.height = resolution
-        self.reverse_gear = False
-
-    def on_init(self):
-        pygame.init()
-        print(__doc__)
-        time.sleep(3)
-        self._display_surf = pygame.display.set_mode(
-            self.size, pygame.HWSURFACE | pygame.DOUBLEBUF)
-        logging.debug('Started the PyGame Library')
-        self._running = True
+class Timer(object):
+    def __init__(self):
         self.step = 0
-        self.prev_step = 0
-        self.prev_time = time.time()
+        self._lap_step = 0
+        self._lap_time = time.time()
 
-        self.carla = CarlaClient(self.host, self.port)
-        while True:
-            try:
-                self.carla.connect()
-                break
-            except Exception as e:
-                logging.error("Cannot connect: %s", e)
-                time.sleep(1)
-
-        scene = self.carla.request_new_episode(self.config)
-        self.num_pos = len(scene.player_start_spots)
-        player_start = np.random.randint(self.num_pos)
-        print("Starting episode...")
-        self.carla.start_episode(player_start)
-        self.prev_restart_time = time.time()
-
-    def on_event(self, event):
-        if event.type == pygame.QUIT:
-            self._running = False
-
-    def on_loop(self):
+    def tick(self):
         self.step += 1
-        keys = pygame.key.get_pressed()
-        restart = False
 
-        control = Control()
+    def lap(self):
+        self._lap_step = self.step
+        self._lap_time = time.time()
 
-        pressed_keys = []
+    def ticks_per_second(self):
+        return float(self.step - self._lap_step) / self.elapsed_seconds_since_lap()
+
+    def elapsed_seconds_since_lap(self):
+        return time.time() - self._lap_time
+
+
+class CarlaGame(object):
+    def __init__(self, carla_client):
+        self.client = carla_client
+        self._timer = None
+        self._display = None
+        self._main_image = None
+        self._mini_view_image1 = None
+        self._mini_view_image2 = None
+        self._is_on_reverse = False
+
+    def execute(self):
+        pygame.init()
+        self._initialize_game()
+        try:
+            while True:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        return
+                self._on_loop()
+                self._on_render()
+        finally:
+            pygame.quit()
+
+    def _initialize_game(self):
+        self._display = pygame.display.set_mode(
+            (WINDOW_WIDTH, WINDOW_HEIGHT),
+            pygame.HWSURFACE | pygame.DOUBLEBUF)
+        logging.debug('pygame started')
+        self._on_new_episode()
+
+    def _on_new_episode(self):
+        print('Requesting new episode...')
+        scene = self.client.request_new_episode(make_carla_settings())
+        number_of_player_starts = len(scene.player_start_spots)
+        player_start = np.random.randint(number_of_player_starts)
+        self.client.start_episode(player_start)
+        self._timer = Timer()
+
+    def _on_loop(self):
+        self._timer.tick()
+
+        measurements, images = self.client.read_measurements()
+
+        self._main_image = images[0]
+        self._mini_view_image1 = images[1]
+        self._mini_view_image2 = images[2]
+
+        # Print measurements every second.
+        if self._timer.elapsed_seconds_since_lap() > 1.0:
+            self._print_player_measurements(measurements.player_measurements)
+            self._timer.lap()
+
+        control = self._get_keyboard_control(pygame.key.get_pressed())
+
+        if control is None:
+            self._on_new_episode()
+        else:
+            self.client.send_control(control)
+
+    def _get_keyboard_control(self, keys):
+        """
+        Return a VehicleControl message based on the pressed keys. Return None
+        if a new episode was requested.
+        """
+        if keys[K_r]:
+            return None
+        control = VehicleControl()
         if keys[K_LEFT] or keys[K_a]:
             control.steer = -1.0
-            pressed_keys.append('left')
         if keys[K_RIGHT] or keys[K_d]:
             control.steer = 1.0
-            pressed_keys.append('right')
         if keys[K_UP] or keys[K_w]:
             control.throttle = 1.0
-            pressed_keys.append('reverse' if self.reverse_gear else 'forward')
         if keys[K_DOWN] or keys[K_s]:
             control.brake = 1.0
-            pressed_keys.append('brake')
         if keys[K_SPACE]:
             control.hand_brake = True
-            pressed_keys.append('hand-brake')
         if keys[K_q]:
-            self.reverse_gear = not self.reverse_gear
-            pressed_keys.append('toggle reverse')
-        if keys[K_r]:
-            pressed_keys.append('reset')
-            if time.time() - self.prev_restart_time > 2.:
-                self.prev_restart_time = time.time()
-                restart = True
+            self._is_on_reverse = not self._is_on_reverse
+        control.reverse = self._is_on_reverse
+        return control
 
-        if time.time() - self.prev_restart_time < 2.:
-            control.throttle = 0.0
-            control.steer = 0.0
+    def _print_player_measurements(self, player_measurements):
+        message = 'Step {step} ({fps:.1f} FPS): '
+        message += '{speed:.2f} km/h, '
+        message += '{other_lane:.0f}% other lane, {offroad:.0f}% off-road'
+        message = message.format(
+            step=self._timer.step,
+            fps=self._timer.ticks_per_second(),
+            speed=player_measurements.forward_speed,
+            other_lane=100 * player_measurements.intersection_otherlane,
+            offroad=100 * player_measurements.intersection_offroad)
+        print_over_same_line(message)
 
-        control.reverse = self.reverse_gear
+    def _on_render(self):
+        gap_x = (WINDOW_WIDTH - 2 * MINI_WINDOW_WIDTH) / 3
+        mini_image_y = WINDOW_HEIGHT - MINI_WINDOW_HEIGHT - gap_x
 
-        measurements, images = self.carla.read_measurements()
+        if self._main_image is not None:
+            array = image_converter.to_rgb_array(self._main_image)
+            surface = pygame.surfarray.make_surface(array)
+            self._display.blit(surface, (0, 0))
 
-        self.carla.send_control(control)
+        if self._mini_view_image1 is not None:
+            array = image_converter.depth_to_grayscale(self._mini_view_image1)
+            surface = pygame.surfarray.make_surface(array)
+            self._display.blit(surface, (gap_x, mini_image_y))
 
-        pack = measurements.player_measurements
-        self.img_vec = get_image_array(images[0])
-        self.depth_vec = get_image_array(images[1])
-        self.labels_vec = get_image_array(images[2])
-
-        if time.time() - self.prev_time > 1.:
-            message = 'Step {step} ({fps:.1f} FPS): '
-            message += '{speed:.2f} km/h, '
-            message += '{other_lane:.0f}% other lane, {offroad:.0f}% off-road'
-            message += ': pressed [%s]' % ', '.join(pressed_keys)
-
-            message = message.format(
-                step=self.step,
-                fps=float(self.step - self.prev_step) / (time.time() - self.prev_time),
-                speed=pack.forward_speed,
-                other_lane=100 * pack.intersection_otherlane,
-                offroad=100 * pack.intersection_offroad)
-
-            empty_space = max(0, get_terminal_width() - len(message))
-            sys.stdout.write('\r' + message + empty_space * ' ')
-            sys.stdout.flush()
-
-            self.prev_step = self.step
-            self.prev_time = time.time()
-
-        if restart:
-            print('\n *** RESTART *** \n')
-            player_pos = np.random.randint(self.num_pos)
-            print('  Player pos %d \n' % (player_pos))
-            self.carla.newEpisode(player_pos)
-
-
-    def on_render(self):
-        """
-        The render method plots the First RGB, the First Depth and First
-        Semantic Segmentation Camera.
-        """
-
-        auxImgResolution = (320, 180)
-        auxImgYPos = self.height - auxImgResolution[1] - 25
-        nImages = 2
-        f = ((self.weight - nImages * auxImgResolution[0]) / (nImages + 1) + auxImgResolution[0])
-        x_pos = (self.weight - nImages * auxImgResolution[0]) / (nImages + 1)
-
-        if self.img_vec:
-            self.img_vec[0] = self.img_vec[0][:, :, :3]
-            self.img_vec[0] = self.img_vec[0][:, :, ::-1]
-            surface = pygame.surfarray.make_surface(
-                np.transpose(self.img_vec[0], (1, 0, 2)))
-            self._display_surf.blit(surface, (0, 0))
-
-        if self.depth_vec:
-            self.depth_vec[0] = self.depth_vec[0][:, :, :3]
-            self.depth_vec[0] = self.depth_vec[0][:, :, ::-1]
-            self.depth_vec[0] = convert_depth(self.depth_vec[0])
-            surface = pygame.surfarray.make_surface(
-                np.transpose(self.depth_vec[0], (1, 0, 2)))
-            # Resize image
-            auxImgXPos = (self.weight / 4) - (auxImgResolution[0] / 2)
-            surface = pygame.transform.scale(surface, auxImgResolution)
-            self._display_surf.blit(surface, (x_pos, auxImgYPos))
-            x_pos += f
-
-        if self.labels_vec:
-            self.labels_vec[0] = join_classes(self.labels_vec[0][:, :, 2])
-            surface = pygame.surfarray.make_surface(
-                np.transpose(self.labels_vec[0], (1, 0, 2)))
-            # Resize image
-            auxImgXPos = ((self.weight / 4) * 3) - (auxImgResolution[0] / 2)
-            surface = pygame.transform.scale(surface, auxImgResolution)
-            self._display_surf.blit(surface, (x_pos, auxImgYPos))
-            x_pos += f
+        if self._mini_view_image2 is not None:
+            array = image_converter.labels_to_cityscapes_palette(self._mini_view_image2)
+            surface = pygame.surfarray.make_surface(array)
+            self._display.blit(surface, (2 * gap_x + MINI_WINDOW_WIDTH, mini_image_y))
 
         pygame.display.flip()
 
-    def on_cleanup(self):
-        self.carla.disconnect()
-        pygame.quit()
-
-    def on_execute(self):
-        if self.on_init() == False:
-            self._running = False
-
-        while(self._running):
-            try:
-
-                for event in pygame.event.get():
-                    self.on_event(event)
-                self.on_loop()
-                self.on_render()
-
-            except Exception as e:
-                logging.exception(e)
-                self._running = False
-                break
-
-        self.on_cleanup()
-
 
 def main():
-    parser = argparse.ArgumentParser(
-        description='Run the carla client manual that connects to CARLA server')
-    parser.add_argument(
-        'host',
-        metavar='HOST',
-        type=str,
-        help='host to connect to')
-    parser.add_argument(
-        'port',
-        metavar='PORT',
+    argparser = argparse.ArgumentParser(description=__doc__)
+    argparser.add_argument(
+        '-v', '--verbose',
+        action='store_true',
+        dest='debug',
+        help='print debug information')
+    argparser.add_argument(
+        '--host',
+        metavar='H',
+        default='localhost',
+        help='IP of the host server (default: localhost)')
+    argparser.add_argument(
+        '-p', '--port',
+        metavar='P',
+        default=2000,
         type=int,
-        help='port to connect to')
+        help='TCP port to listen to (default: 2000)')
+    args = argparser.parse_args()
 
-    parser.add_argument(
-        "-c",
-        "--config",
-        help="the path for the server .ini config file that the client sends",
-        type=str,
-        default="./CarlaSettings.ini")
+    log_level = logging.DEBUG if args.debug else logging.INFO
+    logging.basicConfig(format='%(levelname)s: %(message)s', level=log_level)
 
-    parser.add_argument(
-        "-l",
-        "--log",
-        help="activate the log file",
-        action="store_true")
-    parser.add_argument(
-        "-lv",
-        "--log_verbose",
-        help="put the log file to screen",
-        action="store_true")
-    args = parser.parse_args()
+    logging.info('listening to server %s:%s', args.host, args.port)
 
-    if args.log or args.log_verbose:
-        LOG_FILENAME = 'log_manual_control.log'
-        logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG)
-        if args.log_verbose:  # set of functions to put the logging to screen
+    print(__doc__)
 
-            root = logging.getLogger()
-            root.setLevel(logging.DEBUG)
-            ch = logging.StreamHandler(sys.stdout)
-            ch.setLevel(logging.DEBUG)
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-            ch.setFormatter(formatter)
-            root.addHandler(ch)
+    while True:
+        try:
 
-    theApp = App(port=args.port, host=args.host, config=args.config)
-    theApp.on_execute()
+            with make_carla_client(args.host, args.port) as client:
+                game = CarlaGame(client)
+                game.execute()
+                break
+
+        except TCPConnectionError as error:
+            logging.error(error)
+            time.sleep(1)
+        except Exception as exception:
+            logging.exception(exception)
+            sys.exit(1)
 
 
 if __name__ == '__main__':
