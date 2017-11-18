@@ -61,7 +61,7 @@ Run the help command to see options available
 Running the server
 ------------------
 
-The server can be started by running the `CarlaUE4.sh` script with some extra
+The server can be started by running the "CarlaUE4.sh" script with some extra
 arguments. When run in server mode (controlled by the CARLA client), it is
 highly recommended to run it at fixed time-step
 
@@ -76,8 +76,8 @@ To run the game on the second town, just change the command to select the
 
     $ ./CarlaUE4.sh /Game/Maps/Town02 -carla-server -benchmark -fps=15
 
-When run as server is sometimes useful to run the game in a smaller window, this
-can be chosen with
+When run as server, it is sometimes useful to run the game in a smaller window,
+this can be chosen with
 
     $ ./CarlaUE4.sh /Game/Maps/Town01 -carla-server -benchmark -fps=15 -windowed -ResX=800 -ResY=600
 
@@ -142,9 +142,9 @@ started (every time the level is loaded).
 Settings are loaded following the next hierarchy, with values later in the
 hierarchy overriding earlier values.
 
-  1. `{ProjectFolder}/Config/CarlaSettings.ini`
-  2. File provided by command-line argument `-carla-settings=<path-to-ini-file>`
-  3. Other command-line arguments as `-world-port`, or `-carla-no-networking`
+  1. `{ProjectFolder}/Config/CarlaSettings.ini`.
+  2. File provided by command-line argument `-carla-settings=<path-to-ini-file>`.
+  3. Other command-line arguments as `-carla-server` or `-world-port`.
   4. Settings file sent by the client on every new episode.
 
 Take a look at the Example.CarlaSettings.ini file for further details.
