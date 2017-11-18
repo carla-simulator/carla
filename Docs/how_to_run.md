@@ -18,29 +18,30 @@ For building CARLA from source, please check out the
 Running the Python client
 -------------------------
 
-Requires Python 3 with some extra modules installed
+The "carla" Python module provides a basic API for communicating with the CARLA
+server. In the "PythonClient" folder we provide a couple of examples on how to
+use this API. We recommend Python 3, but they are also compatible with Python 2.
+
+The basic functionality requires only the protobuf module to be installed
 
     $ sudo apt-get install python3 python3-pip
-    $ sudo pip3 install protobuf numpy Pillow
+    $ sudo pip3 install protobuf
 
-A sample Python script is provided at `PythonClient/client_example.py`. The
-script is well commented explaining how to use the client API.
+However, other operations as handling images require some extra modules, and the
+"manual_control.py" example requires pygame
 
-The script can be run and provides basic functionality for controlling the
-vehicle and saving images to disk. Run the help command to see options available
+    $ sudo pip3 install numpy Pillow pygame
 
-    $ ./carla_example.py --help
+The script "PythonClient/client_example.py" provides basic functionality for
+controlling the vehicle and saving images to disk. Run the help command to see
+options available
 
-A second Python script is provided at `PythonClient/carla_manual_control.py`.
-The script is pygame dependent and serves as an interactive example where the
-user controls the car with a keyboard.
+    $ ./client_example.py --help
 
-    $ sudo apt-get install python3-tk
-    $ sudo pip3 install pygame matplolib
+The script "PythonClient/manual_control.py" launches a PyGame window with
+several views and allows to control the vehicle using the WASD keys.
 
-Run the help command to see options available
-
-    $ ./carla_manual_control.py --help
+    $ ./manual_control.py --help
 
 Running the server
 ------------------
