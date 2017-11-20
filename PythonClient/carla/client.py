@@ -34,6 +34,10 @@ class CarlaClient(object):
         self._world_client = tcp.TCPClient(host, world_port, timeout)
         self._stream_client = tcp.TCPClient(host, world_port + 1, timeout)
         self._control_client = tcp.TCPClient(host, world_port + 2, timeout)
+        self._current_settings = None
+        # Controls the state, if an episode is already started.
+        self._is_episode_requested = False
+        # Variable to control the latest episode where the it started
 
     def connect(self):
         self._world_client.connect()
@@ -67,7 +71,17 @@ class CarlaClient(object):
         pb_message.ParseFromString(data)
         if len(pb_message.player_start_spots) < 1:
             raise RuntimeError("received 0 player start spots")
+        self._is_episode_requested =True
         return pb_message
+    def load_carla_settings(self, carla_settings):
+        """ Abstraction to new episode request. carla_settings object must be convertible to
+        a str holding a CarlaSettings.ini.
+
+        Returns a protobuf object holding the scene description.
+        """
+        self._current_settings = carla_settings
+        return self.request_new_episode(carla_settings)
+
 
     def start_episode(self, player_start_index):
         """Start the new episode at the player start given by the
@@ -76,6 +90,14 @@ class CarlaClient(object):
 
         This function waits until the server answers with an EpisodeReady.
         """
+
+        if self._current_settings == None:
+            raise RuntimeError('no settings loaded, cannot start episode')
+
+        if not self._is_episode_requested:
+            self.request_new_episode(self._current_settings)
+
+
         pb_message = carla_protocol.EpisodeStart()
         pb_message.player_start_spot_index = player_start_index
         self._world_client.write(pb_message.SerializeToString())
@@ -90,6 +112,8 @@ class CarlaClient(object):
         # We can start the agent clients now.
         self._stream_client.connect()
         self._control_client.connect()
+        # Set again the status for no episode requested
+        self._is_episode_requested = False
 
     def read_measurements(self):
         """Read measuremnts of current frame. The episode must be started.
