@@ -33,7 +33,9 @@ CONTENT_FOLDER=$SCRIPT_DIR/Unreal/CarlaUE4/Content
 
 CONTENT_GDRIVE_ID=$(tac $SCRIPT_DIR/Util/ContentVersions.txt | egrep -m 1 . | rev | cut -d' ' -f1 | rev)
 
-if [[ ! -d "$CONTENT_FOLDER/.git" ]]; then
+VERSION_FILE=${CONTENT_FOLDER}/.version
+
+function download_content {
   if [[ -d "$CONTENT_FOLDER" ]]; then
     echo "Backing up existing Content..."
     mv -v "$CONTENT_FOLDER" "${CONTENT_FOLDER}_$(date +%Y%m%d%H%M%S)"
@@ -44,9 +46,22 @@ if [[ ! -d "$CONTENT_FOLDER/.git" ]]; then
   tar -xvzf Content.tar.gz -C Content
   rm Content.tar.gz
   mv Content/* $CONTENT_FOLDER
-else
+  echo "$CONTENT_GDRIVE_ID" > "$VERSION_FILE"
+}
+
+if [[ -d "$CONTENT_FOLDER/.git" ]]; then
   echo "Using git version of 'Content', skipping download..."
+elif [[ -f "$CONTENT_FOLDER/.version" ]]; then
+  if [ "$CONTENT_GDRIVE_ID" == `cat $VERSION_FILE` ]; then
+    echo "Content is up-to-date, skipping download..."
+  else
+    download_content
+  fi
+else
+  download_content
 fi
+
+exit 1
 
 # ==============================================================================
 # -- Get and compile libc++ ----------------------------------------------------
