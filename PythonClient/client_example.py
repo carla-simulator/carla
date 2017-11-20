@@ -75,7 +75,7 @@ def run_carla_client(host, port, autopilot_on, save_images_to_disk, image_filena
                 # replies with a scene description containing the available start
                 # spots for the player. Here instead of a CarlaSettings object we
                 # can also provide a CarlaSettings.ini file as string.
-                scene = client.load_carla_settings(settings)
+                scene = client.load_settings(settings)
 
             # Choose one player start at random.
             number_of_player_starts = len(scene.player_start_spots)
