@@ -25,7 +25,7 @@ class _BasicTestBase(unit_tests.CarlaServerTest):
                 carla_settings.randomize_weather()
                 logging.debug('sending CarlaSettings:\n%s', carla_settings)
                 logging.info('new episode requested')
-                scene = client.request_new_episode(carla_settings)
+                scene = client.load_settings(carla_settings)
                 number_of_player_starts = len(scene.player_start_spots)
                 player_start = random.randint(0, max(0, number_of_player_starts - 1))
                 logging.info(

@@ -128,7 +128,7 @@ class CarlaClientConsole(cmd.Cmd):
             self.control = _Control()
             if not self.client.connected():
                 self.client.connect()
-            self.client.request_new_episode(self.settings)
+            self.client.load_settings(self.settings)
             self.client.start_episode(0)
             logging.info('new episode started')
         except Exception as exception:

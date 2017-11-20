@@ -45,7 +45,7 @@ def run_carla_client(args):
             logging.debug('sending CarlaSettings:\n%s', settings)
             logging.info('new episode requested')
 
-            scene = client.request_new_episode(settings)
+            scene = client.load_settings(settings)
 
             number_of_player_starts = len(scene.player_start_spots)
             player_start = random.randint(0, max(0, number_of_player_starts - 1))
