@@ -134,10 +134,11 @@ class CarlaGame(object):
         self._on_new_episode()
 
     def _on_new_episode(self):
-        print('Requesting new episode...')
-        scene = self.client.request_new_episode(make_carla_settings())
+        
+        scene = self.client.load_settings(make_carla_settings())
         number_of_player_starts = len(scene.player_start_spots)
         player_start = np.random.randint(number_of_player_starts)
+        print('Starting new episode...')
         self.client.start_episode(player_start)
         self._timer = Timer()
         self._is_on_reverse = False
