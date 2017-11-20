@@ -9,14 +9,15 @@
 import io
 import random
 import sys
-
-try:
-
-    from configparser import ConfigParser
-
-except ImportError:
+import sys
+is_py2 = sys.version[0] == '2'
+if is_py2:
 
     from ConfigParser import RawConfigParser as ConfigParser
+
+else:
+    
+    from configparser import ConfigParser
 
 
 MAX_NUMBER_OF_WEATHER_IDS = 14
@@ -143,5 +144,6 @@ class CarlaSettings(object):
             text = io.StringIO()
         else:
             text = io.BytesIO()
+
         ini.write(text)
         return text.getvalue().replace(' = ', '=')
