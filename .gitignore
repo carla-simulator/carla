@@ -18,7 +18,6 @@ Util/Build
 *.workspace
 *CodeCompletionFolders.txt
 *CodeLitePreProcessor.txt
-*_pb2.py
 .codelite
 .tags*
 .vs
