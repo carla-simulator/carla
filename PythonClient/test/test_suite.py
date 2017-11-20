@@ -23,6 +23,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '.'))
 
 import carla
 
+from carla.tcp import TCPConnectionError
 from carla.util import StopWatch
 
 from unit_tests import CarlaServerTest
@@ -99,14 +100,20 @@ def run_test(test, args):
         logging.error('exception instantiating %r: %s', test.name, exception)
         return False
     log_test(RUN, test.name)
-    try:
-        timer = StopWatch()
-        result = test.run()
-        timer.stop()
-    except Exception as exception:
-        timer.stop()
-        logging.error('exception: %s', exception)
-        result = False
+    while True:
+        try:
+            timer = StopWatch()
+            result = test.run()
+            timer.stop()
+            break
+        except TCPConnectionError as error:
+            logging.error(error)
+            time.sleep(1)
+        except Exception as exception:
+            timer.stop()
+            logging.exception('exception: %s', exception)
+            result = False
+            break
     log_test(OK if result else FAILED, '%s (%d ms)', test.name, timer.milliseconds())
     return result
 
@@ -118,9 +125,6 @@ def do_the_tests(args):
     failed = []
     log_test(SEP0, 'Running %d tests.', len(tests))
     for test in tests:
-        if succeeded or failed:
-            logging.info('waiting for the server to be ready again')
-            time.sleep(7)
         if run_test(test, args):
             succeeded.append(test)
         else:
