@@ -4,15 +4,16 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-import unit_tests
-
 import logging
 import random
+
+import unit_tests
 
 import carla
 
 from carla.client import CarlaClient
-from carla.settings import CarlaSettings, Camera
+from carla.sensor import Camera
+from carla.settings import CarlaSettings
 from carla.util import make_connection
 
 
@@ -39,7 +40,7 @@ class _BasicTestBase(unit_tests.CarlaServerTest):
                 reverse = (random.random() < 0.2)
                 for _ in range(0, number_of_frames):
                     logging.debug('reading measurements...')
-                    measurements, images = client.read_measurements()
+                    measurements, images = client.read_data()
                     number_of_agents = len(measurements.non_player_agents)
                     logging.debug('received data of %d agents', number_of_agents)
                     logging.debug('received %d images', len(images))
@@ -63,7 +64,7 @@ class _BasicTestBase(unit_tests.CarlaServerTest):
 class UseCase(_BasicTestBase):
     def run(self):
         settings = CarlaSettings()
-        settings.add_camera(Camera('DefaultCamera'))
+        settings.add_sensor(Camera('DefaultCamera'))
         self.run_carla_client(settings, 5, 200)
 
 
@@ -76,18 +77,18 @@ class NoCamera(_BasicTestBase):
 class TwoCameras(_BasicTestBase):
     def run(self):
         settings = CarlaSettings()
-        settings.add_camera(Camera('DefaultCamera'))
+        settings.add_sensor(Camera('DefaultCamera'))
         camera2 = Camera('Camera2')
         camera2.set(PostProcessing='Depth', CameraFOV=120)
         camera2.set_image_size(1924, 1028)
-        settings.add_camera(camera2)
+        settings.add_sensor(camera2)
         self.run_carla_client(settings, 3, 100)
 
 
 class SynchronousMode(_BasicTestBase):
     def run(self):
         settings = CarlaSettings(SynchronousMode=True)
-        settings.add_camera(Camera('DefaultCamera'))
+        settings.add_sensor(Camera('DefaultCamera'))
         self.run_carla_client(settings, 3, 200)
 
 
@@ -99,12 +100,12 @@ class GetAgentsInfo(_BasicTestBase):
             SendNonPlayerAgentsInfo=True,
             NumberOfVehicles=60,
             NumberOfPedestrians=90)
-        settings.add_camera(Camera('DefaultCamera'))
+        settings.add_sensor(Camera('DefaultCamera'))
         self.run_carla_client(settings, 3, 100)
 
 
 class LongEpisode(_BasicTestBase):
     def run(self):
         settings = CarlaSettings()
-        settings.add_camera(Camera('DefaultCamera'))
+        settings.add_sensor(Camera('DefaultCamera'))
         self.run_carla_client(settings, 1, 2000, use_ai_control=True)

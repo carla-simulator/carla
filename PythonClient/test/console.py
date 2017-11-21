@@ -16,7 +16,8 @@ import time
 
 
 from carla.client import CarlaClient
-from carla.settings import CarlaSettings, Camera
+from carla.sensor import Camera
+from carla.settings import CarlaSettings
 
 
 class _Control(object):
@@ -55,7 +56,7 @@ def get_default_carla_settings(args):
         NumberOfVehicles=20,
         NumberOfPedestrians=40,
         WeatherId=1)
-    settings.add_camera(Camera('Camera1'))
+    settings.add_sensor(Camera('Camera1'))
     return str(settings)
 
 
@@ -164,7 +165,7 @@ class CarlaClientConsole(cmd.Cmd):
         filename = '_images/console/camera_{:0>3d}/image_{:0>8d}.png'
         while not self.done:
             try:
-                measurements, images = self.client.read_measurements()
+                measurements, images = self.client.read_data()
                 if self.print_measurements:
                     print(measurements)
 

@@ -6,12 +6,11 @@
 
 """CARLA Client."""
 
-import os
 import struct
-import time
 
 from contextlib import contextmanager
 
+from . import sensor
 from . import tcp
 from . import util
 
@@ -19,6 +18,7 @@ try:
     from . import carla_server_pb2 as carla_protocol
 except ImportError:
     raise RuntimeError('cannot import "carla_server_pb2.py", run the protobuf compiler to generate this file')
+
 
 
 VehicleControl = carla_protocol.Control
@@ -97,11 +97,11 @@ class CarlaClient(object):
         finally:
             self._is_episode_requested = False
 
-    def read_measurements(self):
+    def read_data(self):
         """
-        Read measuremnts of current frame. The episode must be started. Return
-        the protobuf object with the measurements followed by the raw data with
-        the images.
+        Read data sent from the server this frame. The episode must be started.
+        Return the protobuf object with the measurements followed by the raw
+        data of the sensors.
         """
         # Read measurements.
         data = self._stream_client.read()
@@ -109,9 +109,9 @@ class CarlaClient(object):
             raise RuntimeError('failed to read data from server')
         pb_message = carla_protocol.Measurements()
         pb_message.ParseFromString(data)
-        # Read images.
-        images_raw_data = self._stream_client.read()
-        return pb_message, CarlaImage._parse_raw_data(images_raw_data)
+        # Read sensor data.
+        raw_sensor_data = self._stream_client.read()
+        return pb_message, self._parse_raw_sensor_data(raw_sensor_data)
 
     def send_control(self, *args, **kwargs):
         """Send vehicle control for the current frame."""
@@ -150,47 +150,22 @@ class CarlaClient(object):
         self._is_episode_requested = True
         return pb_message
 
-
-class CarlaImage(object):
     @staticmethod
-    def _parse_raw_data(raw_data):
+    def _parse_raw_sensor_data(raw_data):
+        # At this point the only sensors available are images, the raw_data is
+        # consists of images only.
+        image_types = ["None", "SceneFinal", "Depth", "SemanticSegmentation"]
+        gettype = lambda id: image_types[id] if len(image_types) > id else "Unknown"
         getval = lambda index: struct.unpack('<L', raw_data[index*4:index*4+4])[0]
-        images = []
+        sensors = []
         total_size = len(raw_data) / 4
         index = 0
         while index < total_size:
             width = getval(index)
             height = getval(index + 1)
-            image_type = getval(index + 2)
+            image_type = gettype(getval(index + 2))
             begin = index + 3
             end = begin + width * height
-            images.append(CarlaImage(width, height, image_type, raw_data[begin*4:end*4]))
+            sensors.append(sensor.Image(width, height, image_type, raw_data[begin*4:end*4]))
             index = end
-        return images
-
-    def __init__(self, width, height, image_type, raw_data):
-        assert len(raw_data) == 4 * width * height
-        self.width = width
-        self.height = height
-        self.image_type = image_type
-        self.raw = raw_data
-
-    def save_to_disk(self, filename):
-        """Save this image to disk (requires PIL installed)."""
-        try:
-            from PIL import Image
-        except ImportError:
-            raise RuntimeError('cannot import PIL, make sure pillow package is installed')
-
-        image = Image.frombytes(
-            mode='RGBA',
-            size=(self.width, self.height),
-            data=self.raw,
-            decoder_name='raw')
-        b, g, r, a = image.split()
-        image = Image.merge("RGB", (r, g, b))
-
-        folder = os.path.dirname(filename)
-        if not os.path.isdir(folder):
-            os.makedirs(folder)
-        image.save(filename)
+        return sensors
