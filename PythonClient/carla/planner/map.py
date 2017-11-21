@@ -7,6 +7,11 @@ import os
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
+"""
+Class used for operating the city map 
+
+"""
+
 try:
     import numpy as np
 except ImportError:
@@ -22,7 +27,6 @@ import math
 
 def string_to_node(string):
 	vec = string.split(',')
-
 	return (int(vec[0]),int(vec[1]))
 
 def string_to_floats(string):
@@ -30,12 +34,6 @@ def string_to_floats(string):
 
 	return (float(vec[0]),float(vec[1]),float(vec[2]))
 
-def angle_between(v1,v2):
-    return np.arccos(np.dot(v1,v2) / np.linalg.norm(v1) / np.linalg.norm(v2))
-def signal(v1,v2):
-    return np.cross(v1,v2) / np.linalg.norm(v1) / np.linalg.norm(v2)
-
-sldist = lambda c1, c2: math.sqrt((c2[0] - c1[0])**2 + (c2[1] - c1[1])**2)
 
 
 class CarlaMap(object):
@@ -54,10 +52,8 @@ class CarlaMap(object):
 			# The offset of the world from the zero coordinates ( The coordinate we consider zero)
 			self.worldoffset = string_to_floats(linewordloffset)
 
-			#WARNING: for now just considering the y angle
 			lineworldangles = file.readline()
 			self.angles =  string_to_floats(lineworldangles)
-			#self.worldrotation = np.array([[math.cos(math.radians(self.angles[0])),0,math.sin(math.radians(self.angles[0])) ],[0,1,0],[-math.sin(math.radians(self.angles[0])),0,math.cos(math.radians(self.angles[0]))]])
 
 			self.worldrotation = np.array([[math.cos(math.radians(self.angles[2])),-math.sin(math.radians(self.angles[2])) ,0.0],[math.sin(math.radians(self.angles[2])),math.cos(math.radians(self.angles[2])),0.0],[0.0,0.0,1.0]])
 
@@ -100,8 +96,11 @@ class CarlaMap(object):
 			img = Image.fromarray(self.map_image.astype(np.uint8))
 			img = img.resize((size[1],size[0]), Image.ANTIALIAS)
 			img.load()
-			return np.asarray( img, dtype="int32")
-		return self.map_image
+			return np.fliplr(np.asarray( img, dtype="int32"))
+		return np.fliplr(self.map_image)
+
+
+	# get the position on the map for a certain world position
 
 	def get_position_on_map(self,world):
 
@@ -123,6 +122,7 @@ class CarlaMap(object):
 
 		return pixel
 
+	# Get world position of a certain map position
 
 	def get_position_on_world(self,pixel):
 
@@ -138,6 +138,8 @@ class CarlaMap(object):
 		return world_vertex
 
 
+	# Get the lane orientation of a certain world position
+
 	def get_lane_orientation(self,world):
 
 		relative_location = []
@@ -145,16 +147,16 @@ class CarlaMap(object):
 		rotation = np.array([world[0],world[1],world[2]])
 		rotation = rotation.dot(self.worldrotation)
 
-		#print 'rot ', rotation
 		
 		relative_location.append(rotation[0] + self.worldoffset[0] - self.mapoffset[0])
 		relative_location.append(rotation[1] + self.worldoffset[1] - self.mapoffset[1])
 		relative_location.append(rotation[2] + self.worldoffset[2] - self.mapoffset[2])
-		#print 'trans ', relative_location
+
 
 		pixel.append(math.floor(relative_location[0]/float(self.pixel_density)))
 		pixel.append(math.floor(relative_location[1]/float(self.pixel_density)))
-		#print self.map_image.shape
+
+
 		ori = self.map_image[int(pixel[1]),int(pixel[0]),2]
 		ori = ((float(ori)/255.0) ) *2*math.pi 
 

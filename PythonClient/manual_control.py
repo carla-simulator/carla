@@ -147,7 +147,7 @@ class CarlaGame(object):
 
     def _on_new_episode(self):
         print('Requesting new episode...')
-        scene = self.client.request_new_episode(make_carla_settings())
+        scene = self.client.load_settings(make_carla_settings())
         number_of_player_starts = len(scene.player_start_spots)
         player_start = np.random.randint(number_of_player_starts)
         self.client.start_episode(player_start)
@@ -167,7 +167,6 @@ class CarlaGame(object):
         if self._timer.elapsed_seconds_since_lap() > 1.0:
             if self._city_name != None:
                 # Function to get car position on map
-
 
                 map_position = self._map.get_position_on_map([measurements.player_measurements.transform.location.x,\
                     measurements.player_measurements.transform.location.y,\
@@ -303,7 +302,7 @@ def main():
         '-m', '--city_name',
         metavar='M',
         default=None,
-        help='Plot the carla town map of city sent as argument (default: town01), needs to match city from server')
+        help='Plot the carla town map of city sent as argument (default: None), needs to match city from server, Options: Town01 or Town02')
     args = argparser.parse_args()
 
     log_level = logging.DEBUG if args.debug else logging.INFO
