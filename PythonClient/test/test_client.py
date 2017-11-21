@@ -58,7 +58,7 @@ def run_carla_client(args):
 
             client.start_episode(player_start)
 
-            use_ai_control = (random.random() < 0.5)
+            use_autopilot_control = (random.random() < 0.5)
             reverse = (random.random() < 0.2)
 
             for frame in range(0, frames_per_episode):
@@ -73,8 +73,8 @@ def run_carla_client(args):
                     images[0].save_to_disk(filename.format(episode, frame))
 
                 logging.debug('sending control...')
-                control = measurements.player_measurements.ai_control
-                if not use_ai_control:
+                control = measurements.player_measurements.autopilot_control
+                if not use_autopilot_control:
                     control.steer = random.uniform(-1.0, 1.0)
                     control.throttle = 0.3
                     control.hand_brake = False

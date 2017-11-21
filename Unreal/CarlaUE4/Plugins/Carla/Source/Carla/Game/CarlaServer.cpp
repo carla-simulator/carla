@@ -311,11 +311,11 @@ CarlaServer::ErrorCode CarlaServer::SendMeasurements(
   Set(player.collision_other, PlayerState.GetCollisionIntensityOther());
   Set(player.intersection_otherlane, PlayerState.GetOtherLaneIntersectionFactor());
   Set(player.intersection_offroad, PlayerState.GetOffRoadIntersectionFactor());
-  Set(player.ai_control.steer, PlayerState.GetSteer());
-  Set(player.ai_control.throttle, PlayerState.GetThrottle());
-  Set(player.ai_control.brake, PlayerState.GetBrake());
-  Set(player.ai_control.hand_brake, PlayerState.GetHandBrake());
-  Set(player.ai_control.reverse, PlayerState.GetCurrentGear() < 0);
+  Set(player.autopilot_control.steer, PlayerState.GetSteer());
+  Set(player.autopilot_control.throttle, PlayerState.GetThrottle());
+  Set(player.autopilot_control.brake, PlayerState.GetBrake());
+  Set(player.autopilot_control.hand_brake, PlayerState.GetHandBrake());
+  Set(player.autopilot_control.reverse, PlayerState.GetCurrentGear() < 0);
 
   TArray<carla_agent> Agents;
   if (bSendNonPlayerAgentsInfo) {

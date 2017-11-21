@@ -18,7 +18,7 @@ from carla.util import make_connection
 
 
 class _BasicTestBase(unit_tests.CarlaServerTest):
-    def run_carla_client(self, carla_settings, number_of_episodes, number_of_frames, use_ai_control=None):
+    def run_carla_client(self, carla_settings, number_of_episodes, number_of_frames, use_autopilot_control=None):
         with make_connection(CarlaClient, self.args.host, self.args.port, timeout=15) as client:
             logging.info('CarlaClient connected, running %d episodes', number_of_episodes)
             for _ in range(0, number_of_episodes):
@@ -35,8 +35,8 @@ class _BasicTestBase(unit_tests.CarlaServerTest):
                     number_of_player_starts,
                     number_of_frames)
                 client.start_episode(player_start)
-                if use_ai_control is None:
-                    use_ai_control = (random.random() < 0.5)
+                if use_autopilot_control is None:
+                    use_autopilot_control = (random.random() < 0.5)
                 reverse = (random.random() < 0.2)
                 for _ in range(0, number_of_frames):
                     logging.debug('reading measurements...')
@@ -47,8 +47,8 @@ class _BasicTestBase(unit_tests.CarlaServerTest):
                     if len(images) != len(carla_settings._cameras):
                         raise RuntimeError('received %d images, expected %d' % (len(images), len(carla_settings._cameras)))
                     logging.debug('sending control...')
-                    control = measurements.player_measurements.ai_control
-                    if not use_ai_control:
+                    control = measurements.player_measurements.autopilot_control
+                    if not use_autopilot_control:
                         control.steer = random.uniform(-1.0, 1.0)
                         control.throttle = 0.3
                         control.hand_brake = False
@@ -108,4 +108,4 @@ class LongEpisode(_BasicTestBase):
     def run(self):
         settings = CarlaSettings()
         settings.add_sensor(Camera('DefaultCamera'))
-        self.run_carla_client(settings, 1, 2000, use_ai_control=True)
+        self.run_carla_client(settings, 1, 2000, use_autopilot_control=True)

@@ -121,7 +121,7 @@ def run_carla_client(host, port, autopilot_on, save_images_to_disk, image_filena
                     # enable autopilot by sending back this control to the
                     # server. Here we will also add some noise to the steer.
 
-                    control = measurements.player_measurements.ai_control
+                    control = measurements.player_measurements.autopilot_control
                     control.steer += random.uniform(-0.1, 0.1)
                     client.send_control(control)
 
