@@ -33,7 +33,7 @@ collision_pedestrians      | float     | Collision intensity with pedestrians.
 collision_other            | float     | General collision intensity (everything else but pedestrians and vehicles).
 intersection_otherlane     | float     | Percentage of the car invading other lanes.
 intersection_offroad       | float     | Percentage of the car off-road.
-ai_control                 | Control   | Vehicle's AI control that would apply this frame.
+autopilot_control          | Control   | Vehicle's autopilot control that would apply this frame.
 
 ###### Transform
 
@@ -67,10 +67,10 @@ rectangle) against the map image of the city. These images are generated in the
 editor and serialized for runtime use. You can find them too in the release
 package under the folder "RoadMaps".
 
-###### AI control
+###### Autopilot control
 
-The `ai_control` measurement contains the control values that the in-game AI
-would apply if it were controlling the vehicle.
+The `autopilot_control` measurement contains the control values that the in-game
+autopilot system would apply as if it were controlling the vehicle.
 
 This is the same structure used to send the vehicle control to the server.
 
