@@ -49,7 +49,7 @@ from carla.client import make_carla_client, VehicleControl
 from carla.settings import CarlaSettings, Camera
 from carla.tcp import TCPConnectionError
 from carla.util import print_over_same_line
-
+from carla.planner.map import CarlaMap
 
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 600
@@ -104,14 +104,20 @@ class Timer(object):
 
 
 class CarlaGame(object):
-    def __init__(self, carla_client):
+    def __init__(self, carla_client,city_name):
         self.client = carla_client
         self._timer = None
         self._display = None
         self._main_image = None
         self._mini_view_image1 = None
         self._mini_view_image2 = None
+        self._map_view = None
         self._is_on_reverse = False
+        self._city_name = city_name
+        if city_name != None:
+            self._map = CarlaMap(city_name)
+        else:
+            self._map = None
 
     def execute(self):
         pygame.init()
@@ -127,9 +133,15 @@ class CarlaGame(object):
             pygame.quit()
 
     def _initialize_game(self):
-        self._display = pygame.display.set_mode(
-            (WINDOW_WIDTH, WINDOW_HEIGHT),
-            pygame.HWSURFACE | pygame.DOUBLEBUF)
+        if self._city_name !=None:
+            self._display = pygame.display.set_mode(
+                (WINDOW_WIDTH*2, WINDOW_HEIGHT),
+                pygame.HWSURFACE | pygame.DOUBLEBUF)
+        else:
+            self._display = pygame.display.set_mode(
+                (WINDOW_WIDTH, WINDOW_HEIGHT),
+                pygame.HWSURFACE | pygame.DOUBLEBUF)
+
         logging.debug('pygame started')
         self._on_new_episode()
 
@@ -154,7 +166,26 @@ class CarlaGame(object):
 
         # Print measurements every second.
         if self._timer.elapsed_seconds_since_lap() > 1.0:
-            self._print_player_measurements(measurements.player_measurements)
+            if self._city_name != None:
+                # Function to get car position on map
+
+                map_position = self._map.get_position_on_map([measurements.player_measurements.transform.location.x,\
+                    measurements.player_measurements.transform.location.y,\
+                    measurements.player_measurements.transform.location.z])
+                # Function to get orientation of the road car is in
+                lane_orientation = self._map.get_lane_orientation([measurements.player_measurements.transform.location.x,\
+                    measurements.player_measurements.transform.location.y,\
+                    measurements.player_measurements.transform.location.z])
+
+                self._print_player_measurements_map(measurements.player_measurements,map_position,lane_orientation)
+            else:
+                self._print_player_measurements(measurements.player_measurements)
+
+            #Plot position on the map as well
+            if self._city_name != None:
+                self._map.draw_position_on_map(measurements.player_measurements.transform.location,[255,0,0,255])
+                self._map_view = self._map.get_map([WINDOW_WIDTH,WINDOW_HEIGHT])
+
             self._timer.lap()
 
         control = self._get_keyboard_control(pygame.key.get_pressed())
@@ -187,7 +218,27 @@ class CarlaGame(object):
         control.reverse = self._is_on_reverse
         return control
 
+
+    def _print_player_measurements_map(self, player_measurements,map_position,lane_orientation):
+        message = 'Step {step} ({fps:.1f} FPS): '
+        message += 'Map Position ({map_x:.1f},{map_y:.1f}) Lane Orientation ({ori_x:.1f},{ori_y:.1f})  '
+        message += '{speed:.2f} km/h, '
+        message += '{other_lane:.0f}% other lane, {offroad:.0f}% off-road'
+        message = message.format(
+            map_x=map_position[0],
+            map_y=map_position[1],
+            ori_x=lane_orientation[0],
+            ori_y=lane_orientation[1],
+            step=self._timer.step,
+            fps=self._timer.ticks_per_second(),
+            speed=player_measurements.forward_speed,
+            other_lane=100 * player_measurements.intersection_otherlane,
+            offroad=100 * player_measurements.intersection_offroad)
+        print_over_same_line(message)
+
+
     def _print_player_measurements(self, player_measurements):
+
         message = 'Step {step} ({fps:.1f} FPS): '
         message += '{speed:.2f} km/h, '
         message += '{other_lane:.0f}% other lane, {offroad:.0f}% off-road'
@@ -218,6 +269,15 @@ class CarlaGame(object):
             surface = pygame.surfarray.make_surface(array)
             self._display.blit(surface, (2 * gap_x + MINI_WINDOW_WIDTH, mini_image_y))
 
+        
+        if self._map_view is not None:
+            array =self._map_view
+            array = array[:, :, :3]
+            surface = pygame.surfarray.make_surface(array)
+            self._display.blit(surface, ( WINDOW_WIDTH,0))
+        
+
+
         pygame.display.flip()
 
 
@@ -239,6 +299,11 @@ def main():
         default=2000,
         type=int,
         help='TCP port to listen to (default: 2000)')
+    argparser.add_argument(
+        '-m', '--city_name',
+        metavar='M',
+        default=None,
+        help='Plot the carla town map of city sent as argument (default: None), needs to match city from server, Options: Town01 or Town02')
     args = argparser.parse_args()
 
     log_level = logging.DEBUG if args.debug else logging.INFO
@@ -252,7 +317,7 @@ def main():
         try:
 
             with make_carla_client(args.host, args.port) as client:
-                game = CarlaGame(client)
+                game = CarlaGame(client,args.city_name)
                 game.execute()
                 break
 
