@@ -20,7 +20,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import carla
 
 from carla.client import CarlaClient
-from carla.settings import CarlaSettings, Camera
+from carla.sensor import Camera
+from carla.settings import CarlaSettings
 from carla.tcp import TCPClient
 from carla.util import make_connection
 
@@ -40,7 +41,7 @@ def run_carla_client(args):
             settings.randomize_seeds()
             camera = Camera('DefaultCamera')
             camera.set_image_size(300, 200) # Do not change this, hard-coded in test.
-            settings.add_camera(camera)
+            settings.add_sensor(camera)
 
             logging.debug('sending CarlaSettings:\n%s', settings)
             logging.info('new episode requested')
@@ -62,7 +63,7 @@ def run_carla_client(args):
 
             for frame in range(0, frames_per_episode):
                 logging.debug('reading measurements...')
-                measurements, images = client.read_measurements()
+                measurements, images = client.read_data()
 
                 logging.debug('received data of %d agents', len(measurements.non_player_agents))
                 assert len(images) == 1

@@ -45,11 +45,12 @@ except ImportError:
     raise RuntimeError('cannot import numpy, make sure numpy package is installed')
 
 from carla import image_converter
+from carla import sensor
 from carla.client import make_carla_client, VehicleControl
-from carla.settings import CarlaSettings, Camera
+from carla.planner.map import CarlaMap
+from carla.settings import CarlaSettings
 from carla.tcp import TCPConnectionError
 from carla.util import print_over_same_line
-from carla.planner.map import CarlaMap
 
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 600
@@ -65,21 +66,21 @@ def make_carla_settings():
         NumberOfPedestrians=30,
         WeatherId=random.choice([1, 3, 7, 8, 14]))
     settings.randomize_seeds()
-    camera0 = Camera('CameraRGB')
+    camera0 = sensor.Camera('CameraRGB')
     camera0.set_image_size(WINDOW_WIDTH, WINDOW_HEIGHT)
     camera0.set_position(200, 0, 140)
     camera0.set_rotation(0.0, 0.0, 0.0)
-    settings.add_camera(camera0)
-    camera1 = Camera('CameraDepth', PostProcessing='Depth')
+    settings.add_sensor(camera0)
+    camera1 = sensor.Camera('CameraDepth', PostProcessing='Depth')
     camera1.set_image_size(MINI_WINDOW_WIDTH, MINI_WINDOW_HEIGHT)
     camera1.set_position(200, 0, 140)
     camera1.set_rotation(0.0, 0.0, 0.0)
-    settings.add_camera(camera1)
-    camera2 = Camera('CameraSemSeg', PostProcessing='SemanticSegmentation')
+    settings.add_sensor(camera1)
+    camera2 = sensor.Camera('CameraSemSeg', PostProcessing='SemanticSegmentation')
     camera2.set_image_size(MINI_WINDOW_WIDTH, MINI_WINDOW_HEIGHT)
     camera2.set_position(200, 0, 140)
     camera2.set_rotation(0.0, 0.0, 0.0)
-    settings.add_camera(camera2)
+    settings.add_sensor(camera2)
     return settings
 
 
@@ -104,7 +105,7 @@ class Timer(object):
 
 
 class CarlaGame(object):
-    def __init__(self, carla_client,city_name):
+    def __init__(self, carla_client, city_name=None):
         self.client = carla_client
         self._timer = None
         self._display = None
@@ -114,10 +115,7 @@ class CarlaGame(object):
         self._map_view = None
         self._is_on_reverse = False
         self._city_name = city_name
-        if city_name != None:
-            self._map = CarlaMap(city_name)
-        else:
-            self._map = None
+        self._map = CarlaMap(city_name) if city_name is not None else None
 
     def execute(self):
         pygame.init()
@@ -133,9 +131,9 @@ class CarlaGame(object):
             pygame.quit()
 
     def _initialize_game(self):
-        if self._city_name !=None:
+        if self._city_name is not None:
             self._display = pygame.display.set_mode(
-                (WINDOW_WIDTH*2, WINDOW_HEIGHT),
+                (WINDOW_WIDTH * 2, WINDOW_HEIGHT),
                 pygame.HWSURFACE | pygame.DOUBLEBUF)
         else:
             self._display = pygame.display.set_mode(
@@ -146,7 +144,6 @@ class CarlaGame(object):
         self._on_new_episode()
 
     def _on_new_episode(self):
-        
         scene = self.client.load_settings(make_carla_settings())
         number_of_player_starts = len(scene.player_start_spots)
         player_start = np.random.randint(number_of_player_starts)
@@ -158,7 +155,7 @@ class CarlaGame(object):
     def _on_loop(self):
         self._timer.tick()
 
-        measurements, images = self.client.read_measurements()
+        measurements, images = self.client.read_data()
 
         self._main_image = images[0]
         self._mini_view_image1 = images[1]
@@ -166,25 +163,31 @@ class CarlaGame(object):
 
         # Print measurements every second.
         if self._timer.elapsed_seconds_since_lap() > 1.0:
-            if self._city_name != None:
-                # Function to get car position on map
-
-                map_position = self._map.get_position_on_map([measurements.player_measurements.transform.location.x,\
-                    measurements.player_measurements.transform.location.y,\
+            if self._city_name is not None:
+                # Function to get car position on map.
+                map_position = self._map.get_position_on_map([
+                    measurements.player_measurements.transform.location.x,
+                    measurements.player_measurements.transform.location.y,
                     measurements.player_measurements.transform.location.z])
-                # Function to get orientation of the road car is in
-                lane_orientation = self._map.get_lane_orientation([measurements.player_measurements.transform.location.x,\
-                    measurements.player_measurements.transform.location.y,\
+                # Function to get orientation of the road car is in.
+                lane_orientation = self._map.get_lane_orientation([
+                    measurements.player_measurements.transform.location.x,
+                    measurements.player_measurements.transform.location.y,
                     measurements.player_measurements.transform.location.z])
 
-                self._print_player_measurements_map(measurements.player_measurements,map_position,lane_orientation)
+                self._print_player_measurements_map(
+                    measurements.player_measurements,
+                    map_position,
+                    lane_orientation)
             else:
                 self._print_player_measurements(measurements.player_measurements)
 
-            #Plot position on the map as well
-            if self._city_name != None:
-                self._map.draw_position_on_map(measurements.player_measurements.transform.location,[255,0,0,255])
-                self._map_view = self._map.get_map([WINDOW_WIDTH,WINDOW_HEIGHT])
+            # Plot position on the map as well.
+            if self._city_name is not None:
+                self._map.draw_position_on_map(
+                    measurements.player_measurements.transform.location,
+                    [255, 0, 0, 255])
+                self._map_view = self._map.get_map([WINDOW_WIDTH, WINDOW_HEIGHT])
 
             self._timer.lap()
 
@@ -218,8 +221,11 @@ class CarlaGame(object):
         control.reverse = self._is_on_reverse
         return control
 
-
-    def _print_player_measurements_map(self, player_measurements,map_position,lane_orientation):
+    def _print_player_measurements_map(
+            self,
+            player_measurements,
+            map_position,
+            lane_orientation):
         message = 'Step {step} ({fps:.1f} FPS): '
         message += 'Map Position ({map_x:.1f},{map_y:.1f}) Lane Orientation ({ori_x:.1f},{ori_y:.1f})  '
         message += '{speed:.2f} km/h, '
@@ -236,9 +242,7 @@ class CarlaGame(object):
             offroad=100 * player_measurements.intersection_offroad)
         print_over_same_line(message)
 
-
     def _print_player_measurements(self, player_measurements):
-
         message = 'Step {step} ({fps:.1f} FPS): '
         message += '{speed:.2f} km/h, '
         message += '{other_lane:.0f}% other lane, {offroad:.0f}% off-road'
@@ -265,24 +269,24 @@ class CarlaGame(object):
             self._display.blit(surface, (gap_x, mini_image_y))
 
         if self._mini_view_image2 is not None:
-            array = image_converter.labels_to_cityscapes_palette(self._mini_view_image2)
+            array = image_converter.labels_to_cityscapes_palette(
+                self._mini_view_image2)
             surface = pygame.surfarray.make_surface(array)
-            self._display.blit(surface, (2 * gap_x + MINI_WINDOW_WIDTH, mini_image_y))
+            self._display.blit(
+                surface, (2 * gap_x + MINI_WINDOW_WIDTH, mini_image_y))
 
-        
         if self._map_view is not None:
-            array =self._map_view
+            array = self._map_view
             array = array[:, :, :3]
             surface = pygame.surfarray.make_surface(array)
-            self._display.blit(surface, ( WINDOW_WIDTH,0))
-        
-
+            self._display.blit(surface, (WINDOW_WIDTH, 0))
 
         pygame.display.flip()
 
 
 def main():
-    argparser = argparse.ArgumentParser(description='CARLA Manual Control Client')
+    argparser = argparse.ArgumentParser(
+        description='CARLA Manual Control Client')
     argparser.add_argument(
         '-v', '--verbose',
         action='store_true',
@@ -317,7 +321,7 @@ def main():
         try:
 
             with make_carla_client(args.host, args.port) as client:
-                game = CarlaGame(client,args.city_name)
+                game = CarlaGame(client, args.city_name)
                 game.execute()
                 break
 

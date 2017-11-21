@@ -9,55 +9,21 @@
 import io
 import random
 import sys
-import sys
-is_py2 = sys.version[0] == '2'
-if is_py2:
+
+
+if sys.version_info >= (3, 0):
+
+    from configparser import ConfigParser
+
+else:
 
     from ConfigParser import RawConfigParser as ConfigParser
 
-else:
-    
-    from configparser import ConfigParser
+
+from . import sensor as carla_sensor
 
 
 MAX_NUMBER_OF_WEATHER_IDS = 14
-
-
-class Camera(object):
-    """Camera description. To be added to CarlaSettings."""
-    def __init__(self, name, **kwargs):
-        self.CameraName = name
-        self.PostProcessing = 'SceneFinal'
-        self.ImageSizeX = 800
-        self.ImageSizeY = 600
-        self.CameraFOV = 90
-        self.CameraPositionX = 140
-        self.CameraPositionY = 0
-        self.CameraPositionZ = 140
-        self.CameraRotationPitch = 0
-        self.CameraRotationRoll = 0
-        self.CameraRotationYaw = 0
-        self.set(**kwargs)
-
-    def set(self, **kwargs):
-        for key, value in kwargs.items():
-            if not hasattr(self, key):
-                raise ValueError('CarlaSettings.Camera: no key named %r' % key)
-            setattr(self, key, value)
-
-    def set_image_size(self, pixels_x, pixels_y):
-        self.ImageSizeX = pixels_x
-        self.ImageSizeY = pixels_y
-
-    def set_position(self, x, y, z):
-        self.CameraPositionX = x
-        self.CameraPositionY = y
-        self.CameraPositionZ = z
-
-    def set_rotation(self, pitch, roll, yaw):
-        self.CameraRotationPitch = pitch
-        self.CameraRotationRoll = roll
-        self.CameraRotationYaw = yaw
 
 
 class CarlaSettings(object):
@@ -95,10 +61,11 @@ class CarlaSettings(object):
     def randomize_weather(self):
         self.WeatherId = random.randint(0, MAX_NUMBER_OF_WEATHER_IDS)
 
-    def add_camera(self, camera):
-        if not isinstance(camera, Camera):
-            raise ValueError('Can only add instances of carla_settings.Camera')
-        self._cameras.append(camera)
+    def add_sensor(self, sensor):
+        if isinstance(sensor, carla_sensor.Camera):
+            self._cameras.append(sensor)
+        else:
+            raise ValueError('Sensor not supported')
 
     def __str__(self):
         ini = ConfigParser()
