@@ -61,7 +61,7 @@ class CarlaMap(object):
 
 			self.worldrotation = np.array([[math.cos(math.radians(self.angles[2])),-math.sin(math.radians(self.angles[2])) ,0.0],[math.sin(math.radians(self.angles[2])),math.cos(math.radians(self.angles[2])),0.0],[0.0,0.0,1.0]])
 
-			# Ignore for now
+			# Ignore for now, these are offsets for map coordinates and scale ( Not used)
 			lineworscale = file.readline()
 			linemapoffset = file.readline()
 
@@ -158,9 +158,6 @@ class CarlaMap(object):
 		ori = self.map_image[int(pixel[1]),int(pixel[0]),2]
 		ori = ((float(ori)/255.0) ) *2*math.pi 
 
-		#print self.map_image[int(pixel[1]),int(pixel[0]),:]
-		#print ori
-		#print (math.cos(ori),math.sin(ori))
-		#print exit()
+
 
 		return (-math.cos(ori),-math.sin(ori))
