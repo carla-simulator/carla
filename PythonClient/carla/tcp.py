@@ -9,7 +9,7 @@
 import logging
 import socket
 import struct
-
+import time
 
 class TCPConnectionError(Exception):
     pass
@@ -24,12 +24,20 @@ class TCPClient(object):
         self._logprefix = '(%s:%s) ' % (self._host, self._port)
 
     def connect(self):
-        try:
-            self._socket = socket.create_connection(address=(self._host, self._port), timeout=self._timeout)
-            self._socket.settimeout(self._timeout)
-            logging.debug(self._logprefix + 'connected')
-        except Exception as exception:
-            self._reraise_exception_as_tcp_error('failed to connect', exception)
+
+        for attempt in range(10):
+            try:
+                self._socket = socket.create_connection(address=(self._host, self._port), timeout=self._timeout)
+                self._socket.settimeout(self._timeout)
+                logging.debug(self._logprefix + 'connected')
+            except Exception as exception:
+                logging.debug('attempt number %d',(attempt))
+                time.sleep(1)
+                continue
+            else:           
+                return
+
+        self._reraise_exception_as_tcp_error('failed to connect', exception)
 
     def disconnect(self):
         if self._socket is not None:
