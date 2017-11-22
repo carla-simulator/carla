@@ -88,16 +88,15 @@ class Image(SensorData):
         Lazy initialization for data property, stores converted data in its
         default format.
         """
-        from . import image_converter
-
         if self._converted_data is None:
+            from . import image_converter
+
             if self.type == 'Depth':
                 self._converted_data = image_converter.depth_to_array(self)
             elif self.type == 'SemanticSegmentation':
                 self._converted_data = image_converter.labels_to_array(self)
             else:
                 self._converted_data = image_converter.to_rgb_array(self)
-
         return self._converted_data
 
     def save_to_disk(self, filename):
