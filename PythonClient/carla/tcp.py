@@ -24,19 +24,16 @@ class TCPClient(object):
         self._logprefix = '(%s:%s) ' % (self._host, self._port)
 
     def connect(self):
-
         for attempt in range(10):
             try:
                 self._socket = socket.create_connection(address=(self._host, self._port), timeout=self._timeout)
                 self._socket.settimeout(self._timeout)
                 logging.debug(self._logprefix + 'connected')
+                return
             except Exception as exception:
-                logging.debug('attempt number %d',(attempt))
+                logging.debug(self._logprefix + 'connection attempt %d: %s', attempt, exception)
                 time.sleep(1)
                 continue
-            else:           
-                return
-
         self._reraise_exception_as_tcp_error('failed to connect', exception)
 
     def disconnect(self):

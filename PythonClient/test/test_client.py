@@ -20,7 +20,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import carla
 
 from carla.client import CarlaClient
-from carla.sensor import Camera
+from carla.sensor import Camera, Image
 from carla.settings import CarlaSettings
 from carla.tcp import TCPClient
 from carla.util import make_connection
@@ -63,7 +63,8 @@ def run_carla_client(args):
 
             for frame in range(0, frames_per_episode):
                 logging.debug('reading measurements...')
-                measurements, images = client.read_data()
+                measurements, sensor_data = client.read_data()
+                images = [x for x in sensor_data.values() if isinstance(x, Image)]
 
                 logging.debug('received data of %d agents', len(measurements.non_player_agents))
                 assert len(images) == 1

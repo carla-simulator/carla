@@ -155,11 +155,11 @@ class CarlaGame(object):
     def _on_loop(self):
         self._timer.tick()
 
-        measurements, images = self.client.read_data()
+        measurements, sensor_data = self.client.read_data()
 
-        self._main_image = images[0]
-        self._mini_view_image1 = images[1]
-        self._mini_view_image2 = images[2]
+        self._main_image = sensor_data['CameraRGB']
+        self._mini_view_image1 = sensor_data['CameraDepth']
+        self._mini_view_image2 = sensor_data['CameraSemSeg']
 
         # Print measurements every second.
         if self._timer.elapsed_seconds_since_lap() > 1.0:
@@ -260,18 +260,18 @@ class CarlaGame(object):
 
         if self._main_image is not None:
             array = image_converter.to_rgb_array(self._main_image)
-            surface = pygame.surfarray.make_surface(array)
+            surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
             self._display.blit(surface, (0, 0))
 
         if self._mini_view_image1 is not None:
             array = image_converter.depth_to_grayscale(self._mini_view_image1)
-            surface = pygame.surfarray.make_surface(array)
+            surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
             self._display.blit(surface, (gap_x, mini_image_y))
 
         if self._mini_view_image2 is not None:
             array = image_converter.labels_to_cityscapes_palette(
                 self._mini_view_image2)
-            surface = pygame.surfarray.make_surface(array)
+            surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
             self._display.blit(
                 surface, (2 * gap_x + MINI_WINDOW_WIDTH, mini_image_y))
 

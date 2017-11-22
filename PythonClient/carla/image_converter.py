@@ -30,9 +30,8 @@ def to_bgra_array(image):
     """Convert a CARLA raw image to a BGRA numpy array."""
     if not isinstance(image, sensor.Image):
         raise ValueError("Argument must be a carla.sensor.Image")
-    array = numpy.frombuffer(image.raw, dtype=numpy.dtype("uint8"))
+    array = numpy.frombuffer(image.raw_data, dtype=numpy.dtype("uint8"))
     array = numpy.reshape(array, (image.height, image.width, 4))
-    array = numpy.transpose(array, (1, 0, 2))
     return array
 
 
@@ -45,9 +44,17 @@ def to_rgb_array(image):
     return array
 
 
+def labels_to_array(image):
+    """
+    Convert an image containing CARLA semantic segmentation labels to a 2D array
+    containing the label of each pixel.
+    """
+    return to_bgra_array(image)[:, :, 2]
+
+
 def labels_to_cityscapes_palette(image):
     """
-    Converts an image containing CARLA semantic segmentation labels to
+    Convert an image containing CARLA semantic segmentation labels to
     Cityscapes palette.
     """
     classes = {
@@ -65,24 +72,32 @@ def labels_to_cityscapes_palette(image):
         11: [102, 102, 156], # Walls
         12: [220, 220, 0]    # TrafficSigns
     }
-    array = to_bgra_array(image)
-    array = array[:, :, 2]
+    array = labels_to_array(image)
     result = numpy.zeros((array.shape[0], array.shape[1], 3))
-    for (key, value) in classes.items():
+    for key, value in classes.items():
         result[numpy.where(array == key)] = value
     return result
 
 
-def depth_to_grayscale(image):
+def depth_to_array(image):
     """
-    Converts an image containing CARLA encoded depth-map to logarithmic
-    grayscale.
+    Convert an image containing CARLA encoded depth-map to a 2D array containing
+    the depth value of each pixel normalized between [0.0, 1.0].
     """
     array = to_bgra_array(image)
     array = array.astype(numpy.float32)
     # Apply (R + G * 256 + B * 256 * 256) / (256 * 256 * 256 - 1).
-    grayscale = numpy.dot(array[:, :,:3], [256.0 * 256.0, 256.0, 1.0])
+    grayscale = numpy.dot(array[:, :, :3], [256.0 * 256.0, 256.0, 1.0])
     grayscale /= (256.0 * 256.0 * 256.0 - 1.0)
+    return grayscale
+
+
+def depth_to_grayscale(image):
+    """
+    Convert an image containing CARLA encoded depth-map to logarithmic
+    grayscale.
+    """
+    grayscale = depth_to_array(image)
     # Convert to logarithmic depth.
     logdepth = numpy.ones(grayscale.shape) + (numpy.log(grayscale) / 5.70378)
     logdepth = numpy.clip(logdepth, 0.0, 1.0)

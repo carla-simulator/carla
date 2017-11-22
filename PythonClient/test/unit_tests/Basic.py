@@ -12,7 +12,7 @@ import unit_tests
 import carla
 
 from carla.client import CarlaClient
-from carla.sensor import Camera
+from carla.sensor import Camera, Image
 from carla.settings import CarlaSettings
 from carla.util import make_connection
 
@@ -40,7 +40,8 @@ class _BasicTestBase(unit_tests.CarlaServerTest):
                 reverse = (random.random() < 0.2)
                 for _ in range(0, number_of_frames):
                     logging.debug('reading measurements...')
-                    measurements, images = client.read_data()
+                    measurements, sensor_data = client.read_data()
+                    images = [x for x in sensor_data.values() if isinstance(x, Image)]
                     number_of_agents = len(measurements.non_player_agents)
                     logging.debug('received data of %d agents', number_of_agents)
                     logging.debug('received %d images', len(images))
