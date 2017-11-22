@@ -114,3 +114,16 @@ class CarlaSettings(object):
 
         ini.write(text)
         return text.getvalue().replace(' = ', '=')
+
+
+def _get_sensor_names(settings):
+    if isinstance(settings, CarlaSettings):
+        return [camera.CameraName for camera in settings._cameras]
+    ini = ConfigParser()
+    ini.read(str(settings))
+    section_name = 'CARLA/SceneCapture'
+    option_name = 'Cameras'
+    if ini.has_section(section_name) and ini.has_option(section_name, option_name):
+        cameras = ini['CARLA/SceneCapture']['Cameras']
+        return cameras.split(',')
+    return []

@@ -16,7 +16,6 @@ import random
 import sys
 import time
 
-from carla import sensor
 from carla.client import make_carla_client
 from carla.sensor import Camera
 from carla.settings import CarlaSettings
@@ -24,7 +23,7 @@ from carla.tcp import TCPConnectionError
 from carla.util import print_over_same_line
 
 
-def run_carla_client(host, port, autopilot_on, save_images_to_disk, image_filename_format, settings):
+def run_carla_client(host, port, autopilot_on, save_images_to_disk, image_filename_format, settings_filepath):
     # Here we will run 3 episodes with 300 frames each.
     number_of_episodes = 3
     frames_per_episode = 300
@@ -40,10 +39,11 @@ def run_carla_client(host, port, autopilot_on, save_images_to_disk, image_filena
         for episode in range(0, number_of_episodes):
             # Start a new episode.
 
-            if settings is None:
-                # Create a CarlaSettings object. This object is a handy wrapper
-                # around the CarlaSettings.ini file. Here we set the
-                # configuration we want for the new episode.
+            if settings_filepath is None:
+
+                # Create a CarlaSettings object. This object is a wrapper around
+                # the CarlaSettings.ini file. Here we set the configuration we
+                # want for the new episode.
                 settings = CarlaSettings()
                 settings.set(
                     SynchronousMode=True,
@@ -70,9 +70,15 @@ def run_carla_client(host, port, autopilot_on, save_images_to_disk, image_filena
                 camera1.set_position(30, 0, 130)
                 settings.add_sensor(camera1)
 
-            # Now we load the settings. The server replies with a scene
-            # description containing the available start spots for the player.
-            # Here instead of a CarlaSettings object we can also provide a
+            else:
+
+                # Alternatively, we can load these settings from a file.
+                with open(settings_filepath, 'r') as fp:
+                    settings = fp.read()
+
+            # Now we load these settings into the server. The server replies
+            # with a scene description containing the available start spots for
+            # the player. Here we can provide a CarlaSettings object or a
             # CarlaSettings.ini file as string.
             scene = client.load_settings(settings)
 
@@ -80,9 +86,9 @@ def run_carla_client(host, port, autopilot_on, save_images_to_disk, image_filena
             number_of_player_starts = len(scene.player_start_spots)
             player_start = random.randint(0, max(0, number_of_player_starts - 1))
 
-            # Notify the server that we want to start the episode at
-            # `player_start`. This function blocks until the server is ready to
-            # start the episode.
+            # Notify the server that we want to start the episode at the
+            # player_start index. This function blocks until the server is ready
+            # to start the episode.
             print('Starting new episode...')
             client.start_episode(player_start)
 
@@ -92,14 +98,13 @@ def run_carla_client(host, port, autopilot_on, save_images_to_disk, image_filena
                 # Read the data produced by the server this frame.
                 measurements, sensor_data = client.read_data()
 
-                # Print some of the measurements we received.
+                # Print some information about the player.
                 print_player_measurements(measurements.player_measurements)
 
                 # Save the images to disk if requested.
                 if save_images_to_disk:
-                    images = [x for x in sensor_data if isinstance(x, sensor.Image)]
-                    for n, image in enumerate(images):
-                        image.save_to_disk(image_filename_format.format(episode, n, frame))
+                    for name, image in sensor_data.items():
+                        image.save_to_disk(image_filename_format.format(episode, name, frame))
 
                 # Now we have to send the instructions to control the vehicle.
                 # If we are in synchronous mode the server will pause the
@@ -117,16 +122,14 @@ def run_carla_client(host, port, autopilot_on, save_images_to_disk, image_filena
                 else:
 
                     # Together with the measurements, the server has sent the
-                    # control that the in-game AI would do this frame. We can
-                    # enable autopilot by sending back this control to the
-                    # server. Here we will also add some noise to the steer.
+                    # control that the in-game autopilot would do this frame. We
+                    # can enable autopilot by sending back this control to the
+                    # server. We can modify it if wanted, here for instance we
+                    # will add some noise to the steer.
 
                     control = measurements.player_measurements.autopilot_control
                     control.steer += random.uniform(-0.1, 0.1)
                     client.send_control(control)
-
-    print('Done.')
-    return True
 
 
 def print_player_measurements(player_measurements):
@@ -182,26 +185,19 @@ def main():
 
     logging.info('listening to server %s:%s', args.host, args.port)
 
-    if args.carla_settings is not None:
-        logging.info('reading CarlaSettings from %r', args.carla_settings)
-        with open(args.carla_settings, 'r') as fp:
-            settings = fp.read()
-    else:
-        settings = None
-
     while True:
         try:
 
-            end = run_carla_client(
+            run_carla_client(
                 host=args.host,
                 port=args.port,
                 autopilot_on=args.autopilot,
                 save_images_to_disk=args.images_to_disk,
-                image_filename_format='_images/episode_{:0>3d}/camera_{:0>3d}/image_{:0>5d}.png',
-                settings=settings)
+                image_filename_format='_images/episode_{:0>3d}/{:s}/image_{:0>5d}.png',
+                settings_filepath=args.carla_settings)
 
-            if end:
-                return
+            print('Done.')
+            return
 
         except TCPConnectionError as error:
             logging.error(error)

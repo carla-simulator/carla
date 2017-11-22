@@ -16,7 +16,7 @@ import time
 
 
 from carla.client import CarlaClient
-from carla.sensor import Camera
+from carla.sensor import Camera, Image
 from carla.settings import CarlaSettings
 
 
@@ -165,11 +165,12 @@ class CarlaClientConsole(cmd.Cmd):
         filename = '_images/console/camera_{:0>3d}/image_{:0>8d}.png'
         while not self.done:
             try:
-                measurements, images = self.client.read_data()
+                measurements, sensor_data = self.client.read_data()
                 if self.print_measurements:
                     print(measurements)
 
                 if self.args.images_to_disk:
+                    images = [x for x in sensor_data.values() if isinstance(x, Image)]
                     for n, image in enumerate(images):
                         path = filename.format(n, measurements.game_timestamp)
                         image.save_to_disk(path)

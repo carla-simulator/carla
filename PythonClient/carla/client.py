@@ -11,6 +11,7 @@ import struct
 from contextlib import contextmanager
 
 from . import sensor
+from . import settings
 from . import tcp
 from . import util
 
@@ -38,6 +39,7 @@ class CarlaClient(object):
         self._current_settings = None
         # Controls the state, if an episode is already started.
         self._is_episode_requested = False
+        self._sensor_names = []
 
     def connect(self):
         self._world_client.connect()
@@ -147,17 +149,22 @@ class CarlaClient(object):
         pb_message.ParseFromString(data)
         if len(pb_message.player_start_spots) < 1:
             raise RuntimeError("received 0 player start spots")
+        self._sensor_names = settings._get_sensor_names(carla_settings)
         self._is_episode_requested = True
         return pb_message
 
+    def _parse_raw_sensor_data(self, raw_data):
+        return dict((name, data) for name, data in zip(
+            self._sensor_names,
+            self._iterate_sensor_data(raw_data)))
+
     @staticmethod
-    def _parse_raw_sensor_data(raw_data):
-        # At this point the only sensors available are images, the raw_data is
+    def _iterate_sensor_data(raw_data):
+        # At this point the only sensors available are images, the raw_data
         # consists of images only.
-        image_types = ["None", "SceneFinal", "Depth", "SemanticSegmentation"]
-        gettype = lambda id: image_types[id] if len(image_types) > id else "Unknown"
+        image_types = ['None', 'SceneFinal', 'Depth', 'SemanticSegmentation']
+        gettype = lambda id: image_types[id] if len(image_types) > id else 'Unknown'
         getval = lambda index: struct.unpack('<L', raw_data[index*4:index*4+4])[0]
-        sensors = []
         total_size = len(raw_data) / 4
         index = 0
         while index < total_size:
@@ -166,6 +173,5 @@ class CarlaClient(object):
             image_type = gettype(getval(index + 2))
             begin = index + 3
             end = begin + width * height
-            sensors.append(sensor.Image(width, height, image_type, raw_data[begin*4:end*4]))
             index = end
-        return sensors
+            yield sensor.Image(width, height, image_type, raw_data[begin*4:end*4])
