@@ -324,7 +324,7 @@ def main():
         try:
 
             with make_carla_client(args.host, args.port) as client:
-                game = CarlaGame(client, args.city_name)
+                game = CarlaGame(client, args.map_name)
                 game.execute()
                 break
 
