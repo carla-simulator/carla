@@ -52,6 +52,7 @@ from carla.settings import CarlaSettings
 from carla.tcp import TCPConnectionError
 from carla.util import print_over_same_line
 
+
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 600
 MINI_WINDOW_WIDTH = 320
@@ -59,6 +60,7 @@ MINI_WINDOW_HEIGHT = 180
 
 
 def make_carla_settings():
+    """Make a CarlaSettings object with the settings we need."""
     settings = CarlaSettings()
     settings.set(
         SynchronousMode=False,
@@ -118,6 +120,7 @@ class CarlaGame(object):
         self._map = CarlaMap(city_name) if city_name is not None else None
 
     def execute(self):
+        """Launch the PyGame."""
         pygame.init()
         self._initialize_game()
         try:
@@ -264,7 +267,7 @@ class CarlaGame(object):
             self._display.blit(surface, (0, 0))
 
         if self._mini_view_image1 is not None:
-            array = image_converter.depth_to_grayscale(self._mini_view_image1)
+            array = image_converter.depth_to_logarithmic_grayscale(self._mini_view_image1)
             surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
             self._display.blit(surface, (gap_x, mini_image_y))
 
@@ -304,10 +307,10 @@ def main():
         type=int,
         help='TCP port to listen to (default: 2000)')
     argparser.add_argument(
-        '-m', '--city_name',
+        '-m', '--map-name',
         metavar='M',
         default=None,
-        help='Plot the carla town map of city sent as argument (default: None), needs to match city from server, Options: Town01 or Town02')
+        help='plot the map of the current city (needs to match active map in server, options: Town01 or Town02)')
     args = argparser.parse_args()
 
     log_level = logging.DEBUG if args.debug else logging.INFO

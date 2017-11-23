@@ -12,7 +12,7 @@ from contextlib import contextmanager
 
 @contextmanager
 def make_connection(client_type, *args, **kwargs):
-    """Context manager to create and connect a networking object."""
+    """Context manager to create and connect a networking client object."""
     client = None
     try:
         client = client_type(*args, **kwargs)
