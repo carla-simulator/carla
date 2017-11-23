@@ -15,11 +15,8 @@ provides considerably better performance.
 
 
 try:
-
     import numpy
-
 except ImportError:
-
     raise RuntimeError('cannot import numpy, make sure numpy package is installed')
 
 
@@ -92,10 +89,10 @@ def depth_to_array(image):
     return grayscale
 
 
-def depth_to_grayscale(image):
+def depth_to_logarithmic_grayscale(image):
     """
-    Convert an image containing CARLA encoded depth-map to logarithmic
-    grayscale.
+    Convert an image containing CARLA encoded depth-map to a logarithmic
+    grayscale image array.
     """
     grayscale = depth_to_array(image)
     # Convert to logarithmic depth.

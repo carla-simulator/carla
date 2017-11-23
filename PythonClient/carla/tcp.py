@@ -16,6 +16,14 @@ class TCPConnectionError(Exception):
 
 
 class TCPClient(object):
+    """
+    Basic networking client for TCP connections. Errors occurred during
+    networking operations are raised as TCPConnectionError.
+
+    Received messages are expected to be prepended by a int32 defining the
+    message size. Messages are sent following this convention.
+    """
+
     def __init__(self, host, port, timeout):
         self._host = host
         self._port = port
@@ -23,8 +31,10 @@ class TCPClient(object):
         self._socket = None
         self._logprefix = '(%s:%s) ' % (self._host, self._port)
 
-    def connect(self):
-        for attempt in range(10):
+    def connect(self, connection_attempts=10):
+        """Try to establish a connection to the given host:port."""
+        connection_attempts = max(1, connection_attempts)
+        for attempt in range(1, connection_attempts + 1):
             try:
                 self._socket = socket.create_connection(address=(self._host, self._port), timeout=self._timeout)
                 self._socket.settimeout(self._timeout)
@@ -37,15 +47,18 @@ class TCPClient(object):
         self._reraise_exception_as_tcp_error('failed to connect', exception)
 
     def disconnect(self):
+        """Disconnect any active connection."""
         if self._socket is not None:
             logging.debug(self._logprefix + 'disconnecting')
             self._socket.close()
             self._socket = None
 
     def connected(self):
+        """Return whether there is an active connection."""
         return self._socket is not None
 
     def write(self, message):
+        """Send message to the server."""
         if self._socket is None:
             raise TCPConnectionError(self._logprefix + 'not connected')
         header = struct.pack('<L', len(message))
@@ -55,6 +68,7 @@ class TCPClient(object):
             self._reraise_exception_as_tcp_error('failed to write data', exception)
 
     def read(self):
+        """Read a message from the server."""
         header = self._read_n(4)
         if not header:
             raise TCPConnectionError(self._logprefix + 'connection closed')
@@ -63,6 +77,7 @@ class TCPClient(object):
         return data
 
     def _read_n(self, length):
+        """Read n bytes from the socket."""
         if self._socket is None:
             raise TCPConnectionError(self._logprefix + 'not connected')
         buf = bytes()

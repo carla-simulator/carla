@@ -21,44 +21,50 @@ except ImportError:
     raise RuntimeError('cannot import "carla_server_pb2.py", run the protobuf compiler to generate this file')
 
 
-
 VehicleControl = carla_protocol.Control
 
 
 @contextmanager
 def make_carla_client(host, world_port, timeout=15):
+    """Context manager for creating and connecting a CarlaClient."""
     with util.make_connection(CarlaClient, host, world_port, timeout) as client:
         yield client
 
 
 class CarlaClient(object):
+    """The CARLA client. Manages communications with the CARLA server."""
+
     def __init__(self, host, world_port, timeout=15):
         self._world_client = tcp.TCPClient(host, world_port, timeout)
         self._stream_client = tcp.TCPClient(host, world_port + 1, timeout)
         self._control_client = tcp.TCPClient(host, world_port + 2, timeout)
         self._current_settings = None
-        # Controls the state, if an episode is already started.
         self._is_episode_requested = False
         self._sensor_names = []
 
-    def connect(self):
-        self._world_client.connect()
+    def connect(self, connection_attempts=10):
+        """
+        Try to establish a connection to a CARLA server at the given host:port.
+        """
+        self._world_client.connect(connection_attempts)
 
     def disconnect(self):
+        """Disconnect from server."""
         self._control_client.disconnect()
         self._stream_client.disconnect()
         self._world_client.disconnect()
 
     def connected(self):
+        """Return whether there is an active connection."""
         return self._world_client.connected()
 
     def load_settings(self, carla_settings):
         """
-        Load new settings and request a new episode based on these settings to
-        the server. carla_settings object must be convertible to a str holding a
-        CarlaSettings.ini.
+        Load new settings and request a new episode based on these settings.
+        carla_settings object must be convertible to a str holding the contents
+        of a CarlaSettings.ini file.
 
-        Returns a protobuf object holding the scene description.
+        Return a protobuf object holding the scene description.
         """
         self._current_settings = carla_settings
         return self._request_new_episode(carla_settings)
@@ -68,8 +74,10 @@ class CarlaClient(object):
         """
         Start the new episode at the player start given by the
         player_start_index. The list of player starts is retrieved by
-        "load_settings". Requests a new episode based on the last settings
-        loaded by "load_settings".
+        "load_settings".
+
+        The new episode is started based on the last settings loaded by
+        "load_settings".
 
         This function waits until the server answers with an EpisodeReady.
         """
@@ -101,9 +109,9 @@ class CarlaClient(object):
 
     def read_data(self):
         """
-        Read data sent from the server this frame. The episode must be started.
-        Return the protobuf object with the measurements followed by the raw
-        data of the sensors.
+        Read the data sent from the server this frame. The episode must be
+        started. Return a pair containing the protobuf object containing the
+        measurements followed by the raw data of the sensors.
         """
         # Read measurements.
         data = self._stream_client.read()
@@ -116,7 +124,12 @@ class CarlaClient(object):
         return pb_message, self._parse_raw_sensor_data(raw_sensor_data)
 
     def send_control(self, *args, **kwargs):
-        """Send vehicle control for the current frame."""
+        """
+        Send the VehicleControl to be applied this frame.
+
+        If synchronous mode was requested, the server will pause the simulation
+        until this message is received.
+        """
         if isinstance(args[0] if args else None, carla_protocol.Control):
             pb_message = args[0]
         else:
@@ -130,9 +143,8 @@ class CarlaClient(object):
 
     def _request_new_episode(self, carla_settings):
         """
-        Request a new episode. Internal function to request information about a
-        new episode episode that is going to start. It also prepare the client
-        for reset by disconnecting stream and control clients.
+        Internal function to request a new episode. Prepare the client for a new
+        episode by disconnecting agent clients.
         """
         # Disconnect agent clients.
         self._stream_client.disconnect()
@@ -154,6 +166,7 @@ class CarlaClient(object):
         return pb_message
 
     def _parse_raw_sensor_data(self, raw_data):
+        """Return a dict of {'sensor_name': sensor_data, ...}."""
         return dict((name, data) for name, data in zip(
             self._sensor_names,
             self._iterate_sensor_data(raw_data)))

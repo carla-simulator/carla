@@ -27,7 +27,11 @@ MAX_NUMBER_OF_WEATHER_IDS = 14
 
 
 class CarlaSettings(object):
-    """CARLA settings object. Convertible to str as CarlaSettings.ini."""
+    """
+    The CarlaSettings object controls the settings of an episode.  The __str__
+    method retrieves an str with a CarlaSettings.ini file contents.
+    """
+
     def __init__(self, **kwargs):
         # [CARLA/Server]
         self.SynchronousMode = True
@@ -49,25 +53,27 @@ class CarlaSettings(object):
                 raise ValueError('CarlaSettings: no key named %r' % key)
             setattr(self, key, value)
 
-    def get_number_of_agents(self):
-        if not self.SendNonPlayerAgentsInfo:
-            return 0
-        return self.NumberOfVehicles + self.NumberOfPedestrians
-
     def randomize_seeds(self):
+        """
+        Randomize the seeds of the new episode's pseudo-random number
+        generators.
+        """
         self.SeedVehicles = random.getrandbits(16)
         self.SeedPedestrians = random.getrandbits(16)
 
     def randomize_weather(self):
+        """Randomized the WeatherId."""
         self.WeatherId = random.randint(0, MAX_NUMBER_OF_WEATHER_IDS)
 
     def add_sensor(self, sensor):
+        """Add a sensor to the player vehicle (see sensor.py)."""
         if isinstance(sensor, carla_sensor.Camera):
             self._cameras.append(sensor)
         else:
             raise ValueError('Sensor not supported')
 
     def __str__(self):
+        """Converts this object to an INI formatted string."""
         ini = ConfigParser()
         ini.optionxform=str
         S_SERVER = 'CARLA/Server'
@@ -117,6 +123,10 @@ class CarlaSettings(object):
 
 
 def _get_sensor_names(settings):
+    """
+    Return a list with the names of the sensors defined in the settings object.
+    The settings object can be a CarlaSettings or an INI formatted string.
+    """
     if isinstance(settings, CarlaSettings):
         return [camera.CameraName for camera in settings._cameras]
     ini = ConfigParser()
