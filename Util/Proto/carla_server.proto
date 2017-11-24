@@ -111,7 +111,7 @@ message Measurements {
     float intersection_otherlane = 8;
     float intersection_offroad = 9;
 
-    Control ai_control = 10;
+    Control autopilot_control = 10;
   }
 
   uint32 platform_timestamp = 1;
