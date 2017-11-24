@@ -47,6 +47,7 @@ def run_carla_client(host, port, autopilot_on, save_images_to_disk, image_filena
                 settings = CarlaSettings()
                 settings.set(
                     SynchronousMode=True,
+                    SendNonPlayerAgentsInfo=True,
                     NumberOfVehicles=20,
                     NumberOfPedestrians=40,
                     WeatherId=random.choice([1, 3, 7, 8, 14]))
@@ -98,8 +99,8 @@ def run_carla_client(host, port, autopilot_on, save_images_to_disk, image_filena
                 # Read the data produced by the server this frame.
                 measurements, sensor_data = client.read_data()
 
-                # Print some information about the player.
-                print_player_measurements(measurements.player_measurements)
+                # Print some of the measurements.
+                print_measurements(measurements)
 
                 # Save the images to disk if requested.
                 if save_images_to_disk:
@@ -140,11 +141,14 @@ def run_carla_client(host, port, autopilot_on, save_images_to_disk, image_filena
                     client.send_control(control)
 
 
-def print_player_measurements(player_measurements):
+def print_measurements(measurements):
+    number_of_agents = len(measurements.non_player_agents)
+    player_measurements = measurements.player_measurements
     message = 'Vehicle at ({pos_x:.1f}, {pos_y:.1f}), '
     message += '{speed:.2f} km/h, '
     message += 'Collision: {{vehicles={col_cars:.0f}, pedestrians={col_ped:.0f}, other={col_other:.0f}}}, '
-    message += '{other_lane:.0f}% other lane, {offroad:.0f}% off-road'
+    message += '{other_lane:.0f}% other lane, {offroad:.0f}% off-road, '
+    message += '({agents_num:d} non-player agents in the scene)'
     message = message.format(
         pos_x=player_measurements.transform.location.x / 100, # cm -> m
         pos_y=player_measurements.transform.location.y / 100,
@@ -153,7 +157,8 @@ def print_player_measurements(player_measurements):
         col_ped=player_measurements.collision_pedestrians,
         col_other=player_measurements.collision_other,
         other_lane=100 * player_measurements.intersection_otherlane,
-        offroad=100 * player_measurements.intersection_offroad)
+        offroad=100 * player_measurements.intersection_offroad,
+        agents_num=number_of_agents)
     print_over_same_line(message)
 
 
