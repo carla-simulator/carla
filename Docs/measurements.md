@@ -82,6 +82,16 @@ brake                      | float     | Brake input between [ 0.0, 1.0]
 hand_brake                 | bool      | Whether the hand-brake is engaged
 reverse                    | bool      | Whether the vehicle is in reverse gear
 
+To activate the autopilot from the client, send this `autopilot_control` back
+to the server. Note that you can modify it before sending it back.
+
+```py
+measurements, sensor_data = carla_client.read_data()
+control = measurements.player_measurements.autopilot_control
+# modify here control if wanted.
+carla_client.send_control(control)
+```
+
 (*) The actual steering angle depends on the vehicle used. The default Mustang
 has a maximum steering angle of 70 degrees (this can be checked in the vehicle's
 front wheel blueprint).
