@@ -106,6 +106,14 @@ def run_carla_client(host, port, autopilot_on, save_images_to_disk, image_filena
                     for name, image in sensor_data.items():
                         image.save_to_disk(image_filename_format.format(episode, name, frame))
 
+                # We can access the encoded data of a given image as numpy
+                # array using its "data" property. For instance, to get the
+                # depth value (normalized) at pixel X, Y
+                #
+                #     depth_array = sensor_data['CameraDepth'].data
+                #     value_at_pixel = depth_array[Y, X]
+                #
+
                 # Now we have to send the instructions to control the vehicle.
                 # If we are in synchronous mode the server will pause the
                 # simulation until we send this control.
@@ -114,7 +122,7 @@ def run_carla_client(host, port, autopilot_on, save_images_to_disk, image_filena
 
                     client.send_control(
                         steer=random.uniform(-1.0, 1.0),
-                        throttle=0.3,
+                        throttle=0.5,
                         brake=False,
                         hand_brake=False,
                         reverse=False)
@@ -133,14 +141,17 @@ def run_carla_client(host, port, autopilot_on, save_images_to_disk, image_filena
 
 
 def print_player_measurements(player_measurements):
-    message = 'Vehicle at ({pos_x:.1f}, {pos_y:.1f}, {pos_z:.1f}) '
+    message = 'Vehicle at ({pos_x:.1f}, {pos_y:.1f}), '
     message += '{speed:.2f} km/h, '
+    message += 'Collision: {{vehicles={col_cars:.0f}, pedestrians={col_ped:.0f}, other={col_other:.0f}}}, '
     message += '{other_lane:.0f}% other lane, {offroad:.0f}% off-road'
     message = message.format(
         pos_x=player_measurements.transform.location.x / 100, # cm -> m
         pos_y=player_measurements.transform.location.y / 100,
-        pos_z=player_measurements.transform.location.z / 100,
         speed=player_measurements.forward_speed,
+        col_cars=player_measurements.collision_vehicles,
+        col_ped=player_measurements.collision_pedestrians,
+        col_other=player_measurements.collision_other,
         other_lane=100 * player_measurements.intersection_otherlane,
         offroad=100 * player_measurements.intersection_offroad)
     print_over_same_line(message)
