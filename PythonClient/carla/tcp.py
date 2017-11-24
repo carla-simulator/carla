@@ -34,6 +34,7 @@ class TCPClient(object):
     def connect(self, connection_attempts=10):
         """Try to establish a connection to the given host:port."""
         connection_attempts = max(1, connection_attempts)
+        error = None
         for attempt in range(1, connection_attempts + 1):
             try:
                 self._socket = socket.create_connection(address=(self._host, self._port), timeout=self._timeout)
@@ -41,10 +42,11 @@ class TCPClient(object):
                 logging.debug(self._logprefix + 'connected')
                 return
             except Exception as exception:
-                logging.debug(self._logprefix + 'connection attempt %d: %s', attempt, exception)
+                error = exception
+                logging.debug(self._logprefix + 'connection attempt %d: %s', attempt, error)
                 time.sleep(1)
                 continue
-        self._reraise_exception_as_tcp_error('failed to connect', exception)
+        self._reraise_exception_as_tcp_error('failed to connect', error)
 
     def disconnect(self):
         """Disconnect any active connection."""
