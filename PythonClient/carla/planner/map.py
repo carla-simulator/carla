@@ -77,15 +77,18 @@ class CarlaMap(object):
         self.map_image = np.asarray(self.map_image, dtype="int32")
 
 
-    def get_map(self, size=None):
-        if size is not None:
+    def get_map(self, height=None):
+        if height is not None:
             img = Image.fromarray(self.map_image.astype(np.uint8))
-            img = img.resize((size[1], size[0]), Image.ANTIALIAS)
+
+            aspect_ratio = height/float(self.map_image.shape[0])
+
+            img = img.resize((int(aspect_ratio*self.map_image.shape[1]),height), Image.ANTIALIAS)
             img.load()
-            return np.fliplr(np.asarray(img, dtype="int32"))
+            return np.asarray(img, dtype="int32")
         return np.fliplr(self.map_image)
 
-    def get_map_lanes(self, size=None):
+    def get_map_lanes(self, height=None):
         if size is not None:
             img = Image.fromarray(self.map_image_lanes.astype(np.uint8))
             img = img.resize((size[1], size[0]), Image.ANTIALIAS)

@@ -120,7 +120,7 @@ class CarlaGame(object):
         self._city_name = city_name
         self._map = CarlaMap(city_name) if city_name is not None else None
         self._map_shape = self._map.map_image.shape if city_name is not None else None
-        self._map_view = self._map.get_map([WINDOW_WIDTH, WINDOW_HEIGHT]) if city_name is not None else None
+        self._map_view = self._map.get_map(WINDOW_HEIGHT) if city_name is not None else None
 
     def execute(self):
         """Launch the PyGame."""
@@ -139,7 +139,7 @@ class CarlaGame(object):
     def _initialize_game(self):
         if self._city_name is not None:
             self._display = pygame.display.set_mode(
-                (WINDOW_WIDTH * 2, WINDOW_HEIGHT),
+                (WINDOW_WIDTH + int((WINDOW_HEIGHT/float(self._map.map_image.shape[0]))*self._map.map_image.shape[1]), WINDOW_HEIGHT),
                 pygame.HWSURFACE | pygame.DOUBLEBUF)
         else:
             self._display = pygame.display.set_mode(
@@ -287,17 +287,22 @@ class CarlaGame(object):
         if self._map_view is not None:
             array = self._map_view
             array = array[:, :, :3]
-            surface = pygame.surfarray.make_surface(array)
-            plot_positon = ( int(self._position[1]*(float(WINDOW_WIDTH)/float(self._map_shape[0]))),WINDOW_HEIGHT - int(self._position[0]*(float(WINDOW_HEIGHT)/float(self._map_shape[1]))))
-            pygame.draw.circle(surface, [255, 0, 0, 255], plot_positon, 6, 0)
+            new_window_width =(float(WINDOW_HEIGHT)/float(self._map_shape[0]))*float(self._map_shape[1])
+            surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
+
+            w_pos = int(self._position[0]*(float(WINDOW_HEIGHT)/float(self._map_shape[0])))
+            h_pos =int(self._position[1] *(new_window_width/float(self._map_shape[1])))
+
+            pygame.draw.circle(surface, [255, 0, 0, 255], (w_pos,h_pos), 6, 0)
             for agent in self._agent_positions:
                 if agent.HasField('vehicle'):
                     agent_position = self._map.get_position_on_map([
                         agent.vehicle.transform.location.x,
                         agent.vehicle.transform.location.y,
                         agent.vehicle.transform.location.z])
-                    plot_positon = ( int(agent_position[1]*(float(WINDOW_WIDTH)/float(self._map_shape[0]))),WINDOW_HEIGHT - int(agent_position[0]*(float(WINDOW_HEIGHT)/float(self._map_shape[1]))))
-                    pygame.draw.circle(surface, [255, 0, 255, 255], plot_positon, 4, 0)
+                    w_pos = int(agent_position[0]*(float(WINDOW_HEIGHT)/float(self._map_shape[0])))
+                    h_pos =int(agent_position[1] *(new_window_width/float(self._map_shape[1])))         
+                    pygame.draw.circle(surface, [255, 0, 255, 255], (w_pos,h_pos), 4, 0)
 
             self._display.blit(surface, (WINDOW_WIDTH, 0))
 
