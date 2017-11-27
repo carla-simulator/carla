@@ -36,6 +36,14 @@ Felipe Codevilla, Antonio Lopez, Vladlen Koltun; PMLR 78:1-16
 }
 ```
 
+How to update CARLA
+-------------------
+
+Every new release of CARLA we release a new package with the latest changes in
+the CARLA assets. To download the latest version, run the "Update" script
+
+    $ ./Update.sh
+
 License
 -------
 
