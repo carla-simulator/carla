@@ -64,6 +64,7 @@ def make_carla_settings():
     settings = CarlaSettings()
     settings.set(
         SynchronousMode=False,
+        SendNonPlayerAgentsInfo=True,
         NumberOfVehicles=15,
         NumberOfPedestrians=30,
         WeatherId=random.choice([1, 3, 7, 8, 14]))
@@ -118,6 +119,8 @@ class CarlaGame(object):
         self._is_on_reverse = False
         self._city_name = city_name
         self._map = CarlaMap(city_name) if city_name is not None else None
+        self._map_shape = self._map.map_image.shape
+        self._map_view = self._map.get_map([WINDOW_WIDTH, WINDOW_HEIGHT]) if city_name is not None else None
 
     def execute(self):
         """Launch the PyGame."""
@@ -186,15 +189,16 @@ class CarlaGame(object):
                 self._print_player_measurements(measurements.player_measurements)
 
             # Plot position on the map as well.
-            if self._city_name is not None:
-                self._map.draw_position_on_map(
-                    measurements.player_measurements.transform.location,
-                    [255, 0, 0, 255])
-                self._map_view = self._map.get_map([WINDOW_WIDTH, WINDOW_HEIGHT])
 
             self._timer.lap()
 
         control = self._get_keyboard_control(pygame.key.get_pressed())
+        # Set the player position
+        self._position = self._map.get_position_on_map([
+                    measurements.player_measurements.transform.location.x,
+                    measurements.player_measurements.transform.location.y,
+                    measurements.player_measurements.transform.location.z])
+        self._agent_positions = measurements.non_player_agents
 
         if control is None:
             self._on_new_episode()
@@ -275,6 +279,7 @@ class CarlaGame(object):
             array = image_converter.labels_to_cityscapes_palette(
                 self._mini_view_image2)
             surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
+
             self._display.blit(
                 surface, (2 * gap_x + MINI_WINDOW_WIDTH, mini_image_y))
 
@@ -282,6 +287,19 @@ class CarlaGame(object):
             array = self._map_view
             array = array[:, :, :3]
             surface = pygame.surfarray.make_surface(array)
+            #print ('Position ', (int(self._position[0]*(float(WINDOW_WIDTH)/float(self._map_shape[0]))), int(self._position[1]*(float(WINDOW_HEIGHT)/float(self._map_shape[1])))))
+            plot_positon = ( int(self._position[1]*(float(WINDOW_WIDTH)/float(self._map_shape[0]))),WINDOW_HEIGHT - int(self._position[0]*(float(WINDOW_HEIGHT)/float(self._map_shape[1]))))
+            pygame.draw.circle(surface, [255, 0, 0, 255], plot_positon, 6, 0)
+            for agent in self._agent_positions:
+                if agent.HasField('vehicle'):
+                    agent_position = self._map.get_position_on_map([
+                        agent.vehicle.transform.location.x,
+                        agent.vehicle.transform.location.y,
+                        agent.vehicle.transform.location.z])
+                    plot_positon = ( int(agent_position[1]*(float(WINDOW_WIDTH)/float(self._map_shape[0]))),WINDOW_HEIGHT - int(agent_position[0]*(float(WINDOW_HEIGHT)/float(self._map_shape[1]))))
+                    pygame.draw.circle(surface, [255, 0, 255, 255], plot_positon, 4, 0)
+
+            #surface.set_at(, [255, 0, 0, 255])
             self._display.blit(surface, (WINDOW_WIDTH, 0))
 
         pygame.display.flip()
