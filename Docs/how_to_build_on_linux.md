@@ -74,6 +74,15 @@ use the Makefile generated in the Unreal project folder
     $ cd Unreal/CarlaUE4
     $ make CarlaUE4Editor
 
+Updating CARLA
+--------------
+
+Every new release of CARLA we release a new package with the latest changes in
+the CARLA assets. To download the latest version, run the "Update" script
+
+    $ git pull
+    $ ./Update.sh
+
 Launching the editor
 --------------------
 

@@ -17,24 +17,17 @@ For instructions on how to use and compile CARLA, check out
 [CARLA Documentation](http://carla.readthedocs.io).
 
 News
--------------------
+----
 
-- 28.11.2017 CARLA 0.7.0 released: [change log](https://github.com/carla-simulator/carla/blob/master/CHANGELOG.md) , [release](https://github.com/carla-simulator/carla/releases/tag/0.6.0)
-- 15.11.2017 CARLA 0.6.0 released: [change log](https://github.com/carla-simulator/carla/blob/master/CHANGELOG.md) , [release](https://github.com/carla-simulator/carla/releases/tag/0.6.0)
+- 28.11.2017 CARLA 0.7.0 released: [change log](https://github.com/carla-simulator/carla/blob/master/CHANGELOG.md#carla-070) , [release](https://github.com/carla-simulator/carla/releases/tag/0.7.0)
+- 15.11.2017 CARLA 0.6.0 released: [change log](https://github.com/carla-simulator/carla/blob/master/CHANGELOG.md#carla-060) , [release](https://github.com/carla-simulator/carla/releases/tag/0.6.0)
 
-How to update CARLA
--------------------
-
-Every new release of CARLA we release a new package with the latest changes in
-the CARLA assets. To download the latest version, run the "Update" script
-
-    $ ./Update.sh
-    
 Roadmap
 -------
 
-We are continuously working on improving CARLA, and we appreciate contributions from the community.
-Our most immediate goals are:
+We are continuously working on improving CARLA, and we appreciate contributions
+from the community. Our most immediate goals are:
+
 - Releasing the methods evaluated in the CARLA paper
 - Adding a LiDAR sensor
 - Allowing for flexible and user-friendly import and editing of maps
