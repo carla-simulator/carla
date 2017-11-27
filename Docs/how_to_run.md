@@ -85,8 +85,8 @@ this can be chosen with
 #### CARLA specific command-line options
 
   * `-carla-server` Launches CARLA as server, the execution hangs until a client connects.
-  * `-carla-settings=<ini-file-path>` Load settings from the given INI file. See Example.CarlaSettings.ini.
-  * `-carla-world-port=<port-number>` Listen for client connections at <port-number>, agent ports are set to <port-number>+1 and <port-number>+2 respectively. Activates server.
+  * `-carla-settings="Path/To/CarlaSettings.ini"` Load settings from the given INI file. See Example.CarlaSettings.ini.
+  * `-carla-world-port=N` Listen for client connections at port N, agent ports are set to N+1 and N+2 respectively. Activates server.
   * `-carla-no-hud` Do not display the HUD by default.
   * `-carla-no-networking` Disable networking. Overrides `-carla-server` if present.
 
@@ -144,7 +144,7 @@ Settings are loaded following the next hierarchy, with values later in the
 hierarchy overriding earlier values.
 
   1. `{ProjectFolder}/Config/CarlaSettings.ini`.
-  2. File provided by command-line argument `-carla-settings=<path-to-ini-file>`.
+  2. File provided by command-line argument `-carla-settings="Path/To/CarlaSettings.ini"`.
   3. Other command-line arguments as `-carla-server` or `-world-port`.
   4. Settings file sent by the client on every new episode.
 
