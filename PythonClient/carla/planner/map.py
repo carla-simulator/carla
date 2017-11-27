@@ -34,7 +34,9 @@ class CarlaMap(object):
     def __init__(self, city):
         dir_path = os.path.dirname(__file__)
         city_file = os.path.join(dir_path, city + '.txt')
+
         city_map_file = os.path.join(dir_path, city + '.png')
+        city_map_file_lanes = os.path.join(dir_path, city + 'Lanes.png')
 
         with open(city_file, 'r') as file:
 
@@ -65,30 +67,34 @@ class CarlaMap(object):
 
         # The number of game units per pixel.
         self.pixel_density = 16.43
+        # Load the lanes image
+        self.map_image_lanes = Image.open(city_map_file_lanes)
+        self.map_image_lanes.load()
+        self.map_image_lanes = np.asarray(self.map_image_lanes, dtype="int32")
+        # Load the image
         self.map_image = Image.open(city_map_file)
         self.map_image.load()
         self.map_image = np.asarray(self.map_image, dtype="int32")
 
-    def draw_position_on_map(self, position, color, size=20):
-        position = self.get_position_on_map([position.x, position.y, position.z])
-        for i in range(0, size):
-            self.map_image[int(position[1]), int(position[0])] = color
-            self.map_image[int(position[1]) + i, int(position[0])] = color
-            self.map_image[int(position[1]), int(position[0]) + i] = color
-            self.map_image[int(position[1]) - i, int(position[0])] = color
-            self.map_image[int(position[1]), int(position[0]) - i] = color
-            self.map_image[int(position[1]) + i, int(position[0]) + i] = color
-            self.map_image[int(position[1]) - i, int(position[0]) - i] = color
-            self.map_image[int(position[1]) + i, int(position[0]) - i] = color
-            self.map_image[int(position[1]) - i, int(position[0]) + i] = color
 
-    def get_map(self, size=None):
-        if size is not None:
+    def get_map(self, height=None):
+        if height is not None:
             img = Image.fromarray(self.map_image.astype(np.uint8))
+
+            aspect_ratio = height/float(self.map_image.shape[0])
+
+            img = img.resize((int(aspect_ratio*self.map_image.shape[1]),height), Image.ANTIALIAS)
+            img.load()
+            return np.asarray(img, dtype="int32")
+        return np.fliplr(self.map_image)
+
+    def get_map_lanes(self, height=None):
+        if size is not None:
+            img = Image.fromarray(self.map_image_lanes.astype(np.uint8))
             img = img.resize((size[1], size[0]), Image.ANTIALIAS)
             img.load()
             return np.fliplr(np.asarray(img, dtype="int32"))
-        return np.fliplr(self.map_image)
+        return np.fliplr(self.map_image_lanes)
 
     def get_position_on_map(self, world):
         """Get the position on the map for a certain world position."""
@@ -134,7 +140,7 @@ class CarlaMap(object):
         pixel.append(math.floor(relative_location[0] / float(self.pixel_density)))
         pixel.append(math.floor(relative_location[1] / float(self.pixel_density)))
 
-        ori = self.map_image[int(pixel[1]), int(pixel[0]), 2]
+        ori = self.map_image_lanes[int(pixel[1]), int(pixel[0]), 2]
         ori = ((float(ori) / 255.0)) * 2 * math.pi
 
         return (-math.cos(ori), -math.sin(ori))
