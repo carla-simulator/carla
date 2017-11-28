@@ -124,7 +124,7 @@ def run_carla_client(host, port, autopilot_on, save_images_to_disk, image_filena
                     client.send_control(
                         steer=random.uniform(-1.0, 1.0),
                         throttle=0.5,
-                        brake=False,
+                        brake=0.0,
                         hand_brake=False,
                         reverse=False)
 
