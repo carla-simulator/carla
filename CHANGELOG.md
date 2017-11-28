@@ -9,6 +9,7 @@
     - Better documentation
     - Protocol: renamed "ai_control" to "autopilot_control"
     - Merged testing client
+    - Added the maps for both cities, the client can now access the car position within the lane.
   * Make CARLA start without client by default
   * Added wind effect to some trees and plants
   * Improvements to the existing weather presets
