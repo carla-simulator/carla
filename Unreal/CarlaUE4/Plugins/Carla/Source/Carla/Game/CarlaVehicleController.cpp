@@ -8,6 +8,7 @@
 #include "CarlaVehicleController.h"
 
 #include "SceneCaptureCamera.h"
+#include "Lidar.h"
 
 #include "Components/BoxComponent.h"
 #include "EngineUtils.h"
@@ -132,6 +133,22 @@ void ACarlaVehicleController::AddSceneCaptureCamera(
       TEXT("Created capture camera %d with postprocess \"%s\""),
       SceneCaptureCameras.Num() - 1,
       *PostProcessEffect::ToString(Camera->GetPostProcessEffect()));
+}
+
+void ACarlaVehicleController::AddSceneCaptureLidar(
+    const FLidarDescription &Description)
+{
+  auto Lidar = GetWorld()->SpawnActor<ALidar>(Description.Position, Description.Rotation);
+  Lidar->Set(Description);
+  Lidar->AttachToActor(GetPawn(), FAttachmentTransformRules::KeepRelativeTransform);
+  Lidar->SetOwner(GetPawn());
+  AddTickPrerequisiteActor(Lidar);
+  SceneCaptureLidars.Add(Lidar);
+  UE_LOG(
+      LogCarla,
+      Log,
+      TEXT("Created lidar %d"),
+      SceneCaptureLidars.Num() - 1);
 }
 
 // =============================================================================
