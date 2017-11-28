@@ -19,8 +19,8 @@ For instructions on how to use and compile CARLA, check out
 News
 ----
 
-- 28.11.2017 CARLA 0.7.0 released: [change log](https://github.com/carla-simulator/carla/blob/master/CHANGELOG.md#carla-070) , [release](https://github.com/carla-simulator/carla/releases/tag/0.7.0)
-- 15.11.2017 CARLA 0.6.0 released: [change log](https://github.com/carla-simulator/carla/blob/master/CHANGELOG.md#carla-060) , [release](https://github.com/carla-simulator/carla/releases/tag/0.6.0)
+- 28.11.2017 CARLA 0.7.0 released: [change log](https://github.com/carla-simulator/carla/blob/master/CHANGELOG.md#carla-070), [release](https://github.com/carla-simulator/carla/releases/tag/0.7.0).
+- 15.11.2017 CARLA 0.6.0 released: [change log](https://github.com/carla-simulator/carla/blob/master/CHANGELOG.md#carla-060), [release](https://github.com/carla-simulator/carla/releases/tag/0.6.0).
 
 Roadmap
 -------
