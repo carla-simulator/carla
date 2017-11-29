@@ -67,30 +67,47 @@ void ALidar::BeginPlay()
 }
 
 // Called every frame
-void ALidar::Tick(float DeltaTime)
+// void ALidar::Tick(float DeltaTime)
+// {
+// 	Super::Tick(DeltaTime);
+// }
+
+void ALidar::ReadPoints(float DeltaTime, FCapturedLidarSegment& LidarSegmentData)
 {
-	Super::Tick(DeltaTime);
+    // UE_LOG(LogCarla, Log, TEXT("--- Lidar tick %d"), ShowDebugPoints?1:0);
+    // FVector LidarBodyLoc = RootComponent->GetComponentLocation();
+    // UE_LOG(LogCarla, Log, TEXT("--- location: %f %f %f"), lidar_body_loc.X, lidar_body_loc.Y, lidar_body_loc.Z);
+    // UE_LOG(LogCarla, Log, TEXT("--- actor rotation: %s"), *GetActorRotation().ToString());
+    // UE_LOG(LogCarla, Log, TEXT("---  root rotation: %s"), *RootComponent->GetComponentRotation().ToString());
 
-  // UE_LOG(LogCarla, Log, TEXT("--- Lidar tick %d"), ShowDebugPoints?1:0);
-  // FVector LidarBodyLoc = RootComponent->GetComponentLocation();
-  // UE_LOG(LogCarla, Log, TEXT("--- location: %f %f %f"), lidar_body_loc.X, lidar_body_loc.Y, lidar_body_loc.Z);
+  	int PointsToScanWithOneLaser = int(FMath::RoundHalfFromZero(PointsPerSecond * DeltaTime / float(Channels)));
+  	// float HorizontalAngle = CurrentHorizontalAngle;
 
-	int PointsToScanWithOneLaser = int(FMath::RoundHalfFromZero(PointsPerSecond * DeltaTime / float(Channels)));
-	// float HorizontalAngle = CurrentHorizontalAngle;
+  	float AngleDistanceOfTick = RotationFrequency * 360 * DeltaTime;
+  	// PrintString(FString::Printf(TEXT("tick %f %f %d"), DeltaTime, angle_distance_of_tick, points_to_scan_with_one_laser));
+  	float AngleDistanceOfLaserMeasure = AngleDistanceOfTick / PointsToScanWithOneLaser;
 
-	float AngleDistanceOfTick = RotationFrequency * 360 * DeltaTime;
-	// PrintString(FString::Printf(TEXT("tick %f %f %d"), DeltaTime, angle_distance_of_tick, points_to_scan_with_one_laser));
-	float AngleDistanceOfLaserMeasure = AngleDistanceOfTick / PointsToScanWithOneLaser;
+    LidarSegmentData.LidarLasersSegments.Empty();
 
-	for (auto& Laser : Lasers)
-	{
-		for (int i=0; i<PointsToScanWithOneLaser; i++)
-		{
-			float Distance = Laser.Measure(this, CurrentHorizontalAngle + AngleDistanceOfLaserMeasure * i, ShowDebugPoints);
-		}
-	}
+    auto NumOfLasers = Lasers.Num();
+    LidarSegmentData.LidarLasersSegments.AddDefaulted(NumOfLasers);
+  	for (int li=0; li<NumOfLasers; li++)
+  	{
+      auto& Laser = Lasers[li];
+      auto& LaserPoints = LidarSegmentData.LidarLasersSegments[li].Points;
+      LaserPoints.AddDefaulted(PointsToScanWithOneLaser);
+  		for (int i=0; i<PointsToScanWithOneLaser; i++)
+  		{
+  			Laser.Measure(
+          this,
+          CurrentHorizontalAngle + AngleDistanceOfLaserMeasure * i,
+          LaserPoints[i],
+          ShowDebugPoints
+        );
+  		}
+  	}
 
-	// lidar_body_->AddLocalRotation(FRotator(0, angle_distance_of_tick, 0), false);
-	CurrentHorizontalAngle += AngleDistanceOfTick;
-
+  	// lidar_body_->AddLocalRotation(FRotator(0, angle_distance_of_tick, 0), false);
+  	CurrentHorizontalAngle += AngleDistanceOfTick;
+    LidarSegmentData.HorizontalAngle = CurrentHorizontalAngle;
 }

@@ -19,7 +19,7 @@ public:
 	{}
 
 	int GetId();
-	float Measure(ALidar* Lidar, float HorizontalAngle, bool Debug = false);
+	bool Measure(ALidar* Lidar, float HorizontalAngle, FVector& XYZ, bool Debug = false);
 
 private:
 

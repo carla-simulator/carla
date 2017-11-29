@@ -74,6 +74,11 @@ void ACarlaVehicleController::BeginPlay()
         Image.PostProcessEffect = Camera->GetPostProcessEffect();
       }
     }
+    // Lidars
+    const auto NumberOfLidars = SceneCaptureLidars.Num();
+    if (NumberOfLidars > 0) {
+      CarlaPlayerState->LidarSegments.AddDefaulted(NumberOfLidars);
+    }
   }
 }
 
@@ -105,6 +110,13 @@ void ACarlaVehicleController::Tick(float DeltaTime)
       if (!SceneCaptureCameras[i]->ReadPixels(Image.BitMap)) {
         Image.BitMap.Empty();
       }
+    }
+    // Capture lidars
+    const auto NumberOfLidars = SceneCaptureLidars.Num();
+    check(NumberOfLidars == CarlaPlayerState->LidarSegments.Num());
+    for (auto i = 0; i < NumberOfLidars; ++i) {
+      auto &LidarSegment = CarlaPlayerState->LidarSegments[i];
+      SceneCaptureLidars[i]->ReadPoints(DeltaTime, LidarSegment);
     }
   }
 }

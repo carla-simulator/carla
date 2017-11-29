@@ -11,7 +11,7 @@ int LidarLaser::GetId()
 	return Id;
 }
 
-float LidarLaser::Measure(ALidar* Lidar, float HorizontalAngle, bool Debug)
+bool LidarLaser::Measure(ALidar* Lidar, float HorizontalAngle, FVector& XYZ, bool Debug)
 {
 	FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("Laser_Trace")), true, Lidar);
 	TraceParams.bTraceComplex = true;
@@ -22,7 +22,15 @@ float LidarLaser::Measure(ALidar* Lidar, float HorizontalAngle, bool Debug)
 	FVector LidarBodyLoc = Lidar->GetActorLocation();
   FRotator LidarBodyRot = Lidar->GetActorRotation();
 	FRotator LaserRot (VerticalAngle, HorizontalAngle, 0);
-	FVector EndTrace = Lidar->Range * UKismetMathLibrary::GetForwardVector(LidarBodyRot + LaserRot) + LidarBodyLoc;
+  // float InPitch, float InYaw, float InRoll
+  FRotator ResultRot = UKismetMathLibrary::ComposeRotators(
+    LaserRot,
+    // UKismetMathLibrary::ComposeRotators(
+    //   FRotator(25, 0, 0),
+      LidarBodyRot
+    // )
+  ); //up, no change, no change
+	FVector EndTrace = Lidar->Range * UKismetMathLibrary::GetForwardVector(ResultRot) + LidarBodyLoc;
 
 	Lidar->GetWorld()->LineTraceSingleByChannel(
 		HitInfo,
@@ -47,8 +55,10 @@ float LidarLaser::Measure(ALidar* Lidar, float HorizontalAngle, bool Debug)
   		);
     }
 
-		return (LidarBodyLoc - HitInfo.ImpactPoint).Size();
+    XYZ = LidarBodyLoc - HitInfo.ImpactPoint;
+
+		return true;
 	} else {
-		return -1;
+		return false;
 	}
 }

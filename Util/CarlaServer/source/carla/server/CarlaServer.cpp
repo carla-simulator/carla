@@ -120,6 +120,7 @@ int32_t carla_write_measurements(
       CarlaServerPtr self,
       const carla_measurements &values,
       const struct carla_image *images,
+      const struct carla_lidar_measurement *lidar_measurements,
       const uint32_t number_of_images) {
   CARLA_PROFILE_SCOPE(C_API, WriteMeasurements);
   auto agent = Cast(self)->GetAgentServer();
