@@ -81,6 +81,25 @@ static void Set(carla_image &cImage, const FCapturedImage &uImage)
   }
 }
 
+static void Set(carla_lidar_measurement &cLidarMeasurement, const FCapturedLidarSegment &uLidarSegment)
+{
+//   if (uImage.BitMap.Num() > 0) {
+//     cImage.width = uImage.SizeX;
+//     cImage.height = uImage.SizeY;
+//     cImage.type = PostProcessEffect::ToUInt(uImage.PostProcessEffect);
+//     cImage.data = &uImage.BitMap.GetData()->DWColor();
+//
+// #ifdef CARLA_SERVER_EXTRA_LOG
+//     {
+//       const auto Size = uImage.BitMap.Num();
+//       UE_LOG(LogCarlaServer, Log, TEXT("Sending image %dx%d (%d) type %d"), cImage.width, cImage.height, Size, cImage.type);
+//     }
+//   } else {
+//     UE_LOG(LogCarlaServer, Warning, TEXT("Sending empty image"));
+// #endif // CARLA_SERVER_EXTRA_LOG
+//   }
+}
+
 static void SetBoxSpeedAndType(carla_agent &values, const ACharacter *Walker)
 {
   values.type = CARLA_SERVER_AGENT_PEDESTRIAN;
@@ -338,5 +357,15 @@ CarlaServer::ErrorCode CarlaServer::SendMeasurements(
     }
   }
 
-  return ParseErrorCode(carla_write_measurements(Server, values, images.Get(), NumberOfImages));
+  // Images.
+  const auto NumberOfLidarMeasurements = PlayerState.GetNumberOfLidarsMeasurements();
+  TUniquePtr<carla_lidar_measurement[]> lidar_measurements;
+  if (NumberOfLidarMeasurements > 0) {
+    lidar_measurements = MakeUnique<carla_lidar_measurement[]>(NumberOfLidarMeasurements);
+    for (auto i = 0; i < NumberOfImages; ++i) {
+      Set(lidar_measurements[i], PlayerState.GetLidarSegments()[i]);
+    }
+  }
+
+  return ParseErrorCode(carla_write_measurements(Server, values, images.Get(), lidar_measurements.Get(), NumberOfImages));
 }

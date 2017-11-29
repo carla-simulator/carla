@@ -16,6 +16,7 @@ void ACarlaPlayerState::Reset()
   CollisionIntensityPedestrians = 0.0f;
   CollisionIntensityOther = 0.0f;
   Images.Empty();
+  LidarSegments.Empty();
 }
 
 void ACarlaPlayerState::CopyProperties(APlayerState *PlayerState)
@@ -45,6 +46,7 @@ void ACarlaPlayerState::CopyProperties(APlayerState *PlayerState)
       OtherLaneIntersectionFactor = Other->OtherLaneIntersectionFactor;
       OffRoadIntersectionFactor = Other->OffRoadIntersectionFactor;
       Images = Other->Images;
+      LidarSegments = Other->LidarSegments;
       UE_LOG(LogCarla, Log, TEXT("Copied properties of ACarlaPlayerState"));
     }
   }

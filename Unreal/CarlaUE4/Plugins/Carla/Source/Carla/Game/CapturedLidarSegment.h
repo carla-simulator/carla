@@ -8,24 +8,22 @@
 /// Lidar segment captured by tick
 ///
 USTRUCT()
+struct FCapturedLidarLaserSegment
+{
+  GENERATED_USTRUCT_BODY()
+
+  UPROPERTY(VisibleAnywhere)
+  TArray<FVector> Points;
+};
+
+USTRUCT()
 struct FCapturedLidarSegment
 {
   GENERATED_USTRUCT_BODY()
 
   UPROPERTY(VisibleAnywhere)
-  float horizontal = 0u;
-
-
+  float HorizontalAngle = 0;
 
   UPROPERTY(VisibleAnywhere)
-  uint32 SizeX = 0u;
-
-  UPROPERTY(VisibleAnywhere)
-  uint32 SizeY = 0u;
-
-  UPROPERTY(VisibleAnywhere)
-  EPostProcessEffect PostProcessEffect = EPostProcessEffect::INVALID;
-
-  UPROPERTY(VisibleAnywhere)
-  TArray<FColor> BitMap;
+  TArray<FCapturedLidarLaserSegment> LidarLasersSegments;
 };

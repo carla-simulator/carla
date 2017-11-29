@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "LidarLaser.h"
 #include "Settings/LidarDescription.h"
+#include "Game/CapturedLidarSegment.h"
 #include "Lidar.generated.h"
 
 UCLASS()
@@ -30,7 +31,10 @@ protected:
 
 public:
 	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	// virtual void Tick(float DeltaTime) override;
+
+  /** Capture lidar segment points produced by DeltaTime */
+  void ReadPoints(float DeltaTime, FCapturedLidarSegment& LidarSegmentData);
 
   /** Number of lasers */
 	UPROPERTY(EditDefaultsOnly, Category = "Lidar Description")
