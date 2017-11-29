@@ -34,10 +34,18 @@ namespace server {
     lhs->set_z(rhs.z);
   }
 
+  static void Set(cs::Rotation3D *lhs, const carla_rotation3d &rhs) {
+    DEBUG_ASSERT(lhs != nullptr);
+    lhs->set_pitch(rhs.pitch);
+    lhs->set_roll(rhs.roll);
+    lhs->set_yaw(rhs.yaw);
+  }
+
   static void Set(cs::Transform *lhs, const carla_transform &rhs) {
     DEBUG_ASSERT(lhs != nullptr);
     Set(lhs->mutable_location(), rhs.location);
     Set(lhs->mutable_orientation(), rhs.orientation);
+    Set(lhs->mutable_rotation(), rhs.rotation);
   }
 
   static void Set(cs::Control *lhs, const carla_control &rhs) {
