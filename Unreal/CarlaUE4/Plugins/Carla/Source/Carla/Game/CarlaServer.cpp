@@ -81,23 +81,55 @@ static void Set(carla_image &cImage, const FCapturedImage &uImage)
   }
 }
 
-static void Set(carla_lidar_measurement &cLidarMeasurement, const FCapturedLidarSegment &uLidarSegment)
+struct carla_lidar_measurement_data {
+  TUniquePtr<uint32_t[]> points_count_by_channel;
+  TUniquePtr<float[]> points;
+};
+
+static void Set(
+  carla_lidar_measurement &cLidarMeasurement,
+  const FCapturedLidarSegment &uLidarSegment,
+  carla_lidar_measurement_data &cLidarMeasurementData)
 {
-//   if (uImage.BitMap.Num() > 0) {
-//     cImage.width = uImage.SizeX;
-//     cImage.height = uImage.SizeY;
-//     cImage.type = PostProcessEffect::ToUInt(uImage.PostProcessEffect);
-//     cImage.data = &uImage.BitMap.GetData()->DWColor();
-//
-// #ifdef CARLA_SERVER_EXTRA_LOG
-//     {
-//       const auto Size = uImage.BitMap.Num();
-//       UE_LOG(LogCarlaServer, Log, TEXT("Sending image %dx%d (%d) type %d"), cImage.width, cImage.height, Size, cImage.type);
-//     }
-//   } else {
-//     UE_LOG(LogCarlaServer, Warning, TEXT("Sending empty image"));
-// #endif // CARLA_SERVER_EXTRA_LOG
-//   }
+
+  if (uLidarSegment.LidarLasersSegments.Num() > 0) {
+
+    cLidarMeasurement.horizontal_angle = uLidarSegment.HorizontalAngle;
+    cLidarMeasurement.channels_count = uLidarSegment.LidarLasersSegments.Num();
+
+    cLidarMeasurementData.points_count_by_channel = MakeUnique<uint32_t[]>(cLidarMeasurement.channels_count);
+    size_t total_points = 0;
+    for(int i=0; i<cLidarMeasurement.channels_count; i++)
+    {
+      size_t points_count = uLidarSegment.LidarLasersSegments[0].Points.Num();
+      cLidarMeasurementData.points_count_by_channel[i] = points_count;
+      total_points += points_count;
+    }
+    cLidarMeasurementData.points = MakeUnique<float[]>(3 * total_points);
+    for(int i=0; i<cLidarMeasurement.channels_count; i++)
+    {
+      size_t points_count = cLidarMeasurementData.points_count_by_channel[i];
+      auto& laser_points = uLidarSegment.LidarLasersSegments[i].Points;
+      for(int pi=0; pi<points_count; pi++)
+      {
+        cLidarMeasurementData.points[pi] = laser_points[pi].X;
+        cLidarMeasurementData.points[pi + 1] = laser_points[pi].Y;
+        cLidarMeasurementData.points[pi + 2] = laser_points[pi].Z;
+      }
+    }
+
+    cLidarMeasurement.points_count_by_channel = cLidarMeasurementData.points_count_by_channel.Get();
+    cLidarMeasurement.data = cLidarMeasurementData.points.Get();
+
+#ifdef CARLA_SERVER_EXTRA_LOG
+    {
+      const auto Size = uImage.BitMap.Num();
+      UE_LOG(LogCarlaServer, Log, TEXT("Sending lidar measurement %d x %d"), uLidarSegment.LidarLasersSegments.Num(), uLidarSegment.LidarLasersSegments[0].Points.Num());
+    }
+  } else {
+    UE_LOG(LogCarlaServer, Warning, TEXT("Sending empty lidar measurement"));
+#endif // CARLA_SERVER_EXTRA_LOG
+  }
 }
 
 static void SetBoxSpeedAndType(carla_agent &values, const ACharacter *Walker)
@@ -360,12 +392,16 @@ CarlaServer::ErrorCode CarlaServer::SendMeasurements(
   // Images.
   const auto NumberOfLidarMeasurements = PlayerState.GetNumberOfLidarsMeasurements();
   TUniquePtr<carla_lidar_measurement[]> lidar_measurements;
+  TUniquePtr<carla_lidar_measurement_data[]> lidar_measurements_data;
   if (NumberOfLidarMeasurements > 0) {
     lidar_measurements = MakeUnique<carla_lidar_measurement[]>(NumberOfLidarMeasurements);
+    lidar_measurements_data = MakeUnique<carla_lidar_measurement_data[]>(NumberOfLidarMeasurements);
     for (auto i = 0; i < NumberOfImages; ++i) {
-      Set(lidar_measurements[i], PlayerState.GetLidarSegments()[i]);
+      Set(lidar_measurements[i], PlayerState.GetLidarSegments()[i], lidar_measurements_data[i]);
     }
   }
 
-  return ParseErrorCode(carla_write_measurements(Server, values, images.Get(), lidar_measurements.Get(), NumberOfImages));
+  return ParseErrorCode(carla_write_measurements(
+    Server, values, images.Get(), lidar_measurements.Get(),
+    NumberOfImages, NumberOfLidarMeasurements));
 }
