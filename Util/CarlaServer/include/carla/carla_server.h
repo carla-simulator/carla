@@ -39,7 +39,7 @@ extern "C" {
     float horizontal_angle;
     int channels_count;
     const uint32_t *points_count_by_channel;
-    const uint32_t *data;
+    const float *data;
   };
 
   struct carla_transform {
@@ -263,7 +263,8 @@ extern "C" {
       const carla_measurements &values,
       const struct carla_image *images,
       const struct carla_lidar_measurement *lidar_measurements,
-      uint32_t number_of_images);
+      uint32_t number_of_images,
+      uint32_t number_of_lidar_measurements);
 
 #ifdef __cplusplus
 }
