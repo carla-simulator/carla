@@ -60,13 +60,13 @@ static void GetCameraDescription(
 {
   ConfigFile.GetInt(Section, TEXT("ImageSizeX"), Camera.ImageSizeX);
   ConfigFile.GetInt(Section, TEXT("ImageSizeY"), Camera.ImageSizeY);
-  ConfigFile.GetInt(Section, TEXT("CameraFOV"), Camera.FOVAngle);
-  ConfigFile.GetInt(Section, TEXT("CameraPositionX"), Camera.Position.X);
-  ConfigFile.GetInt(Section, TEXT("CameraPositionY"), Camera.Position.Y);
-  ConfigFile.GetInt(Section, TEXT("CameraPositionZ"), Camera.Position.Z);
-  ConfigFile.GetInt(Section, TEXT("CameraRotationPitch"), Camera.Rotation.Pitch);
-  ConfigFile.GetInt(Section, TEXT("CameraRotationRoll"), Camera.Rotation.Roll);
-  ConfigFile.GetInt(Section, TEXT("CameraRotationYaw"), Camera.Rotation.Yaw);
+  ConfigFile.GetFloat(Section, TEXT("CameraFOV"), Camera.FOVAngle);
+  ConfigFile.GetFloat(Section, TEXT("CameraPositionX"), Camera.Position.X);
+  ConfigFile.GetFloat(Section, TEXT("CameraPositionY"), Camera.Position.Y);
+  ConfigFile.GetFloat(Section, TEXT("CameraPositionZ"), Camera.Position.Z);
+  ConfigFile.GetFloat(Section, TEXT("CameraRotationPitch"), Camera.Rotation.Pitch);
+  ConfigFile.GetFloat(Section, TEXT("CameraRotationRoll"), Camera.Rotation.Roll);
+  ConfigFile.GetFloat(Section, TEXT("CameraRotationYaw"), Camera.Rotation.Yaw);
   ConfigFile.GetPostProcessEffect(Section, TEXT("PostProcessing"), Camera.PostProcessEffect);
 }
 

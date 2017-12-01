@@ -70,6 +70,7 @@ void ACarlaVehicleController::BeginPlay()
         auto &Image = CarlaPlayerState->Images[i];
         Image.SizeX = Camera->GetImageSizeX();
         Image.SizeY = Camera->GetImageSizeY();
+        Image.FOVAngle = Camera->GetFOVAngle();
         Image.PostProcessEffect = Camera->GetPostProcessEffect();
       }
     }

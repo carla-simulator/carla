@@ -50,6 +50,8 @@ public:
     return PostProcessEffect;
   }
 
+  float GetFOVAngle() const;
+
   void SetImageSize(uint32 SizeX, uint32 SizeY);
 
   void SetPostProcessEffect(EPostProcessEffect PostProcessEffect);

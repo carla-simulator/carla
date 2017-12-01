@@ -27,5 +27,8 @@ struct FCapturedImage
   EPostProcessEffect PostProcessEffect = EPostProcessEffect::INVALID;
 
   UPROPERTY(VisibleAnywhere)
+  float FOVAngle = 0.0f;
+
+  UPROPERTY(VisibleAnywhere)
   TArray<FColor> BitMap;
 };
