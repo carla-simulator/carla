@@ -13,11 +13,14 @@ them afterwards with the C++ implementation at "Util/ImageConverter" as it
 provides considerably better performance.
 """
 
+import math
 
 try:
     import numpy
+    from numpy.matlib import repmat
 except ImportError:
-    raise RuntimeError('cannot import numpy, make sure numpy package is installed')
+    raise RuntimeError(
+        'cannot import numpy, make sure numpy package is installed')
 
 
 from . import sensor
@@ -84,9 +87,9 @@ def depth_to_array(image):
     array = to_bgra_array(image)
     array = array.astype(numpy.float32)
     # Apply (R + G * 256 + B * 256 * 256) / (256 * 256 * 256 - 1).
-    grayscale = numpy.dot(array[:, :, :3], [256.0 * 256.0, 256.0, 1.0])
-    grayscale /= (256.0 * 256.0 * 256.0 - 1.0)
-    return grayscale
+    normalized_depth = numpy.dot(array[:, :, :3], [256.0 * 256.0, 256.0, 1.0])
+    normalized_depth /= (256.0 * 256.0 * 256.0 - 1.0)
+    return normalized_depth
 
 
 def depth_to_logarithmic_grayscale(image):
@@ -94,10 +97,39 @@ def depth_to_logarithmic_grayscale(image):
     Convert an image containing CARLA encoded depth-map to a logarithmic
     grayscale image array.
     """
-    grayscale = depth_to_array(image)
+    normalized_depth = depth_to_array(image)
     # Convert to logarithmic depth.
-    logdepth = numpy.ones(grayscale.shape) + (numpy.log(grayscale) / 5.70378)
+    logdepth = numpy.ones(normalized_depth.shape) + \
+        (numpy.log(normalized_depth) / 5.70378)
     logdepth = numpy.clip(logdepth, 0.0, 1.0)
     logdepth *= 255.0
     # Expand to three colors.
     return numpy.repeat(logdepth[:, :, numpy.newaxis], 3, axis=2)
+
+
+def depth_to_local_point_cloud(image, fov):
+    """
+    Convert an image containing CARLA encoded depth-map to a 2D array containing
+    the 3D position (relative to the camera) of each pixel.
+    """
+    far = 1000.0
+    normalized_depth = depth_to_array(image)
+    # (Intrinsic) K Matrix
+    k = numpy.identity(3)
+    k[0, 2] = image.width / 2.0
+    k[1, 2] = image.height / 2.0
+    k[0, 0] = k[1, 1] = image.width / (2.0 * math.tan(fov * math.pi / 360.0))
+    # 2d pixel coordinates
+    pixel_length = image.width * image.height
+    u = repmat(numpy.r_[image.width-1:-1:-1],
+               image.height, 1).reshape(pixel_length)
+    v = repmat(numpy.c_[image.height-1:-1:-1], 1,
+               image.width).reshape(pixel_length)
+    # pd2 = [u,v,1]
+    p2d = numpy.array([u, v, numpy.ones_like(u)])
+    # P = [X,Y,Z]
+    p3d = numpy.dot(numpy.linalg.inv(k), p2d) * \
+        (normalized_depth.reshape(pixel_length) * far)
+    # Formating the output
+    p3d = numpy.transpose(p3d)
+    return p3d[:, numpy.newaxis, :].reshape((image.height, image.width, 3))
