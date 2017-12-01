@@ -55,6 +55,11 @@ class DataStream(object):
 
 
 
+    def _read_data_type(self, imagedata,pointer):
+        pointer += 4*2
+        data_type = struct.unpack('<L',imagedata[pointer:(pointer + 4)])[0]
+        return data_type
+
     def _read_image(self,imagedata,pointer):
 
 
@@ -85,6 +90,59 @@ class DataStream(object):
         return new_image,im_type,pointer
 
 
+    def _read_lidar_measurement(self, imagedata, pointer):
+
+        horizontal_angle = struct.unpack('<d',imagedata[pointer:(pointer+8)])[0]
+        pointer +=8
+        im_type = struct.unpack('<L',imagedata[pointer:(pointer+4)])[0]
+        pointer +=4
+        channels_count = struct.unpack('<L',imagedata[pointer:(pointer+4)])[0]
+        pointer +=4
+        print('--- pointcloud {} {}'.format(horizontal_angle, channels_count))
+
+        points_count_by_channel_size = channels_count * 4
+        points_count_by_channel_bytes = imagedata[pointer:(pointer + points_count_by_channel_size)]
+        points_count_by_channel = np.frombuffer(points_count_by_channel_bytes, dtype=np.dtype('uint32'))
+        pointer += points_count_by_channel_size
+        print('--- points counts {} {}'.format(points_count_by_channel_size, points_count_by_channel))
+
+        points_in_one_channel = points_count_by_channel[0]
+        points_size = channels_count * points_in_one_channel * 3 * 8
+        points = np.frombuffer(imagedata[pointer:(pointer + points_size)], dtype='float')
+        points = np.reshape(points, (channels_count, points_in_one_channel, 3))
+        pointer += points_size
+        print('--- points {} {}'.format(points_size, points))
+
+        lidar_measurement = {
+            'horizontal_angle' : horizontal_angle,
+            'channels_count' : channels_count,
+            'points_count_by_channel' : points_count_by_channel,
+            'points' : points
+        }
+
+        # points = []
+        # for points_count in points_count_by_channel.tolist():
+        #     points_size = points_count * 8
+        #     points.append(np.frombuffer(image_bytes[pointer: (pointer + points_size)], dtype='float'))
+
+        # image_size = width*height*4
+        #
+        # image_bytes = imagedata[pointer:(pointer+image_size)]
+        #
+        #
+        # dt = np.dtype("uint8")
+        #
+        # new_image =np.frombuffer(image_bytes,dtype=dt)
+        #
+        # new_image = np.reshape(new_image,(self._image_y,self._image_x,4)) # TODO: make this generic
+        #
+        # pointer += image_size
+
+
+
+        return lidar_measurement, im_type, pointer
+
+
     def receive_data(self):
 
         depths = []
@@ -102,10 +160,10 @@ class DataStream(object):
 
         measurements = Measurements()
         measurements.ParseFromString(data)
-        
+
         player_measures = measurements.player_measurements
         non_player_agents = measurements.non_player_agents
-        
+
         try:
             logging.debug(" Trying to get the image")
             imagedata  = get_message(self._socket)
@@ -128,23 +186,33 @@ class DataStream(object):
 
         pointer = 0
         while pointer < len(imagedata):
-            image,im_type,pointer = self._read_image(imagedata,pointer)
+            im_type = self._read_data_type(imagedata, pointer)
+            print('--- image type: {}'.format(im_type))
             if im_type == 0:
 
+                image,im_type,pointer = self._read_image(imagedata,pointer)
                 meas_dict['RAW_BGRA'].append(image)
                 logging.debug("RECEIVED rgb_raw")
             if im_type == 1:
 
+                image,im_type,pointer = self._read_image(imagedata,pointer)
                 meas_dict['BGRA'].append(image)
                 logging.debug("RECEIVED rgb")
             if im_type == 2:
 
+                image,im_type,pointer = self._read_image(imagedata,pointer)
                 meas_dict['Depth'].append(image)
                 logging.debug("RECEIVED depht")
             if im_type == 3:
 
+                image,im_type,pointer = self._read_image(imagedata,pointer)
                 meas_dict['Labels'].append(image)
                 logging.debug("RECEIVED scene_seg")
+            if im_type == 10:
+
+                image,im_type,pointer = self._read_lidar_measurement(imagedata,pointer)
+                # meas_dict['Labels'].append(image)
+                logging.debug("RECEIVED lidar_measurement")
 
         meas_dict.update({'WallTime':measurements.platform_timestamp})
 
@@ -170,7 +238,7 @@ class DataStream(object):
         except Exception:
             logging.exception("Other error on getting queue")
             raise Exception
-        
+
         else:
             self._data_buffer.task_done()
 
@@ -183,10 +251,10 @@ class DataStream(object):
         self._socket = socket
 
         self.run()
-        
+
 
     def stop(self):
-        
+
         self._running = False
 
         disconnect(self._socket)
@@ -197,9 +265,9 @@ class DataStream(object):
         while True:
             try:
                 aux=self._data_buffer.get(False)
-            except Queue.Empty:                
+            except Queue.Empty:
                 return
-      
+
 
     @threaded
     def run(self):
@@ -217,5 +285,5 @@ class DataStream(object):
             logging.exception("Unexpected RuntimeError")
             self._running = False
         finally:
-            
+
             logging.debug("We Are finishing the datastream thread ")

@@ -83,7 +83,7 @@ static void Set(carla_image &cImage, const FCapturedImage &uImage)
 
 struct carla_lidar_measurement_data {
   TUniquePtr<uint32_t[]> points_count_by_channel;
-  TUniquePtr<float[]> points;
+  TUniquePtr<double[]> points;
 };
 
 static void Set(
@@ -91,6 +91,30 @@ static void Set(
   const FCapturedLidarSegment &uLidarSegment,
   carla_lidar_measurement_data &cLidarMeasurementData)
 {
+
+  cLidarMeasurement.horizontal_angle = 0;
+  cLidarMeasurement.channels_count = 32;
+  cLidarMeasurementData.points_count_by_channel = MakeUnique<uint32_t[]>(cLidarMeasurement.channels_count);
+  for(int i=0; i<cLidarMeasurement.channels_count; i++)
+  {
+    cLidarMeasurementData.points_count_by_channel[i] = 2;
+  }
+  cLidarMeasurementData.points = MakeUnique<double[]>(3 * 32 * 2);
+  size_t points_filled = 0;
+  for(int i=0; i<cLidarMeasurement.channels_count; i++)
+  {
+    size_t points_count = cLidarMeasurementData.points_count_by_channel[i];
+    for(int pi=0; pi<points_count; pi++)
+    {
+      cLidarMeasurementData.points[3 * pi + 3 * points_filled] = 1 + 3 * pi;
+      cLidarMeasurementData.points[3 * pi + 1 + 3 * points_filled] = 2 + 3 * pi;
+      cLidarMeasurementData.points[3 * pi + 2 + 3 * points_filled] = 3 + 3 * pi;
+    }
+    points_filled += points_count;
+  }
+  cLidarMeasurement.points_count_by_channel = cLidarMeasurementData.points_count_by_channel.Get();
+  cLidarMeasurement.data = cLidarMeasurementData.points.Get();
+  return;
 
   if (uLidarSegment.LidarLasersSegments.Num() > 0) {
 
@@ -105,7 +129,7 @@ static void Set(
       cLidarMeasurementData.points_count_by_channel[i] = points_count;
       total_points += points_count;
     }
-    cLidarMeasurementData.points = MakeUnique<float[]>(3 * total_points);
+    cLidarMeasurementData.points = MakeUnique<double[]>(3 * total_points);
     for(int i=0; i<cLidarMeasurement.channels_count; i++)
     {
       size_t points_count = cLidarMeasurementData.points_count_by_channel[i];
@@ -389,14 +413,14 @@ CarlaServer::ErrorCode CarlaServer::SendMeasurements(
     }
   }
 
-  // Images.
-  const auto NumberOfLidarMeasurements = PlayerState.GetNumberOfLidarsMeasurements();
+  // Lidars.
+  auto NumberOfLidarMeasurements = PlayerState.GetNumberOfLidarsMeasurements();
   TUniquePtr<carla_lidar_measurement[]> lidar_measurements;
   TUniquePtr<carla_lidar_measurement_data[]> lidar_measurements_data;
   if (NumberOfLidarMeasurements > 0) {
     lidar_measurements = MakeUnique<carla_lidar_measurement[]>(NumberOfLidarMeasurements);
     lidar_measurements_data = MakeUnique<carla_lidar_measurement_data[]>(NumberOfLidarMeasurements);
-    for (auto i = 0; i < NumberOfImages; ++i) {
+    for (auto i = 0; i < NumberOfLidarMeasurements; ++i) {
       Set(lidar_measurements[i], PlayerState.GetLidarSegments()[i], lidar_measurements_data[i]);
     }
   }
