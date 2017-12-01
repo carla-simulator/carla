@@ -37,21 +37,26 @@ namespace server {
     ///
     /// @note The expected usage of this class is to mantain a constant size
     /// buffer of images, so memory allocation occurs only once.
-    void Write(const_array_view<carla_image> images);
+    size_t Write(
+      const_array_view<carla_image> images,
+      unsigned char *buffer
+    );
 
-    const_buffer buffer() const {
-      return boost::asio::buffer(_buffer.get(), _size);
-    }
+    size_t GetSize(const_array_view<carla_image> images);
+
+    // const_buffer buffer() const {
+    //   return boost::asio::buffer(_buffer.get(), _size);
+    // }
 
   private:
 
-    void Reset(uint32_t count);
-
-    std::unique_ptr<unsigned char[]> _buffer = nullptr;
-
-    uint32_t _size = 0u;
-
-    uint32_t _capacity = 0u;
+    // void Reset(uint32_t count);
+    //
+    // std::unique_ptr<unsigned char[]> _buffer = nullptr;
+    //
+    // uint32_t _size = 0u;
+    //
+    // uint32_t _capacity = 0u;
   };
 
 } // namespace server

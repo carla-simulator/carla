@@ -64,7 +64,7 @@ namespace server {
       const auto string = _encoder.Encode(values.measurements());
       auto ec = _server.Write(boost::asio::buffer(string), timeout);
       if (!ec) {
-        ec = _server.Write(values.images(), timeout);
+        ec = _server.Write(values.buffer(), timeout);
       }
       return ec;
     }
