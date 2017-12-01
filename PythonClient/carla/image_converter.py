@@ -87,8 +87,8 @@ def depth_to_array(image):
     array = to_bgra_array(image)
     array = array.astype(numpy.float32)
     # Apply (R + G * 256 + B * 256 * 256) / (256 * 256 * 256 - 1).
-    normalized_depth = numpy.dot(array[:, :, :3], [256.0 * 256.0, 256.0, 1.0])
-    normalized_depth /= (256.0 * 256.0 * 256.0 - 1.0)
+    normalized_depth = numpy.dot(array[:, :, :3], [65536.0, 256.0, 1.0])
+    normalized_depth /= 16777215.0 # (256.0 * 256.0 * 256.0 - 1.0)
     return normalized_depth
 
 
