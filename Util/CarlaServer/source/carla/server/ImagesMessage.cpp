@@ -14,18 +14,25 @@
 namespace carla {
 namespace server {
 
+  static_assert(sizeof(float) == sizeof(uint32_t), "Invalid float size!");
+
   static size_t GetSizeOfBuffer(const_array_view<carla_image> images) {
     size_t total = 0u;
     for (const auto &image : images) {
-      total += 3u; // width, height, type.
+      total += 4u; // width, height, type, fov.
       total += image.width * image.height;
     }
     return total * sizeof(uint32_t);
   }
 
-  static size_t WriteSizeToBuffer(unsigned char *buffer, uint32_t size) {
+  static size_t WriteSizeToBuffer(unsigned char *buffer, const uint32_t size) {
     std::memcpy(buffer, &size, sizeof(uint32_t));
     return sizeof(uint32_t);
+  }
+
+  static size_t WriteFloatToBuffer(unsigned char *buffer, const float value) {
+    std::memcpy(buffer, &value, sizeof(float));
+    return sizeof(float);
   }
 
   static size_t WriteImageToBuffer(unsigned char *buffer, const carla_image &image) {
@@ -45,6 +52,7 @@ namespace server {
       begin += WriteSizeToBuffer(begin, image.width);
       begin += WriteSizeToBuffer(begin, image.height);
       begin += WriteSizeToBuffer(begin, image.type);
+      begin += WriteFloatToBuffer(begin, image.fov);
       begin += WriteImageToBuffer(begin, image);
     }
     DEBUG_ASSERT(std::distance(_buffer.get(), begin) == _size);

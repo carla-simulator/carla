@@ -76,6 +76,7 @@ static void Set(carla_image &cImage, const FCapturedImage &uImage)
     cImage.width = uImage.SizeX;
     cImage.height = uImage.SizeY;
     cImage.type = PostProcessEffect::ToUInt(uImage.PostProcessEffect);
+    cImage.fov = uImage.FOVAngle;
     cImage.data = &uImage.BitMap.GetData()->DWColor();
 
 #ifdef CARLA_SERVER_EXTRA_LOG

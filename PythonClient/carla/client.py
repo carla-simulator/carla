@@ -177,14 +177,16 @@ class CarlaClient(object):
         # consists of images only.
         image_types = ['None', 'SceneFinal', 'Depth', 'SemanticSegmentation']
         gettype = lambda id: image_types[id] if len(image_types) > id else 'Unknown'
-        getval = lambda index: struct.unpack('<L', raw_data[index*4:index*4+4])[0]
+        getint = lambda index: struct.unpack('<L', raw_data[index*4:index*4+4])[0]
+        getfloat = lambda index: struct.unpack('<f', raw_data[index*4:index*4+4])[0]
         total_size = len(raw_data) / 4
         index = 0
         while index < total_size:
-            width = getval(index)
-            height = getval(index + 1)
-            image_type = gettype(getval(index + 2))
-            begin = index + 3
+            width = getint(index)
+            height = getint(index + 1)
+            image_type = gettype(getint(index + 2))
+            fov = getfloat(index + 3)
+            begin = index + 4
             end = begin + width * height
             index = end
-            yield sensor.Image(width, height, image_type, raw_data[begin*4:end*4])
+            yield sensor.Image(width, height, image_type, fov, raw_data[begin*4:end*4])
