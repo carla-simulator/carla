@@ -92,30 +92,6 @@ static void Set(
   carla_lidar_measurement_data &cLidarMeasurementData)
 {
 
-  cLidarMeasurement.horizontal_angle = 0;
-  cLidarMeasurement.channels_count = 32;
-  cLidarMeasurementData.points_count_by_channel = MakeUnique<uint32_t[]>(cLidarMeasurement.channels_count);
-  for(int i=0; i<cLidarMeasurement.channels_count; i++)
-  {
-    cLidarMeasurementData.points_count_by_channel[i] = 2;
-  }
-  cLidarMeasurementData.points = MakeUnique<double[]>(3 * 32 * 2);
-  size_t points_filled = 0;
-  for(int i=0; i<cLidarMeasurement.channels_count; i++)
-  {
-    size_t points_count = cLidarMeasurementData.points_count_by_channel[i];
-    for(int pi=0; pi<points_count; pi++)
-    {
-      cLidarMeasurementData.points[3 * pi + 3 * points_filled] = 1 + 3 * pi;
-      cLidarMeasurementData.points[3 * pi + 1 + 3 * points_filled] = 2 + 3 * pi;
-      cLidarMeasurementData.points[3 * pi + 2 + 3 * points_filled] = 3 + 3 * pi;
-    }
-    points_filled += points_count;
-  }
-  cLidarMeasurement.points_count_by_channel = cLidarMeasurementData.points_count_by_channel.Get();
-  cLidarMeasurement.data = cLidarMeasurementData.points.Get();
-  return;
-
   if (uLidarSegment.LidarLasersSegments.Num() > 0) {
 
     cLidarMeasurement.horizontal_angle = uLidarSegment.HorizontalAngle;
@@ -130,16 +106,18 @@ static void Set(
       total_points += points_count;
     }
     cLidarMeasurementData.points = MakeUnique<double[]>(3 * total_points);
+    size_t points_filled = 0;
     for(int i=0; i<cLidarMeasurement.channels_count; i++)
     {
       size_t points_count = cLidarMeasurementData.points_count_by_channel[i];
       auto& laser_points = uLidarSegment.LidarLasersSegments[i].Points;
       for(int pi=0; pi<points_count; pi++)
       {
-        cLidarMeasurementData.points[pi] = laser_points[pi].X;
-        cLidarMeasurementData.points[pi + 1] = laser_points[pi].Y;
-        cLidarMeasurementData.points[pi + 2] = laser_points[pi].Z;
+        cLidarMeasurementData.points[3 * (pi + points_filled)] = laser_points[pi].X;
+        cLidarMeasurementData.points[3 * (pi + points_filled) + 1] = laser_points[pi].Y;
+        cLidarMeasurementData.points[3 * (pi + points_filled) + 2] = laser_points[pi].Z;
       }
+      points_filled += points_count;
     }
 
     cLidarMeasurement.points_count_by_channel = cLidarMeasurementData.points_count_by_channel.Get();

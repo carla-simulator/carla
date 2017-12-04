@@ -44,11 +44,8 @@ namespace server {
     unsigned char *buffer
   ) {
     long buffer_size = GetSizeOfBuffer(images);
-    // Reset(sizeof(uint32_t) + buffer_size); // header + buffer.
 
     auto begin = buffer;
-    // auto begin = _buffer.get();
-    // begin += WriteSizeToBuffer(begin, buffer_size);
     for (const auto &image : images) {
       begin += WriteSizeToBuffer(begin, image.width);
       begin += WriteSizeToBuffer(begin, image.height);
@@ -56,18 +53,8 @@ namespace server {
       begin += WriteImageToBuffer(begin, image);
     }
     DEBUG_ASSERT(std::distance(buffer, begin) == buffer_size);
-    // DEBUG_ASSERT(std::distance(_buffer.get(), begin) == _size);
     return buffer_size;
   }
-
-  // void ImagesMessage::Reset(const uint32_t count) {
-  //   if (_capacity < count) {
-  //     log_info("allocating image buffer of", count, "bytes");
-  //     _buffer = std::make_unique<unsigned char[]>(count);
-  //     _capacity = count;
-  //   }
-  //   _size = count;
-  // }
 
 } // namespace server
 } // namespace carla

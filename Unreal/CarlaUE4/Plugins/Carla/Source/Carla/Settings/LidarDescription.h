@@ -51,20 +51,3 @@ struct FLidarDescription
   UPROPERTY(Category = "Lidar Description", EditDefaultsOnly)
   FRotator Rotation = {0.0f, 0.0f, 0.0f};
 };
-
-// Parameters of known lidars
-
-// Velodyne HDL-32E
-// +/- 2 cm accuracy
-// 32 Channels
-// 80m-100m Range
-// 700,000 Points per Second
-// 360° Horizontal FOV
-// +10° to -30° Vertical FOV
-
-// Velodyne VLP-16
-// 16 Channels
-// 100m Range
-// 300,000 Points per Second
-// 360° Horizontal FOV
-// +/- 15° Vertical FOV

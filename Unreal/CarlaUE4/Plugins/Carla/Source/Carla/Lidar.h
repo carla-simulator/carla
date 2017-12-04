@@ -30,8 +30,6 @@ protected:
   void CreateLasers();
 
 public:
-	// Called every frame
-	// virtual void Tick(float DeltaTime) override;
 
   /** Capture lidar segment points produced by DeltaTime */
   void ReadPoints(float DeltaTime, FCapturedLidarSegment& LidarSegmentData);

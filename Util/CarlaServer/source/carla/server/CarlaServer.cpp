@@ -132,6 +132,7 @@ int32_t carla_write_measurements(
     return agent->WriteMeasurements(
         values,
         carla::const_array_view<carla_image>(images, number_of_images),
-        carla::const_array_view<carla_lidar_measurement>(lidar_measurements, number_of_lidar_measurements)).value();
+        carla::const_array_view<carla_lidar_measurement>(lidar_measurements, number_of_lidar_measurements)
+      ).value();
   }
 }

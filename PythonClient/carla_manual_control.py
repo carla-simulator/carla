@@ -183,6 +183,7 @@ class App(object):
         self.img_vec = measurements['BGRA']
         self.depth_vec = measurements['Depth']
         self.labels_vec = measurements['Labels']
+        self.lidars_vec = measurements['Lidars']
 
         if time.time() - self.prev_time > 1.:
             message = 'Step {step} ({fps:.1f} FPS): '
@@ -251,6 +252,26 @@ class App(object):
             surface = pygame.transform.scale(surface, auxImgResolution)
             self._display_surf.blit(surface, (x_pos, auxImgYPos))
             x_pos += f
+
+        if self.lidars_vec:
+
+            lidar_data = np.array(self.lidars_vec[0]['points'][:, :, :2])
+            lidar_data /= 50.0
+            lidar_data += 100.0
+            lidar_data = np.fabs(lidar_data)
+            lidar_data = lidar_data.astype(np.int32)
+            lidar_data = np.reshape(lidar_data, (-1, 2))
+            #draw lidar
+            lidar_img_size = (200, 200, 3)
+            lidar_img = np.zeros(lidar_img_size)
+            lidar_img[tuple(lidar_data.T)] = (255, 255, 255)
+            surface = pygame.surfarray.make_surface(
+                lidar_img
+            )
+            # surface = pygame.transform.scale(surface, (200, 200))
+            self._display_surf.blit(surface, (10, 10))
+
+
 
         pygame.display.flip()
 
