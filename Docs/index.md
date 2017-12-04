@@ -18,7 +18,7 @@ CARLA Documentation
 
 #### Contributing
 
-  * [Contributing guide](CONTRIBUTING.md)
+  * [Contribution guidelines](CONTRIBUTING.md)
 
 #### Development
 
