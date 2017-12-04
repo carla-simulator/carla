@@ -31,32 +31,12 @@ namespace server {
   class ImagesMessage : private NonCopyable {
   public:
 
-    /// Allocates a new buffer if the capacity is not enough to hold the images,
-    /// but it does not allocate a smaller one if the capacity is greater than
-    /// the size of the images.
-    ///
-    /// @note The expected usage of this class is to mantain a constant size
-    /// buffer of images, so memory allocation occurs only once.
     size_t Write(
       const_array_view<carla_image> images,
       unsigned char *buffer
     );
 
     size_t GetSize(const_array_view<carla_image> images);
-
-    // const_buffer buffer() const {
-    //   return boost::asio::buffer(_buffer.get(), _size);
-    // }
-
-  private:
-
-    // void Reset(uint32_t count);
-    //
-    // std::unique_ptr<unsigned char[]> _buffer = nullptr;
-    //
-    // uint32_t _size = 0u;
-    //
-    // uint32_t _capacity = 0u;
   };
 
 } // namespace server

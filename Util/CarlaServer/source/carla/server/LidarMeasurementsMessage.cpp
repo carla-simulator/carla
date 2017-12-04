@@ -2,7 +2,6 @@
 #include "carla/server/LidarMeasurementsMessage.h"
 
 #include <cstring>
-#include <iostream>
 
 #include "carla/Debug.h"
 #include "carla/Logging.h"
@@ -46,9 +45,7 @@ namespace server {
 
   static size_t WriteLidarMeasurementToBuffer(unsigned char *buffer, const carla_lidar_measurement &lidar_measurement) {
     const auto points_counts_size = GetSizeOfLidarPointsCounts(lidar_measurement);
-    std::cout << "--- points_counts_size: " << points_counts_size << std::endl;
     const auto points_size = GetSizeOfLidarPoints(lidar_measurement);
-    std::cout << "--- points_size: " << points_size << std::endl;
     DEBUG_ASSERT(lidar_measurement.points_count_by_channel != nullptr);
     DEBUG_ASSERT(lidar_measurement.data != nullptr);
     std::memcpy(buffer, lidar_measurement.points_count_by_channel, points_counts_size);
@@ -65,12 +62,8 @@ namespace server {
     unsigned char *buffer
   ) {
     long buffer_size = GetSizeOfBuffer(lidar_measurements);
-    // Reset(sizeof(uint32_t) + buffer_size); // header + buffer
-    std::cout << "--- buffer size: " << buffer_size << std::endl;
 
     auto begin = buffer;
-    // auto begin = _buffer.get();
-    // begin += WriteIntToBuffer(begin, buffer_size);
     for (const auto &lidar_measurement : lidar_measurements) {
       begin += WriteDoubleToBuffer(begin, lidar_measurement.horizontal_angle);
       begin += WriteIntToBuffer(begin, 10); // type of lidar message
@@ -78,18 +71,8 @@ namespace server {
       begin += WriteLidarMeasurementToBuffer(begin, lidar_measurement);
     }
     DEBUG_ASSERT(std::distance(buffer, begin) == buffer_size);
-    // DEBUG_ASSERT(std::distance(_buffer.get(), begin) == _size);
     return buffer_size;
   }
-
-  // void LidarMeasurementsMessage::Reset(const uint32_t count) {
-  //   if (_capacity < count) {
-  //     log_info("allocating image buffer of", count, "bytes");
-  //     _buffer = std::make_unique<unsigned char[]>(count);
-  //     _capacity = count;
-  //   }
-  //   _size = count;
-  // }
 
 } // namespace server
 } // namespace carla

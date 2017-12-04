@@ -6,9 +6,6 @@
 
 class ALidar;
 
-/**
- *
- */
 class CARLA_API LidarLaser
 {
 public:

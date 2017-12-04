@@ -18,6 +18,12 @@ namespace server {
   class MeasurementsMessage : private NonCopyable {
   public:
 
+    /// Allocates a new buffer if the capacity is not enough to hold the images and
+    /// lidar measurements, but it does not allocate a smaller one if the capacity is
+    /// greater than the size of the images.
+    ///
+    /// @note The expected usage of this class is to mantain a constant size
+    /// buffer of images, so memory allocation occurs only once.
     void Write(
         const carla_measurements &measurements,
         const_array_view<carla_image> images,
@@ -42,14 +48,6 @@ namespace server {
     const_buffer buffer() const {
       return boost::asio::buffer(_buffer.get(), _size);
     }
-
-    // const_buffer images() const {
-    //   return _images.buffer();
-    // }
-
-    // const_buffer lidar_measurements() const {
-    //   return _lidar_measurements.buffer();
-    // }
 
   protected:
 

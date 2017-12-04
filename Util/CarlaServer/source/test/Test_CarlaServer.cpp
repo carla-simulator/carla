@@ -1,6 +1,5 @@
 #include <atomic>
 #include <future>
-#include <iostream>
 
 #include <gtest/gtest.h>
 
