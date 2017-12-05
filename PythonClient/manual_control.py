@@ -315,7 +315,6 @@ class CarlaGame(object):
             )
             self._display.blit(surface, (10, 10))
 
-
         if self._map_view is not None:
             array = self._map_view
             array = array[:, :, :3]

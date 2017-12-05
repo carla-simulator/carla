@@ -10,17 +10,17 @@ class CARLA_API LidarLaser
 {
 public:
 
-	LidarLaser(int Id, float VerticalAngle) :
-		Id(Id),
-		VerticalAngle(VerticalAngle)
-	{}
+  LidarLaser(int Id, float VerticalAngle) :
+    Id(Id),
+    VerticalAngle(VerticalAngle)
+  {}
 
-	int GetId();
-	bool Measure(ALidar* Lidar, float HorizontalAngle, FVector& XYZ, bool Debug = false);
+  int GetId();
+  bool Measure(ALidar* Lidar, float HorizontalAngle, FVector& XYZ, bool Debug = false);
 
 private:
 
-	int Id;
-	float VerticalAngle;
+  int Id;
+  float VerticalAngle;
 
 };

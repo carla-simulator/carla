@@ -8,47 +8,47 @@
 
 int LidarLaser::GetId()
 {
-	return Id;
+  return Id;
 }
 
 bool LidarLaser::Measure(ALidar* Lidar, float HorizontalAngle, FVector& XYZ, bool Debug)
 {
-	FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("Laser_Trace")), true, Lidar);
-	TraceParams.bTraceComplex = true;
-	TraceParams.bReturnPhysicalMaterial = false;
+  FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("Laser_Trace")), true, Lidar);
+  TraceParams.bTraceComplex = true;
+  TraceParams.bReturnPhysicalMaterial = false;
 
-	FHitResult HitInfo(ForceInit);
+  FHitResult HitInfo(ForceInit);
 
-	FVector LidarBodyLoc = Lidar->GetActorLocation();
+  FVector LidarBodyLoc = Lidar->GetActorLocation();
   FRotator LidarBodyRot = Lidar->GetActorRotation();
-	FRotator LaserRot (VerticalAngle, HorizontalAngle, 0);  // float InPitch, float InYaw, float InRoll
+  FRotator LaserRot (VerticalAngle, HorizontalAngle, 0);  // float InPitch, float InYaw, float InRoll
   FRotator ResultRot = UKismetMathLibrary::ComposeRotators(
     LaserRot,
     LidarBodyRot
   );
-	FVector EndTrace = Lidar->Range * UKismetMathLibrary::GetForwardVector(ResultRot) + LidarBodyLoc;
+  FVector EndTrace = Lidar->Range * UKismetMathLibrary::GetForwardVector(ResultRot) + LidarBodyLoc;
 
-	Lidar->GetWorld()->LineTraceSingleByChannel(
-		HitInfo,
-		LidarBodyLoc,
-		EndTrace,
-		ECC_MAX,
-		TraceParams,
-		FCollisionResponseParams::DefaultResponseParam
-	);
+  Lidar->GetWorld()->LineTraceSingleByChannel(
+    HitInfo,
+    LidarBodyLoc,
+    EndTrace,
+    ECC_MAX,
+    TraceParams,
+    FCollisionResponseParams::DefaultResponseParam
+  );
 
-	if (HitInfo.bBlockingHit)
-	{
+  if (HitInfo.bBlockingHit)
+  {
     if (Debug)
     {
-  		DrawDebugPoint(
-  			Lidar->GetWorld(),
-  			HitInfo.ImpactPoint,
-  			10,  //size
-  			FColor(255,0,255),
-  			false,  //persistent (never goes away)
-  			0.1  //point leaves a trail on moving object
-  		);
+      DrawDebugPoint(
+        Lidar->GetWorld(),
+        HitInfo.ImpactPoint,
+        10,  //size
+        FColor(255,0,255),
+        false,  //persistent (never goes away)
+        0.1  //point leaves a trail on moving object
+      );
     }
 
     XYZ = LidarBodyLoc - HitInfo.ImpactPoint;
@@ -58,9 +58,9 @@ bool LidarLaser::Measure(ALidar* Lidar, float HorizontalAngle, FVector& XYZ, boo
       FVector(0, 0, 1)
     );
 
-		return true;
-	} else {
+    return true;
+  } else {
     XYZ = FVector(0, 0, 0);
-		return false;
-	}
+    return false;
+  }
 }
