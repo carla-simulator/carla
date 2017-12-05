@@ -121,7 +121,6 @@ void ARoutePlanner::OnTriggerBeginOverlap(
     bool /*bFromSweep*/,
     const FHitResult & /*SweepResult*/)
 {
-  UE_LOG(LogCarla, Warning, TEXT("Begin overlap!"));
   auto *Controller = GetVehicleController(OtherActor);
   auto *RandomEngine = (Controller != nullptr ? Controller->GetRandomEngine() : nullptr);
   if (RandomEngine != nullptr)
@@ -137,9 +136,6 @@ void ARoutePlanner::OnTriggerBeginOverlap(
       WayPoints.Add(Route->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::World));
     }
 
-    UE_LOG(LogCarla, Log, TEXT("Setting a fixed route of %d points"), WayPoints.Num());
     Controller->SetFixedRoute(WayPoints);
-  } else {
-    UE_LOG(LogCarla, Error, TEXT("%s has null random engine!"), *OtherActor->GetName());
   }
 }
