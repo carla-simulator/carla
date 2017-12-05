@@ -22,31 +22,11 @@ command -v clang++-3.9 >/dev/null 2>&1 || {
   exit 1;
 }
 
+# Update content.
+./Update.sh
+
 mkdir -p Util/Build
 pushd Util/Build >/dev/null
-
-# ==============================================================================
-# -- Download the content ------------------------------------------------------
-# ==============================================================================
-
-CONTENT_FOLDER=$SCRIPT_DIR/Unreal/CarlaUE4/Content
-
-CONTENT_GDRIVE_ID=$(tac $SCRIPT_DIR/Util/ContentVersions.txt | egrep -m 1 . | rev | cut -d' ' -f1 | rev)
-
-if [[ ! -d "$CONTENT_FOLDER/.git" ]]; then
-  if [[ -d "$CONTENT_FOLDER" ]]; then
-    echo "Backing up existing Content..."
-    mv -v "$CONTENT_FOLDER" "${CONTENT_FOLDER}_$(date +%Y%m%d%H%M%S)"
-  fi
-  mkdir -p $CONTENT_FOLDER
-  mkdir -p Content
-  ../download_from_gdrive.py $CONTENT_GDRIVE_ID Content.tar.gz
-  tar -xvzf Content.tar.gz -C Content
-  rm Content.tar.gz
-  mv Content/* $CONTENT_FOLDER
-else
-  echo "Using git version of 'Content', skipping download..."
-fi
 
 # ==============================================================================
 # -- Get and compile libc++ ----------------------------------------------------
@@ -175,7 +155,8 @@ popd >/dev/null
 CARLA_SETTINGS_FILE="./Unreal/CarlaUE4/Config/CarlaSettings.ini"
 
 if [[ ! -f $CARLA_SETTINGS_FILE ]]; then
-  cp -v ./Docs/Example.CarlaSettings.ini $CARLA_SETTINGS_FILE
+  echo "Copying CarlaSettings.ini..."
+  sed -e 's/UseNetworking=true/UseNetworking=false/' ./Docs/Example.CarlaSettings.ini > $CARLA_SETTINGS_FILE
 fi
 
 ./Util/Protoc.sh

@@ -33,7 +33,7 @@ collision_pedestrians      | float     | Collision intensity with pedestrians.
 collision_other            | float     | General collision intensity (everything else but pedestrians and vehicles).
 intersection_otherlane     | float     | Percentage of the car invading other lanes.
 intersection_offroad       | float     | Percentage of the car off-road.
-ai_control                 | Control   | Vehicle's AI control that would apply this frame.
+autopilot_control          | Control   | Vehicle's autopilot control that would apply this frame.
 
 ###### Transform
 
@@ -67,10 +67,10 @@ rectangle) against the map image of the city. These images are generated in the
 editor and serialized for runtime use. You can find them too in the release
 package under the folder "RoadMaps".
 
-###### AI control
+###### Autopilot control
 
-The `ai_control` measurement contains the control values that the in-game AI
-would apply if it were controlling the vehicle.
+The `autopilot_control` measurement contains the control values that the in-game
+autopilot system would apply as if it were controlling the vehicle.
 
 This is the same structure used to send the vehicle control to the server.
 
@@ -81,6 +81,16 @@ throttle                   | float     | Throttle input between [ 0.0, 1.0]
 brake                      | float     | Brake input between [ 0.0, 1.0]
 hand_brake                 | bool      | Whether the hand-brake is engaged
 reverse                    | bool      | Whether the vehicle is in reverse gear
+
+To activate the autopilot from the client, send this `autopilot_control` back
+to the server. Note that you can modify it before sending it back.
+
+```py
+measurements, sensor_data = carla_client.read_data()
+control = measurements.player_measurements.autopilot_control
+# modify here control if wanted.
+carla_client.send_control(control)
+```
 
 (*) The actual steering angle depends on the vehicle used. The default Mustang
 has a maximum steering angle of 70 degrees (this can be checked in the vehicle's
@@ -102,10 +112,22 @@ If enabled, the server attaches a list of agents to the measurements package
 every frame. Each of these agents has an unique id that identifies it, and
 belongs to one of the following classes
 
-  * **Vehicle** Contains its transform, bounding-box, and forward speed.
-  * **Pedestrian** Contains its transform, bounding-box, and forward speed. (*)
+  * **Vehicle** Contains its transform, box-extent, and forward speed.
+  * **Pedestrian** Contains its transform, box-extent, and forward speed. (*)
   * **Traffic light** Contains its transform and state (green, yellow, red).
   * **Speed-limit sign** Contains its transform and speed-limit.
 
 (*) At this point every pedestrian is assumed to have the same bounding-box
 size.
+
+###### Transform and bounding box
+
+The transform defines the location and orientation of the agent. The bounding
+box is assumed to be centered at the agent's location. The box extent gives the
+radii dimensions of the bounding box of the agent.
+
+![Vehicle Bounding Box](img/vehicle_bounding_box.png)
+
+!!! important
+    As seen in the picture, the Z coordinate of the box is not fitted to
+    vehicle's height.

@@ -7,6 +7,8 @@ CARLA Documentation
   * [CARLA settings](carla_settings.md)
   * [Measurements](measurements.md)
   * [Cameras and sensors](cameras_and_sensors.md)
+
+  * [F.A.Q.](faq.md)
   * [Troubleshooting](troubleshooting.md)
 
 #### Building from source
@@ -17,5 +19,6 @@ CARLA Documentation
 
 #### Development
 
+  * [Map customization](map_customization.md)
   * [How to add assets](how_to_add_assets.md)
   * [CarlaServer documentation](carla_server.md)

@@ -15,8 +15,9 @@ import threading
 import time
 
 
-from .client import CarlaClient
-from .settings import CarlaSettings, Camera
+from carla.client import CarlaClient
+from carla.sensor import Camera, Image
+from carla.settings import CarlaSettings
 
 
 class _Control(object):
@@ -55,7 +56,7 @@ def get_default_carla_settings(args):
         NumberOfVehicles=20,
         NumberOfPedestrians=40,
         WeatherId=1)
-    settings.add_camera(Camera('Camera1'))
+    settings.add_sensor(Camera('Camera1'))
     return str(settings)
 
 
@@ -87,7 +88,6 @@ class CarlaClientConsole(cmd.Cmd):
         self.thread = threading.Thread(target=self._agent_thread_worker)
         self.done = False
         self.thread.start()
-
 
     def cleanup(self):
         self.do_disconnect()
@@ -129,7 +129,7 @@ class CarlaClientConsole(cmd.Cmd):
             self.control = _Control()
             if not self.client.connected():
                 self.client.connect()
-            self.client.request_new_episode(self.settings)
+            self.client.load_settings(self.settings)
             self.client.start_episode(0)
             logging.info('new episode started')
         except Exception as exception:
@@ -165,11 +165,12 @@ class CarlaClientConsole(cmd.Cmd):
         filename = '_images/console/camera_{:0>3d}/image_{:0>8d}.png'
         while not self.done:
             try:
-                measurements, images = self.client.read_measurements()
+                measurements, sensor_data = self.client.read_data()
                 if self.print_measurements:
                     print(measurements)
 
                 if self.args.images_to_disk:
+                    images = [x for x in sensor_data.values() if isinstance(x, Image)]
                     for n, image in enumerate(images):
                         path = filename.format(n, measurements.game_timestamp)
                         image.save_to_disk(path)

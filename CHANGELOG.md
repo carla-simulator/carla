@@ -1,8 +1,25 @@
+## CARLA 0.7.0
+
+  * New Python client API
+    - Cleaner and more robust
+    - Compatible with Python 2 and 3
+    - Improved exception handling
+    - Improved examples
+    - Included methods for parsing the images
+    - Better documentation
+    - Protocol: renamed "ai_control" to "autopilot_control"
+    - Merged testing client
+    - Added the maps for both cities, the client can now access the car position within the lane.
+  * Make CARLA start without client by default
+  * Added wind effect to some trees and plants
+  * Improvements to the existing weather presets
+  * Build script: skip content download if up-to-date
+
 ## CARLA 0.6.0
 
   * Included Unreal project and reorganised folders
   * Enabled semantic segmentation by default
-  * Added Felipe's Pyhton client
+  * Added Felipe's Python client
   * New build system (Linux only)
   * Few fixes to city assets
 

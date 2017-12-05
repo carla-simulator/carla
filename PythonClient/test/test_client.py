@@ -20,10 +20,12 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import carla
 
 from carla.client import CarlaClient
-from carla.console import CarlaClientConsole
-from carla.settings import CarlaSettings, Camera
+from carla.sensor import Camera, Image
+from carla.settings import CarlaSettings
 from carla.tcp import TCPClient
 from carla.util import make_connection
+
+import console
 
 
 def run_carla_client(args):
@@ -39,12 +41,12 @@ def run_carla_client(args):
             settings.randomize_seeds()
             camera = Camera('DefaultCamera')
             camera.set_image_size(300, 200) # Do not change this, hard-coded in test.
-            settings.add_camera(camera)
+            settings.add_sensor(camera)
 
             logging.debug('sending CarlaSettings:\n%s', settings)
             logging.info('new episode requested')
 
-            scene = client.request_new_episode(settings)
+            scene = client.load_settings(settings)
 
             number_of_player_starts = len(scene.player_start_spots)
             player_start = random.randint(0, max(0, number_of_player_starts - 1))
@@ -56,12 +58,13 @@ def run_carla_client(args):
 
             client.start_episode(player_start)
 
-            use_ai_control = (random.random() < 0.5)
+            use_autopilot_control = (random.random() < 0.5)
             reverse = (random.random() < 0.2)
 
             for frame in range(0, frames_per_episode):
                 logging.debug('reading measurements...')
-                measurements, images = client.read_measurements()
+                measurements, sensor_data = client.read_data()
+                images = [x for x in sensor_data.values() if isinstance(x, Image)]
 
                 logging.debug('received data of %d agents', len(measurements.non_player_agents))
                 assert len(images) == 1
@@ -71,8 +74,8 @@ def run_carla_client(args):
                     images[0].save_to_disk(filename.format(episode, frame))
 
                 logging.debug('sending control...')
-                control = measurements.player_measurements.ai_control
-                if not use_ai_control:
+                control = measurements.player_measurements.autopilot_control
+                if not use_autopilot_control:
                     control.steer = random.uniform(-1.0, 1.0)
                     control.throttle = 0.3
                     control.hand_brake = False
@@ -140,7 +143,7 @@ def main():
     logging.info('listening to server %s:%s', args.host, args.port)
 
     if args.console:
-        cmd = CarlaClientConsole(args)
+        cmd = console.CarlaClientConsole(args)
         try:
             cmd.cmdloop()
         finally:

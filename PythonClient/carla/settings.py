@@ -6,53 +6,32 @@
 
 """CARLA Settings"""
 
-import configparser
 import io
 import random
+import sys
+
+
+if sys.version_info >= (3, 0):
+
+    from configparser import ConfigParser
+
+else:
+
+    from ConfigParser import RawConfigParser as ConfigParser
+
+
+from . import sensor as carla_sensor
 
 
 MAX_NUMBER_OF_WEATHER_IDS = 14
 
 
-class Camera(object):
-    """Camera description. To be added to CarlaSettings."""
-    def __init__(self, name, **kwargs):
-        self.CameraName = name
-        self.PostProcessing = 'SceneFinal'
-        self.ImageSizeX = 800
-        self.ImageSizeY = 600
-        self.CameraFOV = 90
-        self.CameraPositionX = 15
-        self.CameraPositionY = 0
-        self.CameraPositionZ = 123
-        self.CameraRotationPitch = 8
-        self.CameraRotationRoll = 0
-        self.CameraRotationYaw = 0
-        self.set(**kwargs)
-
-    def set(self, **kwargs):
-        for key, value in kwargs.items():
-            if not hasattr(self, key):
-                raise ValueError('CarlaSettings.Camera: no key named %r' % key)
-            setattr(self, key, value)
-
-    def set_image_size(self, pixels_x, pixels_y):
-        self.ImageSizeX = pixels_x
-        self.ImageSizeY = pixels_y
-
-    def set_position(self, x, y, z):
-        self.CameraPositionX = x
-        self.CameraPositionY = y
-        self.CameraPositionZ = z
-
-    def set_rotation(self, pitch, roll, yaw):
-        self.CameraRotationPitch = pitch
-        self.CameraRotationRoll = roll
-        self.CameraRotationYaw = yaw
-
-
 class CarlaSettings(object):
-    """CARLA settings object. Convertible to str as CarlaSettings.ini."""
+    """
+    The CarlaSettings object controls the settings of an episode.  The __str__
+    method retrieves an str with a CarlaSettings.ini file contents.
+    """
+
     def __init__(self, **kwargs):
         # [CARLA/Server]
         self.SynchronousMode = True
@@ -67,6 +46,7 @@ class CarlaSettings(object):
         self.randomize_weather()
         self.set(**kwargs)
         self._cameras = []
+        self._lidars = []
 
     def set(self, **kwargs):
         for key, value in kwargs.items():
@@ -74,25 +54,30 @@ class CarlaSettings(object):
                 raise ValueError('CarlaSettings: no key named %r' % key)
             setattr(self, key, value)
 
-    def get_number_of_agents(self):
-        if not self.SendNonPlayerAgentsInfo:
-            return 0
-        return self.NumberOfVehicles + self.NumberOfPedestrians
-
     def randomize_seeds(self):
+        """
+        Randomize the seeds of the new episode's pseudo-random number
+        generators.
+        """
         self.SeedVehicles = random.getrandbits(16)
         self.SeedPedestrians = random.getrandbits(16)
 
     def randomize_weather(self):
+        """Randomized the WeatherId."""
         self.WeatherId = random.randint(0, MAX_NUMBER_OF_WEATHER_IDS)
 
-    def add_camera(self, camera):
-        if not isinstance(camera, Camera):
-            raise ValueError('Can only add instances of carla_settings.Camera')
-        self._cameras.append(camera)
+    def add_sensor(self, sensor):
+        """Add a sensor to the player vehicle (see sensor.py)."""
+        if isinstance(sensor, carla_sensor.Camera):
+            self._cameras.append(sensor)
+        elif isinstance(sensor, carla_sensor.Lidar):
+            self._lidars.append(sensor)
+        else:
+            raise ValueError('Sensor not supported')
 
     def __str__(self):
-        ini = configparser.ConfigParser()
+        """Converts this object to an INI formatted string."""
+        ini = ConfigParser()
         ini.optionxform=str
         S_SERVER = 'CARLA/Server'
         S_LEVEL = 'CARLA/LevelSettings'
@@ -117,6 +102,7 @@ class CarlaSettings(object):
 
         ini.add_section(S_CAPTURE)
         ini.set(S_CAPTURE, 'Cameras', ','.join(c.CameraName for c in self._cameras))
+        ini.set(S_CAPTURE, 'Lidars', ','.join(l.LidarName for l in self._lidars))
 
         for camera in self._cameras:
             add_section(S_CAPTURE + '/' + camera.CameraName, camera, [
@@ -131,6 +117,49 @@ class CarlaSettings(object):
                 'CameraRotationRoll',
                 'CameraRotationYaw'])
 
-        text = io.StringIO()
+        for lidar in self._lidars:
+            add_section(S_CAPTURE + '/' + lidar.LidarName, lidar, [
+                'Channels',
+                'Range',
+                'PointsPerSecond',
+                'RotationFrequency',
+                'UpperFovLimit',
+                'LowerFovLimit',
+                'ShowDebugPoints',
+                'LidarPositionX',
+                'LidarPositionY',
+                'LidarPositionZ',
+                'LidarRotationPitch',
+                'LidarRotationRoll',
+                'LidarRotationYaw'])
+
+        if sys.version_info >= (3, 0):
+            text = io.StringIO()
+        else:
+            text = io.BytesIO()
+
         ini.write(text)
         return text.getvalue().replace(' = ', '=')
+
+
+def _get_sensor_names(settings):
+    """
+    Return a list with the names of the sensors defined in the settings object.
+    The settings object can be a CarlaSettings or an INI formatted string.
+    """
+    if isinstance(settings, CarlaSettings):
+        return [camera.CameraName for camera in settings._cameras] + \
+            [lidar.LidarName for lidar in settings._lidars]
+    ini = ConfigParser()
+    if sys.version_info >= (3, 0):
+        ini.readfp(io.StringIO(settings))
+    else:
+        ini.readfp(io.BytesIO(settings))
+
+    section_name = 'CARLA/SceneCapture'
+    option_name = 'Cameras'
+
+    if ini.has_section(section_name) and ini.has_option(section_name, option_name):
+        cameras = ini.get(section_name, option_name)
+        return cameras.split(',')
+    return []

@@ -66,7 +66,7 @@ namespace server {
     auto begin = buffer;
     for (const auto &lidar_measurement : lidar_measurements) {
       begin += WriteDoubleToBuffer(begin, lidar_measurement.horizontal_angle);
-      begin += WriteIntToBuffer(begin, 10); // type of lidar message
+      begin += WriteIntToBuffer(begin, 4); // type of lidar message
       begin += WriteIntToBuffer(begin, lidar_measurement.channels_count);
       begin += WriteLidarMeasurementToBuffer(begin, lidar_measurement);
     }
