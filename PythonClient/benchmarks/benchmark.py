@@ -14,7 +14,7 @@ sldist = lambda c1, c2: math.sqrt((c2[0] - c1[0])**2 + (c2[1] - c1[1])**2)
 class Benchmark(object,):
 
 	# Param @name to be used for saving purposes
-	def __init__(self,city_name,name):
+	def __init__(self,city_name,name,starting_position=0):
 		self._city_name = city_name # The name of the city that is going to be used.
 		self._base_name = name # Sends a base name, the rest will be saved with respect to what the episode was about
 		self._dict_stats = {'exp_id':-1,
@@ -45,6 +45,11 @@ class Benchmark(object,):
 		'pos_y':-1
 		}
 
+		# Returns a experiment class that is build from a benchmark inherited class
+		self._experiments = self._build_experiments() 
+
+		self._suffix_name  = self._get_experiments_names(self._experiments) 
+		
 
 	def run_navigation_episode(self, agent,carla, time_out, target):
 
@@ -104,12 +109,10 @@ class Benchmark(object,):
 			return (0, measurement_vec, time_out,distance)
 
 
-	def benchmark_agent(self,agent,carla,starting_position=0):
+	def benchmark_agent(self,agent,carla):
 
-		
+		# The fixed name considering all the experiments being run
 
-		experiments = self._build_experiments() # Returns a experiment class that is build from a benchmark inherited class
-		self._suffix_name  = self._get_experiments_names(experiments[starting_position:]) # The fixed name considering all the experiments being run
 		with open(self._base_name + self._suffix_name , 'wb') as ofd:
 
 			w = csv.DictWriter(ofd, self._dict_stats.keys())
@@ -126,7 +129,7 @@ class Benchmark(object,):
 		self.write_experiment() # write the experiment being run
 
 
-		for experiment in experiments[starting_position:]:
+		for experiment in self._experiments[starting_position:]:
 
 
 
@@ -208,7 +211,7 @@ class Benchmark(object,):
 		with open('rewards_' + self._base_name + self._suffix_name , 'a+') as rfd:
 
 			rw = csv.DictWriter(rfd, self._dict_rewards.keys())
-			rw.writeheader()
+			
 
 
 			for i in range(len(reward_vec)):
@@ -258,7 +261,7 @@ class Benchmark(object,):
 	def _get_experiments_names(self,experiments):
 
 		name_cat ='_t'
-		for  experiment in experiments:
+		for experiment in experiments:
 
 			name_cat += str(experiment.id) + '.'
 
