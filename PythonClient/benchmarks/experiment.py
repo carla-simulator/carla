@@ -20,7 +20,7 @@ class Experiment(object):
 			setattr(self, key, value)
 
 	@property
-	def name(self):
+	def id(self):
 		return self.Id
 
 	@property
