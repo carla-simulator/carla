@@ -278,12 +278,7 @@ def plot_summary(file,summary_weathers):
 			print 'Avg completion', summaries[sw]['completion']/summaries[sw]['num_weathers']
 			print 'Avg infractions'
 			print_infractions(summaries[sw]['infractions']/summaries[sw]['num_weathers'])
-			#
-			#
-			#infractions_vec = [sum(x) for x in zip(infractions, infractions_vec)]
-			#print 'Non_Colisions/Km', (infractions[1]+  infractions[0])/2.0 ,'Lane Cross/Km ',infractions[0],'Side Cross/Km ',infractions[1],'Col Gen /Km ',infractions[2]\
-			#,'Col Ped /Km ',infractions[3],'Col Ped /Km ',infractions[4], 'Acidents/Km ', (infractions[4] +infractions[2] + infractions[3])/3,\
-			#'total', 1/((infractions[4] +infractions[2] + infractions[3] + infractions[1] + infractions[0])/5.0)
+
 
 	return summaries
 
