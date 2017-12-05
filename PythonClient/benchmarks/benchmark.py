@@ -9,6 +9,8 @@ except ImportError:
 import json, csv, time
 
 
+sldist = lambda c1, c2: math.sqrt((c2[0] - c1[0])**2 + (c2[1] - c1[1])**2)
+
 class Benchmark(object,):
 
 	# Param @name to be used for saving purposes
@@ -85,7 +87,9 @@ class Benchmark(object,):
 
 			step += 1
 			# The distance is based on graph but quite not exact.
-			distance = agent.get_distance(measurements.player_measurements.transform,target)
+			distance = sldist([curr_x,curr_y],[target.location.x, target.location.y])
+
+
 			
 			print('[d=%f] c_x = %f, c_y = %f ---> t_x = %f, t_y = %f' % (float(distance), curr_x, curr_y, target.location.x, target.location.y))
 
@@ -139,6 +143,7 @@ class Benchmark(object,):
 					carla.start_episode(start_point)
 
 					print('======== !!!! ==========')
+					print(' Start Position ',start_point,' End Position ',end_point)
 
 					path_distance = agent.get_distance(positions[start_point],positions[end_point])
 
