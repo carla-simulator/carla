@@ -9,6 +9,7 @@
 
 import os
 import numpy as np
+import json
 
 
 # ==============================================================================
@@ -214,18 +215,13 @@ class LidarMeasurement(SensorData):
 
     def save_to_disk(self, filename):
         """Save lidar measurements to disk"""
-
-        pass
-
-        # image = PImage.frombytes(
-        #     mode='RGBA',
-        #     size=(self.width, self.height),
-        #     data=self.raw_data,
-        #     decoder_name='raw')
-        # b, g, r, a = image.split()
-        # image = PImage.merge("RGB", (r, g, b))
-        #
-        # folder = os.path.dirname(filename)
-        # if not os.path.isdir(folder):
-        #     os.makedirs(folder)
-        # image.save(filename)
+        folder = os.path.dirname(filename)
+        if not os.path.isdir(folder):
+            os.makedirs(folder)
+        with open(filename, 'wt') as f:
+            f.write(json.dumps({
+                'horizontal_angle' : self.horizontal_angle,
+                'channels_count' : self.channels_count,
+                'points_count_by_channel' : self.points_count_by_channel.tolist(),
+                'points' : self._converted_data['points'].tolist()
+            }))
