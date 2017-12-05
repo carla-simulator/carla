@@ -1,7 +1,8 @@
 
 from .benchmark import Benchmark
 from .experiment import Experiment
-
+from carla.sensor import Camera
+from carla.settings import CarlaSettings
 
 # Function to return the timeout ( in miliseconds) that is calculated based on distance to goal.
 # This is the same timeout as used on the CoRL paper.
@@ -10,7 +11,7 @@ from .experiment import Experiment
 
 class CoRL(Benchmark):
 
-	def _calculate_time_out(self,distance):
+	def _calculate_time_out(self,path_distance):
 		return ((path_distance/100000.0)/10.0)*3600.0 + 10.0
 
 	def _poses_town01(self):
@@ -72,7 +73,7 @@ class CoRL(Benchmark):
 				]
 
 
-	def build_experiments(self,town):
+	def _build_experiments(self):
 
 
 		# We set the camera that is going to be used for all experiments
@@ -86,7 +87,7 @@ class CoRL(Benchmark):
 		camera.set_rotation(-15.0,0,0)
 		
 		weathers = [1,3,6,8,4,14]
-		if town == 'Town01':
+		if self._city_name == 'Town01':
 			poses_tasks = self._poses_town01()
 			vehicles_tasks =[0,0,0,20]
 			pedestrians_tasks = [0,0,0,50]
@@ -130,8 +131,10 @@ class CoRL(Benchmark):
 					Conditions=conditions,
 					Poses= poses,
 					Id = iteration,
-					Repetions = 1
+					Repetitions = 1
 					)
 				experiments_vector.append(experiment)
 
 		return experiments_vector
+	def _get_details(self): # Function to get automatic information from the experiment for writing purposes
+		return 'corl_' + self._city_name

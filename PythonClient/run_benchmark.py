@@ -9,11 +9,16 @@ from benchmarks.agent import Agent
 
 from carla.tcp import TCPConnectionError
 from carla.client import make_carla_client
+import time
 
+try:
+    from carla import carla_server_pb2 as carla_protocol
+except ImportError:
+    raise RuntimeError('cannot import "carla_server_pb2.py", run the protobuf compiler to generate this file')
 
 class Manual(Agent):
-    def run_step(self, data,target):
-        control = Control()
+    def run_step(self,measurements,sensor_data,target):
+        control = carla_protocol.Control()
         control.steer = 0.0
         control.throttle = 0.9
         control.brake = 0.0
@@ -55,10 +60,12 @@ if(__name__ == '__main__'):
 
 	while True:
 		try:
-			with make_carla_client(host, port) as client:
-				corl= CoRL('test')
-				agent = Manual()
-				results = corl.benchmark_agent(agent,carla)
+			with make_carla_client(args.host, args.port) as client:
+				corl= CoRL('Town02','test')
+				agent = Manual('Town02')
+				results = corl.benchmark_agent(agent,client)
+				corl.plot_summary_test()
+				corl.plot_summary_train()
 
 				break
 

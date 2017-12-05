@@ -21,21 +21,21 @@ from carla.carla_server_pb2 import Control
 
 
 class Agent(object, ):
-    def __init__(self, **kwargs):
+    def __init__(self,city_name, **kwargs):
         import os
         dir_path = os.path.dirname(__file__)
 
-        planner = Planner(dir_path+'/../planner/' + city_name + '.txt',\
-          dir_path+'/../planner/' + city_name + '.png')
+        self._planner = Planner(dir_path+'/../carla/planner/' + city_name + '.txt',\
+          dir_path+'/../carla/planner/' + city_name + '.png')
 
 
 
-    def get_initial_distance(self):
+    def get_distance(self,start_point,end_point):
 
-        _,path_distance=planner.get_next_command([positions[start_point].location.x\
-        ,positions[start_point].location.y,22],[positions[start_point].orientation.x\
-        ,positions[start_point].orientation.y,22],[positions[end_point].location.x\
-        ,positions[end_point].location.y,22],(1,0,0))
+        _,path_distance=self._planner.get_next_command([start_point.location.x\
+        ,start_point.location.y,22],[start_point.orientation.x\
+        ,start_point.orientation.y,22],[end_point.location.x\
+        ,end_point.location.y,22],(1,0,0))
         # We calculate the timout based on the distance
 
         return path_distance

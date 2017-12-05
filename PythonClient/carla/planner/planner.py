@@ -59,7 +59,7 @@ class Planner(object):
 
 		import os
 		dir_path = os.path.dirname(__file__)
-		self.central_path_map_image = Image.open(map_file[:-4] +'c.png')
+		self.central_path_map_image = Image.open(map_file[:-4] +'Central.png')
 		self.central_path_map_image.load()
 		self.central_path_map_image = np.asarray(self.central_path_map_image, dtype="int32" )
 		self.central_path_map_image =self.central_path_map_image[:,:,0] # Just take the red dimension
