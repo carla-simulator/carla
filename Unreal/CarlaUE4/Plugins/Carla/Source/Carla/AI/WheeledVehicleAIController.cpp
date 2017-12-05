@@ -59,6 +59,13 @@ static bool IsThereAnObstacleAhead(
       RayTrace(Vehicle, StartLeft, EndLeft);
 }
 
+template <typename T>
+static void ClearQueue(std::queue<T> &Queue)
+{
+  std::queue<T> EmptyQueue;
+  Queue.swap(EmptyQueue);
+}
+
 // =============================================================================
 // -- Constructor and destructor -----------------------------------------------
 // =============================================================================
@@ -118,8 +125,7 @@ void AWheeledVehicleAIController::ConfigureAutopilot(const bool Enable)
   Vehicle->SetReverse(false);
   Vehicle->SetHandbrakeInput(false);
   TrafficLightState = ETrafficLightState::Green;
-  decltype(TargetLocations) EmptyQueue;
-  TargetLocations.swap(EmptyQueue);
+  ClearQueue(TargetLocations);
   Vehicle->SetAIVehicleState(
       bAutopilotEnabled ?
           ECarlaWheeledVehicleState::FreeDriving :
@@ -130,8 +136,13 @@ void AWheeledVehicleAIController::ConfigureAutopilot(const bool Enable)
 // -- Traffic ------------------------------------------------------------------
 // =============================================================================
 
-void AWheeledVehicleAIController::SetFixedRoute(const TArray<FVector> &Locations)
+void AWheeledVehicleAIController::SetFixedRoute(
+    const TArray<FVector> &Locations,
+    const bool bOverwriteCurrent)
 {
+  if (bOverwriteCurrent) {
+    ClearQueue(TargetLocations);
+  }
   for (auto &Location : Locations) {
     TargetLocations.emplace(Location);
   }
