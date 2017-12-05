@@ -7,10 +7,26 @@ CARLA Simulator
 Welcome to CARLA simulator.
 
 This file contains the instructions to run the CARLA simulator binaries on
-Linux. [Get the latest release here.][releaselink]
+Linux.
+
+[Get the latest release here.][releaselink]
 
 For building CARLA from source, please check out the
 [CARLA Documentation][docslink].
+
+CARLA can be run directly by running the "CarlaUE4.sh" script provided in the
+release package.
+
+There are currently two scenarios available, the desired scenario can be chosen
+from the command-line
+
+    $ ./CarlaUE4.sh /Game/Maps/Town01
+
+or
+
+    $ ./CarlaUE4.sh /Game/Maps/Town02
+
+To run CARLA as server, see ["Running the server"](#running-the-server) below.
 
 [releaselink]: https://github.com/carla-simulator/carla/releases/latest
 [docslink]: http://carla.readthedocs.io
@@ -18,68 +34,61 @@ For building CARLA from source, please check out the
 Running the Python client
 -------------------------
 
-Requires Python 3 with some extra modules installed
+The "carla" Python module provides a basic API for communicating with the CARLA
+server. In the "PythonClient" folder we provide a couple of examples on how to
+use this API. We recommend Python 3, but they are also compatible with Python 2.
+
+The basic functionality requires only the protobuf module to be installed
 
     $ sudo apt-get install python3 python3-pip
-    $ sudo pip3 install protobuf numpy Pillow
+    $ sudo pip3 install protobuf
 
-A sample Python script is provided at `PythonClient/client_example.py`. The
-script is well commented explaining how to use the client API.
+However, other operations as handling images require some extra modules, and the
+"manual_control.py" example requires pygame
 
-The script can be run and provides basic functionality for controlling the
-vehicle and saving images to disk. Run the help command to see options available
+    $ sudo pip3 install numpy Pillow pygame
 
-    $ ./carla_example.py --help
+The script "PythonClient/client_example.py" provides basic functionality for
+controlling the vehicle and saving images to disk. Run the help command to see
+options available
 
-A second Python script is provided at `PythonClient/carla_manual_control.py`.
-The script is pygame dependent and serves as an interactive example where the
-user controls the car with a keyboard.
+    $ ./client_example.py --help
 
-    $ sudo apt-get install python3-tk
-    $ sudo pip3 install pygame matplolib
+The script "PythonClient/manual_control.py" launches a PyGame window with
+several views and allows to control the vehicle using the WASD keys.
 
-Run the help command to see options available
-
-    $ ./carla_manual_control.py --help
+    $ ./manual_control.py --help
 
 Running the server
 ------------------
 
-!!! note
-    By default the game starts in networking mode. It will hang until a client
-    is connected. See below how to run it without client.
+The server can be started by running the "CarlaUE4.sh" script with some extra
+arguments. When run in server mode (controlled by the CARLA client), it is
+highly recommended to run it at fixed time-step
 
-The server can be started by running the `CarlaUE4.sh` script. When run in
-networking mode (controlled by the CARLA client), it is highly recommended to
-run it at fixed time-step
-
-    $ ./CarlaUE4.sh /Game/Maps/Town01 -benchmark -fps=15
+    $ ./CarlaUE4.sh /Game/Maps/Town01 -carla-server -benchmark -fps=15
 
 The arguments `-benchmark -fps=15` make the engine run at a fixed time-step of
 1/15 seconds. In this mode, game-time decouples from real-time and the
 simulation runs as fast as possible.
 
-To run the game on the second city, just change the command to select the
-"Town02"
+To run the game on the second town, just change the command to select the
+"Town02" map
 
-    $ ./CarlaUE4.sh /Game/Maps/Town02 -benchmark -fps=15
+    $ ./CarlaUE4.sh /Game/Maps/Town02 -carla-server -benchmark -fps=15
 
-To run the game windowed at a given resolution
+When run as server, it is sometimes useful to run the game in a smaller window,
+this can be chosen with
 
-    $ ./CarlaUE4.sh /Game/Maps/Town01 -benchmark -fps=15 -windowed -ResX=800 -ResY=600
+    $ ./CarlaUE4.sh /Game/Maps/Town01 -carla-server -benchmark -fps=15 -windowed -ResX=800 -ResY=600
 
-The game can also be run without a client, this way you can drive around the
-city just using the keyboard (in this mode is not recommended to use fixed
-frame-rate to get a more realistic feeling)
+#### CARLA specific command-line options
 
-    $ ./CarlaUE4.sh /Game/Maps/Town02 -carla-no-networking
-
-#### CARLA command-line options
-
-  * `-carla-settings=<ini-file-path>` Load settings from the given INI file. See Example.CarlaSettings.ini.
-  * `-carla-world-port=<port-number>` Listen for client connections at <port-number>, agent ports are set to <port-number>+1 and <port-number>+2 respectively. Activates networking.
-  * `-carla-no-networking` Disable networking. Overrides other settings.
+  * `-carla-server` Launches CARLA as server, the execution hangs until a client connects.
+  * `-carla-settings="Path/To/CarlaSettings.ini"` Load settings from the given INI file. See Example.CarlaSettings.ini.
+  * `-carla-world-port=N` Listen for client connections at port N, agent ports are set to N+1 and N+2 respectively. Activates server.
   * `-carla-no-hud` Do not display the HUD by default.
+  * `-carla-no-networking` Disable networking. Overrides `-carla-server` if present.
 
 #### Running CARLA off-screen
 
@@ -134,9 +143,9 @@ started (every time the level is loaded).
 Settings are loaded following the next hierarchy, with values later in the
 hierarchy overriding earlier values.
 
-  1. `{ProjectFolder}/Config/CarlaSettings.ini`
-  2. File provided by command-line argument `-carla-settings=<path-to-ini-file>`
-  3. Other command-line arguments as `-world-port`, or `-carla-no-networking`
+  1. `{ProjectFolder}/Config/CarlaSettings.ini`.
+  2. File provided by command-line argument `-carla-settings="Path/To/CarlaSettings.ini"`.
+  3. Other command-line arguments as `-carla-server` or `-world-port`.
   4. Settings file sent by the client on every new episode.
 
 Take a look at the Example.CarlaSettings.ini file for further details.

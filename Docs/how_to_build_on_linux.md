@@ -6,7 +6,7 @@ How to build CARLA on Linux
 
 Install the build tools and dependencies
 
-    $ sudo apt-get install build-essential clang-3.9 git cmake ninja-build python3-pip python3-requests python-dev tzdata curl wget unzip autoconf libtool
+    $ sudo apt-get install build-essential clang-3.9 git cmake ninja-build python3-pip python3-requests python-dev tzdata sed curl wget unzip autoconf libtool
     $ sudo pip3 install protobuf
 
 To avoid compatibility issues between Unreal Engine and the CARLA dependencies,
@@ -73,6 +73,15 @@ use the Makefile generated in the Unreal project folder
 
     $ cd Unreal/CarlaUE4
     $ make CarlaUE4Editor
+
+Updating CARLA
+--------------
+
+Every new release of CARLA we release a new package with the latest changes in
+the CARLA assets. To download the latest version, run the "Update" script
+
+    $ git pull
+    $ ./Update.sh
 
 Launching the editor
 --------------------

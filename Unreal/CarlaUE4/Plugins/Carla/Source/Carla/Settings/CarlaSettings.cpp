@@ -195,6 +195,9 @@ void UCarlaSettings::LoadSettings()
   }
   // Override settings from command-line.
   {
+    if (FParse::Param(FCommandLine::Get(), TEXT("carla-server"))) {
+      bUseNetworking = true;
+    }
     uint32 Value;
     if (FParse::Value(FCommandLine::Get(), TEXT("-world-port="), Value) ||
         FParse::Value(FCommandLine::Get(), TEXT("-carla-world-port="), Value)) {

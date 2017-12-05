@@ -126,7 +126,7 @@ namespace server {
     player->set_collision_other(values.player_measurements.collision_other);
     player->set_intersection_otherlane(values.player_measurements.intersection_otherlane);
     player->set_intersection_offroad(values.player_measurements.intersection_offroad);
-    Set(player->mutable_ai_control(), values.player_measurements.ai_control);
+    Set(player->mutable_autopilot_control(), values.player_measurements.ai_control);
     // Non-player agents.
     message->clear_non_player_agents(); // we need to clear as we cache the message.
     for (auto &agent : agents(values)) {
