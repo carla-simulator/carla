@@ -206,30 +206,29 @@ def plot_summary(file,summary_weathers):
 	infractions_vec = [0,0,0,0,0]
 
 	compute_infractions = True
-	#,'test_weather':[4,14]
-	# 'test_weather':[4,14]
+	# Separate the PATH and the basename
+	path = os.path.dirname(file)
+	base_name = os.path.basename(file)
 
-	#tasks =[0]
-	#tasks =[0,1,2,3]
-	#weathers = [1,3,6,8,2,14]
-	#for file in files_parsed:
+
 	f = open(file, "rb")
 	header = f.readline()
 	header= header.split(',')
 	header[-1] = header[-1][:-2]
 	f.close()
 	print header
-	f = open('rewards_' + file, "rb")
+
+	f = open(os.path.join(path,'rewards_' , base_name), "rb")
 	header_rewards = f.readline()
 	header_rewards= header_rewards.split(',')
 	header_rewards[-1] = header_rewards[-1][:-2]
 	f.close()
 	print header_rewards
-	data_matrix = np.loadtxt(open(path + file, "rb"), delimiter=",", skiprows=1)
+	data_matrix = np.loadtxt(open(file, "rb"), delimiter=",", skiprows=1)
 
 	tasks = np.unique(data_matrix[:,header.index('exp_id')])
 
-	reward_matrix = np.loadtxt(open(path + 'rewards_file_' + file, "rb"), delimiter=",", skiprows=1)
+	reward_matrix = np.loadtxt(open(os.path.join(path,'rewards_' , base_name), "rb"), delimiter=",", skiprows=1)
 
 	for t in tasks:
 		task_data_matrix = data_matrix[data_matrix[:,header.index('exp_id')]== t]
