@@ -12,6 +12,9 @@ from .experiment import Experiment
 from carla.sensor import Camera
 from carla.settings import CarlaSettings
 
+import datetime
+
+
 # Function to return the timeout ( in miliseconds) that is calculated based on distance to goal.
 # This is the same timeout as used on the CoRL paper.
 
@@ -88,7 +91,7 @@ class CoRL(Benchmark):
 
         # We set the camera
         # This single RGB camera is used on every experiment
-        
+
         camera = Camera('CameraRGB')
         camera.set(CameraFOV=100)
 
@@ -150,5 +153,7 @@ class CoRL(Benchmark):
         return experiments_vector
 
     def _get_details(self): 
+
+        now = datetime.datetime.now()
         # Function to get automatic information from the experiment for writing purposes
-        return 'corl_' + self._city_name
+        return 'corl_' + self._city_name + '_' + now.strftime("%Y%m%d%H%M")

@@ -6,7 +6,7 @@ except ImportError:
     raise RuntimeError('cannot import "carla_server_pb2.py", run the protobuf compiler to generate this file')
 
 
-import json, csv, time, math
+import json, csv, time, math,os
 
 
 sldist = lambda c1, c2: math.sqrt((c2[0] - c1[0])**2 + (c2[1] - c1[1])**2)
@@ -49,7 +49,15 @@ class Benchmark(object,):
 		self._experiments = self._build_experiments() 
 
 		self._suffix_name  = self._get_experiments_names(self._experiments) 
-		
+
+
+        self._full_name = '_benchmarks_results/' + self._base_name +'_' + self._get_details() +'/'
+        folder = os.path.dirname(self._full_name)
+        if not os.path.isdir(folder):
+            os.makedirs(folder)
+
+
+
 
 	def run_navigation_episode(self, agent,carla, time_out, target):
 
@@ -174,12 +182,8 @@ class Benchmark(object,):
 		return list_stats
 
 
-
-
-	def write_experiment(self):
 		
-		with open(self._get_details() , 'wb') as ofd:
-			pass
+
 
 		
 	def write_summary_results(self,experiment,pose,rep,path_distance,remaining_distance,final_time,time_out,result):
@@ -236,7 +240,7 @@ class Benchmark(object,):
 
 
 		summary_weathers = {'train_weather': [1,3,6,8]}
-
+		print self._base_name + self._suffix_name
 		summary = plot_summary(self._base_name + self._suffix_name,summary_weathers)
 
 
