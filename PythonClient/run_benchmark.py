@@ -1,7 +1,9 @@
+import time
+import sys
 
 import argparse
 import logging
-import sys
+
 
 
 from benchmarks.corl import CoRL
@@ -9,7 +11,7 @@ from benchmarks.agent import Agent
 
 from carla.tcp import TCPConnectionError
 from carla.client import make_carla_client
-import time
+
 
 try:
     from carla import carla_server_pb2 as carla_protocol
@@ -31,54 +33,57 @@ class Manual(Agent):
 if(__name__ == '__main__'):
 
 
-	argparser = argparse.ArgumentParser(description=__doc__)
-	argparser.add_argument(
-		'-v', '--verbose',
-		action='store_true',
-		dest='debug',
-		help='print debug information')
-	argparser.add_argument(
-		'--host',
-		metavar='H',
-		default='localhost',
-		help='IP of the host server (default: localhost)')
-	argparser.add_argument(
-		'-p', '--port',
-		metavar='P',
-		default=2000,
-		type=int,
-		help='TCP port to listen to (default: 2000)')
+    argparser = argparse.ArgumentParser(description=__doc__)
+    argparser.add_argument(
+        '-v', '--verbose',
+        action='store_true',
+        dest='debug',
+        help='print debug information')
+    argparser.add_argument(
+        '--host',
+        metavar='H',
+        default='localhost',
+        help='IP of the host server (default: localhost)')
+    argparser.add_argument(
+        '-p', '--port',
+        metavar='P',
+        default=2000,
+        type=int,
+        help='TCP port to listen to (default: 2000)')
+    argparser.add_argument(
+        '-c', '--city-name',
+        metavar='C',
+        default='Town01',
+        help='plot the map of the current city'
+         +'(needs to match active map in server, options: Town01 or Town02)')
 
 
 
-	args = argparser.parse_args()
+    args = argparser.parse_args()
 
-	log_level = logging.DEBUG if args.debug else logging.INFO
-	logging.basicConfig(format='%(levelname)s: %(message)s', level=log_level)
+    log_level = logging.DEBUG if args.debug else logging.INFO
+    logging.basicConfig(format='%(levelname)s: %(message)s', level=log_level)
 
-	logging.info('listening to server %s:%s', args.host, args.port)
-
-	while True:
-		try:
-			with make_carla_client(args.host, args.port) as client:
-				corl= CoRL('Town02','test')
-				agent = Manual('Town02')
-				results = corl.benchmark_agent(agent,client)
-				corl.plot_summary_test()
-				corl.plot_summary_train()
-
-				break
-
-		except TCPConnectionError as error:
-			logging.error(error)
-			time.sleep(1)
-		except Exception as exception:
-			logging.exception(exception)
-			sys.exit(1)
+    logging.info('listening to server %s:%s', args.host, args.port)
 
 
 
-	
+    while True:
+        try:
+            with make_carla_client(args.host, args.port) as client:
+                corl= CoRL(city_name= args.city_name,name_to_save='test')
+                agent = Manual(args.map_name)
+                results = corl.benchmark_agent(agent,client)
+                corl.plot_summary_test()
+                corl.plot_summary_train()
+
+                break
+
+        except TCPConnectionError as error:
+            logging.error(error)
+            time.sleep(1)
+        except Exception as exception:
+            logging.exception(exception)
+            sys.exit(1)
 
 
-# DETECT AN ERROR AND WRITE THE COMPLETE SUMMARY ALREADY
