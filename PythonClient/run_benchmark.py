@@ -6,8 +6,8 @@ import logging
 
 
 
-from benchmarks.corl import CoRL
-from benchmarks.agent import Agent
+from carla.benchmarks.corl import CoRL
+from carla.benchmarks.agent import Agent
 
 from carla.tcp import TCPConnectionError
 from carla.client import make_carla_client
@@ -71,8 +71,8 @@ if(__name__ == '__main__'):
     while True:
         try:
             with make_carla_client(args.host, args.port) as client:
-                corl= CoRL(city_name= args.city_name,name_to_save='test')
-                agent = Manual(args.map_name)
+                corl= CoRL(city_name= args.city_name,name_to_save='test2')
+                agent = Manual(args.city_name)
                 results = corl.benchmark_agent(agent,client)
                 corl.plot_summary_test()
                 corl.plot_summary_train()

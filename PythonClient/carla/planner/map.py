@@ -9,6 +9,7 @@
 import math
 import os
 
+
 try:
     import numpy as np
 except ImportError:
@@ -19,15 +20,44 @@ try:
 except ImportError:
     raise RuntimeError('cannot import PIL, make sure pillow package is installed')
 
-
-def string_to_node(string):
-    vec = string.split(',')
-    return (int(vec[0]), int(vec[1]))
+from graph import  string_to_node,string_to_floats
 
 
-def string_to_floats(string):
-    vec = string.split(',')
-    return (float(vec[0]), float(vec[1]), float(vec[2]))
+
+
+
+"""
+
+        with open(city_file + '.txt', 'r') as file:
+
+            linewordloffset = file.readline()
+            # The offset of the world from the zero coordinates ( The
+            # coordinate we consider zero)
+            self.worldoffset = string_to_floats(linewordloffset)
+
+            # WARNING: for now just considering the y angle
+            lineworldangles = file.readline()
+            self.angles = string_to_floats(lineworldangles)
+            #self.worldrotation = np.array([[math.cos(math.radians(self.angles[0])),0,math.sin(math.radians(self.angles[0])) ],[0,1,0],[-math.sin(math.radians(self.angles[0])),0,math.cos(math.radians(self.angles[0]))]])
+
+            self.worldrotation = np.array([[math.cos(math.radians(self.angles[2])), -math.sin(math.radians(self.angles[2])), 0.0], [
+                                          math.sin(math.radians(self.angles[2])), math.cos(math.radians(self.angles[2])), 0.0], [0.0, 0.0, 1.0]])
+
+            # Ignore for now
+            lineworscale = file.readline()
+
+            linemapoffset = file.readline()
+
+            # The offset of the map zero coordinate
+            self.mapoffset = string_to_floats(linemapoffset)
+
+            # the graph resolution.
+            linegraphres = file.readline()
+            self.resolution = string_to_node(linegraphres)
+
+"""
+
+# The map contains a graph
 
 
 class CarlaMap(object):
@@ -37,6 +67,15 @@ class CarlaMap(object):
 
         city_map_file = os.path.join(dir_path, city + '.png')
         city_map_file_lanes = os.path.join(dir_path, city + 'Lanes.png')
+        city_map_file_center = os.path.join(dir_path, city + 'Center.png')
+
+
+        # The built graph. This is the exact same graph that unreal builds. This
+        # is a generic structure used for many cases
+
+        self._graph = Graph(city_file)
+        
+        self._grid = Grid()
 
         with open(city_file, 'r') as file:
 
@@ -48,6 +87,7 @@ class CarlaMap(object):
             lineworldangles = file.readline()
             self.angles = string_to_floats(lineworldangles)
 
+            # If tere is an rotation between the world and map coordinates.
             self.worldrotation = np.array([
                 [math.cos(math.radians(self.angles[2])), -math.sin(math.radians(self.angles[2])), 0.0],
                 [math.sin(math.radians(self.angles[2])), math.cos(math.radians(self.angles[2])), 0.0],
@@ -55,17 +95,14 @@ class CarlaMap(object):
 
             # Ignore for now, these are offsets for map coordinates and scale
             # (not used).
-            _ = file.readline()
+            map_scale = file.readline()
             linemapoffset = file.readline()
 
             # The offset of the map zero coordinate.
             self.mapoffset = string_to_floats(linemapoffset)
 
-            # the graph resolution.
-            linegraphres = file.readline()
-            self.resolution = string_to_node(linegraphres)
 
-        # The number of game units per pixel.
+        # The number of game units per pixel. For now this is fixed.
         self.pixel_density = 16.43
         # Load the lanes image
         self.map_image_lanes = Image.open(city_map_file_lanes)
@@ -76,6 +113,15 @@ class CarlaMap(object):
         self.map_image.load()
         self.map_image = np.asarray(self.map_image, dtype="int32")
 
+        # Load the lanes image
+        self.map_image_center = Image.open(city_map_file_center)
+        self.map_image_center.load()
+        self.map_image_center = np.asarray(self.map_image_center, dtype="int32")
+
+
+    def get_graph_resolution(self):
+
+        return self._graph._resolution
 
     def get_map(self, height=None):
         if height is not None:
@@ -113,6 +159,14 @@ class CarlaMap(object):
 
         return pixel
 
+    def get_position_on_graph(self, world):
+        """Get the position on the map for a certain world position."""
+        pixel = self.get_position_on_map(world)
+        return self._graph.project_pixel(pixel)
+        
+
+
+
     def get_position_on_world(self, pixel):
         """Get world position of a certain map position."""
         relative_location = []
@@ -144,3 +198,155 @@ class CarlaMap(object):
         ori = ((float(ori) / 255.0)) * 2 * math.pi
 
         return (-math.cos(ori), -math.sin(ori))
+
+
+
+
+
+
+
+    def 
+
+
+
+
+
+
+
+
+    def make_map_world(self, world):
+
+        relative_location = []
+        pixel = []
+
+        rotation = np.array([world[0], world[1], world[2]])
+        rotation = rotation.dot(self.worldrotation)
+
+        relative_location.append(
+            rotation[0] + self.worldoffset[0] - self.mapoffset[0])
+        relative_location.append(
+            rotation[1] + self.worldoffset[1] - self.mapoffset[1])
+        relative_location.append(
+            rotation[2] + self.worldoffset[2] - self.mapoffset[2])
+
+        pixel.append(math.floor(relative_location[
+                     0]/float(self.pixel_density)))
+        pixel.append(math.floor(relative_location[
+                     1]/float(self.pixel_density)))
+
+        return pixel
+
+    def make_map_node(self, node):
+        pixel = []
+        pixel.append((node[0] + 2) * self.node_density)
+        pixel.append((node[1] + 2) * self.node_density)
+
+        return pixel
+
+    def make_world_map(self, pixel):
+
+        relative_location = []
+        world_vertex = []
+        relative_location.append(pixel[0]*self.pixel_density)
+        relative_location.append(pixel[1]*self.pixel_density)
+
+        world_vertex.append(
+            relative_location[0]+self.mapoffset[0] - self.worldoffset[0])
+        world_vertex.append(
+            relative_location[1]+self.mapoffset[1] - self.worldoffset[1])
+        world_vertex.append(22)
+        return world_vertex
+
+    def make_world_node(self, node):
+
+        return self.make_world_map(self.make_map_node(node))
+
+
+
+    def get_target_ori(self, target_pos):
+
+        relative_location = []
+        pixel = []
+        rotation = np.array([target_pos[0], target_pos[1], target_pos[2]])
+        rotation = rotation.dot(self.worldrotation)
+
+        # print 'rot ', rotation
+
+        relative_location.append(
+            rotation[0] + self.worldoffset[0] - self.mapoffset[0])
+        relative_location.append(
+            rotation[1] + self.worldoffset[1] - self.mapoffset[1])
+        relative_location.append(
+            rotation[2] + self.worldoffset[2] - self.mapoffset[2])
+        # print 'trans ', relative_location
+
+        pixel.append(math.floor(relative_location[
+                     0]/float(self.pixel_density)))
+        pixel.append(math.floor(relative_location[
+                     1]/float(self.pixel_density)))
+        # print self.map_image.shape
+        ori = self.map_image[int(pixel[1]), int(pixel[0]), 2]
+        ori = ((float(ori)/255.0)) * 2*math.pi
+
+        # print self.map_image[int(pixel[1]),int(pixel[0]),:]
+        # print ori
+        #print (math.cos(ori),math.sin(ori))
+        # print exit()
+
+        return (-math.cos(ori), -math.sin(ori))
+
+"""
+    def make_node(self, worldvertex):
+
+        pixel = self.make_map_world(worldvertex)
+
+        node = []
+
+        node.append((pixel[0])/self.node_density - 2)
+        node.append((pixel[1])/self.node_density - 2)
+
+        return tuple(node)
+"""
+    def get_walls_directed(self,node_target,target_ori,node_source):
+
+        # GOes to Grid
+        #added_walls = self.set_grid_direction(node_source,source_ori,node_target)
+
+
+         #print added_walls
+        # Goes to grid
+        #added_walls=added_walls.union(self.set_grid_direction_target(node_target,target_ori,node_source))
+        #print added_walls
+
+    def get_walls(self):
+
+        return walss
+
+
+
+
+    def get_distance_closest_node(self, pos):
+        import collections
+        distance = []
+        for node_iter in self.graph.intersection_nodes():
+
+            distance.append(sldist(node_iter, pos))
+
+        return sorted(distance)[0]
+
+    def get_distance_closest_node_route(self, pos, route):
+        import collections
+        distance = []
+        # if self.graph.intersection_nodes() == set():
+
+        for node_iter in route:
+
+            if node_iter in self.graph.intersection_nodes():
+
+                distance.append(sldist(node_iter, pos))
+
+        if not distance:
+
+            return sldist(route[-1], pos)
+        return sorted(distance)[0]
+

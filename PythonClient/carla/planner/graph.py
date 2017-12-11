@@ -28,8 +28,6 @@ class Graph(object):
 	"""
 
 
-
-
 	def __init__(self,graph_file=None):
 
 
@@ -37,11 +35,17 @@ class Graph(object):
 		self.angles ={}
 		self.edges = {}
 		self.distances = {}
+		self.node_density =50
 		if graph_file != None:
 			with  open(graph_file, 'r') as file:
-				for i in range(5):
+				for i in range(4):
 					next(file)
+
+	            # the graph resolution.
+	            linegraphres = file.readline()
+	            self._resolution = string_to_node(linegraphres)
 				for line in file:
+
 
 					from_node, to_node, d = line.split()
 					from_node = string_to_node(from_node)
@@ -63,7 +67,12 @@ class Graph(object):
 	def add_node(self, value):
 		self.nodes.add(value)
 
+	def project_pixel(self,pixel)
+        node = []
+        node.append((pixel[0])/self.node_density - 2)
+        node.append((pixel[1])/self.node_density - 2)
 
+        return tuple(node)
 
 	def make_orientations(self,node,heading):
 

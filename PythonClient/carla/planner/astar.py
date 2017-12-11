@@ -1,7 +1,9 @@
 import heapq
 
+from carla.planner.map import CarlaMap
 
 class Cell(object):
+
     def __init__(self, x, y, reachable):
         """Initialize new cell.
 
@@ -23,7 +25,10 @@ class Cell(object):
 
 
 class AStar(object):
+
     def __init__(self):
+
+
         # open list
         self.opened = []
         heapq.heapify(self.opened)
@@ -34,8 +39,10 @@ class AStar(object):
         self.grid_height = None
         self.grid_width = None
 
-    def init_grid(self, width, height, walls, start, end):
-        """Prepare grid cells, walls.
+    def init_grid(self, width, height, walls,start, end):
+
+        """
+        Prepare grid cells, walls.
 
         @param width grid's width.
         @param height grid's height.
@@ -143,3 +150,6 @@ class AStar(object):
                         self.update_cell(adj_cell, cell)
                         # add adj cell to open list
                         heapq.heappush(self.opened, (adj_cell.f, adj_cell))
+
+
+
