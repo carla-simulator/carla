@@ -196,11 +196,11 @@ class Benchmark(object,):
 
                     # compute stats for the experiment
 
-                    self.write_summary_results(
+                    self._write_summary_results(
                         experiment, pose, rep, path_distance, 
                         remaining_distance, final_time, time_out, result)
 
-                    self.write_reward_results(experiment, rep, reward_vec)
+                    self._write_reward_results(experiment, rep, reward_vec)
 
                     if(result > 0):
                         print('+++++ Target achieved in %f seconds! +++++' %
@@ -211,7 +211,7 @@ class Benchmark(object,):
 
 
 
-    def write_summary_results(self, experiment, pose, rep,
+    def _write_summary_results(self, experiment, pose, rep,
                               path_distance, remaining_distance, 
                               final_time, time_out, result):
 
@@ -232,7 +232,7 @@ class Benchmark(object,):
 
             w.writerow(self._dict_stats)
 
-    def write_reward_results(self, experiment, rep, reward_vec):
+    def _write_reward_results(self, experiment, rep, reward_vec):
 
         with open(os.path.join(self._full_name,
                                'rewards_' + self._suffix_name), 'a+') as rfd:

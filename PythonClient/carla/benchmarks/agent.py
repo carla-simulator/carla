@@ -25,8 +25,7 @@ class Agent(object, ):
         import os
         dir_path = os.path.dirname(__file__)
 
-        self._planner = Planner(dir_path+'/../planner/' + city_name + '.txt',\
-          dir_path+'/../planner/' + city_name + '.png')
+        self._planner = Planner(city_name)
 
 
 
