@@ -291,9 +291,9 @@ class CarlaMap(object):
 
         """
 
-        np.set_printoptions( linewidth =206,threshold=np.nan)
-        
-        print self._grid._structure
+        #np.set_printoptions( linewidth =206,threshold=np.nan)
+
+        #print self._grid._structure
 
         final_walls = self._grid.get_wall_source(node_source,source_ori,node_target)
         #print 'Returned final ',final_walls
@@ -305,7 +305,7 @@ class CarlaMap(object):
     def get_walls(self):
 
 
-        return self._grid.walls
+        return self._grid._walls
 
 
 
