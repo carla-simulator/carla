@@ -54,7 +54,6 @@ class Benchmark(object,):
                               'pos_y': -1
                               }
 
-        # If this name was run try to continue
 
         # Returns a experiment class that is build from a benchmark inherited
         # class
@@ -98,14 +97,15 @@ class Benchmark(object,):
         curr_y = -1
         prev_x = -1
         prev_y = -1
+        
         measurements, sensor_data = carla.read_data()
         carla.send_control(carla_protocol.Control())
+        
         t0 = measurements.game_timestamp
         t1 = t0
         success = False
-        step = 0
-        accum_lane_intersect = 0.0
-        accum_sidewalk_intersect = 0.0
+
+
         distance = 100000
         measurement_vec = []
         while((t1-t0) < (time_out*1000) and not success):
@@ -128,8 +128,8 @@ class Benchmark(object,):
 
             t1 = measurements.game_timestamp
 
-            step += 1
-            # The distance is based on graph but quite not exact.
+
+
             distance = sldist([curr_x, curr_y],
                               [target.location.x, target.location.y])
 
