@@ -1,8 +1,16 @@
-      
-class CityTrack(object)
+import math
 
 
-    def __init__(self,city_name)
+import numpy as np
+
+from carla.planner.astar import AStar
+from carla.planner.map import CarlaMap
+
+
+class CityTrack(object):
+
+
+    def __init__(self,city_name):
 
 
         self._map = CarlaMap(city_name)
@@ -11,6 +19,10 @@ class CityTrack(object)
 
         # Refers to the start position of the previous route computation
         self._previous_node = []
+
+        # The current computed rout
+
+        self._route =None
  
    
 
@@ -25,7 +37,7 @@ class CityTrack(object)
         # To change the orientation with respect to the map standards
         node_orientation = np.array([node_orientation[0],
                             node_orientation[1],node_orientation[2]])
-        node_orientation = source_ori.dot(self.worldrotation)
+
 
         node  =   tuple([ int(x) for x in node ])
 
@@ -39,11 +51,11 @@ class CityTrack(object)
 
 
         if math.fabs(node_orientation[0]) > math.fabs(node_orientation[1]):
-            node_orientation = (source_ori[0],0.0,0.0)
+            node_orientation = (node_orientation[0],0.0,0.0)
         else:
-            node_orientation = (0.0,source_ori[1],0.0)
+            node_orientation = (0.0,node_orientation[1],0.0)
 
-        node = self.map.grid_search(node[0],node[1])
+        node = self._map._grid.search_on_grid(node[0],node[1])
 
 
         return node
@@ -60,8 +72,14 @@ class CityTrack(object)
 
     def is_far_away_from_route_intersection(self,current_node):
         # CHECK FOR THE EMPTY CASE
+        if self._route == None:
+            raise RuntimeError('Impossible to find route'
+                   + ' Current planner is limited'
+                   + ' Try to select start points away from interesections')
+
+
         return self._closest_intersection_route_position(current_node,
-                       self._previous_route) > 4
+                       self._route) > 4
 
 
 
@@ -70,12 +88,18 @@ class CityTrack(object)
 
         self._previous_node = node_source
 
+        #print node_source
+        #print node_target
+        #print self._map.get_walls_directed(node_source,source_ori,
+        #        node_target,target_ori)
+        print self._map.get_graph_resolution()
 
         a_star =AStar()
-        a_star.init_grid(node_source,self._map.get_graph_resolution()[0],
+        a_star.init_grid(self._map.get_graph_resolution()[0],
             self._map.get_graph_resolution()[1],
-            self._map.get_walls_directed(node_target,target_ori,node_source),
-            node_target)
+            self._map.get_walls_directed(node_source,source_ori,
+                node_target,target_ori),node_source, 
+                node_target)
 
 
         route = a_star.solve()
@@ -86,12 +110,14 @@ class CityTrack(object)
         # REALLY, I want to remove this
         if route == None:
             a_star =AStar()
-            a_star.init_grid(node_source,self._map.get_graph_resolution()[0],
-            self._map.get_graph_resolution()[1],self._map.get_walls(), node_target)
+            a_star.init_grid(self._map.get_graph_resolution()[0],
+            self._map.get_graph_resolution()[1],self._map.get_walls(),
+            node_source, node_target)
 
             route = a_star.solve()
 
             
+        self._route = route
 
         return route
 
@@ -107,15 +133,31 @@ class CityTrack(object)
 
         return sorted(distance_vector)[0]
 
-    def _closest_intersection_route_position(self, current_node):
+    def _closest_intersection_route_position(self, current_node,route):
 
         distance_vector = []
-        for node_iterator in self._map._graph.intersection_nodes():
+        for node_iter in route:
+            for node_iterator in self._map._graph.intersection_nodes():
 
-            distance_vector.append(sldist(node_iterator, current_node))
+                distance_vector.append(sldist(node_iterator, current_node))
 
         return sorted(distance_vector)[0]
 
 
 
+    def get_distance_closest_node_route(self, pos, route):
+        import collections
+        distance = []
+        # if self.graph.intersection_nodes() == set():
+
+        for node_iter in route:
+
+            if node_iter in self.graph.intersection_nodes():
+
+                distance.append(sldist(node_iter, pos))
+
+        if not distance:
+
+            return sldist(route[-1], pos)
+        return sorted(distance)[0]
 

@@ -20,8 +20,13 @@ try:
 except ImportError:
     raise RuntimeError('cannot import PIL, make sure pillow package is installed')
 
-from graph import  string_to_node,string_to_floats
+from carla.planner.graph import Graph
+from carla.planner.grid import Grid
+from carla.planner.graph import  string_to_node,string_to_floats
 
+
+def color_to_angle(color):
+    return ((float(color)/255.0)) * 2*math.pi
 
 
 
@@ -67,15 +72,15 @@ class CarlaMap(object):
 
         city_map_file = os.path.join(dir_path, city + '.png')
         city_map_file_lanes = os.path.join(dir_path, city + 'Lanes.png')
-        city_map_file_center = os.path.join(dir_path, city + 'Center.png')
+        city_map_file_center = os.path.join(dir_path, city + 'Central.png')
 
 
         # The built graph. This is the exact same graph that unreal builds. This
         # is a generic structure used for many cases
 
         self._graph = Graph(city_file)
-        
-        self._grid = Grid()
+
+        self._grid = Grid(self._graph)
 
         with open(city_file, 'r') as file:
 
@@ -163,7 +168,6 @@ class CarlaMap(object):
         """Get the position on the map for a certain world position."""
         pixel = self.get_position_on_map(world)
         return self._graph.project_pixel(pixel)
-        
 
 
 
@@ -195,22 +199,9 @@ class CarlaMap(object):
         pixel.append(math.floor(relative_location[1] / float(self.pixel_density)))
 
         ori = self.map_image_lanes[int(pixel[1]), int(pixel[0]), 2]
-        ori = ((float(ori) / 255.0)) * 2 * math.pi
+        ori = color_to_angle(ori)
 
         return (-math.cos(ori), -math.sin(ori))
-
-
-
-
-
-
-
-    def 
-
-
-
-
-
 
 
 
@@ -286,42 +277,30 @@ class CarlaMap(object):
                      1]/float(self.pixel_density)))
         # print self.map_image.shape
         ori = self.map_image[int(pixel[1]), int(pixel[0]), 2]
-        ori = ((float(ori)/255.0)) * 2*math.pi
+        ori = color_to_angle(ori)
 
-        # print self.map_image[int(pixel[1]),int(pixel[0]),:]
-        # print ori
-        #print (math.cos(ori),math.sin(ori))
-        # print exit()
 
         return (-math.cos(ori), -math.sin(ori))
 
-"""
-    def make_node(self, worldvertex):
 
-        pixel = self.make_map_world(worldvertex)
+    def get_walls_directed(self,node_source,source_ori,node_target,target_ori):
+        """ 
+        This is the most hacky function. Instead of planning on two ways,
+        we basically use a one way road and interrupt the other road by adding
+        an artificial wall.
 
-        node = []
+        """
+        print self._grid._structure
+        final_walls = self._grid.get_wall_source(node_source,source_ori,node_target)
+        print 'Returned final ',final_walls
+        final_walls = final_walls.union(self._grid.get_wall_target(
+                node_target,target_ori,node_source))
+        return final_walls
 
-        node.append((pixel[0])/self.node_density - 2)
-        node.append((pixel[1])/self.node_density - 2)
-
-        return tuple(node)
-"""
-    def get_walls_directed(self,node_target,target_ori,node_source):
-
-        # GOes to Grid
-        #added_walls = self.set_grid_direction(node_source,source_ori,node_target)
-
-
-         #print added_walls
-        # Goes to grid
-        #added_walls=added_walls.union(self.set_grid_direction_target(node_target,target_ori,node_source))
-        #print added_walls
 
     def get_walls(self):
 
-        return walss
-
+        return self._grid.walls
 
 
 
@@ -334,19 +313,4 @@ class CarlaMap(object):
 
         return sorted(distance)[0]
 
-    def get_distance_closest_node_route(self, pos, route):
-        import collections
-        distance = []
-        # if self.graph.intersection_nodes() == set():
-
-        for node_iter in route:
-
-            if node_iter in self.graph.intersection_nodes():
-
-                distance.append(sldist(node_iter, pos))
-
-        if not distance:
-
-            return sldist(route[-1], pos)
-        return sorted(distance)[0]
 

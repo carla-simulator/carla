@@ -20,7 +20,7 @@ from carla.carla_server_pb2 import Control
 
 
 
-class Agent(object, ):
+class Agent(object):
     def __init__(self,city_name, **kwargs):
         import os
         dir_path = os.path.dirname(__file__)
@@ -31,10 +31,10 @@ class Agent(object, ):
 
     def get_distance(self,start_point,end_point):
 
-        _,path_distance=self._planner.get_next_command([start_point.location.x\
-        ,start_point.location.y,22],[start_point.orientation.x\
-        ,start_point.orientation.y,22],[end_point.location.x\
-        ,end_point.location.y,22],(1,0,0))
+        path_distance=self._planner.get_shortest_path_distance(
+        [start_point.location.x,start_point.location.y,22]
+        ,[start_point.orientation.x,start_point.orientation.y,22]
+        ,[end_point.location.x,end_point.location.y,22],(1,0,0))
         # We calculate the timout based on the distance
 
         return path_distance
