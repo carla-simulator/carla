@@ -290,15 +290,20 @@ class CarlaMap(object):
         an artificial wall.
 
         """
+
+        np.set_printoptions( linewidth =206,threshold=np.nan)
+        
         print self._grid._structure
+
         final_walls = self._grid.get_wall_source(node_source,source_ori,node_target)
-        print 'Returned final ',final_walls
+        #print 'Returned final ',final_walls
         final_walls = final_walls.union(self._grid.get_wall_target(
                 node_target,target_ori,node_source))
         return final_walls
 
 
     def get_walls(self):
+
 
         return self._grid.walls
 
