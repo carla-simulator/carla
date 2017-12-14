@@ -15,12 +15,6 @@ def string_to_floats(string):
 
     return (float(vec[0]), float(vec[1]), float(vec[2]))
 
-
-
-
-def signal(v1, v2):
-    return np.cross(v1, v2) / np.linalg.norm(v1) / np.linalg.norm(v2)
-
 sldist = lambda c1, c2: math.sqrt((c2[0] - c1[0])**2 + (c2[1] - c1[1])**2)
 
 sldist3 = lambda c1, c2: math.sqrt(

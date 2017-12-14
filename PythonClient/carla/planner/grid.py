@@ -28,7 +28,7 @@ class Grid(object):
             for offset in visit:
                 c_x, c_y = x + offset[0]*scale, y + offset[1]*scale
 
-                if c_x >= 0 and c_x < self._graph.resolution[0] and c_y >= 0 and c_y < self._graph.resolution[1]:
+                if c_x >= 0 and c_x < self._graph._resolution[0] and c_y >= 0 and c_y < self._graph._resolution[1]:
                     if self._structure[c_x, c_y] == 0:
                         break
                 else:

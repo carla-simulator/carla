@@ -227,10 +227,12 @@ class CarlaMap(object):
 
         return pixel
 
+
+
     def make_map_node(self, node):
         pixel = []
-        pixel.append((node[0] + 2) * self.node_density)
-        pixel.append((node[1] + 2) * self.node_density)
+        pixel.append((node[0] + 2) * self._graph._node_density)
+        pixel.append((node[1] + 2) * self._graph._node_density)
 
         return pixel
 
@@ -253,34 +255,6 @@ class CarlaMap(object):
         return self.make_world_map(self.make_map_node(node))
 
 
-
-    def get_target_ori(self, target_pos):
-
-        relative_location = []
-        pixel = []
-        rotation = np.array([target_pos[0], target_pos[1], target_pos[2]])
-        rotation = rotation.dot(self.worldrotation)
-
-        # print 'rot ', rotation
-
-        relative_location.append(
-            rotation[0] + self.worldoffset[0] - self.mapoffset[0])
-        relative_location.append(
-            rotation[1] + self.worldoffset[1] - self.mapoffset[1])
-        relative_location.append(
-            rotation[2] + self.worldoffset[2] - self.mapoffset[2])
-        # print 'trans ', relative_location
-
-        pixel.append(math.floor(relative_location[
-                     0]/float(self.pixel_density)))
-        pixel.append(math.floor(relative_location[
-                     1]/float(self.pixel_density)))
-        # print self.map_image.shape
-        ori = self.map_image[int(pixel[1]), int(pixel[0]), 2]
-        ori = color_to_angle(ori)
-
-
-        return (-math.cos(ori), -math.sin(ori))
 
 
     def get_walls_directed(self,node_source,source_ori,node_target,target_ori):

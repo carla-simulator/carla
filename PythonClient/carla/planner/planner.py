@@ -2,9 +2,11 @@ import math
 import time
 import collections
 import os
+import numpy as np
 
 
 from PIL import Image
+
 from city_track import CityTrack
 
 compare = lambda x, y: collections.Counter(x) == collections.Counter(y)
@@ -20,11 +22,14 @@ TURN_LEFT = 3.0
 LANE_FOLLOW =2.0
 
 
+# Auxiliary algebra function
 def angle_between(v1, v2):
     return np.arccos(np.dot(v1, v2) / np.linalg.norm(v1) / np.linalg.norm(v2))
 
 sldist = lambda c1, c2: math.sqrt((c2[0] - c1[0])**2 + (c2[1] - c1[1])**2)
 
+def signal(v1, v2):
+    return np.cross(v1, v2) / np.linalg.norm(v1) / np.linalg.norm(v2)
 
 
 class Planner(object):
@@ -82,7 +87,7 @@ class Planner(object):
 
 
 
-            route= self._city_track.compute_route(track_source,source_ori,
+            route = self._city_track.compute_route(track_source,source_ori,
                             track_target,target_ori) 
             if route == None:
                 raise RuntimeError('Impossible to find route')
@@ -94,8 +99,8 @@ class Planner(object):
             if self._city_track.is_far_away_from_route_intersection(track_source):
                 return LANE_FOLLOW
             else:
-                if self.commands:
-                    return self.commands[0]
+                if self._commands:
+                    return self._commands[0]
                 else:
                     return LANE_FOLLOW
         else:
@@ -104,8 +109,8 @@ class Planner(object):
                 return LANE_FOLLOW
 
             # If there is computed commands
-            if self.commands:
-                return self.commands[0]
+            if self._commands:
+                return self._commands[0]
             else:
                 return LANE_FOLLOW
 
@@ -120,6 +125,9 @@ class Planner(object):
 
         route = self._city_track.compute_route(track_source,source_ori,
                             track_target,target_ori)
+        # No Route, distance is zero
+        if route == None:
+            return 0.0
 
         for node_iter in route:
 
@@ -152,7 +160,7 @@ class Planner(object):
         commands_list = []
 
         for i in range(0, len(route)):
-            if route[i] not in self.astar.intersection_nodes():
+            if route[i] not in self._city_track._map._graph.intersection_nodes():
                 continue
 
             current = route[i]
