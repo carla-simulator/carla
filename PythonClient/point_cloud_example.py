@@ -60,22 +60,18 @@ def run_carla_client(host, port, save_images_to_disk, image_filename_format):
         camera1.set_image_size(*image_size)
         camera1.set_position(*camera_local_pos)
         camera1.set_rotation(*camera_local_rotation)
+        settings.add_sensor(camera1)
 
         camera2 = Camera(
             'CameraRGB', PostProcessing='SceneFinal', CameraFOV=fov)
         camera2.set_image_size(*image_size)
         camera2.set_position(*camera_local_pos)
         camera2.set_rotation(*camera_local_rotation)
-
-        settings.add_sensor(camera1)
         settings.add_sensor(camera2)
 
         scene = client.load_settings(settings)
 
         # Start at location index id '0'
-        # client.start_episode(0)
-        number_of_player_starts = len(scene.player_start_spots)
-        player_start = random.randint(0, max(0, number_of_player_starts - 1))
         client.start_episode(0)
 
         # Compute the camera transform matrix
@@ -108,12 +104,10 @@ def run_carla_client(host, port, save_images_to_disk, image_filename_format):
                     image.save_to_disk(
                         image_filename_format.format(episode, name, frame))
 
-            # 2d to (camera) local 3d
+            # 2d to (camera) local 3d ##########################################
             t = StopWatch()
-
             # RGB image [[[r,g,b],..[r,g,b]],..[[r,g,b],..[r,g,b]]]
             image_RGB = to_rgb_array(sensor_data['CameraRGB'])
-
             # [[X0,Y0,Z0],..[Xn,Yn,Zn]]
             # points_3d = depth_to_local_point_cloud(sensor_data['CameraDepth'])
 
@@ -121,35 +115,41 @@ def run_carla_client(host, port, save_images_to_disk, image_filename_format):
             points_3d = depth_to_local_colored_point_cloud(
                 sensor_data['CameraDepth'], image_RGB)
             t.stop()
-            print('Transformation took {:.0f} ms'.format(t.milliseconds()))
+            print('2D to 3D took {:.0f} ms'.format(t.milliseconds()))
 
-            # (camera) local 3d to world 3d
+            # (camera) local 3d to world 3d ####################################
             t = StopWatch()
-
             # Separating the 3d point and its corresponding color
             color_list = points_3d[:, 3:6]
             points_3d = points_3d[:, 0:3]
 
+            # Get the player transformation
             car_to_world = measurements.player_measurements.transform
+
+            # Compute the final transformation matrix
             car_to_world_matrix = compute_transform_matrix(
                 car_to_world) * camera_to_car_matrix
 
-            # We need the foramt [[X0,..Xn],[Z0,..Zn],[Z0,..Zn]]
-            points_3d = points_3d.transpose()
+            # Car to World transformation given the 3D local points
+            # and the transformation matrix
+            points_3d = transform_points(car_to_world_matrix, points_3d)
 
-            # Car to World transformation
-            points_3d = transform_points(
-                car_to_world_matrix, points_3d).transpose()
-
+            # Merging again the 3D points (now in world space) with
+            # the previous colors
             points_3d = numpy.concatenate((points_3d, color_list), axis=1)
+            # Now we have an array of 3D points and colors
+            # [ [X1,Y1,Z1,R1,G1,B1],
+            #   [X2,Y2,Z2,R2,G2,B2],
+            #    ...,
+            #   [Xn,Yn,Zn,Rn,Gn,Bn] ]
 
             t.stop()
-            print('Local to world transformation took {:.0f} ms'.format(
+            print('Local 3D to world 3D took {:.0f} ms'.format(
                 t.milliseconds()))
 
             t = StopWatch()
 
-            # Save PLY to disk
+            # Save PLY to disk #################################################
             print('Generaing PLY ...')
             ply = '\n'.join(['{:.2f} {:.2f} {:.2f} {:.0f} {:.0f} {:.0f}'.format(
                 *p) for p in points_3d.tolist()])
@@ -159,7 +159,8 @@ def run_carla_client(host, port, save_images_to_disk, image_filename_format):
                 os.makedirs(output_folder)
 
             print('Saving PLY ...')
-            with open('{}/{:0>4}.ply'.format(output_folder, frame), 'w+') as f:
+            # Open the file and save with the specific PLY format
+            with open('{}/{:0>5}.ply'.format(output_folder, frame), 'w+') as f:
                 f.write(
                     '\n'.join([construct_ply_header(len(points_3d), True), ply]))
             t.stop()
@@ -214,52 +215,24 @@ def compute_transform_matrix_raw(x=0, y=0, z=0, pitch=0, roll=0, yaw=0, sX=1, sY
 
 def transform_points(transform_matrix, points):
     """
-    Expected points format [[X0..,Xn],[Y0..,Yn],[Z0..,Zn]]
+    Given a 4x4 transformation matrix, transform an array of 3D points.
+    Expected foramt: [[X0,Y0,Z0],..[Xn,Yn,Zn]]
     """
-    # Add 0s row so [[X0..,Xn],[Y0..,Yn],[Z0..,Zn],[0,..0]]
+    # Needed foramt: [[X0,..Xn],[Z0,..Zn],[Z0,..Zn]]
+    points = points.transpose()
+    # Add 0s row: [[X0..,Xn],[Y0..,Yn],[Z0..,Zn],[0,..0]]
     points = numpy.append(points, numpy.ones((1, points.shape[1])), axis=0)
     # Point transformation
     points = transform_matrix * points
     # Return all but last row
-    return points[0:3]
-
-
-def transform_points_old(transform, points):
-    yaw = numpy.radians(transform.rotation.yaw)
-    roll = numpy.radians(-transform.rotation.roll)
-    pitch = numpy.radians(-transform.rotation.pitch)
-
-    yaw_matrix = numpy.array([
-        [math.cos(yaw), -math.sin(yaw), 0],
-        [math.sin(yaw), math.cos(yaw), 0],
-        [0, 0, 1]
-    ])
-
-    pitch_matrix = numpy.array([
-        [math.cos(pitch), 0, -math.sin(pitch)],
-        [0, 1, 0],
-        [math.sin(pitch), 0, math.cos(pitch)]
-    ])
-
-    roll_matrix = numpy.array([
-        [1, 0, 0],
-        [0, math.cos(roll), math.sin(roll)],
-        [0, -math.sin(roll), math.cos(roll)]
-    ])
-
-    rotation_matrix = numpy.dot(
-        yaw_matrix, numpy.dot(pitch_matrix, roll_matrix))
-
-    translation = numpy.array([
-        [transform.location.x],
-        [transform.location.y],
-        [transform.location.z]
-    ])
-
-    return numpy.dot(rotation_matrix, points) + translation
+    return points[0:3].transpose()
 
 
 def construct_ply_header(points_number, colors=False):
+    """
+    Generates a PLY header given a total number of 3D points and
+    coloring property if specified
+    """
     header = ['ply',
               'format ascii 1.0',
               'element vertex {}',
