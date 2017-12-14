@@ -3,6 +3,8 @@ import math
 
 import numpy as np
 
+from carla.planner.graph import sldist
+
 from carla.planner.astar import AStar
 from carla.planner.map import CarlaMap
 
@@ -29,14 +31,16 @@ class CityTrack(object):
 
 
 
-    def project_node(self,node,node_orientation):
+    def project_node(self,position,node_orientation):
         """
             Projecting the graph node into the city road
         """
 
+        node =self._map.get_position_on_graph(position)
+
         # To change the orientation with respect to the map standards
         node_orientation = np.array([node_orientation[0],
-                            node_orientation[1],node_orientation[2]])
+                            node_orientation[1]])
 
 
         node  =   tuple([ int(x) for x in node ])
@@ -92,14 +96,14 @@ class CityTrack(object):
         #print node_target
         #print self._map.get_walls_directed(node_source,source_ori,
         #        node_target,target_ori)
-        print self._map.get_graph_resolution()
-
+        #print self._map.get_graph_resolution()
+        #print self._map.get_walls()
+        #print 's ',node_source,'e ',node_target
         a_star =AStar()
         a_star.init_grid(self._map.get_graph_resolution()[0],
             self._map.get_graph_resolution()[1],
-            self._map.get_walls(),node_source,
-            #self._map.get_walls_directed(node_source,source_ori,
-            #    node_target,target_ori),node_source, 
+            self._map.get_walls_directed(node_source,source_ori,
+                node_target,target_ori),node_source, 
                 node_target)
 
 

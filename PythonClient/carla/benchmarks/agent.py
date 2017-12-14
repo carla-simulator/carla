@@ -9,7 +9,6 @@ from __future__ import print_function
 import time
 import math
 from carla import sensor
-from carla.client import make_carla_client
 from carla.sensor import Camera
 from carla.settings import CarlaSettings
 from carla.tcp import TCPConnectionError
@@ -34,7 +33,8 @@ class Agent(object):
         path_distance=self._planner.get_shortest_path_distance(
         [start_point.location.x,start_point.location.y,22]
         ,[start_point.orientation.x,start_point.orientation.y,22]
-        ,[end_point.location.x,end_point.location.y,22],(1,0,0))
+        ,[end_point.location.x,end_point.location.y,22]
+        ,[end_point.orientation.x,end_point.orientation.y,22])
         # We calculate the timout based on the distance
 
         return path_distance

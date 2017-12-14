@@ -52,6 +52,7 @@ class AStar(object):
         """
         self.grid_height = height
         self.grid_width = width
+        #print walls
         for x in range(self.grid_width):
             for y in range(self.grid_height):
                 if (x, y) in walls:
@@ -59,6 +60,7 @@ class AStar(object):
                 else:
                     reachable = True
                 self.cells.append(Cell(x, y, reachable))
+
         self.start = self.get_cell(*start)
         self.end = self.get_cell(*end)
 
@@ -126,6 +128,8 @@ class AStar(object):
 
         @returns path or None if not found.
         """
+        if self.start == self.end:
+            return None
         # add starting cell to open heap queue
         heapq.heappush(self.opened, (self.start.f, self.start))
         while len(self.opened):
