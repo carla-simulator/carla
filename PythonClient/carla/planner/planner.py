@@ -40,11 +40,7 @@ class Planner(object):
 
         self._city_track = CityTrack(city_name) 
 
-        #self.previous_source = (0, 0)
-        ##self.distance = 0
-        #self.complete_distance = 0
 
-        # print self.map_image
         self._commands = []
 
         #self.route = []
@@ -135,8 +131,10 @@ class Planner(object):
             current_pos = node_iter
 
         # We multiply by these values to convert distance to world coordinates
-        return distance  *50.0*16.42 # , maybe this goes to another layer
+        return distance  *self._city_track._map.pixel_density \
+                    *self._city_track._map._graph._node_density 
 
+                    
 
     def is_there_posible_route(self,source,source_ori,target,target_ori):
 
@@ -146,6 +144,13 @@ class Planner(object):
 
         return  not self._city_track.compute_route(
                    node_source,source_ori,node_target,target_ori)  ==  None
+
+    def test_position(self,source,source_ori):
+
+
+        node_source = self._city_track.project_node(source,source_ori)
+
+        return  self.is_away_from_intersection(node_source)
 
 
 
