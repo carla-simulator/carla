@@ -112,7 +112,7 @@ def depth_to_local_point_cloud(image):
     Convert an image containing CARLA encoded depth-map to a 2D array containing
     the 3D position (relative to the camera) of each pixel.
     """
-    far = 1000.0
+    far = 100000.0 # centimeters
     normalized_depth = depth_to_array(image)
 
     # (Intrinsic) K Matrix
@@ -143,3 +143,42 @@ def depth_to_local_point_cloud(image):
     # Formating the output to:
     # [[X1,Y1,Z1],[X2,Y2,Z2], ... [Xn,Yn,Zn]]
     return numpy.transpose(p3d)
+
+def depth_to_local_colored_point_cloud(image, color):
+    """
+    Convert an image containing CARLA encoded depth-map to a 2D array containing
+    the 3D position (relative to the camera) of each pixel.
+    """
+    far = 100000.0 # max depth in centimeters
+    normalized_depth = depth_to_array(image)
+
+    # (Intrinsic) K Matrix
+    k = numpy.identity(3)
+    k[0, 2] = image.width / 2.0
+    k[1, 2] = image.height / 2.0
+    k[0, 0] = k[1, 1] = image.width / (2.0 * math.tan(image.fov * math.pi / 360.0))
+
+    # 2d pixel coordinates
+    pixel_length = image.width * image.height
+    u_coord = repmat(numpy.r_[image.width-1:-1:-1], image.height, 1).reshape(pixel_length)
+    v_coord = repmat(numpy.c_[image.height-1:-1:-1], 1, image.width).reshape(pixel_length)
+    color = color.reshape(pixel_length, 3)
+    normalized_depth = numpy.reshape(normalized_depth, pixel_length)
+
+    # Search for sky pixels (where the depth is 1.0) to delete them
+    max_depth_indexes = numpy.where(normalized_depth == 1.0)
+    normalized_depth = numpy.delete(normalized_depth, max_depth_indexes)
+    u_coord = numpy.delete(u_coord, max_depth_indexes)
+    v_coord = numpy.delete(v_coord, max_depth_indexes)
+    color = numpy.delete(color, max_depth_indexes, axis=0)
+
+    # pd2 = [u,v,1]
+    p2d = numpy.array([u_coord, v_coord, numpy.ones_like(u_coord)])
+
+    # P = [X,Y,Z]
+    p3d = numpy.dot(numpy.linalg.inv(k), p2d)
+    p3d *= normalized_depth * far
+
+    # Formating the output to:
+    # [[X1,Y1,Z1],[X2,Y2,Z2], ... [Xn,Yn,Zn]]
+    return numpy.concatenate((numpy.transpose(p3d), color), axis=1)
