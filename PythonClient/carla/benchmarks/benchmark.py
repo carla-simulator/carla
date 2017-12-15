@@ -22,7 +22,7 @@ sldist = lambda c1, c2: math.sqrt((c2[0] - c1[0])**2 + (c2[1] - c1[1])**2)
 class Benchmark(object,):
 
     # Param @name to be used for saving purposes
-    def __init__(self, city_name, name_to_save, continue_exp=False):
+    def __init__(self, city_name, name_to_save, continue_exp=False,save_images=False):
         # The name of the city that is going to be used.
         self._city_name = city_name
         # Sends a base name, the rest will be saved with respect to what the
@@ -91,7 +91,14 @@ class Benchmark(object,):
                                now.strftime("%Y%m%d%H%M")), 'wb') as f:
             pass
 
-    def run_navigation_episode(self, agent, carla, time_out, target):
+
+        self._save_images = save_images
+        self._image_filename_format = os.path.join(self._full_name,
+            '_images/episode_{:s}/{:s}/image_{:0>5d}.jpg')
+
+
+
+    def run_navigation_episode(self, agent, carla, time_out, target,episode_name):
 
         curr_x = -1
         curr_y = -1
@@ -108,6 +115,7 @@ class Benchmark(object,):
 
         distance = 100000
         measurement_vec = []
+        frame = 0
         while((t1-t0) < (time_out*1000) and not success):
             capture_time = time.time()
             measurements, sensor_data = carla.read_data()
@@ -118,6 +126,11 @@ class Benchmark(object,):
             carla.send_control(control)
 
             # meassure distance to target
+            if self._save_images:
+                for name, image in sensor_data.items():
+                    image.save_to_disk(self._image_filename_format.format(
+                        episode_name, name, frame))
+
 
             prev_x = curr_x
             prev_y = curr_y
@@ -138,6 +151,8 @@ class Benchmark(object,):
 
             if(distance < 200.0):
                 success = True
+
+            frame +=1
 
         if(success):
             return (1, measurement_vec, float(t1-t0)/1000.0, distance)
@@ -192,7 +207,10 @@ class Benchmark(object,):
                     # running the agent
                     (result, reward_vec, final_time, remaining_distance) = \
                         self.run_navigation_episode(
-                            agent, carla, time_out, positions[end_point])
+                            agent, carla, time_out, positions[end_point],
+                            str(experiment.Conditions.WeatherId) + '_'
+                             + str(experiment.id) +'_'+ str(start_point)
+                             + '.' + str(end_point))
 
                     # compute stats for the experiment
 
@@ -200,7 +218,7 @@ class Benchmark(object,):
                         experiment, pose, rep, path_distance, 
                         remaining_distance, final_time, time_out, result)
 
-                    self._write_reward_results(experiment, rep, reward_vec)
+                    self._write_details_results(experiment, rep, reward_vec)
 
                     if(result > 0):
                         print('+++++ Target achieved in %f seconds! +++++' %
@@ -232,10 +250,10 @@ class Benchmark(object,):
 
             w.writerow(self._dict_stats)
 
-    def _write_reward_results(self, experiment, rep, reward_vec):
+    def _write_details_results(self, experiment, rep, reward_vec):
 
         with open(os.path.join(self._full_name,
-                               'rewards_' + self._suffix_name), 'a+') as rfd:
+                               'details_' + self._suffix_name), 'a+') as rfd:
 
             rw = csv.DictWriter(rfd, self._dict_rewards.keys())
 

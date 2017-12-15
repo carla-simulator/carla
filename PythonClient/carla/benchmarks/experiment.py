@@ -11,7 +11,6 @@ class Experiment(object):
         self.Poses = [[]]
         self.Repetitions = 1
 
-        # self. ,vehicles,pedestrians,weather,cameras
 
     def set(self, **kwargs):
         for key, value in kwargs.items():

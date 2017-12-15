@@ -71,7 +71,7 @@ if(__name__ == '__main__'):
     while True:
         try:
             with make_carla_client(args.host, args.port) as client:
-                corl= CoRL(city_name= args.city_name,name_to_save='test2')
+                corl= CoRL(city_name= args.city_name,name_to_save='details')
                 agent = Manual(args.city_name)
                 results = corl.benchmark_agent(agent,client)
                 corl.plot_summary_test()
