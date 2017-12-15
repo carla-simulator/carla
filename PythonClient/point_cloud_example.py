@@ -6,7 +6,9 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-"""Basic CARLA to generate point cloud in PLY format."""
+# Basic CARLA client to generate point cloud in PLY format that you
+# can visualize with MeshLab (meshlab.net) for instance. Please
+# refer to client_example.py for a simpler and more documented example.
 
 from __future__ import print_function
 
@@ -25,7 +27,7 @@ from carla.sensor import Camera
 from carla.settings import CarlaSettings
 from carla.tcp import TCPConnectionError
 from carla.util import print_over_same_line, StopWatch
-from carla.image_converter import depth_to_local_point_cloud, depth_to_local_colored_point_cloud, to_rgb_array
+from carla.image_converter import depth_to_local_point_cloud, to_rgb_array
 
 
 def run_carla_client(host, port, save_images_to_disk, image_filename_format):
@@ -37,16 +39,10 @@ def run_carla_client(host, port, save_images_to_disk, image_filename_format):
     camera_local_rotation = [0, 0, 0]
     fov = 70
 
-    # We assume the CARLA server is already waiting for a client to connect at
-    # host:port. To create a connection we can use the `make_carla_client`
-    # context manager, it creates a CARLA client object and starts the
-    # connection. It will throw an exception if something goes wrong. The
-    # context manager makes sure the connection is always cleaned up on exit.
     with make_carla_client(host, port) as client:
         print('CarlaClient connected')
-        numpy.set_printoptions(precision=2)
-        # Start a new episode.
-        # Here we load the settings
+
+        # Here we load the settings.
         settings = CarlaSettings()
         settings.set(
             SynchronousMode=True,
@@ -85,16 +81,14 @@ def run_carla_client(host, port, save_images_to_disk, image_filename_format):
 
         camera_to_car_matrix = compute_transform_matrix(camera_to_car)
 
-        # Do the custom transformations
-        # Rotate -90 degrees in X (Roll)
-        rot_X = compute_transform_matrix_raw(roll=-90, yaw=90, sX=-1)
+        # Do the custom transformations.
+        to_unreal_matrix = compute_transform_matrix_raw(
+            roll=-90, yaw=90, sX=-1)
 
-        camera_to_car_matrix = camera_to_car_matrix * rot_X
+        camera_to_car_matrix = camera_to_car_matrix * to_unreal_matrix
 
         # Iterate every frame in the episode.
         for frame in range(0, number_of_frames):
-            print('Frame: {}'.format(frame))
-
             # Read the data produced by the server this frame.
             measurements, sensor_data = client.read_data()
 
@@ -104,72 +98,80 @@ def run_carla_client(host, port, save_images_to_disk, image_filename_format):
                     image.save_to_disk(
                         image_filename_format.format(episode, name, frame))
 
-            # 2d to (camera) local 3d ##########################################
-            t = StopWatch()
+            # Start transformations time mesure.
+            time = StopWatch()
+
             # RGB image [[[r,g,b],..[r,g,b]],..[[r,g,b],..[r,g,b]]]
             image_RGB = to_rgb_array(sensor_data['CameraRGB'])
-            # [[X0,Y0,Z0],..[Xn,Yn,Zn]]
-            # points_3d = depth_to_local_point_cloud(sensor_data['CameraDepth'])
 
-            # [[X0,Y0,Z0,r0,g0,b0],..[Xn,Yn,Zn,rn,gn,bn]]
-            points_3d = depth_to_local_colored_point_cloud(
-                sensor_data['CameraDepth'], image_RGB)
-            t.stop()
-            print('2D to 3D took {:.0f} ms'.format(t.milliseconds()))
-
-            # (camera) local 3d to world 3d ####################################
-            t = StopWatch()
-            # Separating the 3d point and its corresponding color
-            color_list = points_3d[:, 3:6]
-            points_3d = points_3d[:, 0:3]
-
-            # Get the player transformation
-            car_to_world = measurements.player_measurements.transform
-
-            # Compute the final transformation matrix
-            car_to_world_matrix = compute_transform_matrix(
-                car_to_world) * camera_to_car_matrix
-
-            # Car to World transformation given the 3D local points
-            # and the transformation matrix
-            points_3d = transform_points(car_to_world_matrix, points_3d)
-
-            # Merging again the 3D points (now in world space) with
-            # the previous colors
-            points_3d = numpy.concatenate((points_3d, color_list), axis=1)
-            # Now we have an array of 3D points and colors
-            # [ [X1,Y1,Z1,R1,G1,B1],
-            #   [X2,Y2,Z2,R2,G2,B2],
+            # 2d to (camera) local 3d
+            # We use the image_RGB to colorize each 3D point, this is optional.
+            # "max_depth" is used to keep only the points that are near to the
+            # camera, meaning 1.0 the farest points (sky)
+            points_3d = depth_to_local_point_cloud(
+                sensor_data['CameraDepth'], image_RGB, max_depth=0.2)
+            # This give us the following array of 3D points and colors:
+            # [ [X0,Y0,Z0,R0,G0,B0],
             #    ...,
             #   [Xn,Yn,Zn,Rn,Gn,Bn] ]
 
-            t.stop()
-            print('Local 3D to world 3D took {:.0f} ms'.format(
-                t.milliseconds()))
+            # (Camera) local 3d to world 3d.
+            # Get the player transformation.
+            car_to_world = measurements.player_measurements.transform
 
-            t = StopWatch()
+            # Compute the final transformation matrix.
+            car_to_world_matrix = compute_transform_matrix(
+                car_to_world) * camera_to_car_matrix
 
-            # Save PLY to disk #################################################
-            print('Generaing PLY ...')
-            ply = '\n'.join(['{:.2f} {:.2f} {:.2f} {:.0f} {:.0f} {:.0f}'.format(
-                *p) for p in points_3d.tolist()])
+            # Here we split the 3d point and its corresponding color.
+            color_list = points_3d[:, 3:6]
+            points_3d = points_3d[:, 0:3]
 
-            # Create folder to save if does not exist
+            # Car to World transformation given the 3D points and the
+            # transformation matrix.
+            # 3D points must be in format:
+            # [ [X0,Y0,Z0],
+            #   ...,
+            #   [Xn,Yn,Zn] ]
+            points_3d = transform_points(car_to_world_matrix, points_3d)
+
+            # Merging again the 3D points (now in world space) with the
+            # previous colors
+            points_3d = numpy.concatenate((points_3d, color_list), axis=1)
+            # Now we have an array of 3D points and colors again:
+            # [ [X0,Y0,Z0,R0,G0,B0],
+            #    ...,
+            #   [Xn,Yn,Zn,Rn,Gn,Bn] ]
+
+            # End transformations time mesure.
+            time.stop()
+
+            # Save PLY to disk
+            # This generates the PLY string with the 3D points and the RGB colors
+            # for each row of the file.
+            # ply = '\n'.join(['{:.2f} {:.2f} {:.2f} {:.0f} {:.0f} {:.0f}'.format(
+            #     *p) for p in points_3d.tolist()])
+            ply = points_3d.tostring()
+            # Create folder to save if does not exist.
             if not os.path.isdir(output_folder):
                 os.makedirs(output_folder)
 
-            print('Saving PLY ...')
-            # Open the file and save with the specific PLY format
+            # Open the file and save with the specific PLY format.
             with open('{}/{:0>5}.ply'.format(output_folder, frame), 'w+') as f:
-                f.write(
-                    '\n'.join([construct_ply_header(len(points_3d), True), ply]))
-            t.stop()
-            print('Saving to disk took {:.2f} s'.format(t.seconds()))
+                f.write('\n'.join([construct_ply_header(len(points_3d), True), ply]))
 
-            print()
+            print_message(time.milliseconds(), len(points_3d), frame)
 
             client.send_control(
                 measurements.player_measurements.autopilot_control)
+
+
+def print_message(time, point_n, frame):
+    message = ' '.join([
+        'Transformations took {:>3.0f} ms.',
+        'Saved {:>6} points to "{:0>5}.ply."'
+    ]).format(time, point_n, frame)
+    print_over_same_line(message)
 
 
 def compute_transform_matrix(transform):

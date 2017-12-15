@@ -6,7 +6,7 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-# Keyboard controlling for carla. Please refer to client_example for a simpler
+# Keyboard controlling for CARLA. Please refer to client_example.py for a simpler
 # and more documented example.
 
 """
@@ -301,7 +301,7 @@ class CarlaGame(object):
                         agent.vehicle.transform.location.y,
                         agent.vehicle.transform.location.z])
                     w_pos = int(agent_position[0]*(float(WINDOW_HEIGHT)/float(self._map_shape[0])))
-                    h_pos =int(agent_position[1] *(new_window_width/float(self._map_shape[1])))         
+                    h_pos =int(agent_position[1] *(new_window_width/float(self._map_shape[1])))
                     pygame.draw.circle(surface, [255, 0, 255, 255], (w_pos,h_pos), 4, 0)
 
             self._display.blit(surface, (WINDOW_WIDTH, 0))
