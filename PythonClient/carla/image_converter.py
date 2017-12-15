@@ -96,6 +96,7 @@ def depth_to_logarithmic_grayscale(image):
     """
     Convert an image containing CARLA encoded depth-map to a logarithmic
     grayscale image array.
+    "max_depth" is used to omit the points that are far enough.
     """
     normalized_depth = depth_to_array(image)
     # Convert to logarithmic depth.
@@ -107,53 +108,12 @@ def depth_to_logarithmic_grayscale(image):
     return numpy.repeat(logdepth[:, :, numpy.newaxis], 3, axis=2)
 
 
-def depth_to_local_point_cloud(image):
-    """
-    Convert an image containing CARLA encoded depth-map to a 2D array containing
-    the 3D position (relative to the camera) of each pixel.
-    """
-    far = 100000.0  # centimeters
-    normalized_depth = depth_to_array(image)
-
-    # (Intrinsic) K Matrix
-    k = numpy.identity(3)
-    k[0, 2] = image.width / 2.0
-    k[1, 2] = image.height / 2.0
-    k[0, 0] = k[1, 1] = image.width / \
-        (2.0 * math.tan(image.fov * math.pi / 360.0))
-
-    # 2d pixel coordinates
-    pixel_length = image.width * image.height
-    u_coord = repmat(numpy.r_[image.width-1:-1:-1],
-                     image.height, 1).reshape(pixel_length)
-    v_coord = repmat(numpy.c_[image.height-1:-1:-1],
-                     1, image.width).reshape(pixel_length)
-    normalized_depth = numpy.reshape(normalized_depth, pixel_length)
-
-    # Search for sky pixels (where the depth is 1.0) to delete them
-    max_depth_indexes = numpy.where(normalized_depth == 1.0)
-    normalized_depth = numpy.delete(normalized_depth, max_depth_indexes)
-    u_coord = numpy.delete(u_coord, max_depth_indexes)
-    v_coord = numpy.delete(v_coord, max_depth_indexes)
-
-    # pd2 = [u,v,1]
-    p2d = numpy.array([u_coord, v_coord, numpy.ones_like(u_coord)])
-
-    # P = [X,Y,Z]
-    p3d = numpy.dot(numpy.linalg.inv(k), p2d)
-    p3d *= normalized_depth * far
-
-    # Formating the output to:
-    # [[X1,Y1,Z1],[X2,Y2,Z2], ... [Xn,Yn,Zn]]
-    return numpy.transpose(p3d)
-
-
-def depth_to_local_colored_point_cloud(image, color, max_depth=0.9):
+def depth_to_local_point_cloud(image, color=None, max_depth=0.9):
     """
     Convert an image containing CARLA encoded depth-map to a 2D array containing
     the 3D position (relative to the camera) of each pixel and its corresponding
     RGB color of an array.
-    "max_depth" is used to omit the points that are far enough
+    "max_depth" is used to omit the points that are far enough.
     """
     far = 100000.0  # max depth in centimeters
     normalized_depth = depth_to_array(image)
@@ -171,7 +131,8 @@ def depth_to_local_colored_point_cloud(image, color, max_depth=0.9):
                      image.height, 1).reshape(pixel_length)
     v_coord = repmat(numpy.c_[image.height-1:-1:-1],
                      1, image.width).reshape(pixel_length)
-    color = color.reshape(pixel_length, 3)
+    if color is not None:
+        color = color.reshape(pixel_length, 3)
     normalized_depth = numpy.reshape(normalized_depth, pixel_length)
 
     # Search for pixels where the depth is greater than max_depth to
@@ -180,7 +141,8 @@ def depth_to_local_colored_point_cloud(image, color, max_depth=0.9):
     normalized_depth = numpy.delete(normalized_depth, max_depth_indexes)
     u_coord = numpy.delete(u_coord, max_depth_indexes)
     v_coord = numpy.delete(v_coord, max_depth_indexes)
-    color = numpy.delete(color, max_depth_indexes, axis=0)
+    if color is not None:
+        color = numpy.delete(color, max_depth_indexes, axis=0)
 
     # pd2 = [u,v,1]
     p2d = numpy.array([u_coord, v_coord, numpy.ones_like(u_coord)])
@@ -191,4 +153,7 @@ def depth_to_local_colored_point_cloud(image, color, max_depth=0.9):
 
     # Formating the output to:
     # [[X1,Y1,Z1,R1,G1,B1],[X2,Y2,Z2,R2,G2,B2], ... [Xn,Yn,Zn,Rn,Gn,Bn]]
-    return numpy.concatenate((numpy.transpose(p3d), color), axis=1)
+    if color is not None:
+        return numpy.concatenate((numpy.transpose(p3d), color), axis=1)
+    # [[X1,Y1,Z1],[X2,Y2,Z2], ... [Xn,Yn,Zn]]
+    return numpy.transpose(p3d)
