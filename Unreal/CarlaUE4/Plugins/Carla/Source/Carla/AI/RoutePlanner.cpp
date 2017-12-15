@@ -16,7 +16,7 @@
 static bool IsSplineValid(const USplineComponent *SplineComponent)
 {
   return (SplineComponent != nullptr) &&
-         (SplineComponent->GetNumberOfSplinePoints() > 0);
+         (SplineComponent->GetNumberOfSplinePoints() > 1);
 }
 
 static AWheeledVehicleAIController *GetVehicleController(AActor *Actor)
@@ -129,9 +129,9 @@ void ARoutePlanner::OnTriggerBeginOverlap(
 
     TArray<FVector> WayPoints;
     const auto Size = Route->GetNumberOfSplinePoints();
-    check(Size > 0);
+    check(Size > 1);
     WayPoints.Reserve(Size);
-    for (auto i = 0; i < Size; ++i)
+    for (auto i = 1; i < Size; ++i)
     {
       WayPoints.Add(Route->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::World));
     }
