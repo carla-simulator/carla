@@ -1,26 +1,26 @@
-import time
-import sys
+#!/usr/bin/env python3
+
+# Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Barcelona (UAB), and the INTEL Visual Computing Lab.
+#
+# This work is licensed under the terms of the MIT license.
+# For a copy, see <https://opensource.org/licenses/MIT>.
 
 import argparse
 import logging
+import sys
+import time
 
-
-
-from carla.benchmarks.corl import CoRL
 from carla.benchmarks.agent import Agent
+from carla.benchmarks.corl import CoRL
 
+from carla.client import make_carla_client, VehicleControl
 from carla.tcp import TCPConnectionError
-from carla.client import make_carla_client
 
-
-try:
-    from carla import carla_server_pb2 as carla_protocol
-except ImportError:
-    raise RuntimeError('cannot import "carla_server_pb2.py", run the protobuf compiler to generate this file')
 
 class Manual(Agent):
-    def run_step(self,measurements,sensor_data,target):
-        control = carla_protocol.Control()
+    def run_step(self, measurements, sensor_data, target):
+        control = VehicleControl()
         control.steer = 0.0
         control.throttle = 0.9
         control.brake = 0.0
@@ -30,8 +30,7 @@ class Manual(Agent):
         return control
 
 
-if(__name__ == '__main__'):
-
+if __name__ == '__main__':
 
     argparser = argparse.ArgumentParser(description=__doc__)
     argparser.add_argument(
@@ -55,9 +54,7 @@ if(__name__ == '__main__'):
         metavar='C',
         default='Town01',
         help='plot the map of the current city'
-         +'(needs to match active map in server, options: Town01 or Town02)')
-
-
+        + '(needs to match active map in server, options: Town01 or Town02)')
 
     args = argparser.parse_args()
 
@@ -66,14 +63,12 @@ if(__name__ == '__main__'):
 
     logging.info('listening to server %s:%s', args.host, args.port)
 
-
-
     while True:
         try:
             with make_carla_client(args.host, args.port) as client:
-                corl= CoRL(city_name= args.city_name,name_to_save='details')
+                corl = CoRL(city_name=args.city_name, name_to_save='details')
                 agent = Manual(args.city_name)
-                results = corl.benchmark_agent(agent,client)
+                results = corl.benchmark_agent(agent, client)
                 corl.plot_summary_test()
                 corl.plot_summary_train()
 
@@ -85,5 +80,3 @@ if(__name__ == '__main__'):
         except Exception as exception:
             logging.exception(exception)
             sys.exit(1)
-
-
