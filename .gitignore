@@ -22,5 +22,6 @@ Util/Build
 .tags*
 .vs
 __pycache__
+_benchmarks_results
 _images
 core

@@ -1,6 +1,6 @@
-
 import copy
 import numpy as np
+
 
 def angle_between(v1, v2):
     return np.arccos(np.dot(v1, v2) / np.linalg.norm(v1) / np.linalg.norm(v2))
@@ -8,16 +8,13 @@ def angle_between(v1, v2):
 
 class Grid(object):
 
-    def __init__(self,graph):
+    def __init__(self, graph):
 
         self._graph = graph
         self._structure = self._make_structure()
         self._walls = self._make_walls()
 
         #np.set_printoptions(linewidth=206, threshold=np.nan)
-
-
-
 
     def search_on_grid(self, x, y):
         visit = [[0, 1], [0, -1], [1, 0], [1, 1],
@@ -26,9 +23,10 @@ class Grid(object):
         scale = 1
         while(self._structure[c_x, c_y] != 0):
             for offset in visit:
-                c_x, c_y = x + offset[0]*scale, y + offset[1]*scale
+                c_x, c_y = x + offset[0] * scale, y + offset[1] * scale
 
-                if c_x >= 0 and c_x < self._graph._resolution[0] and c_y >= 0 and c_y < self._graph._resolution[1]:
+                if c_x >= 0 and c_x < self._graph._resolution[
+                        0] and c_y >= 0 and c_y < self._graph._resolution[1]:
                     if self._structure[c_x, c_y] == 0:
                         break
                 else:
@@ -37,20 +35,16 @@ class Grid(object):
 
         return (c_x, c_y)
 
-
-
-
-
     def get_wall_source(self, pos, pos_ori, target):
 
         free_nodes = self._get_adjacent_free_nodes(pos)
-        #print self._walls
+        # print self._walls
         final_walls = copy.copy(self._walls)
-        #print final_walls
+        # print final_walls
         heading_start = np.array([pos_ori[0], pos_ori[1]])
         for adj in free_nodes:
 
-            start_to_goal = np.array([adj[0] - pos[0],  adj[1] - pos[1]])
+            start_to_goal = np.array([adj[0] - pos[0], adj[1] - pos[1]])
             angle = angle_between(heading_start, start_to_goal)
             if (angle > 1.6 and adj != target):
                 #self.grid[adj[0], adj[1]] = 1.0
@@ -67,7 +61,7 @@ class Grid(object):
         heading_start = np.array([pos_ori[0], pos_ori[1]])
         for adj in free_nodes:
 
-            start_to_goal = np.array([adj[0] - pos[0],  adj[1] - pos[1]])
+            start_to_goal = np.array([adj[0] - pos[0], adj[1] - pos[1]])
             angle = angle_between(heading_start, start_to_goal)
 
             if (angle < 1.0 and adj != source):
@@ -77,10 +71,6 @@ class Grid(object):
                 #self.walls.add((adj[0], adj[1]))
 
         return final_walls
-
-
-
-
 
     def _draw_line(self, grid, xi, yi, xf, yf):
 
@@ -94,24 +84,27 @@ class Grid(object):
             yi = yf
             yf = aux
 
-        for i in range(xi, xf+1):
+        for i in range(xi, xf + 1):
 
-            for j in range(yi, yf+1):
+            for j in range(yi, yf + 1):
 
                 grid[i, j] = 0.0
 
         return grid
 
     def _make_structure(self):
-        structure =np.ones((self._graph._resolution[0], self._graph._resolution[1]))
+        structure = np.ones(
+            (self._graph._resolution[0],
+             self._graph._resolution[1]))
 
-        for key, connections in self._graph._edges.iteritems():
+        for key, connections in self._graph._edges.items():
 
             # draw a line
             for con in connections:
 
                 # print key[0],key[1],con[0],con[1]
-                structure = self._draw_line(structure, key[0], key[1], con[0], con[1])
+                structure = self._draw_line(
+                    structure, key[0], key[1], con[0], con[1])
                 # print grid
         return structure
 
@@ -125,6 +118,7 @@ class Grid(object):
                     walls.add((i, j))
 
         return walls
+
     def _get_adjacent_free_nodes(self, pos):
         """ Acht nodes in total """
         visit = [[0, 1], [0, -1], [1, 0], [1, 1],
@@ -132,10 +126,10 @@ class Grid(object):
 
         adjacent = set()
         for offset in visit:
-            node = (pos[0] + offset[0], pos[1]+offset[1])
+            node = (pos[0] + offset[0], pos[1] + offset[1])
 
-            if (node[0] >= 0 and node[0] < self._graph._resolution[0] 
-               and node[1] >= 0 and node[1] < self._graph._resolution[1]):
+            if (node[0] >= 0 and node[0] < self._graph._resolution[0]
+                    and node[1] >= 0 and node[1] < self._graph._resolution[1]):
 
                 if self._structure[node[0], node[1]] == 0.0:
                     adjacent.add(node)

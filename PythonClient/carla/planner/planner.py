@@ -1,17 +1,19 @@
-import math
-import time
 import collections
-import os
+import math
 import numpy as np
-
+import os
+import time
 
 from PIL import Image
 
-from city_track import CityTrack
+from . import city_track
 
-compare = lambda x, y: collections.Counter(x) == collections.Counter(y)
 
-""" 
+def compare(x, y):
+    return collections.Counter(x) == collections.Counter(y)
+
+
+"""
 Constants Used for the high level commands
 """
 
@@ -19,14 +21,16 @@ REACH_GOAL = 0.0
 GO_STRAIGHT = 5.0
 TURN_RIGHT = 4.0
 TURN_LEFT = 3.0
-LANE_FOLLOW =2.0
+LANE_FOLLOW = 2.0
 
 
 # Auxiliary algebra function
 def angle_between(v1, v2):
     return np.arccos(np.dot(v1, v2) / np.linalg.norm(v1) / np.linalg.norm(v2))
 
-sldist = lambda c1, c2: math.sqrt((c2[0] - c1[0])**2 + (c2[1] - c1[1])**2)
+
+def sldist(c1, c2): return math.sqrt((c2[0] - c1[0])**2 + (c2[1] - c1[1])**2)
+
 
 def signal(v1, v2):
     return np.cross(v1, v2) / np.linalg.norm(v1) / np.linalg.norm(v2)
@@ -34,12 +38,9 @@ def signal(v1, v2):
 
 class Planner(object):
 
-
     def __init__(self, city_name):
 
-
-        self._city_track = CityTrack(city_name) 
-
+        self._city_track = city_track.CityTrack(city_name)
 
         self._commands = []
 
@@ -52,47 +53,31 @@ class Planner(object):
         #self.node_density = 50.0
         # This function converts the 2d map into a 3D one in a vector.
 
-
-
-
-
-
-
-
-
-    def get_next_command(self, source, source_ori,  target, target_ori):
-
-
+    def get_next_command(self, source, source_ori, target, target_ori):
 
         # Take the world position and project it on the road.
         # The road is represented in a grid
 
-        track_source = self._city_track.project_node(source,source_ori)
-        track_target = self._city_track.project_node(target,target_ori)
-
-
+        track_source = self._city_track.project_node(source, source_ori)
+        track_target = self._city_track.project_node(target, target_ori)
 
         # reach the goal
 
-        if self._city_track.is_at_goal(track_source,track_target):
+        if self._city_track.is_at_goal(track_source, track_target):
             return REACH_GOAL
 
-
         if (self._city_track.is_at_new_node(track_source)
-           and self._city_track.is_away_from_intersection(track_source)):
+                and self._city_track.is_away_from_intersection(track_source)):
 
-
-
-            route = self._city_track.compute_route(track_source,source_ori,
-                            track_target,target_ori) 
-            if route == None:
+            route = self._city_track.compute_route(track_source, source_ori,
+                                                   track_target, target_ori)
+            if route is None:
                 raise RuntimeError('Impossible to find route')
-
 
             self._commands = self._route_to_commands(route)
 
-
-            if self._city_track.is_far_away_from_route_intersection(track_source):
+            if self._city_track.is_far_away_from_route_intersection(
+                    track_source):
                 return LANE_FOLLOW
             else:
                 if self._commands:
@@ -101,7 +86,8 @@ class Planner(object):
                     return LANE_FOLLOW
         else:
 
-            if self._city_track.is_far_away_from_route_intersection(track_source):
+            if self._city_track.is_far_away_from_route_intersection(
+                    track_source):
                 return LANE_FOLLOW
 
             # If there is computed commands
@@ -110,19 +96,23 @@ class Planner(object):
             else:
                 return LANE_FOLLOW
 
-
-    def get_shortest_path_distance(self, source, source_ori,  target, target_ori):
+    def get_shortest_path_distance(
+            self,
+            source,
+            source_ori,
+            target,
+            target_ori):
 
         distance = 0
-        track_source = self._city_track.project_node(source,source_ori)
-        track_target = self._city_track.project_node(target,target_ori)
+        track_source = self._city_track.project_node(source, source_ori)
+        track_target = self._city_track.project_node(target, target_ori)
 
         current_pos = track_source
 
-        route = self._city_track.compute_route(track_source,source_ori,
-                            track_target,target_ori)
+        route = self._city_track.compute_route(track_source, source_ori,
+                                               track_target, target_ori)
         # No Route, distance is zero
-        if route == None:
+        if route is None:
             return 0.0
 
         for node_iter in route:
@@ -131,34 +121,27 @@ class Planner(object):
             current_pos = node_iter
 
         # We multiply by these values to convert distance to world coordinates
-        return distance  *self._city_track._map.pixel_density \
-                    *self._city_track._map._graph._node_density 
+        return distance * self._city_track._map.pixel_density \
+            * self._city_track._map._graph._node_density
 
-                    
+    def is_there_posible_route(self, source, source_ori, target, target_ori):
 
-    def is_there_posible_route(self,source,source_ori,target,target_ori):
+        track_source = self._city_track.project_node(source, source_ori)
+        track_target = self._city_track.project_node(target, target_ori)
 
-        track_source = self._city_track.project_node(source,source_ori)
-        track_target = self._city_track.project_node(target,target_ori)
+        return not self._city_track.compute_route(
+            node_source, source_ori, node_target, target_ori) is None
 
+    def test_position(self, source, source_ori):
 
-        return  not self._city_track.compute_route(
-                   node_source,source_ori,node_target,target_ori)  ==  None
+        node_source = self._city_track.project_node(source, source_ori)
 
-    def test_position(self,source,source_ori):
-
-
-        node_source = self._city_track.project_node(source,source_ori)
-
-        return  self.is_away_from_intersection(node_source)
-
-
+        return self.is_away_from_intersection(node_source)
 
     # from the shortest path graph, transform it into a list of commands
     # @param the sub graph containing the shortest path
     # @param Orientation of the car
     # returns list of commands ( 3 is left, 4 is right, 5 is straight)
-
 
     def _route_to_commands(self, route):
 
@@ -169,13 +152,13 @@ class Planner(object):
                 continue
 
             current = route[i]
-            past = route[i-1]
-            future = route[i+1]
+            past = route[i - 1]
+            future = route[i + 1]
 
             past_to_current = np.array(
-                [current[0]-past[0], current[1]-past[1]])
+                [current[0] - past[0], current[1] - past[1]])
             current_to_future = np.array(
-                [future[0]-current[0], future[1]-current[1]])
+                [future[0] - current[0], future[1] - current[1]])
             angle = signal(current_to_future, past_to_current)
 
             command = 0.0
@@ -189,4 +172,3 @@ class Planner(object):
             commands_list.append(command)
 
         return commands_list
-
