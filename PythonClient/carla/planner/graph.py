@@ -1,24 +1,27 @@
 import math
-import numpy as np
-from matplotlib import collections as mc
 import matplotlib.pyplot as plt
+import numpy as np
+
+from matplotlib import collections as mc
 
 
 def string_to_node(string):
     vec = string.split(',')
-
     return (int(vec[0]), int(vec[1]))
 
 
 def string_to_floats(string):
     vec = string.split(',')
-
     return (float(vec[0]), float(vec[1]), float(vec[2]))
 
-sldist = lambda c1, c2: math.sqrt((c2[0] - c1[0])**2 + (c2[1] - c1[1])**2)
 
-sldist3 = lambda c1, c2: math.sqrt(
-    (c2[0] - c1[0])**2 + (c2[1] - c1[1])**2 + (c2[2] - c1[2])**2)
+def sldist(c1, c2):
+    return math.sqrt((c2[0] - c1[0])**2 + (c2[1] - c1[1])**2)
+
+
+def sldist3(c1, c2):
+    return math.sqrt((c2[0] - c1[0])**2 + (c2[1] - c1[1])
+                     ** 2 + (c2[2] - c1[2])**2)
 
 
 class Graph(object):
@@ -33,7 +36,7 @@ class Graph(object):
         self._edges = {}
         self._distances = {}
         self._node_density = 50
-        if graph_file != None:
+        if graph_file is not None:
             with open(graph_file, 'r') as file:
                 # Skipe the first four lines that
                 lines_after_4 = file.readlines()[4:]
@@ -61,8 +64,8 @@ class Graph(object):
 
     def project_pixel(self, pixel):
         node = []
-        node.append((pixel[0])/self._node_density - 2)
-        node.append((pixel[1])/self._node_density - 2)
+        node.append((pixel[0]) / self._node_density - 2)
+        node.append((pixel[1]) / self._node_density - 2)
 
         return tuple(node)
 
@@ -85,7 +88,7 @@ class Graph(object):
 
             start_to_goal = np.array([node[0] - v[0], node[1] - v[1]])
 
-            print start_to_goal
+            print(start_to_goal)
 
             self.angles[v] = start_to_goal / np.linalg.norm(start_to_goal)
 
@@ -115,8 +118,8 @@ class Graph(object):
     def plot_ori(self, c):
         line_len = 1
 
-        lines = [[(p[0], p[1]), (p[0] + line_len*self._angles[p][0], p[1] +
-                                 line_len*self._angles[p][1])] for p in self.nodes]
+        lines = [[(p[0], p[1]), (p[0] + line_len * self._angles[p][0],
+                                 p[1] + line_len * self._angles[p][1])] for p in self.nodes]
         lc = mc.LineCollection(lines, linewidth=2, color='green')
         fig, ax = plt.subplots()
         ax.add_collection(lc)
