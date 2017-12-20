@@ -12,13 +12,17 @@ import sys
 import time
 
 from carla.benchmarks.agent import Agent
-from carla.benchmarks.corl import CoRL
+from carla.benchmarks.corl_2017 import CoRL2017
 
 from carla.client import make_carla_client, VehicleControl
 from carla.tcp import TCPConnectionError
 
 
 class Manual(Agent):
+    """
+    Sample redefinition of the Agent,
+    An agent that goes straight
+    """
     def run_step(self, measurements, sensor_data, target):
         control = VehicleControl()
         control.steer = 0.0
@@ -53,8 +57,14 @@ if __name__ == '__main__':
         '-c', '--city-name',
         metavar='C',
         default='Town01',
-        help='plot the map of the current city'
-        + '(needs to match active map in server, options: Town01 or Town02)')
+        help='The town that is going to be used on benchmark'
+        + '(needs to match active town in server, options: Town01 or Town02)')
+    argparser.add_argument(
+        '-n', '--log_name',
+        metavar='T',
+        default='test',
+        help='The name of the log file to be created by the scripts'
+        )
 
     args = argparser.parse_args()
 
@@ -66,7 +76,7 @@ if __name__ == '__main__':
     while True:
         try:
             with make_carla_client(args.host, args.port) as client:
-                corl = CoRL(city_name=args.city_name, name_to_save='details')
+                corl = CoRL2017(city_name=args.city_name, name_to_save=args.log_name)
                 agent = Manual(args.city_name)
                 results = corl.benchmark_agent(agent, client)
                 corl.plot_summary_test()

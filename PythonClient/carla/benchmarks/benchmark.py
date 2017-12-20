@@ -1,3 +1,12 @@
+#!/usr/bin/env python3
+
+# Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Barcelona (UAB), and the INTEL Visual Computing Lab.
+#
+# This work is licensed under the terms of the MIT license.
+# For a copy, see <https://opensource.org/licenses/MIT>.
+
+
 from builtins import input
 
 import csv
@@ -5,6 +14,8 @@ import datetime
 import math
 import os
 import time
+import abc
+
 
 from carla.client import VehicleControl
 
@@ -15,17 +26,22 @@ def sldist(c1, c2):
 
 class Benchmark(object):
 
-    # Param @name to be used for saving purposes
+    """
+    The Benchmark class, controls the execution of the benchmark by an
+    Agent class.
+    The benchmark class must be inherited
+    """
     def __init__(
             self,
             city_name,
             name_to_save,
-            continue_exp=False,
+            continue_experiment=False,
             save_images=False):
-        # The name of the city that is going to be used.
+
+        __metaclass__ = abc.ABCMeta
+
         self._city_name = city_name
-        # Sends a base name, the rest will be saved with respect to what the
-        # episode was about
+
         self._base_name = name_to_save
         self._dict_stats = {'exp_id': -1,
                             'rep': -1,
@@ -37,8 +53,6 @@ class Benchmark(object):
                             'final_distance': -1,
                             'final_time': -1,
                             'time_out': -1
-
-
                             }
 
         self._dict_rewards = {'exp_id': -1,
@@ -53,41 +67,12 @@ class Benchmark(object):
                               'pos_y': -1
                               }
 
-        # Returns a experiment class that is build from a benchmark inherited
-        # class
+        # Get the line for the experiment to be continued
+        self._line_on_file = self._continue_experiment(continue_experiment)
 
         self._experiments = self._build_experiments()
-        self._suffix_name = self._get_experiments_names(self._experiments)
-        self._full_name = os.path.join('_benchmarks_results',
-                                       self._base_name + '_'
-                                       + self._get_details() + '/')
-
-        if self._experiment_exist():
-            # If continue_exp was set we continue directly, else we ask for
-            if continue_exp:
-                self._line_on_file = self._get_last_position()
-
-            else:
-                answer = input("The experiment was already found in the files"
-                               + ", Do you want to Continue ? \n")
-                if answer == 'Yes' or answer == 'y':
-                    self._line_on_file = self._get_last_position()
-                else:
-                    self._line_on_file = 0
-
-        else:
-            self._line_on_file = 0
-
-        folder = os.path.dirname(self._full_name)
-        if not os.path.isdir(folder):
-            os.makedirs(folder)
-
-        # Make a date file: to show when this was modified,
-        # the number of times the experiments were run
-        now = datetime.datetime.now()
-        with open(os.path.join(self._full_name,
-                               now.strftime("%Y%m%d%H%M")), 'w') as f:
-            pass
+        # Create the log files and get the names
+        self._suffix_name, self._full_name = self._create_log_record(self._experiments)
 
         self._save_images = save_images
         self._image_filename_format = os.path.join(
@@ -101,22 +86,17 @@ class Benchmark(object):
             target,
             episode_name):
 
-        curr_x = -1
-        curr_y = -1
-        prev_x = -1
-        prev_y = -1
-
         measurements, sensor_data = carla.read_data()
         carla.send_control(VehicleControl())
 
         t0 = measurements.game_timestamp
         t1 = t0
         success = False
-
-        distance = 100000
         measurement_vec = []
         frame = 0
-        while((t1 - t0) < (time_out * 1000) and not success):
+        distance = 10000
+
+        while(t1 - t0) < (time_out * 1000) and not success:
             measurements, sensor_data = carla.read_data()
 
             control = agent.run_step(measurements, sensor_data, target)
@@ -124,14 +104,12 @@ class Benchmark(object):
                   control.throttle, 'Brake ', control.brake)
             carla.send_control(control)
 
-            # meassure distance to target
+            # measure distance to target
             if self._save_images:
                 for name, image in sensor_data.items():
                     image.save_to_disk(self._image_filename_format.format(
                         episode_name, name, frame))
 
-            prev_x = curr_x
-            prev_y = curr_y
             curr_x = measurements.player_measurements.transform.location.x
             curr_y = measurements.player_measurements.transform.location.y
 
@@ -146,14 +124,14 @@ class Benchmark(object):
                 '[d=%f] c_x = %f, c_y = %f ---> t_x = %f, t_y = %f' %
                 (float(distance), curr_x, curr_y, target.location.x, target.location.y))
 
-            if(distance < 200.0):
+            if distance < 200.0:
                 success = True
 
             frame += 1
 
         if success:
-            return (1, measurement_vec, float(t1 - t0) / 1000.0, distance)
-        return (0, measurement_vec, time_out, distance)
+            return 1, measurement_vec, float(t1 - t0) / 1000.0, distance
+        return 0, measurement_vec, time_out, distance
 
     def benchmark_agent(self, agent, carla):
 
@@ -166,7 +144,7 @@ class Benchmark(object):
                 w.writeheader()
 
             with open(os.path.join(self._full_name,
-                                   'rewards_' + self._suffix_name), 'w') as rfd:
+                                   'details_' + self._suffix_name), 'w') as rfd:
 
                 rw = csv.DictWriter(rfd, self._dict_rewards.keys())
                 rw.writeheader()
@@ -270,23 +248,52 @@ class Benchmark(object):
 
                 rw.writerow(self._dict_rewards)
 
-    # To be redefined on subclasses on how to calculate timeout for an episode
-    def _calculate_time_out(self, distance):
-        return 0
+    def _create_log_record(self, base_name, experiments):
+        """
+        This function creates the log files for the benchmark.
 
-    # To be redefined on subclasses
-    def _build_experiments(self):
-        pass
+        """
+        suffix_name = self._get_experiments_names(experiments)
+        full_name = os.path.join('_benchmarks_results',
+                                  base_name + '_'
+                                  + self._get_details() + '/')
 
-    def _get_experiments_names(self, experiments):
+        folder = os.path.dirname(full_name)
+        if not os.path.isdir(folder):
+            os.makedirs(folder)
 
-        name_cat = 'w'
+        # Make a date file: to show when this was modified,
+        # the number of times the experiments were run
+        now = datetime.datetime.now()
+        with open(os.path.join(full_name,
+                               now.strftime("%Y%m%d%H%M")), 'w') as f:
+            pass
 
-        for experiment in experiments:
+        return suffix_name,full_name
 
-            name_cat += str(experiment.Conditions.WeatherId) + '.'
+    def _continue_experiment(self, continue_experiment):
 
-        return name_cat
+        if self._experiment_exist():
+
+            if continue_experiment:
+                line_on_file = self._get_last_position()
+
+            else:
+                # Ask question, to avoid mistaken override situations
+                answer = input("The experiment was already found in the files"
+                               + ",Do you want to continue (y/n)  ? \n"
+                               + " If not the experiment will be overwritten")
+                if answer == 'Yes' or answer == 'y':
+                    line_on_file = self._get_last_position()
+                else:
+                    line_on_file = 0
+
+        else:
+            line_on_file = 0
+
+        return line_on_file
+
+
 
     def _experiment_exist(self):
 
@@ -301,3 +308,51 @@ class Benchmark(object):
             for i, l in enumerate(f):
                 pass
             return i
+
+    # To be redefined on subclasses on how to calculate timeout for an episode
+    @abc.abstractmethod
+    def _calculate_time_out(self, distance):
+        pass
+
+
+    @abc.abstractmethod
+    def _build_experiments(self):
+        """
+        Returns a set of experiments to be evaluated
+        Must be redefined in an inherited class.
+
+        """
+        pass
+
+    @abc.abstractmethod
+    def _get_pose_and_task(self):
+        """
+        Parse the experiment depending on number of poses and tasks
+        """
+        pass
+
+    @abc.abstractmethod
+    def plot_summary_train(self):
+        """
+        returns the summary for the train weather/task episodes
+
+        """
+
+    @abc.abstractmethod
+    def plot_summary_test(self):
+        """
+        returns the summary for the test weather/task episodes
+
+        """
+    @staticmethod
+    def get_experiments_names(experiments):
+
+        name_cat = 'w'
+
+        for experiment in experiments:
+
+            name_cat += str(experiment.Conditions.WeatherId) + '.'
+
+        return name_cat
+
+

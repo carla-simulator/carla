@@ -1,10 +1,9 @@
 import collections
 import math
-import numpy as np
-import os
-import time
 
-from PIL import Image
+
+import numpy as np
+
 
 from . import city_track
 
@@ -44,19 +43,17 @@ class Planner(object):
 
         self._commands = []
 
-        #self.route = []
-
-        # The number of game units per pixel
-        #self.pixel_density = 16.43
-        # A pixel positions with respect to graph node position is:  Pixel =
-        # Node*50 +2
-        #self.node_density = 50.0
-        # This function converts the 2d map into a 3D one in a vector.
 
     def get_next_command(self, source, source_ori, target, target_ori):
+        """
+        Computes the full plan and returns the next command,
+        :param source: source position
+        :param source_ori: source orientation
+        :param target: target position
+        :param target_ori: target orientation
+        :return: a command ( Straight,Lane Follow, Left or Right)
+        """
 
-        # Take the world position and project it on the road.
-        # The road is represented in a grid
 
         track_source = self._city_track.project_node(source, source_ori)
         track_target = self._city_track.project_node(target, target_ori)
@@ -130,7 +127,7 @@ class Planner(object):
         track_target = self._city_track.project_node(target, target_ori)
 
         return not self._city_track.compute_route(
-            node_source, source_ori, node_target, target_ori) is None
+            track_source, source_ori, track_target, target_ori) is None
 
     def test_position(self, source, source_ori):
 
@@ -138,12 +135,17 @@ class Planner(object):
 
         return self.is_away_from_intersection(node_source)
 
-    # from the shortest path graph, transform it into a list of commands
-    # @param the sub graph containing the shortest path
-    # @param Orientation of the car
-    # returns list of commands ( 3 is left, 4 is right, 5 is straight)
+
 
     def _route_to_commands(self, route):
+
+        """
+        from the shortest path graph, transform it into a list of commands
+
+        :param route: the sub graph containing the shortest path
+        :return: list of commands encoded from 0-5
+        """
+
 
         commands_list = []
 
@@ -161,7 +163,7 @@ class Planner(object):
                 [future[0] - current[0], future[1] - current[1]])
             angle = signal(current_to_future, past_to_current)
 
-            command = 0.0
+
             if angle < -0.1:
                 command = TURN_RIGHT
             elif angle > 0.1:

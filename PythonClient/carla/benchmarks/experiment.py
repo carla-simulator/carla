@@ -11,7 +11,6 @@ class Experiment(object):
         self.Poses = [[]]
         self.Repetitions = 1
 
-
     def set(self, **kwargs):
         for key, value in kwargs.items():
             if not hasattr(self, key):

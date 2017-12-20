@@ -83,8 +83,6 @@ class Graph(object):
         self._angles[node] = heading
         for k, v in distance_dic.iteritems():
 
-            # print k
-            # print v
 
             start_to_goal = np.array([node[0] - v[0], node[1] - v[1]])
 
