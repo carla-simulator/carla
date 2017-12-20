@@ -16,7 +16,7 @@ from . import tcp
 from . import util
 
 try:
-    from carla.carla_server_pb2 import carla_server_pb2 as carla_protocol
+    from . import carla_server_pb2 as carla_protocol
 except ImportError:
     raise RuntimeError('cannot import "carla_server_pb2.py", run the protobuf compiler to generate this file')
 
