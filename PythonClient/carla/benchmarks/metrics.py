@@ -8,10 +8,8 @@
 import numpy as np
 import math
 import os
-import matplotlib.pyplot as plt
 
 
-import argparse
 sldist = lambda c1, c2: math.sqrt((c2[0] - c1[0])**2 + (c2[1] - c1[1])**2)
 flatten = lambda l: [item for sublist in l for item in sublist]
 
@@ -182,8 +180,7 @@ def compute_summary(file, dynamic_episodes):
                 lane_road = get_out_of_road_lane(
                     task_reward_matrix, header_rewards)
                 colisions = get_colisions(task_reward_matrix, header_rewards)
-                infractions = [lane_road[0]/km_run, lane_road[1]/km_run,
-                               colisions[0]/km_run, colisions[1]/km_run, colisions[2]/km_run]
+
 
                
                 metrics_dictionary['intersection_offroad'][

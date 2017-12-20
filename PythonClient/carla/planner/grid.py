@@ -14,7 +14,6 @@ class Grid(object):
         self._structure = self._make_structure()
         self._walls = self._make_walls()
 
-        #np.set_printoptions(linewidth=206, threshold=np.nan)
 
     def search_on_grid(self, x, y):
         visit = [[0, 1], [0, -1], [1, 0], [1, 1],
@@ -47,10 +46,9 @@ class Grid(object):
             start_to_goal = np.array([adj[0] - pos[0], adj[1] - pos[1]])
             angle = angle_between(heading_start, start_to_goal)
             if (angle > 1.6 and adj != target):
-                #self.grid[adj[0], adj[1]] = 1.0
 
                 final_walls.add((adj[0], adj[1]))
-                #self.walls.add((adj[0], adj[1]))
+
 
         return final_walls
 
@@ -65,10 +63,9 @@ class Grid(object):
             angle = angle_between(heading_start, start_to_goal)
 
             if (angle < 1.0 and adj != source):
-                #self.grid[adj[0], adj[1]] = 1.0
 
                 final_walls.add((adj[0], adj[1]))
-                #self.walls.add((adj[0], adj[1]))
+
 
         return final_walls
 
@@ -120,7 +117,7 @@ class Grid(object):
         return walls
 
     def _get_adjacent_free_nodes(self, pos):
-        """ Acht nodes in total """
+        """ Eight nodes in total """
         visit = [[0, 1], [0, -1], [1, 0], [1, 1],
                  [1, -1], [-1, 0], [-1, 1], [-1, -1]]
 

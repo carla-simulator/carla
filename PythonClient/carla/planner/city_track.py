@@ -22,13 +22,10 @@ class CityTrack(object):
         # Refers to the start position of the previous route computation
         self._previous_node = []
 
-        # The current computed rout
-
+        # The current computed route
         self._route =None
  
    
-
-
 
 
     def project_node(self,position,node_orientation):
@@ -92,13 +89,7 @@ class CityTrack(object):
 
         self._previous_node = node_source
 
-        #print node_source
-        #print node_target
-        #print self._map.get_walls_directed(node_source,source_ori,
-        #        node_target,target_ori)
-        #print self._map.get_graph_resolution()
-        #print self._map.get_walls()
-        #print 's ',node_source,'e ',node_target
+
         a_star =AStar()
         a_star.init_grid(self._map.get_graph_resolution()[0],
             self._map.get_graph_resolution()[1],
@@ -111,8 +102,8 @@ class CityTrack(object):
 
 
 
-        #print route # JuSt a Corner Case 
-        # REALLY, I want to remove this
+        # JuSt a Corner Case
+        # TODO: Clean this to avoid having to use this function
         if route == None:
             a_star =AStar()
             a_star.init_grid(self._map.get_graph_resolution()[0],
@@ -125,8 +116,6 @@ class CityTrack(object):
         self._route = route
 
         return route
-
-
 
 
     def _closest_intersection_position(self, current_node):
@@ -153,7 +142,6 @@ class CityTrack(object):
     def get_distance_closest_node_route(self, pos, route):
         import collections
         distance = []
-        # if self.graph.intersection_nodes() == set():
 
         for node_iter in route:
 

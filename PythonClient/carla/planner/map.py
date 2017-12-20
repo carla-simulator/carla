@@ -22,47 +22,12 @@ except ImportError:
 
 from carla.planner.graph import Graph
 from carla.planner.grid import Grid
-from carla.planner.graph import  string_to_node,string_to_floats
+from carla.planner.graph import string_to_node,string_to_floats
 
 
 def color_to_angle(color):
     return ((float(color)/255.0)) * 2*math.pi
 
-
-
-
-"""
-
-        with open(city_file + '.txt', 'r') as file:
-
-            linewordloffset = file.readline()
-            # The offset of the world from the zero coordinates ( The
-            # coordinate we consider zero)
-            self.worldoffset = string_to_floats(linewordloffset)
-
-            # WARNING: for now just considering the y angle
-            lineworldangles = file.readline()
-            self.angles = string_to_floats(lineworldangles)
-            #self.worldrotation = np.array([[math.cos(math.radians(self.angles[0])),0,math.sin(math.radians(self.angles[0])) ],[0,1,0],[-math.sin(math.radians(self.angles[0])),0,math.cos(math.radians(self.angles[0]))]])
-
-            self.worldrotation = np.array([[math.cos(math.radians(self.angles[2])), -math.sin(math.radians(self.angles[2])), 0.0], [
-                                          math.sin(math.radians(self.angles[2])), math.cos(math.radians(self.angles[2])), 0.0], [0.0, 0.0, 1.0]])
-
-            # Ignore for now
-            lineworscale = file.readline()
-
-            linemapoffset = file.readline()
-
-            # The offset of the map zero coordinate
-            self.mapoffset = string_to_floats(linemapoffset)
-
-            # the graph resolution.
-            linegraphres = file.readline()
-            self.resolution = string_to_node(linegraphres)
-
-"""
-
-# The map contains a graph
 
 
 class CarlaMap(object):
@@ -230,9 +195,9 @@ class CarlaMap(object):
 
 
     def make_map_node(self, node):
-        pixel = []
-        pixel.append((node[0] + 2) * self._graph._node_density)
-        pixel.append((node[1] + 2) * self._graph._node_density)
+
+        pixel = [((node[0] + 2) * self._graph._node_density)
+                , ((node[1] + 2) * self._graph._node_density)]
 
         return pixel
 
@@ -265,26 +230,21 @@ class CarlaMap(object):
 
         """
 
-        #np.set_printoptions( linewidth =206,threshold=np.nan)
-
-        #print self._grid._structure
-
         final_walls = self._grid.get_wall_source(node_source,source_ori,node_target)
-        #print 'Returned final ',final_walls
+
         final_walls = final_walls.union(self._grid.get_wall_target(
-                node_target,target_ori,node_source))
+                node_target, target_ori, node_source))
         return final_walls
 
 
     def get_walls(self):
-
 
         return self._grid._walls
 
 
 
     def get_distance_closest_node(self, pos):
-        import collections
+
         distance = []
         for node_iter in self.graph.intersection_nodes():
 

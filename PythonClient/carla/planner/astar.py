@@ -1,6 +1,5 @@
 import heapq
 
-from carla.planner.map import CarlaMap
 
 class Cell(object):
 
