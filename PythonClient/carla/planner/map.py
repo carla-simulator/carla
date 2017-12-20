@@ -223,7 +223,7 @@ class CarlaMap(object):
 
 
     def get_walls_directed(self,node_source,source_ori,node_target,target_ori):
-        """ 
+        """
         This is the most hacky function. Instead of planning on two ways,
         we basically use a one way road and interrupt the other road by adding
         an artificial wall.
