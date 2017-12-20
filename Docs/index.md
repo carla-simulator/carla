@@ -7,7 +7,6 @@ CARLA Documentation
   * [CARLA settings](carla_settings.md)
   * [Measurements](measurements.md)
   * [Cameras and sensors](cameras_and_sensors.md)
-
   * [F.A.Q.](faq.md)
   * [Troubleshooting](troubleshooting.md)
 
@@ -17,8 +16,13 @@ CARLA Documentation
   * [How to build on Windows](how_to_build_on_windows.md)
   * [How to add Automotive Materials](how_to_add_automotive_materials.md)
 
+#### Contributing
+
+  * [Contribution guidelines](CONTRIBUTING.md)
+
 #### Development
 
   * [Map customization](map_customization.md)
   * [How to add assets](how_to_add_assets.md)
+  * [CARLA design](carla_design.md)
   * [CarlaServer documentation](carla_server.md)
