@@ -126,7 +126,7 @@ class CarlaClient(object):
     def send_control(self, *args, **kwargs):
         """
         Send the VehicleControl to be applied this frame.
-    
+
         If synchronous mode was requested, the server will pause the simulation
         until this message is received.
         """

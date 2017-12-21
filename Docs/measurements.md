@@ -116,10 +116,22 @@ If enabled, the server attaches a list of agents to the measurements package
 every frame. Each of these agents has an unique id that identifies it, and
 belongs to one of the following classes
 
-  * **Vehicle** Contains its transform, bounding-box, and forward speed.
-  * **Pedestrian** Contains its transform, bounding-box, and forward speed. (*)
+  * **Vehicle** Contains its transform, box-extent, and forward speed.
+  * **Pedestrian** Contains its transform, box-extent, and forward speed. (*)
   * **Traffic light** Contains its transform and state (green, yellow, red).
   * **Speed-limit sign** Contains its transform and speed-limit.
 
 (*) At this point every pedestrian is assumed to have the same bounding-box
 size.
+
+###### Transform and bounding box
+
+The transform defines the location and orientation of the agent. The bounding
+box is assumed to be centered at the agent's location. The box extent gives the
+radii dimensions of the bounding box of the agent.
+
+![Vehicle Bounding Box](img/vehicle_bounding_box.png)
+
+!!! important
+    As seen in the picture, the Z coordinate of the box is not fitted to
+    vehicle's height.

@@ -29,7 +29,7 @@ class CoRL2017(Benchmark):
         summary = compute_summary(os.path.join(
             self._full_name, self._suffix_name),[3])
 
-        return summary 
+        return summary
 
 
     def plot_summary_train(self):
@@ -44,13 +44,13 @@ class CoRL2017(Benchmark):
 
 
     def _plot_summary(self,weathers):
-        """ 
-        We plot the summary of the testing for the set selected weathers. 
+        """
+        We plot the summary of the testing for the set selected weathers.
         The test weathers are [4,14]
 
         """
 
-        
+
         metrics_summary = compute_summary(os.path.join(
             self._full_name, self._suffix_name),[3])
 
@@ -61,7 +61,7 @@ class CoRL2017(Benchmark):
             for weather,tasks in values.items():
                 if weather in set(weathers):
                     print('  Weather: ',weather)
-                    count =0   
+                    count =0
                     for t in tasks:
 
                         print('    Task ',count,' -> ',t)
@@ -153,7 +153,7 @@ class CoRL2017(Benchmark):
 
 
     def _build_experiments(self):
-        """ 
+        """
         Creates the whole set of experiment objects,
         The experiments created depend on the selected Town.
         """
@@ -208,7 +208,7 @@ class CoRL2017(Benchmark):
                 )
                 # Add all the cameras that were set for this experiments
 
-                conditions.add_sensor(camera) 
+                conditions.add_sensor(camera)
 
                 experiment = Experiment()
                 experiment.set(
@@ -221,7 +221,7 @@ class CoRL2017(Benchmark):
 
         return experiments_vector
 
-    def _get_details(self): 
+    def _get_details(self):
 
         # Function to get automatic information from the experiment for writing purposes
         return 'corl2017_' + self._city_name
@@ -232,6 +232,6 @@ class CoRL2017(Benchmark):
         Returns the pose and task this experiment is, based on the line it was
         on the log file.
         """
-        # We assume that the number of poses is constant 
+        # We assume that the number of poses is constant
         return line_on_file/len(self._experiments),line_on_file%25
 

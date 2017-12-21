@@ -61,7 +61,7 @@ def get_distance_traveled(selected_matrix, header):
         # Here we defined a maximun distance in a tick, this case 8 meters or 288km/h
         if sldist((x, y), (prev_x, prev_y)) < 800:
             acummulated_distance += sldist((x, y), (prev_x, prev_y))
-        
+
 
         prev_x = x
         prev_y = y
@@ -152,7 +152,7 @@ def compute_summary(file, dynamic_episodes):
             task_data_matrix = data_matrix[np.logical_and(data_matrix[:, header.index(
                 'exp_id')] == t, data_matrix[:, header.index('weather')] == w)]
 
-            
+
             task_reward_matrix = reward_matrix[np.logical_and(reward_matrix[:, header_rewards.index(
                 'exp_id')] == float(t), reward_matrix[:, header_rewards.index('weather')] == float(w))]
 
@@ -182,7 +182,7 @@ def compute_summary(file, dynamic_episodes):
                 colisions = get_colisions(task_reward_matrix, header_rewards)
 
 
-               
+
                 metrics_dictionary['intersection_offroad'][
                     w][t] = lane_road[0]/km_run
                 metrics_dictionary['intersection_otherlane'][

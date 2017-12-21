@@ -26,11 +26,7 @@ class CityTrack(object):
         # The current computed route
         self._route =None
 
-
-   
-
-
-    def project_node(self,position,node_orientation):
+    def project_node(self, position, node_orientation):
         """
             Projecting the graph node into the city road
         """
@@ -96,7 +92,7 @@ class CityTrack(object):
         a_star.init_grid(self._map.get_graph_resolution()[0],
             self._map.get_graph_resolution()[1],
             self._map.get_walls_directed(node_source,source_ori,
-                node_target,target_ori),node_source, 
+                node_target,target_ori),node_source,
                 node_target)
 
 
@@ -114,7 +110,7 @@ class CityTrack(object):
 
             route = a_star.solve()
 
-            
+
         self._route = route
 
         return route
@@ -142,7 +138,6 @@ class CityTrack(object):
 
 
     def get_distance_closest_node_route(self, pos, route):
-        import collections
         distance = []
 
         for node_iter in route:
