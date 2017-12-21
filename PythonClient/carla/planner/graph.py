@@ -1,8 +1,5 @@
 import math
-import matplotlib.pyplot as plt
 import numpy as np
-
-from matplotlib import collections as mc
 
 
 def string_to_node(string):
@@ -108,6 +105,9 @@ class Graph(object):
         return self._nodes
 
     def plot_ori(self, c):
+        from matplotlib import collections as mc
+
+        import matplotlib.pyplot as plt
         line_len = 1
 
         lines = [[(p[0], p[1]), (p[0] + line_len * self._angles[p][0],
@@ -125,7 +125,7 @@ class Graph(object):
         plt.scatter(xs, ys, color=c)
 
     def plot(self, c):
-
+        import matplotlib.pyplot as plt
         xs = [p[0] for p in self._nodes]
         ys = [p[1] for p in self._nodes]
 

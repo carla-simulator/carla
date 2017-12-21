@@ -54,7 +54,6 @@ class Planner(object):
         :return: a command ( Straight,Lane Follow, Left or Right)
         """
 
-
         track_source = self._city_track.project_node(source, source_ori)
         track_target = self._city_track.project_node(target, target_ori)
 
