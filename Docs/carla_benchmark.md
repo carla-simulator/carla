@@ -15,6 +15,15 @@ Besides the requirements of the CARLA client,
 the benchmark package also needs the future package
     $ sudo pip install future
 
+
+By running the benchmark a default agent that just go straight
+will be tested. To run the benchmark you need a server running.
+For a default localhost server on port 2000, to run the benchmark
+you just need to run:
+    $ ./run_benchmark 
+or
+    $ python run_benchmark
+
 Run the help command to see options available
     $ ./run_benchmark --help
 
