@@ -22,16 +22,15 @@ except ImportError:
 
 from carla.planner.graph import Graph
 from carla.planner.grid import Grid
-from carla.planner.graph import string_to_node,string_to_floats
+from carla.planner.converter import Converter
 
 
 def color_to_angle(color):
     return ((float(color)/255.0)) * 2*math.pi
 
-
-
 class CarlaMap(object):
-    def __init__(self, city):
+
+    def __init__(self, city, pixel_density, node_density):
         dir_path = os.path.dirname(__file__)
         city_file = os.path.join(dir_path, city + '.txt')
 
@@ -39,41 +38,18 @@ class CarlaMap(object):
         city_map_file_lanes = os.path.join(dir_path, city + 'Lanes.png')
         city_map_file_center = os.path.join(dir_path, city + 'Central.png')
 
-
         # The built graph. This is the exact same graph that unreal builds. This
         # is a generic structure used for many cases
-
         self._graph = Graph(city_file)
 
-        self._grid = Grid(self._graph)
-
-        with open(city_file, 'r') as file:
-
-            linewordloffset = file.readline()
-            # The offset of the world from the zero coordinates ( The
-            # coordinate we consider zero)
-            self.worldoffset = string_to_floats(linewordloffset)
-
-            lineworldangles = file.readline()
-            self.angles = string_to_floats(lineworldangles)
-
-            # If tere is an rotation between the world and map coordinates.
-            self.worldrotation = np.array([
-                [math.cos(math.radians(self.angles[2])), -math.sin(math.radians(self.angles[2])), 0.0],
-                [math.sin(math.radians(self.angles[2])), math.cos(math.radians(self.angles[2])), 0.0],
-                [0.0, 0.0, 1.0]])
-
-            # Ignore for now, these are offsets for map coordinates and scale
-            # (not used).
-            map_scale = file.readline()
-            linemapoffset = file.readline()
-
-            # The offset of the map zero coordinate.
-            self.mapoffset = string_to_floats(linemapoffset)
-
-
+        self._pixel_density = pixel_density
+        self._grid = Grid(self._graph, node_density)
         # The number of game units per pixel. For now this is fixed.
-        self.pixel_density = 16.43
+
+        self._converter = Converter(city_file, pixel_density, node_density)
+
+
+
         # Load the lanes image
         self.map_image_lanes = Image.open(city_map_file_lanes)
         self.map_image_lanes.load()
@@ -112,42 +88,7 @@ class CarlaMap(object):
             return np.fliplr(np.asarray(img, dtype="int32"))
         return np.fliplr(self.map_image_lanes)
 
-    def get_position_on_map(self, world):
-        """Get the position on the map for a certain world position."""
-        relative_location = []
-        pixel = []
 
-        rotation = np.array([world[0], world[1], world[2]])
-        rotation = rotation.dot(self.worldrotation)
-
-        relative_location.append(rotation[0] + self.worldoffset[0] - self.mapoffset[0])
-        relative_location.append(rotation[1] + self.worldoffset[1] - self.mapoffset[1])
-        relative_location.append(rotation[2] + self.worldoffset[2] - self.mapoffset[2])
-
-        pixel.append(math.floor(relative_location[0] / float(self.pixel_density)))
-        pixel.append(math.floor(relative_location[1] / float(self.pixel_density)))
-
-        return pixel
-
-    def get_position_on_graph(self, world):
-        """Get the position on the map for a certain world position."""
-        pixel = self.get_position_on_map(world)
-        return self._graph.project_pixel(pixel)
-
-
-
-    def get_position_on_world(self, pixel):
-        """Get world position of a certain map position."""
-        relative_location = []
-        world_vertex = []
-        relative_location.append(pixel[0] * self.pixel_density)
-        relative_location.append(pixel[1] * self.pixel_density)
-
-        world_vertex.append(relative_location[0] + self.mapoffset[0] - self.worldoffset[0])
-        world_vertex.append(relative_location[1] + self.mapoffset[1] - self.worldoffset[1])
-        world_vertex.append(22)  # Z does not matter for now.
-
-        return world_vertex
 
     def get_lane_orientation(self, world):
         """Get the lane orientation of a certain world position."""
@@ -167,58 +108,29 @@ class CarlaMap(object):
         ori = color_to_angle(ori)
 
         return (-math.cos(ori), -math.sin(ori))
+    def convert_to_node(self,input):
+        """
+        Receives a data type (Can Be Pixel or World )
+        :param input: position in some coordinate
+        :return: A node object
+        """
+        return self._converter.convert_to_node(input)
 
+    def convert_to_pixel(self,input):
+        """
+        Receives a data type (Can Be Pixel or World )
+        :param input: position in some coordinate
+        :return: A node object
+        """
+        return self._converter.convert_to_pixel(input)
 
-
-    def make_map_world(self, world):
-
-        relative_location = []
-        pixel = []
-
-        rotation = np.array([world[0], world[1], world[2]])
-        rotation = rotation.dot(self.worldrotation)
-
-        relative_location.append(
-            rotation[0] + self.worldoffset[0] - self.mapoffset[0])
-        relative_location.append(
-            rotation[1] + self.worldoffset[1] - self.mapoffset[1])
-        relative_location.append(
-            rotation[2] + self.worldoffset[2] - self.mapoffset[2])
-
-        pixel.append(math.floor(relative_location[
-                     0]/float(self.pixel_density)))
-        pixel.append(math.floor(relative_location[
-                     1]/float(self.pixel_density)))
-
-        return pixel
-
-
-
-    def make_map_node(self, node):
-
-        pixel = [((node[0] + 2) * self._graph._node_density)
-                , ((node[1] + 2) * self._graph._node_density)]
-
-        return pixel
-
-    def make_world_map(self, pixel):
-
-        relative_location = []
-        world_vertex = []
-        relative_location.append(pixel[0]*self.pixel_density)
-        relative_location.append(pixel[1]*self.pixel_density)
-
-        world_vertex.append(
-            relative_location[0]+self.mapoffset[0] - self.worldoffset[0])
-        world_vertex.append(
-            relative_location[1]+self.mapoffset[1] - self.worldoffset[1])
-        world_vertex.append(22)
-        return world_vertex
-
-    def make_world_node(self, node):
-
-        return self.make_world_map(self.make_map_node(node))
-
+    def convert_to_world(self,input):
+        """
+        Receives a data type (Can Be Pixel or World )
+        :param input: position in some coordinate
+        :return: A node object
+        """
+        return self._converter.convert_to_world(input)
 
 
 
