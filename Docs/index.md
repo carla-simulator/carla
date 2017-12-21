@@ -4,6 +4,7 @@ CARLA Documentation
 #### Using CARLA
 
   * [How to run CARLA server and client](how_to_run.md)
+  * [Benchmark](carla_benchmark.md)
   * [CARLA settings](carla_settings.md)
   * [Measurements](measurements.md)
   * [Cameras and sensors](cameras_and_sensors.md)
