@@ -29,13 +29,14 @@ class Graph(object):
     A simple directed, weighted graph
     """
 
-    def __init__(self, graph_file=None):
+    def __init__(self, graph_file=None,node_density=50):
 
         self._nodes = set()
         self._angles = {}
         self._edges = {}
         self._distances = {}
-        self._node_density = 50
+        self._node_density = node_density
+
         if graph_file is not None:
             with open(graph_file, 'r') as file:
                 # Skipe the first four lines that
@@ -61,13 +62,6 @@ class Graph(object):
 
     def add_node(self, value):
         self._nodes.add(value)
-
-    def project_pixel(self, pixel):
-        node = []
-        node.append((pixel[0]) / self._node_density - 2)
-        node.append((pixel[1]) / self._node_density - 2)
-
-        return tuple(node)
 
     def make_orientations(self, node, heading):
 

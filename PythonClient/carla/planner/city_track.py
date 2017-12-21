@@ -8,14 +8,15 @@ from carla.planner.graph import sldist
 from carla.planner.astar import AStar
 from carla.planner.map import CarlaMap
 
-
 class CityTrack(object):
 
 
     def __init__(self,city_name):
 
+        self._node_density = 50.0
+        self._pixel_density = 16.43
 
-        self._map = CarlaMap(city_name)
+        self._map = CarlaMap(city_name, self._pixel_density, self._node_density)
 
         self._astar = AStar()
 
@@ -24,7 +25,8 @@ class CityTrack(object):
 
         # The current computed route
         self._route =None
- 
+
+
    
 
 
@@ -33,7 +35,7 @@ class CityTrack(object):
             Projecting the graph node into the city road
         """
 
-        node =self._map.get_position_on_graph(position)
+        node =self._map.convert_to_node(position)
 
         # To change the orientation with respect to the map standards
         node_orientation = np.array([node_orientation[0],
@@ -52,9 +54,9 @@ class CityTrack(object):
 
 
         if math.fabs(node_orientation[0]) > math.fabs(node_orientation[1]):
-            node_orientation = (node_orientation[0],0.0,0.0)
+            node_orientation = (node_orientation[0], 0.0, 0.0)
         else:
-            node_orientation = (0.0,node_orientation[1],0.0)
+            node_orientation = (0.0, node_orientation[1], 0.0)
 
         node = self._map._grid.search_on_grid(node[0],node[1])
 
