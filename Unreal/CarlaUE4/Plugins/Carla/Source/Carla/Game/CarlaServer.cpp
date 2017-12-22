@@ -56,10 +56,18 @@ static inline void Set(carla_vector3d &lhs, const FVector &rhs)
   lhs = {rhs.X, rhs.Y, rhs.Z};
 }
 
+static inline void Set(carla_rotation3d &lhs, const FRotator &rhs)
+{
+  lhs.pitch = rhs.Pitch;
+  lhs.roll = rhs.Roll;
+  lhs.yaw = rhs.Yaw;
+}
+
 static inline void Set(carla_transform &lhs, const FTransform &rhs)
 {
   Set(lhs.location, rhs.GetLocation());
   Set(lhs.orientation, rhs.GetRotation().GetForwardVector());
+  Set(lhs.rotation, rhs.Rotator());
 }
 
 static void Set(carla_image &cImage, const FCapturedImage &uImage)

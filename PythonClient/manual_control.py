@@ -35,7 +35,17 @@ import time
 
 try:
     import pygame
-    from pygame.locals import *
+    from pygame.locals import K_DOWN
+    from pygame.locals import K_LEFT
+    from pygame.locals import K_RIGHT
+    from pygame.locals import K_SPACE
+    from pygame.locals import K_UP
+    from pygame.locals import K_a
+    from pygame.locals import K_d
+    from pygame.locals import K_q
+    from pygame.locals import K_r
+    from pygame.locals import K_s
+    from pygame.locals import K_w
 except ImportError:
     raise RuntimeError('cannot import pygame, make sure pygame package is installed')
 
