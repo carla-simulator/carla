@@ -227,11 +227,11 @@ class CoRL2017(Benchmark):
         return 'corl2017_' + self._city_name
 
 
-    def _get_pose_and_task(self,line_on_file):
+    def _get_pose_and_task(self, line_on_file):
         """
         Returns the pose and task this experiment is, based on the line it was
         on the log file.
         """
         # We assume that the number of poses is constant
-        return line_on_file/len(self._experiments),line_on_file%25
+        return int(line_on_file/len(self._experiments)), line_on_file % 25
 
