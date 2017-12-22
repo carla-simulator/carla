@@ -81,6 +81,59 @@ static void Set(carla_image &cImage, const FCapturedImage &uImage)
   }
 }
 
+struct carla_lidar_measurement_data {
+  TUniquePtr<uint32_t[]> points_count_by_channel;
+  TUniquePtr<double[]> points;
+};
+
+static void Set(
+  carla_lidar_measurement &cLidarMeasurement,
+  const FCapturedLidarSegment &uLidarSegment,
+  carla_lidar_measurement_data &cLidarMeasurementData)
+{
+
+  if (uLidarSegment.LidarLasersSegments.Num() > 0) {
+
+    cLidarMeasurement.horizontal_angle = uLidarSegment.HorizontalAngle;
+    cLidarMeasurement.channels_count = uLidarSegment.LidarLasersSegments.Num();
+
+    cLidarMeasurementData.points_count_by_channel = MakeUnique<uint32_t[]>(cLidarMeasurement.channels_count);
+    size_t total_points = 0;
+    for(int i=0; i<cLidarMeasurement.channels_count; i++)
+    {
+      size_t points_count = uLidarSegment.LidarLasersSegments[0].Points.Num();
+      cLidarMeasurementData.points_count_by_channel[i] = points_count;
+      total_points += points_count;
+    }
+    cLidarMeasurementData.points = MakeUnique<double[]>(3 * total_points);
+    size_t points_filled = 0;
+    for(int i=0; i<cLidarMeasurement.channels_count; i++)
+    {
+      size_t points_count = cLidarMeasurementData.points_count_by_channel[i];
+      auto& laser_points = uLidarSegment.LidarLasersSegments[i].Points;
+      for(int pi=0; pi<points_count; pi++)
+      {
+        cLidarMeasurementData.points[3 * (pi + points_filled)] = laser_points[pi].X;
+        cLidarMeasurementData.points[3 * (pi + points_filled) + 1] = laser_points[pi].Y;
+        cLidarMeasurementData.points[3 * (pi + points_filled) + 2] = laser_points[pi].Z;
+      }
+      points_filled += points_count;
+    }
+
+    cLidarMeasurement.points_count_by_channel = cLidarMeasurementData.points_count_by_channel.Get();
+    cLidarMeasurement.data = cLidarMeasurementData.points.Get();
+
+#ifdef CARLA_SERVER_EXTRA_LOG
+    {
+      const auto Size = uImage.BitMap.Num();
+      UE_LOG(LogCarlaServer, Log, TEXT("Sending lidar measurement %d x %d"), uLidarSegment.LidarLasersSegments.Num(), uLidarSegment.LidarLasersSegments[0].Points.Num());
+    }
+  } else {
+    UE_LOG(LogCarlaServer, Warning, TEXT("Sending empty lidar measurement"));
+#endif // CARLA_SERVER_EXTRA_LOG
+  }
+}
+
 static void SetBoxSpeedAndType(carla_agent &values, const ACharacter *Walker)
 {
   values.type = CARLA_SERVER_AGENT_PEDESTRIAN;
@@ -311,11 +364,11 @@ CarlaServer::ErrorCode CarlaServer::SendMeasurements(
   Set(player.collision_other, PlayerState.GetCollisionIntensityOther());
   Set(player.intersection_otherlane, PlayerState.GetOtherLaneIntersectionFactor());
   Set(player.intersection_offroad, PlayerState.GetOffRoadIntersectionFactor());
-  Set(player.autopilot_control.steer, PlayerState.GetSteer());
-  Set(player.autopilot_control.throttle, PlayerState.GetThrottle());
-  Set(player.autopilot_control.brake, PlayerState.GetBrake());
-  Set(player.autopilot_control.hand_brake, PlayerState.GetHandBrake());
-  Set(player.autopilot_control.reverse, PlayerState.GetCurrentGear() < 0);
+  Set(player.ai_control.steer, PlayerState.GetSteer());
+  Set(player.ai_control.throttle, PlayerState.GetThrottle());
+  Set(player.ai_control.brake, PlayerState.GetBrake());
+  Set(player.ai_control.hand_brake, PlayerState.GetHandBrake());
+  Set(player.ai_control.reverse, PlayerState.GetCurrentGear() < 0);
 
   TArray<carla_agent> Agents;
   if (bSendNonPlayerAgentsInfo) {
@@ -338,5 +391,19 @@ CarlaServer::ErrorCode CarlaServer::SendMeasurements(
     }
   }
 
-  return ParseErrorCode(carla_write_measurements(Server, values, images.Get(), NumberOfImages));
+  // Lidars.
+  auto NumberOfLidarMeasurements = PlayerState.GetNumberOfLidarsMeasurements();
+  TUniquePtr<carla_lidar_measurement[]> lidar_measurements;
+  TUniquePtr<carla_lidar_measurement_data[]> lidar_measurements_data;
+  if (NumberOfLidarMeasurements > 0) {
+    lidar_measurements = MakeUnique<carla_lidar_measurement[]>(NumberOfLidarMeasurements);
+    lidar_measurements_data = MakeUnique<carla_lidar_measurement_data[]>(NumberOfLidarMeasurements);
+    for (auto i = 0; i < NumberOfLidarMeasurements; ++i) {
+      Set(lidar_measurements[i], PlayerState.GetLidarSegments()[i], lidar_measurements_data[i]);
+    }
+  }
+
+  return ParseErrorCode(carla_write_measurements(
+    Server, values, images.Get(), lidar_measurements.Get(),
+    NumberOfImages, NumberOfLidarMeasurements));
 }

@@ -35,6 +35,13 @@ extern "C" {
     const uint32_t *data;
   };
 
+  struct carla_lidar_measurement {
+    float horizontal_angle;
+    int channels_count;
+    const uint32_t *points_count_by_channel;
+    const double *data;
+  };
+
   struct carla_transform {
     struct carla_vector3d location;
     struct carla_vector3d orientation;
@@ -139,7 +146,7 @@ extern "C" {
     /** Percentage of the car off-road. */
     float intersection_offroad;
     /** Vehicle's AI control that would apply this frame. */
-    struct carla_control autopilot_control;
+    struct carla_control ai_control;
   };
 
   /* ======================================================================== */
@@ -255,7 +262,9 @@ extern "C" {
       CarlaServerPtr self,
       const carla_measurements &values,
       const struct carla_image *images,
-      uint32_t number_of_images);
+      const struct carla_lidar_measurement *lidar_measurements,
+      const uint32_t number_of_images,
+      const uint32_t number_of_lidar_measurements);
 
 #ifdef __cplusplus
 }
