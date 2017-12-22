@@ -57,8 +57,8 @@ class CoRL2017(Benchmark):
 
         for metric,values in metrics_summary.items():
 
-            print('Metric : ',metric)
-            for weather,tasks in values.items():
+            print('Metric : ', metric)
+            for weather, tasks in values.items():
                 if weather in set(weathers):
                     print('  Weather: ',weather)
                     count =0

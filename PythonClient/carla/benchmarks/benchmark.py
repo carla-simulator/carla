@@ -72,7 +72,7 @@ class Benchmark(object):
 
         self._experiments = self._build_experiments()
         # Create the log files and get the names
-        self._suffix_name, self._full_name = self._create_log_record(self._experiments)
+        self._suffix_name, self._full_name = self._create_log_record(name_to_save, self._experiments)
         # Get the line for the experiment to be continued
         self._line_on_file = self._continue_experiment(continue_experiment)
 
@@ -318,7 +318,12 @@ class Benchmark(object):
     def _calculate_time_out(self, distance):
         pass
 
-
+    @abc.abstractmethod
+    def _get_details(self):
+        """
+        Get details
+        :return: a string with name and town of the subclass
+        """
     @abc.abstractmethod
     def _build_experiments(self):
         """
@@ -327,9 +332,15 @@ class Benchmark(object):
 
         """
         pass
+    @abc.abstractmethod
+    def get_all_statistics(self):
+        """
+        Get the statistics of the evaluated experiments
+        :return:
+        """
 
     @abc.abstractmethod
-    def _get_pose_and_task(self):
+    def _get_pose_and_task(self, line_on_file):
         """
         Parse the experiment depending on number of poses and tasks
         """
@@ -349,7 +360,7 @@ class Benchmark(object):
 
         """
     @staticmethod
-    def get_experiments_names(experiments):
+    def _get_experiments_names(experiments):
 
         name_cat = 'w'
 
