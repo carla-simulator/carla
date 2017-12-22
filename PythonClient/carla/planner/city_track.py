@@ -34,8 +34,8 @@ class CityTrack(object):
         node =self._map.convert_to_node(position)
 
         # To change the orientation with respect to the map standards
-        node_orientation = np.array([node_orientation[0],
-                            node_orientation[1]])
+        #node_orientation = np.array([node_orientation[0],
+        #                    node_orientation[1]])
 
         node = tuple([ int(x) for x in node ])
 

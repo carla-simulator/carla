@@ -80,7 +80,8 @@ class CarlaMap(object):
             return np.asarray(img, dtype="int32")
         return np.fliplr(self.map_image)
 
-    def get_map_lanes(self, height=None):
+    def get_map_lanes(self, size=None):
+
         if size is not None:
             img = Image.fromarray(self.map_image_lanes.astype(np.uint8))
             img = img.resize((size[1], size[0]), Image.ANTIALIAS)
@@ -92,23 +93,14 @@ class CarlaMap(object):
 
     def get_lane_orientation(self, world):
         """Get the lane orientation of a certain world position."""
-        relative_location = []
-        pixel = []
-        rotation = np.array([world[0], world[1], world[2]])
-        rotation = rotation.dot(self.worldrotation)
-
-        relative_location.append(rotation[0] + self.worldoffset[0] - self.mapoffset[0])
-        relative_location.append(rotation[1] + self.worldoffset[1] - self.mapoffset[1])
-        relative_location.append(rotation[2] + self.worldoffset[2] - self.mapoffset[2])
-
-        pixel.append(math.floor(relative_location[0] / float(self.pixel_density)))
-        pixel.append(math.floor(relative_location[1] / float(self.pixel_density)))
+        pixel = self.convert_to_pixel(world)
 
         ori = self.map_image_lanes[int(pixel[1]), int(pixel[0]), 2]
         ori = color_to_angle(ori)
 
         return (-math.cos(ori), -math.sin(ori))
-    def convert_to_node(self,input):
+
+    def convert_to_node(self, input):
         """
         Receives a data type (Can Be Pixel or World )
         :param input: position in some coordinate
@@ -116,7 +108,7 @@ class CarlaMap(object):
         """
         return self._converter.convert_to_node(input)
 
-    def convert_to_pixel(self,input):
+    def convert_to_pixel(self, input):
         """
         Receives a data type (Can Be Pixel or World )
         :param input: position in some coordinate
@@ -124,7 +116,7 @@ class CarlaMap(object):
         """
         return self._converter.convert_to_pixel(input)
 
-    def convert_to_world(self,input):
+    def convert_to_world(self, input):
         """
         Receives a data type (Can Be Pixel or World )
         :param input: position in some coordinate
@@ -134,7 +126,7 @@ class CarlaMap(object):
 
 
 
-    def get_walls_directed(self,node_source,source_ori,node_target,target_ori):
+    def get_walls_directed(self, node_source, source_ori, node_target, target_ori):
         """
         This is the most hacky function. Instead of planning on two ways,
         we basically use a one way road and interrupt the other road by adding
@@ -142,7 +134,7 @@ class CarlaMap(object):
 
         """
 
-        final_walls = self._grid.get_wall_source(node_source,source_ori,node_target)
+        final_walls = self._grid.get_wall_source(node_source, source_ori, node_target)
 
         final_walls = final_walls.union(self._grid.get_wall_target(
                 node_target, target_ori, node_source))

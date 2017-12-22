@@ -1,8 +1,6 @@
 import heapq
 
-
 class Cell(object):
-
     def __init__(self, x, y, reachable):
         """Initialize new cell.
 
@@ -23,11 +21,12 @@ class Cell(object):
         self.f = 0
 
 
+    def __lt__(self, other):
+        return self.g < other.g
+
+
 class AStar(object):
-
     def __init__(self):
-
-
         # open list
         self.opened = []
         heapq.heapify(self.opened)
@@ -38,10 +37,8 @@ class AStar(object):
         self.grid_height = None
         self.grid_width = None
 
-    def init_grid(self, width, height, walls,start, end):
-
-        """
-        Prepare grid cells, walls.
+    def init_grid(self, width, height, walls, start, end):
+        """Prepare grid cells, walls.
 
         @param width grid's width.
         @param height grid's height.
@@ -51,7 +48,6 @@ class AStar(object):
         """
         self.grid_height = height
         self.grid_width = width
-        #print walls
         for x in range(self.grid_width):
             for y in range(self.grid_height):
                 if (x, y) in walls:
@@ -59,7 +55,6 @@ class AStar(object):
                 else:
                     reachable = True
                 self.cells.append(Cell(x, y, reachable))
-
         self.start = self.get_cell(*start)
         self.end = self.get_cell(*end)
 
@@ -127,8 +122,6 @@ class AStar(object):
 
         @returns path or None if not found.
         """
-        if self.start == self.end:
-            return None
         # add starting cell to open heap queue
         heapq.heappush(self.opened, (self.start.f, self.start))
         while len(self.opened):
@@ -153,6 +146,3 @@ class AStar(object):
                         self.update_cell(adj_cell, cell)
                         # add adj cell to open list
                         heapq.heappush(self.opened, (adj_cell.f, adj_cell))
-
-
-
