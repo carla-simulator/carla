@@ -285,7 +285,7 @@ class Benchmark(object):
             else:
                 # Ask question, to avoid mistaken override situations
                 answer = input("The experiment was already found in the files"
-                               + ", Do you want to continue (y/n)  ? \n"
+                               + ", Do you want to continue (y/n)? \n"
                                )
                 if answer == 'Yes' or answer == 'y':
                     line_on_file = self._get_last_position()
