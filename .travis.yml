@@ -10,4 +10,4 @@ install:
   - pip install pylint
 
 script:
-  - pylint --errors-only --ignored-modules=ConfigParser,numpy,pygame PythonClient/carla PythonClient/*.py
+  - pylint --errors-only --ignored-modules=ConfigParser,numpy,pygame,shutil,_socketobject PythonClient/carla PythonClient/*.py
