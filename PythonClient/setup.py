@@ -1,12 +1,15 @@
 from setuptools import setup
 
-setup(
-    name='PythonClient',
-    version='0.7',
-    packages=['carla','carla.planner','carla.benchmarks','carla.planner'],
-    license='',
-    long_description=open('README.txt').read(),
-    include_package_data=True,
-    package_data={'carla.planner' : ['Town01.txt']}
-)
+# @todo Dependencies are missing.
 
+setup(
+    name='carla_client',
+    version='0.7.1',
+    packages=['carla', 'carla.planner', 'carla.benchmarks', 'carla.planner'],
+    license='MIT License',
+    description='Python API for communicating with the CARLA server.',
+    url='https://github.com/carla-simulator/carla',
+    author='The CARLA team',
+    author_email='carla.simulator@gmail.com',
+    include_package_data=True
+)
