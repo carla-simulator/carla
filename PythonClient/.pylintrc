@@ -1,0 +1,3 @@
+[TYPECHECK]
+ignored-modules=ConfigParser,numpy,pygame,shutil
+ignored-classes=_socketobject

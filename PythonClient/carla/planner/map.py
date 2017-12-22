@@ -89,12 +89,13 @@ class CarlaMap(object):
         return np.fliplr(self.map_image)
 
     def get_map_lanes(self, height=None):
-        if size is not None:
-            img = Image.fromarray(self.map_image_lanes.astype(np.uint8))
-            img = img.resize((size[1], size[0]), Image.ANTIALIAS)
-            img.load()
-            return np.fliplr(np.asarray(img, dtype="int32"))
-        return np.fliplr(self.map_image_lanes)
+        # if size is not None:
+        #     img = Image.fromarray(self.map_image_lanes.astype(np.uint8))
+        #     img = img.resize((size[1], size[0]), Image.ANTIALIAS)
+        #     img.load()
+        #     return np.fliplr(np.asarray(img, dtype="int32"))
+        # return np.fliplr(self.map_image_lanes)
+        raise NotImplementedError
 
     def get_position_on_map(self, world):
         """Get the position on the map for a certain world position."""
