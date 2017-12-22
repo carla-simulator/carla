@@ -1,6 +1,10 @@
 CARLA Benchmark
 ===============
 
+!!! important
+    Benchmark code is currently in beta and can be found only in the
+    `benchmark_branch`.
+
 Running the Benchmark
 ---------------------
 
