@@ -175,16 +175,28 @@ class CarlaClient(object):
     def _iterate_sensor_data(raw_data):
         # At this point the only sensors available are images, the raw_data
         # consists of images only.
-        image_types = ['None', 'SceneFinal', 'Depth', 'SemanticSegmentation']
+        image_types = ['None', 'SceneFinal', 'Depth', 'SemanticSegmentation', 'Lidar']
         gettype = lambda id: image_types[id] if len(image_types) > id else 'Unknown'
         getval = lambda index: struct.unpack('<L', raw_data[index*4:index*4+4])[0]
+        getfloatval = lambda index: struct.unpack('<d', raw_data[index*4:index*4+8])[0]
         total_size = len(raw_data) / 4
         index = 0
         while index < total_size:
-            width = getval(index)
-            height = getval(index + 1)
-            image_type = gettype(getval(index + 2))
-            begin = index + 3
-            end = begin + width * height
-            index = end
-            yield sensor.Image(width, height, image_type, raw_data[begin*4:end*4])
+            sensor_type = gettype(getval(index + 2))
+            if sensor_type == 'Lidar':
+
+                horizontal_angle = getfloatval(index)
+                channels_count = getval(index + 3)
+                lm = sensor.LidarMeasurement(
+                    horizontal_angle, channels_count,
+                    sensor_type, raw_data[index*4:])
+                index += lm.size_in_bytes
+                yield lm
+
+            else:
+                width = getval(index)
+                height = getval(index + 1)
+                begin = index + 3
+                end = begin + width * height
+                index = end
+                yield sensor.Image(width, height, sensor_type, raw_data[begin*4:end*4])

@@ -8,6 +8,7 @@
 #include "CarlaVehicleController.h"
 
 #include "SceneCaptureCamera.h"
+#include "Lidar.h"
 
 #include "Components/BoxComponent.h"
 #include "EngineUtils.h"
@@ -73,6 +74,11 @@ void ACarlaVehicleController::BeginPlay()
         Image.PostProcessEffect = Camera->GetPostProcessEffect();
       }
     }
+    // Lidars
+    const auto NumberOfLidars = SceneCaptureLidars.Num();
+    if (NumberOfLidars > 0) {
+      CarlaPlayerState->LidarSegments.AddDefaulted(NumberOfLidars);
+    }
   }
 }
 
@@ -105,6 +111,13 @@ void ACarlaVehicleController::Tick(float DeltaTime)
         Image.BitMap.Empty();
       }
     }
+    // Capture lidars
+    const auto NumberOfLidars = SceneCaptureLidars.Num();
+    check(NumberOfLidars == CarlaPlayerState->LidarSegments.Num());
+    for (auto i = 0; i < NumberOfLidars; ++i) {
+      auto &LidarSegment = CarlaPlayerState->LidarSegments[i];
+      SceneCaptureLidars[i]->ReadPoints(DeltaTime, LidarSegment);
+    }
   }
 }
 
@@ -132,6 +145,22 @@ void ACarlaVehicleController::AddSceneCaptureCamera(
       TEXT("Created capture camera %d with postprocess \"%s\""),
       SceneCaptureCameras.Num() - 1,
       *PostProcessEffect::ToString(Camera->GetPostProcessEffect()));
+}
+
+void ACarlaVehicleController::AddSceneCaptureLidar(
+    const FLidarDescription &Description)
+{
+  auto Lidar = GetWorld()->SpawnActor<ALidar>(Description.Position, Description.Rotation);
+  Lidar->Set(Description);
+  Lidar->AttachToActor(GetPawn(), FAttachmentTransformRules::KeepRelativeTransform);
+  Lidar->SetOwner(GetPawn());
+  AddTickPrerequisiteActor(Lidar);
+  SceneCaptureLidars.Add(Lidar);
+  UE_LOG(
+      LogCarla,
+      Log,
+      TEXT("Created lidar %d"),
+      SceneCaptureLidars.Num() - 1);
 }
 
 // =============================================================================

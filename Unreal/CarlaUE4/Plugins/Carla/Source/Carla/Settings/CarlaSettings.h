@@ -8,6 +8,7 @@
 
 #include "CameraDescription.h"
 #include "WeatherDescription.h"
+#include "LidarDescription.h"
 
 #include "UObject/NoExportTypes.h"
 #include "CarlaSettings.generated.h"
@@ -57,6 +58,8 @@ private:
   void LoadSettingsFromFile(const FString &FilePath, bool bLogOnFailure);
 
   void ResetCameraDescriptions();
+
+  void ResetLidarDescriptions();
 
   /** File name of the settings file used to load this settings. Empty if none used. */
   UPROPERTY(Category = "CARLA Settings|Debug", VisibleAnywhere)
@@ -142,6 +145,10 @@ public:
     */
   UPROPERTY(Category = "Scene Capture", VisibleAnywhere)
   bool bSemanticSegmentationEnabled = false;
+
+  /** Descriptions of the lidars to be attached to the player. */
+  UPROPERTY(Category = "Scene Capture", VisibleAnywhere)
+  TMap<FString, FLidarDescription> LidarDescriptions;
 
   /// @}
 };
