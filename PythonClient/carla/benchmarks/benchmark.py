@@ -69,12 +69,14 @@ class Benchmark(object):
                               'pos_y': -1
                               }
 
-        # Get the line for the experiment to be continued
-        self._line_on_file = self._continue_experiment(continue_experiment)
 
         self._experiments = self._build_experiments()
         # Create the log files and get the names
         self._suffix_name, self._full_name = self._create_log_record(self._experiments)
+        # Get the line for the experiment to be continued
+        self._line_on_file = self._continue_experiment(continue_experiment)
+
+
 
         self._save_images = save_images
         self._image_filename_format = os.path.join(
