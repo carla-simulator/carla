@@ -17,6 +17,7 @@ from . import util
 
 try:
     from . import carla_server_pb2 as carla_protocol
+    from carla_protocol import EpisodeReady
 except ImportError:
     raise RuntimeError('cannot import "carla_server_pb2.py", run the protobuf compiler to generate this file')
 
@@ -96,7 +97,7 @@ class CarlaClient(object):
             data = self._world_client.read()
             if not data:
                 raise RuntimeError('failed to read data from server')
-            pb_message = carla_protocol.EpisodeReady()
+            pb_message = EpisodeReady()
             pb_message.ParseFromString(data)
             if not pb_message.ready:
                 raise RuntimeError('cannot start episode: server failed to start episode')
@@ -159,8 +160,6 @@ class CarlaClient(object):
             raise RuntimeError('failed to read data from server')
         pb_message = carla_protocol.SceneDescription()
         pb_message.ParseFromString(data)
-        if len(pb_message.player_start_spots) < 1:
-            raise RuntimeError("received 0 player start spots")
         self._sensor_names = settings._get_sensor_names(carla_settings)
         self._is_episode_requested = True
         return pb_message
