@@ -40,10 +40,10 @@ class CarlaMap(object):
 
         # The built graph. This is the exact same graph that unreal builds. This
         # is a generic structure used for many cases
-        self._graph = Graph(city_file)
+        self._graph = Graph(city_file, node_density)
 
         self._pixel_density = pixel_density
-        self._grid = Grid(self._graph, node_density)
+        self._grid = Grid(self._graph)
         # The number of game units per pixel. For now this is fixed.
 
         self._converter = Converter(city_file, pixel_density, node_density)

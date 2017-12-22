@@ -37,11 +37,9 @@ class CityTrack(object):
         node_orientation = np.array([node_orientation[0],
                             node_orientation[1]])
 
-
-        node  =   tuple([ int(x) for x in node ])
+        node = tuple([ int(x) for x in node ])
 
         # Set to zero if it is less than zero.
-
 
         node =(max(0,node[0]),max(0,node[1]))
         node =(min(self._map.get_graph_resolution()[0]-1,node[0]),
@@ -49,15 +47,21 @@ class CityTrack(object):
         # is it x or y ? Check to avoid  special corner cases
 
 
-        if math.fabs(node_orientation[0]) > math.fabs(node_orientation[1]):
-            node_orientation = (node_orientation[0], 0.0, 0.0)
-        else:
-            node_orientation = (0.0, node_orientation[1], 0.0)
+        #if math.fabs(node_orientation[0]) > math.fabs(node_orientation[1]):
+        #    node_orientation = (node_orientation[0], 0.0, 0.0)
+        #else:
+        #    node_orientation = (0.0, node_orientation[1], 0.0)
 
-        node = self._map._grid.search_on_grid(node[0],node[1])
+        node = self._map._grid.search_on_grid(node[0], node[1])
 
 
         return node
+
+
+    def get_pixel_density(self):
+        return self._pixel_density
+    def get_node_density(self):
+        return self._node_density
 
     def is_at_goal(self,source,target):
         return source == target
