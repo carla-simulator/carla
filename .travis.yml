@@ -1,0 +1,13 @@
+language: python
+
+python:
+  - "2.7"
+  - "3.5"
+  - "3.6"
+
+install:
+  - pip install -r PythonClient/requirements.txt
+  - pip install pylint
+
+script:
+  - pylint --errors-only --ignored-modules=ConfigParser,numpy,pygame PythonClient/carla PythonClient/*.py
