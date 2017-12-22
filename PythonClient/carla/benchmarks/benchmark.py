@@ -285,8 +285,8 @@ class Benchmark(object):
             else:
                 # Ask question, to avoid mistaken override situations
                 answer = input("The experiment was already found in the files"
-                               + ",Do you want to continue (y/n)  ? \n"
-                               + " If not the experiment will be overwritten")
+                               + ", Do you want to continue (y/n)  ? \n"
+                               )
                 if answer == 'Yes' or answer == 'y':
                     line_on_file = self._get_last_position()
                 else:
@@ -331,7 +331,7 @@ class Benchmark(object):
         Must be redefined in an inherited class.
 
         """
-        pass
+
     @abc.abstractmethod
     def get_all_statistics(self):
         """
@@ -344,7 +344,7 @@ class Benchmark(object):
         """
         Parse the experiment depending on number of poses and tasks
         """
-        pass
+
 
     @abc.abstractmethod
     def plot_summary_train(self):

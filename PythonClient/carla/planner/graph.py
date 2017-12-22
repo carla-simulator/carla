@@ -26,7 +26,7 @@ class Graph(object):
     A simple directed, weighted graph
     """
 
-    def __init__(self, graph_file=None,node_density=50):
+    def __init__(self, graph_file=None, node_density=50):
 
         self._nodes = set()
         self._angles = {}

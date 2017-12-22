@@ -117,7 +117,7 @@ class Planner(object):
             current_pos = node_iter
 
         # We multiply by these values to convert distance to world coordinates
-        return distance * self._city_track._map.get_pixel_density() \
+        return distance * self._city_track.get_pixel_density() \
             * self._city_track.get_node_density()
 
 
