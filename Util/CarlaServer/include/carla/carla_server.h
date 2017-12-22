@@ -28,6 +28,12 @@ extern "C" {
     float z;
   };
 
+  struct carla_rotation3d {
+    float pitch;
+    float yaw;
+    float roll;
+  };
+
   struct carla_image {
     uint32_t width;
     uint32_t height;
@@ -45,6 +51,7 @@ extern "C" {
   struct carla_transform {
     struct carla_vector3d location;
     struct carla_vector3d orientation;
+    struct carla_rotation3d rotation;
   };
 
 #define CARLA_SERVER_AGENT_UNKNOWN            0u
