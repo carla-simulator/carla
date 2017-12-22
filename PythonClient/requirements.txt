@@ -1,0 +1,4 @@
+Pillow
+numpy
+protobuf
+pygame

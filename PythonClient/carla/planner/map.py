@@ -81,15 +81,12 @@ class CarlaMap(object):
         return np.fliplr(self.map_image)
 
     def get_map_lanes(self, size=None):
-
         if size is not None:
             img = Image.fromarray(self.map_image_lanes.astype(np.uint8))
             img = img.resize((size[1], size[0]), Image.ANTIALIAS)
             img.load()
             return np.fliplr(np.asarray(img, dtype="int32"))
         return np.fliplr(self.map_image_lanes)
-
-
 
     def get_lane_orientation(self, world):
         """Get the lane orientation of a certain world position."""
