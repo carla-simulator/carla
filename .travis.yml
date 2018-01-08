@@ -13,4 +13,4 @@ install:
   - pip install pylint
 
 script:
-  - pylint --errors-only --rcfile=PythonClient/.pylintrc PythonClient/carla PythonClient/*.py
+  - pylint --disable=R,C --rcfile=PythonClient/.pylintrc PythonClient/carla PythonClient/*.py
