@@ -20,7 +20,6 @@ import os
 import random
 import sys
 import time
-from carla.carla_server_pb2 import Transform
 
 from carla.client import make_carla_client
 from carla.sensor import Camera
@@ -28,6 +27,12 @@ from carla.settings import CarlaSettings
 from carla.tcp import TCPConnectionError
 from carla.util import print_over_same_line, StopWatch
 from carla.image_converter import depth_to_local_point_cloud, to_rgb_array
+
+try:
+    from . import carla_server_pb2 as carla_protocol
+    from carla_protocol import Transform
+except ImportError:
+    raise RuntimeError('cannot import "carla_server_pb2.py", run the protobuf compiler to generate this file')
 
 
 def run_carla_client(host, port):
