@@ -30,7 +30,7 @@ from carla.util import print_over_same_line, StopWatch
 from carla.image_converter import depth_to_local_point_cloud, to_rgb_array
 
 
-def run_carla_client(host, port, save_images_to_disk, image_filename_format):
+def run_carla_client(host, port):
     # Here we will run 3 episodes with 300 frames each.
     number_of_frames = 3000
     output_folder = '_out'
@@ -92,12 +92,6 @@ def run_carla_client(host, port, save_images_to_disk, image_filename_format):
             # Read the data produced by the server this frame.
             measurements, sensor_data = client.read_data()
 
-            # Save the images to disk if requested.
-            if save_images_to_disk:
-                for name, image in sensor_data.items():
-                    image.save_to_disk(
-                        image_filename_format.format(episode, name, frame))
-
             # Start transformations time mesure.
             time = StopWatch()
 
@@ -149,9 +143,10 @@ def run_carla_client(host, port, save_images_to_disk, image_filename_format):
             # Save PLY to disk
             # This generates the PLY string with the 3D points and the RGB colors
             # for each row of the file.
-            # ply = '\n'.join(['{:.2f} {:.2f} {:.2f} {:.0f} {:.0f} {:.0f}'.format(
-            #     *p) for p in points_3d.tolist()])
-            ply = points_3d.tostring()
+
+            ply = '\n'.join(['{:.2f} {:.2f} {:.2f} {:.0f} {:.0f} {:.0f}'.format(
+                *p) for p in points_3d.tolist()])
+
             # Create folder to save if does not exist.
             if not os.path.isdir(output_folder):
                 os.makedirs(output_folder)
@@ -258,11 +253,6 @@ def main():
         dest='debug',
         help='print debug information')
     argparser.add_argument(
-        '-c', '--color',
-        action='store_true',
-        default='SceneFinal',
-        help='Color for the point cloud')
-    argparser.add_argument(
         '--host',
         metavar='H',
         default='localhost',
@@ -273,10 +263,6 @@ def main():
         default=2000,
         type=int,
         help='TCP port to listen to (default: 2000)')
-    argparser.add_argument(
-        '-i', '--images-to-disk',
-        action='store_true',
-        help='save images to disk')
 
     args = argparser.parse_args()
 
@@ -287,11 +273,7 @@ def main():
 
     while True:
         try:
-            run_carla_client(
-                host=args.host,
-                port=args.port,
-                save_images_to_disk=args.images_to_disk,
-                image_filename_format='_images/episode_{:0>3d}/{:s}/image_{:0>5d}.png')
+            run_carla_client(host=args.host, port=args.port)
             print('Done.')
             return
 
