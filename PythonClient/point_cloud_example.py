@@ -30,7 +30,6 @@ from carla.image_converter import depth_to_local_point_cloud, to_rgb_array
 
 try:
     from . import carla_server_pb2 as carla_protocol
-    from carla_protocol import Transform
 except ImportError:
     raise RuntimeError('cannot import "carla_server_pb2.py", run the protobuf compiler to generate this file')
 
@@ -70,13 +69,13 @@ def run_carla_client(host, port):
         camera2.set_rotation(*camera_local_rotation)
         settings.add_sensor(camera2)
 
-        scene = client.load_settings(settings)
+        client.load_settings(settings)
 
         # Start at location index id '0'
         client.start_episode(0)
 
         # Compute the camera transform matrix
-        camera_to_car = Transform()
+        camera_to_car = carla_protocol.Transform()
         camera_to_car.location.x = camera_local_pos[0]
         camera_to_car.location.y = camera_local_pos[1]
         camera_to_car.location.z = camera_local_pos[2]
@@ -98,7 +97,7 @@ def run_carla_client(host, port):
             measurements, sensor_data = client.read_data()
 
             # Start transformations time mesure.
-            time = StopWatch()
+            timer = StopWatch()
 
             # RGB image [[[r,g,b],..[r,g,b]],..[[r,g,b],..[r,g,b]]]
             image_RGB = to_rgb_array(sensor_data['CameraRGB'])
@@ -143,7 +142,7 @@ def run_carla_client(host, port):
             #   [Xn,Yn,Zn,Rn,Gn,Bn] ]
 
             # End transformations time mesure.
-            time.stop()
+            timer.stop()
 
             # Save PLY to disk
             # This generates the PLY string with the 3D points and the RGB colors
@@ -160,17 +159,17 @@ def run_carla_client(host, port):
             with open('{}/{:0>5}.ply'.format(output_folder, frame), 'w+') as f:
                 f.write('\n'.join([construct_ply_header(len(points_3d), True), ply]))
 
-            print_message(time.milliseconds(), len(points_3d), frame)
+            print_message(timer.milliseconds(), len(points_3d), frame)
 
             client.send_control(
                 measurements.player_measurements.autopilot_control)
 
 
-def print_message(time, point_n, frame):
+def print_message(elapsed_time, point_n, frame):
     message = ' '.join([
         'Transformations took {:>3.0f} ms.',
         'Saved {:>6} points to "{:0>5}.ply."'
-    ]).format(time, point_n, frame)
+    ]).format(elapsed_time, point_n, frame)
     print_over_same_line(message)
 
 
