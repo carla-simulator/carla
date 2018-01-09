@@ -2,21 +2,20 @@ language: python
 
 os: linux
 dist: trusty # xenial is not yet supported.
-python: "3.5"
+
+env: TEST="Pylint"
+python:
+  - "3.5"
+  - "3.6"
+  - "2.7"
+install:
+  - pip install -r PythonClient/requirements.txt
+  - pip install pylint
+script:
+  - pylint --disable=R,C --rcfile=PythonClient/.pylintrc PythonClient/carla PythonClient/*.py
 
 matrix:
   include:
-
-    - env: TEST="Pylint"
-      python:
-        - "2.7"
-        - "3.5"
-        - "3.6"
-      install:
-        - pip install -r PythonClient/requirements.txt
-        - pip install pylint
-      script:
-        - pylint --disable=R,C --rcfile=PythonClient/.pylintrc PythonClient/carla PythonClient/*.py
 
     - env: TEST="CppCheck"
       addons:
@@ -25,4 +24,3 @@ matrix:
             - cppcheck
       script:
         - cppcheck Unreal/CarlaUE4/Source Unreal/CarlaUE4/Plugins/Carla/Source Util/ -iUtil/Build -iUtil/CarlaServer/source/carla/server/carla_server.pb.cc --quiet --error-exitcode=1 --enable=warning
-
