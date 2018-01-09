@@ -18,6 +18,7 @@ matrix:
   include:
 
     - env: TEST="CppCheck"
+      install: true
       addons:
         apt:
           packages:
