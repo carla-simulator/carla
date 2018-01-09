@@ -24,4 +24,4 @@ matrix:
           packages:
             - cppcheck
       script:
-        - cppcheck Unreal/CarlaUE4/Source Unreal/CarlaUE4/Plugins/Carla/Source Util/ -iUtil/Build -iUtil/CarlaServer/source/carla/server/carla_server.pb.cc --quiet --error-exitcode=1 --enable=warning
+        - cppcheck Unreal/CarlaUE4/Source Unreal/CarlaUE4/Plugins/Carla/Source Util/ -iUtil/Build -iUtil/CarlaServer/source/carla/server/carla_server.pb.cc --error-exitcode=1 --enable=warning
