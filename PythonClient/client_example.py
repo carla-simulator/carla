@@ -13,7 +13,6 @@ from __future__ import print_function
 import argparse
 import logging
 import random
-import sys
 import time
 
 from carla.client import make_carla_client
@@ -213,14 +212,10 @@ def main():
                 settings_filepath=args.carla_settings)
 
             print('Done.')
-            return
 
         except TCPConnectionError as error:
             logging.error(error)
             time.sleep(1)
-        except Exception as exception:
-            logging.exception(exception)
-            sys.exit(1)
 
 
 if __name__ == '__main__':
