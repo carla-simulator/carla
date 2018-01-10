@@ -17,3 +17,10 @@ int32 URandomEngine::GenerateRandomSeed()
       std::numeric_limits<int32>::max());
   return Distribution(RandomDevice);
 }
+
+int32 URandomEngine::GenerateSeed()
+{
+  return GetUniformIntInRange(
+      std::numeric_limits<int32>::lowest(),
+      std::numeric_limits<int32>::max());
+}

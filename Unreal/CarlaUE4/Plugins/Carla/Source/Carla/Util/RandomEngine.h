@@ -18,13 +18,19 @@ class URandomEngine : public UObject
 public:
 
   // ===========================================================================
-  /// @name Set and get seed
+  /// @name Seed
   // ===========================================================================
   /// @{
 
+  /// Generate a non-deterministic random seed.
   UFUNCTION(BlueprintCallable)
   static int32 GenerateRandomSeed();
 
+  /// Generate a seed derived from previous seed.
+  UFUNCTION(BlueprintCallable)
+  int32 GenerateSeed();
+
+  /// Seed the random engine.
   UFUNCTION(BlueprintCallable)
   void Seed(int32 InSeed)
   {
