@@ -176,7 +176,8 @@ void ACarlaGameModeBase::BeginPlay()
     VehicleSpawner->SetSeed(CarlaSettings.SeedVehicles);
     VehicleSpawner->SetRoadMap(RoadMap);
     if (PlayerController != nullptr) {
-      PlayerController->SetRandomEngine(VehicleSpawner->GetRandomEngine());
+      PlayerController->GetRandomEngine()->Seed(
+          VehicleSpawner->GetRandomEngine()->GenerateSeed());
     }
   } else {
     UE_LOG(LogCarla, Error, TEXT("Missing vehicle spawner actor!"));

@@ -73,6 +73,8 @@ static void ClearQueue(std::queue<T> &Queue)
 AWheeledVehicleAIController::AWheeledVehicleAIController(const FObjectInitializer& ObjectInitializer) :
   Super(ObjectInitializer)
 {
+  RandomEngine = CreateDefaultSubobject<URandomEngine>(TEXT("RandomEngine"));
+
   PrimaryActorTick.bCanEverTick = true;
   PrimaryActorTick.TickGroup = TG_PrePhysics;
 }

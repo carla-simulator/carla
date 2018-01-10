@@ -98,14 +98,10 @@ public:
   /// @{
 public:
 
-  void SetRandomEngine(URandomEngine *InRandomEngine)
-  {
-    RandomEngine = InRandomEngine;
-  }
-
   UFUNCTION(Category = "Random Engine", BlueprintCallable)
   URandomEngine *GetRandomEngine()
   {
+    check(RandomEngine != nullptr);
     return RandomEngine;
   }
 
@@ -221,13 +217,13 @@ private:
 private:
 
   UPROPERTY()
-  ACarlaWheeledVehicle *Vehicle;
+  ACarlaWheeledVehicle *Vehicle = nullptr;
 
   UPROPERTY()
-  URoadMap *RoadMap;
+  URoadMap *RoadMap = nullptr;
 
   UPROPERTY()
-  URandomEngine *RandomEngine;
+  URandomEngine *RandomEngine = nullptr;
 
   UPROPERTY(VisibleAnywhere)
   bool bAutopilotEnabled = false;
