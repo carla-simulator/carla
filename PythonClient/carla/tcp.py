@@ -39,19 +39,18 @@ class TCPClient(object):
             try:
                 self._socket = socket.create_connection(address=(self._host, self._port), timeout=self._timeout)
                 self._socket.settimeout(self._timeout)
-                logging.debug(self._logprefix + 'connected')
+                logging.debug('%sconnected', self._logprefix)
                 return
-            except Exception as exception:
+            except OSError as exception:
                 error = exception
-                logging.debug(self._logprefix + 'connection attempt %d: %s', attempt, error)
+                logging.debug('%sconnection attempt %d: %s', self._logprefix, attempt, error)
                 time.sleep(1)
-                continue
         self._reraise_exception_as_tcp_error('failed to connect', error)
 
     def disconnect(self):
         """Disconnect any active connection."""
         if self._socket is not None:
-            logging.debug(self._logprefix + 'disconnecting')
+            logging.debug('%sdisconnecting', self._logprefix)
             self._socket.close()
             self._socket = None
 
@@ -66,7 +65,7 @@ class TCPClient(object):
         header = struct.pack('<L', len(message))
         try:
             self._socket.sendall(header + message)
-        except Exception as exception:
+        except OSError as exception:
             self._reraise_exception_as_tcp_error('failed to write data', exception)
 
     def read(self):
@@ -86,7 +85,7 @@ class TCPClient(object):
         while length > 0:
             try:
                 data = self._socket.recv(length)
-            except Exception as exception:
+            except OSError as exception:
                 self._reraise_exception_as_tcp_error('failed to read data', exception)
             if not data:
                 raise TCPConnectionError(self._logprefix + 'connection closed')

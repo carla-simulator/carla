@@ -30,7 +30,6 @@ from __future__ import print_function
 import argparse
 import logging
 import random
-import sys
 import time
 
 try:
@@ -131,6 +130,8 @@ class CarlaGame(object):
         self._map = CarlaMap(city_name) if city_name is not None else None
         self._map_shape = self._map.map_image.shape if city_name is not None else None
         self._map_view = self._map.get_map(WINDOW_HEIGHT) if city_name is not None else None
+        self._position = None
+        self._agent_positions = None
 
     def execute(self):
         """Launch the PyGame."""
@@ -363,9 +364,6 @@ def main():
         except TCPConnectionError as error:
             logging.error(error)
             time.sleep(1)
-        except Exception as exception:
-            logging.exception(exception)
-            sys.exit(1)
 
 
 if __name__ == '__main__':
