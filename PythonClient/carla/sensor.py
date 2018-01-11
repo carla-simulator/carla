@@ -114,7 +114,7 @@ class Image(SensorData):
             size=(self.width, self.height),
             data=self.raw_data,
             decoder_name='raw')
-        b, g, r, a = image.split()
+        b, g, r, _ = image.split()
         image = PImage.merge("RGB", (r, g, b))
 
         folder = os.path.dirname(filename)

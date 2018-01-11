@@ -56,9 +56,9 @@ else:
 
     # Workaround for older Python versions.
     def print_over_same_line(text):
-        line_length = max(print_over_same_line._last_line_length, len(text))
+        line_length = max(print_over_same_line.last_line_length, len(text))
         empty_space = max(0, line_length - len(text))
         sys.stdout.write('\r' + text + empty_space * ' ')
         sys.stdout.flush()
-        print_over_same_line._last_line_length = line_length
-    print_over_same_line._last_line_length = 0
+        print_over_same_line.last_line_length = line_length
+    print_over_same_line.last_line_length = 0
