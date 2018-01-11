@@ -102,7 +102,7 @@ private:
   USceneComponent *SceneRootComponent;
 
   UPROPERTY(Category = "Map Generation", VisibleAnywhere)
-  float MapScale;
+  float MapScale = 1.0f;
 
   UPROPERTY(Category = "Meshes", EditAnywhere)
   TMap<ECityMapMeshTag, UStaticMesh *> StaticMeshes;
