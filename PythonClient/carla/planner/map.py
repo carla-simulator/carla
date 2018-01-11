@@ -38,14 +38,14 @@ class CarlaMap(object):
         city_map_file = os.path.join(dir_path, city + '.png')
         city_map_file_lanes = os.path.join(dir_path, city + 'Lanes.png')
 
-        with open(city_file, 'r') as file:
+        with open(city_file, 'r') as file_object:
 
-            linewordloffset = file.readline()
+            linewordloffset = file_object.readline()
             # The offset of the world from the zero coordinates ( The
             # coordinate we consider zero)
             self.worldoffset = string_to_floats(linewordloffset)
 
-            lineworldangles = file.readline()
+            lineworldangles = file_object.readline()
             self.angles = string_to_floats(lineworldangles)
 
             self.worldrotation = np.array([
@@ -55,14 +55,14 @@ class CarlaMap(object):
 
             # Ignore for now, these are offsets for map coordinates and scale
             # (not used).
-            _ = file.readline()
-            linemapoffset = file.readline()
+            _ = file_object.readline()
+            linemapoffset = file_object.readline()
 
             # The offset of the map zero coordinate.
             self.mapoffset = string_to_floats(linemapoffset)
 
             # the graph resolution.
-            linegraphres = file.readline()
+            linegraphres = file_object.readline()
             self.resolution = string_to_node(linegraphres)
 
         # The number of game units per pixel.

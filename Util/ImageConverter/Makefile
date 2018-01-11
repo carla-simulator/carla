@@ -1,4 +1,4 @@
-CXX=g++
+CXX=clang++
 FLAGS=-Wall -Wextra -std=c++14 -fopenmp
 LIBS=-lboost_system -lboost_filesystem -lboost_program_options -lpng -ljpeg -ltiff
 HEADERS=*.h
