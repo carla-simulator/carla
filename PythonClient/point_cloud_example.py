@@ -18,7 +18,6 @@ import math
 import numpy
 import os
 import random
-import sys
 import time
 
 from carla.client import make_carla_client
@@ -284,9 +283,6 @@ def main():
         except TCPConnectionError as error:
             logging.error(error)
             time.sleep(1)
-        except Exception as exception:
-            logging.exception(exception)
-            sys.exit(1)
 
 
 if __name__ == '__main__':
