@@ -30,7 +30,8 @@ from carla.image_converter import depth_to_local_point_cloud, to_rgb_array
 try:
     from . import carla_server_pb2 as carla_protocol
 except ImportError:
-    raise RuntimeError('cannot import "carla_server_pb2.py", run the protobuf compiler to generate this file')
+    raise RuntimeError(
+        'cannot import "carla_server_pb2.py", run the protobuf compiler to generate this file')
 
 
 def run_carla_client(host, port):
@@ -156,7 +157,8 @@ def run_carla_client(host, port):
 
             # Open the file and save with the specific PLY format.
             with open('{}/{:0>5}.ply'.format(output_folder, frame), 'w+') as f:
-                f.write('\n'.join([construct_ply_header(len(points_3d), True), ply]))
+                f.write(
+                    '\n'.join([construct_ply_header(len(points_3d), True), ply]))
 
             print_message(timer.milliseconds(), len(points_3d), frame)
 
@@ -183,7 +185,44 @@ def compute_transform_matrix(transform):
     )
 
 
-def compute_transform_matrix_raw(x=0, y=0, z=0, pitch=0, roll=0, yaw=0, sX=1, sY=1, sZ=1):
+def compute_transform_matrix_raw(
+        x=0, y=0, z=0,           # Translation
+        pitch=0, roll=0, yaw=0,  # Rotation
+        sX=1, sY=1, sZ=1):       # Scale
+    """
+    Unreal Transform Matrix:
+    m = Translation * Yaw * Pitch * Roll * Scale
+
+    # Translation ####
+    [  1   0   0   x ]
+    [  0   1   0   y ]
+    [  0   0   1   z ]
+    [  0   0   0   1 ]
+
+    # Yaw ############
+    [ cy -sy   0   0 ]
+    [ sy  cy   0   0 ]
+    [  0   0   1   0 ]
+    [  0   0   0   1 ]
+
+    # Pitch ##########
+    [ cp   0 -sp   0 ]
+    [  0   1   0   0 ]
+    [ sp   0  cp   0 ]
+    [  0   0   0   1 ]
+
+    # Roll ###########
+    [  1   0   0   0 ]
+    [  0  cr  sr   0 ]
+    [  0 -sr  cr   0 ]
+    [  0   0   0   1 ]
+
+    # Scale ##########
+    [ sX   0   0   0 ]
+    [  0  sY   0   0 ]
+    [  0   0  sZ   0 ]
+    [  0   0   0   1 ]
+    """
     # Yaw
     cy = math.cos(numpy.radians(yaw))
     sy = math.sin(numpy.radians(yaw))
@@ -199,7 +238,7 @@ def compute_transform_matrix_raw(x=0, y=0, z=0, pitch=0, roll=0, yaw=0, sX=1, sY
     m[0, 3] = x
     m[1, 3] = y
     m[2, 3] = z
-    # Rotation
+    # Scale and rotation
     m[0, 0] = sX * (cp * cy)
     m[0, 1] = sY * (cy * sp*sr - sy * cr)
     m[0, 2] = -sZ * (cy * sp * cr + sy * sr)
@@ -209,7 +248,6 @@ def compute_transform_matrix_raw(x=0, y=0, z=0, pitch=0, roll=0, yaw=0, sX=1, sY
     m[2, 0] = sX * (sp)
     m[2, 1] = -sY * (cp * sr)
     m[2, 2] = sZ * (cp * cr)
-
     return m
 
 
