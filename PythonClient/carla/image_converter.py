@@ -154,6 +154,7 @@ def depth_to_local_point_cloud(image, color=None, max_depth=0.9):
     # Formating the output to:
     # [[X1,Y1,Z1,R1,G1,B1],[X2,Y2,Z2,R2,G2,B2], ... [Xn,Yn,Zn,Rn,Gn,Bn]]
     if color is not None:
-        return numpy.concatenate((numpy.transpose(p3d), color), axis=1)
+        # numpy.concatenate((numpy.transpose(p3d), color), axis=1)
+        return sensor.PointCloud(numpy.transpose(p3d), color_array=color)
     # [[X1,Y1,Z1],[X2,Y2,Z2], ... [Xn,Yn,Zn]]
-    return numpy.transpose(p3d)
+    return sensor.PointCloud(numpy.transpose(p3d))

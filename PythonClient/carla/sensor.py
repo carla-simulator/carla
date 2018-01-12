@@ -8,11 +8,12 @@
 
 
 import os
+import numpy
 
 from collections import namedtuple
 
 # ==============================================================================
-# -- Helpers -------------------------------------------------------------------
+# -- Helpers -------------------------------------------------------------
 # ==============================================================================
 
 
@@ -25,7 +26,7 @@ Point.__new__.__defaults__ = (0.0, 0.0, 0.0, None)
 
 
 # ==============================================================================
-# -- Sensor --------------------------------------------------------------------
+# -- Sensor --------------------------------------------------------------
 # ==============================================================================
 
 
@@ -78,7 +79,7 @@ class Camera(Sensor):
 
 
 # ==============================================================================
-# -- SensorData ----------------------------------------------------------------
+# -- SensorData ----------------------------------------------------------
 # ==============================================================================
 
 
@@ -121,7 +122,8 @@ class Image(SensorData):
         try:
             from PIL import Image as PImage
         except ImportError:
-            raise RuntimeError('cannot import PIL, make sure pillow package is installed')
+            raise RuntimeError(
+                'cannot import PIL, make sure pillow package is installed')
 
         image = PImage.frombytes(
             mode='RGBA',
@@ -140,34 +142,93 @@ class Image(SensorData):
 class PointCloud(SensorData):
     """A list of points."""
 
-    def __init__(self, array):
+    def __init__(self, array, color_array=None):
         self._array = array
-        self._has_colors = len(self) > 0 and len(self.array[0]) == 6
+        self._color_array = color_array
+        self._has_colors = color_array is not None
 
     @property
     def array(self):
-        """The numpy array holding the point-cloud."""
+        """The numpy array holding the point-cloud.
+
+        3D points format for n elements:
+        [ [X0,Y0,Z0],
+          ...,
+          [Xn,Yn,Zn] ]
+        """
         return self._array
+
+    @property
+    def color_array(self):
+        """The numpy array holding the colors corresponding to each point.
+        It is None if there are no colors.
+
+        Colors format for n elements:
+        [ [R0,G0,B0],
+          ...,
+          [Rn,Gn,Bn] ]
+        """
+        return self._color_array
 
     def has_colors(self):
         """Return whether the points have color."""
         return self._has_colors
 
+    def apply_transform(self, transformation):
+        """Modify the PointCloud instance transforming its points"""
+        self._array = transformation.transform_points(self._array)
+
     def save_to_disk(self, filename):
         """Save this point-cloud to disk as PLY format."""
-        raise NotImplementedError
+
+        def construct_ply_header():
+            """Generates a PLY header given a total number of 3D points and
+            coloring property if specified
+            """
+            points = len(self)  # Total point number
+            header = ['ply',
+                      'format ascii 1.0',
+                      'element vertex {}',
+                      'property float32 x',
+                      'property float32 y',
+                      'property float32 z',
+                      'property uchar diffuse_red',
+                      'property uchar diffuse_green',
+                      'property uchar diffuse_blue',
+                      'end_header']
+            if not self._has_colors:
+                return '\n'.join(header[0:6] + [header[-1]]).format(points)
+            return '\n'.join(header).format(points)
+
+        if not self._has_colors:
+            ply = '\n'.join(['{:.2f} {:.2f} {:.2f}'.format(
+                *p) for p in self._array.tolist()])
+        else:
+            points_3d = numpy.concatenate((self._array, self._color_array), axis=1)
+            ply = '\n'.join(['{:.2f} {:.2f} {:.2f} {:.0f} {:.0f} {:.0f}'.format(
+                *p) for p in points_3d.tolist()])
+
+        # Create folder to save if does not exist.
+        folder = os.path.dirname(filename)
+        if not os.path.isdir(folder):
+            os.makedirs(folder)
+
+        # Open the file and save with the specific PLY format.
+        with open(filename, 'w+') as ply_file:
+            ply_file.write('\n'.join([construct_ply_header(), ply]))
 
     def __len__(self):
         return len(self.array)
 
     def __getitem__(self, key):
-        point = self.array[key]
-        if self._has_colors:
-            return Point(*point[:3], color=Color(*point[3:]))
-        return Point(*point)
+        color = None if self._color_array is None else Color(
+            *self._color_array[key])
+        return Point(*self._array[key], color=color)
 
     def __iter__(self):
         class PointIterator(object):
+            """Iterator class for PointCloud"""
+
             def __init__(self, point_cloud):
                 self.point_cloud = point_cloud
                 self.index = -1
