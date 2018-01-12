@@ -13,12 +13,12 @@ def string_to_floats(string):
 
 
 def sldist(c1, c2):
-    return math.sqrt((c2[0] - c1[0])**2 + (c2[1] - c1[1])**2)
+    return math.sqrt((c2[0] - c1[0]) ** 2 + (c2[1] - c1[1]) ** 2)
 
 
 def sldist3(c1, c2):
-    return math.sqrt((c2[0] - c1[0])**2 + (c2[1] - c1[1])
-                     ** 2 + (c2[2] - c1[2])**2)
+    return math.sqrt((c2[0] - c1[0]) ** 2 + (c2[1] - c1[1])
+                     ** 2 + (c2[2] - c1[2]) ** 2)
 
 
 class Graph(object):
@@ -72,14 +72,12 @@ class Graph(object):
             sorted(distance_dic.items()))
 
         self._angles[node] = heading
-        for k, v in distance_dic.iteritems():
-
-
+        for k, v in distance_dic.items():
             start_to_goal = np.array([node[0] - v[0], node[1] - v[1]])
 
             print(start_to_goal)
 
-            self.angles[v] = start_to_goal / np.linalg.norm(start_to_goal)
+            self._angles[v] = start_to_goal / np.linalg.norm(start_to_goal)
 
     def add_edge(self, from_node, to_node, distance):
         self._add_edge(from_node, to_node, distance)
@@ -88,6 +86,11 @@ class Graph(object):
         self._edges.setdefault(from_node, [])
         self._edges[from_node].append(to_node)
         self._distances[(from_node, to_node)] = distance
+
+    def get_resolution(self):
+        return self._resolution
+    def get_edges(self):
+        return self._edges
 
     def intersection_nodes(self):
 
@@ -111,7 +114,7 @@ class Graph(object):
         line_len = 1
 
         lines = [[(p[0], p[1]), (p[0] + line_len * self._angles[p][0],
-                                 p[1] + line_len * self._angles[p][1])] for p in self.nodes]
+                                 p[1] + line_len * self._angles[p][1])] for p in self._nodes]
         lc = mc.LineCollection(lines, linewidth=2, color='green')
         fig, ax = plt.subplots()
         ax.add_collection(lc)

@@ -68,7 +68,7 @@ def get_distance_traveled(selected_matrix, header):
 
         i += 1
 
-    return (float(acummulated_distance)/float(100*1000))
+    return float(acummulated_distance)/float(100*1000)
 
 
 

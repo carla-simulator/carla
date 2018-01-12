@@ -1,8 +1,7 @@
 import math
 import numpy as np
 
-from carla.planner.graph import string_to_node,string_to_floats
-
+from carla.planner.graph import string_to_floats
 
 # Constant definition enumeration
 
@@ -18,7 +17,6 @@ class Converter(object):
         self._node_density = node_density
         self._pixel_density = pixel_density
         with open(city_file, 'r') as f:
-
             # The offset of the world from the zero coordinates ( The
             # coordinate we consider zero)
             self._worldoffset = string_to_floats(f.readline())
@@ -38,13 +36,12 @@ class Converter(object):
             # The offset of the map zero coordinate.
             self._mapoffset = string_to_floats(f.readline())
 
-    def convert_to_node(self,input_data):
+    def convert_to_node(self, input_data):
         """
         Receives a data type (Can Be Pixel or World )
         :param input_data: position in some coordinate
         :return: A vector representing a node
         """
-
 
         input_type = self._check_input_type(input_data)
         if input_type == PIXEL:
@@ -54,9 +51,7 @@ class Converter(object):
         else:
             raise ValueError('Invalid node to be converted')
 
-
-
-    def convert_to_pixel(self,input_data):
+    def convert_to_pixel(self, input_data):
 
         """
         Receives a data type (Can Be Node or World )
@@ -72,8 +67,7 @@ class Converter(object):
         else:
             raise ValueError('Invalid node to be converted')
 
-
-    def convert_to_world(self,input_data):
+    def convert_to_world(self, input_data):
 
         """
         Receives a data type (Can Be Pixel or Node )
@@ -109,22 +103,22 @@ class Converter(object):
             , int(((pixel[1]) / self._node_density) - 2)]
 
         return tuple(node)
-    def _pixel_to_world(self,pixel):
+
+    def _pixel_to_world(self, pixel):
         """
         Conversion from pixel format (image) to world (3D)
         :param pixel:
         :return: world
         """
 
-
-        relative_location = [ pixel[0] * self._pixel_density,
+        relative_location = [pixel[0] * self._pixel_density,
                              pixel[1] * self._pixel_density]
 
         world = [
             relative_location[0] + self._mapoffset[0] - self._worldoffset[0],
             relative_location[1] + self._mapoffset[1] - self._worldoffset[1],
             22
-            ]
+        ]
 
         return world
 
@@ -139,11 +133,11 @@ class Converter(object):
         rotation = rotation.dot(self._worldrotation)
 
         relative_location = [rotation[0] + self._worldoffset[0] - self._mapoffset[0],
-            rotation[1] + self._worldoffset[1] - self._mapoffset[1],
-            rotation[2] + self._worldoffset[2] - self._mapoffset[2]]
+                             rotation[1] + self._worldoffset[1] - self._mapoffset[1],
+                             rotation[2] + self._worldoffset[2] - self._mapoffset[2]]
 
         pixel = [math.floor(relative_location[0] / float(self._pixel_density)),
-             math.floor(relative_location[1] / float(self._pixel_density))]
+                 math.floor(relative_location[1] / float(self._pixel_density))]
 
         return pixel
 
@@ -161,5 +155,3 @@ class Converter(object):
             return NODE
         else:
             return PIXEL
-
-

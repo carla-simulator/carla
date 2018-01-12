@@ -1,5 +1,6 @@
 import heapq
 
+
 class Cell(object):
     def __init__(self, x, y, reachable):
         """Initialize new cell.
@@ -20,7 +21,6 @@ class Cell(object):
         self.h = 0
         self.f = 0
 
-
     def __lt__(self, other):
         return self.g < other.g
 
@@ -36,6 +36,8 @@ class AStar(object):
         self.cells = []
         self.grid_height = None
         self.grid_width = None
+        self.start = None
+        self.end = None
 
     def init_grid(self, width, height, walls, start, end):
         """Prepare grid cells, walls.
@@ -85,14 +87,14 @@ class AStar(object):
         @returns adjacent cells list.
         """
         cells = []
-        if cell.x < self.grid_width-1:
-            cells.append(self.get_cell(cell.x+1, cell.y))
+        if cell.x < self.grid_width - 1:
+            cells.append(self.get_cell(cell.x + 1, cell.y))
         if cell.y > 0:
-            cells.append(self.get_cell(cell.x, cell.y-1))
+            cells.append(self.get_cell(cell.x, cell.y - 1))
         if cell.x > 0:
-            cells.append(self.get_cell(cell.x-1, cell.y))
-        if cell.y < self.grid_height-1:
-            cells.append(self.get_cell(cell.x, cell.y+1))
+            cells.append(self.get_cell(cell.x - 1, cell.y))
+        if cell.y < self.grid_height - 1:
+            cells.append(self.get_cell(cell.x, cell.y + 1))
         return cells
 
     def get_path(self):
