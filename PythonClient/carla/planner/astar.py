@@ -128,7 +128,7 @@ class AStar(object):
         heapq.heappush(self.opened, (self.start.f, self.start))
         while len(self.opened):
             # pop cell from heap queue
-            f, cell = heapq.heappop(self.opened)
+            _, cell = heapq.heappop(self.opened)
             # add cell to closed list so we don't process it twice
             self.closed.add(cell)
             # if ending cell, return found path

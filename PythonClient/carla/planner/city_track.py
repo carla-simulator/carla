@@ -84,7 +84,7 @@ class CityTrack(object):
         route = a_star.solve()
 
         # JuSt a Corner Case
-        # TODO: Clean this to avoid having to use this function
+        # Clean this to avoid having to use this function
         if route is None:
             a_star = AStar()
             a_star.init_grid(self._map.get_graph_resolution()[0],
