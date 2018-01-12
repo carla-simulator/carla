@@ -9,6 +9,20 @@
 
 import os
 
+from collections import namedtuple
+
+# ==============================================================================
+# -- Helpers -------------------------------------------------------------------
+# ==============================================================================
+
+
+Color = namedtuple('Color', 'r g b')
+Color.__new__.__defaults__ = (0, 0, 0)
+
+
+Point = namedtuple('Point', 'x y z color')
+Point.__new__.__defaults__ = (0.0, 0.0, 0.0, None)
+
 
 # ==============================================================================
 # -- Sensor --------------------------------------------------------------------
@@ -121,3 +135,50 @@ class Image(SensorData):
         if not os.path.isdir(folder):
             os.makedirs(folder)
         image.save(filename)
+
+
+class PointCloud(SensorData):
+    """A list of points."""
+
+    def __init__(self, array):
+        self._array = array
+        self._has_colors = len(self) > 0 and len(self.array[0]) == 6
+
+    @property
+    def array(self):
+        """The numpy array holding the point-cloud."""
+        return self._array
+
+    def has_colors(self):
+        """Return whether the points have color."""
+        return self._has_colors
+
+    def save_to_disk(self, filename):
+        """Save this point-cloud to disk as PLY format."""
+        raise NotImplementedError
+
+    def __len__(self):
+        return len(self.array)
+
+    def __getitem__(self, key):
+        point = self.array[key]
+        if self._has_colors:
+            return Point(*point[:3], color=Color(*point[3:]))
+        return Point(*point)
+
+    def __iter__(self):
+        class PointIterator(object):
+            def __init__(self, point_cloud):
+                self.point_cloud = point_cloud
+                self.index = -1
+
+            def __next__(self):
+                self.index += 1
+                if self.index >= len(self.point_cloud):
+                    raise StopIteration
+                return self.point_cloud[self.index]
+
+        return PointIterator(self)
+
+    def __str__(self):
+        return str(self.array)
