@@ -9,7 +9,6 @@
 import math
 import os
 
-
 try:
     import numpy as np
 except ImportError:
@@ -21,12 +20,14 @@ except ImportError:
     raise RuntimeError('cannot import PIL, make sure pillow package is installed')
 
 from carla.planner.graph import Graph
+from carla.planner.graph import sldist
 from carla.planner.grid import Grid
 from carla.planner.converter import Converter
 
 
 def color_to_angle(color):
-    return ((float(color)/255.0)) * 2*math.pi
+    return ((float(color) / 255.0)) * 2 * math.pi
+
 
 class CarlaMap(object):
 
@@ -48,8 +49,6 @@ class CarlaMap(object):
 
         self._converter = Converter(city_file, pixel_density, node_density)
 
-
-
         # Load the lanes image
         self.map_image_lanes = Image.open(city_map_file_lanes)
         self.map_image_lanes.load()
@@ -64,18 +63,17 @@ class CarlaMap(object):
         self.map_image_center.load()
         self.map_image_center = np.asarray(self.map_image_center, dtype="int32")
 
-
     def get_graph_resolution(self):
 
-        return self._graph._resolution
+        return self._graph.get_resolution()
 
     def get_map(self, height=None):
         if height is not None:
             img = Image.fromarray(self.map_image.astype(np.uint8))
 
-            aspect_ratio = height/float(self.map_image.shape[0])
+            aspect_ratio = height / float(self.map_image.shape[0])
 
-            img = img.resize((int(aspect_ratio*self.map_image.shape[1]),height), Image.ANTIALIAS)
+            img = img.resize((int(aspect_ratio * self.map_image.shape[1]), height), Image.ANTIALIAS)
             img.load()
             return np.asarray(img, dtype="int32")
         return np.fliplr(self.map_image)
@@ -97,31 +95,29 @@ class CarlaMap(object):
 
         return (-math.cos(ori), -math.sin(ori))
 
-    def convert_to_node(self, input):
+    def convert_to_node(self, input_data):
         """
         Receives a data type (Can Be Pixel or World )
-        :param input: position in some coordinate
+        :param input_data: position in some coordinate
         :return: A node object
         """
-        return self._converter.convert_to_node(input)
+        return self._converter.convert_to_node(input_data)
 
-    def convert_to_pixel(self, input):
+    def convert_to_pixel(self, input_data):
         """
         Receives a data type (Can Be Pixel or World )
-        :param input: position in some coordinate
+        :param input_data: position in some coordinate
         :return: A node object
         """
-        return self._converter.convert_to_pixel(input)
+        return self._converter.convert_to_pixel(input_data)
 
-    def convert_to_world(self, input):
+    def convert_to_world(self, input_data):
         """
         Receives a data type (Can Be Pixel or World )
-        :param input: position in some coordinate
+        :param input_data: position in some coordinate
         :return: A node object
         """
-        return self._converter.convert_to_world(input)
-
-
+        return self._converter.convert_to_world(input_data)
 
     def get_walls_directed(self, node_source, source_ori, node_target, target_ori):
         """
@@ -134,23 +130,23 @@ class CarlaMap(object):
         final_walls = self._grid.get_wall_source(node_source, source_ori, node_target)
 
         final_walls = final_walls.union(self._grid.get_wall_target(
-                node_target, target_ori, node_source))
+            node_target, target_ori, node_source))
         return final_walls
-
 
     def get_walls(self):
 
-        return self._grid._walls
-
-
+        return self._grid.get_walls()
 
     def get_distance_closest_node(self, pos):
 
         distance = []
-        for node_iter in self.graph.intersection_nodes():
-
+        for node_iter in self._graph.intersection_nodes():
             distance.append(sldist(node_iter, pos))
 
         return sorted(distance)[0]
 
+    def get_intersection_nodes(self):
+        return self._graph.intersection_nodes()
 
+    def search_on_grid(self,node):
+        return self._grid.search_on_grid(node[0], node[1])

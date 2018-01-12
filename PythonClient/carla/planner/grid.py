@@ -14,25 +14,26 @@ class Grid(object):
         self._structure = self._make_structure()
         self._walls = self._make_walls()
 
-
     def search_on_grid(self, x, y):
         visit = [[0, 1], [0, -1], [1, 0], [1, 1],
                  [1, -1], [-1, 0], [-1, 1], [-1, -1]]
         c_x, c_y = x, y
         scale = 1
-        while(self._structure[c_x, c_y] != 0):
+        while self._structure[c_x, c_y] != 0:
             for offset in visit:
                 c_x, c_y = x + offset[0] * scale, y + offset[1] * scale
 
-                if c_x >= 0 and c_x < self._graph._resolution[
-                        0] and c_y >= 0 and c_y < self._graph._resolution[1]:
+                if c_x >= 0 and c_x < self._graph.get_resolution()[
+                    0] and c_y >= 0 and c_y < self._graph.get_resolution()[1]:
                     if self._structure[c_x, c_y] == 0:
                         break
                 else:
                     c_x, c_y = x, y
             scale += 1
 
-        return (c_x, c_y)
+        return c_x, c_y
+    def get_walls(self):
+        return self._walls
 
     def get_wall_source(self, pos, pos_ori, target):
 
@@ -46,9 +47,7 @@ class Grid(object):
             start_to_goal = np.array([adj[0] - pos[0], adj[1] - pos[1]])
             angle = angle_between(heading_start, start_to_goal)
             if (angle > 1.6 and adj != target):
-
                 final_walls.add((adj[0], adj[1]))
-
 
         return final_walls
 
@@ -63,9 +62,7 @@ class Grid(object):
             angle = angle_between(heading_start, start_to_goal)
 
             if (angle < 1.0 and adj != source):
-
                 final_walls.add((adj[0], adj[1]))
-
 
         return final_walls
 
@@ -84,21 +81,19 @@ class Grid(object):
         for i in range(xi, xf + 1):
 
             for j in range(yi, yf + 1):
-
                 grid[i, j] = 0.0
 
         return grid
 
     def _make_structure(self):
         structure = np.ones(
-            (self._graph._resolution[0],
-             self._graph._resolution[1]))
+            (self._graph.get_resolution()[0],
+             self._graph.get_resolution()[1]))
 
-        for key, connections in self._graph._edges.items():
+        for key, connections in self._graph.get_edges().items():
 
             # draw a line
             for con in connections:
-
                 # print key[0],key[1],con[0],con[1]
                 structure = self._draw_line(
                     structure, key[0], key[1], con[0], con[1])
@@ -125,8 +120,8 @@ class Grid(object):
         for offset in visit:
             node = (pos[0] + offset[0], pos[1] + offset[1])
 
-            if (node[0] >= 0 and node[0] < self._graph._resolution[0]
-                    and node[1] >= 0 and node[1] < self._graph._resolution[1]):
+            if (node[0] >= 0 and node[0] < self._graph.get_resolution()[0]
+                    and node[1] >= 0 and node[1] < self._graph.get_resolution()[1]):
 
                 if self._structure[node[0], node[1]] == 0.0:
                     adjacent.add(node)

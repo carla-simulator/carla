@@ -1,9 +1,7 @@
 import collections
 import math
 
-
 import numpy as np
-
 
 from . import city_track
 
@@ -28,7 +26,7 @@ def angle_between(v1, v2):
     return np.arccos(np.dot(v1, v2) / np.linalg.norm(v1) / np.linalg.norm(v2))
 
 
-def sldist(c1, c2): return math.sqrt((c2[0] - c1[0])**2 + (c2[1] - c1[1])**2)
+def sldist(c1, c2): return math.sqrt((c2[0] - c1[0]) ** 2 + (c2[1] - c1[1]) ** 2)
 
 
 def signal(v1, v2):
@@ -43,7 +41,6 @@ class Planner(object):
 
         self._commands = []
 
-
     def get_next_command(self, source, source_ori, target, target_ori):
         """
         Computes the full plan and returns the next command,
@@ -54,8 +51,8 @@ class Planner(object):
         :return: a command ( Straight,Lane Follow, Left or Right)
         """
 
-        track_source = self._city_track.project_node(source, source_ori)
-        track_target = self._city_track.project_node(target, target_ori)
+        track_source = self._city_track.project_node(source)
+        track_target = self._city_track.project_node(target)
 
         # reach the goal
 
@@ -100,8 +97,8 @@ class Planner(object):
             target_ori):
 
         distance = 0
-        track_source = self._city_track.project_node(source, source_ori)
-        track_target = self._city_track.project_node(target, target_ori)
+        track_source = self._city_track.project_node(source)
+        track_target = self._city_track.project_node(target)
 
         current_pos = track_source
 
@@ -112,30 +109,26 @@ class Planner(object):
             return 0.0
 
         for node_iter in route:
-
             distance += sldist(node_iter, current_pos)
             current_pos = node_iter
 
         # We multiply by these values to convert distance to world coordinates
         return distance * self._city_track.get_pixel_density() \
-            * self._city_track.get_node_density()
-
+               * self._city_track.get_node_density()
 
     def is_there_posible_route(self, source, source_ori, target, target_ori):
 
-        track_source = self._city_track.project_node(source, source_ori)
-        track_target = self._city_track.project_node(target, target_ori)
+        track_source = self._city_track.project_node(source)
+        track_target = self._city_track.project_node(target)
 
         return not self._city_track.compute_route(
             track_source, source_ori, track_target, target_ori) is None
 
-    def test_position(self, source, source_ori):
+    def test_position(self, source):
 
-        node_source = self._city_track.project_node(source, source_ori)
+        node_source = self._city_track.project_node(source)
 
-        return self.is_away_from_intersection(node_source)
-
-
+        return self._city_track.is_away_from_intersection(node_source)
 
     def _route_to_commands(self, route):
 
@@ -146,11 +139,10 @@ class Planner(object):
         :return: list of commands encoded from 0-5
         """
 
-
         commands_list = []
 
         for i in range(0, len(route)):
-            if route[i] not in self._city_track._map._graph.intersection_nodes():
+            if route[i] not in self._city_track.get_intersection_nodes():
                 continue
 
             current = route[i]
@@ -162,7 +154,6 @@ class Planner(object):
             current_to_future = np.array(
                 [future[0] - current[0], future[1] - current[1]])
             angle = signal(current_to_future, past_to_current)
-
 
             if angle < -0.1:
                 command = TURN_RIGHT
