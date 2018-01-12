@@ -122,18 +122,21 @@ class CarlaSettings(object):
         return text.getvalue().replace(' = ', '=')
 
 
-def _get_sensor_names(settings):
+def get_sensor_names(settings):
     """
     Return a list with the names of the sensors defined in the settings object.
     The settings object can be a CarlaSettings or an INI formatted string.
     """
     if isinstance(settings, CarlaSettings):
+        # pylint: disable=protected-access
         return [camera.CameraName for camera in settings._cameras]
     ini = ConfigParser()
-    if sys.version_info >= (3, 0):
-        ini.readfp(io.StringIO(settings))
+    if sys.version_info >= (3, 2):
+        ini.read_string(settings)
+    elif sys.version_info >= (3, 0):
+        ini.readfp(io.StringIO(settings)) # pylint: disable=deprecated-method
     else:
-        ini.readfp(io.BytesIO(settings))
+        ini.readfp(io.BytesIO(settings)) # pylint: disable=deprecated-method
 
     section_name = 'CARLA/SceneCapture'
     option_name = 'Cameras'

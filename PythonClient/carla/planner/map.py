@@ -49,7 +49,6 @@ class CarlaMap(object):
         self._converter = Converter(city_file, pixel_density, node_density)
 
 
-
         # Load the lanes image
         self.map_image_lanes = Image.open(city_map_file_lanes)
         self.map_image_lanes.load()
