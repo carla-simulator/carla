@@ -35,9 +35,9 @@ class Graph(object):
         self._node_density = node_density
 
         if graph_file is not None:
-            with open(graph_file, 'r') as file:
+            with open(graph_file, 'r') as f:
                 # Skipe the first four lines that
-                lines_after_4 = file.readlines()[4:]
+                lines_after_4 = f.readlines()[4:]
 
                 # the graph resolution.
                 linegraphres = lines_after_4[0]
@@ -72,7 +72,7 @@ class Graph(object):
             sorted(distance_dic.items()))
 
         self._angles[node] = heading
-        for k, v in distance_dic.items():
+        for _, v in distance_dic.items():
             start_to_goal = np.array([node[0] - v[0], node[1] - v[1]])
 
             print(start_to_goal)
@@ -116,7 +116,7 @@ class Graph(object):
         lines = [[(p[0], p[1]), (p[0] + line_len * self._angles[p][0],
                                  p[1] + line_len * self._angles[p][1])] for p in self._nodes]
         lc = mc.LineCollection(lines, linewidth=2, color='green')
-        fig, ax = plt.subplots()
+        _, ax = plt.subplots()
         ax.add_collection(lc)
 
         ax.autoscale()

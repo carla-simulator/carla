@@ -16,7 +16,7 @@ from carla.planner.planner import Planner
 
 class Agent(object):
     def __init__(self, city_name):
-        __metaclass__ = abc.ABCMeta  # Try to remove
+        self.__metaclass__ = abc.ABCMeta
         self._planner = Planner(city_name)
 
     def get_distance(self, start_point, end_point):

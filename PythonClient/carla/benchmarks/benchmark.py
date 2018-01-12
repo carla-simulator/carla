@@ -40,7 +40,7 @@ class Benchmark(object):
             continue_experiment=False,
             save_images=False):
 
-        __metaclass__ = abc.ABCMeta
+        self.__metaclass__ = abc.ABCMeta
 
         self._city_name = city_name
 
