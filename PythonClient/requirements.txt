@@ -2,3 +2,5 @@ Pillow
 numpy
 protobuf
 pygame
+matplotlib
+builtins

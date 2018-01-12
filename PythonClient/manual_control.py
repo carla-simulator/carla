@@ -127,7 +127,7 @@ class CarlaGame(object):
         self._map_view = None
         self._is_on_reverse = False
         self._city_name = city_name
-        self._map = CarlaMap(city_name) if city_name is not None else None
+        self._map = CarlaMap(city_name, 16.43, 50.0) if city_name is not None else None
         self._map_shape = self._map.map_image.shape if city_name is not None else None
         self._map_view = self._map.get_map(WINDOW_HEIGHT) if city_name is not None else None
         self._position = None
