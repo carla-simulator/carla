@@ -178,6 +178,9 @@ class PointCloud(SensorData):
                     raise StopIteration
                 return self.point_cloud[self.index]
 
+            def next(self):
+                return self.__next__()
+
         return PointIterator(self)
 
     def __str__(self):
