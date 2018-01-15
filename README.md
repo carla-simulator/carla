@@ -55,6 +55,13 @@ Felipe Codevilla, Antonio Lopez, Vladlen Koltun; PMLR 78:1-16
 }
 ```
 
+Contributing
+------------
+
+Please take a look at our [Contribution guidelines][contriblink].
+
+[contriblink]: http://carla.readthedocs.io/en/latest/CONTRIBUTING
+
 License
 -------
 
