@@ -17,6 +17,7 @@ pages:
   - 'How to add Automotive Materials': 'how_to_add_automotive_materials.md'
 - Contributing:
   - 'Contribution guidelines': 'CONTRIBUTING.md'
+  - 'Code of conduct': 'CODE_OF_CONDUCT.md'
 - Development:
   - 'Map customization': 'map_customization.md'
   - 'How to add assets': 'how_to_add_assets.md'
