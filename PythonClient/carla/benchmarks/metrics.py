@@ -101,13 +101,13 @@ def get_out_of_road_lane(selected_matrix, header):
 
 
 
-def compute_summary(file, dynamic_episodes):
+def compute_summary(filename, dynamic_episodes):
 
     # Separate the PATH and the basename
-    path = os.path.dirname(file)
-    base_name = os.path.basename(file)
+    path = os.path.dirname(filename)
+    base_name = os.path.basename(filename)
 
-    f = open(file, "rb")
+    f = open(filename, "rb")
     header = f.readline()
     header = header.split(',')
     header[-1] = header[-1][:-2]
@@ -119,7 +119,7 @@ def compute_summary(file, dynamic_episodes):
     header_rewards[-1] = header_rewards[-1][:-2]
     f.close()
 
-    data_matrix = np.loadtxt(open(file, "rb"), delimiter=",", skiprows=1)
+    data_matrix = np.loadtxt(open(filename, "rb"), delimiter=",", skiprows=1)
 
     tasks = np.unique(data_matrix[:, header.index('exp_id')])
 

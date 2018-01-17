@@ -87,6 +87,3 @@ if __name__ == '__main__':
         except TCPConnectionError as error:
             logging.error(error)
             time.sleep(1)
-        except Exception as exception:
-            logging.exception(exception)
-            sys.exit(1)

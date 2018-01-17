@@ -59,13 +59,13 @@ class CoRL2017(Benchmark):
 
                     print('    AvG  -> ', float(sum(tasks)) / float(len(tasks)))
 
-    def _calculate_time_out(self, path_distance):
+    def _calculate_time_out(self, distance):
         """
         Function to return the timeout ( in miliseconds) that is calculated based on distance to goal.
         This is the same timeout as used on the CoRL paper.
         """
 
-        return ((path_distance / 100000.0) / 10.0) * 3600.0 + 10.0
+        return ((distance / 100000.0) / 10.0) * 3600.0 + 10.0
 
     def _poses_town01(self):
         """
