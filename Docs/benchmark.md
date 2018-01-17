@@ -1,9 +1,6 @@
 CARLA Benchmark
 ===============
 
-!!! important
-    Benchmark code is currently in beta and can be found only in the
-    `benchmark_branch`.
 
 Running the Benchmark
 ---------------------
@@ -13,8 +10,6 @@ tests on a certain agent. We already provide the same benchmark used in the CoRL
 2017 paper. By running this benchmark you can compare the results of your agent
 to the results obtained by the agents show in the paper.
 
-!!! important
-    Currently not tested on python 3
 
 Besides the requirements of the CARLA client, the benchmark package also needs
 the future package
@@ -34,3 +29,39 @@ or
 Run the help command to see options available
 
     $ ./run_benchmark.py --help
+
+Benchmarking your Agent
+---------------------
+The benchmark works by calling three lines of code
+
+    corl = CoRL2017(city_name=args.city_name, name_to_save=args.log_name)
+    agent = Manual(args.city_name)
+    results = corl.benchmark_agent(agent, client)
+
+This is excerpted is executed in the run_benchmark.py example.
+
+First a benchmark object is defined. This is the object that is used to benchmark a certain Agent.
+
+On the second line of our sample code. There is an object of a Manual class instanced. This class inherited an Agent base class
+that is used on the benchmarked.
+To be benchmarked an Agent subclass must redefine the *run_step* function as it is done in the following excerpt:
+
+    def run_step(self, measurements, sensor_data, target):
+        """
+        Function to run a control step in the CARLA vehicle.
+		:param measurements: object of the Measurements type
+		:param sensor_data: images list object
+		:param target: target position of Transform type
+	    :return: an object of the control type.
+	    """
+        control = VehicleControl()
+        control.throttle = 0.9
+        return control
+
+The [measurements](https://github.com/carla-simulator/carla/blob/master/Docs/measurements.md), [target](https://github.com/carla-simulator/carla/blob/master/Docs/measurements.md), [sensor_data](https://github.com/carla-simulator/carla/blob/master/Docs/cameras_and_sensors.m) and [control](https://github.com/carla-simulator/carla/blob/master/Docs/measurements.md) types are described at the documentation.
+
+The function receives measurements from the world, sensor data and a target position. With this the function must return a control to the car, *i.e.* steering value, throttle value, brake value, etc.
+
+Creating your Benchmark
+---------------------
+Tutorial to be added
