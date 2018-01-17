@@ -1,11 +1,10 @@
 
 from carla.settings import CarlaSettings
-from carla.sensor import Camera
 
 
 class Experiment(object):
 
-    def __init__(self, **kwargs):
+    def __init__(self):
         self.Id = ''
         self.Conditions = CarlaSettings()
         self.Poses = [[]]

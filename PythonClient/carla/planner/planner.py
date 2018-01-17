@@ -10,9 +10,9 @@ def compare(x, y):
     return collections.Counter(x) == collections.Counter(y)
 
 
-"""
-Constants Used for the high level commands
-"""
+
+# Constants Used for the high level commands
+
 
 REACH_GOAL = 0.0
 GO_STRAIGHT = 5.0
