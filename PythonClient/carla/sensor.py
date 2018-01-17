@@ -8,7 +8,12 @@
 
 
 import os
-import numpy
+
+try:
+    import numpy
+except ImportError:
+    raise RuntimeError(
+        'cannot import numpy, make sure numpy package is installed.')
 
 from collections import namedtuple
 
@@ -204,9 +209,10 @@ class PointCloud(SensorData):
             ply = '\n'.join(['{:.2f} {:.2f} {:.2f}'.format(
                 *p) for p in self._array.tolist()])
         else:
-            points_3d = numpy.concatenate((self._array, self._color_array), axis=1)
-            ply = '\n'.join(['{:.2f} {:.2f} {:.2f} {:.0f} {:.0f} {:.0f}'.format(
-                *p) for p in points_3d.tolist()])
+            points_3d = numpy.concatenate(
+                (self._array, self._color_array), axis=1)
+            ply = '\n'.join(['{:.2f} {:.2f} {:.2f} {:.0f} {:.0f} {:.0f}'
+                             .format(*p) for p in points_3d.tolist()])
 
         # Create folder to save if does not exist.
         folder = os.path.dirname(filename)

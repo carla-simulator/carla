@@ -14,9 +14,6 @@ from __future__ import print_function
 
 import argparse
 import logging
-import math
-import numpy
-import os
 import random
 import time
 
@@ -27,12 +24,6 @@ from carla.tcp import TCPConnectionError
 from carla.util import print_over_same_line, StopWatch
 from carla.image_converter import depth_to_local_point_cloud, to_rgb_array
 from carla.transform import Transform, Translation, Rotation, Scale
-
-try:
-    from carla import carla_server_pb2 as carla_protocol
-except ImportError:
-    raise RuntimeError('cannot import "carla_server_pb2.py", run '
-                       'the protobuf compiler to generate this file')
 
 
 def run_carla_client(host, port, far):
