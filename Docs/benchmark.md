@@ -41,7 +41,7 @@ The benchmark works by calling three lines of code
     agent = Manual(args.city_name)
     results = corl.benchmark_agent(agent, client)
 
-This is excerpt is executed in the run_benchmark.py example.
+This is excerpt is executed in the [run_benchmark.py](https://github.com/carla-simulator/carla/blob/benchmark_branch/PythonClient/run_benchmark.py) example.
 
 First a *benchmark* object is defined. This is the object that is used to benchmark a certain Agent. <br>
 On the second line of our sample code, there is an object of a Manual class instanced. This class inherited an Agent base class
