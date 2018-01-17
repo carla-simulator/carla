@@ -24,11 +24,7 @@ class Manual(Agent):
     """
     def run_step(self, measurements, sensor_data, target):
         control = VehicleControl()
-        control.steer = 0.0
         control.throttle = 0.9
-        control.brake = 0.0
-        control.hand_brake = False
-        control.reverse = False
 
         return control
 
