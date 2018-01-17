@@ -5,14 +5,14 @@ view the contribution guidelines, then fill out the blanks below.
 
 Checklist:
 
-- [ ] Make sure you are making a pull request against the `dev` branch (not `master` please)
-- [ ] Your branch is up-to-date with `dev` branch and tested with latest changes
-- [ ] Extended the README / documentation, if necessary
-- [ ] Code compiles correctly
-- [ ] All tests passing
-  * [ ] `make check`
-  * [ ] `pylint --disable=R,C --rcfile=PythonClient/.pylintrc PythonClient/carla PythonClient/*.py`
-  * [ ] `cppcheck . -iBuild -i.pb.cc --enable=warning`
+  - [ ] Make sure you are making a pull request against the `dev` branch (not `master` please)
+  - [ ] Your branch is up-to-date with `dev` branch and tested with latest changes
+  - [ ] Extended the README / documentation, if necessary
+  - [ ] Code compiles correctly
+  - [ ] All tests passing
+    - [ ] `make check`
+    - [ ] `pylint --disable=R,C --rcfile=PythonClient/.pylintrc PythonClient/carla PythonClient/*.py`
+    - [ ] `cppcheck . -iBuild -i.pb.cc --enable=warning`
 
 -->
 
