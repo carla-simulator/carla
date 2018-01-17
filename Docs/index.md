@@ -18,6 +18,7 @@ CARLA Documentation
 #### Contributing
 
   * [Contribution guidelines](CONTRIBUTING.md)
+  * [Coding standard](coding_standard.md)
   * [Code of conduct](CODE_OF_CONDUCT.md)
 
 #### Development
