@@ -1,6 +1,4 @@
-CARLA F.A.Q.
-============
-
+<!-- ======================================================================= -->
 <details>
   <summary><h5 style="display:inline">
   What is the expected disk space needed for building CARLA?
@@ -15,6 +13,63 @@ requires much more disk space as it keeps all the intermediate files,
 
 </details>
 
+<!-- ======================================================================= -->
+<details>
+  <summary><h5 style="display:inline">
+  I downloaded CARLA source from GitHub, where is the "CarlaUE4.sh" script?
+  </h4></summary>
+
+There is no "CarlaUE4.sh" script in the source version of CARLA, you need to
+follow the instructions in the [documentation](http://carla.readthedocs.io) on
+building CARLA from source.
+
+Once you open the project in the Unreal Editor, you can hit Play to test CARLA.
+
+</details>
+
+<!-- ======================================================================= -->
+<details>
+  <summary><h5 style="display:inline">
+  Why Unreal Editor hangs after hitting Play?
+  </h4></summary>
+
+This is most probably happening because CARLA is starting in server mode. Check
+your CarlaSettings.ini file ("./Unreal/CarlaUE4/Config/CarlaSettings.ini") and
+set
+
+```ini
+[CARLA/Server]
+UseNetworking=false
+```
+
+</details>
+
+<!-- ======================================================================= -->
+<details>
+  <summary><h5 style="display:inline">
+  How can I create a binary version of CARLA?
+  </h4></summary>
+
+To compile a binary (packaged) version of CARLA, open the CarlaUE4 project with
+Unreal Editor, go to the menu "File -> Package Project", and select your
+platform. This takes a while, but in the end it should generate a packaged
+version of CARLA to execute without Unreal Editor.
+
+</details>
+
+<!-- ======================================================================= -->
+<details>
+  <summary><h5 style="display:inline">
+  Why do I have very low FPS when running the server in Unreal Editor?
+  </h4></summary>
+
+UE4 Editor goes to a low performance mode when out of focus. It can be disabled
+in the editor preferences. Go to "Edit->Editor Preferences->Performance" and
+disable the "Use Less CPU When in Background" option.
+
+</details>
+
+<!-- ======================================================================= -->
 <details>
   <summary><h5 style="display:inline">
   Is it possible to dump images from the CARLA server view?
@@ -29,27 +84,19 @@ Images are saved to "CarlaUE4/Saved/Screenshots/LinuxNoEditor".
 
 </details>
 
+<!-- ======================================================================= -->
 <details>
   <summary><h5 style="display:inline">
-  I downloaded CARLA source from GitHub, where is the "CarlaUE4.sh" script?
+  Fatal error: 'version.h' has been modified since the precompiled header.
   </h4></summary>
 
-There is no "CarlaUE4.sh" script in the source version of CARLA, you need to
-follow the instructions in the [documentation](http://carla.readthedocs.io) on
-building CARLA from source.
+This happens from time to time due to Linux updates. It is possible to force a
+rebuild of all the project files with
 
-Once you open the project in the Unreal Editor, you can hit Play to test CARLA.
+    $ cd Unreal/CarlaUE4/
+    $ make CarlaUE4Editor ARGS=-clean
+    $ make CarlaUE4Editor
 
-</details>
-
-<details>
-  <summary><h5 style="display:inline">
-  How can I create a binary version of CARLA?
-  </h4></summary>
-
-To compile a binary (packaged) version of CARLA, open the CarlaUE4 project with
-Unreal Editor, go to the menu "File -> Package Project", and select your
-platform. This takes a while, but in the end it should generate a packaged
-version of CARLA to execute without Unreal Editor.
+It takes a long time but fixes the issue. Sometimes a reboot is also needed.
 
 </details>
