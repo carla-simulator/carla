@@ -273,7 +273,7 @@ class Benchmark(object):
                                now.strftime("%Y%m%d%H%M")), 'w') as f:
             pass
 
-        return suffix_name,full_name
+        return suffix_name, full_name
 
     def _continue_experiment(self, continue_experiment):
 
@@ -307,11 +307,8 @@ class Benchmark(object):
     def _get_last_position(self):
 
         with open(os.path.join(self._full_name, self._suffix_name)) as f:
+            return sum(1 for _ in f)
 
-            # Function to count the lines.
-            for i, l in enumerate(f):
-                pass
-            return i
 
     # To be redefined on subclasses on how to calculate timeout for an episode
     @abc.abstractmethod
