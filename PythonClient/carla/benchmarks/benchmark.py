@@ -7,7 +7,7 @@
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
 
-from builtins import input
+from builtins import input_data
 
 import csv
 import datetime
@@ -269,11 +269,10 @@ class Benchmark(object):
         # Make a date file: to show when this was modified,
         # the number of times the experiments were run
         now = datetime.datetime.now()
-        with open(os.path.join(full_name,
-                               now.strftime("%Y%m%d%H%M")), 'w') as f:
-            pass
+        open(os.path.join(full_name, now.strftime("%Y%m%d%H%M"))).close()
 
         return suffix_name, full_name
+
 
     def _continue_experiment(self, continue_experiment):
 
@@ -284,7 +283,7 @@ class Benchmark(object):
 
             else:
                 # Ask question, to avoid mistaken override situations
-                answer = input("The experiment was already found in the files"
+                answer = input_data("The experiment was already found in the files"
                                + ", Do you want to continue (y/n)? \n"
                                )
                 if answer == 'Yes' or answer == 'y':
