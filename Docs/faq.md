@@ -2,7 +2,7 @@ CARLA F.A.Q.
 ============
 
 <details>
-  <summary><h6 style="display:inline">
+  <summary><h5 style="display:inline">
   What is the expected disk space needed for building CARLA?
   </h4></summary>
 
@@ -16,7 +16,7 @@ requires much more disk space as it keeps all the intermediate files,
 </details>
 
 <details>
-  <summary><h6 style="display:inline">
+  <summary><h5 style="display:inline">
   Is it possible to dump images from the CARLA server view?
   </h4></summary>
 
@@ -29,7 +29,10 @@ Images are saved to "CarlaUE4/Saved/Screenshots/LinuxNoEditor".
 
 </details>
 
-#### I downloaded CARLA source from GitHub, where is the "CarlaUE4.sh" script?
+<details>
+  <summary><h5 style="display:inline">
+  I downloaded CARLA source from GitHub, where is the "CarlaUE4.sh" script?
+  </h4></summary>
 
 There is no "CarlaUE4.sh" script in the source version of CARLA, you need to
 follow the instructions in the [documentation](http://carla.readthedocs.io) on
@@ -37,9 +40,16 @@ building CARLA from source.
 
 Once you open the project in the Unreal Editor, you can hit Play to test CARLA.
 
-#### How can I create a binary version of CARLA?
+</details>
+
+<details>
+  <summary><h5 style="display:inline">
+  How can I create a binary version of CARLA?
+  </h4></summary>
 
 To compile a binary (packaged) version of CARLA, open the CarlaUE4 project with
 Unreal Editor, go to the menu "File -> Package Project", and select your
 platform. This takes a while, but in the end it should generate a packaged
 version of CARLA to execute without Unreal Editor.
+
+</details>
