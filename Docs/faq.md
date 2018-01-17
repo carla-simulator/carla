@@ -1,6 +1,13 @@
 CARLA F.A.Q.
 ============
 
+<details>
+  <summary>FAQ title here</summary>
+  Your content here...</br>
+  more content...</br>
+  bla bla bla</br>
+</details>
+
 #### What is the expected disk space needed for building CARLA?
 
 Building CARLA from source requires about 15GB of disk space, not counting
