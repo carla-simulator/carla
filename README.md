@@ -15,6 +15,7 @@ environmental conditions.
 
 For instructions on how to use and compile CARLA, check out
 [CARLA Documentation](http://carla.readthedocs.io).
+If you want to benchmark your model in the same conditions as in our CoRL’17 paper, check out [Benchmarking](https://github.com/carla-simulator/carla/blob/benchmark_branch/Docs/benchmark.md).
 
 News
 ----
