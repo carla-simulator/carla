@@ -8,7 +8,6 @@ CARLA Documentation
   * [Measurements](measurements.md)
   * [Cameras and sensors](cameras_and_sensors.md)
   * [F.A.Q.](faq.md)
-  * [Troubleshooting](troubleshooting.md)
 
 #### Building from source
 
