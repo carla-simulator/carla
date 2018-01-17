@@ -62,6 +62,12 @@ Please take a look at our [Contribution guidelines][contriblink].
 
 [contriblink]: http://carla.readthedocs.io/en/latest/CONTRIBUTING
 
+F.A.Q.
+------
+
+If you run into problems, check our
+[FAQ](http://carla.readthedocs.io/en/latest/faq/).
+
 License
 -------
 
