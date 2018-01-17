@@ -2,7 +2,7 @@ CARLA F.A.Q.
 ============
 
 <details>
-  <summary><h4>What is the expected disk space needed for building CARLA?</h4></summary>
+  <summary><h6 style="display:inline">What is the expected disk space needed for building CARLA?</h4></summary>
 
 Building CARLA from source requires about 15GB of disk space, not counting
 Unreal Engine installation.
