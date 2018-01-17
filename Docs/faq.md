@@ -2,7 +2,9 @@ CARLA F.A.Q.
 ============
 
 <details>
-  <summary><h6 style="display:inline">What is the expected disk space needed for building CARLA?</h4></summary>
+  <summary><h6 style="display:inline">
+  What is the expected disk space needed for building CARLA?
+  </h4></summary>
 
 Building CARLA from source requires about 15GB of disk space, not counting
 Unreal Engine installation.
@@ -13,16 +15,10 @@ requires much more disk space as it keeps all the intermediate files,
 
 </details>
 
-#### What is the expected disk space needed for building CARLA?
-
-Building CARLA from source requires about 15GB of disk space, not counting
-Unreal Engine installation.
-
-However, you will also need to build and install Unreal Engine, which on Linux
-requires much more disk space as it keeps all the intermediate files,
-[see this thread](https://answers.unrealengine.com/questions/430541/linux-engine-size.html).
-
-#### Is it possible to dump images from the CARLA server view?
+<details>
+  <summary><h6 style="display:inline">
+  Is it possible to dump images from the CARLA server view?
+  </h4></summary>
 
 Yes, this is an Unreal Engine feature. You can dump the images of the server
 camera by running CARLA with
@@ -30,6 +26,8 @@ camera by running CARLA with
     $ ./CarlaUE4.sh -benchmark -fps=30 -dumpmovie
 
 Images are saved to "CarlaUE4/Saved/Screenshots/LinuxNoEditor".
+
+</details>
 
 #### I downloaded CARLA source from GitHub, where is the "CarlaUE4.sh" script?
 
