@@ -1,6 +1,18 @@
 <!-- ======================================================================= -->
 <details>
   <summary><h5 style="display:inline">
+  What is the recommended hardware to run CARLA?
+  </h4></summary>
+
+CARLA is a very performance demanding software, at the very minimum you would
+need a computer with a dedicated GPU capable of running Unreal Engine. See
+[Unreal Engine's recommended hardware](https://wiki.unrealengine.com/Recommended_Hardware).
+
+</details>
+
+<!-- ======================================================================= -->
+<details>
+  <summary><h5 style="display:inline">
   What is the expected disk space needed for building CARLA?
   </h4></summary>
 
@@ -20,10 +32,32 @@ requires much more disk space as it keeps all the intermediate files,
   </h4></summary>
 
 There is no "CarlaUE4.sh" script in the source version of CARLA, you need to
-follow the instructions in the [documentation](http://carla.readthedocs.io) on
+follow the instructions in the [documentation](http://carla.readthedocs.io) for
 building CARLA from source.
 
 Once you open the project in the Unreal Editor, you can hit Play to test CARLA.
+
+</details>
+
+<!-- ======================================================================= -->
+<details>
+  <summary><h5 style="display:inline">
+  Can I run the server from within Unreal Editor?
+  </h4></summary>
+
+Yes, you can connect the Python client to a server running within Unreal Editor
+as if it was the standalone server.
+
+Go to **"Unreal/CarlaUE4/Config/CarlaSettings.ini"** (this file should have been
+created by the Setup.sh) and enable networking. If for whatever reason you don't
+have this file, just create it and add the following
+
+```ini
+[CARLA/Server]
+UseNetworking=true
+```
+
+Now when you hit Play the editor will hang until a client connects.
 
 </details>
 
@@ -34,8 +68,7 @@ Once you open the project in the Unreal Editor, you can hit Play to test CARLA.
   </h4></summary>
 
 This is most probably happening because CARLA is starting in server mode. Check
-your CarlaSettings.ini file ("./Unreal/CarlaUE4/Config/CarlaSettings.ini") and
-set
+your **"Unreal/CarlaUE4/Config/CarlaSettings.ini"** and set
 
 ```ini
 [CARLA/Server]
