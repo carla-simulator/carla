@@ -7,7 +7,7 @@
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
 
-from builtins import input_data
+from builtins import input as input_data
 
 import csv
 import datetime
@@ -269,7 +269,7 @@ class Benchmark(object):
         # Make a date file: to show when this was modified,
         # the number of times the experiments were run
         now = datetime.datetime.now()
-        open(os.path.join(full_name, now.strftime("%Y%m%d%H%M"))).close()
+        open(os.path.join(full_name, now.strftime("%Y%m%d%H%M")),'w').close()
 
         return suffix_name, full_name
 

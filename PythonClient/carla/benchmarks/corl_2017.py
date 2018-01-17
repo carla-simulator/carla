@@ -9,7 +9,6 @@
 from __future__ import print_function
 
 import os
-import datetime
 
 from .benchmark import Benchmark
 from .experiment import Experiment

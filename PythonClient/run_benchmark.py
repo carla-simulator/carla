@@ -8,7 +8,6 @@
 
 import argparse
 import logging
-import sys
 import time
 
 from carla.benchmarks.agent import Agent
