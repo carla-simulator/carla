@@ -27,6 +27,19 @@ building CARLA from source.
 
 Once you open the project in the Unreal Editor, you can hit Play to test CARLA.
 
+#### Can I skip the download step in Setup.sh?
+
+It is possible to skip the download step by passing the `-s` argument to the
+setup script
+
+    $ ./Setup.sh -s
+
+Bear in mind that if you do so, you are supposed to manually download and
+extract the content package yourself, check out the last output of the Setup.sh
+for instructions or run
+
+    $ ./Update.sh -s
+
 #### How can I create a binary version of CARLA?
 
 To compile a binary (packaged) version of CARLA, open the CarlaUE4 project with

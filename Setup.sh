@@ -1,16 +1,24 @@
 #! /bin/bash
 
 ################################################################################
-# CARLA Util Setup
+# CARLA Setup.sh
 #
-# This downloads and compiles libc++. So we can build and compile our
-# dependencies with libc++ for linking against Unreal.
+# This script sets up the environment and dependencies for compiling CARLA on
+# Linux.
+#
+#   1) Download CARLA Content if necessary.
+#   2) Download and compile libc++.
+#   3) Download other third-party libraries and compile them with libc++.
 #
 # Thanks to the people at https://github.com/Microsoft/AirSim for providing the
 # important parts of this script.
 ################################################################################
 
 set -e
+
+# ==============================================================================
+# -- Set up environment --------------------------------------------------------
+# ==============================================================================
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 pushd "$SCRIPT_DIR" >/dev/null
@@ -21,9 +29,6 @@ command -v clang++-3.9 >/dev/null 2>&1 || {
   echo >&2 "make sure you build Unreal Engine with clang 3.9 too.";
   exit 1;
 }
-
-# Update content.
-./Update.sh
 
 mkdir -p Util/Build
 pushd Util/Build >/dev/null
@@ -160,6 +165,13 @@ if [[ ! -f $CARLA_SETTINGS_FILE ]]; then
 fi
 
 ./Util/Protoc.sh
+
+# ==============================================================================
+# -- Update CARLA Content ------------------------------------------------------
+# ==============================================================================
+
+echo
+./Update.sh $@
 
 # ==============================================================================
 # -- ...and we are done --------------------------------------------------------
