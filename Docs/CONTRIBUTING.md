@@ -33,11 +33,9 @@ your request as a new issue.
 Improving documentation
 -----------------------
 
-If you feel something is missing in the documentation, please don't hesitate in
-opening an issue to let us know.
-
-Even better, if you think you can improve it yourself it would be a great
-contribution to the community!
+If you feel something is missing in the documentation, please don't hesitate to
+open an issue to let us know. Even better, if you think you can improve it
+yourself, it would be a great contribution to the community!
 
 We build our documentation with [MkDocs](http://www.mkdocs.org/) based on the
 Markdown files inside the "Docs" folder. You can either directly modify them on
