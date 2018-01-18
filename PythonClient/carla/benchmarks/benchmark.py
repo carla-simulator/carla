@@ -299,9 +299,7 @@ class Benchmark(object):
 
 
     def _experiment_exist(self):
-
-        folder = os.path.dirname(self._full_name)
-        return os.path.isdir(folder)
+        return os.path.isfile(self._full_name)
 
     def _get_last_position(self):
 
