@@ -107,26 +107,33 @@ def compute_summary(filename, dynamic_episodes):
     path = os.path.dirname(filename)
     base_name = os.path.basename(filename)
 
+
+
     f = open(filename, "rb")
     header = f.readline()
     header = header.split(',')
     header[-1] = header[-1][:-2]
     f.close()
 
-    f = open(os.path.join(path, 'rewards_' + base_name), "rb")
-    header_rewards = f.readline()
-    header_rewards = header_rewards.split(',')
-    header_rewards[-1] = header_rewards[-1][:-2]
+    f = open(os.path.join(path, 'details_' + base_name), "rb")
+    header_details = f.readline()
+    header_details = header_details.split(',')
+    header_details[-1] = header_details[-1][:-2]
     f.close()
 
     data_matrix = np.loadtxt(open(filename, "rb"), delimiter=",", skiprows=1)
+
+    # Corner Case: The presented test just had one episode
+    if data_matrix.ndim == 1:
+        data_matrix = np.expand_dims(data_matrix, axis=0)
+
 
     tasks = np.unique(data_matrix[:, header.index('exp_id')])
 
     all_weathers = np.unique(data_matrix[:, header.index('weather')])
 
     reward_matrix = np.loadtxt(open(os.path.join(
-        path, 'rewards_' + base_name), "rb"), delimiter=",", skiprows=1)
+        path, 'details_' + base_name), "rb"), delimiter=",", skiprows=1)
 
     metrics_dictionary = {'average_completion': {w: [0.0]*len(tasks) for w in all_weathers},
                           'intersection_offroad': {w: [0.0]*len(tasks) for w in all_weathers},
@@ -153,11 +160,11 @@ def compute_summary(filename, dynamic_episodes):
                 'exp_id')] == t, data_matrix[:, header.index('weather')] == w)]
 
 
-            task_reward_matrix = reward_matrix[np.logical_and(reward_matrix[:, header_rewards.index(
-                'exp_id')] == float(t), reward_matrix[:, header_rewards.index('weather')] == float(w))]
+            task_reward_matrix = reward_matrix[np.logical_and(reward_matrix[:, header_details.index(
+                'exp_id')] == float(t), reward_matrix[:, header_details.index('weather')] == float(w))]
 
             km_run = get_distance_traveled(
-                task_reward_matrix, header_rewards)
+                task_reward_matrix, header_details)
 
             metrics_dictionary['average_fully_completed'][w][t] = sum(
                 task_data_matrix[:, header.index('result')])/task_data_matrix.shape[0]
@@ -178,8 +185,8 @@ def compute_summary(filename, dynamic_episodes):
             if list(tasks).index(t) in set(dynamic_episodes):
 
                 lane_road = get_out_of_road_lane(
-                    task_reward_matrix, header_rewards)
-                colisions = get_colisions(task_reward_matrix, header_rewards)
+                    task_reward_matrix, header_details)
+                colisions = get_colisions(task_reward_matrix, header_details)
 
 
 
