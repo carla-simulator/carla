@@ -41,8 +41,7 @@ We build our documentation with [MkDocs](http://www.mkdocs.org/) based on the
 Markdown files inside the "Docs" folder. You can either directly modify them on
 GitHub or locally in your machine.
 
-Once you are done with your changes, please submit a pull-request against the
-`documentation` branch.
+Once you are done with your changes, please submit a pull-request.
 
 **TIP:** You can build and serve it locally by running `mkdocs` in the project's
 main folder
@@ -80,7 +79,7 @@ new code.
 #### Pull-requests
 
 Once you think your contribution is ready to be added to CARLA, please submit a
-pull-request to the `dev` branch.
+pull-request.
 
 Try to be as descriptive as possible when filling the pull-request description.
 Adding images and gifs may help people to understand your changes or new
@@ -97,8 +96,7 @@ If you see a red mark, please correct your code accordingly.
   If you modify this list please keep it up-to-date with pull_request_template.md
 -->
 
-  - [ ] Make sure you are making a pull request against the `dev` branch (not `master` please)
-  - [ ] Your branch is up-to-date with `dev` branch and tested with latest changes
+  - [ ] Your branch is up-to-date with the `master` branch and tested with latest changes
   - [ ] Extended the README / documentation, if necessary
   - [ ] Code compiles correctly
   - [ ] All tests passing
