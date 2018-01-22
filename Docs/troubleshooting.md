@@ -26,3 +26,16 @@ rebuild of all the project files with
     $ cd Unreal/CarlaUE4/
     $ make CarlaUE4Editor ARGS=-clean
     $ make CarlaUE4Editor
+
+#### Setup.sh fails to download content
+
+It is possible to skip the download step by passing the `-s` argument to the
+setup script
+
+    $ ./Setup.sh -s
+
+Bear in mind that if you do so, you are supposed to manually download and
+extract the content package yourself, check out the last output of the Setup.sh
+for instructions or run
+
+    $ ./Update.sh -s
