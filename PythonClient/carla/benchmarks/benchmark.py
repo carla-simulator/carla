@@ -36,14 +36,14 @@ class Benchmark(object):
             city_name,
             name_to_save,
             continue_experiment=False,
-            save_images=False,
-            verbose=False):
+            save_images=False
+            ):
 
 
         self.__metaclass__ = abc.ABCMeta
 
         self._city_name = city_name
-        self._verbose = verbose
+
 
 
         self._base_name = name_to_save
