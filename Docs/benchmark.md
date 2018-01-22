@@ -61,7 +61,7 @@ To be benchmarked, an Agent subclass must redefine the *run_step* function as it
         return control
 The function receives measurements from the world, sensor data and a target position. With this, the function must return a control to the car, *i.e.* steering value, throttle value, brake value, etc.
 
-The [measurements](https://github.com/carla-simulator/carla/blob/master/Docs/measurements.md), [target](https://github.com/carla-simulator/carla/blob/master/Docs/measurements.md), [sensor_data](https://github.com/carla-simulator/carla/blob/master/Docs/cameras_and_sensors.m) and [control](https://github.com/carla-simulator/carla/blob/master/Docs/measurements.md) types are described at the documentation.
+The [measurements](measurements.md), [target](measurements.md), [sensor_data](cameras_and_sensors.m) and [control](measurements.md) types are described at the documentation.
 
 
 
