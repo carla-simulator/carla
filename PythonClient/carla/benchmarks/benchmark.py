@@ -108,8 +108,8 @@ class Benchmark(object):
             control = agent.run_step(measurements, sensor_data, target)
 
             logging.info("Controller is Inputting:")
-            logging.info('Steer = %f Throttle = %f Brake = %f ' %
-                         (control.steer, control.throttle, control.brake))
+            logging.info('Steer = %f Throttle = %f Brake = %f ',
+                         control.steer, control.throttle, control.brake)
 
             carla.send_control(control)
 
@@ -131,9 +131,9 @@ class Benchmark(object):
 
             logging.info('Status:')
             logging.info(
-                '[d=%f] c_x = %f, c_y = %f ---> t_x = %f, t_y = %f' %
-                (float(distance), curr_x, curr_y, target.location.x,
-                 target.location.y))
+                '[d=%f] c_x = %f, c_y = %f ---> t_x = %f, t_y = %f',
+                float(distance), curr_x, curr_y, target.location.x,
+                 target.location.y)
 
             if distance < 200.0:
                 success = True
@@ -180,8 +180,8 @@ class Benchmark(object):
                     carla.start_episode(start_point)
 
                     logging.info('======== !!!! ==========')
-                    logging.info(' Start Position %d End Position %d ' %
-                                 (start_point, end_point))
+                    logging.info(' Start Position %d End Position %d ',
+                                 start_point, end_point)
 
                     path_distance = agent.get_distance(
                         positions[start_point], positions[end_point])
@@ -207,7 +207,7 @@ class Benchmark(object):
                     self._write_details_results(experiment, rep, reward_vec)
 
                     if(result > 0):
-                        logging.info('+++++ Target achieved in %f seconds! +++++' %
+                        logging.info('+++++ Target achieved in %f seconds! +++++',
                               final_time)
                     else:
                         logging.info('----- Timeout! -----')
