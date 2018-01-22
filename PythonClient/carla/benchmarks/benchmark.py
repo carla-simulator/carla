@@ -7,20 +7,18 @@
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
 
-from builtins import input as input_data
-
 import csv
 import datetime
 import math
 import os
-
 import abc
+import logging
 
 
+from builtins import input as input_data
 
 
 from carla.client import VehicleControl
-
 
 def sldist(c1, c2):
     return math.sqrt((c2[0] - c1[0])**2 + (c2[1] - c1[1])**2)
@@ -38,11 +36,15 @@ class Benchmark(object):
             city_name,
             name_to_save,
             continue_experiment=False,
-            save_images=False):
+            save_images=False,
+            verbose=False):
+
 
         self.__metaclass__ = abc.ABCMeta
 
         self._city_name = city_name
+        self._verbose = verbose
+
 
         self._base_name = name_to_save
         self._dict_stats = {'exp_id': -1,
@@ -104,8 +106,11 @@ class Benchmark(object):
             measurements, sensor_data = carla.read_data()
 
             control = agent.run_step(measurements, sensor_data, target)
-            print('STEER ', control.steer, 'GAS ',
-                  control.throttle, 'Brake ', control.brake)
+
+            logging.info("Controller is Inputting:")
+            logging.info('Steer = %f Throttle = %f Brake = %f ' %
+                         (control.steer, control.throttle, control.brake))
+
             carla.send_control(control)
 
             # measure distance to target
@@ -124,9 +129,11 @@ class Benchmark(object):
             distance = sldist([curr_x, curr_y],
                               [target.location.x, target.location.y])
 
-            print(
+            logging.info('Status:')
+            logging.info(
                 '[d=%f] c_x = %f, c_y = %f ---> t_x = %f, t_y = %f' %
-                (float(distance), curr_x, curr_y, target.location.x, target.location.y))
+                (float(distance), curr_x, curr_y, target.location.x,
+                 target.location.y))
 
             if distance < 200.0:
                 success = True
@@ -157,7 +164,7 @@ class Benchmark(object):
         else:
             (start_task, start_pose) = self._get_pose_and_task(self._line_on_file)
 
-        print(' START ')
+        logging.info(' START ')
 
         for experiment in self._experiments[start_task:]:
 
@@ -172,12 +179,15 @@ class Benchmark(object):
 
                     carla.start_episode(start_point)
 
-                    print('======== !!!! ==========')
-                    print(' Start Position ', start_point,
-                          ' End Position ', end_point)
+                    logging.info('======== !!!! ==========')
+                    logging.info(' Start Position %d End Position %d ' %
+                                 (start_point, end_point))
 
                     path_distance = agent.get_distance(
                         positions[start_point], positions[end_point])
+                    euclidean_distance = \
+                        sldist([positions[start_point].location.x, positions[start_point].location.y],
+                        [positions[end_point].location.x, positions[end_point].location.y])
 
                     time_out = self._calculate_time_out(path_distance)
                     # running the agent
@@ -191,16 +201,16 @@ class Benchmark(object):
                     # compute stats for the experiment
 
                     self._write_summary_results(
-                        experiment, pose, rep, path_distance,
+                        experiment, pose, rep, euclidean_distance,
                         remaining_distance, final_time, time_out, result)
 
                     self._write_details_results(experiment, rep, reward_vec)
 
                     if(result > 0):
-                        print('+++++ Target achieved in %f seconds! +++++' %
+                        logging.info('+++++ Target achieved in %f seconds! +++++' %
                               final_time)
                     else:
-                        print('----- Timeout! -----')
+                        logging.info('----- Timeout! -----')
         return self.get_all_statistics()
 
     def _write_summary_results(self, experiment, pose, rep,

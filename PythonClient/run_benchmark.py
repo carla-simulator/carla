@@ -35,6 +35,11 @@ if __name__ == '__main__':
     argparser.add_argument(
         '-v', '--verbose',
         action='store_true',
+        dest='verbose',
+        help='print some extra status information')
+    argparser.add_argument(
+        '-db', '--debug',
+        action='store_true',
         dest='debug',
         help='print debug information')
     argparser.add_argument(
@@ -58,12 +63,17 @@ if __name__ == '__main__':
         '-n', '--log_name',
         metavar='T',
         default='test',
-        help='The name of the log file to be created by the scripts'
+        help='The name of the log file to be created by the benchmark'
         )
 
     args = argparser.parse_args()
+    if args.debug:
+        log_level = logging.DEBUG
+    elif args.verbose:
+        log_level = logging.INFO
+    else:
+        log_level = logging.WARNING
 
-    log_level = logging.DEBUG if args.debug else logging.INFO
     logging.basicConfig(format='%(levelname)s: %(message)s', level=log_level)
 
     logging.info('listening to server %s:%s', args.host, args.port)
@@ -71,7 +81,8 @@ if __name__ == '__main__':
     while True:
         try:
             with make_carla_client(args.host, args.port) as client:
-                corl = CoRL2017(city_name=args.city_name, name_to_save=args.log_name)
+                corl = CoRL2017(city_name=args.city_name, name_to_save=args.log_name,
+                                verbose=args.verbose)
                 agent = Manual(args.city_name)
                 results = corl.benchmark_agent(agent, client)
                 corl.plot_summary_test()
