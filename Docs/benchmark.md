@@ -41,7 +41,7 @@ The benchmark works by calling three lines of code
     agent = Manual(args.city_name)
     results = corl.benchmark_agent(agent, client)
 
-This is excerpt is executed in the [run_benchmark.py](https://github.com/carla-simulator/carla/blob/benchmark_branch/PythonClient/run_benchmark.py) example.
+This is excerpt is executed in the [run_benchmark.py](https://github.com/carla-simulator/carla/blob/master/PythonClient/run_benchmark.py) example.
 
 First a *benchmark* object is defined, for this case, a CoRL2017 benchmark. This is object is used to benchmark a certain Agent. <br>
 On the second line of our sample code, there is an object of a Manual class instanced. This class inherited an Agent base class
@@ -61,7 +61,7 @@ To be benchmarked, an Agent subclass must redefine the *run_step* function as it
         return control
 The function receives measurements from the world, sensor data and a target position. With this, the function must return a control to the car, *i.e.* steering value, throttle value, brake value, etc.
 
-The [measurements](measurements.md), [target](measurements.md), [sensor_data](cameras_and_sensors.m) and [control](measurements.md) types are described at the documentation.
+The [measurements](measurements.md), [target](measurements#player-measurements.md), [sensor_data](cameras_and_sensors.md) and [control](measurements.md) types are described at the documentation.
 
 
 
