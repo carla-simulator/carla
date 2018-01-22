@@ -7,6 +7,7 @@ CARLA Documentation
   * [CARLA settings](carla_settings.md)
   * [Measurements](measurements.md)
   * [Cameras and sensors](cameras_and_sensors.md)
+  * [Benchmark](benchmark.md)
   * [F.A.Q.](faq.md)
   * [Troubleshooting](troubleshooting.md)
 

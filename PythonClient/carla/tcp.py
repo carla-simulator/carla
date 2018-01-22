@@ -41,7 +41,7 @@ class TCPClient(object):
                 self._socket.settimeout(self._timeout)
                 logging.debug('%sconnected', self._logprefix)
                 return
-            except OSError as exception:
+            except socket.error as exception:
                 error = exception
                 logging.debug('%sconnection attempt %d: %s', self._logprefix, attempt, error)
                 time.sleep(1)
@@ -65,7 +65,7 @@ class TCPClient(object):
         header = struct.pack('<L', len(message))
         try:
             self._socket.sendall(header + message)
-        except OSError as exception:
+        except socket.error as exception:
             self._reraise_exception_as_tcp_error('failed to write data', exception)
 
     def read(self):
@@ -85,7 +85,7 @@ class TCPClient(object):
         while length > 0:
             try:
                 data = self._socket.recv(length)
-            except OSError as exception:
+            except socket.error as exception:
                 self._reraise_exception_as_tcp_error('failed to read data', exception)
             if not data:
                 raise TCPConnectionError(self._logprefix + 'connection closed')
