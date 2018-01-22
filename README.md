@@ -19,6 +19,7 @@ For instructions on how to use and compile CARLA, check out
 News
 ----
 
+- 22.01.2018 Job opening: [C++ (UE4) Programmer](https://drive.google.com/open?id=1Hx0eUgpXl95d4IL9meEGhJECgSRos1T1).
 - 28.11.2017 CARLA 0.7.0 released: [change log](https://github.com/carla-simulator/carla/blob/master/CHANGELOG.md#carla-070), [release](https://github.com/carla-simulator/carla/releases/tag/0.7.0).
 - 15.11.2017 CARLA 0.6.0 released: [change log](https://github.com/carla-simulator/carla/blob/master/CHANGELOG.md#carla-060), [release](https://github.com/carla-simulator/carla/releases/tag/0.6.0).
 
@@ -83,6 +84,13 @@ F.A.Q.
 
 If you run into problems, check our
 [FAQ](http://carla.readthedocs.io/en/latest/faq/).
+
+Jobs
+----
+
+We are currently looking for a new programmer to join our team
+
+  * [C++ (UE4) Programmer](https://drive.google.com/open?id=1Hx0eUgpXl95d4IL9meEGhJECgSRos1T1)
 
 License
 -------
