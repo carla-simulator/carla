@@ -19,15 +19,19 @@ this guide will suggest dupplicating an existing level instead of creating one f
 5. After that you can place new PlayerStarts at the places you want the cars to be spawned.
 6. The AI already works, but the cars won't act randomly. Vehicles will follow the instructions given by the RoadMapGenerator. They will follow the road easily while in straight roads but wont so much when entering Intersections:
 ![Road_Instructions_Example.png](img/Road_Instructions_Example.png)
-  (This is a debug view of the instructions the road gives to the Vehicle. They will allways follow the green arrows, the white points are shared points between one or more routes, by default they order the vehicle to continue straight; Black points are off the road, the vehicle gets no instructions and drives to the left, trying to get back to the road)
+
+
+
+
+    > (This is a debug view of the instructions the road gives to the Vehicle. They will allways follow the green arrows, the white points are shared points between one or more routes, by default they order the vehicle to continue straight; Black points are off the road, the vehicle gets no instructions and drives to the left, trying to get back to the road)
 
 7. To get a random behavior, you have to place IntersectionEntrances, this will let you redefine the directoion the vehicle will take overwriting the directions given by the roadmap (until they finish their given order). 
 (See the two example towns how it exactly works). 
 
-*Before version 0.7.1:
+    - Before version 0.7.1:
 For every entrance you'll have to create a series of empty actors that will be the waypoints to guide the car through the intersection; Then you'll have to asign the corresponding actors to every Path
 
-*After version 0.7.1:
+    - After version 0.7.1:
 Every IntersectionEntrance has an array called routes, adding an element to this creates an editable spline in the world with the first point on the IntersectionEntrance (You might have to select another object before you can see it) This spline defines the possible routes any car will take when entering the intersection (as the Empty actors did before) you might configure this routes as you would edit any Unreal spline. Each route will create an element in the field bellow: "Probabilities" every number in this array defines the chances of any vehicle to take the corresponding route.     
 
 8. To change the speed of the car, use the SpeedLimiters. They are straightforward to use. (Make sure you limit the speed for the corners, otherwise the cars will try and fail to take them at full speed)
