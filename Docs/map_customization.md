@@ -23,7 +23,7 @@ this guide will suggest dupplicating an existing level instead of creating one f
 
 
 
-    > (This is a debug view of the instructions the road gives to the Vehicle. They will allways follow the green arrows, the white points are shared points between one or more routes, by default they order the vehicle to continue straight; Black points are off the road, the vehicle gets no instructions and drives to the left, trying to get back to the road)
+  > (This is a debug view of the instructions the road gives to the Vehicle. They will allways follow the green arrows, the white points are shared points between one or more routes, by default they order the vehicle to continue straight; Black points are off the road, the vehicle gets no instructions and drives to the left, trying to get back to the road)
 
 7. To get a random behavior, you have to place IntersectionEntrances, this will let you redefine the directoion the vehicle will take overwriting the directions given by the roadmap (until they finish their given order). 
 (See the two example towns how it exactly works). 
