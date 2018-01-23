@@ -2,6 +2,37 @@
 
 This are the specific blueprint assets created to help building the environment.
 
+## Creating a new map
+Notes:
+ - As creating a map from scratch with the Carla tools causes a crash with UE4.17.2 (Issue [#99](https://github.com/carla-simulator/carla/issues/99)),
+this guide will suggest dupplicating an existing level instead of creating one from scratch.
+
+### Requirements
+
+ - Checkout and build carla from source on [Linux](how_to_build_on_linux.md) or [Windows](how_to_build_on_windows.md)
+
+### Creating
+1. Duplicate an existing map
+2. Remove everything you don't need from the map
+ - Keep the folder "Lighting", "AtmosphericFog", "PostProcessVol" and "CarlaMapGenerator".
+ - It might be interesting to keep the empty level as a template and dupplicate it before starting to populate it.
+3. In the CarlaMapGenerator, there is a field "seed". You can change the map by altering that seed and clicking "Trigger Road Map Generation". "Save Road Map To Disk" should also be checked.
+4. You can change the seed until you have a map you are satisfied with.
+5. After that you can place new PlayerStarts at the places you want the cars to be spawned.
+6. The AI already works, but the cars don't act randomly. 
+ - They will prefer to go forward at crossings.
+ - If that fails they try to go left.
+ - Going right is the final thing to try.
+7. To get a random behavior, you have to place IntersectionEntrances. 
+(See the two example towns how it exactly works). 
+ - Basically an entrance has a set of actors that will be the waypoints to guide the car through the intersection. 
+ - For each intersection path, there is a different list of waypoints.
+8. To change the speed of the car, use the SpeedLimiters. They are straightforward to use. (Make sure you limit the speed for the corners, otherwise the cars will try and fail to take them at full speed)
+9. Traffic lights need to be scripted to avoid traffic accidents.
+Every street at a crossing should have its own turn at green without the other streets having green.
+10. Then you can populate the world with landscape and buildings.
+
+
 ## MultipleFloorBuilding:
 
 The purpose of this blueprint is to make repeating and varying tall buildings a bit easier. Provided a Base, a MiddleFloor and a roof; this blueprint repeats the middle floor to the desired number of stores and tops it whith the last floor given some conditions:
