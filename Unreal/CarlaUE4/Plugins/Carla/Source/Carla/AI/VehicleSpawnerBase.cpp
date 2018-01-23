@@ -104,7 +104,7 @@ void AVehicleSpawnerBase::SpawnVehicleAtSpawnPoint(
     Vehicle->SpawnDefaultController();
     auto Controller = GetController(Vehicle);
     if (Controller != nullptr) { // Sometimes fails...
-      Controller->SetRandomEngine(GetRandomEngine());
+      Controller->GetRandomEngine()->Seed(GetRandomEngine()->GenerateSeed());
       Controller->SetRoadMap(GetRoadMap());
       Controller->SetAutopilot(true);
       Vehicles.Add(Vehicle);
