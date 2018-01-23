@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de
-# Barcelona (UAB), and the INTEL Visual Computing Lab.
+# Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
@@ -127,7 +127,7 @@ class CarlaGame(object):
         self._map_view = None
         self._is_on_reverse = False
         self._city_name = city_name
-        self._map = CarlaMap(city_name) if city_name is not None else None
+        self._map = CarlaMap(city_name, 16.43, 50.0) if city_name is not None else None
         self._map_shape = self._map.map_image.shape if city_name is not None else None
         self._map_view = self._map.get_map(WINDOW_HEIGHT) if city_name is not None else None
         self._position = None
