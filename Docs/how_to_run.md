@@ -38,15 +38,9 @@ The "carla" Python module provides a basic API for communicating with the CARLA
 server. In the "PythonClient" folder we provide a couple of examples on how to
 use this API. We recommend Python 3, but they are also compatible with Python 2.
 
-The basic functionality requires only the protobuf module to be installed
+Install the dependencies with
 
-    $ sudo apt-get install python3 python3-pip
-    $ sudo pip3 install protobuf
-
-However, other operations as handling images require some extra modules, and the
-"manual_control.py" example requires pygame
-
-    $ sudo pip3 install numpy Pillow pygame
+    $ pip install -r PythonClient/requirements.txt
 
 The script "PythonClient/client_example.py" provides basic functionality for
 controlling the vehicle and saving images to disk. Run the help command to see

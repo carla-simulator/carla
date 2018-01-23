@@ -16,9 +16,12 @@ environmental conditions.
 For instructions on how to use and compile CARLA, check out
 [CARLA Documentation](http://carla.readthedocs.io).
 
+If you want to benchmark your model in the same conditions as in our CoRL’17 paper, check out [Benchmarking](https://github.com/carla-simulator/carla/blob/benchmark_branch/Docs/benchmark.md).
+
 News
 ----
 
+- 22.01.2018 Job opening: [C++ (UE4) Programmer](https://drive.google.com/open?id=1Hx0eUgpXl95d4IL9meEGhJECgSRos1T1).
 - 28.11.2017 CARLA 0.7.0 released: [change log](https://github.com/carla-simulator/carla/blob/master/CHANGELOG.md#carla-070), [release](https://github.com/carla-simulator/carla/releases/tag/0.7.0).
 - 15.11.2017 CARLA 0.6.0 released: [change log](https://github.com/carla-simulator/carla/blob/master/CHANGELOG.md#carla-060), [release](https://github.com/carla-simulator/carla/releases/tag/0.6.0).
 
@@ -54,6 +57,42 @@ Felipe Codevilla, Antonio Lopez, Vladlen Koltun; PMLR 78:1-16
   year = {2017}
 }
 ```
+
+Building CARLA
+--------------
+
+Use `git clone` or download the project from this page. Note that the master
+branch contains the latest fixes and features, for the latest stable code may be
+best to switch to the `stable` branch.
+
+Then follow the instruction at [How to build on Linux][buildlink].
+
+Unfortunately we don't have yet official instructions to build on other
+platforms, please check the progress for [Windows][issue21] and [Mac][issue150].
+
+[buildlink]: http://carla.readthedocs.io/en/latest/how_to_build_on_linux
+[issue21]: https://github.com/carla-simulator/carla/issues/21
+[issue150]: https://github.com/carla-simulator/carla/issues/150
+
+Contributing
+------------
+
+Please take a look at our [Contribution guidelines][contriblink].
+
+[contriblink]: http://carla.readthedocs.io/en/latest/CONTRIBUTING
+
+F.A.Q.
+------
+
+If you run into problems, check our
+[FAQ](http://carla.readthedocs.io/en/latest/faq/).
+
+Jobs
+----
+
+We are currently looking for a new programmer to join our team
+
+  * [C++ (UE4) Programmer](https://drive.google.com/open?id=1Hx0eUgpXl95d4IL9meEGhJECgSRos1T1)
 
 License
 -------

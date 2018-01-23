@@ -1,9 +1,11 @@
 Dist
 Doxygen
+PythonClient/dist
 Util/Build
 
 *.VC.db
 *.VC.opendb
+*.egg-info
 *.kdev4
 *.log
 *.pb.cc
@@ -22,5 +24,6 @@ Util/Build
 .tags*
 .vs
 __pycache__
+_benchmarks_results
 _images*
 core
