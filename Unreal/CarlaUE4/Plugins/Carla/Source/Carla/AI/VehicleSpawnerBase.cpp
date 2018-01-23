@@ -1,5 +1,5 @@
 // Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
-// de Barcelona (UAB), and the INTEL Visual Computing Lab.
+// de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
@@ -104,7 +104,7 @@ void AVehicleSpawnerBase::SpawnVehicleAtSpawnPoint(
     Vehicle->SpawnDefaultController();
     auto Controller = GetController(Vehicle);
     if (Controller != nullptr) { // Sometimes fails...
-      Controller->SetRandomEngine(GetRandomEngine());
+      Controller->GetRandomEngine()->Seed(GetRandomEngine()->GenerateSeed());
       Controller->SetRoadMap(GetRoadMap());
       Controller->SetAutopilot(true);
       Vehicles.Add(Vehicle);
