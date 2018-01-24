@@ -1,16 +1,18 @@
 #! /bin/bash
 
 ################################################################################
-# Updates CARLA contents.
+# Updates CARLA content.
 ################################################################################
 
 set -e
 
+DOC_STRING="Update CARLA content to the latest version, to be run after 'git pull'."
+
+USAGE_STRING="Usage: $0 [-h|--help] [-s|--skip-download]"
+
 # ==============================================================================
 # -- Parse arguments -----------------------------------------------------------
 # ==============================================================================
-
-USAGE_STRING="Usage: $0 [-h|--help] [-s|--skip-download]"
 
 SKIP_DOWNLOAD=false
 
@@ -26,6 +28,7 @@ while true; do
       SKIP_DOWNLOAD=true;
       shift ;;
     -h | --help )
+      echo "$DOC_STRING"
       echo "$USAGE_STRING"
       exit 1
       ;;

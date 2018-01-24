@@ -1,3 +1,21 @@
+## CARLA 0.7.1
+
+  * New Python API module: Benchmark
+    - Defines a set of tasks and conditions to test a certain agent
+    - Contains a starting benchmark, CoRL2017
+    - Contains Agent Class: Interface for benchmarking AIs
+  * New Python API module: Basic Planner (Temporary Hack)
+    - Provide routes for the agent
+    - Contains AStar module to find the shortest route
+  * Other Python API improvements
+    - Converter class to convert between Unreal world and map units
+    - Metrics module to summarize benchmark results
+  * Send vehicle's roll, pitch, and yaw to client (orientation is now deprecated)
+  * New RoutePlanner class for assigning fixed routes to autopilot (IntersectionEntrance has been removed)
+  * Create a random engine for each vehicle, which greatly improves repeatability
+  * Add option to skip content download in Setup.sh
+  * Few small fixes to the city assets
+
 ## CARLA 0.7.0
 
   * New Python client API
@@ -9,7 +27,7 @@
     - Better documentation
     - Protocol: renamed "ai_control" to "autopilot_control"
     - Merged testing client
-    - Added the maps for both cities, the client can now access the car position within the lane.
+    - Added the maps for both cities, the client can now access the car position within the lane
   * Make CARLA start without client by default
   * Added wind effect to some trees and plants
   * Improvements to the existing weather presets
