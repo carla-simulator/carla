@@ -20,7 +20,7 @@ A few things need to be working in your server before.
 #### NVIDIA Drivers
 Download and install NVIDIA-drivers with typical tutorials
 http://www.nvidia.es/Download/index.aspx
-### OpenGL
+#### OpenGL
 Openg GL is necessary for Virtual GL. Normally OpenGL
 can be installed through apt.
 
@@ -29,7 +29,7 @@ can be installed through apt.
 Follow this tutorial and install vgl
 https://virtualgl.org/vgldoc/2_2_1/#hd004001
 
-### TurboVNC
+#### TurboVNC
 Follow the tutorial below to install TurboVNC 2.11
 https://cdn.rawgit.com/TurboVNC/turbovnc/2.1.1/doc/index.html#hd005001
 
@@ -41,7 +41,7 @@ These extra packages were necessary to make unreal to work.
 
 
 
-### Configure your X
+#### Configure your X
 
 You must generate a X compatible with your nvdia and compatible to run without display. For that, the following command worked:
 
