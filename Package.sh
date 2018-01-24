@@ -86,7 +86,7 @@ if $DO_PACKAGE ; then
   fi
 
   rm -Rf ${BUILD_FOLDER}
-  mkdir ${BUILD_FOLDER}
+  mkdir -p ${BUILD_FOLDER}
 
   ${UE4_ROOT}/Engine/Build/BatchFiles/RunUAT.sh BuildCookRun \
       -project="${PWD}/CarlaUE4.uproject" \
