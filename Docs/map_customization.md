@@ -1,15 +1,19 @@
 # Map customization
 
 ## Creating a new map
+
 !!! Bug
- - Creating a map from scratch with the Carla tools causes a crash with UE4.17.2 (Issue [#99](https://github.com/carla-simulator/carla/issues/99)),
-this guide will suggest duplicating an existing level instead of creating one from scratch.
+    Creating a map from scratch with the Carla tools causes a crash with
+    UE4.17.2 ([Issue #99](https://github.com/carla-simulator/carla/issues/99)),
+    this guide will suggest duplicating an existing level instead of creating
+    one from scratch.
 
 ### Requirements
 
  - Checkout and build Carla from source on [Linux](how_to_build_on_linux.md) or [Windows](how_to_build_on_windows.md)
 
 ### Creating
+
 - Duplicate an existing map
 - Remove everything you don't need from the map
     - Keep the folder "Lighting", "AtmosphericFog", "PostProcessVol" and "CarlaMapGenerator" this will keep the climate working as intended and the post process saved.
@@ -36,7 +40,11 @@ This are the specific blueprint assets created to help building the environment.
 
 ## MultipleFloorBuilding:
 
-The purpose of this blueprint is to make repeating and varying tall buildings a bit easier. Provided a Base, a MiddleFloor and a roof; this blueprint repeats the middle floor to the desired number of stores and tops it with the last floor given some conditions:
+The purpose of this blueprint is to make repeating and varying tall buildings a
+bit easier. Provided a Base, a MiddleFloor and a roof; this blueprint repeats
+the middle floor to the desired number of stores and tops it with the last floor
+given some conditions:
+
   - All model pivots should be in the bottom center of the Specific mesh.
   - Al models must start and end exactly where the repetition happen.
 
@@ -49,7 +57,8 @@ This blueprint is controlled by this 6 specific Parameters:
   - FloorHeightOffset: Adjust The placement of every floor vertically.
   - RoofOffset: Adjust the placement of the roof vertically.
 
-All of This parameters can be modified once this blueprint is placed in the world.
+All of This parameters can be modified once this blueprint is placed in the
+world.
 
 ## SplinemeshRepeater:
 
@@ -58,8 +67,16 @@ All of This parameters can be modified once this blueprint is placed in the worl
 
 ### Standard use:
 
-SplineMeshRepeater "Content/Blueprints/SplineMeshRepeater" is a tool included in the Carla Project to help building urban environments; It repeats and aligns a specific choosen mesh along a [Spline](https://docs.unrealengine.com/latest/INT/Engine/BlueprintSplines/Reference/SplineEditorTool/index.html) (Unreal Component). Its principal function is to build Tipicaly tiled and repetitive structures as Walls, Roads, Bridges, Fences... Once the actor is placed into the world the spline can be modified so the object gets the desired form. Each Point Defining the spline Generates a new tile so that as more points the Spline has, the more defined it will be, but also heavier on the world. This actor is defined by the following parameters:
-
+SplineMeshRepeater "Content/Blueprints/SplineMeshRepeater" is a tool included in
+the Carla Project to help building urban environments; It repeats and aligns a
+specific chosen mesh along a
+[Spline](https://docs.unrealengine.com/latest/INT/Engine/BlueprintSplines/Reference/SplineEditorTool/index.html)
+(Unreal Component). Its principal function is to build Typically tiled and
+repetitive structures as Walls, Roads, Bridges, Fences... Once the actor is
+placed into the world the spline can be modified so the object gets the desired
+form. Each Point Defining the spline Generates a new tile so that as more points
+the Spline has, the more defined it will be, but also heavier on the world. This
+actor is defined by the following parameters:
 
   - StaticMesh: The mesh to be repeated along the spline.
   - ForWardAxis: Changes the mesh axis to be aligned with the spline.
@@ -67,13 +84,21 @@ SplineMeshRepeater "Content/Blueprints/SplineMeshRepeater" is a tool included in
   - Collision Enabled: Chooses the type of collision to use.
   - Gap distance: Places a Gap between each repeated mesh, for repetitive non continuous walls: bush chains, bollards...
 
-
-(Last three variables are specific for some particular assets to be defined in the next point) A requisite to create assets compatibles with this component is that all the meshes have their pivot placed wherever the repetition starts in the lower point possible with the rest of the mesh pointing positive (Preferably by the X axis)
+(Last three variables are specific for some particular assets to be defined in
+the next point) A requisite to create assets compatibles with this component is
+that all the meshes have their pivot placed wherever the repetition starts in
+the lower point possible with the rest of the mesh pointing positive (Preferably
+by the X axis)
 
 
 ### Specific Walls (Dynamic material)
 
-In the project folder "Content/Static/Walls" are included some specific assets to be used with this SplineMeshRepeater with a series of special characteristics. The uv space of this meshes and their materials are the same for all of them, making them exchangeable. each material is composed of three different surfaces the last three parameters slightly modify the color of this surfaces:
+In the project folder "Content/Static/Walls" are included some specific assets
+to be used with this SplineMeshRepeater with a series of special
+characteristics. The UV space of this meshes and their materials are the same
+for all of them, making them exchangeable. each material is composed of three
+different surfaces the last three parameters slightly modify the color of this
+surfaces:
 
   - MainMaterialColor: Change the main material of the Wall
   - DetailsColor: Change the color of the details (if any)
@@ -81,18 +106,26 @@ In the project folder "Content/Static/Walls" are included some specific assets t
 
    To add elements that profit from this functions exist the GardenWallMask File that defines the uv space to place the materials: (Blue space: MainMaterial; green space: Details; red space TopWall).
 
-Between the material masters is WallMaster which is going to be the master of the materials using this function. An instance of this material will be created and the correspondent textures will be added. This material includes the following parameters to be modified by the material to use:
+Between the material masters is WallMaster which is going to be the master of
+the materials using this function. An instance of this material will be created
+and the correspondent textures will be added. This material includes the
+following parameters to be modified by the material to use:
 
   - Normal Flattener: Slightly modifies the normal map values to exaggerate it or flatten it.
   - RoughnessCorrection: Changes the Roughness value given by the texture.
 
-  The rest of the parameters are the mask the textures and the color corrections that won't be modified in this instance but in the blueprint that will be launched into the world.
-
-
-
+The rest of the parameters are the mask the textures and the color corrections
+that won't be modified in this instance but in the blueprint that will be
+launched into the world.
 
 ## Weather
-This is the actor in charge of modifying all the lighting, environmental actors an anything that affects the impression of the climate. It runs automatically with the game when is not specified otherwise In the Config.Ini but has Its own actor to launch in editor mode to configure the climatic conditions. To fully work It will need One of each of the following actors: SkySphere, Skylight, Postprocess Volume (Boundless) And Light Source to exist in the world.
+
+This is the actor in charge of modifying all the lighting, environmental actors
+an anything that affects the impression of the climate. It runs automatically
+with the game when is not specified otherwise In the Config. Ini but has Its own
+actor to launch in editor mode to configure the climatic conditions. To fully
+work It will need One of each of the following actors: SkySphere, Skylight,
+Postprocess Volume (Boundless) And Light Source to exist in the world.
 
   - SunPolarAngle: polar angle of the sun, determines time of the day
   - SunAzimuthAngle: adds to the location of the sun in the current level
@@ -121,5 +154,7 @@ This is the actor in charge of modifying all the lighting, environmental actors 
   - CameraPostProcessParameters.AutoExposureMaxBrightness: defines the maximum brightness the autoexposure will count as right in the final image.
   - CameraPostProcessParameters.AutoExposureBias: Darkens or brightens the final image towards a defined bias.
 
-
-You can have as many different configurations saved in the project as you want and choose the configuration to aply while on the build, through the [settings file](carla_settings.md); or in the editor while building the level or testing.
+You can have as many different configurations saved in the project as you want
+and choose the configuration to apply while on the build, through the
+[settings file](carla_settings.md); or in the editor while building the level or
+testing.
