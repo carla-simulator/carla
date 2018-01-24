@@ -9,7 +9,7 @@ set -e
 DOC_STRING="Makes a packaged version of CARLA for distribution.
 Please make sure to run Rebuild.sh before!"
 
-USAGE_STRING="Usage: $0 [-h|--help] [--skip-packaging]"
+USAGE_STRING="Usage: $0 [-h|--help] [--no-packaging] [--no-zip] [--clean-intermediate]"
 
 # ==============================================================================
 # -- Parse arguments -----------------------------------------------------------
@@ -18,8 +18,9 @@ USAGE_STRING="Usage: $0 [-h|--help] [--skip-packaging]"
 DO_PACKAGE=true
 DO_COPY_FILES=true
 DO_TARBALL=true
+DO_CLEAN_INTERMEDIATE=false
 
-OPTS=`getopt -o h --long help,skip-packaging -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,no-packaging,no-zip,clean-intermediate -n 'parse-options' -- "$@"`
 
 if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
 
@@ -27,8 +28,14 @@ eval set -- "$OPTS"
 
 while true; do
   case "$1" in
-    --skip-packaging )
+    --no-packaging )
       DO_PACKAGE=false
+      shift ;;
+    --no-zip )
+      DO_TARBALL=false
+      shift ;;
+    --clean-intermediate )
+      DO_CLEAN_INTERMEDIATE=true
       shift ;;
     -h | --help )
       echo "$DOC_STRING"
@@ -142,6 +149,18 @@ if $DO_TARBALL ; then
   tar -czvf ${DESTINATION} *
 
   popd >/dev/null
+
+fi
+
+# ==============================================================================
+# -- Remove intermediate files -------------------------------------------------
+# ==============================================================================
+
+if $DO_CLEAN_INTERMEDIATE ; then
+
+  log "Removing intermediate build..."
+
+  rm -Rf ${BUILD_FOLDER}
 
 fi
 
