@@ -1,8 +1,8 @@
 # Map customization
 
 ## Creating a new map
-Notes:
- - As creating a map from scratch with the Carla tools causes a crash with UE4.17.2 (Issue [#99](https://github.com/carla-simulator/carla/issues/99)),
+!!! Bug
+ - Creating a map from scratch with the Carla tools causes a crash with UE4.17.2 (Issue [#99](https://github.com/carla-simulator/carla/issues/99)),
 this guide will suggest dupplicating an existing level instead of creating one from scratch.
 
 ### Requirements
