@@ -26,7 +26,7 @@ from carla.planner.converter import Converter
 
 
 def color_to_angle(color):
-    return ((float(color) / 255.0)) * 2 * math.pi
+    return (float(color) / 255.0) * 2 * math.pi
 
 
 class CarlaMap(object):
@@ -105,7 +105,7 @@ class CarlaMap(object):
 
     def convert_to_pixel(self, input_data):
         """
-        Receives a data type (Can Be Pixel or World )
+        Receives a data type (Can Be Node or World )
         :param input_data: position in some coordinate
         :return: A node object
         """
@@ -113,7 +113,7 @@ class CarlaMap(object):
 
     def convert_to_world(self, input_data):
         """
-        Receives a data type (Can Be Pixel or World )
+        Receives a data type (Can Be Pixel or Node )
         :param input_data: position in some coordinate
         :return: A node object
         """
