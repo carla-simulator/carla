@@ -1,5 +1,5 @@
 // Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
-// de Barcelona (UAB), and the INTEL Visual Computing Lab.
+// de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
@@ -16,4 +16,11 @@ int32 URandomEngine::GenerateRandomSeed()
       std::numeric_limits<int32>::lowest(),
       std::numeric_limits<int32>::max());
   return Distribution(RandomDevice);
+}
+
+int32 URandomEngine::GenerateSeed()
+{
+  return GetUniformIntInRange(
+      std::numeric_limits<int32>::lowest(),
+      std::numeric_limits<int32>::max());
 }
