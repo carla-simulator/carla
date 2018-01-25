@@ -25,6 +25,5 @@ Util/Build
 .vs
 __pycache__
 _benchmarks_results
-_images
+_images*
 core
-
