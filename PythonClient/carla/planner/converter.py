@@ -18,7 +18,7 @@ NODE = 2
 
 class Converter(object):
 
-    def __init__(self, city_file, node_density, pixel_density):
+    def __init__(self, city_file,  pixel_density, node_density):
 
         self._node_density = node_density
         self._pixel_density = pixel_density
@@ -66,6 +66,7 @@ class Converter(object):
         """
 
         input_type = self._check_input_type(input_data)
+
         if input_type == NODE:
             return self._node_to_pixel(input_data)
         elif input_type == WORLD:
@@ -141,6 +142,8 @@ class Converter(object):
         relative_location = [rotation[0] + self._worldoffset[0] - self._mapoffset[0],
                              rotation[1] + self._worldoffset[1] - self._mapoffset[1],
                              rotation[2] + self._worldoffset[2] - self._mapoffset[2]]
+
+
 
         pixel = [math.floor(relative_location[0] / float(self._pixel_density)),
                  math.floor(relative_location[1] / float(self._pixel_density))]
