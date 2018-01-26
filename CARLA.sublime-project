@@ -5,18 +5,19 @@
 			"path": ".",
 			"folder_exclude_patterns":
 			[
-				"__pycache__",
 				".clang",
 				".codelite",
 				".kdev4",
 				".vs",
-				"Build",
 				"Binaries",
-				"Unreal/CarlaUE4/Content*",
+				"Build",
 				"DerivedDataCache",
+				"Dist",
 				"Doxygen",
 				"Intermediate",
-				"Saved"
+				"Saved",
+				"Unreal/CarlaUE4/Content*",
+				"__pycache__"
 			],
 			"file_exclude_patterns":
 			[
