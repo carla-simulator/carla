@@ -1,5 +1,5 @@
 // Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
-// de Barcelona (UAB), and the INTEL Visual Computing Lab.
+// de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
@@ -98,14 +98,10 @@ public:
   /// @{
 public:
 
-  void SetRandomEngine(URandomEngine *InRandomEngine)
-  {
-    RandomEngine = InRandomEngine;
-  }
-
   UFUNCTION(Category = "Random Engine", BlueprintCallable)
   URandomEngine *GetRandomEngine()
   {
+    check(RandomEngine != nullptr);
     return RandomEngine;
   }
 
@@ -177,7 +173,7 @@ public:
 
   /// Set a fixed route to follow if autopilot is enabled.
   UFUNCTION(Category = "Wheeled Vehicle Controller", BlueprintCallable)
-  void SetFixedRoute(const TArray<FVector> &Locations);
+  void SetFixedRoute(const TArray<FVector> &Locations, bool bOverwriteCurrent=true);
 
   /// @}
   // ===========================================================================
@@ -221,13 +217,13 @@ private:
 private:
 
   UPROPERTY()
-  ACarlaWheeledVehicle *Vehicle;
+  ACarlaWheeledVehicle *Vehicle = nullptr;
 
   UPROPERTY()
-  URoadMap *RoadMap;
+  URoadMap *RoadMap = nullptr;
 
   UPROPERTY()
-  URandomEngine *RandomEngine;
+  URandomEngine *RandomEngine = nullptr;
 
   UPROPERTY(VisibleAnywhere)
   bool bAutopilotEnabled = false;

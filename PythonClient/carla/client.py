@@ -1,5 +1,5 @@
 # Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de
-# Barcelona (UAB), and the INTEL Visual Computing Lab.
+# Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
@@ -159,9 +159,7 @@ class CarlaClient(object):
             raise RuntimeError('failed to read data from server')
         pb_message = carla_protocol.SceneDescription()
         pb_message.ParseFromString(data)
-        if len(pb_message.player_start_spots) < 1:
-            raise RuntimeError("received 0 player start spots")
-        self._sensor_names = settings._get_sensor_names(carla_settings)
+        self._sensor_names = settings.get_sensor_names(carla_settings)
         self._is_episode_requested = True
         return pb_message
 

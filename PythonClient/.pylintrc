@@ -1,0 +1,4 @@
+[TYPECHECK]
+ignore=carla_server_pb2.py
+ignored-modules=ConfigParser,numpy,numpy.random,pygame,shutil
+ignored-classes=_socketobject,EpisodeReady

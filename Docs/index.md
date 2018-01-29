@@ -7,8 +7,8 @@ CARLA Documentation
   * [CARLA settings](carla_settings.md)
   * [Measurements](measurements.md)
   * [Cameras and sensors](cameras_and_sensors.md)
+  * [Benchmark](benchmark.md)
   * [F.A.Q.](faq.md)
-  * [Troubleshooting](troubleshooting.md)
 
 #### Building from source
 
@@ -19,6 +19,8 @@ CARLA Documentation
 #### Contributing
 
   * [Contribution guidelines](CONTRIBUTING.md)
+  * [Coding standard](coding_standard.md)
+  * [Code of conduct](CODE_OF_CONDUCT.md)
 
 #### Development
 

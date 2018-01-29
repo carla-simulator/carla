@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de
-# Barcelona (UAB), and the INTEL Visual Computing Lab.
+# Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
@@ -13,7 +13,6 @@ from __future__ import print_function
 import argparse
 import logging
 import random
-import sys
 import time
 
 from carla.client import make_carla_client
@@ -218,9 +217,6 @@ def main():
         except TCPConnectionError as error:
             logging.error(error)
             time.sleep(1)
-        except Exception as exception:
-            logging.exception(exception)
-            sys.exit(1)
 
 
 if __name__ == '__main__':

@@ -37,9 +37,13 @@ autopilot_control          | Control   | Vehicle's autopilot control that would 
 
 ###### Transform
 
-The transform contains two Vector3D objects, location and orientation.
-Currently, the orientation is represented as the Cartesian coordinates X, Y, Z.
-_We will probably change this in the future to Roll, Pitch, and Yaw._
+The transform contains the location and rotation of the player.
+
+Key                        | Type       | Description
+-------------------------- | ---------- | ------------
+location                   | Vector3D   | World location.
+orientation *[deprecated]* | Vector3D   | Orientation in Cartesian coordinates.
+rotation                   | Rotation3D | Pitch, roll, and yaw.
 
 ###### Collision
 
