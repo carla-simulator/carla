@@ -36,7 +36,8 @@ https://cdn.rawgit.com/TurboVNC/turbovnc/2.1.1/doc/index.html#hd005001
 WARNING: Take care on which VNC you install as it may not be compatible with Unreal. The one above was the only one that worked for me. 
 #### Extra Packages
 These extra packages were necessary to make unreal to work.
-    sudo apt install 11-xserver-utils libxrandr-dev
+
+    sudo apt install x11-xserver-utils libxrandr-dev
 
 
 
