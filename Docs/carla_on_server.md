@@ -56,7 +56,7 @@ Start by killing all Xorg servers. This command could change depending on your s
 
     sudo service lightdm stop
 
-Run our own X server. Here I use number 7, but in theory it could be labeled with any number.
+Run your own Xorg. Here I use number 7, but it could be labeled with any free number.
 
     sudo nohup Xorg :7 &
 
@@ -69,12 +69,12 @@ If everything is working fine the following command
 should run smoothly.
 
     DISPLAY=:8 vglrun -d :7.0 glxinfo
-Note. This will run glx info on Xserver 7, device 0. This means you are selecting the GPU 0 on your machine. To run on other GPU such as GPU 1 run:
+Note. This will run glxinfo on Xserver 7, device 0. This means you are selecting the GPU 0 on your machine. To run on other GPU, such as GPU 1 run:
 
     DISPLAY=:8 vglrun -d :7.1 glxinfo
 
 ## Running CARLA 
 
-Now, finally, to run CARLA on a certain gpu_number placed in a certain $CARLA_PATH basiclly run.
+Now, finally, to run CARLA on a certain gpu_number placed in a certain $CARLA_PATH, run.
 
     DISPLAY=:8 vglrun -d :7.<gpu_number> $CARLA_PATH/CarlaUE4/Binaries/Linux/CarlaUE4 
