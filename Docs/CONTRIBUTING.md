@@ -59,7 +59,7 @@ Before starting hands-on on coding, please check out the
 [projects page][projectslink] to see if we are already working on that, it would
 be a pity putting an effort into something just to discover that someone else
 was already working on that. In case of doubt or to discuss how to proceed,
-please contact one of us (or send an email to carla.ai.simulator@gmail.com).
+please contact one of us (or send an email to carla.simulator@gmail.com).
 
 [projectslink]: https://github.com/carla-simulator/carla/projects/1
 

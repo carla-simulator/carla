@@ -10,6 +10,6 @@ setup(
     description='Python API for communicating with the CARLA server.',
     url='https://github.com/carla-simulator/carla',
     author='The CARLA team',
-    author_email='carla.ai.simulator@gmail.com',
+    author_email='carla.simulator@gmail.com',
     include_package_data=True
 )
