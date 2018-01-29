@@ -1,10 +1,45 @@
 #! /bin/bash
 
 ################################################################################
-# Updates CARLA contents.
+# Updates CARLA content.
 ################################################################################
 
 set -e
+
+DOC_STRING="Update CARLA content to the latest version, to be run after 'git pull'."
+
+USAGE_STRING="Usage: $0 [-h|--help] [-s|--skip-download]"
+
+# ==============================================================================
+# -- Parse arguments -----------------------------------------------------------
+# ==============================================================================
+
+SKIP_DOWNLOAD=false
+
+OPTS=`getopt -o hs --long help,skip-download -n 'parse-options' -- "$@"`
+
+if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
+
+eval set -- "$OPTS"
+
+while true; do
+  case "$1" in
+    -s | --skip-download )
+      SKIP_DOWNLOAD=true;
+      shift ;;
+    -h | --help )
+      echo "$DOC_STRING"
+      echo "$USAGE_STRING"
+      exit 1
+      ;;
+    * )
+      break ;;
+  esac
+done
+
+# ==============================================================================
+# -- Set up environment --------------------------------------------------------
+# ==============================================================================
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 pushd "$SCRIPT_DIR" >/dev/null
@@ -29,6 +64,19 @@ function download_content {
   echo "$CONTENT_GDRIVE_ID" > "$VERSION_FILE"
   echo "Content updated successfully."
 }
+
+# ==============================================================================
+# -- Download Content if necessary ---------------------------------------------
+# ==============================================================================
+
+if $SKIP_DOWNLOAD ; then
+  echo "Skipping 'Content' update. Please manually download the package from"
+  echo
+  echo "  https://drive.google.com/open?id=$CONTENT_GDRIVE_ID"
+  echo
+  echo "and extract it under Unreal/CarlaUE4/Content."
+  exit 0
+fi
 
 if [[ -d "$CONTENT_FOLDER/.git" ]]; then
   echo "Using git version of 'Content', skipping update."

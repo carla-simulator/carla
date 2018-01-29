@@ -1,5 +1,5 @@
 // Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
-// de Barcelona (UAB), and the INTEL Visual Computing Lab.
+// de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
@@ -59,6 +59,13 @@ static bool IsThereAnObstacleAhead(
       RayTrace(Vehicle, StartLeft, EndLeft);
 }
 
+template <typename T>
+static void ClearQueue(std::queue<T> &Queue)
+{
+  std::queue<T> EmptyQueue;
+  Queue.swap(EmptyQueue);
+}
+
 // =============================================================================
 // -- Constructor and destructor -----------------------------------------------
 // =============================================================================
@@ -66,6 +73,8 @@ static bool IsThereAnObstacleAhead(
 AWheeledVehicleAIController::AWheeledVehicleAIController(const FObjectInitializer& ObjectInitializer) :
   Super(ObjectInitializer)
 {
+  RandomEngine = CreateDefaultSubobject<URandomEngine>(TEXT("RandomEngine"));
+
   PrimaryActorTick.bCanEverTick = true;
   PrimaryActorTick.TickGroup = TG_PrePhysics;
 }
@@ -118,8 +127,7 @@ void AWheeledVehicleAIController::ConfigureAutopilot(const bool Enable)
   Vehicle->SetReverse(false);
   Vehicle->SetHandbrakeInput(false);
   TrafficLightState = ETrafficLightState::Green;
-  decltype(TargetLocations) EmptyQueue;
-  TargetLocations.swap(EmptyQueue);
+  ClearQueue(TargetLocations);
   Vehicle->SetAIVehicleState(
       bAutopilotEnabled ?
           ECarlaWheeledVehicleState::FreeDriving :
@@ -130,8 +138,13 @@ void AWheeledVehicleAIController::ConfigureAutopilot(const bool Enable)
 // -- Traffic ------------------------------------------------------------------
 // =============================================================================
 
-void AWheeledVehicleAIController::SetFixedRoute(const TArray<FVector> &Locations)
+void AWheeledVehicleAIController::SetFixedRoute(
+    const TArray<FVector> &Locations,
+    const bool bOverwriteCurrent)
 {
+  if (bOverwriteCurrent) {
+    ClearQueue(TargetLocations);
+  }
   for (auto &Location : Locations) {
     TargetLocations.emplace(Location);
   }

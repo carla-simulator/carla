@@ -1,0 +1,56 @@
+// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
+#pragma once
+
+#include "GameFramework/Actor.h"
+#include "Components/BoxComponent.h"
+#include "Components/SplineComponent.h"
+#include "RoutePlanner.generated.h"
+
+/// Assign a random route to every ACarlaWheeledVehicle entering the trigger
+/// volume. Routes must be added in editor after placing this actor into the
+/// world. Spline tangents are ignored, only locations are taken into account
+/// for making the route.
+UCLASS()
+class CARLA_API ARoutePlanner : public AActor
+{
+  GENERATED_BODY()
+
+public:
+
+  ARoutePlanner(const FObjectInitializer& ObjectInitializer);
+
+protected:
+
+#if WITH_EDITOR
+  virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif // WITH_EDITOR
+
+  virtual void BeginPlay() override;
+
+  virtual void EndPlay(EEndPlayReason::Type EndPlayReason) override;
+
+  UFUNCTION()
+  void OnTriggerBeginOverlap(
+      UPrimitiveComponent* OverlappedComp,
+      AActor *OtherActor,
+      UPrimitiveComponent *OtherComp,
+      int32 OtherBodyIndex,
+      bool bFromSweep,
+      const FHitResult &SweepResult);
+
+public:
+
+  UPROPERTY(EditAnywhere)
+  UBoxComponent *TriggerVolume;
+
+  UPROPERTY(BlueprintReadWrite, Category="Traffic Routes", EditAnywhere)
+  TArray<USplineComponent *> Routes;
+
+  UPROPERTY(BlueprintReadWrite, Category="Traffic Routes", EditAnywhere, EditFixedSize)
+  TArray<float> Probabilities;
+};

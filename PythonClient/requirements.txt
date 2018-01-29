@@ -1,0 +1,6 @@
+Pillow
+numpy
+protobuf
+pygame
+matplotlib
+future

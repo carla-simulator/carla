@@ -1,5 +1,5 @@
 // Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
-// de Barcelona (UAB), and the INTEL Visual Computing Lab.
+// de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
@@ -20,12 +20,16 @@ message Vector3D {
   float z = 3;
 }
 
+message Rotation3D {
+  float pitch = 1;
+  float yaw = 2;
+  float roll = 3;
+}
+
 message Transform {
   Vector3D location = 1;
-  // For now, orientation as the cartesian coordinates X, Y, Z. But we are
-  // probably better off using Roll, Pitch, Yaw in the future as it gives more
-  // info.
-  Vector3D orientation = 2;
+  Vector3D orientation = 2 [deprecated=true];
+  Rotation3D rotation = 3;
 }
 
 message Vehicle {
