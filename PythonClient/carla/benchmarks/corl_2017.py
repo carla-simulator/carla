@@ -132,6 +132,8 @@ class CoRL2017(Benchmark):
         """
         Creates the whole set of experiment objects,
         The experiments created depend on the selected Town.
+
+
         """
 
         # We set the camera
@@ -199,5 +201,10 @@ class CoRL2017(Benchmark):
         Returns the pose and task this experiment is, based on the line it was
         on the log file.
         """
-        # We assume that the number of poses is constant
-        return int(line_on_file / len(self._experiments)), line_on_file % 25
+        """
+            Warning: assumes that all tasks have the same size
+        """
+        if self._city_name == 'Town01':
+            return line_on_file / len(self._poses_town01()[0]), line_on_file % len(self._poses_town01()[0])
+        else:
+            return line_on_file / len(self._poses_town01()[0]), line_on_file % len(self._poses_town02()[0])

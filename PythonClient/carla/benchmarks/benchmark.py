@@ -78,6 +78,15 @@ class Benchmark(object):
         # Get the line for the experiment to be continued
         self._line_on_file = self._continue_experiment(continue_experiment)
 
+        folder = os.path.dirname(self._full_name)
+        if not os.path.isdir(folder):
+            os.makedirs(folder)
+
+        # A log with a date file: to show when was the last access and log what was tested,
+
+        now = datetime.datetime.now()
+        self._internal_log_name = os.path.join(self._full_name, 'log_' + now.strftime("%Y%m%d%H%M"))
+
 
 
         self._save_images = save_images
@@ -145,7 +154,6 @@ class Benchmark(object):
         return 0, measurement_vec, time_out, distance
 
     def benchmark_agent(self, agent, carla):
-
         if self._line_on_file == 0:
             # The fixed name considering all the experiments being run
             with open(os.path.join(self._full_name,
@@ -162,7 +170,7 @@ class Benchmark(object):
             start_task = 0
             start_pose = 0
         else:
-            (start_task, start_pose) = self._get_pose_and_task(self._line_on_file)
+            (start_task, start_pose) = self._get_pose_and_task(self._line_on_file -1)
 
         logging.info(' START ')
 
@@ -170,6 +178,10 @@ class Benchmark(object):
 
             positions = carla.load_settings(
                 experiment.conditions).player_start_spots
+
+            with open(self._internal_log_name, 'a+') as log:
+                log.write('Start Experiment %d \n' % experiment.id)
+
 
             for pose in experiment.poses[start_pose:]:
                 for rep in range(experiment.repetitions):
@@ -182,6 +194,11 @@ class Benchmark(object):
                     logging.info('======== !!!! ==========')
                     logging.info(' Start Position %d End Position %d ',
                                  start_point, end_point)
+
+
+                    with open(self._internal_log_name, 'a+') as log:
+                        log.write(' Start Test  (%d  %d ) on weather %d \n ' %
+                                  (start_point, end_point, experiment.Conditions.WeatherId))
 
                     path_distance = agent.get_distance(
                         positions[start_point], positions[end_point])
@@ -203,14 +220,17 @@ class Benchmark(object):
                     self._write_summary_results(
                         experiment, pose, rep, euclidean_distance,
                         remaining_distance, final_time, time_out, result)
-
+                    with open(self._internal_log_name, 'a+') as log:
+                        log.write('Finished Experiment')
                     self._write_details_results(experiment, rep, reward_vec)
 
-                    if(result > 0):
+                    if result > 0:
                         logging.info('+++++ Target achieved in %f seconds! +++++',
                               final_time)
                     else:
                         logging.info('----- Timeout! -----')
+        with open(self._internal_log_name, 'a+') as log:
+            log.write('====== Finished Entire Benchmark ======')
         return self.get_all_statistics()
 
     def _write_summary_results(self, experiment, pose, rep,
@@ -272,14 +292,7 @@ class Benchmark(object):
                                   base_name + '_'
                                   + self._get_details() + '/')
 
-        folder = os.path.dirname(full_name)
-        if not os.path.isdir(folder):
-            os.makedirs(folder)
 
-        # Make a date file: to show when this was modified,
-        # the number of times the experiments were run
-        now = datetime.datetime.now()
-        open(os.path.join(full_name, now.strftime("%Y%m%d%H%M")),'w').close()
 
         return suffix_name, full_name
 
@@ -309,7 +322,7 @@ class Benchmark(object):
 
 
     def _experiment_exist(self):
-        return os.path.isfile(self._full_name)
+        return os.path.exists(self._full_name)
 
     def _get_last_position(self):
 
@@ -318,6 +331,16 @@ class Benchmark(object):
 
 
     # To be redefined on subclasses on how to calculate timeout for an episode
+    @abc.abstractmethod
+    def check_if_finished(self):
+        """
+        Check if the experiment has finished
+
+        :return:
+        """
+        pass
+
+
     @abc.abstractmethod
     def _calculate_time_out(self, distance):
         pass
