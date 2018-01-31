@@ -1,10 +1,10 @@
-Running CARLA Remotely and without Display
+Running CARLA without Display and Selecting GPUs 
 ------
 
 
 This tutorial is designed for: 
 - Remote server users that have several nvidia  graphical cards and want to effectively use CARLA on all GPUs.
--  Desktop users who want to use the GPU that is not plugged on the screen for rendering CARLA.
+- Desktop users who want to use the GPU that is not plugged on the screen for rendering CARLA.
 
 
 On this tutorial you will learn.
