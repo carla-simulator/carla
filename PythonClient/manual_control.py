@@ -137,6 +137,7 @@ class CarlaGame(object):
         self._main_image = None
         self._mini_view_image1 = None
         self._mini_view_image2 = None
+        self._lidar_measurement = None
         self._map_view = None
         self._is_on_reverse = False
         self._city_name = city_name

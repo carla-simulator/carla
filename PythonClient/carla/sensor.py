@@ -223,5 +223,5 @@ class LidarMeasurement(SensorData):
                 'horizontal_angle' : self.horizontal_angle,
                 'channels_count' : self.channels_count,
                 'points_count_by_channel' : self.points_count_by_channel.tolist(),
-                'points' : self._converted_data['points'].tolist()
+                'points' : self.data['points'].tolist()
             }))
