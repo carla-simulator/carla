@@ -1,5 +1,45 @@
 #!/bin/bash
+
+################################################################################
+# Updates CARLA content.
+################################################################################
+
 set -e
+
+DOC_STRING="Update CARLA content to the latest version, to be run after 'git pull'."
+
+USAGE_STRING="Usage: $0 [-h|--help] [--no-editor]"
+
+# ==============================================================================
+# -- Parse arguments -----------------------------------------------------------
+# ==============================================================================
+
+LAUNCH_UE4_EDITOR=true
+
+OPTS=`getopt -o h --long help,no-editor -n 'parse-options' -- "$@"`
+
+if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
+
+eval set -- "$OPTS"
+
+while true; do
+  case "$1" in
+    --no-editor )
+      LAUNCH_UE4_EDITOR=false;
+      shift ;;
+    -h | --help )
+      echo "$DOC_STRING"
+      echo "$USAGE_STRING"
+      exit 1
+      ;;
+    * )
+      break ;;
+  esac
+done
+
+# ==============================================================================
+# -- Set up environment --------------------------------------------------------
+# ==============================================================================
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 pushd "$SCRIPT_DIR" >/dev/null
@@ -60,8 +100,15 @@ set -e
 log "Build CarlaUE4 project..."
 make CarlaUE4Editor
 
-log "Launching UE4Editor..."
-${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${PWD}/CarlaUE4.uproject"
+if $LAUNCH_UE4_EDITOR ; then
+  log "Launching UE4Editor..."
+  ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${PWD}/CarlaUE4.uproject"
+else
+  echo ""
+  echo "****************"
+  echo "*** Success! ***"
+  echo "****************"
+fi
 
 popd >/dev/null
 

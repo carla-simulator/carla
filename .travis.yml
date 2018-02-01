@@ -1,13 +1,27 @@
 language: python
 
+os: linux
+dist: trusty # xenial is not yet supported.
+
+env: TEST="Pylint"
 python:
-  - "2.7"
   - "3.5"
   - "3.6"
-
+  - "2.7"
 install:
   - pip install -r PythonClient/requirements.txt
   - pip install pylint
-
 script:
-  - pylint --errors-only --rcfile=PythonClient/.pylintrc PythonClient/carla PythonClient/*.py
+  - pylint --disable=R,C --rcfile=PythonClient/.pylintrc PythonClient/carla PythonClient/*.py
+
+matrix:
+  include:
+
+    - env: TEST="CppCheck"
+      install: true
+      addons:
+        apt:
+          packages:
+            - cppcheck
+      script:
+        - cppcheck . -iBuild -i.pb.cc --error-exitcode=1 --enable=warning --quiet

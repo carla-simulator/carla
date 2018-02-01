@@ -1,5 +1,5 @@
 // Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
-// de Barcelona (UAB), and the INTEL Visual Computing Lab.
+// de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
@@ -176,7 +176,8 @@ void ACarlaGameModeBase::BeginPlay()
     VehicleSpawner->SetSeed(CarlaSettings.SeedVehicles);
     VehicleSpawner->SetRoadMap(RoadMap);
     if (PlayerController != nullptr) {
-      PlayerController->SetRandomEngine(VehicleSpawner->GetRandomEngine());
+      PlayerController->GetRandomEngine()->Seed(
+          VehicleSpawner->GetRandomEngine()->GenerateSeed());
     }
   } else {
     UE_LOG(LogCarla, Error, TEXT("Missing vehicle spawner actor!"));

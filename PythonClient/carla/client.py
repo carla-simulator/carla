@@ -1,5 +1,5 @@
 # Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de
-# Barcelona (UAB), and the INTEL Visual Computing Lab.
+# Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
@@ -17,7 +17,6 @@ from . import util
 
 try:
     from . import carla_server_pb2 as carla_protocol
-    from carla_protocol import EpisodeReady
 except ImportError:
     raise RuntimeError('cannot import "carla_server_pb2.py", run the protobuf compiler to generate this file')
 
@@ -97,7 +96,7 @@ class CarlaClient(object):
             data = self._world_client.read()
             if not data:
                 raise RuntimeError('failed to read data from server')
-            pb_message = EpisodeReady()
+            pb_message = carla_protocol.EpisodeReady()
             pb_message.ParseFromString(data)
             if not pb_message.ready:
                 raise RuntimeError('cannot start episode: server failed to start episode')
@@ -160,7 +159,7 @@ class CarlaClient(object):
             raise RuntimeError('failed to read data from server')
         pb_message = carla_protocol.SceneDescription()
         pb_message.ParseFromString(data)
-        self._sensor_names = settings._get_sensor_names(carla_settings)
+        self._sensor_names = settings.get_sensor_names(carla_settings)
         self._is_episode_requested = True
         return pb_message
 

@@ -1,23 +1,25 @@
 Contributing to CARLA
 =====================
 
-> _This document is a work in progress and might be incomplete._
-
 We are more than happy to accept contributions!
 
 How can I contribute?
 
   * Reporting bugs
   * Feature requests
+  * Improving documentation
   * Code contributions
 
 Reporting bugs
 --------------
 
-Use our [issue section](issueslink) on GitHub. Please check before that the
-issue was not already added.
+Use our [issue section][issueslink] on GitHub. Please check before that the
+issue is not already reported, and make sure you have read our
+[Documentation][docslink] and [FAQ][faqlink].
 
 [issueslink]: https://github.com/carla-simulator/carla/issues
+[docslink]: http://carla.readthedocs.io
+[faqlink]: http://carla.readthedocs.io/en/latest/faq/
 
 Feature requests
 ----------------
@@ -28,13 +30,36 @@ your request as a new issue.
 
 [frlink]: https://github.com/carla-simulator/carla/issues?q=is%3Aissue+is%3Aopen+label%3A%22feature+request%22
 
+Improving documentation
+-----------------------
+
+If you feel something is missing in the documentation, please don't hesitate to
+open an issue to let us know. Even better, if you think you can improve it
+yourself, it would be a great contribution to the community!
+
+We build our documentation with [MkDocs](http://www.mkdocs.org/) based on the
+Markdown files inside the "Docs" folder. You can either directly modify them on
+GitHub or locally in your machine.
+
+Once you are done with your changes, please submit a pull-request.
+
+**TIP:** You can build and serve it locally by running `mkdocs` in the project's
+main folder
+
+    $ sudo pip install mkdocs
+    $ mkdocs serve
+
 Code contributions
 ------------------
 
+So you are considering making a code contribution, great! we love to have
+contributions from the community.
+
 Before starting hands-on on coding, please check out the
-[projects page][projectslink] to see if we are already working on that. In case
-of doubt or to discuss how to proceed, please contact one of us (or send an
-email to carla.simulator@gmail.com).
+[projects page][projectslink] to see if we are already working on that, it would
+be a pity putting an effort into something just to discover that someone else
+was already working on that. In case of doubt or to discuss how to proceed,
+please contact one of us (or send an email to carla.simulator@gmail.com).
 
 [projectslink]: https://github.com/carla-simulator/carla/projects/1
 
@@ -42,22 +67,39 @@ email to carla.simulator@gmail.com).
 
 Check out the ["CARLA Design"](carla_design.md) document to get an idea on the
 different modules that compose CARLA, and chose the most appropriate one to hold
-the new feature.
+the new feature. We are aware the developers documentation is still scarce,
+please ask us in case of doubt, and of course don't hesitate to improve the
+current documentation if you feel confident enough.
 
-#### Coding style
+#### Coding standard
 
-Please follow the current coding style when submitting new code.
+Please follow the current [coding standard](coding_standard.md) when submitting
+new code.
 
-  * Use spaces, not tabs.
-  * Comments should not exceed 80 columns, code may exceed this limit a bit in rare
-occasions if it results in clearer code.
-  * Python code follows [PEP8 style guide](https://www.python.org/dev/peps/pep-0008/) (use `autopep8` whenever possible).
-  * Unreal C++ code, CarlaUE4 and Carla plugin, follow the [Unreal Engine's Coding Standard](https://docs.unrealengine.com/latest/INT/Programming/Development/CodingStandard/) with the exception of using spaces instead of tabs.
-  * CarlaServer uses [Google's style guide](https://google.github.io/styleguide/cppguide.html).
-
-#### Pull request
+#### Pull-requests
 
 Once you think your contribution is ready to be added to CARLA, please submit a
-pull request and one of our team members will take a look at it.
+pull-request.
 
 Try to be as descriptive as possible when filling the pull-request description.
+Adding images and gifs may help people to understand your changes or new
+features.
+
+Please note that there are some checks that the new code is required to pass
+before we can do the merge. The checks are automatically run by the continuous
+integration system, you will see a green tick mark if all the checks succeeded.
+If you see a red mark, please correct your code accordingly.
+
+###### Checklist
+
+<!--
+  If you modify this list please keep it up-to-date with pull_request_template.md
+-->
+
+  - [ ] Your branch is up-to-date with the `master` branch and tested with latest changes
+  - [ ] Extended the README / documentation, if necessary
+  - [ ] Code compiles correctly
+  - [ ] All tests passing
+    - [ ] `make check`
+    - [ ] `pylint --disable=R,C --rcfile=PythonClient/.pylintrc PythonClient/carla PythonClient/*.py`
+    - [ ] `cppcheck . -iBuild -i.pb.cc --enable=warning`
