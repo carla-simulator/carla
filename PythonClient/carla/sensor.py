@@ -1,5 +1,5 @@
 # Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de
-# Barcelona (UAB), and the INTEL Visual Computing Lab.
+# Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
@@ -159,7 +159,7 @@ class Image(SensorData):
             size=(self.width, self.height),
             data=self.raw_data,
             decoder_name='raw')
-        b, g, r, a = image.split()
+        b, g, r, _ = image.split()
         image = PImage.merge("RGB", (r, g, b))
 
         folder = os.path.dirname(filename)
