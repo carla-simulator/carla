@@ -153,7 +153,7 @@ extern "C" {
     /** Percentage of the car off-road. */
     float intersection_offroad;
     /** Vehicle's AI control that would apply this frame. */
-    struct carla_control ai_control;
+    struct carla_control autopilot_control;
   };
 
   /* ======================================================================== */
