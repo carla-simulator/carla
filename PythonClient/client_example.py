@@ -118,7 +118,6 @@ def run_carla_client(host, port, autopilot_on, save_images_to_disk, image_filena
                 if save_images_to_disk:
                     for name, measurement in sensor_data.items():
                         if isinstance(measurement, LidarMeasurement):
-                            measurement.data
                             measurement.save_to_disk(lidar_filename_format.format(episode, name, frame))
                         else:
                             measurement.save_to_disk(image_filename_format.format(episode, name, frame))
