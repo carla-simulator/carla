@@ -113,5 +113,12 @@ Value | Tag
 
 This is implemented by tagging every object in the scene before hand (either at
 begin play or on spawn). The objects are classified by their relative file path
-in the project. E.g., every mesh stored in the "Content/Static/Pedestrians"
-folder it's tagged as pedestrian.
+in the project. E.g., every mesh stored in the
+_"Unreal/CarlaUE4/Content/Static/Pedestrians"_ folder it's tagged as pedestrian.
+
+!!! note
+    **Adding new tags**:
+    At the moment adding new tags is not very flexible and requires to modify
+    the C++ code. Add a new label to the `ECityObjectLabel` enum in "Tagger.h",
+    and its corresponding filepath check inside `GetLabelByFolderName()`
+    function in "Tagger.cpp".
