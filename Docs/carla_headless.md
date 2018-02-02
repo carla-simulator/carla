@@ -73,6 +73,12 @@ Note. This will run glxinfo on Xserver 7, device 0. This means you are selecting
 
     DISPLAY=:8 vglrun -d :7.1 glxinfo
 
+#### Extra
+
+If you want disable the need of sudo when creating the  'nohup Xorg'
+go to the '/etc/X11/Xwrapper.config'  file and change 'allowed_users=console' to 'allowed_users=anybody'
+
+
 ## Running CARLA 
 
 Now, finally, to run CARLA on a certain gpu_number placed in a certain $CARLA_PATH, run.
