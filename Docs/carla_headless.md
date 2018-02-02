@@ -26,12 +26,12 @@ can be installed through apt.
 
     sudo apt-get install freeglut3-dev mesa-utils
 ####  VGL
-Follow this tutorial and install vgl
-https://virtualgl.org/vgldoc/2_2_1/#hd004001
+Follow this tutorial and install vgl: <br>
+[Installing VGL](https://virtualgl.org/vgldoc/2_2_1/#hd004001)
 
 #### TurboVNC
-Follow the tutorial below to install TurboVNC 2.11
-https://cdn.rawgit.com/TurboVNC/turbovnc/2.1.1/doc/index.html#hd005001
+Follow the tutorial below to install TurboVNC 2.11:<br>
+[Installing TurboVNC](https://cdn.rawgit.com/TurboVNC/turbovnc/2.1.1/doc/index.html#hd005001)
 
 WARNING: Take care on which VNC you install as it may not be compatible with Unreal. The one above was the only one that worked for me. 
 #### Extra Packages
