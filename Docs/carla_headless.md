@@ -52,9 +52,6 @@ You must generate a X compatible with your nvdia and compatible to run without d
 
 ## Emulating The Virtual Display
 
-Start by killing all Xorg servers. This command could change depending on your system.
-
-    sudo service lightdm stop
 
 Run your own Xorg. Here I use number 7, but it could be labeled with any free number.
 
@@ -77,6 +74,12 @@ Note. This will run glxinfo on Xserver 7, device 0. This means you are selecting
 
 If you want disable the need of sudo when creating the  'nohup Xorg'
 go to the '/etc/X11/Xwrapper.config'  file and change 'allowed_users=console' to 'allowed_users=anybody'
+
+It may be needed to stop all Xorg servers before running nohup Xorg.
+The command for that could change depending on your system. Generally for Ubuntu 16.04
+you should use:
+
+    sudo service lightdm stop
 
 
 ## Running CARLA 
