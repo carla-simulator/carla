@@ -1,6 +1,8 @@
 CARLA Simulator
 ===============
 
+[![Build Status](https://travis-ci.org/carla-simulator/carla.svg?branch=master)](https://travis-ci.org/carla-simulator/carla)
+
 CARLA is an open-source simulator for autonomous driving research. CARLA has
 been developed from the ground up to support development, training, and
 validation of autonomous urban driving systems. In addition to open-source code

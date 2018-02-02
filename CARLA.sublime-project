@@ -49,6 +49,18 @@
 	"build_systems":
 	[
 		{
+			"name": "CARLA - Pylint",
+			"working_dir": "${project_path}",
+			"file_regex": "^\\[([^:]*):([0-9]+):?([0-9]+)?\\]:? (.*)$",
+			"shell_cmd": "pylint --disable=R,C --rcfile=PythonClient/.pylintrc PythonClient/carla PythonClient/*.py --msg-template='[{path}:{line:3d}:{column}]: {msg_id} {msg}'"
+		},
+		{
+			"name": "CARLA - CppCheck",
+			"working_dir": "${project_path}",
+			"file_regex": "^\\[([^:]*):([0-9]+):?([0-9]+)?\\]:? (.*)$",
+			"shell_cmd": "cppcheck . -iBuild -i.pb.cc --error-exitcode=0 --enable=warning --quiet"
+		},
+		{
 			"name": "CARLA - Rebuild script",
 			"working_dir": "${project_path}",
 			"file_regex": "^(..[^:]*):([0-9]+):?([0-9]+)?:? (.*)$",
