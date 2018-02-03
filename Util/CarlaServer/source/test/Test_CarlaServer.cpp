@@ -52,7 +52,7 @@ TEST(CarlaServerAPI, SimBlocking) {
   constexpr uint32_t ImageSizeY = 200u;
   const uint32_t image0[ImageSizeX*ImageSizeY] = {0u};
   const carla_image images[] = {
-    {ImageSizeX, ImageSizeY, 1u, image0}
+    {ImageSizeX, ImageSizeY, 1u, 0u, image0}
   };
 
   const uint32_t points_count_by_channel[32] = {1u};

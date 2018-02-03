@@ -38,6 +38,7 @@ extern "C" {
     uint32_t width;
     uint32_t height;
     uint32_t type;
+    float fov;
     const uint32_t *data;
   };
 

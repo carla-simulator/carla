@@ -119,6 +119,12 @@ void ASceneCaptureCamera::BeginPlay()
   Super::BeginPlay();
 }
 
+float ASceneCaptureCamera::GetFOVAngle() const
+{
+  check(CaptureComponent2D != nullptr);
+  return CaptureComponent2D->FOVAngle;
+}
+
 void ASceneCaptureCamera::SetImageSize(uint32 otherSizeX, uint32 otherSizeY)
 {
   SizeX = otherSizeX;
