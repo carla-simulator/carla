@@ -20,12 +20,14 @@ change your default clang version to compile Unreal
 Build Unreal Engine
 -------------------
 
+!!! note
+    Unreal Engine repositories are set to private. In order to gain access you
+    need to add your GitHub username when you sign up at
+    [www.unrealengine.com](https://www.unrealengine.com).
+
 Download and compile Unreal Engine 4.17. Here we will assume you install it at
 "~/UnrealEngine_4.17", but you can install it anywhere, just replace the path
 where necessary.
-
-Unreal Engine repositories are set to private. In order to gain access you need
-to add your GitHub username when you sign up at https://unrealengine.com.
 
     $ git clone --depth=1 -b 4.17 https://github.com/EpicGames/UnrealEngine.git ~/UnrealEngine_4.17
     $ cd ~/UnrealEngine_4.17
