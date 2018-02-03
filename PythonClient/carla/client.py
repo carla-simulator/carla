@@ -179,7 +179,7 @@ class CarlaClient(object):
         total_size = len(raw_data) / 4
         index = 0
         while index < total_size:
-            sensor_type = gettype(getval(index + 2))
+            sensor_type = gettype(getint(index + 2))
             if sensor_type == 'Lidar':
                 horizontal_angle = getdouble(index)
                 channels_count = getint(index + 3)
