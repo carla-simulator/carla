@@ -7,9 +7,8 @@
 """CARLA sensors."""
 
 
-import os
-import numpy as np
 import json
+import os
 
 try:
     import numpy
@@ -311,9 +310,9 @@ class LidarMeasurement(SensorData):
 
         points_count_by_channel_size = channels_count * 4
         points_count_by_channel_bytes = raw_data[4*4:4*4 + points_count_by_channel_size]
-        self.points_count_by_channel = np.frombuffer(points_count_by_channel_bytes, dtype=np.dtype('uint32'))
+        self.points_count_by_channel = numpy.frombuffer(points_count_by_channel_bytes, dtype=numpy.dtype('uint32'))
 
-        self.points_size = int(np.sum(self.points_count_by_channel) * 3 * 8)  # three floats X, Y, Z
+        self.points_size = int(numpy.sum(self.points_count_by_channel) * 3 * 8)  # three floats X, Y, Z
         begin = 4*4 + points_count_by_channel_size  # 4*4 is horizontal_angle, type, channels_count
         end = begin + self.points_size
         self.points_data = raw_data[begin:end]
@@ -333,8 +332,8 @@ class LidarMeasurement(SensorData):
         if self._converted_data is None:
 
             points_in_one_channel = self.points_count_by_channel[0]
-            points = np.frombuffer(self.points_data[:self.points_size], dtype='float')
-            points = np.reshape(points, (self.channels_count, points_in_one_channel, 3))
+            points = numpy.frombuffer(self.points_data[:self.points_size], dtype='float')
+            points = numpy.reshape(points, (self.channels_count, points_in_one_channel, 3))
 
             self._converted_data = {
                 'horizontal_angle' : self.horizontal_angle,
