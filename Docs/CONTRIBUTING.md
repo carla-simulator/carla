@@ -63,6 +63,17 @@ please contact one of us (or send an email to carla.simulator@gmail.com).
 
 [projectslink]: https://github.com/carla-simulator/carla/projects/1
 
+#### Where can I learn more about Unreal Engine?
+
+A basic introduction to C++ programming with UE4 can be found at Unreal's
+[C++ Programming Tutorials][ue4tutorials]. Then, if you want to dive into UE4
+C++ development there are few paying options online. The
+[Unreal C++ Course at Udemy][ue4course] it's pretty complete and there are
+usually offers that make it very affordable.
+
+[ue4tutorials]: https://docs.unrealengine.com/latest/INT/Programming/Tutorials/
+[ue4course]: https://www.udemy.com/unrealcourse/
+
 #### What should I know before I get started?
 
 Check out the ["CARLA Design"](carla_design.md) document to get an idea on the
@@ -70,6 +81,27 @@ different modules that compose CARLA, and chose the most appropriate one to hold
 the new feature. We are aware the developers documentation is still scarce,
 please ask us in case of doubt, and of course don't hesitate to improve the
 current documentation if you feel confident enough.
+
+#### Are there any examples in CARLA to see how Unreal programming works?
+
+You can find an example of how C++ classes work in UE4 in
+[`ASceneCaptureToDiskCamera`][capturelink] (and its parent class
+`ASceneCaptureCamera`). This class creates an actor that can be dropped into the
+scene. In the editor, type _"Scene Capture To Disk"_ in the Modes tab, and drag
+and drop the actor into the scene. Now searching for its detail tab you can find
+all the `UPROPERTY` members reflected. This shows the basic mechanism to use C++
+classes in Unreal Editor.
+
+For a more advanced example on how to extend C++ classes with blueprints, you
+can take a look at the _"VehicleSpawner"_ blueprint. It derives from the C++
+class `AVehicleSpawnerBase`. The C++ class decides where and when it spawns a
+vehicle, then calls the function `SpawnVehicle()`, which is implemented in the
+blueprint. The blueprint then decides model and color of the vehicle being
+spawned. Note that the blueprint can call back C++ functions, for instance for
+getting the random engine. This way there is a back-and-forth communication
+between C++ code and blueprints.
+
+[capturelink]: https://github.com/carla-simulator/carla/blob/master/Unreal/CarlaUE4/Plugins/Carla/Source/Carla/SceneCaptureToDiskCamera.h
 
 #### Coding standard
 
