@@ -12,7 +12,7 @@
 #include "CarlaPlayerState.h"
 #include "CarlaVehicleController.h"
 #include "CarlaWheeledVehicle.h"
-#include "SceneCaptureCamera.h"
+#include "Sensor/SceneCaptureCamera.h"
 #include "Settings/CarlaSettings.h"
 
 #include <carla/carla_server.h>

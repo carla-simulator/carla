@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "GameFramework/Actor.h"
+#include "Sensor.h"
 #include "StaticMeshResources.h"
 #include "Settings/CameraDescription.h"
 #include "SceneCaptureCamera.generated.h"
@@ -19,7 +19,7 @@ class UTextureRenderTarget2D;
 /// Own SceneCapture, re-implementing some of the methods since ASceneCapture
 /// cannot be subclassed.
 UCLASS(hidecategories=(Collision, Attachment, Actor))
-class CARLA_API ASceneCaptureCamera : public AActor
+class CARLA_API ASceneCaptureCamera : public ASensor
 {
   GENERATED_BODY()
 

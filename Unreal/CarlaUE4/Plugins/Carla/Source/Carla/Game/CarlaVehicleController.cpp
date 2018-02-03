@@ -7,8 +7,8 @@
 #include "Carla.h"
 #include "CarlaVehicleController.h"
 
-#include "SceneCaptureCamera.h"
-#include "Lidar.h"
+#include "Sensor/Lidar.h"
+#include "Sensor/SceneCaptureCamera.h"
 
 #include "Components/BoxComponent.h"
 #include "EngineUtils.h"

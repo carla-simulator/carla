@@ -3,20 +3,20 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "Sensor.h"
 #include "LidarLaser.h"
 #include "Settings/LidarDescription.h"
 #include "Game/CapturedLidarSegment.h"
 #include "Lidar.generated.h"
 
 UCLASS()
-class CARLA_API ALidar : public AActor
+class CARLA_API ALidar : public ASensor
 {
   GENERATED_BODY()
 
 public:
   // Sets default values for this actor's properties
-  ALidar();
+  ALidar(const FObjectInitializer& ObjectInitializer);
 
   void Set(const FLidarDescription &LidarDescription);
 
