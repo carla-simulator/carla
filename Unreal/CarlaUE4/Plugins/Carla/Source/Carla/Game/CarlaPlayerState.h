@@ -1,5 +1,5 @@
 // Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
-// de Barcelona (UAB), and the INTEL Visual Computing Lab.
+// de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
@@ -9,6 +9,7 @@
 #include "GameFramework/PlayerState.h"
 #include "AI/TrafficLightState.h"
 #include "CapturedImage.h"
+#include "CapturedLidarSegment.h"
 #include "CarlaPlayerState.generated.h"
 
 /// Current state of the player, updated every frame by ACarlaVehicleController.
@@ -201,9 +202,26 @@ public:
     return GetNumberOfImages() > 0;
   }
 
+  UFUNCTION(BlueprintCallable)
+  int32 GetNumberOfLidarsMeasurements() const
+  {
+    return LidarSegments.Num();
+  }
+
+  UFUNCTION(BlueprintCallable)
+  bool HasLidarsMeasurements() const
+  {
+    return GetNumberOfLidarsMeasurements() > 0;
+  }
+
   const TArray<FCapturedImage> &GetImages() const
   {
     return Images;
+  }
+
+  const TArray<FCapturedLidarSegment> &GetLidarSegments() const
+  {
+    return LidarSegments;
   }
 
   /// @}
@@ -286,4 +304,7 @@ private:
 
   UPROPERTY(VisibleAnywhere)
   TArray<FCapturedImage> Images;
+
+  UPROPERTY(VisibleAnywhere)
+  TArray<FCapturedLidarSegment> LidarSegments;
 };

@@ -9,14 +9,17 @@ pages:
   - 'CARLA Settings': 'carla_settings.md'
   - 'Measurements': 'measurements.md'
   - 'Cameras and sensors': 'cameras_and_sensors.md'
+  - 'CARLA without Display and Selecting GPUs': 'carla_headless.md'
+  - 'Benchmark': 'benchmark.md'
   - 'F.A.Q.': 'faq.md'
-  - 'Troubleshooting': 'troubleshooting.md'
 - Building from source:
   - 'How to build on Linux': 'how_to_build_on_linux.md'
   - 'How to build on Windows': 'how_to_build_on_windows.md'
   - 'How to add Automotive Materials': 'how_to_add_automotive_materials.md'
 - Contributing:
   - 'Contribution guidelines': 'CONTRIBUTING.md'
+  - 'Coding standard': 'coding_standard.md'
+  - 'Code of conduct': 'CODE_OF_CONDUCT.md'
 - Development:
   - 'Map customization': 'map_customization.md'
   - 'How to add assets': 'how_to_add_assets.md'

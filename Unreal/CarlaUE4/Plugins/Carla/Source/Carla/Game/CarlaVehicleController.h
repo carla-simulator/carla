@@ -1,5 +1,5 @@
 // Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
-// de Barcelona (UAB), and the INTEL Visual Computing Lab.
+// de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
@@ -12,7 +12,9 @@
 class ACarlaHUD;
 class ACarlaPlayerState;
 class ASceneCaptureCamera;
+class ALidar;
 struct FCameraDescription;
+struct FLidarDescription;
 
 /// The CARLA player controller.
 UCLASS()
@@ -85,6 +87,9 @@ public:
       const FCameraDescription &CameraDescription,
       const FCameraPostProcessParameters *OverridePostProcessParameters);
 
+  void AddSceneCaptureLidar(
+      const FLidarDescription &LidarDescription);
+
   /// @}
   // ===========================================================================
   /// @name Events
@@ -116,6 +121,9 @@ private:
 
   UPROPERTY()
   TArray<ASceneCaptureCamera *> SceneCaptureCameras;
+
+  UPROPERTY()
+  TArray<ALidar *> SceneCaptureLidars;
 
   // Cast for quick access to the custom player state.
   UPROPERTY()

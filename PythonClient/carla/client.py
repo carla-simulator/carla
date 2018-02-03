@@ -1,5 +1,5 @@
 # Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de
-# Barcelona (UAB), and the INTEL Visual Computing Lab.
+# Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
@@ -171,20 +171,28 @@ class CarlaClient(object):
 
     @staticmethod
     def _iterate_sensor_data(raw_data):
-        # At this point the only sensors available are images, the raw_data
-        # consists of images only.
-        image_types = ['None', 'SceneFinal', 'Depth', 'SemanticSegmentation']
+        image_types = ['None', 'SceneFinal', 'Depth', 'SemanticSegmentation', 'Lidar']
         gettype = lambda id: image_types[id] if len(image_types) > id else 'Unknown'
         getint = lambda index: struct.unpack('<L', raw_data[index*4:index*4+4])[0]
         getfloat = lambda index: struct.unpack('<f', raw_data[index*4:index*4+4])[0]
+        getdouble = lambda index: struct.unpack('<d', raw_data[index*4:index*4+8])[0]
         total_size = len(raw_data) / 4
         index = 0
         while index < total_size:
-            width = getint(index)
-            height = getint(index + 1)
-            image_type = gettype(getint(index + 2))
-            fov = getfloat(index + 3)
-            begin = index + 4
-            end = begin + width * height
-            index = end
-            yield sensor.Image(width, height, image_type, fov, raw_data[begin*4:end*4])
+            sensor_type = gettype(getval(index + 2))
+            if sensor_type == 'Lidar':
+                horizontal_angle = getdouble(index)
+                channels_count = getint(index + 3)
+                lm = sensor.LidarMeasurement(
+                    horizontal_angle, channels_count,
+                    sensor_type, raw_data[index*4:])
+                index += lm.size_in_bytes
+                yield lm
+            else:
+                width = getint(index)
+                height = getint(index + 1)
+                fov = getfloat(index + 3)
+                begin = index + 4
+                end = begin + width * height
+                index = end
+                yield sensor.Image(width, height, sensor_type, fov, raw_data[begin*4:end*4])
