@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de
-# Barcelona (UAB), and the INTEL Visual Computing Lab.
+# Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
@@ -93,6 +93,19 @@ def make_carla_settings():
     camera2.set_position(200, 0, 140)
     camera2.set_rotation(0.0, 0.0, 0.0)
     settings.add_sensor(camera2)
+    lidar0 = sensor.Lidar('Lidar32')
+    lidar0.set_position(0, 0, 250)
+    lidar0.set_rotation(0, 0, 0)
+    lidar0.set(
+        Channels = 32,
+        Range = 5000,
+        PointsPerSecond = 100000,
+        RotationFrequency = 10,
+        UpperFovLimit = 10,
+        LowerFovLimit = -30,
+        ShowDebugPoints = False)
+    settings.add_sensor(lidar0)
+
     return settings
 
 
@@ -124,10 +137,11 @@ class CarlaGame(object):
         self._main_image = None
         self._mini_view_image1 = None
         self._mini_view_image2 = None
+        self._lidar_measurement = None
         self._map_view = None
         self._is_on_reverse = False
         self._city_name = city_name
-        self._map = CarlaMap(city_name) if city_name is not None else None
+        self._map = CarlaMap(city_name, 16.43, 50.0) if city_name is not None else None
         self._map_shape = self._map.map_image.shape if city_name is not None else None
         self._map_view = self._map.get_map(WINDOW_HEIGHT) if city_name is not None else None
         self._position = None
@@ -177,12 +191,13 @@ class CarlaGame(object):
         self._main_image = sensor_data['CameraRGB']
         self._mini_view_image1 = sensor_data['CameraDepth']
         self._mini_view_image2 = sensor_data['CameraSemSeg']
+        self._lidar_measurement = sensor_data['Lidar32']
 
         # Print measurements every second.
         if self._timer.elapsed_seconds_since_lap() > 1.0:
             if self._city_name is not None:
                 # Function to get car position on map.
-                map_position = self._map.get_position_on_map([
+                map_position = self._map.convert_to_pixel([
                     measurements.player_measurements.transform.location.x,
                     measurements.player_measurements.transform.location.y,
                     measurements.player_measurements.transform.location.z])
@@ -206,7 +221,7 @@ class CarlaGame(object):
         control = self._get_keyboard_control(pygame.key.get_pressed())
         # Set the player position
         if self._city_name is not None:
-            self._position = self._map.get_position_on_map([
+            self._position = self._map.convert_to_pixel([
                         measurements.player_measurements.transform.location.x,
                         measurements.player_measurements.transform.location.y,
                         measurements.player_measurements.transform.location.z])
@@ -295,25 +310,45 @@ class CarlaGame(object):
             self._display.blit(
                 surface, (2 * gap_x + MINI_WINDOW_WIDTH, mini_image_y))
 
+        if self._lidar_measurement is not None:
+
+            lidar_data = np.array(self._lidar_measurement.data['points'][:, :, :2])
+            lidar_data /= 50.0
+            lidar_data += 100.0
+            lidar_data = np.fabs(lidar_data)
+            lidar_data = lidar_data.astype(np.int32)
+            lidar_data = np.reshape(lidar_data, (-1, 2))
+            #draw lidar
+            lidar_img_size = (200, 200, 3)
+            lidar_img = np.zeros(lidar_img_size)
+            lidar_img[tuple(lidar_data.T)] = (255, 255, 255)
+            surface = pygame.surfarray.make_surface(
+                lidar_img
+            )
+            self._display.blit(surface, (10, 10))
+
         if self._map_view is not None:
             array = self._map_view
             array = array[:, :, :3]
+
             new_window_width =(float(WINDOW_HEIGHT)/float(self._map_shape[0]))*float(self._map_shape[1])
             surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
 
             w_pos = int(self._position[0]*(float(WINDOW_HEIGHT)/float(self._map_shape[0])))
-            h_pos =int(self._position[1] *(new_window_width/float(self._map_shape[1])))
+            h_pos = int(self._position[1] *(new_window_width/float(self._map_shape[1])))
 
             pygame.draw.circle(surface, [255, 0, 0, 255], (w_pos,h_pos), 6, 0)
             for agent in self._agent_positions:
                 if agent.HasField('vehicle'):
-                    agent_position = self._map.get_position_on_map([
+                    agent_position = self._map.convert_to_pixel([
                         agent.vehicle.transform.location.x,
                         agent.vehicle.transform.location.y,
                         agent.vehicle.transform.location.z])
+
                     w_pos = int(agent_position[0]*(float(WINDOW_HEIGHT)/float(self._map_shape[0])))
-                    h_pos =int(agent_position[1] *(new_window_width/float(self._map_shape[1])))
-                    pygame.draw.circle(surface, [255, 0, 255, 255], (w_pos,h_pos), 4, 0)
+                    h_pos = int(agent_position[1] *(new_window_width/float(self._map_shape[1])))
+
+                    pygame.draw.circle(surface, [255, 0, 255, 255], (w_pos ,h_pos), 4, 0)
 
             self._display.blit(surface, (WINDOW_WIDTH, 0))
 

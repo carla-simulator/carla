@@ -1,5 +1,5 @@
 # Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de
-# Barcelona (UAB), and the INTEL Visual Computing Lab.
+# Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
@@ -46,6 +46,7 @@ class CarlaSettings(object):
         self.randomize_weather()
         self.set(**kwargs)
         self._cameras = []
+        self._lidars = []
 
     def set(self, **kwargs):
         for key, value in kwargs.items():
@@ -69,13 +70,15 @@ class CarlaSettings(object):
         """Add a sensor to the player vehicle (see sensor.py)."""
         if isinstance(sensor, carla_sensor.Camera):
             self._cameras.append(sensor)
+        elif isinstance(sensor, carla_sensor.Lidar):
+            self._lidars.append(sensor)
         else:
             raise ValueError('Sensor not supported')
 
     def __str__(self):
         """Converts this object to an INI formatted string."""
         ini = ConfigParser()
-        ini.optionxform=str
+        ini.optionxform = str
         S_SERVER = 'CARLA/Server'
         S_LEVEL = 'CARLA/LevelSettings'
         S_CAPTURE = 'CARLA/SceneCapture'
@@ -99,6 +102,7 @@ class CarlaSettings(object):
 
         ini.add_section(S_CAPTURE)
         ini.set(S_CAPTURE, 'Cameras', ','.join(c.CameraName for c in self._cameras))
+        ini.set(S_CAPTURE, 'Lidars', ','.join(l.LidarName for l in self._lidars))
 
         for camera in self._cameras:
             add_section(S_CAPTURE + '/' + camera.CameraName, camera, [
@@ -112,6 +116,22 @@ class CarlaSettings(object):
                 'CameraRotationPitch',
                 'CameraRotationRoll',
                 'CameraRotationYaw'])
+
+        for lidar in self._lidars:
+            add_section(S_CAPTURE + '/' + lidar.LidarName, lidar, [
+                'Channels',
+                'Range',
+                'PointsPerSecond',
+                'RotationFrequency',
+                'UpperFovLimit',
+                'LowerFovLimit',
+                'ShowDebugPoints',
+                'LidarPositionX',
+                'LidarPositionY',
+                'LidarPositionZ',
+                'LidarRotationPitch',
+                'LidarRotationRoll',
+                'LidarRotationYaw'])
 
         if sys.version_info >= (3, 0):
             text = io.StringIO()
@@ -129,14 +149,15 @@ def get_sensor_names(settings):
     """
     if isinstance(settings, CarlaSettings):
         # pylint: disable=protected-access
-        return [camera.CameraName for camera in settings._cameras]
+        return [camera.CameraName for camera in settings._cameras] + \
+            [lidar.LidarName for lidar in settings._lidars]
     ini = ConfigParser()
     if sys.version_info >= (3, 2):
         ini.read_string(settings)
     elif sys.version_info >= (3, 0):
-        ini.readfp(io.StringIO(settings)) # pylint: disable=deprecated-method
+        ini.readfp(io.StringIO(settings))  # pylint: disable=deprecated-method
     else:
-        ini.readfp(io.BytesIO(settings)) # pylint: disable=deprecated-method
+        ini.readfp(io.BytesIO(settings))  # pylint: disable=deprecated-method
 
     section_name = 'CARLA/SceneCapture'
     option_name = 'Cameras'

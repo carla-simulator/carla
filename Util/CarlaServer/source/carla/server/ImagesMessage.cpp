@@ -1,5 +1,5 @@
 // Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
-// de Barcelona (UAB), and the INTEL Visual Computing Lab.
+// de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
@@ -42,12 +42,17 @@ namespace server {
     return size;
   }
 
-  void ImagesMessage::Write(const_array_view<carla_image> images) {
-    const size_t buffer_size = GetSizeOfBuffer(images);
-    Reset(sizeof(uint32_t) + buffer_size); // header + buffer.
+  size_t ImagesMessage::GetSize(const_array_view<carla_image> images) {
+    return GetSizeOfBuffer(images);
+  }
 
-    auto begin = _buffer.get();
-    begin += WriteSizeToBuffer(begin, buffer_size);
+  size_t ImagesMessage::Write(
+    const_array_view<carla_image> images,
+    unsigned char *buffer
+  ) {
+    long buffer_size = GetSizeOfBuffer(images);
+
+    auto begin = buffer;
     for (const auto &image : images) {
       begin += WriteSizeToBuffer(begin, image.width);
       begin += WriteSizeToBuffer(begin, image.height);
@@ -55,16 +60,8 @@ namespace server {
       begin += WriteFloatToBuffer(begin, image.fov);
       begin += WriteImageToBuffer(begin, image);
     }
-    DEBUG_ASSERT(std::distance(_buffer.get(), begin) == _size);
-  }
-
-  void ImagesMessage::Reset(const uint32_t count) {
-    if (_capacity < count) {
-      log_info("allocating image buffer of", count, "bytes");
-      _buffer = std::make_unique<unsigned char[]>(count);
-      _capacity = count;
-    }
-    _size = count;
+    DEBUG_ASSERT(std::distance(buffer, begin) == buffer_size);
+    return buffer_size;
   }
 
 } // namespace server

@@ -1,5 +1,5 @@
 // Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
-// de Barcelona (UAB), and the INTEL Visual Computing Lab.
+// de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
@@ -82,6 +82,27 @@ static bool RequestedSemanticSegmentation(const FCameraDescription &Camera)
   return (Camera.PostProcessEffect == EPostProcessEffect::SemanticSegmentation);
 }
 
+static void GetLidarDescription(
+    const MyIniFile &ConfigFile,
+    const TCHAR* Section,
+    FLidarDescription &Lidar)
+{
+  ConfigFile.GetInt(Section, TEXT("LidarPositionX"), Lidar.Position.X);
+  ConfigFile.GetInt(Section, TEXT("LidarPositionY"), Lidar.Position.Y);
+  ConfigFile.GetInt(Section, TEXT("LidarPositionZ"), Lidar.Position.Z);
+  ConfigFile.GetInt(Section, TEXT("LidarRotationPitch"), Lidar.Rotation.Pitch);
+  ConfigFile.GetInt(Section, TEXT("LidarRotationRoll"), Lidar.Rotation.Roll);
+  ConfigFile.GetInt(Section, TEXT("LidarRotationYaw"), Lidar.Rotation.Yaw);
+
+  ConfigFile.GetInt(Section, TEXT("Channels"), Lidar.Channels);
+  ConfigFile.GetFloat(Section, TEXT("Range"), Lidar.Range);
+  ConfigFile.GetFloat(Section, TEXT("PointsPerSecond"), Lidar.PointsPerSecond);
+  ConfigFile.GetFloat(Section, TEXT("RotationFrequency"), Lidar.RotationFrequency);
+  ConfigFile.GetFloat(Section, TEXT("UpperFovLimit"), Lidar.UpperFovLimit);
+  ConfigFile.GetFloat(Section, TEXT("LowerFovLimit"), Lidar.LowerFovLimit);
+  ConfigFile.GetBool(Section, TEXT("ShowDebugPoints"), Lidar.ShowDebugPoints);
+}
+
 static void LoadSettingsFromConfig(
     const MyIniFile &ConfigFile,
     UCarlaSettings &Settings,
@@ -123,6 +144,25 @@ static void LoadSettingsFromConfig(
 
     ValidateCameraDescription(Camera);
     Settings.bSemanticSegmentationEnabled |= RequestedSemanticSegmentation(Camera);
+  }
+  // Lidars.
+  FString Lidars;
+  ConfigFile.GetString(S_CARLA_SCENECAPTURE, TEXT("Lidars"), Lidars);
+  TArray<FString> LidarNames;
+  Lidars.ParseIntoArray(LidarNames, TEXT(","), true);
+  for (FString &Name : LidarNames) {
+    FLidarDescription &Lidar = Settings.LidarDescriptions.FindOrAdd(Name);
+    GetLidarDescription(ConfigFile, S_CARLA_SCENECAPTURE, Lidar);
+
+    TArray<FString> SubSections;
+    Name.ParseIntoArray(SubSections, TEXT("/"), true);
+    check(SubSections.Num() > 0);
+    FString Section = S_CARLA_SCENECAPTURE;
+    for (FString &SubSection : SubSections) {
+      Section += TEXT("/");
+      Section += SubSection;
+      GetLidarDescription(ConfigFile, *Section, Lidar);
+    }
   }
 }
 
@@ -174,6 +214,7 @@ void UCarlaSettings::LoadSettingsFromString(const FString &INIFileContents)
 {
   UE_LOG(LogCarla, Log, TEXT("Loading CARLA settings from string"));
   ResetCameraDescriptions();
+  ResetLidarDescriptions();
   MyIniFile ConfigFile;
   ConfigFile.ProcessInputFileContents(INIFileContents);
   constexpr bool bLoadCarlaServerSection = false;
@@ -229,6 +270,13 @@ void UCarlaSettings::LogSettings() const
     UE_LOG(LogCarla, Log, TEXT("Camera Rotation = (%s)"), *Item.Value.Rotation.ToString());
     UE_LOG(LogCarla, Log, TEXT("Post-Processing = %s"), *PostProcessEffect::ToString(Item.Value.PostProcessEffect));
   }
+  UE_LOG(LogCarla, Log, TEXT("Added %d lidars."), LidarDescriptions.Num());
+  for (auto &Item : LidarDescriptions) {
+    UE_LOG(LogCarla, Log, TEXT("[%s/%s]"), S_CARLA_SCENECAPTURE, *Item.Key);
+    UE_LOG(LogCarla, Log, TEXT("Lidar params = ch %f range %f pts %f"), Item.Value.Channels, Item.Value.Range, Item.Value.PointsPerSecond);
+    UE_LOG(LogCarla, Log, TEXT("Lidar Position = (%s)"), *Item.Value.Position.ToString());
+    UE_LOG(LogCarla, Log, TEXT("Lidar Rotation = (%s)"), *Item.Value.Rotation.ToString());
+  }
   UE_LOG(LogCarla, Log, TEXT("================================================================================"));
 }
 
@@ -262,11 +310,17 @@ void UCarlaSettings::ResetCameraDescriptions()
   bSemanticSegmentationEnabled = false;
 }
 
+void UCarlaSettings::ResetLidarDescriptions()
+{
+  LidarDescriptions.Empty();
+}
+
 void UCarlaSettings::LoadSettingsFromFile(const FString &FilePath, const bool bLogOnFailure)
 {
   if (FPaths::FileExists(FilePath)) {
     UE_LOG(LogCarla, Log, TEXT("Loading CARLA settings from \"%s\""), *FilePath);
     ResetCameraDescriptions();
+    ResetLidarDescriptions();
     const MyIniFile ConfigFile(FilePath);
     constexpr bool bLoadCarlaServerSection = true;
     LoadSettingsFromConfig(ConfigFile, *this, bLoadCarlaServerSection);

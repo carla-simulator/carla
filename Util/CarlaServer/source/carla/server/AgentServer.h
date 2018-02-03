@@ -1,5 +1,5 @@
 // Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
-// de Barcelona (UAB), and the INTEL Visual Computing Lab.
+// de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
@@ -27,11 +27,12 @@ namespace server {
 
     error_code WriteMeasurements(
         const carla_measurements &measurements,
-        const_array_view<carla_image> images) {
+        const_array_view<carla_image> images,
+        const_array_view<carla_lidar_measurement> lidar_measurements) {
       error_code ec;
       if (!_control.TryGetResult(ec)) {
         auto writer = _measurements.buffer()->MakeWriter();
-        writer->Write(measurements, images);
+        writer->Write(measurements, images, lidar_measurements);
         ec = errc::success();
       }
       return ec;
