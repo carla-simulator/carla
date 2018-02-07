@@ -6,10 +6,11 @@
 
 #pragma once
 
-#include "carla/NonCopyable.h"
 #include "carla/Logging.h"
+#include "carla/NonCopyable.h"
 #include "carla/server/CarlaEncoder.h"
 #include "carla/server/MeasurementsMessage.h"
+#include "carla/server/SensorDataInbox.h"
 #include "carla/server/ServerTraits.h"
 
 namespace carla {
@@ -58,18 +59,32 @@ namespace server {
       return _server.Write(boost::asio::buffer(string), timeout);
     }
 
-    /// @warning This operation consists of two Writes, the timeout applies to
-    /// each individual Write. Effectively, it may wait twice the timeout.
+    /// @warning This operation consists of several Writes, the timeout applies
+    /// to each individual Write. Effectively, it may wait the timeout for each
+    /// sensor.
     error_code Write(const MeasurementsMessage &values, time_duration timeout) {
       const auto string = _encoder.Encode(values.measurements());
       auto ec = _server.Write(boost::asio::buffer(string), timeout);
       if (!ec) {
-        ec = _server.Write(values.buffer(), timeout);
+        ec = Write(values.sensor_inbox(), timeout);
       }
       return ec;
     }
 
   private:
+
+    error_code Write(SensorDataInbox &inbox, time_duration timeout) {
+      error_code ec;
+      for (auto &sensor_buffer : inbox) {
+        auto reader = sensor_buffer.TryMakeReader();
+        if (reader != nullptr) {
+          auto ec = _server.Write(reader->buffer(), timeout);
+          if (ec)
+            return ec;
+        }
+      }
+      return errc::success();
+    }
 
     error_code ReadString(std::string &string, time_duration timeout) {
        // Get the message's size.

@@ -262,6 +262,9 @@ CarlaServer::ErrorCode CarlaServer::SendSceneDescription(
   carla_scene_description scene;
   scene.player_start_spots = StartSpots.Get();
   scene.number_of_player_start_spots = NumberOfStartSpots;
+  /// @todo Add the sensors here.
+  scene.sensors = nullptr;
+  scene.number_of_sensors = 0u;
 
   return ParseErrorCode(carla_write_scene_description(Server, scene, GetTimeOut(TimeOut, bBlocking)));
 }

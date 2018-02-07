@@ -11,13 +11,43 @@
 #include "carla/server/DoubleBuffer.h"
 #include "carla/server/SensorDataMessage.h"
 
+#include <type_traits>
 #include <unordered_map>
+#include <vector>
 
 struct carla_sensor_data;
 struct carla_sensor_definition;
 
 namespace carla {
 namespace server {
+
+namespace detail {
+
+  template <typename IT>
+  class value_iterator {
+  public:
+
+    value_iterator(IT original_iterator) : _it(original_iterator) {}
+
+    value_iterator &operator++() {
+      ++_it;
+      return *this;
+    }
+
+    auto &operator*() {
+      return _it->second;
+    }
+
+    bool operator!=(value_iterator rhs) {
+      return _it != rhs._it;
+    }
+
+  private:
+
+    IT _it;
+  };
+
+} // detail
 
   /// Stores the data received from the sensors (asynchronously) to be sent next
   /// on next tick.
@@ -27,32 +57,46 @@ namespace server {
   /// different buffers, i.e. each sensor can have its own producer and consumer
   /// threads.
   class SensorDataInbox : private NonCopyable {
+
+    using DataBuffer = DoubleBuffer<SensorDataMessage>;
+
+    using Map = std::unordered_map<uint32_t, DataBuffer>;
+
   public:
 
-    /// We need to initialize the map before hand so it remains constant and
-    /// doesn't need a lock.
-    ///
-    /// @warning This function is not thread-safe.
-    void RegisterSensor(const carla_sensor_definition &sensor) {
-      _buffers[sensor.id];
+    using Sensors = std::vector<carla_sensor_definition>;
+
+    using buffer_iterator = detail::value_iterator<Map::iterator>;
+
+    explicit SensorDataInbox(const Sensors &sensors) {
+      // We need to initialize the map before hand so it remains constant and
+      // doesn't need a lock.
+      for (auto &sensor : sensors)
+        _buffers[sensor.id];
     }
 
     void Write(const carla_sensor_data &data) {
-      auto message = _buffers.at(data.id).MakeWriter();
-      message->Write(data);
+      auto writer = _buffers.at(data.id).MakeWriter();
+      writer->Write(data);
     }
 
     /// Tries to acquire a reader on the buffer of the given sensor. See
     /// DoubleBuffer.
     auto TryMakeReader(uint32_t sensor_id) {
-      return _buffers.at(sensor_id).TryMakeReader(timeout_t::milliseconds(0u));
+      return _buffers.at(sensor_id).TryMakeReader();
+    }
+
+    buffer_iterator begin() {
+      return _buffers.begin();
+    }
+
+    buffer_iterator end() {
+      return _buffers.end();
     }
 
   private:
 
-    using DataBuffer = DoubleBuffer<SensorDataMessage>;
-
-    std::unordered_map<uint32_t, DataBuffer> _buffers;
+    Map _buffers;
   };
 
 } // namespace server

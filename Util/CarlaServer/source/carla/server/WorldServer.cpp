@@ -91,6 +91,10 @@ namespace server {
 
   std::future<error_code> WorldServer::Write(
       const carla_scene_description &scene_description) {
+    decltype(_sensor_definitions) defs(
+        scene_description.sensors,
+        scene_description.sensors + scene_description.number_of_sensors);
+    _sensor_definitions = std::move(defs);
     return carla::server::Write(_protocol.scene_description, scene_description);
   }
 
@@ -106,11 +110,17 @@ namespace server {
   }
 
   void WorldServer::StartAgentServer() {
-    _agent_server = std::make_unique<AgentServer>(_encoder, _port + 1u, _port + 2u, _timeout);
+    _agent_server = std::make_unique<AgentServer>(
+        _encoder,
+        _port + 1u,
+        _port + 2u,
+        _sensor_definitions,
+        _timeout);
   }
 
   void WorldServer::KillAgentServer() {
     _agent_server = nullptr;
+    _sensor_definitions.clear();
   }
 
   void WorldServer::ResetProtocol() {
