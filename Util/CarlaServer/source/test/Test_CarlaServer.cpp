@@ -8,6 +8,8 @@
 #include "carla/Logging.h"
 #include "carla/server/ServerTraits.h"
 
+#include "Sensor.h"
+
 using namespace carla::server;
 using namespace boost::posix_time;
 
@@ -48,18 +50,13 @@ TEST(CarlaServerAPI, SimBlocking) {
   CarlaServerPtr CarlaServer = CarlaServerGuard.get();
   ASSERT_TRUE(CarlaServer != nullptr);
 
-  constexpr uint32_t ImageSizeX = 300u;
-  constexpr uint32_t ImageSizeY = 200u;
-  const uint32_t image0[ImageSizeX*ImageSizeY] = {0u};
-  const carla_image images[] = {
-    {ImageSizeX, ImageSizeY, 1u, 0u, image0}
-  };
+  std::array<test::Sensor, 5u> sensors;
 
-  const uint32_t points_count_by_channel[32] = {1u};
-  const double lidar_data[32 * 3] = {1};
-  const carla_lidar_measurement lidar_measurements[] = {
-    {10, 32, points_count_by_channel, lidar_data}
-  };
+  carla_sensor_definition sensor_definitions[sensors.size()];
+
+  for (auto i = 0u; i < sensors.size(); ++i) {
+    sensor_definitions[i] = sensors[i].definition();
+  }
 
   const carla_transform start_locations[] = {
     {carla_vector3d{0.0f, 0.0f, 0.0f}, carla_vector3d{0.0f, 0.0f, 0.0f}, carla_rotation3d{0.0f, 0.0f, 0.0f}},
@@ -88,7 +85,9 @@ TEST(CarlaServerAPI, SimBlocking) {
       test_log("sending scene description...");
       const carla_scene_description values{
           start_locations,
-          SIZE_OF_ARRAY(start_locations)};
+          SIZE_OF_ARRAY(start_locations),
+          sensor_definitions,
+          SIZE_OF_ARRAY(sensor_definitions)};
       ASSERT_EQ(S, carla_write_scene_description(CarlaServer, values, TIMEOUT));
     }
     {
@@ -111,9 +110,10 @@ TEST(CarlaServerAPI, SimBlocking) {
           carla_measurements measurements;
           measurements.non_player_agents = agents_data.data();
           measurements.number_of_non_player_agents = agents_data.size();
-          auto ec = carla_write_measurements(
-            CarlaServer, measurements, images, lidar_measurements,
-            SIZE_OF_ARRAY(images), SIZE_OF_ARRAY(lidar_measurements));
+          for (auto &sensor : sensors) {
+            carla_write_sensor_data(CarlaServer, sensor.MakeRandomData());
+          }
+          auto ec = carla_write_measurements(CarlaServer, measurements);
           if (ec != S)
             break;
         }

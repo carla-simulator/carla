@@ -23,6 +23,10 @@ namespace server {
     return array_view::make_const(values.player_start_spots, values.number_of_player_start_spots);
   }
 
+  static auto sensors(const carla_scene_description &values) {
+    return array_view::make_const(values.sensors, values.number_of_sensors);
+  }
+
   static auto agents(const carla_measurements &values) {
     return array_view::make_const(values.non_player_agents, values.number_of_non_player_agents);
   }
@@ -46,6 +50,22 @@ namespace server {
     Set(lhs->mutable_location(), rhs.location);
     Set(lhs->mutable_orientation(), rhs.orientation);
     Set(lhs->mutable_rotation(), rhs.rotation);
+  }
+
+  static void Set(cs::Sensor *lhs, const carla_sensor_definition &rhs) {
+    DEBUG_ASSERT(lhs != nullptr);
+    lhs->set_id(rhs.id);
+    lhs->set_name(std::string(rhs.name));
+    lhs->set_type([&](){
+      switch (rhs.type) {
+        case CARLA_SERVER_CAMERA_NONE:                  return cs::Sensor::CAMERA_NONE;
+        case CARLA_SERVER_CAMERA_SCENE_FINAL:           return cs::Sensor::CAMERA_SCENE_FINAL;
+        case CARLA_SERVER_CAMERA_DEPTH:                 return cs::Sensor::CAMERA_DEPTH;
+        case CARLA_SERVER_CAMERA_SEMANTIC_SEGMENTATION: return cs::Sensor::CAMERA_SEMANTIC_SEGMENTATION;
+        case CARLA_SERVER_LIDAR_RAY_TRACE:              return cs::Sensor::LIDAR_RAY_TRACE;
+        default:                                        return cs::Sensor::UNKNOWN;
+      }
+    }());
   }
 
   static void Set(cs::Control *lhs, const carla_control &rhs) {
@@ -107,6 +127,9 @@ namespace server {
     DEBUG_ASSERT(message != nullptr);
     for (auto &spot : start_spots(values)) {
       Set(message->add_player_start_spots(), spot);
+    }
+    for (auto &sensor : sensors(values)) {
+      Set(message->add_sensors(), sensor);
     }
     return Protobuf::Encode(*message);
   }

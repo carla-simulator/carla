@@ -15,12 +15,13 @@
 TEST(SensorDataInbox, SyncSingleSensor) {
   using namespace carla::server;
   test::Sensor sensor0;
-  SensorDataInbox inbox;
-  inbox.RegisterSensor(sensor0.definition());
+  SensorDataInbox::Sensors defs;
+  defs.push_back(sensor0.definition());
+  SensorDataInbox inbox(defs);
   for (auto j = 0u; j < 1000u; ++j) {
     auto data = sensor0.MakeRandomData();
     inbox.Write(data);
-    auto buffer = inbox.TryMakeReader(sensor0.id());
+    auto buffer = (*inbox.begin()).TryMakeReader();
     ASSERT_TRUE(buffer != nullptr);
     sensor0.CheckData(buffer->buffer());
   }
@@ -29,9 +30,12 @@ TEST(SensorDataInbox, SyncSingleSensor) {
 TEST(SensorDataInbox, SyncMultipleSensors) {
   using namespace carla::server;
   std::array<test::Sensor, 50u> sensors;
-  SensorDataInbox inbox;
-  for (auto &sensor : sensors)
-    inbox.RegisterSensor(sensor.definition());
+  SensorDataInbox::Sensors defs;
+  defs.reserve(sensors.size());
+  std::for_each(sensors.begin(), sensors.end(), [&](auto &s){
+    defs.push_back(s.definition());
+  });
+  SensorDataInbox inbox(defs);
   for (auto j = 0u; j < 1000u; ++j) {
     for (auto &sensor : sensors) {
       inbox.Write(sensor.MakeRandomData());
@@ -45,9 +49,12 @@ TEST(SensorDataInbox, SyncMultipleSensors) {
 TEST(SensorDataInbox, Async) {
   using namespace carla::server;
   std::array<test::Sensor, 50u> sensors;
-  SensorDataInbox inbox;
-  for (auto &sensor : sensors)
-    inbox.RegisterSensor(sensor.definition());
+  SensorDataInbox::Sensors defs;
+  defs.reserve(sensors.size());
+  std::for_each(sensors.begin(), sensors.end(), [&](auto &s){
+    defs.push_back(s.definition());
+  });
+  SensorDataInbox inbox(defs);
 
   constexpr auto numberOfWrites = 200u;
 

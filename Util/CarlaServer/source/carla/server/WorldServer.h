@@ -75,6 +75,8 @@ namespace server {
 
     AsyncServer<EncoderServer<TCPServer>> _world_server;
 
+    std::vector<carla_sensor_definition> _sensor_definitions;
+
     std::unique_ptr<AgentServer> _agent_server;
 
     RequestNewEpisode _new_episode_data;
