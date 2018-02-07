@@ -34,6 +34,21 @@ extern "C" {
     float roll;
   };
 
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  struct carla_sensor_definition {
+    uint32_t id;
+    uint32_t type;
+    const char *name;
+  };
+
+  struct carla_sensor_data {
+    uint32_t id;
+    const void *header;
+    uint32_t header_size;
+    const void *data;
+    uint32_t data_size;
+  };
+// -----------------------------------------------------------------------------
   struct carla_image {
     uint32_t width;
     uint32_t height;
@@ -48,6 +63,7 @@ extern "C" {
     const uint32_t *points_count_by_channel;
     const double *data;
   };
+// <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
   struct carla_transform {
     struct carla_vector3d location;
