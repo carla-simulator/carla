@@ -2,7 +2,7 @@ CARLA Simulator
 ===============
 
 [![Build Status](https://travis-ci.org/carla-simulator/carla.svg?branch=master)](https://travis-ci.org/carla-simulator/carla)
-[![Documentation](https://readthedocs.org/projects/docs/badge/?version=latest)](https://carla.readthedocs.io)
+[![Documentation](https://readthedocs.org/projects/carla/badge/?version=latest)](http://carla.readthedocs.io)
 [![Waffle.io](https://badge.waffle.io/carla-simulator/carla.svg?columns=Next,In%20Progress,Review)](https://waffle.io/carla-simulator/carla)
 
 CARLA is an open-source simulator for autonomous driving research. CARLA has
