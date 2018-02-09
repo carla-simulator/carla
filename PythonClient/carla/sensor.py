@@ -17,6 +17,7 @@ except ImportError:
         'cannot import numpy, make sure numpy package is installed.')
 
 from collections import namedtuple
+from .transform import Transform, Translation, Rotation, Scale
 
 # ==============================================================================
 # -- Helpers -------------------------------------------------------------
@@ -69,18 +70,54 @@ class Camera(Sensor):
         self.set(**kwargs)
 
     def set_image_size(self, pixels_x, pixels_y):
+        '''Sets the image size in pixels'''
         self.ImageSizeX = pixels_x
         self.ImageSizeY = pixels_y
 
     def set_position(self, x, y, z):
+        '''Sets a position to the camera in cm'''
         self.CameraPositionX = x
         self.CameraPositionY = y
         self.CameraPositionZ = z
 
-    def set_rotation(self, pitch, roll, yaw):
+    def set_rotation(self, pitch, yaw, roll):
+        '''Sets a rotation to the camera'''
         self.CameraRotationPitch = pitch
-        self.CameraRotationRoll = roll
         self.CameraRotationYaw = yaw
+        self.CameraRotationRoll = roll
+
+    def get_transform(self):
+        '''
+        Returns the camera to [whatever the camera is
+        attached to] transformation.
+        '''
+        return Transform(
+            Translation(
+                self.CameraPositionX,
+                self.CameraPositionY,
+                self.CameraPositionZ
+            ),
+            Rotation(
+                self.CameraRotationPitch,
+                self.CameraRotationYaw,
+                self.CameraRotationRoll
+            )
+        )
+
+    def get_unreal_transform(self):
+        '''
+        Returns the camera to [whatever the camera is
+        attached to] transformation with the Unreal
+        necessary corrections applied.
+        '''
+        # Do the custom transformations.
+        to_unreal_transform = Transform(
+            Rotation(roll=-90, yaw=90),
+            Scale(x=-1)
+        )
+        # Apply and return it.
+        return self.get_transform() * to_unreal_transform
+
 
 
 class Lidar(Sensor):
@@ -180,8 +217,8 @@ class Image(SensorData):
             size=(self.width, self.height),
             data=self.raw_data,
             decoder_name='raw')
-        b, g, r, _ = image.split()
-        image = PImage.merge("RGB", (r, g, b))
+        color = image.split()
+        image = PImage.merge("RGB", color[2::-1])
 
         folder = os.path.dirname(filename)
         if not os.path.isdir(folder):

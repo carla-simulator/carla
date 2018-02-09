@@ -37,22 +37,6 @@ class Transform(object):
     The transformation is applied in the order: scale, rotation, translation.
     """
 
-    @staticmethod
-    def _from_protobuf_transform(transform):
-        """Create a Transform from a Protobuf Transform object."""
-        return Transform(
-            Translation(
-                transform.location.x,
-                transform.location.y,
-                transform.location.z
-            ),
-            Rotation(
-                transform.rotation.pitch,
-                transform.rotation.yaw,
-                transform.rotation.roll
-            )
-        )
-
     def __init__(self, *args, **kwargs):
         if 'matrix' in kwargs:
             self.matrix = kwargs['matrix']
