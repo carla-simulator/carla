@@ -14,6 +14,7 @@ from __future__ import print_function
 
 import argparse
 import logging
+import os
 import random
 import time
 
@@ -27,14 +28,16 @@ from carla.transform import Transform, Translation, Rotation, Scale
 
 
 def run_carla_client(host, port, far):
-    # Here we will run 3 episodes with 300 frames each.
+    # Here we will run a single episode with 300 frames.
     number_of_frames = 3000
+    frame_step = 100  # Save one image every 100 frames
     output_folder = '_out'
     image_size = [800, 600]
-    camera_local_pos = [30, 0, 130]
-    camera_local_rotation = [0, 0, 0]
+    camera_local_pos = [30, 0, 130]  # [X, Y, Z]
+    camera_local_rotation = [0, 0, 0]  # [pitch(Y), yaw(Z), roll(X)]
     fov = 70
 
+    # Connect with the server
     with make_carla_client(host, port) as client:
         print('CarlaClient connected')
 
@@ -48,14 +51,17 @@ def run_carla_client(host, port, far):
             WeatherId=random.choice([1, 3, 7, 8, 14]))
         settings.randomize_seeds()
 
-        camera1 = Camera('CameraDepth', PostProcessing='Depth', CameraFOV=fov)
+        camera1 = Camera(
+            'CameraDepth', PostProcessing='Depth', CameraFOV=fov
+        )
         camera1.set_image_size(*image_size)
         camera1.set_position(*camera_local_pos)
         camera1.set_rotation(*camera_local_rotation)
         settings.add_sensor(camera1)
 
         camera2 = Camera(
-            'CameraRGB', PostProcessing='SceneFinal', CameraFOV=fov)
+            'CameraRGB', PostProcessing='SceneFinal', CameraFOV=fov
+        )
         camera2.set_image_size(*image_size)
         camera2.set_position(*camera_local_pos)
         camera2.set_rotation(*camera_local_rotation)
@@ -67,72 +73,64 @@ def run_carla_client(host, port, far):
         client.start_episode(0)
 
         # Compute the camera transform matrix
-        camera_to_car_transform = Transform(
-            Translation(*camera_local_pos),
-            Rotation(*camera_local_rotation)
-        )
+        camera_to_car_transform = camera2.get_unreal_transform()
 
-        # Do the custom transformations.
-        to_unreal_transform = Transform(
-            Rotation(roll=-90, yaw=90),
-            Scale(x=-1)
-        )
-        # And apply it.
-        camera_to_car_transform *= to_unreal_transform
-
-        # Iterate every frame in the episode.
-        for frame in range(0, number_of_frames):
+        # Iterate every frame in the episode except for the first one.
+        for frame in range(1, number_of_frames):
             # Read the data produced by the server this frame.
             measurements, sensor_data = client.read_data()
+            # Save one image every 'frame_step' frames
+            if not frame % frame_step:
+                # Start transformations time mesure.
+                timer = StopWatch()
 
-            # Start transformations time mesure.
-            timer = StopWatch()
+                # RGB image [[[r,g,b],..[r,g,b]],..[[r,g,b],..[r,g,b]]]
+                image_RGB = to_rgb_array(sensor_data['CameraRGB'])
 
-            # RGB image [[[r,g,b],..[r,g,b]],..[[r,g,b],..[r,g,b]]]
-            image_RGB = to_rgb_array(sensor_data['CameraRGB'])
+                # 2d to (camera) local 3d
+                # We use the image_RGB to colorize each 3D point, this is optional.
+                # "max_depth" is used to keep only the points that are near to the
+                # camera, meaning 1.0 the farest points (sky)
+                point_cloud = depth_to_local_point_cloud(
+                    sensor_data['CameraDepth'],
+                    image_RGB,
+                    max_depth=far
+                )
 
-            # 2d to (camera) local 3d
-            # We use the image_RGB to colorize each 3D point, this is optional.
-            # "max_depth" is used to keep only the points that are near to the
-            # camera, meaning 1.0 the farest points (sky)
-            point_cloud = depth_to_local_point_cloud(
-                sensor_data['CameraDepth'],
-                image_RGB,
-                max_depth=far
-            )
+                # (Camera) local 3d to world 3d.
+                # Get the transform from the player protobuf transformation.
+                world_transform = Transform(
+                    measurements.player_measurements.transform
+                )
 
-            # (Camera) local 3d to world 3d.
-            # Get the transform from the player protobuf transformation.
-            world_transform = Transform(
-                measurements.player_measurements.transform
-            )
+                # Compute the final transformation matrix.
+                car_to_world_transform = world_transform * camera_to_car_transform
 
-            # Compute the final transformation matrix.
-            car_to_world_transform = world_transform * camera_to_car_transform
+                # Car to World transformation given the 3D points and the
+                # transformation matrix.
+                point_cloud.apply_transform(car_to_world_transform)
 
-            # Car to World transformation given the 3D points and the
-            # transformation matrix.
-            point_cloud.apply_transform(car_to_world_transform)
+                # End transformations time mesure.
+                timer.stop()
 
-            # End transformations time mesure.
-            timer.stop()
+                # Save PLY to disk
+                # This generates the PLY string with the 3D points and the RGB colors
+                # for each row of the file.
+                point_cloud.save_to_disk(os.path.join(
+                    output_folder, '{:0>5}.ply'.format(frame))
+                )
 
-            # Save PLY to disk
-            # This generates the PLY string with the 3D points and the RGB colors
-            # for each row of the file.
-            point_cloud.save_to_disk(
-                '{}/{:0>5}.ply'.format(output_folder, frame))
-
-            print_message(timer.milliseconds(), len(point_cloud), frame)
+                print_message(timer.milliseconds(), len(point_cloud), frame)
 
             client.send_control(
-                measurements.player_measurements.autopilot_control)
+                measurements.player_measurements.autopilot_control
+            )
 
 
 def print_message(elapsed_time, point_n, frame):
     message = ' '.join([
         'Transformations took {:>3.0f} ms.',
-        'Saved {:>6} points to "{:0>5}.ply."'
+        'Saved {:>6} points to "{:0>5}.ply".'
     ]).format(elapsed_time, point_n, frame)
     print_over_same_line(message)
 
@@ -180,7 +178,7 @@ def main():
     while True:
         try:
             run_carla_client(host=args.host, port=args.port, far=args.far)
-            print('Done.')
+            print('\nDone!')
             return
 
         except TCPConnectionError as error:
