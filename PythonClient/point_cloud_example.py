@@ -24,7 +24,7 @@ from carla.settings import CarlaSettings
 from carla.tcp import TCPConnectionError
 from carla.util import print_over_same_line, StopWatch
 from carla.image_converter import depth_to_local_point_cloud, to_rgb_array
-from carla.transform import Transform, Translation, Rotation, Scale
+from carla.transform import Transform
 
 
 def run_carla_client(host, port, far):
@@ -79,6 +79,7 @@ def run_carla_client(host, port, far):
         for frame in range(1, number_of_frames):
             # Read the data produced by the server this frame.
             measurements, sensor_data = client.read_data()
+
             # Save one image every 'frame_step' frames
             if not frame % frame_step:
                 # Start transformations time mesure.
