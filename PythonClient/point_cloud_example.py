@@ -6,9 +6,9 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-# Basic CARLA client to generate point cloud in PLY format that you
-# can visualize with MeshLab (meshlab.net) for instance. Please
-# refer to client_example.py for a simpler and more documented example.
+"""Basic CARLA client to generate point cloud in PLY format that you
+   can visualize with MeshLab (meshlab.net) for instance. Please
+   refer to client_example.py for a simpler and more documented example."""
 
 from __future__ import print_function
 
