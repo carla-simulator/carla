@@ -14,7 +14,6 @@ import os
 import abc
 import logging
 
-
 from builtins import input as input_data
 
 
@@ -325,9 +324,20 @@ class Benchmark(object):
         return os.path.exists(self._full_name)
 
     def _get_last_position(self):
+        """
+            Get the last position on the experiment file
+            With this you are able to continue from there
+        :return int, position:
+        """
 
-        with open(os.path.join(self._full_name, self._suffix_name)) as f:
-            return sum(1 for _ in f)
+        # Try to open, if the file is not found
+        try:
+            with open(os.path.join(self._full_name, self._suffix_name)) as f:
+                return sum(1 for _ in f)
+        except IOError:
+                return 0
+
+
 
 
     # To be redefined on subclasses on how to calculate timeout for an episode
