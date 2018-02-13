@@ -83,7 +83,8 @@ namespace server {
             return ec;
         }
       }
-      return errc::success();
+      const uint32_t end_message = 0u;
+      return _server.Write(boost::asio::buffer(&end_message, sizeof(end_message)), timeout);;
     }
 
     error_code ReadString(std::string &string, time_duration timeout) {
