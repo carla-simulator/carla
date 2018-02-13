@@ -104,15 +104,14 @@ TEST(CarlaServerAPI, SimBlocking) {
     std::array<carla_agent, 10u> agents_data;
 
     std::atomic_bool done{false};
-    auto agent_thread_result = std::async(std::launch::async, [&](){
+
+    // Simulate game thread.
+    auto game_thread_result = std::async(std::launch::async, [&](){
       while (!done) {
         {
           carla_measurements measurements;
           measurements.non_player_agents = agents_data.data();
           measurements.number_of_non_player_agents = agents_data.size();
-          for (auto &sensor : sensors) {
-            carla_write_sensor_data(CarlaServer, sensor.MakeRandomData());
-          }
           auto ec = carla_write_measurements(CarlaServer, measurements);
           if (ec != S)
             break;
@@ -128,6 +127,16 @@ TEST(CarlaServerAPI, SimBlocking) {
       }
     });
 
+    // Simulate render thread.
+    auto render_thread_result = std::async(std::launch::async, [&](){
+      while (!done) {
+        for (auto &sensor : sensors) {
+          carla_write_sensor_data(CarlaServer, sensor.MakeRandomData());
+          std::this_thread::sleep_for(std::chrono::microseconds(150));
+        }
+      };
+    });
+
     for (;;) {
       carla_request_new_episode new_episode;
       auto ec = carla_read_request_new_episode(CarlaServer, new_episode, 0);
@@ -141,7 +150,8 @@ TEST(CarlaServerAPI, SimBlocking) {
     }
 
     test_log("waiting for async's future");
-    agent_thread_result.get();
+    game_thread_result.get();
+    render_thread_result.get();
   }
   test_log("###### End Test ######");
 }
