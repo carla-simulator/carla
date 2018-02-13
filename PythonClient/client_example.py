@@ -224,8 +224,8 @@ def main():
                 port=args.port,
                 autopilot_on=args.autopilot,
                 save_images_to_disk=args.images_to_disk,
-                image_filename_format='_images/episode_{:0>3d}/{:s}/image_{:0>5d}.png',
-                lidar_filename_format='_lidars/episode_{:0>3d}/{:s}/lidar_{:0>5d}.json',
+                image_filename_format='_out/episode_{:0>4d}/{:s}/{:0>6d}.png',
+                lidar_filename_format='_out/episode_{:0>4d}/{:s}/{:0>6d}.json',
                 settings_filepath=args.carla_settings)
 
             print('Done.')
