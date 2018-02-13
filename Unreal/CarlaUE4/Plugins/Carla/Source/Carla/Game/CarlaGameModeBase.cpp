@@ -18,6 +18,8 @@
 #include "CarlaHUD.h"
 #include "CarlaPlayerState.h"
 #include "CarlaVehicleController.h"
+#include "Sensor/Sensor.h"
+#include "Sensor/SensorFactory.h"
 #include "Settings/CarlaSettings.h"
 #include "Tagger.h"
 #include "TaggerDelegate.h"
@@ -222,12 +224,9 @@ void ACarlaGameModeBase::AttachCaptureCamerasToPlayer()
     OverridePostProcessParameters = &Weather->CameraPostProcessParameters;
   }
 
-  for (const auto &Item : Settings.CameraDescriptions) {
-    PlayerController->AddSceneCaptureCamera(Item.Value, OverridePostProcessParameters);
-  }
-
-  for (const auto &Item : Settings.LidarDescriptions) {
-    PlayerController->AddSceneCaptureLidar(Item.Value);
+  for (const auto &Item : Settings.SensorDescriptions) {
+    auto *Sensor = FSensorFactory::Make(Item.Key, *Item.Value, *GetWorld());
+    Sensor->AttachToActor(PlayerController->GetPawn());
   }
 }
 

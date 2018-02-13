@@ -11,10 +11,11 @@
 
 class ACarlaHUD;
 class ACarlaPlayerState;
-class ASceneCaptureCamera;
 class ALidar;
-struct FCameraDescription;
-struct FLidarDescription;
+class ASceneCaptureCamera;
+class UCameraDescription;
+class ULidarDescription;
+struct FCameraPostProcessParameters;
 
 /// The CARLA player controller.
 UCLASS()
@@ -48,8 +49,6 @@ public:
   /// @{
 public:
 
-  virtual void BeginPlay() override;
-
   virtual void Tick(float DeltaTime) override;
 
   /// @}
@@ -75,20 +74,6 @@ public:
   {
     return *CarlaPlayerState;
   }
-
-  /// @}
-  // ===========================================================================
-  /// @name Scene Capture
-  // ===========================================================================
-  /// @{
-public:
-
-  void AddSceneCaptureCamera(
-      const FCameraDescription &CameraDescription,
-      const FCameraPostProcessParameters *OverridePostProcessParameters);
-
-  void AddSceneCaptureLidar(
-      const FLidarDescription &LidarDescription);
 
   /// @}
   // ===========================================================================
@@ -118,12 +103,6 @@ private:
   // -- Member variables -------------------------------------------------------
   // ===========================================================================
 private:
-
-  UPROPERTY()
-  TArray<ASceneCaptureCamera *> SceneCaptureCameras;
-
-  UPROPERTY()
-  TArray<ALidar *> SceneCaptureLidars;
 
   // Cast for quick access to the custom player state.
   UPROPERTY()

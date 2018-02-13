@@ -2,12 +2,20 @@
 
 #pragma once
 
+#include "SensorDescription.h"
 #include "LidarDescription.generated.h"
 
-USTRUCT()
-struct FLidarDescription
+UCLASS()
+class ULidarDescription : public USensorDescription
 {
-  GENERATED_USTRUCT_BODY()
+  GENERATED_BODY()
+
+public:
+
+  virtual void AcceptVisitor(ISensorDescriptionVisitor &Visitor) const final
+  {
+    Visitor.Visit(*this);
+  }
 
   /** Number of lasers */
   UPROPERTY(EditDefaultsOnly, Category = "Lidar Description")
@@ -26,28 +34,20 @@ struct FLidarDescription
   float RotationFrequency = 10;
 
   /**
-    Upper laser angle, counts from horizontal,
-    positive values means above horizontal line
-  */
+   * Upper laser angle, counts from horizontal, positive values means above
+   * horizontal line
+   */
   UPROPERTY(EditDefaultsOnly, Category = "Lidar Description")
   float UpperFovLimit = 10;
 
   /**
-    Lower laser angle, counts from horizontal,
-    negative values means under horizontal line
-  */
+   * Lower laser angle, counts from horizontal, negative values means under
+   * horizontal line
+   */
   UPROPERTY(EditDefaultsOnly, Category = "Lidar Description")
   float LowerFovLimit = -30;
 
   /** wether to show debug points of laser hits in simulator */
   UPROPERTY(EditDefaultsOnly, Category = "Lidar Description")
   bool ShowDebugPoints = false;
-
-  /** Position relative to the player. */
-  UPROPERTY(Category = "Lidar Description", EditDefaultsOnly)
-  FVector Position = {0.0f, 0.0f, 250.0f};
-
-  /** Rotation relative to the player. */
-  UPROPERTY(Category = "Lidar Description", EditDefaultsOnly)
-  FRotator Rotation = {0.0f, 0.0f, 0.0f};
 };

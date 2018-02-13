@@ -22,7 +22,7 @@ ALidar::ALidar(const FObjectInitializer& ObjectInitializer) :
   CreateLasers();
 }
 
-void ALidar::Set(const FLidarDescription &LidarDescription)
+void ALidar::Set(const ULidarDescription &LidarDescription)
 {
   Channels = LidarDescription.Channels;
   Range = LidarDescription.Range;

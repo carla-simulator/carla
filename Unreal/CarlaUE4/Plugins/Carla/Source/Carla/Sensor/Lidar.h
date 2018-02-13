@@ -18,7 +18,7 @@ public:
   // Sets default values for this actor's properties
   ALidar(const FObjectInitializer& ObjectInitializer);
 
-  void Set(const FLidarDescription &LidarDescription);
+  void Set(const ULidarDescription &LidarDescription);
 
 protected:
   // Called when the game starts or when spawned
