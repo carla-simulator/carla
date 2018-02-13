@@ -56,33 +56,6 @@ void ACarlaVehicleController::Possess(APawn *aPawn)
 // -- AActor -------------------------------------------------------------------
 // =============================================================================
 
-void ACarlaVehicleController::BeginPlay()
-{
-  Super::BeginPlay();
-
-  if (CarlaPlayerState != nullptr) {
-    CarlaPlayerState->Images.Empty();
-    const auto NumberOfCameras = SceneCaptureCameras.Num();
-    if (NumberOfCameras > 0) {
-      CarlaPlayerState->Images.AddDefaulted(NumberOfCameras);
-      for (auto i = 0; i < NumberOfCameras; ++i) {
-        auto *Camera = SceneCaptureCameras[i];
-        check(Camera != nullptr);
-        auto &Image = CarlaPlayerState->Images[i];
-        Image.SizeX = Camera->GetImageSizeX();
-        Image.SizeY = Camera->GetImageSizeY();
-        Image.FOVAngle = Camera->GetFOVAngle();
-        Image.PostProcessEffect = Camera->GetPostProcessEffect();
-      }
-    }
-    // Lidars
-    const auto NumberOfLidars = SceneCaptureLidars.Num();
-    if (NumberOfLidars > 0) {
-      CarlaPlayerState->LidarSegments.AddDefaulted(NumberOfLidars);
-    }
-  }
-}
-
 void ACarlaVehicleController::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
@@ -104,64 +77,7 @@ void ACarlaVehicleController::Tick(float DeltaTime)
     CarlaPlayerState->SpeedLimit = GetSpeedLimit();
     CarlaPlayerState->TrafficLightState = GetTrafficLightState();
     IntersectPlayerWithRoadMap();
-    const auto NumberOfCameras = SceneCaptureCameras.Num();
-    check(NumberOfCameras == CarlaPlayerState->Images.Num());
-    for (auto i = 0; i < NumberOfCameras; ++i) {
-      auto &Image = CarlaPlayerState->Images[i];
-      if (!SceneCaptureCameras[i]->ReadPixels(Image.BitMap)) {
-        Image.BitMap.Empty();
-      }
-    }
-    // Capture lidars
-    const auto NumberOfLidars = SceneCaptureLidars.Num();
-    check(NumberOfLidars == CarlaPlayerState->LidarSegments.Num());
-    for (auto i = 0; i < NumberOfLidars; ++i) {
-      auto &LidarSegment = CarlaPlayerState->LidarSegments[i];
-      SceneCaptureLidars[i]->ReadPoints(DeltaTime, LidarSegment);
-    }
   }
-}
-
-// =============================================================================
-// -- Scene capture ------------------------------------------------------------
-// =============================================================================
-
-void ACarlaVehicleController::AddSceneCaptureCamera(
-    const FCameraDescription &Description,
-    const FCameraPostProcessParameters *OverridePostProcessParameters)
-{
-  auto Camera = GetWorld()->SpawnActor<ASceneCaptureCamera>(Description.Position, Description.Rotation);
-  if (OverridePostProcessParameters != nullptr) {
-    Camera->Set(Description, *OverridePostProcessParameters);
-  } else {
-    Camera->Set(Description);
-  }
-  Camera->AttachToActor(GetPawn(), FAttachmentTransformRules::KeepRelativeTransform);
-  Camera->SetOwner(GetPawn());
-  AddTickPrerequisiteActor(Camera);
-  SceneCaptureCameras.Add(Camera);
-  UE_LOG(
-      LogCarla,
-      Log,
-      TEXT("Created capture camera %d with postprocess \"%s\""),
-      SceneCaptureCameras.Num() - 1,
-      *PostProcessEffect::ToString(Camera->GetPostProcessEffect()));
-}
-
-void ACarlaVehicleController::AddSceneCaptureLidar(
-    const FLidarDescription &Description)
-{
-  auto Lidar = GetWorld()->SpawnActor<ALidar>(Description.Position, Description.Rotation);
-  Lidar->Set(Description);
-  Lidar->AttachToActor(GetPawn(), FAttachmentTransformRules::KeepRelativeTransform);
-  Lidar->SetOwner(GetPawn());
-  AddTickPrerequisiteActor(Lidar);
-  SceneCaptureLidars.Add(Lidar);
-  UE_LOG(
-      LogCarla,
-      Log,
-      TEXT("Created lidar %d"),
-      SceneCaptureLidars.Num() - 1);
 }
 
 // =============================================================================

@@ -7,6 +7,20 @@
 #include "Carla.h"
 #include "Sensor.h"
 
-ASensor::ASensor(const FObjectInitializer& ObjectInitializer) :
-  Super(ObjectInitializer)
-{}
+static uint32 GetNextSensorId()
+{
+  static uint32 COUNT = 0u;
+  return ++COUNT;
+}
+
+ASensor::ASensor(const FObjectInitializer& ObjectInitializer)
+  : Super(ObjectInitializer),
+    Id(GetNextSensorId()) {}
+
+void ASensor::AttachToActor(AActor *Actor)
+{
+  check(Actor != nullptr);
+  Super::AttachToActor(Actor, FAttachmentTransformRules::KeepRelativeTransform);
+  SetOwner(Actor);
+  Actor->AddTickPrerequisiteActor(this);
+}

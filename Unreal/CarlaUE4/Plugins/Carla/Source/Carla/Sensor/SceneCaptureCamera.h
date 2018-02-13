@@ -60,11 +60,7 @@ public:
 
   void SetTargetGamma(float TargetGamma);
 
-  void Set(const FCameraDescription &CameraDescription);
-
-  void Set(
-      const FCameraDescription &CameraDescription,
-      const FCameraPostProcessParameters &OverridePostProcessParameters);
+  void Set(const UCameraDescription &CameraDescription);
 
   bool ReadPixels(TArray<FColor> &BitMap) const;
 

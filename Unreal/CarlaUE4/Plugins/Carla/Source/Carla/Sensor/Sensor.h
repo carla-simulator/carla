@@ -18,4 +18,29 @@ class CARLA_API ASensor : public AActor
 public:
 
   ASensor(const FObjectInitializer& ObjectInitializer);
+
+  uint32 GetId() const
+  {
+    return Id;
+  }
+
+  void SetName(FString InName)
+  {
+    Name = InName;
+  }
+
+  const FString &GetName() const
+  {
+    return Name;
+  }
+
+  void AttachToActor(AActor *Actor);
+
+private:
+
+  UPROPERTY(VisibleAnywhere)
+  uint32 Id;
+
+  UPROPERTY(VisibleAnywhere)
+  FString Name;
 };

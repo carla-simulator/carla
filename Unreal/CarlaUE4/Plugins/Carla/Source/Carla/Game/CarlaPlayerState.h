@@ -186,46 +186,6 @@ public:
 
   /// @}
   // ===========================================================================
-  /// @name Images
-  // ===========================================================================
-  /// @{
-
-  UFUNCTION(BlueprintCallable)
-  int32 GetNumberOfImages() const
-  {
-    return Images.Num();
-  }
-
-  UFUNCTION(BlueprintCallable)
-  bool HasImages() const
-  {
-    return GetNumberOfImages() > 0;
-  }
-
-  UFUNCTION(BlueprintCallable)
-  int32 GetNumberOfLidarsMeasurements() const
-  {
-    return LidarSegments.Num();
-  }
-
-  UFUNCTION(BlueprintCallable)
-  bool HasLidarsMeasurements() const
-  {
-    return GetNumberOfLidarsMeasurements() > 0;
-  }
-
-  const TArray<FCapturedImage> &GetImages() const
-  {
-    return Images;
-  }
-
-  const TArray<FCapturedLidarSegment> &GetLidarSegments() const
-  {
-    return LidarSegments;
-  }
-
-  /// @}
-  // ===========================================================================
   // -- Modifiers --------------------------------------------------------------
   // ===========================================================================
 private:
@@ -301,10 +261,4 @@ private:
 
   UPROPERTY(VisibleAnywhere)
   float OffRoadIntersectionFactor = 0.0f;
-
-  UPROPERTY(VisibleAnywhere)
-  TArray<FCapturedImage> Images;
-
-  UPROPERTY(VisibleAnywhere)
-  TArray<FCapturedLidarSegment> LidarSegments;
 };
