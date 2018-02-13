@@ -23,8 +23,8 @@ namespace server {
   ///
   ///    {
   ///      total size,
-  ///      width, height, type, color[0], color[1],...,     <- first image
-  ///      width, height, type, color[0], color[1],...,     <- second image
+  ///      width, height, type, FOV, color[0], color[1],...,     <- first image
+  ///      width, height, type, FOV, color[0], color[1],...,     <- second image
   ///      ...
   ///    }
   ///
