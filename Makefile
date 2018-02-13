@@ -4,10 +4,16 @@ BASE_BUILD_FOLDER=$(CURDIR)/Util/Build/carlaserver-build
 MY_CMAKE_FOLDER=$(CURDIR)/Util/cmake
 MY_CMAKE_FLAGS=-B"$(BUILD_FOLDER)" -DCMAKE_INSTALL_PREFIX="$(INSTALL_FOLDER)"
 
+define log
+	@echo -- LOG [$(1)] '$($1)'
+endef
+
 ifeq ($(OS),Windows_NT)
 BUILD_RULE=build_windows
+CLEAN_RULE=clean_windows
 PROTOC_COMPILE=cmd.exe /k "cd Util & call Protoc.bat & exit"
 PROTOC_CLEAN=cmd.exe /k "cd Util & call Protoc.bat --clean & exit"
+RM=
 else
 BUILD_RULE=build_linux
 PROTOC_COMPILE=./Util/Protoc.sh
@@ -26,6 +32,11 @@ release: BUILD_FOLDER=$(BASE_BUILD_FOLDER)/release
 release: MY_CMAKE_FLAGS+=-DCMAKE_BUILD_TYPE=Release
 release: $(BUILD_RULE)
 
+vsproject: BUILD_FOLDER=$(BASE_BUILD_FOLDER)/visualstudio
+vsproject: MY_CMAKE_FLAGS+=-DCMAKE_BUILD_TYPE=Debug
+vsproject: MY_CMAKE_FLAGS+=-G "Visual Studio 14 2015 Win64"
+vsproject: call_cmake
+
 build_linux: MY_CMAKE_FLAGS+=-G "Ninja"
 build_linux: call_cmake
 	@cd $(BUILD_FOLDER) && ninja && ninja install
@@ -34,13 +45,12 @@ build_windows: MY_CMAKE_FLAGS+=-G "NMake Makefiles"
 build_windows: call_cmake
 	@cd $(BUILD_FOLDER) && nmake && nmake install
 
-vsproject: BUILD_FOLDER=$(BASE_BUILD_FOLDER)/visualstudio
-vsproject: MY_CMAKE_FLAGS+=-DCMAKE_BUILD_TYPE=Debug
-vsproject: MY_CMAKE_FLAGS+=-G "Visual Studio 14 2015 Win64"
-vsproject: call_cmake
-
 call_cmake: protobuf
+ifeq ($(OS),Windows_NT)
+	-@mkdir "$(BUILD_FOLDER)"
+else
 	@mkdir -p $(BUILD_FOLDER)
+endif
 	@cd $(BUILD_FOLDER) && cmake $(MY_CMAKE_FLAGS) "$(MY_CMAKE_FOLDER)"
 
 protobuf:
@@ -57,7 +67,11 @@ doxygen:
 ### Clean ######################################################################
 
 clean:
+ifeq ($(OS),Windows_NT)
+	@rd /s /q "$(BASE_BUILD_FOLDER)" "$(INSTALL_FOLDER)"
+else
 	@rm -Rf $(BASE_BUILD_FOLDER) $(INSTALL_FOLDER) Doxygen
+endif
 	@$(PROTOC_CLEAN)
 
 ### Test #######################################################################
