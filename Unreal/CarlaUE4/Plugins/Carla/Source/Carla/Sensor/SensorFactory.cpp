@@ -14,15 +14,21 @@
 #include "Settings/CameraDescription.h"
 #include "Settings/LidarDescription.h"
 
+template <typename T, typename D>
+static T *SpawnSensor(const D &Description, UWorld &World)
+{
+  FActorSpawnParameters Params;
+  Params.Name = Description.Name;
+  return World.SpawnActor<T>(Description.Position, Description.Rotation, Params);
+}
+
 ASensor *FSensorFactory::Make(
-    const FString &Name,
     const USensorDescription &Description,
     UWorld &World)
 {
   FSensorFactory Visitor(World);
   Description.AcceptVisitor(Visitor);
   check(Visitor.Sensor != nullptr);
-  Visitor.Sensor->SetName(Name);
   return Visitor.Sensor;
 }
 
@@ -30,7 +36,7 @@ FSensorFactory::FSensorFactory(UWorld &World) : World(World) {}
 
 void FSensorFactory::Visit(const UCameraDescription &Description)
 {
-  auto Camera = World.SpawnActor<ASceneCaptureCamera>(Description.Position, Description.Rotation);
+  auto Camera = SpawnSensor<ASceneCaptureCamera>(Description, World);
   Camera->Set(Description);
   UE_LOG(
       LogCarla,
@@ -43,7 +49,7 @@ void FSensorFactory::Visit(const UCameraDescription &Description)
 
 void FSensorFactory::Visit(const ULidarDescription &Description)
 {
-  auto Lidar = World.SpawnActor<ALidar>(Description.Position, Description.Rotation);
+  auto Lidar = SpawnSensor<ALidar>(Description, World);
   Lidar->Set(Description);
   UE_LOG(
       LogCarla,
