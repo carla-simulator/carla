@@ -16,7 +16,6 @@ class FSensorFactory : private ISensorDescriptionVisitor
 public:
 
   static ASensor *Make(
-      const FString &Name,
       const USensorDescription &Description,
       UWorld &World);
 

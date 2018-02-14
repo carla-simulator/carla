@@ -18,6 +18,10 @@ public:
 
   virtual void AcceptVisitor(ISensorDescriptionVisitor &Visitor) const {}
 
+  /** Display name of the sensor. */
+  UPROPERTY(Category = "Sensor Description", EditDefaultsOnly)
+  FName Name;
+
   /** Position relative to the player. */
   UPROPERTY(Category = "Sensor Description", EditDefaultsOnly)
   FVector Position = {170.0f, 0.0f, 150.0f};

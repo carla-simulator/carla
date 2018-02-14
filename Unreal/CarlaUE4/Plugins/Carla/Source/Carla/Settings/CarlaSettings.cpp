@@ -130,8 +130,9 @@ static void LoadSettingsFromConfig(
   ConfigFile.GetString(S_CARLA_SCENECAPTURE, TEXT("Cameras"), Cameras);
   TArray<FString> CameraNames;
   Cameras.ParseIntoArray(CameraNames, TEXT(","), true);
-  for (FString &Name : CameraNames) {
+  for (const FString &Name : CameraNames) {
     auto *Camera = NewObject<UCameraDescription>(&Settings);
+    Camera->Name = FName(*Name);
     check(Camera != nullptr);
     GetCameraDescription(ConfigFile, S_CARLA_SCENECAPTURE, *Camera);
 
@@ -154,8 +155,9 @@ static void LoadSettingsFromConfig(
   ConfigFile.GetString(S_CARLA_SCENECAPTURE, TEXT("Lidars"), Lidars);
   TArray<FString> LidarNames;
   Lidars.ParseIntoArray(LidarNames, TEXT(","), true);
-  for (FString &Name : LidarNames) {
+  for (const FString &Name : LidarNames) {
     auto *Lidar = NewObject<ULidarDescription>(&Settings);
+    Lidar->Name = FName(*Name);
     check(Lidar != nullptr);
     GetLidarDescription(ConfigFile, S_CARLA_SCENECAPTURE, *Lidar);
 

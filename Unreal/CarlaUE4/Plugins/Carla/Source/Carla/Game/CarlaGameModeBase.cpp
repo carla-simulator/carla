@@ -225,7 +225,7 @@ void ACarlaGameModeBase::AttachCaptureCamerasToPlayer()
   }
 
   for (const auto &Item : Settings.SensorDescriptions) {
-    auto *Sensor = FSensorFactory::Make(Item.Key, *Item.Value, *GetWorld());
+    auto *Sensor = FSensorFactory::Make(*Item.Value, *GetWorld());
     Sensor->AttachToActor(PlayerController->GetPawn());
   }
 }
