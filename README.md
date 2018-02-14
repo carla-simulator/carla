@@ -2,7 +2,7 @@ CARLA Simulator
 ===============
 
 [![Build Status](https://travis-ci.org/carla-simulator/carla.svg?branch=master)](https://travis-ci.org/carla-simulator/carla)
-[![Documentation](https://readthedocs.org/projects/docs/badge/?version=latest)](https://carla.readthedocs.io)
+[![Documentation](https://readthedocs.org/projects/carla/badge/?version=latest)](http://carla.readthedocs.io)
 [![Waffle.io](https://badge.waffle.io/carla-simulator/carla.svg?columns=Next,In%20Progress,Review)](https://waffle.io/carla-simulator/carla)
 
 CARLA is an open-source simulator for autonomous driving research. CARLA has
@@ -29,7 +29,6 @@ News
 
 - 05.02.2018 CARLA 0.7.1 available for Windows too, [release](https://github.com/carla-simulator/carla/releases/tag/0.7.1).
 - 25.01.2018 CARLA 0.7.1 released: [change log](https://github.com/carla-simulator/carla/blob/master/CHANGELOG.md#carla-071), [release](https://github.com/carla-simulator/carla/releases/tag/0.7.1).
-- 22.01.2018 Job opening: [C++ (UE4) Programmer](https://drive.google.com/open?id=1Hx0eUgpXl95d4IL9meEGhJECgSRos1T1).
 - 28.11.2017 CARLA 0.7.0 released: [change log](https://github.com/carla-simulator/carla/blob/master/CHANGELOG.md#carla-070), [release](https://github.com/carla-simulator/carla/releases/tag/0.7.0).
 - 15.11.2017 CARLA 0.6.0 released: [change log](https://github.com/carla-simulator/carla/blob/master/CHANGELOG.md#carla-060), [release](https://github.com/carla-simulator/carla/releases/tag/0.6.0).
 
