@@ -31,7 +31,7 @@ public:
 
   using HalfEdge = MapGen::DoublyConnectedEdgeList::HalfEdge;
 
-  bool IsVisited(const HalfEdge &InHalfEdge)
+  bool Insert(const HalfEdge &InHalfEdge)
   {
     return Set.insert(&InHalfEdge).second &&
            Set.insert(&MapGen::DoublyConnectedEdgeList::GetPair(InHalfEdge)).second;
@@ -160,7 +160,7 @@ void ACityMapGenerator::GenerateRoads()
 
   // For each edge add road segment.
   for (auto &edge : graph.GetHalfEdges()) {
-    if (HalfEdgeCounter.IsVisited(edge)) {
+    if (HalfEdgeCounter.Insert(edge)) {
       auto source = Graph::GetSource(edge).GetPosition();
       auto target = Graph::GetTarget(edge).GetPosition();
 
