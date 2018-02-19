@@ -18,6 +18,7 @@
 #include "StaticMeshResources.h"
 #include "TextureResource.h"
 
+
 static constexpr auto DEPTH_MAT_PATH =
 #if PLATFORM_LINUX
     TEXT("Material'/Carla/PostProcessingMaterials/DepthEffectMaterial_GLSL.DepthEffectMaterial_GLSL'");
@@ -55,10 +56,12 @@ ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer& ObjectInitial
   DrawFrustum->SetupAttachment(MeshComp);
 
   CaptureRenderTarget = CreateDefaultSubobject<UTextureRenderTarget2D>(TEXT("CaptureRenderTarget0"));
-  //---added by jbelon
-  CaptureRenderTarget->MipGenSettings = TextureMipGenSettings::TMGS_NoMipmaps;
+  #if WITH_EDITORONLY_DATA
+	CaptureRenderTarget->CompressionNoAlpha = true;
+	CaptureRenderTarget->MipGenSettings = TextureMipGenSettings::TMGS_NoMipmaps;
+  #endif
   CaptureRenderTarget->CompressionSettings = TextureCompressionSettings::TC_Default;
-  CaptureRenderTarget->CompressionNoAlpha = true;
+  
   //CaptureRenderTarget->RenderTargetFormat = ETextureRenderTargetFormat::
   CaptureRenderTarget->SRGB=0;
   CaptureRenderTarget->bAutoGenerateMips = false;
