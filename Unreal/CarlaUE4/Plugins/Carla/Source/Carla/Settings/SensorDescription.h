@@ -9,6 +9,8 @@
 #include "SensorDescriptionVisitor.h"
 #include "SensorDescription.generated.h"
 
+class FIniFile;
+
 UCLASS(Abstract)
 class USensorDescription : public UObject
 {
@@ -16,11 +18,26 @@ class USensorDescription : public UObject
 
 public:
 
-  virtual void AcceptVisitor(ISensorDescriptionVisitor &Visitor) const {}
+  virtual void AcceptVisitor(ISensorDescriptionVisitor &Visitor) const;
+
+  virtual void Load(const FIniFile &Config, const FString &Section);
+
+  virtual void Validate() {}
+
+  virtual bool RequiresSemanticSegmentation() const
+  {
+    return false;
+  }
+
+  virtual void Log() const;
 
   /** Display name of the sensor. */
   UPROPERTY(Category = "Sensor Description", EditDefaultsOnly)
   FName Name;
+
+  /** Sensor type. */
+  UPROPERTY(Category = "Sensor Description", EditDefaultsOnly)
+  FString Type;
 
   /** Position relative to the player. */
   UPROPERTY(Category = "Sensor Description", EditDefaultsOnly)

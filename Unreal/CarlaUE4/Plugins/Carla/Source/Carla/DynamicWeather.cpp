@@ -46,7 +46,7 @@ void ADynamicWeather::LoadWeatherDescriptionsFromFile(
   FString DefaultFilePath;
   if (GetWeatherIniFilePath(GetIniFileName(), DefaultFilePath)) {
     UE_LOG(LogCarla, Log, TEXT("Loading weather description from %s"), *DefaultFilePath);
-    IniFile ConfigFile(DefaultFilePath);
+    FIniFile ConfigFile(DefaultFilePath);
 
     { // Override map specific presets.
       FString MapOverridesFilePath;
@@ -190,7 +190,7 @@ bool ADynamicWeather::LoadFromConfigFile()
 {
   FString FilePath;
   if (GetWeatherIniFilePath(FileName, FilePath) && CheckWeatherValidity(Weather)) {
-    IniFile ConfigFile(FilePath);
+    FIniFile ConfigFile(FilePath);
     if (!ConfigFile.HasSection(Weather.Name)) {
       UE_LOG(LogCarla, Error, TEXT("Weather \"%s\" is not present in config file"), *Weather.Name);
       return false;
@@ -206,7 +206,7 @@ bool ADynamicWeather::SaveToConfigFile() const
 {
   FString FilePath;
   if (GetWeatherIniFilePath(FileName, FilePath) && CheckWeatherValidity(Weather)) {
-    IniFile ConfigFile(FilePath);
+    FIniFile ConfigFile(FilePath);
     Weather.WriteToConfigFile(ConfigFile);
     return ConfigFile.Write(FilePath);
   } else {
