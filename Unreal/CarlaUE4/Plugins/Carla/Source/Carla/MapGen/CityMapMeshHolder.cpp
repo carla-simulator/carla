@@ -177,12 +177,16 @@ void ACityMapMeshHolder::ResetInstantiators()
   }
 
   const FName roadtag = FName("CARLA_ROAD");
-  for(int32 i=0; i<Children.Num() ;i++)
+  TArray<AActor*> roadpieces;
+  GetAttachedActors(roadpieces);
+  
+  for(int32 i=roadpieces.Num()-1; i>=0; i--)
   {
+	
 	//UE_LOG(LogTemp,Display,TEXT("ACityMapMeshHolder::ResetInstantiators Destroyed %s"),*Children[i]->GetName());
-	if(Children[i]->Tags.Contains(roadtag))
+	if(roadpieces[i]->Tags.Contains(roadtag))
 	{
-	   Destroy(Children[i]);
+	   roadpieces[i]->Destroy();
 	}
   }
   
