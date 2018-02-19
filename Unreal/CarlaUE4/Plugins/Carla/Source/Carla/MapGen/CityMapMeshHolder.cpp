@@ -6,11 +6,15 @@
 
 #include "Carla.h"
 #include "CityMapMeshHolder.h"
-
+#include "Engine/StaticMeshActor.h"
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 
 #include <vector>
+#include "DetailCategoryBuilder.h"
+#include "DetailLayoutBuilder.h"
+
+
 
 using tag_size_t = std::underlying_type<ECityMapMeshTag>::type;
 
@@ -34,28 +38,47 @@ ACityMapMeshHolder::ACityMapMeshHolder(const FObjectInitializer& ObjectInitializ
     // Add static mesh holder.
     StaticMeshes.Add(CityMapMeshTag::FromUInt(i));
   }
+
 }
+
+/*void ACityMapMeshHolder::LayoutDetails(IDetailLayoutBuilder& DetailLayout)
+{
+ IDetailCategoryBuilder& DetailCategory = DetailLayout.EditCategory("Rendering");
+ IDetailPropertyRow& row = DetailCategory.AddProperty("Generation", TEXT(""));
+ 
+}*/
 
 void ACityMapMeshHolder::OnConstruction(const FTransform &Transform)
 {
   Super::OnConstruction(Transform);
 
-  if (MeshInstatiators.Num() == 0) {
-    ResetInstantiators();
-    UpdateMapScale();
-    UpdateMap();
+}
+
+void ACityMapMeshHolder::PostInitializeComponents()
+{
+  Super::PostInitializeComponents();
+  if(IsValid(GetLevel())&&!GetLevel()->IsPendingKill())
+  {
+	if (MeshInstatiators.Num() == 0) {
+     ResetInstantiators();
+     UpdateMapScale();
+     UpdateMap();
+    }
+	  
   }
+  
 }
 
 #if WITH_EDITOR
 void ACityMapMeshHolder::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
   Super::PostEditChangeProperty(PropertyChangedEvent);
-  if (PropertyChangedEvent.Property) {
+  if (PropertyChangedEvent.Property) 
+  { 
     ResetInstantiators();
     UpdateMapScale();
     UpdateMap();
-  }
+   }
 }
 #endif // WITH_EDITOR
 
@@ -108,7 +131,26 @@ void ACityMapMeshHolder::AddInstance(ECityMapMeshTag Tag, uint32 X, uint32 Y, fl
 void ACityMapMeshHolder::AddInstance(ECityMapMeshTag Tag, FTransform Transform)
 {
   auto &instantiator = GetInstantiator(Tag);
-  instantiator.AddInstance(Transform);
+  static int32 componentnumber = 0;
+  FActorSpawnParameters params;
+  params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+  FVector location = Transform.GetLocation();
+  FRotator rotation = Transform.Rotator();
+  AStaticMeshActor* StaticMeshActor = Cast<AStaticMeshActor>(GetWorld()->SpawnActor(AStaticMeshActor::StaticClass(),&location,&rotation,params));
+  StaticMeshActor->AttachToActor(this,FAttachmentTransformRules::KeepRelativeTransform);
+  StaticMeshActor->SetMobility(EComponentMobility::Static);
+  UStaticMeshComponent* staticmeshcomponent = StaticMeshActor->GetStaticMeshComponent();
+  staticmeshcomponent->SetMobility(EComponentMobility::Static);
+  staticmeshcomponent->SetStaticMesh(instantiator.GetStaticMesh());
+  
+  //occlussion 
+  StaticMeshActor->Tags.Add(FName("CARLA_ROAD"));
+  staticmeshcomponent->bAllowCullDistanceVolume=true;
+  staticmeshcomponent->bUseAsOccluder=false;
+  staticmeshcomponent->LDMaxDrawDistance = MaxDrawDistance;
+  staticmeshcomponent->CastShadow=false;
+  StaticMeshActor->bEnableAutoLODGeneration=true;
+  
 }
 
 // =============================================================================
@@ -133,6 +175,17 @@ void ACityMapMeshHolder::ResetInstantiators()
     auto &instantiator = GetInstantiator(CityMapMeshTag::FromUInt(i));
     instantiator.SetStaticMesh(GetStaticMesh(CityMapMeshTag::FromUInt(i)));
   }
+
+  const FName roadtag = FName("CARLA_ROAD");
+  for(int32 i=0; i<Children.Num() ;i++)
+  {
+	//UE_LOG(LogTemp,Display,TEXT("ACityMapMeshHolder::ResetInstantiators Destroyed %s"),*Children[i]->GetName());
+	if(Children[i]->Tags.Contains(roadtag))
+	{
+	   Destroy(Children[i]);
+	}
+  }
+  
 }
 
 void ACityMapMeshHolder::UpdateMapScale()

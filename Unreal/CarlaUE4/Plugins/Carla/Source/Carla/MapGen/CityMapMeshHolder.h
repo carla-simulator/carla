@@ -10,8 +10,9 @@
 #include "CityMapMeshTag.h"
 #include "CityMapMeshHolder.generated.h"
 
+class IDetailLayoutBuilder;
 class UInstancedStaticMeshComponent;
-
+class AStaticMeshActor;
 /// Holds the static meshes and instances necessary for building a city map.
 UCLASS(Abstract)
 class CARLA_API ACityMapMeshHolder : public AActor
@@ -26,11 +27,12 @@ public:
   /// Initializes the mesh holders. It is safe to call SetStaticMesh after this.
   /// However, instances cannot be added until OnConstruction is called.
   ACityMapMeshHolder(const FObjectInitializer& ObjectInitializer);
-
+  //void LayoutDetails( IDetailLayoutBuilder& DetailLayout );
 protected:
 
   /// Initializes the instantiators.
   virtual void OnConstruction(const FTransform &Transform) override;
+  virtual void PostInitializeComponents() override;
 
 #if WITH_EDITOR
   /// Clears and updates the instantiators.
@@ -44,6 +46,7 @@ protected:
 
   float GetMapScale() const
   {
+	  
     return MapScale;
   }
 
@@ -112,4 +115,7 @@ private:
 
   UPROPERTY(Category = "Meshes", VisibleAnywhere)
   TArray<UInstancedStaticMeshComponent *> MeshInstatiators;
+  
+  UPROPERTY(Category = "Meshes", EditAnywhere)
+  float MaxDrawDistance = 10000.0f;
 };
