@@ -55,10 +55,26 @@ ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer& ObjectInitial
   DrawFrustum->SetupAttachment(MeshComp);
 
   CaptureRenderTarget = CreateDefaultSubobject<UTextureRenderTarget2D>(TEXT("CaptureRenderTarget0"));
+  //---added by jbelon
+  CaptureRenderTarget->MipGenSettings = TextureMipGenSettings::TMGS_NoMipmaps;
+  CaptureRenderTarget->CompressionSettings = TextureCompressionSettings::TC_Default;
+  CaptureRenderTarget->CompressionNoAlpha = true;
+  //CaptureRenderTarget->RenderTargetFormat = ETextureRenderTargetFormat::
+  CaptureRenderTarget->SRGB=0;
+  CaptureRenderTarget->bAutoGenerateMips = false;
+  CaptureRenderTarget->AddressX = TextureAddress::TA_Clamp;
+  CaptureRenderTarget->AddressY = TextureAddress::TA_Clamp;
+  
+  //-------------------
 
   CaptureComponent2D = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("SceneCaptureComponent2D"));
-  CaptureComponent2D->SetupAttachment(MeshComp);
 
+  //--addded by jbelon
+  //CaptureComponent2D->
+  //------------------
+
+  CaptureComponent2D->SetupAttachment(MeshComp);
+  
   // Load post-processing materials.
   static ConstructorHelpers::FObjectFinder<UMaterial> DEPTH(DEPTH_MAT_PATH);
   PostProcessDepth = DEPTH.Object;
@@ -174,6 +190,11 @@ void ASceneCaptureCamera::Set(
 
 bool ASceneCaptureCamera::ReadPixels(TArray<FColor> &BitMap) const
 {
+  if(!CaptureRenderTarget)
+  {
+	  UE_LOG(LogCarla, Error, TEXT("SceneCaptureCamera: Missing render target"));
+	  return false;
+  }
   FTextureRenderTargetResource* RTResource = CaptureRenderTarget->GameThread_GetRenderTargetResource();
   if (RTResource == nullptr) {
     UE_LOG(LogCarla, Error, TEXT("SceneCaptureCamera: Missing render target"));
