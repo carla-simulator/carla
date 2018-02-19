@@ -1,32 +1,33 @@
-{
-	"FileVersion": 3,
-	"Version": 1,
-	"VersionName": "0.7.1",
-	"FriendlyName": "CARLA",
-	"Description": "",
-	"Category": "Science",
-	"CreatedBy": "CVC",
-	"CreatedByURL": "",
-	"DocsURL": "",
-	"MarketplaceURL": "",
-	"SupportURL": "",
-	"CanContainContent": true,
-	"IsBetaVersion": true,
-	"Installed": true,
-	"Modules": [
-		{
-			"Name": "Carla",
-			"Type": "Developer",
-			"LoadingPhase": "Default",
-			"AdditionalDependencies": [
-				"Engine"
-			]
-		}
-	],
-	"Plugins": [
-		{
-			"Name": "PhysXVehicles",
-			"Enabled": true
-		}
-	]
-}
+	{
+		"PluginFileVersion": 3,
+		"Version": 1,
+		"VersionName": "0.7.1",
+		"DisplayName": "CARLA",
+		"FriendlyName": "CARLA",
+		"Description": "",
+		"Category": "Science",
+		"CreatedBy": "CVC",
+		"CreatedByURL": "",
+		"DocsURL": "",
+		"MarketplaceURL": "",
+		"SupportURL": "",
+		"CanContainContent": true,
+		"IsBetaVersion": true,
+		"Installed": true,
+		"Modules": [
+			{
+				"Name": "Carla",
+				"Type": "Developer",
+				"LoadingPhase": "PreDefault",
+				"AdditionalDependencies": [
+					"Engine"
+				]
+			}
+		],
+		"Plugins": [
+			{
+				"Name": "PhysXVehicles",
+				"Enabled": true
+			}
+		]
+	}
