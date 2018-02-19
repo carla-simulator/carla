@@ -9,10 +9,8 @@
 #include "Engine/StaticMeshActor.h"
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
-
 #include <vector>
-#include "DetailCategoryBuilder.h"
-#include "DetailLayoutBuilder.h"
+
 
 
 
@@ -131,7 +129,6 @@ void ACityMapMeshHolder::AddInstance(ECityMapMeshTag Tag, uint32 X, uint32 Y, fl
 void ACityMapMeshHolder::AddInstance(ECityMapMeshTag Tag, FTransform Transform)
 {
   auto &instantiator = GetInstantiator(Tag);
-  static int32 componentnumber = 0;
   FActorSpawnParameters params;
   params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
   FVector location = Transform.GetLocation();
