@@ -148,6 +148,54 @@ void AWheeledVehicleAIController::SetFixedRoute(
   for (auto &Location : Locations) {
     TargetLocations.emplace(Location);
   }
+
+  auto NumberOfLocations = Locations.Num();
+  if( NumberOfLocations == 0 )
+  {
+    //no fixed route
+    RouteCommand = ERouteCommand::LaneFollow;
+  }
+  else
+  {
+    if( NumberOfLocations < 2)
+    {
+      //only single line segment
+      RouteCommand = ERouteCommand::GoStraight;
+    }
+    else
+    {
+      //multiple line segments - compare first segment direction with last segment direction
+      auto FirstSegment = Locations[0] - Vehicle->GetActorLocation();
+      auto LastSegment = Locations[NumberOfLocations-1] - Locations[NumberOfLocations-2];
+      FirstSegment.Normalize();
+      LastSegment.Normalize();
+  
+      float firstSegAngle = FirstSegment.UnitCartesianToSpherical().Y;
+      float lastSegAngle  = LastSegment.UnitCartesianToSpherical().Y;
+
+      firstSegAngle *= (180.0f / PI);
+      lastSegAngle *= (180.0 / PI);
+
+      float angle = lastSegAngle - firstSegAngle;
+      if (angle > 180.0f) { angle -= 360.0f;} else if (angle < -180.0f) {
+        angle += 360.0f;
+      }
+
+      if( angle < -45.0f)
+      {
+        RouteCommand = ERouteCommand::TurnLeft;
+      }
+      else if( angle > 45.0f)
+      {
+        RouteCommand = ERouteCommand::TurnRight;
+      }
+      else
+      {
+        RouteCommand = ERouteCommand::GoStraight;
+      }
+    }
+  }
+  TimeRouteCommandSet = FPlatformTime::Seconds();
 }
 
 // =============================================================================
@@ -156,6 +204,15 @@ void AWheeledVehicleAIController::SetFixedRoute(
 
 void AWheeledVehicleAIController::TickAutopilotController()
 {
+  if( RouteCommand != ERouteCommand::LaneFollow )
+  {
+    auto now = FPlatformTime::Seconds();
+    if( now - TimeRouteCommandSet > 5.0)
+    {
+      RouteCommand = ERouteCommand::LaneFollow;
+    }
+  }
+
 #if WITH_EDITOR
   if (Vehicle == nullptr) { // This happens in simulation mode in editor.
     bAutopilotEnabled = false;
@@ -166,7 +223,7 @@ void AWheeledVehicleAIController::TickAutopilotController()
   check(Vehicle != nullptr);
 
   if (RoadMap == nullptr) {
-    UE_LOG(LogCarla, Error, TEXT("Controller doesn't have a road map!"));
+    //UE_LOG(LogCarla, Error, TEXT("Controller doesn't have a road map!"));
     return;
   }
 
@@ -198,8 +255,8 @@ void AWheeledVehicleAIController::TickAutopilotController()
   } else {
     AutopilotControl.Brake = 0.0f;
     AutopilotControl.Throttle = Throttle;
-  }
-  AutopilotControl.Steer = Steering;
+      }
+  AutopilotControl.Steer = Steering;  
 }
 
 float AWheeledVehicleAIController::GoToNextTargetLocation(FVector &Direction)

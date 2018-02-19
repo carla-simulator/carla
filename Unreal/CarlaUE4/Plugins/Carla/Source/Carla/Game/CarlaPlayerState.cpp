@@ -39,6 +39,7 @@ void ACarlaPlayerState::CopyProperties(APlayerState *PlayerState)
       CurrentGear = Other->CurrentGear;
       SpeedLimit = Other->SpeedLimit;
       TrafficLightState = Other->TrafficLightState;
+      RouteCommand = Other->RouteCommand;
       CollisionIntensityCars = Other->CollisionIntensityCars;
       CollisionIntensityPedestrians = Other->CollisionIntensityPedestrians;
       CollisionIntensityOther = Other->CollisionIntensityOther;

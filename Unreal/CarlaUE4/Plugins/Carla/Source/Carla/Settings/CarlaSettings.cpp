@@ -145,7 +145,11 @@ void UCarlaSettings::LoadSettings()
 {
   CurrentFileName = TEXT("");
   // Load settings from project Config folder if present.
+#if ENGINE_MINOR_VERSION >= 18
+  LoadSettingsFromFile(FPaths::Combine(FPaths::ProjectConfigDir(), TEXT("CarlaSettings.ini")), false);
+#else
   LoadSettingsFromFile(FPaths::Combine(FPaths::GameConfigDir(), TEXT("CarlaSettings.ini")), false);
+#endif
   // Load settings given by command-line arg if provided.
   {
     FString FilePath;

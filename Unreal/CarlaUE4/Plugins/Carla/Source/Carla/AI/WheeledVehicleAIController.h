@@ -10,6 +10,7 @@
 
 #include "GameFramework/PlayerController.h"
 #include "TrafficLightState.h"
+#include "RouteCommand.h"
 #include "WheeledVehicleAIController.generated.h"
 
 class ACarlaWheeledVehicle;
@@ -175,6 +176,13 @@ public:
   UFUNCTION(Category = "Wheeled Vehicle Controller", BlueprintCallable)
   void SetFixedRoute(const TArray<FVector> &Locations, bool bOverwriteCurrent=true);
 
+  /// Get the route command based on the FixedRoute (if set by autopilot)
+  UFUNCTION(Category = "Wheeled Vehicle Controller", BlueprintCallable)
+  ERouteCommand GetRouteCommand() const
+  {
+    return RouteCommand;
+  }
+
   /// @}
   // ===========================================================================
   /// @name AI
@@ -237,7 +245,10 @@ private:
   UPROPERTY(VisibleAnywhere)
   float MaximumSteerAngle = -1.0f;
 
-  FAutopilotControl AutopilotControl;
+  UPROPERTY(VisibleAnywhere)
+  ERouteCommand RouteCommand = ERouteCommand::LaneFollow;
+  double TimeRouteCommandSet = 5.f;
 
+  FAutopilotControl AutopilotControl;
   std::queue<FVector> TargetLocations;
 };

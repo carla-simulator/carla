@@ -9,10 +9,15 @@
 
 #include "HighResScreenshot.h"
 #include "Paths.h"
+#include "Runtime/Launch/Resources/Version.h"
 
 ASceneCaptureToDiskCamera::ASceneCaptureToDiskCamera(const FObjectInitializer& ObjectInitializer) :
   Super(ObjectInitializer),
+#if ENGINE_MINOR_VERSION >= 18
+  SaveToFolder(FPaths::Combine(FPaths::ProjectSavedDir(), "SceneCaptures")),
+#else
   SaveToFolder(FPaths::Combine(FPaths::GameSavedDir(), "SceneCaptures")),
+#endif
   FileName("capture_%05d.png") {}
 
 void ASceneCaptureToDiskCamera::BeginPlay()

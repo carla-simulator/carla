@@ -10,6 +10,7 @@
 #include "Util/IniFile.h"
 
 #include "Components/ArrowComponent.h"
+#include "Runtime/Launch/Resources/Version.h"
 
 static FString GetIniFileName(const FString &MapName = TEXT(""))
 {
@@ -21,7 +22,11 @@ static FString GetIniFileName(const FString &MapName = TEXT(""))
 
 static bool GetWeatherIniFilePath(const FString &FileName, FString &FilePath)
 {
+#if ENGINE_MINOR_VERSION >= 18
+  FilePath = FPaths::Combine(FPaths::ProjectConfigDir(), FileName);
+#else
   FilePath = FPaths::Combine(FPaths::GameConfigDir(), FileName);
+#endif
   const bool bFileExists = FPaths::FileExists(FilePath);
   if (!bFileExists) {
     UE_LOG(LogCarla, Warning, TEXT("\"%s\" not found"), *FilePath);

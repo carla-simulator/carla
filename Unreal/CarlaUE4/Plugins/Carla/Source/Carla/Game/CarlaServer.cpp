@@ -89,6 +89,11 @@ static void Set(carla_image &cImage, const FCapturedImage &uImage)
   }
 }
 
+static inline void Set(uint8_t &lhs, const ERouteCommand &rhs)
+{
+  lhs = static_cast<uint8_t>(rhs);
+}
+
 static void SetBoxSpeedAndType(carla_agent &values, const ACharacter *Walker)
 {
   values.type = CARLA_SERVER_AGENT_PEDESTRIAN;
@@ -324,6 +329,7 @@ CarlaServer::ErrorCode CarlaServer::SendMeasurements(
   Set(player.autopilot_control.brake, PlayerState.GetBrake());
   Set(player.autopilot_control.hand_brake, PlayerState.GetHandBrake());
   Set(player.autopilot_control.reverse, PlayerState.GetCurrentGear() < 0);
+  Set(player.autopilot_control.route_command, PlayerState.GetRouteCommand());
 
   TArray<carla_agent> Agents;
   if (bSendNonPlayerAgentsInfo) {

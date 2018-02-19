@@ -122,6 +122,7 @@ extern "C" {
     float brake;
     bool hand_brake;
     bool reverse;
+    uint8_t route_command;
   };
 
   /* ======================================================================== */

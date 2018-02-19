@@ -55,6 +55,8 @@ namespace server {
     lhs->set_brake(rhs.brake);
     lhs->set_hand_brake(rhs.hand_brake);
     lhs->set_reverse(rhs.reverse);
+    lhs->set_route_command(
+      static_cast< ::carla_server::Control_RouteCommand >(rhs.route_command));
   }
 
   static void SetVehicle(cs::Vehicle *lhs, const carla_agent &rhs) {

@@ -6,6 +6,7 @@
 
 #include "Carla.h"
 #include "CityMapGenerator.h"
+#include "Runtime/Launch/Resources/Version.h"
 
 #include "MapGen/GraphGenerator.h"
 #include "MapGen/RoadMap.h"
@@ -291,7 +292,11 @@ void ACityMapGenerator::GenerateRoadMap()
 #endif // WITH_EDITOR
 
   if (bSaveRoadMapToDisk) {
+#if ENGINE_MINOR_VERSION >= 18
+    RoadMap->SaveAsPNG(FPaths::ProjectSavedDir(), World->GetMapName());
+#else
     RoadMap->SaveAsPNG(FPaths::GameSavedDir(), World->GetMapName());
+#endif
   }
 
 #if WITH_EDITOR
