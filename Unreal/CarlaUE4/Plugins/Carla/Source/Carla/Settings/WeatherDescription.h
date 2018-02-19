@@ -9,7 +9,7 @@
 #include "CameraPostProcessParameters.h"
 #include "WeatherDescription.generated.h"
 
-class IniFile;
+class FIniFile;
 
 UENUM(BlueprintType)
 enum class EPrecipitationType : uint8
@@ -22,9 +22,9 @@ struct FWeatherDescription
 {
   GENERATED_USTRUCT_BODY()
 
-  void ReadFromConfigFile(const IniFile &ConfigFile, const FString &Section);
+  void ReadFromConfigFile(const FIniFile &ConfigFile, const FString &Section);
 
-  void WriteToConfigFile(IniFile &ConfigFile) const;
+  void WriteToConfigFile(FIniFile &ConfigFile) const;
 
   // ===========================================================================
   /// @name Weather
