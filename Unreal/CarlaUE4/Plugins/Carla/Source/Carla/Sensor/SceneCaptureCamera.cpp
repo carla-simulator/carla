@@ -131,7 +131,15 @@ void ASceneCaptureCamera::Tick(const float DeltaSeconds)
     uint32 Width;
     uint32 Height;
     uint32 Type;
-  } ImageHeader = {SizeX, SizeY, PostProcessEffect::ToUInt(GetPostProcessEffect())};
+    float FOV;
+  } ImageHeader = {
+    SizeX,
+    SizeY,
+    PostProcessEffect::ToUInt(PostProcessEffect),
+    CaptureComponent2D->FOVAngle
+  };
+
+  static_assert(sizeof(ImageHeader) == 4u * sizeof(uint32), "Invalid header size");
 
   TArray<FColor> BitMap;
   if (ReadPixels(BitMap)) {
