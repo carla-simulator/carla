@@ -25,12 +25,12 @@ Build Unreal Engine
     need to add your GitHub username when you sign up at
     [www.unrealengine.com](https://www.unrealengine.com).
 
-Download and compile Unreal Engine 4.17. Here we will assume you install it at
-"~/UnrealEngine_4.17", but you can install it anywhere, just replace the path
+Download and compile Unreal Engine 4.18. Here we will assume you install it at
+"~/UnrealEngine_4.18", but you can install it anywhere, just replace the path
 where necessary.
 
-    $ git clone --depth=1 -b 4.17 https://github.com/EpicGames/UnrealEngine.git ~/UnrealEngine_4.17
-    $ cd ~/UnrealEngine_4.17
+    $ git clone --depth=1 -b 4.18 https://github.com/EpicGames/UnrealEngine.git ~/UnrealEngine_4.18
+    $ cd ~/UnrealEngine_4.18
     $ ./Setup.sh && ./GenerateProjectFiles.sh && make
 
 Check Unreal's documentation
@@ -61,7 +61,7 @@ To build CARLA, use the rebuild script. This script deletes all intermediate
 files, rebuilds whole CARLA, and launches the editor. Use it too for making a
 clean rebuild of CARLA
 
-    $ UE4_ROOT=~/UnrealEngine_4.17 ./Rebuild.sh
+    $ UE4_ROOT=~/UnrealEngine_4.18 ./Rebuild.sh
 
 It looks at the environment variable `UE4_ROOT` to find the right version of
 Unreal Engine. You can also add this variable to your "~/.bashrc" or similar.
@@ -91,7 +91,7 @@ Launching the editor
 To open the editor once the project is already built
 
     $ cd Unreal/CarlaUE4
-    $ ~/UnrealEngine_4.17/Engine/Binaries/Linux/UE4Editor "$PWD/CarlaUE4.uproject"
+    $ ~/UnrealEngine_4.18/Engine/Binaries/Linux/UE4Editor "$PWD/CarlaUE4.uproject"
 
 Test (Optional)
 ---------------
