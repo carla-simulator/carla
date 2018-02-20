@@ -7,6 +7,8 @@
 #include "Carla.h"
 #include "SceneCaptureCamera.h"
 
+#include "SensorDataView.h"
+
 #include "Components/DrawFrustumComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Components/StaticMeshComponent.h"
@@ -38,7 +40,7 @@ ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer& ObjectInitial
   SizeY(512u),
   PostProcessEffect(EPostProcessEffect::SceneFinal)
 {
-  PrimaryActorTick.bCanEverTick = true; /// @todo Does it need to tick?
+  PrimaryActorTick.bCanEverTick = true;
   PrimaryActorTick.TickGroup = TG_PrePhysics;
 
   MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CamMesh0"));
@@ -117,6 +119,28 @@ void ASceneCaptureCamera::BeginPlay()
   CaptureComponent2D->Activate();
 
   Super::BeginPlay();
+}
+
+void ASceneCaptureCamera::Tick(const float DeltaSeconds)
+{
+  Super::Tick(DeltaSeconds);
+
+  /// @todo This should be done on render thread.
+
+  struct {
+    uint32 Width;
+    uint32 Height;
+    uint32 Type;
+  } ImageHeader = {SizeX, SizeY, PostProcessEffect::ToUInt(GetPostProcessEffect())};
+
+  TArray<FColor> BitMap;
+  if (ReadPixels(BitMap)) {
+    FSensorDataView DataView(
+        FReadOnlyBufferView{reinterpret_cast<const void *>(&ImageHeader), sizeof(ImageHeader)},
+        FReadOnlyBufferView{BitMap});
+
+    WriteSensorData(DataView);
+  }
 }
 
 float ASceneCaptureCamera::GetFOVAngle() const

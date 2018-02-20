@@ -216,6 +216,7 @@ void UCarlaSettings::LogSettings() const
   UE_LOG(LogCarla, Log, TEXT("Added %d sensors."), SensorDescriptions.Num());
   UE_LOG(LogCarla, Log, TEXT("Semantic Segmentation = %s"), EnabledDisabled(bSemanticSegmentationEnabled));
   for (auto &&Sensor : SensorDescriptions) {
+    check(Sensor.Value != nullptr);
     Sensor.Value->Log();
   }
   UE_LOG(LogCarla, Log, TEXT("================================================================================"));
@@ -223,7 +224,7 @@ void UCarlaSettings::LogSettings() const
 
 #undef S_CARLA_SERVER
 #undef S_CARLA_LEVELSETTINGS
-#undef S_CARLA_SCENECAPTURE
+#undef S_CARLA_SENSOR
 
 void UCarlaSettings::GetActiveWeatherDescription(
     bool &bWeatherWasChanged,
