@@ -65,6 +65,7 @@ public:
       const FCameraPostProcessParameters &OverridePostProcessParameters);
 
   bool ReadPixels(TArray<FColor> &BitMap) const;
+  void WritePixels(TArray<FColor>& RawData);
 
 private:
 

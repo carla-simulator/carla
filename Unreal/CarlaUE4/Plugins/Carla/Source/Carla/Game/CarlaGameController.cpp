@@ -11,6 +11,8 @@
 
 #include "Settings/CarlaSettings.h"
 #include "CarlaServer.h"
+#include "RenderingThread.h"
+
 
 using Errc = CarlaServer::ErrorCode;
 
@@ -115,16 +117,27 @@ void CarlaGameController::Tick(float DeltaSeconds)
   // Send measurements.
   {
     check(GameState != nullptr);
-    if (Errc::Error == Server->SendMeasurements(
+  	ENQUEUE_UNIQUE_RENDER_COMMAND_FOURPARAMETER( /** @TODO: move to the screencapturecamera */
+	  FSendMeasurements,
+	  CarlaServer*,Server,Server.Get(), /** @TODO: move unique pointer lambda reference */
+	  const ACarlaGameState*, GameState, GameState,
+	  const ACarlaPlayerState&, PlayerState,Player->GetPlayerState(),
+	  //,ParamType4,ParamName4,ParamValue4,Code
+	  bool,bSendNonPlayerAgentsInfo,CarlaSettings->bSendNonPlayerAgentsInfo,
+	  {
+	  	if (Errc::Error == Server->SendMeasurements(
             *GameState,
-            Player->GetPlayerState(),
-            CarlaSettings->bSendNonPlayerAgentsInfo)) {
-      Server = nullptr;
-      return;
-    }
+            PlayerState,
+            bSendNonPlayerAgentsInfo))
+		{
+			Server = nullptr;
+		}
+      });
+      
   }
 
   // Read control, block if the settings say so.
+  if(Server!=nullptr)
   {
     const bool bShouldBlock = CarlaSettings->bSynchronousMode;
     if (Errc::Error == Server->ReadControl(*Player, bShouldBlock)) {

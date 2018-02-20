@@ -15,8 +15,7 @@
 #include "HighResScreenshot.h"
 #include "Materials/Material.h"
 #include "Paths.h"
-#include "StaticMeshResources.h"
-#include "TextureResource.h"
+
 
 
 static constexpr auto DEPTH_MAT_PATH =
@@ -198,7 +197,7 @@ bool ASceneCaptureCamera::ReadPixels(TArray<FColor> &BitMap) const
 	  UE_LOG(LogCarla, Error, TEXT("SceneCaptureCamera: Missing render target"));
 	  return false;
   }
-  FTextureRenderTargetResource* RTResource = CaptureRenderTarget->GameThread_GetRenderTargetResource();
+  FTextureRenderTargetResource* RTResource = CaptureRenderTarget->GetRenderTargetResource(); //  CaptureRenderTarget->GameThread_GetRenderTargetResource();
   if (RTResource == nullptr) {
     UE_LOG(LogCarla, Error, TEXT("SceneCaptureCamera: Missing render target"));
     return false;
@@ -207,6 +206,74 @@ bool ASceneCaptureCamera::ReadPixels(TArray<FColor> &BitMap) const
   ReadPixelFlags.SetLinearToGamma(true);
   return RTResource->ReadPixels(BitMap, ReadPixelFlags);
 }
+
+void ASceneCaptureCamera::WritePixels(TArray<FColor>& RawData)
+ {
+  check(IsInRenderingThread());
+  if(!CaptureRenderTarget)
+  {
+  	UE_LOG(LogCarla, Error, TEXT("SceneCaptureCamera: Missing render target"));
+  	return ;
+  }
+  FRHITexture2D *texture = CaptureRenderTarget->GetRenderTargetResource()->GetRenderTargetTexture();
+  
+  uint32 width = texture->GetSizeX();
+  uint32 height = texture->GetSizeY();
+  uint32 stride;
+  uint8 *src = reinterpret_cast<uint8*>(RHILockTexture2D(texture, 0, RLM_ReadOnly, stride, false));
+  const uint32 bufferSize = stride * height;
+	//Alternative Method 0: deeplearning
+  /*void *buffer = FMemory::Malloc(bufferSize, 4);
+  if(!buffer)
+  {
+	UE_LOG(LogCarla, Display, TEXT("Error allocating memory"));
+	RHIUnlockTexture2D(texture, 0, false);
+	return ;	
+  }
+  //FMemory::BigBlockMemcpy(buffer, src, bufferSize);*/
+  RawData.Empty(width*height);
+  for(unsigned y = 0; y < height; ++y)
+  {
+    for(unsigned x = 0; x < width; ++x)
+	{
+		//RGBA -> 
+		RawData.Add(FColor(src[2],src[1],src[0],src[3]));
+		src += 4;
+	}
+  }
+  
+  RHIUnlockTexture2D(texture, 0, false);
+	//Alternative Method 1
+   /*FColor* RHIData = reinterpret_cast<FColor*>(RHILockTexture2D(TextureRHI, 0, RLM_ReadOnly, stride, false, false));
+	 if(!RHIData) {
+		 UE_LOG(LogCarla,Display,TEXT("ASceneCaptureCamera::WritePixels : RHIData is null"));
+	 	 return;
+	 }
+	 RawData.Append(RHIData,Width*Height);*/
+	//Alternative Method 2
+  /*uint8* OriginBuffer = reinterpret_cast<uint8*>(RHILockTexture2D(TextureRHI, 0, RLM_ReadOnly, stride, false,false));
+	if(OriginBuffer)
+	{
+	  for (int32 y = 0; y < Height; y++)
+      {
+         uint8* OriginPtr = &OriginBuffer[(Height - 1 - y) * stride];
+         for (int32 x = 0; x < Width; x++)
+         {
+			 RawData[(Height - 1 - y) * Width] = FColor(*OriginPtr++,*OriginPtr++,*OriginPtr++,*OriginPtr++);
+         }
+      }
+	}
+	*/
+	//Alternative Method 3
+  /*
+	FRHITexture2D* Texture2D = TextureRHI->GetTexture2D();
+	uint8* TextureBuffer = (uint8*)RHILockTexture2D(Texture2D, 0, RLM_ReadOnly, stride, false, false);
+	FMemory::Memcpy( RawData.GetData(), TextureBuffer, stride + (Width*Height*4) );
+	*/
+	//End of Alternative methods lock
+  //RHIUnlockTexture2D(TextureRHI, 0, false, false);
+}
+
 
 void ASceneCaptureCamera::UpdateDrawFrustum()
 {
