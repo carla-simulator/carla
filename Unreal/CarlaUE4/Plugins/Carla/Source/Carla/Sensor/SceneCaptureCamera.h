@@ -35,6 +35,8 @@ public:
 
   virtual void BeginPlay() override;
 
+  virtual void Tick(float DeltaSeconds) override;
+
   uint32 GetImageSizeX() const
   {
     return SizeX;

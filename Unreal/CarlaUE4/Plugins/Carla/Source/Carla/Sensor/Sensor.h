@@ -7,6 +7,7 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
+#include "SensorDataSink.h"
 #include "Sensor.generated.h"
 
 /// Base class for sensors.
@@ -26,8 +27,23 @@ public:
 
   void AttachToActor(AActor *Actor);
 
+  void SetSensorDataSink(TSharedPtr<ISensorDataSink> InSensorDataSink)
+  {
+    SensorDataSink = InSensorDataSink;
+  }
+
+protected:
+
+  void WriteSensorData(const FSensorDataView &SensorData)
+  {
+    check(SensorDataSink.Get() != nullptr);
+    SensorDataSink->Write(SensorData);
+  }
+
 private:
 
   UPROPERTY(VisibleAnywhere)
   uint32 Id;
+
+  TSharedPtr<ISensorDataSink> SensorDataSink = nullptr;
 };
