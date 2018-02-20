@@ -14,6 +14,11 @@
 #include "GameFramework/Pawn.h"
 #include "WheeledVehicle.h"
 #include "WheeledVehicleMovementComponent.h"
+#include "CarlaPlayerState.h"
+#include "CarlaWheeledVehicle.h"
+#include "CarlaHUD.h"
+#include "MapGen/RoadMap.h"
+#include "Settings/CameraPostProcessParameters.h"
 
 // =============================================================================
 // -- Constructor and destructor -----------------------------------------------
@@ -99,11 +104,18 @@ void ACarlaVehicleController::Tick(float DeltaTime)
     IntersectPlayerWithRoadMap();
     const auto NumberOfCameras = SceneCaptureCameras.Num();
     check(NumberOfCameras == CarlaPlayerState->Images.Num());
-    for (auto i = 0; i < NumberOfCameras; ++i) {
-      auto &Image = CarlaPlayerState->Images[i];
-      if (!SceneCaptureCameras[i]->ReadPixels(Image.BitMap)) {
-        Image.BitMap.Empty();
-      }
+	  
+    for (auto i = 0; i < NumberOfCameras; ++i) 
+	{
+      FCapturedImage *Image = &CarlaPlayerState->Images[i];
+	  ASceneCaptureCamera *Camera = SceneCaptureCameras[i];
+	  ENQUEUE_UNIQUE_RENDER_COMMAND_TWOPARAMETER(
+        FReadFromTexture,
+        FCapturedImage*, Image, Image,
+         ASceneCaptureCamera *, Camera, Camera,
+        {
+            Camera->WritePixels(Image->BitMap);			
+        });
     }
   }
 }

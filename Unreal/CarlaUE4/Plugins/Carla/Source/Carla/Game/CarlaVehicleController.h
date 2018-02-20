@@ -9,6 +9,7 @@
 #include "WheeledVehicleController.h"
 #include "CarlaVehicleController.generated.h"
 
+struct FCameraPostProcessParameters;
 class ACarlaHUD;
 class ACarlaPlayerState;
 class ASceneCaptureCamera;
