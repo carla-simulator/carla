@@ -1,15 +1,15 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Carla.h"
 #include "Lidar.h"
+
+#include "DrawDebugHelpers.h"
+#include "Runtime/Engine/Classes/Kismet/KismetMathLibrary.h"
 #include "StaticMeshResources.h"
 
-// Sets default values
 ALidar::ALidar(const FObjectInitializer& ObjectInitializer) :
   Super(ObjectInitializer)
 {
-  // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
   PrimaryActorTick.bCanEverTick = true;
 
   auto MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CamMesh0"));
@@ -18,66 +18,125 @@ ALidar::ALidar(const FObjectInitializer& ObjectInitializer) :
   MeshComp->CastShadow = false;
   MeshComp->PostPhysicsComponentTick.bCanEverTick = false;
   RootComponent = MeshComp;
-
-  CreateLasers();
 }
 
 void ALidar::Set(const ULidarDescription &LidarDescription)
 {
-  Channels = LidarDescription.Channels;
-  Range = LidarDescription.Range;
-  PointsPerSecond = LidarDescription.PointsPerSecond;
-  RotationFrequency = LidarDescription.RotationFrequency;
-  UpperFovLimit = LidarDescription.UpperFovLimit;
-  LowerFovLimit = LidarDescription.LowerFovLimit;
-  ShowDebugPoints = LidarDescription.ShowDebugPoints;
+  Description = &LidarDescription;
+  LidarMeasurement = FLidarMeasurement(Description->Channels);
   CreateLasers();
 }
 
 void ALidar::CreateLasers()
 {
-  float dAngle = (UpperFovLimit - LowerFovLimit) / (Channels - 1);
-
-  Lasers.Empty();
-  for(int i=0; i<Channels; i++)
+  check(Description != nullptr);
+  const auto NumberOfLasers = Description->Channels;
+  check(NumberOfLasers > 0u);
+  const float DeltaAngle =
+    (Description->UpperFovLimit - Description->LowerFovLimit) /
+    static_cast<float>(NumberOfLasers - 1);
+  LaserAngles.Empty(NumberOfLasers);
+  for(auto i = 0u; i < NumberOfLasers; ++i)
   {
-    Lasers.Emplace(i, UpperFovLimit - i * dAngle);
+    const float VerticalAngle =
+      Description->UpperFovLimit - static_cast<float>(i) * DeltaAngle;
+    LaserAngles.Emplace(VerticalAngle);
   }
 }
 
-// Called when the game starts or when spawned
-void ALidar::BeginPlay()
+void ALidar::Tick(const float DeltaTime)
 {
-  Super::BeginPlay();
+  Super::Tick(DeltaTime);
+
+  ReadPoints(DeltaTime);
+  WriteSensorData(LidarMeasurement.GetView());
 }
 
-void ALidar::ReadPoints(float DeltaTime, FCapturedLidarSegment& LidarSegmentData)
+void ALidar::ReadPoints(const float DeltaTime)
 {
-  int PointsToScanWithOneLaser = int(FMath::RoundHalfFromZero(PointsPerSecond * DeltaTime / float(Channels)));
+  const uint32 ChannelCount = Description->Channels;
+  const uint32 PointsToScanWithOneLaser =
+    FMath::RoundHalfFromZero(
+        Description->PointsPerSecond * DeltaTime / float(ChannelCount));
+  check(PointsToScanWithOneLaser > 0);
+  check(ChannelCount == LaserAngles.Num());
+  check(Description != nullptr);
 
-  float AngleDistanceOfTick = RotationFrequency * 360 * DeltaTime;
-  float AngleDistanceOfLaserMeasure = AngleDistanceOfTick / PointsToScanWithOneLaser;
+  const float CurrentHorizontalAngle = LidarMeasurement.GetHorizontalAngle();
+  const float AngleDistanceOfTick = Description->RotationFrequency * 360.0f * DeltaTime;
+  const float AngleDistanceOfLaserMeasure = AngleDistanceOfTick / PointsToScanWithOneLaser;
 
-  LidarSegmentData.LidarLasersSegments.Empty();
+  LidarMeasurement.Reset(ChannelCount * PointsToScanWithOneLaser);
 
-  auto NumOfLasers = Lasers.Num();
-  LidarSegmentData.LidarLasersSegments.AddDefaulted(NumOfLasers);
-  for (int li=0; li<NumOfLasers; li++)
+  for (auto Channel = 0u; Channel < ChannelCount; ++Channel)
   {
-    auto& Laser = Lasers[li];
-    auto& LaserPoints = LidarSegmentData.LidarLasersSegments[li].Points;
-    LaserPoints.AddDefaulted(PointsToScanWithOneLaser);
-    for (int i=0; i<PointsToScanWithOneLaser; i++)
+    for (auto i = 0u; i < PointsToScanWithOneLaser; ++i)
     {
-      Laser.Measure(
-        this,
-        CurrentHorizontalAngle + AngleDistanceOfLaserMeasure * i,
-        LaserPoints[i],
-        ShowDebugPoints
-      );
+      FVector Point;
+      const float Angle = CurrentHorizontalAngle + AngleDistanceOfLaserMeasure * i;
+      if (ShootLaser(Channel, Angle, Point))
+      {
+        LidarMeasurement.WritePoint(Channel, Point);
+      }
     }
   }
 
-  CurrentHorizontalAngle = fmod(CurrentHorizontalAngle + AngleDistanceOfTick, 360.0f);
-  LidarSegmentData.HorizontalAngle = CurrentHorizontalAngle;
+  const float HorizontalAngle = std::fmod(CurrentHorizontalAngle + AngleDistanceOfTick, 360.0f);
+  LidarMeasurement.SetHorizontalAngle(HorizontalAngle);
+}
+
+bool ALidar::ShootLaser(const uint32 Channel, const float HorizontalAngle, FVector &XYZ) const
+{
+  const float VerticalAngle = LaserAngles[Channel];
+
+  FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("Laser_Trace")), true, this);
+  TraceParams.bTraceComplex = true;
+  TraceParams.bReturnPhysicalMaterial = false;
+
+  FHitResult HitInfo(ForceInit);
+
+  FVector LidarBodyLoc = GetActorLocation();
+  FRotator LidarBodyRot = GetActorRotation();
+  FRotator LaserRot (VerticalAngle, HorizontalAngle, 0);  // float InPitch, float InYaw, float InRoll
+  FRotator ResultRot = UKismetMathLibrary::ComposeRotators(
+    LaserRot,
+    LidarBodyRot
+  );
+  const auto Range = Description->Range;
+  FVector EndTrace = Range * UKismetMathLibrary::GetForwardVector(ResultRot) + LidarBodyLoc;
+
+  GetWorld()->LineTraceSingleByChannel(
+    HitInfo,
+    LidarBodyLoc,
+    EndTrace,
+    ECC_MAX,
+    TraceParams,
+    FCollisionResponseParams::DefaultResponseParam
+  );
+
+  if (HitInfo.bBlockingHit)
+  {
+    if (Description->ShowDebugPoints)
+    {
+      DrawDebugPoint(
+        GetWorld(),
+        HitInfo.ImpactPoint,
+        10,  //size
+        FColor(255,0,255),
+        false,  //persistent (never goes away)
+        0.1  //point leaves a trail on moving object
+      );
+    }
+
+    XYZ = LidarBodyLoc - HitInfo.ImpactPoint;
+    XYZ = UKismetMathLibrary::RotateAngleAxis(
+      XYZ,
+      - LidarBodyRot.Yaw + 90,
+      FVector(0, 0, 1)
+    );
+
+    return true;
+  } else {
+    return false;
+  }
 }
