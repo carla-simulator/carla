@@ -7,6 +7,8 @@
 #include "Carla.h"
 #include "CarlaWheeledVehicle.h"
 
+#include "AI/VehicleControl.h"
+
 #include "Components/BoxComponent.h"
 #include "Engine/CollisionProfile.h"
 
@@ -63,6 +65,14 @@ float ACarlaWheeledVehicle::GetMaximumSteerAngle() const
 // =============================================================================
 // -- Set functions ------------------------------------------------------------
 // =============================================================================
+
+void ACarlaWheeledVehicle::ApplyVehicleControl(const FVehicleControl &VehicleControl)
+{
+  SetThrottleInput(VehicleControl.Throttle);
+  SetSteeringInput(VehicleControl.Steer);
+  SetBrakeInput(VehicleControl.Brake);
+  SetHandbrakeInput(VehicleControl.bHandBrake);
+}
 
 void ACarlaWheeledVehicle::SetThrottleInput(const float Value)
 {

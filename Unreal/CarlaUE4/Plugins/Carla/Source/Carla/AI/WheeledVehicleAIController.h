@@ -10,6 +10,7 @@
 
 #include "GameFramework/PlayerController.h"
 #include "TrafficLightState.h"
+#include "VehicleControl.h"
 #include "WheeledVehicleAIController.generated.h"
 
 class ACarlaWheeledVehicle;
@@ -182,14 +183,7 @@ public:
   /// @{
 protected:
 
-  struct FAutopilotControl {
-    float Throttle = 0.0f;
-    float Steer = 0.0f;
-    float Brake = 0.0f;
-    bool bHandBrake = false;
-  };
-
-  const FAutopilotControl &GetAutopilotControl() const
+  const FVehicleControl &GetAutopilotControl() const
   {
     return AutopilotControl;
   }
@@ -237,7 +231,7 @@ private:
   UPROPERTY(VisibleAnywhere)
   float MaximumSteerAngle = -1.0f;
 
-  FAutopilotControl AutopilotControl;
+  FVehicleControl AutopilotControl;
 
   std::queue<FVector> TargetLocations;
 };

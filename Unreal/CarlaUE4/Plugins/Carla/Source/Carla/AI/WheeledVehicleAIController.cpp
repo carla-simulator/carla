@@ -107,9 +107,7 @@ void AWheeledVehicleAIController::Tick(const float DeltaTime)
   TickAutopilotController();
 
   if (bAutopilotEnabled) {
-    Vehicle->SetThrottleInput(AutopilotControl.Throttle);
-    Vehicle->SetSteeringInput(AutopilotControl.Steer);
-    Vehicle->SetBrakeInput(AutopilotControl.Brake);
+    Vehicle->ApplyVehicleControl(AutopilotControl);
   }
 }
 
