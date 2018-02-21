@@ -94,11 +94,20 @@ message EpisodeReady {
 // =============================================================================
 
 message Control {
+  enum RouteCommand {
+    GOAL_REACHED = 0;
+    UNUSED_1 = 1;
+    LANE_FOLLOW = 2;
+    TURN_LEFT = 3;
+    TURN_RIGHT = 4;
+    GO_STRAIGHT = 5;
+  }
   float steer = 1;
   float throttle = 2;
   float brake = 3;
   bool hand_brake = 4;
   bool reverse = 5;
+  RouteCommand route_command = 6;
 }
 
 message Measurements {

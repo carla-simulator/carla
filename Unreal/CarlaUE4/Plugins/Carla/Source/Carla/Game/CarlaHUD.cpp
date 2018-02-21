@@ -61,6 +61,20 @@ static FText GetTrafficLightAsText(ETrafficLightState State)
   }
 }
 
+
+static FText GetRouteCommandAsText(ERouteCommand State)
+{
+  switch (State) {
+    case ERouteCommand::GoalReached: return FText(LOCTEXT("GoalReachedCommand",   "GoalReached"));
+    case ERouteCommand::Unused_1:    return FText(LOCTEXT("Unused_1Command",   "Unused_1"));
+    case ERouteCommand::LaneFollow:  return FText(LOCTEXT("LaneFollowCommand",   "LaneFollow"));
+    case ERouteCommand::TurnRight:   return FText(LOCTEXT("TurnRightCommand",    "TurnRight"));
+    case ERouteCommand::TurnLeft:    return FText(LOCTEXT("TurnLeftCommand",     "TurnLeft"));
+    case ERouteCommand::GoStraight:  return FText(LOCTEXT("GoStraightCommand",   "GoStraight"));
+    default:                         return FText(LOCTEXT("InvalidRouteCommand", "INVALID"));
+  }
+}
+
 static FText GetHUDText(const ACarlaPlayerState &Vehicle)
 {
   // Set number precision.
@@ -77,6 +91,7 @@ static FText GetHUDText(const ACarlaPlayerState &Vehicle)
   Args.Add("Gear", GetGearAsText(Vehicle.GetCurrentGear()));
   Args.Add("SpeedLimit", RoundedFloatAsText(Vehicle.GetSpeedLimit()));
   Args.Add("TrafficLightState", GetTrafficLightAsText(Vehicle.GetTrafficLightState()));
+  Args.Add("RouteCommand", GetRouteCommandAsText(Vehicle.GetRouteCommand()));
   Args.Add("CollisionCars", RoundedFloatAsText(Vehicle.GetCollisionIntensityCars()));
   Args.Add("CollisionPedestrians", RoundedFloatAsText(Vehicle.GetCollisionIntensityPedestrians()));
   Args.Add("CollisionOther", RoundedFloatAsText(Vehicle.GetCollisionIntensityOther()));
@@ -91,6 +106,7 @@ static FText GetHUDText(const ACarlaPlayerState &Vehicle)
           "\n"
           "Speed Limit:   {SpeedLimit} km/h\n"
           "Traffic Light: {TrafficLightState}\n"
+          "Route Command: {RouteCommand}\n"
           "\n"
           "Location:      {Location}\n"
           "Orientation:   {Orientation}\n"

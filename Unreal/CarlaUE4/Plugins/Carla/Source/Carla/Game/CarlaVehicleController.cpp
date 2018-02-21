@@ -90,6 +90,7 @@ void ACarlaVehicleController::Tick(float DeltaTime)
     CarlaPlayerState->Acceleration = (CurrentSpeed - PreviousSpeed) / DeltaTime;
     const auto &AutopilotControl = GetAutopilotControl();
     CarlaPlayerState->Steer = AutopilotControl.Steer;
+    CarlaPlayerState->RouteCommand = GetRouteCommand();
     CarlaPlayerState->Throttle = AutopilotControl.Throttle;
     CarlaPlayerState->Brake = AutopilotControl.Brake;
     CarlaPlayerState->bHandBrake = AutopilotControl.bHandBrake;

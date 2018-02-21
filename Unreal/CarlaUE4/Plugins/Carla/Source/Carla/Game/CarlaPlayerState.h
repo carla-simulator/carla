@@ -8,6 +8,7 @@
 
 #include "GameFramework/PlayerState.h"
 #include "AI/TrafficLightState.h"
+#include "AI/RouteCommand.h"
 #include "CapturedImage.h"
 #include "CarlaPlayerState.generated.h"
 
@@ -141,6 +142,12 @@ public:
     return TrafficLightState;
   }
 
+  UFUNCTION(BlueprintCallable)
+  ERouteCommand GetRouteCommand() const
+  {
+    return RouteCommand;
+  }
+
   /// @}
   // ===========================================================================
   /// @name Collision
@@ -268,6 +275,9 @@ private:
 
   UPROPERTY(VisibleAnywhere)
   ETrafficLightState TrafficLightState = ETrafficLightState::Green;
+
+  UPROPERTY(VisibleAnywhere)
+  ERouteCommand RouteCommand = ERouteCommand::LaneFollow;
 
   UPROPERTY(VisibleAnywhere)
   float CollisionIntensityCars = 0.0f;
