@@ -7,6 +7,7 @@ CARLA Documentation
   * [CARLA settings](carla_settings.md)
   * [Measurements](measurements.md)
   * [Cameras and sensors](cameras_and_sensors.md)
+  * [CARLA without Display and Selecting GPUs](carla_headless.md)
   * [Benchmark](benchmark.md)
   * [F.A.Q.](faq.md)
 
