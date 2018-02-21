@@ -247,7 +247,7 @@ private:
 
   UPROPERTY(VisibleAnywhere)
   ERouteCommand RouteCommand = ERouteCommand::LaneFollow;
-  double TimeRouteCommandSet = 5.f;
+  double TimeRouteCommandSet = 5.0;
 
   FAutopilotControl AutopilotControl;
   std::queue<FVector> TargetLocations;
