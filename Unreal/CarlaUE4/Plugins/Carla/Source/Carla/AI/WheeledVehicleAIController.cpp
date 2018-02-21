@@ -223,7 +223,7 @@ void AWheeledVehicleAIController::TickAutopilotController()
   check(Vehicle != nullptr);
 
   if (RoadMap == nullptr) {
-    //UE_LOG(LogCarla, Error, TEXT("Controller doesn't have a road map!"));
+    UE_LOG(LogCarla, Error, TEXT("Controller doesn't have a road map!"));
     return;
   }
 
@@ -255,8 +255,8 @@ void AWheeledVehicleAIController::TickAutopilotController()
   } else {
     AutopilotControl.Brake = 0.0f;
     AutopilotControl.Throttle = Throttle;
-      }
-  AutopilotControl.Steer = Steering;  
+  }
+  AutopilotControl.Steer = Steering;
 }
 
 float AWheeledVehicleAIController::GoToNextTargetLocation(FVector &Direction)
