@@ -11,6 +11,7 @@
 #include "WheeledVehicle.h"
 #include "CarlaWheeledVehicle.generated.h"
 
+class FVehicleControl;
 class UBoxComponent;
 
 /// Base class for CARLA wheeled vehicles.
@@ -62,6 +63,9 @@ public:
   // ===========================================================================
   /// @{
 public:
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void ApplyVehicleControl(const FVehicleControl &VehicleControl);
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void SetThrottleInput(float Value);
