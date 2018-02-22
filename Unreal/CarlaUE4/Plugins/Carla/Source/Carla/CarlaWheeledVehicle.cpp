@@ -8,6 +8,7 @@
 #include "CarlaWheeledVehicle.h"
 
 #include "AI/VehicleControl.h"
+#include "Agent/VehicleAgentComponent.h"
 
 #include "Components/BoxComponent.h"
 #include "Engine/CollisionProfile.h"
@@ -23,6 +24,8 @@ ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectIniti
   VehicleBounds->SetupAttachment(RootComponent);
   VehicleBounds->SetHiddenInGame(true);
   VehicleBounds->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
+
+  VehicleAgentComponent = CreateDefaultSubobject<UVehicleAgentComponent>(TEXT("VehicleAgentComponent"));
 
   GetVehicleMovementComponent()->bReverseAsBrake = false;
 }
