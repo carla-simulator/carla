@@ -2,11 +2,12 @@
 
 #pragma once
 
-#include "SensorDescription.h"
+#include "Settings/SensorDescription.h"
+
 #include "LidarDescription.generated.h"
 
 UCLASS()
-class ULidarDescription : public USensorDescription
+class CARLA_API ULidarDescription : public USensorDescription
 {
   GENERATED_BODY()
 

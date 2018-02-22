@@ -6,11 +6,12 @@
 
 #include "Carla.h"
 #include "Tagger.h"
-#include "EngineUtils.h"
-#include "Engine/StaticMesh.h"
-#include "Engine/SkeletalMesh.h"
-#include "Components/StaticMeshComponent.h"
+
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/SkeletalMesh.h"
+#include "Engine/StaticMesh.h"
+#include "EngineUtils.h"
 #include "PhysicsEngine/PhysicsAsset.h"
 
 #ifdef CARLA_TAGGER_EXTRA_LOG

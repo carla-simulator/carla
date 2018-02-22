@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Engine/Scene.h"
+
 #include "CameraPostProcessParameters.generated.h"
 
 /**
@@ -14,7 +15,7 @@
   * the weather and lighting conditions.
   */
 USTRUCT(BlueprintType)
-struct FCameraPostProcessParameters
+struct CARLA_API FCameraPostProcessParameters
 {
   GENERATED_USTRUCT_BODY()
 

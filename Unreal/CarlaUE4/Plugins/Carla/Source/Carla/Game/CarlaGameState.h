@@ -7,9 +7,11 @@
 #pragma once
 
 #include "GameFramework/GameStateBase.h"
-#include "AI/TrafficSignBase.h"
-#include "AI/VehicleSpawnerBase.h"
-#include "AI/WalkerSpawnerBase.h"
+
+#include "Traffic/TrafficSignBase.h"
+#include "Vehicle/VehicleSpawnerBase.h"
+#include "Walker/WalkerSpawnerBase.h"
+
 #include "CarlaGameState.generated.h"
 
 UCLASS()

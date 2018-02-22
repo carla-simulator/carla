@@ -7,8 +7,8 @@
 #include "Carla.h"
 #include "CarlaWheeledVehicle.h"
 
-#include "AI/VehicleControl.h"
 #include "Agent/VehicleAgentComponent.h"
+#include "Vehicle/VehicleControl.h"
 
 #include "Components/BoxComponent.h"
 #include "Engine/CollisionProfile.h"

@@ -7,8 +7,8 @@
 #include "Carla.h"
 #include "CarlaGameInstance.h"
 
-#include "CarlaGameController.h"
-#include "MockGameController.h"
+#include "Game/MockGameController.h"
+#include "Server/CarlaGameController.h"
 #include "Settings/CarlaSettings.h"
 
 UCarlaGameInstance::UCarlaGameInstance() {

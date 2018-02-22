@@ -6,9 +6,12 @@
 
 #pragma once
 
-#include "Sensor.h"
-#include "StaticMeshResources.h"
+#include "Sensor/Sensor.h"
+
 #include "Settings/CameraDescription.h"
+
+#include "StaticMeshResources.h"
+
 #include "SceneCaptureCamera.generated.h"
 
 class UDrawFrustumComponent;

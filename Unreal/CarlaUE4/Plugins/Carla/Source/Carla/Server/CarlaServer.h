@@ -12,7 +12,7 @@ class APlayerStart;
 class UCarlaSettings;
 
 /// Wrapper around carla_server API.
-class CARLA_API CarlaServer
+class CarlaServer
 {
 public:
 

@@ -6,13 +6,14 @@
 
 #pragma once
 
-#include "SensorDescriptionVisitor.h"
+#include "Settings/SensorDescriptionVisitor.h"
+
 #include "SensorDescription.generated.h"
 
 class FIniFile;
 
 UCLASS(Abstract)
-class USensorDescription : public UObject
+class CARLA_API USensorDescription : public UObject
 {
   GENERATED_BODY()
 

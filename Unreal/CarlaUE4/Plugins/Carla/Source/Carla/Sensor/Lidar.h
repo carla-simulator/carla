@@ -2,9 +2,11 @@
 
 #pragma once
 
-#include "Sensor/LidarMeasurement.h"
 #include "Sensor/Sensor.h"
+
+#include "Sensor/LidarMeasurement.h"
 #include "Settings/LidarDescription.h"
+
 #include "Lidar.generated.h"
 
 /// A ray-trace based Lidar sensor.

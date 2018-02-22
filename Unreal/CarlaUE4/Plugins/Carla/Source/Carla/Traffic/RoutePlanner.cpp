@@ -7,9 +7,9 @@
 #include "Carla.h"
 #include "RoutePlanner.h"
 
-#include "CarlaWheeledVehicle.h"
 #include "Util/RandomEngine.h"
-#include "WheeledVehicleAIController.h"
+#include "Vehicle/CarlaWheeledVehicle.h"
+#include "Vehicle/WheeledVehicleAIController.h"
 
 #include "Engine/CollisionProfile.h"
 

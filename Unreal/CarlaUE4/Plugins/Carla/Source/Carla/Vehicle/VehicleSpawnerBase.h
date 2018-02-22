@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Util/ActorWithRandomEngine.h"
+
 #include "VehicleSpawnerBase.generated.h"
 
 class ACarlaWheeledVehicle;

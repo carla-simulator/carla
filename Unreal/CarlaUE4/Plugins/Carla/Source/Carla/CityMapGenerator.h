@@ -7,8 +7,10 @@
 #pragma once
 
 #include "MapGen/CityMapMeshHolder.h"
+
 #include "MapGen/DoublyConnectedEdgeList.h"
 #include "MapGen/GraphParser.h"
+
 #include "CityMapGenerator.generated.h"
 
 class URoadMap;

@@ -7,12 +7,12 @@
 #include "Carla.h"
 #include "WheeledVehicleAIController.h"
 
+#include "MapGen/RoadMap.h"
+#include "Vehicle/CarlaWheeledVehicle.h"
+
 #include "EngineUtils.h"
 #include "GameFramework/Pawn.h"
 #include "WheeledVehicleMovementComponent.h"
-
-#include "CarlaWheeledVehicle.h"
-#include "MapGen/RoadMap.h"
 
 // =============================================================================
 // -- Static local methods -----------------------------------------------------

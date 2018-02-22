@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "ReadOnlyBufferView.h"
+#include "Sensor/ReadOnlyBufferView.h"
 
 /// A view over a sensor's output data. Does not own the data.
 class FSensorDataView {

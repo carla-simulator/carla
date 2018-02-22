@@ -7,7 +7,9 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
-#include "SensorDataSink.h"
+
+#include "Sensor/SensorDataSink.h"
+
 #include "Sensor.generated.h"
 
 /// Base class for sensors.

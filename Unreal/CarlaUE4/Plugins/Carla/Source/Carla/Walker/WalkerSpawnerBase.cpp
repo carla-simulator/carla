@@ -7,13 +7,13 @@
 #include "Carla.h"
 #include "WalkerSpawnerBase.h"
 
+#include "Util/RandomEngine.h"
+#include "Walker/WalkerAIController.h"
+#include "Walker/WalkerSpawnPoint.h"
+
 #include "Components/BoxComponent.h"
 #include "EngineUtils.h"
 #include "GameFramework/Character.h"
-
-#include "Util/RandomEngine.h"
-#include "WalkerAIController.h"
-#include "WalkerSpawnPoint.h"
 
 // =============================================================================
 // -- Static local methods -----------------------------------------------------

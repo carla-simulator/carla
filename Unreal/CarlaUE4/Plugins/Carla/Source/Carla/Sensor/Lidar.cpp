@@ -4,6 +4,7 @@
 #include "Lidar.h"
 
 #include "DrawDebugHelpers.h"
+#include "Engine/CollisionProfile.h"
 #include "Runtime/Engine/Classes/Kismet/KismetMathLibrary.h"
 #include "StaticMeshResources.h"
 

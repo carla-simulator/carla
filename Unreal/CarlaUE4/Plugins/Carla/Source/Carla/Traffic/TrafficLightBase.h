@@ -6,8 +6,10 @@
 
 #pragma once
 
-#include "TrafficSignBase.h"
-#include "TrafficLightState.h"
+#include "Traffic/TrafficSignBase.h"
+
+#include "Traffic/TrafficLightState.h"
+
 #include "TrafficLightBase.generated.h"
 
 class ACarlaWheeledVehicle;

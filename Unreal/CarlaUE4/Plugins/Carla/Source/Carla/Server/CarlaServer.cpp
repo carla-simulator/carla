@@ -7,13 +7,14 @@
 #include "Carla.h"
 #include "CarlaServer.h"
 
-#include "GameFramework/PlayerStart.h"
-
-#include "CarlaPlayerState.h"
-#include "CarlaVehicleController.h"
-#include "CarlaWheeledVehicle.h"
+#include "Game/CarlaPlayerState.h"
 #include "Sensor/SceneCaptureCamera.h"
 #include "Settings/CarlaSettings.h"
+#include "Vehicle/CarlaVehicleController.h"
+#include "Vehicle/CarlaWheeledVehicle.h"
+
+#include "GameFramework/Character.h"
+#include "GameFramework/PlayerStart.h"
 
 #include <carla/carla_server.h>
 

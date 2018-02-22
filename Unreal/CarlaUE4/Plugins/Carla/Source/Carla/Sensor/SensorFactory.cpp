@@ -9,8 +9,8 @@
 #include "Carla.h"
 #include "SensorFactory.h"
 
-#include "Lidar.h"
-#include "SceneCaptureCamera.h"
+#include "Sensor/Lidar.h"
+#include "Sensor/SceneCaptureCamera.h"
 #include "Settings/CameraDescription.h"
 #include "Settings/LidarDescription.h"
 

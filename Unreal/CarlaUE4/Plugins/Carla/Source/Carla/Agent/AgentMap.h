@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "Containers/Map.h"
+
 class FAgentMap
 {
 public:

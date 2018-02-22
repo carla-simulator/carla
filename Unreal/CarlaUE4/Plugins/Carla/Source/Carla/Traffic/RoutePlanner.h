@@ -7,8 +7,10 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
+
 #include "Components/BoxComponent.h"
 #include "Components/SplineComponent.h"
+
 #include "RoutePlanner.generated.h"
 
 /// Assign a random route to every ACarlaWheeledVehicle entering the trigger
