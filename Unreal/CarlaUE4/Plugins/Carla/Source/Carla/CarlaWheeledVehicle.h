@@ -11,8 +11,8 @@
 #include "WheeledVehicle.h"
 #include "CarlaWheeledVehicle.generated.h"
 
-class FVehicleControl;
 class UBoxComponent;
+struct FVehicleControl;
 
 /// Base class for CARLA wheeled vehicles.
 UCLASS()
