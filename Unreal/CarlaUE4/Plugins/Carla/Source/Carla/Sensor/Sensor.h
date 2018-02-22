@@ -36,8 +36,11 @@ protected:
 
   void WriteSensorData(const FSensorDataView &SensorData)
   {
-    check(SensorDataSink.Get() != nullptr);
-    SensorDataSink->Write(SensorData);
+    if (SensorDataSink.IsValid()) {
+      SensorDataSink->Write(SensorData);
+    } else {
+      UE_LOG(LogCarla, Warning, TEXT("Sensor %d has no data sink."), Id);
+    }
   }
 
 private:

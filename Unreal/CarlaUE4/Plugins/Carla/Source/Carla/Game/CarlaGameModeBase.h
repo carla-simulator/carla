@@ -7,21 +7,22 @@
 #pragma once
 
 #include "GameFramework/GameModeBase.h"
+
+#include "DynamicWeather.h"
 #include "AI/VehicleSpawnerBase.h"
 #include "AI/WalkerSpawnerBase.h"
-#include "CarlaGameControllerBase.h"
-#include "DynamicWeather.h"
-#include "MockGameControllerSettings.h"
+#include "Game/CarlaGameControllerBase.h"
+#include "Game/DataRouter.h"
+#include "Game/MockGameControllerSettings.h"
+
 #include "CarlaGameModeBase.generated.h"
 
 class ACarlaVehicleController;
 class APlayerStart;
 class ASceneCaptureCamera;
+class UCarlaGameInstance;
 class UTaggerDelegate;
 
-/**
- *
- */
 UCLASS(HideCategories=(ActorTick))
 class CARLA_API ACarlaGameModeBase : public AGameModeBase
 {
@@ -38,6 +39,11 @@ public:
   virtual void BeginPlay() override;
 
   virtual void Tick(float DeltaSeconds) override;
+
+  FDataRouter &GetDataRouter()
+  {
+    return DataRouter;
+  }
 
 protected:
 
@@ -72,6 +78,8 @@ private:
   APlayerStart *FindUnOccupiedStartPoints(
       AController *Player,
       TArray<APlayerStart *> &UnOccupiedStartPoints);
+
+  FDataRouter DataRouter;
 
   CarlaGameControllerBase *GameController;
 

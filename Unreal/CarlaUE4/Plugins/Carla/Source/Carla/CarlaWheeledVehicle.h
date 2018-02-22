@@ -12,6 +12,7 @@
 #include "CarlaWheeledVehicle.generated.h"
 
 class UBoxComponent;
+class UVehicleAgentComponent;
 struct FVehicleControl;
 
 /// Base class for CARLA wheeled vehicles.
@@ -111,8 +112,11 @@ private:
   UPROPERTY(Category = "AI Controller", VisibleAnywhere)
   ECarlaWheeledVehicleState State = ECarlaWheeledVehicleState::UNKNOWN;
 
-  UPROPERTY(EditAnywhere)
+  UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere)
   UBoxComponent *VehicleBounds;
+
+  UPROPERTY(Category = "CARLA Wheeled Vehicle", VisibleAnywhere)
+  UVehicleAgentComponent *VehicleAgentComponent;
 
   UPROPERTY()
   bool bIsInReverse = false;
