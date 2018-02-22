@@ -6,11 +6,12 @@
 
 #pragma once
 
-#include "CarlaGameControllerBase.h"
-#include "MockGameControllerSettings.h"
+#include "Game/CarlaGameControllerBase.h"
+
+#include "Game/MockGameControllerSettings.h"
 
 /// Mocks the CARLA game controller class for testing purposes.
-class CARLA_API MockGameController : public CarlaGameControllerBase
+class CARLA_API MockGameController : public ICarlaGameControllerBase
 {
 public:
 

@@ -6,7 +6,8 @@
 
 #pragma once
 
-#include "CameraPostProcessParameters.h"
+#include "Settings/CameraPostProcessParameters.h"
+
 #include "WeatherDescription.generated.h"
 
 class FIniFile;
@@ -18,7 +19,7 @@ enum class EPrecipitationType : uint8
 };
 
 USTRUCT(BlueprintType)
-struct FWeatherDescription
+struct CARLA_API FWeatherDescription
 {
   GENERATED_USTRUCT_BODY()
 

@@ -7,10 +7,9 @@
 #include "Carla.h"
 #include "CarlaGameController.h"
 
-#include "CarlaVehicleController.h"
-
+#include "Server/CarlaServer.h"
 #include "Settings/CarlaSettings.h"
-#include "CarlaServer.h"
+#include "Vehicle/CarlaVehicleController.h"
 
 using Errc = CarlaServer::ErrorCode;
 

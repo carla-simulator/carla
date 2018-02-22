@@ -6,9 +6,12 @@
 
 #pragma once
 
-#include "AI/CarlaWheeledVehicleState.h"
-#include "CoreMinimal.h"
 #include "WheeledVehicle.h"
+
+#include "Vehicle/CarlaWheeledVehicleState.h"
+
+#include "CoreMinimal.h"
+
 #include "CarlaWheeledVehicle.generated.h"
 
 class UBoxComponent;

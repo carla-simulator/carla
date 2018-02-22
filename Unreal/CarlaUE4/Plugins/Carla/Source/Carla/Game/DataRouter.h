@@ -7,8 +7,8 @@
 #pragma once
 
 #include "Agent/AgentMap.h"
-#include "Game/CarlaVehicleController.h"
 #include "Sensor/SensorDataSink.h"
+#include "Vehicle/CarlaVehicleController.h"
 
 class ACarlaPlayerState;
 class ASensor;

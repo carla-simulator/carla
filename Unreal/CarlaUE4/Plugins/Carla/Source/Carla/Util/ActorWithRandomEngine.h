@@ -7,6 +7,7 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
+
 #include "ActorWithRandomEngine.generated.h"
 
 class URandomEngine;

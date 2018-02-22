@@ -6,7 +6,8 @@
 
 #pragma once
 
-#include "SceneCaptureCamera.h"
+#include "Sensor/SceneCaptureCamera.h"
+
 #include "SceneCaptureToDiskCamera.generated.h"
 
 UCLASS(Blueprintable,BlueprintType)

@@ -7,9 +7,9 @@
 #pragma once
 
 #include "GameFramework/PlayerState.h"
-#include "AI/TrafficLightState.h"
-#include "CapturedImage.h"
-#include "CapturedLidarSegment.h"
+
+#include "Traffic/TrafficLightState.h"
+
 #include "CarlaPlayerState.generated.h"
 
 /// Current state of the player, updated every frame by ACarlaVehicleController.

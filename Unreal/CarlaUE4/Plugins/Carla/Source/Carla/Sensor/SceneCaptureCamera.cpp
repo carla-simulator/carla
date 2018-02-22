@@ -7,7 +7,7 @@
 #include "Carla.h"
 #include "SceneCaptureCamera.h"
 
-#include "SensorDataView.h"
+#include "Sensor/SensorDataView.h"
 
 #include "Components/DrawFrustumComponent.h"
 #include "Components/SceneCaptureComponent2D.h"

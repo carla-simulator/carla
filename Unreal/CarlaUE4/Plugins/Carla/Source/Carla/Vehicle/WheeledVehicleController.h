@@ -6,8 +6,10 @@
 
 #pragma once
 
+#include "Vehicle/WheeledVehicleAIController.h"
+
 #include "CoreMinimal.h"
-#include "AI/WheeledVehicleAIController.h"
+
 #include "WheeledVehicleController.generated.h"
 
 class UCameraComponent;

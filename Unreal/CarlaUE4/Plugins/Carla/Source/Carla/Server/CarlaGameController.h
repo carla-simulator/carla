@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include "CarlaGameControllerBase.h"
+#include "Game/CarlaGameControllerBase.h"
 
 class ACarlaGameState;
 class ACarlaVehicleController;
 class CarlaServer;
 
 /// Implements remote control of game and player.
-class CARLA_API CarlaGameController : public CarlaGameControllerBase
+class CARLA_API CarlaGameController : public ICarlaGameControllerBase
 {
 public:
 

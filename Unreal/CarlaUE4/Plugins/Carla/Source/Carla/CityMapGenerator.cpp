@@ -9,7 +9,7 @@
 
 #include "MapGen/GraphGenerator.h"
 #include "MapGen/RoadMap.h"
-#include "Tagger.h"
+#include "Game/Tagger.h"
 
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Engine/World.h"

@@ -9,11 +9,11 @@
 #include "GameFramework/GameModeBase.h"
 
 #include "DynamicWeather.h"
-#include "AI/VehicleSpawnerBase.h"
-#include "AI/WalkerSpawnerBase.h"
 #include "Game/CarlaGameControllerBase.h"
 #include "Game/DataRouter.h"
 #include "Game/MockGameControllerSettings.h"
+#include "Vehicle/VehicleSpawnerBase.h"
+#include "Walker/WalkerSpawnerBase.h"
 
 #include "CarlaGameModeBase.generated.h"
 
@@ -81,7 +81,7 @@ private:
 
   FDataRouter DataRouter;
 
-  CarlaGameControllerBase *GameController;
+  ICarlaGameControllerBase *GameController;
 
   UPROPERTY()
   UCarlaGameInstance *GameInstance;

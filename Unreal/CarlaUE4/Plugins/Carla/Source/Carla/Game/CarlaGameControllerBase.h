@@ -6,18 +6,18 @@
 
 #pragma once
 
-#include "Array.h"
+#include "Containers/Array.h"
 
 class AController;
 class APlayerStart;
 class UCarlaSettings;
 
 /// Base class for a CARLA game controller.
-class CARLA_API CarlaGameControllerBase
+class ICarlaGameControllerBase
 {
 public:
 
-  virtual ~CarlaGameControllerBase() {}
+  virtual ~ICarlaGameControllerBase() {}
 
   virtual void Initialize(UCarlaSettings &CarlaSettings) = 0;
 

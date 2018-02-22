@@ -6,7 +6,8 @@
 
 #pragma once
 
-#include "WheeledVehicleController.h"
+#include "Vehicle/WheeledVehicleController.h"
+
 #include "CarlaVehicleController.generated.h"
 
 class ACarlaHUD;

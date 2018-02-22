@@ -6,12 +6,14 @@
 
 #pragma once
 
-#include "PostProcessEffect.h"
-#include "SensorDescription.h"
+#include "Settings/SensorDescription.h"
+
+#include "Settings/PostProcessEffect.h"
+
 #include "CameraDescription.generated.h"
 
 UCLASS()
-class UCameraDescription : public USensorDescription
+class CARLA_API UCameraDescription : public USensorDescription
 {
   GENERATED_BODY()
 

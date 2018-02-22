@@ -9,8 +9,10 @@
 #include <queue>
 
 #include "GameFramework/PlayerController.h"
-#include "TrafficLightState.h"
-#include "VehicleControl.h"
+
+#include "Traffic/TrafficLightState.h"
+#include "Vehicle/VehicleControl.h"
+
 #include "WheeledVehicleAIController.generated.h"
 
 class ACarlaWheeledVehicle;
