@@ -40,6 +40,7 @@ public:
       FNavPathSharedPtr* OutPath = nullptr) override;
 
   virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult &Result) override;
+  
 
   UFUNCTION(BlueprintCallable)
   void SenseActors(TArray<AActor *> Actors);
@@ -49,10 +50,13 @@ public:
     return Status;
   }
 
+  UFUNCTION(BlueprintCallable)
+  void TrySetMovement(bool paused);
+
 private:
 
   void TryResumeMovement();
-
+  
   void TryPauseMovement(bool bItWasRunOver = false);
 
   UFUNCTION()
@@ -63,4 +67,5 @@ private:
 
   UPROPERTY(VisibleAnywhere)
   EWalkerStatus Status = EWalkerStatus::Unknown;
+
 };
