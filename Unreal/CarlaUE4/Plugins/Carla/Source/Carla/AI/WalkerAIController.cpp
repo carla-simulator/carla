@@ -224,6 +224,12 @@ void AWalkerAIController::SenseActors(const TArray<AActor *> Actors)
   }
 }
 
+void AWalkerAIController::TrySetMovement(bool paused)
+{
+	if(paused) TryPauseMovement(false);
+	else TryResumeMovement();
+}
+
 void AWalkerAIController::TryResumeMovement()
 {
   if (Status != EWalkerStatus::Moving) {
