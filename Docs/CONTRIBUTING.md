@@ -55,13 +55,13 @@ Code contributions
 So you are considering making a code contribution, great! we love to have
 contributions from the community.
 
-Before starting hands-on on coding, please check out the
-[projects page][projectslink] to see if we are already working on that, it would
+Before starting hands-on on coding, please check out our
+[issue board][wafflelink] to see if we are already working on that, it would
 be a pity putting an effort into something just to discover that someone else
 was already working on that. In case of doubt or to discuss how to proceed,
 please contact one of us (or send an email to carla.simulator@gmail.com).
 
-[projectslink]: https://github.com/carla-simulator/carla/projects/1
+[wafflelink]: https://waffle.io/carla-simulator/carla
 
 #### Where can I learn more about Unreal Engine?
 
