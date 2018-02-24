@@ -12,12 +12,6 @@
 #include "Game/CarlaGameModeBase.h"
 #include "Game/DataRouter.h"
 
-static uint32 GetNextAgentId()
-{
-  static uint32 COUNT = 0u;
-  return ++COUNT;
-}
-
 static FDataRouter &GetDataRouter(UWorld *World)
 {
   check(World != nullptr);
@@ -25,10 +19,6 @@ static FDataRouter &GetDataRouter(UWorld *World)
   check(GameMode != nullptr);
   return GameMode->GetDataRouter();
 }
-
-UAgentComponent::UAgentComponent(const FObjectInitializer &ObjectInitializer)
-  : Super(ObjectInitializer),
-    Id(GetNextAgentId()) {}
 
 void UAgentComponent::AcceptVisitor(IAgentComponentVisitor &Visitor) const
 {

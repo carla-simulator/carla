@@ -9,16 +9,6 @@
 
 #include "Util/IniFile.h"
 
-static uint32 GetNextSensorDescriptionId()
-{
-  static uint32 COUNT = 0u;
-  return ++COUNT;
-}
-
-USensorDescription::USensorDescription(const FObjectInitializer &ObjectInitializer)
-  : Super(ObjectInitializer),
-    Id(GetNextSensorDescriptionId()) {}
-
 void USensorDescription::AcceptVisitor(ISensorDescriptionVisitor &Visitor) const
 {
   unimplemented();
@@ -37,7 +27,7 @@ void USensorDescription::Load(const FIniFile &Config, const FString &Section)
 void USensorDescription::Log() const
 {
   UE_LOG(LogCarla, Log, TEXT("[%s/%s]"), TEXT("CARLA/Sensor"), *Name);
-  UE_LOG(LogCarla, Log, TEXT("Id = %d"), Id);
+  UE_LOG(LogCarla, Log, TEXT("Id = %d"), GetId());
   UE_LOG(LogCarla, Log, TEXT("Type = %s"), *Type);
   UE_LOG(LogCarla, Log, TEXT("Position = (%s)"), *Position.ToString());
   UE_LOG(LogCarla, Log, TEXT("Rotation = (%s)"), *Rotation.ToString());
