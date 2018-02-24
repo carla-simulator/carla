@@ -10,7 +10,7 @@
 
 #include "DynamicWeather.h"
 #include "Game/CarlaGameControllerBase.h"
-#include "Game/DataRouter.h"
+#include "Game/CarlaGameInstance.h"
 #include "Game/MockGameControllerSettings.h"
 #include "Vehicle/VehicleSpawnerBase.h"
 #include "Walker/WalkerSpawnerBase.h"
@@ -42,7 +42,8 @@ public:
 
   FDataRouter &GetDataRouter()
   {
-    return DataRouter;
+    check(GameInstance != nullptr);
+    return GameInstance->GetDataRouter();
   }
 
 protected:
@@ -67,7 +68,7 @@ private:
 
   void RegisterPlayer(AController &NewPlayer);
 
-  void AttachCaptureCamerasToPlayer();
+  void AttachSensorsToPlayer();
 
   void TagActorsForSemanticSegmentation();
 
@@ -78,8 +79,6 @@ private:
   APlayerStart *FindUnOccupiedStartPoints(
       AController *Player,
       TArray<APlayerStart *> &UnOccupiedStartPoints);
-
-  FDataRouter DataRouter;
 
   ICarlaGameControllerBase *GameController;
 

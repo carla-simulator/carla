@@ -10,12 +10,15 @@
 
 class AController;
 class APlayerStart;
+class FDataRouter;
 class UCarlaSettings;
 
 /// Base class for a CARLA game controller.
 class ICarlaGameControllerBase
 {
 public:
+
+  ICarlaGameControllerBase(FDataRouter &DataRouter) : DataRouter(DataRouter) {}
 
   virtual ~ICarlaGameControllerBase() {}
 
@@ -28,4 +31,8 @@ public:
   virtual void BeginPlay() = 0;
 
   virtual void Tick(float DeltaSeconds) = 0;
+
+protected:
+
+  FDataRouter &DataRouter;
 };

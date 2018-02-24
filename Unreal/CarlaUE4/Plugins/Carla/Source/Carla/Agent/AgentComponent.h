@@ -13,8 +13,6 @@
 
 #include "AgentComponent.generated.h"
 
-class FAgentMap;
-
 /// Actors with an UAgentComponent are registered as agents in the scene and
 /// their status is sent to the client each frame (if requested by the client).
 UCLASS(Abstract)
@@ -43,6 +41,4 @@ private:
 
   UPROPERTY(VisibleAnywhere)
   uint32 Id;
-
-  TWeakPtr<FAgentMap> AgentMap = nullptr;
 };

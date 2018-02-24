@@ -76,6 +76,7 @@ void ACarlaWheeledVehicle::ApplyVehicleControl(const FVehicleControl &VehicleCon
   SetSteeringInput(VehicleControl.Steer);
   SetBrakeInput(VehicleControl.Brake);
   SetHandbrakeInput(VehicleControl.bHandBrake);
+  SetReverse(VehicleControl.bReverse);
 }
 
 void ACarlaWheeledVehicle::SetThrottleInput(const float Value)

@@ -9,27 +9,26 @@
 #include "Carla.h"
 #include "AgentComponent.h"
 
-#include "Agent/AgentMap.h"
 #include "Game/CarlaGameModeBase.h"
 #include "Game/DataRouter.h"
 
-static uint32 GetNextId()
+static uint32 GetNextAgentId()
 {
   static uint32 COUNT = 0u;
   return ++COUNT;
 }
 
-static TSharedPtr<FAgentMap> GetAgentMap(UWorld *World)
+static FDataRouter &GetDataRouter(UWorld *World)
 {
   check(World != nullptr);
   auto *GameMode = Cast<ACarlaGameModeBase>(World->GetAuthGameMode());
   check(GameMode != nullptr);
-  return GameMode->GetDataRouter().GetAgents();
+  return GameMode->GetDataRouter();
 }
 
 UAgentComponent::UAgentComponent(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer),
-    Id(GetNextId()) {}
+    Id(GetNextAgentId()) {}
 
 void UAgentComponent::AcceptVisitor(IAgentComponentVisitor &Visitor) const
 {
@@ -39,24 +38,11 @@ void UAgentComponent::AcceptVisitor(IAgentComponentVisitor &Visitor) const
 void UAgentComponent::BeginPlay()
 {
   Super::BeginPlay();
-
-  // Register this component in the World's list of agents.
-  auto AgentMapPtr = GetAgentMap(GetWorld());
-  if (AgentMapPtr.IsValid()) {
-    AgentMapPtr->Agents.Add(Id, this);
-    AgentMap = AgentMapPtr;
-  } else {
-    UE_LOG(LogCarla, Error, TEXT("AgentComponent: Missing AgentMap!"));
-  }
+  GetDataRouter(GetWorld()).RegisterAgent(this);
 }
 
 void UAgentComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-  // Deregister this component in the World's list of agents.
-  auto AgentMapPtr = AgentMap.Pin();
-  if (AgentMapPtr.IsValid()) {
-    AgentMapPtr->Agents.Remove(Id);
-  }
-
+  GetDataRouter(GetWorld()).DeregisterAgent(this);
   Super::EndPlay(EndPlayReason);
 }
