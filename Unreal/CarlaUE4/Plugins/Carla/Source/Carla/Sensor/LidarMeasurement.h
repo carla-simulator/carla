@@ -60,8 +60,14 @@ public:
     Header[0] = reinterpret_cast<const uint32 &>(HorizontalAngle);
   }
 
+  uint32 GetChannelCount() const
+  {
+    return Header[1];
+  }
+
   void Reset(uint32 TotalPointCount)
   {
+    std::memset(Header.GetData() + 2u, 0, sizeof(uint32) * GetChannelCount());
     Points.Reset(3u * TotalPointCount);
   }
 
