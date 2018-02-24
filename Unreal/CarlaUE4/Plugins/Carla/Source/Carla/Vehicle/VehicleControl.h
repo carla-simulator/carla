@@ -24,4 +24,7 @@ struct CARLA_API FVehicleControl
 
   UPROPERTY(Category = "Vehicle Control", EditAnywhere)
   bool bHandBrake = false;
+
+  UPROPERTY(Category = "Vehicle Control", EditAnywhere)
+  bool bReverse = false;
 };

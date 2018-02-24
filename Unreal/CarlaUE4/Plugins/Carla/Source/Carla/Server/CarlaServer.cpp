@@ -7,14 +7,7 @@
 #include "Carla.h"
 #include "CarlaServer.h"
 
-#include "Game/CarlaPlayerState.h"
-#include "Sensor/SceneCaptureCamera.h"
-#include "Settings/CarlaSettings.h"
-#include "Vehicle/CarlaVehicleController.h"
-#include "Vehicle/CarlaWheeledVehicle.h"
-
-#include "GameFramework/Character.h"
-#include "GameFramework/PlayerStart.h"
+#include "Server/CarlaEncoder.h"
 
 #include <carla/carla_server.h>
 
@@ -22,14 +15,14 @@
 // -- Static local methods -----------------------------------------------------
 // =============================================================================
 
-static CarlaServer::ErrorCode ParseErrorCode(const uint32 ErrorCode)
+static FCarlaServer::ErrorCode ParseErrorCode(const uint32 ErrorCode)
 {
   if (ErrorCode == CARLA_SERVER_SUCCESS) {
-    return CarlaServer::Success;
+    return FCarlaServer::Success;
   } else if (ErrorCode == CARLA_SERVER_TRY_AGAIN) {
-    return CarlaServer::TryAgain;
+    return FCarlaServer::TryAgain;
   } else {
-    return CarlaServer::Error;
+    return FCarlaServer::Error;
   }
 }
 
@@ -39,187 +32,17 @@ static int32 GetTimeOut(uint32 TimeOut, const bool bBlocking)
 }
 
 // =============================================================================
-// -- Set functions ------------------------------------------------------------
-// =============================================================================
-
-static inline void Set(bool &lhs, bool rhs)
-{
-  lhs = rhs;
-}
-
-static inline void Set(float &lhs, float rhs)
-{
-  lhs = rhs;
-}
-
-static inline void Set(carla_vector3d &lhs, const FVector &rhs)
-{
-  lhs = {rhs.X, rhs.Y, rhs.Z};
-}
-
-static inline void Set(carla_rotation3d &lhs, const FRotator &rhs)
-{
-  lhs.pitch = rhs.Pitch;
-  lhs.roll = rhs.Roll;
-  lhs.yaw = rhs.Yaw;
-}
-
-static inline void Set(carla_transform &lhs, const FTransform &rhs)
-{
-  Set(lhs.location, rhs.GetLocation());
-  Set(lhs.orientation, rhs.GetRotation().GetForwardVector());
-  Set(lhs.rotation, rhs.Rotator());
-}
-
-// static void Set(carla_image &cImage, const FCapturedImage &uImage)
-// {
-//   if (uImage.BitMap.Num() > 0) {
-//     cImage.width = uImage.SizeX;
-//     cImage.height = uImage.SizeY;
-//     cImage.type = PostProcessEffect::ToUInt(uImage.PostProcessEffect);
-//     cImage.fov = uImage.FOVAngle;
-//     cImage.data = &uImage.BitMap.GetData()->DWColor();
-
-// #ifdef CARLA_SERVER_EXTRA_LOG
-//     {
-//       const auto Size = uImage.BitMap.Num();
-//       UE_LOG(LogCarlaServer, Log, TEXT("Sending image %dx%d (%d) type %d"), cImage.width, cImage.height, Size, cImage.type);
-//     }
-//   } else {
-//     UE_LOG(LogCarlaServer, Warning, TEXT("Sending empty image"));
-// #endif // CARLA_SERVER_EXTRA_LOG
-//   }
-// }
-
-// struct carla_lidar_measurement_data {
-//   TUniquePtr<uint32_t[]> points_count_by_channel;
-//   TUniquePtr<double[]> points;
-// };
-
-// static void Set(
-//   carla_lidar_measurement &cLidarMeasurement,
-//   const FCapturedLidarSegment &uLidarSegment,
-//   carla_lidar_measurement_data &cLidarMeasurementData)
-// {
-
-//   if (uLidarSegment.LidarLasersSegments.Num() > 0) {
-
-//     cLidarMeasurement.horizontal_angle = uLidarSegment.HorizontalAngle;
-//     cLidarMeasurement.channels_count = uLidarSegment.LidarLasersSegments.Num();
-
-//     cLidarMeasurementData.points_count_by_channel = MakeUnique<uint32_t[]>(cLidarMeasurement.channels_count);
-//     size_t total_points = 0;
-//     for(int i=0; i<cLidarMeasurement.channels_count; i++)
-//     {
-//       size_t points_count = uLidarSegment.LidarLasersSegments[0].Points.Num();
-//       cLidarMeasurementData.points_count_by_channel[i] = points_count;
-//       total_points += points_count;
-//     }
-//     cLidarMeasurementData.points = MakeUnique<double[]>(3 * total_points);
-//     size_t points_filled = 0;
-//     for(int i=0; i<cLidarMeasurement.channels_count; i++)
-//     {
-//       size_t points_count = cLidarMeasurementData.points_count_by_channel[i];
-//       auto& laser_points = uLidarSegment.LidarLasersSegments[i].Points;
-//       for(int pi=0; pi<points_count; pi++)
-//       {
-//         cLidarMeasurementData.points[3 * (pi + points_filled)] = laser_points[pi].X;
-//         cLidarMeasurementData.points[3 * (pi + points_filled) + 1] = laser_points[pi].Y;
-//         cLidarMeasurementData.points[3 * (pi + points_filled) + 2] = laser_points[pi].Z;
-//       }
-//       points_filled += points_count;
-//     }
-
-//     cLidarMeasurement.points_count_by_channel = cLidarMeasurementData.points_count_by_channel.Get();
-//     cLidarMeasurement.data = cLidarMeasurementData.points.Get();
-
-// #ifdef CARLA_SERVER_EXTRA_LOG
-//     {
-//       const auto Size = uImage.BitMap.Num();
-//       UE_LOG(LogCarlaServer, Log, TEXT("Sending lidar measurement %d x %d"), uLidarSegment.LidarLasersSegments.Num(), uLidarSegment.LidarLasersSegments[0].Points.Num());
-//     }
-//   } else {
-//     UE_LOG(LogCarlaServer, Warning, TEXT("Sending empty lidar measurement"));
-// #endif // CARLA_SERVER_EXTRA_LOG
-//   }
-// }
-
-static void SetBoxSpeedAndType(carla_agent &values, const ACharacter *Walker)
-{
-  values.type = CARLA_SERVER_AGENT_PEDESTRIAN;
-  values.forward_speed = FVector::DotProduct(Walker->GetVelocity(), Walker->GetActorRotation().Vector()) * 0.036f;
-  /// @todo Perhaps the box it is not the same for every walker...
-  values.box_extent = {45.0f, 35.0f, 100.0f};
-}
-
-static void SetBoxSpeedAndType(carla_agent &values, const ACarlaWheeledVehicle *Vehicle)
-{
-  values.type = CARLA_SERVER_AGENT_VEHICLE;
-  values.forward_speed = Vehicle->GetVehicleForwardSpeed();
-  Set(values.box_extent, Vehicle->GetVehicleBoundsExtent());
-}
-
-static void SetBoxSpeedAndType(carla_agent &values, const ATrafficSignBase *TrafficSign)
-{
-  switch (TrafficSign->GetTrafficSignState()) {
-    case ETrafficSignState::TrafficLightRed:
-      values.type = CARLA_SERVER_AGENT_TRAFFICLIGHT_RED;
-      break;
-    case ETrafficSignState::TrafficLightYellow:
-      values.type = CARLA_SERVER_AGENT_TRAFFICLIGHT_YELLOW;
-      break;
-    case ETrafficSignState::TrafficLightGreen:
-      values.type = CARLA_SERVER_AGENT_TRAFFICLIGHT_GREEN;
-      break;
-    case ETrafficSignState::SpeedLimit_30:
-      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      values.forward_speed = 30.0f;
-      break;
-    case ETrafficSignState::SpeedLimit_40:
-      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      values.forward_speed = 40.0f;
-      break;
-    case ETrafficSignState::SpeedLimit_50:
-      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      values.forward_speed = 50.0f;
-      break;
-    case ETrafficSignState::SpeedLimit_60:
-      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      values.forward_speed = 60.0f;
-      break;
-    case ETrafficSignState::SpeedLimit_90:
-      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      values.forward_speed = 90.0f;
-      break;
-    case ETrafficSignState::SpeedLimit_100:
-      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      values.forward_speed = 100.0f;
-      break;
-    case ETrafficSignState::SpeedLimit_120:
-      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      values.forward_speed = 120.0f;
-      break;
-    case ETrafficSignState::SpeedLimit_130:
-      values.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      values.forward_speed = 130.0f;
-      break;
-    default:
-      UE_LOG(LogCarla, Error, TEXT("Unknown traffic sign!"));
-  }
-}
-
-// =============================================================================
 // -- CarlaServer --------------------------------------------------------------
 // =============================================================================
 
-CarlaServer::CarlaServer(const uint32 InWorldPort, const uint32 InTimeOut) :
+FCarlaServer::FCarlaServer(const uint32 InWorldPort, const uint32 InTimeOut) :
   WorldPort(InWorldPort),
   TimeOut(InTimeOut),
   Server(carla_make_server()) {
   check(Server != nullptr);
 }
 
-CarlaServer::~CarlaServer()
+FCarlaServer::~FCarlaServer()
 {
 #ifdef CARLA_SERVER_EXTRA_LOG
   UE_LOG(LogCarlaServer, Warning, TEXT("Destroying CarlaServer"));
@@ -227,50 +50,49 @@ CarlaServer::~CarlaServer()
   carla_free_server(Server);
 }
 
-CarlaServer::ErrorCode CarlaServer::Connect()
+FCarlaServer::ErrorCode FCarlaServer::Connect()
 {
   UE_LOG(LogCarlaServer, Log, TEXT("Waiting for the client to connect..."));
   return ParseErrorCode(carla_server_connect(Server, WorldPort, TimeOut));
 }
 
-CarlaServer::ErrorCode CarlaServer::ReadNewEpisode(UCarlaSettings &Settings, const bool bBlocking)
+FCarlaServer::ErrorCode FCarlaServer::ReadNewEpisode(FString &IniFile, const bool bBlocking)
 {
   carla_request_new_episode values;
   auto ec = ParseErrorCode(carla_read_request_new_episode(Server, values, GetTimeOut(TimeOut, bBlocking)));
   if (Success == ec) {
-    auto IniFile = FString(values.ini_file_length, ANSI_TO_TCHAR(values.ini_file));
+    FCarlaEncoder::Decode(values, IniFile);
     UE_LOG(LogCarlaServer, Log, TEXT("Received new episode"));
 #ifdef CARLA_SERVER_EXTRA_LOG
     UE_LOG(LogCarlaServer, Log, TEXT("Received CarlaSettings.ini:\n%s"), *IniFile);
 #endif // CARLA_SERVER_EXTRA_LOG
-    Settings.LoadSettingsFromString(IniFile);
   }
   return ec;
 }
 
-CarlaServer::ErrorCode CarlaServer::SendSceneDescription(
-      const TArray<APlayerStart *> &AvailableStartSpots,
-      const bool bBlocking)
+FCarlaServer::ErrorCode FCarlaServer::SendSceneDescription(
+    const TArray<APlayerStart *> &AvailableStartSpots,
+    const TArray<USensorDescription *> &SensorDescriptions,
+    const bool bBlocking)
 {
-  const int32 NumberOfStartSpots = AvailableStartSpots.Num();
-  auto StartSpots = MakeUnique<carla_transform[]>(NumberOfStartSpots);
-
-  for (auto i = 0; i < NumberOfStartSpots; ++i) {
-    Set(StartSpots[i], AvailableStartSpots[i]->GetActorTransform());
-  }
-
-  UE_LOG(LogCarlaServer, Log, TEXT("Sending %d available start positions"), NumberOfStartSpots);
   carla_scene_description scene;
-  scene.player_start_spots = StartSpots.Get();
-  scene.number_of_player_start_spots = NumberOfStartSpots;
-  /// @todo Add the sensors here.
-  scene.sensors = nullptr;
-  scene.number_of_sensors = 0u;
-
+  // Encode start spots.
+  TArray<carla_transform> Transforms;
+  FCarlaEncoder::Encode(AvailableStartSpots, Transforms);
+  scene.player_start_spots = (Transforms.Num() > 0 ? Transforms.GetData() : nullptr);;
+  scene.number_of_player_start_spots = Transforms.Num();
+  // Encode sensors.
+  TArray<carla_sensor_definition> Sensors;
+  FCarlaEncoder::Encode(SensorDescriptions, Sensors);
+  scene.sensors = (Sensors.Num() > 0 ? Sensors.GetData() : nullptr);;
+  scene.number_of_sensors = Sensors.Num();
+  // Send scene description.
+  UE_LOG(LogCarlaServer, Log, TEXT("Sending %d available start positions"), scene.number_of_player_start_spots);
+  UE_LOG(LogCarlaServer, Log, TEXT("Sending %d sensor descriptions"), scene.number_of_sensors);
   return ParseErrorCode(carla_write_scene_description(Server, scene, GetTimeOut(TimeOut, bBlocking)));
 }
 
-CarlaServer::ErrorCode CarlaServer::ReadEpisodeStart(uint32 &StartPositionIndex, const bool bBlocking)
+FCarlaServer::ErrorCode FCarlaServer::ReadEpisodeStart(uint32 &StartPositionIndex, const bool bBlocking)
 {
   carla_episode_start values;
   auto ec = ParseErrorCode(carla_read_episode_start(Server, values, GetTimeOut(TimeOut, bBlocking)));
@@ -281,25 +103,18 @@ CarlaServer::ErrorCode CarlaServer::ReadEpisodeStart(uint32 &StartPositionIndex,
   return ec;
 }
 
-CarlaServer::ErrorCode CarlaServer::SendEpisodeReady(const bool bBlocking)
+FCarlaServer::ErrorCode FCarlaServer::SendEpisodeReady(const bool bBlocking)
 {
   UE_LOG(LogCarlaServer, Log, TEXT("Ready to play, notifying client"));
   const carla_episode_ready values = {true};
   return ParseErrorCode(carla_write_episode_ready(Server, values, GetTimeOut(TimeOut, bBlocking)));
 }
 
-CarlaServer::ErrorCode CarlaServer::ReadControl(ACarlaVehicleController &Player, const bool bBlocking)
+FCarlaServer::ErrorCode FCarlaServer::ReadControl(FVehicleControl &Control, const bool bBlocking)
 {
   carla_control values;
   auto ec = ParseErrorCode(carla_read_control(Server, values, GetTimeOut(TimeOut, bBlocking)));
   if (Success == ec) {
-    check(Player.IsPossessingAVehicle());
-    auto Vehicle = Player.GetPossessedVehicle();
-    Vehicle->SetSteeringInput(values.steer);
-    Vehicle->SetThrottleInput(values.throttle);
-    Vehicle->SetBrakeInput(values.brake);
-    Vehicle->SetHandbrakeInput(values.hand_brake);
-    Vehicle->SetReverse(values.reverse);
 #ifdef CARLA_SERVER_EXTRA_LOG
     UE_LOG(
         LogCarlaServer,
@@ -312,87 +127,38 @@ CarlaServer::ErrorCode CarlaServer::ReadControl(ACarlaVehicleController &Player,
         (values.hand_brake ? TEXT("True") : TEXT("False")),
         (values.reverse ? TEXT("True") : TEXT("False")));
 #endif // CARLA_SERVER_EXTRA_LOG
+    FCarlaEncoder::Decode(values, Control);
   } else if ((!bBlocking) && (TryAgain == ec)) {
     UE_LOG(LogCarlaServer, Warning, TEXT("No control received from the client this frame!"));
   }
   return ec;
 }
 
-template <typename T>
-static void AddAgents(TArray<carla_agent> &Agents, const TArray<T> &Actors)
+FCarlaServer::ErrorCode FCarlaServer::SendSensorData(const FSensorDataView &Data)
 {
-  for (auto &&Actor : Actors) {
-    if (Actor != nullptr) {
-      Agents.Emplace();
-      auto &values = Agents.Last();
-      values.id = GetTypeHash(Actor);
-      Set(values.transform, Actor->GetActorTransform());
-      SetBoxSpeedAndType(values, Actor);
-    }
-  }
+  carla_sensor_data values;
+  FCarlaEncoder::Encode(Data, values);
+  return ParseErrorCode(carla_write_sensor_data(Server, values));
 }
 
-static void GetAgentInfo(
-    const ACarlaGameState &GameState,
-    TArray<carla_agent> &Agents)
-{
-  const auto *WalkerSpawner = GameState.GetWalkerSpawner();
-  const auto *VehicleSpawner = GameState.GetVehicleSpawner();
-  const auto &TrafficSigns = GameState.GetTrafficSigns();
-
-  auto NumberOfAgents = TrafficSigns.Num();
-  if (WalkerSpawner != nullptr) {
-    NumberOfAgents += WalkerSpawner->GetCurrentNumberOfWalkers();
-  }
-  if (VehicleSpawner != nullptr) {
-    NumberOfAgents += VehicleSpawner->GetNumberOfSpawnedVehicles();
-  }
-  Agents.Reserve(NumberOfAgents);
-
-  AddAgents(Agents, TrafficSigns);
-  if (WalkerSpawner != nullptr) {
-    AddAgents(Agents, WalkerSpawner->GetWalkersWhiteList());
-    AddAgents(Agents, WalkerSpawner->GetWalkersBlackList());
-  }
-  if (VehicleSpawner != nullptr) {
-    AddAgents(Agents, VehicleSpawner->GetVehicles());
-  }
-}
-
-CarlaServer::ErrorCode CarlaServer::SendMeasurements(
-    const ACarlaGameState &GameState,
+FCarlaServer::ErrorCode FCarlaServer::SendMeasurements(
     const ACarlaPlayerState &PlayerState,
+    const TArray<const UAgentComponent *> &Agents,
     const bool bSendNonPlayerAgentsInfo)
 {
-  // Measurements.
+  // Encode measurements.
   carla_measurements values;
-  values.platform_timestamp = PlayerState.GetPlatformTimeStamp();
-  values.game_timestamp = PlayerState.GetGameTimeStamp();
-  auto &player = values.player_measurements;
-  Set(player.transform, PlayerState.GetTransform());
-  Set(player.acceleration, PlayerState.GetAcceleration());
-  Set(player.forward_speed, PlayerState.GetForwardSpeed());
-  Set(player.collision_vehicles, PlayerState.GetCollisionIntensityCars());
-  Set(player.collision_pedestrians, PlayerState.GetCollisionIntensityPedestrians());
-  Set(player.collision_other, PlayerState.GetCollisionIntensityOther());
-  Set(player.intersection_otherlane, PlayerState.GetOtherLaneIntersectionFactor());
-  Set(player.intersection_offroad, PlayerState.GetOffRoadIntersectionFactor());
-  Set(player.autopilot_control.steer, PlayerState.GetSteer());
-  Set(player.autopilot_control.throttle, PlayerState.GetThrottle());
-  Set(player.autopilot_control.brake, PlayerState.GetBrake());
-  Set(player.autopilot_control.hand_brake, PlayerState.GetHandBrake());
-  Set(player.autopilot_control.reverse, PlayerState.GetCurrentGear() < 0);
-
-  TArray<carla_agent> Agents;
+  FCarlaEncoder::Encode(PlayerState, values);
+  // Encode agents.
+  TArray<carla_agent> AgentsData;
   if (bSendNonPlayerAgentsInfo) {
-    GetAgentInfo(GameState, Agents);
+    FCarlaEncoder::Encode(Agents, AgentsData);
   }
-  values.non_player_agents = (Agents.Num() > 0 ? Agents.GetData() : nullptr);
-  values.number_of_non_player_agents = Agents.Num();
-
+  values.non_player_agents = (AgentsData.Num() > 0 ? AgentsData.GetData() : nullptr);;
+  values.number_of_non_player_agents = AgentsData.Num();
+  // Send measurements.
 #ifdef CARLA_SERVER_EXTRA_LOG
   UE_LOG(LogCarlaServer, Log, TEXT("Sending data of %d agents"), values.number_of_non_player_agents);
 #endif // CARLA_SERVER_EXTRA_LOG
-
   return ParseErrorCode(carla_write_measurements(Server, values));
 }

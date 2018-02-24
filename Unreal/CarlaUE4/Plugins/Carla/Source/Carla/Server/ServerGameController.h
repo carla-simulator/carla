@@ -8,14 +8,17 @@
 
 #include "Game/CarlaGameControllerBase.h"
 
-#include "Game/MockGameControllerSettings.h"
+class FCarlaServer;
+class FServerSensorDataSink;
 
-/// Mocks the CARLA game controller class for testing purposes.
-class MockGameController : public ICarlaGameControllerBase
+/// Implements remote control of game and player.
+class FServerGameController : public ICarlaGameControllerBase
 {
 public:
 
-  explicit MockGameController(FDataRouter &DataRouter, const FMockGameControllerSettings &Settings);
+  FServerGameController(FDataRouter &DataRouter);
+
+  ~FServerGameController();
 
   virtual void Initialize(UCarlaSettings &CarlaSettings) final;
 
@@ -29,5 +32,11 @@ public:
 
 private:
 
-  FMockGameControllerSettings Settings;
+  void RestartLevel();
+
+  const TSharedPtr<FServerSensorDataSink> DataSink;
+
+  TSharedPtr<FCarlaServer> Server;
+
+  UCarlaSettings *CarlaSettings = nullptr;
 };

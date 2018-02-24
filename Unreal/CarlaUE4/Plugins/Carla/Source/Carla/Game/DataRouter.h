@@ -6,47 +6,66 @@
 
 #pragma once
 
-#include "Agent/AgentMap.h"
+#include "Util/NonCopyable.h"
+
 #include "Sensor/SensorDataSink.h"
+
 #include "Vehicle/CarlaVehicleController.h"
+#include "Vehicle/CarlaWheeledVehicle.h"
 
 class ACarlaPlayerState;
 class ASensor;
+class UAgentComponent;
 struct FVehicleControl;
 
-class FDataRouter
+class FDataRouter : private NonCopyable
 {
 public:
 
-  FDataRouter();
-
-  ~FDataRouter();
-
   void SetSensorDataSink(TSharedPtr<ISensorDataSink> InSensorDataSink)
   {
+    check(!SensorDataSink.IsValid());
     SensorDataSink = InSensorDataSink;
   }
 
-  void RegisterPlayer(ACarlaVehicleController *InPlayer);
+  void RegisterPlayer(ACarlaVehicleController &InPlayer);
 
-  void RegisterSensor(ASensor *InSensor);
+  void RegisterSensor(ASensor &InSensor);
 
-  const ACarlaPlayerState &GetPlayerState()
+  void RegisterAgent(const UAgentComponent *Agent)
+  {
+    check(Agent != nullptr);
+    Agents.Emplace(Agent);
+  }
+
+  void DeregisterAgent(const UAgentComponent *Agent)
+  {
+    check(Agent != nullptr);
+    Agents.RemoveSwap(Agent);
+  }
+
+  const ACarlaPlayerState &GetPlayerState() const
   {
     check(Player != nullptr);
     return Player->GetPlayerState();
   }
 
-  TSharedPtr<FAgentMap> GetAgents()
+  const TArray<const UAgentComponent *> &GetAgents() const
   {
     return Agents;
   }
 
-  void ApplyVehicleControl(const FVehicleControl &VehicleControl);
+  void ApplyVehicleControl(const FVehicleControl &VehicleControl)
+  {
+    check((Player != nullptr) && (Player->IsPossessingAVehicle()));
+    Player->GetPossessedVehicle()->ApplyVehicleControl(VehicleControl);
+  }
+
+  void RestartLevel();
 
 private:
 
-  const TSharedPtr<FAgentMap> Agents;
+  TArray<const UAgentComponent *> Agents;
 
   ACarlaVehicleController *Player = nullptr;
 

@@ -7,17 +7,12 @@
 #include "Carla.h"
 #include "DataRouter.h"
 
-#include "Agent/AgentMap.h"
 #include "Sensor/Sensor.h"
 
-FDataRouter::FDataRouter() : Agents(MakeShared<FAgentMap>()) {}
-
-FDataRouter::~FDataRouter() {}
-
-void FDataRouter::RegisterPlayer(ACarlaVehicleController *InPlayer)
+void FDataRouter::RegisterPlayer(ACarlaVehicleController &InPlayer)
 {
   if (Player == nullptr) {
-    Player = InPlayer;
+    Player = &InPlayer;
   } else {
     UE_LOG(
         LogCarla,
@@ -26,11 +21,10 @@ void FDataRouter::RegisterPlayer(ACarlaVehicleController *InPlayer)
   }
 }
 
-void FDataRouter::RegisterSensor(ASensor *InSensor)
+void FDataRouter::RegisterSensor(ASensor &InSensor)
 {
-  if (SensorDataSink.Get() != nullptr) {
-    check(InSensor != nullptr);
-    InSensor->SetSensorDataSink(SensorDataSink);
+  if (SensorDataSink.IsValid()) {
+    InSensor.SetSensorDataSink(SensorDataSink);
   } else {
     UE_LOG(
         LogCarla,
@@ -39,7 +33,15 @@ void FDataRouter::RegisterSensor(ASensor *InSensor)
   }
 }
 
-void FDataRouter::ApplyVehicleControl(const FVehicleControl &VehicleControl)
+void FDataRouter::RestartLevel()
 {
-
+  if (Player != nullptr) {
+    Player->RestartLevel();
+    Player = nullptr;
+  } else {
+    UE_LOG(
+        LogCarla,
+        Error,
+        TEXT("FDataRouter: Trying to restart level but I don't have any player registered"));
+  }
 }

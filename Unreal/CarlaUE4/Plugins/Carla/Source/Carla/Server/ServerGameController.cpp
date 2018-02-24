@@ -5,45 +5,55 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
-#include "CarlaGameController.h"
+#include "ServerGameController.h"
 
+#include "Game/DataRouter.h"
 #include "Server/CarlaServer.h"
+#include "Server/ServerSensorDataSink.h"
 #include "Settings/CarlaSettings.h"
-#include "Vehicle/CarlaVehicleController.h"
 
-using Errc = CarlaServer::ErrorCode;
+using Errc = FCarlaServer::ErrorCode;
 
 static constexpr bool BLOCKING = true;
 static constexpr bool NON_BLOCKING = false;
 
-CarlaGameController::CarlaGameController() :
-  Server(nullptr),
-  Player(nullptr) {}
+FServerGameController::FServerGameController(FDataRouter &InDataRouter)
+  : ICarlaGameControllerBase(InDataRouter),
+    DataSink(MakeShared<FServerSensorDataSink>()),
+    Server(nullptr) {
+  DataRouter.SetSensorDataSink(DataSink);
+}
 
-CarlaGameController::~CarlaGameController() {}
+FServerGameController::~FServerGameController() {}
 
-void CarlaGameController::Initialize(UCarlaSettings &InCarlaSettings)
+void FServerGameController::Initialize(UCarlaSettings &InCarlaSettings)
 {
   CarlaSettings = &InCarlaSettings;
 
   // Initialize server if missing.
-  if (Server == nullptr) {
-    Server = MakeUnique<CarlaServer>(CarlaSettings->WorldPort, CarlaSettings->ServerTimeOut);
-    if ((Errc::Success != Server->Connect()) ||
-        (Errc::Success != Server->ReadNewEpisode(*CarlaSettings, BLOCKING))) {
+  if (!Server.IsValid()) {
+    Server = MakeShared<FCarlaServer>(CarlaSettings->WorldPort, CarlaSettings->ServerTimeOut);
+    DataSink->SetServer(Server);
+    FString IniFile;
+    if ((Errc::Success == Server->Connect()) &&
+        (Errc::Success == Server->ReadNewEpisode(IniFile, BLOCKING))) {
+      CarlaSettings->LoadSettingsFromString(IniFile);
+    } else {
       UE_LOG(LogCarlaServer, Warning, TEXT("Failed to initialize, server needs restart"));
       Server = nullptr;
     }
   }
 }
 
-APlayerStart *CarlaGameController::ChoosePlayerStart(
+APlayerStart *FServerGameController::ChoosePlayerStart(
     const TArray<APlayerStart *> &AvailableStartSpots)
 {
   check(AvailableStartSpots.Num() > 0);
   // Send scene description.
-  if (Server != nullptr) {
-    if (Errc::Success != Server->SendSceneDescription(AvailableStartSpots, BLOCKING)) {
+  if (Server.IsValid()) {
+    TArray<USensorDescription *> Sensors;
+    CarlaSettings->SensorDescriptions.GenerateValueArray(Sensors);
+    if (Errc::Success != Server->SendSceneDescription(AvailableStartSpots, Sensors, BLOCKING)) {
       UE_LOG(LogCarlaServer, Warning, TEXT("Failed to send scene description, server needs restart"));
       Server = nullptr;
     }
@@ -51,7 +61,7 @@ APlayerStart *CarlaGameController::ChoosePlayerStart(
 
   // Read episode start.
   uint32 StartIndex = 0u; // default.
-  if (Server != nullptr) {
+  if (Server.IsValid()) {
     if (Errc::Success != Server->ReadEpisodeStart(StartIndex, BLOCKING)) {
       UE_LOG(LogCarlaServer, Warning, TEXT("Failed to read episode start, server needs restart"));
       Server = nullptr;
@@ -66,18 +76,14 @@ APlayerStart *CarlaGameController::ChoosePlayerStart(
   return AvailableStartSpots[StartIndex];
 }
 
-void CarlaGameController::RegisterPlayer(AController &NewPlayer)
+void FServerGameController::RegisterPlayer(AController &NewPlayer)
 {
-  Player = Cast<ACarlaVehicleController>(&NewPlayer);
-  check(Player != nullptr);
+
 }
 
-void CarlaGameController::BeginPlay()
+void FServerGameController::BeginPlay()
 {
-  check(Player != nullptr);
-  GameState = Cast<ACarlaGameState>(Player->GetWorld()->GetGameState());
-  check(GameState != nullptr);
-  if (Server != nullptr) {
+  if (Server.IsValid()) {
     if (Errc::Success != Server->SendEpisodeReady(BLOCKING)) {
       UE_LOG(LogCarlaServer, Warning, TEXT("Failed to read episode start, server needs restart"));
       Server = nullptr;
@@ -85,12 +91,11 @@ void CarlaGameController::BeginPlay()
   }
 }
 
-void CarlaGameController::Tick(float DeltaSeconds)
+void FServerGameController::Tick(float DeltaSeconds)
 {
-  check(Player != nullptr);
   check(CarlaSettings != nullptr);
 
-  if (Server == nullptr) {
+  if (!Server.IsValid()) {
     UE_LOG(LogCarlaServer, Warning, TEXT("Client disconnected, server needs restart"));
     RestartLevel();
     return;
@@ -98,9 +103,11 @@ void CarlaGameController::Tick(float DeltaSeconds)
 
   // Check if the client requested a new episode.
   {
-    auto ec = Server->ReadNewEpisode(*CarlaSettings, NON_BLOCKING);
+    FString IniFile;
+    auto ec = Server->ReadNewEpisode(IniFile, NON_BLOCKING);
     switch (ec) {
       case Errc::Success:
+        CarlaSettings->LoadSettingsFromString(IniFile);
         RestartLevel();
         return;
       case Errc::Error:
@@ -113,10 +120,9 @@ void CarlaGameController::Tick(float DeltaSeconds)
 
   // Send measurements.
   {
-    check(GameState != nullptr);
     if (Errc::Error == Server->SendMeasurements(
-            *GameState,
-            Player->GetPlayerState(),
+            DataRouter.GetPlayerState(),
+            DataRouter.GetAgents(),
             CarlaSettings->bSendNonPlayerAgentsInfo)) {
       Server = nullptr;
       return;
@@ -126,15 +132,18 @@ void CarlaGameController::Tick(float DeltaSeconds)
   // Read control, block if the settings say so.
   {
     const bool bShouldBlock = CarlaSettings->bSynchronousMode;
-    if (Errc::Error == Server->ReadControl(*Player, bShouldBlock)) {
+    FVehicleControl Control;
+    if (Errc::Error == Server->ReadControl(Control, bShouldBlock)) {
       Server = nullptr;
       return;
+    } else {
+      DataRouter.ApplyVehicleControl(Control);
     }
   }
 }
 
-void CarlaGameController::RestartLevel()
+void FServerGameController::RestartLevel()
 {
   UE_LOG(LogCarlaServer, Log, TEXT("Restarting the level..."));
-  Player->RestartLevel();
+  DataRouter.RestartLevel();
 }

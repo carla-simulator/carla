@@ -6,13 +6,17 @@
 
 #pragma once
 
-class ACarlaGameState;
-class ACarlaVehicleController;
+#include "Containers/Array.h"
+
+class ACarlaPlayerState;
 class APlayerStart;
-class UCarlaSettings;
+class FSensorDataView;
+class FString;
+class USensorDescription;
+struct FVehicleControl;
 
 /// Wrapper around carla_server API.
-class CarlaServer
+class FCarlaServer
 {
 public:
 
@@ -22,29 +26,32 @@ public:
     Error
   };
 
-  explicit CarlaServer(uint32 WorldPort, uint32 TimeOutInMilliseconds);
+  explicit FCarlaServer(uint32 WorldPort, uint32 TimeOutInMilliseconds);
 
-  ~CarlaServer();
+  ~FCarlaServer();
 
   /// Connect with the client, block until the client connects or the time-out
   /// is met.
   ErrorCode Connect();
 
-  ErrorCode ReadNewEpisode(UCarlaSettings &Settings, bool bBlocking);
+  ErrorCode ReadNewEpisode(FString &IniFile, bool bBlocking);
 
   ErrorCode SendSceneDescription(
       const TArray<APlayerStart *> &AvailableStartSpots,
+      const TArray<USensorDescription *> &SensorDescriptions,
       bool bBlocking);
 
   ErrorCode ReadEpisodeStart(uint32 &StartPositionIndex, bool bBlocking);
 
   ErrorCode SendEpisodeReady(bool bBlocking);
 
-  ErrorCode ReadControl(ACarlaVehicleController &Player, bool bBlocking);
+  ErrorCode ReadControl(FVehicleControl &Control, bool bBlocking);
+
+  ErrorCode SendSensorData(const FSensorDataView &Data);
 
   ErrorCode SendMeasurements(
-      const ACarlaGameState &GameState,
       const ACarlaPlayerState &PlayerState,
+      const TArray<const UAgentComponent *> &Agents,
       bool bSendNonPlayerAgentsInfo);
 
 private:
