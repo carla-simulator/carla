@@ -11,6 +11,8 @@
 #include "carla/ArrayView.h"
 #include "carla/Debug.h"
 #include "carla/Logging.h"
+#include "carla/server/CarlaSceneDescription.h"
+#include "carla/server/RequestNewEpisode.h"
 
 #include "carla/server/carla_server.pb.h"
 
@@ -129,6 +131,10 @@ namespace server {
       Set(message->add_sensors(), sensor);
     }
     return Protobuf::Encode(*message);
+  }
+
+  std::string CarlaEncoder::Encode(const CarlaSceneDescription &values) {
+    return values.pop_scene();
   }
 
   std::string CarlaEncoder::Encode(const carla_episode_ready &values) {
