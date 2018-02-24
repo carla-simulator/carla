@@ -10,8 +10,8 @@
 
 #include "TrafficSignAgentComponent.generated.h"
 
-/// This component can be added to any AWheeledVehicle to be added as agent.
-/// See UAgentComponent.
+class ATrafficSignBase;
+
 UCLASS()
 class CARLA_API UTrafficSignAgentComponent : public UAgentComponent
 {
@@ -21,9 +21,15 @@ public:
 
   UTrafficSignAgentComponent(const FObjectInitializer &ObjectInitializer);
 
+  const ATrafficSignBase &GetTrafficSign() const
+  {
+    check(TrafficSign != nullptr);
+    return *TrafficSign;
+  }
+
 protected:
 
-  virtual void OnComponentCreated() override;
+  virtual void BeginPlay() override;
 
   virtual void AcceptVisitor(IAgentComponentVisitor &Visitor) const final
   {
@@ -32,5 +38,6 @@ protected:
 
 private:
 
-
+  UPROPERTY()
+  ATrafficSignBase *TrafficSign = nullptr;
 };

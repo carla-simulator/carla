@@ -26,6 +26,7 @@ ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectIniti
   VehicleBounds->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
 
   VehicleAgentComponent = CreateDefaultSubobject<UVehicleAgentComponent>(TEXT("VehicleAgentComponent"));
+  VehicleAgentComponent->SetupAttachment(RootComponent);
 
   GetVehicleMovementComponent()->bReverseAsBrake = false;
 }

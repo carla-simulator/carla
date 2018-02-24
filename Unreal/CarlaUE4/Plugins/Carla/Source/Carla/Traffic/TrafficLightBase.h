@@ -22,7 +22,7 @@ class CARLA_API ATrafficLightBase : public ATrafficSignBase {
 
 public:
 
-  ATrafficLightBase();
+  ATrafficLightBase(const FObjectInitializer &ObjectInitializer);
 
 protected:
 

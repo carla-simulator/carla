@@ -9,11 +9,21 @@
 #include "Carla.h"
 #include "WalkerAgentComponent.h"
 
+#include "GameFramework/Character.h"
+
 UWalkerAgentComponent::UWalkerAgentComponent(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer) {}
 
-void UWalkerAgentComponent::OnComponentCreated()
+float UWalkerAgentComponent::GetForwardSpeed() const
 {
-  Super::OnComponentCreated();
+  /// @todo Is it necessary to compute this speed every tick?
+  return FVector::DotProduct(Walker->GetVelocity(), Walker->GetActorRotation().Vector()) * 0.036f;
+}
 
+void UWalkerAgentComponent::BeginPlay()
+{
+  Walker = Cast<ACharacter>(GetOwner());
+  checkf(Walker != nullptr, TEXT("UWalkerAgentComponent can only be attached to ACharacter"));
+
+  Super::BeginPlay();
 }

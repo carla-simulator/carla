@@ -32,9 +32,7 @@ class CARLA_API ATrafficSignBase : public AActor {
 
 public:
 
-  ATrafficSignBase();
-
-  virtual void BeginPlay() override;
+  ATrafficSignBase(const FObjectInitializer &ObjectInitializer);
 
   UFUNCTION(BlueprintCallable)
   ETrafficSignState GetTrafficSignState() const
@@ -52,4 +50,7 @@ private:
 
   UPROPERTY(Category = "Traffic Sign", EditAnywhere)
   ETrafficSignState TrafficSignState = ETrafficSignState::UNKNOWN;
+
+  UPROPERTY(Category = "Traffic Sign", VisibleAnywhere)
+  UTrafficSignAgentComponent *TrafficSignAgentComponent;
 };

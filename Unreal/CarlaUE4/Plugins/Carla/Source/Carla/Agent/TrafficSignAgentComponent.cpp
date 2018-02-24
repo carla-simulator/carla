@@ -9,11 +9,15 @@
 #include "Carla.h"
 #include "TrafficSignAgentComponent.h"
 
+#include "Traffic/TrafficSignBase.h"
+
 UTrafficSignAgentComponent::UTrafficSignAgentComponent(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer) {}
 
-void UTrafficSignAgentComponent::OnComponentCreated()
+void UTrafficSignAgentComponent::BeginPlay()
 {
-  Super::OnComponentCreated();
+  TrafficSign = Cast<ATrafficSignBase>(GetOwner());
+  checkf(TrafficSign != nullptr, TEXT("UTrafficSignAgentComponent can only be attached to ATrafficSignBase"));
 
+  Super::BeginPlay();
 }
