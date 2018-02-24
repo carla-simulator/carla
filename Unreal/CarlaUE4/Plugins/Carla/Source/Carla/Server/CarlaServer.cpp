@@ -82,8 +82,9 @@ FCarlaServer::ErrorCode FCarlaServer::SendSceneDescription(
   scene.player_start_spots = (Transforms.Num() > 0 ? Transforms.GetData() : nullptr);;
   scene.number_of_player_start_spots = Transforms.Num();
   // Encode sensors.
+  TArray<TUniquePtr<const char[]>> SensorNames; // This holds the memory while we send it.
   TArray<carla_sensor_definition> Sensors;
-  FCarlaEncoder::Encode(SensorDescriptions, Sensors);
+  FCarlaEncoder::Encode(SensorDescriptions, Sensors, SensorNames);
   scene.sensors = (Sensors.Num() > 0 ? Sensors.GetData() : nullptr);;
   scene.number_of_sensors = Sensors.Num();
   // Send scene description.

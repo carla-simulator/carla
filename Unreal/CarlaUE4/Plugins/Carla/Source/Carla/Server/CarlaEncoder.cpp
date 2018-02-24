@@ -15,9 +15,19 @@
 
 #include "GameFramework/PlayerStart.h"
 
+#include <cstring>
+
 // =============================================================================
 // -- Static local methods -----------------------------------------------------
 // =============================================================================
+
+static auto MakeCharBuffer(const FString &String)
+{
+  const char *Ptr = TCHAR_TO_ANSI(*String);
+  auto Buffer = MakeUnique<char[]>(std::strlen(Ptr) + 1u); // + null terminator.
+  std::strcpy(Buffer.Get(), Ptr);
+  return TUniquePtr<const char[]>(Buffer.Release());
+}
 
 static void Encode(const FVector &Vector, carla_vector3d &Data)
 {
@@ -38,10 +48,11 @@ static void Encode(const FTransform &Transform, carla_transform &Data)
   Encode(Transform.Rotator(), Data.rotation);
 }
 
-static void Encode(const USensorDescription &SensorDescription, carla_sensor_definition &Data)
+static TUniquePtr<const char[]> Encode(
+    const USensorDescription &SensorDescription,
+    carla_sensor_definition &Data)
 {
   Data.id = SensorDescription.GetId();
-  Data.name = TCHAR_TO_ANSI(*SensorDescription.Name);
   Data.type = [](const FString &Type) {
 #define CARLA_CHECK_TYPE(Str) if (Type == TEXT(#Str)) return CARLA_SERVER_ ## Str;
       CARLA_CHECK_TYPE(CAMERA)
@@ -49,6 +60,9 @@ static void Encode(const USensorDescription &SensorDescription, carla_sensor_def
       else return CARLA_SERVER_SENSOR_UNKNOWN;
 #undef CARLA_CHECK_TYPE
   }(SensorDescription.Type);
+  auto Memory = MakeCharBuffer(SensorDescription.Name);
+  Data.name = Memory.Get();
+  return Memory;
 }
 
 // =============================================================================
@@ -69,13 +83,15 @@ void FCarlaEncoder::Encode(
 
 void FCarlaEncoder::Encode(
     const TArray<USensorDescription *> &SensorDescriptions,
-    TArray<carla_sensor_definition> &Data)
+    TArray<carla_sensor_definition> &Data,
+    TArray<TUniquePtr<const char[]>> &SensorNames)
 {
   const int32 NumberOfSensors = SensorDescriptions.Num();
   Data.AddUninitialized(NumberOfSensors);
+  SensorNames.Reserve(NumberOfSensors);
   for (auto i = 0; i < NumberOfSensors; ++i) {
     check(SensorDescriptions[i] != nullptr);
-    ::Encode(*SensorDescriptions[i], Data[i]);
+    SensorNames.Emplace(::Encode(*SensorDescriptions[i], Data[i]));
   }
 }
 
