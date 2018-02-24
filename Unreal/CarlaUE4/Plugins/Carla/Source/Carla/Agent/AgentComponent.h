@@ -8,7 +8,7 @@
 
 #include "Agent/AgentComponentVisitor.h"
 
-#include "Components/ActorComponent.h"
+#include "Components/SceneComponent.h"
 #include "Templates/SharedPointer.h"
 
 #include "AgentComponent.generated.h"
@@ -18,7 +18,7 @@ class FAgentMap;
 /// Actors with an UAgentComponent are registered as agents in the scene and
 /// their status is sent to the client each frame (if requested by the client).
 UCLASS(Abstract)
-class CARLA_API UAgentComponent : public UActorComponent
+class CARLA_API UAgentComponent : public USceneComponent
 {
   GENERATED_BODY()
 

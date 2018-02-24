@@ -9,15 +9,15 @@
 #include "Carla.h"
 #include "VehicleAgentComponent.h"
 
-#include "WheeledVehicle.h"
+#include "Vehicle/CarlaWheeledVehicle.h"
 
 UVehicleAgentComponent::UVehicleAgentComponent(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer) {}
 
-void UVehicleAgentComponent::OnComponentCreated()
+void UVehicleAgentComponent::BeginPlay()
 {
-  Super::OnComponentCreated();
+  WheeledVehicle = Cast<ACarlaWheeledVehicle>(GetOwner());
+  checkf(WheeledVehicle != nullptr, TEXT("UVehicleAgentComponent can only be attached to ACarlaWheeledVehicle"));
 
-  WheeledVehicle = Cast<AWheeledVehicle>(GetOwner());
-  checkf(WheeledVehicle != nullptr, TEXT("UVehicleAgentComponent can only be attached to AWheeledVehicle"));
+  Super::BeginPlay();
 }

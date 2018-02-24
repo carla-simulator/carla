@@ -10,6 +10,8 @@
 
 #include "WalkerAgentComponent.generated.h"
 
+class ACharacter;
+
 /// This component can be added to any ACharacter to be added as agent.
 /// See UAgentComponent.
 UCLASS()
@@ -21,9 +23,18 @@ public:
 
   UWalkerAgentComponent(const FObjectInitializer &ObjectInitializer);
 
+  /// Return forward speed in km/h.
+  float GetForwardSpeed() const;
+
+  FVector GetBoundingBoxExtent() const
+  {
+    /// @todo Perhaps the box it is not the same for every walker...
+    return {45.0f, 35.0f, 100.0f};
+  }
+
 protected:
 
-  virtual void OnComponentCreated() override;
+  virtual void BeginPlay() override;
 
   virtual void AcceptVisitor(IAgentComponentVisitor &Visitor) const final
   {
@@ -32,5 +43,6 @@ protected:
 
 private:
 
-
+  UPROPERTY()
+  ACharacter *Walker = nullptr;
 };

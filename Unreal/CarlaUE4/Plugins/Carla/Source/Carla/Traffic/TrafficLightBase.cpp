@@ -35,7 +35,8 @@ static ETrafficSignState ToTrafficSignState(ETrafficLightState State) {
 // -- ATrafficLightBase --------------------------------------------------------
 // =============================================================================
 
-ATrafficLightBase::ATrafficLightBase() : Super()
+ATrafficLightBase::ATrafficLightBase(const FObjectInitializer &ObjectInitializer)
+  : Super(ObjectInitializer)
 {
 	PrimaryActorTick.bCanEverTick = false;
 }

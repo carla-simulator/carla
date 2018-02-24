@@ -10,7 +10,7 @@
 
 #include "VehicleAgentComponent.generated.h"
 
-class AWheeledVehicle;
+class ACarlaWheeledVehicle;
 
 UCLASS()
 class CARLA_API UVehicleAgentComponent : public UAgentComponent
@@ -21,9 +21,15 @@ public:
 
   UVehicleAgentComponent(const FObjectInitializer &ObjectInitializer);
 
+  ACarlaWheeledVehicle &GetVehicle() const
+  {
+    check(WheeledVehicle != nullptr);
+    return *WheeledVehicle;
+  }
+
 protected:
 
-  virtual void OnComponentCreated() override;
+  virtual void BeginPlay() override;
 
   virtual void AcceptVisitor(IAgentComponentVisitor &Visitor) const final
   {
@@ -32,5 +38,5 @@ protected:
 
 private:
 
-  AWheeledVehicle *WheeledVehicle = nullptr;
+  ACarlaWheeledVehicle *WheeledVehicle = nullptr;
 };
