@@ -144,6 +144,7 @@ void ASceneCaptureCamera::Tick(const float DeltaSeconds)
   TArray<FColor> BitMap;
   if (ReadPixels(BitMap)) {
     FSensorDataView DataView(
+        GetId(),
         FReadOnlyBufferView{reinterpret_cast<const void *>(&ImageHeader), sizeof(ImageHeader)},
         FReadOnlyBufferView{BitMap});
 
@@ -202,6 +203,7 @@ void ASceneCaptureCamera::Set(const UCameraDescription &CameraDescription)
   //   PostProcessSettings.bOverride_AutoExposureBias = true;
   //   PostProcessSettings.AutoExposureBias = Override.AutoExposureBias;
   // }
+  Super::Set(CameraDescription);
   SetImageSize(CameraDescription.ImageSizeX, CameraDescription.ImageSizeY);
   SetPostProcessEffect(CameraDescription.PostProcessEffect);
   SetFOVAngle(CameraDescription.FOVAngle);

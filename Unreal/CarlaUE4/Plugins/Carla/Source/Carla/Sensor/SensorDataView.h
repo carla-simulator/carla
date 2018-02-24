@@ -13,10 +13,17 @@ class FSensorDataView {
 public:
 
   FSensorDataView(
+      uint32 InSensorId,
       FReadOnlyBufferView InHeader,
       FReadOnlyBufferView InData)
-    : Header(InHeader),
+    : SensorId(InSensorId),
+      Header(InHeader),
       Data(InData) {}
+
+  uint32 GetSensorId() const
+  {
+    return SensorId;
+  }
 
   FReadOnlyBufferView GetHeader() const
   {
@@ -29,6 +36,8 @@ public:
   }
 
 private:
+
+  uint32 SensorId;
 
   FReadOnlyBufferView Header;
 

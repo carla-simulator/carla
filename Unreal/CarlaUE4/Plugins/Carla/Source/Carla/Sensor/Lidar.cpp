@@ -8,8 +8,8 @@
 #include "Runtime/Engine/Classes/Kismet/KismetMathLibrary.h"
 #include "StaticMeshResources.h"
 
-ALidar::ALidar(const FObjectInitializer& ObjectInitializer) :
-  Super(ObjectInitializer)
+ALidar::ALidar(const FObjectInitializer& ObjectInitializer)
+  : Super(ObjectInitializer)
 {
   PrimaryActorTick.bCanEverTick = true;
 
@@ -23,8 +23,9 @@ ALidar::ALidar(const FObjectInitializer& ObjectInitializer) :
 
 void ALidar::Set(const ULidarDescription &LidarDescription)
 {
+  Super::Set(LidarDescription);
   Description = &LidarDescription;
-  LidarMeasurement = FLidarMeasurement(Description->Channels);
+  LidarMeasurement = FLidarMeasurement(GetId(), Description->Channels);
   CreateLasers();
 }
 

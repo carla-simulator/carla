@@ -34,7 +34,8 @@ class FLidarMeasurement {
   static_assert(sizeof(float) == sizeof(uint32), "Invalid float size");
 public:
 
-  explicit FLidarMeasurement(uint32 ChannelCount = 0u)
+  explicit FLidarMeasurement(uint32 SensorId = 0u, uint32 ChannelCount = 0u)
+    : SensorId(SensorId)
   {
     Header.AddDefaulted(2u + ChannelCount);
     Header[1] = ChannelCount;
@@ -42,8 +43,10 @@ public:
 
   FLidarMeasurement &operator=(FLidarMeasurement &&Other)
   {
+    SensorId = Other.SensorId;
     Header = std::move(Other.Header);
     Points = std::move(Other.Points);
+    Other.SensorId = 0u;
     return *this;
   }
 
@@ -73,10 +76,12 @@ public:
 
   FSensorDataView GetView() const
   {
-    return FSensorDataView(Header, Points);
+    return FSensorDataView(SensorId, Header, Points);
   }
 
 private:
+
+  uint32 SensorId;
 
   TArray<uint32> Header;
 
