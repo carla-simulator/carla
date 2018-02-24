@@ -19,6 +19,13 @@ class CARLA_API USensorDescription : public UObject
 
 public:
 
+  USensorDescription(const FObjectInitializer &ObjectInitializer);
+
+  uint32 GetId() const
+  {
+    return Id;
+  }
+
   virtual void AcceptVisitor(ISensorDescriptionVisitor &Visitor) const;
 
   virtual void Load(const FIniFile &Config, const FString &Section);
@@ -32,9 +39,16 @@ public:
 
   virtual void Log() const;
 
+private:
+
+  UPROPERTY(Category = "Sensor Description", VisibleAnywhere)
+  uint32 Id;
+
+public:
+
   /** Display name of the sensor. */
   UPROPERTY(Category = "Sensor Description", EditDefaultsOnly)
-  FName Name;
+  FString Name;
 
   /** Sensor type. */
   UPROPERTY(Category = "Sensor Description", EditDefaultsOnly)

@@ -7,15 +7,9 @@
 #include "Carla.h"
 #include "Sensor.h"
 
-static uint32 GetNextSensorId()
-{
-  static uint32 COUNT = 0u;
-  return ++COUNT;
-}
-
 ASensor::ASensor(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer),
-    Id(GetNextSensorId()) {}
+    Id(0u) {}
 
 void ASensor::AttachToActor(AActor *Actor)
 {

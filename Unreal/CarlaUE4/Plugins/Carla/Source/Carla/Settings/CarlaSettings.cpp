@@ -54,7 +54,7 @@ static void LoadSensorFromConfig(
     const FIniFile &ConfigFile,
     USensorDescription &Sensor)
 {
-  ForEachSectionInName(Sensor.Name.ToString(), [&](const auto &Section){
+  ForEachSectionInName(Sensor.Name, [&](const auto &Section){
     Sensor.Load(ConfigFile, Section);
   });
 }
@@ -63,7 +63,7 @@ template <typename T>
 static T *MakeSensor(UObject *Parent, const FString &Name, const FString &Type)
 {
   auto *Sensor = NewObject<T>(Parent);
-  Sensor->Name = FName(*Name);
+  Sensor->Name = Name;
   Sensor->Type = Type;
   return Sensor;
 }

@@ -18,7 +18,7 @@ template <typename T, typename D>
 static T *SpawnSensor(const D &Description, UWorld &World)
 {
   FActorSpawnParameters Params;
-  Params.Name = Description.Name;
+  Params.Name = FName(*Description.Name);
   return World.SpawnActor<T>(Description.Position, Description.Rotation, Params);
 }
 

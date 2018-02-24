@@ -9,6 +9,7 @@
 #include "GameFramework/Actor.h"
 
 #include "Sensor/SensorDataSink.h"
+#include "Settings/SensorDescription.h"
 
 #include "Sensor.generated.h"
 
@@ -35,6 +36,11 @@ public:
   }
 
 protected:
+
+  void Set(const USensorDescription &SensorDescription)
+  {
+    Id = SensorDescription.GetId();
+  }
 
   void WriteSensorData(const FSensorDataView &SensorData)
   {
