@@ -9,7 +9,9 @@
 #include "carla/NonCopyable.h"
 #include "carla/server/AsyncServer.h"
 #include "carla/server/CarlaEncoder.h"
+#include "carla/server/CarlaSceneDescription.h"
 #include "carla/server/EncoderServer.h"
+#include "carla/server/RequestNewEpisode.h"
 #include "carla/server/TCPServer.h"
 
 namespace carla {
@@ -58,7 +60,7 @@ namespace server {
       explicit Protocol(time_duration timeout);
 
       ReadTask<RequestNewEpisode> request_new_episode;
-      WriteTask<carla_scene_description> scene_description;
+      WriteTask<CarlaSceneDescription> scene_description;
       ReadTask<carla_episode_start> episode_start;
       WriteTask<carla_episode_ready> episode_ready;
     };

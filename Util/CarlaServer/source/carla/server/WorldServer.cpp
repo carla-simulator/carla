@@ -39,10 +39,10 @@ namespace server {
     return reading.error_code;
   }
 
-  template <typename T>
-  static std::future<error_code> Write(WriteTask<T> &task, const T &value) {
+  template <typename T, typename E = typename std::remove_reference<T>::type>
+  static std::future<error_code> Write(WriteTask<E> &task, T &&value) {
     DEBUG_ASSERT(task.valid());
-    task.set_message(value);
+    task.set_message(std::forward<T>(value));
     return task.ReleaseResult();
   }
 
@@ -91,11 +91,13 @@ namespace server {
 
   std::future<error_code> WorldServer::Write(
       const carla_scene_description &scene_description) {
+    /// @todo Here sensor names are not copied and will be invalidated.
     decltype(_sensor_definitions) defs(
         scene_description.sensors,
         scene_description.sensors + scene_description.number_of_sensors);
     _sensor_definitions = std::move(defs);
-    return carla::server::Write(_protocol.scene_description, scene_description);
+    CarlaSceneDescription scene(_encoder.Encode(scene_description));
+    return carla::server::Write(_protocol.scene_description, std::move(scene));
   }
 
   error_code WorldServer::TryRead(
