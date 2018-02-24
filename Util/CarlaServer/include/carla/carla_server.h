@@ -71,11 +71,9 @@ extern "C" {
   /* -- sensors ------------------------------------------------------------- */
   /* ======================================================================== */
 
-#define CARLA_SERVER_CAMERA_NONE                   100u
-#define CARLA_SERVER_CAMERA_SCENE_FINAL            101u
-#define CARLA_SERVER_CAMERA_DEPTH                  102u
-#define CARLA_SERVER_CAMERA_SEMANTIC_SEGMENTATION  103u
-#define CARLA_SERVER_LIDAR_RAY_TRACE               104u
+#define CARLA_SERVER_SENSOR_UNKNOWN                  0u
+#define CARLA_SERVER_CAMERA                        101u
+#define CARLA_SERVER_LIDAR_RAY_TRACE               102u
 
   struct carla_sensor_definition {
     /** Id of the sensor. */

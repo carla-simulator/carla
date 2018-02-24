@@ -58,12 +58,9 @@ namespace server {
     lhs->set_name(std::string(rhs.name));
     lhs->set_type([&](){
       switch (rhs.type) {
-        case CARLA_SERVER_CAMERA_NONE:                  return cs::Sensor::CAMERA_NONE;
-        case CARLA_SERVER_CAMERA_SCENE_FINAL:           return cs::Sensor::CAMERA_SCENE_FINAL;
-        case CARLA_SERVER_CAMERA_DEPTH:                 return cs::Sensor::CAMERA_DEPTH;
-        case CARLA_SERVER_CAMERA_SEMANTIC_SEGMENTATION: return cs::Sensor::CAMERA_SEMANTIC_SEGMENTATION;
-        case CARLA_SERVER_LIDAR_RAY_TRACE:              return cs::Sensor::LIDAR_RAY_TRACE;
-        default:                                        return cs::Sensor::UNKNOWN;
+        case CARLA_SERVER_CAMERA:             return cs::Sensor::CAMERA;
+        case CARLA_SERVER_LIDAR_RAY_TRACE:    return cs::Sensor::LIDAR_RAY_TRACE;
+        default:                              return cs::Sensor::UNKNOWN;
       }
     }());
   }

@@ -74,7 +74,7 @@ static USensorDescription *MakeSensor(
     const FString &SensorName)
 {
   const auto SensorType = GetSensorType(ConfigFile, SensorName);
-  if (SensorType.StartsWith(TEXT("CAMERA_"), ESearchCase::IgnoreCase)) {
+  if (SensorType == TEXT("CAMERA")) {
     return MakeSensor<UCameraDescription>(Parent, SensorName, SensorType);
   } else if (SensorType == TEXT("LIDAR_RAY_TRACE")) {
     return MakeSensor<ULidarDescription>(Parent, SensorName, SensorType);

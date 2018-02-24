@@ -16,3 +16,19 @@ FString PostProcessEffect::ToString(EPostProcessEffect PostProcessEffect)
     return FString("Invalid");
   return ptr->GetNameStringByIndex(static_cast<int32>(PostProcessEffect));
 }
+
+EPostProcessEffect PostProcessEffect::FromString(const FString &String)
+{
+  if (String == "None") {
+    return EPostProcessEffect::None;
+  } else if (String == "SceneFinal") {
+    return EPostProcessEffect::SceneFinal;
+  } else if (String == "Depth") {
+    return EPostProcessEffect::Depth;
+  } else if (String == "SemanticSegmentation") {
+    return EPostProcessEffect::SemanticSegmentation;
+  } else {
+    UE_LOG(LogCarla, Error, TEXT("Invalid post-processing effect \"%s\""), *String);
+    return EPostProcessEffect::INVALID;
+  }
+}
