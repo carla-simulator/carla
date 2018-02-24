@@ -17,7 +17,7 @@ void UCameraDescription::Load(const FIniFile &Config, const FString &Section)
   PostProcessEffect = PostProcessEffect::FromString(PostProcessing);
   Config.GetInt(*Section, TEXT("ImageSizeX"), ImageSizeX);
   Config.GetInt(*Section, TEXT("ImageSizeY"), ImageSizeY);
-  Config.GetFloat(*Section, TEXT("CameraFOV"), FOVAngle);
+  Config.GetFloat(*Section, TEXT("FOV"), FOVAngle);
 }
 
 void UCameraDescription::Validate()

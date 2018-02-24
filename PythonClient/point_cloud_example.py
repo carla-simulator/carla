@@ -51,17 +51,13 @@ def run_carla_client(host, port, far):
             WeatherId=random.choice([1, 3, 7, 8, 14]))
         settings.randomize_seeds()
 
-        camera1 = Camera(
-            'CameraDepth', PostProcessing='Depth', CameraFOV=fov
-        )
+        camera1 = Camera('CameraDepth', PostProcessing='Depth', FOV=fov)
         camera1.set_image_size(*image_size)
         camera1.set_position(*camera_local_pos)
         camera1.set_rotation(*camera_local_rotation)
         settings.add_sensor(camera1)
 
-        camera2 = Camera(
-            'CameraRGB', PostProcessing='SceneFinal', CameraFOV=fov
-        )
+        camera2 = Camera('CameraRGB', PostProcessing='SceneFinal', FOV=fov)
         camera2.set_image_size(*image_size)
         camera2.set_position(*camera_local_pos)
         camera2.set_rotation(*camera_local_rotation)
