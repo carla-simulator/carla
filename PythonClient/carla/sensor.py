@@ -7,15 +7,15 @@
 """CARLA sensors."""
 
 
-import json
 import os
+
+from collections import namedtuple
 
 try:
     import numpy
 except ImportError:
     raise RuntimeError('cannot import numpy, make sure numpy package is installed.')
 
-from collections import namedtuple
 from .transform import Transform, Translation, Rotation, Scale
 
 # ==============================================================================
