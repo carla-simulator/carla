@@ -39,11 +39,8 @@ message Transform {
 message Sensor {
   enum Type {
     UNKNOWN = 0;
-    CAMERA_NONE = 1;
-    CAMERA_SCENE_FINAL = 2;
-    CAMERA_DEPTH = 3;
-    CAMERA_SEMANTIC_SEGMENTATION = 4;
-    LIDAR_RAY_TRACE = 5;
+    CAMERA = 1;
+    LIDAR_RAY_TRACE = 2;
   }
 
   fixed32 id = 1;

@@ -28,6 +28,8 @@ public:
 
   static FString ToString(EPostProcessEffect PostProcessEffect);
 
+  static EPostProcessEffect FromString(const FString &String);
+
   static constexpr uint_type ToUInt(EPostProcessEffect PostProcessEffect)
   {
     return static_cast<uint_type>(PostProcessEffect);

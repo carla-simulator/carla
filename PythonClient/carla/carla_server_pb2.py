@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='carla_server.proto',
   package='carla_server',
   syntax='proto3',
-  serialized_pb=_b('\n\x12\x63\x61rla_server.proto\x12\x0c\x63\x61rla_server\"+\n\x08Vector3D\x12\t\n\x01x\x18\x01 \x01(\x02\x12\t\n\x01y\x18\x02 \x01(\x02\x12\t\n\x01z\x18\x03 \x01(\x02\"6\n\nRotation3D\x12\r\n\x05pitch\x18\x01 \x01(\x02\x12\x0b\n\x03yaw\x18\x02 \x01(\x02\x12\x0c\n\x04roll\x18\x03 \x01(\x02\"\x92\x01\n\tTransform\x12(\n\x08location\x18\x01 \x01(\x0b\x32\x16.carla_server.Vector3D\x12/\n\x0borientation\x18\x02 \x01(\x0b\x32\x16.carla_server.Vector3DB\x02\x18\x01\x12*\n\x08rotation\x18\x03 \x01(\x0b\x32\x18.carla_server.Rotation3D\"\xd3\x01\n\x06Sensor\x12\n\n\x02id\x18\x01 \x01(\x07\x12\'\n\x04type\x18\x02 \x01(\x0e\x32\x19.carla_server.Sensor.Type\x12\x0c\n\x04name\x18\x03 \x01(\t\"\x85\x01\n\x04Type\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x0f\n\x0b\x43\x41MERA_NONE\x10\x01\x12\x16\n\x12\x43\x41MERA_SCENE_FINAL\x10\x02\x12\x10\n\x0c\x43\x41MERA_DEPTH\x10\x03\x12 \n\x1c\x43\x41MERA_SEMANTIC_SEGMENTATION\x10\x04\x12\x13\n\x0fLIDAR_RAY_TRACE\x10\x05\"x\n\x07Vehicle\x12*\n\ttransform\x18\x01 \x01(\x0b\x32\x17.carla_server.Transform\x12*\n\nbox_extent\x18\x02 \x01(\x0b\x32\x16.carla_server.Vector3D\x12\x15\n\rforward_speed\x18\x03 \x01(\x02\"{\n\nPedestrian\x12*\n\ttransform\x18\x01 \x01(\x0b\x32\x17.carla_server.Transform\x12*\n\nbox_extent\x18\x02 \x01(\x0b\x32\x16.carla_server.Vector3D\x12\x15\n\rforward_speed\x18\x03 \x01(\x02\"\x94\x01\n\x0cTrafficLight\x12*\n\ttransform\x18\x01 \x01(\x0b\x32\x17.carla_server.Transform\x12/\n\x05state\x18\x02 \x01(\x0e\x32 .carla_server.TrafficLight.State\"\'\n\x05State\x12\t\n\x05GREEN\x10\x00\x12\n\n\x06YELLOW\x10\x01\x12\x07\n\x03RED\x10\x02\"Q\n\x0eSpeedLimitSign\x12*\n\ttransform\x18\x01 \x01(\x0b\x32\x17.carla_server.Transform\x12\x13\n\x0bspeed_limit\x18\x02 \x01(\x02\"\xe5\x01\n\x05\x41gent\x12\n\n\x02id\x18\x01 \x01(\x07\x12(\n\x07vehicle\x18\x02 \x01(\x0b\x32\x15.carla_server.VehicleH\x00\x12.\n\npedestrian\x18\x03 \x01(\x0b\x32\x18.carla_server.PedestrianH\x00\x12\x33\n\rtraffic_light\x18\x04 \x01(\x0b\x32\x1a.carla_server.TrafficLightH\x00\x12\x38\n\x10speed_limit_sign\x18\x05 \x01(\x0b\x32\x1c.carla_server.SpeedLimitSignH\x00\x42\x07\n\x05\x61gent\"%\n\x11RequestNewEpisode\x12\x10\n\x08ini_file\x18\x01 \x01(\t\"n\n\x10SceneDescription\x12\x33\n\x12player_start_spots\x18\x01 \x03(\x0b\x32\x17.carla_server.Transform\x12%\n\x07sensors\x18\x02 \x03(\x0b\x32\x14.carla_server.Sensor\"/\n\x0c\x45pisodeStart\x12\x1f\n\x17player_start_spot_index\x18\x01 \x01(\r\"\x1d\n\x0c\x45pisodeReady\x12\r\n\x05ready\x18\x01 \x01(\x08\"^\n\x07\x43ontrol\x12\r\n\x05steer\x18\x01 \x01(\x02\x12\x10\n\x08throttle\x18\x02 \x01(\x02\x12\r\n\x05\x62rake\x18\x03 \x01(\x02\x12\x12\n\nhand_brake\x18\x04 \x01(\x08\x12\x0f\n\x07reverse\x18\x05 \x01(\x08\"\x8a\x04\n\x0cMeasurements\x12\x1a\n\x12platform_timestamp\x18\x01 \x01(\r\x12\x16\n\x0egame_timestamp\x18\x02 \x01(\r\x12J\n\x13player_measurements\x18\x03 \x01(\x0b\x32-.carla_server.Measurements.PlayerMeasurements\x12.\n\x11non_player_agents\x18\x04 \x03(\x0b\x32\x13.carla_server.Agent\x1a\xc9\x02\n\x12PlayerMeasurements\x12*\n\ttransform\x18\x01 \x01(\x0b\x32\x17.carla_server.Transform\x12,\n\x0c\x61\x63\x63\x65leration\x18\x03 \x01(\x0b\x32\x16.carla_server.Vector3D\x12\x15\n\rforward_speed\x18\x04 \x01(\x02\x12\x1a\n\x12\x63ollision_vehicles\x18\x05 \x01(\x02\x12\x1d\n\x15\x63ollision_pedestrians\x18\x06 \x01(\x02\x12\x17\n\x0f\x63ollision_other\x18\x07 \x01(\x02\x12\x1e\n\x16intersection_otherlane\x18\x08 \x01(\x02\x12\x1c\n\x14intersection_offroad\x18\t \x01(\x02\x12\x30\n\x11\x61utopilot_control\x18\n \x01(\x0b\x32\x15.carla_server.ControlB\x03\xf8\x01\x01\x62\x06proto3')
+  serialized_pb=_b('\n\x12\x63\x61rla_server.proto\x12\x0c\x63\x61rla_server\"+\n\x08Vector3D\x12\t\n\x01x\x18\x01 \x01(\x02\x12\t\n\x01y\x18\x02 \x01(\x02\x12\t\n\x01z\x18\x03 \x01(\x02\"6\n\nRotation3D\x12\r\n\x05pitch\x18\x01 \x01(\x02\x12\x0b\n\x03yaw\x18\x02 \x01(\x02\x12\x0c\n\x04roll\x18\x03 \x01(\x02\"\x92\x01\n\tTransform\x12(\n\x08location\x18\x01 \x01(\x0b\x32\x16.carla_server.Vector3D\x12/\n\x0borientation\x18\x02 \x01(\x0b\x32\x16.carla_server.Vector3DB\x02\x18\x01\x12*\n\x08rotation\x18\x03 \x01(\x0b\x32\x18.carla_server.Rotation3D\"\x81\x01\n\x06Sensor\x12\n\n\x02id\x18\x01 \x01(\x07\x12\'\n\x04type\x18\x02 \x01(\x0e\x32\x19.carla_server.Sensor.Type\x12\x0c\n\x04name\x18\x03 \x01(\t\"4\n\x04Type\x12\x0b\n\x07UNKNOWN\x10\x00\x12\n\n\x06\x43\x41MERA\x10\x01\x12\x13\n\x0fLIDAR_RAY_TRACE\x10\x02\"x\n\x07Vehicle\x12*\n\ttransform\x18\x01 \x01(\x0b\x32\x17.carla_server.Transform\x12*\n\nbox_extent\x18\x02 \x01(\x0b\x32\x16.carla_server.Vector3D\x12\x15\n\rforward_speed\x18\x03 \x01(\x02\"{\n\nPedestrian\x12*\n\ttransform\x18\x01 \x01(\x0b\x32\x17.carla_server.Transform\x12*\n\nbox_extent\x18\x02 \x01(\x0b\x32\x16.carla_server.Vector3D\x12\x15\n\rforward_speed\x18\x03 \x01(\x02\"\x94\x01\n\x0cTrafficLight\x12*\n\ttransform\x18\x01 \x01(\x0b\x32\x17.carla_server.Transform\x12/\n\x05state\x18\x02 \x01(\x0e\x32 .carla_server.TrafficLight.State\"\'\n\x05State\x12\t\n\x05GREEN\x10\x00\x12\n\n\x06YELLOW\x10\x01\x12\x07\n\x03RED\x10\x02\"Q\n\x0eSpeedLimitSign\x12*\n\ttransform\x18\x01 \x01(\x0b\x32\x17.carla_server.Transform\x12\x13\n\x0bspeed_limit\x18\x02 \x01(\x02\"\xe5\x01\n\x05\x41gent\x12\n\n\x02id\x18\x01 \x01(\x07\x12(\n\x07vehicle\x18\x02 \x01(\x0b\x32\x15.carla_server.VehicleH\x00\x12.\n\npedestrian\x18\x03 \x01(\x0b\x32\x18.carla_server.PedestrianH\x00\x12\x33\n\rtraffic_light\x18\x04 \x01(\x0b\x32\x1a.carla_server.TrafficLightH\x00\x12\x38\n\x10speed_limit_sign\x18\x05 \x01(\x0b\x32\x1c.carla_server.SpeedLimitSignH\x00\x42\x07\n\x05\x61gent\"%\n\x11RequestNewEpisode\x12\x10\n\x08ini_file\x18\x01 \x01(\t\"n\n\x10SceneDescription\x12\x33\n\x12player_start_spots\x18\x01 \x03(\x0b\x32\x17.carla_server.Transform\x12%\n\x07sensors\x18\x02 \x03(\x0b\x32\x14.carla_server.Sensor\"/\n\x0c\x45pisodeStart\x12\x1f\n\x17player_start_spot_index\x18\x01 \x01(\r\"\x1d\n\x0c\x45pisodeReady\x12\r\n\x05ready\x18\x01 \x01(\x08\"^\n\x07\x43ontrol\x12\r\n\x05steer\x18\x01 \x01(\x02\x12\x10\n\x08throttle\x18\x02 \x01(\x02\x12\r\n\x05\x62rake\x18\x03 \x01(\x02\x12\x12\n\nhand_brake\x18\x04 \x01(\x08\x12\x0f\n\x07reverse\x18\x05 \x01(\x08\"\x8a\x04\n\x0cMeasurements\x12\x1a\n\x12platform_timestamp\x18\x01 \x01(\r\x12\x16\n\x0egame_timestamp\x18\x02 \x01(\r\x12J\n\x13player_measurements\x18\x03 \x01(\x0b\x32-.carla_server.Measurements.PlayerMeasurements\x12.\n\x11non_player_agents\x18\x04 \x03(\x0b\x32\x13.carla_server.Agent\x1a\xc9\x02\n\x12PlayerMeasurements\x12*\n\ttransform\x18\x01 \x01(\x0b\x32\x17.carla_server.Transform\x12,\n\x0c\x61\x63\x63\x65leration\x18\x03 \x01(\x0b\x32\x16.carla_server.Vector3D\x12\x15\n\rforward_speed\x18\x04 \x01(\x02\x12\x1a\n\x12\x63ollision_vehicles\x18\x05 \x01(\x02\x12\x1d\n\x15\x63ollision_pedestrians\x18\x06 \x01(\x02\x12\x17\n\x0f\x63ollision_other\x18\x07 \x01(\x02\x12\x1e\n\x16intersection_otherlane\x18\x08 \x01(\x02\x12\x1c\n\x14intersection_offroad\x18\t \x01(\x02\x12\x30\n\x11\x61utopilot_control\x18\n \x01(\x0b\x32\x15.carla_server.ControlB\x03\xf8\x01\x01\x62\x06proto3')
 )
 
 
@@ -35,30 +35,18 @@ _SENSOR_TYPE = _descriptor.EnumDescriptor(
       options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='CAMERA_NONE', index=1, number=1,
+      name='CAMERA', index=1, number=1,
       options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='CAMERA_SCENE_FINAL', index=2, number=2,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='CAMERA_DEPTH', index=3, number=3,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='CAMERA_SEMANTIC_SEGMENTATION', index=4, number=4,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='LIDAR_RAY_TRACE', index=5, number=5,
+      name='LIDAR_RAY_TRACE', index=2, number=2,
       options=None,
       type=None),
   ],
   containing_type=None,
   options=None,
-  serialized_start=365,
-  serialized_end=498,
+  serialized_start=364,
+  serialized_end=416,
 )
 _sym_db.RegisterEnumDescriptor(_SENSOR_TYPE)
 
@@ -83,8 +71,8 @@ _TRAFFICLIGHT_STATE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=857,
-  serialized_end=896,
+  serialized_start=775,
+  serialized_end=814,
 )
 _sym_db.RegisterEnumDescriptor(_TRAFFICLIGHT_STATE)
 
@@ -266,7 +254,7 @@ _SENSOR = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=287,
-  serialized_end=498,
+  serialized_end=416,
 )
 
 
@@ -310,8 +298,8 @@ _VEHICLE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=500,
-  serialized_end=620,
+  serialized_start=418,
+  serialized_end=538,
 )
 
 
@@ -355,8 +343,8 @@ _PEDESTRIAN = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=622,
-  serialized_end=745,
+  serialized_start=540,
+  serialized_end=663,
 )
 
 
@@ -394,8 +382,8 @@ _TRAFFICLIGHT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=748,
-  serialized_end=896,
+  serialized_start=666,
+  serialized_end=814,
 )
 
 
@@ -432,8 +420,8 @@ _SPEEDLIMITSIGN = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=898,
-  serialized_end=979,
+  serialized_start=816,
+  serialized_end=897,
 )
 
 
@@ -494,8 +482,8 @@ _AGENT = _descriptor.Descriptor(
       name='agent', full_name='carla_server.Agent.agent',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=982,
-  serialized_end=1211,
+  serialized_start=900,
+  serialized_end=1129,
 )
 
 
@@ -525,8 +513,8 @@ _REQUESTNEWEPISODE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1213,
-  serialized_end=1250,
+  serialized_start=1131,
+  serialized_end=1168,
 )
 
 
@@ -563,8 +551,8 @@ _SCENEDESCRIPTION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1252,
-  serialized_end=1362,
+  serialized_start=1170,
+  serialized_end=1280,
 )
 
 
@@ -594,8 +582,8 @@ _EPISODESTART = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1364,
-  serialized_end=1411,
+  serialized_start=1282,
+  serialized_end=1329,
 )
 
 
@@ -625,8 +613,8 @@ _EPISODEREADY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1413,
-  serialized_end=1442,
+  serialized_start=1331,
+  serialized_end=1360,
 )
 
 
@@ -684,8 +672,8 @@ _CONTROL = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1444,
-  serialized_end=1538,
+  serialized_start=1362,
+  serialized_end=1456,
 )
 
 
@@ -771,8 +759,8 @@ _MEASUREMENTS_PLAYERMEASUREMENTS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1734,
-  serialized_end=2063,
+  serialized_start=1652,
+  serialized_end=1981,
 )
 
 _MEASUREMENTS = _descriptor.Descriptor(
@@ -822,8 +810,8 @@ _MEASUREMENTS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1541,
-  serialized_end=2063,
+  serialized_start=1459,
+  serialized_end=1981,
 )
 
 _TRANSFORM.fields_by_name['location'].message_type = _VECTOR3D
