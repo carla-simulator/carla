@@ -22,11 +22,9 @@ class CARLA_API UAgentComponent : public USceneComponent
 
 public:
 
-  UAgentComponent(const FObjectInitializer &ObjectInitializer);
-
   uint32 GetId() const
   {
-    return Id;
+    return GetTypeHash(this);
   }
 
   virtual void AcceptVisitor(IAgentComponentVisitor &Visitor) const;
@@ -36,9 +34,4 @@ protected:
   virtual void BeginPlay() override;
 
   virtual void EndPlay(EEndPlayReason::Type EndPlayReason) override;
-
-private:
-
-  UPROPERTY(VisibleAnywhere)
-  uint32 Id;
 };

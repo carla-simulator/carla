@@ -196,12 +196,14 @@ void FCarlaEncoder::Visit(const UTrafficSignAgentComponent &Agent)
 void FCarlaEncoder::Visit(const UVehicleAgentComponent &Agent)
 {
   auto &Vehicle = Agent.GetVehicle();
+  Data.type = CARLA_SERVER_AGENT_VEHICLE;
   Data.forward_speed = Vehicle.GetVehicleForwardSpeed();
   ::Encode(Vehicle.GetVehicleBoundsExtent(), Data.box_extent);
 }
 
 void FCarlaEncoder::Visit(const UWalkerAgentComponent &Agent)
 {
+  Data.type = CARLA_SERVER_AGENT_PEDESTRIAN;
   Data.forward_speed = Agent.GetForwardSpeed();
   ::Encode(Agent.GetBoundingBoxExtent(), Data.box_extent);
 }

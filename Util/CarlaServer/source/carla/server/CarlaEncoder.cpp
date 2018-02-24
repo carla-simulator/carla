@@ -118,6 +118,8 @@ namespace server {
         return SetTrafficLight(lhs->mutable_traffic_light(), rhs, cs::TrafficLight::YELLOW);
       case CARLA_SERVER_AGENT_TRAFFICLIGHT_RED:
         return SetTrafficLight(lhs->mutable_traffic_light(), rhs, cs::TrafficLight::RED);
+      default:
+        log_error("invalid agent type");
     }
   }
 
