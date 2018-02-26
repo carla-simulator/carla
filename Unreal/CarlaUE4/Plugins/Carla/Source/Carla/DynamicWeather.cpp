@@ -21,7 +21,7 @@ static FString GetIniFileName(const FString &MapName = TEXT(""))
 
 static bool GetWeatherIniFilePath(const FString &FileName, FString &FilePath)
 {
-  FilePath = FPaths::Combine(FPaths::GameConfigDir(), FileName);
+  FilePath = FPaths::Combine(FPaths::ProjectConfigDir(), FileName);
   const bool bFileExists = FPaths::FileExists(FilePath);
   if (!bFileExists) {
     UE_LOG(LogCarla, Warning, TEXT("\"%s\" not found"), *FilePath);
