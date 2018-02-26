@@ -131,7 +131,8 @@ void ACarlaGameModeBase::BeginPlay()
   Super::BeginPlay();
 
   const auto &CarlaSettings = GameInstance->GetCarlaSettings();
-
+  CarlaSettings.ApplyQualitySettingsLevelPostRestart();
+  
   // Setup semantic segmentation if necessary.
   if (CarlaSettings.bSemanticSegmentationEnabled) {
     TagActorsForSemanticSegmentation();

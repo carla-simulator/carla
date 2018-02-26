@@ -48,9 +48,19 @@ class CARLA_API UCarlaSettings : public UObject
   GENERATED_BODY()
 
 public:
-  /** Sets the new quality settings level and make changes in the game related to it. Returns the reuslt of the operation */
+  
+  /** 
+   * Sets the new quality settings level and make changes in the game related to it. 
+   * Returns the result of the operation. 
+   * @note This will not apply the quality settings. Use ApplyQualitySettings functions instead
+   * @param newDefaultLevel Store the new quality 
+   */
   bool SetQualitySettingsLevel(EQualitySettingsLevel newDefaultLevel);
-
+  /** @return current quality settings level (could not be applied yet) */
+  EQualitySettingsLevel GetQualitySettingsLevel() const { return DefaultQualitySettingsLevel; }
+  /** @todo move to class */
+  void ApplyQualitySettingsLevelPostRestart() const;
+  void ApplyQualitySettingsLevelPreRestart() const{}
   /** Load the settings based on the command-line arguments and the INI file if provided. */
   void LoadSettings();
 
@@ -164,12 +174,12 @@ public:
   /// @name Quality Settings
   // ===========================================================================
   /// @{
-public:
+private:
   /** Quality Settings level. */
-  UPROPERTY(Category = "Quality Settings", VisibleAnywhere)
+  UPROPERTY(Category = "Quality Settings", VisibleAnywhere, meta =(AllowPrivateAccess="true"))
   EQualitySettingsLevel DefaultQualitySettingsLevel = EQualitySettingsLevel::None;
 
-
+ public:
   //UPROPERTY(Category = "Quality Settings", EditAnywhere, config)
   //TArray<UMaterial*> RoadMaterials;
 
