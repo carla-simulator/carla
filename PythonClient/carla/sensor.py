@@ -16,10 +16,13 @@ try:
 except ImportError:
     raise RuntimeError('cannot import numpy, make sure numpy package is installed.')
 
+from . import image_converter
+
 from .transform import Transform, Translation, Rotation, Scale
 
+
 # ==============================================================================
-# -- Helpers -------------------------------------------------------------
+# -- Helpers -------------------------------------------------------------------
 # ==============================================================================
 
 
@@ -32,7 +35,7 @@ Point.__new__.__defaults__ = (0.0, 0.0, 0.0, None)
 
 
 # ==============================================================================
-# -- Sensor --------------------------------------------------------------
+# -- Sensor --------------------------------------------------------------------
 # ==============================================================================
 
 
@@ -44,12 +47,12 @@ class Sensor(object):
     def __init__(self, name, sensor_type):
         self.SensorName = name
         self.SensorType = sensor_type
-        self.PositionX = 140
-        self.PositionY = 0
-        self.PositionZ = 140
-        self.RotationPitch = 0
-        self.RotationRoll = 0
-        self.RotationYaw = 0
+        self.PositionX = 140.0
+        self.PositionY = 0.0
+        self.PositionZ = 140.0
+        self.RotationPitch = 0.0
+        self.RotationRoll = 0.0
+        self.RotationYaw = 0.0
 
     def set(self, **kwargs):
         for key, value in kwargs.items():
@@ -96,9 +99,9 @@ class Camera(Sensor):
     def __init__(self, name, **kwargs):
         super(Camera, self).__init__(name, sensor_type="CAMERA")
         self.PostProcessing = 'SceneFinal'
-        self.ImageSizeX = 800
-        self.ImageSizeY = 600
-        self.FOV = 90
+        self.ImageSizeX = 720
+        self.ImageSizeY = 512
+        self.FOV = 90.0
         self.set(**kwargs)
 
     def set_image_size(self, pixels_x, pixels_y):
@@ -116,19 +119,18 @@ class Lidar(Sensor):
     def __init__(self, name, **kwargs):
         super(Lidar, self).__init__(name, sensor_type="LIDAR_RAY_TRACE")
         self.Channels = 32
-        self.Range = 5000
-        self.PointsPerSecond = 100000
-        self.RotationFrequency = 10
-        self.UpperFovLimit = 10
-        self.LowerFovLimit = -30
+        self.Range = 5000.0
+        self.PointsPerSecond = 56000
+        self.RotationFrequency = 10.0
+        self.UpperFovLimit = 10.0
+        self.LowerFovLimit = -30.0
         self.ShowDebugPoints = False
         self.set(**kwargs)
 
 
 # ==============================================================================
-# -- SensorData ----------------------------------------------------------
+# -- SensorData ----------------------------------------------------------------
 # ==============================================================================
-
 
 class SensorData(object):
     """Base class for sensor data returned from the server."""
@@ -154,8 +156,6 @@ class Image(SensorData):
         default format.
         """
         if self._converted_data is None:
-            from . import image_converter
-
             if self.type == 'Depth':
                 self._converted_data = image_converter.depth_to_array(self)
             elif self.type == 'SemanticSegmentation':
