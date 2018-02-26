@@ -58,6 +58,8 @@ function log {
 
 if [ ! -d "${UE4_ROOT}" ]; then
   fatal_error "UE4_ROOT is not defined, or points to a non-existant directory, please set this environment variable."
+else
+  echo "Using Unreal Engine at '$UE4_ROOT'"
 fi
 
 # ==============================================================================

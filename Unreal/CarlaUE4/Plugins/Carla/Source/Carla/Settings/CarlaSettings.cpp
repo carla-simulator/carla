@@ -24,11 +24,13 @@
 // -- Static methods -----------------------------------------------------------
 // =============================================================================
 
+/// Call Callback for every subsection (from top to bottom) in SectionName.
+/// Subsections are separated by '/' character.
 template <typename T>
-static void ForEachSectionInName(const FString &SensorName, T &&Callback)
+static void ForEachSectionInName(const FString &SectionName, T &&Callback)
 {
   TArray<FString> SubSections;
-  SensorName.ParseIntoArray(SubSections, TEXT("/"), true);
+  SectionName.ParseIntoArray(SubSections, TEXT("/"), true);
   check(SubSections.Num() > 0);
   FString Section = S_CARLA_SENSOR;
   Callback(Section);
@@ -39,6 +41,8 @@ static void ForEachSectionInName(const FString &SensorName, T &&Callback)
   }
 }
 
+/// Recursively get sensor type from the ConfigFile for each subsection in
+/// SensorName.
 static FString GetSensorType(
     const FIniFile &ConfigFile,
     const FString &SensorName)
@@ -50,6 +54,8 @@ static FString GetSensorType(
   return SensorType;
 }
 
+/// Recursively load sensor settings from the ConfigFile for each subsection in
+/// SensorName.
 static void LoadSensorFromConfig(
     const FIniFile &ConfigFile,
     USensorDescription &Sensor)
