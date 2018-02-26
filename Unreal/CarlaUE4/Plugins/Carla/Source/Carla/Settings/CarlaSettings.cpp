@@ -118,9 +118,9 @@ static void LoadSettingsFromConfig(
   ConfigFile.GetString(S_CARLA_QUALITYSETTINGS, TEXT("DefaultLevel"), sDefaultLevel);
   if(!Settings.SetQualitySettingsLevel(FQualitySettings::FromString(sDefaultLevel)))
   {
-	  //ERROR! @TODO : fix settings
+	  ///apply pre-restart.... @todo
   }
-
+  
 
   // Sensors.
   FString Sensors;
@@ -179,14 +179,17 @@ bool UCarlaSettings::SetQualitySettingsLevel(EQualitySettingsLevel newDefaultLev
 		return false;
 	}
 
-	/*if(newDefaultLevel!=DefaultQualitySettingsLevel)
-	{
-		return true;
-	}*/
+	DefaultQualitySettingsLevel = newDefaultLevel;
+
+	return true;
+}
+
+void UCarlaSettings::ApplyQualitySettingsLevelPostRestart() const
+{
 	UWorld *world = GetWorld();
-	
+	if(!world) return ;
 	//set the quality settings now
-	switch(newDefaultLevel)
+	switch(DefaultQualitySettingsLevel)
 	{
 	  case EQualitySettingsLevel::Low: {//r.SSR.qualitylaunch commands to lower quality settings
 		world->Exec(world,TEXT("r.DefaultFeature.MotionBlur 0"));
@@ -248,34 +251,31 @@ bool UCarlaSettings::SetQualitySettingsLevel(EQualitySettingsLevel newDefaultLev
 				
 			}
 		}*/
-
-	    //iterate all lights, deactivate shadows
+		
+	    //iterate all directional lights, deactivate shadows
 		UGameplayStatics::GetAllActorsOfClass(world, ALight::StaticClass(), actors);
 		for(i=0;i<actors.Num();i++)
 		{
-			ALight *light = Cast<ALight>(actors[i]);
-			if(light)
+			//tweak directional lights
+			ADirectionalLight* directionallight = Cast<ADirectionalLight>(actors[i]);
+			if(directionallight)
 			{
-				//disable all lights shadows
-				light->SetCastShadows(false);
-
-				//tweak directional lights
-				ADirectionalLight* directionallight = Cast<ADirectionalLight>(light);
-				if(directionallight)
-				{
-					directionallight->SetLightFunctionFadeDistance(LowLightFadeDistance);
-				}
-
-				//disable point lights
-				APointLight* pointlight = Cast<APointLight>(light);
-				if(pointlight)
-				{
-					actors[i]->SetActorHiddenInGame(true);
-				}
+				directionallight->SetCastShadows(false);
+				directionallight->SetLightFunctionFadeDistance(LowLightFadeDistance);
+				continue;
 			}
-			
+			//disable point lights
+			/*
+			APointLight* pointlight = Cast<APointLight>(actors[i]);
+			if(pointlight)
+			{
+				actors[i]->SetActorHiddenInGame(true);
+			}
+			*/
+			//disable any other type of light
+			actors[i]->SetActorHiddenInGame(true);
 		}
-		
+
 	    //Set all the roads the low quality material
 		/*UGameplayStatics::GetAllActorsWithTag(world, FName("CARLA_ROAD"),actors);
 		for(i=0; i<actors.Num(); i++)
@@ -304,9 +304,6 @@ bool UCarlaSettings::SetQualitySettingsLevel(EQualitySettingsLevel newDefaultLev
 	  
 	  default: ;
 	}
-	DefaultQualitySettingsLevel = newDefaultLevel;
-
-	return true;
 }
 
 void UCarlaSettings::LoadSettings()
