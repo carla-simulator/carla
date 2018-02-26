@@ -9,6 +9,7 @@
 #include "Settings/SensorDescription.h"
 
 #include "Settings/PostProcessEffect.h"
+#include "Settings/WeatherDescription.h"
 
 #include "CameraDescription.generated.h"
 
@@ -33,6 +34,8 @@ public:
     return PostProcessEffect == EPostProcessEffect::SemanticSegmentation;
   }
 
+  virtual void AdjustToWeather(const FWeatherDescription &WeatherDescription) final;
+
   virtual void Log() const final;
 
   /** X size in pixels of the captured image. */
@@ -50,4 +53,12 @@ public:
   /** Camera field of view (in degrees). */
   UPROPERTY(Category = "Camera Description", EditDefaultsOnly, meta=(DisplayName = "Field of View", ClampMin = "0.001", ClampMax = "360.0"))
   float FOVAngle = 90.0f;
+
+  /** If disabled the camera default values will be used instead. */
+  UPROPERTY(Category = "Camera Description|Weather", EditDefaultsOnly)
+  bool bOverrideCameraPostProcessParameters = false;
+
+  /** Camera post-process parameters to be overriden depending on the weather. */
+  UPROPERTY(Category = "Camera Description|Weather", EditDefaultsOnly, meta=(EditCondition = "bOverrideCameraPostProcessParameters"))
+  FCameraPostProcessParameters CameraPostProcessParameters;
 };
