@@ -94,13 +94,6 @@ F.A.Q.
 If you run into problems, check our
 [FAQ](http://carla.readthedocs.io/en/latest/faq/).
 
-Jobs
-----
-
-We are currently looking for a new programmer to join our team
-
-  * [C++ (UE4) Programmer](https://drive.google.com/open?id=1Hx0eUgpXl95d4IL9meEGhJECgSRos1T1)
-
 License
 -------
 
