@@ -67,8 +67,8 @@ def run_carla_client(args):
                 images = [x for x in sensor_data.values() if isinstance(x, Image)]
 
                 logging.debug('received data of %d agents', len(measurements.non_player_agents))
-                assert len(images) == 1
-                assert (images[0].width, images[0].height) == (camera.ImageSizeX, camera.ImageSizeY)
+                if len(images) > 0:
+                    assert (images[0].width, images[0].height) == (camera.ImageSizeX, camera.ImageSizeY)
 
                 if args.images_to_disk:
                     images[0].save_to_disk(filename.format(episode, frame))
