@@ -14,7 +14,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogCarlaServer, Log, All);
 // Options to compile with extra debug log.
 #if WITH_EDITOR
 // #define CARLA_AI_VEHICLES_EXTRA_LOG
-#define CARLA_AI_WALKERS_EXTRA_LOG
+// #define CARLA_AI_WALKERS_EXTRA_LOG
 // #define CARLA_ROAD_GENERATOR_EXTRA_LOG
 // #define CARLA_SERVER_EXTRA_LOG
 // #define CARLA_TAGGER_EXTRA_LOG
@@ -22,9 +22,15 @@ DECLARE_LOG_CATEGORY_EXTERN(LogCarlaServer, Log, All);
 
 class FCarlaModule : public IModuleInterface
 {
+	void RegisterSettings();
+	void UnregisterSettings();
+	bool HandleSettingsSaved();
+
+
 public:
 
 	/** IModuleInterface implementation */
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
+	
 };

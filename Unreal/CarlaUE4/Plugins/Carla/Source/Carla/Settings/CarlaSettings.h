@@ -12,15 +12,44 @@
 
 #include "CarlaSettings.generated.h"
 
-class USensorDescription;
+UENUM(BlueprintType)
+enum class EQualitySettingsLevel : uint8
+{
+  None    UMETA(DisplayName = "Not set"),
+  Low     UMETA(DisplayName = "Low"),
+  Medium  UMETA(DisplayName = "Medium"),
+  High    UMETA(DisplayName = "High"),
+  Epic    UMETA(DisplayName = "Epic") ,
+	
+};
 
-/// Global settings for CARLA.
-UCLASS()
+class CARLA_API FQualitySettings 
+{
+public:
+ using uint_type = typename std::underlying_type<EQualitySettingsLevel>::type;
+ static EQualitySettingsLevel FromString(const FString &SQualitySettingsLevel);
+ static FString ToString(EQualitySettingsLevel QualitySettingsLevel);
+ static constexpr uint_type ToUInt(EQualitySettingsLevel quality_settings_level)
+ {
+   return static_cast<uint_type>(quality_settings_level);
+ }
+};
+
+class USensorDescription;
+class UMaterial;
+/** Global settings for CARLA.
+ * Setting object used to hold both config settings and editable ones in one place
+ * To ensure the settings are saved to the specified config file make sure to add
+ * props using the globalconfig or config meta.
+ */
+UCLASS(config = Game, defaultconfig)
 class CARLA_API UCarlaSettings : public UObject
 {
   GENERATED_BODY()
 
 public:
+  /** Sets the new quality settings level and make changes in the game related to it. Returns the reuslt of the operation */
+  bool SetQualitySettingsLevel(EQualitySettingsLevel newDefaultLevel);
 
   /** Load the settings based on the command-line arguments and the INI file if provided. */
   void LoadSettings();
@@ -64,7 +93,8 @@ private:
   UPROPERTY(Category = "CARLA Settings|Debug", VisibleAnywhere)
   FString CurrentFileName;
 
-  // ===========================================================================
+
+	// ===========================================================================
   /// @name CARLA Server
   // ===========================================================================
   /// @{
@@ -127,7 +157,29 @@ public:
   UPROPERTY(Category = "Level Settings", VisibleAnywhere)
   int32 SeedVehicles = 123456789;
 
+  
   /// @}
+
+  // ===========================================================================
+  /// @name Quality Settings
+  // ===========================================================================
+  /// @{
+public:
+  /** Quality Settings level. */
+  UPROPERTY(Category = "Quality Settings", VisibleAnywhere)
+  EQualitySettingsLevel DefaultQualitySettingsLevel = EQualitySettingsLevel::None;
+
+
+  //UPROPERTY(Category = "Quality Settings", EditAnywhere, config)
+  //TArray<UMaterial*> RoadMaterials;
+
+  //distances
+  UPROPERTY(Category = "Quality Settings/Low", EditAnywhere, config)
+  float LowLightFadeDistance;
+
+
+  /// @}
+
   // ===========================================================================
   /// @name Sensors
   // ===========================================================================
