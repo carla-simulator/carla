@@ -190,20 +190,20 @@ void ASceneCaptureCamera::SetTargetGamma(const float TargetGamma)
 
 void ASceneCaptureCamera::Set(const UCameraDescription &CameraDescription)
 {
-  /// @todo What to do with OverridePostProcessParameters?
-  // if (CameraDescription.OverridePostProcessParameters != nullptr) {
-  //   auto Override = *CameraDescription.OverridePostProcessParameters;
-  //   auto &PostProcessSettings = CaptureComponent2D->PostProcessSettings;
-  //   PostProcessSettings.bOverride_AutoExposureMethod = true;
-  //   PostProcessSettings.AutoExposureMethod = Override.AutoExposureMethod;
-  //   PostProcessSettings.bOverride_AutoExposureMinBrightness = true;
-  //   PostProcessSettings.AutoExposureMinBrightness = Override.AutoExposureMinBrightness;
-  //   PostProcessSettings.bOverride_AutoExposureMaxBrightness = true;
-  //   PostProcessSettings.AutoExposureMaxBrightness = Override.AutoExposureMaxBrightness;
-  //   PostProcessSettings.bOverride_AutoExposureBias = true;
-  //   PostProcessSettings.AutoExposureBias = Override.AutoExposureBias;
-  // }
   Super::Set(CameraDescription);
+
+  if (CameraDescription.bOverrideCameraPostProcessParameters) {
+    auto &Override = CameraDescription.CameraPostProcessParameters;
+    auto &PostProcessSettings = CaptureComponent2D->PostProcessSettings;
+    PostProcessSettings.bOverride_AutoExposureMethod = true;
+    PostProcessSettings.AutoExposureMethod = Override.AutoExposureMethod;
+    PostProcessSettings.bOverride_AutoExposureMinBrightness = true;
+    PostProcessSettings.AutoExposureMinBrightness = Override.AutoExposureMinBrightness;
+    PostProcessSettings.bOverride_AutoExposureMaxBrightness = true;
+    PostProcessSettings.AutoExposureMaxBrightness = Override.AutoExposureMaxBrightness;
+    PostProcessSettings.bOverride_AutoExposureBias = true;
+    PostProcessSettings.AutoExposureBias = Override.AutoExposureBias;
+  }
   SetImageSize(CameraDescription.ImageSizeX, CameraDescription.ImageSizeY);
   SetPostProcessEffect(CameraDescription.PostProcessEffect);
   SetFOVAngle(CameraDescription.FOVAngle);
