@@ -7,7 +7,10 @@
 #pragma once
 
 #include "Engine/GameInstance.h"
-#include "CarlaGameControllerBase.h"
+
+#include "Game/CarlaGameControllerBase.h"
+#include "Game/DataRouter.h"
+
 #include "CarlaGameInstance.generated.h"
 
 class UCarlaSettings;
@@ -29,7 +32,7 @@ public:
   void InitializeGameControllerIfNotPresent(
       const FMockGameControllerSettings &MockControllerSettings);
 
-  CarlaGameControllerBase &GetGameController()
+  ICarlaGameControllerBase &GetGameController()
   {
     check(GameController != nullptr);
     return *GameController;
@@ -54,10 +57,17 @@ public:
     return CarlaSettings;
   }
 
+  FDataRouter &GetDataRouter()
+  {
+    return DataRouter;
+  }
+
 private:
 
   UPROPERTY(Category = "CARLA Settings", EditAnywhere)
   UCarlaSettings *CarlaSettings;
 
-  TUniquePtr<CarlaGameControllerBase> GameController;
+  FDataRouter DataRouter;
+
+  TUniquePtr<ICarlaGameControllerBase> GameController;
 };

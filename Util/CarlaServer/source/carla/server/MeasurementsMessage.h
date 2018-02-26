@@ -6,37 +6,40 @@
 
 #pragma once
 
+#include "carla/Debug.h"
 #include "carla/NonCopyable.h"
 #include "carla/server/CarlaMeasurements.h"
 #include "carla/server/CarlaServerAPI.h"
-#include "carla/server/ImagesMessage.h"
 
 namespace carla {
 namespace server {
+
+  class SensorDataInbox;
 
   class MeasurementsMessage : private NonCopyable {
   public:
 
     void Write(
         const carla_measurements &measurements,
-        const_array_view<carla_image> images) {
+        SensorDataInbox &sensor_inbox) {
       _measurements.Write(measurements);
-      _images.Write(images);
+      _sensor_inbox = &sensor_inbox;
     }
 
     const carla_measurements &measurements() const {
       return _measurements.measurements();
     }
 
-    const_buffer images() const {
-      return _images.buffer();
+    SensorDataInbox &sensor_inbox() const {
+      DEBUG_ASSERT(_sensor_inbox != nullptr);
+      return *_sensor_inbox;
     }
 
   private:
 
     CarlaMeasurements _measurements;
 
-    ImagesMessage _images;
+    SensorDataInbox *_sensor_inbox = nullptr;
   };
 
 } // namespace server

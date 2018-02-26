@@ -11,7 +11,7 @@
 #include "RandomEngine.generated.h"
 
 UCLASS(Blueprintable,BlueprintType)
-class URandomEngine : public UObject
+class CARLA_API URandomEngine : public UObject
 {
   GENERATED_BODY()
 

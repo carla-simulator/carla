@@ -45,7 +45,7 @@ class CarlaSettings(object):
         self.SeedPedestrians = None
         self.randomize_weather()
         self.set(**kwargs)
-        self._cameras = []
+        self._sensors = []
 
     def set(self, **kwargs):
         for key, value in kwargs.items():
@@ -67,18 +67,20 @@ class CarlaSettings(object):
 
     def add_sensor(self, sensor):
         """Add a sensor to the player vehicle (see sensor.py)."""
-        if isinstance(sensor, carla_sensor.Camera):
-            self._cameras.append(sensor)
-        else:
+        if not isinstance(sensor, carla_sensor.Sensor):
             raise ValueError('Sensor not supported')
+        self._sensors.append(sensor)
 
     def __str__(self):
         """Converts this object to an INI formatted string."""
         ini = ConfigParser()
-        ini.optionxform=str
+        ini.optionxform = str
         S_SERVER = 'CARLA/Server'
         S_LEVEL = 'CARLA/LevelSettings'
-        S_CAPTURE = 'CARLA/SceneCapture'
+        S_SENSOR = 'CARLA/Sensor'
+
+        def get_attribs(obj):
+            return [a for a in dir(obj) if not a.startswith('_') and not callable(getattr(obj, a))]
 
         def add_section(section, obj, keys):
             for key in keys:
@@ -97,21 +99,12 @@ class CarlaSettings(object):
             'SeedVehicles',
             'SeedPedestrians'])
 
-        ini.add_section(S_CAPTURE)
-        ini.set(S_CAPTURE, 'Cameras', ','.join(c.CameraName for c in self._cameras))
+        ini.add_section(S_SENSOR)
+        ini.set(S_SENSOR, 'Sensors', ','.join(s.SensorName for s in self._sensors))
 
-        for camera in self._cameras:
-            add_section(S_CAPTURE + '/' + camera.CameraName, camera, [
-                'PostProcessing',
-                'ImageSizeX',
-                'ImageSizeY',
-                'CameraFOV',
-                'CameraPositionX',
-                'CameraPositionY',
-                'CameraPositionZ',
-                'CameraRotationPitch',
-                'CameraRotationRoll',
-                'CameraRotationYaw'])
+        for sensor_def in self._sensors:
+            section = S_SENSOR + '/' + sensor_def.SensorName
+            add_section(section, sensor_def, get_attribs(sensor_def))
 
         if sys.version_info >= (3, 0):
             text = io.StringIO()
@@ -120,28 +113,3 @@ class CarlaSettings(object):
 
         ini.write(text)
         return text.getvalue().replace(' = ', '=')
-
-
-def get_sensor_names(settings):
-    """
-    Return a list with the names of the sensors defined in the settings object.
-    The settings object can be a CarlaSettings or an INI formatted string.
-    """
-    if isinstance(settings, CarlaSettings):
-        # pylint: disable=protected-access
-        return [camera.CameraName for camera in settings._cameras]
-    ini = ConfigParser()
-    if sys.version_info >= (3, 2):
-        ini.read_string(settings)
-    elif sys.version_info >= (3, 0):
-        ini.readfp(io.StringIO(settings)) # pylint: disable=deprecated-method
-    else:
-        ini.readfp(io.BytesIO(settings)) # pylint: disable=deprecated-method
-
-    section_name = 'CARLA/SceneCapture'
-    option_name = 'Cameras'
-
-    if ini.has_section(section_name) and ini.has_option(section_name, option_name):
-        cameras = ini.get(section_name, option_name)
-        return cameras.split(',')
-    return []

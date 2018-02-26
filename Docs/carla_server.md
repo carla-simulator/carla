@@ -48,10 +48,11 @@ Server only writes, first measurements message then the bulk of raw images.
 
 Every image is an array of uint32's
 
-    [width, height, type, color[0], color[1],...]
+    [width, height, type, FOV, color[0], color[1],...]
 
-where each color is an [FColor][fcolorlink] (BGRA) as stored in Unreal Engine,
-and the possible types of images are
+where FOV is the horizontal field of view of the camera as float, each color is
+an [FColor][fcolorlink] (BGRA) as stored in Unreal Engine, and the possible
+types of images are
 
     type = 0  None                  (RGB without any post-processing)
     type = 1  SceneFinal            (RGB with post-processing present at the scene)
