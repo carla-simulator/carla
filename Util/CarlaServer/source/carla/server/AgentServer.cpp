@@ -33,7 +33,7 @@ namespace server {
 
   error_code AgentServer::WriteMeasurements(const carla_measurements &measurements) {
     error_code ec;
-    if (!_control.TryGetResult(ec)) { /// @todo Why _control here?? is it a bug?
+    if (!_measurements.TryGetResult(ec)) {
       auto writer = _measurements.buffer()->MakeWriter();
       writer->Write(measurements, _sensor_inbox);
       ec = errc::success();
