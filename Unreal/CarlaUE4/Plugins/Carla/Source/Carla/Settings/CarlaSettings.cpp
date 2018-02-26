@@ -11,14 +11,22 @@
 #include "Settings/CameraDescription.h"
 #include "Settings/LidarDescription.h"
 #include "Util/IniFile.h"
-
+#include "Package.h"
 #include "CommandLine.h"
 #include "UnrealMathUtility.h"
+#include "Engine/Engine.h"
+#include "Kismet/GameplayStatics.h"
+#include "Engine/DirectionalLight.h"
+#include "Engine/PointLight.h"
+#include "Landscape.h"
+#include "Components/StaticMeshComponent.h"
+
 
 // INI file sections.
 #define S_CARLA_SERVER                 TEXT("CARLA/Server")
 #define S_CARLA_LEVELSETTINGS          TEXT("CARLA/LevelSettings")
 #define S_CARLA_SENSOR                 TEXT("CARLA/Sensor")
+#define S_CARLA_QUALITYSETTINGS        TEXT("CARLA/QualitySettings")
 
 // =============================================================================
 // -- Static methods -----------------------------------------------------------
@@ -104,6 +112,16 @@ static void LoadSettingsFromConfig(
   ConfigFile.GetInt(S_CARLA_LEVELSETTINGS, TEXT("WeatherId"), Settings.WeatherId);
   ConfigFile.GetInt(S_CARLA_LEVELSETTINGS, TEXT("SeedVehicles"), Settings.SeedVehicles);
   ConfigFile.GetInt(S_CARLA_LEVELSETTINGS, TEXT("SeedPedestrians"), Settings.SeedPedestrians);
+
+  // QualitySettings.
+  FString sDefaultLevel;
+  ConfigFile.GetString(S_CARLA_QUALITYSETTINGS, TEXT("DefaultLevel"), sDefaultLevel);
+  if(!Settings.SetQualitySettingsLevel(FQualitySettings::FromString(sDefaultLevel)))
+  {
+	  //ERROR! @TODO : fix settings
+  }
+
+
   // Sensors.
   FString Sensors;
   ConfigFile.GetString(S_CARLA_SENSOR, TEXT("Sensors"), Sensors);
@@ -134,6 +152,162 @@ static bool GetSettingsFilePathFromCommandLine(FString &Value)
 // =============================================================================
 // -- UCarlaSettings -----------------------------------------------------------
 // =============================================================================
+
+EQualitySettingsLevel FQualitySettings::FromString(const FString& SQualitySettingsLevel)
+{
+	if(SQualitySettingsLevel.Equals("Low")) return EQualitySettingsLevel::Low;
+	if(SQualitySettingsLevel.Equals("Medium")) return EQualitySettingsLevel::Medium;
+	if(SQualitySettingsLevel.Equals("High")) return EQualitySettingsLevel::High;
+	if(SQualitySettingsLevel.Equals("Epic")) return EQualitySettingsLevel::Epic;
+
+	return EQualitySettingsLevel::None;
+}
+
+FString FQualitySettings::ToString(EQualitySettingsLevel QualitySettingsLevel)
+{
+  const UEnum* ptr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EQualitySettingsLevel"), true);
+  if(!ptr)
+    return FString("Invalid");
+  return ptr->GetNameStringByIndex(static_cast<int32>(QualitySettingsLevel));
+}
+
+bool UCarlaSettings::SetQualitySettingsLevel(EQualitySettingsLevel newDefaultLevel)
+{
+	if(newDefaultLevel==EQualitySettingsLevel::None)
+	{
+		UE_LOG(LogCarla ,Warning, TEXT("Quality Settings Level not set!"));
+		return false;
+	}
+
+	/*if(newDefaultLevel!=DefaultQualitySettingsLevel)
+	{
+		return true;
+	}*/
+	UWorld *world = GetWorld();
+	
+	//set the quality settings now
+	switch(newDefaultLevel)
+	{
+	  case EQualitySettingsLevel::Low: {//r.SSR.qualitylaunch commands to lower quality settings
+		world->Exec(world,TEXT("r.DefaultFeature.MotionBlur 0"));
+		world->Exec(world,TEXT("r.DefaultFeature.Bloom 0"));
+		world->Exec(world,TEXT("r.DefaultFeature.AmbientOcclusion 0"));
+		world->Exec(world,TEXT("r.AmbientOcclusionLevels 0"));
+		world->Exec(world,TEXT("r.DefaultFeature.AmbientOcclusionStaticFraction 0"));
+		world->Exec(world,TEXT("r.DefaultFeature.AutoExposure 0"));
+		world->Exec(world,TEXT("r.RHICmdBypass 0"));
+		world->Exec(world,TEXT("r.DefaultFeature.AntiAliasing 2"));
+		world->Exec(world,TEXT("r.Streaming.PoolSize 2000"));
+		world->Exec(world,TEXT("r.HZBOcclusion 0"));
+		world->Exec(world,TEXT("r.MinScreenRadiusForLights 0.01"));
+		world->Exec(world,TEXT("r.SeparateTranslucency 0"));
+		world->Exec(world,TEXT("r.FinishCurrentFrame 1"));
+		world->Exec(world,TEXT("r.MotionBlurQuality 0"));
+		world->Exec(world,TEXT("r.PostProcessAAQuality 0"));
+		world->Exec(world,TEXT("r.BloomQuality 1"));
+		world->Exec(world,TEXT("r.SSR.Quality 0"));
+		world->Exec(world,TEXT("r.DepthOfFieldQuality 0"));
+		world->Exec(world,TEXT("r.SceneColorFormat 2"));
+		world->Exec(world,TEXT("r.TranslucencyVolumeBlur 0"));
+		world->Exec(world,TEXT("r.TranslucencyLightingVolumeDim 4"));
+		world->Exec(world,TEXT("r.MaxAnisotropy 8"));
+		world->Exec(world,TEXT("r.LensFlareQuality 0"));
+		world->Exec(world,TEXT("r.SceneColorFringeQuality 0"));
+		world->Exec(world,TEXT("r.FastBlurThreshold 0"));
+		world->Exec(world,TEXT("r.SSR.MaxRoughness 0.1"));
+		world->Exec(world,TEXT("r.AllowOcclusionQueries 1"));
+		world->Exec(world,TEXT("r.SSR 0"));
+		world->Exec(world,TEXT("r.StencilForLODDither 1"));
+		world->Exec(world,TEXT("r.EarlyZPass 1"));
+		world->Exec(world,TEXT("r.EarlyZPassMovable 1"));
+		world->Exec(world,TEXT("r.Foliage.DitheredLOD 0"));
+		world->Exec(world,TEXT("r.ForwardShading 0"));
+		world->Exec(world,TEXT("sg.PostProcessQuality 0"));
+	    world->Exec(world,TEXT("r.ViewDistanceScale 0.1"));
+		world->Exec(world,TEXT("sg.ShadowQuality 0"));
+		world->Exec(world,TEXT("sg.TextureQuality 0"));
+		world->Exec(world,TEXT("sg.EffectsQuality 0"));
+		world->Exec(world,TEXT("FoliageQuality 0"));
+		world->Exec(world,TEXT("foliage.DensityScale 0"));
+		world->Exec(world,TEXT("grass.DensityScale 0"));
+
+		//world->Exec(world,TEXT("r.DetailMode 0")); //-->will change to lods 0
+		//iterate all vehicles and people, set the draw distance 
+	    TArray<AActor*> actors;
+		int32 i;
+
+		//iterate all terrain, deactivate the actor
+		/*UGameplayStatics::GetAllActorsOfClass(world, ALandscape::StaticClass(), actors);
+		for(i=0; i<actors.Num(); i++)
+		{
+			ALandscape* landscape = Cast<ALandscape>(actors[i]);
+			if(landscape)
+			{
+				landscape->DisableComponentsSimulatePhysics();
+				landscape->bUseLandscapeForCullingInvisibleHLODVertices=true;
+				
+			}
+		}*/
+
+	    //iterate all lights, deactivate shadows
+		UGameplayStatics::GetAllActorsOfClass(world, ALight::StaticClass(), actors);
+		for(i=0;i<actors.Num();i++)
+		{
+			ALight *light = Cast<ALight>(actors[i]);
+			if(light)
+			{
+				//disable all lights shadows
+				light->SetCastShadows(false);
+
+				//tweak directional lights
+				ADirectionalLight* directionallight = Cast<ADirectionalLight>(light);
+				if(directionallight)
+				{
+					directionallight->SetLightFunctionFadeDistance(LowLightFadeDistance);
+				}
+
+				//disable point lights
+				APointLight* pointlight = Cast<APointLight>(light);
+				if(pointlight)
+				{
+					actors[i]->SetActorHiddenInGame(true);
+				}
+			}
+			
+		}
+		
+	    //Set all the roads the low quality material
+		/*UGameplayStatics::GetAllActorsWithTag(world, FName("CARLA_ROAD"),actors);
+		for(i=0; i<actors.Num(); i++)
+		{
+			TArray<UActorComponent*> components = actors[i]->GetComponentsByClass(UStaticMeshComponent::StaticClass());
+			for(int32 j=0; j<components.Num(); j++)
+			{
+				UStaticMeshComponent* staticmesh = Cast<UStaticMeshComponent>(components[j]);
+				if(staticmesh)
+				{
+					for(int32 k=0; k<staticmesh->GetNumMaterials(); k++)
+					{
+						if(!RoadMaterials.IsValidIndex(k)) break;
+						staticmesh->SetMaterial(k, Cast<UMaterialInterface>(RoadMaterials[k]));
+					}
+				}
+			}
+		}*/
+
+
+		break;
+	  }
+	  case EQualitySettingsLevel::Medium: break;
+	  case EQualitySettingsLevel::High: break;
+	  case EQualitySettingsLevel::Epic: break;
+	  
+	  default: ;
+	}
+	DefaultQualitySettingsLevel = newDefaultLevel;
+
+	return true;
+}
 
 void UCarlaSettings::LoadSettings()
 {
@@ -209,13 +383,18 @@ void UCarlaSettings::LogSettings() const
   UE_LOG(LogCarla, Log, TEXT("Seed Vehicle Spawner = %d"), SeedVehicles);
   UE_LOG(LogCarla, Log, TEXT("Seed Pedestrian Spawner = %d"), SeedPedestrians);
   UE_LOG(LogCarla, Log, TEXT("Found %d available weather settings."), WeatherDescriptions.Num());
-  for (auto i = 0; i < WeatherDescriptions.Num(); ++i) {
+  for (auto i = 0; i < WeatherDescriptions.Num(); ++i)
+  {
     UE_LOG(LogCarla, Log, TEXT("  * %d - %s"), i, *WeatherDescriptions[i].Name);
   }
+  UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_QUALITYSETTINGS);
+  UE_LOG(LogCarla, Log, TEXT("Default Quality Settings = %s"), *FQualitySettings::ToString(DefaultQualitySettingsLevel));
+
   UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_SENSOR);
   UE_LOG(LogCarla, Log, TEXT("Added %d sensors."), SensorDescriptions.Num());
   UE_LOG(LogCarla, Log, TEXT("Semantic Segmentation = %s"), EnabledDisabled(bSemanticSegmentationEnabled));
-  for (auto &&Sensor : SensorDescriptions) {
+  for (auto &&Sensor : SensorDescriptions) 
+  {
     check(Sensor.Value != nullptr);
     Sensor.Value->Log();
   }
