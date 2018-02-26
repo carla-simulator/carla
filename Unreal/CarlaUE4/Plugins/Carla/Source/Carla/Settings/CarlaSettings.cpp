@@ -5,85 +5,87 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
+#include "CarlaSettings.h"
+
+#include "DynamicWeather.h"
+#include "Settings/CameraDescription.h"
+#include "Settings/LidarDescription.h"
+#include "Util/IniFile.h"
 
 #include "CommandLine.h"
 #include "UnrealMathUtility.h"
 
-#include "DynamicWeather.h"
-#include "Settings/CarlaSettings.h"
-#include "Util/IniFile.h"
-
 // INI file sections.
 #define S_CARLA_SERVER                 TEXT("CARLA/Server")
 #define S_CARLA_LEVELSETTINGS          TEXT("CARLA/LevelSettings")
-#define S_CARLA_SCENECAPTURE           TEXT("CARLA/SceneCapture")
-
-// =============================================================================
-// -- MyIniFile ----------------------------------------------------------------
-// =============================================================================
-
-class MyIniFile : public IniFile {
-public:
-
-  MyIniFile() = default;
-
-  explicit MyIniFile(const FString &FileName) : IniFile(FileName) {}
-
-  void GetPostProcessEffect(const TCHAR* Section, const TCHAR* Key, EPostProcessEffect &Target) const
-  {
-    FString ValueString;
-    if (GetFConfigFile().GetString(Section, Key, ValueString)) {
-      if (ValueString == "None") {
-        Target = EPostProcessEffect::None;
-      } else if (ValueString == "SceneFinal") {
-        Target = EPostProcessEffect::SceneFinal;
-      } else if (ValueString == "Depth") {
-        Target = EPostProcessEffect::Depth;
-      } else if (ValueString == "SemanticSegmentation") {
-        Target = EPostProcessEffect::SemanticSegmentation;
-      } else {
-        UE_LOG(LogCarla, Error, TEXT("Invalid post-processing \"%s\" in INI file"), *ValueString);
-        Target = EPostProcessEffect::INVALID;
-      }
-    }
-  }
-};
+#define S_CARLA_SENSOR                 TEXT("CARLA/Sensor")
 
 // =============================================================================
 // -- Static methods -----------------------------------------------------------
 // =============================================================================
 
-static void GetCameraDescription(
-    const MyIniFile &ConfigFile,
-    const TCHAR* Section,
-    FCameraDescription &Camera)
+template <typename T>
+static void ForEachSectionInName(const FString &SensorName, T &&Callback)
 {
-  ConfigFile.GetInt(Section, TEXT("ImageSizeX"), Camera.ImageSizeX);
-  ConfigFile.GetInt(Section, TEXT("ImageSizeY"), Camera.ImageSizeY);
-  ConfigFile.GetInt(Section, TEXT("CameraFOV"), Camera.FOVAngle);
-  ConfigFile.GetInt(Section, TEXT("CameraPositionX"), Camera.Position.X);
-  ConfigFile.GetInt(Section, TEXT("CameraPositionY"), Camera.Position.Y);
-  ConfigFile.GetInt(Section, TEXT("CameraPositionZ"), Camera.Position.Z);
-  ConfigFile.GetInt(Section, TEXT("CameraRotationPitch"), Camera.Rotation.Pitch);
-  ConfigFile.GetInt(Section, TEXT("CameraRotationRoll"), Camera.Rotation.Roll);
-  ConfigFile.GetInt(Section, TEXT("CameraRotationYaw"), Camera.Rotation.Yaw);
-  ConfigFile.GetPostProcessEffect(Section, TEXT("PostProcessing"), Camera.PostProcessEffect);
+  TArray<FString> SubSections;
+  SensorName.ParseIntoArray(SubSections, TEXT("/"), true);
+  check(SubSections.Num() > 0);
+  FString Section = S_CARLA_SENSOR;
+  Callback(Section);
+  for (FString &SubSection : SubSections) {
+    Section += TEXT("/");
+    Section += SubSection;
+    Callback(Section);
+  }
 }
 
-static void ValidateCameraDescription(FCameraDescription &Camera)
+static FString GetSensorType(
+    const FIniFile &ConfigFile,
+    const FString &SensorName)
 {
-  FMath::Clamp(Camera.FOVAngle, 0.001f, 360.0f);
-  Camera.ImageSizeX = (Camera.ImageSizeX == 0u ? 720u : Camera.ImageSizeX);
-  Camera.ImageSizeY = (Camera.ImageSizeY == 0u ? 512u : Camera.ImageSizeY);
+  FString SensorType;
+  ForEachSectionInName(SensorName, [&](const auto &Section){
+    ConfigFile.GetString(*Section, TEXT("SensorType"), SensorType);
+  });
+  return SensorType;
 }
 
-static bool RequestedSemanticSegmentation(const FCameraDescription &Camera)
+static void LoadSensorFromConfig(
+    const FIniFile &ConfigFile,
+    USensorDescription &Sensor)
 {
-  return (Camera.PostProcessEffect == EPostProcessEffect::SemanticSegmentation);
+  ForEachSectionInName(Sensor.Name, [&](const auto &Section){
+    Sensor.Load(ConfigFile, Section);
+  });
+}
+
+template <typename T>
+static T *MakeSensor(UObject *Parent, const FString &Name, const FString &Type)
+{
+  auto *Sensor = NewObject<T>(Parent);
+  Sensor->Name = Name;
+  Sensor->Type = Type;
+  return Sensor;
+}
+
+static USensorDescription *MakeSensor(
+    const FIniFile &ConfigFile,
+    UObject *Parent,
+    const FString &SensorName)
+{
+  const auto SensorType = GetSensorType(ConfigFile, SensorName);
+  if (SensorType == TEXT("CAMERA")) {
+    return MakeSensor<UCameraDescription>(Parent, SensorName, SensorType);
+  } else if (SensorType == TEXT("LIDAR_RAY_TRACE")) {
+    return MakeSensor<ULidarDescription>(Parent, SensorName, SensorType);
+  } else {
+    UE_LOG(LogCarla, Error, TEXT("Invalid sensor type '%s'"), *SensorType);
+    return nullptr;
+  }
 }
 
 static void LoadSettingsFromConfig(
-    const MyIniFile &ConfigFile,
+    const FIniFile &ConfigFile,
     UCarlaSettings &Settings,
     const bool bLoadCarlaServerSection)
 {
@@ -102,27 +104,19 @@ static void LoadSettingsFromConfig(
   ConfigFile.GetInt(S_CARLA_LEVELSETTINGS, TEXT("WeatherId"), Settings.WeatherId);
   ConfigFile.GetInt(S_CARLA_LEVELSETTINGS, TEXT("SeedVehicles"), Settings.SeedVehicles);
   ConfigFile.GetInt(S_CARLA_LEVELSETTINGS, TEXT("SeedPedestrians"), Settings.SeedPedestrians);
-  // SceneCapture.
-  FString Cameras;
-  ConfigFile.GetString(S_CARLA_SCENECAPTURE, TEXT("Cameras"), Cameras);
-  TArray<FString> CameraNames;
-  Cameras.ParseIntoArray(CameraNames, TEXT(","), true);
-  for (FString &Name : CameraNames) {
-    FCameraDescription &Camera = Settings.CameraDescriptions.FindOrAdd(Name);
-    GetCameraDescription(ConfigFile, S_CARLA_SCENECAPTURE, Camera);
-
-    TArray<FString> SubSections;
-    Name.ParseIntoArray(SubSections, TEXT("/"), true);
-    check(SubSections.Num() > 0);
-    FString Section = S_CARLA_SCENECAPTURE;
-    for (FString &SubSection : SubSections) {
-      Section += TEXT("/");
-      Section += SubSection;
-      GetCameraDescription(ConfigFile, *Section, Camera);
+  // Sensors.
+  FString Sensors;
+  ConfigFile.GetString(S_CARLA_SENSOR, TEXT("Sensors"), Sensors);
+  TArray<FString> SensorNames;
+  Sensors.ParseIntoArray(SensorNames, TEXT(","), true);
+  for (const FString &Name : SensorNames) {
+    auto *Sensor = MakeSensor(ConfigFile, &Settings, Name);
+    if (Sensor != nullptr) {
+      LoadSensorFromConfig(ConfigFile, *Sensor);
+      Sensor->Validate();
+      Settings.bSemanticSegmentationEnabled |= Sensor->RequiresSemanticSegmentation();
+      Settings.SensorDescriptions.Add(Name, Sensor);
     }
-
-    ValidateCameraDescription(Camera);
-    Settings.bSemanticSegmentationEnabled |= RequestedSemanticSegmentation(Camera);
   }
 }
 
@@ -173,8 +167,8 @@ void UCarlaSettings::LoadSettings()
 void UCarlaSettings::LoadSettingsFromString(const FString &INIFileContents)
 {
   UE_LOG(LogCarla, Log, TEXT("Loading CARLA settings from string"));
-  ResetCameraDescriptions();
-  MyIniFile ConfigFile;
+  ResetSensorDescriptions();
+  FIniFile ConfigFile;
   ConfigFile.ProcessInputFileContents(INIFileContents);
   constexpr bool bLoadCarlaServerSection = false;
   LoadSettingsFromConfig(ConfigFile, *this, bLoadCarlaServerSection);
@@ -218,23 +212,19 @@ void UCarlaSettings::LogSettings() const
   for (auto i = 0; i < WeatherDescriptions.Num(); ++i) {
     UE_LOG(LogCarla, Log, TEXT("  * %d - %s"), i, *WeatherDescriptions[i].Name);
   }
-  UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_SCENECAPTURE);
-  UE_LOG(LogCarla, Log, TEXT("Added %d cameras."), CameraDescriptions.Num());
+  UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_SENSOR);
+  UE_LOG(LogCarla, Log, TEXT("Added %d sensors."), SensorDescriptions.Num());
   UE_LOG(LogCarla, Log, TEXT("Semantic Segmentation = %s"), EnabledDisabled(bSemanticSegmentationEnabled));
-  for (auto &Item : CameraDescriptions) {
-    UE_LOG(LogCarla, Log, TEXT("[%s/%s]"), S_CARLA_SCENECAPTURE, *Item.Key);
-    UE_LOG(LogCarla, Log, TEXT("Image Size = %dx%d"), Item.Value.ImageSizeX, Item.Value.ImageSizeY);
-    UE_LOG(LogCarla, Log, TEXT("FOV = %f"), Item.Value.FOVAngle);
-    UE_LOG(LogCarla, Log, TEXT("Camera Position = (%s)"), *Item.Value.Position.ToString());
-    UE_LOG(LogCarla, Log, TEXT("Camera Rotation = (%s)"), *Item.Value.Rotation.ToString());
-    UE_LOG(LogCarla, Log, TEXT("Post-Processing = %s"), *PostProcessEffect::ToString(Item.Value.PostProcessEffect));
+  for (auto &&Sensor : SensorDescriptions) {
+    check(Sensor.Value != nullptr);
+    Sensor.Value->Log();
   }
   UE_LOG(LogCarla, Log, TEXT("================================================================================"));
 }
 
 #undef S_CARLA_SERVER
 #undef S_CARLA_LEVELSETTINGS
-#undef S_CARLA_SCENECAPTURE
+#undef S_CARLA_SENSOR
 
 void UCarlaSettings::GetActiveWeatherDescription(
     bool &bWeatherWasChanged,
@@ -256,9 +246,9 @@ const FWeatherDescription &UCarlaSettings::GetWeatherDescriptionByIndex(int32 In
   return WeatherDescriptions[Index];
 }
 
-void UCarlaSettings::ResetCameraDescriptions()
+void UCarlaSettings::ResetSensorDescriptions()
 {
-  CameraDescriptions.Empty();
+  SensorDescriptions.Empty();
   bSemanticSegmentationEnabled = false;
 }
 
@@ -266,8 +256,8 @@ void UCarlaSettings::LoadSettingsFromFile(const FString &FilePath, const bool bL
 {
   if (FPaths::FileExists(FilePath)) {
     UE_LOG(LogCarla, Log, TEXT("Loading CARLA settings from \"%s\""), *FilePath);
-    ResetCameraDescriptions();
-    const MyIniFile ConfigFile(FilePath);
+    ResetSensorDescriptions();
+    const FIniFile ConfigFile(FilePath);
     constexpr bool bLoadCarlaServerSection = true;
     LoadSettingsFromConfig(ConfigFile, *this, bLoadCarlaServerSection);
     CurrentFileName = FilePath;

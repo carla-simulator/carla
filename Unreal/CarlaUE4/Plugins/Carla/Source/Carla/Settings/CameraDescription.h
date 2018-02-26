@@ -6,13 +6,34 @@
 
 #pragma once
 
-#include "PostProcessEffect.h"
+#include "Settings/SensorDescription.h"
+
+#include "Settings/PostProcessEffect.h"
+
 #include "CameraDescription.generated.h"
 
-USTRUCT()
-struct FCameraDescription
+UCLASS()
+class CARLA_API UCameraDescription : public USensorDescription
 {
-  GENERATED_USTRUCT_BODY()
+  GENERATED_BODY()
+
+public:
+
+  virtual void AcceptVisitor(ISensorDescriptionVisitor &Visitor) const final
+  {
+    Visitor.Visit(*this);
+  }
+
+  virtual void Load(const FIniFile &Config, const FString &Section) final;
+
+  virtual void Validate() final;
+
+  virtual bool RequiresSemanticSegmentation() const final
+  {
+    return PostProcessEffect == EPostProcessEffect::SemanticSegmentation;
+  }
+
+  virtual void Log() const final;
 
   /** X size in pixels of the captured image. */
   UPROPERTY(Category = "Camera Description", EditDefaultsOnly, meta=(ClampMin = "1"))
@@ -21,14 +42,6 @@ struct FCameraDescription
   /** Y size in pixels of the captured image. */
   UPROPERTY(Category = "Camera Description", EditDefaultsOnly, meta=(ClampMin = "1"))
   uint32 ImageSizeY = 512u;
-
-  /** Position relative to the player. */
-  UPROPERTY(Category = "Camera Description", EditDefaultsOnly)
-  FVector Position = {170.0f, 0.0f, 150.0f};
-
-  /** Rotation relative to the player. */
-  UPROPERTY(Category = "Camera Description", EditDefaultsOnly)
-  FRotator Rotation = {0.0f, 0.0f, 0.0f};
 
   /** Post-process effect to be applied to the captured image. */
   UPROPERTY(Category = "Camera Description", EditDefaultsOnly)
