@@ -32,6 +32,10 @@ Point = namedtuple('Point', 'x y z color')
 Point.__new__.__defaults__ = (0.0, 0.0, 0.0, None)
 
 
+def _append_extension(filename, ext):
+    return filename if filename.lower().endswith(ext.lower()) else filename + ext
+
+
 # ==============================================================================
 # -- Sensor --------------------------------------------------------------------
 # ==============================================================================
@@ -166,6 +170,8 @@ class Image(SensorData):
 
     def save_to_disk(self, filename):
         """Save this image to disk (requires PIL installed)."""
+        filename = _append_extension(filename, '.png')
+
         try:
             from PIL import Image as PImage
         except ImportError:
@@ -227,6 +233,7 @@ class PointCloud(SensorData):
 
     def save_to_disk(self, filename):
         """Save this point-cloud to disk as PLY format."""
+        filename = _append_extension(filename, '.ply')
 
         def construct_ply_header():
             """Generates a PLY header given a total number of 3D points and

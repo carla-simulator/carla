@@ -19,8 +19,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 import carla
 
+from carla import sensor
 from carla.client import CarlaClient
-from carla.sensor import Camera, Image
 from carla.settings import CarlaSettings
 from carla.tcp import TCPClient
 from carla.util import make_connection
@@ -31,17 +31,19 @@ import console
 def run_carla_client(args):
     with make_connection(CarlaClient, args.host, args.port, timeout=15) as client:
         logging.info('CarlaClient connected')
-        filename = '_images/episode_{:0>3d}/image_{:0>5d}.png'
+        filename = '_out/test_episode_{:0>4d}/{:s}/{:0>6d}'
         frames_per_episode = 300
         episode = 0
         while True:
             episode += 1
             settings = CarlaSettings()
-            settings.set(SendNonPlayerAgentsInfo=True,SynchronousMode=args.synchronous)
+            settings.set(SendNonPlayerAgentsInfo=True, SynchronousMode=args.synchronous)
             settings.randomize_seeds()
-            camera = Camera('DefaultCamera')
+            camera = sensor.Camera('DefaultCamera')
             camera.set_image_size(300, 200) # Do not change this, hard-coded in test.
             settings.add_sensor(camera)
+            lidar = sensor.Lidar('DefaultLidar')
+            settings.add_sensor(lidar)
 
             logging.debug('sending CarlaSettings:\n%s', settings)
             logging.info('new episode requested')
@@ -64,14 +66,15 @@ def run_carla_client(args):
             for frame in range(0, frames_per_episode):
                 logging.debug('reading measurements...')
                 measurements, sensor_data = client.read_data()
-                images = [x for x in sensor_data.values() if isinstance(x, Image)]
+                images = [x for x in sensor_data.values() if isinstance(x, sensor.Image)]
 
                 logging.debug('received data of %d agents', len(measurements.non_player_agents))
                 if len(images) > 0:
                     assert (images[0].width, images[0].height) == (camera.ImageSizeX, camera.ImageSizeY)
 
                 if args.images_to_disk:
-                    images[0].save_to_disk(filename.format(episode, frame))
+                    for name, data in sensor_data.items():
+                        data.save_to_disk(filename.format(episode, name, frame))
 
                 logging.debug('sending control...')
                 control = measurements.player_measurements.autopilot_control
