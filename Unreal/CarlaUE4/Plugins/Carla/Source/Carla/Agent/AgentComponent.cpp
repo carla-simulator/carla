@@ -20,6 +20,15 @@ static FDataRouter &GetDataRouter(UWorld *World)
   return GameMode->GetDataRouter();
 }
 
+UAgentComponent::UAgentComponent(const FObjectInitializer& ObjectInitializer)
+  : Super(ObjectInitializer)
+{
+  bVisible = false;
+  bHiddenInGame = true;
+  bShouldUpdatePhysicsVolume = false;
+  PrimaryComponentTick.bCanEverTick = false;
+}
+
 void UAgentComponent::AcceptVisitor(IAgentComponentVisitor &Visitor) const
 {
   unimplemented();
