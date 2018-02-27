@@ -16,8 +16,6 @@ try:
 except ImportError:
     raise RuntimeError('cannot import numpy, make sure numpy package is installed.')
 
-from . import image_converter
-
 from .transform import Transform, Translation, Rotation, Scale
 
 
@@ -156,6 +154,8 @@ class Image(SensorData):
         default format.
         """
         if self._converted_data is None:
+            from . import image_converter
+
             if self.type == 'Depth':
                 self._converted_data = image_converter.depth_to_array(self)
             elif self.type == 'SemanticSegmentation':
