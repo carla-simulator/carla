@@ -28,7 +28,7 @@ Please check first the list of [feature requests][frlink]. If it is not there
 and you think is a feature that might be interesting for users, please submit
 your request as a new issue.
 
-[frlink]: https://github.com/carla-simulator/carla/issues?q=is%3Aissue+is%3Aopen+label%3A%22feature+request%22
+[frlink]: https://github.com/carla-simulator/carla/issues?q=is%3Aissue+is%3Aopen+label%3A%22feature+request%22+sort%3Acomments-desc
 
 Improving documentation
 -----------------------
