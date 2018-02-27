@@ -19,7 +19,7 @@ enum class EQualitySettingsLevel : uint8
   Low     UMETA(DisplayName = "Low"),
   Medium  UMETA(DisplayName = "Medium"),
   High    UMETA(DisplayName = "High"),
-  Epic    UMETA(DisplayName = "Epic") ,
+  Epic    UMETA(DisplayName = "Epic") 
 	
 };
 
@@ -178,10 +178,10 @@ private:
   /** Quality Settings level. */
   UPROPERTY(Category = "Quality Settings", VisibleAnywhere, meta =(AllowPrivateAccess="true"))
   EQualitySettingsLevel DefaultQualitySettingsLevel = EQualitySettingsLevel::None;
-
+ 
  public:
-  //UPROPERTY(Category = "Quality Settings", EditAnywhere, config)
-  //TArray<UMaterial*> RoadMaterials;
+  UPROPERTY(Category = "Quality Settings", EditAnywhere, config)
+  TArray<TSubclassOf<UMaterial>> RoadMaterials;
 
   //distances
   UPROPERTY(Category = "Quality Settings/Low", EditAnywhere, config)
