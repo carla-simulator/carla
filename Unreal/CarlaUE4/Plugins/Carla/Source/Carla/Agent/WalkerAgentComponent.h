@@ -14,7 +14,7 @@ class ACharacter;
 
 /// This component can be added to any ACharacter to be added as agent.
 /// See UAgentComponent.
-UCLASS()
+UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class CARLA_API UWalkerAgentComponent : public UAgentComponent
 {
   GENERATED_BODY()
