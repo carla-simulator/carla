@@ -1,9 +1,9 @@
 // Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
 
 #include "Carla.h"
-#include "ISettingsModule.h"
-#include "ISettingsSection.h"
-#include "ISettingsContainer.h"
+#include "Developer/Settings/Public/ISettingsModule.h"
+#include "Developer/Settings/Public/ISettingsSection.h"
+#include "Developer/Settings/Public/ISettingsContainer.h"
 #include "Settings/CarlaSettings.h"
 
 #define LOCTEXT_NAMESPACE "FCarlaModule"

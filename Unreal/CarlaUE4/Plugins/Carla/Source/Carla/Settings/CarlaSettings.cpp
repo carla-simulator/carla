@@ -18,7 +18,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Engine/DirectionalLight.h"
 #include "Engine/PointLight.h"
-#include "Landscape.h"
+//#include "Landscape.h" //--> needs Lanscape module in the build cs 
 #include "Components/StaticMeshComponent.h"
 
 
@@ -204,7 +204,7 @@ void UCarlaSettings::ApplyQualitySettingsLevelPostRestart() const
 		world->Exec(world,TEXT("r.HZBOcclusion 0"));
 		world->Exec(world,TEXT("r.MinScreenRadiusForLights 0.01"));
 		world->Exec(world,TEXT("r.SeparateTranslucency 0"));
-		world->Exec(world,TEXT("r.FinishCurrentFrame 1"));
+		world->Exec(world,TEXT("r.FinishCurrentFrame 0"));
 		world->Exec(world,TEXT("r.MotionBlurQuality 0"));
 		world->Exec(world,TEXT("r.PostProcessAAQuality 0"));
 		world->Exec(world,TEXT("r.BloomQuality 1"));
@@ -226,14 +226,17 @@ void UCarlaSettings::ApplyQualitySettingsLevelPostRestart() const
 		world->Exec(world,TEXT("r.Foliage.DitheredLOD 0"));
 		world->Exec(world,TEXT("r.ForwardShading 0"));
 		world->Exec(world,TEXT("sg.PostProcessQuality 0"));
-	    world->Exec(world,TEXT("r.ViewDistanceScale 0.1"));
+	  world->Exec(world,TEXT("r.ViewDistanceScale 0.1"));
 		world->Exec(world,TEXT("sg.ShadowQuality 0"));
 		world->Exec(world,TEXT("sg.TextureQuality 0"));
 		world->Exec(world,TEXT("sg.EffectsQuality 0"));
 		world->Exec(world,TEXT("FoliageQuality 0"));
 		world->Exec(world,TEXT("foliage.DensityScale 0"));
 		world->Exec(world,TEXT("grass.DensityScale 0"));
-
+    world->Exec(world,TEXT("r.TranslucentLightingVolume 0"));
+    world->Exec(world,TEXT("r.LightShaftDownSampleFactor 4"));
+    world->Exec(world,TEXT("r.OcclusionQueryLocation 1"));
+    world->Exec(world,TEXT("r.BasePassOutputsVelocity 0"));
 		//world->Exec(world,TEXT("r.DetailMode 0")); //-->will change to lods 0
 		//iterate all vehicles and people, set the draw distance 
 	    TArray<AActor*> actors;

@@ -117,5 +117,5 @@ private:
   TArray<UInstancedStaticMeshComponent *> MeshInstatiators;
   
   UPROPERTY(Category = "Meshes", EditAnywhere)
-  float MaxDrawDistance = 10000.0f;
+  float MaxDrawDistance = 10000.0f; /** @todo: move to carlasettings */
 };
