@@ -1,7 +1,3 @@
-// src/main/java/org/umlgraph/doclet/
-
-// java -jar /usr/lib/jvm/java-8-oracle/lib/UmlGraph.jar -package -output - CarlaUE4.java | dot -Tpng -oCarlaUE4.png
-
 // =============================================================================
 // -- Unreal classes -----------------------------------------------------------
 // =============================================================================
