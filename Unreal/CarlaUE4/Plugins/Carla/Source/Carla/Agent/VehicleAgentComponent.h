@@ -12,7 +12,7 @@
 
 class ACarlaWheeledVehicle;
 
-UCLASS()
+UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class CARLA_API UVehicleAgentComponent : public UAgentComponent
 {
   GENERATED_BODY()
