@@ -17,3 +17,4 @@ Config/CarlaSettings.ini
 
 CMakeLists.txt
 Makefile
+.vscode
