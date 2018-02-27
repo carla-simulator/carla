@@ -22,6 +22,8 @@ class CARLA_API UAgentComponent : public USceneComponent
 
 public:
 
+  UAgentComponent(const FObjectInitializer& ObjectInitializer);
+
   uint32 GetId() const
   {
     return GetTypeHash(this);
