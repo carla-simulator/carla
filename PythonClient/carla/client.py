@@ -195,18 +195,18 @@ def _make_sensor_parsers(sensors):
 
     def parse_lidar(data):
         horizontal_angle = getfloat(data, 0)
-        channels_count = getint(data, 1)
-        points_count_by_channel = numpy.frombuffer(
-            data[8:8+channels_count*4],
+        channels = getint(data, 1)
+        point_count_by_channel = numpy.frombuffer(
+            data[8:8+channels*4],
             dtype=numpy.dtype('uint32'))
         points = numpy.frombuffer(
-            data[8+channels_count*4:],
+            data[8+channels*4:],
             dtype=numpy.dtype('f4'))
         points = numpy.reshape(points, (int(points.shape[0]/3), 3))
         return sensor.LidarMeasurement(
             horizontal_angle,
-            channels_count,
-            points_count_by_channel,
+            channels,
+            point_count_by_channel,
             sensor.PointCloud(points))
 
     class SensorDefinition(object):
