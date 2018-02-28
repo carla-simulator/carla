@@ -25,7 +25,7 @@ static auto MakeCharBuffer(const FString &String)
 {
   const char *Ptr = TCHAR_TO_UTF8(*String);
   auto Buffer = MakeUnique<char[]>(std::strlen(Ptr) + 1u); // + null terminator.
-  #if _WIN32
+  #if defined(_WIN32)
   strcpy_s(Buffer.Get(),String.Len()+1, Ptr);
   #else
   std::strcpy(Buffer.Get(), Ptr);

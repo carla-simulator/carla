@@ -6,7 +6,6 @@
 
 #include "Carla.h"
 #include "CarlaSettings.h"
-
 #include "DynamicWeather.h"
 #include "Settings/CameraDescription.h"
 #include "Settings/LidarDescription.h"
@@ -19,7 +18,8 @@
 #include "Engine/DirectionalLight.h"
 #include "Engine/PointLight.h"
 //#include "Landscape.h" //--> needs Lanscape module in the build cs 
-#include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
+#include "Materials/MaterialInstance.h"
 
 
 // INI file sections.
@@ -27,6 +27,12 @@
 #define S_CARLA_LEVELSETTINGS          TEXT("CARLA/LevelSettings")
 #define S_CARLA_SENSOR                 TEXT("CARLA/Sensor")
 #define S_CARLA_QUALITYSETTINGS        TEXT("CARLA/QualitySettings")
+
+// =============================================================================
+// -- Static variables & constants ---------------------------------------------
+// =============================================================================
+const FName UCarlaSettings::CARLA_ROAD_TAG = FName("CARLA_ROAD");
+
 
 // =============================================================================
 // -- Static methods -----------------------------------------------------------
@@ -118,7 +124,10 @@ static void LoadSettingsFromConfig(
   ConfigFile.GetString(S_CARLA_QUALITYSETTINGS, TEXT("DefaultLevel"), sDefaultLevel);
   if(!Settings.SetQualitySettingsLevel(FQualitySettings::FromString(sDefaultLevel)))
   {
-	  ///apply pre-restart.... @todo
+	  //error
+  } else
+  {
+	  //apply pre-restart.... 
   }
   
 
@@ -186,121 +195,11 @@ bool UCarlaSettings::SetQualitySettingsLevel(EQualitySettingsLevel newDefaultLev
 
 void UCarlaSettings::ApplyQualitySettingsLevelPostRestart() const
 {
-	UWorld *world = GetWorld();
-	if(!world) return ;
-	//set the quality settings now
 	switch(DefaultQualitySettingsLevel)
 	{
-	  case EQualitySettingsLevel::Low: {//r.SSR.qualitylaunch commands to lower quality settings
-		world->Exec(world,TEXT("r.DefaultFeature.MotionBlur 0"));
-		world->Exec(world,TEXT("r.DefaultFeature.Bloom 0"));
-		world->Exec(world,TEXT("r.DefaultFeature.AmbientOcclusion 0"));
-		world->Exec(world,TEXT("r.AmbientOcclusionLevels 0"));
-		world->Exec(world,TEXT("r.DefaultFeature.AmbientOcclusionStaticFraction 0"));
-		world->Exec(world,TEXT("r.DefaultFeature.AutoExposure 0"));
-		world->Exec(world,TEXT("r.RHICmdBypass 0"));
-		world->Exec(world,TEXT("r.DefaultFeature.AntiAliasing 2"));
-		world->Exec(world,TEXT("r.Streaming.PoolSize 2000"));
-		world->Exec(world,TEXT("r.HZBOcclusion 0"));
-		world->Exec(world,TEXT("r.MinScreenRadiusForLights 0.01"));
-		world->Exec(world,TEXT("r.SeparateTranslucency 0"));
-		world->Exec(world,TEXT("r.FinishCurrentFrame 0"));
-		world->Exec(world,TEXT("r.MotionBlurQuality 0"));
-		world->Exec(world,TEXT("r.PostProcessAAQuality 0"));
-		world->Exec(world,TEXT("r.BloomQuality 1"));
-		world->Exec(world,TEXT("r.SSR.Quality 0"));
-		world->Exec(world,TEXT("r.DepthOfFieldQuality 0"));
-		world->Exec(world,TEXT("r.SceneColorFormat 2"));
-		world->Exec(world,TEXT("r.TranslucencyVolumeBlur 0"));
-		world->Exec(world,TEXT("r.TranslucencyLightingVolumeDim 4"));
-		world->Exec(world,TEXT("r.MaxAnisotropy 8"));
-		world->Exec(world,TEXT("r.LensFlareQuality 0"));
-		world->Exec(world,TEXT("r.SceneColorFringeQuality 0"));
-		world->Exec(world,TEXT("r.FastBlurThreshold 0"));
-		world->Exec(world,TEXT("r.SSR.MaxRoughness 0.1"));
-		world->Exec(world,TEXT("r.AllowOcclusionQueries 1"));
-		world->Exec(world,TEXT("r.SSR 0"));
-		world->Exec(world,TEXT("r.StencilForLODDither 1"));
-		world->Exec(world,TEXT("r.EarlyZPass 1"));
-		world->Exec(world,TEXT("r.EarlyZPassMovable 1"));
-		world->Exec(world,TEXT("r.Foliage.DitheredLOD 0"));
-		world->Exec(world,TEXT("r.ForwardShading 0"));
-		world->Exec(world,TEXT("sg.PostProcessQuality 0"));
-	  world->Exec(world,TEXT("r.ViewDistanceScale 0.1"));
-		world->Exec(world,TEXT("sg.ShadowQuality 0"));
-		world->Exec(world,TEXT("sg.TextureQuality 0"));
-		world->Exec(world,TEXT("sg.EffectsQuality 0"));
-		world->Exec(world,TEXT("FoliageQuality 0"));
-		world->Exec(world,TEXT("foliage.DensityScale 0"));
-		world->Exec(world,TEXT("grass.DensityScale 0"));
-    world->Exec(world,TEXT("r.TranslucentLightingVolume 0"));
-    world->Exec(world,TEXT("r.LightShaftDownSampleFactor 4"));
-    world->Exec(world,TEXT("r.OcclusionQueryLocation 1"));
-    world->Exec(world,TEXT("r.BasePassOutputsVelocity 0"));
-		//world->Exec(world,TEXT("r.DetailMode 0")); //-->will change to lods 0
-		//iterate all vehicles and people, set the draw distance 
-	    TArray<AActor*> actors;
-		int32 i;
-
-		//iterate all terrain, deactivate the actor
-		/*UGameplayStatics::GetAllActorsOfClass(world, ALandscape::StaticClass(), actors);
-		for(i=0; i<actors.Num(); i++)
-		{
-			ALandscape* landscape = Cast<ALandscape>(actors[i]);
-			if(landscape)
-			{
-				landscape->DisableComponentsSimulatePhysics();
-				landscape->bUseLandscapeForCullingInvisibleHLODVertices=true;
-				
-			}
-		}*/
-		
-	    //iterate all directional lights, deactivate shadows
-		UGameplayStatics::GetAllActorsOfClass(world, ALight::StaticClass(), actors);
-		for(i=0;i<actors.Num();i++)
-		{
-			//tweak directional lights
-			ADirectionalLight* directionallight = Cast<ADirectionalLight>(actors[i]);
-			if(directionallight)
-			{
-				directionallight->SetCastShadows(false);
-				directionallight->SetLightFunctionFadeDistance(LowLightFadeDistance);
-				continue;
-			}
-			//disable point lights
-			/*
-			APointLight* pointlight = Cast<APointLight>(actors[i]);
-			if(pointlight)
-			{
-				actors[i]->SetActorHiddenInGame(true);
-			}
-			*/
-			//disable any other type of light
-			actors[i]->SetActorHiddenInGame(true);
-		}
-
-	    //Set all the roads the low quality material
-		/*UGameplayStatics::GetAllActorsWithTag(world, FName("CARLA_ROAD"),actors);
-		for(i=0; i<actors.Num(); i++)
-		{
-			TArray<UActorComponent*> components = actors[i]->GetComponentsByClass(UStaticMeshComponent::StaticClass());
-			for(int32 j=0; j<components.Num(); j++)
-			{
-				UStaticMeshComponent* staticmesh = Cast<UStaticMeshComponent>(components[j]);
-				if(staticmesh)
-				{
-					for(int32 k=0; k<staticmesh->GetNumMaterials(); k++)
-					{
-						if(!RoadMaterials.IsValidIndex(k)) break;
-						staticmesh->SetMaterial(k, Cast<UMaterialInterface>(RoadMaterials[k]));
-					}
-				}
-			}
-		}*/
-
-
+	  case EQualitySettingsLevel::Low: 
+	  	ApplyLowQualitySettings();
 		break;
-	  }
 	  case EQualitySettingsLevel::Medium: break;
 	  case EQualitySettingsLevel::High: break;
 	  case EQualitySettingsLevel::Epic: break;
@@ -429,6 +328,156 @@ void UCarlaSettings::ResetSensorDescriptions()
 {
   SensorDescriptions.Empty();
   bSemanticSegmentationEnabled = false;
+}
+
+void UCarlaSettings::LaunchLowQualityCommands(UWorld * world) const
+{
+  //launch commands to lower quality settings
+  world->Exec(world,TEXT("r.DefaultFeature.MotionBlur 0"));
+  world->Exec(world,TEXT("r.DefaultFeature.Bloom 0"));
+  world->Exec(world,TEXT("r.DefaultFeature.AmbientOcclusion 0"));
+  world->Exec(world,TEXT("r.AmbientOcclusionLevels 0"));
+  world->Exec(world,TEXT("r.DefaultFeature.AmbientOcclusionStaticFraction 0"));
+  world->Exec(world,TEXT("r.DefaultFeature.AutoExposure 0"));
+  world->Exec(world,TEXT("r.RHICmdBypass 0"));
+  world->Exec(world,TEXT("r.DefaultFeature.AntiAliasing 2"));
+  world->Exec(world,TEXT("r.Streaming.PoolSize 2000"));
+  world->Exec(world,TEXT("r.HZBOcclusion 0"));
+  world->Exec(world,TEXT("r.MinScreenRadiusForLights 0.01"));
+  world->Exec(world,TEXT("r.SeparateTranslucency 0"));
+  world->Exec(world,TEXT("r.FinishCurrentFrame 0"));
+  world->Exec(world,TEXT("r.MotionBlurQuality 0"));
+  world->Exec(world,TEXT("r.PostProcessAAQuality 0"));
+  world->Exec(world,TEXT("r.BloomQuality 1"));
+  world->Exec(world,TEXT("r.SSR.Quality 0"));
+  world->Exec(world,TEXT("r.DepthOfFieldQuality 0"));
+  world->Exec(world,TEXT("r.SceneColorFormat 2"));
+  world->Exec(world,TEXT("r.TranslucencyVolumeBlur 0"));
+  world->Exec(world,TEXT("r.TranslucencyLightingVolumeDim 4"));
+  world->Exec(world,TEXT("r.MaxAnisotropy 8"));
+  world->Exec(world,TEXT("r.LensFlareQuality 0"));
+  world->Exec(world,TEXT("r.SceneColorFringeQuality 0"));
+  world->Exec(world,TEXT("r.FastBlurThreshold 0"));
+  world->Exec(world,TEXT("r.SSR.MaxRoughness 0.1"));
+  world->Exec(world,TEXT("r.AllowOcclusionQueries 1"));
+  world->Exec(world,TEXT("r.SSR 0"));
+  world->Exec(world,TEXT("r.StencilForLODDither 1"));
+  world->Exec(world,TEXT("r.EarlyZPass 2")); //transparent before opaque
+  world->Exec(world,TEXT("r.EarlyZPassMovable 1"));
+  world->Exec(world,TEXT("r.Foliage.DitheredLOD 0"));
+  world->Exec(world,TEXT("r.ForwardShading 0"));
+  world->Exec(world,TEXT("sg.PostProcessQuality 0"));
+  world->Exec(world,TEXT("r.ViewDistanceScale 0.1"));
+  world->Exec(world,TEXT("sg.ShadowQuality 0"));
+  world->Exec(world,TEXT("sg.TextureQuality 0"));
+  world->Exec(world,TEXT("sg.EffectsQuality 0"));
+  world->Exec(world,TEXT("FoliageQuality 0"));
+  world->Exec(world,TEXT("foliage.DensityScale 0"));
+  world->Exec(world,TEXT("grass.DensityScale 0"));
+  world->Exec(world,TEXT("r.TranslucentLightingVolume 0"));
+  world->Exec(world,TEXT("r.LightShaftDownSampleFactor 4"));
+  world->Exec(world,TEXT("r.OcclusionQueryLocation 1"));
+  world->Exec(world,TEXT("r.BasePassOutputsVelocity 0"));
+  //world->Exec(world,TEXT("r.DetailMode 0")); //-->will change to lods 0
+}
+
+void UCarlaSettings::SetAllLightsLowQuality(UWorld* world) const
+{
+  TArray<AActor*> actors;
+  UGameplayStatics::GetAllActorsOfClass(world, ALight::StaticClass(), actors);
+  for(int32 i=0;i<actors.Num();i++)
+  {
+    //tweak directional lights
+    ADirectionalLight* directionallight = Cast<ADirectionalLight>(actors[i]);
+    if(directionallight)
+    {
+      directionallight->SetCastShadows(false);
+      directionallight->SetLightFunctionFadeDistance(LowLightFadeDistance);
+      continue;
+    }
+    //disable any other type of light
+    actors[i]->SetActorHiddenInGame(true);
+  }
+}
+
+void UCarlaSettings::SetAllRoadsLowQuality(UWorld* world) const
+{
+  TArray<AActor*> actors;
+  UGameplayStatics::GetAllActorsWithTag(world, CARLA_ROAD_TAG,actors);
+  for(int32 i=0; i<actors.Num(); i++)
+  {
+  	TArray<UActorComponent*> components = actors[i]->GetComponentsByClass(UStaticMeshComponent::StaticClass());
+  	for(int32 j=0; j<components.Num(); j++)
+  	{
+  		UStaticMeshComponent* staticmesh = Cast<UStaticMeshComponent>(components[j]);
+  		if(staticmesh)
+  		{
+  			for(int32 k=0; k<staticmesh->GetNumMaterials(); k++)
+  			{
+  				if(LowRoadMaterials.IsValidIndex(k) && LowRoadMaterials[k].MaterialInterface && LowRoadMaterials[k].MaterialInterface->IsValidLowLevel())
+  				{
+  					staticmesh->SetMaterial(k, LowRoadMaterials[k].MaterialInterface);
+  				}
+  			}
+  		}
+  	}
+  }
+}
+
+void UCarlaSettings::SetAllActorsDrawDistance(UWorld* world, const float static_mesh_max_draw_distance) const
+{
+  ///@TODO: use semantics to grab all actors by type (vehicles,ground,people,props) and set different distances configured in the global properties
+  TArray<AActor*> actors;
+  #define _MAX_SCALE_SIZE 50.0f
+  //set the lower quality - max draw distance
+  UGameplayStatics::GetAllActorsOfClass(world, AActor::StaticClass(),actors);
+  for(int32 i=0; i<actors.Num(); i++)
+  {
+	 if(!IsValid(actors[i]) || actors[i]->IsPendingKillPending() || actors[i]->ActorHasTag(CARLA_ROAD_TAG)) continue;
+     TArray<UActorComponent*> components = actors[i]->GetComponentsByClass(UStaticMeshComponent::StaticClass());
+	 float dist = static_mesh_max_draw_distance;
+   const float maxscale = actors[i]->GetActorScale().GetMax();
+	 if(maxscale>_MAX_SCALE_SIZE)  dist *= 100.0f;
+	 for(int32 j=0; j<components.Num(); j++)
+	 {
+		 UStaticMeshComponent* staticmeshcomp = Cast<UStaticMeshComponent>(components[j]);
+		 if(IsValid(staticmeshcomp))
+		 {
+			 staticmeshcomp->SetCullDistance(dist);
+		 }
+	 }
+	 
+  }
+}
+
+
+void UCarlaSettings::ApplyLowQualitySettings() const
+{
+  UWorld *world = GetWorld();
+  if(!world) return ;
+  LaunchLowQualityCommands(world);
+
+  //iterate all terrain, deactivate the actor
+  /*UGameplayStatics::GetAllActorsOfClass(world, ALandscape::StaticClass(), actors);
+  for(i=0; i<actors.Num(); i++)
+  {
+  	ALandscape* landscape = Cast<ALandscape>(actors[i]);
+  	if(landscape)
+  	{
+  		landscape->DisableComponentsSimulatePhysics();
+  		landscape->bUseLandscapeForCullingInvisibleHLODVertices=true;
+  			
+  	}
+  }*/
+  	
+  //iterate all directional lights, deactivate shadows
+  SetAllLightsLowQuality(world);
+  
+  //Set all the roads the low quality material
+  SetAllRoadsLowQuality(world);
+
+  //Set all actors with static meshes a max disntace configured in the global settings for the low quality
+  SetAllActorsDrawDistance(world, LowStaticMeshMaxDrawDistance);
 }
 
 void UCarlaSettings::LoadSettingsFromFile(const FString &FilePath, const bool bLogOnFailure)
