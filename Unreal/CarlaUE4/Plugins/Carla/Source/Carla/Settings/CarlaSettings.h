@@ -36,7 +36,7 @@ public:
 };
 
 class USensorDescription;
-class UMaterial;
+struct FStaticMaterial;
 /** Global settings for CARLA.
  * Setting object used to hold both config settings and editable ones in one place
  * To ensure the settings are saved to the specified config file make sure to add
@@ -84,6 +84,7 @@ public:
     return nullptr;
   }
 
+
   // Special overload for blueprints.
   UFUNCTION(BlueprintCallable)
   void GetActiveWeatherDescription(
@@ -92,9 +93,25 @@ public:
 
   UFUNCTION(BlueprintCallable)
   const FWeatherDescription &GetWeatherDescriptionByIndex(int32 Index);
-
+  ///----------- constants ------------------
+public:
+  /**
+   * CARLA_ROAD name to tag road mesh actors
+   */
+  static const FName CARLA_ROAD_TAG;
+  
 private:
-
+  /***/
+  void LaunchLowQualityCommands(UWorld* world) const;
+  /***/
+  void SetAllLightsLowQuality(UWorld* world) const;
+  /***/
+  void SetAllRoadsLowQuality(UWorld* world) const;
+  /***/
+  void SetAllActorsDrawDistance(UWorld* world, const float static_mesh_max_draw_distance) const;
+  /***/
+  void ApplyLowQualitySettings() const;
+  /***/
   void LoadSettingsFromFile(const FString &FilePath, bool bLogOnFailure);
 
   void ResetSensorDescriptions();
@@ -104,7 +121,7 @@ private:
   FString CurrentFileName;
 
 
-	// ===========================================================================
+  // ===========================================================================
   /// @name CARLA Server
   // ===========================================================================
   /// @{
@@ -180,13 +197,28 @@ private:
   EQualitySettingsLevel DefaultQualitySettingsLevel = EQualitySettingsLevel::None;
  
  public:
-  UPROPERTY(Category = "Quality Settings", EditAnywhere, config)
-  TArray<TSubclassOf<UMaterial>> RoadMaterials;
+  /** @TODO : Move Low quality vars to a generic map of structs with the quality level as key*/
+
+  /** Low quality Road Materials. 
+   * Using the index of array it will assign to the material with the same index in the mesh for each piece of road
+   * @TODO: Use slots name to set it for each part of the road
+   */
+  UPROPERTY(Category = "Quality Settings/Low", EditAnywhere, config, DisplayName="Road Materials List for Low Quality")
+  TArray<FStaticMaterial> LowRoadMaterials;
 
   //distances
+  /**
+   * Distance at which the light function should be completely faded to DisabledBrightness.  
+   * This is useful for hiding aliasing from light functions applied in the distance.
+   */
   UPROPERTY(Category = "Quality Settings/Low", EditAnywhere, config)
-  float LowLightFadeDistance;
+  float LowLightFadeDistance  = 1000.0f;
 
+  /**
+   *
+   */
+  UPROPERTY(Category = "Quality Settings/Low", EditAnywhere, config, meta = (ClampMin = "500.0", ClampMax = "15000.0", UIMin = "500.0", UIMax = "15000.0")) 
+  float LowStaticMeshMaxDrawDistance = 10000.0f;
 
   /// @}
 

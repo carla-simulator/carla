@@ -10,8 +10,7 @@
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include <vector>
-
-
+#include "Settings/CarlaSettings.h"
 
 
 using tag_size_t = std::underlying_type<ECityMapMeshTag>::type;
@@ -141,7 +140,7 @@ void ACityMapMeshHolder::AddInstance(ECityMapMeshTag Tag, FTransform Transform)
   staticmeshcomponent->SetStaticMesh(instantiator.GetStaticMesh());
   
   //occlussion 
-  StaticMeshActor->Tags.Add(FName("CARLA_ROAD"));
+  StaticMeshActor->Tags.Add(UCarlaSettings::CARLA_ROAD_TAG);
   staticmeshcomponent->bAllowCullDistanceVolume=true;
   staticmeshcomponent->bUseAsOccluder=false;
   staticmeshcomponent->LDMaxDrawDistance = MaxDrawDistance;
@@ -173,15 +172,13 @@ void ACityMapMeshHolder::ResetInstantiators()
     instantiator.SetStaticMesh(GetStaticMesh(CityMapMeshTag::FromUInt(i)));
   }
 
-  const FName roadtag = FName("CARLA_ROAD");
+  
   TArray<AActor*> roadpieces;
   GetAttachedActors(roadpieces);
   
   for(int32 i=roadpieces.Num()-1; i>=0; i--)
   {
-	
-	//UE_LOG(LogTemp,Display,TEXT("ACityMapMeshHolder::ResetInstantiators Destroyed %s"),*Children[i]->GetName());
-	if(roadpieces[i]->Tags.Contains(roadtag))
+	if(roadpieces[i]->Tags.Contains(UCarlaSettings::CARLA_ROAD_TAG))
 	{
 	   roadpieces[i]->Destroy();
 	}
