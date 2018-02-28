@@ -6,6 +6,7 @@
 
 """CARLA Client."""
 
+import logging
 import struct
 
 from contextlib import contextmanager
@@ -217,10 +218,10 @@ def _make_sensor_parsers(sensors):
 
     for s in sensors:
         sensor_def = SensorDefinition(s)
-        if sensor_def.type == carla_protocol.Sensor.UNKNOWN:
-            pass
+        if sensor_def.type == carla_protocol.Sensor.CAMERA:
+            sensor_def.parse_raw_data = parse_image
         elif sensor_def.type == carla_protocol.Sensor.LIDAR_RAY_TRACE:
             sensor_def.parse_raw_data = parse_lidar
         else:
-            sensor_def.parse_raw_data = parse_image
+            logging.error('unknown sensor type %s', sensor_def.type)
         yield sensor_def
