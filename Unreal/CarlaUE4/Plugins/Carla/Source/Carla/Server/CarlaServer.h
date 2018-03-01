@@ -47,6 +47,8 @@ public:
 
   ErrorCode ReadControl(FVehicleControl &Control, bool bBlocking);
 
+  /// Enqueues sensor data to be sent to the client. It is safe to call this
+  /// function from a different thread.
   ErrorCode SendSensorData(const FSensorDataView &Data);
 
   ErrorCode SendMeasurements(

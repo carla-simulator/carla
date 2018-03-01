@@ -2,8 +2,6 @@
 
 #include <gtest/gtest.h>
 
-#include <random>
-
 namespace test {
 
   static uint32_t ID_COUNT = 0u;
@@ -17,14 +15,23 @@ namespace test {
 
   carla_sensor_data Sensor::MakeRandomData() {
     std::lock_guard<std::mutex> lock(_mutex);
-    std::random_device device;
-    std::default_random_engine rng(device());
-    std::uniform_int_distribution<uint32_t> dist(1, 10000);
 
-    _data.header_size = dist(rng);
-    _data.data_size = dist(rng);
+    const struct {
+      uint32_t Width;
+      uint32_t Height;
+      uint32_t Type;
+      float FOV;
+    } ImageHeader = {300u, 200u, 1u, 90.0f};
 
-    _header = std::make_unique<const unsigned char[]>(_data.header_size);
+    _data.header_size = sizeof(ImageHeader);
+    auto header = std::make_unique<unsigned char[]>(_data.header_size);
+    std::memcpy(
+        reinterpret_cast<void *>(header.get()),
+        reinterpret_cast<const void *>(&ImageHeader),
+        _data.header_size);
+    _header = std::move(header);
+
+    _data.data_size = 300u * 200u;
     _buffer = std::make_unique<const unsigned char[]>(_data.data_size);
 
     _data.header = _header.get();

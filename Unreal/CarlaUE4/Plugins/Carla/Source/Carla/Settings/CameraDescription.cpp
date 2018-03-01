@@ -27,6 +27,15 @@ void UCameraDescription::Validate()
   ImageSizeY = (ImageSizeY == 0u ? 512u : ImageSizeY);
 }
 
+void UCameraDescription::AdjustToWeather(const FWeatherDescription &WeatherDescription)
+{
+  bOverrideCameraPostProcessParameters = WeatherDescription.bOverrideCameraPostProcessParameters;
+  if (bOverrideCameraPostProcessParameters)
+  {
+    CameraPostProcessParameters = WeatherDescription.CameraPostProcessParameters;
+  }
+}
+
 void UCameraDescription::Log() const
 {
   Super::Log();

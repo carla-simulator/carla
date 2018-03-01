@@ -16,7 +16,7 @@ import random
 import time
 
 from carla.client import make_carla_client
-from carla.sensor import Camera, Lidar, LidarMeasurement
+from carla.sensor import Camera, Lidar
 from carla.settings import CarlaSettings
 from carla.tcp import TCPConnectionError
 from carla.util import print_over_same_line
@@ -117,11 +117,8 @@ def run_carla_client(args):
                 # Save the images to disk if requested.
                 if args.save_images_to_disk:
                     for name, measurement in sensor_data.items():
-                        if isinstance(measurement, LidarMeasurement):
-                            filename = args.lidar_filename_format
-                        else:
-                            filename = args.image_filename_format
-                        measurement.save_to_disk(filename.format(episode, name, frame))
+                        filename = args.out_filename_format.format(episode, name, frame)
+                        measurement.save_to_disk(filename)
 
                 # We can access the encoded data of a given image as numpy
                 # array using its "data" property. For instance, to get the
@@ -223,8 +220,7 @@ def main():
 
     logging.info('listening to server %s:%s', args.host, args.port)
 
-    args.image_filename_format = '_out/episode_{:0>4d}/{:s}/{:0>6d}.png'
-    args.lidar_filename_format = '_out/episode_{:0>4d}/{:s}/{:0>6d}.ply'
+    args.out_filename_format = '_out/episode_{:0>4d}/{:s}/{:0>6d}'
 
     while True:
         try:

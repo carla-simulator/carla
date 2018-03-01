@@ -6,6 +6,7 @@
 
 """CARLA Client."""
 
+import logging
 import struct
 
 from contextlib import contextmanager
@@ -194,18 +195,18 @@ def _make_sensor_parsers(sensors):
 
     def parse_lidar(data):
         horizontal_angle = getfloat(data, 0)
-        channels_count = getint(data, 1)
-        points_count_by_channel = numpy.frombuffer(
-            data[8:8+channels_count*4],
+        channels = getint(data, 1)
+        point_count_by_channel = numpy.frombuffer(
+            data[8:8+channels*4],
             dtype=numpy.dtype('uint32'))
         points = numpy.frombuffer(
-            data[8+channels_count*4:],
+            data[8+channels*4:],
             dtype=numpy.dtype('f4'))
         points = numpy.reshape(points, (int(points.shape[0]/3), 3))
         return sensor.LidarMeasurement(
             horizontal_angle,
-            channels_count,
-            points_count_by_channel,
+            channels,
+            point_count_by_channel,
             sensor.PointCloud(points))
 
     class SensorDefinition(object):
@@ -217,10 +218,10 @@ def _make_sensor_parsers(sensors):
 
     for s in sensors:
         sensor_def = SensorDefinition(s)
-        if sensor_def.type == carla_protocol.Sensor.UNKNOWN:
-            pass
+        if sensor_def.type == carla_protocol.Sensor.CAMERA:
+            sensor_def.parse_raw_data = parse_image
         elif sensor_def.type == carla_protocol.Sensor.LIDAR_RAY_TRACE:
             sensor_def.parse_raw_data = parse_lidar
         else:
-            sensor_def.parse_raw_data = parse_image
+            logging.error('unknown sensor type %s', sensor_def.type)
         yield sensor_def
