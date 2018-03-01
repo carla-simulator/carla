@@ -6,25 +6,26 @@
 
 #pragma once
 
-#include "CarlaGameControllerBase.h"
-#include "MockGameControllerSettings.h"
+#include "Game/CarlaGameControllerBase.h"
+
+#include "Game/MockGameControllerSettings.h"
 
 /// Mocks the CARLA game controller class for testing purposes.
-class CARLA_API MockGameController : public CarlaGameControllerBase
+class MockGameController : public ICarlaGameControllerBase
 {
 public:
 
-  explicit MockGameController(const FMockGameControllerSettings &Settings);
+  explicit MockGameController(FDataRouter &DataRouter, const FMockGameControllerSettings &Settings);
 
-  virtual void Initialize(UCarlaSettings &CarlaSettings) override;
+  virtual void Initialize(UCarlaSettings &CarlaSettings) final;
 
-  virtual APlayerStart *ChoosePlayerStart(const TArray<APlayerStart *> &AvailableStartSpots) override;
+  virtual APlayerStart *ChoosePlayerStart(const TArray<APlayerStart *> &AvailableStartSpots) final;
 
-  virtual void RegisterPlayer(AController &NewPlayer) override;
+  virtual void RegisterPlayer(AController &NewPlayer) final;
 
-  virtual void BeginPlay() override;
+  virtual void BeginPlay() final;
 
-  virtual void Tick(float DeltaSeconds) override;
+  virtual void Tick(float DeltaSeconds) final;
 
 private:
 

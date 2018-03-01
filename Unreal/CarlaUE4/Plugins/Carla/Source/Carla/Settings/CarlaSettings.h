@@ -6,12 +6,13 @@
 
 #pragma once
 
-#include "CameraDescription.h"
 #include "WeatherDescription.h"
-#include "LidarDescription.h"
 
 #include "UObject/NoExportTypes.h"
+
 #include "CarlaSettings.generated.h"
+
+class USensorDescription;
 
 /// Global settings for CARLA.
 UCLASS()
@@ -57,9 +58,7 @@ private:
 
   void LoadSettingsFromFile(const FString &FilePath, bool bLogOnFailure);
 
-  void ResetCameraDescriptions();
-
-  void ResetLidarDescriptions();
+  void ResetSensorDescriptions();
 
   /** File name of the settings file used to load this settings. Empty if none used. */
   UPROPERTY(Category = "CARLA Settings|Debug", VisibleAnywhere)
@@ -130,25 +129,21 @@ public:
 
   /// @}
   // ===========================================================================
-  /// @name Scene Capture
+  /// @name Sensors
   // ===========================================================================
   /// @{
 public:
 
   /** Descriptions of the cameras to be attached to the player. */
-  UPROPERTY(Category = "Scene Capture", VisibleAnywhere)
-  TMap<FString, FCameraDescription> CameraDescriptions;
+  UPROPERTY(Category = "Sensors", VisibleAnywhere)
+  TMap<FString, USensorDescription *> SensorDescriptions;
 
   /** Whether semantic segmentation should be activated. The mechanisms for
     * semantic segmentation impose some performance penalties even if it is not
     * used, we only enable it if necessary.
     */
-  UPROPERTY(Category = "Scene Capture", VisibleAnywhere)
+  UPROPERTY(Category = "Sensors", VisibleAnywhere)
   bool bSemanticSegmentationEnabled = false;
-
-  /** Descriptions of the lidars to be attached to the player. */
-  UPROPERTY(Category = "Scene Capture", VisibleAnywhere)
-  TMap<FString, FLidarDescription> LidarDescriptions;
 
   /// @}
 };

@@ -7,8 +7,8 @@
 #include "Carla.h"
 #include "CarlaGameInstance.h"
 
-#include "CarlaGameController.h"
-#include "MockGameController.h"
+#include "Game/MockGameController.h"
+#include "Server/ServerGameController.h"
 #include "Settings/CarlaSettings.h"
 
 UCarlaGameInstance::UCarlaGameInstance() {
@@ -25,9 +25,9 @@ void UCarlaGameInstance::InitializeGameControllerIfNotPresent(
 {
   if (GameController == nullptr) {
     if (CarlaSettings->bUseNetworking) {
-      GameController = MakeUnique<CarlaGameController>();
+      GameController = MakeUnique<FServerGameController>(DataRouter);
     } else {
-      GameController = MakeUnique<MockGameController>(MockControllerSettings);
+      GameController = MakeUnique<MockGameController>(DataRouter, MockControllerSettings);
       UE_LOG(LogCarla, Log, TEXT("Using mock CARLA controller"));
     }
   }

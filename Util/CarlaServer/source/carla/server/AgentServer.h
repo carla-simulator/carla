@@ -9,6 +9,7 @@
 #include "carla/NonCopyable.h"
 #include "carla/server/AsyncServer.h"
 #include "carla/server/EncoderServer.h"
+#include "carla/server/SensorDataInbox.h"
 #include "carla/server/TCPServer.h"
 
 namespace carla {
@@ -23,38 +24,22 @@ namespace server {
         CarlaEncoder &encoder,
         uint32_t out_port,
         uint32_t in_port,
+        const SensorDataInbox::Sensors &sensors,
         time_duration timeout);
 
-    error_code WriteMeasurements(
-        const carla_measurements &measurements,
-        const_array_view<carla_image> images,
-        const_array_view<carla_lidar_measurement> lidar_measurements) {
-      error_code ec;
-      if (!_control.TryGetResult(ec)) {
-        auto writer = _measurements.buffer()->MakeWriter();
-        writer->Write(measurements, images, lidar_measurements);
-        ec = errc::success();
-      }
-      return ec;
-    };
+    error_code WriteSensorData(const carla_sensor_data &data);
 
-    error_code ReadControl(carla_control &control, timeout_t timeout) {
-      error_code ec = errc::try_again();
-      if (!_control.TryGetResult(ec)) {
-        auto reader = _control.buffer()->TryMakeReader(timeout);
-        if (reader != nullptr) {
-          control = *reader;
-          ec = errc::success();
-        }
-      }
-      return ec;
-    }
+    error_code WriteMeasurements(const carla_measurements &measurements);
+
+    error_code ReadControl(carla_control &control, timeout_t timeout);
 
   private:
 
     AsyncServer<EncoderServer<TCPServer>> _out;
 
     AsyncServer<EncoderServer<TCPServer>> _in;
+
+    SensorDataInbox _sensor_inbox;
 
     StreamWriteTask<MeasurementsMessage> _measurements;
 
