@@ -120,7 +120,9 @@ int32_t carla_write_measurements(
       CarlaServerPtr self,
       const carla_measurements &values,
       const struct carla_image *images,
-      const uint32_t number_of_images) {
+      const struct carla_lidar_measurement *lidar_measurements,
+      const uint32_t number_of_images,
+      const uint32_t number_of_lidar_measurements) {
   CARLA_PROFILE_SCOPE(C_API, WriteMeasurements);
   auto agent = Cast(self)->GetAgentServer();
   if (agent == nullptr) {
@@ -129,6 +131,8 @@ int32_t carla_write_measurements(
   } else {
     return agent->WriteMeasurements(
         values,
-        carla::const_array_view<carla_image>(images, number_of_images)).value();
+        carla::const_array_view<carla_image>(images, number_of_images),
+        carla::const_array_view<carla_lidar_measurement>(lidar_measurements, number_of_lidar_measurements)
+      ).value();
   }
 }
