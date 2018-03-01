@@ -6,7 +6,7 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-# Keyboard controlling for carla. Please refer to client_example for a simpler
+# Keyboard controlling for CARLA. Please refer to client_example.py for a simpler
 # and more documented example.
 
 """
@@ -93,6 +93,19 @@ def make_carla_settings():
     camera2.set_position(200, 0, 140)
     camera2.set_rotation(0.0, 0.0, 0.0)
     settings.add_sensor(camera2)
+    lidar0 = sensor.Lidar('Lidar32')
+    lidar0.set_position(0, 0, 250)
+    lidar0.set_rotation(0, 0, 0)
+    lidar0.set(
+        Channels = 32,
+        Range = 5000,
+        PointsPerSecond = 100000,
+        RotationFrequency = 10,
+        UpperFovLimit = 10,
+        LowerFovLimit = -30,
+        ShowDebugPoints = False)
+    settings.add_sensor(lidar0)
+
     return settings
 
 
@@ -124,6 +137,7 @@ class CarlaGame(object):
         self._main_image = None
         self._mini_view_image1 = None
         self._mini_view_image2 = None
+        self._lidar_measurement = None
         self._map_view = None
         self._is_on_reverse = False
         self._city_name = city_name
@@ -177,6 +191,7 @@ class CarlaGame(object):
         self._main_image = sensor_data['CameraRGB']
         self._mini_view_image1 = sensor_data['CameraDepth']
         self._mini_view_image2 = sensor_data['CameraSemSeg']
+        self._lidar_measurement = sensor_data['Lidar32']
 
         # Print measurements every second.
         if self._timer.elapsed_seconds_since_lap() > 1.0:
@@ -294,6 +309,23 @@ class CarlaGame(object):
 
             self._display.blit(
                 surface, (2 * gap_x + MINI_WINDOW_WIDTH, mini_image_y))
+
+        if self._lidar_measurement is not None:
+
+            lidar_data = np.array(self._lidar_measurement.data['points'][:, :, :2])
+            lidar_data /= 50.0
+            lidar_data += 100.0
+            lidar_data = np.fabs(lidar_data)
+            lidar_data = lidar_data.astype(np.int32)
+            lidar_data = np.reshape(lidar_data, (-1, 2))
+            #draw lidar
+            lidar_img_size = (200, 200, 3)
+            lidar_img = np.zeros(lidar_img_size)
+            lidar_img[tuple(lidar_data.T)] = (255, 255, 255)
+            surface = pygame.surfarray.make_surface(
+                lidar_img
+            )
+            self._display.blit(surface, (10, 10))
 
         if self._map_view is not None:
             array = self._map_view

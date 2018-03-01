@@ -16,13 +16,13 @@ import random
 import time
 
 from carla.client import make_carla_client
-from carla.sensor import Camera
+from carla.sensor import Camera, Lidar, LidarMeasurement
 from carla.settings import CarlaSettings
 from carla.tcp import TCPConnectionError
 from carla.util import print_over_same_line
 
 
-def run_carla_client(host, port, autopilot_on, save_images_to_disk, image_filename_format, settings_filepath):
+def run_carla_client(host, port, autopilot_on, save_images_to_disk, image_filename_format, lidar_filename_format, settings_filepath):
     # Here we will run 3 episodes with 300 frames each.
     number_of_episodes = 3
     frames_per_episode = 300
@@ -70,6 +70,19 @@ def run_carla_client(host, port, autopilot_on, save_images_to_disk, image_filena
                 camera1.set_position(30, 0, 130)
                 settings.add_sensor(camera1)
 
+                lidar0 = Lidar('Lidar32')
+                lidar0.set_position(0, 0, 250)
+                lidar0.set_rotation(0, 0, 0)
+                lidar0.set(
+                    Channels = 32,
+                    Range = 5000,
+                    PointsPerSecond = 100000,
+                    RotationFrequency = 10,
+                    UpperFovLimit = 10,
+                    LowerFovLimit = -30,
+                    ShowDebugPoints = False)
+                settings.add_sensor(lidar0)
+
             else:
 
                 # Alternatively, we can load these settings from a file.
@@ -103,8 +116,11 @@ def run_carla_client(host, port, autopilot_on, save_images_to_disk, image_filena
 
                 # Save the images to disk if requested.
                 if save_images_to_disk:
-                    for name, image in sensor_data.items():
-                        image.save_to_disk(image_filename_format.format(episode, name, frame))
+                    for name, measurement in sensor_data.items():
+                        if isinstance(measurement, LidarMeasurement):
+                            measurement.save_to_disk(lidar_filename_format.format(episode, name, frame))
+                        else:
+                            measurement.save_to_disk(image_filename_format.format(episode, name, frame))
 
                 # We can access the encoded data of a given image as numpy
                 # array using its "data" property. For instance, to get the
@@ -208,7 +224,8 @@ def main():
                 port=args.port,
                 autopilot_on=args.autopilot,
                 save_images_to_disk=args.images_to_disk,
-                image_filename_format='_images/episode_{:0>3d}/{:s}/image_{:0>5d}.png',
+                image_filename_format='_out/episode_{:0>4d}/{:s}/{:0>6d}.png',
+                lidar_filename_format='_out/episode_{:0>4d}/{:s}/{:0>6d}.json',
                 settings_filepath=args.carla_settings)
 
             print('Done.')

@@ -1,6 +1,5 @@
 #include <atomic>
 #include <future>
-#include <iostream>
 
 #include <gtest/gtest.h>
 
@@ -53,7 +52,13 @@ TEST(CarlaServerAPI, SimBlocking) {
   constexpr uint32_t ImageSizeY = 200u;
   const uint32_t image0[ImageSizeX*ImageSizeY] = {0u};
   const carla_image images[] = {
-    {ImageSizeX, ImageSizeY, 1u, image0}
+    {ImageSizeX, ImageSizeY, 1u, 0u, image0}
+  };
+
+  const uint32_t points_count_by_channel[32] = {1u};
+  const double lidar_data[32 * 3] = {1};
+  const carla_lidar_measurement lidar_measurements[] = {
+    {10, 32, points_count_by_channel, lidar_data}
   };
 
   const carla_transform start_locations[] = {
@@ -106,7 +111,9 @@ TEST(CarlaServerAPI, SimBlocking) {
           carla_measurements measurements;
           measurements.non_player_agents = agents_data.data();
           measurements.number_of_non_player_agents = agents_data.size();
-          auto ec = carla_write_measurements(CarlaServer, measurements, images, SIZE_OF_ARRAY(images));
+          auto ec = carla_write_measurements(
+            CarlaServer, measurements, images, lidar_measurements,
+            SIZE_OF_ARRAY(images), SIZE_OF_ARRAY(lidar_measurements));
           if (ec != S)
             break;
         }

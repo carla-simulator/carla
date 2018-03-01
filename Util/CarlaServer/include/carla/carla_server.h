@@ -38,7 +38,15 @@ extern "C" {
     uint32_t width;
     uint32_t height;
     uint32_t type;
+    float fov;
     const uint32_t *data;
+  };
+
+  struct carla_lidar_measurement {
+    float horizontal_angle;
+    int channels_count;
+    const uint32_t *points_count_by_channel;
+    const double *data;
   };
 
   struct carla_transform {
@@ -262,7 +270,9 @@ extern "C" {
       CarlaServerPtr self,
       const carla_measurements &values,
       const struct carla_image *images,
-      uint32_t number_of_images);
+      const struct carla_lidar_measurement *lidar_measurements,
+      const uint32_t number_of_images,
+      const uint32_t number_of_lidar_measurements);
 
 #ifdef __cplusplus
 }

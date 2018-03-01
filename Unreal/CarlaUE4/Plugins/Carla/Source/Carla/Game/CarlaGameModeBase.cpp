@@ -225,6 +225,10 @@ void ACarlaGameModeBase::AttachCaptureCamerasToPlayer()
   for (const auto &Item : Settings.CameraDescriptions) {
     PlayerController->AddSceneCaptureCamera(Item.Value, OverridePostProcessParameters);
   }
+
+  for (const auto &Item : Settings.LidarDescriptions) {
+    PlayerController->AddSceneCaptureLidar(Item.Value);
+  }
 }
 
 void ACarlaGameModeBase::TagActorsForSemanticSegmentation()
