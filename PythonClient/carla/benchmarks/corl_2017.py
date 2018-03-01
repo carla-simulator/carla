@@ -138,7 +138,7 @@ class CoRL2017(Benchmark):
         # This single RGB camera is used on every experiment
 
         camera = Camera('CameraRGB')
-        camera.set(CameraFOV=100)
+        camera.set(FOV=100)
 
         camera.set_image_size(800, 600)
 

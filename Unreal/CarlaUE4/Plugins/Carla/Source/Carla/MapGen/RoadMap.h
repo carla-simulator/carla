@@ -12,7 +12,7 @@
 
 /// Road map intersection result. See URoadMap.
 USTRUCT(BlueprintType)
-struct FRoadMapIntersectionResult
+struct CARLA_API FRoadMapIntersectionResult
 {
   GENERATED_BODY()
 

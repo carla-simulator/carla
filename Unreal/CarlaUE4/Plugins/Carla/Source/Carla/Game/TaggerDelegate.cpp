@@ -7,8 +7,9 @@
 #include "Carla.h"
 #include "TaggerDelegate.h"
 
+#include "Game/Tagger.h"
+
 #include "Engine/World.h"
-#include "Tagger.h"
 
 UTaggerDelegate::UTaggerDelegate() :
   ActorSpawnedDelegate(FOnActorSpawned::FDelegate::CreateUObject(this, &UTaggerDelegate::OnActorSpawned)) {}

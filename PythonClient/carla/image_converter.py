@@ -19,8 +19,7 @@ try:
     import numpy
     from numpy.matlib import repmat
 except ImportError:
-    raise RuntimeError(
-        'cannot import numpy, make sure numpy package is installed')
+    raise RuntimeError('cannot import numpy, make sure numpy package is installed')
 
 
 from . import sensor
