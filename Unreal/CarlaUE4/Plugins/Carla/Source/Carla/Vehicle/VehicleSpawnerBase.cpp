@@ -35,8 +35,11 @@ static AWheeledVehicleAIController *GetController(ACarlaWheeledVehicle *Vehicle)
 // =============================================================================
 
 // Sets default values
-AVehicleSpawnerBase::AVehicleSpawnerBase(const FObjectInitializer& ObjectInitializer) :
-  Super(ObjectInitializer) {}
+AVehicleSpawnerBase::AVehicleSpawnerBase(const FObjectInitializer& ObjectInitializer)
+  : Super(ObjectInitializer)
+{
+  PrimaryActorTick.bCanEverTick = false;
+}
 
 void AVehicleSpawnerBase::BeginPlay()
 {

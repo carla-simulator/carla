@@ -101,7 +101,14 @@ TEST(CarlaServerAPI, SimBlocking) {
       ASSERT_EQ(S, carla_write_episode_ready(CarlaServer, values, TIMEOUT));
     }
 
-    std::array<carla_agent, 10u> agents_data;
+    std::array<carla_agent, 30u> agents_data;
+    for (auto i = 0u; i < agents_data.size(); ++i) {
+      agents_data[i].id = i;
+      agents_data[i].type = CARLA_SERVER_AGENT_VEHICLE;
+      agents_data[i].transform = start_locations[0u];
+      agents_data[i].box_extent = {100.0f, 100.0f, 100.0f};
+      agents_data[i].forward_speed = 50.0f;
+    }
 
     std::atomic_bool done{false};
 

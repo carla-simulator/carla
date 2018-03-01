@@ -12,7 +12,7 @@
 
 class ATrafficSignBase;
 
-UCLASS()
+UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class CARLA_API UTrafficSignAgentComponent : public UAgentComponent
 {
   GENERATED_BODY()

@@ -9,6 +9,8 @@
 
 ATrafficSignBase::ATrafficSignBase(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer) {
+  PrimaryActorTick.bCanEverTick = false;
+
   RootComponent =
       ObjectInitializer.CreateDefaultSubobject<USceneComponent>(this, TEXT("SceneRootComponent"));
   RootComponent->SetMobility(EComponentMobility::Static);
@@ -16,4 +18,5 @@ ATrafficSignBase::ATrafficSignBase(const FObjectInitializer &ObjectInitializer)
   TrafficSignAgentComponent =
       CreateDefaultSubobject<UTrafficSignAgentComponent>(TEXT("TrafficSignAgentComponent"));
   TrafficSignAgentComponent->SetupAttachment(RootComponent);
+  TrafficSignAgentComponent->SetMobility(EComponentMobility::Static);
 }

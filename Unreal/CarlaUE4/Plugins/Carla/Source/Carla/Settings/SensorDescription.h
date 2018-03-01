@@ -11,7 +11,9 @@
 #include "SensorDescription.generated.h"
 
 class FIniFile;
+struct FWeatherDescription;
 
+/// A description of a sensor as loaded from the settings file.
 UCLASS(Abstract)
 class CARLA_API USensorDescription : public UObject
 {
@@ -34,6 +36,8 @@ public:
   {
     return false;
   }
+
+  virtual void AdjustToWeather(const FWeatherDescription &) {}
 
   virtual void Log() const;
 

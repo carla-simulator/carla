@@ -210,13 +210,16 @@ void ACarlaGameModeBase::AttachSensorsToPlayer()
   check(PlayerController != nullptr);
   const auto &Settings = GameInstance->GetCarlaSettings();
   const auto *Weather = Settings.GetActiveWeatherDescription();
-  const FCameraPostProcessParameters *OverridePostProcessParameters = nullptr;
-  if ((Weather != nullptr) && (Weather->bOverrideCameraPostProcessParameters)) {
-    OverridePostProcessParameters = &Weather->CameraPostProcessParameters;
-  }
 
-  for (const auto &Item : Settings.SensorDescriptions) {
-    auto *Sensor = FSensorFactory::Make(*Item.Value, *GetWorld());
+  for (auto &Item : Settings.SensorDescriptions)
+  {
+    check(Item.Value != nullptr);
+    auto &SensorDescription = *Item.Value;
+    if (Weather != nullptr)
+    {
+      SensorDescription.AdjustToWeather(*Weather);
+    }
+    auto *Sensor = FSensorFactory::Make(SensorDescription, *GetWorld());
     check(Sensor != nullptr);
     Sensor->AttachToActor(PlayerController->GetPawn());
     GetDataRouter().RegisterSensor(*Sensor);
