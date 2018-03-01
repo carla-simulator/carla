@@ -110,10 +110,12 @@ private:
   /***/
   void SetAllActorsDrawDistance(UWorld* world, const float static_mesh_max_draw_distance) const;
   /***/
+  void SetPostProcessEffectsEnabled(UWorld* world, bool enabled) const;
+  /***/
   void ApplyLowQualitySettings() const;
   /***/
   void LoadSettingsFromFile(const FString &FilePath, bool bLogOnFailure);
-
+  /***/
   void ResetSensorDescriptions();
 
   /** File name of the settings file used to load this settings. Empty if none used. */
