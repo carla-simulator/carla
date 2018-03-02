@@ -412,17 +412,26 @@ void UCarlaSettings::SetAllRoadsLowQuality(UWorld* world) const
   	TArray<UActorComponent*> components = actors[i]->GetComponentsByClass(UStaticMeshComponent::StaticClass());
   	for(int32 j=0; j<components.Num(); j++)
   	{
-  		UStaticMeshComponent* staticmesh = Cast<UStaticMeshComponent>(components[j]);
-  		if(staticmesh)
-  		{
-  			for(int32 k=0; k<staticmesh->GetNumMaterials(); k++)
-  			{
-  				if(LowRoadMaterials.IsValidIndex(k) && LowRoadMaterials[k].MaterialInterface && LowRoadMaterials[k].MaterialInterface->IsValidLowLevel())
-  				{
-  					staticmesh->SetMaterial(k, LowRoadMaterials[k].MaterialInterface);
-  				}
-  			}
-  		}
+  	  UStaticMeshComponent* staticmesh = Cast<UStaticMeshComponent>(components[j]);
+  	  if(staticmesh)
+  	  {
+		TArray<FName> slotsnames = staticmesh->GetMaterialSlotNames();
+		for(int32 k=0; k<slotsnames.Num(); k++)
+		{
+		  const FName &slotname = slotsnames[k];
+		  bool found = LowRoadMaterials.ContainsByPredicate([staticmesh,slotname](const FStaticMaterial& material)
+		  {
+			  if(material.MaterialSlotName.IsEqual(slotname))
+			  {
+				  staticmesh->SetMaterial(
+					  staticmesh->GetMaterialIndex(slotname), 
+					  material.MaterialInterface
+				  );
+				  return true;
+			  } else return false;
+		  });
+		}
+  	  }
   	}
   }
 }
