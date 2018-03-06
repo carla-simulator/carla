@@ -15,6 +15,7 @@
 #include "Sensor/Sensor.h"
 #include "Sensor/SensorFactory.h"
 #include "Settings/CarlaSettings.h"
+#include "Settings/CarlaSettingsDelegate.h"
 #include "Util/RandomEngine.h"
 #include "Vehicle/CarlaVehicleController.h"
 
@@ -38,6 +39,7 @@ ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializ
   HUDClass = ACarlaHUD::StaticClass();
 
   TaggerDelegate = CreateDefaultSubobject<UTaggerDelegate>(TEXT("TaggerDelegate"));
+  CarlaSettingsDelegate = CreateDefaultSubobject<UCarlaSettingsDelegate>(TEXT("CarlaSettingsDelegate"));
 }
 
 void ACarlaGameModeBase::InitGame(
@@ -55,7 +57,7 @@ void ACarlaGameModeBase::InitGame(
   GameInstance->InitializeGameControllerIfNotPresent(MockGameControllerSettings);
   GameController = &GameInstance->GetGameController();
   auto &CarlaSettings = GameInstance->GetCarlaSettings();
-
+  UWorld *world = GetWorld();
   { // Load weather descriptions and initialize game controller.
 #if WITH_EDITOR
     {
@@ -87,22 +89,36 @@ void ACarlaGameModeBase::InitGame(
   }
 
   if (TaggerDelegate != nullptr) {
-    TaggerDelegate->RegisterSpawnHandler(GetWorld());
+    TaggerDelegate->RegisterSpawnHandler(world);
   } else {
     UE_LOG(LogCarla, Error, TEXT("Missing TaggerDelegate!"));
   }
 
+  if(CarlaSettingsDelegate!=nullptr){
+    //assign delegate for every new actor
+    CarlaSettingsDelegate->RegisterSpawnHandler(world);
+    //apply quality settings 
+    CarlaSettingsDelegate->ApplyQualitySettingsLevelPostRestart();
+    
+    
+  } else {
+    UE_LOG(LogCarla, Error, TEXT("Missing CarlaSettingsDelegate!"));
+  }
+
   if (DynamicWeatherClass != nullptr) {
-    DynamicWeather = GetWorld()->SpawnActor<ADynamicWeather>(DynamicWeatherClass);
+    DynamicWeather = world->SpawnActor<ADynamicWeather>(DynamicWeatherClass);
   }
 
   if (VehicleSpawnerClass != nullptr) {
-    VehicleSpawner = GetWorld()->SpawnActor<AVehicleSpawnerBase>(VehicleSpawnerClass);
+    VehicleSpawner = world->SpawnActor<AVehicleSpawnerBase>(VehicleSpawnerClass);
   }
 
   if (WalkerSpawnerClass != nullptr) {
-    WalkerSpawner = GetWorld()->SpawnActor<AWalkerSpawnerBase>(WalkerSpawnerClass);
+    WalkerSpawner = world->SpawnActor<AWalkerSpawnerBase>(WalkerSpawnerClass);
   }
+
+  
+
 }
 
 void ACarlaGameModeBase::RestartPlayer(AController* NewPlayer)
@@ -131,7 +147,6 @@ void ACarlaGameModeBase::BeginPlay()
   Super::BeginPlay();
 
   const auto &CarlaSettings = GameInstance->GetCarlaSettings();
-  CarlaSettings.ApplyQualitySettingsLevelPostRestart();
   
   // Setup semantic segmentation if necessary.
   if (CarlaSettings.bSemanticSegmentationEnabled) {

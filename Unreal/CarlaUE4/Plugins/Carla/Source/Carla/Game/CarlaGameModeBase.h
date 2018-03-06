@@ -22,7 +22,7 @@ class APlayerStart;
 class ASceneCaptureCamera;
 class UCarlaGameInstance;
 class UTaggerDelegate;
-
+class UCarlaSettingsDelegate;
 UCLASS(HideCategories=(ActorTick))
 class CARLA_API ACarlaGameModeBase : public AGameModeBase
 {
@@ -90,6 +90,9 @@ private:
 
   UPROPERTY()
   UTaggerDelegate *TaggerDelegate;
+
+  UPROPERTY()
+  UCarlaSettingsDelegate* CarlaSettingsDelegate;
 
   UPROPERTY()
   ADynamicWeather *DynamicWeather;
