@@ -36,4 +36,16 @@ protected:
   virtual void BeginPlay() override;
 
   virtual void EndPlay(EEndPlayReason::Type EndPlayReason) override;
+
+protected:
+
+  /** If true, this component will be registered at BeginPlay. */
+  UPROPERTY(Category = "Agent Component", EditAnywhere)
+  bool bRegisterAgentComponent = true;
+
+private:
+
+  /** Whether this component has been registered. */
+  UPROPERTY(Category = "Agent Component", VisibleAnywhere, AdvancedDisplay)
+  bool bAgentComponentIsRegistered = false;
 };
