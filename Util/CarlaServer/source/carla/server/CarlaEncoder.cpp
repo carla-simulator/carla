@@ -155,6 +155,7 @@ namespace server {
     auto *player = message->mutable_player_measurements();
     DEBUG_ASSERT(player != nullptr);
     Set(player->mutable_transform(), values.player_measurements.transform);
+    Set(player->mutable_box_extent(), values.player_measurements.box_extent);
     Set(player->mutable_acceleration(), values.player_measurements.acceleration);
     player->set_forward_speed(values.player_measurements.forward_speed);
     player->set_collision_vehicles(values.player_measurements.collision_vehicles);
