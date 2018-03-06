@@ -64,7 +64,7 @@ void ACarlaVehicleController::Tick(float DeltaTime)
     auto Vehicle = GetPossessedVehicle();
     CarlaPlayerState->UpdateTimeStamp(DeltaTime);
     const FVector PreviousSpeed = CarlaPlayerState->ForwardSpeed * CarlaPlayerState->GetOrientation();
-    CarlaPlayerState->Transform = Vehicle->GetActorTransform();
+    CarlaPlayerState->Transform = Vehicle->GetVehicleTransform();
     CarlaPlayerState->ForwardSpeed = Vehicle->GetVehicleForwardSpeed();
     const FVector CurrentSpeed = CarlaPlayerState->ForwardSpeed * CarlaPlayerState->GetOrientation();
     CarlaPlayerState->Acceleration = (CurrentSpeed - PreviousSpeed) / DeltaTime;
@@ -113,7 +113,7 @@ void ACarlaVehicleController::IntersectPlayerWithRoadMap()
   auto Vehicle = GetPossessedVehicle();
   constexpr float ChecksPerCentimeter = 0.1f;
   auto Result = RoadMap->Intersect(
-      Vehicle->GetActorTransform(),
+      Vehicle->GetVehicleTransform(),
       Vehicle->GetVehicleBoundsExtent(),
       ChecksPerCentimeter);
 
