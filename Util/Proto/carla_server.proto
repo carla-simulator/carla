@@ -126,6 +126,8 @@ message Measurements {
   message PlayerMeasurements {
     Transform transform = 1;
 
+    Vector3D box_extent = 11;
+
     Vector3D acceleration = 3;
     float forward_speed = 4;
 

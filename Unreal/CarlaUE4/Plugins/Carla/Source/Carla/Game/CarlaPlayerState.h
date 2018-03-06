@@ -83,6 +83,12 @@ public:
   }
 
   UFUNCTION(BlueprintCallable)
+  FVector GetBoundsExtent() const
+  {
+    return BoundsExtent;
+  }
+
+  UFUNCTION(BlueprintCallable)
   float GetForwardSpeed() const
   {
     return ForwardSpeed;
@@ -219,6 +225,9 @@ private:
 
   UPROPERTY(VisibleAnywhere)
   FTransform Transform;
+
+  UPROPERTY(VisibleAnywhere)
+  FVector BoundsExtent;
 
   UPROPERTY(VisibleAnywhere)
   float ForwardSpeed = 0.0f;
