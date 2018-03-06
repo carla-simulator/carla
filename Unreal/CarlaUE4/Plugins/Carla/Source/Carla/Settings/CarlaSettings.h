@@ -12,7 +12,7 @@
 
 #include "CarlaSettings.generated.h"
 
-UENUM(BlueprintType)
+UENUM(BlueprintType, Blueprintable)
 enum class EQualitySettingsLevel : uint8
 {
   None    UMETA(DisplayName = "Not set"),
@@ -23,7 +23,7 @@ enum class EQualitySettingsLevel : uint8
 	
 };
 
-class CARLA_API FQualitySettings 
+class CARLA_API FQualitySettings : public UObject
 {
 public:
  using uint_type = typename std::underlying_type<EQualitySettingsLevel>::type;
@@ -42,7 +42,7 @@ struct FStaticMaterial;
  * To ensure the settings are saved to the specified config file make sure to add
  * props using the globalconfig or config meta.
  */
-UCLASS(config = Game, defaultconfig)
+UCLASS(BlueprintType, Blueprintable, config = Game, defaultconfig)
 class CARLA_API UCarlaSettings : public UObject
 {
   GENERATED_BODY()
@@ -57,10 +57,9 @@ public:
    */
   bool SetQualitySettingsLevel(EQualitySettingsLevel newDefaultLevel);
   /** @return current quality settings level (could not be applied yet) */
+  UFUNCTION(BlueprintCallable)
   EQualitySettingsLevel GetQualitySettingsLevel() const { return DefaultQualitySettingsLevel; }
-  /** @todo move to class */
-  void ApplyQualitySettingsLevelPostRestart() const;
-  void ApplyQualitySettingsLevelPreRestart() const{}
+  
   /** Load the settings based on the command-line arguments and the INI file if provided. */
   void LoadSettings();
 
@@ -86,7 +85,7 @@ public:
 
 
   // Special overload for blueprints.
-  UFUNCTION(BlueprintCallable)
+  UFUNCTION(BlueprintCallable, Category="CARLA Settings")
   void GetActiveWeatherDescription(
       bool &bWeatherWasChanged,
       FWeatherDescription &WeatherDescription) const;
@@ -101,18 +100,7 @@ public:
   static const FName CARLA_ROAD_TAG;
   
 private:
-  /***/
-  void LaunchLowQualityCommands(UWorld* world) const;
-  /***/
-  void SetAllLightsLowQuality(UWorld* world) const;
-  /***/
-  void SetAllRoadsLowQuality(UWorld* world) const;
-  /***/
-  void SetAllActorsDrawDistance(UWorld* world, const float static_mesh_max_draw_distance) const;
-  /***/
-  void SetPostProcessEffectsEnabled(UWorld* world, bool enabled) const;
-  /***/
-  void ApplyLowQualitySettings() const;
+  
   /***/
   void LoadSettingsFromFile(const FString &FilePath, bool bLogOnFailure);
   /***/
@@ -205,7 +193,7 @@ private:
    * Using the index of array it will assign to the material with the same index in the mesh for each piece of road
    * @TODO: Use slots name to set it for each part of the road
    */
-  UPROPERTY(Category = "Quality Settings/Low", EditAnywhere, config, DisplayName="Road Materials List for Low Quality")
+  UPROPERTY(Category = "Quality Settings/Low", BlueprintReadOnly, EditAnywhere, config, DisplayName="Road Materials List for Low Quality")
   TArray<FStaticMaterial> LowRoadMaterials;
 
   //distances
@@ -213,13 +201,13 @@ private:
    * Distance at which the light function should be completely faded to DisabledBrightness.  
    * This is useful for hiding aliasing from light functions applied in the distance.
    */
-  UPROPERTY(Category = "Quality Settings/Low", EditAnywhere, config)
+  UPROPERTY(Category = "Quality Settings/Low", BlueprintReadOnly, EditAnywhere, config)
   float LowLightFadeDistance  = 1000.0f;
 
   /**
    *
    */
-  UPROPERTY(Category = "Quality Settings/Low", EditAnywhere, config, meta = (ClampMin = "500.0", ClampMax = "15000.0", UIMin = "500.0", UIMax = "15000.0")) 
+  UPROPERTY(Category = "Quality Settings/Low", BlueprintReadOnly, EditAnywhere, config, meta = (ClampMin = "500.0", ClampMax = "15000.0", UIMin = "500.0", UIMax = "15000.0")) 
   float LowStaticMeshMaxDrawDistance = 10000.0f;
 
   /// @}
@@ -231,14 +219,14 @@ private:
 public:
 
   /** Descriptions of the cameras to be attached to the player. */
-  UPROPERTY(Category = "Sensors", VisibleAnywhere)
+  UPROPERTY(Category = "Sensors", BlueprintReadOnly, VisibleAnywhere)
   TMap<FString, USensorDescription *> SensorDescriptions;
 
   /** Whether semantic segmentation should be activated. The mechanisms for
     * semantic segmentation impose some performance penalties even if it is not
     * used, we only enable it if necessary.
     */
-  UPROPERTY(Category = "Sensors", VisibleAnywhere)
+  UPROPERTY(Category = "Sensors", BlueprintReadOnly,VisibleAnywhere)
   bool bSemanticSegmentationEnabled = false;
 
   /// @}
