@@ -142,27 +142,37 @@ void UCarlaSettingsDelegate::SetAllRoadsLowQuality(UWorld* world) const
   if(CarlaSettings->LowRoadMaterials.Num()==0) return; //no materials configured for low quality
   TArray<AActor*> actors;
   UGameplayStatics::GetAllActorsWithTag(world, UCarlaSettings::CARLA_ROAD_TAG,actors);
+  const float LowRoadPieceMeshMaxDrawDistance = CarlaSettings->LowRoadPieceMeshMaxDrawDistance;
   for(int32 i=0; i<actors.Num(); i++)
   {
 	if(!IsValid(actors[i]) || actors[i]->IsPendingKillPending()) continue;
   	TArray<UActorComponent*> components = actors[i]->GetComponentsByClass(UStaticMeshComponent::StaticClass());
   	for(int32 j=0; j<components.Num(); j++)
   	{
-  	  UStaticMeshComponent* staticmesh = Cast<UStaticMeshComponent>(components[j]);
-  	  if(staticmesh)
+  	  UStaticMeshComponent* staticmeshcomponent = Cast<UStaticMeshComponent>(components[j]);
+  	  if(staticmeshcomponent)
   	  {
-        TArray<FName> slotsnames = staticmesh->GetMaterialSlotNames();
+        TArray<FName> slotsnames = staticmeshcomponent->GetMaterialSlotNames();
         for(int32 k=0; k<slotsnames.Num(); k++)
         {
           const FName &slotname = slotsnames[k];
-          bool found = CarlaSettings->LowRoadMaterials.ContainsByPredicate([staticmesh,slotname](const FStaticMaterial& material)
+          bool found = CarlaSettings->LowRoadMaterials.ContainsByPredicate(
+			  [staticmeshcomponent,slotname,LowRoadPieceMeshMaxDrawDistance](const FStaticMaterial& material)
           {
             if(material.MaterialSlotName.IsEqual(slotname))
             {
-              staticmesh->SetMaterial(
-                staticmesh->GetMaterialIndex(slotname), 
+              staticmeshcomponent->SetMaterial(
+                staticmeshcomponent->GetMaterialIndex(slotname), 
                 material.MaterialInterface
               );
+			  staticmeshcomponent->bAllowCullDistanceVolume=true;
+			  staticmeshcomponent->bUseAsOccluder=false;
+  
+			  staticmeshcomponent->LDMaxDrawDistance = LowRoadPieceMeshMaxDrawDistance; 
+  			  staticmeshcomponent->CastShadow = false;
+			  
+       
+ 
               return true;
             } else return false;
           });

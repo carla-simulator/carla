@@ -13,6 +13,8 @@
 class IDetailLayoutBuilder;
 class UInstancedStaticMeshComponent;
 class AStaticMeshActor;
+
+
 /// Holds the static meshes and instances necessary for building a city map.
 UCLASS(Abstract)
 class CARLA_API ACityMapMeshHolder : public AActor
@@ -92,14 +94,14 @@ private:
   /// Here does nothing, implement in derived classes.
   virtual void UpdateMap();
 
-  /// Clear all instances in the instantiators and update the static meshes.
-  void ResetInstantiators();
+  /// Clear all instances of the static mesh actors.
+  void DeletePieces();
 
   /// Set the scale to the dimensions of the base mesh.
   void UpdateMapScale();
 
-  /// Creates a new one if necessary.
-  UInstancedStaticMeshComponent &GetInstantiator(ECityMapMeshTag Tag);
+ private:
+
 
   UPROPERTY()
   USceneComponent *SceneRootComponent;
@@ -113,9 +115,5 @@ private:
   UPROPERTY()
   TMap<UStaticMesh *, ECityMapMeshTag> TagMap;
 
-  UPROPERTY(Category = "Meshes", VisibleAnywhere)
-  TArray<UInstancedStaticMeshComponent *> MeshInstatiators;
-  
-  UPROPERTY(Category = "Meshes", EditAnywhere)
-  float MaxDrawDistance = 10000.0f; /** @todo: move to carlasettings */
+
 };

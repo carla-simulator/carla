@@ -11,6 +11,7 @@
 #include "Engine/StaticMesh.h"
 #include <vector>
 #include "Settings/CarlaSettings.h"
+#include "Game/CarlaGameInstance.h"
 
 
 using tag_size_t = std::underlying_type<ECityMapMeshTag>::type;
@@ -54,14 +55,17 @@ void ACityMapMeshHolder::OnConstruction(const FTransform &Transform)
 void ACityMapMeshHolder::PostInitializeComponents()
 {
   Super::PostInitializeComponents();
+  
+
   if(IsValid(GetLevel())&&!GetLevel()->IsPendingKill())
-  {
-	if (MeshInstatiators.Num() == 0) {
-     ResetInstantiators();
-     UpdateMapScale();
-     UpdateMap();
-    }
-	  
+  {	 
+	 TArray<AActor*> roadpieces;
+     GetAttachedActors(roadpieces);
+	 if(roadpieces.Num()==0)
+	 {
+	   UpdateMapScale();
+       UpdateMap();
+	 }
   }
   
 }
@@ -72,7 +76,7 @@ void ACityMapMeshHolder::PostEditChangeProperty(FPropertyChangedEvent& PropertyC
   Super::PostEditChangeProperty(PropertyChangedEvent);
   if (PropertyChangedEvent.Property) 
   { 
-    ResetInstantiators();
+    DeletePieces();
     UpdateMapScale();
     UpdateMap();
    }
@@ -122,12 +126,10 @@ void ACityMapMeshHolder::AddInstance(ECityMapMeshTag Tag, uint32 X, uint32 Y, fl
   const FQuat rotation(FVector(0.0f, 0.0f, 1.0f), Angle);
   const FVector location = GetTileLocation(X, Y);
   AddInstance(Tag, FTransform(rotation, location));
-
 }
 
 void ACityMapMeshHolder::AddInstance(ECityMapMeshTag Tag, FTransform Transform)
 {
-  auto &instantiator = GetInstantiator(Tag);
   FActorSpawnParameters params;
   params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
   FVector location = Transform.GetLocation();
@@ -137,16 +139,9 @@ void ACityMapMeshHolder::AddInstance(ECityMapMeshTag Tag, FTransform Transform)
   StaticMeshActor->SetMobility(EComponentMobility::Static);
   UStaticMeshComponent* staticmeshcomponent = StaticMeshActor->GetStaticMeshComponent();
   staticmeshcomponent->SetMobility(EComponentMobility::Static);
-  staticmeshcomponent->SetStaticMesh(instantiator.GetStaticMesh());
-  
-  //occlussion 
+  staticmeshcomponent->SetStaticMesh(GetStaticMesh(Tag));
   StaticMeshActor->Tags.Add(UCarlaSettings::CARLA_ROAD_TAG);
-  staticmeshcomponent->bAllowCullDistanceVolume=true;
-  staticmeshcomponent->bUseAsOccluder=false;
-  staticmeshcomponent->LDMaxDrawDistance = MaxDrawDistance;
-  staticmeshcomponent->CastShadow=false;
-  StaticMeshActor->bEnableAutoLODGeneration=true;
-  
+  StaticMeshActor->bEnableAutoLODGeneration = true;
 }
 
 // =============================================================================
@@ -155,23 +150,14 @@ void ACityMapMeshHolder::AddInstance(ECityMapMeshTag Tag, FTransform Transform)
 
 void ACityMapMeshHolder::UpdateMap() {}
 
-void ACityMapMeshHolder::ResetInstantiators()
+void ACityMapMeshHolder::DeletePieces()
 {
-  for (auto *instantiator : MeshInstatiators) {
-    if (instantiator != nullptr) {
-      instantiator->ClearInstances();
-    }
+  //this part will be deprecated: remove the instanced static mesh components
+  TArray<UActorComponent*> oldcomponents = GetComponentsByClass(UInstancedStaticMeshComponent::StaticClass());
+  for(int32 i=0;i<oldcomponents.Num();i++)
+  {
+	  oldcomponents[i]->DestroyComponent();
   }
-  if (MeshInstatiators.Num() != NUMBER_OF_TAGS) {
-    MeshInstatiators.Empty();
-    MeshInstatiators.Init(nullptr, NUMBER_OF_TAGS);
-  }
-  check(MeshInstatiators.Num() == NUMBER_OF_TAGS);
-  for (tag_size_t i = 0u; i < NUMBER_OF_TAGS; ++i) {
-    auto &instantiator = GetInstantiator(CityMapMeshTag::FromUInt(i));
-    instantiator.SetStaticMesh(GetStaticMesh(CityMapMeshTag::FromUInt(i)));
-  }
-
   
   TArray<AActor*> roadpieces;
   GetAttachedActors(roadpieces);
@@ -203,19 +189,4 @@ void ACityMapMeshHolder::UpdateMapScale()
   }
 }
 
-UInstancedStaticMeshComponent &ACityMapMeshHolder::GetInstantiator(ECityMapMeshTag Tag)
-{
-  UInstancedStaticMeshComponent *instantiator = MeshInstatiators[CityMapMeshTag::ToUInt(Tag)];
-  if (instantiator == nullptr) {
-    // Create and register an instantiator.
-    instantiator = NewObject<UInstancedStaticMeshComponent>(this);
-    instantiator->SetMobility(EComponentMobility::Static);
-    instantiator->SetCollisionObjectType(ECollisionChannel::ECC_WorldStatic);
-    instantiator->SetupAttachment(SceneRootComponent);
-    instantiator->SetStaticMesh(GetStaticMesh(Tag));
-    MeshInstatiators[CityMapMeshTag::ToUInt(Tag)] = instantiator;
-    instantiator->RegisterComponent();
-  }
-  check(instantiator != nullptr);
-  return *instantiator;
-}
+
