@@ -17,7 +17,7 @@ UWalkerAgentComponent::UWalkerAgentComponent(const FObjectInitializer &ObjectIni
 float UWalkerAgentComponent::GetForwardSpeed() const
 {
   /// @todo Is it necessary to compute this speed every tick?
-  return FVector::DotProduct(Walker->GetVelocity(), Walker->GetActorRotation().Vector()) * 0.036f;
+  return FVector::DotProduct(Walker->GetVelocity(), Walker->GetActorRotation().Vector());
 }
 
 void UWalkerAgentComponent::BeginPlay()

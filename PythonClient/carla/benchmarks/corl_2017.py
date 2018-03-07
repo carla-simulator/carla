@@ -142,7 +142,7 @@ class CoRL2017(Benchmark):
 
         camera.set_image_size(800, 600)
 
-        camera.set_position(200, 0, 140)
+        camera.set_position(2.0, 0.0, 1.4)
         camera.set_rotation(-15.0, 0, 0)
 
         weathers = [1, 3, 6, 8, 4, 14]

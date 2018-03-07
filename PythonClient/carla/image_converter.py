@@ -114,7 +114,7 @@ def depth_to_local_point_cloud(image, color=None, max_depth=0.9):
     RGB color of an array.
     "max_depth" is used to omit the points that are far enough.
     """
-    far = 100000.0  # max depth in centimeters
+    far = 1000.0  # max depth in meters.
     normalized_depth = depth_to_array(image)
 
     # (Intrinsic) K Matrix

@@ -28,7 +28,7 @@ public:
   UPROPERTY(EditDefaultsOnly, Category = "Lidar Description")
   uint32 Channels = 32u;
 
-  /** Measure distance. */
+  /** Measure distance in centimeters. */
   UPROPERTY(EditDefaultsOnly, Category = "Lidar Description")
   float Range = 5000.0f;
 
