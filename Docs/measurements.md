@@ -103,6 +103,10 @@ front wheel blueprint).
 Non-player agents info
 ----------------------
 
+!!! important
+    Since version 0.8.0 the player vehicle is not sent in the list of non-player
+    agents.
+
 To receive info of every non-player agent in the scene every frame you need to
 activate this option in the settings file sent by the client at the beginning of
 the episode.
