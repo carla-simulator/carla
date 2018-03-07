@@ -60,19 +60,19 @@ def run_carla_client(args):
                 camera0 = Camera('CameraRGB')
                 # Set image resolution in pixels.
                 camera0.set_image_size(800, 600)
-                # Set its position relative to the car in centimeters.
-                camera0.set_position(30, 0, 130)
+                # Set its position relative to the car in meters.
+                camera0.set_position(0.30, 0, 1.30)
                 settings.add_sensor(camera0)
 
                 # Let's add another camera producing ground-truth depth.
                 camera1 = Camera('CameraDepth', PostProcessing='Depth')
                 camera1.set_image_size(800, 600)
-                camera1.set_position(30, 0, 130)
+                camera1.set_position(0.30, 0, 1.30)
                 settings.add_sensor(camera1)
 
                 if args.lidar:
                     lidar = Lidar('Lidar32')
-                    lidar.set_position(0, 0, 250)
+                    lidar.set_position(0, 0, 2.50)
                     lidar.set_rotation(0, 0, 0)
                     lidar.set(
                         Channels=32,
@@ -158,14 +158,14 @@ def print_measurements(measurements):
     number_of_agents = len(measurements.non_player_agents)
     player_measurements = measurements.player_measurements
     message = 'Vehicle at ({pos_x:.1f}, {pos_y:.1f}), '
-    message += '{speed:.2f} km/h, '
+    message += '{speed:.0f} km/h, '
     message += 'Collision: {{vehicles={col_cars:.0f}, pedestrians={col_ped:.0f}, other={col_other:.0f}}}, '
     message += '{other_lane:.0f}% other lane, {offroad:.0f}% off-road, '
     message += '({agents_num:d} non-player agents in the scene)'
     message = message.format(
-        pos_x=player_measurements.transform.location.x / 100, # cm -> m
-        pos_y=player_measurements.transform.location.y / 100,
-        speed=player_measurements.forward_speed,
+        pos_x=player_measurements.transform.location.x,
+        pos_y=player_measurements.transform.location.y,
+        speed=player_measurements.forward_speed * 3.6, # m/s -> km/h
         col_cars=player_measurements.collision_vehicles,
         col_ped=player_measurements.collision_pedestrians,
         col_other=player_measurements.collision_other,

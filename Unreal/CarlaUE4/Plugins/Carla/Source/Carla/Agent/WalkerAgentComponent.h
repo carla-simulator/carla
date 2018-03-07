@@ -23,7 +23,7 @@ public:
 
   UWalkerAgentComponent(const FObjectInitializer &ObjectInitializer);
 
-  /// Return forward speed in km/h.
+  /// Return forward speed in cm/s.
   float GetForwardSpeed() const;
 
   FVector GetBoundingBoxExtent() const

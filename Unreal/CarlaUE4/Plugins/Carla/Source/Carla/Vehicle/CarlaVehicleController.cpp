@@ -94,7 +94,7 @@ void ACarlaVehicleController::OnCollisionEvent(
 {
   // Register collision only if we are moving faster than 1 km/h.
   check(IsPossessingAVehicle());
-  if (FMath::Abs(GetPossessedVehicle()->GetVehicleForwardSpeed()) > 1.0f) {
+  if (FMath::Abs(GetPossessedVehicle()->GetVehicleForwardSpeed() * 0.036f) > 1.0f) {
     CarlaPlayerState->RegisterCollision(Actor, OtherActor, NormalImpulse, Hit);
   }
 }
