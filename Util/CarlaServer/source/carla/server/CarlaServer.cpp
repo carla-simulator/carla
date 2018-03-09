@@ -116,19 +116,28 @@ int32_t carla_read_control(
   return agent->ReadControl(values, timeout_t::milliseconds(timeout)).value();
 }
 
+int32_t carla_write_sensor_data(
+    CarlaServerPtr self,
+    const carla_sensor_data &sensor_data) {
+  CARLA_PROFILE_SCOPE(C_API, WriteSensorData);
+  auto agent = Cast(self)->GetAgentServer();
+  if (agent == nullptr) {
+    log_debug("trying to write sensor data but agent server is missing");
+    return CARLA_SERVER_OPERATION_ABORTED;
+  } else {
+    return agent->WriteSensorData(sensor_data).value();
+  }
+}
+
 int32_t carla_write_measurements(
-      CarlaServerPtr self,
-      const carla_measurements &values,
-      const struct carla_image *images,
-      const uint32_t number_of_images) {
+    CarlaServerPtr self,
+    const carla_measurements &measurements) {
   CARLA_PROFILE_SCOPE(C_API, WriteMeasurements);
   auto agent = Cast(self)->GetAgentServer();
   if (agent == nullptr) {
     log_debug("trying to write measurements but agent server is missing");
     return CARLA_SERVER_OPERATION_ABORTED;
   } else {
-    return agent->WriteMeasurements(
-        values,
-        carla::const_array_view<carla_image>(images, number_of_images)).value();
+    return agent->WriteMeasurements(measurements).value();
   }
 }

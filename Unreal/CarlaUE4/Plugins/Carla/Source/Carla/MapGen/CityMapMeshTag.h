@@ -73,7 +73,7 @@ enum class ECityMapMeshTag : uint8
 };
 
 /// Helper class for working with ECityMapMeshTag.
-class CARLA_API CityMapMeshTag
+class CityMapMeshTag
 {
 public:
 

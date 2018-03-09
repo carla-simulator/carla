@@ -13,6 +13,7 @@ import carla
 
 from carla.client import CarlaClient
 from carla.sensor import Camera, Image
+from carla.sensor import Lidar, LidarMeasurement
 from carla.settings import CarlaSettings
 from carla.util import make_connection
 
@@ -45,8 +46,8 @@ class _BasicTestBase(unit_tests.CarlaServerTest):
                     number_of_agents = len(measurements.non_player_agents)
                     logging.debug('received data of %d agents', number_of_agents)
                     logging.debug('received %d images', len(images))
-                    if len(images) != len(carla_settings._cameras):
-                        raise RuntimeError('received %d images, expected %d' % (len(images), len(carla_settings._cameras)))
+                    if len(sensor_data) != len(carla_settings._sensors):
+                        raise RuntimeError('received %d, expected %d' % (len(sensor_data), len(carla_settings._sensors)))
                     logging.debug('sending control...')
                     control = measurements.player_measurements.autopilot_control
                     if not use_autopilot_control:
@@ -80,7 +81,7 @@ class TwoCameras(_BasicTestBase):
         settings = CarlaSettings()
         settings.add_sensor(Camera('DefaultCamera'))
         camera2 = Camera('Camera2')
-        camera2.set(PostProcessing='Depth', CameraFOV=120)
+        camera2.set(PostProcessing='Depth', FOV=120)
         camera2.set_image_size(1924, 1028)
         settings.add_sensor(camera2)
         self.run_carla_client(settings, 3, 100)
@@ -110,3 +111,10 @@ class LongEpisode(_BasicTestBase):
         settings = CarlaSettings()
         settings.add_sensor(Camera('DefaultCamera'))
         self.run_carla_client(settings, 1, 2000, use_autopilot_control=True)
+
+
+class LidarTest(_BasicTestBase):
+    def run(self):
+        settings = CarlaSettings()
+        settings.add_sensor(Lidar('DefaultLidar'))
+        self.run_carla_client(settings, 3, 100)

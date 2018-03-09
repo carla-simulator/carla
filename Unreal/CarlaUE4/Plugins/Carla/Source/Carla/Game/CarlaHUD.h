@@ -12,7 +12,7 @@
 class FTexture;
 
 UCLASS()
-class ACarlaHUD : public AHUD
+class CARLA_API ACarlaHUD : public AHUD
 {
   GENERATED_BODY()
 
