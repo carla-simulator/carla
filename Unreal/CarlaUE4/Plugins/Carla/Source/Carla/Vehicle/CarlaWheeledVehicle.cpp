@@ -37,6 +37,13 @@ ACarlaWheeledVehicle::~ACarlaWheeledVehicle() {}
 // -- Get functions ------------------------------------------------------------
 // =============================================================================
 
+FTransform ACarlaWheeledVehicle::GetVehicleTransform() const
+{
+  FTransform Transform = VehicleBounds->GetComponentTransform();
+  Transform.SetScale3D(GetActorTransform().GetScale3D());
+  return Transform;
+}
+
 float ACarlaWheeledVehicle::GetVehicleForwardSpeed() const
 {
   return GetVehicleMovementComponent()->GetForwardSpeed() * 0.036f;
@@ -44,7 +51,7 @@ float ACarlaWheeledVehicle::GetVehicleForwardSpeed() const
 
 FVector ACarlaWheeledVehicle::GetVehicleOrientation() const
 {
-  return GetActorTransform().GetRotation().GetForwardVector();
+  return GetVehicleTransform().GetRotation().GetForwardVector();
 }
 
 int32 ACarlaWheeledVehicle::GetVehicleCurrentGear() const
