@@ -7,7 +7,8 @@
 #include "Carla.h"
 #include "CarlaHUD.h"
 
-#include "CarlaVehicleController.h"
+#include "Vehicle/CarlaVehicleController.h"
+
 #include "CommandLine.h"
 #include "ConstructorHelpers.h"
 #include "Engine/Canvas.h"

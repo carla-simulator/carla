@@ -9,7 +9,7 @@
 #include "MockGameControllerSettings.generated.h"
 
 USTRUCT(BlueprintType)
-struct FMockGameControllerSettings
+struct CARLA_API FMockGameControllerSettings
 {
   GENERATED_USTRUCT_BODY()
 

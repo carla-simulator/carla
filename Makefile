@@ -88,9 +88,9 @@ run_test_release:
 
 launch_test_clients:
 	@echo "Launch echo client"
-	@python3 $(PYTHON_CLIENT_FOLDER)/test_client.py --echo -p 4000 --log echo_client.log & echo $$! > echo_client.pid
+	@python3 $(PYTHON_CLIENT_FOLDER)/test_client.py --echo -v -p 4000 --log echo_client.log & echo $$! > echo_client.pid
 	@echo "Launch carla client"
-	@python3 $(PYTHON_CLIENT_FOLDER)/test_client.py -p 2000 --log carla_client.log & echo $$! > carla_client.pid
+	@python3 $(PYTHON_CLIENT_FOLDER)/test_client.py -v -p 2000 --log carla_client.log & echo $$! > carla_client.pid
 
 kill_test_clients:
 	@echo "Kill echo client"
