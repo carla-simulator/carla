@@ -120,9 +120,15 @@ if $DO_COPY_FILES ; then
   cp -v ./Docs/Example.CarlaSettings.ini ${DESTINATION}/Example.CarlaSettings.ini
 
   rsync -vhr --delete --delete-excluded \
-      --exclude "__pycache__" \
+      --exclude "*.egg-info" \
+      --exclude "*.log" \
       --exclude "*.pyc" \
       --exclude ".*" \
+      --exclude ".tags*" \
+      --exclude "__pycache__" \
+      --exclude "_benchmarks_results*" \
+      --exclude "_images*" \
+      --exclude "_out*" \
       PythonClient/ ${DESTINATION}/PythonClient
 
   echo
