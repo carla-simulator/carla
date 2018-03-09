@@ -31,7 +31,7 @@ release: MY_CMAKE_FLAGS+=-DCMAKE_BUILD_TYPE=Release
 release: $(BUILD_RULE)
 
 vsproject: BUILD_FOLDER=$(BASE_BUILD_FOLDER)/visualstudio
-vsproject: MY_CMAKE_FLAGS+=-DCMAKE_BUILD_TYPE=Debug
+vsproject: MY_CMAKE_FLAGS+=-DCMAKE_BUILD_TYPE=Release
 vsproject: MY_CMAKE_FLAGS+=-G "Visual Studio 14 2015 Win64"
 vsproject: call_cmake
 
