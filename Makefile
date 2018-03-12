@@ -4,18 +4,16 @@ BASE_BUILD_FOLDER=$(CURDIR)/Util/Build/carlaserver-build
 MY_CMAKE_FOLDER=$(CURDIR)/Util/cmake
 MY_CMAKE_FLAGS=-B"$(BUILD_FOLDER)" -DCMAKE_INSTALL_PREFIX="$(INSTALL_FOLDER)"
 
-define log
-	@echo -- LOG [$(1)] '$($1)'
-endef
-
 ifeq ($(OS),Windows_NT)
 BUILD_RULE=build_windows
 CLEAN_RULE=clean_windows
+CALL_CMAKE_RULE=call_cmake_windows
 PROTOC_COMPILE=cmd.exe /k "cd Util & call Protoc.bat & exit"
 PROTOC_CLEAN=cmd.exe /k "cd Util & call Protoc.bat --clean & exit"
-RM=
 else
 BUILD_RULE=build_linux
+CLEAN_RULE=clean_linux
+CALL_CMAKE_RULE=call_cmake_linux
 PROTOC_COMPILE=./Util/Protoc.sh
 PROTOC_CLEAN=./Util/Protoc.sh --clean
 endif
@@ -33,7 +31,7 @@ release: MY_CMAKE_FLAGS+=-DCMAKE_BUILD_TYPE=Release
 release: $(BUILD_RULE)
 
 vsproject: BUILD_FOLDER=$(BASE_BUILD_FOLDER)/visualstudio
-vsproject: MY_CMAKE_FLAGS+=-DCMAKE_BUILD_TYPE=Debug
+vsproject: MY_CMAKE_FLAGS+=-DCMAKE_BUILD_TYPE=Release
 vsproject: MY_CMAKE_FLAGS+=-G "Visual Studio 14 2015 Win64"
 vsproject: call_cmake
 
@@ -45,16 +43,17 @@ build_windows: MY_CMAKE_FLAGS+=-G "NMake Makefiles"
 build_windows: call_cmake
 	@cd $(BUILD_FOLDER) && nmake && nmake install
 
-call_cmake: protobuf
-ifeq ($(OS),Windows_NT)
-	-@mkdir "$(BUILD_FOLDER)"
-else
-	@mkdir -p $(BUILD_FOLDER)
-endif
+call_cmake: protobuf $(CALL_CMAKE_RULE)
 	@cd $(BUILD_FOLDER) && cmake $(MY_CMAKE_FLAGS) "$(MY_CMAKE_FOLDER)"
 
 protobuf:
 	@$(PROTOC_COMPILE)
+
+call_cmake_linux:
+	@mkdir -p $(BUILD_FOLDER)
+
+call_cmake_windows:
+	-@mkdir "$(BUILD_FOLDER)"
 
 ### Docs #######################################################################
 
@@ -66,13 +65,14 @@ doxygen:
 
 ### Clean ######################################################################
 
-clean:
-ifeq ($(OS),Windows_NT)
-	@rd /s /q "$(BASE_BUILD_FOLDER)" "$(INSTALL_FOLDER)"
-else
-	@rm -Rf $(BASE_BUILD_FOLDER) $(INSTALL_FOLDER) Doxygen
-endif
+clean: $(CLEAN_RULE)
 	@$(PROTOC_CLEAN)
+
+clean_linux:
+	@rm -Rf $(BASE_BUILD_FOLDER) $(INSTALL_FOLDER) Doxygen
+
+clean_windows:
+	-@rd /s /q "$(BASE_BUILD_FOLDER)" "$(INSTALL_FOLDER)" Doxygen 2>nul
 
 ### Test #######################################################################
 
