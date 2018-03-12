@@ -9,17 +9,38 @@
 
 #include "MapGen/GraphGenerator.h"
 #include "MapGen/RoadMap.h"
-#include "Tagger.h"
+#include "Game/Tagger.h"
 
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Engine/World.h"
 #include "Paths.h"
 
 #include <algorithm>
+#include <unordered_set>
 
 #ifdef CARLA_ROAD_GENERATOR_EXTRA_LOG
 #include <sstream>
 #endif // CARLA_ROAD_GENERATOR_EXTRA_LOG
+
+// =============================================================================
+// -- Private types ------------------------------------------------------------
+// =============================================================================
+
+class FHalfEdgeCounter {
+public:
+
+  using HalfEdge = MapGen::DoublyConnectedEdgeList::HalfEdge;
+
+  bool Insert(const HalfEdge &InHalfEdge)
+  {
+    return Set.insert(&InHalfEdge).second &&
+           Set.insert(&MapGen::DoublyConnectedEdgeList::GetPair(InHalfEdge)).second;
+  }
+
+private:
+
+  std::unordered_set<const HalfEdge *> Set;
+};
 
 // =============================================================================
 // -- Constructor and destructor -----------------------------------------------
@@ -135,35 +156,39 @@ void ACityMapGenerator::GenerateRoads()
 
   const uint32 margin = CityMapMeshTag::GetRoadIntersectionSize() / 2u;
 
+  FHalfEdgeCounter HalfEdgeCounter;
+
   // For each edge add road segment.
   for (auto &edge : graph.GetHalfEdges()) {
-    auto source = Graph::GetSource(edge).GetPosition();
-    auto target = Graph::GetTarget(edge).GetPosition();
+    if (HalfEdgeCounter.Insert(edge)) {
+      auto source = Graph::GetSource(edge).GetPosition();
+      auto target = Graph::GetTarget(edge).GetPosition();
 
-    if (source.x == target.x) {
-      // vertical
-      auto y = 1u + margin + std::min(source.y, target.y);
-      auto end = std::max(source.y, target.y) - margin;
-      for (; y < end; ++y) {
-        AddInstance(ECityMapMeshTag::RoadTwoLanes_LaneLeft,          source.x, y, HALF_PI);
-        AddInstance(ECityMapMeshTag::RoadTwoLanes_LaneRight,         source.x, y, HALF_PI);
-        AddInstance(ECityMapMeshTag::RoadTwoLanes_SidewalkLeft,      source.x, y, HALF_PI);
-        AddInstance(ECityMapMeshTag::RoadTwoLanes_SidewalkRight,     source.x, y, HALF_PI);
-        AddInstance(ECityMapMeshTag::RoadTwoLanes_LaneMarkingBroken, source.x, y, HALF_PI);
+      if (source.x == target.x) {
+        // vertical
+        auto y = 1u + margin + std::min(source.y, target.y);
+        auto end = std::max(source.y, target.y) - margin;
+        for (; y < end; ++y) {
+          AddInstance(ECityMapMeshTag::RoadTwoLanes_LaneLeft,          source.x, y, HALF_PI);
+          AddInstance(ECityMapMeshTag::RoadTwoLanes_LaneRight,         source.x, y, HALF_PI);
+          AddInstance(ECityMapMeshTag::RoadTwoLanes_SidewalkLeft,      source.x, y, HALF_PI);
+          AddInstance(ECityMapMeshTag::RoadTwoLanes_SidewalkRight,     source.x, y, HALF_PI);
+          AddInstance(ECityMapMeshTag::RoadTwoLanes_LaneMarkingBroken, source.x, y, HALF_PI);
+        }
+      } else if (source.y == target.y) {
+        // horizontal
+        auto x = 1u + margin + std::min(source.x, target.x);
+        auto end = std::max(source.x, target.x) - margin;
+        for (; x < end; ++x) {
+          AddInstance(ECityMapMeshTag::RoadTwoLanes_LaneLeft,          x, source.y);
+          AddInstance(ECityMapMeshTag::RoadTwoLanes_LaneRight,         x, source.y);
+          AddInstance(ECityMapMeshTag::RoadTwoLanes_SidewalkLeft,      x, source.y);
+          AddInstance(ECityMapMeshTag::RoadTwoLanes_SidewalkRight,     x, source.y);
+          AddInstance(ECityMapMeshTag::RoadTwoLanes_LaneMarkingBroken, x, source.y);
+        }
+      } else {
+        UE_LOG(LogCarla, Warning, TEXT("Diagonal edge ignored"));
       }
-    } else if (source.y == target.y) {
-      // horizontal
-      auto x = 1u + margin + std::min(source.x, target.x);
-      auto end = std::max(source.x, target.x) - margin;
-      for (; x < end; ++x) {
-        AddInstance(ECityMapMeshTag::RoadTwoLanes_LaneLeft,          x, source.y);
-        AddInstance(ECityMapMeshTag::RoadTwoLanes_LaneRight,         x, source.y);
-        AddInstance(ECityMapMeshTag::RoadTwoLanes_SidewalkLeft,      x, source.y);
-        AddInstance(ECityMapMeshTag::RoadTwoLanes_SidewalkRight,     x, source.y);
-        AddInstance(ECityMapMeshTag::RoadTwoLanes_LaneMarkingBroken, x, source.y);
-      }
-    } else {
-      UE_LOG(LogCarla, Warning, TEXT("Diagonal edge ignored"));
     }
   }
 
@@ -291,7 +316,7 @@ void ACityMapGenerator::GenerateRoadMap()
 #endif // WITH_EDITOR
 
   if (bSaveRoadMapToDisk) {
-    RoadMap->SaveAsPNG(FPaths::GameSavedDir(), World->GetMapName());
+    RoadMap->SaveAsPNG(FPaths::ProjectSavedDir(), World->GetMapName());
   }
 
 #if WITH_EDITOR

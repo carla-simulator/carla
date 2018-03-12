@@ -7,8 +7,22 @@
 #include "Carla.h"
 #include "MockGameController.h"
 
-MockGameController::MockGameController(const FMockGameControllerSettings &InSettings) :
-  Settings(InSettings) {}
+#include "Game/DataRouter.h"
+#include "Sensor/SensorDataSink.h"
+
+class FMockSensorDataSink : public ISensorDataSink {
+public:
+
+  virtual void Write(const FSensorDataView &) final {}
+};
+
+MockGameController::MockGameController(
+    FDataRouter &InDataRouter,
+    const FMockGameControllerSettings &InSettings)
+  : ICarlaGameControllerBase(InDataRouter),
+    Settings(InSettings) {
+  DataRouter.SetSensorDataSink(MakeShared<FMockSensorDataSink>());
+}
 
 void MockGameController::Initialize(UCarlaSettings &CarlaSettings)
 {

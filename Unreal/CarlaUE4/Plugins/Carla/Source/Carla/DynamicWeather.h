@@ -7,7 +7,9 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
+
 #include "Settings/WeatherDescription.h"
+
 #include "DynamicWeather.generated.h"
 
 class UArrowComponent;

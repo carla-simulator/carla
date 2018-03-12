@@ -13,7 +13,7 @@
 
 namespace MapGen {
 
-  class CARLA_API RoadSegmentDescription : private NonCopyable
+  class RoadSegmentDescription : private NonCopyable
   {
   public:
 

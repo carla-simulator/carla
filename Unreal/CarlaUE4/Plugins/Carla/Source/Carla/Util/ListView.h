@@ -7,7 +7,7 @@
 #pragma once
 
 template<typename IT>
-class CARLA_API ListView
+class ListView
 {
 public:
 
