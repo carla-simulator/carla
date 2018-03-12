@@ -41,6 +41,11 @@ public:
   /// @{
 public:
 
+  /// Transform of the vehicle. Location is shifted so it matches center of the
+  /// vehicle bounds rather than the actor's location.
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  FTransform GetVehicleTransform() const;
+
   /// Forward speed in km/h. Might be negative if goes backwards.
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   float GetVehicleForwardSpeed() const;
