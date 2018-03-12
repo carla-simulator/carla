@@ -136,7 +136,6 @@ void FCarlaEncoder::Encode(
 void FCarlaEncoder::Encode(const UAgentComponent &AgentComponent, carla_agent &AgentData)
 {
   AgentData.id = AgentComponent.GetId();
-  ::Encode(AgentComponent.GetComponentTransform(), AgentData.transform);
   FCarlaEncoder Encoder(AgentData);
   AgentComponent.AcceptVisitor(Encoder);
 }
@@ -149,6 +148,7 @@ FCarlaEncoder::FCarlaEncoder(carla_agent &InData) : Data(InData) {}
 
 void FCarlaEncoder::Visit(const UTrafficSignAgentComponent &Agent)
 {
+  ::Encode(Agent.GetComponentTransform(), Data.transform);
   auto &TrafficSign = Agent.GetTrafficSign();
   switch (TrafficSign.GetTrafficSignState()) {
     case ETrafficSignState::TrafficLightRed:
@@ -200,6 +200,7 @@ void FCarlaEncoder::Visit(const UTrafficSignAgentComponent &Agent)
 void FCarlaEncoder::Visit(const UVehicleAgentComponent &Agent)
 {
   auto &Vehicle = Agent.GetVehicle();
+  ::Encode(Vehicle.GetVehicleTransform(), Data.transform);
   Data.type = CARLA_SERVER_AGENT_VEHICLE;
   Data.forward_speed = Vehicle.GetVehicleForwardSpeed();
   ::Encode(Vehicle.GetVehicleBoundsExtent(), Data.box_extent);
@@ -207,6 +208,7 @@ void FCarlaEncoder::Visit(const UVehicleAgentComponent &Agent)
 
 void FCarlaEncoder::Visit(const UWalkerAgentComponent &Agent)
 {
+  ::Encode(Agent.GetComponentTransform(), Data.transform);
   Data.type = CARLA_SERVER_AGENT_PEDESTRIAN;
   Data.forward_speed = Agent.GetForwardSpeed();
   ::Encode(Agent.GetBoundingBoxExtent(), Data.box_extent);
