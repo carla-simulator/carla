@@ -156,6 +156,8 @@ extern "C" {
   struct carla_player_measurements {
     /** World transform of the player. */
     struct carla_transform transform;
+    /** Extent of the bounding box of the player. */
+    struct carla_vector3d box_extent;
     /** Current acceleration of the player. */
     struct carla_vector3d acceleration;
     /** Forward speed in km/h. */

@@ -103,6 +103,7 @@ void FCarlaEncoder::Encode(
   Data.game_timestamp = PlayerState.GetGameTimeStamp();
   auto &Player = Data.player_measurements;
   ::Encode(PlayerState.GetTransform(), Player.transform);
+  ::Encode(PlayerState.GetBoundsExtent(), Player.box_extent);
   ::Encode(PlayerState.GetAcceleration(), Player.acceleration);
   Player.forward_speed = PlayerState.GetForwardSpeed();
   Player.collision_vehicles = PlayerState.GetCollisionIntensityCars();
