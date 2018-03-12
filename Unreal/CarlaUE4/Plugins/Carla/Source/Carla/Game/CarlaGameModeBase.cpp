@@ -94,12 +94,11 @@ void ACarlaGameModeBase::InitGame(
     UE_LOG(LogCarla, Error, TEXT("Missing TaggerDelegate!"));
   }
 
-  if(CarlaSettingsDelegate!=nullptr){
-    //assign delegate for every new actor
-    CarlaSettingsDelegate->RegisterSpawnHandler(world);
+  if(CarlaSettingsDelegate!=nullptr) {
     //apply quality settings 
-    CarlaSettingsDelegate->ApplyQualitySettingsLevelPostRestart();
-    
+    CarlaSettingsDelegate->ApplyQualitySettingsLevelPostRestart(world);
+    //assign settings delegate for every new actor from now on
+    CarlaSettingsDelegate->RegisterSpawnHandler(world);
     
   } else {
     UE_LOG(LogCarla, Error, TEXT("Missing CarlaSettingsDelegate!"));

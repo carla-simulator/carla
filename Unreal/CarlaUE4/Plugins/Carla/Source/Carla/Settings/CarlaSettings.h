@@ -214,7 +214,7 @@ private:
    * Default low distance for roads meshes
    */
   UPROPERTY(Category = "Quality Settings/Low", BlueprintReadOnly, EditAnywhere, config, meta = (ClampMin = "5000.0", ClampMax = "17000.0", UIMin = "5000.0", UIMax = "17000.0")) 
-  float LowRoadPieceMeshMaxDrawDistance = 15000.0f;
+  float LowRoadPieceMeshMaxDrawDistance = 10000.0f;
 
   /// @}
 
