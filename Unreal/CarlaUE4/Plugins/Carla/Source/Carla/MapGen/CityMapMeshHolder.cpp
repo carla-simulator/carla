@@ -12,6 +12,7 @@
 #include <vector>
 #include "Settings/CarlaSettings.h"
 #include "Game/CarlaGameInstance.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 
 using tag_size_t = std::underlying_type<ECityMapMeshTag>::type;
@@ -56,13 +57,13 @@ void ACityMapMeshHolder::PostInitializeComponents()
 {
   Super::PostInitializeComponents();
   
-
   if(IsValid(GetLevel())&&!GetLevel()->IsPendingKill())
   {	 
 	 TArray<AActor*> roadpieces;
      GetAttachedActors(roadpieces);
 	 if(roadpieces.Num()==0)
 	 {
+	   UE_LOG(LogCarla, Error, TEXT("Please regenerate the road in edit mode for '%s' actor"), *UKismetSystemLibrary::GetDisplayName(this));
 	   UpdateMapScale();
        UpdateMap();
 	 }

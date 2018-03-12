@@ -3,6 +3,12 @@
 #include "Game/CarlaGameModeBase.h"
 #include "Settings/CarlaSettings.h"
 #include "CarlaSettingsDelegate.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/Engine.h"
+#include "Kismet/GameplayStatics.h"
+#include "Engine/DirectionalLight.h"
+#include "Engine/StaticMesh.h"
+#include "Engine/PostProcessVolume.h"
 
 UCarlaSettingsDelegate::UCarlaSettingsDelegate() :
   ActorSpawnedDelegate(FOnActorSpawned::FDelegate::CreateUObject(this, &UCarlaSettingsDelegate::OnActorSpawned))
@@ -11,60 +17,69 @@ UCarlaSettingsDelegate::UCarlaSettingsDelegate() :
 
 void UCarlaSettingsDelegate::RegisterSpawnHandler(UWorld *InWorld)
 {
-  check(InWorld!=nullptr);
-  auto GameInstance  = Cast<UCarlaGameInstance>(InWorld->GetGameInstance());
-  check(GameInstance!=nullptr);
-  CarlaSettings = &GameInstance->GetCarlaSettings();
-  check(CarlaSettings!=nullptr);
+  CheckCarlaSettings(InWorld);
   InWorld->AddOnActorSpawnedHandler(ActorSpawnedDelegate);
 }
 
 void UCarlaSettingsDelegate::OnActorSpawned(AActor* InActor)
 {
   check(CarlaSettings!=nullptr);
-  if (InActor != nullptr && IsValid(InActor) && !InActor->IsPendingKill()) 
+  if (InActor != nullptr && IsValid(InActor) && !InActor->IsPendingKill() && !InActor->Tags.Contains(UCarlaSettings::CARLA_ROAD_TAG))
   {
-     //apply settings for this actor for the current quality level
-	   TArray<UActorComponent*> components = InActor->GetComponentsByClass(UPrimitiveComponent::StaticClass());
-	   float dist = CarlaSettings->LowStaticMeshMaxDrawDistance;
-     const float maxscale = InActor->GetActorScale().GetMax();
-     #define _MAX_SCALE_SIZE 50.0f
      
-	   if(maxscale>_MAX_SCALE_SIZE) {
-        dist *= 100.0f;
-     }
-
-	   for(int32 i=0; i<components.Num(); i++)
-  	 {
-		  UPrimitiveComponent* primitivecomponent = Cast<UPrimitiveComponent>(components[i]);
-		  if(IsValid(primitivecomponent))
-		  {
-			 primitivecomponent->SetCullDistance(dist);
-		  }
-	   }
+	 TArray<UActorComponent*> components = InActor->GetComponentsByClass(UPrimitiveComponent::StaticClass());
+	 switch(CarlaSettings->GetQualitySettingsLevel())
+	 {
+	 case EQualitySettingsLevel::Low:{
+		 //apply settings for this actor for the current quality level
+		 #define _MAX_SCALE_SIZE 50.0f
+		 float dist = CarlaSettings->LowStaticMeshMaxDrawDistance;
+		 const float maxscale = InActor->GetActorScale().GetMax();
+		 if(maxscale>_MAX_SCALE_SIZE) {
+			dist *= 100.0f;
+		 }
+		 SetActorComponentsDrawDistance(InActor, dist);
+		 break;
+	 }
+	 default: break;
+	 }
   }
 }
 
 
-void UCarlaSettingsDelegate::ApplyQualitySettingsLevelPostRestart() const
+void UCarlaSettingsDelegate::ApplyQualitySettingsLevelPostRestart(UWorld* InWorld)
 {
+	CheckCarlaSettings(InWorld);
 	switch(CarlaSettings->GetQualitySettingsLevel())
 	{
 	  case EQualitySettingsLevel::Low: 
-	  	ApplyLowQualitySettings();
-		  break;
+	    ApplyLowQualitySettings(InWorld);
+		break;
 	  case EQualitySettingsLevel::Medium: 
-      /** @todo */
-      break;
+		UE_LOG(LogCarla, Warning, TEXT("Medium Quality Settings level is not implemented yet and will have no effect."));
+		break;
 	  case EQualitySettingsLevel::High: 
-      /** @todo */
-      break;
+		UE_LOG(LogCarla, Warning, TEXT("High Quality Settings level is not implemented yet and will have no effect."));
+        break;
+	  case EQualitySettingsLevel::None: 
+		/** No changes */
+		UE_LOG(LogCarla, Warning, TEXT("No Quality Settings level set. No changes applied."));
+		break;
 	  default: case EQualitySettingsLevel::Epic: 
-      /** @todo */
-      break;
+		/** default settings level */
+        break;
 	}
 }
 
+
+void UCarlaSettingsDelegate::CheckCarlaSettings(UWorld* world)
+{
+  check(world!=nullptr);
+  auto GameInstance  = Cast<UCarlaGameInstance>(world->GetGameInstance());
+  check(GameInstance!=nullptr);
+  CarlaSettings = &GameInstance->GetCarlaSettings();
+  check(CarlaSettings!=nullptr);
+}
 
 void UCarlaSettingsDelegate::LaunchLowQualityCommands(UWorld * world) const
 {
@@ -165,21 +180,34 @@ void UCarlaSettingsDelegate::SetAllRoadsLowQuality(UWorld* world) const
                 staticmeshcomponent->GetMaterialIndex(slotname), 
                 material.MaterialInterface
               );
-			  staticmeshcomponent->bAllowCullDistanceVolume=true;
-			  staticmeshcomponent->bUseAsOccluder=false;
-  
-			  staticmeshcomponent->LDMaxDrawDistance = LowRoadPieceMeshMaxDrawDistance; 
-  			  staticmeshcomponent->CastShadow = false;
-			  
-       
- 
               return true;
             } else return false;
           });
         }
+		staticmeshcomponent->bAllowCullDistanceVolume = true;
+		staticmeshcomponent->bUseAsOccluder = false;
+		staticmeshcomponent->LDMaxDrawDistance = LowRoadPieceMeshMaxDrawDistance; 
+  		staticmeshcomponent->CastShadow = false;
   	  }
   	}
   }
+}
+
+void UCarlaSettingsDelegate::SetActorComponentsDrawDistance(AActor* actor, const float max_draw_distance) const
+{
+   if(!actor) return;
+   TArray<UActorComponent*> components = actor->GetComponentsByClass(UPrimitiveComponent::StaticClass());
+   float dist = max_draw_distance;
+   const float maxscale = actor->GetActorScale().GetMax();
+   if(maxscale>_MAX_SCALE_SIZE)  dist *= 100.0f;
+   for(int32 j=0; j<components.Num(); j++)
+   {
+    UPrimitiveComponent* primitivecomponent = Cast<UPrimitiveComponent>(components[j]);
+    if(IsValid(primitivecomponent))
+    {
+      primitivecomponent->SetCullDistance(dist);
+    }
+   }
 }
 
 void UCarlaSettingsDelegate::SetAllActorsDrawDistance(UWorld* world, const float max_draw_distance) const
@@ -192,19 +220,7 @@ void UCarlaSettingsDelegate::SetAllActorsDrawDistance(UWorld* world, const float
   for(int32 i=0; i<actors.Num(); i++)
   {
 	 if(!IsValid(actors[i]) || actors[i]->IsPendingKillPending() || actors[i]->ActorHasTag(UCarlaSettings::CARLA_ROAD_TAG)) continue;
-     TArray<UActorComponent*> components = actors[i]->GetComponentsByClass(UPrimitiveComponent::StaticClass());
-	   float dist = max_draw_distance;
-     const float maxscale = actors[i]->GetActorScale().GetMax();
-	   if(maxscale>_MAX_SCALE_SIZE)  dist *= 100.0f;
-	   for(int32 j=0; j<components.Num(); j++)
-  	 {
-		  UPrimitiveComponent* primitivecomponent = Cast<UPrimitiveComponent>(components[j]);
-		  if(IsValid(primitivecomponent))
-		  {
-			 primitivecomponent->SetCullDistance(dist);
-		  }
-	   }
-     
+     SetActorComponentsDrawDistance(actors[i], max_draw_distance);
   }
 }
 
@@ -224,9 +240,8 @@ void UCarlaSettingsDelegate::SetPostProcessEffectsEnabled(UWorld* world, bool en
   }
 }
 
-void UCarlaSettingsDelegate::ApplyLowQualitySettings() const
+void UCarlaSettingsDelegate::ApplyLowQualitySettings(UWorld *world) const
 {
-  UWorld *world = GetWorld();
   if(!world) return ;
   LaunchLowQualityCommands(world);
 	
