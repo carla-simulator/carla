@@ -11,7 +11,7 @@
 namespace MapGen {
 
   /// Random DoublyConnectedEdgeList generator.
-  class CARLA_API GraphGenerator : private NonCopyable
+  class GraphGenerator : private NonCopyable
   {
   public:
 

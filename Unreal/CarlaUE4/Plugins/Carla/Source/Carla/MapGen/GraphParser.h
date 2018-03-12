@@ -16,7 +16,7 @@ namespace MapGen {
 
   class DoublyConnectedEdgeList;
 
-  class CARLA_API GraphParser : private NonCopyable
+  class GraphParser : private NonCopyable
   {
   public:
 

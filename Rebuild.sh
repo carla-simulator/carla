@@ -58,6 +58,8 @@ function log {
 
 if [ ! -d "${UE4_ROOT}" ]; then
   fatal_error "UE4_ROOT is not defined, or points to a non-existant directory, please set this environment variable."
+else
+  echo "Using Unreal Engine at '$UE4_ROOT'"
 fi
 
 # ==============================================================================
@@ -94,7 +96,7 @@ pushd "$UNREAL_PROJECT_FOLDER" >/dev/null
 # This command usually fails but normally we can continue anyway.
 set +e
 log "Generate Unreal project files..."
-${UE4_ROOT}/GenerateProjectFiles.sh -project="${PWD}/CarlaUE4.uproject" -game -engine
+${UE4_ROOT}/GenerateProjectFiles.sh -project="${PWD}/CarlaUE4.uproject" -game -engine -makefiles
 set -e
 
 log "Build CarlaUE4 project..."
