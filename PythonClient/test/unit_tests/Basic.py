@@ -118,3 +118,13 @@ class LidarTest(_BasicTestBase):
         settings = CarlaSettings()
         settings.add_sensor(Lidar('DefaultLidar'))
         self.run_carla_client(settings, 3, 100)
+
+
+class SpeedLowQuality(_BasicTestBase):
+    def run(self):
+        settings = CarlaSettings(QualityLevel='Low')
+        settings.add_sensor(Lidar('DefaultLidar'))
+        settings.add_sensor(Camera('DefaultCamera'))
+        settings.add_sensor(Camera('DefaultDepth', PostProcessing='Depth'))
+        settings.add_sensor(Camera('DefaultSemSeg', PostProcessing='SemanticSegmentation'))
+        self.run_carla_client(settings, 3, 200)
