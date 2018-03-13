@@ -32,7 +32,7 @@
 // -- Static variables & constants ---------------------------------------------
 // =============================================================================
 const FName UCarlaSettings::CARLA_ROAD_TAG = FName("CARLA_ROAD");
-
+const FName UCarlaSettings::CARLA_SKY_TAG = FName("CARLA_SKY");
 
 // =============================================================================
 // -- Static methods -----------------------------------------------------------
@@ -120,9 +120,9 @@ static void LoadSettingsFromConfig(
   ConfigFile.GetInt(S_CARLA_LEVELSETTINGS, TEXT("SeedPedestrians"), Settings.SeedPedestrians);
 
   // QualitySettings.
-  FString sDefaultLevel;
-  ConfigFile.GetString(S_CARLA_QUALITYSETTINGS, TEXT("DefaultLevel"), sDefaultLevel);
-  if(!Settings.SetQualitySettingsLevel(FQualitySettings::FromString(sDefaultLevel)))
+  FString sQualityLevel;
+  ConfigFile.GetString(S_CARLA_QUALITYSETTINGS, TEXT("QualityLevel"), sQualityLevel);
+  if(!Settings.SetQualitySettingsLevel(FQualitySettings::FromString(sQualityLevel)))
   {
 	  //error
   } else
@@ -180,15 +180,15 @@ FString FQualitySettings::ToString(EQualitySettingsLevel QualitySettingsLevel)
   return ptr->GetNameStringByIndex(static_cast<int32>(QualitySettingsLevel));
 }
 
-bool UCarlaSettings::SetQualitySettingsLevel(EQualitySettingsLevel newDefaultLevel)
+bool UCarlaSettings::SetQualitySettingsLevel(EQualitySettingsLevel newQualityLevel)
 {
-	if(newDefaultLevel==EQualitySettingsLevel::None)
+	if(newQualityLevel==EQualitySettingsLevel::None)
 	{
 		UE_LOG(LogCarla ,Warning, TEXT("Quality Settings Level not set!"));
 		return false;
 	}
 
-	DefaultQualitySettingsLevel = newDefaultLevel;
+	QualitySettingsLevel = newQualityLevel;
 
 	return true;
 }
@@ -273,7 +273,7 @@ void UCarlaSettings::LogSettings() const
     UE_LOG(LogCarla, Log, TEXT("  * %d - %s"), i, *WeatherDescriptions[i].Name);
   }
   UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_QUALITYSETTINGS);
-  UE_LOG(LogCarla, Log, TEXT("Default Quality Settings = %s"), *FQualitySettings::ToString(DefaultQualitySettingsLevel));
+  UE_LOG(LogCarla, Log, TEXT("Quality Settings = %s"), *FQualitySettings::ToString(QualitySettingsLevel));
 
   UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_SENSOR);
   UE_LOG(LogCarla, Log, TEXT("Added %d sensors."), SensorDescriptions.Num());

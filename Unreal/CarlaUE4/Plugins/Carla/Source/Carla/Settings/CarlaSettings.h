@@ -53,12 +53,12 @@ public:
    * Sets the new quality settings level and make changes in the game related to it. 
    * Returns the result of the operation. 
    * @note This will not apply the quality settings. Use ApplyQualitySettings functions instead
-   * @param newDefaultLevel Store the new quality 
+   * @param newQualityLevel Store the new quality 
    */
-  bool SetQualitySettingsLevel(EQualitySettingsLevel newDefaultLevel);
+  bool SetQualitySettingsLevel(EQualitySettingsLevel newQualityLevel);
   /** @return current quality settings level (could not be applied yet) */
   UFUNCTION(BlueprintCallable)
-  EQualitySettingsLevel GetQualitySettingsLevel() const { return DefaultQualitySettingsLevel; }
+  EQualitySettingsLevel GetQualitySettingsLevel() const { return QualitySettingsLevel; }
   
   /** Load the settings based on the command-line arguments and the INI file if provided. */
   void LoadSettings();
@@ -98,11 +98,15 @@ public:
    * CARLA_ROAD name to tag road mesh actors
    */
   static const FName CARLA_ROAD_TAG;
-  
+  /**
+   * CARLA_SKY name to tag the sky sphere (BPS) actors in the scenes 
+   */
+  static const FName CARLA_SKY_TAG;
+
 private:
-  
   /***/
   void LoadSettingsFromFile(const FString &FilePath, bool bLogOnFailure);
+
   /***/
   void ResetSensorDescriptions();
 
@@ -184,14 +188,13 @@ public:
 private:
   /** Quality Settings level. */
   UPROPERTY(Category = "Quality Settings", VisibleAnywhere, meta =(AllowPrivateAccess="true"))
-  EQualitySettingsLevel DefaultQualitySettingsLevel = EQualitySettingsLevel::None;
+  EQualitySettingsLevel QualitySettingsLevel = EQualitySettingsLevel::None;
  
  public:
   /** @TODO : Move Low quality vars to a generic map of structs with the quality level as key*/
 
   /** Low quality Road Materials. 
-   * Using the index of array it will assign to the material with the same index in the mesh for each piece of road
-   * @TODO: Use slots name to set it for each part of the road
+   * Uses slots name to set material for each part of the road for low quality
    */
   UPROPERTY(Category = "Quality Settings/Low", BlueprintReadOnly, EditAnywhere, config, DisplayName="Road Materials List for Low Quality")
   TArray<FStaticMaterial> LowRoadMaterials;
@@ -207,14 +210,14 @@ private:
   /**
    * Default low distance for all primitive components
    */
-  UPROPERTY(Category = "Quality Settings/Low", BlueprintReadOnly, EditAnywhere, config, meta = (ClampMin = "500.0", ClampMax = "15000.0", UIMin = "500.0", UIMax = "15000.0")) 
+  UPROPERTY(Category = "Quality Settings/Low", BlueprintReadOnly, EditAnywhere, config, meta = (ClampMin = "5000.0", ClampMax = "20000.0", UIMin = "5000.0", UIMax = "20000.0")) 
   float LowStaticMeshMaxDrawDistance = 10000.0f;
 
   /**
    * Default low distance for roads meshes
    */
-  UPROPERTY(Category = "Quality Settings/Low", BlueprintReadOnly, EditAnywhere, config, meta = (ClampMin = "5000.0", ClampMax = "17000.0", UIMin = "5000.0", UIMax = "17000.0")) 
-  float LowRoadPieceMeshMaxDrawDistance = 10000.0f;
+  UPROPERTY(Category = "Quality Settings/Low", BlueprintReadOnly, EditAnywhere, config, meta = (ClampMin = "5000.0", ClampMax = "20000.0", UIMin = "5000.0", UIMax = "20000.0")) 
+  float LowRoadPieceMeshMaxDrawDistance = 15000.0f;
 
   /// @}
 

@@ -165,7 +165,7 @@ void ACityMapMeshHolder::DeletePieces()
   
   for(int32 i=roadpieces.Num()-1; i>=0; i--)
   {
-	if(roadpieces[i]->Tags.Contains(UCarlaSettings::CARLA_ROAD_TAG))
+	if(roadpieces[i]->ActorHasTag(UCarlaSettings::CARLA_ROAD_TAG))
 	{
 	   roadpieces[i]->Destroy();
 	}
