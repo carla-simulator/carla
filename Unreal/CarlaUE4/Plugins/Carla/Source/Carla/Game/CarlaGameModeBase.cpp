@@ -96,7 +96,7 @@ void ACarlaGameModeBase::InitGame(
 
   if(CarlaSettingsDelegate!=nullptr) {
     //apply quality settings 
-    CarlaSettingsDelegate->ApplyQualitySettingsLevelPostRestart(world);
+    CarlaSettingsDelegate->ApplyQualitySettingsLevelPostRestart();
     //assign settings delegate for every new actor from now on
     CarlaSettingsDelegate->RegisterSpawnHandler(world);
     

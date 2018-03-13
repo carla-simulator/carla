@@ -122,13 +122,10 @@ static void LoadSettingsFromConfig(
   // QualitySettings.
   FString sQualityLevel;
   ConfigFile.GetString(S_CARLA_QUALITYSETTINGS, TEXT("QualityLevel"), sQualityLevel);
-  if(!Settings.SetQualitySettingsLevel(FQualitySettings::FromString(sQualityLevel)))
+  if(!Settings.SetQualitySettingsLevel(UQualitySettings::FromString(sQualityLevel)))
   {
-	  //error
-  } else
-  {
-	  //apply pre-restart.... 
-  }
+	 //error
+  } 
   
 
   // Sensors.
@@ -162,7 +159,7 @@ static bool GetSettingsFilePathFromCommandLine(FString &Value)
 // -- UCarlaSettings -----------------------------------------------------------
 // =============================================================================
 
-EQualitySettingsLevel FQualitySettings::FromString(const FString& SQualitySettingsLevel)
+EQualitySettingsLevel UQualitySettings::FromString(const FString& SQualitySettingsLevel)
 {
 	if(SQualitySettingsLevel.Equals("Low")) return EQualitySettingsLevel::Low;
 	if(SQualitySettingsLevel.Equals("Medium")) return EQualitySettingsLevel::Medium;
@@ -172,7 +169,7 @@ EQualitySettingsLevel FQualitySettings::FromString(const FString& SQualitySettin
 	return EQualitySettingsLevel::None;
 }
 
-FString FQualitySettings::ToString(EQualitySettingsLevel QualitySettingsLevel)
+FString UQualitySettings::ToString(EQualitySettingsLevel QualitySettingsLevel)
 {
   const UEnum* ptr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EQualitySettingsLevel"), true);
   if(!ptr)
@@ -273,7 +270,7 @@ void UCarlaSettings::LogSettings() const
     UE_LOG(LogCarla, Log, TEXT("  * %d - %s"), i, *WeatherDescriptions[i].Name);
   }
   UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_QUALITYSETTINGS);
-  UE_LOG(LogCarla, Log, TEXT("Quality Settings = %s"), *FQualitySettings::ToString(QualitySettingsLevel));
+  UE_LOG(LogCarla, Log, TEXT("Quality Settings = %s"), *UQualitySettings::ToString(QualitySettingsLevel));
 
   UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_SENSOR);
   UE_LOG(LogCarla, Log, TEXT("Added %d sensors."), SensorDescriptions.Num());

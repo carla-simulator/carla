@@ -12,7 +12,7 @@
 
 #include "CarlaSettings.generated.h"
 
-UENUM(BlueprintType, Blueprintable)
+UENUM(BlueprintType)
 enum class EQualitySettingsLevel : uint8
 {
   None    UMETA(DisplayName = "Not set"),
@@ -23,12 +23,18 @@ enum class EQualitySettingsLevel : uint8
 	
 };
 
-class CARLA_API FQualitySettings : public UObject
+UCLASS(BlueprintType)
+class CARLA_API UQualitySettings : public UObject
 {
+	GENERATED_BODY()
+
 public:
  using uint_type = typename std::underlying_type<EQualitySettingsLevel>::type;
+ UFUNCTION(BlueprintCallable)
  static EQualitySettingsLevel FromString(const FString &SQualitySettingsLevel);
+ UFUNCTION(BlueprintCallable)
  static FString ToString(EQualitySettingsLevel QualitySettingsLevel);
+ 
  static constexpr uint_type ToUInt(EQualitySettingsLevel quality_settings_level)
  {
    return static_cast<uint_type>(quality_settings_level);
@@ -55,9 +61,10 @@ public:
    * @note This will not apply the quality settings. Use ApplyQualitySettings functions instead
    * @param newQualityLevel Store the new quality 
    */
+  UFUNCTION(BlueprintCallable, Category="CARLA Settings")
   bool SetQualitySettingsLevel(EQualitySettingsLevel newQualityLevel);
   /** @return current quality settings level (could not be applied yet) */
-  UFUNCTION(BlueprintCallable)
+  UFUNCTION(BlueprintCallable, Category="CARLA Settings")
   EQualitySettingsLevel GetQualitySettingsLevel() const { return QualitySettingsLevel; }
   
   /** Load the settings based on the command-line arguments and the INI file if provided. */
@@ -219,6 +226,13 @@ private:
   UPROPERTY(Category = "Quality Settings/Low", BlueprintReadOnly, EditAnywhere, config, meta = (ClampMin = "5000.0", ClampMax = "20000.0", UIMin = "5000.0", UIMax = "20000.0")) 
   float LowRoadPieceMeshMaxDrawDistance = 15000.0f;
 
+
+  /** EPIC quality Road Materials. 
+   * Uses slots name to set material for each part of the road for Epic quality
+   */
+  UPROPERTY(Category = "Quality Settings/Epic", BlueprintReadOnly, EditAnywhere, config, DisplayName="Road Materials List for EPIC Quality")
+  TArray<FStaticMaterial> EpicRoadMaterials;
+  
   /// @}
 
   // ===========================================================================
