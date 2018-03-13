@@ -24,9 +24,10 @@ void UCarlaSettingsDelegate::RegisterSpawnHandler(UWorld *InWorld)
 void UCarlaSettingsDelegate::OnActorSpawned(AActor* InActor)
 {
   check(CarlaSettings!=nullptr);
-  if (InActor != nullptr && IsValid(InActor) && !InActor->IsPendingKill() && !InActor->Tags.Contains(UCarlaSettings::CARLA_ROAD_TAG))
-  {
-     
+  if (InActor != nullptr && IsValid(InActor) && !InActor->IsPendingKill() && 
+	  !InActor->ActorHasTag(UCarlaSettings::CARLA_ROAD_TAG) && 
+	  !InActor->ActorHasTag(UCarlaSettings::CARLA_SKY_TAG)
+  ){   
 	 TArray<UActorComponent*> components = InActor->GetComponentsByClass(UPrimitiveComponent::StaticClass());
 	 switch(CarlaSettings->GetQualitySettingsLevel())
 	 {
@@ -219,7 +220,12 @@ void UCarlaSettingsDelegate::SetAllActorsDrawDistance(UWorld* world, const float
   UGameplayStatics::GetAllActorsOfClass(world, AActor::StaticClass(),actors);
   for(int32 i=0; i<actors.Num(); i++)
   {
-	 if(!IsValid(actors[i]) || actors[i]->IsPendingKillPending() || actors[i]->ActorHasTag(UCarlaSettings::CARLA_ROAD_TAG)) continue;
+	 if(!IsValid(actors[i]) || actors[i]->IsPendingKillPending() || 
+		 actors[i]->ActorHasTag(UCarlaSettings::CARLA_ROAD_TAG) ||
+		 actors[i]->ActorHasTag(UCarlaSettings::CARLA_SKY_TAG)
+     ){
+	 	continue;
+	 }
      SetActorComponentsDrawDistance(actors[i], max_draw_distance);
   }
 }
