@@ -46,6 +46,12 @@ public:
     return GameInstance->GetDataRouter();
   }
 
+  UFUNCTION(BlueprintPure, Category="CARLA Settings")
+  UCarlaSettingsDelegate *GetCARLASettingsDelegate()
+  {
+    return CarlaSettingsDelegate;
+  }
+
 protected:
 
   /** Used only when networking is disabled. */

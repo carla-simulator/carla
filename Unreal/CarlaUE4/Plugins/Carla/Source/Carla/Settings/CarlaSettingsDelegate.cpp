@@ -9,6 +9,7 @@
 #include "Engine/DirectionalLight.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/PostProcessVolume.h"
+#include "UObjectIterator.h"
 
 UCarlaSettingsDelegate::UCarlaSettingsDelegate() :
   ActorSpawnedDelegate(FOnActorSpawned::FDelegate::CreateUObject(this, &UCarlaSettingsDelegate::OnActorSpawned))
@@ -48,13 +49,28 @@ void UCarlaSettingsDelegate::OnActorSpawned(AActor* InActor)
 }
 
 
-void UCarlaSettingsDelegate::ApplyQualitySettingsLevelPostRestart(UWorld* InWorld)
+void UCarlaSettingsDelegate::ApplyQualitySettingsLevelPostRestart()
 {
-	CheckCarlaSettings(InWorld);
-	switch(CarlaSettings->GetQualitySettingsLevel())
+	CheckCarlaSettings(nullptr);
+	UWorld *InWorld = CarlaSettings->GetWorld();
+    EQualitySettingsLevel QualitySettingsLevel = CarlaSettings->GetQualitySettingsLevel();
+	if(AppliedLowPostResetQualitySettingsLevel==QualitySettingsLevel) return;
+	
+	switch(QualitySettingsLevel)
 	{
-	  case EQualitySettingsLevel::Low: 
-	    ApplyLowQualitySettings(InWorld);
+	  case EQualitySettingsLevel::Low:
+		{
+		  //execute tweaks for quality 
+		  LaunchLowQualityCommands(InWorld);	
+		  //iterate all directional lights, deactivate shadows
+		  SetAllLights(InWorld,CarlaSettings->LowLightFadeDistance,false,true);
+		  //Set all the roads the low quality materials
+		  SetAllRoads(InWorld, CarlaSettings->LowRoadPieceMeshMaxDrawDistance, CarlaSettings->LowRoadMaterials);
+		  //Set all actors with static meshes a max disntace configured in the global settings for the low quality
+		  SetAllActorsDrawDistance(InWorld, CarlaSettings->LowStaticMeshMaxDrawDistance);
+		  //Disable all post process volumes
+		  SetPostProcessEffectsEnabled(InWorld, false);
+		}
 		break;
 	  case EQualitySettingsLevel::Medium: 
 		UE_LOG(LogCarla, Warning, TEXT("Medium Quality Settings level is not implemented yet and will have no effect."));
@@ -66,15 +82,35 @@ void UCarlaSettingsDelegate::ApplyQualitySettingsLevelPostRestart(UWorld* InWorl
 		/** No changes */
 		UE_LOG(LogCarla, Warning, TEXT("No Quality Settings level set. No changes applied."));
 		break;
-	  default: case EQualitySettingsLevel::Epic: 
-		/** default settings level */
+	  default: case EQualitySettingsLevel::Epic:
+		{
+	      LaunchEpicQualityCommands(InWorld);
+		  SetAllLights(InWorld,0.0f,true,false);
+		  SetAllRoads(InWorld, 0, CarlaSettings->EpicRoadMaterials);
+		  SetAllActorsDrawDistance(InWorld, 0);
+		  SetPostProcessEffectsEnabled(InWorld,true);
+		}
         break;
 	}
+	AppliedLowPostResetQualitySettingsLevel = QualitySettingsLevel;
+}
+
+void UCarlaSettingsDelegate::ApplyQualitySettingsLevelPreRestart()
+{
+	//CheckCarlaSettings(nullptr);
+	/** apply any change in the global config */
+}
+
+UWorld* UCarlaSettingsDelegate::GetLocalWorld()
+{
+	return GEngine->GetWorldFromContextObjectChecked(this);
 }
 
 
 void UCarlaSettingsDelegate::CheckCarlaSettings(UWorld* world)
 {
+  if(IsValid(CarlaSettings)) return;
+  if(world==nullptr||!IsValid(world)||world->IsPendingKill()) world = GetLocalWorld();
   check(world!=nullptr);
   auto GameInstance  = Cast<UCarlaGameInstance>(world->GetGameInstance());
   check(GameInstance!=nullptr);
@@ -112,18 +148,18 @@ void UCarlaSettingsDelegate::LaunchLowQualityCommands(UWorld * world) const
   GEngine->Exec(world,TEXT("r.FastBlurThreshold 0"));
   GEngine->Exec(world,TEXT("r.SSR.MaxRoughness 0.1"));
   GEngine->Exec(world,TEXT("r.AllowOcclusionQueries 1"));
-  GEngine->Exec(world,TEXT("r.SSR 0"));
+  //GEngine->Exec(world,TEXT("r.SSR 0"));
   GEngine->Exec(world,TEXT("r.StencilForLODDither 1"));
   GEngine->Exec(world,TEXT("r.EarlyZPass 2")); //transparent before opaque
   GEngine->Exec(world,TEXT("r.EarlyZPassMovable 1"));
-  GEngine->Exec(world,TEXT("r.Foliage.DitheredLOD 0"));
-  GEngine->Exec(world,TEXT("r.ForwardShading 0"));
+  GEngine->Exec(world,TEXT("Foliage.DitheredLOD 0"));
+  //GEngine->Exec(world,TEXT("r.ForwardShading 0")); //readonly
   GEngine->Exec(world,TEXT("sg.PostProcessQuality 0"));
   //GEngine->Exec(world,TEXT("r.ViewDistanceScale 0.1")); //--> too extreme (far clip too short)
   GEngine->Exec(world,TEXT("sg.ShadowQuality 0"));
   GEngine->Exec(world,TEXT("sg.TextureQuality 0"));
   GEngine->Exec(world,TEXT("sg.EffectsQuality 0"));
-  GEngine->Exec(world,TEXT("FoliageQuality 0"));
+  GEngine->Exec(world,TEXT("sg.FoliageQuality 0"));
   GEngine->Exec(world,TEXT("foliage.DensityScale 0"));
   GEngine->Exec(world,TEXT("grass.DensityScale 0"));
   GEngine->Exec(world,TEXT("r.TranslucentLightingVolume 0"));
@@ -133,32 +169,12 @@ void UCarlaSettingsDelegate::LaunchLowQualityCommands(UWorld * world) const
   //world->Exec(world,TEXT("r.DetailMode 0")); //-->will change to lods 0
 }
 
-void UCarlaSettingsDelegate::SetAllLightsLowQuality(UWorld* world) const
-{
-  TArray<AActor*> actors;
-  UGameplayStatics::GetAllActorsOfClass(world, ALight::StaticClass(), actors);
-  for(int32 i=0;i<actors.Num();i++)
-  {
-	if(!IsValid(actors[i]) || actors[i]->IsPendingKillPending()) continue;
-    //tweak directional lights
-    ADirectionalLight* directionallight = Cast<ADirectionalLight>(actors[i]);
-    if(directionallight)
-    {
-      directionallight->SetCastShadows(false);
-      directionallight->SetLightFunctionFadeDistance(CarlaSettings->LowLightFadeDistance);
-      continue;
-    }
-    //disable any other type of light
-    actors[i]->SetActorHiddenInGame(true);
-  }
-}
 
-void UCarlaSettingsDelegate::SetAllRoadsLowQuality(UWorld* world) const
+void UCarlaSettingsDelegate::SetAllRoads(UWorld* world, const float max_draw_distance, const TArray<FStaticMaterial> &road_pieces_materials) const
 {
-  if(CarlaSettings->LowRoadMaterials.Num()==0) return; //no materials configured for low quality
   TArray<AActor*> actors;
   UGameplayStatics::GetAllActorsWithTag(world, UCarlaSettings::CARLA_ROAD_TAG,actors);
-  const float LowRoadPieceMeshMaxDrawDistance = CarlaSettings->LowRoadPieceMeshMaxDrawDistance;
+  
   for(int32 i=0; i<actors.Num(); i++)
   {
 	if(!IsValid(actors[i]) || actors[i]->IsPendingKillPending()) continue;
@@ -168,27 +184,30 @@ void UCarlaSettingsDelegate::SetAllRoadsLowQuality(UWorld* world) const
   	  UStaticMeshComponent* staticmeshcomponent = Cast<UStaticMeshComponent>(components[j]);
   	  if(staticmeshcomponent)
   	  {
-        TArray<FName> slotsnames = staticmeshcomponent->GetMaterialSlotNames();
-        for(int32 k=0; k<slotsnames.Num(); k++)
-        {
-          const FName &slotname = slotsnames[k];
-          bool found = CarlaSettings->LowRoadMaterials.ContainsByPredicate(
-			  [staticmeshcomponent,slotname,LowRoadPieceMeshMaxDrawDistance](const FStaticMaterial& material)
+		staticmeshcomponent->bAllowCullDistanceVolume = (max_draw_distance>0);
+		//staticmeshcomponent->bUseAsOccluder = false;
+		staticmeshcomponent->LDMaxDrawDistance = max_draw_distance; 
+  		staticmeshcomponent->CastShadow = (max_draw_distance==0);
+		if(road_pieces_materials.Num()>0)
+		{
+          TArray<FName> meshslotsnames = staticmeshcomponent->GetMaterialSlotNames();
+          for(int32 k=0; k<meshslotsnames.Num(); k++)
           {
-            if(material.MaterialSlotName.IsEqual(slotname))
+            const FName &slotname = meshslotsnames[k];
+            road_pieces_materials.ContainsByPredicate(
+		  	  [staticmeshcomponent,slotname](const FStaticMaterial& material)
             {
-              staticmeshcomponent->SetMaterial(
-                staticmeshcomponent->GetMaterialIndex(slotname), 
-                material.MaterialInterface
-              );
-              return true;
-            } else return false;
-          });
-        }
-		staticmeshcomponent->bAllowCullDistanceVolume = true;
-		staticmeshcomponent->bUseAsOccluder = false;
-		staticmeshcomponent->LDMaxDrawDistance = LowRoadPieceMeshMaxDrawDistance; 
-  		staticmeshcomponent->CastShadow = false;
+              if(material.MaterialSlotName.IsEqual(slotname))
+              {
+                staticmeshcomponent->SetMaterial(
+                  staticmeshcomponent->GetMaterialIndex(slotname), 
+                  material.MaterialInterface
+                );
+                return true;
+              } else return false;
+            });
+          }
+		}
   	  }
   	}
   }
@@ -207,6 +226,7 @@ void UCarlaSettingsDelegate::SetActorComponentsDrawDistance(AActor* actor, const
     if(IsValid(primitivecomponent))
     {
       primitivecomponent->SetCullDistance(dist);
+	  primitivecomponent->bAllowCullDistanceVolume = dist>0;
     }
    }
 }
@@ -231,7 +251,7 @@ void UCarlaSettingsDelegate::SetAllActorsDrawDistance(UWorld* world, const float
 }
 
 
-void UCarlaSettingsDelegate::SetPostProcessEffectsEnabled(UWorld* world, bool enabled) const
+void UCarlaSettingsDelegate::SetPostProcessEffectsEnabled(UWorld* world, const bool enabled) const
 {
   TArray<AActor*> actors;
   UGameplayStatics::GetAllActorsOfClass(world, APostProcessVolume::StaticClass(), actors);
@@ -246,20 +266,64 @@ void UCarlaSettingsDelegate::SetPostProcessEffectsEnabled(UWorld* world, bool en
   }
 }
 
-void UCarlaSettingsDelegate::ApplyLowQualitySettings(UWorld *world) const
+
+void UCarlaSettingsDelegate::LaunchEpicQualityCommands(UWorld* world) const
 {
   if(!world) return ;
-  LaunchLowQualityCommands(world);
-	
-  //iterate all directional lights, deactivate shadows
-  SetAllLightsLowQuality(world);
-  
-  //Set all the roads the low quality material
-  SetAllRoadsLowQuality(world);
-
-  //Set all actors with static meshes a max disntace configured in the global settings for the low quality
-  SetAllActorsDrawDistance(world, CarlaSettings->LowStaticMeshMaxDrawDistance);
-
-  //Disable all post process volumes
-  SetPostProcessEffectsEnabled(world, false);
+  GEngine->Exec(world,TEXT("r.AmbientOcclusionLevels -1"));
+  GEngine->Exec(world,TEXT("r.RHICmdBypass 1"));
+  GEngine->Exec(world,TEXT("r.DefaultFeature.AntiAliasing 2"));
+  GEngine->Exec(world,TEXT("r.Streaming.PoolSize 2000"));
+  GEngine->Exec(world,TEXT("r.MinScreenRadiusForLights 0.03"));
+  GEngine->Exec(world,TEXT("r.SeparateTranslucency 1"));
+  GEngine->Exec(world,TEXT("r.PostProcessAAQuality 4"));
+  GEngine->Exec(world,TEXT("r.BloomQuality 5"));
+  GEngine->Exec(world,TEXT("r.SSR.Quality 3"));
+  GEngine->Exec(world,TEXT("r.DepthOfFieldQuality 2"));
+  GEngine->Exec(world,TEXT("r.SceneColorFormat 4"));
+  GEngine->Exec(world,TEXT("r.TranslucencyVolumeBlur 1"));
+  GEngine->Exec(world,TEXT("r.TranslucencyLightingVolumeDim 64"));
+  GEngine->Exec(world,TEXT("r.MaxAnisotropy 8"));
+  GEngine->Exec(world,TEXT("r.LensFlareQuality 2"));
+  GEngine->Exec(world,TEXT("r.SceneColorFringeQuality 1"));
+  GEngine->Exec(world,TEXT("r.FastBlurThreshold 100"));
+  GEngine->Exec(world,TEXT("r.SSR.MaxRoughness -1"));
+  GEngine->Exec(world,TEXT("r.StencilForLODDither 0"));
+  GEngine->Exec(world,TEXT("r.EarlyZPass 3"));
+  GEngine->Exec(world,TEXT("r.EarlyZPassMovable 1"));
+  GEngine->Exec(world,TEXT("Foliage.DitheredLOD 1"));
+  GEngine->Exec(world,TEXT("sg.PostProcessQuality 3"));
+  GEngine->Exec(world,TEXT("r.ViewDistanceScale 1")); //--> too extreme (far clip too short)
+  GEngine->Exec(world,TEXT("sg.ShadowQuality 3"));
+  GEngine->Exec(world,TEXT("sg.TextureQuality 3"));
+  GEngine->Exec(world,TEXT("sg.EffectsQuality 3"));
+  GEngine->Exec(world,TEXT("sg.FoliageQuality 3"));
+  GEngine->Exec(world,TEXT("foliage.DensityScale 1"));
+  GEngine->Exec(world,TEXT("grass.DensityScale 1"));
+  GEngine->Exec(world,TEXT("r.TranslucentLightingVolume 1"));
+  GEngine->Exec(world,TEXT("r.LightShaftDownSampleFactor 2"));
+  //GEngine->Exec(world,TEXT("r.OcclusionQueryLocation 0"));
+  GEngine->Exec(world,TEXT("r.BasePassOutputsVelocity 0"));
+  GEngine->Exec(world,TEXT("r.DetailMode 2"));
 }
+
+void UCarlaSettingsDelegate::SetAllLights(UWorld* world, const float max_distance_fade, const bool cast_shadows, const bool hide_non_directional) const
+{
+  TArray<AActor*> actors;
+  UGameplayStatics::GetAllActorsOfClass(world, ALight::StaticClass(), actors);
+  for(int32 i=0;i<actors.Num();i++)
+  {
+	if(!IsValid(actors[i]) || actors[i]->IsPendingKillPending()) continue;
+    //tweak directional lights
+    ADirectionalLight* directionallight = Cast<ADirectionalLight>(actors[i]);
+    if(directionallight)
+    {
+      directionallight->SetCastShadows(cast_shadows);
+      directionallight->SetLightFunctionFadeDistance(max_distance_fade);
+      continue;
+    }
+    //disable any other type of light
+    actors[i]->SetActorHiddenInGame(hide_non_directional);
+  }
+}
+
