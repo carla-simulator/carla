@@ -36,6 +36,8 @@ class CarlaSettings(object):
         # [CARLA/Server]
         self.SynchronousMode = True
         self.SendNonPlayerAgentsInfo = False
+        # [CARLA/QualitySettings]
+        self.QualityLevel = 'Epic'
         # [CARLA/LevelSettings]
         self.PlayerVehicle = None
         self.NumberOfVehicles = 20
@@ -75,6 +77,7 @@ class CarlaSettings(object):
         ini = ConfigParser()
         ini.optionxform = str
         S_SERVER = 'CARLA/Server'
+        S_QUALITY = 'CARLA/QualitySettings'
         S_LEVEL = 'CARLA/LevelSettings'
         S_SENSOR = 'CARLA/Sensor'
 
@@ -91,6 +94,8 @@ class CarlaSettings(object):
         add_section(S_SERVER, self, [
             'SynchronousMode',
             'SendNonPlayerAgentsInfo'])
+        add_section(S_QUALITY, self, [
+            'QualityLevel'])
         add_section(S_LEVEL, self, [
             'NumberOfVehicles',
             'NumberOfPedestrians',
