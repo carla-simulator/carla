@@ -37,11 +37,21 @@ void UAgentComponent::AcceptVisitor(IAgentComponentVisitor &Visitor) const
 void UAgentComponent::BeginPlay()
 {
   Super::BeginPlay();
-  GetDataRouter(GetWorld()).RegisterAgent(this);
+
+  if (bRegisterAgentComponent)
+  {
+    GetDataRouter(GetWorld()).RegisterAgent(this);
+    bAgentComponentIsRegistered = true;
+  }
 }
 
 void UAgentComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-  GetDataRouter(GetWorld()).DeregisterAgent(this);
+  if (bAgentComponentIsRegistered)
+  {
+    GetDataRouter(GetWorld()).DeregisterAgent(this);
+    bAgentComponentIsRegistered = false;
+  }
+
   Super::EndPlay(EndPlayReason);
 }

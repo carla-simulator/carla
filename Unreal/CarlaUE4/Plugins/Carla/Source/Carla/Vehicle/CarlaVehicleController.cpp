@@ -42,6 +42,8 @@ void ACarlaVehicleController::Possess(APawn *aPawn)
     // Get custom player state.
     CarlaPlayerState = Cast<ACarlaPlayerState>(PlayerState);
     check(CarlaPlayerState != nullptr);
+    // We can set bounds extent already as it's not going to change.
+    CarlaPlayerState->BoundsExtent = GetPossessedVehicle()->GetVehicleBoundsExtent();
     // Set HUD input.
     CarlaHUD = Cast<ACarlaHUD>(GetHUD());
     if (CarlaHUD != nullptr) {
