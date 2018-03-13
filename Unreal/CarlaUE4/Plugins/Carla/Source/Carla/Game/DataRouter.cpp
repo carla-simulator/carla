@@ -9,18 +9,6 @@
 
 #include "Sensor/Sensor.h"
 
-void FDataRouter::RegisterPlayer(ACarlaVehicleController &InPlayer)
-{
-  if (Player == nullptr) {
-    Player = &InPlayer;
-  } else {
-    UE_LOG(
-        LogCarla,
-        Error,
-        TEXT("FDataRouter: Trying to register a second player but only one is supported"));
-  }
-}
-
 void FDataRouter::RegisterSensor(ASensor &InSensor)
 {
   if (SensorDataSink.IsValid()) {

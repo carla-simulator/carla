@@ -28,7 +28,10 @@ public:
     SensorDataSink = InSensorDataSink;
   }
 
-  void RegisterPlayer(ACarlaVehicleController &InPlayer);
+  void RegisterPlayer(ACarlaVehicleController &InPlayer)
+  {
+    Player = &InPlayer;
+  }
 
   void RegisterSensor(ASensor &InSensor);
 
