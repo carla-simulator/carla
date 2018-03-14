@@ -177,7 +177,8 @@ void AWheeledVehicleAIController::TickAutopilotController()
     Steering = CalcStreeringValue(Direction);
   }
 
-  const auto Speed = Vehicle->GetVehicleForwardSpeed();
+  // Speed in km/h.
+  const auto Speed = Vehicle->GetVehicleForwardSpeed() * 0.036f;
 
   float Throttle;
   if (TrafficLightState != ETrafficLightState::Green) {

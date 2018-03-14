@@ -49,9 +49,9 @@ class Sensor(object):
     def __init__(self, name, sensor_type):
         self.SensorName = name
         self.SensorType = sensor_type
-        self.PositionX = 140.0
+        self.PositionX = 0.2
         self.PositionY = 0.0
-        self.PositionZ = 140.0
+        self.PositionZ = 1.3
         self.RotationPitch = 0.0
         self.RotationRoll = 0.0
         self.RotationYaw = 0.0
