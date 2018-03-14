@@ -149,7 +149,7 @@ void UCarlaSettingsDelegate::LaunchLowQualityCommands(UWorld * world) const
   GEngine->Exec(world,TEXT("r.SSR.MaxRoughness 0.1"));
   GEngine->Exec(world,TEXT("r.AllowOcclusionQueries 1"));
   //GEngine->Exec(world,TEXT("r.SSR 0"));
-  GEngine->Exec(world,TEXT("r.StencilForLODDither 1"));
+  //GEngine->Exec(world,TEXT("r.StencilForLODDither 1")); //readonly
   GEngine->Exec(world,TEXT("r.EarlyZPass 2")); //transparent before opaque
   GEngine->Exec(world,TEXT("r.EarlyZPassMovable 1"));
   GEngine->Exec(world,TEXT("Foliage.DitheredLOD 0"));
@@ -185,7 +185,7 @@ void UCarlaSettingsDelegate::SetAllRoads(UWorld* world, const float max_draw_dis
   	  if(staticmeshcomponent)
   	  {
 		staticmeshcomponent->bAllowCullDistanceVolume = (max_draw_distance>0);
-		//staticmeshcomponent->bUseAsOccluder = false;
+		staticmeshcomponent->bUseAsOccluder = false;
 		staticmeshcomponent->LDMaxDrawDistance = max_draw_distance; 
   		staticmeshcomponent->CastShadow = (max_draw_distance==0);
 		if(road_pieces_materials.Num()>0)
@@ -288,7 +288,7 @@ void UCarlaSettingsDelegate::LaunchEpicQualityCommands(UWorld* world) const
   GEngine->Exec(world,TEXT("r.SceneColorFringeQuality 1"));
   GEngine->Exec(world,TEXT("r.FastBlurThreshold 100"));
   GEngine->Exec(world,TEXT("r.SSR.MaxRoughness -1"));
-  GEngine->Exec(world,TEXT("r.StencilForLODDither 0"));
+  //GEngine->Exec(world,TEXT("r.StencilForLODDither 0")); //readonly
   GEngine->Exec(world,TEXT("r.EarlyZPass 3"));
   GEngine->Exec(world,TEXT("r.EarlyZPassMovable 1"));
   GEngine->Exec(world,TEXT("Foliage.DitheredLOD 1"));

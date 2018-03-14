@@ -72,7 +72,7 @@ public:
 
 private:
   ///Read the camera buffer and write it to a color array
-  void WritePixels(float DeltaTime) const;
+  void WritePixels(float DeltaTime,FRHICommandListImmediate& rhi_cmd_list) const;
 
   /// Used to synchronize the DrawFrustumComponent with the
   /// SceneCaptureComponent2D settings.

@@ -19,7 +19,6 @@
 #include "Paths.h"
 
 
-
 static constexpr auto DEPTH_MAT_PATH =
 #if PLATFORM_LINUX
     TEXT("Material'/Carla/PostProcessingMaterials/DepthEffectMaterial_GLSL.DepthEffectMaterial_GLSL'");
@@ -142,14 +141,14 @@ void ASceneCaptureCamera::BeginPlay()
 void ASceneCaptureCamera::Tick(const float DeltaSeconds)
 {
   Super::Tick(DeltaSeconds);
-  auto fn = [=](){WritePixels(DeltaSeconds);};
+  auto fn = [=](FRHICommandListImmediate& RHICmdList){WritePixels(DeltaSeconds,RHICmdList);};
   ENQUEUE_UNIQUE_RENDER_COMMAND_ONEPARAMETER(
 	  FWritePixels,
 	  decltype(fn),write_function,fn,
 	  {
-		write_function();
+		write_function(RHICmdList);
 	  });
-  
+ 
 }
 
 float ASceneCaptureCamera::GetFOVAngle() const
@@ -226,7 +225,7 @@ bool ASceneCaptureCamera::ReadPixels(TArray<FColor> &BitMap) const
   return RTResource->ReadPixels(BitMap, ReadPixelFlags);
 }
 
-void ASceneCaptureCamera::WritePixels(float DeltaTime) const
+void ASceneCaptureCamera::WritePixels(float DeltaTime, FRHICommandListImmediate& rhi_cmd_list) const
  {
   check(IsInRenderingThread());
   if(!CaptureRenderTarget)
@@ -234,16 +233,8 @@ void ASceneCaptureCamera::WritePixels(float DeltaTime) const
   	UE_LOG(LogCarla, Error, TEXT("SceneCaptureCamera: Missing render target"));
   	return ;
   }
-  FRHITexture2D *texture = CaptureRenderTarget->GetRenderTargetResource()->GetRenderTargetTexture();
-  if(!texture)
-  {
-	  UE_LOG(LogCarla, Error, TEXT("SceneCaptureCamera: Missing render texture"));
-	  return ;
-  }
-  const uint32 width = texture->GetSizeX();
-  uint32 height = texture->GetSizeY();
-  uint32 stride;
-  uint8 *src = reinterpret_cast<uint8*>(RHILockTexture2D(texture, 0, RLM_ReadOnly, stride, false));
+  FTextureRenderTarget2DResource* RenderResource = (FTextureRenderTarget2DResource*)CaptureRenderTarget->Resource;
+  
   struct {
     uint32 Width;
     uint32 Height;
@@ -255,31 +246,56 @@ void ASceneCaptureCamera::WritePixels(float DeltaTime) const
     PostProcessEffect::ToUInt(PostProcessEffect),
     CaptureComponent2D->FOVAngle
   };
-  FSensorDataView DataView(
-    GetId(),
-    FReadOnlyBufferView{reinterpret_cast<const void *>(&ImageHeader), sizeof(ImageHeader)},
-    FReadOnlyBufferView{src,stride*height}
-  );
 
-  WriteSensorData(DataView);
-
-  /*
-   * example of buffer manual copy
-  const uint32 bufferSize = stride * height;
-  RawData.Empty(width*height);
-  FMemory::BigBlockMemcpy(captureBuffer->getBuffer<void>(), src, captureBuffer->getBufferSize());
-  for(unsigned y = 0; y < height; ++y)
+  if(IsVulkanPlatform(GMaxRHIShaderPlatform))
   {
-    for(unsigned x = 0; x < width; ++x)
-	{
-		//RGBA -> 
-		RawData.Add(FColor(src[2],src[1],src[0],src[3]));
-		src += 4;
-	}
-  }*/
-  
-  RHIUnlockTexture2D(texture, 0, false);
-
+	FTextureRHIParamRef texture = RenderResource->GetRenderTargetTexture();
+	if(!texture)
+    {
+      UE_LOG(LogCarla, Error, TEXT("SceneCaptureCamera: Missing render target texture"));
+	  return;
+    }
+    struct FReadSurfaceContext
+    {
+   	  FRenderTarget* SrcRenderTarget;
+   	  TArray<FColor>* OutData;
+   	  FIntRect Rect;
+   	  FReadSurfaceDataFlags Flags;
+    };
+    TArray<FColor> Pixels;   
+    rhi_cmd_list.ReadSurfaceData(
+   	  texture,
+   	  FIntRect(0, 0, RenderResource->GetSizeXY().X, RenderResource->GetSizeXY().Y),
+   	  Pixels,
+   	  FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX)
+    );
+    FSensorDataView DataView(
+     GetId(),
+     FReadOnlyBufferView{reinterpret_cast<const void *>(&ImageHeader), sizeof(ImageHeader)},
+     FReadOnlyBufferView{Pixels}
+   );
+   WriteSensorData(DataView);
+  } else
+  {
+	//if it's not vulkan we can lock the render target texture resource
+	FRHITexture2D *texture = CaptureRenderTarget->GetRenderTargetResource()->GetRenderTargetTexture();
+    if(!texture)
+    {
+	  UE_LOG(LogCarla, Error, TEXT("SceneCaptureCamera: Missing render texture"));
+	  return ;
+    }
+	const uint32 height = texture->GetSizeY();
+	uint32 stride;
+	uint8 *src = reinterpret_cast<uint8*>(RHILockTexture2D(texture, 0, RLM_ReadOnly, stride, false));
+	const FSensorDataView DataView(
+	  GetId(),
+	  FReadOnlyBufferView{reinterpret_cast<const void *>(&ImageHeader), sizeof(ImageHeader)},
+	  FReadOnlyBufferView{src,stride*height}
+	);
+	  
+	WriteSensorData(DataView);
+	RHIUnlockTexture2D(texture, 0, false);
+  }
 }
 
 
