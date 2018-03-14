@@ -28,6 +28,10 @@ class StopWatch(object):
         self.start = datetime.datetime.now()
         self.end = None
 
+    def restart(self):
+        self.start = datetime.datetime.now()
+        self.end = None
+
     def stop(self):
         self.end = datetime.datetime.now()
 
