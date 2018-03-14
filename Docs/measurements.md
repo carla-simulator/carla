@@ -110,6 +110,10 @@ front wheel blueprint).
 Non-player agents info
 ----------------------
 
+!!! important
+    Since version 0.8.0 the player vehicle is not sent in the list of non-player
+    agents.
+
 To receive info of every non-player agent in the scene every frame you need to
 activate this option in the settings file sent by the client at the beginning of
 the episode.
@@ -134,11 +138,7 @@ size.
 ###### Transform and bounding box
 
 The transform defines the location and orientation of the agent. The bounding
-box is assumed to be centered at the agent's location. The box extent gives the
-radii dimensions of the bounding box of the agent.
+box is centered at the agent's location. The box extent gives the radii
+dimensions of the bounding box of the agent.
 
 ![Vehicle Bounding Box](img/vehicle_bounding_box.png)
-
-!!! important
-    As seen in the picture, the Z coordinate of the box is not fitted to
-    vehicle's height.
