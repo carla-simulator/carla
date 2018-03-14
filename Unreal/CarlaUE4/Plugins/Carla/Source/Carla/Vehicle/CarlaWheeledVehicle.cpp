@@ -46,7 +46,7 @@ FTransform ACarlaWheeledVehicle::GetVehicleTransform() const
 
 float ACarlaWheeledVehicle::GetVehicleForwardSpeed() const
 {
-  return GetVehicleMovementComponent()->GetForwardSpeed() * 0.036f;
+  return GetVehicleMovementComponent()->GetForwardSpeed();
 }
 
 FVector ACarlaWheeledVehicle::GetVehicleOrientation() const
