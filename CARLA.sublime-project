@@ -9,6 +9,7 @@
 				".codelite",
 				".kdev4",
 				".vs",
+				".vscode",
 				"Binaries",
 				"Build",
 				"DerivedDataCache",
