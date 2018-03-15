@@ -148,7 +148,7 @@ void UCarlaSettingsDelegate::LaunchLowQualityCommands(UWorld * world) const
   GEngine->Exec(world,TEXT("r.FastBlurThreshold 0"));
   GEngine->Exec(world,TEXT("r.SSR.MaxRoughness 0.1"));
   GEngine->Exec(world,TEXT("r.AllowOcclusionQueries 1"));
-  //GEngine->Exec(world,TEXT("r.SSR 0"));
+  GEngine->Exec(world,TEXT("r.SSR 0"));
   //GEngine->Exec(world,TEXT("r.StencilForLODDither 1")); //readonly
   GEngine->Exec(world,TEXT("r.EarlyZPass 2")); //transparent before opaque
   GEngine->Exec(world,TEXT("r.EarlyZPassMovable 1"));
@@ -166,7 +166,7 @@ void UCarlaSettingsDelegate::LaunchLowQualityCommands(UWorld * world) const
   GEngine->Exec(world,TEXT("r.LightShaftDownSampleFactor 4"));
   GEngine->Exec(world,TEXT("r.OcclusionQueryLocation 1"));
   //GEngine->Exec(world,TEXT("r.BasePassOutputsVelocity 0")); //--> readonly
-  //world->Exec(world,TEXT("r.DetailMode 0")); //-->will change to lods 0
+  //GEngine->Exec(world,TEXT("r.DetailMode 0")); //-->will change to lods 0
 }
 
 
