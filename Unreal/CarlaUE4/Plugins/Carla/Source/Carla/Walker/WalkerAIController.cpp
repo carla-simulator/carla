@@ -23,11 +23,14 @@
 #  define EXTRA_LOG_ONLY(predicate)
 #endif // CARLA_AI_WALKERS_EXTRA_LOG
 
-static constexpr float UPDATE_TIME_IN_SECONDS = 10.0f;
+static constexpr float UPDATE_TIME_IN_SECONDS = 0.6f;
 static constexpr float PREVISION_TIME_IN_SECONDS = 5.0f;
 static constexpr float WALKER_SIGHT_RADIUS = 500.0f;
-static constexpr float WALKER_PERIPHERAL_VISION_ANGLE_IN_DEGREES = 90.0f;
-static constexpr float VEHICLE_SAFETY_RADIUS = 400.0f;
+static constexpr float WALKER_SPEED_DAMPING = 4.0f;
+static constexpr float WALKER_PERIPHERAL_VISION_ANGLE_IN_DEGREES = 155.0f;
+static constexpr float WALKER_MAX_TIME_PAUSED = 10.0f;
+static constexpr float VEHICLE_SAFETY_RADIUS = 600.0f;
+
 
 // =============================================================================
 // -- PawnPath -----------------------------------------------------------------
@@ -70,7 +73,7 @@ private:
 
   explicit PawnPath(const APawn &Walker) :
     Start(GetLocation(Walker)),
-    End(GetLocation(Walker) + GetForwardVector(Walker) * WALKER_SIGHT_RADIUS) {}
+    End(GetLocation(Walker) + GetForwardVector(Walker) * WALKER_SPEED_DAMPING * WALKER_SIGHT_RADIUS) {}
 
   explicit PawnPath(const AWheeledVehicle &Vehicle) :
     PawnPath(GetLocation(Vehicle), GetForwardVector(Vehicle), GetForwardSpeed(Vehicle)) {}
@@ -145,7 +148,6 @@ AWalkerAIController::AWalkerAIController(const FObjectInitializer& ObjectInitial
 
   auto Perception = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("AIPerception Component"));
   check(Perception != nullptr);
-  SetPerceptionComponent(*Perception);
 
   SightConfiguration = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("SightConfiguration"));
   SightConfiguration->SightRadius = WALKER_SIGHT_RADIUS;
@@ -154,10 +156,12 @@ AWalkerAIController::AWalkerAIController(const FObjectInitializer& ObjectInitial
   SightConfiguration->DetectionByAffiliation.bDetectEnemies = true;
   SightConfiguration->DetectionByAffiliation.bDetectNeutrals = true;
   SightConfiguration->DetectionByAffiliation.bDetectFriendlies = true;
-
+  
   Perception->ConfigureSense(*SightConfiguration);
   Perception->SetDominantSense(SightConfiguration->GetSenseImplementation());
   Perception->OnPerceptionUpdated.AddDynamic(this, &AWalkerAIController::SenseActors);
+  SetPerceptionComponent(*Perception);
+  TimeInState=0.0f;
 }
 
 
@@ -171,17 +175,20 @@ void AWalkerAIController::Possess(APawn *aPawn)
 void AWalkerAIController::Tick(float DeltaSeconds)
 {
   Super::Tick(DeltaSeconds);
-
+  TimeInState+=DeltaSeconds;
   if (Status != EWalkerStatus::RunOver) {
-    switch (GetMoveStatus()) {
+    switch (GetMoveStatus()) 
+	{
       case EPathFollowingStatus::Idle:
       case EPathFollowingStatus::Waiting:
         LOG_AI_WALKER(Warning, "is stuck!");
-        Status = EWalkerStatus::Stuck;
+        ChangeStatus(EWalkerStatus::Stuck);
         break;
       case EPathFollowingStatus::Paused:
-        LOG_AI_WALKER(Log, "is paused");
-        TryResumeMovement();
+		if(TimeInState>WALKER_MAX_TIME_PAUSED){
+			LOG_AI_WALKER(Log, "is paused, trying resume movement");
+			TryResumeMovement();
+		}
         break;
     };
   }
@@ -195,9 +202,12 @@ FPathFollowingRequestResult AWalkerAIController::MoveTo(
   UE_LOG(LogCarla, Log, TEXT("Walker %s requested move from (%s) to (%s)"),
       *GetPawn()->GetName(),
       *GetPawn()->GetActorLocation().ToString(),
-      *MoveRequest.GetGoalLocation().ToString());
+      *MoveRequest.GetGoalLocation().ToString())
+
+;
 #endif // CARLA_AI_WALKERS_EXTRA_LOG
-  Status = EWalkerStatus::Moving;
+  
+  ChangeStatus(EWalkerStatus::Moving);
   return Super::MoveTo(MoveRequest, OutPath);
 }
 
@@ -209,9 +219,10 @@ void AWalkerAIController::OnMoveCompleted(
 #ifdef CARLA_AI_WALKERS_EXTRA_LOG
   UE_LOG(LogCarla, Log, TEXT("Walker %s completed move at (%s)"),
       *GetPawn()->GetName(),
-      *GetPawn()->GetActorLocation().ToString());
+      *GetPawn()->GetActorLocation().ToString())
+;
 #endif // CARLA_AI_WALKERS_EXTRA_LOG
-  Status = EWalkerStatus::MoveCompleted;
+  ChangeStatus(EWalkerStatus::MoveCompleted);
 }
 
 void AWalkerAIController::SenseActors(const TArray<AActor *> Actors)
@@ -220,8 +231,22 @@ void AWalkerAIController::SenseActors(const TArray<AActor *> Actors)
   if ((Status == EWalkerStatus::Moving) &&
       (aPawn != nullptr) &&
       IntersectsWithVehicle(*aPawn, Actors)) {
-    TryPauseMovement();
+		TryPauseMovement();
   }
+}
+
+void AWalkerAIController::TrySetMovement(bool paused)
+{
+	if(paused) TryPauseMovement(false);
+	else TryResumeMovement();
+}
+
+void AWalkerAIController::ChangeStatus(EWalkerStatus status)
+{
+	if(status==Status) return;
+	//switch (status) {  }
+	TimeInState = 0.0f;
+	Status = status;
 }
 
 void AWalkerAIController::TryResumeMovement()
@@ -235,7 +260,7 @@ void AWalkerAIController::TryResumeMovement()
         LOG_AI_WALKER(Error, "is unable to resume movement");
       } else {
         LOG_AI_WALKER(Log, "resuming movement");
-        Status = EWalkerStatus::Moving;
+        ChangeStatus(EWalkerStatus::Moving);
       }
     }
   }
@@ -252,7 +277,7 @@ void AWalkerAIController::TryPauseMovement(const bool bItWasRunOver)
         LOG_AI_WALKER(Error, "is unable to pause movement");
       } else {
         LOG_AI_WALKER(Log, "paused");
-        Status = (bItWasRunOver ? EWalkerStatus::RunOver : EWalkerStatus::Paused);
+        ChangeStatus(bItWasRunOver ? EWalkerStatus::RunOver : EWalkerStatus::Paused);
       }
     }
   }
@@ -268,7 +293,7 @@ void AWalkerAIController::OnPawnTookDamage(
   LOG_AI_WALKER(Warning, "has been run over");
   constexpr bool bItWasRunOver = true;
   TryPauseMovement(bItWasRunOver);
-  Status = EWalkerStatus::RunOver;
+  ChangeStatus(EWalkerStatus::RunOver);
 }
 
 #undef EXTRA_LOG_ONLY

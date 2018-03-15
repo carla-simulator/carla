@@ -23,6 +23,8 @@ public class Carla : ModuleRules
       new string[]
       {
         "Core",
+        "RenderCore",
+        "RHI"
         // ... add other public dependencies that you statically link with here ...
       }
       );

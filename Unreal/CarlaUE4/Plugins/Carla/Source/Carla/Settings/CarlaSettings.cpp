@@ -6,31 +6,43 @@
 
 #include "Carla.h"
 #include "CarlaSettings.h"
-
 #include "DynamicWeather.h"
 #include "Settings/CameraDescription.h"
 #include "Settings/LidarDescription.h"
 #include "Util/IniFile.h"
-
+#include "Package.h"
 #include "CommandLine.h"
 #include "UnrealMathUtility.h"
+#include "Engine/Engine.h"
+#include "Kismet/GameplayStatics.h"
+#include "Engine/DirectionalLight.h"
+#include "Engine/PointLight.h"
+#include "Engine/StaticMesh.h"
+#include "Engine/PostProcessVolume.h"
+#include "Materials/MaterialInstance.h"
+
 
 // INI file sections.
 #define S_CARLA_SERVER                 TEXT("CARLA/Server")
 #define S_CARLA_LEVELSETTINGS          TEXT("CARLA/LevelSettings")
 #define S_CARLA_SENSOR                 TEXT("CARLA/Sensor")
+#define S_CARLA_QUALITYSETTINGS        TEXT("CARLA/QualitySettings")
+
+// =============================================================================
+// -- Static variables & constants ---------------------------------------------
+// =============================================================================
+const FName UCarlaSettings::CARLA_ROAD_TAG = FName("CARLA_ROAD");
+const FName UCarlaSettings::CARLA_SKY_TAG = FName("CARLA_SKY");
 
 // =============================================================================
 // -- Static methods -----------------------------------------------------------
 // =============================================================================
 
-/// Call Callback for every subsection (from top to bottom) in SectionName.
-/// Subsections are separated by '/' character.
 template <typename T>
-static void ForEachSectionInName(const FString &SectionName, T &&Callback)
+static void ForEachSectionInName(const FString &SensorName, T &&Callback)
 {
   TArray<FString> SubSections;
-  SectionName.ParseIntoArray(SubSections, TEXT("/"), true);
+  SensorName.ParseIntoArray(SubSections, TEXT("/"), true);
   check(SubSections.Num() > 0);
   FString Section = S_CARLA_SENSOR;
   Callback(Section);
@@ -41,8 +53,6 @@ static void ForEachSectionInName(const FString &SectionName, T &&Callback)
   }
 }
 
-/// Recursively get sensor type from the ConfigFile for each subsection in
-/// SensorName.
 static FString GetSensorType(
     const FIniFile &ConfigFile,
     const FString &SensorName)
@@ -54,8 +64,6 @@ static FString GetSensorType(
   return SensorType;
 }
 
-/// Recursively load sensor settings from the ConfigFile for each subsection in
-/// SensorName.
 static void LoadSensorFromConfig(
     const FIniFile &ConfigFile,
     USensorDescription &Sensor)
@@ -110,6 +118,16 @@ static void LoadSettingsFromConfig(
   ConfigFile.GetInt(S_CARLA_LEVELSETTINGS, TEXT("WeatherId"), Settings.WeatherId);
   ConfigFile.GetInt(S_CARLA_LEVELSETTINGS, TEXT("SeedVehicles"), Settings.SeedVehicles);
   ConfigFile.GetInt(S_CARLA_LEVELSETTINGS, TEXT("SeedPedestrians"), Settings.SeedPedestrians);
+
+  // QualitySettings.
+  FString sQualityLevel;
+  ConfigFile.GetString(S_CARLA_QUALITYSETTINGS, TEXT("QualityLevel"), sQualityLevel);
+  if(!Settings.SetQualitySettingsLevel(UQualitySettings::FromString(sQualityLevel)))
+  {
+	 //error
+  } 
+  
+
   // Sensors.
   FString Sensors;
   ConfigFile.GetString(S_CARLA_SENSOR, TEXT("Sensors"), Sensors);
@@ -140,6 +158,38 @@ static bool GetSettingsFilePathFromCommandLine(FString &Value)
 // =============================================================================
 // -- UCarlaSettings -----------------------------------------------------------
 // =============================================================================
+
+EQualitySettingsLevel UQualitySettings::FromString(const FString& SQualitySettingsLevel)
+{
+	if(SQualitySettingsLevel.Equals("Low")) return EQualitySettingsLevel::Low;
+	if(SQualitySettingsLevel.Equals("Medium")) return EQualitySettingsLevel::Medium;
+	if(SQualitySettingsLevel.Equals("High")) return EQualitySettingsLevel::High;
+	if(SQualitySettingsLevel.Equals("Epic")) return EQualitySettingsLevel::Epic;
+
+	return EQualitySettingsLevel::None;
+}
+
+FString UQualitySettings::ToString(EQualitySettingsLevel QualitySettingsLevel)
+{
+  const UEnum* ptr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EQualitySettingsLevel"), true);
+  if(!ptr)
+    return FString("Invalid");
+  return ptr->GetNameStringByIndex(static_cast<int32>(QualitySettingsLevel));
+}
+
+bool UCarlaSettings::SetQualitySettingsLevel(EQualitySettingsLevel newQualityLevel)
+{
+	if(newQualityLevel==EQualitySettingsLevel::None)
+	{
+		UE_LOG(LogCarla ,Warning, TEXT("Quality Settings Level not set!"));
+		return false;
+	}
+
+	QualitySettingsLevel = newQualityLevel;
+
+	return true;
+}
+
 
 void UCarlaSettings::LoadSettings()
 {
@@ -215,13 +265,18 @@ void UCarlaSettings::LogSettings() const
   UE_LOG(LogCarla, Log, TEXT("Seed Vehicle Spawner = %d"), SeedVehicles);
   UE_LOG(LogCarla, Log, TEXT("Seed Pedestrian Spawner = %d"), SeedPedestrians);
   UE_LOG(LogCarla, Log, TEXT("Found %d available weather settings."), WeatherDescriptions.Num());
-  for (auto i = 0; i < WeatherDescriptions.Num(); ++i) {
+  for (auto i = 0; i < WeatherDescriptions.Num(); ++i)
+  {
     UE_LOG(LogCarla, Log, TEXT("  * %d - %s"), i, *WeatherDescriptions[i].Name);
   }
+  UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_QUALITYSETTINGS);
+  UE_LOG(LogCarla, Log, TEXT("Quality Settings = %s"), *UQualitySettings::ToString(QualitySettingsLevel));
+
   UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_SENSOR);
   UE_LOG(LogCarla, Log, TEXT("Added %d sensors."), SensorDescriptions.Num());
   UE_LOG(LogCarla, Log, TEXT("Semantic Segmentation = %s"), EnabledDisabled(bSemanticSegmentationEnabled));
-  for (auto &&Sensor : SensorDescriptions) {
+  for (auto &&Sensor : SensorDescriptions) 
+  {
     check(Sensor.Value != nullptr);
     Sensor.Value->Log();
   }

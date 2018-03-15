@@ -191,11 +191,11 @@ class CarlaGame(object):
 
         measurements, sensor_data = self.client.read_data()
 
-        self._main_image = sensor_data['CameraRGB']
-        self._mini_view_image1 = sensor_data['CameraDepth']
-        self._mini_view_image2 = sensor_data['CameraSemSeg']
+        self._main_image = sensor_data.get('CameraRGB',None)
+        self._mini_view_image1 = sensor_data.get('CameraDepth' ,None)
+        self._mini_view_image2 = sensor_data.get('CameraSemSeg',None)
         if self._enable_lidar:
-            self._lidar_measurement = sensor_data['Lidar32']
+            self._lidar_measurement = sensor_data.get('Lidar32',None)
 
         # Print measurements every second.
         if self._timer.elapsed_seconds_since_lap() > 1.0:

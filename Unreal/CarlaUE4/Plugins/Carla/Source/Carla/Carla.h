@@ -22,9 +22,15 @@ DECLARE_LOG_CATEGORY_EXTERN(LogCarlaServer, Log, All);
 
 class FCarlaModule : public IModuleInterface
 {
+	void RegisterSettings();
+	void UnregisterSettings();
+	bool HandleSettingsSaved();
+
+
 public:
 
 	/** IModuleInterface implementation */
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
+	
 };
