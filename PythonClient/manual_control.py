@@ -80,22 +80,22 @@ def make_carla_settings(enable_lidar):
     settings.randomize_seeds()
     camera0 = sensor.Camera('CameraRGB')
     camera0.set_image_size(WINDOW_WIDTH, WINDOW_HEIGHT)
-    camera0.set_position(200, 0, 140)
+    camera0.set_position(2.0, 0.0, 1.4)
     camera0.set_rotation(0.0, 0.0, 0.0)
     settings.add_sensor(camera0)
     camera1 = sensor.Camera('CameraDepth', PostProcessing='Depth')
     camera1.set_image_size(MINI_WINDOW_WIDTH, MINI_WINDOW_HEIGHT)
-    camera1.set_position(200, 0, 140)
+    camera1.set_position(2.0, 0.0, 1.4)
     camera1.set_rotation(0.0, 0.0, 0.0)
     settings.add_sensor(camera1)
     camera2 = sensor.Camera('CameraSemSeg', PostProcessing='SemanticSegmentation')
     camera2.set_image_size(MINI_WINDOW_WIDTH, MINI_WINDOW_HEIGHT)
-    camera2.set_position(200, 0, 140)
+    camera2.set_position(2.0, 0.0, 1.4)
     camera2.set_rotation(0.0, 0.0, 0.0)
     settings.add_sensor(camera2)
     if enable_lidar:
         lidar = sensor.Lidar('Lidar32')
-        lidar.set_position(0, 0, 250)
+        lidar.set_position(0, 0, 2.5)
         lidar.set_rotation(0, 0, 0)
         lidar.set(
             Channels=32,
@@ -273,7 +273,7 @@ class CarlaGame(object):
             ori_y=lane_orientation[1],
             step=self._timer.step,
             fps=self._timer.ticks_per_second(),
-            speed=player_measurements.forward_speed,
+            speed=player_measurements.forward_speed * 3.6,
             other_lane=100 * player_measurements.intersection_otherlane,
             offroad=100 * player_measurements.intersection_offroad)
         print_over_same_line(message)
@@ -285,7 +285,7 @@ class CarlaGame(object):
         message = message.format(
             step=self._timer.step,
             fps=self._timer.ticks_per_second(),
-            speed=player_measurements.forward_speed,
+            speed=player_measurements.forward_speed * 3.6,
             other_lane=100 * player_measurements.intersection_otherlane,
             offroad=100 * player_measurements.intersection_offroad)
         print_over_same_line(message)

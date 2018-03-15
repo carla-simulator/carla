@@ -137,6 +137,7 @@ class Converter(object):
         """
 
         rotation = np.array([world[0], world[1], world[2]])
+        rotation *= 1e2 # meters to centimeters.
         rotation = rotation.dot(self._worldrotation)
 
         relative_location = [rotation[0] + self._worldoffset[0] - self._mapoffset[0],

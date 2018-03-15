@@ -9,7 +9,7 @@ void ULidarDescription::Load(const FIniFile &Config, const FString &Section)
 {
   Super::Load(Config, Section);
   Config.GetInt(*Section, TEXT("Channels"), Channels);
-  Config.GetFloat(*Section, TEXT("Range"), Range);
+  Config.GetFloat(*Section, TEXT("Range"), Range, 1e2);
   Config.GetInt(*Section, TEXT("PointsPerSecond"), PointsPerSecond);
   Config.GetFloat(*Section, TEXT("RotationFrequency"), RotationFrequency);
   Config.GetFloat(*Section, TEXT("UpperFovLimit"), UpperFovLimit);

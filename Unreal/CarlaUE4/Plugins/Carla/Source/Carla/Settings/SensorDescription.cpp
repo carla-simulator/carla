@@ -16,9 +16,10 @@ void USensorDescription::AcceptVisitor(ISensorDescriptionVisitor &Visitor) const
 
 void USensorDescription::Load(const FIniFile &Config, const FString &Section)
 {
-  Config.GetFloat(*Section, TEXT("PositionX"), Position.X);
-  Config.GetFloat(*Section, TEXT("PositionY"), Position.Y);
-  Config.GetFloat(*Section, TEXT("PositionZ"), Position.Z);
+  constexpr float TO_CENTIMETERS = 1e2;
+  Config.GetFloat(*Section, TEXT("PositionX"), Position.X, TO_CENTIMETERS);
+  Config.GetFloat(*Section, TEXT("PositionY"), Position.Y, TO_CENTIMETERS);
+  Config.GetFloat(*Section, TEXT("PositionZ"), Position.Z, TO_CENTIMETERS);
   Config.GetFloat(*Section, TEXT("RotationPitch"), Rotation.Pitch);
   Config.GetFloat(*Section, TEXT("RotationYaw"), Rotation.Yaw);
   Config.GetFloat(*Section, TEXT("RotationRoll"), Rotation.Roll);

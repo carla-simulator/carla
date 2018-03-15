@@ -33,7 +33,7 @@ def run_carla_client(host, port, far):
     frame_step = 100  # Save one image every 100 frames
     output_folder = '_out'
     image_size = [800, 600]
-    camera_local_pos = [30, 0, 130]  # [X, Y, Z]
+    camera_local_pos = [0.3, 0.0, 1.3] # [X, Y, Z]
     camera_local_rotation = [0, 0, 0]  # [pitch(Y), yaw(Z), roll(X)]
     fov = 70
 
