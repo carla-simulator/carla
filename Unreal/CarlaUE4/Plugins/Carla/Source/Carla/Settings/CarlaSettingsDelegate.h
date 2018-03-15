@@ -65,7 +65,7 @@ private:
 private:
 
   /** currently applied settings level after level is restarted */
-  EQualitySettingsLevel AppliedLowPostResetQualitySettingsLevel = EQualitySettingsLevel::None;
+  EQualitySettingsLevel AppliedLowPostResetQualitySettingsLevel = EQualitySettingsLevel::Epic;
 
   /** */
   UCarlaSettings* CarlaSettings = nullptr;

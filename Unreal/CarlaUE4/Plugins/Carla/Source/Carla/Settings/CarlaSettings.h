@@ -195,7 +195,7 @@ public:
 private:
   /** Quality Settings level. */
   UPROPERTY(Category = "Quality Settings", VisibleAnywhere, meta =(AllowPrivateAccess="true"))
-  EQualitySettingsLevel QualitySettingsLevel = EQualitySettingsLevel::None;
+  EQualitySettingsLevel QualitySettingsLevel = EQualitySettingsLevel::Epic;
  
  public:
   /** @TODO : Move Low quality vars to a generic map of structs with the quality level as key*/
