@@ -19,6 +19,7 @@ Use ARROWS or WASD keys for control.
     AD           : steer
     Q            : toggle reverse
     Space        : hand-brake
+    P            : toggle autopilot
 
     R            : restart level
 
@@ -41,6 +42,7 @@ try:
     from pygame.locals import K_UP
     from pygame.locals import K_a
     from pygame.locals import K_d
+    from pygame.locals import K_p
     from pygame.locals import K_q
     from pygame.locals import K_r
     from pygame.locals import K_s
@@ -129,13 +131,14 @@ class Timer(object):
 
 
 class CarlaGame(object):
-    def __init__(self, carla_client, enable_lidar=False, city_name=None):
+    def __init__(self, carla_client, enable_autopilot=False, enable_lidar=False, city_name=None):
         self.client = carla_client
         self._timer = None
         self._display = None
         self._main_image = None
         self._mini_view_image1 = None
         self._mini_view_image2 = None
+        self._enable_autopilot = enable_autopilot
         self._enable_lidar = enable_lidar
         self._lidar_measurement = None
         self._map_view = None
@@ -230,6 +233,8 @@ class CarlaGame(object):
 
         if control is None:
             self._on_new_episode()
+        elif self._enable_autopilot:
+            self.client.send_control(measurements.player_measurements.autopilot_control)
         else:
             self.client.send_control(control)
 
@@ -253,6 +258,8 @@ class CarlaGame(object):
             control.hand_brake = True
         if keys[K_q]:
             self._is_on_reverse = not self._is_on_reverse
+        if keys[K_p]:
+            self._enable_autopilot = not self._enable_autopilot
         control.reverse = self._is_on_reverse
         return control
 
@@ -376,6 +383,10 @@ def main():
         type=int,
         help='TCP port to listen to (default: 2000)')
     argparser.add_argument(
+        '-a', '--autopilot',
+        action='store_true',
+        help='enable autopilot')
+    argparser.add_argument(
         '-l', '--lidar',
         action='store_true',
         help='enable Lidar')
@@ -398,7 +409,7 @@ def main():
         try:
 
             with make_carla_client(args.host, args.port) as client:
-                game = CarlaGame(client, args.lidar, args.map_name)
+                game = CarlaGame(client, args.autopilot, args.lidar, args.map_name)
                 game.execute()
                 break
 
