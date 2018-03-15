@@ -1,6 +1,11 @@
 Measurements
 ============
 
+!!! important
+    Since version 0.8.0 the measurements received by the client are in SI
+    units. All locations have been converted to `meters` and speeds to
+    `meters/second`.
+
 Every frame the server sends a package with the measurements and images gathered
 to the client. This document describes the details of these measurements.
 
@@ -10,10 +15,10 @@ Time-stamps
 Since CARLA can be run at fixed-frame rate, we keep track of two different
 time-stamps.
 
-Key                        | Type      | Description
--------------------------- | --------- | ------------
-platform_timestamp         | uint32    | Time-stamp of the current frame, in milliseconds as given by the OS.
-game_timestamp             | uint32    | In-game time-stamp, milliseconds elapsed since the beginning of the current level.
+Key                        | Type      | Units        | Description
+-------------------------- | --------- | ------------ | ------------
+platform_timestamp         | uint32    | milliseconds | Time-stamp of the current frame, as given by the OS.
+game_timestamp             | uint32    | milliseconds | In-game time-stamp, elapsed since the beginning of the current level.
 
 In real-time mode, the elapsed time between two time steps should be similar
 both platform and game time-stamps. When run in fixed-time step, the game
@@ -23,27 +28,27 @@ time-stamp keeps the actual time elapsed.
 Player measurements
 -------------------
 
-Key                        | Type      | Description
--------------------------- | --------- | ------------
-transform                  | Transform | World transform of the player.
-acceleration               | Vector3D  | Current acceleration of the player.
-forward_speed              | float     | Forward speed in km/h.
-collision_vehicles         | float     | Collision intensity with other vehicles.
-collision_pedestrians      | float     | Collision intensity with pedestrians.
-collision_other            | float     | General collision intensity (everything else but pedestrians and vehicles).
-intersection_otherlane     | float     | Percentage of the car invading other lanes.
-intersection_offroad       | float     | Percentage of the car off-road.
-autopilot_control          | Control   | Vehicle's autopilot control that would apply this frame.
+Key                        | Type      | Units  | Description
+-------------------------- | --------- | ------ | ------------
+transform                  | Transform |        | World transform of the player (contains a locations and a rotation).
+acceleration               | Vector3D  | m/s^2  | Current acceleration of the player.
+forward_speed              | float     | m/s    | Forward speed of the player.
+collision_vehicles         | float     | kg*m/s | Collision intensity with other vehicles.
+collision_pedestrians      | float     | kg*m/s | Collision intensity with pedestrians.
+collision_other            | float     | kg*m/s | General collision intensity (everything else but pedestrians and vehicles).
+intersection_otherlane     | float     |        | Percentage of the car invading other lanes.
+intersection_offroad       | float     |        | Percentage of the car off-road.
+autopilot_control          | Control   |        | Vehicle's autopilot control that would apply this frame.
 
 ###### Transform
 
 The transform contains the location and rotation of the player.
 
-Key                        | Type       | Description
--------------------------- | ---------- | ------------
-location                   | Vector3D   | World location.
-orientation *[deprecated]* | Vector3D   | Orientation in Cartesian coordinates.
-rotation                   | Rotation3D | Pitch, roll, and yaw.
+Key                        | Type       | Units   | Description
+-------------------------- | ---------- | ------- | ------------
+location                   | Vector3D   | m       | World location.
+orientation *[deprecated]* | Vector3D   |         | Orientation in Cartesian coordinates.
+rotation                   | Rotation3D | degrees | Pitch, roll, and yaw.
 
 ###### Collision
 
@@ -99,6 +104,8 @@ carla_client.send_control(control)
 (*) The actual steering angle depends on the vehicle used. The default Mustang
 has a maximum steering angle of 70 degrees (this can be checked in the vehicle's
 front wheel blueprint).
+
+![Mustan Steering Angle](img/steering_angle_mustang.png)
 
 Non-player agents info
 ----------------------

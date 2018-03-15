@@ -1,6 +1,10 @@
 Cameras and sensors
 ===================
 
+!!! important
+    Since version 0.8.0 the positions of the sensors are specified in meters
+    instead of centimeters. Always relative to the vehicle.
+
 Cameras and sensors can be added to the player vehicle by defining them in the
 settings sent by the client on every new episode. This can be done either by
 filling a `CarlaSettings` Python class ([client_example.py][clientexamplelink])
@@ -39,7 +43,7 @@ using the functions at `carla.image_converter` Python module.
 Camera: Scene final
 -------------------
 
-![SceneFinal](img/capture_scenefinal.png)<br>
+![SceneFinal](img/capture_scenefinal.png)
 
 The "scene final" camera provides a view of the scene after applying some
 post-processing effects to create a more realistic feel. These are actually
@@ -61,7 +65,7 @@ in the Camera. We use the following post process effects:
 camera = carla.sensor.Camera('MyCamera', PostProcessing='SceneFinal')
 camera.set(FOV=90.0)
 camera.set_image_size(800, 600)
-camera.set_position(x=30, y=0, z=130)
+camera.set_position(x=0.30, y=0, z=1.30)
 camera.set_rotation(pitch=0, yaw=0, roll=0)
 
 carla_settings.add_sensor(camera)
@@ -76,9 +80,9 @@ PostProcessing=SceneFinal
 ImageSizeX=800
 ImageSizeY=600
 FOV=90
-PositionX=30
+PositionX=0.30
 PositionY=0
-PositionZ=130
+PositionZ=1.30
 RotationPitch=0
 RotationRoll=0
 RotationYaw=0
@@ -122,7 +126,7 @@ seen in "PythonClient/point_cloud_example.py".
 camera = carla.sensor.Camera('MyCamera', PostProcessing='Depth')
 camera.set(FOV=90.0)
 camera.set_image_size(800, 600)
-camera.set_position(x=30, y=0, z=130)
+camera.set_position(x=0.30, y=0, z=1.30)
 camera.set_rotation(pitch=0, yaw=0, roll=0)
 
 carla_settings.add_sensor(camera)
@@ -137,9 +141,9 @@ PostProcessing=Depth
 ImageSizeX=800
 ImageSizeY=600
 FOV=90
-PositionX=30
+PositionX=0.30
 PositionY=0
-PositionZ=130
+PositionZ=1.30
 RotationPitch=0
 RotationRoll=0
 RotationYaw=0
@@ -192,7 +196,7 @@ _"Unreal/CarlaUE4/Content/Static/Pedestrians"_ folder it's tagged as pedestrian.
 camera = carla.sensor.Camera('MyCamera', PostProcessing='SemanticSegmentation')
 camera.set(FOV=90.0)
 camera.set_image_size(800, 600)
-camera.set_position(x=30, y=0, z=130)
+camera.set_position(x=0.30, y=0, z=1.30)
 camera.set_rotation(pitch=0, yaw=0, roll=0)
 
 carla_settings.add_sensor(camera)
@@ -207,9 +211,9 @@ PostProcessing=SemanticSegmentation
 ImageSizeX=800
 ImageSizeY=600
 FOV=90
-PositionX=30
+PositionX=0.30
 PositionY=0
-PositionZ=130
+PositionZ=1.30
 RotationPitch=0
 RotationRoll=0
 RotationYaw=0
@@ -234,10 +238,10 @@ The received `LidarMeasurement` object contains the following information
 
 Key                        | Type       | Description
 -------------------------- | ---------- | ------------
-horizontal_angle           | float      | Angle in XY plane of the lidar this frame
-channels                   | uint32     | Number of channels (lasers) of the lidar
-point_count_by_channel     | uint32     | Number of points per channel captured this frame
-point_cloud                | PointCloud | Captured points this frame
+horizontal_angle           | float      | Angle in XY plane of the lidar this frame (in degrees).
+channels                   | uint32     | Number of channels (lasers) of the lidar.
+point_count_by_channel     | uint32     | Number of points per channel captured this frame.
+point_cloud                | PointCloud | Captured points this frame.
 
 ###### Python
 
@@ -245,12 +249,12 @@ point_cloud                | PointCloud | Captured points this frame
 lidar = carla.sensor.Lidar('MyLidar')
 lidar.set(
     Channels=32,
-    Range=5000,
+    Range=50,
     PointsPerSecond=100000,
     RotationFrequency=10,
     UpperFovLimit=10,
     LowerFovLimit=-30)
-lidar.set_position(x=0, y=0, z=140)
+lidar.set_position(x=0, y=0, z=1.40)
 lidar.set_rotation(pitch=0, yaw=0, roll=0)
 
 carla_settings.add_sensor(lidar)
@@ -262,14 +266,14 @@ carla_settings.add_sensor(lidar)
 [CARLA/Sensor/MyLidar]
 SensorType=LIDAR_RAY_TRACE
 Channels=32
-Range=5000
+Range=50
 PointsPerSecond=100000
 RotationFrequency=10
 UpperFOVLimit=10
 LowerFOVLimit=-30
 PositionX=0
 PositionY=0
-PositionZ=140
+PositionZ=1.40
 RotationPitch=0
 RotationYaw=0
 RotationRoll=0

@@ -46,7 +46,7 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   FTransform GetVehicleTransform() const;
 
-  /// Forward speed in km/h. Might be negative if goes backwards.
+  /// Forward speed in cm/s. Might be negative if goes backwards.
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   float GetVehicleForwardSpeed() const;
 

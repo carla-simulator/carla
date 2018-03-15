@@ -35,8 +35,11 @@ extern "C" {
   };
 
   struct carla_transform {
+    /** Location in meters. */
     struct carla_vector3d location;
+    /** Unit vector pointing "forward". */
     struct carla_vector3d orientation;
+    /** Rotation angles in degrees. */
     struct carla_rotation3d rotation;
   };
 
@@ -160,7 +163,7 @@ extern "C" {
     struct carla_vector3d box_extent;
     /** Current acceleration of the player. */
     struct carla_vector3d acceleration;
-    /** Forward speed in km/h. */
+    /** Forward speed in m/s. */
     float forward_speed;
     /** Collision intensity with other vehicles. */
     float collision_vehicles;
