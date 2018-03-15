@@ -112,11 +112,11 @@ public:
     }
   }
 
-  void GetFloat(const TCHAR* Section, const TCHAR* Key, float &Target) const
+  void GetFloat(const TCHAR* Section, const TCHAR* Key, float &Target, const float Factor = 1.0f) const
   {
     FString Value;
     if (ConfigFile.GetString(Section, Key, Value)) {
-      Target = FCString::Atof(*Value);
+      Target = Factor * FCString::Atof(*Value);
     }
   }
 
