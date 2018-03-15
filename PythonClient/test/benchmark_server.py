@@ -35,48 +35,53 @@ minimum = {min:.2f} FPS
 ===========================
 """
 
+def make_base_settings():
+    return CarlaSettings(
+        WeatherId=1,
+        SendNonPlayerAgentsInfo=False,
+        SynchronousMode=False,
+        NumberOfVehicles=20,
+        NumberOfPedestrians=30,
+        SeedVehicles=123456789,
+        SeedPedestrians=123456789,
+        QualityLevel='Epic')
+
 def generate_settings_scenario_001():
     logging.info('Scenario 001: no sensors, no agents info')
-    settings = CarlaSettings()
-    settings.set(WeatherId=1, SendNonPlayerAgentsInfo=False, SynchronousMode=False)
-    return settings
+    return make_base_settings()
 
 
 def generate_settings_scenario_002():
     logging.info('Scenario 002: no sensors, sending agents info')
-    settings = CarlaSettings()
-    settings.set(WeatherId=1, SendNonPlayerAgentsInfo=True, SynchronousMode=False)
+    settings = make_base_settings()
+    settings.set(SendNonPlayerAgentsInfo=True)
     return settings
 
 
 def generate_settings_scenario_003():
     logging.info('Scenario 003: single camera RGB, no agents info')
-    settings = CarlaSettings()
-    settings.set(WeatherId=1, SendNonPlayerAgentsInfo=False, SynchronousMode=False)
+    settings = make_base_settings()
     settings.add_sensor(Camera('DefaultCamera'))
     return settings
 
 
 def generate_settings_scenario_004():
     logging.info('Scenario 004: single camera Depth, no agents info')
-    settings = CarlaSettings()
-    settings.set(WeatherId=1, SendNonPlayerAgentsInfo=False, SynchronousMode=False)
+    settings = make_base_settings()
     settings.add_sensor(Camera('DefaultCamera', PostProcessing='Depth'))
     return settings
 
 
 def generate_settings_scenario_005():
     logging.info('Scenario 005: single camera SemanticSegmentation, no agents info')
-    settings = CarlaSettings()
-    settings.set(WeatherId=1, SendNonPlayerAgentsInfo=False, SynchronousMode=False)
+    settings = make_base_settings()
     settings.add_sensor(Camera('DefaultCamera', PostProcessing='SemanticSegmentation'))
     return settings
 
 
 def generate_settings_scenario_006():
     logging.info('Scenario 006: 3 cameras, no agents info')
-    settings = CarlaSettings()
-    settings.set(WeatherId=1, SendNonPlayerAgentsInfo=False, SynchronousMode=False)
+    settings = make_base_settings()
     settings.add_sensor(Camera('DefaultCamera'))
     settings.add_sensor(Camera('DefaultDepthCamera', PostProcessing='Depth'))
     settings.add_sensor(Camera('DefaultSemSegCamera', PostProcessing='SemanticSegmentation'))
@@ -85,8 +90,8 @@ def generate_settings_scenario_006():
 
 def generate_settings_scenario_007():
     logging.info('Scenario 007: no sensors, no agents info, rainy')
-    settings = CarlaSettings()
-    settings.set(WeatherId=13, SendNonPlayerAgentsInfo=False, SynchronousMode=False)
+    settings = make_base_settings()
+    settings.set(WeatherId=13)
     return settings
 
 
@@ -127,6 +132,7 @@ def run_carla_client(args, settings_generators):
                 watch.annotate()
             print(str(watch))
         print('done.')
+
 
 def main():
     argparser = argparse.ArgumentParser(description=__doc__)
