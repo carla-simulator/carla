@@ -61,21 +61,11 @@ ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer& ObjectInitial
 	CaptureRenderTarget->MipGenSettings = TextureMipGenSettings::TMGS_NoMipmaps;
   #endif
   CaptureRenderTarget->CompressionSettings = TextureCompressionSettings::TC_Default;
-  
-  //CaptureRenderTarget->RenderTargetFormat = ETextureRenderTargetFormat::
   CaptureRenderTarget->SRGB=0;
   CaptureRenderTarget->bAutoGenerateMips = false;
   CaptureRenderTarget->AddressX = TextureAddress::TA_Clamp;
   CaptureRenderTarget->AddressY = TextureAddress::TA_Clamp;
-  
-  //-------------------
-
   CaptureComponent2D = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("SceneCaptureComponent2D"));
-
-  //--addded by jbelon
-  //CaptureComponent2D->
-  //------------------
-
   CaptureComponent2D->SetupAttachment(MeshComp);
   
   // Load post-processing materials.
@@ -121,7 +111,7 @@ void ASceneCaptureCamera::BeginPlay()
 
   // Setup camera post-processing.
   if (PostProcessEffect != EPostProcessEffect::None) {
-    CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
+    CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR; //HD is much slower!
   }
   if (bRemovePostProcessing) {
     RemoveShowFlags(CaptureComponent2D->ShowFlags);

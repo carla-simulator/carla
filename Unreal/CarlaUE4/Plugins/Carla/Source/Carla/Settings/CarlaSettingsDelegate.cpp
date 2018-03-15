@@ -303,7 +303,7 @@ void UCarlaSettingsDelegate::LaunchEpicQualityCommands(UWorld* world) const
   GEngine->Exec(world,TEXT("r.TranslucentLightingVolume 1"));
   GEngine->Exec(world,TEXT("r.LightShaftDownSampleFactor 2"));
   //GEngine->Exec(world,TEXT("r.OcclusionQueryLocation 0"));
-  GEngine->Exec(world,TEXT("r.BasePassOutputsVelocity 0"));
+  //GEngine->Exec(world,TEXT("r.BasePassOutputsVelocity 0")); //readonly
   GEngine->Exec(world,TEXT("r.DetailMode 2"));
 }
 
