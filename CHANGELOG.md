@@ -1,3 +1,42 @@
+## CARLA 0.8.0
+
+  * Upgraded to Unreal Engine 4.18
+  * Created our own pedestrian models free to use and distribute
+  * Removed Epic's Automotive Materials dependencies
+  * 360 Lidars support (similar to Velodyne HDL-32E or VLP-16) thanks to @parilo
+    - Ray-trace based
+    - Configurable settings
+    - Added methods to save points to disk as PLY file
+  * Added quality level settings
+    - Low: faster, low quality graphics
+    - Epic: best quality (as before)
+  * Measurements now use SI units
+    - Locations:    m
+    - Speed:        m/s
+    - Acceleration: m/s^2
+    - Collisions:   kg*m/s
+    - Angles:       degrees
+  * Added API methods to convert depth images to a point cloud
+    - New method "image_converter.depth_to_local_point_cloud"
+    - A supplementary image can be passed to attach colors to the points
+    - New client example generates a point cloud in world coordinates
+    - Added Transform class to Python API
+  * Images are now captured in render thread
+    - Improves performance
+    - In asynchronous mode, images may arrive up to two frames later
+    - In synchronous mode, game thread is blocked until images are ready (as before)
+  * Refactored sensor related code to ease adding new sensors in the future
+  * Added vehicle box extent to player measurements
+  * Adjusted bounding boxes to vehicles' height
+  * Changed vehicles' center to match bounding box
+  * Improved performance of roads by using actors instead of instances (due to occlusion and draw distance)
+  * Added autopilot mode to manua_control.py
+  * Replaced background landscape and trees by a matte painting
+  * Fixed road map generated some meshes twice
+  * Small improvements to Windows support
+    - Fixed issues with the Makefile
+    - Fixed asset names too long or containing special characters
+
 ## CARLA 0.7.1
 
   * New Python API module: Benchmark
