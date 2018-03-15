@@ -42,7 +42,7 @@ protected:
     Id = SensorDescription.GetId();
   }
 
-  void WriteSensorData(const FSensorDataView &SensorData)
+  void WriteSensorData(const FSensorDataView &SensorData) const
   {
     if (SensorDataSink.IsValid()) {
       SensorDataSink->Write(SensorData);

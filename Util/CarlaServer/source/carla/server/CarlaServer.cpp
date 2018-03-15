@@ -132,6 +132,7 @@ int32_t carla_write_sensor_data(
 int32_t carla_write_measurements(
     CarlaServerPtr self,
     const carla_measurements &measurements) {
+  CARLA_PROFILE_FPS(FPS, SendMeasurements);
   CARLA_PROFILE_SCOPE(C_API, WriteMeasurements);
   auto agent = Cast(self)->GetAgentServer();
   if (agent == nullptr) {

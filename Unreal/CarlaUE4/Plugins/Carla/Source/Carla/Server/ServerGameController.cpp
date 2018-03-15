@@ -11,6 +11,7 @@
 #include "Server/CarlaServer.h"
 #include "Server/ServerSensorDataSink.h"
 #include "Settings/CarlaSettings.h"
+#include "Private/RenderTargetTemp.h"
 
 using Errc = FCarlaServer::ErrorCode;
 
@@ -120,10 +121,16 @@ void FServerGameController::Tick(float DeltaSeconds)
 
   // Send measurements.
   {
+	if(CarlaSettings->bSynchronousMode)
+	{
+	  FlushRenderingCommands();
+	}
+
     if (Errc::Error == Server->SendMeasurements(
             DataRouter.GetPlayerState(),
             DataRouter.GetAgents(),
-            CarlaSettings->bSendNonPlayerAgentsInfo)) {
+            CarlaSettings->bSendNonPlayerAgentsInfo)) 
+	{
       Server = nullptr;
       return;
     }

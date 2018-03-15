@@ -17,8 +17,7 @@
 #include "HighResScreenshot.h"
 #include "Materials/Material.h"
 #include "Paths.h"
-#include "StaticMeshResources.h"
-#include "TextureResource.h"
+
 
 static constexpr auto DEPTH_MAT_PATH =
 #if PLATFORM_LINUX
@@ -57,10 +56,18 @@ ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer& ObjectInitial
   DrawFrustum->SetupAttachment(MeshComp);
 
   CaptureRenderTarget = CreateDefaultSubobject<UTextureRenderTarget2D>(TEXT("CaptureRenderTarget0"));
-
+  #if WITH_EDITORONLY_DATA
+	CaptureRenderTarget->CompressionNoAlpha = true;
+	CaptureRenderTarget->MipGenSettings = TextureMipGenSettings::TMGS_NoMipmaps;
+  #endif
+  CaptureRenderTarget->CompressionSettings = TextureCompressionSettings::TC_Default;
+  CaptureRenderTarget->SRGB=0;
+  CaptureRenderTarget->bAutoGenerateMips = false;
+  CaptureRenderTarget->AddressX = TextureAddress::TA_Clamp;
+  CaptureRenderTarget->AddressY = TextureAddress::TA_Clamp;
   CaptureComponent2D = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("SceneCaptureComponent2D"));
   CaptureComponent2D->SetupAttachment(MeshComp);
-
+  
   // Load post-processing materials.
   static ConstructorHelpers::FObjectFinder<UMaterial> DEPTH(DEPTH_MAT_PATH);
   PostProcessDepth = DEPTH.Object;
@@ -104,7 +111,7 @@ void ASceneCaptureCamera::BeginPlay()
 
   // Setup camera post-processing.
   if (PostProcessEffect != EPostProcessEffect::None) {
-    CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
+    CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR; //HD is much slower!
   }
   if (bRemovePostProcessing) {
     RemoveShowFlags(CaptureComponent2D->ShowFlags);
@@ -124,31 +131,24 @@ void ASceneCaptureCamera::BeginPlay()
 void ASceneCaptureCamera::Tick(const float DeltaSeconds)
 {
   Super::Tick(DeltaSeconds);
-
-  /// @todo This should be done on render thread.
-
-  struct {
-    uint32 Width;
-    uint32 Height;
-    uint32 Type;
-    float FOV;
-  } ImageHeader = {
-    SizeX,
-    SizeY,
-    PostProcessEffect::ToUInt(PostProcessEffect),
-    CaptureComponent2D->FOVAngle
-  };
-
-  static_assert(sizeof(ImageHeader) == 4u * sizeof(uint32), "Invalid header size");
-
-  TArray<FColor> BitMap;
-  if (ReadPixels(BitMap)) {
-    FSensorDataView DataView(
-        GetId(),
-        FReadOnlyBufferView{reinterpret_cast<const void *>(&ImageHeader), sizeof(ImageHeader)},
-        FReadOnlyBufferView{BitMap});
-
-    WriteSensorData(DataView);
+  if(IsVulkanPlatform(GMaxRHIShaderPlatform))
+  {
+    auto fn = [=](FRHICommandListImmediate& RHICmdList){WritePixelsNonBlocking(DeltaSeconds,RHICmdList);};
+    ENQUEUE_UNIQUE_RENDER_COMMAND_ONEPARAMETER(
+      FWritePixelsNonBlocking,
+      decltype(fn),write_function_vulkan,fn,
+      {
+    	write_function_vulkan(RHICmdList);
+      });
+  } else
+  {
+    auto fn = [=](){WritePixels(DeltaSeconds);};
+    ENQUEUE_UNIQUE_RENDER_COMMAND_ONEPARAMETER(
+    FWritePixels,
+    decltype(fn),write_function,fn,
+    {
+		write_function();
+    });
   }
 }
 
@@ -211,6 +211,11 @@ void ASceneCaptureCamera::Set(const UCameraDescription &CameraDescription)
 
 bool ASceneCaptureCamera::ReadPixels(TArray<FColor> &BitMap) const
 {
+  if(!CaptureRenderTarget)
+  {
+	  UE_LOG(LogCarla, Error, TEXT("SceneCaptureCamera: Missing render target"));
+	  return false;
+  }
   FTextureRenderTargetResource* RTResource = CaptureRenderTarget->GameThread_GetRenderTargetResource();
   if (RTResource == nullptr) {
     UE_LOG(LogCarla, Error, TEXT("SceneCaptureCamera: Missing render target"));
@@ -220,6 +225,90 @@ bool ASceneCaptureCamera::ReadPixels(TArray<FColor> &BitMap) const
   ReadPixelFlags.SetLinearToGamma(true);
   return RTResource->ReadPixels(BitMap, ReadPixelFlags);
 }
+
+void ASceneCaptureCamera::WritePixelsNonBlocking(float DeltaTime, FRHICommandListImmediate& rhi_cmd_list) const
+ {
+  check(IsInRenderingThread());
+  if(!CaptureRenderTarget)
+  {
+  	UE_LOG(LogCarla, Error, TEXT("SceneCaptureCamera: Missing render target"));
+  	return ;
+  }
+  FTextureRenderTarget2DResource* RenderResource = (FTextureRenderTarget2DResource*)CaptureRenderTarget->Resource;
+  FTextureRHIParamRef texture = RenderResource->GetRenderTargetTexture();
+  if(!texture)
+  {
+    UE_LOG(LogCarla, Error, TEXT("SceneCaptureCamera: Missing render target texture"));
+    return;
+  }
+  struct {
+    uint32 Width;
+    uint32 Height;
+    uint32 Type;
+    float FOV;
+  } ImageHeader = {
+    SizeX,
+    SizeY,
+    PostProcessEffect::ToUInt(PostProcessEffect),
+    CaptureComponent2D->FOVAngle
+  };
+  
+  struct FReadSurfaceContext
+  {
+    FRenderTarget* SrcRenderTarget;
+    TArray<FColor>* OutData;
+    FIntRect Rect;
+    FReadSurfaceDataFlags Flags;
+  };
+  TArray<FColor> Pixels;   
+  rhi_cmd_list.ReadSurfaceData(
+    texture,
+    FIntRect(0, 0, RenderResource->GetSizeXY().X, RenderResource->GetSizeXY().Y),
+    Pixels,
+    FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX)
+  );
+  FSensorDataView DataView(
+     GetId(),
+     FReadOnlyBufferView{reinterpret_cast<const void *>(&ImageHeader), sizeof(ImageHeader)},
+     FReadOnlyBufferView{Pixels}
+   );
+   WriteSensorData(DataView);
+  
+}
+
+void ASceneCaptureCamera::WritePixels(float DeltaTime) const
+{
+  FRHITexture2D *texture = CaptureRenderTarget->GetRenderTargetResource()->GetRenderTargetTexture();
+  if(!texture)
+  {
+	  UE_LOG(LogCarla, Error, TEXT("SceneCaptureCamera: Missing render texture"));
+	  return ;
+  }
+  const uint32 width = texture->GetSizeX();
+  uint32 height = texture->GetSizeY();
+  uint32 stride;
+  uint8 *src = reinterpret_cast<uint8*>(RHILockTexture2D(texture, 0, RLM_ReadOnly, stride, false));
+  struct {
+    uint32 Width;
+    uint32 Height;
+    uint32 Type;
+    float FOV;
+  } ImageHeader = {
+    SizeX,
+    SizeY,
+    PostProcessEffect::ToUInt(PostProcessEffect),
+    CaptureComponent2D->FOVAngle
+  };
+  FSensorDataView DataView(
+    GetId(),
+    FReadOnlyBufferView{reinterpret_cast<const void *>(&ImageHeader), sizeof(ImageHeader)},
+    FReadOnlyBufferView{src,stride*height}
+  );
+
+  WriteSensorData(DataView);
+  RHIUnlockTexture2D(texture, 0, false);
+}
+
 
 void ASceneCaptureCamera::UpdateDrawFrustum()
 {

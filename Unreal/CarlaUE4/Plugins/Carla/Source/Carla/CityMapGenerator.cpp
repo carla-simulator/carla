@@ -291,21 +291,16 @@ void ACityMapGenerator::GenerateRoadMap()
       // Do the ray tracing.
       FHitResult Hit;
       if (LineTrace(World, Start, End, Hit)) {
-        auto InstancedStaticMeshComponent = Cast<UInstancedStaticMeshComponent>(Hit.Component.Get());
-        if (InstancedStaticMeshComponent == nullptr) {
+        auto StaticMeshComponent = Cast<UStaticMeshComponent>(Hit.Component.Get());
+        if (StaticMeshComponent == nullptr) {
           UE_LOG(LogCarla, Error, TEXT("Road component is not UInstancedStaticMeshComponent"));
         } else {
-          FTransform InstanceTransform;
-          if (!InstancedStaticMeshComponent->GetInstanceTransform(Hit.Item, InstanceTransform, true)) {
-            UE_LOG(LogCarla, Error, TEXT("Failed to get instance's transform"));
-          } else {
-            RoadMap->SetPixelAt(
-                PixelX,
-                PixelY,
-                GetTag(*InstancedStaticMeshComponent->GetStaticMesh()),
-                InstanceTransform,
-                bLeftHandTraffic);
-          }
+          RoadMap->SetPixelAt(
+            PixelX,
+            PixelY,
+            GetTag(*StaticMeshComponent->GetStaticMesh()),
+            StaticMeshComponent->GetOwner()->GetTransform(),
+            bLeftHandTraffic);
         }
       }
     }
