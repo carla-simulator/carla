@@ -174,7 +174,15 @@ fi
 # -- ...and we are done --------------------------------------------------------
 # ==============================================================================
 
-echo ""
+if $DO_TARBALL ; then
+  FINAL_PACKAGE=Dist/CARLA_${REPOSITORY_TAG}.tar.gz
+else
+  FINAL_PACKAGE=Dist/${REPOSITORY_TAG}
+fi
+
+echo
+echo "Packaged version created at ${FINAL_PACKAGE}"
+echo
 echo "****************"
 echo "*** Success! ***"
 echo "****************"
