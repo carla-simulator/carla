@@ -101,7 +101,7 @@ def make_carla_settings(enable_lidar):
         lidar.set_rotation(0, 0, 0)
         lidar.set(
             Channels=32,
-            Range=5000,
+            Range=50,
             PointsPerSecond=100000,
             RotationFrequency=10,
             UpperFovLimit=10,
