@@ -19,7 +19,7 @@ moment there are four different sensors available.
   * [Camera: Scene final](#camera-scene-final)
   * [Camera: Depth map](#camera-depth-map)
   * [Camera: Semantic segmentation](#camera-semantic-segmentation)
-  * [Ray-trace based lidar](#ray-trace-based-lidar)
+  * [Ray-cast based lidar](#ray-cast-based-lidar)
 
 !!! note
     The images are sent by the server as a BGRA array of bytes. The provided
@@ -219,12 +219,12 @@ RotationRoll=0
 RotationYaw=0
 ```
 
-Ray-trace based Lidar
----------------------
+Ray-cast based Lidar
+--------------------
 
 ![LidarPointCloud](img/lidar_point_cloud.gif)
 
-A rotating Lidar implemented with ray-tracing. The points are computed by adding
+A rotating Lidar implemented with ray-casting. The points are computed by adding
 a laser for each channel distributed in the vertical FOV, then the rotation is
 simulated computing the horizontal angle that the Lidar rotated this frame, and
 doing a ray-cast for each point that each laser was supposed to generate this
@@ -264,7 +264,7 @@ carla_settings.add_sensor(lidar)
 
 ```ini
 [CARLA/Sensor/MyLidar]
-SensorType=LIDAR_RAY_TRACE
+SensorType=LIDAR_RAY_CAST
 Channels=32
 Range=50
 PointsPerSecond=100000

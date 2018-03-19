@@ -63,7 +63,7 @@ static TUniquePtr<const char[]> Encode(
   Data.type = [](const FString &Type) {
 #define CARLA_CHECK_TYPE(Str) if (Type == TEXT(#Str)) return CARLA_SERVER_ ## Str;
       CARLA_CHECK_TYPE(CAMERA)
-      CARLA_CHECK_TYPE(LIDAR_RAY_TRACE)
+      CARLA_CHECK_TYPE(LIDAR_RAY_CAST)
       else return CARLA_SERVER_SENSOR_UNKNOWN;
 #undef CARLA_CHECK_TYPE
   }(SensorDescription.Type);
