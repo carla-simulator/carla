@@ -21,21 +21,26 @@
     - A supplementary image can be passed to attach colors to the points
     - New client example generates a point cloud in world coordinates
     - Added Transform class to Python API
-  * Images are now captured in render thread
-    - Improves performance
-    - In asynchronous mode, images may arrive up to two frames later
-    - In synchronous mode, game thread is blocked until images are ready (as before)
   * Refactored sensor related code to ease adding new sensors in the future
   * Added vehicle box extent to player measurements
   * Adjusted bounding boxes to vehicles' height
   * Changed vehicles' center to match bounding box
-  * Improved performance of roads by using actors instead of instances (due to occlusion and draw distance)
   * Added autopilot mode to manua_control.py
   * Replaced background landscape and trees by a matte painting
   * Fixed road map generated some meshes twice
   * Small improvements to Windows support
     - Fixed issues with the Makefile
     - Fixed asset names too long or containing special characters
+  * Optimizations
+    - Fixed materials and improved shaders for roads, architecture, sidewalks, foliage, landscapes, cars, walkers, reflections, water.
+    - Execution of a set of Project and Engine parameters to improve performance (quality, vsync, AO, occlusion)
+    - Generation of the road pieces using static meshes and actors instead of a single actor with instanced meshes
+      · Improved performance of roads by using actors instead of instances (due to occlusion and draw distance)
+    - Asynchronous screen captures in the render queue
+      · In asynchronous mode, images may arrive up to two frames later
+      · In synchronous mode, game thread is blocked until images are ready (as before)
+    - Blueprint code optimizations for vehicles, walkers, splines
+    - Added a way to configure different settings levels for quality with culling distance and materials configuration
 
 ## CARLA 0.7.1
 
