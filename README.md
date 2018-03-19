@@ -38,10 +38,10 @@ Roadmap
 We are continuously working on improving CARLA, and we appreciate contributions
 from the community. Our most immediate goals are:
 
-- Releasing the methods evaluated in the CARLA paper
-- Adding a LiDAR sensor
-- Allowing for flexible and user-friendly import and editing of maps
-- Allowing the users to control non-player characters (and therefore set up user-specified scenarios)
+- [ ] Releasing the methods evaluated in the CARLA paper
+- [x] Adding a Lidar sensor
+- [ ] Allowing for flexible and user-friendly import and editing of maps
+- [ ] Allowing the users to control non-player characters (and therefore set up user-specified scenarios)
 
 We will post a detailed roadmap and contribution guidelines soon - stay tuned!
 

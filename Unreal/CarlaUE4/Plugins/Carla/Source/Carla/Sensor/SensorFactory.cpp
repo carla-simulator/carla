@@ -54,7 +54,7 @@ void FSensorFactory::Visit(const ULidarDescription &Description)
   UE_LOG(
       LogCarla,
       Log,
-      TEXT("Created LiDAR %d"),
+      TEXT("Created Lidar %d"),
       Lidar->GetId());
   Sensor = Lidar;
 }
