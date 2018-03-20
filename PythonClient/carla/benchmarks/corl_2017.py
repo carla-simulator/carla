@@ -64,7 +64,7 @@ class CoRL2017(Benchmark):
         This is the same timeout as used on the CoRL paper.
         """
 
-        return ((distance / 100000.0) / 10.0) * 3600.0 + 10.0
+        return ((distance / 1000.0) / 10.0) * 3600.0 + 10.0
 
     def _poses_town01(self):
         """

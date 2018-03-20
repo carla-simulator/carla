@@ -78,9 +78,12 @@ if __name__ == '__main__':
 
     logging.info('listening to server %s:%s', args.host, args.port)
 
+
     while True:
         try:
+
             with make_carla_client(args.host, args.port) as client:
+
                 corl = CoRL2017(city_name=args.city_name, name_to_save=args.log_name)
                 agent = Manual(args.city_name)
                 results = corl.benchmark_agent(agent, client)
