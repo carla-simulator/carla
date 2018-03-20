@@ -1,6 +1,6 @@
 #pragma once
 
-class CARLA_API NonCopyable {
+class NonCopyable {
 public:
 
   NonCopyable() = default;

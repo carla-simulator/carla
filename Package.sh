@@ -120,9 +120,15 @@ if $DO_COPY_FILES ; then
   cp -v ./Docs/Example.CarlaSettings.ini ${DESTINATION}/Example.CarlaSettings.ini
 
   rsync -vhr --delete --delete-excluded \
-      --exclude "__pycache__" \
+      --exclude "*.egg-info" \
+      --exclude "*.log" \
       --exclude "*.pyc" \
       --exclude ".*" \
+      --exclude ".tags*" \
+      --exclude "__pycache__" \
+      --exclude "_benchmarks_results*" \
+      --exclude "_images*" \
+      --exclude "_out*" \
       PythonClient/ ${DESTINATION}/PythonClient
 
   echo
@@ -168,7 +174,15 @@ fi
 # -- ...and we are done --------------------------------------------------------
 # ==============================================================================
 
-echo ""
+if $DO_TARBALL ; then
+  FINAL_PACKAGE=Dist/CARLA_${REPOSITORY_TAG}.tar.gz
+else
+  FINAL_PACKAGE=Dist/${REPOSITORY_TAG}
+fi
+
+echo
+echo "Packaged version created at ${FINAL_PACKAGE}"
+echo
 echo "****************"
 echo "*** Success! ***"
 echo "****************"

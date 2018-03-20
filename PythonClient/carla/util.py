@@ -28,11 +28,18 @@ class StopWatch(object):
         self.start = datetime.datetime.now()
         self.end = None
 
+    def restart(self):
+        self.start = datetime.datetime.now()
+        self.end = None
+
     def stop(self):
         self.end = datetime.datetime.now()
 
+    def seconds(self):
+        return (self.end - self.start).total_seconds()
+
     def milliseconds(self):
-        return 1000.0 * (self.end - self.start).total_seconds()
+        return 1000.0 * self.seconds()
 
 
 def to_hex_str(header):

@@ -127,8 +127,8 @@ class Benchmark(object):
                     image.save_to_disk(self._image_filename_format.format(
                         episode_name, name, frame))
 
-            curr_x = measurements.player_measurements.transform.location.x
-            curr_y = measurements.player_measurements.transform.location.y
+            curr_x = 1e2 * measurements.player_measurements.transform.location.x
+            curr_y = 1e2 * measurements.player_measurements.transform.location.y
 
             measurement_vec.append(measurements.player_measurements)
 

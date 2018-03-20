@@ -1,21 +1,25 @@
 Cameras and sensors
 ===================
 
+!!! important
+    Since version 0.8.0 the positions of the sensors are specified in meters
+    instead of centimeters. Always relative to the vehicle.
+
 Cameras and sensors can be added to the player vehicle by defining them in the
-settings file sent by the client on every new episode. Check out the examples at
-[CARLA Settings example][settingslink].
+settings sent by the client on every new episode. This can be done either by
+filling a `CarlaSettings` Python class ([client_example.py][clientexamplelink])
+or by loading an INI settings file ([CARLA Settings example][settingslink]).
 
 This document describes the details of the different cameras/sensors currently
 available as well as the resulting images produced by them.
 
 Although we plan to extend the sensor suite of CARLA in the near future, at the
-moment there are only three different sensors available. These three sensors are
-implemented as different post-processing effects applied to scene capture
-cameras.
+moment there are four different sensors available.
 
-  * [Scene final](#scene-final)
-  * [Depth map](#depth-map)
-  * [Semantic segmentation](#semantic-segmentation)
+  * [Camera: Scene final](#camera-scene-final)
+  * [Camera: Depth map](#camera-depth-map)
+  * [Camera: Semantic segmentation](#camera-semantic-segmentation)
+  * [Ray-trace based lidar](#ray-trace-based-lidar)
 
 !!! note
     The images are sent by the server as a BGRA array of bytes. The provided
@@ -23,26 +27,27 @@ cameras.
     parse the images and convert them to the desired format. There are some
     examples in the PythonClient folder showing how to parse the images.
 
-There is a fourth post-processing effect available, _None_, which provides a
-view with of the scene with no effect, not even lens effects like flares or
-depth of field; we will skip this one in the following descriptions.
+There is a fourth post-processing effect available for cameras, _None_, which
+provides a view with of the scene with no effect, not even scene lighting; we
+will skip this one in the following descriptions.
 
-We provide a tool to convert raw depth and semantic segmentation images to a
-more human readable palette of colors. It can be found at
-["Util/ImageConverter"][imgconvlink].
+We provide a tool to convert raw depth and semantic segmentation images in bulk
+to a more human readable palette of colors. It can be found at
+["Util/ImageConverter"][imgconvlink]. Alternatively, they can also be converted
+using the functions at `carla.image_converter` Python module.
 
+[clientexamplelink]: https://github.com/carla-simulator/carla/blob/master/PythonClient/client_example.py
 [settingslink]: https://github.com/carla-simulator/carla/blob/master/Docs/Example.CarlaSettings.ini
-
 [imgconvlink]: https://github.com/carla-simulator/carla/tree/master/Util/ImageConverter
 
-Scene final
------------
+Camera: Scene final
+-------------------
 
-![SceneFinal](img/capture_scenefinal.png)<br>
+![SceneFinal](img/capture_scenefinal.png)
 
 The "scene final" camera provides a view of the scene after applying some
 post-processing effects to create a more realistic feel. These are actually
-stored on the Level, in an actor called [PostProcessVolume][postprolink] and not
+stored in the Level, in an actor called [PostProcessVolume][postprolink] and not
 in the Camera. We use the following post process effects:
 
   * **Vignette** Darkens the border of the screen.
@@ -54,8 +59,37 @@ in the Camera. We use the following post process effects:
 
 [postprolink]: https://docs.unrealengine.com/latest/INT/Engine/Rendering/PostProcessEffects/
 
-Depth map
----------
+###### Python
+
+```py
+camera = carla.sensor.Camera('MyCamera', PostProcessing='SceneFinal')
+camera.set(FOV=90.0)
+camera.set_image_size(800, 600)
+camera.set_position(x=0.30, y=0, z=1.30)
+camera.set_rotation(pitch=0, yaw=0, roll=0)
+
+carla_settings.add_sensor(camera)
+```
+
+###### CarlaSettings.ini
+
+```ini
+[CARLA/Sensor/MyCamera]
+SensorType=CAMERA
+PostProcessing=SceneFinal
+ImageSizeX=800
+ImageSizeY=600
+FOV=90
+PositionX=0.30
+PositionY=0
+PositionZ=1.30
+RotationPitch=0
+RotationRoll=0
+RotationYaw=0
+```
+
+Camera: Depth map
+-----------------
 
 ![Depth](img/capture_depth.png)
 
@@ -82,8 +116,41 @@ Our max render distance (far) is 1km.
 
         Ans * far
 
-Semantic segmentation
----------------------
+The generated "depth map" images are usually converted to a logarithmic
+grayscale for display. A point cloud can also be extracted from depth images as
+seen in "PythonClient/point_cloud_example.py".
+
+###### Python
+
+```py
+camera = carla.sensor.Camera('MyCamera', PostProcessing='Depth')
+camera.set(FOV=90.0)
+camera.set_image_size(800, 600)
+camera.set_position(x=0.30, y=0, z=1.30)
+camera.set_rotation(pitch=0, yaw=0, roll=0)
+
+carla_settings.add_sensor(camera)
+```
+
+###### CarlaSettings.ini
+
+```ini
+[CARLA/Sensor/MyCamera]
+SensorType=CAMERA
+PostProcessing=Depth
+ImageSizeX=800
+ImageSizeY=600
+FOV=90
+PositionX=0.30
+PositionY=0
+PositionZ=1.30
+RotationPitch=0
+RotationRoll=0
+RotationYaw=0
+```
+
+Camera: Semantic segmentation
+-----------------------------
 
 ![SemanticSegmentation](img/capture_semseg.png)
 
@@ -122,3 +189,92 @@ _"Unreal/CarlaUE4/Content/Static/Pedestrians"_ folder it's tagged as pedestrian.
     the C++ code. Add a new label to the `ECityObjectLabel` enum in "Tagger.h",
     and its corresponding filepath check inside `GetLabelByFolderName()`
     function in "Tagger.cpp".
+
+###### Python
+
+```py
+camera = carla.sensor.Camera('MyCamera', PostProcessing='SemanticSegmentation')
+camera.set(FOV=90.0)
+camera.set_image_size(800, 600)
+camera.set_position(x=0.30, y=0, z=1.30)
+camera.set_rotation(pitch=0, yaw=0, roll=0)
+
+carla_settings.add_sensor(camera)
+```
+
+###### CarlaSettings.ini
+
+```ini
+[CARLA/Sensor/MyCamera]
+SensorType=CAMERA
+PostProcessing=SemanticSegmentation
+ImageSizeX=800
+ImageSizeY=600
+FOV=90
+PositionX=0.30
+PositionY=0
+PositionZ=1.30
+RotationPitch=0
+RotationRoll=0
+RotationYaw=0
+```
+
+Ray-trace based Lidar
+---------------------
+
+![LidarPointCloud](img/lidar_point_cloud.gif)
+
+A rotating Lidar implemented with ray-tracing. The points are computed by adding
+a laser for each channel distributed in the vertical FOV, then the rotation is
+simulated computing the horizontal angle that the Lidar rotated this frame, and
+doing a ray-cast for each point that each laser was supposed to generate this
+frame; `PointsPerSecond / (FPS * Channels)`.
+
+Each frame the server sends a packet with all the points generated during a
+`1/FPS` interval. During the interval the physics wasn’t updated so all the
+points in a packet reflect the same "static picture" of the scene.
+
+The received `LidarMeasurement` object contains the following information
+
+Key                        | Type       | Description
+-------------------------- | ---------- | ------------
+horizontal_angle           | float      | Angle in XY plane of the lidar this frame (in degrees).
+channels                   | uint32     | Number of channels (lasers) of the lidar.
+point_count_by_channel     | uint32     | Number of points per channel captured this frame.
+point_cloud                | PointCloud | Captured points this frame.
+
+###### Python
+
+```py
+lidar = carla.sensor.Lidar('MyLidar')
+lidar.set(
+    Channels=32,
+    Range=50,
+    PointsPerSecond=100000,
+    RotationFrequency=10,
+    UpperFovLimit=10,
+    LowerFovLimit=-30)
+lidar.set_position(x=0, y=0, z=1.40)
+lidar.set_rotation(pitch=0, yaw=0, roll=0)
+
+carla_settings.add_sensor(lidar)
+```
+
+###### CarlaSettings.ini
+
+```ini
+[CARLA/Sensor/MyLidar]
+SensorType=LIDAR_RAY_TRACE
+Channels=32
+Range=50
+PointsPerSecond=100000
+RotationFrequency=10
+UpperFOVLimit=10
+LowerFOVLimit=-30
+PositionX=0
+PositionY=0
+PositionZ=1.40
+RotationPitch=0
+RotationYaw=0
+RotationRoll=0
+```

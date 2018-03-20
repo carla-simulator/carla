@@ -11,7 +11,7 @@
 namespace MapGen {
 
   template<typename T>
-  class CARLA_API Position {
+  class Position {
   public:
     using number_type = T;
 

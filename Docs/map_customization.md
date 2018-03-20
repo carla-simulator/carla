@@ -22,7 +22,7 @@
 - You can change the seed until you have a map you are satisfied with.
 - After that you can place new PlayerStarts at the places you want the cars to be spawned.
 - The AI already works, but the cars won't act randomly. Vehicles will follow the instructions given by the RoadMapGenerator. They will follow the road easily while in straight roads but wont so much when entering Intersections:
-![Road_Instructions_Example.png](img/Road_Instructions_Example.png)
+![road_instructions_example.png](img/road_instructions_example.png)
   > (This is a debug view of the instructions the road gives to the Vehicle. They will always follow the green arrows, the white points are shared points between one or more routes, by default they order the vehicle to continue straight; Black points are off the road, the vehicle gets no instructions and drives to the left, trying to get back to the road)
 
 - To get a random behavior, you have to place IntersectionEntrances, this will let you redefine the direction the vehicle will take overwriting the directions given by the road map (until they finish their given order).

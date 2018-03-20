@@ -140,11 +140,11 @@ class CoRL2017(Benchmark):
         # This single RGB camera is used on every experiment
 
         camera = Camera('CameraRGB')
-        camera.set(CameraFOV=100)
+        camera.set(FOV=100)
 
         camera.set_image_size(800, 600)
 
-        camera.set_position(200, 0, 140)
+        camera.set_position(2.0, 0.0, 1.4)
         camera.set_rotation(-15.0, 0, 0)
 
         weathers = [1, 3, 6, 8, 4, 14]

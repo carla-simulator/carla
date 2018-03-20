@@ -7,8 +7,9 @@
 #pragma once
 
 #include "GameFramework/PlayerState.h"
-#include "AI/TrafficLightState.h"
-#include "CapturedImage.h"
+
+#include "Traffic/TrafficLightState.h"
+
 #include "CarlaPlayerState.generated.h"
 
 /// Current state of the player, updated every frame by ACarlaVehicleController.
@@ -79,6 +80,12 @@ public:
   FVector GetOrientation() const
   {
     return Transform.GetRotation().GetForwardVector();
+  }
+
+  UFUNCTION(BlueprintCallable)
+  FVector GetBoundsExtent() const
+  {
+    return BoundsExtent;
   }
 
   UFUNCTION(BlueprintCallable)
@@ -185,29 +192,6 @@ public:
 
   /// @}
   // ===========================================================================
-  /// @name Images
-  // ===========================================================================
-  /// @{
-
-  UFUNCTION(BlueprintCallable)
-  int32 GetNumberOfImages() const
-  {
-    return Images.Num();
-  }
-
-  UFUNCTION(BlueprintCallable)
-  bool HasImages() const
-  {
-    return GetNumberOfImages() > 0;
-  }
-
-  const TArray<FCapturedImage> &GetImages() const
-  {
-    return Images;
-  }
-
-  /// @}
-  // ===========================================================================
   // -- Modifiers --------------------------------------------------------------
   // ===========================================================================
 private:
@@ -241,6 +225,9 @@ private:
 
   UPROPERTY(VisibleAnywhere)
   FTransform Transform;
+
+  UPROPERTY(VisibleAnywhere)
+  FVector BoundsExtent;
 
   UPROPERTY(VisibleAnywhere)
   float ForwardSpeed = 0.0f;
@@ -283,7 +270,4 @@ private:
 
   UPROPERTY(VisibleAnywhere)
   float OffRoadIntersectionFactor = 0.0f;
-
-  UPROPERTY(VisibleAnywhere)
-  TArray<FCapturedImage> Images;
 };

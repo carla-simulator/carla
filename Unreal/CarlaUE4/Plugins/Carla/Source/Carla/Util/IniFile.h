@@ -12,7 +12,7 @@
 
 /// Wrapper around Unreal's INI file. In get functions, @a Target value is only
 /// set if it was present in the INI file, otherwise it keeps its value.
-class CARLA_API IniFile : private NonCopyable
+class CARLA_API FIniFile : private NonCopyable
 {
 private:
 
@@ -23,7 +23,7 @@ private:
         (source <= std::numeric_limits<TARGET>::max())) {
       target = static_cast<TARGET>(source);
     } else {
-      UE_LOG(LogCarla, Error, TEXT("IniFile: Type cast failed"));
+      UE_LOG(LogCarla, Error, TEXT("FIniFile: Type cast failed"));
     }
   }
 
@@ -34,9 +34,9 @@ public:
   // ===========================================================================
   /// @{
 
-  IniFile() = default;
+  FIniFile() = default;
 
-  explicit IniFile(const FString &FileName)
+  explicit FIniFile(const FString &FileName)
   {
     ConfigFile.Read(FileName);
   }
@@ -112,11 +112,11 @@ public:
     }
   }
 
-  void GetFloat(const TCHAR* Section, const TCHAR* Key, float &Target) const
+  void GetFloat(const TCHAR* Section, const TCHAR* Key, float &Target, const float Factor = 1.0f) const
   {
     FString Value;
     if (ConfigFile.GetString(Section, Key, Value)) {
-      Target = FCString::Atof(*Value);
+      Target = Factor * FCString::Atof(*Value);
     }
   }
 
