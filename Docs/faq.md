@@ -152,3 +152,52 @@ rebuild of all the project files with
 It takes a long time but fixes the issue. Sometimes a reboot is also needed.
 
 </details>
+
+<!-- ======================================================================= -->
+<details>
+  <summary><h5 style="display:inline">
+  Fatal error: 'carla/carla_server.h' file not found.
+  </h4></summary>
+
+This indicates that the CarlaServer dependency failed to compile.
+
+Please follow the instructions at
+[How to build on Linux](http://carla.readthedocs.io/en/latest/how_to_build_on_linux/).
+
+Make sure that the Setup script does print _"Success!"_ at the end
+
+    $ ./Setup.sh
+    ...
+    ...
+    ****************
+    *** Success! ***
+    ****************
+
+Then check if CarlaServer compiles without errors running make
+
+    $ make
+
+It should end printing something like
+
+```
+[1/1] Install the project...
+-- Install configuration: "Release"
+-- Installing: Unreal/CarlaUE4/Plugins/Carla/CarlaServer/shared/libc++abi.so.1
+-- Installing: Unreal/CarlaUE4/Plugins/Carla/CarlaServer/shared/libc++abi.so.1.0
+-- Installing: Unreal/CarlaUE4/Plugins/Carla/CarlaServer/shared/libc++.so.1
+-- Installing: Unreal/CarlaUE4/Plugins/Carla/CarlaServer/shared/libc++.so.1.0
+-- Installing: Unreal/CarlaUE4/Plugins/Carla/CarlaServer/shared/libc++.so
+-- Installing: Unreal/CarlaUE4/Plugins/Carla/CarlaServer/shared/libc++abi.so
+-- Installing: Unreal/CarlaUE4/Plugins/Carla/CarlaServer/lib/libc++abi.a
+-- Installing: Unreal/CarlaUE4/Plugins/Carla/CarlaServer/lib/libboost_system.a
+-- Installing: Unreal/CarlaUE4/Plugins/Carla/CarlaServer/lib/libprotobuf.a
+-- Installing: Unreal/CarlaUE4/Plugins/Carla/CarlaServer/include/carla
+-- Installing: Unreal/CarlaUE4/Plugins/Carla/CarlaServer/include/carla/carla_server.h
+-- Installing: Unreal/CarlaUE4/Plugins/Carla/CarlaServer/lib/libcarlaserver.a
+-- Installing: Unreal/CarlaUE4/Plugins/Carla/CarlaServer/bin/test_carlaserver
+-- Set runtime path of "Unreal/CarlaUE4/Plugins/Carla/CarlaServer/bin/test_carlaserver" to ""
+```
+
+If so you can safely run Rebuild.sh.
+
+</details>

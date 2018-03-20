@@ -9,7 +9,7 @@ This document describes the details of the different cameras/sensors currently
 available as well as the resulting images produced by them.
 
 Although we plan to extend the sensor suite of CARLA in the near future, at the
-moment there are three different sensors available. These three sensors are
+moment there are only three different sensors available. These three sensors are
 implemented as different post-processing effects applied to scene capture
 cameras.
 
@@ -38,6 +38,8 @@ more human readable palette of colors. It can be found at
 Scene final
 -----------
 
+![SceneFinal](img/capture_scenefinal.png)<br>
+
 The "scene final" camera provides a view of the scene after applying some
 post-processing effects to create a more realistic feel. These are actually
 stored on the Level, in an actor called [PostProcessVolume][postprolink] and not
@@ -54,6 +56,8 @@ in the Camera. We use the following post process effects:
 
 Depth map
 ---------
+
+![Depth](img/capture_depth.png)
 
 The "depth map" camera provides an image with 24 bit floating precision point
 codified in the 3 channels of the RGB color space. The order from less to more
@@ -81,12 +85,14 @@ Our max render distance (far) is 1km.
 Semantic segmentation
 ---------------------
 
+![SemanticSegmentation](img/capture_semseg.png)
+
 The "semantic segmentation" camera classifies every object in the view by
 displaying it in a different color according to the object class. E.g.,
 pedestrians appear in a different color than vehicles.
 
-The server provides an image with the tag information encoded in the red
-channel. A pixel with a red value of x displays an object with tag x. The
+The server provides an image with the tag information **encoded in the red
+channel**. A pixel with a red value of x displays an object with tag x. The
 following tags are currently available
 
 Value | Tag
@@ -106,6 +112,13 @@ Value | Tag
   12  | TrafficSigns
 
 This is implemented by tagging every object in the scene before hand (either at
-begin play or on spawn). The objects are classified by their relative file
-system path in the project. E.g., every mesh stored in the "pedestrians" folder
-it's tagged as pedestrian.
+begin play or on spawn). The objects are classified by their relative file path
+in the project. E.g., every mesh stored in the
+_"Unreal/CarlaUE4/Content/Static/Pedestrians"_ folder it's tagged as pedestrian.
+
+!!! note
+    **Adding new tags**:
+    At the moment adding new tags is not very flexible and requires to modify
+    the C++ code. Add a new label to the `ECityObjectLabel` enum in "Tagger.h",
+    and its corresponding filepath check inside `GetLabelByFolderName()`
+    function in "Tagger.cpp".
