@@ -5,7 +5,7 @@ from setuptools import setup
 setup(
     name='carla_client',
     version='0.7.1',
-    packages=['carla', 'carla.planner', 'carla.benchmarks', 'carla.planner'],
+    packages=['carla', 'carla.benchmarks', 'carla.planner'],
     license='MIT License',
     description='Python API for communicating with the CARLA server.',
     url='https://github.com/carla-simulator/carla',

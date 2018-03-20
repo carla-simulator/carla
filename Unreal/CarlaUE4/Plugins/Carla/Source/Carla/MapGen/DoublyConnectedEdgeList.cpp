@@ -1,5 +1,5 @@
 // Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
-// de Barcelona (UAB), and the INTEL Visual Computing Lab.
+// de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
@@ -44,7 +44,7 @@ namespace MapGen {
     using Dcel = DoublyConnectedEdgeList;
     // from [-pi, pi] to [0, 1].
     auto normalize = [](auto a) {
-      constexpr decltype(a) twoPi = 2.0 * 3.14159265359;
+      constexpr float twoPi = 2.0 * 3.14159265359;
       a /= twoPi;
       while (a >= 1.0) a -= 1.0;
       while (a <  0.0) a += 1.0;
