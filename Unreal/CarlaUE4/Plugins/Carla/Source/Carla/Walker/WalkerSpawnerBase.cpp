@@ -110,43 +110,74 @@ void AWalkerSpawnerBase::Tick(float DeltaTime)
     TryToSpawnWalkerAt(GetRandomSpawnPoint());
   }
 
-  if (WalkersBlackList.Num() > 0) {
+  if (WalkersBlackList.Num() > 0) 
+  {
     // If still stuck in the black list, just kill it.
-    const int32 Index = (++CurrentIndexToCheck % WalkersBlackList.Num());
-    auto Walker = WalkersBlackList[Index];
-    const auto Status = GetWalkerStatus(Walker);
-    if ((Status == EWalkerStatus::MoveCompleted) ||
-        (Status == EWalkerStatus::Invalid) ||
-        (Status == EWalkerStatus::RunOver)) {
-      WalkersBlackList.RemoveAtSwap(Index);
-      if ((Walker != nullptr) && (Status != EWalkerStatus::RunOver)) {
-        Walker->Destroy();
-      }
+    const int32 BlackListedIndex = (++CurrentIndexToCheck % WalkersBlackList.Num());
+    ACharacter* BlackListedWalker = WalkersBlackList[BlackListedIndex];
+	if(BlackListedWalker != nullptr && IsValid(BlackListedWalker))
+	{
+      const auto Status = GetWalkerStatus(BlackListedWalker);
+	  switch(Status)
+	  {
+	    case EWalkerStatus::MoveCompleted:
+	    case EWalkerStatus::Invalid:
+	    case EWalkerStatus::RunOver:{
+	      WalkersBlackList.RemoveAtSwap(BlackListedIndex);
+          if (Status != EWalkerStatus::RunOver) {
+            BlackListedWalker->Destroy();
+          } 
+	      break;
+	    }
+	    case EWalkerStatus::Stuck: 
+	  	  if(!TrySetDestination(*BlackListedWalker)){
+	  	   SetRandomWalkerDestination(BlackListedWalker);
+	  	  }
+		  WalkersBlackList.RemoveAtSwap(BlackListedIndex);
+	  	  break;
+	    default: case EWalkerStatus::Unknown: case EWalkerStatus::Paused: break;
+	  }
+    } 
+  	else
+    {
+	    WalkersBlackList.RemoveAtSwap(BlackListedIndex);
     }
   }
 
-  if (Walkers.Num() > 0) {
+  if (Walkers.Num() > 0) 
+  {
     // Check one walker, if fails black-list it or kill it.
-    const int32 Index = (++CurrentIndexToCheck % Walkers.Num());
-    auto Walker = Walkers[Index];
+    const int32 WalkerIndex = (++CurrentIndexToCheck % Walkers.Num());
+    auto Walker = Walkers[WalkerIndex];
     const auto Status = GetWalkerStatus(Walker);
 
     if ((Status == EWalkerStatus::MoveCompleted) ||
         (Status == EWalkerStatus::Invalid) ||
         (Status == EWalkerStatus::RunOver)) {
       // Kill it.
-      Walkers.RemoveAtSwap(Index);
+      Walkers.RemoveAtSwap(WalkerIndex);
       // If it was run over will self-destroy.
       if ((Walker != nullptr) && (Status != EWalkerStatus::RunOver)) {
         Walker->Destroy();
       }
-    } else if (Status == EWalkerStatus::Stuck) {
+    } else if (Status == EWalkerStatus::Stuck) 
+	{
+	  SetRandomWalkerDestination(Walker);
       // Black-list it.
-      TrySetDestination(*Walker);
-      WalkersBlackList.Add(Walker);
-      Walkers.RemoveAtSwap(Index);
+	  WalkersBlackList.Add(Walker);
+      Walkers.RemoveAtSwap(WalkerIndex);
     }
   }
+}
+
+bool AWalkerSpawnerBase::SetRandomWalkerDestination(ACharacter *Walker)
+{
+	const auto &DestinationPoint = GetRandomSpawnPoint();
+	auto Controller = GetController(Walker);
+	if(!Controller) return false;
+	Controller->MoveTo(DestinationPoint.GetActorLocation());
+	
+	return true;
 }
 
 // =============================================================================
@@ -214,12 +245,17 @@ bool AWalkerSpawnerBase::TrySetDestination(ACharacter &Walker)
   // Try to retrieve controller.
   auto Controller = GetController(&Walker);
   if (Controller == nullptr) {
+	UE_LOG(LogCarla, Warning, TEXT("Could not get valid controller for walker: %s"), *Walker.GetName());
     return false;
   }
 
   // Try find destination.
   FVector Destination;
   if (!TryGetValidDestination(Walker.GetActorLocation(), Destination)) {
+	UE_LOG(LogCarla, Warning, 
+		TEXT("Could not get a new destiny: %s for walker: %s"), 
+		*Destination.ToString(), *Walker.GetName()
+	);
     return false;
   }
 

@@ -28,7 +28,7 @@ static constexpr float PREVISION_TIME_IN_SECONDS = 5.0f;
 static constexpr float WALKER_SIGHT_RADIUS = 500.0f;
 static constexpr float WALKER_SPEED_DAMPING = 4.0f;
 static constexpr float WALKER_PERIPHERAL_VISION_ANGLE_IN_DEGREES = 155.0f;
-static constexpr float WALKER_MAX_TIME_PAUSED = 10.0f;
+static constexpr float WALKER_MAX_TIME_PAUSED = 5.0f;
 static constexpr float VEHICLE_SAFETY_RADIUS = 600.0f;
 
 
@@ -225,7 +225,7 @@ void AWalkerAIController::OnMoveCompleted(
   ChangeStatus(EWalkerStatus::MoveCompleted);
 }
 
-void AWalkerAIController::SenseActors(const TArray<AActor *> Actors)
+void AWalkerAIController::SenseActors(const TArray<AActor *>& Actors)
 {
   const auto *aPawn = GetPawn();
   if ((Status == EWalkerStatus::Moving) &&
