@@ -92,6 +92,10 @@ namespace detail {
       return std::unique_ptr<const T, decltype(deleter)>(pointer, deleter);
     }
 
+    auto TryMakeReader() {
+      return TryMakeReader(timeout_t::milliseconds(0u));
+    }
+
     /// Returns an unique_ptr to the buffer to be written. The given buffer
     /// will be locked for writing until the unique_ptr is destroyed.
     ///

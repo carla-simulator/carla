@@ -28,14 +28,22 @@ namespace carla {
   class ProfilerData : private NonCopyable {
   public:
 
-    explicit ProfilerData(std::string name) : _name(std::move(name)) {}
+    explicit ProfilerData(std::string name, bool show_fps = false)
+      : _name(std::move(name)),
+        _show_fps(show_fps) {}
 
     ~ProfilerData() {
       log_profiler(_name, ':', "annotated", _count, "times", std::fixed, std::setprecision(3));
       if (_count > 0u) {
-        log_profiler(_name, ':', "average =", Average(), "ms");
-        log_profiler(_name, ':', "maximum =", Maximum(), "ms");
-        log_profiler(_name, ':', "minimum =", Minimum(), "ms");
+        if (_show_fps) {
+          log_profiler(_name, ':', "average =", fps(Average()), "FPS");
+          log_profiler(_name, ':', "maximum =", fps(Minimum()), "FPS");
+          log_profiler(_name, ':', "minimum =", fps(Maximum()), "FPS");
+        } else {
+          log_profiler(_name, ':', "average =", Average(), "ms");
+          log_profiler(_name, ':', "maximum =", Maximum(), "ms");
+          log_profiler(_name, ':', "minimum =", Minimum(), "ms");
+        }
       }
     }
 
@@ -65,7 +73,13 @@ namespace carla {
       return 1e-3f * static_cast<float>(microseconds);
     }
 
-    std::string _name;
+    static inline float fps(float milliseconds) {
+      return 1e3f / milliseconds;
+    }
+
+    const std::string _name;
+
+    const bool _show_fps;
 
     size_t _count = 0u;
 
@@ -101,8 +115,23 @@ namespace carla {
     ::carla::ScopedProfiler carla_profiler_ ## context ## _ ## name ## _scoped_profiler( \
         carla_profiler_ ## context ## _ ## name ## _data);
 
+#define CARLA_PROFILE_FPS(context, name) \
+    { \
+      static thread_local ::carla::StopWatch stop_watch; \
+      stop_watch.Stop(); \
+      static thread_local bool first_time = true; \
+      if (!first_time) { \
+        static thread_local ::carla::ProfilerData profiler_data(#context "." #name, true); \
+        profiler_data.Annotate(stop_watch); \
+      } else { \
+        first_time = false; \
+      } \
+      stop_watch.Restart(); \
+    }
+
 #else // CARLA_WITH_PROFILER
 
 #define CARLA_PROFILE_SCOPE(context, name)
+#define CARLA_PROFILE_FPS(context, name)
 
 #endif // CARLA_WITH_PROFILER

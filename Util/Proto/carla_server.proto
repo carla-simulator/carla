@@ -32,6 +32,26 @@ message Transform {
   Rotation3D rotation = 3;
 }
 
+// =============================================================================
+// -- Sensors ------------------------------------------------------------------
+// =============================================================================
+
+message Sensor {
+  enum Type {
+    UNKNOWN = 0;
+    CAMERA = 1;
+    LIDAR_RAY_TRACE = 2;
+  }
+
+  fixed32 id = 1;
+  Type type = 2;
+  string name = 3;
+}
+
+// =============================================================================
+// -- Agents -------------------------------------------------------------------
+// =============================================================================
+
 message Vehicle {
   Transform transform = 1;
   Vector3D box_extent = 2;
@@ -79,6 +99,7 @@ message RequestNewEpisode {
 
 message SceneDescription {
   repeated Transform player_start_spots = 1;
+  repeated Sensor sensors = 2;
 }
 
 message EpisodeStart {
@@ -104,6 +125,8 @@ message Control {
 message Measurements {
   message PlayerMeasurements {
     Transform transform = 1;
+
+    Vector3D box_extent = 11;
 
     Vector3D acceleration = 3;
     float forward_speed = 4;

@@ -6,12 +6,12 @@
 
 """CARLA Client."""
 
+import logging
 import struct
 
 from contextlib import contextmanager
 
 from . import sensor
-from . import settings
 from . import tcp
 from . import util
 
@@ -19,6 +19,11 @@ try:
     from . import carla_server_pb2 as carla_protocol
 except ImportError:
     raise RuntimeError('cannot import "carla_server_pb2.py", run the protobuf compiler to generate this file')
+
+try:
+    import numpy
+except ImportError:
+    raise RuntimeError('cannot import numpy, make sure numpy package is installed.')
 
 
 VehicleControl = carla_protocol.Control
@@ -40,7 +45,7 @@ class CarlaClient(object):
         self._control_client = tcp.TCPClient(host, world_port + 2, timeout)
         self._current_settings = None
         self._is_episode_requested = False
-        self._sensor_names = []
+        self._sensors = {}
 
     def connect(self, connection_attempts=10):
         """
@@ -68,7 +73,6 @@ class CarlaClient(object):
         """
         self._current_settings = carla_settings
         return self._request_new_episode(carla_settings)
-
 
     def start_episode(self, player_start_index):
         """
@@ -120,8 +124,7 @@ class CarlaClient(object):
         pb_message = carla_protocol.Measurements()
         pb_message.ParseFromString(data)
         # Read sensor data.
-        raw_sensor_data = self._stream_client.read()
-        return pb_message, self._parse_raw_sensor_data(raw_sensor_data)
+        return pb_message, dict(x for x in self._read_sensor_data())
 
     def send_control(self, *args, **kwargs):
         """
@@ -159,30 +162,66 @@ class CarlaClient(object):
             raise RuntimeError('failed to read data from server')
         pb_message = carla_protocol.SceneDescription()
         pb_message.ParseFromString(data)
-        self._sensor_names = settings.get_sensor_names(carla_settings)
+        self._sensors = dict((sensor.id, sensor) \
+            for sensor in _make_sensor_parsers(pb_message.sensors))
         self._is_episode_requested = True
         return pb_message
 
-    def _parse_raw_sensor_data(self, raw_data):
-        """Return a dict of {'sensor_name': sensor_data, ...}."""
-        return dict((name, data) for name, data in zip(
-            self._sensor_names,
-            self._iterate_sensor_data(raw_data)))
+    def _read_sensor_data(self):
+        while True:
+            data = self._stream_client.read()
+            if not data:
+                raise StopIteration
+            yield self._parse_sensor_data(data)
 
-    @staticmethod
-    def _iterate_sensor_data(raw_data):
-        # At this point the only sensors available are images, the raw_data
-        # consists of images only.
-        image_types = ['None', 'SceneFinal', 'Depth', 'SemanticSegmentation']
-        gettype = lambda id: image_types[id] if len(image_types) > id else 'Unknown'
-        getval = lambda index: struct.unpack('<L', raw_data[index*4:index*4+4])[0]
-        total_size = len(raw_data) / 4
-        index = 0
-        while index < total_size:
-            width = getval(index)
-            height = getval(index + 1)
-            image_type = gettype(getval(index + 2))
-            begin = index + 3
-            end = begin + width * height
-            index = end
-            yield sensor.Image(width, height, image_type, raw_data[begin*4:end*4])
+    def _parse_sensor_data(self, data):
+        sensor_id = struct.unpack('<L', data[0:4])[0]
+        parser = self._sensors[sensor_id]
+        return parser.name, parser.parse_raw_data(data[4:])
+
+
+def _make_sensor_parsers(sensors):
+    image_types = ['None', 'SceneFinal', 'Depth', 'SemanticSegmentation']
+    getimgtype = lambda id: image_types[id] if len(image_types) > id else 'Unknown'
+    getint = lambda data, index: struct.unpack('<L', data[index*4:index*4+4])[0]
+    getfloat = lambda data, index: struct.unpack('<f', data[index*4:index*4+4])[0]
+
+    def parse_image(data):
+        width = getint(data, 0)
+        height = getint(data, 1)
+        image_type = getimgtype(getint(data, 2))
+        fov = getfloat(data, 3)
+        return sensor.Image(width, height, image_type, fov, data[16:])
+
+    def parse_lidar(data):
+        horizontal_angle = getfloat(data, 0)
+        channels = getint(data, 1)
+        point_count_by_channel = numpy.frombuffer(
+            data[8:8+channels*4],
+            dtype=numpy.dtype('uint32'))
+        points = numpy.frombuffer(
+            data[8+channels*4:],
+            dtype=numpy.dtype('f4'))
+        points = numpy.reshape(points, (int(points.shape[0]/3), 3))
+        return sensor.LidarMeasurement(
+            horizontal_angle,
+            channels,
+            point_count_by_channel,
+            sensor.PointCloud(points))
+
+    class SensorDefinition(object):
+        def __init__(self, s):
+            self.id = s.id
+            self.name = s.name
+            self.type = s.type
+            self.parse_raw_data = lambda x: x
+
+    for s in sensors:
+        sensor_def = SensorDefinition(s)
+        if sensor_def.type == carla_protocol.Sensor.CAMERA:
+            sensor_def.parse_raw_data = parse_image
+        elif sensor_def.type == carla_protocol.Sensor.LIDAR_RAY_TRACE:
+            sensor_def.parse_raw_data = parse_lidar
+        else:
+            logging.error('unknown sensor type %s', sensor_def.type)
+        yield sensor_def

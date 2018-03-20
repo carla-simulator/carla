@@ -19,7 +19,7 @@ enum class ELaneMarkingType : uint8
 
 /// Description of a road segment piece.
 USTRUCT(BlueprintType)
-struct FRoadSegmentPiece
+struct CARLA_API FRoadSegmentPiece
 {
   GENERATED_BODY()
 
