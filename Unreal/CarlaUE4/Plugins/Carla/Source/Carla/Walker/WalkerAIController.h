@@ -44,7 +44,7 @@ public:
   
 
   UFUNCTION(BlueprintCallable)
-  void SenseActors(TArray<AActor *> Actors);
+  void SenseActors(const TArray<AActor *>& Actors);
 
   EWalkerStatus GetWalkerStatus() const
   {

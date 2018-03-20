@@ -45,6 +45,7 @@ public:
 
   virtual void Tick(float DeltaTime) override;
 
+
   /// @}
   // ===========================================================================
   /// @name Blueprintable functions
@@ -87,6 +88,7 @@ private:
 
   bool TrySetDestination(ACharacter &Walker);
 
+  bool SetRandomWalkerDestination(ACharacter * Walker);
   /// @}
 
 private:
