@@ -58,21 +58,28 @@ void AVehicleSpawnerBase::BeginPlay()
   UE_LOG(LogCarla, Log, TEXT("Found %d positions for spawning vehicles"), SpawnPoints.Num());
 
   if (SpawnPoints.Num() < NumberOfVehicles) {
-    bSpawnVehicles = false;
     UE_LOG(LogCarla, Error, TEXT("We don't have enough spawn points for vehicles!"));
   }
+  
+  if(NumberOfVehicles==0) bSpawnVehicles = false;
 
-  if (bSpawnVehicles) {
-    const int32 MaximumNumberOfAttempts = 4 * NumberOfVehicles;
+  if (bSpawnVehicles) 
+  {
+	GetRandomEngine()->Shuffle(SpawnPoints);
+    const int32 MaximumNumberOfAttempts = SpawnPoints.Num();
     int32 NumberOfAttempts = 0;
-    while ((NumberOfVehicles > Vehicles.Num()) && (NumberOfAttempts < MaximumNumberOfAttempts)) {
-      // Try to spawn one vehicle.
-      TryToSpawnRandomVehicle();
+
+    while ((NumberOfVehicles > Vehicles.Num()) && (NumberOfAttempts < MaximumNumberOfAttempts)) 
+	{
+	  SpawnVehicleAtSpawnPoint(*SpawnPoints[NumberOfAttempts]);
       ++NumberOfAttempts;
     }
 
     if (NumberOfVehicles > Vehicles.Num()) {
       UE_LOG(LogCarla, Error, TEXT("Requested %d vehicles, but we were only able to spawn %d"), NumberOfVehicles, Vehicles.Num());
+    } else
+    {
+	  UE_LOG(LogCarla, Log, TEXT("Spawned %d vehicles"), NumberOfAttempts);
     }
   }
 }
