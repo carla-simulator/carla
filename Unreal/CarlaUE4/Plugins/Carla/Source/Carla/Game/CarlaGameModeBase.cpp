@@ -199,6 +199,15 @@ void ACarlaGameModeBase::BeginPlay()
   GameController->BeginPlay();
 }
 
+void ACarlaGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	if(CarlaSettingsDelegate!=nullptr && EndPlayReason==EEndPlayReason::EndPlayInEditor)
+	{
+	  CarlaSettingsDelegate->Reset();
+	}
+}
+
 void ACarlaGameModeBase::Tick(float DeltaSeconds)
 {
   Super::Tick(DeltaSeconds);

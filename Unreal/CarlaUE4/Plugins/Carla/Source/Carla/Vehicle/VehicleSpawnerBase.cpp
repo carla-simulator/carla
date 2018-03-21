@@ -90,7 +90,7 @@ void AVehicleSpawnerBase::SetNumberOfVehicles(const int32 Count)
 void AVehicleSpawnerBase::TryToSpawnRandomVehicle()
 {
   auto SpawnPoint = GetRandomSpawnPoint();
-  if ((SpawnPoint != nullptr)) {
+  if (SpawnPoint != nullptr) {
       SpawnVehicleAtSpawnPoint(*SpawnPoint);
   } else {
     UE_LOG(LogCarla, Error, TEXT("Unable to find spawn point"));
