@@ -11,9 +11,18 @@
 #include "Engine/PostProcessVolume.h"
 #include "UObjectIterator.h"
 
+///quality settings configuration between runs
+EQualitySettingsLevel UCarlaSettingsDelegate::AppliedLowPostResetQualitySettingsLevel = EQualitySettingsLevel::Epic;
+
 UCarlaSettingsDelegate::UCarlaSettingsDelegate() :
   ActorSpawnedDelegate(FOnActorSpawned::FDelegate::CreateUObject(this, &UCarlaSettingsDelegate::OnActorSpawned))
 {
+}
+
+void UCarlaSettingsDelegate::Reset()
+{
+	LaunchEpicQualityCommands(GetLocalWorld());
+	AppliedLowPostResetQualitySettingsLevel = EQualitySettingsLevel::Epic;
 }
 
 void UCarlaSettingsDelegate::RegisterSpawnHandler(UWorld *InWorld)
