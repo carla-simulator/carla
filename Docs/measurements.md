@@ -1,5 +1,4 @@
-Measurements
-============
+<h1>Measurements</h1>
 
 !!! important
     Since version 0.8.0 the measurements received by the client are in SI
@@ -40,7 +39,7 @@ intersection_otherlane     | float     |        | Percentage of the car invading
 intersection_offroad       | float     |        | Percentage of the car off-road.
 autopilot_control          | Control   |        | Vehicle's autopilot control that would apply this frame.
 
-###### Transform
+<h4>Transform</h4>
 
 The transform contains the location and rotation of the player.
 
@@ -50,7 +49,7 @@ location                   | Vector3D   | m       | World location.
 orientation *[deprecated]* | Vector3D   |         | Orientation in Cartesian coordinates.
 rotation                   | Rotation3D | degrees | Pitch, roll, and yaw.
 
-###### Collision
+<h4>Collision</h4>
 
 Collision variables keep an accumulation of all the collisions occurred during
 this episode. Every collision contributes proportionally to the intensity of the
@@ -65,7 +64,7 @@ objects are classified based on their tag (same as for semantic segmentation).
 Collisions are not annotated if the vehicle is not moving (<1km/h) to avoid
 annotating undesired collision due to mistakes in the AI of non-player agents.
 
-###### Lane/off-road intersection
+<h4>Lane/off-road intersection</h4>
 
 The lane intersection measures the percentage of the vehicle invading the
 opposite lane. The off-road intersection measures the percentage of the vehicle
@@ -76,7 +75,7 @@ rectangle) against the map image of the city. These images are generated in the
 editor and serialized for runtime use. You can find them too in the release
 package under the folder "RoadMaps".
 
-###### Autopilot control
+<h4>Autopilot control</h4>
 
 The `autopilot_control` measurement contains the control values that the in-game
 autopilot system would apply as if it were controlling the vehicle.
@@ -135,7 +134,7 @@ belongs to one of the following classes
 (*) At this point every pedestrian is assumed to have the same bounding-box
 size.
 
-###### Transform and bounding box
+<h4>Transform and bounding box</h4>
 
 The transform defines the location and orientation of the agent. The bounding
 box is centered at the agent's location. The box extent gives the radii

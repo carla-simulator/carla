@@ -72,8 +72,9 @@ the Python script.
 
 !!! important
     Before you start running your own experiments, it is important to know the
-    details for running the simulation at [fixed time-step](fixed_time_step.md)
-    for achieving maximum speed and repeatability.
+    details for running the simulator at **fixed time-step** for achieving
+    maximum speed and repeatability. We will cover this in the next item
+    [Configuring the simulation](configuring_the_simulation.md).
 
 <h4>Saving images to disk</h4>
 
