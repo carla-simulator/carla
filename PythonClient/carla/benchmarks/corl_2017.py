@@ -8,7 +8,11 @@
 
 from __future__ import print_function
 
+
+
 import os
+import numpy as np
+
 
 from .benchmark import Benchmark
 from .experiment import Experiment
@@ -20,10 +24,59 @@ from .metrics import compute_summary
 
 class CoRL2017(Benchmark):
 
+    def __init__(self,
+                 city_name,
+                 name_to_save,
+                 continue_experiment=True,
+                 save_images=False,
+                 distance_for_sucess=2.0
+                 ):
+
+        # Define all the parameters used to compute the driving summary.
+
+        self._metrics_parameters = {
+
+            'intersection_offroad': {'frames_to_check': 10,  # Check intersection always with 10 frames tolerance
+                                   'frames_inside_recount': 20,
+                                   'threshold': 0.3
+                                  },
+            'intersection_otherlane': {'frames_to_check': 10,  # Check intersection always with 10 frames tolerance
+                               'frames_inside_recount': 20,
+                               'threshold': 0.4
+                              },
+            'collision_general': {'frames_to_check': 10,
+                                  'frames_inside_recount': 20,
+
+                                  'threshold': 40
+
+                             },
+            'collision_vehicles': {'frames_to_check': 10,
+                                   'frames_inside_recount': 30,
+
+                                   'threshold': 40
+            },
+            'collision_pedestrians': {'frames_to_check': 5,
+                                      'frames_inside_recount': 100,
+
+                                      'threshold': 30
+            },
+            'dynamic_episodes': [3]
+
+        }
+
+
+        Benchmark.__init__(self, city_name,
+                            name_to_save,
+                            continue_experiment,
+                            save_images,
+                            distance_for_sucess)
+
+
+
     def get_all_statistics(self):
 
         summary = compute_summary(os.path.join(
-            self._full_name, self._suffix_name), [3])
+            self._full_name, self._suffix_name),self._metrics_parameters)
 
         return summary
 
@@ -42,8 +95,12 @@ class CoRL2017(Benchmark):
 
         """
 
+
+
         metrics_summary = compute_summary(os.path.join(
-            self._full_name, self._suffix_name), [3])
+            self._full_name, self._suffix_name), self._metrics_parameters)
+
+        print (metrics_summary)
 
         for metric, values in metrics_summary.items():
 
@@ -53,10 +110,15 @@ class CoRL2017(Benchmark):
                     print('  Weather: ', weather)
                     count = 0
                     for t in tasks:
-                        print('    Task ', count, ' -> ', t)
+                        if isinstance(t,np.ndarray) or isinstance(t,list):
+                            if t == []:
+                                print ('empty')
+                            else:
+                                print('    Task ', count, ' -> ', sum(t)/len(t))
+                        else:
+                            print('    Task ', count, ' -> ', t)
                         count += 1
 
-                    print('    AvG  -> ', float(sum(tasks)) / float(len(tasks)))
 
     def _calculate_time_out(self, distance):
         """
@@ -73,25 +135,25 @@ class CoRL2017(Benchmark):
         """
 
         def _poses_straight():
-            return [[36, 40], [39, 35], [110, 114], [7, 3], [0, 4],
-                    [68, 50], [61, 59], [47, 64], [147, 90], [33, 87],
-                    [26, 19], [80, 76], [45, 49], [55, 44], [29, 107],
-                    [95, 104], [84, 34], [53, 67], [22, 17], [91, 148],
-                    [20, 107], [78, 70], [95, 102], [68, 44], [45, 69]]
+            return [[36, 40]]#, [39, 35], [110, 114], [7, 3], [0, 4],
+                    #[68, 50], [61, 59], [47, 64], [147, 90], [33, 87],
+                    #[26, 19], [80, 76], [45, 49], [55, 44], [29, 107],
+                    #[95, 104], [84, 34], [53, 67], [22, 17], [91, 148],
+                    #[20, 107], [78, 70], [95, 102], [68, 44], [45, 69]]
 
         def _poses_one_curve():
-            return [[138, 17], [47, 16], [26, 9], [42, 49], [140, 124],
-                    [85, 98], [65, 133], [137, 51], [76, 66], [46, 39],
-                    [40, 60], [0, 29], [4, 129], [121, 140], [2, 129],
-                    [78, 44], [68, 85], [41, 102], [95, 70], [68, 129],
-                    [84, 69], [47, 79], [110, 15], [130, 17], [0, 17]]
+            return [[138, 17]]#, [47, 16], [26, 9], [42, 49], [140, 124],
+                    #[85, 98], [65, 133], [137, 51], [76, 66], [46, 39],
+                    #[40, 60], [0, 29], [4, 129], [121, 140], [2, 129],
+                    #[78, 44], [68, 85], [41, 102], [95, 70], [68, 129],
+                    #[84, 69], [47, 79], [110, 15], [130, 17], [0, 17]]
 
         def _poses_navigation():
-            return [[105, 29], [27, 130], [102, 87], [132, 27], [24, 44],
-                    [96, 26], [34, 67], [28, 1], [140, 134], [105, 9],
-                    [148, 129], [65, 18], [21, 16], [147, 97], [42, 51],
-                    [30, 41], [18, 107], [69, 45], [102, 95], [18, 145],
-                    [111, 64], [79, 45], [84, 69], [73, 31], [37, 81]]
+            return [[105, 29]]#, [27, 130], [102, 87], [132, 27], [24, 44],
+                    #[96, 26], [34, 67], [28, 1], [140, 134], [105, 9],
+                    #[148, 129], [65, 18], [21, 16], [147, 97], [42, 51],
+                    #[30, 41], [18, 107], [69, 45], [102, 95], [18, 145],
+                    #[111, 64], [79, 45], [84, 69], [73, 31], [37, 81]]
 
         return [_poses_straight(),
                 _poses_one_curve(),
