@@ -40,7 +40,7 @@ message Sensor {
   enum Type {
     UNKNOWN = 0;
     CAMERA = 1;
-    LIDAR_RAY_TRACE = 2;
+    LIDAR_RAY_CAST = 2;
   }
 
   fixed32 id = 1;

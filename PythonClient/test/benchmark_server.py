@@ -46,52 +46,74 @@ def make_base_settings():
         SeedPedestrians=123456789,
         QualityLevel='Epic')
 
+
 def generate_settings_scenario_001():
-    logging.info('Scenario 001: no sensors, no agents info')
+    logging.info('Scenario 001: no sensors')
     return make_base_settings()
 
 
 def generate_settings_scenario_002():
-    logging.info('Scenario 002: no sensors, sending agents info')
+    logging.info('Scenario 002: no sensors, no agents at all')
+    settings = make_base_settings()
+    settings.set(NumberOfVehicles=0, NumberOfPedestrians=0)
+    return settings
+
+
+def generate_settings_scenario_003():
+    logging.info('Scenario 003: no sensors, no pedestrians')
+    settings = make_base_settings()
+    settings.set(NumberOfPedestrians=0)
+    return settings
+
+
+def generate_settings_scenario_004():
+    logging.info('Scenario 004: no sensors, no vehicles')
+    settings = make_base_settings()
+    settings.set(NumberOfVehicles=0)
+    return settings
+
+
+def generate_settings_scenario_005():
+    logging.info('Scenario 005: no sensors, hard rain')
+    settings = make_base_settings()
+    settings.set(WeatherId=13)
+    return settings
+
+
+def generate_settings_scenario_006():
+    logging.info('Scenario 006: no sensors, sending agents info')
     settings = make_base_settings()
     settings.set(SendNonPlayerAgentsInfo=True)
     return settings
 
 
-def generate_settings_scenario_003():
-    logging.info('Scenario 003: single camera RGB, no agents info')
+def generate_settings_scenario_007():
+    logging.info('Scenario 007: single camera RGB')
     settings = make_base_settings()
-    settings.add_sensor(Camera('DefaultCamera'))
+    settings.add_sensor(Camera('DefaultRGBCamera'))
     return settings
 
 
-def generate_settings_scenario_004():
-    logging.info('Scenario 004: single camera Depth, no agents info')
+def generate_settings_scenario_008():
+    logging.info('Scenario 008: single camera Depth')
     settings = make_base_settings()
-    settings.add_sensor(Camera('DefaultCamera', PostProcessing='Depth'))
-    return settings
-
-
-def generate_settings_scenario_005():
-    logging.info('Scenario 005: single camera SemanticSegmentation, no agents info')
-    settings = make_base_settings()
-    settings.add_sensor(Camera('DefaultCamera', PostProcessing='SemanticSegmentation'))
-    return settings
-
-
-def generate_settings_scenario_006():
-    logging.info('Scenario 006: 3 cameras, no agents info')
-    settings = make_base_settings()
-    settings.add_sensor(Camera('DefaultCamera'))
     settings.add_sensor(Camera('DefaultDepthCamera', PostProcessing='Depth'))
+    return settings
+
+
+def generate_settings_scenario_009():
+    logging.info('Scenario 009: single camera SemanticSegmentation')
+    settings = make_base_settings()
     settings.add_sensor(Camera('DefaultSemSegCamera', PostProcessing='SemanticSegmentation'))
     return settings
 
 
-def generate_settings_scenario_007():
-    logging.info('Scenario 007: no sensors, no agents info, rainy')
+def generate_settings_scenario_010():
+    logging.info('Scenario 010: 3 cameras')
     settings = make_base_settings()
-    settings.set(WeatherId=13)
+    settings.add_sensor(Camera('DefaultRGBCamera'))
+    settings.add_sensor(Camera('DefaultDepthCamera', PostProcessing='Depth'))
+    settings.add_sensor(Camera('DefaultSemSegCamera', PostProcessing='SemanticSegmentation'))
     return settings
 
 

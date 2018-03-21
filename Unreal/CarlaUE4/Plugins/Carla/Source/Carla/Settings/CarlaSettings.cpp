@@ -21,7 +21,6 @@
 #include "Engine/PostProcessVolume.h"
 #include "Materials/MaterialInstance.h"
 
-
 // INI file sections.
 #define S_CARLA_SERVER                 TEXT("CARLA/Server")
 #define S_CARLA_LEVELSETTINGS          TEXT("CARLA/LevelSettings")
@@ -31,6 +30,7 @@
 // =============================================================================
 // -- Static variables & constants ---------------------------------------------
 // =============================================================================
+
 const FName UCarlaSettings::CARLA_ROAD_TAG = FName("CARLA_ROAD");
 const FName UCarlaSettings::CARLA_SKY_TAG = FName("CARLA_SKY");
 
@@ -90,7 +90,7 @@ static USensorDescription *MakeSensor(
   const auto SensorType = GetSensorType(ConfigFile, SensorName);
   if (SensorType == TEXT("CAMERA")) {
     return MakeSensor<UCameraDescription>(Parent, SensorName, SensorType);
-  } else if (SensorType == TEXT("LIDAR_RAY_TRACE")) {
+  } else if (SensorType == TEXT("LIDAR_RAY_CAST")) {
     return MakeSensor<ULidarDescription>(Parent, SensorName, SensorType);
   } else {
     UE_LOG(LogCarla, Error, TEXT("Invalid sensor type '%s'"), *SensorType);
@@ -125,8 +125,7 @@ static void LoadSettingsFromConfig(
   if(!Settings.SetQualitySettingsLevel(UQualitySettings::FromString(sQualityLevel)))
   {
 	 //error
-  } 
-  
+  }
 
   // Sensors.
   FString Sensors;
@@ -189,7 +188,6 @@ bool UCarlaSettings::SetQualitySettingsLevel(EQualitySettingsLevel newQualityLev
 
 	return true;
 }
-
 
 void UCarlaSettings::LoadSettings()
 {
@@ -275,7 +273,7 @@ void UCarlaSettings::LogSettings() const
   UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_SENSOR);
   UE_LOG(LogCarla, Log, TEXT("Added %d sensors."), SensorDescriptions.Num());
   UE_LOG(LogCarla, Log, TEXT("Semantic Segmentation = %s"), EnabledDisabled(bSemanticSegmentationEnabled));
-  for (auto &&Sensor : SensorDescriptions) 
+  for (auto &&Sensor : SensorDescriptions)
   {
     check(Sensor.Value != nullptr);
     Sensor.Value->Log();

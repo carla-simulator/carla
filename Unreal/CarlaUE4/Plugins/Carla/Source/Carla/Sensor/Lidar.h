@@ -36,7 +36,7 @@ private:
   /// Shoot a laser ray-trace, return whether the laser hit something.
   bool ShootLaser(uint32 Channel, float HorizontalAngle, FVector &Point) const;
 
-  UPROPERTY(Category = "LiDAR", VisibleAnywhere)
+  UPROPERTY(Category = "Lidar", VisibleAnywhere)
   const ULidarDescription *Description;
 
   TArray<float> LaserAngles;
