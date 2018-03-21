@@ -61,7 +61,7 @@ namespace server {
     lhs->set_type([&](){
       switch (rhs.type) {
         case CARLA_SERVER_CAMERA:             return cs::Sensor::CAMERA;
-        case CARLA_SERVER_LIDAR_RAY_TRACE:    return cs::Sensor::LIDAR_RAY_TRACE;
+        case CARLA_SERVER_LIDAR_RAY_CAST:     return cs::Sensor::LIDAR_RAY_CAST;
         default:                              return cs::Sensor::UNKNOWN;
       }
     }());
