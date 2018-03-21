@@ -70,7 +70,7 @@ MINI_WINDOW_WIDTH = 320
 MINI_WINDOW_HEIGHT = 180
 
 
-def make_carla_settings(enable_lidar):
+def make_carla_settings(args):
     """Make a CarlaSettings object with the settings we need."""
     settings = CarlaSettings()
     settings.set(
@@ -78,7 +78,8 @@ def make_carla_settings(enable_lidar):
         SendNonPlayerAgentsInfo=True,
         NumberOfVehicles=15,
         NumberOfPedestrians=30,
-        WeatherId=random.choice([1, 3, 7, 8, 14]))
+        WeatherId=random.choice([1, 3, 7, 8, 14]),
+        QualityLevel=args.quality_level)
     settings.randomize_seeds()
     camera0 = sensor.Camera('CameraRGB')
     camera0.set_image_size(WINDOW_WIDTH, WINDOW_HEIGHT)
@@ -95,7 +96,7 @@ def make_carla_settings(enable_lidar):
     camera2.set_position(2.0, 0.0, 1.4)
     camera2.set_rotation(0.0, 0.0, 0.0)
     settings.add_sensor(camera2)
-    if enable_lidar:
+    if args.lidar:
         lidar = sensor.Lidar('Lidar32')
         lidar.set_position(0, 0, 2.5)
         lidar.set_rotation(0, 0, 0)
@@ -131,22 +132,22 @@ class Timer(object):
 
 
 class CarlaGame(object):
-    def __init__(self, carla_client, enable_autopilot=False, enable_lidar=False, city_name=None):
+    def __init__(self, carla_client, args):
         self.client = carla_client
+        self._carla_settings = make_carla_settings(args)
         self._timer = None
         self._display = None
         self._main_image = None
         self._mini_view_image1 = None
         self._mini_view_image2 = None
-        self._enable_autopilot = enable_autopilot
-        self._enable_lidar = enable_lidar
+        self._enable_autopilot = args.autopilot
         self._lidar_measurement = None
         self._map_view = None
         self._is_on_reverse = False
-        self._city_name = city_name
-        self._map = CarlaMap(city_name, 16.43, 50.0) if city_name is not None else None
-        self._map_shape = self._map.map_image.shape if city_name is not None else None
-        self._map_view = self._map.get_map(WINDOW_HEIGHT) if city_name is not None else None
+        self._city_name = args.map_name
+        self._map = CarlaMap(self._city_name, 16.43, 50.0) if self._city_name is not None else None
+        self._map_shape = self._map.map_image.shape if self._city_name is not None else None
+        self._map_view = self._map.get_map(WINDOW_HEIGHT) if self._city_name is not None else None
         self._position = None
         self._agent_positions = None
 
@@ -178,7 +179,7 @@ class CarlaGame(object):
         self._on_new_episode()
 
     def _on_new_episode(self):
-        scene = self.client.load_settings(make_carla_settings(self._enable_lidar))
+        scene = self.client.load_settings(self._carla_settings)
         number_of_player_starts = len(scene.player_start_spots)
         player_start = np.random.randint(number_of_player_starts)
         print('Starting new episode...')
@@ -191,11 +192,10 @@ class CarlaGame(object):
 
         measurements, sensor_data = self.client.read_data()
 
-        self._main_image = sensor_data.get('CameraRGB',None)
-        self._mini_view_image1 = sensor_data.get('CameraDepth' ,None)
-        self._mini_view_image2 = sensor_data.get('CameraSemSeg',None)
-        if self._enable_lidar:
-            self._lidar_measurement = sensor_data.get('Lidar32',None)
+        self._main_image = sensor_data.get('CameraRGB', None)
+        self._mini_view_image1 = sensor_data.get('CameraDepth', None)
+        self._mini_view_image2 = sensor_data.get('CameraSemSeg', None)
+        self._lidar_measurement = sensor_data.get('Lidar32', None)
 
         # Print measurements every second.
         if self._timer.elapsed_seconds_since_lap() > 1.0:
@@ -391,6 +391,12 @@ def main():
         action='store_true',
         help='enable Lidar')
     argparser.add_argument(
+        '-q', '--quality-level',
+        choices=['Low', 'Epic'],
+        type=lambda s: s.title(),
+        default='Epic',
+        help='graphics quality level, a lower level makes the simulation run considerably faster.')
+    argparser.add_argument(
         '-m', '--map-name',
         metavar='M',
         default=None,
@@ -409,7 +415,7 @@ def main():
         try:
 
             with make_carla_client(args.host, args.port) as client:
-                game = CarlaGame(client, args.autopilot, args.lidar, args.map_name)
+                game = CarlaGame(client, args)
                 game.execute()
                 break
 
