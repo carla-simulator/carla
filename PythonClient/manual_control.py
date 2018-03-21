@@ -321,7 +321,7 @@ class CarlaGame(object):
 
         if self._lidar_measurement is not None:
             lidar_data = np.array(self._lidar_measurement.data[:, :2])
-            lidar_data /= 50.0
+            lidar_data *= 2.0
             lidar_data += 100.0
             lidar_data = np.fabs(lidar_data)
             lidar_data = lidar_data.astype(np.int32)

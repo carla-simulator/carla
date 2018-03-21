@@ -75,9 +75,10 @@ public:
   {
     check(Header[1] > Channel);
     Header[2u + Channel] += 1u;
-    Points.Emplace(Point.X);
-    Points.Emplace(Point.Y);
-    Points.Emplace(Point.Z);
+    constexpr float TO_METERS = 1e-2f;
+    Points.Emplace(TO_METERS * Point.X);
+    Points.Emplace(TO_METERS * Point.Y);
+    Points.Emplace(TO_METERS * Point.Z);
   }
 
   FSensorDataView GetView() const
