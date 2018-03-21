@@ -59,8 +59,48 @@ The function receives measurements from the world, sensor data and a target posi
 
 The [measurements](measurements.md), [target](measurements.md), [sensor_data](cameras_and_sensors.md) and [control](measurements.md) types are described on the documentation.
 
+Benchmark Structure
+-------------------
+
+The benchmark  structure in set of *Experiments*.
+Each *experiment* contains a set of poses, that are tuples containing
+start and end point.
+The *experiments* also are associated with a condition which is
+a [carla settings](carla_settings.md) object or file.
 
 
-Creating your Benchmark
+
+
+Benchmark Execution
 ---------------------
-Tutorial to be added
+
+During the execution the benchmark module stores
+the [measurements](measurements.md)  and
+ [controls](measurements.md) for every single step.
+
+
+
+Benchmark Results
+------------------
+
+The track execution.
+The metrics module compute the following results based
+on what was logged.
+This results are returned as a dictionary. 
+
+The driving quality accessment in general needs to be 
+
+ It is also necesary
+  to specificy the time frame to count. This is set using the
+  parameter *frames_inside_recount* following that as soon
+  as the 
+
+
+* Off Road Intersection: Counts number of intersection of
+  a percentage bigger than a *threshold*.
+    
+
+* b
+* c
+* d
+
