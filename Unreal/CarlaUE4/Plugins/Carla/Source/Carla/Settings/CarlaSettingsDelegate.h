@@ -21,6 +21,9 @@ public:
   /** Constructor */
   UCarlaSettingsDelegate();
 
+  /** Reset settings to default */
+  void Reset();
+
   /** Create the event trigger handler for all new spawned actors to be processed with a custom function here */
   void RegisterSpawnHandler(UWorld *World);
 
@@ -65,7 +68,7 @@ private:
 private:
 
   /** currently applied settings level after level is restarted */
-  EQualitySettingsLevel AppliedLowPostResetQualitySettingsLevel = EQualitySettingsLevel::Epic;
+  static EQualitySettingsLevel AppliedLowPostResetQualitySettingsLevel;
 
   /** */
   UCarlaSettings* CarlaSettings = nullptr;
