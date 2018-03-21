@@ -1,5 +1,6 @@
-How to add assets
-=================
+<h1>How to add assets</h1>
+
+> _This document is a work in progress and might be incomplete._
 
 Adding a vehicle
 ----------------
