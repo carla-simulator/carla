@@ -60,7 +60,17 @@ void ALidar::ReadPoints(const float DeltaTime)
   const uint32 PointsToScanWithOneLaser =
     FMath::RoundHalfFromZero(
         Description->PointsPerSecond * DeltaTime / float(ChannelCount));
-  check(PointsToScanWithOneLaser > 0);
+
+  if (PointsToScanWithOneLaser <= 0)
+  {
+    UE_LOG(
+        LogCarla,
+        Warning,
+        TEXT("%s: no points requested this frame, try increasing the number of points per second."),
+        *GetName());
+    return;
+  }
+
   check(ChannelCount == LaserAngles.Num());
   check(Description != nullptr);
 

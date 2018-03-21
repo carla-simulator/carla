@@ -49,7 +49,8 @@ def run_carla_client(args):
                     SendNonPlayerAgentsInfo=True,
                     NumberOfVehicles=20,
                     NumberOfPedestrians=40,
-                    WeatherId=random.choice([1, 3, 7, 8, 14]))
+                    WeatherId=random.choice([1, 3, 7, 8, 14]),
+                    QualityLevel=args.quality_level)
                 settings.randomize_seeds()
 
                 # Now we want to add a couple of cameras to the player vehicle.
@@ -76,7 +77,7 @@ def run_carla_client(args):
                     lidar.set_rotation(0, 0, 0)
                     lidar.set(
                         Channels=32,
-                        Range=5000,
+                        Range=50,
                         PointsPerSecond=100000,
                         RotationFrequency=10,
                         UpperFovLimit=10,
@@ -201,6 +202,12 @@ def main():
         '-l', '--lidar',
         action='store_true',
         help='enable Lidar')
+    argparser.add_argument(
+        '-q', '--quality-level',
+        choices=['Low', 'Epic'],
+        type=lambda s: s.title(),
+        default='Epic',
+        help='graphics quality level, a lower level makes the simulation run considerably faster.')
     argparser.add_argument(
         '-i', '--images-to-disk',
         action='store_true',
