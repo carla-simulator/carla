@@ -17,6 +17,7 @@
 #include "HighResScreenshot.h"
 #include "Materials/Material.h"
 #include "Paths.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 
 static constexpr auto DEPTH_MAT_PATH =
@@ -124,6 +125,9 @@ void ASceneCaptureCamera::BeginPlay()
 
   CaptureComponent2D->UpdateContent();
   CaptureComponent2D->Activate();
+
+  //Make sure that there is enough time in the render queue
+  UKismetSystemLibrary::ExecuteConsoleCommand(GetWorld(), FString("g.TimeoutForBlockOnRenderFence 300000"));
 
   Super::BeginPlay();
 }
