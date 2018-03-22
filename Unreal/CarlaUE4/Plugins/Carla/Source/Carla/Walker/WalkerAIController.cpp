@@ -225,7 +225,7 @@ void AWalkerAIController::OnMoveCompleted(
   ChangeStatus(EWalkerStatus::MoveCompleted);
 }
 
-void AWalkerAIController::SenseActors(const TArray<AActor *>& Actors)
+void AWalkerAIController::SenseActors(TArray<AActor *> Actors)
 {
   const auto *aPawn = GetPawn();
   if ((Status == EWalkerStatus::Moving) &&
