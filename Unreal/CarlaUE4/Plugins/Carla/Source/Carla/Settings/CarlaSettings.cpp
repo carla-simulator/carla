@@ -122,10 +122,7 @@ static void LoadSettingsFromConfig(
   // QualitySettings.
   FString sQualityLevel;
   ConfigFile.GetString(S_CARLA_QUALITYSETTINGS, TEXT("QualityLevel"), sQualityLevel);
-  if(!Settings.SetQualitySettingsLevel(UQualitySettings::FromString(sQualityLevel)))
-  {
-	 //error
-  }
+  Settings.SetQualitySettingsLevel(UQualitySettings::FromString(sQualityLevel));
 
   // Sensors.
   FString Sensors;
@@ -176,17 +173,9 @@ FString UQualitySettings::ToString(EQualitySettingsLevel QualitySettingsLevel)
   return ptr->GetNameStringByIndex(static_cast<int32>(QualitySettingsLevel));
 }
 
-bool UCarlaSettings::SetQualitySettingsLevel(EQualitySettingsLevel newQualityLevel)
+void UCarlaSettings::SetQualitySettingsLevel(EQualitySettingsLevel newQualityLevel)
 {
-	if(newQualityLevel==EQualitySettingsLevel::None)
-	{
-		UE_LOG(LogCarla ,Warning, TEXT("Quality Settings Level not set!"));
-		return false;
-	}
-
 	QualitySettingsLevel = newQualityLevel;
-
-	return true;
 }
 
 void UCarlaSettings::LoadSettings()

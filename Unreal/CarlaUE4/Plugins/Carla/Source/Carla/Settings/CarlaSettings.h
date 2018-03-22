@@ -57,12 +57,12 @@ public:
   
   /** 
    * Sets the new quality settings level and make changes in the game related to it. 
-   * Returns the result of the operation. 
    * @note This will not apply the quality settings. Use ApplyQualitySettings functions instead
    * @param newQualityLevel Store the new quality 
    */
   UFUNCTION(BlueprintCallable, Category="CARLA Settings")
-  bool SetQualitySettingsLevel(EQualitySettingsLevel newQualityLevel);
+  void SetQualitySettingsLevel(EQualitySettingsLevel newQualityLevel);
+
   /** @return current quality settings level (could not be applied yet) */
   UFUNCTION(BlueprintCallable, Category="CARLA Settings")
   EQualitySettingsLevel GetQualitySettingsLevel() const { return QualitySettingsLevel; }
