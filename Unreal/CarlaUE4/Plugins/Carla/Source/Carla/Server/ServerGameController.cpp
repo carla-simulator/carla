@@ -121,17 +121,18 @@ void FServerGameController::Tick(float DeltaSeconds)
 
   // Send measurements.
   {
-	if(CarlaSettings->bSynchronousMode)
-	{
-	  FlushRenderingCommands();
-	}
+    if (CarlaSettings->bSynchronousMode)
+    {
+      FlushRenderingCommands();
+    }
 
     if (Errc::Error == Server->SendMeasurements(
             DataRouter.GetPlayerState(),
             DataRouter.GetAgents(),
-            CarlaSettings->bSendNonPlayerAgentsInfo)) 
-	{
-      Server = nullptr;
+            CarlaSettings->bSendNonPlayerAgentsInfo))
+    {
+      // The error here must be ignored, otherwise we can create a race
+      // condition between the different ports.
       return;
     }
   }
@@ -140,12 +141,10 @@ void FServerGameController::Tick(float DeltaSeconds)
   {
     const bool bShouldBlock = CarlaSettings->bSynchronousMode;
     FVehicleControl Control;
-    if (Errc::Error == Server->ReadControl(Control, bShouldBlock)) {
-      Server = nullptr;
-      return;
-    } else {
+    if (Errc::Error != Server->ReadControl(Control, bShouldBlock))
+    {
       DataRouter.ApplyVehicleControl(Control);
-    }
+    } // Here we ignore the error too.
   }
 }
 
