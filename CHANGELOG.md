@@ -37,8 +37,8 @@
   * Removed the player from the list of non-player agents
   * Adjusted bounding boxes to vehicles' height
   * Changed vehicles' center to match bounding box
-  * Added autopilot mode to manua_control.py
-  * Added quality level options to manua_control.py and client_example.py
+  * Added autopilot mode to manual_control.py
+  * Added quality level options to manual_control.py and client_example.py
   * Replaced background landscape and trees by a matte painting
   * Fixed road map generated some meshes twice
   * Small improvements to Windows support
