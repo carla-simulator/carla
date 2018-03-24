@@ -210,9 +210,7 @@ class Benchmark(object):
                         [positions[end_point].location.x, positions[end_point].location.y])
 
                     time_out = self._calculate_time_out(path_distance)
-                    print "TIMEOUT"
 
-                    print time_out
                     # running the agent
                     (result, reward_vec, final_time, remaining_distance) = \
                         self.run_navigation_episode(
