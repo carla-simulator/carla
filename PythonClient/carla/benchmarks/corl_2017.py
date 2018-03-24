@@ -8,11 +8,8 @@
 
 from __future__ import print_function
 
-
-
 import os
 import numpy as np
-
 
 from .benchmark import Benchmark
 from .experiment import Experiment
@@ -29,7 +26,7 @@ class CoRL2017(Benchmark):
                  name_to_save,
                  continue_experiment=True,
                  save_images=False,
-                 distance_for_sucess=2.0
+                 distance_for_success=2.0
                  ):
 
         # Define all the parameters used to compute the driving summary.
@@ -37,46 +34,39 @@ class CoRL2017(Benchmark):
         self._metrics_parameters = {
 
             'intersection_offroad': {'frames_skip': 10,  # Check intersection always with 10 frames tolerance
-                                   'frames_recount': 20,
-                                   'threshold': 0.3
-                                  },
+                                     'frames_recount': 20,
+                                     'threshold': 0.3
+                                     },
             'intersection_otherlane': {'frames_skip': 10,  # Check intersection always with 10 frames tolerance
-                               'frames_recount': 20,
-                               'threshold': 0.4
-                              },
+                                       'frames_recount': 20,
+                                       'threshold': 0.4
+                                       },
             'collision_general': {'frames_skip': 10,
                                   'frames_recount': 20,
-
                                   'threshold': 40
-
-                             },
+                                  },
             'collision_vehicles': {'frames_skip': 10,
                                    'frames_recount': 30,
-
                                    'threshold': 40
-            },
+                                   },
             'collision_pedestrians': {'frames_skip': 5,
                                       'frames_recount': 100,
-
                                       'threshold': 30
-            },
+                                      },
             'dynamic_episodes': [3]
 
         }
 
-
         Benchmark.__init__(self, city_name,
-                            name_to_save,
-                            continue_experiment,
-                            save_images,
-                            distance_for_sucess)
-
-
+                           name_to_save,
+                           continue_experiment,
+                           save_images,
+                           distance_for_success)
 
     def get_all_statistics(self):
 
         summary = compute_summary(os.path.join(
-            self._full_name, self._suffix_name),self._metrics_parameters)
+            self._full_name, self._suffix_name), self._metrics_parameters)
 
         return summary
 
@@ -95,13 +85,10 @@ class CoRL2017(Benchmark):
 
         """
 
-
-
         metrics_summary = compute_summary(os.path.join(
             self._full_name, self._suffix_name), self._metrics_parameters)
 
-
-        print (" Final Results ! ")
+        print(" Final Results ! ")
 
         for metric, values in metrics_summary.items():
 
@@ -111,15 +98,14 @@ class CoRL2017(Benchmark):
                     print('  Weather: ', weather)
                     count = 0
                     for t in tasks:
-                        if isinstance(t,np.ndarray) or isinstance(t,list):
+                        if isinstance(t, np.ndarray) or isinstance(t, list):
                             if t == []:
-                                print ('Metric Not Computed')
+                                print('Metric Not Computed')
                             else:
-                                print('    Task ', count, ' -> ', sum(t)/len(t))
+                                print('    Task ', count, ' -> ', sum(t) / len(t))
                         else:
                             print('    Task ', count, ' -> ', t)
                         count += 1
-
 
     def _calculate_time_out(self, distance):
         """
