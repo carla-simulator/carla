@@ -66,29 +66,29 @@ def get_colisions(selected_matrix, header, parameters):
 
     while i < selected_matrix.shape[0]:
         if (selected_matrix[i, header.index('collision_gen')]
-                - selected_matrix[(i-parameters['collision_general']['frames_to_check']), header.index('collision_gen')]) > \
+                - selected_matrix[(i-parameters['collision_general']['frames_skip']), header.index('collision_gen')]) > \
                 parameters['collision_general']['threshold']:
             count_collisions_general += 1
-            i +=  parameters['collision_general']['frames_inside_recount']
+            i +=  parameters['collision_general']['frames_recount']
         i += 1
 
     i = 1
     while i < selected_matrix.shape[0]:
         if (selected_matrix[i, header.index('collision_car')]
-                - selected_matrix[(i-parameters['collision_vehicles']['frames_to_check']), header.index('collision_car')]) > \
+                - selected_matrix[(i-parameters['collision_vehicles']['frames_skip']), header.index('collision_car')]) > \
                 parameters['collision_vehicles']['threshold']:
             count_collisions_vehicle += 1
-            i += parameters['collision_vehicles']['frames_inside_recount']
+            i += parameters['collision_vehicles']['frames_recount']
         i += 1
 
     i = 1
     while i < selected_matrix.shape[0]:
         if (selected_matrix[i, header.index('collision_ped')]
-                - selected_matrix[i-parameters['collision_pedestrians']['frames_to_check'],
+                - selected_matrix[i-parameters['collision_pedestrians']['frames_skip'],
                                   header.index('collision_ped')]) > \
                 parameters['collision_pedestrians']['threshold']:
             count_collisions_pedestrian += 1
-            i += parameters['collision_pedestrians']['frames_inside_recount']
+            i += parameters['collision_pedestrians']['frames_recount']
         i += 1
 
     return count_collisions_general, count_collisions_vehicle, count_collisions_pedestrian
@@ -116,7 +116,7 @@ def get_distance_traveled(selected_matrix, header):
 
         i += 1
 
-    return acummulated_distance
+    return acummulated_distance/(1000.0)
 
 
 
@@ -141,21 +141,21 @@ def get_out_of_road_lane(selected_matrix, header, parameters):
     while i < selected_matrix.shape[0]:
         # print selected_matrix[i,6]
         if (selected_matrix[i, header.index('sidewalk_intersect')]
-            - selected_matrix[(i-parameters['intersection_offroad']['frames_to_check']),
+            - selected_matrix[(i-parameters['intersection_offroad']['frames_skip']),
                                 header.index('sidewalk_intersect')]) \
                 > parameters['intersection_offroad']['threshold']:
 
             count_sidewalk_intersect += 1
-            i += parameters['intersection_offroad']['frames_inside_recount']
+            i += parameters['intersection_offroad']['frames_recount']
         if i >= selected_matrix.shape[0]:
             break
 
         if (selected_matrix[i, header.index('lane_intersect')]
-            - selected_matrix[(i-parameters['intersection_otherlane']['frames_to_check']),
+            - selected_matrix[(i-parameters['intersection_otherlane']['frames_skip']),
                                  header.index('lane_intersect')]) \
                 > parameters['intersection_otherlane']['threshold']:
             count_lane_intersect += 1
-            i += parameters['intersection_otherlane']['frames_inside_recount']
+            i += parameters['intersection_otherlane']['frames_recount']
 
         i += 1
 
@@ -267,8 +267,8 @@ def compute_summary(filename, parameters):
                 metrics_dictionary['driven_kilometers'][w][t] = km_run_episodes
                 metrics_dictionary['average_speed'][w][t] =\
                         km_run_episodes\
-                        /experiment_results_matrix[count,
-                                                  header.index('final_time')]
+                        /(experiment_results_matrix[count,
+                                                  header.index('final_time')]/3600.0)
                 count += 1
 
 
