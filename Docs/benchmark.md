@@ -64,43 +64,62 @@ Benchmark Structure
 
 The benchmark  structure in set of *Experiments*.
 Each *experiment* contains a set of poses, that are tuples containing
-start and end point.
+a start and an end point.
 The *experiments* also are associated with a condition which is
-a [carla settings](carla_settings.md) object or file.
+a [carla settings](carla_settings.md) object.
 
 
 
 
-Benchmark Execution
----------------------
+####Benchmark Execution
+
 
 During the execution the benchmark module stores
 the [measurements](measurements.md)  and
  [controls](measurements.md) for every single step.
+ These results are stored on the *_benchmarks_results*
+ folder.
 
 
 
-Benchmark Results
-------------------
+####Benchmark Metrics
 
-The track execution.
-The metrics module compute the following results based
-on what was logged.
-This results are returned as a dictionary. 
-
-The driving quality accessment in general needs to be 
-
- It is also necesary
-  to specificy the time frame to count. This is set using the
-  parameter *frames_inside_recount* following that as soon
-  as the 
+The benchmark module provides the following metrics, which 
+are related to infraction:
 
 
-* Off Road Intersection: Counts number of intersection of
-  a percentage bigger than a *threshold*.
-    
+* Off Road Intersection: The number of times the agent goes out of the road. 
+ The intersection is only counted if the area of the vehicle outside
+  of the road is bigger than a *threshold*.
+  
+* Other Lane Intersection: The number of times the agent goes to the other
+ lane. The intersection is only counted if the area of the vehicle on the
+ other lane is bigger than a *threshold*.
+   
+* Vehicle Collisions: The number of collisions with vehicles that have
+  an impact bigger than a *threshold*.
 
-* b
-* c
-* d
+* Pedestrian Collisions: The number of collisions with pedestrians
+ that have an impact bigger than a threshold.
 
+* General Collisions: The number of collisions with all other
+objects.
+
+
+These results can be computed with the metrics module, by using the following
+function
+
+`summary_dictionary = metrics.compute_summary(path_to_execution_log,parameters)`
+
+The function receives the full path to the execution log and a dictionary with
+parameters. It returns a dictionary with the metrics.
+
+ The parameters are:
+* Threshold: The threshold used by the metrics.
+
+* Frames  Recount: After making the infraction, set the number
+of frames that the agent needs to keep doing the infraction for
+it to be counted as another infraction. 
+
+*Frames Skip: It is related to the number of frames you have
+to skip after a collision or a intersection starts.

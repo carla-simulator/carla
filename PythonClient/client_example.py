@@ -24,8 +24,8 @@ from carla.util import print_over_same_line
 
 def run_carla_client(args):
     # Here we will run 3 episodes with 300 frames each.
-    number_of_episodes = 3
-    frames_per_episode = 300
+    number_of_episodes = 10
+    frames_per_episode = 30
 
     # We assume the CARLA server is already waiting for a client to connect at
     # host:port. To create a connection we can use the `make_carla_client`
@@ -49,7 +49,8 @@ def run_carla_client(args):
                     SendNonPlayerAgentsInfo=True,
                     NumberOfVehicles=20,
                     NumberOfPedestrians=40,
-                    WeatherId=random.choice([1, 3, 7, 8, 14]))
+                    WeatherId=random.choice([1, 3, 7, 8, 14])
+                )
                 settings.randomize_seeds()
 
                 # Now we want to add a couple of cameras to the player vehicle.
@@ -153,6 +154,9 @@ def run_carla_client(args):
                     control.steer += random.uniform(-0.1, 0.1)
                     client.send_control(control)
 
+                time.sleep(0.05)
+
+
 
 def print_measurements(measurements):
     number_of_agents = len(measurements.non_player_agents)
@@ -231,6 +235,8 @@ def main():
             return
 
         except TCPConnectionError as error:
+            import traceback
+            traceback.print_exc()
             logging.error(error)
             time.sleep(1)
 
@@ -240,4 +246,6 @@ if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
+        import traceback
+        traceback.print_exc()
         print('\nCancelled by user. Bye!')
