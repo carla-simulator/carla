@@ -36,7 +36,7 @@ class Benchmark(object):
             name_to_save,
             continue_experiment=True,
             save_images=False,
-            distance_for_sucess=2.0
+            distance_for_success=2.0
             ):
 
 
@@ -72,7 +72,7 @@ class Benchmark(object):
                               }
 
         # The minimum distance for arriving into the goal point in order to consider ir a success
-        self._distance_for_success = distance_for_sucess
+        self._distance_for_success = distance_for_success
 
         self._experiments = self._build_experiments()
         # Create the log files and get the names
