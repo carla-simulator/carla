@@ -179,19 +179,19 @@ def compute_summary(filename, parameters):
 
 
 
-    f = open(filename, "rb")
+    f = open(filename, "r")
     header = f.readline()
     header = header.split(',')
     header[-1] = header[-1][:-2]
     f.close()
 
-    f = open(os.path.join(path, 'details_' + base_name), "rb")
+    f = open(os.path.join(path, 'details_' + base_name), "r")
     header_metrics = f.readline()
     header_metrics = header_metrics.split(',')
     header_metrics[-1] = header_metrics[-1][:-2]
     f.close()
 
-    result_matrix = np.loadtxt(open(filename, "rb"), delimiter=",", skiprows=1)
+    result_matrix = np.loadtxt(open(filename, "r"), delimiter=",", skiprows=1)
 
     # Corner Case: The presented test just had one episode
     if result_matrix.ndim == 1:
@@ -204,7 +204,7 @@ def compute_summary(filename, parameters):
     all_weathers = np.unique(result_matrix[:, header.index('weather')])
 
     metrics_matrix = np.loadtxt(open(os.path.join(
-        path, 'details_' + base_name), "rb"), delimiter=",", skiprows=1)
+        path, 'details_' + base_name), "r"), delimiter=",", skiprows=1)
 
     metrics_dictionary = {'average_completion': {w: [0]*len(tasks) for w in all_weathers},
                           'intersection_offroad': {w: [[] for i in range(len(tasks))] for w in all_weathers},
