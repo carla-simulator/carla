@@ -107,6 +107,8 @@ class BenchmarkTest(Benchmark):
                             print('    Task ', count, ' -> ', t)
                         count += 1
 
+
+
     def _calculate_time_out(self, distance):
         """
         Function to return the timeout ( in miliseconds) that is calculated based on distance to goal.
@@ -122,13 +124,13 @@ class BenchmarkTest(Benchmark):
         """
 
         def _poses_straight():
-            return [[36, 40]]#, [39, 35]]
+            return [[36, 40], [39, 35]]
 
         def _poses_one_curve():
-            return [[138, 17]]#, [47, 16]]
+            return [[138, 17], [47, 16]]
 
         def _poses_navigation():
-            return [[105, 29]]#, [27, 130]]
+            return [[105, 29], [27, 130]]
 
         return [_poses_straight(),
                 _poses_one_curve(),
@@ -138,13 +140,13 @@ class BenchmarkTest(Benchmark):
     def _poses_town02(self):
 
         def _poses_straight():
-            return [[38, 34]]#, [4, 2]]
+            return [[38, 34], [4, 2]]
 
         def _poses_one_curve():
-            return [[37, 76]]#, [8, 24]]
+            return [[37, 76], [8, 24]]
 
         def _poses_navigation():
-            return [[19, 66]]#, [79, 14]]
+            return [[19, 66], [79, 14]]
 
         return [_poses_straight(),
                 _poses_one_curve(),
