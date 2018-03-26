@@ -59,16 +59,21 @@ class Benchmark(object):
                             'time_out': -1
                             }
 
-        self._dict_rewards = {'exp_id': -1,
+        self._dict_measurements = {'exp_id': -1,
                               'rep': -1,
                               'weather': -1,
-                              'collision_gen': -1,
-                              'collision_ped': -1,
-                              'collision_car': -1,
-                              'lane_intersect': -1,
-                              'sidewalk_intersect': -1,
+                              'start_point': -1,
+                              'end_point': -1,
+                              'collision_general': -1,
+                              'collision_pedestrians': -1,
+                              'collision_vehicles': -1,
+                              'intersection_otherlane': -1,
+                              'intersection_offroad': -1,
                               'pos_x': -1,
-                              'pos_y': -1
+                              'pos_y': -1,
+                              'steer': -1,
+                              'throttle': -1,
+                              'brake': -1
                               }
 
         # The minimum distance for arriving into the goal point in order to consider ir a success
@@ -111,6 +116,8 @@ class Benchmark(object):
         t1 = t0
         success = False
         measurement_vec = []
+        # The vector containing all controls produced on this episode
+        control_vec = []
         frame = 0
         distance = 10000
 
@@ -135,6 +142,7 @@ class Benchmark(object):
             curr_y = measurements.player_measurements.transform.location.y
 
             measurement_vec.append(measurements.player_measurements)
+            control_vec.append(control)
 
             t1 = measurements.game_timestamp
 
@@ -153,8 +161,8 @@ class Benchmark(object):
             frame += 1
 
         if success:
-            return 1, measurement_vec, float(t1 - t0) / 1000.0, distance
-        return 0, measurement_vec, time_out, distance
+            return 1, measurement_vec, control_vec, float(t1 - t0) / 1000.0, distance
+        return 0, measurement_vec, control_vec, time_out, distance
 
     def benchmark_agent(self, agent, carla):
         if self._line_on_file == 0:
@@ -168,7 +176,7 @@ class Benchmark(object):
             with open(os.path.join(self._full_name,
                                    'details_' + self._suffix_name), 'w') as rfd:
 
-                rw = csv.DictWriter(rfd, self._dict_rewards.keys())
+                rw = csv.DictWriter(rfd, self._dict_measurements.keys())
                 rw.writeheader()
             start_task = 0
             start_pose = 0
@@ -212,7 +220,7 @@ class Benchmark(object):
                     time_out = self._calculate_time_out(path_distance)
 
                     # running the agent
-                    (result, reward_vec, final_time, remaining_distance) = \
+                    (result, reward_vec, control_vec, final_time, remaining_distance) = \
                         self.run_navigation_episode(
                             agent, carla, time_out, positions[end_point],
                             str(experiment.Conditions.WeatherId) + '_'
@@ -226,7 +234,7 @@ class Benchmark(object):
                         remaining_distance, final_time, time_out, result)
                     with open(self._internal_log_name, 'a+') as log:
                         log.write('Finished Experiment')
-                    self._write_details_results(experiment, rep, reward_vec)
+                    self._write_details_results(experiment, rep, pose, reward_vec, control_vec)
 
                     if result > 0:
                         logging.info('+++++ Target achieved in %f seconds! +++++',
@@ -258,33 +266,41 @@ class Benchmark(object):
 
             w.writerow(self._dict_stats)
 
-    def _write_details_results(self, experiment, rep, reward_vec):
+    def _write_details_results(self, experiment, rep, pose, reward_vec, control_vec):
 
         with open(os.path.join(self._full_name,
                                'details_' + self._suffix_name), 'a+') as rfd:
 
-            rw = csv.DictWriter(rfd, self._dict_rewards.keys())
+            rw = csv.DictWriter(rfd, self._dict_measurements.keys())
 
             for i in range(len(reward_vec)):
-                self._dict_rewards['exp_id'] = experiment.id
-                self._dict_rewards['rep'] = rep
-                self._dict_rewards['weather'] = experiment.Conditions.WeatherId
-                self._dict_rewards['collision_gen'] = reward_vec[
+                self._dict_measurements['exp_id'] = experiment.id
+                self._dict_measurements['rep'] = rep
+                self._dict_measurements['start_point'] = pose[0]
+                self._dict_measurements['end_point'] = pose[1]
+                self._dict_measurements['weather'] = experiment.Conditions.WeatherId
+                self._dict_measurements['collision_general'] = reward_vec[
                     i].collision_other
-                self._dict_rewards['collision_ped'] = reward_vec[
+                self._dict_measurements['collision_pedestrians'] = reward_vec[
                     i].collision_pedestrians
-                self._dict_rewards['collision_car'] = reward_vec[
+                self._dict_measurements['collision_vehicles'] = reward_vec[
                     i].collision_vehicles
-                self._dict_rewards['lane_intersect'] = reward_vec[
+                self._dict_measurements['intersection_otherlane'] = reward_vec[
                     i].intersection_otherlane
-                self._dict_rewards['sidewalk_intersect'] = reward_vec[
+                self._dict_measurements['intersection_offroad'] = reward_vec[
                     i].intersection_offroad
-                self._dict_rewards['pos_x'] = reward_vec[
+                self._dict_measurements['pos_x'] = reward_vec[
                     i].transform.location.x
-                self._dict_rewards['pos_y'] = reward_vec[
+                self._dict_measurements['pos_y'] = reward_vec[
                     i].transform.location.y
+                self._dict_measurements['steer'] = control_vec[
+                    i].steer
+                self._dict_measurements['throttle'] = control_vec[
+                    i].throttle
+                self._dict_measurements['brake'] = control_vec[
+                    i].brake
 
-                rw.writerow(self._dict_rewards)
+                rw.writerow(self._dict_measurements)
 
     def _create_log_record(self, base_name, experiments):
         """

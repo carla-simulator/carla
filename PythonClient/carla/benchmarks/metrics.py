@@ -9,6 +9,8 @@ import numpy as np
 import math
 import os
 
+import matplotlib.pyplot as plt
+
 
 sldist = lambda c1, c2: math.sqrt((c2[0] - c1[0])**2 + (c2[1] - c1[1])**2)
 flatten = lambda l: [item for sublist in l for item in sublist]
@@ -25,9 +27,8 @@ Based on that it calculates some specific metrics
 
 def divide_by_episodes(metrics_matrix, header):
 
-
-    prev_x = metrics_matrix[0, header.index('pos_x')]
-    prev_y = metrics_matrix[0, header.index('pos_y')]
+    prev_start = metrics_matrix[0, header.index('start_point')]
+    prev_end = metrics_matrix[0, header.index('end_point')]
 
     i = 1
     prev_i_position = 0
@@ -36,17 +37,18 @@ def divide_by_episodes(metrics_matrix, header):
 
     while i < metrics_matrix.shape[0]:
 
-        x = metrics_matrix[i, header.index('pos_x')]
-        y = metrics_matrix[i, header.index('pos_y')]
+        current_start = metrics_matrix[i, header.index('start_point')]
+        current_end = metrics_matrix[i, header.index('end_point')]
         # Here we defined a maximum distance in a tick, this case 7 meters, if it is bigger
 
-
-        if sldist((x, y), (prev_x, prev_y)) > 7:
+        if current_start != prev_start and current_end != prev_end:
             episode_matrix_metrics.append(metrics_matrix[prev_i_position:i, :])
             prev_i_position = i
 
-        prev_x = x
-        prev_y = y
+
+
+        prev_start = current_start
+        prev_end = current_end
 
         i += 1
 
@@ -65,8 +67,8 @@ def get_colisions(selected_matrix, header, parameters):
     i = 1
 
     while i < selected_matrix.shape[0]:
-        if (selected_matrix[i, header.index('collision_gen')]
-                - selected_matrix[(i-parameters['collision_general']['frames_skip']), header.index('collision_gen')]) > \
+        if (selected_matrix[i, header.index('collision_general')]
+                - selected_matrix[(i-parameters['collision_general']['frames_skip']), header.index('collision_vehicles')]) > \
                 parameters['collision_general']['threshold']:
             count_collisions_general += 1
             i +=  parameters['collision_general']['frames_recount']
@@ -74,8 +76,8 @@ def get_colisions(selected_matrix, header, parameters):
 
     i = 1
     while i < selected_matrix.shape[0]:
-        if (selected_matrix[i, header.index('collision_car')]
-                - selected_matrix[(i-parameters['collision_vehicles']['frames_skip']), header.index('collision_car')]) > \
+        if (selected_matrix[i, header.index('collision_vehicles')]
+                - selected_matrix[(i-parameters['collision_vehicles']['frames_skip']), header.index('collision_vehicles')]) > \
                 parameters['collision_vehicles']['threshold']:
             count_collisions_vehicle += 1
             i += parameters['collision_vehicles']['frames_recount']
@@ -83,9 +85,9 @@ def get_colisions(selected_matrix, header, parameters):
 
     i = 1
     while i < selected_matrix.shape[0]:
-        if (selected_matrix[i, header.index('collision_ped')]
+        if (selected_matrix[i, header.index('collision_pedestrians')]
                 - selected_matrix[i-parameters['collision_pedestrians']['frames_skip'],
-                                  header.index('collision_ped')]) > \
+                                  header.index('collision_pedestrians')]) > \
                 parameters['collision_pedestrians']['threshold']:
             count_collisions_pedestrian += 1
             i += parameters['collision_pedestrians']['frames_recount']
@@ -139,10 +141,10 @@ def get_out_of_road_lane(selected_matrix, header, parameters):
     i = 0
 
     while i < selected_matrix.shape[0]:
-        # print selected_matrix[i,6]
-        if (selected_matrix[i, header.index('sidewalk_intersect')]
+
+        if (selected_matrix[i, header.index('intersection_offroad')]
             - selected_matrix[(i-parameters['intersection_offroad']['frames_skip']),
-                                header.index('sidewalk_intersect')]) \
+                                header.index('intersection_offroad')]) \
                 > parameters['intersection_offroad']['threshold']:
 
             count_sidewalk_intersect += 1
@@ -150,9 +152,9 @@ def get_out_of_road_lane(selected_matrix, header, parameters):
         if i >= selected_matrix.shape[0]:
             break
 
-        if (selected_matrix[i, header.index('lane_intersect')]
+        if (selected_matrix[i, header.index('intersection_otherlane')]
             - selected_matrix[(i-parameters['intersection_otherlane']['frames_skip']),
-                                 header.index('lane_intersect')]) \
+                                 header.index('intersection_otherlane')]) \
                 > parameters['intersection_otherlane']['threshold']:
             count_lane_intersect += 1
             i += parameters['intersection_otherlane']['frames_recount']
@@ -217,6 +219,8 @@ def compute_summary(filename, parameters):
                           'driven_kilometers': {w: [0]*len(tasks) for w in all_weathers}
                           }
 
+
+
     for t in tasks:
         experiment_results_matrix = result_matrix[
             result_matrix[:, header.index('exp_id')] == t]
@@ -259,6 +263,9 @@ def compute_summary(filename, parameters):
 
             count = 0
 
+            print ' Divided into this number of episodes : '
+            print len(episode_experiment_metrics_matrix)
+
 
             for episode_experiment_metrics in episode_experiment_metrics_matrix:
 
@@ -274,10 +281,14 @@ def compute_summary(filename, parameters):
 
             if list(tasks).index(t) in set(parameters['dynamic_episodes']):
 
+
                 for episode_experiment_metrics in episode_experiment_metrics_matrix:
+
+
                     lane_road = get_out_of_road_lane(
                         episode_experiment_metrics, header_metrics, parameters)
                     colisions = get_colisions(episode_experiment_metrics, header_metrics, parameters)
+
 
 
                     metrics_dictionary['intersection_offroad'][

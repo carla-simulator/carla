@@ -315,7 +315,7 @@ if __name__ == '__main__':
 
             with make_carla_client(args.host, args.port) as client:
 
-                corl = BenchmarkTest(city_name=args.city_name, name_to_save=args.log_name)
+                corl = BenchmarkTest(city_name=args.city_name, name_to_save=args.log_name+'_metrics')
                 agent = Manual(args.city_name)
                 results = corl.benchmark_agent(agent, client)
                 corl.plot_summary_test()
