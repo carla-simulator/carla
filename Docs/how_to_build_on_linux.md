@@ -1,13 +1,11 @@
-How to build CARLA on Linux
-===========================
+<h1>How to build CARLA on Linux</h1>
 
 !!! note
     CARLA requires Ubuntu 16.04 or later.
 
 Install the build tools and dependencies
 
-    $ sudo apt-get install build-essential clang-3.9 git cmake ninja-build python3-pip python3-requests python-dev tzdata sed curl wget unzip autoconf libtool
-    $ sudo pip3 install protobuf
+    $ sudo apt-get install build-essential clang-3.9 git cmake ninja-build python3-requests python-dev tzdata sed curl wget unzip autoconf libtool
 
 To avoid compatibility issues between Unreal Engine and the CARLA dependencies,
 the best configuration is to compile everything with the same compiler version
@@ -47,16 +45,6 @@ takes a while
 
 Once it's done it should print "Success" if everything went well.
 
-Download Epic Games' Automotive Materials package and install it under
-"Unreal/CarlaUE4/Content/AutomotiveMaterials".
-[How to download automotive materials](how_to_add_automotive_materials.md).
-
-!!! note
-    Due to license restrictions, pedestrians are not include in the CARLA open
-    source project (only in the compiled binaries). Some warnings may appear
-    when starting the project related to this. We are working to find a
-    solution.
-
 To build CARLA, use the rebuild script. This script deletes all intermediate
 files, rebuilds whole CARLA, and launches the editor. Use it too for making a
 clean rebuild of CARLA
@@ -65,10 +53,6 @@ clean rebuild of CARLA
 
 It looks at the environment variable `UE4_ROOT` to find the right version of
 Unreal Engine. You can also add this variable to your "~/.bashrc" or similar.
-
-Once the project is opened, it is required to manually link Epic's Automotive
-Materials to our vehicles.
-[How to link automotive materials](how_to_add_automotive_materials.md).
 
 Later, if you need to compile some changes without doing a full rebuild, you can
 use the Makefile generated in the Unreal project folder
