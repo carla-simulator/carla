@@ -11,23 +11,12 @@
 from __future__ import print_function
 import abc
 
-from carla.planner.planner import Planner
 
 
 class Agent(object):
     def __init__(self, city_name):
         self.__metaclass__ = abc.ABCMeta
-        self._planner = Planner(city_name)
 
-    def get_distance(self, start_point, end_point):
-        path_distance = self._planner.get_shortest_path_distance(
-            [start_point.location.x, start_point.location.y, 0]
-            , [start_point.orientation.x, start_point.orientation.y, 0]
-            , [end_point.location.x, end_point.location.y, 0]
-            , [end_point.orientation.x, end_point.orientation.y, 0])
-        # We calculate the timout based on the distance
-
-        return path_distance
 
     @abc.abstractmethod
     def run_step(self, measurements, sensor_data, target):

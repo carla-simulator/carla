@@ -18,6 +18,7 @@ from builtins import input as input_data
 
 
 from carla.client import VehicleControl
+from carla.planner.planner import Planner
 
 def sldist(c1, c2):
     return math.sqrt((c2[0] - c1[0])**2 + (c2[1] - c1[1])**2)
@@ -101,19 +102,55 @@ class Benchmark(object):
         self._image_filename_format = os.path.join(
             self._full_name, '_images/episode_{:s}/{:s}/image_{:0>5d}.jpg')
 
-    def run_navigation_episode(
+
+
+        self._planner = Planner(city_name)
+
+    def get_distance(self, start_point, end_point):
+        path_distance = self._planner.get_shortest_path_distance(
+            [start_point.location.x, start_point.location.y, 0]
+            , [start_point.orientation.x, start_point.orientation.y, 0]
+            , [end_point.location.x, end_point.location.y, 0]
+            , [end_point.orientation.x, end_point.orientation.y, 0])
+        # We calculate the timout based on the distance
+
+        return path_distance
+
+
+    def _save_images_if_activated(self,sensor_data, episode_name, frame):
+
+        if self._save_images:
+            for name, image in sensor_data.items():
+                image.save_to_disk(self._image_filename_format.format(
+                    episode_name, name, frame))
+
+    def _run_navigation_episode(
             self,
             agent,
-            carla,
+            client,
             time_out,
             target,
             episode_name):
 
-        measurements, sensor_data = carla.read_data()
-        carla.send_control(VehicleControl())
+        """
+         Run one episode of the benchmark (Pose ) for a certain agent.
 
-        t0 = measurements.game_timestamp
-        t1 = t0
+
+        Args:
+            agent: the agent object
+            client: an object of the carla client to communicate
+            with the CARLA simulator
+            time_out: the time limit to complete this episode
+            target: the target to reach
+            episode_name: The name for saving images of this episode
+
+        """
+
+        measurements, sensor_data = client.read_data()
+        client.send_control(VehicleControl())
+
+        initial_timestamp = measurements.game_timestamp
+        current_timestamp = initial_timestamp
         success = False
         measurement_vec = []
         # The vector containing all controls produced on this episode
@@ -121,22 +158,18 @@ class Benchmark(object):
         frame = 0
         distance = 10000
 
-        while(t1 - t0) < (time_out * 1000) and not success:
-            measurements, sensor_data = carla.read_data()
+        while(current_timestamp - initial_timestamp) < (time_out * 1000) and not success:
 
-            control = agent.run_step(measurements, sensor_data, target)
+            # Read data from server with the client
+            measurements, sensor_data = client.read_data()
+            # The directions to reach the goal are calculated.
+            directions = self._planner.get_next_command()
+            # Agent process the data.
+            control = agent.run_step(measurements, sensor_data, directions, target)
+            #
+            client.send_control(control)
 
-            logging.info("Controller is Inputting:")
-            logging.info('Steer = %f Throttle = %f Brake = %f ',
-                         control.steer, control.throttle, control.brake)
-
-            carla.send_control(control)
-
-            # measure distance to target
-            if self._save_images:
-                for name, image in sensor_data.items():
-                    image.save_to_disk(self._image_filename_format.format(
-                        episode_name, name, frame))
+            self._save_images_if_activated(sensor_data, episode_name, frame)
 
             curr_x = measurements.player_measurements.transform.location.x
             curr_y = measurements.player_measurements.transform.location.y
@@ -144,7 +177,14 @@ class Benchmark(object):
             measurement_vec.append(measurements.player_measurements)
             control_vec.append(control)
 
-            t1 = measurements.game_timestamp
+
+
+            logging.info("Controller is Inputting:")
+            logging.info('Steer = %f Throttle = %f Brake = %f ',
+                         control.steer, control.throttle, control.brake)
+
+
+            current_timestamp = measurements.game_timestamp
 
             distance = sldist([curr_x, curr_y],
                               [target.location.x, target.location.y])
@@ -161,10 +201,10 @@ class Benchmark(object):
             frame += 1
 
         if success:
-            return 1, measurement_vec, control_vec, float(t1 - t0) / 1000.0, distance
+            return 1, measurement_vec, control_vec, float(current_timestamp - initial_timestamp) / 1000.0, distance
         return 0, measurement_vec, control_vec, time_out, distance
 
-    def benchmark_agent(self, agent, carla):
+    def benchmark_agent(self, agent, client):
         if self._line_on_file == 0:
             # The fixed name considering all the experiments being run
             with open(os.path.join(self._full_name,
@@ -187,7 +227,7 @@ class Benchmark(object):
 
         for experiment in self._experiments[start_task:]:
 
-            positions = carla.load_settings(
+            positions = client.load_settings(
                 experiment.conditions).player_start_spots
 
             with open(self._internal_log_name, 'a+') as log:
@@ -200,7 +240,7 @@ class Benchmark(object):
                     start_point = pose[0]
                     end_point = pose[1]
 
-                    carla.start_episode(start_point)
+                    client.start_episode(start_point)
 
                     logging.info('======== !!!! ==========')
                     logging.info(' Start Position %d End Position %d ',
@@ -222,7 +262,7 @@ class Benchmark(object):
                     # running the agent
                     (result, reward_vec, control_vec, final_time, remaining_distance) = \
                         self.run_navigation_episode(
-                            agent, carla, time_out, positions[end_point],
+                            agent, client, time_out, positions[end_point],
                             str(experiment.Conditions.WeatherId) + '_'
                         + str(experiment.id) + '_' + str(start_point)
                         + '.' + str(end_point))
