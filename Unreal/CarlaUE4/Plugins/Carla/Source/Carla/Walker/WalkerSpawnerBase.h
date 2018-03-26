@@ -118,5 +118,7 @@ private:
   UPROPERTY(Category = "Walker Spawner", VisibleAnywhere, AdvancedDisplay)
   TArray<ACharacter *> WalkersBlackList;
 
-  uint32 CurrentIndexToCheck = 0u;
+  uint32 CurrentWalkerIndexToCheck = 0u;
+
+  uint32 CurrentBlackWalkerIndexToCheck = 0u;
 };
