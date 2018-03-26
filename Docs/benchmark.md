@@ -121,5 +121,5 @@ parameters. It returns a dictionary with the metrics.
 of frames that the agent needs to keep doing the infraction for
 it to be counted as another infraction. 
 
-*Frames Skip: It is related to the number of frames you have
-to skip after a collision or a intersection starts.
+*Frames Skip: It is related to the number of frames that are
+skipped after a collision or a intersection starts.
