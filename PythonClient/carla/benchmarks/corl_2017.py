@@ -31,6 +31,7 @@ class CoRL2017(Benchmark):
 
         # Define all the parameters used to compute the driving summary.
 
+
         self._metrics_parameters = {
 
             'intersection_offroad': {'frames_skip': 10,  # Check intersection always with 10 frames tolerance
@@ -56,6 +57,11 @@ class CoRL2017(Benchmark):
             'dynamic_episodes': [3]
 
         }
+
+
+        # All the weather used on the episode.
+        self._weathers = [1, 3, 6, 8, 4, 14]
+
 
         Benchmark.__init__(self, city_name,
                            name_to_save,
@@ -196,7 +202,6 @@ class CoRL2017(Benchmark):
         camera.set_position(2.0, 0.0, 1.4)
         camera.set_rotation(-15.0, 0, 0)
 
-        weathers = [1, 3, 6, 8, 4, 14]
         if self._city_name == 'Town01':
             poses_tasks = self._poses_town01()
             vehicles_tasks = [0, 0, 0, 20]
@@ -208,7 +213,7 @@ class CoRL2017(Benchmark):
 
         experiments_vector = []
 
-        for weather in weathers:
+        for weather in self._weathers:
 
             for iteration in range(len(poses_tasks)):
                 poses = poses_tasks[iteration]
@@ -251,8 +256,12 @@ class CoRL2017(Benchmark):
         on the log file.
         """
         """
-            Warning: assumes that all tasks have the same size
+            Warning: assumes that all experiments have the same size
         """
+
+
+
+
         if self._city_name == 'Town01':
             return line_on_file / len(self._poses_town01()[0]), line_on_file % len(self._poses_town01()[0])
         else:
