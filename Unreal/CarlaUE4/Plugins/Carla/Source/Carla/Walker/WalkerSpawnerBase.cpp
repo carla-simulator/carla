@@ -10,10 +10,10 @@
 #include "Util/RandomEngine.h"
 #include "Walker/WalkerAIController.h"
 #include "Walker/WalkerSpawnPoint.h"
-
 #include "Components/BoxComponent.h"
 #include "EngineUtils.h"
 #include "GameFramework/Character.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 // =============================================================================
 // -- Static local methods -----------------------------------------------------
@@ -112,61 +112,107 @@ void AWalkerSpawnerBase::Tick(float DeltaTime)
 
   if (WalkersBlackList.Num() > 0) 
   {
-    // If still stuck in the black list, just kill it.
-    const int32 BlackListedIndex = (++CurrentIndexToCheck % WalkersBlackList.Num());
-    ACharacter* BlackListedWalker = WalkersBlackList[BlackListedIndex];
-	if(BlackListedWalker != nullptr && IsValid(BlackListedWalker))
+	CurrentBlackWalkerIndexToCheck = ++CurrentBlackWalkerIndexToCheck % WalkersBlackList.Num();
+    ACharacter* BlackListedWalker = WalkersBlackList[CurrentBlackWalkerIndexToCheck];
+	AWalkerAIController* controller = BlackListedWalker!=nullptr?Cast<AWalkerAIController>(BlackListedWalker->GetController()):nullptr;
+	if(BlackListedWalker != nullptr && controller!=nullptr && IsValid(BlackListedWalker))
 	{
       const auto Status = GetWalkerStatus(BlackListedWalker);
+	  const char* name = TCHAR_TO_UTF8(*UKismetSystemLibrary::GetDisplayName(BlackListedWalker));
+	  if(strcmp("",name)==0)
+      {  
+		UE_LOG(LogCarla,Log,TEXT("empty name"));
+	  }
+	  UE_LOG(LogCarla, Log, TEXT("Watching walker %s with state %d"), *UKismetSystemLibrary::GetDisplayName(BlackListedWalker), (int)Status);
 	  switch(Status)
 	  {
-	    case EWalkerStatus::MoveCompleted:
-	    case EWalkerStatus::Invalid:
 	    case EWalkerStatus::RunOver:{
-	      WalkersBlackList.RemoveAtSwap(BlackListedIndex);
-          if (Status != EWalkerStatus::RunOver) {
-            BlackListedWalker->Destroy();
-          } 
+		  //remove from list and wait for auto-destroy
+	      WalkersBlackList.RemoveAtSwap(CurrentBlackWalkerIndexToCheck);
 	      break;
 	    }
-	    case EWalkerStatus::Stuck: 
-	  	  if(!TrySetDestination(*BlackListedWalker)){
-	  	   SetRandomWalkerDestination(BlackListedWalker);
-	  	  }
-		  WalkersBlackList.RemoveAtSwap(BlackListedIndex);
+		case EWalkerStatus::MoveCompleted:
+		{
+	      BlackListedWalker->Destroy();
+		  break;	    
+		}
+	    default: {
+		  switch(controller->GetMoveStatus())
+		  {
+			case EPathFollowingStatus::Idle: 
+			  if(!TrySetDestination(*BlackListedWalker))
+			  {
+	  		    if(!SetRandomWalkerDestination(BlackListedWalker))
+	  		    {
+		  	  	  UE_LOG(LogCarla,Error,TEXT("Could not set a random destination to walker %s"),*UKismetSystemLibrary::GetDisplayName(BlackListedWalker));
+	  		    }
+	  		  }
+			  break;
+			case EPathFollowingStatus::Waiting: 
+			  //incomplete path
+
+		  	  break;
+			case EPathFollowingStatus::Paused: 
+			  //waiting for blueprint code 
+		  	  break;
+			case EPathFollowingStatus::Moving:			  
+			  if(BlackListedWalker->GetVelocity().Size()>1.0f)
+			  {
+			    WalkersBlackList.RemoveAtSwap(CurrentBlackWalkerIndexToCheck);
+		        Walkers.Add(BlackListedWalker);
+			  }
+		  	  break;
+			default: break;
+		  }
 	  	  break;
-	    default: case EWalkerStatus::Unknown: case EWalkerStatus::Paused: break;
+		}
+	    
 	  }
+	  UE_LOG(LogCarla, Log, TEXT("New state for walker %s : %d"), *UKismetSystemLibrary::GetDisplayName(BlackListedWalker), (int)GetWalkerStatus(BlackListedWalker));
     } 
-  	else
-    {
-	    WalkersBlackList.RemoveAtSwap(BlackListedIndex);
-    }
+  	
   }
 
   if (Walkers.Num() > 0) 
   {
-    // Check one walker, if fails black-list it or kill it.
-    const int32 WalkerIndex = (++CurrentIndexToCheck % Walkers.Num());
-    auto Walker = Walkers[WalkerIndex];
-    const auto Status = GetWalkerStatus(Walker);
-
-    if ((Status == EWalkerStatus::MoveCompleted) ||
-        (Status == EWalkerStatus::Invalid) ||
-        (Status == EWalkerStatus::RunOver)) {
-      // Kill it.
-      Walkers.RemoveAtSwap(WalkerIndex);
-      // If it was run over will self-destroy.
-      if ((Walker != nullptr) && (Status != EWalkerStatus::RunOver)) {
-        Walker->Destroy();
-      }
-    } else if (Status == EWalkerStatus::Stuck) 
+  	// Check one walker, if fails black-list it or kill it.
+	CurrentWalkerIndexToCheck = ++CurrentWalkerIndexToCheck % Walkers.Num();
+    auto Walker = Walkers[CurrentWalkerIndexToCheck];
+	const char* walker_name = TCHAR_TO_UTF8(*UKismetSystemLibrary::GetDisplayName(Walker));
+	if(strcmp(walker_name,""))
 	{
-	  SetRandomWalkerDestination(Walker);
-      // Black-list it.
-	  WalkersBlackList.Add(Walker);
-      Walkers.RemoveAtSwap(WalkerIndex);
+		printf("hehh %s",walker_name);
+	}
+	if(Walker == nullptr || !IsValid(Walker))
+	{
+	  Walkers.RemoveAtSwap(CurrentWalkerIndexToCheck);
+	} else {
+	  const auto Status = GetWalkerStatus(Walker);
+  	  switch (Status)
+	  {
+		default: 
+		case EWalkerStatus::Paused:
+		case EWalkerStatus::Unknown:
+		  break;
+	    case EWalkerStatus::RunOver: {
+          Walkers.RemoveAtSwap(CurrentWalkerIndexToCheck);
+	      break;
+	     }
+	     case EWalkerStatus::MoveCompleted:
+		  Walker->Destroy();
+		  break;
+  	  	 case EWalkerStatus::Invalid:
+	     case EWalkerStatus::Stuck:
+	     {
+		   SetRandomWalkerDestination(Walker);
+		   // Black-list it and wait for this walker to move
+		   WalkersBlackList.Add(Walker);
+		   Walkers.RemoveAtSwap(CurrentWalkerIndexToCheck);
+		   break;
+         }
+	  }
     }
+
   }
 }
 
@@ -174,10 +220,28 @@ bool AWalkerSpawnerBase::SetRandomWalkerDestination(ACharacter *Walker)
 {
 	const auto &DestinationPoint = GetRandomSpawnPoint();
 	auto Controller = GetController(Walker);
-	if(!Controller) return false;
-	Controller->MoveTo(DestinationPoint.GetActorLocation());
-	
-	return true;
+	if(!Controller) {
+	  UE_LOG(LogCarla, Warning, TEXT("AWalkerSpawnerBase::SetRandomWalkerDestination: Walker %s has no controller"), 
+	   *UKismetSystemLibrary::GetDisplayName(Walker)
+      );
+	  return false;
+	}
+	const EPathFollowingRequestResult::Type request_result = Controller->MoveToLocation(DestinationPoint.GetActorLocation(),-1.0f,false,true,true,true,nullptr,true);
+	switch(request_result)
+	{
+	  case EPathFollowingRequestResult::Type::Failed:
+	  {
+	    UE_LOG(LogCarla, Warning, TEXT("AWalkerSpawnerBase::SetRandomWalkerDestination: Bad destination point %s"), 
+		  *UKismetSystemLibrary::GetDisplayName(&DestinationPoint)
+		);
+	    return false;
+	  }
+	  case EPathFollowingRequestResult::Type::AlreadyAtGoal:{
+		UE_LOG(LogCarla, Log, TEXT("AWalkerSpawnerBase::SetRandomWalkerDestination already in destination, generating new location"));
+	  	return SetRandomWalkerDestination(Walker);
+	  }
+	  default: case EPathFollowingRequestResult::Type::RequestSuccessful: return true;
+	}
 }
 
 // =============================================================================
@@ -236,7 +300,10 @@ bool AWalkerSpawnerBase::TryToSpawnWalkerAt(const AWalkerSpawnPointBase &SpawnPo
 
   // Add walker and set destination.
   Walkers.Add(Walker);
-  Controller->MoveToLocation(Destination);
+  if (Controller->MoveToLocation(Destination,-1.0f,false,true,true,true,nullptr,true)!=EPathFollowingRequestResult::Type::RequestSuccessful)
+  {
+    SetRandomWalkerDestination(Walker);
+  }
   return true;
 }
 
@@ -259,6 +326,5 @@ bool AWalkerSpawnerBase::TrySetDestination(ACharacter &Walker)
     return false;
   }
 
-  Controller->MoveToLocation(Destination);
-  return true;
+  return Controller->MoveToLocation(Destination,-1.0f,false,true,true,true,nullptr,true)==EPathFollowingRequestResult::RequestSuccessful;
 }
