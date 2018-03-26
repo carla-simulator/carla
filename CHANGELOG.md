@@ -1,3 +1,50 @@
+## CARLA 0.8.0
+
+  * Upgraded to Unreal Engine 4.18
+  * Created our own pedestrian 3D models free to use and distribute
+  * Removed Epic's Automotive Materials dependencies
+  * 360 Lidars support (similar to Velodyne HDL-32E or VLP-16) thanks to Anton Pechenko (Yandex)
+    - Ray-cast based
+    - Configurable settings
+    - Added methods to save points to disk as PLY file
+  * Added quality level settings
+    - Low: low quality graphics, about 3 times faster with one camera
+    - Epic: best quality (as before)
+  * Measurements now use SI units
+    - Locations:    m
+    - Speed:        m/s
+    - Acceleration: m/s^2
+    - Collisions:   kg*m/s
+    - Angles:       degrees
+  * Added API methods to convert depth images to a point cloud
+    - New method "image_converter.depth_to_local_point_cloud"
+    - A supplementary image can be passed to attach colors to the points
+    - New client example generates a point cloud in world coordinates
+    - Added Transform class to Python API
+  * Performance optimizations
+    - Significant speed improvements in both Epic and Low modes
+    - Fixed materials and improved shaders for roads, architecture, sidewalks, foliage, landscapes, cars, walkers, reflections, water
+    - Execution of a set of Project and Engine parameters to improve performance (quality, vsync, AO, occlusion)
+    - Generation of the road pieces using static meshes and actors instead of a single actor with instanced meshes
+      - Improved performance since now is able to apply occlusion and draw distance
+    - Images are captured asynchronously in the render thread
+      - In asynchronous mode, images may arrive up to two frames later
+      - In synchronous mode, game thread is blocked until images are ready
+    - Blueprint code optimizations for vehicles, walkers, and splines
+    - Added a way to configure different quality levels with culling distance and materials configuration
+  * Refactored sensor related code to ease adding new sensors in the future
+  * Added vehicle box extent to player measurements
+  * Removed the player from the list of non-player agents
+  * Adjusted bounding boxes to vehicles' height
+  * Changed vehicles' center to match bounding box
+  * Added autopilot mode to manual_control.py
+  * Added quality level options to manual_control.py and client_example.py
+  * Replaced background landscape and trees by a matte painting
+  * Fixed road map generated some meshes twice
+  * Small improvements to Windows support
+    - Fixed issues with the Makefile
+    - Fixed asset names too long or containing special characters
+
 ## CARLA 0.7.1
 
   * New Python API module: Benchmark
