@@ -1,10 +1,12 @@
-How to add the automotive materials
-===================================
+<h1>How to link Epic's Automotive Materials</h1>
 
-CARLA uses Epic Game's Automotive Materials package for a realistic car paint
-look. Due to license restrictions we are not allowed to redistribute this
-package. In this document we explain how to download and link these materials to
-our vehicles.
+!!! important
+    Since version 0.8.0 CARLA does not use Epic's _Automotive Materials_ by
+    default. However, you can still enable them if you compile from source.
+
+Epic Game's provides a set of realistic _Automotive Materials_ free to use. In
+this document we explain how to download and link these materials to our
+vehicles for a more realistic car paint.
 
 Download from Marketplace
 -------------------------
