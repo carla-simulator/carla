@@ -114,7 +114,7 @@ function
 The function receives the full path to the execution log and a dictionary with
 parameters. It returns a dictionary with the metrics.
 
- The parameters are:
+The parameters are:
 * Threshold: The threshold used by the metrics.
 
 * Frames  Recount: After making the infraction, set the number
