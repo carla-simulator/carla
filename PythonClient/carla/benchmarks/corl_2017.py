@@ -16,6 +16,8 @@ from .experiment import Experiment
 from carla.sensor import Camera
 from carla.settings import CarlaSettings
 
+from carla.planner.planner import Planner
+
 from .metrics import compute_summary
 
 
@@ -59,15 +61,27 @@ class CoRL2017(Benchmark):
         }
 
 
-        # All the weather used on the episode.
+        # All the weather used on this benchmar
         self._weathers = [1, 3, 6, 8, 4, 14]
 
+        # The global planner is part of the corl2017 benchmark.
+        self._planner = Planner(city_name)
 
         Benchmark.__init__(self, city_name,
                            name_to_save,
                            continue_experiment,
                            save_images,
                            distance_for_success)
+
+
+
+    def get_number_of_poses_task(self):
+
+        if self._city_name == 'Town01':
+            return len(self._poses_town01()[0])
+        else:
+            return len(self._poses_town02()[0])
+
 
     def get_all_statistics(self):
 
@@ -113,13 +127,18 @@ class CoRL2017(Benchmark):
                             print('    Task ', count, ' -> ', t)
                         count += 1
 
-    def _calculate_time_out(self, distance):
+    def _calculate_time_out(self, start_point, end_point):
         """
         Function to return the timeout ( in miliseconds) that is calculated based on distance to goal.
         This is the same timeout as used on the CoRL paper.
         """
+        path_distance = self._planner.get_shortest_path_distance(
+            [start_point.location.x, start_point.location.y, 0]
+            , [start_point.orientation.x, start_point.orientation.y, 0]
+            , [end_point.location.x, end_point.location.y, 0]
+            , [end_point.orientation.x, end_point.orientation.y, 0])
 
-        return ((distance / 1000.0) / 10.0) * 3600.0 + 10.0
+        return ((path_distance / 1000.0) / 10.0) * 3600.0 + 10.0
 
     def _poses_town01(self):
         """
@@ -250,19 +269,4 @@ class CoRL2017(Benchmark):
         # Function to get automatic information from the experiment for writing purposes
         return 'corl2017_' + self._city_name
 
-    def _get_pose_and_task(self, line_on_file):
-        """
-        Returns the pose and task this experiment is, based on the line it was
-        on the log file.
-        """
-        """
-            Warning: assumes that all experiments have the same size
-        """
 
-
-
-
-        if self._city_name == 'Town01':
-            return line_on_file / len(self._poses_town01()[0]), line_on_file % len(self._poses_town01()[0])
-        else:
-            return line_on_file / len(self._poses_town01()[0]), line_on_file % len(self._poses_town02()[0])
