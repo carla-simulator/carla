@@ -179,6 +179,8 @@ class CarlaGame(object):
         self._on_new_episode()
 
     def _on_new_episode(self):
+        self._carla_settings.randomize_seeds()
+        self._carla_settings.randomize_weather()
         scene = self.client.load_settings(self._carla_settings)
         number_of_player_starts = len(scene.player_start_spots)
         player_start = np.random.randint(number_of_player_starts)

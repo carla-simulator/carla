@@ -1,5 +1,4 @@
-Cameras and sensors
-===================
+<h1>Cameras and sensors</h1>
 
 !!! important
     Since version 0.8.0 the positions of the sensors are specified in meters
@@ -59,7 +58,7 @@ in the Camera. We use the following post process effects:
 
 [postprolink]: https://docs.unrealengine.com/latest/INT/Engine/Rendering/PostProcessEffects/
 
-###### Python
+<h6>Python</h6>
 
 ```py
 camera = carla.sensor.Camera('MyCamera', PostProcessing='SceneFinal')
@@ -71,7 +70,7 @@ camera.set_rotation(pitch=0, yaw=0, roll=0)
 carla_settings.add_sensor(camera)
 ```
 
-###### CarlaSettings.ini
+<h6>CarlaSettings.ini</h6>
 
 ```ini
 [CARLA/Sensor/MyCamera]
@@ -120,7 +119,7 @@ The generated "depth map" images are usually converted to a logarithmic
 grayscale for display. A point cloud can also be extracted from depth images as
 seen in "PythonClient/point_cloud_example.py".
 
-###### Python
+<h6>Python</h6>
 
 ```py
 camera = carla.sensor.Camera('MyCamera', PostProcessing='Depth')
@@ -132,7 +131,7 @@ camera.set_rotation(pitch=0, yaw=0, roll=0)
 carla_settings.add_sensor(camera)
 ```
 
-###### CarlaSettings.ini
+<h6>CarlaSettings.ini</h6>
 
 ```ini
 [CARLA/Sensor/MyCamera]
@@ -190,7 +189,7 @@ _"Unreal/CarlaUE4/Content/Static/Pedestrians"_ folder it's tagged as pedestrian.
     and its corresponding filepath check inside `GetLabelByFolderName()`
     function in "Tagger.cpp".
 
-###### Python
+<h6>Python</h6>
 
 ```py
 camera = carla.sensor.Camera('MyCamera', PostProcessing='SemanticSegmentation')
@@ -202,7 +201,7 @@ camera.set_rotation(pitch=0, yaw=0, roll=0)
 carla_settings.add_sensor(camera)
 ```
 
-###### CarlaSettings.ini
+<h6>CarlaSettings.ini</h6>
 
 ```ini
 [CARLA/Sensor/MyCamera]
@@ -243,7 +242,7 @@ channels                   | uint32     | Number of channels (lasers) of the lid
 point_count_by_channel     | uint32     | Number of points per channel captured this frame.
 point_cloud                | PointCloud | Captured points this frame.
 
-###### Python
+<h6>Python</h6>
 
 ```py
 lidar = carla.sensor.Lidar('MyLidar')
@@ -260,7 +259,7 @@ lidar.set_rotation(pitch=0, yaw=0, roll=0)
 carla_settings.add_sensor(lidar)
 ```
 
-###### CarlaSettings.ini
+<h6>CarlaSettings.ini</h6>
 
 ```ini
 [CARLA/Sensor/MyLidar]
