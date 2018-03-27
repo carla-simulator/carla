@@ -7,18 +7,15 @@
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
 
-import csv
-import datetime
 import math
 import os
 import abc
 import logging
 
-from builtins import input as input_data
 
+from .recording import Recording
 
 from carla.client import VehicleControl
-from carla.planner.planner import Planner
 
 def sldist(c1, c2):
     return math.sqrt((c2[0] - c1[0])**2 + (c2[1] - c1[1])**2)
@@ -29,12 +26,13 @@ class Benchmark(object):
     """
     The Benchmark class, controls the execution of the benchmark by an
     Agent class.
-    The benchmark class must be inherited
+    The benchmark class must be inherited with a class that defines the
+    all the experiments to be run by the agent
     """
     def __init__(
             self,
-            city_name,
-            name_to_save,
+            city_name='Town01',
+            name_to_save='Test',
             continue_experiment=True,
             save_images=False,
             distance_for_success=2.0
@@ -44,85 +42,22 @@ class Benchmark(object):
         self.__metaclass__ = abc.ABCMeta
 
         self._city_name = city_name
-
-
-
         self._base_name = name_to_save
-        self._dict_stats = {'exp_id': -1,
-                            'rep': -1,
-                            'weather': -1,
-                            'start_point': -1,
-                            'end_point': -1,
-                            'result': -1,
-                            'initial_distance': -1,
-                            'final_distance': -1,
-                            'final_time': -1,
-                            'time_out': -1
-                            }
 
-        self._dict_measurements = {'exp_id': -1,
-                              'rep': -1,
-                              'weather': -1,
-                              'start_point': -1,
-                              'end_point': -1,
-                              'collision_general': -1,
-                              'collision_pedestrians': -1,
-                              'collision_vehicles': -1,
-                              'intersection_otherlane': -1,
-                              'intersection_offroad': -1,
-                              'pos_x': -1,
-                              'pos_y': -1,
-                              'steer': -1,
-                              'throttle': -1,
-                              'brake': -1
-                              }
-
-        # The minimum distance for arriving into the goal point in order to consider ir a success
+        # The minimum distance for arriving into the goal point in
+        # order to consider ir a success
         self._distance_for_success = distance_for_success
-
+        # build all the experiments to be evaluated, this function is redefined
+        # on a benchmark derivate class
         self._experiments = self._build_experiments()
-        # Create the log files and get the names
-        self._suffix_name, self._full_name = self._create_log_record(name_to_save, self._experiments)
-        # Get the line for the experiment to be continued
-        self._line_on_file = self._continue_experiment(continue_experiment)
-
-
-        folder = os.path.dirname(self._full_name)
-        if not os.path.isdir(folder):
-            os.makedirs(folder)
-
-        # A log with a date file: to show when was the last access and log what was tested,
-
-        now = datetime.datetime.now()
-        self._internal_log_name = os.path.join(self._full_name, 'log_' + now.strftime("%Y%m%d%H%M"))
+        # The object used to record the benchmark and to able to continue after
+        self._recording = Recording(city_name=city_name, name_to_save=name_to_save
+                                    , continue_experiment=continue_experiment
+                                    , save_images=save_images)
 
 
 
-        self._save_images = save_images
-        self._image_filename_format = os.path.join(
-            self._full_name, '_images/episode_{:s}/{:s}/image_{:0>5d}.jpg')
 
-
-
-        self._planner = Planner(city_name)
-
-    def get_distance(self, start_point, end_point):
-        path_distance = self._planner.get_shortest_path_distance(
-            [start_point.location.x, start_point.location.y, 0]
-            , [start_point.orientation.x, start_point.orientation.y, 0]
-            , [end_point.location.x, end_point.location.y, 0]
-            , [end_point.orientation.x, end_point.orientation.y, 0])
-        # We calculate the timout based on the distance
-
-        return path_distance
-
-
-    def _save_images_if_activated(self,sensor_data, episode_name, frame):
-
-        if self._save_images:
-            for name, image in sensor_data.items():
-                image.save_to_disk(self._image_filename_format.format(
-                    episode_name, name, frame))
 
     def _run_navigation_episode(
             self,
@@ -133,7 +68,7 @@ class Benchmark(object):
             episode_name):
 
         """
-         Run one episode of the benchmark (Pose ) for a certain agent.
+         Run one episode of the benchmark (Pose) for a certain agent.
 
 
         Args:
@@ -146,93 +81,99 @@ class Benchmark(object):
 
         """
 
+        # Send an initial command.
         measurements, sensor_data = client.read_data()
         client.send_control(VehicleControl())
 
         initial_timestamp = measurements.game_timestamp
         current_timestamp = initial_timestamp
-        success = False
+
+        # The vector containing all measurements produced on this episode
         measurement_vec = []
         # The vector containing all controls produced on this episode
         control_vec = []
         frame = 0
         distance = 10000
+        success = False
 
         while(current_timestamp - initial_timestamp) < (time_out * 1000) and not success:
 
             # Read data from server with the client
             measurements, sensor_data = client.read_data()
             # The directions to reach the goal are calculated.
-            directions = self._planner.get_next_command()
+            directions = self._get_directions(measurements.player_measurements.transform, target)
             # Agent process the data.
             control = agent.run_step(measurements, sensor_data, directions, target)
-            #
+            # Send the control commands to the vehicle
             client.send_control(control)
 
-            self._save_images_if_activated(sensor_data, episode_name, frame)
+            # save images if the flag is activated
+            self._recording.save_images(sensor_data, episode_name, frame)
 
-            curr_x = measurements.player_measurements.transform.location.x
-            curr_y = measurements.player_measurements.transform.location.y
-
-            measurement_vec.append(measurements.player_measurements)
-            control_vec.append(control)
-
-
+            current_x = measurements.player_measurements.transform.location.x
+            current_y = measurements.player_measurements.transform.location.y
 
             logging.info("Controller is Inputting:")
             logging.info('Steer = %f Throttle = %f Brake = %f ',
-                         control.steer, control.throttle, control.brake)
-
+                           control.steer, control.throttle, control.brake)
 
             current_timestamp = measurements.game_timestamp
-
-            distance = sldist([curr_x, curr_y],
+            distance = sldist([current_x, current_y],
                               [target.location.x, target.location.y])
 
             logging.info('Status:')
             logging.info(
                 '[d=%f] c_x = %f, c_y = %f ---> t_x = %f, t_y = %f',
-                float(distance), curr_x, curr_y, target.location.x,
-                 target.location.y)
+                float(distance), current_x, current_y, target.location.x,
+                target.location.y)
 
             if distance < self._distance_for_success:
                 success = True
 
+            # Increment the vectors and append the measurements and controls.
             frame += 1
+            measurement_vec.append(measurements.player_measurements)
+            control_vec.append(control)
 
         if success:
             return 1, measurement_vec, control_vec, float(current_timestamp - initial_timestamp) / 1000.0, distance
         return 0, measurement_vec, control_vec, time_out, distance
 
     def benchmark_agent(self, agent, client):
-        if self._line_on_file == 0:
-            # The fixed name considering all the experiments being run
-            with open(os.path.join(self._full_name,
-                                   self._suffix_name), 'w') as ofd:
+        """
+        Function to benchmark the agent.
+        Check the log file for this benchmark.
+        Continue from the experiment where it stopped.
 
-                w = csv.DictWriter(ofd, self._dict_stats.keys())
-                w.writeheader()
 
-            with open(os.path.join(self._full_name,
-                                   'details_' + self._suffix_name), 'w') as rfd:
 
-                rw = csv.DictWriter(rfd, self._dict_measurements.keys())
-                rw.writeheader()
-            start_task = 0
-            start_pose = 0
-        else:
-            (start_task, start_pose) = self._get_pose_and_task(self._line_on_file -1)
+        Args:
+             agent:
+             client:
 
-        logging.info(' START ')
 
-        for experiment in self._experiments[start_task:]:
+        Return:
+            A dictionary with all the metrics computed from the
+            agent running the set of experiments.
+        """
+
+
+        # Function return the current pose and task for this benchmark.
+        start_experiment, start_pose = self._recording.get_pose_and_experiment(
+                                                       self._get_number_of_poses_task())
+
+        logging.info('START')
+
+        for experiment in self._experiments[start_experiment:]:
 
             positions = client.load_settings(
                 experiment.conditions).player_start_spots
 
+
+            self._recording.log_start()
+
             with open(self._internal_log_name, 'a+') as log:
                 log.write('Start Experiment %d \n' % experiment.id)
-
 
             for pose in experiment.poses[start_pose:]:
                 for rep in range(experiment.repetitions):
@@ -244,177 +185,72 @@ class Benchmark(object):
 
                     logging.info('======== !!!! ==========')
                     logging.info(' Start Position %d End Position %d ',
-                                 start_point, end_point)
+                                   start_point, end_point)
 
+
+                    self._recording.log_poses()
 
                     with open(self._internal_log_name, 'a+') as log:
-                        log.write(' Start Test  (%d  %d ) on weather %d \n ' %
+                        log.write(' Start Poses  (%d  %d ) on weather %d \n ' %
                                   (start_point, end_point, experiment.Conditions.WeatherId))
 
-                    path_distance = agent.get_distance(
-                        positions[start_point], positions[end_point])
+
+
+                    # Calculate the initial distance for this episode
                     euclidean_distance = \
                         sldist([positions[start_point].location.x, positions[start_point].location.y],
                         [positions[end_point].location.x, positions[end_point].location.y])
 
-                    time_out = self._calculate_time_out(path_distance)
+                    time_out = self._calculate_time_out(positions[start_point], positions[end_point])
 
                     # running the agent
                     (result, reward_vec, control_vec, final_time, remaining_distance) = \
-                        self.run_navigation_episode(
+                        self._run_navigation_episode(
                             agent, client, time_out, positions[end_point],
                             str(experiment.Conditions.WeatherId) + '_'
-                        + str(experiment.id) + '_' + str(start_point)
-                        + '.' + str(end_point))
+                            + str(experiment.id) + '_' + str(start_point)
+                            + '.' + str(end_point))
 
                     # compute stats for the experiment
 
-                    self._write_summary_results(
+                    self._recording._write_summary_results(
                         experiment, pose, rep, euclidean_distance,
                         remaining_distance, final_time, time_out, result)
+
+                    self._recording._write_details_results(experiment, rep, pose, reward_vec, control_vec)
+
                     with open(self._internal_log_name, 'a+') as log:
                         log.write('Finished Experiment')
-                    self._write_details_results(experiment, rep, pose, reward_vec, control_vec)
 
                     if result > 0:
                         logging.info('+++++ Target achieved in %f seconds! +++++',
-                              final_time)
+                                       final_time)
                     else:
                         logging.info('----- Timeout! -----')
-        with open(self._internal_log_name, 'a+') as log:
+
+
+        self._recording.log_end()
+        with open(self._recording._internal_log_name, 'a+') as log:
             log.write('====== Finished Entire Benchmark ======')
         return self.get_all_statistics()
-
-    def _write_summary_results(self, experiment, pose, rep,
-                               path_distance, remaining_distance,
-                               final_time, time_out, result):
-
-        self._dict_stats['exp_id'] = experiment.id
-        self._dict_stats['rep'] = rep
-        self._dict_stats['weather'] = experiment.Conditions.WeatherId
-        self._dict_stats['start_point'] = pose[0]
-        self._dict_stats['end_point'] = pose[1]
-        self._dict_stats['result'] = result
-        self._dict_stats['initial_distance'] = path_distance
-        self._dict_stats['final_distance'] = remaining_distance
-        self._dict_stats['final_time'] = final_time
-        self._dict_stats['time_out'] = time_out
-
-        with open(os.path.join(self._full_name, self._suffix_name), 'a+') as ofd:
-
-            w = csv.DictWriter(ofd, self._dict_stats.keys())
-
-            w.writerow(self._dict_stats)
-
-    def _write_details_results(self, experiment, rep, pose, reward_vec, control_vec):
-
-        with open(os.path.join(self._full_name,
-                               'details_' + self._suffix_name), 'a+') as rfd:
-
-            rw = csv.DictWriter(rfd, self._dict_measurements.keys())
-
-            for i in range(len(reward_vec)):
-                self._dict_measurements['exp_id'] = experiment.id
-                self._dict_measurements['rep'] = rep
-                self._dict_measurements['start_point'] = pose[0]
-                self._dict_measurements['end_point'] = pose[1]
-                self._dict_measurements['weather'] = experiment.Conditions.WeatherId
-                self._dict_measurements['collision_general'] = reward_vec[
-                    i].collision_other
-                self._dict_measurements['collision_pedestrians'] = reward_vec[
-                    i].collision_pedestrians
-                self._dict_measurements['collision_vehicles'] = reward_vec[
-                    i].collision_vehicles
-                self._dict_measurements['intersection_otherlane'] = reward_vec[
-                    i].intersection_otherlane
-                self._dict_measurements['intersection_offroad'] = reward_vec[
-                    i].intersection_offroad
-                self._dict_measurements['pos_x'] = reward_vec[
-                    i].transform.location.x
-                self._dict_measurements['pos_y'] = reward_vec[
-                    i].transform.location.y
-                self._dict_measurements['steer'] = control_vec[
-                    i].steer
-                self._dict_measurements['throttle'] = control_vec[
-                    i].throttle
-                self._dict_measurements['brake'] = control_vec[
-                    i].brake
-
-                rw.writerow(self._dict_measurements)
-
-    def _create_log_record(self, base_name, experiments):
-        """
-        This function creates the log files for the benchmark.
-
-        """
-        suffix_name = self._get_experiments_names(experiments)
-        full_name = os.path.join('_benchmarks_results',
-                                  base_name + '_'
-                                  + self._get_details() + '/')
-
-
-
-        return suffix_name, full_name
-
-
-    def _continue_experiment(self, continue_experiment):
-
-        if self._experiment_exist():
-
-            if continue_experiment:
-                line_on_file = self._get_last_position()
-
-            else:
-                # Ask question, to avoid mistaken override situations
-                answer = input_data("The experiment was already found in the files"
-                               + ", Do you want to continue (y/n)? \n"
-                               )
-                if answer == 'Yes' or answer == 'y':
-                    line_on_file = self._get_last_position()
-                else:
-                    line_on_file = 0
-
-        else:
-            line_on_file = 0
-
-        return line_on_file
-
-
-
-    def _experiment_exist(self):
-        return os.path.exists(self._full_name)
-
-    def _get_last_position(self):
-        """
-            Get the last position on the experiment file
-            With this you are able to continue from there
-        :return int, position:
-        """
-
-        # Try to open, if the file is not found
-        try:
-            with open(os.path.join(self._full_name, self._suffix_name)) as f:
-                return sum(1 for _ in f)
-        except IOError:
-                return 0
-
 
 
 
     # To be redefined on subclasses on how to calculate timeout for an episode
-    @abc.abstractmethod
-    def check_if_finished(self):
-        """
-        Check if the experiment has finished
-
-        :return:
-        """
-        pass
 
 
     @abc.abstractmethod
-    def _calculate_time_out(self, distance):
+    def _calculate_time_out(self, start_point, end_point):
         pass
+
+    @abc.abstractmethod
+    def _get_number_of_poses_task(self):
+        """
+            Get the number of poses a task have for this benchmark
+        """
+        """
+            Warning: assumes that all tasks have the same size
+        """
 
     @abc.abstractmethod
     def _get_details(self):
@@ -436,9 +272,14 @@ class Benchmark(object):
         Get the statistics of the evaluated experiments
         :return:
         """
+    @abc.abstractmethod
+    def _get_directions(self, current_point, end_point):
+        """
+        Class that should return the directions to reach a certain goal
+        """
 
     @abc.abstractmethod
-    def _get_pose_and_task(self, line_on_file):
+    def _get_pose_and_experiment(self, line_on_file):
         """
         Parse the experiment depending on number of poses and tasks
         """
@@ -457,15 +298,3 @@ class Benchmark(object):
         returns the summary for the test weather/task episodes
 
         """
-    @staticmethod
-    def _get_experiments_names(experiments):
-
-        name_cat = 'w'
-
-        for experiment in experiments:
-
-            name_cat += str(experiment.Conditions.WeatherId) + '.'
-
-        return name_cat
-
-
