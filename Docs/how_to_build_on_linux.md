@@ -38,6 +38,14 @@ the steps above fail.
 Build CARLA
 -----------
 
+Clone or download the project from our
+[GitHub repository](https://github.com/carla-simulator/carla)
+
+    $ git clone https://github.com/carla-simulator/carla
+
+Note that the `master` branch contains the latest fixes and features, for the
+latest stable code may be best to switch to the `stable` branch.
+
 Run the setup script to download the content and build all dependencies. It
 takes a while
 
