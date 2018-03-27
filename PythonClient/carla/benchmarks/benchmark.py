@@ -12,23 +12,23 @@ import os
 import abc
 import logging
 
-
 from .recording import Recording
 
 from carla.client import VehicleControl
 
+
 def sldist(c1, c2):
-    return math.sqrt((c2[0] - c1[0])**2 + (c2[1] - c1[1])**2)
+    return math.sqrt((c2[0] - c1[0]) ** 2 + (c2[1] - c1[1]) ** 2)
 
 
 class Benchmark(object):
-
     """
     The Benchmark class, controls the execution of the benchmark by an
     Agent class.
     The benchmark class must be inherited with a class that defines the
     all the experiments to be run by the agent
     """
+
     def __init__(
             self,
             city_name='Town01',
@@ -36,8 +36,7 @@ class Benchmark(object):
             continue_experiment=True,
             save_images=False,
             distance_for_success=2.0
-            ):
-
+    ):
 
         self.__metaclass__ = abc.ABCMeta
 
@@ -54,10 +53,6 @@ class Benchmark(object):
         self._recording = Recording(city_name=city_name, name_to_save=name_to_save
                                     , continue_experiment=continue_experiment
                                     , save_images=save_images)
-
-
-
-
 
     def _run_navigation_episode(
             self,
@@ -96,7 +91,7 @@ class Benchmark(object):
         distance = 10000
         success = False
 
-        while(current_timestamp - initial_timestamp) < (time_out * 1000) and not success:
+        while (current_timestamp - initial_timestamp) < (time_out * 1000) and not success:
 
             # Read data from server with the client
             measurements, sensor_data = client.read_data()
@@ -115,18 +110,19 @@ class Benchmark(object):
 
             logging.info("Controller is Inputting:")
             logging.info('Steer = %f Throttle = %f Brake = %f ',
-                           control.steer, control.throttle, control.brake)
+                         control.steer, control.throttle, control.brake)
 
             current_timestamp = measurements.game_timestamp
+            # Get the distance travelled until now
             distance = sldist([current_x, current_y],
                               [target.location.x, target.location.y])
-
+            # Write status of the run on verbose mode
             logging.info('Status:')
             logging.info(
                 '[d=%f] c_x = %f, c_y = %f ---> t_x = %f, t_y = %f',
                 float(distance), current_x, current_y, target.location.x,
                 target.location.y)
-
+            # Check if reach the target
             if distance < self._distance_for_success:
                 success = True
 
@@ -136,19 +132,19 @@ class Benchmark(object):
             control_vec.append(control)
 
         if success:
-            return 1, measurement_vec, control_vec, float(current_timestamp - initial_timestamp) / 1000.0, distance
+            return 1, measurement_vec, control_vec, float(
+                current_timestamp - initial_timestamp) / 1000.0, distance
         return 0, measurement_vec, control_vec, time_out, distance
 
     def benchmark_agent(self, agent, client):
         """
         Function to benchmark the agent.
-        Check the log file for this benchmark.
-        Continue from the experiment where it stopped.
-
+        It first check the log file for this benchmark.
+            if it exist it continue from the experiment where it stopped.
 
 
         Args:
-             agent:
+             agent: an agent object with the run step class implemented.
              client:
 
 
@@ -157,10 +153,9 @@ class Benchmark(object):
             agent running the set of experiments.
         """
 
-
         # Function return the current pose and task for this benchmark.
         start_experiment, start_pose = self._recording.get_pose_and_experiment(
-                                                       self._get_number_of_poses_task())
+            self._get_number_of_poses_task())
 
         logging.info('START')
 
@@ -169,75 +164,60 @@ class Benchmark(object):
             positions = client.load_settings(
                 experiment.conditions).player_start_spots
 
-
             self._recording.log_start()
-
-            with open(self._internal_log_name, 'a+') as log:
-                log.write('Start Experiment %d \n' % experiment.id)
 
             for pose in experiment.poses[start_pose:]:
                 for rep in range(experiment.repetitions):
 
-                    start_point = pose[0]
-                    end_point = pose[1]
+                    start_index = pose[0]
+                    end_index = pose[1]
 
-                    client.start_episode(start_point)
-
+                    client.start_episode(start_index)
+                    # Print information on
                     logging.info('======== !!!! ==========')
                     logging.info(' Start Position %d End Position %d ',
-                                   start_point, end_point)
+                                 start_index, end_index)
 
-
-                    self._recording.log_poses()
-
-                    with open(self._internal_log_name, 'a+') as log:
-                        log.write(' Start Poses  (%d  %d ) on weather %d \n ' %
-                                  (start_point, end_point, experiment.Conditions.WeatherId))
-
-
+                    self._recording.log_poses(start_index, end_index,
+                                              experiment.Conditions.WeatherId)
 
                     # Calculate the initial distance for this episode
-                    euclidean_distance = \
-                        sldist([positions[start_point].location.x, positions[start_point].location.y],
-                        [positions[end_point].location.x, positions[end_point].location.y])
+                    initial_distance = \
+                        sldist(
+                            [positions[start_index].location.x, positions[start_index].location.y],
+                            [positions[end_index].location.x, positions[end_index].location.y])
 
-                    time_out = self._calculate_time_out(positions[start_point], positions[end_point])
+                    time_out = self._calculate_time_out(positions[start_index],
+                                                        positions[end_index])
 
                     # running the agent
                     (result, reward_vec, control_vec, final_time, remaining_distance) = \
                         self._run_navigation_episode(
-                            agent, client, time_out, positions[end_point],
+                            agent, client, time_out, positions[end_index],
                             str(experiment.Conditions.WeatherId) + '_'
-                            + str(experiment.id) + '_' + str(start_point)
-                            + '.' + str(end_point))
+                            + str(experiment.id) + '_' + str(start_index)
+                            + '.' + str(end_index))
 
-                    # compute stats for the experiment
-
-                    self._recording._write_summary_results(
-                        experiment, pose, rep, euclidean_distance,
+                    # Write the general status of the just run episode
+                    self._recording.write_summary_results(
+                        experiment, pose, rep, initial_distance,
                         remaining_distance, final_time, time_out, result)
 
-                    self._recording._write_details_results(experiment, rep, pose, reward_vec, control_vec)
-
-                    with open(self._internal_log_name, 'a+') as log:
-                        log.write('Finished Experiment')
+                    # Write the details of this episode.
+                    self._recording.write_details_results(experiment, rep, pose, reward_vec,
+                                                           control_vec)
 
                     if result > 0:
                         logging.info('+++++ Target achieved in %f seconds! +++++',
-                                       final_time)
+                                     final_time)
                     else:
                         logging.info('----- Timeout! -----')
 
-
         self._recording.log_end()
-        with open(self._recording._internal_log_name, 'a+') as log:
-            log.write('====== Finished Entire Benchmark ======')
+
         return self.get_all_statistics()
 
-
-
     # To be redefined on subclasses on how to calculate timeout for an episode
-
 
     @abc.abstractmethod
     def _calculate_time_out(self, start_point, end_point):
@@ -258,6 +238,7 @@ class Benchmark(object):
         Get details
         :return: a string with name and town of the subclass
         """
+
     @abc.abstractmethod
     def _build_experiments(self):
         """
@@ -272,6 +253,7 @@ class Benchmark(object):
         Get the statistics of the evaluated experiments
         :return:
         """
+
     @abc.abstractmethod
     def _get_directions(self, current_point, end_point):
         """
@@ -283,7 +265,6 @@ class Benchmark(object):
         """
         Parse the experiment depending on number of poses and tasks
         """
-
 
     @abc.abstractmethod
     def plot_summary_train(self):

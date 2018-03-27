@@ -57,7 +57,39 @@ class Recording(object):
             self._full_name, '_images/episode_{:s}/{:s}/image_{:0>5d}.jpg')
 
 
-    def _write_summary_results(self, experiment, pose, rep,
+
+    """
+        Methods to log status of a certain benchmark execution.
+        This serves to keep track of which episodes were in fact benchmarked.
+    """
+
+
+    def log_poses(self, start_index, end_index, weather_id):
+        with open(self._internal_log_name, 'a+') as log:
+            log.write(' Start Poses  (%d  %d ) on weather %d \n ' %
+                      (start_index, end_index, weather_id))
+
+    def log_poses_finish(self):
+        with open(self._internal_log_name, 'a+') as log:
+            log.write('Finished Experiment')
+
+    def log_start(self, id_experiment):
+
+        with open(self._internal_log_name, 'a+') as log:
+            log.write('Start Experiment %d \n' % id_experiment)
+
+    def log_end(self):
+        with open(self._recording._internal_log_name, 'a+') as log:
+            log.write('====== Finished Entire Benchmark ======')
+
+
+    """
+        Methods to record the measurements, sensors,
+        controls and status of the entire benchmark.
+
+    """
+
+    def write_summary_results(self, experiment, pose, rep,
                                path_distance, remaining_distance,
                                final_time, time_out, result):
         self._dict_stats['exp_id'] = experiment.id
@@ -77,7 +109,7 @@ class Recording(object):
             w.writerow(self._dict_stats)
 
 
-    def _write_details_results(self, experiment, rep, pose, reward_vec, control_vec):
+    def write_details_results(self, experiment, rep, pose, reward_vec, control_vec):
         with open(os.path.join(self._full_name,
                                'details_' + self._suffix_name), 'a+') as rfd:
             rw = csv.DictWriter(rfd, self._dict_measurements.keys())
@@ -147,7 +179,7 @@ class Recording(object):
         return line_on_file
 
 
-    def _save_images_if_activated(self, sensor_data, episode_name, frame):
+    def save_images(self, sensor_data, episode_name, frame):
         if self._save_images:
             for name, image in sensor_data.items():
                 image.save_to_disk(self._image_filename_format.format(
@@ -203,6 +235,8 @@ class Recording(object):
                 return sum(1 for _ in f)
         except IOError:
             return 0
+
+
 
 
     @staticmethod
