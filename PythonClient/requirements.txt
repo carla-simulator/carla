@@ -4,3 +4,6 @@ protobuf
 pygame
 matplotlib
 future
+gym
+opencv-python
+
