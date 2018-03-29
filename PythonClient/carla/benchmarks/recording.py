@@ -6,13 +6,10 @@ import os
 
 class Recording(object):
     def __init__(self
-                 , city_name
                  , name_to_save
                  , continue_experiment
                  , save_images
                  , benchmark_details):
-
-
 
 
         self._dict_summary = {'exp_id': -1,
@@ -249,7 +246,6 @@ class Recording(object):
     def _experiment_exist(self):
 
         return os.path.exists(self._path)
-
 
     def _get_last_position(self):
         """
