@@ -13,16 +13,16 @@ class Recording(object):
 
 
         self._dict_summary = {'exp_id': -1,
-                            'rep': -1,
-                            'weather': -1,
-                            'start_point': -1,
-                            'end_point': -1,
-                            'result': -1,
-                            'initial_distance': -1,
-                            'final_distance': -1,
-                            'final_time': -1,
-                            'time_out': -1
-                            }
+                              'rep': -1,
+                              'weather': -1,
+                              'start_point': -1,
+                              'end_point': -1,
+                              'result': -1,
+                              'initial_distance': -1,
+                              'final_distance': -1,
+                              'final_time': -1,
+                              'time_out': -1
+                              }
 
         self._dict_measurements = {'exp_id': -1,
                                    'rep': -1,
@@ -40,6 +40,10 @@ class Recording(object):
                                    'throttle': -1,
                                    'brake': -1
                                    }
+
+        # Just in the case is the first time and there is no benchmark results folder
+        if not os.path.exists('_benchmarks_results'):
+            os.mkdir('_benchmarks_results')
 
         # Generate the full path for the log files
         self._path = os.path.join('_benchmarks_results'

@@ -50,7 +50,7 @@ class Benchmark(object):
         # on a benchmark derivate class
         self._experiments = self._build_experiments()
         # The object used to record the benchmark and to able to continue after
-        self._recording = Recording(city_name=city_name, name_to_save=name_to_save
+        self._recording = Recording( name_to_save=name_to_save
                                     , continue_experiment=continue_experiment
                                     , save_images=save_images)
 
