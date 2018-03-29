@@ -14,7 +14,7 @@ class testRecording(unittest.TestCase):
         """
 
 
-        recording = Recording(city_name='Town01', name_to_save='Test1'
+        recording = Recording(name_to_save='Test1'
                               , continue_experiment=False, save_images=True
                               , benchmark_details='corl2017_town01')
 
@@ -31,7 +31,7 @@ class testRecording(unittest.TestCase):
         import os
         from carla.benchmarks.experiment import Experiment
 
-        recording = Recording(city_name='Town01', name_to_save='Test1'
+        recording = Recording(name_to_save='Test1'
                               , continue_experiment=False, save_images=True
                               , benchmark_details='corl2017_town01')
 
@@ -63,7 +63,7 @@ class testRecording(unittest.TestCase):
         from carla.carla_server_pb2 import Control
 
 
-        recording = Recording(city_name='Town01', name_to_save='Test1'
+        recording = Recording(name_to_save='Test1'
                               , continue_experiment=False, save_images=True
                               , benchmark_details='corl2017_town01')
 
@@ -92,7 +92,7 @@ class testRecording(unittest.TestCase):
 
     def test_continue_experiment(self):
 
-        recording = Recording(city_name='Town01', name_to_save='Test1'
+        recording = Recording( name_to_save='Test1'
                               , continue_experiment=False, save_images=True
                               , benchmark_details='corl2017_town01')
 
@@ -119,7 +119,7 @@ class testRecording(unittest.TestCase):
     def test_get_pose_and_experiment(self):
 
 
-        recording = Recording(city_name='Town01', name_to_save='Test1'
+        recording = Recording( name_to_save='Test1'
                               , continue_experiment=False, save_images=True
                               , benchmark_details='corl2017_town01')
 
@@ -161,7 +161,7 @@ class testRecording(unittest.TestCase):
         pose, experiment = recording.get_pose_and_experiment(25)
         self.assertEqual(pose, 23)
         self.assertEqual(experiment, 1)
-        
+
 
 if __name__ == '__main__':
     unittest.main()
