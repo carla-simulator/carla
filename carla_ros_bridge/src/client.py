@@ -100,7 +100,7 @@ def update_marker_pose(object, base_marker):
 
     base_marker.scale.x = object.box_extent.x * 2.0
     base_marker.scale.y = object.box_extent.y * 2.0
-    base_marker.scale.z = object.box_extent.z * 2.0 * 2.0  # <-- carla seems to report only half of the bounding box on thix axis
+    base_marker.scale.z = object.box_extent.z * 2.0
 
     base_marker.type = Marker.CUBE
 
