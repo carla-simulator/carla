@@ -43,15 +43,15 @@ class BenchmarkTest(Benchmark):
                                        },
             'collision_general': {'frames_skip': 10,
                                   'frames_recount': 20,
-                                  'threshold': 40
+                                  'threshold': 400
                                   },
             'collision_vehicles': {'frames_skip': 10,
                                    'frames_recount': 30,
-                                   'threshold': 40
+                                   'threshold': 400
                                    },
             'collision_pedestrians': {'frames_skip': 5,
                                       'frames_recount': 100,
-                                      'threshold': 30
+                                      'threshold': 300
                                       },
             'dynamic_episodes': [3]
 
