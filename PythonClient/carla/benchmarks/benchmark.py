@@ -52,7 +52,8 @@ class Benchmark(object):
         # The object used to record the benchmark and to able to continue after
         self._recording = Recording( name_to_save=name_to_save
                                     , continue_experiment=continue_experiment
-                                    , save_images=save_images)
+                                    , save_images=save_images
+                                    , benchmark_details=self._get_details())
 
     def _run_navigation_episode(
             self,
@@ -198,13 +199,13 @@ class Benchmark(object):
                             + str(experiment.id) + '_' + str(start_index)
                             + '.' + str(end_index))
 
-                    # Write the general status of the just run episode
+                    # Write the general status of the just ran episode
                     self._recording.write_summary_results(
                         experiment, pose, rep, initial_distance,
                         remaining_distance, final_time, time_out, result)
 
                     # Write the details of this episode.
-                    self._recording.write_details_results(experiment, rep, pose, reward_vec,
+                    self._recording.write_measurements_results(experiment, rep, pose, reward_vec,
                                                            control_vec)
 
                     if result > 0:

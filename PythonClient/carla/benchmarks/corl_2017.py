@@ -18,7 +18,7 @@ from carla.settings import CarlaSettings
 
 from carla.planner.planner import Planner
 
-from .metrics import compute_summary
+from .metrics import Metrics
 
 
 class CoRL2017(Benchmark):
@@ -34,7 +34,7 @@ class CoRL2017(Benchmark):
         # Define all the parameters used to compute the driving summary.
 
 
-        self._metrics_parameters = {
+        metrics_parameters = {
 
             'intersection_offroad': {'frames_skip': 10,  # Check intersection always with 10 frames tolerance
                                      'frames_recount': 20,
@@ -46,20 +46,20 @@ class CoRL2017(Benchmark):
                                        },
             'collision_general': {'frames_skip': 10,
                                   'frames_recount': 20,
-                                  'threshold': 40
+                                  'threshold': 400
                                   },
             'collision_vehicles': {'frames_skip': 10,
                                    'frames_recount': 30,
-                                   'threshold': 40
+                                   'threshold': 400
                                    },
             'collision_pedestrians': {'frames_skip': 5,
                                       'frames_recount': 100,
-                                      'threshold': 30
+                                      'threshold': 300
                                       },
             'dynamic_episodes': [3]
 
         }
-
+        self._metrics = Metrics(metrics_parameters)
 
         # All the weather used on this benchmar
         self._weathers = [1, 3, 6, 8, 4, 14]
@@ -85,8 +85,7 @@ class CoRL2017(Benchmark):
 
     def get_all_statistics(self):
 
-        summary = compute_summary(os.path.join(
-            self._full_name, self._suffix_name), self._metrics_parameters)
+        summary = self._metrics.compute(self._recording._path)
 
         return summary
 
@@ -126,6 +125,8 @@ class CoRL2017(Benchmark):
                         else:
                             print('    Task ', count, ' -> ', t)
                         count += 1
+
+
 
     def _calculate_time_out(self, start_point, end_point):
         """
