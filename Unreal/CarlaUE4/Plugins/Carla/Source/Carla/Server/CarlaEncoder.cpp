@@ -152,6 +152,7 @@ FCarlaEncoder::FCarlaEncoder(carla_agent &InData) : Data(InData) {}
 
 void FCarlaEncoder::Visit(const UTrafficSignAgentComponent &Agent)
 {
+  constexpr float TO_METERS_PER_SECOND = 1.0f / 3.6f;
   ::Encode(Agent.GetComponentTransform(), Data.transform);
   auto &TrafficSign = Agent.GetTrafficSign();
   switch (TrafficSign.GetTrafficSignState()) {
@@ -166,35 +167,35 @@ void FCarlaEncoder::Visit(const UTrafficSignAgentComponent &Agent)
       break;
     case ETrafficSignState::SpeedLimit_30:
       Data.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      Data.forward_speed = 30.0f;
+      Data.forward_speed = 30.0f * TO_METERS_PER_SECOND;
       break;
     case ETrafficSignState::SpeedLimit_40:
       Data.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      Data.forward_speed = 40.0f;
+      Data.forward_speed = 40.0f * TO_METERS_PER_SECOND;
       break;
     case ETrafficSignState::SpeedLimit_50:
       Data.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      Data.forward_speed = 50.0f;
+      Data.forward_speed = 50.0f * TO_METERS_PER_SECOND;
       break;
     case ETrafficSignState::SpeedLimit_60:
       Data.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      Data.forward_speed = 60.0f;
+      Data.forward_speed = 60.0f * TO_METERS_PER_SECOND;
       break;
     case ETrafficSignState::SpeedLimit_90:
       Data.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      Data.forward_speed = 90.0f;
+      Data.forward_speed = 90.0f * TO_METERS_PER_SECOND;
       break;
     case ETrafficSignState::SpeedLimit_100:
       Data.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      Data.forward_speed = 100.0f;
+      Data.forward_speed = 100.0f * TO_METERS_PER_SECOND;
       break;
     case ETrafficSignState::SpeedLimit_120:
       Data.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      Data.forward_speed = 120.0f;
+      Data.forward_speed = 120.0f * TO_METERS_PER_SECOND;
       break;
     case ETrafficSignState::SpeedLimit_130:
       Data.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      Data.forward_speed = 130.0f;
+      Data.forward_speed = 130.0f * TO_METERS_PER_SECOND;
       break;
     default:
       UE_LOG(LogCarla, Error, TEXT("Unknown traffic sign!"));
