@@ -26,17 +26,28 @@ This ros package aims at providing a simple ros bridge for carla simulator.
 
 # Setup
 
-Create a catkin workspace and install carla_ros_bridge package
+## Clone the carla ros bridge branch
 
-    mdkir -p ~/catkin_ws/src 
-    ln -s path_to_carla_ros_bridge ~/catkin_ws/src/
-    source /opt/ros/lunar/setup.bash # if you use kinetic source /opt/ros/kinetic/setup.bash
-    cd ~/catkin_ws ; catkin_make 
-    source ~/catkin_ws/devel/setup.bash
-    
-Then install dependencies using rosdep (you can also use apt-get)
+    git clone -b dev/add_ros_bridge https://github.com/laurent-george/carla.git
 
+## Install carla python client in your workspace
+
+    cd carla/PythonClient
+    pip install -e .  --user --upgrade   
+
+    now in a python2.7 terminal you should be able to do
+
+    import carla
+
+## Create a catkin workspace and install carla_ros_bridge package
+
+    source /opt/ros/kinetic/setup.bash
+    mkdir -p ~/catkin_ws/src 
+    ln -s ~/carla/carla_ros_bridge/ ~/catkin_ws/src/
+    cd ~/catkin_ws
+    catkin_make 
     rosdep install --from-paths ~/catkin_ws/ 
+    catkin_make 
     
     
 # Start the ros bridge
@@ -47,7 +58,8 @@ First run the simulator (see carla documentation)
 
 Then start the ros bridge:
 
-    roslaunch carla_ros_client client.launch
+    source ~/catkin_ws/devel/setup.bash
+    roslaunch carla_ros_bridge client.launch
     
 To start the ros bridge with rviz use:
 
