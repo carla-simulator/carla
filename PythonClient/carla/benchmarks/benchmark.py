@@ -167,7 +167,7 @@ class Benchmark(object):
         logging.info('START')
 
 
-        for experiment in self._experiments[start_experiment:]:
+        for experiment in self._experiments[int(start_experiment):]:
 
             positions = client.load_settings(
                 experiment.conditions).player_start_spots
