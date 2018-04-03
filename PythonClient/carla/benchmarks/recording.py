@@ -29,7 +29,7 @@ class Recording(object):
                                    'weather': -1,
                                    'start_point': -1,
                                    'end_point': -1,
-                                   'collision_general': -1,
+                                   'collision_other': -1,
                                    'collision_pedestrians': -1,
                                    'collision_vehicles': -1,
                                    'intersection_otherlane': -1,
@@ -132,20 +132,20 @@ class Recording(object):
                 self._dict_measurements['start_point'] = pose[0]
                 self._dict_measurements['end_point'] = pose[1]
                 self._dict_measurements['weather'] = experiment.Conditions.WeatherId
-                self._dict_measurements['collision_general'] = reward_vec[
-                    i].player_measurements.collision_other
+                self._dict_measurements['collision_other'] = reward_vec[
+                    i].collision_other
                 self._dict_measurements['collision_pedestrians'] = reward_vec[
-                    i].player_measurements.collision_pedestrians
+                    i].collision_pedestrians
                 self._dict_measurements['collision_vehicles'] = reward_vec[
-                    i].player_measurements.collision_vehicles
+                    i].collision_vehicles
                 self._dict_measurements['intersection_otherlane'] = reward_vec[
-                    i].player_measurements.intersection_otherlane
+                    i].intersection_otherlane
                 self._dict_measurements['intersection_offroad'] = reward_vec[
-                    i].player_measurements.intersection_offroad
+                    i].intersection_offroad
                 self._dict_measurements['pos_x'] = reward_vec[
-                    i].player_measurements.transform.location.x
+                    i].transform.location.x
                 self._dict_measurements['pos_y'] = reward_vec[
-                    i].player_measurements.transform.location.y
+                    i].transform.location.y
                 self._dict_measurements['steer'] = control_vec[
                     i].steer
                 self._dict_measurements['throttle'] = control_vec[
@@ -238,12 +238,13 @@ class Recording(object):
         """
             Warning: assumes that all tasks have the same size
         """
-        line_on_file = self._get_last_position()
+        line_on_file = self._get_last_position() - 1
 
-        if line_on_file == 1:
+
+        if line_on_file == 0:
             return 0, 0
         else:
-            return line_on_file % number_poses_task -1, line_on_file / number_poses_task
+            return line_on_file % number_poses_task, line_on_file / number_poses_task
 
 
 

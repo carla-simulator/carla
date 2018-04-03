@@ -67,7 +67,7 @@ class testMetrics(unittest.TestCase):
                                             final_time=0.2, time_out=49, result=1)
 
 
-            reward_vec = [Measurements() for x in range(25)]
+            reward_vec = [Measurements().player_measurements for x in range(25)]
             control_vec = [Control() for x in range(25)]
 
             recording.write_measurements_results(experiment=experiment,
@@ -147,7 +147,6 @@ class testMetrics(unittest.TestCase):
         summary_dict = metrics_obj.compute(path)
 
 
-        print summary_dict['collision_vehicles']
         number_of_colisions_vehicles = sum_matrix(summary_dict['collision_vehicles'][1.0])
         number_of_colisions_general = sum_matrix(summary_dict['collision_general'][1.0])
         number_of_colisions_pedestrians = sum_matrix(summary_dict['collision_pedestrians'][1.0])

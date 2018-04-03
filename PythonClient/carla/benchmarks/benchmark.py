@@ -33,7 +33,7 @@ class Benchmark(object):
             self,
             city_name='Town01',
             name_to_save='Test',
-            continue_experiment=True,
+            continue_experiment=False,
             save_images=False,
             distance_for_success=2.0
     ):
@@ -155,17 +155,18 @@ class Benchmark(object):
         """
 
         # Function return the current pose and task for this benchmark.
-        start_experiment, start_pose = self._recording.get_pose_and_experiment(
-            self._get_number_of_poses_task())
+        start_pose, start_experiment = self._recording.get_pose_and_experiment(
+            self.get_number_of_poses_task())
 
         logging.info('START')
+
 
         for experiment in self._experiments[start_experiment:]:
 
             positions = client.load_settings(
                 experiment.conditions).player_start_spots
 
-            self._recording.log_start()
+            self._recording.log_start(experiment.id)
 
             for pose in experiment.poses[start_pose:]:
                 for rep in range(experiment.repetitions):
@@ -225,7 +226,7 @@ class Benchmark(object):
         pass
 
     @abc.abstractmethod
-    def _get_number_of_poses_task(self):
+    def get_number_of_poses_task(self):
         """
             Get the number of poses a task have for this benchmark
         """

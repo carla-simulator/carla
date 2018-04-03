@@ -22,7 +22,7 @@ class Manual(Agent):
     Sample redefinition of the Agent,
     An agent that goes straight
     """
-    def run_step(self, measurements, sensor_data, target):
+    def run_step(self, measurements, sensor_data, directions, target):
         control = VehicleControl()
         control.throttle = 0.9
 
@@ -75,7 +75,6 @@ if __name__ == '__main__':
         log_level = logging.WARNING
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=log_level)
-
     logging.info('listening to server %s:%s', args.host, args.port)
 
 

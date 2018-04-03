@@ -68,7 +68,7 @@ class testRecording(unittest.TestCase):
                               , benchmark_details='corl2017_town01')
 
 
-        reward_vec = [Measurements() for x in range(20)]
+        reward_vec = [Measurements().player_measurements for x in range(20)]
         control_vec = [Control() for x in range(25)]
 
         recording.write_measurements_results(experiment=Experiment(),
@@ -119,9 +119,15 @@ class testRecording(unittest.TestCase):
     def test_get_pose_and_experiment(self):
 
 
+
         recording = Recording( name_to_save='Test1'
                               , continue_experiment=False, save_images=True
                               , benchmark_details='corl2017_town01')
+
+
+
+        from carla.benchmarks.experiment import Experiment
+
 
         pose, experiment = recording.get_pose_and_experiment(25)
 
@@ -130,8 +136,6 @@ class testRecording(unittest.TestCase):
         self.assertEqual(pose, 0)
         self.assertEqual(experiment, 0)
 
-
-        from carla.benchmarks.experiment import Experiment
 
         recording.write_summary_results( experiment=Experiment(), pose=[24,32], rep=1,
                                          path_distance=200, remaining_distance=0,
@@ -161,6 +165,69 @@ class testRecording(unittest.TestCase):
         pose, experiment = recording.get_pose_and_experiment(25)
         self.assertEqual(pose, 23)
         self.assertEqual(experiment, 1)
+
+    def test_get_pose_and_experiment_corner(self):
+        print 'Pose '
+
+        from carla.benchmarks.experiment import Experiment
+
+        recording = Recording( name_to_save='Test1'
+                              , continue_experiment=False, save_images=True
+                              , benchmark_details='corl2017_town01')
+
+        pose, experiment = recording.get_pose_and_experiment(1)
+
+        # An starting experiment should return one
+
+        self.assertEqual(pose, 0)
+        self.assertEqual(experiment, 0)
+
+        pose, experiment = recording.get_pose_and_experiment(2)
+        self.assertEqual(pose, 0)
+        self.assertEqual(experiment, 0)
+
+
+        recording.write_summary_results( experiment=Experiment(), pose=[24, 32], rep=1,
+                                         path_distance=200, remaining_distance=0,
+                                         final_time=0.2, time_out=49, result=1)
+
+
+        pose, experiment = recording.get_pose_and_experiment(1)
+
+        print (pose, experiment)
+        self.assertEqual(pose, 0)
+        self.assertEqual(experiment, 1)
+
+
+        pose, experiment = recording.get_pose_and_experiment(2)
+
+        print (pose, experiment)
+        # An starting experiment should return one
+        self.assertEqual(pose, 1)
+        self.assertEqual(experiment, 0)
+
+        pose, experiment = recording.get_pose_and_experiment(3)
+
+        print (pose, experiment)
+        # An starting experiment should return one
+        self.assertEqual(pose, 1)
+        self.assertEqual(experiment, 0)
+
+        recording.write_summary_results( experiment=Experiment(), pose=[24, 32], rep=1,
+                                         path_distance=200, remaining_distance=0,
+                                         final_time=0.2, time_out=49, result=1)
+
+
+        pose, experiment = recording.get_pose_and_experiment(2)
+
+        self.assertEqual(pose, 0)
+        self.assertEqual(experiment, 1)
+
+
+        pose, experiment = recording.get_pose_and_experiment(3)
+
+        self.assertEqual(pose, 2)
+        self.assertEqual(experiment, 0)
 
 
 if __name__ == '__main__':
