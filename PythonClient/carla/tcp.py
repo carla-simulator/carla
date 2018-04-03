@@ -71,8 +71,8 @@ class TCPClient(object):
     def read(self):
         """Read a message from the server."""
         header = self._read_n(4)
-        #if not header:
-        #    raise TCPConnectionError(self._logprefix + 'connection closed')
+        if not header:
+            raise TCPConnectionError(self._logprefix + 'connection closed')
         length = struct.unpack('<L', header)[0]
         data = self._read_n(length)
         return data
@@ -85,14 +85,10 @@ class TCPClient(object):
         while length > 0:
             try:
                 data = self._socket.recv(length)
-
             except socket.error as exception:
                 self._reraise_exception_as_tcp_error('failed to read data', exception)
-
-            except Exception as exp:
-                raise RuntimeError("general exp")
-            #if not data:
-            #    raise TCPConnectionError(self._logprefix + 'connection closed')
+            if not data:
+                raise TCPConnectionError(self._logprefix + 'connection closed')
             buf += data
             length -= len(data)
         return buf

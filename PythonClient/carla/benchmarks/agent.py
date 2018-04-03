@@ -19,7 +19,7 @@ class Agent(object):
 
 
     @abc.abstractmethod
-    def run_step(self, measurements, sensor_data, target):
+    def run_step(self, measurements, sensor_data, directions, target):
         """
         Function to be redefined by an agent.
         :param The measurements like speed, the image data and a target
