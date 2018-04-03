@@ -207,7 +207,7 @@ void FCarlaEncoder::Visit(const UVehicleAgentComponent &Agent)
   ::Encode(Vehicle.GetVehicleTransform(), Data.transform);
   Data.type = CARLA_SERVER_AGENT_VEHICLE;
   Data.forward_speed = Vehicle.GetVehicleForwardSpeed() * TO_METERS;
-  ::Encode(Vehicle.GetVehicleBoundsExtent(), Data.box_extent);
+  ::Encode(Vehicle.GetVehicleBoundsExtent() * TO_METERS, Data.box_extent);
 }
 
 void FCarlaEncoder::Visit(const UWalkerAgentComponent &Agent)
@@ -215,5 +215,5 @@ void FCarlaEncoder::Visit(const UWalkerAgentComponent &Agent)
   ::Encode(Agent.GetComponentTransform(), Data.transform);
   Data.type = CARLA_SERVER_AGENT_PEDESTRIAN;
   Data.forward_speed = Agent.GetForwardSpeed() * TO_METERS;
-  ::Encode(Agent.GetBoundingBoxExtent(), Data.box_extent);
+  ::Encode(Agent.GetBoundingBoxExtent() * TO_METERS, Data.box_extent);
 }
