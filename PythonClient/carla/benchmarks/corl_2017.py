@@ -16,8 +16,6 @@ from .experiment import Experiment
 from carla.sensor import Camera
 from carla.settings import CarlaSettings
 
-from carla.planner.planner import Planner
-
 from .metrics import Metrics
 
 
@@ -36,15 +34,15 @@ class CoRL2017(Benchmark):
 
         metrics_parameters = {
 
-            'intersection_offroad': {'frames_skip': 10,  # Check intersection always with 10 frames tolerance
+            'intersection_offroad': {'frames_skip': 10,
                                      'frames_recount': 20,
                                      'threshold': 0.3
                                      },
-            'intersection_otherlane': {'frames_skip': 10,  # Check intersection always with 10 frames tolerance
+            'intersection_otherlane': {'frames_skip': 10,
                                        'frames_recount': 20,
                                        'threshold': 0.4
                                        },
-            'collision_general': {'frames_skip': 10,
+            'collision_other': {'frames_skip': 10,
                                   'frames_recount': 20,
                                   'threshold': 400
                                   },
@@ -61,11 +59,8 @@ class CoRL2017(Benchmark):
         }
         self._metrics = Metrics(metrics_parameters)
 
-        # All the weather used on this benchmar
+        # All the weather used on this benchmark
         self._weathers = [1, 3, 6, 8, 4, 14]
-
-        # The global planner is part of the corl2017 benchmark.
-        self._planner = Planner(city_name)
 
         Benchmark.__init__(self, city_name,
                            name_to_save,
@@ -104,8 +99,7 @@ class CoRL2017(Benchmark):
 
         """
 
-        metrics_summary = compute_summary(os.path.join(
-            self._full_name, self._suffix_name), self._metrics_parameters)
+        metrics_summary = self._metrics.compute(self._recording._path)
 
         print(" Final Results ! ")
 

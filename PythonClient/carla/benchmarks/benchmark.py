@@ -14,6 +14,8 @@ import logging
 
 from .recording import Recording
 
+from carla.planner.planner import Planner
+
 from carla.client import VehicleControl
 
 
@@ -54,6 +56,10 @@ class Benchmark(object):
                                     , continue_experiment=continue_experiment
                                     , save_images=save_images
                                     , benchmark_details=self._get_details())
+
+        # We have a default planner instantiated that produces high level commands
+
+        self._planner = Planner(city_name)
 
     def _run_navigation_episode(
             self,
@@ -219,6 +225,22 @@ class Benchmark(object):
 
         return self.get_all_statistics()
 
+
+    def _get_directions(self, current_point, end_point):
+        """
+        Class that should return the directions to reach a certain goal
+        """
+
+        directions = self._planner.get_next_command(
+            (current_point.location.x,
+             current_point.location.y, 0.22),
+            (current_point.orientation.x,
+             current_point.orientation.y,
+             current_point.orientation.z),
+            (end_point.location.x, end_point.location.y, 0.22),
+            (end_point.orientation.x, end_point.orientation.y, -0.001))
+        return directions
+
     # To be redefined on subclasses on how to calculate timeout for an episode
 
     @abc.abstractmethod
@@ -256,11 +278,6 @@ class Benchmark(object):
         :return:
         """
 
-    @abc.abstractmethod
-    def _get_directions(self, current_point, end_point):
-        """
-        Class that should return the directions to reach a certain goal
-        """
 
     @abc.abstractmethod
     def _get_pose_and_experiment(self, line_on_file):
