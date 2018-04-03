@@ -8,7 +8,8 @@
 #include "SceneCaptureCamera.h"
 
 #include "Sensor/SensorDataView.h"
-
+#include "Game/CarlaGameInstance.h"
+#include "Settings/CarlaSettings.h"
 #include "Components/DrawFrustumComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Components/StaticMeshComponent.h"
@@ -62,7 +63,8 @@ ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer& ObjectInitial
 	CaptureRenderTarget->MipGenSettings = TextureMipGenSettings::TMGS_NoMipmaps;
   #endif
   CaptureRenderTarget->CompressionSettings = TextureCompressionSettings::TC_Default;
-  CaptureRenderTarget->SRGB=0;
+  CaptureRenderTarget->SRGB = false;
+  CaptureRenderTarget->bUseLegacyGamma = false;
   CaptureRenderTarget->bAutoGenerateMips = false;
   CaptureRenderTarget->AddressX = TextureAddress::TA_Clamp;
   CaptureRenderTarget->AddressY = TextureAddress::TA_Clamp;
@@ -110,16 +112,44 @@ void ASceneCaptureCamera::BeginPlay()
   CaptureComponent2D->Deactivate();
   CaptureComponent2D->TextureTarget = CaptureRenderTarget;
 
-  // Setup camera post-processing.
-  if (PostProcessEffect != EPostProcessEffect::None) {
-    CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR; //HD is much slower!
+  // Setup camera post-processing depending on the quality level: 
+  const UCarlaGameInstance* GameInstance  = Cast<UCarlaGameInstance>(GetWorld()->GetGameInstance());
+  check(GameInstance!=nullptr);
+  const UCarlaSettings& CarlaSettings = GameInstance->GetCarlaSettings();
+  switch(PostProcessEffect)
+  {
+    case EPostProcessEffect::None: break;
+    case EPostProcessEffect::SceneFinal:
+  	{
+	  //we set LDR for high quality because it will include post-fx
+	  //and HDR for low quality to avoid high contrast
+	  switch(CarlaSettings.GetQualitySettingsLevel())
+	  {
+	    case EQualitySettingsLevel::Low:
+			CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_SceneColorHDRNoAlpha;
+		  break;
+		default:
+		  //LDR is faster than HDR (smaller bitmap array)
+	      CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
+		  break;
+	  }
+      break;
+	}
+    default:  
+  	  CaptureComponent2D->CaptureSource = SCS_FinalColorLDR; 
+	  break;
   }
-  if (bRemovePostProcessing) {
+
+  if (bRemovePostProcessing) 
+  {
     RemoveShowFlags(CaptureComponent2D->ShowFlags);
   }
-  if (PostProcessEffect == EPostProcessEffect::Depth) {
+
+  if (PostProcessEffect == EPostProcessEffect::Depth) 
+  {
     CaptureComponent2D->PostProcessSettings.AddBlendable(PostProcessDepth, 1.0f);
-  } else if (PostProcessEffect == EPostProcessEffect::SemanticSegmentation) {
+  } else if (PostProcessEffect == EPostProcessEffect::SemanticSegmentation) 
+  {
     CaptureComponent2D->PostProcessSettings.AddBlendable(PostProcessSemanticSegmentation, 1.0f);
   }
 
