@@ -221,6 +221,8 @@ class Benchmark(object):
                     else:
                         logging.info('----- Timeout! -----')
 
+
+            start_pose = 0
         self._recording.log_end()
 
         return self.get_all_statistics()
