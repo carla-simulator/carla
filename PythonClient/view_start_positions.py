@@ -68,6 +68,9 @@ def view_start_positions(args):
             circle = Circle((pixel[0], pixel[1]), 12, color='r', label='A point')
             ax.add_patch(circle)
 
+            if not args.no_labels:
+                plt.text(pixel[0], pixel[1], str(position), size='x-small')
+
         plt.show()
 
 
@@ -95,6 +98,10 @@ def main():
         default='all',
         help='Indices of the positions that you want to plot on the map. '
              'The indices must be separated by commas (default = all positions)')
+    argparser.add_argument(
+        '--no-labels',
+        action='store_true',
+        help='do not display position indices')
 
     args = argparser.parse_args()
 
