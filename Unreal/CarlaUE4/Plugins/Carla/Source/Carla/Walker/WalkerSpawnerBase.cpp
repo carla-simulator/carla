@@ -170,8 +170,8 @@ void AWalkerSpawnerBase::Tick(float DeltaTime)
   {
   	// Check one walker, if fails black-list it or kill it.
 	CurrentWalkerIndexToCheck = ++CurrentWalkerIndexToCheck % Walkers.Num();
-    auto Walker = Walkers[CurrentWalkerIndexToCheck];
-	const char* walker_name = TCHAR_TO_UTF8(*UKismetSystemLibrary::GetDisplayName(Walker));
+  auto Walker = Walkers[CurrentWalkerIndexToCheck];
+	
 	if(Walker == nullptr || !IsValid(Walker))
 	{
 	  Walkers.RemoveAtSwap(CurrentWalkerIndexToCheck);
