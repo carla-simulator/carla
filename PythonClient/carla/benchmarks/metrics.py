@@ -75,7 +75,14 @@ class Metrics(object):
         return episode_matrix_metrics
 
     def _get_collisions(self, selected_matrix, header):
+        """
+            Get the number of collisions for pedestrians, vehicles or other
+        Args:
+            selected_matrix: The matrix with all the experiments summary
+            header: The header , to know the positions of details
 
+
+        """
         count_collisions_general = 0
         count_collisions_pedestrian = 0
         count_collisions_vehicle = 0
@@ -237,6 +244,8 @@ class Metrics(object):
         measurements_matrix = np.loadtxt(os.path.join(path, 'measurements.csv'), delimiter=",",
                                          skiprows=1)
 
+        #plt.plot(measurements_matrix[:, header_metrics.index('collision_vehicles')])
+        #plt.show()
         metrics_dictionary = {'average_completion': {w: [0] * len(tasks) for w in all_weathers},
                               'intersection_offroad': {w: [[] for i in range(len(tasks))] for w in
                                                        all_weathers},
@@ -275,12 +284,10 @@ class Metrics(object):
                 metrics_dictionary['average_fully_completed'][w][t] = \
                     experiment_results_matrix[:, header.index('result')]
 
-                metrics_dictionary['average_completion'][w][t] = sum(
+                metrics_dictionary['average_completion'][w][t] = \
                     (experiment_results_matrix[:, header.index('initial_distance')]
-                     - experiment_results_matrix[:, header.index('final_distance')])
-                    / experiment_results_matrix[:, header.index('initial_distance')]) \
-                                                                 / len(
-                    experiment_results_matrix[:, header.index('final_distance')])
+                     - experiment_results_matrix[:, header.index('final_distance')]) \
+                    / experiment_results_matrix[:, header.index('initial_distance')]
 
                 # Now we divide the experiment metrics matrix
 
@@ -293,7 +300,7 @@ class Metrics(object):
 
                     km_run_episodes = self._get_distance_traveled(
                         episode_experiment_metrics, header_metrics)
-                    metrics_dictionary['driven_kilometers'][w][t] = km_run_episodes
+                    metrics_dictionary['driven_kilometers'][w][t] += km_run_episodes
                     metrics_dictionary['average_speed'][w][t] = \
                         km_run_episodes/(experiment_results_matrix[count,
                                         header.index('final_time')] / 3600.0)

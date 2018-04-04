@@ -81,12 +81,12 @@ class Recording(object):
 
     def log_poses_finish(self):
         with open(self._internal_log_name, 'a+') as log:
-            log.write('Finished Experiment')
+            log.write('Finished Task')
 
     def log_start(self, id_experiment):
 
         with open(self._internal_log_name, 'a+') as log:
-            log.write('Start Experiment %d \n' % id_experiment)
+            log.write('Start Task %d \n' % id_experiment)
 
     def log_end(self):
         with open(self._internal_log_name, 'a+') as log:
