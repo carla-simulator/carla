@@ -6,7 +6,8 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-"""Basic CARLA client example."""
+"""Connects with a CARLA simulator and displays the available start positions
+for the current map."""
 
 from __future__ import print_function
 
@@ -14,25 +15,26 @@ import argparse
 import logging
 import time
 
+import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
+
+from matplotlib.patches import Circle
+
 from carla.client import make_carla_client
+from carla.planner.map import CarlaMap
 from carla.settings import CarlaSettings
 from carla.tcp import TCPConnectionError
-from carla.planner.map import CarlaMap
-
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-from matplotlib.patches import Circle
 
 
 def view_start_positions(args):
     # We assume the CARLA server is already waiting for a client to connect at
-    # host:port. The same way as in the client example
+    # host:port. The same way as in the client example.
     with make_carla_client(args.host, args.port) as client:
         print('CarlaClient connected')
 
         # We load the default settings to the client.
         scene = client.load_settings(CarlaSettings())
-        print("Receives the Start Position")
+        print("Received the start positions")
 
         # We get the number of player starts, in order to detect the city.
         number_of_player_starts = len(scene.player_start_spots)
@@ -57,15 +59,13 @@ def view_start_positions(args):
         for position in positions_to_plot:
             # Check if position is valid
             if position >= len(scene.player_start_spots):
-                raise RuntimeError('Position selected is invalid')
+                raise RuntimeError('Selected position is invalid')
 
             # Convert world to pixel coordinates
-            pixel = carla_map.convert_to_pixel([scene.player_start_spots[position].location.x
-                                                   , scene.player_start_spots[position].location.y
-                                                   , scene.player_start_spots[position].location.z])
-            circle = Circle((pixel[0]
-                            , pixel[1])
-                            , 12, color='r')
+            pixel = carla_map.convert_to_pixel([scene.player_start_spots[position].location.x,
+                                                scene.player_start_spots[position].location.y,
+                                                scene.player_start_spots[position].location.z])
+            circle = Circle((pixel[0], pixel[1]), 12, color='r', label='A point')
             ax.add_patch(circle)
 
         plt.show()
@@ -93,8 +93,8 @@ def main():
         '-pos', '--positions',
         metavar='P',
         default='all',
-        help=' The positions that you want to plot on the map. '
-             'The positions must be separated by commas (default = all positions)')
+        help='Indices of the positions that you want to plot on the map. '
+             'The indices must be separated by commas (default = all positions)')
 
     args = argparser.parse_args()
 
@@ -115,7 +115,6 @@ def main():
             time.sleep(1)
         except RuntimeError as error:
             logging.error(error)
-            time.sleep(1)
             break
 
 
@@ -124,7 +123,4 @@ if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        import traceback
-
-        traceback.print_exc()
         print('\nCancelled by user. Bye!')
