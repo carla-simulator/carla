@@ -168,40 +168,38 @@ void AWalkerSpawnerBase::Tick(float DeltaTime)
 
   if (Walkers.Num() > 0) 
   {
-  	// Check one walker, if fails black-list it or kill it.
-	CurrentWalkerIndexToCheck = ++CurrentWalkerIndexToCheck % Walkers.Num();
-  auto Walker = Walkers[CurrentWalkerIndexToCheck];
-	
-	if(Walker == nullptr || !IsValid(Walker))
-	{
-	  Walkers.RemoveAtSwap(CurrentWalkerIndexToCheck);
-	} else {
-	  const auto Status = GetWalkerStatus(Walker);
-  	  switch (Status)
+    // Check one walker, if fails black-list it or kill it.
+	  CurrentWalkerIndexToCheck = ++CurrentWalkerIndexToCheck % Walkers.Num();
+    auto Walker = Walkers[CurrentWalkerIndexToCheck];
+	  if(Walker == nullptr || !IsValid(Walker))
 	  {
-		default: 
-		case EWalkerStatus::Paused:
-		case EWalkerStatus::Unknown:
-		  break;
-	    case EWalkerStatus::RunOver: {
+  	  Walkers.RemoveAtSwap(CurrentWalkerIndexToCheck);
+  	} else {
+	    const auto Status = GetWalkerStatus(Walker);
+  	  switch (Status)
+	    {
+  		  default: 
+		    case EWalkerStatus::Paused:
+		    case EWalkerStatus::Unknown:
+  		    break;
+	      case EWalkerStatus::RunOver: {
           Walkers.RemoveAtSwap(CurrentWalkerIndexToCheck);
-	      break;
-	     }
-	     case EWalkerStatus::MoveCompleted:
-		  Walker->Destroy();
-		  break;
-  	  	 case EWalkerStatus::Invalid:
-	     case EWalkerStatus::Stuck:
-	     {
-		   SetRandomWalkerDestination(Walker);
-		   // Black-list it and wait for this walker to move
-		   WalkersBlackList.Add(Walker);
-		   Walkers.RemoveAtSwap(CurrentWalkerIndexToCheck);
-		   break;
-         }
-	  }
+	        break;
+	      }
+	      case EWalkerStatus::MoveCompleted:
+    		  Walker->Destroy();
+		      break;
+  	    case EWalkerStatus::Invalid:
+	      case EWalkerStatus::Stuck:
+	      {
+    		  SetRandomWalkerDestination(Walker);
+		      // Black-list it and wait for this walker to move
+		      WalkersBlackList.Add(Walker);
+		      Walkers.RemoveAtSwap(CurrentWalkerIndexToCheck);
+		      break;
+        }
+	    }
     }
-
   }
 }
 
