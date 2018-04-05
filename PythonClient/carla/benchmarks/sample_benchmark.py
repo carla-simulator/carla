@@ -33,6 +33,7 @@ class SampleBenchmark(Benchmark):
 
         # Define all the parameters used to compute the driving summary.
 
+        # TODO: this should be taken from the default class
 
         metrics_parameters = {
 
@@ -59,14 +60,14 @@ class SampleBenchmark(Benchmark):
             'dynamic_episodes': [3]
 
         }
+
         self._metrics = Metrics(metrics_parameters)
 
         # All the weather used on this benchmark
         self._weathers = [1]
 
-        # The global planner is part of the corl2017 benchmark.
-        self._planner = Planner(city_name)
 
+        # TODO: Simplify this initalization, Default parameters go to benchmark
         Benchmark.__init__(self, city_name,
                            name_to_save,
                            continue_experiment,
@@ -83,7 +84,7 @@ class SampleBenchmark(Benchmark):
             return len(self._poses_town02()[0])
 
 
-    def get_all_statistics(self):
+    def get_all_statistics(self): # Weird Function
 
         summary = self._metrics.compute(self._recording._path)
 
@@ -123,11 +124,12 @@ class SampleBenchmark(Benchmark):
                                 print('    Task ', count, ' -> ', sum(t) / len(t))
                         else:
                             print('    Task ', count, ' -> ', t)
+
                         count += 1
 
 
 
-    def _calculate_time_out(self, start_point, end_point):
+    def _calculate_time_out(self, start_point, end_point): #TODO this could come from base class
         """
         Function to return the timeout ( in miliseconds) that is calculated based on distance to goal.
         This is the same timeout as used on the CoRL paper.
@@ -142,7 +144,7 @@ class SampleBenchmark(Benchmark):
 
     def _poses_town01(self):
         """
-        Each matrix is a new task. We have all the four tasks
+            Each matrix is a new task. We have all the four tasks
 
         """
 
@@ -179,9 +181,8 @@ class SampleBenchmark(Benchmark):
 
     def _build_experiments(self):
         """
-        Creates the whole set of experiment objects,
-        The experiments created depend on the selected Town.
-
+            Creates the whole set of experiment objects,
+            The experiments created depends on the selected Town.
 
         """
 
@@ -239,7 +240,7 @@ class SampleBenchmark(Benchmark):
 
         return experiments_vector
 
-    def _get_details(self):
+    def _get_details(self): #TODO Automatize to get values directly from the master class.
 
         # Function to get automatic information from the experiment for writing purposes
         return 'sample_' + self._city_name
