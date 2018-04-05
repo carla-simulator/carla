@@ -108,7 +108,7 @@ class CoRL2017(Benchmark):
 
         self._print_summary([4.0, 14.0])
 
-    def _print_summary(self, weathers):
+    def _print_summary(self, weathers): # TODO: THIS SHOULD BE EXTERNAL
         """
             We plot the summary of the testing for the set selected weathers.
 

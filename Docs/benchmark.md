@@ -22,10 +22,12 @@ or
 
     $ python run_benchmark.py
 
-Run the help command to see options available
+Run the help command to see options available.
 
     $ ./run_benchmark.py --help
 
+
+Now we will show 
 
 Benchmark Structure
 -------------------
@@ -33,12 +35,27 @@ Benchmark Structure
 
 
 ![Benchmark_structure](img/benchmark_diagram.png)
+>Figure: The general structure of the benchmark. 
 
-The benchmark  structure in set of *Experiments*.
-Each *experiment* contains a set of poses, that are tuples containing
-a start and an end point.
-The *experiments* also are associated with a condition which is
-a [carla settings](carla_settings.md) object.
+
+
+The *benchmark*  is composed by set of *Experiments*.
+Each *experiment* is related to *Task* that contains a set of poses.
+These *poses* are  are tuples containing a start and an end point.
+The *experiments* also are associated with a *condition* which is
+a [carla settings](carla_settings.md) object. The conditions specify
+simulation parameters such as: weather, sensor suite, number of
+vehicles and pedestrians, etc.
+
+
+
+The base benchmark class contains the general execution process.
+The actual set of experiments must be defined in the derived 
+class. 
+
+The user also should define the agent class. The agent is the active
+part which will be benchmarked.
+
 
 
 
