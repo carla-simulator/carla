@@ -21,6 +21,7 @@ client_example.py        | Basic usage example of the "carla" module.
 manual_control.py        | A GUI client in which the vehicle can be controlled manually.
 point_cloud_example.py   | Usage example for converting depth images into a point cloud in world coordinates.
 run_benchmark.py         | Run the CoRL'17 benchmark with a trivial agent.
+view_start_positions.py  | Show all the possible start positions in a map
 
 !!! note
     If you are building CARLA from source, the Python code is inside the
@@ -98,3 +99,4 @@ You can see all the available options in the script's help
 The other scripts present in the _"PythonClient"_ folder run in a similar
 fashion. We recommend now launching _"manual_control.py"_ for a GUI interface
 implemented with PyGame.
+
