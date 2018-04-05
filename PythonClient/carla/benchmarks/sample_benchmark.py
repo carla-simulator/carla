@@ -84,48 +84,7 @@ class SampleBenchmark(Benchmark):
             return len(self._poses_town02()[0])
 
 
-    def get_all_statistics(self): # Weird Function
 
-        summary = self._metrics.compute(self._recording._path)
-
-        return summary
-
-    def plot_summary_train(self):
-
-        self._plot_summary([1.0, 3.0, 6.0, 8.0])
-
-    def plot_summary_test(self):
-
-        self._plot_summary([4.0, 14.0])
-
-    def _plot_summary(self, weathers):
-        """
-        We plot the summary of the testing for the set selected weathers.
-        The test weathers are [4,14]
-
-        """
-
-        metrics_summary = self._metrics.compute(self._recording._path)
-
-        print(" Final Results ! ")
-
-        for metric, values in metrics_summary.items():
-
-            print('Metric : ', metric)
-            for weather, tasks in values.items():
-                if weather in set(weathers):
-                    print('  Weather: ', weather)
-                    count = 0
-                    for t in tasks:
-                        if isinstance(t, np.ndarray) or isinstance(t, list):
-                            if t == []:
-                                print('Metric Not Computed')
-                            else:
-                                print('    Task ', count, ' -> ', sum(t) / len(t))
-                        else:
-                            print('    Task ', count, ' -> ', t)
-
-                        count += 1
 
 
 
