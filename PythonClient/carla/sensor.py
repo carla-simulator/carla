@@ -119,9 +119,9 @@ class Lidar(Sensor):
     """
 
     def __init__(self, name, **kwargs):
-        super(Lidar, self).__init__(name, sensor_type="LIDAR_RAY_TRACE")
+        super(Lidar, self).__init__(name, sensor_type="LIDAR_RAY_CAST")
         self.Channels = 32
-        self.Range = 5000.0
+        self.Range = 50.0
         self.PointsPerSecond = 56000
         self.RotationFrequency = 10.0
         self.UpperFovLimit = 10.0

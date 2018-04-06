@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name='carla_client',
-    version='0.7.1',
+    version='0.8.1',
     packages=['carla', 'carla.agent_benchmark', 'carla.planner'],
     license='MIT License',
     description='Python API for communicating with the CARLA server.',

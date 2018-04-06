@@ -1,5 +1,4 @@
-Cameras and sensors
-===================
+<h1>Cameras and sensors</h1>
 
 !!! important
     Since version 0.8.0 the positions of the sensors are specified in meters
@@ -19,7 +18,7 @@ moment there are four different sensors available.
   * [Camera: Scene final](#camera-scene-final)
   * [Camera: Depth map](#camera-depth-map)
   * [Camera: Semantic segmentation](#camera-semantic-segmentation)
-  * [Ray-trace based lidar](#ray-trace-based-lidar)
+  * [Ray-cast based lidar](#ray-cast-based-lidar)
 
 !!! note
     The images are sent by the server as a BGRA array of bytes. The provided
@@ -59,7 +58,7 @@ in the Camera. We use the following post process effects:
 
 [postprolink]: https://docs.unrealengine.com/latest/INT/Engine/Rendering/PostProcessEffects/
 
-###### Python
+<h6>Python</h6>
 
 ```py
 camera = carla.sensor.Camera('MyCamera', PostProcessing='SceneFinal')
@@ -71,7 +70,7 @@ camera.set_rotation(pitch=0, yaw=0, roll=0)
 carla_settings.add_sensor(camera)
 ```
 
-###### CarlaSettings.ini
+<h6>CarlaSettings.ini</h6>
 
 ```ini
 [CARLA/Sensor/MyCamera]
@@ -120,7 +119,7 @@ The generated "depth map" images are usually converted to a logarithmic
 grayscale for display. A point cloud can also be extracted from depth images as
 seen in "PythonClient/point_cloud_example.py".
 
-###### Python
+<h6>Python</h6>
 
 ```py
 camera = carla.sensor.Camera('MyCamera', PostProcessing='Depth')
@@ -132,7 +131,7 @@ camera.set_rotation(pitch=0, yaw=0, roll=0)
 carla_settings.add_sensor(camera)
 ```
 
-###### CarlaSettings.ini
+<h6>CarlaSettings.ini</h6>
 
 ```ini
 [CARLA/Sensor/MyCamera]
@@ -190,7 +189,7 @@ _"Unreal/CarlaUE4/Content/Static/Pedestrians"_ folder it's tagged as pedestrian.
     and its corresponding filepath check inside `GetLabelByFolderName()`
     function in "Tagger.cpp".
 
-###### Python
+<h6>Python</h6>
 
 ```py
 camera = carla.sensor.Camera('MyCamera', PostProcessing='SemanticSegmentation')
@@ -202,7 +201,7 @@ camera.set_rotation(pitch=0, yaw=0, roll=0)
 carla_settings.add_sensor(camera)
 ```
 
-###### CarlaSettings.ini
+<h6>CarlaSettings.ini</h6>
 
 ```ini
 [CARLA/Sensor/MyCamera]
@@ -219,12 +218,12 @@ RotationRoll=0
 RotationYaw=0
 ```
 
-Ray-trace based Lidar
----------------------
+Ray-cast based Lidar
+--------------------
 
 ![LidarPointCloud](img/lidar_point_cloud.gif)
 
-A rotating Lidar implemented with ray-tracing. The points are computed by adding
+A rotating Lidar implemented with ray-casting. The points are computed by adding
 a laser for each channel distributed in the vertical FOV, then the rotation is
 simulated computing the horizontal angle that the Lidar rotated this frame, and
 doing a ray-cast for each point that each laser was supposed to generate this
@@ -243,7 +242,7 @@ channels                   | uint32     | Number of channels (lasers) of the lid
 point_count_by_channel     | uint32     | Number of points per channel captured this frame.
 point_cloud                | PointCloud | Captured points this frame.
 
-###### Python
+<h6>Python</h6>
 
 ```py
 lidar = carla.sensor.Lidar('MyLidar')
@@ -260,11 +259,11 @@ lidar.set_rotation(pitch=0, yaw=0, roll=0)
 carla_settings.add_sensor(lidar)
 ```
 
-###### CarlaSettings.ini
+<h6>CarlaSettings.ini</h6>
 
 ```ini
 [CARLA/Sensor/MyLidar]
-SensorType=LIDAR_RAY_TRACE
+SensorType=LIDAR_RAY_CAST
 Channels=32
 Range=50
 PointsPerSecond=100000
