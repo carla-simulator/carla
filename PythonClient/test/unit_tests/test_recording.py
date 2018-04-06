@@ -1,6 +1,6 @@
 
 import unittest
-from carla.benchmarks.recording import Recording
+from carla.agent_benchmark.recording import Recording
 
 class testRecording(unittest.TestCase):
 
@@ -29,7 +29,7 @@ class testRecording(unittest.TestCase):
     def test_write_summary_results(self):
 
         import os
-        from carla.benchmarks.experiment import Experiment
+        from carla.agent_benchmark.experiment import Experiment
 
         recording = Recording(name_to_save='Test1'
                               , continue_experiment=False, save_images=True
@@ -58,7 +58,7 @@ class testRecording(unittest.TestCase):
     def teste_write_measurements_results(self):
 
         import os
-        from carla.benchmarks.experiment import Experiment
+        from carla.agent_benchmark.experiment import Experiment
         from carla.carla_server_pb2 import Measurements
         from carla.carla_server_pb2 import Control
 
@@ -101,7 +101,7 @@ class testRecording(unittest.TestCase):
         # If you don't want to continue, should return also one
         self.assertEqual(recording._continue_experiment(False)[1], 1)
 
-        from carla.benchmarks.experiment import Experiment
+        from carla.agent_benchmark.experiment import Experiment
 
         recording.write_summary_results(experiment=Experiment(), pose=[24, 32], rep=1,
                                          path_distance=200, remaining_distance=0,
@@ -126,7 +126,7 @@ class testRecording(unittest.TestCase):
 
 
 
-        from carla.benchmarks.experiment import Experiment
+        from carla.agent_benchmark.experiment import Experiment
 
 
         pose, experiment = recording.get_pose_and_experiment(25)
@@ -169,7 +169,7 @@ class testRecording(unittest.TestCase):
     def test_get_pose_and_experiment_corner(self):
         print 'Pose '
 
-        from carla.benchmarks.experiment import Experiment
+        from carla.agent_benchmark.experiment import Experiment
 
         recording = Recording( name_to_save='Test1'
                               , continue_experiment=False, save_images=True

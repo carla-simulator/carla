@@ -8,11 +8,6 @@
 
 from __future__ import print_function
 
-import os
-import numpy as np
-
-
-import argparse
 import logging
 import time
 
@@ -21,10 +16,9 @@ import time
 
 import unittest
 
-from carla.benchmarks.agent import Agent
-from carla.benchmarks.benchmark import Benchmark
+from carla.agent_benchmark.agent import Agent
 
-from carla.benchmarks.sample_benchmark import SampleBenchmark
+from carla.agent_benchmark.experiment_suite.sample import SampleBenchmark
 
 from carla.client import make_carla_client, VehicleControl
 from carla.tcp import TCPConnectionError

@@ -25,8 +25,10 @@ def sldist(c1, c2):
 
 class Benchmark(object):
     """
-    The Benchmark class, controls the execution of the benchmark by an
-    Agent class.
+    The Benchmark class, controls the execution of the benchmark interfacing
+    an Agent class with a set Suite.
+
+
     The benchmark class must be inherited with a class that defines the
     all the experiments to be run by the agent
     """

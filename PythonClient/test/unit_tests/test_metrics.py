@@ -1,8 +1,8 @@
 import os
 import numpy as np
 import unittest
-from carla.benchmarks.metrics import Metrics
-from carla.benchmarks.recording import Recording
+from carla.agent_benchmark.metrics import Metrics
+from carla.agent_benchmark.recording import Recording
 
 
 
@@ -54,7 +54,7 @@ class testMetrics(unittest.TestCase):
 
 
 
-        from carla.benchmarks.experiment import Experiment
+        from carla.agent_benchmark.experiment import Experiment
         from carla.carla_server_pb2 import Measurements
         from carla.carla_server_pb2 import Control
 
