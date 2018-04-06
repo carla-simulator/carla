@@ -8,14 +8,12 @@
 
 
 import math
-import os
 import abc
 import logging
 
 from .recording import Recording
 
 from carla.planner.planner import Planner
-
 from carla.client import VehicleControl
 
 
@@ -23,7 +21,7 @@ def sldist(c1, c2):
     return math.sqrt((c2[0] - c1[0]) ** 2 + (c2[1] - c1[1]) ** 2)
 
 
-class Benchmark(object):
+class AgentBenchmark(object):
     """
     The Benchmark class, controls the execution of the benchmark interfacing
     an Agent class with a set Suite.
@@ -50,18 +48,46 @@ class Benchmark(object):
         # The minimum distance for arriving into the goal point in
         # order to consider ir a success
         self._distance_for_success = distance_for_success
-        # build all the experiments to be evaluated, this function is redefined
-        # on a benchmark derivate class
-        self._experiments = self._build_experiments()
         # The object used to record the benchmark and to able to continue after
-        self._recording = Recording( name_to_save=name_to_save
+        self._recording = Recording(name_to_save=name_to_save
                                     , continue_experiment=continue_experiment
                                     , save_images=save_images
-                                    , benchmark_details=self._get_details())
+                                    )
 
         # We have a default planner instantiated that produces high level commands
 
         self._planner = Planner(city_name)
+
+
+
+
+
+    def _get_directions(self, current_point, end_point):
+        """
+        Class that should return the directions to reach a certain goal
+        """
+
+        directions = self._planner.get_next_command(
+            (current_point.location.x,
+             current_point.location.y, 0.22),
+            (current_point.orientation.x,
+             current_point.orientation.y,
+             current_point.orientation.z),
+            (end_point.location.x, end_point.location.y, 0.22),
+            (end_point.orientation.x, end_point.orientation.y, -0.001))
+        return directions
+
+    def _get_shortest_path(self, start_point, end_point):
+        """
+        Calculates the shortest path between two points
+        """
+
+        return self._planner.get_shortest_path_distance(
+            [start_point.location.x, start_point.location.y, 0]
+            , [start_point.orientation.x, start_point.orientation.y, 0]
+            , [end_point.location.x, end_point.location.y, 0]
+            , [end_point.orientation.x, end_point.orientation.y, 0])
+
 
     def _run_navigation_episode(
             self,
@@ -145,11 +171,11 @@ class Benchmark(object):
                 current_timestamp - initial_timestamp) / 1000.0, distance
         return 0, measurement_vec, control_vec, time_out, distance
 
-    def benchmark_agent(self, agent, client):
+    def benchmark_agent(self, experiment_suite, agent, client):
         """
         Function to benchmark the agent.
         It first check the log file for this benchmark.
-            if it exist it continue from the experiment where it stopped.
+        if it exist it continues from the experiment where it stopped.
 
 
         Args:
@@ -164,12 +190,11 @@ class Benchmark(object):
 
         # Function return the current pose and task for this benchmark.
         start_pose, start_experiment = self._recording.get_pose_and_experiment(
-            self.get_number_of_poses_task())
+            experiment_suite.get_number_of_poses_task())
 
         logging.info('START')
 
-
-        for experiment in self._experiments[int(start_experiment):]:
+        for experiment in experiment_suite.get_experiments()[int(start_experiment):]:
 
             positions = client.load_settings(
                 experiment.conditions).player_start_spots
@@ -197,8 +222,8 @@ class Benchmark(object):
                             [positions[start_index].location.x, positions[start_index].location.y],
                             [positions[end_index].location.x, positions[end_index].location.y])
 
-                    time_out = self._calculate_time_out(positions[start_index],
-                                                        positions[end_index])
+                    time_out = experiment_suite.calculate_time_out(
+                                self._get_shortest_path(positions[start_index], positions[end_index]))
 
                     # running the agent
                     (result, reward_vec, control_vec, final_time, remaining_distance) = \
@@ -215,90 +240,16 @@ class Benchmark(object):
 
                     # Write the details of this episode.
                     self._recording.write_measurements_results(experiment, rep, pose, reward_vec,
-                                                           control_vec)
-
+                                                               control_vec)
                     if result > 0:
                         logging.info('+++++ Target achieved in %f seconds! +++++',
                                      final_time)
                     else:
                         logging.info('----- Timeout! -----')
 
-
             start_pose = 0
+
         self._recording.log_end()
 
-        return self.get_all_statistics()
+        return self._compute_metric()
 
-
-    def _get_directions(self, current_point, end_point):
-        """
-        Class that should return the directions to reach a certain goal
-        """
-
-        directions = self._planner.get_next_command(
-            (current_point.location.x,
-             current_point.location.y, 0.22),
-            (current_point.orientation.x,
-             current_point.orientation.y,
-             current_point.orientation.z),
-            (end_point.location.x, end_point.location.y, 0.22),
-            (end_point.orientation.x, end_point.orientation.y, -0.001))
-        return directions
-
-    # To be redefined on subclasses on how to calculate timeout for an episode
-
-    @abc.abstractmethod
-    def _calculate_time_out(self, start_point, end_point):
-        pass
-
-    @abc.abstractmethod
-    def get_number_of_poses_task(self):
-        """
-            Get the number of poses a task have for this benchmark
-        """
-        """
-            Warning: assumes that all tasks have the same size
-        """
-
-    @abc.abstractmethod
-    def _get_details(self):
-        """
-        Get details
-        :return: a string with name and town of the subclass
-        """
-
-    @abc.abstractmethod
-    def _build_experiments(self):
-        """
-        Returns a set of experiments to be evaluated
-        Must be redefined in an inherited class.
-
-        """
-
-    @abc.abstractmethod
-    def get_all_statistics(self):
-        """
-        Get the statistics of the evaluated experiments
-        :return:
-        """
-
-
-    @abc.abstractmethod
-    def _get_pose_and_experiment(self, line_on_file):
-        """
-        Parse the experiment depending on number of poses and tasks
-        """
-
-    @abc.abstractmethod
-    def plot_summary_train(self):
-        """
-        returns the summary for the train weather/task episodes
-
-        """
-
-    @abc.abstractmethod
-    def plot_summary_test(self):
-        """
-        returns the summary for the test weather/task episodes
-
-        """
