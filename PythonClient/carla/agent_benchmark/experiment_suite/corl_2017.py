@@ -11,15 +11,15 @@ from __future__ import print_function
 import os
 import numpy as np
 
-from carla.agent_benchmark.benchmark import Benchmark
+from carla.agent_benchmark.agent_benchmark import AgentBenchmark
 from carla.agent_benchmark.experiment import Experiment
 from carla.sensor import Camera
 from carla.settings import CarlaSettings
-
+from carla.agent_benchmark.experiment_suite.experiment_suite import ExperimentSuite
 from carla.agent_benchmark.metrics import Metrics
 
 
-class CoRL2017(Benchmark):
+class CoRL2017(ExperimentSuite):
 
     def __init__(self,
                  city_name,
@@ -29,52 +29,26 @@ class CoRL2017(Benchmark):
                  distance_for_success=2.0
                  ):
 
-        # Define all the parameters used to compute the driving summary.
-
-
-        metrics_parameters = {
-
-            'intersection_offroad': {'frames_skip': 10,
-                                     'frames_recount': 20,
-                                     'threshold': 0.3
-                                     },
-            'intersection_otherlane': {'frames_skip': 10,
-                                       'frames_recount': 20,
-                                       'threshold': 0.4
-                                       },
-            'collision_other': {'frames_skip': 10,
-                                  'frames_recount': 20,
-                                  'threshold': 400
-                                  },
-            'collision_vehicles': {'frames_skip': 10,
-                                   'frames_recount': 30,
-                                   'threshold': 400
-                                   },
-            'collision_pedestrians': {'frames_skip': 5,
-                                      'frames_recount': 100,
-                                      'threshold': 300
-                                      },
-            'dynamic_episodes': [3]
-
-        }
-        self._metrics = Metrics(metrics_parameters)
-
         # All the weather used on this benchmark
         self._weathers = [1, 3, 6, 8, 4, 14]
         # Improve readability by adding a weather dictionary
-        self._weather_name_dict = {1: 'Clear Noon', 3: 'After Rain Noon',
+        weather_name_dict = {1: 'Clear Noon', 3: 'After Rain Noon',
                                    6: 'Heavy Rain Noon', 8: 'Clear Sunset',
-                                   4: 'After Rain Sunset', 14: 'Soft Rain Sunset'}
+                                   4: 'Cloudy After Rain', 14: 'Soft Rain Sunset'}
 
-        Benchmark.__init__(self, city_name,
-                           name_to_save,
-                           continue_experiment,
-                           save_images,
-                           distance_for_success)
+        #Benchmark.__init__(self, city_name,
+        #                   name_to_save,
+        #                   continue_experiment,
+        #                   save_images,
+        #                   distance_for_success)
 
 
 
     def get_number_of_poses_task(self):
+        """
+            Returns the number of poses that each task has.
+            It assumes all tasks have the same number of poses.
+        """
 
         if self._city_name == 'Town01':
             return len(self._poses_town01()[0])
@@ -82,27 +56,16 @@ class CoRL2017(Benchmark):
             return len(self._poses_town02()[0])
 
 
-    def get_all_statistics(self):
+    #def get_all_statistics(self):
 
-        summary = self._metrics.compute(self._recording._path)
+    #    summary = self._metrics.compute(self._recording._path,[3])
 
-        return summary
-
-
+    #    return summary
 
 
-    def _calculate_time_out(self, start_point, end_point):
-        """
-        Function to return the timeout ( in miliseconds) that is calculated based on distance to goal.
-        This is the same timeout as used on the CoRL paper.
-        """
-        path_distance = self._planner.get_shortest_path_distance(
-            [start_point.location.x, start_point.location.y, 0]
-            , [start_point.orientation.x, start_point.orientation.y, 0]
-            , [end_point.location.x, end_point.location.y, 0]
-            , [end_point.orientation.x, end_point.orientation.y, 0])
 
-        return ((path_distance / 1000.0) / 10.0) * 3600.0 + 10.0
+
+
 
     def _poses_town01(self):
         """
@@ -166,7 +129,7 @@ class CoRL2017(Benchmark):
                 _poses_navigation()
                 ]
 
-    def _build_experiments(self):
+    def build_experiments(self):
         """
         Creates the whole set of experiment objects,
         The experiments created depend on the selected Town.
@@ -227,10 +190,5 @@ class CoRL2017(Benchmark):
                 experiments_vector.append(experiment)
 
         return experiments_vector
-
-    def _get_details(self):
-
-        # Function to get automatic information from the experiment for writing purposes
-        return 'corl2017_' + self._city_name
 
 

@@ -4,12 +4,14 @@ import csv
 import datetime
 import os
 
+
 class Recording(object):
+
     def __init__(self
                  , name_to_save
                  , continue_experiment
                  , save_images
-                 , benchmark_details):
+                 ):
 
 
         self._dict_summary = {'exp_id': -1,
@@ -47,7 +49,7 @@ class Recording(object):
 
         # Generate the full path for the log files
         self._path = os.path.join('_benchmarks_results'
-                                  , name_to_save + '_' + benchmark_details
+                                  , name_to_save
                                   )
 
         # Check for continuation of experiment, also returns the last line, used for test purposes
@@ -102,7 +104,6 @@ class Recording(object):
     def write_summary_results(self, experiment, pose, rep,
                               path_distance, remaining_distance,
                               final_time, time_out, result):
-
 
         self._dict_summary['exp_id'] = experiment.id
         self._dict_summary['rep'] = rep

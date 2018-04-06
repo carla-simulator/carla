@@ -8,18 +8,16 @@ from carla.settings import CarlaSettings
 
 
 class Experiment(object):
-
-
     """
-        Experiment defines a certain task, under conditions
-        A task is associated with a set of poses, containing start and end pose.
+    Experiment defines a certain task, under conditions
+    A task is associated with a set of poses, containing start and end pose.
 
-        Conditions are associated with a carla Settings and describe the following conditions:
+    Conditions are associated with a carla Settings and describe the following conditions:
 
-        Number Of Vehicles
-        Number Of Pedestrians
-        Weather
-        Random Seed of the agents, describing their behaviour.
+    Number Of Vehicles
+    Number Of Pedestrians
+    Weather
+    Random Seed of the agents, describing their behaviour.
 
     """
 

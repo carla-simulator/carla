@@ -1,24 +1,5 @@
-def plot_summary_train(self):
-    print("")
-    print("")
-    print ("----- Printing results for training weathers (Seen in Training) -----")
-    print("")
-    print("")
 
-    self._print_summary([1.0, 3.0, 6.0, 8.0])
-
-
-def plot_summary_test(self):
-    print("")
-    print("")
-    print("----- Printing results for test weathers (Unseen in Training) -----")
-    print("")
-    print("")
-
-    self._print_summary([4.0, 14.0])
-
-
-def _print_summary(metrics_summary, weathers):
+def print_summary(metrics_summary, weathers, path):
     """
         We plot the summary of the testing for the set selected weathers.
 
@@ -26,7 +7,6 @@ def _print_summary(metrics_summary, weathers):
 
     """
 
-    metrics_summary = self._metrics.compute(self._recording._path)
 
     # First we write the entire dictionary on the benchmark folder.
     fout = os.path.join(self._recording._path, 'metrics.txt')

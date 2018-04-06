@@ -1,0 +1,103 @@
+# To be redefined on subclasses on how to calculate timeout for an episode
+import abc
+from carla.agent_benchmark.metrics import Metrics
+
+
+class ExperimentSuite(object):
+
+    def __init__(self, city_name):
+        metrics_parameters = {
+
+            'intersection_offroad': {'frames_skip': 10,
+                                     'frames_recount': 20,
+                                     'threshold': 0.3
+                                     },
+            'intersection_otherlane': {'frames_skip': 10,
+                                       'frames_recount': 20,
+                                       'threshold': 0.4
+                                       },
+            'collision_other': { 'frames_skip': 10,
+                                  'frames_recount': 20,
+                                  'threshold': 400
+                                  },
+            'collision_vehicles': {'frames_skip': 10,
+                                   'frames_recount': 30,
+                                   'threshold': 400
+                                   },
+            'collision_pedestrians': {'frames_skip': 5,
+                                      'frames_recount': 100,
+                                      'threshold': 300
+                                      },
+
+        }
+
+        self._city_name = city_name
+        self._metrics = Metrics(metrics_parameters)
+        self._experiments = self.build_experiments()
+
+
+
+    def dynamic_tasks(self):
+        """
+        Returns the episodes that contain dynamic obstacles
+        """
+        pass # TODO, implement !
+
+
+
+    def calculate_time_out(self, path_distance):
+        """
+        Function to return the timeout ( in miliseconds)
+        that is calculated based on distance to goal.
+        This is the same timeout as used on the CoRL paper.
+        """
+        return ((path_distance / 1000.0) / 10.0) * 3600.0 + 10.0
+
+
+    def get_number_of_poses_task(self):
+        """
+            Get the number of poses a task have for this benchmark
+        """
+        """
+            Warning: assumes that all tasks have the same size
+        """
+
+        return len(self._experiments[0].poses)
+
+    def get_experiments(self):
+        return self._experiments
+
+
+    @abc.abstractmethod
+    def build_experiments(self):
+        """
+        Returns a set of experiments to be evaluated
+        Must be redefined in an inherited class.
+
+        """
+
+
+    @abc.abstractmethod
+    def get_pose_and_experiment(self, line_on_file):
+        """
+        Parse the experiment depending on number of poses and tasks
+        """
+
+    @abc.abstractproperty
+    def train_weathers(self):
+        """
+        Return the weathers that are considered as training conditions
+        """
+
+    @abc.abstractproperty
+    def test_weathers(self):
+        """
+        Return the weathers that are considered as testing conditions
+        """
+
+    @abc.abstractproperty
+    def weathers(self):
+        """
+        Return all the used weathers
+        """
+

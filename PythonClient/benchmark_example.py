@@ -10,26 +10,20 @@ import argparse
 import logging
 import time
 
-from carla.agent_benchmark.agent import Agent
 
-from carla.client import make_carla_client, VehicleControl
+
+from carla.client import make_carla_client
 from carla.tcp import TCPConnectionError
 
 
-class Manual(Agent):
-    """
-    Sample redefinition of the Agent,
-    An agent that goes straight
-    """
-    def run_step(self, measurements, sensor_data, directions, target):
-        control = VehicleControl()
-        control.throttle = 0.9
 
-        return control
+from carla.agent_benchmark.agent_benchmark import AgentBenchmark
+from carla.agent.forward import Forward
+from carla.agent_benchmark.experiment_suite.corl_2017 import CoRL2017
+import carla.agent_benchmark.results_printer as results_printer
 
 
 
-# Here I will more or less build a new class.
 def run_benchmark():
 
 
@@ -38,14 +32,33 @@ def run_benchmark():
 
             with make_carla_client(args.host, args.port) as client:
 
-                #corl = CoRL2017(city_name=args.city_name, name_to_save=args.log_name)
+                agent = Forward()
+                experiment_suite = CoRL2017()
 
-                benchmark = Benchmark_AI(experi)
+                benchmark = AgentBenchmark(city_name=args.city_name,
+                                           name_to_save=args.log_name
+                                           + type(experiment_suite).__name__
+                                           + '_' + args.city_name)
 
-                agent = Manual(args.city_name)
-                results = corl.benchmark_agent(agent, client)
-                corl.plot_summary_test()
-                corl.plot_summary_train()
+                benchmark_summary = benchmark.benchmark_agent(agent, client)
+
+
+                print("")
+                print("")
+                print("----- Printing results for training weathers (Seen in Training) -----")
+                print("")
+                print("")
+                results_printer.print_summary(benchmark_summary,experiment_suite.train_weathers,
+                                              benchmark.get_path())
+
+                print("")
+                print("")
+                print("----- Printing results for test weathers (Unseen in Training) -----")
+                print("")
+                print("")
+
+                results_printer.print_summary(benchmark_summary, experiment_suite.test_weathers,
+                                              benchmark.get_path())
 
                 break
 

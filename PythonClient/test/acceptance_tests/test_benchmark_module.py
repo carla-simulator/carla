@@ -16,7 +16,7 @@ import time
 
 import unittest
 
-from carla.agent_benchmark.agent import Agent
+from carla.agent.agent import Agent
 
 from carla.agent_benchmark.experiment_suite.sample import SampleBenchmark
 

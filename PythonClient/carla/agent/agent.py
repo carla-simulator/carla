@@ -14,7 +14,7 @@ import abc
 
 
 class Agent(object):
-    def __init__(self, city_name):
+    def __init__(self):
         self.__metaclass__ = abc.ABCMeta
 
 
