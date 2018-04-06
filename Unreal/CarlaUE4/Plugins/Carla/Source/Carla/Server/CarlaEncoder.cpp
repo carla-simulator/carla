@@ -63,7 +63,7 @@ static TUniquePtr<const char[]> Encode(
   Data.type = [](const FString &Type) {
 #define CARLA_CHECK_TYPE(Str) if (Type == TEXT(#Str)) return CARLA_SERVER_ ## Str;
       CARLA_CHECK_TYPE(CAMERA)
-      CARLA_CHECK_TYPE(LIDAR_RAY_TRACE)
+      CARLA_CHECK_TYPE(LIDAR_RAY_CAST)
       else return CARLA_SERVER_SENSOR_UNKNOWN;
 #undef CARLA_CHECK_TYPE
   }(SensorDescription.Type);
@@ -152,6 +152,7 @@ FCarlaEncoder::FCarlaEncoder(carla_agent &InData) : Data(InData) {}
 
 void FCarlaEncoder::Visit(const UTrafficSignAgentComponent &Agent)
 {
+  constexpr float TO_METERS_PER_SECOND = 1.0f / 3.6f;
   ::Encode(Agent.GetComponentTransform(), Data.transform);
   auto &TrafficSign = Agent.GetTrafficSign();
   switch (TrafficSign.GetTrafficSignState()) {
@@ -166,35 +167,35 @@ void FCarlaEncoder::Visit(const UTrafficSignAgentComponent &Agent)
       break;
     case ETrafficSignState::SpeedLimit_30:
       Data.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      Data.forward_speed = 30.0f;
+      Data.forward_speed = 30.0f * TO_METERS_PER_SECOND;
       break;
     case ETrafficSignState::SpeedLimit_40:
       Data.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      Data.forward_speed = 40.0f;
+      Data.forward_speed = 40.0f * TO_METERS_PER_SECOND;
       break;
     case ETrafficSignState::SpeedLimit_50:
       Data.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      Data.forward_speed = 50.0f;
+      Data.forward_speed = 50.0f * TO_METERS_PER_SECOND;
       break;
     case ETrafficSignState::SpeedLimit_60:
       Data.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      Data.forward_speed = 60.0f;
+      Data.forward_speed = 60.0f * TO_METERS_PER_SECOND;
       break;
     case ETrafficSignState::SpeedLimit_90:
       Data.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      Data.forward_speed = 90.0f;
+      Data.forward_speed = 90.0f * TO_METERS_PER_SECOND;
       break;
     case ETrafficSignState::SpeedLimit_100:
       Data.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      Data.forward_speed = 100.0f;
+      Data.forward_speed = 100.0f * TO_METERS_PER_SECOND;
       break;
     case ETrafficSignState::SpeedLimit_120:
       Data.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      Data.forward_speed = 120.0f;
+      Data.forward_speed = 120.0f * TO_METERS_PER_SECOND;
       break;
     case ETrafficSignState::SpeedLimit_130:
       Data.type = CARLA_SERVER_AGENT_SPEEDLIMITSIGN;
-      Data.forward_speed = 130.0f;
+      Data.forward_speed = 130.0f * TO_METERS_PER_SECOND;
       break;
     default:
       UE_LOG(LogCarla, Error, TEXT("Unknown traffic sign!"));
@@ -207,7 +208,7 @@ void FCarlaEncoder::Visit(const UVehicleAgentComponent &Agent)
   ::Encode(Vehicle.GetVehicleTransform(), Data.transform);
   Data.type = CARLA_SERVER_AGENT_VEHICLE;
   Data.forward_speed = Vehicle.GetVehicleForwardSpeed() * TO_METERS;
-  ::Encode(Vehicle.GetVehicleBoundsExtent(), Data.box_extent);
+  ::Encode(Vehicle.GetVehicleBoundsExtent() * TO_METERS, Data.box_extent);
 }
 
 void FCarlaEncoder::Visit(const UWalkerAgentComponent &Agent)
@@ -215,5 +216,5 @@ void FCarlaEncoder::Visit(const UWalkerAgentComponent &Agent)
   ::Encode(Agent.GetComponentTransform(), Data.transform);
   Data.type = CARLA_SERVER_AGENT_PEDESTRIAN;
   Data.forward_speed = Agent.GetForwardSpeed() * TO_METERS;
-  ::Encode(Agent.GetBoundingBoxExtent(), Data.box_extent);
+  ::Encode(Agent.GetBoundingBoxExtent() * TO_METERS, Data.box_extent);
 }

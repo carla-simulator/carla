@@ -1,6 +1,9 @@
-# Map customization
+<h1>Map customization</h1>
 
-## Creating a new map
+> _This document is a work in progress and might be incomplete._
+
+Creating a new map
+------------------
 
 !!! Bug
     Creating a map from scratch with the Carla tools causes a crash with
@@ -8,11 +11,11 @@
     this guide will suggest duplicating an existing level instead of creating
     one from scratch.
 
-### Requirements
+<h4>Requirements</h4>
 
  - Checkout and build Carla from source on [Linux](how_to_build_on_linux.md) or [Windows](how_to_build_on_windows.md)
 
-### Creating
+<h4>Creating</h4>
 
 - Duplicate an existing map
 - Remove everything you don't need from the map
@@ -34,11 +37,8 @@
 Every street at a crossing should have its own turn at green without the other streets having green.
 - Then you can populate the world with landscape and buildings.
 
-## Blueprint Assets
-
-This are the specific blueprint assets created to help building the environment.
-
-## MultipleFloorBuilding:
+MultipleFloorBuilding
+---------------------
 
 The purpose of this blueprint is to make repeating and varying tall buildings a
 bit easier. Provided a Base, a MiddleFloor and a roof; this blueprint repeats
@@ -60,12 +60,13 @@ This blueprint is controlled by this 6 specific Parameters:
 All of This parameters can be modified once this blueprint is placed in the
 world.
 
-## SplinemeshRepeater:
+SplinemeshRepeater
+------------------
 
 !!! Bug
     See [#35 SplineMeshRepeater loses its collider mesh](https://github.com/carla-simulator/carla/issues/35)
 
-### Standard use:
+<h4>Standard use:</h4>
 
 SplineMeshRepeater "Content/Blueprints/SplineMeshRepeater" is a tool included in
 the Carla Project to help building urban environments; It repeats and aligns a
@@ -91,7 +92,7 @@ the lower point possible with the rest of the mesh pointing positive (Preferably
 by the X axis)
 
 
-### Specific Walls (Dynamic material)
+<h4>Specific Walls (Dynamic material)</h4>
 
 In the project folder "Content/Static/Walls" are included some specific assets
 to be used with this SplineMeshRepeater with a series of special
@@ -118,7 +119,8 @@ The rest of the parameters are the mask the textures and the color corrections
 that won't be modified in this instance but in the blueprint that will be
 launched into the world.
 
-## Weather
+Weather
+-------
 
 This is the actor in charge of modifying all the lighting, environmental actors
 an anything that affects the impression of the climate. It runs automatically

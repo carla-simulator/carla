@@ -95,11 +95,11 @@ void ACarlaGameModeBase::InitGame(
   }
 
   if(CarlaSettingsDelegate!=nullptr) {
-    //apply quality settings 
+    //apply quality settings
     CarlaSettingsDelegate->ApplyQualitySettingsLevelPostRestart();
     //assign settings delegate for every new actor from now on
     CarlaSettingsDelegate->RegisterSpawnHandler(world);
-    
+
   } else {
     UE_LOG(LogCarla, Error, TEXT("Missing CarlaSettingsDelegate!"));
   }
@@ -116,7 +116,7 @@ void ACarlaGameModeBase::InitGame(
     WalkerSpawner = world->SpawnActor<AWalkerSpawnerBase>(WalkerSpawnerClass);
   }
 
-  
+
 
 }
 
@@ -146,7 +146,7 @@ void ACarlaGameModeBase::BeginPlay()
   Super::BeginPlay();
 
   const auto &CarlaSettings = GameInstance->GetCarlaSettings();
-  
+
   // Setup semantic segmentation if necessary.
   if (CarlaSettings.bSemanticSegmentationEnabled) {
     TagActorsForSemanticSegmentation();
@@ -197,6 +197,15 @@ void ACarlaGameModeBase::BeginPlay()
   }
 
   GameController->BeginPlay();
+}
+
+void ACarlaGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	if (CarlaSettingsDelegate != nullptr)
+	{
+	  CarlaSettingsDelegate->Reset();
+	}
 }
 
 void ACarlaGameModeBase::Tick(float DeltaSeconds)
