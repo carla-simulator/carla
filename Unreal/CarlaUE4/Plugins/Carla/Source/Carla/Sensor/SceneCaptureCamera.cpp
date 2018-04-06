@@ -61,10 +61,10 @@ ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer& ObjectInitial
   #if WITH_EDITORONLY_DATA
 	CaptureRenderTarget->CompressionNoAlpha = true;
 	CaptureRenderTarget->MipGenSettings = TextureMipGenSettings::TMGS_NoMipmaps;
+    CaptureRenderTarget->bUseLegacyGamma = false;
   #endif
   CaptureRenderTarget->CompressionSettings = TextureCompressionSettings::TC_Default;
   CaptureRenderTarget->SRGB = false;
-  CaptureRenderTarget->bUseLegacyGamma = false;
   CaptureRenderTarget->bAutoGenerateMips = false;
   CaptureRenderTarget->AddressX = TextureAddress::TA_Clamp;
   CaptureRenderTarget->AddressY = TextureAddress::TA_Clamp;
