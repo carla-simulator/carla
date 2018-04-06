@@ -10,8 +10,7 @@ import argparse
 import logging
 import time
 
-from carla.benchmarks.agent import Agent
-from carla.benchmarks.corl_2017 import CoRL2017
+from carla.agent_benchmark.agent import Agent
 
 from carla.client import make_carla_client, VehicleControl
 from carla.tcp import TCPConnectionError
@@ -27,6 +26,35 @@ class Manual(Agent):
         control.throttle = 0.9
 
         return control
+
+
+
+# Here I will more or less build a new class.
+def run_benchmark():
+
+
+    while True:
+        try:
+
+            with make_carla_client(args.host, args.port) as client:
+
+                #corl = CoRL2017(city_name=args.city_name, name_to_save=args.log_name)
+
+                benchmark = Benchmark_AI(experi)
+
+                agent = Manual(args.city_name)
+                results = corl.benchmark_agent(agent, client)
+                corl.plot_summary_test()
+                corl.plot_summary_train()
+
+                break
+
+        except TCPConnectionError as error:
+            logging.error(error)
+            time.sleep(1)
+
+
+
 
 
 if __name__ == '__main__':
@@ -65,6 +93,13 @@ if __name__ == '__main__':
         default='test',
         help='The name of the log file to be created by the benchmark'
         )
+    argparser.add_argument(
+        '-n', '--log_name',
+        metavar='T',
+        default='test',
+        help='The name of the log file to be created by the benchmark'
+        )
+
 
     args = argparser.parse_args()
     if args.debug:
@@ -77,20 +112,3 @@ if __name__ == '__main__':
     logging.basicConfig(format='%(levelname)s: %(message)s', level=log_level)
     logging.info('listening to server %s:%s', args.host, args.port)
 
-
-    while True:
-        try:
-
-            with make_carla_client(args.host, args.port) as client:
-
-                corl = CoRL2017(city_name=args.city_name, name_to_save=args.log_name)
-                agent = Manual(args.city_name)
-                results = corl.benchmark_agent(agent, client)
-                corl.plot_summary_test()
-                corl.plot_summary_train()
-
-                break
-
-        except TCPConnectionError as error:
-            logging.error(error)
-            time.sleep(1)
