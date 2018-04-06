@@ -1,3 +1,10 @@
+## CARLA 0.8.1
+
+  * New Python example for visualizing the player start positions
+  * Fixed box extent of non-player agents was sent in centimeters instead of meters
+  * Fixed speed limits were sent in km/h instead of m/s
+  * Fixed issue in Volkswagen T2 wheels causing it to overturn
+
 ## CARLA 0.8.0
 
   * Upgraded to Unreal Engine 4.18
