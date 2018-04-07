@@ -18,9 +18,9 @@
 <h3> Agent Benchmark </h3>
   
   * [Quick Start](benchmark_start.md)
-  * [General Structure]()
-  * [Creating Your Benchmark]()
-  * [Something Else]()
+  * [Creating Your Benchmark](benchmark_creating.md)
+  * [General Structure](benchmark_structure.md)
+  * [Computed Metrics](benchmark_metrics.md)
   
 <h3>Advanced topics</h3>
 

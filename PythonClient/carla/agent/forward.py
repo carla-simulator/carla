@@ -5,8 +5,8 @@ from carla.client import VehicleControl
 
 class Forward(Agent):
     """
-    Sample redefinition of the Agent,
-    An agent that goes straight
+    Simple derivation of Agent Class,
+    A trivial agent agent that goes straight
     """
     def run_step(self, measurements, sensor_data, directions, target):
         control = VehicleControl()

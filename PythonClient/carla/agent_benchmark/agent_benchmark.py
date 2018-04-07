@@ -15,6 +15,8 @@ from .recording import Recording
 
 from carla.planner.planner import Planner
 from carla.client import VehicleControl
+from carla.agent_benchmark.metrics import Metrics
+
 
 
 def sldist(c1, c2):
@@ -44,22 +46,115 @@ class AgentBenchmark(object):
 
         self._city_name = city_name
         self._base_name = name_to_save
-
         # The minimum distance for arriving into the goal point in
         # order to consider ir a success
         self._distance_for_success = distance_for_success
         # The object used to record the benchmark and to able to continue after
-        self._recording = Recording(name_to_save=name_to_save
-                                    , continue_experiment=continue_experiment
-                                    , save_images=save_images
+        self._recording = Recording(name_to_save=name_to_save,
+                                    continue_experiment=continue_experiment,
+                                    save_images=save_images
                                     )
 
         # We have a default planner instantiated that produces high level commands
-
         self._planner = Planner(city_name)
 
 
 
+
+
+    def benchmark_agent(self, experiment_suite, agent, client):
+        """
+        Function to benchmark the agent.
+        It first check the log file for this benchmark.
+        if it exist it continues from the experiment where it stopped.
+
+
+        Args:
+            experiment_suite
+            agent: an agent object with the run step class implemented.
+            client:
+
+
+        Return:
+            A dictionary with all the metrics computed from the
+            agent running the set of experiments.
+        """
+
+        # Instantiate a metric object that will be used to compute the metrics for
+        # the benchmark afterwards.
+        metrics_object = Metrics(experiment_suite.metrics_parameters)
+
+        # Function return the current pose and task for this benchmark.
+        start_pose, start_experiment = self._recording.get_pose_and_experiment(
+            experiment_suite.get_number_of_poses_task())
+
+        logging.info('START')
+
+        for experiment in experiment_suite.get_experiments()[int(start_experiment):]:
+
+            positions = client.load_settings(
+                experiment.conditions).player_start_spots
+
+            self._recording.log_start(experiment.id)
+
+            for pose in experiment.poses[start_pose:]:
+                for rep in range(experiment.repetitions):
+
+                    start_index = pose[0]
+                    end_index = pose[1]
+
+                    client.start_episode(start_index)
+                    # Print information on
+                    logging.info('======== !!!! ==========')
+                    logging.info(' Start Position %d End Position %d ',
+                                 start_index, end_index)
+
+                    self._recording.log_poses(start_index, end_index,
+                                              experiment.Conditions.WeatherId)
+
+                    # Calculate the initial distance for this episode
+                    initial_distance = \
+                        sldist(
+                            [positions[start_index].location.x, positions[start_index].location.y],
+                            [positions[end_index].location.x, positions[end_index].location.y])
+
+                    time_out = experiment_suite.calculate_time_out(
+                                self._get_shortest_path(positions[start_index], positions[end_index]))
+
+                    # running the agent
+                    (result, reward_vec, control_vec, final_time, remaining_distance) = \
+                        self._run_navigation_episode(
+                            agent, client, time_out, positions[end_index],
+                            str(experiment.Conditions.WeatherId) + '_'
+                            + str(experiment.id) + '_' + str(start_index)
+                            + '.' + str(end_index))
+
+                    # Write the general status of the just ran episode
+                    self._recording.write_summary_results(
+                        experiment, pose, rep, initial_distance,
+                        remaining_distance, final_time, time_out, result)
+
+                    # Write the details of this episode.
+                    self._recording.write_measurements_results(experiment, rep, pose, reward_vec,
+                                                               control_vec)
+                    if result > 0:
+                        logging.info('+++++ Target achieved in %f seconds! +++++',
+                                     final_time)
+                    else:
+                        logging.info('----- Timeout! -----')
+
+            start_pose = 0
+
+        self._recording.log_end()
+
+        return metrics_object.compute(self._recording._path)
+
+
+    def get_path(self):
+        """
+        Returns the path were the log was saved.
+        """
+        return self._recording._path
 
 
     def _get_directions(self, current_point, end_point):
@@ -79,7 +174,7 @@ class AgentBenchmark(object):
 
     def _get_shortest_path(self, start_point, end_point):
         """
-        Calculates the shortest path between two points
+        Calculates the shortest path between two points considering the road netowrk
         """
 
         return self._planner.get_shortest_path_distance(
@@ -171,85 +266,4 @@ class AgentBenchmark(object):
                 current_timestamp - initial_timestamp) / 1000.0, distance
         return 0, measurement_vec, control_vec, time_out, distance
 
-    def benchmark_agent(self, experiment_suite, agent, client):
-        """
-        Function to benchmark the agent.
-        It first check the log file for this benchmark.
-        if it exist it continues from the experiment where it stopped.
-
-
-        Args:
-             agent: an agent object with the run step class implemented.
-             client:
-
-
-        Return:
-            A dictionary with all the metrics computed from the
-            agent running the set of experiments.
-        """
-
-        # Function return the current pose and task for this benchmark.
-        start_pose, start_experiment = self._recording.get_pose_and_experiment(
-            experiment_suite.get_number_of_poses_task())
-
-        logging.info('START')
-
-        for experiment in experiment_suite.get_experiments()[int(start_experiment):]:
-
-            positions = client.load_settings(
-                experiment.conditions).player_start_spots
-
-            self._recording.log_start(experiment.id)
-
-            for pose in experiment.poses[start_pose:]:
-                for rep in range(experiment.repetitions):
-
-                    start_index = pose[0]
-                    end_index = pose[1]
-
-                    client.start_episode(start_index)
-                    # Print information on
-                    logging.info('======== !!!! ==========')
-                    logging.info(' Start Position %d End Position %d ',
-                                 start_index, end_index)
-
-                    self._recording.log_poses(start_index, end_index,
-                                              experiment.Conditions.WeatherId)
-
-                    # Calculate the initial distance for this episode
-                    initial_distance = \
-                        sldist(
-                            [positions[start_index].location.x, positions[start_index].location.y],
-                            [positions[end_index].location.x, positions[end_index].location.y])
-
-                    time_out = experiment_suite.calculate_time_out(
-                                self._get_shortest_path(positions[start_index], positions[end_index]))
-
-                    # running the agent
-                    (result, reward_vec, control_vec, final_time, remaining_distance) = \
-                        self._run_navigation_episode(
-                            agent, client, time_out, positions[end_index],
-                            str(experiment.Conditions.WeatherId) + '_'
-                            + str(experiment.id) + '_' + str(start_index)
-                            + '.' + str(end_index))
-
-                    # Write the general status of the just ran episode
-                    self._recording.write_summary_results(
-                        experiment, pose, rep, initial_distance,
-                        remaining_distance, final_time, time_out, result)
-
-                    # Write the details of this episode.
-                    self._recording.write_measurements_results(experiment, rep, pose, reward_vec,
-                                                               control_vec)
-                    if result > 0:
-                        logging.info('+++++ Target achieved in %f seconds! +++++',
-                                     final_time)
-                    else:
-                        logging.info('----- Timeout! -----')
-
-            start_pose = 0
-
-        self._recording.log_end()
-
-        return self._compute_metric()
 

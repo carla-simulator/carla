@@ -21,51 +21,15 @@ from carla.agent_benchmark.metrics import Metrics
 
 class CoRL2017(ExperimentSuite):
 
-    def __init__(self,
-                 city_name,
-                 name_to_save,
-                 continue_experiment=True,
-                 save_images=False,
-                 distance_for_success=2.0
-                 ):
-
-        # All the weather used on this benchmark
-        self._weathers = [1, 3, 6, 8, 4, 14]
-        # Improve readability by adding a weather dictionary
-        weather_name_dict = {1: 'Clear Noon', 3: 'After Rain Noon',
-                                   6: 'Heavy Rain Noon', 8: 'Clear Sunset',
-                                   4: 'Cloudy After Rain', 14: 'Soft Rain Sunset'}
-
-        #Benchmark.__init__(self, city_name,
-        #                   name_to_save,
-        #                   continue_experiment,
-        #                   save_images,
-        #                   distance_for_success)
-
-
-
-    def get_number_of_poses_task(self):
-        """
-            Returns the number of poses that each task has.
-            It assumes all tasks have the same number of poses.
-        """
-
-        if self._city_name == 'Town01':
-            return len(self._poses_town01()[0])
-        else:
-            return len(self._poses_town02()[0])
-
-
-    #def get_all_statistics(self):
-
-    #    summary = self._metrics.compute(self._recording._path,[3])
-
-    #    return summary
-
-
-
-
-
+    @property
+    def train_weathers(self):
+        return [1, 3, 6, 8]
+    @property
+    def test_weathers(self):
+        return [4, 14]
+    @property
+    def weathers(self):
+        return [1, 3, 6, 8, 4, 14]
 
     def _poses_town01(self):
         """
@@ -142,9 +106,7 @@ class CoRL2017(ExperimentSuite):
 
         camera = Camera('CameraRGB')
         camera.set(FOV=100)
-
         camera.set_image_size(800, 600)
-
         camera.set_position(2.0, 0.0, 1.4)
         camera.set_rotation(-15.0, 0, 0)
 
@@ -159,7 +121,7 @@ class CoRL2017(ExperimentSuite):
 
         experiments_vector = []
 
-        for weather in self._weathers:
+        for weather in self.weathers:
 
             for iteration in range(len(poses_tasks)):
                 poses = poses_tasks[iteration]
@@ -168,13 +130,10 @@ class CoRL2017(ExperimentSuite):
 
                 conditions = CarlaSettings()
                 conditions.set(
-                    SynchronousMode=True,
                     SendNonPlayerAgentsInfo=True,
                     NumberOfVehicles=vehicles,
                     NumberOfPedestrians=pedestrians,
-                    WeatherId=weather,
-                    SeedVehicles=123456789,
-                    SeedPedestrians=123456789
+                    WeatherId=weather
                 )
                 # Add all the cameras that were set for this experiments
 

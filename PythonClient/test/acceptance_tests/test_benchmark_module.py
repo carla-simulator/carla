@@ -18,7 +18,7 @@ import unittest
 
 from carla.agent.agent import Agent
 
-from carla.agent_benchmark.experiment_suite.sample import SampleBenchmark
+from carla.agent_benchmark.experiment_suite.basic import Basic
 
 from carla.client import make_carla_client, VehicleControl
 from carla.tcp import TCPConnectionError

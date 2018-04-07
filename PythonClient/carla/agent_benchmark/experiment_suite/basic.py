@@ -14,13 +14,15 @@ from carla.settings import CarlaSettings
 from .experiment_suite import ExperimentSuite
 
 
-class Sample(ExperimentSuite):
+class Basic(ExperimentSuite):
 
+    """
     def __init__(self,
                  city_name
                  ):
 
         ExperimentSuite.__init__(city_name)
+    """
 
     @property
     def train_weathers(self):
@@ -32,7 +34,6 @@ class Sample(ExperimentSuite):
     def weathers(self):
         return [1]
 
-
     def build_experiments(self):
         """
             Creates the whole set of experiment objects,
@@ -40,17 +41,9 @@ class Sample(ExperimentSuite):
 
         """
 
-        # We set the camera
-        # This single RGB camera is used on every experiment
-
-        camera = Camera('CameraRGB')
-        camera.set(FOV=100)
-
-        camera.set_image_size(800, 600)
-
-        camera.set_position(2.0, 0.0, 1.4)
-        camera.set_rotation(-15.0, 0, 0)
-
+        # We check the town, based on that we define the town related parameters
+        # The size of the vector is related to the number of tasks, inside each
+        # task there is also multiple poses ( start end, positions )
         if self._city_name == 'Town01':
             poses_tasks = [[[36, 40]], [[138, 17]], [[105, 29]], [[105, 29]]]
             vehicles_tasks = [0, 0, 0, 20]
@@ -60,8 +53,17 @@ class Sample(ExperimentSuite):
             vehicles_tasks = [0, 0, 0, 15]
             pedestrians_tasks = [0, 0, 0, 50]
 
-        experiments_vector = []
+        # We set the camera
+        # This single RGB camera is used on every experiment
 
+        camera = Camera('CameraRGB')
+        camera.set(FOV=100)
+        camera.set_image_size(800, 600)
+        camera.set_position(2.0, 0.0, 1.4)
+        camera.set_rotation(-15.0, 0, 0)
+
+        # Based on the parameters, creates a vector with experiment objects.
+        experiments_vector = []
         for weather in self.weathers:
 
             for iteration in range(len(poses_tasks)):
@@ -83,7 +85,7 @@ class Sample(ExperimentSuite):
                 experiment.set(
                     Conditions=conditions,
                     Poses=poses,
-                    Id=iteration,
+                    Task=iteration,
                     Repetitions=1
                 )
                 experiments_vector.append(experiment)

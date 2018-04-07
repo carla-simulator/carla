@@ -163,7 +163,6 @@ class testMetrics(unittest.TestCase):
 
 
         # Now lets make a collision test on a premade file
-        print 'SECOND TEST'
 
         path = 'test/unit_tests/test_data/testfile_collisions'
 
