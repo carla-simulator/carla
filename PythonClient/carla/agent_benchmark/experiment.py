@@ -22,7 +22,7 @@ class Experiment(object):
     """
 
     def __init__(self):
-        self.Id = '0'
+        self.Task = '0'
         self.Conditions = CarlaSettings()
         self.Poses = [[]]
         self.Repetitions = 1
@@ -34,8 +34,8 @@ class Experiment(object):
             setattr(self, key, value)
 
     @property
-    def id(self):
-        return self.Id
+    def task(self):
+        return self.Task
 
     @property
     def conditions(self):

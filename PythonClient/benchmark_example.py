@@ -20,35 +20,45 @@ from carla.tcp import TCPConnectionError
 from carla.agent_benchmark.agent_benchmark import AgentBenchmark
 from carla.agent.forward import Forward
 from carla.agent_benchmark.experiment_suite.corl_2017 import CoRL2017
+from carla.agent_benchmark.experiment_suite.basic import Basic
 import carla.agent_benchmark.results_printer as results_printer
 
 
 
-def run_benchmark():
-
+def run_benchmark(full_benchmark):
 
     while True:
         try:
 
             with make_carla_client(args.host, args.port) as client:
 
+                # We instantiate a forward agent, a simple policy that just set
+                # acceleration as 0.9 and steering as zero
                 agent = Forward()
-                experiment_suite = CoRL2017()
-
+                # We instantiate an experiment suite. Basically a set of experiments
+                # that are going to be evaluated on this benchmark.
+                if full_benchmark:
+                    experiment_suite = CoRL2017()
+                else:
+                    experiment_suite = Basic()
+                # We instantiate the agent benchmark, that is the engine used to
+                # benchmark an agent. The instantiation starts the log process, setting
+                # the city and log name.
                 benchmark = AgentBenchmark(city_name=args.city_name,
                                            name_to_save=args.log_name
                                            + type(experiment_suite).__name__
                                            + '_' + args.city_name)
+                # This function performs the benchmark. It returns a dictionary summarizing
+                # the entire execution.
 
-                benchmark_summary = benchmark.benchmark_agent(agent, client)
-
+                benchmark_summary = benchmark.benchmark_agent(experiment_suite, agent, client)
 
                 print("")
                 print("")
                 print("----- Printing results for training weathers (Seen in Training) -----")
                 print("")
                 print("")
-                results_printer.print_summary(benchmark_summary,experiment_suite.train_weathers,
+                results_printer.print_summary(benchmark_summary, experiment_suite.train_weathers,
                                               benchmark.get_path())
 
                 print("")
@@ -107,11 +117,11 @@ if __name__ == '__main__':
         help='The name of the log file to be created by the benchmark'
         )
     argparser.add_argument(
-        '-n', '--log_name',
-        metavar='T',
-        default='test',
-        help='The name of the log file to be created by the benchmark'
-        )
+        '--corl_2017',
+        action='store_true',
+        dest='debug',
+        help='print debug information'
+    )
 
 
     args = argparser.parse_args()
@@ -124,4 +134,4 @@ if __name__ == '__main__':
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=log_level)
     logging.info('listening to server %s:%s', args.host, args.port)
-
+    run_benchmark(args.corl_2017)

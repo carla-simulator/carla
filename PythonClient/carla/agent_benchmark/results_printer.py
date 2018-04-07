@@ -1,3 +1,5 @@
+import os
+import numpy as np
 
 def print_summary(metrics_summary, weathers, path):
     """
@@ -7,9 +9,14 @@ def print_summary(metrics_summary, weathers, path):
 
     """
 
+    # Improve readability by adding a weather dictionary
+    weather_name_dict = {1: 'Clear Noon', 3: 'After Rain Noon',
+                         6: 'Heavy Rain Noon', 8: 'Clear Sunset',
+                         4: 'Cloudy After Rain', 14: 'Soft Rain Sunset'}
+
 
     # First we write the entire dictionary on the benchmark folder.
-    fout = os.path.join(self._recording._path, 'metrics.txt')
+    fout = os.path.join(path, 'metrics.txt')
     fo = open(fout, "w")
 
     for k, v in metrics_summary.items():
@@ -37,7 +44,7 @@ def print_summary(metrics_summary, weathers, path):
         metric_sum_values = np.zeros(len(self._poses_town01()))
         for weather, tasks in values.items():
             if weather in set(weathers):
-                print('  Weather: ', self._weather_name_dict[weather])
+                print('  Weather: ', weather_name_dict[weather])
                 count = 0
                 for t in tasks:
                     # if isinstance(t, np.ndarray) or isinstance(t, list):
@@ -90,7 +97,7 @@ def print_summary(metrics_summary, weathers, path):
             tasks_driven = items_driven[1]
 
             if weather in set(weathers):
-                print('  Weather: ', weather)
+                print('  Weather: ', weather_name_dict[weather])
                 count = 0
                 for t, t_driven in zip(tasks, tasks_driven):
                     # if isinstance(t, np.ndarray) or isinstance(t, list):

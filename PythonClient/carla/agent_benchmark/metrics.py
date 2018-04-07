@@ -18,7 +18,7 @@ flatten = lambda l: [item for sublist in l for item in sublist]
 class Metrics(object):
     """
         The metrics class is made to take the driving measurements
-        and calculate some specific metrics.
+        and calculate some specific performance metrics.
 
     """
 
