@@ -25,7 +25,7 @@ import carla.agent_benchmark.results_printer as results_printer
 
 
 
-def run_benchmark(full_benchmark):
+def run_benchmark(full_benchmark, city_name, log_name):
 
     while True:
         try:
@@ -44,10 +44,10 @@ def run_benchmark(full_benchmark):
                 # We instantiate the agent benchmark, that is the engine used to
                 # benchmark an agent. The instantiation starts the log process, setting
                 # the city and log name.
-                benchmark = AgentBenchmark(city_name=args.city_name,
-                                           name_to_save=args.log_name
+                benchmark = AgentBenchmark(city_name=city_name,
+                                           name_to_save=log_name
                                            + type(experiment_suite).__name__
-                                           + '_' + args.city_name)
+                                           + '_' + city_name)
                 # This function performs the benchmark. It returns a dictionary summarizing
                 # the entire execution.
 
@@ -133,4 +133,4 @@ if __name__ == '__main__':
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=log_level)
     logging.info('listening to server %s:%s', args.host, args.port)
-    run_benchmark(args.corl_2017)
+    run_benchmark(args.corl_2017, args.city_name, args.log_name)
