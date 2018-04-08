@@ -143,7 +143,7 @@ class CoRL2017(ExperimentSuite):
                 experiment.set(
                     Conditions=conditions,
                     Poses=poses,
-                    Id=iteration,
+                    Task=iteration,
                     Repetitions=1
                 )
                 experiments_vector.append(experiment)

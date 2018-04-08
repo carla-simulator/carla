@@ -105,7 +105,7 @@ class Recording(object):
                               path_distance, remaining_distance,
                               final_time, time_out, result):
 
-        self._dict_summary['exp_id'] = experiment.id
+        self._dict_summary['exp_id'] = experiment.task
         self._dict_summary['rep'] = rep
         self._dict_summary['weather'] = experiment.Conditions.WeatherId
         self._dict_summary['start_point'] = pose[0]
@@ -128,7 +128,7 @@ class Recording(object):
             rw = csv.DictWriter(rfd, self._dict_measurements.keys())
 
             for i in range(len(reward_vec)):
-                self._dict_measurements['exp_id'] = experiment.id
+                self._dict_measurements['exp_id'] = experiment.task
                 self._dict_measurements['rep'] = rep
                 self._dict_measurements['start_point'] = pose[0]
                 self._dict_measurements['end_point'] = pose[1]

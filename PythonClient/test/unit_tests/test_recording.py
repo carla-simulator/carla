@@ -16,7 +16,7 @@ class testRecording(unittest.TestCase):
 
         recording = Recording(name_to_save='Test1'
                               , continue_experiment=False, save_images=True
-                              , benchmark_details='corl2017_town01')
+                              )
 
 
         _ = open(os.path.join(recording._path,'summary.csv'), 'r')
@@ -33,7 +33,7 @@ class testRecording(unittest.TestCase):
 
         recording = Recording(name_to_save='Test1'
                               , continue_experiment=False, save_images=True
-                              , benchmark_details='corl2017_town01')
+                              )
 
         recording.write_summary_results( experiment=Experiment(), pose=[24,32], rep=1,
                                          path_distance=200, remaining_distance=0,
@@ -65,7 +65,7 @@ class testRecording(unittest.TestCase):
 
         recording = Recording(name_to_save='Test1'
                               , continue_experiment=False, save_images=True
-                              , benchmark_details='corl2017_town01')
+                              )
 
 
         reward_vec = [Measurements().player_measurements for x in range(20)]
@@ -94,7 +94,7 @@ class testRecording(unittest.TestCase):
 
         recording = Recording( name_to_save='Test1'
                               , continue_experiment=False, save_images=True
-                              , benchmark_details='corl2017_town01')
+                              )
 
         # A just started case should return the continue experiment case
         self.assertEqual(recording._continue_experiment(True)[1], 1)
@@ -122,7 +122,7 @@ class testRecording(unittest.TestCase):
 
         recording = Recording( name_to_save='Test1'
                               , continue_experiment=False, save_images=True
-                              , benchmark_details='corl2017_town01')
+                              )
 
 
 
@@ -167,13 +167,13 @@ class testRecording(unittest.TestCase):
         self.assertEqual(experiment, 1)
 
     def test_get_pose_and_experiment_corner(self):
-        print 'Pose '
+
 
         from carla.agent_benchmark.experiment import Experiment
 
         recording = Recording( name_to_save='Test1'
                               , continue_experiment=False, save_images=True
-                              , benchmark_details='corl2017_town01')
+                              )
 
         pose, experiment = recording.get_pose_and_experiment(1)
 

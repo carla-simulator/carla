@@ -12,7 +12,7 @@ class Experiment(object):
     Experiment defines a certain task, under conditions
     A task is associated with a set of poses, containing start and end pose.
 
-    Conditions are associated with a carla Settings and describe the following conditions:
+    Conditions are associated with a carla Settings and describe the following:
 
     Number Of Vehicles
     Number Of Pedestrians
@@ -22,7 +22,7 @@ class Experiment(object):
     """
 
     def __init__(self):
-        self.Task = '0'
+        self.Task = 0
         self.Conditions = CarlaSettings()
         self.Poses = [[]]
         self.Repetitions = 1

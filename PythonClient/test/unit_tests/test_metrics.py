@@ -26,7 +26,7 @@ class testMetrics(unittest.TestCase):
                                        'frames_recount': 20,
                                        'threshold': 0.4
                                        },
-            'collision_general': {'frames_skip': 10,
+            'collision_other': {'frames_skip': 10,
                                   'frames_recount': 20,
                                   'threshold': 400
                                   },
@@ -50,7 +50,7 @@ class testMetrics(unittest.TestCase):
 
         recording = Recording(name_to_save='TestMetric'
                               , continue_experiment=False, save_images=True
-                              , benchmark_details='corl2017_town01')
+                              )
 
 
 
@@ -81,14 +81,14 @@ class testMetrics(unittest.TestCase):
     def test_init(self):
 
         # Metric should instantiate with parameters
-        Metrics(self._metrics_parameters)
+        Metrics(self._metrics_parameters,[3])
 
 
 
     def test_divide_by_episodes(self):
 
 
-        metrics_obj = Metrics(self._metrics_parameters)
+        metrics_obj = Metrics(self._metrics_parameters,[3])
 
         poses_to_test = [[24, 32], [34, 36], [54, 67]]
         path = self._generate_test_case(poses_to_test)
@@ -134,7 +134,7 @@ class testMetrics(unittest.TestCase):
 
         # This is is the last one, generate many cases, corner cases, to be tested.
 
-        metrics_obj = Metrics(self._metrics_parameters)
+        metrics_obj = Metrics(self._metrics_parameters,[3])
 
 
         # Lets start testing a general file, not from a real run
@@ -148,7 +148,7 @@ class testMetrics(unittest.TestCase):
 
 
         number_of_colisions_vehicles = sum_matrix(summary_dict['collision_vehicles'][1.0])
-        number_of_colisions_general = sum_matrix(summary_dict['collision_general'][1.0])
+        number_of_colisions_general = sum_matrix(summary_dict['collision_other'][1.0])
         number_of_colisions_pedestrians = sum_matrix(summary_dict['collision_pedestrians'][1.0])
         number_of_intersection_offroad = sum_matrix(summary_dict['intersection_offroad'][1.0])
         number_of_intersection_otherlane = sum_matrix(summary_dict['intersection_otherlane'][1.0])
@@ -169,7 +169,7 @@ class testMetrics(unittest.TestCase):
         summary_dict = metrics_obj.compute(path)
 
         number_of_colisions_vehicles = sum_matrix(summary_dict['collision_vehicles'][3.0])
-        number_of_colisions_general = sum_matrix(summary_dict['collision_general'][3.0])
+        number_of_colisions_general = sum_matrix(summary_dict['collision_other'][3.0])
         number_of_colisions_pedestrians = sum_matrix(summary_dict['collision_pedestrians'][3.0])
         number_of_intersection_offroad = sum_matrix(summary_dict['intersection_offroad'][3.0])
         number_of_intersection_otherlane = sum_matrix(summary_dict['intersection_otherlane'][3.0])

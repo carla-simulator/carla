@@ -59,9 +59,6 @@ class AgentBenchmark(object):
         self._planner = Planner(city_name)
 
 
-
-
-
     def benchmark_agent(self, experiment_suite, agent, client):
         """
         Function to benchmark the agent.
@@ -82,7 +79,8 @@ class AgentBenchmark(object):
 
         # Instantiate a metric object that will be used to compute the metrics for
         # the benchmark afterwards.
-        metrics_object = Metrics(experiment_suite.metrics_parameters)
+        metrics_object = Metrics(experiment_suite.metrics_parameters,
+                                 experiment_suite.dynamic_tasks)
 
         # Function return the current pose and task for this benchmark.
         start_pose, start_experiment = self._recording.get_pose_and_experiment(

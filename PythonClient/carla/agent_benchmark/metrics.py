@@ -22,13 +22,15 @@ class Metrics(object):
 
     """
 
-    def __init__(self, parameters):
+    def __init__(self, parameters, dynamic_tasks):
         """
         Args
             parameters: A dictionary with the used parameters for checking how to count infractions
+            dynamic_tasks: A list of the all dynamic tasks (That contain dynamic objects)
         """
 
         self._parameters = parameters
+        self._parameters['dynamic_tasks'] = dynamic_tasks
 
     def _divide_by_episodes(self, measurements_matrix, header):
 
@@ -314,7 +316,7 @@ class Metrics(object):
                     metrics_dictionary['intersection_offroad'][
                         w][t].append(lane_road[1])
 
-                    if tasks[t] in set(self._parameters['dynamic_episodes']):
+                    if tasks[t] in set(self._parameters['dynamic_tasks']):
 
                         collisions = self._get_collisions(episode_experiment_metrics, header_metrics)
 
