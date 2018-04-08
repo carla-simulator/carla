@@ -119,7 +119,6 @@ if __name__ == '__main__':
     argparser.add_argument(
         '--corl-2017',
         action='store_true',
-        dest='debug',
         help='print debug information'
     )
 
