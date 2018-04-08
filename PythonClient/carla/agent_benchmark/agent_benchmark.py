@@ -93,7 +93,7 @@ class AgentBenchmark(object):
             positions = client.load_settings(
                 experiment.conditions).player_start_spots
 
-            self._recording.log_start(experiment.id)
+            self._recording.log_start(experiment.task)
 
             for pose in experiment.poses[start_pose:]:
                 for rep in range(experiment.repetitions):
@@ -124,7 +124,7 @@ class AgentBenchmark(object):
                         self._run_navigation_episode(
                             agent, client, time_out, positions[end_index],
                             str(experiment.Conditions.WeatherId) + '_'
-                            + str(experiment.id) + '_' + str(start_index)
+                            + str(experiment.task) + '_' + str(start_index)
                             + '.' + str(end_index))
 
                     # Write the general status of the just ran episode
