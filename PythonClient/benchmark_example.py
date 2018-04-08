@@ -38,9 +38,9 @@ def run_benchmark(full_benchmark, city_name, log_name):
                 # We instantiate an experiment suite. Basically a set of experiments
                 # that are going to be evaluated on this benchmark.
                 if full_benchmark:
-                    experiment_suite = CoRL2017()
+                    experiment_suite = CoRL2017(city_name)
                 else:
-                    experiment_suite = Basic()
+                    experiment_suite = Basic(city_name)
                 # We instantiate the agent benchmark, that is the engine used to
                 # benchmark an agent. The instantiation starts the log process, setting
                 # the city and log name.
