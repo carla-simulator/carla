@@ -1,4 +1,4 @@
-intersection_offroad,collision_general,collision_pedestrians,weather,brake,exp_id,collision_vehicles,pos_x,pos_y,intersection_otherlane,end_point,rep,throttle,start_point,steer
+intersection_offroad,collision_other,collision_pedestrians,weather,brake,exp_id,collision_vehicles,pos_x,pos_y,intersection_otherlane,end_point,rep,throttle,start_point,steer
 0.0,0.0,0.0,3,0.0,3,0.0,122.2798080444336,326.1367492675781,0.0,29,0,0.8999999761581421,105,0.0
 0.0,0.0,0.0,3,0.0,3,6267.859375,121.46373748779297,326.0997619628906,0.0,29,0,0.8999999761581421,105,0.0
 0.0,0.0,0.0,3,0.0,3,6267.859375,120.96914672851562,326.058837890625,0.0,29,0,0.8999999761581421,105,0.0

@@ -1,7 +1,7 @@
 
-
 from carla.agent.agent import Agent
 from carla.client import VehicleControl
+
 
 class Forward(Agent):
     """

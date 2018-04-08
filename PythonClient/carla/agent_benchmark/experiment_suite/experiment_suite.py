@@ -33,6 +33,7 @@ class ExperimentSuite(object):
         """
         return self._experiments
 
+    @property
     def dynamic_tasks(self):
         """
         Returns the episodes that contain dynamic obstacles
@@ -40,7 +41,7 @@ class ExperimentSuite(object):
         dynamic_tasks = set()
         for exp in self._experiments:
             if exp.conditions.NumberOfVehicles > 0 or exp.conditions.NumberOfPedestrians > 0:
-                dynamic_tasks.update(exp.task)
+                dynamic_tasks.add(exp.task)
 
         return list(dynamic_tasks)
 

@@ -117,7 +117,7 @@ if __name__ == '__main__':
         help='The name of the log file to be created by the benchmark'
         )
     argparser.add_argument(
-        '--corl_2017',
+        '--corl-2017',
         action='store_true',
         dest='debug',
         help='print debug information'
