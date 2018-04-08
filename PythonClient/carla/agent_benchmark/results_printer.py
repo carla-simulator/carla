@@ -30,6 +30,9 @@ def print_summary(metrics_summary, weathers, path):
         'average_completion'
 
     ]
+    # We compute the number  of episodes based on size of average completion
+
+    number_of_episodes = len(metrics_summary['average_completion'].items()[1][0])
 
     for metric in metrics_to_average:
 
@@ -41,7 +44,7 @@ def print_summary(metrics_summary, weathers, path):
         print ("")
         values = metrics_summary[metric]
 
-        metric_sum_values = np.zeros(len(self._poses_town01()))
+        metric_sum_values = np.zeros(number_of_episodes)
         for weather, tasks in values.items():
             if weather in set(weathers):
                 print('  Weather: ', weather_name_dict[weather])
@@ -76,8 +79,8 @@ def print_summary(metrics_summary, weathers, path):
     for metric in infraction_metrics:
         values_driven = metrics_summary['driven_kilometers']
         values = metrics_summary[metric]
-        metric_sum_values = np.zeros(len(self._poses_town01()))
-        summed_driven_kilometers = np.zeros(len(self._poses_town01()))
+        metric_sum_values = np.zeros(number_of_episodes)
+        summed_driven_kilometers = np.zeros(number_of_episodes)
 
         if metric == 'collision_pedestrians':
             print ('Avg. Kilometers driven before a collision to a PEDESTRIAN')
