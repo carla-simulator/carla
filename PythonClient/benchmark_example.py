@@ -17,11 +17,11 @@ from carla.tcp import TCPConnectionError
 from carla.settings import CarlaSettings
 
 
-from carla.agent_benchmark.agent_benchmark import AgentBenchmark
-from carla.agent.forward import Forward
-from carla.agent_benchmark.experiment_suite.corl_2017 import CoRL2017
-from carla.agent_benchmark.experiment_suite.basic import Basic
-import carla.agent_benchmark.results_printer as results_printer
+from carla.driving_benchmark.driving_benchmark import DrivingBenchmark
+from carla.agent.forward_agent import ForwardAgent
+from carla.driving_benchmark.experiment_suite.corl_2017 import CoRL2017
+from carla.driving_benchmark.experiment_suite.basic import Basic
+import carla.driving_benchmark.results_printer as results_printer
 
 
 
@@ -32,27 +32,27 @@ def run_benchmark(full_benchmark, city_name, log_name, continue_experiment):
 
             with make_carla_client(args.host, args.port) as client:
                 # Hack to fix for the issue 310, we force a reset, so it does not get
-                #  the positions on first
+                #  the positions on first server reset.
                 client.load_settings(CarlaSettings())
                 client.start_episode(0)
 
                 # We instantiate a forward agent, a simple policy that just set
                 # acceleration as 0.9 and steering as zero
-                agent = Forward()
+                agent = ForwardAgent()
                 # We instantiate an experiment suite. Basically a set of experiments
                 # that are going to be evaluated on this benchmark.
                 if full_benchmark:
                     experiment_suite = CoRL2017(city_name)
                 else:
                     experiment_suite = Basic(city_name)
-                # We instantiate the agent benchmark, that is the engine used to
-                # benchmark an agent. The instantiation starts the log process, setting
+                # We instantiate the driving benchmark, that is the engine used to
+                # benchmark an agent. The instantiation starts the log process, sets
                 # the city and log name.
-                benchmark = AgentBenchmark(city_name=city_name,
-                                           name_to_save=log_name
-                                           + type(experiment_suite).__name__
-                                           + '_' + city_name,
-                                           continue_experiment=continue_experiment)
+                benchmark = DrivingBenchmark(city_name=city_name,
+                                             name_to_save=log_name
+                                             + type(experiment_suite).__name__
+                                             + '_' + city_name,
+                                             continue_experiment=continue_experiment)
                 # This function performs the benchmark. It returns a dictionary summarizing
                 # the entire execution.
 
