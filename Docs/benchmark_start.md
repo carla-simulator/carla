@@ -34,7 +34,7 @@ This benchmark example can be further configured. Run the help command to see op
 
 
 When running the driving benchmark for the basic configuration
-you should [expect the following results](benchmark_structure.md/#expected-results).
+you should [expect the following results](benchmark_creating.md/#expected-results).
 
 
 
