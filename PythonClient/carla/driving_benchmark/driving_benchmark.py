@@ -11,19 +11,24 @@ import math
 import abc
 import logging
 
-from .recording import Recording
+
+from carla.client import make_carla_client
+from carla.tcp import TCPConnectionError
+from carla.settings import CarlaSettings
+
 
 from carla.planner.planner import Planner
 from carla.client import VehicleControl
-from carla.agent_benchmark.metrics import Metrics
+from carla.driving_benchmark.metrics import Metrics
 
-
+from .recording import Recording
+from . import results_printer
 
 def sldist(c1, c2):
     return math.sqrt((c2[0] - c1[0]) ** 2 + (c2[1] - c1[1]) ** 2)
 
 
-class AgentBenchmark(object):
+class DrivingBenchmark(object):
     """
     The Benchmark class, controls the execution of the benchmark interfacing
     an Agent class with a set Suite.
@@ -265,3 +270,57 @@ class AgentBenchmark(object):
         return 0, measurement_vec, control_vec, time_out, distance
 
 
+def run_driving_benchmark(agent,
+                          experiment_suite,
+                          city_name='Town01',
+                          log_name='Test',
+                          continue_experiment=False,
+                          host='127.0.0.1',
+                          port=2000
+                          ):
+
+    while True:
+        try:
+
+            with make_carla_client(host, port) as client:
+                # Hack to fix for the issue 310, we force a reset, so it does not get
+                #  the positions on first server reset.
+                client.load_settings(CarlaSettings())
+                client.start_episode(0)
+
+
+                # We instantiate the driving benchmark, that is the engine used to
+                # benchmark an agent. The instantiation starts the log process, sets
+
+                benchmark = DrivingBenchmark(city_name=city_name,
+                                             name_to_save=log_name
+                                             + type(experiment_suite).__name__
+                                             + '_' + city_name,
+                                             continue_experiment=continue_experiment)
+                # This function performs the benchmark. It returns a dictionary summarizing
+                # the entire execution.
+
+                benchmark_summary = benchmark.benchmark_agent(experiment_suite, agent, client)
+
+                print("")
+                print("")
+                print("----- Printing results for training weathers (Seen in Training) -----")
+                print("")
+                print("")
+                results_printer.print_summary(benchmark_summary, experiment_suite.train_weathers,
+                                              benchmark.get_path())
+
+                print("")
+                print("")
+                print("----- Printing results for test weathers (Unseen in Training) -----")
+                print("")
+                print("")
+
+                results_printer.print_summary(benchmark_summary, experiment_suite.test_weathers,
+                                              benchmark.get_path())
+
+                break
+
+        except TCPConnectionError as error:
+            logging.error(error)
+            time.sleep(1)

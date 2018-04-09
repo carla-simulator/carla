@@ -7,7 +7,7 @@
 
 from __future__ import print_function
 
-from carla.agent_benchmark.experiment import Experiment
+from carla.driving_benchmark.experiment import Experiment
 from carla.sensor import Camera
 from carla.settings import CarlaSettings
 

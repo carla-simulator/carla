@@ -3,7 +3,7 @@ from carla.agent.agent import Agent
 from carla.client import VehicleControl
 
 
-class Forward(Agent):
+class ForwardAgent(Agent):
     """
     Simple derivation of Agent Class,
     A trivial agent agent that goes straight
