@@ -14,7 +14,7 @@ import time
 
 from carla.client import make_carla_client
 from carla.tcp import TCPConnectionError
-
+from carla.settings import CarlaSettings
 
 
 from carla.agent_benchmark.agent_benchmark import AgentBenchmark
@@ -31,6 +31,10 @@ def run_benchmark(full_benchmark, city_name, log_name, continue_experiment):
         try:
 
             with make_carla_client(args.host, args.port) as client:
+                # Hack to fix for the issue 310, we force a reset, so it does not get
+                #  the positions on first
+                #client.load_settings(CarlaSettings())
+                #client.start_episode(0)
 
                 # We instantiate a forward agent, a simple policy that just set
                 # acceleration as 0.9 and steering as zero
