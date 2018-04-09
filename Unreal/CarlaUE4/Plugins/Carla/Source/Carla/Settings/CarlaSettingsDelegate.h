@@ -5,11 +5,9 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
-
+#include "CoreMinimal.h"
+#include "Engine/World.h"
 #include "CarlaSettingsDelegate.generated.h"
-
-
-class UCarlaSettings;
 
 /// Used to set settings for every actor that is spawned into the world.
 UCLASS(BlueprintType)

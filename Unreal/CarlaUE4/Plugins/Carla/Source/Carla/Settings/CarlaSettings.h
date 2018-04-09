@@ -5,12 +5,10 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
-
+#include "Engine/StaticMesh.h"
 #include "WeatherDescription.h"
-
-#include "UObject/NoExportTypes.h"
-
 #include "CarlaSettings.generated.h"
+
 
 UENUM(BlueprintType)
 enum class EQualitySettingsLevel : uint8
@@ -42,7 +40,7 @@ public:
 };
 
 class USensorDescription;
-struct FStaticMaterial;
+
 /** Global settings for CARLA.
  * Setting object used to hold both config settings and editable ones in one place
  * To ensure the settings are saved to the specified config file make sure to add

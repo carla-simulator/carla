@@ -16,7 +16,7 @@
 	"Modules": [
 		{
 			"Name": "Carla",
-			"Type": "Developer",
+			"Type": "Runtime",
 			"LoadingPhase": "PreDefault",
 			"AdditionalDependencies": [
 				"Engine"
