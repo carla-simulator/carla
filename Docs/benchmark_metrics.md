@@ -1,5 +1,10 @@
 
-####Benchmark Performance Metrics
+Benchmark Performance Metrics
+------------------------------
+
+
+On your experiment suite class definition you could also
+redefine.
 
 The benchmark module provides the following performance metrics, which 
 are related to infraction:

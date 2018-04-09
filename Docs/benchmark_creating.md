@@ -10,11 +10,11 @@ Both modules are abstract classes that must be redefined by
 the user.
 
 The following code excerpt is
-an example on how to apply a agent benchmark
+an example on how to apply a driving benchmark
 
-    agent = Forward() 
+    agent = ForwardAgent() 
     experiment_suite = Basic()
-    benchmark = AgentBenchmark() 
+    benchmark = DrivingBenchmark() 
     benchmark_summary = benchmark.benchmark_agent(experiment_suite, agent, client)
 
 
@@ -32,7 +32,7 @@ Lets start by deriving a simple Forward agent.
     from carla.agent.agent import Agent
     from carla.client import VehicleControl
     
-    class Forward(Agent):
+    class ForwardAgent(Agent):
 
 
 To have its performance evaluated, the Forward derived class _must_ redefine the *run_step* 
@@ -189,5 +189,21 @@ The full code could be found at basic.py
 
 
 
-#### Executing and expected results
+#### Expected Results
+
+The presented example can be execute  for Town01 as:
+
+    ./driving_benchmark_example.py -c Town01
+ 
+You should expect these results: [town01_basic_forward_results](benchmark_basic_results_town01.md
+
+For Town02:
+
+    ./driving_benchmark_example.py -c Town02
+
+You should expect these results: [town01_basic_forward_results](benchmark_basic_results_town01.md
+
+ you should expect these results for Town01
+and these results for Town02
+
 
