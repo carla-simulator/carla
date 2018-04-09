@@ -24,7 +24,7 @@ a basic experiment suite and a trivial forward going agent.
 
 
 
-####Defining the Agent
+#### Defining the Agent
 
 The tested agent must  inherit the base *Agent* class.
 Lets start by deriving a simple Forward agent. 
@@ -63,7 +63,7 @@ This function receives the following parameters:
 
 
 
-####Defining the Experiment Suite
+#### Defining the Experiment Suite
 
 
 To create a Experiment Suite class you need to perform
@@ -75,7 +75,7 @@ the following steps:
 
 
 
-#####Definition
+##### Definition
 
 
 The defined set of experiments must derive the *ExperimentSuite* class
@@ -90,7 +90,7 @@ as in the following code.
     
     class Basic(ExperimentSuite):
     
-#####Define the used weathers
+##### Define the used weathers
 
 The user must select the weathers to be used. One should select the set
 of test weathers and the set of train weathers. This is defined as a
@@ -154,33 +154,34 @@ Keep in mind that a task is a set of episodes with start and end points.
 Finally by using the defined tasks we can build the experiments
 vector as we show in the following code excerpt:
 
-     experiments_vector = []
-        for weather in self.weathers:
+```
+experiments_vector = []
+    for weather in self.weathers:
 
-            for iteration in range(len(poses_tasks)):
-                poses = poses_tasks[iteration]
-                vehicles = vehicles_tasks[iteration]
-                pedestrians = pedestrians_tasks[iteration]
-
-                conditions = CarlaSettings()
-                conditions.set(
-                    SendNonPlayerAgentsInfo=True,
-                    NumberOfVehicles=vehicles,
-                    NumberOfPedestrians=pedestrians,
-                    WeatherId=weather
-
-                )
-                # Add all the cameras that were set for this experiments
-                conditions.add_sensor(camera)
-                experiment = Experiment()
-                experiment.set(
-                    Conditions=conditions,
-                    Poses=poses,
-                    Task=iteration,
-                    Repetitions=1
-                )
-                experiments_vector.append(experiment)
-
+        for iteration in range(len(poses_tasks)):
+            poses = poses_tasks[iteration]
+            vehicles = vehicles_tasks[iteration]
+            pedestrians = pedestrians_tasks[iteration]
+    
+            conditions = CarlaSettings()
+            conditions.set(
+                SendNonPlayerAgentsInfo=True,
+                NumberOfVehicles=vehicles,
+                NumberOfPedestrians=pedestrians,
+                WeatherId=weather
+    
+            )
+            # Add all the cameras that were set for this experiments
+            conditions.add_sensor(camera)
+            experiment = Experiment()
+            experiment.set(
+                Conditions=conditions,
+                Poses=poses,
+                Task=iteration,
+                Repetitions=1
+            )
+            experiments_vector.append(experiment)
+```
 
 
 
@@ -195,15 +196,13 @@ The presented example can be execute  for Town01 as:
 
     ./driving_benchmark_example.py -c Town01
  
-You should expect these results: [town01_basic_forward_results](benchmark_basic_results_town01.md
+You should expect these results: [town01_basic_forward_results](benchmark_basic_results_town01.md)
 
 For Town02:
 
     ./driving_benchmark_example.py -c Town02
 
-You should expect these results: [town01_basic_forward_results](benchmark_basic_results_town01.md
+You should expect these results: [town01_basic_forward_results](benchmark_basic_results_town01.md)
 
- you should expect these results for Town01
-and these results for Town02
 
 

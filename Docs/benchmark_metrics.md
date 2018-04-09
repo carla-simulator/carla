@@ -1,10 +1,8 @@
 
-Benchmark Performance Metrics
+Driving Benchmark Performance Metrics
 ------------------------------
 
 
-On your experiment suite class definition you could also
-redefine.
 
 The benchmark module provides the following performance metrics, which 
 are related to infraction:
@@ -22,16 +20,16 @@ are related to infraction:
   an impact bigger than a *threshold*.
 
 * Pedestrian Collisions: The number of collisions with pedestrians
- that have an impact bigger than a threshold.
+ that have an impact bigger than a *threshold*.
 
 * General Collisions: The number of collisions with all other
-objects.
+objects with an impact bigger than a *threshold*
 
 
 These results can be computed with the metrics module, by using the following
 function
 
-`summary_dictionary = metrics.compute_summary(path_to_execution_log,parameters)`
+    summary_dictionary = metrics.compute_summary(path_to_execution_log,parameters)
 
 The function receives the full path to the execution log and a dictionary with
 parameters. It returns a dictionary with the metrics.
@@ -46,6 +44,10 @@ it to be counted as another infraction.
 *Frames Skip: It is related to the number of frames that are
 skipped after a collision or a intersection starts.
 
+
+
+On your experiment suite class definition you could also
+redefine the metrics experiment.
 
 
 ####Benchmark Execution

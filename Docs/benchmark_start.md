@@ -37,7 +37,6 @@ When running the driving benchmark for the basic configuration
 you should [expect the following results](benchmark_creating.md/#expected-results).
 
 
-
 Next we show the benchmark structure and
 how to  set up your agent and conditions
 where it will be tested.
