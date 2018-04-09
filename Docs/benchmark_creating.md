@@ -1,11 +1,11 @@
 Benchmarking your Agent
 ---------------------------
 
-![Benchmark_structure](img/benchmark.pn)
+![Benchmark_structure](img/benchmark_diagram_small.png )
 
 The agent benchmark is associated with other two modules.
-The *agent* module, that is a controller which performs in a
-second module, the *experiment suite*.
+The *agent* module, a controller which performs in a
+another module, the *experiment suite*.
 Both modules are abstract classes that must be redefined by
 the user.
 

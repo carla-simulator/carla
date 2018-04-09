@@ -11,7 +11,7 @@ Getting Started
 ----------------
 
 To run an example of a trivial agent performing in an small
-set of experiments run:
+set of experiments (Basic) run:
 
     $ ./benchmark_example.py
 
@@ -33,7 +33,17 @@ This benchmark example can be further configured. Run the help command to see op
     $ ./benchmark_example.py --help
 
 
-Next we show how to  set up your agent and customize the conditions
+#### Expected Results
+
+When running the basic example you should expect these results for Town01
+and these results for Town02
+
+
+
+
+
+Next we show the benchmark structure and
+how to  set up your agent and conditions
 where it will be tested.
 
 
