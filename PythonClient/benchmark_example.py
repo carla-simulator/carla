@@ -25,7 +25,7 @@ import carla.agent_benchmark.results_printer as results_printer
 
 
 
-def run_benchmark(full_benchmark, city_name, log_name, continue_experiment):
+def run_benchmark(agent, experiment_suite, city_name, log_name, continue_experiment):
 
     while True:
         try:
@@ -36,15 +36,6 @@ def run_benchmark(full_benchmark, city_name, log_name, continue_experiment):
                 client.load_settings(CarlaSettings())
                 client.start_episode(0)
 
-                # We instantiate a forward agent, a simple policy that just set
-                # acceleration as 0.9 and steering as zero
-                agent = Forward()
-                # We instantiate an experiment suite. Basically a set of experiments
-                # that are going to be evaluated on this benchmark.
-                if full_benchmark:
-                    experiment_suite = CoRL2017(city_name)
-                else:
-                    experiment_suite = Basic(city_name)
                 # We instantiate the agent benchmark, that is the engine used to
                 # benchmark an agent. The instantiation starts the log process, setting
                 # the city and log name.
@@ -143,4 +134,17 @@ if __name__ == '__main__':
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=log_level)
     logging.info('listening to server %s:%s', args.host, args.port)
-    run_benchmark(args.corl_2017, args.city_name, args.log_name, args.continue_experiment)
+
+    # We instantiate a forward agent, a simple policy that just set
+    # acceleration as 0.9 and steering as zero
+    agent = Forward()
+
+    # We instantiate an experiment suite. Basically a set of experiments
+    # that are going to be evaluated on this benchmark.
+    if args.corl_2017:
+        experiment_suite = CoRL2017(city_name)
+    else:
+        experiment_suite = Basic(city_name)
+
+    # Now actually run the agent_benchmark
+    run_benchmark(agent, experiment_suite, args.city_name, args.log_name, args.continue_experiment)
