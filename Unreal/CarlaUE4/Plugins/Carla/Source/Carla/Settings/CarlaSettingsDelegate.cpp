@@ -1,5 +1,5 @@
 #include "Carla.h"
-#include "Engine/World.h"
+
 #include "Game/CarlaGameModeBase.h"
 #include "Settings/CarlaSettings.h"
 #include "CarlaSettingsDelegate.h"
