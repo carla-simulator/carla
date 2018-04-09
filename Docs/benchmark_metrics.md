@@ -23,14 +23,17 @@ are related to infraction:
  that have an impact bigger than a *threshold*.
 
 * General Collisions: The number of collisions with all other
-objects with an impact bigger than a *threshold*
+objects with an impact bigger than a *threshold*.
 
 
 These results can be computed with the metrics module, by using the following
-function
+code excerpt:
 
-    summary_dictionary = metrics.compute_summary(path_to_execution_log,parameters)
+    metrics_object = Metrics(metrics_parameters)
+    summary_dictionary = metrics_object.compute(path_to_execution_log)
 
+The class is instanced with a dictionary of parameters. 
+These parameters could be changed by changing 
 The function receives the full path to the execution log and a dictionary with
 parameters. It returns a dictionary with the metrics.
 
