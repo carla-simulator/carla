@@ -43,8 +43,6 @@ from the community. Our most immediate goals are:
 - [ ] Allowing for flexible and user-friendly import and editing of maps
 - [ ] Allowing the users to control non-player characters (and therefore set up user-specified scenarios)
 
-We will post a detailed roadmap and contribution guidelines soon - stay tuned!
-
 Paper
 -----
 
@@ -101,13 +99,4 @@ CARLA specific code is distributed under MIT License.
 
 CARLA specific assets are distributed under CC-BY License.
 
-Note that UE4 itself and the UE4 free automotive materials follow their own
-license terms.
-
-CARLA uses free automotive materials from Epic Games. For compiling CARLA, these
-materials must be downloaded from the UE4 marketplace and manually linked in
-CARLA following the instructions provided in the documentation.
-
-CARLA uses pedestrians created with Adobe Fuse, which is a free tool for that
-purpose. Currently, we cannot redistribute these pedestrians models. They can
-only be used in the provided executable.
+Note that UE4 itself follows its own license terms.
