@@ -1,4 +1,4 @@
-Agent Benchmark
+Driving Benchmark
 ===============
 
 One of the main objectives of CARLA is to serve as a comparison
@@ -13,12 +13,12 @@ Getting Started
 To run an example of a trivial agent performing in an small
 set of experiments (Basic) run:
 
-    $ ./benchmark_example.py
+    $ ./driving_benchmark_example.py
 
 
 Keep in mind that to run the command above, you need a CARLA simulator
-server running, on  localhost and on port 2000.
-    
+server running, at localhost and on port 2000.
+   
 
 We already provide the same benchmark used in the CoRL
 2017 paper. By running this benchmark you can compare the results of your agent
@@ -26,19 +26,15 @@ to the results obtained by the agents shown in the paper.
 The CoRL 2017 experiment suite can be run in a trivial agent by
 running:
 
-    $ ./benchmark_example.py --corl-2017
+    $ ./driving_benchmark_example.py --corl-2017
 
 This benchmark example can be further configured. Run the help command to see options available.
 
-    $ ./benchmark_example.py --help
+    $ ./driving_benchmark_example.py --help
 
 
-#### Expected Results
-
-When running the basic example you should expect these results for Town01
-and these results for Town02
-
-
+When running the driving benchmark for the basic configuration
+you should [expect the following results](benchmark_structure.md/#expected-results).
 
 
 

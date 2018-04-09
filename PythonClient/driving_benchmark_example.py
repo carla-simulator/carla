@@ -85,7 +85,7 @@ if __name__ == '__main__':
     else:
         experiment_suite = Basic(args.city_name)
 
-    # Now actually run the agent_benchmark
+    # Now actually run the driving_benchmark
     run_driving_benchmark(agent, experiment_suite, args.city_name,
                           args.log_name, args.continue_experiment,
                           args.host, args.port)
