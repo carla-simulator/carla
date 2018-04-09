@@ -27,9 +27,6 @@ class CoRL2017(ExperimentSuite):
     @property
     def test_weathers(self):
         return [4, 14]
-    @property
-    def weathers(self):
-        return [1, 3, 6, 8, 4, 14]
 
     def _poses_town01(self):
         """

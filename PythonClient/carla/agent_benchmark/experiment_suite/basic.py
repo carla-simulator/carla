@@ -16,22 +16,11 @@ from .experiment_suite import ExperimentSuite
 
 class Basic(ExperimentSuite):
 
-    """
-    def __init__(self,
-                 city_name
-                 ):
-
-        ExperimentSuite.__init__(city_name)
-    """
-
     @property
     def train_weathers(self):
         return [1]
     @property
     def test_weathers(self):
-        return [1]
-    @property
-    def weathers(self):
         return [1]
 
     def build_experiments(self):

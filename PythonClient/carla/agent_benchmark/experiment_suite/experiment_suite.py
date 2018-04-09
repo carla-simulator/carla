@@ -78,6 +78,10 @@ class ExperimentSuite(object):
 
               }
 
+    @abc.abstractproperty
+    def weathers(self):
+        return list(set(self.train_weathers).update(set(self.test_weathers)))
+
     @abc.abstractmethod
     def build_experiments(self):
         """
@@ -96,10 +100,3 @@ class ExperimentSuite(object):
         """
         Return the weathers that are considered as testing conditions
         """
-
-    @abc.abstractproperty
-    def weathers(self):
-        """
-        Return all the used weathers
-        """
-
