@@ -245,7 +245,7 @@ class Recording(object):
         if line_on_file == 0:
             return 0, 0
         else:
-            return line_on_file % number_poses_task, line_on_file / number_poses_task
+            return line_on_file % number_poses_task, line_on_file // number_poses_task
 
 
 

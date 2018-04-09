@@ -222,16 +222,17 @@ class Metrics(object):
 
         """
 
-        with open(os.path.join(path, 'summary.csv'), "r") as f:
+        with open(os.path.join(path, 'summary.csv'), "rU") as f:
             header = f.readline()
             header = header.split(',')
-            header[-1] = header[-1][:-2]
+            header[-1] = header[-1][:-1]
 
-        with open(os.path.join(path, 'measurements.csv'), "r") as f:
+        with open(os.path.join(path, 'measurements.csv'), "rU") as f:
 
             header_metrics = f.readline()
             header_metrics = header_metrics.split(',')
-            header_metrics[-1] = header_metrics[-1][:-2]
+            header_metrics[-1] = header_metrics[-1][:-1]
+
 
         result_matrix = np.loadtxt(os.path.join(path, 'summary.csv'), delimiter=",", skiprows=1)
 
@@ -246,9 +247,7 @@ class Metrics(object):
         measurements_matrix = np.loadtxt(os.path.join(path, 'measurements.csv'), delimiter=",",
                                          skiprows=1)
 
-        #plt.plot(measurements_matrix[:, header_metrics.index('collision_vehicles')])
-        #plt.show()
-        metrics_dictionary = {'average_completion': {w: [0] * len(tasks) for w in all_weathers},
+        metrics_dictionary = {'episodes_completion': {w: [0] * len(tasks) for w in all_weathers},
                               'intersection_offroad': {w: [[] for i in range(len(tasks))] for w in
                                                        all_weathers},
                               'intersection_otherlane': {w: [[] for i in range(len(tasks))] for w in
@@ -259,7 +258,7 @@ class Metrics(object):
                                                      all_weathers},
                               'collision_other': {w: [[] for i in range(len(tasks))] for w in
                                                     all_weathers},
-                              'average_fully_completed': {w: [0] * len(tasks) for w in
+                              'episodes_fully_completed': {w: [0] * len(tasks) for w in
                                                           all_weathers},
                               'average_speed': {w: [0] * len(tasks) for w in all_weathers},
                               'driven_kilometers': {w: [0] * len(tasks) for w in all_weathers}
@@ -283,10 +282,10 @@ class Metrics(object):
                                    measurements_matrix[:, header_metrics.index('weather')] == float(
                                        w))]
 
-                metrics_dictionary['average_fully_completed'][w][t] = \
+                metrics_dictionary['episodes_fully_completed'][w][t] = \
                     experiment_results_matrix[:, header.index('result')]
 
-                metrics_dictionary['average_completion'][w][t] = \
+                metrics_dictionary['episodes_completion'][w][t] = \
                     (experiment_results_matrix[:, header.index('initial_distance')]
                      - experiment_results_matrix[:, header.index('final_distance')]) \
                     / experiment_results_matrix[:, header.index('initial_distance')]

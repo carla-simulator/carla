@@ -78,9 +78,11 @@ class ExperimentSuite(object):
 
               }
 
-    @abc.abstractproperty
+    @property
     def weathers(self):
-        return list(set(self.train_weathers).update(set(self.test_weathers)))
+        weathers = set(self.train_weathers)
+        weathers.update(self.test_weathers)
+        return weathers
 
     @abc.abstractmethod
     def build_experiments(self):

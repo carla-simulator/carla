@@ -8,15 +8,12 @@
 
 from __future__ import print_function
 
-import os
-import numpy as np
 
-from carla.agent_benchmark.agent_benchmark import AgentBenchmark
 from carla.agent_benchmark.experiment import Experiment
 from carla.sensor import Camera
 from carla.settings import CarlaSettings
 from carla.agent_benchmark.experiment_suite.experiment_suite import ExperimentSuite
-from carla.agent_benchmark.metrics import Metrics
+
 
 
 class CoRL2017(ExperimentSuite):

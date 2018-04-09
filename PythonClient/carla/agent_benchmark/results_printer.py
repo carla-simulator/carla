@@ -26,17 +26,16 @@ def print_summary(metrics_summary, weathers, path):
     # Second we plot the metrics that are already ready by averaging
 
     metrics_to_average = [
-        'average_fully_completed',
-        'average_completion'
+        'episodes_fully_completed',
+        'episodes_completion'
 
     ]
     # We compute the number  of episodes based on size of average completion
-
-    number_of_episodes = len(metrics_summary['average_completion'].items()[1][0])
+    number_of_episodes = len(list(metrics_summary['episodes_fully_completed'].items())[0][1])
 
     for metric in metrics_to_average:
 
-        if metric == 'average_completion':
+        if metric == 'episodes_completion':
             print ("Average Percentage of Distance to Goal Travelled ")
         else:
             print ("Percentage of Successful Episodes")
@@ -118,7 +117,10 @@ def print_summary(metrics_summary, weathers, path):
                     count += 1
         print ('  Average Between Weathers')
         for i in range(len(metric_sum_values)):
-            print('    Task ', i, ' -> ', summed_driven_kilometers[i] / metric_sum_values[i])
+            if  metric_sum_values[i] == 0:
+                print('    More than ', i, ' -> ', summed_driven_kilometers[i])
+            else:
+                print('    Task ', i, ' -> ', summed_driven_kilometers[i] / metric_sum_values[i])
         print ("")
 
     print("")
