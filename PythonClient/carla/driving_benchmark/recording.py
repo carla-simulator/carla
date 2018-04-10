@@ -13,7 +13,6 @@ class Recording(object):
                  , save_images
                  ):
 
-
         self._dict_summary = {'exp_id': -1,
                               'rep': -1,
                               'weather': -1,
@@ -25,7 +24,6 @@ class Recording(object):
                               'final_time': -1,
                               'time_out': -1
                               }
-
         self._dict_measurements = {'exp_id': -1,
                                    'rep': -1,
                                    'weather': -1,
@@ -68,13 +66,9 @@ class Recording(object):
         self._image_filename_format = os.path.join(
             self._path, '_images/episode_{:s}/{:s}/image_{:0>5d}.jpg')
 
-
-
-    """
-        Methods to log status of a certain benchmark execution.
-        This serves to keep track of which episodes were in fact benchmarked.
-    """
-
+    @property
+    def path(self):
+        return self._path
 
     def log_poses(self, start_index, end_index, weather_id):
         with open(self._internal_log_name, 'a+') as log:
@@ -94,16 +88,12 @@ class Recording(object):
         with open(self._internal_log_name, 'a+') as log:
             log.write('====== Finished Entire Benchmark ======')
 
-
-    """
-        Methods to record the measurements, sensors,
-        controls and status of the entire benchmark.
-
-    """
-
     def write_summary_results(self, experiment, pose, rep,
                               path_distance, remaining_distance,
                               final_time, time_out, result):
+        """
+        Method to record the summary of an episode(pose) execution
+        """
 
         self._dict_summary['exp_id'] = experiment.task
         self._dict_summary['rep'] = rep
@@ -121,9 +111,11 @@ class Recording(object):
 
             w.writerow(self._dict_summary)
 
-
     def write_measurements_results(self, experiment, rep, pose, reward_vec, control_vec):
-
+        """
+        Method to record the measurements, sensors,
+        controls and status of the entire benchmark.
+        """
         with open(os.path.join(self._path, 'measurements.csv'), 'a+') as rfd:
             rw = csv.DictWriter(rfd, self._dict_measurements.keys())
 
@@ -157,13 +149,9 @@ class Recording(object):
                 rw.writerow(self._dict_measurements)
 
 
-    """
-        Internal methods for summary files creation and recovering
-    """
-
     def _create_log_files(self):
         """
-            Just create the log files and add the necessary header for it.
+        Just create the log files and add the necessary header for it.
         """
 
         if not self._experiment_exist():
@@ -178,11 +166,10 @@ class Recording(object):
                 rw = csv.DictWriter(rfd, self._dict_measurements.keys())
                 rw.writeheader()
 
-
     def _continue_experiment(self, continue_experiment):
         """
-            Get the line on the file for the experiment.
-            If continue_experiment is false and experiment exist, generates a new file path
+        Get the line on the file for the experiment.
+        If continue_experiment is false and experiment exist, generates a new file path
 
         """
         def get_non_existent_path(f_name_path):
@@ -218,16 +205,14 @@ class Recording(object):
             line_on_file = 1
         return new_path, line_on_file
 
-
     def save_images(self, sensor_data, episode_name, frame):
         """
-            Save a image during the experiment
+        Save a image during the experiment
         """
         if self._save_images:
             for name, image in sensor_data.items():
                 image.save_to_disk(self._image_filename_format.format(
                     episode_name, name, frame))
-
 
     def get_pose_and_experiment(self, number_poses_task):
         """
@@ -246,8 +231,6 @@ class Recording(object):
             return 0, 0
         else:
             return line_on_file % number_poses_task, line_on_file // number_poses_task
-
-
 
     def _experiment_exist(self):
 

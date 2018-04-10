@@ -21,9 +21,9 @@ class ExperimentSuite(object):
         """
             Get the number of poses a task have for this benchmark
         """
-        """
-            Warning: assumes that all tasks have the same size
-        """
+
+        # Warning: assumes that all tasks have the same size
+
 
         return len(self._experiments[0].poses)
 

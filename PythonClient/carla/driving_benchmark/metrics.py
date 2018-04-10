@@ -9,7 +9,6 @@ import numpy as np
 import math
 import os
 
-import matplotlib.pyplot as plt
 
 sldist = lambda c1, c2: math.sqrt((c2[0] - c1[0]) ** 2 + (c2[1] - c1[1]) ** 2)
 flatten = lambda l: [item for sublist in l for item in sublist]
