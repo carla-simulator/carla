@@ -1,4 +1,5 @@
 Shows the results for test and train weathers, for this case they are the same.
+The result is printed in the screen after running the driving benchmark.
     
     
     Percentage of Successful Episodes

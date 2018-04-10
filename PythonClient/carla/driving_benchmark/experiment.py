@@ -33,6 +33,9 @@ class Experiment(object):
                 raise ValueError('Experiment: no key named %r' % key)
             setattr(self, key, value)
 
+        if self.Repetitions != 1:
+            raise NotImplementedError()
+
     @property
     def task(self):
         return self.Task

@@ -12,17 +12,28 @@ the user.
 The following code excerpt is
 an example of how to apply a driving benchmark;
 
-    agent = ForwardAgent() 
-    experiment_suite = BasicExperiments()
-    benchmark = DrivingBenchmark() 
-    performance_metrics_summary = benchmark.benchmark_agent(experiment_suite, agent, client)
+    # We instantiate a forward agent, a simple policy that just set
+    # acceleration as 0.9 and steering as zero
+    agent = ForwardAgent()
+
+    # We instantiate an experiment suite. Basically a set of experiments
+    # that are going to be evaluated on this benchmark.
+    experiment_suite = BasicExperimentSuite(city_name)
+
+    # Now actually run the driving_benchmark
+    # Besides the agent and experiment suite we should send
+    # the city name ( Town01, Town02) the log
+    run_driving_benchmark(agent, experiment_suite, city_name,
+                          log_name, continue_experiment,
+                          host, port)
+
 
 
 Following this excerpt, there are two classes to be defined.
 The ForwardAgent() and the BasicExperiments().
-After that, we instantiate the driving benchmark with default parameters
-and execute it. As a result of the execution, the driving benchmark
-returns a summary of the calculated [performance metrics](benchmark_metrics.md).
+After that, we run the benchmark it. As result of the execution, the driving benchmark
+returns stores a summary of the calculated [performance metrics](benchmark_metrics.md).
+
 
 In this tutorial we are going to show how to define 
 a basic experiment suite and a trivial agent with a going
