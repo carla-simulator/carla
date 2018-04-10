@@ -19,6 +19,9 @@
 #include "Materials/Material.h"
 #include "Paths.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Image.h"
+#include "ImageUtils.h"
+#include <memory>
 
 
 static constexpr auto DEPTH_MAT_PATH =
@@ -318,27 +321,48 @@ void ASceneCaptureCamera::WritePixels(float DeltaTime) const
 	  UE_LOG(LogCarla, Error, TEXT("SceneCaptureCamera: Missing render texture"));
 	  return ;
   }
+  const uint32 num_bytes_per_pixel = 4;    // PF_R8G8B8A8
   const uint32 width = texture->GetSizeX();
-  uint32 height = texture->GetSizeY();
-  uint32 stride;
-  uint8 *src = reinterpret_cast<uint8*>(RHILockTexture2D(texture, 0, RLM_ReadOnly, stride, false));
+  const uint32 height = texture->GetSizeY();
+  const uint32 dest_stride = width * height * num_bytes_per_pixel;
+  uint32 src_stride;
+  uint8 *src = reinterpret_cast<uint8*>(RHILockTexture2D(texture, 0, RLM_ReadOnly, src_stride, false));
   struct {
     uint32 Width;
     uint32 Height;
     uint32 Type;
     float FOV;
   } ImageHeader = {
-    SizeX,
-    SizeY,
+    width,
+    height,
     PostProcessEffect::ToUInt(PostProcessEffect),
     CaptureComponent2D->FOVAngle
   };
-  FSensorDataView DataView(
+
+  std::unique_ptr<uint8[]> dest = nullptr;
+  //Direct 3D uses additional rows in the buffer,so we need check the result stride from the lock:
+  if(IsD3DPlatform(GMaxRHIShaderPlatform,false) && (dest_stride!=src_stride))
+  {
+    const uint32 copy_row_stride = width * num_bytes_per_pixel;
+    dest = std::make_unique<uint8[]>(dest_stride);
+    // Copy per row
+    uint8* dest_row = dest.get();
+    uint8* src_row = src;
+    for (uint32 Row = 0; Row < height; ++Row)
+    {
+        FMemory::Memcpy(dest_row, src_row, copy_row_stride);
+        dest_row += copy_row_stride;
+        src_row += src_stride;
+    }
+    src = dest.get();
+  } 
+
+  const FSensorDataView DataView(
     GetId(),
     FReadOnlyBufferView{reinterpret_cast<const void *>(&ImageHeader), sizeof(ImageHeader)},
-    FReadOnlyBufferView{src,stride*height}
+    FReadOnlyBufferView{src,dest_stride}
   );
-
+   
   WriteSensorData(DataView);
   RHIUnlockTexture2D(texture, 0, false);
 }
