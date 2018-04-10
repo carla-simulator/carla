@@ -11,7 +11,7 @@ import logging
 
 from carla.driving_benchmark import run_driving_benchmark
 from carla.driving_benchmark.experiment_suite import CoRL2017
-from carla.driving_benchmark.experiment_suite import Basic
+from carla.driving_benchmark.experiment_suite import BasicExperimentSuite
 from carla.agent import ForwardAgent
 
 
@@ -85,7 +85,7 @@ if __name__ == '__main__':
     else:
         print ' WARNING: running the basic driving benchmark, to run the CORL 2017, you should run' \
               ' python driving_benchmark_example.py --corld-2017'
-        experiment_suite = Basic(args.city_name)
+        experiment_suite = BasicExperimentSuite(args.city_name)
 
     # Now actually run the driving_benchmark
     run_driving_benchmark(agent, experiment_suite, args.city_name,

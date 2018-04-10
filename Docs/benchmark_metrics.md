@@ -2,11 +2,20 @@
 Driving Benchmark Performance Metrics
 ------------------------------
 
+This page explains the performance metrics module.
+Use to compute a summary of results based on the agent
+actions when completing  the experiments.
 
 
-The benchmark module provides the following performance metrics, which 
-are related to infraction:
+### Provided performance metrics
 
+The driving benchmark performance metrics module provides the following performance metrics:
+
+* Percentage of Success: The percentage of episodes (poses from tasks),
+that the agent successfully completed.
+
+* Average Completion: The average distance towards the goal that the 
+agent was able to travel.
 
 * Off Road Intersection: The number of times the agent goes out of the road. 
  The intersection is only counted if the area of the vehicle outside
@@ -26,16 +35,21 @@ are related to infraction:
 objects with an impact bigger than a *threshold*.
 
 
-These results can be computed with the metrics module, by using the following
-code excerpt:
+### Executing and Setting Parameters
+
+The metrics are computed as the final step of the benchmark
+and it is returned by the [benchmark_agent()](benchmark_creating.md).
+Internally it is executed as follows:
 
     metrics_object = Metrics(metrics_parameters)
     summary_dictionary = metrics_object.compute(path_to_execution_log)
 
-The class is instanced with a dictionary of parameters. 
-These parameters could be changed by changing 
-The function receives the full path to the execution log and a dictionary with
-parameters. It returns a dictionary with the metrics.
+The performance metric compute function
+receives the full path to the execution log 
+and dictionary with the performance metrics.
+
+Also, the metric class is instanced with the metric parameters.
+
 
 The parameters are:
 * Threshold: The threshold used by the metrics.
@@ -44,20 +58,43 @@ The parameters are:
 of frames that the agent needs to keep doing the infraction for
 it to be counted as another infraction. 
 
-*Frames Skip: It is related to the number of frames that are
+* Frames Skip: It is related to the number of frames that are
 skipped after a collision or a intersection starts.
 
+These parameters are defined as property of the *Experiment Suite*
+base class and can be redefined at your 
+[custom *Experiment Suite*](benchmark_creating.md/#defining-the-experiment-suite).
+
+The default defined parameters are: 
 
 
-On your experiment suite class definition you could also
-redefine the metrics experiment.
+    @property
+        def metrics_parameters(self):
+        """
+        Property to return the parameters for the metric module
+        Could be redefined depending on the needs of the user.
+        """
+        return {
 
+            'intersection_offroad': {'frames_skip': 10,
+                                     'frames_recount': 20,
+                                     'threshold': 0.3
+                                     },
+            'intersection_otherlane': {'frames_skip': 10,
+                                       'frames_recount': 20,
+                                       'threshold': 0.4
+                                       },
+            'collision_other': {'frames_skip': 10,
+                                'frames_recount': 20,
+                                'threshold': 400
+                                },
+            'collision_vehicles': {'frames_skip': 10,
+                                   'frames_recount': 30,
+                                   'threshold': 400
+                                   },
+            'collision_pedestrians': {'frames_skip': 5,
+                                      'frames_recount': 100,
+                                      'threshold': 300
+                                      },
 
-####Benchmark Execution
-
-
-During the execution the benchmark module stores
-the [measurements](measurements.md)  and
- [controls](measurements.md) for every single step.
- These results are stored on the *_benchmarks_results*
- folder.
+              }

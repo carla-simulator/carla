@@ -4,25 +4,29 @@ Benchmarking your Agent
 ![Benchmark_structure](img/benchmark_diagram_small.png )
 
 The driving benchmark is associated with other two modules.
-The *agent* module, a controller which performs in a
+The *agent* module, a controller which performs in 
 another module, the *experiment suite*.
 Both modules are abstract classes that must be redefined by
 the user.
 
 The following code excerpt is
-an example of how to apply a driving benchmark
+an example of how to apply a driving benchmark;
 
     agent = ForwardAgent() 
-    experiment_suite = Basic()
+    experiment_suite = BasicExperiments()
     benchmark = DrivingBenchmark() 
-    benchmark_summary = benchmark.benchmark_agent(experiment_suite, agent, client)
+    performance_metrics_summary = benchmark.benchmark_agent(experiment_suite, agent, client)
 
 
 Following this excerpt, there are two classes to be defined.
-The ForwardAgent() and the BasicSuite().
-In this tutorial we are going to show how to create 
-a basic experiment suite  and a trivial forward going agent.
+The ForwardAgent() and the BasicExperiments().
+After that, we instantiate the driving benchmark with default parameters
+and execute it. As a result of the execution, the driving benchmark
+returns a summary of the calculated [performance metrics](benchmark_metrics.md).
 
+In this tutorial we are going to show how to define 
+a basic experiment suite and a trivial agent with a going
+forward policy.
 
 
 #### Defining the Agent
@@ -36,8 +40,8 @@ Lets start by deriving a simple Forward agent.
     class ForwardAgent(Agent):
 
 
-To have its performance evaluated, the Forward derived class _must_ redefine the *run_step* 
-function as it is done in the following excerpt:
+To have its performance evaluated, the ForwardAgent derived class _must_ 
+redefine the *run_step* function as it is done in the following excerpt:
 
     def run_step(self, measurements, sensor_data, directions, target):
         """
@@ -53,13 +57,14 @@ This function receives the following parameters:
  * [Measurements](measurements.md): the entire state of the world received
  by the client from the CARLA Simulator. These measurements contains agent position, orientation,
  dynamic objects information, etc.
- * [Sensor Data](cameras_and_sensors.md): The measured data from defined sensors, such as Lidars or RGB cameras.
+ * [Sensor Data](cameras_and_sensors.md): The measured data from defined sensors, 
+ such as Lidars or RGB cameras.
  * Directions: Information from the high level planner. Currently the planner sends
  a high level command from the set: STRAIGHT, RIGHT, LEFT, NOTHING.
  * Target Position: The position and orientation of the target.
  
  With all this information, the *run_step* function is expected 
- to return a [control message]() containing, 
+ to return a [vehicle control message](measurements.md) containing, 
  steering value, throttle value, brake value, etc.
 
 
@@ -95,7 +100,7 @@ as in the following code.
 
 The user must select the weathers to be used. One should select the set
 of test weathers and the set of train weathers. This is defined as a
-class property as in the following example.
+class property as in the following example:
 
     @property
     def train_weathers(self):
@@ -108,13 +113,13 @@ class property as in the following example.
 ##### Building Experiments
 
 The [experiments are composed by a *task* that is defined by a set of *poses*](benchmark_structure.md).
-Lets start by selecting poses for one of the cities, Town01.
+Lets start by selecting poses for one of the cities, Town01 for instance.
  First of all, we need to see all the possible positions, for that, with
   a CARLA simulator running in a terminal, run:
     
     python view_start_positions.py
  
- ![town01_positions](img/welcome.png)
+ ![town01_positions](img/town01_positions.png)
  
   
   
@@ -132,7 +137,7 @@ Figure 3, shows these defined poses for both carla towns.
 
 
  ![town01_positions](img/initial_positions.png)
- >Figure 3: The poses used on this basic *Experimental Suite* example. Poses are
+ >Figure 3: The poses used on this basic *Experiment Suite* example. Poses are
  a tuple of start and end position of a goal-directed episode. Start positions are
  shown in Blue, end positions in Red. Left: Straight poses,
  where the goal is just straight away from the start position. Middle: One turn
@@ -157,7 +162,7 @@ vector as we show in the following code excerpt:
 
 ```
 experiments_vector = []
-    for weather in self.weathers:
+    for weather in used_weathers:
 
         for iteration in range(len(poses_tasks)):
             poses = poses_tasks[iteration]

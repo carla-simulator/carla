@@ -51,7 +51,8 @@ Run the help command to see options available.
 
 
 When running the driving benchmark for the basic configuration
-you should [expect the following results](benchmark_creating.md/#expected-results).
+you should [expect the following results](benchmark_creating.md/#expected-results)
+to be printed on the terminal.
 
 
 
