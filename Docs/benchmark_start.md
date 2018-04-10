@@ -1,17 +1,34 @@
 Driving Benchmark
 ===============
 
-One of the main objectives of CARLA is to serve as a comparison
-tool for driving controllers in reproducible pre-determined conditions.
-With this, the *agent benchmark* module operates as a way to use CARLA
-to evaluate certain driving controller (agent) and obtain a some
+The  *driving benchmark* module is made
+to evaluate a driving controller (agent) and obtain 
 metrics about its performance. 
+
+This module is mainly designed for:
+
+* Users that work with autonomous driving agents and want
+to see how they perform in carla.
+
+On this section you will learn.
+
+* How to quickly get started and benchmark a trivial agent right away.
+* Learn about the general implementation architecture of the driving 
+benchmark module.
+* Learn how to set up your agent to be benchmarked and create your
+how set of experiments to challenge your agents. 
+* Learn about the performance metrics used.
+
+
+
 
 Getting Started
 ----------------
 
-To run an example of a trivial agent performing in an small
-set of experiments (Basic) run:
+As a way to familiarize yourself with the system we
+provide a trivial agent performing in an small
+set of experiments (Basic). To execute it, simply
+run:
 
     $ ./driving_benchmark_example.py
 
@@ -21,25 +38,20 @@ server running, at localhost and on port 2000.
    
 
 We already provide the same benchmark used in the CoRL
-2017 paper. By running this benchmark you can compare the results of your agent
-to the results obtained by the agents shown in the paper. 
+2017 paper. 
 The CoRL 2017 experiment suite can be run in a trivial agent by
 running:
 
     $ ./driving_benchmark_example.py --corl-2017
 
-This benchmark example can be further configured. Run the help command to see options available.
+This benchmark example can be further configured.
+Run the help command to see options available.
 
     $ ./driving_benchmark_example.py --help
 
 
 When running the driving benchmark for the basic configuration
 you should [expect the following results](benchmark_creating.md/#expected-results).
-
-
-Next we show the benchmark structure and
-how to  set up your agent and conditions
-where it will be tested.
 
 
 

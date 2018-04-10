@@ -3,14 +3,14 @@ Benchmarking your Agent
 
 ![Benchmark_structure](img/benchmark_diagram_small.png )
 
-The agent benchmark is associated with other two modules.
+The driving benchmark is associated with other two modules.
 The *agent* module, a controller which performs in a
 another module, the *experiment suite*.
 Both modules are abstract classes that must be redefined by
 the user.
 
 The following code excerpt is
-an example on how to apply a driving benchmark
+an example of how to apply a driving benchmark
 
     agent = ForwardAgent() 
     experiment_suite = Basic()
@@ -18,9 +18,10 @@ an example on how to apply a driving benchmark
     benchmark_summary = benchmark.benchmark_agent(experiment_suite, agent, client)
 
 
-
+Following this excerpt, there are two classes to be defined.
+The ForwardAgent() and the BasicSuite().
 In this tutorial we are going to show how to create 
-a basic experiment suite and a trivial forward going agent.
+a basic experiment suite  and a trivial forward going agent.
 
 
 
@@ -52,13 +53,13 @@ This function receives the following parameters:
  * [Measurements](measurements.md): the entire state of the world received
  by the client from the CARLA Simulator. These measurements contains agent position, orientation,
  dynamic objects information, etc.
- * Sensor Data: The measured data from defined sensors, such as Lidars or RGB cameras.
+ * [Sensor Data](cameras_and_sensors.md): The measured data from defined sensors, such as Lidars or RGB cameras.
  * Directions: Information from the high level planner. Currently the planner sends
  a high level command from the set: STRAIGHT, RIGHT, LEFT, NOTHING.
  * Target Position: The position and orientation of the target.
  
  With all this information, the *run_step* function is expected 
- to return a control to the car containing, 
+ to return a [control message]() containing, 
  steering value, throttle value, brake value, etc.
 
 
@@ -186,7 +187,7 @@ experiments_vector = []
 
 
             
-The full code could be found at basic.py
+The full code could be found at basic.py (LINK)
 
 
 
