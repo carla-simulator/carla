@@ -10,6 +10,7 @@
 import math
 import abc
 import logging
+import time
 
 
 from carla.client import make_carla_client
@@ -172,7 +173,7 @@ class DrivingBenchmark(object):
              current_point.orientation.y,
              current_point.orientation.z),
             (end_point.location.x, end_point.location.y, 0.22),
-            (end_point.orientation.x, end_point.orientation.y, -0.001))
+            (end_point.orientation.x, end_point.orientation.y, end_point.orientation.z))
         return directions
 
     def _get_shortest_path(self, start_point, end_point):
@@ -181,10 +182,10 @@ class DrivingBenchmark(object):
         """
 
         return self._planner.get_shortest_path_distance(
-            [start_point.location.x, start_point.location.y, 0]
-            , [start_point.orientation.x, start_point.orientation.y, 0]
-            , [end_point.location.x, end_point.location.y, 0]
-            , [end_point.orientation.x, end_point.orientation.y, 0])
+            [start_point.location.x, start_point.location.y, 0.22]
+            , [start_point.orientation.x, start_point.orientation.y, 0.22]
+            , [end_point.location.x, end_point.location.y, end_point.location.z]
+            , [end_point.orientation.x, end_point.orientation.y, end_point.orientation.z])
 
 
     def _run_navigation_episode(
@@ -293,7 +294,7 @@ def run_driving_benchmark(agent,
                 # benchmark an agent. The instantiation starts the log process, sets
 
                 benchmark = DrivingBenchmark(city_name=city_name,
-                                             name_to_save=log_name
+                                             name_to_save=log_name + '_'
                                              + type(experiment_suite).__name__
                                              + '_' + city_name,
                                              continue_experiment=continue_experiment)
