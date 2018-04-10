@@ -83,8 +83,8 @@ if __name__ == '__main__':
     if args.corl_2017:
         experiment_suite = CoRL2017(args.city_name)
     else:
-        print ' WARNING: running the basic driving benchmark, to run the CORL 2017, you should run' \
-              ' python driving_benchmark_example.py --corld-2017'
+        print (' WARNING: running the basic driving benchmark, to run the CORL 2017, you should run' \
+              ' python driving_benchmark_example.py --corld-2017')
         experiment_suite = BasicExperimentSuite(args.city_name)
 
     # Now actually run the driving_benchmark

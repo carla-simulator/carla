@@ -242,8 +242,6 @@ def main():
             return
 
         except TCPConnectionError as error:
-            import traceback
-            traceback.print_exc()
             logging.error(error)
             time.sleep(1)
 

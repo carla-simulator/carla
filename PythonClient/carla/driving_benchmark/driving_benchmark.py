@@ -151,14 +151,14 @@ class DrivingBenchmark(object):
 
         self._recording.log_end()
 
-        return metrics_object.compute(self._recording._path)
+        return metrics_object.compute(self._recording.path)
 
 
     def get_path(self):
         """
         Returns the path were the log was saved.
         """
-        return self._recording._path
+        return self._recording.path
 
 
     def _get_directions(self, current_point, end_point):
