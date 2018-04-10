@@ -50,11 +50,13 @@ class Planner(object):
     def get_next_command(self, source, source_ori, target, target_ori):
         """
         Computes the full plan and returns the next command,
-        :param source: source position
-        :param source_ori: source orientation
-        :param target: target position
-        :param target_ori: target orientation
-        :return: a command ( Straight,Lane Follow, Left or Right)
+        Args
+            source: source position
+            source_ori: source orientation
+            target: target position
+            target_ori: target orientation
+        Returns
+            a command ( Straight,Lane Follow, Left or Right)
         """
 
         track_source = self._city_track.project_node(source)
