@@ -14,7 +14,7 @@ from carla.settings import CarlaSettings
 from .experiment_suite import ExperimentSuite
 
 
-class Basic(ExperimentSuite):
+class BasicExperimentSuite(ExperimentSuite):
 
     @property
     def train_weathers(self):
