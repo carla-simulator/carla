@@ -216,17 +216,12 @@ class Recording(object):
 
     def get_pose_and_experiment(self, number_poses_task):
         """
-            Based on the line in log file, return the current pose and experiment.
-            If the line is zero, create new log files.
+        Based on the line in log file, return the current pose and experiment.
+        If the line is zero, create new log files.
 
-
         """
-        """
-            Warning: assumes that all tasks have the same size
-        """
+        # Warning: assumes that all tasks have the same size
         line_on_file = self._get_last_position() - 1
-
-
         if line_on_file == 0:
             return 0, 0
         else:
@@ -238,8 +233,8 @@ class Recording(object):
 
     def _get_last_position(self):
         """
-            Get the last position on the summary experiment file
-            With this you are able to continue from there
+        Get the last position on the summary experiment file
+        With this you are able to continue from there
 
         Returns:
              int, position:
