@@ -282,12 +282,12 @@ class Metrics(object):
                                        w))]
 
                 metrics_dictionary['episodes_fully_completed'][w][t] = \
-                    experiment_results_matrix[:, header.index('result')]
+                    experiment_results_matrix[:, header.index('result')].tolist()
 
                 metrics_dictionary['episodes_completion'][w][t] = \
-                    (experiment_results_matrix[:, header.index('initial_distance')]
-                     - experiment_results_matrix[:, header.index('final_distance')]) \
-                    / experiment_results_matrix[:, header.index('initial_distance')]
+                    ((experiment_results_matrix[:, header.index('initial_distance')]
+                     - experiment_results_matrix[:, header.index('final_distance')])
+                     / experiment_results_matrix[:, header.index('initial_distance')]).tolist()
 
                 # Now we divide the experiment metrics matrix
 

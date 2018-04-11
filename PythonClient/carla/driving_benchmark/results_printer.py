@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import json
 
 def print_summary(metrics_summary, weathers, path):
     """
@@ -14,15 +15,10 @@ def print_summary(metrics_summary, weathers, path):
                          6: 'Heavy Rain Noon', 8: 'Clear Sunset',
                          4: 'Cloudy After Rain', 14: 'Soft Rain Sunset'}
 
-
     # First we write the entire dictionary on the benchmark folder.
-    fout = os.path.join(path, 'metrics.txt')
-    fo = open(fout, "w")
+    with open(os.path.join(path, 'metrics.json'), 'w') as fo:
+        fo.write(json.dumps(metrics_summary, fo))
 
-    for k, v in metrics_summary.items():
-        fo.write(str(k) + ' >>> ' + str(v) + '\n\n')
-
-    fo.close()
     # Second we plot the metrics that are already ready by averaging
 
     metrics_to_average = [
