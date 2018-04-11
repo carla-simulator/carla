@@ -19,8 +19,6 @@
 #include "Materials/Material.h"
 #include "Paths.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "Image.h"
-#include "ImageUtils.h"
 #include <memory>
 
 
