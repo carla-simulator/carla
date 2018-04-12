@@ -15,11 +15,10 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/CollisionProfile.h"
 #include "Engine/TextureRenderTarget2D.h"
-#include "HighResScreenshot.h"
 #include "Materials/Material.h"
-#include "Paths.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include <memory>
+#include "ConstructorHelpers.h"
 
 
 static constexpr auto DEPTH_MAT_PATH =
@@ -36,6 +35,8 @@ static constexpr auto SEMANTIC_SEGMENTATION_MAT_PATH =
 
 static void RemoveShowFlags(FEngineShowFlags &ShowFlags);
 
+uint32 ASceneCaptureCamera::NumSceneCapture = 0;
+
 ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer& ObjectInitializer) :
   Super(ObjectInitializer),
   SizeX(720u),
@@ -45,7 +46,7 @@ ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer& ObjectInitial
   PrimaryActorTick.bCanEverTick = true;
   PrimaryActorTick.TickGroup = TG_PrePhysics;
 
-  MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CamMesh0"));
+  MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CamMesh"));
 
   MeshComp->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
 
@@ -54,11 +55,11 @@ ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer& ObjectInitial
   MeshComp->PostPhysicsComponentTick.bCanEverTick = false;
   RootComponent = MeshComp;
 
-  DrawFrustum = CreateDefaultSubobject<UDrawFrustumComponent>(TEXT("DrawFrust0"));
+  DrawFrustum = CreateDefaultSubobject<UDrawFrustumComponent>(TEXT("DrawFrust"));
   DrawFrustum->bIsEditorOnly = true;
   DrawFrustum->SetupAttachment(MeshComp);
 
-  CaptureRenderTarget = CreateDefaultSubobject<UTextureRenderTarget2D>(TEXT("CaptureRenderTarget0"));
+  CaptureRenderTarget = CreateDefaultSubobject<UTextureRenderTarget2D>(FName(*FString::Printf(TEXT("CaptureRenderTarget%d"),NumSceneCapture)));
   #if WITH_EDITORONLY_DATA
 	CaptureRenderTarget->CompressionNoAlpha = true;
 	CaptureRenderTarget->MipGenSettings = TextureMipGenSettings::TMGS_NoMipmaps;
@@ -70,13 +71,14 @@ ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer& ObjectInitial
   CaptureRenderTarget->AddressX = TextureAddress::TA_Clamp;
   CaptureRenderTarget->AddressY = TextureAddress::TA_Clamp;
   CaptureComponent2D = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("SceneCaptureComponent2D"));
-  CaptureComponent2D->SetupAttachment(MeshComp);
+  CaptureComponent2D->SetupAttachment(MeshComp); 
   
   // Load post-processing materials.
   static ConstructorHelpers::FObjectFinder<UMaterial> DEPTH(DEPTH_MAT_PATH);
   PostProcessDepth = DEPTH.Object;
   static ConstructorHelpers::FObjectFinder<UMaterial> SEMANTIC_SEGMENTATION(SEMANTIC_SEGMENTATION_MAT_PATH);
   PostProcessSemanticSegmentation = SEMANTIC_SEGMENTATION.Object;
+  NumSceneCapture++;
 }
 
 void ASceneCaptureCamera::PostActorCreated()
@@ -109,7 +111,11 @@ void ASceneCaptureCamera::BeginPlay()
   // Setup render target.
   const bool bInForceLinearGamma = bRemovePostProcessing;
   CaptureRenderTarget->InitCustomFormat(SizeX, SizeY, PF_B8G8R8A8, bInForceLinearGamma);
-
+  if(!IsValid(CaptureComponent2D)||CaptureComponent2D->IsPendingKill())
+  {
+    CaptureComponent2D = NewObject<USceneCaptureComponent2D>(this,TEXT("SceneCaptureComponent2D"));
+    CaptureComponent2D->SetupAttachment(MeshComp);
+  }
   CaptureComponent2D->Deactivate();
   CaptureComponent2D->TextureTarget = CaptureRenderTarget;
 
@@ -161,6 +167,11 @@ void ASceneCaptureCamera::BeginPlay()
   UKismetSystemLibrary::ExecuteConsoleCommand(GetWorld(), FString("g.TimeoutForBlockOnRenderFence 300000"));
 
   Super::BeginPlay();
+}
+
+void ASceneCaptureCamera::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    if(NumSceneCapture!=0) NumSceneCapture = 0;
 }
 
 void ASceneCaptureCamera::Tick(const float DeltaSeconds)
