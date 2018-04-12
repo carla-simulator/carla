@@ -1,11 +1,20 @@
 Benchmarking your Agent
 ---------------------------
 
-![Benchmark_structure](img/benchmark_diagram_small.png )
+
+In this tutorial we show:
+
+ * [How to define a trivial agent with a forward going policy.](#defining-the-agent)
+ * [How to define a basic experiment suite.](#defining-the-experiment-suite)
+
+
+#### Introduction
+
+![Benchmark_structure](img/benchmark_diagram_small.png)
 
 The driving benchmark is associated with other two modules.
-The *agent* module, a controller which performs in 
-another module, the *experiment suite*.
+The *agent* module, that is a controller which performs in 
+another module: the *experiment suite*.
 Both modules are abstract classes that must be redefined by
 the user.
 
@@ -30,20 +39,18 @@ an example of how to apply a driving benchmark;
 
 
 Following this excerpt, there are two classes to be defined.
-The ForwardAgent() and the BasicExperiments().
-After that, we run the benchmark it. As result of the execution, the driving benchmark
-returns stores a summary of the calculated [performance metrics](benchmark_metrics.md).
+The ForwardAgent() and the BasicExperimentSuite().
+After that, the benchmark is run with the "run_driving_benchmark" function.
+The  summary  of the execution, the [performance metrics](benchmark_metrics.md), are stored
+in a json file and printed to the screen.
 
 
-In this tutorial we are going to show how to define 
-a basic experiment suite and a trivial agent with a going
-forward policy.
 
 
 #### Defining the Agent
 
 The tested agent must  inherit the base *Agent* class.
-Lets start by deriving a simple Forward agent. 
+Lets start by deriving a simple forward agent:
 
     from carla.agent.agent import Agent
     from carla.client import VehicleControl
@@ -75,7 +82,7 @@ This function receives the following parameters:
  * Target Position: The position and orientation of the target.
  
  With all this information, the *run_step* function is expected 
- to return a [vehicle control message](measurements.md) containing, 
+ to return a [vehicle control message](measurements.md), containing:
  steering value, throttle value, brake value, etc.
 
 
@@ -88,7 +95,7 @@ the following steps:
 
 * Create your custom class by inheriting the ExperimentSuite base class.
 * Define the test and train weather conditions to be used.
-* Build the *Experiment* objects 
+* Build the *Experiment* objects .
 
 
 
@@ -96,7 +103,7 @@ the following steps:
 
 
 The defined set of experiments must derive the *ExperimentSuite* class
-as in the following code. 
+as in the following code excerpt:
 
     from carla.agent_benchmark.experiment import Experiment
     from carla.sensor import Camera
@@ -105,9 +112,9 @@ as in the following code.
     from .experiment_suite import ExperimentSuite
     
     
-    class Basic(ExperimentSuite):
+    class BasicExperimentSuite(ExperimentSuite):
     
-##### Define the used weathers
+##### Define test and train weather conditions
 
 The user must select the weathers to be used. One should select the set
 of test weathers and the set of train weathers. This is defined as a
@@ -124,27 +131,26 @@ class property as in the following example:
 ##### Building Experiments
 
 The [experiments are composed by a *task* that is defined by a set of *poses*](benchmark_structure.md).
-Lets start by selecting poses for one of the cities, Town01 for instance.
- First of all, we need to see all the possible positions, for that, with
-  a CARLA simulator running in a terminal, run:
+Lets start by selecting poses for one of the cities, lets take Town01, for instance.
+First of all, we need to see all the possible positions, for that, with
+a CARLA simulator running in a terminal, run:
     
     python view_start_positions.py
  
  ![town01_positions](img/town01_positions.png)
- 
+ > Figure 2: All the possible start positions for CARLA Town01.
   
   
 Now lets choose, for instance, 105 as start position and 29
-as end. This two positions can be visualized by running. 
+as the end position. This two positions can be visualized by running:
     
     python view_start_positions.py --pos 105,29 --no-labels
 
+ ![town01_positions](img/town01_109_29.png)
+ > Figure 2: A start and an end position.
 
-
- Lets define
-two more poses, one for going straight, other one for one simple turn.
-Also, lets also choose three poses for Town02.
-Figure 3, shows these defined poses for both carla towns.
+Lets choose two more  poses, one for going straight, other one for one simple turn.
+Also, lets also choose three poses for Town02:
 
 
  ![town01_positions](img/initial_positions.png)
@@ -156,13 +162,19 @@ Figure 3, shows these defined poses for both carla towns.
  the goal is far away from the start position, usually more than one turn.
 
 
-We define each of this defined poses as tasks. Plus, we also set
+We define each of this defined poses as a task. Plus, we also set
 the number of dynamic objects for each of these tasks and repeat
 the arbitrary position task to have it also defined with dynamic
-objects. This is defined
-in the following code excerpt:
+objects. In the following code excerpt we show the final
+defined positions and the number of dinamic objects for each task:
     
-    poses_tasks = [[[36, 40]], [[138, 17]], [[105, 29]], [[105, 29]]]
+    # Define the start/end position above as tasks
+    poses_task0 = [[36, 40]]
+    poses_task1 = [[138, 17]]
+    poses_task2 = [[105, 29]]
+    poses_task3 = [[105, 29]]
+    # Concatenate all the tasks
+    poses_tasks = poses_task0, poses_task1 , poses_task1 , poses_task3]
     vehicles_tasks = [0, 0, 0, 20]
     pedestrians_tasks = [0, 0, 0, 50]
 
@@ -171,39 +183,39 @@ Keep in mind that a task is a set of episodes with start and end points.
 Finally by using the defined tasks we can build the experiments
 vector as we show in the following code excerpt:
 
-```
-experiments_vector = []
-    for weather in used_weathers:
 
-        for iteration in range(len(poses_tasks)):
-            poses = poses_tasks[iteration]
-            vehicles = vehicles_tasks[iteration]
-            pedestrians = pedestrians_tasks[iteration]
-    
-            conditions = CarlaSettings()
-            conditions.set(
-                SendNonPlayerAgentsInfo=True,
-                NumberOfVehicles=vehicles,
-                NumberOfPedestrians=pedestrians,
-                WeatherId=weather
-    
-            )
-            # Add all the cameras that were set for this experiments
-            conditions.add_sensor(camera)
-            experiment = Experiment()
-            experiment.set(
-                Conditions=conditions,
-                Poses=poses,
-                Task=iteration,
-                Repetitions=1
-            )
-            experiments_vector.append(experiment)
-```
+    experiments_vector = []
+        # The used weathers is the union between test and train weathers
+        for weather in used_weathers:
+            for iteration in range(len(poses_tasks)):
+                poses = poses_tasks[iteration]
+                vehicles = vehicles_tasks[iteration]
+                pedestrians = pedestrians_tasks[iteration]
+
+                conditions = CarlaSettings()
+                conditions.set(
+                    SendNonPlayerAgentsInfo=True,
+                    NumberOfVehicles=vehicles,
+                    NumberOfPedestrians=pedestrians,
+                    WeatherId=weather
+
+                )
+                # Add all the cameras that were set for this experiments
+                conditions.add_sensor(camera)
+                experiment = Experiment()
+                experiment.set(
+                    Conditions=conditions,
+                    Poses=poses,
+                    Task=iteration,
+                    Repetitions=1
+                )
+                experiments_vector.append(experiment)
+
 
 
 
             
-The full code could be found at basic.py (LINK)
+The full code could be found at [basic_experiment_suite.py](LINK)
 
 
 
