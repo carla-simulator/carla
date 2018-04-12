@@ -10,7 +10,7 @@
 #include "Engine/StaticMesh.h"
 #include "Engine/PostProcessVolume.h"
 #include "UObjectIterator.h"
-
+#include "Async.h"
 
 ///quality settings configuration between runs
 EQualitySettingsLevel UCarlaSettingsDelegate::AppliedLowPostResetQualitySettingsLevel = EQualitySettingsLevel::Epic;
@@ -22,8 +22,7 @@ UCarlaSettingsDelegate::UCarlaSettingsDelegate() :
 
 void UCarlaSettingsDelegate::Reset()
 {
-  GetLocalWorld()->GetTimerManager().ClearAllTimersForObject(this);
-	AppliedLowPostResetQualitySettingsLevel = EQualitySettingsLevel::None;
+  AppliedLowPostResetQualitySettingsLevel = EQualitySettingsLevel::None;
 }
 
 void UCarlaSettingsDelegate::RegisterSpawnHandler(UWorld *InWorld)
@@ -63,7 +62,7 @@ void UCarlaSettingsDelegate::ApplyQualitySettingsLevelPostRestart()
 {
 	CheckCarlaSettings(nullptr);
 	UWorld *InWorld = CarlaSettings->GetWorld();
-  InWorld->GetTimerManager().ClearAllTimersForObject(this);
+  
   EQualitySettingsLevel QualitySettingsLevel = CarlaSettings->GetQualitySettingsLevel();
 	if(AppliedLowPostResetQualitySettingsLevel==QualitySettingsLevel) return;
 	
