@@ -7,17 +7,17 @@ metrics about its performance.
 
 This module is mainly designed for:
 
-* Users that work with autonomous driving agents and want
-to see how they perform in carla.
+* Users that work developing autonomous driving agents and want
+to see how they perform in CARLA.
 
 On this section you will learn.
 
 * How to quickly get started and benchmark a trivial agent right away.
-* Learn about the general implementation architecture of the driving 
-benchmark module.
-* Learn how to set up your agent to be benchmarked and create your
-how set of experiments to challenge your agents. 
-* Learn about the performance metrics used.
+* Learn about the general implementation [architecture of the driving 
+benchmark module](benchmark_structure.md).
+* Learn [how to set up your agent  and create your
+own set of experiments](benchmark_creating.md) for challenging your agents. 
+* Learn about the [performance metrics used](benchmark_metrics.md).
 
 
 
@@ -34,7 +34,7 @@ run:
 
 
 Keep in mind that to run the command above, you need a CARLA simulator
-server running, at localhost and on port 2000.
+ running at localhost and on port 2000.
    
 
 We already provide the same benchmark used in the CoRL
@@ -49,10 +49,19 @@ Run the help command to see options available.
 
     $ ./driving_benchmark_example.py --help
 
+One of the options available is to be able to continue
+from a previous benchmark execution. For example,
+ to continue a experiment in CoRL2017  with a log name of "driving_benchmark_test", run:
+
+$ ./driving_benchmark_example.py --continue-experiment -n driving_benchmark_test --corl-2017
+
+! Note: if the log name already exist and you dont set it to continue it
+will create another log witha  number.
 
 When running the driving benchmark for the basic configuration
 you should [expect the following results](benchmark_creating.md/#expected-results)
-to be printed on the terminal.
+to be printed on the terminal in more or less 5 minutes,
+depending on your machine configuration.
 
 
 

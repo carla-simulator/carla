@@ -15,8 +15,8 @@
   * [How to build on Linux](how_to_build_on_linux.md)
   * [How to build on Windows](how_to_build_on_windows.md)
 
-<h3> Agent Benchmark </h3>
-  
+<h3> Driving Benchmark </h3>
+
   * [Quick Start](benchmark_start.md)
   * [General Structure](benchmark_structure.md)
   * [Creating Your Benchmark](benchmark_creating.md)
