@@ -63,7 +63,7 @@ Then start the ros bridge:
     
 To start the ros bridge with rviz use:
 
-    roslaunch carla_ros_client client_with_rviz.launch
+    roslaunch carla_ros_bridge client_with_rviz.launch
     
 You can setup the wanted camera/sensors in config/settings.yaml.
 
