@@ -78,14 +78,19 @@ void AWalkerSpawnerBase::BeginPlay()
       SpawnPoints.Add(SpawnPoint);
     }
   }
+  #ifdef CARLA_AI_WALKERS_EXTRA_LOG
   UE_LOG(LogCarla, Log, TEXT("Found %d positions for spawning walkers at begin play."), BeginSpawnPoints.Num());
   UE_LOG(LogCarla, Log, TEXT("Found %d positions for spawning walkers during game play."), SpawnPoints.Num());
-
+  #endif 
   if (SpawnPoints.Num() < 2) {
     bSpawnWalkers = false;
+    #ifdef CARLA_AI_WALKERS_EXTRA_LOG
     UE_LOG(LogCarla, Error, TEXT("We don't have enough spawn points for walkers!"));
+    #endif
   } else if (BeginSpawnPoints.Num() < NumberOfWalkers) {
+    #ifdef CARLA_AI_WALKERS_EXTRA_LOG
     UE_LOG(LogCarla, Warning, TEXT("Requested %d walkers, but we only have %d spawn points. Some will fail to spawn."), NumberOfWalkers, BeginSpawnPoints.Num());
+    #endif
   }
 
   GetRandomEngine()->Shuffle(BeginSpawnPoints);
@@ -97,7 +102,9 @@ void AWalkerSpawnerBase::BeginPlay()
         ++Count;
       }
     }
+    #ifdef CARLA_AI_WALKERS_EXTRA_LOG
     UE_LOG(LogCarla, Log, TEXT("Spawned %d walkers at begin play."), Count);
+    #endif
   }
 }
 
@@ -118,7 +125,9 @@ void AWalkerSpawnerBase::Tick(float DeltaTime)
 	  if(BlackListedWalker != nullptr && controller!=nullptr && IsValid(BlackListedWalker))
 	  {
       const auto Status = GetWalkerStatus(BlackListedWalker);
+      #ifdef CARLA_AI_WALKERS_EXTRA_LOG
 	    UE_LOG(LogCarla, Log, TEXT("Watching walker %s with state %d"), *UKismetSystemLibrary::GetDisplayName(BlackListedWalker), (int)Status);
+      #endif
 	    switch(Status)
 	    {
   	    case EWalkerStatus::RunOver:{
@@ -139,7 +148,9 @@ void AWalkerSpawnerBase::Tick(float DeltaTime)
 			        {
 	  		        if(!SetRandomWalkerDestination(BlackListedWalker))
 	  		        {
+                  #ifdef CARLA_AI_WALKERS_EXTRA_LOG
 		  	  	      UE_LOG(LogCarla,Error,TEXT("Could not set a random destination to walker %s"),*UKismetSystemLibrary::GetDisplayName(BlackListedWalker));
+                  #endif
 	  		        }
 	  		      }
 			      break;
@@ -160,8 +171,10 @@ void AWalkerSpawnerBase::Tick(float DeltaTime)
 		    }
 	  	  break;
 		    }
-	    }
+      }
+      #ifdef CARLA_AI_WALKERS_EXTRA_LOG
 	    UE_LOG(LogCarla, Log, TEXT("New state for walker %s : %d"), *UKismetSystemLibrary::GetDisplayName(BlackListedWalker), (int)GetWalkerStatus(BlackListedWalker));
+      #endif
     } 
   	
   }
@@ -208,9 +221,11 @@ bool AWalkerSpawnerBase::SetRandomWalkerDestination(ACharacter *Walker)
 	const auto &DestinationPoint = GetRandomSpawnPoint();
 	auto Controller = GetController(Walker);
 	if(!Controller) {
+    #ifdef CARLA_AI_WALKERS_EXTRA_LOG
 	  UE_LOG(LogCarla, Warning, TEXT("AWalkerSpawnerBase::SetRandomWalkerDestination: Walker %s has no controller"), 
 	   *UKismetSystemLibrary::GetDisplayName(Walker)
       );
+    #endif
 	  return false;
 	}
 	const EPathFollowingRequestResult::Type request_result = Controller->MoveToLocation(DestinationPoint.GetActorLocation(),-1.0f,false,true,true,true,nullptr,true);
@@ -218,13 +233,17 @@ bool AWalkerSpawnerBase::SetRandomWalkerDestination(ACharacter *Walker)
 	{
 	  case EPathFollowingRequestResult::Type::Failed:
 	  {
+      #ifdef CARLA_AI_WALKERS_EXTRA_LOG
 	    UE_LOG(LogCarla, Warning, TEXT("AWalkerSpawnerBase::SetRandomWalkerDestination: Bad destination point %s"), 
 		  *UKismetSystemLibrary::GetDisplayName(&DestinationPoint)
-		);
+		  );
+      #endif
 	    return false;
 	  }
 	  case EPathFollowingRequestResult::Type::AlreadyAtGoal:{
-		UE_LOG(LogCarla, Log, TEXT("AWalkerSpawnerBase::SetRandomWalkerDestination already in destination, generating new location"));
+      #ifdef CARLA_AI_WALKERS_EXTRA_LOG
+		  UE_LOG(LogCarla, Log, TEXT("AWalkerSpawnerBase::SetRandomWalkerDestination already in destination, generating new location"));
+      #endif
 	  	return SetRandomWalkerDestination(Walker);
 	  }
 	  default: case EPathFollowingRequestResult::Type::RequestSuccessful: return true;
@@ -299,17 +318,20 @@ bool AWalkerSpawnerBase::TrySetDestination(ACharacter &Walker)
   // Try to retrieve controller.
   auto Controller = GetController(&Walker);
   if (Controller == nullptr) {
-	UE_LOG(LogCarla, Warning, TEXT("Could not get valid controller for walker: %s"), *Walker.GetName());
+	  UE_LOG(LogCarla, Warning, TEXT("Could not get valid controller for walker: %s"), *Walker.GetName());
     return false;
   }
 
   // Try find destination.
   FVector Destination;
   if (!TryGetValidDestination(Walker.GetActorLocation(), Destination)) {
-	UE_LOG(LogCarla, Warning, 
-		TEXT("Could not get a new destiny: %s for walker: %s"), 
-		*Destination.ToString(), *Walker.GetName()
-	);
+    #ifdef CARLA_AI_WALKERS_EXTRA_LOG
+	  UE_LOG(
+      LogCarla, Warning, 
+		  TEXT("Could not get a new destiny: %s for walker: %s"), 
+		  *Destination.ToString(), *Walker.GetName()
+	  );
+    #endif
     return false;
   }
 
