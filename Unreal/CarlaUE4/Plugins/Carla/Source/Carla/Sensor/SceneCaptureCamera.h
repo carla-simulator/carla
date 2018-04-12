@@ -37,7 +37,7 @@ protected:
 public:
 
   virtual void BeginPlay() override;
-
+  virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
   virtual void Tick(float DeltaSeconds) override;
 
   uint32 GetImageSizeX() const
@@ -68,7 +68,9 @@ public:
   void Set(const UCameraDescription &CameraDescription);
 
   bool ReadPixels(TArray<FColor> &BitMap) const;
-  
+
+protected:
+  static uint32 NumSceneCapture;
 
 private:
   ///Read the camera buffer and write it to the client with no lock of the resources (for Vulkan API)
@@ -97,7 +99,7 @@ private:
   UDrawFrustumComponent* DrawFrustum;
 
   /** Render target necessary for scene capture */
-  UPROPERTY(Transient)
+  UPROPERTY()
   UTextureRenderTarget2D* CaptureRenderTarget;
 
   /** Scene capture component. */
