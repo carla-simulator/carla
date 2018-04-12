@@ -11,6 +11,7 @@
 #include "Engine/PostProcessVolume.h"
 #include "UObjectIterator.h"
 
+
 ///quality settings configuration between runs
 EQualitySettingsLevel UCarlaSettingsDelegate::AppliedLowPostResetQualitySettingsLevel = EQualitySettingsLevel::Epic;
 
@@ -21,8 +22,8 @@ UCarlaSettingsDelegate::UCarlaSettingsDelegate() :
 
 void UCarlaSettingsDelegate::Reset()
 {
-	LaunchEpicQualityCommands(GetLocalWorld());
-	AppliedLowPostResetQualitySettingsLevel = EQualitySettingsLevel::Epic;
+  GetLocalWorld()->GetTimerManager().ClearAllTimersForObject(this);
+	AppliedLowPostResetQualitySettingsLevel = EQualitySettingsLevel::None;
 }
 
 void UCarlaSettingsDelegate::RegisterSpawnHandler(UWorld *InWorld)
@@ -62,7 +63,8 @@ void UCarlaSettingsDelegate::ApplyQualitySettingsLevelPostRestart()
 {
 	CheckCarlaSettings(nullptr);
 	UWorld *InWorld = CarlaSettings->GetWorld();
-    EQualitySettingsLevel QualitySettingsLevel = CarlaSettings->GetQualitySettingsLevel();
+  InWorld->GetTimerManager().ClearAllTimersForObject(this);
+  EQualitySettingsLevel QualitySettingsLevel = CarlaSettings->GetQualitySettingsLevel();
 	if(AppliedLowPostResetQualitySettingsLevel==QualitySettingsLevel) return;
 	
 	switch(QualitySettingsLevel)
@@ -70,7 +72,7 @@ void UCarlaSettingsDelegate::ApplyQualitySettingsLevelPostRestart()
 	  case EQualitySettingsLevel::Low:
 		{
 		  //execute tweaks for quality 
-		  LaunchLowQualityCommands(InWorld);	
+		  LaunchLowQualityCommands(InWorld);
 		  //iterate all directional lights, deactivate shadows
 		  SetAllLights(InWorld,CarlaSettings->LowLightFadeDistance,false,true);
 		  //Set all the roads the low quality materials
@@ -181,45 +183,49 @@ void UCarlaSettingsDelegate::LaunchLowQualityCommands(UWorld * world) const
 
 void UCarlaSettingsDelegate::SetAllRoads(UWorld* world, const float max_draw_distance, const TArray<FStaticMaterial> &road_pieces_materials) const
 {
-  TArray<AActor*> actors;
-  UGameplayStatics::GetAllActorsWithTag(world, UCarlaSettings::CARLA_ROAD_TAG,actors);
-  
-  for(int32 i=0; i<actors.Num(); i++)
-  {
-	if(!IsValid(actors[i]) || actors[i]->IsPendingKillPending()) continue;
-  	TArray<UActorComponent*> components = actors[i]->GetComponentsByClass(UStaticMeshComponent::StaticClass());
-  	for(int32 j=0; j<components.Num(); j++)
-  	{
-  	  UStaticMeshComponent* staticmeshcomponent = Cast<UStaticMeshComponent>(components[j]);
-  	  if(staticmeshcomponent)
-  	  {
-		staticmeshcomponent->bAllowCullDistanceVolume = (max_draw_distance>0);
-		staticmeshcomponent->bUseAsOccluder = false;
-		staticmeshcomponent->LDMaxDrawDistance = max_draw_distance; 
-  		staticmeshcomponent->CastShadow = (max_draw_distance==0);
-		if(road_pieces_materials.Num()>0)
-		{
-          TArray<FName> meshslotsnames = staticmeshcomponent->GetMaterialSlotNames();
-          for(int32 k=0; k<meshslotsnames.Num(); k++)
+  if(!world||!IsValid(world)||world->IsPendingKill()) return;
+  AsyncTask(ENamedThreads::GameThread, [=](){
+    if(!world||!IsValid(world)||world->IsPendingKill()) return;
+    TArray<AActor*> actors;
+    UGameplayStatics::GetAllActorsWithTag(world, UCarlaSettings::CARLA_ROAD_TAG,actors);
+    
+    for(int32 i=0; i<actors.Num(); i++)
+    {
+    if(!IsValid(actors[i]) || actors[i]->IsPendingKillPending()) continue;
+      TArray<UActorComponent*> components = actors[i]->GetComponentsByClass(UStaticMeshComponent::StaticClass());
+      for(int32 j=0; j<components.Num(); j++)
+      {
+        UStaticMeshComponent* staticmeshcomponent = Cast<UStaticMeshComponent>(components[j]);
+        if(staticmeshcomponent)
+        {
+          staticmeshcomponent->bAllowCullDistanceVolume = (max_draw_distance>0);
+          staticmeshcomponent->bUseAsOccluder = false;
+          staticmeshcomponent->LDMaxDrawDistance = max_draw_distance; 
+            staticmeshcomponent->CastShadow = (max_draw_distance==0);
+          if(road_pieces_materials.Num()>0)
           {
-            const FName &slotname = meshslotsnames[k];
-            road_pieces_materials.ContainsByPredicate(
-		  	  [staticmeshcomponent,slotname](const FStaticMaterial& material)
+            TArray<FName> meshslotsnames = staticmeshcomponent->GetMaterialSlotNames();
+            for(int32 k=0; k<meshslotsnames.Num(); k++)
             {
-              if(material.MaterialSlotName.IsEqual(slotname))
+              const FName &slotname = meshslotsnames[k];
+              road_pieces_materials.ContainsByPredicate(
+            [staticmeshcomponent,slotname](const FStaticMaterial& material)
               {
-                staticmeshcomponent->SetMaterial(
-                  staticmeshcomponent->GetMaterialIndex(slotname), 
-                  material.MaterialInterface
-                );
-                return true;
-              } else return false;
-            });
+                if(material.MaterialSlotName.IsEqual(slotname))
+                {
+                  staticmeshcomponent->SetMaterial(
+                    staticmeshcomponent->GetMaterialIndex(slotname), 
+                    material.MaterialInterface
+                  );
+                  return true;
+                } else return false;
+              });
+            }
           }
-		}
-  	  }
-  	}
-  }
+        }
+      }
+    }
+  }); //,DELAY_TIME_TO_SET_ALL_ROADS, false);
 }
 
 void UCarlaSettingsDelegate::SetActorComponentsDrawDistance(AActor* actor, const float max_draw_distance) const
@@ -243,20 +249,24 @@ void UCarlaSettingsDelegate::SetActorComponentsDrawDistance(AActor* actor, const
 void UCarlaSettingsDelegate::SetAllActorsDrawDistance(UWorld* world, const float max_draw_distance) const
 {
   ///@TODO: use semantics to grab all actors by type (vehicles,ground,people,props) and set different distances configured in the global properties
-  TArray<AActor*> actors;
-  #define _MAX_SCALE_SIZE 50.0f
-  //set the lower quality - max draw distance
-  UGameplayStatics::GetAllActorsOfClass(world, AActor::StaticClass(),actors);
-  for(int32 i=0; i<actors.Num(); i++)
-  {
-	 if(!IsValid(actors[i]) || actors[i]->IsPendingKillPending() || 
-		 actors[i]->ActorHasTag(UCarlaSettings::CARLA_ROAD_TAG) ||
-		 actors[i]->ActorHasTag(UCarlaSettings::CARLA_SKY_TAG)
-     ){
-	 	continue;
-	 }
-     SetActorComponentsDrawDistance(actors[i], max_draw_distance);
-  }
+  if(!world||!IsValid(world)||world->IsPendingKill()) return;
+  AsyncTask(ENamedThreads::GameThread, [=](){
+    if(!world||!IsValid(world)||world->IsPendingKill()) return;
+    TArray<AActor*> actors;
+    #define _MAX_SCALE_SIZE 50.0f
+    //set the lower quality - max draw distance
+    UGameplayStatics::GetAllActorsOfClass(world, AActor::StaticClass(),actors);
+    for(int32 i=0; i<actors.Num(); i++)
+    {
+    if(!IsValid(actors[i]) || actors[i]->IsPendingKillPending() || 
+      actors[i]->ActorHasTag(UCarlaSettings::CARLA_ROAD_TAG) ||
+      actors[i]->ActorHasTag(UCarlaSettings::CARLA_SKY_TAG)
+      ){
+        continue;
+      }
+      SetActorComponentsDrawDistance(actors[i], max_draw_distance);
+    }
+  });
 }
 
 
@@ -266,12 +276,12 @@ void UCarlaSettingsDelegate::SetPostProcessEffectsEnabled(UWorld* world, const b
   UGameplayStatics::GetAllActorsOfClass(world, APostProcessVolume::StaticClass(), actors);
   for(int32 i=0; i<actors.Num(); i++)
   {
-	if(!IsValid(actors[i]) || actors[i]->IsPendingKillPending()) continue;
-    APostProcessVolume* postprocessvolume = Cast<APostProcessVolume>(actors[i]);
-	if(postprocessvolume)
-	{
-		postprocessvolume->bEnabled = enabled;
-	}
+	  if(!IsValid(actors[i]) || actors[i]->IsPendingKillPending()) continue;
+      APostProcessVolume* postprocessvolume = Cast<APostProcessVolume>(actors[i]);
+	  if(postprocessvolume)
+	  {
+  		postprocessvolume->bEnabled = enabled;
+	  }
   }
 }
 
@@ -318,21 +328,26 @@ void UCarlaSettingsDelegate::LaunchEpicQualityCommands(UWorld* world) const
 
 void UCarlaSettingsDelegate::SetAllLights(UWorld* world, const float max_distance_fade, const bool cast_shadows, const bool hide_non_directional) const
 {
-  TArray<AActor*> actors;
-  UGameplayStatics::GetAllActorsOfClass(world, ALight::StaticClass(), actors);
-  for(int32 i=0;i<actors.Num();i++)
-  {
-	if(!IsValid(actors[i]) || actors[i]->IsPendingKillPending()) continue;
-    //tweak directional lights
-    ADirectionalLight* directionallight = Cast<ADirectionalLight>(actors[i]);
-    if(directionallight)
+  if(!world||!IsValid(world)||world->IsPendingKill()) return;
+  AsyncTask(ENamedThreads::GameThread, [=](){
+    if(!world||!IsValid(world)||world->IsPendingKill()) return;
+    TArray<AActor*> actors;
+    UGameplayStatics::GetAllActorsOfClass(world, ALight::StaticClass(), actors);
+    for(int32 i=0;i<actors.Num();i++)
     {
-      directionallight->SetCastShadows(cast_shadows);
-      directionallight->SetLightFunctionFadeDistance(max_distance_fade);
-      continue;
+    if(!IsValid(actors[i]) || actors[i]->IsPendingKillPending()) continue;
+      //tweak directional lights
+      ADirectionalLight* directionallight = Cast<ADirectionalLight>(actors[i]);
+      if(directionallight)
+      {
+        directionallight->SetCastShadows(cast_shadows);
+        directionallight->SetLightFunctionFadeDistance(max_distance_fade);
+        continue;
+      }
+      //disable any other type of light
+      actors[i]->SetActorHiddenInGame(hide_non_directional);
     }
-    //disable any other type of light
-    actors[i]->SetActorHiddenInGame(hide_non_directional);
-  }
+  });
+  
 }
 
