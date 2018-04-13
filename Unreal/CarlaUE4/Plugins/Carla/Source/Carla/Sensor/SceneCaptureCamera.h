@@ -73,10 +73,16 @@ protected:
   static uint32 NumSceneCapture;
 
 private:
-  ///Read the camera buffer and write it to the client with no lock of the resources (for Vulkan API)
-  void WritePixelsNonBlocking(float DeltaTime,FRHICommandListImmediate& rhi_cmd_list) const;
-  ///Read the camera buffer and write it to the client with opengl or direct3d
-  void WritePixels(float DeltaTime) const;
+
+  /// Read the camera buffer and write it to the client with no lock of the
+  /// resources (for Vulkan API).
+  void WritePixelsNonBlocking(
+      uint64 FrameNumber,
+      FRHICommandListImmediate& rhi_cmd_list) const;
+
+  /// Read the camera buffer and write it to the client with opengl or direct3d.
+  void WritePixels(uint64 FrameNumber) const;
+
   /// Used to synchronize the DrawFrustumComponent with the
   /// SceneCaptureComponent2D settings.
   void UpdateDrawFrustum();
