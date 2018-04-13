@@ -10,7 +10,6 @@
 #include "Navigation/CrowdFollowingComponent.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
-#include "Perception/AISense_Sight.h"
 #include "WheeledVehicle.h"
 #include "WheeledVehicleMovementComponent.h"
 
@@ -27,8 +26,8 @@ static constexpr float UPDATE_TIME_IN_SECONDS = 0.6f;
 static constexpr float PREVISION_TIME_IN_SECONDS = 5.0f;
 static constexpr float WALKER_SIGHT_RADIUS = 500.0f;
 static constexpr float WALKER_SPEED_DAMPING = 4.0f;
-static constexpr float WALKER_PERIPHERAL_VISION_ANGLE_IN_DEGREES = 155.0f;
-static constexpr float WALKER_MAX_TIME_PAUSED = 10.0f;
+static constexpr float WALKER_PERIPHERAL_VISION_ANGLE_IN_DEGREES =	130.0f;
+static constexpr float WALKER_MAX_TIME_PAUSED = 5.0f;
 static constexpr float VEHICLE_SAFETY_RADIUS = 600.0f;
 
 
@@ -176,11 +175,13 @@ void AWalkerAIController::Tick(float DeltaSeconds)
 {
   Super::Tick(DeltaSeconds);
   TimeInState+=DeltaSeconds;
-  if (Status != EWalkerStatus::RunOver) {
+  if (Status != EWalkerStatus::RunOver) 
+  {
     switch (GetMoveStatus()) 
 	{
-      case EPathFollowingStatus::Idle:
-      case EPathFollowingStatus::Waiting:
+	  default: break;
+      case EPathFollowingStatus::Idle: 
+      //case EPathFollowingStatus::Waiting: //<-- incomplete path
         LOG_AI_WALKER(Warning, "is stuck!");
         ChangeStatus(EWalkerStatus::Stuck);
         break;
@@ -190,7 +191,8 @@ void AWalkerAIController::Tick(float DeltaSeconds)
 			TryResumeMovement();
 		}
         break;
-    };
+	
+	};
   }
 }
 
@@ -225,7 +227,7 @@ void AWalkerAIController::OnMoveCompleted(
   ChangeStatus(EWalkerStatus::MoveCompleted);
 }
 
-void AWalkerAIController::SenseActors(const TArray<AActor *> Actors)
+void AWalkerAIController::SenseActors(TArray<AActor *> Actors)
 {
   const auto *aPawn = GetPawn();
   if ((Status == EWalkerStatus::Moving) &&
