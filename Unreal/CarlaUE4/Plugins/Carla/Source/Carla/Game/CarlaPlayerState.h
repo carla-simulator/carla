@@ -40,6 +40,11 @@ public:
   // ===========================================================================
   /// @{
 
+  uint64 GetFrameNumber() const
+  {
+    return FrameNumber;
+  }
+
   UFUNCTION(BlueprintCallable)
   float GetFramesPerSecond() const
   {
@@ -213,6 +218,9 @@ private:
 
   // If you add another variable here, don't forget to copy it inside
   // CopyProperties if necessary.
+
+  UPROPERTY(VisibleAnywhere)
+  uint64 FrameNumber;
 
   UPROPERTY(VisibleAnywhere)
   float FramesPerSecond;
