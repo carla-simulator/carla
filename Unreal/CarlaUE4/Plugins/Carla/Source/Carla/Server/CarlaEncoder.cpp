@@ -106,6 +106,7 @@ void FCarlaEncoder::Encode(
     const ACarlaPlayerState &PlayerState,
     carla_measurements &Data)
 {
+  Data.frame_number = PlayerState.GetFrameNumber();
   Data.platform_timestamp = PlayerState.GetPlatformTimeStamp();
   Data.game_timestamp = PlayerState.GetGameTimeStamp();
   auto &Player = Data.player_measurements;

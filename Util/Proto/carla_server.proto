@@ -141,6 +141,8 @@ message Measurements {
     Control autopilot_control = 10;
   }
 
+  uint64 frame_number = 5;
+
   uint32 platform_timestamp = 1;
 
   uint32 game_timestamp = 2;
