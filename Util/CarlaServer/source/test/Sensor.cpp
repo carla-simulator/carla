@@ -17,11 +17,12 @@ namespace test {
     std::lock_guard<std::mutex> lock(_mutex);
 
     const struct {
+      uint64_t FrameNumber;
       uint32_t Width;
       uint32_t Height;
       uint32_t Type;
       float FOV;
-    } ImageHeader = {300u, 200u, 1u, 90.0f};
+    } ImageHeader = {++_frame_number, 300u, 200u, 1u, 90.0f};
 
     _data.header_size = sizeof(ImageHeader);
     auto header = std::make_unique<unsigned char[]>(_data.header_size);
