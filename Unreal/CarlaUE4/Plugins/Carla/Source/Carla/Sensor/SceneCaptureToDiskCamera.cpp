@@ -12,7 +12,7 @@
 
 ASceneCaptureToDiskCamera::ASceneCaptureToDiskCamera(const FObjectInitializer& ObjectInitializer) :
   Super(ObjectInitializer),
-  SaveToFolder(FPaths::Combine(FPaths::ProjectSavedDir(), "SceneCaptures")),
+  SaveToFolder(*FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("SceneCaptures"))),
   FileName("capture_%05d.png") {}
 
 void ASceneCaptureToDiskCamera::BeginPlay()
