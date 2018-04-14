@@ -132,6 +132,7 @@ namespace server {
   std::string CarlaEncoder::Encode(const carla_scene_description &values) {
     auto *message = _protobuf.CreateMessage<cs::SceneDescription>();
     DEBUG_ASSERT(message != nullptr);
+    message->set_map_name(std::string(values.map_name));
     for (auto &spot : start_spots(values)) {
       Set(message->add_player_start_spots(), spot);
     }

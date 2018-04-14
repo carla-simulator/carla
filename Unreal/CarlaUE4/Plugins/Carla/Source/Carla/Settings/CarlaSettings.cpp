@@ -218,7 +218,7 @@ void UCarlaSettings::LoadSettingsFromString(const FString &INIFileContents)
   CurrentFileName = TEXT("<string-provided-by-client>");
 }
 
-void UCarlaSettings::LoadWeatherDescriptions(const FString &MapName)
+void UCarlaSettings::LoadWeatherDescriptions()
 {
   WeatherDescriptions.Empty();
   ADynamicWeather::LoadWeatherDescriptionsFromFile(MapName, WeatherDescriptions);
