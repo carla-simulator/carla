@@ -8,9 +8,9 @@
 
 #include "Agent/AgentComponent.h"
 
-#include "WalkerAgentComponent.generated.h"
+#include "GameFramework/Character.h"
 
-class ACharacter;
+#include "WalkerAgentComponent.generated.h"
 
 /// This component can be added to any ACharacter to be added as agent.
 /// See UAgentComponent.
@@ -24,7 +24,20 @@ public:
   UWalkerAgentComponent(const FObjectInitializer &ObjectInitializer);
 
   /// Return forward speed in cm/s.
-  float GetForwardSpeed() const;
+  float GetForwardSpeed() const
+  {
+    return FVector::DotProduct(Walker->GetVelocity(), Walker->GetActorRotation().Vector());
+  }
+
+  FTransform GetTransform() const
+  {
+    return Walker->GetActorTransform();
+  }
+
+  FTransform GetBoundingBoxTransform() const
+  {
+    return FTransform();
+  }
 
   FVector GetBoundingBoxExtent() const
   {

@@ -40,7 +40,7 @@ static bool IsThereAnObstacleAhead(
     const FVector &Direction)
 {
   const auto ForwardVector = Vehicle.GetVehicleOrientation();
-  const auto VehicleBounds = Vehicle.GetVehicleBoundsExtent();
+  const auto VehicleBounds = Vehicle.GetVehicleBoundingBoxExtent();
 
   const float Distance = std::max(50.0f, Speed * Speed); // why?
 
@@ -250,7 +250,7 @@ float AWheeledVehicleAIController::GoToNextTargetLocation(FVector &Direction)
 float AWheeledVehicleAIController::CalcStreeringValue(FVector &direction)
 {
   float steering = 0;
-  FVector BoxExtent = Vehicle->GetVehicleBoundsExtent();
+  FVector BoxExtent = Vehicle->GetVehicleBoundingBoxExtent();
   FVector forward = Vehicle->GetActorForwardVector();
 
   FVector rightSensorPosition(BoxExtent.X / 2.0f, (BoxExtent.Y / 2.0f) + 100.0f, 0.0f);
