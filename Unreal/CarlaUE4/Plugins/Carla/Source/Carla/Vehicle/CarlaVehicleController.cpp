@@ -42,8 +42,9 @@ void ACarlaVehicleController::Possess(APawn *aPawn)
     // Get custom player state.
     CarlaPlayerState = Cast<ACarlaPlayerState>(PlayerState);
     check(CarlaPlayerState != nullptr);
-    // We can set bounds extent already as it's not going to change.
-    CarlaPlayerState->BoundsExtent = GetPossessedVehicle()->GetVehicleBoundsExtent();
+    // We can set the bounding box already as it's not going to change.
+    CarlaPlayerState->BoundingBoxTransform = GetPossessedVehicle()->GetVehicleBoundingBoxTransform();
+    CarlaPlayerState->BoundingBoxExtent = GetPossessedVehicle()->GetVehicleBoundingBoxExtent();
     // Set HUD input.
     CarlaHUD = Cast<ACarlaHUD>(GetHUD());
     if (CarlaHUD != nullptr) {
@@ -114,9 +115,11 @@ void ACarlaVehicleController::IntersectPlayerWithRoadMap()
   check(IsPossessingAVehicle());
   auto Vehicle = GetPossessedVehicle();
   constexpr float ChecksPerCentimeter = 0.1f;
+  const auto *BoundingBox = Vehicle->GetVehicleBoundingBox();
+  check(BoundingBox != nullptr);
   auto Result = RoadMap->Intersect(
-      Vehicle->GetVehicleTransform(),
-      Vehicle->GetVehicleBoundsExtent(),
+      BoundingBox->GetComponentTransform(),
+      Vehicle->GetVehicleBoundingBoxExtent(), // Get scaled bounding box extent.
       ChecksPerCentimeter);
 
   CarlaPlayerState->OffRoadIntersectionFactor = Result.OffRoad;

@@ -111,7 +111,8 @@ void FCarlaEncoder::Encode(
   Data.game_timestamp = PlayerState.GetGameTimeStamp();
   auto &Player = Data.player_measurements;
   ::Encode(PlayerState.GetTransform(), Player.transform);
-  ::Encode(PlayerState.GetBoundsExtent() * TO_METERS, Player.box_extent);
+  ::Encode(PlayerState.GetBoundingBoxTransform(), Player.bounding_box.transform);
+  ::Encode(PlayerState.GetBoundingBoxExtent() * TO_METERS, Player.bounding_box.extent);
   ::Encode(PlayerState.GetAcceleration() * TO_METERS, Player.acceleration);
   Player.forward_speed = PlayerState.GetForwardSpeed() * TO_METERS;
   Player.collision_vehicles = PlayerState.GetCollisionIntensityCars() * TO_METERS;
@@ -205,17 +206,18 @@ void FCarlaEncoder::Visit(const UTrafficSignAgentComponent &Agent)
 
 void FCarlaEncoder::Visit(const UVehicleAgentComponent &Agent)
 {
-  auto &Vehicle = Agent.GetVehicle();
-  ::Encode(Vehicle.GetVehicleTransform(), Data.transform);
+  ::Encode(Agent.GetTransform(), Data.transform);
   Data.type = CARLA_SERVER_AGENT_VEHICLE;
-  Data.forward_speed = Vehicle.GetVehicleForwardSpeed() * TO_METERS;
-  ::Encode(Vehicle.GetVehicleBoundsExtent() * TO_METERS, Data.box_extent);
+  Data.forward_speed = Agent.GetForwardSpeed() * TO_METERS;
+  ::Encode(Agent.GetBoundingBoxTransform(), Data.bounding_box.transform);
+  ::Encode(Agent.GetBoundingBoxExtent() * TO_METERS, Data.bounding_box.extent);
 }
 
 void FCarlaEncoder::Visit(const UWalkerAgentComponent &Agent)
 {
-  ::Encode(Agent.GetComponentTransform(), Data.transform);
+  ::Encode(Agent.GetTransform(), Data.transform);
   Data.type = CARLA_SERVER_AGENT_PEDESTRIAN;
   Data.forward_speed = Agent.GetForwardSpeed() * TO_METERS;
-  ::Encode(Agent.GetBoundingBoxExtent() * TO_METERS, Data.box_extent);
+  ::Encode(Agent.GetBoundingBoxTransform(), Data.bounding_box.transform);
+  ::Encode(Agent.GetBoundingBoxExtent() * TO_METERS, Data.bounding_box.extent);
 }
