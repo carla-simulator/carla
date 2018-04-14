@@ -32,6 +32,11 @@ message Transform {
   Rotation3D rotation = 3;
 }
 
+message BoundingBox {
+  Transform transform = 1;
+  Vector3D extent = 2;
+}
+
 // =============================================================================
 // -- Sensors ------------------------------------------------------------------
 // =============================================================================
@@ -54,13 +59,13 @@ message Sensor {
 
 message Vehicle {
   Transform transform = 1;
-  Vector3D box_extent = 2;
+  BoundingBox bounding_box = 4;
   float forward_speed = 3;
 }
 
 message Pedestrian {
   Transform transform = 1;
-  Vector3D box_extent = 2;
+  BoundingBox bounding_box = 4;
   float forward_speed = 3;
 }
 
@@ -126,7 +131,7 @@ message Measurements {
   message PlayerMeasurements {
     Transform transform = 1;
 
-    Vector3D box_extent = 11;
+    BoundingBox bounding_box = 12;
 
     Vector3D acceleration = 3;
     float forward_speed = 4;

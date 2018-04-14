@@ -8,7 +8,6 @@
 #include "CarlaWheeledVehicle.h"
 
 #include "Agent/VehicleAgentComponent.h"
-#include "Vehicle/VehicleControl.h"
 
 #include "Components/BoxComponent.h"
 #include "Engine/CollisionProfile.h"
@@ -37,13 +36,6 @@ ACarlaWheeledVehicle::~ACarlaWheeledVehicle() {}
 // -- Get functions ------------------------------------------------------------
 // =============================================================================
 
-FTransform ACarlaWheeledVehicle::GetVehicleTransform() const
-{
-  FTransform Transform = VehicleBounds->GetComponentTransform();
-  Transform.SetScale3D(GetActorTransform().GetScale3D());
-  return Transform;
-}
-
 float ACarlaWheeledVehicle::GetVehicleForwardSpeed() const
 {
   return GetVehicleMovementComponent()->GetForwardSpeed();
@@ -59,7 +51,12 @@ int32 ACarlaWheeledVehicle::GetVehicleCurrentGear() const
   return GetVehicleMovementComponent()->GetCurrentGear();
 }
 
-FVector ACarlaWheeledVehicle::GetVehicleBoundsExtent() const
+FTransform ACarlaWheeledVehicle::GetVehicleBoundingBoxTransform() const
+{
+  return VehicleBounds->GetRelativeTransform();
+}
+
+FVector ACarlaWheeledVehicle::GetVehicleBoundingBoxExtent() const
 {
   return VehicleBounds->GetScaledBoxExtent();
 }

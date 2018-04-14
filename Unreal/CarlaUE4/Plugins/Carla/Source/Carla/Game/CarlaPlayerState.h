@@ -88,9 +88,15 @@ public:
   }
 
   UFUNCTION(BlueprintCallable)
-  FVector GetBoundsExtent() const
+  FTransform GetBoundingBoxTransform() const
   {
-    return BoundsExtent;
+    return BoundingBoxTransform;
+  }
+
+  UFUNCTION(BlueprintCallable)
+  FVector GetBoundingBoxExtent() const
+  {
+    return BoundingBoxExtent;
   }
 
   UFUNCTION(BlueprintCallable)
@@ -235,7 +241,10 @@ private:
   FTransform Transform;
 
   UPROPERTY(VisibleAnywhere)
-  FVector BoundsExtent;
+  FTransform BoundingBoxTransform;
+
+  UPROPERTY(VisibleAnywhere)
+  FVector BoundingBoxExtent;
 
   UPROPERTY(VisibleAnywhere)
   float ForwardSpeed = 0.0f;
