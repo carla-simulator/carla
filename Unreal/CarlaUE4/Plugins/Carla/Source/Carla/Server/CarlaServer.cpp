@@ -71,11 +71,15 @@ FCarlaServer::ErrorCode FCarlaServer::ReadNewEpisode(FString &IniFile, const boo
 }
 
 FCarlaServer::ErrorCode FCarlaServer::SendSceneDescription(
+    const FString &MapName,
     const TArray<APlayerStart *> &AvailableStartSpots,
     const TArray<USensorDescription *> &SensorDescriptions,
     const bool bBlocking)
 {
   carla_scene_description scene;
+  // Encode map name.
+  const auto MapNameBuffer = FCarlaEncoder::Encode(MapName);
+  scene.map_name = MapNameBuffer.Get();
   // Encode start spots.
   TArray<carla_transform> Transforms;
   FCarlaEncoder::Encode(AvailableStartSpots, Transforms);

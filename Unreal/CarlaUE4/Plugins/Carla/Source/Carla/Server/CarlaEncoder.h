@@ -18,6 +18,8 @@ class FCarlaEncoder : private IAgentComponentVisitor
 {
 public:
 
+  static TUniquePtr<const char[]> Encode(const FString &String);
+
   static void Encode(
     const TArray<APlayerStart *> &AvailableStartSpots,
     TArray<carla_transform> &Data);

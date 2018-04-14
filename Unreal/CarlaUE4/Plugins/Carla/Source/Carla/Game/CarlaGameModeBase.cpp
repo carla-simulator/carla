@@ -68,10 +68,12 @@ void ACarlaGameModeBase::InitGame(
       constexpr auto PIEPrefix = TEXT("UEDPIE_0_");
       CorrectedMapName.RemoveFromStart(PIEPrefix);
       UE_LOG(LogCarla, Log, TEXT("Corrected map name from %s to %s"), *MapName, *CorrectedMapName);
-      CarlaSettings.LoadWeatherDescriptions(CorrectedMapName);
+      CarlaSettings.MapName = CorrectedMapName;
+      CarlaSettings.LoadWeatherDescriptions();
     }
 #else
-    CarlaSettings.LoadWeatherDescriptions(MapName);
+    CarlaSettings.MapName = MapName;
+    CarlaSettings.LoadWeatherDescriptions();
 #endif // WITH_EDITOR
     GameController->Initialize(CarlaSettings);
     CarlaSettings.ValidateWeatherId();

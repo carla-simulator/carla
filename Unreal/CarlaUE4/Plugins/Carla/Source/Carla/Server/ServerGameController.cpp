@@ -54,7 +54,8 @@ APlayerStart *FServerGameController::ChoosePlayerStart(
   if (Server.IsValid()) {
     TArray<USensorDescription *> Sensors;
     CarlaSettings->SensorDescriptions.GenerateValueArray(Sensors);
-    if (Errc::Success != Server->SendSceneDescription(AvailableStartSpots, Sensors, BLOCKING)) {
+    const auto &MapName = CarlaSettings->MapName;
+    if (Errc::Success != Server->SendSceneDescription(MapName, AvailableStartSpots, Sensors, BLOCKING)) {
       UE_LOG(LogCarlaServer, Warning, TEXT("Failed to send scene description, server needs restart"));
       Server = nullptr;
     }
