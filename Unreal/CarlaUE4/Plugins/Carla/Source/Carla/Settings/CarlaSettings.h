@@ -9,7 +9,6 @@
 #include "WeatherDescription.h"
 #include "CarlaSettings.generated.h"
 
-
 UENUM(BlueprintType)
 enum class EQualitySettingsLevel : uint8
 {
@@ -17,8 +16,7 @@ enum class EQualitySettingsLevel : uint8
   Low     UMETA(DisplayName = "Low"),
   Medium  UMETA(DisplayName = "Medium"),
   High    UMETA(DisplayName = "High"),
-  Epic    UMETA(DisplayName = "Epic") 
-	
+  Epic    UMETA(DisplayName = "Epic")
 };
 
 UCLASS(BlueprintType)
@@ -27,12 +25,13 @@ class CARLA_API UQualitySettings : public UObject
 	GENERATED_BODY()
 
 public:
+
  using uint_type = typename std::underlying_type<EQualitySettingsLevel>::type;
  UFUNCTION(BlueprintCallable)
  static EQualitySettingsLevel FromString(const FString &SQualitySettingsLevel);
  UFUNCTION(BlueprintCallable)
  static FString ToString(EQualitySettingsLevel QualitySettingsLevel);
- 
+
  static constexpr uint_type ToUInt(EQualitySettingsLevel quality_settings_level)
  {
    return static_cast<uint_type>(quality_settings_level);
@@ -52,11 +51,11 @@ class CARLA_API UCarlaSettings : public UObject
   GENERATED_BODY()
 
 public:
-  
-  /** 
-   * Sets the new quality settings level and make changes in the game related to it. 
+
+  /**
+   * Sets the new quality settings level and make changes in the game related to it.
    * @note This will not apply the quality settings. Use ApplyQualitySettings functions instead
-   * @param newQualityLevel Store the new quality 
+   * @param newQualityLevel Store the new quality
    */
   UFUNCTION(BlueprintCallable, Category="CARLA Settings")
   void SetQualitySettingsLevel(EQualitySettingsLevel newQualityLevel);
@@ -64,7 +63,7 @@ public:
   /** @return current quality settings level (could not be applied yet) */
   UFUNCTION(BlueprintCallable, Category="CARLA Settings")
   EQualitySettingsLevel GetQualitySettingsLevel() const { return QualitySettingsLevel; }
-  
+
   /** Load the settings based on the command-line arguments and the INI file if provided. */
   void LoadSettings();
 
@@ -72,7 +71,7 @@ public:
   void LoadSettingsFromString(const FString &INIFileContents);
 
   /** Load weather description from config files. (There may be overrides for each map). */
-  void LoadWeatherDescriptions(const FString &MapName);
+  void LoadWeatherDescriptions();
 
   /** Check if requested weather id is present in WeatherDescriptions. */
   void ValidateWeatherId();
@@ -97,6 +96,7 @@ public:
 
   UFUNCTION(BlueprintCallable)
   const FWeatherDescription &GetWeatherDescriptionByIndex(int32 Index);
+
   ///----------- constants ------------------
 public:
   /**
@@ -104,11 +104,12 @@ public:
    */
   static const FName CARLA_ROAD_TAG;
   /**
-   * CARLA_SKY name to tag the sky sphere (BPS) actors in the scenes 
+   * CARLA_SKY name to tag the sky sphere (BPS) actors in the scenes
    */
   static const FName CARLA_SKY_TAG;
 
 private:
+
   /***/
   void LoadSettingsFromFile(const FString &FilePath, bool bLogOnFailure);
 
@@ -155,6 +156,10 @@ public:
   /// @{
 public:
 
+  /** Display name of the current map. */
+  UPROPERTY(Category = "Level Settings", VisibleAnywhere)
+  FString MapName;
+
   /** Path to the pawn class of the player. */
   UPROPERTY(Category = "Level Settings", VisibleAnywhere)
   FString PlayerVehicle;
@@ -183,7 +188,6 @@ public:
   UPROPERTY(Category = "Level Settings", VisibleAnywhere)
   int32 SeedVehicles = 123456789;
 
-  
   /// @}
 
   // ===========================================================================
@@ -191,14 +195,16 @@ public:
   // ===========================================================================
   /// @{
 private:
+
   /** Quality Settings level. */
   UPROPERTY(Category = "Quality Settings", VisibleAnywhere, meta =(AllowPrivateAccess="true"))
   EQualitySettingsLevel QualitySettingsLevel = EQualitySettingsLevel::Epic;
- 
- public:
+
+public:
+
   /** @TODO : Move Low quality vars to a generic map of structs with the quality level as key*/
 
-  /** Low quality Road Materials. 
+  /** Low quality Road Materials.
    * Uses slots name to set material for each part of the road for low quality
    */
   UPROPERTY(Category = "Quality Settings/Low", BlueprintReadOnly, EditAnywhere, config, DisplayName="Road Materials List for Low Quality")
@@ -206,7 +212,7 @@ private:
 
   //distances
   /**
-   * Distance at which the light function should be completely faded to DisabledBrightness.  
+   * Distance at which the light function should be completely faded to DisabledBrightness.
    * This is useful for hiding aliasing from light functions applied in the distance.
    */
   UPROPERTY(Category = "Quality Settings/Low", BlueprintReadOnly, EditAnywhere, config)
@@ -215,22 +221,22 @@ private:
   /**
    * Default low distance for all primitive components
    */
-  UPROPERTY(Category = "Quality Settings/Low", BlueprintReadOnly, EditAnywhere, config, meta = (ClampMin = "5000.0", ClampMax = "20000.0", UIMin = "5000.0", UIMax = "20000.0")) 
+  UPROPERTY(Category = "Quality Settings/Low", BlueprintReadOnly, EditAnywhere, config, meta = (ClampMin = "5000.0", ClampMax = "20000.0", UIMin = "5000.0", UIMax = "20000.0"))
   float LowStaticMeshMaxDrawDistance = 10000.0f;
 
   /**
    * Default low distance for roads meshes
    */
-  UPROPERTY(Category = "Quality Settings/Low", BlueprintReadOnly, EditAnywhere, config, meta = (ClampMin = "5000.0", ClampMax = "20000.0", UIMin = "5000.0", UIMax = "20000.0")) 
+  UPROPERTY(Category = "Quality Settings/Low", BlueprintReadOnly, EditAnywhere, config, meta = (ClampMin = "5000.0", ClampMax = "20000.0", UIMin = "5000.0", UIMax = "20000.0"))
   float LowRoadPieceMeshMaxDrawDistance = 15000.0f;
 
 
-  /** EPIC quality Road Materials. 
+  /** EPIC quality Road Materials.
    * Uses slots name to set material for each part of the road for Epic quality
    */
   UPROPERTY(Category = "Quality Settings/Epic", BlueprintReadOnly, EditAnywhere, config, DisplayName="Road Materials List for EPIC Quality")
   TArray<FStaticMaterial> EpicRoadMaterials;
-  
+
   /// @}
 
   // ===========================================================================

@@ -121,6 +121,8 @@ extern "C" {
   /* ======================================================================== */
 
   struct carla_scene_description {
+    /** Display name of the current map. */
+    const char *map_name;
     /** Collection of the initial player start locations. */
     const struct carla_transform *player_start_spots;
     uint32_t number_of_player_start_spots;

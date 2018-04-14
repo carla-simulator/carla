@@ -24,7 +24,7 @@ matrix:
           packages:
             - cppcheck
       script:
-        - cppcheck . -iBuild -i.pb.cc --error-exitcode=1 --enable=warning --quiet
+        - cppcheck . -iBuild -i.pb.cc --error-exitcode=1 --enable=warning --inline-suppr --quiet
 
     - env: TEST="MkDocs"
       install:
