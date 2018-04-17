@@ -40,6 +40,11 @@ public:
   // ===========================================================================
   /// @{
 
+  uint64 GetFrameNumber() const
+  {
+    return FrameNumber;
+  }
+
   UFUNCTION(BlueprintCallable)
   float GetFramesPerSecond() const
   {
@@ -83,9 +88,15 @@ public:
   }
 
   UFUNCTION(BlueprintCallable)
-  FVector GetBoundsExtent() const
+  FTransform GetBoundingBoxTransform() const
   {
-    return BoundsExtent;
+    return BoundingBoxTransform;
+  }
+
+  UFUNCTION(BlueprintCallable)
+  FVector GetBoundingBoxExtent() const
+  {
+    return BoundingBoxExtent;
   }
 
   UFUNCTION(BlueprintCallable)
@@ -215,6 +226,9 @@ private:
   // CopyProperties if necessary.
 
   UPROPERTY(VisibleAnywhere)
+  uint64 FrameNumber;
+
+  UPROPERTY(VisibleAnywhere)
   float FramesPerSecond;
 
   UPROPERTY(VisibleAnywhere)
@@ -227,7 +241,10 @@ private:
   FTransform Transform;
 
   UPROPERTY(VisibleAnywhere)
-  FVector BoundsExtent;
+  FTransform BoundingBoxTransform;
+
+  UPROPERTY(VisibleAnywhere)
+  FVector BoundingBoxExtent;
 
   UPROPERTY(VisibleAnywhere)
   float ForwardSpeed = 0.0f;

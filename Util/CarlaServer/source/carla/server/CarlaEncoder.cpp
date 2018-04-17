@@ -54,6 +54,12 @@ namespace server {
     Set(lhs->mutable_rotation(), rhs.rotation);
   }
 
+  static void Set(cs::BoundingBox *lhs, const carla_bounding_box &rhs) {
+    DEBUG_ASSERT(lhs != nullptr);
+    Set(lhs->mutable_transform(), rhs.transform);
+    Set(lhs->mutable_extent(), rhs.extent);
+  }
+
   static void Set(cs::Sensor *lhs, const carla_sensor_definition &rhs) {
     DEBUG_ASSERT(lhs != nullptr);
     lhs->set_id(rhs.id);
@@ -79,14 +85,14 @@ namespace server {
   static void SetVehicle(cs::Vehicle *lhs, const carla_agent &rhs) {
     DEBUG_ASSERT(lhs != nullptr);
     Set(lhs->mutable_transform(), rhs.transform);
-    Set(lhs->mutable_box_extent(), rhs.box_extent);
+    Set(lhs->mutable_bounding_box(), rhs.bounding_box);
     lhs->set_forward_speed(rhs.forward_speed);
   }
 
   static void SetPedestrian(cs::Pedestrian *lhs, const carla_agent &rhs) {
     DEBUG_ASSERT(lhs != nullptr);
     Set(lhs->mutable_transform(), rhs.transform);
-    Set(lhs->mutable_box_extent(), rhs.box_extent);
+    Set(lhs->mutable_bounding_box(), rhs.bounding_box);
     lhs->set_forward_speed(rhs.forward_speed);
   }
 
@@ -149,13 +155,14 @@ namespace server {
   std::string CarlaEncoder::Encode(const carla_measurements &values) {
     static thread_local auto *message = _protobuf.CreateMessage<cs::Measurements>();
     DEBUG_ASSERT(message != nullptr);
+    message->set_frame_number(values.frame_number);
     message->set_platform_timestamp(values.platform_timestamp);
     message->set_game_timestamp(values.game_timestamp);
     // Player measurements.
     auto *player = message->mutable_player_measurements();
     DEBUG_ASSERT(player != nullptr);
     Set(player->mutable_transform(), values.player_measurements.transform);
-    Set(player->mutable_box_extent(), values.player_measurements.box_extent);
+    Set(player->mutable_bounding_box(), values.player_measurements.bounding_box);
     Set(player->mutable_acceleration(), values.player_measurements.acceleration);
     player->set_forward_speed(values.player_measurements.forward_speed);
     player->set_collision_vehicles(values.player_measurements.collision_vehicles);

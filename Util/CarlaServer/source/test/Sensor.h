@@ -34,6 +34,8 @@ namespace test {
 
     Sensor(uint32_t id);
 
+    uint64_t _frame_number = 0u;
+
     mutable std::mutex _mutex;
 
     const std::string _name;

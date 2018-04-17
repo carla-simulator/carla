@@ -11,13 +11,13 @@ to the client. This document describes the details of these measurements.
 Time-stamps
 -----------
 
-Since CARLA can be run at fixed-frame rate, we keep track of two different
-time-stamps.
+Every frame is described by three different counters/time-stamps
 
 Key                        | Type      | Units        | Description
 -------------------------- | --------- | ------------ | ------------
+frame_number               | uint64    |              | Frame counter (it is **not** restarted on each episode).
 platform_timestamp         | uint32    | milliseconds | Time-stamp of the current frame, as given by the OS.
-game_timestamp             | uint32    | milliseconds | In-game time-stamp, elapsed since the beginning of the current level.
+game_timestamp             | uint32    | milliseconds | In-game time-stamp, elapsed since the beginning of the current episode.
 
 In real-time mode, the elapsed time between two time steps should be similar
 both platform and game time-stamps. When run in fixed-time step, the game
@@ -126,18 +126,68 @@ If enabled, the server attaches a list of agents to the measurements package
 every frame. Each of these agents has an unique id that identifies it, and
 belongs to one of the following classes
 
-  * **Vehicle** Contains its transform, box-extent, and forward speed.
-  * **Pedestrian** Contains its transform, box-extent, and forward speed. (*)
-  * **Traffic light** Contains its transform and state (green, yellow, red).
-  * **Speed-limit sign** Contains its transform and speed-limit.
+  * Vehicle
+  * Pedestrian
+  * Traffic ligth
+  * Speed limit sign
 
-(*) At this point every pedestrian is assumed to have the same bounding-box
-size.
+Each of them can be accessed in Python by checking if the agent object has the
+field enabled
+
+```python
+measurements, sensor_data = client.read_data()
+
+for agent in measurements.non_player_agents:
+    agent.id # unique id of the agent
+    if agent.HasField('vehicle'):
+        agent.vehicle.forward_speed
+        agent.vehicle.transform
+        agent.vehicle.bounding_box
+```
+
+<h6>Vehicle</h6>
+
+Key                             | Type      | Description
+------------------------------- | --------- | ------------
+id                              | uint32    | Agent ID
+vehicle.forward_speed           | float     | Forward speed of the vehicle in m/s
+vehicle.transform               | Transform | Agent-to-world transform
+vehicle.bounding_box.transform  | Transform | Transform of the bounding box relative to the vehicle
+vehicle.bounding_box.extent     | Vector3D  | Radii dimensions of the bounding box in meters
+
+<h6>Pedestrian</h6>
+
+Key                               | Type      | Description
+--------------------------------- | --------- | ------------
+id                                | uint32    | Agent ID
+pedestrian.forward_speed          | float     | Forward speed of the pedestrian in m/s
+pedestrian.transform              | Transform | Agent-to-world transform
+pedestrian.bounding_box.transform | Transform | Transform of the bounding box relative to the pedestrian
+pedestrian.bounding_box.extent    | Vector3D  | Radii dimensions of the bounding box in meters (*)
+
+<small>(*) At this point every pedestrian is assumed to have the same
+bounding-box size.</small>
+
+<h6>Traffic light</h6>
+
+Key                          | Type      | Description
+---------------------------- | --------- | ------------
+id                           | uint32    | Agent ID
+traffic_light.transform      | Transform | Agent-to-world transform
+traffic_light.state          | enum      | Traffic light state; `GREEN`, `YELLOW`, or `RED`
+
+<h6>Speed limit sign</h6>
+
+Key                          | Type      | Description
+---------------------------- | --------- | ------------
+id                           | uint32    | Agent ID
+speed_limit_sign.transform   | Transform | Agent-to-world transform
+speed_limit_sign.speed_limit | float     | Speed limit in m/s
 
 <h4>Transform and bounding box</h4>
 
-The transform defines the location and orientation of the agent. The bounding
-box is centered at the agent's location. The box extent gives the radii
-dimensions of the bounding box of the agent.
+The transform defines the location and orientation of the agent. The transform
+of the bounding box is given relative to the vehicle. The box extent gives the
+radii dimensions of the bounding box of the agent.
 
 ![Vehicle Bounding Box](img/vehicle_bounding_box.png)

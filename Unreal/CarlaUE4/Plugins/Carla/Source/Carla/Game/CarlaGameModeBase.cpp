@@ -202,7 +202,7 @@ void ACarlaGameModeBase::BeginPlay()
 void ACarlaGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
-	if (CarlaSettingsDelegate != nullptr)
+	if (CarlaSettingsDelegate != nullptr && EndPlayReason!=EEndPlayReason::EndPlayInEditor)
 	{
 	  CarlaSettingsDelegate->Reset();
 	}

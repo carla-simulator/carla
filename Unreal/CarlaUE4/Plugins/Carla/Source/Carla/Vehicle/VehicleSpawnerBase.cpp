@@ -11,10 +11,12 @@
 #include "Vehicle/CarlaWheeledVehicle.h"
 #include "Vehicle/WheeledVehicleAIController.h"
 
-#include "Engine/PlayerStartPIE.h"
+
 #include "EngineUtils.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/PlayerStart.h"
+#include "TimerManager.h"
+#include "Kismet/GameplayStatics.h"
 
 // =============================================================================
 // -- Static local methods -----------------------------------------------------
@@ -35,8 +37,7 @@ static AWheeledVehicleAIController *GetController(ACarlaWheeledVehicle *Vehicle)
 // =============================================================================
 
 // Sets default values
-AVehicleSpawnerBase::AVehicleSpawnerBase(const FObjectInitializer& ObjectInitializer)
-  : Super(ObjectInitializer)
+AVehicleSpawnerBase::AVehicleSpawnerBase(const FObjectInitializer& ObjectInitializer): Super(ObjectInitializer)
 {
   PrimaryActorTick.bCanEverTick = false;
 }
@@ -55,31 +56,71 @@ void AVehicleSpawnerBase::BeginPlay()
     SpawnPoints.Add(*It);
   }
 
-  UE_LOG(LogCarla, Log, TEXT("Found %d positions for spawning vehicles"), SpawnPoints.Num());
+  UE_LOG(LogCarla, Log, TEXT("Found %d PlayerStart positions for spawning vehicles"), SpawnPoints.Num());
 
-  if (SpawnPoints.Num() < NumberOfVehicles) {
-    bSpawnVehicles = false;
-    UE_LOG(LogCarla, Error, TEXT("We don't have enough spawn points for vehicles!"));
+  if (SpawnPoints.Num() < NumberOfVehicles && SpawnPoints.Num()>0) 
+  {
+    UE_LOG(LogCarla, Warning, TEXT("We don't have enough spawn points (PlayerStart) for vehicles!"));
+	if(SpawnPoints.Num()==0)
+	{
+	  UE_LOG(LogCarla, Error, TEXT("At least one spawn point (PlayerStart) is needed to spawn vehicles!"));	
+	} else
+	{
+	  UE_LOG(LogCarla, Log, 
+	    TEXT("To cover the %d vehicles to spawn after beginplay, it will spawn one new vehicle each %f seconds"),
+	    NumberOfVehicles - SpawnPoints.Num(),
+		TimeBetweenSpawnAttemptsAfterBegin
+	  )
+;
+	}
   }
+  
+  if(NumberOfVehicles==0||SpawnPoints.Num()==0) bSpawnVehicles = false;
 
-  if (bSpawnVehicles) {
-    const int32 MaximumNumberOfAttempts = 4 * NumberOfVehicles;
+  if (bSpawnVehicles) 
+  {
+	GetRandomEngine()->Shuffle(SpawnPoints);
+    const int32 MaximumNumberOfAttempts = SpawnPoints.Num();
     int32 NumberOfAttempts = 0;
-    while ((NumberOfVehicles > Vehicles.Num()) && (NumberOfAttempts < MaximumNumberOfAttempts)) {
-      // Try to spawn one vehicle.
-      TryToSpawnRandomVehicle();
+
+    while ((NumberOfVehicles > Vehicles.Num()) && (NumberOfAttempts < MaximumNumberOfAttempts)) 
+	{
+	  SpawnVehicleAtSpawnPoint(*SpawnPoints[NumberOfAttempts]);
       ++NumberOfAttempts;
     }
-
-    if (NumberOfVehicles > Vehicles.Num()) {
+	
+    if (NumberOfAttempts > NumberOfVehicles) 
+	{
       UE_LOG(LogCarla, Error, TEXT("Requested %d vehicles, but we were only able to spawn %d"), NumberOfVehicles, Vehicles.Num());
+    } else
+    {
+	  if(NumberOfAttempts == NumberOfVehicles)
+	  {
+	    UE_LOG(LogCarla, Log, TEXT("Spawned all %d vehicles"), NumberOfAttempts);
+	  } else
+	  {
+		UE_LOG(LogCarla, Log, 
+		  TEXT("Starting the timer to spawn the other %d vehicles, one per %f seconds"), 
+		  NumberOfVehicles - NumberOfAttempts,
+		  TimeBetweenSpawnAttemptsAfterBegin
+		);
+		GetWorld()->GetTimerManager().SetTimer(AttemptTimerHandle,this, &AVehicleSpawnerBase::SpawnVehicleAttempt, TimeBetweenSpawnAttemptsAfterBegin,false,-1);
+
+	  }
+	 
     }
   }
 }
 
+void AVehicleSpawnerBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
+}
+
 void AVehicleSpawnerBase::SetNumberOfVehicles(const int32 Count)
 {
-  if (Count > 0) {
+  if (Count > 0) 
+  {
     bSpawnVehicles = true;
     NumberOfVehicles = Count;
   } else {
@@ -90,7 +131,8 @@ void AVehicleSpawnerBase::SetNumberOfVehicles(const int32 Count)
 void AVehicleSpawnerBase::TryToSpawnRandomVehicle()
 {
   auto SpawnPoint = GetRandomSpawnPoint();
-  if (SpawnPoint != nullptr) {
+  if (SpawnPoint != nullptr) 
+  {
       SpawnVehicleAtSpawnPoint(*SpawnPoint);
   } else {
     UE_LOG(LogCarla, Error, TEXT("Unable to find spawn point"));
@@ -102,11 +144,13 @@ void AVehicleSpawnerBase::SpawnVehicleAtSpawnPoint(
 {
   ACarlaWheeledVehicle *Vehicle;
   SpawnVehicle(SpawnPoint.GetActorTransform(), Vehicle);
-  if ((Vehicle != nullptr) && !Vehicle->IsPendingKill()) {
+  if ((Vehicle != nullptr) && !Vehicle->IsPendingKill())
+  {
     Vehicle->AIControllerClass = AWheeledVehicleAIController::StaticClass();
     Vehicle->SpawnDefaultController();
     auto Controller = GetController(Vehicle);
-    if (Controller != nullptr) { // Sometimes fails...
+    if (Controller != nullptr) 
+	{ // Sometimes fails...
       Controller->GetRandomEngine()->Seed(GetRandomEngine()->GenerateSeed());
       Controller->SetRoadMap(GetRoadMap());
       Controller->SetAutopilot(true);
@@ -116,6 +160,38 @@ void AVehicleSpawnerBase::SpawnVehicleAtSpawnPoint(
       Vehicle->Destroy();
     }
   }
+}
+
+void AVehicleSpawnerBase::SpawnVehicleAttempt()
+{
+	if(Vehicles.Num()>=NumberOfVehicles) 
+	{
+	  UE_LOG(LogCarla, Log, TEXT("All vehicles spawned correctly"));
+	  return;
+	}
+	
+	APlayerStart* spawnpoint = GetRandomSpawnPoint();
+	APawn* playerpawn = UGameplayStatics::GetPlayerPawn(GetWorld(),0);
+	const float DistanceToPlayer = playerpawn&&spawnpoint? FVector::Distance(playerpawn->GetActorLocation(),spawnpoint->GetActorLocation()):0.0f;
+	float NextTime = TimeBetweenSpawnAttemptsAfterBegin;
+	if(DistanceToPlayer>DistanceToPlayerBetweenSpawnAttemptsAfterBegin)
+	{
+	  SpawnVehicleAtSpawnPoint(*spawnpoint);
+	} else
+	{
+	  NextTime /= 2.0f;
+	}
+	
+	if(Vehicles.Num()<NumberOfVehicles)
+	{
+	  auto &timemanager = GetWorld()->GetTimerManager();
+	  if(AttemptTimerHandle.IsValid()) timemanager.ClearTimer(AttemptTimerHandle);
+	  timemanager.SetTimer(AttemptTimerHandle,this, &AVehicleSpawnerBase::SpawnVehicleAttempt,NextTime,false,-1);
+	} else
+	{
+	  UE_LOG(LogCarla, Log, TEXT("Last vehicle spawned correctly"));
+	}
+
 }
 
 APlayerStart *AVehicleSpawnerBase::GetRandomSpawnPoint()

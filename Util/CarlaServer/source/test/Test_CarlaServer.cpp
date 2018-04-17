@@ -106,7 +106,7 @@ TEST(CarlaServerAPI, SimBlocking) {
       agents_data[i].id = i;
       agents_data[i].type = CARLA_SERVER_AGENT_VEHICLE;
       agents_data[i].transform = start_locations[0u];
-      agents_data[i].box_extent = {100.0f, 100.0f, 100.0f};
+      agents_data[i].bounding_box = {start_locations[0u], {100.0f, 100.0f, 100.0f}};
       agents_data[i].forward_speed = 50.0f;
     }
 
