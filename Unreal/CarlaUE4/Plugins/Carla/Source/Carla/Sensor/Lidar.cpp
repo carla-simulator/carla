@@ -94,6 +94,7 @@ void ALidar::ReadPoints(const float DeltaTime)
   }
 
   const float HorizontalAngle = std::fmod(CurrentHorizontalAngle + AngleDistanceOfTick, 360.0f);
+  LidarMeasurement.SetFrameNumber(GFrameCounter);
   LidarMeasurement.SetHorizontalAngle(HorizontalAngle);
 }
 

@@ -43,6 +43,11 @@ extern "C" {
     struct carla_rotation3d rotation;
   };
 
+  struct carla_bounding_box {
+    struct carla_transform transform;
+    struct carla_vector3d extent;
+  };
+
   /* ======================================================================== */
   /* -- agents -------------------------------------------------------------- */
   /* ======================================================================== */
@@ -66,7 +71,7 @@ extern "C" {
     uint32_t id;
     uint32_t type;
     struct carla_transform transform;
-    struct carla_vector3d box_extent;
+    struct carla_bounding_box bounding_box;
     float forward_speed;
   };
 
@@ -159,8 +164,8 @@ extern "C" {
   struct carla_player_measurements {
     /** World transform of the player. */
     struct carla_transform transform;
-    /** Extent of the bounding box of the player. */
-    struct carla_vector3d box_extent;
+    /** Bounding box of the player. */
+    struct carla_bounding_box bounding_box;
     /** Current acceleration of the player. */
     struct carla_vector3d acceleration;
     /** Forward speed in m/s. */
@@ -184,6 +189,8 @@ extern "C" {
   /* ======================================================================== */
 
   struct carla_measurements {
+    /** Frame counter. */
+    uint32_t frame_number;
     /** Time-stamp of the current frame, in milliseconds as given by the OS. */
     uint32_t platform_timestamp;
     /** In-game time-stamp, milliseconds elapsed since the beginning of the current level. */

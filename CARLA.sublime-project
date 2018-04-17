@@ -18,7 +18,8 @@
 				"Intermediate",
 				"Saved",
 				"Unreal/CarlaUE4/Content*",
-				"__pycache__"
+				"__pycache__",
+				"_site"
 			],
 			"file_exclude_patterns":
 			[

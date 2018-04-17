@@ -54,6 +54,9 @@ public:
   UFUNCTION(BlueprintCallable)
   void TrySetMovement(bool paused);
 
+  UFUNCTION(BlueprintCallable)
+  float GetTimeInState() const { return TimeInState; }
+
 private:
   void ChangeStatus(EWalkerStatus status);
   void TryResumeMovement();
@@ -68,6 +71,6 @@ private:
 
   UPROPERTY(VisibleAnywhere)
   EWalkerStatus Status = EWalkerStatus::Unknown;
-
+  /** Continous time in the same EWalkerStatus */
   float TimeInState=0.0f;
 };

@@ -8,9 +8,9 @@
 
 #include "Agent/AgentComponent.h"
 
-#include "VehicleAgentComponent.generated.h"
+#include "Vehicle/CarlaWheeledVehicle.h"
 
-class ACarlaWheeledVehicle;
+#include "VehicleAgentComponent.generated.h"
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class CARLA_API UVehicleAgentComponent : public UAgentComponent
@@ -21,10 +21,25 @@ public:
 
   UVehicleAgentComponent(const FObjectInitializer &ObjectInitializer);
 
-  ACarlaWheeledVehicle &GetVehicle() const
+  /// Return forward speed in cm/s.
+  float GetForwardSpeed() const
   {
-    check(WheeledVehicle != nullptr);
-    return *WheeledVehicle;
+    return Vehicle->GetVehicleForwardSpeed();
+  }
+
+  FTransform GetTransform() const
+  {
+    return Vehicle->GetVehicleTransform();
+  }
+
+  FTransform GetBoundingBoxTransform() const
+  {
+    return Vehicle->GetVehicleBoundingBoxTransform();
+  }
+
+  FVector GetBoundingBoxExtent() const
+  {
+    return Vehicle->GetVehicleBoundingBoxExtent();
   }
 
 protected:
@@ -38,5 +53,6 @@ protected:
 
 private:
 
-  ACarlaWheeledVehicle *WheeledVehicle = nullptr;
+  UPROPERTY()
+  ACarlaWheeledVehicle *Vehicle = nullptr;
 };

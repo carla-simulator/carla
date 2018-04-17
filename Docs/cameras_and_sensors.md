@@ -35,6 +35,11 @@ to a more human readable palette of colors. It can be found at
 ["Util/ImageConverter"][imgconvlink]. Alternatively, they can also be converted
 using the functions at `carla.image_converter` Python module.
 
+Note that all the sensor data comes with a _frame number_ stamp, this _frame
+number_ matches the one received in the measurements. This is especially useful
+for running the simulator in asynchronous mode and synchronize sensor data on
+the client side.
+
 [clientexamplelink]: https://github.com/carla-simulator/carla/blob/master/PythonClient/client_example.py
 [settingslink]: https://github.com/carla-simulator/carla/blob/master/Docs/Example.CarlaSettings.ini
 [imgconvlink]: https://github.com/carla-simulator/carla/tree/master/Util/ImageConverter

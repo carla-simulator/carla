@@ -9,11 +9,9 @@
 #include "Carla.h"
 #include "VehicleAgentComponent.h"
 
-#include "Vehicle/CarlaWheeledVehicle.h"
-
-static bool IsPlayer(const ACarlaWheeledVehicle &Vehicle)
+static bool IsPlayer(const ACarlaWheeledVehicle &InVehicle)
 {
-  auto *Controller = Cast<AWheeledVehicleAIController>(Vehicle.GetController());
+  auto *Controller = Cast<AWheeledVehicleAIController>(InVehicle.GetController());
   return (Controller != nullptr) && Controller->IsPossessingThePlayer();
 }
 
@@ -22,11 +20,11 @@ UVehicleAgentComponent::UVehicleAgentComponent(const FObjectInitializer &ObjectI
 
 void UVehicleAgentComponent::BeginPlay()
 {
-  WheeledVehicle = Cast<ACarlaWheeledVehicle>(GetOwner());
-  checkf(WheeledVehicle != nullptr, TEXT("UVehicleAgentComponent can only be attached to ACarlaWheeledVehicle"));
+  Vehicle = Cast<ACarlaWheeledVehicle>(GetOwner());
+  checkf(Vehicle != nullptr, TEXT("UVehicleAgentComponent can only be attached to ACarlaWheeledVehicle"));
 
   // We only want to register non-player agents.
-  bRegisterAgentComponent = !IsPlayer(*WheeledVehicle);
+  bRegisterAgentComponent = !IsPlayer(*Vehicle);
 
   Super::BeginPlay();
 }
