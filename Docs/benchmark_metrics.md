@@ -3,8 +3,8 @@ Driving Benchmark Performance Metrics
 ------------------------------
 
 This page explains the performance metrics module.
-This module is used to compute a summary of results based on the agent
-actions when completing experiments.
+This module is used to compute a summary of results based on the actions
+ performed by the agent during the benchmark.
 
 
 ### Provided performance metrics
@@ -41,13 +41,14 @@ The metrics are computed as the final step of the benchmark
 and stores a summary of the results a json file.
 Internally it is executed as follows:
 
-    metrics_object = Metrics(metrics_parameters)
-    summary_dictionary = metrics_object.compute(path_to_execution_log)
+```python
+metrics_object = Metrics(metrics_parameters)
+summary_dictionary = metrics_object.compute(path_to_execution_log)
+```
 
 The Metric's compute function
 receives the full path to the execution log.
-Also, the metric class is instanced with the metric parameters.
-
+The Metric class  should be instanced with some parameters.
 The parameters are:
 
 * **Threshold**: The threshold used by the metrics.
@@ -59,7 +60,7 @@ skipped after a collision or a intersection starts.
 
 These parameters are defined as property of the *Experiment Suite*
 base class and can be redefined at your 
-[custom *Experiment Suite*](benchmark_creating.md/#defining-the-experiment-suite).
+[custom *Experiment Suite*](benchmark_creating/#defining-the-experiment-suite).
 
 The default parameters are:
 

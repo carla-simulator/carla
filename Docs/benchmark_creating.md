@@ -40,7 +40,7 @@ an example of how to apply a driving benchmark;
 
 Following this excerpt, there are two classes to be defined.
 The ForwardAgent() and the BasicExperimentSuite().
-After that, the benchmark is run with the "run_driving_benchmark" function.
+After that, the benchmark can ne run with the "run_driving_benchmark" function.
 The  summary  of the execution, the [performance metrics](benchmark_metrics.md), are stored
 in a json file and printed to the screen.
 
@@ -50,7 +50,7 @@ in a json file and printed to the screen.
 #### Defining the Agent
 
 The tested agent must  inherit the base *Agent* class.
-Lets start by deriving a simple forward agent:
+Let's start by deriving a simple forward agent:
 
     from carla.agent.agent import Agent
     from carla.client import VehicleControl
@@ -78,7 +78,7 @@ This function receives the following parameters:
  * [Sensor Data](cameras_and_sensors.md): The measured data from defined sensors, 
  such as Lidars or RGB cameras.
  * Directions: Information from the high level planner. Currently the planner sends
- a high level command from the set: STRAIGHT, RIGHT, LEFT, NOTHING.
+ a high level command from the follwoing set: STRAIGHT, RIGHT, LEFT, NOTHING.
  * Target Position: The position and orientation of the target.
  
  With all this information, the *run_step* function is expected 
@@ -131,54 +131,52 @@ class property as in the following example:
 ##### Building Experiments
 
 The [experiments are composed by a *task* that is defined by a set of *poses*](benchmark_structure.md).
-Lets start by selecting poses for one of the cities, lets take Town01, for instance.
+Let's start by selecting poses for one of the cities, let's take Town01, for instance.
 First of all, we need to see all the possible positions, for that, with
 a CARLA simulator running in a terminal, run:
     
     python view_start_positions.py
  
  ![town01_positions](img/town01_positions.png)
- > Figure 2: All the possible start positions for CARLA Town01.
   
   
-Now lets choose, for instance, 105 as start position and 29
+Now let's choose, for instance, 140 as start position and 134
 as the end position. This two positions can be visualized by running:
     
-    python view_start_positions.py --pos 105,29 --no-labels
+    python view_start_positions.py --pos 140,134 --no-labels
 
- ![town01_positions](img/town01_109_29.png)
- > Figure 2: A start and an end position.
+ ![town01_positions](img/town01_140_134.png)
 
-Lets choose two more  poses, one for going straight, other one for one simple turn.
-Also, lets also choose three poses for Town02:
+Let's choose two more  poses, one for going straight, other one for one simple turn.
+Also, let's also choose three poses for Town02:
 
 
  ![town01_positions](img/initial_positions.png)
- >Figure 3: The poses used on this basic *Experiment Suite* example. Poses are
+ >Figure: The poses used on this basic *Experiment Suite* example. Poses are
  a tuple of start and end position of a goal-directed episode. Start positions are
  shown in Blue, end positions in Red. Left: Straight poses,
  where the goal is just straight away from the start position. Middle: One turn
- episode, where the goal is one turn away from the start point. Arbitrary position,
+ episode, where the goal is one turn away from the start point. Right: arbitrary position,
  the goal is far away from the start position, usually more than one turn.
 
 
-We define each of this defined poses as a task. Plus, we also set
+We define each of these poses as a task. Plus, we also set
 the number of dynamic objects for each of these tasks and repeat
 the arbitrary position task to have it also defined with dynamic
 objects. In the following code excerpt we show the final
-defined positions and the number of dinamic objects for each task:
+defined positions and the number of dynamic objects for each task:
     
-    # Define the start/end position above as tasks
-    poses_task0 = [[36, 40]]
+    # Define the start/end position below as tasks
+    poses_task0 = [[7, 3]]
     poses_task1 = [[138, 17]]
-    poses_task2 = [[105, 29]]
-    poses_task3 = [[105, 29]]
+    poses_task2 = [[140, 134]]
+    poses_task3 = [[140, 134]]
     # Concatenate all the tasks
-    poses_tasks = poses_task0, poses_task1 , poses_task1 , poses_task3]
+    poses_tasks = [poses_task0, poses_task1 , poses_task1 , poses_task3]
+    # Add dynamic objects to tasks
     vehicles_tasks = [0, 0, 0, 20]
     pedestrians_tasks = [0, 0, 0, 50]
 
-Keep in mind that a task is a set of episodes with start and end points.
 
 Finally by using the defined tasks we can build the experiments
 vector as we show in the following code excerpt:
@@ -215,7 +213,7 @@ vector as we show in the following code excerpt:
 
 
             
-The full code could be found at [basic_experiment_suite.py](LINK)
+The full code could be found at [basic_experiment_suite.py](https://github.com/carla-simulator/carla/blob/master/PythonClient/carla/driving_benchmark/experiment_suite/basic_experiment_suite.py)
 
 
 
@@ -225,13 +223,13 @@ The presented example can be execute  for Town01 as:
 
     ./driving_benchmark_example.py -c Town01
  
-You should expect these results: [town01_basic_forward_results](benchmark_basic_results_town01.md)
+You should expect these results: [town01_basic_forward_results](benchmark_basic_results_town01)
 
 For Town02:
 
     ./driving_benchmark_example.py -c Town02
 
-You should expect these results: [town01_basic_forward_results](benchmark_basic_results_town01.md)
+You should expect these results: [town01_basic_forward_results](benchmark_basic_results_town02)
 
 
 
