@@ -1,5 +1,7 @@
-Shows the results for test and train weathers, for this case they are the same.
-The result is printed in the screen after running the driving benchmark.
+We show the results for test and train weathers when
+[running the simple example](benchmark_start/#getting-started) for Town02.
+The following result should print on the screen after running the
+example.
     
     
     Percentage of Successful Episodes
