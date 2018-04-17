@@ -13,13 +13,19 @@ pages:
   - 'Measurements': 'measurements.md'
   - 'Cameras and sensors': 'cameras_and_sensors.md'
   - 'F.A.Q.': 'faq.md'
+- Driving Benchmark:
+  - 'Quick Start': 'benchmark_start.md'
+  - 'General Structure': 'benchmark_structure.md'
+  - 'Creating Your Benchmark': 'benchmark_creating.md'
+  - 'Computed Performance Metrics': 'benchmark_metrics.md'
+  - 'ResultsTown01': 'benchmark_basic_results_town01.md'
+  - 'ResultsTown02': 'benchmark_basic_results_town02.md'
 - Building from source:
   - 'How to build on Linux': 'how_to_build_on_linux.md'
   - 'How to build on Windows': 'how_to_build_on_windows.md'
 - Advanced topics:
   - 'CARLA Settings': 'carla_settings.md'
   - 'Simulator keyboard input': 'simulator_keyboard_input.md'
-  - 'Benchmark': 'benchmark.md'
   - 'Running without display and selecting GPUs': 'carla_headless.md'
   - "How to link Epic's Automotive Materials": 'epic_automotive_materials.md'
 - Contributing:
@@ -31,6 +37,8 @@ pages:
   - 'How to add assets': 'how_to_add_assets.md'
   - 'CARLA design': 'carla_design.md'
   - 'CarlaServer documentation': 'carla_server.md'
+
+
 
 markdown_extensions:
   - admonition
