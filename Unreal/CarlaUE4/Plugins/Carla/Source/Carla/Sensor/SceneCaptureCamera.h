@@ -37,7 +37,7 @@ protected:
 public:
 
   virtual void BeginPlay() override;
-
+  virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
   virtual void Tick(float DeltaSeconds) override;
 
   uint32 GetImageSizeX() const
@@ -68,13 +68,21 @@ public:
   void Set(const UCameraDescription &CameraDescription);
 
   bool ReadPixels(TArray<FColor> &BitMap) const;
-  
+
+protected:
+  static uint32 NumSceneCapture;
 
 private:
-  ///Read the camera buffer and write it to the client with no lock of the resources (for Vulkan API)
-  void WritePixelsNonBlocking(float DeltaTime,FRHICommandListImmediate& rhi_cmd_list) const;
-  ///Read the camera buffer and write it to the client with opengl or direct3d
-  void WritePixels(float DeltaTime) const;
+
+  /// Read the camera buffer and write it to the client with no lock of the
+  /// resources (for Vulkan API).
+  void WritePixelsNonBlocking(
+      uint64 FrameNumber,
+      FRHICommandListImmediate& rhi_cmd_list) const;
+
+  /// Read the camera buffer and write it to the client with opengl or direct3d.
+  void WritePixels(uint64 FrameNumber) const;
+
   /// Used to synchronize the DrawFrustumComponent with the
   /// SceneCaptureComponent2D settings.
   void UpdateDrawFrustum();
@@ -97,7 +105,7 @@ private:
   UDrawFrustumComponent* DrawFrustum;
 
   /** Render target necessary for scene capture */
-  UPROPERTY(Transient)
+  UPROPERTY()
   UTextureRenderTarget2D* CaptureRenderTarget;
 
   /** Scene capture component. */

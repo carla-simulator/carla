@@ -25,3 +25,18 @@ matrix:
             - cppcheck
       script:
         - cppcheck . -iBuild -i.pb.cc --error-exitcode=1 --enable=warning --quiet
+
+    - env: TEST="MkDocs"
+      install:
+        - pip install mkdocs
+      script:
+        - mkdocs build --verbose --clean --strict --site-dir _site
+
+    - env: TEST="AwesomeBot"
+      install:
+        - gem install awesome_bot
+      script:
+        - find . -name '*.md' | xargs awesome_bot --allow-dupe --allow-redirect --skip-save-results
+
+notifications:
+  email: false

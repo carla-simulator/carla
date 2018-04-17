@@ -101,7 +101,7 @@ spawned. Note that the blueprint can call back C++ functions, for instance for
 getting the random engine. This way there is a back-and-forth communication
 between C++ code and blueprints.
 
-[capturelink]: https://github.com/carla-simulator/carla/blob/master/Unreal/CarlaUE4/Plugins/Carla/Source/Carla/SceneCaptureToDiskCamera.h
+[capturelink]: https://github.com/carla-simulator/carla/blob/master/Unreal/CarlaUE4/Plugins/Carla/Source/Carla/Sensor/SceneCaptureToDiskCamera.h
 
 #### Coding standard
 

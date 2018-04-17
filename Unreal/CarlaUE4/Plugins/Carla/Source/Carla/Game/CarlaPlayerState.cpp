@@ -7,6 +7,8 @@
 #include "Carla.h"
 #include "CarlaPlayerState.h"
 
+#include "CoreGlobals.h"
+
 void ACarlaPlayerState::Reset()
 {
   Super::Reset();
@@ -25,6 +27,7 @@ void ACarlaPlayerState::CopyProperties(APlayerState *PlayerState)
     ACarlaPlayerState *Other = Cast<ACarlaPlayerState>(PlayerState);
     if (Other != nullptr)
     {
+      FrameNumber = Other->FrameNumber;
       FramesPerSecond = Other->FramesPerSecond;
       PlatformTimeStamp = Other->PlatformTimeStamp;
       GameTimeStamp = Other->GameTimeStamp;
@@ -74,6 +77,7 @@ static int32 RoundToMilliseconds(float Seconds)
 
 void ACarlaPlayerState::UpdateTimeStamp(float DeltaSeconds)
 {
+  FrameNumber = GFrameCounter;
   FramesPerSecond = 1.0f / DeltaSeconds;
   PlatformTimeStamp = RoundToMilliseconds(FPlatformTime::Seconds());
   GameTimeStamp += RoundToMilliseconds(DeltaSeconds);

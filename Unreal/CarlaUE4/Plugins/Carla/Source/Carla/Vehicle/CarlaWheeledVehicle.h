@@ -9,6 +9,7 @@
 #include "WheeledVehicle.h"
 
 #include "Vehicle/CarlaWheeledVehicleState.h"
+#include "Vehicle/VehicleControl.h"
 
 #include "CoreMinimal.h"
 
@@ -16,7 +17,6 @@
 
 class UBoxComponent;
 class UVehicleAgentComponent;
-struct FVehicleControl;
 
 /// Base class for CARLA wheeled vehicles.
 UCLASS()
@@ -44,7 +44,10 @@ public:
   /// Transform of the vehicle. Location is shifted so it matches center of the
   /// vehicle bounds rather than the actor's location.
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
-  FTransform GetVehicleTransform() const;
+  FTransform GetVehicleTransform() const
+  {
+    return GetActorTransform();
+  }
 
   /// Forward speed in cm/s. Might be negative if goes backwards.
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
@@ -58,9 +61,20 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   int32 GetVehicleCurrentGear() const;
 
-  /// Extent of the vehicle's bounds.
+  /// Transform of the vehicle's bounding box relative to the vehicle.
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
-  FVector GetVehicleBoundsExtent() const;
+  FTransform GetVehicleBoundingBoxTransform() const;
+
+  /// Extent of the vehicle's bounding box.
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  FVector GetVehicleBoundingBoxExtent() const;
+
+  /// Get vehicle's bounding box component.
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  UBoxComponent *GetVehicleBoundingBox() const
+  {
+    return VehicleBounds;
+  }
 
   /// Get the maximum angle at which the front wheel can steer.
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)

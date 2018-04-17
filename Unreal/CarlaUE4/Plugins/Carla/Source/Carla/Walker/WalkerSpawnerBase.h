@@ -45,6 +45,7 @@ public:
 
   virtual void Tick(float DeltaTime) override;
 
+
   /// @}
   // ===========================================================================
   /// @name Blueprintable functions
@@ -87,6 +88,7 @@ private:
 
   bool TrySetDestination(ACharacter &Walker);
 
+  bool SetRandomWalkerDestination(ACharacter * Walker);
   /// @}
 
 private:
@@ -116,5 +118,7 @@ private:
   UPROPERTY(Category = "Walker Spawner", VisibleAnywhere, AdvancedDisplay)
   TArray<ACharacter *> WalkersBlackList;
 
-  uint32 CurrentIndexToCheck = 0u;
+  uint32 CurrentWalkerIndexToCheck = 0u;
+
+  uint32 CurrentBlackWalkerIndexToCheck = 0u;
 };
