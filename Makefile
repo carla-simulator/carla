@@ -35,6 +35,11 @@ vsproject: MY_CMAKE_FLAGS+=-DCMAKE_BUILD_TYPE=Release
 vsproject: MY_CMAKE_FLAGS+=-G "Visual Studio 14 2015 Win64"
 vsproject: call_cmake
 
+vsproject15: BUILD_FOLDER=$(BASE_BUILD_FOLDER)/visualstudio
+vsproject15: MY_CMAKE_FLAGS+=-DCMAKE_BUILD_TYPE=Release
+vsproject15: MY_CMAKE_FLAGS+=-G "Visual Studio 15 2017 Win64"
+vsproject15: call_cmake
+
 build_linux: MY_CMAKE_FLAGS+=-G "Ninja"
 build_linux: call_cmake
 	@cd $(BUILD_FOLDER) && ninja && ninja install

@@ -183,31 +183,36 @@ class CarlaClient(object):
 def _make_sensor_parsers(sensors):
     image_types = ['None', 'SceneFinal', 'Depth', 'SemanticSegmentation']
     getimgtype = lambda id: image_types[id] if len(image_types) > id else 'Unknown'
-    getint = lambda data, index: struct.unpack('<L', data[index*4:index*4+4])[0]
+    getint32 = lambda data, index: struct.unpack('<L', data[index*4:index*4+4])[0]
+    getint64 = lambda data, index: struct.unpack('<Q', data[index*4:index*4+8])[0]
     getfloat = lambda data, index: struct.unpack('<f', data[index*4:index*4+4])[0]
 
     def parse_image(data):
-        width = getint(data, 0)
-        height = getint(data, 1)
-        image_type = getimgtype(getint(data, 2))
-        fov = getfloat(data, 3)
-        return sensor.Image(width, height, image_type, fov, data[16:])
+        frame_number = getint64(data, 0)
+        width = getint32(data, 2)
+        height = getint32(data, 3)
+        image_type = getimgtype(getint32(data, 4))
+        fov = getfloat(data, 5)
+        return sensor.Image(frame_number, width, height, image_type, fov, data[24:])
 
     def parse_lidar(data):
-        horizontal_angle = getfloat(data, 0)
-        channels = getint(data, 1)
+        frame_number = getint64(data, 0)
+        horizontal_angle = getfloat(data, 2)
+        channels = getint32(data, 3)
+        header_size = 16
         point_count_by_channel = numpy.frombuffer(
-            data[8:8+channels*4],
+            data[header_size:header_size+channels*4],
             dtype=numpy.dtype('uint32'))
         points = numpy.frombuffer(
-            data[8+channels*4:],
+            data[header_size+channels*4:],
             dtype=numpy.dtype('f4'))
         points = numpy.reshape(points, (int(points.shape[0]/3), 3))
         return sensor.LidarMeasurement(
+            frame_number,
             horizontal_angle,
             channels,
             point_count_by_channel,
-            sensor.PointCloud(points))
+            sensor.PointCloud(frame_number, points))
 
     class SensorDefinition(object):
         def __init__(self, s):

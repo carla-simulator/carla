@@ -8,14 +8,16 @@
 
 #include "Carla.h"
 #include "AgentComponent.h"
-
+#include "Engine/World.h"
 #include "Game/CarlaGameModeBase.h"
 #include "Game/DataRouter.h"
+#include "Engine/Engine.h"
+#include "Kismet/GameplayStatics.h"
 
 static FDataRouter &GetDataRouter(UWorld *World)
 {
   check(World != nullptr);
-  auto *GameMode = Cast<ACarlaGameModeBase>(World->GetAuthGameMode());
+  ACarlaGameModeBase *GameMode = Cast<ACarlaGameModeBase>(World->GetAuthGameMode());
   check(GameMode != nullptr);
   return GameMode->GetDataRouter();
 }
@@ -40,7 +42,20 @@ void UAgentComponent::BeginPlay()
 
   if (bRegisterAgentComponent)
   {
-    GetDataRouter(GetWorld()).RegisterAgent(this);
+    /**
+      * This only returns true if the current game mode is not null 
+      * because you can only access a game mode if you are the host
+      * @param oftheworld UWorld is needed to access the game mode
+      * @return true if there is a game mode and it is not null
+     */
+    if(UGameplayStatics::GetGameMode(GetWorld())!=nullptr)
+    {
+      GetDataRouter(GetWorld()).RegisterAgent(this);
+    } else
+    {
+        UCarlaGameInstance* GameInstance = Cast<UCarlaGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+        if(GameInstance)    GameInstance->GetDataRouter().RegisterAgent(this);
+    }
     bAgentComponentIsRegistered = true;
   }
 }
@@ -49,9 +64,19 @@ void UAgentComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
   if (bAgentComponentIsRegistered)
   {
-    GetDataRouter(GetWorld()).DeregisterAgent(this);
+    if(UGameplayStatics::GetGameMode(GetWorld())!=nullptr)
+    {
+     GetDataRouter(GetWorld()).DeregisterAgent(this);
+    }
+    else
+    {
+        UCarlaGameInstance* GameInstance = Cast<UCarlaGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+        if(GameInstance)
+           GameInstance->GetDataRouter().DeregisterAgent(this);
+    }
     bAgentComponentIsRegistered = false;
   }
 
   Super::EndPlay(EndPlayReason);
 }
+

@@ -9,16 +9,8 @@
 #include "Carla.h"
 #include "WalkerAgentComponent.h"
 
-#include "GameFramework/Character.h"
-
 UWalkerAgentComponent::UWalkerAgentComponent(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer) {}
-
-float UWalkerAgentComponent::GetForwardSpeed() const
-{
-  /// @todo Is it necessary to compute this speed every tick?
-  return FVector::DotProduct(Walker->GetVelocity(), Walker->GetActorRotation().Vector());
-}
 
 void UWalkerAgentComponent::BeginPlay()
 {
