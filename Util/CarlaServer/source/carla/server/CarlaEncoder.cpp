@@ -149,6 +149,7 @@ namespace server {
   std::string CarlaEncoder::Encode(const carla_measurements &values) {
     static thread_local auto *message = _protobuf.CreateMessage<cs::Measurements>();
     DEBUG_ASSERT(message != nullptr);
+    message->set_frame_number(values.frame_number);
     message->set_platform_timestamp(values.platform_timestamp);
     message->set_game_timestamp(values.game_timestamp);
     // Player measurements.
