@@ -11,13 +11,13 @@ to the client. This document describes the details of these measurements.
 Time-stamps
 -----------
 
-Since CARLA can be run at fixed-frame rate, we keep track of two different
-time-stamps.
+Every frame is described by three different counters/time-stamps
 
 Key                        | Type      | Units        | Description
 -------------------------- | --------- | ------------ | ------------
+frame_number               | uint64    |              | Frame counter (it is **not** restarted on each episode).
 platform_timestamp         | uint32    | milliseconds | Time-stamp of the current frame, as given by the OS.
-game_timestamp             | uint32    | milliseconds | In-game time-stamp, elapsed since the beginning of the current level.
+game_timestamp             | uint32    | milliseconds | In-game time-stamp, elapsed since the beginning of the current episode.
 
 In real-time mode, the elapsed time between two time steps should be similar
 both platform and game time-stamps. When run in fixed-time step, the game

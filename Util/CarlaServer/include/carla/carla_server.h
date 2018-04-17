@@ -184,6 +184,8 @@ extern "C" {
   /* ======================================================================== */
 
   struct carla_measurements {
+    /** Frame counter. */
+    uint32_t frame_number;
     /** Time-stamp of the current frame, in milliseconds as given by the OS. */
     uint32_t platform_timestamp;
     /** In-game time-stamp, milliseconds elapsed since the beginning of the current level. */

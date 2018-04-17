@@ -8,40 +8,63 @@
 #include "SceneCaptureCamera.h"
 
 #include "Sensor/SensorDataView.h"
-#include "Game/CarlaGameInstance.h"
 #include "Settings/CarlaSettings.h"
+
 #include "Components/DrawFrustumComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Components/StaticMeshComponent.h"
+#include "ConstructorHelpers.h"
+#include "CoreGlobals.h"
 #include "Engine/CollisionProfile.h"
 #include "Engine/TextureRenderTarget2D.h"
-#include "Materials/Material.h"
+#include "Game/CarlaGameInstance.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include <memory>
-#include "ConstructorHelpers.h"
+#include "Materials/Material.h"
 
+#include <memory>
+
+// =============================================================================
+// -- Local static variables ---------------------------------------------------
+// =============================================================================
 
 static constexpr auto DEPTH_MAT_PATH =
 #if PLATFORM_LINUX
-    TEXT("Material'/Carla/PostProcessingMaterials/DepthEffectMaterial_GLSL.DepthEffectMaterial_GLSL'");
+  TEXT("Material'/Carla/PostProcessingMaterials/DepthEffectMaterial_GLSL.DepthEffectMaterial_GLSL'");
 #elif PLATFORM_WINDOWS
-    TEXT("Material'/Carla/PostProcessingMaterials/DepthEffectMaterial.DepthEffectMaterial'");
+  TEXT("Material'/Carla/PostProcessingMaterials/DepthEffectMaterial.DepthEffectMaterial'");
 #else
 #  error No depth material defined for this platform
 #endif
 
 static constexpr auto SEMANTIC_SEGMENTATION_MAT_PATH =
-    TEXT("Material'/Carla/PostProcessingMaterials/GTMaterial.GTMaterial'");
+  TEXT("Material'/Carla/PostProcessingMaterials/GTMaterial.GTMaterial'");
+
+// =============================================================================
+// -- Local static methods and types -------------------------------------------
+// =============================================================================
+
+struct FImageHeaderData
+{
+  uint64 FrameNumber;
+  uint32 Width;
+  uint32 Height;
+  uint32 Type;
+  float FOV;
+};
 
 static void RemoveShowFlags(FEngineShowFlags &ShowFlags);
 
+// =============================================================================
+// -- ASceneCaptureCamera ------------------------------------------------------
+// =============================================================================
+
 uint32 ASceneCaptureCamera::NumSceneCapture = 0;
 
-ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer& ObjectInitializer) :
-  Super(ObjectInitializer),
-  SizeX(720u),
-  SizeY(512u),
-  PostProcessEffect(EPostProcessEffect::SceneFinal)
+ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer &ObjectInitializer)
+  : Super(ObjectInitializer),
+    SizeX(720u),
+    SizeY(512u),
+    PostProcessEffect(EPostProcessEffect::SceneFinal)
 {
   PrimaryActorTick.bCanEverTick = true;
   PrimaryActorTick.TickGroup = TG_PrePhysics;
@@ -59,24 +82,28 @@ ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer& ObjectInitial
   DrawFrustum->bIsEditorOnly = true;
   DrawFrustum->SetupAttachment(MeshComp);
 
-  CaptureRenderTarget = CreateDefaultSubobject<UTextureRenderTarget2D>(FName(*FString::Printf(TEXT("CaptureRenderTarget%d"),NumSceneCapture)));
-  #if WITH_EDITORONLY_DATA
-	CaptureRenderTarget->CompressionNoAlpha = true;
-	CaptureRenderTarget->MipGenSettings = TextureMipGenSettings::TMGS_NoMipmaps;
-    CaptureRenderTarget->bUseLegacyGamma = false;
-  #endif
+  CaptureRenderTarget = CreateDefaultSubobject<UTextureRenderTarget2D>(
+      FName(*FString::Printf(TEXT("CaptureRenderTarget%d"), NumSceneCapture)));
+#if WITH_EDITORONLY_DATA
+  CaptureRenderTarget->CompressionNoAlpha = true;
+  CaptureRenderTarget->MipGenSettings = TextureMipGenSettings::TMGS_NoMipmaps;
+  CaptureRenderTarget->bUseLegacyGamma = false;
+#endif
   CaptureRenderTarget->CompressionSettings = TextureCompressionSettings::TC_Default;
   CaptureRenderTarget->SRGB = false;
   CaptureRenderTarget->bAutoGenerateMips = false;
   CaptureRenderTarget->AddressX = TextureAddress::TA_Clamp;
   CaptureRenderTarget->AddressY = TextureAddress::TA_Clamp;
-  CaptureComponent2D = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("SceneCaptureComponent2D"));
-  CaptureComponent2D->SetupAttachment(MeshComp); 
-  
+  CaptureComponent2D = CreateDefaultSubobject<USceneCaptureComponent2D>(
+      TEXT("SceneCaptureComponent2D"));
+  CaptureComponent2D->SetupAttachment(MeshComp);
+
   // Load post-processing materials.
-  static ConstructorHelpers::FObjectFinder<UMaterial> DEPTH(DEPTH_MAT_PATH);
+  static ConstructorHelpers::FObjectFinder<UMaterial> DEPTH(
+      DEPTH_MAT_PATH);
   PostProcessDepth = DEPTH.Object;
-  static ConstructorHelpers::FObjectFinder<UMaterial> SEMANTIC_SEGMENTATION(SEMANTIC_SEGMENTATION_MAT_PATH);
+  static ConstructorHelpers::FObjectFinder<UMaterial> SEMANTIC_SEGMENTATION(
+      SEMANTIC_SEGMENTATION_MAT_PATH);
   PostProcessSemanticSegmentation = SEMANTIC_SEGMENTATION.Object;
   NumSceneCapture++;
 }
@@ -87,18 +114,23 @@ void ASceneCaptureCamera::PostActorCreated()
 
   // no need load the editor mesh when there is no editor
 #if WITH_EDITOR
-  if(MeshComp)
+  if (MeshComp)
   {
     if (!IsRunningCommandlet())
     {
-      if( !MeshComp->GetStaticMesh())
+      if (!MeshComp->GetStaticMesh())
       {
-        UStaticMesh* CamMesh = LoadObject<UStaticMesh>(NULL, TEXT("/Engine/EditorMeshes/MatineeCam_SM.MatineeCam_SM"), NULL, LOAD_None, NULL);
+        UStaticMesh *CamMesh = LoadObject<UStaticMesh>(
+            NULL,
+            TEXT("/Engine/EditorMeshes/MatineeCam_SM.MatineeCam_SM"),
+            NULL,
+            LOAD_None,
+            NULL);
         MeshComp->SetStaticMesh(CamMesh);
       }
     }
   }
-#endif // WITH_EDITOR
+#endif   // WITH_EDITOR
 
   // Sync component with CameraActor frustum settings.
   UpdateDrawFrustum();
@@ -111,51 +143,53 @@ void ASceneCaptureCamera::BeginPlay()
   // Setup render target.
   const bool bInForceLinearGamma = bRemovePostProcessing;
   CaptureRenderTarget->InitCustomFormat(SizeX, SizeY, PF_B8G8R8A8, bInForceLinearGamma);
-  if(!IsValid(CaptureComponent2D)||CaptureComponent2D->IsPendingKill())
+  if (!IsValid(CaptureComponent2D) || CaptureComponent2D->IsPendingKill())
   {
-    CaptureComponent2D = NewObject<USceneCaptureComponent2D>(this,TEXT("SceneCaptureComponent2D"));
+    CaptureComponent2D = NewObject<USceneCaptureComponent2D>(this, TEXT("SceneCaptureComponent2D"));
     CaptureComponent2D->SetupAttachment(MeshComp);
   }
   CaptureComponent2D->Deactivate();
   CaptureComponent2D->TextureTarget = CaptureRenderTarget;
 
-  // Setup camera post-processing depending on the quality level: 
-  const UCarlaGameInstance* GameInstance  = Cast<UCarlaGameInstance>(GetWorld()->GetGameInstance());
-  check(GameInstance!=nullptr);
-  const UCarlaSettings& CarlaSettings = GameInstance->GetCarlaSettings();
-  switch(PostProcessEffect)
+  // Setup camera post-processing depending on the quality level:
+  const UCarlaGameInstance *GameInstance  = Cast<UCarlaGameInstance>(GetWorld()->GetGameInstance());
+  check(GameInstance != nullptr);
+  const UCarlaSettings &CarlaSettings = GameInstance->GetCarlaSettings();
+  switch (PostProcessEffect)
   {
-    case EPostProcessEffect::None: break;
-    case EPostProcessEffect::SceneFinal:
-  	{
-	  //we set LDR for high quality because it will include post-fx
-	  //and HDR for low quality to avoid high contrast
-	  switch(CarlaSettings.GetQualitySettingsLevel())
-	  {
-	    case EQualitySettingsLevel::Low:
-			CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_SceneColorHDRNoAlpha;
-		  break;
-		default:
-		  //LDR is faster than HDR (smaller bitmap array)
-	      CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
-		  break;
-	  }
+    case EPostProcessEffect::None:
       break;
-	}
-    default:  
-  	  CaptureComponent2D->CaptureSource = SCS_FinalColorLDR; 
-	  break;
+    case EPostProcessEffect::SceneFinal:
+    {
+      // We set LDR for high quality because it will include post-fx and HDR for
+      // low quality to avoid high contrast.
+      switch (CarlaSettings.GetQualitySettingsLevel())
+      {
+        case EQualitySettingsLevel::Low:
+          CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_SceneColorHDRNoAlpha;
+          break;
+        default:
+          // LDR is faster than HDR (smaller bitmap array).
+          CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
+          break;
+      }
+      break;
+    }
+    default:
+      CaptureComponent2D->CaptureSource = SCS_FinalColorLDR;
+      break;
   }
 
-  if (bRemovePostProcessing) 
+  if (bRemovePostProcessing)
   {
     RemoveShowFlags(CaptureComponent2D->ShowFlags);
   }
 
-  if (PostProcessEffect == EPostProcessEffect::Depth) 
+  if (PostProcessEffect == EPostProcessEffect::Depth)
   {
     CaptureComponent2D->PostProcessSettings.AddBlendable(PostProcessDepth, 1.0f);
-  } else if (PostProcessEffect == EPostProcessEffect::SemanticSegmentation) 
+  }
+  else if (PostProcessEffect == EPostProcessEffect::SemanticSegmentation)
   {
     CaptureComponent2D->PostProcessSettings.AddBlendable(PostProcessSemanticSegmentation, 1.0f);
   }
@@ -163,37 +197,50 @@ void ASceneCaptureCamera::BeginPlay()
   CaptureComponent2D->UpdateContent();
   CaptureComponent2D->Activate();
 
-  //Make sure that there is enough time in the render queue
-  UKismetSystemLibrary::ExecuteConsoleCommand(GetWorld(), FString("g.TimeoutForBlockOnRenderFence 300000"));
+  // Make sure that there is enough time in the render queue.
+  UKismetSystemLibrary::ExecuteConsoleCommand(
+      GetWorld(),
+      FString("g.TimeoutForBlockOnRenderFence 300000"));
 
   Super::BeginPlay();
 }
 
 void ASceneCaptureCamera::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-    if(NumSceneCapture!=0) NumSceneCapture = 0;
+  if (NumSceneCapture != 0)
+  {
+    NumSceneCapture = 0;
+  }
 }
 
 void ASceneCaptureCamera::Tick(const float DeltaSeconds)
 {
   Super::Tick(DeltaSeconds);
-  if(IsVulkanPlatform(GMaxRHIShaderPlatform))
+
+  const auto FrameNumber = GFrameCounter;
+
+  if (IsVulkanPlatform(GMaxRHIShaderPlatform))
   {
-    auto fn = [=](FRHICommandListImmediate& RHICmdList){WritePixelsNonBlocking(DeltaSeconds,RHICmdList);};
+    auto fn = [=](FRHICommandListImmediate &RHICmdList) {
+        WritePixelsNonBlocking(FrameNumber, RHICmdList);
+      };
     ENQUEUE_UNIQUE_RENDER_COMMAND_ONEPARAMETER(
-      FWritePixelsNonBlocking,
-      decltype(fn),write_function_vulkan,fn,
-      {
-    	write_function_vulkan(RHICmdList);
-      });
-  } else
-  {
-    auto fn = [=](){WritePixels(DeltaSeconds);};
-    ENQUEUE_UNIQUE_RENDER_COMMAND_ONEPARAMETER(
-    FWritePixels,
-    decltype(fn),write_function,fn,
+        FWritePixelsNonBlocking,
+        decltype(fn), write_function_vulkan, fn,
     {
-		write_function();
+      write_function_vulkan(RHICmdList);
+    });
+  }
+  else
+  {
+    auto fn = [=]() {
+        WritePixels(FrameNumber);
+      };
+    ENQUEUE_UNIQUE_RENDER_COMMAND_ONEPARAMETER(
+        FWritePixels,
+        decltype(fn), write_function, fn,
+    {
+      write_function();
     });
   }
 }
@@ -214,7 +261,8 @@ void ASceneCaptureCamera::SetPostProcessEffect(EPostProcessEffect otherPostProce
 {
   PostProcessEffect = otherPostProcessEffect;
   auto &PostProcessSettings = CaptureComponent2D->PostProcessSettings;
-  if (PostProcessEffect != EPostProcessEffect::SceneFinal) {
+  if (PostProcessEffect != EPostProcessEffect::SceneFinal)
+  {
     PostProcessSettings.bOverride_AutoExposureMethod = false;
     PostProcessSettings.bOverride_AutoExposureMinBrightness = false;
     PostProcessSettings.bOverride_AutoExposureMaxBrightness = false;
@@ -238,7 +286,8 @@ void ASceneCaptureCamera::Set(const UCameraDescription &CameraDescription)
 {
   Super::Set(CameraDescription);
 
-  if (CameraDescription.bOverrideCameraPostProcessParameters) {
+  if (CameraDescription.bOverrideCameraPostProcessParameters)
+  {
     auto &Override = CameraDescription.CameraPostProcessParameters;
     auto &PostProcessSettings = CaptureComponent2D->PostProcessSettings;
     PostProcessSettings.bOverride_AutoExposureMethod = true;
@@ -257,13 +306,15 @@ void ASceneCaptureCamera::Set(const UCameraDescription &CameraDescription)
 
 bool ASceneCaptureCamera::ReadPixels(TArray<FColor> &BitMap) const
 {
-  if(!CaptureRenderTarget)
+  if (!CaptureRenderTarget)
   {
-	  UE_LOG(LogCarla, Error, TEXT("SceneCaptureCamera: Missing render target"));
-	  return false;
+    UE_LOG(LogCarla, Error, TEXT("SceneCaptureCamera: Missing render target"));
+    return false;
   }
-  FTextureRenderTargetResource* RTResource = CaptureRenderTarget->GameThread_GetRenderTargetResource();
-  if (RTResource == nullptr) {
+  FTextureRenderTargetResource *RTResource =
+      CaptureRenderTarget->GameThread_GetRenderTargetResource();
+  if (RTResource == nullptr)
+  {
     UE_LOG(LogCarla, Error, TEXT("SceneCaptureCamera: Missing render target"));
     return false;
   }
@@ -272,76 +323,62 @@ bool ASceneCaptureCamera::ReadPixels(TArray<FColor> &BitMap) const
   return RTResource->ReadPixels(BitMap, ReadPixelFlags);
 }
 
-void ASceneCaptureCamera::WritePixelsNonBlocking(float DeltaTime, FRHICommandListImmediate& rhi_cmd_list) const
- {
+void ASceneCaptureCamera::WritePixelsNonBlocking(
+    const uint64 FrameNumber,
+    FRHICommandListImmediate &rhi_cmd_list) const
+{
   check(IsInRenderingThread());
-  if(!CaptureRenderTarget)
+  if (!CaptureRenderTarget)
   {
-  	UE_LOG(LogCarla, Error, TEXT("SceneCaptureCamera: Missing render target"));
-  	return ;
+    UE_LOG(LogCarla, Error, TEXT("SceneCaptureCamera: Missing render target"));
+    return;
   }
-  FTextureRenderTarget2DResource* RenderResource = (FTextureRenderTarget2DResource*)CaptureRenderTarget->Resource;
+  FTextureRenderTarget2DResource *RenderResource =
+      (FTextureRenderTarget2DResource *) CaptureRenderTarget->Resource;
   FTextureRHIParamRef texture = RenderResource->GetRenderTargetTexture();
-  if(!texture)
+  if (!texture)
   {
     UE_LOG(LogCarla, Error, TEXT("SceneCaptureCamera: Missing render target texture"));
     return;
   }
-  struct {
-    uint32 Width;
-    uint32 Height;
-    uint32 Type;
-    float FOV;
-  } ImageHeader = {
+  FImageHeaderData ImageHeader = {
+    FrameNumber,
     SizeX,
     SizeY,
     PostProcessEffect::ToUInt(PostProcessEffect),
     CaptureComponent2D->FOVAngle
   };
-  
-  struct FReadSurfaceContext
-  {
-    FRenderTarget* SrcRenderTarget;
-    TArray<FColor>* OutData;
-    FIntRect Rect;
-    FReadSurfaceDataFlags Flags;
-  };
-  TArray<FColor> Pixels;   
+
+  TArray<FColor> Pixels;
   rhi_cmd_list.ReadSurfaceData(
-    texture,
-    FIntRect(0, 0, RenderResource->GetSizeXY().X, RenderResource->GetSizeXY().Y),
-    Pixels,
-    FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX)
-  );
+      texture,
+      FIntRect(0, 0, RenderResource->GetSizeXY().X, RenderResource->GetSizeXY().Y),
+      Pixels,
+      FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
   FSensorDataView DataView(
-     GetId(),
-     FReadOnlyBufferView{reinterpret_cast<const void *>(&ImageHeader), sizeof(ImageHeader)},
-     FReadOnlyBufferView{Pixels}
-   );
-   WriteSensorData(DataView);
-  
+      GetId(),
+      FReadOnlyBufferView{reinterpret_cast<const void *>(&ImageHeader), sizeof(ImageHeader)},
+      FReadOnlyBufferView{Pixels});
+  WriteSensorData(DataView);
 }
 
-void ASceneCaptureCamera::WritePixels(float DeltaTime) const
+void ASceneCaptureCamera::WritePixels(const uint64 FrameNumber) const
 {
   FRHITexture2D *texture = CaptureRenderTarget->GetRenderTargetResource()->GetRenderTargetTexture();
-  if(!texture)
+  if (!texture)
   {
-	  UE_LOG(LogCarla, Error, TEXT("SceneCaptureCamera: Missing render texture"));
-	  return ;
+    UE_LOG(LogCarla, Error, TEXT("SceneCaptureCamera: Missing render texture"));
+    return;
   }
   const uint32 num_bytes_per_pixel = 4;    // PF_R8G8B8A8
   const uint32 width = texture->GetSizeX();
   const uint32 height = texture->GetSizeY();
   const uint32 dest_stride = width * height * num_bytes_per_pixel;
   uint32 src_stride;
-  uint8 *src = reinterpret_cast<uint8*>(RHILockTexture2D(texture, 0, RLM_ReadOnly, src_stride, false));
-  struct {
-    uint32 Width;
-    uint32 Height;
-    uint32 Type;
-    float FOV;
-  } ImageHeader = {
+  uint8 *src = reinterpret_cast<uint8 *>(
+      RHILockTexture2D(texture, 0, RLM_ReadOnly, src_stride, false));
+  FImageHeaderData ImageHeader = {
+    FrameNumber,
     width,
     height,
     PostProcessEffect::ToUInt(PostProcessEffect),
@@ -349,48 +386,52 @@ void ASceneCaptureCamera::WritePixels(float DeltaTime) const
   };
 
   std::unique_ptr<uint8[]> dest = nullptr;
-  //Direct 3D uses additional rows in the buffer,so we need check the result stride from the lock:
-  if(IsD3DPlatform(GMaxRHIShaderPlatform,false) && (dest_stride!=src_stride))
+  // Direct 3D uses additional rows in the buffer,so we need check the result
+  // stride from the lock:
+  if (IsD3DPlatform(GMaxRHIShaderPlatform, false) && (dest_stride != src_stride))
   {
     const uint32 copy_row_stride = width * num_bytes_per_pixel;
     dest = std::make_unique<uint8[]>(dest_stride);
     // Copy per row
-    uint8* dest_row = dest.get();
-    uint8* src_row = src;
+    uint8 *dest_row = dest.get();
+    uint8 *src_row = src;
     for (uint32 Row = 0; Row < height; ++Row)
     {
-        FMemory::Memcpy(dest_row, src_row, copy_row_stride);
-        dest_row += copy_row_stride;
-        src_row += src_stride;
+      FMemory::Memcpy(dest_row, src_row, copy_row_stride);
+      dest_row += copy_row_stride;
+      src_row += src_stride;
     }
     src = dest.get();
-  } 
+  }
 
   const FSensorDataView DataView(
-    GetId(),
-    FReadOnlyBufferView{reinterpret_cast<const void *>(&ImageHeader), sizeof(ImageHeader)},
-    FReadOnlyBufferView{src,dest_stride}
-  );
-   
+      GetId(),
+      FReadOnlyBufferView{reinterpret_cast<const void *>(&ImageHeader), sizeof(ImageHeader)},
+      FReadOnlyBufferView{src, dest_stride});
+
   WriteSensorData(DataView);
   RHIUnlockTexture2D(texture, 0, false);
 }
 
-
 void ASceneCaptureCamera::UpdateDrawFrustum()
 {
-  if(DrawFrustum && CaptureComponent2D)
+  if (DrawFrustum && CaptureComponent2D)
   {
     DrawFrustum->FrustumStartDist = GNearClippingPlane;
 
-    // 1000 is the default frustum distance, ideally this would be infinite but that might cause rendering issues
-    DrawFrustum->FrustumEndDist = (CaptureComponent2D->MaxViewDistanceOverride > DrawFrustum->FrustumStartDist)
+    // 1000 is the default frustum distance, ideally this would be infinite but
+    // that might cause rendering issues.
+    DrawFrustum->FrustumEndDist =
+      (CaptureComponent2D->MaxViewDistanceOverride > DrawFrustum->FrustumStartDist)
       ? CaptureComponent2D->MaxViewDistanceOverride : 1000.0f;
 
     DrawFrustum->FrustumAngle = CaptureComponent2D->FOVAngle;
-    //DrawFrustum->FrustumAspectRatio = CaptureComponent2D->AspectRatio;
   }
 }
+
+// =============================================================================
+// -- Local static functions implementations -----------------------------------
+// =============================================================================
 
 // Remove the show flags that might interfere with post-processing effects like
 // depth and semantic segmentation.
