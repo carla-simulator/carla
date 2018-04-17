@@ -1,5 +1,5 @@
 We show the results for test and train weathers when
-[running the simple example](benchmark_start/#getting-started) for Town02.
+[running the simple example](benchmark_creating/#expected-results) for Town02.
 The following result should print on the screen after running the
 example.
     

@@ -18,8 +18,6 @@ pages:
   - 'General Structure': 'benchmark_structure.md'
   - 'Creating Your Benchmark': 'benchmark_creating.md'
   - 'Computed Performance Metrics': 'benchmark_metrics.md'
-  - 'ResultsTown01': 'benchmark_basic_results_town01.md'
-  - 'ResultsTown02': 'benchmark_basic_results_town02.md'
 - Building from source:
   - 'How to build on Linux': 'how_to_build_on_linux.md'
   - 'How to build on Windows': 'how_to_build_on_windows.md'
@@ -37,6 +35,9 @@ pages:
   - 'How to add assets': 'how_to_add_assets.md'
   - 'CARLA design': 'carla_design.md'
   - 'CarlaServer documentation': 'carla_server.md'
+- Appendix:
+  - 'Driving Benchmark Sample Results Town01': 'benchmark_basic_results_town01.md'
+  - 'Driving Benchmark Sample Results Town02': 'benchmark_basic_results_town02.md'
 
 
 
