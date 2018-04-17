@@ -114,7 +114,7 @@ def print_summary(metrics_summary, weathers, path):
         print ('  Average Between Weathers')
         for i in range(len(metric_sum_values)):
             if  metric_sum_values[i] == 0:
-                print('    More than ', i, ' -> ', summed_driven_kilometers[i])
+                print('    Task ', i, ' -> more than ', summed_driven_kilometers[i])
             else:
                 print('    Task ', i, ' -> ', summed_driven_kilometers[i] / metric_sum_values[i])
         print ("")

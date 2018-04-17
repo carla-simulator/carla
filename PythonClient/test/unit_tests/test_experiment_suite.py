@@ -1,9 +1,9 @@
 import unittest
-from carla.driving_benchmark.experiment_suite.experiment_suite import ExperimentSuite
+from carla.driving_benchmark.experiment_suites.experiment_suite import ExperimentSuite
 
-from carla.driving_benchmark.experiment_suite.basic_experiment_suite import BasicExperimentSuite
+from carla.driving_benchmark.experiment_suites.basic_experiment_suite import BasicExperimentSuite
 
-from carla.driving_benchmark.experiment_suite.corl_2017 import CoRL2017
+from carla.driving_benchmark.experiment_suites.corl_2017 import CoRL2017
 
 class testExperimentSuite(unittest.TestCase):
 

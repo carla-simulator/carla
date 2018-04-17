@@ -12,7 +12,7 @@ from __future__ import print_function
 from carla.driving_benchmark.experiment import Experiment
 from carla.sensor import Camera
 from carla.settings import CarlaSettings
-from carla.driving_benchmark.experiment_suite.experiment_suite import ExperimentSuite
+from carla.driving_benchmark.experiment_suites.experiment_suite import ExperimentSuite
 
 
 
