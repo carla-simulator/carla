@@ -1,4 +1,3 @@
-#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 # Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
@@ -12,11 +11,9 @@ from __future__ import print_function
 import abc
 
 
-
 class Agent(object):
     def __init__(self):
         self.__metaclass__ = abc.ABCMeta
-
 
     @abc.abstractmethod
     def run_step(self, measurements, sensor_data, directions, target):
