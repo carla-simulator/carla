@@ -62,9 +62,8 @@ to continue a experiment in CoRL2017  with a log name of "driving_benchmark_test
     will create another log under a different name.
 
 When running the driving benchmark for the basic configuration
-you should [expect these results](benchmark_basic_results_town01)
-to be printed on the terminal in more or less 5 minutes,
-depending on your machine configuration.
+you should [expect these results](benchmark_creating/#expected-results)
+
 
 
 
