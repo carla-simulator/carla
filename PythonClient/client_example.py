@@ -250,6 +250,4 @@ if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        import traceback
-        traceback.print_exc()
         print('\nCancelled by user. Bye!')
