@@ -22,75 +22,75 @@ example.
     Average Percentage of Distance to Goal Travelled
 
       Weather:  Clear Noon
-        Task: 0  ->  0.9642745353103807
-        Task: 1  ->  0.6793899335407552
-        Task: 2  ->  0.659387057876586
-        Task: 3  ->  0.6997037642505417
+        Task: 0  ->  0.9643630125892909
+        Task: 1  ->  0.6794216252808839
+        Task: 2  ->  0.6593855166486696
+        Task: 3  ->  0.6646695325122313
       Average Between Weathers
-        Task  0  ->  0.9642745353103807
-        Task  1  ->  0.6793899335407552
-        Task  2  ->  0.659387057876586
-        Task  3  ->  0.6997037642505417
+        Task  0  ->  0.9643630125892909
+        Task  1  ->  0.6794216252808839
+        Task  2  ->  0.6593855166486696
+        Task  3  ->  0.6646695325122313
 
     Avg. Kilometers driven before a collision to a PEDESTRIAN
       Weather:  Clear Noon
-        Task  0  -> more than 0.043162963265066225
-        Task  1  -> more than 0.1235917529074286
-        Task  2  -> more than 0.2400510454518888
-        Task  3  -> more than 0.21809535188051554
+        Task  0  -> more than 0.04316352371637994
+        Task  1  -> more than 0.12350085985904342
+        Task  2  -> more than 0.2400373917146113
+        Task  3  -> more than 0.22983408429063365
       Average Between Weathers
-        Task  0  -> more than  0.043162963265066225
-        Task  1  -> more than  0.1235917529074286
-        Task  2  -> more than  0.2400510454518888
-        Task  3  -> more than  0.21809535188051554
+        Task  0  -> more than  0.04316352371637994
+        Task  1  -> more than  0.12350085985904342
+        Task  2  -> more than  0.2400373917146113
+        Task  3  -> more than  0.22983408429063365
 
     Avg. Kilometers driven before a collision to a VEHICLE
       Weather:  Clear Noon
-        Task  0  -> more than 0.043162963265066225
-        Task  1  -> more than 0.1235917529074286
-        Task  2  -> more than 0.2400510454518888
-        Task  3  ->  0.21809535188051554
+        Task  0  -> more than 0.04316352371637994
+        Task  1  -> more than 0.12350085985904342
+        Task  2  -> more than 0.2400373917146113
+        Task  3  ->  0.11491704214531683
       Average Between Weathers
-        Task  0  -> more than  0.043162963265066225
-        Task  1  -> more than  0.1235917529074286
-        Task  2  -> more than  0.2400510454518888
-        Task  3  ->  0.21809535188051554
+        Task  0  -> more than  0.04316352371637994
+        Task  1  -> more than  0.12350085985904342
+        Task  2  -> more than  0.2400373917146113
+        Task  3  ->  0.11491704214531683
 
     Avg. Kilometers driven before a collision to a STATIC OBSTACLE
       Weather:  Clear Noon
-        Task  0  -> more than 0.043162963265066225
-        Task  1  -> more than 0.1235917529074286
-        Task  2  -> more than 0.2400510454518888
-        Task  3  ->  0.07269845062683851
+        Task  0  -> more than 0.04316352371637994
+        Task  1  -> more than 0.12350085985904342
+        Task  2  -> more than 0.2400373917146113
+        Task  3  ->  0.22983408429063365
       Average Between Weathers
-        Task  0  -> more than  0.043162963265066225
-        Task  1  -> more than  0.1235917529074286
-        Task  2  -> more than  0.2400510454518888
-        Task  3  ->  0.07269845062683851
+        Task  0  -> more than  0.04316352371637994
+        Task  1  -> more than  0.12350085985904342
+        Task  2  -> more than  0.2400373917146113
+        Task  3  ->  0.22983408429063365
 
     Avg. Kilometers driven before going OUTSIDE OF THE ROAD
       Weather:  Clear Noon
-        Task  0  -> more than 0.043162963265066225
-        Task  1  -> more than 0.1235917529074286
-        Task  2  -> more than 0.2400510454518888
-        Task  3  ->  0.21809535188051554
+        Task  0  -> more than 0.04316352371637994
+        Task  1  ->  0.12350085985904342
+        Task  2  ->  0.2400373917146113
+        Task  3  -> more than 0.22983408429063365
       Average Between Weathers
-        Task  0  -> more than  0.043162963265066225
-        Task  1  -> more than  0.1235917529074286
-        Task  2  -> more than  0.2400510454518888
-        Task  3  ->  0.21809535188051554
+        Task  0  -> more than  0.04316352371637994
+        Task  1  ->  0.12350085985904342
+        Task  2  ->  0.2400373917146113
+        Task  3  -> more than  0.22983408429063365
 
     Avg. Kilometers driven before invading the OPPOSITE LANE
       Weather:  Clear Noon
-        Task  0  -> more than 0.043162963265066225
-        Task  1  ->  0.1235917529074286
-        Task  2  ->  0.010437001976169077
-        Task  3  -> more than 0.21809535188051554
+        Task  0  -> more than 0.04316352371637994
+        Task  1  -> more than 0.12350085985904342
+        Task  2  -> more than 0.2400373917146113
+        Task  3  -> more than 0.22983408429063365
       Average Between Weathers
-        Task  0  -> more than  0.043162963265066225
-        Task  1  ->  0.1235917529074286
-        Task  2  ->  0.010437001976169077
-        Task  3  -> more than  0.21809535188051554
+        Task  0  -> more than  0.04316352371637994
+        Task  1  -> more than  0.12350085985904342
+        Task  2  -> more than  0.2400373917146113
+        Task  3  -> more than  0.22983408429063365
 
 
 
@@ -115,75 +115,75 @@ example.
     Average Percentage of Distance to Goal Travelled
 
       Weather:  Clear Noon
-        Task: 0  ->  0.9642745353103807
-        Task: 1  ->  0.6793899335407552
-        Task: 2  ->  0.659387057876586
-        Task: 3  ->  0.6997037642505417
+        Task: 0  ->  0.9643630125892909
+        Task: 1  ->  0.6794216252808839
+        Task: 2  ->  0.6593855166486696
+        Task: 3  ->  0.6646695325122313
       Average Between Weathers
-        Task  0  ->  0.9642745353103807
-        Task  1  ->  0.6793899335407552
-        Task  2  ->  0.659387057876586
-        Task  3  ->  0.6997037642505417
+        Task  0  ->  0.9643630125892909
+        Task  1  ->  0.6794216252808839
+        Task  2  ->  0.6593855166486696
+        Task  3  ->  0.6646695325122313
 
     Avg. Kilometers driven before a collision to a PEDESTRIAN
       Weather:  Clear Noon
-        Task  0  -> more than 0.043162963265066225
-        Task  1  -> more than 0.1235917529074286
-        Task  2  -> more than 0.2400510454518888
-        Task  3  -> more than 0.21809535188051554
+        Task  0  -> more than 0.04316352371637994
+        Task  1  -> more than 0.12350085985904342
+        Task  2  -> more than 0.2400373917146113
+        Task  3  -> more than 0.22983408429063365
       Average Between Weathers
-        Task  0  -> more than  0.043162963265066225
-        Task  1  -> more than  0.1235917529074286
-        Task  2  -> more than  0.2400510454518888
-        Task  3  -> more than  0.21809535188051554
+        Task  0  -> more than  0.04316352371637994
+        Task  1  -> more than  0.12350085985904342
+        Task  2  -> more than  0.2400373917146113
+        Task  3  -> more than  0.22983408429063365
 
     Avg. Kilometers driven before a collision to a VEHICLE
       Weather:  Clear Noon
-        Task  0  -> more than 0.043162963265066225
-        Task  1  -> more than 0.1235917529074286
-        Task  2  -> more than 0.2400510454518888
-        Task  3  ->  0.21809535188051554
+        Task  0  -> more than 0.04316352371637994
+        Task  1  -> more than 0.12350085985904342
+        Task  2  -> more than 0.2400373917146113
+        Task  3  ->  0.11491704214531683
       Average Between Weathers
-        Task  0  -> more than  0.043162963265066225
-        Task  1  -> more than  0.1235917529074286
-        Task  2  -> more than  0.2400510454518888
-        Task  3  ->  0.21809535188051554
+        Task  0  -> more than  0.04316352371637994
+        Task  1  -> more than  0.12350085985904342
+        Task  2  -> more than  0.2400373917146113
+        Task  3  ->  0.11491704214531683
 
     Avg. Kilometers driven before a collision to a STATIC OBSTACLE
       Weather:  Clear Noon
-        Task  0  -> more than 0.043162963265066225
-        Task  1  -> more than 0.1235917529074286
-        Task  2  -> more than 0.2400510454518888
-        Task  3  ->  0.07269845062683851
+        Task  0  -> more than 0.04316352371637994
+        Task  1  -> more than 0.12350085985904342
+        Task  2  -> more than 0.2400373917146113
+        Task  3  ->  0.22983408429063365
       Average Between Weathers
-        Task  0  -> more than  0.043162963265066225
-        Task  1  -> more than  0.1235917529074286
-        Task  2  -> more than  0.2400510454518888
-        Task  3  ->  0.07269845062683851
+        Task  0  -> more than  0.04316352371637994
+        Task  1  -> more than  0.12350085985904342
+        Task  2  -> more than  0.2400373917146113
+        Task  3  ->  0.22983408429063365
 
     Avg. Kilometers driven before going OUTSIDE OF THE ROAD
       Weather:  Clear Noon
-        Task  0  -> more than 0.043162963265066225
-        Task  1  -> more than 0.1235917529074286
-        Task  2  -> more than 0.2400510454518888
-        Task  3  ->  0.21809535188051554
+        Task  0  -> more than 0.04316352371637994
+        Task  1  ->  0.12350085985904342
+        Task  2  ->  0.2400373917146113
+        Task  3  -> more than 0.22983408429063365
       Average Between Weathers
-        Task  0  -> more than  0.043162963265066225
-        Task  1  -> more than  0.1235917529074286
-        Task  2  -> more than  0.2400510454518888
-        Task  3  ->  0.21809535188051554
+        Task  0  -> more than  0.04316352371637994
+        Task  1  ->  0.12350085985904342
+        Task  2  ->  0.2400373917146113
+        Task  3  -> more than  0.22983408429063365
 
     Avg. Kilometers driven before invading the OPPOSITE LANE
       Weather:  Clear Noon
-        Task  0  -> more than 0.043162963265066225
-        Task  1  ->  0.1235917529074286
-        Task  2  ->  0.010437001976169077
-        Task  3  -> more than 0.21809535188051554
+        Task  0  -> more than 0.04316352371637994
+        Task  1  -> more than 0.12350085985904342
+        Task  2  -> more than 0.2400373917146113
+        Task  3  -> more than 0.22983408429063365
       Average Between Weathers
-        Task  0  -> more than  0.043162963265066225
-        Task  1  ->  0.1235917529074286
-        Task  2  ->  0.010437001976169077
-        Task  3  -> more than  0.21809535188051554
+        Task  0  -> more than  0.04316352371637994
+        Task  1  -> more than  0.12350085985904342
+        Task  2  -> more than  0.2400373917146113
+        Task  3  -> more than  0.22983408429063365
 
 
 
