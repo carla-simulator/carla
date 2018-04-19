@@ -219,6 +219,10 @@ The full code could be found at [basic_experiment_suite.py](https://github.com/c
 
 #### Expected Results
 
+To run the examples, to get similar you need a CARLA Simulator server running with fixed simulation step
+
+sh CarlaUE4.sh /Game/Maps/Town01 -windowed -world-port=2000  -benchmark -fps=10
+
 The presented example can be execute  for Town01 as:
 
     ./driving_benchmark_example.py -c Town01
