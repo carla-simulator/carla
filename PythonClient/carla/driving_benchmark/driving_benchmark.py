@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
 #
@@ -7,23 +5,21 @@
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
 
-import math
 import abc
 import logging
+import math
 import time
 
-
-from carla.client import make_carla_client
-from carla.tcp import TCPConnectionError
-from carla.settings import CarlaSettings
-
-
-from carla.planner.planner import Planner
 from carla.client import VehicleControl
+from carla.client import make_carla_client
 from carla.driving_benchmark.metrics import Metrics
+from carla.planner.planner import Planner
+from carla.settings import CarlaSettings
+from carla.tcp import TCPConnectionError
 
-from .recording import Recording
 from . import results_printer
+from .recording import Recording
+
 
 def sldist(c1, c2):
     return math.sqrt((c2[0] - c1[0]) ** 2 + (c2[1] - c1[1]) ** 2)
@@ -63,7 +59,6 @@ class DrivingBenchmark(object):
 
         # We have a default planner instantiated that produces high level commands
         self._planner = Planner(city_name)
-
 
     def benchmark_agent(self, experiment_suite, agent, client):
         """
@@ -123,7 +118,7 @@ class DrivingBenchmark(object):
                             [positions[end_index].location.x, positions[end_index].location.y])
 
                     time_out = experiment_suite.calculate_time_out(
-                                self._get_shortest_path(positions[start_index], positions[end_index]))
+                        self._get_shortest_path(positions[start_index], positions[end_index]))
 
                     # running the agent
                     (result, reward_vec, control_vec, final_time, remaining_distance) = \
@@ -153,13 +148,11 @@ class DrivingBenchmark(object):
 
         return metrics_object.compute(self._recording.path)
 
-
     def get_path(self):
         """
         Returns the path were the log was saved.
         """
         return self._recording.path
-
 
     def _get_directions(self, current_point, end_point):
         """
@@ -182,11 +175,11 @@ class DrivingBenchmark(object):
         """
 
         return self._planner.get_shortest_path_distance(
-            [start_point.location.x, start_point.location.y, 0.22]
-            , [start_point.orientation.x, start_point.orientation.y, 0.22]
-            , [end_point.location.x, end_point.location.y, end_point.location.z]
-            , [end_point.orientation.x, end_point.orientation.y, end_point.orientation.z])
-
+            [
+                start_point.location.x, start_point.location.y, 0.22], [
+                start_point.orientation.x, start_point.orientation.y, 0.22], [
+                end_point.location.x, end_point.location.y, end_point.location.z], [
+                    end_point.orientation.x, end_point.orientation.y, end_point.orientation.z])
 
     def _run_navigation_episode(
             self,
@@ -195,7 +188,6 @@ class DrivingBenchmark(object):
             time_out,
             target,
             episode_name):
-
         """
          Run one episode of the benchmark (Pose) for a certain agent.
 
@@ -288,7 +280,6 @@ def run_driving_benchmark(agent,
                 #  the positions on first server reset.
                 client.load_settings(CarlaSettings())
                 client.start_episode(0)
-
 
                 # We instantiate the driving benchmark, that is the engine used to
                 # benchmark an agent. The instantiation starts the log process, sets
