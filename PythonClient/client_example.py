@@ -51,7 +51,6 @@ def run_carla_client(args):
                     NumberOfPedestrians=40,
                     WeatherId=random.choice([1, 3, 7, 8, 14]),
                     QualityLevel=args.quality_level)
-
                 settings.randomize_seeds()
 
                 # Now we want to add a couple of cameras to the player vehicle.
@@ -154,8 +153,6 @@ def run_carla_client(args):
                     control = measurements.player_measurements.autopilot_control
                     control.steer += random.uniform(-0.1, 0.1)
                     client.send_control(control)
-
-
 
 
 def print_measurements(measurements):
