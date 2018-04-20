@@ -24,7 +24,6 @@ class ExperimentSuite(object):
 
         # Warning: assumes that all tasks have the same size
 
-
         return len(self._experiments[0].poses)
 
     def get_experiments(self):
@@ -44,8 +43,6 @@ class ExperimentSuite(object):
                 dynamic_tasks.add(exp.task)
 
         return list(dynamic_tasks)
-
-
 
     @property
     def metrics_parameters(self):
@@ -76,7 +73,7 @@ class ExperimentSuite(object):
                                       'threshold': 300
                                       },
 
-              }
+        }
 
     @property
     def weathers(self):
@@ -91,6 +88,7 @@ class ExperimentSuite(object):
         Must be redefined in an inherited class.
 
         """
+
     @abc.abstractproperty
     def train_weathers(self):
         """

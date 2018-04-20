@@ -8,12 +8,10 @@
 
 from __future__ import print_function
 
-
 from carla.driving_benchmark.experiment import Experiment
 from carla.sensor import Camera
 from carla.settings import CarlaSettings
 from carla.driving_benchmark.experiment_suites.experiment_suite import ExperimentSuite
-
 
 
 class CoRL2017(ExperimentSuite):
@@ -21,6 +19,7 @@ class CoRL2017(ExperimentSuite):
     @property
     def train_weathers(self):
         return [1, 3, 6, 8]
+
     @property
     def test_weathers(self):
         return [4, 14]
@@ -143,5 +142,3 @@ class CoRL2017(ExperimentSuite):
                 experiments_vector.append(experiment)
 
         return experiments_vector
-
-

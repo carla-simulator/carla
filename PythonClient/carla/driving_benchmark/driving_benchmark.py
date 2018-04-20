@@ -179,7 +179,7 @@ class DrivingBenchmark(object):
                 start_point.location.x, start_point.location.y, 0.22], [
                 start_point.orientation.x, start_point.orientation.y, 0.22], [
                 end_point.location.x, end_point.location.y, end_point.location.z], [
-                    end_point.orientation.x, end_point.orientation.y, end_point.orientation.z])
+                end_point.orientation.x, end_point.orientation.y, end_point.orientation.z])
 
     def _run_navigation_episode(
             self,
@@ -271,7 +271,6 @@ def run_driving_benchmark(agent,
                           host='127.0.0.1',
                           port=2000
                           ):
-
     while True:
         try:
 
@@ -286,8 +285,8 @@ def run_driving_benchmark(agent,
 
                 benchmark = DrivingBenchmark(city_name=city_name,
                                              name_to_save=log_name + '_'
-                                             + type(experiment_suite).__name__
-                                             + '_' + city_name,
+                                                          + type(experiment_suite).__name__
+                                                          + '_' + city_name,
                                              continue_experiment=continue_experiment)
                 # This function performs the benchmark. It returns a dictionary summarizing
                 # the entire execution.
