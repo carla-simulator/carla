@@ -1,3 +1,22 @@
+## CARLA 0.8.2
+
+  * Revamped driving benchmark
+    - Changed name from benchmark to driving benchmark
+    - Fully Redesigned the architecture of the module
+    - Added a lot more documentation
+    - Now you can stop and resume the benchmarks you run
+  * Rolled back vehicle's location to the pivot of the mesh instead of the center of the bounding box
+  * Added relative transform of the vehicle's bounding box to the measurements, player and non-players
+  * Added "frame number" to each sensor measurement so it is possible to sync all the measurements based on the frame they are produced
+  * Improved vehicle spawner to better handle spawning failures
+  * Walkers use now a closer angle to detect vehicles, so they don't stop moving if a car passes nearby
+  * Fixed lighting artefact causing the road to change its brightness depending on the distance to the camera
+  * Fixed captured images overexposed in Low mode
+  * Fixed illegal character in asset name
+  * Fixed editing sun azimuth angle in CarlaWeadther.ini had no effect
+  * Fixed crash when using a non-standard image size in DirectX (Windows)
+  * Fixed issue with using multiple "SceneCaptureToDiskCamera"
+
 ## CARLA 0.8.1
 
   * New Python example for visualizing the player start positions
