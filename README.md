@@ -22,7 +22,7 @@ For instructions on how to use and compile CARLA, check out
 
 If you want to benchmark your model in the same conditions as in our CoRL’17
 paper, check out
-[Benchmarking](http://carla.readthedocs.io/en/latest/benchmark/).
+[Benchmarking](http://carla.readthedocs.io/en/latest/benchmark_start/).
 
 News
 ----
