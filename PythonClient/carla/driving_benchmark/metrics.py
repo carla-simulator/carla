@@ -9,7 +9,6 @@ import numpy as np
 import math
 import os
 
-
 sldist = lambda c1, c2: math.sqrt((c2[0] - c1[0]) ** 2 + (c2[1] - c1[1]) ** 2)
 flatten = lambda l: [item for sublist in l for item in sublist]
 
@@ -60,8 +59,7 @@ class Metrics(object):
 
             # If there is a change in the position it means it is a new episode for sure.
             if (current_start != prev_start and current_end != prev_end) \
-               or current_exp_id != prev_exp_id:
-
+                    or current_exp_id != prev_exp_id:
                 episode_matrix_metrics.append(measurements_matrix[prev_i_position:i, :])
                 prev_i_position = i
 
@@ -156,7 +154,6 @@ class Metrics(object):
 
     def _get_out_of_road_lane(self, selected_matrix, header):
 
-
         """
             Check for the situations were the agent goes out of the road.
         Args:
@@ -232,7 +229,6 @@ class Metrics(object):
             header_metrics = header_metrics.split(',')
             header_metrics[-1] = header_metrics[-1][:-1]
 
-
         result_matrix = np.loadtxt(os.path.join(path, 'summary.csv'), delimiter=",", skiprows=1)
 
         # Corner Case: The presented test just had one episode
@@ -256,9 +252,9 @@ class Metrics(object):
                               'collision_vehicles': {w: [[] for i in range(len(tasks))] for w in
                                                      all_weathers},
                               'collision_other': {w: [[] for i in range(len(tasks))] for w in
-                                                    all_weathers},
+                                                  all_weathers},
                               'episodes_fully_completed': {w: [0] * len(tasks) for w in
-                                                          all_weathers},
+                                                           all_weathers},
                               'average_speed': {w: [0] * len(tasks) for w in all_weathers},
                               'driven_kilometers': {w: [0] * len(tasks) for w in all_weathers}
                               }
@@ -286,7 +282,7 @@ class Metrics(object):
 
                 metrics_dictionary['episodes_completion'][w][t] = \
                     ((experiment_results_matrix[:, header.index('initial_distance')]
-                     - experiment_results_matrix[:, header.index('final_distance')])
+                      - experiment_results_matrix[:, header.index('final_distance')])
                      / experiment_results_matrix[:, header.index('initial_distance')]).tolist()
 
                 # Now we divide the experiment metrics matrix
@@ -302,8 +298,9 @@ class Metrics(object):
                         episode_experiment_metrics, header_metrics)
                     metrics_dictionary['driven_kilometers'][w][t] += km_run_episodes
                     metrics_dictionary['average_speed'][w][t] = \
-                        km_run_episodes/(experiment_results_matrix[count,
-                                        header.index('final_time')] / 3600.0)
+                        km_run_episodes / (experiment_results_matrix[count,
+                                                                     header.index(
+                                                                         'final_time')] / 3600.0)
                     count += 1
 
                     lane_road = self._get_out_of_road_lane(
@@ -316,7 +313,8 @@ class Metrics(object):
 
                     if tasks[t] in set(self._parameters['dynamic_tasks']):
 
-                        collisions = self._get_collisions(episode_experiment_metrics, header_metrics)
+                        collisions = self._get_collisions(episode_experiment_metrics,
+                                                          header_metrics)
 
                         metrics_dictionary['collision_pedestrians'][
                             w][t].append(collisions[2])

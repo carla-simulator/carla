@@ -1,5 +1,3 @@
-
-
 import csv
 import datetime
 import os
@@ -148,14 +146,12 @@ class Recording(object):
 
                 rw.writerow(self._dict_measurements)
 
-
     def _create_log_files(self):
         """
         Just create the log files and add the necessary header for it.
         """
 
         if not self._experiment_exist():
-
             os.mkdir(self._path)
 
             with open(os.path.join(self._path, 'summary.csv'), 'w') as ofd:
@@ -172,6 +168,7 @@ class Recording(object):
         If continue_experiment is false and experiment exist, generates a new file path
 
         """
+
         def get_non_existent_path(f_name_path):
             """
             Get the path to a filename which does not exist by incrementing path.

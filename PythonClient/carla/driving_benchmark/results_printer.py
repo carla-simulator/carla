@@ -2,6 +2,7 @@ import os
 import numpy as np
 import json
 
+
 def print_summary(metrics_summary, weathers, path):
     """
         We plot the summary of the testing for the set selected weathers.
@@ -113,7 +114,7 @@ def print_summary(metrics_summary, weathers, path):
                     count += 1
         print ('  Average Between Weathers')
         for i in range(len(metric_sum_values)):
-            if  metric_sum_values[i] == 0:
+            if metric_sum_values[i] == 0:
                 print('    Task ', i, ' -> more than ', summed_driven_kilometers[i])
             else:
                 print('    Task ', i, ' -> ', summed_driven_kilometers[i] / metric_sum_values[i])

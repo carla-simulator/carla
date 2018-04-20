@@ -14,7 +14,6 @@ from carla.driving_benchmark.experiment_suites import CoRL2017
 from carla.driving_benchmark.experiment_suites import BasicExperimentSuite
 from carla.agent import ForwardAgent
 
-
 if __name__ == '__main__':
 
     argparser = argparse.ArgumentParser(description=__doc__)
@@ -44,13 +43,13 @@ if __name__ == '__main__':
         metavar='C',
         default='Town01',
         help='The town that is going to be used on benchmark'
-        + '(needs to match active town in server, options: Town01 or Town02)')
+             + '(needs to match active town in server, options: Town01 or Town02)')
     argparser.add_argument(
         '-n', '--log_name',
         metavar='T',
         default='test',
         help='The name of the log file to be created by the benchmark'
-        )
+    )
     argparser.add_argument(
         '--corl-2017',
         action='store_true',
@@ -61,7 +60,6 @@ if __name__ == '__main__':
         action='store_true',
         help='If you want to continue the experiment with the same name'
     )
-
 
     args = argparser.parse_args()
     if args.debug:
@@ -84,8 +82,8 @@ if __name__ == '__main__':
         experiment_suite = CoRL2017(args.city_name)
     else:
         print (' WARNING: running the basic driving benchmark, to run for CoRL 2017'
-               ' experiment suites, you should run' 
-              ' python driving_benchmark_example.py --corl-2017')
+               ' experiment suites, you should run'
+               ' python driving_benchmark_example.py --corl-2017')
         experiment_suite = BasicExperimentSuite(args.city_name)
 
     # Now actually run the driving_benchmark
