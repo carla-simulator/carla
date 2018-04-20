@@ -40,14 +40,14 @@ def view_start_positions(args):
         number_of_player_starts = len(scene.player_start_spots)
         if number_of_player_starts > 100:  # WARNING: unsafe way to check for city, see issue #313
             image = mpimg.imread("carla/planner/Town01.png")
-            carla_map = CarlaMap('Town01', 16.53, 50)
+            carla_map = CarlaMap('Town01', 0.1653, 50)
 
         else:
 
             image = mpimg.imread("carla/planner/Town02.png")
-            carla_map = CarlaMap('Town02', 16.53, 50)
+            carla_map = CarlaMap('Town02', 0.1653, 50)
 
-        _, ax = plt.subplots(1)
+        fig, ax = plt.subplots(1)
 
         ax.imshow(image)
 
@@ -65,13 +65,17 @@ def view_start_positions(args):
             pixel = carla_map.convert_to_pixel([scene.player_start_spots[position].location.x,
                                                 scene.player_start_spots[position].location.y,
                                                 scene.player_start_spots[position].location.z])
+
             circle = Circle((pixel[0], pixel[1]), 12, color='r', label='A point')
             ax.add_patch(circle)
 
             if not args.no_labels:
                 plt.text(pixel[0], pixel[1], str(position), size='x-small')
 
+        plt.axis('off')
         plt.show()
+
+        fig.savefig('town_positions.pdf', orientation='landscape', bbox_inches='tight')
 
 
 def main():
