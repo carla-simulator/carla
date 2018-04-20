@@ -10,4 +10,4 @@
 0.7.1: 1gf3YaFIjwr1EaK6qxq2V-a510Brt9Imq
 0.8.0: 1tA-WwKA0RNhBoENYunqF3-F_wg11dL86
 0.8.1: 1su5wQH7KJphAcirMA8VEDLndGigQ9tzq
-Latest: 17Fi8DYdNkBJ5AIsh_uUbUPdD-XeVlTf9
+0.8.2: 1llrBkZDvJmxXYh4r3jz0wuwz8Q8jRQeZ
