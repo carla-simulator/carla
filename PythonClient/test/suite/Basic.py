@@ -7,7 +7,7 @@
 import logging
 import random
 
-import unit_tests
+import suite
 
 import carla
 
@@ -18,7 +18,7 @@ from carla.settings import CarlaSettings
 from carla.util import make_connection
 
 
-class _BasicTestBase(unit_tests.CarlaServerTest):
+class _BasicTestBase(suite.CarlaServerTest):
     def run_carla_client(self, carla_settings, number_of_episodes, number_of_frames, use_autopilot_control=None):
         with make_connection(CarlaClient, self.args.host, self.args.port, timeout=15) as client:
             logging.info('CarlaClient connected, running %d episodes', number_of_episodes)

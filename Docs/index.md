@@ -15,11 +15,17 @@
   * [How to build on Linux](how_to_build_on_linux.md)
   * [How to build on Windows](how_to_build_on_windows.md)
 
+<h3> Driving Benchmark </h3>
+
+  * [Quick Start](benchmark_start.md)
+  * [General Structure](benchmark_structure.md)
+  * [Creating Your Benchmark](benchmark_creating.md)
+  * [Computed Performance Metrics](benchmark_metrics.md)
+  
 <h3>Advanced topics</h3>
 
   * [CARLA settings](carla_settings.md)
   * [Simulator keyboard input](simulator_keyboard_input.md)
-  * [Benchmark](benchmark.md)
   * [Running without display and selecting GPUs](carla_headless.md)
   * [How to link Epic's Automotive Materials](epic_automotive_materials.md)
 
