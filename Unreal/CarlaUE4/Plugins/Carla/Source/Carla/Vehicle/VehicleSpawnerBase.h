@@ -68,7 +68,7 @@ protected:
 
   APlayerStart* GetRandomSpawnPoint();
 
-  void SpawnVehicleAtSpawnPoint(const APlayerStart &SpawnPoint);
+  ACarlaWheeledVehicle* SpawnVehicleAtSpawnPoint(const APlayerStart &SpawnPoint);
 
   UPROPERTY()
   URoadMap *RoadMap = nullptr;
