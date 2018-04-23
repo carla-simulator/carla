@@ -27,10 +27,10 @@ paper, check out
 News
 ----
 
+- 23.04.2018 CARLA 0.8.2 released: [post](http://carla.org/2018/04/23/release-0.8.2/), [change log](https://github.com/carla-simulator/carla/blob/master/CHANGELOG.md#carla-082), [release](https://github.com/carla-simulator/carla/releases/tag/0.8.2).
 - 05.04.2018 CARLA 0.8.1 released: [post](http://carla.org/2018/04/05/release-0.8.1/), [change log](https://github.com/carla-simulator/carla/blob/master/CHANGELOG.md#carla-081), [release](https://github.com/carla-simulator/carla/releases/tag/0.8.1).
 - 27.03.2018 CARLA 0.8.0 released: [post](http://carla.org/2018/03/27/release-0.8.0/), [change log](https://github.com/carla-simulator/carla/blob/master/CHANGELOG.md#carla-080), [release](https://github.com/carla-simulator/carla/releases/tag/0.8.0).
 - 25.01.2018 CARLA 0.7.1 released: [change log](https://github.com/carla-simulator/carla/blob/master/CHANGELOG.md#carla-071), [release](https://github.com/carla-simulator/carla/releases/tag/0.7.1).
-- 28.11.2017 CARLA 0.7.0 released: [change log](https://github.com/carla-simulator/carla/blob/master/CHANGELOG.md#carla-070), [release](https://github.com/carla-simulator/carla/releases/tag/0.7.0).
 
 Roadmap
 -------
