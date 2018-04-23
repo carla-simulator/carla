@@ -8,26 +8,11 @@
 
 import argparse
 import logging
-import time
 
-from carla.benchmarks.agent import Agent
-from carla.benchmarks.corl_2017 import CoRL2017
-
-from carla.client import make_carla_client, VehicleControl
-from carla.tcp import TCPConnectionError
-
-
-class Manual(Agent):
-    """
-    Sample redefinition of the Agent,
-    An agent that goes straight
-    """
-    def run_step(self, measurements, sensor_data, target):
-        control = VehicleControl()
-        control.throttle = 0.9
-
-        return control
-
+from carla.driving_benchmark import run_driving_benchmark
+from carla.driving_benchmark.experiment_suites import CoRL2017
+from carla.driving_benchmark.experiment_suites import BasicExperimentSuite
+from carla.agent import ForwardAgent
 
 if __name__ == '__main__':
 
@@ -58,13 +43,23 @@ if __name__ == '__main__':
         metavar='C',
         default='Town01',
         help='The town that is going to be used on benchmark'
-        + '(needs to match active town in server, options: Town01 or Town02)')
+             + '(needs to match active town in server, options: Town01 or Town02)')
     argparser.add_argument(
         '-n', '--log_name',
         metavar='T',
         default='test',
         help='The name of the log file to be created by the benchmark'
-        )
+    )
+    argparser.add_argument(
+        '--corl-2017',
+        action='store_true',
+        help='If you want to benchmark the corl-2017 instead of the Basic one'
+    )
+    argparser.add_argument(
+        '--continue-experiment',
+        action='store_true',
+        help='If you want to continue the experiment with the same name'
+    )
 
     args = argparser.parse_args()
     if args.debug:
@@ -75,20 +70,23 @@ if __name__ == '__main__':
         log_level = logging.WARNING
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=log_level)
-
     logging.info('listening to server %s:%s', args.host, args.port)
 
-    while True:
-        try:
-            with make_carla_client(args.host, args.port) as client:
-                corl = CoRL2017(city_name=args.city_name, name_to_save=args.log_name)
-                agent = Manual(args.city_name)
-                results = corl.benchmark_agent(agent, client)
-                corl.plot_summary_test()
-                corl.plot_summary_train()
+    # We instantiate a forward agent, a simple policy that just set
+    # acceleration as 0.9 and steering as zero
+    agent = ForwardAgent()
 
-                break
+    # We instantiate an experiment suite. Basically a set of experiments
+    # that are going to be evaluated on this benchmark.
+    if args.corl_2017:
+        experiment_suite = CoRL2017(args.city_name)
+    else:
+        print (' WARNING: running the basic driving benchmark, to run for CoRL 2017'
+               ' experiment suites, you should run'
+               ' python driving_benchmark_example.py --corl-2017')
+        experiment_suite = BasicExperimentSuite(args.city_name)
 
-        except TCPConnectionError as error:
-            logging.error(error)
-            time.sleep(1)
+    # Now actually run the driving_benchmark
+    run_driving_benchmark(agent, experiment_suite, args.city_name,
+                          args.log_name, args.continue_experiment,
+                          args.host, args.port)

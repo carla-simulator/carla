@@ -8,9 +8,21 @@ from carla.settings import CarlaSettings
 
 
 class Experiment(object):
+    """
+    Experiment defines a certain task, under conditions
+    A task is associated with a set of poses, containing start and end pose.
+
+    Conditions are associated with a carla Settings and describe the following:
+
+    Number Of Vehicles
+    Number Of Pedestrians
+    Weather
+    Random Seed of the agents, describing their behaviour.
+
+    """
 
     def __init__(self):
-        self.Id = ''
+        self.Task = 0
         self.Conditions = CarlaSettings()
         self.Poses = [[]]
         self.Repetitions = 1
@@ -21,9 +33,12 @@ class Experiment(object):
                 raise ValueError('Experiment: no key named %r' % key)
             setattr(self, key, value)
 
+        if self.Repetitions != 1:
+            raise NotImplementedError()
+
     @property
-    def id(self):
-        return self.Id
+    def task(self):
+        return self.Task
 
     @property
     def conditions(self):

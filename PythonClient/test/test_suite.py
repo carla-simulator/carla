@@ -26,7 +26,7 @@ import carla
 from carla.tcp import TCPConnectionError
 from carla.util import StopWatch
 
-from unit_tests import CarlaServerTest
+from suite import CarlaServerTest
 
 # Modified by command-line args.
 LOGGING_TO_FILE = False
@@ -74,7 +74,7 @@ def iterate_tests():
     strip_ext = lambda f: os.path.splitext(os.path.basename(f))[0]
     is_valid = lambda obj: inspect.isclass(obj) and issubclass(obj, interface)
 
-    folder = os.path.join(os.path.dirname(__file__), 'unit_tests')
+    folder = os.path.join(os.path.dirname(__file__), 'suite')
     modules = glob.glob(os.path.join(folder, "*.py"))
 
     for module_name in set(strip_ext(m) for m in modules if not m.startswith('_')):
