@@ -35,7 +35,7 @@ git clone https://github.com/carla-simulator/carla.git
 ```
 
 ### Download the assets
-Download the assets from the version you need. Build the download link with `https://drive.google.com/open?id=` followed by the choosen hash that you will find in [`Util/ContentVersions.txt`](https://github.com/carla-simulator/carla/blob/master/Util/ContentVersions.txt).
+Download the assets from the version you need. Take a look at [`Util/ContentVersions.txt`](https://github.com/carla-simulator/carla/blob/master/Util/ContentVersions.txt) and follow the provided instructions to build the download link from the version's hash.
 
 Create the folder `Content` in `Unreal/CarlaUE4/` and unzip the content you just downloaded here.
 
