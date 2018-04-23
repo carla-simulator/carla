@@ -119,7 +119,7 @@ void ACarlaVehicleController::IntersectPlayerWithRoadMap()
   check(BoundingBox != nullptr);
   auto Result = RoadMap->Intersect(
       BoundingBox->GetComponentTransform(),
-      Vehicle->GetVehicleBoundingBoxExtent(), // Get scaled bounding box extent.
+      BoundingBox->GetUnscaledBoxExtent(),
       ChecksPerCentimeter);
 
   CarlaPlayerState->OffRoadIntersectionFactor = Result.OffRoad;
