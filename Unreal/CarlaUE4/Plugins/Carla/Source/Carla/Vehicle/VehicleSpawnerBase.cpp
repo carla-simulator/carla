@@ -79,35 +79,42 @@ void AVehicleSpawnerBase::BeginPlay()
 
   if (bSpawnVehicles) 
   {
-	GetRandomEngine()->Shuffle(SpawnPoints);
-    const int32 MaximumNumberOfAttempts = SpawnPoints.Num();
-    int32 NumberOfAttempts = 0;
-
+	GetRandomEngine()->Shuffle(SpawnPoints); //to get a random spawn point from the map
+    const int32 MaximumNumberOfAttempts = SpawnPoints.Num(); 
+    int32 NumberOfAttempts = 0; 
+    int32 SpawnIndexCount = 0;
     while ((NumberOfVehicles > Vehicles.Num()) && (NumberOfAttempts < MaximumNumberOfAttempts)) 
 	{
-	  SpawnVehicleAtSpawnPoint(*SpawnPoints[NumberOfAttempts]);
-      ++NumberOfAttempts;
+      if(SpawnPoints.IsValidIndex(SpawnIndexCount))
+      {
+	     if(SpawnVehicleAtSpawnPoint(*SpawnPoints[SpawnIndexCount])){
+            SpawnIndexCount++;
+         }
+      }
+      NumberOfAttempts++;
     }
-	
-    if (NumberOfAttempts > NumberOfVehicles) 
+	bool bAllSpawned = false;
+    if (NumberOfVehicles > SpawnIndexCount) 
 	{
-      UE_LOG(LogCarla, Error, TEXT("Requested %d vehicles, but we were only able to spawn %d"), NumberOfVehicles, Vehicles.Num());
+      UE_LOG(LogCarla, Warning, TEXT("Requested %d vehicles, but we were only able to spawn %d"), NumberOfVehicles, SpawnIndexCount);
     } else
     {
-	  if(NumberOfAttempts == NumberOfVehicles)
+	  if(SpawnIndexCount == NumberOfVehicles)
 	  {
-	    UE_LOG(LogCarla, Log, TEXT("Spawned all %d vehicles"), NumberOfAttempts);
-	  } else
-	  {
-		UE_LOG(LogCarla, Log, 
-		  TEXT("Starting the timer to spawn the other %d vehicles, one per %f seconds"), 
-		  NumberOfVehicles - NumberOfAttempts,
-		  TimeBetweenSpawnAttemptsAfterBegin
-		);
-		GetWorld()->GetTimerManager().SetTimer(AttemptTimerHandle,this, &AVehicleSpawnerBase::SpawnVehicleAttempt, TimeBetweenSpawnAttemptsAfterBegin,false,-1);
-
-	  }
-	 
+        bAllSpawned = true;
+	  } 
+    }
+    if(!bAllSpawned)
+    {
+      UE_LOG(LogCarla, Log, 
+	    TEXT("Starting the timer to spawn the other %d vehicles, one per %f seconds"), 
+	    NumberOfVehicles - SpawnIndexCount,
+	    TimeBetweenSpawnAttemptsAfterBegin
+	  );
+	  GetWorld()->GetTimerManager().SetTimer(AttemptTimerHandle,this, &AVehicleSpawnerBase::SpawnVehicleAttempt, TimeBetweenSpawnAttemptsAfterBegin,false,-1);
+    } else
+    {
+      UE_LOG(LogCarla, Log, TEXT("Spawned all %d requested vehicles"), NumberOfVehicles);
     }
   }
 }
@@ -139,7 +146,7 @@ void AVehicleSpawnerBase::TryToSpawnRandomVehicle()
   }
 }
 
-void AVehicleSpawnerBase::SpawnVehicleAtSpawnPoint(
+ACarlaWheeledVehicle* AVehicleSpawnerBase::SpawnVehicleAtSpawnPoint(
     const APlayerStart &SpawnPoint)
 {
   ACarlaWheeledVehicle *Vehicle;
@@ -156,10 +163,12 @@ void AVehicleSpawnerBase::SpawnVehicleAtSpawnPoint(
       Controller->SetAutopilot(true);
       Vehicles.Add(Vehicle);
     } else {
+
       UE_LOG(LogCarla, Error, TEXT("Something went wrong creating the controller for the new vehicle"));
       Vehicle->Destroy();
     }
   }
+  return Vehicle;
 }
 
 void AVehicleSpawnerBase::SpawnVehicleAttempt()
@@ -176,7 +185,10 @@ void AVehicleSpawnerBase::SpawnVehicleAttempt()
 	float NextTime = TimeBetweenSpawnAttemptsAfterBegin;
 	if(DistanceToPlayer>DistanceToPlayerBetweenSpawnAttemptsAfterBegin)
 	{
-	  SpawnVehicleAtSpawnPoint(*spawnpoint);
+	  if(SpawnVehicleAtSpawnPoint(*spawnpoint)!=nullptr)
+	  {
+	      UE_LOG(LogCarla, Log, TEXT("Vehicle %d/%d late spawned"), Vehicles.Num(), NumberOfVehicles);
+	  }
 	} else
 	{
 	  NextTime /= 2.0f;
@@ -189,7 +201,7 @@ void AVehicleSpawnerBase::SpawnVehicleAttempt()
 	  timemanager.SetTimer(AttemptTimerHandle,this, &AVehicleSpawnerBase::SpawnVehicleAttempt,NextTime,false,-1);
 	} else
 	{
-	  UE_LOG(LogCarla, Log, TEXT("Last vehicle spawned correctly"));
+	  UE_LOG(LogCarla, Log, TEXT("All vehicles spawned correctly"));
 	}
 
 }
