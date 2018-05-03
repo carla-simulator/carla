@@ -9,8 +9,9 @@
 #include "Engine/DirectionalLight.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/PostProcessVolume.h"
-#include "UObjectIterator.h"
 #include "Async.h"
+#include "Landscape.h"
+#include "InstancedFoliageActor.h"
 
 ///quality settings configuration between runs
 EQualitySettingsLevel UCarlaSettingsDelegate::AppliedLowPostResetQualitySettingsLevel = EQualitySettingsLevel::Epic;
@@ -35,9 +36,11 @@ void UCarlaSettingsDelegate::OnActorSpawned(AActor* InActor)
 {
   check(CarlaSettings!=nullptr);
   if (InActor != nullptr && IsValid(InActor) && !InActor->IsPendingKill() && 
+      InActor->IsA<AInstancedFoliageActor>() || //foliage culling is controlled per instance
+      InActor->IsA<ALandscape>() || //dont touch landscapes nor roads
 	  !InActor->ActorHasTag(UCarlaSettings::CARLA_ROAD_TAG) && 
 	  !InActor->ActorHasTag(UCarlaSettings::CARLA_SKY_TAG)
-  ){   
+  ){
 	 TArray<UActorComponent*> components = InActor->GetComponentsByClass(UPrimitiveComponent::StaticClass());
 	 switch(CarlaSettings->GetQualitySettingsLevel())
 	 {
@@ -63,7 +66,7 @@ void UCarlaSettingsDelegate::ApplyQualitySettingsLevelPostRestart()
 	CheckCarlaSettings(nullptr);
 	UWorld *InWorld = CarlaSettings->GetWorld();
   
-  EQualitySettingsLevel QualitySettingsLevel = CarlaSettings->GetQualitySettingsLevel();
+    const EQualitySettingsLevel QualitySettingsLevel = CarlaSettings->GetQualitySettingsLevel();
 	if(AppliedLowPostResetQualitySettingsLevel==QualitySettingsLevel) return;
 	
 	switch(QualitySettingsLevel)
@@ -190,8 +193,9 @@ void UCarlaSettingsDelegate::SetAllRoads(UWorld* world, const float max_draw_dis
     
     for(int32 i=0; i<actors.Num(); i++)
     {
-    if(!IsValid(actors[i]) || actors[i]->IsPendingKillPending()) continue;
-      TArray<UActorComponent*> components = actors[i]->GetComponentsByClass(UStaticMeshComponent::StaticClass());
+      AActor* actor = actors[i];
+      if(!IsValid(actor) || actor->IsPendingKillPending()) continue;
+      TArray<UActorComponent*> components = actor->GetComponentsByClass(UStaticMeshComponent::StaticClass());
       for(int32 j=0; j<components.Num(); j++)
       {
         UStaticMeshComponent* staticmeshcomponent = Cast<UStaticMeshComponent>(components[j]);
@@ -257,13 +261,16 @@ void UCarlaSettingsDelegate::SetAllActorsDrawDistance(UWorld* world, const float
     UGameplayStatics::GetAllActorsOfClass(world, AActor::StaticClass(),actors);
     for(int32 i=0; i<actors.Num(); i++)
     {
-    if(!IsValid(actors[i]) || actors[i]->IsPendingKillPending() || 
-      actors[i]->ActorHasTag(UCarlaSettings::CARLA_ROAD_TAG) ||
-      actors[i]->ActorHasTag(UCarlaSettings::CARLA_SKY_TAG)
+      AActor* actor = actors[i];
+      if(!IsValid(actor) || actor->IsPendingKillPending() || 
+        actor->IsA<AInstancedFoliageActor>() || //foliage culling is controlled per instance
+        actor->IsA<ALandscape>() || //dont touch landscapes nor roads
+        actor->ActorHasTag(UCarlaSettings::CARLA_ROAD_TAG) ||
+        actor->ActorHasTag(UCarlaSettings::CARLA_SKY_TAG)
       ){
         continue;
       }
-      SetActorComponentsDrawDistance(actors[i], max_draw_distance);
+      SetActorComponentsDrawDistance(actor, max_draw_distance);
     }
   });
 }
@@ -275,8 +282,9 @@ void UCarlaSettingsDelegate::SetPostProcessEffectsEnabled(UWorld* world, const b
   UGameplayStatics::GetAllActorsOfClass(world, APostProcessVolume::StaticClass(), actors);
   for(int32 i=0; i<actors.Num(); i++)
   {
-	  if(!IsValid(actors[i]) || actors[i]->IsPendingKillPending()) continue;
-      APostProcessVolume* postprocessvolume = Cast<APostProcessVolume>(actors[i]);
+      AActor* actor = actors[i];
+	  if(!IsValid(actor) || actor->IsPendingKillPending()) continue;
+      APostProcessVolume* postprocessvolume = Cast<APostProcessVolume>(actor);
 	  if(postprocessvolume)
 	  {
   		postprocessvolume->bEnabled = enabled;
