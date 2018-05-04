@@ -42,11 +42,28 @@ Create the folder `Content` in `Unreal/CarlaUE4/` and unzip the content you just
 ## Dependencies
 Download and build **for win64**:
 
-- Boost 1.64
+- Boost 1.64.0
 - Protobuf 3.3.2
+- Google Test 1.8.0
 
 ### Building Boost for CARLA
-_Under construction_
+curl and tar come with Windows 10 version 1803 or later.
+```
+mkdir Util\Build
+cd Util\Build
+
+curl -O -L https://dl.bintray.com/boostorg/release/1.64.0/source/boost_1_64_0.tar.gz
+tar xzf boost_1_64_0.tar.gz
+move boost_1_64_0 boost-source
+
+cd boost-source
+bootstrap.bat
+b2 clean
+b2 variant=release link=static runtime-link=shared threading=multi address-model=64
+
+move stage ..\boost-install
+xcopy /E boost ..\boost-install\boost\
+```
 
 Follow the official documentatio to compile boost.
 Put the generated binaries in `Util/Build/boost-install`.
@@ -56,6 +73,20 @@ Put the generated binaries in `Util/Build/boost-install`.
 Just use [this batch](https://gist.github.com/marcgpuig/57946f9b684f64e5f08487089c437ea3) script, it will download and compile a ready-to-use version. Put it in`Util/Build` and just run it.
 
 #### Manually
+```
+cd Util\Build
+
+git clone --depth=1 -b v3.3.2 https://github.com/google/protobuf.git protobuf-source
+
+cd protobuf-source\cmake
+mkdir build
+mkdir ..\..\protobuf-install
+cd build
+
+"C:\Program Files\CMake\bin\cmake" -DCMAKE_GENERATOR_PLATFORM=x64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../../../protobuf-install -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_CXX_FLAGS_RELEASE=/MD -Dprotobuf_MSVC_STATIC_RUNTIME=OFF ../
+"C:\Program Files\CMake\bin\cmake" --build . --target INSTALL --config Release
+```
+
 If something goes wrong, just follow the protobuf [cmake tutorials](https://github.com/google/protobuf/blob/master/cmake/README.md), but add these cmake arguments:
 
 ```
@@ -66,6 +97,21 @@ If something goes wrong, just follow the protobuf [cmake tutorials](https://gith
 ```
 
 Put the generated binaries in `Util/Build/protobuf-install`.
+
+### Building Google Test for CARLA
+```
+cd Util/Build
+
+git clone --depth=1 -b release-1.8.0 https://github.com/google/googletest.git googletest-source
+
+mkdir googletest-install
+cd googletest-source\googletest
+mkdir cmake\build
+cd cmake\build
+
+"C:\Program Files\CMake\bin\cmake" -DCMAKE_GENERATOR_PLATFORM=x64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../../../../googletest-install -DCMAKE_CXX_FLAGS=/D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING ../..
+"C:\Program Files\CMake\bin\cmake" --build . --target INSTALL --config Release
+```
 
 ## Compiling CARLA server
 With your Visual Studio propmt, navigate into the `carla` folder where you cloned the repo with
