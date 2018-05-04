@@ -104,6 +104,7 @@ public class Carla : ModuleRules
     {
       // Auto-links boost libraries in folder.
       PublicLibraryPaths.Add(Path.Combine(CarlaServerInstallPath, "lib"));
+      PublicLibraryPaths.Add(Path.GetFullPath(Path.Combine(ModuleDirectory, "../../../../../../Util/Build/boost-install/lib")));
 
       PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetLibName("libprotobuf")));
       PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetLibName(CarlaServerLib)));
