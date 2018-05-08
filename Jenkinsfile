@@ -5,6 +5,10 @@ pipeline {
         UE4_ROOT = '/var/lib/jenkins/UnrealEngine_4.18'
     }
 
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '6', artifactNumToKeepStr: '6'))
+    }
+
     stages {
 
         stage('Setup') {
@@ -24,11 +28,15 @@ pipeline {
                 sh './Package.sh --clean-intermediate'
             }
         }
+
     }
 
     post {
-        success {
+
+        always {
             archiveArtifacts 'Dist/*.tar.gz'
+            deleteDir()
         }
+
     }
 }
