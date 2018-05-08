@@ -13,7 +13,7 @@ pipeline {
 
         stage('Setup') {
             steps {
-                sh './Setup.sh'
+                sh './Setup.sh --jobs=12'
             }
         }
 
