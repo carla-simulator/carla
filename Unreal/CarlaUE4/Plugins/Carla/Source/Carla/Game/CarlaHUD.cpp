@@ -6,6 +6,7 @@
 
 #include "Carla.h"
 #include "CarlaHUD.h"
+#include "CarlaPlayerState.h"
 
 #include "Vehicle/CarlaVehicleController.h"
 
@@ -13,6 +14,7 @@
 #include "ConstructorHelpers.h"
 #include "Engine/Canvas.h"
 #include "Engine/Font.h"
+
 
 #define LOCTEXT_NAMESPACE "CarlaHUD"
 
@@ -131,11 +133,12 @@ void ACarlaHUD::DrawHUD()
   ACarlaVehicleController *Vehicle = Cast<ACarlaVehicleController>(
       GetOwningPawn() == nullptr ? nullptr : GetOwningPawn()->GetController());
 
-  if (Vehicle != nullptr)
+  if (IsValid(Vehicle))
   {
     FVector2D ScaleVec(HUDYRatio * 1.4f, HUDYRatio * 1.4f);
-
-    auto Text = GetHUDText(Vehicle->GetPlayerState());
+    const auto& PlayerState = Vehicle->GetPlayerState();
+    if (&PlayerState == nullptr) return;
+    const auto Text = GetHUDText(PlayerState);
     FCanvasTextItem HUDTextItem(FVector2D(HUDXRatio * 50.0f, HUDYRatio * 330.0f), Text, HUDFont, FLinearColor::White);
     HUDTextItem.Scale = ScaleVec;
     Canvas->DrawItem(HUDTextItem);

@@ -10,6 +10,8 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "CarlaWheeledVehicle.h"
+#include "Spectator/CarlaSpectatorPawn.h"
 
 // =============================================================================
 // -- Constructor and destructor -----------------------------------------------
@@ -69,38 +71,60 @@ void AWheeledVehicleController::BeginPlay()
 void AWheeledVehicleController::SetupInputComponent()
 {
   Super::SetupInputComponent();
-  if (InputComponent != nullptr) {
+  if (InputComponent != nullptr) 
+  {
     // Camera movement.
     InputComponent->BindAxis("CameraZoom", this, &AWheeledVehicleController::ChangeCameraZoom);
     InputComponent->BindAxis("CameraUp", this, &AWheeledVehicleController::ChangeCameraUp);
     InputComponent->BindAxis("CameraRight", this, &AWheeledVehicleController::ChangeCameraRight);
     InputComponent->BindAction("ToggleCamera", IE_Pressed, this, &AWheeledVehicleController::ToggleCamera);
-    InputComponent->BindAction("RestartLevel", IE_Pressed, this, &AWheeledVehicleController::RestartLevel);
-    // Vehicle movement.
+    InputComponent->BindAction("RestartLevel", IE_Pressed, this, &AWheeledVehicleController::RestartLevel).bConsumeInput = false;
+
+    // Vehicle or spectator movement.
     InputComponent->BindAction("ToggleAutopilot", IE_Pressed, this, &AWheeledVehicleAIController::ToggleAutopilot);
-    InputComponent->BindAxis("MoveForward", this, &AWheeledVehicleController::SetThrottleInput);
-    InputComponent->BindAxis("MoveRight", this, &AWheeledVehicleController::SetSteeringInput);
+    InputComponent->BindAxis("MoveForward", this, &AWheeledVehicleController::SetThrottleInput).bConsumeInput = false;
+    InputComponent->BindAxis("MoveRight", this, &AWheeledVehicleController::SetSteeringInput).bConsumeInput = false;
     InputComponent->BindAxis("Brake", this, &AWheeledVehicleController::SetBrakeInput);
     InputComponent->BindAction("ToggleReverse", IE_Pressed, this, &AWheeledVehicleController::ToggleReverse);
     InputComponent->BindAction("Handbrake", IE_Pressed, this, &AWheeledVehicleController::HoldHandbrake);
     InputComponent->BindAction("Handbrake", IE_Released, this, &AWheeledVehicleController::ReleaseHandbrake);
+
+    /*//Interaction
+    InputComponent->BindAction("Interact", IE_Pressed, this, &AWheeledVehicleController::InteractButton).bConsumeInput = false;
+    InputComponent->BindAction("UseTheForce", IE_Pressed, this, &AWheeledVehicleController::ForceButton).bConsumeInput = false;
+
+    //Camera movement with mouse only for spectator mode
+    InputComponent->BindAxis("CameraPitch", this, &AWheeledVehicleController::MousePitchCamera).bConsumeInput = false;
+    InputComponent->BindAxis("CameraYaw", this, &AWheeledVehicleController::MouseYawCamera).bConsumeInput = false;
+    */
+    InputComponent->bBlockInput = false;
+
   }
 }
 
 void AWheeledVehicleController::Possess(APawn *aPawn)
 {
   Super::Possess(aPawn);
+  if (!IsValid(aPawn)) return;
   SpringArm->AttachToComponent(
       aPawn->GetRootComponent(),
       FAttachmentTransformRules::KeepRelativeTransform);
   OnBoardCamera->AttachToComponent(
       aPawn->GetRootComponent(),
       FAttachmentTransformRules::KeepRelativeTransform);
+  ACarlaSpectatorPawn* spectator = Cast<ACarlaSpectatorPawn>(aPawn);
+  if(spectator)
+  {
+    EnableUserInput(true);
+    spectator->SetCameraSpring(SpringArm);
+    spectator->SetCamera(PlayerCamera);
+  }
 }
 
 void AWheeledVehicleController::CalcCamera(float DeltaTime, FMinimalViewInfo& OutResult)
 {
-  if (bOnBoardCameraIsActive) {
+  if (bOnBoardCameraIsActive) 
+  {
     OnBoardCamera->GetCameraView(DeltaTime, OutResult);
   } else {
     PlayerCamera->GetCameraView(DeltaTime, OutResult);
@@ -114,7 +138,8 @@ void AWheeledVehicleController::CalcCamera(float DeltaTime, FMinimalViewInfo& Ou
 void AWheeledVehicleController::EnableUserInput(const bool On)
 {
   bAllowUserInput = On;
-  if (bAllowUserInput) {
+  if (bAllowUserInput) 
+  {
     Super::SetAutopilot(false);
   }
 }
@@ -144,9 +169,11 @@ void AWheeledVehicleController::ChangeCameraRight(float Value)
 
 void AWheeledVehicleController::EnableOnBoardCamera(const bool bEnable, const bool bForce)
 {
-  if (bForce || (bOnBoardCameraIsActive != bEnable)) {
+  if (bForce || (bOnBoardCameraIsActive != bEnable)) 
+  {
     bOnBoardCameraIsActive = bEnable;
-    if (bEnable) {
+    if (bEnable) 
+    {
       PlayerCamera->Deactivate();
       OnBoardCamera->Activate();
     } else {
@@ -162,42 +189,109 @@ void AWheeledVehicleController::EnableOnBoardCamera(const bool bEnable, const bo
 
 void AWheeledVehicleController::SetThrottleInput(const float Value)
 {
-  if (bAllowUserInput && !IsAutopilotEnabled()) {
-    GetPossessedVehicle()->SetThrottleInput(Value);
+  if (bAllowUserInput && !IsAutopilotEnabled())
+  {
+    const bool bIsVehicle = IsPossessingAVehicle();
+    if(bIsVehicle)
+    {
+      GetPossessedVehicle()->SetThrottleInput(Value);
+    }
+    else 
+    {
+      ACarlaSpectatorPawn* carlaspectator = Cast<ACarlaSpectatorPawn>(GetPawn());
+      if(IsValid(carlaspectator))
+      {
+        carlaspectator->MoveForward(Value);
+      }
+    }
   }
 }
 
 void AWheeledVehicleController::SetSteeringInput(const float Value)
 {
-  if (bAllowUserInput && !IsAutopilotEnabled()) {
-    GetPossessedVehicle()->SetSteeringInput(Value);
+  if (bAllowUserInput && !IsAutopilotEnabled()) 
+  {
+    ACarlaSpectatorPawn* carlaspectator = Cast<ACarlaSpectatorPawn>(GetPawn());
+    if (IsValid(carlaspectator))
+    {
+      carlaspectator->MoveRight(Value);
+      return;
+    }
+    if(IsPossessingAVehicle())
+    {
+      GetPossessedVehicle()->SetSteeringInput(Value);
+    } 
   }
 }
 
 void AWheeledVehicleController::SetBrakeInput(const float Value)
 {
-  if (bAllowUserInput && !IsAutopilotEnabled()) {
+  if (bAllowUserInput && !IsAutopilotEnabled() && IsPossessingAVehicle()) 
+  {
     GetPossessedVehicle()->SetBrakeInput(Value);
   }
 }
 
 void AWheeledVehicleController::ToggleReverse()
 {
-  if (bAllowUserInput && !IsAutopilotEnabled()) {
+  if (bAllowUserInput && !IsAutopilotEnabled() && IsPossessingAVehicle()) 
+  {
     GetPossessedVehicle()->ToggleReverse();
   }
 }
 
 void AWheeledVehicleController::HoldHandbrake()
 {
-  if (bAllowUserInput && !IsAutopilotEnabled()) {
+  if (bAllowUserInput && !IsAutopilotEnabled() && IsPossessingAVehicle()) 
+  {
     GetPossessedVehicle()->HoldHandbrake();
   }
 }
 
 void AWheeledVehicleController::ReleaseHandbrake()
 {
-  if (bAllowUserInput && !IsAutopilotEnabled()) {
+  if (bAllowUserInput && !IsAutopilotEnabled() && IsPossessingAVehicle())
+  {
     GetPossessedVehicle()->ReleaseHandbrake();
+  }
+}
+
+void AWheeledVehicleController::InteractButton()
+{
+  if (!bAllowUserInput) return;
+  ACarlaSpectatorPawn* carlaspectator = Cast<ACarlaSpectatorPawn>(GetPawn());
+  if (IsValid(carlaspectator))
+  {
+    carlaspectator->PossessLookedTarget();
+  }
+}
+
+void AWheeledVehicleController::ForceButton()
+{
+  if (!bAllowUserInput) return;
+  ACarlaSpectatorPawn* carlaspectator = Cast<ACarlaSpectatorPawn>(GetPawn());
+  if (IsValid(carlaspectator))
+  {
+    carlaspectator->FollowLookedTarget();
+  }
+}
+
+void AWheeledVehicleController::MousePitchCamera(float Value)
+{
+  if (!bAllowUserInput) return;
+  ACarlaSpectatorPawn* carlaspectator = Cast<ACarlaSpectatorPawn>(GetPawn());
+  if (IsValid(carlaspectator))
+  {
+      carlaspectator->PitchCamera(Value);
+  }
+}
+
+void AWheeledVehicleController::MouseYawCamera(float Value)
+{
+  if (!bAllowUserInput) return;
+  ACarlaSpectatorPawn* carlaspectator = Cast<ACarlaSpectatorPawn>(GetPawn());
+  if (IsValid(carlaspectator))
+  {
+      carlaspectator->YawCamera(Value);
   }
 }

@@ -34,13 +34,12 @@ protected:
     UPROPERTY(EditAnywhere)
     FRotator RotationOffset = FRotator{0.0f};
 
-    UPROPERTY(EditAnywhere)
     USphereComponent* PawnDetectionSphere;
 
-    UPROPERTY(EditAnywhere,BlueprintReadWrite, meta = (AllowPrivateAccess="true"))
     USpringArmComponent* CameraSpringArm;
 
     UCameraComponent* Camera;
+
     FVector2D MovementInput;
     FVector2D CameraInput;
    
@@ -53,7 +52,7 @@ protected:
     virtual void Tick(float DeltaSeconds) override;
 
     virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
-
+public:
     virtual void MoveForward(float AxisValue) override;
 
     virtual void MoveRight(float AxisValue) override;
@@ -62,11 +61,26 @@ protected:
 
     virtual void PitchCamera(float AxisValue);
 
+    FORCEINLINE
+    void SetCameraSpring(USpringArmComponent* cameraspring)
+    {
+      CameraSpringArm = cameraspring;
+    }
+
+    FORCEINLINE
+    void SetCamera(UCameraComponent* camera)
+    {
+      Camera = camera;
+    }
+
     UFUNCTION(BlueprintCallable)
     virtual void RestartLevel();
 
     UFUNCTION(BlueprintCallable)
     virtual void PossessLookedTarget();
+
+    UFUNCTION(BlueprintCallable)
+    virtual void FollowLookedTarget();
 
 public:
     /**  */
@@ -79,6 +93,13 @@ public:
     /** */
     UFUNCTION(BlueprintCallable)
     void SetManualControl();
+
+
+    UFUNCTION(BlueprintPure)
+    APawn* GetLookedTarget() const { return LookedTarget; }
+
+    UFUNCTION(BlueprintPure)
+    APawn* GetFollowedTarget() const { return FollowedTarget;  }
 
 private:
     UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess="true") )

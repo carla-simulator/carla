@@ -76,7 +76,7 @@ private:
   void ChangeCameraUp(float Value);
 
   void ChangeCameraRight(float Value);
-
+  
   void EnableOnBoardCamera(bool bEnable = true, bool bForce = false);
 
   void ToggleCamera()
@@ -102,6 +102,14 @@ private:
   void HoldHandbrake();
 
   void ReleaseHandbrake();
+
+  void InteractButton();
+
+  void ForceButton();
+
+  void MousePitchCamera(float Value);
+  
+  void MouseYawCamera(float Value);
 
   /// @}
   // ===========================================================================

@@ -22,18 +22,20 @@ ACarlaSpectatorPawn::ACarlaSpectatorPawn(const FObjectInitializer& ObjectInitial
 	: Super(ObjectInitializer)
 {
   PrimaryActorTick.bCanEverTick = true;
+  if(InputComponent)
+     InputComponent->bBlockInput = false;
   RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
-  CameraSpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraSpringArm"));
+  /*CameraSpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraSpringArm"));
   CameraSpringArm->SetupAttachment(RootComponent);
   CameraSpringArm->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, 50.0f), FRotator(-60.0f, 0.0f, 0.0f));
   CameraSpringArm->TargetArmLength = 400.f;
   CameraSpringArm->bEnableCameraLag = true;
   CameraSpringArm->CameraLagSpeed = 3.0f;
   Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("GameCamera"));
-  Camera->SetupAttachment(CameraSpringArm /*USpringArmComponent::SocketName*/);
+  Camera->SetupAttachment(CameraSpringArm); //USpringArmComponent::SocketName
   
   //Take control of the default Player
-  AutoPossessPlayer = EAutoReceiveInput::Player0;
+  //AutoPossessPlayer = EAutoReceiveInput::Player0;*/
 }
 
 bool ACarlaSpectatorPawn::TraceSphere(const FVector& Start, const FVector& End, const float Radius, FHitResult& HitOut, ECollisionChannel TraceChannel) const
@@ -59,6 +61,7 @@ bool ACarlaSpectatorPawn::TraceSphere(const FVector& Start, const FVector& End, 
 
 void ACarlaSpectatorPawn::DetectForwardVehiclePawns()
 {
+  if (!Camera) return;
   FHitResult hit;
   if(TraceSphere(Camera->GetComponentLocation(),Camera->GetComponentLocation() + Camera->GetForwardVector()*DistanceToDetectPawns,RadiusToDetectPawns,hit))
   {
@@ -74,6 +77,7 @@ void ACarlaSpectatorPawn::BeginPlay()
 {
   Super::BeginPlay();
   GetWorld()->DebugDrawTraceTag = FName(TEXT("SphereTracePawn"));
+  
 }
 
 void ACarlaSpectatorPawn::TickFollowingMode(float DeltaTime)
@@ -87,21 +91,23 @@ void ACarlaSpectatorPawn::TickFollowingMode(float DeltaTime)
   const FVector TargetLocation = FollowedTarget->GetActorLocation();
   SetActorLocation(TargetLocation - FollowedTarget->GetActorForwardVector().Normalize() * 15.0f);
   //const FVector DestinyLocation = TargetLocation + FollowedTarget->GetActorForwardVector() * ;
-  
-  FRotator PitchRotation = CameraSpringArm->GetComponentRotation();
-  PitchRotation.Pitch = FMath::Clamp(PitchRotation.Pitch + CameraInput.Y, -110.0f, 115.0f);
-  CameraSpringArm->SetWorldRotation(PitchRotation);
-
+  if (CameraSpringArm)
+  {
+    FRotator PitchRotation = CameraSpringArm->GetComponentRotation();
+    PitchRotation.Pitch = FMath::Clamp(PitchRotation.Pitch + CameraInput.Y, -110.0f, 115.0f);
+    CameraSpringArm->SetWorldRotation(PitchRotation);
+  }
 }
 
 
 void ACarlaSpectatorPawn::TickManualMode(float DeltaTime)
 {
   //Rotate our camera's pitch, but limit it so we're always looking downward
+    if (!CameraSpringArm) return;
   FRotator PitchRotation = CameraSpringArm->GetComponentRotation();
   PitchRotation.Pitch = PitchRotation.Pitch + CameraInput.Y;// FMath::Clamp(PitchRotation.Pitch + CameraInput.Y, -80.0f, -15.0f);
   CameraSpringArm->SetWorldRotation(PitchRotation);
-
+  
   //Rotate our actor's yaw, which will turn our camera because we're attached to it
   FRotator YawRotation = GetActorRotation();
   YawRotation.Yaw += CameraInput.X;
@@ -154,6 +160,7 @@ void ACarlaSpectatorPawn::SetupPlayerInputComponent(UInputComponent* InputCompon
   InputComponent->BindAxis("MoveRight", this, &ACarlaSpectatorPawn::MoveRight);
   InputComponent->BindAction("RestartLevel", IE_Pressed, this, &ACarlaSpectatorPawn::RestartLevel);
   InputComponent->BindAction("Interact", IE_Pressed, this, &ACarlaSpectatorPawn::PossessLookedTarget);
+  InputComponent->BindAction("UseTheForce", IE_Pressed, this, &ACarlaSpectatorPawn::FollowLookedTarget);
   InputComponent->BindAxis("CameraPitch", this, &ACarlaSpectatorPawn::PitchCamera);
   InputComponent->BindAxis("CameraYaw", this, &ACarlaSpectatorPawn::YawCamera);
 }
@@ -166,6 +173,7 @@ void ACarlaSpectatorPawn::MoveForward(float AxisValue)
 void ACarlaSpectatorPawn::MoveRight(float AxisValue)
 {
   MovementInput.Y = FMath::Clamp<float>(AxisValue, -1.0f, 1.0f);
+  
 }
 
 void ACarlaSpectatorPawn::PitchCamera(float AxisValue)
@@ -201,6 +209,14 @@ void ACarlaSpectatorPawn::PossessLookedTarget()
   }
 }
 
+void ACarlaSpectatorPawn::FollowLookedTarget()
+{
+  if(IsValid(LookedTarget)&&!LookedTarget->IsPendingKillPending())
+  {
+    SetFollowTarget(LookedTarget);
+  }
+}
+
 
 void ACarlaSpectatorPawn::SetFollowTarget(APawn* Pawn)
 {
@@ -208,10 +224,12 @@ void ACarlaSpectatorPawn::SetFollowTarget(APawn* Pawn)
   {
     ControlMode = ESpectatorControlMode::FOLLOW_CONTROL;
     FollowedTarget = Pawn;
-    CameraSpringArm->SocketOffset = FVector(0.0, 30.f, 0.0);
-    CameraSpringArm->TargetArmLength = 500.0f;
-    CameraSpringArm->TargetOffset = FVector(170.0f,-8.f, 375.0f);
-
+    if(CameraSpringArm)
+    {
+      CameraSpringArm->SocketOffset = FVector(0.0, 30.f, 0.0);
+      CameraSpringArm->TargetArmLength = 500.0f;
+      CameraSpringArm->TargetOffset = FVector(170.0f,-8.f, 375.0f);
+    }
   }
 }
 

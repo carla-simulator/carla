@@ -24,6 +24,7 @@
 #include "EngineUtils.h"
 #include "GameFramework/PlayerStart.h"
 #include "SceneViewport.h"
+#include "CityMapGenerator.h"
 
 ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializer) :
   Super(ObjectInitializer),

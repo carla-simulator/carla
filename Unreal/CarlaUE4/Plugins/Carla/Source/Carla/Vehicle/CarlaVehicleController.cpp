@@ -35,19 +35,21 @@ ACarlaVehicleController::~ACarlaVehicleController() {}
 void ACarlaVehicleController::Possess(APawn *aPawn)
 {
   Super::Possess(aPawn);
-
-  if (IsPossessingAVehicle()) {
+  
+  if (IsPossessingAVehicle()) 
+  {
     // Bind hit events.
     aPawn->OnActorHit.AddDynamic(this, &ACarlaVehicleController::OnCollisionEvent);
     // Get custom player state.
     CarlaPlayerState = Cast<ACarlaPlayerState>(PlayerState);
-    check(CarlaPlayerState != nullptr);
+    if (CarlaPlayerState == nullptr) return;
     // We can set the bounding box already as it's not going to change.
     CarlaPlayerState->BoundingBoxTransform = GetPossessedVehicle()->GetVehicleBoundingBoxTransform();
     CarlaPlayerState->BoundingBoxExtent = GetPossessedVehicle()->GetVehicleBoundingBoxExtent();
     // Set HUD input.
     CarlaHUD = Cast<ACarlaHUD>(GetHUD());
-    if (CarlaHUD != nullptr) {
+    if (CarlaHUD != nullptr) 
+    {
       InputComponent->BindAction("ToggleHUD", IE_Pressed, CarlaHUD, &ACarlaHUD::ToggleHUDView);
     } else {
       UE_LOG(LogCarla, Warning, TEXT("Current HUD is not a ACarlaHUD"));
@@ -94,7 +96,7 @@ void ACarlaVehicleController::OnCollisionEvent(
     const FHitResult& Hit)
 {
   // Register collision only if we are moving faster than 1 km/h.
-  check(IsPossessingAVehicle());
+  if (!IsPossessingAVehicle()) return;
   if (FMath::Abs(GetPossessedVehicle()->GetVehicleForwardSpeed() * 0.036f) > 1.0f) {
     CarlaPlayerState->RegisterCollision(Actor, OtherActor, NormalImpulse, Hit);
   }

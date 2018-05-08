@@ -46,6 +46,12 @@ public:
 
   virtual void Tick(float DeltaTime) override;
 
+  UFUNCTION(BlueprintCallable)
+  virtual void StartSpectatingOnly() override;
+
+  UFUNCTION(BlueprintCallable)
+  void StopSpectatingOnly();
+
   /// @}
   // ===========================================================================
   /// @name Possessed vehicle
