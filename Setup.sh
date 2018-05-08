@@ -16,6 +16,43 @@
 
 set -e
 
+DOC_STRING="Download and compile CARLA content and dependencies."
+
+USAGE_STRING="Usage: $0 [-h|--help] [-s|--skip-download] [--jobs=N]"
+
+# ==============================================================================
+# -- Parse arguments -----------------------------------------------------------
+# ==============================================================================
+
+UPDATE_SCRIPT_FLAGS=
+NUMBER_OF_ASYNC_JOBS=1
+
+OPTS=`getopt -o hs --long help,skip-download,jobs:: -n 'parse-options' -- "$@"`
+
+if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
+
+eval set -- "$OPTS"
+
+while true; do
+  case "$1" in
+    -s | --skip-download )
+      UPDATE_SCRIPT_FLAGS=--skip-download;
+      shift ;;
+    --jobs)
+        case "$2" in
+          "") NUMBER_OF_ASYNC_JOBS=4 ; shift 2 ;;
+          *) NUMBER_OF_ASYNC_JOBS=$2 ; shift 2 ;;
+        esac ;;
+    -h | --help )
+      echo "$DOC_STRING"
+      echo "$USAGE_STRING"
+      exit 1
+      ;;
+    * )
+      break ;;
+  esac
+done
+
 # ==============================================================================
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
@@ -61,10 +98,10 @@ cmake -DCMAKE_C_COMPILER=${C_COMPILER} -DCMAKE_CXX_COMPILER=${COMPILER} \
       -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="../llvm-install" \
             ../llvm-source
 
-make cxx
+make -j $NUMBER_OF_ASYNC_JOBS cxx
 
 #install libc++ locally in llvm-install folder
-make install-libcxx install-libcxxabi
+make -j $NUMBER_OF_ASYNC_JOBS install-libcxx install-libcxxabi
 
 popd >/dev/null
 
@@ -89,10 +126,13 @@ BOOST_TOOLSET="clang-3.9"
 BOOST_CFLAGS="-fPIC -std=c++1y -stdlib=libc++ -I../llvm-install/include/c++/v1"
 BOOST_LFLAGS="-stdlib=libc++ -L../llvm-install/lib"
 
-./bootstrap.sh --with-toolset=clang --prefix=../boost-install
+./bootstrap.sh \
+    --with-toolset=clang \
+    --prefix=../boost-install \
+    --with-libraries=system
 ./b2 clean
-./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" linkflags="${BOOST_LFLAGS}" --prefix="../boost-install" -j 4 stage release
-./b2 install toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" linkflags="${BOOST_LFLAGS}" --prefix="../boost-install"
+./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" linkflags="${BOOST_LFLAGS}" --prefix="../boost-install" -j $NUMBER_OF_ASYNC_JOBS stage release
+./b2 install toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" linkflags="${BOOST_LFLAGS}" --prefix="../boost-install" -j $NUMBER_OF_ASYNC_JOBS
 
 popd >/dev/null
 
@@ -103,7 +143,7 @@ popd >/dev/null
 # Get protobuf source
 if [[ ! -d "protobuf-source" ]]; then
   echo "Retrieving protobuf..."
-  git clone --depth=1 -b v3.3.0  https://github.com/google/protobuf.git protobuf-source
+  git clone --depth=1 -b v3.3.0 --recurse-submodules https://github.com/google/protobuf.git protobuf-source
 else
   echo "Folder protobuf-source already exists, skipping git clone..."
 fi
@@ -118,9 +158,10 @@ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$PWD/../llvm-install/lib/"
     CXX="clang++-3.9" \
     CXXFLAGS="-fPIC -stdlib=libc++ -I$PWD/../llvm-install/include/c++/v1" \
     LDFLAGS="-stdlib=libc++ -L$PWD/../llvm-install/lib/" \
-    --prefix="$PWD/../protobuf-install"
-make
-make install
+    --prefix="$PWD/../protobuf-install" \
+    --disable-shared
+make -j $NUMBER_OF_ASYNC_JOBS
+make -j $NUMBER_OF_ASYNC_JOBS install
 
 popd >/dev/null
 
@@ -171,7 +212,7 @@ fi
 # ==============================================================================
 
 echo
-./Update.sh $@
+./Update.sh $UPDATE_SCRIPT_FLAGS
 
 # ==============================================================================
 # -- ...and we are done --------------------------------------------------------
