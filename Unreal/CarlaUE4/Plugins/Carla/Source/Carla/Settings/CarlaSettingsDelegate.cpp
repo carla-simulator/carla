@@ -194,7 +194,7 @@ void UCarlaSettingsDelegate::SetAllRoads(UWorld* world, const float max_draw_dis
     for(int32 i=0; i<actors.Num(); i++)
     {
       AActor* actor = actors[i];
-      if(!IsValid(actor) || actor->IsPendingKillPending()) continue;
+      if(!IsValid(actor) || actor->IsPendingKill()) continue;
       TArray<UActorComponent*> components = actor->GetComponentsByClass(UStaticMeshComponent::StaticClass());
       for(int32 j=0; j<components.Num(); j++)
       {
@@ -262,7 +262,7 @@ void UCarlaSettingsDelegate::SetAllActorsDrawDistance(UWorld* world, const float
     for(int32 i=0; i<actors.Num(); i++)
     {
       AActor* actor = actors[i];
-      if(!IsValid(actor) || actor->IsPendingKillPending() || 
+      if(!IsValid(actor) || actor->IsPendingKill() || 
         actor->IsA<AInstancedFoliageActor>() || //foliage culling is controlled per instance
         actor->IsA<ALandscape>() || //dont touch landscapes nor roads
         actor->ActorHasTag(UCarlaSettings::CARLA_ROAD_TAG) ||
@@ -283,7 +283,7 @@ void UCarlaSettingsDelegate::SetPostProcessEffectsEnabled(UWorld* world, const b
   for(int32 i=0; i<actors.Num(); i++)
   {
       AActor* actor = actors[i];
-	  if(!IsValid(actor) || actor->IsPendingKillPending()) continue;
+	  if(!IsValid(actor) || actor->IsPendingKill()) continue;
       APostProcessVolume* postprocessvolume = Cast<APostProcessVolume>(actor);
 	  if(postprocessvolume)
 	  {
@@ -342,7 +342,7 @@ void UCarlaSettingsDelegate::SetAllLights(UWorld* world, const float max_distanc
     UGameplayStatics::GetAllActorsOfClass(world, ALight::StaticClass(), actors);
     for(int32 i=0;i<actors.Num();i++)
     {
-    if(!IsValid(actors[i]) || actors[i]->IsPendingKillPending()) continue;
+    if(!IsValid(actors[i]) || actors[i]->IsPendingKill()) continue;
       //tweak directional lights
       ADirectionalLight* directionallight = Cast<ADirectionalLight>(actors[i]);
       if(directionallight)
