@@ -37,7 +37,9 @@ public class Carla : ModuleRules
         "Engine",
         "PhysXVehicles",
         "Slate",
-        "SlateCore"
+        "SlateCore",
+        "Landscape",
+        "Foliage"
         // ... add private dependencies that you statically link with here ...
       }
       );
