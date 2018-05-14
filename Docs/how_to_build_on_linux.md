@@ -44,7 +44,7 @@ Clone or download the project from our
     $ git clone https://github.com/carla-simulator/carla
 
 Note that the `master` branch contains the latest fixes and features, for the
-latest stable code may be best to switch to the `stable` branch.
+latest stable code may be best to switch to the latest release tag.
 
 Run the setup script to download the content and build all dependencies. It
 takes a while
