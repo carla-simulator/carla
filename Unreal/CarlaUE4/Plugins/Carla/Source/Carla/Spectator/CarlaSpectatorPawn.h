@@ -29,10 +29,10 @@ class ACarlaSpectatorPawn : public ASpectatorPawn
 
 protected:
     UPROPERTY(EditAnywhere)
-    FVector PositionOffset = FVector{0.0f};
+    FVector PositionOffset = {0.0f,0.0f ,0.0f };
 
     UPROPERTY(EditAnywhere)
-    FRotator RotationOffset = FRotator{0.0f};
+    FRotator RotationOffset = {0.0f,0.0f ,0.0f };
 
     USphereComponent* PawnDetectionSphere;
 

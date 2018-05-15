@@ -65,6 +65,8 @@ public:
   }
 
   void RestartLevel();
+  
+  bool PlayerControlVehicle(APlayerController* playercontroller, APawn* pawn);
 
 private:
 

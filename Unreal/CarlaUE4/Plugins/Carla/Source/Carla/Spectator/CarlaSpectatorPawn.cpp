@@ -202,9 +202,19 @@ void ACarlaSpectatorPawn::PossessLookedTarget()
     APlayerController* playercontroller = GEngine->GetFirstLocalPlayerController(GetWorld());
     if(playercontroller->GetPawn()!=LookedTarget)
     {
-      //possess the looked target
-      playercontroller->Possess(LookedTarget);
-      Destroy();
+      //possess the looked target, we ask for permission to the data router to do this
+      if(LookedTarget->IsA<ACarlaWheeledVehicle>())
+      {
+        UCarlaGameInstance *carla = Cast<UCarlaGameInstance>(GetWorld()->GetGameInstance());
+        if (carla)
+        {
+          if(carla->GetDataRouter().PlayerControlVehicle(playercontroller, LookedTarget))
+          {
+            Destroy();
+          }
+        }
+      }
+
     }
   }
 }

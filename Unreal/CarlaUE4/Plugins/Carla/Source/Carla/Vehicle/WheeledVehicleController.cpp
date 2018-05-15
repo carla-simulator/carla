@@ -12,6 +12,10 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "CarlaWheeledVehicle.h"
 #include "Spectator/CarlaSpectatorPawn.h"
+#include "Game/CarlaGameInstance.h"
+#include "Engine/World.h"
+#include "Util/RandomEngine.h"
+#include "GameFramework/PlayerState.h"
 
 // =============================================================================
 // -- Constructor and destructor -----------------------------------------------
@@ -24,12 +28,10 @@ AWheeledVehicleController::AWheeledVehicleController(const FObjectInitializer& O
 
   // Create the spring arm component.
   SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm0"));
-  SpringArm->TargetOffset = FVector(0.f, 0.f, 200.f);
-  SpringArm->SetRelativeRotation(FRotator(-15.f, 0.f, 0.f));
   SpringArm->SetupAttachment(RootComponent);
-  SpringArm->TargetArmLength = 650.0f;
   SpringArm->bEnableCameraRotationLag = true;
   SpringArm->CameraRotationLagSpeed = 7.f;
+  SpringArm->TargetArmLength = 650.0f;
   SpringArm->bInheritPitch = false;
   SpringArm->bInheritRoll = false;
   SpringArm->bInheritYaw = true;
@@ -45,11 +47,10 @@ AWheeledVehicleController::AWheeledVehicleController(const FObjectInitializer& O
 
   // Create the on-board camera component.
   OnBoardCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("OnBoardCamera0"));
-  OnBoardCamera->SetRelativeLocation(FVector(140.f, 0.f, 140.f));
-  OnBoardCamera->SetRelativeRotation(FRotator(-10.f, 0.f, 0.f));
   OnBoardCamera->SetupAttachment(RootComponent);
   OnBoardCamera->bUsePawnControlRotation = false;
   OnBoardCamera->FieldOfView = 100.f;
+  ResetCameras();
 }
 
 AWheeledVehicleController::~AWheeledVehicleController() {}
@@ -89,37 +90,61 @@ void AWheeledVehicleController::SetupInputComponent()
     InputComponent->BindAction("Handbrake", IE_Pressed, this, &AWheeledVehicleController::HoldHandbrake);
     InputComponent->BindAction("Handbrake", IE_Released, this, &AWheeledVehicleController::ReleaseHandbrake);
 
-    /*//Interaction
+    //Interaction
     InputComponent->BindAction("Interact", IE_Pressed, this, &AWheeledVehicleController::InteractButton).bConsumeInput = false;
     InputComponent->BindAction("UseTheForce", IE_Pressed, this, &AWheeledVehicleController::ForceButton).bConsumeInput = false;
 
     //Camera movement with mouse only for spectator mode
     InputComponent->BindAxis("CameraPitch", this, &AWheeledVehicleController::MousePitchCamera).bConsumeInput = false;
     InputComponent->BindAxis("CameraYaw", this, &AWheeledVehicleController::MouseYawCamera).bConsumeInput = false;
-    */
+    
     InputComponent->bBlockInput = false;
 
   }
 }
 
-void AWheeledVehicleController::Possess(APawn *aPawn)
+void AWheeledVehicleController::ResetCameras()
 {
-  Super::Possess(aPawn);
-  if (!IsValid(aPawn)) return;
-  SpringArm->AttachToComponent(
-      aPawn->GetRootComponent(),
-      FAttachmentTransformRules::KeepRelativeTransform);
-  OnBoardCamera->AttachToComponent(
-      aPawn->GetRootComponent(),
-      FAttachmentTransformRules::KeepRelativeTransform);
-  ACarlaSpectatorPawn* spectator = Cast<ACarlaSpectatorPawn>(aPawn);
-  if(spectator)
-  {
-    EnableUserInput(true);
-    spectator->SetCameraSpring(SpringArm);
-    spectator->SetCamera(PlayerCamera);
-  }
+  SpringArm->TargetOffset = FVector(0.f, 0.f, 200.f);
+  SpringArm->SetRelativeLocation(FVector(-702.0f, 0.0f, 193.2f));
+  SpringArm->SetRelativeRotation(FRotator(-15.f, 0.f, 0.f));
+  OnBoardCamera->SetRelativeLocation(FVector(140.f, 0.f, 140.f));
+  OnBoardCamera->SetRelativeRotation(FRotator(-10.f, 0.f, 0.f));
 }
+
+void AWheeledVehicleController::Possess(APawn* aPawn)
+{
+  if (!IsValid(aPawn)) return;
+  Super::Possess(aPawn);
+  SpringArm->AttachToComponent(aPawn->GetRootComponent(),FAttachmentTransformRules::KeepRelativeTransform);
+  OnBoardCamera->AttachToComponent(aPawn->GetRootComponent(),FAttachmentTransformRules::KeepRelativeTransform);
+  ResetCameras();
+}
+
+void AWheeledVehicleController::UnPossess()
+{
+  Super::UnPossess();
+  APawn *pawn = GetPawn();
+  if (!pawn) return;
+  SpringArm->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
+  OnBoardCamera->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform); 
+}
+
+void AWheeledVehicleController::StartSpectatingOnly()
+{
+    Super::StartSpectatingOnly();
+}
+
+void AWheeledVehicleController::StopSpectatingOnly()
+{
+    ChangeState(NAME_Playing);
+    PlayerState->bIsSpectator = false;
+    PlayerState->bOnlySpectator = false;
+    bPlayerIsWaiting = false;
+   // ResetCameraMode();
+    ResetCameras();
+}
+
 
 void AWheeledVehicleController::CalcCamera(float DeltaTime, FMinimalViewInfo& OutResult)
 {
@@ -258,11 +283,49 @@ void AWheeledVehicleController::ReleaseHandbrake()
 
 void AWheeledVehicleController::InteractButton()
 {
-  if (!bAllowUserInput) return;
-  ACarlaSpectatorPawn* carlaspectator = Cast<ACarlaSpectatorPawn>(GetPawn());
-  if (IsValid(carlaspectator))
+  if (!bAllowUserInput) return; 
+  UCarlaGameInstance *carla = Cast<UCarlaGameInstance>(GetWorld()->GetGameInstance());
+  if (carla)
   {
-    carlaspectator->PossessLookedTarget();
+    ACarlaSpectatorPawn* carlaspectator = Cast<ACarlaSpectatorPawn>(GetSpectatorPawn());
+    if (IsValid(carlaspectator))
+    {
+      APawn* lookedtarget = carlaspectator->GetLookedTarget();
+      if (lookedtarget!=nullptr && carlaspectator != lookedtarget)
+      {
+        if (lookedtarget->IsA<ACarlaWheeledVehicle>() && carla->GetDataRouter().PlayerControlVehicle(this, lookedtarget))
+        {
+          ResetCameras();
+          carlaspectator->Destroy();
+        }
+      }
+    }
+    else
+    {
+      SetAutopilot(false);
+      APawn *currentPawn = GetPawn();
+      if(currentPawn)
+      {
+        if (currentPawn->GetController()) currentPawn->GetController()->UnPossess();
+        currentPawn->AIControllerClass = AWheeledVehicleAIController::StaticClass();
+        currentPawn->SpawnDefaultController();
+        AWheeledVehicleAIController* controller = Cast<AWheeledVehicleAIController>(currentPawn->GetController());
+        if (controller)
+        {
+          controller->GetRandomEngine()->Seed(GetRandomEngine()->GenerateSeed());
+          controller->SetRoadMap(GetRoadMap());
+          controller->SetAutopilot(true);
+        }
+      }
+      StartSpectatingOnly();
+      carlaspectator = Cast<ACarlaSpectatorPawn>(GetSpectatorPawn());
+      check(carlaspectator);
+      Possess(carlaspectator);
+      carlaspectator->SetCameraSpring(SpringArm);
+      carlaspectator->SetCamera(PlayerCamera);
+      ResetCameras();
+      
+    }
   }
 }
 

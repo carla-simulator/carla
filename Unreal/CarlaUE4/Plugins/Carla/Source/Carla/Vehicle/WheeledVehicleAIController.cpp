@@ -12,8 +12,6 @@
 
 #include "EngineUtils.h"
 #include "GameFramework/Pawn.h"
-#include "GameFramework/PlayerState.h"
-#include "Spectator/CarlaSpectatorPawn.h"
 
 // =============================================================================
 // -- Static local methods -----------------------------------------------------
@@ -120,19 +118,6 @@ void AWheeledVehicleAIController::Tick(const float DeltaTime)
   }
 }
 
-void AWheeledVehicleAIController::StartSpectatingOnly()
-{
-  Super::StartSpectatingOnly();
-}
-
-void AWheeledVehicleAIController::StopSpectatingOnly()
-{ 
-  
-  ChangeState(NAME_Playing);
-  PlayerState->bIsSpectator = false;
-  PlayerState->bOnlySpectator = false;
-  bPlayerIsWaiting = true;
-}
 
 // =============================================================================
 // -- Autopilot ----------------------------------------------------------------

@@ -11,6 +11,11 @@
 
 #include "Components/BoxComponent.h"
 #include "Engine/CollisionProfile.h"
+#include "WheeledVehicleController.h"
+#include "WheeledVehicleMovementComponent.h"
+#include "Util/RandomEngine.h"
+#include "Kismet/GameplayStatics.h"
+#include "VehicleSpawnerBase.h"
 
 // =============================================================================
 // -- Constructor and destructor -----------------------------------------------

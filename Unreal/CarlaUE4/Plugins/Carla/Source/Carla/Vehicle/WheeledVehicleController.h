@@ -49,7 +49,17 @@ public:
 
   virtual void SetupInputComponent() override;
 
+  void ResetCameras();
+
   virtual void Possess(APawn *aPawn) override;
+
+  virtual void UnPossess() override;
+
+  UFUNCTION(BlueprintCallable)
+  virtual void StartSpectatingOnly() override;
+
+  UFUNCTION(BlueprintCallable)
+  void StopSpectatingOnly();
 
   virtual void CalcCamera(float DeltaTime, FMinimalViewInfo& OutResult) override;
 
