@@ -35,7 +35,8 @@ AWheeledVehicleController::AWheeledVehicleController(const FObjectInitializer& O
   SpringArm->bInheritPitch = false;
   SpringArm->bInheritRoll = false;
   SpringArm->bInheritYaw = true;
-
+  InitialSpringArmPosition = SpringArm->RelativeLocation;
+  InitialSpringArmRotation = SpringArm->RelativeRotation;
   // Do not collide, may clip into level.
   SpringArm->bDoCollisionTest = false;
 
@@ -50,6 +51,7 @@ AWheeledVehicleController::AWheeledVehicleController(const FObjectInitializer& O
   OnBoardCamera->SetupAttachment(RootComponent);
   OnBoardCamera->bUsePawnControlRotation = false;
   OnBoardCamera->FieldOfView = 100.f;
+
   ResetCameras();
 }
 
@@ -106,8 +108,8 @@ void AWheeledVehicleController::SetupInputComponent()
 void AWheeledVehicleController::ResetCameras()
 {
   SpringArm->TargetOffset = FVector(0.f, 0.f, 200.f);
-  SpringArm->SetRelativeLocation(FVector(-702.0f, 0.0f, 193.2f));
-  SpringArm->SetRelativeRotation(FRotator(-15.f, 0.f, 0.f));
+  SpringArm->SetRelativeLocation(InitialSpringArmPosition); // FVector(-702.0f, 0.0f, 193.2f));
+  SpringArm->SetRelativeRotation(InitialSpringArmRotation); // FRotator(-15.f, 0.f, 0.f));
   OnBoardCamera->SetRelativeLocation(FVector(140.f, 0.f, 140.f));
   OnBoardCamera->SetRelativeRotation(FRotator(-10.f, 0.f, 0.f));
 }

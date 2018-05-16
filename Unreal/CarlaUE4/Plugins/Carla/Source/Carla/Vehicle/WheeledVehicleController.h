@@ -141,4 +141,9 @@ private:
 
   UPROPERTY(Category = "Vehicle User Input", VisibleAnywhere)
   bool bAllowUserInput = false;
+
+  FVector InitialSpringArmPosition = {0.0f,0.0f,0.0f};
+
+  FRotator InitialSpringArmRotation = { 0.0f,0.0f,0.0f };
+
 };

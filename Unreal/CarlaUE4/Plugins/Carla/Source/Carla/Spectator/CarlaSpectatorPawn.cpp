@@ -236,9 +236,9 @@ void ACarlaSpectatorPawn::SetFollowTarget(APawn* Pawn)
     FollowedTarget = Pawn;
     if(CameraSpringArm)
     {
-      CameraSpringArm->SocketOffset = FVector(0.0, 30.f, 0.0);
+      /*CameraSpringArm->SocketOffset = FVector(0.0, 30.f, 0.0);
       CameraSpringArm->TargetArmLength = 500.0f;
-      CameraSpringArm->TargetOffset = FVector(170.0f,-8.f, 375.0f);
+      CameraSpringArm->TargetOffset = FVector(170.0f,-8.f, 375.0f);*/
     }
   }
 }
