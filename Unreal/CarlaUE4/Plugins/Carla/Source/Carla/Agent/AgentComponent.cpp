@@ -17,9 +17,9 @@
 static FDataRouter &GetDataRouter(UWorld *World)
 {
   check(World != nullptr);
-  ACarlaGameModeBase *GameMode = Cast<ACarlaGameModeBase>(World->GetAuthGameMode());
-  check(GameMode != nullptr);
-  return GameMode->GetDataRouter();
+  UCarlaGameInstance *GameInstance = Cast<UCarlaGameInstance>(UGameplayStatics::GetGameInstance(World));
+  check(GameInstance != nullptr);
+  return GameInstance->GetDataRouter();
 }
 
 UAgentComponent::UAgentComponent(const FObjectInitializer& ObjectInitializer)

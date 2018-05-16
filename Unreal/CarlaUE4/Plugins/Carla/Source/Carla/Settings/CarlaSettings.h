@@ -156,9 +156,9 @@ public:
   /// @{
 public:
 
-  /** Display name of the current map. */
+  /** Level name to load in the reset time */
   UPROPERTY(Category = "Level Settings", VisibleAnywhere)
-  FString MapName;
+  FString MapName = "";
 
   /** Path to the pawn class of the player. */
   UPROPERTY(Category = "Level Settings", VisibleAnywhere)
