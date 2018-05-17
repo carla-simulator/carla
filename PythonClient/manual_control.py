@@ -144,10 +144,11 @@ class CarlaGame(object):
         self._lidar_measurement = None
         self._map_view = None
         self._is_on_reverse = False
-        self._city_name = args.map_name
-        self._map = CarlaMap(self._city_name, 0.1643, 50.0) if self._city_name is not None else None
-        self._map_shape = self._map.map_image.shape if self._city_name is not None else None
-        self._map_view = self._map.get_map(WINDOW_HEIGHT) if self._city_name is not None else None
+        self._display_map = args.map
+        self._city_name = None
+        self._map = None
+        self._map_shape = None
+        self._map_view = None
         self._position = None
         self._agent_positions = None
 
@@ -166,9 +167,16 @@ class CarlaGame(object):
             pygame.quit()
 
     def _initialize_game(self):
+        self._on_new_episode()
+
         if self._city_name is not None:
+            self._map = CarlaMap(self._city_name, 0.1643, 50.0)
+            self._map_shape = self._map.map_image.shape
+            self._map_view = self._map.get_map(WINDOW_HEIGHT)
+
+            extra_width = int((WINDOW_HEIGHT/float(self._map_shape[0]))*self._map_shape[1])
             self._display = pygame.display.set_mode(
-                (WINDOW_WIDTH + int((WINDOW_HEIGHT/float(self._map.map_image.shape[0]))*self._map.map_image.shape[1]), WINDOW_HEIGHT),
+                (WINDOW_WIDTH + extra_width, WINDOW_HEIGHT),
                 pygame.HWSURFACE | pygame.DOUBLEBUF)
         else:
             self._display = pygame.display.set_mode(
@@ -176,12 +184,13 @@ class CarlaGame(object):
                 pygame.HWSURFACE | pygame.DOUBLEBUF)
 
         logging.debug('pygame started')
-        self._on_new_episode()
 
     def _on_new_episode(self):
         self._carla_settings.randomize_seeds()
         self._carla_settings.randomize_weather()
         scene = self.client.load_settings(self._carla_settings)
+        if self._display_map:
+            self._city_name = scene.map_name
         number_of_player_starts = len(scene.player_start_spots)
         player_start = np.random.randint(number_of_player_starts)
         print('Starting new episode...')
@@ -397,13 +406,11 @@ def main():
         choices=['Low', 'Epic'],
         type=lambda s: s.title(),
         default='Epic',
-        help='graphics quality level, a lower level makes the simulation run considerably faster.')
+        help='graphics quality level, a lower level makes the simulation run considerably faster')
     argparser.add_argument(
-        '-m', '--map-name',
-        metavar='M',
-        default=None,
-        help='plot the map of the current city (needs to match active map in '
-             'server, options: Town01 or Town02)')
+        '-m', '--map',
+        action='store_true',
+        help='plot the map of the current city')
     args = argparser.parse_args()
 
     log_level = logging.DEBUG if args.debug else logging.INFO

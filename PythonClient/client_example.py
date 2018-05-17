@@ -103,7 +103,7 @@ def run_carla_client(args):
             # Notify the server that we want to start the episode at the
             # player_start index. This function blocks until the server is ready
             # to start the episode.
-            print('Starting new episode...')
+            print('Starting new episode at %r...' % scene.map_name)
             client.start_episode(player_start)
 
             # Iterate every frame in the episode.

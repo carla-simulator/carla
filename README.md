@@ -5,6 +5,12 @@ CARLA Simulator
 [![Documentation](https://readthedocs.org/projects/carla/badge/?version=latest)](http://carla.readthedocs.io)
 [![Waffle.io](https://badge.waffle.io/carla-simulator/carla.svg?columns=Next,In%20Progress,Review)](https://waffle.io/carla-simulator/carla)
 
+[![carla.org](Docs/img/btn/web.png)](http://carla.org)
+[![download](Docs/img/btn/download.png)](https://github.com/carla-simulator/carla/releases/latest)
+[![documentation](Docs/img/btn/docs.png)](http://carla.readthedocs.io)
+[![discord](Docs/img/btn/chat.png)](https://discord.gg/vNVHXfb)
+<!-- [![forum](Docs/img/btn/forum.png)](link here) -->
+
 CARLA is an open-source simulator for autonomous driving research. CARLA has
 been developed from the ground up to support development, training, and
 validation of autonomous urban driving systems. In addition to open-source code
@@ -14,11 +20,6 @@ simulation platform supports flexible specification of sensor suites and
 environmental conditions.
 
 [![CARLA Video](Docs/img/video_thumbnail.png)](https://youtu.be/Hp8Dz-Zek2E)
-
-[Get the latest release here.](https://github.com/carla-simulator/carla/releases/latest)
-
-For instructions on how to use and compile CARLA, check out
-[CARLA Documentation](http://carla.readthedocs.io).
 
 If you want to benchmark your model in the same conditions as in our CoRL’17
 paper, check out
@@ -68,7 +69,7 @@ Building CARLA
 
 Use `git clone` or download the project from this page. Note that the master
 branch contains the latest fixes and features, for the latest stable code may be
-best to switch to the `stable` branch.
+best to switch to the latest release tag.
 
 Then follow the instruction at [How to build on Linux][buildlink].
 

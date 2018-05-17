@@ -103,6 +103,7 @@ message RequestNewEpisode {
 }
 
 message SceneDescription {
+  string map_name = 3;
   repeated Transform player_start_spots = 1;
   repeated Sensor sensors = 2;
 }
