@@ -1,18 +1,36 @@
 @echo off
 
-msg * "Sorry, this script is currently unavailable."
-exit
+setlocal
 
-rem echo Deleting intermediate folders...
-rem FOR %%G IN (Binaries,Intermediate,Plugins\Carla\Binaries,Plugins\Carla\Intermediate) DO (if exist %%G ( rmdir /s/q %%G ))
+set LOCAL_PATH=%~dp0
 
-rem echo Making CarlaServer...
-rem call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
-rem Visual Studio 2017 Enterprise:
-rem call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" 
-rem START /wait cmd.exe /k "cd Plugins\Carla & make clean default & pause & exit"
+set LIB_FOLDER=%LOCAL_PATH%Util\Build\
+set CARLA_FOLDER=%LOCAL_PATH%Unreal\CarlaUE4\
 
+if not exist "%LIB_FOLDER%" (
+	echo Creating %LIB_FOLDER% folder...
+	mkdir %LIB_FOLDER%
+)
 
+echo Deleting intermediate folders...
+for %%G in (
+	"%CARLA_FOLDER%Binaries",
+	"%CARLA_FOLDER%Intermediate",
+	"%CARLA_FOLDER%Plugins\Carla\Binaries",
+	"%CARLA_FOLDER%Plugins\Carla\Intermediate"
+) do (
+	if exist %%G (
+		echo Deleting: %%G
+		rmdir /s/q %%G
+	)
+)
 
-rem echo Launch editor...
-rem start CarlaUE4.uproject
+echo.
+echo Building carlaserver...
+make clean & make
+
+echo.
+echo Launch editor...
+start %CARLA_FOLDER%CarlaUE4.uproject
+
+endlocal
