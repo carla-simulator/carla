@@ -37,7 +37,7 @@ private:
   bool ShootLaser(uint32 Channel, float HorizontalAngle, FVector &Point) const;
 
   UPROPERTY(Category = "Lidar", VisibleAnywhere)
-  const ULidarDescription *Description;
+  const ULidarDescription *Description = nullptr;
 
   TArray<float> LaserAngles;
 

@@ -37,6 +37,7 @@ public:
   ErrorCode ReadNewEpisode(FString &IniFile, bool bBlocking);
 
   ErrorCode SendSceneDescription(
+      const FString &MapName,
       const TArray<APlayerStart *> &AvailableStartSpots,
       const TArray<USensorDescription *> &SensorDescriptions,
       bool bBlocking);

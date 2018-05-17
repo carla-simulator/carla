@@ -84,6 +84,8 @@ TEST(CarlaServerAPI, SimBlocking) {
     {
       test_log("sending scene description...");
       const carla_scene_description values{
+          // cppcheck-suppress constStatement
+          "TestTown01",
           start_locations,
           SIZE_OF_ARRAY(start_locations),
           sensor_definitions,

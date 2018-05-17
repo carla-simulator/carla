@@ -24,18 +24,6 @@ static constexpr float TO_METERS = 1e-2;
 // -- Static local methods -----------------------------------------------------
 // =============================================================================
 
-static auto MakeCharBuffer(const FString &String)
-{
-  const char *Ptr = TCHAR_TO_UTF8(*String);
-  auto Buffer = MakeUnique<char[]>(std::strlen(Ptr) + 1u); // + null terminator.
-  #if defined(_WIN32)
-  strcpy_s(Buffer.Get(),String.Len()+1, Ptr);
-  #else
-  std::strcpy(Buffer.Get(), Ptr);
-  #endif
-  return TUniquePtr<const char[]>(Buffer.Release());
-}
-
 static void Encode(const FVector &Vector, carla_vector3d &Data)
 {
   Data = {Vector.X, Vector.Y, Vector.Z};
@@ -67,7 +55,7 @@ static TUniquePtr<const char[]> Encode(
       else return CARLA_SERVER_SENSOR_UNKNOWN;
 #undef CARLA_CHECK_TYPE
   }(SensorDescription.Type);
-  auto Memory = MakeCharBuffer(SensorDescription.Name);
+  auto Memory = FCarlaEncoder::Encode(SensorDescription.Name);
   Data.name = Memory.Get();
   return Memory;
 }
@@ -75,6 +63,18 @@ static TUniquePtr<const char[]> Encode(
 // =============================================================================
 // -- FCarlaEncoder static methods ---------------------------------------------
 // =============================================================================
+
+TUniquePtr<const char[]> FCarlaEncoder::Encode(const FString &String)
+{
+  const char *Ptr = TCHAR_TO_UTF8(*String);
+  auto Buffer = MakeUnique<char[]>(std::strlen(Ptr) + 1u); // + null terminator.
+#if defined(_WIN32)
+  strcpy_s(Buffer.Get(),String.Len()+1, Ptr);
+#else
+  std::strcpy(Buffer.Get(), Ptr);
+#endif
+  return TUniquePtr<const char[]>(Buffer.Release());
+}
 
 void FCarlaEncoder::Encode(
     const TArray<APlayerStart *> &AvailableStartSpots,

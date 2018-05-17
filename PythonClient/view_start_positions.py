@@ -13,6 +13,7 @@ from __future__ import print_function
 
 import argparse
 import logging
+import sys
 import time
 
 import matplotlib.image as mpimg
@@ -36,16 +37,13 @@ def view_start_positions(args):
         scene = client.load_settings(CarlaSettings())
         print("Received the start positions")
 
-        # We get the number of player starts, in order to detect the city.
-        number_of_player_starts = len(scene.player_start_spots)
-        if number_of_player_starts > 100:  # WARNING: unsafe way to check for city, see issue #313
-            image = mpimg.imread("carla/planner/Town01.png")
-            carla_map = CarlaMap('Town01', 0.1653, 50)
-
-        else:
-
-            image = mpimg.imread("carla/planner/Town02.png")
-            carla_map = CarlaMap('Town02', 0.1653, 50)
+        try:
+            image = mpimg.imread('carla/planner/%s.png' % scene.map_name)
+            carla_map = CarlaMap(scene.map_name, 0.1653, 50)
+        except IOError as exception:
+            logging.error(exception)
+            logging.error('Cannot find map "%s"', scene.map_name)
+            sys.exit(1)
 
         fig, ax = plt.subplots(1)
 
