@@ -18,7 +18,8 @@ echo.
 echo  Installing Protobuf...
 call %INSTALLERS_DIR%install_proto.bat %INSTALLATION_DIR%
 
-if not %install_proto%==done (
+if not defined install_proto (
+	echo.
 	echo  Failed while installing Protobuf.
 	goto failed
 )
@@ -27,7 +28,8 @@ echo.
 echo  Installing Boost...
 call %INSTALLERS_DIR%install_boost.bat %INSTALLATION_DIR%
 
-if not %install_boost%==done (
+if not defined install_boost (
+	echo.
 	echo  Failed while installing Boost.
 	goto failed
 )
@@ -63,6 +65,7 @@ FOR /F "tokens=1 delims=:" %%i in (%VERSION_FILE%) do (
 	goto eof
 
 :failed
+	echo.
 	echo  Ok, and error ocurred, don't panic!
 	echo  We have different platforms where you can find some help :)
 	echo.
