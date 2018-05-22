@@ -7,8 +7,24 @@ rem with the x64 Visual C++ Toolset enabled.
 
 setlocal
 
+:arg-parse
+if not "%1"=="" (
+    if "%1"=="-j" (
+        set NUMBER_OF_ASYNC_JOBS=%2
+        shift
+    )
+    if "%1"=="--build-dir" (
+        set BUILD_DIR=%2
+        shift
+    )
+    shift
+    goto :arg-parse
+)
+
+if [%BUILD_DIR%] == [] set BUILD_DIR=.
+if [%NUMBER_OF_ASYNC_JOBS%] == [] set NUMBER_OF_ASYNC_JOBS=1
+
 set LOCAL_PATH=%~dp0
-set BUILD_DIR=%1
 set FILE_N=---%~n0%~x0:
 
 set P_VERSION=v3.3.2
@@ -17,6 +33,10 @@ set P_SRC_DIR=%BUILD_DIR%%P_SRC%
 set P_INSTALL=protobuf-install
 set P_INSTALL_DIR=%BUILD_DIR%%P_INSTALL%
 
+if exist "%P_INSTALL_DIR%" (
+	goto already_build
+)
+
 if not exist "%P_SRC_DIR%" (
 	echo %FILE_N% Cloning Protobuf - version "%P_VERSION%"...
 	echo.
@@ -24,10 +44,6 @@ if not exist "%P_SRC_DIR%" (
 	echo.
 ) else (
 	echo %FILE_N% Not cloning protobuf because already exists a folder called "%P_SRC%".
-)
-
-if exist "%P_INSTALL_DIR%" (
-	goto already_build
 )
 
 if not exist "%P_SRC_DIR%\cmake\build" (
@@ -46,24 +62,45 @@ cmake -G "NMake Makefiles" ^
 	-DCMAKE_INSTALL_PREFIX=%P_INSTALL_DIR% ^
 	%P_SRC_DIR%\cmake
 
+if errorlevel 1 goto error_cmake
+
 echo %FILE_N% Building...
 nmake & nmake install
+
+if errorlevel 1 goto error_install
 
 rem Remove the downloaded protobuf source because is no more needed
 rem if you want to keep the source just delete the following command.
 rem rd /s /q %P_SRC_DIR% 2>nul
 
+goto success
+
 :success
 	echo.
 	echo %FILE_N% Protobuf has been successfully installed in %P_INSTALL_DIR%!
-	goto eof
+	goto good_exit
 
 :already_build
-	echo %FILE_N% Library has already been built.
+	echo %FILE_N% A Protobuf installation already exists.
 	echo %FILE_N% Delete "%P_INSTALL_DIR%" if you want to force a rebuild.
-	goto eof
+	goto good_exit
 
-:eof
+:error_cmake
+	echo %FILE_N% [ERROR] An error ocurred while executing the cmake.
+	goto bad_exit
+
+:error_install
+	echo %FILE_N% [ERROR] An error ocurred while installing.
+	goto bad_exit
+
+:good_exit
 	echo %FILE_N% Exiting...
 	endlocal
 	set install_proto=done
+	goto:EOF
+
+:bad_exit
+	if exist "%B_INSTALL_DIR%" rd /s /q "B_INSTALL_DIR"
+	echo %FILE_N% Exiting with error...
+	endlocal
+	goto:EOF
