@@ -45,8 +45,8 @@ if exist "%B_INSTALL_DIR%" (
 if not exist "%B_SRC_DIR%" (
 	echo %FILE_N% Cloning Boost - version "%B_VERSION%"...
 	echo.
-	call git clone --depth=1 -b %B_VERSION% ^
-		--recurse-submodules -j8 ^
+	call git clone --depth=1 -b %B_VERSION%^
+		--recurse-submodules -j8^
 		https://github.com/boostorg/boost.git %B_SRC_DIR%
 	if errorlevel 1 goto error_git
 	echo.
@@ -66,21 +66,21 @@ echo %FILE_N% Packing headers...
 b2 headers
 
 echo %FILE_N% Building...
-b2 -j8 ^
-	headers ^
-	--layout=versioned ^
-	--with-system ^
-	--with-date_time ^
-	--build-dir=./build ^
-	architecture=x86 ^
-	address-model=64 ^
-	toolset=%B_TOOLSET% ^
-	variant=release ^
-	link=static ^
-	threading=multi ^
-	--prefix=%B_INSTALL_DIR% ^
-	--libdir=%B_LIB_DIR% ^
-	--includedir=%B_INSTALL_DIR% ^
+b2 -j8^
+	headers^
+	--layout=versioned^
+	--with-system^
+	--with-date_time^
+	--build-dir=./build^
+	architecture=x86^
+	address-model=64^
+	toolset=%B_TOOLSET%^
+	variant=release^
+	link=static^
+	threading=multi^
+	--prefix=%B_INSTALL_DIR%^
+	--libdir=%B_LIB_DIR%^
+	--includedir=%B_INSTALL_DIR%^
 	install
 
 if errorlevel 1 goto error_install

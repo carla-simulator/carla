@@ -40,7 +40,9 @@ if exist "%P_INSTALL_DIR%" (
 if not exist "%P_SRC_DIR%" (
 	echo %FILE_N% Cloning Protobuf - version "%P_VERSION%"...
 	echo.
-	call git clone --depth=1 -b %P_VERSION% https://github.com/google/protobuf.git %P_SRC_DIR%
+	call git clone --depth=1 -b %P_VERSION%^
+		--recurse-submodules -j8^
+		https://github.com/google/protobuf.git %P_SRC_DIR%
 	if errorlevel 1 goto error_git
 	echo.
 
@@ -56,12 +58,12 @@ if not exist "%P_SRC_DIR%\cmake\build" (
 cd %P_SRC_DIR%\cmake\build
 
 echo %FILE_N% Generating build...
-cmake -G "NMake Makefiles" ^
-	-DCMAKE_BUILD_TYPE=Release ^
-	-Dprotobuf_BUILD_TESTS=OFF ^
-	-DCMAKE_CXX_FLAGS_RELEASE=/MD ^
-	-Dprotobuf_MSVC_STATIC_RUNTIME=OFF ^
-	-DCMAKE_INSTALL_PREFIX=%P_INSTALL_DIR% ^
+cmake -G "NMake Makefiles"^
+	-DCMAKE_BUILD_TYPE=Release^
+	-Dprotobuf_BUILD_TESTS=OFF^
+	-DCMAKE_CXX_FLAGS_RELEASE=/MD^
+	-Dprotobuf_MSVC_STATIC_RUNTIME=OFF^
+	-DCMAKE_INSTALL_PREFIX=%P_INSTALL_DIR%^
 	%P_SRC_DIR%\cmake
 
 if errorlevel 1 goto error_cmake
