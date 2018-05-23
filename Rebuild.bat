@@ -39,6 +39,13 @@ start %CARLA_FOLDER%CarlaUE4.uproject
 :success
 	goto eof
 
+:error_git
+	echo %FILE_N% [GIT ERROR] An error ocurred while executing the git.
+	echo %FILE_N% [GIT ERROR] Possible causes:
+	echo %FILE_N%              - Make sure "git" is installed.
+	echo %FILE_N%              - Make sure it is available on your Windows "path".
+	goto bad_exit
+
 :compiling_error
 	echo.
 	echo.

@@ -80,9 +80,11 @@ goto success
 :success
 	echo.
 	echo.
-	echo  #############################
-	echo  #         IMPORTANT         #
-	echo  #############################
+	echo  ###########
+	echo  # SUCCESS #
+	echo  ###########
+	echo.
+	echo  IMPORTANT!
 	echo.
 	echo  All the CARLA library dependences should be installed now.
 	echo  (You can remove all "*-src" folders in %INSTALLATION_DIR% directory)
