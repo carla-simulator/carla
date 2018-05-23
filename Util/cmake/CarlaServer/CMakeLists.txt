@@ -61,8 +61,6 @@ if (UNIX)
 elseif (WIN32)
 
   # Setup boost.
-  # add_definitions(-DBOOST_AUTO_LINK_NOMANGLE)
-  # set(Boost_USE_STATIC_LIBS ON)
   include_directories("${CARLA_BOOST_INSTALL_PATH}/boost-1_64")
   file(GLOB Boost_System_Static_Libraries "${CARLA_BOOST_INSTALL_PATH}/lib/libboost_system*.lib")
   file(GLOB Boost_DateTime_Static_Libraries "${CARLA_BOOST_INSTALL_PATH}/lib/libboost_date_time*.lib")

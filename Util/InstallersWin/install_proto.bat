@@ -41,7 +41,9 @@ if not exist "%P_SRC_DIR%" (
 	echo %FILE_N% Cloning Protobuf - version "%P_VERSION%"...
 	echo.
 	call git clone --depth=1 -b %P_VERSION% https://github.com/google/protobuf.git %P_SRC_DIR%
+	if errorlevel 1 goto error_git
 	echo.
+
 ) else (
 	echo %FILE_N% Not cloning protobuf because already exists a folder called "%P_SRC%".
 )
@@ -71,7 +73,7 @@ if errorlevel 1 goto error_install
 
 rem Remove the downloaded protobuf source because is no more needed
 rem if you want to keep the source just delete the following command.
-rem rd /s /q %P_SRC_DIR% 2>nul
+rem rd /s /q %P_SRC_DIR%
 
 goto success
 
@@ -85,12 +87,30 @@ goto success
 	echo %FILE_N% Delete "%P_INSTALL_DIR%" if you want to force a rebuild.
 	goto good_exit
 
+:error_git
+	echo.
+	echo %FILE_N% [GIT ERROR] An error ocurred while executing the git.
+	echo %FILE_N% [GIT ERROR] Possible causes:
+	echo %FILE_N%              - Make sure "git" is installed.
+	echo %FILE_N%              - Make sure it is available on your Windows "path".
+	goto bad_exit
+
 :error_cmake
-	echo %FILE_N% [ERROR] An error ocurred while executing the cmake.
+	echo.
+	echo %FILE_N% [CMAKE ERROR] An error ocurred while executing the cmake.
+	echo %FILE_N% [CMAKE ERROR] Possible causes:
+	echo %FILE_N%                - Make sure "CMake" is installed.
+	echo %FILE_N%                - Make sure it is available on your Windows "path".
 	goto bad_exit
 
 :error_install
-	echo %FILE_N% [ERROR] An error ocurred while installing.
+	echo.
+	echo %FILE_N% [NMAKE ERROR] An error ocurred while installing using NMake.
+	echo %FILE_N% [NMAKE ERROR] Possible causes:
+	echo %FILE_N%                - Make sure you have Visual Studio installed.
+	echo %FILE_N%                - Make sure you have the "x64 Visual C++ Toolset" in your path.
+	echo %FILE_N%                  For example using the "Visual Studio x64 Native Tools Command Prompt",
+	echo %FILE_N%                  or the "vcvarsall.bat".
 	goto bad_exit
 
 :good_exit

@@ -48,6 +48,7 @@ if not exist "%B_SRC_DIR%" (
 	call git clone --depth=1 -b %B_VERSION% ^
 		--recurse-submodules -j8 ^
 		https://github.com/boostorg/boost.git %B_SRC_DIR%
+	if errorlevel 1 goto error_git
 	echo.
 ) else (
 	echo %FILE_N% Not cloning boost because already exists a folder called "%B_SRC%".
@@ -88,7 +89,7 @@ cd %BUILD_DIR%
 
 rem Remove the downloaded protobuf source because is no more needed
 rem if you want to keep the source just delete the following command.
-rem @rd /s /q %B_SRC_DIR% 2>nul
+rem @rd /s /q %B_SRC_DIR%
 
 goto success
 
@@ -102,12 +103,22 @@ goto success
 	echo %FILE_N% Delete "%B_INSTALL_DIR%" if you want to force a rebuild.
 	goto good_exit
 
+:error_git
+	echo.
+	echo %FILE_N% [GIT ERROR] An error ocurred while executing the git.
+	echo %FILE_N% [GIT ERROR] Possible causes:
+	echo %FILE_N%              - Make sure "git" is installed.
+	echo %FILE_N%              - Make sure it is available on your Windows "path".
+	goto bad_exit
+
 :error_bootstrap
-	echo %FILE_N% [ERROR] An error ocurred while executing the "bootstrap.bat".
+	echo.
+	echo %FILE_N% [BOOTSTRAP ERROR] An error ocurred while executing "bootstrap.bat".
 	goto bad_exit
 
 :error_install
-	echo %FILE_N% [ERROR] An error ocurred while installing.
+	echo.
+	echo %FILE_N% [B2 ERROR] An error ocurred while installing using "b2.exe".
 	goto bad_exit
 
 :good_exit
