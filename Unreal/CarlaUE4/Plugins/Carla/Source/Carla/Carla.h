@@ -18,6 +18,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogCarlaServer, Log, All);
 // #define CARLA_ROAD_GENERATOR_EXTRA_LOG
 // #define CARLA_SERVER_EXTRA_LOG
 // #define CARLA_TAGGER_EXTRA_LOG
+// #define CARLA_DEBUG_SPECTATOR
 #endif // WITH_EDITOR
 
 class FCarlaModule : public IModuleInterface

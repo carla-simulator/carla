@@ -42,7 +42,8 @@ protected:
 
     FVector2D MovementInput;
     FVector2D CameraInput;
-   
+    float Speed = 6.0f;
+
     virtual void BeginPlay() override;
 
     virtual void TickFollowingMode(float DeltaTime);
