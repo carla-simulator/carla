@@ -5,7 +5,6 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
-
 #include "Engine/Engine.h"
 #include "Components/InputComponent.h"
 #include "Camera/CameraComponent.h"
@@ -14,7 +13,9 @@
 #include "CarlaSpectatorPawn.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "UObjectIterator.h"
+#ifdef CARLA_DEBUG_SPECTATOR
 #include "DrawDebugHelpers.h"
+#endif
 
 constexpr float TIME_BETWEEN_LOOKS_FOR_TARGETS = 0.1f;
 
@@ -52,7 +53,7 @@ bool ACarlaSpectatorPawn::TraceSphere(const FVector& Start, const FVector& End, 
   HitOut = FHitResult(ForceInit);
   
   const bool result = GetWorld()->SweepSingleByChannel(HitOut,Start,End, FQuat(), TraceChannel,FCollisionShape::MakeSphere(Radius), TraceParams);
-  #if WITH_EDITOR
+  #if WITH_EDITOR && defined(CARLA_DEBUG_SPECTATOR)
     DrawDebugSphere(GetWorld(),HitOut.Location,Radius, 32, FColor::Cyan);
     DrawDebugLine(GetWorld(), Start, End, FColor::Cyan, false, -1, 0, 12.333);
   #endif
@@ -76,15 +77,16 @@ void ACarlaSpectatorPawn::DetectForwardVehiclePawns()
 void ACarlaSpectatorPawn::BeginPlay()
 {
   Super::BeginPlay();
-  GetWorld()->DebugDrawTraceTag = FName(TEXT("SphereTracePawn"));
-  
+  #ifdef CARLA_DEBUG_SPECTATOR
+    GetWorld()->DebugDrawTraceTag = FName(TEXT("SphereTracePawn"));
+  #endif
 }
 
 void ACarlaSpectatorPawn::TickFollowingMode(float DeltaTime)
 {
   if(!IsValid(FollowedTarget)||FollowedTarget->IsPendingKill())
   {
-    UE_LOG(LogCarla, Error, TEXT("CarlaSpectator is not following any target, switching to manual control"))
+    UE_LOG(LogCarla, Warning, TEXT("CarlaSpectator is not following any target, switching to manual control"))
     SetManualControl();
     return;
   }
@@ -120,8 +122,8 @@ void ACarlaSpectatorPawn::TickManualMode(float DeltaTime)
     //Scale our movement input axis values by 100 units per second
     MovementInput = MovementInput.GetSafeNormal() * 100.0f;
     
-    NewLocation += GetActorForwardVector() * MovementInput.X * DeltaTime;
-    NewLocation += GetActorRightVector() * MovementInput.Y * DeltaTime;
+    NewLocation += GetActorForwardVector() * MovementInput.X * DeltaTime * Speed;
+    NewLocation += GetActorRightVector() * MovementInput.Y * DeltaTime * Speed;
     SetActorLocation(NewLocation);
   }
 
@@ -234,12 +236,12 @@ void ACarlaSpectatorPawn::SetFollowTarget(APawn* Pawn)
   {
     ControlMode = ESpectatorControlMode::FOLLOW_CONTROL;
     FollowedTarget = Pawn;
-    if(CameraSpringArm)
+    /*if(CameraSpringArm)
     {
-      /*CameraSpringArm->SocketOffset = FVector(0.0, 30.f, 0.0);
+      CameraSpringArm->SocketOffset = FVector(0.0, 30.f, 0.0);
       CameraSpringArm->TargetArmLength = 500.0f;
-      CameraSpringArm->TargetOffset = FVector(170.0f,-8.f, 375.0f);*/
-    }
+      CameraSpringArm->TargetOffset = FVector(170.0f,-8.f, 375.0f);
+    }*/
   }
 }
 

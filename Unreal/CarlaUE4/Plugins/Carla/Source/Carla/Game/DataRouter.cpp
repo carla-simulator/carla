@@ -58,7 +58,7 @@ bool FDataRouter::PlayerControlVehicle(APlayerController* playercontroller, APaw
     vehicle->Controller = carlavehiclecontroller;
     vehicle->AIControllerClass = ACarlaVehicleController::StaticClass();
     carlavehiclecontroller->SetAutopilot(false);
-    carlavehiclecontroller->SetupInputComponent();
+    //carlavehiclecontroller->SetupInputComponent();
     carlavehiclecontroller->StopSpectatingOnly();
 
   }

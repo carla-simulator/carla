@@ -81,7 +81,7 @@ void AWheeledVehicleController::SetupInputComponent()
     InputComponent->BindAxis("CameraUp", this, &AWheeledVehicleController::ChangeCameraUp);
     InputComponent->BindAxis("CameraRight", this, &AWheeledVehicleController::ChangeCameraRight);
     InputComponent->BindAction("ToggleCamera", IE_Pressed, this, &AWheeledVehicleController::ToggleCamera);
-    InputComponent->BindAction("RestartLevel", IE_Pressed, this, &AWheeledVehicleController::RestartLevel).bConsumeInput = false;
+    InputComponent->BindAction("RestartLevel", IE_Pressed, this, &AWheeledVehicleController::RestartLevel); // .bConsumeInput = false;
 
     // Vehicle or spectator movement.
     InputComponent->BindAction("ToggleAutopilot", IE_Pressed, this, &AWheeledVehicleAIController::ToggleAutopilot);
@@ -93,8 +93,8 @@ void AWheeledVehicleController::SetupInputComponent()
     InputComponent->BindAction("Handbrake", IE_Released, this, &AWheeledVehicleController::ReleaseHandbrake);
 
     //Interaction
-    InputComponent->BindAction("Interact", IE_Pressed, this, &AWheeledVehicleController::InteractButton).bConsumeInput = false;
-    InputComponent->BindAction("UseTheForce", IE_Pressed, this, &AWheeledVehicleController::ForceButton).bConsumeInput = false;
+    InputComponent->BindAction("Interact", IE_Released, this, &AWheeledVehicleController::InteractButton); // .bConsumeInput = false;
+    InputComponent->BindAction("UseTheForce", IE_Pressed, this, &AWheeledVehicleController::ForceButton); // .bConsumeInput = false;
 
     //Camera movement with mouse only for spectator mode
     InputComponent->BindAxis("CameraPitch", this, &AWheeledVehicleController::MousePitchCamera).bConsumeInput = false;
@@ -143,7 +143,6 @@ void AWheeledVehicleController::StopSpectatingOnly()
     PlayerState->bIsSpectator = false;
     PlayerState->bOnlySpectator = false;
     bPlayerIsWaiting = false;
-   // ResetCameraMode();
     ResetCameras();
 }
 
@@ -297,6 +296,7 @@ void AWheeledVehicleController::InteractButton()
       {
         if (lookedtarget->IsA<ACarlaWheeledVehicle>() && carla->GetDataRouter().PlayerControlVehicle(this, lookedtarget))
         {
+          StopSpectatingOnly();
           ResetCameras();
           carlaspectator->Destroy();
         }
