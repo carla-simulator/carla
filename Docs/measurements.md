@@ -27,17 +27,18 @@ time-stamp keeps the actual time elapsed.
 Player measurements
 -------------------
 
-Key                        | Type      | Units  | Description
--------------------------- | --------- | ------ | ------------
-transform                  | Transform |        | World transform of the player (contains a locations and a rotation).
-acceleration               | Vector3D  | m/s^2  | Current acceleration of the player.
-forward_speed              | float     | m/s    | Forward speed of the player.
-collision_vehicles         | float     | kg*m/s | Collision intensity with other vehicles.
-collision_pedestrians      | float     | kg*m/s | Collision intensity with pedestrians.
-collision_other            | float     | kg*m/s | General collision intensity (everything else but pedestrians and vehicles).
-intersection_otherlane     | float     |        | Percentage of the car invading other lanes.
-intersection_offroad       | float     |        | Percentage of the car off-road.
-autopilot_control          | Control   |        | Vehicle's autopilot control that would apply this frame.
+Key                        | Type        | Units  | Description
+-------------------------- | ----------- | ------ | ------------
+transform                  | Transform   |        | World transform of the player (contains a locations and a rotation).
+bounding_box               | BoundingBox |        | Bounding box of the player.
+acceleration               | Vector3D    | m/s^2  | Current acceleration of the player.
+forward_speed              | float       | m/s    | Forward speed of the player.
+collision_vehicles         | float       | kg*m/s | Collision intensity with other vehicles.
+collision_pedestrians      | float       | kg*m/s | Collision intensity with pedestrians.
+collision_other            | float       | kg*m/s | General collision intensity (everything else but pedestrians and vehicles).
+intersection_otherlane     | float       |        | Percentage of the car invading other lanes.
+intersection_offroad       | float       |        | Percentage of the car off-road.
+autopilot_control          | Control     |        | Vehicle's autopilot control that would apply this frame.
 
 <h4>Transform</h4>
 
@@ -48,6 +49,15 @@ Key                        | Type       | Units   | Description
 location                   | Vector3D   | m       | World location.
 orientation *[deprecated]* | Vector3D   |         | Orientation in Cartesian coordinates.
 rotation                   | Rotation3D | degrees | Pitch, roll, and yaw.
+
+<h4>BoundingBox</h4>
+
+Contains the transform and extent of a bounding box.
+
+Key                        | Type       | Units   | Description
+-------------------------- | ---------- | ------- | ------------
+transform                  | Transform  |         | Transform of the bounding box relative to the vehicle.
+extent                     | Vector3D   | m       | Radii dimensions of the bounding box (half-box).
 
 <h4>Collision</h4>
 
