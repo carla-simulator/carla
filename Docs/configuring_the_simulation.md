@@ -11,13 +11,13 @@ Fixed time-step
 
 The time-step is the _simulation-time_ elapsed between two steps of the
 simulation. In video-games, this _simulation-time_ is almost always adjusted to
-real time for better realism. This is achieved having a **variable time-step**
-that adjusts the simulation to keep up with real-time. In simulations however,
-it is better to detach the _simulation-time_ from real-time, and let the
-simulation run as fast as possible using a **fixed time-step**. Doing so, we are
-not only able to simulate longer periods in less time, but also gain
-repeatability by reducing the float-point arithmetic errors that a variable
-time-step introduces.
+real time for better realism. This is achieved by having a **variable
+time-step** that adjusts the simulation to keep up with real-time. In
+simulations however, it is better to detach the _simulation-time_ from real-
+time, and let the simulation run as fast as possible using a **fixed time-
+step**. Doing so, we are not only able to simulate longer periods in less time,
+but also gain repeatability by reducing the float-point arithmetic errors that a
+variable time-step introduces.
 
 CARLA can be run in both modes.
 
@@ -43,4 +43,43 @@ simulator since this is actually a feature of Unreal Engine.
 Synchronous vs Asynchronous mode
 --------------------------------
 
-> TODO
+The client-simulator communication can be synchronized by using the _synchronous
+mode_. The synchronous mode enables two things
+
+  * The simulator waits for the sensor data to be ready before sending the
+    measurements.
+  * The simulator halts each frame until a control message is received.
+
+This is very useful when dealing with slow client applications, as the
+simulation is halted until the client is ready to continue. This also ensures
+that the generated data of every sensor is received every frame by the client.
+As opposed to _asynchronous mode_, in which the sensor data may arrive a couple
+of frames later or even be lost if the client is not fast enough.
+
+However, there are a couple of caveats to bear in mind when using the
+synchronous mode. First of all, **it is very important to run the simulator at
+fixed time-step when using the synchronous mode**. Otherwise the physics engine
+will try to recompute at once all the time spent waiting for the client, this
+usually results in inconsistent or not very realistic physics.
+
+Secondly, the synchronous mode imposes a significant performance penalty. There
+is a price in waiting for the render thread to have the images ready and halting
+the simulation when the client is slow. There is a trade-off in using the
+synchronous mode.
+
+The synchronous mode can be enabled at the beginning of each episode both in the
+INI file or the Python API
+
+**Python**
+
+```py
+settings = CarlaSettings()
+settings.set(SynchronousMode=True)
+```
+
+**CarlaSettings.ini**
+
+```ini
+[CARLA/Server]
+SynchronousMode=true
+```
