@@ -29,9 +29,9 @@ Player measurements
 
 Key                        | Type        | Units  | Description
 -------------------------- | ----------- | ------ | ------------
-transform                  | Transform   |        | World transform of the player (contains a locations and a rotation).
+transform                  | Transform   |        | World transform of the player (contains a locations and a rotation) respect the car's pivot defined by the artists.
 bounding_box               | BoundingBox |        | Bounding box of the player.
-acceleration               | Vector3D    | m/s^2  | Current acceleration of the player.
+acceleration               | Vector3D    | m/s^2  | Current acceleration of the player respect to the world frame.
 forward_speed              | float       | m/s    | Forward speed of the player.
 collision_vehicles         | float       | kg*m/s | Collision intensity with other vehicles.
 collision_pedestrians      | float       | kg*m/s | Collision intensity with pedestrians.
@@ -160,7 +160,7 @@ for agent in measurements.non_player_agents:
 Key                             | Type      | Description
 ------------------------------- | --------- | ------------
 id                              | uint32    | Agent ID
-vehicle.forward_speed           | float     | Forward speed of the vehicle in m/s
+vehicle.forward_speed           | float     | Forward speed of the vehicle in m/s, is the linear speed projected to the forward vector of the chassis of the vehicle
 vehicle.transform               | Transform | Agent-to-world transform
 vehicle.bounding_box.transform  | Transform | Transform of the bounding box relative to the vehicle
 vehicle.bounding_box.extent     | Vector3D  | Radii dimensions of the bounding box in meters
