@@ -47,7 +47,8 @@ Note that the `master` branch contains the latest fixes and features, for the
 latest stable code may be best to switch to the latest release tag.
 
 Run the setup script to download the content and build all dependencies. It
-takes a while
+takes a while (you can speed up the process by parallelizing the script with the
+`--jobs=8` flag)
 
     $ ./Setup.sh
 
