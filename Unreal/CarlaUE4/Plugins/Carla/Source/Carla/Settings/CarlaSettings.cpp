@@ -111,6 +111,7 @@ static void LoadSettingsFromConfig(
   }
   ConfigFile.GetBool(S_CARLA_SERVER, TEXT("SynchronousMode"), Settings.bSynchronousMode);
   ConfigFile.GetBool(S_CARLA_SERVER, TEXT("SendNonPlayerAgentsInfo"), Settings.bSendNonPlayerAgentsInfo);
+  ConfigFile.GetBool(S_CARLA_SERVER, TEXT("DisableRendering"), Settings.bDisableRendering);
   // LevelSettings.
   ConfigFile.GetString(S_CARLA_LEVELSETTINGS, TEXT("PlayerVehicle"), Settings.PlayerVehicle);
   ConfigFile.GetInt(S_CARLA_LEVELSETTINGS, TEXT("NumberOfVehicles"), Settings.NumberOfVehicles);
@@ -187,24 +188,32 @@ void UCarlaSettings::LoadSettings()
   // Load settings given by command-line arg if provided.
   {
     FString FilePath;
-    if (GetSettingsFilePathFromCommandLine(FilePath)) {
+    if (GetSettingsFilePathFromCommandLine(FilePath))
+    {
       LoadSettingsFromFile(FilePath, true);
     }
   }
   // Override settings from command-line.
   {
-    if (FParse::Param(FCommandLine::Get(), TEXT("carla-server"))) {
+    if (FParse::Param(FCommandLine::Get(), TEXT("carla-server")))
+    {
       bUseNetworking = true;
     }
     uint32 Value;
     if (FParse::Value(FCommandLine::Get(), TEXT("-world-port="), Value) ||
         FParse::Value(FCommandLine::Get(), TEXT("-carla-port="), Value) ||
-        FParse::Value(FCommandLine::Get(), TEXT("-carla-world-port="), Value)) {
+        FParse::Value(FCommandLine::Get(), TEXT("-carla-world-port="), Value))
+    {
       WorldPort = Value;
       bUseNetworking = true;
     }
-    if (FParse::Param(FCommandLine::Get(), TEXT("carla-no-networking"))) {
+    if (FParse::Param(FCommandLine::Get(), TEXT("carla-no-networking")))
+    {
       bUseNetworking = false;
+    }
+    if(FParse::Param(FCommandLine::Get(), TEXT("disable-rendering")))
+    {
+      bDisableRendering = false;
     }
   }
 }
@@ -246,6 +255,7 @@ void UCarlaSettings::LogSettings() const
   UE_LOG(LogCarla, Log, TEXT("Server Time-out = %d ms"), ServerTimeOut);
   UE_LOG(LogCarla, Log, TEXT("Synchronous Mode = %s"), EnabledDisabled(bSynchronousMode));
   UE_LOG(LogCarla, Log, TEXT("Send Non-Player Agents Info = %s"), EnabledDisabled(bSendNonPlayerAgentsInfo));
+  UE_LOG(LogCarla, Log, TEXT("Disable Render World = %s"), bDisableRendering?TEXT("YES"):TEXT("NO"));
   UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_LEVELSETTINGS);
   UE_LOG(LogCarla, Log, TEXT("Player Vehicle        = %s"), (PlayerVehicle.IsEmpty() ? TEXT("Default") : *PlayerVehicle));
   UE_LOG(LogCarla, Log, TEXT("Number Of Vehicles    = %d"), NumberOfVehicles);

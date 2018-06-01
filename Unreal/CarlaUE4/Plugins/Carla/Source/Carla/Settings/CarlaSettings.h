@@ -149,6 +149,10 @@ public:
   UPROPERTY(Category = "CARLA Server", VisibleAnywhere, meta = (EditCondition = bUseNetworking))
   bool bSendNonPlayerAgentsInfo = false;
 
+  /** Enable or disable the viewport rendering of the world. Disabled by default */
+  UPROPERTY(Category = "CARLA Server", VisibleAnywhere)
+  bool bDisableRendering = false;
+
   /// @}
   // ===========================================================================
   /// @name Level Settings
