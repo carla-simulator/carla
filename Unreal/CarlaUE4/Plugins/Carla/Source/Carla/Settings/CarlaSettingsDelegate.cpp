@@ -66,7 +66,7 @@ void UCarlaSettingsDelegate::ApplyQualitySettingsLevelPostRestart()
 	CheckCarlaSettings(nullptr);
 	UWorld *InWorld = CarlaSettings->GetWorld();
   
-    const EQualitySettingsLevel QualitySettingsLevel = CarlaSettings->GetQualitySettingsLevel();
+  const EQualitySettingsLevel QualitySettingsLevel = CarlaSettings->GetQualitySettingsLevel();
 	if(AppliedLowPostResetQualitySettingsLevel==QualitySettingsLevel) return;
 	
 	switch(QualitySettingsLevel)
@@ -97,21 +97,44 @@ void UCarlaSettingsDelegate::ApplyQualitySettingsLevelPostRestart()
 		break;
 	  default: case EQualitySettingsLevel::Epic:
 		{
-	      LaunchEpicQualityCommands(InWorld);
+	    LaunchEpicQualityCommands(InWorld);
 		  SetAllLights(InWorld,0.0f,true,false);
 		  SetAllRoads(InWorld, 0, CarlaSettings->EpicRoadMaterials);
 		  SetAllActorsDrawDistance(InWorld, 0);
 		  SetPostProcessEffectsEnabled(InWorld,true);
 		}
-        break;
+    break;
 	}
 	AppliedLowPostResetQualitySettingsLevel = QualitySettingsLevel;
 }
 
 void UCarlaSettingsDelegate::ApplyQualitySettingsLevelPreRestart()
 {
-	//CheckCarlaSettings(nullptr);
-	/** apply any change in the global config */
+	CheckCarlaSettings(nullptr);
+  UWorld *InWorld = CarlaSettings->GetWorld();
+  if(!IsValid(InWorld)||InWorld->IsPendingKill()) return;
+  //enable or disable world and hud rendering
+  APlayerController* playercontroller = UGameplayStatics::GetPlayerController(InWorld,0);
+  if(playercontroller)
+  {
+    ULocalPlayer* player = playercontroller->GetLocalPlayer();
+    if(player)
+    {
+      player->ViewportClient->bDisableWorldRendering = CarlaSettings->bDisableRendering;
+    }
+    //if we already have a hud class:
+    AHUD* hud = playercontroller->GetHUD();
+    if(hud) 
+    {
+      hud->bShowHUD = !CarlaSettings->bDisableRendering;
+    }
+    //toggle hud: @TODO: find a better solution
+    /*if(CarlaSettings->bDisableRendering)
+    {
+      GEngine->Exec(InWorld,TEXT("showhud"));
+    }*/
+  }
+  
 }
 
 UWorld* UCarlaSettingsDelegate::GetLocalWorld()

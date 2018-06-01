@@ -127,20 +127,29 @@ void ACarlaGameModeBase::RestartPlayer(AController* NewPlayer)
   check(NewPlayer != nullptr);
   TArray<APlayerStart *> UnOccupiedStartPoints;
   APlayerStart *PlayFromHere = FindUnOccupiedStartPoints(NewPlayer, UnOccupiedStartPoints);
+  bool bStartSpotFound = false;
   if (PlayFromHere != nullptr) {
     RestartPlayerAtPlayerStart(NewPlayer, PlayFromHere);
     RegisterPlayer(*NewPlayer);
-    return;
+    bStartSpotFound = true;
   } else if (UnOccupiedStartPoints.Num() > 0u) {
     check(GameController != nullptr);
     APlayerStart *StartSpot = GameController->ChoosePlayerStart(UnOccupiedStartPoints);
     if (StartSpot != nullptr) {
       RestartPlayerAtPlayerStart(NewPlayer, StartSpot);
-      RegisterPlayer(*NewPlayer);
-      return;
+      RegisterPlayer(*NewPlayer);      
+      bStartSpotFound = true;
     }
   }
-  UE_LOG(LogCarla, Error, TEXT("No start spot found!"));
+  if(!bStartSpotFound)
+  {
+    UE_LOG(LogCarla, Error, TEXT("No start spot found!"));
+  }
+  if(CarlaSettingsDelegate!=nullptr) 
+  {
+    //apply quality settings
+    CarlaSettingsDelegate->ApplyQualitySettingsLevelPreRestart();
+  }
 }
 
 void ACarlaGameModeBase::BeginPlay()

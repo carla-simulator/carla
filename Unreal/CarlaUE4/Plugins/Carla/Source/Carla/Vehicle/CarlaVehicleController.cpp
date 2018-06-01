@@ -49,6 +49,8 @@ void ACarlaVehicleController::Possess(APawn *aPawn)
     CarlaHUD = Cast<ACarlaHUD>(GetHUD());
     if (CarlaHUD != nullptr) {
       InputComponent->BindAction("ToggleHUD", IE_Pressed, CarlaHUD, &ACarlaHUD::ToggleHUDView);
+      CarlaHUD->bShowHUD = !(Cast<UCarlaGameInstance>(GetWorld()->GetGameInstance())->GetCarlaSettings().bDisableRendering);
+      CarlaHUD->SetVisible(CarlaHUD->bShowHUD);
     } else {
       UE_LOG(LogCarla, Warning, TEXT("Current HUD is not a ACarlaHUD"));
     }
