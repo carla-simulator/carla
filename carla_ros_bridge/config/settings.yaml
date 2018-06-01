@@ -1,12 +1,12 @@
-# carla original variable name is used unchanged here (i.e CamelCase, etc)
 carla:
   host: localhost
   port: 2000
-  QualityLevel: Epic  # Low or Epic
+  QualityLevel: Low  # Low or Epic
   SynchronousMode: True
+  SendNonPlayerAgentsInfo: True
 
   sensors:
-    CameraRGB:
+    camera_front:
       SensorType: CAMERA
       carla_settings:
         PostProcessing: SceneFinal
@@ -19,23 +19,22 @@ carla:
         RotationPitch: 0
         RotationRoll: 0
         RotationYaw: 0
-#
-#    camera_depth:
-#      SensorType: CAMERA
-#      carla_settings:
-#        PostProcessing: Depth
-#        ImageSizeX: 800
-#        ImageSizeY: 600
-#        FOV: 90
-#        PositionX: 1.80
-#        PositionY: 0
-#        PositionZ: 1.30
-#        RotationPitch: 0
-#        RotationRoll: 0
-#        RotationYaw: 0
-#
-#
-#
+
+    camera_depth:
+      SensorType: CAMERA
+      carla_settings:
+        PostProcessing: Depth
+        ImageSizeX: 320
+        ImageSizeY: 240
+        FOV: 90
+        PositionX: 1.80
+        PositionY: 0
+        PositionZ: 1.30
+        RotationPitch: 0
+        RotationRoll: 0
+        RotationYaw: 0
+
+# Uncomment the following lines if you want to enable lidar publication
 #    lidar_0:
 #      SensorType: LIDAR_RAY_CAST
 #      carla_settings:
@@ -44,7 +43,7 @@ carla:
 #        PointsPerSecond: 200000
 #        RotationFrequency: 25
 #        UpperFovLimit: 1.6
-#        LowerFovLimit: -1.6 
+#        LowerFovLimit: -1.6
 #        PositionX: 0.0
 #        PositionY: 0
 #        PositionZ: 1.50
