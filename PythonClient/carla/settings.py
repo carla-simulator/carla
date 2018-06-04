@@ -36,6 +36,7 @@ class CarlaSettings(object):
         # [CARLA/Server]
         self.SynchronousMode = True
         self.SendNonPlayerAgentsInfo = False
+        self.DisableRendering = False
         # [CARLA/QualitySettings]
         self.QualityLevel = 'Epic'
         # [CARLA/LevelSettings]
@@ -94,7 +95,8 @@ class CarlaSettings(object):
 
         add_section(S_SERVER, self, [
             'SynchronousMode',
-            'SendNonPlayerAgentsInfo'])
+            'SendNonPlayerAgentsInfo',
+			'DisableRendering'])
         add_section(S_QUALITY, self, [
             'QualityLevel'])
         add_section(S_LEVEL, self, [

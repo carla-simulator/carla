@@ -213,7 +213,7 @@ void UCarlaSettings::LoadSettings()
     }
     if(FParse::Param(FCommandLine::Get(), TEXT("disable-rendering")))
     {
-      bDisableRendering = false;
+      bDisableRendering = true;
     }
   }
 }
