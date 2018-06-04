@@ -183,6 +183,34 @@ class CarlaGame(object):
                 self._on_render()
         finally:
             pygame.quit()
+    def get_directions(self, measurements):
+        current_point = measurements.player_measurements.transform
+        end_point = self._player_target_transform
+        directions = self._planner.get_next_command(
+            (current_point.location.x,
+             current_point.location.y, 0.22),
+            (current_point.orientation.x,
+             current_point.orientation.y,
+             current_point.orientation.z),
+            (end_point.location.x, end_point.location.y, 0.22),
+            (end_point.orientation.x, end_point.orientation.y, end_point.orientation.z))
+
+
+
+        waypoints = self.waypointer.get_next_waypoints(
+            (current_point.location.x, current_point.location.y, 22) \
+            , (
+                current_point.orientation.x, current_point.orientation.y,
+                current_point.orientation.z) \
+            , (end_point.location.x, end_point.location.y, end_point.location.z) \
+            , (end_point.orientation.x, end_point.orientation.y, end_point.orientation.z))
+        if waypoints == []:
+            waypoints = [[current_point.location.x, current_point.location.y, 22]]
+
+
+        return directions
+
+
 
     def _initialize_game(self):
         self._on_new_episode()
@@ -259,16 +287,10 @@ class CarlaGame(object):
 
             self._timer.lap()
 
-        current_point = measurements.player_measurements.transform
-        end_point = self._player_target_transform
-        directions = self._planner.get_next_command(
-            (current_point.location.x,
-             current_point.location.y, 0.22),
-            (current_point.orientation.x,
-             current_point.orientation.y,
-             current_point.orientation.z),
-            (end_point.location.x, end_point.location.y, 0.22),
-            (end_point.orientation.x, end_point.orientation.y, end_point.orientation.z))
+
+
+        directions = self.get_directions()
+
 
         # TODO: This is going to be a vector of controls for each agent.
         # TODO: We should select something like the viewport agent.
