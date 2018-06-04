@@ -12,6 +12,8 @@
 #include "Async.h"
 #include "Landscape.h"
 #include "InstancedFoliageActor.h"
+#include "Engine/LocalPlayer.h"
+#include "GameFramework/HUD.h"
 
 ///quality settings configuration between runs
 EQualitySettingsLevel UCarlaSettingsDelegate::AppliedLowPostResetQualitySettingsLevel = EQualitySettingsLevel::Epic;
