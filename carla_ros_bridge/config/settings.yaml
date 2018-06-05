@@ -4,6 +4,9 @@ carla:
   QualityLevel: Low  # Low or Epic
   SynchronousMode: True
   SendNonPlayerAgentsInfo: True
+  NumberOfVehicles: 30
+  NumberOfPedestrians: 10
+  WeatherId: 1
 
   sensors:
     camera_front:
