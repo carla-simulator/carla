@@ -57,12 +57,13 @@ class CarlaRosBridge(object):
         self.param_sensors = params.get('sensors', {})
         self.carla_settings = CarlaSettings()
         self.carla_settings.set(
-            SendNonPlayerAgentsInfo=True,
-            NumberOfVehicles=20,
-            NumberOfPedestrians=40,
-            WeatherId=random.choice([1, 3, 7, 8, 14]),
-            SynchronousMode=params['SynchronousMode'],
-            QualityLevel=params['QualityLevel'])
+            SendNonPlayerAgentsInfo=params.get('SendNonPlayerAgentsInfo', True),
+            NumberOfVehicles=params.get('NumberOfVehicles', 20),
+            NumberOfPedestrians=params.get('NumberOfPedestrians', 40),
+            WeatherId=params.get('WeatherId', random.choice([1, 3, 7, 8, 14])),
+            SynchronousMode=params.get('SynchronousMode', True),
+            QualityLevel=params.get('QualityLevel', 'Low')
+            )
         self.carla_settings.randomize_seeds()
 
     def add_sensor(self, name):
