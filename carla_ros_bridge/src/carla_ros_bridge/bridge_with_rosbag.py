@@ -18,8 +18,8 @@ class CarlaRosBridgeWithBag(CarlaRosBridge):
         self.bag = rosbag.Bag('/tmp/output_{}.bag'.format(timestr), mode='w')
 
     def send_msgs(self):
-        for name, msg in self.message_to_publish:
-            self.bag.write(name, msg, self.cur_time)
+        for publisher, msg in self.msgs_to_publish:
+            self.bag.write(publisher.name, msg, self.cur_time)
 
         tf_msg = TFMessage(self.tf_to_publish)
         self.bag.write('tf', tf_msg, self.cur_time)
