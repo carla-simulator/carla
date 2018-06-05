@@ -62,7 +62,7 @@ from carla.planner.map import CarlaMap
 from carla.settings import CarlaSettings
 from carla.tcp import TCPConnectionError
 from carla.util import print_over_same_line
-from carla.planner import Planner
+from carla.planner import Planner, Waypointer
 from carla.agent import HumanAgent, ForwardAgent, CommandFollower
 
 
@@ -169,6 +169,7 @@ class CarlaGame(object):
         # The target position for the player.
         self._player_target_transform = None
         self._planner = None
+        self._waypointer = None
 
     def execute(self):
         """Launch the PyGame."""
@@ -197,7 +198,7 @@ class CarlaGame(object):
 
 
 
-        waypoints = self.waypointer.get_next_waypoints(
+        waypoints = self._waypointer.get_next_waypoints(
             (current_point.location.x, current_point.location.y, 22) \
             , (
                 current_point.orientation.x, current_point.orientation.y,
@@ -208,7 +209,7 @@ class CarlaGame(object):
             waypoints = [[current_point.location.x, current_point.location.y, 22]]
 
 
-        return directions
+        return directions, waypoints
 
 
 
@@ -230,6 +231,8 @@ class CarlaGame(object):
                 pygame.HWSURFACE | pygame.DOUBLEBUF)
 
         self._planner = Planner(self._city_name)
+
+        self._waypointer = Waypointer(self._city_name)
 
         logging.debug('pygame started')
 
@@ -288,14 +291,15 @@ class CarlaGame(object):
             self._timer.lap()
 
 
-
-        directions = self.get_directions()
+        # function to get directions and waypoints.
+        directions, waypoints = self.get_directions(measurements)
 
 
         # TODO: This is going to be a vector of controls for each agent.
         # TODO: We should select something like the viewport agent.
+
         control = self._controlling_agent.run_step(measurements, sensor_data,
-                                                   directions, self._player_target_transform)
+                                                   waypoints, self._player_target_transform)
         # Set the player position
         if self._city_name is not None:
             self._position = self._map.convert_to_pixel([
@@ -451,7 +455,7 @@ def main():
         action='store_true',
         help='plot the map of the current city')
     argparser.add_argument(
-        '-c', '--controller',
+        '-c', '--controlling_agent',
         default='ForwardAgent',
         help='the controller that is going to be used for the Player')
     args = argparser.parse_args()

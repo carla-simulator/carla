@@ -24,7 +24,17 @@ class CommandFollower(Agent):
 
 
     def run_step(self, measurements, sensor_data, directions, target):
+        """
 
+        Args:
+            measurements: carla measurements for all vehicles
+            sensor_data: the sensor that attached to this vehicle
+            directions: in this case, the directions are waypoints
+            target: the transform of the target.
+
+        Returns:
+
+        """
 
         player = measurements.player_measurements
         agents = measurements.non_player_agents

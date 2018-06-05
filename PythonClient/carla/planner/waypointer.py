@@ -1,12 +1,12 @@
-from carla.planner.planner import Planner
+import random
+import numpy as np
+from numpy import linalg as LA
+
+
 from carla.planner.converter import Converter
 from carla.planner.city_track import CityTrack
-
 from carla.planner.graph import *
-from carla.planner.astar import *
-import numpy as np
-import bezier
-from numpy import linalg as LA
+from carla.planner import bezier
 from PIL import Image
 import math
 import os
@@ -29,12 +29,27 @@ def distance(t1, t2):
 
 class Waypointer(object):
 
-    def __init__(self, config, debug=False):
+    def __init__(self, city_name, debug=False):
+
+
+        dir_path = os.path.dirname(__file__)
+        self.city_file = os.path.join(dir_path , city_name + '.txt')
+        self.city_map_file = os.path.join(dir_path, city_name + '.png')
+        self.city_name = city_name
+
+
+        extra_spacing = (random.randint(0, 4) - 2)
+        self.lane_shift_distance = 13 + extra_spacing  # The amount of shifting from the center the car should go
+        self.extra_spacing_rights = -2 - extra_spacing
+        self.extra_spacing_lefts = 10 + extra_spacing
+        self.way_key_points_predicted = 7
+        self.number_of_waypoints = 30
+
 
         self.debug = debug
 
-        self._converter = Converter(config.city_file, 0.1643, 50.0)
-        self._city_track = CityTrack(config.city_name)
+        self._converter = Converter(self.city_file, 0.1643, 50.0)
+        self._city_track = CityTrack(self.city_name)
         self._map = self._city_track._map
 
         # dir_path = os.path.dirname(__file__)
@@ -63,11 +78,11 @@ class Waypointer(object):
         # self.map_file = config.city_map_file
         # Define here some specific configuration to produce waypoints
         self.last_trajectory = []
-        self.lane_shift_distance = config.lane_shift_distance  # The amount of shifting from the center the car should go
-        self.extra_spacing_rights = config.extra_spacing_rights
-        self.extra_spacing_lefts = config.extra_spacing_lefts
-        self.way_key_points_predicted = config.way_key_points_predicted
-        self.number_of_waypoints = config.number_of_waypoints
+        self.lane_shift_distance = self.lane_shift_distance  # The amount of shifting from the center the car should go
+        self.extra_spacing_rights = self.extra_spacing_rights
+        self.extra_spacing_lefts = self.extra_spacing_lefts
+        self.way_key_points_predicted = self.way_key_points_predicted
+        self.number_of_waypoints = self.number_of_waypoints
         self.previous_map = [0, 0]
 
         if debug:
