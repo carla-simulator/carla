@@ -269,7 +269,7 @@ class Waypointer(object):
 
         return added_walls
 
-    def graph_to_waypoints(self, next_route, source_map_position):
+    def graph_to_waypoints(self, next_route):
 
         # Function to get the unit vector and the cross product.
 
@@ -358,11 +358,11 @@ class Waypointer(object):
 
         # reach the goal
         if track_source == track_target:
-            return self.last_trajectory
+            return self.last_trajectory, self.last_map_points
 
         # This is to avoid computing a new route when inside the route
 
-        distance_node = self._city_track.get_distance_closest_node_turn(track_source)
+        distance_node = self._city_track._closest_intersection_position(track_source)
 
         if self.debug:
             self._write_point_on_map(self._converter.convert_to_pixel(source), [255, 0, 255, 255],
@@ -388,12 +388,11 @@ class Waypointer(object):
                 self.search_image = self._map.map_image.astype(np.uint8)
 
             self.points = self.graph_to_waypoints(
-                self._route[1:(1 + self.way_key_points_predicted)],
-                self._converter.convert_to_pixel(source))
+                self._route[1:(1 + self.way_key_points_predicted)])
             self.last_trajectory, self.last_map_points = self.generate_final_trajectory(
                 [np.array(self._converter.convert_to_pixel(source))] + self.points)
 
-            return self.last_trajectory  # self.generate_final_trajectory([np.array(self.make_map_world(source))] +self.points)
+            return self.last_trajectory, self.last_map_points  # self.generate_final_trajectory([np.array(self.make_map_world(source))] +self.points)
 
 
         else:
@@ -410,8 +409,7 @@ class Waypointer(object):
                     if self.debug:
                         self.search_image = self._map.map_image.astype(np.uint8)
                     self.points = self.graph_to_waypoints(
-                        self._route[1:(1 + self.way_key_points_predicted)],
-                        self._converter.convert_to_pixel(source))
+                        self._route[1:(1 + self.way_key_points_predicted)])
 
                     self.last_trajectory, self.last_map_points = self.generate_final_trajectory(
                         [np.array(self._converter.convert_to_pixel(source))] + self.points)
@@ -456,7 +454,7 @@ class Waypointer(object):
 
                     self._print_trajectory(self.points, [255, 128, 0, 255], 7)
 
-            return self.last_trajectory
+            return self.last_trajectory, self.last_map_points
 
         # This function uses the map to test if some specific position is too close to intersections
 

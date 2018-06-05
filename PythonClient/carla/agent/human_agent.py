@@ -3,6 +3,23 @@
 from carla.agent.agent import Agent
 from carla.client import VehicleControl
 
+try:
+    import pygame
+    from pygame.locals import K_DOWN
+    from pygame.locals import K_LEFT
+    from pygame.locals import K_RIGHT
+    from pygame.locals import K_SPACE
+    from pygame.locals import K_UP
+    from pygame.locals import K_a
+    from pygame.locals import K_d
+    from pygame.locals import K_p
+    from pygame.locals import K_q
+    from pygame.locals import K_s
+    from pygame.locals import K_w
+
+except ImportError:
+    raise RuntimeError('cannot import pygame, make sure pygame package is installed')
+
 
 class HumanAgent(Agent):
 
@@ -10,14 +27,20 @@ class HumanAgent(Agent):
     Derivation of Agent Class for human control,
 
     """
+    def __init__(self):
+        # TODO: add the parameter for a joystick to be used, default keyboard.
+
+        self._is_on_reverse = False
+
+
+
 
     def _get_keyboard_control(self, keys):
         """
         Return a VehicleControl message based on the pressed keys. Return None
         if a new episode was requested.
         """
-        if keys[K_r]:
-            return None
+
         control = VehicleControl()
         if keys[K_LEFT] or keys[K_a]:
             control.steer = -1.0
@@ -31,15 +54,15 @@ class HumanAgent(Agent):
             control.hand_brake = True
         if keys[K_q]:
             self._is_on_reverse = not self._is_on_reverse
-        if keys[K_p]:
-            self._enable_autopilot = not self._enable_autopilot
         control.reverse = self._is_on_reverse
         return control
 
     def run_step(self, measurements, sensor_data, directions, target):
-        control = VehicleControl()
-        control.throttle = 0.9
+        # We basically ignore all the parameters.
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return VehicleControl()
 
-        return control
+        return self._get_keyboard_control(pygame.key.get_pressed())
 
 
