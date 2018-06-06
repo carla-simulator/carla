@@ -5,7 +5,7 @@ CARLA Simulator
 [![Documentation](https://readthedocs.org/projects/carla/badge/?version=latest)](http://carla.readthedocs.io)
 [![Waffle.io](https://badge.waffle.io/carla-simulator/carla.svg?columns=Next,In%20Progress,Review)](https://waffle.io/carla-simulator/carla)
 
-### Carla is hiring! [C++ Programmer](http://www.cvc.uab.es/?p=3853)
+### Carla is hiring! [Software Engineer](http://www.cvc.uab.es/?p=3853)
 
 [![carla.org](Docs/img/btn/web.png)](http://carla.org)
 [![download](Docs/img/btn/download.png)](https://github.com/carla-simulator/carla/releases/latest)
