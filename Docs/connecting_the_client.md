@@ -97,6 +97,6 @@ You can see all the available options in the script's help
 <h4>Running other examples</h4>
 
 The other scripts present in the _"PythonClient"_ folder run in a similar
-fashion. We recommend now launching _"manual_control.py"_ for a GUI interface
+fashion. We recommend now launching _"control_example.py"_ for a GUI interface
 implemented with PyGame.
 
