@@ -118,6 +118,7 @@ if $DO_COPY_FILES ; then
   cp -v ./CHANGELOG.md ${DESTINATION}/CHANGELOG
   cp -v ./Docs/release_readme.md ${DESTINATION}/README
   cp -v ./Docs/Example.CarlaSettings.ini ${DESTINATION}/Example.CarlaSettings.ini
+  cp -v ./Util/Docker/Release.Dockerfile ${DESTINATION}/Dockerfile
 
   rsync -vhr --delete --delete-excluded \
       --exclude "*.egg-info" \
