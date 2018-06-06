@@ -42,7 +42,7 @@ http://wiki.ros.org/ROS/Tutorials/InstallingandConfiguringROSEnvironment
 ## Install carla python client in your workspace
 
     cd carla/PythonClient
-    pip install -e .  --user --upgrade   
+    pip2 install -e .  --user --upgrade   
     
 Check the installation is successfull by trying to import carla from python:
 
@@ -53,7 +53,7 @@ You should see the Success message without any errors.
 ### Install recent protobuf version [optional]
 
     sudo apt-get remove python-protobuf
-    sudo pip install --upgrade protobuf
+    sudo pip2 install --upgrade protobuf
 
     
 ### Add the carla_ros_bridge in the catkin workspace
@@ -64,7 +64,8 @@ Run the following command after replacing [PATH_TO_CARLA] with the actual path t
     source ~/ros/catkin_ws_for_carla/devel/setup.bash
     rosdep update
     rosdep install --from-paths ~/ros/catkin_ws_for_carla
-    catkin_make ~/ros/catkin_ws_for_carla
+    cd ~/ros/catkin_ws_for_carla
+    catkin_make
     
 
 ### Test your installation
@@ -80,7 +81,7 @@ Wait for the message:
     
 Then run the tests
     
-    rostest carla_ros_bridge test/ros_bridge_client.test
+    rostest carla_ros_bridge ros_bridge_client.test
     
 you should see:
 
@@ -104,7 +105,7 @@ Wait for the message:
 
 Then start the ros bridge:
 
-    source ~/catkin_ws/devel/setup.bash
+    source ~/ros/catkin_ws_for_carla/devel/setup.bash
     roslaunch carla_ros_bridge client.launch
     
 To start the ros bridge with rviz use:
@@ -130,13 +131,13 @@ Then you can send command to the car using the /ackermann_cmd topic.
 
 Example of forward movements, speed in in meters/sec.
 
-     rostopic pub /ackerman_cmd ackermann_msgs/AckermannDrive "{steering_angle: 0.0, steering_angle_velocity: 0.0, speed: 10, acceleration: 0.0,
+     rostopic pub /ackermann_cmd ackermann_msgs/AckermannDrive "{steering_angle: 0.0, steering_angle_velocity: 0.0, speed: 10, acceleration: 0.0,
       jerk: 0.0}" -r 10
   
   
 Example of forward with steering
   
-     rostopic pub /ackerman_cmd ackermann_msgs/AckermannDrive "{steering_angle: 5.41, steering_angle_velocity: 0.0, speed: 10, acceleration: 0.0,
+     rostopic pub /ackermann_cmd ackermann_msgs/AckermannDrive "{steering_angle: 5.41, steering_angle_velocity: 0.0, speed: 10, acceleration: 0.0,
       jerk: 0.0}" -r 10
       
   Warning: the steering_angle is the driving angle (in radians) not the wheel angle, for now max wheel is set to 500 degrees.
@@ -144,7 +145,18 @@ Example of forward with steering
   
 Example for backward :
 
-     rostopic pub /ackerman_cmd ackermann_msgs/AckermannDrive "{steering_angle: 0, steering_angle_velocity: 0.0, speed: -10, acceleration: 0.0,
+     rostopic pub /ackermann_cmd ackermann_msgs/AckermannDrive "{steering_angle: 0, steering_angle_velocity: 0.0, speed: -10, acceleration: 0.0,
       jerk: 0.0}" -r 10
-      
+
+
+# ROSBAG recording
+
+The carla_ros_bridge could also be used to record all published topics into a rosbag:
+
+    roslaunch carla_ros_bridge client_with_rviz.launch enable_rosbag:=True
+
+This command will create a rosbag in /tmp/output_{date}.bag
+
+You can of course also use rosbag record to do the same, but using the ros_bridge to do the recording you have the guarentee that all the message are saved without small desynchronization that could occurs when using *rosbag record* in an other process.
+
 
