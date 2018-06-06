@@ -10,7 +10,7 @@
 # and more documented example.
 
 """
-Welcome to CARLA control control.
+Welcome to CARLA control example for humans.
 
 Use ARROWS or WASD keys for control.
 
@@ -22,6 +22,8 @@ Use ARROWS or WASD keys for control.
     P            : toggle autopilot
 
     R            : restart level
+
+If running with map enabled (-m option) try to reach the green dot.
 
 STARTING in a moment...
 """
@@ -43,7 +45,7 @@ from carla.client import make_carla_client
 
 from carla.settings import CarlaSettings
 from carla.tcp import TCPConnectionError
-from game.hud import HUD
+from game.carla_game import CarlaGame
 from carla.planner import Planner, Waypointer
 from carla.agent import HumanAgent, ForwardAgent
 
@@ -196,13 +198,13 @@ def execute(client, args):
     planner = Planner(map_name)
     waypointer = Waypointer(map_name)
 
-
     # Py game goes inside the HUD
-    hud = HUD(args, WINDOW_WIDTH, WINDOW_HEIGHT, MINI_WINDOW_WIDTH, MINI_WINDOW_HEIGHT)
-    hud.initialize_game(map_name)
-    hud.start_timer()
+    carla_game = CarlaGame(args, WINDOW_WIDTH, WINDOW_HEIGHT, MINI_WINDOW_WIDTH, MINI_WINDOW_HEIGHT)
+    carla_game.initialize_game(map_name)
+    carla_game.start_timer()
+    carla_game.set_objective(player_target_transform)
 
-    while hud.is_running():
+    while carla_game.is_running():
 
         # we add the vehicle and the connection outside of the game.
         measurements, sensor_data = client.read_data()
@@ -226,26 +228,26 @@ def execute(client, args):
 
             agents_positions = measurements.non_player_agents
             # Render with the provided map
-            hud.render(sensor_data, player_position=position, goal_position=player_target_transform,
-                       waypoints=waypoints, agents_positions=agents_positions)
+            carla_game.render(sensor_data, player_position=position,
+                              waypoints=None, agents_positions=agents_positions)
         else:
             #  For this case we don't need to plot the position
-            hud.render(sensor_data)
+            carla_game.render(sensor_data)
 
-        if hud.is_reset():
+        if carla_game.is_reset(measurements.player_measurements.transform.location):
             # If you press the reset button, R, starts a new episode
-            new_episode(client, carla_settings)
-            hud.start_timer()
+            player_target_transform, map_name = new_episode(client, carla_settings)
+            carla_game.start_timer()
+            carla_game.set_objective(player_target_transform)
 
         # If you press the autopilot button, P, it changes to autopilot mode.
         # this is DEPRECATED, autopilot will be only client side.
-        if hud.is_autopilot_enabled():
+        if carla_game.is_autopilot_enabled():
             client.send_control(measurements.player_measurements.autopilot_control)
         else:
             client.send_control(control)
 
-        hud.print_measurements(measurements)
-
+        carla_game.print_measurements(measurements)
 
 
 def main():
@@ -296,7 +298,8 @@ def main():
 
     logging.info('listening to server %s:%s', args.host, args.port)
 
-    print(__doc__)
+    if args.controlling_agent == "HumanAgent":
+        print(__doc__)
 
     while True:
         try:
