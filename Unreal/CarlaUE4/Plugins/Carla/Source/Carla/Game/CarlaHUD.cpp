@@ -69,11 +69,12 @@ static FText GetHUDText(const ACarlaPlayerState &Vehicle)
   HighPrecision.MinimumFractionalDigits = 2u;
   HighPrecision.MaximumFractionalDigits = 2u;
 
+  constexpr float TO_MILLISECONDS = 1e3;
   constexpr float TO_METERS = 1e-2;
   constexpr float TO_KMPH = 0.036f;
 
   FFormatNamedArguments Args;
-  Args.Add("FPS", RoundedFloatAsText(Vehicle.GetFramesPerSecond()));
+  Args.Add("SimStep", RoundedFloatAsText(Vehicle.GetSimulationStepInSeconds() * TO_MILLISECONDS));
   Args.Add("Location", GetVectorAsText(Vehicle.GetLocation() * TO_METERS));
   Args.Add("Acceleration", GetVectorAsText(Vehicle.GetAcceleration() * TO_METERS, HighPrecision));
   Args.Add("Orientation", GetVectorAsText(Vehicle.GetOrientation(), HighPrecision));
@@ -88,7 +89,7 @@ static FText GetHUDText(const ACarlaPlayerState &Vehicle)
   Args.Add("IntersectionOffRoad", RoundedFloatAsText(100.0f * Vehicle.GetOffRoadIntersectionFactor()));
   return FText::Format(
       LOCTEXT("HUDTextFormat",
-          "FPS: {FPS}\n"
+          "Simulation Step: {SimStep} ms\n"
           "\n"
           "Speed:         {Speed} km/h\n"
           "Gear:          {Gear}\n"
