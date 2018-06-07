@@ -55,7 +55,7 @@ class testMapChanging(unittest.TestCase):
         # Here we will run 3 episodes with 300 frames each.
 
 
-        with make_carla_client('127.0.0.1', 2000) as client:
+        with make_carla_client('127.0.0.1', 2000, timeout=20) as client:
             print('CarlaClient connected')
 
             # Run Eight episodes

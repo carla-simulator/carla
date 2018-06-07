@@ -28,15 +28,18 @@ public:
 
   virtual void BeginPlay() final;
 
+    
   virtual void Tick(float DeltaSeconds) final;
 
 private:
-
+  bool MapExists(const FString& mapname, bool refreshmapfiles=false);
+  bool IsTheSameLevel();
+  void ChangeLevel(UWorld* world, const FString& mapname);
   void RestartLevel();
 
   const TSharedPtr<FServerSensorDataSink> DataSink;
 
   TSharedPtr<FCarlaServer> Server;
 
-  UCarlaSettings *CarlaSettings = nullptr;
+  UCarlaSettings* CarlaSettings = nullptr;
 };

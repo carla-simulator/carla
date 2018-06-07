@@ -71,23 +71,9 @@ void ACarlaGameModeBase::InitGame(
     }
     if(!CurrentMapName.Equals(CarlaSettings.MapName))
     {
-      static TArray<FString> MapFiles;
-      if (MapFiles.Num() == 0)
-      {//@todo: test this in production
-        IFileManager::Get().FindFilesRecursive(MapFiles, *FPaths::Combine(*FPaths::ProjectContentDir(), TEXT("Maps")), TEXT("*.umap"), true, false, false);
-      }
-      const FRegexPattern MapPattern(*FString::Printf(TEXT("%s\\.umap"), *CarlaSettings.MapName));
-      if (MapFiles.ContainsByPredicate([&](const FString& mapname){return FRegexMatcher(MapPattern, mapname).FindNext();}))
-      {
-        UGameplayStatics::OpenLevel(world, FName(*CarlaSettings.MapName), true, FString(L"?initCARLA=true")); //pass vars
-        //@TODO : will change to streaming in the future
-        //UGameplayStatics::LoadStreamLevel(world, CarlaSettings.MapName,true,true,FLatentActionInfo::);
-        //world->ServerTravel(FString("/Game/Maps/")+CarlaSettings.MapName);
-        return;
-      } 
-
-      UE_LOG(LogCarla, Error, TEXT("The map %s could not be found in the Maps directory, check it out!"), *CarlaSettings.MapName);
-      CarlaSettings.MapName = CurrentMapName;
+      ErrorMessage = "Current Map is not the map in the Settings";
+      UE_LOG(LogCarla, Error, TEXT("The map in CarlaSettings is not the current one: %s !"), *CarlaSettings.MapName);
+      return;
     }
 
     CarlaSettings.LoadWeatherDescriptions();
