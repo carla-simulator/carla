@@ -61,9 +61,9 @@ if (UNIX)
 elseif (WIN32)
 
   # Setup boost.
-  include_directories("${CARLA_BOOST_INSTALL_PATH}")
-  file(GLOB Boost_System_Static_Libraries "${CARLA_BOOST_INSTALL_PATH}/stage/lib/libboost_system*.lib")
-  file(GLOB Boost_DateTime_Static_Libraries "${CARLA_BOOST_INSTALL_PATH}/stage/lib/libboost_date_time*.lib")
+  include_directories("${CARLA_BOOST_INSTALL_PATH}/boost-1_64")
+  file(GLOB Boost_System_Static_Libraries "${CARLA_BOOST_INSTALL_PATH}/lib/libboost_system*.lib")
+  file(GLOB Boost_DateTime_Static_Libraries "${CARLA_BOOST_INSTALL_PATH}/lib/libboost_date_time*.lib")
   set(Boost_Static_Libraries
       "${Boost_System_Static_Libraries}"
       "${Boost_DateTime_Static_Libraries}")

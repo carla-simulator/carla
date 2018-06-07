@@ -46,9 +46,9 @@ public:
   }
 
   UFUNCTION(BlueprintCallable)
-  float GetFramesPerSecond() const
+  float GetSimulationStepInSeconds() const
   {
-    return FramesPerSecond;
+    return SimulationStepInSeconds;
   }
 
   UFUNCTION(BlueprintCallable)
@@ -229,7 +229,7 @@ private:
   uint64 FrameNumber;
 
   UPROPERTY(VisibleAnywhere)
-  float FramesPerSecond;
+  float SimulationStepInSeconds;
 
   UPROPERTY(VisibleAnywhere)
   int32 PlatformTimeStamp;
