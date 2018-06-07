@@ -30,11 +30,19 @@ public:
 
     
   virtual void Tick(float DeltaSeconds) final;
+  /** @param mapname Use full path name or filename without the extension .
+  * @param refreshmapfiles updates the list
+  */
+  bool MapExists(const FString& mapname, bool refreshmapfiles = false);
 
 private:
-  bool MapExists(const FString& mapname, bool refreshmapfiles=false);
+  /** Returns true if the current level name (map) is the same as the one in the current settings */
   bool IsTheSameLevel();
+
+  /** Using the world. It will just open the mapname */
   void ChangeLevel(UWorld* world, const FString& mapname);
+
+  /** Reload the current level */
   void RestartLevel();
 
   const TSharedPtr<FServerSensorDataSink> DataSink;

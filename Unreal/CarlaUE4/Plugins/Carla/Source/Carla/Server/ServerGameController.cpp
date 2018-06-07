@@ -164,10 +164,13 @@ void FServerGameController::Tick(float DeltaSeconds)
 bool FServerGameController::MapExists(const FString& mapname,bool refreshmapfiles)
 {
   static TArray<FString> MapFiles;
+  if (FPaths::FileExists(mapname)) return true;
   if (refreshmapfiles || MapFiles.Num() == 0)
   {
+    /** @TODO: Add the maps coming from any DLC or additional PAK */
     IFileManager::Get().FindFilesRecursive(MapFiles, *FPaths::Combine(*FPaths::ProjectContentDir(), TEXT("Maps")), TEXT("*.umap"), true, false, false);
   }
+  
   const FRegexPattern MapPattern(*FString::Printf(TEXT("%s\\.umap"), *mapname));
   return (MapFiles.ContainsByPredicate([&](const FString& _mapname) {return FRegexMatcher(MapPattern, _mapname).FindNext(); }));
 }
@@ -187,6 +190,7 @@ bool FServerGameController::IsTheSameLevel()
 
 void FServerGameController::ChangeLevel(UWorld* world,const FString& mapname)
 {
+  if (!IsValid(world) || mapname.IsEmpty()) return;
   UGameplayStatics::OpenLevel(world, FName(*mapname), true, FString(L"?initCARLA=true"));
 }
 
