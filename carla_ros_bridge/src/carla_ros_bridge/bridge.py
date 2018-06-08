@@ -142,7 +142,7 @@ class CarlaRosBridge(object):
 
             # handle time
             self.carla_game_stamp = measurements.game_timestamp
-            self.cur_time = rospy.Time.from_sec(self.carla_game_stamp * 1000.0)
+            self.cur_time = rospy.Time.from_sec(self.carla_game_stamp * 1e-3)
             self.compute_cur_time_msg()
 
             # handle agents
