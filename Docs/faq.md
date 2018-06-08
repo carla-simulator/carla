@@ -104,10 +104,14 @@ UseNetworking=false
   How can I create a binary version of CARLA?
   </h4></summary>
 
-To compile a binary (packaged) version of CARLA, open the CarlaUE4 project with
-Unreal Editor, go to the menu "File -> Package Project", and select your
-platform. This takes a while, but in the end it should generate a packaged
-version of CARLA to execute without Unreal Editor.
+In Linux, the recommended way is to use the `Package.sh` script provided. This
+script makes a packaged version of the project, including the Python client.
+This is the script we use to make a release of CARLA for Linux.
+
+Alternatively, it is possible to compile a binary version of CARLA within Unreal
+Editor, open the CarlaUE4 project, go to the menu "File -> Package Project", and
+select your platform. This takes a while, but in the end it should generate a
+packaged version of CARLA to execute without Unreal Editor.
 
 </details>
 

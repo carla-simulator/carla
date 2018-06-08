@@ -28,7 +28,7 @@ void ACarlaPlayerState::CopyProperties(APlayerState *PlayerState)
     if (Other != nullptr)
     {
       FrameNumber = Other->FrameNumber;
-      FramesPerSecond = Other->FramesPerSecond;
+      SimulationStepInSeconds = Other->SimulationStepInSeconds;
       PlatformTimeStamp = Other->PlatformTimeStamp;
       GameTimeStamp = Other->GameTimeStamp;
       Transform = Other->Transform;
@@ -78,7 +78,7 @@ static int32 RoundToMilliseconds(float Seconds)
 void ACarlaPlayerState::UpdateTimeStamp(float DeltaSeconds)
 {
   FrameNumber = GFrameCounter;
-  FramesPerSecond = 1.0f / DeltaSeconds;
+  SimulationStepInSeconds = DeltaSeconds;
   PlatformTimeStamp = RoundToMilliseconds(FPlatformTime::Seconds());
   GameTimeStamp += RoundToMilliseconds(DeltaSeconds);
 }
