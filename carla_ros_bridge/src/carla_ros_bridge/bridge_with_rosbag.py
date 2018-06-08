@@ -7,6 +7,7 @@ import time
 from tf2_msgs.msg import TFMessage
 import rosbag
 import rospy
+import os
 
 from carla_ros_bridge.bridge import CarlaRosBridge
 
@@ -14,8 +15,8 @@ from carla_ros_bridge.bridge import CarlaRosBridge
 class CarlaRosBridgeWithBag(CarlaRosBridge):
     def __init__(self, *args, **kwargs):
         super(CarlaRosBridgeWithBag, self).__init__(*args, **kwargs)
-        timestr = time.strftime("%Y%m%d-%H%M%S")
-        self.bag = rosbag.Bag('/tmp/output_{}.bag'.format(timestr), mode='w')
+        rosbag_fname = rospy.get_param('rosbag_fname')
+        self.bag = rosbag.Bag(rosbag_fname, mode='w')
 
     def send_msgs(self):
         for publisher, msg in self.msgs_to_publish:

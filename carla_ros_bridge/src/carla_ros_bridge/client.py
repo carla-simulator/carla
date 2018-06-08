@@ -24,7 +24,7 @@ def main():
         rospy.loginfo("Connected")
 
         bridge_cls = CarlaRosBridgeWithBag if rospy.get_param(
-            'enable_rosbag') else CarlaRosBridge
+            'rosbag_fname', '') else CarlaRosBridge
         with bridge_cls(client=client, params=params) as carla_ros_bridge:
             rospy.on_shutdown(carla_ros_bridge.on_shutdown)
             carla_ros_bridge.run()

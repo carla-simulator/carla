@@ -153,9 +153,9 @@ Example for backward :
 
 The carla_ros_bridge could also be used to record all published topics into a rosbag:
 
-    roslaunch carla_ros_bridge client_with_rviz.launch enable_rosbag:=True
+    roslaunch carla_ros_bridge client_with_rviz.launch rosbag_fname:=/tmp/save_session.bag
 
-This command will create a rosbag in /tmp/output_{date}.bag
+This command will create a rosbag /tmp/save_session.bag
 
 You can of course also use rosbag record to do the same, but using the ros_bridge to do the recording you have the guarentee that all the message are saved without small desynchronization that could occurs when using *rosbag record* in an other process.
 
