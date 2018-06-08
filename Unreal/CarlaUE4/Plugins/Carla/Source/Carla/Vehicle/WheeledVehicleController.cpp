@@ -321,7 +321,13 @@ void AWheeledVehicleController::InteractButton()
       }
       StartSpectatingOnly();
       carlaspectator = Cast<ACarlaSpectatorPawn>(GetSpectatorPawn());
-      check(carlaspectator);
+      if(!carlaspectator)
+      {
+        UE_LOG(LogCarla, Error, TEXT("Carla Spectator is not the default spectator class of the game mode!"));
+        if (GetSpectatorPawn()) Possess(GetSpectatorPawn());
+        return;
+      }
+
       Possess(carlaspectator);
       carlaspectator->SetCameraSpring(SpringArm);
       carlaspectator->SetCamera(PlayerCamera);
