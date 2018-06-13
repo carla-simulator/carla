@@ -45,6 +45,7 @@ class CarlaSettings(object):
         self.WeatherId = 1
         self.SeedVehicles = None
         self.SeedPedestrians = None
+        self.DisableTwoWheeledVehicles = False
         self.set(**kwargs)
         self._sensors = []
 
@@ -101,7 +102,8 @@ class CarlaSettings(object):
             'NumberOfPedestrians',
             'WeatherId',
             'SeedVehicles',
-            'SeedPedestrians'])
+            'SeedPedestrians',
+            'DisableTwoWheeledVehicles'])
 
         ini.add_section(S_SENSOR)
         ini.set(S_SENSOR, 'Sensors', ','.join(s.SensorName for s in self._sensors))

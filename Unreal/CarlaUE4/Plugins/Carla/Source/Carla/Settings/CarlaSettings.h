@@ -188,6 +188,10 @@ public:
   UPROPERTY(Category = "Level Settings", VisibleAnywhere)
   int32 SeedVehicles = 123456789;
 
+  /** Disable bikes and motorbikes. */
+  UPROPERTY(Category = "Level Settings", BlueprintReadOnly, VisibleAnywhere)
+  bool bDisableTwoWheeledVehicles = false;
+
   /// @}
 
   // ===========================================================================
@@ -253,7 +257,7 @@ public:
     * semantic segmentation impose some performance penalties even if it is not
     * used, we only enable it if necessary.
     */
-  UPROPERTY(Category = "Sensors", BlueprintReadOnly,VisibleAnywhere)
+  UPROPERTY(Category = "Sensors", BlueprintReadOnly, VisibleAnywhere)
   bool bSemanticSegmentationEnabled = false;
 
   /// @}
