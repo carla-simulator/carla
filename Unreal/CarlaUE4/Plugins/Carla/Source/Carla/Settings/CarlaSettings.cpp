@@ -118,6 +118,7 @@ static void LoadSettingsFromConfig(
   ConfigFile.GetInt(S_CARLA_LEVELSETTINGS, TEXT("WeatherId"), Settings.WeatherId);
   ConfigFile.GetInt(S_CARLA_LEVELSETTINGS, TEXT("SeedVehicles"), Settings.SeedVehicles);
   ConfigFile.GetInt(S_CARLA_LEVELSETTINGS, TEXT("SeedPedestrians"), Settings.SeedPedestrians);
+  ConfigFile.GetBool(S_CARLA_LEVELSETTINGS, TEXT("DisableTwoWheeledVehicles"), Settings.bDisableTwoWheeledVehicles);
 
   // QualitySettings.
   FString sQualityLevel;
@@ -251,6 +252,7 @@ void UCarlaSettings::LogSettings() const
   UE_LOG(LogCarla, Log, TEXT("Weather Id = %d"), WeatherId);
   UE_LOG(LogCarla, Log, TEXT("Seed Vehicle Spawner = %d"), SeedVehicles);
   UE_LOG(LogCarla, Log, TEXT("Seed Pedestrian Spawner = %d"), SeedPedestrians);
+  UE_LOG(LogCarla, Log, TEXT("Two-Wheeled Vehicles = %s"), EnabledDisabled(!bDisableTwoWheeledVehicles));
   UE_LOG(LogCarla, Log, TEXT("Found %d available weather settings."), WeatherDescriptions.Num());
   for (auto i = 0; i < WeatherDescriptions.Num(); ++i)
   {
