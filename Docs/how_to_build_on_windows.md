@@ -18,8 +18,12 @@ In order to build CARLA you must **enable the x64 Visual C++ Toolset**.
 I recommend to use this environment for everything you do in this tutorial.
 You have different options:
 
-- **Recomended:** Use [`Visual Studio x64 Native Tools Command Prompt`](https://docs.microsoft.com/en-us/dotnet/framework/tools/developer-command-prompt-for-vs). Just press the `Win` button and search for `x64`, because the name of this Command Prompt can change depending on the lenguage you have installed Visual Studio.
+- **Recomended:** Use [`Visual Studio x64 Native Tools Command Prompt`](https://docs.microsoft.com/en-us/dotnet/framework/tools/developer-command-prompt-for-vs). Just press the `Win` button and search for `x64` (be careful to not **unintentionally open a `x86_x64` prompt**), because the name of this Command Prompt can change depending on the lenguage you have Visual Studio installed.
 - [Enable a 64-Bit Visual C++ Toolset on the Command Line](https://msdn.microsoft.com/en-us/library/x4d2c09s.aspx) (the instructions will depend on the version of VS that you have).
+
+!!! note
+    Take care if you have **Cygwin** installed. This could cause the errors like  
+    `/usr/bin/sh: rd: command not found` While executing `Reuild.bat`.
 
 <h3>Clone the repository</h3>
 Go to the path you want to install CARLA and use git to download the project using the following command:
