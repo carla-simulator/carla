@@ -33,7 +33,7 @@ make clean & make
 if errorlevel 1 goto compiling_error
 
 echo.
-echo %FILE_N% Launch editor...
+echo %FILE_N% Launching Unreal Editor...
 start %CARLA_FOLDER%CarlaUE4.uproject
 
 :success
