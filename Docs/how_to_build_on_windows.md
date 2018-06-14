@@ -15,7 +15,7 @@ Also:
 
 <h3>Environment Setup</h3>
 In order to build CARLA you must **enable the x64 Visual C++ Toolset**.
-I recommend to use this environment for everything you do in this tutorial.  
+I recommend to use this environment for everything you do in this tutorial.
 You have different options:
 
 - **Recomended:** Use [`Visual Studio x64 Native Tools Command Prompt`](https://docs.microsoft.com/en-us/dotnet/framework/tools/developer-command-prompt-for-vs). Just press the `Win` button and search for `x64`, because the name of this Command Prompt can change depending on the lenguage you have installed Visual Studio.
@@ -35,7 +35,7 @@ cd carla
 ```
 
 # Automatic installation
-Once you have downloaded the repo you can start with the automatic installation.  
+Once you have downloaded the repo you can start with the automatic installation.
 This process may take a while, it will download and install the necessary Boost and Protobuf libraries. Expect 20-40 minutes, depending on your hardware and internet connection.
 
 Script        | Use
@@ -48,13 +48,13 @@ Script        | Use
 
         Setup.bat -j 8 --boost-toolset msvc-14.1
 
-    `-j n` will try to parallelize the git download and NMake compilation. If not specified, no optimization will be made.  
+    `-j n` will try to parallelize the git download and NMake compilation. If not specified, no optimization will be made.
 
     To see available commands, like which `--boost-toolset` you have to use depending on your Visual Studio version, use:
 
         Setup.bat --help
 
-1. When it's done, and if everything went well, `Setup.bat` will provide a link where you can download the assets manually. If you get some errors you can try the **Manual Installation**, open a new issue on [GitHub](https://github.com/carla-simulator/carla/issues/) or just ask on the Windows [Discord](https://discord.gg/vNVHXfb) channel.
+1. When it's done, and if everything went well, `Setup.bat` will provide a link where you can download the assets manually. If you get some errors you can try the **Manual Installation**, open a new issue on [GitHub](https://github.com/carla-simulator/carla/issues/) or just ask on the [Windows Discord channel](https://discord.gg/42KJdRj).
 
 1. Unzip these assets into `Unreal/CarlaUE4/Content`. Create it if the folder is not there.
 
@@ -86,7 +86,7 @@ Download and build **for win64**:
 - Protobuf 3.3.2
 
 <h3>Building Boost for CARLA</h3>
-Follow the official documentatio to compile boost.  
+Follow the official documentation to compile boost.
 Put the generated binaries in `Util/Build/boost-install`:
 
 ```c
@@ -136,10 +136,10 @@ If you have done everything alright, **carla server** must be installed successf
 
 <h3>Launch Unreal Engine</h3>
 Double click `Unreal/CarlaUE4/CarlaUE4.uproject` and it will ask you to rebuild:
-     
+
     UE4Editor-CarlaUE4.dll
     UE4Editor-Carla.dll
-  
+
 Agree.
 
 <h3>Compilation failures</h3>
