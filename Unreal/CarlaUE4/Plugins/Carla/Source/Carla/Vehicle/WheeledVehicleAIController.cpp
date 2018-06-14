@@ -203,7 +203,13 @@ void AWheeledVehicleAIController::TickAutopilotController()
 
 float AWheeledVehicleAIController::GoToNextTargetLocation(FVector &Direction)
 {
-  const auto &CurrentLocation = Vehicle->GetActorLocation();
+  // Get middle point between the two front wheels.
+  const auto CurrentLocation = [&](){
+    const auto &Wheels = Vehicle->GetVehicleMovementComponent()->Wheels;
+    check((Wheels.Num() > 1) && (Wheels[0u] != nullptr) && (Wheels[1u] != nullptr));
+    return (Wheels[0u]->Location + Wheels[1u]->Location) / 2.0f;
+  }();
+
   const auto Target = [&](){
     const auto &Result = TargetLocations.front();
     return FVector{Result.X, Result.Y, CurrentLocation.Z};
