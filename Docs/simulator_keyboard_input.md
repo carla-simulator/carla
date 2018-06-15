@@ -22,4 +22,5 @@ Key             | Action
 `C`             | Change weather/lighting
 `Enter`         | Jump
 `F`             | Use the force
+`T`             | Reset vehicle rotation
 `Alt+F4`        | Quit
