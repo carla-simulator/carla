@@ -1,3 +1,13 @@
+## CARLA 0.8.4
+
+  * Community contribution: ROS bridge by @laurent-george
+  * New vehicle: Tesla Model 3
+  * Added an option to _"CarlaSettings.ini"_ to disable bikes and motorbikes
+  * Fixed missing collision of vehicles introduced in 0.8.3
+  * Improved stability of bikes and motorbikes
+  * Improved autopilot turning behaviour at intersections, now using front wheels positions as reference
+  * Temporarily removed Kawasaki Ninja motorbikes because the model was having some stability issues
+
 ## CARLA 0.8.3
 
   * Added two-wheeled vehicles, 3 bicycles and 4 motorbikes
