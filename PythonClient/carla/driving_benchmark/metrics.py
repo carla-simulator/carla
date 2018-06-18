@@ -42,6 +42,8 @@ class Metrics(object):
         """
 
         # Read previous for position zero
+        print (measurements_matrix)
+        print (header)
         prev_start = measurements_matrix[0, header.index('start_point')]
         prev_end = measurements_matrix[0, header.index('end_point')]
         prev_exp_id = measurements_matrix[0, header.index('exp_id')]
@@ -242,6 +244,7 @@ class Metrics(object):
         measurements_matrix = np.loadtxt(os.path.join(path, 'measurements.csv'), delimiter=",",
                                          skiprows=1)
 
+        print (" FULL MAT ", measurements_matrix)
         metrics_dictionary = {'episodes_completion': {w: [0] * len(tasks) for w in all_weathers},
                               'intersection_offroad': {w: [[] for i in range(len(tasks))] for w in
                                                        all_weathers},
@@ -271,12 +274,14 @@ class Metrics(object):
                     np.logical_and(result_matrix[:, header.index(
                         'exp_id')] == tasks[t], result_matrix[:, header.index('weather')] == w)]
 
+
                 experiment_metrics_matrix = measurements_matrix[
                     np.logical_and(measurements_matrix[:, header_metrics.index(
                         'exp_id')] == float(tasks[t]),
                                    measurements_matrix[:, header_metrics.index('weather')] == float(
                                        w))]
-
+                print ("task ", float(tasks[t]), " weather",float(w))
+                print(" EXPERIMENT ", experiment_metrics_matrix)
                 metrics_dictionary['episodes_fully_completed'][w][t] = \
                     experiment_results_matrix[:, header.index('result')].tolist()
 
