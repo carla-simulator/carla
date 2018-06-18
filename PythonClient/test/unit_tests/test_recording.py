@@ -54,8 +54,54 @@ class testRecording(unittest.TestCase):
             self.assertEqual(len(written_row), len(recording._dict_summary))
 
 
+    def test_write_summary_results_good_order(self):
 
-    def teste_write_measurements_results(self):
+        import os
+        from carla.driving_benchmark.experiment import Experiment
+
+        recording = Recording(name_to_save='Test_good_order'
+                              , continue_experiment=False, save_images=True
+                              )
+
+
+        for i in range(0, 10):
+            recording.write_summary_results( experiment=Experiment(), pose=[24,32], rep=1,
+                                             path_distance=200, remaining_distance=0,
+                                             final_time=0.2, time_out=49, result=1)
+
+        recording = Recording(name_to_save='Test_good_order'
+                          , continue_experiment=True, save_images=True
+                          )
+
+
+        for i in range(0, 10):
+            recording.write_summary_results( experiment=Experiment(), pose=[24,32], rep=1,
+                                             path_distance=200, remaining_distance=0,
+                                             final_time=0.2, time_out=49, result=1)
+
+
+        recording = Recording(name_to_save='Test_good_order'
+                          , continue_experiment=True, save_images=True
+                          )
+
+
+        for i in range(0, 10):
+            recording.write_summary_results( experiment=Experiment(), pose=[24,32], rep=1,
+                                             path_distance=200, remaining_distance=0,
+                                             final_time=0.2, time_out=49, result=1)
+
+        recording = Recording(name_to_save='Test_good_order'
+                          , continue_experiment=True, save_images=True
+                          )
+
+
+        for i in range(0, 10):
+            recording.write_summary_results( experiment=Experiment(), pose=[24,32], rep=1,
+                                             path_distance=200, remaining_distance=0,
+                                             final_time=0.2, time_out=49, result=1)
+
+
+    def test_write_measurements_results(self):
 
         import os
         from carla.driving_benchmark.experiment import Experiment
