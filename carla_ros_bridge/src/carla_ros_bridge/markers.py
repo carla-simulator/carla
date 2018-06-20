@@ -125,11 +125,6 @@ def get_vehicle_marker(object, header, marker_id=0, is_player=False):
     marker.text = "id = {}".format(marker_id)
     update_marker_pose(object, marker)
 
-    if not is_player:  # related to bug request #322
-        marker.scale.x = marker.scale.x / 100.0
-        marker.scale.y = marker.scale.y / 100.0
-        marker.scale.z = marker.scale.z / 100.0
-
     # the box pose seems to require a little bump to be well aligned with camera depth
     marker.pose.position.z += marker.scale.z / 2.0
 
