@@ -186,12 +186,12 @@ class CameraHandler(SensorHandler):
 
         rotation = t.transform.rotation
         quat = [rotation.x, rotation.y, rotation.z, rotation.w]
-        roll, pitch, yaw = tf.transformations.euler_from_quaternion(quat)
-
-        roll -= math.pi / 2.0
-        yaw -= math.pi / 2.0
-
-        quat = tf.transformations.quaternion_from_euler(roll, pitch, yaw)
+        quat_swap = tf.transformations.quaternion_from_matrix(
+            [[0, 0, 1, 0],
+            [-1, 0, 0, 0],
+            [0, -1, 0, 0],
+            [0, 0, 0, 1]])
+        quat = tf.transformations.quaternion_multiply(quat, quat_swap)
 
         t.transform.rotation.x = quat[0]
         t.transform.rotation.y = quat[1]
