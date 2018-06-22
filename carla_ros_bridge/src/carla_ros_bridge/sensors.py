@@ -104,7 +104,7 @@ class LidarHandler(SensorHandler):
         child_frame_id = self.name
 
         t = TransformStamped()
-        t.header.stamp = self.cur_time
+        t.header.stamp = cur_time
         t.header.frame_id = parent_frame_id
         t.child_frame_id = child_frame_id
         t.transform = carla_transform_to_ros_transform(
