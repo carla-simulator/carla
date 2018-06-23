@@ -293,9 +293,10 @@ def main():
     argparser.add_argument(
         '-c', '--controlling_agent',
         default='HumanAgent',
-        help='the controller that is going to be used by the Player. Options:'
-             '      HumanAgent: Control your agent with a keyboard'
-             '      ForwardAgent: A trivial agent that goes forward')
+        help='the controller that is going to be used by the main vehicle.'
+             ' Options: '
+             ' HumanAgent - Control your agent with a keyboard.'
+             ' ForwardAgent - A trivial agent that goes forward')
     args = argparser.parse_args()
 
     log_level = logging.DEBUG if args.debug else logging.INFO
