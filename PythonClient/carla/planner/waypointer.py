@@ -64,6 +64,7 @@ class Waypointer(object):
         # self.grid = self.make_grid()
         # self.walls = self.make_walls()
         self.last_map_points = None
+        self.points = None
 
     def reset(self):
         self.last_trajectory = []

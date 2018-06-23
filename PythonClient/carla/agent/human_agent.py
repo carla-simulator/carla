@@ -25,7 +25,9 @@ class HumanAgent(Agent):
     """
 
     def __init__(self):
-        # TODO: add the parameter for a joystick to be used, default keyboard.
+        """
+         TODO: add the parameter for a joystick to be used, default keyboard.
+        """
         super(HumanAgent).__init__()
         self._is_on_reverse = False
 
