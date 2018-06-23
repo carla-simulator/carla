@@ -107,7 +107,7 @@ def make_controlling_agent(args):
     if args.controlling_agent == "ForwardAgent":
         return ForwardAgent()
     elif args.controlling_agent == "HumanAgent":
-        # TODONextPR: Add parameters such as joysticks to the human agent.
+        # TDNextPR: Add parameters such as joysticks to the human agent.
         return HumanAgent()
 
     else:
@@ -118,9 +118,9 @@ def get_directions(measurements, target_transform, planner, waypointer):
     """ Function to get the high level commands and the waypoints.
         The waypoints correspond to the local planning, the near path the car has to follow.
     """
-    """
-    TODO 0.9.X  or 0.10.X: add a new more general and robust planner with wider variety of repr
-    """
+
+    #TD 0.9.X  or 0.10.X: add a new more general and robust planner with wider variety of repr
+
     # Get the current position from the measurements
     current_point = measurements.player_measurements.transform
 
@@ -210,16 +210,16 @@ def execute(client, args):
         measurements, sensor_data = client.read_data()
 
         # get the planning results
-        """
-        TODO: this will become a neutral route object that can be transformed after to the
-        TODO: format needed by the agent.
-        """
+
+        #TD: this will become a neutral route object that can be transformed after to the
+        #TD: format needed by the agent.
+
         _, waypoints = get_directions(measurements, player_target_transform,
                                                planner, waypointer)
-        """
-        TODO 0.9: This is going to be a vector of controls for each agent.
-        TODO 0.9: We should select something like the viewport agent.
-        """
+
+        #TD 0.9: This is going to be a vector of controls for each agent.
+        #TD 0.9: We should select something like the viewport agent.
+
         # run a step for the agent. regardless of the type
         control = controlling_agent.run_step(measurements, sensor_data,
                                              waypoints,
