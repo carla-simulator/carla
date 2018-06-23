@@ -135,7 +135,7 @@ def get_directions(measurements, target_transform, planner, waypointer):
          target_transform.orientation.z)
     )
 
-    waypoints_world, waypoints = waypointer.get_next_waypoints(
+    _, waypoints = waypointer.get_next_waypoints(
         (current_point.location.x,
          current_point.location.y, 0.22),
         (current_point.orientation.x, current_point.orientation.y,
@@ -187,7 +187,7 @@ def execute(client, args):
 
     """
 
-    # Here we instanciate a sample carla settings, for now it is hardcoded on having a rgb a
+    # Here we instantiate a sample carla settings, for now it is hardcoded on having a rgb a
     # a depth and a semantic segmentation image. If parameter is send there can also be a lidar.
     controlling_agent = make_controlling_agent(args)
     carla_settings = make_carla_settings(args)
@@ -212,7 +212,7 @@ def execute(client, args):
         # get the planning results
         # TODO: this will become a neutral route object that can be transformed after to the
         # TODO: format needed by the agent.
-        directions, waypoints = get_directions(measurements, player_target_transform,
+        _, waypoints = get_directions(measurements, player_target_transform,
                                                planner, waypointer)
 
         # TODO 0.9: This is going to be a vector of controls for each agent.
@@ -290,7 +290,9 @@ def main():
     argparser.add_argument(
         '-c', '--controlling_agent',
         default='HumanAgent',
-        help='the controller that is going to be used for the Player')
+        help='the controller that is going to be used by the Player. Options:'
+             '      HumanAgent: Control your agent with a keyboard'
+             '      ForwardAgent: A trivial agent that goes forward')
     args = argparser.parse_args()
 
     log_level = logging.DEBUG if args.debug else logging.INFO

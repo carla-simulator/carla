@@ -1,5 +1,3 @@
-
-
 from carla.agent.agent import Agent
 from carla.client import VehicleControl
 
@@ -12,7 +10,6 @@ try:
     from pygame.locals import K_UP
     from pygame.locals import K_a
     from pygame.locals import K_d
-    from pygame.locals import K_p
     from pygame.locals import K_q
     from pygame.locals import K_s
     from pygame.locals import K_w
@@ -22,22 +19,21 @@ except ImportError:
 
 
 class HumanAgent(Agent):
-
     """
     Derivation of Agent Class for human control,
 
     """
+
     def __init__(self):
         # TODO: add the parameter for a joystick to be used, default keyboard.
-
+        super(HumanAgent).__init__()
         self._is_on_reverse = False
-
-
-
 
     def _get_keyboard_control(self, keys):
         """
-        Return a VehicleControl message based on the pressed keys. Return None
+        Return a VehicleControl message based on the pressed keys.
+
+        Return None
         if a new episode was requested.
         """
 
@@ -64,5 +60,3 @@ class HumanAgent(Agent):
                 return VehicleControl()
 
         return self._get_keyboard_control(pygame.key.get_pressed())
-
-

@@ -1,21 +1,20 @@
+import math
+import os
 import random
 import numpy as np
 from numpy import linalg as LA
 
 from carla.planner.converter import Converter
 from carla.planner.city_track import CityTrack
-from carla.planner.graph import *
 from carla.planner import bezier
-import math
-import os
-import time
+
 
 
 def angle_between(v1, v2):
     return np.arccos(np.dot(v1, v2) / np.linalg.norm(v1) / np.linalg.norm(v2))
 
 
-def distance(t1, t2):
+def sldist(t1, t2):
     return math.sqrt((t1[0] - t2[0]) * (t1[0] - t2[0]) + (t1[1] - t2[1]) * (t1[1] - t2[1]))
 
 
@@ -46,7 +45,7 @@ class Waypointer(object):
 
         self._converter = Converter(self.city_file, 0.1643, 50.0)
         self._city_track = CityTrack(self.city_name)
-        self._map = self._city_track._map
+        self._map = self._city_track.get_map()
 
         # Define here some specific configuration to produce waypoints
         self.last_trajectory = []
@@ -64,6 +63,7 @@ class Waypointer(object):
         self._previous_source = None
         # self.grid = self.make_grid()
         # self.walls = self.make_walls()
+        self.last_map_points = None
 
     def reset(self):
         self.last_trajectory = []
@@ -120,7 +120,6 @@ class Waypointer(object):
 
         """
 
-
         shifted_lane_vec = []
 
         for i in range(len(lane_points[:-1])):
@@ -133,18 +132,16 @@ class Waypointer(object):
                             lane_point[1] + unit_vec[1] * distance_to_center[i]]
             # One interesting thing is to replicate the point where the turn happens
             if i == inflection_position:
-
                 unit_vec = self._get_unit(lane_points[i], lane_points[i - 1])
 
                 shifted_lane_vec.append([lane_point[0] + unit_vec[0] * distance_to_center[i],
                                          lane_point[1] + unit_vec[1] * distance_to_center[i]])
 
-
             shifted_lane_vec.append(shifted_lane)
 
         last_lane_point = lane_points[-1]
-        shifted_lane = [last_lane_point[0] + unit_vec[0] * distance_to_center[i],
-                        last_lane_point[1] + unit_vec[1] * distance_to_center[i]]
+        shifted_lane = [last_lane_point[0] + unit_vec[0] * distance_to_center[-1],
+                        last_lane_point[1] + unit_vec[1] * distance_to_center[-1]]
 
         shifted_lane_vec.append(shifted_lane)
         return shifted_lane_vec
@@ -163,7 +160,7 @@ class Waypointer(object):
         """
         curve_points = None
         first_time = True
-        #inflection_point = None
+        prev_unit_vec = None
         for i in range(len(points) - 1):
 
             unit_vec = self._get_unit(points[i + 1], points[i])
@@ -214,7 +211,6 @@ class Waypointer(object):
         points = np.transpose(points)
         points_list = []
         for point in points:
-
             world_points.append(self._converter.convert_to_world(point))
             points_list.append(point.tolist())
 
@@ -224,10 +220,9 @@ class Waypointer(object):
         """
             Get free positions to drive in the direction of the target point
 
-
         """
 
-        free_nodes = self._city_track._map._grid._get_adjacent_free_nodes(pos)
+        free_nodes = self._map.get_adjacent_free_nodes(pos)
 
         added_walls = set()
         heading_start = np.array([pos_ori[0], pos_ori[1]])
@@ -236,8 +231,8 @@ class Waypointer(object):
 
             start_to_goal = np.array([adj[0] - pos[0], adj[1] - pos[1]])
             angle = angle_between(heading_start, start_to_goal)
-            # print ' Angle between ',angle
-            if (angle < 2 and adj != source):
+
+            if angle < 2 and adj != source:
                 added_walls.add((adj[0], adj[1]))
 
         return added_walls
@@ -264,8 +259,6 @@ class Waypointer(object):
         _, points_indexes, curve_direction = self._find_curve_points(lane_points)
         # If it is a intersection we divide this in two parts
 
-        # if (1-vector_s_dir[0]) < 0.1 or (1-vector_s_dir[1]) <0.1:
-        # it is not a intersection
         lan_shift_distance_vec = [self.lane_shift_distance] * len(lane_points)
 
         if points_indexes is not None:
@@ -304,9 +297,9 @@ class Waypointer(object):
                 direction_ori[0] = aux
 
                 direction = free_nodes[0]
-            except:
+            except RuntimeError:
 
-                #    # Repeate some route point, there is no problem.
+                # Repeate some route point, there is no problem.
                 direction = [round(self._route[-1][0] + direction_ori[0]),
                              round(self._route[-1][1] + direction_ori[1])]
 
@@ -344,7 +337,7 @@ class Waypointer(object):
 
         # This is to avoid computing a new route when inside the route
 
-        distance_node = self._city_track._closest_intersection_position(track_source)
+        distance_node = self._city_track.closest_intersection_position(track_source)
 
         if distance_node > 2 and self._previous_source != track_source:
 
@@ -367,7 +360,7 @@ class Waypointer(object):
 
 
         else:
-            if distance(self.previous_map, self._converter.convert_to_pixel(source)) > 3.0:
+            if sldist(self.previous_map, self._converter.convert_to_pixel(source)) > 3.0:
 
                 # That is because no route was ever computed. This is a problem we should solve.
                 if not self._route:
@@ -392,13 +385,11 @@ class Waypointer(object):
                                                point)
                     cross_product = np.cross(source_ori[0:2], point_vec)
 
-
                     if (cross_product > 0.0 and sldist(point, self._converter.convert_to_pixel(
                             source)) < 50) or sldist(
                         point,
                         self._converter.convert_to_pixel(
                             source)) < 15.0:
-
                         self.last_trajectory.remove(
                             self._converter.convert_to_world(
                                 point))  # = [self.make_world_map(point)] + self.last_trajc
@@ -415,7 +406,7 @@ class Waypointer(object):
     def test_position(self, source):
         node_source = self._city_track.project_node(source)
 
-        distance_node = self._city_track._closest_intersection_position(node_source)
+        distance_node = self._city_track.closest_intersection_position(node_source)
         if distance_node > 2:
             return True
         else:

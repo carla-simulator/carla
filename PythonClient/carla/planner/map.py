@@ -148,5 +148,8 @@ class CarlaMap(object):
     def get_intersection_nodes(self):
         return self._graph.intersection_nodes()
 
-    def search_on_grid(self,node):
+    def get_adjacent_free_nodes(self):
+        return self._grid.get_adjacent_free_nodes()
+
+    def search_on_grid(self, node):
         return self._grid.search_on_grid(node[0], node[1])

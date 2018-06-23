@@ -52,6 +52,9 @@ class CityTrack(object):
     def get_intersection_nodes(self):
         return self._map.get_intersection_nodes()
 
+    def get_map(self):
+        return self._map
+
     def get_pixel_density(self):
         return self._pixel_density
 
@@ -65,7 +68,7 @@ class CityTrack(object):
         return current_node != self._previous_node
 
     def is_away_from_intersection(self, current_node):
-        return self._closest_intersection_position(current_node) > 1
+        return self.closest_intersection_position(current_node) > 1
 
     def is_far_away_from_route_intersection(self, current_node):
         # CHECK FOR THE EMPTY CASE
@@ -117,7 +120,7 @@ class CityTrack(object):
         return sorted(distance)[0]
 
 
-    def _closest_intersection_position(self, current_node):
+    def closest_intersection_position(self, current_node):
 
         distance_vector = []
         for node_iterator in self._map.get_intersection_nodes():
