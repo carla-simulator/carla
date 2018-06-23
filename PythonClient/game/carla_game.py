@@ -153,7 +153,7 @@ class CarlaGame(object):
 
     def print_measurements(self, measurements):
         """
-        Priting function: print all the measurements that are being received.
+        Printing function: print all the measurements that are being received.
 
         """
 
@@ -180,11 +180,10 @@ class CarlaGame(object):
 
             self._timer.lap()
 
-    def _print_player_measurements_map(
-            self,
-            player_measurements,
-            map_position,
-            lane_orientation):
+    def _print_player_measurements_map(self,
+                                       player_measurements,
+                                       map_position,
+                                       lane_orientation):
         message = 'Step {step} ({fps:.1f} FPS): '
         message += 'Map Position ({map_x:.1f},{map_y:.1f}) '
         message += 'Lane Orientation ({ori_x:.1f},{ori_y:.1f}) '
@@ -219,12 +218,11 @@ class CarlaGame(object):
             Draw the waypoints on the map surface.
         Args:
             surface:
-            waypoints:
+            waypoints: waypoints produced by the local planner.
 
         Returns:
 
         """
-
         for waypoint in waypoints:
             new_window_width = \
                 (float(self._window_height) / float(self._map_shape[0])) * \
