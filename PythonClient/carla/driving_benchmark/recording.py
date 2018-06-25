@@ -4,12 +4,19 @@ import os
 
 
 class Recording(object):
+    """
+    Class to record all the logs for the benchmark. It records individual episodes measurements
+    and also summary for each episodes.
+    """
 
-    def __init__(self
-                 , name_to_save
-                 , continue_experiment
-                 , save_images
-                 ):
+    def __init__(self, name_to_save, continue_experiment, save_images):
+        """
+        Recorder constructors
+        Args:
+            name_to_save: Name of the log
+            continue_experiment: If you want to continue a previous experiment with the same names
+            save_images: If you want to save images to the disk.
+        """
 
         self._dict_summary = {'exp_id': -1,
                               'rep': -1,
@@ -44,15 +51,13 @@ class Recording(object):
             os.mkdir('_benchmarks_results')
 
         # Generate the full path for the log files
-        self._path = os.path.join('_benchmarks_results'
-                                  , name_to_save
-                                  )
+        self._path = os.path.join('_benchmarks_results', name_to_save)
 
         # Check for continuation of experiment, also returns the last line, used for test purposes
         # If you don't want to continue it will create a new path name with a number.
         # Also returns the fieldnames for both measurements and summary, so you can keep the
         # previous order
-        self._path, _, self._summary_fieldnames, self._measurements_fieldnames\
+        self._path, _, self._summary_fieldnames, self._measurements_fieldnames \
             = self._continue_experiment(continue_experiment)
 
         self._create_log_files()
@@ -72,20 +77,31 @@ class Recording(object):
         return self._path
 
     def log_poses(self, start_index, end_index, weather_id):
+        """
+            Log tested poses by the benchmark
+        """
         with open(self._internal_log_name, 'a+') as log:
             log.write(' Start Poses  (%d  %d ) on weather %d \n ' %
                       (start_index, end_index, weather_id))
 
     def log_poses_finish(self):
+        """
+            Log when a set of poses (task) is finished by the benchmark
+        """
         with open(self._internal_log_name, 'a+') as log:
             log.write('Finished Task')
 
     def log_start(self, id_experiment):
-
+        """
+            Log when a set of poses (task) is started by the benchmark
+        """
         with open(self._internal_log_name, 'a+') as log:
             log.write('Start Task %d \n' % id_experiment)
 
     def log_end(self):
+        """
+            Log when the benchmark is finished
+        """
         with open(self._internal_log_name, 'a+') as log:
             log.write('====== Finished Entire Benchmark ======')
 
@@ -110,7 +126,6 @@ class Recording(object):
         with open(os.path.join(self._path, 'summary.csv'), 'a+') as ofd:
             w = csv.DictWriter(ofd, self._dict_summary.keys())
             w.fieldnames = self._summary_fieldnames
-
             w.writerow(self._dict_summary)
 
     def write_measurements_results(self, experiment, rep, pose, reward_vec, control_vec):
