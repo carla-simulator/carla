@@ -3,9 +3,10 @@
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
+import numpy as np
+
 
 from carla.planner.graph import sldist
-
 from carla.planner.astar import AStar
 from carla.planner.map import CarlaMap
 
@@ -90,6 +91,11 @@ class CityTrack(object):
                          self._map.get_walls_directed(node_source, source_ori,
                                                       node_target, target_ori), node_source,
                          node_target)
+
+        np.set_printoptions(threshold=np.nan, linewidth=200)
+        #print_grid = self._map._grid._structure
+        #print_grid[node_source[0], node_source[1]] = 7
+        #print_grid[node_target[0], node_target[1]] = 7
 
         route = a_star.solve()
 

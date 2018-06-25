@@ -9,7 +9,6 @@ from carla.planner.city_track import CityTrack
 from carla.planner import bezier
 
 
-
 def angle_between(v1, v2):
     return np.arccos(np.dot(v1, v2) / np.linalg.norm(v1) / np.linalg.norm(v2))
 
@@ -61,18 +60,20 @@ class Waypointer(object):
         self._route = []
         self.previous_map = [0, 0]
         self._previous_source = None
-        # self.grid = self.make_grid()
-        # self.walls = self.make_walls()
         self.last_map_points = None
         self.points = None
 
     def reset(self):
+        """
+            Reset the variables from any previous route calculation
+        Returns:
+            None
+
+        """
         self.last_trajectory = []
         self._route = []
         self.previous_map = [0, 0]
         self._previous_source = None
-        # self.grid = self.make_grid()
-        # self.walls = self.make_walls()
 
     def _search_around_square(self, map_point, map_central_2d):
         """
@@ -276,17 +277,17 @@ class Waypointer(object):
 
         return shifted_lane_vec
 
-    def add_extra_points(self, node_target, target_ori, node_source):
+    def add_extra_points(self, route, node_target, target_ori, node_source):
         """
-            Hacky: Add extra points after the target
-
-
+            Hacky: Add extra points after the target. With this the route never
+            finishes and waypoints can be always computed.
         """
         direction = node_target
         direction_ori = target_ori
         # print self.grid
+        new_route = route
 
-        while len(self._route) < 10:  # ADD EXTRA POINTS AFTER
+        while len(new_route) < 10:  # ADD EXTRA POINTS AFTER
 
             try:
                 free_nodes = list(
@@ -298,16 +299,17 @@ class Waypointer(object):
                 direction_ori[0] = aux
 
                 direction = free_nodes[0]
-            except RuntimeError:
+            except IndexError:
 
-                # Repeate some route point, there is no problem.
-                direction = [round(self._route[-1][0] + direction_ori[0]),
-                             round(self._route[-1][1] + direction_ori[1])]
+                # Repeat some route point, there is no problem.
+                direction = [round(new_route[-1][0] + direction_ori[0]),
+                             round(new_route[-1][1] + direction_ori[1])]
 
-            self._route.append(direction)
+            new_route.append(direction)
+
+        return new_route
 
     def get_next_waypoints(self, source, source_ori, target, target_ori):
-
         """
             Get the next waypoints, from a list of generated waypoints.
         Args:
@@ -322,15 +324,6 @@ class Waypointer(object):
         track_source = self._city_track.project_node(source)
         track_target = self._city_track.project_node(target)
 
-        if math.fabs(target_ori[0]) > math.fabs(target_ori[1]):
-            target_ori = (target_ori[0], 0.0, 0.0)
-        else:
-            target_ori = (0.0, target_ori[1], 0.0)
-
-        if math.fabs(source_ori[0]) > math.fabs(source_ori[1]):
-            source_ori = (source_ori[0], 0.0, 0.0)
-        else:
-            source_ori = (0.0, source_ori[1], 0.0)
 
         # reach the goal
         if track_source == track_target:
@@ -344,26 +337,24 @@ class Waypointer(object):
 
             # print node_source
             # print node_target
-            self._route = self._city_track.compute_route(track_source, source_ori, track_target,
-                                                         target_ori)
-
-            # print self._route
+            route = self._city_track.compute_route(track_source, source_ori, track_target,
+                                                   target_ori)
 
             # IF needed we add points after the objective, that is very hacky.
-            self.add_extra_points(track_target, target_ori, track_source)
+            route = self.add_extra_points(route, track_target, target_ori, track_source)
 
-            self.points = self.graph_to_waypoints(
-                self._route[1:(1 + self.way_key_points_predicted)])
+            self.points = self.graph_to_waypoints(route[1:(1 + self.way_key_points_predicted)])
+
             self.last_trajectory, self.last_map_points = self.generate_final_trajectory(
                 [np.array(self._converter.convert_to_pixel(source))] + self.points)
 
-            return self.last_trajectory, self.last_map_points  # self.generate_final_trajectory([np.array(self.make_map_world(source))] +self.points)
-
+            return self.last_trajectory, self.last_map_points
 
         else:
             if sldist(self.previous_map, self._converter.convert_to_pixel(source)) > 3.0:
 
                 # That is because no route was ever computed. This is a problem we should solve.
+                """
                 if not self._route:
                     self._route = self._city_track.compute_route(track_source, source_ori,
                                                                  track_target, target_ori)
@@ -376,6 +367,7 @@ class Waypointer(object):
 
                     self.last_trajectory, self.last_map_points = self.generate_final_trajectory(
                         [np.array(self._converter.convert_to_pixel(source))] + self.points)
+                """
 
                 # We have to find the current node position
                 self.previous_map = self._converter.convert_to_pixel(source)
@@ -402,7 +394,7 @@ class Waypointer(object):
 
     def route_test(self, node_source, source_ori, node_target, target_ori):
         route = self._city_track.compute_route(node_source, source_ori, node_target, target_ori)
-        return not route == None
+        return route is not None
 
     def test_position(self, source):
         node_source = self._city_track.project_node(source)

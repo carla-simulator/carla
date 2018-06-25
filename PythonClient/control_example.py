@@ -119,7 +119,7 @@ def get_directions(measurements, target_transform, planner, waypointer):
         The waypoints correspond to the local planning, the near path the car has to follow.
     """
 
-    #TD 0.9.X  or 0.10.X: add a new more general and robust planner with wider variety of repr
+    #  TD 0.9.X  or 0.10.X: add a new more general and robust planner with wider variety of repr
 
     # Get the current position from the measurements
     current_point = measurements.player_measurements.transform
@@ -209,16 +209,14 @@ def execute(client, args):
         # we add the vehicle and the connection outside of the game.
         measurements, sensor_data = client.read_data()
 
-        # get the planning results
-
-        #TD: this will become a neutral route object that can be transformed after to the
-        #TD: format needed by the agent.
+        # TD: this will become a neutral route object that can be transformed after to the
+        # TD: format needed by the agent.
 
         _, waypoints = get_directions(measurements, player_target_transform,
-                                               planner, waypointer)
+                                      planner, waypointer)
 
-        #TD 0.9: This is going to be a vector of controls for each agent.
-        #TD 0.9: We should select something like the viewport agent.
+        # TD 0.9: This is going to be a vector of controls for each agent.
+        # TD 0.9: We should select something like the viewport agent.
 
         # run a step for the agent. regardless of the type
         control = controlling_agent.run_step(measurements, sensor_data,

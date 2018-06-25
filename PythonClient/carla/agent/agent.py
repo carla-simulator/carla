@@ -16,9 +16,15 @@ class Agent(object):
         self.__metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
+    def possess(self, vehicle):
+        # Not implemented to be added on 0.9
+        pass
+
+    @abc.abstractmethod
     def run_step(self, measurements, sensor_data, directions, target):
         """
         Function to be redefined by an agent.
         :param The measurements like speed, the image data and a target
         :returns A carla Control object, with the steering/gas/brake for the agent
         """
+

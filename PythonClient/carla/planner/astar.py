@@ -106,6 +106,8 @@ class AStar(object):
     def get_path(self):
         cell = self.end
         path = [(cell.x, cell.y)]
+        if cell.parent == None:
+            return path
         while cell.parent is not self.start:
             cell = cell.parent
             path.append((cell.x, cell.y))
@@ -117,8 +119,9 @@ class AStar(object):
     def update_cell(self, adj, cell):
         """Update adjacent cell.
 
-        @param adj adjacent cell to current cell
-        @param cell current cell being processed
+        Args:
+            adj: adjacent cell to current cell
+            cell: current cell being processed
         """
         adj.g = cell.g + 10
         adj.h = self.get_heuristic(adj)
