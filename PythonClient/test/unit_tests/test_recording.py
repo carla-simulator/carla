@@ -13,8 +13,7 @@ class testRecording(unittest.TestCase):
         """
 
         recording = Recording(name_to_save='Test1',
-                              continue_experiment=False, save_images=True
-                              )
+                              continue_experiment=False, save_images=True)
 
         _ = open(os.path.join(recording._path, 'summary.csv'), 'r')
         _ = open(os.path.join(recording._path, 'measurements.csv'), 'r')
@@ -28,8 +27,7 @@ class testRecording(unittest.TestCase):
         from carla.driving_benchmark.experiment import Experiment
 
         recording = Recording(name_to_save='Test1',
-                              continue_experiment=False, save_images=True
-                              )
+                              continue_experiment=False, save_images=True)
 
         recording.write_summary_results(experiment=Experiment(), pose=[24, 32], rep=1,
                                         path_distance=200, remaining_distance=0,
@@ -62,8 +60,7 @@ class testRecording(unittest.TestCase):
                                             final_time=0.2, time_out=49, result=1)
 
         recording = Recording(name_to_save='Test_good_order',
-                              continue_experiment=True, save_images=True
-                              )
+                              continue_experiment=True, save_images=True)
 
         for i in range(0, 10):
             recording.write_summary_results(experiment=Experiment(), pose=[24, 32], rep=1,
@@ -71,8 +68,7 @@ class testRecording(unittest.TestCase):
                                             final_time=0.2, time_out=49, result=1)
 
         recording = Recording(name_to_save='Test_good_order',
-                              continue_experiment=True, save_images=True
-                              )
+                              continue_experiment=True, save_images=True)
 
         for i in range(0, 10):
             recording.write_summary_results(experiment=Experiment(), pose=[24, 32], rep=1,
@@ -80,8 +76,7 @@ class testRecording(unittest.TestCase):
                                             final_time=0.2, time_out=49, result=1)
 
         recording = Recording(name_to_save='Test_good_order',
-                              continue_experiment=True, save_images=True
-                              )
+                              continue_experiment=True, save_images=True)
 
         for i in range(0, 10):
             recording.write_summary_results(experiment=Experiment(), pose=[24, 32], rep=1,
@@ -96,8 +91,7 @@ class testRecording(unittest.TestCase):
         from carla.carla_server_pb2 import Control
 
         recording = Recording(name_to_save='Test1',
-                              continue_experiment=False, save_images=True
-                              )
+                              continue_experiment=False, save_images=True)
 
         reward_vec = [Measurements().player_measurements for x in range(20)]
         control_vec = [Control() for x in range(25)]
@@ -122,8 +116,7 @@ class testRecording(unittest.TestCase):
     def test_continue_experiment(self):
 
         recording = Recording(name_to_save='Test1',
-                              continue_experiment=False, save_images=True
-                              )
+                              continue_experiment=False, save_images=True)
 
         # A just started case should return the continue experiment case
         self.assertEqual(recording._continue_experiment(True)[1], 1)
@@ -147,8 +140,7 @@ class testRecording(unittest.TestCase):
     def test_get_pose_and_experiment(self):
 
         recording = Recording(name_to_save='Test1',
-                              continue_experiment=False, save_images=True
-                              )
+                              continue_experiment=False, save_images=True)
 
         from carla.driving_benchmark.experiment import Experiment
 
@@ -193,8 +185,7 @@ class testRecording(unittest.TestCase):
         from carla.driving_benchmark.experiment import Experiment
 
         recording = Recording(name_to_save='Test1',
-                              continue_experiment=False, save_images=True
-                              )
+                              continue_experiment=False, save_images=True)
 
         pose, experiment = recording.get_pose_and_experiment(1)
 
