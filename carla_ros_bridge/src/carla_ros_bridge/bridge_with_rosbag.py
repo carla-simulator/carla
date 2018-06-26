@@ -8,16 +8,18 @@ from tf2_msgs.msg import TFMessage
 import rosbag
 import rospy
 import os
+from datetime import datetime
 
 from carla_ros_bridge.bridge import CarlaRosBridge
 
 
 class CarlaRosBridgeWithBag(CarlaRosBridge):
-    def __init__(self, episode, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(CarlaRosBridgeWithBag, self).__init__(*args, **kwargs)
 
+        fname = '{:%m%d_%H%M}'.format(datetime.now())
         rosbag_fname = os.path.join(rospy.get_param('rosbag_fname'), 
-                                    'recording_episode'+str(episode))
+                                    'recording_episode'+fname)
         self.bag = rosbag.Bag(rosbag_fname, mode='w')
 
     def send_msgs(self):
@@ -26,7 +28,7 @@ class CarlaRosBridgeWithBag(CarlaRosBridge):
 
         tf_msg = TFMessage(self.tf_to_publish)
         self.bag.write('tf', tf_msg, self.cur_time)
-        
+
         self.bag.write('steer', self.steer, self.cur_time)
         self.bag.write('brake', self.brake, self.cur_time)
         self.bag.write('gas', self.throttle, self.cur_time)
