@@ -16,6 +16,7 @@ def main():
     params = rospy.get_param('carla')
     host = params['host']
     port = params['port']
+    num_episodes = params['Episodes']
 
     rospy.loginfo("Trying to connect to {host}:{port}".format(
         host=host, port=port))
@@ -23,11 +24,13 @@ def main():
     with make_carla_client(host, port) as client:
         rospy.loginfo("Connected")
 
-        bridge_cls = CarlaRosBridgeWithBag if rospy.get_param(
-            'rosbag_fname', '') else CarlaRosBridge
-        with bridge_cls(client=client, params=params) as carla_ros_bridge:
-            rospy.on_shutdown(carla_ros_bridge.on_shutdown)
-            carla_ros_bridge.run()
+        for episode in range(0, num_episodes):
+            rospy.loginfo("Starting Episode --> {}".format(episode))
+            bridge_cls = CarlaRosBridgeWithBag if rospy.get_param(
+                'rosbag_fname', '') else CarlaRosBridge
+            with bridge_cls(client=client, params=params) as carla_ros_bridge:
+                rospy.on_shutdown(carla_ros_bridge.on_shutdown)
+                carla_ros_bridge.run()
 
 
 if __name__ == "__main__":

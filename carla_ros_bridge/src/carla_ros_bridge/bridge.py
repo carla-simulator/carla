@@ -27,6 +27,7 @@ class CarlaRosBridge(object):
         :param rate: rate to query data from carla in Hz
         """
         self.setup_carla_client(client=client, params=params)
+        self.frames_per_episode = params['Framesperepisode']
 
         self.tf_to_publish = []
         self.msgs_to_publish = []
@@ -51,6 +52,14 @@ class CarlaRosBridge(object):
 
         # creating input controller listener
         self.input_controller = InputController()
+
+        # control inputs - float std msgs
+        self.steer = Float32(0.0)
+        self.brake = Float32(0.0)
+        self.throttle = Float32(0.0)
+        # control inputs - Bool msgs
+        self.reverse = Bool(False)
+        self.hand_brake = Bool(False)
 
     def setup_carla_client(self, client, params):
         self.client = client
@@ -137,7 +146,8 @@ class CarlaRosBridge(object):
         player_start = random.randint(0, max(0, number_of_player_starts - 1))
 
         self.client.start_episode(player_start)
-        while not (rospy.is_shutdown()):
+
+        for frame in range(0, self.frames_per_episode):
             measurements, sensor_data = self.client.read_data()
 
             # handle time
@@ -155,9 +165,6 @@ class CarlaRosBridge(object):
             for name, data in sensor_data.items():
                 self.sensors[name].process_sensor_data(data, self.cur_time)
 
-            # publish all messages
-            self.send_msgs()
-
             # handle control
             if rospy.get_param('carla_autopilot', True):
                 control = measurements.player_measurements.autopilot_control
@@ -165,6 +172,13 @@ class CarlaRosBridge(object):
             else:
                 control = self.input_controller.cur_control
                 self.client.send_control(**control)
+
+            self.steer.data = control.steer
+            self.throttle.data = control.throttle
+            self.brake.data = control.brake  
+
+            # publish all messages
+            self.send_msgs()
 
     def __enter__(self):
         return self

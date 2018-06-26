@@ -13,9 +13,11 @@ from carla_ros_bridge.bridge import CarlaRosBridge
 
 
 class CarlaRosBridgeWithBag(CarlaRosBridge):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, episode, *args, **kwargs):
         super(CarlaRosBridgeWithBag, self).__init__(*args, **kwargs)
-        rosbag_fname = rospy.get_param('rosbag_fname')
+
+        rosbag_fname = os.path.join(rospy.get_param('rosbag_fname'), 
+                                    'recording_episode'+str(episode))
         self.bag = rosbag.Bag(rosbag_fname, mode='w')
 
     def send_msgs(self):
@@ -24,6 +26,11 @@ class CarlaRosBridgeWithBag(CarlaRosBridge):
 
         tf_msg = TFMessage(self.tf_to_publish)
         self.bag.write('tf', tf_msg, self.cur_time)
+        
+        self.bag.write('steer', self.steer, self.cur_time)
+        self.bag.write('brake', self.brake, self.cur_time)
+        self.bag.write('gas', self.throttle, self.cur_time)
+
         super(CarlaRosBridgeWithBag, self).send_msgs()
 
     def __enter__(self):
