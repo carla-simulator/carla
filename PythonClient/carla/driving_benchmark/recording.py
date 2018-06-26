@@ -109,7 +109,7 @@ class Recording(object):
                               path_distance, remaining_distance,
                               final_time, time_out, result):
         """
-        Method to record the summary of an episode(pose) execution
+            Method to record the summary of an episode(pose) execution
         """
 
         self._dict_summary['exp_id'] = experiment.task
@@ -253,11 +253,11 @@ class Recording(object):
         line_on_file = self._get_last_position() - 1
         if line_on_file == 0:
             return 0, 0
-        else:
-            return line_on_file % number_poses_task, line_on_file // number_poses_task
+
+        return line_on_file % number_poses_task, line_on_file // number_poses_task
 
     def _experiment_exist(self):
-
+        """ Check if the experiment exists"""
         return os.path.exists(self._path)
 
     def _get_last_position(self):
