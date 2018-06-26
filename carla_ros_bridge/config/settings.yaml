@@ -7,8 +7,8 @@ carla:
   NumberOfVehicles: 30
   NumberOfPedestrians: 10
   WeatherId: 1
-  Framesperepisode: 200
-  Episodes: 10
+  Framesperepisode: -1
+  Episodes: 2
 
   sensors:
     camera_front:

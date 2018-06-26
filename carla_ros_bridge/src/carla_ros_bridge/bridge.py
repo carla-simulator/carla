@@ -8,6 +8,8 @@ import random
 from rosgraph_msgs.msg import Clock
 from tf2_msgs.msg import TFMessage
 import rospy
+from std_msgs.msg import Float32, Bool
+from itertools import count
 
 from carla.settings import CarlaSettings
 from carla_ros_bridge.control import InputController
@@ -147,7 +149,9 @@ class CarlaRosBridge(object):
 
         self.client.start_episode(player_start)
 
-        for frame in range(0, self.frames_per_episode):
+        for frame in count():
+            if frame == self.frames_per_episode:
+                break
             measurements, sensor_data = self.client.read_data()
 
             # handle time
