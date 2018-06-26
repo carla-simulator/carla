@@ -4,12 +4,19 @@ import os
 
 
 class Recording(object):
+    """
+    Class to record all the logs for the benchmark. It records individual episodes measurements
+    and also summary for each episodes.
+    """
 
-    def __init__(self
-                 , name_to_save
-                 , continue_experiment
-                 , save_images
-                 ):
+    def __init__(self, name_to_save, continue_experiment, save_images):
+        """
+        Recorder constructors
+        Args:
+            name_to_save: Name of the log
+            continue_experiment: If you want to continue a previous experiment with the same names
+            save_images: If you want to save images to the disk.
+        """
 
         self._dict_summary = {'exp_id': -1,
                               'rep': -1,
@@ -44,13 +51,14 @@ class Recording(object):
             os.mkdir('_benchmarks_results')
 
         # Generate the full path for the log files
-        self._path = os.path.join('_benchmarks_results'
-                                  , name_to_save
-                                  )
+        self._path = os.path.join('_benchmarks_results', name_to_save)
 
         # Check for continuation of experiment, also returns the last line, used for test purposes
-        # If you don't want to continue it will create a new path name with a number
-        self._path, _ = self._continue_experiment(continue_experiment)
+        # If you don't want to continue it will create a new path name with a number.
+        # Also returns the fieldnames for both measurements and summary, so you can keep the
+        # previous order
+        self._path, _, self._summary_fieldnames, self._measurements_fieldnames \
+            = self._continue_experiment(continue_experiment)
 
         self._create_log_files()
 
@@ -69,20 +77,31 @@ class Recording(object):
         return self._path
 
     def log_poses(self, start_index, end_index, weather_id):
+        """
+            Log tested poses by the benchmark
+        """
         with open(self._internal_log_name, 'a+') as log:
             log.write(' Start Poses  (%d  %d ) on weather %d \n ' %
                       (start_index, end_index, weather_id))
 
     def log_poses_finish(self):
+        """
+            Log when a set of poses (task) is finished by the benchmark
+        """
         with open(self._internal_log_name, 'a+') as log:
             log.write('Finished Task')
 
     def log_start(self, id_experiment):
-
+        """
+            Log when a set of poses (task) is started by the benchmark
+        """
         with open(self._internal_log_name, 'a+') as log:
             log.write('Start Task %d \n' % id_experiment)
 
     def log_end(self):
+        """
+            Log when the benchmark is finished
+        """
         with open(self._internal_log_name, 'a+') as log:
             log.write('====== Finished Entire Benchmark ======')
 
@@ -90,7 +109,7 @@ class Recording(object):
                               path_distance, remaining_distance,
                               final_time, time_out, result):
         """
-        Method to record the summary of an episode(pose) execution
+            Method to record the summary of an episode(pose) execution
         """
 
         self._dict_summary['exp_id'] = experiment.task
@@ -106,7 +125,7 @@ class Recording(object):
 
         with open(os.path.join(self._path, 'summary.csv'), 'a+') as ofd:
             w = csv.DictWriter(ofd, self._dict_summary.keys())
-
+            w.fieldnames = self._summary_fieldnames
             w.writerow(self._dict_summary)
 
     def write_measurements_results(self, experiment, rep, pose, reward_vec, control_vec):
@@ -115,8 +134,8 @@ class Recording(object):
         controls and status of the entire benchmark.
         """
         with open(os.path.join(self._path, 'measurements.csv'), 'a+') as rfd:
-            rw = csv.DictWriter(rfd, self._dict_measurements.keys())
-
+            mw = csv.DictWriter(rfd, self._dict_measurements.keys())
+            mw.fieldnames = self._measurements_fieldnames
             for i in range(len(reward_vec)):
                 self._dict_measurements['exp_id'] = experiment.task
                 self._dict_measurements['rep'] = rep
@@ -144,7 +163,7 @@ class Recording(object):
                 self._dict_measurements['brake'] = control_vec[
                     i].brake
 
-                rw.writerow(self._dict_measurements)
+                mw.writerow(self._dict_measurements)
 
     def _create_log_files(self):
         """
@@ -155,12 +174,16 @@ class Recording(object):
             os.mkdir(self._path)
 
             with open(os.path.join(self._path, 'summary.csv'), 'w') as ofd:
-                w = csv.DictWriter(ofd, self._dict_summary.keys())
-                w.writeheader()
+                sw = csv.DictWriter(ofd, self._dict_summary.keys())
+                sw.writeheader()
+                if self._summary_fieldnames is None:
+                    self._summary_fieldnames = sw.fieldnames
 
             with open(os.path.join(self._path, 'measurements.csv'), 'w') as rfd:
-                rw = csv.DictWriter(rfd, self._dict_measurements.keys())
-                rw.writeheader()
+                mw = csv.DictWriter(rfd, self._dict_measurements.keys())
+                mw.writeheader()
+                if self._measurements_fieldnames is None:
+                    self._measurements_fieldnames = mw.fieldnames
 
     def _continue_experiment(self, continue_experiment):
         """
@@ -185,6 +208,8 @@ class Recording(object):
 
         # start the new path as the same one as before
         new_path = self._path
+        summary_fieldnames = None
+        measurements_fieldnames = None
 
         # if the experiment exist
         if self._experiment_exist():
@@ -192,6 +217,13 @@ class Recording(object):
             # If you want to continue just get the last position
             if continue_experiment:
                 line_on_file = self._get_last_position()
+                # Get the previously used fileorder
+                with open(os.path.join(self._path, 'summary.csv'), 'r') as ofd:
+                    summary_reader = csv.DictReader(ofd)
+                    summary_fieldnames = summary_reader.fieldnames
+                with open(os.path.join(self._path, 'measurements.csv'), 'r') as ofd:
+                    measurements_reader = csv.DictReader(ofd)
+                    measurements_fieldnames = measurements_reader.fieldnames
 
             else:
                 # Get a new non_conflicting path name
@@ -200,7 +232,7 @@ class Recording(object):
 
         else:
             line_on_file = 1
-        return new_path, line_on_file
+        return new_path, line_on_file, summary_fieldnames, measurements_fieldnames
 
     def save_images(self, sensor_data, episode_name, frame):
         """
@@ -221,11 +253,11 @@ class Recording(object):
         line_on_file = self._get_last_position() - 1
         if line_on_file == 0:
             return 0, 0
-        else:
-            return line_on_file % number_poses_task, line_on_file // number_poses_task
+
+        return line_on_file % number_poses_task, line_on_file // number_poses_task
 
     def _experiment_exist(self):
-
+        """ Check if the experiment exists"""
         return os.path.exists(self._path)
 
     def _get_last_position(self):
