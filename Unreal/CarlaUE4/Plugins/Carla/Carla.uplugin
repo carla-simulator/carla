@@ -1,7 +1,7 @@
 {
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "0.8.2",
+	"VersionName": "0.8.4",
 	"FriendlyName": "CARLA",
 	"Description": "Open-source simulator for autonomous driving research.",
 	"Category": "Science",

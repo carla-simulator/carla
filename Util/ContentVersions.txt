@@ -11,3 +11,5 @@
 0.8.0: 1tA-WwKA0RNhBoENYunqF3-F_wg11dL86
 0.8.1: 1su5wQH7KJphAcirMA8VEDLndGigQ9tzq
 0.8.2: 1llrBkZDvJmxXYh4r3jz0wuwz8Q8jRQeZ
+0.8.3: 1z2XKOk9LoKI-EhxcrpI31W5TeYo2-jjn
+0.8.4: 1mFNS-w5atQ45yegiTepRIeKBYVm8N8He

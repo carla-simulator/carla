@@ -1,3 +1,31 @@
+## CARLA 0.8.4
+
+  * Community contribution: ROS bridge by @laurent-george
+  * New vehicle: Tesla Model 3
+  * Added an option to _"CarlaSettings.ini"_ to disable bikes and motorbikes
+  * Fixed missing collision of vehicles introduced in 0.8.3
+  * Improved stability of bikes and motorbikes
+  * Improved autopilot turning behaviour at intersections, now using front wheels positions as reference
+  * Temporarily removed Kawasaki Ninja motorbikes because the model was having some stability issues
+
+## CARLA 0.8.3
+
+  * Added two-wheeled vehicles, 3 bicycles and 4 motorbikes
+  * Several art optimizations (CARLA is now about 10% faster)
+    - Improved the performance of vegetation assets, adjusted LOD and culling distance, set billboards where possible
+    - Drastically reduced the number of polygons of the landscape while keeping the original shape
+    - Removed some high-cost unnecessary assets
+    - Remodelled Mustang and NissanMicra, now with less polygons and materials, better textures and LOD
+    - Remodelled building SM_TerracedHouse_01, now with more polygons but less materials and better textures
+  * CARLA releases include now a Dockerfile for building docker images
+  * Change in HUD: replace "FPS" by "Simulation Step"
+  * The current map name is now included in the scene description message sent to the client
+  * Adapted "manual_control.py" and "view_start_positions.py" to use the map name sent by the simulator
+  * Improved the vehicle spawning algorithm, now it tries to spawn as much cars as possible even if there are not enough spawn points
+  * "Setup.sh" is now faster and accepts an argument to run multiple jobs in parallel
+  * Fixed foliage distance culling using wrong distance in "Low Mode"
+  * Fixed NissanMicra slightly turning left when driving straight
+
 ## CARLA 0.8.2
 
   * Revamped driving benchmark

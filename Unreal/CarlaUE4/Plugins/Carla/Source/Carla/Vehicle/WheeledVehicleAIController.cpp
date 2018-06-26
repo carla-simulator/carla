@@ -12,6 +12,7 @@
 
 #include "EngineUtils.h"
 #include "GameFramework/Pawn.h"
+#include "WheeledVehicleMovementComponent.h"
 
 // =============================================================================
 // -- Static local methods -----------------------------------------------------
@@ -238,13 +239,19 @@ float AWheeledVehicleAIController::GoToNextTargetLocation(FVector &Direction)
 {
   APawn* pawn = GetPawn();
   if (!Vehicle||!pawn) return 0.0f;
-  const auto &CurrentLocation = Vehicle->GetActorLocation();
+  const auto CurrentLocation = [&](){
+    const auto &Wheels = Vehicle->GetVehicleMovementComponent()->Wheels;
+    check((Wheels.Num() > 1) && (Wheels[0u] != nullptr) && (Wheels[1u] != nullptr));
+    return (Wheels[0u]->Location + Wheels[1u]->Location) / 2.0f;
+  }();
+
   const auto Target = [&]()
   {
+    // Get middle point between the two front wheels.
     const auto &Result = TargetLocations.front();
     return FVector{Result.X, Result.Y, CurrentLocation.Z};
   }();
-
+  
   if (Target.Equals(CurrentLocation, 80.0f)) 
   {
     TargetLocations.pop();

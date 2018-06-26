@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name='carla_client',
-    version='0.8.2',
+    version='0.8.4',
     packages=['carla', 'carla.driving_benchmark', 'carla.agent',
               'carla.driving_benchmark.experiment_suites', 'carla.planner'],
     license='MIT License',
