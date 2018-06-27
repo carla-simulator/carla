@@ -66,6 +66,7 @@ Run the following command after replacing [PATH_TO_CARLA] with the actual path t
     rosdep install --from-paths ~/ros/catkin_ws_for_carla
     cd ~/ros/catkin_ws_for_carla
     catkin_make
+    source ~/ros/catkin_ws_for_carla/devel/setup.bash
     
 
 ### Test your installation
