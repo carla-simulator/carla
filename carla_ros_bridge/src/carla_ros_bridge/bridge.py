@@ -4,12 +4,11 @@ Rosbridge class:
 Class that handle communication between CARLA and ROS
 """
 import random
+from itertools import count
 
 from rosgraph_msgs.msg import Clock
 from tf2_msgs.msg import TFMessage
 import rospy
-from std_msgs.msg import Float32, Bool
-from itertools import count
 
 from carla.settings import CarlaSettings
 from carla_ros_bridge.control import InputController
@@ -54,14 +53,6 @@ class CarlaRosBridge(object):
 
         # creating input controller listener
         self.input_controller = InputController()
-
-        # control inputs - float std msgs
-        self.steer = Float32(0.0)
-        self.brake = Float32(0.0)
-        self.throttle = Float32(0.0)
-        # control inputs - Bool msgs
-        self.reverse = Bool(False)
-        self.hand_brake = Bool(False)
 
     def setup_carla_client(self, client, params):
         self.client = client
@@ -150,7 +141,7 @@ class CarlaRosBridge(object):
         self.client.start_episode(player_start)
 
         for frame in count():
-            if frame == self.frames_per_episode:
+            if (frame == self.frames_per_episode) or rospy.is_shutdown():
                 break
             measurements, sensor_data = self.client.read_data()
 
@@ -169,6 +160,9 @@ class CarlaRosBridge(object):
             for name, data in sensor_data.items():
                 self.sensors[name].process_sensor_data(data, self.cur_time)
 
+            # publish all messages
+            self.send_msgs()
+
             # handle control
             if rospy.get_param('carla_autopilot', True):
                 control = measurements.player_measurements.autopilot_control
@@ -176,13 +170,6 @@ class CarlaRosBridge(object):
             else:
                 control = self.input_controller.cur_control
                 self.client.send_control(**control)
-
-            self.steer.data = control.steer
-            self.throttle.data = control.throttle
-            self.brake.data = control.brake  
-
-            # publish all messages
-            self.send_msgs()
 
     def __enter__(self):
         return self

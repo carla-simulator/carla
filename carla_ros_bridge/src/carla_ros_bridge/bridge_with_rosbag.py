@@ -3,12 +3,12 @@ RosBridge class with rosbag support
 """
 
 import time
+from datetime import datetime
 
 from tf2_msgs.msg import TFMessage
 import rosbag
 import rospy
 import os
-from datetime import datetime
 
 from carla_ros_bridge.bridge import CarlaRosBridge
 
@@ -28,10 +28,6 @@ class CarlaRosBridgeWithBag(CarlaRosBridge):
 
         tf_msg = TFMessage(self.tf_to_publish)
         self.bag.write('tf', tf_msg, self.cur_time)
-
-        self.bag.write('steer', self.steer, self.cur_time)
-        self.bag.write('brake', self.brake, self.cur_time)
-        self.bag.write('gas', self.throttle, self.cur_time)
 
         super(CarlaRosBridgeWithBag, self).send_msgs()
 
