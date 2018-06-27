@@ -14,6 +14,7 @@ from carla.settings import CarlaSettings
 from carla_ros_bridge.control import InputController
 from carla_ros_bridge.markers import PlayerAgentHandler, NonPlayerAgentsHandler
 from carla_ros_bridge.sensors import CameraHandler, LidarHandler
+from carla_ros_bridge.map import MapHandler
 
 
 class CarlaRosBridge(object):
@@ -137,6 +138,10 @@ class CarlaRosBridge(object):
         # Choose one player start at random.
         number_of_player_starts = len(scene.player_start_spots)
         player_start = random.randint(0, max(0, number_of_player_starts - 1))
+
+        # Send occupancy grid to rivz
+        map_handler = MapHandler(scene.map_name)
+        map_handler.send_map()
 
         self.client.start_episode(player_start)
 
