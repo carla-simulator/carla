@@ -7,7 +7,7 @@ carla:
   NumberOfVehicles: 30
   NumberOfPedestrians: 10
   WeatherId: 1
-  Framesperepisode: -1
+  Framesperepisode: -1 # -1: run episode indefinitely until interrupted
   Episodes: 2
 
   sensors:
