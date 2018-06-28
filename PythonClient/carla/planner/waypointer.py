@@ -1,4 +1,3 @@
-import math
 import os
 import random
 import numpy as np
@@ -6,27 +5,23 @@ from numpy import linalg as LA
 
 from carla.planner.converter import Converter
 from carla.planner.city_track import CityTrack
-from carla.planner import bezier
-
-
-def angle_between(v1, v2):
-    return np.arccos(np.dot(v1, v2) / np.linalg.norm(v1) / np.linalg.norm(v2))
-
-
-def sldist(t1, t2):
-    return math.sqrt((t1[0] - t2[0]) * (t1[0] - t2[0]) + (t1[1] - t2[1]) * (t1[1] - t2[1]))
+from carla.planner import bezier, sldist, angle_between
 
 
 class Waypointer(object):
     """
         Class used to make waypoints, local planning, given a route.
-        TODO 0.9 or 0.10: remodel it, now it is very specific for the Town01 and Town02
+        TODO  0.10: remodel it, now it is very specific for the Town01 and Town02
         WARNING: there are specific situations were the waypointer does not work.
 
     """
 
     def __init__(self, city_name):
-
+        """
+            Init function
+        Args:
+            city_name: the name of the CARLA city used, "Town01" or "Town02"
+        """
         # Open the necessary files
         dir_path = os.path.dirname(__file__)
         self.city_file = os.path.join(dir_path, city_name + '.txt')
@@ -36,7 +31,8 @@ class Waypointer(object):
         # Define the specif parameter for the waypointer. Where is the middle of the road,
         # how open are the curves being made, etc.
         extra_spacing = (random.randint(0, 4) - 2)
-        self.lane_shift_distance = 13 + extra_spacing  # The amount of shifting from the center the car should go
+        # The amount of shifting from the center the car should go
+        self.lane_shift_distance = 13 + extra_spacing
         self.extra_spacing_rights = -2 - extra_spacing
         self.extra_spacing_lefts = 10 + extra_spacing
         self.way_key_points_predicted = 7
@@ -46,16 +42,8 @@ class Waypointer(object):
         self._city_track = CityTrack(self.city_name)
         self._map = self._city_track.get_map()
 
-        # Define here some specific configuration to produce waypoints
-        self.last_trajectory = []
-        self.lane_shift_distance = self.lane_shift_distance  # The amount of shifting from the center the car should go
-        self.extra_spacing_rights = self.extra_spacing_rights
-        self.extra_spacing_lefts = self.extra_spacing_lefts
-        self.way_key_points_predicted = self.way_key_points_predicted
-        self.number_of_waypoints = self.number_of_waypoints
-        self.previous_map = [0, 0]
-
         # The internal state variable
+        self.previous_map = [0, 0]
         self.last_trajectory = []
         self._route = []
         self.previous_map = [0, 0]
@@ -63,21 +51,9 @@ class Waypointer(object):
         self.last_map_points = None
         self.points = None
 
-    def reset(self):
-        """
-            Reset the variables from any previous route calculation
-        Returns:
-            None
-
-        """
-        self.last_trajectory = []
-        self._route = []
-        self.previous_map = [0, 0]
-        self._previous_source = None
-
     def _search_around_square(self, map_point, map_central_2d):
         """
-            Function to search the map point in the central line.
+        Function to search the map point in the central line.
         Args:
             map_point: the used map point
             map_central_2d: the 2d map containing the central lines in red
@@ -104,15 +80,12 @@ class Waypointer(object):
 
                 closest_point = [t[0] - square_crop.shape[1] / 2, t[1] - square_crop.shape[0] / 2]
 
-        # self.search_image[x,y ] = 128
-        # search_image[x+closest_point[0],y +closest_point[1]] = 128
-
         return np.array([x + closest_point[0], y + closest_point[1]])
 
     def _shift_points(self, distance_to_center, lane_points, inflection_position):
         """
-            Function to take the route points in the middle of the road and shift then to the
-            center of the lane
+        Function to take the route points in the middle of the road and shift then to the
+        center of the lane
         Args:
             distance_to_center: The distance you want to shift
             lane_points: the lane points used
@@ -152,7 +125,7 @@ class Waypointer(object):
 
     def _find_curve_points(self, points):
         """
-            Function to find points when there is a curve.
+        Function to find points when there is a curve.
         Args:
             points: the search space
 
@@ -181,7 +154,7 @@ class Waypointer(object):
 
     def _get_unit(self, last_pos, first_pos):
         """
-            Get a unity vector from two points point
+        Get a unity vector from two 2D points, graph nodes.
 
         """
 
@@ -194,12 +167,13 @@ class Waypointer(object):
 
     def generate_final_trajectory(self, coarse_trajectory):
         """
-            Smooth the waypoints trajectory using a bezier curve.
+        Smooth the waypoints trajectory using a bezier curve.
         Args:
-            coarse_trajectory:
+            coarse_trajectory: a list with the trajectory of 2D points.
 
         Returns:
-
+            world_points: A list of 3D points in the world after smoothing
+            points_list: A list of 3D points in the map after smoothing
         """
 
         total_course_trajectory_distance = 0
@@ -220,8 +194,7 @@ class Waypointer(object):
 
     def get_free_node_direction_target(self, pos, pos_ori, source):
         """
-            Get free positions to drive in the direction of the target point
-
+        Get free positions to drive in the direction of the target point.
         """
 
         free_nodes = self._map.get_adjacent_free_nodes(pos)
@@ -241,8 +214,8 @@ class Waypointer(object):
 
     def graph_to_waypoints(self, next_route):
         """
-            Convert the graph to raw waypoints, with the same size as as the route.
-            Basically just project the route to the map and shift to the center of the lane.
+        Convert the graph to raw waypoints, with the same size as as the route.
+        Basically just project the route to the map and shift to the center of the lane.
         Args:
             next_route: the graph points (nodes) that are going to be converted.
 
@@ -257,7 +230,6 @@ class Waypointer(object):
             map_point = self._converter.convert_to_pixel([int(point[0]), int(point[1])])
             lane_points.append(self._search_around_square(map_point, self._map.map_image_center))
 
-        # THE CURVE POINTS
         _, points_indexes, curve_direction = self._find_curve_points(lane_points)
         # If it is a intersection we divide this in two parts
 
@@ -277,33 +249,23 @@ class Waypointer(object):
 
         return shifted_lane_vec
 
-    def add_extra_points(self, route, node_target, target_ori, node_source):
+    def add_extra_points(self, route, node_source):
         """
-            Hacky: Add extra points after the target. With this the route never
-            finishes and waypoints can be always computed.
+        Hacky: Add extra points after the target. With this the route never
+        finishes and waypoints can be always computed.
         """
-        direction = node_target
-        direction_ori = target_ori
         # print self.grid
         new_route = route
 
         while len(new_route) < 10:  # ADD EXTRA POINTS AFTER
 
-            try:
-                free_nodes = list(
-                    self.get_free_node_direction_target(direction, direction_ori, node_source))
+            if len(route) > 1:
+                direction_route = self._get_unit(np.array(route[-1]), np.array(route[-2]))
+            else:
+                direction_route = self._get_unit(np.array(route[-1], node_source))
 
-                direction_ori = self._get_unit(np.array(direction), np.array(free_nodes[0]))
-                aux = -direction_ori[1]
-                direction_ori[1] = direction_ori[0]
-                direction_ori[0] = aux
-
-                direction = free_nodes[0]
-            except IndexError:
-
-                # Repeat some route point, there is no problem.
-                direction = [round(new_route[-1][0] + direction_ori[0]),
-                             round(new_route[-1][1] + direction_ori[1])]
+            direction = (round(new_route[-1][0] + direction_route[1]),
+                         round(new_route[-1][1] - direction_route[0]))
 
             new_route.append(direction)
 
@@ -311,7 +273,7 @@ class Waypointer(object):
 
     def get_next_waypoints(self, source, source_ori, target, target_ori):
         """
-            Get the next waypoints, from a list of generated waypoints.
+        Get the next waypoints, from a list of generated waypoints.
         Args:
             source: source position
             source_ori: source orientation
@@ -323,7 +285,6 @@ class Waypointer(object):
         """
         track_source = self._city_track.project_node(source)
         track_target = self._city_track.project_node(target)
-
 
         # reach the goal
         if track_source == track_target:
@@ -341,8 +302,7 @@ class Waypointer(object):
                                                    target_ori)
 
             # IF needed we add points after the objective, that is very hacky.
-            route = self.add_extra_points(route, track_target, target_ori, track_source)
-
+            route = self.add_extra_points(route, track_source)
             self.points = self.graph_to_waypoints(route[1:(1 + self.way_key_points_predicted)])
 
             self.last_trajectory, self.last_map_points = self.generate_final_trajectory(
@@ -354,20 +314,17 @@ class Waypointer(object):
             if sldist(self.previous_map, self._converter.convert_to_pixel(source)) > 3.0:
 
                 # That is because no route was ever computed. This is a problem we should solve.
-                """
-                if not self._route:
-                    self._route = self._city_track.compute_route(track_source, source_ori,
-                                                                 track_target, target_ori)
-                    # print self._route
 
-                    self.add_extra_points(track_target, target_ori, track_source)
+                route = self._city_track.compute_route(track_source, source_ori,
+                                                       track_target, target_ori)
+                # print self._route
 
-                    self.points = self.graph_to_waypoints(
-                        self._route[1:(1 + self.way_key_points_predicted)])
+                route = self.add_extra_points(route, track_source)
 
-                    self.last_trajectory, self.last_map_points = self.generate_final_trajectory(
-                        [np.array(self._converter.convert_to_pixel(source))] + self.points)
-                """
+                self.points = self.graph_to_waypoints(route[1:(1 + self.way_key_points_predicted)])
+
+                self.last_trajectory, self.last_map_points = self.generate_final_trajectory(
+                    [np.array(self._converter.convert_to_pixel(source))] + self.points)
 
                 # We have to find the current node position
                 self.previous_map = self._converter.convert_to_pixel(source)
@@ -389,26 +346,3 @@ class Waypointer(object):
                         self.last_map_points.remove(point)
 
             return self.last_trajectory, self.last_map_points
-
-        # This function uses the map to test if some specific position is too close to intersections
-
-    def route_test(self, node_source, source_ori, node_target, target_ori):
-        route = self._city_track.compute_route(node_source, source_ori, node_target, target_ori)
-        return route is not None
-
-    def test_position(self, source):
-        node_source = self._city_track.project_node(source)
-
-        distance_node = self._city_track.closest_intersection_position(node_source)
-        if distance_node > 2:
-            return True
-        else:
-            return False
-
-    def test_pair(self, source, source_ori, target, target_ori):
-
-        node_source = self._city_track.project_node(source)
-
-        node_target = self._city_track.project_node(target)
-
-        return self.route_test(node_source, source_ori, node_target, target_ori)

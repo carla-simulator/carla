@@ -16,7 +16,6 @@ def compare(x, y):
     return collections.Counter(x) == collections.Counter(y)
 
 
-
 # Constants Used for the high level commands
 
 
@@ -29,10 +28,30 @@ LANE_FOLLOW = 2.0
 
 # Auxiliary algebra function
 def angle_between(v1, v2):
+    """
+        Returns the angle between two 2D points
+    Args:
+        v1: a float tuple (first)
+        v2: a float tuple (second)
+
+    Returns:
+
+    """
     return np.arccos(np.dot(v1, v2) / np.linalg.norm(v1) / np.linalg.norm(v2))
 
 
-def sldist(c1, c2): return math.sqrt((c2[0] - c1[0]) ** 2 + (c2[1] - c1[1]) ** 2)
+def sldist(t1, t2):
+    """
+        Returns the distance between two 2D points
+    Args:
+        t1: a float tuple (first)
+        t2: a float tuple (second)
+
+    Returns:
+        A float, the distance
+
+    """
+    return math.sqrt((t1[0] - t2[0]) * (t1[0] - t2[0]) + (t1[1] - t2[1]) * (t1[1] - t2[1]))
 
 
 def signal(v1, v2):
