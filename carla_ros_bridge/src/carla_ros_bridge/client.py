@@ -26,6 +26,9 @@ def main():
 
         for episode in range(0, num_episodes):
             rospy.loginfo("Starting Episode --> {}".format(episode))
+            current_eps = '_episode' + '_' + str(episode)
+            rospy.set_param(param_name='curr_episode',
+                            param_value=current_eps)
             bridge_cls = CarlaRosBridgeWithBag if rospy.get_param(
                 'rosbag_fname', '') else CarlaRosBridge
             with bridge_cls(client=client, params=params) as carla_ros_bridge:

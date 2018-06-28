@@ -17,9 +17,8 @@ class CarlaRosBridgeWithBag(CarlaRosBridge):
     def __init__(self, *args, **kwargs):
         super(CarlaRosBridgeWithBag, self).__init__(*args, **kwargs)
 
-        fname = '{:%m%d_%H%M}'.format(datetime.now())
-        rosbag_fname = os.path.join(rospy.get_param('rosbag_fname'), 
-                                    'recording_episode'+fname)
+        prefix, ext = os.path.splitext(rospy.get_param('rosbag_fname'))
+        rosbag_fname = os.path.abspath(prefix + rospy.get_param('curr_episode'))
         self.bag = rosbag.Bag(rosbag_fname, mode='w')
 
     def send_msgs(self):
