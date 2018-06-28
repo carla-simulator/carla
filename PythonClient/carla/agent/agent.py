@@ -15,7 +15,6 @@ class Agent(object):
     def __init__(self):
         self.__metaclass__ = abc.ABCMeta
 
-    @abc.abstractmethod
     def possess(self, vehicle):
         # Not implemented to be added on 0.9
         pass

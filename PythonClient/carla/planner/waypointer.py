@@ -262,7 +262,7 @@ class Waypointer(object):
             if len(route) > 1:
                 direction_route = self._get_unit(np.array(route[-1]), np.array(route[-2]))
             else:
-                direction_route = self._get_unit(np.array(route[-1], node_source))
+                direction_route = self._get_unit(np.array(route[-1]), node_source)
 
             direction = (round(new_route[-1][0] + direction_route[1]),
                          round(new_route[-1][1] - direction_route[0]))
