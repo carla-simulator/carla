@@ -90,6 +90,9 @@ class Converter(object):
         else:
             raise ValueError('Invalid node to be converted')
 
+    def get_map_resolution(self):
+        return self._pixel_density
+
     def _node_to_pixel(self, node):
         """
         Conversion from node format (graph) to pixel (image)

@@ -64,8 +64,10 @@ class CarlaMap(object):
         self.map_image_center = np.asarray(self.map_image_center, dtype="int32")
 
     def get_graph_resolution(self):
-
         return self._graph.get_resolution()
+
+    def get_map_resolution(self):
+        return self._converter.get_map_resolution()
 
     def get_map(self, height=None):
         if height is not None:
