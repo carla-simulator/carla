@@ -35,11 +35,6 @@ import logging
 import random
 import time
 
-try:
-    import numpy as np
-except ImportError:
-    raise RuntimeError('cannot import numpy, make sure numpy package is installed')
-
 from carla import sensor
 from carla.client import make_carla_client
 
