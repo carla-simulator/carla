@@ -31,7 +31,7 @@ def color_to_angle(color):
 
 class CarlaMap(object):
 
-    def __init__(self, city, pixel_density, node_density):
+    def __init__(self, city, pixel_density=0.1643, node_density=50):
         dir_path = os.path.dirname(__file__)
         city_file = os.path.join(dir_path, city + '.txt')
 
