@@ -25,6 +25,8 @@ def main():
         rospy.loginfo("Connected")
 
         for episode in range(0, num_episodes):
+            if rospy.is_shutdown():
+                break
             rospy.loginfo("Starting Episode --> {}".format(episode))
             current_eps = '_episode' + '_' + str(episode)
             rospy.set_param(param_name='curr_episode',
