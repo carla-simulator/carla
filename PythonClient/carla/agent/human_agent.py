@@ -28,7 +28,7 @@ class HumanAgent(Agent):
         """
          TODO: add the parameter for a joystick to be used, default keyboard.
         """
-        super(HumanAgent).__init__()
+        Agent.__init__(self)
         self._is_on_reverse = False
 
     def _get_keyboard_control(self, keys):
