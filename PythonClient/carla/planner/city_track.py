@@ -13,12 +13,7 @@ from carla.planner.map import CarlaMap
 class CityTrack(object):
 
     def __init__(self, city_name):
-
-        # These values are fixed for every city.
-        self._node_density = 50.0
-        self._pixel_density = 0.1643
-
-        self._map = CarlaMap(city_name, self._pixel_density, self._node_density)
+        self._map = CarlaMap(city_name)
 
         self._astar = AStar()
 
