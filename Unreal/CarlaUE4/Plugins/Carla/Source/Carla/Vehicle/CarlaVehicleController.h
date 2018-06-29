@@ -113,4 +113,29 @@ private:
   // Cast for quick access to the custom HUD.
   UPROPERTY()
   ACarlaHUD *CarlaHUD;
+  
+  // Necessary for computing the wheels speed.
+  UPROPERTY()
+  float PreviousWheelFLPosition;
+  
+  UPROPERTY()
+  float PreviousWheelFRPosition;
+  
+  UPROPERTY()
+  float PreviousWheelRLPosition;
+  
+  UPROPERTY()
+  float PreviousWheelRRPosition;
+  
+  UPROPERTY()
+  float PreviousWheelFLSpeed;
+  
+  UPROPERTY()
+  float PreviousWheelFRSpeed;
+  
+  UPROPERTY()
+  float PreviousWheelRLSpeed;
+  
+  UPROPERTY()
+  float PreviousWheelRRSpeed;
 };

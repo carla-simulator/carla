@@ -145,6 +145,11 @@ message Measurements {
     float intersection_offroad = 9;
 
     Control autopilot_control = 10;
+
+    float wheelFLOmega = 13;
+    float wheelFROmega = 14;
+    float wheelRLOmega = 15;
+    float wheelRROmega = 16;
   }
 
   uint64 frame_number = 5;

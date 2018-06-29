@@ -184,6 +184,11 @@ extern "C" {
     float intersection_offroad;
     /** Vehicle's AI control that would apply this frame. */
     struct carla_control autopilot_control;
+    /** Rotational speed of the wheels. */
+    float wheelFLOmega;
+    float wheelFROmega;
+    float wheelRLOmega;
+    float wheelRROmega;
   };
 
   /* ======================================================================== */

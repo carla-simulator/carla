@@ -110,6 +110,27 @@ public:
   {
     return Acceleration;
   }
+  
+  UFUNCTION(BlueprintCallable)
+  float GetWheelFLOmega() const
+  {
+    return WheelFLOmega;
+  }
+  UFUNCTION(BlueprintCallable)
+  float GetWheelFROmega() const
+  {
+    return WheelFROmega;
+  }
+  UFUNCTION(BlueprintCallable)
+  float GetWheelRLOmega() const
+  {
+    return WheelRLOmega;
+  }
+  UFUNCTION(BlueprintCallable)
+  float GetWheelRROmega() const
+  {
+    return WheelRROmega;
+  }
 
   /// @}
   // ===========================================================================
@@ -287,4 +308,16 @@ private:
 
   UPROPERTY(VisibleAnywhere)
   float OffRoadIntersectionFactor = 0.0f;
+  
+  UPROPERTY(VisibleAnywhere)
+  float WheelFLOmega = 0.0f;
+  
+  UPROPERTY(VisibleAnywhere)
+  float WheelFROmega = 0.0f;
+  
+  UPROPERTY(VisibleAnywhere)
+  float WheelRLOmega = 0.0f;
+  
+  UPROPERTY(VisibleAnywhere)
+  float WheelRROmega = 0.0f;
 };

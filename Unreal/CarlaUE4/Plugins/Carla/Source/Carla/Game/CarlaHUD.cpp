@@ -87,6 +87,10 @@ static FText GetHUDText(const ACarlaPlayerState &Vehicle)
   Args.Add("CollisionOther", RoundedFloatAsText(Vehicle.GetCollisionIntensityOther() * TO_METERS));
   Args.Add("IntersectionOtherLane", RoundedFloatAsText(100.0f * Vehicle.GetOtherLaneIntersectionFactor()));
   Args.Add("IntersectionOffRoad", RoundedFloatAsText(100.0f * Vehicle.GetOffRoadIntersectionFactor()));
+  Args.Add("WheelFLOmega", RoundedFloatAsText(Vehicle.GetWheelFLOmega()));
+  Args.Add("WheelFROmega", RoundedFloatAsText(Vehicle.GetWheelFROmega()));
+  Args.Add("WheelRLOmega", RoundedFloatAsText(Vehicle.GetWheelRLOmega()));
+  Args.Add("WheelRROmega", RoundedFloatAsText(Vehicle.GetWheelRROmega()));
   return FText::Format(
       LOCTEXT("HUDTextFormat",
           "Simulation Step: {SimStep} ms\n"
@@ -106,7 +110,10 @@ static FText GetHUDText(const ACarlaPlayerState &Vehicle)
           "Collision (Other):      {CollisionOther}\n"
           "\n"
           "Intersection (Lane):    {IntersectionOtherLane}%\n"
-          "Intersection (OffRoad): {IntersectionOffRoad}%")
+          "Intersection (OffRoad): {IntersectionOffRoad}%"
+          "\n"
+          "Wheels speed (rad/s):   {WheelFLOmega}, {WheelFROmega},\n"
+          "                        {WheelRLOmega}, {WheelRROmega}")
       ,
       Args);
 }
