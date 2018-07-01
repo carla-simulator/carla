@@ -39,10 +39,10 @@ collision_other            | float       | kg*m/s | General collision intensity 
 intersection_otherlane     | float       |        | Percentage of the vehicle invading other lanes.
 intersection_offroad       | float       |        | Percentage of the vehicle off-road.
 autopilot_control          | Control     |        | Vehicle's autopilot control that would apply this frame.
-wheelFLOmega               | float     | rad/s  | Vehicle's front left wheel' rotational speed.
-wheelFROmega               | float     | rad/s  | Vehicle's front right wheel' rotational speed.
-wheelRLOmega               | float     | rad/s  | Vehicle's rear left wheel' rotational speed.
-wheelRROmega               | float     | rad/s  | Vehicle's rear right wheel' rotational speed.
+wheelFLOmega               | float       | rad/s  | Vehicle's front left wheel' rotational speed.
+wheelFROmega               | float       | rad/s  | Vehicle's front right wheel' rotational speed.
+wheelRLOmega               | float       | rad/s  | Vehicle's rear left wheel' rotational speed.
+wheelRROmega               | float       | rad/s  | Vehicle's rear right wheel' rotational speed.
 
 <h4>Transform</h4>
 

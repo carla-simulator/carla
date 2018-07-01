@@ -23,6 +23,14 @@
 ACarlaVehicleController::ACarlaVehicleController(const FObjectInitializer& ObjectInitializer) :
   Super(ObjectInitializer)
 {
+  PreviousWheelFLPosition = 0.0f;
+  PreviousWheelFRPosition = 0.0f;
+  PreviousWheelRLPosition = 0.0f;
+  PreviousWheelRRPosition = 0.0f;
+  PreviousWheelFLSpeed = 0.0f;
+  PreviousWheelFRSpeed = 0.0f;
+  PreviousWheelRLSpeed = 0.0f;
+  PreviousWheelRRSpeed = 0.0f;
   PrimaryActorTick.bCanEverTick = true;
 }
 
@@ -52,14 +60,6 @@ void ACarlaVehicleController::Possess(APawn *aPawn)
     } else {
       UE_LOG(LogCarla, Warning, TEXT("Current HUD is not a ACarlaHUD"));
     }
-    PreviousWheelFLPosition = 0.0f;
-	PreviousWheelFRPosition = 0.0f;
-	PreviousWheelRLPosition = 0.0f;
-	PreviousWheelRRPosition = 0.0f;
-	PreviousWheelFLSpeed = 0.0f;
-	PreviousWheelFRSpeed = 0.0f;
-	PreviousWheelRLSpeed = 0.0f;
-	PreviousWheelRRSpeed = 0.0f;
   }
 }
 
