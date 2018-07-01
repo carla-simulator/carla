@@ -88,45 +88,48 @@ void ACarlaVehicleController::Tick(float DeltaTime)
     CarlaPlayerState->SpeedLimit = GetSpeedLimit();
     CarlaPlayerState->TrafficLightState = GetTrafficLightState();
 	  
-    const float threshold = 3000.0f; // TODO: determined "empirically"
+    const float threshold = 50.0f; // determined "empirically"
+	// this threshold should be interpreted as: if a wheel' speed between two consecutive frames
+	// change by an amount greater that the threshold, it should be ignored.
+	// This happens when the wheel's position goes from maximum value (1800 degrees) to zero.
 	  // FL
 	float CurrentWheelPosition = Vehicle->GetWheelFLPosition();
-    float CurrentWheelSpeed = (PreviousWheelFLPosition - CurrentWheelPosition) / DeltaTime;
+    float CurrentWheelSpeed = (CurrentWheelPosition - PreviousWheelFLPosition) / DeltaTime;
 	if (abs(CurrentWheelSpeed - PreviousWheelFLSpeed) > threshold)
-	{ // This is to avoid (wrong) extra high speed when the angle goes from maximum value (1800 degrees) to zero.
+	{
 		CurrentWheelSpeed = PreviousWheelFLSpeed; // for this step we keep the previous computed speed
 	}
-	CarlaPlayerState->WheelFLOmega = CurrentWheelSpeed;
+	CarlaPlayerState->WheelFLOmega = abs(CurrentWheelSpeed);
 	PreviousWheelFLSpeed = CurrentWheelSpeed;
 	PreviousWheelFLPosition = CurrentWheelPosition;
 	  // FR
 	CurrentWheelPosition = Vehicle->GetWheelFRPosition();
-    CurrentWheelSpeed = (PreviousWheelFRPosition - CurrentWheelPosition) / DeltaTime;
+    CurrentWheelSpeed = (CurrentWheelPosition - PreviousWheelFRPosition) / DeltaTime;
 	if (abs(CurrentWheelSpeed - PreviousWheelFRSpeed) > threshold)
-	{ // This is to avoid (wrong) extra high speed when the angle goes from maximum value (1800 degrees) to zero.
+	{
 		CurrentWheelSpeed = PreviousWheelFRSpeed; // for this step we keep the previous computed speed
 	}
-	CarlaPlayerState->WheelFROmega = CurrentWheelSpeed;
+	CarlaPlayerState->WheelFROmega = abs(CurrentWheelSpeed);
 	PreviousWheelFRSpeed = CurrentWheelSpeed;
 	PreviousWheelFRPosition = CurrentWheelPosition;
 	  // RL
 	CurrentWheelPosition = Vehicle->GetWheelRLPosition();
-    CurrentWheelSpeed = (PreviousWheelRLPosition - CurrentWheelPosition) / DeltaTime;
+    CurrentWheelSpeed = (CurrentWheelPosition - PreviousWheelRLPosition) / DeltaTime;
 	if (abs(CurrentWheelSpeed - PreviousWheelRLSpeed) > threshold)
-	{ // This is to avoid (wrong) extra high speed when the angle goes from maximum value (1800 degrees) to zero.
+	{
 		CurrentWheelSpeed = PreviousWheelRLSpeed; // for this step we keep the previous computed speed
 	}
-	CarlaPlayerState->WheelRLOmega = CurrentWheelSpeed;
+	CarlaPlayerState->WheelRLOmega = abs(CurrentWheelSpeed);
 	PreviousWheelRLSpeed = CurrentWheelSpeed;
 	PreviousWheelRLPosition = CurrentWheelPosition;
 	  // RR
 	CurrentWheelPosition = Vehicle->GetWheelRRPosition();
-    CurrentWheelSpeed = (PreviousWheelRRPosition - CurrentWheelPosition) / DeltaTime;
+    CurrentWheelSpeed = (CurrentWheelPosition - PreviousWheelRRPosition) / DeltaTime;
 	if (abs(CurrentWheelSpeed - PreviousWheelRRSpeed) > threshold)
-	{ // This is to avoid (wrong) extra high speed when the angle goes from maximum value (1800 degrees) to zero.
+	{
 		CurrentWheelSpeed = PreviousWheelRRSpeed; // for this step we keep the previous computed speed
 	}
-	CarlaPlayerState->WheelRROmega = CurrentWheelSpeed;
+	CarlaPlayerState->WheelRROmega = abs(CurrentWheelSpeed);
 	PreviousWheelRRSpeed = CurrentWheelSpeed;
 	PreviousWheelRRPosition = CurrentWheelPosition;
 
