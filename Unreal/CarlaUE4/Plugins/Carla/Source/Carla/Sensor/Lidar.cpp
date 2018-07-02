@@ -34,7 +34,7 @@ void ALidar::CreateLasers()
   check(Description != nullptr);
   const auto NumberOfLasers = Description->Channels;
   check(NumberOfLasers > 0u);
-  const float DeltaAngle =
+  const float DeltaAngle = NumberOfLasers == 1u ? 0.f :
     (Description->UpperFovLimit - Description->LowerFovLimit) /
     static_cast<float>(NumberOfLasers - 1);
   LaserAngles.Empty(NumberOfLasers);
