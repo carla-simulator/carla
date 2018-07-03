@@ -49,10 +49,10 @@ class MapHandler(object):
         map_msg.info.origin.position.x = to_world[0]
         map_msg.info.origin.position.y = -to_world[1]
 
-        # FIXME: remove hardcoded values from convert_to_world
+        # FIXME: remove hardcoded values from convert_to_world (PR #542)
         map_msg.info.origin.position.z = -self.carla_map._converter._worldoffset[2]
 
-        # FIXME: height for Town01 is still in centimeters
+        # FIXME: height for Town01 is still in centimeters (issue #541)
         if self.map_name == 'Town01':
             map_msg.info.origin.position.z *= 100
 
