@@ -14,12 +14,6 @@
 #include "CommandLine.h"
 #include "UnrealMathUtility.h"
 #include "Engine/Engine.h"
-#include "Kismet/GameplayStatics.h"
-#include "Engine/DirectionalLight.h"
-#include "Engine/PointLight.h"
-#include "Engine/StaticMesh.h"
-#include "Engine/PostProcessVolume.h"
-#include "Materials/MaterialInstance.h"
 
 // INI file sections.
 #define S_CARLA_SERVER                 TEXT("CARLA/Server")
@@ -46,7 +40,8 @@ static void ForEachSectionInName(const FString &SensorName, T &&Callback)
   check(SubSections.Num() > 0);
   FString Section = S_CARLA_SENSOR;
   Callback(Section);
-  for (FString &SubSection : SubSections) {
+  for (FString &SubSection : SubSections) 
+  {
     Section += TEXT("/");
     Section += SubSection;
     Callback(Section);
@@ -104,13 +99,16 @@ static void LoadSettingsFromConfig(
     const bool bLoadCarlaServerSection)
 {
   // CarlaServer.
-  if (bLoadCarlaServerSection) {
+  if (bLoadCarlaServerSection) 
+  {
     ConfigFile.GetBool(S_CARLA_SERVER, TEXT("UseNetworking"), Settings.bUseNetworking);
     ConfigFile.GetInt(S_CARLA_SERVER, TEXT("WorldPort"), Settings.WorldPort);
     ConfigFile.GetInt(S_CARLA_SERVER, TEXT("ServerTimeOut"), Settings.ServerTimeOut);
   }
+
   ConfigFile.GetBool(S_CARLA_SERVER, TEXT("SynchronousMode"), Settings.bSynchronousMode);
   ConfigFile.GetBool(S_CARLA_SERVER, TEXT("SendNonPlayerAgentsInfo"), Settings.bSendNonPlayerAgentsInfo);
+
   // LevelSettings.
   ConfigFile.GetString(S_CARLA_LEVELSETTINGS, TEXT("PlayerVehicle"), Settings.PlayerVehicle);
   ConfigFile.GetInt(S_CARLA_LEVELSETTINGS, TEXT("NumberOfVehicles"), Settings.NumberOfVehicles);
@@ -118,6 +116,7 @@ static void LoadSettingsFromConfig(
   ConfigFile.GetInt(S_CARLA_LEVELSETTINGS, TEXT("WeatherId"), Settings.WeatherId);
   ConfigFile.GetInt(S_CARLA_LEVELSETTINGS, TEXT("SeedVehicles"), Settings.SeedVehicles);
   ConfigFile.GetInt(S_CARLA_LEVELSETTINGS, TEXT("SeedPedestrians"), Settings.SeedPedestrians);
+  ConfigFile.GetString(S_CARLA_LEVELSETTINGS, TEXT("MapName"), Settings.MapName);
   ConfigFile.GetBool(S_CARLA_LEVELSETTINGS, TEXT("DisableTwoWheeledVehicles"), Settings.bDisableTwoWheeledVehicles);
 
   // QualitySettings.
@@ -130,7 +129,8 @@ static void LoadSettingsFromConfig(
   ConfigFile.GetString(S_CARLA_SENSOR, TEXT("Sensors"), Sensors);
   TArray<FString> SensorNames;
   Sensors.ParseIntoArray(SensorNames, TEXT(","), true);
-  for (const FString &Name : SensorNames) {
+  for (const FString &Name : SensorNames) 
+  {
     auto *Sensor = MakeSensor(ConfigFile, &Settings, Name);
     if (Sensor != nullptr) {
       LoadSensorFromConfig(ConfigFile, *Sensor);
@@ -143,8 +143,10 @@ static void LoadSettingsFromConfig(
 
 static bool GetSettingsFilePathFromCommandLine(FString &Value)
 {
-  if (FParse::Value(FCommandLine::Get(), TEXT("-carla-settings="), Value)) {
-    if (FPaths::IsRelative(Value)) {
+  if (FParse::Value(FCommandLine::Get(), TEXT("-carla-settings="), Value)) 
+  {
+    if (FPaths::IsRelative(Value)) 
+    {
       Value = FPaths::ConvertRelativePathToFull(FPaths::LaunchDir(), Value);
       return true;
     }
@@ -174,9 +176,9 @@ FString UQualitySettings::ToString(EQualitySettingsLevel QualitySettingsLevel)
   return ptr->GetNameStringByIndex(static_cast<int32>(QualitySettingsLevel));
 }
 
-void UCarlaSettings::SetQualitySettingsLevel(EQualitySettingsLevel newQualityLevel)
+void UCarlaSettings::SetQualitySettingsLevel(const EQualitySettingsLevel newQualityLevel)
 {
-	QualitySettingsLevel = newQualityLevel;
+  QualitySettingsLevel = newQualityLevel;
 }
 
 void UCarlaSettings::LoadSettings()
@@ -187,22 +189,29 @@ void UCarlaSettings::LoadSettings()
   // Load settings given by command-line arg if provided.
   {
     FString FilePath;
-    if (GetSettingsFilePathFromCommandLine(FilePath)) {
+    if (GetSettingsFilePathFromCommandLine(FilePath)) 
+    {
       LoadSettingsFromFile(FilePath, true);
     }
   }
   // Override settings from command-line.
   {
-    if (FParse::Param(FCommandLine::Get(), TEXT("carla-server"))) {
+    if (FParse::Param(FCommandLine::Get(), TEXT("carla-server"))) 
+    {
       bUseNetworking = true;
     }
+
     uint32 Value;
+
     if (FParse::Value(FCommandLine::Get(), TEXT("-world-port="), Value) ||
-        FParse::Value(FCommandLine::Get(), TEXT("-carla-world-port="), Value)) {
+        FParse::Value(FCommandLine::Get(), TEXT("-carla-world-port="), Value)) 
+    {
       WorldPort = Value;
       bUseNetworking = true;
     }
-    if (FParse::Param(FCommandLine::Get(), TEXT("carla-no-networking"))) {
+
+    if (FParse::Param(FCommandLine::Get(), TEXT("carla-no-networking"))) 
+    {
       bUseNetworking = false;
     }
   }
@@ -239,6 +248,7 @@ void UCarlaSettings::LogSettings() const
   auto EnabledDisabled = [](bool bValue) { return (bValue ? TEXT("Enabled") : TEXT("Disabled")); };
   UE_LOG(LogCarla, Log, TEXT("== CARLA Settings =============================================================="));
   UE_LOG(LogCarla, Log, TEXT("Last settings file loaded: %s"), *CurrentFileName);
+  UE_LOG(LogCarla, Log, TEXT("Level to travel to: %s"), *MapName);
   UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_SERVER);
   UE_LOG(LogCarla, Log, TEXT("Networking = %s"), EnabledDisabled(bUseNetworking));
   UE_LOG(LogCarla, Log, TEXT("World Port = %d"), WorldPort);
@@ -280,8 +290,9 @@ void UCarlaSettings::GetActiveWeatherDescription(
     bool &bWeatherWasChanged,
     FWeatherDescription &WeatherDescription) const
 {
-  auto WeatherPtr = GetActiveWeatherDescription();
-  if (WeatherPtr != nullptr) {
+  const auto WeatherPtr = GetActiveWeatherDescription();
+  if (WeatherPtr != nullptr) 
+  {
     WeatherDescription = *WeatherPtr;
     bWeatherWasChanged = true;
   } else {
@@ -304,7 +315,8 @@ void UCarlaSettings::ResetSensorDescriptions()
 
 void UCarlaSettings::LoadSettingsFromFile(const FString &FilePath, const bool bLogOnFailure)
 {
-  if (FPaths::FileExists(FilePath)) {
+  if (FPaths::FileExists(FilePath)) 
+  {
     UE_LOG(LogCarla, Log, TEXT("Loading CARLA settings from \"%s\""), *FilePath);
     ResetSensorDescriptions();
     const FIniFile ConfigFile(FilePath);

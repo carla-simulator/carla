@@ -8,6 +8,7 @@
 #include "DataRouter.h"
 
 #include "Sensor/Sensor.h"
+#include "CarlaPlayerState.h"
 
 void FDataRouter::RegisterSensor(ASensor &InSensor)
 {
@@ -32,4 +33,37 @@ void FDataRouter::RestartLevel()
         Error,
         TEXT("FDataRouter: Trying to restart level but I don't have any player registered"));
   }
+}
+
+bool FDataRouter::PlayerControlVehicle(APlayerController* playercontroller, APawn* pawn)
+{
+  if (!IsValid(playercontroller) || playercontroller->IsPendingKill() || !IsValid(pawn) || pawn->IsPendingKill()) return false;
+  AController* oldcontroller = pawn->GetController();
+  if (IsValid(oldcontroller) && !oldcontroller->IsA<AWheeledVehicleController>())
+  {
+      oldcontroller->UnPossess();
+      oldcontroller->SetPawn(nullptr);
+      oldcontroller->Destroy();
+  }
+
+  //check player controller and pawn
+  if (!pawn->IsA<ACarlaWheeledVehicle>()) {
+      playercontroller->Possess(pawn);
+      return false;
+  }
+  ACarlaVehicleController* carlavehiclecontroller = Cast<ACarlaVehicleController>(playercontroller);
+  if(carlavehiclecontroller && carlavehiclecontroller->IsPossessingThePlayer())
+  {
+    ACarlaWheeledVehicle* vehicle = Cast<ACarlaWheeledVehicle>(pawn);
+    vehicle->Controller = carlavehiclecontroller;
+    vehicle->AIControllerClass = ACarlaVehicleController::StaticClass();
+    carlavehiclecontroller->SetAutopilot(false);
+    //carlavehiclecontroller->SetupInputComponent();
+    carlavehiclecontroller->StopSpectatingOnly();
+
+  }
+    
+  playercontroller->Possess(pawn);
+  
+  return true;
 }

@@ -48,6 +48,8 @@ void AVehicleSpawnerBase::BeginPlay()
 
   NumberOfVehicles = FMath::Max(0, NumberOfVehicles);
 
+  if (NumberOfVehicles == 0) return;
+
   // Allocate space for walkers.
   Vehicles.Reserve(NumberOfVehicles);
 

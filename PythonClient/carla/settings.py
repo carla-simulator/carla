@@ -39,6 +39,7 @@ class CarlaSettings(object):
         # [CARLA/QualitySettings]
         self.QualityLevel = 'Epic'
         # [CARLA/LevelSettings]
+        self.MapName = 'Town02'
         self.PlayerVehicle = None
         self.NumberOfVehicles = 20
         self.NumberOfPedestrians = 30
@@ -98,6 +99,7 @@ class CarlaSettings(object):
         add_section(S_QUALITY, self, [
             'QualityLevel'])
         add_section(S_LEVEL, self, [
+            'MapName',
             'NumberOfVehicles',
             'NumberOfPedestrians',
             'WeatherId',

@@ -88,16 +88,23 @@ AWheeledVehicleAIController::~AWheeledVehicleAIController() {}
 void AWheeledVehicleAIController::Possess(APawn *aPawn)
 {
   Super::Possess(aPawn);
-
-  if (IsPossessingAVehicle()) {
+  /*if (IsPossessingAVehicle()) 
+   *{
     UE_LOG(LogCarla, Error, TEXT("Controller already possessing a vehicle!"));
     return;
-  }
+  }*/
   Vehicle = Cast<ACarlaWheeledVehicle>(aPawn);
-  check(Vehicle != nullptr);
-  MaximumSteerAngle = Vehicle->GetMaximumSteerAngle();
-  check(MaximumSteerAngle > 0.0f);
-  ConfigureAutopilot(bAutopilotEnabled);
+  if (IsValid(Vehicle))
+  {
+    MaximumSteerAngle = Vehicle->GetMaximumSteerAngle();
+    check(MaximumSteerAngle > 0.0f);
+    ConfigureAutopilot(bAutopilotEnabled);
+  }
+  else 
+  {
+    bAutopilotEnabled = false;
+    Vehicle = nullptr;
+  }
 }
 
 void AWheeledVehicleAIController::Tick(const float DeltaTime)
@@ -106,18 +113,26 @@ void AWheeledVehicleAIController::Tick(const float DeltaTime)
 
   TickAutopilotController();
 
-  if (bAutopilotEnabled) {
+  if (bAutopilotEnabled) 
+  {
     Vehicle->ApplyVehicleControl(AutopilotControl);
   }
 }
+
 
 // =============================================================================
 // -- Autopilot ----------------------------------------------------------------
 // =============================================================================
 
 void AWheeledVehicleAIController::ConfigureAutopilot(const bool Enable)
-{
+{ 
+  if (!Vehicle)
+  {
+    bAutopilotEnabled = false;
+    return;
+  }
   bAutopilotEnabled = Enable;
+  
   // Reset state.
   Vehicle->SetSteeringInput(0.0f);
   Vehicle->SetThrottleInput(0.0f);
@@ -140,10 +155,13 @@ void AWheeledVehicleAIController::SetFixedRoute(
     const TArray<FVector> &Locations,
     const bool bOverwriteCurrent)
 {
-  if (bOverwriteCurrent) {
+  if (bOverwriteCurrent) 
+  {
     ClearQueue(TargetLocations);
   }
-  for (auto &Location : Locations) {
+
+  for (auto &Location : Locations) 
+  {
     TargetLocations.emplace(Location);
   }
 }
@@ -155,15 +173,20 @@ void AWheeledVehicleAIController::SetFixedRoute(
 void AWheeledVehicleAIController::TickAutopilotController()
 {
 #if WITH_EDITOR
-  if (Vehicle == nullptr) { // This happens in simulation mode in editor.
+  if (!IsValid(Vehicle))
+  { // This happens in simulation mode in editor.
     bAutopilotEnabled = false;
     return;
   }
 #endif // WITH_EDITOR
+  if(!IsValid(Vehicle))
+  {
+    //current pawn is not a vehicle
+    return;
+  }
 
-  check(Vehicle != nullptr);
-
-  if (RoadMap == nullptr) {
+  if (RoadMap == nullptr) 
+  {
     UE_LOG(LogCarla, Error, TEXT("Controller doesn't have a road map!"));
     return;
   }
@@ -171,9 +194,12 @@ void AWheeledVehicleAIController::TickAutopilotController()
   FVector Direction;
 
   float Steering;
-  if (!TargetLocations.empty()) {
+  if (!TargetLocations.empty()) 
+  {
     Steering = GoToNextTargetLocation(Direction);
-  } else {
+  } 
+  else 
+  {
     Steering = CalcStreeringValue(Direction);
   }
 
@@ -181,20 +207,28 @@ void AWheeledVehicleAIController::TickAutopilotController()
   const auto Speed = Vehicle->GetVehicleForwardSpeed() * 0.036f;
 
   float Throttle;
-  if (TrafficLightState != ETrafficLightState::Green) {
+  if (TrafficLightState != ETrafficLightState::Green) 
+  {
     Vehicle->SetAIVehicleState(ECarlaWheeledVehicleState::WaitingForRedLight);
     Throttle = Stop(Speed);
-  } else if (IsThereAnObstacleAhead(*Vehicle, Speed, Direction)) {
+  } 
+  else if (IsThereAnObstacleAhead(*Vehicle, Speed, Direction)) 
+  {
     Vehicle->SetAIVehicleState(ECarlaWheeledVehicleState::ObstacleAhead);
     Throttle = Stop(Speed);
-  } else {
+  } 
+  else 
+  {
     Throttle = Move(Speed);
   }
 
-  if (Throttle < 0.001f) {
+  if (Throttle < 0.001f) 
+  {
     AutopilotControl.Brake = 1.0f;
     AutopilotControl.Throttle = 0.0f;
-  } else {
+  } 
+  else 
+  {
     AutopilotControl.Brake = 0.0f;
     AutopilotControl.Throttle = Throttle;
   }
@@ -203,30 +237,37 @@ void AWheeledVehicleAIController::TickAutopilotController()
 
 float AWheeledVehicleAIController::GoToNextTargetLocation(FVector &Direction)
 {
-  // Get middle point between the two front wheels.
+  APawn* pawn = GetPawn();
+  if (!Vehicle||!pawn) return 0.0f;
   const auto CurrentLocation = [&](){
     const auto &Wheels = Vehicle->GetVehicleMovementComponent()->Wheels;
     check((Wheels.Num() > 1) && (Wheels[0u] != nullptr) && (Wheels[1u] != nullptr));
     return (Wheels[0u]->Location + Wheels[1u]->Location) / 2.0f;
   }();
 
-  const auto Target = [&](){
+  const auto Target = [&]()
+  {
+    // Get middle point between the two front wheels.
     const auto &Result = TargetLocations.front();
     return FVector{Result.X, Result.Y, CurrentLocation.Z};
   }();
-
-  if (Target.Equals(CurrentLocation, 80.0f)) {
+  
+  if (Target.Equals(CurrentLocation, 80.0f)) 
+  {
     TargetLocations.pop();
-    if (!TargetLocations.empty()) {
+    if (!TargetLocations.empty()) 
+    {
       return GoToNextTargetLocation(Direction);
-    } else {
+    } 
+    else 
+    {
       return CalcStreeringValue(Direction);
     }
   }
 
   Direction = (Target - CurrentLocation).GetSafeNormal();
 
-  const FVector &Forward = GetPawn()->GetActorForwardVector();
+  const FVector &Forward = pawn->GetActorForwardVector();
 
   float dirAngle = Direction.UnitCartesianToSpherical().Y;
   float actorAngle = Forward.UnitCartesianToSpherical().Y;
@@ -236,17 +277,33 @@ float AWheeledVehicleAIController::GoToNextTargetLocation(FVector &Direction)
 
   float angle = dirAngle - actorAngle;
 
-  if (angle > 180.0f) { angle -= 360.0f;} else if (angle < -180.0f) {
-    angle += 360.0f;
+  if (angle > 180.0f)
+  {
+      angle -= 360.0f;
+  } 
+  else 
+  {
+    if (angle < -180.0f) 
+    {
+      angle += 360.0f;
+    }
   }
 
   float Steering = 0.0f;
-  if (angle < -MaximumSteerAngle) {
+  if (angle < -MaximumSteerAngle) 
+  {
     Steering = -1.0f;
-  } else if (angle > MaximumSteerAngle) {
-    Steering = 1.0f;
-  } else {
-    Steering += angle / MaximumSteerAngle;
+  } 
+  else 
+  {
+      if (angle > MaximumSteerAngle)
+      {
+        Steering = 1.0f;
+      }
+      else 
+      {
+        Steering += angle / MaximumSteerAngle;
+      }
   }
 
   Vehicle->SetAIVehicleState(ECarlaWheeledVehicleState::FollowingFixedRoute);
@@ -255,11 +312,12 @@ float AWheeledVehicleAIController::GoToNextTargetLocation(FVector &Direction)
 
 float AWheeledVehicleAIController::CalcStreeringValue(FVector &direction)
 {
+  APawn* pawn = GetPawn();
+  if(!Vehicle||!pawn) return 0.0f;
   float steering = 0;
   FVector BoxExtent = Vehicle->GetVehicleBoundingBoxExtent();
   FVector forward = Vehicle->GetActorForwardVector();
 
-  FVector rightSensorPosition(BoxExtent.X / 2.0f, (BoxExtent.Y / 2.0f) + 100.0f, 0.0f);
   FVector leftSensorPosition(BoxExtent.X / 2.0f, -(BoxExtent.Y / 2.0f) - 100.0f, 0.0f);
 
   float forwardMagnitude = BoxExtent.X / 2.0f;
@@ -277,14 +335,14 @@ float AWheeledVehicleAIController::CalcStreeringValue(FVector &direction)
   float sinL = FGenericPlatformMath::Sin(actorAngle - offset);
   float cosL = FGenericPlatformMath::Cos(actorAngle - offset);
 
-  rightSensorPosition.Y = sinR * Magnitude;
-  rightSensorPosition.X = cosR * Magnitude;
+  FVector rightSensorPosition(cosR * Magnitude, sinR * Magnitude, 0.0f);
 
   leftSensorPosition.Y = sinL * Magnitude;
   leftSensorPosition.X = cosL * Magnitude;
-
-  FVector rightPositon = GetPawn()->GetActorLocation() + FVector(rightSensorPosition.X, rightSensorPosition.Y, 0.0f);
-  FVector leftPosition = GetPawn()->GetActorLocation() + FVector(leftSensorPosition.X, leftSensorPosition.Y, 0.0f);
+  
+  if (pawn != Vehicle||pawn==nullptr) return 0.0f;
+  FVector rightPositon = pawn->GetActorLocation() + FVector(rightSensorPosition.X, rightSensorPosition.Y, 0.0f);
+  FVector leftPosition = pawn->GetActorLocation() + FVector(leftSensorPosition.X, leftSensorPosition.Y, 0.0f);
 
   FRoadMapPixelData rightRoadData = RoadMap->GetDataAt(rightPositon);
   if (!rightRoadData.IsRoad()) { steering -= 0.2f;}
@@ -292,52 +350,90 @@ float AWheeledVehicleAIController::CalcStreeringValue(FVector &direction)
   FRoadMapPixelData leftRoadData = RoadMap->GetDataAt(leftPosition);
   if (!leftRoadData.IsRoad()) { steering += 0.2f;}
 
-  FRoadMapPixelData roadData = RoadMap->GetDataAt(GetPawn()->GetActorLocation());
-  if (!roadData.IsRoad()) {
+  FRoadMapPixelData roadData = RoadMap->GetDataAt(pawn->GetActorLocation());
+  if (!roadData.IsRoad()) 
+  {
     steering = -1;
-  } else if (roadData.HasDirection()) {
-
-    direction = roadData.GetDirection();
-    FVector right = rightRoadData.GetDirection();
-    FVector left = leftRoadData.GetDirection();
-
-    forward.Z = 0.0f;
-
-    float dirAngle = direction.UnitCartesianToSpherical().Y;
-    float rightAngle = right.UnitCartesianToSpherical().Y;
-    float leftAngle = left.UnitCartesianToSpherical().Y;
-
-    dirAngle *= (180.0f / PI);
-    rightAngle *= (180.0 / PI);
-    leftAngle *= (180.0 / PI);
-    actorAngle *= (180.0 / PI);
-
-    float min = dirAngle - 90.0f;
-    if (min < -180.0f) { min = 180.0f + (min + 180.0f);}
-
-    float max = dirAngle + 90.0f;
-    if (max > 180.0f) { max = -180.0f + (max - 180.0f);}
-
-    if (dirAngle < -90.0 || dirAngle > 90.0) {
-      if (rightAngle < min && rightAngle > max) { steering -= 0.2f;}
-      if (leftAngle < min && leftAngle > max) { steering += 0.2f;}
-    } else {
-      if (rightAngle < min || rightAngle > max) { steering -= 0.2f;}
-      if (leftAngle < min || leftAngle > max) { steering += 0.2f;}
-    }
-
-    float angle = dirAngle - actorAngle;
-
-    if (angle > 180.0f) { angle -= 360.0f;} else if (angle < -180.0f) {
-      angle += 360.0f;
-    }
-
-    if (angle < -MaximumSteerAngle) {
-      steering = -1.0f;
-    } else if (angle > MaximumSteerAngle) {
-      steering = 1.0f;
-    } else {
-      steering += angle / MaximumSteerAngle;
+  } 
+  else 
+  {
+    if (roadData.HasDirection()) 
+    {
+      direction = roadData.GetDirection();
+      FVector right = rightRoadData.GetDirection();
+      FVector left = leftRoadData.GetDirection();
+      
+      forward.Z = 0.0f;
+      
+      float dirAngle = direction.UnitCartesianToSpherical().Y;
+      float rightAngle = right.UnitCartesianToSpherical().Y;
+      float leftAngle = left.UnitCartesianToSpherical().Y;
+      
+      dirAngle *= (180.0f / PI);
+      rightAngle *= (180.0 / PI);
+      leftAngle *= (180.0 / PI);
+      actorAngle *= (180.0 / PI);
+      
+      float min = dirAngle - 90.0f;
+      if (min < -180.0f)
+      {
+        min = 180.0f + (min + 180.0f);
+      }
+      
+      float max = dirAngle + 90.0f;
+      if (max > 180.0f)
+      {
+        max = -180.0f + (max - 180.0f);
+      }
+      
+      if (dirAngle < -90.0 || dirAngle > 90.0) {
+        if (rightAngle < min && rightAngle > max)
+        {
+          steering -= 0.2f;
+        }
+        if (leftAngle < min && leftAngle > max)
+        {
+          steering += 0.2f;
+        }
+      } else {
+        if (rightAngle < min || rightAngle > max)
+        {
+          steering -= 0.2f;
+        }
+        if (leftAngle < min || leftAngle > max)
+        {
+          steering += 0.2f;
+        }
+      }
+      
+      float angle = dirAngle - actorAngle;
+      
+      if (angle > 180.0f)
+      {
+        angle -= 360.0f;
+      }
+      else 
+      {
+        if (angle < -180.0f) 
+        {
+          angle += 360.0f;
+        }
+      }
+      
+      if (angle < -MaximumSteerAngle) 
+      {
+        steering = -1.0f;
+      } else
+      {
+        if (angle > MaximumSteerAngle) 
+        {
+          steering = 1.0f;
+        } 
+        else 
+        {
+          steering += angle / MaximumSteerAngle;
+        }
+      }
     }
   }
 
@@ -345,16 +441,25 @@ float AWheeledVehicleAIController::CalcStreeringValue(FVector &direction)
   return steering;
 }
 
-float AWheeledVehicleAIController::Stop(const float Speed) {
+float AWheeledVehicleAIController::Stop(const float Speed) 
+{
   return (Speed >= 1.0f ? -Speed / SpeedLimit : 0.0f);
 }
 
-float AWheeledVehicleAIController::Move(const float Speed) {
-  if (Speed >= SpeedLimit) {
+float AWheeledVehicleAIController::Move(const float Speed) 
+{
+  if (Speed >= SpeedLimit) 
+  {
     return Stop(Speed);
-  } else if (Speed >= SpeedLimit - 10.0f) {
-    return 0.5f;
-  } else {
-    return 1.0f;
+  } 
+  else 
+  {
+    if (Speed >= SpeedLimit - 10.0f) 
+    {
+      return 0.5f;
+    }
+    else {
+      return 1.0f;
+    }
   }
 }

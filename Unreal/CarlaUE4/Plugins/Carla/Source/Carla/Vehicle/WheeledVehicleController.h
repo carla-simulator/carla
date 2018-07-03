@@ -49,7 +49,17 @@ public:
 
   virtual void SetupInputComponent() override;
 
+  void ResetCameras();
+
   virtual void Possess(APawn *aPawn) override;
+
+  virtual void UnPossess() override;
+
+  UFUNCTION(BlueprintCallable)
+  virtual void StartSpectatingOnly() override;
+
+  UFUNCTION(BlueprintCallable)
+  void StopSpectatingOnly();
 
   virtual void CalcCamera(float DeltaTime, FMinimalViewInfo& OutResult) override;
 
@@ -76,7 +86,7 @@ private:
   void ChangeCameraUp(float Value);
 
   void ChangeCameraRight(float Value);
-
+  
   void EnableOnBoardCamera(bool bEnable = true, bool bForce = false);
 
   void ToggleCamera()
@@ -103,6 +113,14 @@ private:
 
   void ReleaseHandbrake();
 
+  void InteractButton();
+
+  void ForceButton();
+
+  void MousePitchCamera(float Value);
+  
+  void MouseYawCamera(float Value);
+
   /// @}
   // ===========================================================================
   // -- Member variables -------------------------------------------------------
@@ -123,4 +141,9 @@ private:
 
   UPROPERTY(Category = "Vehicle User Input", VisibleAnywhere)
   bool bAllowUserInput = false;
+
+  FVector InitialSpringArmPosition = {0.0f,0.0f,0.0f};
+
+  FRotator InitialSpringArmRotation = { 0.0f,0.0f,0.0f };
+
 };

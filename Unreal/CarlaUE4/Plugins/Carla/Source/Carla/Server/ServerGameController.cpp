@@ -12,7 +12,9 @@
 #include "Server/ServerSensorDataSink.h"
 #include "Settings/CarlaSettings.h"
 #include "Private/RenderTargetTemp.h"
-
+#include "Regex.h"
+#include "FileManager.h"
+#include "Kismet/GameplayStatics.h"
 using Errc = FCarlaServer::ErrorCode;
 
 static constexpr bool BLOCKING = true;
@@ -107,10 +109,20 @@ void FServerGameController::Tick(float DeltaSeconds)
   {
     FString IniFile;
     auto ec = Server->ReadNewEpisode(IniFile, NON_BLOCKING);
-    switch (ec) {
+    switch (ec) 
+    {
       case Errc::Success:
         CarlaSettings->LoadSettingsFromString(IniFile);
-        RestartLevel();
+        if (IsTheSameLevel())
+        {
+          RestartLevel();
+        } else if (MapExists(CarlaSettings->MapName)) 
+        {  
+          ChangeLevel(CarlaSettings->GetWorld(), CarlaSettings->MapName);
+        } else
+        {
+          UE_LOG(LogCarla, Error, TEXT("The map %s could not be found in the Maps directory, check it out!"), *CarlaSettings->MapName);
+        }
         return;
       case Errc::Error:
         Server = nullptr;
@@ -147,6 +159,39 @@ void FServerGameController::Tick(float DeltaSeconds)
       DataRouter.ApplyVehicleControl(Control);
     } // Here we ignore the error too.
   }
+}
+
+bool FServerGameController::MapExists(const FString& mapname,bool refreshmapfiles)
+{
+  static TArray<FString> MapFiles;
+  if (FPaths::FileExists(mapname)) return true;
+  if (refreshmapfiles || MapFiles.Num() == 0)
+  {
+    /** @TODO: Add the maps coming from any DLC or additional PAK */
+    IFileManager::Get().FindFilesRecursive(MapFiles, *FPaths::Combine(*FPaths::ProjectContentDir(), TEXT("Maps")), TEXT("*.umap"), true, false, false);
+  }
+  
+  const FRegexPattern MapPattern(*FString::Printf(TEXT("%s\\.umap"), *mapname));
+  return (MapFiles.ContainsByPredicate([&](const FString& _mapname) {return FRegexMatcher(MapPattern, _mapname).FindNext(); }));
+}
+
+bool FServerGameController::IsTheSameLevel()
+{
+  UWorld* world = CarlaSettings->GetWorld();
+  check(world);
+  const FString CurrentMapName = world->GetMapName().Mid(world->StreamingLevelsPrefix.Len());
+  const FString LoadMapName = CarlaSettings->MapName.Mid(world->StreamingLevelsPrefix.Len());
+  if (CarlaSettings->MapName.IsEmpty() || (!LoadMapName.IsEmpty() && CurrentMapName != LoadMapName))
+  {
+      CarlaSettings->MapName = LoadMapName;
+  }
+  return (CurrentMapName.Equals(CarlaSettings->MapName));
+}
+
+void FServerGameController::ChangeLevel(UWorld* world,const FString& mapname)
+{
+  if (!IsValid(world) || mapname.IsEmpty()) return;
+  UGameplayStatics::OpenLevel(world, FName(*mapname), true, FString(L"?initCARLA=true"));
 }
 
 void FServerGameController::RestartLevel()

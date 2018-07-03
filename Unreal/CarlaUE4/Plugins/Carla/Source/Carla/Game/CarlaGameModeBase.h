@@ -42,11 +42,7 @@ public:
 
   virtual void Tick(float DeltaSeconds) override;
 
-  FDataRouter &GetDataRouter()
-  {
-    check(GameInstance != nullptr);
-    return GameInstance->GetDataRouter();
-  }
+  
 
   UFUNCTION(BlueprintPure, Category="CARLA Settings")
   UCarlaSettingsDelegate *GetCARLASettingsDelegate()
@@ -55,6 +51,12 @@ public:
   }
 
 protected:
+
+  FDataRouter & GetDataRouter()
+  {
+    check(GameInstance != nullptr);
+    return GameInstance->GetDataRouter();
+  }
 
   /** Used only when networking is disabled. */
   UPROPERTY(Category = "Mock CARLA Controller", EditAnywhere, BlueprintReadOnly, meta = (ExposeFunctionCategories = "Mock CARLA Controller"))

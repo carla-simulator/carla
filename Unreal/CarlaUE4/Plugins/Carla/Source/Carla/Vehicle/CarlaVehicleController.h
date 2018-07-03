@@ -44,6 +44,7 @@ public:
 
   virtual void Possess(APawn *aPawn) override;
 
+  virtual void UnPossess() override;
   /// @}
   // ===========================================================================
   /// @name AActor overrides

@@ -13,8 +13,11 @@
 #include "Components/BoxComponent.h"
 #include "EngineUtils.h"
 #include "GameFramework/Pawn.h"
-#include "WheeledVehicle.h"
 #include "WheeledVehicleMovementComponent.h"
+#include "Game/CarlaPlayerState.h"
+#include "MapGen/RoadMap.h"
+#include "CarlaWheeledVehicle.h"
+#include "Game/CarlaHUD.h"
 
 // =============================================================================
 // -- Constructor and destructor -----------------------------------------------
@@ -35,24 +38,37 @@ ACarlaVehicleController::~ACarlaVehicleController() {}
 void ACarlaVehicleController::Possess(APawn *aPawn)
 {
   Super::Possess(aPawn);
-
-  if (IsPossessingAVehicle()) {
+  
+  if (IsPossessingAVehicle()) 
+  {
     // Bind hit events.
     aPawn->OnActorHit.AddDynamic(this, &ACarlaVehicleController::OnCollisionEvent);
     // Get custom player state.
-    CarlaPlayerState = Cast<ACarlaPlayerState>(PlayerState);
-    check(CarlaPlayerState != nullptr);
+    CarlaPlayerState = IsValid(PlayerState)?Cast<ACarlaPlayerState>(PlayerState):nullptr;
+    if (CarlaPlayerState == nullptr) return;
     // We can set the bounding box already as it's not going to change.
     CarlaPlayerState->BoundingBoxTransform = GetPossessedVehicle()->GetVehicleBoundingBoxTransform();
     CarlaPlayerState->BoundingBoxExtent = GetPossessedVehicle()->GetVehicleBoundingBoxExtent();
     // Set HUD input.
     CarlaHUD = Cast<ACarlaHUD>(GetHUD());
-    if (CarlaHUD != nullptr) {
+    if (CarlaHUD != nullptr) 
+    {
       InputComponent->BindAction("ToggleHUD", IE_Pressed, CarlaHUD, &ACarlaHUD::ToggleHUDView);
     } else {
       UE_LOG(LogCarla, Warning, TEXT("Current HUD is not a ACarlaHUD"));
     }
   }
+}
+
+void ACarlaVehicleController::UnPossess()
+{
+  APawn* aPawn = GetPawn();
+  if (IsPossessingAVehicle() && IsValid(aPawn))
+  {
+      // UnBind hit events.
+      aPawn->OnActorHit.RemoveAll(this);
+  }
+  Super::UnPossess();
 }
 
 // =============================================================================
@@ -63,8 +79,9 @@ void ACarlaVehicleController::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
 
-  if (IsPossessingAVehicle()) {
-    auto Vehicle = GetPossessedVehicle();
+  if (IsPossessingAVehicle()) 
+  {
+    const auto Vehicle = GetPossessedVehicle();
     CarlaPlayerState->UpdateTimeStamp(DeltaTime);
     const FVector PreviousSpeed = CarlaPlayerState->ForwardSpeed * CarlaPlayerState->GetOrientation();
     CarlaPlayerState->Transform = Vehicle->GetVehicleTransform();
@@ -94,8 +111,9 @@ void ACarlaVehicleController::OnCollisionEvent(
     const FHitResult& Hit)
 {
   // Register collision only if we are moving faster than 1 km/h.
-  check(IsPossessingAVehicle());
-  if (FMath::Abs(GetPossessedVehicle()->GetVehicleForwardSpeed() * 0.036f) > 1.0f) {
+  if (!IsPossessingAVehicle()) return;
+  if (FMath::Abs(GetPossessedVehicle()->GetVehicleForwardSpeed() * 0.036f) > 1.0f) 
+  {
     CarlaPlayerState->RegisterCollision(Actor, OtherActor, NormalImpulse, Hit);
   }
 }
@@ -106,7 +124,7 @@ void ACarlaVehicleController::OnCollisionEvent(
 
 void ACarlaVehicleController::IntersectPlayerWithRoadMap()
 {
-  auto RoadMap = GetRoadMap();
+  const auto RoadMap = GetRoadMap();
   if (RoadMap == nullptr) {
     UE_LOG(LogCarla, Error, TEXT("Controller doesn't have a road map!"));
     return;
@@ -117,7 +135,7 @@ void ACarlaVehicleController::IntersectPlayerWithRoadMap()
   constexpr float ChecksPerCentimeter = 0.1f;
   const auto *BoundingBox = Vehicle->GetVehicleBoundingBox();
   check(BoundingBox != nullptr);
-  auto Result = RoadMap->Intersect(
+  const auto Result = RoadMap->Intersect(
       BoundingBox->GetComponentTransform(),
       BoundingBox->GetUnscaledBoxExtent(),
       ChecksPerCentimeter);
