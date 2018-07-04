@@ -35,6 +35,7 @@ pages:
   - 'How to add assets': 'how_to_add_assets.md'
   - 'CARLA design': 'carla_design.md'
   - 'CarlaServer documentation': 'carla_server.md'
+  - 'Build system': 'build_system.md'
 - Appendix:
   - 'Driving Benchmark Sample Results Town01': 'benchmark_basic_results_town01.md'
   - 'Driving Benchmark Sample Results Town02': 'benchmark_basic_results_town02.md'

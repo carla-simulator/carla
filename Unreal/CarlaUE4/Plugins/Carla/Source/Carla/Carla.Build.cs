@@ -1,5 +1,6 @@
 // Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
 
+using System;
 using System.IO;
 using UnrealBuildTool;
 
@@ -78,17 +79,7 @@ public class Carla : ModuleRules
 
   private void AddCarlaServerDependency(ReadOnlyTargetRules Target)
   {
-    string CarlaServerInstallPath = Path.GetFullPath(Path.Combine(ModuleDirectory, "../../CarlaServer"));
-
-    string CarlaServerLib;
-    if (UseDebugLibs(Target))
-    {
-      CarlaServerLib = "carlaserverd";
-    }
-    else
-    {
-      CarlaServerLib = "carlaserver";
-    }
+    string LibCarlaInstallPath = Path.GetFullPath(Path.Combine(ModuleDirectory, "../../CarlaDependencies"));
 
     ADelegate GetLibName = (string BaseName) => {
       if (IsWindows(Target))
@@ -104,23 +95,17 @@ public class Carla : ModuleRules
     // Link dependencies.
     if (IsWindows(Target))
     {
-      // Auto-links boost libraries in folder.
-      PublicLibraryPaths.Add(Path.Combine(CarlaServerInstallPath, "lib"));
-
-      PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetLibName("libprotobuf")));
-      PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetLibName(CarlaServerLib)));
+      throw new NotImplementedException();
     }
     else
     {
-      PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetLibName("c++abi")));
-      PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetLibName("boost_system")));
-      PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetLibName("protobuf")));
-      PublicAdditionalLibraries.Add(Path.Combine(CarlaServerInstallPath, "lib", GetLibName(CarlaServerLib)));
+      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("c++abi")));
+      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("rpc")));
     }
 
     // Include path.
-    string CarlaServerIncludePath = Path.Combine(CarlaServerInstallPath, "include");
-    PublicIncludePaths.Add(CarlaServerIncludePath);
-    PrivateIncludePaths.Add(CarlaServerIncludePath);
+    string LibCarlaIncludePath = Path.Combine(LibCarlaInstallPath, "include");
+    PublicIncludePaths.Add(LibCarlaIncludePath);
+    PrivateIncludePaths.Add(LibCarlaIncludePath);
   }
 }

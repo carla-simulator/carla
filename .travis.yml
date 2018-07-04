@@ -17,14 +17,15 @@ script:
 matrix:
   include:
 
-    - env: TEST="CppCheck"
-      install: true
-      addons:
-        apt:
-          packages:
-            - cppcheck
-      script:
-        - cppcheck . -iBuild -i.pb.cc --error-exitcode=1 --enable=warning --inline-suppr --quiet
+    # CppCheck does not support C++17.
+    # - env: TEST="CppCheck"
+    #   install: true
+    #   addons:
+    #     apt:
+    #       packages:
+    #         - cppcheck
+    #   script:
+    #     - cppcheck . -iBuild -i.pb.cc --error-exitcode=1 --enable=warning --inline-suppr --quiet
 
     - env: TEST="MkDocs"
       install:

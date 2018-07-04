@@ -21,7 +21,7 @@
   * [General Structure](benchmark_structure.md)
   * [Creating Your Benchmark](benchmark_creating.md)
   * [Computed Performance Metrics](benchmark_metrics.md)
-  
+
 <h3>Advanced topics</h3>
 
   * [CARLA settings](carla_settings.md)
@@ -41,3 +41,4 @@
   * [How to add assets](how_to_add_assets.md)
   * [CARLA design](carla_design.md)
   * [CarlaServer documentation](carla_server.md)
+  * [Build system](build_system.md)
