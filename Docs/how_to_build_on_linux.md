@@ -5,15 +5,23 @@
 
 Install the build tools and dependencies
 
-    $ sudo apt-get install build-essential clang-3.9 git cmake ninja-build python3-requests python-dev tzdata sed curl wget unzip autoconf libtool
+```
+sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+sudo apt-get install build-essential clang-5.0 lld-5.0 g++-7 ninja-build python python-pip python3 python3-pip libboost-python-dev python-dev tzdata sed curl wget unzip autoconf libtool
+pip2 install --user setuptools nose2
+pip3 install --user setuptools nose2
+```
 
 To avoid compatibility issues between Unreal Engine and the CARLA dependencies,
 the best configuration is to compile everything with the same compiler version
-and C++ runtime library. We use clang 3.9 and LLVM's libc++. You may need to
-change your default clang version to compile Unreal
+and C++ runtime library. We use clang 5.0 and LLVM's libc++. We recommend to
+change your default clang version to compile Unreal Engine and the CARLA
+dependencies
 
-    $ sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-3.9/bin/clang++ 100
-    $ sudo update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-3.9/bin/clang 100
+```sh
+sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-5.0/bin/clang++ 101
+sudo update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-5.0/bin/clang 101
+```
 
 Build Unreal Engine
 -------------------
@@ -23,13 +31,15 @@ Build Unreal Engine
     need to add your GitHub username when you sign up at
     [www.unrealengine.com](https://www.unrealengine.com).
 
-Download and compile Unreal Engine 4.18. Here we will assume you install it at
-"~/UnrealEngine_4.18", but you can install it anywhere, just replace the path
+Download and compile Unreal Engine 4.19. Here we will assume you install it at
+`~/UnrealEngine_4.19", but you can install it anywhere, just replace the path
 where necessary.
 
-    $ git clone --depth=1 -b 4.18 https://github.com/EpicGames/UnrealEngine.git ~/UnrealEngine_4.18
-    $ cd ~/UnrealEngine_4.18
-    $ ./Setup.sh && ./GenerateProjectFiles.sh && make
+```sh
+git clone --depth=1 -b 4.19 https://github.com/EpicGames/UnrealEngine.git ~/UnrealEngine_4.19
+cd ~/UnrealEngine_4.19
+./Setup.sh && ./GenerateProjectFiles.sh && make
+```
 
 Check Unreal's documentation
 ["Building On Linux"](https://wiki.unrealengine.com/Building_On_Linux) if any of
@@ -41,56 +51,47 @@ Build CARLA
 Clone or download the project from our
 [GitHub repository](https://github.com/carla-simulator/carla)
 
-    $ git clone https://github.com/carla-simulator/carla
+```sh
+git clone https://github.com/carla-simulator/carla
+```
 
 Note that the `master` branch contains the latest fixes and features, for the
 latest stable code may be best to switch to the latest release tag.
 
-Run the setup script to download the content and build all dependencies. It
-takes a while (you can speed up the process by parallelizing the script with the
-`--jobs=8` flag)
+Now you need to download the assets package, to do so we provide a handy script
+that downloads and extracts the latest version (note that the package is >10GB,
+this step might take some time depending on your connection)
 
-    $ ./Setup.sh
+```sh
+./Update.sh
+```
 
-Once it's done it should print "Success" if everything went well.
+For CARLA to find your Unreal Engine's installation folder you need to set the
+following environment variable
 
-To build CARLA, use the rebuild script. This script deletes all intermediate
-files, rebuilds whole CARLA, and launches the editor. Use it too for making a
-clean rebuild of CARLA
+```sh
+export UE4_ROOT=~/UnrealEngine_4.19
+```
 
-    $ UE4_ROOT=~/UnrealEngine_4.18 ./Rebuild.sh
+You can also add this variable to your `~/.bashrc` or `~/.profile`.
 
-It looks at the environment variable `UE4_ROOT` to find the right version of
-Unreal Engine. You can also add this variable to your "~/.bashrc" or similar.
+Now that the environment is set up, you can run make to run different commands
 
-Later, if you need to compile some changes without doing a full rebuild, you can
-use the Makefile generated in the Unreal project folder
-
-    $ cd Unreal/CarlaUE4
-    $ make CarlaUE4Editor
+```sh
+make launch   # Compiles CARLA and launches Unreal Engine's Editor.
+make package  # Compiles CARLA and creates a packaged version for distribution.
+make help     # Print all available commands.
+```
 
 Updating CARLA
 --------------
 
 Every new release of CARLA we release a new package with the latest changes in
-the CARLA assets. To download the latest version, run the "Update" script
+the CARLA assets. To download the latest version and recompile CARLA, run
 
-    $ git pull
-    $ ./Update.sh
-
-Launching the editor
---------------------
-
-To open the editor once the project is already built
-
-    $ cd Unreal/CarlaUE4
-    $ ~/UnrealEngine_4.18/Engine/Binaries/Linux/UE4Editor "$PWD/CarlaUE4.uproject"
-
-Test (Optional)
----------------
-
-A set of unit tests is available for testing the CarlaServer library (note that
-these tests launch the python client, they require python3 and protobuf for
-python3 installed, as well as ports 2000 and 4000 available)
-
-    $ make check
+```sh
+make clean
+git pull
+./Update.sh
+make launch
+```

@@ -4,6 +4,8 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#ifdef CARLA_COMPILE_CARLASERVER_LEGACY
+
 #include "Carla.h"
 #include "CarlaEncoder.h"
 
@@ -221,3 +223,5 @@ void FCarlaEncoder::Visit(const UWalkerAgentComponent &Agent)
   ::Encode(Agent.GetBoundingBoxTransform(), Data.bounding_box.transform);
   ::Encode(Agent.GetBoundingBoxExtent() * TO_METERS, Data.bounding_box.extent);
 }
+
+#endif // CARLA_COMPILE_CARLASERVER_LEGACY
