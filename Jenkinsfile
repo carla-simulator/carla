@@ -37,7 +37,7 @@ pipeline {
 
         stage('Unit Tests') {
             steps {
-                sh 'make check'
+                sh 'make check ARGS="--all --xml"'
             }
         }
 
@@ -58,6 +58,7 @@ pipeline {
     post {
 
         always {
+            junit 'Build/test-results/*.xml'
             archiveArtifacts 'Dist/*.tar.gz'
             deleteDir()
         }
