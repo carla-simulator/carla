@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        UE4_ROOT = '/var/lib/jenkins/UnrealEngine_4.18'
+        UE4_ROOT = '/var/lib/jenkins/UnrealEngine_4.19'
     }
 
     options {
@@ -13,19 +13,43 @@ pipeline {
 
         stage('Setup') {
             steps {
-                sh './Setup.sh --jobs=12'
+                sh 'make setup'
             }
         }
 
-        stage('Build') {
+        stage('Download Content') {
             steps {
-                sh './Rebuild.sh --no-editor'
+                sh './Update.sh'
+            }
+        }
+
+        stage('LibCarla') {
+            steps {
+                sh 'make LibCarla'
+            }
+        }
+
+        stage('PythonAPI') {
+            steps {
+                sh 'make PythonAPI'
+            }
+        }
+
+        stage('Unit Tests') {
+            steps {
+                sh 'make check'
+            }
+        }
+
+        stage('CarlaUE4Editor') {
+            steps {
+                sh 'make CarlaUE4Editor'
             }
         }
 
         stage('Package') {
             steps {
-                sh './Package.sh --clean-intermediate'
+                sh 'make package'
             }
         }
 

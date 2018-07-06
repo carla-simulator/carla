@@ -16,3 +16,13 @@
 #ifndef BOOST_COROUTINES_NO_DEPRECATION_WARNING
 #  define BOOST_COROUTINES_NO_DEPRECATION_WARNING
 #endif // BOOST_COROUTINES_NO_DEPRECATION_WARNING
+
+#ifndef BOOST_NO_EXCEPTIONS
+#  define BOOST_NO_EXCEPTIONS
+#endif // BOOST_NO_EXCEPTIONS
+
+namespace boost {
+
+  static inline void throw_exception(const std::exception &) {}
+
+} // namespace boost
