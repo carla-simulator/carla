@@ -59,6 +59,7 @@ pipeline {
 
         always {
             junit 'Build/test-results/*.xml'
+            archiveArtifacts 'profiler.csv'
             archiveArtifacts 'Dist/*.tar.gz'
             deleteDir()
         }
