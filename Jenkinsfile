@@ -6,7 +6,7 @@ pipeline {
     }
 
     options {
-        buildDiscarder(logRotator(numToKeepStr: '6', artifactNumToKeepStr: '6'))
+        buildDiscarder(logRotator(numToKeepStr: '3', artifactNumToKeepStr: '3'))
     }
 
     stages {
@@ -14,24 +14,15 @@ pipeline {
         stage('Setup') {
             steps {
                 sh 'make setup'
-            }
-        }
-
-        stage('Download Content') {
-            steps {
                 sh './Update.sh'
             }
         }
 
-        stage('LibCarla') {
+        stage('Build') {
             steps {
                 sh 'make LibCarla'
-            }
-        }
-
-        stage('PythonAPI') {
-            steps {
                 sh 'make PythonAPI'
+                sh 'make CarlaUE4Editor'
             }
         }
 
@@ -39,11 +30,11 @@ pipeline {
             steps {
                 sh 'make check ARGS="--all --xml"'
             }
-        }
-
-        stage('CarlaUE4Editor') {
-            steps {
-                sh 'make CarlaUE4Editor'
+            post {
+                always {
+                    junit 'Build/test-results/*.xml'
+                    archiveArtifacts 'profiler.csv'
+                }
             }
         }
 
@@ -51,18 +42,18 @@ pipeline {
             steps {
                 sh 'make package'
             }
+            post {
+                always {
+                    archiveArtifacts 'Dist/*.tar.gz'
+                }
+            }
         }
 
     }
 
     post {
-
         always {
-            junit 'Build/test-results/*.xml'
-            archiveArtifacts 'profiler.csv'
-            archiveArtifacts 'Dist/*.tar.gz'
             deleteDir()
         }
-
     }
 }
