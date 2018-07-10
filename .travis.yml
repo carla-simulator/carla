@@ -1,35 +1,50 @@
-language: python
+language: cpp
+compiler: clang
 
 os: linux
-dist: trusty # xenial is not yet supported.
-
-env: TEST="Pylint"
-python:
-  - "3.5"
-  - "3.6"
-  - "2.7"
-install:
-  - pip install -r PythonClient/requirements.txt
-  - pip install pylint
-script:
-  - pylint --disable=R,C --rcfile=PythonClient/.pylintrc PythonClient/carla PythonClient/*.py
+dist: trusty
+sudo: false
 
 matrix:
   include:
 
-    # CppCheck does not support C++17.
-    # - env: TEST="CppCheck"
-    #   install: true
-    #   addons:
-    #     apt:
-    #       packages:
-    #         - cppcheck
-    #   script:
-    #     - cppcheck . -iBuild -i.pb.cc --error-exitcode=1 --enable=warning --inline-suppr --quiet
+    - env: TEST="Unit Tests"
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-5.0
+          packages:
+            - g++-7 # we need this one for the libstdc++.
+            - clang-5.0
+            - ninja-build
+            - python
+            - python-pip
+            - python3
+            - python3-pip
+            - libboost-python-dev
+      install:
+        - pip2 install --user setuptools nose2
+        - pip3 install --user setuptools nose2
+        - make setup
+      script:
+        - make check ARGS="--all --gtest_args=--gtest_filter=-*_mt"
+
+    - env: TEST="Pylint 2"
+      addons:
+        apt:
+          packages:
+            - python
+            - python-pip
+      install:
+        - pip2 install --user -r PythonClient/requirements.txt
+        - pip2 install --user pylint
+      script:
+        - pylint --disable=R,C --rcfile=PythonClient/.pylintrc PythonClient/carla PythonClient/*.py
 
     - env: TEST="MkDocs"
       install:
-        - pip install mkdocs
+        - pip install --user mkdocs
       script:
         - mkdocs build --verbose --clean --strict --site-dir _site
 
