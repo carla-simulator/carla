@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include "carla/streaming/low_level/tcp/ServerSession.h"
+#include "carla/streaming/detail/tcp/ServerSession.h"
 
 namespace carla {
 namespace streaming {
-namespace low_level {
+namespace detail {
 
   using Session = tcp::ServerSession;
 
-} // namespace low_level
+} // namespace detail
 } // namespace streaming
 } // namespace carla

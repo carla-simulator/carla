@@ -7,15 +7,14 @@
 #include "test.h"
 
 #include <carla/ThreadGroup.h>
-#include <carla/streaming/low_level/tcp/Client.h>
-#include <carla/streaming/low_level/tcp/Server.h>
+#include <carla/streaming/detail/tcp/Client.h>
+#include <carla/streaming/detail/tcp/Server.h>
 
 #include <atomic>
 
-TEST(streaming_low_level_tcp, small_message) {
+TEST(streaming_detail_tcp, small_message) {
   using namespace util::message;
-  using namespace carla::streaming::low_level;
-  using shared_session = std::shared_ptr<tcp::ServerSession>;
+  using namespace carla::streaming::detail;
 
   boost::asio::io_service io_service;
   tcp::Server::endpoint ep(boost::asio::ip::tcp::v4(), TESTING_PORT);

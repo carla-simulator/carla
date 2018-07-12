@@ -9,6 +9,7 @@
 #include <chrono>
 
 namespace carla {
+namespace detail {
 
   template <typename CLOCK>
   class StopWatchTmpl {
@@ -51,6 +52,8 @@ namespace carla {
     bool _is_running;
   };
 
-  using StopWatch = StopWatchTmpl<std::chrono::steady_clock>;
+} // namespace detail
+
+  using StopWatch = detail::StopWatchTmpl<std::chrono::steady_clock>;
 
 } // namespace carla

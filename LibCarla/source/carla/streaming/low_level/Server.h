@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "carla/streaming/low_level/Dispatcher.h"
+#include "carla/streaming/detail/Dispatcher.h"
 #include "carla/streaming/Stream.h"
 
 #include <boost/asio/io_service.hpp>
@@ -15,14 +15,15 @@ namespace carla {
 namespace streaming {
 namespace low_level {
 
-  /// Wrapper around low level servers.
+  /// A low-level streaming server. Each new stream has a token associated, this
+  /// token can be used by a client to subscribe to the stream. This server
+  /// requires an external io_service running.
   template <typename T>
   class Server {
   public:
 
     using underlying_server = T;
 
-    using duration_type = typename underlying_server::duration_type;
     using endpoint = typename underlying_server::endpoint;
     using protocol_type = typename underlying_server::protocol_type;
 
@@ -40,7 +41,7 @@ namespace low_level {
     explicit Server(boost::asio::io_service &io_service, const std::string &address, uint16_t port)
       : Server(io_service, endpoint(boost::asio::ip::address::from_string(address), port)) {}
 
-    void set_timeout(duration_type timeout) {
+    void set_timeout(time_duration timeout) {
       _server.set_timeout(timeout);
     }
 
@@ -52,7 +53,7 @@ namespace low_level {
 
     underlying_server _server;
 
-    Dispatcher _dispatcher;
+    detail::Dispatcher _dispatcher;
   };
 
 } // namespace low_level

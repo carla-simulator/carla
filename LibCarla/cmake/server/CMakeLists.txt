@@ -23,3 +23,29 @@ file(GLOB libcarla_carla_streaming_headers "${libcarla_source_path}/carla/stream
 install(FILES ${libcarla_carla_streaming_headers} DESTINATION include/carla/streaming)
 
 install(DIRECTORY "${BOOST_INCLUDE_PATH}/boost" DESTINATION include)
+
+# carla_server library.
+
+file(GLOB_RECURSE libcarla_server_sources
+    "${libcarla_source_path}/carla/rpc/*.h"
+    "${libcarla_source_path}/carla/rpc/*.cpp"
+    "${libcarla_source_path}/carla/streaming/*.h"
+    "${libcarla_source_path}/carla/streaming/*.cpp")
+
+# Create targets for debug and release in the same build type.
+foreach(target carla_server_debug carla_server)
+  add_library(${target} STATIC ${libcarla_server_sources})
+
+  target_include_directories(${target} PRIVATE
+      "${BOOST_INCLUDE_PATH}"
+      "${RPCLIB_INCLUDE_PATH}")
+
+  install(TARGETS ${target} DESTINATION lib)
+endforeach(target)
+
+# Specific options for debug.
+set_target_properties(carla_server_debug PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_DEBUG})
+target_compile_definitions(carla_server_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
+
+# Specific options for release.
+set_target_properties(carla_server PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})

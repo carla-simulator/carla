@@ -209,7 +209,9 @@ set(CMAKE_C_COMPILER ${CC})
 set(CMAKE_CXX_COMPILER ${CXX})
 
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -std=c++17 -pthread -fPIC" CACHE STRING "" FORCE)
-# set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra" CACHE STRING "" FORCE)
+# See https://bugs.llvm.org/show_bug.cgi?id=21629
+set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wno-missing-braces" CACHE STRING "" FORCE)
 EOL
 
 # -- LIBCPP_TOOLCHAIN_FILE -----------------------------------------------------
@@ -232,7 +234,6 @@ cat >${CMAKE_CONFIG_FILE}.gen <<EOL
 
 set(CARLA_VERSION $(get_carla_version))
 
-add_definitions(-DBOOST_COROUTINES_NO_DEPRECATION_WARNING)
 add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY)
 
 set(BOOST_INCLUDE_PATH "${BOOST_INCLUDE}")

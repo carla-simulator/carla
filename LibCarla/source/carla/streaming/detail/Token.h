@@ -7,7 +7,7 @@
 #pragma once
 
 #include "carla/Debug.h"
-#include "carla/streaming/low_level/Types.h"
+#include "carla/streaming/detail/Types.h"
 
 #include <boost/asio/ip/address.hpp>
 #include <boost/asio/ip/tcp.hpp>
@@ -15,13 +15,11 @@
 
 namespace carla {
 namespace streaming {
-namespace low_level {
-
 namespace detail {
 
 #pragma pack(push, 1)
 
-  struct token {
+  struct token_data {
     stream_id_type stream_id;
 
     uint16_t port;
@@ -47,7 +45,7 @@ namespace detail {
 #pragma pack(pop)
 
   static_assert(
-      sizeof(token) == 24u,
+      sizeof(token_data) == 24u,
       "Size shouldn't be more than"
       "  v6 address  : 128"
       "  + state     :  16"
@@ -55,8 +53,6 @@ namespace detail {
       "  + stream id :  32"
       "  -----------------"
       "                192");
-
-} // namespace detail
 
   /// Serializes a stream endpoint. Contains all the necessary information for a
   /// client to subscribe to a stream.
@@ -66,28 +62,13 @@ namespace detail {
     template <typename P>
     static constexpr auto get_protocol() {
       return std::is_same<P, boost::asio::ip::tcp>::value ?
-          detail::token::protocol::tcp :
-          detail::token::protocol::udp;
+          token_data::protocol::tcp :
+          token_data::protocol::udp;
     }
 
-    void set_address(const boost::asio::ip::address &addr) {
-      if (addr.is_v4()) {
-        _token.address_type = detail::token::address::ip_v4;
-        _token.address.v4 = addr.to_v4().to_bytes();
-      } else if (addr.is_v6()) {
-        _token.address_type = detail::token::address::ip_v6;
-        _token.address.v6 = addr.to_v6().to_bytes();
-      } else {
-        throw std::invalid_argument("invalid ip address!");
-      }
-    }
+    void set_address(const boost::asio::ip::address &addr);
 
-    boost::asio::ip::address get_address() const {
-      if (_token.address_type == detail::token::address::ip_v4) {
-        return boost::asio::ip::address_v4(_token.address.v4);
-      }
-      return boost::asio::ip::address_v6(_token.address.v6);
-    }
+    boost::asio::ip::address get_address() const;
 
     template <typename P>
     boost::asio::ip::basic_endpoint<P> get_endpoint() const {
@@ -120,24 +101,24 @@ namespace detail {
     }
 
     bool is_valid() const {
-      return ((_token.protocol != detail::token::protocol::not_set) &&
-             (_token.address_type != detail::token::address::not_set));
+      return ((_token.protocol != token_data::protocol::not_set) &&
+             (_token.address_type != token_data::address::not_set));
     }
 
     bool address_is_v4() const {
-      return _token.address_type == detail::token::address::ip_v4;
+      return _token.address_type == token_data::address::ip_v4;
     }
 
     bool address_is_v6() const {
-      return _token.address_type == detail::token::address::ip_v6;
+      return _token.address_type == token_data::address::ip_v6;
     }
 
     bool protocol_is_udp() const {
-      return _token.protocol == detail::token::protocol::udp;
+      return _token.protocol == token_data::protocol::udp;
     }
 
     bool protocol_is_tcp() const {
-      return _token.protocol == detail::token::protocol::tcp;
+      return _token.protocol == token_data::protocol::tcp;
     }
 
     boost::asio::ip::udp::endpoint to_udp_endpoint() const {
@@ -156,9 +137,9 @@ namespace detail {
 
     friend class Dispatcher;
 
-    detail::token _token;
+    token_data _token;
   };
 
-} // namespace low_level
+} // namespace detail
 } // namespace streaming
 } // namespace carla

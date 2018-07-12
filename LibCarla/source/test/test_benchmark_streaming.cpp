@@ -31,7 +31,7 @@ public:
   void AddStream() {
     Stream stream = _server.MakeStream();
 
-    _client.Subscribe(stream.token(), [this](std::shared_ptr<Message> msg) {
+    _client.Subscribe(stream.token(), [this](std::shared_ptr<Message> DEBUG_ONLY(msg)) {
       DEBUG_ASSERT_EQ(msg->size(), _message.size());
       DEBUG_ASSERT(*msg == _message);
       _client_callback.post([this]() {

@@ -39,7 +39,7 @@ TEST(rpc, server_bind_sync_run_on_game_thread) {
   carla::ThreadGroup threads;
   threads.CreateThread([&]() {
     Client client("localhost", TESTING_PORT);
-    for (auto i = 0u; i < 300u; ++i) {
+    for (auto i = 0; i < 300; ++i) {
       auto result = client.call("do_the_thing", i, 1).as<int>();
       EXPECT_EQ(result, i + 1);
     }
