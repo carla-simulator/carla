@@ -6,17 +6,16 @@
 
 #pragma once
 
+#include "carla/NonCopyable.h"
 #include "carla/streaming/Message.h"
-#include "carla/streaming/low_level/Session.h"
-#include "carla/streaming/low_level/Token.h"
+#include "carla/streaming/detail/Session.h"
+#include "carla/streaming/detail/Token.h"
 
 #include <memory>
 #include <mutex>
 
 namespace carla {
 namespace streaming {
-namespace low_level {
-
 namespace detail {
 
   /// Handles the synchronization of the shared session.
@@ -37,18 +36,16 @@ namespace detail {
 
   private:
 
-    mutable std::mutex _mutex; /// @todo it can be atomic
+    mutable std::mutex _mutex; /// @todo it can be atomic.
 
     std::shared_ptr<Session> _session;
   };
 
-} // namespace detail
-
   /// Shared state among all the copies of a stream. Provides access to the
-  /// underlying UDP session if active.
+  /// underlying server session if active.
   class StreamState
-    : public detail::SessionHolder,
-      private boost::noncopyable {
+    : public SessionHolder,
+      private NonCopyable {
   public:
 
     explicit StreamState(const token_type &token) : _token(token) {}
@@ -69,6 +66,6 @@ namespace detail {
     const token_type _token;
   };
 
-} // namespace low_level
+} // namespace detail
 } // namespace streaming
 } // namespace carla

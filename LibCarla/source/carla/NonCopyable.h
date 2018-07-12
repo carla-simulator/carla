@@ -8,6 +8,7 @@
 
 namespace carla {
 
+  /// Inherit (privately) to suppress copy-construction and copy-assignment.
   class NonCopyable {
   public:
 
@@ -15,7 +16,7 @@ namespace carla {
 
     NonCopyable(const NonCopyable &) = delete;
 
-    void operator=(const NonCopyable &x) = delete;
+    void operator=(const NonCopyable &) = delete;
   };
 
 } // namespace carla

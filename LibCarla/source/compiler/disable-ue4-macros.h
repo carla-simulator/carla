@@ -4,6 +4,12 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#ifndef LIBCARLA_INCLUDED_DISABLE_UE4_MACROS_HEADER
+#  define LIBCARLA_INCLUDED_DISABLE_UE4_MACROS_HEADER
+#else
+#  error disable-ue4-macros.h should only be included once!
+#endif // LIBCARLA_INCLUDED_DISABLE_UE4_MACROS_HEADER
+
 #pragma push_macro("check")
 #undef check
 
@@ -13,16 +19,14 @@
 #  define BOOST_ERROR_CODE_HEADER_ONLY
 #endif // BOOST_ERROR_CODE_HEADER_ONLY
 
-#ifndef BOOST_COROUTINES_NO_DEPRECATION_WARNING
-#  define BOOST_COROUTINES_NO_DEPRECATION_WARNING
-#endif // BOOST_COROUTINES_NO_DEPRECATION_WARNING
-
 #ifndef BOOST_NO_EXCEPTIONS
 #  define BOOST_NO_EXCEPTIONS
 #endif // BOOST_NO_EXCEPTIONS
 
 namespace boost {
 
-  static inline void throw_exception(const std::exception &) {}
+  static inline void throw_exception(const std::exception &e) {
+    UE_LOG(LogCarla, Fatal, TEXT("Exception thronw on Boost libraries: %s"), UTF8_TO_TCHAR(e.what()));
+  }
 
 } // namespace boost

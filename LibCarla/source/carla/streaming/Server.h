@@ -8,18 +8,18 @@
 
 #include "carla/ThreadGroup.h"
 #include "carla/streaming/low_level/Server.h"
-#include "carla/streaming/low_level/tcp/Server.h"
+#include "carla/streaming/detail/tcp/Server.h"
 
 #include <boost/asio/io_service.hpp>
 
 namespace carla {
 namespace streaming {
 
+  /// A streaming server. Each new stream has a token associated, this token can
+  /// be used by a client to subscribe to the stream.
   class Server {
-    using underlying_server = low_level::Server<low_level::tcp::Server>;
+    using underlying_server = low_level::Server<detail::tcp::Server>;
   public:
-
-    using duration_type = underlying_server::duration_type;
 
     explicit Server(uint16_t port)
       : _server(_io_service, port) {}
@@ -31,7 +31,7 @@ namespace streaming {
       Stop();
     }
 
-    void set_timeout(duration_type timeout) {
+    void set_timeout(time_duration timeout) {
       _server.set_timeout(timeout);
     }
 

@@ -8,8 +8,8 @@
 
 #include "carla/Debug.h"
 #include "carla/streaming/Message.h"
-#include "carla/streaming/low_level/StreamState.h"
-#include "carla/streaming/low_level/Token.h"
+#include "carla/streaming/detail/StreamState.h"
+#include "carla/streaming/detail/Token.h"
 
 #include <boost/asio/buffer.hpp>
 
@@ -18,13 +18,13 @@
 namespace carla {
 namespace streaming {
 
-namespace low_level {
+namespace detail {
 
   class Dispatcher;
 
-} // namespace low_level
+} // namespace detail
 
-  using stream_token = low_level::token_type;
+  using stream_token = detail::token_type;
 
   class Stream {
   public:
@@ -54,14 +54,14 @@ namespace low_level {
 
   private:
 
-    friend class low_level::Dispatcher;
+    friend class detail::Dispatcher;
 
-    Stream(std::shared_ptr<low_level::StreamState> state)
+    Stream(std::shared_ptr<detail::StreamState> state)
       : _shared_state(std::move(state)) {
       DEBUG_ASSERT(_shared_state != nullptr);
     }
 
-    std::shared_ptr<low_level::StreamState> _shared_state;
+    std::shared_ptr<detail::StreamState> _shared_state;
   };
 
 } // namespace streaming

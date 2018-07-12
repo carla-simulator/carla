@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/Debug.h"
+#include "carla/streaming/detail/Types.h"
 
 #include <boost/asio/buffer.hpp>
 
@@ -19,14 +20,6 @@
 namespace carla {
 namespace streaming {
 
-namespace low_level {
-namespace tcp {
-
-  class Client; /// @todo
-
-} // namespace low_level
-} // namespace tcp
-
   /// A message owns a buffer with raw data.
   class Message {
 
@@ -38,7 +31,7 @@ namespace tcp {
 
     using value_type = unsigned char;
 
-    using size_type = uint32_t;
+    using size_type = detail::message_size_type;
 
     // =========================================================================
     // -- Construction and assignment ------------------------------------------
@@ -130,8 +123,6 @@ namespace tcp {
     // =========================================================================
 
   private:
-
-    friend class low_level::tcp::Client; /// @todo
 
     size_type _size = 0u;
 

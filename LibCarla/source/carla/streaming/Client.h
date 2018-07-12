@@ -8,16 +8,16 @@
 
 #include "carla/ThreadGroup.h"
 #include "carla/streaming/low_level/Client.h"
-#include "carla/streaming/low_level/tcp/Client.h"
+#include "carla/streaming/detail/tcp/Client.h"
 
 #include <boost/asio/io_service.hpp>
 
 namespace carla {
 namespace streaming {
 
-  using stream_token = low_level::token_type;
+  using stream_token = detail::token_type;
 
-  /// With this client you can subscribe to multiple streams.
+  /// A client able to subscribe to multiple streams.
   class Client {
   public:
 
@@ -45,7 +45,7 @@ namespace streaming {
 
   private:
 
-    using underlying_client = low_level::Client<low_level::tcp::Client>;
+    using underlying_client = low_level::Client<detail::tcp::Client>;
 
     boost::asio::io_service _io_service;
 

@@ -30,7 +30,9 @@ endforeach(target)
 
 # Specific options for debug.
 set_target_properties(libcarla_test_debug PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_DEBUG})
+target_link_libraries(libcarla_test_debug "carla_server_debug")
 target_compile_definitions(libcarla_test_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
 
 # Specific options for release.
 set_target_properties(libcarla_test_release PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})
+target_link_libraries(libcarla_test_release "carla_server")

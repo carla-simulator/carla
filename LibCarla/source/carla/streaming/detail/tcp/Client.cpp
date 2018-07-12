@@ -4,36 +4,30 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#pragma once
+#include "carla/streaming/detail/tcp/Client.h"
 
 #include "carla/Debug.h"
 #include "carla/Logging.h"
-#include "carla/streaming/Message.h"
-#include "carla/streaming/low_level/Types.h"
-#include "carla/streaming/low_level/tcp/Timeout.h"
+#include "carla/Time.h"
 
 #include <boost/asio/connect.hpp>
-#include <boost/asio/deadline_timer.hpp>
-#include <boost/asio/io_service.hpp>
-#include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/read.hpp>
-#include <boost/asio/strand.hpp>
 #include <boost/asio/write.hpp>
-
-#include <functional>
-#include <memory>
-#include <string>
 
 namespace carla {
 namespace streaming {
-namespace low_level {
+namespace detail {
 namespace tcp {
 
-  class Encoder {
+  // ===========================================================================
+  // -- Decoder ----------------------------------------------------------------
+  // ===========================================================================
+
+  class Decoder {
   public:
 
     boost::asio::mutable_buffer header() {
-      return boost::asio::buffer(reinterpret_cast<unsigned char *>(&_size), sizeof(_size));
+      return boost::asio::buffer(&_size, sizeof(_size));
     }
 
     boost::asio::mutable_buffer body() {
@@ -58,81 +52,37 @@ namespace tcp {
     std::shared_ptr<Message> _message;
   };
 
-  /// @warning The client should not be destroyed before the @a io_service is
-  /// stopped.
-  class Client : private boost::noncopyable {
-  public:
+  // ===========================================================================
+  // -- Client -----------------------------------------------------------------
+  // ===========================================================================
 
-    using endpoint = boost::asio::ip::tcp::endpoint;
+  Client::Client(
+      boost::asio::io_service &io_service,
+      endpoint ep,
+      stream_id_type stream_id,
+      callback_function_type callback)
+    : _endpoint(std::move(ep)),
+      _stream_id(stream_id),
+      _callback(std::move(callback)),
+      _socket(io_service),
+      _strand(io_service),
+      _connection_timer(io_service) {
+    Connect();
+  }
 
-    template <typename Functor>
-    Client(
-        boost::asio::io_service &io_service,
-        endpoint ep,
-        stream_id_type stream_id,
-        Functor &&callback)
-      : _endpoint(std::move(ep)),
-        _stream_id(stream_id),
-        _callback(std::forward<Functor>(callback)),
-        _socket(io_service),
-        _strand(io_service),
-        _connection_timer(io_service) {
-      Connect();
-    }
+  Client::~Client() {
+    Stop();
+  }
 
-    ~Client() {
-      Stop();
-    }
-
-    stream_id_type get_id() const {
-      return _stream_id;
-    }
-
-    bool operator==(const Client &rhs) const {
-      return get_id() == rhs.get_id();
-    }
-
-    void Stop() {
-      _connection_timer.cancel();
-      _strand.post([this]() {
-        _done = true;
-        if (_socket.is_open()) {
-          _socket.close();
-        }
-      });
-    }
-
-  private:
-
-    /// @todo Stop inlining and make cpp files.
-
-    inline void Connect();
-
-    inline void Reconnect() {
-      _connection_timer.expires_from_now(timeout_type::seconds(1u));
-      _connection_timer.async_wait([this](boost::system::error_code ec) {
-        if (!ec) {
-          Connect();
-        }
-      });
-    }
-
-    inline void ReadData();
-
-    const endpoint _endpoint;
-
-    const stream_id_type _stream_id;
-
-    std::function<void(std::shared_ptr<Message>)> _callback;
-
-    boost::asio::ip::tcp::socket _socket;
-
-    boost::asio::io_service::strand _strand;
-
-    boost::asio::deadline_timer _connection_timer;
-
-    bool _done = false;
-  };
+  void Client::Stop() {
+    _connection_timer.cancel();
+    _strand.post([this]() {
+      _done = true;
+      if (_socket.is_open()) {
+        _socket.close();
+      }
+    });
+  }
 
   void Client::Connect() {
     _strand.post([this]() {
@@ -151,9 +101,9 @@ namespace tcp {
           // Send the stream id to subscribe to the stream.
           log_debug("streaming client: sending stream id", _stream_id);
           boost::asio::async_write(
-              _socket,
-              boost::asio::buffer(&_stream_id, sizeof(_stream_id)),
-              _strand.wrap([=](error_code ec, size_t DEBUG_ONLY(bytes)) {
+          _socket,
+          boost::asio::buffer(&_stream_id, sizeof(_stream_id)),
+          _strand.wrap([=](error_code ec, size_t DEBUG_ONLY(bytes)) {
             if (!ec) {
               DEBUG_ASSERT_EQ(bytes, sizeof(_stream_id));
               // If succeeded start reading data.
@@ -175,6 +125,15 @@ namespace tcp {
     });
   }
 
+  void Client::Reconnect() {
+    _connection_timer.expires_from_now(time_duration::seconds(1u));
+    _connection_timer.async_wait([this](boost::system::error_code ec) {
+      if (!ec) {
+        Connect();
+      }
+    });
+  }
+
   void Client::ReadData() {
     _strand.post([this]() {
       if (_done) {
@@ -183,14 +142,15 @@ namespace tcp {
 
       log_debug("streaming client: Client::ReadData");
 
-      auto encoder = std::make_shared<Encoder>();
+      auto encoder = std::make_shared<Decoder>();
 
       auto handle_read_data = [=](boost::system::error_code ec, size_t DEBUG_ONLY(bytes)) {
         DEBUG_ONLY(log_debug("streaming client: Client::ReadData.handle_read_data", bytes, "bytes"));
         if (!ec) {
           DEBUG_ASSERT_EQ(bytes, encoder->size());
           DEBUG_ASSERT_NE(bytes, 0u);
-          // Move the buffer to the callback function and start reading the next
+          // Move the buffer to the callback function and start reading
+          // the next
           // piece of data.
           log_debug("streaming client: success reading data, calling the callback");
           _socket.get_io_service().post([this, encoder]() { _callback(encoder->pop()); });
@@ -206,7 +166,8 @@ namespace tcp {
         DEBUG_ONLY(log_debug("streaming client: Client::ReadData.handle_read_header", bytes, "bytes"));
         if (!ec && (encoder->size() > 0u)) {
           DEBUG_ASSERT_EQ(bytes, sizeof(message_size_type));
-          // Now that we know the size of the coming buffer, we can allocate
+          // Now that we know the size of the coming buffer, we can
+          // allocate
           // our buffer and start putting data into it.
           boost::asio::async_read(
               _socket,
@@ -229,21 +190,6 @@ namespace tcp {
   }
 
 } // namespace tcp
-} // namespace low_level
+} // namespace detail
 } // namespace streaming
 } // namespace carla
-
-namespace std {
-
-  // Injecting a hash function for our clients into std namespace so we can
-  // directly insert them into std::unordered_set.
-  template <>
-  struct hash<carla::streaming::low_level::tcp::Client> {
-    using argument_type = carla::streaming::low_level::tcp::Client;
-    using result_type = std::size_t;
-    result_type operator()(const argument_type &client) const noexcept {
-      return std::hash<carla::streaming::low_level::stream_id_type>()(client.get_id());
-    }
-  };
-
-} // namespace std

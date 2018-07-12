@@ -6,7 +6,9 @@
 
 #pragma once
 
-#include "carla/streaming/low_level/Token.h"
+#include "carla/streaming/detail/HashableClient.h"
+#include "carla/streaming/detail/Token.h"
+#include "carla/streaming/detail/tcp/Client.h"
 
 #include <boost/asio/io_service.hpp>
 
@@ -16,23 +18,25 @@ namespace carla {
 namespace streaming {
 namespace low_level {
 
-  /// Wrapper around low level clients. You can subscribe to multiple streams.
+  /// A client able to subscribe to multiple streams. Accepts an external
+  /// io_service.
   ///
   /// @warning The client should not be destroyed before the @a io_service is
   /// stopped.
-  /// @pre T has to be hashable.
   template <typename T>
   class Client {
   public:
 
-    using underlying_client = T;
+    using underlying_client = detail::HashableClient<T>;
+
+    using token_type = carla::streaming::detail::token_type;
 
     template <typename Functor>
     void Subscribe(
         boost::asio::io_service &io_service,
         const token_type &token,
         Functor &&callback) {
-      if (!token.protocol_is_tcp()) {
+      if (!token.protocol_is_tcp()) { /// @todo
         throw std::invalid_argument("invalid token, only TCP tokens supported");
       }
       _clients.emplace(

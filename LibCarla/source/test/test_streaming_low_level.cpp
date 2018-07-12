@@ -9,13 +9,14 @@
 #include <carla/ThreadGroup.h>
 #include <carla/streaming/low_level/Client.h>
 #include <carla/streaming/low_level/Server.h>
-#include <carla/streaming/low_level/tcp/Client.h>
-#include <carla/streaming/low_level/tcp/Server.h>
+#include <carla/streaming/detail/tcp/Client.h>
+#include <carla/streaming/detail/tcp/Server.h>
 
 #include <atomic>
 
 TEST(streaming_low_level, sending_strings) {
   using namespace util::message;
+  using namespace carla::streaming::detail;
   using namespace carla::streaming::low_level;
 
   constexpr auto number_of_messages = 5'000u;

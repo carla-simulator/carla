@@ -11,33 +11,31 @@
 #include <chrono>
 
 namespace carla {
-namespace streaming {
-namespace low_level {
-namespace tcp {
 
-  /// Positive time-out up to milliseconds resolution.
-  class timeout_type {
+  /// Positive time duration up to milliseconds resolution. Automatically casts
+  /// between std::chrono::duration and boost::posix_time::time_duration.
+  class time_duration {
   public:
 
-    static inline timeout_type seconds(size_t timeout) {
+    static inline time_duration seconds(size_t timeout) {
       return std::chrono::seconds(timeout);
     }
 
-    static inline timeout_type milliseconds(size_t timeout) {
+    static inline time_duration milliseconds(size_t timeout) {
       return std::chrono::milliseconds(timeout);
     }
 
-    constexpr timeout_type() : _milliseconds(0u) {}
+    constexpr time_duration() : _milliseconds(0u) {}
 
     template <typename Rep, typename Period>
-    timeout_type(std::chrono::duration<Rep, Period> duration)
+    time_duration(std::chrono::duration<Rep, Period> duration)
       : _milliseconds(std::chrono::duration_cast<std::chrono::milliseconds>(duration).count()) {}
 
-    timeout_type(boost::posix_time::time_duration timeout)
-      : timeout_type(std::chrono::milliseconds(timeout.total_milliseconds())) {}
+    time_duration(boost::posix_time::time_duration timeout)
+      : time_duration(std::chrono::milliseconds(timeout.total_milliseconds())) {}
 
-    timeout_type(const timeout_type &) = default;
-    timeout_type &operator=(const timeout_type &) = default;
+    time_duration(const time_duration &) = default;
+    time_duration &operator=(const time_duration &) = default;
 
     boost::posix_time::time_duration to_posix_time() const {
       return boost::posix_time::milliseconds(_milliseconds);
@@ -56,7 +54,4 @@ namespace tcp {
     size_t _milliseconds;
   };
 
-} // namespace tcp
-} // namespace low_level
-} // namespace streaming
 } // namespace carla
