@@ -44,8 +44,8 @@ def get_libcarla_extensions():
                 'dependencies/lib'],
             runtime_library_dirs=['/usr/local/lib/boost'],
             libraries=libraries,
-            extra_compile_args=['-fPIC', '-std=c++17'],
-            language='c++17',
+            extra_compile_args=['-fPIC', '-std=c++14'],
+            language='c++14',
             depends=depends)
 
     return [make_extension('carla.libcarla', glob.glob('source/libcarla/*.cpp'))]
