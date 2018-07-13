@@ -11,7 +11,7 @@ process.
 
 ![modules](img/modules.png)
 
-In Linux, we compile CARLA and all the dependencies with clang-5.0 and C++17
+In Linux, we compile CARLA and all the dependencies with clang-5.0 and C++14
 standard. We however link against different runtime C++ libraries depending on
 where the code going to be used, since all the code that is going to be linked
 with Unreal Engine needs to be compiled using `libc++`.
