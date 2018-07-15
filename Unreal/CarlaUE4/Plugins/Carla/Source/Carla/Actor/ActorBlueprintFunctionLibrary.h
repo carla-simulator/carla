@@ -21,9 +21,5 @@ class UActorBlueprintFunctionLibrary : public UBlueprintFunctionLibrary
   /// errors found.
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static bool CheckActorDefinitions(const TArray<FActorDefinition> &ActorDefinitions);
-
-  /// Modifies the list of actor definitions, fixing or removing invalid items.
-  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
-  static void ValidateActorDefinitions(TArray<FActorDefinition> &ActorDefinitions);
 };
 

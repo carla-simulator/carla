@@ -5,97 +5,144 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
-#include "ActorBlueprintFunctionLibrary.h"
+#include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+
+#include "Carla/Util/ScopedStack.h"
 
 #include <algorithm>
+#include <stack>
 
-/// @todo Improve all the check here.
-namespace ActorDetail {
+/// Checks validity of FActorDefinition.
+class FActorDefinitionValidator {
+public:
 
-  /// Iterate every item and validate it with @a Validator.
-  template <typename T, typename F>
-  static bool ForEach(const TArray<T> &Array, F Validator)
+  /// Iterate all actor definitions and properties and display messages on
+  /// error.
+  bool AreValid(const TArray<FActorDefinition> &ActorDefinitions)
   {
-    bool result = true;
-    for (auto &&Item : Array)
+    return AreValid(TEXT("Actor Definition"), ActorDefinitions);
+  }
+
+private:
+
+  /// If @a Predicate is false, print an error message. If possible the message
+  /// is printed too in the editor window.
+  template <typename T, typename ... ARGS>
+  bool OnScreenAssert(bool Predicate, const T &Format, ARGS && ... Args) const
+  {
+    if (!Predicate)
     {
-      result &= Validator(Item);
+      FString Message;
+      for (auto &String : Stack)
+      {
+        Message += String;
+      }
+      Message += TEXT(" ");
+      Message += FString::Printf(Format, std::forward<ARGS>(Args)...);
+
+      UE_LOG(LogCarla, Error, TEXT("%s"), *Message);
+#if WITH_EDITOR
+      if(GEngine)
+      {
+        GEngine->AddOnScreenDebugMessage(42, 15.0f, FColor::Red, Message);
+      }
+#endif // WITH_EDITOR
     }
-    return result;
+    return Predicate;
   }
 
-  static bool IsValid(const FString &String)
+  template <typename T>
+  FString GetDisplayId(const FString &Type, size_t Index, const T &Item)
   {
-    return !String.IsEmpty();
+    return FString::Printf(TEXT("[%s %d : %s]"), *Type, Index, *Item.Id);
   }
 
-  static bool IdIsValid(const FString &Id)
+  FString GetDisplayId(const FString &Type, size_t Index, const FString &Item)
   {
-    return IsValid(Id);
+    return FString::Printf(TEXT("[%s %d : %s]"), *Type, Index, *Item);
   }
 
-  static bool TagsAreValid(const FString &Tags)
+  /// Applies @a Validator to each item in @a Array. Pushes a new context to the
+  /// stack for each item.
+  template <typename T, typename F>
+  bool ForEach(const FString &Type, const TArray<T> &Array, F Validator)
   {
-    return IsValid(Tags);
+    bool Result = true;
+    auto Counter = 0u;
+    for (const auto &Item : Array)
+    {
+      auto Scope = Stack.PushScope(GetDisplayId(Type, Counter, Item));
+      Result &= Validator(Item);
+      ++Counter;
+    }
+    return Result;
   }
 
-  static bool IsValid(const EActorAttributeType Type)
+  /// Applies @a IsValid to each item in @a Array. Pushes a new context to the
+  /// stack for each item.
+  template <typename T>
+  bool AreValid(const FString &Type, const TArray<T> &Array)
   {
-    return Type < EActorAttributeType::SIZE;
+    return ForEach(Type, Array, [this](const auto &Item){ return IsValid(Item); });
   }
 
-  static bool ValueIsValid(const EActorAttributeType Type, const FString &Value)
+  bool IsIdValid(const FString &Id)
   {
+    /// @todo Do more checks.
+    return OnScreenAssert(!Id.IsEmpty(), TEXT("Id cannot be empty"));
+  }
+
+  bool AreTagsValid(const FString &Tags)
+  {
+    /// @todo Do more checks.
+    return OnScreenAssert(!Tags.IsEmpty(), TEXT("Tags cannot be empty"));
+  }
+
+  bool IsValid(const EActorAttributeType Type)
+  {
+    /// @todo Do more checks.
+    return OnScreenAssert(Type < EActorAttributeType::SIZE, TEXT("Invalid Type"));
+  }
+
+  bool ValueIsValid(const EActorAttributeType Type, const FString &Value)
+  {
+    /// @todo Do more checks.
     return true;
   }
 
-  static bool IsValid(const FActorVariation &Variation)
+  bool IsValid(const FActorVariation &Variation)
   {
     return
-        IdIsValid(Variation.Id) &&
+        IsIdValid(Variation.Id) &&
         IsValid(Variation.Type) &&
-        ForEach(Variation.RecommendedValues, [&](auto &Value) {
+        ForEach(TEXT("Recommended Value"), Variation.RecommendedValues, [&](auto &Value) {
           return ValueIsValid(Variation.Type, Value);
         });
   }
 
-  static bool IsValid(const FActorAttribute &Attribute)
+  bool IsValid(const FActorAttribute &Attribute)
   {
     return
-        IdIsValid(Attribute.Id) &&
+        IsIdValid(Attribute.Id) &&
         IsValid(Attribute.Type) &&
         ValueIsValid(Attribute.Type, Attribute.Value);
   }
 
-  static bool IsValid(const FActorDefinition &Definition);
-
-  template <typename T>
-  static bool AreValid(const TArray<T> &Array)
+  bool IsValid(const FActorDefinition &ActorDefinition)
   {
-    return ForEach(Array, [](const auto &Item){ return ActorDetail::IsValid(Item); });
-  }
-
-  static bool IsValid(const FActorDefinition &Definition)
-  {
+    /// @todo Validate Class and make sure IDs are not repeated.
     return
-        IdIsValid(Definition.Id) &&
-        TagsAreValid(Definition.Tags) &&
-        AreValid(Definition.Variations) &&
-        AreValid(Definition.Attributes);
+        IsIdValid(ActorDefinition.Id) &&
+        AreTagsValid(ActorDefinition.Tags) &&
+        AreValid(TEXT("Variation"), ActorDefinition.Variations) &&
+        AreValid(TEXT("Attribute"), ActorDefinition.Attributes);
   }
 
-} // namespace ActorDetail
+  FScopedStack<FString> Stack;
+};
 
 bool UActorBlueprintFunctionLibrary::CheckActorDefinitions(const TArray<FActorDefinition> &ActorDefinitions)
 {
-  return ActorDetail::AreValid(ActorDefinitions);
-}
-
-void UActorBlueprintFunctionLibrary::ValidateActorDefinitions(TArray<FActorDefinition> &ActorDefinitions)
-{
-  /// @todo
-  if (!CheckActorDefinitions(ActorDefinitions))
-  {
-    ActorDefinitions.Empty(); // lol
-  }
+  FActorDefinitionValidator Validator;
+  return Validator.AreValid(ActorDefinitions);
 }
