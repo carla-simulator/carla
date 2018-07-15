@@ -10,6 +10,7 @@
 #include "Carla/Actor/ActorDescription.h"
 
 #include "Containers/Array.h"
+#include "GameFramework/Actor.h"
 
 #include <algorithm>
 
@@ -17,7 +18,7 @@
 
 /// Interface for the actor spawner. It is implemented in blueprints.
 UCLASS(BlueprintType, Blueprintable)
-class CARLA_API UActorSpawnerBase : public UObject
+class CARLA_API AActorSpawnerBase : public AActor
 {
   GENERATED_BODY()
 
