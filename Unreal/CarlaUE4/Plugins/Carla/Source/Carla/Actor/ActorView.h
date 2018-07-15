@@ -40,7 +40,7 @@ public:
 
 private:
 
-  friend class UActorRegistry;
+  friend class FActorRegistry;
 
   FActorView(IdType ActorId, AActor &Actor)
     : Id(ActorId),

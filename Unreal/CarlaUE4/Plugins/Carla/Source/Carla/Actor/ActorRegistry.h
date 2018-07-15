@@ -12,14 +12,9 @@
 
 #include <unordered_map>
 
-#include "ActorRegistry.generated.h"
-
 /// A registry of all the Carla actors.
-UCLASS(BlueprintType, Blueprintable)
-class CARLA_API UActorRegistry : public UObject
+class FActorRegistry
 {
-  GENERATED_BODY()
-
 private:
 
   using DatabaseType = std::unordered_map<FActorView::IdType, FActorView>;
@@ -42,42 +37,45 @@ public:
 
   void Deregister(IdType Id);
 
+  void Deregister(AActor *Actor);
+
+  /// @}
+  // ===========================================================================
+  /// @name Look up functions
+  // ===========================================================================
+  /// @{
+
+  int32 Num() const
+  {
+    return Actors.Num();
+  }
+
+  bool IsEmpty() const
+  {
+    return ActorDatabase.empty();
+  }
+
+  bool Contains(uint32 Id) const
+  {
+    return ActorDatabase.find(Id) != ActorDatabase.end();
+  }
+
   FActorView Find(IdType Id) const
   {
     auto it = ActorDatabase.find(Id);
     return it != ActorDatabase.end() ? it->second : FActorView();
   }
 
-  /// @}
-  // ===========================================================================
-  /// @name Blueprint support
-  // ===========================================================================
-  /// @{
-public:
-
-  // UPROPERTY(BlueprintCallable)
-  int32 Num() const
+  FActorView Find(AActor *Actor) const
   {
-    return Actors.Num();
+    auto PtrToId = Ids.Find(Actor);
+    return PtrToId != nullptr ? Find(*PtrToId) : FActorView();
   }
 
-  // UPROPERTY(BlueprintCallable)
-  bool IsEmpty() const
-  {
-    return ActorDatabase.empty();
-  }
-
-  // UPROPERTY(BlueprintCallable)
-  bool Contains(IdType Id) const
-  {
-    return ActorDatabase.find(Id) != ActorDatabase.end();
-  }
-
-  // UPROPERTY(BlueprintCallable)
   AActor *FindActor(IdType Id) const
   {
-    auto PtrToPtr = Actors.Find(Id);
-    return PtrToPtr != nullptr ? *PtrToPtr : nullptr;
+    auto View = Find(Id);
+    return View.IsValid() ? View.GetActor() : nullptr;
   }
 
   /// @}
@@ -105,12 +103,9 @@ public:
   /// @}
 private:
 
-  // Because UPROPERTY doesn't understand aliases...
-  static_assert(sizeof(IdType) == sizeof(uint32), "Id type missmatch!");
+  TMap<IdType, AActor *> Actors;
 
-  // This one makes sure actors are not garbage collected.
-  UPROPERTY(VisibleAnywhere)
-  TMap<uint32, AActor *> Actors;
+  TMap<AActor *, IdType> Ids;
 
   DatabaseType ActorDatabase;
 };

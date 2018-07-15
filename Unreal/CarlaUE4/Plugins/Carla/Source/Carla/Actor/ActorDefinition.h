@@ -18,6 +18,9 @@ struct FActorDefinition
 {
   GENERATED_BODY()
 
+  /// Uniquely identifies the definition (no need to fill it).
+  uint32 UId = 0u;
+
   /// Display ID that identifies the actor.
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FString Id;
