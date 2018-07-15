@@ -17,6 +17,12 @@ class UActorBlueprintFunctionLibrary : public UBlueprintFunctionLibrary
 {
   GENERATED_BODY()
 
+public:
+
+  /// Return whether the actor definition is valid. Prints all the errors found.
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static bool CheckActorDefinition(const FActorDefinition &ActorDefinitions);
+
   /// Return whether the list of actor definitions is valid. Prints all the
   /// errors found.
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)

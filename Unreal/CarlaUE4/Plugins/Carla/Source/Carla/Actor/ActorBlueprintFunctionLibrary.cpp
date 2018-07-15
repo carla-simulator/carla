@@ -16,17 +16,25 @@
 class FActorDefinitionValidator {
 public:
 
-  /// Iterate all actor definitions and properties and display messages on
+  /// Iterate all actor definitions and their properties and display messages on
   /// error.
   bool AreValid(const TArray<FActorDefinition> &ActorDefinitions)
   {
     return AreValid(TEXT("Actor Definition"), ActorDefinitions);
   }
 
+  /// Validate @a ActorDefinition and display messages on error.
+  bool SingleIsValid(const FActorDefinition &Definition)
+  {
+    auto ScopeText = FString::Printf(TEXT("[Actor Definition : %s]"), *Definition.Id);
+    auto Scope = Stack.PushScope(ScopeText);
+    return IsValid(Definition);
+  }
+
 private:
 
   /// If @a Predicate is false, print an error message. If possible the message
-  /// is printed too in the editor window.
+  /// is printed to the editor window.
   template <typename T, typename ... ARGS>
   bool OnScreenAssert(bool Predicate, const T &Format, ARGS && ... Args) const
   {
@@ -140,6 +148,12 @@ private:
 
   FScopedStack<FString> Stack;
 };
+
+bool UActorBlueprintFunctionLibrary::CheckActorDefinition(const FActorDefinition &ActorDefinition)
+{
+  FActorDefinitionValidator Validator;
+  return Validator.SingleIsValid(ActorDefinition);
+}
 
 bool UActorBlueprintFunctionLibrary::CheckActorDefinitions(const TArray<FActorDefinition> &ActorDefinitions)
 {
