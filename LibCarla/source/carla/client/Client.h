@@ -57,8 +57,8 @@ namespace client {
 
     SharedPtr<World> GetWorld();
 
-    BlueprintLibrary GetBlueprintLibrary() {
-      return Call<std::vector<carla::rpc::ActorBlueprint>>("get_blueprints");
+    SharedPtr<BlueprintLibrary> GetBlueprintLibrary() {
+      return MakeShared<BlueprintLibrary>(Call<std::vector<carla::rpc::ActorDefinition>>("get_blueprints"));
     }
 
     SharedPtr<Actor> SpawnActor(const ActorBlueprint &blueprint, const Transform &transform);

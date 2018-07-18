@@ -23,7 +23,7 @@ namespace client {
   using SharedPtr = boost::shared_ptr<T>;
 
   template <typename T, typename ... Args>
-  auto MakeShared(Args && ... args) {
+  static inline auto MakeShared(Args && ... args) {
     return boost::make_shared<T>(std::forward<Args>(args) ...);
   }
 

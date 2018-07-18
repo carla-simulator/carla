@@ -6,22 +6,24 @@
 
 #pragma once
 
-#include "carla/rpc/ActorDefinition.h"
+#include <cstdint>
 
 namespace carla {
 namespace rpc {
 
-  class Actor {
-  public:
+  enum class ActorAttributeType : uint8_t {
+    Bool,
+    Int,
+    Float,
+    String,
+    RGBColor,
 
-    using id_type = uint32_t;
-
-    id_type id;
-
-    ActorDefinition definition;
-
-    MSGPACK_DEFINE_ARRAY(id, definition);
+    SIZE,
+    INVALID
   };
+
+  // Serialization of this class is in ActorAttribute.h, to reduce dependencies
+  // since this file is directly included in UE4 code.
 
 } // namespace rpc
 } // namespace carla

@@ -6,31 +6,46 @@
 
 #include "carla/client/ActorBlueprint.h"
 
-#include <boost/algorithm/string/predicate.hpp>
+#include "carla/StringUtil.h"
 
-#ifdef _WIN32
-#  include <shlwapi.h>
-#else
-#  include <fnmatch.h>
-#endif // _WIN32
+#include <algorithm>
 
 namespace carla {
 namespace client {
 
-  static bool MatchWildcards(const std::string &str, const std::string &test) {
-#ifdef _WIN32
-    return PathMatchSpecA(str.c_str(), test.c_str());
-#else
-    return 0 == fnmatch(test.c_str(), str.c_str(), 0);
-#endif // _WIN32
+  template <typename Map, typename Container>
+  static void FillMap(Map &destination, Container &source) {
+    destination.reserve(source.size());
+    for (auto &item : source) {
+      auto id = item.id;
+      destination.emplace(id, std::move(item));
+    }
   }
 
-  bool ActorBlueprint::StartsWith(const std::string &test) const {
-    return boost::starts_with(GetTypeId(), test);
+  ActorBlueprint::ActorBlueprint(rpc::ActorDefinition definition)
+    : _uid(definition.uid),
+      _id(std::move(definition.id)) {
+    StringUtil::Split(_tags, definition.tags, ",");
+    FillMap(_attributes, definition.attributes);
   }
 
-  bool ActorBlueprint::MatchWildcards(const std::string &test) const {
-    return ::carla::client::MatchWildcards(GetTypeId(), test);
+  bool ActorBlueprint::MatchTags(const std::string &wildcard_pattern) const {
+    return std::any_of(_tags.begin(), _tags.end(), [&](const auto &tag) {
+      return StringUtil::Match(tag, wildcard_pattern);
+    });
+  }
+
+  rpc::ActorDescription ActorBlueprint::MakeActorDescription() const {
+    rpc::ActorDescription description;
+    description.uid = _uid;
+    description.id = _id;
+    description.attributes.reserve(_attributes.size());
+    for (const auto &attribute : *this) {
+      if (attribute.IsModifiable()) {
+        description.attributes.push_back(attribute);
+      }
+    }
+    return description;
   }
 
 } // namespace client

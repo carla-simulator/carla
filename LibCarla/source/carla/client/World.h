@@ -24,7 +24,7 @@ namespace client {
     World(World &&) = default;
     World &operator=(World &&) = default;
 
-    BlueprintLibrary GetBlueprintLibrary() const {
+    SharedPtr<BlueprintLibrary> GetBlueprintLibrary() const {
       return _parent->GetBlueprintLibrary();
     }
 

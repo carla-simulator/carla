@@ -9,6 +9,7 @@
 #include "carla/Debug.h"
 #include "carla/NonCopyable.h"
 #include "carla/client/ActorBlueprint.h"
+#include "carla/client/Memory.h"
 
 #include <algorithm>
 #include <vector>
@@ -16,28 +17,30 @@
 namespace carla {
 namespace client {
 
-  class Client;
-
-  class BlueprintLibrary /*: private NonCopyable*/ {
+  class BlueprintLibrary
+    : public EnableSharedFromThis<BlueprintLibrary>,
+      private NonCopyable {
     using list_type = std::vector<ActorBlueprint>;
   public:
-
-    // BlueprintLibrary() = default;
-
-    // BlueprintLibrary(BlueprintLibrary &&) = default;
-    // BlueprintLibrary &operator=(BlueprintLibrary &&) = default;
 
     using value_type = list_type::value_type;
     using size_type = list_type::size_type;
     using const_iterator = list_type::const_iterator;
     using const_reference = list_type::const_reference;
 
-    BlueprintLibrary Filter(const std::string &wildcard_pattern) const {
+    explicit BlueprintLibrary(const std::vector<rpc::ActorDefinition> &blueprints)
+      : _blueprints(blueprints.begin(), blueprints.end()) {}
+
+    BlueprintLibrary(BlueprintLibrary &&) = default;
+    BlueprintLibrary &operator=(BlueprintLibrary &&) = default;
+
+    /// Filters a list of ActorBlueprint with tags matching @a wildcard_pattern.
+    SharedPtr<BlueprintLibrary> Filter(const std::string &wildcard_pattern) const {
       list_type result;
       std::copy_if(begin(), end(), std::back_inserter(result), [&](const auto &x) {
-        return x.MatchWildcards(wildcard_pattern);
+        return x.MatchTags(wildcard_pattern);
       });
-      return result;
+      return SharedPtr<BlueprintLibrary>{new BlueprintLibrary(result)};
     }
 
     const_reference operator[](size_type pos) const {
@@ -62,13 +65,8 @@ namespace client {
 
   private:
 
-    friend class Client;
-
     BlueprintLibrary(list_type blueprints)
       : _blueprints(std::move(blueprints)) {}
-
-    BlueprintLibrary(const std::vector<carla::rpc::ActorBlueprint> &blueprints)
-      : _blueprints(blueprints.begin(), blueprints.end()) {}
 
     list_type _blueprints;
   };

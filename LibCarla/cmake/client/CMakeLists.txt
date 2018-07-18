@@ -5,13 +5,17 @@ project(libcarla-client)
 install(DIRECTORY "${RPCLIB_INCLUDE_PATH}/rpc" DESTINATION include)
 install(FILES "${RPCLIB_LIB_PATH}/librpc.a" DESTINATION lib)
 
+file(GLOB libcarla_sources
+    "${libcarla_source_path}/carla/*.h"
+    "${libcarla_source_path}/carla/*.cpp")
+
 file(GLOB_RECURSE libcarla_client_sources
     "${libcarla_source_path}/carla/client/*.h"
     "${libcarla_source_path}/carla/client/*.cpp")
 
 # Create targets for debug and release in the same build type.
 foreach(target carla_client_debug carla_client)
-  add_library(${target} STATIC ${libcarla_client_sources})
+  add_library(${target} STATIC ${libcarla_client_sources} ${libcarla_sources})
 
   target_include_directories(${target} PRIVATE
       "${BOOST_INCLUDE_PATH}"

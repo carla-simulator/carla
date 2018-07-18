@@ -14,7 +14,7 @@ namespace carla {
 namespace client {
 
   std::ostream &operator<<(std::ostream &out, const Actor &actor) {
-    out << "Actor(id=" << actor.GetId() << ", type_id=" << actor.GetTypeId() << ')';
+    out << "Actor(id=" << actor.GetId() /*<< ", type_id=" << actor.GetTypeId()*/ << ')';
     return out;
   }
 
@@ -27,11 +27,11 @@ void export_actor() {
 
   class_<cc::Actor, boost::noncopyable, boost::shared_ptr<cc::Actor>>("Actor", no_init)
     .add_property("id", &cc::Actor::GetId)
-    .add_property("type_id", +[](const cc::Actor &self) -> std::string {
-      // Needs to copy the string by value.
-      return self.GetTypeId();
-    })
-    .add_property("blueprint", &cc::Actor::GetBlueprint)
+    // .add_property("type_id", +[](const cc::Actor &self) -> std::string {
+    //   // Needs to copy the string by value.
+    //   return self.GetTypeId();
+    // })
+    // .add_property("blueprint", &cc::Actor::GetBlueprint)
     .def("get_world", &cc::Actor::GetWorld)
     .def("apply_control", &cc::Actor::ApplyControl)
     .def(self_ns::str(self_ns::self))
