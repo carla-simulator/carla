@@ -16,16 +16,12 @@ struct FActorDescription
 {
   GENERATED_BODY()
 
-  /// Uniquely identifies the definition.
+  /// UId of the definition in which this description was based.
   uint32 UId = 0u;
 
   /// Display ID that identifies the actor.
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FString Id;
-
-  /// AActor class of the actor to be spawned.
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  TSubclassOf<AActor> Class;
 
   /// User selected variations of the actor. Note that at this point are
   /// represented by non-modifiable attributes.

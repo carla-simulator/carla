@@ -30,13 +30,13 @@ namespace client {
       return _actor.id;
     }
 
-    const std::string &GetTypeId() const {
-      return _actor.blueprint.type_id;
-    }
+    // const std::string &GetTypeId() const {
+    //   return _actor.blueprint.type_id;
+    // }
 
-    ActorBlueprint GetBlueprint() const {
-      return _actor.blueprint;
-    }
+    // ActorBlueprint GetBlueprint() const {
+    //   return _actor.blueprint;
+    // }
 
     SharedPtr<World> GetWorld() const {
       return _world;

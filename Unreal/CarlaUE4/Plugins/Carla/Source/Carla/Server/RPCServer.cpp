@@ -10,7 +10,6 @@
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Version.h>
 #include <carla/rpc/Actor.h>
-#include <carla/rpc/ActorBlueprint.h>
 #include <carla/rpc/Server.h>
 #include <carla/rpc/Transform.h>
 #include <carla/rpc/VehicleControl.h>
@@ -52,20 +51,20 @@ void FRPCServer::Initialize(AServer &Server, uint16_t Port)
 
   srv.BindAsync("version", []() { return std::string(carla::version()); });
 
-  srv.BindAsync("get_blueprints", []() {
-    return std::vector<cr::ActorBlueprint>{
-      cr::ActorBlueprint{"vehicle.mustang.red"},
-      cr::ActorBlueprint{"vehicle.mustang.also_red"},
-      cr::ActorBlueprint{"vehicle.mustang.still_red"}
-    };
-  });
+  // srv.BindAsync("get_blueprints", []() {
+  //   return std::vector<cr::ActorBlueprint>{
+  //     cr::ActorBlueprint{"vehicle.mustang.red"},
+  //     cr::ActorBlueprint{"vehicle.mustang.also_red"},
+  //     cr::ActorBlueprint{"vehicle.mustang.still_red"}
+  //   };
+  // });
 
-  srv.BindSync("spawn_actor", [&](
-      const cr::ActorBlueprint &blueprint,
-      const cr::Transform &transform) {
-    auto id = Server.SpawnAgent(transform);
-    return cr::Actor{static_cast<cr::Actor::id_type>(id), blueprint};
-  });
+  // srv.BindSync("spawn_actor", [&](
+  //     const cr::ActorBlueprint &blueprint,
+  //     const cr::Transform &transform) {
+  //   auto id = Server.SpawnAgent(transform);
+  //   return cr::Actor{static_cast<cr::Actor::id_type>(id), blueprint};
+  // });
 
   srv.BindSync("apply_control_to_actor", [&](
       const cr::Actor &actor,
