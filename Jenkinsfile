@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        UE4_ROOT = '/var/lib/jenkins/UnrealEngine_4.19'
+        UE4_ROOT = '/var/lib/jenkins/UnrealEngine_4.20'
     }
 
     options {

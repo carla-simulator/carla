@@ -34,7 +34,7 @@ public:
   UPROPERTY(Category = "Scene Capture", EditAnywhere, BlueprintReadWrite, meta = (EditCondition = bCaptureScene))
   FString SaveToFolder;
 
-  UPROPERTY(Category = "Scene Capture", EditAnywhere, BlueprintReadWrite, meta = (EditCondition = bCaptureScene))
+  UPROPERTY(Category = "Scene Capture", VisibleAnywhere, BlueprintReadOnly, meta = (EditCondition = bCaptureScene))
   FString FileName;
 
   UPROPERTY(Category = "Scene Capture", EditAnywhere, BlueprintReadWrite, meta = (EditCondition = bCaptureScene))

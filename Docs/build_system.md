@@ -53,7 +53,7 @@ Two configurations:
 
 #### CarlaUE4 and Carla plugin
 
-Both compiled at the same step with Unreal Engine 4.19 build tool. They require
+Both compiled at the same step with Unreal Engine 4.20 build tool. They require
 the `UE4_ROOT` environment variable set.
 
 Command

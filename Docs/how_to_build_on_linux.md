@@ -37,13 +37,13 @@ Build Unreal Engine
     need to add your GitHub username when you sign up at
     [www.unrealengine.com](https://www.unrealengine.com).
 
-Download and compile Unreal Engine 4.19. Here we will assume you install it at
-`~/UnrealEngine_4.19", but you can install it anywhere, just replace the path
+Download and compile Unreal Engine 4.20. Here we will assume you install it at
+`~/UnrealEngine_4.20", but you can install it anywhere, just replace the path
 where necessary.
 
 ```sh
-git clone --depth=1 -b 4.19 https://github.com/EpicGames/UnrealEngine.git ~/UnrealEngine_4.19
-cd ~/UnrealEngine_4.19
+git clone --depth=1 -b 4.20 https://github.com/EpicGames/UnrealEngine.git ~/UnrealEngine_4.20
+cd ~/UnrealEngine_4.20
 ./Setup.sh && ./GenerateProjectFiles.sh && make
 ```
 
@@ -76,7 +76,7 @@ For CARLA to find your Unreal Engine's installation folder you need to set the
 following environment variable
 
 ```sh
-export UE4_ROOT=~/UnrealEngine_4.19
+export UE4_ROOT=~/UnrealEngine_4.20
 ```
 
 You can also add this variable to your `~/.bashrc` or `~/.profile`.

@@ -70,7 +70,7 @@ public:
   /// @{
 
   UFUNCTION(BlueprintCallable)
-  const FTransform &GetTransform() const
+  const FTransform &GetVehicleTransform() const
   {
     return Transform;
   }

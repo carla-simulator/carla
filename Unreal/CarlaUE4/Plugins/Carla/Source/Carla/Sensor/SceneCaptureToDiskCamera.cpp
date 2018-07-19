@@ -13,7 +13,7 @@
 ASceneCaptureToDiskCamera::ASceneCaptureToDiskCamera(const FObjectInitializer& ObjectInitializer) :
   Super(ObjectInitializer),
   SaveToFolder(*FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("SceneCaptures"))),
-  FileName("capture_%05d.png") {}
+  FileName(TEXT("%06d.png")) {}
 
 void ASceneCaptureToDiskCamera::BeginPlay()
 {
@@ -30,7 +30,7 @@ void ASceneCaptureToDiskCamera::Tick(const float DeltaTime)
   Super::Tick(DeltaTime);
 
   if (bCaptureScene) {
-    const FString FilePath = FPaths::Combine(SaveToFolder, FString::Printf(*FileName, CaptureFileNameCount));
+    const FString FilePath = FPaths::Combine(SaveToFolder, FString::Printf(TEXT("%06d.png"), CaptureFileNameCount));
     UE_LOG(LogCarla, Log, TEXT("DeltaTime %fs: Capture %s"), DeltaTime, *FilePath);
     SaveCaptureToDisk(FilePath);
     ++CaptureFileNameCount;
