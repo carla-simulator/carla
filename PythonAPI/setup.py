@@ -31,6 +31,7 @@ def get_libcarla_extensions():
                 yield os.path.join(root, filename)
 
     depends = [x for x in walk('dependencies')]
+    depends += [x for x in walk('source/libcarla')]
 
     def make_extension(name, sources):
         return Extension(
@@ -48,7 +49,7 @@ def get_libcarla_extensions():
             language='c++14',
             depends=depends)
 
-    return [make_extension('carla.libcarla', glob.glob('source/libcarla/*.cpp'))]
+    return [make_extension('carla.libcarla', ['source/libcarla/libcarla.cpp'])]
 
 
 setup(

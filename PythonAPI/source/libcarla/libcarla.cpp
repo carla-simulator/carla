@@ -6,12 +6,12 @@
 
 #include <boost/python.hpp>
 
-void export_actor();
-void export_blueprint();
-void export_client();
-void export_control();
-void export_transform();
-void export_world();
+#include "Actor.cpp"
+#include "Blueprint.cpp"
+#include "Client.cpp"
+#include "Control.cpp"
+#include "Transform.cpp"
+#include "World.cpp"
 
 BOOST_PYTHON_MODULE(libcarla) {
   using namespace boost::python;
