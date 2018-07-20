@@ -6,7 +6,6 @@ from geometry_msgs.msg import TransformStamped
 from std_msgs.msg import Header
 from visualization_msgs.msg import MarkerArray, Marker
 from nav_msgs.msg import Odometry
-import rospy # TODO
 
 from carla.sensor import Transform as carla_Transform
 from carla_ros_bridge.transforms import carla_transform_to_ros_transform, ros_transform_to_pose
