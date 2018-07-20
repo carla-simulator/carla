@@ -5,6 +5,8 @@ Classes to handle Agent object (player and non-player)
 from geometry_msgs.msg import TransformStamped
 from std_msgs.msg import Header
 from visualization_msgs.msg import MarkerArray, Marker
+from nav_msgs.msg import Odometry
+import rospy # TODO
 
 from carla.sensor import Transform as carla_Transform
 from carla_ros_bridge.transforms import carla_transform_to_ros_transform, ros_transform_to_pose
@@ -49,7 +51,7 @@ class AgentObjectHandler(object):
 
 class PlayerAgentHandler(AgentObjectHandler):
     """
-    Convert player agent into ros message (as marker)
+    Convert player agent into ros message (as marker and odometry)
     """
 
     def __init__(self, name, **kwargs):
@@ -69,6 +71,10 @@ class PlayerAgentHandler(AgentObjectHandler):
             data, header=header, marker_id=0, is_player=True)
         self.process_msg_fun(self.name, marker)
         self.process_msg_fun('tf', t)
+        # forming an odometry message
+        odometry = get_vehicle_odometry(
+            data, header=header)
+        self.process_msg_fun('player_odometry', odometry)
 
 
 class NonPlayerAgentsHandler(AgentObjectHandler):
@@ -145,3 +151,21 @@ def update_marker_pose(object, base_marker):
     base_marker.scale.z = object.bounding_box.extent.z * 2.0
 
     base_marker.type = Marker.CUBE
+
+
+def get_vehicle_odometry(object, header):
+    """
+    Return an odometry msg
+
+    :param object: carla agent object (pb2 object (vehicle, pedestrian or traffic light))
+    :param header: ros header (stamp/frame_id)    
+    :return: a ros odometry msg
+    """
+    ros_transform = carla_transform_to_ros_transform(
+        carla_Transform(object.transform))
+
+    odometry = Odometry(header=header)
+    odometry.child_frame_id = "base_link"    
+    odometry.pose.pose = ros_transform_to_pose(ros_transform)
+
+    return odometry
