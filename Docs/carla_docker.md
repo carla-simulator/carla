@@ -1,3 +1,4 @@
+
 <h1>Running CARLA in a Docker </h1>
 
 
@@ -9,6 +10,7 @@ This tutorial is designed for:
 
 This tutorial was tested in Ubuntu 16.04 and using NVIDIA 396.37 drivers.
 This method requires a version of NVIDIA drivers >=390.
+
 
 ## Docker Installation
 
@@ -58,5 +60,4 @@ select the port that is going to be used:
 
 At the list of parameters do not forget to add "-world-port=<port_number>" so that CARLA runs on server mode
 listening to the "<port_number>"
-
 
