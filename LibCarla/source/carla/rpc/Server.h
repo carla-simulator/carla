@@ -6,9 +6,13 @@
 
 #pragma once
 
+#include "carla/Time.h"
+
 #include <boost/asio/io_service.hpp>
 
 #include <rpc/server.h>
+
+#include <future>
 
 namespace carla {
 namespace rpc {
@@ -94,10 +98,9 @@ namespace detail {
       _server.async_run(worker_threads);
     }
 
-    template <typename Duration>
-    void SyncRunFor(Duration duration) {
+    void SyncRunFor(time_duration duration) {
       _sync_io_service.reset();
-      _sync_io_service.run_for(duration);
+      _sync_io_service.run_for(duration.to_chrono());
     }
 
     /// @warning does not stop the game thread.

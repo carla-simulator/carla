@@ -10,7 +10,7 @@
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla/Actor/ActorSpawner.h"
 
-void AActorDispatcher::Bind(FActorDefinition Definition, SpawnFunctionType Functor)
+void FActorDispatcher::Bind(FActorDefinition Definition, SpawnFunctionType Functor)
 {
   if (UActorBlueprintFunctionLibrary::CheckActorDefinition(Definition))
   {
@@ -24,7 +24,7 @@ void AActorDispatcher::Bind(FActorDefinition Definition, SpawnFunctionType Funct
   }
 }
 
-void AActorDispatcher::Bind(IActorSpawner &ActorSpawner)
+void FActorDispatcher::Bind(IActorSpawner &ActorSpawner)
 {
   for (const auto &Definition : ActorSpawner.MakeDefinitions())
   {
@@ -34,7 +34,7 @@ void AActorDispatcher::Bind(IActorSpawner &ActorSpawner)
   }
 }
 
-AActor *AActorDispatcher::SpawnActor(
+AActor *FActorDispatcher::SpawnActor(
     const FTransform &Transform,
     const FActorDescription &Description)
 {
@@ -51,7 +51,7 @@ AActor *AActorDispatcher::SpawnActor(
   return Actor;
 }
 
-void AActorDispatcher::DestroyActor(AActor *Actor)
+void FActorDispatcher::DestroyActor(AActor *Actor)
 {
   if (Actor != nullptr)
   {
