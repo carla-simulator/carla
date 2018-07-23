@@ -29,7 +29,7 @@ namespace rpc {
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
     operator FActorDescription() const {
-      FActorVariation Description;
+      FActorDescription Description;
       Description.UId = uid;
       Description.Id = ToFString(id);
       Description.Variations.Reserve(attributes.size());

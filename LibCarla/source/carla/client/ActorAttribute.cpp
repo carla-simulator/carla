@@ -86,11 +86,11 @@ namespace client {
 
   void ActorAttribute::Validate() const {
     switch (_attribute.type) {
-      case rpc::ActorAttributeType::Bool:     As<rpc::ActorAttributeType::Bool>();
-      case rpc::ActorAttributeType::Int:      As<rpc::ActorAttributeType::Int>();
-      case rpc::ActorAttributeType::Float:    As<rpc::ActorAttributeType::Float>();
-      case rpc::ActorAttributeType::String:   As<rpc::ActorAttributeType::String>();
-      case rpc::ActorAttributeType::RGBColor: As<rpc::ActorAttributeType::RGBColor>();
+      case rpc::ActorAttributeType::Bool:     As<rpc::ActorAttributeType::Bool>();     break;
+      case rpc::ActorAttributeType::Int:      As<rpc::ActorAttributeType::Int>();      break;
+      case rpc::ActorAttributeType::Float:    As<rpc::ActorAttributeType::Float>();    break;
+      case rpc::ActorAttributeType::String:   As<rpc::ActorAttributeType::String>();   break;
+      case rpc::ActorAttributeType::RGBColor: As<rpc::ActorAttributeType::RGBColor>(); break;
       default:
         LIBCARLA_THROW_INVALID_VALUE("invalid value type");
     }

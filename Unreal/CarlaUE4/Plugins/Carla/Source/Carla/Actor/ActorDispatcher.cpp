@@ -34,21 +34,18 @@ void FActorDispatcher::Bind(IActorSpawner &ActorSpawner)
   }
 }
 
-AActor *FActorDispatcher::SpawnActor(
+TPair<EActorSpawnResultStatus, FActorView> FActorDispatcher::SpawnActor(
     const FTransform &Transform,
     const FActorDescription &Description)
 {
   if ((Description.UId == 0) || (Description.UId > SpawnFunctions.Num()))
   {
     UE_LOG(LogCarla, Error, TEXT("Invalid ActorDescription \"%s\" (UId=%d)"), *Description.Id, Description.UId);
-    return nullptr;
+    return MakeTuple(EActorSpawnResultStatus::InvalidDescription, FActorView());
   }
-  auto *Actor = SpawnFunctions[Description.UId](Transform, Description);
-  if (Actor != nullptr)
-  {
-    Registry.Register(*Actor);
-  }
-  return Actor;
+  auto Result = SpawnFunctions[Description.UId - 1](Transform, Description);
+  auto View = Result.IsValid() ? Registry.Register(*Result.Actor) : FActorView();
+  return MakeTuple(Result.Status, View);
 }
 
 void FActorDispatcher::DestroyActor(AActor *Actor)

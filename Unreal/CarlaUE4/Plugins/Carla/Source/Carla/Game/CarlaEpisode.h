@@ -47,13 +47,28 @@ public:
   /// Spawns an actor based on @a ActorDescription at @a Transform. To properly
   /// despawn an actor created with this function call DestroyActor.
   ///
-  /// Return nullptr on failure.
+  /// @return A pair containing the result of the spawn function and a view over
+  /// the actor and its properties. If the status is different of Success the
+  /// view is invalid.
+  TPair<EActorSpawnResultStatus, FActorView> SpawnActorWithInfo(
+      const FTransform &Transform,
+      const FActorDescription &ActorDescription)
+  {
+    return ActorDispatcher.SpawnActor(Transform, ActorDescription);
+  }
+
+  /// Spawns an actor based on @a ActorDescription at @a Transform. To properly
+  /// despawn an actor created with this function call DestroyActor.
+  ///
+  /// @return nullptr on failure.
+  ///
+  /// @note Special overload for blueprints.
   UFUNCTION(BlueprintCallable)
   AActor *SpawnActor(
       const FTransform &Transform,
       const FActorDescription &ActorDescription)
   {
-    return ActorDispatcher.SpawnActor(Transform, ActorDescription);
+    return SpawnActorWithInfo(Transform, ActorDescription).Value.GetActor();
   }
 
   /// Destroys an actor, properly removing it from the registry.

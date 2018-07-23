@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Carla/Actor/ActorSpawner.h"
+#include "Carla/Actor/ActorSpawnResult.h"
 
 #include "ActorSpawnerBlueprintBase.generated.h"
 
@@ -28,13 +29,13 @@ public:
     return GenerateDefinitions();
   }
 
-  virtual AActor *SpawnActor(
+  virtual FActorSpawnResult SpawnActor(
       const FTransform &SpawnAtTransform,
       const FActorDescription &ActorDescription) final
   {
-    AActor *Actor = nullptr;
-    SpawnActor(SpawnAtTransform, ActorDescription, Actor);
-    return Actor;
+    FActorSpawnResult Result;
+    SpawnActor(SpawnAtTransform, ActorDescription, Result);
+    return Result;
   }
 
 protected:
@@ -46,5 +47,5 @@ protected:
   void SpawnActor(
       const FTransform &SpawnAtTransform,
       const FActorDescription &ActorDescription,
-      AActor *&Actor);
+      FActorSpawnResult &SpawnResult);
 };

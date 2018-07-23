@@ -9,19 +9,98 @@
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Version.h>
+#include <carla/rpc/Actor.h>
+#include <carla/rpc/ActorDefinition.h>
+#include <carla/rpc/ActorDescription.h>
 #include <carla/rpc/Server.h>
+#include <carla/rpc/Transform.h>
 #include <compiler/enable-ue4-macros.h>
+
+#include <vector>
+
+// =============================================================================
+// -- Static local functions ---------------------------------------------------
+// =============================================================================
+
+template <typename T, typename Other>
+static std::vector<T> MakeVectorFromTArray(const TArray<Other> &Array)
+{
+  return {Array.GetData(), Array.GetData() + Array.Num()};
+}
+
+// =============================================================================
+// -- FTheNewCarlaServer::FPimpl -----------------------------------------------
+// =============================================================================
 
 class FTheNewCarlaServer::FPimpl
 {
 public:
 
-  FPimpl(uint16_t port) : Server(port) {}
+  FPimpl(uint16_t port) : Server(port) {
+    BindActions();
+  }
 
   carla::rpc::Server Server;
 
-  UCarlaEpisode *CurrentEpisode = nullptr;
+  UCarlaEpisode *Episode = nullptr;
+
+private:
+
+  void BindActions();
+
+  void RespondErrorStr(const std::string &ErrorMessage) {
+    UE_LOG(LogCarlaServer, Log, TEXT("Responding error, %s"), *carla::rpc::ToFString(ErrorMessage));
+    carla::rpc::Server::RespondError(ErrorMessage);
+  }
+
+  void RespondError(const FString &ErrorMessage) {
+    RespondErrorStr(carla::rpc::FromFString(ErrorMessage));
+  }
+
+  void RequireEpisode()
+  {
+    if (Episode == nullptr)
+    {
+      RespondErrorStr("episode not ready");
+    }
+  }
 };
+
+// =============================================================================
+// -- FTheNewCarlaServer::FPimpl Bind Actions ----------------------------------
+// =============================================================================
+
+void FTheNewCarlaServer::FPimpl::BindActions()
+{
+  namespace cr = carla::rpc;
+
+  Server.BindAsync("ping", []() { return true; });
+
+  Server.BindAsync("version", []() { return std::string(carla::version()); });
+
+  Server.BindSync("get_actor_definitions", [this]() {
+    RequireEpisode();
+    return MakeVectorFromTArray<cr::ActorDefinition>(Episode->GetActorDefinitions());
+  });
+
+  Server.BindSync("spawn_actor", [this](
+      const cr::Transform &Transform,
+      const cr::ActorDescription &Definition) {
+    RequireEpisode();
+    auto Result = Episode->SpawnActorWithInfo(Transform, Definition);
+    if (Result.Key != EActorSpawnResultStatus::Success)
+    {
+      RespondError(FActorSpawnResult::StatusToString(Result.Key));
+    }
+    cr::Actor actor;
+    actor.id = Result.Value.GetActorId();
+    return actor;
+  });
+}
+
+// =============================================================================
+// -- FTheNewCarlaServer -------------------------------------------------------
+// =============================================================================
 
 FTheNewCarlaServer::FTheNewCarlaServer() : Pimpl(nullptr) {}
 
@@ -30,27 +109,18 @@ FTheNewCarlaServer::~FTheNewCarlaServer() {}
 void FTheNewCarlaServer::Start(uint16_t Port)
 {
   UE_LOG(LogCarlaServer, Log, TEXT("Initializing rpc-server at port %d"), Port);
-
   Pimpl = MakeUnique<FPimpl>(Port);
-
-  namespace cr = carla::rpc;
-
-  auto &srv = Pimpl->Server;
-
-  srv.BindAsync("ping", []() { return true; });
-
-  srv.BindAsync("version", []() { return std::string(carla::version()); });
 }
 
 void FTheNewCarlaServer::NotifyBeginEpisode(UCarlaEpisode &Episode)
 {
   UE_LOG(LogCarlaServer, Log, TEXT("New episode '%s' started"), *Episode.GetMapName());
-  Pimpl->CurrentEpisode = &Episode;
+  Pimpl->Episode = &Episode;
 }
 
 void FTheNewCarlaServer::NotifyEndEpisode()
 {
-  Pimpl->CurrentEpisode = nullptr;
+  Pimpl->Episode = nullptr;
 }
 
 void FTheNewCarlaServer::AsyncRun(uint32 NumberOfWorkerThreads)
