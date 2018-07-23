@@ -8,7 +8,7 @@
 
 class AActor;
 
-/// An view over an actor and its properties.
+/// A view over an actor and its properties.
 class FActorView
 {
 public:

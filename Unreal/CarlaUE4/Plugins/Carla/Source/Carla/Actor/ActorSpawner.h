@@ -8,6 +8,7 @@
 
 #include "Carla/Actor/ActorDefinition.h"
 #include "Carla/Actor/ActorDescription.h"
+#include "Carla/Actor/ActorSpawnResult.h"
 
 #include "Containers/Array.h"
 #include "GameFramework/Actor.h"
@@ -26,7 +27,7 @@ public:
   ///
   /// @pre ActorDescription is expected to be derived from one of the
   /// definitions retrieved with MakeDefinitions.
-  virtual AActor *SpawnActor(
+  virtual FActorSpawnResult SpawnActor(
       const FTransform &SpawnAtTransform,
       const FActorDescription &ActorDescription) = 0;
 };

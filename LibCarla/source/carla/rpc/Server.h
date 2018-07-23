@@ -11,6 +11,7 @@
 #include <boost/asio/io_service.hpp>
 
 #include <rpc/server.h>
+#include <rpc/this_handler.h>
 
 #include <future>
 
@@ -106,6 +107,11 @@ namespace detail {
     /// @warning does not stop the game thread.
     void Stop() {
       _server.stop();
+    }
+
+    template <typename T>
+    static void RespondError(T &&error_object) {
+      ::rpc::this_handler().respond_error(std::forward<T>(error_object));
     }
 
   private:

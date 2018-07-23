@@ -9,6 +9,7 @@
 #include "Carla/Actor/ActorDefinition.h"
 #include "Carla/Actor/ActorDescription.h"
 #include "Carla/Actor/ActorRegistry.h"
+#include "Carla/Actor/ActorSpawnResult.h"
 
 #include "Containers/Array.h"
 #include "Templates/Function.h"
@@ -21,7 +22,7 @@ class FActorDispatcher
 {
 public:
 
-  using SpawnFunctionType = TFunction<AActor*(const FTransform &, const FActorDescription &)>;
+  using SpawnFunctionType = TFunction<FActorSpawnResult(const FTransform &, const FActorDescription &)>;
 
   /// Bind a definition to a spawn function. When SpawnActor is called with a
   /// matching description @a Functor is called.
@@ -37,8 +38,10 @@ public:
   /// Spawns an actor based on @a ActorDescription at @a Transform. To properly
   /// despawn an actor created with this function call DestroyActor.
   ///
-  /// Return nullptr on failure.
-  AActor *SpawnActor(
+  /// @return A pair containing the result of the spawn function and a view over
+  /// the actor and its properties. If the status is different of Success the
+  /// view is invalid.
+  TPair<EActorSpawnResultStatus, FActorView> SpawnActor(
       const FTransform &Transform,
       const FActorDescription &ActorDescription);
 
