@@ -11,20 +11,14 @@
 #include "Carla/Actor/ActorRegistry.h"
 
 #include "Containers/Array.h"
-#include "GameFramework/Actor.h"
 #include "Templates/Function.h"
-
-#include "ActorDispatcher.generated.h"
 
 class IActorSpawner;
 
 /// Actor in charge of binding ActorDefinitions to spawn functions, as well as
 /// keeping the registry of all the actors spawned.
-UCLASS()
-class CARLA_API AActorDispatcher : public AActor
+class FActorDispatcher
 {
-  GENERATED_BODY()
-
 public:
 
   using SpawnFunctionType = TFunction<AActor*(const FTransform &, const FActorDescription &)>;
@@ -44,16 +38,13 @@ public:
   /// despawn an actor created with this function call DestroyActor.
   ///
   /// Return nullptr on failure.
-  UFUNCTION(BlueprintCallable)
   AActor *SpawnActor(
       const FTransform &Transform,
       const FActorDescription &ActorDescription);
 
   /// Destroys an actor, properly removing it from the registry.
-  UFUNCTION(BlueprintCallable)
   void DestroyActor(AActor *Actor);
 
-  UFUNCTION(BlueprintCallable)
   const TArray<FActorDefinition> &GetActorDefinitions() const
   {
     return Definitions;
