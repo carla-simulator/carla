@@ -52,9 +52,9 @@ public:
   /// view is invalid.
   TPair<EActorSpawnResultStatus, FActorView> SpawnActorWithInfo(
       const FTransform &Transform,
-      const FActorDescription &ActorDescription)
+      FActorDescription ActorDescription)
   {
-    return ActorDispatcher.SpawnActor(Transform, ActorDescription);
+    return ActorDispatcher.SpawnActor(Transform, std::move(ActorDescription));
   }
 
   /// Spawns an actor based on @a ActorDescription at @a Transform. To properly
@@ -66,9 +66,9 @@ public:
   UFUNCTION(BlueprintCallable)
   AActor *SpawnActor(
       const FTransform &Transform,
-      const FActorDescription &ActorDescription)
+      FActorDescription ActorDescription)
   {
-    return SpawnActorWithInfo(Transform, ActorDescription).Value.GetActor();
+    return SpawnActorWithInfo(Transform, std::move(ActorDescription)).Value.GetActor();
   }
 
   /// Destroys an actor, properly removing it from the registry.

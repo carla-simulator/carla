@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "Carla/Actor/ActorDescription.h"
+
 class AActor;
 
 /// A view over an actor and its properties.
@@ -20,7 +22,7 @@ public:
 
   bool IsValid() const
   {
-    return TheActor != nullptr;
+    return (TheActor != nullptr) && Description.IsValid();
   }
 
   IdType GetActorId() const
@@ -38,15 +40,25 @@ public:
     return TheActor;
   }
 
+  const FActorDescription *GetActorDescription() const
+  {
+    return Description.Get();
+  }
+
 private:
 
   friend class FActorRegistry;
 
-  FActorView(IdType ActorId, AActor &Actor)
+  FActorView(IdType ActorId, AActor &Actor, FActorDescription Description)
     : Id(ActorId),
-      TheActor(&Actor) {}
+      TheActor(&Actor),
+      Description(MakeShared<FActorDescription>(std::move(Description))) {
+    check(Id != 0u);
+  }
 
   IdType Id = 0u;
 
   AActor *TheActor = nullptr;
+
+  TSharedPtr<const FActorDescription> Description = nullptr;
 };

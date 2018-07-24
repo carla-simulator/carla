@@ -79,6 +79,9 @@ namespace rpc {
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
+    ActorAttributeValue(const FActorAttribute &Attribute)
+      : ActorAttributeValue(ActorAttribute(Attribute)) {}
+
     operator FActorAttribute() const {
       FActorAttribute Attribute;
       Attribute.Id = ToFString(id);

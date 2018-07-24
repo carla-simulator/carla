@@ -28,6 +28,15 @@ namespace rpc {
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
+    ActorDescription(const FActorDescription &Description)
+      : uid(Description.UId),
+        id(FromFString(Description.Id)) {
+      attributes.reserve(Description.Variations.Num());
+      for (const auto &Item : Description.Variations) {
+        attributes.push_back(Item);
+      }
+    }
+
     operator FActorDescription() const {
       FActorDescription Description;
       Description.UId = uid;
