@@ -38,7 +38,7 @@ TPair<EActorSpawnResultStatus, FActorView> FActorDispatcher::SpawnActor(
     const FTransform &Transform,
     FActorDescription Description)
 {
-  if ((Description.UId == 0) || (Description.UId > SpawnFunctions.Num()))
+  if ((Description.UId == 0u) || (Description.UId > static_cast<uint32>(SpawnFunctions.Num())))
   {
     UE_LOG(LogCarla, Error, TEXT("Invalid ActorDescription \"%s\" (UId=%d)"), *Description.Id, Description.UId);
     return MakeTuple(EActorSpawnResultStatus::InvalidDescription, FActorView());

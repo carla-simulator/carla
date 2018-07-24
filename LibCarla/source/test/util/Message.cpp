@@ -6,6 +6,8 @@
 
 #include "Message.h"
 
+#include <boost/random/independent_bits.hpp>
+
 #include <climits>
 #include <random>
 
@@ -21,7 +23,7 @@ namespace message {
   shared_message make_random(size_t size) {
     if (size == 0u)
       return make_empty();
-    using random_bytes_engine = std::independent_bits_engine<
+    using random_bytes_engine = boost::random::independent_bits_engine<
         std::random_device,
         CHAR_BIT,
         unsigned char>;
