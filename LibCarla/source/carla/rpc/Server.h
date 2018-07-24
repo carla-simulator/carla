@@ -11,7 +11,6 @@
 #include <boost/asio/io_service.hpp>
 
 #include <rpc/server.h>
-#include <rpc/this_handler.h>
 
 #include <future>
 
@@ -109,10 +108,7 @@ namespace detail {
       _server.stop();
     }
 
-    template <typename T>
-    static void RespondError(T &&error_object) {
-      ::rpc::this_handler().respond_error(std::forward<T>(error_object));
-    }
+    static void RespondError(std::string error_message);
 
   private:
 

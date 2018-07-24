@@ -9,13 +9,13 @@
 #include "Carla.h"
 #include "Carla/Actor/ActorRegistry.h"
 
-FActorView FActorRegistry::Register(AActor &Actor)
+FActorView FActorRegistry::Register(AActor &Actor, FActorDescription Description)
 {
   static IdType ID_COUNTER = 0u;
   const auto Id = ++ID_COUNTER;
   Actors.Emplace(Id, &Actor);
   Ids.Emplace(&Actor, Id);
-  auto Result = ActorDatabase.emplace(Id, FActorView(Id, Actor));
+  auto Result = ActorDatabase.emplace(Id, FActorView(Id, Actor, std::move(Description)));
   check(Result.second);
   check(static_cast<size_t>(Actors.Num()) == ActorDatabase.size());
   check(static_cast<size_t>(Ids.Num()) == ActorDatabase.size());

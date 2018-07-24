@@ -85,16 +85,14 @@ void FTheNewCarlaServer::FPimpl::BindActions()
 
   Server.BindSync("spawn_actor", [this](
       const cr::Transform &Transform,
-      const cr::ActorDescription &Definition) {
+      cr::ActorDescription Description) -> cr::Actor {
     RequireEpisode();
-    auto Result = Episode->SpawnActorWithInfo(Transform, Definition);
+    auto Result = Episode->SpawnActorWithInfo(Transform, std::move(Description));
     if (Result.Key != EActorSpawnResultStatus::Success)
     {
       RespondError(FActorSpawnResult::StatusToString(Result.Key));
     }
-    cr::Actor actor;
-    actor.id = Result.Value.GetActorId();
-    return actor;
+    return Result.Value;
   });
 }
 

@@ -36,7 +36,7 @@ void FActorDispatcher::Bind(IActorSpawner &ActorSpawner)
 
 TPair<EActorSpawnResultStatus, FActorView> FActorDispatcher::SpawnActor(
     const FTransform &Transform,
-    const FActorDescription &Description)
+    FActorDescription Description)
 {
   if ((Description.UId == 0) || (Description.UId > SpawnFunctions.Num()))
   {
@@ -44,7 +44,7 @@ TPair<EActorSpawnResultStatus, FActorView> FActorDispatcher::SpawnActor(
     return MakeTuple(EActorSpawnResultStatus::InvalidDescription, FActorView());
   }
   auto Result = SpawnFunctions[Description.UId - 1](Transform, Description);
-  auto View = Result.IsValid() ? Registry.Register(*Result.Actor) : FActorView();
+  auto View = Result.IsValid() ? Registry.Register(*Result.Actor, std::move(Description)) : FActorView();
   return MakeTuple(Result.Status, View);
 }
 

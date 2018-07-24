@@ -6,7 +6,8 @@
 
 #pragma once
 
-#include "carla/rpc/ActorDefinition.h"
+#include "carla/Debug.h"
+#include "carla/rpc/ActorDescription.h"
 
 namespace carla {
 namespace rpc {
@@ -16,11 +17,23 @@ namespace rpc {
 
     using id_type = uint32_t;
 
+    Actor() = default;
+
     id_type id;
 
-    ActorDefinition definition;
+    ActorDescription description;
 
-    MSGPACK_DEFINE_ARRAY(id, definition);
+#ifdef LIBCARLA_INCLUDED_FROM_UE4
+
+    Actor(FActorView View)
+      : id(View.GetActorId()),
+        description(*View.GetActorDescription()) {
+      DEBUG_ASSERT(View.IsValid());
+    }
+
+#endif // LIBCARLA_INCLUDED_FROM_UE4
+
+    MSGPACK_DEFINE_ARRAY(id, description);
   };
 
 } // namespace rpc
