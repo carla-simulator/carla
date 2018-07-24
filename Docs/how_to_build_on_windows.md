@@ -1,5 +1,11 @@
 <h1>How to build CARLA on Windows</h1>
 
+!!! important
+    Since version 0.9.0 the build system changed, the instructions in this
+    document are no longer valid. While we work on fixing this, we recommend
+    either compile Carla on Linux or switch to the `stable` branch. Sorry for
+    the inconvenience.
+
 <h3>Necessary software</h3>
 - [Git](https://git-scm.com/downloads)
 - [Make](http://gnuwin32.sourceforge.net/downlinks/make-bin-zip.php)
@@ -22,7 +28,7 @@ You have different options:
 - [Enable a 64-Bit Visual C++ Toolset on the Command Line](https://msdn.microsoft.com/en-us/library/x4d2c09s.aspx) (the instructions will depend on the version of VS that you have).
 
 !!! note
-    Take care if you have **Cygwin** installed. This could cause the errors like  
+    Take care if you have **Cygwin** installed. This could cause the errors like
     `/usr/bin/sh: rd: command not found` While executing `Reuild.bat`.
 
 <h3>Clone the repository</h3>

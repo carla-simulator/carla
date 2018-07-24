@@ -7,6 +7,7 @@
 #pragma once
 
 #include <deque>
+#include <memory>
 
 /// A stack to keep track of nested scopes.
 template <typename T>
