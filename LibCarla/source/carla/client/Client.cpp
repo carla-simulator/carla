@@ -23,7 +23,7 @@ namespace client {
   SharedPtr<Actor> Client::SpawnActor(
       const ActorBlueprint &blueprint,
       const Transform &transform) {
-    auto actor = Call<carla::rpc::Actor>("spawn_actor", blueprint.MakeActorDescription(), transform);
+    auto actor = Call<carla::rpc::Actor>("spawn_actor", transform, blueprint.MakeActorDescription());
     return SharedPtr<Actor>(new Actor{actor, GetWorld()});
   }
 

@@ -26,6 +26,14 @@ struct FActorSpawnResult
 {
   GENERATED_BODY()
 
+  FActorSpawnResult() = default;
+
+  explicit FActorSpawnResult(AActor *InActor)
+    : Actor(InActor),
+      Status(Actor != nullptr ?
+          EActorSpawnResultStatus::Success :
+          EActorSpawnResultStatus::UnknownError) {}
+
   static FString StatusToString(EActorSpawnResultStatus Status);
 
   bool IsValid() const

@@ -28,6 +28,12 @@ static std::vector<T> MakeVectorFromTArray(const TArray<Other> &Array)
   return {Array.GetData(), Array.GetData() + Array.Num()};
 }
 
+static void AttachActors(AActor *Child, AActor *Parent)
+{
+  Child->AttachToActor(Parent, FAttachmentTransformRules::KeepRelativeTransform);
+  Child->SetOwner(Parent);
+}
+
 // =============================================================================
 // -- FTheNewCarlaServer::FPimpl -----------------------------------------------
 // =============================================================================
@@ -64,6 +70,30 @@ private:
       RespondErrorStr("episode not ready");
     }
   }
+
+  auto SpawnActor(const FTransform &Transform, FActorDescription Description)
+  {
+    auto Result = Episode->SpawnActorWithInfo(Transform, std::move(Description));
+    if (Result.Key != EActorSpawnResultStatus::Success)
+    {
+      RespondError(FActorSpawnResult::StatusToString(Result.Key));
+    }
+    check(Result.Value.IsValid());
+    return Result.Value;
+  }
+
+  void AttachActors(FActorView Child, FActorView Parent)
+  {
+    if (!Child.IsValid())
+    {
+      RespondError("unable to attach actor: child actor not found");
+    }
+    if (!Parent.IsValid())
+    {
+      RespondError("unable to attach actor: parent actor not found");
+    }
+    ::AttachActors(Child.GetActor(), Parent.GetActor());
+  }
 };
 
 // =============================================================================
@@ -87,12 +117,24 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       const cr::Transform &Transform,
       cr::ActorDescription Description) -> cr::Actor {
     RequireEpisode();
-    auto Result = Episode->SpawnActorWithInfo(Transform, std::move(Description));
-    if (Result.Key != EActorSpawnResultStatus::Success)
-    {
-      RespondError(FActorSpawnResult::StatusToString(Result.Key));
-    }
-    return Result.Value;
+    return SpawnActor(Transform, Description);
+  });
+
+  Server.BindSync("spawn_actor_with_parent", [this](
+      const cr::Transform &Transform,
+      cr::ActorDescription Description,
+      cr::Actor Parent) -> cr::Actor {
+    RequireEpisode();
+    auto ActorView = SpawnActor(Transform, Description);
+    auto ParentActorView = Episode->GetActorRegistry().Find(Parent.id);
+    AttachActors(ActorView, ParentActorView);
+    return ActorView;
+  });
+
+  Server.BindSync("attach_actors", [this](cr::Actor Child, cr::Actor Parent) {
+    RequireEpisode();
+    auto &Registry = Episode->GetActorRegistry();
+    AttachActors(Registry.Find(Child.id), Registry.Find(Parent.id));
   });
 }
 

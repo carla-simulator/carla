@@ -13,15 +13,27 @@
 #include "Containers/Array.h"
 #include "GameFramework/Actor.h"
 
-/// Interface for Carla actor spawners.
-class IActorSpawner
+#include "ActorSpawner.generated.h"
+
+/// Base class for Carla actor spawners.
+UCLASS(Abstract)
+class CARLA_API AActorSpawner : public AActor
 {
+  GENERATED_BODY()
+
 public:
 
-  virtual ~IActorSpawner() {}
+  AActorSpawner(const FObjectInitializer& ObjectInitializer)
+    : Super(ObjectInitializer)
+  {
+    PrimaryActorTick.bCanEverTick = false;
+  }
 
   /// Retrieve the list of actor definitions that this class is able to spawn.
-  virtual TArray<FActorDefinition> MakeDefinitions() = 0;
+  virtual TArray<FActorDefinition> MakeDefinitions() {
+    unimplemented();
+    return {};
+  }
 
   /// Spawn an actor based on @a ActorDescription and @a Transform.
   ///
@@ -29,5 +41,8 @@ public:
   /// definitions retrieved with MakeDefinitions.
   virtual FActorSpawnResult SpawnActor(
       const FTransform &SpawnAtTransform,
-      const FActorDescription &ActorDescription) = 0;
+      const FActorDescription &ActorDescription) {
+    unimplemented();
+    return {};
+  }
 };

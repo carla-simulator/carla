@@ -31,7 +31,7 @@ public:
     return MapName;
   }
 
-  void RegisterActorSpawner(IActorSpawner &ActorSpawner)
+  void RegisterActorSpawner(AActorSpawner &ActorSpawner)
   {
     ActorDispatcher.Bind(ActorSpawner);
   }

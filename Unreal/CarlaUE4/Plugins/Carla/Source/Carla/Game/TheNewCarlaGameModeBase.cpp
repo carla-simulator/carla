@@ -61,15 +61,15 @@ void ATheNewCarlaGameModeBase::SpawnActorSpawners()
   auto *World = GetWorld();
   check(World != nullptr);
 
-  for (auto &SpawnerClass : BlueprintSpawners)
+  for (auto &SpawnerClass : ActorSpawners)
   {
     if (SpawnerClass != nullptr)
     {
-      auto *Spawner = World->SpawnActor<AActorSpawnerBlueprintBase>(SpawnerClass);
+      auto *Spawner = World->SpawnActor<AActorSpawner>(SpawnerClass);
       if (Spawner != nullptr)
       {
         Episode->RegisterActorSpawner(*Spawner);
-        BlueprintSpawnerInstances.Add(Spawner);
+        ActorSpawnerInstances.Add(Spawner);
       }
       else
       {

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "Carla/Actor/ActorSpawnerBlueprintBase.h"
+#include "Carla/Actor/ActorSpawner.h"
 #include "Carla/Game/CarlaEpisode.h"
 
 #include "CoreMinimal.h"
@@ -44,9 +44,11 @@ private:
   UPROPERTY()
   UCarlaEpisode *Episode = nullptr;
 
+  /// List of actor spawners that will be used to define and spawn the actors
+  /// available in game.
   UPROPERTY(EditAnywhere)
-  TArray<TSubclassOf<AActorSpawnerBlueprintBase>> BlueprintSpawners;
+  TSet<TSubclassOf<AActorSpawner>> ActorSpawners;
 
   UPROPERTY()
-  TArray<AActorSpawnerBlueprintBase *> BlueprintSpawnerInstances;
+  TArray<AActorSpawner *> ActorSpawnerInstances;
 };
