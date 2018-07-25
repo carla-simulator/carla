@@ -106,7 +106,7 @@ void export_blueprint() {
   class_<cc::BlueprintLibrary, boost::noncopyable, boost::shared_ptr<cc::BlueprintLibrary>>("BlueprintLibrary", no_init)
     .def("filter", &cc::BlueprintLibrary::Filter)
     .def("__getitem__", +[](const cc::BlueprintLibrary &self, size_t pos) -> cc::ActorBlueprint {
-      return self[pos];
+      return self.at(pos);
     })
     .def("__len__", &cc::BlueprintLibrary::size)
     .def("__iter__", range(&cc::BlueprintLibrary::begin, &cc::BlueprintLibrary::end))
