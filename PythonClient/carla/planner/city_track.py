@@ -134,4 +134,3 @@ class CityTrack(object):
                 distance_vector.append(sldist(node_iterator, current_node))
 
         return sorted(distance_vector)[0]
-
