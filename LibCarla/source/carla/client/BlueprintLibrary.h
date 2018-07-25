@@ -47,6 +47,10 @@ namespace client {
       return _blueprints[pos];
     }
 
+    const_reference at(size_type pos) const {
+      return _blueprints.at(pos);
+    }
+
     const_iterator begin() const /*noexcept*/ {
       return _blueprints.begin();
     }
