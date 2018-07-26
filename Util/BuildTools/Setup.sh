@@ -74,10 +74,13 @@ unset LLVM_BASENAME
 BOOST_BASENAME=boost-1.67.0
 
 BOOST_INCLUDE=${PWD}/${BOOST_BASENAME}-install/include
+BOOST_LIBPATH=${PWD}/${BOOST_BASENAME}-install/lib
 
 if [[ -d "${BOOST_BASENAME}-install" ]] ; then
   log "${BOOST_BASENAME} already installed."
 else
+
+  rm -Rf ${BOOST_BASENAME}-source
 
   log "Retrieving boost."
   wget https://dl.bintray.com/boostorg/release/1.67.0/source/boost_1_67_0.tar.gz
@@ -85,8 +88,25 @@ else
   tar -xzf boost_1_67_0.tar.gz
   rm boost_1_67_0.tar.gz
   mkdir -p ${BOOST_BASENAME}-install/include
-  mv boost_1_67_0/boost ${BOOST_BASENAME}-install/include/
-  rm -Rf boost_1_67_0
+  mv boost_1_67_0 ${BOOST_BASENAME}-source
+  # rm -Rf boost_1_67_0
+
+  pushd ${BOOST_BASENAME}-source >/dev/null
+
+  BOOST_TOOLSET="clang-5.0"
+  BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
+
+  ./bootstrap.sh \
+      --with-toolset=clang \
+      --prefix=../boost-install \
+      --with-libraries=python
+  ./b2 clean
+  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j 12 stage release
+  ./b2 install toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j 12
+
+  popd >/dev/null
+
+  rm -Rf ${BOOST_BASENAME}-source
 
 fi
 
@@ -250,6 +270,7 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "Client")
   # Here libraries linking libstdc++.
   set(RPCLIB_INCLUDE_PATH "${RPCLIB_LIBSTDCXX_INCLUDE}")
   set(RPCLIB_LIB_PATH "${RPCLIB_LIBSTDCXX_LIBPATH}")
+  set(BOOST_LIB_PATH "${BOOST_LIBPATH}")
 endif ()
 EOL
 
