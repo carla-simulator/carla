@@ -7,6 +7,8 @@
 #include "Carla.h"
 #include "TheNewCarlaServer.h"
 
+#include "Carla/Sensor/Sensor.h"
+
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Version.h>
 #include <carla/rpc/Actor.h>
@@ -14,6 +16,7 @@
 #include <carla/rpc/ActorDescription.h>
 #include <carla/rpc/Server.h>
 #include <carla/rpc/Transform.h>
+#include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include <vector>
@@ -35,6 +38,36 @@ static void AttachActors(AActor *Child, AActor *Parent)
 }
 
 // =============================================================================
+// -- FStreamingSensorDataSink -------------------------------------------------
+// =============================================================================
+
+class FStreamingSensorDataSink : public ISensorDataSink {
+public:
+
+  FStreamingSensorDataSink(carla::streaming::Stream InStream)
+    : TheStream(InStream) {}
+
+  ~FStreamingSensorDataSink()
+  {
+    UE_LOG(LogCarlaServer, Log, TEXT("Destroying sensor data sink"));
+  }
+
+  void Write(const FSensorDataView &SensorData) final {
+    auto MakeBuffer = [](FReadOnlyBufferView View) {
+      return boost::asio::buffer(View.GetData(), View.GetSize());
+    };
+    std::array<boost::asio::const_buffer, 2u> SequencedBuffer;
+    SequencedBuffer[0u] = MakeBuffer(SensorData.GetHeader());
+    SequencedBuffer[1u] = MakeBuffer(SensorData.GetData());
+    TheStream.Write(SequencedBuffer);
+  }
+
+private:
+
+  carla::streaming::Stream TheStream;
+};
+
+// =============================================================================
 // -- FTheNewCarlaServer::FPimpl -----------------------------------------------
 // =============================================================================
 
@@ -42,11 +75,15 @@ class FTheNewCarlaServer::FPimpl
 {
 public:
 
-  FPimpl(uint16_t port) : Server(port) {
+  FPimpl(uint16_t port)
+    : Server(port),
+      StreamingServer(port + 1u) {
     BindActions();
   }
 
   carla::rpc::Server Server;
+
+  carla::streaming::Server StreamingServer;
 
   UCarlaEpisode *Episode = nullptr;
 
@@ -94,6 +131,22 @@ private:
     }
     ::AttachActors(Child.GetActor(), Parent.GetActor());
   }
+
+  carla::rpc::Actor SerializeActor(FActorView ActorView)
+  {
+    if (ActorView.IsValid())
+    {
+      auto *Sensor = Cast<ASensor>(ActorView.GetActor());
+      if (Sensor != nullptr)
+      {
+        UE_LOG(LogCarlaServer, Log, TEXT("Making a new sensor stream for actor '%s'"), *ActorView.GetActorDescription()->Id);
+        auto Stream = StreamingServer.MakeStream();
+        Sensor->SetSensorDataSink(MakeShared<FStreamingSensorDataSink>(Stream));
+        return {ActorView, Stream.token()};
+      }
+    }
+    return ActorView;
+  }
 };
 
 // =============================================================================
@@ -117,7 +170,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       const cr::Transform &Transform,
       cr::ActorDescription Description) -> cr::Actor {
     RequireEpisode();
-    return SpawnActor(Transform, Description);
+    return SerializeActor(SpawnActor(Transform, Description));
   });
 
   Server.BindSync("spawn_actor_with_parent", [this](
@@ -128,7 +181,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     auto ActorView = SpawnActor(Transform, Description);
     auto ParentActorView = Episode->GetActorRegistry().Find(Parent.id);
     AttachActors(ActorView, ParentActorView);
-    return ActorView;
+    return SerializeActor(ActorView);
   });
 
   Server.BindSync("attach_actors", [this](cr::Actor Child, cr::Actor Parent) {
@@ -165,7 +218,11 @@ void FTheNewCarlaServer::NotifyEndEpisode()
 
 void FTheNewCarlaServer::AsyncRun(uint32 NumberOfWorkerThreads)
 {
-  Pimpl->Server.AsyncRun(NumberOfWorkerThreads);
+  /// @todo Define better the number of threads each server gets.
+  auto RPCThreads = NumberOfWorkerThreads / 2u;
+  auto StreamingThreads = NumberOfWorkerThreads - RPCThreads;
+  Pimpl->Server.AsyncRun(std::max(2u, RPCThreads));
+  Pimpl->StreamingServer.AsyncRun(std::max(2u, StreamingThreads));
 }
 
 void FTheNewCarlaServer::RunSome(uint32 Milliseconds)

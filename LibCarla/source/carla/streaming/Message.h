@@ -47,9 +47,12 @@ namespace streaming {
 
     explicit Message(uint64_t size)
       : Message([size]() {
+#ifndef LIBCARLA_INCLUDED_FROM_UE4
+          /// @todo What to do with exceptions?
           if (size > std::numeric_limits<size_type>::max()) {
             throw std::invalid_argument("message size too big");
           }
+#endif // LIBCARLA_INCLUDED_FROM_UE4
           return static_cast<size_type>(size);
         } ()) {}
 

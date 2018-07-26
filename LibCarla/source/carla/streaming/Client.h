@@ -6,9 +6,11 @@
 
 #pragma once
 
+#include "carla/Logging.h"
 #include "carla/ThreadGroup.h"
-#include "carla/streaming/low_level/Client.h"
+#include "carla/streaming/Token.h"
 #include "carla/streaming/detail/tcp/Client.h"
+#include "carla/streaming/low_level/Client.h"
 
 #include <boost/asio/io_service.hpp>
 
@@ -21,12 +23,14 @@ namespace streaming {
   class Client {
   public:
 
+    Client() : _io_service(), _work_to_do(_io_service) {}
+
     ~Client() {
       Stop();
     }
 
     template <typename Functor>
-    void Subscribe(const stream_token &token, Functor &&callback) {
+    void Subscribe(const Token &token, Functor &&callback) {
       _client.Subscribe(_io_service, token, std::forward<Functor>(callback));
     }
 
@@ -48,6 +52,8 @@ namespace streaming {
     using underlying_client = low_level::Client<detail::tcp::Client>;
 
     boost::asio::io_service _io_service;
+
+    boost::asio::io_service::work _work_to_do;
 
     ThreadGroup _workers;
 

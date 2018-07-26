@@ -16,6 +16,7 @@
 
 BOOST_PYTHON_MODULE(libcarla) {
   using namespace boost::python;
+  PyEval_InitThreads();
   scope().attr("__path__") = "libcarla";
   export_transform();
   export_control();

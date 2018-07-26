@@ -14,11 +14,19 @@ FActorView FActorRegistry::Register(AActor &Actor, FActorDescription Description
   static IdType ID_COUNTER = 0u;
   const auto Id = ++ID_COUNTER;
   Actors.Emplace(Id, &Actor);
+  if (Ids.Contains(&Actor))
+  {
+    UE_LOG(
+        LogCarla,
+        Warning,
+        TEXT("This actor's memory address is already registered, "
+             "either you forgot to deregister the actor "
+             "or the actor was garbage collected."));
+  }
   Ids.Emplace(&Actor, Id);
   auto Result = ActorDatabase.emplace(Id, FActorView(Id, Actor, std::move(Description)));
   check(Result.second);
   check(static_cast<size_t>(Actors.Num()) == ActorDatabase.size());
-  check(static_cast<size_t>(Ids.Num()) == ActorDatabase.size());
   return Result.first->second;
 }
 
@@ -31,7 +39,6 @@ void FActorRegistry::Deregister(IdType Id)
   Actors.Remove(Id);
   Ids.Remove(Actor);
   check(static_cast<size_t>(Actors.Num()) == ActorDatabase.size());
-  check(static_cast<size_t>(Ids.Num()) == ActorDatabase.size());
 }
 
 void FActorRegistry::Deregister(AActor *Actor)

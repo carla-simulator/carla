@@ -8,8 +8,8 @@
 
 #include "carla/Debug.h"
 #include "carla/streaming/Message.h"
+#include "carla/streaming/Token.h"
 #include "carla/streaming/detail/StreamState.h"
-#include "carla/streaming/detail/Token.h"
 
 #include <boost/asio/buffer.hpp>
 
@@ -24,8 +24,6 @@ namespace detail {
 
 } // namespace detail
 
-  using stream_token = detail::token_type;
-
   class Stream {
   public:
 
@@ -37,7 +35,7 @@ namespace detail {
     Stream &operator=(const Stream &) = default;
     Stream &operator=(Stream &&) = default;
 
-    stream_token token() const {
+    Token token() const {
       return _shared_state->token();
     }
 
