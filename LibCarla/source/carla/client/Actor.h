@@ -8,7 +8,6 @@
 
 #include "carla/Debug.h"
 #include "carla/NonCopyable.h"
-#include "carla/client/Control.h"
 #include "carla/client/Memory.h"
 #include "carla/client/World.h"
 #include "carla/rpc/Actor.h"
@@ -38,10 +37,6 @@ namespace client {
 
     SharedPtr<World> GetWorld() const {
       return _world;
-    }
-
-    void ApplyControl(const VehicleControl &control) {
-      _world->GetClient().ApplyControlToActor(*this, control);
     }
 
     const auto &Serialize() const {

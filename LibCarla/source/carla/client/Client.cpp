@@ -9,6 +9,7 @@
 #include "carla/client/Actor.h"
 #include "carla/client/Control.h"
 #include "carla/client/Sensor.h"
+#include "carla/client/Vehicle.h"
 #include "carla/client/World.h"
 
 namespace carla {
@@ -31,7 +32,7 @@ namespace client {
     if (actor.IsASensor()) {
       return SharedPtr<Actor>(new Sensor{actor, GetWorld()});
     }
-    return SharedPtr<Actor>(new Actor{actor, GetWorld()});
+    return SharedPtr<Actor>(new Vehicle{actor, GetWorld()});
   }
 
   void Client::ApplyControlToActor(

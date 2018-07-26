@@ -16,6 +16,7 @@
 #include <carla/rpc/ActorDescription.h>
 #include <carla/rpc/Server.h>
 #include <carla/rpc/Transform.h>
+#include <carla/rpc/VehicleControl.h>
 #include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
 
@@ -123,11 +124,11 @@ private:
   {
     if (!Child.IsValid())
     {
-      RespondError("unable to attach actor: child actor not found");
+      RespondErrorStr("unable to attach actor: child actor not found");
     }
     if (!Parent.IsValid())
     {
-      RespondError("unable to attach actor: parent actor not found");
+      RespondErrorStr("unable to attach actor: parent actor not found");
     }
     ::AttachActors(Child.GetActor(), Parent.GetActor());
   }
@@ -188,6 +189,19 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     RequireEpisode();
     auto &Registry = Episode->GetActorRegistry();
     AttachActors(Registry.Find(Child.id), Registry.Find(Parent.id));
+  });
+
+  Server.BindSync("apply_control_to_actor", [this](cr::Actor Actor, cr::VehicleControl Control) {
+    RequireEpisode();
+    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    if (!ActorView.IsValid()) {
+      RespondErrorStr("unable to apply control: actor not found");
+    }
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    if (Vehicle == nullptr) {
+      RespondErrorStr("unable to apply control: actor is not a vehicle");
+    }
+    Vehicle->ApplyVehicleControl(Control);
   });
 }
 
