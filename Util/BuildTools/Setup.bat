@@ -18,14 +18,14 @@ rem ============================================================================
 set LOCAL_PATH=%~dp0
 set "FILE_N=-[%~n0]:"
 
-set INSTALLERS_DIR=%LOCAL_PATH%..\InstallersWin\
-set INSTALLATION_DIR=%LOCAL_PATH%..\..\Build\
-set VERSION_FILE=%LOCAL_PATH%..\ContentVersions.txt
-set CONTENT_DIR=%LOCAL_PATH%..\..\Unreal\CarlaUE4\Content
+rem NOTE(Andrei): this is script is called by make,
+rem so we are at the root of the project.
+set ROOT_PATH=%CD%\
 
-pushd %INSTALLATION_DIR%
-    set INSTALLATION_DIR=%CD%\
-popd
+set INSTALLERS_DIR=%ROOT_PATH%Util\InstallersWin\
+set INSTALLATION_DIR=%ROOT_PATH%Build\
+set VERSION_FILE=%ROOT_PATH%Util\ContentVersions.txt
+set CONTENT_DIR=%ROOT_PATH%Unreal\CarlaUE4\Content
 
 set TOOLSET=msvc-14.1
 set NUMBER_OF_ASYNC_JOBS=%NUMBER_OF_PROCESSORS%
