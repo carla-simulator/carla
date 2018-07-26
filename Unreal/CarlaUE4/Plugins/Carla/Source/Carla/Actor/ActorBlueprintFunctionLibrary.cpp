@@ -149,6 +149,20 @@ private:
   FScopedStack<FString> Stack;
 };
 
+template <typename ... ARGS>
+static FString JoinStrings(const FString &Separator, ARGS && ... Args) {
+  return FString::Join(TArray<FString>{std::forward<ARGS>(Args)...}, *Separator);
+}
+
+static FString ColorToFString(const FColor &Color)
+{
+  return JoinStrings(
+      TEXT(","),
+      FString::FromInt(Color.R),
+      FString::FromInt(Color.G),
+      FString::FromInt(Color.B));
+}
+
 bool UActorBlueprintFunctionLibrary::CheckActorDefinition(const FActorDefinition &ActorDefinition)
 {
   FActorDefinitionValidator Validator;
@@ -159,4 +173,55 @@ bool UActorBlueprintFunctionLibrary::CheckActorDefinitions(const TArray<FActorDe
 {
   FActorDefinitionValidator Validator;
   return Validator.AreValid(ActorDefinitions);
+}
+
+void UActorBlueprintFunctionLibrary::MakeVehicleDefinition(
+    const FVehicleParameters &Parameters,
+    bool &Success,
+    FActorDefinition &Definition)
+{
+  /// @todo We need to validate here the params.
+  Definition.Id = JoinStrings(TEXT("."), Parameters.Make, Parameters.Model).ToLower();
+  Definition.Class = Parameters.Class;
+  Definition.Tags = JoinStrings(TEXT(","), TEXT("vehicle"), Parameters.Make, Parameters.Model).ToLower();
+  FActorVariation Colors;
+  Colors.Id = TEXT("color");
+  Colors.Type = EActorAttributeType::RGBColor;
+  Colors.bRestrictToRecommended = false;
+  for (auto &Color : Parameters.RecommendedColors)
+  {
+    Colors.RecommendedValues.Emplace(ColorToFString(Color));
+  }
+  Definition.Variations.Emplace(Colors);
+  Definition.Attributes.Emplace(FActorAttribute{
+    TEXT("number_of_wheels"),
+    EActorAttributeType::Int,
+    FString::FromInt(Parameters.NumberOfWheels)
+  });
+  Success = CheckActorDefinition(Definition);
+}
+
+template <typename T, typename Functor>
+static void FillActorDefinitionArray(
+    const TArray<T> &ParameterArray,
+    TArray<FActorDefinition> &Definitions,
+    Functor Maker)
+{
+  for (auto &Item : ParameterArray)
+  {
+    FActorDefinition Definition;
+    bool Success = false;
+    Maker(Item, Success, Definition);
+    if (Success)
+    {
+      Definitions.Emplace(std::move(Definition));
+    }
+  }
+}
+
+void UActorBlueprintFunctionLibrary::MakeVehicleDefinitions(
+    const TArray<FVehicleParameters> &ParameterArray,
+    TArray<FActorDefinition> &Definitions)
+{
+  FillActorDefinitionArray(ParameterArray, Definitions, &MakeVehicleDefinition);
 }
