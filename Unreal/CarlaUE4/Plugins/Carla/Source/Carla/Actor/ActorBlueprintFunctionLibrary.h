@@ -7,10 +7,32 @@
 #pragma once
 
 #include "Carla/Actor/ActorDefinition.h"
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
 #include "Kismet/BlueprintFunctionLibrary.h"
 
 #include "ActorBlueprintFunctionLibrary.generated.h"
+
+USTRUCT(BlueprintType)
+struct CARLA_API FVehicleParameters
+{
+  GENERATED_BODY()
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  FString Make;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  FString Model;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  TSubclassOf<ACarlaWheeledVehicle> Class;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  int32 NumberOfWheels = 4;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  TArray<FColor> RecommendedColors;
+};
 
 UCLASS()
 class UActorBlueprintFunctionLibrary : public UBlueprintFunctionLibrary
@@ -27,5 +49,16 @@ public:
   /// errors found.
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static bool CheckActorDefinitions(const TArray<FActorDefinition> &ActorDefinitions);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakeVehicleDefinition(
+      const FVehicleParameters &Parameters,
+      bool &Success,
+      FActorDefinition &Definition);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakeVehicleDefinitions(
+      const TArray<FVehicleParameters> &ParameterArray,
+      TArray<FActorDefinition> &Definitions);
 };
 
