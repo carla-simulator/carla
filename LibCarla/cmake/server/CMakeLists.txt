@@ -26,6 +26,14 @@ install(FILES ${libcarla_carla_streaming_headers} DESTINATION include/carla/stre
 
 install(DIRECTORY "${BOOST_INCLUDE_PATH}/boost" DESTINATION include)
 
+if(WIN32)
+  file(GLOB boostlib_date_time "${BOOST_LIBRARY_PATH}/libboost_date_time-*-mt-*.lib")
+  install(FILES ${boostlib_date_time} DESTINATION lib)
+
+  file(GLOB boostlib_system "${BOOST_LIBRARY_PATH}/libboost_system-*-mt-*.lib")
+  install(FILES ${boostlib_system} DESTINATION lib)
+endif()
+
 # carla_server library.
 
 file(GLOB_RECURSE libcarla_server_sources

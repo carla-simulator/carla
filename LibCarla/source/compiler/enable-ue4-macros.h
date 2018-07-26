@@ -5,5 +5,6 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma pop_macro("check")
+#pragma pop_macro("TEXT")
 
 #undef LIBCARLA_INCLUDED_FROM_UE4
