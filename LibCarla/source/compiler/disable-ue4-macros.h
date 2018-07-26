@@ -37,3 +37,6 @@ namespace boost {
   }
 
 } // namespace boost
+
+#pragma push_macro("TEXT")
+#undef TEXT
