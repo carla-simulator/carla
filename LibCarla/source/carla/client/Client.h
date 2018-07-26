@@ -13,8 +13,10 @@
 #include "carla/client/Memory.h"
 #include "carla/client/Transform.h"
 #include "carla/rpc/Client.h"
+#include "carla/streaming/Client.h"
 
 #include <string>
+#include <thread>
 
 namespace carla {
 namespace client {
@@ -31,7 +33,9 @@ namespace client {
     template <typename ... Args>
     explicit Client(Args && ... args)
       : _client(std::forward<Args>(args) ...) {
+      /// @todo Make these arguments.
       SetTimeout(10'000);
+      _streaming_client.AsyncRun(std::thread::hardware_concurrency());
     }
 
     void SetTimeout(int64_t milliseconds) {
@@ -41,6 +45,11 @@ namespace client {
     template <typename T, typename ... Args>
     T Call(const std::string &function, Args && ... args) {
       return _client.call(function, std::forward<Args>(args) ...).template as<T>();
+    }
+
+    template <typename Functor>
+    void SubscribeToStream(const streaming::Token &token, Functor &&callback) {
+      _streaming_client.Subscribe(token, std::forward<Functor>(callback));
     }
 
     std::string GetClientVersion() const {
@@ -73,6 +82,8 @@ namespace client {
   private:
 
     carla::rpc::Client _client;
+
+    carla::streaming::Client _streaming_client;
 
     SharedPtr<World> _active_world;
   };

@@ -23,6 +23,8 @@ namespace client {
       private NonCopyable {
   public:
 
+    virtual ~Actor() = default;
+
     Actor(Actor &&) = default;
     Actor &operator=(Actor &&) = default;
 
@@ -39,22 +41,24 @@ namespace client {
     }
 
     void ApplyControl(const VehicleControl &control) {
-      _world->ApplyControlToActor(*this, control);
+      _world->GetClient().ApplyControlToActor(*this, control);
     }
 
     const auto &Serialize() const {
       return _actor;
     }
 
-  private:
-
-    friend class Client;
+  protected:
 
     Actor(carla::rpc::Actor actor, SharedPtr<World> world)
       : _actor(actor),
         _world(std::move(world)) {
       DEBUG_ASSERT(_world != nullptr);
     }
+
+  private:
+
+    friend class Client;
 
     carla::rpc::Actor _actor;
 

@@ -13,6 +13,9 @@
 #pragma push_macro("check")
 #undef check
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-braces"
+
 #define LIBCARLA_INCLUDED_FROM_UE4
 
 #ifndef BOOST_ERROR_CODE_HEADER_ONLY
