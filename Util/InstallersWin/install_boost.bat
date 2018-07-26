@@ -31,7 +31,7 @@ if [%NUMBER_OF_ASYNC_JOBS%] == [] set NUMBER_OF_ASYNC_JOBS=1
 set LOCAL_PATH=%~dp0
 set FILE_N=---%~n0%~x0:
 
-set B_VERSION=boost-1.64.0
+set B_VERSION=boost-1.67.0
 set B_SRC=boost-src
 set B_SRC_DIR=%BUILD_DIR%%B_SRC%
 set B_INSTALL=boost-install
