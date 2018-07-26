@@ -44,7 +44,7 @@ CarlaUE4Editor: LibCarla
 
 .PHONY: PythonAPI
 PythonAPI: LibCarla
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py2 --py3
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py2
 
 .PHONY: LibCarla
 LibCarla: setup

@@ -30,26 +30,29 @@ def get_libcarla_extensions():
             for filename in fnmatch.filter(filenames, file_filter):
                 yield os.path.join(root, filename)
 
-    depends = [x for x in walk('dependencies')]
-    depends += [x for x in walk('source/libcarla')]
+    depends = [x for x in walk('source/libcarla')]
+    depends += [x for x in walk('dependencies')]
 
     def make_extension(name, sources):
         return Extension(
             name,
             sources=sources,
             include_dirs=[
-                '/usr/local/include',
                 'dependencies/include'],
             library_dirs=[
-                '/usr/local/lib/boost',
                 'dependencies/lib'],
-            runtime_library_dirs=['/usr/local/lib/boost'],
+            runtime_library_dirs=['dependencies/lib'],
             libraries=libraries,
-            extra_compile_args=['-fPIC', '-std=c++14'],
+            extra_compile_args=['-fPIC', '-std=c++14', '-DBOOST_ERROR_CODE_HEADER_ONLY', '-Wno-missing-braces'],
             language='c++14',
             depends=depends)
 
-    return [make_extension('carla.libcarla', ['source/libcarla/libcarla.cpp'])]
+    sources = ['source/libcarla/libcarla.cpp']
+    sources += [x for x in walk('dependencies/include', '*.cpp')]
+
+    print('compiling:\n  - %s' % '\n  - '.join(sources))
+
+    return [make_extension('carla.libcarla', sources)]
 
 
 setup(
