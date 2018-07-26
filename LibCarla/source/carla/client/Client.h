@@ -73,7 +73,8 @@ namespace client {
 
     SharedPtr<Actor> SpawnActor(
         const ActorBlueprint &blueprint,
-        const Transform &transform);
+        const Transform &transform,
+        Actor *parent = nullptr);
 
     void ApplyControlToActor(
         const Actor &actor,

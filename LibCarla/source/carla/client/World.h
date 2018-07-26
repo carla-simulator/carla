@@ -27,12 +27,14 @@ namespace client {
 
     SharedPtr<Actor> TrySpawnActor(
         const ActorBlueprint &blueprint,
-        const Transform &transform);
+        const Transform &transform,
+        Actor *parent = nullptr);
 
     SharedPtr<Actor> SpawnActor(
         const ActorBlueprint &blueprint,
-        const Transform &transform) {
-      return _parent->SpawnActor(blueprint, transform);
+        const Transform &transform,
+        Actor *parent = nullptr) {
+      return _parent->SpawnActor(blueprint, transform, parent);
     }
 
     Client &GetClient() const {
