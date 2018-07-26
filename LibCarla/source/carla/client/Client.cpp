@@ -23,8 +23,11 @@ namespace client {
 
   SharedPtr<Actor> Client::SpawnActor(
       const ActorBlueprint &blueprint,
-      const Transform &transform) {
-    auto actor = Call<carla::rpc::Actor>("spawn_actor", transform, blueprint.MakeActorDescription());
+      const Transform &transform,
+      Actor *parent) {
+    auto actor = parent != nullptr ?
+        Call<carla::rpc::Actor>("spawn_actor_with_parent", transform, blueprint.MakeActorDescription(), parent->Serialize()) :
+        Call<carla::rpc::Actor>("spawn_actor", transform, blueprint.MakeActorDescription());
     if (actor.IsASensor()) {
       return SharedPtr<Actor>(new Sensor{actor, GetWorld()});
     }

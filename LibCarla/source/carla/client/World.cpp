@@ -13,11 +13,12 @@ namespace client {
 
   SharedPtr<Actor> World::TrySpawnActor(
       const ActorBlueprint &blueprint,
-      const Transform &transform) {
+      const Transform &transform,
+      Actor *parent) {
     try {
-      return SpawnActor(blueprint, transform);
-    } catch (const std::exception & DEBUG_ONLY(e)) {
-      DEBUG_ONLY(log_debug("TrySpawnActor: failed with:", e.what()));
+      return SpawnActor(blueprint, transform, parent);
+    } catch (const std::exception &e) {
+      log_warning("TrySpawnActor: failed with:", e.what());
       return nullptr;
     }
   }
