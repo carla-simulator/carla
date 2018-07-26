@@ -34,6 +34,27 @@ namespace rpc {
     bool hand_brake = false;
     bool reverse = false;
 
+#ifdef LIBCARLA_INCLUDED_FROM_UE4
+
+    VehicleControl(const FVehicleControl &Control)
+      : throttle(Control.Throttle),
+        steer(Control.Steer),
+        brake(Control.Brake),
+        hand_brake(Control.bHandBrake),
+        reverse(Control.bReverse) {}
+
+    operator FVehicleControl() const {
+      FVehicleControl Control;
+      Control.Throttle = throttle;
+      Control.Steer = steer;
+      Control.Brake = brake;
+      Control.bHandBrake = hand_brake;
+      Control.bReverse = reverse;
+      return Control;
+    }
+
+#endif // LIBCARLA_INCLUDED_FROM_UE4
+
     MSGPACK_DEFINE_ARRAY(
         throttle,
         steer,

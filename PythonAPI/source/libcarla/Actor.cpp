@@ -7,6 +7,7 @@
 #include <carla/client/Actor.h>
 #include <carla/client/Image.h>
 #include <carla/client/Sensor.h>
+#include <carla/client/Vehicle.h>
 
 #include <boost/python.hpp>
 
@@ -40,6 +41,11 @@ namespace client {
     return out;
   }
 
+  std::ostream &operator<<(std::ostream &out, const Vehicle &vehicle) {
+    out << "Vehicle(id=" << vehicle.GetId() << ", type=" << vehicle.GetTypeId() << ')';
+    return out;
+  }
+
   std::ostream &operator<<(std::ostream &out, const Sensor &sensor) {
     out << "Sensor(id=" << sensor.GetId() << ", type=" << sensor.GetTypeId() << ')';
     return out;
@@ -51,6 +57,7 @@ namespace client {
 void export_actor() {
   using namespace boost::python;
   namespace cc = carla::client;
+  namespace cr = carla::rpc;
 
   class_<cc::Image, boost::noncopyable, boost::shared_ptr<cc::Image>>("Image", no_init)
     .add_property("frame_number", &cc::Image::GetFrameNumber)
@@ -72,7 +79,11 @@ void export_actor() {
       return self.GetTypeId();
     })
     .def("get_world", &cc::Actor::GetWorld)
-    .def("apply_control", &cc::Actor::ApplyControl)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cc::Vehicle, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Vehicle>>("Vehicle", no_init)
+    .def("apply_control", &cc::Vehicle::ApplyControl)
     .def(self_ns::str(self_ns::self))
   ;
 
@@ -103,5 +114,6 @@ void export_actor() {
         }
       });
     })
+    .def(self_ns::str(self_ns::self))
   ;
 }
