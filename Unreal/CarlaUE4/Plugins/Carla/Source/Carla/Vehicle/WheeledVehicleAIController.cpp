@@ -75,6 +75,8 @@ AWheeledVehicleAIController::AWheeledVehicleAIController(const FObjectInitialize
 {
   RandomEngine = CreateDefaultSubobject<URandomEngine>(TEXT("RandomEngine"));
 
+  RandomEngine->Seed(RandomEngine->GenerateRandomSeed());
+
   PrimaryActorTick.bCanEverTick = true;
   PrimaryActorTick.TickGroup = TG_PrePhysics;
 }
@@ -98,6 +100,12 @@ void AWheeledVehicleAIController::Possess(APawn *aPawn)
   MaximumSteerAngle = Vehicle->GetMaximumSteerAngle();
   check(MaximumSteerAngle > 0.0f);
   ConfigureAutopilot(bAutopilotEnabled);
+
+  if (RoadMap == nullptr)
+  {
+    TActorIterator<ACityMapGenerator> It(GetWorld());
+    RoadMap = (It ? It->GetRoadMap() : nullptr);
+  }
 }
 
 void AWheeledVehicleAIController::Tick(const float DeltaTime)

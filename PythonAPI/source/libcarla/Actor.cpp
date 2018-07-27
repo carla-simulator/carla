@@ -84,6 +84,7 @@ void export_actor() {
 
   class_<cc::Vehicle, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Vehicle>>("Vehicle", no_init)
     .def("apply_control", &cc::Vehicle::ApplyControl)
+    .def("set_autopilot", &cc::Vehicle::SetAutopilot, (arg("enabled")=true))
     .def(self_ns::str(self_ns::self))
   ;
 

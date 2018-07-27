@@ -41,5 +41,11 @@ namespace client {
     _client.call("apply_control_to_actor", actor.Serialize(), control);
   }
 
+  void Client::SetActorAutopilot(
+      const Actor &actor,
+      const bool enabled) {
+    _client.call("set_actor_autopilot", actor.Serialize(), enabled);
+  }
+
 } // namespace client
 } // namespace carla
