@@ -198,10 +198,12 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
   FActorVariation PostProcessing;
   PostProcessing.Id = TEXT("post_processing");
   PostProcessing.Type = EActorAttributeType::String;
-  for (uint8 i = 0u; i < PostProcessEffect::ToUInt(EPostProcessEffect::SIZE); ++i)
+  for (uint8 i = 1u; i < PostProcessEffect::ToUInt(EPostProcessEffect::SIZE); ++i)
   {
     PostProcessing.RecommendedValues.Add(PostProcessEffect::ToString(i));
   }
+  // By defaul goes to the first one, we don't want None as default.
+  PostProcessing.RecommendedValues.Add(PostProcessEffect::ToString(0u));
   PostProcessing.bRestrictToRecommended = true;
   // FOV.
   FActorVariation FOV;
