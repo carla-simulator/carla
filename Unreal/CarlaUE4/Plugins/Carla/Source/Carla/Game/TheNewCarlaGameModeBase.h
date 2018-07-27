@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "Carla/Actor/ActorSpawner.h"
+#include "Carla/Actor/CarlaActorFactory.h"
 #include "Carla/Game/CarlaEpisode.h"
 
 #include "CoreMinimal.h"
@@ -36,7 +36,7 @@ protected:
 
 private:
 
-  void SpawnActorSpawners();
+  void SpawnActorFactories();
 
   UPROPERTY()
   UCarlaGameInstance *GameInstance = nullptr;
@@ -47,8 +47,8 @@ private:
   /// List of actor spawners that will be used to define and spawn the actors
   /// available in game.
   UPROPERTY(EditAnywhere)
-  TSet<TSubclassOf<AActorSpawner>> ActorSpawners;
+  TSet<TSubclassOf<ACarlaActorFactory>> ActorFactories;
 
   UPROPERTY()
-  TArray<AActorSpawner *> ActorSpawnerInstances;
+  TArray<ACarlaActorFactory *> ActorFactoryInstances;
 };

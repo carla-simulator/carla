@@ -14,7 +14,7 @@
 #include "Containers/Array.h"
 #include "Templates/Function.h"
 
-class AActorSpawner;
+class ACarlaActorFactory;
 
 /// Actor in charge of binding ActorDefinitions to spawn functions, as well as
 /// keeping the registry of all the actors spawned.
@@ -30,10 +30,10 @@ public:
   /// @warning Invalid definitions are ignored.
   void Bind(FActorDefinition Definition, SpawnFunctionType SpawnFunction);
 
-  /// Bind all the definitions of @a ActorSpawner to its spawn function.
+  /// Bind all the definitions of @a ActorFactory to its spawn function.
   ///
   /// @warning Invalid definitions are ignored.
-  void Bind(AActorSpawner &ActorSpawner);
+  void Bind(ACarlaActorFactory &ActorFactory);
 
   /// Spawns an actor based on @a ActorDescription at @a Transform. To properly
   /// despawn an actor created with this function call DestroyActor.

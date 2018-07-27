@@ -8,7 +8,7 @@
 #include "Carla/Actor/ActorDispatcher.h"
 
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
-#include "Carla/Actor/ActorSpawner.h"
+#include "Carla/Actor/CarlaActorFactory.h"
 
 void FActorDispatcher::Bind(FActorDefinition Definition, SpawnFunctionType Functor)
 {
@@ -25,12 +25,12 @@ void FActorDispatcher::Bind(FActorDefinition Definition, SpawnFunctionType Funct
   }
 }
 
-void FActorDispatcher::Bind(AActorSpawner &ActorSpawner)
+void FActorDispatcher::Bind(ACarlaActorFactory &ActorFactory)
 {
-  for (const auto &Definition : ActorSpawner.MakeDefinitions())
+  for (const auto &Definition : ActorFactory.GetDefinitions())
   {
     Bind(Definition, [&](const FTransform &Transform, const FActorDescription &Description) {
-      return ActorSpawner.SpawnActor(Transform, Description);
+      return ActorFactory.SpawnActor(Transform, Description);
     });
   }
 }
