@@ -8,8 +8,28 @@
 #include <carla/client/ActorBlueprint.h>
 
 #include <boost/python.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 #include <ostream>
+
+template <typename Iterable>
+static std::ostream &PrintList(std::ostream &out, const Iterable &list) {
+  auto it = list.begin();
+  out << '[' << *it;
+  for (++it; it != list.end(); ++it) {
+    out << ", " << *it;
+  }
+  out << ']';
+  return out;
+}
+
+namespace std {
+
+  std::ostream &operator<<(std::ostream &out, const std::vector<std::string> &vector_of_strings) {
+    return PrintList(out, vector_of_strings);
+  }
+
+} // namespace std
 
 namespace carla {
 namespace client {
@@ -27,13 +47,7 @@ namespace client {
   }
 
   std::ostream &operator<<(std::ostream &out, const BlueprintLibrary &blueprints) {
-    auto it = blueprints.begin();
-    out << '[' << *it;
-    for (++it; it != blueprints.end(); ++it) {
-      out << ", " << *it;
-    }
-    out << ']';
-    return out;
+    return PrintList(out, blueprints);
   }
 
 } // namespace client
@@ -60,9 +74,17 @@ void export_blueprint() {
     .def(self_ns::str(self_ns::self))
   ;
 
+  class_<std::vector<std::string>>("vector_of_strings")
+    .def(vector_indexing_suite<std::vector<std::string>>())
+    .def(self_ns::str(self_ns::self))
+  ;
+
   class_<cc::ActorAttribute>("ActorAttribute", no_init)
     .add_property("is_modifiable", &cc::ActorAttribute::IsModifiable)
     .add_property("type", &cc::ActorAttribute::GetType)
+    .add_property("recommended_values", +[](const cc::ActorAttribute &self) -> std::vector<std::string> {
+      return self.GetRecommendedValues();
+    })
     .def("as_bool", &cc::ActorAttribute::As<bool>)
     .def("as_int", &cc::ActorAttribute::As<int>)
     .def("as_float", &cc::ActorAttribute::As<float>)
