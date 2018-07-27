@@ -99,7 +99,7 @@ private:
   bool IsIdValid(const FString &Id)
   {
     /// @todo Do more checks.
-    return OnScreenAssert(!Id.IsEmpty(), TEXT("Id cannot be empty"));
+    return OnScreenAssert((!Id.IsEmpty() && Id != TEXT(".")), TEXT("Id cannot be empty"));
   }
 
   bool AreTagsValid(const FString &Tags)
@@ -111,7 +111,7 @@ private:
   bool IsValid(const EActorAttributeType Type)
   {
     /// @todo Do more checks.
-    return OnScreenAssert(Type < EActorAttributeType::SIZE, TEXT("Invalid Type"));
+    return OnScreenAssert(Type < EActorAttributeType::SIZE, TEXT("Invalid type"));
   }
 
   bool ValueIsValid(const EActorAttributeType Type, const FString &Value)
@@ -125,6 +125,7 @@ private:
     return
         IsIdValid(Variation.Id) &&
         IsValid(Variation.Type) &&
+        OnScreenAssert(Variation.RecommendedValues.Num() > 0, TEXT("Recommended values cannot be empty")) &&
         ForEach(TEXT("Recommended Value"), Variation.RecommendedValues, [&](auto &Value) {
           return ValueIsValid(Variation.Type, Value);
         });

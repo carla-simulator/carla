@@ -21,7 +21,7 @@ void FActorDispatcher::Bind(FActorDefinition Definition, SpawnFunctionType Funct
   }
   else
   {
-    UE_LOG(LogCarla, Warning, TEXT("Invalid definition ignored"));
+    UE_LOG(LogCarla, Warning, TEXT("Invalid definition '%s' ignored"), *Definition.Id);
   }
 }
 

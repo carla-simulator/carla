@@ -6,6 +6,7 @@
 
 #include "carla/client/ActorAttribute.h"
 
+#include "carla/Logging.h"
 #include "carla/StringUtil.h"
 
 namespace carla {
@@ -70,6 +71,7 @@ namespace client {
     std::vector<std::string> channels;
     StringUtil::Split(channels, _attribute.value, ",");
     if (channels.size() != 3u) {
+      log_error("invalid color", _attribute.value);
       LIBCARLA_THROW_INVALID_VALUE("colors must have 3 channels (R,G,B)");
     }
 
