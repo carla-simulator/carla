@@ -14,8 +14,8 @@ set DEL_SRC=false
 
 :arg-parse
 if not "%1"=="" (
-      if "%1"=="--build-dir" (
-        set BUILD_DIR=%2
+    if "%1"=="--build-dir" (
+        set BUILD_DIR=%~2
         shift
     )
 
@@ -51,14 +51,15 @@ if not exist "%GT_SRC_DIR%" (
 
 if not exist "%GT_BUILD_DIR%" (
     echo %FILE_N% Creating "%GT_BUILD_DIR%"
-    mkdir %GT_BUILD_DIR%
+    mkdir "%GT_BUILD_DIR%"
 )
 
-cd %GT_BUILD_DIR%
+cd "%GT_BUILD_DIR%"
 
 echo %FILE_N% Generating build...
-cmake -G "NMake Makefiles"^
+cmake .. -G "Visual Studio 15 2017 Win64"^
     -DCMAKE_BUILD_TYPE=Release^
+    -DCMAKE_CXX_FLAGS_RELEASE=/MD^
     -DCMAKE_INSTALL_PREFIX=%GT_INSTALL_DIR%^
     -DCMAKE_CXX_FLAGS=/D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING^
     %GT_SRC_DIR%
@@ -66,13 +67,13 @@ cmake -G "NMake Makefiles"^
 if errorlevel 1 goto error_cmake
 
 echo %FILE_N% Building...
-nmake & nmake install
+cmake --build . --config Release --target install
 
 if errorlevel 1 goto error_install
 
 rem Remove the downloaded Google Test source because is no more needed
 if %DEL_SRC% == true (
-    rd /s /q %GT_SRC_DIR%
+    rd /s /q "%GT_SRC_DIR%"
 )
 
 goto success
@@ -83,7 +84,7 @@ rem ============================================================================
 
 :success
     echo.
-    echo %FILE_N% Google Test has been successfully installed in %GT_INSTALL_DIR%!
+    echo %FILE_N% Google Test has been successfully installed in "%GT_INSTALL_DIR%"!
     goto good_exit
 
 :already_build
@@ -124,7 +125,7 @@ rem ============================================================================
     goto:EOF
 
 :bad_exit
-    if exist "%GT_INSTALL_DIR%" rd /s /q "GT_INSTALL_DIR"
+    if exist "%GT_INSTALL_DIR%" rd /s /q "%GT_INSTALL_DIR%"
     echo %FILE_N% Exiting with error...
     endlocal
     goto:EOF

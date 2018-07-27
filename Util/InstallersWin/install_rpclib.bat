@@ -15,7 +15,7 @@ set DEL_SRC=false
 :arg-parse
 if not "%1"=="" (
     if "%1"=="--build-dir" (
-        set BUILD_DIR=%2
+        set BUILD_DIR=%~2
         shift
     )
 
@@ -51,29 +51,28 @@ if not exist "%RPC_SRC_DIR%" (
 
 if not exist "%RPC_BUILD_DIR%" (
     echo %FILE_N% Creating "%RPC_BUILD_DIR%"
-    mkdir %RPC_BUILD_DIR%
+    mkdir "%RPC_BUILD_DIR%"
 )
 
-cd %RPC_BUILD_DIR%
-
+cd "%RPC_BUILD_DIR%"
 echo %FILE_N% Generating build...
-cmake -G "NMake Makefiles"^
-    -DCMAKE_BUILD_TYPE=Release^
-    -RPCLIB_BUILD_EXAMPLES=OFF^
-    -DCMAKE_CXX_FLAGS_RELEASE=/MD^
-    -DCMAKE_INSTALL_PREFIX=%RPC_INSTALL_DIR%^
-    %RPC_SRC_DIR%
 
+cmake .. -G "Visual Studio 15 2017 Win64"^
+        -DCMAKE_BUILD_TYPE=Release^
+        -RPCLIB_BUILD_EXAMPLES=OFF^
+        -DCMAKE_CXX_FLAGS_RELEASE=/MD^
+        -DCMAKE_INSTALL_PREFIX=%RPC_INSTALL_DIR%^
+        %RPC_SRC_DIR%
 if errorlevel 1 goto error_cmake
 
 echo %FILE_N% Building...
-nmake & nmake install
+cmake --build . --config Release --target install
 
 if errorlevel 1 goto error_install
 
 rem Remove the downloaded rpclib source because is no more needed
 if %DEL_SRC% == true (
-  rd /s /q %RPC_SRC_DIR%
+  rd /s /q "%RPC_SRC_DIR%"
 )
 
 goto success
@@ -84,7 +83,7 @@ rem ============================================================================
 
 :success
     echo.
-    echo %FILE_N% rpclib has been successfully installed in %RPC_INSTALL_DIR%!
+    echo %FILE_N% rpclib has been successfully installed in "%RPC_INSTALL_DIR%"!
     goto good_exit
 
 :already_build
@@ -126,7 +125,7 @@ rem ============================================================================
     goto:EOF
 
 :bad_exit
-    if exist "%RPC_INSTALL_DIR%" rd /s /q "RPC_INSTALL_DIR"
+    if exist "%RPC_INSTALL_DIR%" rd /s /q "%RPC_INSTALL_DIR%"
     echo %FILE_N% Exiting with error...
     endlocal
     goto:EOF
