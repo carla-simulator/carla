@@ -43,7 +43,7 @@ struct CARLA_API FActorVariation
   FString Id;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  EActorAttributeType Type = EActorAttributeType::Int;
+  EActorAttributeType Type = EActorAttributeType::String;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   TArray<FString> RecommendedValues;
@@ -63,7 +63,7 @@ struct CARLA_API FActorAttribute
   FString Id;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  EActorAttributeType Type = EActorAttributeType::Int;
+  EActorAttributeType Type = EActorAttributeType::String;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FString Value;

@@ -32,7 +32,7 @@ void ATheNewCarlaGameModeBase::InitGame(
       GameInstance != nullptr,
       TEXT("GameInstance is not a UCarlaGameInstance, did you forget to set it in the project settings?"));
 
-  SpawnActorSpawners();
+  SpawnActorFactories();
 }
 
 void ATheNewCarlaGameModeBase::BeginPlay()
@@ -56,20 +56,20 @@ void ATheNewCarlaGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
   Super::EndPlay(EndPlayReason);
 }
 
-void ATheNewCarlaGameModeBase::SpawnActorSpawners()
+void ATheNewCarlaGameModeBase::SpawnActorFactories()
 {
   auto *World = GetWorld();
   check(World != nullptr);
 
-  for (auto &SpawnerClass : BlueprintSpawners)
+  for (auto &FactoryClass : ActorFactories)
   {
-    if (SpawnerClass != nullptr)
+    if (FactoryClass != nullptr)
     {
-      auto *Spawner = World->SpawnActor<AActorSpawnerBlueprintBase>(SpawnerClass);
-      if (Spawner != nullptr)
+      auto *Factory = World->SpawnActor<ACarlaActorFactory>(FactoryClass);
+      if (Factory != nullptr)
       {
-        Episode->RegisterActorSpawner(*Spawner);
-        BlueprintSpawnerInstances.Add(Spawner);
+        Episode->RegisterActorFactory(*Factory);
+        ActorFactoryInstances.Add(Factory);
       }
       else
       {

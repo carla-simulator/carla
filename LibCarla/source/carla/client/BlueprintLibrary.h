@@ -7,56 +7,65 @@
 #pragma once
 
 #include "carla/Debug.h"
+#include "carla/Iterator.h"
 #include "carla/NonCopyable.h"
 #include "carla/client/ActorBlueprint.h"
 #include "carla/client/Memory.h"
 
-#include <algorithm>
+#include <type_traits>
+#include <unordered_map>
 #include <vector>
 
 namespace carla {
 namespace client {
 
+  /// @todo Works as a list but its actually a map. We should assess the use
+  /// cases and reconsider this implementation.
   class BlueprintLibrary
     : public EnableSharedFromThis<BlueprintLibrary>,
       private NonCopyable {
-    using list_type = std::vector<ActorBlueprint>;
+    using map_type = std::unordered_map<std::string, ActorBlueprint>;
   public:
 
-    using value_type = list_type::value_type;
-    using size_type = list_type::size_type;
-    using const_iterator = list_type::const_iterator;
-    using const_reference = list_type::const_reference;
+    // Here we force a bit the typedefs to make this class look like a list.
+    using key_type = map_type::key_type;
+    using value_type = map_type::mapped_type;
+    using size_type = map_type::size_type;
+    using const_iterator = decltype(carla::iterator::make_map_values_iterator<map_type::const_iterator>(map_type::const_iterator{}));
+    using const_reference = const value_type &;
+    using const_pointer = const value_type *;
 
-    explicit BlueprintLibrary(const std::vector<rpc::ActorDefinition> &blueprints)
-      : _blueprints(blueprints.begin(), blueprints.end()) {}
+    explicit BlueprintLibrary(const std::vector<rpc::ActorDefinition> &blueprints);
 
     BlueprintLibrary(BlueprintLibrary &&) = default;
     BlueprintLibrary &operator=(BlueprintLibrary &&) = default;
 
     /// Filters a list of ActorBlueprint with tags matching @a wildcard_pattern.
-    SharedPtr<BlueprintLibrary> Filter(const std::string &wildcard_pattern) const {
-      list_type result;
-      std::copy_if(begin(), end(), std::back_inserter(result), [&](const auto &x) {
-        return x.MatchTags(wildcard_pattern);
-      });
-      return SharedPtr<BlueprintLibrary>{new BlueprintLibrary(result)};
+    SharedPtr<BlueprintLibrary> Filter(const std::string &wildcard_pattern) const;
+
+    const_pointer Find(const std::string &key) const {
+      auto it = _blueprints.find(key);
+      return it != _blueprints.end() ? &it->second : nullptr;
     }
 
+    const_reference at(const std::string &key) const {
+      return _blueprints.at(key);
+    }
+
+    /// @warning Linear complexity.
     const_reference operator[](size_type pos) const {
-      return _blueprints[pos];
+      return std::next(_blueprints.begin(), pos)->second;
     }
 
-    const_reference at(size_type pos) const {
-      return _blueprints.at(pos);
-    }
+    /// @warning Linear complexity.
+    const_reference at(size_type pos) const;
 
     const_iterator begin() const /*noexcept*/ {
-      return _blueprints.begin();
+      return iterator::make_map_values_iterator(_blueprints.begin());
     }
 
     const_iterator end() const /*noexcept*/ {
-      return _blueprints.end();
+      return iterator::make_map_values_iterator(_blueprints.end());
     }
 
     bool empty() const /*noexcept*/ {
@@ -69,10 +78,10 @@ namespace client {
 
   private:
 
-    BlueprintLibrary(list_type blueprints)
+    BlueprintLibrary(map_type blueprints)
       : _blueprints(std::move(blueprints)) {}
 
-    list_type _blueprints;
+    map_type _blueprints;
   };
 
 } // namespace client

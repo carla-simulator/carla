@@ -8,7 +8,6 @@
 
 #include "carla/Debug.h"
 #include "carla/NonCopyable.h"
-#include "carla/client/Control.h"
 #include "carla/client/Memory.h"
 #include "carla/client/World.h"
 #include "carla/rpc/Actor.h"
@@ -22,6 +21,8 @@ namespace client {
     : public EnableSharedFromThis<Actor>,
       private NonCopyable {
   public:
+
+    virtual ~Actor() = default;
 
     Actor(Actor &&) = default;
     Actor &operator=(Actor &&) = default;
@@ -38,23 +39,21 @@ namespace client {
       return _world;
     }
 
-    void ApplyControl(const VehicleControl &control) {
-      _world->ApplyControlToActor(*this, control);
-    }
-
     const auto &Serialize() const {
       return _actor;
     }
 
-  private:
-
-    friend class Client;
+  protected:
 
     Actor(carla::rpc::Actor actor, SharedPtr<World> world)
       : _actor(actor),
         _world(std::move(world)) {
       DEBUG_ASSERT(_world != nullptr);
     }
+
+  private:
+
+    friend class Client;
 
     carla::rpc::Actor _actor;
 

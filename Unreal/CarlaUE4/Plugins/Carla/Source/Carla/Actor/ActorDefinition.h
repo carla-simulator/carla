@@ -25,6 +25,13 @@ struct FActorDefinition
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FString Id;
 
+  /// Class of the actor to be spawned (Optional).
+  ///
+  /// Note that this parameter is not exposed on the client-side, only used by
+  /// the spawner itself.
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  TSubclassOf<AActor> Class;
+
   /// A list of comma-separated tags.
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FString Tags;

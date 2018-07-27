@@ -5,16 +5,49 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include <carla/client/Actor.h>
+#include <carla/client/Image.h>
+#include <carla/client/Sensor.h>
+#include <carla/client/Vehicle.h>
 
 #include <boost/python.hpp>
 
 #include <ostream>
+#include <iostream>
+
+/// Aquires a lock on the Python's Global Interpreter Lock, necessary for
+/// calling Python code from a different thread.
+///
+/// https://wiki.python.org/moin/GlobalInterpreterLock
+class GILLockGuard {
+public:
+
+  GILLockGuard()
+    : _state(PyGILState_Ensure()) {}
+
+  ~GILLockGuard() {
+    PyGILState_Release(_state);
+  }
+
+private:
+
+  PyGILState_STATE _state;
+};
 
 namespace carla {
 namespace client {
 
   std::ostream &operator<<(std::ostream &out, const Actor &actor) {
-    out << "Actor(id=" << actor.GetId() /*<< ", type_id=" << actor.GetTypeId()*/ << ')';
+    out << "Actor(id=" << actor.GetId() << ", type=" << actor.GetTypeId() << ')';
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const Vehicle &vehicle) {
+    out << "Vehicle(id=" << vehicle.GetId() << ", type=" << vehicle.GetTypeId() << ')';
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const Sensor &sensor) {
+    out << "Sensor(id=" << sensor.GetId() << ", type=" << sensor.GetTypeId() << ')';
     return out;
   }
 
@@ -24,15 +57,63 @@ namespace client {
 void export_actor() {
   using namespace boost::python;
   namespace cc = carla::client;
+  namespace cr = carla::rpc;
+
+  class_<cc::Image, boost::noncopyable, boost::shared_ptr<cc::Image>>("Image", no_init)
+    .add_property("frame_number", &cc::Image::GetFrameNumber)
+    .add_property("width", &cc::Image::GetWidth)
+    .add_property("height", &cc::Image::GetHeight)
+    .add_property("type", +[](const cc::Image &self) -> std::string {
+      return self.GetType();
+    })
+    .add_property("fov", &cc::Image::GetFOV)
+    .add_property("raw_data", +[](cc::Image &self) {
+      auto *ptr = PyBuffer_FromMemory(self.GetData(), self.GetSize());
+      return object(handle<>(ptr));
+    })
+  ;
 
   class_<cc::Actor, boost::noncopyable, boost::shared_ptr<cc::Actor>>("Actor", no_init)
     .add_property("id", &cc::Actor::GetId)
     .add_property("type_id", +[](const cc::Actor &self) -> std::string {
-      // Needs to copy the string by value.
       return self.GetTypeId();
     })
     .def("get_world", &cc::Actor::GetWorld)
-    .def("apply_control", &cc::Actor::ApplyControl)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cc::Vehicle, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Vehicle>>("Vehicle", no_init)
+    .def("apply_control", &cc::Vehicle::ApplyControl)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cc::Sensor, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Sensor>>("Sensor", no_init)
+    .def("listen", +[](cc::Sensor &self, boost::python::object callback) {
+      // Make sure the callback is actually callable.
+      if (!PyCallable_Check(callback.ptr())) {
+        PyErr_SetString(PyExc_TypeError, "callback argument must be callable!");
+        throw_error_already_set();
+        return;
+      }
+
+      // Subscribe to the sensor.
+      self.Listen([callback](auto message) {
+        cc::SharedPtr<cc::Image> image;
+        try {
+          image = cc::Image::FromBuffer(message->buffer());
+        } catch (const std::exception &e) {
+          std::cerr << "exception while parsing the image: " << e.what() << std::endl;
+          return;
+        }
+
+        GILLockGuard gil_lock;
+        try {
+          call<void>(callback.ptr(), object(image));
+        } catch (const error_already_set &e) {
+          PyErr_Print();
+        }
+      });
+    })
     .def(self_ns::str(self_ns::self))
   ;
 }

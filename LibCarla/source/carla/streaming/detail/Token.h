@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/Debug.h"
+#include "carla/streaming/Token.h"
 #include "carla/streaming/detail/Types.h"
 
 #include <boost/asio/ip/address.hpp>
@@ -45,7 +46,7 @@ namespace detail {
 #pragma pack(pop)
 
   static_assert(
-      sizeof(token_data) == 24u,
+      sizeof(token_data) == sizeof(Token::data),
       "Size shouldn't be more than"
       "  v6 address  : 128"
       "  + state     :  16"
@@ -92,6 +93,10 @@ namespace detail {
     token_type() = default;
     token_type(const token_type &) = default;
 
+    token_type(const Token &rhs);
+
+    operator Token() const;
+
     auto get_stream_id() const {
       return _token.stream_id;
     }
@@ -127,10 +132,6 @@ namespace detail {
 
     boost::asio::ip::tcp::endpoint to_tcp_endpoint() const {
       return get_endpoint<boost::asio::ip::tcp>();
-    }
-
-    boost::asio::const_buffer as_buffer() const {
-      return boost::asio::buffer(&_token, sizeof(_token));
     }
 
   private:

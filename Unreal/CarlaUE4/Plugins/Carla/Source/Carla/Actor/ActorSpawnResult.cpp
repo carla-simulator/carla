@@ -22,7 +22,7 @@ FString FActorSpawnResult::StatusToString(EActorSpawnResultStatus InStatus)
     case EActorSpawnResultStatus::InvalidDescription:
       return TEXT("Spawn failed because of invalid actor description");
     case EActorSpawnResultStatus::Collision:
-      return TEXT("Spawn failed because due to a collision at spawn position");
+      return TEXT("Spawn failed because of collision at spawn position");
     case EActorSpawnResultStatus::UnknownError:
     default:
       return TEXT("Unknown error while trying to spawn actor");

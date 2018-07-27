@@ -10,11 +10,12 @@
 
 #include <sstream>
 
-void translator(rpc::rpc_error e) {
+void translator(const rpc::rpc_error &e) {
   std::stringstream ss;
-  ss << e.what()
-     << " in function " << e.get_function_name()
-     << ": " << e.get_error().as<std::string>();
+  ss << e.what() << " in function " << e.get_function_name();
+  /// @todo Supposedly we can extract the error string here as provided by the
+  /// server with e.get_error().as<std::string>(), but it gives the wrong
+  /// string.
   PyErr_SetString(PyExc_RuntimeError, ss.str().c_str());
 }
 
