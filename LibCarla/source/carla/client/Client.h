@@ -80,6 +80,10 @@ namespace client {
         const Actor &actor,
         const VehicleControl &control);
 
+    void SetActorAutopilot(
+        const Actor &actor,
+        bool enabled);
+
   private:
 
     carla::rpc::Client _client;

@@ -19,6 +19,10 @@ namespace client {
       GetWorld()->GetClient().ApplyControlToActor(*this, control);
     }
 
+    void SetAutopilot(bool enabled = true) {
+      GetWorld()->GetClient().SetActorAutopilot(*this, enabled);
+    }
+
   private:
 
     friend class Client;
