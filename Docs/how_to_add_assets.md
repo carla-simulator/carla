@@ -11,13 +11,13 @@ for creating the Skeletal Mesh and Physics Asset. And
 [Vehicles User Guide](https://docs.unrealengine.com/latest/INT/Engine/Physics/Vehicles/VehicleUserGuide/)
 for the rest.
 
-```
-If you want a simpler way you might copy our "General4wheeledSkeleton" from our project, either by 
-exporting it and copying it into your model or by creating your skelleton using the same bone names and orientation. 
-Bind it to your vehicle model and choose it when importing your vehicle into the editor.
-This way you won't need to configure the animation, you might just use "General4wheeledAnimation" (step 3) 
-You also won't need to configure the bone names for your wheels (Step 7. Be carefull, you'll still need to asign the wheel blueprints).
-```
+!!! important
+    If you want a simpler way you might copy our "General4wheeledSkeleton" from our project, either by 
+    exporting it and copying it into your model or by creating your skelleton using the same bone names and orientation. 
+    Bind it to your vehicle model and choose it when importing your vehicle into the editor.
+    This way you won't need to configure the animation, you might just use "General4wheeledAnimation" (step 3) 
+    You also won't need to configure the bone names for your wheels (Step 7. Be carefull, you'll still need to asign the wheel blueprints).
+
 
   * Import fbx as Skelletal Mesh to its own folder inside `Content/Static/Vehicles`. A Physics asset and a Skeleton should be automatically created and linked the three together.
   * Tune the Physics asset. Delete the automatically created ones and add boxes to the `Vehicle_Base` bone matching the shape, make sure generate hit events is enabled. Add a sphere for each wheel and set their "Physics Type" to "Kinematic".
@@ -39,25 +39,26 @@ Adding 2 wheeled vehicles is similar to adding a 4 wheeled one but due to the co
 
 As with the 4 wheeled vehicles, orient the model towards positive "x" and every bone axis towards positive x and with the z axis facing upwards.
 
+```yaml
+Bone Setup:
+  - Bike_Rig:  # The origin point of the mesh. Place it in the point 0 of the scenecomment
+   - BikeBody:  # The model's body centre.   
+     - Pedals:  # If the vehicle is a bike bind the pedalier to this bone, will rotate with the bike acceleration.   
+      - RightPedal:  # Sets the driver's feet position and rotates with the pedalier if the vehicle is a bike.   
+      - LeftPedal:   # ^   
+     - RearWheel:  # Rear Wheel of the vehicle   
+     - Handler:  # Rotates with the frontal wheel of the vehicle bind the vehicle handler to it.   
+      - HandlerMidBone:  # Positioned over the front wheel bone to orient the handler with the wheel    
+      - HandlerRight:  # Sets the position of the driver's hand, no need to bind it to anything.   
+      - HandlerLeft:  # ^   
+     - Frontwheel:  # Frontal wheel of the vehicle.   
+     - RightHelperRotator:  # This four additional bones are here for an obsolete system of making the bike stable by using aditional invisible wheels   
+      - RightHelprWheel:  # ^   
+     - LeftHelperRotator:  # ^   
+      - LeftHelperWheel:  # ^   
+     - Seat: # Sets the position of the drivers hip bone. No need to bind it to anything but place it carefully.   
 ```
-Bone Setup: 
- >Bike_Rig: The origin point of the mesh. Place it in the point 0 of the scene.
-  >BikeBody: The model's body centre.
-   >Pedals: If the vehicle is a bike bind the pedalier to this bone, will rotate with the bike acceleration.
-    >RightPedal: Sets the driver's feet position and rotates with the pedalier if the vehicle is a bike.
-    >LeftPedal:   ^
-   >RearWheel: Rear Wheel of the vehicle
-   >Handler: Rotates with the frontal wheel of the vehicle bind the vehicle handler to it.
-    >HandlerMidBone: Positioned over the front wheel bone to orient the handler with the wheel 
-    >HandlerRight: Sets the position of the driver's hand, no need to bind it to anything.
-    >HandlerLeft: ^
-   >Frontwheel: Frontal wheel of the vehicle.
-   >RightHelperRotator:This four additional bones are here for an obsolete system of making the bike stable by using aditional invisible wheels
-    >RightHelprWheel: ^
-   >LeftHelperRotator: ^
-    >LeftHelperWheel: ^
-   >Seat: Sets the position of the drivers hip bone. No need to bind it to anything but place it carefully.
-```
+
   * Import fbx as Skelletal Mesh to its own folder inside `Content/Static/Vehicles/2Wheeled`.When importing select "General2WheeledVehicleSkeleton" as skelleton A Physics asset should be automatically created and linked.
   * Tune the Physics asset. Delete the automatically created ones and add boxes to the `BikeBody` bone trying to match the shape as possible, make sure generate hit events is enabled. Add a sphere for each wheel and set their "Physics Type" to "Kinematic".
   * Create folder `Content/Blueprints/Vehicles/<vehicle-model>`
