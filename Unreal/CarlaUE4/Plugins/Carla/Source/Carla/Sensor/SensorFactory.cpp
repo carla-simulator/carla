@@ -27,14 +27,17 @@ FActorSpawnResult ASensorFactory::SpawnActor(
     const FActorDescription &Description)
 {
   FActorSpawnParameters Params;
-  static int32 COUNTER = 0u;
-  Params.Name = FName(*(Description.Id + FString::FromInt(++COUNTER)));
   auto *World = GetWorld();
   if (World == nullptr)
   {
     return {};
   }
-  auto *Sensor = World->SpawnActor<ASceneCaptureCamera>(Description.Class, Transform, Params);
+  auto *Sensor = World->SpawnActorDeferred<ASceneCaptureCamera>(
+      Description.Class,
+      Transform,
+      this,
+      nullptr,
+      ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
   if (Sensor != nullptr)
   {
     using ABFL = UActorBlueprintFunctionLibrary;
@@ -47,5 +50,6 @@ FActorSpawnResult ASensorFactory::SpawnActor(
         PostProcessEffect::FromString(
             ABFL::RetrieveActorAttributeToString("post_processing", Description.Variations, "SceneFinal")));
   }
+  UGameplayStatics::FinishSpawningActor(Sensor, Transform);
   return FActorSpawnResult{Sensor};
 }
