@@ -2,14 +2,17 @@ ARGS=--all
 
 default: help
 
+export ROOT_PATH=$(CURDIR)/# root of the project (makefile directory)
+export INSTALLATION_DIR=$(ROOT_PATH)Build/# dependecy install/build directory (rpclib, gtest, boost)
+
 help:
 	@type "${CARLA_BUILD_TOOLS_FOLDER}\Linux.mk.help"
 
 launch: LibCarla
-	@echo "Not implemented!"
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat --build --launch
 
 launch-only:
-	@echo "Not implemented!"
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat --launch
 
 package: CarlaUE4Editor PythonAPI
 	@echo "Not implemented!"
@@ -18,10 +21,12 @@ docs:
 	@echo "Not implemented!"
 
 clean:
-	@echo "Not implemented!"
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat --clean
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.bat --clean
 
 rebuild: setup
-	@echo "Not implemented!"
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.bat --rebuild
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat --rebuild
 
 hard-clean: clean
 	@echo "Not implemented!"
@@ -33,7 +38,7 @@ benchmark: LibCarla
 	@echo "Not implemented!"
 
 CarlaUE4Editor: LibCarla
-	@echo "Not implemented!"
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat --build
 
 .PHONY: PythonAPI
 PythonAPI: LibCarla

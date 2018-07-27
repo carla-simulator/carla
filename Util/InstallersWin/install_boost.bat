@@ -9,15 +9,15 @@ setlocal
 :arg-parse
 if not "%1"=="" (
     if "%1"=="-j" (
-        set NUMBER_OF_ASYNC_JOBS=%2
+        set NUMBER_OF_ASYNC_JOBS=%~2
         shift
     )
     if "%1"=="--build-dir" (
-        set BUILD_DIR=%2
+        set BUILD_DIR=%~2
         shift
     )
     if "%1"=="--toolset" (
-        set B_TOOLSET=%2
+        set B_TOOLSET=%~2
         shift
     )
     shift
@@ -53,7 +53,7 @@ if not exist "%B_SRC_DIR%" (
     echo %FILE_N% Not cloning boost because already exists a folder called "%B_SRC%".
 )
 
-cd %B_SRC_DIR%
+cd "%B_SRC_DIR%"
 if not exist "b2.exe" (
     echo %FILE_N% Generating build...
     call bootstrap.bat
@@ -75,15 +75,15 @@ b2 -j8^
     variant=release^
     link=static^
     threading=multi^
-    --prefix=%B_INSTALL_DIR%^
-    --libdir=%B_LIB_DIR%^
-    --includedir=%B_INSTALL_DIR%^
+    --prefix="%B_INSTALL_DIR%"^
+    --libdir="%B_LIB_DIR%"^
+    --includedir="%B_INSTALL_DIR%"^
     install
 
 if errorlevel 1 goto error_install
 
-for /d %%i in (%B_INSTALL_DIR%\boost-*) do rename "%%i" include
-cd %BUILD_DIR%
+for /d %%i in ("%B_INSTALL_DIR%\boost-*") do rename "%%i" include
+cd "%BUILD_DIR%"
 
 rem Remove the downloaded protobuf source because is no more needed
 rem if you want to keep the source just delete the following command.
@@ -93,7 +93,7 @@ goto success
 
 :success
     echo.
-    echo %FILE_N% Boost has been successfully installed in %B_INSTALL_DIR%!
+    echo %FILE_N% Boost has been successfully installed in "%B_INSTALL_DIR%"!
     goto good_exit
 
 :already_build
@@ -126,7 +126,7 @@ goto success
     goto:EOF
 
 :bad_exit
-    if exist "%B_INSTALL_DIR%" rd /s /q "B_INSTALL_DIR"
+    if exist "%B_INSTALL_DIR%" rd /s /q "%B_INSTALL_DIR%"
     echo %FILE_N% Exiting with error...
     endlocal
     goto:EOF
