@@ -14,6 +14,18 @@
 #include "ActorBlueprintFunctionLibrary.generated.h"
 
 USTRUCT(BlueprintType)
+struct CARLA_API FCameraParameters
+{
+  GENERATED_BODY()
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  FString Id;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  TSubclassOf<AActor> Class;
+};
+
+USTRUCT(BlueprintType)
 struct CARLA_API FVehicleParameters
 {
   GENERATED_BODY()
@@ -60,6 +72,12 @@ public:
   /// @name Helpers to create actor definitions
   /// ==========================================================================
   /// @{
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakeCameraDefinition(
+      const FCameraParameters &Parameters,
+      bool &Success,
+      FActorDefinition &Definition);
 
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static void MakeVehicleDefinition(

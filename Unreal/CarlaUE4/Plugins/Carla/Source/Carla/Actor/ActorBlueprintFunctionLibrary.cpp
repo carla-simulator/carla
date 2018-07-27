@@ -7,6 +7,7 @@
 #include "Carla.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
+#include "Carla/Settings/PostProcessEffect.h"
 #include "Carla/Util/ScopedStack.h"
 
 #include <algorithm>
@@ -164,6 +165,10 @@ static FString ColorToFString(const FColor &Color)
       FString::FromInt(Color.B));
 }
 
+/// ============================================================================
+/// -- Actor definition validators ---------------------------------------------
+/// ============================================================================
+
 bool UActorBlueprintFunctionLibrary::CheckActorDefinition(const FActorDefinition &ActorDefinition)
 {
   FActorDefinitionValidator Validator;
@@ -174,6 +179,49 @@ bool UActorBlueprintFunctionLibrary::CheckActorDefinitions(const TArray<FActorDe
 {
   FActorDefinitionValidator Validator;
   return Validator.AreValid(ActorDefinitions);
+}
+
+/// ============================================================================
+/// -- Helpers to create actor definitions -------------------------------------
+/// ============================================================================
+
+void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
+    const FCameraParameters &Parameters,
+    bool &Success,
+    FActorDefinition &Definition)
+{
+  Definition.Id = Parameters.Id.ToLower();
+  Definition.Class = Parameters.Class;
+  Definition.Tags = JoinStrings(TEXT(","), TEXT("sensor"), Parameters.Id).ToLower();
+  // Post-processing.
+  FActorVariation PostProcessing;
+  PostProcessing.Id = TEXT("post_processing");
+  PostProcessing.Type = EActorAttributeType::String;
+  for (uint8 i = 0u; i < PostProcessEffect::ToUInt(EPostProcessEffect::SIZE); ++i)
+  {
+    PostProcessing.RecommendedValues.Add(PostProcessEffect::ToString(i));
+  }
+  PostProcessing.bRestrictToRecommended = true;
+  // FOV.
+  FActorVariation FOV;
+  FOV.Id = TEXT("fov");
+  FOV.Type = EActorAttributeType::Float;
+  FOV.RecommendedValues = { TEXT("90.0") };
+  FOV.bRestrictToRecommended = false;
+  // Resolution.
+  FActorVariation ResX;
+  ResX.Id = TEXT("image_size_x");
+  ResX.Type = EActorAttributeType::Int;
+  ResX.RecommendedValues = { TEXT("800") };
+  ResX.bRestrictToRecommended = false;
+  FActorVariation ResY;
+  ResY.Id = TEXT("image_size_y");
+  ResY.Type = EActorAttributeType::Int;
+  ResY.RecommendedValues = { TEXT("600") };
+  ResY.bRestrictToRecommended = false;
+
+  Definition.Variations = {PostProcessing, ResX, ResY, FOV};
+  Success = CheckActorDefinition(Definition);
 }
 
 void UActorBlueprintFunctionLibrary::MakeVehicleDefinition(
@@ -226,6 +274,10 @@ void UActorBlueprintFunctionLibrary::MakeVehicleDefinitions(
 {
   FillActorDefinitionArray(ParameterArray, Definitions, &MakeVehicleDefinition);
 }
+
+/// ============================================================================
+/// -- Helpers to retrieve attribute values ------------------------------------
+/// ============================================================================
 
 bool UActorBlueprintFunctionLibrary::ActorAttributeToBool(
     const FActorAttribute &ActorAttribute,
