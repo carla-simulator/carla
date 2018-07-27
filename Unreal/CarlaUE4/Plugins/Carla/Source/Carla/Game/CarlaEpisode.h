@@ -31,9 +31,9 @@ public:
     return MapName;
   }
 
-  void RegisterActorSpawner(IActorSpawner &ActorSpawner)
+  void RegisterActorFactory(ACarlaActorFactory &ActorFactory)
   {
-    ActorDispatcher.Bind(ActorSpawner);
+    ActorDispatcher.Bind(ActorFactory);
   }
 
   /// Return the list of actor definitions that are available to be spawned this

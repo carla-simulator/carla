@@ -25,7 +25,7 @@ namespace carla {
       return std::chrono::milliseconds(timeout);
     }
 
-    constexpr time_duration() : _milliseconds(0u) {}
+    constexpr time_duration() noexcept : _milliseconds(0u) {}
 
     template <typename Rep, typename Period>
     time_duration(std::chrono::duration<Rep, Period> duration)

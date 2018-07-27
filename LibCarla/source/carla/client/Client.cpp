@@ -8,6 +8,8 @@
 
 #include "carla/client/Actor.h"
 #include "carla/client/Control.h"
+#include "carla/client/Sensor.h"
+#include "carla/client/Vehicle.h"
 #include "carla/client/World.h"
 
 namespace carla {
@@ -22,9 +24,15 @@ namespace client {
 
   SharedPtr<Actor> Client::SpawnActor(
       const ActorBlueprint &blueprint,
-      const Transform &transform) {
-    auto actor = Call<carla::rpc::Actor>("spawn_actor", blueprint.MakeActorDescription(), transform);
-    return SharedPtr<Actor>(new Actor{actor, GetWorld()});
+      const Transform &transform,
+      Actor *parent) {
+    auto actor = parent != nullptr ?
+        Call<carla::rpc::Actor>("spawn_actor_with_parent", transform, blueprint.MakeActorDescription(), parent->Serialize()) :
+        Call<carla::rpc::Actor>("spawn_actor", transform, blueprint.MakeActorDescription());
+    if (actor.IsASensor()) {
+      return SharedPtr<Actor>(new Sensor{actor, GetWorld()});
+    }
+    return SharedPtr<Actor>(new Vehicle{actor, GetWorld()});
   }
 
   void Client::ApplyControlToActor(

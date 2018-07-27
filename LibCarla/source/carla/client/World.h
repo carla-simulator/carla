@@ -21,34 +21,34 @@ namespace client {
       private NonCopyable {
   public:
 
-    World(World &&) = default;
-    World &operator=(World &&) = default;
-
     SharedPtr<BlueprintLibrary> GetBlueprintLibrary() const {
       return _parent->GetBlueprintLibrary();
     }
 
     SharedPtr<Actor> TrySpawnActor(
         const ActorBlueprint &blueprint,
-        const Transform &transform);
+        const Transform &transform,
+        Actor *parent = nullptr);
 
     SharedPtr<Actor> SpawnActor(
         const ActorBlueprint &blueprint,
-        const Transform &transform) {
-      return _parent->SpawnActor(blueprint, transform);
+        const Transform &transform,
+        Actor *parent = nullptr) {
+      return _parent->SpawnActor(blueprint, transform, parent);
     }
 
-    template <typename ControlType>
-    void ApplyControlToActor(const Actor &actor, const ControlType &control) {
-      _parent->ApplyControlToActor(actor, control);
+    Client &GetClient() const {
+      DEBUG_ASSERT(_parent != nullptr);
+      return *_parent;
     }
 
   private:
 
     friend class Client;
 
-    explicit World(SharedPtr<Client> parent) : _parent(std::move(parent)) {
-      DEBUG_ASSERT(parent != nullptr);
+    explicit World(SharedPtr<Client> parent)
+      : _parent(std::move(parent)) {
+      DEBUG_ASSERT(_parent != nullptr);
     }
 
     SharedPtr<Client> _parent;

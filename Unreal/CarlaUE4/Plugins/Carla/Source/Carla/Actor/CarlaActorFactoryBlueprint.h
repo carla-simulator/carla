@@ -6,30 +6,30 @@
 
 #pragma once
 
-#include "Carla/Actor/ActorSpawner.h"
 #include "Carla/Actor/ActorSpawnResult.h"
+#include "Carla/Actor/CarlaActorFactory.h"
 
-#include "ActorSpawnerBlueprintBase.generated.h"
+#include "GameFramework/Actor.h"
 
-/// Base class for Blueprints implementing IActorSpawner interface.
+#include "CarlaActorFactoryBlueprint.generated.h"
+
+/// Base class for Blueprints implementing ACarlaActorFactory interface.
 ///
 /// Blueprints deriving from this class are expected to override
-/// GenerateDefinitions and SpawnActor functions.
-UCLASS(BlueprintType, Blueprintable)
-class CARLA_API AActorSpawnerBlueprintBase
-  : public AActor,
-    public IActorSpawner
+/// GetDefinitions and SpawnActor functions.
+UCLASS(Abstract, BlueprintType, Blueprintable)
+class CARLA_API ACarlaActorFactoryBlueprint : public ACarlaActorFactory
 {
   GENERATED_BODY()
 
 public:
 
-  virtual TArray<FActorDefinition> MakeDefinitions() final
+  TArray<FActorDefinition> GetDefinitions() final
   {
     return GenerateDefinitions();
   }
 
-  virtual FActorSpawnResult SpawnActor(
+  FActorSpawnResult SpawnActor(
       const FTransform &SpawnAtTransform,
       const FActorDescription &ActorDescription) final
   {

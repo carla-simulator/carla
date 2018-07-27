@@ -8,7 +8,7 @@
 #include "Carla/Actor/ActorDispatcher.h"
 
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
-#include "Carla/Actor/ActorSpawner.h"
+#include "Carla/Actor/CarlaActorFactory.h"
 
 void FActorDispatcher::Bind(FActorDefinition Definition, SpawnFunctionType Functor)
 {
@@ -17,6 +17,7 @@ void FActorDispatcher::Bind(FActorDefinition Definition, SpawnFunctionType Funct
     Definition.UId = static_cast<uint32>(SpawnFunctions.Num()) + 1u;
     Definitions.Emplace(Definition);
     SpawnFunctions.Emplace(Functor);
+    Classes.Emplace(Definition.Class);
   }
   else
   {
@@ -24,12 +25,12 @@ void FActorDispatcher::Bind(FActorDefinition Definition, SpawnFunctionType Funct
   }
 }
 
-void FActorDispatcher::Bind(IActorSpawner &ActorSpawner)
+void FActorDispatcher::Bind(ACarlaActorFactory &ActorFactory)
 {
-  for (const auto &Definition : ActorSpawner.MakeDefinitions())
+  for (const auto &Definition : ActorFactory.GetDefinitions())
   {
     Bind(Definition, [&](const FTransform &Transform, const FActorDescription &Description) {
-      return ActorSpawner.SpawnActor(Transform, Description);
+      return ActorFactory.SpawnActor(Transform, Description);
     });
   }
 }
@@ -40,11 +41,30 @@ TPair<EActorSpawnResultStatus, FActorView> FActorDispatcher::SpawnActor(
 {
   if ((Description.UId == 0u) || (Description.UId > static_cast<uint32>(SpawnFunctions.Num())))
   {
-    UE_LOG(LogCarla, Error, TEXT("Invalid ActorDescription \"%s\" (UId=%d)"), *Description.Id, Description.UId);
+    UE_LOG(LogCarla, Error, TEXT("Invalid ActorDescription '%s' (UId=%d)"), *Description.Id, Description.UId);
     return MakeTuple(EActorSpawnResultStatus::InvalidDescription, FActorView());
   }
+
+  UE_LOG(LogCarla, Log, TEXT("Spawning actor '%s'"), *Description.Id);
+
+  Description.Class = Classes[Description.UId - 1];
   auto Result = SpawnFunctions[Description.UId - 1](Transform, Description);
+
+  if ((Result.Status == EActorSpawnResultStatus::Success) && (Result.Actor == nullptr))
+  {
+    UE_LOG(LogCarla, Warning, TEXT("ActorSpawnResult: Trying to spawn '%s'"), *Description.Id);
+    UE_LOG(LogCarla, Warning, TEXT("ActorSpawnResult: Reported success but did not return an actor"));
+    Result.Status = EActorSpawnResultStatus::UnknownError;
+  }
+
   auto View = Result.IsValid() ? Registry.Register(*Result.Actor, std::move(Description)) : FActorView();
+
+  if (!View.IsValid())
+  {
+    UE_LOG(LogCarla, Warning, TEXT("Failed to spawn actor '%s'"), *Description.Id);
+    check(Result.Status != EActorSpawnResultStatus::Success);
+  }
+
   return MakeTuple(Result.Status, View);
 }
 

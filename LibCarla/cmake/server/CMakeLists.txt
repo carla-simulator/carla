@@ -23,6 +23,15 @@ install(FILES ${libcarla_carla_rpc_headers} DESTINATION include/carla/rpc)
 file(GLOB libcarla_carla_streaming_headers "${libcarla_source_path}/carla/streaming/*.h")
 install(FILES ${libcarla_carla_streaming_headers} DESTINATION include/carla/streaming)
 
+file(GLOB libcarla_carla_streaming_detail_headers "${libcarla_source_path}/carla/streaming/detail/*.h")
+install(FILES ${libcarla_carla_streaming_detail_headers} DESTINATION include/carla/streaming/detail)
+
+file(GLOB libcarla_carla_streaming_detail_tcp_headers "${libcarla_source_path}/carla/streaming/detail/tcp/*.h")
+install(FILES ${libcarla_carla_streaming_detail_tcp_headers} DESTINATION include/carla/streaming/detail/tcp)
+
+file(GLOB libcarla_carla_streaming_low_level_headers "${libcarla_source_path}/carla/streaming/low_level/*.h")
+install(FILES ${libcarla_carla_streaming_low_level_headers} DESTINATION include/carla/streaming/low_level)
+
 install(DIRECTORY "${BOOST_INCLUDE_PATH}/boost" DESTINATION include)
 
 if(WIN32)

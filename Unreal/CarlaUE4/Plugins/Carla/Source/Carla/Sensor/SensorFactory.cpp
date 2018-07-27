@@ -4,57 +4,69 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#pragma once
-
 #include "Carla.h"
-#include "SensorFactory.h"
+#include "Carla/Sensor/SensorFactory.h"
 
-#include "Sensor/Lidar.h"
-#include "Sensor/SceneCaptureCamera.h"
-#include "Settings/CameraDescription.h"
-#include "Settings/LidarDescription.h"
+#include "Carla/Sensor/SceneCaptureCamera.h"
 
-template <typename T, typename D>
-static T *SpawnSensor(const D &Description, UWorld &World)
+template <typename T>
+static FActorDefinition MakeSensorDefinition(const FString &Id)
+{
+  FActorDefinition Definition;
+  Definition.Id = Id;
+  Definition.Class = T::StaticClass();
+  Definition.Tags = TEXT("sensor,") + Id;
+  return Definition;
+}
+
+TArray<FActorDefinition> ASensorFactory::GetDefinitions()
+{
+  // Cameras.
+  auto Cameras = MakeSensorDefinition<ASceneCaptureCamera>("camera");
+  {
+    FActorVariation PostProcessing;
+    PostProcessing.Id = TEXT("PostProcessing");
+    PostProcessing.Type = EActorAttributeType::String;
+    PostProcessing.RecommendedValues = {
+        TEXT("None"),
+        TEXT("SceneFinal"),
+        TEXT("Depth"),
+        TEXT("SemanticSegmentation")
+    };
+    PostProcessing.bRestrictToRecommended = true;
+    FActorVariation FOV;
+    FOV.Id = TEXT("FOV");
+    FOV.Type = EActorAttributeType::Float;
+    FOV.RecommendedValues = { TEXT("90.0") };
+    FOV.bRestrictToRecommended = false;
+    FActorVariation ResX;
+    ResX.Id = TEXT("ImageSizeX");
+    ResX.Type = EActorAttributeType::Int;
+    ResX.RecommendedValues = { TEXT("800") };
+    ResX.bRestrictToRecommended = false;
+    FActorVariation ResY;
+    ResY.Id = TEXT("ImageSizeY");
+    ResY.Type = EActorAttributeType::Int;
+    ResY.RecommendedValues = { TEXT("600") };
+    ResY.bRestrictToRecommended = false;
+    Cameras.Variations = {PostProcessing, ResX, ResY, FOV};
+  }
+  return {Cameras};
+}
+
+FActorSpawnResult ASensorFactory::SpawnActor(
+    const FTransform &Transform,
+    const FActorDescription &Description)
 {
   FActorSpawnParameters Params;
-  Params.Name = FName(*Description.Name);
-  return World.SpawnActor<T>(Description.Position, Description.Rotation, Params);
-}
-
-ASensor *FSensorFactory::Make(
-    const USensorDescription &Description,
-    UWorld &World)
-{
-  FSensorFactory Visitor(World);
-  Description.AcceptVisitor(Visitor);
-  check(Visitor.Sensor != nullptr);
-  return Visitor.Sensor;
-}
-
-FSensorFactory::FSensorFactory(UWorld &World) : World(World) {}
-
-void FSensorFactory::Visit(const UCameraDescription &Description)
-{
-  auto Camera = SpawnSensor<ASceneCaptureCamera>(Description, World);
-  Camera->Set(Description);
-  UE_LOG(
-      LogCarla,
-      Log,
-      TEXT("Created Capture Camera %d with postprocess \"%s\""),
-      Camera->GetId(),
-      *PostProcessEffect::ToString(Camera->GetPostProcessEffect()));
-  Sensor = Camera;
-}
-
-void FSensorFactory::Visit(const ULidarDescription &Description)
-{
-  auto Lidar = SpawnSensor<ALidar>(Description, World);
-  Lidar->Set(Description);
-  UE_LOG(
-      LogCarla,
-      Log,
-      TEXT("Created Lidar %d"),
-      Lidar->GetId());
-  Sensor = Lidar;
+  static int32 COUNTER = 0u;
+  Params.Name = FName(*(Description.Id + FString::FromInt(++COUNTER)));
+  auto *World = GetWorld();
+  if (World == nullptr)
+  {
+    return {};
+  }
+  auto *Sensor = World->SpawnActor<ASensor>(Description.Class, Transform, Params);
+  /// @todo Set description: Actor->Set(Description);
+  return FActorSpawnResult{Sensor};
 }

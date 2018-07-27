@@ -7,4 +7,6 @@
 #pragma pop_macro("check")
 #pragma pop_macro("TEXT")
 
+#pragma clang diagnostic pop
+
 #undef LIBCARLA_INCLUDED_FROM_UE4

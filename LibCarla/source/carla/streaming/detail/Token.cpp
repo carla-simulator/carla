@@ -6,6 +6,7 @@
 
 #include "carla/streaming/detail/Token.h"
 
+#include <cstring>
 #include <exception>
 
 namespace carla {
@@ -29,6 +30,16 @@ namespace detail {
       return boost::asio::ip::address_v4(_token.address.v4);
     }
     return boost::asio::ip::address_v6(_token.address.v6);
+  }
+
+  token_type::token_type(const Token &rhs) {
+    std::memcpy(&_token, &rhs.data[0u], sizeof(_token));
+  }
+
+  token_type::operator Token() const {
+    Token token;
+    std::memcpy(&token.data[0u], &_token, token.data.size());
+    return token;
   }
 
 } // namespace detail

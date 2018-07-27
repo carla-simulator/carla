@@ -7,6 +7,8 @@
 #include "Carla.h"
 #include "TheNewCarlaServer.h"
 
+#include "Carla/Sensor/Sensor.h"
+
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Version.h>
 #include <carla/rpc/Actor.h>
@@ -14,6 +16,8 @@
 #include <carla/rpc/ActorDescription.h>
 #include <carla/rpc/Server.h>
 #include <carla/rpc/Transform.h>
+#include <carla/rpc/VehicleControl.h>
+#include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include <vector>
@@ -28,6 +32,42 @@ static std::vector<T> MakeVectorFromTArray(const TArray<Other> &Array)
   return {Array.GetData(), Array.GetData() + Array.Num()};
 }
 
+static void AttachActors(AActor *Child, AActor *Parent)
+{
+  Child->AttachToActor(Parent, FAttachmentTransformRules::KeepRelativeTransform);
+  Child->SetOwner(Parent);
+}
+
+// =============================================================================
+// -- FStreamingSensorDataSink -------------------------------------------------
+// =============================================================================
+
+class FStreamingSensorDataSink : public ISensorDataSink {
+public:
+
+  FStreamingSensorDataSink(carla::streaming::Stream InStream)
+    : TheStream(InStream) {}
+
+  ~FStreamingSensorDataSink()
+  {
+    UE_LOG(LogCarlaServer, Log, TEXT("Destroying sensor data sink"));
+  }
+
+  void Write(const FSensorDataView &SensorData) final {
+    auto MakeBuffer = [](FReadOnlyBufferView View) {
+      return boost::asio::buffer(View.GetData(), View.GetSize());
+    };
+    std::array<boost::asio::const_buffer, 2u> SequencedBuffer;
+    SequencedBuffer[0u] = MakeBuffer(SensorData.GetHeader());
+    SequencedBuffer[1u] = MakeBuffer(SensorData.GetData());
+    TheStream.Write(SequencedBuffer);
+  }
+
+private:
+
+  carla::streaming::Stream TheStream;
+};
+
 // =============================================================================
 // -- FTheNewCarlaServer::FPimpl -----------------------------------------------
 // =============================================================================
@@ -36,11 +76,15 @@ class FTheNewCarlaServer::FPimpl
 {
 public:
 
-  FPimpl(uint16_t port) : Server(port) {
+  FPimpl(uint16_t port)
+    : Server(port),
+      StreamingServer(port + 1u) {
     BindActions();
   }
 
   carla::rpc::Server Server;
+
+  carla::streaming::Server StreamingServer;
 
   UCarlaEpisode *Episode = nullptr;
 
@@ -63,6 +107,46 @@ private:
     {
       RespondErrorStr("episode not ready");
     }
+  }
+
+  auto SpawnActor(const FTransform &Transform, FActorDescription Description)
+  {
+    auto Result = Episode->SpawnActorWithInfo(Transform, std::move(Description));
+    if (Result.Key != EActorSpawnResultStatus::Success)
+    {
+      RespondError(FActorSpawnResult::StatusToString(Result.Key));
+    }
+    check(Result.Value.IsValid());
+    return Result.Value;
+  }
+
+  void AttachActors(FActorView Child, FActorView Parent)
+  {
+    if (!Child.IsValid())
+    {
+      RespondErrorStr("unable to attach actor: child actor not found");
+    }
+    if (!Parent.IsValid())
+    {
+      RespondErrorStr("unable to attach actor: parent actor not found");
+    }
+    ::AttachActors(Child.GetActor(), Parent.GetActor());
+  }
+
+  carla::rpc::Actor SerializeActor(FActorView ActorView)
+  {
+    if (ActorView.IsValid())
+    {
+      auto *Sensor = Cast<ASensor>(ActorView.GetActor());
+      if (Sensor != nullptr)
+      {
+        UE_LOG(LogCarlaServer, Log, TEXT("Making a new sensor stream for actor '%s'"), *ActorView.GetActorDescription()->Id);
+        auto Stream = StreamingServer.MakeStream();
+        Sensor->SetSensorDataSink(MakeShared<FStreamingSensorDataSink>(Stream));
+        return {ActorView, Stream.token()};
+      }
+    }
+    return ActorView;
   }
 };
 
@@ -87,12 +171,37 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       const cr::Transform &Transform,
       cr::ActorDescription Description) -> cr::Actor {
     RequireEpisode();
-    auto Result = Episode->SpawnActorWithInfo(Transform, std::move(Description));
-    if (Result.Key != EActorSpawnResultStatus::Success)
-    {
-      RespondError(FActorSpawnResult::StatusToString(Result.Key));
+    return SerializeActor(SpawnActor(Transform, Description));
+  });
+
+  Server.BindSync("spawn_actor_with_parent", [this](
+      const cr::Transform &Transform,
+      cr::ActorDescription Description,
+      cr::Actor Parent) -> cr::Actor {
+    RequireEpisode();
+    auto ActorView = SpawnActor(Transform, Description);
+    auto ParentActorView = Episode->GetActorRegistry().Find(Parent.id);
+    AttachActors(ActorView, ParentActorView);
+    return SerializeActor(ActorView);
+  });
+
+  Server.BindSync("attach_actors", [this](cr::Actor Child, cr::Actor Parent) {
+    RequireEpisode();
+    auto &Registry = Episode->GetActorRegistry();
+    AttachActors(Registry.Find(Child.id), Registry.Find(Parent.id));
+  });
+
+  Server.BindSync("apply_control_to_actor", [this](cr::Actor Actor, cr::VehicleControl Control) {
+    RequireEpisode();
+    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    if (!ActorView.IsValid()) {
+      RespondErrorStr("unable to apply control: actor not found");
     }
-    return Result.Value;
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    if (Vehicle == nullptr) {
+      RespondErrorStr("unable to apply control: actor is not a vehicle");
+    }
+    Vehicle->ApplyVehicleControl(Control);
   });
 }
 
@@ -123,7 +232,11 @@ void FTheNewCarlaServer::NotifyEndEpisode()
 
 void FTheNewCarlaServer::AsyncRun(uint32 NumberOfWorkerThreads)
 {
-  Pimpl->Server.AsyncRun(NumberOfWorkerThreads);
+  /// @todo Define better the number of threads each server gets.
+  auto RPCThreads = NumberOfWorkerThreads / 2u;
+  auto StreamingThreads = NumberOfWorkerThreads - RPCThreads;
+  Pimpl->Server.AsyncRun(std::max(2u, RPCThreads));
+  Pimpl->StreamingServer.AsyncRun(std::max(2u, StreamingThreads));
 }
 
 void FTheNewCarlaServer::RunSome(uint32 Milliseconds)
