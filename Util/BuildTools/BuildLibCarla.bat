@@ -68,12 +68,28 @@ echo.
 rem Set the visual studio solution directory
 rem
 set ROOT_PATH=%CD%
+set "FILE_N=    -[%~n0]:"
 set LIBCARLA_VSPROJECT_PATH=%ROOT_PATH%\Build\libcarla-visualstudio
-set INSTALL_PATH=%ROOT_PATH%\Unreal\CarlaUE4\Plugins\Carla\CarlaDependencies
+
+set LIBCARLA_SERVER_INSTALL_PATH=%ROOT_PATH%\Unreal\CarlaUE4\Plugins\Carla\CarlaDependencies
+set LIBCARLA_CLIENT_INSTALL_PATH=%ROOT_PATH%\Build\libcarla-client-install
 
 echo Visual Studio solution: %LIBCARLA_VSPROJECT_PATH%
-echo Instalation path:       %INSTALL_PATH%
+echo LibCarla server instalation path:       %LIBCARLA_SERVER_INSTALL_PATH%
+echo LibCarla client instalation path:       %LIBCARLA_CLIENT_INSTALL_PATH%
 echo.
+
+if %REMOVE_INTERMEDIATE% == true (
+    echo Cleaning project solution
+    rmdir /S /Q %LIBCARLA_VSPROJECT_PATH%
+
+    echo Cleaning client instalation
+    rmdir /S /Q %LIBCARLA_CLIENT_INSTALL_PATH%
+
+    echo Cleaning server instalation
+    rmdir /S /Q %LIBCARLA_SERVER_INSTALL_PATH%
+    echo.
+)
 
 if not exist %LIBCARLA_VSPROJECT_PATH% mkdir %LIBCARLA_VSPROJECT_PATH%
 pushd %LIBCARLA_VSPROJECT_PATH%
@@ -81,14 +97,15 @@ pushd %LIBCARLA_VSPROJECT_PATH%
 rem Build libcarla server
 rem
 if %BUILD_SERVER% == true (
-    cmake -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Server -DCMAKE_INSTALL_PREFIX=%INSTALL_PATH% %ROOT_PATH%
+    cmake -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Server -DCMAKE_INSTALL_PREFIX=%LIBCARLA_SERVER_INSTALL_PATH% %ROOT_PATH%
     cmake --build . --config Release --target install
 )
 
 rem Build libcarla client
 rem
 if %BUILD_CLIENT% == true (
-    echo Building client is not implemented
+    cmake -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Client -DCMAKE_INSTALL_PREFIX=%LIBCARLA_CLIENT_INSTALL_PATH% %ROOT_PATH%
+    cmake --build . --config Release --target install
 )
 
 goto :eof
