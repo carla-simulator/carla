@@ -7,7 +7,6 @@ install(FILES ${LibCXX_Libraries} DESTINATION lib)
 
 # Install rpclib.
 install(DIRECTORY "${RPCLIB_INCLUDE_PATH}/rpc" DESTINATION include)
-
 file(GLOB libcarla_carla_rpclib "${RPCLIB_LIB_PATH}/*.*")
 install(FILES ${libcarla_carla_rpclib} DESTINATION lib)
 
