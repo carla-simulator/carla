@@ -7,6 +7,9 @@
 #include "Carla.h"
 #include "Carla/Game/TheNewCarlaGameModeBase.h"
 
+#include "Game/Tagger.h"
+#include "Game/TaggerDelegate.h"
+
 ATheNewCarlaGameModeBase::ATheNewCarlaGameModeBase(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer)
 {
@@ -15,6 +18,8 @@ ATheNewCarlaGameModeBase::ATheNewCarlaGameModeBase(const FObjectInitializer& Obj
   bAllowTickBeforeBeginPlay = false;
 
   Episode = CreateDefaultSubobject<UCarlaEpisode>(TEXT("Episode"));
+
+  TaggerDelegate = CreateDefaultSubobject<UTaggerDelegate>(TEXT("TaggerDelegate"));
 }
 
 void ATheNewCarlaGameModeBase::InitGame(
@@ -32,12 +37,25 @@ void ATheNewCarlaGameModeBase::InitGame(
       GameInstance != nullptr,
       TEXT("GameInstance is not a UCarlaGameInstance, did you forget to set it in the project settings?"));
 
+  if (TaggerDelegate != nullptr) {
+    check(GetWorld() != nullptr);
+    TaggerDelegate->RegisterSpawnHandler(GetWorld());
+  } else {
+    UE_LOG(LogCarla, Error, TEXT("Missing TaggerDelegate!"));
+  }
+
   SpawnActorFactories();
 }
 
 void ATheNewCarlaGameModeBase::BeginPlay()
 {
   Super::BeginPlay();
+
+  if (true) { /// @todo If semantic segmentation enabled.
+    check(GetWorld() != nullptr);
+    ATagger::TagActorsInLevel(*GetWorld(), true);
+    TaggerDelegate->SetSemanticSegmentationEnabled();
+  }
 
   GameInstance->NotifyBeginEpisode(*Episode);
 }
