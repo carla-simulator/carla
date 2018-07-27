@@ -10,6 +10,7 @@
 #include "Carla/Util/ScopedStack.h"
 
 #include <algorithm>
+#include <limits>
 #include <stack>
 
 /// Checks validity of FActorDefinition.
@@ -224,4 +225,136 @@ void UActorBlueprintFunctionLibrary::MakeVehicleDefinitions(
     TArray<FActorDefinition> &Definitions)
 {
   FillActorDefinitionArray(ParameterArray, Definitions, &MakeVehicleDefinition);
+}
+
+bool UActorBlueprintFunctionLibrary::ActorAttributeToBool(
+    const FActorAttribute &ActorAttribute,
+    bool Default)
+{
+  if (ActorAttribute.Type != EActorAttributeType::Bool)
+  {
+    UE_LOG(LogCarla, Error, TEXT("ActorAttribute '%s' is not a bool"), *ActorAttribute.Id);
+    return Default;
+  }
+  return ActorAttribute.Value.ToBool();
+}
+
+int32 UActorBlueprintFunctionLibrary::ActorAttributeToInt(
+    const FActorAttribute &ActorAttribute,
+    int32 Default)
+{
+  if (ActorAttribute.Type != EActorAttributeType::Int)
+  {
+    UE_LOG(LogCarla, Error, TEXT("ActorAttribute '%s' is not an int"), *ActorAttribute.Id);
+    return Default;
+  }
+  return FCString::Atoi(*ActorAttribute.Value);
+}
+
+float UActorBlueprintFunctionLibrary::ActorAttributeToFloat(
+    const FActorAttribute &ActorAttribute,
+    float Default)
+{
+  if (ActorAttribute.Type != EActorAttributeType::Float)
+  {
+    UE_LOG(LogCarla, Error, TEXT("ActorAttribute '%s' is not a float"), *ActorAttribute.Id);
+    return Default;
+  }
+  return FCString::Atof(*ActorAttribute.Value);
+}
+
+FString UActorBlueprintFunctionLibrary::ActorAttributeToString(
+    const FActorAttribute &ActorAttribute,
+    const FString &Default)
+{
+  if (ActorAttribute.Type != EActorAttributeType::String)
+  {
+    UE_LOG(LogCarla, Error, TEXT("ActorAttribute '%s' is not a string"), *ActorAttribute.Id);
+    return Default;
+  }
+  return ActorAttribute.Value;
+}
+
+FColor UActorBlueprintFunctionLibrary::ActorAttributeToColor(
+    const FActorAttribute &ActorAttribute,
+    const FColor &Default)
+{
+  if (ActorAttribute.Type != EActorAttributeType::RGBColor)
+  {
+    UE_LOG(LogCarla, Error, TEXT("ActorAttribute '%s' is not a color"), *ActorAttribute.Id);
+    return Default;
+  }
+  TArray<FString> Channels;
+  ActorAttribute.Value.ParseIntoArray(Channels, TEXT(","), false);
+  if (Channels.Num() != 3)
+  {
+    UE_LOG(LogCarla, Error, TEXT("ActorAttribute '%s': invalid color '%s'"), *ActorAttribute.Id, *ActorAttribute.Value);
+    return Default;
+  }
+  TArray<uint8> Colors;
+  for (auto &Str : Channels)
+  {
+    auto Val = FCString::Atoi(*Str);
+    if ((Val < 0) || (Val > std::numeric_limits<uint8>::max()))
+    {
+      UE_LOG(LogCarla, Error, TEXT("ActorAttribute '%s': invalid color '%s'"), *ActorAttribute.Id, *ActorAttribute.Value);
+      return Default;
+    }
+    Colors.Add(Val);
+  }
+  FColor Color;
+  Color.R = Colors[0u];
+  Color.G = Colors[1u];
+  Color.B = Colors[2u];
+  return Color;
+}
+
+bool UActorBlueprintFunctionLibrary::RetrieveActorAttributeToBool(
+    const FString &Id,
+    const TMap<FString, FActorAttribute> &Attributes,
+    bool Default)
+{
+  return Attributes.Contains(Id) ?
+      ActorAttributeToBool(Attributes[Id], Default) :
+      Default;
+}
+
+int32 UActorBlueprintFunctionLibrary::RetrieveActorAttributeToInt(
+    const FString &Id,
+    const TMap<FString, FActorAttribute> &Attributes,
+    int32 Default)
+{
+  return Attributes.Contains(Id) ?
+      ActorAttributeToInt(Attributes[Id], Default) :
+      Default;
+}
+
+float UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat(
+    const FString &Id,
+    const TMap<FString, FActorAttribute> &Attributes,
+    float Default)
+{
+  return Attributes.Contains(Id) ?
+      ActorAttributeToFloat(Attributes[Id], Default) :
+      Default;
+}
+
+FString UActorBlueprintFunctionLibrary::RetrieveActorAttributeToString(
+    const FString &Id,
+    const TMap<FString, FActorAttribute> &Attributes,
+    const FString &Default)
+{
+  return Attributes.Contains(Id) ?
+      ActorAttributeToString(Attributes[Id], Default) :
+      Default;
+}
+
+FColor UActorBlueprintFunctionLibrary::RetrieveActorAttributeToColor(
+    const FString &Id,
+    const TMap<FString, FActorAttribute> &Attributes,
+    const FColor &Default)
+{
+  return Attributes.Contains(Id) ?
+      ActorAttributeToColor(Attributes[Id], Default) :
+      Default;
 }

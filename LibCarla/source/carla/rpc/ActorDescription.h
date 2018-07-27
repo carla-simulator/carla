@@ -33,7 +33,7 @@ namespace rpc {
         id(FromFString(Description.Id)) {
       attributes.reserve(Description.Variations.Num());
       for (const auto &Item : Description.Variations) {
-        attributes.push_back(Item);
+        attributes.emplace_back(Item.Value);
       }
     }
 
@@ -43,7 +43,7 @@ namespace rpc {
       Description.Id = ToFString(id);
       Description.Variations.Reserve(attributes.size());
       for (const auto &item : attributes) {
-        Description.Variations.Add(item);
+        Description.Variations.Emplace(ToFString(item.id), item);
       }
       return Description;
     }

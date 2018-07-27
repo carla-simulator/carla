@@ -29,6 +29,9 @@ struct FActorDescription
 
   /// User selected variations of the actor. Note that at this point are
   /// represented by non-modifiable attributes.
+  ///
+  ///   Key: Id of the attribute.
+  ///   Value: The attribute.
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  TArray<FActorAttribute> Variations;
+  TMap<FString, FActorAttribute> Variations;
 };
