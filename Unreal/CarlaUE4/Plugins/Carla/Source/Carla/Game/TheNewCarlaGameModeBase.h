@@ -14,6 +14,8 @@
 
 #include "TheNewCarlaGameModeBase.generated.h"
 
+class UTaggerDelegate;
+
 /// Base class for the CARLA Game Mode.
 UCLASS(HideCategories=(ActorTick))
 class CARLA_API ATheNewCarlaGameModeBase : public AGameModeBase
@@ -40,6 +42,9 @@ private:
 
   UPROPERTY()
   UCarlaGameInstance *GameInstance = nullptr;
+
+  UPROPERTY()
+  UTaggerDelegate *TaggerDelegate = nullptr;
 
   UPROPERTY()
   UCarlaEpisode *Episode = nullptr;
