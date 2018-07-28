@@ -2,6 +2,11 @@
 
 ![Welcome to CARLA](img/welcome.png)
 
+!!! important
+    This tutorial refers to the latest development versions of CARLA, 0.9.0 or
+    later. For the documentation of the stable version please switch to the
+    [stable branch](https://carla.readthedocs.io/en/stable/getting_started/).
+
 Welcome to CARLA! This tutorial provides the basic steps for getting started
 using CARLA.
 
@@ -14,17 +19,50 @@ the package in a folder of your choice.
 The release package contains the following
 
   * The CARLA simulator.
-  * The "carla" Python module.
-  * Some Python client examples.
+  * The "carla" Python API module.
+  * An "example.py" script.
 
-For now we will focus on the simulator only. The simulator can be run in two
-different modes
+The simulator can be started by running `CarlaUE4.sh` on Linux, or
+`CarlaUE4.exe` on Windows. Unlike previous versions, now the simulator
+automatically starts in "server mode". That is, you can already start connecting
+your Python scripts to control the actors in the simulation.
 
-  * **Server mode:** The simulator is controlled by a client application that
-    collects data and sends driving instructions. In this mode the simulator
-    hangs until a client starts a connection.
-  * **Standalone mode:** The simulator starts in sort of _video-game mode_ in
-    which you can control the vehicle with the keyboard.
+CARLA requires two available TCP ports on your computer, by default 2000 and
+2001. Make sure you don't have a firewall or another application blocking those
+ports. Alternatively, you can manually change the port CARLA uses by launching
+the simulator with the command-line argument `-carla-port=N`, the second port
+will be automatically set to `N+1`.
 
-In the next item in this tutorial we will run the **standalone mode** to take a
-first look into CARLA.
+!!! tip
+    You can launch the simulator in windowed mode by using the argument
+    `-windowed`, and control the window size with `-ResX=N` and `-ResY=N`.
+
+#### Running the example script
+
+Run the example script with
+
+```sh
+python example.py
+```
+
+If everything went well you should start seeing cars appearing in the scene.
+
+_We strongly recommend taking a look at the example code to understand how it
+works, and modify it at will. We'll have soon tutorials for writing your own
+scripts, but for now the examples is all we have._
+
+#### Changing the map
+
+By default, the simulator starts up in our _"Town01"_ map. The second map can be
+started by passing the path to the map as first argument when launching the
+simulator
+
+```sh
+# On Linux
+$ ./CarlaUE4.sh /Game/Carla/Maps/Town02
+```
+
+```cmd
+rem On Windows
+> CarlaUE4.exe /Game/Carla/Maps/Town02
+```

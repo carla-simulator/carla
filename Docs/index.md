@@ -1,12 +1,17 @@
 <h1>CARLA Documentation</h1>
 
+!!! important
+    This documentation refers to the latest development versions of CARLA, 0.9.0
+    or later. For the documentation of the stable version please switch to the
+    [stable branch](https://carla.readthedocs.io/en/stable/).
+
 <h3>Quick start</h3>
 
   * [Getting started](getting_started.md)
-  * [Running the simulator](running_simulator_standalone.md)
-  * [Connecting a Python client](connecting_the_client.md)
+  <!-- * [Running the simulator](running_simulator_standalone.md) -->
+  <!-- * [Connecting a Python client](connecting_the_client.md) -->
   * [Configuring the simulation](configuring_the_simulation.md)
-  * [Measurements](measurements.md)
+  <!-- * [Measurements](measurements.md) -->
   * [Cameras and sensors](cameras_and_sensors.md)
   * [F.A.Q.](faq.md)
 
@@ -25,7 +30,8 @@
 <h3>Advanced topics</h3>
 
   * [CARLA settings](carla_settings.md)
-  * [Simulator keyboard input](simulator_keyboard_input.md)
+  * [Python API](python_api.md)
+  <!-- * [Simulator keyboard input](simulator_keyboard_input.md) -->
   * [Running without display and selecting GPUs](carla_headless.md)
   * [How to link Epic's Automotive Materials](epic_automotive_materials.md)
 
@@ -39,6 +45,6 @@
 
   * [Map customization](map_customization.md)
   * [How to add assets](how_to_add_assets.md)
-  * [CARLA design](carla_design.md)
-  * [CarlaServer documentation](carla_server.md)
+  <!-- * [CARLA design](carla_design.md) -->
+  <!-- * [CarlaServer documentation](carla_server.md) -->
   * [Build system](build_system.md)

@@ -113,23 +113,22 @@ void export_blueprint() {
     .add_property("id", +[](const cc::ActorBlueprint &self) -> std::string {
       return self.GetId();
     })
+    .add_property("tags", &cc::ActorBlueprint::GetTags)
     .def("contains_tag", &cc::ActorBlueprint::ContainsTag)
     .def("match_tags", &cc::ActorBlueprint::MatchTags)
-    .def("get_tags", &cc::ActorBlueprint::GetTags)
     .def("contains_attribute", &cc::ActorBlueprint::ContainsAttribute)
     .def("get_attribute", +[](const cc::ActorBlueprint &self, const std::string &id) -> cc::ActorAttribute {
       return self.GetAttribute(id);
     })
     .def("set_attribute", &cc::ActorBlueprint::SetAttribute)
-    .def("match_tags", &cc::ActorBlueprint::MatchTags)
     .def(self_ns::str(self_ns::self))
   ;
 
   class_<cc::BlueprintLibrary, boost::noncopyable, boost::shared_ptr<cc::BlueprintLibrary>>("BlueprintLibrary", no_init)
-    .def("filter", &cc::BlueprintLibrary::Filter)
     .def("find", +[](const cc::BlueprintLibrary &self, const std::string &key) -> cc::ActorBlueprint {
       return self.at(key);
     })
+    .def("filter", &cc::BlueprintLibrary::Filter)
     .def("__getitem__", +[](const cc::BlueprintLibrary &self, size_t pos) -> cc::ActorBlueprint {
       return self.at(pos);
     })
