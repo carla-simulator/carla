@@ -80,13 +80,17 @@ namespace client {
 
     void DestroyActor(Actor &actor);
 
+    bool SetActorLocation(Actor &actor, const Location &location);
+
+    bool SetActorTransform(Actor &actor, const Transform &transform);
+
     void ApplyControlToActor(
-        const Actor &actor,
+        Actor &actor,
         const VehicleControl &control);
 
     void SetActorAutopilot(
-        const Actor &actor,
-        bool enabled);
+        Actor &actor,
+        bool enabled = true);
 
   private:
 

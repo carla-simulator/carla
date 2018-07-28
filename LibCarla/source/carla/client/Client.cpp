@@ -47,14 +47,22 @@ namespace client {
     _client.call("destroy_actor", actor.Serialize());
   }
 
+  bool Client::SetActorLocation(Actor &actor, const Location &location) {
+    return Call<bool>("set_actor_location", actor.Serialize(), location);
+  }
+
+  bool Client::SetActorTransform(Actor &actor, const Transform &transform) {
+    return Call<bool>("set_actor_transform", actor.Serialize(), transform);
+  }
+
   void Client::ApplyControlToActor(
-      const Actor &actor,
+      Actor &actor,
       const VehicleControl &control) {
     _client.call("apply_control_to_actor", actor.Serialize(), control);
   }
 
   void Client::SetActorAutopilot(
-      const Actor &actor,
+      Actor &actor,
       const bool enabled) {
     _client.call("set_actor_autopilot", actor.Serialize(), enabled);
   }
