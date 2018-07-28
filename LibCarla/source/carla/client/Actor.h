@@ -43,6 +43,8 @@ namespace client {
       return _actor;
     }
 
+    void Destroy();
+
   protected:
 
     Actor(carla::rpc::Actor actor, SharedPtr<World> world)
