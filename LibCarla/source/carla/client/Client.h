@@ -80,6 +80,10 @@ namespace client {
 
     void DestroyActor(Actor &actor);
 
+    Location GetActorLocation(Actor &actor);
+
+    Transform GetActorTransform(Actor &actor);
+
     bool SetActorLocation(Actor &actor, const Location &location);
 
     bool SetActorTransform(Actor &actor, const Transform &transform);

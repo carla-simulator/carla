@@ -10,6 +10,14 @@
 namespace carla {
 namespace client {
 
+  Location Actor::GetLocation() {
+    return GetWorld()->GetClient().GetActorLocation(*this);
+  }
+
+  Transform Actor::GetTransform() {
+    return GetWorld()->GetClient().GetActorTransform(*this);
+  }
+
   bool Actor::SetLocation(const Location &location) {
     return GetWorld()->GetClient().SetActorLocation(*this, location);
   }

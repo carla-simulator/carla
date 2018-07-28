@@ -47,6 +47,14 @@ namespace client {
     _client.call("destroy_actor", actor.Serialize());
   }
 
+  Location Client::GetActorLocation(Actor &actor) {
+    return Call<Location>("get_actor_location", actor.Serialize());
+  }
+
+  Transform Client::GetActorTransform(Actor &actor) {
+    return Call<Transform>("get_actor_transform", actor.Serialize());
+  }
+
   bool Client::SetActorLocation(Actor &actor, const Location &location) {
     return Call<bool>("set_actor_location", actor.Serialize(), location);
   }

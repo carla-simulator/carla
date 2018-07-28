@@ -79,6 +79,8 @@ void export_actor() {
       return self.GetTypeId();
     })
     .def("get_world", &cc::Actor::GetWorld)
+    .def("get_location", &cc::Actor::GetLocation)
+    .def("get_transform", &cc::Actor::GetTransform)
     .def("set_location", &cc::Actor::SetLocation, (arg("location")))
     .def("set_transform", &cc::Actor::SetTransform, (arg("transform")))
     .def("destroy", &cc::Actor::Destroy)
