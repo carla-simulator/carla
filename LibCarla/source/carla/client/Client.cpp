@@ -12,8 +12,16 @@
 #include "carla/client/Vehicle.h"
 #include "carla/client/World.h"
 
+#include <thread>
+
 namespace carla {
 namespace client {
+
+  Client::Client(const std::string &host, uint16_t port, size_t worker_threads)
+    : _client(host, port) {
+    _streaming_client.AsyncRun(
+        worker_threads > 0u ? worker_threads : std::thread::hardware_concurrency());
+  }
 
   SharedPtr<World> Client::GetWorld() {
     if (_active_world == nullptr) {
