@@ -16,7 +16,6 @@
 #include "carla/streaming/Client.h"
 
 #include <string>
-#include <thread>
 
 namespace carla {
 namespace client {
@@ -30,13 +29,16 @@ namespace client {
       private NonCopyable {
   public:
 
-    template <typename ... Args>
-    explicit Client(Args && ... args)
-      : _client(std::forward<Args>(args) ...) {
-      /// @todo Make these arguments.
-      SetTimeout(10'000);
-      _streaming_client.AsyncRun(std::thread::hardware_concurrency());
-    }
+    /// Construct a carla client.
+    ///
+    /// @param host IP address of the host machine running the simulator.
+    /// @param port TCP port to connect with the simulator.
+    /// @param worker_threads number of asynchronous threads to use, or 0 to use
+    ///        all available hardware concurrency.
+    explicit Client(
+        const std::string &host,
+        uint16_t port,
+        size_t worker_threads = 0u);
 
     void SetTimeout(int64_t milliseconds) {
       _client.set_timeout(milliseconds);
