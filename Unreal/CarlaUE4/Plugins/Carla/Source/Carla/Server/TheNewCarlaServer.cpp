@@ -200,6 +200,24 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     AttachActors(Registry.Find(Child.id), Registry.Find(Parent.id));
   });
 
+  Server.BindSync("get_actor_location", [this](cr::Actor Actor) -> cr::Location {
+    RequireEpisode();
+    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
+      RespondErrorStr("unable to get actor location: actor not found");
+    }
+    return {ActorView.GetActor()->GetActorLocation()};
+  });
+
+  Server.BindSync("get_actor_transform", [this](cr::Actor Actor) -> cr::Transform {
+    RequireEpisode();
+    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
+      RespondErrorStr("unable to get actor transform: actor not found");
+    }
+    return {ActorView.GetActor()->GetActorTransform()};
+  });
+
   Server.BindSync("set_actor_location", [this](
       cr::Actor Actor,
       cr::Location Location) -> bool {
