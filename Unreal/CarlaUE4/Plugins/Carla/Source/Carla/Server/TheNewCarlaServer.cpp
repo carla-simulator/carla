@@ -200,6 +200,40 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     AttachActors(Registry.Find(Child.id), Registry.Find(Parent.id));
   });
 
+  Server.BindSync("set_actor_location", [this](
+      cr::Actor Actor,
+      cr::Location Location) -> bool {
+    RequireEpisode();
+    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
+      RespondErrorStr("unable to set actor location: actor not found");
+    }
+    // This function only works with teleport physics, to reset speeds we need
+    // another method.
+    return ActorView.GetActor()->SetActorLocation(
+        Location,
+        false,
+        nullptr,
+        ETeleportType::TeleportPhysics);
+  });
+
+  Server.BindSync("set_actor_transform", [this](
+      cr::Actor Actor,
+      cr::Transform Transform) -> bool {
+    RequireEpisode();
+    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
+      RespondErrorStr("unable to set actor transform: actor not found");
+    }
+    // This function only works with teleport physics, to reset speeds we need
+    // another method.
+    return ActorView.GetActor()->SetActorTransform(
+        Transform,
+        false,
+        nullptr,
+        ETeleportType::TeleportPhysics);
+  });
+
   Server.BindSync("apply_control_to_actor", [this](cr::Actor Actor, cr::VehicleControl Control) {
     RequireEpisode();
     auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
