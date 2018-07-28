@@ -96,9 +96,10 @@ if $DO_COPY_FILES ; then
   copy_if_changed "./LICENSE" "${DESTINATION}/LICENSE"
   copy_if_changed "./CHANGELOG.md" "${DESTINATION}/CHANGELOG"
   copy_if_changed "./Docs/release_readme.md" "${DESTINATION}/README"
-  copy_if_changed "./Docs/Example.CarlaSettings.ini" "${DESTINATION}/Example.CarlaSettings.ini"
+  # copy_if_changed "./Docs/Example.CarlaSettings.ini" "${DESTINATION}/Example.CarlaSettings.ini"
   copy_if_changed "./Util/Docker/Release.Dockerfile" "${DESTINATION}/Dockerfile"
-  copy_if_changed "./PythonAPI/dist/*.egg" "${DESTINATION}/PythonAPI"
+  copy_if_changed "./PythonAPI/dist/*.egg" "${DESTINATION}/PythonAPI/"
+  copy_if_changed "./PythonAPI/example.py" "${DESTINATION}/example.py"
 
   popd >/dev/null
 
