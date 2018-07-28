@@ -91,7 +91,8 @@ void AWheeledVehicleAIController::Possess(APawn *aPawn)
 {
   Super::Possess(aPawn);
 
-  if (IsPossessingAVehicle()) {
+  if (IsPossessingAVehicle())
+  {
     UE_LOG(LogCarla, Error, TEXT("Controller already possessing a vehicle!"));
     return;
   }
@@ -108,13 +109,26 @@ void AWheeledVehicleAIController::Possess(APawn *aPawn)
   }
 }
 
+void AWheeledVehicleAIController::UnPossess()
+{
+  Super::UnPossess();
+
+  Vehicle = nullptr;
+}
+
 void AWheeledVehicleAIController::Tick(const float DeltaTime)
 {
   Super::Tick(DeltaTime);
 
+  if (!IsPossessingAVehicle())
+  {
+    return;
+  }
+
   TickAutopilotController();
 
-  if (bAutopilotEnabled) {
+  if (bAutopilotEnabled)
+  {
     Vehicle->ApplyVehicleControl(AutopilotControl);
   }
 }
