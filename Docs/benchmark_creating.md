@@ -13,7 +13,7 @@ In this tutorial we show:
 ![Benchmark_structure](img/benchmark_diagram_small.png)
 
 The driving benchmark is associated with other two modules.
-The *agent* module, that is a controller which performs in 
+The *agent* module, that is a controller which performs in
 another module: the *experiment suite*.
 Both modules are abstract classes that must be redefined by
 the user.
@@ -54,11 +54,11 @@ Let's start by deriving a simple forward agent:
 
     from carla.agent.agent import Agent
     from carla.client import VehicleControl
-    
+
     class ForwardAgent(Agent):
 
 
-To have its performance evaluated, the ForwardAgent derived class _must_ 
+To have its performance evaluated, the ForwardAgent derived class _must_
 redefine the *run_step* function as it is done in the following excerpt:
 
     def run_step(self, measurements, sensor_data, directions, target):
@@ -71,18 +71,18 @@ redefine the *run_step* function as it is done in the following excerpt:
 
 
 This function receives the following parameters:
- 
- * [Measurements](measurements.md): the entire state of the world received
+
+ * [Measurements](index.md)<!-- @todo -->: the entire state of the world received
  by the client from the CARLA Simulator. These measurements contains agent position, orientation,
  dynamic objects information, etc.
- * [Sensor Data](cameras_and_sensors.md): The measured data from defined sensors, 
+ * [Sensor Data](cameras_and_sensors.md): The measured data from defined sensors,
  such as Lidars or RGB cameras.
  * Directions: Information from the high level planner. Currently the planner sends
  a high level command from the follwoing set: STRAIGHT, RIGHT, LEFT, NOTHING.
  * Target Position: The position and orientation of the target.
- 
- With all this information, the *run_step* function is expected 
- to return a [vehicle control message](measurements.md), containing:
+
+ With all this information, the *run_step* function is expected
+ to return a [vehicle control message](index.md)<!-- @todo -->, containing:
  steering value, throttle value, brake value, etc.
 
 
@@ -108,12 +108,12 @@ as in the following code excerpt:
     from carla.agent_benchmark.experiment import Experiment
     from carla.sensor import Camera
     from carla.settings import CarlaSettings
-    
+
     from .experiment_suite import ExperimentSuite
-    
-    
+
+
     class BasicExperimentSuite(ExperimentSuite):
-    
+
 ##### Define test and train weather conditions
 
 The user must select the weathers to be used. One should select the set
@@ -126,7 +126,7 @@ class property as in the following example:
     @property
     def test_weathers(self):
         return [1]
-        
+
 
 ##### Building Experiments
 
@@ -134,15 +134,15 @@ The [experiments are composed by a *task* that is defined by a set of *poses*](b
 Let's start by selecting poses for one of the cities, let's take Town01, for instance.
 First of all, we need to see all the possible positions, for that, with
 a CARLA simulator running in a terminal, run:
-    
+
     python view_start_positions.py
- 
+
  ![town01_positions](img/town01_positions.png)
-  
-  
+
+
 Now let's choose, for instance, 140 as start position and 134
 as the end position. This two positions can be visualized by running:
-    
+
     python view_start_positions.py --pos 140,134 --no-labels
 
  ![town01_positions](img/town01_140_134.png)
@@ -165,7 +165,7 @@ the number of dynamic objects for each of these tasks and repeat
 the arbitrary position task to have it also defined with dynamic
 objects. In the following code excerpt we show the final
 defined positions and the number of dynamic objects for each task:
-    
+
     # Define the start/end position below as tasks
     poses_task0 = [[7, 3]]
     poses_task1 = [[138, 17]]
@@ -212,7 +212,7 @@ vector as we show in the following code excerpt:
 
 
 
-            
+
 The full code could be found at [basic_experiment_suite.py](https://github.com/carla-simulator/carla/blob/master/PythonClient/carla/driving_benchmark/experiment_suites/basic_experiment_suite.py)
 
 
@@ -228,7 +228,7 @@ For that you should run the CARLA simulator as:
 The example presented in this tutorial can be executed  for Town01 as:
 
     ./driving_benchmark_example.py -c Town01
- 
+
 You should expect these results: [town01_basic_forward_results](benchmark_basic_results_town01)
 
 For Town02:
