@@ -185,6 +185,15 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     return SerializeActor(ActorView);
   });
 
+  Server.BindSync("destroy_actor", [this](cr::Actor Actor) {
+    RequireEpisode();
+    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
+      RespondErrorStr("unable to destroy actor: actor not found");
+    }
+    Episode->DestroyActor(ActorView.GetActor());
+  });
+
   Server.BindSync("attach_actors", [this](cr::Actor Child, cr::Actor Parent) {
     RequireEpisode();
     auto &Registry = Episode->GetActorRegistry();

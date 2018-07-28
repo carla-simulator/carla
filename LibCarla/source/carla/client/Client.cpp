@@ -35,6 +35,10 @@ namespace client {
     return SharedPtr<Actor>(new Vehicle{actor, GetWorld()});
   }
 
+  void Client::DestroyActor(Actor &actor) {
+    _client.call("destroy_actor", actor.Serialize());
+  }
+
   void Client::ApplyControlToActor(
       const Actor &actor,
       const VehicleControl &control) {

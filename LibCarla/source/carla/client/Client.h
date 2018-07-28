@@ -76,6 +76,8 @@ namespace client {
         const Transform &transform,
         Actor *parent = nullptr);
 
+    void DestroyActor(Actor &actor);
+
     void ApplyControlToActor(
         const Actor &actor,
         const VehicleControl &control);
