@@ -42,7 +42,7 @@ namespace client {
   }
 
   std::ostream &operator<<(std::ostream &out, const ActorBlueprint &bp) {
-    out << "ActorBlueprint(id=" << bp.GetId() << ')';
+    out << "ActorBlueprint(id=" << bp.GetId() << "tags=" << bp.GetTags() << ')';
     return out;
   }
 
