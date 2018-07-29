@@ -40,7 +40,7 @@ def save_to_disk(image):
 
 
 def main(add_a_camera, enable_autopilot):
-    client = carla.Client('localhost', 2020)
+    client = carla.Client('localhost', 2000)
     client.set_timeout(2000)
 
     print('client version: %s' % client.get_client_version())
