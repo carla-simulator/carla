@@ -100,6 +100,8 @@ if $DO_COPY_FILES ; then
   copy_if_changed "./Util/Docker/Release.Dockerfile" "${DESTINATION}/Dockerfile"
   copy_if_changed "./PythonAPI/dist/*.egg" "${DESTINATION}/PythonAPI/"
   copy_if_changed "./PythonAPI/example.py" "${DESTINATION}/example.py"
+  copy_if_changed "./PythonAPI/manual_control.py" "${DESTINATION}/manual_control.py"
+  copy_if_changed "./PythonAPI/vehicle_gallery.py" "${DESTINATION}/vehicle_gallery.py"
 
   popd >/dev/null
 
