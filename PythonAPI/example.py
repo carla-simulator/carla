@@ -84,7 +84,7 @@ def main(add_a_camera, enable_autopilot):
             if add_a_camera:
                 add_a_camera = False
 
-                camera_bp = blueprint_library.find('camera')
+                camera_bp = blueprint_library.find('sensor.camera')
                 # camera_bp.set_attribute('post_processing', 'Depth')
                 camera_transform = carla.Transform(carla.Location(x=0.4, y=0.0, z=1.4))
                 camera = world.spawn_actor(camera_bp, camera_transform, attach_to=vehicle)

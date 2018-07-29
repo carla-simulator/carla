@@ -191,7 +191,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     bool &Success,
     FActorDefinition &Definition)
 {
-  Definition.Id = Parameters.Id.ToLower();
+  Definition.Id = JoinStrings(TEXT("."), TEXT("sensor"), Parameters.Id).ToLower();
   Definition.Class = Parameters.Class;
   Definition.Tags = JoinStrings(TEXT(","), TEXT("sensor"), Parameters.Id).ToLower();
   // Post-processing.
