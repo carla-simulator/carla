@@ -7,6 +7,7 @@
 #include "carla/client/Client.h"
 
 #include "carla/client/Actor.h"
+#include "carla/client/BlueprintLibrary.h"
 #include "carla/client/Control.h"
 #include "carla/client/Sensor.h"
 #include "carla/client/Vehicle.h"
@@ -28,6 +29,16 @@ namespace client {
       _active_world.reset(new World(shared_from_this()));
     }
     return _active_world;
+  }
+
+  SharedPtr<BlueprintLibrary> Client::GetBlueprintLibrary() {
+    return MakeShared<BlueprintLibrary>(
+        Call<std::vector<carla::rpc::ActorDefinition>>("get_actor_definitions"));
+  }
+
+  SharedPtr<Actor> Client::GetSpectator() {
+    auto spectator = Call<carla::rpc::Actor>("get_spectator");
+    return SharedPtr<Actor>(new Actor{spectator, GetWorld()});
   }
 
   SharedPtr<Actor> Client::SpawnActor(

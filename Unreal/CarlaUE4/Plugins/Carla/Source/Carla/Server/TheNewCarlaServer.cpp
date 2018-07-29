@@ -9,6 +9,8 @@
 
 #include "Carla/Sensor/Sensor.h"
 
+#include "GameFramework/SpectatorPawn.h"
+
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Version.h>
 #include <carla/rpc/Actor.h>
@@ -165,6 +167,15 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   Server.BindSync("get_actor_definitions", [this]() {
     RequireEpisode();
     return MakeVectorFromTArray<cr::ActorDefinition>(Episode->GetActorDefinitions());
+  });
+
+  Server.BindSync("get_spectator", [this]() -> cr::Actor {
+    RequireEpisode();
+    auto ActorView = Episode->GetActorRegistry().Find(Episode->GetSpectatorPawn());
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
+      RespondErrorStr("unable to find spectator");
+    }
+    return ActorView;
   });
 
   Server.BindSync("spawn_actor", [this](
