@@ -44,6 +44,10 @@ void export_transform() {
     .def_readwrite("x", &cc::Location::x)
     .def_readwrite("y", &cc::Location::y)
     .def_readwrite("z", &cc::Location::z)
+    .def(self += self)
+    .def(self + self)
+    .def(self -= self)
+    .def(self - self)
     .def(self_ns::str(self_ns::self))
   ;
 
