@@ -8,7 +8,6 @@
 
 #include "carla/NonCopyable.h"
 #include "carla/Version.h"
-#include "carla/client/BlueprintLibrary.h"
 #include "carla/client/Control.h"
 #include "carla/client/Memory.h"
 #include "carla/client/Transform.h"
@@ -22,6 +21,7 @@ namespace client {
 
   class Actor;
   class ActorBlueprint;
+  class BlueprintLibrary;
   class World;
 
   class Client
@@ -68,10 +68,9 @@ namespace client {
 
     SharedPtr<World> GetWorld();
 
-    SharedPtr<BlueprintLibrary> GetBlueprintLibrary() {
-      return MakeShared<BlueprintLibrary>(
-          Call<std::vector<carla::rpc::ActorDefinition>>("get_actor_definitions"));
-    }
+    SharedPtr<BlueprintLibrary> GetBlueprintLibrary();
+
+    SharedPtr<Actor> GetSpectator();
 
     SharedPtr<Actor> SpawnActor(
         const ActorBlueprint &blueprint,

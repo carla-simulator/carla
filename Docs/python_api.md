@@ -17,6 +17,7 @@
 ## `carla.World`
 
 - `get_blueprint_library()`
+- `get_spectator()`
 - `spawn_actor(blueprint, transform, attach_to=None)`
 - `try_spawn_actor(blueprint, transform, attach_to=None)`
 

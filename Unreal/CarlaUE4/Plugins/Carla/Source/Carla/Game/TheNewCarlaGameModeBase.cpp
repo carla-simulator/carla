@@ -29,8 +29,10 @@ void ATheNewCarlaGameModeBase::InitGame(
 {
   Super::InitGame(MapName, Options, ErrorMessage);
 
-  check(Episode != nullptr);
-  Episode->Initialize(MapName);
+  checkf(
+      Episode != nullptr,
+      TEXT("Missing episode, can't continue without an episode!"));
+  Episode->SetMapName(MapName);
 
   GameInstance = Cast<UCarlaGameInstance>(GetGameInstance());
   checkf(
@@ -57,6 +59,7 @@ void ATheNewCarlaGameModeBase::BeginPlay()
     TaggerDelegate->SetSemanticSegmentationEnabled();
   }
 
+  Episode->InitializeAtBeginPlay();
   GameInstance->NotifyBeginEpisode(*Episode);
 }
 
