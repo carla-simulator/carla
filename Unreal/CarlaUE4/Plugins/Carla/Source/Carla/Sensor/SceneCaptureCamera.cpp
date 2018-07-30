@@ -52,6 +52,8 @@ struct FImageHeaderData
   float FOV;
 };
 
+static void SetCameraDefaultOverrides(USceneCaptureComponent2D &CaptureComponent2D);
+
 static void RemoveShowFlags(FEngineShowFlags &ShowFlags);
 
 // =============================================================================
@@ -97,6 +99,7 @@ ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer &ObjectInitial
   CaptureComponent2D = CreateDefaultSubobject<USceneCaptureComponent2D>(
       TEXT("SceneCaptureComponent2D"));
   CaptureComponent2D->SetupAttachment(MeshComp);
+  SetCameraDefaultOverrides(*CaptureComponent2D);
 
   // Load post-processing materials.
   static ConstructorHelpers::FObjectFinder<UMaterial> DEPTH(
@@ -432,6 +435,19 @@ void ASceneCaptureCamera::UpdateDrawFrustum()
 // =============================================================================
 // -- Local static functions implementations -----------------------------------
 // =============================================================================
+
+static void SetCameraDefaultOverrides(USceneCaptureComponent2D &CaptureComponent2D)
+{
+  auto &PostProcessSettings = CaptureComponent2D.PostProcessSettings;
+  PostProcessSettings.bOverride_AutoExposureMethod = true;
+  PostProcessSettings.AutoExposureMethod = AEM_Histogram;
+  PostProcessSettings.bOverride_AutoExposureMinBrightness = true;
+  PostProcessSettings.AutoExposureMinBrightness = 0.27f;
+  PostProcessSettings.bOverride_AutoExposureMaxBrightness = true;
+  PostProcessSettings.AutoExposureMaxBrightness = 5.0f;
+  PostProcessSettings.bOverride_AutoExposureBias = true;
+  PostProcessSettings.AutoExposureBias = -3.5f;
+}
 
 // Remove the show flags that might interfere with post-processing effects like
 // depth and semantic segmentation.
