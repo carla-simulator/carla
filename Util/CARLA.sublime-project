@@ -1,0 +1,138 @@
+{
+	"folders":
+	[
+		{
+			"path": "..",
+			"file_exclude_patterns":
+			[
+				"*.VC.db",
+				"*.VC.opendb",
+				"*.gdb_history",
+				"*.kdev4",
+				"*.pri",
+				"*.pro",
+				"*.py[cod]",
+				"*.sln",
+				"*.stackdump",
+				"*.sublime-workspace",
+				"*.uasset",
+				"*.umap",
+				"*.workspace",
+				"*CodeCompletionFolders.txt",
+				"*CodeLitePreProcessor.txt",
+				".tags*",
+				"core"
+			],
+			"folder_exclude_patterns":
+			[
+				".clang",
+				".codelite",
+				".kdev4",
+				".vs",
+				".vscode",
+				"Binaries",
+				"DerivedDataCache",
+				"Dist",
+				"Doxygen",
+				"Intermediate",
+				"PythonAPI/build",
+				"PythonAPI/dependencies",
+				"PythonAPI/dist",
+				"Saved",
+				"Unreal/CarlaUE4/Content*",
+				"Unreal/CarlaUE4/Plugins/Carla/CarlaDependencies",
+				"__pycache__",
+				"_site"
+			],
+		}
+	],
+	"settings":
+	{
+		"ensure_newline_at_eof_on_save": true,
+		"tab_size": 2,
+		"translate_tabs_to_spaces": true,
+		"trim_trailing_white_space_on_save": true
+	},
+	"build_systems":
+	[
+		{
+			"name": "CARLA - make CarlaUE4Editor",
+			"working_dir": "${project_path}/..",
+			"file_regex": "(Unreal\\/CarlaUE4\\/[^:]*):([0-9]+):?([0-9]+)?:? (.*)$",
+			"syntax": "Packages/Makefile/Make Output.sublime-syntax",
+			"linux":
+			{
+				"shell_cmd": "CARLA_BUILD_NO_COLOR=true make CarlaUE4Editor"
+			}
+		},
+		{
+			"name": "CARLA - make LibCarla",
+			"working_dir": "${project_path}/..",
+			"file_regex": "^../../([^:]*):([0-9]+):?([0-9]+)?:? (.*)$",
+			"syntax": "Packages/Makefile/Make Output.sublime-syntax",
+			"linux":
+			{
+				"shell_cmd": "CARLA_BUILD_NO_COLOR=true make LibCarla"
+			}
+		},
+		{
+			"name": "CARLA - make PythonAPI",
+			"working_dir": "${project_path}/..",
+			"file_regex": "^../../([^:]*):([0-9]+):?([0-9]+)?:? (.*)$",
+			"syntax": "Packages/Makefile/Make Output.sublime-syntax",
+			"linux":
+			{
+				"shell_cmd": "CARLA_BUILD_NO_COLOR=true make PythonAPI"
+			}
+		},
+		{
+			"name": "CARLA - make check",
+			"working_dir": "${project_path}/..",
+			"file_regex": "^../../([^:]*):([0-9]+):?([0-9]+)?:? (.*)$",
+			"syntax": "Packages/Makefile/Make Output.sublime-syntax",
+			"linux":
+			{
+				"shell_cmd": "CARLA_BUILD_NO_COLOR=true make check"
+			}
+		},
+		{
+			"name": "CARLA - make check LibCarla",
+			"working_dir": "${project_path}/..",
+			"file_regex": "^../../([^:]*):([0-9]+):?([0-9]+)?:? (.*)$",
+			"syntax": "Packages/Makefile/Make Output.sublime-syntax",
+			"linux":
+			{
+				"shell_cmd": "CARLA_BUILD_NO_COLOR=true make check ARGS=\"--carlalib-debug\""
+			}
+		},
+		{
+			"name": "CARLA - make check LibCarla (launch GDB)",
+			"working_dir": "${project_path}/..",
+			"file_regex": "^../../([^:]*):([0-9]+):?([0-9]+)?:? (.*)$",
+			"syntax": "Packages/Makefile/Make Output.sublime-syntax",
+			"linux":
+			{
+				"shell_cmd": "gnome-terminal --maximize -e 'make check ARGS=\"--gdb --carlalib-debug\"'"
+			}
+		},
+		{
+			"name": "CARLA - make clean",
+			"working_dir": "${project_path}/..",
+			"syntax": "Packages/Makefile/Make Output.sublime-syntax",
+			"linux":
+			{
+				"shell_cmd": "CARLA_BUILD_NO_COLOR=true make clean"
+			}
+		},
+		{
+			"name": "CARLA - Prettify this file",
+			"working_dir": "${project_path}/..",
+			"file_regex": "^([^:]*):([0-9]+):?([0-9]+)?:? (.*)$",
+			"syntax": "Packages/Makefile/Make Output.sublime-syntax",
+			"linux":
+			{
+				"shell_cmd": "CARLA_BUILD_NO_COLOR=true make pretty ARGS=-f${file}"
+			}
+		}
+	]
+}

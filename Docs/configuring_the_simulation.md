@@ -40,6 +40,8 @@ run the simulation at a fixed time-step of 0.2 seconds we execute
 It is important to note that this mode can only be enabled when launching the
 simulator since this is actually a feature of Unreal Engine.
 
+<!-- Disabled for now...
+
 Synchronous vs Asynchronous mode
 --------------------------------
 
@@ -83,3 +85,4 @@ settings.set(SynchronousMode=True)
 [CARLA/Server]
 SynchronousMode=true
 ```
+ -->

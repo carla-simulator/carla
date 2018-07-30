@@ -4,57 +4,52 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#pragma once
-
 #include "Carla.h"
-#include "SensorFactory.h"
+#include "Carla/Sensor/SensorFactory.h"
 
-#include "Sensor/Lidar.h"
-#include "Sensor/SceneCaptureCamera.h"
-#include "Settings/CameraDescription.h"
-#include "Settings/LidarDescription.h"
+#include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+#include "Carla/Sensor/SceneCaptureCamera.h"
 
-template <typename T, typename D>
-static T *SpawnSensor(const D &Description, UWorld &World)
+TArray<FActorDefinition> ASensorFactory::GetDefinitions()
+{
+  FActorDefinition Cameras;
+  bool Success = false;
+  UActorBlueprintFunctionLibrary::MakeCameraDefinition(
+      {TEXT("camera"), ASceneCaptureCamera::StaticClass()},
+      Success,
+      Cameras);
+  check(Success);
+  return {Cameras};
+}
+
+FActorSpawnResult ASensorFactory::SpawnActor(
+    const FTransform &Transform,
+    const FActorDescription &Description)
 {
   FActorSpawnParameters Params;
-  Params.Name = FName(*Description.Name);
-  return World.SpawnActor<T>(Description.Position, Description.Rotation, Params);
-}
-
-ASensor *FSensorFactory::Make(
-    const USensorDescription &Description,
-    UWorld &World)
-{
-  FSensorFactory Visitor(World);
-  Description.AcceptVisitor(Visitor);
-  check(Visitor.Sensor != nullptr);
-  return Visitor.Sensor;
-}
-
-FSensorFactory::FSensorFactory(UWorld &World) : World(World) {}
-
-void FSensorFactory::Visit(const UCameraDescription &Description)
-{
-  auto Camera = SpawnSensor<ASceneCaptureCamera>(Description, World);
-  Camera->Set(Description);
-  UE_LOG(
-      LogCarla,
-      Log,
-      TEXT("Created Capture Camera %d with postprocess \"%s\""),
-      Camera->GetId(),
-      *PostProcessEffect::ToString(Camera->GetPostProcessEffect()));
-  Sensor = Camera;
-}
-
-void FSensorFactory::Visit(const ULidarDescription &Description)
-{
-  auto Lidar = SpawnSensor<ALidar>(Description, World);
-  Lidar->Set(Description);
-  UE_LOG(
-      LogCarla,
-      Log,
-      TEXT("Created Lidar %d"),
-      Lidar->GetId());
-  Sensor = Lidar;
+  auto *World = GetWorld();
+  if (World == nullptr)
+  {
+    return {};
+  }
+  auto *Sensor = World->SpawnActorDeferred<ASceneCaptureCamera>(
+      Description.Class,
+      Transform,
+      this,
+      nullptr,
+      ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+  if (Sensor != nullptr)
+  {
+    using ABFL = UActorBlueprintFunctionLibrary;
+    Sensor->SetImageSize(
+        ABFL::RetrieveActorAttributeToInt("image_size_x", Description.Variations, 800),
+        ABFL::RetrieveActorAttributeToInt("image_size_y", Description.Variations, 600));
+    Sensor->SetFOVAngle(
+        ABFL::RetrieveActorAttributeToFloat("fov", Description.Variations, 90.0f));
+    Sensor->SetPostProcessEffect(
+        PostProcessEffect::FromString(
+            ABFL::RetrieveActorAttributeToString("post_processing", Description.Variations, "SceneFinal")));
+  }
+  UGameplayStatics::FinishSpawningActor(Sensor, Transform);
+  return FActorSpawnResult{Sensor};
 }
