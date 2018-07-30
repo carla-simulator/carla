@@ -32,6 +32,20 @@ def get_libcarla_extensions():
             include_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7/include']
             library_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7']
             extra_link_args += ['/usr/lib/gcc/x86_64-linux-gnu/7/libstdc++.a']
+        else:
+            libraries += ["boost_python"]
+    elif os.name == "nt":
+        pwd = os.path.dirname(os.path.realpath(__file__))
+        pylib = "libboost_python%d%d-vc141-mt-s-x64-1_68.lib" % (sys.version_info.major, sys.version_info.minor)
+
+        extra_link_args = [
+                'shlwapi.lib',
+                os.path.join(pwd, 'dependencies/lib/rpc.lib'),
+                os.path.join(pwd, 'dependencies/lib', pylib)]
+
+        # https://docs.microsoft.com/es-es/cpp/porting/modifying-winver-and-win32-winnt
+        extra_compile_args = ['/DPYTHON3X', '/MT', '/DBOOST_PYTHON_STATIC_LIB','/DBOOST_ERROR_CODE_HEADER_ONLY', '/D_WIN32_WINNT=0x0501' ]
+        extra_link_args += []
     else:
         raise NotImplementedError
 
@@ -44,6 +58,7 @@ def get_libcarla_extensions():
     depends += [x for x in walk('dependencies')]
 
     def make_extension(name, sources):
+
         return Extension(
             name,
             sources=sources,

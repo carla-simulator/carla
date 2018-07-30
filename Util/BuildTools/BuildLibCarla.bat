@@ -10,7 +10,6 @@ rem -- Parse arguments ---------------------------------------------------------
 rem ============================================================================
 
 set DOC_STRING=Build LibCarla.
-
 set "USAGE_STRING=Usage: %FILE_N% [-h^|--help] [--rebuild] [--server] [--client] [--clean]"
 
 set REMOVE_INTERMEDIATE=false
@@ -67,7 +66,7 @@ rem
 set LIBCARLA_VSPROJECT_PATH=%INSTALLATION_DIR%libcarla-visualstudio
 
 set LIBCARLA_SERVER_INSTALL_PATH=%ROOT_PATH%Unreal\CarlaUE4\Plugins\Carla\CarlaDependencies
-set LIBCARLA_CLIENT_INSTALL_PATH=%INSTALLATION_DIR%libcarla-client-install
+set LIBCARLA_CLIENT_INSTALL_PATH=%ROOT_PATH%PythonAPI\dependencies
 
 if %REMOVE_INTERMEDIATE% == true (
     echo %FILE_N% cleaning build folder
@@ -76,31 +75,18 @@ if %REMOVE_INTERMEDIATE% == true (
 )
 
 if not exist "%LIBCARLA_VSPROJECT_PATH%" mkdir "%LIBCARLA_VSPROJECT_PATH%"
-pushd "%LIBCARLA_VSPROJECT_PATH%"
+cd "%LIBCARLA_VSPROJECT_PATH%"
 
 rem Build libcarla server
 rem
-if %BUILD_SERVER% == true (
-    if exist "%LIBCARLA_SERVER_INSTALL_PATH%" (
-        goto :eof
-    )
-
-    cmake -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Server -DCMAKE_CXX_FLAGS_RELEASE=/MD^ -DCMAKE_INSTALL_PREFIX="%LIBCARLA_SERVER_INSTALL_PATH%" "%ROOT_PATH%"
+if %BUILD_SERVER% == true if not exist "%LIBCARLA_SERVER_INSTALL_PATH%" (
+    cmake -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Server -DCMAKE_CXX_FLAGS_RELEASE=/MT -DCMAKE_INSTALL_PREFIX=%LIBCARLA_SERVER_INSTALL_PATH% %ROOT_PATH%
     cmake --build . --config Release --target install
 )
 
 rem Build libcarla client
 rem
-if %BUILD_CLIENT% == true (
-    if exist "%LIBCARLA_CLIENT_INSTALL_PATH%" (
-        goto :eof
-    )
-
-    cmake -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Client -DCMAKE_CXX_FLAGS_RELEASE=/MD^ -DCMAKE_INSTALL_PREFIX="%LIBCARLA_CLIENT_INSTALL_PATH%" "%ROOT_PATH%"
+if %BUILD_CLIENT% == true if not exist "%LIBCARLA_CLIENT_INSTALL_PATH%" (
+    cmake -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Client -DCMAKE_CXX_FLAGS_RELEASE=/MT -DCMAKE_INSTALL_PREFIX=%LIBCARLA_CLIENT_INSTALL_PATH% %ROOT_PATH%
     cmake --build . --config Release --target install
 )
-
-goto :eof
-
-rem TO DELTE
-echo DEBUG: LAST LINE
