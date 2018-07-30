@@ -1,4 +1,3 @@
-
 <h1>Running CARLA in a Docker </h1>
 
 
@@ -60,4 +59,5 @@ select the port that is going to be used:
 
 At the list of parameters do not forget to add "-world-port=<port_number>" so that CARLA runs on server mode
 listening to the "<port_number>"
+
 
