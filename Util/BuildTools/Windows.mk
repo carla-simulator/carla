@@ -42,7 +42,7 @@ CarlaUE4Editor: LibCarla
 
 .PHONY: PythonAPI
 PythonAPI: LibCarla
-	@echo "Not implemented!"
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.bat --py3
 
 .PHONY: LibCarla
 LibCarla: setup

@@ -6,6 +6,9 @@ rem Just put it in `Util/Build` and run it.
 
 setlocal
 
+set LOCAL_PATH=%~dp0
+set "FILE_N=    -[%~n0]:"
+
 :arg-parse
 if not "%1"=="" (
     if "%1"=="-j" (
@@ -28,9 +31,6 @@ if [%BUILD_DIR%] == [] set BUILD_DIR=.
 if [%B_TOOLSET%] == [] set B_TOOLSET=msvc-14.1
 if [%NUMBER_OF_ASYNC_JOBS%] == [] set NUMBER_OF_ASYNC_JOBS=1
 
-set LOCAL_PATH=%~dp0
-set FILE_N=---%~n0%~x0:
-
 set B_VERSION=boost-1.67.0
 set B_SRC=boost-src
 set B_SRC_DIR=%BUILD_DIR%%B_SRC%
@@ -46,9 +46,11 @@ if not exist "%B_SRC_DIR%" (
     echo %FILE_N% Cloning Boost - version "%B_VERSION%"...
     echo.
 
-    call git clone --depth=1 -b %B_VERSION% --recurse-submodules -j8 https://github.com/boostorg/boost.git %B_SRC_DIR%
+    rem call git clone --depth=1 -b %B_VERSION% --recurse-submodules -j8 https://github.com/boostorg/boost.git %B_SRC_DIR%
+    rem clone master as there is bug in 1.67 related to python boost (https://github.com/boostorg/python/issues/193)
+
+    call git clone --depth=1 --recurse-submodules -j8 https://github.com/boostorg/boost.git %B_SRC_DIR%
     if errorlevel 1 goto error_git
-    echo.
 ) else (
     echo %FILE_N% Not cloning boost because already exists a folder called "%B_SRC%".
 )
@@ -62,7 +64,7 @@ if not exist "b2.exe" (
 if errorlevel 1 goto error_bootstrap
 
 echo %FILE_N% Packing headers...
-b2 headers
+b2 headers link=static
 
 echo %FILE_N% Building...
 b2 -j8^
@@ -74,6 +76,7 @@ b2 -j8^
     toolset=%B_TOOLSET%^
     variant=release^
     link=static^
+    runtime-link=static^
     threading=multi^
     --prefix="%B_INSTALL_DIR%"^
     --libdir="%B_LIB_DIR%"^
