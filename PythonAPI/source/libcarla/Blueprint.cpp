@@ -8,8 +8,28 @@
 #include <carla/client/ActorBlueprint.h>
 
 #include <boost/python.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 #include <ostream>
+
+template <typename Iterable>
+static std::ostream &PrintList(std::ostream &out, const Iterable &list) {
+  auto it = list.begin();
+  out << '[' << *it;
+  for (++it; it != list.end(); ++it) {
+    out << ", " << *it;
+  }
+  out << ']';
+  return out;
+}
+
+namespace std {
+
+  std::ostream &operator<<(std::ostream &out, const std::vector<std::string> &vector_of_strings) {
+    return PrintList(out, vector_of_strings);
+  }
+
+} // namespace std
 
 namespace carla {
 namespace client {
@@ -22,18 +42,12 @@ namespace client {
   }
 
   std::ostream &operator<<(std::ostream &out, const ActorBlueprint &bp) {
-    out << "ActorBlueprint(id=" << bp.GetId() << ')';
+    out << "ActorBlueprint(id=" << bp.GetId() << "tags=" << bp.GetTags() << ')';
     return out;
   }
 
   std::ostream &operator<<(std::ostream &out, const BlueprintLibrary &blueprints) {
-    auto it = blueprints.begin();
-    out << '[' << *it;
-    for (++it; it != blueprints.end(); ++it) {
-      out << ", " << *it;
-    }
-    out << ']';
-    return out;
+    return PrintList(out, blueprints);
   }
 
 } // namespace client
@@ -60,9 +74,17 @@ void export_blueprint() {
     .def(self_ns::str(self_ns::self))
   ;
 
+  class_<std::vector<std::string>>("vector_of_strings")
+    .def(vector_indexing_suite<std::vector<std::string>>())
+    .def(self_ns::str(self_ns::self))
+  ;
+
   class_<cc::ActorAttribute>("ActorAttribute", no_init)
     .add_property("is_modifiable", &cc::ActorAttribute::IsModifiable)
     .add_property("type", &cc::ActorAttribute::GetType)
+    .add_property("recommended_values", +[](const cc::ActorAttribute &self) -> std::vector<std::string> {
+      return self.GetRecommendedValues();
+    })
     .def("as_bool", &cc::ActorAttribute::As<bool>)
     .def("as_int", &cc::ActorAttribute::As<int>)
     .def("as_float", &cc::ActorAttribute::As<float>)
@@ -91,23 +113,22 @@ void export_blueprint() {
     .add_property("id", +[](const cc::ActorBlueprint &self) -> std::string {
       return self.GetId();
     })
+    .add_property("tags", &cc::ActorBlueprint::GetTags)
     .def("contains_tag", &cc::ActorBlueprint::ContainsTag)
     .def("match_tags", &cc::ActorBlueprint::MatchTags)
-    .def("get_tags", &cc::ActorBlueprint::GetTags)
     .def("contains_attribute", &cc::ActorBlueprint::ContainsAttribute)
     .def("get_attribute", +[](const cc::ActorBlueprint &self, const std::string &id) -> cc::ActorAttribute {
       return self.GetAttribute(id);
     })
     .def("set_attribute", &cc::ActorBlueprint::SetAttribute)
-    .def("match_tags", &cc::ActorBlueprint::MatchTags)
     .def(self_ns::str(self_ns::self))
   ;
 
   class_<cc::BlueprintLibrary, boost::noncopyable, boost::shared_ptr<cc::BlueprintLibrary>>("BlueprintLibrary", no_init)
-    .def("filter", &cc::BlueprintLibrary::Filter)
     .def("find", +[](const cc::BlueprintLibrary &self, const std::string &key) -> cc::ActorBlueprint {
       return self.at(key);
     })
+    .def("filter", &cc::BlueprintLibrary::Filter)
     .def("__getitem__", +[](const cc::BlueprintLibrary &self, size_t pos) -> cc::ActorBlueprint {
       return self.at(pos);
     })

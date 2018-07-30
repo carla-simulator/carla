@@ -39,9 +39,19 @@ namespace client {
       return _world;
     }
 
+    Location GetLocation();
+
+    Transform GetTransform();
+
+    bool SetLocation(const Location &location);
+
+    bool SetTransform(const Transform &transform);
+
     const auto &Serialize() const {
       return _actor;
     }
+
+    void Destroy();
 
   protected:
 

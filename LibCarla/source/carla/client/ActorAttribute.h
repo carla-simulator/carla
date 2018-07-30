@@ -67,6 +67,10 @@ namespace client {
       return _attribute.type;
     }
 
+    const std::vector<std::string> &GetRecommendedValues() const {
+      return _attribute.recommended_values;
+    }
+
     /// Cast the value to the given type.
     ///
     /// @throw BadAttributeCast if the cast fails.

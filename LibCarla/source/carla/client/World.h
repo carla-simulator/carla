@@ -25,6 +25,10 @@ namespace client {
       return _parent->GetBlueprintLibrary();
     }
 
+    SharedPtr<Actor> GetSpectator() const {
+      return _parent->GetSpectator();
+    }
+
     SharedPtr<Actor> TrySpawnActor(
         const ActorBlueprint &blueprint,
         const Transform &transform,

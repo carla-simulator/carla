@@ -8,7 +8,6 @@
 
 #include "carla/NonCopyable.h"
 #include "carla/Version.h"
-#include "carla/client/BlueprintLibrary.h"
 #include "carla/client/Control.h"
 #include "carla/client/Memory.h"
 #include "carla/client/Transform.h"
@@ -16,13 +15,13 @@
 #include "carla/streaming/Client.h"
 
 #include <string>
-#include <thread>
 
 namespace carla {
 namespace client {
 
   class Actor;
   class ActorBlueprint;
+  class BlueprintLibrary;
   class World;
 
   class Client
@@ -30,13 +29,16 @@ namespace client {
       private NonCopyable {
   public:
 
-    template <typename ... Args>
-    explicit Client(Args && ... args)
-      : _client(std::forward<Args>(args) ...) {
-      /// @todo Make these arguments.
-      SetTimeout(10'000);
-      _streaming_client.AsyncRun(std::thread::hardware_concurrency());
-    }
+    /// Construct a carla client.
+    ///
+    /// @param host IP address of the host machine running the simulator.
+    /// @param port TCP port to connect with the simulator.
+    /// @param worker_threads number of asynchronous threads to use, or 0 to use
+    ///        all available hardware concurrency.
+    explicit Client(
+        const std::string &host,
+        uint16_t port,
+        size_t worker_threads = 0u);
 
     void SetTimeout(int64_t milliseconds) {
       _client.set_timeout(milliseconds);
@@ -66,19 +68,32 @@ namespace client {
 
     SharedPtr<World> GetWorld();
 
-    SharedPtr<BlueprintLibrary> GetBlueprintLibrary() {
-      return MakeShared<BlueprintLibrary>(
-          Call<std::vector<carla::rpc::ActorDefinition>>("get_actor_definitions"));
-    }
+    SharedPtr<BlueprintLibrary> GetBlueprintLibrary();
+
+    SharedPtr<Actor> GetSpectator();
 
     SharedPtr<Actor> SpawnActor(
         const ActorBlueprint &blueprint,
         const Transform &transform,
         Actor *parent = nullptr);
 
+    void DestroyActor(Actor &actor);
+
+    Location GetActorLocation(Actor &actor);
+
+    Transform GetActorTransform(Actor &actor);
+
+    bool SetActorLocation(Actor &actor, const Location &location);
+
+    bool SetActorTransform(Actor &actor, const Transform &transform);
+
     void ApplyControlToActor(
-        const Actor &actor,
+        Actor &actor,
         const VehicleControl &control);
+
+    void SetActorAutopilot(
+        Actor &actor,
+        bool enabled = true);
 
   private:
 

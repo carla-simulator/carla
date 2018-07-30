@@ -15,6 +15,7 @@ void export_world() {
 
   class_<cc::World, boost::noncopyable, boost::shared_ptr<cc::World>>("World", no_init)
     .def("get_blueprint_library", &cc::World::GetBlueprintLibrary)
+    .def("get_spectator", &cc::World::GetSpectator)
     .def("try_spawn_actor", &cc::World::TrySpawnActor,
         (arg("blueprint"), arg("transform"), arg("attach_to")=cc::SharedPtr<cc::Actor>()))
     .def("spawn_actor", &cc::World::SpawnActor,

@@ -17,6 +17,8 @@ Content*
 Config/CarlaSettings.ini
 Config/DefaultEditor.ini
 
+*.code-workspace
+.idea
+.vscode
 CMakeLists.txt
 Makefile
-.vscode

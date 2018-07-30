@@ -20,15 +20,23 @@ class CARLA_API UCarlaEpisode : public UObject
 
 public:
 
-  void Initialize(const FString &InMapName)
+  void SetMapName(const FString &InMapName)
   {
     MapName = InMapName;
   }
+
+  void InitializeAtBeginPlay();
 
   UFUNCTION(BlueprintCallable)
   const FString &GetMapName() const
   {
     return MapName;
+  }
+
+  UFUNCTION(BlueprintCallable)
+  APawn *GetSpectatorPawn() const
+  {
+    return Spectator;
   }
 
   void RegisterActorFactory(ACarlaActorFactory &ActorFactory)
@@ -89,4 +97,7 @@ private:
   FString MapName;
 
   FActorDispatcher ActorDispatcher;
+
+  UPROPERTY(VisibleAnywhere)
+  APawn *Spectator = nullptr;
 };
