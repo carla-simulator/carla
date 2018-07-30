@@ -1,14 +1,14 @@
-<h1>Running CARLA under Docker</h1>
+<h1>Running CARLA in a Docker </h1>
 
 
 
 This tutorial is designed for:
 
   * People that want to run CARLA without needing to install all dependencies.
-  * Recommended way of running CARLA on servers.
+  * Recommended solution to run multiple CARLA servers and perform GPU mapping
 
 This tutorial was tested in Ubuntu 16.04 and using NVIDIA 396.37 drivers.
-
+This method requires a version of NVIDIA drivers >=390.
 
 ## Docker Installation
 
@@ -36,7 +36,12 @@ section from the [nvidia-dockers github](https://github.com/NVIDIA/nvidia-docker
 
 Pull the CARLA image.
 
-    docker pull carlasim/carla:0.8.4
+    docker pull carlasim/carla:version
+
+For selecting a version, for instance, version 0.8.2 (stable), do:
+
+    docker pull carlasim/carla:0.8.2
+
 
 
 Running CARLA under docker:
@@ -55,8 +60,3 @@ At the list of parameters do not forget to add "-world-port=<port_number>" so th
 listening to the "<port_number>"
 
 
-
-Obs: you can also pull different versions of CARLA. To pull, for instance, version 0.8.2
-
-
-    docker pull carlasim/carla:0.8.2

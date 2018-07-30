@@ -33,7 +33,7 @@
   * [Python API](python_api.md)
   <!-- * [Simulator keyboard input](simulator_keyboard_input.md) -->
   * [Running without display and selecting GPUs](carla_headless.md)
-  * [Running CARLA under Docker](carla_docker.md)
+  * [Running CARLA in a Docker](carla_docker.md)
   * [How to link Epic's Automotive Materials](epic_automotive_materials.md)
 
 <h3>Contributing</h3>
