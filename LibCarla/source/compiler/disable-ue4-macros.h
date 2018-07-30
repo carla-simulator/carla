@@ -13,8 +13,10 @@
 #pragma push_macro("check")
 #undef check
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wmissing-braces"
+#if defined(__clang__)
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wmissing-braces"
+#endif
 
 #define LIBCARLA_INCLUDED_FROM_UE4
 
