@@ -11,7 +11,7 @@ Welcome to CARLA! This tutorial provides the basic steps for getting started
 using CARLA.
 
 <!-- Latest release button -->
-<p align="middle"><a href="https://github.com/carla-simulator/carla/releases/latest" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release"><span class="icon icon-github"></span> Get the latest release</a></p>
+<p align="middle"><a href="https://github.com/carla-simulator/carla/blob/master/Docs/download.md" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release"><span class="icon icon-github"></span> Get the latest release</a></p>
 
 Download the latest release from our GitHub page and extract all the contents of
 the package in a folder of your choice.
@@ -20,7 +20,7 @@ The release package contains the following
 
   * The CARLA simulator.
   * The "carla" Python API module.
-  * An "example.py" script.
+  * A few Python scripts with usage examples.
 
 The simulator can be started by running `CarlaUE4.sh` on Linux, or
 `CarlaUE4.exe` on Windows. Unlike previous versions, now the simulator
