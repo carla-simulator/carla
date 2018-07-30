@@ -76,7 +76,7 @@ b2 -j8^
     toolset=%B_TOOLSET%^
     variant=release^
     link=static^
-    runtime-link=static^
+    runtime-link=shared^
     threading=multi^
     --prefix="%B_INSTALL_DIR%"^
     --libdir="%B_LIB_DIR%"^
