@@ -25,7 +25,8 @@ foreach(target carla_client_debug carla_client)
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}")
 
-  install(TARGETS ${target} DESTINATION lib)
+  # @todo This was disabled because now everything is built in the setup.py.
+  # install(TARGETS ${target} DESTINATION lib)
 endforeach(target)
 
 # Specific options for debug.
