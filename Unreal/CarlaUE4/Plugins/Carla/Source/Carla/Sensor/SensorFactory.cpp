@@ -7,50 +7,18 @@
 #include "Carla.h"
 #include "Carla/Sensor/SensorFactory.h"
 
+#include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla/Sensor/SceneCaptureCamera.h"
-
-template <typename T>
-static FActorDefinition MakeSensorDefinition(const FString &Id)
-{
-  FActorDefinition Definition;
-  Definition.Id = Id;
-  Definition.Class = T::StaticClass();
-  Definition.Tags = TEXT("sensor,") + Id;
-  return Definition;
-}
 
 TArray<FActorDefinition> ASensorFactory::GetDefinitions()
 {
-  // Cameras.
-  auto Cameras = MakeSensorDefinition<ASceneCaptureCamera>("camera");
-  {
-    FActorVariation PostProcessing;
-    PostProcessing.Id = TEXT("PostProcessing");
-    PostProcessing.Type = EActorAttributeType::String;
-    PostProcessing.RecommendedValues = {
-        TEXT("None"),
-        TEXT("SceneFinal"),
-        TEXT("Depth"),
-        TEXT("SemanticSegmentation")
-    };
-    PostProcessing.bRestrictToRecommended = true;
-    FActorVariation FOV;
-    FOV.Id = TEXT("FOV");
-    FOV.Type = EActorAttributeType::Float;
-    FOV.RecommendedValues = { TEXT("90.0") };
-    FOV.bRestrictToRecommended = false;
-    FActorVariation ResX;
-    ResX.Id = TEXT("ImageSizeX");
-    ResX.Type = EActorAttributeType::Int;
-    ResX.RecommendedValues = { TEXT("800") };
-    ResX.bRestrictToRecommended = false;
-    FActorVariation ResY;
-    ResY.Id = TEXT("ImageSizeY");
-    ResY.Type = EActorAttributeType::Int;
-    ResY.RecommendedValues = { TEXT("600") };
-    ResY.bRestrictToRecommended = false;
-    Cameras.Variations = {PostProcessing, ResX, ResY, FOV};
-  }
+  FActorDefinition Cameras;
+  bool Success = false;
+  UActorBlueprintFunctionLibrary::MakeCameraDefinition(
+      {TEXT("camera"), ASceneCaptureCamera::StaticClass()},
+      Success,
+      Cameras);
+  check(Success);
   return {Cameras};
 }
 
@@ -59,14 +27,29 @@ FActorSpawnResult ASensorFactory::SpawnActor(
     const FActorDescription &Description)
 {
   FActorSpawnParameters Params;
-  static int32 COUNTER = 0u;
-  Params.Name = FName(*(Description.Id + FString::FromInt(++COUNTER)));
   auto *World = GetWorld();
   if (World == nullptr)
   {
     return {};
   }
-  auto *Sensor = World->SpawnActor<ASensor>(Description.Class, Transform, Params);
-  /// @todo Set description: Actor->Set(Description);
+  auto *Sensor = World->SpawnActorDeferred<ASceneCaptureCamera>(
+      Description.Class,
+      Transform,
+      this,
+      nullptr,
+      ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+  if (Sensor != nullptr)
+  {
+    using ABFL = UActorBlueprintFunctionLibrary;
+    Sensor->SetImageSize(
+        ABFL::RetrieveActorAttributeToInt("image_size_x", Description.Variations, 800),
+        ABFL::RetrieveActorAttributeToInt("image_size_y", Description.Variations, 600));
+    Sensor->SetFOVAngle(
+        ABFL::RetrieveActorAttributeToFloat("fov", Description.Variations, 90.0f));
+    Sensor->SetPostProcessEffect(
+        PostProcessEffect::FromString(
+            ABFL::RetrieveActorAttributeToString("post_processing", Description.Variations, "SceneFinal")));
+  }
+  UGameplayStatics::FinishSpawningActor(Sensor, Transform);
   return FActorSpawnResult{Sensor};
 }

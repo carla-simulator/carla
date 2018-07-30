@@ -7,21 +7,31 @@
 from setuptools import setup, Extension
 
 import fnmatch
-import glob
 import os
 import platform
 import sys
 
 
 def get_libcarla_extensions():
-    libraries = ['carla_client', 'rpc']
+    include_dirs = ['dependencies/include']
+    library_dirs = ['dependencies/lib']
+    libraries = []
 
     if os.name == "posix":
         if platform.dist()[0] == "Ubuntu":
-            libraries += ["boost_python-py%d%d" % (sys.version_info.major,
-                                                   sys.version_info.minor)]
-        else:
-            libraries += ["boost_python"]
+            pwd = os.path.dirname(os.path.realpath(__file__))
+            pylib = "libboost_python%d%d.a" % (sys.version_info.major,
+                                               sys.version_info.minor)
+            extra_link_args = [
+                os.path.join(pwd, 'dependencies/lib/librpc.a'),
+                os.path.join(pwd, 'dependencies/lib', pylib)]
+            extra_compile_args = [
+                '-fPIC', '-std=c++14', '-DBOOST_ERROR_CODE_HEADER_ONLY', '-Wno-missing-braces'
+            ]
+            # @todo Why would we need this?
+            include_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7/include']
+            library_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7']
+            extra_link_args += ['/usr/lib/gcc/x86_64-linux-gnu/7/libstdc++.a']
     else:
         raise NotImplementedError
 
@@ -37,13 +47,11 @@ def get_libcarla_extensions():
         return Extension(
             name,
             sources=sources,
-            include_dirs=[
-                'dependencies/include'],
-            library_dirs=[
-                'dependencies/lib'],
-            runtime_library_dirs=['dependencies/lib'],
+            include_dirs=include_dirs,
+            library_dirs=library_dirs,
             libraries=libraries,
-            extra_compile_args=['-fPIC', '-std=c++14', '-DBOOST_ERROR_CODE_HEADER_ONLY', '-Wno-missing-braces'],
+            extra_compile_args=extra_compile_args,
+            extra_link_args=extra_link_args,
             language='c++14',
             depends=depends)
 

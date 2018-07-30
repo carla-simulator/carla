@@ -8,6 +8,8 @@
 
 #include "carla/Logging.h"
 
+#include <rpc/rpc_error.h>
+
 namespace carla {
 namespace client {
 
@@ -17,7 +19,7 @@ namespace client {
       Actor *parent) {
     try {
       return SpawnActor(blueprint, transform, parent);
-    } catch (const std::exception &e) {
+    } catch (const ::rpc::rpc_error &e) {
       log_warning("TrySpawnActor: failed with:", e.what());
       return nullptr;
     }

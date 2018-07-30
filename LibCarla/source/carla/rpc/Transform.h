@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "carla/rpc/Location.h"
 #include "carla/rpc/MsgPack.h"
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
@@ -14,34 +15,6 @@
 
 namespace carla {
 namespace rpc {
-
-  class Location {
-  public:
-
-    Location() = default;
-
-    Location(float ix, float iy, float iz)
-      : x(ix),
-        y(iy),
-        z(iz) {}
-
-    float x = 0.0f;
-    float y = 0.0f;
-    float z = 0.0f;
-
-#ifdef LIBCARLA_INCLUDED_FROM_UE4
-
-    Location(const FVector &vector) // from centimeters to meters.
-      : Location(1e-2f * vector.X, 1e-2f * vector.Y, 1e-2f * vector.Z) {}
-
-    operator FVector() const {
-      return FVector{1e2f * x, 1e2f * y, 1e2f * z}; // from meters to centimeters.
-    }
-
-#endif // LIBCARLA_INCLUDED_FROM_UE4
-
-    MSGPACK_DEFINE_ARRAY(x, y, z);
-  };
 
   class Rotation {
   public:

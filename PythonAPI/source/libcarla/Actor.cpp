@@ -79,11 +79,17 @@ void export_actor() {
       return self.GetTypeId();
     })
     .def("get_world", &cc::Actor::GetWorld)
+    .def("get_location", &cc::Actor::GetLocation)
+    .def("get_transform", &cc::Actor::GetTransform)
+    .def("set_location", &cc::Actor::SetLocation, (arg("location")))
+    .def("set_transform", &cc::Actor::SetTransform, (arg("transform")))
+    .def("destroy", &cc::Actor::Destroy)
     .def(self_ns::str(self_ns::self))
   ;
 
   class_<cc::Vehicle, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Vehicle>>("Vehicle", no_init)
-    .def("apply_control", &cc::Vehicle::ApplyControl)
+    .def("apply_control", &cc::Vehicle::ApplyControl, (arg("control")))
+    .def("set_autopilot", &cc::Vehicle::SetAutopilot, (arg("enabled")=true))
     .def(self_ns::str(self_ns::self))
   ;
 
@@ -113,7 +119,7 @@ void export_actor() {
           PyErr_Print();
         }
       });
-    })
+    }, (arg("callback")))
     .def(self_ns::str(self_ns::self))
   ;
 }

@@ -53,6 +53,11 @@ public:
     return Definitions;
   }
 
+  FActorRegistry &GetActorRegistry()
+  {
+    return Registry;
+  }
+
   const FActorRegistry &GetActorRegistry() const
   {
     return Registry;
