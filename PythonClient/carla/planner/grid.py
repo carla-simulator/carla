@@ -43,7 +43,7 @@ class Grid(object):
 
     def get_wall_source(self, pos, pos_ori, target):
 
-        free_nodes = self._get_adjacent_free_nodes(pos)
+        free_nodes = self.get_adjacent_free_nodes(pos)
         # print self._walls
         final_walls = copy.copy(self._walls)
         # print final_walls
@@ -59,7 +59,7 @@ class Grid(object):
 
     def get_wall_target(self, pos, pos_ori, source):
 
-        free_nodes = self._get_adjacent_free_nodes(pos)
+        free_nodes = self.get_adjacent_free_nodes(pos)
         final_walls = copy.copy(self._walls)
         heading_start = np.array([pos_ori[0], pos_ori[1]])
         for adj in free_nodes:
@@ -117,7 +117,7 @@ class Grid(object):
 
         return walls
 
-    def _get_adjacent_free_nodes(self, pos):
+    def get_adjacent_free_nodes(self, pos):
         """ Eight nodes in total """
         visit = [[0, 1], [0, -1], [1, 0], [1, 1],
                  [1, -1], [-1, 0], [-1, 1], [-1, -1]]

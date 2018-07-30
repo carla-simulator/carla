@@ -10,7 +10,7 @@
 # and more documented example.
 
 """
-Welcome to CARLA manual control.
+Welcome to CARLA control example for humans.
 
 Use ARROWS or WASD keys for control.
 
@@ -23,6 +23,8 @@ Use ARROWS or WASD keys for control.
 
     R            : restart level
 
+If running with map enabled (-m option) try to reach the green dot.
+
 STARTING in a moment...
 """
 
@@ -33,36 +35,14 @@ import logging
 import random
 import time
 
-try:
-    import pygame
-    from pygame.locals import K_DOWN
-    from pygame.locals import K_LEFT
-    from pygame.locals import K_RIGHT
-    from pygame.locals import K_SPACE
-    from pygame.locals import K_UP
-    from pygame.locals import K_a
-    from pygame.locals import K_d
-    from pygame.locals import K_p
-    from pygame.locals import K_q
-    from pygame.locals import K_r
-    from pygame.locals import K_s
-    from pygame.locals import K_w
-except ImportError:
-    raise RuntimeError('cannot import pygame, make sure pygame package is installed')
-
-try:
-    import numpy as np
-except ImportError:
-    raise RuntimeError('cannot import numpy, make sure numpy package is installed')
-
-from carla import image_converter
 from carla import sensor
-from carla.client import make_carla_client, VehicleControl
-from carla.planner.map import CarlaMap
+from carla.client import make_carla_client
+
 from carla.settings import CarlaSettings
 from carla.tcp import TCPConnectionError
-from carla.util import print_over_same_line
-
+from game.carla_game import CarlaGame, WindowProperties
+from carla.planner import Planner, Waypointer
+from carla.agent import HumanAgent, ForwardAgent
 
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 600
@@ -71,7 +51,10 @@ MINI_WINDOW_HEIGHT = 180
 
 
 def make_carla_settings(args):
-    """Make a CarlaSettings object with the settings we need."""
+    """
+    Make a CarlaSettings object with the settings we need..
+    For now that is hardcoded for this version.
+    """
     settings = CarlaSettings()
     settings.set(
         SynchronousMode=False,
@@ -111,267 +94,181 @@ def make_carla_settings(args):
     return settings
 
 
-class Timer(object):
-    def __init__(self):
-        self.step = 0
-        self._lap_step = 0
-        self._lap_time = time.time()
+def make_controlling_agent(args):
+    """
+    Make the controlling agent object depending on what was selected.
+    Right now we have the following options:
+    Forward Agent: A trivial agent that just accelerate forward.
+    Human Agent: An agent controlled by a human driver, currently only by keyboard.
+    """
 
-    def tick(self):
-        self.step += 1
+    if args.controlling_agent == "ForwardAgent":
+        return ForwardAgent()
+    elif args.controlling_agent == "HumanAgent":
+        # TDNextPR: Add parameters such as joysticks to the human agent.
+        return HumanAgent()
 
-    def lap(self):
-        self._lap_step = self.step
-        self._lap_time = time.time()
-
-    def ticks_per_second(self):
-        return float(self.step - self._lap_step) / self.elapsed_seconds_since_lap()
-
-    def elapsed_seconds_since_lap(self):
-        return time.time() - self._lap_time
+    else:
+        raise ValueError("Selected Agent Does not exist")
 
 
-class CarlaGame(object):
-    def __init__(self, carla_client, args):
-        self.client = carla_client
-        self._carla_settings = make_carla_settings(args)
-        self._timer = None
-        self._display = None
-        self._main_image = None
-        self._mini_view_image1 = None
-        self._mini_view_image2 = None
-        self._enable_autopilot = args.autopilot
-        self._lidar_measurement = None
-        self._map_view = None
-        self._is_on_reverse = False
-        self._display_map = args.map
-        self._city_name = None
-        self._map = None
-        self._map_shape = None
-        self._map_view = None
-        self._position = None
-        self._agent_positions = None
+def get_directions(measurements, target_transform, planner, waypointer):
+    """
+    Function to get the high level commands and the waypoints.
+    The waypoints correspond to the local planning, the near path the car has to follow.
+    """
 
-    def execute(self):
-        """Launch the PyGame."""
-        pygame.init()
-        self._initialize_game()
-        try:
-            while True:
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        return
-                self._on_loop()
-                self._on_render()
-        finally:
-            pygame.quit()
+    #  TD 0.9.X  or 0.10.X: add a new more general and robust planner with wider variety of repr
 
-    def _initialize_game(self):
-        self._on_new_episode()
+    # Get the current position from the measurements
+    current_point = measurements.player_measurements.transform
 
-        if self._city_name is not None:
-            self._map = CarlaMap(self._city_name, 0.1643, 50.0)
-            self._map_shape = self._map.map_image.shape
-            self._map_view = self._map.get_map(WINDOW_HEIGHT)
+    directions = planner.get_next_command(
+        (current_point.location.x,
+         current_point.location.y, 0.22),
+        (current_point.orientation.x,
+         current_point.orientation.y,
+         current_point.orientation.z),
+        (target_transform.location.x, target_transform.location.y, 0.22),
+        (target_transform.orientation.x, target_transform.orientation.y,
+         target_transform.orientation.z)
+    )
 
-            extra_width = int((WINDOW_HEIGHT/float(self._map_shape[0]))*self._map_shape[1])
-            self._display = pygame.display.set_mode(
-                (WINDOW_WIDTH + extra_width, WINDOW_HEIGHT),
-                pygame.HWSURFACE | pygame.DOUBLEBUF)
-        else:
-            self._display = pygame.display.set_mode(
-                (WINDOW_WIDTH, WINDOW_HEIGHT),
-                pygame.HWSURFACE | pygame.DOUBLEBUF)
+    _, waypoints = waypointer.get_next_waypoints(
+        (current_point.location.x,
+         current_point.location.y, 0.22),
+        (current_point.orientation.x, current_point.orientation.y,
+         current_point.orientation.z),
+        (target_transform.location.x, target_transform.location.y, target_transform.location.z),
+        (target_transform.orientation.x, target_transform.orientation.y,
+         target_transform.orientation.z)
+    )
 
-        logging.debug('pygame started')
+    return directions, waypoints
 
-    def _on_new_episode(self):
-        self._carla_settings.randomize_seeds()
-        self._carla_settings.randomize_weather()
-        scene = self.client.load_settings(self._carla_settings)
-        if self._display_map:
-            self._city_name = scene.map_name
-        number_of_player_starts = len(scene.player_start_spots)
-        player_start = np.random.randint(number_of_player_starts)
-        print('Starting new episode...')
-        self.client.start_episode(player_start)
-        self._timer = Timer()
-        self._is_on_reverse = False
 
-    def _on_loop(self):
-        self._timer.tick()
+def new_episode(client, carla_settings):
+    """
+    Start a CARLA new episode and generate a target to be pursued on this episode
+    Args:
+        client: the client connected to CARLA now
+        carla_settings: a carla settings object to be used
 
-        measurements, sensor_data = self.client.read_data()
+    Returns:
+        Returns the target position for this episode and the name of the current carla map.
 
-        self._main_image = sensor_data.get('CameraRGB', None)
-        self._mini_view_image1 = sensor_data.get('CameraDepth', None)
-        self._mini_view_image2 = sensor_data.get('CameraSemSeg', None)
-        self._lidar_measurement = sensor_data.get('Lidar32', None)
+    """
+    carla_settings.randomize_seeds()
+    carla_settings.randomize_weather()
+    scene = client.load_settings(carla_settings)
 
-        # Print measurements every second.
-        if self._timer.elapsed_seconds_since_lap() > 1.0:
-            if self._city_name is not None:
-                # Function to get car position on map.
-                map_position = self._map.convert_to_pixel([
-                    measurements.player_measurements.transform.location.x,
-                    measurements.player_measurements.transform.location.y,
-                    measurements.player_measurements.transform.location.z])
-                # Function to get orientation of the road car is in.
-                lane_orientation = self._map.get_lane_orientation([
-                    measurements.player_measurements.transform.location.x,
-                    measurements.player_measurements.transform.location.y,
-                    measurements.player_measurements.transform.location.z])
+    # We have a predefined set of start end positions, since the planner is not general for
+    # all end positions
+    if scene.map_name == 'Town01':
+        poses = [[105, 29], [27, 130], [102, 87], [132, 27], [24, 44],
+                 [96, 26], [34, 67], [28, 1], [140, 134], [105, 9],
+                 [148, 129], [65, 18], [21, 16], [147, 97], [42, 51],
+                 [30, 41], [18, 107], [69, 45], [102, 95], [18, 145],
+                 [111, 64], [79, 45], [84, 69], [73, 31], [37, 81]]
 
-                self._print_player_measurements_map(
-                    measurements.player_measurements,
-                    map_position,
-                    lane_orientation)
-            else:
-                self._print_player_measurements(measurements.player_measurements)
+    elif scene.map_name == 'Town02':
+        poses = [[19, 66], [79, 14], [19, 57], [23, 1],
+                 [53, 76], [42, 13], [31, 71], [33, 5],
+                 [54, 30], [10, 61], [66, 3], [27, 12],
+                 [79, 19], [2, 29], [16, 14], [5, 57],
+                 [70, 73], [46, 67], [57, 50], [61, 49], [21, 12],
+                 [51, 81], [77, 68], [56, 65], [43, 54]]
 
-            # Plot position on the map as well.
+    else:
+        raise ValueError("Town not supported by manual control")
 
-            self._timer.lap()
+    start_end_tuple = random.choice(poses)
 
-        control = self._get_keyboard_control(pygame.key.get_pressed())
+    player_target_transform = scene.player_start_spots[start_end_tuple[1]]
+    player_start = start_end_tuple[0]
+
+    print('Starting new episode...')
+    client.start_episode(player_start)
+
+    return player_target_transform, scene.map_name
+
+
+def execute(client, args):
+    """
+    The main loop for the controller example.
+    Args:
+        client: carla client object
+        args: arguments for the
+
+    Returns:
+        None
+    """
+
+    # Here we instantiate a sample carla settings, for now it is hardcoded on having a rgb a
+    # a depth and a semantic segmentation image. If parameter is send there can also be a lidar.
+    carla_settings = make_carla_settings(args)
+    controlling_agent = make_controlling_agent(args)
+
+    # Start a new episode and create the planner object. Also create a waypointer to generate
+    # trajectories.
+    player_target_transform, map_name = new_episode(client, carla_settings)
+
+    planner = Planner(map_name)
+    waypointer = Waypointer(map_name)
+    window_props = WindowProperties(window_width=WINDOW_WIDTH, window_height=WINDOW_HEIGHT,
+                                    mini_window_width=MINI_WINDOW_WIDTH,
+                                    mini_window_height=MINI_WINDOW_HEIGHT)
+    # Py game goes inside the carla game class
+    carla_game = CarlaGame(args.autopilot, args.map, window_props)
+    carla_game.initialize_game(map_name)
+    carla_game.start_timer()
+    carla_game.set_objective(player_target_transform.location)
+
+    while carla_game.is_running():
+
+        # we add the vehicle and the connection outside of the game.
+        measurements, sensor_data = client.read_data()
+
+        # TD: this will become a neutral route object that can be transformed after to the
+        # TD: format needed by the agent.
+
+        _, waypoints = get_directions(measurements, player_target_transform,
+                                      planner, waypointer)
+
+        # TD 0.9: This is going to be a vector of controls for each agent.
+        # TD 0.9: We should select something like the viewport agent.
+
+        # run a step for the agent. regardless of the type
+        control = controlling_agent.run_step(measurements, sensor_data,
+                                             waypoints,
+                                             player_target_transform)
+
         # Set the player position
-        if self._city_name is not None:
-            self._position = self._map.convert_to_pixel([
-                measurements.player_measurements.transform.location.x,
-                measurements.player_measurements.transform.location.y,
-                measurements.player_measurements.transform.location.z])
-            self._agent_positions = measurements.non_player_agents
+        if args.map:
+            position = measurements.player_measurements.transform.location
 
-        if control is None:
-            self._on_new_episode()
-        elif self._enable_autopilot:
-            self.client.send_control(measurements.player_measurements.autopilot_control)
+            agents_positions = measurements.non_player_agents
+            # Render with the provided map
+            carla_game.draw(sensor_data, player_position=position,
+                            waypoints=waypoints, agents_positions=agents_positions)
         else:
-            self.client.send_control(control)
+            #  For this case we don't need to plot the position
 
-    def _get_keyboard_control(self, keys):
-        """
-        Return a VehicleControl message based on the pressed keys. Return None
-        if a new episode was requested.
-        """
-        if keys[K_r]:
-            return None
-        control = VehicleControl()
-        if keys[K_LEFT] or keys[K_a]:
-            control.steer = -1.0
-        if keys[K_RIGHT] or keys[K_d]:
-            control.steer = 1.0
-        if keys[K_UP] or keys[K_w]:
-            control.throttle = 1.0
-        if keys[K_DOWN] or keys[K_s]:
-            control.brake = 1.0
-        if keys[K_SPACE]:
-            control.hand_brake = True
-        if keys[K_q]:
-            self._is_on_reverse = not self._is_on_reverse
-        if keys[K_p]:
-            self._enable_autopilot = not self._enable_autopilot
-        control.reverse = self._is_on_reverse
-        return control
+            carla_game.draw(sensor_data)
 
-    def _print_player_measurements_map(
-            self,
-            player_measurements,
-            map_position,
-            lane_orientation):
-        message = 'Step {step} ({fps:.1f} FPS): '
-        message += 'Map Position ({map_x:.1f},{map_y:.1f}) '
-        message += 'Lane Orientation ({ori_x:.1f},{ori_y:.1f}) '
-        message += '{speed:.2f} km/h, '
-        message += '{other_lane:.0f}% other lane, {offroad:.0f}% off-road'
-        message = message.format(
-            map_x=map_position[0],
-            map_y=map_position[1],
-            ori_x=lane_orientation[0],
-            ori_y=lane_orientation[1],
-            step=self._timer.step,
-            fps=self._timer.ticks_per_second(),
-            speed=player_measurements.forward_speed * 3.6,
-            other_lane=100 * player_measurements.intersection_otherlane,
-            offroad=100 * player_measurements.intersection_offroad)
-        print_over_same_line(message)
+        if carla_game.is_reset(measurements.player_measurements.transform.location):
+            # If you press the reset button, R, starts a new episode
+            player_target_transform, map_name = new_episode(client, carla_settings)
+            carla_game.start_timer()
+            carla_game.set_objective(player_target_transform.location)
 
-    def _print_player_measurements(self, player_measurements):
-        message = 'Step {step} ({fps:.1f} FPS): '
-        message += '{speed:.2f} km/h, '
-        message += '{other_lane:.0f}% other lane, {offroad:.0f}% off-road'
-        message = message.format(
-            step=self._timer.step,
-            fps=self._timer.ticks_per_second(),
-            speed=player_measurements.forward_speed * 3.6,
-            other_lane=100 * player_measurements.intersection_otherlane,
-            offroad=100 * player_measurements.intersection_offroad)
-        print_over_same_line(message)
+        # If you press the autopilot button, P, it changes to autopilot mode.
+        if carla_game.is_autopilot_enabled():
+            client.send_control(measurements.player_measurements.autopilot_control)
+        else:
+            client.send_control(control)
 
-    def _on_render(self):
-        gap_x = (WINDOW_WIDTH - 2 * MINI_WINDOW_WIDTH) / 3
-        mini_image_y = WINDOW_HEIGHT - MINI_WINDOW_HEIGHT - gap_x
-
-        if self._main_image is not None:
-            array = image_converter.to_rgb_array(self._main_image)
-            surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
-            self._display.blit(surface, (0, 0))
-
-        if self._mini_view_image1 is not None:
-            array = image_converter.depth_to_logarithmic_grayscale(self._mini_view_image1)
-            surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
-            self._display.blit(surface, (gap_x, mini_image_y))
-
-        if self._mini_view_image2 is not None:
-            array = image_converter.labels_to_cityscapes_palette(
-                self._mini_view_image2)
-            surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
-
-            self._display.blit(
-                surface, (2 * gap_x + MINI_WINDOW_WIDTH, mini_image_y))
-
-        if self._lidar_measurement is not None:
-            lidar_data = np.array(self._lidar_measurement.data[:, :2])
-            lidar_data *= 2.0
-            lidar_data += 100.0
-            lidar_data = np.fabs(lidar_data)
-            lidar_data = lidar_data.astype(np.int32)
-            lidar_data = np.reshape(lidar_data, (-1, 2))
-            #draw lidar
-            lidar_img_size = (200, 200, 3)
-            lidar_img = np.zeros(lidar_img_size)
-            lidar_img[tuple(lidar_data.T)] = (255, 255, 255)
-            surface = pygame.surfarray.make_surface(lidar_img)
-            self._display.blit(surface, (10, 10))
-
-        if self._map_view is not None:
-            array = self._map_view
-            array = array[:, :, :3]
-
-            new_window_width = \
-                (float(WINDOW_HEIGHT) / float(self._map_shape[0])) * \
-                float(self._map_shape[1])
-            surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
-
-            w_pos = int(self._position[0]*(float(WINDOW_HEIGHT)/float(self._map_shape[0])))
-            h_pos = int(self._position[1] *(new_window_width/float(self._map_shape[1])))
-
-            pygame.draw.circle(surface, [255, 0, 0, 255], (w_pos, h_pos), 6, 0)
-            for agent in self._agent_positions:
-                if agent.HasField('vehicle'):
-                    agent_position = self._map.convert_to_pixel([
-                        agent.vehicle.transform.location.x,
-                        agent.vehicle.transform.location.y,
-                        agent.vehicle.transform.location.z])
-
-                    w_pos = int(agent_position[0]*(float(WINDOW_HEIGHT)/float(self._map_shape[0])))
-                    h_pos = int(agent_position[1] *(new_window_width/float(self._map_shape[1])))
-
-                    pygame.draw.circle(surface, [255, 0, 255, 255], (w_pos, h_pos), 4, 0)
-
-            self._display.blit(surface, (WINDOW_WIDTH, 0))
-
-        pygame.display.flip()
+        carla_game.print_measurements(measurements)
 
 
 def main():
@@ -411,6 +308,13 @@ def main():
         '-m', '--map',
         action='store_true',
         help='plot the map of the current city')
+    argparser.add_argument(
+        '-c', '--controlling_agent',
+        default='HumanAgent',
+        help='the controller that is going to be used by the main vehicle.'
+             ' Options: '
+             ' HumanAgent - Control your agent with a keyboard.'
+             ' ForwardAgent - A trivial agent that goes forward')
     args = argparser.parse_args()
 
     log_level = logging.DEBUG if args.debug else logging.INFO
@@ -418,14 +322,15 @@ def main():
 
     logging.info('listening to server %s:%s', args.host, args.port)
 
-    print(__doc__)
+    if args.controlling_agent == "HumanAgent":
+        print(__doc__)
 
     while True:
         try:
 
             with make_carla_client(args.host, args.port) as client:
-                game = CarlaGame(client, args)
-                game.execute()
+                # game = CarlaGame(client, args)
+                execute(client, args)
                 break
 
         except TCPConnectionError as error:

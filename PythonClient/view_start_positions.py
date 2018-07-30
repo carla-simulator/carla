@@ -54,6 +54,8 @@ def view_start_positions(args):
         else:
             positions_to_plot = map(int, args.positions.split(','))
 
+        f = open("savepos.csv", 'w')
+
         for position in positions_to_plot:
             # Check if position is valid
             if position >= len(scene.player_start_spots):
@@ -64,11 +66,22 @@ def view_start_positions(args):
                                                 scene.player_start_spots[position].location.y,
                                                 scene.player_start_spots[position].location.z])
 
+            f.write("%f,%f,%f,%f,%f,%f\n" % (scene.player_start_spots[position].location.x,
+                                             scene.player_start_spots[position].location.y,
+                                             scene.player_start_spots[position].location.z,
+                                             scene.player_start_spots[position].orientation.x,
+                                             scene.player_start_spots[position].orientation.y,
+                                             scene.player_start_spots[position].orientation.z))
+
+
+
             circle = Circle((pixel[0], pixel[1]), 12, color='r', label='A point')
             ax.add_patch(circle)
 
             if not args.no_labels:
                 plt.text(pixel[0], pixel[1], str(position), size='x-small')
+
+        f.close()
 
         plt.axis('off')
         plt.show()

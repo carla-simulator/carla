@@ -3,9 +3,9 @@
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
+import numpy as np
 
 from carla.planner.graph import sldist
-
 from carla.planner.astar import AStar
 from carla.planner.map import CarlaMap
 
@@ -52,6 +52,9 @@ class CityTrack(object):
     def get_intersection_nodes(self):
         return self._map.get_intersection_nodes()
 
+    def get_map(self):
+        return self._map
+
     def get_pixel_density(self):
         return self._pixel_density
 
@@ -65,7 +68,7 @@ class CityTrack(object):
         return current_node != self._previous_node
 
     def is_away_from_intersection(self, current_node):
-        return self._closest_intersection_position(current_node) > 1
+        return self.closest_intersection_position(current_node) > 1
 
     def is_far_away_from_route_intersection(self, current_node):
         # CHECK FOR THE EMPTY CASE
@@ -85,8 +88,11 @@ class CityTrack(object):
         a_star.init_grid(self._map.get_graph_resolution()[0],
                          self._map.get_graph_resolution()[1],
                          self._map.get_walls_directed(node_source, source_ori,
-                                                      node_target, target_ori), node_source,
+                                                      node_target, target_ori),
+                         node_source,
                          node_target)
+
+        np.set_printoptions(threshold=np.nan, linewidth=200)
 
         route = a_star.solve()
 
@@ -116,15 +122,13 @@ class CityTrack(object):
             return sldist(route[-1], pos)
         return sorted(distance)[0]
 
-
-    def _closest_intersection_position(self, current_node):
+    def closest_intersection_position(self, current_node):
 
         distance_vector = []
         for node_iterator in self._map.get_intersection_nodes():
             distance_vector.append(sldist(node_iterator, current_node))
 
         return sorted(distance_vector)[0]
-
 
     def _closest_intersection_route_position(self, current_node, route):
 
@@ -134,4 +138,3 @@ class CityTrack(object):
                 distance_vector.append(sldist(node_iterator, current_node))
 
         return sorted(distance_vector)[0]
-
