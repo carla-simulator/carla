@@ -1,10 +1,9 @@
 @echo off
+setlocal
 
 rem BAT script that downloads and installs a ready to use
 rem Google Test build for CARLA (carla.org).
 rem Run it through a cmd with the x64 Visual C++ Toolset enabled.
-
-setlocal
 
 set LOCAL_PATH=%~dp0
 set "FILE_N=    -[%~n0]:"
@@ -43,8 +42,7 @@ if not exist "%GT_SRC_DIR%" (
     echo.
 
     call git clone --depth=1 -b %GT_VERSION% https://github.com/google/googletest.git %GT_SRC_DIR%
-    if errorlevel 1 goto error_git
-    echo.
+    if %errorlevel% neq 0 goto error_git
 ) else (
     echo %FILE_N% Not cloning Google Test because already exists a folder called "%GT_SRC%".
 )
@@ -55,21 +53,20 @@ if not exist "%GT_BUILD_DIR%" (
 )
 
 cd "%GT_BUILD_DIR%"
-
 echo %FILE_N% Generating build...
+
 cmake .. -G "Visual Studio 15 2017 Win64"^
     -DCMAKE_BUILD_TYPE=Release^
-    -DCMAKE_CXX_FLAGS_RELEASE=/MD^
+    -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
     -DCMAKE_INSTALL_PREFIX=%GT_INSTALL_DIR%^
     -DCMAKE_CXX_FLAGS=/D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING^
     %GT_SRC_DIR%
-
-if errorlevel 1 goto error_cmake
+if %errorlevel%  neq 0 goto error_cmake
 
 echo %FILE_N% Building...
 cmake --build . --config Release --target install
 
-if errorlevel 1 goto error_install
+if errorlevel  neq 0 goto error_install
 
 rem Remove the downloaded Google Test source because is no more needed
 if %DEL_SRC% == true (
@@ -110,8 +107,8 @@ rem ============================================================================
 
 :error_install
     echo.
-    echo %FILE_N% [NMAKE ERROR] An error ocurred while installing using NMake.
-    echo %FILE_N% [NMAKE ERROR] Possible causes:
+    echo %FILE_N% [Visual Studio 15 2017 Win64 ERROR] An error ocurred while installing using Visual Studio 15 2017 Win64.
+    echo %FILE_N% [Visual Studio 15 2017 Win64 ERROR] Possible causes:
     echo %FILE_N%                - Make sure you have Visual Studio installed.
     echo %FILE_N%                - Make sure you have the "x64 Visual C++ Toolset" in your path.
     echo %FILE_N%                  For example using the "Visual Studio x64 Native Tools Command Prompt",
@@ -122,10 +119,10 @@ rem ============================================================================
     echo %FILE_N% Exiting...
     endlocal
     set install_gtest=done
-    goto:EOF
+    exit /b 0
 
 :bad_exit
     if exist "%GT_INSTALL_DIR%" rd /s /q "%GT_INSTALL_DIR%"
     echo %FILE_N% Exiting with error...
     endlocal
-    goto:EOF
+    exit /b %errorlevel%

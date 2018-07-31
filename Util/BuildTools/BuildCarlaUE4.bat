@@ -3,13 +3,13 @@
 setlocal
 
 set LOCAL_PATH=%~dp0
-set FILE_N=%~n0%~x0
+set "FILE_N=-[%~n0]:"
 
 rem ============================================================================
 rem -- Parse arguments ---------------------------------------------------------
 rem ============================================================================
 
-set "FILE_N=    -[%~n0]:"
+
 set DOC_STRING=Build LibCarla.
 set "USAGE_STRING=Usage: %FILE_N% [-h^|--help] [--build] [--rebuild] [--launch] [--clean] [--hard-clean]"
 
@@ -76,10 +76,17 @@ set CARLA_FOLDER=%ROOT_PATH%Unreal\CarlaUE4\
 pushd "%CARLA_FOLDER%"
 
 if %REMOVE_INTERMEDIATE% == true (
-    echo %FILE_N% cleaning carla folder
+    echo.
+    echo %FILE_N% cleaning "%CARLA_FOLDER%Binaries"
     if exist "%CARLA_FOLDER%Binaries" rmdir /S /Q "%CARLA_FOLDER%Binaries"
+
+    echo %FILE_N% cleaning "%CARLA_FOLDER%Intermediate"
     if exist "%CARLA_FOLDER%Intermediate" rmdir /S /Q "%CARLA_FOLDER%Intermediate"
+
+    echo %FILE_N% cleaning "%CARLA_FOLDER%Plugins\Carla\Binaries"
     if exist "%CARLA_FOLDER%Plugins\Carla\Binaries" rmdir /S /Q "%CARLA_FOLDER%Plugins\Carla\Binaries"
+
+    echo %FILE_N% cleaning "%CARLA_FOLDER%Plugins\Carla\Intermediate"
     if exist "%CARLA_FOLDER%Plugins\Carla\Intermediate" rmdir /S /Q "%CARLA_FOLDER%Plugins\Carla\Intermediate"
 )
 
@@ -97,4 +104,6 @@ if %LAUNCH_UE4_EDITOR% == true (
     call "%CARLA_FOLDER%CarlaUE4.uproject"
 )
 
-goto :eof
+rem ============================================================================
+rem -- Messages and Errors -----------------------------------------------------
+rem ============================================================================

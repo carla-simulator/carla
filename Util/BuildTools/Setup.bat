@@ -1,21 +1,25 @@
 @echo off
 setlocal
 
+rem BAT script that downloads and generates
+rem rpclib, gtest and boost libraries for CARLA (carla.org).
+rem Run it through a cmd with the x64 Visual C++ Toolset enabled.
+
+set LOCAL_PATH=%~dp0
+set "FILE_N=-[%~n0]:"
+
 rem ============================================================================
 rem -- Check for compiler ------------------------------------------------------
 rem ============================================================================
 
 where cl
-if errorlevel 1 goto error_cl
+if %errorlevel% neq 0 goto error_cl
 
 rem TODO: check for x64 and not x86 or x64_x86
 
 rem ============================================================================
 rem -- Parse arguments ---------------------------------------------------------
 rem ============================================================================
-
-set LOCAL_PATH=%~dp0
-set "FILE_N=-[%~n0]:"
 
 set INSTALLERS_DIR=%ROOT_PATH%Util\InstallersWin\
 set VERSION_FILE=%ROOT_PATH%Util\ContentVersions.txt
@@ -171,41 +175,37 @@ rem ============================================================================
 :success
     echo.
     echo %FILE_N%
-    echo  ###########
-    echo  # SUCCESS #
-    echo  ###########
+    echo    ###########
+    echo    # SUCCESS #
+    echo    ###########
     echo.
-    echo  IMPORTANT!
+    echo    IMPORTANT!
     echo.
-    echo  All the CARLA library dependences should be installed now.
-    echo  (You can remove all "*-src" folders in %INSTALLATION_DIR% directory)
+    echo    All the CARLA library dependences should be installed now.
+    echo    (You can remove all "*-src" folders in %INSTALLATION_DIR% directory)
     echo.
-    echo  You only need the ASSET PACK with all the meshes and textures.
+    echo    You only need the ASSET PACK with all the meshes and textures.
     echo.
-    echo  This script provides the assets for CARLA %ASSETS_VERSION%
-    echo  You can download the assets from here:
+    echo    This script provides the assets for CARLA %ASSETS_VERSION%
+    echo    You can download the assets from here:
     echo.
-    echo    %URL%
+    echo        %URL%
     echo.
-    echo  If you want another version, search it in %VERSION_FILE%.
-    echo.
-    echo  Unzip it in the "%CONTENT_DIR%" folder.
-    echo  After that, please run the "Rebuild.bat".
-
-    goto eof
+    echo    Unzip it in the "%CONTENT_DIR%" folder.
+    echo    If you want another version, search it in %VERSION_FILE%.
+    goto good_exit
 
 :help
     echo  Download and compiles all the necessary libraries to build CARLA.
     echo.
     echo  Commands:
-    echo    -h, --help          -^> Shows this dialog.
-    echo    -j ^<N^>              -^> N is the integer number of async jobs while compiling (default=1).
-    echo    --boost-toolset [T] -^> Toolset corresponding to your compiler ^(default=^*^):
+    echo     -h, --help          -^> Shows this dialog.
+    echo     -j ^<N^>            -^> N is the integer number of async jobs while compiling (default=1).
+    echo     --boost-toolset [T] -^> Toolset corresponding to your compiler ^(default=^*^):
     echo                               Visual Studio 2013 -^> msvc-12.0
     echo                               Visual Studio 2015 -^> msvc-14.0
     echo                               Visual Studio 2017 -^> msvc-14.1 *
-
-    goto eof
+    goto good_exit
 
 :error_cl
     echo.
@@ -218,20 +218,21 @@ rem ============================================================================
 :failed
     echo.
     echo %FILE_N%
-    echo  Ok, and error ocurred, don't panic!
-    echo  We have different platforms where you can find some help :)
+    echo    Ok, and error ocurred, don't panic!
+    echo    We have different platforms where you can find some help :)
     echo.
-    echo  - Make sure you have read the documentation:
-    echo    http://carla.readthedocs.io/en/latest/how_to_build_on_windows/
+    echo    - Make sure you have read the documentation:
+    echo        http://carla.readthedocs.io/en/latest/how_to_build_on_windows/
     echo.
-    echo  - If the problem persists, you can ask on our Github's "Building on Windows" issue:
-    echo    https://github.com/carla-simulator/carla/issues/21
+    echo    - If the problem persists, you can ask on our Github's "Building on Windows" issue:
+    echo        https://github.com/carla-simulator/carla/issues/21
     echo.
-    echo  - Or just use our Discord channel!
-    echo    We'll be glad to help you there :)
-    echo    https://discord.gg/42KJdRj
-
-    goto :eof
-
-:eof
+    echo    - Or just use our Discord channel!
+    echo        We'll be glad to help you there :)
+    echo        https://discord.gg/42KJdRj
     endlocal
+    exit /b %errorlevel%
+
+:good_exit
+    endlocal
+    exit /b 0

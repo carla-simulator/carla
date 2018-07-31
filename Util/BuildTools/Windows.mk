@@ -18,14 +18,17 @@ package: CarlaUE4Editor PythonAPI
 	@echo "Not implemented!"
 
 docs:
-	@echo "Not implemented!"
+	@doxygen
+	@echo "Documentation index at ./Doxygen/html/index.html"
 
 clean:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat --clean
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.bat --clean
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.bat --clean
 
 rebuild: setup
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.bat --rebuild
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.bat --rebuild
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat --rebuild
 
 hard-clean: clean
@@ -49,7 +52,7 @@ LibCarla: setup
 	@${CARLA_BUILD_TOOLS_FOLDER}\BuildLibCarla.bat --server --client
 
 setup:
-	@${CARLA_BUILD_TOOLS_FOLDER}\Setup.bat -j 8 --boost-toolset msvc-14.1
+	@${CARLA_BUILD_TOOLS_FOLDER}\Setup.bat --boost-toolset msvc-14.1
 
 pretty:
 	@echo "Not implemented!"

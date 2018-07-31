@@ -1,9 +1,11 @@
 @echo off
-
 setlocal
 
+rem BAT script that creates the client and the server of LibCarla (carla.org).
+rem Run it through a cmd with the x64 Visual C++ Toolset enabled.
+
 set LOCAL_PATH=%~dp0
-set "FILE_N=    -[%~n0]:"
+set "FILE_N=-[%~n0]:"
 
 rem ============================================================================
 rem -- Parse arguments ---------------------------------------------------------
@@ -69,9 +71,13 @@ set LIBCARLA_SERVER_INSTALL_PATH=%ROOT_PATH%Unreal\CarlaUE4\Plugins\Carla\CarlaD
 set LIBCARLA_CLIENT_INSTALL_PATH=%ROOT_PATH%PythonAPI\dependencies
 
 if %REMOVE_INTERMEDIATE% == true (
-    echo %FILE_N% cleaning build folder
-    if exist "%INSTALLATION_DIR%" rmdir /S /Q "%INSTALLATION_DIR%"
+    echo.
+
+    echo %FILE_N% Cleaning "%LIBCARLA_SERVER_INSTALL_PATH%"
     if exist "%LIBCARLA_SERVER_INSTALL_PATH%" rmdir /S /Q "%LIBCARLA_SERVER_INSTALL_PATH%"
+
+    echo %FILE_N% Cleaning "%LIBCARLA_CLIENT_INSTALL_PATH%"
+    if exist "%LIBCARLA_CLIENT_INSTALL_PATH%" rmdir /S /Q "%LIBCARLA_CLIENT_INSTALL_PATH%"
 )
 
 if not exist "%LIBCARLA_VSPROJECT_PATH%" mkdir "%LIBCARLA_VSPROJECT_PATH%"
@@ -80,13 +86,58 @@ cd "%LIBCARLA_VSPROJECT_PATH%"
 rem Build libcarla server
 rem
 if %BUILD_SERVER% == true if not exist "%LIBCARLA_SERVER_INSTALL_PATH%" (
-    cmake -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Server -DCMAKE_CXX_FLAGS_RELEASE=/MD -DCMAKE_INSTALL_PREFIX=%LIBCARLA_SERVER_INSTALL_PATH% %ROOT_PATH%
+    cmake -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Server -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP" -DCMAKE_INSTALL_PREFIX=%LIBCARLA_SERVER_INSTALL_PATH% %ROOT_PATH%
+    if %errorlevel% neq 0 goto error_cmake
+
     cmake --build . --config Release --target install
+    if %errorlevel% neq 0 goto error_install
 )
 
 rem Build libcarla client
 rem
 if %BUILD_CLIENT% == true if not exist "%LIBCARLA_CLIENT_INSTALL_PATH%" (
-    cmake -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Client -DCMAKE_CXX_FLAGS_RELEASE=/MD -DCMAKE_INSTALL_PREFIX=%LIBCARLA_CLIENT_INSTALL_PATH% %ROOT_PATH%
+    cmake -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Client -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP" -DCMAKE_INSTALL_PREFIX=%LIBCARLA_CLIENT_INSTALL_PATH% %ROOT_PATH%
+    if %errorlevel% neq 0 goto error_cmake
+
     cmake --build . --config Release --target install
+    if %errorlevel% neq 0 goto error_install
 )
+
+goto success
+
+rem ============================================================================
+rem -- Messages and Errors -----------------------------------------------------
+rem ============================================================================
+
+:success
+    echo.
+    if %BUILD_SERVER% == true echo %FILE_N% LibCarla client has been successfully installed in "%LIBCARLA_SERVER_INSTALL_PATH%"!
+    if %BUILD_CLIENT% == true echo %FILE_N% LibCarla client has been successfully installed in "%LIBCARLA_CLIENT_INSTALL_PATH%"!
+    goto good_exit
+
+:error_cmake
+    echo.
+    echo %FILE_N% [CMAKE ERROR] An error ocurred while executing the cmake.
+    echo %FILE_N% [CMAKE ERROR] Possible causes:
+    echo %FILE_N%                - Make sure "CMake" is installed.
+    echo %FILE_N%                - Make sure it is available on your Windows "path".
+    echo %FILE_N%                - CMake 3.9.0 or higher is required.
+    goto bad_exit
+
+:error_install
+    echo.
+    echo %FILE_N% [Visual Studio 15 2017 Win64 ERROR] An error ocurred while installing using Visual Studio 15 2017 Win64.
+    echo %FILE_N% [Visual Studio 15 2017 Win64 ERROR] Possible causes:
+    echo %FILE_N%                - Make sure you have Visual Studio installed.
+    echo %FILE_N%                - Make sure you have the "x64 Visual C++ Toolset" in your path.
+    echo %FILE_N%                  For example using the "Visual Studio x64 Native Tools Command Prompt",
+    echo %FILE_N%                  or the "vcvarsall.bat".
+    goto bad_exit
+
+:good_exit
+    endlocal
+    exit /b 0
+
+:bad_exit
+    endlocal
+    exit /b %errorlevel%
