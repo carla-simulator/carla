@@ -1,10 +1,9 @@
 @echo off
+setlocal
 
 rem BAT script that downloads and installs a ready to use
 rem boost build for CARLA (carla.org).
 rem Just put it in `Util/Build` and run it.
-
-setlocal
 
 set LOCAL_PATH=%~dp0
 set "FILE_N=    -[%~n0]:"
@@ -27,9 +26,14 @@ if not "%1"=="" (
     goto :arg-parse
 )
 
+rem If not set set the build dir to the current dir
 if [%BUILD_DIR%] == [] set BUILD_DIR=.
+
+rem If not definned use Visual Studio 2017 as tool set
 if [%B_TOOLSET%] == [] set B_TOOLSET=msvc-14.1
-if [%NUMBER_OF_ASYNC_JOBS%] == [] set NUMBER_OF_ASYNC_JOBS=1
+
+rem If is not set set the number of parallel jobs to the number of CPU threads
+if [%NUMBER_OF_ASYNC_JOBS%] == [] set NUMBER_OF_ASYNC_JOBS=%NUMBER_OF_PROCESSORS%
 
 set B_VERSION=boost-1.67.0
 set B_SRC=boost-src
@@ -46,11 +50,8 @@ if not exist "%B_SRC_DIR%" (
     echo %FILE_N% Cloning Boost - version "%B_VERSION%"...
     echo.
 
-    rem call git clone --depth=1 -b %B_VERSION% --recurse-submodules -j8 https://github.com/boostorg/boost.git %B_SRC_DIR%
-    rem clone master as there is bug in 1.67 related to python boost (https://github.com/boostorg/python/issues/193)
-
-    call git clone --depth=1 --recurse-submodules -j8 https://github.com/boostorg/boost.git %B_SRC_DIR%
-    if errorlevel 1 goto error_git
+    call git clone --depth=1 -b %B_VERSION% --recurse-submodules -j%NUMBER_OF_ASYNC_JOBS% https://github.com/boostorg/boost.git %B_SRC_DIR%
+    if %errorlevel% neq 0 goto error_git
 ) else (
     echo %FILE_N% Not cloning boost because already exists a folder called "%B_SRC%".
 )
@@ -61,13 +62,13 @@ if not exist "b2.exe" (
     call bootstrap.bat
 )
 
-if errorlevel 1 goto error_bootstrap
+if %errorlevel% neq 0 goto error_bootstrap
 
 echo %FILE_N% Packing headers...
 b2 headers link=static
 
 echo %FILE_N% Building...
-b2 -j8^
+b2 -j%NUMBER_OF_ASYNC_JOBS%^
     headers^
     --layout=versioned^
     --build-dir=./build^
@@ -82,17 +83,14 @@ b2 -j8^
     --libdir="%B_LIB_DIR%"^
     --includedir="%B_INSTALL_DIR%"^
     install
-
-if errorlevel 1 goto error_install
+if %errorlevel% neq 0 goto error_install
 
 for /d %%i in ("%B_INSTALL_DIR%\boost-*") do rename "%%i" include
-cd "%BUILD_DIR%"
-
-rem Remove the downloaded protobuf source because is no more needed
-rem if you want to keep the source just delete the following command.
-rem @rd /s /q %B_SRC_DIR%
-
 goto success
+
+rem ============================================================================
+rem -- Messages and Errors -----------------------------------------------------
+rem ============================================================================
 
 :success
     echo.
@@ -126,10 +124,10 @@ goto success
     echo %FILE_N% Exiting...
     endlocal
     set install_boost=done
-    goto:EOF
+    exit /b 0
 
 :bad_exit
     if exist "%B_INSTALL_DIR%" rd /s /q "%B_INSTALL_DIR%"
     echo %FILE_N% Exiting with error...
     endlocal
-    goto:EOF
+    exit /b %errorlevel%
