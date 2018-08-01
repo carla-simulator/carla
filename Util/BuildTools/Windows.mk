@@ -2,8 +2,11 @@ ARGS=--all
 
 default: help
 
-export ROOT_PATH=$(CURDIR)/# root of the project (makefile directory)
-export INSTALLATION_DIR=$(ROOT_PATH)Build/# dependecy install/build directory (rpclib, gtest, boost)
+# root of the project (makefile directory)
+export ROOT_PATH=$(CURDIR)/
+
+# dependecy install/build directory (rpclib, gtest, boost)
+export INSTALLATION_DIR=$(ROOT_PATH)Build/
 
 help:
 	@type "${CARLA_BUILD_TOOLS_FOLDER}\Linux.mk.help"
@@ -15,7 +18,7 @@ launch-only:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat --launch
 
 package: CarlaUE4Editor PythonAPI
-	@echo "Not implemented!"
+	@${CARLA_BUILD_TOOLS_FOLDER}/Package.bat
 
 docs:
 	@doxygen
