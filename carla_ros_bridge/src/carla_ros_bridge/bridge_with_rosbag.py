@@ -3,6 +3,7 @@ RosBridge class with rosbag support
 """
 
 import time
+from datetime import datetime
 
 from tf2_msgs.msg import TFMessage
 import rosbag
@@ -15,7 +16,9 @@ from carla_ros_bridge.bridge import CarlaRosBridge
 class CarlaRosBridgeWithBag(CarlaRosBridge):
     def __init__(self, *args, **kwargs):
         super(CarlaRosBridgeWithBag, self).__init__(*args, **kwargs)
-        rosbag_fname = rospy.get_param('rosbag_fname')
+
+        prefix, ext = os.path.splitext(rospy.get_param('rosbag_fname'))
+        rosbag_fname = os.path.abspath(prefix + rospy.get_param('curr_episode'))
         self.bag = rosbag.Bag(rosbag_fname, mode='w')
 
     def send_msgs(self):
@@ -24,6 +27,7 @@ class CarlaRosBridgeWithBag(CarlaRosBridge):
 
         tf_msg = TFMessage(self.tf_to_publish)
         self.bag.write('tf', tf_msg, self.cur_time)
+
         super(CarlaRosBridgeWithBag, self).send_msgs()
 
     def __enter__(self):

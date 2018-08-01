@@ -39,7 +39,7 @@ def view_start_positions(args):
 
         try:
             image = mpimg.imread('carla/planner/%s.png' % scene.map_name)
-            carla_map = CarlaMap(scene.map_name, 0.1653, 50)
+            carla_map = CarlaMap(scene.map_name)
         except IOError as exception:
             logging.error(exception)
             logging.error('Cannot find map "%s"', scene.map_name)

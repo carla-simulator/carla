@@ -198,6 +198,7 @@ void UCarlaSettings::LoadSettings()
     }
     uint32 Value;
     if (FParse::Value(FCommandLine::Get(), TEXT("-world-port="), Value) ||
+        FParse::Value(FCommandLine::Get(), TEXT("-carla-port="), Value) ||
         FParse::Value(FCommandLine::Get(), TEXT("-carla-world-port="), Value)) {
       WorldPort = Value;
       bUseNetworking = true;

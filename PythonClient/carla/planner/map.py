@@ -31,7 +31,7 @@ def color_to_angle(color):
 
 class CarlaMap(object):
 
-    def __init__(self, city, pixel_density, node_density):
+    def __init__(self, city, pixel_density=0.1643, node_density=50):
         dir_path = os.path.dirname(__file__)
         city_file = os.path.join(dir_path, city + '.txt')
 
@@ -64,8 +64,10 @@ class CarlaMap(object):
         self.map_image_center = np.asarray(self.map_image_center, dtype="int32")
 
     def get_graph_resolution(self):
-
         return self._graph.get_resolution()
+
+    def get_map_resolution(self):
+        return self._converter.get_map_resolution()
 
     def get_map(self, height=None):
         if height is not None:
