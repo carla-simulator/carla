@@ -8,8 +8,9 @@
 
 #include "Engine/GameInstance.h"
 
-#include "Game/CarlaGameControllerBase.h"
-#include "Game/DataRouter.h"
+#include "Carla/Game/CarlaGameControllerBase.h"
+#include "Carla/Game/DataRouter.h"
+#include "Carla/Server/TheNewCarlaServer.h"
 
 #include "CarlaGameInstance.generated.h"
 
@@ -62,12 +63,26 @@ public:
     return DataRouter;
   }
 
+  void NotifyBeginEpisode(UCarlaEpisode &Episode);
+
+  void Tick(float /*DeltaSeconds*/)
+  {
+    Server.RunSome(10u); /// @todo
+  }
+
+  void NotifyEndEpisode();
+
 private:
 
+  UPROPERTY(VisibleAnywhere)
+  bool bServerIsRunning = false;
+
   UPROPERTY(Category = "CARLA Settings", EditAnywhere)
-  UCarlaSettings *CarlaSettings;
+  UCarlaSettings *CarlaSettings = nullptr;
 
   FDataRouter DataRouter;
 
   TUniquePtr<ICarlaGameControllerBase> GameController;
+
+  FTheNewCarlaServer Server;
 };

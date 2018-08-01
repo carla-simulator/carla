@@ -26,11 +26,11 @@ C++
 ---
 
   * Compilation should not give any error or warning
-    (`clang++ -Wall -Wextra -std=C++14`).
+    (`clang++ -Wall -Wextra -std=C++14 -Wno-missing-braces`).
   * Unreal C++ code (CarlaUE4 and Carla plugin) follow the
     [Unreal Engine's Coding Standard][ue4link] with the exception of using
     spaces instead of tabs.
-  * CarlaServer uses [Google's style guide][googlelink].
+  * LibCarla uses a variation of [Google's style guide][googlelink].
 
 [ue4link]: https://docs.unrealengine.com/latest/INT/Programming/Development/CodingStandard/
 [googlelink]: https://google.github.io/styleguide/cppguide.html

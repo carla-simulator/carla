@@ -35,16 +35,17 @@ public:
 
   virtual void Tick(float DeltaSeconds) override;
 
-	
+
   virtual FPathFollowingRequestResult MoveTo(
       const FAIMoveRequest& MoveRequest,
       FNavPathSharedPtr* OutPath = nullptr) override;
 
-  virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult &Result) override;
-  
+  virtual void OnMoveCompleted(
+      FAIRequestID RequestID,
+      const FPathFollowingResult &Result) override;
 
   UFUNCTION(BlueprintCallable)
-  void SenseActors(TArray<AActor *> Actors);
+  void SenseActors(const TArray<AActor *> &Actors);
 
   EWalkerStatus GetWalkerStatus() const
   {
@@ -58,19 +59,27 @@ public:
   float GetTimeInState() const { return TimeInState; }
 
 private:
+
   void ChangeStatus(EWalkerStatus status);
+
   void TryResumeMovement();
-  
+
   void TryPauseMovement(bool bItWasRunOver = false);
 
   UFUNCTION()
-  void OnPawnTookDamage(AActor *DamagedActor, float Damage, const UDamageType *DamageType, AController *InstigatedBy, AActor *DamageCauser);
+  void OnPawnTookDamage(
+      AActor *DamagedActor,
+      float Damage,
+      const UDamageType *DamageType,
+      AController *InstigatedBy,
+      AActor *DamageCauser);
 
   UPROPERTY(Category = "Walker AI Controller", VisibleAnywhere)
   UAISenseConfig_Sight *SightConfiguration;
 
   UPROPERTY(VisibleAnywhere)
   EWalkerStatus Status = EWalkerStatus::Unknown;
+
   /** Continous time in the same EWalkerStatus */
   float TimeInState=0.0f;
 };

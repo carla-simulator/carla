@@ -7,25 +7,34 @@
 #include "Carla.h"
 #include "PostProcessEffect.h"
 
-#include "Package.h"
-
 FString PostProcessEffect::ToString(EPostProcessEffect PostProcessEffect)
 {
-  const UEnum* ptr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EPostProcessEffect"), true);
-  if(!ptr)
-    return FString("Invalid");
-  return ptr->GetNameStringByIndex(static_cast<int32>(PostProcessEffect));
+  static_assert(
+      static_cast<uint8>(EPostProcessEffect::SIZE) == 4u,
+      "If you add a new post-process effect, please update these functions.");
+
+  switch (PostProcessEffect)
+  {
+    case EPostProcessEffect::None:                  return TEXT("None");
+    case EPostProcessEffect::SceneFinal:            return TEXT("SceneFinal");
+    case EPostProcessEffect::Depth:                 return TEXT("Depth");
+    case EPostProcessEffect::SemanticSegmentation:  return TEXT("SemanticSegmentation");
+    default:
+      UE_LOG(LogCarla, Error, TEXT("Invalid post-processing effect \"%d\""), ToUInt(PostProcessEffect));
+      return TEXT("INVALID");
+  }
 }
 
 EPostProcessEffect PostProcessEffect::FromString(const FString &String)
 {
-  if (String == "None") {
+  auto Str = String.ToLower();
+  if (Str == "none") {
     return EPostProcessEffect::None;
-  } else if (String == "SceneFinal") {
+  } else if (Str == "scenefinal") {
     return EPostProcessEffect::SceneFinal;
-  } else if (String == "Depth") {
+  } else if (Str == "depth") {
     return EPostProcessEffect::Depth;
-  } else if (String == "SemanticSegmentation") {
+  } else if (Str == "semanticsegmentation") {
     return EPostProcessEffect::SemanticSegmentation;
   } else {
     UE_LOG(LogCarla, Error, TEXT("Invalid post-processing effect \"%s\""), *String);

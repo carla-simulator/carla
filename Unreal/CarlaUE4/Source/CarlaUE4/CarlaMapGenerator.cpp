@@ -17,7 +17,7 @@ ACarlaMapGenerator::ACarlaMapGenerator(const FObjectInitializer& ObjectInitializ
       SetStaticMesh(ECityMapMeshTag:: Tag, MeshObj.Object); \
     }
 
-#define PREFIX_FOLDER "/Game/Static/"
+#define PREFIX_FOLDER "/Game/Carla/Static/"
 
   SET_STATIC_MESH(RoadTwoLanes_LaneLeft,           PREFIX_FOLDER "Road",        "St_Road_TileRoad_RoadL");
   SET_STATIC_MESH(RoadTwoLanes_LaneRight,          PREFIX_FOLDER "Road",        "St_Road_TileRoad_RoadR");
