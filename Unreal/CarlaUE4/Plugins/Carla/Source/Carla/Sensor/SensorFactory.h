@@ -6,28 +6,20 @@
 
 #pragma once
 
-#include "Settings/SensorDescriptionVisitor.h"
+#include "Carla/Actor/ActorSpawnResult.h"
+#include "Carla/Actor/CarlaActorFactory.h"
 
-class ASensor;
-class UWorld;
+#include "SensorFactory.generated.h"
 
-class FSensorFactory : private ISensorDescriptionVisitor
+/// Object in charge of spawning sensors.
+UCLASS()
+class CARLA_API ASensorFactory : public ACarlaActorFactory
 {
-public:
+  GENERATED_BODY()
 
-  static ASensor *Make(
-      const USensorDescription &Description,
-      UWorld &World);
+  TArray<FActorDefinition> GetDefinitions() final;
 
-private:
-
-  FSensorFactory(UWorld &World);
-
-  virtual void Visit(const UCameraDescription &) final;
-
-  virtual void Visit(const ULidarDescription &) final;
-
-  UWorld &World;
-
-  ASensor *Sensor = nullptr;
+  FActorSpawnResult SpawnActor(
+      const FTransform &SpawnAtTransform,
+      const FActorDescription &ActorDescription) final;
 };

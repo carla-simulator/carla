@@ -9,12 +9,15 @@
 
 #include "Server/CarlaEncoder.h"
 
-#include <carla/carla_server.h>
+#ifdef CARLA_COMPILE_CARLASERVER_LEGACY
+#  include <carla/carla_server.h>
+#endif // CARLA_COMPILE_CARLASERVER_LEGACY
 
 // =============================================================================
 // -- Static local methods -----------------------------------------------------
 // =============================================================================
 
+#ifdef CARLA_COMPILE_CARLASERVER_LEGACY
 static FCarlaServer::ErrorCode ParseErrorCode(const uint32 ErrorCode)
 {
   if (ErrorCode == CARLA_SERVER_SUCCESS) {
@@ -25,6 +28,7 @@ static FCarlaServer::ErrorCode ParseErrorCode(const uint32 ErrorCode)
     return FCarlaServer::Error;
   }
 }
+#endif // CARLA_COMPILE_CARLASERVER_LEGACY
 
 static int32 GetTimeOut(uint32 TimeOut, const bool bBlocking)
 {
@@ -38,7 +42,12 @@ static int32 GetTimeOut(uint32 TimeOut, const bool bBlocking)
 FCarlaServer::FCarlaServer(const uint32 InWorldPort, const uint32 InTimeOut) :
   WorldPort(InWorldPort),
   TimeOut(InTimeOut),
-  Server(carla_make_server()) {
+#ifdef CARLA_COMPILE_CARLASERVER_LEGACY
+  Server(carla_make_server())
+#else
+  Server(nullptr)
+#endif // CARLA_COMPILE_CARLASERVER_LEGACY
+{
   check(Server != nullptr);
 }
 
@@ -47,17 +56,26 @@ FCarlaServer::~FCarlaServer()
 #ifdef CARLA_SERVER_EXTRA_LOG
   UE_LOG(LogCarlaServer, Warning, TEXT("Destroying CarlaServer"));
 #endif // CARLA_SERVER_EXTRA_LOG
+#ifdef CARLA_COMPILE_CARLASERVER_LEGACY
   carla_free_server(Server);
+#endif // CARLA_COMPILE_CARLASERVER_LEGACY
 }
 
 FCarlaServer::ErrorCode FCarlaServer::Connect()
 {
+#ifdef CARLA_COMPILE_CARLASERVER_LEGACY
   UE_LOG(LogCarlaServer, Log, TEXT("Waiting for the client to connect..."));
   return ParseErrorCode(carla_server_connect(Server, WorldPort, TimeOut));
+#else
+  UE_LOG(LogCarlaServer, Error, TEXT("CarlaServer no longer supported!!"));
+  return ErrorCode::Error;
+#endif // CARLA_COMPILE_CARLASERVER_LEGACY
 }
 
 FCarlaServer::ErrorCode FCarlaServer::ReadNewEpisode(FString &IniFile, const bool bBlocking)
 {
+#ifdef CARLA_COMPILE_CARLASERVER_LEGACY
+
   carla_request_new_episode values;
   auto ec = ParseErrorCode(carla_read_request_new_episode(Server, values, GetTimeOut(TimeOut, bBlocking)));
   if (Success == ec) {
@@ -68,6 +86,10 @@ FCarlaServer::ErrorCode FCarlaServer::ReadNewEpisode(FString &IniFile, const boo
 #endif // CARLA_SERVER_EXTRA_LOG
   }
   return ec;
+
+#else
+  return ErrorCode::Error;
+#endif // CARLA_COMPILE_CARLASERVER_LEGACY
 }
 
 FCarlaServer::ErrorCode FCarlaServer::SendSceneDescription(
@@ -76,6 +98,8 @@ FCarlaServer::ErrorCode FCarlaServer::SendSceneDescription(
     const TArray<USensorDescription *> &SensorDescriptions,
     const bool bBlocking)
 {
+#ifdef CARLA_COMPILE_CARLASERVER_LEGACY
+
   carla_scene_description scene;
   // Encode map name.
   const auto MapNameBuffer = FCarlaEncoder::Encode(MapName);
@@ -95,10 +119,16 @@ FCarlaServer::ErrorCode FCarlaServer::SendSceneDescription(
   UE_LOG(LogCarlaServer, Log, TEXT("Sending %d available start positions"), scene.number_of_player_start_spots);
   UE_LOG(LogCarlaServer, Log, TEXT("Sending %d sensor descriptions"), scene.number_of_sensors);
   return ParseErrorCode(carla_write_scene_description(Server, scene, GetTimeOut(TimeOut, bBlocking)));
+
+#else
+  return ErrorCode::Error;
+#endif // CARLA_COMPILE_CARLASERVER_LEGACY
 }
 
 FCarlaServer::ErrorCode FCarlaServer::ReadEpisodeStart(uint32 &StartPositionIndex, const bool bBlocking)
 {
+#ifdef CARLA_COMPILE_CARLASERVER_LEGACY
+
   carla_episode_start values;
   auto ec = ParseErrorCode(carla_read_episode_start(Server, values, GetTimeOut(TimeOut, bBlocking)));
   if (Success == ec) {
@@ -106,17 +136,29 @@ FCarlaServer::ErrorCode FCarlaServer::ReadEpisodeStart(uint32 &StartPositionInde
     UE_LOG(LogCarlaServer, Log, TEXT("Episode start received: { StartIndex = %d }"), StartPositionIndex);
   }
   return ec;
+
+#else
+  return ErrorCode::Error;
+#endif // CARLA_COMPILE_CARLASERVER_LEGACY
 }
 
 FCarlaServer::ErrorCode FCarlaServer::SendEpisodeReady(const bool bBlocking)
 {
+#ifdef CARLA_COMPILE_CARLASERVER_LEGACY
+
   UE_LOG(LogCarlaServer, Log, TEXT("Ready to play, notifying client"));
   const carla_episode_ready values = {true};
   return ParseErrorCode(carla_write_episode_ready(Server, values, GetTimeOut(TimeOut, bBlocking)));
+
+#else
+  return ErrorCode::Error;
+#endif // CARLA_COMPILE_CARLASERVER_LEGACY
 }
 
 FCarlaServer::ErrorCode FCarlaServer::ReadControl(FVehicleControl &Control, const bool bBlocking)
 {
+#ifdef CARLA_COMPILE_CARLASERVER_LEGACY
+
   carla_control values;
   auto ec = ParseErrorCode(carla_read_control(Server, values, GetTimeOut(TimeOut, bBlocking)));
   if (Success == ec) {
@@ -137,13 +179,23 @@ FCarlaServer::ErrorCode FCarlaServer::ReadControl(FVehicleControl &Control, cons
     UE_LOG(LogCarlaServer, Warning, TEXT("No control received from the client this frame!"));
   }
   return ec;
+
+#else
+  return ErrorCode::Error;
+#endif // CARLA_COMPILE_CARLASERVER_LEGACY
 }
 
 FCarlaServer::ErrorCode FCarlaServer::SendSensorData(const FSensorDataView &Data)
 {
+#ifdef CARLA_COMPILE_CARLASERVER_LEGACY
+
   carla_sensor_data values;
   FCarlaEncoder::Encode(Data, values);
   return ParseErrorCode(carla_write_sensor_data(Server, values));
+
+#else
+  return ErrorCode::Error;
+#endif // CARLA_COMPILE_CARLASERVER_LEGACY
 }
 
 FCarlaServer::ErrorCode FCarlaServer::SendMeasurements(
@@ -151,6 +203,8 @@ FCarlaServer::ErrorCode FCarlaServer::SendMeasurements(
     const TArray<const UAgentComponent *> &Agents,
     const bool bSendNonPlayerAgentsInfo)
 {
+#ifdef CARLA_COMPILE_CARLASERVER_LEGACY
+
   // Encode measurements.
   carla_measurements values;
   FCarlaEncoder::Encode(PlayerState, values);
@@ -166,4 +220,8 @@ FCarlaServer::ErrorCode FCarlaServer::SendMeasurements(
   UE_LOG(LogCarlaServer, Log, TEXT("Sending data of %d agents"), values.number_of_non_player_agents);
 #endif // CARLA_SERVER_EXTRA_LOG
   return ParseErrorCode(carla_write_measurements(Server, values));
+
+#else
+  return ErrorCode::Error;
+#endif // CARLA_COMPILE_CARLASERVER_LEGACY
 }

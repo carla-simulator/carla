@@ -66,7 +66,7 @@ static ECityObjectLabel GetLabelByPath(const T *Object)
   const FString Path = Object->GetPathName();
   TArray<FString> StringArray;
   Path.ParseIntoArray(StringArray, TEXT("/"), false);
-  return (StringArray.Num() > 3 ? GetLabelByFolderName(StringArray[3]) : ECityObjectLabel::None);
+  return (StringArray.Num() > 4 ? GetLabelByFolderName(StringArray[4]) : ECityObjectLabel::None);
 }
 
 static void SetStencilValue(
