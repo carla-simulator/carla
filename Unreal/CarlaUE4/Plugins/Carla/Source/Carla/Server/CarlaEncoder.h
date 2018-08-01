@@ -6,6 +6,8 @@
 
 #pragma once
 
+#ifdef CARLA_COMPILE_CARLASERVER_LEGACY
+
 #include "Agent/AgentComponentVisitor.h"
 
 #include "Sensor/SensorDataView.h"
@@ -74,3 +76,5 @@ private:
 
   carla_agent &Data;
 };
+
+#endif // CARLA_COMPILE_CARLASERVER_LEGACY
