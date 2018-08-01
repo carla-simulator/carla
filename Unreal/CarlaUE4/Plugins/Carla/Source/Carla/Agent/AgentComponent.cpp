@@ -14,12 +14,11 @@
 #include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
 
-static FDataRouter &GetDataRouter(UWorld *World)
+static FDataRouter *GetDataRouter(UWorld *World)
 {
   check(World != nullptr);
   ACarlaGameModeBase *GameMode = Cast<ACarlaGameModeBase>(World->GetAuthGameMode());
-  check(GameMode != nullptr);
-  return GameMode->GetDataRouter();
+  return GameMode != nullptr ? &GameMode->GetDataRouter() : nullptr;
 }
 
 UAgentComponent::UAgentComponent(const FObjectInitializer& ObjectInitializer)
@@ -43,14 +42,18 @@ void UAgentComponent::BeginPlay()
   if (bRegisterAgentComponent)
   {
     /**
-      * This only returns true if the current game mode is not null 
+      * This only returns true if the current game mode is not null
       * because you can only access a game mode if you are the host
       * @param oftheworld UWorld is needed to access the game mode
       * @return true if there is a game mode and it is not null
      */
     if(UGameplayStatics::GetGameMode(GetWorld())!=nullptr)
     {
-      GetDataRouter(GetWorld()).RegisterAgent(this);
+      auto *DataRouter = GetDataRouter(GetWorld());
+      if (DataRouter != nullptr)
+      {
+        DataRouter->RegisterAgent(this);
+      }
     } else
     {
         UCarlaGameInstance* GameInstance = Cast<UCarlaGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
@@ -64,15 +67,22 @@ void UAgentComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
   if (bAgentComponentIsRegistered)
   {
+    FDataRouter *DataRouter = nullptr;
     if(UGameplayStatics::GetGameMode(GetWorld())!=nullptr)
     {
-     GetDataRouter(GetWorld()).DeregisterAgent(this);
+      DataRouter = GetDataRouter(GetWorld());
     }
     else
     {
-        UCarlaGameInstance* GameInstance = Cast<UCarlaGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-        if(GameInstance)
-           GameInstance->GetDataRouter().DeregisterAgent(this);
+      UCarlaGameInstance *GameInstance = Cast<UCarlaGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+      if(GameInstance)
+      {
+        DataRouter = &GameInstance->GetDataRouter();
+      }
+    }
+    if (DataRouter != nullptr)
+    {
+      DataRouter->DeregisterAgent(this);
     }
     bAgentComponentIsRegistered = false;
   }
