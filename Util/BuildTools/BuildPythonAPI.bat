@@ -56,8 +56,8 @@ if not "%1"=="" (
 )
 
 set PYTHON_LIB_PATH=%ROOT_PATH%PythonAPI\
-set PYTHON_LIB_BUILD=%PYTHON_LIB_PATH%build
-set PYTHON_LIB_DEPENDENCIES=%PYTHON_LIB_PATH%dependencies
+set PYTHON_LIB_BUILD=%PYTHON_LIB_PATH%build\
+set PYTHON_LIB_DEPENDENCIES=%PYTHON_LIB_PATH%dependencies\
 
 if %REMOVE_INTERMEDIATE% == false (
     if %BUILD_FOR_PYTHON3% == false (
@@ -78,10 +78,11 @@ if %REMOVE_INTERMEDIATE% == true (
     if exist "%PYTHON_LIB_DEPENDENCIES%" rmdir /S /Q "%PYTHON_LIB_DEPENDENCIES%"
 
     echo %FILE_N% Cleaning "%PYTHON_LIB_PATH%\dist"
-    if exist "%PYTHON_LIB_PATH%\dist" rmdir /S /Q "%PYTHON_LIB_PATH%\dist"
+    if exist "%PYTHON_LIB_PATH%dist" rmdir /S /Q "%PYTHON_LIB_PATH%dist"
 )
 
 cd "%PYTHON_LIB_PATH%"
+if exist "%PYTHON_LIB_PATH%dist" goto already_installed
 
 rem ============================================================================
 rem -- Check for py ------------------------------------------------------------
@@ -111,7 +112,12 @@ rem ============================================================================
 
 :success
     echo.
-    if %BUILD_FOR_PYTHON3%==true echo %FILE_N% Carla lib for python has been successfully installed in "%PYTHON_LIB_PATH%\dist"!
+    if %BUILD_FOR_PYTHON3%==true echo %FILE_N% Carla lib for python has been successfully installed in "%PYTHON_LIB_PATH%dist"!
+    goto good_exit
+
+:already_installed
+    echo.
+    echo %FILE_N% already installed in "%PYTHON_LIB_PATH%dist"
     goto good_exit
 
 :py2_not_supported

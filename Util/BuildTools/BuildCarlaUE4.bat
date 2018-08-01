@@ -1,5 +1,4 @@
 @echo off
-
 setlocal
 
 set LOCAL_PATH=%~dp0
@@ -77,6 +76,13 @@ pushd "%CARLA_FOLDER%"
 
 if %REMOVE_INTERMEDIATE% == true (
     echo.
+
+    echo %FILE_N% cleaning "%CARLA_FOLDER%Saved"
+    if exist "%CARLA_FOLDER%Saved" rmdir /S /Q "%CARLA_FOLDER%Saved"
+
+    echo %FILE_N% cleaning "%CARLA_FOLDER%Build"
+    if exist "%CARLA_FOLDER%Build" rmdir /S /Q "%CARLA_FOLDER%Build"
+
     echo %FILE_N% cleaning "%CARLA_FOLDER%Binaries"
     if exist "%CARLA_FOLDER%Binaries" rmdir /S /Q "%CARLA_FOLDER%Binaries"
 
@@ -88,10 +94,6 @@ if %REMOVE_INTERMEDIATE% == true (
 
     echo %FILE_N% cleaning "%CARLA_FOLDER%Plugins\Carla\Intermediate"
     if exist "%CARLA_FOLDER%Plugins\Carla\Intermediate" rmdir /S /Q "%CARLA_FOLDER%Plugins\Carla\Intermediate"
-)
-
-if %HARD_CLEAN% == true (
-    make CarlaUE4Editor
 )
 
 if %BUILD_CARLAUE4 == true (
