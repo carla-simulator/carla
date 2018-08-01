@@ -44,7 +44,7 @@ done
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 pushd "$SCRIPT_DIR" >/dev/null
 
-CONTENT_FOLDER=$SCRIPT_DIR/Unreal/CarlaUE4/Content
+CONTENT_FOLDER=$SCRIPT_DIR/Unreal/CarlaUE4/Content/Carla
 
 CONTENT_GDRIVE_ID=$(tac $SCRIPT_DIR/Util/ContentVersions.txt | egrep -m 1 . | rev | cut -d' ' -f1 | rev)
 
@@ -74,7 +74,7 @@ if $SKIP_DOWNLOAD ; then
   echo
   echo "  https://drive.google.com/open?id=$CONTENT_GDRIVE_ID"
   echo
-  echo "and extract it under Unreal/CarlaUE4/Content."
+  echo "and extract it under Unreal/CarlaUE4/Content/Carla."
   exit 0
 fi
 

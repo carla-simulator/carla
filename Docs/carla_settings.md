@@ -2,6 +2,12 @@
 
 > _This document is a work in progress and might be incomplete._
 
+!!! important
+    This document still refers to the 0.8.X API (stable version). The
+    proceedings stated here may not apply to latest versions, 0.9.0 or later.
+    Latest versions introduced significant changes in the API, we are still
+    working on documenting everything, sorry for the inconvenience.
+
 CarlaSettings.ini
 -----------------
 
@@ -14,7 +20,7 @@ hierarchy overriding earlier values.
 
   1. `{CarlaFolder}/Unreal/CarlaUE4/Config/CarlaSettings.ini`.
   2. File provided by command-line argument `-carla-settings="Path/To/CarlaSettings.ini"`.
-  3. Other command-line arguments as `-carla-server` or `-world-port`.
+  3. Other command-line arguments like `-carla-port`.
   4. Settings file sent by the client on every new episode.
 
 Take a look at the [CARLA Settings example][settingslink].
@@ -54,8 +60,6 @@ WeatherId=6
 Simulator command-line options
 ------------------------------
 
-  * `-carla-server` Launches CARLA as server, the execution hangs until a client connects.
   * `-carla-settings="Path/To/CarlaSettings.ini"` Load settings from the given INI file. See Example.CarlaSettings.ini.
-  * `-carla-world-port=N` Listen for client connections at port N, agent ports are set to N+1 and N+2 respectively. Activates server.
+  * `-carla-port=N` Listen for client connections at port N, streaming port is set to N+1.
   * `-carla-no-hud` Do not display the HUD by default.
-  * `-carla-no-networking` Disable networking. Overrides `-carla-server` if present.
