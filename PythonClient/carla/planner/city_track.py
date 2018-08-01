@@ -13,12 +13,7 @@ from carla.planner.map import CarlaMap
 class CityTrack(object):
 
     def __init__(self, city_name):
-
-        # These values are fixed for every city.
-        self._node_density = 50.0
-        self._pixel_density = 0.1643
-
-        self._map = CarlaMap(city_name, self._pixel_density, self._node_density)
+        self._map = CarlaMap(city_name)
 
         self._astar = AStar()
 
@@ -53,10 +48,10 @@ class CityTrack(object):
         return self._map.get_intersection_nodes()
 
     def get_pixel_density(self):
-        return self._pixel_density
+        return self._map.get_map_resolution()
 
     def get_node_density(self):
-        return self._node_density
+        return self._map.get_graph_resolution()
 
     def is_at_goal(self, source, target):
         return source == target
