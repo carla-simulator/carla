@@ -15,9 +15,9 @@ class MapHandler(object):
     Convert CarlaMap lane image to ROS OccupancyGrid message
     """
 
-    def __init__(self, map_name, topic='/map', res=0.1643):
+    def __init__(self, map_name, topic='/map'):
         self.map_name = map_name
-        self.carla_map = CarlaMap(map_name, res, 50)
+        self.carla_map = CarlaMap(map_name)
         self.map_pub = rospy.Publisher(
             topic, OccupancyGrid, queue_size=10, latch=True)
         self.build_map_message()
@@ -48,9 +48,7 @@ class MapHandler(object):
         to_world = self.carla_map.convert_to_world(top_right_corner)
         map_msg.info.origin.position.x = to_world[0]
         map_msg.info.origin.position.y = -to_world[1]
-
-        # FIXME: remove hardcoded values from convert_to_world (PR #542)
-        map_msg.info.origin.position.z = -self.carla_map._converter._worldoffset[2]
+        map_msg.info.origin.position.z = to_world[2]
 
         # FIXME: height for Town01 is still in centimeters (issue #541)
         if self.map_name == 'Town01':
