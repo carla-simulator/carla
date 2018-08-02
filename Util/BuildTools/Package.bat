@@ -1,13 +1,54 @@
 @echo off
-setlocal enableextensions
+setlocal
 
-rem
+rem Bat script that compiles and exports the carla project (carla.org)
+rem Run it through a cmd with the x64 Visual C++ Toolset enabled.
 rem https://wiki.unrealengine.com/How_to_package_your_game_with_commands
-rem
 
 set LOCAL_PATH=%~dp0
 set "FILE_N=-[%~n0]:"
 
+rem ==============================================================================
+rem -- Parse arguments -----------------------------------------------------------
+rem ==============================================================================
+
+set DOC_STRING="Makes a packaged version of CARLA for distribution."
+set USAGE_STRING="Usage: %FILE_N% [-h|--help] [--no-packaging] [--no-zip] [--clean-intermediate]"
+
+set DO_PACKAGE=true
+set DO_COPY_FILES=true
+set DO_TARBALL=true
+set DO_CLEAN_INTERMEDIATE=false
+
+:arg-parse
+if not "%1"=="" (
+    if "%1"=="--clean-intermediate" (
+        set DO_CLEAN_INTERMEDIATE=true
+    )
+
+    if "%1"=="--no-zip" (
+        set DO_TARBALL=false
+    )
+
+    if "%1"=="--no-packaging" (
+        set DO_PACKAGE=false
+    )
+
+    if "%1"=="-h" (
+        echo %DOC_STRING%
+        echo %USAGE_STRING%
+        GOTO :eof
+    )
+
+    if "%1"=="--help" (
+        echo %DOC_STRING%
+        echo %USAGE_STRING%
+        GOTO :eof
+    )
+
+    shift
+    goto :arg-parse
+)
 
 rem Extract Unreal Engine root path
 rem
@@ -15,49 +56,82 @@ set KEY_NAME="HKEY_LOCAL_MACHINE\SOFTWARE\EpicGames\Unreal Engine\4.19"
 set VALUE_NAME=InstalledDirectory
 
 for /f %%i in ('git describe --tags --dirty --always') do set CARLA_VERSION=%%i
-if not defined CARLA_VERSION goto error_CARLA_VERSION
+if not defined CARLA_VERSION goto error_carla_version
 
 for /f "usebackq tokens=3*" %%A in (`reg query %KEY_NAME%  /v %VALUE_NAME%`) do set UE4_ROOT=%%A%%B
 if not defined UE4_ROOT goto error_unreal_no_found
 
-set CARLA_OUTPUT_PATH=%INSTALLATION_DIR%UE4Carla/%CARLA_VERSION%
-if not exist "%CARLA_OUTPUT_PATH%" mkdir "%CARLA_OUTPUT_PATH%"
+set BUILD_FOLDER=%INSTALLATION_DIR%UE4Carla/%CARLA_VERSION%/
+if not exist "%BUILD_FOLDER%" mkdir "%BUILD_FOLDER%"
+
+set DESTINATION_TAR="%BUILD_FOLDER%../CARLA_%CARLA_VERSION%.tar.gz"
+set SOURCE=%BUILD_FOLDER%WindowsNoEditor/
 
 rem ============================================================================
 rem -- Create Carla package ----------------------------------------------------
 rem ============================================================================
 
-call "%UE4_ROOT%\Engine\Build\BatchFiles\Build.bat"^
-    CarlaUE4Editor^
-    Win64^
-    Development^
-    -WaitMutex^
-    -FromMsBuild^
-    "%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"
+if %DO_PACKAGE%==true (
+    call "%UE4_ROOT%\Engine\Build\BatchFiles\Build.bat"^
+        CarlaUE4Editor^
+        Win64^
+        Development^
+        -WaitMutex^
+        -FromMsBuild^
+        "%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"
 
-call "%UE4_ROOT%\Engine\Build\BatchFiles\Build.bat"^
-    CarlaUE4^
-    Win64^
-    Development^
-    -WaitMutex^
-    -FromMsBuild^
-    "%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"
+    call "%UE4_ROOT%\Engine\Build\BatchFiles\Build.bat"^
+        CarlaUE4^
+        Win64^
+        Development^
+        -WaitMutex^
+        -FromMsBuild^
+        "%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"
 
-call "%UE4_ROOT%\Engine\Build\BatchFiles\RunUAT.bat"^
-    BuildCookRun^
-    -nocompileeditor^
-    -TargetPlatform=Win64^
-    -Platform=Win64^
-    -installed^
-    -nop4^
-    -project="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"^
-    -cook^
-    -stage^
-    -build^
-    -archive^
-    -archivedirectory="%CARLA_OUTPUT_PATH%"^
-    -package^
-    -clientconfig=Development
+    call "%UE4_ROOT%\Engine\Build\BatchFiles\RunUAT.bat"^
+        BuildCookRun^
+        -nocompileeditor^
+        -TargetPlatform=Win64^
+        -Platform=Win64^
+        -installed^
+        -nop4^
+        -project="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"^
+        -cook^
+        -stage^
+        -build^
+        -archive^
+        -archivedirectory="%BUILD_FOLDER%"^
+        -package^
+        -clientconfig=Development
+)
+
+rem ==============================================================================
+rem -- Zip the project -----------------------------------------------------------
+rem ==============================================================================
+
+if %DO_TARBALL%==true (
+    echo "%FILE_N% Building package..."
+
+    if exist %SOURCE%Manifest_NonUFSFiles_Win64.txt del /S /Q %SOURCE%Manifest_NonUFSFiles_Win64.txt
+    if exist %SOURCE%Manifest_DebugFiles_Win64.txt del /S /Q %SOURCE%Manifest_DebugFiles_Win64.txt
+    if exist %SOURCE%Manifest_UFSFiles_Win64.txt del /S /Q %SOURCE%Manifest_UFSFiles_Win64.txt
+
+    if exist CarlaUE4/Saved rmdir /S /Q CarlaUE4/Saved
+    if exist Engine/Saved rmdir /S /Q Engine/Saved
+
+    pushd "%SOURCE%""
+        tar -czvf "%DESTINATION_TAR%" "*"
+    popd
+)
+
+rem ==============================================================================
+rem -- Remove intermediate files -------------------------------------------------
+rem ==============================================================================
+
+if %DO_CLEAN_INTERMEDIATE%==true (
+    echo "%FILE_N% Removing intermediate build."
+    rmdir /S /Q "%BUILD_FOLDER%"
+)
 
 rem ============================================================================
 rem -- Messages and Errors -----------------------------------------------------
@@ -65,7 +139,8 @@ rem ============================================================================
 
 :success
     echo.
-    echo %FILE_N% Carla project successful exported to "%CARLA_OUTPUT_PATH%"!
+    if %DO_PACKAGE%==true echo %FILE_N% Carla project successful exported to "%CARLA_OUTPUT_PATH%"!
+    if %DO_TARBALL%==true echo %FILE_N% Compress carla project exported to "%DESTINATION_TAR%"!
     goto good_exit
 
 :error_carla_version
