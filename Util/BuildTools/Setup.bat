@@ -62,7 +62,7 @@ echo %FILE_N% Install directory:  "%INSTALLATION_DIR%"
 
 if not exist "%CONTENT_DIR%" (
     echo %FILE_N% Creating "%CONTENT_DIR%" folder...
-    mkdir "%CONTENT_DIR%""
+    mkdir "%CONTENT_DIR%"
 )
 
 if not exist "%INSTALLATION_DIR%" (
