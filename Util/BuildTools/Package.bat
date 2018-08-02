@@ -1,5 +1,5 @@
 @echo off
-setlocal
+setlocal enabledelayedexpansion
 
 rem Bat script that compiles and exports the carla project (carla.org)
 rem Run it through a cmd with the x64 Visual C++ Toolset enabled.
@@ -116,10 +116,32 @@ if %DO_PACKAGE%==true (
 )
 
 rem ==============================================================================
+rem -- Adding extra files to package ---------------------------------------------
+rem ==============================================================================
+
+if %DO_COPY_FILES%==true (
+    echo.
+    echo "%FILE_N% Adding extra files to package..."
+
+    set XCOPY_ROOT_FROM=%ROOT_PATH:/=\%
+    set XCOPY_COPY_TO=%SOURCE:/=\%
+
+    echo f | xcopy /y "!XCOPY_ROOT_FROM!LICENSE"                           "!XCOPY_COPY_TO!LICENSE"
+    echo f | xcopy /y "!XCOPY_ROOT_FROM!CHANGELOG.md"                      "!XCOPY_COPY_TO!CHANGELOG"
+    echo f | xcopy /y "!XCOPY_ROOT_FROM!Docs\release_readme.md"            "!XCOPY_COPY_TO!README"
+    echo f | xcopy /y "!XCOPY_ROOT_FROM!Util\Docker\Release.Dockerfile"    "!XCOPY_COPY_TO!Dockerfile"
+    echo f | xcopy /y "!XCOPY_ROOT_FROM!PythonAPI\dist\*.egg"              "!XCOPY_COPY_TO!PythonAPI\"
+    echo f | xcopy /y "!XCOPY_ROOT_FROM!PythonAPI\example.py"              "!XCOPY_COPY_TO!PythonAPI\example.py"
+    echo f | xcopy /y "!XCOPY_ROOT_FROM!PythonAPI\manual_control.py"       "!XCOPY_COPY_TO!PythonAPI\manual_control.py"
+    echo f | xcopy /y "!XCOPY_ROOT_FROM!PythonAPI\vehicle_gallery.py"      "!XCOPY_COPY_TO!PythonAPI\vehicle_gallery.py"
+)
+
+rem ==============================================================================
 rem -- Zip the project -----------------------------------------------------------
 rem ==============================================================================
 
 if %DO_TARBALL%==true (
+    echo.
     echo "%FILE_N% Building package..."
 
     if exist %SOURCE%Manifest_NonUFSFiles_Win64.txt del /S /Q %SOURCE%Manifest_NonUFSFiles_Win64.txt
@@ -130,7 +152,7 @@ if %DO_TARBALL%==true (
     if exist Engine/Saved rmdir /S /Q Engine/Saved
 
     pushd "%SOURCE%""
-        tar -czvf "%DESTINATION_TAR%" "*"
+        tar -czf "%DESTINATION_TAR%" "*"
     popd
 )
 
@@ -139,6 +161,7 @@ rem -- Remove intermediate files -----------------------------------------------
 rem ==============================================================================
 
 if %DO_CLEAN_INTERMEDIATE%==true (
+    echo.
     echo "%FILE_N% Removing intermediate build."
     rmdir /S /Q "%BUILD_FOLDER%"
 )
