@@ -17,8 +17,11 @@ set USAGE_STRING="Usage: %FILE_N% [-h|--help] [--no-packaging] [--no-zip] [--cle
 
 set DO_PACKAGE=true
 set DO_COPY_FILES=true
+
 set DO_TARBALL=true
 set DO_CLEAN_INTERMEDIATE=false
+
+set UE_VERSION=4.19
 
 :arg-parse
 if not "%1"=="" (
@@ -32,6 +35,11 @@ if not "%1"=="" (
 
     if "%1"=="--no-packaging" (
         set DO_PACKAGE=false
+    )
+
+    if "%1"=="--ue-version" (
+        set UE_VERSION=%~2
+        shift
     )
 
     if "%1"=="-h" (
@@ -52,14 +60,16 @@ if not "%1"=="" (
 
 rem Extract Unreal Engine root path
 rem
-set KEY_NAME="HKEY_LOCAL_MACHINE\SOFTWARE\EpicGames\Unreal Engine\4.19"
+set KEY_NAME="HKEY_LOCAL_MACHINE\SOFTWARE\EpicGames\Unreal Engine\%UE_VERSION%"
 set VALUE_NAME=InstalledDirectory
-
-for /f %%i in ('git describe --tags --dirty --always') do set CARLA_VERSION=%%i
-if not defined CARLA_VERSION goto error_carla_version
 
 for /f "usebackq tokens=3*" %%A in (`reg query %KEY_NAME%  /v %VALUE_NAME%`) do set UE4_ROOT=%%A%%B
 if not defined UE4_ROOT goto error_unreal_no_found
+
+rem Set packaging paths
+rem
+for /f %%i in ('git describe --tags --dirty --always') do set CARLA_VERSION=%%i
+if not defined CARLA_VERSION goto error_carla_version
 
 set BUILD_FOLDER=%INSTALLATION_DIR%UE4Carla/%CARLA_VERSION%/
 if not exist "%BUILD_FOLDER%" mkdir "%BUILD_FOLDER%"
@@ -150,7 +160,7 @@ rem ============================================================================
 
 :error_unreal_no_found
     echo.
-    echo %FILE_N% Unreal Engine 4.19 not detected
+    echo %FILE_N% Unreal Engine %UE_VERSION% not detected
     goto bad_exit
 
 :good_exit
@@ -160,4 +170,3 @@ rem ============================================================================
 :bad_exit
     endlocal
     exit /b 1
-

@@ -18,7 +18,7 @@ launch-only:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat --launch
 
 package: CarlaUE4Editor PythonAPI
-	@${CARLA_BUILD_TOOLS_FOLDER}/Package.bat
+	@${CARLA_BUILD_TOOLS_FOLDER}/Package.bat --ue-version 4.19
 
 docs:
 	@doxygen
