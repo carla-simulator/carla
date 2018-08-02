@@ -63,7 +63,7 @@ rem
 set KEY_NAME="HKEY_LOCAL_MACHINE\SOFTWARE\EpicGames\Unreal Engine\%UE_VERSION%"
 set VALUE_NAME=InstalledDirectory
 
-for /f "usebackq tokens=3*" %%A in (`reg query %KEY_NAME%  /v %VALUE_NAME%`) do set UE4_ROOT=%%A%%B
+for /f "usebackq tokens=3*" %%A in (`reg query %KEY_NAME% /v %VALUE_NAME% /reg:64`) do set UE4_ROOT=%%A %%B
 if not defined UE4_ROOT goto error_unreal_no_found
 
 rem Set packaging paths
