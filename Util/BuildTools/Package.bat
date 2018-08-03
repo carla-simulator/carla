@@ -74,7 +74,7 @@ if not defined CARLA_VERSION goto error_carla_version
 set BUILD_FOLDER=%INSTALLATION_DIR%UE4Carla/%CARLA_VERSION%/
 if not exist "%BUILD_FOLDER%" mkdir "%BUILD_FOLDER%"
 
-set DESTINATION_TAR="%BUILD_FOLDER%../CARLA_%CARLA_VERSION%.tar.gz"
+set DESTINATION_ZIP="%BUILD_FOLDER%../CARLA_%CARLA_VERSION%.zip"
 set SOURCE=%BUILD_FOLDER%WindowsNoEditor/
 
 rem ============================================================================
@@ -123,17 +123,17 @@ if %DO_COPY_FILES%==true (
     echo.
     echo "%FILE_N% Adding extra files to package..."
 
-    set XCOPY_ROOT_FROM=%ROOT_PATH:/=\%
-    set XCOPY_COPY_TO=%SOURCE:/=\%
+    set XCOPY_FROM=%ROOT_PATH:/=\%
+    set XCOPY_TO=%SOURCE:/=\%
 
-    echo f | xcopy /y "!XCOPY_ROOT_FROM!LICENSE"                           "!XCOPY_COPY_TO!LICENSE"
-    echo f | xcopy /y "!XCOPY_ROOT_FROM!CHANGELOG.md"                      "!XCOPY_COPY_TO!CHANGELOG"
-    echo f | xcopy /y "!XCOPY_ROOT_FROM!Docs\release_readme.md"            "!XCOPY_COPY_TO!README"
-    echo f | xcopy /y "!XCOPY_ROOT_FROM!Util\Docker\Release.Dockerfile"    "!XCOPY_COPY_TO!Dockerfile"
-    echo f | xcopy /y "!XCOPY_ROOT_FROM!PythonAPI\dist\*.egg"              "!XCOPY_COPY_TO!PythonAPI\"
-    echo f | xcopy /y "!XCOPY_ROOT_FROM!PythonAPI\example.py"              "!XCOPY_COPY_TO!PythonAPI\example.py"
-    echo f | xcopy /y "!XCOPY_ROOT_FROM!PythonAPI\manual_control.py"       "!XCOPY_COPY_TO!PythonAPI\manual_control.py"
-    echo f | xcopy /y "!XCOPY_ROOT_FROM!PythonAPI\vehicle_gallery.py"      "!XCOPY_COPY_TO!PythonAPI\vehicle_gallery.py"
+    echo f | xcopy /y "!XCOPY_FROM!LICENSE"                           "!XCOPY_TO!LICENSE"
+    echo f | xcopy /y "!XCOPY_FROM!CHANGELOG.md"                      "!XCOPY_TO!CHANGELOG"
+    echo f | xcopy /y "!XCOPY_FROM!Docs\release_readme.md"            "!XCOPY_TO!README"
+    echo f | xcopy /y "!XCOPY_FROM!Util\Docker\Release.Dockerfile"    "!XCOPY_TO!Dockerfile"
+    echo f | xcopy /y "!XCOPY_FROM!PythonAPI\dist\*.egg"              "!XCOPY_TO!PythonAPI\"
+    echo f | xcopy /y "!XCOPY_FROM!PythonAPI\example.py"              "!XCOPY_TO!PythonAPI\example.py"
+    echo f | xcopy /y "!XCOPY_FROM!PythonAPI\manual_control.py"       "!XCOPY_TO!PythonAPI\manual_control.py"
+    echo f | xcopy /y "!XCOPY_FROM!PythonAPI\vehicle_gallery.py"      "!XCOPY_TO!PythonAPI\vehicle_gallery.py"
 )
 
 rem ==============================================================================
@@ -144,15 +144,19 @@ if %DO_TARBALL%==true (
     echo.
     echo "%FILE_N% Building package..."
 
-    if exist %SOURCE%Manifest_NonUFSFiles_Win64.txt del /S /Q %SOURCE%Manifest_NonUFSFiles_Win64.txt
-    if exist %SOURCE%Manifest_DebugFiles_Win64.txt del /S /Q %SOURCE%Manifest_DebugFiles_Win64.txt
-    if exist %SOURCE%Manifest_UFSFiles_Win64.txt del /S /Q %SOURCE%Manifest_UFSFiles_Win64.txt
+    set DST_ZIP=%DESTINATION_ZIP:/=\%
+    set SRC_PATH=%SOURCE:/=\%
 
-    if exist CarlaUE4/Saved rmdir /S /Q CarlaUE4/Saved
-    if exist Engine/Saved rmdir /S /Q Engine/Saved
+    if exist "!SRC_PATH!Manifest_NonUFSFiles_Win64.txt" del /Q "!SRC_PATH!Manifest_NonUFSFiles_Win64.txt"
+    if exist "!SRC_PATH!Manifest_DebugFiles_Win64.txt" del /Q "!SRC_PATH!Manifest_DebugFiles_Win64.txt"
+    if exist "!SRC_PATH!Manifest_UFSFiles_Win64.txt" del /Q "!SRC_PATH!Manifest_UFSFiles_Win64.txt"
 
-    pushd "%SOURCE%""
-        tar -czf "%DESTINATION_TAR%" "*"
+    if exist "!SRC_PATH!CarlaUE4/Saved" rmdir /S /Q "!SRC_PATH!CarlaUE4/Saved"
+    if exist "!SRC_PATH!Engine/Saved" rmdir /S /Q "!SRC_PATH!Engine/Saved"
+
+    pushd "!SRC_PATH!""
+        rem https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.archive/compress-archive?view=powershell-6
+        powershell -command "& { Compress-Archive -Path * -CompressionLevel Fastest -DestinationPath '!DST_ZIP!' }"
     popd
 )
 
@@ -173,7 +177,7 @@ rem ============================================================================
 :success
     echo.
     if %DO_PACKAGE%==true echo %FILE_N% Carla project successful exported to "%CARLA_OUTPUT_PATH%"!
-    if %DO_TARBALL%==true echo %FILE_N% Compress carla project exported to "%DESTINATION_TAR%"!
+    if %DO_TARBALL%==true echo %FILE_N% Compress carla project exported to "%DESTINATION_ZIP%"!
     goto good_exit
 
 :error_carla_version
