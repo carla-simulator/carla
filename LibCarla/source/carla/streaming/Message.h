@@ -56,6 +56,12 @@ namespace streaming {
           return static_cast<size_type>(size);
         } ()) {}
 
+#ifdef __APPLE__
+      // avoid recursive delegation on Mac: size_type is not the same as std::size_t
+      explicit Message(std::size_t size)
+      : Message(size_type(size)) {}
+#endif
+      
     template <typename ConstBufferSequence>
     explicit Message(ConstBufferSequence source)
       : Message(boost::asio::buffer_size(source)) {
