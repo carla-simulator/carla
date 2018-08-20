@@ -102,6 +102,7 @@ rem
 if %BUILD_FOR_PYTHON3%==true (
     echo Building Python API for Python 3.
     call py -3 setup.py bdist_egg
+    if %errorlevel% neq 0 goto error_build_egg
 )
 
 goto success
@@ -131,6 +132,11 @@ rem ============================================================================
     echo %FILE_N% [PY ERROR] Possible causes:
     echo %FILE_N%              - Make sure "py" is installed.
     echo %FILE_N%              - Make sure it is available on your Windows "py".
+    goto bad_exit
+
+:error_build_egg
+    echo.
+    echo %FILE_N% An error occurred while building the egg file.
     goto bad_exit
 
 :good_exit
