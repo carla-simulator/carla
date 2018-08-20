@@ -31,7 +31,7 @@ class DrivingBenchmark(object):
     an Agent class with a set Suite.
 
 
-    The benchmark class must be inherited with a class that defines the
+    The benchmark class must be inherited by a class that defines the
     all the experiments to be run by the agent
     """
 
@@ -63,8 +63,8 @@ class DrivingBenchmark(object):
     def benchmark_agent(self, experiment_suite, agent, client):
         """
         Function to benchmark the agent.
-        It first check the log file for this benchmark.
-        if it exist it continues from the experiment where it stopped.
+        It first checks the log file of this benchmark.
+        if it exists, it continues from the experiment where it stopped.
 
 
         Args:
@@ -83,7 +83,7 @@ class DrivingBenchmark(object):
         metrics_object = Metrics(experiment_suite.metrics_parameters,
                                  experiment_suite.dynamic_tasks)
 
-        # Function return the current pose and task for this benchmark.
+        # Function returns the current pose and task for this benchmark.
         start_pose, start_experiment = self._recording.get_pose_and_experiment(
             experiment_suite.get_number_of_poses_task())
 
@@ -150,7 +150,7 @@ class DrivingBenchmark(object):
 
     def get_path(self):
         """
-        Returns the path were the log was saved.
+        Returns the path where the log was saved.
         """
         return self._recording.path
 
@@ -171,7 +171,7 @@ class DrivingBenchmark(object):
 
     def _get_shortest_path(self, start_point, end_point):
         """
-        Calculates the shortest path between two points considering the road netowrk
+        Calculates the shortest path between two points considering the road network
         """
 
         return self._planner.get_shortest_path_distance(
@@ -189,7 +189,7 @@ class DrivingBenchmark(object):
             target,
             episode_name):
         """
-         Run one episode of the benchmark (Pose) for a certain agent.
+         Runs one episode of the benchmark (Pose) for a certain agent.
 
 
         Args:
@@ -223,7 +223,7 @@ class DrivingBenchmark(object):
             measurements, sensor_data = client.read_data()
             # The directions to reach the goal are calculated.
             directions = self._get_directions(measurements.player_measurements.transform, target)
-            # Agent process the data.
+            # The agent processes the data.
             control = agent.run_step(measurements, sensor_data, directions, target)
             # Send the control commands to the vehicle
             client.send_control(control)
