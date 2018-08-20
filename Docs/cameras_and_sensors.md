@@ -1,6 +1,12 @@
 <h1>Cameras and sensors</h1>
 
 !!! important
+    This document still refers to the 0.8.X API (stable version). The
+    proceedings stated here may not apply to latest versions, 0.9.0 or later.
+    Latest versions introduced significant changes in the API, we are still
+    working on documenting everything, sorry for the inconvenience.
+
+!!! important
     Since version 0.8.0 the positions of the sensors are specified in meters
     instead of centimeters. Always relative to the vehicle.
 

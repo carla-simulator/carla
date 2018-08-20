@@ -42,9 +42,11 @@ public:
   /// @{
 public:
 
-  virtual void Possess(APawn *aPawn) override;
+  void Possess(APawn *aPawn) override;
 
-  virtual void Tick(float DeltaTime) override;
+  void UnPossess() override;
+
+  void Tick(float DeltaTime) override;
 
   /// @}
   // ===========================================================================

@@ -130,7 +130,7 @@ goto success
 	echo.
 	echo  - Or just use our Discord channel!
 	echo    We'll be glad to help you there :)
-	echo    https://discord.gg/vNVHXfb
+	echo    https://discord.gg/42KJdRj
 
 	goto eof
 

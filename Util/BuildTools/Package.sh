@@ -1,19 +1,14 @@
 #! /bin/bash
 
-################################################################################
-# Packages a CARLA build.
-################################################################################
-
-set -e
-
-DOC_STRING="Makes a packaged version of CARLA for distribution.
-Please make sure to run Rebuild.sh before!"
-
-USAGE_STRING="Usage: $0 [-h|--help] [--no-packaging] [--no-zip] [--clean-intermediate]"
+source $(dirname "$0")/Environment.sh
 
 # ==============================================================================
 # -- Parse arguments -----------------------------------------------------------
 # ==============================================================================
+
+DOC_STRING="Makes a packaged version of CARLA for distribution."
+
+USAGE_STRING="Usage: $0 [-h|--help] [--no-packaging] [--no-zip] [--clean-intermediate]"
 
 DO_PACKAGE=true
 DO_COPY_FILES=true
@@ -48,38 +43,20 @@ while true; do
 done
 
 # ==============================================================================
-# -- Set up environment --------------------------------------------------------
-# ==============================================================================
-
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-pushd "$SCRIPT_DIR" >/dev/null
-
-REPOSITORY_TAG=`git describe --tags --dirty --always`
-
-echo "Packaging version '$REPOSITORY_TAG'."
-
-UNREAL_PROJECT_FOLDER=${PWD}/Unreal/CarlaUE4
-DIST_FOLDER=${PWD}/Dist
-BUILD_FOLDER=${DIST_FOLDER}/${REPOSITORY_TAG}
-
-function fatal_error {
-  echo -e "\033[0;31mERROR: $1\033[0m"
-  exit 1
-}
-
-function log {
-  echo -e "\033[0;33m$1\033[0m"
-}
-
-# ==============================================================================
 # -- Package project -----------------------------------------------------------
 # ==============================================================================
 
+REPOSITORY_TAG=$(get_carla_version)
+
+BUILD_FOLDER=${CARLA_DIST_FOLDER}/${REPOSITORY_TAG}
+
+log "Packaging version '$REPOSITORY_TAG'."
+
 if $DO_PACKAGE ; then
 
-  pushd "$UNREAL_PROJECT_FOLDER" >/dev/null
+  pushd "${CARLAUE4_ROOT_FOLDER}" >/dev/null
 
-  log "Packaging the project..."
+  log "Packaging the project."
 
   if [ ! -d "${UE4_ROOT}" ]; then
     fatal_error "UE4_ROOT is not defined, or points to a non-existant directory, please set this environment variable."
@@ -105,34 +82,28 @@ if [[ ! -d ${BUILD_FOLDER}/LinuxNoEditor ]] ; then
 fi
 
 # ==============================================================================
-# -- Copy files (Python server, README, etc) -----------------------------------
+# -- Copy files (Python API, README, etc) --------------------------------------
 # ==============================================================================
 
 if $DO_COPY_FILES ; then
 
   DESTINATION=${BUILD_FOLDER}/LinuxNoEditor
 
-  log "Copying extra files..."
+  log "Adding extra files to package."
 
-  cp -v ./LICENSE ${DESTINATION}/LICENSE
-  cp -v ./CHANGELOG.md ${DESTINATION}/CHANGELOG
-  cp -v ./Docs/release_readme.md ${DESTINATION}/README
-  cp -v ./Docs/Example.CarlaSettings.ini ${DESTINATION}/Example.CarlaSettings.ini
-  cp -v ./Util/Docker/Release.Dockerfile ${DESTINATION}/Dockerfile
+  pushd ${CARLA_ROOT_FOLDER} >/dev/null
 
-  rsync -vhr --delete --delete-excluded \
-      --exclude "*.egg-info" \
-      --exclude "*.log" \
-      --exclude "*.pyc" \
-      --exclude ".*" \
-      --exclude ".tags*" \
-      --exclude "__pycache__" \
-      --exclude "_benchmarks_results*" \
-      --exclude "_images*" \
-      --exclude "_out*" \
-      PythonClient/ ${DESTINATION}/PythonClient
+  copy_if_changed "./LICENSE" "${DESTINATION}/LICENSE"
+  copy_if_changed "./CHANGELOG.md" "${DESTINATION}/CHANGELOG"
+  copy_if_changed "./Docs/release_readme.md" "${DESTINATION}/README"
+  # copy_if_changed "./Docs/Example.CarlaSettings.ini" "${DESTINATION}/Example.CarlaSettings.ini"
+  copy_if_changed "./Util/Docker/Release.Dockerfile" "${DESTINATION}/Dockerfile"
+  copy_if_changed "./PythonAPI/dist/*.egg" "${DESTINATION}/PythonAPI/"
+  copy_if_changed "./PythonAPI/example.py" "${DESTINATION}/example.py"
+  copy_if_changed "./PythonAPI/manual_control.py" "${DESTINATION}/manual_control.py"
+  copy_if_changed "./PythonAPI/vehicle_gallery.py" "${DESTINATION}/vehicle_gallery.py"
 
-  echo
+  popd >/dev/null
 
 fi
 
@@ -142,12 +113,12 @@ fi
 
 if $DO_TARBALL ; then
 
-  DESTINATION=${DIST_FOLDER}/CARLA_${REPOSITORY_TAG}.tar.gz
+  DESTINATION=${CARLA_DIST_FOLDER}/CARLA_${REPOSITORY_TAG}.tar.gz
   SOURCE=${BUILD_FOLDER}/LinuxNoEditor
 
-  pushd "$SOURCE" >/dev/null
+  pushd "${SOURCE}" >/dev/null
 
-  log "Packaging build..."
+  log "Packaging build."
 
   rm -f ./Manifest_NonUFSFiles_Linux.txt
   rm -Rf ./CarlaUE4/Saved
@@ -165,7 +136,7 @@ fi
 
 if $DO_CLEAN_INTERMEDIATE ; then
 
-  log "Removing intermediate build..."
+  log "Removing intermediate build."
 
   rm -Rf ${BUILD_FOLDER}
 
@@ -176,16 +147,10 @@ fi
 # ==============================================================================
 
 if $DO_TARBALL ; then
-  FINAL_PACKAGE=Dist/CARLA_${REPOSITORY_TAG}.tar.gz
+  FINAL_PACKAGE=${CARLA_DIST_FOLDER}/CARLA_${REPOSITORY_TAG}.tar.gz
 else
-  FINAL_PACKAGE=Dist/${REPOSITORY_TAG}
+  FINAL_PACKAGE=${BUILD_FOLDER}
 fi
 
-echo
-echo "Packaged version created at ${FINAL_PACKAGE}"
-echo
-echo "****************"
-echo "*** Success! ***"
-echo "****************"
-
-popd >/dev/null
+log "Packaged version created at ${FINAL_PACKAGE}"
+log "Success!"
