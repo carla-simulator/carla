@@ -2,41 +2,58 @@ pipeline {
     agent any
 
     environment {
-        UE4_ROOT = '/var/lib/jenkins/UnrealEngine_4.18'
+        UE4_ROOT = '/var/lib/jenkins/UnrealEngine_4.19'
     }
 
     options {
-        buildDiscarder(logRotator(numToKeepStr: '6', artifactNumToKeepStr: '6'))
+        buildDiscarder(logRotator(numToKeepStr: '3', artifactNumToKeepStr: '3'))
     }
 
     stages {
 
         stage('Setup') {
             steps {
-                sh './Setup.sh --jobs=12'
+                sh 'make setup'
+                sh './Update.sh'
             }
         }
 
         stage('Build') {
             steps {
-                sh './Rebuild.sh --no-editor'
+                sh 'make LibCarla'
+                sh 'make PythonAPI'
+                sh 'make CarlaUE4Editor'
+            }
+        }
+
+        stage('Unit Tests') {
+            steps {
+                sh 'make check ARGS="--all --xml"'
+            }
+            post {
+                always {
+                    junit 'Build/test-results/*.xml'
+                    archiveArtifacts 'profiler.csv'
+                }
             }
         }
 
         stage('Package') {
             steps {
-                sh './Package.sh --clean-intermediate'
+                sh 'make package'
+            }
+            post {
+                always {
+                    archiveArtifacts 'Dist/*.tar.gz'
+                }
             }
         }
 
     }
 
     post {
-
         always {
-            archiveArtifacts 'Dist/*.tar.gz'
             deleteDir()
         }
-
     }
 }

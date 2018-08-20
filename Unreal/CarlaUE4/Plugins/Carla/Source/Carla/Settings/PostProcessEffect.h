@@ -26,12 +26,22 @@ public:
 
   using uint_type = typename std::underlying_type<EPostProcessEffect>::type;
 
-  static FString ToString(EPostProcessEffect PostProcessEffect);
-
-  static EPostProcessEffect FromString(const FString &String);
-
   static constexpr uint_type ToUInt(EPostProcessEffect PostProcessEffect)
   {
     return static_cast<uint_type>(PostProcessEffect);
   }
+
+  static constexpr EPostProcessEffect FromUInt(uint_type Index)
+  {
+    return static_cast<EPostProcessEffect>(Index);
+  }
+
+  static FString ToString(EPostProcessEffect PostProcessEffect);
+
+  static FString ToString(uint_type Index)
+  {
+    return ToString(FromUInt(Index));
+  }
+
+  static EPostProcessEffect FromString(const FString &String);
 };
