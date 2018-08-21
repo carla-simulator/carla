@@ -170,7 +170,7 @@ class CarlaGame(object):
         self._on_new_episode()
 
         if self._city_name is not None:
-            self._map = CarlaMap(self._city_name, 0.1643, 50.0)
+            self._map = CarlaMap(self._city_name)
             self._map_shape = self._map.map_image.shape
             self._map_view = self._map.get_map(WINDOW_HEIGHT)
 

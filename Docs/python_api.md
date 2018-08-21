@@ -1,4 +1,4 @@
-<h1>Python API</h1>
+<h1>Python API Reference</h1>
 
 !!! important
     Versions prior to 0.9.0 have a very different API. For the documentation of

@@ -1,3 +1,24 @@
+## CARLA 0.9.0
+
+  * Upgraded to Unreal Engine 4.19
+  * Redesign of the networking architecture
+    - Allows any number of clients to connect simultaneously
+    - Now is possible to add and remove at any time any vehicle or camera
+    - Now is possible to control any vehicle or camera
+    - Now is possible to place cameras anywhere
+    - Reduced to two ports instead of three
+    - First port uses an RPC protocol based on [rpclib](http://rpclib.net/)
+    - Second port is for the streaming of the sensor data
+  * Redesign of the Python API
+    - Actors and sensors are now exposed in the API and can be independently controlled
+    - The Python module is built in C++, with significant performance gain in some operations
+    - Many functionality haven't been ported yet, so expect a lot of things missing
+  * Redesign of the build system to accommodate the changes in dependencies
+    - Everything can be done now with the Makefile
+    - For the moment only Linux is supported, sorry
+  * Massive clean up of all unused assets
+  * Some aesthetic fixes to the vehicles
+
 ## CARLA 0.8.4
 
   * Community contribution: ROS bridge by @laurent-george
