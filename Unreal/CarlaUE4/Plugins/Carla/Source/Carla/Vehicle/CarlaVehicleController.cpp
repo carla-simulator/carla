@@ -64,19 +64,19 @@ void ACarlaVehicleController::Tick(float DeltaTime)
   Super::Tick(DeltaTime);
 
   if (IsPossessingAVehicle()) {
-    auto Vehicle = GetPossessedVehicle();
+    auto CurrentVehicle = GetPossessedVehicle();
     CarlaPlayerState->UpdateTimeStamp(DeltaTime);
     const FVector PreviousSpeed = CarlaPlayerState->ForwardSpeed * CarlaPlayerState->GetOrientation();
-    CarlaPlayerState->Transform = Vehicle->GetVehicleTransform();
-    CarlaPlayerState->ForwardSpeed = Vehicle->GetVehicleForwardSpeed();
+    CarlaPlayerState->Transform = CurrentVehicle->GetVehicleTransform();
+    CarlaPlayerState->ForwardSpeed = CurrentVehicle->GetVehicleForwardSpeed();
     const FVector CurrentSpeed = CarlaPlayerState->ForwardSpeed * CarlaPlayerState->GetOrientation();
     CarlaPlayerState->Acceleration = (CurrentSpeed - PreviousSpeed) / DeltaTime;
-    const auto &AutopilotControl = GetAutopilotControl();
-    CarlaPlayerState->Steer = AutopilotControl.Steer;
-    CarlaPlayerState->Throttle = AutopilotControl.Throttle;
-    CarlaPlayerState->Brake = AutopilotControl.Brake;
-    CarlaPlayerState->bHandBrake = AutopilotControl.bHandBrake;
-    CarlaPlayerState->CurrentGear = Vehicle->GetVehicleCurrentGear();
+    const auto &AutopilotCtrl = GetAutopilotControl();
+    CarlaPlayerState->Steer = AutopilotCtrl.Steer;
+    CarlaPlayerState->Throttle = AutopilotCtrl.Throttle;
+    CarlaPlayerState->Brake = AutopilotCtrl.Brake;
+    CarlaPlayerState->bHandBrake = AutopilotCtrl.bHandBrake;
+    CarlaPlayerState->CurrentGear = CurrentVehicle->GetVehicleCurrentGear();
     CarlaPlayerState->SpeedLimit = GetSpeedLimit();
     CarlaPlayerState->TrafficLightState = GetTrafficLightState();
     IntersectPlayerWithRoadMap();
@@ -106,18 +106,18 @@ void ACarlaVehicleController::OnCollisionEvent(
 
 void ACarlaVehicleController::IntersectPlayerWithRoadMap()
 {
-  auto RoadMap = GetRoadMap();
-  if (RoadMap == nullptr) {
+  auto CurrentRoadMap = GetRoadMap();
+  if (CurrentRoadMap == nullptr) {
     UE_LOG(LogCarla, Error, TEXT("Controller doesn't have a road map!"));
     return;
   }
 
   check(IsPossessingAVehicle());
-  auto Vehicle = GetPossessedVehicle();
+  auto CurrentVehicle = GetPossessedVehicle();
   constexpr float ChecksPerCentimeter = 0.1f;
-  const auto *BoundingBox = Vehicle->GetVehicleBoundingBox();
+  const auto *BoundingBox = CurrentVehicle->GetVehicleBoundingBox();
   check(BoundingBox != nullptr);
-  auto Result = RoadMap->Intersect(
+  auto Result = CurrentRoadMap->Intersect(
       BoundingBox->GetComponentTransform(),
       BoundingBox->GetUnscaledBoxExtent(),
       ChecksPerCentimeter);

@@ -86,7 +86,6 @@ public class Carla : ModuleRules
   private void AddCarlaServerDependency(ReadOnlyTargetRules Target)
   {
     string LibCarlaInstallPath = Path.GetFullPath(Path.Combine(ModuleDirectory, "../../CarlaDependencies"));
-    bEnableExceptions = true;
 
     ADelegate GetLibName = (string BaseName) => {
       if (IsWindows(Target))
