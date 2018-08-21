@@ -27,7 +27,7 @@ view_start_positions.py  | Show all the possible start positions in a map
     If you are building CARLA from source, the Python code is inside the
     _"PythonClient"_ folder in the CARLA repository. Bear in mind that the
     `master` branch contains latest fixes and changes that might be incompatible
-    with the release version. Consider using the latest release code.
+    with the release version. Consider using the `stable` branch.
 
 Install dependencies
 --------------------

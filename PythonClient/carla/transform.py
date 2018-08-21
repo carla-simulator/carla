@@ -1,5 +1,5 @@
 # Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de
-# Barcelona (UAB), and the INTEL Visual Computing Lab.
+# Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
@@ -123,7 +123,7 @@ class Transform(object):
         # Needed foramt: [[X0,..Xn],[Z0,..Zn],[Z0,..Zn]]. So let's transpose
         # the point matrix.
         points = points.transpose()
-        # Add 0s row: [[X0..,Xn],[Y0..,Yn],[Z0..,Zn],[0,..0]]
+        # Add 1s row: [[X0..,Xn],[Y0..,Yn],[Z0..,Zn],[1,..1]]
         points = numpy.append(points, numpy.ones((1, points.shape[1])), axis=0)
         # Point transformation
         points = self.matrix * points
