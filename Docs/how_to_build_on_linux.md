@@ -62,7 +62,7 @@ git clone https://github.com/carla-simulator/carla
 ```
 
 Note that the `master` branch contains the latest fixes and features, for the
-latest stable code may be best to switch to the latest release tag.
+latest stable code may be best to switch to the `stable` branch.
 
 Now you need to download the assets package, to do so we provide a handy script
 that downloads and extracts the latest version (note that the package is >10GB,
