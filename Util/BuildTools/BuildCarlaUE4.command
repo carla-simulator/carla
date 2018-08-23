@@ -18,12 +18,17 @@ fi
 
 DOC_STRING="Build and launch CarlaUE4."
 
-USAGE_STRING="Usage: $0 [-h|--help] [--build] [--rebuild] [--launch] [--clean] [--hard-clean]"
+USAGE_STRING="Usage: $0 [-h|--help] [--build] [--rebuild] [--launch] [--clean] [--hard-clean] [--[no]-xcode]"
 
 REMOVE_INTERMEDIATE=false
 HARD_CLEAN=false
 BUILD_CARLAUE4=false
 LAUNCH_UE4_EDITOR=false
+
+USE_XCODE=true
+if [[ -f ${CARLA_BUILD_FOLDER}/NO_XCODEBUILD ]] ; then
+  USE_XCODE=false
+fi
 
 while true; do
   case "$1" in
@@ -43,6 +48,12 @@ while true; do
     --hard-clean )
       REMOVE_INTERMEDIATE=true;
       HARD_CLEAN=true;
+      shift ;;
+    --no-xcode )
+      USE_XCODE=false;
+      shift ;;
+    --xcode )
+      USE_XCODE=true;
       shift ;;
     -h | --help )
       echo "$DOC_STRING"
@@ -93,13 +104,18 @@ if ${HARD_CLEAN} ; then
 
   log "Doing a \"hard\" clean of the Unreal Engine project."
 
-  make CarlaUE4Editor ARGS=-clean
+  if ${USE_XCODE}; then
+    xcodebuild -scheme CarlaUe4 clean
+  else
+    make CarlaUE4Editor ARGS=-clean
+  fi
 
 fi
 
 if ${REMOVE_INTERMEDIATE} ; then
 
-  rm -f Makefile
+  rm -f Makefile 
+  rm -rf CarlaUe4.xcworkspace
 
 fi
 
@@ -119,17 +135,24 @@ if ${BUILD_CARLAUE4} ; then
       fatal_error "No GenerateProjectFiles.sh in ${UE4_ROOT}. You can copy this from UnrealEngine source tree."
     fi
 
-    ${UE4_ROOT}/GenerateProjectFiles.sh -project="${PWD}/CarlaUE4.uproject" -game -engine -makefiles
-
-    # HACK! This generates wrong targets on the Mac! Just replace Linux with Mac everywhere:
-    sed -i .original -e "s/Linux/Mac/g" Makefile
+    if ${USE_XCODE}; then
+      ${UE4_ROOT}/GenerateProjectFiles.sh -project="${PWD}/CarlaUE4.uproject" -game -engine -xcode
+    else
+      ${UE4_ROOT}/GenerateProjectFiles.sh -project="${PWD}/CarlaUE4.uproject" -game -engine -makefiles
+      # HACK! This generates wrong targets on the Mac! Just replace Linux with Mac everywhere:
+      sed -i .original -e "s/Linux/Mac/g" Makefile
+    fi
 
     set -e
 
   fi
 
   log "Build CarlaUE4 project."
-  make CarlaUE4Editor
+  if ${USE_XCODE}; then
+    xcodebuild -scheme CarlaUE4 -target CarlaUE4Editor
+  else
+    make CarlaUE4Editor
+  fi
 
 fi
 

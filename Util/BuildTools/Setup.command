@@ -29,6 +29,46 @@ mkdir -p ${CARLA_BUILD_FOLDER}
 pushd ${CARLA_BUILD_FOLDER} >/dev/null
 
 # ==============================================================================
+# -- Parse arguments -----------------------------------------------------------
+# ==============================================================================
+
+DOC_STRING="Setup build including third-party libraries"
+
+USAGE_STRING="Usage: $0 [-h|--help] [--[no]-xcode]"
+
+USE_XCODE=true
+if [[ -f ${CARLA_BUILD_FOLDER}/NO_XCODEBUILD ]] ; then
+  USE_XCODE=false
+fi
+
+# Mac OSX standard getopt does not support long options, so we don't bother. 
+
+while true; do
+  case "$1" in
+    --xcode )
+      USE_XCODE=true;
+      rm -f ${CARLA_BUILD_FOLDER}/NO_XCODEBUILD
+      shift ;;
+    --no-xcode )
+      USE_XCODE=false;
+      touch ${CARLA_BUILD_FOLDER}/NO_XCODEBUILD
+      shift ;;
+    -h | --help )
+      echo "$DOC_STRING"
+      echo "$USAGE_STRING"
+      exit 1
+      ;;
+    * )
+      if [ ! -z "$1" ]; then
+        echo "Bad argument: '$1'"
+        echo "$USAGE_STRING"
+        exit 2
+      fi
+      break ;;
+  esac
+done
+
+# ==============================================================================
 # -- Get boost includes --------------------------------------------------------
 # ==============================================================================
 
@@ -121,14 +161,24 @@ else
 
   pushd ${RPCLIB_BASENAME}-libcxx-build >/dev/null
 
-  cmake -G "Ninja" \
+  if ${USE_XCODE}; then
+    RPC_TOOLSET=Xcode
+  else
+    RPC_TOOLSET=Ninja
+  fi
+
+  cmake -G ${RPC_TOOLSET} \
       -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++" \
       -DCMAKE_INSTALL_PREFIX="../${RPCLIB_BASENAME}-libcxx-install" \
       ../${RPCLIB_BASENAME}-source
 
-  ninja
-
-  ninja install
+  if ${USE_XCODE}; then
+    xcodebuild
+    xcodebuild -target install -configuration Release
+  else
+    ninja
+    ninja install
+  fi
 
   popd >/dev/null
 
@@ -138,18 +188,22 @@ else
 
   pushd ${RPCLIB_BASENAME}-libstdcxx-build >/dev/null
 
-  cmake -G "Ninja" \
+  cmake -G ${RPC_TOOLSET} \
       -DCMAKE_CXX_FLAGS="-fPIC -std=c++14" \
       -DCMAKE_INSTALL_PREFIX="../${RPCLIB_BASENAME}-libstdcxx-install" \
       ../${RPCLIB_BASENAME}-source
 
-  ninja
-
-  ninja install
+  if ${USE_XCODE}; then
+    xcodebuild
+    xcodebuild -target install -configuration Release
+  else
+    ninja
+    ninja install
+  fi
 
   popd >/dev/null
 
-  rm -Rf ${RPCLIB_BASENAME}-source ${RPCLIB_BASENAME}-libcxx-build ${RPCLIB_BASENAME}-libstdcxx-build
+ rm -Rf ${RPCLIB_BASENAME}-source ${RPCLIB_BASENAME}-libcxx-build ${RPCLIB_BASENAME}-libstdcxx-build
 
 fi
 
@@ -179,14 +233,24 @@ else
 
   pushd ${GTEST_BASENAME}-build >/dev/null
 
-  cmake -G "Ninja" \
+  if ${USE_XCODE}; then
+    GTEST_TOOLSET=Xcode
+  else
+    GTEST_TOOLSET=Ninja
+  fi
+
+  cmake -G ${GTEST_TOOLSET} \
       -DCMAKE_CXX_FLAGS="-std=c++14 -stdlib=libc++ " \
       -DCMAKE_INSTALL_PREFIX="../${GTEST_BASENAME}-install" \
       ../${GTEST_BASENAME}-source
 
-  ninja
-
-  ninja install
+  if ${USE_XCODE}; then
+    xcodebuild
+    xcodebuild -target install -configuration Release
+  else
+    ninja
+    ninja install
+  fi
 
   popd >/dev/null
 

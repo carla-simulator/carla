@@ -8,12 +8,17 @@ source $(dirname "$0")/Environment.sh
 
 DOC_STRING="Build LibCarla."
 
-USAGE_STRING="Usage: $0 [-h|--help] [--rebuild] [--server] [--client] [--xcode] [--clean]"
+USAGE_STRING="Usage: $0 [-h|--help] [--rebuild] [--server] [--client] [--[no]-xcode] [--clean]"
 
 REMOVE_INTERMEDIATE=false
 BUILD_SERVER=false
 BUILD_CLIENT=false
-USE_XCODE=false
+
+if [[ -f ${CARLA_BUILD_FOLDER}/NO_XCODEBUILD ]]; then
+  USE_XCODE=false
+else
+  USE_XCODE=true
+fi
 
 # Mac OSX standard getopt does not support long options, so we don't bother. 
 
@@ -32,6 +37,9 @@ while true; do
       shift ;;
     --xcode )
       USE_XCODE=true;
+      shift ;;
+    --no-xcode )
+      USE_XCODE=false;
       shift ;;
     --clean )
       REMOVE_INTERMEDIATE=true;
@@ -90,7 +98,7 @@ if ${BUILD_SERVER} ; then
   mkdir -p ${LIBCARLA_BUILD_SERVER_FOLDER}
   pushd "${LIBCARLA_BUILD_SERVER_FOLDER}" >/dev/null
 
-  if [ ! -f ${BUILDFILE} ]; then
+  if [ ! -e ${BUILDFILE} ]; then
     cmake \
         -G "${CMAKE_TOOLSET}" \
         -DCMAKE_BUILD_TYPE=Server \
@@ -100,9 +108,13 @@ if ${BUILD_SERVER} ; then
         ${CARLA_ROOT_FOLDER}
   fi
 
-  ${BUILDCMD} 
-
-  ${BUILDCMD} install | grep -v "Up-to-date:"
+  if ${USE_XCODE}; then
+    xcodebuild
+    xcodebuild -target install | grep -v "Up-to-date:"
+  else
+    ninja
+    ninja install | grep -v "Up-to-date:"
+  fi
 
   popd >/dev/null
 
@@ -119,7 +131,7 @@ if ${BUILD_CLIENT} ; then
   mkdir -p ${LIBCARLA_BUILD_CLIENT_FOLDER}
   pushd "${LIBCARLA_BUILD_CLIENT_FOLDER}" >/dev/null
 
-  if [ ! -f "${BUILDFILE}" ]; then
+  if [ ! -e ${BUILDFILE} ]; then
 
     cmake \
         -G "${CMAKE_TOOLSET}" \
@@ -131,9 +143,13 @@ if ${BUILD_CLIENT} ; then
 
   fi
 
-  ${BUILDCMD} 
-
-  ${BUILDCMD} install | grep -v "Up-to-date:"
+  if ${USE_XCODE}; then
+    xcodebuild
+    xcodebuild -target install | grep -v "Up-to-date:"
+  else
+    ninja
+    ninja install | grep -v "Up-to-date:"
+  fi
 
   popd >/dev/null
 
