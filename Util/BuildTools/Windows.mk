@@ -12,7 +12,7 @@ help:
 	@type "${CARLA_BUILD_TOOLS_FOLDER}\Linux.mk.help"
 
 launch: LibCarla
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat --build --launch
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat --build
 
 launch-only:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat --launch
