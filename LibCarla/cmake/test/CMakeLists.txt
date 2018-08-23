@@ -8,7 +8,7 @@ file(GLOB_RECURSE libcarla_test_sources
     "${libcarla_source_path}/test/*.cpp")
 
 link_directories(
-    ${BOOST_LIBRARY_PATH}
+    ${BOOST_LIB_PATH}
     ${RPCLIB_LIB_PATH}
     ${GTEST_LIB_PATH})
 
