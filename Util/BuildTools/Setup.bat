@@ -159,11 +159,11 @@ set CMAKE_INSTALLATION_DIR=%INSTALLATION_DIR:\=/%
 >>"%INSTALLATION_DIR%CMakeLists.txt.in" echo set(RPCLIB_LIB_PATH "%CMAKE_INSTALLATION_DIR%rpclib-install/lib")
 >>"%INSTALLATION_DIR%CMakeLists.txt.in" echo.
 >>"%INSTALLATION_DIR%CMakeLists.txt.in" echo if (CMAKE_BUILD_TYPE STREQUAL "Server")
->>"%INSTALLATION_DIR%CMakeLists.txt.in" echo     # Here libraries linking libc++.
+>>"%INSTALLATION_DIR%CMakeLists.txt.in" echo     # Specific libraries for server
 >>"%INSTALLATION_DIR%CMakeLists.txt.in" echo     set(GTEST_INCLUDE_PATH "%CMAKE_INSTALLATION_DIR%gtest-install/include")
 >>"%INSTALLATION_DIR%CMakeLists.txt.in" echo     set(GTEST_LIB_PATH "%CMAKE_INSTALLATION_DIR%gtest-install/lib")
 >>"%INSTALLATION_DIR%CMakeLists.txt.in" echo elseif (CMAKE_BUILD_TYPE STREQUAL "Client")
->>"%INSTALLATION_DIR%CMakeLists.txt.in" echo     # Here libraries linking libstdc++.
+>>"%INSTALLATION_DIR%CMakeLists.txt.in" echo     # Specific libraries for client
 >>"%INSTALLATION_DIR%CMakeLists.txt.in" echo endif ()
 
 goto success
