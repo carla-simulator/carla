@@ -5,19 +5,18 @@
 # ==============================================================================
 
 command -v /usr/bin/xcodebuild >/dev/null || {
-  echo >&2 "Xcode not installed - need version 9.2";
+  echo >&2 "Xcode not installed - need version 9.2 or later";
   exit 1;
 } 
 
 function getXcodeVersion() {
-  /usr/bin/xcodebuild -version | grep Xcode
+  /usr/bin/xcodebuild -version | sed -e "s/Xcode //; q"
 }
 
 XCODE_VERSION=$(getXcodeVersion)
-if [[ ${XCODE_VERSION} != 'Xcode 9.2' ]] ; then
-  # TODO - allow later versions
-  echo >&2 "Found ${XCODE_VERSION}, but require 9.2" ;
-  echo >&2 "Install Xcode 9.2 and if necessary activate using xcode-select";
+if [[ ! "${XCODE_VERSION}" =~ ^[1-9][0-9] ]] && [[ "${XCODE_VERSION}" < '9.2' ]] ; then
+  echo >&2 "Found Xcode ${XCODE_VERSION}, but require version 9.2 or later" ;
+  echo >&2 "Install appropriate version and if necessary activate using xcode-select";
   exit 2;
 fi
 
