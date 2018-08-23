@@ -5,8 +5,12 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
+
 #include "CoreMinimal.h"
 #include "Engine/World.h"
+
+#include "Carla/Settings/CarlaSettings.h"
+
 #include "CarlaSettingsDelegate.generated.h"
 
 /// Used to set settings for every actor that is spawned into the world.
@@ -29,7 +33,7 @@ public:
   UFUNCTION(BlueprintCallable, Category="CARLA Settings", meta=(HidePin="InWorld"))
   void ApplyQualitySettingsLevelPostRestart();
 
-  /** Before loading a level, apply the current settings */  
+  /** Before loading a level, apply the current settings */
   UFUNCTION(BlueprintCallable, Category="CARLA Settings", meta=(HidePin="InWorld"))
   void ApplyQualitySettingsLevelPreRestart();
 
@@ -37,8 +41,8 @@ private:
   UWorld* GetLocalWorld();
   /** Function to apply to the actor that is being spawned to apply the current settings */
   void OnActorSpawned(AActor *Actor);
-  /** Check that the world ,instance and settings are valid and save the CarlaSettings instance 
-   * @param world used to get the instance of CarlaSettings 
+  /** Check that the world ,instance and settings are valid and save the CarlaSettings instance
+   * @param world used to get the instance of CarlaSettings
    */
   void CheckCarlaSettings(UWorld* world);
 
@@ -56,7 +60,7 @@ private:
 
   /** */
   void SetPostProcessEffectsEnabled(UWorld* world, const bool enabled) const;
-  
+
   /** Execute engine commands to apply the epic quality settings to the world */
   void LaunchEpicQualityCommands(UWorld* world) const;
 
