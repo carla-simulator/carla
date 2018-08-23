@@ -44,8 +44,8 @@ def get_libcarla_extensions():
                 os.path.join(pwd, 'dependencies/lib', pylib)]
 
         # https://docs.microsoft.com/es-es/cpp/porting/modifying-winver-and-win32-winnt
-        extra_compile_args = ['/DPYTHON3X', '/DBOOST_ALL_NO_LIB', '/DBOOST_PYTHON_STATIC_LIB','/DBOOST_ERROR_CODE_HEADER_ONLY', '/D_WIN32_WINNT=0x0501' ]
-        extra_link_args += []
+        extra_compile_args = ['/DPYTHON3X', '/DBOOST_ALL_NO_LIB', '/DBOOST_PYTHON_STATIC_LIB',
+                '/DBOOST_ERROR_CODE_HEADER_ONLY', '/D_WIN32_WINNT=0x0501' ]
     else:
         raise NotImplementedError
 
