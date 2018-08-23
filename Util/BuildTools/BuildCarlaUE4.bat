@@ -10,9 +10,8 @@ rem ============================================================================
 
 
 set DOC_STRING=Build LibCarla.
-set "USAGE_STRING=Usage: %FILE_N% [-h^|--help] [--build] [--rebuild] [--launch] [--clean] [--hard-clean]"
+set "USAGE_STRING=Usage: %FILE_N% [-h^|--help] [--build] [--rebuild] [--launch] [--clean]"
 
-set HARD_CLEAN=false
 set BUILD_CARLAUE4=false
 set LAUNCH_UE4_EDITOR=false
 set REMOVE_INTERMEDIATE=false
@@ -30,11 +29,6 @@ if not "%1"=="" (
 
     if "%1"=="--launch" (
         set LAUNCH_UE4_EDITOR=true
-    )
-
-    if "%1"=="--hard-clean" (
-        set REMOVE_INTERMEDIATE=true
-        set HARD_CLEAN=true
     )
 
     if "%1"=="--clean" (
@@ -60,10 +54,8 @@ if not "%1"=="" (
 if %REMOVE_INTERMEDIATE% == false (
     if %LAUNCH_UE4_EDITOR% == false (
         if %BUILD_CARLAUE4% == false (
-            if %HARD_CLEAN% == false (
-                echo Nothing selected to be done.
-                goto :eof
-            )
+            echo Nothing selected to be done.
+            goto :eof
         )
     )
 )
@@ -96,9 +88,13 @@ if %REMOVE_INTERMEDIATE% == true (
     if exist "%CARLA_FOLDER%Plugins\Carla\Intermediate" rmdir /S /Q "%CARLA_FOLDER%Plugins\Carla\Intermediate"
 )
 
-if %BUILD_CARLAUE4 == true (
-    echo %FILE_N% Builing and launching Unreal Editor...
-    call "%CARLA_FOLDER%CarlaUE4.uproject"
+if %BUILD_CARLAUE4% == true (
+    echo %FILE_N% Builing and starting Carla...
+
+    call MsBuild.exe "%CARLA_FOLDER%CarlaUE4.sln" /m /p:configuration=Development /p:platform=Win64
+    if errorlevel 1 goto error_build
+
+    start "" "%CARLA_FOLDER%Binaries\Win64\CarlaUE4.exe"
 )
 
 if %LAUNCH_UE4_EDITOR% == true (
@@ -106,6 +102,22 @@ if %LAUNCH_UE4_EDITOR% == true (
     call "%CARLA_FOLDER%CarlaUE4.uproject"
 )
 
+goto good_exit
+
 rem ============================================================================
 rem -- Messages and Errors -----------------------------------------------------
 rem ============================================================================
+
+:error_build
+    echo.
+    echo %FILE_N% There was a problem building Carla.
+    echo %FILE_N% Please read the screen log for more information.
+    goto bad_exit
+
+:good_exit
+    endlocal
+    exit /b 0
+
+:bad_exit
+    endlocal
+    exit /b %errorlevel%
