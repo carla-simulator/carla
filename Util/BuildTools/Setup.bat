@@ -23,7 +23,7 @@ rem ============================================================================
 
 set INSTALLERS_DIR=%ROOT_PATH%Util\InstallersWin\
 set VERSION_FILE=%ROOT_PATH%Util\ContentVersions.txt
-set CONTENT_DIR=%ROOT_PATH%Unreal\CarlaUE4\Content
+set CONTENT_DIR=%ROOT_PATH%Unreal\CarlaUE4\Content\Carla
 
 set TOOLSET=msvc-14.1
 set NUMBER_OF_ASYNC_JOBS=%NUMBER_OF_PROCESSORS%
