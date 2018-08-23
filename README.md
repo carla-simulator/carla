@@ -61,7 +61,7 @@ Building CARLA
 
 Use `git clone` or download the project from this page. Note that the master
 branch contains the latest fixes and features, for the latest stable code may be
-best to switch to the latest release tag.
+best to switch to the `stable` branch.
 
 Then follow the instruction at [How to build on Linux][buildlinuxlink] or
 [How to build on Windows][buildwindowslink].
