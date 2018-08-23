@@ -21,8 +21,13 @@
 // _APISET_SECURITYBASE_VER
 // _WIN32_WINNT_WINTHRESHOLD
 
-#pragma warning(push)
-#pragma warning(disable: 4668 4191)
+// NOTE(Andrei): Macros to detect which compiler is
+//http://nadeausoftware.com/articles/2012/10/c_c_tip_how_detect_compiler_name_and_version_using_compiler_predefined_macros
+#if defined(_MSC_VER)
+  #pragma warning(push)
+  #pragma warning(disable: 4668 4191)
+#endif
+
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Version.h>
 #include <carla/rpc/Actor.h>
@@ -33,8 +38,10 @@
 #include <carla/rpc/VehicleControl.h>
 #include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
-#pragma warning(pop)
 
+#if defined(_MSC_VER)
+  #pragma warning(pop)
+#endif
 #include <vector>
 
 // =============================================================================
