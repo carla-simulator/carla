@@ -111,7 +111,7 @@ rem ============================================================================
 
 :success
     echo.
-    if %BUILD_SERVER% == true echo %FILE_N% LibCarla client has been successfully installed in "%LIBCARLA_SERVER_INSTALL_PATH%"!
+    if %BUILD_SERVER% == true echo %FILE_N% LibCarla server has been successfully installed in "%LIBCARLA_SERVER_INSTALL_PATH%"!
     if %BUILD_CLIENT% == true echo %FILE_N% LibCarla client has been successfully installed in "%LIBCARLA_CLIENT_INSTALL_PATH%"!
     goto good_exit
 
