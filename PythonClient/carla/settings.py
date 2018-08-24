@@ -96,7 +96,7 @@ class CarlaSettings(object):
         add_section(S_SERVER, self, [
             'SynchronousMode',
             'SendNonPlayerAgentsInfo',
-			'DisableRendering'])
+            'DisableRendering'])
         add_section(S_QUALITY, self, [
             'QualityLevel'])
         add_section(S_LEVEL, self, [

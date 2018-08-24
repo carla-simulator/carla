@@ -211,10 +211,6 @@ void UCarlaSettings::LoadSettings()
     {
       bUseNetworking = false;
     }
-    if(FParse::Param(FCommandLine::Get(), TEXT("disable-rendering")))
-    {
-      bDisableRendering = true;
-    }
   }
 }
 
@@ -255,7 +251,7 @@ void UCarlaSettings::LogSettings() const
   UE_LOG(LogCarla, Log, TEXT("Server Time-out = %d ms"), ServerTimeOut);
   UE_LOG(LogCarla, Log, TEXT("Synchronous Mode = %s"), EnabledDisabled(bSynchronousMode));
   UE_LOG(LogCarla, Log, TEXT("Send Non-Player Agents Info = %s"), EnabledDisabled(bSendNonPlayerAgentsInfo));
-  UE_LOG(LogCarla, Log, TEXT("Disable Render World = %s"), bDisableRendering?TEXT("YES"):TEXT("NO"));
+  UE_LOG(LogCarla, Log, TEXT("Rendering = %s"), EnabledDisabled(!bDisableRendering));
   UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_LEVELSETTINGS);
   UE_LOG(LogCarla, Log, TEXT("Player Vehicle        = %s"), (PlayerVehicle.IsEmpty() ? TEXT("Default") : *PlayerVehicle));
   UE_LOG(LogCarla, Log, TEXT("Number Of Vehicles    = %d"), NumberOfVehicles);
