@@ -13,20 +13,23 @@ rem -- Parse arguments ---------------------------------------------------------
 rem ==============================================================================
 
 set DOC_STRING="Makes a packaged version of CARLA for distribution."
-set USAGE_STRING="Usage: %FILE_N% [-h|--help] [--no-packaging] [--no-zip] [--clean-intermediate]"
+set USAGE_STRING="Usage: %FILE_N% [-h|--help] [--no-packaging] [--no-zip] [--clean]"
 
 set DO_PACKAGE=true
 set DO_COPY_FILES=true
 
 set DO_TARBALL=true
-set DO_CLEAN_INTERMEDIATE=false
+set DO_CLEAN=false
 
 set UE_VERSION=4.19
 
 :arg-parse
 if not "%1"=="" (
-    if "%1"=="--clean-intermediate" (
-        set DO_CLEAN_INTERMEDIATE=true
+    if "%1"=="--clean" (
+        set DO_CLEAN=true
+        set DO_TARBALL=false
+        set DO_PACKAGE=false
+        set DO_COPY_FILES=false
     )
 
     if "%1"=="--no-zip" (
@@ -90,6 +93,8 @@ if %DO_PACKAGE%==true (
         -FromMsBuild^
         "%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"
 
+    if errorlevel 1 goto error_build_editor
+
     call "%UE4_ROOT%\Engine\Build\BatchFiles\Build.bat"^
         CarlaUE4^
         Win64^
@@ -97,6 +102,8 @@ if %DO_PACKAGE%==true (
         -WaitMutex^
         -FromMsBuild^
         "%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"
+
+    if errorlevel 1 goto error_build
 
     call "%UE4_ROOT%\Engine\Build\BatchFiles\RunUAT.bat"^
         BuildCookRun^
@@ -113,6 +120,8 @@ if %DO_PACKAGE%==true (
         -archivedirectory="%BUILD_FOLDER%"^
         -package^
         -clientconfig=Development
+
+    if errorlevel 1 goto error_runUAT
 )
 
 rem ==============================================================================
@@ -164,11 +173,15 @@ rem ============================================================================
 rem -- Remove intermediate files -------------------------------------------------
 rem ==============================================================================
 
-if %DO_CLEAN_INTERMEDIATE%==true (
+if %DO_CLEAN%==true (
     echo.
     echo "%FILE_N% Removing intermediate build."
+
     rmdir /S /Q "%BUILD_FOLDER%"
+    goto :eof
 )
+
+goto success
 
 rem ============================================================================
 rem -- Messages and Errors -----------------------------------------------------
@@ -182,12 +195,30 @@ rem ============================================================================
 
 :error_carla_version
     echo.
-    echo Carla Version is not set
+    echo %FILE_N% Carla Version is not set
     goto bad_exit
 
 :error_unreal_no_found
     echo.
     echo %FILE_N% Unreal Engine %UE_VERSION% not detected
+    goto bad_exit
+
+:error_build_editor
+    echo.
+    echo %FILE_N% There was a problem while building the CarlaUE4Editor.
+    echo %FILE_N% Please read the screen log for more information.
+    goto bad_exit
+
+:error_build
+    echo.
+    echo %FILE_N% There was a problem while building the CarlaUE4.
+    echo %FILE_N% Please read the screen log for more information.
+    goto bad_exit
+
+:error_runUAT
+    echo.
+    echo %FILE_N% There was a problem while packaging Unreal project.
+    echo %FILE_N% Please read the screen log for more information.
     goto bad_exit
 
 :good_exit

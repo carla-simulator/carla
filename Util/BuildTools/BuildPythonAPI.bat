@@ -77,7 +77,7 @@ if %REMOVE_INTERMEDIATE% == true (
     echo %FILE_N% Cleaning "%PYTHON_LIB_DEPENDENCIES%"
     if exist "%PYTHON_LIB_DEPENDENCIES%" rmdir /S /Q "%PYTHON_LIB_DEPENDENCIES%"
 
-    echo %FILE_N% Cleaning "%PYTHON_LIB_PATH%\dist"
+    echo %FILE_N% Cleaning "%PYTHON_LIB_PATH%dist"
     if exist "%PYTHON_LIB_PATH%dist" rmdir /S /Q "%PYTHON_LIB_PATH%dist"
 )
 
