@@ -44,7 +44,11 @@
 <h3>Development</h3>
 
   * [Map customization](map_customization.md)
-  * [How to add assets](how_to_add_assets.md)
   <!-- * [CARLA design](carla_design.md) -->
   <!-- * [CarlaServer documentation](carla_server.md) -->
   * [Build system](build_system.md)
+
+<h3>Art guidelines</h3>
+
+  * [How to add assets](how_to_add_assets.md)
+  * [How to model vehicles](how_to_model_vehicles.md)
