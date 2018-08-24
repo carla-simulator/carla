@@ -93,7 +93,7 @@ class CarlaGame(object):
             cam_blueprint = world.get_blueprint_library().find('sensor.camera')
             self._camera = world.spawn_actor(cam_blueprint, CAMERA_POSITION, attach_to=self._vehicle)
 
-            self._camera.listen(lambda image: self._parse_image(image))
+            self._camera.listen(self._parse_image)
 
             while True:
                 for event in pygame.event.get():

@@ -36,7 +36,7 @@
 namespace boost {
 
   static inline void throw_exception(const std::exception &e) {
-    UE_LOG(LogCarla, Fatal, TEXT("Exception thronw on Boost libraries: %s"), UTF8_TO_TCHAR(e.what()));
+    UE_LOG(LogCarla, Fatal, TEXT("Exception thrown on Boost libraries: %s"), UTF8_TO_TCHAR(e.what()));
   }
 
 } // namespace boost
