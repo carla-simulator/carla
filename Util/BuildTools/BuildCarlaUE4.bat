@@ -13,6 +13,8 @@ set DOC_STRING=Build LibCarla.
 set "USAGE_STRING=Usage: %FILE_N% [-h^|--help] [--build] [--rebuild] [--launch] [--clean]"
 
 set BUILD_CARLAUE4=false
+set BUILD_CARLAUE4_EDITOR=false
+
 set LAUNCH_UE4_EDITOR=false
 set REMOVE_INTERMEDIATE=false
 
@@ -25,6 +27,10 @@ if not "%1"=="" (
 
     if "%1"=="--build" (
         set BUILD_CARLAUE4=true
+    )
+
+    if "%1"=="--build-editor" (
+        set BUILD_CARLAUE4_EDITOR=true
     )
 
     if "%1"=="--launch" (
@@ -54,8 +60,10 @@ if not "%1"=="" (
 if %REMOVE_INTERMEDIATE% == false (
     if %LAUNCH_UE4_EDITOR% == false (
         if %BUILD_CARLAUE4% == false (
-            echo Nothing selected to be done.
-            goto :eof
+            if %BUILD_CARLAUE4_EDITOR% == false (
+                echo Nothing selected to be done.
+                goto :eof
+            )
         )
     )
 )
@@ -95,6 +103,15 @@ if %BUILD_CARLAUE4% == true (
     if errorlevel 1 goto error_build
 
     start "" "%CARLA_FOLDER%Binaries\Win64\CarlaUE4.exe"
+)
+
+if %BUILD_CARLAUE4_EDITOR% == true (
+    echo %FILE_N% Builing and starting Carla...
+
+    call MsBuild.exe "%CARLA_FOLDER%CarlaUE4.sln" /m /p:configuration="Development Editor" /p:platform=Win64
+    if errorlevel 1 goto error_build
+
+    call "%CARLA_FOLDER%CarlaUE4.uproject"
 )
 
 if %LAUNCH_UE4_EDITOR% == true (
