@@ -57,9 +57,12 @@ namespace streaming {
         } ()) {}
 
 #ifdef __APPLE__
-      // avoid recursive delegation on Mac: size_type is not the same as std::size_t
+      // On the Mac, std::size_t is unsigned long, where uint64_t
+      // is unsigned long long. Although both are 64-bits, they are
+      // distinct types, so this declaration is needed to avoid recursive
+      // delegation back to the template constructor.
       explicit Message(std::size_t size)
-      : Message(size_type(size)) {}
+      : Message(uint64_t(size)) {}
 #endif
       
     template <typename ConstBufferSequence>
