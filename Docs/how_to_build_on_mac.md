@@ -33,12 +33,24 @@ Although, you don't need to build the engine from source, you do need to add the
 
 ### Install the build tools and dependencies
 
-~~~
-brew install autoconf curl libtool ninja wget
+~~~sh
+$ brew install autoconf curl libtool ninja wget
 ~~~
 
 Use shipping python or install using your favorite method (e.g. brew, download installer from python.org,
 Anaconda/miniconda).
+
+If using conda environment:
+
+~~~sh
+$ conda install -c conda-forge nose2
+~~~
+
+else:
+
+~~~sh
+$ pip2 install nose2
+~~~
 
 In order for `boost-python` to build properly, you may need to add a `user-config.jam` file
 to your home directory describing the location of your python implementations. For instance,
