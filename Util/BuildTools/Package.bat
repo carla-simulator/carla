@@ -140,9 +140,9 @@ if %DO_COPY_FILES%==true (
     echo f | xcopy /y "!XCOPY_FROM!Docs\release_readme.md"            "!XCOPY_TO!README"
     echo f | xcopy /y "!XCOPY_FROM!Util\Docker\Release.Dockerfile"    "!XCOPY_TO!Dockerfile"
     echo f | xcopy /y "!XCOPY_FROM!PythonAPI\dist\*.egg"              "!XCOPY_TO!PythonAPI\"
-    echo f | xcopy /y "!XCOPY_FROM!PythonAPI\example.py"              "!XCOPY_TO!PythonAPI\example.py"
-    echo f | xcopy /y "!XCOPY_FROM!PythonAPI\manual_control.py"       "!XCOPY_TO!PythonAPI\manual_control.py"
-    echo f | xcopy /y "!XCOPY_FROM!PythonAPI\vehicle_gallery.py"      "!XCOPY_TO!PythonAPI\vehicle_gallery.py"
+    echo f | xcopy /y "!XCOPY_FROM!PythonAPI\example.py"              "!XCOPY_TO!example.py"
+    echo f | xcopy /y "!XCOPY_FROM!PythonAPI\manual_control.py"       "!XCOPY_TO!manual_control.py"
+    echo f | xcopy /y "!XCOPY_FROM!PythonAPI\vehicle_gallery.py"      "!XCOPY_TO!vehicle_gallery.py"
 )
 
 rem ==============================================================================
