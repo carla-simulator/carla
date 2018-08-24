@@ -1,99 +1,98 @@
+<h1>How to model vehicles</h1>
 
-# How to model vehicles
+## 4-Wheeled Vehicles
 
-## 4-Wheels Vehicles
+<h3>Modelling</h3>
 
+Vehicles must have a minimum of 10.000 and a maximum of 17.000 Tris
+approximately. We model the vehicles using the size and scale of actual cars.
+The bottom part of the vehicle consists of a plane adjusted to the Bodywork.
 
-### **Modeling**
+The vehicle must be divided in 6 materials:
 
-The vehicles of Carla must have Min 10.000 - Max 17.000 Tris aprox. we base on real cars and real scales to modeling. The part of bottom of car, modeling a plane and adjust it to the Bodywork. 
+  1. **BodyWork:**
+    The Bodywork includes the chassis, doors, car handle, and front and back
+    parts of the vehicle. The BodyWork material is controlled by Unreal Engine.
+    You can add logos and some details, but remember, all the details will be
+    painted by Unreal using the same color. Use the alpha channel if you want to
+    paint details with a different color.
 
-The car must been divide in 6 materials:
+  2. **Wheels:**
+    Model the Wheels with hubcaps and add details to the tire with Substance. In
+    the UV, add the tires and the hubcaps separately.
 
-**1.BodyWork:**
+  3. **Interior:**
+    The Interior includes the seats, the steering wheel, and the bottom of the
+    vehicle. You don’t need to add much detail here.
 
-The Bodywork include the chassis, doors, car handle, front and back. All to refer the chassis. The material of BodyWork will be controlled by Unreal. Can put the logos and a bit details, but remember, all that details will be painted by Unreal with the same color. To do channel alpha if you want paint details with different color.
+  4. **Details:**
+    Lights, logos, exhaust pipes, protections, and grille.
 
-**2.Wheels:**
+  5. **Glass:**
+    Light glasses, windows, etc. This material is controlled by Unreal.
 
-Model the Wheels with the hubcaps and put details the car tire with substance.
-The UV, put the tires separately and the hubcaps to.
+  6. **LicencePlate:**
+    Add just a plane, the materials are controlled by Unreal. Depending on the
+    car, it is possible to have several materials, but following this
+    criterion.
 
-**3.Interior:**
+<h3>Nomenclature of Material</h3>
 
-the seats and steering wheel. You don’t need much detail. In this section put the part of bottom the car.
+* `M*"CarName"* Bodywork`
 
-**4.Details:**
+* `M*"CarName"* Wheel`
 
-Lights, logos, exhaust pipes, protections, grille.
+* `M*"CarName"* Interior`
 
-**5.Glass:**
+* `M*"CarName"* Details`
 
-Light glasses, windows etc..Material controlled by Unreal
- 
-**6.LicencePlate:**
+* `M*"CarName"* Glass`
 
-Put plane and the material controlled by Unreal
+* `M\_"CarName"\_LicencePlate`
 
+<h3>Textures</h3>
 
+The size of the textures is 2048x2048.
 
-	              Depending on the car is possible put more material or less but following this criterion.
-                  
-                  
-### **Nomenclature of Material**
+* `T* "CarName"* PartOfMaterial* d (\_BaseColor*)`
 
-+ M_”NameCar”_ Bodywork 
+* `T* "CarName"* PartOfMaterial* n (\_Normal*)`
 
-+ M_ ”NameCar” _ Wheel
+* `T* "CarName"* PartOfMaterial* orm (\_OcclusionRoughnessMetallic*)`
 
-+ M_”NameCar”_ Interior
+<h3>RIG</h3>
 
-+ M_”NameCar”_ Details
+The easiest way is to copy the "General4wheeledSkeleton" present in our project,
+either by exporting it and copying it to your model or by creating your skeleton
+using the same bone names and orientation.
 
-+ M_”NameCar”_ Glass
+The model and every bone must be oriented towards positive X axis with the Z
+axis facing upwards.
 
-+ M_”NameCar”_LicencePlate
+_Bone Setup:_
 
-### **Textures**
+Vhehicle_Base: The origin point of the mesh, place it in the point (0,0,0) of the scene.
 
-The size of texture 2048 x 2048
+* Wheel_Front_Left: Set the joint's position in the middle of the Wheel.
 
-+ T_ ”NameCar”_ PartOfMaterial_ d (_BaseColor_)
+* Wheel_Front_Right: Set the joint's position in the middle of the Wheel.
 
-+ T_ ”NameCar”_ PartOfMaterial_ n (_Normal_)
+* Wheel_Rear_Left: Set the joint's position in the middle of the Wheel.
 
-+ T_ ”NameCar”_ PartOfMaterial_ orm (_OcclusionRoughnessMetallic_)
+* Wheel_Rear_Left: Set the joint's position in the middle of the Wheel.
 
+<h3>LODs</h3>
 
-### **RIG**
+All vehicle LODs must be made in Maya or other 3D software. Because Unreal does
+not generate LODs automatically, you can adjust the number of Tris to make a
+smooth transitions between levels.
 
-If you want a simpler way you might copy our "General4wheeledSkeleton" from our project, either by exporting it and copying it into your model or by creating your skelleton using the same bone names and orientation.
+* _Level 0_ - Original
 
-As with the 4 wheeled vehicles, orient the model towards positive "x" and every bone axis towards positive x and with the z axis facing upwards.
+* _Level 1_ - Deleted 2.000/2.500 Tris (_Do not delete the interior and steering wheel_)
 
-_Bone Setup:_ 
+* _Level 2_ - Deleted 2.000/2.500 Tris (_Do not delete the interior_)
 
-Vheicle_Base: The origin point of the mesh. Place it in the point 0,0,0 of the scene.
+* _Level 3_ - Deleted 2.000/2.500 Tris (_Delete the interior_)
 
-+ Wheel_Front_Left: Set the position joint in the middle of Wheel.
-
-+ Wheel_Front_Right:Set the position joint in the middle of Wheel.
-
-+ Wheel_Rear_Left:Set the position joint in the middle of Wheel.
-
-+ Wheel_Rear_Left:Set the position joint in the middle of Wheel.
-
-### **LODs**
-
-All LODs of vehicles must be made in maya or other software 3D. Because Unreal does not generate Lods automatically. You can put more or less tris in order to the transition between them is not evident.
-
-_Level - 0_ - Original
-
-_Level - 1_ - Deleted 2.000/2.500 Tries (_Do not delete the interior and steering wheell_ )
-
-_Level - 2_ - Deleted 2.000/2.500 Tries (_Do not delete the interior_)
-
-_Level - 3_ - Deleted 2.000/2.500 Tries  (_Delete the interior_)
-
-_Level - 4_ - That has a simple form of car. 
-
+* _Level 4_ - Simple shape of a vehicle.
