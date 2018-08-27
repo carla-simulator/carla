@@ -25,7 +25,7 @@ def main():
     client = carla.Client('localhost', 2000)
     world = client.get_world()
     spectator = world.get_spectator()
-    vehicle_blueprints = world.get_blueprint_library().filter('vehicle');
+    vehicle_blueprints = world.get_blueprint_library().filter('vehicle')
 
     for blueprint in vehicle_blueprints:
         transform = carla.Transform(LOCATION, carla.Rotation(yaw=-45.0))
