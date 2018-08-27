@@ -32,37 +32,54 @@ The vehicle must be divided in 6 materials:
     Light glasses, windows, etc. This material is controlled by Unreal.
 
   6. **LicencePlate:**
-    Add just a plane, the materials are controlled by Unreal. Depending on the
-    car, it is possible to have several materials, but following this
-    criterion.
+    Put a rectangular plane with this size 29-12 cm, for the licence Plate. 
+    We assign the license plate texture.
+
+    
 
 <h3>Nomenclature of Material</h3>
 
-* `M*"CarName"* Bodywork`
+* M(Material)_"CarName"_Bodywork(part of car)
 
-* `M*"CarName"* Wheel`
+* M_"CarName"_Wheel
 
-* `M*"CarName"* Interior`
+* M_"CarName"_Interior
 
-* `M*"CarName"* Details`
+* M_"CarName"_Details
 
-* `M*"CarName"* Glass`
+* M_"CarName"_Glass
 
-* `M\_"CarName"\_LicencePlate`
+* M_"CarName"_LicencePlate
+
 
 <h3>Textures</h3>
 
 The size of the textures is 2048x2048.
 
-* `T* "CarName"* PartOfMaterial* d (\_BaseColor*)`
+* T_"CarName"_PartOfMaterial_d (BaseColor)
 
-* `T* "CarName"* PartOfMaterial* n (\_Normal*)`
+* T_"CarName"_PartOfMaterial_n (Normal)
 
-* `T* "CarName"* PartOfMaterial* orm (\_OcclusionRoughnessMetallic*)`
+* T_"CarName"_PartOfMaterial_orm (OcclusionRoughnessMetallic)
+
+* **EXEMPLE**:
+Type of car Tesla Model 3
+
+TEXTURES
+* T_Tesla3_BodyWork_d
+* T_Tesla3_BodyWork_n
+* T_Tesla3_BodyWork_orm
+
+MATERIAL
+* M_Tesla3_BodyWork
+
+
+
+
 
 <h3>RIG</h3>
 
-The easiest way is to copy the "General4wheeledSkeleton" present in our project,
+The easiest way is to copy the "General4WheeledVehicleSkeleton" present in our project,
 either by exporting it and copying it to your model or by creating your skeleton
 using the same bone names and orientation.
 
