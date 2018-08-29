@@ -35,14 +35,42 @@ namespace carla {
 namespace client {
 
   std::ostream &operator<<(std::ostream &out, const Color &color) {
-    out << "Color(r=" << color.r
-        << ", g=" << color.g
-        << ", b=" << color.b << ')';
+    out << "Color(" << int(color.r) << ',' << int(color.g) << ',' << int(color.b) << ')';
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const ActorAttribute &attr) {
+    using Type = carla::rpc::ActorAttributeType;
+    static_assert(static_cast<uint8_t>(Type::SIZE) == 5u, "Please update this function.");
+    out << "ActorAttribute(id=" << attr.GetId();
+    switch (attr.GetType()) {
+      case Type::Bool:
+        out << ",type=bool,value=" << (attr.As<bool>() ? "True" : "False");
+        break;
+      case Type::Int:
+        out << ",type=int,value=" << attr.As<int>();
+        break;
+      case Type::Float:
+        out << ",type=float,value=" << attr.As<float>();
+        break;
+      case Type::String:
+        out << ",type=str,value=" << attr.As<std::string>();
+        break;
+      case Type::RGBColor:
+        out << ",type=Color,value=" << attr.As<Color>();
+        break;
+      default:
+        out << ",INVALID";
+    }
+    if (!attr.IsModifiable()) {
+      out << "(const)";
+    }
+    out << ')';
     return out;
   }
 
   std::ostream &operator<<(std::ostream &out, const ActorBlueprint &bp) {
-    out << "ActorBlueprint(id=" << bp.GetId() << "tags=" << bp.GetTags() << ')';
+    out << "ActorBlueprint(id=" << bp.GetId() << ",tags=" << bp.GetTags() << ')';
     return out;
   }
 
@@ -80,11 +108,14 @@ void export_blueprint() {
   ;
 
   class_<cc::ActorAttribute>("ActorAttribute", no_init)
-    .add_property("is_modifiable", &cc::ActorAttribute::IsModifiable)
+    .add_property("id", +[](const cc::ActorAttribute &self) -> std::string {
+      return self.GetId();
+    })
     .add_property("type", &cc::ActorAttribute::GetType)
     .add_property("recommended_values", +[](const cc::ActorAttribute &self) -> std::vector<std::string> {
       return self.GetRecommendedValues();
     })
+    .add_property("is_modifiable", &cc::ActorAttribute::IsModifiable)
     .def("as_bool", &cc::ActorAttribute::As<bool>)
     .def("as_int", &cc::ActorAttribute::As<int>)
     .def("as_float", &cc::ActorAttribute::As<float>)
@@ -107,6 +138,7 @@ void export_blueprint() {
     .def("__int__", &cc::ActorAttribute::As<int>)
     .def("__float__", &cc::ActorAttribute::As<float>)
     .def("__str__", &cc::ActorAttribute::As<std::string>)
+    .def(self_ns::str(self_ns::self))
   ;
 
   class_<cc::ActorBlueprint>("ActorBlueprint", no_init)
@@ -121,6 +153,8 @@ void export_blueprint() {
       return self.GetAttribute(id);
     })
     .def("set_attribute", &cc::ActorBlueprint::SetAttribute)
+    .def("__len__", &cc::ActorBlueprint::size)
+    .def("__iter__", range(&cc::ActorBlueprint::begin, &cc::ActorBlueprint::end))
     .def(self_ns::str(self_ns::self))
   ;
 
