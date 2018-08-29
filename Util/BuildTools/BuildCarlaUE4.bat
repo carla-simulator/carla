@@ -45,7 +45,7 @@ if not "%1"=="" (
         shift
     )
 
-    if "%1"=="--launch" (
+    if "%1"=="--launch-editor" (
         set LAUNCH_UE4_EDITOR=true
     )
 
@@ -126,8 +126,6 @@ if %REMOVE_INTERMEDIATE% == true (
 rem Generate Visual Studio solution
 rem
 set genVsSolution=false
-if %BUILD_CARLAUE4% == true set genVsSolution=true
-if %BUILD_CARLAUE4_EDITOR%  == true set genVsSolution=true
 
 if not exist "%CARLA_FOLDER%CarlaUE4.sln" set genVsSolution=true
 if %REMOVE_INTERMEDIATE% == true set genVsSolution=false
