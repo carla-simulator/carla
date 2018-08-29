@@ -3,12 +3,15 @@
 
 <h3>Necessary software</h3>
 - [Git](https://git-scm.com/downloads)
-- [Make](http://gnuwin32.sourceforge.net/downlinks/make-bin-zip.php)
+- [Make](http://gnuwin32.sourceforge.net/packages/make.htm)
 - [CMake](https://cmake.org/download/)
 - [Python3 x64](https://www.python.org/downloads/)
 
 !!! important
     Be sure that these programs are added to your environment path, so you can use them from your command prompt.
+
+!!! important
+    If make complins about missing libintl3.dll or/and libiconv2.dll please donwload the [dependencies](http://gnuwin32.sourceforge.net/downlinks/make-dep-zip.php) and extract the bin contento into the make installation path.
 
 Also:
 
@@ -37,16 +40,12 @@ cd carla
 ```
 
 <h3>Download Carla contents</h3>
-Depending on the Carla version that you are unsing download one of the links and extract the content to `Unreal\CarlaUE4\Content\Carla`
-
-| Version | Download URL |
-| --- | --- |
-| 0.9.0 | https://drive.google.com/open?id=1FtC00CrDb7Kz5StBAwb6vqOGbzZtpROx |
+Depending on the Carla version that you are unsing download one of the links that you can find in `\Util\ContentVersions.txt` and extract the content to `Unreal\CarlaUE4\Content\Carla`, if the path doesn't exist, create it.
 
 # Build Carla
 ---
 
-Once you have downloaded the repo and extract the Carla contents you can start with the automatic build. The process may take a while, it will download and install the necessary libraries (Boost, RPCLib and googletest). Expect 20-40 minutes, depending on your hardware and internet connection. If you get any error open a new issue on [GitHub](https://github.com/carla-simulator/carla/issues/) or just ask on the [Windows Discord channel](https://discord.gg/42KJdRj).
+Once you have downloaded the repo and extract the Carla contents you can start with the automatic build. The process may take a while, it will download and install the necessary libraries (Boost, RPCLib and googletest). Expect 20-40 minutes, depending on your hardware and internet connection. If you get any error comment on [GitHub #647](https://github.com/carla-simulator/carla/issues/647) issue or just ask on the [Windows Discord channel](https://discord.gg/42KJdRj).
 
 <h3>Build commands</h3>
 
