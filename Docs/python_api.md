@@ -38,12 +38,15 @@
 - `contains_attribute(key)`
 - `get_attribute(key)`
 - `set_attribute(key, value)`
+- `__len__`
+- `__iter__`
 
 ## `carla.ActorAttribute`
 
-- `is_modifiable`
+- `id`
 - `type`
 - `recommended_values`
+- `is_modifiable`
 - `as_bool()`
 - `as_int()`
 - `as_float()`

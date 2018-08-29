@@ -89,6 +89,10 @@ namespace client {
       _attributes.at(id).Set(std::move(value));
     }
 
+    size_t size() const {
+      return _attributes.size();
+    }
+
     auto begin() const {
       return iterator::make_map_values_iterator(_attributes.begin());
     }

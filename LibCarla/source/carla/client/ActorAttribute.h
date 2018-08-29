@@ -53,14 +53,8 @@ namespace client {
       Validate();
     }
 
-    /// Set the value of this attribute.
-    ///
-    /// @throw InvalidAttributeValue if attribute is not modifiable.
-    /// @throw InvalidAttributeValue if format does not match this type.
-    void Set(std::string value);
-
-    bool IsModifiable() const {
-      return _attribute.is_modifiable;
+    const std::string &GetId() const {
+      return _attribute.id;
     }
 
     rpc::ActorAttributeType GetType() const {
@@ -70,6 +64,16 @@ namespace client {
     const std::vector<std::string> &GetRecommendedValues() const {
       return _attribute.recommended_values;
     }
+
+    bool IsModifiable() const {
+      return _attribute.is_modifiable;
+    }
+
+    /// Set the value of this attribute.
+    ///
+    /// @throw InvalidAttributeValue if attribute is not modifiable.
+    /// @throw InvalidAttributeValue if format does not match this type.
+    void Set(std::string value);
 
     /// Cast the value to the given type.
     ///
