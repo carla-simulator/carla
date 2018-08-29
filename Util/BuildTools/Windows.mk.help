@@ -1,0 +1,69 @@
+Welcome to CARLA Simulator!
+===========================
+
+This Makefile will help you building the different CARLA utilities.
+
+Use the following commands:
+
+    help:
+
+        Display this help message.
+
+    launch:
+
+        Compile CarlaUE4 project and launch it in Unreal Engine's Editor.
+
+    launch-editor:
+
+        Launch CarlaUE4 project in Unreal Engine's Editor
+
+    package:
+
+        Makes a packaged version of CARLA ready for distribution.
+
+    docs:
+
+        Build CARLA Doxygen documentation.
+
+    clean:
+
+        Remove intermediate build files.
+
+    rebuild:
+
+        Remove intermediate build files and rebuild the whole project.
+
+    hard-clean:
+
+        Remove intermediate build files and dependencies, and force a
+        recompilation of Unreal Engine's pre-compiled headers. Useful for
+        fixing "version.h has been modified since the precompiled header"
+        errors. Beware, recompilation takes a long time!
+
+
+There are also some lower level commands for building individual modules helpful
+for developers:
+
+    check:
+
+        Run unit test suites for LibCarla and PythonAPI.
+
+    benchmark:
+
+        Run the benchmark tests for LibCarla.
+
+    CarlaUE4Editor:
+
+        Build CarlaUE4 project, but do not launch the editor.
+
+    PythonAPI:
+
+        Build and package the Python API module for Python 2 and 3.
+
+    LibCarla:
+
+        Build the LibCarla library, both "Server" and "Client" configurations.
+
+    setup:
+
+        Run the setup step only.
