@@ -48,9 +48,9 @@ def main(add_a_camera, enable_autopilot):
 
     world = client.get_world()
 
-    blueprint_library = world.get_blueprint_library();
+    blueprint_library = world.get_blueprint_library()
 
-    vehicle_blueprints = blueprint_library.filter('vehicle');
+    vehicle_blueprints = blueprint_library.filter('vehicle')
 
 
     actor_list = []
