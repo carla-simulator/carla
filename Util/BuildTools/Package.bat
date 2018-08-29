@@ -8,6 +8,9 @@ rem https://wiki.unrealengine.com/How_to_package_your_game_with_commands
 set LOCAL_PATH=%~dp0
 set "FILE_N=-[%~n0]:"
 
+rem Print batch params (debug purpose)
+echo %FILE_N% [Batch params]: %*
+
 rem ==============================================================================
 rem -- Parse arguments -----------------------------------------------------------
 rem ==============================================================================

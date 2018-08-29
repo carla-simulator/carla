@@ -8,6 +8,13 @@ rem Just put it in `Util/Build` and run it.
 set LOCAL_PATH=%~dp0
 set "FILE_N=    -[%~n0]:"
 
+rem Print batch params (debug purpose)
+echo %FILE_N% [Batch params]: %*
+
+rem ============================================================================
+rem -- Parse arguments ---------------------------------------------------------
+rem ============================================================================
+
 :arg-parse
 if not "%1"=="" (
     if "%1"=="-j" (
