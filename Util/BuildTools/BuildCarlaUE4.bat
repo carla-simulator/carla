@@ -7,10 +7,12 @@ rem Run it through a cmd with the x64 Visual C++ Toolset enabled.
 set LOCAL_PATH=%~dp0
 set "FILE_N=-[%~n0]:"
 
+rem Print batch params (debug purpose)
+echo %FILE_N% [Batch params]: %*
+
 rem ============================================================================
 rem -- Parse arguments ---------------------------------------------------------
 rem ============================================================================
-
 
 set DOC_STRING=Build LibCarla.
 set "USAGE_STRING=Usage: %FILE_N% [-h^|--help] [--build] [--rebuild] [--launch] [--clean]"
