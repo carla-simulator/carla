@@ -195,30 +195,30 @@ rem ============================================================================
 
 :error_carla_version
     echo.
-    echo %FILE_N% Carla Version is not set
+    echo %FILE_N% [ERROR] Carla Version is not set
     goto bad_exit
 
 :error_unreal_no_found
     echo.
-    echo %FILE_N% Unreal Engine %UE_VERSION% not detected
+    echo %FILE_N% [ERROR] Unreal Engine %UE_VERSION% not detected
     goto bad_exit
 
 :error_build_editor
     echo.
-    echo %FILE_N% There was a problem while building the CarlaUE4Editor.
-    echo %FILE_N% Please read the screen log for more information.
+    echo %FILE_N% [ERROR] There was a problem while building the CarlaUE4Editor.
+    echo           [ERROR] Please read the screen log for more information.
     goto bad_exit
 
 :error_build
     echo.
-    echo %FILE_N% There was a problem while building the CarlaUE4.
-    echo %FILE_N% Please read the screen log for more information.
+    echo %FILE_N% [ERROR] There was a problem while building the CarlaUE4.
+    echo           [ERROR] Please read the screen log for more information.
     goto bad_exit
 
 :error_runUAT
     echo.
-    echo %FILE_N% There was a problem while packaging Unreal project.
-    echo %FILE_N% Please read the screen log for more information.
+    echo %FILE_N% [ERROR] There was a problem while packaging Unreal project.
+    echo           [ERROR] Please read the screen log for more information.
     goto bad_exit
 
 :good_exit

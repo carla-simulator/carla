@@ -111,28 +111,27 @@ rem -- Messages and Errors -----------------------------------------------------
 rem ============================================================================
 
 :success
-    echo.
     if %BUILD_SERVER% == true echo %FILE_N% LibCarla server has been successfully installed in "%LIBCARLA_SERVER_INSTALL_PATH%"!
     if %BUILD_CLIENT% == true echo %FILE_N% LibCarla client has been successfully installed in "%LIBCARLA_CLIENT_INSTALL_PATH%"!
     goto good_exit
 
 :error_cmake
     echo.
-    echo %FILE_N% [CMAKE ERROR] An error ocurred while executing the cmake.
-    echo %FILE_N% [CMAKE ERROR] Possible causes:
-    echo %FILE_N%                - Make sure "CMake" is installed.
-    echo %FILE_N%                - Make sure it is available on your Windows "path".
-    echo %FILE_N%                - CMake 3.9.0 or higher is required.
+    echo %FILE_N% [ERROR] An error ocurred while executing the cmake.
+    echo           [ERROR] Possible causes:
+    echo           [ERROR]  - Make sure "CMake" is installed.
+    echo           [ERROR]  - Make sure it is available on your Windows "path".
+    echo           [ERROR]  - CMake 3.9.0 or higher is required.
     goto bad_exit
 
 :error_install
     echo.
-    echo %FILE_N% [Visual Studio 15 2017 Win64 ERROR] An error ocurred while installing using Visual Studio 15 2017 Win64.
-    echo %FILE_N% [Visual Studio 15 2017 Win64 ERROR] Possible causes:
-    echo %FILE_N%                - Make sure you have Visual Studio installed.
-    echo %FILE_N%                - Make sure you have the "x64 Visual C++ Toolset" in your path.
-    echo %FILE_N%                  For example using the "Visual Studio x64 Native Tools Command Prompt",
-    echo %FILE_N%                  or the "vcvarsall.bat".
+    echo %FILE_N% [ERROR] An error ocurred while installing using Visual Studio 15 2017 Win64.
+    echo           [ERROR] Possible causes:
+    echo           [ERROR]  - Make sure you have Visual Studio installed.
+    echo           [ERROR]  - Make sure you have the "x64 Visual C++ Toolset" in your path.
+    echo           [ERROR]    For example using the "Visual Studio x64 Native Tools Command Prompt",
+    echo           [ERROR]    or the "vcvarsall.bat".
     goto bad_exit
 
 :good_exit

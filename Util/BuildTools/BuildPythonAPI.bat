@@ -119,25 +119,25 @@ rem ============================================================================
 
 :already_installed
     echo.
-    echo %FILE_N% already installed in "%PYTHON_LIB_PATH%dist"
+    echo %FILE_N% [ERROR] Already installed in "%PYTHON_LIB_PATH%dist"
     goto good_exit
 
 :py2_not_supported
     echo.
-    echo %FILE_N% Python 2 is not currently suported in Windows.
+    echo %FILE_N% [ERROR] Python 2 is not currently suported in Windows.
     goto bad_exit
 
 :error_py
     echo.
-    echo %FILE_N% [PY ERROR] An error ocurred while executing the py.
-    echo %FILE_N% [PY ERROR] Possible causes:
-    echo %FILE_N%              - Make sure "py" is installed.
-    echo %FILE_N%              - Make sure it is available on your Windows "py".
+    echo %FILE_N% [ERROR] An error ocurred while executing the py.
+    echo %FILE_N% [ERROR] Possible causes:
+    echo %FILE_N% [ERROR]  - Make sure "py" is installed.
+    echo %FILE_N% [ERROR]  - Make sure it is available on your Windows "py".
     goto bad_exit
 
 :error_build_egg
     echo.
-    echo %FILE_N% An error occurred while building the egg file.
+    echo %FILE_N% [ERROR] An error occurred while building the egg file.
     goto bad_exit
 
 :good_exit

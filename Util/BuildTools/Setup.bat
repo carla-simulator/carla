@@ -15,7 +15,7 @@ rem ============================================================================
 rem -- Check for compiler ------------------------------------------------------
 rem ============================================================================
 
-where cl
+where cl 1>nul
 if %errorlevel% neq 0 goto error_cl
 
 rem TODO: check for x64 and not x86 or x64_x86
@@ -172,7 +172,6 @@ rem -- Messages and Errors -----------------------------------------------------
 rem ============================================================================
 
 :success
-    echo.
     echo %FILE_N%
     echo    ###########
     echo    # SUCCESS #
@@ -192,6 +191,7 @@ rem ============================================================================
     echo.
     echo    Unzip it in the "%CONTENT_DIR%" folder.
     echo    If you want another version, search it in %VERSION_FILE%.
+    echo.
     goto good_exit
 
 :help
@@ -208,10 +208,10 @@ rem ============================================================================
 
 :error_cl
     echo.
-    echo %FILE_N% [cl.exe ERROR] Can't find Visual Studio compiler.
-    echo %FILE_N% [cl.exe ERROR] Possible causes:
-    echo %FILE_N%                 - You are not using "Visual Studio x64 Native Tools Command Prompt".
-    echo %FILE_N%                 - Make sure you use x64 (not x64_x86!)
+    echo %FILE_N% [ERROR] Can't find Visual Studio compiler (cl.exe).
+    echo           [ERROR] Possible causes:
+    echo           [ERROR]  - Make sure you use x64 (not x64_x86!)
+    echo           [ERROR]  - You are not using "Visual Studio x64 Native Tools Command Prompt".
     goto failed
 
 :failed
