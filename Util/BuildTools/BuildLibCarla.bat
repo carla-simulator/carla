@@ -74,8 +74,6 @@ set LIBCARLA_SERVER_INSTALL_PATH=%ROOT_PATH%Unreal\CarlaUE4\Plugins\Carla\CarlaD
 set LIBCARLA_CLIENT_INSTALL_PATH=%ROOT_PATH%PythonAPI\dependencies
 
 if %REMOVE_INTERMEDIATE% == true (
-    echo.
-
     echo %FILE_N% Cleaning "%LIBCARLA_SERVER_INSTALL_PATH%"
     if exist "%LIBCARLA_SERVER_INSTALL_PATH%" rmdir /S /Q "%LIBCARLA_SERVER_INSTALL_PATH%"
 

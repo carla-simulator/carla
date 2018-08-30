@@ -9,7 +9,7 @@ export ROOT_PATH=$(CURDIR)/
 export INSTALLATION_DIR=$(ROOT_PATH)Build/
 
 help:
-	@type "${CARLA_BUILD_TOOLS_FOLDER}\Linux.mk.help"
+	@type "${CARLA_BUILD_TOOLS_FOLDER}\Windows.mk.help"
 
 launch: LibCarla
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --build --ue-version 4.19

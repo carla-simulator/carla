@@ -46,7 +46,6 @@ if exist "%GT_INSTALL_DIR%" (
 
 if not exist "%GT_SRC_DIR%" (
     echo %FILE_N% Cloning Google Test - version "%GT_VERSION%"...
-    echo.
 
     call git clone --depth=1 -b %GT_VERSION% https://github.com/google/googletest.git %GT_SRC_DIR%
     if %errorlevel% neq 0 goto error_git
