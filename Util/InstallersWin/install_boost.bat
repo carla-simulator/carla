@@ -55,7 +55,6 @@ if exist "%B_INSTALL_DIR%" (
 
 if not exist "%B_SRC_DIR%" (
     echo %FILE_N% Cloning Boost - version "%B_VERSION%"...
-    echo.
 
     call git clone --depth=1 -b %B_VERSION% --recurse-submodules -j%NUMBER_OF_ASYNC_JOBS% https://github.com/boostorg/boost.git %B_SRC_DIR%
     if %errorlevel% neq 0 goto error_git

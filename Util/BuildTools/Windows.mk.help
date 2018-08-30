@@ -33,14 +33,6 @@ Use the following commands:
 
         Remove intermediate build files and rebuild the whole project.
 
-    hard-clean:
-
-        Remove intermediate build files and dependencies, and force a
-        recompilation of Unreal Engine's pre-compiled headers. Useful for
-        fixing "version.h has been modified since the precompiled header"
-        errors. Beware, recompilation takes a long time!
-
-
 There are also some lower level commands for building individual modules helpful
 for developers:
 

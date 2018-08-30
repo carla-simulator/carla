@@ -132,7 +132,6 @@ rem -- Adding extra files to package -------------------------------------------
 rem ==============================================================================
 
 if %DO_COPY_FILES%==true (
-    echo.
     echo "%FILE_N% Adding extra files to package..."
 
     set XCOPY_FROM=%ROOT_PATH:/=\%
@@ -153,7 +152,6 @@ rem -- Zip the project ---------------------------------------------------------
 rem ==============================================================================
 
 if %DO_TARBALL%==true (
-    echo.
     echo "%FILE_N% Building package..."
 
     set DST_ZIP=%DESTINATION_ZIP:/=\%
@@ -177,8 +175,7 @@ rem -- Remove intermediate files -----------------------------------------------
 rem ==============================================================================
 
 if %DO_CLEAN%==true (
-    echo.
-    echo "%FILE_N% Removing intermediate build."
+    echo %FILE_N% Removing intermediate build.
 
     rmdir /S /Q "%BUILD_FOLDER%"
     goto :eof

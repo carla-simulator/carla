@@ -72,8 +72,6 @@ if %REMOVE_INTERMEDIATE% == false (
 )
 
 if %REMOVE_INTERMEDIATE% == true (
-    echo.
-
     echo %FILE_N% Cleaning "%PYTHON_LIB_BUILD%"
     if exist "%PYTHON_LIB_BUILD%" rmdir /S /Q "%PYTHON_LIB_BUILD%"
 

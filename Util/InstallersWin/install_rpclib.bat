@@ -46,7 +46,6 @@ if exist "%RPC_INSTALL_DIR%" (
 
 if not exist "%RPC_SRC_DIR%" (
     echo %FILE_N% Cloning rpclib - version "%RPC_VERSION%"...
-    echo.
 
     call git clone --depth=1 -b %RPC_VERSION% https://github.com/rpclib/rpclib.git %RPC_SRC_DIR%
     if %errorlevel% neq 0 goto error_git

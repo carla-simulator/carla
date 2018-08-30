@@ -84,7 +84,6 @@ call "%INSTALLERS_DIR%install_rpclib.bat"^
 if %errorlevel% neq 0 goto failed
 
 if not defined install_rpclib (
-    echo.
     echo %FILE_N% Failed while installing rpclib.
     goto failed
 )
@@ -93,7 +92,6 @@ rem ============================================================================
 rem -- Download and install Google Test ----------------------------------------
 rem ============================================================================
 
-echo.
 echo %FILE_N% Installing Google Test...
 call "%INSTALLERS_DIR%install_gtest.bat"^
     --build-dir "%INSTALLATION_DIR%"
@@ -101,7 +99,7 @@ call "%INSTALLERS_DIR%install_gtest.bat"^
 if %errorlevel% neq 0 goto failed
 
 if not defined install_gtest (
-    echo.
+
     echo %FILE_N% Failed while installing Google Test.
     goto failed
 )
@@ -110,7 +108,6 @@ rem ============================================================================
 rem -- Download and install Boost ----------------------------------------------
 rem ============================================================================
 
-echo.
 echo %FILE_N% Installing Boost...
 call "%INSTALLERS_DIR%install_boost.bat"^
     --build-dir "%INSTALLATION_DIR%"^
@@ -120,7 +117,6 @@ call "%INSTALLERS_DIR%install_boost.bat"^
 if %errorlevel% neq 0 goto failed
 
 if not defined install_boost (
-    echo.
     echo %FILE_N% Failed while installing Boost.
     goto failed
 )
