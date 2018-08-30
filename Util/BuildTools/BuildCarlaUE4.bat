@@ -175,13 +175,13 @@ rem ============================================================================
 
 :error_build
     echo.
-    echo %FILE_N% There was a problem building Carla.
-    echo %FILE_N% Please read the screen log for more information.
+    echo %FILE_N% [ERROR] There was a problem building Carla.
+    echo           [ERROR] Please read the screen log for more information.
     goto bad_exit
 
 :error_unreal_no_found
     echo.
-    echo %FILE_N% Unreal Engine %UE_VERSION% not detected
+    echo %FILE_N% [ERROR] Unreal Engine %UE_VERSION% not detected
     goto bad_exit
 
 :good_exit
