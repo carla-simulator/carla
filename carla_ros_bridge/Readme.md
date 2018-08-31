@@ -8,6 +8,8 @@ This ros package aims at providing a simple ros bridge for carla simulator.
 
 ![short video](https://youtu.be/S_NoN2GBtdY)
 
+If you have question regarding carla ros bridge just use the carla ros bridge Discord channel, we'll be glad to help you there:
+[Ros Discord channel](https://discord.gg/JU8Bjc8).
 
 # Features
 
