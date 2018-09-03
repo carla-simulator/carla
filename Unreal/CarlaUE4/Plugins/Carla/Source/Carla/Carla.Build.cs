@@ -77,6 +77,12 @@ public class Carla : ModuleRules
 
   delegate string ADelegate(string s);
 
+  private void AddBoostLibs(string LibPath)
+  {
+    string [] files = Directory.GetFiles(LibPath, "*boost*.lib");
+    foreach (string file in files) PublicAdditionalLibraries.Add(file);
+  }
+
   private void AddCarlaServerDependency(ReadOnlyTargetRules Target)
   {
     string LibCarlaInstallPath = Path.GetFullPath(Path.Combine(ModuleDirectory, "../../CarlaDependencies"));
@@ -95,7 +101,17 @@ public class Carla : ModuleRules
     // Link dependencies.
     if (IsWindows(Target))
     {
-      throw new NotImplementedException();
+      AddBoostLibs(Path.Combine(LibCarlaInstallPath, "lib"));
+      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("rpc")));
+
+      if (UseDebugLibs(Target))
+      {
+        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server_debug")));
+      }
+      else
+      {
+        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server")));
+      }
     }
     else
     {
@@ -113,6 +129,7 @@ public class Carla : ModuleRules
 
     // Include path.
     string LibCarlaIncludePath = Path.Combine(LibCarlaInstallPath, "include");
+
     PublicIncludePaths.Add(LibCarlaIncludePath);
     PrivateIncludePaths.Add(LibCarlaIncludePath);
 
