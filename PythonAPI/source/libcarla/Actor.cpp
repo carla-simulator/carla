@@ -68,7 +68,14 @@ void export_actor() {
     })
     .add_property("fov", &cc::Image::GetFOV)
     .add_property("raw_data", +[](cc::Image &self) {
+
+#if PYTHON3X
+      //NOTE(Andrei): python37
+      auto *ptr = PyMemoryView_FromMemory(reinterpret_cast<char *>(self.GetData()), self.GetSize(), PyBUF_READ);
+#else
+      //NOTE(Andrei): python2.7
       auto *ptr = PyBuffer_FromMemory(self.GetData(), self.GetSize());
+#endif
       return object(handle<>(ptr));
     })
   ;
@@ -114,8 +121,8 @@ void export_actor() {
 
         GILLockGuard gil_lock;
         try {
-          call<void>(callback.ptr(), object(image));
-        } catch (const error_already_set &e) {
+          boost::python::call<void>(callback.ptr(), boost::python::object(image));
+        } catch (const boost::python::error_already_set &e) {
           PyErr_Print();
         }
       });

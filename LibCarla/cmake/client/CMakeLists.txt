@@ -3,7 +3,8 @@ project(libcarla-client)
 
 # Install rpclib.
 install(DIRECTORY "${RPCLIB_INCLUDE_PATH}/rpc" DESTINATION include)
-install(FILES "${RPCLIB_LIB_PATH}/librpc.a" DESTINATION lib)
+file(GLOB libcarla_carla_rpclib "${RPCLIB_LIB_PATH}/*.*")
+install(FILES ${libcarla_carla_rpclib} DESTINATION lib)
 
 file(GLOB libcarla_sources
     "${libcarla_source_path}/carla/*.h"

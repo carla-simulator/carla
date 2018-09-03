@@ -7,7 +7,8 @@ install(FILES ${LibCXX_Libraries} DESTINATION lib)
 
 # Install rpclib.
 install(DIRECTORY "${RPCLIB_INCLUDE_PATH}/rpc" DESTINATION include)
-install(FILES "${RPCLIB_LIB_PATH}/librpc.a" DESTINATION lib)
+file(GLOB libcarla_carla_rpclib "${RPCLIB_LIB_PATH}/*.*")
+install(FILES ${libcarla_carla_rpclib} DESTINATION lib)
 
 # Install headers.
 
@@ -32,6 +33,14 @@ file(GLOB libcarla_carla_streaming_low_level_headers "${libcarla_source_path}/ca
 install(FILES ${libcarla_carla_streaming_low_level_headers} DESTINATION include/carla/streaming/low_level)
 
 install(DIRECTORY "${BOOST_INCLUDE_PATH}/boost" DESTINATION include)
+
+if(WIN32)
+  file(GLOB boostlib_date_time "${BOOST_LIB_PATH}/libboost_date_time-*-mt-*.lib")
+  install(FILES ${boostlib_date_time} DESTINATION lib)
+
+  file(GLOB boostlib_system "${BOOST_LIB_PATH}/libboost_system-*-mt-*.lib")
+  install(FILES ${boostlib_system} DESTINATION lib)
+endif()
 
 # carla_server library.
 
