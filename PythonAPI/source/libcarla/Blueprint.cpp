@@ -14,10 +14,13 @@
 
 template <typename Iterable>
 static std::ostream &PrintList(std::ostream &out, const Iterable &list) {
-  auto it = list.begin();
-  out << '[' << *it;
-  for (++it; it != list.end(); ++it) {
-    out << ", " << *it;
+  out << '[';
+  if (!list.empty()) {
+    auto it = list.begin();
+    out << *it;
+    for (++it; it != list.end(); ++it) {
+      out << ", " << *it;
+    }
   }
   out << ']';
   return out;
