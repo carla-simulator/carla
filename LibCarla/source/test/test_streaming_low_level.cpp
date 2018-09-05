@@ -15,7 +15,7 @@
 #include <atomic>
 
 TEST(streaming_low_level, sending_strings) {
-  using namespace util::message;
+  using namespace util::buffer;
   using namespace carla::streaming;
   using namespace carla::streaming::detail;
   using namespace carla::streaming::low_level;
