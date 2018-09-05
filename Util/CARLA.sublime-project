@@ -31,6 +31,7 @@
 				".vs",
 				".vscode",
 				"Binaries",
+				"Build",
 				"DerivedDataCache",
 				"Dist",
 				"Doxygen",
@@ -102,7 +103,7 @@
 			"syntax": "Packages/Makefile/Make Output.sublime-syntax",
 			"linux":
 			{
-				"shell_cmd": "CARLA_BUILD_NO_COLOR=true make check ARGS=\"--carlalib-debug\""
+				"shell_cmd": "CARLA_BUILD_NO_COLOR=true make check ARGS=\"--libcarla-debug\""
 			}
 		},
 		{
@@ -112,7 +113,7 @@
 			"syntax": "Packages/Makefile/Make Output.sublime-syntax",
 			"linux":
 			{
-				"shell_cmd": "gnome-terminal --maximize -e 'make check ARGS=\"--gdb --carlalib-debug\"'"
+				"shell_cmd": "gnome-terminal --maximize -e 'make check ARGS=\"--gdb --libcarla-debug\"'"
 			}
 		},
 		{
