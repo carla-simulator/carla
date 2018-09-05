@@ -14,7 +14,6 @@
 #include <atomic>
 
 TEST(streaming_detail_tcp, small_message) {
-  using namespace util::message;
   using namespace carla::streaming;
   using namespace carla::streaming::detail;
 
@@ -43,7 +42,7 @@ TEST(streaming_detail_tcp, small_message) {
     ++message_count;
     ASSERT_NE(message, nullptr);
     ASSERT_EQ(message->size(), 5u);
-    const std::string msg = as_string(*message);
+    const std::string msg = util::buffer::as_string(*message);
     ASSERT_EQ(msg, std::string("Hola!"));
   });
 

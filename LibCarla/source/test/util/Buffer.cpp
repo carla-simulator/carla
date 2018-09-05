@@ -4,7 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "Message.h"
+#include "Buffer.h"
 
 #include <boost/random/independent_bits.hpp>
 
@@ -12,15 +12,9 @@
 #include <random>
 
 namespace util {
-namespace message {
+namespace buffer {
 
-  shared_message make_empty(size_t size) {
-    return size == 0u ?
-        std::make_shared<Message>() :
-        std::make_shared<Message>(size);
-  }
-
-  shared_message make_random(size_t size) {
+  shared_buffer make_random(size_t size) {
     if (size == 0u)
       return make_empty();
     using random_bytes_engine = boost::random::independent_bits_engine<
@@ -28,20 +22,20 @@ namespace message {
         CHAR_BIT,
         unsigned char>;
     random_bytes_engine rbe;
-    auto message = make_empty(size);
-    std::generate(begin(*message), end(*message), std::ref(rbe));
-    return message;
+    auto buffer = make_empty(size);
+    std::generate(buffer->begin(), buffer->end(), std::ref(rbe));
+    return buffer;
   }
 
-  std::string to_hex_string(const Message &msg, size_t length) {
-    length = std::min(static_cast<size_t>(msg.size()), length);
+  std::string to_hex_string(const Buffer &buf, size_t length) {
+    length = std::min(static_cast<size_t>(buf.size()), length);
     auto buffer = std::make_unique<char[]>(2u * length + 1u);
     for (auto i = 0u; i < length; ++i)
-      sprintf(&buffer[2u * i], "%02x", msg.data()[i]);
-    if (length < msg.size())
+      sprintf(&buffer[2u * i], "%02x", buf.data()[i]);
+    if (length < buf.size())
       return std::string(buffer.get()) + std::string("...");
     return std::string(buffer.get());
   }
 
-} // namespace message
+} // namespace buffer
 } // namespace util

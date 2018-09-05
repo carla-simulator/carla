@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "carla/Buffer.h"
+
 #include <cstdint>
 
 namespace carla {
@@ -14,7 +16,7 @@ namespace detail {
 
   using stream_id_type = uint32_t;
 
-  using message_size_type = uint32_t;
+  using message_size_type = Buffer::size_type;
 
 } // namespace detail
 } // namespace streaming
