@@ -14,6 +14,8 @@
 #include <boost/asio/read.hpp>
 #include <boost/asio/write.hpp>
 
+#include <exception>
+
 namespace carla {
 namespace streaming {
 namespace detail {
@@ -58,15 +60,16 @@ namespace tcp {
 
   Client::Client(
       boost::asio::io_service &io_service,
-      endpoint ep,
-      stream_id_type stream_id,
+      const token_type &token,
       callback_function_type callback)
-    : _endpoint(std::move(ep)),
-      _stream_id(stream_id),
+    : _token(token),
       _callback(std::move(callback)),
       _socket(io_service),
       _strand(io_service),
       _connection_timer(io_service) {
+    if (!_token.protocol_is_tcp()) {
+      throw std::invalid_argument("invalid token, only TCP tokens supported");
+    }
     Connect();
   }
 
@@ -96,32 +99,38 @@ namespace tcp {
         _socket.close();
       }
 
-      auto handle_connect = [=](error_code ec) {
+      auto handle_connect = [=](
+          error_code ec,
+          const boost::asio::ip::tcp::endpoint & DEBUG_ONLY(ep)) {
+        DEBUG_ONLY(log_debug("streaming client: connected to", ep));
         if (!ec) {
           // Send the stream id to subscribe to the stream.
-          log_debug("streaming client: sending stream id", _stream_id);
+          const auto &stream_id = _token.get_stream_id();
+          log_debug("streaming client: sending stream id", stream_id);
           boost::asio::async_write(
-          _socket,
-          boost::asio::buffer(&_stream_id, sizeof(_stream_id)),
-          _strand.wrap([=](error_code ec, size_t DEBUG_ONLY(bytes)) {
+              _socket,
+              boost::asio::buffer(&stream_id, sizeof(stream_id)),
+              _strand.wrap([=](error_code ec, size_t DEBUG_ONLY(bytes)) {
             if (!ec) {
-              DEBUG_ASSERT_EQ(bytes, sizeof(_stream_id));
+              DEBUG_ASSERT_EQ(bytes, sizeof(stream_id));
               // If succeeded start reading data.
               ReadData();
             } else {
               // Else try again.
-              log_debug("streaming client: failed to send stream id:", ec.message());
+              log_warning("streaming client: failed to send stream id:", ec.message());
               Connect();
             }
           }));
         } else {
-          log_debug("streaming client: connection failed:", ec.message());
+          log_warning("streaming client: connection failed:", ec.message());
           Reconnect();
         }
       };
 
-      log_debug("streaming client: connecting to", _endpoint);
-      _socket.async_connect(_endpoint, _strand.wrap(handle_connect));
+      log_debug("streaming client: connecting to", _token.get_address(), "at port", _token.get_port());
+      boost::asio::ip::tcp::resolver resolver(_socket.get_io_service());
+      auto endpoint_it = resolver.resolve({_token.get_address(), _token.get_port()});
+      boost::asio::async_connect(_socket, endpoint_it, _strand.wrap(handle_connect));
     });
   }
 
@@ -149,15 +158,14 @@ namespace tcp {
         if (!ec) {
           DEBUG_ASSERT_EQ(bytes, encoder->size());
           DEBUG_ASSERT_NE(bytes, 0u);
-          // Move the buffer to the callback function and start reading
-          // the next
+          // Move the buffer to the callback function and start reading the next
           // piece of data.
           log_debug("streaming client: success reading data, calling the callback");
           _socket.get_io_service().post([this, encoder]() { _callback(encoder->pop()); });
           ReadData();
         } else {
           // As usual, if anything fails start over from the very top.
-          log_debug("streaming client: failed to read data:", ec.message());
+          log_warning("streaming client: failed to read data:", ec.message());
           Connect();
         }
       };
@@ -166,15 +174,14 @@ namespace tcp {
         DEBUG_ONLY(log_debug("streaming client: Client::ReadData.handle_read_header", bytes, "bytes"));
         if (!ec && (encoder->size() > 0u)) {
           DEBUG_ASSERT_EQ(bytes, sizeof(message_size_type));
-          // Now that we know the size of the coming buffer, we can
-          // allocate
-          // our buffer and start putting data into it.
+          // Now that we know the size of the coming buffer, we can allocate our
+          // buffer and start putting data into it.
           boost::asio::async_read(
               _socket,
               encoder->body(),
               _strand.wrap(handle_read_data));
         } else {
-          log_debug("streaming client: failed to read header:", ec.message());
+          log_warning("streaming client: failed to read header:", ec.message());
           DEBUG_ONLY(log_debug("size  = ", encoder->size()));
           DEBUG_ONLY(log_debug("bytes = ", bytes));
           Connect();
