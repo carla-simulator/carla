@@ -86,21 +86,21 @@ cd "%LIBCARLA_VSPROJECT_PATH%"
 
 rem Build libcarla server
 rem
-if %BUILD_SERVER% == true if not exist "%LIBCARLA_SERVER_INSTALL_PATH%" (
+if %BUILD_SERVER% == true (
     cmake -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Server -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP" -DCMAKE_INSTALL_PREFIX=%LIBCARLA_SERVER_INSTALL_PATH% %ROOT_PATH%
     if %errorlevel% neq 0 goto error_cmake
 
-    cmake --build . --config Release --target install
+    cmake --build . --config Release --target install | findstr /V "Up-to-date:"
     if %errorlevel% neq 0 goto error_install
 )
 
 rem Build libcarla client
 rem
-if %BUILD_CLIENT% == true if not exist "%LIBCARLA_CLIENT_INSTALL_PATH%" (
+if %BUILD_CLIENT% == true (
     cmake -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Client -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP" -DCMAKE_INSTALL_PREFIX=%LIBCARLA_CLIENT_INSTALL_PATH% %ROOT_PATH%
     if %errorlevel% neq 0 goto error_cmake
 
-    cmake --build . --config Release --target install
+    cmake --build . --config Release --target install  | findstr /V "Up-to-date:"
     if %errorlevel% neq 0 goto error_install
 )
 
