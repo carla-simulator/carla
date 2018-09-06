@@ -8,6 +8,7 @@
 
 #include "carla/NonCopyable.h"
 #include "carla/streaming/Message.h"
+#include "carla/streaming/detail/Token.h"
 #include "carla/streaming/detail/Types.h"
 
 #include <boost/asio/deadline_timer.hpp>
@@ -35,14 +36,13 @@ namespace tcp {
 
     Client(
         boost::asio::io_service &io_service,
-        endpoint ep,
-        stream_id_type stream_id,
+        const token_type &token,
         callback_function_type callback);
 
     ~Client();
 
     stream_id_type GetStreamId() const {
-      return _stream_id;
+      return _token.get_stream_id();
     }
 
     void Stop();
@@ -55,9 +55,7 @@ namespace tcp {
 
     void ReadData();
 
-    const endpoint _endpoint;
-
-    const stream_id_type _stream_id;
+    const token_type _token;
 
     callback_function_type _callback;
 

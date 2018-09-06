@@ -69,14 +69,14 @@ namespace detail {
 
     void set_address(const boost::asio::ip::address &addr);
 
-    boost::asio::ip::address get_address() const;
-
     template <typename P>
     boost::asio::ip::basic_endpoint<P> get_endpoint() const {
       DEBUG_ASSERT(is_valid());
       DEBUG_ASSERT(get_protocol<P>() == _token.protocol);
       return {get_address(), _token.port};
     }
+
+  public:
 
     template <typename P>
     explicit token_type(
@@ -88,8 +88,6 @@ namespace detail {
       set_address(ep.address());
     }
 
-  public:
-
     token_type() = default;
     token_type(const token_type &) = default;
 
@@ -97,9 +95,13 @@ namespace detail {
 
     operator Token() const;
 
-    auto get_stream_id() const {
+    // We need to return a reference here so we can use the address of the
+    // stream id to send it as buffer.
+    const auto &get_stream_id() const {
       return _token.stream_id;
     }
+
+    boost::asio::ip::address get_address() const;
 
     auto get_port() const {
       return _token.port;

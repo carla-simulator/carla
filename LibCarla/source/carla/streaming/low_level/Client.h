@@ -36,13 +36,9 @@ namespace low_level {
         boost::asio::io_service &io_service,
         const token_type &token,
         Functor &&callback) {
-      if (!token.protocol_is_tcp()) { /// @todo
-        throw std::invalid_argument("invalid token, only TCP tokens supported");
-      }
       _clients.emplace(
           io_service,
-          token.to_tcp_endpoint(),
-          token.get_stream_id(),
+          token,
           std::forward<Functor>(callback));
     }
 

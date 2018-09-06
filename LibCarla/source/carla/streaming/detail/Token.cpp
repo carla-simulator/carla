@@ -25,13 +25,6 @@ namespace detail {
     }
   }
 
-  boost::asio::ip::address token_type::get_address() const {
-    if (_token.address_type == token_data::address::ip_v4) {
-      return boost::asio::ip::address_v4(_token.address.v4);
-    }
-    return boost::asio::ip::address_v6(_token.address.v6);
-  }
-
   token_type::token_type(const Token &rhs) {
     std::memcpy(&_token, &rhs.data[0u], sizeof(_token));
   }
@@ -40,6 +33,13 @@ namespace detail {
     Token token;
     std::memcpy(&token.data[0u], &_token, token.data.size());
     return token;
+  }
+
+  boost::asio::ip::address token_type::get_address() const {
+    if (_token.address_type == token_data::address::ip_v4) {
+      return boost::asio::ip::address_v4(_token.address.v4);
+    }
+    return boost::asio::ip::address_v6(_token.address.v6);
   }
 
 } // namespace detail
