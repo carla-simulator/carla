@@ -13,7 +13,7 @@ Plugins/Carla/DerivedDataCache
 Plugins/Carla/Intermediate
 Plugins/Carla/Saved
 
-Content*
+./Content*
 Config/CarlaSettings.ini
 Config/DefaultEditor.ini
 
