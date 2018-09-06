@@ -83,7 +83,7 @@ if %REMOVE_INTERMEDIATE% == true (
 )
 
 cd "%PYTHON_LIB_PATH%"
-if exist "%PYTHON_LIB_PATH%dist" goto already_installed
+rem if exist "%PYTHON_LIB_PATH%dist" goto already_installed
 
 rem ============================================================================
 rem -- Check for py ------------------------------------------------------------
