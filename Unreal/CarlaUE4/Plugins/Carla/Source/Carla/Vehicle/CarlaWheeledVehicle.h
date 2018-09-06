@@ -79,6 +79,19 @@ public:
   /// Get the maximum angle at which the front wheel can steer.
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   float GetMaximumSteerAngle() const;
+  
+  /// Get the rotation angle of the wheels.
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  float GetWheelFLPosition() const;
+  
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  float GetWheelFRPosition() const;
+  
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  float GetWheelRLPosition() const;
+  
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  float GetWheelRRPosition() const;
 
   /// @}
   // ===========================================================================

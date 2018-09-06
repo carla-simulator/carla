@@ -23,6 +23,14 @@
 ACarlaVehicleController::ACarlaVehicleController(const FObjectInitializer& ObjectInitializer) :
   Super(ObjectInitializer)
 {
+  PreviousWheelFLPosition = 0.0f;
+  PreviousWheelFRPosition = 0.0f;
+  PreviousWheelRLPosition = 0.0f;
+  PreviousWheelRRPosition = 0.0f;
+  PreviousWheelFLSpeed = 0.0f;
+  PreviousWheelFRSpeed = 0.0f;
+  PreviousWheelRLSpeed = 0.0f;
+  PreviousWheelRRSpeed = 0.0f;
   PrimaryActorTick.bCanEverTick = true;
 }
 
@@ -81,6 +89,52 @@ void ACarlaVehicleController::Tick(float DeltaTime)
     CarlaPlayerState->CurrentGear = CurrentVehicle->GetVehicleCurrentGear();
     CarlaPlayerState->SpeedLimit = GetSpeedLimit();
     CarlaPlayerState->TrafficLightState = GetTrafficLightState();
+	  
+    const float threshold = 50.0f; // determined "empirically"
+	// this threshold should be interpreted as: if a wheel' speed between two consecutive frames
+	// change by an amount greater that the threshold, it should be ignored.
+	// This happens when the wheel's position goes from maximum value (1800 degrees) to zero.
+	  // FL
+	float CurrentWheelPosition = Vehicle->GetWheelFLPosition();
+    float CurrentWheelSpeed = (CurrentWheelPosition - PreviousWheelFLPosition) / DeltaTime;
+	if (abs(CurrentWheelSpeed - PreviousWheelFLSpeed) > threshold)
+	{
+		CurrentWheelSpeed = PreviousWheelFLSpeed; // for this step we keep the previous computed speed
+	}
+	CarlaPlayerState->WheelFLOmega = abs(CurrentWheelSpeed);
+	PreviousWheelFLSpeed = CurrentWheelSpeed;
+	PreviousWheelFLPosition = CurrentWheelPosition;
+	  // FR
+	CurrentWheelPosition = Vehicle->GetWheelFRPosition();
+    CurrentWheelSpeed = (CurrentWheelPosition - PreviousWheelFRPosition) / DeltaTime;
+	if (abs(CurrentWheelSpeed - PreviousWheelFRSpeed) > threshold)
+	{
+		CurrentWheelSpeed = PreviousWheelFRSpeed; // for this step we keep the previous computed speed
+	}
+	CarlaPlayerState->WheelFROmega = abs(CurrentWheelSpeed);
+	PreviousWheelFRSpeed = CurrentWheelSpeed;
+	PreviousWheelFRPosition = CurrentWheelPosition;
+	  // RL
+	CurrentWheelPosition = Vehicle->GetWheelRLPosition();
+    CurrentWheelSpeed = (CurrentWheelPosition - PreviousWheelRLPosition) / DeltaTime;
+	if (abs(CurrentWheelSpeed - PreviousWheelRLSpeed) > threshold)
+	{
+		CurrentWheelSpeed = PreviousWheelRLSpeed; // for this step we keep the previous computed speed
+	}
+	CarlaPlayerState->WheelRLOmega = abs(CurrentWheelSpeed);
+	PreviousWheelRLSpeed = CurrentWheelSpeed;
+	PreviousWheelRLPosition = CurrentWheelPosition;
+	  // RR
+	CurrentWheelPosition = Vehicle->GetWheelRRPosition();
+    CurrentWheelSpeed = (CurrentWheelPosition - PreviousWheelRRPosition) / DeltaTime;
+	if (abs(CurrentWheelSpeed - PreviousWheelRRSpeed) > threshold)
+	{
+		CurrentWheelSpeed = PreviousWheelRRSpeed; // for this step we keep the previous computed speed
+	}
+	CarlaPlayerState->WheelRROmega = abs(CurrentWheelSpeed);
+	PreviousWheelRRSpeed = CurrentWheelSpeed;
+	PreviousWheelRRPosition = CurrentWheelPosition;
+
     IntersectPlayerWithRoadMap();
   }
 }

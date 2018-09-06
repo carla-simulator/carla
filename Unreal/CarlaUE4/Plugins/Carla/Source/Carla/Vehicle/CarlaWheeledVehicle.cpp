@@ -70,6 +70,63 @@ float ACarlaWheeledVehicle::GetMaximumSteerAngle() const
   return FrontWheel->SteerAngle;
 }
 
+// The order is:
+	  // 0: front left
+	  // 1: front right
+	  // 2: rear left
+	  // 3: rear right
+float ACarlaWheeledVehicle::GetWheelFLPosition() const
+{
+  float Angle;
+  const auto &Wheels = GetVehicleMovementComponent()->Wheels;
+  check(Wheels.Num() > 0);
+  const auto *Wheel = Wheels[0];
+  check(Wheel != nullptr);
+  // angle is given in degrees. We then convert it to radians
+  // 1 rad = 1 deg * PI / 180.0f = 1 deg * 0.01745329251
+  Angle = Wheel->GetRotationAngle() * 0.01745329251f;
+  return Angle;
+}
+
+float ACarlaWheeledVehicle::GetWheelFRPosition() const
+{
+  float Angle;
+  const auto &Wheels = GetVehicleMovementComponent()->Wheels;
+  check(Wheels.Num() > 0);
+  const auto *Wheel = Wheels[1];
+  check(Wheel != nullptr);
+  // angle is given in degrees. We then convert it to radians
+  // 1 rad = 1 deg * PI / 180.0f = 1 deg * 0.01745329251
+  Angle = Wheel->GetRotationAngle() * 0.01745329251f;
+  return Angle;
+}
+
+float ACarlaWheeledVehicle::GetWheelRLPosition() const
+{
+  float Angle;
+  const auto &Wheels = GetVehicleMovementComponent()->Wheels;
+  check(Wheels.Num() > 0);
+  const auto *Wheel = Wheels[2];
+  check(Wheel != nullptr);
+  // angle is given in degrees. We then convert it to radians
+  // 1 rad = 1 deg * PI / 180.0f = 1 deg * 0.01745329251
+  Angle = Wheel->GetRotationAngle() * 0.01745329251f;
+  return Angle;
+}
+
+float ACarlaWheeledVehicle::GetWheelRRPosition() const
+{
+  float Angle;
+  const auto &Wheels = GetVehicleMovementComponent()->Wheels;
+  check(Wheels.Num() > 0);
+  const auto *Wheel = Wheels[3];
+  check(Wheel != nullptr);
+  // angle is given in degrees. We then convert it to radians
+  // 1 rad = 1 deg * PI / 180.0f = 1 deg * 0.01745329251
+  Angle = Wheel->GetRotationAngle() * 0.01745329251f;
+  return Angle;
+}
+
 // =============================================================================
 // -- Set functions ------------------------------------------------------------
 // =============================================================================

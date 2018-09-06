@@ -127,6 +127,10 @@ void FCarlaEncoder::Encode(
   Player.autopilot_control.brake = PlayerState.GetBrake();
   Player.autopilot_control.hand_brake = PlayerState.GetHandBrake();
   Player.autopilot_control.reverse = PlayerState.GetCurrentGear() < 0;
+  Player.wheelFLOmega = PlayerState.GetWheelFLOmega();
+  Player.wheelFROmega = PlayerState.GetWheelFROmega();
+  Player.wheelRLOmega = PlayerState.GetWheelRLOmega();
+  Player.wheelRROmega = PlayerState.GetWheelRROmega();
 }
 
 void FCarlaEncoder::Encode(
