@@ -16,6 +16,7 @@
 
 TEST(streaming_low_level, sending_strings) {
   using namespace util::message;
+  using namespace carla::streaming;
   using namespace carla::streaming::detail;
   using namespace carla::streaming::low_level;
 
@@ -27,7 +28,7 @@ TEST(streaming_low_level, sending_strings) {
   boost::asio::io_service io_service;
 
   Server<tcp::Server> srv(io_service, TESTING_PORT);
-  srv.set_timeout(1s);
+  srv.SetTimeout(1s);
 
   auto stream = srv.MakeStream();
 

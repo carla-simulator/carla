@@ -19,20 +19,29 @@ namespace streaming {
   /// be used by a client to subscribe to the stream.
   class Server {
     using underlying_server = low_level::Server<detail::tcp::Server>;
+    using protocol_type = low_level::Server<detail::tcp::Server>::protocol_type;
   public:
 
     explicit Server(uint16_t port)
-      : _server(_io_service, port) {}
+      : _server(_io_service, make_endpoint<protocol_type>(port)) {}
 
     explicit Server(const std::string &address, uint16_t port)
-      : _server(_io_service, address, port) {}
+      : _server(_io_service, make_endpoint<protocol_type>(address, port)) {}
+
+    explicit Server(
+        const std::string &address, uint16_t port,
+        const std::string &external_address, uint16_t external_port)
+      : _server(
+          _io_service,
+          make_endpoint<protocol_type>(address, port),
+          make_endpoint<protocol_type>(external_address, external_port)) {}
 
     ~Server() {
       Stop();
     }
 
-    void set_timeout(time_duration timeout) {
-      _server.set_timeout(timeout);
+    void SetTimeout(time_duration timeout) {
+      _server.SetTimeout(timeout);
     }
 
     Stream MakeStream() {

@@ -99,11 +99,13 @@ namespace tcp {
         _socket.close();
       }
 
-      auto handle_connect = [=](
-          error_code ec,
-          const boost::asio::ip::tcp::endpoint & DEBUG_ONLY(ep)) {
-        DEBUG_ONLY(log_debug("streaming client: connected to", ep));
+      DEBUG_ASSERT(_token.is_valid());
+      DEBUG_ASSERT(_token.protocol_is_tcp());
+      const auto ep = _token.to_tcp_endpoint();
+
+      auto handle_connect = [=](error_code ec) {
         if (!ec) {
+          log_debug("streaming client: connected to", ep);
           // Send the stream id to subscribe to the stream.
           const auto &stream_id = _token.get_stream_id();
           log_debug("streaming client: sending stream id", stream_id);
@@ -127,10 +129,8 @@ namespace tcp {
         }
       };
 
-      log_debug("streaming client: connecting to", _token.get_address(), "at port", _token.get_port());
-      boost::asio::ip::tcp::resolver resolver(_socket.get_io_service());
-      auto endpoint_it = resolver.resolve({_token.get_address(), _token.get_port()});
-      boost::asio::async_connect(_socket, endpoint_it, _strand.wrap(handle_connect));
+      log_debug("streaming client: connecting to", ep);
+      _socket.async_connect(ep, _strand.wrap(handle_connect));
     });
   }
 

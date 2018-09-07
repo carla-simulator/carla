@@ -19,7 +19,8 @@ namespace carla {
 namespace client {
 
   Client::Client(const std::string &host, uint16_t port, size_t worker_threads)
-    : _client(host, port) {
+    : _client(host, port),
+      _streaming_client(host) {
     _streaming_client.AsyncRun(
         worker_threads > 0u ? worker_threads : std::thread::hardware_concurrency());
   }

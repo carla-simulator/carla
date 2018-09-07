@@ -30,7 +30,7 @@ namespace tcp {
 
     /// Set session time-out. Applies only to newly created sessions. By default
     /// the time-out is set to 10 seconds.
-    void set_timeout(time_duration timeout) {
+    void SetTimeout(time_duration timeout) {
       _timeout = timeout;
     }
 
