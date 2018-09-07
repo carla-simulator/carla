@@ -32,6 +32,7 @@ namespace tcp {
   public:
 
     using endpoint = boost::asio::ip::tcp::endpoint;
+    using protocol_type = endpoint::protocol_type;
     using callback_function_type = std::function<void (std::shared_ptr<Message>)>;
 
     Client(

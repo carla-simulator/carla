@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/Debug.h"
+#include "carla/streaming/EndPoint.h"
 #include "carla/streaming/Token.h"
 #include "carla/streaming/detail/Types.h"
 
@@ -21,9 +22,9 @@ namespace detail {
 #pragma pack(push, 1)
 
   struct token_data {
-    stream_id_type stream_id;
+    stream_id_type stream_id = 0u;
 
-    uint16_t port;
+    uint16_t port = 0u;
 
     enum class protocol : uint8_t {
       not_set,
@@ -62,12 +63,13 @@ namespace detail {
 
     template <typename P>
     static constexpr auto get_protocol() {
+      static_assert(
+          std::is_same<P, boost::asio::ip::tcp>::value ||
+          std::is_same<P, boost::asio::ip::udp>::value, "Invalid protocol.");
       return std::is_same<P, boost::asio::ip::tcp>::value ?
           token_data::protocol::tcp :
           token_data::protocol::udp;
     }
-
-    void set_address(const boost::asio::ip::address &addr);
 
     template <typename P>
     boost::asio::ip::basic_endpoint<P> get_endpoint() const {
@@ -76,17 +78,26 @@ namespace detail {
       return {get_address(), _token.port};
     }
 
-  public:
-
-    template <typename P>
+    template <typename Protocol>
     explicit token_type(
         stream_id_type stream_id,
-        const boost::asio::ip::basic_endpoint<P> &ep) {
+        const EndPoint<Protocol, FullyDefinedEndPoint> &ep) {
       _token.stream_id = stream_id;
       _token.port = ep.port();
-      _token.protocol = get_protocol<P>();
+      _token.protocol = get_protocol<Protocol>();
       set_address(ep.address());
     }
+
+    template <typename Protocol>
+    explicit token_type(
+        stream_id_type stream_id,
+        EndPoint<Protocol, PartiallyDefinedEndPoint> ep) {
+      _token.stream_id = stream_id;
+      _token.port = ep.port();
+      _token.protocol = get_protocol<Protocol>();
+    }
+
+  public:
 
     token_type() = default;
     token_type(const token_type &) = default;
@@ -101,6 +112,12 @@ namespace detail {
       return _token.stream_id;
     }
 
+    bool has_address() const {
+      return _token.address_type != token_data::address::not_set;
+    }
+
+    void set_address(const boost::asio::ip::address &addr);
+
     boost::asio::ip::address get_address() const;
 
     auto get_port() const {
@@ -108,7 +125,8 @@ namespace detail {
     }
 
     bool is_valid() const {
-      return ((_token.protocol != token_data::protocol::not_set) &&
+      return has_address() &&
+             ((_token.protocol != token_data::protocol::not_set) &&
              (_token.address_type != token_data::address::not_set));
     }
 
@@ -126,6 +144,11 @@ namespace detail {
 
     bool protocol_is_tcp() const {
       return _token.protocol == token_data::protocol::tcp;
+    }
+
+    template <typename Protocol>
+    bool has_same_protocol(const boost::asio::ip::basic_endpoint<Protocol> &) const {
+      return _token.protocol == get_protocol<Protocol>();
     }
 
     boost::asio::ip::udp::endpoint to_udp_endpoint() const {

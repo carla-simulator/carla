@@ -23,7 +23,14 @@ namespace streaming {
   class Client {
   public:
 
-    Client() : _io_service(), _work_to_do(_io_service) {}
+    explicit Client()
+      : _io_service(),
+        _work_to_do(_io_service) {}
+
+    explicit Client(const std::string &fallback_address)
+      : _io_service(),
+        _work_to_do(_io_service),
+        _client(fallback_address) {}
 
     ~Client() {
       Stop();

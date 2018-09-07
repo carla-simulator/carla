@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "carla/streaming/EndPoint.h"
 #include "carla/streaming/Stream.h"
 #include "carla/streaming/detail/Session.h"
 #include "carla/streaming/detail/StreamState.h"
@@ -23,8 +24,8 @@ namespace detail {
   class Dispatcher {
   public:
 
-    template <typename P>
-    explicit Dispatcher(const boost::asio::ip::basic_endpoint<P> &ep)
+    template <typename Protocol, typename EndPointType>
+    explicit Dispatcher(const EndPoint<Protocol, EndPointType> &ep)
       : _cached_token(0u, ep) {}
 
     Stream MakeStream();

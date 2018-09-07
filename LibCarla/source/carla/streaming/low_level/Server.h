@@ -24,25 +24,32 @@ namespace low_level {
 
     using underlying_server = T;
 
-    using endpoint = typename underlying_server::endpoint;
     using protocol_type = typename underlying_server::protocol_type;
 
-    explicit Server(boost::asio::io_service &io_service, const endpoint &ep)
-      : _server(io_service, ep),
-        _dispatcher(ep) {
-      _server.Listen([this](auto session){
+    template <typename InternalEPType, typename ExternalEPType>
+    explicit Server(
+        boost::asio::io_service &io_service,
+        detail::EndPoint<protocol_type, InternalEPType> internal_ep,
+        detail::EndPoint<protocol_type, ExternalEPType> external_ep)
+      : _server(io_service, std::move(internal_ep)),
+        _dispatcher(std::move(external_ep)) {
+      _server.Listen([this](auto session) {
         _dispatcher.RegisterSession(session);
       });
     }
 
-    explicit Server(boost::asio::io_service &io_service, uint16_t port)
-      : Server(io_service, endpoint(protocol_type::v4(), port)) {}
+    template <typename InternalEPType>
+    explicit Server(
+        boost::asio::io_service &io_service,
+        detail::EndPoint<protocol_type, InternalEPType> internal_ep)
+      : Server(io_service, internal_ep, make_endpoint<protocol_type>(internal_ep.port())) {}
 
-    explicit Server(boost::asio::io_service &io_service, const std::string &address, uint16_t port)
-      : Server(io_service, endpoint(boost::asio::ip::address::from_string(address), port)) {}
+    template <typename... EPArgs>
+    explicit Server(boost::asio::io_service &io_service, EPArgs &&... args)
+      : Server(io_service, make_endpoint<protocol_type>(std::forward<EPArgs>(args)...)) {}
 
-    void set_timeout(time_duration timeout) {
-      _server.set_timeout(timeout);
+    void SetTimeout(time_duration timeout) {
+      _server.SetTimeout(timeout);
     }
 
     Stream MakeStream() {

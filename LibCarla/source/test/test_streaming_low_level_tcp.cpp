@@ -7,6 +7,7 @@
 #include "test.h"
 
 #include <carla/ThreadGroup.h>
+#include <carla/streaming/detail/Dispatcher.h>
 #include <carla/streaming/detail/tcp/Client.h>
 #include <carla/streaming/detail/tcp/Server.h>
 
@@ -14,18 +15,19 @@
 
 TEST(streaming_detail_tcp, small_message) {
   using namespace util::message;
+  using namespace carla::streaming;
   using namespace carla::streaming::detail;
 
   boost::asio::io_service io_service;
   tcp::Server::endpoint ep(boost::asio::ip::tcp::v4(), TESTING_PORT);
 
   tcp::Server srv(io_service, ep);
-  srv.set_timeout(1s);
+  srv.SetTimeout(1s);
   std::atomic_bool done{false};
   std::atomic_size_t message_count{0u};
 
   srv.Listen([&](std::shared_ptr<tcp::ServerSession> session) {
-    ASSERT_EQ(session->get_stream_id(), 42u);
+    ASSERT_EQ(session->get_stream_id(), 1u);
     const std::string msg = "Hola!";
     auto message = std::make_shared<Message>(boost::asio::buffer(msg));
     while (!done) {
@@ -35,7 +37,9 @@ TEST(streaming_detail_tcp, small_message) {
     std::cout << "done!\n";
   });
 
-  tcp::Client c(io_service, token_type{42u, ep}, [&](std::shared_ptr<Message> message) {
+  Dispatcher dispatcher{make_endpoint<tcp::Client::protocol_type>(ep)};
+  auto stream = dispatcher.MakeStream();
+  tcp::Client c(io_service, stream.token(), [&](std::shared_ptr<Message> message) {
     ++message_count;
     ASSERT_NE(message, nullptr);
     ASSERT_EQ(message->size(), 5u);
@@ -53,4 +57,5 @@ TEST(streaming_detail_tcp, small_message) {
   io_service.stop();
   done = true;
   std::cout << "client received " << message_count << " messages\n";
+  ASSERT_GT(message_count, 10u);
 }
