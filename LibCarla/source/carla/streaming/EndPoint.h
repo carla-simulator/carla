@@ -14,8 +14,6 @@
 #include <mutex>
 #include <unordered_map>
 
-#include <experimental/optional>
-
 namespace carla {
 namespace streaming {
 namespace detail {
