@@ -10,12 +10,6 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/ip/udp.hpp>
 
-#include <memory>
-#include <mutex>
-#include <unordered_map>
-
-#include <experimental/optional>
-
 namespace carla {
 namespace streaming {
 namespace detail {
