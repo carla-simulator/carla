@@ -61,6 +61,15 @@ namespace tcp {
     });
   }
 
+  void ServerSession::Close() {
+    _strand.post([this, self = shared_from_this()]() {
+      if (_socket.is_open()) {
+        _socket.close();
+      }
+      log_debug("session", _session_id, "closed");
+    });
+  }
+
   void ServerSession::Write(std::shared_ptr<const Message> message) {
     auto self = shared_from_this();
     _strand.post([=]() {
@@ -88,17 +97,8 @@ namespace tcp {
       _deadline.expires_from_now(_timeout);
       boost::asio::async_write(
           _socket,
-          message->encode(),
+          message->GetBufferSequence(),
           _strand.wrap(handle_sent));
-    });
-  }
-
-  void ServerSession::Close() {
-    _strand.post([this, self = shared_from_this()]() {
-      if (_socket.is_open()) {
-        _socket.close();
-      }
-      log_debug("session", _session_id, "closed");
     });
   }
 

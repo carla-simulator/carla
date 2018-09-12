@@ -33,7 +33,8 @@ namespace client {
     }
   }
 
-  SharedPtr<Image> Image::FromBuffer(boost::asio::const_buffer buffer) {
+  SharedPtr<Image> Image::FromBuffer(Buffer buffer) {
+    /// @todo We can avoid making another copy of the buffer here.
     if (buffer.size() < sizeof(FImageHeaderData)) {
       throw std::invalid_argument("buffer too small to be an image");
     }

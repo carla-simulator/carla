@@ -35,9 +35,8 @@ TEST(streaming_low_level, sending_strings) {
   Client<tcp::Client> c;
   c.Subscribe(io_service, stream.token(), [&](auto message) {
     ++message_count;
-    ASSERT_NE(message, nullptr);
-    ASSERT_EQ(message->size(), message_text.size());
-    const std::string msg = as_string(*message);
+    ASSERT_EQ(message.size(), message_text.size());
+    const std::string msg = as_string(message);
     ASSERT_EQ(msg, message_text);
   });
 

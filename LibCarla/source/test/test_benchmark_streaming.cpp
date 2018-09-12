@@ -13,7 +13,7 @@ using namespace carla::streaming;
 
 static auto make_special_message(size_t size) {
   std::vector<uint32_t> v(size/sizeof(uint32_t), 42u);
-  Message msg(boost::asio::buffer(v));
+  carla::Buffer msg(v);
   EXPECT_EQ(msg.size(), size);
   return msg;
 }
@@ -31,9 +31,9 @@ public:
   void AddStream() {
     Stream stream = _server.MakeStream();
 
-    _client.Subscribe(stream.token(), [this](std::shared_ptr<Message> DEBUG_ONLY(msg)) {
-      DEBUG_ASSERT_EQ(msg->size(), _message.size());
-      DEBUG_ASSERT(*msg == _message);
+    _client.Subscribe(stream.token(), [this](carla::Buffer DEBUG_ONLY(msg)) {
+      DEBUG_ASSERT_EQ(msg.size(), _message.size());
+      DEBUG_ASSERT(msg == _message);
       _client_callback.post([this]() {
         CARLA_PROFILE_FPS(client, listen_callback);
         ++_number_of_messages_received;
@@ -92,7 +92,7 @@ private:
 
   Client _client;
 
-  const Message _message;
+  const carla::Buffer _message;
 
   boost::asio::io_service _client_callback;
 

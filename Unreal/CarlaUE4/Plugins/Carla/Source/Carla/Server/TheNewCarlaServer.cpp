@@ -77,12 +77,11 @@ public:
 
   void Write(const FSensorDataView &SensorData) final {
     auto MakeBuffer = [](FReadOnlyBufferView View) {
-      return boost::asio::buffer(View.GetData(), View.GetSize());
+      return carla::Buffer(boost::asio::buffer(View.GetData(), View.GetSize()));
     };
-    std::array<boost::asio::const_buffer, 2u> SequencedBuffer;
-    SequencedBuffer[0u] = MakeBuffer(SensorData.GetHeader());
-    SequencedBuffer[1u] = MakeBuffer(SensorData.GetData());
-    TheStream.Write(SequencedBuffer);
+    TheStream.Write(
+        MakeBuffer(SensorData.GetHeader()),
+        MakeBuffer(SensorData.GetData()));
   }
 
 private:

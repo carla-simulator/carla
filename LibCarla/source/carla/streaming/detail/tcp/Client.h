@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include "carla/Buffer.h"
 #include "carla/NonCopyable.h"
-#include "carla/streaming/Message.h"
 #include "carla/streaming/detail/Token.h"
 #include "carla/streaming/detail/Types.h"
 
@@ -33,7 +33,7 @@ namespace tcp {
 
     using endpoint = boost::asio::ip::tcp::endpoint;
     using protocol_type = endpoint::protocol_type;
-    using callback_function_type = std::function<void (std::shared_ptr<Message>)>;
+    using callback_function_type = std::function<void (Buffer)>;
 
     Client(
         boost::asio::io_service &io_service,

@@ -8,8 +8,9 @@
 
 #include "carla/NonCopyable.h"
 #include "carla/Time.h"
-#include "carla/streaming/Message.h"
+#include "carla/TypeTraits.h"
 #include "carla/streaming/detail/Types.h"
+#include "carla/streaming/detail/tcp/Message.h"
 
 #include <boost/asio/deadline_timer.hpp>
 #include <boost/asio/io_service.hpp>
@@ -50,12 +51,20 @@ namespace tcp {
     }
 
     /// Writes some data to the socket.
-    void Write(std::shared_ptr<const Message> message);
+    template <typename... Buffers>
+    void Write(Buffers... buffers) {
+      static_assert(
+          are_same<Buffer, Buffers...>::value,
+          "This function only accepts arguments of type Buffer.");
+      Write(std::make_shared<const Message>(std::move(buffers)...));
+    }
 
     /// Posts a job to close this session.
     void Close();
 
   private:
+
+    void Write(std::shared_ptr<const Message> message);
 
     void StartTimer();
 

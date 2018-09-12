@@ -113,7 +113,7 @@ void export_actor() {
       self.Listen([callback](auto message) {
         cc::SharedPtr<cc::Image> image;
         try {
-          image = cc::Image::FromBuffer(message->buffer());
+          image = cc::Image::FromBuffer(std::move(message));
         } catch (const std::exception &e) {
           std::cerr << "exception while parsing the image: " << e.what() << std::endl;
           return;

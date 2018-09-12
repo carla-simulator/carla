@@ -34,9 +34,9 @@ namespace tcp {
 
     boost::asio::mutable_buffer body() {
       DEBUG_ASSERT(_size > 0u);
-      DEBUG_ASSERT(_message == nullptr);
-      _message = std::make_shared<Message>(_size);
-      return _message->buffer();
+      DEBUG_ASSERT(_message.empty());
+      _message.reset(_size);
+      return _message.buffer();
     }
 
     auto size() const {
@@ -51,7 +51,7 @@ namespace tcp {
 
     message_size_type _size = 0u;
 
-    std::shared_ptr<Message> _message;
+    Buffer _message;
   };
 
   // ===========================================================================

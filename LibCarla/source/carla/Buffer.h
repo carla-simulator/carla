@@ -228,11 +228,6 @@ namespace carla {
       return {data(), size()};
     }
 
-    std::array<boost::asio::const_buffer, 2u> encode() const {
-      DEBUG_ASSERT(!empty());
-      return {boost::asio::buffer(&_size, sizeof(_size)), buffer()};
-    }
-
     // =========================================================================
     // -- Private members ------------------------------------------------------
     // =========================================================================
