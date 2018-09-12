@@ -7,7 +7,6 @@
 #pragma once
 
 #include "carla/NonCopyable.h"
-#include "carla/streaming/Message.h"
 #include "carla/streaming/detail/Session.h"
 #include "carla/streaming/detail/Token.h"
 
@@ -54,10 +53,11 @@ namespace detail {
       return _token;
     }
 
-    void Write(std::shared_ptr<const Message> message) {
+    template <typename... Buffers>
+    void Write(Buffers... buffers) {
       auto session = get_session();
       if (session != nullptr) {
-        session->Write(message);
+        session->Write(std::move(buffers)...);
       }
     }
 

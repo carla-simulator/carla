@@ -6,10 +6,9 @@
 
 #pragma once
 
+#include "carla/Buffer.h"
 #include "carla/NonCopyable.h"
 #include "carla/client/Memory.h"
-
-#include <boost/asio/buffer.hpp>
 
 #include <memory>
 
@@ -23,7 +22,7 @@ namespace client {
 
     using byte_type = unsigned char;
 
-    static SharedPtr<Image> FromBuffer(boost::asio::const_buffer buffer);
+    static SharedPtr<Image> FromBuffer(Buffer buffer);
 
     Image();
 

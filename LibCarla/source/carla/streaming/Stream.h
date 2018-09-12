@@ -6,12 +6,10 @@
 
 #pragma once
 
+#include "carla/Buffer.h"
 #include "carla/Debug.h"
-#include "carla/streaming/Message.h"
 #include "carla/streaming/Token.h"
 #include "carla/streaming/detail/StreamState.h"
-
-#include <boost/asio/buffer.hpp>
 
 #include <memory>
 
@@ -39,14 +37,16 @@ namespace detail {
       return _shared_state->token();
     }
 
-    template <typename ConstBufferSequence>
-    void Write(ConstBufferSequence buffer) {
-      _shared_state->Write(std::make_shared<Message>(buffer));
+    /// Flush @a buffers down the stream. No copies are made.
+    template <typename... Buffers>
+    void Write(Buffers... buffers) {
+      _shared_state->Write(std::move(buffers)...);
     }
 
+    /// Make a copy of @a data and flush it down the stream.
     template <typename T>
-    Stream &operator<<(const T &rhs) {
-      Write(boost::asio::buffer(rhs));
+    Stream &operator<<(const T &data) {
+      Write(Buffer(data));
       return *this;
     }
 
