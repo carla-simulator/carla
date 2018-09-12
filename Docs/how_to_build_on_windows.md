@@ -88,7 +88,7 @@ Every new release of CARLA we release a new package with the latest changes in t
 
 If you also have installed other version of Visual Studio or Microsoft Compiler and get any error during the build as C2440 or C2672 this is probably because is not using the 2017 compiler, so try first to uninstall the other ones and rebuild again.
 
-If you would like to keep the other version of Visual Studio edit ```%appdata%\Unreal Engine\UnrealBuildTool\BuildConfiguration.xml``` and ```<path_to_unreal_engine_installation>\UE_4.19\Engine\Saved\UnrealBuildTool\BuildConfiguration.xml``` adding the following lines under Configuration tag:
+If you would like to keep the other version of Visual Studio edit ```%appdata%\Unreal Engine\UnrealBuildTool\BuildConfiguration.xml``` and ```<path_to_unreal_engine_installation>\UE_4.19\Engine\Saved\UnrealBuildTool\BuildConfiguration.xml``` adding the following lines under `Configuration` tag:
 
 ```
 <VCProjectFileGenerator>
