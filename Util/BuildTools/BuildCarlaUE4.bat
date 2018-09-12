@@ -131,7 +131,7 @@ if %REMOVE_INTERMEDIATE% == true set genVsSolution=false
 if %genVsSolution% == true (
     call "%UE4_ROOT%/Engine/Binaries/DotNET/UnrealBuildTool.exe"  -projectfiles^
         -project="%CARLA_FOLDER%CarlaUE4.uproject"^
-        -game -rocket -progress
+        -game -rocket -progress -2017
 
     call "%UE4_ROOT%/Engine/Binaries/Win64/UE4Editor.exe" "%CARLA_FOLDER%CarlaUE4.uproject"^
         -targetplatform=WindowsNoEditor^
