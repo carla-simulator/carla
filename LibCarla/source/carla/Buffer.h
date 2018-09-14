@@ -11,7 +11,6 @@
 
 #include <boost/asio/buffer.hpp>
 
-#include <array>
 #include <cstdint>
 #include <limits>
 #include <memory>
@@ -23,9 +22,19 @@
 
 namespace carla {
 
+  class BufferPool;
+
   /// A piece of raw data.
   ///
-  /// Creating a buffer bigger than max_size() is undefined.
+  /// Note that if more capacity is needed, a new memory block is allocated and
+  /// the old one is deleted. This means that by default the buffer can only
+  /// grow. To release the memory use `clear` or `pop`.
+  ///
+  /// This is a move-only type, meant to be cheap to pass by value. If the
+  /// buffer is retrieved from a BufferPool, the memory is automatically pushed
+  /// back to the pool on destruction.
+  ///
+  /// @warning Creating a buffer bigger than max_size() is undefined.
   class Buffer {
 
     // =========================================================================
@@ -70,15 +79,23 @@ namespace carla {
     Buffer &operator=(const Buffer &) = delete;
 
     Buffer(Buffer &&rhs) noexcept
-      : _size(rhs._size),
+      : _parent_pool(std::move(rhs._parent_pool)),
+        _size(rhs._size),
         _capacity(rhs._capacity),
         _data(rhs.pop()) {}
 
     Buffer &operator=(Buffer &&rhs) noexcept {
+      _parent_pool = std::move(rhs._parent_pool);
       _size = rhs._size;
       _capacity = rhs._capacity;
       _data = rhs.pop();
       return *this;
+    }
+
+    ~Buffer() {
+      if (_size > 0u) {
+        ReuseThisBuffer();
+      }
     }
 
     // =========================================================================
@@ -155,7 +172,7 @@ namespace carla {
 
     void reset(size_type size) {
       if (_capacity < size) {
-        log_debug("allocating sensor buffer of", size, "bytes");
+        log_debug("allocating buffer of", size, "bytes");
         _data = std::make_unique<value_type[]>(size);
         _capacity = size;
       }
@@ -233,6 +250,12 @@ namespace carla {
     // =========================================================================
 
   private:
+
+    void ReuseThisBuffer();
+
+    friend class BufferPool;
+
+    std::weak_ptr<BufferPool> _parent_pool;
 
     size_type _size = 0u;
 

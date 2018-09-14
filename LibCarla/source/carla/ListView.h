@@ -11,6 +11,8 @@
 
 namespace carla {
 
+  /// A view over a range of elements in a container. Basically a pair of begin
+  /// and end iterators.
   template<typename IT>
   class ListView {
   public:
@@ -25,19 +27,30 @@ namespace carla {
     explicit ListView(iterator begin, iterator end)
       : _begin(begin), _end(end) {}
 
-    template <typename STL_CONTAINER>
-    explicit ListView(STL_CONTAINER &container)
-      : _begin(iterator(container.begin())),
-        _end(iterator(container.end())) {}
-
     ListView(const ListView &) = default;
     ListView &operator=(const ListView &) = delete;
 
-    iterator begin() const {
+    iterator begin() {
       return _begin;
     }
 
-    iterator end() const {
+    const_iterator begin() const {
+      return _begin;
+    }
+
+    const_iterator cbegin() const {
+      return _begin;
+    }
+
+    iterator end() {
+      return _end;
+    }
+
+    const_iterator end() const {
+      return _end;
+    }
+
+    const_iterator cend() const {
       return _end;
     }
 
@@ -56,9 +69,14 @@ namespace carla {
     const iterator _end;
   };
 
-  template <typename T>
-  static inline auto MakeListView(T begin, T end) {
-    return ListView<T>(begin, end);
+  template <typename Iterator>
+  static inline auto MakeListView(Iterator begin, Iterator end) {
+    return ListView<Iterator>(begin, end);
+  }
+
+  template <typename Container>
+  static inline auto MakeListView(Container &c) {
+    return MakeListView(std::begin(c), std::end(c));
   }
 
 } // namespace carla

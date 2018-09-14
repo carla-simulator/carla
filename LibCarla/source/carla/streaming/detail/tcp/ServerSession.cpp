@@ -73,10 +73,8 @@ namespace tcp {
   void ServerSession::Write(std::shared_ptr<const Message> message) {
     auto self = shared_from_this();
     _strand.post([=]() {
-
-      /// @todo has to be a better way of doing this...
       if (_is_writing) {
-        // Repost and return;
+        // Re-post and return;
         Write(std::move(message));
         return;
       }

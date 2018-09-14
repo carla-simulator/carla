@@ -49,6 +49,10 @@ file(GLOB libcarla_carla_headers
     "${libcarla_source_path}/carla/*.h")
 install(FILES ${libcarla_carla_headers} DESTINATION include/carla)
 
+file(GLOB libcarla_moodycamel_headers
+    "${libcarla_source_path}/moodycamel/*.h")
+install(FILES ${libcarla_moodycamel_headers} DESTINATION include/moodycamel)
+
 file(GLOB libcarla_carla_client_headers
     "${libcarla_source_path}/carla/client/*.cpp"
     "${libcarla_source_path}/carla/client/*.h")

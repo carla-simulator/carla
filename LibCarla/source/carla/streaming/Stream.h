@@ -22,6 +22,10 @@ namespace detail {
 
 } // namespace detail
 
+  /// A stream represents an unidirectional channel for sending data from server
+  /// to client. A (single) client can subscribe to this stream using the stream
+  /// token. If no client is subscribed, the data flushed down the stream is
+  /// discarded.
   class Stream {
   public:
 
@@ -33,8 +37,20 @@ namespace detail {
     Stream &operator=(const Stream &) = default;
     Stream &operator=(Stream &&) = default;
 
+    /// Token associated with this stream. This token can be used by a client to
+    /// subscribe to this stream.
     Token token() const {
       return _shared_state->token();
+    }
+
+    /// Pull a buffer from the buffer pool associated to this stream. Discarded
+    /// buffers are re-used to avoid memory allocations.
+    ///
+    /// @note Re-using buffers is optimized for the use case in which all the
+    /// messages sent through the stream are big and have (approximately) the
+    /// same size.
+    Buffer MakeBuffer() {
+      return _shared_state->MakeBuffer();
     }
 
     /// Flush @a buffers down the stream. No copies are made.
@@ -46,7 +62,9 @@ namespace detail {
     /// Make a copy of @a data and flush it down the stream.
     template <typename T>
     Stream &operator<<(const T &data) {
-      Write(Buffer(data));
+      auto buffer = MakeBuffer();
+      buffer.copy_from(data);
+      Write(std::move(buffer));
       return *this;
     }
 
