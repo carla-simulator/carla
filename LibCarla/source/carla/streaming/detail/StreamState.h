@@ -14,11 +14,14 @@
 #include <memory>
 
 namespace carla {
+
+  class BufferPool;
+
 namespace streaming {
 namespace detail {
 
   /// Handles the synchronization of the shared session.
-  class SessionHolder {
+  class SessionHolder : private NonCopyable {
   public:
 
     void set_session(std::shared_ptr<Session> session) {
@@ -38,16 +41,18 @@ namespace detail {
 
   /// Shared state among all the copies of a stream. Provides access to the
   /// underlying server session if active.
-  class StreamState
-    : public SessionHolder,
-      private NonCopyable {
+  class StreamState : public SessionHolder {
   public:
 
-    explicit StreamState(const token_type &token) : _token(token) {}
+    explicit StreamState(const token_type &token);
+
+    ~StreamState();
 
     const token_type &token() const {
       return _token;
     }
+
+    Buffer MakeBuffer();
 
     template <typename... Buffers>
     void Write(Buffers... buffers) {
@@ -60,6 +65,8 @@ namespace detail {
   private:
 
     const token_type _token;
+
+    const std::shared_ptr<BufferPool> _buffer_pool;
   };
 
 } // namespace detail

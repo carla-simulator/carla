@@ -14,7 +14,7 @@ namespace carla {
   class ThreadGroup {
   public:
 
-    ThreadGroup() {}
+    ThreadGroup() = default;
 
     ThreadGroup(const ThreadGroup &) = delete;
     ThreadGroup &operator=(const ThreadGroup &) = delete;

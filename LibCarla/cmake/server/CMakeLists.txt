@@ -45,6 +45,8 @@ endif()
 # carla_server library.
 
 file(GLOB_RECURSE libcarla_server_sources
+    "${libcarla_source_path}/carla/*.h"
+    "${libcarla_source_path}/carla/*.cpp"
     "${libcarla_source_path}/carla/rpc/*.h"
     "${libcarla_source_path}/carla/rpc/*.cpp"
     "${libcarla_source_path}/carla/streaming/*.h"

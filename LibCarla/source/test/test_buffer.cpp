@@ -7,9 +7,9 @@
 #include "test.h"
 
 #include <carla/Buffer.h>
+#include <carla/BufferPool.h>
 
 #include <array>
-#include <iostream>
 #include <list>
 #include <set>
 #include <string>
@@ -100,3 +100,18 @@ TEST(buffer, memcpy) {
 // TEST(buffer, message_too_big) {
 //   ASSERT_THROW(Buffer(4294967296ul), std::invalid_argument);
 // }
+
+TEST(buffer, buffer_pool) {
+  const std::string str = "Hello buffer!";
+  auto pool = std::make_shared<carla::BufferPool>();
+  {
+    auto buff = pool->Pop();
+    buff.copy_from(str);
+  }
+  auto buff1 = pool->Pop();
+  ASSERT_EQ(as_string(buff1), str);
+  auto buff2 = pool->Pop();
+  ASSERT_NE(as_string(buff2), str);
+  // Now delete the pool to test the weak reference inside the buffers.
+  pool.reset();
+}

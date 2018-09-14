@@ -13,6 +13,7 @@
 namespace carla {
 namespace streaming {
 
+  /// A token that uniquely identify a stream.
   class Token {
   public:
 

@@ -22,17 +22,19 @@ namespace detail {
 namespace tcp {
 
   // ===========================================================================
-  // -- Decoder ----------------------------------------------------------------
+  // -- IncomingMessage --------------------------------------------------------
   // ===========================================================================
 
-  class Decoder {
+  /// Helper for reading incoming TCP messages. Allocates the whole message in
+  /// a single buffer.
+  class IncomingMessage {
   public:
 
-    boost::asio::mutable_buffer header() {
+    boost::asio::mutable_buffer size_as_buffer() {
       return boost::asio::buffer(&_size, sizeof(_size));
     }
 
-    boost::asio::mutable_buffer body() {
+    boost::asio::mutable_buffer buffer() {
       DEBUG_ASSERT(_size > 0u);
       DEBUG_ASSERT(_message.empty());
       _message.reset(_size);
@@ -151,17 +153,17 @@ namespace tcp {
 
       log_debug("streaming client: Client::ReadData");
 
-      auto encoder = std::make_shared<Decoder>();
+      auto message = std::make_shared<IncomingMessage>();
 
       auto handle_read_data = [=](boost::system::error_code ec, size_t DEBUG_ONLY(bytes)) {
         DEBUG_ONLY(log_debug("streaming client: Client::ReadData.handle_read_data", bytes, "bytes"));
         if (!ec) {
-          DEBUG_ASSERT_EQ(bytes, encoder->size());
+          DEBUG_ASSERT_EQ(bytes, message->size());
           DEBUG_ASSERT_NE(bytes, 0u);
           // Move the buffer to the callback function and start reading the next
           // piece of data.
           log_debug("streaming client: success reading data, calling the callback");
-          _socket.get_io_service().post([this, encoder]() { _callback(encoder->pop()); });
+          _socket.get_io_service().post([this, message]() { _callback(message->pop()); });
           ReadData();
         } else {
           // As usual, if anything fails start over from the very top.
@@ -172,17 +174,17 @@ namespace tcp {
 
       auto handle_read_header = [=](boost::system::error_code ec, size_t DEBUG_ONLY(bytes)) {
         DEBUG_ONLY(log_debug("streaming client: Client::ReadData.handle_read_header", bytes, "bytes"));
-        if (!ec && (encoder->size() > 0u)) {
+        if (!ec && (message->size() > 0u)) {
           DEBUG_ASSERT_EQ(bytes, sizeof(message_size_type));
           // Now that we know the size of the coming buffer, we can allocate our
           // buffer and start putting data into it.
           boost::asio::async_read(
               _socket,
-              encoder->body(),
+              message->buffer(),
               _strand.wrap(handle_read_data));
         } else {
           log_warning("streaming client: failed to read header:", ec.message());
-          DEBUG_ONLY(log_debug("size  = ", encoder->size()));
+          DEBUG_ONLY(log_debug("size  = ", message->size()));
           DEBUG_ONLY(log_debug("bytes = ", bytes));
           Connect();
         }
@@ -191,7 +193,7 @@ namespace tcp {
       // Read the size of the buffer that is coming.
       boost::asio::async_read(
           _socket,
-          encoder->header(),
+          message->size_as_buffer(),
           _strand.wrap(handle_read_header));
     });
   }

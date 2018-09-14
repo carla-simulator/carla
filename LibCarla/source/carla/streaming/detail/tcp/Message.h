@@ -25,6 +25,10 @@ namespace streaming {
 namespace detail {
 namespace tcp {
 
+  /// Serialization of a set of buffers to be sent over a TCP socket as a single
+  /// message. Template paramenter @a MaxNumberOfBuffers imposes a compile-time
+  /// limit on the maximum number of buffers that can be included in a single
+  /// message.
   template <size_t MaxNumberOfBuffers>
   class MessageTmpl
     : public std::enable_shared_from_this<MessageTmpl<MaxNumberOfBuffers>>,
@@ -78,6 +82,8 @@ namespace tcp {
     std::array<boost::asio::const_buffer, max_size() + 1u> _buffer_views;
   };
 
+  /// A TCP message containing a maximum of 2 buffers. This is optimized for a
+  /// header and body sort of messages.
   using Message = MessageTmpl<2u>;
 
 } // namespace tcp
