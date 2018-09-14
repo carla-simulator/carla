@@ -10,8 +10,8 @@
 #include "carla/streaming/detail/Session.h"
 #include "carla/streaming/detail/Token.h"
 
+#include <atomic>
 #include <memory>
-#include <mutex>
 
 namespace carla {
 namespace streaming {
@@ -22,20 +22,16 @@ namespace detail {
   public:
 
     void set_session(std::shared_ptr<Session> session) {
-      std::lock_guard<std::mutex> guard(_mutex);
-      _session = std::move(session);
+      std::atomic_store_explicit(&_session, session, std::memory_order_relaxed);
     }
 
   protected:
 
     std::shared_ptr<Session> get_session() const {
-      std::lock_guard<std::mutex> guard(_mutex);
-      return _session;
+      return std::atomic_load_explicit(&_session, std::memory_order_relaxed);
     }
 
   private:
-
-    mutable std::mutex _mutex; /// @todo it can be atomic.
 
     std::shared_ptr<Session> _session;
   };
