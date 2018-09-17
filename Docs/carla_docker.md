@@ -20,9 +20,7 @@ This method requires a version of NVIDIA drivers >=390.
 ### Docker CE
 
 For our tests we used the Docker CE version.
-To install Docker CE we recommend using this tutorial:
-[https://docs.docker.com/install/linux/docker-ce/ubuntu/#extra-steps-for-aufs](
-https://docs.docker.com/install/linux/docker-ce/ubuntu/#extra-steps-for-aufs)
+To install Docker CE we recommend using [this tutorial](https://docs.docker.com/install/linux/docker-ce/ubuntu/#extra-steps-for-aufs)
 
 ### NVIDIA-Docker2
 
