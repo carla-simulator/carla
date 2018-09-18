@@ -28,6 +28,9 @@ matrix:
         - pip3 install --user setuptools nose2
         - make setup
       script:
+        - make setup >/dev/null
+        - make LibCarla >/dev/null
+        - make PythonAPI >/dev/null
         - make check ARGS="--all --gtest_args=--gtest_filter=-*_mt"
 
     - env: TEST="Pylint 2"
