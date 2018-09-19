@@ -20,6 +20,12 @@ install(FILES ${libcarla_carla_headers} DESTINATION include/carla)
 file(GLOB libcarla_carla_rpc_headers "${libcarla_source_path}/carla/rpc/*.h")
 install(FILES ${libcarla_carla_rpc_headers} DESTINATION include/carla/rpc)
 
+file(GLOB libcarla_carla_sensor_headers "${libcarla_source_path}/carla/sensor/*.h")
+install(FILES ${libcarla_carla_sensor_headers} DESTINATION include/carla/sensor)
+
+file(GLOB libcarla_carla_sensor_s11n_headers "${libcarla_source_path}/carla/sensor/s11n/*.h")
+install(FILES ${libcarla_carla_sensor_s11n_headers} DESTINATION include/carla/sensor/s11n)
+
 file(GLOB libcarla_carla_streaming_headers "${libcarla_source_path}/carla/streaming/*.h")
 install(FILES ${libcarla_carla_streaming_headers} DESTINATION include/carla/streaming)
 
@@ -49,6 +55,10 @@ file(GLOB_RECURSE libcarla_server_sources
     "${libcarla_source_path}/carla/*.cpp"
     "${libcarla_source_path}/carla/rpc/*.h"
     "${libcarla_source_path}/carla/rpc/*.cpp"
+    "${libcarla_source_path}/carla/sensor/*.h"
+    "${libcarla_source_path}/carla/sensor/*.cpp"
+    "${libcarla_source_path}/carla/sensor/s11n/*.h"
+    "${libcarla_source_path}/carla/sensor/s11n/*.cpp"
     "${libcarla_source_path}/carla/streaming/*.h"
     "${libcarla_source_path}/carla/streaming/*.cpp")
 
