@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Carla.h"
-#include "Lidar.h"
+#include "Carla/Sensor/Lidar.h"
 
 #include "DrawDebugHelpers.h"
 #include "Engine/CollisionProfile.h"

@@ -7,8 +7,8 @@
 #include "Carla.h"
 #include "Carla/Game/TheNewCarlaGameModeBase.h"
 
-#include "Game/Tagger.h"
-#include "Game/TaggerDelegate.h"
+#include "Carla/Game/Tagger.h"
+#include "Carla/Game/TaggerDelegate.h"
 
 ATheNewCarlaGameModeBase::ATheNewCarlaGameModeBase(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer)

@@ -5,13 +5,13 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
-#include "Sensor.h"
+#include "Carla/Sensor/DeprecatedSensor.h"
 
-ASensor::ASensor(const FObjectInitializer& ObjectInitializer)
+ADeprecatedSensor::ADeprecatedSensor(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer),
     Id(0u) {}
 
-void ASensor::AttachToActor(AActor *Actor)
+void ADeprecatedSensor::AttachToActor(AActor *Actor)
 {
   check(Actor != nullptr);
   Super::AttachToActor(Actor, FAttachmentTransformRules::KeepRelativeTransform);

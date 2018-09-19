@@ -5,9 +5,9 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
-#include "TheNewCarlaServer.h"
+#include "Carla/Server/TheNewCarlaServer.h"
 
-#include "Carla/Sensor/Sensor.h"
+#include "Carla/Sensor/DeprecatedSensor.h"
 
 #include "GameFramework/SpectatorPawn.h"
 
@@ -138,7 +138,7 @@ private:
   {
     if (ActorView.IsValid())
     {
-      auto *Sensor = Cast<ASensor>(ActorView.GetActor());
+      auto *Sensor = Cast<ADeprecatedSensor>(ActorView.GetActor());
       if (Sensor != nullptr)
       {
         UE_LOG(LogCarlaServer, Log, TEXT("Making a new sensor stream for actor '%s'"), *ActorView.GetActorDescription()->Id);

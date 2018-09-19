@@ -5,10 +5,10 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
-#include "SceneCaptureCamera.h"
+#include "Carla/Sensor/SceneCaptureCamera.h"
 
-#include "Sensor/SensorDataView.h"
-#include "Settings/CarlaSettings.h"
+#include "Carla/Sensor/SensorDataView.h"
+#include "Carla/Settings/CarlaSettings.h"
 
 #include "Components/DrawFrustumComponent.h"
 #include "Components/SceneCaptureComponent2D.h"

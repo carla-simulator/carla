@@ -7,12 +7,12 @@
 #pragma once
 
 #include "Carla.h"
-#include "OldSensorFactory.h"
+#include "Carla/Sensor/OldSensorFactory.h"
 
-#include "Sensor/Lidar.h"
-#include "Sensor/SceneCaptureCamera.h"
-#include "Settings/CameraDescription.h"
-#include "Settings/LidarDescription.h"
+#include "Carla/Sensor/Lidar.h"
+#include "Carla/Sensor/SceneCaptureCamera.h"
+#include "Carla/Settings/CameraDescription.h"
+#include "Carla/Settings/LidarDescription.h"
 
 template <typename T, typename D>
 static T *SpawnSensor(const D &Description, UWorld &World)
@@ -22,7 +22,7 @@ static T *SpawnSensor(const D &Description, UWorld &World)
   return World.SpawnActor<T>(Description.Position, Description.Rotation, Params);
 }
 
-ASensor *FSensorFactory::Make(
+ADeprecatedSensor *FSensorFactory::Make(
     const USensorDescription &Description,
     UWorld &World)
 {

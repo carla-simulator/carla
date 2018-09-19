@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "Sensor/Sensor.h"
+#include "Carla/Sensor/DeprecatedSensor.h"
 
-#include "Settings/CameraDescription.h"
+#include "Carla/Settings/CameraDescription.h"
 
 #include "StaticMeshResources.h"
 
@@ -22,7 +22,7 @@ class UTextureRenderTarget2D;
 /// Own SceneCapture, re-implementing some of the methods since ASceneCapture
 /// cannot be subclassed.
 UCLASS(hidecategories=(Collision, Attachment, Actor))
-class CARLA_API ASceneCaptureCamera : public ASensor
+class CARLA_API ASceneCaptureCamera : public ADeprecatedSensor
 {
   GENERATED_BODY()
 
