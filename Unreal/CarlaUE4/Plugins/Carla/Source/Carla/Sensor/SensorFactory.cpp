@@ -10,7 +10,7 @@
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla/Sensor/SceneCaptureCamera.h"
 
-TArray<FActorDefinition> ASensorFactory::GetDefinitions()
+TArray<FActorDefinition> ADeprecatedSensorFactory::GetDefinitions()
 {
   FActorDefinition Cameras;
   bool Success = false;
@@ -22,7 +22,7 @@ TArray<FActorDefinition> ASensorFactory::GetDefinitions()
   return {Cameras};
 }
 
-FActorSpawnResult ASensorFactory::SpawnActor(
+FActorSpawnResult ADeprecatedSensorFactory::SpawnActor(
     const FTransform &Transform,
     const FActorDescription &Description)
 {

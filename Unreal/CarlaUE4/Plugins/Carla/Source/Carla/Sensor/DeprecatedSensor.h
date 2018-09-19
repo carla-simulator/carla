@@ -11,17 +11,17 @@
 #include "Sensor/SensorDataSink.h"
 #include "Settings/SensorDescription.h"
 
-#include "Sensor.generated.h"
+#include "DeprecatedSensor.generated.h"
 
-/// Base class for sensors.
+/// DEPRECATED Base class for sensors.
 UCLASS(Abstract, hidecategories=(Collision, Attachment, Actor))
-class CARLA_API ASensor : public AActor
+class CARLA_API ADeprecatedSensor : public AActor
 {
   GENERATED_BODY()
 
 public:
 
-  ASensor(const FObjectInitializer& ObjectInitializer);
+  ADeprecatedSensor(const FObjectInitializer& ObjectInitializer);
 
   uint32 GetId() const
   {

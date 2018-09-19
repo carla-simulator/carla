@@ -5,11 +5,11 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
-#include "DataRouter.h"
+#include "Carla/Game/DataRouter.h"
 
-#include "Sensor/Sensor.h"
+#include "Carla/Sensor/DeprecatedSensor.h"
 
-void FDataRouter::RegisterSensor(ASensor &InSensor)
+void FDataRouter::RegisterSensor(ADeprecatedSensor &InSensor)
 {
   if (SensorDataSink.IsValid()) {
     InSensor.SetSensorDataSink(SensorDataSink);

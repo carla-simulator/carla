@@ -6,15 +6,13 @@
 
 #pragma once
 
-#include "Util/NonCopyable.h"
-
-#include "Sensor/SensorDataSink.h"
-
-#include "Vehicle/CarlaVehicleController.h"
-#include "Vehicle/CarlaWheeledVehicle.h"
+#include "Carla/Sensor/SensorDataSink.h"
+#include "Carla/Util/NonCopyable.h"
+#include "Carla/Vehicle/CarlaVehicleController.h"
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
 class ACarlaPlayerState;
-class ASensor;
+class ADeprecatedSensor;
 class UAgentComponent;
 struct FVehicleControl;
 
@@ -33,7 +31,7 @@ public:
     Player = &InPlayer;
   }
 
-  void RegisterSensor(ASensor &InSensor);
+  void RegisterSensor(ADeprecatedSensor &InSensor);
 
   void RegisterAgent(const UAgentComponent *Agent)
   {

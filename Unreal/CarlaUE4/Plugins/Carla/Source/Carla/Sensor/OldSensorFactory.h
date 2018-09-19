@@ -6,16 +6,16 @@
 
 #pragma once
 
-#include "Settings/SensorDescriptionVisitor.h"
+#include "Carla/Settings/SensorDescriptionVisitor.h"
 
-class ASensor;
+class ADeprecatedSensor;
 class UWorld;
 
 class FSensorFactory : private ISensorDescriptionVisitor
 {
 public:
 
-  static ASensor *Make(
+  static ADeprecatedSensor *Make(
       const USensorDescription &Description,
       UWorld &World);
 
@@ -29,5 +29,5 @@ private:
 
   UWorld &World;
 
-  ASensor *Sensor = nullptr;
+  ADeprecatedSensor *Sensor = nullptr;
 };

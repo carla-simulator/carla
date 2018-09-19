@@ -13,7 +13,7 @@
 
 /// Object in charge of spawning sensors.
 UCLASS()
-class CARLA_API ASensorFactory : public ACarlaActorFactory
+class CARLA_API ADeprecatedSensorFactory : public ACarlaActorFactory
 {
   GENERATED_BODY()
 

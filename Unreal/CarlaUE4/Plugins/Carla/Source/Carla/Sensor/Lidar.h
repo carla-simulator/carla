@@ -2,16 +2,16 @@
 
 #pragma once
 
-#include "Sensor/Sensor.h"
+#include "Carla/Sensor/DeprecatedSensor.h"
 
-#include "Sensor/LidarMeasurement.h"
-#include "Settings/LidarDescription.h"
+#include "Carla/Sensor/LidarMeasurement.h"
+#include "Carla/Settings/LidarDescription.h"
 
 #include "Lidar.generated.h"
 
 /// A ray-trace based Lidar sensor.
 UCLASS()
-class CARLA_API ALidar : public ASensor
+class CARLA_API ALidar : public ADeprecatedSensor
 {
   GENERATED_BODY()
 
