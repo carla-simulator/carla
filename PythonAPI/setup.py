@@ -71,7 +71,7 @@ def get_libcarla_extensions():
             depends=depends)
 
     sources = ['source/libcarla/libcarla.cpp']
-    sources += [x for x in walk('dependencies/include', '*.cpp')]
+    sources += [x for x in walk('dependencies/include/carla', '*.cpp')]
 
     print('compiling:\n  - %s' % '\n  - '.join(sources))
 
