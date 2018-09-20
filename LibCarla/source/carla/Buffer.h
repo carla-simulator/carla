@@ -307,7 +307,10 @@ namespace carla {
     /// @copydoc copy_from(size_type, const Buffer &)
     template <typename T>
     void copy_from(size_type offset, const TArray<T> &source) {
-      copy_from(offset, source.GetData(), sizeof(T) * source.Num());
+      copy_from(
+          offset,
+          reinterpret_cast<const value_type *>(source.GetData()),
+          sizeof(T) * source.Num());
     }
 #endif // LIBCARLA_INCLUDED_FROM_UE4
 
