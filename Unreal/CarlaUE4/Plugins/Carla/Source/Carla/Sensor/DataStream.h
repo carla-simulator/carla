@@ -19,7 +19,13 @@
 // =============================================================================
 
 class FSensorMessageHeader {
+public:
+
+  FSensorMessageHeader(FSensorMessageHeader &&) = default;
+
 private:
+
+  FSensorMessageHeader(carla::Buffer InBuffer) : Buffer(std::move(InBuffer)) {}
 
   friend class FDataStream;
 
