@@ -22,7 +22,7 @@ class UTextureRenderTarget2D;
 /// SetUpSceneCaptureComponent function.
 ///
 /// @warning All the setters should be called before BeginPlay.
-UCLASS(Abstract)
+UCLASS()
 class CARLA_API ASceneCaptureSensor : public ASensor
 {
   GENERATED_BODY()

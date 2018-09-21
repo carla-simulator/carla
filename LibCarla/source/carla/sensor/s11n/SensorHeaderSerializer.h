@@ -8,7 +8,6 @@
 
 #include "carla/Buffer.h"
 #include "carla/rpc/Transform.h"
-#include "carla/sensor/SensorRegistry.h"
 
 namespace carla {
 namespace sensor {
@@ -17,17 +16,21 @@ namespace s11n {
   class SensorHeaderSerializer {
   public:
 
-    template <typename Sensor>
-    static Buffer Serialize(const Sensor &sensor, uint16_t frame_counter) {
-      return Serialize(
-          SensorRegistry::template get<Sensor*>::index,
-          frame_counter,
-          sensor.GetActorTransform());
-    }
+#pragma pack(push, 1)
+    struct Header {
+      uint64_t sensor_type;
+      uint64_t frame_number;
+      rpc::Transform sensor_transform;
+    };
+#pragma pack(pop)
 
-  private:
+    constexpr static auto header_offset = sizeof(Header);
 
     static Buffer Serialize(uint64_t index, uint64_t frame, rpc::Transform transform);
+
+    static const Header &Deserialize(const Buffer &message) {
+      return *reinterpret_cast<const Header *>(message.data());
+    }
   };
 
 } // namespace s11n

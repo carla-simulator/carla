@@ -11,6 +11,7 @@
 #include "Client.cpp"
 #include "Control.cpp"
 #include "Exception.cpp"
+#include "Sensor.cpp"
 #include "Transform.cpp"
 #include "World.cpp"
 
@@ -22,6 +23,7 @@ BOOST_PYTHON_MODULE(libcarla) {
   export_control();
   export_blueprint();
   export_actor();
+  export_sensor();
   export_world();
   export_client();
   export_exception();

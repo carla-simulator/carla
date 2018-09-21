@@ -8,14 +8,14 @@
 #include "Carla/Sensor/SensorFactory.h"
 
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
-#include "Carla/Sensor/SceneCaptureCamera.h"
+#include "Carla/Sensor/SceneCaptureSensor.h"
 
 TArray<FActorDefinition> ADeprecatedSensorFactory::GetDefinitions()
 {
   FActorDefinition Cameras;
   bool Success = false;
   UActorBlueprintFunctionLibrary::MakeCameraDefinition(
-      {TEXT("camera"), ASceneCaptureCamera::StaticClass()},
+      {TEXT("camera"), ASceneCaptureSensor::StaticClass()},
       Success,
       Cameras);
   check(Success);
@@ -32,7 +32,7 @@ FActorSpawnResult ADeprecatedSensorFactory::SpawnActor(
   {
     return {};
   }
-  auto *Sensor = World->SpawnActorDeferred<ASceneCaptureCamera>(
+  auto *Sensor = World->SpawnActorDeferred<ASceneCaptureSensor>(
       Description.Class,
       Transform,
       this,
@@ -46,9 +46,10 @@ FActorSpawnResult ADeprecatedSensorFactory::SpawnActor(
         ABFL::RetrieveActorAttributeToInt("image_size_y", Description.Variations, 600));
     Sensor->SetFOVAngle(
         ABFL::RetrieveActorAttributeToFloat("fov", Description.Variations, 90.0f));
-    Sensor->SetPostProcessEffect(
-        PostProcessEffect::FromString(
-            ABFL::RetrieveActorAttributeToString("post_processing", Description.Variations, "SceneFinal")));
+    /// @todo No post-process effects available.
+    // Sensor->SetPostProcessEffect(
+    //     PostProcessEffect::FromString(
+    //         ABFL::RetrieveActorAttributeToString("post_processing", Description.Variations, "SceneFinal")));
   }
   UGameplayStatics::FinishSpawningActor(Sensor, Transform);
   return FActorSpawnResult{Sensor};

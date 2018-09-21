@@ -7,8 +7,8 @@
 #pragma once
 
 #include "carla/Debug.h"
+#include "carla/Memory.h"
 #include "carla/NonCopyable.h"
-#include "carla/client/Memory.h"
 #include "carla/client/World.h"
 #include "carla/rpc/Actor.h"
 

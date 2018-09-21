@@ -23,6 +23,9 @@ install(FILES ${libcarla_carla_rpc_headers} DESTINATION include/carla/rpc)
 file(GLOB libcarla_carla_sensor_headers "${libcarla_source_path}/carla/sensor/*.h")
 install(FILES ${libcarla_carla_sensor_headers} DESTINATION include/carla/sensor)
 
+file(GLOB libcarla_carla_sensor_data_headers "${libcarla_source_path}/carla/sensor/data/*.h")
+install(FILES ${libcarla_carla_sensor_data_headers} DESTINATION include/carla/sensor/data)
+
 file(GLOB libcarla_carla_sensor_s11n_headers "${libcarla_source_path}/carla/sensor/s11n/*.h")
 install(FILES ${libcarla_carla_sensor_s11n_headers} DESTINATION include/carla/sensor/s11n)
 

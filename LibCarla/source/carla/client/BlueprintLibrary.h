@@ -8,9 +8,9 @@
 
 #include "carla/Debug.h"
 #include "carla/Iterator.h"
+#include "carla/Memory.h"
 #include "carla/NonCopyable.h"
 #include "carla/client/ActorBlueprint.h"
-#include "carla/client/Memory.h"
 
 #include <type_traits>
 #include <unordered_map>
