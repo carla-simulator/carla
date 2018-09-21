@@ -17,8 +17,8 @@ void export_world() {
     .def("get_blueprint_library", &cc::World::GetBlueprintLibrary)
     .def("get_spectator", &cc::World::GetSpectator)
     .def("try_spawn_actor", &cc::World::TrySpawnActor,
-        (arg("blueprint"), arg("transform"), arg("attach_to")=cc::SharedPtr<cc::Actor>()))
+        (arg("blueprint"), arg("transform"), arg("attach_to")=carla::SharedPtr<cc::Actor>()))
     .def("spawn_actor", &cc::World::SpawnActor,
-        (arg("blueprint"), arg("transform"), arg("attach_to")=cc::SharedPtr<cc::Actor>()))
+        (arg("blueprint"), arg("transform"), arg("attach_to")=carla::SharedPtr<cc::Actor>()))
   ;
 }

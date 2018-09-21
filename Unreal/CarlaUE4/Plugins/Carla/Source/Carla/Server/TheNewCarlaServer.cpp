@@ -7,7 +7,7 @@
 #include "Carla.h"
 #include "Carla/Server/TheNewCarlaServer.h"
 
-#include "Carla/Sensor/DeprecatedSensor.h"
+#include "Carla/Sensor/Sensor.h"
 
 #include "GameFramework/SpectatorPawn.h"
 
@@ -39,35 +39,6 @@ static void AttachActors(AActor *Child, AActor *Parent)
   Child->AttachToActor(Parent, FAttachmentTransformRules::KeepRelativeTransform);
   Child->SetOwner(Parent);
 }
-
-// =============================================================================
-// -- FStreamingSensorDataSink -------------------------------------------------
-// =============================================================================
-
-class FStreamingSensorDataSink : public ISensorDataSink {
-public:
-
-  FStreamingSensorDataSink(carla::streaming::Stream InStream)
-    : TheStream(InStream) {}
-
-  ~FStreamingSensorDataSink()
-  {
-    UE_LOG(LogCarlaServer, Log, TEXT("Destroying sensor data sink"));
-  }
-
-  void Write(const FSensorDataView &SensorData) final {
-    auto MakeBuffer = [](FReadOnlyBufferView View) {
-      return carla::Buffer(boost::asio::buffer(View.GetData(), View.GetSize()));
-    };
-    TheStream.Write(
-        MakeBuffer(SensorData.GetHeader()),
-        MakeBuffer(SensorData.GetData()));
-  }
-
-private:
-
-  carla::streaming::Stream TheStream;
-};
 
 // =============================================================================
 // -- FTheNewCarlaServer::FPimpl -----------------------------------------------
@@ -138,12 +109,12 @@ private:
   {
     if (ActorView.IsValid())
     {
-      auto *Sensor = Cast<ADeprecatedSensor>(ActorView.GetActor());
+      auto *Sensor = Cast<ASensor>(ActorView.GetActor());
       if (Sensor != nullptr)
       {
         UE_LOG(LogCarlaServer, Log, TEXT("Making a new sensor stream for actor '%s'"), *ActorView.GetActorDescription()->Id);
         auto Stream = StreamingServer.MakeStream();
-        Sensor->SetSensorDataSink(MakeShared<FStreamingSensorDataSink>(Stream));
+        Sensor->SetDataStream(Stream);
         return {ActorView, Stream.token()};
       }
     }

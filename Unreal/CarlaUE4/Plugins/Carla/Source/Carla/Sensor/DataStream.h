@@ -73,7 +73,10 @@ inline FSensorMessageHeader FDataStream::MakeHeader(const TSensor &Sensor)
 {
   check(IsInGameThread());
   using Serializer = carla::sensor::s11n::SensorHeaderSerializer;
-  return {Serializer::Serialize(Sensor, GFrameCounter)};
+  return {Serializer::Serialize(
+      carla::sensor::SensorRegistry::template get<TSensor*>::index,
+      GFrameCounter,
+      Sensor.GetActorTransform())};
 }
 
 inline carla::Buffer FDataStream::PopBufferFromPool()

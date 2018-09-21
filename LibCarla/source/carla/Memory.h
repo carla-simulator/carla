@@ -6,26 +6,24 @@
 
 #pragma once
 
-// In this namespace, we use boost::shared_ptr for now to make it compatible
-// with boost::python, but it would be nice to make an adaptor for
-// std::shared_ptr.
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
 
 namespace carla {
-namespace client {
+
+  // Use this SharedPtr (boost::shared_ptr) to keep compatibility with
+  // boost::python, but it would be nice if in the future we can make a Python
+  // adaptor for std::shared_ptr.
+  template <typename T>
+  using SharedPtr = boost::shared_ptr<T>;
 
   template <typename T>
   using EnableSharedFromThis = boost::enable_shared_from_this<T>;
-
-  template <typename T>
-  using SharedPtr = boost::shared_ptr<T>;
 
   template <typename T, typename ... Args>
   static inline auto MakeShared(Args && ... args) {
     return boost::make_shared<T>(std::forward<Args>(args) ...);
   }
 
-} // namespace client
 } // namespace carla

@@ -6,43 +6,53 @@
 
 #pragma once
 
-#include "carla/Buffer.h"
+#include "carla/Memory.h"
+#include "carla/sensor/DataMessage.h"
 
 #include <cstdint>
 #include <cstring>
 
 namespace carla {
 namespace sensor {
+
+  class SensorData;
+
 namespace s11n {
 
   class ImageSerializer {
+  public:
 
 #pragma pack(push, 1)
     struct ImageHeader {
       uint32_t width;
       uint32_t height;
-      uint32_t type;
-      float fov;
+      float fov_angle;
     };
 #pragma pack(pop)
 
-  public:
+    constexpr static auto header_offset = sizeof(ImageHeader);
 
-    constexpr static auto offset_size = sizeof(ImageHeader);
+    static const ImageHeader &DeserializeHeader(const DataMessage &message) {
+      return *reinterpret_cast<const ImageHeader *>(message.begin());
+    }
 
     template <typename Sensor>
-    static Buffer Serialize(const Sensor &sensor, Buffer bitmap) {
-      DEBUG_ASSERT(bitmap.size() > sizeof(ImageHeader));
-      ImageHeader header = {
-        sensor.GetImageWidth(),
-        sensor.GetImageHeight(),
-        0u, /// @todo
-        sensor.GetFOVAngle()
-      };
-      std::memcpy(bitmap.data(), reinterpret_cast<const void *>(&header), sizeof(header));
-      return bitmap;
-    }
+    static Buffer Serialize(const Sensor &sensor, Buffer bitmap);
+
+    static SharedPtr<SensorData> Deserialize(DataMessage message);
   };
+
+  template <typename Sensor>
+  inline Buffer ImageSerializer::Serialize(const Sensor &sensor, Buffer bitmap) {
+    DEBUG_ASSERT(bitmap.size() > sizeof(ImageHeader));
+    ImageHeader header = {
+      sensor.GetImageWidth(),
+      sensor.GetImageHeight(),
+      sensor.GetFOVAngle()
+    };
+    std::memcpy(bitmap.data(), reinterpret_cast<const void *>(&header), sizeof(header));
+    return bitmap;
+  }
 
 } // namespace s11n
 } // namespace sensor

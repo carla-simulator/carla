@@ -10,7 +10,7 @@
 // Offset to keep clear in the buffer for later adding the image header by the
 // serializer.
 constexpr auto BUFFER_OFFSET =
-    carla::sensor::SensorRegistry::get<ASceneCaptureSensor *>::type::offset_size;
+    carla::sensor::SensorRegistry::get<ASceneCaptureSensor *>::type::header_offset;
 
 // =============================================================================
 // -- Local static methods -----------------------------------------------------
