@@ -13,18 +13,18 @@ struct CARLA_API FVehicleControl
 {
   GENERATED_BODY()
 
-  UPROPERTY(Category = "Vehicle Control", EditAnywhere)
+  UPROPERTY(Category = "Vehicle Control", EditAnywhere, BlueprintReadWrite)
   float Throttle = 0.0f;
 
-  UPROPERTY(Category = "Vehicle Control", EditAnywhere)
+  UPROPERTY(Category = "Vehicle Control", EditAnywhere, BlueprintReadWrite)
   float Steer = 0.0f;
 
-  UPROPERTY(Category = "Vehicle Control", EditAnywhere)
+  UPROPERTY(Category = "Vehicle Control", EditAnywhere, BlueprintReadWrite)
   float Brake = 0.0f;
 
-  UPROPERTY(Category = "Vehicle Control", EditAnywhere)
+  UPROPERTY(Category = "Vehicle Control", EditAnywhere, BlueprintReadWrite)
   bool bHandBrake = false;
 
-  UPROPERTY(Category = "Vehicle Control", EditAnywhere)
+  UPROPERTY(Category = "Vehicle Control", EditAnywhere, BlueprintReadWrite)
   bool bReverse = false;
 };
