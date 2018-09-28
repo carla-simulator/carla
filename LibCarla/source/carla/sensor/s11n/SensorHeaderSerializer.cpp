@@ -13,8 +13,8 @@ namespace sensor {
 namespace s11n {
 
   static Buffer PopBufferFromPool() {
-    static BufferPool pool;
-    return pool.Pop();
+    static auto pool = std::make_shared<BufferPool>();
+    return pool->Pop();
   }
 
   Buffer SensorHeaderSerializer::Serialize(
