@@ -10,13 +10,17 @@
 
 #include "carla/sensor/s11n/ImageSerializer.h"
 
-class ASceneCaptureSensor;
+class ADepthCamera;
+class ASceneCaptureCamera;
+class ASemanticSegmentationCamera;
 
 namespace carla {
 namespace sensor {
 
   using SensorRegistry = CompositeSerializer<
-    std::pair<ASceneCaptureSensor *, s11n::ImageSerializer>
+    std::pair<ASceneCaptureCamera *, s11n::ImageSerializer>,
+    std::pair<ADepthCamera *, s11n::ImageSerializer>,
+    std::pair<ASemanticSegmentationCamera *, s11n::ImageSerializer>
   >;
 
 } // namespace sensor

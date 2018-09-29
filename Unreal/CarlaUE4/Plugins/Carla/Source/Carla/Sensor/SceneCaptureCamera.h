@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "Carla/Sensor/PixelReader.h"
 #include "Carla/Sensor/SceneCaptureSensor.h"
 
 #include "SceneCaptureCamera.generated.h"
@@ -18,4 +19,12 @@ class CARLA_API ASceneCaptureCamera : public ASceneCaptureSensor
 public:
 
   using ASceneCaptureSensor::EnablePostProcessingEffects;
+
+protected:
+
+  void Tick(float DeltaTime) override
+  {
+    Super::Tick(DeltaTime);
+    FPixelReader::SendPixelsInRenderThread(*this);
+  }
 };
