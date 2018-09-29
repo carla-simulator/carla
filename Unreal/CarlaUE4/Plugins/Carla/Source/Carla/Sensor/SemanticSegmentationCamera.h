@@ -18,6 +18,11 @@ class CARLA_API ASemanticSegmentationCamera : public AShaderBasedSensor
 
 public:
 
+  static FActorDefinition GetSensorDefinition()
+  {
+    return UActorBlueprintFunctionLibrary::MakeCameraDefinition(TEXT("semseg_camera"));
+  }
+
   ASemanticSegmentationCamera(const FObjectInitializer &ObjectInitializer)
     : Super(ObjectInitializer)
   {
