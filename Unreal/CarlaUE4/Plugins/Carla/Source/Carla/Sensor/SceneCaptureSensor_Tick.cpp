@@ -100,42 +100,43 @@ static void WritePixelsToBuffer(
     carla::Buffer &Buffer)
 {
   check(IsInRenderingThread());
-  FRHITexture2D *texture = RenderTarget.GetRenderTargetResource()->GetRenderTargetTexture();
-  if (!texture)
+  FRHITexture2D *Texture = RenderTarget.GetRenderTargetResource()->GetRenderTargetTexture();
+  if (!Texture)
   {
     UE_LOG(LogCarla, Error, TEXT("SceneCaptureCamera: Missing render texture"));
     return;
   }
-  const uint32 num_bytes_per_pixel = 4;    // PF_R8G8B8A8
-  const uint32 width = texture->GetSizeX();
-  const uint32 height = texture->GetSizeY();
-  const uint32 dest_stride = width * height * num_bytes_per_pixel;
+  const uint32 BytesPerPixel = 4u; // PF_R8G8B8A8
+  const uint32 Width = Texture->GetSizeX();
+  const uint32 Height = Texture->GetSizeY();
+  const uint32 ExpectedStride = Width * Height * BytesPerPixel;
 
-  uint32 src_stride;
-  LockTexture Lock(texture, src_stride);
-  const uint8 *src = Lock.Source;
+  uint32 SrcStride;
+  LockTexture Lock(Texture, SrcStride);
 
-  /// @todo We don't need to allocate memory here.
-  std::unique_ptr<uint8[]> dest = nullptr;
-  // Direct 3D uses additional rows in the buffer,so we need check the result
-  // stride from the lock:
-  if (IsD3DPlatform(GMaxRHIShaderPlatform, false) && (dest_stride != src_stride))
+#ifdef PLATFORM_WINDOWS
+  // JB: Direct 3D uses additional rows in the buffer, so we need check the
+  // result stride from the lock:
+  if (IsD3DPlatform(GMaxRHIShaderPlatform, false) && (ExpectedStride != SrcStride))
   {
-    const uint32 copy_row_stride = width * num_bytes_per_pixel;
-    dest = std::make_unique<uint8[]>(dest_stride);
-    // Copy per row
-    uint8 *dest_row = dest.get();
-    const uint8 *src_row = src;
-    for (uint32 Row = 0; Row < height; ++Row)
+    Buffer.reset(BUFFER_OFFSET + ExpectedStride);
+    auto DstRow = Buffer.begin() + BUFFER_OFFSET;
+    const uint32 RowStride = Width * BytesPerPixel;
+    const uint8 *SrcRow = Lock.Source;
+    for (uint32 Row = 0u; Row < Height; ++Row)
     {
-      FMemory::Memcpy(dest_row, src_row, copy_row_stride);
-      dest_row += copy_row_stride;
-      src_row += src_stride;
+      FMemory::Memcpy(DstRow, SrcRow, RowStride);
+      DstRow += RowStride;
+      SrcRow += SrcStride;
     }
-    src = dest.get();
   }
-
-  Buffer.copy_from(BUFFER_OFFSET, src, dest_stride);
+  else
+#endif // PLATFORM_WINDOWS
+  {
+    check(ExpectedStride == SrcStride);
+    const uint8 *Source = Lock.Source;
+    Buffer.copy_from(BUFFER_OFFSET, Source, SrcStride);
+  }
 }
 
 static void WritePixelsToBuffer_Vulkan(
@@ -153,7 +154,7 @@ static void WritePixelsToBuffer_Vulkan(
     return;
   }
 
-  // Extra copy here, don't know how to avoid it.
+  // NS: Extra copy here, don't know how to avoid it.
   TArray<FColor> Pixels;
   InRHICmdList.ReadSurfaceData(
       texture,
