@@ -95,7 +95,6 @@ FCarlaServer::ErrorCode FCarlaServer::ReadNewEpisode(FString &IniFile, const boo
 FCarlaServer::ErrorCode FCarlaServer::SendSceneDescription(
     const FString &MapName,
     const TArray<APlayerStart *> &AvailableStartSpots,
-    const TArray<USensorDescription *> &SensorDescriptions,
     const bool bBlocking)
 {
 #ifdef CARLA_COMPILE_CARLASERVER_LEGACY
@@ -179,19 +178,6 @@ FCarlaServer::ErrorCode FCarlaServer::ReadControl(FVehicleControl &Control, cons
     UE_LOG(LogCarlaServer, Warning, TEXT("No control received from the client this frame!"));
   }
   return ec;
-
-#else
-  return ErrorCode::Error;
-#endif // CARLA_COMPILE_CARLASERVER_LEGACY
-}
-
-FCarlaServer::ErrorCode FCarlaServer::SendSensorData(const FSensorDataView &Data)
-{
-#ifdef CARLA_COMPILE_CARLASERVER_LEGACY
-
-  carla_sensor_data values;
-  FCarlaEncoder::Encode(Data, values);
-  return ParseErrorCode(carla_write_sensor_data(Server, values));
 
 #else
   return ErrorCode::Error;

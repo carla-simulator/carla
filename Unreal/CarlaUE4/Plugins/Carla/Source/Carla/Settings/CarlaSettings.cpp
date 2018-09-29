@@ -7,8 +7,6 @@
 #include "Carla.h"
 #include "CarlaSettings.h"
 #include "DynamicWeather.h"
-#include "Settings/CameraDescription.h"
-#include "Settings/LidarDescription.h"
 #include "Util/IniFile.h"
 #include "Package.h"
 #include "CommandLine.h"
@@ -64,40 +62,6 @@ static FString GetSensorType(
   return SensorType;
 }
 
-static void LoadSensorFromConfig(
-    const FIniFile &ConfigFile,
-    USensorDescription &Sensor)
-{
-  ForEachSectionInName(Sensor.Name, [&](const auto &Section){
-    Sensor.Load(ConfigFile, Section);
-  });
-}
-
-template <typename T>
-static T *MakeSensor(UObject *Parent, const FString &Name, const FString &Type)
-{
-  auto *Sensor = NewObject<T>(Parent);
-  Sensor->Name = Name;
-  Sensor->Type = Type;
-  return Sensor;
-}
-
-static USensorDescription *MakeSensor(
-    const FIniFile &ConfigFile,
-    UObject *Parent,
-    const FString &SensorName)
-{
-  const auto SensorType = GetSensorType(ConfigFile, SensorName);
-  if (SensorType == TEXT("CAMERA")) {
-    return MakeSensor<UCameraDescription>(Parent, SensorName, SensorType);
-  } else if (SensorType == TEXT("LIDAR_RAY_CAST")) {
-    return MakeSensor<ULidarDescription>(Parent, SensorName, SensorType);
-  } else {
-    UE_LOG(LogCarla, Error, TEXT("Invalid sensor type '%s'"), *SensorType);
-    return nullptr;
-  }
-}
-
 static void LoadSettingsFromConfig(
     const FIniFile &ConfigFile,
     UCarlaSettings &Settings,
@@ -125,21 +89,6 @@ static void LoadSettingsFromConfig(
   FString sQualityLevel;
   ConfigFile.GetString(S_CARLA_QUALITYSETTINGS, TEXT("QualityLevel"), sQualityLevel);
   Settings.SetQualitySettingsLevel(UQualitySettings::FromString(sQualityLevel));
-
-  // Sensors.
-  FString Sensors;
-  ConfigFile.GetString(S_CARLA_SENSOR, TEXT("Sensors"), Sensors);
-  TArray<FString> SensorNames;
-  Sensors.ParseIntoArray(SensorNames, TEXT(","), true);
-  for (const FString &Name : SensorNames) {
-    auto *Sensor = MakeSensor(ConfigFile, &Settings, Name);
-    if (Sensor != nullptr) {
-      LoadSensorFromConfig(ConfigFile, *Sensor);
-      Sensor->Validate();
-      Settings.bSemanticSegmentationEnabled |= Sensor->RequiresSemanticSegmentation();
-      Settings.SensorDescriptions.Add(Name, Sensor);
-    }
-  }
 }
 
 static bool GetSettingsFilePathFromCommandLine(FString &Value)
@@ -217,7 +166,6 @@ void UCarlaSettings::LoadSettings()
 void UCarlaSettings::LoadSettingsFromString(const FString &INIFileContents)
 {
   UE_LOG(LogCarla, Log, TEXT("Loading CARLA settings from string"));
-  ResetSensorDescriptions();
   FIniFile ConfigFile;
   ConfigFile.ProcessInputFileContents(INIFileContents);
   constexpr bool bLoadCarlaServerSection = false;
@@ -269,13 +217,7 @@ void UCarlaSettings::LogSettings() const
   UE_LOG(LogCarla, Log, TEXT("Quality Settings = %s"), *UQualitySettings::ToString(QualitySettingsLevel));
 
   UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_SENSOR);
-  UE_LOG(LogCarla, Log, TEXT("Added %d sensors."), SensorDescriptions.Num());
   UE_LOG(LogCarla, Log, TEXT("Semantic Segmentation = %s"), EnabledDisabled(bSemanticSegmentationEnabled));
-  for (auto &&Sensor : SensorDescriptions)
-  {
-    check(Sensor.Value != nullptr);
-    Sensor.Value->Log();
-  }
   UE_LOG(LogCarla, Log, TEXT("================================================================================"));
 }
 
@@ -303,17 +245,10 @@ const FWeatherDescription &UCarlaSettings::GetWeatherDescriptionByIndex(int32 In
   return WeatherDescriptions[Index];
 }
 
-void UCarlaSettings::ResetSensorDescriptions()
-{
-  SensorDescriptions.Empty();
-  bSemanticSegmentationEnabled = false;
-}
-
 void UCarlaSettings::LoadSettingsFromFile(const FString &FilePath, const bool bLogOnFailure)
 {
   if (FPaths::FileExists(FilePath)) {
     UE_LOG(LogCarla, Log, TEXT("Loading CARLA settings from \"%s\""), *FilePath);
-    ResetSensorDescriptions();
     const FIniFile ConfigFile(FilePath);
     constexpr bool bLoadCarlaServerSection = true;
     LoadSettingsFromConfig(ConfigFile, *this, bLoadCarlaServerSection);
