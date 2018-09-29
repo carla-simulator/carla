@@ -22,14 +22,14 @@ class UTextureRenderTarget2D;
 /// SetUpSceneCaptureComponent function.
 ///
 /// @warning All the setters should be called before BeginPlay.
-UCLASS()
+UCLASS(Abstract)
 class CARLA_API ASceneCaptureSensor : public ASensor
 {
   GENERATED_BODY()
 
 public:
 
-  ASceneCaptureSensor(const FObjectInitializer& ObjectInitializer);
+  ASceneCaptureSensor(const FObjectInitializer &ObjectInitializer);
 
   void SetImageSize(uint32 Width, uint32 Height);
 
@@ -43,10 +43,14 @@ public:
     return ImageHeight;
   }
 
+protected:
+
   void EnablePostProcessingEffects(bool Enable = true)
   {
     bEnablePostProcessingEffects = Enable;
   }
+
+public:
 
   bool ArePostProcessingEffectsEnabled() const
   {
@@ -56,6 +60,12 @@ public:
   void SetFOVAngle(float FOVAngle);
 
   float GetFOVAngle() const;
+
+  /// Use only for debugging purposes.
+  bool ReadPixels_GameThread(TArray<FColor> &BitMap) const;
+
+  /// Use only for debugging purposes.
+  bool SaveCaptureToDisk(const FString &FilePath) const;
 
 protected:
 
