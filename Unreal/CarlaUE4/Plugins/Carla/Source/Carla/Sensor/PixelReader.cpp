@@ -134,7 +134,7 @@ void FPixelReader::WritePixelsToBuffer(
   const uint32 BytesPerPixel = 4u; // PF_R8G8B8A8
   const uint32 Width = Texture->GetSizeX();
   const uint32 Height = Texture->GetSizeY();
-  const uint32 ExpectedStride = Width * Height * BytesPerPixel;
+  const uint32 ExpectedStride = Width * BytesPerPixel;
 
   uint32 SrcStride;
   LockTexture Lock(Texture, SrcStride);
@@ -144,14 +144,13 @@ void FPixelReader::WritePixelsToBuffer(
   // result stride from the lock:
   if (IsD3DPlatform(GMaxRHIShaderPlatform, false) && (ExpectedStride != SrcStride))
   {
-    Buffer.reset(Offset + ExpectedStride);
+    Buffer.reset(Offset + ExpectedStride * Height);
     auto DstRow = Buffer.begin() + Offset;
-    const uint32 RowStride = Width * BytesPerPixel;
     const uint8 *SrcRow = Lock.Source;
     for (uint32 Row = 0u; Row < Height; ++Row)
     {
-      FMemory::Memcpy(DstRow, SrcRow, RowStride);
-      DstRow += RowStride;
+      FMemory::Memcpy(DstRow, SrcRow, ExpectedStride);
+      DstRow += ExpectedStride;
       SrcRow += SrcStride;
     }
   }
@@ -160,6 +159,6 @@ void FPixelReader::WritePixelsToBuffer(
   {
     check(ExpectedStride == SrcStride);
     const uint8 *Source = Lock.Source;
-    Buffer.copy_from(Offset, Source, SrcStride);
+    Buffer.copy_from(Offset, Source, ExpectedStride * Height);
   }
 }
