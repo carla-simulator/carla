@@ -7,6 +7,12 @@
 #include "Carla.h"
 #include "Carla/Sensor/SceneCaptureSensor.h"
 
+#include "Components/DrawFrustumComponent.h"
+#include "Components/SceneCaptureComponent2D.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/TextureRenderTarget2D.h"
+#include "HighResScreenshot.h"
+
 static auto SCENE_CAPTURE_COUNTER = 0u;
 
 // =============================================================================
@@ -85,6 +91,41 @@ float ASceneCaptureSensor::GetFOVAngle() const
 {
   check(CaptureComponent2D != nullptr);
   return CaptureComponent2D->FOVAngle;
+}
+
+bool ASceneCaptureSensor::ReadPixels_GameThread(TArray<FColor> &BitMap) const
+{
+  check(IsInGameThread());
+  if (!CaptureRenderTarget)
+  {
+    UE_LOG(LogCarla, Error, TEXT("SceneCaptureCamera: Missing render target"));
+    return false;
+  }
+  FTextureRenderTargetResource *RTResource =
+      CaptureRenderTarget->GameThread_GetRenderTargetResource();
+  if (RTResource == nullptr)
+  {
+    UE_LOG(LogCarla, Error, TEXT("SceneCaptureCamera: Missing render target"));
+    return false;
+  }
+  FReadSurfaceDataFlags ReadPixelFlags(RCM_UNorm);
+  ReadPixelFlags.SetLinearToGamma(true);
+  return RTResource->ReadPixels(BitMap, ReadPixelFlags);
+}
+
+bool ASceneCaptureSensor::SaveCaptureToDisk(const FString &FilePath) const
+{
+  TArray<FColor> OutBMP;
+  if (!ReadPixels_GameThread(OutBMP)) {
+    return false;
+  }
+  for (FColor &color : OutBMP) {
+    color.A = 255u;
+  }
+  const FIntPoint DestSize(GetImageWidth(), GetImageHeight());
+  FString ResultPath;
+  FHighResScreenshotConfig &HighResScreenshotConfig = GetHighResScreenshotConfig();
+  return HighResScreenshotConfig.SaveImage(FilePath, OutBMP, DestSize, &ResultPath);
 }
 
 void ASceneCaptureSensor::PostActorCreated()
