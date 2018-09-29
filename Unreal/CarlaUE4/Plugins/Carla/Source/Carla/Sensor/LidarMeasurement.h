@@ -6,7 +6,9 @@
 
 #pragma once
 
-#include "Sensor/SensorDataView.h"
+#include <compiler/disable-ue4-macros.h>
+#include <carla/Buffer.h>
+#include <compiler/enable-ue4-macros.h>
 
 #include "Containers/Array.h"
 
@@ -15,7 +17,6 @@
 /// The header consists of an array of uint32's in the following layout
 ///
 ///    {
-///      Frame number (uint64)
 ///      Horizontal angle (float),
 ///      Channel count,
 ///      Point count of channel 0,
@@ -35,66 +36,64 @@ class FLidarMeasurement {
   static_assert(sizeof(float) == sizeof(uint32), "Invalid float size");
 public:
 
-  explicit FLidarMeasurement(uint32 SensorId = 0u, uint32 ChannelCount = 0u)
-    : SensorId(SensorId)
+  explicit FLidarMeasurement(uint32 ChannelCount = 0u)
   {
-    Header.AddDefaulted(4u + ChannelCount);
-    Header[3] = ChannelCount;
+    Header.AddDefaulted(2u + ChannelCount);
+    Header[1] = ChannelCount;
   }
 
   FLidarMeasurement &operator=(FLidarMeasurement &&Other)
   {
-    SensorId = Other.SensorId;
     Header = std::move(Other.Header);
     Points = std::move(Other.Points);
-    Other.SensorId = 0u;
     return *this;
-  }
-
-  void SetFrameNumber(uint64 FrameNumber)
-  {
-    std::memcpy(Header.GetData(), reinterpret_cast<const void *>(&FrameNumber), 2u);
   }
 
   float GetHorizontalAngle() const
   {
-    return reinterpret_cast<const float &>(Header[2]);
+    return reinterpret_cast<const float &>(Header[0]);
   }
 
   void SetHorizontalAngle(float HorizontalAngle)
   {
-    Header[2] = reinterpret_cast<const uint32 &>(HorizontalAngle);
+    Header[0] = reinterpret_cast<const uint32 &>(HorizontalAngle);
   }
 
   uint32 GetChannelCount() const
   {
-    return Header[3];
+    return Header[1];
   }
 
   void Reset(uint32 TotalPointCount)
   {
-    std::memset(Header.GetData() + 4u, 0, sizeof(uint32) * GetChannelCount());
+    std::memset(Header.GetData() + 2u, 0, sizeof(uint32) * GetChannelCount());
     Points.Reset(3u * TotalPointCount);
   }
 
   void WritePoint(uint32 Channel, const FVector &Point)
   {
-    check(Header[3] > Channel);
-    Header[4u + Channel] += 1u;
+    check(GetChannelCount() > Channel);
+    Header[2u + Channel] += 1u;
     constexpr float TO_METERS = 1e-2f;
     Points.Emplace(TO_METERS * Point.X);
     Points.Emplace(TO_METERS * Point.Y);
     Points.Emplace(TO_METERS * Point.Z);
   }
 
-  FSensorDataView GetView() const
+  void CopyToBuffer(carla::Buffer &Buffer) const
   {
-    return FSensorDataView(SensorId, Header, Points);
+    /// @todo This should be moved to its own serializer.
+    std::array<boost::asio::const_buffer, 2u> BufSequence = {{
+      boost::asio::buffer(
+          reinterpret_cast<const unsigned char *>(Header.GetData()),
+          sizeof(uint32) * Header.Num()),
+      boost::asio::buffer(
+          reinterpret_cast<const unsigned char *>(Points.GetData()),
+          sizeof(float) * Points.Num())}};
+    Buffer.copy_from(BufSequence);
   }
 
 private:
-
-  uint32 SensorId;
 
   TArray<uint32> Header;
 
