@@ -7,7 +7,6 @@
 #include "Carla.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
-#include "Carla/Settings/PostProcessEffect.h"
 #include "Carla/Util/ScopedStack.h"
 
 #include <algorithm>
@@ -194,17 +193,6 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
   Definition.Id = JoinStrings(TEXT("."), TEXT("sensor"), Parameters.Id).ToLower();
   Definition.Class = Parameters.Class;
   Definition.Tags = JoinStrings(TEXT(","), TEXT("sensor"), Parameters.Id).ToLower();
-  // Post-processing.
-  FActorVariation PostProcessing;
-  PostProcessing.Id = TEXT("post_processing");
-  PostProcessing.Type = EActorAttributeType::String;
-  for (uint8 i = 1u; i < PostProcessEffect::ToUInt(EPostProcessEffect::SIZE); ++i)
-  {
-    PostProcessing.RecommendedValues.Add(PostProcessEffect::ToString(i));
-  }
-  // By defaul goes to the first one, we don't want None as default.
-  PostProcessing.RecommendedValues.Add(PostProcessEffect::ToString(0u));
-  PostProcessing.bRestrictToRecommended = true;
   // FOV.
   FActorVariation FOV;
   FOV.Id = TEXT("fov");
@@ -223,7 +211,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
   ResY.RecommendedValues = { TEXT("600") };
   ResY.bRestrictToRecommended = false;
 
-  Definition.Variations = {PostProcessing, ResX, ResY, FOV};
+  Definition.Variations = {ResX, ResY, FOV};
   Success = CheckActorDefinition(Definition);
 }
 

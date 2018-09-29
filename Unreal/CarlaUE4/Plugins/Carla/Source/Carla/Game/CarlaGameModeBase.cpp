@@ -12,7 +12,6 @@
 #include "Carla/Game/CarlaPlayerState.h"
 #include "Carla/Game/Tagger.h"
 #include "Carla/Game/TaggerDelegate.h"
-#include "Carla/Sensor/DeprecatedSensor.h"
 #include "Carla/Settings/CarlaSettings.h"
 #include "Carla/Settings/CarlaSettingsDelegate.h"
 #include "Carla/Util/RandomEngine.h"

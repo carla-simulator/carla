@@ -7,20 +7,6 @@
 #include "Carla.h"
 #include "Carla/Game/DataRouter.h"
 
-#include "Carla/Sensor/DeprecatedSensor.h"
-
-void FDataRouter::RegisterSensor(ADeprecatedSensor &InSensor)
-{
-  if (SensorDataSink.IsValid()) {
-    InSensor.SetSensorDataSink(SensorDataSink);
-  } else {
-    UE_LOG(
-        LogCarla,
-        Error,
-        TEXT("FDataRouter: Trying to register a sensor but I don't have a SensorDataSink"));
-  }
-}
-
 void FDataRouter::RestartLevel()
 {
   if (Player != nullptr) {

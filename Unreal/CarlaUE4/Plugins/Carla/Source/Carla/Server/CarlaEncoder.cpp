@@ -45,23 +45,6 @@ static void Encode(const FTransform &Transform, carla_transform &Data)
   Encode(Transform.Rotator(), Data.rotation);
 }
 
-static TUniquePtr<const char[]> Encode(
-    const USensorDescription &SensorDescription,
-    carla_sensor_definition &Data)
-{
-  Data.id = SensorDescription.GetId();
-  Data.type = [](const FString &Type) {
-#define CARLA_CHECK_TYPE(Str) if (Type == TEXT(#Str)) return CARLA_SERVER_ ## Str;
-      CARLA_CHECK_TYPE(CAMERA)
-      CARLA_CHECK_TYPE(LIDAR_RAY_CAST)
-      else return CARLA_SERVER_SENSOR_UNKNOWN;
-#undef CARLA_CHECK_TYPE
-  }(SensorDescription.Type);
-  auto Memory = FCarlaEncoder::Encode(SensorDescription.Name);
-  Data.name = Memory.Get();
-  return Memory;
-}
-
 // =============================================================================
 // -- FCarlaEncoder static methods ---------------------------------------------
 // =============================================================================
