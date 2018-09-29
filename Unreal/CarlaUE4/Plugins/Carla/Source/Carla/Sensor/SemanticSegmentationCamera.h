@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "Carla/Sensor/PixelReader.h"
 #include "Carla/Sensor/ShaderBasedSensor.h"
 
 #include "SemanticSegmentationCamera.generated.h"
@@ -21,5 +22,13 @@ public:
     : Super(ObjectInitializer)
   {
     LoadPostProcessingMaterial(TEXT("Material'/Carla/PostProcessingMaterials/GTMaterial.GTMaterial'"));
+  }
+
+protected:
+
+  void Tick(float DeltaTime) override
+  {
+    Super::Tick(DeltaTime);
+    FPixelReader::SendPixelsInRenderThread(*this);
   }
 };

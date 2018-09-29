@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "Carla/Sensor/PixelReader.h"
 #include "Carla/Sensor/ShaderBasedSensor.h"
 
 #include "DepthCamera.generated.h"
@@ -27,5 +28,13 @@ public:
         TEXT("Material'/Carla/PostProcessingMaterials/DepthEffectMaterial.DepthEffectMaterial'")
 #endif
     );
+  }
+
+protected:
+
+  void Tick(float DeltaTime) override
+  {
+    Super::Tick(DeltaTime);
+    FPixelReader::SendPixelsInRenderThread(*this);
   }
 };

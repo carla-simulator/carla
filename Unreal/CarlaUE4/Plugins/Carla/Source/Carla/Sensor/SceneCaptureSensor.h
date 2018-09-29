@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "Carla/Sensor/PixelReader.h"
 #include "Carla/Sensor/Sensor.h"
 
 #include "SceneCaptureSensor.generated.h"
@@ -26,6 +27,8 @@ UCLASS(Abstract)
 class CARLA_API ASceneCaptureSensor : public ASensor
 {
   GENERATED_BODY()
+
+  friend class FPixelReader;
 
 public:
 
@@ -61,19 +64,25 @@ public:
 
   float GetFOVAngle() const;
 
-  /// Use only for debugging purposes.
-  bool ReadPixels_GameThread(TArray<FColor> &BitMap) const;
+  /// Use for debugging purposes only.
+  bool ReadPixels(TArray<FColor> &BitMap) const
+  {
+    check(CaptureRenderTarget != nullptr);
+    return FPixelReader::WritePixelsToArray(*CaptureRenderTarget, BitMap);
+  }
 
-  /// Use only for debugging purposes.
-  bool SaveCaptureToDisk(const FString &FilePath) const;
+  /// Use for debugging purposes only.
+  bool SaveCaptureToDisk(const FString &FilePath) const
+  {
+    check(CaptureRenderTarget != nullptr);
+    return FPixelReader::SavePixelsToDisk(*CaptureRenderTarget, FilePath);
+  }
 
 protected:
 
   virtual void PostActorCreated() override;
 
   virtual void BeginPlay() override;
-
-  virtual void Tick(float DeltaSeconds) override;
 
   virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
