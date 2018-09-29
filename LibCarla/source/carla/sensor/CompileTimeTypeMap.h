@@ -32,6 +32,7 @@ namespace detail {
     template <size_t Index>
     struct get_by_index {
       using type = void;
+      using key = void;
     };
   };
 
@@ -63,6 +64,12 @@ namespace detail {
           Index == current_index(),
           Value,
           typename CompileTimeTypeMapImpl<Size, Rest...>::template get_by_index<Index>::type
+        >::type;
+
+      using key = typename std::conditional<
+          Index == current_index(),
+          Key,
+          typename CompileTimeTypeMapImpl<Size, Rest...>::template get_by_index<Index>::key
         >::type;
     };
   };

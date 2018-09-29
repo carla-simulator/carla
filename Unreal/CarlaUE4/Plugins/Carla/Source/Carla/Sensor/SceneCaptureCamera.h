@@ -18,6 +18,11 @@ class CARLA_API ASceneCaptureCamera : public ASceneCaptureSensor
 
 public:
 
+  static FActorDefinition GetSensorDefinition()
+  {
+    return UActorBlueprintFunctionLibrary::MakeCameraDefinition(TEXT("camera"));
+  }
+
   using ASceneCaptureSensor::EnablePostProcessingEffects;
 
 protected:

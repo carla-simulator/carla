@@ -185,14 +185,23 @@ bool UActorBlueprintFunctionLibrary::CheckActorDefinitions(const TArray<FActorDe
 /// -- Helpers to create actor definitions -------------------------------------
 /// ============================================================================
 
+FActorDefinition UActorBlueprintFunctionLibrary::MakeCameraDefinition(
+    const FString &Id)
+{
+  FActorDefinition Definition;
+  bool Success;
+  MakeCameraDefinition(Id, Success, Definition);
+  check(Success);
+  return Definition;
+}
+
 void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
-    const FCameraParameters &Parameters,
+    const FString &Id,
     bool &Success,
     FActorDefinition &Definition)
 {
-  Definition.Id = JoinStrings(TEXT("."), TEXT("sensor"), Parameters.Id).ToLower();
-  Definition.Class = Parameters.Class;
-  Definition.Tags = JoinStrings(TEXT(","), TEXT("sensor"), Parameters.Id).ToLower();
+  Definition.Id = JoinStrings(TEXT("."), TEXT("sensor"), Id).ToLower();
+  Definition.Tags = JoinStrings(TEXT(","), TEXT("sensor"), Id).ToLower();
   // FOV.
   FActorVariation FOV;
   FOV.Id = TEXT("fov");

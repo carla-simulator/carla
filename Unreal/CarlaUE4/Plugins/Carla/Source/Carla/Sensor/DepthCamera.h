@@ -18,6 +18,11 @@ class CARLA_API ADepthCamera : public AShaderBasedSensor
 
 public:
 
+  static FActorDefinition GetSensorDefinition()
+  {
+    return UActorBlueprintFunctionLibrary::MakeCameraDefinition(TEXT("depth_camera"));
+  }
+
   ADepthCamera(const FObjectInitializer &ObjectInitializer)
     : Super(ObjectInitializer)
   {
