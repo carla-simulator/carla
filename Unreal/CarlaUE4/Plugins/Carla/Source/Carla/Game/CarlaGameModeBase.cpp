@@ -13,7 +13,6 @@
 #include "Carla/Game/Tagger.h"
 #include "Carla/Game/TaggerDelegate.h"
 #include "Carla/Sensor/DeprecatedSensor.h"
-#include "Carla/Sensor/OldSensorFactory.h"
 #include "Carla/Settings/CarlaSettings.h"
 #include "Carla/Settings/CarlaSettingsDelegate.h"
 #include "Carla/Util/RandomEngine.h"
@@ -273,22 +272,23 @@ void ACarlaGameModeBase::RegisterPlayer(AController &NewPlayer)
 void ACarlaGameModeBase::AttachSensorsToPlayer()
 {
   check(PlayerController != nullptr);
-  const auto &Settings = GameInstance->GetCarlaSettings();
-  const auto *Weather = Settings.GetActiveWeatherDescription();
+  UE_LOG(LogCarla, Error, TEXT("Sensors are no longer available in this game mode."));
+  // const auto &Settings = GameInstance->GetCarlaSettings();
+  // const auto *Weather = Settings.GetActiveWeatherDescription();
 
-  for (auto &Item : Settings.SensorDescriptions)
-  {
-    check(Item.Value != nullptr);
-    auto &SensorDescription = *Item.Value;
-    if (Weather != nullptr)
-    {
-      SensorDescription.AdjustToWeather(*Weather);
-    }
-    auto *Sensor = FSensorFactory::Make(SensorDescription, *GetWorld());
-    check(Sensor != nullptr);
-    Sensor->AttachToActor(PlayerController->GetPawn());
-    GetDataRouter().RegisterSensor(*Sensor);
-  }
+  // for (auto &Item : Settings.SensorDescriptions)
+  // {
+  //   check(Item.Value != nullptr);
+  //   auto &SensorDescription = *Item.Value;
+  //   if (Weather != nullptr)
+  //   {
+  //     SensorDescription.AdjustToWeather(*Weather);
+  //   }
+  //   auto *Sensor = FSensorFactory::Make(SensorDescription, *GetWorld());
+  //   check(Sensor != nullptr);
+  //   Sensor->AttachToActor(PlayerController->GetPawn());
+  //   GetDataRouter().RegisterSensor(*Sensor);
+  // }
 }
 
 void ACarlaGameModeBase::TagActorsForSemanticSegmentation()
