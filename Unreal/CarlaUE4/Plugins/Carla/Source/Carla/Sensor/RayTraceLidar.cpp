@@ -1,19 +1,23 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
-#include "Carla/Sensor/Lidar.h"
+#include "Carla/Sensor/RayTraceLidar.h"
 
 #include "DrawDebugHelpers.h"
 #include "Engine/CollisionProfile.h"
 #include "Runtime/Engine/Classes/Kismet/KismetMathLibrary.h"
 #include "StaticMeshResources.h"
 
-ALidar::ALidar(const FObjectInitializer& ObjectInitializer)
+ARayTraceLidar::ARayTraceLidar(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer)
 {
   PrimaryActorTick.bCanEverTick = true;
 
-  auto MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CamMesh0"));
+  auto MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RootComponent"));
   MeshComp->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
   MeshComp->bHiddenInGame = true;
   MeshComp->CastShadow = false;
@@ -21,45 +25,48 @@ ALidar::ALidar(const FObjectInitializer& ObjectInitializer)
   RootComponent = MeshComp;
 }
 
-void ALidar::Set(const ULidarDescription &LidarDescription)
+void ARayTraceLidar::Set(const FLidarDescription &LidarDescription)
 {
-  Super::Set(LidarDescription);
-  Description = &LidarDescription;
-  LidarMeasurement = FLidarMeasurement(GetId(), Description->Channels);
+  Description = LidarDescription;
+  LidarMeasurement = FLidarMeasurement(Description.Channels);
   CreateLasers();
 }
 
-void ALidar::CreateLasers()
+void ARayTraceLidar::CreateLasers()
 {
-  check(Description != nullptr);
-  const auto NumberOfLasers = Description->Channels;
+  const auto NumberOfLasers = Description.Channels;
   check(NumberOfLasers > 0u);
   const float DeltaAngle = NumberOfLasers == 1u ? 0.f :
-    (Description->UpperFovLimit - Description->LowerFovLimit) /
+    (Description.UpperFovLimit - Description.LowerFovLimit) /
     static_cast<float>(NumberOfLasers - 1);
   LaserAngles.Empty(NumberOfLasers);
   for(auto i = 0u; i < NumberOfLasers; ++i)
   {
     const float VerticalAngle =
-      Description->UpperFovLimit - static_cast<float>(i) * DeltaAngle;
+      Description.UpperFovLimit - static_cast<float>(i) * DeltaAngle;
     LaserAngles.Emplace(VerticalAngle);
   }
 }
 
-void ALidar::Tick(const float DeltaTime)
+void ARayTraceLidar::Tick(const float DeltaTime)
 {
   Super::Tick(DeltaTime);
 
   ReadPoints(DeltaTime);
-  WriteSensorData(LidarMeasurement.GetView());
+
+  /// @todo Here we send the data.
+  // auto &Stream = GetDataStream();
+  // auto Buffer = Stream.PopBufferFromPool();
+  // LidarMeasurement.CopyToBuffer(Buffer);
+  // Stream.Send_GameThread(*this, std::move(Buffer));
 }
 
-void ALidar::ReadPoints(const float DeltaTime)
+void ARayTraceLidar::ReadPoints(const float DeltaTime)
 {
-  const uint32 ChannelCount = Description->Channels;
+  const uint32 ChannelCount = Description.Channels;
   const uint32 PointsToScanWithOneLaser =
     FMath::RoundHalfFromZero(
-        Description->PointsPerSecond * DeltaTime / float(ChannelCount));
+        Description.PointsPerSecond * DeltaTime / float(ChannelCount));
 
   if (PointsToScanWithOneLaser <= 0)
   {
@@ -72,10 +79,9 @@ void ALidar::ReadPoints(const float DeltaTime)
   }
 
   check(ChannelCount == LaserAngles.Num());
-  check(Description != nullptr);
 
   const float CurrentHorizontalAngle = LidarMeasurement.GetHorizontalAngle();
-  const float AngleDistanceOfTick = Description->RotationFrequency * 360.0f * DeltaTime;
+  const float AngleDistanceOfTick = Description.RotationFrequency * 360.0f * DeltaTime;
   const float AngleDistanceOfLaserMeasure = AngleDistanceOfTick / PointsToScanWithOneLaser;
 
   LidarMeasurement.Reset(ChannelCount * PointsToScanWithOneLaser);
@@ -94,11 +100,10 @@ void ALidar::ReadPoints(const float DeltaTime)
   }
 
   const float HorizontalAngle = std::fmod(CurrentHorizontalAngle + AngleDistanceOfTick, 360.0f);
-  LidarMeasurement.SetFrameNumber(GFrameCounter);
   LidarMeasurement.SetHorizontalAngle(HorizontalAngle);
 }
 
-bool ALidar::ShootLaser(const uint32 Channel, const float HorizontalAngle, FVector &XYZ) const
+bool ARayTraceLidar::ShootLaser(const uint32 Channel, const float HorizontalAngle, FVector &XYZ) const
 {
   const float VerticalAngle = LaserAngles[Channel];
 
@@ -115,7 +120,7 @@ bool ALidar::ShootLaser(const uint32 Channel, const float HorizontalAngle, FVect
     LaserRot,
     LidarBodyRot
   );
-  const auto Range = Description->Range;
+  const auto Range = Description.Range;
   FVector EndTrace = Range * UKismetMathLibrary::GetForwardVector(ResultRot) + LidarBodyLoc;
 
   GetWorld()->LineTraceSingleByChannel(
@@ -129,7 +134,7 @@ bool ALidar::ShootLaser(const uint32 Channel, const float HorizontalAngle, FVect
 
   if (HitInfo.bBlockingHit)
   {
-    if (Description->ShowDebugPoints)
+    if (Description.ShowDebugPoints)
     {
       DrawDebugPoint(
         GetWorld(),
