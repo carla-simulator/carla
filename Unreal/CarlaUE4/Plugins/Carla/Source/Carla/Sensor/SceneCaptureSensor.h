@@ -46,25 +46,26 @@ public:
     return ImageHeight;
   }
 
-protected:
-
+  UFUNCTION(BlueprintCallable)
   void EnablePostProcessingEffects(bool Enable = true)
   {
     bEnablePostProcessingEffects = Enable;
   }
 
-public:
-
+  UFUNCTION(BlueprintCallable)
   bool ArePostProcessingEffectsEnabled() const
   {
     return bEnablePostProcessingEffects;
   }
 
+  UFUNCTION(BlueprintCallable)
   void SetFOVAngle(float FOVAngle);
 
+  UFUNCTION(BlueprintCallable)
   float GetFOVAngle() const;
 
   /// Use for debugging purposes only.
+  UFUNCTION(BlueprintCallable)
   bool ReadPixels(TArray<FColor> &BitMap) const
   {
     check(CaptureRenderTarget != nullptr);
@@ -72,6 +73,7 @@ public:
   }
 
   /// Use for debugging purposes only.
+  UFUNCTION(BlueprintCallable)
   bool SaveCaptureToDisk(const FString &FilePath) const
   {
     check(CaptureRenderTarget != nullptr);
@@ -95,19 +97,19 @@ private:
   void UpdateDrawFrustum();
 
   /// Image width in pixels.
-  UPROPERTY(Category = "Scene Capture", EditAnywhere)
+  UPROPERTY(EditAnywhere)
   uint32 ImageWidth = 800u;
 
   /// Image height in pixels.
-  UPROPERTY(Category = "Scene Capture", EditAnywhere)
+  UPROPERTY(EditAnywhere)
   uint32 ImageHeight = 600u;
 
   /// Whether to render the post-processing effects present in the scene.
-  UPROPERTY(Category = "Scene Capture", EditAnywhere)
+  UPROPERTY(EditAnywhere)
   bool bEnablePostProcessingEffects = true;
 
   /// Render target necessary for scene capture.
-  UPROPERTY()
+  UPROPERTY(EditAnywhere)
   UTextureRenderTarget2D *CaptureRenderTarget = nullptr;
 
   /// Scene capture component.
