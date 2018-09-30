@@ -39,6 +39,12 @@ file(GLOB libcarla_carla_opendrive_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_opendrive_sources}")
 install(FILES ${libcarla_carla_opendrive_sources} DESTINATION include/carla/opendrive)
 
+file(GLOB libcarla_carla_pointcloud_sources
+    "${libcarla_source_path}/carla/pointcloud/*.cpp"
+    "${libcarla_source_path}/carla/pointcloud/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_pointcloud_sources}")
+install(FILES ${libcarla_carla_pointcloud_sources} DESTINATION include/carla/pointcloud)
+
 file(GLOB libcarla_carla_road_sources
     "${libcarla_source_path}/carla/road/*.cpp"
     "${libcarla_source_path}/carla/road/*.h")

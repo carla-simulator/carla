@@ -100,6 +100,7 @@
 - `channels`
 - `raw_data`
 - `get_point_count(channel)`
+- `save_to_disk(path)`
 - `__len__()`
 - `__iter__()`
 

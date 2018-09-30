@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include <carla/client/Sensor.h>
+#include <carla/pointcloud/PLY.h>
 #include <carla/sensor/SensorData.h>
 #include <carla/sensor/data/Image.h>
 #include <carla/sensor/data/LidarMeasurement.h>
@@ -77,6 +78,11 @@ static auto GetRawDataAsBuffer(T &self) {
   return boost::python::object(boost::python::handle<>(ptr));
 }
 
+template <typename T>
+static void SavePointCloudToDisk(T &self, const std::string &path) {
+  carla::pointcloud::PLY::SaveToDisk(path, self.begin(), self.end());
+}
+
 void export_sensor() {
   using namespace boost::python;
   namespace cc = carla::client;
@@ -105,6 +111,7 @@ void export_sensor() {
     .add_property("channels", &csd::LidarMeasurement::GetChannelCount)
     .add_property("raw_data", &GetRawDataAsBuffer<csd::LidarMeasurement>)
     .def("get_point_count", &csd::LidarMeasurement::GetPointCount, (arg("channel")))
+    .def("save_to_disk", &SavePointCloudToDisk<csd::LidarMeasurement>, (arg("path")))
     .def("__len__", &csd::LidarMeasurement::size)
     .def("__iter__", iterator<csd::LidarMeasurement>())
     .def(self_ns::str(self_ns::self))
