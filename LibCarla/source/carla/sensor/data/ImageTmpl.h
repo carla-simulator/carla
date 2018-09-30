@@ -15,8 +15,8 @@ namespace sensor {
 namespace data {
 
   template <typename T>
-  class ImageTmpl : public Array<s11n::ImageSerializer::header_offset, T>  {
-    using Super = Array<s11n::ImageSerializer::header_offset, T>;
+  class ImageTmpl : public Array<T>  {
+    using Super = Array<T>;
   protected:
 
     using Serializer = s11n::ImageSerializer;
@@ -24,28 +24,28 @@ namespace data {
     friend Serializer;
 
     explicit ImageTmpl(DataMessage message)
-      : Super(std::move(message)) {
+      : Super(Serializer::header_offset, std::move(message)) {
       DEBUG_ASSERT(GetWidth() * GetHeight() == Super::size());
     }
 
   private:
 
-   const auto &GetHeader() const {
-     return Serializer::DeserializeHeader(Super::GetMessage());
-   }
+    const auto &GetHeader() const {
+      return Serializer::DeserializeHeader(Super::GetMessage());
+    }
 
   public:
 
     auto GetWidth() const {
-     return GetHeader().width;
+      return GetHeader().width;
     }
 
     auto GetHeight() const {
-     return GetHeader().height;
+      return GetHeader().height;
     }
 
-    uint64_t GetFOVAngle() const {
-     return GetHeader().fov_angle;
+    auto GetFOVAngle() const {
+      return GetHeader().fov_angle;
     }
   };
 

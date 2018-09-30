@@ -7,6 +7,7 @@
 #include "Carla.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
+#include "Carla/Sensor/LidarDescription.h"
 #include "Carla/Sensor/SceneCaptureSensor.h"
 #include "Carla/Util/ScopedStack.h"
 
@@ -186,6 +187,13 @@ bool UActorBlueprintFunctionLibrary::CheckActorDefinitions(const TArray<FActorDe
 /// -- Helpers to create actor definitions -------------------------------------
 /// ============================================================================
 
+template <typename... TStrs>
+static void FillIdAndTags(FActorDefinition &Def, TStrs &&... Strings)
+{
+  Def.Id = JoinStrings(TEXT("."), std::forward<TStrs>(Strings)...).ToLower();
+  Def.Tags = JoinStrings(TEXT(","), std::forward<TStrs>(Strings)...).ToLower();
+}
+
 FActorDefinition UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     const FString &Id,
     const bool bEnableModifyingPostProcessEffects)
@@ -203,8 +211,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     bool &Success,
     FActorDefinition &Definition)
 {
-  Definition.Id = JoinStrings(TEXT("."), TEXT("sensor"), Id).ToLower();
-  Definition.Tags = JoinStrings(TEXT(","), TEXT("sensor"), Id).ToLower();
+  FillIdAndTags(Definition, TEXT("sensor"), TEXT("camera"), Id);
   // FOV.
   FActorVariation FOV;
   FOV.Id = TEXT("fov");
@@ -238,15 +245,66 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
   Success = CheckActorDefinition(Definition);
 }
 
+FActorDefinition UActorBlueprintFunctionLibrary::MakeLidarDefinition(
+    const FString &Id)
+{
+  FActorDefinition Definition;
+  bool Success;
+  MakeLidarDefinition(Id, Success, Definition);
+  check(Success);
+  return Definition;
+}
+
+void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
+    const FString &Id,
+    bool &Success,
+    FActorDefinition &Definition)
+{
+  FillIdAndTags(Definition, TEXT("sensor"), TEXT("lidar"), Id);
+  // Number of channels.
+  FActorVariation Channels;
+  Channels.Id = TEXT("channels");
+  Channels.Type = EActorAttributeType::Int;
+  Channels.RecommendedValues = { TEXT("32") };
+  // Range.
+  FActorVariation Range;
+  Range.Id = TEXT("range");
+  Range.Type = EActorAttributeType::Float;
+  Range.RecommendedValues = { TEXT("5000.0") };
+  // Points per second.
+  FActorVariation PointsPerSecond;
+  PointsPerSecond.Id = TEXT("points_per_second");
+  PointsPerSecond.Type = EActorAttributeType::Int;
+  PointsPerSecond.RecommendedValues = { TEXT("56000") };
+  // Frequency.
+  FActorVariation Frequency;
+  Frequency.Id = TEXT("rotation_frequency");
+  Frequency.Type = EActorAttributeType::Float;
+  Frequency.RecommendedValues = { TEXT("10.0") };
+  // Upper FOV limit.
+  FActorVariation UpperFOV;
+  UpperFOV.Id = TEXT("upper_fov");
+  UpperFOV.Type = EActorAttributeType::Float;
+  UpperFOV.RecommendedValues = { TEXT("10.0") };
+  // Lower FOV limit.
+  FActorVariation LowerFOV;
+  LowerFOV.Id = TEXT("lower_fov");
+  LowerFOV.Type = EActorAttributeType::Float;
+  LowerFOV.RecommendedValues = { TEXT("-30.0") };
+
+  Definition.Variations = {Channels, Range, PointsPerSecond, Frequency, UpperFOV, LowerFOV};
+
+  Success = CheckActorDefinition(Definition);
+}
+
 void UActorBlueprintFunctionLibrary::MakeVehicleDefinition(
     const FVehicleParameters &Parameters,
     bool &Success,
     FActorDefinition &Definition)
 {
   /// @todo We need to validate here the params.
-  Definition.Id = JoinStrings(TEXT("."), Parameters.Make, Parameters.Model).ToLower();
+  FillIdAndTags(Definition, TEXT("vehicle"), Parameters.Make, Parameters.Model);
   Definition.Class = Parameters.Class;
-  Definition.Tags = JoinStrings(TEXT(","), TEXT("vehicle"), Parameters.Make, Parameters.Model).ToLower();
   FActorVariation Colors;
   Colors.Id = TEXT("color");
   Colors.Type = EActorAttributeType::RGBColor;
@@ -443,7 +501,7 @@ FColor UActorBlueprintFunctionLibrary::RetrieveActorAttributeToColor(
         check((ActorPtr != nullptr) && !ActorPtr->IsPendingKill());
 #endif // WITH_EDITOR
 
-void UActorBlueprintFunctionLibrary::SetActor(
+void UActorBlueprintFunctionLibrary::SetCamera(
     const FActorDescription &Description,
     ASceneCaptureSensor *Camera)
 {
@@ -460,6 +518,24 @@ void UActorBlueprintFunctionLibrary::SetActor(
             Description.Variations["enable_postprocess_effects"],
             true));
   }
+}
+
+void UActorBlueprintFunctionLibrary::SetLidar(
+    const FActorDescription &Description,
+    FLidarDescription &Lidar)
+{
+  Lidar.Channels =
+      RetrieveActorAttributeToInt("channels", Description.Variations, Lidar.Channels);
+  Lidar.Range =
+      RetrieveActorAttributeToFloat("range", Description.Variations, Lidar.Range);
+  Lidar.PointsPerSecond =
+      RetrieveActorAttributeToInt("points_per_second", Description.Variations, Lidar.PointsPerSecond);
+  Lidar.RotationFrequency =
+      RetrieveActorAttributeToFloat("rotation_frequency", Description.Variations, Lidar.RotationFrequency);
+  Lidar.UpperFovLimit =
+      RetrieveActorAttributeToFloat("upper_fov", Description.Variations, Lidar.UpperFovLimit);
+  Lidar.LowerFovLimit =
+      RetrieveActorAttributeToFloat("lower_fov", Description.Variations, Lidar.LowerFovLimit);
 }
 
 #undef CARLA_ABFL_CHECK_ACTOR
