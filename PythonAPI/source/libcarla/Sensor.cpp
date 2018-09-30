@@ -7,8 +7,10 @@
 #include <carla/client/Sensor.h>
 #include <carla/sensor/SensorData.h>
 #include <carla/sensor/data/Image.h>
+#include <carla/sensor/data/LidarMeasurement.h>
 
 #include <boost/python.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 #include <ostream>
 #include <iostream>
@@ -46,14 +48,34 @@ namespace sensor {
 namespace data {
 
   std::ostream &operator<<(std::ostream &out, const Image &image) {
-    out << "Image(" << image.GetWidth() << 'x' << image.GetHeight()
-        << ", frame=" << image.GetFrameNumber() << ')';
+    out << "Image(frame=" << image.GetFrameNumber()
+        << ", size=" << image.GetWidth() << 'x' << image.GetHeight()
+        << ')';
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const LidarMeasurement &meas) {
+    out << "LidarMeasurement(frame=" << meas.GetFrameNumber()
+        << ", number_of_points=" << meas.size()
+        << ')';
     return out;
   }
 
 } // namespace data
 } // namespace sensor
 } // namespace carla
+
+template <typename T>
+static auto GetRawDataAsBuffer(T &self) {
+  auto *data = reinterpret_cast<unsigned char *>(self.data());
+  auto size = sizeof(typename T::value_type) * self.size();
+#if PYTHON3X // NOTE(Andrei): python 3
+  auto *ptr = PyMemoryView_FromMemory(reinterpret_cast<char *>(data), size, PyBUF_READ);
+#else        // NOTE(Andrei): python 2
+  auto *ptr = PyBuffer_FromMemory(data, size);
+#endif
+  return boost::python::object(boost::python::handle<>(ptr));
+}
 
 void export_sensor() {
   using namespace boost::python;
@@ -72,17 +94,19 @@ void export_sensor() {
     .add_property("width", &csd::Image::GetWidth)
     .add_property("height", &csd::Image::GetHeight)
     .add_property("fov", &csd::Image::GetFOVAngle)
-    .add_property("raw_data", +[](csd::Image &self) {
-      // An image is an Array<Color>, convert back to buffer of chars.
-      auto *data = reinterpret_cast<unsigned char *>(self.data());
-      auto size = sizeof(csd::Image::value_type) * self.size();
-#if PYTHON3X // NOTE(Andrei): python37
-      auto *ptr = PyMemoryView_FromMemory(reinterpret_cast<char *>(data), size, PyBUF_READ);
-#else        // NOTE(Andrei): python2.7
-      auto *ptr = PyBuffer_FromMemory(data, size);
-#endif
-      return object(handle<>(ptr));
-    })
+    .add_property("raw_data", &GetRawDataAsBuffer<csd::Image>)
+    .def("__len__", &csd::Image::size)
+    .def("__iter__", iterator<csd::Image>())
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<csd::LidarMeasurement, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::LidarMeasurement>>("LidarMeasurement", no_init)
+    .add_property("horizontal_angle", &csd::LidarMeasurement::GetHorizontalAngle)
+    .add_property("channels", &csd::LidarMeasurement::GetChannelCount)
+    .add_property("raw_data", &GetRawDataAsBuffer<csd::LidarMeasurement>)
+    .def("get_point_count", &csd::LidarMeasurement::GetPointCount, (arg("channel")))
+    .def("__len__", &csd::LidarMeasurement::size)
+    .def("__iter__", iterator<csd::LidarMeasurement>())
     .def(self_ns::str(self_ns::self))
   ;
 

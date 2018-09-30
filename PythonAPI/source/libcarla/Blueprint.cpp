@@ -35,12 +35,22 @@ namespace std {
 } // namespace std
 
 namespace carla {
-namespace client {
+
+namespace sensor {
+namespace data {
 
   std::ostream &operator<<(std::ostream &out, const Color &color) {
-    out << "Color(" << int(color.r) << ',' << int(color.g) << ',' << int(color.b) << ')';
+    out << "Color(" << int(color.r)
+        << ',' << int(color.g)
+        << ',' << int(color.b)
+        << ',' << int(color.a) << ')';
     return out;
   }
+
+} // namespace data
+} // namespace sensor
+
+namespace client {
 
   std::ostream &operator<<(std::ostream &out, const ActorAttribute &attr) {
     using Type = carla::rpc::ActorAttributeType;
@@ -88,6 +98,7 @@ void export_blueprint() {
   using namespace boost::python;
   namespace cc = carla::client;
   namespace crpc = carla::rpc;
+  namespace csd = carla::sensor::data;
 
   enum_<crpc::ActorAttributeType>("ActorAttributeType")
     .value("Bool", crpc::ActorAttributeType::Bool)
@@ -97,11 +108,13 @@ void export_blueprint() {
     .value("RGBColor", crpc::ActorAttributeType::RGBColor)
   ;
 
-  class_<cc::Color>("Color")
-    .def(init<uint8_t, uint8_t, uint8_t>((arg("r")=0, arg("g")=0, arg("b")=0)))
-    .def_readwrite("r", &cc::Color::r)
-    .def_readwrite("g", &cc::Color::g)
-    .def_readwrite("b", &cc::Color::b)
+  class_<csd::Color>("Color")
+    .def(init<uint8_t, uint8_t, uint8_t, uint8_t>(
+        (arg("r")=0, arg("g")=0, arg("b")=0, arg("a")=255)))
+    .def_readwrite("r", &csd::Color::r)
+    .def_readwrite("g", &csd::Color::g)
+    .def_readwrite("b", &csd::Color::b)
+    .def_readwrite("a", &csd::Color::a)
     .def(self_ns::str(self_ns::self))
   ;
 
