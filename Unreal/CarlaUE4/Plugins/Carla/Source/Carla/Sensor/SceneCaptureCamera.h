@@ -18,18 +18,9 @@ class CARLA_API ASceneCaptureCamera : public ASceneCaptureSensor
 
 public:
 
-  static FActorDefinition GetSensorDefinition()
-  {
-    return UActorBlueprintFunctionLibrary::MakeCameraDefinition(TEXT("camera"));
-  }
-
-  using ASceneCaptureSensor::EnablePostProcessingEffects;
+  static FActorDefinition GetSensorDefinition();
 
 protected:
 
-  void Tick(float DeltaTime) override
-  {
-    Super::Tick(DeltaTime);
-    FPixelReader::SendPixelsInRenderThread(*this);
-  }
+  void Tick(float DeltaTime) override;
 };

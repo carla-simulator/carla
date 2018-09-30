@@ -11,7 +11,8 @@
 
 #include "SensorFactory.generated.h"
 
-/// Object in charge of spawning sensors.
+/// Object in charge of spawning sensors. Automatically looks for all the
+/// sensors registered in carla::sensor::SensorRegistry.
 UCLASS()
 class CARLA_API ASensorFactory : public ACarlaActorFactory
 {

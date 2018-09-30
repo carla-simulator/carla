@@ -34,6 +34,8 @@ public:
 
   ASceneCaptureSensor(const FObjectInitializer &ObjectInitializer);
 
+  void Set(const FActorDescription &ActorDescription) override;
+
   void SetImageSize(uint32 Width, uint32 Height);
 
   uint32 GetImageWidth() const

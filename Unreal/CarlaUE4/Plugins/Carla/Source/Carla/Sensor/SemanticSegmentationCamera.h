@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "Carla/Sensor/PixelReader.h"
 #include "Carla/Sensor/ShaderBasedSensor.h"
 
 #include "SemanticSegmentationCamera.generated.h"
@@ -18,22 +17,11 @@ class CARLA_API ASemanticSegmentationCamera : public AShaderBasedSensor
 
 public:
 
-  static FActorDefinition GetSensorDefinition()
-  {
-    return UActorBlueprintFunctionLibrary::MakeCameraDefinition(TEXT("semseg_camera"));
-  }
+  static FActorDefinition GetSensorDefinition();
 
-  ASemanticSegmentationCamera(const FObjectInitializer &ObjectInitializer)
-    : Super(ObjectInitializer)
-  {
-    LoadPostProcessingMaterial(TEXT("Material'/Carla/PostProcessingMaterials/GTMaterial.GTMaterial'"));
-  }
+  ASemanticSegmentationCamera(const FObjectInitializer &ObjectInitializer);
 
 protected:
 
-  void Tick(float DeltaTime) override
-  {
-    Super::Tick(DeltaTime);
-    FPixelReader::SendPixelsInRenderThread(*this);
-  }
+  void Tick(float DeltaTime) override;
 };

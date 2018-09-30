@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "Carla/Sensor/PixelReader.h"
 #include "Carla/Sensor/ShaderBasedSensor.h"
 
 #include "DepthCamera.generated.h"
@@ -18,28 +17,11 @@ class CARLA_API ADepthCamera : public AShaderBasedSensor
 
 public:
 
-  static FActorDefinition GetSensorDefinition()
-  {
-    return UActorBlueprintFunctionLibrary::MakeCameraDefinition(TEXT("depth_camera"));
-  }
+  static FActorDefinition GetSensorDefinition();
 
-  ADepthCamera(const FObjectInitializer &ObjectInitializer)
-    : Super(ObjectInitializer)
-  {
-    LoadPostProcessingMaterial(
-#if PLATFORM_LINUX
-        TEXT("Material'/Carla/PostProcessingMaterials/DepthEffectMaterial_GLSL.DepthEffectMaterial_GLSL'")
-#else
-        TEXT("Material'/Carla/PostProcessingMaterials/DepthEffectMaterial.DepthEffectMaterial'")
-#endif
-    );
-  }
+  ADepthCamera(const FObjectInitializer &ObjectInitializer);
 
 protected:
 
-  void Tick(float DeltaTime) override
-  {
-    Super::Tick(DeltaTime);
-    FPixelReader::SendPixelsInRenderThread(*this);
-  }
+  void Tick(float DeltaTime) override;
 };

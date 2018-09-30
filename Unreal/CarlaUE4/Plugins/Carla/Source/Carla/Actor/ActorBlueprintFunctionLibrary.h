@@ -7,11 +7,14 @@
 #pragma once
 
 #include "Carla/Actor/ActorDefinition.h"
+#include "Carla/Actor/ActorDescription.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
 #include "Kismet/BlueprintFunctionLibrary.h"
 
 #include "ActorBlueprintFunctionLibrary.generated.h"
+
+class ASceneCaptureSensor;
 
 USTRUCT(BlueprintType)
 struct CARLA_API FVehicleParameters
@@ -61,11 +64,14 @@ public:
   /// ==========================================================================
   /// @{
 
-  static FActorDefinition MakeCameraDefinition(const FString &Id);
+  static FActorDefinition MakeCameraDefinition(
+      const FString &Id,
+      bool bEnableModifyingPostProcessEffects = false);
 
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static void MakeCameraDefinition(
       const FString &Id,
+      bool bEnableModifyingPostProcessEffects,
       bool &Success,
       FActorDefinition &Definition);
 
@@ -130,6 +136,15 @@ public:
       const FString &Id,
       const TMap<FString, FActorAttribute> &Attributes,
       const FColor &Default);
+
+  /// @}
+  /// ==========================================================================
+  /// @name Helpers to set Actors
+  /// ==========================================================================
+  /// @{
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void SetActor(const FActorDescription &Description, ASceneCaptureSensor *Camera);
 
   /// @}
 };
