@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/NonCopyable.h"
+#include "carla/Time.h"
 #include "carla/Version.h"
 #include "carla/client/Control.h"
 #include "carla/client/Memory.h"
@@ -40,8 +41,8 @@ namespace client {
         uint16_t port,
         size_t worker_threads = 0u);
 
-    void SetTimeout(int64_t milliseconds) {
-      _client.set_timeout(milliseconds);
+    void SetTimeout(time_duration timeout) {
+      _client.set_timeout(timeout.milliseconds());
     }
 
     template <typename T, typename ... Args>
