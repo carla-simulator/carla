@@ -71,6 +71,7 @@ CAMERA_POSITION = carla.Transform(carla.Location(x=0.5, z=1.40))
 class CarlaGame(object):
     def __init__(self, args):
         self._client = carla.Client(args.host, args.port)
+        self._client.set_timeout(2.0)
         self._display = None
         self._surface = None
         self._camera = None
