@@ -11,7 +11,7 @@
 
 FActorDefinition ASemanticSegmentationCamera::GetSensorDefinition()
 {
-  return UActorBlueprintFunctionLibrary::MakeCameraDefinition(TEXT("semseg_camera"));
+  return UActorBlueprintFunctionLibrary::MakeCameraDefinition(TEXT("semantic_segmentation"));
 }
 
 ASemanticSegmentationCamera::ASemanticSegmentationCamera(

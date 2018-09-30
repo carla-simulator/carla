@@ -11,7 +11,7 @@
 
 FActorDefinition ADepthCamera::GetSensorDefinition()
 {
-  return UActorBlueprintFunctionLibrary::MakeCameraDefinition(TEXT("depth_camera"));
+  return UActorBlueprintFunctionLibrary::MakeCameraDefinition(TEXT("depth"));
 }
 
 ADepthCamera::ADepthCamera(const FObjectInitializer &ObjectInitializer)
