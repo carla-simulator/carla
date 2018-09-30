@@ -12,6 +12,10 @@ namespace carla {
 namespace sensor {
 namespace s11n {
 
+  static_assert(
+      SensorHeaderSerializer::header_offset == 2u * 8u + 6u * 4u,
+      "Header size missmatch");
+
   static Buffer PopBufferFromPool() {
     static auto pool = std::make_shared<BufferPool>();
     return pool->Pop();
