@@ -15,9 +15,11 @@
 
 // 1. Include the serializer here.
 #include "carla/sensor/s11n/ImageSerializer.h"
+#include "carla/sensor/s11n/LidarSerializer.h"
 
 // 2. Add a forward-declaration of the sensor here.
 class ADepthCamera;
+class ARayCastLidar;
 class ASceneCaptureCamera;
 class ASemanticSegmentationCamera;
 
@@ -30,7 +32,8 @@ namespace sensor {
   using SensorRegistry = CompositeSerializer<
     std::pair<ASceneCaptureCamera *, s11n::ImageSerializer>,
     std::pair<ADepthCamera *, s11n::ImageSerializer>,
-    std::pair<ASemanticSegmentationCamera *, s11n::ImageSerializer>
+    std::pair<ASemanticSegmentationCamera *, s11n::ImageSerializer>,
+    std::pair<ARayCastLidar *, s11n::LidarSerializer>
   >;
 
 } // namespace sensor
@@ -42,6 +45,7 @@ namespace sensor {
 
 // 4. Include the sensor here.
 #include "Carla/Sensor/DepthCamera.h"
+#include "Carla/Sensor/RayCastLidar.h"
 #include "Carla/Sensor/SceneCaptureCamera.h"
 #include "Carla/Sensor/SemanticSegmentationCamera.h"
 

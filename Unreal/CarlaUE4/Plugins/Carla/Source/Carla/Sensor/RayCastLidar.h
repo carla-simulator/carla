@@ -9,21 +9,30 @@
 #include "Carla/Sensor/Sensor.h"
 
 #include "Carla/Sensor/LidarDescription.h"
-#include "Carla/Sensor/LidarMeasurement.h"
 
-#include "RayTraceLidar.generated.h"
+#include <compiler/disable-ue4-macros.h>
+#include <carla/sensor/s11n/LidarMeasurement.h>
+#include <compiler/enable-ue4-macros.h>
 
-/// A ray-trace based Lidar sensor.
+#include "RayCastLidar.generated.h"
+
+/// A ray-cast based Lidar sensor.
 UCLASS()
-class CARLA_API ARayTraceLidar : public ASensor
+class CARLA_API ARayCastLidar : public ASensor
 {
   GENERATED_BODY()
 
+  using FLidarMeasurement = carla::sensor::s11n::LidarMeasurement;
+
 public:
 
-  ARayTraceLidar(const FObjectInitializer &ObjectInitializer);
+  static FActorDefinition GetSensorDefinition();
 
-  void SetLidar(const FLidarDescription &LidarDescription);
+  ARayCastLidar(const FObjectInitializer &ObjectInitializer);
+
+  void Set(const FActorDescription &Description) override;
+
+  void Set(const FLidarDescription &LidarDescription);
 
 protected:
 

@@ -78,7 +78,7 @@ ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer& ObjectInitial
 void ASceneCaptureSensor::Set(const FActorDescription &Description)
 {
   Super::Set(Description);
-  UActorBlueprintFunctionLibrary::SetActor(Description, this);
+  UActorBlueprintFunctionLibrary::SetCamera(Description, this);
 }
 
 void ASceneCaptureSensor::SetImageSize(uint32 InWidth, uint32 InHeight)

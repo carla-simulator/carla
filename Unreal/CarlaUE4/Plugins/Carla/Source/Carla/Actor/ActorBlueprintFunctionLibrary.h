@@ -15,6 +15,7 @@
 #include "ActorBlueprintFunctionLibrary.generated.h"
 
 class ASceneCaptureSensor;
+struct FLidarDescription;
 
 USTRUCT(BlueprintType)
 struct CARLA_API FVehicleParameters
@@ -72,6 +73,15 @@ public:
   static void MakeCameraDefinition(
       const FString &Id,
       bool bEnableModifyingPostProcessEffects,
+      bool &Success,
+      FActorDefinition &Definition);
+
+  static FActorDefinition MakeLidarDefinition(
+      const FString &Id);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakeLidarDefinition(
+      const FString &Id,
       bool &Success,
       FActorDefinition &Definition);
 
@@ -144,7 +154,9 @@ public:
   /// @{
 
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
-  static void SetActor(const FActorDescription &Description, ASceneCaptureSensor *Camera);
+  static void SetCamera(const FActorDescription &Description, ASceneCaptureSensor *Camera);
+
+  static void SetLidar(const FActorDescription &Description, FLidarDescription &Lidar);
 
   /// @}
 };

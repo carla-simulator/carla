@@ -16,7 +16,7 @@ namespace carla {
 namespace sensor {
 namespace data {
 
-  template <size_t Offset, typename T>
+  template <typename T>
   class Array : public SensorData {
   public:
 
@@ -28,11 +28,11 @@ namespace data {
     using reference = typename std::iterator_traits<iterator>::reference;
 
     iterator begin() {
-     return reinterpret_cast<iterator>(_message.begin() + Offset);
+     return reinterpret_cast<iterator>(_message.begin() + _offset);
     }
 
     const_iterator cbegin() const {
-     return reinterpret_cast<const_iterator>(_message.begin() + Offset);
+     return reinterpret_cast<const_iterator>(_message.begin() + _offset);
     }
 
     const_iterator begin() const {
@@ -77,11 +77,19 @@ namespace data {
 
   protected:
 
-    explicit Array(DataMessage message)
+    explicit Array(size_t offset, DataMessage message)
       : SensorData(message),
         _message(std::move(message)) {
-      DEBUG_ASSERT(_message.size() >= Offset);
-      DEBUG_ASSERT((_message.size() - Offset) % sizeof(T) == 0u);
+      SetOffset(offset);
+    }
+
+    explicit Array(DataMessage message)
+      : Array(0u, std::move(message)) {}
+
+    void SetOffset(size_t offset) {
+      DEBUG_ASSERT(_message.size() >= _offset);
+      DEBUG_ASSERT((_message.size() - _offset) % sizeof(T) == 0u);
+      _offset = offset;
     }
 
     const DataMessage &GetMessage() const {
@@ -89,6 +97,8 @@ namespace data {
     }
 
   private:
+
+    size_t _offset;
 
     DataMessage _message;
   };

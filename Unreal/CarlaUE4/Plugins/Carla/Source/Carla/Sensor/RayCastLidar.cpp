@@ -5,14 +5,21 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
-#include "Carla/Sensor/RayTraceLidar.h"
+#include "Carla/Sensor/RayCastLidar.h"
+
+#include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
 #include "DrawDebugHelpers.h"
 #include "Engine/CollisionProfile.h"
 #include "Runtime/Engine/Classes/Kismet/KismetMathLibrary.h"
 #include "StaticMeshResources.h"
 
-ARayTraceLidar::ARayTraceLidar(const FObjectInitializer& ObjectInitializer)
+FActorDefinition ARayCastLidar::GetSensorDefinition()
+{
+  return UActorBlueprintFunctionLibrary::MakeLidarDefinition(TEXT("ray_cast"));
+}
+
+ARayCastLidar::ARayCastLidar(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer)
 {
   PrimaryActorTick.bCanEverTick = true;
@@ -25,14 +32,22 @@ ARayTraceLidar::ARayTraceLidar(const FObjectInitializer& ObjectInitializer)
   RootComponent = MeshComp;
 }
 
-void ARayTraceLidar::SetLidar(const FLidarDescription &LidarDescription)
+void ARayCastLidar::Set(const FActorDescription &ActorDescription)
+{
+  Super::Set(ActorDescription);
+  FLidarDescription LidarDescription;
+  UActorBlueprintFunctionLibrary::SetLidar(ActorDescription, LidarDescription);
+  Set(LidarDescription);
+}
+
+void ARayCastLidar::Set(const FLidarDescription &LidarDescription)
 {
   Description = LidarDescription;
   LidarMeasurement = FLidarMeasurement(Description.Channels);
   CreateLasers();
 }
 
-void ARayTraceLidar::CreateLasers()
+void ARayCastLidar::CreateLasers()
 {
   const auto NumberOfLasers = Description.Channels;
   check(NumberOfLasers > 0u);
@@ -48,20 +63,17 @@ void ARayTraceLidar::CreateLasers()
   }
 }
 
-void ARayTraceLidar::Tick(const float DeltaTime)
+void ARayCastLidar::Tick(const float DeltaTime)
 {
   Super::Tick(DeltaTime);
 
   ReadPoints(DeltaTime);
 
-  /// @todo Here we send the data.
-  // auto &Stream = GetDataStream();
-  // auto Buffer = Stream.PopBufferFromPool();
-  // LidarMeasurement.CopyToBuffer(Buffer);
-  // Stream.Send_GameThread(*this, std::move(Buffer));
+  auto &Stream = GetDataStream();
+  Stream.Send_GameThread(*this, LidarMeasurement, Stream.PopBufferFromPool());
 }
 
-void ARayTraceLidar::ReadPoints(const float DeltaTime)
+void ARayCastLidar::ReadPoints(const float DeltaTime)
 {
   const uint32 ChannelCount = Description.Channels;
   const uint32 PointsToScanWithOneLaser =
@@ -103,7 +115,7 @@ void ARayTraceLidar::ReadPoints(const float DeltaTime)
   LidarMeasurement.SetHorizontalAngle(HorizontalAngle);
 }
 
-bool ARayTraceLidar::ShootLaser(const uint32 Channel, const float HorizontalAngle, FVector &XYZ) const
+bool ARayCastLidar::ShootLaser(const uint32 Channel, const float HorizontalAngle, FVector &XYZ) const
 {
   const float VerticalAngle = LaserAngles[Channel];
 
