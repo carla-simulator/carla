@@ -99,7 +99,7 @@ else
   ./bootstrap.sh \
       --with-toolset=clang \
       --prefix=../boost-install \
-      --with-libraries=python
+      --with-libraries=python,filesystem
   ./b2 clean
   ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j 12 stage release
   ./b2 install toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j 12
