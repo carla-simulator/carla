@@ -8,7 +8,7 @@
 ## `carla.Client`
 
 - `Client(host, port, worker_threads=0)`
-- `set_timeout(milliseconds)`
+- `set_timeout(seconds)`
 - `get_client_version()`
 - `get_server_version()`
 - `ping()`

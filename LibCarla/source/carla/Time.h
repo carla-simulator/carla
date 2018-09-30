@@ -49,6 +49,10 @@ namespace carla {
       return to_posix_time();
     }
 
+    constexpr size_t milliseconds() const noexcept {
+      return _milliseconds;
+    }
+
   private:
 
     size_t _milliseconds;
