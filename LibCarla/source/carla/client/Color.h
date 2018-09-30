@@ -6,27 +6,12 @@
 
 #pragma once
 
-#include <cstdint>
+#include "carla/sensor/data/Color.h"
 
 namespace carla {
 namespace client {
 
-  struct Color {
-    Color() = default;
-    Color(uint8_t r, uint8_t g, uint8_t b) : r(r), g(g), b(b) {}
-
-    bool operator==(const Color &rhs) const  {
-      return (r == rhs.r) && (g == rhs.g) && (b == rhs.b);
-    }
-
-    bool operator!=(const Color &rhs) const  {
-      return !(*this == rhs);
-    }
-
-    uint8_t r = 0u;
-    uint8_t g = 0u;
-    uint8_t b = 0u;
-  };
+  using Color = carla::sensor::data::Color;
 
 } // namespace client
 } // namespace carla

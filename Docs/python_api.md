@@ -38,8 +38,8 @@
 - `contains_attribute(key)`
 - `get_attribute(key)`
 - `set_attribute(key, value)`
-- `__len__`
-- `__iter__`
+- `__len__()`
+- `__iter__()`
 
 ## `carla.ActorAttribute`
 
@@ -83,11 +83,25 @@
 ## `carla.Image`
 
 - `frame_number`
+- `transform`
 - `width`
 - `height`
 - `type`
 - `fov`
 - `raw_data`
+- `__len__()`
+- `__iter__()`
+
+## `carla.LidarMeasurement`
+
+- `frame_number`
+- `transform`
+- `horizontal_angle`
+- `channels`
+- `raw_data`
+- `get_point_count(channel)`
+- `__len__()`
+- `__iter__()`
 
 ## `carla.VehicleControl`
 
@@ -119,3 +133,4 @@
 - `r`
 - `g`
 - `b`
+- `a`
