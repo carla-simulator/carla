@@ -16,7 +16,7 @@ namespace client {
   public:
 
     template <typename Functor>
-    void Listen(Functor callback) {
+    void Listen(Functor &&callback) {
       /// @todo should we check if we are already listening?
       log_debug("sensor", GetId(), "type", GetTypeId(), ": subscribing to stream");
       GetWorld()->GetClient().SubscribeToStream(_stream_token, std::forward<Functor>(callback));
