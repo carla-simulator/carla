@@ -20,6 +20,8 @@ class CARLA_API ASensor : public AActor
 
 public:
 
+  virtual void Set(const FActorDescription &) {}
+
   /// @warning Do not change the stream after BeginPlay. It is not thread-safe.
   void SetDataStream(FDataStream InStream)
   {

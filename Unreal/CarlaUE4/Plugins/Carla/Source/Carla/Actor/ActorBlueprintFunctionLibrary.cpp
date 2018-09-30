@@ -7,6 +7,7 @@
 #include "Carla.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
+#include "Carla/Sensor/SceneCaptureSensor.h"
 #include "Carla/Util/ScopedStack.h"
 
 #include <algorithm>
@@ -186,17 +187,19 @@ bool UActorBlueprintFunctionLibrary::CheckActorDefinitions(const TArray<FActorDe
 /// ============================================================================
 
 FActorDefinition UActorBlueprintFunctionLibrary::MakeCameraDefinition(
-    const FString &Id)
+    const FString &Id,
+    const bool bEnableModifyingPostProcessEffects)
 {
   FActorDefinition Definition;
   bool Success;
-  MakeCameraDefinition(Id, Success, Definition);
+  MakeCameraDefinition(Id, bEnableModifyingPostProcessEffects, Success, Definition);
   check(Success);
   return Definition;
 }
 
 void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     const FString &Id,
+    const bool bEnableModifyingPostProcessEffects,
     bool &Success,
     FActorDefinition &Definition)
 {
@@ -221,6 +224,17 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
   ResY.bRestrictToRecommended = false;
 
   Definition.Variations = {ResX, ResY, FOV};
+
+  if (bEnableModifyingPostProcessEffects)
+  {
+    FActorVariation PostProccess;
+    PostProccess.Id = TEXT("enable_postprocess_effects");
+    PostProccess.Type = EActorAttributeType::Bool;
+    PostProccess.RecommendedValues = { TEXT("true") };
+    PostProccess.bRestrictToRecommended = false;
+    Definition.Variations.Add(PostProccess);
+  }
+
   Success = CheckActorDefinition(Definition);
 }
 
@@ -410,3 +424,42 @@ FColor UActorBlueprintFunctionLibrary::RetrieveActorAttributeToColor(
       ActorAttributeToColor(Attributes[Id], Default) :
       Default;
 }
+
+/// ============================================================================
+/// -- Helpers to set Actors ---------------------------------------------------
+/// ============================================================================
+
+// Here we do different checks when we are in editor, because we don't want the
+// editor crashing while people is testing new actor definitions.
+#if WITH_EDITOR
+#  define CARLA_ABFL_CHECK_ACTOR(ActorPtr) \
+        if ((ActorPtr == nullptr) || ActorPtr->IsPendingKill()) \
+        { \
+          UE_LOG(LogCarla, Error, TEXT("Cannot set empty actor!")); \
+          return; \
+        }
+#else
+#  define CARLA_ABFL_CHECK_ACTOR(ActorPtr) \
+        check((ActorPtr != nullptr) && !ActorPtr->IsPendingKill());
+#endif // WITH_EDITOR
+
+void UActorBlueprintFunctionLibrary::SetActor(
+    const FActorDescription &Description,
+    ASceneCaptureSensor *Camera)
+{
+  CARLA_ABFL_CHECK_ACTOR(Camera);
+  Camera->SetImageSize(
+      RetrieveActorAttributeToInt("image_size_x", Description.Variations, 800),
+      RetrieveActorAttributeToInt("image_size_y", Description.Variations, 600));
+  Camera->SetFOVAngle(
+      RetrieveActorAttributeToFloat("fov", Description.Variations, 90.0f));
+  if (Description.Variations.Contains("enable_postprocess_effects"))
+  {
+    Camera->EnablePostProcessingEffects(
+        ActorAttributeToBool(
+            Description.Variations["enable_postprocess_effects"],
+            true));
+  }
+}
+
+#undef CARLA_ABFL_CHECK_ACTOR

@@ -25,7 +25,7 @@ ARayTraceLidar::ARayTraceLidar(const FObjectInitializer& ObjectInitializer)
   RootComponent = MeshComp;
 }
 
-void ARayTraceLidar::Set(const FLidarDescription &LidarDescription)
+void ARayTraceLidar::SetLidar(const FLidarDescription &LidarDescription)
 {
   Description = LidarDescription;
   LidarMeasurement = FLidarMeasurement(Description.Channels);

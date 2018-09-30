@@ -23,7 +23,7 @@ public:
 
   ARayTraceLidar(const FObjectInitializer &ObjectInitializer);
 
-  void Set(const FLidarDescription &LidarDescription);
+  void SetLidar(const FLidarDescription &LidarDescription);
 
 protected:
 

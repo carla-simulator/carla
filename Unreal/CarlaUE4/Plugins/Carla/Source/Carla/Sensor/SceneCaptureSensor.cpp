@@ -75,6 +75,12 @@ ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer& ObjectInitial
   ++SCENE_CAPTURE_COUNTER;
 }
 
+void ASceneCaptureSensor::Set(const FActorDescription &Description)
+{
+  Super::Set(Description);
+  UActorBlueprintFunctionLibrary::SetActor(Description, this);
+}
+
 void ASceneCaptureSensor::SetImageSize(uint32 InWidth, uint32 InHeight)
 {
   ImageWidth = InWidth;

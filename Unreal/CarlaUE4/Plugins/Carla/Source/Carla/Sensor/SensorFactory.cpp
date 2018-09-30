@@ -7,8 +7,7 @@
 #include "Carla.h"
 #include "Carla/Sensor/SensorFactory.h"
 
-#include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
-#include "Carla/Sensor/SceneCaptureCamera.h"
+#include "Carla/Sensor/Sensor.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/sensor/SensorRegistry.h>
@@ -59,27 +58,25 @@ FActorSpawnResult ASensorFactory::SpawnActor(
     const FTransform &Transform,
     const FActorDescription &Description)
 {
-  FActorSpawnParameters Params;
   auto *World = GetWorld();
   if (World == nullptr)
   {
+    UE_LOG(LogCarla, Error, TEXT("ASensorFactory: cannot spawn sensor into empty world."));
     return {};
   }
-  /// @todo Here we may spawn something else than a scene capture.
-  auto *Sensor = World->SpawnActorDeferred<ASceneCaptureSensor>(
+  auto *Sensor = World->SpawnActorDeferred<ASensor>(
       Description.Class,
       Transform,
       this,
       nullptr,
       ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
-  if (Sensor != nullptr)
+  if (Sensor == nullptr)
   {
-    using ABFL = UActorBlueprintFunctionLibrary;
-    Sensor->SetImageSize(
-        ABFL::RetrieveActorAttributeToInt("image_size_x", Description.Variations, 800),
-        ABFL::RetrieveActorAttributeToInt("image_size_y", Description.Variations, 600));
-    Sensor->SetFOVAngle(
-        ABFL::RetrieveActorAttributeToFloat("fov", Description.Variations, 90.0f));
+    UE_LOG(LogCarla, Error, TEXT("ASensorFactory: spawn sensor failed."));
+  }
+  else
+  {
+    Sensor->Set(Description);
   }
   UGameplayStatics::FinishSpawningActor(Sensor, Transform);
   return FActorSpawnResult{Sensor};
