@@ -11,7 +11,8 @@
 #include <carla/sensor/SensorRegistry.h>
 #include <compiler/enable-ue4-macros.h>
 
-class UTextureRenderTarget2D;
+#include "CoreGlobals.h"
+#include "Engine/TextureRenderTarget2D.h"
 
 // =============================================================================
 // -- FPixelReader -------------------------------------------------------------
