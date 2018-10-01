@@ -69,19 +69,23 @@ public:
       });
     }
 
+    const auto expected_number_of_messages = _streams.size() * number_of_messages;
     for (auto i = 0u; i < 30; ++i) {
-      if (_number_of_messages_received >= (_streams.size() * number_of_messages)) {
+      std::cout << "received " << _number_of_messages_received
+                << " of " << expected_number_of_messages
+                << " messages,";
+      if (_number_of_messages_received >= expected_number_of_messages) {
         break;
       }
-      std::cout << "received only " << _number_of_messages_received
-                << " messages, waiting..." << std::endl;
+      std::cout << " waiting..." << std::endl;
       std::this_thread::sleep_for(1s);
     }
 
     _client_callback.stop();
     _threads.JoinAll();
 
-    std::cout << _number_of_messages_received << " messages received; done.\n";
+    ASSERT_EQ(_number_of_messages_received, expected_number_of_messages);
+    std::cout << " done." << std::endl;
 
     _client.Stop();
     _server.Stop();

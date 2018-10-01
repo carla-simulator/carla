@@ -20,6 +20,9 @@
 #include <memory>
 
 namespace carla {
+
+  class BufferPool;
+
 namespace streaming {
 namespace detail {
 namespace tcp {
@@ -65,6 +68,8 @@ namespace tcp {
     boost::asio::io_service::strand _strand;
 
     boost::asio::deadline_timer _connection_timer;
+
+    std::shared_ptr<BufferPool> _buffer_pool;
 
     bool _done = false;
   };
