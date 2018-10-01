@@ -93,7 +93,7 @@ namespace carla {
     }
 
     ~Buffer() {
-      if (_size > 0u) {
+      if (_capacity > 0u) {
         ReuseThisBuffer();
       }
     }
