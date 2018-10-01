@@ -77,9 +77,9 @@ namespace tcp {
 
     message_size_type _total_size = 0u;
 
-    std::array<Buffer, max_size()> _buffers;
+    std::array<Buffer, MaxNumberOfBuffers> _buffers;
 
-    std::array<boost::asio::const_buffer, max_size() + 1u> _buffer_views;
+    std::array<boost::asio::const_buffer, MaxNumberOfBuffers + 1u> _buffer_views;
   };
 
   /// A TCP message containing a maximum of 2 buffers. This is optimized for a
