@@ -6,6 +6,7 @@
 
 #include "carla/streaming/detail/tcp/Client.h"
 
+#include "carla/BufferPool.h"
 #include "carla/Debug.h"
 #include "carla/Logging.h"
 #include "carla/Time.h"
@@ -30,13 +31,14 @@ namespace tcp {
   class IncomingMessage {
   public:
 
+    explicit IncomingMessage(Buffer buffer) : _message(std::move(buffer)) {}
+
     boost::asio::mutable_buffer size_as_buffer() {
       return boost::asio::buffer(&_size, sizeof(_size));
     }
 
     boost::asio::mutable_buffer buffer() {
       DEBUG_ASSERT(_size > 0u);
-      DEBUG_ASSERT(_message.empty());
       _message.reset(_size);
       return _message.buffer();
     }
@@ -68,7 +70,8 @@ namespace tcp {
       _callback(std::move(callback)),
       _socket(io_service),
       _strand(io_service),
-      _connection_timer(io_service) {
+      _connection_timer(io_service),
+      _buffer_pool(std::make_shared<BufferPool>()) {
     if (!_token.protocol_is_tcp()) {
       throw std::invalid_argument("invalid token, only TCP tokens supported");
     }
@@ -153,7 +156,7 @@ namespace tcp {
 
       log_debug("streaming client: Client::ReadData");
 
-      auto message = std::make_shared<IncomingMessage>();
+      auto message = std::make_shared<IncomingMessage>(_buffer_pool->Pop());
 
       auto handle_read_data = [=](boost::system::error_code ec, size_t DEBUG_ONLY(bytes)) {
         DEBUG_ONLY(log_debug("streaming client: Client::ReadData.handle_read_data", bytes, "bytes"));
