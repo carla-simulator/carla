@@ -1,0 +1,294 @@
+syntax = "proto3";
+
+option optimize_for = SPEED;
+
+import "osi_version.proto";
+import "osi_common.proto";
+import "osi_detectedtrafficsign.proto";
+import "osi_detectedtrafficlight.proto";
+import "osi_detectedroadmarking.proto";
+import "osi_detectedlane.proto";
+import "osi_detectedobject.proto";
+import "osi_detectedoccupant.proto";
+import "osi_sensorview.proto";
+import "osi_featuredata.proto";
+
+package osi3;
+
+//
+// \brief The header attributes of each detected entity.
+//
+message DetectedEntityHeader
+{
+    // Time stamp at which the measurement was taken (not the time at which it
+    // was processed or at which it is transmitted) in the global synchronized
+    // time.
+    //
+    // \note See \c SensorData::timestamp and \c SensorData::last_measurement_time
+    // for detailed discussions on the semantics of time-related fields.
+    //
+    Timestamp measurement_time = 1;
+
+    // Continuous up counter to identify the cycle.
+    //
+    uint64 cycle_counter = 2;
+
+    // Data Qualifier expresses to what extent the content of this event can be
+    // relied on.
+    //
+    DataQualifier data_qualifier = 3;
+
+    //
+    // Data qualifier communicates the overall availability of the
+    // interface.
+    //
+    enum DataQualifier
+    {
+        // Unknown (must not be used in ground truth).
+        //
+        DATA_QUALIFIER_UNKNOWN = 0;
+
+        // Other (unspecified but known).
+        //
+        DATA_QUALIFIER_OTHER = 1;
+
+        // Data is available.
+        //
+        DATA_QUALIFIER_AVAILABLE = 2;
+
+        // Reduced data is available.
+        //
+        DATA_QUALIFIER_AVAILABLE_REDUCED = 3;
+
+        // Data is not available.
+        //
+        DATA_QUALIFIER_NOT_AVAILABLE = 4;
+
+        // Sensor is blind.
+        //
+        DATA_QUALIFIER_BLINDNESS = 5;
+
+        // Sensor temporary available.
+        //
+        DATA_QUALIFIER_TEMPORARY_AVAILABLE = 6;
+    }
+}
+
+//
+// \brief The sensor information derived from \c GroundTruth and processed by
+// sensor-models.
+//
+// The sensor information is supposed to imitate the output of real sensors.
+// All information regarding the environment is given with respect to
+// the virtual sensor coordinate system specified in
+// \c SensorData::mounting_position, except for feature data, which is given
+// with respect to the physical sensor coordinate system specified in the
+// corresponding physical sensor's coordinate system.
+//
+// When simulating multiple distinct sensors, each sensor can produce an
+// individual copy of the \c SensorData interface. This allows an independent
+// treatment of the sensors.
+//
+// Sensor fusion models can consolidate multiple \c SensorData interfaces into
+// one consolidated \c SensorData interface.  This can happen either in
+// seperate logical models, consuming and producing \c SensorData interfaces,
+// or it can happen as part of a combined sensor/logical model, that consumes
+// \c SensorView interfaces and directly produces one consolidated \c SensorData
+// output.
+//
+message SensorData
+{
+    // The interface version used by the sender.
+    //
+    InterfaceVersion version = 1;
+
+    // The timestamp of the sensor data. Zero time is arbitrary but must be
+    // identical for all messages. Zero time does not need to coincide with
+    // the unix epoch. Recommended is the starting time point of the
+    // simulation.
+    //
+    // \note This is the point in time that the sensor data message becomes
+    // available to the rest of the system (i.e. the driving functions), so
+    // it corresponds with the sending time and thus takes the latency of
+    // internal processing of the sensor into account. Latencies of bus
+    // communications, etc., that occur after the sensor output have to be
+    // applied on top of this, if needed.
+    //
+    // The time that the actual measurement was performed (which will usually
+    // correspond with the timestamp of the \c GroundTruth the sensor model
+    // processed to arrive at these results) can be found in the additional
+    // field \c SensorData::last_measurement_time.
+    //
+    // For an ideal zero latency sensor the two timestamps would be the same
+    // and would correspond with the timestamp from the current \c GroundTruth
+    // message.
+    //
+    // For a sensor model that does not know its own internal latencies (e.g.
+    // a dumb sensor with no internal time concept), the two timestamps might
+    // also be identical, but delayed from the \c GroundTruth timestamp.
+    //
+    Timestamp timestamp = 2;
+
+    // The sensors estimated location of the host vehicle
+    //
+    // \note This value is only set by sensors that are able to
+    // provide an own estimation of the host vehicle location.
+    // \note Note that dimension and base_polygon need not be set.
+    //
+    BaseMoving host_vehicle_location = 3;
+
+    // The sensors estimated location error of the host vehicle
+    //
+    // \note This value is only set by sensors that are able to
+    // provide an own estimation of the host vehicle location.
+    // \note Note that dimension and base_polygon need not be set.
+    //
+    BaseMoving host_vehicle_location_rmse = 4;
+
+    // The ID of the sensor at host vehicle's mounting_position.
+    //
+    // This is the ID of the virtual sensor, to be used in its detected
+    // object output; it is distinct from the IDs of its physical detectors,
+    // which are used in the detected features.
+    //
+    Identifier sensor_id = 5;
+
+    // The virtual mounting position of the sensor (origin and orientation
+    // of the sensor coordinate system) given in vehicle coordinates [1].
+    // The virtual position pertains to the sensor as a whole, regardless
+    // of the actual position of individual physical detectors, and governs
+    // the sensor-relative coordinates in detected objects of the sensor
+    // as a whole.  Individual features detected by individual physical
+    // detectors are governed by the actual physical mounting positions
+    // of the detectors, as indicated in the technology-specific sub-views
+    // and sub-view configurations.
+    //
+    // \arg \b x-direction of sensor coordinate system: sensor viewing direction
+    // \arg \b z-direction of sensor coordinate system: sensor (up)
+    // \arg \b y-direction of sensor coordinate system: perpendicular to x and z right hand system
+    //
+    // \par References:
+    // - [1] DIN ISO 8855:2013-11
+    //
+    // \note This field is usually static during the simulation.
+    // \note The origin of vehicle's coordinate system in world frame is
+    // ( \c MovingObject::base . \c BaseMoving::position + Inverse_Rotation_yaw_pitch_roll(
+    // \c MovingObject::base . \c BaseMoving::orientation) * 
+    // \c MovingObject::VehicleAttributes::bbcenter_to_rear) .
+    // The orientation of the vehicle's coordinate system is equal to the
+    // orientation of the vehicle's bounding box \c MovingObject::base . 
+    // \c BaseMoving::orientation.
+    //
+    MountingPosition mounting_position = 6;
+
+    // The root mean squared error of the mounting position.
+    //
+    MountingPosition mounting_position_rmse = 7;
+
+    // Sensor view w.r.t. the sensor coordinate system
+    //
+    // This provides a copy of the \c SensorView data received by the sensor
+    // for reference purposes.  For complex sensors or logic models this
+    // can be multiple copies.
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated SensorView sensor_view = 8;
+
+    // The timestamp of the last real-world measurement (e.g. GT input) that
+    // this set of sensor data takes into account. This in effect is the last
+    // time instance of reality the measurements correspond to. See field
+    // \c SensorData::timestamp for a detailed discussion. This value is also
+    // the upper bound to the \c DetectedEntityHeader::measurement_time and the
+    // feature data \c SensorDetectionHeader::measurement_time fields.
+    //
+    Timestamp last_measurement_time = 9;
+
+    // General information about the \c DetectedStationaryObject .
+    //
+    DetectedEntityHeader stationary_object_header = 10;
+
+    // The list of stationary objects (e.g. landmarks) detected by the sensor.
+    //
+    repeated DetectedStationaryObject stationary_object = 11;
+
+    // General information about the \c DetectedMovingObject .
+    //
+    DetectedEntityHeader moving_object_header = 12;
+
+    // The list of moving objects detected by the sensor as perceived by
+    // the sensor.
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated DetectedMovingObject moving_object = 13;
+
+    // General information about the \c DetectedTrafficSign .
+    //
+    DetectedEntityHeader traffic_sign_header = 14;
+
+    // The list of traffic signs detected by the sensor.
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated DetectedTrafficSign traffic_sign = 15;
+
+    // General information about the \c DetectedTrafficLight .
+    //
+    DetectedEntityHeader traffic_light_header = 16;
+
+    // The list of traffic lights detected by the sensor.
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated DetectedTrafficLight traffic_light = 17;
+
+    // General information about the \c DetectedRoadMarking .
+    //
+    DetectedEntityHeader road_marking_header = 18;
+
+    // The list of road markings detected by the sensor.
+    // This excludes lane boundary markings.
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated DetectedRoadMarking road_marking = 19;
+
+    // General information about the \c DetectedLaneBoundary .
+    //
+    DetectedEntityHeader lane_boundary_header = 20;
+
+    // The list of lane boundary markings detected by the sensor.
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated DetectedLaneBoundary lane_boundary = 21;
+
+    // General information about the \c DetectedLane .
+    //
+    DetectedEntityHeader lane_header = 22;
+
+    // The list of lanes detected by the sensor
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated DetectedLane lane = 23;
+
+    // General information about the \c DetectedOccupant .
+    //
+    DetectedEntityHeader occupant_header = 24;
+
+    // The list of occupants of the host vehicle
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated DetectedOccupant occupant = 25;
+
+    // Low level feature data interface.
+    //
+    // Low Level feature data is optionally provided by sensor models that
+    // model sensors giving access to this low level data, i.e. data prior to
+    // object hypothesis and tracking.
+    //
+    FeatureData feature_data = 26;
+}

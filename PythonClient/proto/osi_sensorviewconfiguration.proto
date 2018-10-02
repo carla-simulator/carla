@@ -1,0 +1,752 @@
+syntax = "proto3";
+
+option optimize_for = SPEED;
+
+import "osi_common.proto";
+import "osi_version.proto";
+
+package osi3;
+
+//
+// \brief The configuration settings for the \c SensorView to be provided
+// by the environment simulation.
+//
+// This message can be provided by the sensor model to the environment
+// simulation, in which case it describes the input configuration that
+// is desired by the sensor model. In response the environment simulation
+// will configure the input and provide a new message of this type, which
+// describes the actual configuration that it is going to employ. The two
+// can and will differ, when either the environment simulation does not
+// support a given requested configuration, and/or when the requested
+// configuration allowed for multiple alternatives, in which case the set
+// configuration will only contain the alternative chosen.
+//
+// It should be noted that this message is not intended to provide for
+// parametrization of a generic sensor model, but rather for the automatic
+// configuration of an environment simulation in order to supply the
+// necessary input to it, depending on its actual configuration.
+// Mechanisms to parametrize sensor models are currently packaging-specific,
+// i.e. they depend on the packaging mechanism chosen:  For FMU-packaging
+// the parametrization can be implemented using normal FMU parameters,
+// and the requested \c SensorViewConfiguration can depend on those parameter
+// values by being defined as a calculatedParameter.
+//
+// The sensor-technology specific configurations are intended to allow
+// sensor models to use useful sensor modeling base capabilities of the
+// environment simulation (e.g. ray tracing engines, camera/lens image
+// generation), which need configuration by the sensor model to supply
+// suitable data. The specified details are not directly related to
+// sensor details, but rather provide the necessary base machinery
+// setup so that the data provided is suitable to model the sensor to
+// a sufficient degree of fidelity internally. For example the number
+// of rays parameters for the Lidar configuration does not match one to
+// one with the number of laser rays a lidar sensor might cast, but
+// rather specifies the number of rays being cast by a ray
+// casting/tracing engine, which might be many more than the physical
+// rays being cast at any point in time.
+//
+// This also implies that for sensors that have dynamically varying
+// characteristics (e.g. switching between wide and narrow focus,
+// switching update rates, etc.), the basic approach is to specify
+// the maximum amount of data needed at all times here, and internally
+// select the data that is needed at any point in time.
+//
+// In order to optimize the workload and bandwidth needed for sensor
+// simulation, OSI packaging mechanisms can specify the ability to
+// exchange \c SensorViewConfiguration messages not only prior to
+// simulation startup, but also dynamically during simulation runs,
+// thereby allowing dynamic input configuration switching to only
+// request data that is needed in the current sensor mode. However
+// this is more or less only a resource optimization strategy, and
+// since providing fine-grained information like this can reveal
+// internal characteristics of the sensor and/or sensor model, will
+// not always be the preferred approach for reasons of IP protection.
+//
+message SensorViewConfiguration
+{
+    // The interface version used by the sender (simulation environment).
+    //
+    InterfaceVersion version = 1;
+
+    // The ID of the sensor at host vehicle's mounting_position.
+    //
+    // This is the ID of the virtual sensor, to be used in its detected
+    // object output; it is distinct from the IDs of its physical detectors,
+    // which are used in the detected features.
+    //
+    // The ID is to be provided by the environment simulation, the sensor
+    // model is not in a position to provide a useful default value.
+    //
+    Identifier sensor_id = 2;
+
+    // The virtual mounting position of the sensor (origin and orientation
+    // of the sensor coordinate system) given in vehicle coordinates [1].
+    // The virtual position pertains to the sensor as a whole, regardless
+    // of the actual position of individual physical detectors, and governs
+    // the sensor-relative coordinates in detected objects of the sensor
+    // as a whole. Individual features detected by individual physical
+    // detectors are governed by the actual physical mounting positions
+    // of the detectors, as indicated in the technology-specific sub-views
+    // and sub-view configurations.
+    //
+    // \arg \b x-direction of sensor coordinate system: sensor viewing direction
+    // \arg \b z-direction of sensor coordinate system: sensor (up)
+    // \arg \b y-direction of sensor coordinate system: perpendicular to x and z
+    // right hand system
+    //
+    // \par References:
+    // - [1] DIN ISO 8855:2013-11
+    //
+    // \note The origin of vehicle's coordinate system in world frame is
+    // ( \c MovingObject::base . \c BaseMoving::position + Inverse_Rotation_yaw_pitch_roll(
+    // \c MovingObject::base . \c BaseMoving::orientation) * 
+    // \c MovingObject::VehicleAttributes::bbcenter_to_rear) .
+    // The orientation of the vehicle's coordinate system is equal to the
+    // orientation of the vehicle's bounding box \c MovingObject::base . 
+    // \c BaseMoving::orientation.
+    // \note A default position can be provided by the sensor model (e.g. to
+    // indicate the position the model was validated for),
+    // but this is optional; the environment simulation must provide a valid
+    // mounting position (based on the vehicle configuration) when setting the
+    // view configuration.
+    //
+    MountingPosition mounting_position = 3;
+
+    // The root mean squared error of the mounting position.
+    //
+    MountingPosition mounting_position_rmse = 4;
+
+    // Field of View in horizontal orientation of the sensor.
+    //
+    // This determines the limit of the cone of interest of ground truth
+    // that the simulation environment has to provide.
+    // Viewing range: [- \c #field_of_view_horizontal/2,  \c #field_of_view_horizontal/2]
+    // azimuth in the sensor frame as defined in \c Spherical3d.
+    // Unit: [rad]
+    double field_of_view_horizontal = 5;
+
+    // Field of View in vertical orientation of the sensor.
+    //
+    // This determines the limit of the cone of interest of ground truth
+    // that the simulation environment has to provide.
+    // Viewing range: [- \c #field_of_view_vertical/2,  \c #field_of_view_vertical/2]
+    // elevation in the sensor frame at zero azimuth as defined in
+    // \c Spherical3d.
+    //
+    // Unit: [rad]
+    double field_of_view_vertical = 6;
+
+    // Maximum range of the sensor
+    //
+    // This determines the limit of the cone of interest of ground truth
+    // that the simulation environment has to provide.
+    //
+    // Unit: [m]
+    double range = 7;
+
+    // The update cycle time of the sensor model.
+    //
+    // This specifies the rate at which the sensor model is provided with
+    // new input data.
+    //
+    // Unit: [s]
+    // \note In the case of FMU packaging this will correspond to the
+    // communication step size.
+    Timestamp update_cycle_time = 8;
+
+    // Initial update cycle offset of the sensor model.
+    //
+    // This specifies the initial offset (i.e. initial delay) of the
+    // sensor model update cycle that the simulation should take into
+    // account. It is defined against a simulation start time of 0:
+    // i.e. an initial offset of 0.008s would mean, that the initial
+    // update of sensor input data to the model should occur at 0+0.008s,
+    // and then update_cycle_time after that, etc. If the simulation
+    // start time of the simulation is non-zero, then the offset still
+    // has to be interpreted against a 0 start time, and not simply
+    // added on top of the start time: e.g. if the simulation starts at
+    // 0.030s, and the update cycle time is 0.020s, then the first
+    // update to the sensor input should happen at 0.048s, or 0.018s
+    // after simulation start. This convention is needed to ensure
+    // stable phase position of the offset in the case of changing
+    // simulation start times, e.g. for partial resimulation.
+    //
+    // Unit: [s]
+    Timestamp update_cycle_offset = 9;
+
+    // Simulation Start time
+    //
+    // This specifies the simulation start time that the Simulation
+    // has chosen. This field has no defined meaning if provided by
+    // the sensor model.
+    //
+    // Unit: [s]
+    Timestamp simulation_start_time = 10;
+
+    // Generic Sensor View Configuration(s).
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated GenericSensorViewConfiguration generic_sensor_view_configuration = 1000;
+
+    // Radar-specific Sensor View Configuration(s).
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated RadarSensorViewConfiguration radar_sensor_view_configuration = 1001;
+
+    // Lidar-specific Sensor View Configuration(s).
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated LidarSensorViewConfiguration lidar_sensor_view_configuration = 1002;
+
+    // Camera-specific Sensor View Configuration(s).
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated CameraSensorViewConfiguration camera_sensor_view_configuration = 1003;
+
+    // Ultrasonic-specific Sensor View Configuration(s).
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated UltrasonicSensorViewConfiguration ultrasonic_sensor_view_configuration = 1004;
+}
+
+//
+// \brief The configuration settings for the Generic Sensor View to be provided
+// by the environment simulation.
+//
+message GenericSensorViewConfiguration
+{
+    // The ID of the sensor at host vehicle's mounting_position.
+    //
+    // This is the ID of the physical sensor, to be used in its detected
+    // features output; it is distinct from the ID of its virtual sensor.
+    //
+    // The ID is to be provided by the environment simulation, the sensor
+    // model is not in a position to provide a useful default value.
+    //
+    Identifier sensor_id = 1;
+
+    // The physical mounting position of the sensor (origin and orientation
+    // of the sensor coordinate system) given in vehicle coordinates [1].
+    // The physical position pertains to this detector individually, and
+    // governs the sensor-relative coordinates in features detected by this
+    // detector.
+    //
+    // \arg \b x-direction of sensor coordinate system: sensor viewing direction
+    // \arg \b z-direction of sensor coordinate system: sensor (up)
+    // \arg \b y-direction of sensor coordinate system: perpendicular to x and z
+    // right hand system
+    //
+    // \par References:
+    // - [1] DIN ISO 8855:2013-11
+    //
+    // \note The origin of vehicle's coordinate system in world frame is
+    // ( \c MovingObject::base . \c BaseMoving::position + Inverse_Rotation_yaw_pitch_roll(
+    // \c MovingObject::base . \c BaseMoving::orientation) * 
+    // \c MovingObject::VehicleAttributes::bbcenter_to_rear) .
+    // The orientation of the vehicle's coordinate system is equal to the
+    // orientation of the vehicle's bounding box \c MovingObject::base . 
+    // \c BaseMoving::orientation.
+    // \note A default position can be provided by the sensor model (e.g. to
+    // indicate the position the model was validated for),
+    // but this is optional; the environment simulation must provide a valid
+    // mounting position (based on the vehicle configuration) when setting the
+    // view configuration.
+    //
+    MountingPosition mounting_position = 2;
+
+    // The root mean squared error of the mounting position.
+    //
+    MountingPosition mounting_position_rmse = 3;
+
+    // Field of View in horizontal orientation of the physical sensor.
+    //
+    // Viewing range: [- \c #field_of_view_horizontal/2,  \c #field_of_view_horizontal/2]
+    // azimuth in the sensor frame as defined in \c Spherical3d.
+    //
+    // Unit: [rad]
+    double field_of_view_horizontal = 4;
+
+    // Field of View in vertical orientation of the physical sensor.
+    //
+    // Viewing range: [- \c #field_of_view_vertical/2,  \c #field_of_view_vertical/2]
+    // elevation in the sensor frame at zero azimuth as defined in
+    // \c Spherical3d.
+    //
+    // Unit: [rad]
+    double field_of_view_vertical = 5;
+
+    // TBD: Generic sensor specific configuration.
+    //
+}
+
+//
+// \brief The configuration settings for the Radar Sensor View to be provided
+// by the environment simulation.
+//
+message RadarSensorViewConfiguration
+{
+    // The ID of the sensor at host vehicle's mounting_position.
+    //
+    // This is the ID of the physical sensor, to be used in its detected
+    // features output; it is distinct from the ID of its virtual sensor.
+    //
+    // The ID is to be provided by the environment simulation, the sensor
+    // model is not in a position to provide a useful default value.
+    //
+    Identifier sensor_id = 1;
+
+    // The physical mounting position of the sensor (origin and orientation
+    // of the sensor coordinate system) given in vehicle coordinates [1].
+    // The physical position pertains to this detector individually, and
+    // governs the sensor-relative coordinates in features detected by this
+    // detector.
+    //
+    // \arg \b x-direction of sensor coordinate system: sensor viewing direction
+    // \arg \b z-direction of sensor coordinate system: sensor (up)
+    // \arg \b y-direction of sensor coordinate system: perpendicular to x and z
+    // right hand system
+    //
+    // \par References:
+    // - [1] DIN ISO 8855:2013-11
+    //
+    // \note The origin of vehicle's coordinate system in world frame is
+    // ( \c MovingObject::base . \c BaseMoving::position + Inverse_Rotation_yaw_pitch_roll(
+    // \c MovingObject::base . \c BaseMoving::orientation) * 
+    // \c MovingObject::VehicleAttributes::bbcenter_to_rear) .
+    // The orientation of the vehicle's coordinate system is equal to the
+    // orientation of the vehicle's bounding box \c MovingObject::base . 
+    // \c BaseMoving::orientation.
+    // \note A default position can be provided by the sensor model (e.g. to
+    // indicate the position the model was validated for),
+    // but this is optional; the environment simulation must provide a valid
+    // mounting position (based on the vehicle configuration) when setting the
+    // view configuration.
+    //
+    MountingPosition mounting_position = 2;
+
+    // The root mean squared error of the mounting position.
+    //
+    MountingPosition mounting_position_rmse = 3;
+
+    // Field of View in horizontal orientation of the physical sensor.
+    //
+    // Viewing range: [- \c #field_of_view_horizontal/2,  \c #field_of_view_horizontal/2]
+    // azimuth in the sensor frame as defined in \c Spherical3d.
+    //
+    // Unit: [rad]
+    double field_of_view_horizontal = 4;
+
+    // Field of View in vertical orientation of the physical sensor.
+    //
+    // Viewing range: [- \c #field_of_view_vertical/2,  \c #field_of_view_vertical/2]
+    // elevation in the sensor frame at zero azimuth as defined in
+    // \c Spherical3d.
+    //
+    // Unit: [rad]
+    double field_of_view_vertical = 5;
+
+    // Number of rays to cast across horizontal field of view (azimuth).
+    //
+    // \note This is a characteristic of the ray tracing engine of the
+    // environment simulation, not a direct characteristic of the sensor.
+    uint32 number_of_rays_horizontal = 6;
+
+    // Number of rays to cast across vertical field of view (elevation).
+    //
+    // \note This is a characteristic of the ray tracing engine of the
+    // environment simulation, not a direct characteristic of the sensor.
+    uint32 number_of_rays_vertical = 7;
+
+    // Maximum number of interactions to take into account.
+    //
+    // \note This is a characteristic of the ray tracing engine of the
+    // environment simulation, not a direct characteristic of the sensor.
+    uint32 max_number_of_interactions = 8;
+
+    // Emitter Frequency.
+    //
+    // This information can be used by a ray tracing engine to calculate
+    // doppler shift information and take into account differences in
+    // refraction and reflection. For doppler shift calculations the
+    // sensor model can of course always provide a nominal frequency and
+    // adjust the resulting doppler shift information to actual frequency
+    // through frequency adjustments. For material and geometry interaction
+    // purposes the frequency is also relevant.
+    //
+    // Unit: [Hz]
+    double emitter_frequency = 9;
+
+    // This represents the TX antenna diagram
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated AntennaDiagramEntry tx_antenna_diagram = 10;
+
+    // This represents the RX antenna diagram
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated AntennaDiagramEntry rx_antenna_diagram = 11;
+
+    //
+    // \brief The radar antenna diagram.
+    //
+    // \note Rotation is defined analog Spherical3d
+    message AntennaDiagramEntry {
+        // Horizontal deflection (azimuth) of entry in sensor/antenna
+        // coordinates.
+        //
+        // Unit: [rad]
+        double horizontal_angle = 1;
+
+        // Vertical deflection (elevation) of entry in sensor/antenna
+        // coordinates.
+        //
+        // Unit: [rad]
+        double vertical_angle = 2;
+
+        // Combined response of emitter and receiver antenna at this
+        // point (positive dB is gain, negative dB is attenuation).
+        //
+        // Unit: [dB]
+        double response = 3;
+    }
+}
+
+//
+// \brief The configuration settings for the Lidar Sensor View to be provided
+// by the environment simulation.
+//
+message LidarSensorViewConfiguration
+{
+    // The ID of the sensor at host vehicle's mounting_position.
+    //
+    // This is the ID of the physical sensor, to be used in its detected
+    // features output; it is distinct from the ID of its virtual sensor.
+    //
+    // The ID is to be provided by the environment simulation, the sensor
+    // model is not in a position to provide a useful default value.
+    //
+    Identifier sensor_id = 1;
+
+    // The physical mounting position of the sensor (origin and orientation
+    // of the sensor coordinate system) given in vehicle coordinates [1].
+    // The physical position pertains to this detector individually, and
+    // governs the sensor-relative coordinates in features detected by this
+    // detector.
+    //
+    // \arg \b x-direction of sensor coordinate system: sensor viewing direction
+    // \arg \b z-direction of sensor coordinate system: sensor (up)
+    // \arg \b y-direction of sensor coordinate system: perpendicular to x and z
+    // right hand system
+    //
+    // \par References:
+    // - [1] DIN ISO 8855:2013-11
+    //
+    // \note The origin of vehicle's coordinate system in world frame is
+    // ( \c MovingObject::base . \c BaseMoving::position + Inverse_Rotation_yaw_pitch_roll(
+    // \c MovingObject::base . \c BaseMoving::orientation) * 
+    // \c MovingObject::VehicleAttributes::bbcenter_to_rear) .
+    // The orientation of the vehicle's coordinate system is equal to the
+    // orientation of the vehicle's bounding box \c MovingObject::base . 
+    // \c BaseMoving::orientation.
+    // \note A default position can be provided by the sensor model (e.g. to
+    // indicate the position the model was validated for),
+    // but this is optional; the environment simulation must provide a valid
+    // mounting position (based on the vehicle configuration) when setting the
+    // view configuration.
+    //
+    MountingPosition mounting_position = 2;
+
+    // The root mean squared error of the mounting position.
+    //
+    MountingPosition mounting_position_rmse = 3;
+
+    // Field of View in horizontal orientation of the physical sensor.
+    //
+    // Viewing range: [- \c #field_of_view_horizontal/2,  \c #field_of_view_horizontal/2]
+    // azimuth in the sensor frame as defined in \c Spherical3d.
+    //
+    // Unit: [rad]
+    double field_of_view_horizontal = 4;
+
+    // Field of View in vertical orientation of the physical sensor.
+    //
+    // Viewing range: [- \c #field_of_view_vertical/2,  \c #field_of_view_vertical/2]
+    // elevation in the sensor frame at zero azimuth as defined in
+    // \c Spherical3d.
+    //
+    // Unit: [rad]
+    double field_of_view_vertical = 5;
+
+    // Number of rays to cast across horizontal field of view.
+    //
+    // \note This is a characteristic of the ray tracing engine of the
+    // environment simulation, not a direct characteristic of the sensor.
+    uint32 number_of_rays_horizontal = 6;
+
+    // Number of rays to cast across vertical field of view.
+    //
+    // \note This is a characteristic of the ray tracing engine of the
+    // environment simulation, not a direct characteristic of the sensor.
+    uint32 number_of_rays_vertical = 7;
+
+    // Maximum number of interactions to take into account.
+    //
+    // \note This is a characteristic of the ray tracing engine of the
+    // environment simulation, not a direct characteristic of the sensor.
+    uint32 max_number_of_interactions = 8;
+
+    // Emitter Frequency.
+    //
+    // This information can be used by a ray tracing engine to calculate
+    // doppler shift information and take into account differences in
+    // refraction and reflection. For doppler shift calculations the
+    // sensor model can of course always provide a nominal frequency and
+    // adjust the resulting doppler shift information to actual frequency
+    // through frequency adjustments. For material and geometry interaction
+    // purposes the frequency is also relevant.
+    //
+    // Unit: [Hz]
+    double emitter_frequency = 9;
+}
+
+//
+// \brief The configuration settings for the Camera Sensor View to be provided
+// by the environment simulation.
+//
+message CameraSensorViewConfiguration
+{
+    // The ID of the sensor at host vehicle's mounting_position.
+    //
+    // This is the ID of the physical sensor, to be used in its detected
+    // features output; it is distinct from the ID of its virtual sensor.
+    //
+    // The ID is to be provided by the environment simulation, the sensor
+    // model is not in a position to provide a useful default value.
+    //
+    Identifier sensor_id = 1;
+
+    // The physical mounting position of the sensor (origin and orientation
+    // of the sensor coordinate system) given in vehicle coordinates [1].
+    // The physical position pertains to this detector individually, and
+    // governs the sensor-relative coordinates in features detected by this
+    // detector.
+    //
+    // \arg \b x-direction of sensor coordinate system: sensor viewing direction
+    // \arg \b z-direction of sensor coordinate system: sensor (up)
+    // \arg \b y-direction of sensor coordinate system: perpendicular to x and z
+    // right hand system
+    //
+    // \par References:
+    // - [1] DIN ISO 8855:2013-11
+    //
+    // \note The origin of vehicle's coordinate system in world frame is
+    // ( \c MovingObject::base . \c BaseMoving::position + Inverse_Rotation_yaw_pitch_roll(
+    // \c MovingObject::base . \c BaseMoving::orientation) * 
+    // \c MovingObject::VehicleAttributes::bbcenter_to_rear) .
+    // The orientation of the vehicle's coordinate system is equal to the
+    // orientation of the vehicle's bounding box \c MovingObject::base . 
+    // \c BaseMoving::orientation.
+    // \note A default position can be provided by the sensor model (e.g. to
+    // indicate the position the model was validated for),
+    // but this is optional; the environment simulation must provide a valid
+    // mounting position (based on the vehicle configuration) when setting the
+    // view configuration.
+    //
+    MountingPosition mounting_position = 2;
+
+    // The root mean squared error of the mounting position.
+    //
+    MountingPosition mounting_position_rmse = 3;
+
+    // Field of View in horizontal orientation of the physical sensor.
+    //
+    // Viewing range: [- \c #field_of_view_horizontal/2,  \c #field_of_view_horizontal/2]
+    // azimuth in the sensor frame as defined in \c Spherical3d.
+    //
+    // Unit: [rad]
+    double field_of_view_horizontal = 4;
+
+    // Field of View in vertical orientation of the physical sensor.
+    //
+    // Viewing range: [- \c #field_of_view_vertical/2,  \c #field_of_view_vertical/2]
+    // elevation in the sensor frame at zero azimuth as defined in
+    // \c Spherical3d.
+    //
+    // Unit: [rad]
+    double field_of_view_vertical = 5;
+
+    // Number of pixels to produce across horizontal field of view.
+    //
+    // \note This is a characteristic of the rendering engine of the
+    // environment simulation, not a direct characteristic of the sensor.
+    uint32 number_of_pixels_horizontal = 6;
+
+    // Number of pixels to produce across horizontal field of view.
+    //
+    // \note This is a characteristic of the rendering engine of the
+    // environment simulation, not a direct characteristic of the sensor.
+    uint32 number_of_pixels_vertical = 7;
+
+    // Format for image data (includes number, kind and format of channels).
+    //
+    // In the message provided by the sensor model, this field can
+    // be repeated and all values are acceptable to the model, with
+    // the most acceptable value being listed first, and the remaining
+    // values indicating alternatives in descending order of preference.
+    //
+    // In the message provided to the sensor model, this field must
+    // contain exactly one value, indicating the format of the image
+    // data being provided by the simulation environment - which must
+    // be one of the values the sensor model requested - or there
+    // must be no value, indicating that the simulation environment
+    // cannot provide image data in one of the requested formats.
+    //
+    repeated ChannelFormat channel_format = 8;
+
+    // Channel format.
+    //
+    enum ChannelFormat
+    {
+        // Type of channel format is unknown (must not be used).
+        //
+        CHANNEL_FORMAT_UNKNOWN = 0;
+
+        // Unspecified but known channel format.
+        // Consider proposing an additional format if using
+        // \c #CHANNEL_FORMAT_OTHER.
+        //
+        CHANNEL_FORMAT_OTHER = 1;
+
+        // Single Luminance Channel UINT8 Linear.
+        //
+        CHANNEL_FORMAT_MONO_U8_LIN = 2;
+
+        // Single Luminance Channel UINT16 Linear.
+        //
+        CHANNEL_FORMAT_MONO_U16_LIN = 3;
+
+        // Single Luminance Channel UINT32 Linear.
+        //
+        CHANNEL_FORMAT_MONO_U32_LIN = 4;
+
+        // Single Luminance Channel Single Precision FP Linear.
+        //
+        CHANNEL_FORMAT_MONO_F32_LIN = 5;
+
+        // Packed RGB Channels (no padding) UINT8 Linear.
+        //
+        CHANNEL_FORMAT_RGB_U8_LIN = 6;
+
+        // Packed RGB Channels (no padding) UINT16 Linear.
+        //
+        CHANNEL_FORMAT_RGB_U16_LIN = 7;
+
+        // Packed RGB Channels (no padding) UINT32 Linear.
+        //
+        CHANNEL_FORMAT_RGB_U32_LIN = 8;
+
+        // Packed RGB Channels (no padding) Single Precision FP Linear.
+        //
+        CHANNEL_FORMAT_RGB_F32_LIN = 9;
+
+        // Bayer RGGB Channels UINT8 FP Linear.
+        //
+        CHANNEL_FORMAT_BAYER_BGGR_U8_LIN = 10;
+
+        // Bayer RGGB Channels UINT16 FP Linear.
+        //
+        CHANNEL_FORMAT_BAYER_BGGR_U16_LIN = 11;
+
+        // Bayer RGGB Channels UINT32 FP Linear.
+        //
+        CHANNEL_FORMAT_BAYER_BGGR_U32_LIN = 12;
+
+        // Bayer RGGB Channels Single Precision FP Linear.
+        //
+        CHANNEL_FORMAT_BAYER_BGGR_F32_LIN = 13;
+
+        // TBD: Further channel permutations and padding (e.g. RGBZ,
+        // BGR, BAYER_RGGB/GBRG/GRBG/...), non-BAYER filters, non-linear
+        // encodings, ...
+    }
+
+    // TBD: Optical (and other) effects to apply to image, etc.
+    //
+}
+
+//
+// \brief The configuration settings for the Ultrasonic Sensor View to be
+// provided by the environment simulation.
+//
+message UltrasonicSensorViewConfiguration
+{
+    // The ID of the sensor at host vehicle's mounting_position.
+    //
+    // This is the ID of the physical sensor, to be used in its detected
+    // features output; it is distinct from the ID of its virtual sensor.
+    //
+    // The ID is to be provided by the environment simulation, the sensor
+    // model is not in a position to provide a useful default value.
+    //
+    Identifier sensor_id = 1;
+
+    // The physical mounting position of the sensor (origin and orientation
+    // of the sensor coordinate system) given in vehicle coordinates [1].
+    // The physical position pertains to this detector individually, and
+    // governs the sensor-relative coordinates in features detected by this
+    // detector.
+    //
+    // \arg \b x-direction of sensor coordinate system: sensor viewing direction
+    // \arg \b z-direction of sensor coordinate system: sensor (up)
+    // \arg \b y-direction of sensor coordinate system: perpendicular to x and z
+    // right hand system
+    //
+    // \par References:
+    // - [1] DIN ISO 8855:2013-11
+    //
+    // \note The origin of vehicle's coordinate system in world frame is
+    // ( \c MovingObject::base . \c BaseMoving::position + Inverse_Rotation_yaw_pitch_roll(
+    // \c MovingObject::base . \c BaseMoving::orientation) * 
+    // \c MovingObject::VehicleAttributes::bbcenter_to_rear) .
+    // The orientation of the vehicle's coordinate system is equal to the
+    // orientation of the vehicle's bounding box \c MovingObject::base . 
+    // \c BaseMoving::orientation.
+    // \note A default position can be provided by the sensor model (e.g. to
+    // indicate the position the model was validated for),
+    // but this is optional; the environment simulation must provide a valid
+    // mounting position (based on the vehicle configuration) when setting the
+    // view configuration.
+    //
+    MountingPosition mounting_position = 2;
+
+    // The root mean squared error of the mounting position.
+    //
+    MountingPosition mounting_position_rmse = 3;
+
+    // Field of View in horizontal orientation of the physical sensor.
+    //
+    // Viewing range: [- \c #field_of_view_horizontal/2,  \c #field_of_view_horizontal/2]
+    // azimuth in the sensor frame as defined in \c Spherical3d.
+    //
+    // Unit: [rad]
+    double field_of_view_horizontal = 4;
+
+    // Field of View in vertical orientation of the physical sensor.
+    //
+    // Viewing range: [- \c #field_of_view_vertical/2,  \c #field_of_view_vertical/2]
+    // elevation in the sensor frame at zero azimuth as defined in
+    // \c Spherical3d.
+    //
+    // Unit: [rad]
+    double field_of_view_vertical = 5;
+
+    // TBD: Ultrasonic Sensor specific configuration.
+    //
+}
