@@ -13,6 +13,7 @@ namespace carla {
 namespace sensor {
 namespace s11n {
 
+  /// Serializes the meta-information (header) sent with all the sensor data.
   class SensorHeaderSerializer {
   public:
 

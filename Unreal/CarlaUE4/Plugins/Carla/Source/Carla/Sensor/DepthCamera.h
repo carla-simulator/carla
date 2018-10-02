@@ -10,6 +10,7 @@
 
 #include "DepthCamera.generated.h"
 
+/// Sensor that produces "depth" images.
 UCLASS()
 class CARLA_API ADepthCamera : public AShaderBasedSensor
 {

@@ -28,7 +28,8 @@ namespace sensor {
 
   // 3. Register the sensor and its serializer in the SensorRegistry.
 
-  /// Contains a registry of all the sensors available.
+  /// Contains a registry of all the sensors available and allows serializing
+  /// and deserializing sensor data for the types registered.
   using SensorRegistry = CompositeSerializer<
     std::pair<ASceneCaptureCamera *, s11n::ImageSerializer>,
     std::pair<ADepthCamera *, s11n::ImageSerializer>,

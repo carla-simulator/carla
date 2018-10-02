@@ -22,6 +22,8 @@ public:
 
   virtual void Set(const FActorDescription &) {}
 
+  /// Replace the FDataStream associated with this sensor.
+  ///
   /// @warning Do not change the stream after BeginPlay. It is not thread-safe.
   void SetDataStream(FDataStream InStream)
   {
@@ -30,6 +32,7 @@ public:
 
 protected:
 
+  /// Return the FDataStream associated with this sensor.
   FDataStream &GetDataStream()
   {
     return Stream;

@@ -16,6 +16,7 @@ namespace carla {
 namespace sensor {
 namespace data {
 
+  /// Base class for all the sensor data consisting of an array of items.
   template <typename T>
   class Array : public SensorData {
   public:
@@ -28,11 +29,11 @@ namespace data {
     using reference = typename std::iterator_traits<iterator>::reference;
 
     iterator begin() {
-     return reinterpret_cast<iterator>(_message.begin() + _offset);
+     return reinterpret_cast<iterator>(_data.begin() + _offset);
     }
 
     const_iterator cbegin() const {
-     return reinterpret_cast<const_iterator>(_message.begin() + _offset);
+     return reinterpret_cast<const_iterator>(_data.begin() + _offset);
     }
 
     const_iterator begin() const {
@@ -40,11 +41,11 @@ namespace data {
     }
 
     iterator end() {
-     return reinterpret_cast<iterator>(_message.end());
+     return reinterpret_cast<iterator>(_data.end());
     }
 
     const_iterator cend() const {
-     return reinterpret_cast<const_iterator>(_message.end());
+     return reinterpret_cast<const_iterator>(_data.end());
     }
 
     const_iterator end() const {
@@ -77,30 +78,30 @@ namespace data {
 
   protected:
 
-    explicit Array(size_t offset, DataMessage message)
-      : SensorData(message),
-        _message(std::move(message)) {
+    explicit Array(size_t offset, RawData data)
+      : SensorData(data),
+        _data(std::move(data)) {
       SetOffset(offset);
     }
 
-    explicit Array(DataMessage message)
-      : Array(0u, std::move(message)) {}
+    explicit Array(RawData data)
+      : Array(0u, std::move(data)) {}
 
     void SetOffset(size_t offset) {
-      DEBUG_ASSERT(_message.size() >= _offset);
-      DEBUG_ASSERT((_message.size() - _offset) % sizeof(T) == 0u);
+      DEBUG_ASSERT(_data.size() >= _offset);
+      DEBUG_ASSERT((_data.size() - _offset) % sizeof(T) == 0u);
       _offset = offset;
     }
 
-    const DataMessage &GetMessage() const {
-      return _message;
+    const RawData &GetRawData() const {
+      return _data;
     }
 
   private:
 
     size_t _offset;
 
-    DataMessage _message;
+    RawData _data;
   };
 
 } // namespace data

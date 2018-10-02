@@ -120,7 +120,7 @@ void export_sensor() {
       }
 
       // Subscribe to the sensor.
-      self.Listen([callback](auto message) { // Here we retrieve already the deserialized object.
+      self.Listen([callback](auto message) { // Here we retrieve the deserialized object.
         GILLockGuard gil_lock;
         try {
           boost::python::call<void>(callback.ptr(), boost::python::object(message));
