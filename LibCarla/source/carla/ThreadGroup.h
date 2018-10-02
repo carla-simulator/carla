@@ -6,18 +6,17 @@
 
 #pragma once
 
+#include "carla/NonCopyable.h"
+
 #include <thread>
 #include <vector>
 
 namespace carla {
 
-  class ThreadGroup {
+  class ThreadGroup : private NonCopyable {
   public:
 
     ThreadGroup() = default;
-
-    ThreadGroup(const ThreadGroup &) = delete;
-    ThreadGroup &operator=(const ThreadGroup &) = delete;
 
     ~ThreadGroup() {
       JoinAll();
