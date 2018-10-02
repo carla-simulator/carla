@@ -1,0 +1,174 @@
+syntax = "proto3";
+
+option optimize_for = SPEED;
+
+import "osi_common.proto";
+import "osi_trafficsign.proto";
+
+package osi3;
+
+//
+// \brief A road surface marking.
+//
+// Lane markings are excluded and defined as \c LaneBoundary messages
+// as part of \c Lane.
+//
+// All coordinates and orientations are relative to the global ground truth
+// coordinate system.
+//
+message RoadMarking
+{
+    // The ID of the road marking.
+    //
+    Identifier id = 1;
+
+    // The base parameters of the road marking.
+    //
+    // The orientation of the bounding box \c #base
+    // \c BaseStationary::orientation is defined as follows:
+    // The z-axis of the \c BaseStationary::orientation is the vector from the
+    // 'bottom' to the 'top' of the road marking's (i.e. painted traffic sign)
+    // 2D image area.
+    // (Normally it is in the ground truth xy-plain.)
+    // The x-axis of the \c BaseStationary::orientation is the view normal of
+    // the road marking's 2D image area.
+    // Normally this x-axis points to the sky.
+    //
+    // \note If a valid unidirectional road marking is assigned to the host
+    // vehicle's current lane and the driving direction of the latter roughly
+    // matches the z-axis of the \c #base \c BaseStationary::orientation then
+    // the road marking is of relevance to (i.e. in effect for) the host
+    // vehicle.
+    //
+    BaseStationary base = 2;
+
+    // The classification data for the road marking.
+    //
+    Classification classification = 3;
+
+    //
+    // \brief \c Classification data for a road surface marking.
+    //
+    message Classification
+    {
+        // The type of the road marking.
+        //
+        Type type = 1;
+
+        // Traffic sign as road marking (color image, monochrome image or character
+        // string).
+        //
+        // \note Field is set if ( \c #type == \c #TYPE_PAINTED_TRAFFIC_SIGN or
+        // \c #TYPE_SYMBOLIC_TRAFFIC_SIGN or \c #TYPE_TEXTUAL_TRAFFIC_SIGN ).
+        //
+        // \note Field need not be set (or set to \c #TYPE_OTHER)
+        // if road marking type (\c #type) does not require it.
+        //
+        TrafficSign.MainSign.Classification.Type traffic_main_sign_type = 2;
+
+        // The monochrome color of the road marking.
+        // \note Field need not be set (or set to \c #COLOR_OTHER)
+        // if road marking type does not require it (e.g. for \c #type ==
+        // \c #TYPE_PAINTED_TRAFFIC_SIGN).
+        //
+        Color monochrome_color = 3;
+
+        // Additional value associated with the road marking, e.g. value of the
+        // speed limit.
+        //
+        // \note Field need not be set if road marking type does not require it.
+        //
+        TrafficSignValue value = 4;
+
+        // Additional text value as road marking, e.g. BUS, TAXI etc.
+        //
+        // \note Field need not be set if road marking type does not require it.
+        //
+        string value_text = 5;
+
+        // The ID(s) of the lane(s) that the road marking is assigned to.
+        // May be multiple if the road marking goes across multiple lanes.
+        //
+        // \note OSI uses singular instead of plural for repeated field names.
+        //
+        repeated Identifier assigned_lane_id = 6;
+
+        // Definition of road marking types.
+        //
+        enum Type
+        {
+            // Type of road marking is unknown (must not be used in ground 
+            // truth).
+            //
+            TYPE_UNKNOWN = 0;
+
+            // Other (unspecified but known) type of road marking.
+            //
+            TYPE_OTHER = 1;
+
+            // Paint on the road surface indicating a color image of a traffic sign.
+            //
+            TYPE_PAINTED_TRAFFIC_SIGN = 2;
+
+            // Paint on the road surface indicating a monochrome logical symbol
+            // of a traffic sign (e.g. digits 50 as start of speed limit 50 or
+            // stop line for stop sign).
+            //
+            TYPE_SYMBOLIC_TRAFFIC_SIGN = 3;
+
+            // Paint on the road surface as a character string (e.g. BUS as bus only
+            // lane).
+            //
+            TYPE_TEXTUAL_TRAFFIC_SIGN = 4;
+
+            // Paint on the road surface indicating a generic symbol.
+            //
+            TYPE_GENERIC_SYMBOL = 5;
+
+            // Paint on the road surface indicating a generic line.
+            //
+            TYPE_GENERIC_LINE = 6;
+
+            // Paint on the road surface indicating a generic character string.
+            //
+            TYPE_GENERIC_TEXT = 7;
+        }
+
+        // Definition of road marking colors
+        //
+        enum Color
+        {
+            // Color of road marking is unknown (must not be used in ground truth).
+            //
+            COLOR_UNKNOWN = 0;
+
+            // Marking with another (unspecified but known) color.
+            //
+            COLOR_OTHER = 1;
+
+            // Marking with white color.
+            //
+            COLOR_WHITE = 2;
+
+            // Marking with yellow / orange-yellow color.
+            //
+            COLOR_YELLOW = 3;
+
+            // Marking with blue color.
+            //
+            COLOR_BLUE = 5;
+
+            // Marking with red color.
+            //
+            COLOR_RED = 6;
+
+            // Marking with green color.
+            //
+            COLOR_GREEN = 7;
+
+            // Marking with violet color.
+            //
+            COLOR_VIOLET = 8;
+        }
+    }
+}

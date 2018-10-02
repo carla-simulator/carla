@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+option optimize_for = SPEED;
+
+import "osi_common.proto";
+import "osi_trafficlight.proto";
+import "osi_detectedobject.proto";
+
+package osi3;
+
+//
+// \brief A traffic light in the environment as detected by the sensor.
+//
+message DetectedTrafficLight
+{
+    // Common information of one detected item.
+    //
+    DetectedItemHeader header = 1;
+
+    // The base parameters of the traffic light.
+    //
+    // \c BaseStationary::orientation x-axis is view normal of the traffic
+    // light's icon.
+    //
+    BaseStationary base = 2;
+
+    // The root mean squared error of the base parameters of the detected
+    // traffic light's geometry. \c TrafficLight::base has to be identical
+    // for all \c #candidate traffic lights.
+    //
+    BaseStationary base_rmse = 3;
+
+    // A list of candidates for this traffic light as estimated by the
+    // sensor.
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated CandidateTrafficLight candidate = 4;
+
+    //
+    // \brief A candidate for a detected traffic light as estimated by
+    // the sensor.
+    //
+    message CandidateTrafficLight
+    {
+        // The estimated probability that this candidate is the true value.
+        //
+        // \note The sum of all \c #probability must be one. This probability is
+        // given under the condition of
+        // \c DetectedItemHeader::existence_probability.
+        //
+        // Range: [0,1]
+        //
+        double probability = 1;
+
+        // The classification of one traffic light that define this candidate.
+        //
+        // \note IDs, which are referenced in this message, usually
+        // reference to \c DetectedXXX::tracking_id IDs.
+        //
+        TrafficLight.Classification classification = 2;
+    }
+}

@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+option optimize_for = SPEED;
+
+import "osi_occupant.proto";
+import "osi_detectedobject.proto";
+
+package osi3;
+
+//
+// \brief A vehicle occupant as detected and perceived by an interior sensor.
+//
+message DetectedOccupant
+{
+    // Common information of one detected item.
+    //
+    DetectedItemHeader header = 1;
+
+    // A list of candidates for this occupant as estimated by the
+    // sensor.
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated CandidateOccupant candidate = 2;
+
+    //
+    // \brief A candidate for a detected occupant as estimated by
+    // the sensor.
+    //
+    message CandidateOccupant
+    {
+        // The estimated probability that this candidate is the true value.
+        //
+        // \note The sum of all \c #probability must be one. This probability is
+        // given under the condition of
+        // \c DetectedItemHeader::existence_probability.
+        //
+        // Range: [0,1]
+        //
+        double probability = 1;
+
+        // The detected vehicle occupant classification.
+        //
+        // \note IDs, which are referenced in this message, usually
+        // reference to \c DetectedXXX::tracking_id IDs.
+        //
+        Occupant.Classification classification = 2;
+    }
+}

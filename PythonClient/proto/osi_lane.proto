@@ -1,0 +1,498 @@
+syntax = "proto3";
+
+option optimize_for = SPEED;
+
+import "osi_common.proto";
+
+package osi3;
+
+//
+// \brief A lane in the road network.
+//
+// A lane is part of a road and mainly characterized by its center line. It also
+// knows about any adjacent lanes, antecessor and successor lanes.
+// The following image will be referred to by later comments. We'll use the lane
+// with ID 3 as reference if not mentioned otherwise.
+//
+// \image html highway_exit.png
+//
+// For lane a to be the antecessor of lane b, the last point of a's center line
+// has to be identical to the first point of b's center line (although both
+// points might lie outside the simulated region, the relationship remains). Any
+// lane starts or ends at such a split/merge point. No lane can ever keep its ID
+// after such a split point, i.e. lane 4 has to change its ID after lane 6
+// splits off of lane 4, thus in the example it becomes a new lane with ID 7.
+//
+message Lane
+{
+    // The ID of the lane.
+    // Example: 3 (see reference picture).
+    //
+    // \note Note ID is global unique.
+    //
+    Identifier id = 1;
+
+    // The classification of the lane.
+    //
+    Classification classification = 2;
+
+    //
+    // \brief \c Classification of a lane.
+    //
+    message Classification
+    {
+        // The type of the lane.
+        // Example: \c #type = \c #TYPE_DRIVING (see reference picture)
+        //
+        Type type = 1;
+        
+        // Indicates that the host vehicle travels on this particular lane.
+        // The host vehicle may travel on more than one lane at once. This does
+        // also apply for the \c CanditateLane in the \c DetectedLane .
+        //
+        bool is_host_vehicle_lane = 2;
+
+        // The lane's center line (as a list of segments).
+        //
+        // This is the line, that a typical vehicle is supposed to follow. Thus, if
+        // the road narrows (e.g. at a construction site) this line is supposed to
+        // describe the trajectory that the vehicle should follow. The intended
+        // direction of travel on the lane is given by the direction defined by the
+        // sequence of points forming the center line.
+        //
+        // \image html highway_exit.png "Center lines as yellow dotted lines."
+        //
+        // \attention The points describing the center line might be set at
+        // arbitrary distances. When the points are pairwise linearly connected, the
+        // lateral distance to the real ideal line (as used by the simulation
+        // environment internally) must not exceed 5cm. As shown in the following
+        // image:
+        //
+        // \image html line_approximation_error.png "Approximation error as green line."
+        //
+        // \note The \c #centerline is defined only for \c #type =
+        // \c #TYPE_DRIVING and one \c #lane_pairing pair.
+        //
+        repeated Vector3d centerline = 3;
+
+        // Definition of the intended driving direction.
+        //
+        // Defined and used for driving lanes.
+        // true means driving direction is according to ascending storage order of
+        // center line points.
+        // false means driving direction is according to descending storage order of
+        // center line points.
+        //
+        // \note The \c #centerline_is_driving_direction is defined for \c #type =
+        // \c #TYPE_DRIVING .
+        //
+        bool centerline_is_driving_direction = 4;
+
+        // List of IDs of all lane segments that are directly adjacent to the lane
+        // on the left side (w.r.t. intended driving direction). Note that lengths
+        // of lane segments are not synchronized and therefore there are multiple
+        // adjacent segments if there is a split/merge point in the adjacent lane.
+        //
+        // Example: The lane ID 2 is the only left adjacent lane for lane ID 3 in
+        // the reference picture.
+        //
+        // \note The \c #left_adjacent_lane_id is undefined for \c #type =
+        // \c #TYPE_INTERSECTION .
+        //
+        // \note OSI uses singular instead of plural for repeated field names.
+        //
+        repeated Identifier left_adjacent_lane_id = 5;
+
+        // List of IDs of all lane segments that are directly adjacent to the lane
+        // on the right side (w.r.t. intended driving direction). Note that lengths
+        // of lane segments are not synchronized and therefore there are multiple
+        // adjacent segments if there is a split/merge point in the adjacent lane.
+        // Example: The lane IDs 4 and 7 are the right adjacent lane segments for
+        // lane ID 3 in the reference picture due to the lane split. Lane ID 6 is
+        // not a right adjacent lane to lane ID 3 as they are separated by lane ID
+        // 7.
+        //
+        // \note The \c #right_adjacent_lane_id is undefined for \c #type =
+        // \c #TYPE_INTERSECTION .
+        //
+        // \note OSI uses singular instead of plural for repeated field names.
+        //
+        repeated Identifier right_adjacent_lane_id = 6;
+
+        // The antecessor/successor lane pairings of this lane. There can be
+        // multiple pairings with the same antecessor and different successor lanes
+        // and vice versa.
+        // The antecessor lanes end in the same point that this lane starts from.
+        // The successor lanes start in the same point that this lane ends in.
+        // Example:
+        //
+        // \note OSI uses singular instead of plural for repeated field names.
+        //
+        repeated LanePairing lane_pairing = 7;
+
+        // The right adjacent lane boundaries \c #right_lane_boundary_id may only be
+        // shared with/as the left adjacent lane boundaries
+        // \c #left_lane_boundary_id of the nearest right adjacent lane
+        // \c #right_adjacent_lane_id.
+        //
+        // \note Empty for intersections.
+        //
+        // \note The \c #right_lane_boundary_id is undefined for \c #type =
+        // \c #TYPE_INTERSECTION .
+        //
+        // \note OSI uses singular instead of plural for repeated field names.
+        //
+        repeated Identifier right_lane_boundary_id = 8;
+
+        // The left adjacent lane boundaries \c #left_lane_boundary_id may only be
+        // shared with/as the right adjacent lane boundaries
+        // \c #right_lane_boundary_id of the nearest left adjacent lane
+        // \c #left_adjacent_lane_id.
+        //
+        // \note Empty for intersections.
+        //
+        // \note The \c #left_lane_boundary_id is undefined for \c #type =
+        // \c #TYPE_INTERSECTION .
+        //
+        // \note OSI uses singular instead of plural for repeated field names.
+        //
+        repeated Identifier left_lane_boundary_id = 9;
+
+        // The free boundaries which have no/unknown assignment to left/right.
+        //
+        // \note \c Lane with \c #type = \c #TYPE_INTERSECTION use only free
+        // lane boundaries.
+        //
+        // \note OSI uses singular instead of plural for repeated field names.
+        //
+        repeated Identifier free_lane_boundary_id = 10;
+
+        // The condition of the lane, e.g. influenced by weather.
+        //
+        RoadCondition road_condition = 11;
+
+        // Definition of available lane types.
+        //
+        enum Type
+        {
+            // Lane of unknown type (must not be used in ground truth).
+            //
+            TYPE_UNKNOWN = 0;
+
+            // Any other type of lane.
+            //
+            TYPE_OTHER = 1;
+
+            // A normal lane.
+            // Example: lanes with IDs 1, 2, 3, 4 and 7 of the highway_exit image.
+            //
+            TYPE_DRIVING = 2;
+
+            // A road where driving is normally not permitted.
+            //
+            TYPE_NONDRIVING = 3;
+
+            // An intersection as a lane.
+            //
+            TYPE_INTERSECTION = 4;
+        }
+
+        //
+        // \brief The condition of the road surface.
+        //
+        message RoadCondition
+        {
+            // The temperature of the roads surface in Kelvin.
+            //
+            // Unit: [K]
+            //
+            double surface_temperature = 1;
+
+            // The height of the water film on top of the surface in mm.
+            //
+            // Unit: [mm]
+            //
+            double surface_water_film = 2;
+
+            // The temperature where the water on top of the surface would start
+            // to freeze or dew in Kelvin.
+            //
+            // Unit: [K]
+            //
+            double surface_freezing_point = 3;
+
+            // The percentage of ice covering the road.
+            //
+            // Unit: [%]
+            //
+            double surface_ice = 4;
+
+            // The coefficient representing the roughness or unevenness of the road.
+            // International Roughness Index (IRI) [1] values range from 0 = smooth
+            // ground (equivalent to driving on a plate of glass) up to > 20 mm/m
+            // (a very rough road).
+            //
+            // Estimated value ranges (IRI):
+            //        0.0 [mm/m] absolutely perfect evenness
+            // 0.3 -  1.8 [mm/m] airport runways and superhighways
+            // 1.4 -  3.4 [mm/m] new pavements
+            // 2.2 -  5.7 [mm/m] older pavements
+            // 3.2 -  9.8 [mm/m] maintained unpaved roads
+            // 4.0 - 11.0 [mm/m] damaged pavements
+            // 8.0 - > 20 [mm/m] rough unpaved roads
+            //
+            // Speed of normal use (IRI):
+            //  30 [km/h] - 20   [mm/m]
+            //  50 [km/h] - 14.5 [mm/m]
+            //  60 [km/h] - 10.0 [mm/m]
+            //  80 [km/h] -  8.5 [mm/m]
+            // 100 [km/h] -  3.4 [mm/m]
+            //
+            // Road conditions (IRI);
+            // 15 [mm/m] erosion gulleys and deep depressions
+            // 11 [mm/m] frequent shallow depressions, some deep
+            //  9 [mm/m] frequent minor depressions
+            //  5 [mm/m] surface imperfections
+            //
+            // Unit: [mm/m]
+            //
+            // \par References:
+            // - [1] SAYERS, M.W.; KARAMIHAS, S.M. Little Book of Profiling,
+            // University of Michigan Transportation Research Institute, 1998.
+            //
+            double surface_roughness = 5;
+
+            // The surface texture or fine roughness
+            //
+            // Whereas the IRI-based roughness or unevenness measure only takes
+            // into account road wavelengths around 0.5m - 100m, the surface texture
+            // or fine roughness [2] measures only wavelengths below 0.5m.
+            // It is given as the standard height deviation of fine roughness
+            //
+            // Unit: [m]
+            //
+            // \par References:
+            // - [1] SAYERS, M.W.; KARAMIHAS, S.M. Little Book of Profiling,
+            // University of Michigan Transportation Research Institute, 1998.
+            // - [2] SCHNEIDER, R.: Modellierung der Wellenausbreitung fuer
+            // ein bildgebendes Kfz-Radar, Dissertation, Universitaet Karlsruhe,
+            // Mai 1998.
+            //
+            double surface_texture = 6;
+        }
+
+        // \brief The lane ID pairings of antecessor and successor lanes.
+        //
+        message LanePairing
+        {
+            // The antecessor lane ID.
+            //
+            Identifier antecessor_lane_id = 1;
+
+            // The successor lane ID.
+            //
+            Identifier successor_lane_id = 2;
+        }
+    }
+}
+
+//
+// \brief A lane boundary defining the border of a lane.
+//
+// The left and right lane boundary define the width of the lane. Additionally,
+// free markings can be defined, e.g. at construction sites. Free markings
+// across multiple lanes may be defined multiple times for all affected lanes.
+//
+message LaneBoundary
+{
+    // The ID of the lane boundary.
+    //
+    Identifier id = 1;
+
+    // The list of individual points defining the location of the lane boundary
+    // (as a list of segments).
+    //
+    // Since a \c BoundaryPoint is part of a sequence, only the position
+    // attribute has to be set for each instance. All other values will be
+    // reused from the previous \c BoundaryPoint in the sequence or set to
+    // default values if there is none or it was never set. 
+    //
+    // \note For dashed lines, one \c BoundaryPoint has to be at the start and
+    // another at the end of each dashed line segment. The first 
+    // \c BoundaryPoint defines the beginning of the first dashed lane marking.
+    // The last \c BoundaryPoint defines the end of the last dashed lane 
+    // marking. For example, the area between the second and third 
+    // \c BoundaryPoint has no lane marking, and so on.
+    // \note For Botts' dots lines, one \c BoundaryPoint position has to define
+    // each Botts' dot.
+    //
+    // \attention For \c BoundaryPoint the same rule for the approximation
+    // error applies as for \c Lane::Classification::centerline.
+    //
+    repeated BoundaryPoint boundary_line = 2;
+
+    // The classification of the lane boundary.
+    //
+    Classification classification = 3;
+
+    //
+    // \brief A single point of a lane boundary.
+    //
+    message BoundaryPoint
+    {
+        // The position of the \c BoundaryPoint.
+        //
+        Vector3d position = 1;
+
+        // The overall width of the lane boundary at the position of the
+        // \c BoundaryPoint .
+        // Used for lines forming lane markings.
+        //
+        // \note Field need not be set if it is defined previous.
+        // See \c LaneBoundary.
+        //
+        double width = 2;
+
+        // The overall height of the lane boundary at the position of the
+        // \c BoundaryPoint .
+        // Used for guard rails, curbstone, or similar.
+        //
+        // \note Field need not be set if it is previously defined.
+        // See \c LaneBoundary .
+        //
+        double height = 3;
+    }
+
+    //
+    // \brief \c Classification data of a lane boundary.
+    //
+    message Classification
+    {
+        // The type of the lane boundary.
+        //
+        Type type = 1;
+
+        // The color of the lane boundary in case of lane markings.
+        //
+        Color color = 2;
+
+        // The ids of \c StationaryObject which limit the corresponding lane.
+        // This field must be set if the \c #type is set to
+        // \c #TYPE_STRUCTURE
+        //
+        repeated Identifier limiting_structure_id = 3;
+
+        // The lane boundary type.
+        // There is no special representation for double lines, e.g. solid / solid
+        // or dashed / solid. In such cases, each lane will define its own side of
+        // the lane boundary.
+        //
+        enum Type
+        {
+            // The type of lane boundary is unknown. Value must not be used in
+            // ground truth.
+            //
+            TYPE_UNKNOWN = 0;
+
+            // Unspecified but known type of lane boundary.
+            // Consider proposing an additional type if using TYPE_OTHER.
+            //
+            TYPE_OTHER = 1;
+
+            // An invisible lane boundary (e.g. unmarked part of a dashed line).
+            //
+            TYPE_NO_LINE = 2;
+
+            // A solid line at the lane boundary.
+            //
+            TYPE_SOLID_LINE = 3;
+
+            // A dashed line at the lane boundary.
+            //
+            TYPE_DASHED_LINE = 4;
+
+            // A lane boundary consisting of Botts' dots (multiple Botts dots).
+            //
+            TYPE_BOTTS_DOTS = 5;
+
+            // A lane boundary formed by the road's edge.
+            // The road edge is the end of the (paved) road surface.
+            //
+            TYPE_ROAD_EDGE = 6;
+
+            // A lane boundary formed by a snow edge that may be on the road
+            // surface.
+            //
+            TYPE_SNOW_EDGE = 7;
+
+            // A lane boundary covered by grass.
+            //
+            TYPE_GRASS_EDGE = 8;
+
+            // A lane boundary covered by gravel.
+            //
+            TYPE_GRAVEL_EDGE = 9;
+
+            // A lane boundary covered by soil.
+            //
+            TYPE_SOIL_EDGE = 10;
+
+            // A guard rail.
+            //
+            TYPE_GUARD_RAIL = 11;
+
+            // A curb.
+            //
+            TYPE_CURB = 12;
+
+            // A structure (e.g. building or tunnel wall).
+            //
+            TYPE_STRUCTURE = 13;
+        }
+
+        // The color of the lane boundary in case of a lane markings.
+        // Lane markings that alternate in color must be represented by individual
+        // \c LaneBoundary segments.
+        //
+        enum Color
+        {
+            // Color of marking is unknown. Value must not be used in ground truth.
+            //
+            COLOR_UNKNOWN = 0;
+
+            // Other (unspecified but known) color.
+            //
+            COLOR_OTHER = 1;
+
+            // Marking without color. Used to represent logical boundaries without
+            // actual physical markings at the respective position.
+            // Value may be used in ground truth only.
+            //
+            COLOR_NONE = 2;
+
+            // Marking with white color.
+            //
+            COLOR_WHITE = 3;
+
+            // Marking with yellow / orange-yellow color.
+            //
+            COLOR_YELLOW = 4;
+
+            // Marking with red color
+            //
+            COLOR_RED = 5;
+
+            // Marking with blue color.
+            //
+            COLOR_BLUE = 6;
+
+            // Marking with green color;
+            //
+            COLOR_GREEN = 7;
+
+            // Marking with violet color.
+            //
+            COLOR_VIOLET = 8;
+        }
+    }
+}
