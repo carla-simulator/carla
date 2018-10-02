@@ -12,8 +12,8 @@ namespace carla {
 namespace sensor {
 namespace s11n {
 
-  SharedPtr<SensorData> ImageSerializer::Deserialize(DataMessage message) {
-    return SharedPtr<data::Image>(new data::Image{std::move(message)});
+  SharedPtr<SensorData> ImageSerializer::Deserialize(RawData data) {
+    return SharedPtr<data::Image>(new data::Image{std::move(data)});
   }
 
 } // namespace s11n

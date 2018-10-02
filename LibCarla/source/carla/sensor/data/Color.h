@@ -13,6 +13,7 @@ namespace sensor {
 namespace data {
 
 #pragma pack(push, 1)
+  /// A 32-bit BGRA color.
   struct Color {
     Color() = default;
     Color(const Color &) = default;

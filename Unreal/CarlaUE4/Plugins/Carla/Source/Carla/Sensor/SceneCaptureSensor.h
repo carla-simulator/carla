@@ -17,7 +17,8 @@ class UStaticMeshComponent;
 class UTextureRenderTarget2D;
 
 /// Base class for sensors using a USceneCaptureComponent2D for rendering the
-/// scene. Images are automatically serialized and sent.
+/// scene. This class does not capture data, use
+/// `FPixelReader::SendPixelsInRenderThread(*this)` in derived classes.
 ///
 /// To access the USceneCaptureComponent2D override the
 /// SetUpSceneCaptureComponent function.

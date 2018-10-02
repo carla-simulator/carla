@@ -12,46 +12,53 @@
 #include <compiler/disable-ue4-macros.h>
 #include <carla/sensor/SensorRegistry.h>
 #include <compiler/enable-ue4-macros.h>
+
 #define LIBCARLA_SENSOR_REGISTRY_WITH_SENSOR_INCLUDES
 #include <carla/sensor/SensorRegistry.h>
 #undef LIBCARLA_SENSOR_REGISTRY_WITH_SENSOR_INCLUDES
 
-/// Call GetSensorDefinition() on each sensor registered in the SensorRegistry.
 class FSensorDefinitionGatherer
 {
   using Registry = carla::sensor::SensorRegistry;
 
+public:
+
+  /// Retrieve the definitions of all the sensors registered in the
+  /// SensorRegistry by calling their static method
+  /// SensorType::GetSensorDefinition().
+  static auto GetSensorDefinitions()
+  {
+    TArray<FActorDefinition> Definitions;
+    Definitions.Reserve(Registry::size());
+    AppendDefinitions(Definitions, std::make_index_sequence<Registry::size()>());
+    return Definitions;
+  }
+
+private:
+
   template <size_t Index>
-  static void Append_impl(TArray<FActorDefinition> &Definitions)
+  static void AppendDefinitions(TArray<FActorDefinition> &Definitions)
   {
     using SensorPtrType = typename Registry::get_by_index<Index>::key;
     using SensorType = typename std::remove_pointer<SensorPtrType>::type;
     auto Def = SensorType::GetSensorDefinition();
+    // Make sure the class matches the sensor type.
     Def.Class = SensorType::StaticClass();
-    Definitions.Add(Def);
+    Definitions.Emplace(Def);
   }
 
   template <size_t... Is>
-  static void Append_impl(
+  static void AppendDefinitions(
       TArray<FActorDefinition> &Definitions,
       std::index_sequence<Is...>)
   {
-    std::initializer_list<int> ({(Append_impl<Is>(Definitions), 0)...});
-  }
-
-public:
-
-  static void AppendSensorDefinitions(TArray<FActorDefinition> &Definitions)
-  {
-    Append_impl(Definitions, std::make_index_sequence<Registry::size()>());
+    std::initializer_list<int> ({(AppendDefinitions<Is>(Definitions), 0)...});
   }
 };
 
 TArray<FActorDefinition> ASensorFactory::GetDefinitions()
 {
-  TArray<FActorDefinition> Definitions;
-  FSensorDefinitionGatherer::AppendSensorDefinitions(Definitions);
-  return Definitions;
+  return FSensorDefinitionGatherer::GetSensorDefinitions();
 }
 
 FActorSpawnResult ASensorFactory::SpawnActor(

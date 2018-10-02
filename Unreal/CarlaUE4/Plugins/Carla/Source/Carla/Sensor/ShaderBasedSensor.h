@@ -10,6 +10,7 @@
 
 #include "ShaderBasedSensor.generated.h"
 
+/// A shader in AShaderBasedSensor.
 USTRUCT(BlueprintType)
 struct CARLA_API FSensorShader
 {
@@ -22,7 +23,11 @@ struct CARLA_API FSensorShader
   float Weight = 1.0f;
 };
 
-UCLASS()
+/// A sensor that produces data by applying post-process materials (shaders) to
+/// a scene capture image.
+///
+/// @warning Shaders must be added before BeginPlay.
+UCLASS(Abstract)
 class CARLA_API AShaderBasedSensor : public ASceneCaptureSensor
 {
   GENERATED_BODY()
@@ -36,7 +41,7 @@ public:
   }
 
   /// Load the UMaterial at the given @a Path and append it to the list of
-  /// sensors with @a Weight.
+  /// shaders with @a Weight.
   ///
   /// @return Whether it succeeded.
   UFUNCTION(BlueprintCallable)

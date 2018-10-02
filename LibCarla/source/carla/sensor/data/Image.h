@@ -13,6 +13,7 @@ namespace carla {
 namespace sensor {
 namespace data {
 
+  /// An image of 32-bit BGRA colors.
   using Image = ImageTmpl<Color>;
 
 } // namespace data

@@ -14,36 +14,42 @@ namespace carla {
 namespace sensor {
 namespace data {
 
-  template <typename T>
-  class ImageTmpl : public Array<T>  {
-    using Super = Array<T>;
+  /// Templated image for any type of pixel.
+  template <typename PixelT>
+  class ImageTmpl : public Array<PixelT>  {
+    using Super = Array<PixelT>;
   protected:
 
     using Serializer = s11n::ImageSerializer;
 
     friend Serializer;
 
-    explicit ImageTmpl(DataMessage message)
-      : Super(Serializer::header_offset, std::move(message)) {
+    explicit ImageTmpl(RawData data)
+      : Super(Serializer::header_offset, std::move(data)) {
       DEBUG_ASSERT(GetWidth() * GetHeight() == Super::size());
     }
 
   private:
 
     const auto &GetHeader() const {
-      return Serializer::DeserializeHeader(Super::GetMessage());
+      return Serializer::DeserializeHeader(Super::GetRawData());
     }
 
   public:
 
+    using pixel_type = PixelT;
+
+    /// Get image width in pixels.
     auto GetWidth() const {
       return GetHeader().width;
     }
 
+    /// Get image height in pixels.
     auto GetHeight() const {
       return GetHeader().height;
     }
 
+    /// Get horizontal field of view of the image in degrees.
     auto GetFOVAngle() const {
       return GetHeader().fov_angle;
     }

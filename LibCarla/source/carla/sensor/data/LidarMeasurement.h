@@ -15,6 +15,8 @@ namespace carla {
 namespace sensor {
 namespace data {
 
+  /// Measurement produced by a Lidar. Consists of an array of 3D points plus
+  /// some extra meta-information about the Lidar.
   class LidarMeasurement : public Array<rpc::Location>  {
     static_assert(sizeof(rpc::Location) == 3u * sizeof(float), "Location size missmatch");
     using Super = Array<rpc::Location>;
@@ -24,27 +26,32 @@ namespace data {
 
     friend Serializer;
 
-    explicit LidarMeasurement(DataMessage message)
-      : Super(std::move(message)) {
-      Super::SetOffset(Serializer::GetHeaderOffset(Super::GetMessage()));
+    explicit LidarMeasurement(RawData data)
+      : Super(std::move(data)) {
+      Super::SetOffset(Serializer::GetHeaderOffset(Super::GetRawData()));
     }
 
   private:
 
     auto GetHeader() const {
-      return Serializer::DeserializeHeader(Super::GetMessage());
+      return Serializer::DeserializeHeader(Super::GetRawData());
     }
 
   public:
 
+    /// Horizontal angle of the Lidar at the time of the measurement.
     auto GetHorizontalAngle() const {
       return GetHeader().GetHorizontalAngle();
     }
 
+    /// Number of channels of the Lidar.
     auto GetChannelCount() const {
       return GetHeader().GetChannelCount();
     }
 
+    /// Retrieve the number of points that @a channel generated. Points are
+    /// sorted by channel, so this method allows to identify the channel that
+    /// generated each point.
     auto GetPointCount(size_t channel) const {
       return GetHeader().GetPointCount(channel);
     }

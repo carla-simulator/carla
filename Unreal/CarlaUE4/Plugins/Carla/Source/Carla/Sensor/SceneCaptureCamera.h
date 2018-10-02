@@ -11,6 +11,7 @@
 
 #include "SceneCaptureCamera.generated.h"
 
+/// A sensor that captures images from the scene.
 UCLASS()
 class CARLA_API ASceneCaptureCamera : public ASceneCaptureSensor
 {
