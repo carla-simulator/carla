@@ -5,7 +5,6 @@
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
-from __future__ import print_function
 
 import argparse
 import logging
@@ -19,10 +18,6 @@ from carla.client import make_carla_client
 from carla.settings import CarlaSettings
 from carla.tcp import TCPConnectionError
 
-
-# import osi_grpc_pb2_grpc
-# import osi_groundtruth_pb2
-# import proto_generated.osi_groundtruth_pb2 as osi_groundtruth_pb2
 import sys
 sys.path.append('C:\\Users\\sham\\newcarla\\carla\\PythonClient\\proto_generated')
 import osi_grpc_pb2_grpc
@@ -102,32 +97,33 @@ def run_carla_client(args):
                     reverse=False)
 
 
-def vehicle_to_world(x_in_vehicle, y_in_vehicle, z_in_vehicle, roll, pitch, yaw):
+def vehicle_to_world_rotation(x_in_vehicle, y_in_vehicle, z_in_vehicle, roll_host, pitch_host, yaw_host):
     """
+    Rotates a 3D vector from vehicle to world coordinates
     :param x_in_vehicle: x_value in vehicle coordinate system
     :param y_in_vehicle: y_value in vehicle coordinate system
     :param z_in_vehicle: z_value in vehicle coordinate system
-    :param roll: roll angle
-    :param pitch: pitch angle
-    :param yaw: yaw angle
+    :param roll_host: roll angle
+    :param pitch_host: pitch angle
+    :param yaw_host: yaw angle
     :return: x,y,z in world coordinate system
     """
 
     # Rotation about roll around x axis:
-    sin_roll = math.sin(roll)
-    cos_roll = math.cos(roll)
+    sin_roll = math.sin(roll_host)
+    cos_roll = math.cos(roll_host)
     y1_in_world = y_in_vehicle * cos_roll - z_in_vehicle * sin_roll
     z1_in_world = y_in_vehicle * sin_roll + z_in_vehicle * cos_roll
 
     # Rotation about pitch around y axis:
-    sin_pitch = math.sin(pitch)
-    cos_pitch = math.cos(pitch)
+    sin_pitch = math.sin(pitch_host)
+    cos_pitch = math.cos(pitch_host)
     x1_in_world = x_in_vehicle * cos_pitch + z1_in_world * sin_pitch
     z2_in_world = -x_in_vehicle * sin_pitch + z1_in_world * cos_pitch
 
     # Rotation about yaw around z axis:
-    sin_yaw = math.sin(yaw)
-    cos_yaw = math.cos(yaw)
+    sin_yaw = math.sin(yaw_host)
+    cos_yaw = math.cos(yaw_host)
     x3_in_world = x1_in_world * cos_yaw - y1_in_world * sin_yaw
     y3_in_world = x1_in_world * sin_yaw + y1_in_world * cos_yaw
 
@@ -140,7 +136,6 @@ def send_osi_groundtruth(measurements, args):
     :param measurements: measurements of the agents and the host vehicle in the scene
     :param args: command line arguments
     """
-    # channel = grpc.insecure_channel('localhost:63558')
     channel = grpc.insecure_channel('localhost:' + str(args.grpc_port))
     stub = osi_grpc_pb2_grpc.GroundtruthdataStub(channel)
     ground_truth = osi_groundtruth_pb2.GroundTruth()
@@ -164,13 +159,16 @@ def send_osi_groundtruth(measurements, args):
     pitch_host = measurements.player_measurements.transform.rotation.pitch
     roll_host = measurements.player_measurements.transform.rotation.roll
 
-    x_host = measurements.player_measurements.forward_speed
-    y_host = 0
-    z_host = 0
+    velocity_host_x = measurements.player_measurements.forward_speed
+    velocity_host_y = 0
+    velocity_host_z = 0
 
-    host_vehicle.base.velocity.x = vehicle_to_world(x_host, y_host, z_host, roll_host, pitch_host, yaw_host)[0]
-    host_vehicle.base.velocity.y = vehicle_to_world(x_host, y_host, z_host, roll_host, pitch_host, yaw_host)[1]
-    host_vehicle.base.velocity.z = vehicle_to_world(x_host, y_host, z_host, roll_host, pitch_host, yaw_host)[2]
+    rotated_host_speed_v_to_w = vehicle_to_world_rotation(velocity_host_x,
+                                                          velocity_host_y, velocity_host_z, roll_host,
+                                                          pitch_host, yaw_host)
+    host_vehicle.base.velocity.x = rotated_host_speed_v_to_w[0]
+    host_vehicle.base.velocity.y = rotated_host_speed_v_to_w[1]
+    host_vehicle.base.velocity.z = rotated_host_speed_v_to_w[2]
 
     # host_vehicle acceleration
     host_vehicle.base.acceleration.x = measurements.player_measurements.acceleration.x
@@ -203,9 +201,9 @@ def send_osi_groundtruth(measurements, args):
             pitch_agent = agent.vehicle.transform.rotation.pitch
             roll_agent = agent.vehicle.transform.rotation.roll
 
-            x_vehicle = agent.vehicle.forward_speed
-            y_vehicle = 0
-            z_vehicle = 0
+            velocity_vehicle_x = agent.vehicle.forward_speed
+            velocity_vehicle_y = 0
+            velocity_vehicle_z = 0
 
             mov_obj = ground_truth.moving_object.add()
 
@@ -213,9 +211,12 @@ def send_osi_groundtruth(measurements, args):
             mov_obj.id.value = agent.id
 
             # velocity of the agent
-            mov_obj.base.velocity.x = vehicle_to_world(x_vehicle, y_vehicle, z_vehicle, roll_agent, pitch_agent, yaw_agent)[0]
-            mov_obj.base.velocity.y = vehicle_to_world(x_vehicle, y_vehicle, z_vehicle, roll_agent, pitch_agent, yaw_agent)[1]
-            mov_obj.base.velocity.z = vehicle_to_world(x_vehicle, y_vehicle, z_vehicle, roll_agent, pitch_agent, yaw_agent)[2]
+            rotated_vehicle_speed_v_to_w = vehicle_to_world_rotation(velocity_vehicle_x,
+                                                                     velocity_vehicle_y, velocity_vehicle_z, roll_agent,
+                                                                     pitch_agent, yaw_agent)
+            mov_obj.base.velocity.x = rotated_vehicle_speed_v_to_w[0]
+            mov_obj.base.velocity.y = rotated_vehicle_speed_v_to_w[1]
+            mov_obj.base.velocity.z = rotated_vehicle_speed_v_to_w[2]
 
             # position of the agent  (w.r.t cartisian coordinates)
             mov_obj.base.position.x = agent.vehicle.transform.location.x \
