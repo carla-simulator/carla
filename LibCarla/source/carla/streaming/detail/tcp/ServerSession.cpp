@@ -71,6 +71,8 @@ namespace tcp {
   }
 
   void ServerSession::Write(std::shared_ptr<const Message> message) {
+    DEBUG_ASSERT(message != nullptr);
+    DEBUG_ASSERT(!message->empty());
     auto self = shared_from_this();
     _strand.post([=]() {
       if (_is_writing) {

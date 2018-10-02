@@ -13,7 +13,7 @@
 
 #include <atomic>
 
-TEST(streaming_detail_tcp, small_message) {
+TEST(streaming_low_level_tcp, small_message) {
   using namespace carla::streaming;
   using namespace carla::streaming::detail;
 
@@ -25,12 +25,12 @@ TEST(streaming_detail_tcp, small_message) {
   std::atomic_bool done{false};
   std::atomic_size_t message_count{0u};
 
+  const std::string msg = "Hola!";
+
   srv.Listen([&](std::shared_ptr<tcp::ServerSession> session) {
     ASSERT_EQ(session->get_stream_id(), 1u);
-    const std::string msg = "Hola!";
-    auto message = carla::Buffer(msg);
     while (!done) {
-      session->Write(std::move(message));
+      session->Write(carla::Buffer(msg));
       std::this_thread::sleep_for(1ns);
     }
     std::cout << "done!\n";
@@ -42,8 +42,8 @@ TEST(streaming_detail_tcp, small_message) {
     ++message_count;
     ASSERT_FALSE(message.empty());
     ASSERT_EQ(message.size(), 5u);
-    const std::string msg = util::buffer::as_string(message);
-    ASSERT_EQ(msg, std::string("Hola!"));
+    const std::string received = util::buffer::as_string(message);
+    ASSERT_EQ(received, msg);
   });
 
   // We need at least two threads because this server loop consumes one.

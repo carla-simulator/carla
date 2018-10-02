@@ -62,8 +62,12 @@ namespace tcp {
     }
 
     /// Size in bytes of the message excluding the header.
-    auto size() const {
+    auto size() const noexcept {
       return _total_size;
+    }
+
+    bool empty() const noexcept {
+      return size() == 0u;
     }
 
     auto GetBufferSequence() const {
