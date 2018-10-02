@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+option optimize_for = SPEED;
+
+import "osi_sensordata.proto";
+
+package osi3;
+
+//
+// \brief (Time) Series of \c SensorData messages that may be used for data
+// recording or internal buffering by some sensor models.
+//
+message SensorDataSeries
+{
+    // List of sensor data messages for subsequent timesteps.
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated SensorData sensor_data = 1;
+}
+
+//
+// \brief List of sensors where each element contains a time series of
+// \c SensorData messages.
+//
+message SensorDataSeriesList
+{
+    // List of sensor data for multiple sensors at subsequent timesteps.
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated SensorDataSeries sensor = 1;
+}
