@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include "carla/rpc/Transform.h"
+#include "carla/geom/Transform.h"
 
 namespace carla {
 namespace client {
 
-  using Location = carla::rpc::Location;
-  using Rotation = carla::rpc::Rotation;
-  using Transform = carla::rpc::Transform;
+  using Location = carla::geom::Location;
+  using Rotation = carla::geom::Rotation;
+  using Transform = carla::geom::Transform;
 
 } // namespace client
 } // namespace carla

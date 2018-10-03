@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include "carla/MsgPack.h"
 #include "carla/rpc/ActorAttribute.h"
-#include "carla/rpc/MsgPack.h"
 #include "carla/rpc/String.h"
 
 #include <vector>

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "carla/rpc/MsgPack.h"
+#include "carla/MsgPack.h"
 
 #include <array>
 

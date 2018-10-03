@@ -17,6 +17,9 @@ install(DIRECTORY "${libcarla_source_path}/compiler" DESTINATION include)
 file(GLOB libcarla_carla_headers "${libcarla_source_path}/carla/*.h")
 install(FILES ${libcarla_carla_headers} DESTINATION include/carla)
 
+file(GLOB libcarla_carla_geom_headers "${libcarla_source_path}/carla/geom/*.h")
+install(FILES ${libcarla_carla_geom_headers} DESTINATION include/carla/geom)
+
 file(GLOB libcarla_carla_rpc_headers "${libcarla_source_path}/carla/rpc/*.h")
 install(FILES ${libcarla_carla_rpc_headers} DESTINATION include/carla/rpc)
 

@@ -6,14 +6,21 @@
 
 #pragma once
 
-#include "carla/geom/Transform.h"
+#include "carla/road/Map.h"
+
+#include <istream>
+#include <ostream>
 
 namespace carla {
-namespace rpc {
+namespace opendrive {
 
-  using Rotation = geom::Rotation;
+    class OpenDrive {
+    public:
 
-  using Transform = geom::Transform;
+      static road::Map Load(std::istream &input);
 
-} // namespace rpc
+      static void Dump(const road::Map &map, std::ostream &output);
+    };
+
+} // namespace opendrive
 } // namespace carla
