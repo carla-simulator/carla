@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include "carla/geom/Transform.h"
-
 namespace carla {
-namespace rpc {
+namespace road {
 
-  using Rotation = geom::Rotation;
+    class Map {
+    public:
 
-  using Transform = geom::Transform;
 
-} // namespace rpc
+    };
+
+} // namespace road
 } // namespace carla
