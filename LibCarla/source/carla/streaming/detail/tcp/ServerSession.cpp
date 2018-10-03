@@ -76,8 +76,7 @@ namespace tcp {
     auto self = shared_from_this();
     _strand.post([=]() {
       if (_is_writing) {
-        // Re-post and return;
-        Write(std::move(message));
+        log_debug("session", _session_id, ": connection too slow: message discarded");
         return;
       }
       _is_writing = true;
