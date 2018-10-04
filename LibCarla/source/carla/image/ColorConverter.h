@@ -20,7 +20,7 @@ namespace image {
       void operator()(const boost::gil::gray32fc_pixel_t &src, DstPixelT &dst) const {
         using namespace boost::gil;
         const float value = 1.0f + std::log(src[0u]) / 5.70378f;
-        const float clamped = std::max(std::min(value, 1.0f), 0.0f);
+        const float clamped = std::max(std::min(value, 1.0f), 0.005f);
         color_convert(gray32fc_pixel_t{clamped}, dst);
       }
     };

@@ -25,7 +25,8 @@ def get_libcarla_extensions():
             extra_link_args = [
                 os.path.join(pwd, 'dependencies/lib/librpc.a'),
                 os.path.join(pwd, 'dependencies/lib/libboost_filesystem.a'),
-                os.path.join(pwd, 'dependencies/lib', pylib)]
+                os.path.join(pwd, 'dependencies/lib', pylib),
+                '-lpng', '-ljpeg', '-ltiff']
             extra_compile_args = [
                 '-fPIC', '-std=c++14', '-DBOOST_ERROR_CODE_HEADER_ONLY', '-Wno-missing-braces'
             ]

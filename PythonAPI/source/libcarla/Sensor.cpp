@@ -5,6 +5,9 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include <carla/client/Sensor.h>
+#include <carla/image/ImageConverter.h>
+#include <carla/image/ImageIO.h>
+#include <carla/image/ImageView.h>
 #include <carla/pointcloud/PLY.h>
 #include <carla/sensor/SensorData.h>
 #include <carla/sensor/data/Image.h>
@@ -66,6 +69,13 @@ namespace data {
 } // namespace sensor
 } // namespace carla
 
+enum class EColorConverter {
+  None,
+  Depth,
+  LogarithmicDepth,
+  CityScapesPalette
+};
+
 template <typename T>
 static auto GetRawDataAsBuffer(T &self) {
   auto *data = reinterpret_cast<unsigned char *>(self.data());
@@ -76,6 +86,49 @@ static auto GetRawDataAsBuffer(T &self) {
   auto *ptr = PyBuffer_FromMemory(data, size);
 #endif
   return boost::python::object(boost::python::handle<>(ptr));
+}
+
+template <typename T>
+static void ConvertImage(T &self, EColorConverter cc) {
+  using namespace carla::image;
+  auto view = ImageView::MakeView(self);
+  switch (cc) {
+    case EColorConverter::Depth:
+      ImageConverter::ConvertInPlace(view, ColorConverter::Depth());
+      break;
+    case EColorConverter::LogarithmicDepth:
+      ImageConverter::ConvertInPlace(view, ColorConverter::LogarithmicDepth());
+      break;
+    case EColorConverter::CityScapesPalette:
+      ImageConverter::ConvertInPlace(view, ColorConverter::CityScapesPalette());
+      break;
+    case EColorConverter::None:
+      break; // ignore.
+    default:
+      throw std::invalid_argument("invalid color converter!");
+  }
+}
+
+template <typename T>
+static void SaveImageToDisk(T &self, const std::string &path, EColorConverter cc) {
+  using namespace carla::image;
+  auto view = ImageView::MakeView(self);
+  switch (cc) {
+    case EColorConverter::None:
+      ImageIO::WriteView(path, view);
+      break;
+    case EColorConverter::Depth:
+      ImageIO::WriteView(path, ImageView::MakeColorConvertedView(view, ColorConverter::Depth()));
+      break;
+    case EColorConverter::LogarithmicDepth:
+      ImageIO::WriteView(path, ImageView::MakeColorConvertedView(view, ColorConverter::LogarithmicDepth()));
+      break;
+    case EColorConverter::CityScapesPalette:
+      ImageIO::WriteView(path, ImageView::MakeColorConvertedView(view, ColorConverter::CityScapesPalette()));
+      break;
+    default:
+      throw std::invalid_argument("invalid color converter!");
+  }
 }
 
 template <typename T>
@@ -96,11 +149,20 @@ void export_sensor() {
     })
   ;
 
+  enum_<EColorConverter>("ColorConverter")
+    .value("None", EColorConverter::None)
+    .value("Depth", EColorConverter::Depth)
+    .value("LogarithmicDepth", EColorConverter::LogarithmicDepth)
+    .value("CityScapesPalette", EColorConverter::CityScapesPalette)
+  ;
+
   class_<csd::Image, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::Image>>("Image", no_init)
     .add_property("width", &csd::Image::GetWidth)
     .add_property("height", &csd::Image::GetHeight)
     .add_property("fov", &csd::Image::GetFOVAngle)
     .add_property("raw_data", &GetRawDataAsBuffer<csd::Image>)
+    .def("convert", &ConvertImage<csd::Image>, (arg("color_converter")))
+    .def("save_to_disk", &SaveImageToDisk<csd::Image>, (arg("path"), arg("color_converter")=EColorConverter::None))
     .def("__len__", &csd::Image::size)
     .def("__iter__", iterator<csd::Image>())
     .def(self_ns::str(self_ns::self))
