@@ -100,13 +100,13 @@ namespace detail {
       return StringUtil::EndsWith(str, get_default_extension());
     }
 
-    template <typename Str, typename IMAGE>
-    static void read_image(Str &&in_filename, IMAGE &image) {
+    template <typename Str, typename ImageT>
+    static void read_image(Str &&in_filename, ImageT &image) {
       boost::gil::png_read_and_convert_image(std::forward<Str>(in_filename), image);
     }
 
-    template <typename Str, typename VIEW>
-    static void write_view(Str &&out_filename, const VIEW &view) {
+    template <typename Str, typename ViewT>
+    static void write_view(Str &&out_filename, const ViewT &view) {
       boost::gil::png_write_view(std::forward<Str>(out_filename), view);
     }
 
@@ -129,14 +129,23 @@ namespace detail {
              StringUtil::EndsWith(str, "jpg");
     }
 
-    template <typename Str, typename IMAGE>
-    static void read_image(Str &&in_filename, IMAGE &image) {
+    template <typename Str, typename ImageT>
+    static void read_image(Str &&in_filename, ImageT &image) {
       boost::gil::jpeg_read_image(std::forward<Str>(in_filename), image);
     }
 
-    template <typename Str, typename VIEW>
-    static void write_view(Str &&out_filename, const VIEW &view) {
-      boost::gil::jpeg_write_view(std::forward<Str>(out_filename), view);
+    template <typename Str, typename ViewT>
+    static typename std::enable_if<boost::gil::jpeg_write_support<ViewT>::is_supported>::type
+    write_view(Str &&out_filename, const ViewT &view) {
+      using namespace boost::gil;
+      jpeg_write_view(std::forward<Str>(out_filename), view);
+    }
+
+    template <typename Str, typename ViewT>
+    static typename std::enable_if<!boost::gil::jpeg_write_support<ViewT>::is_supported>::type
+    write_view(Str &&out_filename, const ViewT &view) {
+      using namespace boost::gil;
+      jpeg_write_view(std::forward<Str>(out_filename), color_converted_view<rgb8_pixel_t>(view));
     }
 
 #endif // LIBCARLA_IMAGE_WITH_JPEG_SUPPORT
@@ -157,14 +166,23 @@ namespace detail {
       return StringUtil::EndsWith(str, get_default_extension());
     }
 
-    template <typename Str, typename IMAGE>
-    static void read_image(Str &&in_filename, IMAGE &image) {
+    template <typename Str, typename ImageT>
+    static void read_image(Str &&in_filename, ImageT &image) {
       boost::gil::tiff_read_and_convert_image(std::forward<Str>(in_filename), image);
     }
 
-    template <typename Str, typename VIEW>
-    static void write_view(Str &&out_filename, const VIEW &view) {
-      boost::gil::tiff_write_view(std::forward<Str>(out_filename), view);
+    template <typename Str, typename ViewT>
+    static typename std::enable_if<boost::gil::tiff_write_support<ViewT>::is_supported>::type
+    write_view(Str &&out_filename, const ViewT &view) {
+      using namespace boost::gil;
+      tiff_write_view(std::forward<Str>(out_filename), view);
+    }
+
+    template <typename Str, typename ViewT>
+    static typename std::enable_if<!boost::gil::tiff_write_support<ViewT>::is_supported>::type
+    write_view(Str &&out_filename, const ViewT &view) {
+      using namespace boost::gil;
+      tiff_write_view(std::forward<Str>(out_filename), color_converted_view<rgb8_pixel_t>(view));
     }
 
 #endif // LIBCARLA_IMAGE_WITH_TIFF_SUPPORT
@@ -204,7 +222,6 @@ namespace detail {
     static typename std::enable_if<!IO::is_supported>::type write_view(Args &&...) {
       DEBUG_ASSERT(false);
     }
-
   };
 
   template <typename... IOs>
@@ -241,7 +258,6 @@ namespace detail {
       }
       return false;
     }
-
   };
 
   template <typename IO, typename... IOs>

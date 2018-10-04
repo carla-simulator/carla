@@ -89,6 +89,8 @@
 - `type`
 - `fov`
 - `raw_data`
+- `convert(color_converter)`
+- `save_to_disk(path, color_converter=None)`
 - `__len__()`
 - `__iter__()`
 
@@ -135,3 +137,10 @@
 - `g`
 - `b`
 - `a`
+
+## `carla.ColorConverter`
+
+- `None`
+- `Depth`
+- `LogarithmicDepth`
+- `CityScapesPalette`
