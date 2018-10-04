@@ -14,16 +14,12 @@ namespace image {
   class ImageIO {
   public:
 
-    using io_default = io::png;
-
-    static_assert(io_default::is_supported, "Default format not supported!");
-
-    template <typename Str, typename ImageT, typename IO = io_default>
+    template <typename Str, typename ImageT, typename IO = io::any>
     static void ReadImage(Str &&in_filename, ImageT &image, IO = IO()) {
       IO::read_image(std::forward<Str>(in_filename), image);
     }
 
-    template <typename Str, typename ViewT, typename IO = io_default>
+    template <typename Str, typename ViewT, typename IO = io::any>
     static void WriteView(Str &&out_filename, const ViewT &image_view, IO = IO()) {
       IO::write_view(std::forward<Str>(out_filename), image_view);
     }
