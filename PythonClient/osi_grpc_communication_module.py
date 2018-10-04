@@ -12,14 +12,16 @@ import random
 import time
 import math
 import grpc
+import sys
+import os
 import numpy as np
 
 from carla.client import make_carla_client
 from carla.settings import CarlaSettings
 from carla.tcp import TCPConnectionError
 
-import sys
-sys.path.append('C:\\Users\\sham\\newcarla\\carla\\PythonClient\\proto_generated')
+sys.path.insert(0,os.path.abspath('proto_generated'))
+
 import osi_grpc_pb2_grpc
 import osi_groundtruth_pb2
 
@@ -190,9 +192,8 @@ def send_osi_groundtruth(measurements, args):
 
     # timestamp with osi standards
     ground_truth.timestamp.seconds = np.int64(measurements.game_timestamp / 1000)
-    a_seconds = np.double(measurements.game_timestamp / 1000.0)
-    b_seconds = math.floor(measurements.game_timestamp / 1000)
-    ground_truth.timestamp.nanos = np.uint32((10 ** 9) * (a_seconds - b_seconds))
+    last_second = np.double(measurements.game_timestamp / 1000.0)
+    ground_truth.timestamp.nanos = np.uint32((10 ** 9) * (last_second - ground_truth.timestamp.seconds))
 
     for agent in measurements.non_player_agents:
 

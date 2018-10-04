@@ -3,7 +3,8 @@ import time
 
 import grpc
 import sys
-sys.path.append('C:\\Users\\sham\\newcarla\\carla\\PythonClient\\proto_generated')
+import os
+sys.path.insert(0,os.path.abspath('proto_generated'))
 import osi_grpc_pb2_grpc
 import osi_grpc_pb2
 
