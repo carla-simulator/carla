@@ -255,6 +255,12 @@ cat >${CMAKE_CONFIG_FILE}.gen <<EOL
 set(CARLA_VERSION $(get_carla_version))
 
 add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY)
+add_definitions(-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT)
+
+# Uncomment to force support for other image formats (require their respective
+# libraries installed).
+# add_definitions(-DLIBCARLA_IMAGE_WITH_JPEG_SUPPORT)
+# add_definitions(-DLIBCARLA_IMAGE_WITH_TIFF_SUPPORT)
 
 set(BOOST_INCLUDE_PATH "${BOOST_INCLUDE}")
 
