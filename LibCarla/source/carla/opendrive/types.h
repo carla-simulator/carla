@@ -259,6 +259,8 @@ namespace opendrive
 
             double heading, speed, width;
             double distance_in_section;
+
+            Waypoint() : v{0.0, 0.0, 0.0}, heading(0.0), speed(0.0), width(0.0) {}
         };
     }
 }
