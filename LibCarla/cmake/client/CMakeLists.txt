@@ -27,6 +27,12 @@ file(GLOB libcarla_carla_client_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_client_sources}")
 install(FILES ${libcarla_carla_client_sources} DESTINATION include/carla/client)
 
+file(GLOB libcarla_carla_client_detail_sources
+    "${libcarla_source_path}/carla/client/detail/*.cpp"
+    "${libcarla_source_path}/carla/client/detail/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_client_detail_sources}")
+install(FILES ${libcarla_carla_client_detail_sources} DESTINATION include/carla/client/detail)
+
 file(GLOB libcarla_carla_geom_sources
     "${libcarla_source_path}/carla/geom/*.cpp"
     "${libcarla_source_path}/carla/geom/*.h")

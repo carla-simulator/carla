@@ -13,7 +13,7 @@ void export_world() {
   using namespace boost::python;
   namespace cc = carla::client;
 
-  class_<cc::World, boost::noncopyable, boost::shared_ptr<cc::World>>("World", no_init)
+  class_<cc::World>("World", no_init)
     .def("get_blueprint_library", &cc::World::GetBlueprintLibrary)
     .def("get_spectator", &cc::World::GetSpectator)
     .def("try_spawn_actor", &cc::World::TrySpawnActor,

@@ -64,6 +64,7 @@
 
 - `id`
 - `type_id`
+- `is_alive`
 - `get_world()`
 - `get_location()`
 - `get_transform()`
@@ -73,6 +74,7 @@
 
 ## `carla.Vehicle(carla.Actor)`
 
+- `control`
 - `apply_control(vehicle_control)`
 - `set_autopilot(enabled=True)`
 
@@ -113,6 +115,8 @@
 - `brake`
 - `hand_brake`
 - `reverse`
+- `__eq__()`
+- `__ne__()`
 
 ## `carla.Location`
 

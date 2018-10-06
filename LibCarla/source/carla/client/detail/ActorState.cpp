@@ -4,14 +4,19 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#pragma once
+#include "carla/client/detail/ActorState.h"
 
-#include "carla/rpc/VehicleControl.h"
+#include <string>
 
 namespace carla {
 namespace client {
+namespace detail {
 
-  using VehicleControl = carla::rpc::VehicleControl;
+  std::string ActorState::GetDisplayId() const {
+    using namespace std::string_literals;
+    return "Actor "s + std::to_string(GetId()) + " (" + GetTypeId() + ')';
+  }
 
+} // namespace detail
 } // namespace client
 } // namespace carla

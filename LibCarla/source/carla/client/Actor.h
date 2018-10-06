@@ -8,66 +8,55 @@
 
 #include "carla/Debug.h"
 #include "carla/Memory.h"
-#include "carla/NonCopyable.h"
-#include "carla/client/World.h"
-#include "carla/rpc/Actor.h"
+#include "carla/client/detail/ActorState.h"
 
 namespace carla {
 namespace client {
 
-  class Client;
-
   class Actor
     : public EnableSharedFromThis<Actor>,
-      private NonCopyable {
+      private detail::ActorState {
+    using Super = detail::ActorState;
   public:
+
+    explicit Actor(ActorInitializer init) : Super(std::move(init)) {}
 
     virtual ~Actor() = default;
 
-    Actor(Actor &&) = default;
-    Actor &operator=(Actor &&) = default;
+    using Super::GetId;
+    using Super::GetTypeId;
+    using Super::GetDisplayId;
+    using Super::GetWorld;
 
-    auto GetId() const {
-      return _actor.id;
-    }
+    geom::Location GetLocation();
 
-    const std::string &GetTypeId() const {
-      return _actor.description.id;
-    }
+    geom::Transform GetTransform();
 
-    SharedPtr<World> GetWorld() const {
-      return _world;
-    }
+    void SetLocation(const geom::Location &location);
 
-    Location GetLocation();
-
-    Transform GetTransform();
-
-    bool SetLocation(const Location &location);
-
-    bool SetTransform(const Transform &transform);
+    void SetTransform(const geom::Transform &transform);
 
     const auto &Serialize() const {
-      return _actor;
+      return Super::GetActorDescription();
+    }
+
+    bool IsAlive() const {
+      return _is_alive;
     }
 
     void Destroy();
 
   protected:
 
-    Actor(carla::rpc::Actor actor, SharedPtr<World> world)
-      : _actor(actor),
-        _world(std::move(world)) {
-      DEBUG_ASSERT(_world != nullptr);
+    using Super::GetActorDescription;
+
+    auto GetClientImplementation() const {
+      return GetWorld().parent;
     }
 
   private:
 
-    friend class Client;
-
-    carla::rpc::Actor _actor;
-
-    SharedPtr<World> _world;
+    bool _is_alive = true;
   };
 
 } // namespace client

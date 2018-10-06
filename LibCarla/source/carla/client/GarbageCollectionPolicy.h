@@ -6,12 +6,14 @@
 
 #pragma once
 
-#include "carla/sensor/data/Color.h"
-
 namespace carla {
 namespace client {
 
-  using Color = carla::sensor::data::Color;
+  enum class GarbageCollectionPolicy {
+    Disabled,
+    Enabled,
+    Inherit
+  };
 
 } // namespace client
 } // namespace carla

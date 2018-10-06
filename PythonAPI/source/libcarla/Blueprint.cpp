@@ -70,7 +70,7 @@ namespace client {
         out << ",type=str,value=" << attr.As<std::string>();
         break;
       case Type::RGBColor:
-        out << ",type=Color,value=" << attr.As<Color>();
+        out << ",type=Color,value=" << attr.As<sensor::data::Color>();
         break;
       default:
         out << ",INVALID";
@@ -136,18 +136,18 @@ void export_blueprint() {
     .def("as_int", &cc::ActorAttribute::As<int>)
     .def("as_float", &cc::ActorAttribute::As<float>)
     .def("as_str", &cc::ActorAttribute::As<std::string>)
-    .def("as_color", &cc::ActorAttribute::As<cc::Color>)
+    .def("as_color", &cc::ActorAttribute::As<csd::Color>)
     .def("__eq__", &cc::ActorAttribute::operator==<bool>)
     .def("__eq__", &cc::ActorAttribute::operator==<int>)
     .def("__eq__", &cc::ActorAttribute::operator==<float>)
     .def("__eq__", &cc::ActorAttribute::operator==<std::string>)
-    .def("__eq__", &cc::ActorAttribute::operator==<cc::Color>)
+    .def("__eq__", &cc::ActorAttribute::operator==<csd::Color>)
     .def("__eq__", &cc::ActorAttribute::operator==<cc::ActorAttribute>)
     .def("__ne__", &cc::ActorAttribute::operator!=<bool>)
     .def("__ne__", &cc::ActorAttribute::operator!=<int>)
     .def("__ne__", &cc::ActorAttribute::operator!=<float>)
     .def("__ne__", &cc::ActorAttribute::operator!=<std::string>)
-    .def("__ne__", &cc::ActorAttribute::operator!=<cc::Color>)
+    .def("__ne__", &cc::ActorAttribute::operator!=<csd::Color>)
     .def("__ne__", &cc::ActorAttribute::operator!=<cc::ActorAttribute>)
     .def("__nonzero__", &cc::ActorAttribute::As<bool>)
     .def("__bool__", &cc::ActorAttribute::As<bool>)

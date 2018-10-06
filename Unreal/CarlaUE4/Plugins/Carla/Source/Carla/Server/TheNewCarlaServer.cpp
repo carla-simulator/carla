@@ -169,10 +169,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   Server.BindSync("destroy_actor", [this](cr::Actor Actor) {
     RequireEpisode();
     auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
-    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
-      RespondErrorStr("unable to destroy actor: actor not found");
+    if (!ActorView.IsValid()) {
+      UE_LOG(LogCarlaServer, Warning, TEXT("unable to destroy actor: not found"));
+      return false;
     }
-    Episode->DestroyActor(ActorView.GetActor());
+    return Episode->DestroyActor(ActorView.GetActor());
   });
 
   Server.BindSync("attach_actors", [this](cr::Actor Child, cr::Actor Parent) {
@@ -209,6 +210,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     }
     // This function only works with teleport physics, to reset speeds we need
     // another method.
+    /// @todo print error instead of returning false.
     return ActorView.GetActor()->SetActorLocation(
         Location,
         false,
