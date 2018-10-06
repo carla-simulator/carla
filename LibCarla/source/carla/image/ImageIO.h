@@ -14,14 +14,15 @@ namespace image {
   class ImageIO {
   public:
 
-    template <typename Str, typename ImageT, typename IO = io::any>
-    static void ReadImage(Str &&in_filename, ImageT &image, IO = IO()) {
-      IO::read_image(std::forward<Str>(in_filename), image);
+    template <typename ImageT, typename IO = io::any>
+    static void ReadImage(const std::string &in_filename, ImageT &image, IO = IO()) {
+      IO::read_image(in_filename, image);
     }
 
-    template <typename Str, typename ViewT, typename IO = io::any>
-    static void WriteView(Str &&out_filename, const ViewT &image_view, IO = IO()) {
-      IO::write_view(std::forward<Str>(out_filename), image_view);
+    template <typename ViewT, typename IO = io::any>
+    static std::string WriteView(std::string out_filename, const ViewT &image_view, IO = IO()) {
+      IO::write_view(out_filename, image_view);
+      return out_filename;
     }
   };
 

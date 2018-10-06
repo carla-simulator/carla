@@ -8,7 +8,7 @@
 #include <carla/image/ImageConverter.h>
 #include <carla/image/ImageIO.h>
 #include <carla/image/ImageView.h>
-#include <carla/pointcloud/PLY.h>
+#include <carla/pointcloud/PointCloudIO.h>
 #include <carla/sensor/SensorData.h>
 #include <carla/sensor/data/Image.h>
 #include <carla/sensor/data/LidarMeasurement.h>
@@ -110,30 +110,34 @@ static void ConvertImage(T &self, EColorConverter cc) {
 }
 
 template <typename T>
-static void SaveImageToDisk(T &self, const std::string &path, EColorConverter cc) {
+static std::string SaveImageToDisk(T &self, std::string path, EColorConverter cc) {
   using namespace carla::image;
   auto view = ImageView::MakeView(self);
   switch (cc) {
     case EColorConverter::None:
-      ImageIO::WriteView(path, view);
-      break;
+      return ImageIO::WriteView(
+          std::move(path),
+          view);
     case EColorConverter::Depth:
-      ImageIO::WriteView(path, ImageView::MakeColorConvertedView(view, ColorConverter::Depth()));
-      break;
+      return ImageIO::WriteView(
+          std::move(path),
+          ImageView::MakeColorConvertedView(view, ColorConverter::Depth()));
     case EColorConverter::LogarithmicDepth:
-      ImageIO::WriteView(path, ImageView::MakeColorConvertedView(view, ColorConverter::LogarithmicDepth()));
-      break;
+      return ImageIO::WriteView(
+          std::move(path),
+          ImageView::MakeColorConvertedView(view, ColorConverter::LogarithmicDepth()));
     case EColorConverter::CityScapesPalette:
-      ImageIO::WriteView(path, ImageView::MakeColorConvertedView(view, ColorConverter::CityScapesPalette()));
-      break;
+      return ImageIO::WriteView(
+          std::move(path),
+          ImageView::MakeColorConvertedView(view, ColorConverter::CityScapesPalette()));
     default:
       throw std::invalid_argument("invalid color converter!");
   }
 }
 
 template <typename T>
-static void SavePointCloudToDisk(T &self, const std::string &path) {
-  carla::pointcloud::PLY::SaveToDisk(path, self.begin(), self.end());
+static std::string SavePointCloudToDisk(T &self, std::string path) {
+  return carla::pointcloud::PointCloudIO::SaveToDisk(std::move(path), self.begin(), self.end());
 }
 
 void export_sensor() {

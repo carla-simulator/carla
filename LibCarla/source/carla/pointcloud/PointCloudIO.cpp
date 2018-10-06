@@ -4,14 +4,14 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "carla/pointcloud/PLY.h"
+#include "carla/pointcloud/PointCloudIO.h"
 
 #include <iomanip>
 
 namespace carla {
 namespace pointcloud {
 
-  void PLY::WriteHeader(OutputFile &out, size_t number_of_points) {
+  void PointCloudIO::WriteHeader(std::ostream &out, size_t number_of_points) {
     out << "ply\n"
            "format ascii 1.0\n"
            "element vertex " << number_of_points << "\n"

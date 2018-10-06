@@ -6,28 +6,36 @@
 
 #pragma once
 
-#include "carla/OutputFile.h"
+#include "carla/FileSystem.h"
 
+#include <fstream>
 #include <iterator>
 
 namespace carla {
 namespace pointcloud {
 
-  class PLY {
+  class PointCloudIO {
   public:
 
     template <typename PointIt>
-    static void SaveToDisk(const std::string &path, PointIt begin, PointIt end) {
-      OutputFile out(path, ".ply");
+    static void Dump(std::ostream &out, PointIt begin, PointIt end) {
       WriteHeader(out, std::distance(begin, end));
       for (; begin != end; ++begin) {
         out << begin->x << ' ' << begin->y << ' ' << begin->z << '\n';
       }
     }
 
+    template <typename PointIt>
+    static std::string SaveToDisk(std::string path, PointIt begin, PointIt end) {
+      FileSystem::ValidateFilePath(path, ".ply");
+      std::ofstream out(path);
+      Dump(out, begin, end);
+      return path;
+    }
+
   private:
 
-    static void WriteHeader(OutputFile &out, size_t number_of_points);
+    static void WriteHeader(std::ostream &out, size_t number_of_points);
   };
 
 } // namespace pointcloud

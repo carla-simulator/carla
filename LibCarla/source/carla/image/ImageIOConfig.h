@@ -212,7 +212,7 @@ namespace detail {
     }
 
     template <typename IO, typename... Args>
-    static typename std::enable_if<IO::is_supported>::type write_view(std::string path, Args &&... args) {
+    static typename std::enable_if<IO::is_supported>::type write_view(std::string &path, Args &&... args) {
       FileSystem::ValidateFilePath(path, IO::get_default_extension());
       log_debug("writing", path, "as", IO::get_default_extension());
       IO::write_view(path, std::forward<Args>(args)...);
@@ -251,7 +251,7 @@ namespace detail {
     }
 
     template <typename Str, typename... Args>
-    static bool try_write_view(const Str &filename, Args &&... args) {
+    static bool try_write_view(Str &filename, Args &&... args) {
       if (io_resolver::match_extension<IO>(filename)) {
         io_resolver::write_view<IO>(filename, std::forward<Args>(args)...);
         return true;
