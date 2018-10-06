@@ -20,23 +20,20 @@ namespace client {
     return out;
   }
 
-  std::ostream &operator<<(std::ostream &out, const Vehicle &vehicle) {
-    out << "Vehicle(id=" << vehicle.GetId() << ", type=" << vehicle.GetTypeId() << ')';
-    return out;
-  }
-
 } // namespace client
 } // namespace carla
 
 void export_actor() {
   using namespace boost::python;
   namespace cc = carla::client;
+  namespace cr = carla::rpc;
 
   class_<cc::Actor, boost::noncopyable, boost::shared_ptr<cc::Actor>>("Actor", no_init)
     .add_property("id", &cc::Actor::GetId)
     .add_property("type_id", +[](const cc::Actor &self) -> std::string {
       return self.GetTypeId();
     })
+    .add_property("is_alive", &cc::Actor::IsAlive)
     .def("get_world", &cc::Actor::GetWorld)
     .def("get_location", &cc::Actor::GetLocation)
     .def("get_transform", &cc::Actor::GetTransform)
@@ -47,6 +44,9 @@ void export_actor() {
   ;
 
   class_<cc::Vehicle, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Vehicle>>("Vehicle", no_init)
+    .add_property("control", +[](const cc::Vehicle &self) -> cr::VehicleControl {
+      return self.GetControl();
+    })
     .def("apply_control", &cc::Vehicle::ApplyControl, (arg("control")))
     .def("set_autopilot", &cc::Vehicle::SetAutopilot, (arg("enabled")=true))
     .def(self_ns::str(self_ns::self))

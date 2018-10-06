@@ -6,56 +6,54 @@
 
 #pragma once
 
-#include "carla/Debug.h"
 #include "carla/Memory.h"
-#include "carla/NonCopyable.h"
-#include "carla/client/Client.h"
+#include "carla/client/GarbageCollectionPolicy.h"
+#include "carla/geom/Transform.h"
 
 namespace carla {
 namespace client {
 
-  class Actor;
+namespace detail {
+  class Client;
+  class ActorFactory;
+}
 
-  class World
-    : public EnableSharedFromThis<World>,
-      private NonCopyable {
+  class Actor;
+  class ActorBlueprint;
+  class BlueprintLibrary;
+
+  class World {
   public:
 
-    SharedPtr<BlueprintLibrary> GetBlueprintLibrary() const {
-      return _parent->GetBlueprintLibrary();
-    }
+    World(const World &) = default;
+    World(World &&) = default;
 
-    SharedPtr<Actor> GetSpectator() const {
-      return _parent->GetSpectator();
-    }
+    World &operator=(const World &) = default;
+    World &operator=(World &&) = default;
 
-    SharedPtr<Actor> TrySpawnActor(
-        const ActorBlueprint &blueprint,
-        const Transform &transform,
-        Actor *parent = nullptr);
+    SharedPtr<BlueprintLibrary> GetBlueprintLibrary() const;
+
+    SharedPtr<Actor> GetSpectator() const;
 
     SharedPtr<Actor> SpawnActor(
         const ActorBlueprint &blueprint,
-        const Transform &transform,
-        Actor *parent = nullptr) {
-      return _parent->SpawnActor(blueprint, transform, parent);
-    }
+        const geom::Transform &transform,
+        Actor *parent = nullptr);
 
-    Client &GetClient() const {
-      DEBUG_ASSERT(_parent != nullptr);
-      return *_parent;
-    }
+    SharedPtr<Actor> TrySpawnActor(
+        const ActorBlueprint &blueprint,
+        const geom::Transform &transform,
+        Actor *parent = nullptr);
 
   private:
 
-    friend class Client;
+    friend class Actor;
+    friend class detail::ActorFactory;
+    friend class detail::Client;
 
-    explicit World(SharedPtr<Client> parent)
-      : _parent(std::move(parent)) {
-      DEBUG_ASSERT(_parent != nullptr);
-    }
+    World(SharedPtr<detail::Client> parent) : parent(std::move(parent)) {}
 
-    SharedPtr<Client> _parent;
+    SharedPtr<detail::Client> parent;
   };
 
 } // namespace client
