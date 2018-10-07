@@ -27,7 +27,8 @@ def get_libcarla_extensions():
                 os.path.join(pwd, 'dependencies/lib/libboost_filesystem.a'),
                 os.path.join(pwd, 'dependencies/lib', pylib)]
             extra_compile_args = [
-                '-fPIC', '-std=c++14', '-DBOOST_ERROR_CODE_HEADER_ONLY', '-Wno-missing-braces'
+                '-fPIC', '-std=c++14', '-Wno-missing-braces',
+                '-DBOOST_ERROR_CODE_HEADER_ONLY', '-DLIBCARLA_WITH_PYTHON_SUPPORT'
             ]
             if 'TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true':
                 print('Travis CI build detected: disabling PNG support.')
@@ -44,16 +45,19 @@ def get_libcarla_extensions():
             raise NotImplementedError
     elif os.name == "nt":
         pwd = os.path.dirname(os.path.realpath(__file__))
-        pylib = "libboost_python%d%d-vc141-mt-x64-1_67.lib" % (sys.version_info.major, sys.version_info.minor)
-
+        pylib = "libboost_python%d%d-vc141-mt-x64-1_67.lib" % (
+            sys.version_info.major,
+            sys.version_info.minor)
         extra_link_args = [
                 'shlwapi.lib',
                 os.path.join(pwd, 'dependencies/lib/rpc.lib'),
                 os.path.join(pwd, 'dependencies/lib', pylib)]
 
         # https://docs.microsoft.com/es-es/cpp/porting/modifying-winver-and-win32-winnt
-        extra_compile_args = ['/DPYTHON3X', '/DBOOST_ALL_NO_LIB', '/DBOOST_PYTHON_STATIC_LIB',
-                '/DBOOST_ERROR_CODE_HEADER_ONLY', '/D_WIN32_WINNT=0x0501' ]
+        extra_compile_args = [
+            '/DPYTHON3X', '/DBOOST_ALL_NO_LIB', '/DBOOST_PYTHON_STATIC_LIB',
+            '/DBOOST_ERROR_CODE_HEADER_ONLY', '/D_WIN32_WINNT=0x0501',
+            '/DLIBCARLA_WITH_PYTHON_SUPPORT']
     else:
         raise NotImplementedError
 

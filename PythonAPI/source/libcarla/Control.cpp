@@ -6,8 +6,6 @@
 
 #include <carla/rpc/VehicleControl.h>
 
-#include <boost/python.hpp>
-
 #include <ostream>
 
 namespace carla {
