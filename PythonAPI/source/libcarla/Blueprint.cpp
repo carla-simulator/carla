@@ -7,7 +7,6 @@
 #include <carla/client/BlueprintLibrary.h>
 #include <carla/client/ActorBlueprint.h>
 
-#include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 #include <ostream>
@@ -124,13 +123,9 @@ void export_blueprint() {
   ;
 
   class_<cc::ActorAttribute>("ActorAttribute", no_init)
-    .add_property("id", +[](const cc::ActorAttribute &self) -> std::string {
-      return self.GetId();
-    })
+    .add_property("id", CALL_RETURNING_COPY(cc::ActorAttribute, GetId))
     .add_property("type", &cc::ActorAttribute::GetType)
-    .add_property("recommended_values", +[](const cc::ActorAttribute &self) -> std::vector<std::string> {
-      return self.GetRecommendedValues();
-    })
+    .add_property("recommended_values", CALL_RETURNING_COPY(cc::ActorAttribute, GetRecommendedValues))
     .add_property("is_modifiable", &cc::ActorAttribute::IsModifiable)
     .def("as_bool", &cc::ActorAttribute::As<bool>)
     .def("as_int", &cc::ActorAttribute::As<int>)
@@ -158,16 +153,12 @@ void export_blueprint() {
   ;
 
   class_<cc::ActorBlueprint>("ActorBlueprint", no_init)
-    .add_property("id", +[](const cc::ActorBlueprint &self) -> std::string {
-      return self.GetId();
-    })
+    .add_property("id", CALL_RETURNING_COPY(cc::ActorBlueprint, GetId))
     .add_property("tags", &cc::ActorBlueprint::GetTags)
     .def("contains_tag", &cc::ActorBlueprint::ContainsTag)
     .def("match_tags", &cc::ActorBlueprint::MatchTags)
     .def("contains_attribute", &cc::ActorBlueprint::ContainsAttribute)
-    .def("get_attribute", +[](const cc::ActorBlueprint &self, const std::string &id) -> cc::ActorAttribute {
-      return self.GetAttribute(id);
-    })
+    .def("get_attribute", CALL_RETURNING_COPY_1(cc::ActorBlueprint, GetAttribute, const std::string &))
     .def("set_attribute", &cc::ActorBlueprint::SetAttribute)
     .def("__len__", &cc::ActorBlueprint::size)
     .def("__iter__", range(&cc::ActorBlueprint::begin, &cc::ActorBlueprint::end))

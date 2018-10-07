@@ -12,11 +12,11 @@
 namespace carla {
 namespace client {
 
-  geom::Location Actor::GetLocation() {
+  geom::Location Actor::GetLocation() const {
     return GetClientImplementation()->GetActorLocation(*this);
   }
 
-  geom::Transform Actor::GetTransform() {
+  geom::Transform Actor::GetTransform() const {
     return GetClientImplementation()->GetActorTransform(*this);
   }
 

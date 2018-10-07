@@ -130,11 +130,11 @@ namespace detail {
     });
   }
 
-  geom::Location Client::GetActorLocation(Actor &actor) {
+  geom::Location Client::GetActorLocation(const Actor &actor) {
     return _pimpl->CallAndWait<geom::Location>("get_actor_location", actor.Serialize());
   }
 
-  geom::Transform Client::GetActorTransform(Actor &actor) {
+  geom::Transform Client::GetActorTransform(const Actor &actor) {
     return _pimpl->CallAndWait<geom::Transform>("get_actor_transform", actor.Serialize());
   }
 

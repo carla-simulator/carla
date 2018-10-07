@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "carla/PythonUtil.h"
 #include "carla/client/detail/Client.h"
 
 namespace carla {
@@ -49,6 +50,14 @@ namespace client {
 
     SharedPtr<detail::Client> _client_state;
   };
+
+  inline Client::Client(
+      const std::string &host,
+      uint16_t port,
+      size_t worker_threads)
+    : _client_state(
+        new detail::Client(host, port, worker_threads),
+        PythonUtil::ReleaseGILDeleter()) {}
 
 } // namespace client
 } // namespace carla

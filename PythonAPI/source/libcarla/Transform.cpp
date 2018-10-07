@@ -6,8 +6,6 @@
 
 #include <carla/geom/Transform.h>
 
-#include <boost/python.hpp>
-
 #include <ostream>
 
 namespace carla {

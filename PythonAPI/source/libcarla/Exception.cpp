@@ -7,8 +7,6 @@
 #include <rpc/config.h>
 #include <rpc/rpc_error.h>
 
-#include <boost/python.hpp>
-
 #include <sstream>
 
 void translator(const rpc::rpc_error &e) {

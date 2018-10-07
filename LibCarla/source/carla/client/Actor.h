@@ -28,9 +28,9 @@ namespace client {
     using Super::GetDisplayId;
     using Super::GetWorld;
 
-    geom::Location GetLocation();
+    geom::Location GetLocation() const;
 
-    geom::Transform GetTransform();
+    geom::Transform GetTransform() const;
 
     void SetLocation(const geom::Location &location);
 
