@@ -15,7 +15,7 @@ namespace client {
 
   class Actor
     : public EnableSharedFromThis<Actor>,
-      private detail::ActorState {
+      public detail::ActorState {
     using Super = detail::ActorState;
   public:
 
@@ -23,10 +23,6 @@ namespace client {
 
     virtual ~Actor() = default;
 
-    using Super::GetId;
-    using Super::GetTypeId;
-    using Super::GetDisplayId;
-    using Super::GetWorld;
 
     geom::Location GetLocation() const;
 
@@ -47,8 +43,6 @@ namespace client {
     void Destroy();
 
   protected:
-
-    using Super::GetActorDescription;
 
     auto GetClientImplementation() const {
       return GetWorld().parent;
