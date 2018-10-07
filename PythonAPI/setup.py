@@ -25,17 +25,23 @@ def get_libcarla_extensions():
             extra_link_args = [
                 os.path.join(pwd, 'dependencies/lib/librpc.a'),
                 os.path.join(pwd, 'dependencies/lib/libboost_filesystem.a'),
-                os.path.join(pwd, 'dependencies/lib', pylib),
-                '-lpng', '-ljpeg', '-ltiff']
+                os.path.join(pwd, 'dependencies/lib', pylib)]
             extra_compile_args = [
                 '-fPIC', '-std=c++14', '-DBOOST_ERROR_CODE_HEADER_ONLY', '-Wno-missing-braces'
             ]
+            if 'TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true':
+                print('Travis CI build detected: disabling PNG support.')
+                extra_link_args += ['-ljpeg', '-ltiff']
+                extra_compile_args += ['-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=false']
+            else:
+                extra_link_args += ['-lpng', '-ljpeg', '-ltiff']
+                extra_compile_args += ['-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true']
             # @todo Why would we need this?
             include_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7/include']
             library_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7']
             extra_link_args += ['/usr/lib/gcc/x86_64-linux-gnu/7/libstdc++.a']
         else:
-            libraries += ["boost_python", "boost_filesystem"]
+            raise NotImplementedError
     elif os.name == "nt":
         pwd = os.path.dirname(os.path.realpath(__file__))
         pylib = "libboost_python%d%d-vc141-mt-x64-1_67.lib" % (sys.version_info.major, sys.version_info.minor)

@@ -307,7 +307,19 @@ namespace detail {
 
   struct tiff : detail::io_impl<detail::io_tiff> {};
 
-  struct any : detail::io_any<detail::io_png, detail::io_jpeg, detail::io_tiff> {};
+#if LIBCARLA_IMAGE_WITH_PNG_SUPPORT
+
+  struct any : detail::io_any<detail::io_png, detail::io_tiff, detail::io_jpeg> {};
+
+#elif LIBCARLA_IMAGE_WITH_TIFF_SUPPORT
+
+  struct any : detail::io_any<detail::io_tiff, detail::io_jpeg> {};
+
+#else // Then for sure this one is available.
+
+  struct any : detail::io_any<detail::io_jpeg> {};
+
+#endif
 
 } // namespace io
 } // namespace image

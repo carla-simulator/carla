@@ -23,6 +23,8 @@ matrix:
             - python3
             - python3-pip
             - libboost-python-dev
+            - libtiff5-dev
+            - libjpeg-dev
       install:
         - pip2 install -q --user setuptools nose2
         - pip3 install -q --user setuptools nose2
@@ -34,7 +36,7 @@ matrix:
         - kill %1
         - make check ARGS="--all --gtest_args=--gtest_filter=-*_mt"
       after_failure:
-        - tail --lines=1000 build.log
+        - tail --lines=2000 build.log
 
     - env: TEST="Pylint 2"
       addons:
