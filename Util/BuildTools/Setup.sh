@@ -255,10 +255,10 @@ cat >${CMAKE_CONFIG_FILE}.gen <<EOL
 set(CARLA_VERSION $(get_carla_version))
 
 add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY)
-add_definitions(-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT)
 
-# Uncomment to force support for other image formats (require their respective
-# libraries installed).
+# Uncomment to force support for an specific image format (require their
+# respective libraries installed).
+# add_definitions(-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT)
 # add_definitions(-DLIBCARLA_IMAGE_WITH_JPEG_SUPPORT)
 # add_definitions(-DLIBCARLA_IMAGE_WITH_TIFF_SUPPORT)
 
@@ -278,7 +278,15 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "Client")
   set(RPCLIB_LIB_PATH "${RPCLIB_LIBSTDCXX_LIBPATH}")
   set(BOOST_LIB_PATH "${BOOST_LIBPATH}")
 endif ()
+
 EOL
+
+if "${TRAVIS}" -eq "true" ; then
+  log "Travis CI build detected: disabling PNG support."
+  echo "add_definitions(-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=false)" >> ${CMAKE_CONFIG_FILE}.gen
+else
+  echo "add_definitions(-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true)" >> ${CMAKE_CONFIG_FILE}.gen
+fi
 
 # -- Move files ----------------------------------------------------------------
 
