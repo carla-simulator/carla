@@ -9,6 +9,8 @@
 #include <carla/streaming/Client.h>
 #include <carla/streaming/Server.h>
 
+#include <algorithm>
+
 using namespace carla::streaming;
 
 static auto make_special_message(size_t size) {
@@ -61,7 +63,7 @@ public:
     for (auto &&stream : _streams) {
       _threads.CreateThread([=]() mutable {
         for (auto i = 0u; i < number_of_messages; ++i) {
-          std::this_thread::sleep_for(8ms); // ~120FPS.
+          std::this_thread::sleep_for(11ms); // ~90FPS.
           {
             CARLA_PROFILE_SCOPE(game, write_to_stream);
             stream << _message.buffer();
@@ -96,9 +98,6 @@ public:
       carla::log_warning("threshold unmet:", _number_of_messages_received, '/', threshold);
     }
 #endif // NDEBUG
-
-    _client.Stop();
-    _server.Stop();
   }
 
 private:
@@ -122,11 +121,17 @@ private:
   std::atomic_size_t _number_of_messages_received{0u};
 };
 
+static size_t get_max_concurrency() {
+  size_t concurrency = 0.75 * std::thread::hardware_concurrency();
+  return std::max(2ul, concurrency);
+}
+
 static void benchmark_image(
     const size_t dimensions,
     const size_t number_of_streams = 1u,
     const double success_ratio = 1.0) {
   constexpr auto number_of_messages = 100u;
+  carla::logging::log("Benchmark:", number_of_streams, "streams at 90FPS.");
   Benchmark benchmark(TESTING_PORT, 4u * dimensions, success_ratio);
   benchmark.AddStreams(number_of_streams);
   benchmark.Run(number_of_messages);
@@ -137,21 +142,21 @@ TEST(benchmark_streaming, image_200x200) {
 }
 
 TEST(benchmark_streaming, image_800x600) {
-  benchmark_image(800u * 600u);
+  benchmark_image(800u * 600u, 1u, 0.9);
 }
 
 TEST(benchmark_streaming, image_1920x1080) {
-  benchmark_image(1920u * 1080u);
+  benchmark_image(1920u * 1080u, 1u, 0.9);
 }
 
 TEST(benchmark_streaming, image_200x200_mt) {
-  benchmark_image(200u * 200u, 9u);
+  benchmark_image(200u * 200u, get_max_concurrency());
 }
 
 TEST(benchmark_streaming, image_800x600_mt) {
-  benchmark_image(800u * 600u, 9u);
+  benchmark_image(800u * 600u, get_max_concurrency(), 0.8);
 }
 
 TEST(benchmark_streaming, image_1920x1080_mt) {
-  benchmark_image(1920u * 1080u, 9u, 0.7);
+  benchmark_image(1920u * 1080u, get_max_concurrency(), 0.7);
 }
