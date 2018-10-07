@@ -29,12 +29,14 @@ namespace detail {
 
     std::string GetDisplayId() const;
 
-    const rpc::Actor &GetActorDescription() const {
-      return _description;
-    }
-
     World GetWorld() const {
       return _parent;
+    }
+
+  protected:
+
+    const rpc::Actor &GetActorDescription() const {
+      return _description;
     }
 
   private:

@@ -27,10 +27,11 @@ void export_actor() {
   namespace cr = carla::rpc;
 
   class_<cc::Actor, boost::noncopyable, boost::shared_ptr<cc::Actor>>("Actor", no_init)
-    .add_property("id", &cc::Actor::GetId)
-    .add_property("type_id", +[](const cc::Actor &self) -> std::string { return self.GetTypeId(); })
-    .add_property("is_alive", &cc::Actor::IsAlive)
-    .def("get_world", &cc::Actor::GetWorld)
+    // work-around, force return copy to resolve Actor instead of ActorState.
+    .add_property("id", CALL_RETURNING_COPY(cc::Actor, GetId))
+    .add_property("type_id", CALL_RETURNING_COPY(cc::Actor, GetTypeId))
+    .add_property("is_alive", CALL_RETURNING_COPY(cc::Actor, IsAlive))
+    .def("get_world", CALL_RETURNING_COPY(cc::Actor, GetWorld))
     .def("get_location", CONST_CALL_WITHOUT_GIL(cc::Actor, GetLocation))
     .def("get_transform", CONST_CALL_WITHOUT_GIL(cc::Actor, GetTransform))
     .def("set_location", &cc::Actor::SetLocation, (arg("location")))
