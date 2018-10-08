@@ -6,13 +6,12 @@
 
 #pragma once
 
-#include "carla/streaming/detail/HashableClient.h"
 #include "carla/streaming/detail/Token.h"
 #include "carla/streaming/detail/tcp/Client.h"
 
 #include <boost/asio/io_service.hpp>
 
-#include <unordered_set>
+#include <unordered_map>
 
 namespace carla {
 namespace streaming {
@@ -27,7 +26,7 @@ namespace low_level {
   class Client {
   public:
 
-    using underlying_client = detail::HashableClient<T>;
+    using underlying_client = T;
     using protocol_type = typename underlying_client::protocol_type;
     using token_type = carla::streaming::detail::token_type;
 
@@ -48,17 +47,20 @@ namespace low_level {
       if (!token.has_address()) {
         token.set_address(_fallback_address);
       }
-      _clients.emplace(
-          io_service,
-          token,
-          std::forward<Functor>(callback));
+      _clients.emplace(std::piecewise_construct,
+          std::forward_as_tuple(token.get_stream_id()),
+          std::forward_as_tuple(io_service, token, std::forward<Functor>(callback)));
+    }
+
+    void UnSubscribe(token_type token) {
+      _clients.erase(token.get_stream_id());
     }
 
   private:
 
     boost::asio::ip::address _fallback_address;
 
-    std::unordered_set<underlying_client> _clients;
+    std::unordered_map<detail::stream_id_type, underlying_client> _clients;
   };
 
 } // namespace low_level

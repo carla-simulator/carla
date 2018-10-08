@@ -79,13 +79,15 @@ namespace tcp {
   }
 
   Client::~Client() {
-    Stop();
+    _done = true;
+    /// @todo Destroying this client is not safe, another thread might be still
+    /// @using it.
   }
 
   void Client::Stop() {
+    _done = true;
     _connection_timer.cancel();
     _strand.post([this]() {
-      _done = true;
       if (_socket.is_open()) {
         _socket.close();
       }
@@ -179,6 +181,9 @@ namespace tcp {
         DEBUG_ONLY(log_debug("streaming client: Client::ReadData.handle_read_header", bytes, "bytes"));
         if (!ec && (message->size() > 0u)) {
           DEBUG_ASSERT_EQ(bytes, sizeof(message_size_type));
+          if (_done) {
+            return;
+          }
           // Now that we know the size of the coming buffer, we can allocate our
           // buffer and start putting data into it.
           boost::asio::async_read(

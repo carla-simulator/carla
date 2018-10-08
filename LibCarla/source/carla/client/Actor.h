@@ -40,7 +40,7 @@ namespace client {
       return _is_alive;
     }
 
-    void Destroy();
+    virtual void Destroy();
 
   protected:
 

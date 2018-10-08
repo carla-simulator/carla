@@ -130,6 +130,10 @@ namespace detail {
     });
   }
 
+  void Client::UnSubscribeFromStream(const streaming::Token &token) {
+    _pimpl->streaming_client.UnSubscribe(token);
+  }
+
   geom::Location Client::GetActorLocation(const Actor &actor) {
     return _pimpl->CallAndWait<geom::Location>("get_actor_location", actor.Serialize());
   }

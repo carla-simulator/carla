@@ -16,6 +16,7 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/strand.hpp>
 
+#include <atomic>
 #include <functional>
 #include <memory>
 
@@ -49,9 +50,9 @@ namespace tcp {
       return _token.get_stream_id();
     }
 
-    void Stop();
-
   private:
+
+    void Stop();
 
     void Connect();
 
@@ -71,7 +72,7 @@ namespace tcp {
 
     std::shared_ptr<BufferPool> _buffer_pool;
 
-    bool _done = false;
+    std::atomic_bool _done{false};
   };
 
 } // namespace tcp

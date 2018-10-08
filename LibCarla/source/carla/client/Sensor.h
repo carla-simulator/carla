@@ -25,9 +25,13 @@ namespace client {
 
     void Listen(CallbackFunctionType callback);
 
+    void Stop();
+
     bool IsListening() const {
       return _is_listening;
     }
+
+    void Destroy() override;
 
   private:
 

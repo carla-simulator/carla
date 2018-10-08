@@ -80,7 +80,9 @@
 
 ## `carla.Sensor(carla.Actor)`
 
+- `is_listening`
 - `listen(callback_function)`
+- `stop()`
 
 ## `carla.Image`
 

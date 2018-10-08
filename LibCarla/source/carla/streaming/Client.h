@@ -41,6 +41,10 @@ namespace streaming {
       _client.Subscribe(_io_service, token, std::forward<Functor>(callback));
     }
 
+    void UnSubscribe(const Token &token) {
+      _client.UnSubscribe(token);
+    }
+
     void Run() {
       _io_service.run();
     }
@@ -49,12 +53,12 @@ namespace streaming {
       _workers.CreateThreads(worker_threads, [this]() { Run(); });
     }
 
+  private:
+
     void Stop() {
       _io_service.stop();
       _workers.JoinAll();
     }
-
-  private:
 
     using underlying_client = low_level::Client<detail::tcp::Client>;
 

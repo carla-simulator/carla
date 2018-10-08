@@ -31,7 +31,9 @@ void export_sensor() {
   namespace cc = carla::client;
 
   class_<cc::Sensor, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Sensor>>("Sensor", no_init)
+    .add_property("is_listening", &cc::Sensor::IsListening)
     .def("listen", &SubscribeToStream, (arg("callback")))
+    .def("stop", &cc::Sensor::Stop)
     .def(self_ns::str(self_ns::self))
   ;
 }
