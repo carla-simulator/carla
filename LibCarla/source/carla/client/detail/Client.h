@@ -10,7 +10,7 @@
 #include "carla/NonCopyable.h"
 #include "carla/Time.h"
 #include "carla/client/GarbageCollectionPolicy.h"
-#include "carla/client/World.h"
+#include "carla/client/detail/Episode.h"
 #include "carla/geom/Transform.h"
 
 #include <functional>
@@ -24,7 +24,7 @@ namespace client {
   class ActorBlueprint;
   class BlueprintLibrary;
   class Vehicle;
-  class World;
+  class Episode;
 }
 namespace rpc { class VehicleControl; }
 namespace sensor { class SensorData; }
@@ -35,6 +35,7 @@ namespace carla {
 namespace client {
 namespace detail {
 
+  /// @todo Make sure this class is really thread-safe.
   class Client
     : public EnableSharedFromThis<Client>,
       private NonCopyable {
@@ -55,10 +56,6 @@ namespace detail {
     std::string GetServerVersion();
 
     bool Ping();
-
-    World GetWorld() {
-      return shared_from_this();
-    }
 
     SharedPtr<BlueprintLibrary> GetBlueprintLibrary();
 
@@ -94,12 +91,24 @@ namespace detail {
       return _gc_policy;
     }
 
+    size_t GetCurrentEpisodeId() const {
+      return _episode_id;
+    }
+
+    Episode GetCurrentEpisode() {
+      return shared_from_this();
+    }
+
   private:
 
     class Pimpl;
     const std::unique_ptr<Pimpl> _pimpl;
 
     const GarbageCollectionPolicy _gc_policy;
+
+    // At this point the id won't change because we cannot yet restart the
+    // episode from the client.
+    const size_t _episode_id = 0u;
   };
 
 } // namespace detail

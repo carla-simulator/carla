@@ -28,11 +28,11 @@ namespace client {
     log_debug(GetDisplayId(), ": subscribing to stream");
     if (_is_listening) {
       log_warning(
-          "attempting to listen to stream but sensor is already listeninig:",
+          "attempting to listen to stream but sensor is already listening:",
           GetDisplayId());
       return;
     }
-    GetClientImplementation()->SubscribeToStream(
+    GetEpisode()->SubscribeToStream(
         GetActorDescription().GetStreamToken(),
         std::move(callback));
     _is_listening = true;
@@ -45,7 +45,7 @@ namespace client {
           GetDisplayId());
       return;
     }
-    GetClientImplementation()->UnSubscribeFromStream(
+    GetEpisode()->UnSubscribeFromStream(
         GetActorDescription().GetStreamToken());
     _is_listening = false;
   }

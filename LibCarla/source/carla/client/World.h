@@ -7,16 +7,11 @@
 #pragma once
 
 #include "carla/Memory.h"
-#include "carla/client/GarbageCollectionPolicy.h"
+#include "carla/client/detail/Episode.h"
 #include "carla/geom/Transform.h"
 
 namespace carla {
 namespace client {
-
-namespace detail {
-  class Client;
-  class ActorFactory;
-}
 
   class Actor;
   class ActorBlueprint;
@@ -24,6 +19,8 @@ namespace detail {
 
   class World {
   public:
+
+    World(detail::Episode episode) : _episode(std::move(episode)) {}
 
     World(const World &) = default;
     World(World &&) = default;
@@ -47,13 +44,7 @@ namespace detail {
 
   private:
 
-    friend class Actor;
-    friend class detail::ActorFactory;
-    friend class detail::Client;
-
-    World(SharedPtr<detail::Client> parent) : parent(std::move(parent)) {}
-
-    SharedPtr<detail::Client> parent;
+    detail::Episode _episode;
   };
 
 } // namespace client

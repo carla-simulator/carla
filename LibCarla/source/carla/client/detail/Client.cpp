@@ -12,6 +12,7 @@
 #include "carla/client/Vehicle.h"
 #include "carla/client/World.h"
 #include "carla/client/detail/ActorFactory.h"
+#include "carla/client/detail/Episode.h"
 #include "carla/rpc/Client.h"
 #include "carla/sensor/Deserializer.h"
 #include "carla/streaming/Client.h"
@@ -94,7 +95,7 @@ namespace detail {
   SharedPtr<Actor> Client::GetSpectator() {
     auto spectator = _pimpl->CallAndWait<carla::rpc::Actor>("get_spectator");
     return ActorFactory::MakeActor(
-        GetWorld(),
+        GetCurrentEpisode(),
         spectator,
         GarbageCollectionPolicy::Disabled);
   }
@@ -115,7 +116,7 @@ namespace detail {
           transform,
           blueprint.MakeActorDescription());
     }
-    return ActorFactory::MakeActor(GetWorld(), actor, gc);
+    return ActorFactory::MakeActor(GetCurrentEpisode(), actor, gc);
   }
 
   bool Client::DestroyActor(Actor &actor) {

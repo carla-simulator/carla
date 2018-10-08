@@ -17,11 +17,11 @@ namespace carla {
 namespace client {
 
   SharedPtr<BlueprintLibrary> World::GetBlueprintLibrary() const {
-    return parent->GetBlueprintLibrary();
+    return _episode->GetBlueprintLibrary();
   }
 
   SharedPtr<Actor> World::GetSpectator() const {
-    return parent->GetSpectator();
+    return _episode->GetSpectator();
   }
 
   SharedPtr<Actor> World::SpawnActor(
@@ -29,7 +29,7 @@ namespace client {
       const geom::Transform &transform,
       Actor *parent_actor) {
     try {
-      return parent->SpawnActor(blueprint, transform, parent_actor);
+      return _episode->SpawnActor(blueprint, transform, parent_actor);
     } catch (const std::exception &e) {
       log_warning("SpawnActor: failed with:", e.what());
       throw;

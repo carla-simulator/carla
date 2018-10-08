@@ -42,12 +42,6 @@ namespace client {
 
     virtual void Destroy();
 
-  protected:
-
-    auto GetClientImplementation() const {
-      return GetWorld().parent;
-    }
-
   private:
 
     bool _is_alive = true;

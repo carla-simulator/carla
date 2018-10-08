@@ -63,17 +63,17 @@ namespace detail {
   }
 
   SharedPtr<Actor> ActorFactory::MakeActor(
-      World world,
+      Episode episode,
       rpc::Actor description,
       GarbageCollectionPolicy gc) {
-    const auto gcw = world.parent->GetGarbageCollectionPolicy();
+    const auto gcw = episode->GetGarbageCollectionPolicy();
     const auto gca = (gc == GarbageCollectionPolicy::Inherit ? gcw : gc);
     if (description.HasAStream()) {
-      return MakeActorImpl<Sensor>(ActorInitializer{description, world}, gca);
+      return MakeActorImpl<Sensor>(ActorInitializer{description, episode}, gca);
     } else if (StringUtil::StartsWith(description.description.id, "vehicle.")) {
-      return MakeActorImpl<Vehicle>(ActorInitializer{description, world}, gca);
+      return MakeActorImpl<Vehicle>(ActorInitializer{description, episode}, gca);
     }
-    return MakeActorImpl<Actor>(ActorInitializer{description, world}, gca);
+    return MakeActorImpl<Actor>(ActorInitializer{description, episode}, gca);
   }
 
 } // namespace detail
