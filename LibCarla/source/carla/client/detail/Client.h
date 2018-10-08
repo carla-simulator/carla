@@ -76,6 +76,8 @@ namespace detail {
         const streaming::Token &token,
         std::function<void(SharedPtr<sensor::SensorData>)> callback);
 
+    void UnSubscribeFromStream(const streaming::Token &token);
+
     geom::Location GetActorLocation(const Actor &actor);
 
     geom::Transform GetActorTransform(const Actor &actor);

@@ -19,6 +19,9 @@ namespace client {
           "in the simulation:",
           GetDisplayId());
     }
+    if (_is_listening) {
+      Stop();
+    }
   }
 
   void Sensor::Listen(CallbackFunctionType callback) {
@@ -33,6 +36,25 @@ namespace client {
         GetActorDescription().GetStreamToken(),
         std::move(callback));
     _is_listening = true;
+  }
+
+  void Sensor::Stop() {
+    if (!_is_listening) {
+      log_warning(
+          "attempting to unsubscribe from stream but sensor wasn't listening:",
+          GetDisplayId());
+      return;
+    }
+    GetClientImplementation()->UnSubscribeFromStream(
+        GetActorDescription().GetStreamToken());
+    _is_listening = false;
+  }
+
+  void Sensor::Destroy() {
+    if (_is_listening) {
+      Stop();
+    }
+    Actor::Destroy();
   }
 
 } // namespace client
