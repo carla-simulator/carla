@@ -43,7 +43,7 @@ namespace client {
     }
 
     World GetWorld() const {
-      return _client_state->GetWorld();
+      return _client_state->GetCurrentEpisode();
     }
 
   private:

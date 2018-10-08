@@ -12,13 +12,13 @@ namespace client {
 
   void Vehicle::ApplyControl(const Control &control) {
     if (control != _control) {
-      GetClientImplementation()->ApplyControlToVehicle(*this, control);
+      GetEpisode()->ApplyControlToVehicle(*this, control);
       _control = control;
     }
   }
 
   void Vehicle::SetAutopilot(bool enabled) {
-    GetClientImplementation()->SetVehicleAutopilot(*this, enabled);
+    GetEpisode()->SetVehicleAutopilot(*this, enabled);
   }
 
 } // namespace client

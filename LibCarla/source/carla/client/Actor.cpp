@@ -13,25 +13,25 @@ namespace carla {
 namespace client {
 
   geom::Location Actor::GetLocation() const {
-    return GetClientImplementation()->GetActorLocation(*this);
+    return GetEpisode()->GetActorLocation(*this);
   }
 
   geom::Transform Actor::GetTransform() const {
-    return GetClientImplementation()->GetActorTransform(*this);
+    return GetEpisode()->GetActorTransform(*this);
   }
 
   void Actor::SetLocation(const geom::Location &location) {
-    GetClientImplementation()->SetActorLocation(*this, location);
+    GetEpisode()->SetActorLocation(*this, location);
   }
 
   void Actor::SetTransform(const geom::Transform &transform) {
-    GetClientImplementation()->SetActorTransform(*this, transform);
+    GetEpisode()->SetActorTransform(*this, transform);
   }
 
   void Actor::Destroy() {
     if (_is_alive) {
       // Let the exceptions leave the function, IsAlive() will still be true.
-      _is_alive = !GetClientImplementation()->DestroyActor(*this);
+      _is_alive = !GetEpisode()->DestroyActor(*this);
     } else {
       log_warning(
           "attempting to destroy an actor that is already dead:",

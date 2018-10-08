@@ -30,7 +30,7 @@ namespace detail {
     std::string GetDisplayId() const;
 
     World GetWorld() const {
-      return _parent;
+      return _episode;
     }
 
   protected:
@@ -39,15 +39,23 @@ namespace detail {
       return _description;
     }
 
+    Episode &GetEpisode() {
+      return _episode;
+    }
+
+    const Episode &GetEpisode() const {
+      return _episode;
+    }
+
   private:
 
-    ActorState(rpc::Actor description, World parent)
+    ActorState(rpc::Actor description, Episode episode)
       : _description(std::move(description)),
-        _parent(std::move(parent)) {}
+        _episode(std::move(episode)) {}
 
     rpc::Actor _description;
 
-    World _parent;
+    Episode _episode;
   };
 
 } // namespace detail
