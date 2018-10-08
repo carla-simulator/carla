@@ -30,9 +30,11 @@ namespace tcp {
 
   /// A client that connects to a single stream.
   ///
-  /// @warning The client should not be destroyed before the @a io_service is
-  /// stopped.
-  class Client : private NonCopyable {
+  /// @warning This client should be stopped before releasing the shared pointer
+  /// or won't be destroyed.
+  class Client
+    : public std::enable_shared_from_this<Client>,
+      private NonCopyable {
   public:
 
     using endpoint = boost::asio::ip::tcp::endpoint;
@@ -46,15 +48,15 @@ namespace tcp {
 
     ~Client();
 
+    void Connect();
+
     stream_id_type GetStreamId() const {
       return _token.get_stream_id();
     }
 
-  private:
-
     void Stop();
 
-    void Connect();
+  private:
 
     void Reconnect();
 

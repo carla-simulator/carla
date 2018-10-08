@@ -68,6 +68,8 @@ namespace tcp {
 
     void StartTimer();
 
+    void CloseNow();
+
     friend class Server;
 
     const size_t _session_id;

@@ -75,27 +75,13 @@ namespace tcp {
     if (!_token.protocol_is_tcp()) {
       throw std::invalid_argument("invalid token, only TCP tokens supported");
     }
-    Connect();
   }
 
-  Client::~Client() {
-    _done = true;
-    /// @todo Destroying this client is not safe, another thread might be still
-    /// @using it.
-  }
-
-  void Client::Stop() {
-    _done = true;
-    _connection_timer.cancel();
-    _strand.post([this]() {
-      if (_socket.is_open()) {
-        _socket.close();
-      }
-    });
-  }
+  Client::~Client() = default;
 
   void Client::Connect() {
-    _strand.post([this]() {
+    auto self = shared_from_this();
+    _strand.post([this, self]() {
       if (_done) {
         return;
       }
@@ -110,8 +96,11 @@ namespace tcp {
       DEBUG_ASSERT(_token.protocol_is_tcp());
       const auto ep = _token.to_tcp_endpoint();
 
-      auto handle_connect = [=](error_code ec) {
+      auto handle_connect = [this, self, ep](error_code ec) {
         if (!ec) {
+          if (_done) {
+            return;
+          }
           log_debug("streaming client: connected to", ep);
           // Send the stream id to subscribe to the stream.
           const auto &stream_id = _token.get_stream_id();
@@ -126,12 +115,12 @@ namespace tcp {
               ReadData();
             } else {
               // Else try again.
-              log_warning("streaming client: failed to send stream id:", ec.message());
+              log_info("streaming client: failed to send stream id:", ec.message());
               Connect();
             }
           }));
         } else {
-          log_warning("streaming client: connection failed:", ec.message());
+          log_info("streaming client: connection failed:", ec.message());
           Reconnect();
         }
       };
@@ -141,9 +130,21 @@ namespace tcp {
     });
   }
 
+  void Client::Stop() {
+    _connection_timer.cancel();
+    auto self = shared_from_this();
+    _strand.post([this, self]() {
+      _done = true;
+      if (_socket.is_open()) {
+        _socket.close();
+      }
+    });
+  }
+
   void Client::Reconnect() {
+    auto self = shared_from_this();
     _connection_timer.expires_from_now(time_duration::seconds(1u));
-    _connection_timer.async_wait([this](boost::system::error_code ec) {
+    _connection_timer.async_wait([this, self](boost::system::error_code ec) {
       if (!ec) {
         Connect();
       }
@@ -151,7 +152,8 @@ namespace tcp {
   }
 
   void Client::ReadData() {
-    _strand.post([this]() {
+    auto self = shared_from_this();
+    _strand.post([this, self]() {
       if (_done) {
         return;
       }
@@ -160,7 +162,7 @@ namespace tcp {
 
       auto message = std::make_shared<IncomingMessage>(_buffer_pool->Pop());
 
-      auto handle_read_data = [=](boost::system::error_code ec, size_t DEBUG_ONLY(bytes)) {
+      auto handle_read_data = [this, self, message](boost::system::error_code ec, size_t DEBUG_ONLY(bytes)) {
         DEBUG_ONLY(log_debug("streaming client: Client::ReadData.handle_read_data", bytes, "bytes"));
         if (!ec) {
           DEBUG_ASSERT_EQ(bytes, message->size());
@@ -168,16 +170,18 @@ namespace tcp {
           // Move the buffer to the callback function and start reading the next
           // piece of data.
           log_debug("streaming client: success reading data, calling the callback");
-          _socket.get_io_service().post([this, message]() { _callback(message->pop()); });
+          _socket.get_io_service().post([self, message]() { self->_callback(message->pop()); });
           ReadData();
         } else {
           // As usual, if anything fails start over from the very top.
-          log_warning("streaming client: failed to read data:", ec.message());
+          log_info("streaming client: failed to read data:", ec.message());
           Connect();
         }
       };
 
-      auto handle_read_header = [=](boost::system::error_code ec, size_t DEBUG_ONLY(bytes)) {
+      auto handle_read_header = [this, self, message, handle_read_data](
+          boost::system::error_code ec,
+          size_t DEBUG_ONLY(bytes)) {
         DEBUG_ONLY(log_debug("streaming client: Client::ReadData.handle_read_header", bytes, "bytes"));
         if (!ec && (message->size() > 0u)) {
           DEBUG_ASSERT_EQ(bytes, sizeof(message_size_type));
@@ -191,7 +195,7 @@ namespace tcp {
               message->buffer(),
               _strand.wrap(handle_read_data));
         } else {
-          log_warning("streaming client: failed to read header:", ec.message());
+          log_info("streaming client: failed to read header:", ec.message());
           DEBUG_ONLY(log_debug("size  = ", message->size()));
           DEBUG_ONLY(log_debug("bytes = ", bytes));
           Connect();

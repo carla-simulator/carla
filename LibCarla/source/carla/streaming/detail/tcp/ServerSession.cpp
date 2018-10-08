@@ -48,7 +48,7 @@ namespace tcp {
           _socket.get_io_service().post([=]() { cb(self); });
         } else {
           log_error("session", _session_id, ": error retrieving stream id :", ec.message());
-          Close();
+          CloseNow();
         }
       };
 
@@ -63,10 +63,7 @@ namespace tcp {
 
   void ServerSession::Close() {
     _strand.post([this, self = shared_from_this()]() {
-      if (_socket.is_open()) {
-        _socket.close();
-      }
-      log_debug("session", _session_id, "closed");
+      CloseNow();
     });
   }
 
@@ -75,6 +72,9 @@ namespace tcp {
     DEBUG_ASSERT(!message->empty());
     auto self = shared_from_this();
     _strand.post([=]() {
+      if (!_socket.is_open()) {
+        return;
+      }
       if (_is_writing) {
         log_debug("session", _session_id, ": connection too slow: message discarded");
         return;
@@ -84,7 +84,8 @@ namespace tcp {
       auto handle_sent = [this, self, message](const boost::system::error_code &ec, size_t DEBUG_ONLY(bytes)) {
         _is_writing = false;
         if (ec) {
-          log_error("session", _session_id, ": error sending data :", ec.message());
+          log_info("session", _session_id, ": error sending data :", ec.message());
+          CloseNow();
         } else {
           DEBUG_ONLY(log_debug("session", _session_id, ": successfully sent", bytes, "bytes"));
           DEBUG_ASSERT_EQ(bytes, sizeof(message_size_type) + message->size());
@@ -106,10 +107,21 @@ namespace tcp {
       log_debug("session", _session_id, "timed out");
       Close();
     } else {
-      _deadline.async_wait([self = shared_from_this()](boost::system::error_code) {
-        self->StartTimer();
+      std::weak_ptr<ServerSession> weak_self = shared_from_this();
+      _deadline.async_wait([weak_self](boost::system::error_code) {
+        auto self = weak_self.lock();
+        if (self != nullptr) {
+          self->StartTimer();
+        }
       });
     }
+  }
+
+  void ServerSession::CloseNow() {
+    if (_socket.is_open()) {
+      _socket.close();
+    }
+    log_debug("session", _session_id, "closed");
   }
 
 } // namespace tcp

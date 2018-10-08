@@ -11,6 +11,7 @@
 
 #include <boost/asio/io_service.hpp>
 
+#include <memory>
 #include <unordered_map>
 
 namespace carla {
@@ -39,6 +40,12 @@ namespace low_level {
     explicit Client()
       : Client(carla::streaming::make_localhost_address()) {}
 
+    ~Client() {
+      for (auto &pair : _clients) {
+        pair.second->Stop();
+      }
+    }
+
     template <typename Functor>
     void Subscribe(
         boost::asio::io_service &io_service,
@@ -47,20 +54,29 @@ namespace low_level {
       if (!token.has_address()) {
         token.set_address(_fallback_address);
       }
-      _clients.emplace(std::piecewise_construct,
-          std::forward_as_tuple(token.get_stream_id()),
-          std::forward_as_tuple(io_service, token, std::forward<Functor>(callback)));
+      auto client = std::make_shared<underlying_client>(
+          io_service,
+          token,
+          std::forward<Functor>(callback));
+      client->Connect();
+      _clients.emplace(token.get_stream_id(), std::move(client));
     }
 
     void UnSubscribe(token_type token) {
-      _clients.erase(token.get_stream_id());
+      auto it = _clients.find(token.get_stream_id());
+      if (it != _clients.end()) {
+        it->second->Stop();
+        _clients.erase(it);
+      }
     }
 
   private:
 
     boost::asio::ip::address _fallback_address;
 
-    std::unordered_map<detail::stream_id_type, underlying_client> _clients;
+    std::unordered_map<
+        detail::stream_id_type,
+        std::shared_ptr<underlying_client>> _clients;
   };
 
 } // namespace low_level
