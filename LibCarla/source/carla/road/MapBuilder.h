@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include "Map.h"
 #include "carla/geom/Location.h"
-#include "carla/road/Map.h"
 
 #include <map>
 #include <vector>
@@ -15,67 +15,9 @@
 namespace carla {
 namespace road {
 
-using id_type = size_t;
-
-// Geometry ////////////////////////////////////////////////////////////
-
-enum class GeometryType : unsigned int {
-  LINE,
-  ARC,
-  SPIRAL
-};
-
-struct Geometry {
-  GeometryType type;   // geometry type
-  double length = 1.0; // length of the road section [meters]
-
-  double start_position_offset = 0.0; // s-offset [meters]
-  double heading = 0.0;               // start orientation [radians]
-
-  geom::Location start_position; // [meters]
-
-protected:
-  Geometry(GeometryType type) : type(type) {}
-};
-
-struct GeometryLine : public Geometry {
-  GeometryLine() : Geometry(GeometryType::LINE) {}
-};
-
-struct GeometryArc : public Geometry {
-  double curvature = 0.0;
-  GeometryArc() : Geometry(GeometryType::ARC) {}
-};
-
-struct GeometrySpiral : public Geometry {
-  double curve_start = 0.0;
-  double curve_end = 0.0;
-  GeometrySpiral() : Geometry(GeometryType::SPIRAL) {}
-};
-
-// Roads //////////////////////////////////////////////////////////////
-
-struct RoadInfo {
-  // distance from RoadSegment origin to where
-  // the informations starts affecting
-  double d = 0; // [meters]
-};
-
-struct SpeedLimit : public RoadInfo {
-  double value = 0; // [meters/second]
-};
-
-struct RoadSegment {
-  id_type id = -1;
-  std::vector<id_type> predecessor_id;
-  std::vector<id_type> successor_id;
-  std::vector<Geometry> geom;
-  std::multimap<double, RoadInfo> info;
-};
-
 class MapBuilder {
 public:
-  bool AddRoadSegment(const RoadSegment &seg) {}
+  bool AddRoadSegment(const RoadSegmentDefinition &seg);
 
 private:
   Map map;
