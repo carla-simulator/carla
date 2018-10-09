@@ -13,11 +13,11 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void opendrive::parser::TrafficSignalsParser::Parse(const pugi::xml_node & xmlNode, std::vector<opendrive::types::TrafficSignalInformation> & out_traffic_signals)
+void carla::opendrive::parser::TrafficSignalsParser::Parse(const pugi::xml_node & xmlNode, std::vector<carla::opendrive::types::TrafficSignalInformation> & out_traffic_signals)
 {
     for (pugi::xml_node signal = xmlNode.child("signal"); signal; signal = signal.next_sibling("signal"))
     {
-        opendrive::types::TrafficSignalInformation trafficSignalInformation;
+        carla::opendrive::types::TrafficSignalInformation trafficSignalInformation;
 
         trafficSignalInformation.id = std::atoi(signal.attribute("id").value());
 

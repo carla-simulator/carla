@@ -22,7 +22,7 @@
 
 struct OpenDriveParser
 {
-    static bool Parse(const char *OpenDriveXMLFile, opendrive::types::OpenDriveData &out_open_drive_data)
+    static bool Parse(const char *OpenDriveXMLFile, carla::opendrive::types::OpenDriveData &out_open_drive_data)
     {
         pugi::xml_document xmlDoc;
         pugi::xml_parse_result pugiParseResult = xmlDoc.load_file(OpenDriveXMLFile);
@@ -34,7 +34,7 @@ struct OpenDriveParser
 
         for (pugi::xml_node road = xmlDoc.child("OpenDRIVE").child("road"); road; road = road.next_sibling("road"))
         {
-            opendrive::types::RoadInformation openDriveRoadInformation;
+            carla::opendrive::types::RoadInformation openDriveRoadInformation;
 
             openDriveRoadInformation.attributes.name = road.attribute("name").value();
             openDriveRoadInformation.attributes.id = std::atoi(road.attribute("id").value());
@@ -43,20 +43,20 @@ struct OpenDriveParser
 
             ///////////////////////////////////////////////////////////////////////////////
 
-            opendrive::parser::ProfilesParser::Parse(road, openDriveRoadInformation.road_profiles);
+            carla::opendrive::parser::ProfilesParser::Parse(road, openDriveRoadInformation.road_profiles);
 
-            opendrive::parser::RoadLinkParser::Parse(road.child("link"), openDriveRoadInformation.road_link);
-            opendrive::parser::TrafficSignalsParser::Parse(road.child("signals"), openDriveRoadInformation.trafic_signals);
+            carla::opendrive::parser::RoadLinkParser::Parse(road.child("link"), openDriveRoadInformation.road_link);
+            carla::opendrive::parser::TrafficSignalsParser::Parse(road.child("signals"), openDriveRoadInformation.trafic_signals);
 
-            opendrive::parser::LaneParser::Parse(road.child("lanes"), openDriveRoadInformation.lane_sections);
-            opendrive::parser::GeometryParser::Parse(road.child("planView"), openDriveRoadInformation.geometry_attributes);
+            carla::opendrive::parser::LaneParser::Parse(road.child("lanes"), openDriveRoadInformation.lane_sections);
+            carla::opendrive::parser::GeometryParser::Parse(road.child("planView"), openDriveRoadInformation.geometry_attributes);
 
             out_open_drive_data.roads.push_back(openDriveRoadInformation);
         }
 
         for (pugi::xml_node junction = xmlDoc.child("OpenDRIVE").child("junction"); junction; junction = junction.next_sibling("junction"))
         {
-            opendrive::parser::JunctionParser::Parse(junction, out_open_drive_data.junctions);
+            carla::opendrive::parser::JunctionParser::Parse(junction, out_open_drive_data.junctions);
         }
 
         return true;

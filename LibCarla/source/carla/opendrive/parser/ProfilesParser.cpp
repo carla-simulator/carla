@@ -13,11 +13,11 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void opendrive::parser::ProfilesParser::ParseElevation(const pugi::xml_node & xmlNode, std::vector<opendrive::types::ElevationProfile>& out_elevation_profile)
+void carla::opendrive::parser::ProfilesParser::ParseElevation(const pugi::xml_node & xmlNode, std::vector<carla::opendrive::types::ElevationProfile>& out_elevation_profile)
 {
     for (pugi::xml_node laneSection = xmlNode.child("elevation"); laneSection; laneSection = laneSection.next_sibling("elevation"))
     {
-        opendrive::types::ElevationProfile elevationProfile;
+        carla::opendrive::types::ElevationProfile elevationProfile;
 
         elevationProfile.start_position = std::stod(laneSection.attribute("s").value());
         elevationProfile.elevation = std::stod(laneSection.attribute("a").value());
@@ -29,11 +29,11 @@ void opendrive::parser::ProfilesParser::ParseElevation(const pugi::xml_node & xm
     }
 }
 
-void opendrive::parser::ProfilesParser::ParseLateral(const pugi::xml_node & xmlNode, std::vector<opendrive::types::LateralProfile> & out_lateral_profile)
+void carla::opendrive::parser::ProfilesParser::ParseLateral(const pugi::xml_node & xmlNode, std::vector<carla::opendrive::types::LateralProfile> & out_lateral_profile)
 {
     for (pugi::xml_node laneSection = xmlNode.child("superelevation"); laneSection; laneSection = laneSection.next_sibling("superelevation"))
     {
-        opendrive::types::LateralProfile lateralProfile;
+        carla::opendrive::types::LateralProfile lateralProfile;
 
         lateralProfile.start_position = std::stod(laneSection.attribute("s").value());
         lateralProfile.elevation = std::stod(laneSection.attribute("a").value());
@@ -45,11 +45,10 @@ void opendrive::parser::ProfilesParser::ParseLateral(const pugi::xml_node & xmlN
     }
 }
 
-void opendrive::parser::ProfilesParser::Parse(const pugi::xml_node & xmlNode, opendrive::types::RoadProfiles & out_road_profiles)
+void carla::opendrive::parser::ProfilesParser::Parse(const pugi::xml_node & xmlNode, carla::opendrive::types::RoadProfiles & out_road_profiles)
 {
-    opendrive::parser::ProfilesParser profilesParser;
+    carla::opendrive::parser::ProfilesParser profilesParser;
 
     profilesParser.ParseElevation(xmlNode.child("elevationProfile"), out_road_profiles.elevation_profile);
     profilesParser.ParseLateral(xmlNode.child("lateralProfile"), out_road_profiles.lateral_profile);
 }
-

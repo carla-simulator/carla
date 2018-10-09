@@ -15,18 +15,21 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-namespace opendrive
+namespace carla
 {
-    namespace parser
+    namespace opendrive
     {
-        class ProfilesParser
+        namespace parser
         {
-            private:
-                void ParseElevation(const pugi::xml_node & xmlNode, std::vector<opendrive::types::ElevationProfile> & out_elevation_profile);
-                void ParseLateral(const pugi::xml_node & xmlNode, std::vector<opendrive::types::LateralProfile> & out_lateral_profile);
+            class ProfilesParser
+            {
+                private:
+                    void ParseElevation(const pugi::xml_node & xmlNode, std::vector<carla::opendrive::types::ElevationProfile> & out_elevation_profile);
+                    void ParseLateral(const pugi::xml_node & xmlNode, std::vector<carla::opendrive::types::LateralProfile> & out_lateral_profile);
 
-            public:
-                static void Parse(const pugi::xml_node & xmlNode, opendrive::types::RoadProfiles & out_road_profiles);
-        };
+                public:
+                    static void Parse(const pugi::xml_node & xmlNode, carla::opendrive::types::RoadProfiles & out_road_profiles);
+            };
+        }
     }
 }

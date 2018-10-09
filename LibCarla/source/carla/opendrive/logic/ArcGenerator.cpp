@@ -20,7 +20,7 @@ static const double HALF_PI_LOCAL = 1.57079632679489661923;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void opendrive::logic::ArcPointsGenerator::Init()
+void carla::opendrive::logic::ArcPointsGenerator::Init()
 {
     start_angle = 0.0;
     arc_radius = std::abs(1.0 / geometry_attributes->curvature);
@@ -38,7 +38,7 @@ void opendrive::logic::ArcPointsGenerator::Init()
     start_Y = geometry_attributes->start_position_y + std::sin(start_angle - FULL_PI_LOCAL) * arc_radius;
 }
 
-void opendrive::logic::ArcPointsGenerator::GeneratePoint(double sOffset, opendrive::types::Waypoint & outWaypoint)
+void carla::opendrive::logic::ArcPointsGenerator::GeneratePoint(double sOffset, carla::opendrive::types::Waypoint & outWaypoint)
 {
     int elevationIndex = road_profile->elevation_profile.size() ? 0 : -1;
 

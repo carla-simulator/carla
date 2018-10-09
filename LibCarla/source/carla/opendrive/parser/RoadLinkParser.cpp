@@ -13,16 +13,16 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void opendrive::parser::RoadLinkParser::ParseLink(const pugi::xml_node & xmlNode, opendrive::types::RoadLinkInformation ** out_link_information)
+void carla::opendrive::parser::RoadLinkParser::ParseLink(const pugi::xml_node & xmlNode, carla::opendrive::types::RoadLinkInformation ** out_link_information)
 {
-    (*out_link_information) = new opendrive::types::RoadLinkInformation;
+    (*out_link_information) = new carla::opendrive::types::RoadLinkInformation;
 
     (*out_link_information)->id = std::atoi(xmlNode.attribute("elementId").value());
     (*out_link_information)->contact_point = xmlNode.attribute("contactPoint").value();
     (*out_link_information)->element_type = xmlNode.attribute("elementType").value();
 }
 
-void opendrive::parser::RoadLinkParser::Parse(const pugi::xml_node & xmlNode, opendrive::types::RoadLink & out_road_link)
+void carla::opendrive::parser::RoadLinkParser::Parse(const pugi::xml_node & xmlNode, carla::opendrive::types::RoadLink & out_road_link)
 {
     out_road_link.predecessor = nullptr;
     out_road_link.successor = nullptr;
