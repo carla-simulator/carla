@@ -12,24 +12,20 @@
 #include <map>
 #include <vector>
 
-namespace carla
-{
-namespace road
-{
+namespace carla {
+namespace road {
 
 using id_type = size_t;
 
 // Geometry ////////////////////////////////////////////////////////////
 
-enum class GeometryType : unsigned int
-{
+enum class GeometryType : unsigned int {
   LINE,
   ARC,
   SPIRAL
 };
 
-struct Geometry
-{
+struct Geometry {
   GeometryType type;   // geometry type
   double length = 1.0; // length of the road section [meters]
 
@@ -42,19 +38,16 @@ protected:
   Geometry(GeometryType type) : type(type) {}
 };
 
-struct GeometryLine : public Geometry
-{
+struct GeometryLine : public Geometry {
   GeometryLine() : Geometry(GeometryType::LINE) {}
 };
 
-struct GeometryArc : public Geometry
-{
+struct GeometryArc : public Geometry {
   double curvature = 0.0;
   GeometryArc() : Geometry(GeometryType::ARC) {}
 };
 
-struct GeometrySpiral : public Geometry
-{
+struct GeometrySpiral : public Geometry {
   double curve_start = 0.0;
   double curve_end = 0.0;
   GeometrySpiral() : Geometry(GeometryType::SPIRAL) {}
@@ -62,20 +55,17 @@ struct GeometrySpiral : public Geometry
 
 // Roads //////////////////////////////////////////////////////////////
 
-struct RoadInfo
-{
+struct RoadInfo {
   // distance from RoadSegment origin to where
   // the informations starts affecting
   double d = 0; // [meters]
 };
 
-struct SpeedLimit : public RoadInfo
-{
+struct SpeedLimit : public RoadInfo {
   double value = 0; // [meters/second]
 };
 
-struct RoadSegment
-{
+struct RoadSegment {
   id_type id = -1;
   std::vector<id_type> predecessor_id;
   std::vector<id_type> successor_id;
@@ -83,8 +73,7 @@ struct RoadSegment
   std::multimap<double, RoadInfo> info;
 };
 
-class MapBuilder
-{
+class MapBuilder {
 public:
   bool AddRoadSegment(const RoadSegment &seg) {}
 
