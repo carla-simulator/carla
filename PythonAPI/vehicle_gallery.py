@@ -1,17 +1,23 @@
 #!/usr/bin/env python
 
+import glob
+import os
 import sys
 
-sys.path.append(
-    'PythonAPI/carla-0.9.0-py%d.%d-linux-x86_64.egg' % (sys.version_info.major,
-                                                        sys.version_info.minor))
+try:
+    sys.path.append(glob.glob('**/*%d.%d-%s.egg' % (
+        sys.version_info.major,
+        sys.version_info.minor,
+        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
+except IndexError:
+    pass
 
 import carla
 
 import math
 import time
 
-# Nice spot on Town01.
+# Nice spot in Town01.
 LOCATION = carla.Location(x=155.5, y=55.8, z=39)
 
 
