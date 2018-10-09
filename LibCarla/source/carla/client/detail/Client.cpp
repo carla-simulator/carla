@@ -62,7 +62,8 @@ namespace detail {
       const uint16_t port,
       const size_t worker_threads,
       const bool enable_garbage_collection)
-    : _pimpl(std::make_unique<Pimpl>(host, port, worker_threads)),
+    : LIBCARLA_INITIALIZE_LIFETIME_PROFILER("carla::client::detail::Client"),
+      _pimpl(std::make_unique<Pimpl>(host, port, worker_threads)),
       _gc_policy(enable_garbage_collection ?
         GarbageCollectionPolicy::Enabled : GarbageCollectionPolicy::Disabled) {}
 
@@ -123,6 +124,7 @@ namespace detail {
     auto result = _pimpl->CallAndWait<bool>("destroy_actor", actor.Serialize());
     // Remove it's persistent state so it cannot access the client anymore.
     actor.GetEpisode().ClearState();
+    log_debug(actor.GetDisplayId(), "destroyed.");
     return result;
   }
 

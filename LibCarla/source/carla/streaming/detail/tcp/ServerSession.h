@@ -9,6 +9,7 @@
 #include "carla/NonCopyable.h"
 #include "carla/Time.h"
 #include "carla/TypeTraits.h"
+#include "carla/profiler/LifetimeProfiled.h"
 #include "carla/streaming/detail/Types.h"
 #include "carla/streaming/detail/tcp/Message.h"
 
@@ -30,6 +31,7 @@ namespace tcp {
   /// closes itself after @a timeout of inactivity is met.
   class ServerSession
     : public std::enable_shared_from_this<ServerSession>,
+      private profiler::LifetimeProfiled,
       private NonCopyable {
   public:
 

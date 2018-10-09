@@ -9,20 +9,23 @@
 #include "carla/Debug.h"
 #include "carla/Memory.h"
 #include "carla/client/detail/ActorState.h"
+#include "carla/profiler/LifetimeProfiled.h"
 
 namespace carla {
 namespace client {
 
   class Actor
     : public EnableSharedFromThis<Actor>,
+      private profiler::LifetimeProfiled,
       public detail::ActorState {
     using Super = detail::ActorState;
   public:
 
-    explicit Actor(ActorInitializer init) : Super(std::move(init)) {}
+    explicit Actor(ActorInitializer init)
+      : LIBCARLA_INITIALIZE_LIFETIME_PROFILER(init.GetDisplayId()),
+        Super(std::move(init)) {}
 
     virtual ~Actor() = default;
-
 
     geom::Location GetLocation() const;
 
