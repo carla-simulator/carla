@@ -281,7 +281,7 @@ endif ()
 
 EOL
 
-if "${TRAVIS}" -eq "true" ; then
+if [ "${TRAVIS}" == "true" ] ; then
   log "Travis CI build detected: disabling PNG support."
   echo "add_definitions(-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=false)" >> ${CMAKE_CONFIG_FILE}.gen
 else
