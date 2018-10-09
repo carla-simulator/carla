@@ -8,6 +8,7 @@
 
 #include "carla/Buffer.h"
 #include "carla/NonCopyable.h"
+#include "carla/profiler/LifetimeProfiled.h"
 #include "carla/streaming/detail/Token.h"
 #include "carla/streaming/detail/Types.h"
 
@@ -34,6 +35,7 @@ namespace tcp {
   /// or won't be destroyed.
   class Client
     : public std::enable_shared_from_this<Client>,
+      private profiler::LifetimeProfiled,
       private NonCopyable {
   public:
 

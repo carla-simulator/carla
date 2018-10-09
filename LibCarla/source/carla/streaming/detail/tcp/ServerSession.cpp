@@ -24,7 +24,9 @@ namespace tcp {
   ServerSession::ServerSession(
       boost::asio::io_service &io_service,
       const time_duration timeout)
-    : _session_id(SESSION_COUNTER++),
+    : LIBCARLA_INITIALIZE_LIFETIME_PROFILER(
+          std::string("tcp server session ") + std::to_string(SESSION_COUNTER)),
+      _session_id(SESSION_COUNTER++),
       _socket(io_service),
       _timeout(timeout),
       _deadline(io_service),

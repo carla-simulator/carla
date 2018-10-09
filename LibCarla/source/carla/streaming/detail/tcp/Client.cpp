@@ -66,7 +66,9 @@ namespace tcp {
       boost::asio::io_service &io_service,
       const token_type &token,
       callback_function_type callback)
-    : _token(token),
+    : LIBCARLA_INITIALIZE_LIFETIME_PROFILER(
+          std::string("tcp client ") + std::to_string(token.get_stream_id())),
+      _token(token),
       _callback(std::move(callback)),
       _socket(io_service),
       _strand(io_service),

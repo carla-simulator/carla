@@ -12,6 +12,7 @@
 #include "carla/client/GarbageCollectionPolicy.h"
 #include "carla/client/detail/Episode.h"
 #include "carla/geom/Transform.h"
+#include "carla/profiler/LifetimeProfiled.h"
 
 #include <functional>
 #include <memory>
@@ -38,6 +39,7 @@ namespace detail {
   /// @todo Make sure this class is really thread-safe.
   class Client
     : public EnableSharedFromThis<Client>,
+      private profiler::LifetimeProfiled,
       private NonCopyable {
   public:
 

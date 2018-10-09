@@ -55,6 +55,11 @@ namespace detail {
 
   template <typename ActorT>
   static auto MakeActorImpl(ActorInitializer init, GarbageCollectionPolicy gc) {
+    log_debug(
+        init.GetDisplayId(),
+        "created",
+        gc == GarbageCollectionPolicy::Enabled ? "with" : "without",
+        "garbage collection");
     if (gc == GarbageCollectionPolicy::Enabled) {
       return SharedPtr<ActorT>{new ActorT(std::move(init)), GarbageCollector()};
     }
