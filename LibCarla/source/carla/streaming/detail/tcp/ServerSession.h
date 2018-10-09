@@ -40,8 +40,6 @@ namespace tcp {
 
     explicit ServerSession(boost::asio::io_service &io_service, time_duration timeout);
 
-    ~ServerSession();
-
     /// Starts the session and calls @a callback after successfully reading the
     /// stream id.
     void Open(callback_function_type callback);
@@ -60,9 +58,6 @@ namespace tcp {
           "This function only accepts arguments of type Buffer.");
       Write(std::make_shared<const Message>(std::move(buffers)...));
     }
-
-    /// Posts a job to close this session.
-    void Close();
 
   private:
 

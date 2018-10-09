@@ -20,6 +20,8 @@ namespace streaming {
 namespace detail {
 namespace tcp {
 
+  /// @warning This server cannot be destructed before its @a io_service is
+  /// stopped.
   class Server : private NonCopyable {
   public:
 
