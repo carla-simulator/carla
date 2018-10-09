@@ -71,8 +71,25 @@ namespace carla {
 
 #endif // LIBCARLA_WITH_PYTHON_SUPPORT
 
-    /// A deleter that can be passed to a shared_ptr to release the GIL before
-    /// destroying the object.
+    /// A deleter that can be passed to a smart pointer to acquire the GIL
+    /// before destroying the object.
+    class AcquireGILDeleter {
+    public:
+
+      template <typename T>
+      void operator()(T *ptr) const {
+#ifdef LIBCARLA_WITH_PYTHON_SUPPORT
+        if (ptr != nullptr && !PythonUtil::ThisThreadHasTheGIL()) {
+          AcquireGIL lock;
+          delete ptr;
+        } else
+#endif // LIBCARLA_WITH_PYTHON_SUPPORT
+        delete ptr;
+      }
+    };
+
+    /// A deleter that can be passed to a smart pointer to release the GIL
+    /// before destroying the object.
     class ReleaseGILDeleter {
     public:
 

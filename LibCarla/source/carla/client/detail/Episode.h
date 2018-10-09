@@ -14,7 +14,7 @@ namespace carla {
 namespace client {
 namespace detail {
 
-  class Episode {
+  class EpisodeImpl {
   public:
 
     PersistentState &operator*() const {
@@ -25,17 +25,32 @@ namespace detail {
       return &GetPersistentStateWithChecks();
     }
 
+  protected:
+
+    EpisodeImpl(SharedPtr<PersistentState> state);
+
+    void ClearState();
+
   private:
-
-    friend PersistentState;
-
-    Episode(SharedPtr<PersistentState> state);
 
     PersistentState &GetPersistentStateWithChecks() const;
 
     SharedPtr<PersistentState> _state;
 
     size_t _episode_id;
+  };
+
+  class Episode : private EpisodeImpl {
+  public:
+
+    using EpisodeImpl::operator*;
+    using EpisodeImpl::operator->;
+
+  private:
+
+    friend PersistentState;
+
+    using EpisodeImpl::EpisodeImpl;
   };
 
 } // namespace detail

@@ -8,19 +8,24 @@
 #include <carla/client/Sensor.h>
 
 static void SubscribeToStream(carla::client::Sensor &self, boost::python::object callback) {
+  namespace py = boost::python;
   // Make sure the callback is actually callable.
   if (!PyCallable_Check(callback.ptr())) {
     PyErr_SetString(PyExc_TypeError, "callback argument must be callable!");
-    boost::python::throw_error_already_set();
+    py::throw_error_already_set();
     return;
   }
 
+  // We need to delete the callback while holding the GIL.
+  using Deleter = carla::PythonUtil::AcquireGILDeleter;
+  auto callback_ptr = carla::SharedPtr<py::object>{new py::object(callback), Deleter()};
+
   // Subscribe to the sensor.
-  self.Listen([callback](auto message) {
+  self.Listen([callback=std::move(callback_ptr)](auto message) {
     carla::PythonUtil::AcquireGIL lock;
     try {
-      boost::python::call<void>(callback.ptr(), boost::python::object(message));
-    } catch (const boost::python::error_already_set &e) {
+      py::call<void>(callback->ptr(), py::object(message));
+    } catch (const py::error_already_set &e) {
       PyErr_Print();
     }
   });

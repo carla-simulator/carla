@@ -120,7 +120,10 @@ namespace detail {
   }
 
   bool Client::DestroyActor(Actor &actor) {
-    return _pimpl->CallAndWait<bool>("destroy_actor", actor.Serialize());
+    auto result = _pimpl->CallAndWait<bool>("destroy_actor", actor.Serialize());
+    // Remove it's persistent state so it cannot access the client anymore.
+    actor.GetEpisode().ClearState();
+    return result;
   }
 
   void Client::SubscribeToStream(
