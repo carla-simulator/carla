@@ -32,10 +32,6 @@ namespace tcp {
       _deadline(io_service),
       _strand(io_service) {}
 
-  ServerSession::~ServerSession() {
-    _deadline.cancel();
-  }
-
   void ServerSession::Open(callback_function_type callback) {
     StartTimer();
     auto self = shared_from_this(); // To keep myself alive.
@@ -60,12 +56,6 @@ namespace tcp {
           _socket,
           boost::asio::buffer(&_stream_id, sizeof(_stream_id)),
           _strand.wrap(handle_query));
-    });
-  }
-
-  void ServerSession::Close() {
-    _strand.post([this, self = shared_from_this()]() {
-      CloseNow();
     });
   }
 
@@ -107,19 +97,21 @@ namespace tcp {
   void ServerSession::StartTimer() {
     if (_deadline.expires_at() <= boost::asio::deadline_timer::traits_type::now()) {
       log_debug("session", _session_id, "timed out");
-      Close();
+      _strand.post([self=shared_from_this()]() { self->CloseNow(); });
     } else {
-      std::weak_ptr<ServerSession> weak_self = shared_from_this();
-      _deadline.async_wait([weak_self](boost::system::error_code) {
-        auto self = weak_self.lock();
-        if (self != nullptr) {
-          self->StartTimer();
+      _deadline.async_wait([this, self=shared_from_this()](boost::system::error_code ec) {
+        if (!ec) {
+          StartTimer();
+        } else {
+          log_debug("session", _session_id, "timed out error:", ec.message());
         }
       });
     }
   }
 
   void ServerSession::CloseNow() {
+    DEBUG_ASSERT(_strand.running_in_this_thread());
+    _deadline.cancel();
     if (_socket.is_open()) {
       _socket.close();
     }
