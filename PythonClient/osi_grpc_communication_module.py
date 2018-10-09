@@ -29,7 +29,7 @@ import osi_groundtruth_pb2
 def run_carla_client(args):
     # Here we will run episodes with frames/episode.
     number_of_episodes = 1
-    frames_per_episode = 300
+    frames_per_episode = 500
     settings = CarlaSettings()
     # We assume the CARLA server is already waiting for a client to connect at
     # host:port. To create a connection we can use the `make_carla_client`
@@ -50,8 +50,8 @@ def run_carla_client(args):
                 settings.set(
                     SynchronousMode=True,
                     SendNonPlayerAgentsInfo=True,
-                    NumberOfVehicles=5,
-                    NumberOfPedestrians=0,
+                    NumberOfVehicles=100,
+                    NumberOfPedestrians=10,
                     WeatherId='Default',
                     QualityLevel=args.quality_level)
                 settings.randomize_seeds()
@@ -70,8 +70,7 @@ def run_carla_client(args):
 
             # Choose one player start at random.
             number_of_player_starts = len(scene.player_start_spots)
-            player_start = random.randint(0, max(0, number_of_player_starts - 1))
-
+            player_start = min(0, max(0,number_of_player_starts-1))
             # Notify the server that we want to start the episode at the
             # player_start index. This function blocks until the server is ready
             # to start the episode.
@@ -91,12 +90,12 @@ def run_carla_client(args):
                 # If we are in synchronous mode the server will pause the
                 # simulation until we send this control.
 
-                client.send_control(
-                    steer=random.uniform(-1.0, 1.0),
-                    throttle=0.5,
-                    brake=0.0,
-                    hand_brake=False,
-                    reverse=False)
+                # Together with the measurements, the server has sent the
+                # control that the in-game autopilot would do this frame.
+
+                control = measurements.player_measurements.autopilot_control
+                client.send_control(control)
+
 
 
 def vehicle_to_world_rotation(x_in_vehicle, y_in_vehicle, z_in_vehicle, roll_host, pitch_host, yaw_host):
