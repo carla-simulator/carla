@@ -8,18 +8,29 @@
 
 #include "carla/client/detail/Client.h"
 
+#include <boost/atomic.hpp>
+
 #include <exception>
 
 namespace carla {
 namespace client {
 namespace detail {
 
-  Episode::Episode(SharedPtr<PersistentState> state)
+  EpisodeImpl::EpisodeImpl(SharedPtr<PersistentState> state)
     : _state(std::move(state)),
       _episode_id(_state->GetCurrentEpisodeId()) {}
 
-  PersistentState &Episode::GetPersistentStateWithChecks() const {
-    DEBUG_ASSERT(_state != nullptr);
+  void EpisodeImpl::ClearState() {
+    boost::atomic_store_explicit(&_state, {nullptr}, boost::memory_order_relaxed);
+  }
+
+  PersistentState &EpisodeImpl::GetPersistentStateWithChecks() const {
+    auto state = boost::atomic_load_explicit(&_state, boost::memory_order_relaxed);
+    if (state == nullptr) {
+      throw std::runtime_error(
+          "trying to operate on a destroyed actor; an actor's function "
+          "was called, but the actor is already destroyed.");
+    }
     if (_episode_id != _state->GetCurrentEpisodeId()) {
       throw std::runtime_error(
           "trying to access an expired episode; a new episode was started "

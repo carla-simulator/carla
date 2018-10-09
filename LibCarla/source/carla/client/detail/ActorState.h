@@ -49,6 +49,8 @@ namespace detail {
 
   private:
 
+    friend class detail::Client;
+
     ActorState(rpc::Actor description, Episode episode)
       : _description(std::move(description)),
         _episode(std::move(episode)) {}

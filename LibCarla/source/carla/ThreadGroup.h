@@ -37,6 +37,7 @@ namespace carla {
 
     void JoinAll() {
       for (auto &thread : _threads) {
+        DEBUG_ASSERT_NE(thread.get_id(), std::this_thread::get_id());
         if (thread.joinable()) {
           thread.join();
         }
