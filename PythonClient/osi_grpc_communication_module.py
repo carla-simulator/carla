@@ -50,7 +50,7 @@ def run_carla_client(args):
                 settings.set(
                     SynchronousMode=True,
                     SendNonPlayerAgentsInfo=True,
-                    NumberOfVehicles=100,
+                    NumberOfVehicles=50,
                     NumberOfPedestrians=10,
                     WeatherId='Default',
                     QualityLevel=args.quality_level)
