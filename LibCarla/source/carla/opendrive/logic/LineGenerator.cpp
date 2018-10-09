@@ -18,7 +18,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void opendrive::logic::LinePointsGenerator::Init()
+void carla::opendrive::logic::LinePointsGenerator::Init()
 {
     orientation_vector.x = std::cos(geometry_attributes->heading);
     orientation_vector.y = std::sin(geometry_attributes->heading);
@@ -30,7 +30,7 @@ void opendrive::logic::LinePointsGenerator::Init()
 }
 
 
-void opendrive::logic::LinePointsGenerator::GeneratePoint(double sOffset, opendrive::types::Waypoint &outWaypoint)
+void carla::opendrive::logic::LinePointsGenerator::GeneratePoint(double sOffset, carla::opendrive::types::Waypoint &outWaypoint)
 {
     int elevationIndex = road_profile->elevation_profile.size() ? 0 : -1;
     math::vector::Vector3<double> p = start_point + (sOffset * distance_vector);

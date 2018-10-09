@@ -30,9 +30,9 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void opendrive::logic::RoadPointsGenerator::GenerateLaneInformation(const opendrive::logic::road_generator_input *input, double sOffset, opendrive::types::Waypoint &outWaypoint)
+void carla::opendrive::logic::RoadPointsGenerator::GenerateLaneInformation(const carla::opendrive::logic::road_generator_input *input, double sOffset, carla::opendrive::types::Waypoint &outWaypoint)
 {
-    const std::vector<opendrive::types::Lane> *laneInformation = nullptr;
+    const std::vector<carla::opendrive::types::Lane> *laneInformation = nullptr;
     int /*numLaneInVector = -1,*/ laneNumber = std::abs(input->to_lane);
 
     switch (input->which_lane)
@@ -42,12 +42,12 @@ void opendrive::logic::RoadPointsGenerator::GenerateLaneInformation(const opendr
 
         } break;
 
-        case opendrive::logic::which_lane_e::Left:
+        case carla::opendrive::logic::which_lane_e::Left:
         {
             laneInformation = &input->lane_section->left;
         } break;
 
-        case opendrive::logic::which_lane_e::Right:
+        case carla::opendrive::logic::which_lane_e::Right:
         {
             laneInformation = &input->lane_section->right;
         } break;
@@ -59,10 +59,10 @@ void opendrive::logic::RoadPointsGenerator::GenerateLaneInformation(const opendr
     }
 
     assert(laneNumber >= (int)laneInformation->size());
-    const opendrive::types::Lane *lane = &laneInformation->at(laneNumber - 1);
+    const carla::opendrive::types::Lane *lane = &laneInformation->at(laneNumber - 1);
 
-    const std::vector<opendrive::types::LaneWidth> &laneWidth = lane->lane_width;
-    const std::vector<opendrive::types::LaneSpeed> &laneSpeed = lane->lane_speed;
+    const std::vector<carla::opendrive::types::LaneWidth> &laneWidth = lane->lane_width;
+    const std::vector<carla::opendrive::types::LaneSpeed> &laneSpeed = lane->lane_speed;
 
     if (last_lane_width_index + 1 < (int)laneWidth.size())
     {
@@ -103,18 +103,18 @@ void opendrive::logic::RoadPointsGenerator::GenerateLaneInformation(const opendr
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void opendrive::logic::RoadPointsGenerator::GenerateArcPoints(const road_generator_input *input, std::vector<opendrive::types::Waypoint>& out_points, int numPoints)
+void carla::opendrive::logic::RoadPointsGenerator::GenerateArcPoints(const road_generator_input *input, std::vector<carla::opendrive::types::Waypoint>& out_points, int numPoints)
 {
-    opendrive::logic::ArcPointsGenerator arcGenerator;
+    carla::opendrive::logic::ArcPointsGenerator arcGenerator;
 
-    arcGenerator.SetGeometry((opendrive::types::GeometryAttributesArc *)input->geometry_attributes);
+    arcGenerator.SetGeometry((carla::opendrive::types::GeometryAttributesArc *)input->geometry_attributes);
     arcGenerator.SetRoadProfile(input->road_profile);
 
     arcGenerator.Init();
 
     for (double sOffset = 0, step = input->geometry_attributes->length / numPoints; sOffset < input->geometry_attributes->length; sOffset += step)
     {
-        opendrive::types::Waypoint waypoint;
+        carla::opendrive::types::Waypoint waypoint;
 
         arcGenerator.GeneratePoint(sOffset, waypoint);
         GenerateLaneInformation(input, sOffset, waypoint);
@@ -123,11 +123,11 @@ void opendrive::logic::RoadPointsGenerator::GenerateArcPoints(const road_generat
     }
 }
 
-void opendrive::logic::RoadPointsGenerator::GenerateLinePoints(const road_generator_input *input, std::vector<opendrive::types::Waypoint>& out_points, int numPoints)
+void carla::opendrive::logic::RoadPointsGenerator::GenerateLinePoints(const road_generator_input *input, std::vector<carla::opendrive::types::Waypoint>& out_points, int numPoints)
 {
-    opendrive::logic::LinePointsGenerator lineGenerator;
+    carla::opendrive::logic::LinePointsGenerator lineGenerator;
 
-    lineGenerator.SetGeometry((opendrive::types::GeometryAttributesLine *)input->geometry_attributes);
+    lineGenerator.SetGeometry((carla::opendrive::types::GeometryAttributesLine *)input->geometry_attributes);
     lineGenerator.SetRoadProfile(input->road_profile);
 
     lineGenerator.Init();
@@ -135,7 +135,7 @@ void opendrive::logic::RoadPointsGenerator::GenerateLinePoints(const road_genera
     for (int i = 0; i < numPoints; ++i)
     {
         double sOffset = (double)(i + 1) / (double)numPoints;
-        opendrive::types::Waypoint waypoint;
+        carla::opendrive::types::Waypoint waypoint;
 
         lineGenerator.GeneratePoint(sOffset, waypoint);
         GenerateLaneInformation(input, sOffset, waypoint);
@@ -144,9 +144,9 @@ void opendrive::logic::RoadPointsGenerator::GenerateLinePoints(const road_genera
     }
 }
 
-void opendrive::logic::RoadPointsGenerator::GenerateSpiralPoints(const road_generator_input *input, std::vector<opendrive::types::Waypoint>& out_points, int numPoints)
+void carla::opendrive::logic::RoadPointsGenerator::GenerateSpiralPoints(const road_generator_input *input, std::vector<carla::opendrive::types::Waypoint>& out_points, int numPoints)
 {
-    opendrive::logic::SpiralPointsGenerator spiralGenerator;
+    carla::opendrive::logic::SpiralPointsGenerator spiralGenerator;
 
     spiralGenerator.SetGeometry((opendrive::types::GeometryAttributesSpiral *)input->geometry_attributes);
     spiralGenerator.SetRoadProfile(input->road_profile);
@@ -155,7 +155,7 @@ void opendrive::logic::RoadPointsGenerator::GenerateSpiralPoints(const road_gene
 
     for (double sOffset = 0, step = input->geometry_attributes->length / numPoints; sOffset < input->geometry_attributes->length; sOffset += step)
     {
-        opendrive::types::Waypoint waypoint;
+        carla::opendrive::types::Waypoint waypoint;
 
         spiralGenerator.GeneratePoint(sOffset, waypoint);
         GenerateLaneInformation(input, sOffset, waypoint);
@@ -165,13 +165,13 @@ void opendrive::logic::RoadPointsGenerator::GenerateSpiralPoints(const road_gene
 
 }
 
-void opendrive::logic::RoadPointsGenerator::Generate(const opendrive::types::OpenDriveData & openDriveRoad, std::vector<opendrive::types::Waypoint> &out_road_roints, double scale, int fromLane, int toLane)
+void carla::opendrive::logic::RoadPointsGenerator::Generate(const carla::opendrive::types::OpenDriveData & openDriveRoad, std::vector<carla::opendrive::types::Waypoint> &out_road_roints, double scale, int fromLane, int toLane)
 {
     for (size_t i = 0; i < openDriveRoad.roads.size(); ++i)
     {
         for (size_t j = 0; j < openDriveRoad.roads[i].geometry_attributes.size(); ++j)
         {
-            std::vector<opendrive::types::Waypoint> tmpWaypoints;
+            std::vector<carla::opendrive::types::Waypoint> tmpWaypoints;
 
             Generate(openDriveRoad.roads[i], tmpWaypoints, scale, fromLane, toLane);
             out_road_roints.insert(out_road_roints.end(), tmpWaypoints.begin(), tmpWaypoints.end());
@@ -179,11 +179,11 @@ void opendrive::logic::RoadPointsGenerator::Generate(const opendrive::types::Ope
     }
 }
 
-void opendrive::logic::RoadPointsGenerator::Generate(const opendrive::types::RoadInformation & roadInformation, std::vector<opendrive::types::Waypoint> &out_road_roints, double scale, int fromLane, int toLane, bool isJunction)
+void carla::opendrive::logic::RoadPointsGenerator::Generate(const carla::opendrive::types::RoadInformation & roadInformation, std::vector<carla::opendrive::types::Waypoint> &out_road_roints, double scale, int fromLane, int toLane, bool isJunction)
 {
     for (size_t i = 0; i < roadInformation.geometry_attributes.size(); ++i)
     {
-        opendrive::logic::road_generator_input input;
+        carla::opendrive::logic::road_generator_input input;
 
         input.geometry_attributes = roadInformation.geometry_attributes[i];
         input.is_junction = isJunction;

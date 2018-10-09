@@ -15,19 +15,22 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-namespace opendrive
+namespace carla
 {
-    namespace parser
+    namespace opendrive
     {
-        class GeometryParser
+        namespace parser
         {
-            private:
-                void ParseArc(const pugi::xml_node & xmlNode, opendrive::types::GeometryAttributesArc * out_geometry_arc);
-                void ParseLine(const pugi::xml_node & xmlNode, opendrive::types::GeometryAttributesLine * out_geometry_line);
-                void ParseSpiral(const pugi::xml_node & xmlNode, opendrive::types::GeometryAttributesSpiral * out_geometry_spiral);
+            class GeometryParser
+            {
+                private:
+                    void ParseArc(const pugi::xml_node &xmlNode, carla::opendrive::types::GeometryAttributesArc *out_geometry_arc);
+                    void ParseLine(const pugi::xml_node &xmlNode, carla::opendrive::types::GeometryAttributesLine *out_geometry_line);
+                    void ParseSpiral(const pugi::xml_node &xmlNode, carla::opendrive::types::GeometryAttributesSpiral *out_geometry_spiral);
 
-            public:
-                static void Parse(const pugi::xml_node & xmlNode, std::vector<opendrive::types::GeometryAttributes *> & out_geometry_attributes);
-        };
+                public:
+                    static void Parse(const pugi::xml_node &xmlNode, std::vector<carla::opendrive::types::GeometryAttributes *> &out_geometry_attributes);
+            };
+        }
     }
 }

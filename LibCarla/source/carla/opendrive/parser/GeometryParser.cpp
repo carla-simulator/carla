@@ -20,28 +20,28 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void opendrive::parser::GeometryParser::ParseArc(const pugi::xml_node & xmlNode, opendrive::types::GeometryAttributesArc * out_geometry_arc)
+void carla::opendrive::parser::GeometryParser::ParseArc(const pugi::xml_node & xmlNode, carla::opendrive::types::GeometryAttributesArc * out_geometry_arc)
 {
     out_geometry_arc->type = opendrive::types::GeometryType::ARC;
     out_geometry_arc->curvature = std::stod(xmlNode.attribute("curvature").value());
 }
 
-void opendrive::parser::GeometryParser::ParseLine(const pugi::xml_node & xmlNode, opendrive::types::GeometryAttributesLine * out_geometry_line)
+void carla::opendrive::parser::GeometryParser::ParseLine(const pugi::xml_node & xmlNode, carla::opendrive::types::GeometryAttributesLine * out_geometry_line)
 {
     ODP_UNUSED(xmlNode);
     out_geometry_line->type = opendrive::types::GeometryType::LINE;
 }
 
-void opendrive::parser::GeometryParser::ParseSpiral(const pugi::xml_node & xmlNode, opendrive::types::GeometryAttributesSpiral * out_geometry_spiral)
+void carla::opendrive::parser::GeometryParser::ParseSpiral(const pugi::xml_node & xmlNode, carla::opendrive::types::GeometryAttributesSpiral * out_geometry_spiral)
 {
     out_geometry_spiral->type = opendrive::types::GeometryType::SPIRAL;
     out_geometry_spiral->curve_end = std::stod(xmlNode.attribute("curvEnd").value());
     out_geometry_spiral->curve_start = std::stod(xmlNode.attribute("curvStart").value());
 }
 
-void opendrive::parser::GeometryParser::Parse(const pugi::xml_node & xmlNode, std::vector<opendrive::types::GeometryAttributes*> & out_geometry_attributes)
+void carla::opendrive::parser::GeometryParser::Parse(const pugi::xml_node & xmlNode, std::vector<carla::opendrive::types::GeometryAttributes*> & out_geometry_attributes)
 {
-    opendrive::parser::GeometryParser gometry_parser;
+    carla::opendrive::parser::GeometryParser gometry_parser;
 
     for (pugi::xml_node roadGeometry = xmlNode.child("geometry"); roadGeometry; roadGeometry = roadGeometry.next_sibling("geometry"))
     {

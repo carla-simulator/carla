@@ -15,17 +15,20 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-namespace opendrive
+namespace carla
 {
-    namespace parser
+    namespace opendrive
     {
-        class RoadLinkParser
+        namespace parser
         {
-            private:
-                void ParseLink(const pugi::xml_node & xmlNode, opendrive::types::RoadLinkInformation ** out_link_information);
+            class RoadLinkParser
+            {
+                private:
+                    void ParseLink(const pugi::xml_node & xmlNode, carla::opendrive::types::RoadLinkInformation ** out_link_information);
 
-            public:
-                static void Parse(const pugi::xml_node & xmlNode, opendrive::types::RoadLink & out_road_link);
-        };
+                public:
+                    static void Parse(const pugi::xml_node & xmlNode, carla::opendrive::types::RoadLink & out_road_link);
+            };
+        }
     }
 }

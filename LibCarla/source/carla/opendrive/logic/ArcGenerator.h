@@ -15,37 +15,39 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-namespace opendrive
+namespace carla
 {
-    namespace logic
+    namespace opendrive
     {
-        class ArcPointsGenerator
+        namespace logic
         {
-            private:
-                const opendrive::types::GeometryAttributesArc *geometry_attributes;
-                const opendrive::types::RoadProfiles *road_profile;
+            class ArcPointsGenerator
+            {
+                private:
+                    const carla::opendrive::types::GeometryAttributesArc *geometry_attributes;
+                    const carla::opendrive::types::RoadProfiles *road_profile;
 
-                double start_angle, arc_radius;
-                double start_X, start_Y;
+                    double start_angle, arc_radius;
+                    double start_X, start_Y;
 
-            public:
-                ArcPointsGenerator() : geometry_attributes(nullptr), road_profile(nullptr)
-                {
-                }
+                public:
+                    ArcPointsGenerator() : geometry_attributes(nullptr), road_profile(nullptr)
+                    {
+                    }
 
-                inline void SetGeometry(const opendrive::types::GeometryAttributesArc *geometryAttributes)
-                {
-                    geometry_attributes = geometryAttributes;
-                }
+                    inline void SetGeometry(const carla::opendrive::types::GeometryAttributesArc *geometryAttributes)
+                    {
+                        geometry_attributes = geometryAttributes;
+                    }
 
-                inline void SetRoadProfile(const opendrive::types::RoadProfiles *roadProfile)
-                {
-                    road_profile = roadProfile;
-                }
+                    inline void SetRoadProfile(const carla::opendrive::types::RoadProfiles *roadProfile)
+                    {
+                        road_profile = roadProfile;
+                    }
 
-                void Init();
-                void GeneratePoint(double sOffset, opendrive::types::Waypoint &outWaypoint);
-        };
+                    void Init();
+                    void GeneratePoint(double sOffset, carla::opendrive::types::Waypoint &outWaypoint);
+            };
+        }
     }
 }
-

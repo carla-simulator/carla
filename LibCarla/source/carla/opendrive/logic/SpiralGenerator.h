@@ -15,40 +15,43 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-namespace opendrive
+namespace carla
 {
-    namespace logic
+    namespace opendrive
     {
-        class SpiralPointsGenerator
+        namespace logic
         {
-            private:
-                const opendrive::types::GeometryAttributesSpiral *geometry_attributes;
-                const opendrive::types::RoadProfiles *road_profile;
+            class SpiralPointsGenerator
+            {
+                private:
+                    const carla::opendrive::types::GeometryAttributesSpiral *geometry_attributes;
+                    const carla::opendrive::types::RoadProfiles *road_profile;
 
-                double end_X, end_Y;
-                double start_X, start_Y;
+                    double end_X, end_Y;
+                    double start_X, start_Y;
 
-                bool inverse;
-                double curvature, a, m_a;
-                double rot_angle_cos, rot_angle_sin;
+                    bool inverse;
+                    double curvature, a, m_a;
+                    double rot_angle_cos, rot_angle_sin;
 
-            public:
-                SpiralPointsGenerator() : geometry_attributes(nullptr), road_profile(nullptr)
-                {
-                }
+                public:
+                    SpiralPointsGenerator() : geometry_attributes(nullptr), road_profile(nullptr)
+                    {
+                    }
 
-                inline void SetGeometry(const opendrive::types::GeometryAttributesSpiral *geometryAttributes)
-                {
-                    geometry_attributes = geometryAttributes;
-                }
+                    inline void SetGeometry(const carla::opendrive::types::GeometryAttributesSpiral *geometryAttributes)
+                    {
+                        geometry_attributes = geometryAttributes;
+                    }
 
-                inline void SetRoadProfile(const opendrive::types::RoadProfiles *roadProfile)
-                {
-                    road_profile = roadProfile;
-                }
+                    inline void SetRoadProfile(const carla::opendrive::types::RoadProfiles *roadProfile)
+                    {
+                        road_profile = roadProfile;
+                    }
 
-                void Init();
-                void GeneratePoint(double sOffset, opendrive::types::Waypoint &outWaypoint);
-        };
+                    void Init();
+                    void GeneratePoint(double sOffset, carla::opendrive::types::Waypoint &outWaypoint);
+            };
+        }
     }
 }

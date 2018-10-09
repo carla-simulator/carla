@@ -21,7 +21,7 @@ static const double sqrtPiO2 = std::sqrt(HALF_PI_LOCAL);
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void opendrive::logic::SpiralPointsGenerator::Init()
+void carla::opendrive::logic::SpiralPointsGenerator::Init()
 {
     double curvStart = geometry_attributes->curve_start;
     double curvEnd = geometry_attributes->curve_end;
@@ -75,7 +75,7 @@ void opendrive::logic::SpiralPointsGenerator::Init()
     }
 }
 
-void opendrive::logic::SpiralPointsGenerator::GeneratePoint(double sOffset, opendrive::types::Waypoint & outWaypoint)
+void carla::opendrive::logic::SpiralPointsGenerator::GeneratePoint(double sOffset, carla::opendrive::types::Waypoint & outWaypoint)
 {
     int elevationIndex = road_profile->elevation_profile.size() ? 0 : -1;
 

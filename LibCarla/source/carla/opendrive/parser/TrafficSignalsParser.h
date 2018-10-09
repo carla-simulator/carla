@@ -15,16 +15,19 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-namespace opendrive
+namespace carla
 {
-    namespace parser
+    namespace opendrive
     {
-        class TrafficSignalsParser
+        namespace parser
         {
-            private:
+            class TrafficSignalsParser
+            {
+                private:
 
-            public:
-                static void Parse(const pugi::xml_node & xmlNode, std::vector<opendrive::types::TrafficSignalInformation> & out_traffic_signals);
-        };
+                public:
+                    static void Parse(const pugi::xml_node & xmlNode, std::vector<carla::opendrive::types::TrafficSignalInformation> & out_traffic_signals);
+            };
+        }
     }
 }
