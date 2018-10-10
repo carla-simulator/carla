@@ -98,39 +98,39 @@ namespace opendrive {
             case carla::opendrive::types::GeometryType::ARC: {
               carla::opendrive::types::GeometryAttributesArc *arc =
                   (carla::opendrive::types::GeometryAttributesArc *) it->second->geometry_attributes[i];
-              carla::road::GeometryArc *newarc = new carla::road::GeometryArc(arc->curvature,
+
+              roadSegment.MakeGeometry<carla::road::GeometryArc>(arc->curvature,
                   arc->start_position,
                   arc->length,
                   arc->heading,
                   loc);
 
-              roadSegment.AddGeometry(*newarc);
               break;
             }
 
             case carla::opendrive::types::GeometryType::LINE: {
               carla::opendrive::types::GeometryAttributesLine *line =
                   (carla::opendrive::types::GeometryAttributesLine *) it->second->geometry_attributes[i];
-              carla::road::GeometryLine *newline = new carla::road::GeometryLine(line->start_position,
+
+              roadSegment.MakeGeometry<carla::road::GeometryLine>(line->start_position,
                   line->length,
                   line->heading,
                   loc);
 
-              roadSegment.AddGeometry(*newline);
               break;
             }
 
             case carla::opendrive::types::GeometryType::SPIRAL: {
               carla::opendrive::types::GeometryAttributesSpiral *spiral =
                   (carla::opendrive::types::GeometryAttributesSpiral *) it->second->geometry_attributes[i];
-              carla::road::GeometrySpiral *newspiral = new carla::road::GeometrySpiral(spiral->curve_start,
+
+              roadSegment.MakeGeometry<carla::road::GeometrySpiral>(spiral->curve_start,
                   spiral->curve_end,
                   spiral->start_position,
                   spiral->length,
                   spiral->heading,
                   loc);
 
-              roadSegment.AddGeometry(*newspiral);
               break;
             }
 

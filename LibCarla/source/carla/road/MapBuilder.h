@@ -15,17 +15,18 @@
 namespace carla {
 namespace road {
 
-  using temp_section_type = std::multimap<id_type, RoadSegmentDefinition>;
+  using temp_section_type = std::multimap<id_type, const RoadSegmentDefinition &>;
 
   class MapBuilder {
   public:
 
     bool AddRoadSegment(const RoadSegmentDefinition &seg);
 
+    const Map &BuildMap();
+
   private:
-    Map map;
     temp_section_type _temp_sections;
   };
 
 } // namespace road
-} // namespace  carla
+} // namespace carla
