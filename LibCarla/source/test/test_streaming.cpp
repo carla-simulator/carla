@@ -7,6 +7,8 @@
 #include "test.h"
 
 #include <carla/ThreadGroup.h>
+#include <carla/streaming/Client.h>
+#include <carla/streaming/Server.h>
 #include <carla/streaming/detail/Dispatcher.h>
 #include <carla/streaming/detail/tcp/Client.h>
 #include <carla/streaming/detail/tcp/Server.h>
@@ -163,3 +165,46 @@ TEST(streaming, low_level_tcp_small_message) {
   ASSERT_GT(message_count, 10u);
   c->Stop();
 }
+
+TEST(streaming, stream_outlives_server) {
+  using namespace carla::streaming;
+  using namespace util::buffer;
+  constexpr size_t iterations = 10u;
+  std::atomic_bool done{false};
+
+  const std::string message = "Hello client, how are you?";
+  std::shared_ptr<Stream> stream;
+
+  carla::ThreadGroup sender;
+  sender.CreateThread([&]() {
+    while (!done) {
+      auto s = std::atomic_load_explicit(&stream, std::memory_order_relaxed);
+      if (s != nullptr) {
+        (*s) << message;
+      }
+    }
+  });
+
+  for (auto i = 0u; i < iterations; ++i) {
+    Server srv(TESTING_PORT);
+    srv.AsyncRun(2u);
+    {
+      auto s = std::make_shared<Stream>(srv.MakeStream());
+      std::atomic_store_explicit(&stream, s, std::memory_order_relaxed);
+    }
+    std::atomic_size_t messages_received{0u};
+    {
+      Client c;
+      c.AsyncRun(2u);
+      c.Subscribe(stream->token(), [&](auto buffer) {
+        const std::string result = as_string(buffer);
+        ASSERT_EQ(result, message);
+        ++messages_received;
+      });
+      std::this_thread::sleep_for(20ms);
+    } // client dies here.
+    ASSERT_GT(messages_received, 0u);
+  } // server dies here.
+  std::this_thread::sleep_for(20ms);
+  done = true;
+} // stream dies here.
