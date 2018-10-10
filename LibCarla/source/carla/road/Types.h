@@ -9,6 +9,7 @@
 #include "carla/geom/Location.h"
 
 #include <cstdio>
+#include <memory>
 
 namespace carla {
 namespace road {
@@ -125,12 +126,16 @@ namespace road {
       _successor_id.emplace_back(id);
     }
 
-    void AddGeometry(const Geometry &geom) {
-      _geom.emplace_back(geom);
+    // usage MakeGeometry<GeometryArc>(len, st_pos_offs, head, st_pos, curv)
+    template<typename T, typename... Args>
+    void MakeGeometry(Args &&... args) {
+      _geom.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
     }
 
-    void AddInfo(const RoadInfo &info) {
-      _info.emplace_back(info);
+    // usage MakeInfo<SpeedLimit>(30.0)
+    template<typename T, typename... Args>
+    void MakeInfo(Args &&... args) {
+      _info.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
     }
 
     const std::vector<id_type> &GetPredecessorID_Vector() const {
@@ -139,10 +144,10 @@ namespace road {
     const std::vector<id_type> &GetSuccessorID_Vector() const {
       return _successor_id;
     }
-    const std::vector<Geometry> &GetGeometry_Vector() const {
+    const std::vector<std::unique_ptr<Geometry>> &GetGeometry_Vector() const {
       return _geom;
     }
-    const std::vector<RoadInfo> &GetInfo_Vector() const {
+    const std::vector<std::unique_ptr<RoadInfo>> &GetInfo_Vector() const {
       return _info;
     }
 
@@ -151,8 +156,8 @@ namespace road {
     id_type _id;
     std::vector<id_type> _predecessor_id;
     std::vector<id_type> _successor_id;
-    std::vector<Geometry> _geom;
-    std::vector<RoadInfo> _info;
+    std::vector<std::unique_ptr<Geometry>> _geom;
+    std::vector<std::unique_ptr<RoadInfo>> _info;
   };
 
 } // namespace road
