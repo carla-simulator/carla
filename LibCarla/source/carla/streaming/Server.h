@@ -48,6 +48,10 @@ namespace streaming {
       return _server.MakeStream();
     }
 
+    MultiStream MakeMultiStream() {
+      return _server.MakeMultiStream();
+    }
+
     void Run() {
       _service.Run();
     }

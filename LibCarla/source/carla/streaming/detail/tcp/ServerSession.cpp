@@ -63,10 +63,6 @@ namespace tcp {
     });
   }
 
-  void ServerSession::Close() {
-    _strand.post([self=shared_from_this()]() { self->CloseNow(); });
-  }
-
   void ServerSession::Write(std::shared_ptr<const Message> message) {
     DEBUG_ASSERT(message != nullptr);
     DEBUG_ASSERT(!message->empty());
@@ -100,6 +96,10 @@ namespace tcp {
           message->GetBufferSequence(),
           _strand.wrap(handle_sent));
     });
+  }
+
+  void ServerSession::Close() {
+    _strand.post([self=shared_from_this()]() { self->CloseNow(); });
   }
 
   void ServerSession::StartTimer() {
