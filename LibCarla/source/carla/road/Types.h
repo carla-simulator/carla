@@ -47,24 +47,31 @@ namespace road {
     double _start_position_offset; // s-offset [meters]
     double _heading;               // start orientation [radians]
 
-    geom::Location start_position; // [meters]
+    geom::Location _start_position; // [meters]
 
   protected:
 
-    Geometry(GeometryType type) : _type(type) {}
+    Geometry(GeometryType type, double start_offset, double length, double heading, const geom::Location &start_pos) :
+    _type(type),
+    _length(length),
+    _start_position_offset(start_offset),
+    _heading(heading),
+    _start_position(start_pos)
+    {}
   };
 
   class GeometryLine : public Geometry {
   public:
 
-    GeometryLine() : Geometry(GeometryType::LINE) {}
+    GeometryLine(double start_offset, double length, double heading, const geom::Location &start_pos) :
+    Geometry(GeometryType::LINE, start_offset, length, heading, start_pos) {}
   };
 
   class GeometryArc : public Geometry {
   public:
 
-    GeometryArc(double curv)
-      : Geometry(GeometryType::ARC),
+    GeometryArc(double curv, double start_offset, double length, double heading, const geom::Location &start_pos)
+      : Geometry(GeometryType::ARC, start_offset, length, heading, start_pos),
         _curvature(curv) {}
     double GetCurvature() {
       return _curvature;
@@ -78,8 +85,8 @@ namespace road {
   class GeometrySpiral : public Geometry {
   public:
 
-    GeometrySpiral(double curv_s, double curv_e)
-      : Geometry(GeometryType::SPIRAL),
+    GeometrySpiral(double curv_s, double curv_e, double start_offset, double length, double heading, const geom::Location &start_pos)
+      : Geometry(GeometryType::SPIRAL, start_offset, length, heading, start_pos),
         _curve_start(curv_s),
         _curve_end(curv_e) {}
     double GetCurveStart() {
