@@ -36,9 +36,15 @@ namespace low_level {
         detail::EndPoint<protocol_type, ExternalEPType> external_ep)
       : _server(io_service, std::move(internal_ep)),
         _dispatcher(std::move(external_ep)) {
-      _server.Listen([this](auto session) {
-        _dispatcher.RegisterSession(session);
-      });
+      auto on_session_opened = [this](auto session) {
+        if (!_dispatcher.RegisterSession(session)) {
+          session->Close();
+        }
+      };
+      auto on_session_closed = [this](auto session) {
+        _dispatcher.DeregisterSession(session);
+      };
+      _server.Listen(on_session_opened, on_session_closed);
     }
 
     template <typename InternalEPType>

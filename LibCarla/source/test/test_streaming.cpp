@@ -139,7 +139,7 @@ TEST(streaming, low_level_tcp_small_message) {
       std::this_thread::sleep_for(1ns);
     }
     std::cout << "done!\n";
-  });
+  }, [](std::shared_ptr<tcp::ServerSession>) { std::cout << "session closed!\n"; });
 
   Dispatcher dispatcher{make_endpoint<tcp::Client::protocol_type>(ep)};
   auto stream = dispatcher.MakeStream();
