@@ -4,26 +4,15 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#pragma once
-
 #include "Map.h"
-#include "carla/geom/Location.h"
-
-#include <map>
-#include <vector>
 
 namespace carla {
 namespace road {
 
-  class MapBuilder {
-  public:
-
-    bool AddRoadSegment(const RoadSegmentDefinition &seg);
-
-  private:
-
-    Map map;
-  };
+  bool Map::AddRoadSegment(const RoadSegmentDefinition &def) {
+    _graph.AddNode(def.GetId(), def);
+    return true;
+  }
 
 } // namespace road
-} // namespace  carla
+} // namespace carla
