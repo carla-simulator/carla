@@ -14,16 +14,4 @@
 using namespace carla::road;
 
 TEST(road, compilation_test) {
-  /*Map m;
-  RoadSegmentDefinition def(1);
-
-  GeometryLine g0;
-  GeometrySpiral g1(1.0, 2.0);
-  GeometryArc g2(1.0);
-
-  def.AddGeometry(g0);
-  def.AddGeometry(g1);
-  def.AddGeometry(g2);*/
-
-  //m.AddRoadSegment(def);
 }
