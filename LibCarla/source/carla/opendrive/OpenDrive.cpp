@@ -6,20 +6,26 @@
 namespace carla {
 namespace opendrive {
 
-  #define UNUSED(x) (void)x
+#define UNUSED(x) (void) x
 
   struct lane_junction_t {
     int connection_road = -1;
     int from_lane = 0, to_lane = 0;
   };
 
-  static void fnc_generate_roads_data(opendrive::types::OpenDriveData &openDriveRoad, std::map<int, opendrive::types::RoadInformation *> &out_roads) {
+  static void fnc_generate_roads_data(
+      opendrive::types::OpenDriveData &openDriveRoad,
+      std::map<int,
+      opendrive::types::RoadInformation *> &out_roads) {
     for (size_t i = 0; i < openDriveRoad.roads.size(); ++i) {
       out_roads[openDriveRoad.roads[i].attributes.id] = &openDriveRoad.roads[i];
     }
   }
 
-  static void fnc_generate_junctions_data(opendrive::types::OpenDriveData &openDriveRoad, std::map<int, std::map<int, std::vector<lane_junction_t>>> &out_data) {
+  static void fnc_generate_junctions_data(
+      opendrive::types::OpenDriveData &openDriveRoad,
+      std::map<int,
+      std::map<int, std::vector<lane_junction_t>>> &out_data) {
     for (size_t i = 0; i < openDriveRoad.junctions.size(); ++i) {
       for (size_t j = 0; j < openDriveRoad.junctions[i].connections.size(); ++j) {
         lane_junction_t junctionData;
@@ -61,34 +67,80 @@ namespace opendrive {
     fnc_generate_junctions_data(open_drive_road, junctionsData);
 
     // Transforma data for the MapBuilder
-    for(road_data_t::iterator it = roadData.begin(); it != roadData.end(); ++it)
-    {
+    for (road_data_t::iterator it = roadData.begin(); it != roadData.end(); ++it) {
       carla::road::RoadSegmentDefinition roadSegment(it->first);
 
-      if(it->second->road_link.successor != nullptr)
-      {
-        if(it->second->road_link.successor->element_type == "junction")
-        {
-          std::vector<lane_junction_t> & options = junctionsData[it->second->road_link.successor->id][it->first];
-          for(size_t i = 0; i < options.size(); ++i) roadSegment.AddSuccessorID(options[i].connection_road);
-        }
-        else
-        {
+      if (it->second->road_link.successor != nullptr) {
+        if (it->second->road_link.successor->element_type == "junction") {
+          std::vector<lane_junction_t> &options =
+              junctionsData[it->second->road_link.successor->id][it->first];
+          for (size_t i = 0; i < options.size(); ++i) {
+            roadSegment.AddSuccessorID(options[i].connection_road);
+          }
+        } else {
           roadSegment.AddSuccessorID(it->second->road_link.successor->id);
         }
-      }
 
-      if(it->second->road_link.predecessor != nullptr)
-      {
-        if(it->second->road_link.predecessor->element_type == "junction")
-        {
-          std::vector<lane_junction_t> & options = junctionsData[it->second->road_link.predecessor->id][it->first];
-          for(size_t i = 0; i < options.size(); ++i) roadSegment.AddPredecessorID(options[i].connection_road);
+        if (it->second->road_link.predecessor != nullptr) {
+          std::vector<lane_junction_t> &options =
+              junctionsData[it->second->road_link.predecessor->id][it->first];
+          for (size_t i = 0; i < options.size(); ++i) {
+            roadSegment.AddPredecessorID(options[i].connection_road);
+          }
         }
-        else
-        {
-          roadSegment.AddPredecessorID(it->second->road_link.predecessor->id);
+
+        for (size_t i = 0; i < it->second->geometry_attributes.size(); ++i) {
+          geom::Location loc;
+          loc.x = it->second->geometry_attributes[i]->start_position_x;
+          loc.y = it->second->geometry_attributes[i]->start_position_y;
+
+          switch (it->second->geometry_attributes[i]->type) {
+            case carla::opendrive::types::GeometryType::ARC: {
+              carla::opendrive::types::GeometryAttributesArc *arc =
+                  (carla::opendrive::types::GeometryAttributesArc *) it->second->geometry_attributes[i];
+              carla::road::GeometryArc *newarc = new carla::road::GeometryArc(arc->curvature,
+                  arc->start_position,
+                  arc->length,
+                  arc->heading,
+                  loc);
+
+              roadSegment.AddGeometry(*newarc);
+              break;
+            }
+
+            case carla::opendrive::types::GeometryType::LINE: {
+              carla::opendrive::types::GeometryAttributesLine *line =
+                  (carla::opendrive::types::GeometryAttributesLine *) it->second->geometry_attributes[i];
+              carla::road::GeometryLine *newline = new carla::road::GeometryLine(line->start_position,
+                  line->length,
+                  line->heading,
+                  loc);
+
+              roadSegment.AddGeometry(*newline);
+              break;
+            }
+
+            case carla::opendrive::types::GeometryType::SPIRAL: {
+              carla::opendrive::types::GeometryAttributesSpiral *spiral =
+                  (carla::opendrive::types::GeometryAttributesSpiral *) it->second->geometry_attributes[i];
+              carla::road::GeometrySpiral *newspiral = new carla::road::GeometrySpiral(spiral->curve_start,
+                  spiral->curve_end,
+                  spiral->start_position,
+                  spiral->length,
+                  spiral->heading,
+                  loc);
+
+              roadSegment.AddGeometry(*newspiral);
+              break;
+            }
+
+            default: {
+              break;
+            }
+          }
         }
+
+        mapBuilder.AddRoadSegment(roadSegment);
       }
     }
 
@@ -99,5 +151,6 @@ namespace opendrive {
     UNUSED(input);
     return road::Map();
   }
+
 } // namespace opendrive
 } // namespace carla
