@@ -9,8 +9,9 @@
 #include "Types.h"
 #include "carla/geom/Location.h"
 
-#include <vector>
 #include <map>
+#include <memory>
+#include <vector>
 
 namespace carla {
 namespace road {
@@ -38,12 +39,12 @@ namespace road {
   class RoadSegment : public RoadElement {
   public:
 
-    id_type GetId() {
+    id_type GetId() const {
       return _id;
     }
-    std::vector<RoadInfo> GetInfo();
+    const std::vector<RoadInfo> GetInfo() const;
 
-    std::vector<RoadInfo> GetInfo(double dist);
+    const std::vector<RoadInfo> GetInfo(double dist) const;
 
     // returns single info given a type and a distance
     template <typename T>
@@ -59,7 +60,7 @@ namespace road {
     std::vector<RoadSegment *> _next_list;
     std::vector<RoadSegment *> _prev_list;
     std::vector<Geometry> geom;
-    std::multimap<double, RoadInfo> _info_list;
+    std::multimap<double, std::unique_ptr<RoadInfo>> _info_list;
   };
 
 } // namespace road

@@ -35,17 +35,11 @@ namespace road {
   public:
 
     RoadGraph() : _bounding_box(),
-                  _temp_sections(),
                   _sections() {}
-
-    void AddNode(id_type id, const RoadSegmentDefinition &rs) {
-      _temp_sections.emplace(std::pair<id_type, RoadSegmentDefinition>(id, rs));
-    }
 
   private:
 
     Rect _bounding_box;
-    std::multimap<id_type, RoadSegmentDefinition> _temp_sections;
     std::multimap<id_type, RoadSegment> _sections;
   };
 
@@ -58,7 +52,7 @@ namespace road {
 
     RoadGraph GetGraph();
 
-    bool AddRoadSegment(const RoadSegmentDefinition &def);
+    bool AddRoadSegment(const RoadSegment &def);
 
   private:
 
