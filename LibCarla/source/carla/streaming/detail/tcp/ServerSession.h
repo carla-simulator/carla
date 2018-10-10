@@ -52,21 +52,27 @@ namespace tcp {
       return _stream_id;
     }
 
-    /// Writes some data to the socket.
     template <typename... Buffers>
-    void Write(Buffers... buffers) {
+    static auto MakeMessage(Buffers... buffers) {
       static_assert(
           are_same<Buffer, Buffers...>::value,
           "This function only accepts arguments of type Buffer.");
-      Write(std::make_shared<const Message>(std::move(buffers)...));
+      return std::make_shared<const Message>(std::move(buffers)...);
+    }
+
+    /// Writes some data to the socket.
+    void Write(std::shared_ptr<const Message> message);
+
+    /// Writes some data to the socket.
+    template <typename... Buffers>
+    void Write(Buffers... buffers) {
+      Write(MakeMessage(std::move(buffers)...));
     }
 
     /// Post a job to close the session.
     void Close();
 
   private:
-
-    void Write(std::shared_ptr<const Message> message);
 
     void StartTimer();
 

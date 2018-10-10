@@ -9,7 +9,6 @@
 #include "carla/streaming/EndPoint.h"
 #include "carla/streaming/Stream.h"
 #include "carla/streaming/detail/Session.h"
-#include "carla/streaming/detail/StreamState.h"
 #include "carla/streaming/detail/Token.h"
 
 #include <memory>
@@ -19,6 +18,8 @@
 namespace carla {
 namespace streaming {
 namespace detail {
+
+  class StreamStateBase;
 
   /// Keeps the mapping between streams and sessions.
   class Dispatcher {
@@ -30,7 +31,9 @@ namespace detail {
 
     ~Dispatcher();
 
-    Stream MakeStream();
+    carla::streaming::Stream MakeStream();
+
+    carla::streaming::MultiStream MakeMultiStream();
 
     bool RegisterSession(std::shared_ptr<Session> session);
 
@@ -48,7 +51,7 @@ namespace detail {
     /// them alive the whole run.
     std::unordered_map<
         stream_id_type,
-        std::shared_ptr<StreamState>> _stream_map;
+        std::shared_ptr<StreamStateBase>> _stream_map;
   };
 
 } // namespace detail

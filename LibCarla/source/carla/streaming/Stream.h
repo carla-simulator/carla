@@ -6,79 +6,26 @@
 
 #pragma once
 
-#include "carla/Buffer.h"
-#include "carla/Debug.h"
-#include "carla/streaming/Token.h"
+#include "carla/streaming/detail/MultiStreamState.h"
+#include "carla/streaming/detail/Stream.h"
 #include "carla/streaming/detail/StreamState.h"
-
-#include <memory>
 
 namespace carla {
 namespace streaming {
 
-namespace detail {
-
-  class Dispatcher;
-
-} // namespace detail
+  /// A stream represents an unidirectional channel for sending data from server
+  /// to client. A **single** client can subscribe to this stream using the
+  /// stream token. If no client is subscribed, the data flushed down the stream
+  /// is discarded.
+  using Stream = detail::Stream<detail::StreamState>;
 
   /// A stream represents an unidirectional channel for sending data from server
-  /// to client. A (single) client can subscribe to this stream using the stream
+  /// to client. Multiple clients can subscribe to this stream using the stream
   /// token. If no client is subscribed, the data flushed down the stream is
   /// discarded.
-  class Stream {
-  public:
-
-    Stream() = delete;
-
-    Stream(const Stream &) = default;
-    Stream(Stream &&) = default;
-
-    Stream &operator=(const Stream &) = default;
-    Stream &operator=(Stream &&) = default;
-
-    /// Token associated with this stream. This token can be used by a client to
-    /// subscribe to this stream.
-    Token token() const {
-      return _shared_state->token();
-    }
-
-    /// Pull a buffer from the buffer pool associated to this stream. Discarded
-    /// buffers are re-used to avoid memory allocations.
-    ///
-    /// @note Re-using buffers is optimized for the use case in which all the
-    /// messages sent through the stream are big and have (approximately) the
-    /// same size.
-    Buffer MakeBuffer() {
-      return _shared_state->MakeBuffer();
-    }
-
-    /// Flush @a buffers down the stream. No copies are made.
-    template <typename... Buffers>
-    void Write(Buffers... buffers) {
-      _shared_state->Write(std::move(buffers)...);
-    }
-
-    /// Make a copy of @a data and flush it down the stream.
-    template <typename T>
-    Stream &operator<<(const T &data) {
-      auto buffer = MakeBuffer();
-      buffer.copy_from(data);
-      Write(std::move(buffer));
-      return *this;
-    }
-
-  private:
-
-    friend class detail::Dispatcher;
-
-    Stream(std::shared_ptr<detail::StreamState> state)
-      : _shared_state(std::move(state)) {
-      DEBUG_ASSERT(_shared_state != nullptr);
-    }
-
-    std::shared_ptr<detail::StreamState> _shared_state;
-  };
+  ///
+  /// @warning MultiStream is quite slower than Stream.
+  using MultiStream = detail::Stream<detail::MultiStreamState>;
 
 } // namespace streaming
 } // namespace carla

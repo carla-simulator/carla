@@ -214,3 +214,41 @@ TEST(streaming, stream_outlives_server) {
   std::this_thread::sleep_for(20ms);
   done = true;
 } // stream dies here.
+
+TEST(streaming, multi_stream) {
+  using namespace carla::streaming;
+  using namespace util::buffer;
+  constexpr size_t number_of_messages = 100u;
+  constexpr size_t number_of_clients = 6u;
+  constexpr size_t iterations = 20u;
+  const std::string message = "Hi y'all!";
+
+  Server srv(TESTING_PORT);
+  srv.AsyncRun(number_of_clients);
+  auto stream = srv.MakeMultiStream();
+
+  for (auto i = 0u; i < iterations; ++i) {
+    std::vector<std::pair<std::atomic_size_t, std::unique_ptr<Client>>> v(number_of_clients);
+
+    for (auto &pair : v) {
+      pair.first = 0u;
+      pair.second = std::make_unique<Client>();
+      pair.second->AsyncRun(1u);
+      pair.second->Subscribe(stream.token(), [&](auto buffer) {
+        const std::string result = as_string(buffer);
+        ASSERT_EQ(result, message);
+        ++pair.first;
+      });
+    }
+
+    for (auto i = 0u; i < number_of_messages; ++i) {
+      std::this_thread::sleep_for(4ms);
+      stream << message;
+    }
+    std::this_thread::sleep_for(4ms);
+
+    for (auto &pair : v) {
+      ASSERT_EQ(pair.first, number_of_messages);
+    }
+  }
+}
