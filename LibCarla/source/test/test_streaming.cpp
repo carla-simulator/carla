@@ -102,11 +102,11 @@ TEST(streaming, low_level_unsubscribing) {
     });
 
     for (auto i = 0u; i < number_of_messages; ++i) {
-      std::this_thread::sleep_for(2ms);
+      std::this_thread::sleep_for(4ms);
       stream << message_text;
     }
 
-    std::this_thread::sleep_for(2ms);
+    std::this_thread::sleep_for(4ms);
     c.UnSubscribe(stream.token());
 
     for (auto i = 0u; i < number_of_messages; ++i) {
@@ -166,18 +166,24 @@ TEST(streaming, low_level_tcp_small_message) {
   c->Stop();
 }
 
+struct DoneGuard {
+  ~DoneGuard() { done = true; };
+  std::atomic_bool &done;
+};
+
 TEST(streaming, stream_outlives_server) {
   using namespace carla::streaming;
   using namespace util::buffer;
   constexpr size_t iterations = 10u;
   std::atomic_bool done{false};
-
   const std::string message = "Hello client, how are you?";
   std::shared_ptr<Stream> stream;
 
   carla::ThreadGroup sender;
+  DoneGuard g = {done};
   sender.CreateThread([&]() {
     while (!done) {
+      std::this_thread::sleep_for(1ms);
       auto s = std::atomic_load_explicit(&stream, std::memory_order_relaxed);
       if (s != nullptr) {
         (*s) << message;
