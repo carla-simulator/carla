@@ -63,19 +63,18 @@ namespace opendrive {
     // Transforma data for the MapBuilder
     for(road_data_t::iterator it = roadData.begin(); it != roadData.end(); ++it)
     {
-      carla::road::RoadSegmentDefinition roadSegment;
-      roadSegment.id = it->first;
+      carla::road::RoadSegmentDefinition roadSegment(it->first);
 
       if(it->second->road_link.successor != nullptr)
       {
         if(it->second->road_link.successor->element_type == "junction")
         {
           std::vector<lane_junction_t> & options = junctionsData[it->second->road_link.successor->id][it->first];
-          for(size_t i = 0; i < options.size(); ++i) roadSegment.successor_id.push_back(options[i].connection_road);
+          for(size_t i = 0; i < options.size(); ++i) roadSegment.AddSuccessorID(options[i].connection_road);
         }
         else
         {
-          roadSegment.successor_id.push_back(it->second->road_link.successor->id);
+          roadSegment.AddSuccessorID(it->second->road_link.successor->id);
         }
       }
 
@@ -84,11 +83,11 @@ namespace opendrive {
         if(it->second->road_link.predecessor->element_type == "junction")
         {
           std::vector<lane_junction_t> & options = junctionsData[it->second->road_link.predecessor->id][it->first];
-          for(size_t i = 0; i < options.size(); ++i) roadSegment.predecessor_id.push_back(options[i].connection_road);
+          for(size_t i = 0; i < options.size(); ++i) roadSegment.AddPredecessorID(options[i].connection_road);
         }
         else
         {
-          roadSegment.predecessor_id.push_back(it->second->road_link.predecessor->id);
+          roadSegment.AddPredecessorID(it->second->road_link.predecessor->id);
         }
       }
     }
