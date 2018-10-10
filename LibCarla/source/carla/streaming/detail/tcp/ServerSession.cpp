@@ -32,18 +32,22 @@ namespace tcp {
       _deadline(io_service),
       _strand(io_service) {}
 
-  void ServerSession::Open(callback_function_type callback) {
+  void ServerSession::Open(
+      callback_function_type on_opened,
+      callback_function_type on_closed) {
+    DEBUG_ASSERT(on_opened && on_closed);
+    _on_closed = std::move(on_closed);
     StartTimer();
     auto self = shared_from_this(); // To keep myself alive.
     _strand.post([=]() {
 
-      auto handle_query = [this, self, cb=std::move(callback)](
+      auto handle_query = [this, self, callback=std::move(on_opened)](
           const boost::system::error_code &ec,
           size_t DEBUG_ONLY(bytes_received)) {
         DEBUG_ASSERT_EQ(bytes_received, sizeof(_stream_id));
         if (!ec) {
           log_debug("session", _session_id, "for stream", _stream_id, " started");
-          _socket.get_io_service().post([=]() { cb(self); });
+          _socket.get_io_service().post([=]() { callback(self); });
         } else {
           log_error("session", _session_id, ": error retrieving stream id :", ec.message());
           CloseNow();
@@ -57,6 +61,10 @@ namespace tcp {
           boost::asio::buffer(&_stream_id, sizeof(_stream_id)),
           _strand.wrap(handle_query));
     });
+  }
+
+  void ServerSession::Close() {
+    _strand.post([self=shared_from_this()]() { self->CloseNow(); });
   }
 
   void ServerSession::Write(std::shared_ptr<const Message> message) {
@@ -97,7 +105,7 @@ namespace tcp {
   void ServerSession::StartTimer() {
     if (_deadline.expires_at() <= boost::asio::deadline_timer::traits_type::now()) {
       log_debug("session", _session_id, "timed out");
-      _strand.post([self=shared_from_this()]() { self->CloseNow(); });
+      Close();
     } else {
       _deadline.async_wait([this, self=shared_from_this()](boost::system::error_code ec) {
         if (!ec) {
@@ -115,6 +123,10 @@ namespace tcp {
     if (_socket.is_open()) {
       _socket.close();
     }
+    _socket.get_io_service().post([self=shared_from_this()]() {
+      DEBUG_ASSERT(self->_on_closed);
+      self->_on_closed(self);
+    });
     log_debug("session", _session_id, "closed");
   }
 

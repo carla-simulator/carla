@@ -40,9 +40,11 @@ namespace tcp {
 
     explicit ServerSession(boost::asio::io_service &io_service, time_duration timeout);
 
-    /// Starts the session and calls @a callback after successfully reading the
-    /// stream id.
-    void Open(callback_function_type callback);
+    /// Starts the session and calls @a on_opened after successfully reading the
+    /// stream id, and @a on_closed once the session is closed.
+    void Open(
+        callback_function_type on_opened,
+        callback_function_type on_closed);
 
     /// @warning This function should only be called after the session is
     /// opened. It is safe to call this function from within the @a callback.
@@ -58,6 +60,9 @@ namespace tcp {
           "This function only accepts arguments of type Buffer.");
       Write(std::make_shared<const Message>(std::move(buffers)...));
     }
+
+    /// Post a job to close the session.
+    void Close();
 
   private:
 
@@ -80,6 +85,8 @@ namespace tcp {
     boost::asio::deadline_timer _deadline;
 
     boost::asio::io_service::strand _strand;
+
+    callback_function_type _on_closed;
 
     bool _is_writing = false;
   };

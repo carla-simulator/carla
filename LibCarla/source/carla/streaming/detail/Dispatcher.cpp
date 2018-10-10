@@ -34,15 +34,27 @@ namespace detail {
     return ptr;
   }
 
-  void Dispatcher::RegisterSession(std::shared_ptr<Session> session) {
+  bool Dispatcher::RegisterSession(std::shared_ptr<Session> session) {
     DEBUG_ASSERT(session != nullptr);
     std::lock_guard<std::mutex> lock(_mutex);
     auto search = _stream_map.find(session->get_stream_id());
     if (search != _stream_map.end()) {
       DEBUG_ASSERT(search->second != nullptr);
       search->second->set_session(std::move(session));
+      return true;
     } else {
       log_error("Invalid session: no stream available with id", session->get_stream_id());
+      return false;
+    }
+  }
+
+  void Dispatcher::DeregisterSession(std::shared_ptr<Session> session) {
+    DEBUG_ASSERT(session != nullptr);
+    std::lock_guard<std::mutex> lock(_mutex);
+    auto search = _stream_map.find(session->get_stream_id());
+    if (search != _stream_map.end()) {
+      DEBUG_ASSERT(search->second != nullptr);
+      search->second->set_session(nullptr);
     }
   }
 

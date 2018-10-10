@@ -32,7 +32,9 @@ namespace detail {
 
     Stream MakeStream();
 
-    void RegisterSession(std::shared_ptr<Session> session);
+    bool RegisterSession(std::shared_ptr<Session> session);
+
+    void DeregisterSession(std::shared_ptr<Session> session);
 
   private:
 
