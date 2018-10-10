@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "carla/geom/Location.h"
+#include "Geometry.h"
 
 #include <cstdio>
 #include <memory>
@@ -17,91 +17,6 @@ namespace road {
   using id_type = size_t;
 
 // Geometry ////////////////////////////////////////////////////////////
-
-  enum class GeometryType : unsigned int {
-    LINE,
-    ARC,
-    SPIRAL
-  };
-
-  class Geometry {
-  public:
-
-    GeometryType GetTypeh() {
-      return _type;
-    }
-    double GetLength() {
-      return _length;
-    }
-    double GetStartPositionOffset() {
-      return _start_position_offset;
-    }
-    double GetHeading() {
-      return _heading;
-    }
-
-  private:
-
-    GeometryType _type;            // geometry type
-    double _length;                // length of the road section [meters]
-
-    double _start_position_offset; // s-offset [meters]
-    double _heading;               // start orientation [radians]
-
-    geom::Location _start_position; // [meters]
-
-  protected:
-
-    Geometry(GeometryType type, double start_offset, double length, double heading, const geom::Location &start_pos) :
-    _type(type),
-    _length(length),
-    _start_position_offset(start_offset),
-    _heading(heading),
-    _start_position(start_pos)
-    {}
-  };
-
-  class GeometryLine : public Geometry {
-  public:
-
-    GeometryLine(double start_offset, double length, double heading, const geom::Location &start_pos) :
-    Geometry(GeometryType::LINE, start_offset, length, heading, start_pos) {}
-  };
-
-  class GeometryArc : public Geometry {
-  public:
-
-    GeometryArc(double curv, double start_offset, double length, double heading, const geom::Location &start_pos)
-      : Geometry(GeometryType::ARC, start_offset, length, heading, start_pos),
-        _curvature(curv) {}
-    double GetCurvature() {
-      return _curvature;
-    }
-
-  private:
-
-    double _curvature;
-  };
-
-  class GeometrySpiral : public Geometry {
-  public:
-
-    GeometrySpiral(double curv_s, double curv_e, double start_offset, double length, double heading, const geom::Location &start_pos)
-      : Geometry(GeometryType::SPIRAL, start_offset, length, heading, start_pos),
-        _curve_start(curv_s),
-        _curve_end(curv_e) {}
-    double GetCurveStart() {
-      return _curve_start;
-    }
-    double GetCurveEnd() {
-      return _curve_end;
-    }
-
-  private:
-
-    double _curve_start;
-    double _curve_end;
-  };
 
   struct RoadInfo {
     // distance from Road's start location
@@ -115,8 +30,13 @@ namespace road {
   class RoadSegmentDefinition {
   public:
 
-    const id_type &GetId() const
-    {
+    RoadSegmentDefinition(RoadSegmentDefinition &&rsd)
+       : _id(rsd._id),
+        _predecessor_id(std::move(rsd._predecessor_id)),
+        _geom(std::move(rsd._geom)),
+        _info(std::move(rsd._info)) {}
+
+    const id_type &GetId() const {
       return _id;
     }
 
@@ -134,15 +54,15 @@ namespace road {
     }
 
     // usage MakeGeometry<GeometryArc>(len, st_pos_offs, head, st_pos, curv)
-    template<typename T, typename... Args>
-    void MakeGeometry(Args &&... args) {
-      _geom.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
+    template <typename T, typename ... Args>
+    void MakeGeometry(Args && ... args) {
+      _geom.emplace_back(std::make_unique<T>(std::forward<Args>(args) ...));
     }
 
     // usage MakeInfo<SpeedLimit>(30.0)
-    template<typename T, typename... Args>
-    void MakeInfo(Args &&... args) {
-      _info.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
+    template <typename T, typename ... Args>
+    void MakeInfo(Args && ... args) {
+      _info.emplace_back(std::make_unique<T>(std::forward<Args>(args) ...));
     }
 
     const std::vector<id_type> &GetPredecessorID_Vector() const {

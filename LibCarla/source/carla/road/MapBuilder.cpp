@@ -15,4 +15,4 @@ bool MapBuilder::AddRoadSegment(const RoadSegmentDefinition &seg) {
 }
 
 } // namespace road
-} // namespace  carla
+} // namespace carla
