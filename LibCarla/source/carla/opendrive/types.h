@@ -260,25 +260,7 @@ namespace carla
             {
                 std::vector<RoadInformation> roads;
                 std::vector<Junction> junctions;
-
-                ~OpenDriveData()
-                {
-                    for(size_t i = 0; i < roads.size(); ++i)
-                    {
-                        delete roads[i].road_link.successor;
-                        delete roads[i].road_link.predecessor;
-
-                        for(size_t j = 0; j < roads[i].geometry_attributes.size(); ++j)
-                        {
-                            delete roads[i].geometry_attributes[j];
-                        }
-                    }
-
-                    roads.clear();
-                    junctions.clear();
-                }
             };
-
 
             struct Waypoint
             {
