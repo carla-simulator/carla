@@ -44,6 +44,27 @@ install(FILES ${libcarla_carla_streaming_detail_tcp_headers} DESTINATION include
 file(GLOB libcarla_carla_streaming_low_level_headers "${libcarla_source_path}/carla/streaming/low_level/*.h")
 install(FILES ${libcarla_carla_streaming_low_level_headers} DESTINATION include/carla/streaming/low_level)
 
+file(GLOB libcarla_carla_opendrive "${libcarla_source_path}/carla/opendrive/*.h")
+install(FILES ${libcarla_carla_opendrive} DESTINATION include/carla/opendrive)
+
+file(GLOB libcarla_carla_opendrive_parser "${libcarla_source_path}/carla/opendrive/parser/*.h")
+install(FILES ${libcarla_carla_opendrive_parser} DESTINATION include/carla/opendrive/parser)
+
+file(GLOB libcarla_carla_opendrive_parser_pugixml "${libcarla_source_path}/carla/opendrive/parser/pugixml/*.hpp")
+install(FILES ${libcarla_carla_opendrive_parser_pugixml} DESTINATION include/carla/opendrive/parser/pugixml)
+
+file(GLOB libcarla_carla_opendrive_math "${libcarla_source_path}/carla/opendrive/math/*.h")
+install(FILES ${libcarla_carla_opendrive_math} DESTINATION include/carla/opendrive/math)
+
+file(GLOB libcarla_carla_opendrive_logic "${libcarla_source_path}/carla/opendrive/logic/*.h")
+install(FILES ${libcarla_carla_opendrive_logic} DESTINATION include/carla/opendrive/logic)
+
+file(GLOB libcarla_carla_opendrive_logic_cephes "${libcarla_source_path}/carla/opendrive/logic/cephes/*.h")
+install(FILES ${libcarla_carla_opendrive_logic_cephes} DESTINATION include/carla/opendrive/logic/cephes)
+
+file(GLOB  "${libcarla_source_path}/carla/opendrive/*.h")
+install(FILES ${} DESTINATION include/carla/opendrive)
+
 install(DIRECTORY "${BOOST_INCLUDE_PATH}/boost" DESTINATION include)
 
 if(WIN32)
@@ -66,7 +87,19 @@ file(GLOB_RECURSE libcarla_server_sources
     "${libcarla_source_path}/carla/sensor/s11n/*.h"
     "${libcarla_source_path}/carla/sensor/s11n/*.cpp"
     "${libcarla_source_path}/carla/streaming/*.h"
-    "${libcarla_source_path}/carla/streaming/*.cpp")
+    "${libcarla_source_path}/carla/streaming/*.cpp"
+
+    "${libcarla_source_path}/carla/opendrive/logic/cephes/*.h"
+    "${libcarla_source_path}/carla/opendrive/logic/cephes/*.cpp"
+    "${libcarla_source_path}/carla/opendrive/logic/*.h"
+    "${libcarla_source_path}/carla/opendrive/logic/*.cpp"
+    "${libcarla_source_path}/carla/opendrive/parser/pugixml/*.hpp"
+    "${libcarla_source_path}/carla/opendrive/parser/pugixml/*.cpp"
+    "${libcarla_source_path}/carla/opendrive/parser/*.h"
+    "${libcarla_source_path}/carla/opendrive/parser/*.cpp"
+    "${libcarla_source_path}/carla/opendrive/*.h"
+    "${libcarla_source_path}/carla/opendrive/*.cpp"
+    "${libcarla_source_path}/carla/opendrive/math/*.h")
 
 # Create targets for debug and release in the same build type.
 foreach(target carla_server_debug carla_server)
