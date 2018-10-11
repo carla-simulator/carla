@@ -8,6 +8,7 @@
 
 #include "Carla/Actor/CarlaActorFactory.h"
 #include "Carla/Game/CarlaEpisode.h"
+#include "Carla/Game/CarlaGameInstance.h"
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"

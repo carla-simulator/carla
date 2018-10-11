@@ -7,6 +7,9 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
+
+#include "Carla/Agent/TrafficSignAgentComponent.h"
+
 #include "TrafficSignBase.generated.h"
 
 UENUM(BlueprintType)
