@@ -51,7 +51,7 @@ struct OpenDriveParser
             carla::opendrive::parser::LaneParser::Parse(road.child("lanes"), openDriveRoadInformation.lane_sections);
             carla::opendrive::parser::GeometryParser::Parse(road.child("planView"), openDriveRoadInformation.geometry_attributes);
 
-            out_open_drive_data.roads.push_back(openDriveRoadInformation);
+            out_open_drive_data.roads.push_back(std::move(openDriveRoadInformation));
         }
 
         for (pugi::xml_node junction = xmlDoc.child("OpenDRIVE").child("junction"); junction; junction = junction.next_sibling("junction"))

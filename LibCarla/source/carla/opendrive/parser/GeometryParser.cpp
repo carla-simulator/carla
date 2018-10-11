@@ -39,36 +39,36 @@ void carla::opendrive::parser::GeometryParser::ParseSpiral(const pugi::xml_node 
     out_geometry_spiral->curve_start = std::stod(xmlNode.attribute("curvStart").value());
 }
 
-void carla::opendrive::parser::GeometryParser::Parse(const pugi::xml_node & xmlNode, std::vector<carla::opendrive::types::GeometryAttributes*> & out_geometry_attributes)
+void carla::opendrive::parser::GeometryParser::Parse(const pugi::xml_node & xmlNode, std::vector<std::unique_ptr<carla::opendrive::types::GeometryAttributes>> & out_geometry_attributes)
 {
     carla::opendrive::parser::GeometryParser gometry_parser;
 
     for (pugi::xml_node roadGeometry = xmlNode.child("geometry"); roadGeometry; roadGeometry = roadGeometry.next_sibling("geometry"))
     {
-        opendrive::types::GeometryAttributes *geometry_attributes = nullptr;
+        std::unique_ptr<opendrive::types::GeometryAttributes> geometry_attributes;
         std::string firstChildName(roadGeometry.first_child().name());
 
         if (firstChildName == "arc")
         {
-            geometry_attributes = new opendrive::types::GeometryAttributesArc;
-            gometry_parser.ParseArc(roadGeometry.first_child(), static_cast<opendrive::types::GeometryAttributesArc *>(geometry_attributes));
+            geometry_attributes = std::make_unique<opendrive::types::GeometryAttributesArc>();
+            gometry_parser.ParseArc(roadGeometry.first_child(), static_cast<opendrive::types::GeometryAttributesArc *>(geometry_attributes.get()));
         }
         else if (firstChildName == "line")
         {
-            geometry_attributes = new opendrive::types::GeometryAttributesLine;
-            gometry_parser.ParseLine(roadGeometry.first_child(), static_cast<opendrive::types::GeometryAttributesLine *>(geometry_attributes));
+            geometry_attributes = std::make_unique<opendrive::types::GeometryAttributesLine>();
+            gometry_parser.ParseLine(roadGeometry.first_child(), static_cast<opendrive::types::GeometryAttributesLine *>(geometry_attributes.get()));
         }
         else if (firstChildName == "spiral")
         {
-            geometry_attributes = new opendrive::types::GeometryAttributesSpiral;
-            gometry_parser.ParseSpiral(roadGeometry.first_child(), static_cast<opendrive::types::GeometryAttributesSpiral *>(geometry_attributes));
+            geometry_attributes = std::make_unique<opendrive::types::GeometryAttributesSpiral>();
+            gometry_parser.ParseSpiral(roadGeometry.first_child(), static_cast<opendrive::types::GeometryAttributesSpiral *>(geometry_attributes.get()));
         }
         else
         {
             ODP_ASSERT(false, "Geometry type unknown");
         }
 
-        out_geometry_attributes.push_back(geometry_attributes);
+        out_geometry_attributes.push_back(std::move(geometry_attributes));
 
         geometry_attributes->start_position = std::stod(roadGeometry.attribute("s").value());
 

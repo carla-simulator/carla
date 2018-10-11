@@ -185,7 +185,7 @@ void carla::opendrive::logic::RoadPointsGenerator::Generate(const carla::opendri
     {
         carla::opendrive::logic::road_generator_input input;
 
-        input.geometry_attributes = roadInformation.geometry_attributes[i];
+        input.geometry_attributes = roadInformation.geometry_attributes[i].get();
         input.is_junction = isJunction;
 
         input.road_profile = &roadInformation.road_profiles;
