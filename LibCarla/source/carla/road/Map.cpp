@@ -10,12 +10,12 @@ namespace carla {
 namespace road {
 
   bool Map::ExistId(id_type id) const {
-    return _sections.count(id);
+    return _elements.count(id);
   }
 
   const RoadElement *Map::GetRoad(id_type id) {
     if (ExistId(id)) {
-      return _sections.find(id)->second.get();
+      return _elements.find(id)->second.get();
     }
     return nullptr;
   }

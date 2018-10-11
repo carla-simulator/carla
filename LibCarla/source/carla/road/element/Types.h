@@ -35,13 +35,13 @@ namespace element {
         _geom(std::move(rsd._geom)),
         _info(std::move(rsd._info)) {}
 
-    const id_type &GetId() const {
-      return _id;
-    }
-
     RoadSegmentDefinition(id_type id) {
       assert(id > 0);
       _id = id;
+    }
+
+    const id_type &GetId() const {
+      return _id;
     }
 
     void AddPredecessorID(const id_type &id) {
@@ -78,7 +78,7 @@ namespace element {
     }
 
   private:
-
+    friend class RoadSegment;
     id_type _id;
     std::vector<id_type> _predecessor_id;
     std::vector<id_type> _successor_id;

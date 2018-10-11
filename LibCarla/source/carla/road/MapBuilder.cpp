@@ -17,7 +17,7 @@ namespace road {
   const Map &MapBuilder::Build() {
 
     for (auto &&seg : _temp_sections) {
-      map.MakeElement<RoadSegment>(seg.first, seg.second);
+      map.MakeElement<RoadSegment>(seg.first, std::move(seg.second));
     }
 
     return map;
