@@ -7,6 +7,7 @@
 #pragma once
 
 #include "element/RoadSegment.h"
+#include "carla/NonCopyable.h"
 
 #include <boost/graph/adjacency_list.hpp>
 
@@ -20,19 +21,17 @@ namespace road {
   class Map {
   public:
 
+    Map(const Map &) = delete;
+    Map &operator=(const Map &) = delete;
+
+    Map(Map &&) = default;
+    Map &operator=(Map &&) = default;
+
     bool ExistId(id_type id) const;
 
     const RoadElement *GetRoad(id_type id);
 
     const RoadElement &NearestRoad(const geom::Location &loc);
-
-    template <typename T, typename ... Args>
-    T &MakeElement(id_type id, Args && ... args) {
-      auto inst = std::make_unique<T>(std::forward<Args>(args) ...);
-      T &r = *inst;
-      _elements.emplace(id, std::move(inst));
-      return r;
-    }
 
   private:
 
