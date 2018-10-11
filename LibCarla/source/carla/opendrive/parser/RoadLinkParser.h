@@ -24,7 +24,7 @@ namespace carla
             class RoadLinkParser
             {
                 private:
-                    void ParseLink(const pugi::xml_node & xmlNode, carla::opendrive::types::RoadLinkInformation ** out_link_information);
+                    void ParseLink(const pugi::xml_node & xmlNode, carla::opendrive::types::RoadLinkInformation * out_link_information);
 
                 public:
                     static void Parse(const pugi::xml_node & xmlNode, carla::opendrive::types::RoadLink & out_road_link);

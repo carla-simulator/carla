@@ -13,19 +13,15 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void carla::opendrive::parser::RoadLinkParser::ParseLink(const pugi::xml_node & xmlNode, carla::opendrive::types::RoadLinkInformation ** out_link_information)
+void carla::opendrive::parser::RoadLinkParser::ParseLink(const pugi::xml_node & xmlNode, carla::opendrive::types::RoadLinkInformation * out_link_information)
 {
-    (*out_link_information) = new carla::opendrive::types::RoadLinkInformation;
-
-    (*out_link_information)->id = std::atoi(xmlNode.attribute("elementId").value());
-    (*out_link_information)->contact_point = xmlNode.attribute("contactPoint").value();
-    (*out_link_information)->element_type = xmlNode.attribute("elementType").value();
+    out_link_information->id = std::atoi(xmlNode.attribute("elementId").value());
+    out_link_information->element_type = xmlNode.attribute("elementType").value();
+    out_link_information->contact_point = xmlNode.attribute("contactPoint").value();
 }
 
 void carla::opendrive::parser::RoadLinkParser::Parse(const pugi::xml_node & xmlNode, carla::opendrive::types::RoadLink & out_road_link)
 {
-    out_road_link.predecessor = nullptr;
-    out_road_link.successor = nullptr;
     RoadLinkParser parser;
 
     const pugi::xml_node predecessorNode = xmlNode.child("predecessor");
@@ -33,11 +29,13 @@ void carla::opendrive::parser::RoadLinkParser::Parse(const pugi::xml_node & xmlN
 
     if (predecessorNode)
     {
-        parser.ParseLink(predecessorNode, &out_road_link.predecessor);
+        out_road_link.predecessor = std::make_unique<carla::opendrive::types::RoadLinkInformation>();
+        parser.ParseLink(predecessorNode, out_road_link.predecessor.get());
     }
 
     if (successorNode)
     {
-        parser.ParseLink(successorNode, &out_road_link.successor);
+        out_road_link.predecessor = std::make_unique<carla::opendrive::types::RoadLinkInformation>();
+        parser.ParseLink(successorNode, out_road_link.successor.get());
     }
 }

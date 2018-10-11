@@ -26,10 +26,10 @@ void carla::opendrive::parser::LaneParser::ParseLane(const pugi::xml_node & xmlN
         ParseLaneSpeed(lane, currentLane.lane_speed);
         ParseLaneWidth(lane, currentLane.lane_width);
 
-        ParseLaneLink(lane.child("link"), &currentLane.link);
+        ParseLaneLink(lane.child("link"), currentLane.link);
         ParseLaneRoadMark(lane.child("roadMark"), currentLane.road_marker);
 
-        out_lane.push_back(currentLane);
+        out_lane.push_back(std::move(currentLane));
     }
 }
 
@@ -51,16 +51,16 @@ void carla::opendrive::parser::LaneParser::ParseLaneWidth(const pugi::xml_node &
     }
 }
 
-void carla::opendrive::parser::LaneParser::ParseLaneLink(const pugi::xml_node & xmlNode, carla::opendrive::types::LaneLink ** out_lane_link)
+void carla::opendrive::parser::LaneParser::ParseLaneLink(const pugi::xml_node & xmlNode, std::unique_ptr<carla::opendrive::types::LaneLink> & out_lane_link)
 {
     const pugi::xml_node predecessorNode = xmlNode.child("predecessor");
     const pugi::xml_node successorNode = xmlNode.child("successor");
 
-    (*out_lane_link) = (predecessorNode || successorNode) ? new opendrive::types::LaneLink : nullptr;
-    if (*out_lane_link == nullptr) return;
+    out_lane_link = (predecessorNode || successorNode) ? std::make_unique<opendrive::types::LaneLink>() : nullptr;
+    if (out_lane_link == nullptr) return;
 
-    (*out_lane_link)->predecessor_id = predecessorNode ? std::atoi(predecessorNode.attribute("id").value()) : 0;
-    (*out_lane_link)->successor_id = successorNode ? std::atoi(successorNode.attribute("id").value()) : 0;
+    out_lane_link->predecessor_id = predecessorNode ? std::atoi(predecessorNode.attribute("id").value()) : 0;
+    out_lane_link->successor_id = successorNode ? std::atoi(successorNode.attribute("id").value()) : 0;
 }
 
 void carla::opendrive::parser::LaneParser::ParseLaneRoadMark(const pugi::xml_node & xmlNode, std::vector<carla::opendrive::types::LaneRoadMark> & out_lane_mark)

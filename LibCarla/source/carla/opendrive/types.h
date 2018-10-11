@@ -106,10 +106,7 @@ namespace carla
                 std::vector<LaneWidth> lane_width;
 
                 std::vector<LaneRoadMark> road_marker;
-                LaneLink *link;
-
-                Lane() : link(nullptr) {}
-                ~Lane() { delete link; link = nullptr; }
+                std::unique_ptr<LaneLink> link;
             };
 
             struct LaneSection
@@ -187,11 +184,8 @@ namespace carla
 
             struct RoadLink
             {
-                RoadLinkInformation *successor;
-                RoadLinkInformation *predecessor;
-
-                RoadLink() : successor(nullptr), predecessor(nullptr) {}
-                ~RoadLink() { delete successor; delete predecessor; successor = predecessor = nullptr; }
+                std::unique_ptr<RoadLinkInformation> successor;
+                std::unique_ptr<RoadLinkInformation> predecessor;
             };
 
             struct RoadInformation
@@ -203,15 +197,7 @@ namespace carla
                 LaneSection lane_sections;
 
                 std::vector<TrafficSignalInformation> trafic_signals;
-                std::vector<GeometryAttributes *> geometry_attributes;
-
-                ~RoadInformation()
-                {
-                    for(size_t i = 0; i < geometry_attributes.size(); ++i)
-                    {
-                        delete geometry_attributes[i];
-                    }
-                }
+                std::vector<std::unique_ptr<GeometryAttributes>> geometry_attributes;
             };
 
             /////////////////////////////////////////////////////////////////
