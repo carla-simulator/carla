@@ -17,8 +17,8 @@ namespace opendrive {
     class OpenDrive {
     public:
 
-      static const road::Map &Load(std::istream &input);
-      static const road::Map &Load(const std::string &file);
+      static road::Map Load(std::istream &input);
+      static road::Map Load(const std::string &file);
 
       static void Dump(const road::Map &map, std::ostream &output);
     };

@@ -14,13 +14,16 @@ namespace road {
     return true;
   }
 
-  const Map &MapBuilder::Build() {
+  Map MapBuilder::Build() {
 
     for (auto &&seg : _temp_sections) {
-      map.MakeElement<RoadSegment>(seg.first, std::move(seg.second));
+      MakeElement<RoadSegment>(seg.first, std::move(seg.second));
     }
 
-    return map;
+    // _map is a memeber of MapBuilder so you must especify if
+    // you want to keep it (will return copy -> Map(const Map &))
+    // or move it (will return move -> Map(Map &&))
+    return std::move(_map);
   }
 
 } // namespace road

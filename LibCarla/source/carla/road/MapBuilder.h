@@ -21,12 +21,21 @@ namespace road {
 
     bool AddRoadSegmentDefinition(RoadSegmentDefinition &seg);
 
-    const Map &Build();
+    Map Build();
 
   private:
 
+    template <typename T, typename ... Args>
+    T &MakeElement(id_type id, Args && ... args) {
+      auto inst = std::make_unique<T>(std::forward<Args>(args) ...);
+      T &r = *inst;
+      _map._elements.emplace(id, std::move(inst));
+      return r;
+    }
+
+  private:
+    Map _map;
     temp_section_type _temp_sections;
-    Map map;
   };
 
 } // namespace road

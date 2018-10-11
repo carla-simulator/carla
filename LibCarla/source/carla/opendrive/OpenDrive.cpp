@@ -46,7 +46,7 @@ namespace opendrive {
     }
   }
 
-  const road::Map &OpenDrive::Load(const std::string &file) {
+  road::Map OpenDrive::Load(const std::string &file) {
     carla::opendrive::types::OpenDriveData open_drive_road;
     OpenDriveParser::Parse(file.c_str(), open_drive_road);
     carla::road::MapBuilder mapBuilder;
@@ -147,7 +147,7 @@ namespace opendrive {
     return mapBuilder.Build();
   }
 
-  const road::Map &OpenDrive::Load(std::istream &input) {
+  road::Map OpenDrive::Load(std::istream &input) {
     UNUSED(input);
 
     carla::road::MapBuilder mapBuilder;
