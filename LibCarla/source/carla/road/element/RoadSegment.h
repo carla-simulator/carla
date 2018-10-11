@@ -10,7 +10,7 @@
 #include "RoadElement.h"
 #include "carla/geom/Location.h"
 
-#include <map>
+#include <set>
 #include <memory>
 #include <vector>
 
@@ -21,8 +21,13 @@ namespace element {
   class RoadSegment : public RoadElement {
   public:
 
-    RoadSegment() : _id(-1) {}
-    RoadSegment(const RoadSegmentDefinition &def) : _id(def.GetId()) {}
+    RoadSegment(RoadSegmentDefinition &&def)
+      : _id(def.GetId()),
+        _geom(std::move(def._geom)) {
+      for (auto &&a : def._info) {
+        _info.insert(std::move(a));
+      }
+    }
 
     id_type GetId() const {
       return _id;
@@ -41,11 +46,20 @@ namespace element {
 
   private:
 
+    struct LessComp {
+      using is_transparent = void;
+      bool operator()(
+          const std::unique_ptr<RoadInfo> &a,
+          const std::unique_ptr<RoadInfo> &b) const {
+        return a->d < b->d;
+      }
+    };
+
     id_type _id;
-    std::vector<RoadSegment *> _next_list;
-    std::vector<RoadSegment *> _prev_list;
-    std::vector<std::unique_ptr<Geometry>> geom;
-    std::multimap<double, std::unique_ptr<RoadInfo>> _info_list;
+    std::vector<RoadSegment *> _predecessors;
+    std::vector<RoadSegment *> _successors;
+    std::vector<std::unique_ptr<Geometry>> _geom;
+    std::multiset<std::unique_ptr<RoadInfo>, LessComp> _info;
   };
 
 } // namespace element

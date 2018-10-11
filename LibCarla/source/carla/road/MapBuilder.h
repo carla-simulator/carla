@@ -14,7 +14,7 @@
 namespace carla {
 namespace road {
 
-  using temp_section_type = std::multimap<id_type, RoadSegmentDefinition &>;
+  using temp_section_type = std::map<id_type, RoadSegmentDefinition &>;
 
   class MapBuilder {
   public:

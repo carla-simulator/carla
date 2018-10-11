@@ -30,13 +30,15 @@ namespace road {
     T &MakeElement(id_type id, Args && ... args) {
       auto inst = std::make_unique<T>(std::forward<Args>(args) ...);
       T &r = *inst;
-      _sections.emplace(id, std::move(inst));
+      _elements.emplace(id, std::move(inst));
       return r;
     }
 
   private:
 
-    std::map<id_type, std::unique_ptr<RoadElement>> _sections;
+    friend class MapBuilder;
+    Map() {}
+    std::map<id_type, std::unique_ptr<RoadElement>> _elements;
   };
 
 } // namespace road
