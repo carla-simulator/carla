@@ -10,6 +10,7 @@
 /*
     STD/C++ includes
 */
+#include <cstdlib>
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -35,7 +36,7 @@ void carla::opendrive::parser::RoadLinkParser::Parse(const pugi::xml_node & xmlN
 
     if (successorNode)
     {
-        out_road_link.predecessor = std::make_unique<carla::opendrive::types::RoadLinkInformation>();
+        out_road_link.successor = std::make_unique<carla::opendrive::types::RoadLinkInformation>();
         parser.ParseLink(successorNode, out_road_link.successor.get());
     }
 }
