@@ -8,7 +8,6 @@
 
 import argparse
 import logging
-import random
 import time
 import math
 import grpc
@@ -20,7 +19,7 @@ from carla.client import make_carla_client
 from carla.settings import CarlaSettings
 from carla.tcp import TCPConnectionError
 
-sys.path.insert(0,os.path.abspath('proto_generated'))
+sys.path.insert(0, os.path.abspath('proto_generated'))
 
 import osi_grpc_pb2_grpc
 import osi_groundtruth_pb2
@@ -70,7 +69,8 @@ def run_carla_client(args):
 
             # Choose one player start at random.
             number_of_player_starts = len(scene.player_start_spots)
-            player_start = min(0, max(0,number_of_player_starts-1))
+            player_start = min(0, max(0, number_of_player_starts-1))
+
             # Notify the server that we want to start the episode at the
             # player_start index. This function blocks until the server is ready
             # to start the episode.
@@ -95,7 +95,6 @@ def run_carla_client(args):
 
                 control = measurements.player_measurements.autopilot_control
                 client.send_control(control)
-
 
 
 def vehicle_to_world_rotation(x_in_vehicle, y_in_vehicle, z_in_vehicle, roll_host, pitch_host, yaw_host):
