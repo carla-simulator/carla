@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "RoadSegment.h"
+#include "element/RoadSegment.h"
 
 #include <boost/graph/adjacency_list.hpp>
 
@@ -15,48 +15,28 @@
 namespace carla {
 namespace road {
 
-  class Rect {
-  public:
-
-    geom::Location GetLocation() {
-      return _location;
-    }
-    geom::Location GetExtend() {
-      return _extend;
-    }
-
-  private:
-
-    geom::Location _location;
-    geom::Location _extend;
-  };
-
-  class RoadGraph {
-  public:
-
-    RoadGraph() : _bounding_box(),
-                  _sections() {}
-
-  private:
-
-    Rect _bounding_box;
-    std::multimap<id_type, RoadSegment> _sections;
-  };
+  using namespace carla::road::element;
 
   class Map {
   public:
 
-    const RoadSegment &GetRoad(id_type id);
+    bool ExistId(id_type id) const;
 
-    const RoadSegment &NearestRoad(const geom::Location &loc);
+    const RoadElement *GetRoad(id_type id);
 
-    RoadGraph GetGraph();
+    const RoadElement &NearestRoad(const geom::Location &loc);
 
-    bool AddRoadSegment(const RoadSegment &def);
+    template <typename T, typename ... Args>
+    T &MakeElement(id_type id, Args && ... args) {
+      auto inst = std::make_unique<T>(std::forward<Args>(args) ...);
+      T &r = *inst;
+      _sections.emplace(id, std::move(inst));
+      return r;
+    }
 
   private:
 
-    RoadGraph _graph;
+    std::map<id_type, std::unique_ptr<RoadElement>> _sections;
   };
 
 } // namespace road

@@ -6,28 +6,32 @@
 
 #pragma once
 
-#include "Map.h"
 #include "carla/geom/Location.h"
-
-#include <map>
 
 namespace carla {
 namespace road {
+namespace element {
 
-  using temp_section_type = std::multimap<id_type, RoadSegmentDefinition &>;
+  struct Direction {
+    double angle = 0.0; // [radians]
+  };
 
-  class MapBuilder {
+  class RoadElement {
   public:
 
-    bool AddRoadSegmentDefinition(RoadSegmentDefinition &seg);
-
-    const Map &Build();
+    geom::Location GetLocation() const {
+      return _loc;
+    }
+    Direction GetDirection() const {
+      return _dir;
+    }
 
   private:
 
-    temp_section_type _temp_sections;
-    Map map;
+    geom::Location _loc;
+    Direction _dir;
   };
 
+} // namespace element
 } // namespace road
 } // namespace carla

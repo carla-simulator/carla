@@ -10,6 +10,7 @@
 
 namespace carla {
 namespace road {
+namespace element {
 
   enum class GeometryType : unsigned int {
     LINE,
@@ -116,5 +117,6 @@ namespace road {
     double _curve_end;
   };
 
+} // namespace element
 } // namespace road
 } // namespace carla

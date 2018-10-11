@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Types.h"
+#include "RoadElement.h"
 #include "carla/geom/Location.h"
 
 #include <map>
@@ -15,29 +16,13 @@
 
 namespace carla {
 namespace road {
-
-  struct Direction {
-    double angle = 0.0; // [radians]
-  };
-
-  class RoadElement {
-  public:
-
-    geom::Location GetLocation() const {
-      return _loc;
-    }
-    Direction GetDirection() const {
-      return _dir;
-    }
-
-  private:
-
-    geom::Location _loc;
-    Direction _dir;
-  };
+namespace element {
 
   class RoadSegment : public RoadElement {
   public:
+
+    RoadSegment() : _id(-1) {}
+    RoadSegment(const RoadSegmentDefinition &def) : _id(def.GetId()) {}
 
     id_type GetId() const {
       return _id;
@@ -56,12 +41,13 @@ namespace road {
 
   private:
 
-    id_type _id = -1;
+    id_type _id;
     std::vector<RoadSegment *> _next_list;
     std::vector<RoadSegment *> _prev_list;
-    std::vector<Geometry> geom;
+    std::vector<std::unique_ptr<Geometry>> geom;
     std::multimap<double, std::unique_ptr<RoadInfo>> _info_list;
   };
 
+} // namespace element
 } // namespace road
 } // namespace carla

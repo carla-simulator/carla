@@ -13,10 +13,9 @@
 
 namespace carla {
 namespace road {
+namespace element {
 
   using id_type = size_t;
-
-// Geometry ////////////////////////////////////////////////////////////
 
   struct RoadInfo {
     // distance from Road's start location
@@ -31,7 +30,7 @@ namespace road {
   public:
 
     RoadSegmentDefinition(RoadSegmentDefinition &&rsd)
-       : _id(rsd._id),
+      : _id(rsd._id),
         _predecessor_id(std::move(rsd._predecessor_id)),
         _geom(std::move(rsd._geom)),
         _info(std::move(rsd._info)) {}
@@ -87,5 +86,6 @@ namespace road {
     std::vector<std::unique_ptr<RoadInfo>> _info;
   };
 
+} // namespace element
 } // namespace road
 } // namespace carla
