@@ -9,10 +9,19 @@
 namespace carla {
 namespace road {
 
-bool MapBuilder::AddRoadSegmentDefinition(const RoadSegmentDefinition &seg) {
-  _temp_sections.emplace(seg.GetId(), seg);
-  return true;
-}
+  bool MapBuilder::AddRoadSegmentDefinition(RoadSegmentDefinition &seg) {
+    _temp_sections.emplace(seg.GetId(), seg);
+    return true;
+  }
+
+  const Map &MapBuilder::Build() {
+
+    for (auto &&seg : _temp_sections) {
+      map.MakeElement<RoadSegment>(seg.first, seg.second);
+    }
+
+    return map;
+  }
 
 } // namespace road
 } // namespace carla
