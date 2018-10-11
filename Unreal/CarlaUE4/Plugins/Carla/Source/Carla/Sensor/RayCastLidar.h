@@ -8,6 +8,7 @@
 
 #include "Carla/Sensor/Sensor.h"
 
+#include "Carla/Actor/ActorDefinition.h"
 #include "Carla/Sensor/LidarDescription.h"
 
 #include <compiler/disable-ue4-macros.h>
