@@ -9,7 +9,7 @@
 namespace carla {
 namespace road {
 
-bool MapBuilder::AddRoadSegment(const RoadSegmentDefinition &seg) {
+bool MapBuilder::AddRoadSegmentDefinition(const RoadSegmentDefinition &seg) {
   _temp_sections.emplace(seg.GetId(), seg);
   return true;
 }
