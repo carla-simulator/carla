@@ -20,7 +20,7 @@ namespace road {
   class MapBuilder {
   public:
 
-    bool AddRoadSegment(const RoadSegmentDefinition &seg);
+    bool AddRoadSegmentDefinition(const RoadSegmentDefinition &seg);
 
     const Map &BuildMap();
 

@@ -99,11 +99,11 @@ namespace opendrive {
               carla::opendrive::types::GeometryAttributesArc *arc =
                   (carla::opendrive::types::GeometryAttributesArc *) it->second->geometry_attributes[i].get();
 
-              roadSegment.MakeGeometry<carla::road::GeometryArc>(arc->curvature,
-                  arc->start_position,
+              roadSegment.MakeGeometry<carla::road::GeometryArc>(arc->start_position,
                   arc->length,
                   arc->heading,
-                  loc);
+                  loc,
+                  arc->curvature);
 
               break;
             }
@@ -124,12 +124,12 @@ namespace opendrive {
               carla::opendrive::types::GeometryAttributesSpiral *spiral =
                   (carla::opendrive::types::GeometryAttributesSpiral *) it->second->geometry_attributes[i].get();
 
-              roadSegment.MakeGeometry<carla::road::GeometrySpiral>(spiral->curve_start,
-                  spiral->curve_end,
-                  spiral->start_position,
+              roadSegment.MakeGeometry<carla::road::GeometrySpiral>(spiral->start_position,
                   spiral->length,
                   spiral->heading,
-                  loc);
+                  loc,
+                  spiral->curve_start,
+                  spiral->curve_end);
 
               break;
             }
@@ -140,7 +140,7 @@ namespace opendrive {
           }
         }
 
-        mapBuilder.AddRoadSegment(roadSegment);
+        mapBuilder.AddRoadSegmentDefinition(roadSegment);
       }
     }
 

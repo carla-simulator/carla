@@ -62,7 +62,11 @@ namespace road {
   class GeometryLine : public Geometry {
   public:
 
-    GeometryLine(double start_offset, double length, double heading, const geom::Location &start_pos)
+    GeometryLine(
+        double start_offset,
+        double length,
+        double heading,
+        const geom::Location &start_pos)
       : Geometry(GeometryType::LINE, start_offset, length, heading, start_pos) {}
   };
 
@@ -70,11 +74,11 @@ namespace road {
   public:
 
     GeometryArc(
-        double curv,
         double start_offset,
         double length,
         double heading,
-        const geom::Location &start_pos)
+        const geom::Location &start_pos,
+        double curv)
       : Geometry(GeometryType::ARC, start_offset, length, heading, start_pos),
         _curvature(curv) {}
     double GetCurvature() {
@@ -90,12 +94,12 @@ namespace road {
   public:
 
     GeometrySpiral(
-        double curv_s,
-        double curv_e,
         double start_offset,
         double length,
         double heading,
-        const geom::Location &start_pos)
+        const geom::Location &start_pos,
+        double curv_s,
+        double curv_e)
       : Geometry(GeometryType::SPIRAL, start_offset, length, heading, start_pos),
         _curve_start(curv_s),
         _curve_end(curv_e) {}
