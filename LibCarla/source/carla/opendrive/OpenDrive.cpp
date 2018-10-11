@@ -46,20 +46,20 @@ namespace opendrive {
     }
   }
 
-  road::Map OpenDrive::Load(const std::string &file) {
+  const road::Map &OpenDrive::Load(const std::string &file) {
     carla::opendrive::types::OpenDriveData open_drive_road;
     OpenDriveParser::Parse(file.c_str(), open_drive_road);
+    carla::road::MapBuilder mapBuilder;
 
     if (open_drive_road.roads.empty()) {
       // TODO(Andrei): Log some type of warning
-      return road::Map();
+      return mapBuilder.Build();
     }
 
     // Generate road and junction information
     using junction_data_t = std::map<int, std::map<int, std::vector<lane_junction_t>>>;
     using road_data_t = std::map<int, carla::opendrive::types::RoadInformation *>;
 
-    carla::road::MapBuilder mapBuilder;
     junction_data_t junctionsData;
     road_data_t roadData;
 
@@ -144,12 +144,14 @@ namespace opendrive {
       }
     }
 
-    return road::Map();
+    return mapBuilder.Build();
   }
 
-  road::Map OpenDrive::Load(std::istream &input) {
+  const road::Map &OpenDrive::Load(std::istream &input) {
     UNUSED(input);
-    return road::Map();
+
+    carla::road::MapBuilder mapBuilder;
+    return mapBuilder.Build();
   }
 
 } // namespace opendrive
