@@ -19,6 +19,7 @@ TEST(road, add_geometry) {
   def.MakeGeometry<GeometryArc>(1.0, 2.0, 3.0, carla::geom::Location(), 1.0);
 
   builder.AddRoadSegmentDefinition(def);
+  builder.Build();
 }
 
 TEST(road, add_information) {
@@ -34,4 +35,25 @@ TEST(road, add_information) {
   def.MakeInfo<C>();
 
   builder.AddRoadSegmentDefinition(def);
+  builder.Build();
+}
+
+TEST(road, add_geom_info) {
+  MapBuilder builder;
+  RoadSegmentDefinition def(1);
+
+  class A : public RoadInfo {};
+  class B : public RoadInfo {};
+  class C : public RoadInfo {};
+
+  def.MakeGeometry<GeometryLine>(1.0, 2.0, 3.0, carla::geom::Location());
+  def.MakeGeometry<GeometrySpiral>(1.0, 2.0, 3.0, carla::geom::Location(), 1.0, 2.0);
+  def.MakeGeometry<GeometryArc>(1.0, 2.0, 3.0, carla::geom::Location(), 1.0);
+
+  def.MakeInfo<A>();
+  def.MakeInfo<B>();
+  def.MakeInfo<C>();
+
+  builder.AddRoadSegmentDefinition(def);
+  builder.Build();
 }
