@@ -80,6 +80,10 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   float GetMaximumSteerAngle() const;
 
+  // 
+  UPROPERTY(Category = "CARLA Wheeled Vehicle", VisibleAnywhere)
+	  bool IsPuppetVehicle = false;
+
   /// @}
   // ===========================================================================
   /// @name Set functions
@@ -122,6 +126,12 @@ public:
   {
     SetHandbrakeInput(false);
   }
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void SetRotation(const FRotator Value);
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void SetLocation(const FVector Value);
 
   void SetAIVehicleState(ECarlaWheeledVehicleState InState)
   {
