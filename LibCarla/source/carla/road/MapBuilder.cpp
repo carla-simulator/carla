@@ -15,15 +15,30 @@ namespace road {
   }
 
   Map MapBuilder::Build() {
+    // Move the RoadSegmentDefinitions needed information to a RoadSegments
+    for (auto &&id_seg : _temp_sections) {
+      MakeElement<RoadSegment>(id_seg.first, std::move(id_seg.second));
+    }
 
-    for (auto &&seg : _temp_sections) {
-      MakeElement<RoadSegment>(seg.first, std::move(seg.second));
+    // Create the pointers between RoadSegments based on the ids
+    for (auto &&id_seg : _temp_sections) {
+      for (auto &t : id_seg.second.GetPredecessorID()) {
+        _map._elements[id_seg.first]->PredEmplaceBack(_map._elements[t].get());
+      }
+      for (auto &t : id_seg.second.GetSuccessorID()) {
+        _map._elements[id_seg.first]->SuccEmplaceBack(_map._elements[t].get());
+      }
     }
 
     // _map is a memeber of MapBuilder so you must especify if
     // you want to keep it (will return copy -> Map(const Map &))
     // or move it (will return move -> Map(Map &&))
     return std::move(_map);
+  }
+
+  bool MapBuilder::InterpretRoadFlow() {
+    // todo
+    return false;
   }
 
 } // namespace road

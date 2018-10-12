@@ -13,11 +13,15 @@ namespace road {
     return _elements.count(id);
   }
 
-  const RoadElement *Map::GetRoad(id_type id) {
+  const RoadSegment *Map::GetRoad(id_type id) const {
     if (ExistId(id)) {
       return _elements.find(id)->second.get();
     }
     return nullptr;
+  }
+
+  uint32_t Map::GetRoadCount() const {
+    return _elements.size();
   }
 
 } // namespace road
