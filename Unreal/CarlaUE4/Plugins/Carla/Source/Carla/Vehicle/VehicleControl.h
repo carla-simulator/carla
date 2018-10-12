@@ -7,6 +7,8 @@
 #pragma once
 
 #include "VehicleControl.generated.h"
+#include "Runtime\Core\Public\Math\Rotator.h"
+#include "Runtime\Core\Public\Math\Vector.h"
 
 USTRUCT(BlueprintType)
 struct CARLA_API FVehicleControl
@@ -27,4 +29,10 @@ struct CARLA_API FVehicleControl
 
   UPROPERTY(Category = "Vehicle Control", EditAnywhere)
   bool bReverse = false;
+
+  UPROPERTY(Category = "Vehicle Control", EditAnywhere)
+	  FRotator VehRotation {0.0f, 0.0f, 0.0f};
+
+  UPROPERTY(Category = "Vehicle Control", EditAnywhere)
+	  FVector VehLocation {0.0f, 0.0f, 0.0f};
 };
