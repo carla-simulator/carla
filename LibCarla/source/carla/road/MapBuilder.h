@@ -14,8 +14,6 @@
 namespace carla {
 namespace road {
 
-  using temp_section_type = std::map<id_type, RoadSegmentDefinition &>;
-
   class MapBuilder {
   public:
 
@@ -33,9 +31,12 @@ namespace road {
       return r;
     }
 
+    bool InterpretRoadFlow();
+
   private:
+
     Map _map;
-    temp_section_type _temp_sections;
+    std::map<id_type, RoadSegmentDefinition &> _temp_sections;
   };
 
 } // namespace road

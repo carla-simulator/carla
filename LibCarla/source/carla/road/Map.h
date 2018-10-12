@@ -29,15 +29,19 @@ namespace road {
 
     bool ExistId(id_type id) const;
 
-    const RoadElement *GetRoad(id_type id);
+    const RoadSegment *GetRoad(id_type id) const;
 
-    const RoadElement &NearestRoad(const geom::Location &loc);
+    uint32_t GetRoadCount() const;
+
+    const RoadSegment &NearestRoad(const geom::Location &loc);
 
   private:
 
     friend class MapBuilder;
+
     Map() {}
-    std::map<id_type, std::unique_ptr<RoadElement>> _elements;
+
+    std::map<id_type, std::unique_ptr<RoadSegment>> _elements;
   };
 
 } // namespace road

@@ -33,14 +33,15 @@ namespace element {
     double GetHeading() {
       return _heading;
     }
+    virtual ~Geometry() = default;
 
   private:
 
-    GeometryType _type;            // geometry type
-    double _length;                // length of the road section [meters]
+    GeometryType _type;             // geometry type
+    double _length;                 // length of the road section [meters]
 
-    double _start_position_offset; // s-offset [meters]
-    double _heading;               // start orientation [radians]
+    double _start_position_offset;  // s-offset [meters]
+    double _heading;                // start orientation [radians]
 
     geom::Location _start_position; // [meters]
 

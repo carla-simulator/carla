@@ -20,6 +20,7 @@ namespace element {
   struct RoadInfo {
     // distance from Road's start location
     double d = 0; // [meters]
+    virtual ~RoadInfo() = default;
   };
 
   struct SpeedLimit : public RoadInfo {
@@ -64,20 +65,21 @@ namespace element {
       _info.emplace_back(std::make_unique<T>(std::forward<Args>(args) ...));
     }
 
-    const std::vector<id_type> &GetPredecessorID_Vector() const {
+    const std::vector<id_type> &GetPredecessorID() const {
       return _predecessor_id;
     }
-    const std::vector<id_type> &GetSuccessorID_Vector() const {
+    const std::vector<id_type> &GetSuccessorID() const {
       return _successor_id;
     }
-    const std::vector<std::unique_ptr<Geometry>> &GetGeometry_Vector() const {
+    const std::vector<std::unique_ptr<Geometry>> &GetGeometry() const {
       return _geom;
     }
-    const std::vector<std::unique_ptr<RoadInfo>> &GetInfo_Vector() const {
+    const std::vector<std::unique_ptr<RoadInfo>> &GetInfo() const {
       return _info;
     }
 
   private:
+
     friend class RoadSegment;
     id_type _id;
     std::vector<id_type> _predecessor_id;
