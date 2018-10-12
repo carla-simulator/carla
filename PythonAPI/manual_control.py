@@ -29,7 +29,7 @@ from __future__ import print_function
 import sys
 
 sys.path.append(
-    'PythonAPI/carla-0.9.0-py%d.%d-linux-x86_64.egg' % (sys.version_info.major,
+    'dist/carla-0.9.0-py%d.%d-win-amd64.egg' % (sys.version_info.major,
                                                         sys.version_info.minor))
 
 import carla
