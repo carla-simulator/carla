@@ -41,13 +41,14 @@
 #  pragma warning(disable: 4668 4191)
 #endif
 
-namespace boost {
-
-  static inline void throw_exception(const std::exception &e) {
-    UE_LOG(LogCarla, Fatal, TEXT("Exception thrown on Boost libraries: %s"), UTF8_TO_TCHAR(e.what()));
-  }
-
-} // namespace boost
+#ifndef LIBCARLA_BOOST_EXCEPTION
+#define LIBCARLA_BOOST_EXCEPTION
+  namespace boost {
+    static inline void throw_exception(const std::exception &e) {
+      UE_LOG(LogCarla, Fatal, TEXT("Exception thrown on Boost libraries: %s"), UTF8_TO_TCHAR(e.what()));
+    }
+  } // namespace boost
+#endif
 
 #endif // LIBCARLA_INCLUDED_DISABLE_UE4_MACROS_HEADER
 
