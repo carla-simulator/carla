@@ -6,22 +6,20 @@
 
 #pragma once
 
+#include "RoadSegment.h"
+
 namespace carla {
 namespace road {
 namespace element {
-
-  struct RoadInfo {
+  class RoadInfo {
   public:
 
+    RoadInfo() {}
+    RoadInfo(double distance) : d(distance) {}
     virtual ~RoadInfo() = default;
 
     // distance from Road's start location
     double d = 0; // [meters]
-
-  protected:
-
-    RoadInfo() {}
-    RoadInfo(double distance) : d(distance) {}
   };
 
 } // namespace element

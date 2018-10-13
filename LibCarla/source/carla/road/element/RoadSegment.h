@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Types.h"
+#include "RoadInfo.h"
 #include "carla/geom/Location.h"
 
 #include <set>
@@ -46,15 +47,27 @@ namespace element {
       return vec;
     }
 
-    const std::vector<RoadInfo> &GetInfo(double dist) const;
-
     // returns single info given a type and a distance
     template <typename T>
-    const T &GetInfo(double dist) const;
+    const T *GetInfo(double dist) const {
+      if (dist < 0) {
+        return nullptr;
+      }
+      auto up_bound = _info.upper_bound(
+          std::make_unique<RoadInfo>(dist));
+      T *t_last = nullptr;
+      for (auto i = _info.begin(); i != up_bound; ++i) {
+        T *t = dynamic_cast<T *>(i->get());
+        if (t != nullptr) {
+          t_last = t;
+        }
+      }
+      return t_last;
+    }
 
     // returns info vector given a type and a distance
     template <typename T>
-    std::vector<T> GetInfo(double dist) const;
+    std::vector<T> GetInfos(double dist) const;
 
     void PredEmplaceBack(RoadSegment *s) {
       _predecessors.emplace_back(s);
