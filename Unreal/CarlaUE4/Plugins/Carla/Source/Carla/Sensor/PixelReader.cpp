@@ -123,7 +123,7 @@ void FPixelReader::WritePixelsToBuffer(
 #if CARLA_WITH_VULKAN_SUPPORT == 1
   if (IsVulkanPlatform(GMaxRHIShaderPlatform))
   {
-    WritePixelsToBuffer_Vulkan(RenderTarget, Buffer, InRHICmdList);
+    WritePixelsToBuffer_Vulkan(RenderTarget, Buffer, 0, InRHICmdList);
     return;
   }
 #endif // CARLA_WITH_VULKAN_SUPPORT
