@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Geometry.h"
+#include "RoadInfo.h"
 
 #include <cstdio>
 #include <memory>
@@ -16,16 +17,6 @@ namespace road {
 namespace element {
 
   using id_type = size_t;
-
-  struct RoadInfo {
-    // distance from Road's start location
-    double d = 0; // [meters]
-    virtual ~RoadInfo() = default;
-  };
-
-  struct SpeedLimit : public RoadInfo {
-    double speed = 0; // [meters/second]
-  };
 
   class RoadSegmentDefinition {
   public:
@@ -61,8 +52,9 @@ namespace element {
 
     // usage MakeInfo<SpeedLimit>(30.0)
     template <typename T, typename ... Args>
-    void MakeInfo(Args && ... args) {
+    T *MakeInfo(Args && ... args) {
       _info.emplace_back(std::make_unique<T>(std::forward<Args>(args) ...));
+      return dynamic_cast<T *>(_info.back().get());
     }
 
     const std::vector<id_type> &GetPredecessorID() const {
