@@ -119,6 +119,10 @@ if %REMOVE_INTERMEDIATE% == true (
 
     echo %FILE_N% cleaning "%CARLA_FOLDER%CarlaUE4.sln"
     if exist "%CARLA_FOLDER%CarlaUE4.sln" del /F /Q "%CARLA_FOLDER%CarlaUE4.sln" 1>nul
+
+    rem NOTE(Andrei): If this folders are not available can not generate the VS solution
+    mkdir "%CARLA_FOLDER%Saved"
+    mkdir "%CARLA_FOLDER%Saved\Logs"
 )
 
 rem Generate Visual Studio solution
