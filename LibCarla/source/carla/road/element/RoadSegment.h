@@ -33,13 +33,24 @@ namespace element {
     id_type GetId() const {
       return _id;
     }
-    const std::vector<RoadInfo> GetInfo() const;
 
-    const std::vector<RoadInfo> GetInfo(double dist) const;
+    template <typename T>
+    const std::vector<const T *> GetInfo() const {
+      std::vector<const T *> vec;
+      for (auto &&info : _info) {
+        auto *t = dynamic_cast<const T *>(info.get());
+        if (t != nullptr) {
+          vec.emplace_back(t);
+        }
+      }
+      return vec;
+    }
+
+    const std::vector<RoadInfo> &GetInfo(double dist) const;
 
     // returns single info given a type and a distance
     template <typename T>
-    T GetInfo(double dist) const;
+    const T &GetInfo(double dist) const;
 
     // returns info vector given a type and a distance
     template <typename T>

@@ -27,7 +27,9 @@ TEST(road, add_information) {
   RoadSegmentDefinition def(1);
 
   class A : public RoadInfo {};
+
   class B : public RoadInfo {};
+
   class C : public RoadInfo {};
 
   def.MakeInfo<A>();
@@ -42,20 +44,45 @@ TEST(road, add_geom_info) {
   MapBuilder builder;
   RoadSegmentDefinition def(1);
 
-  class A : public RoadInfo {};
+  class A : public RoadInfo {
+  public:
+
+    A() {}
+    A(double distance)
+      : RoadInfo(distance) {}
+    A(double distance, double _a0)
+      : RoadInfo(distance),
+        _a(_a0) {}
+    double _a = 0;
+  };
+
   class B : public RoadInfo {};
+
   class C : public RoadInfo {};
 
   def.MakeGeometry<GeometryLine>(1.0, 2.0, 3.0, carla::geom::Location());
   def.MakeGeometry<GeometrySpiral>(1.0, 2.0, 3.0, carla::geom::Location(), 1.0, 2.0);
   def.MakeGeometry<GeometryArc>(1.0, 2.0, 3.0, carla::geom::Location(), 1.0);
-
-  def.MakeInfo<A>();
+  A *a_def0 = def.MakeInfo<A>();
+  a_def0->d = 1;
+  a_def0->_a = 2;
+  def.MakeInfo<A>(3);
+  def.MakeInfo<A>(4, 5);
   def.MakeInfo<B>();
   def.MakeInfo<C>();
-
   builder.AddRoadSegmentDefinition(def);
-  builder.Build();
+
+  Map m = builder.Build();
+  const std::vector<const A *> a = m.GetRoad(1)->GetInfo<A>();
+  ASSERT_EQ(a.size(), 3U);
+  ASSERT_EQ(a[0]->d, 1U);
+  ASSERT_EQ(a[0]->_a, 2U);
+
+  ASSERT_EQ(a[1]->d, 3U);
+  ASSERT_EQ(a[1]->_a, 0U);
+
+  ASSERT_EQ(a[2]->d, 4U);
+  ASSERT_EQ(a[2]->_a, 5U);
 }
 
 TEST(road, connections) {
