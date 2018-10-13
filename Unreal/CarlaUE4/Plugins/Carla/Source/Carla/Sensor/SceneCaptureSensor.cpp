@@ -4,14 +4,14 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "Carla.h"
-#include "Carla/Sensor/SceneCaptureSensor.h"
-
 #include "Components/DrawFrustumComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "HighResScreenshot.h"
+
+#include "Carla.h"
+#include "Carla/Sensor/SceneCaptureSensor.h"
 
 static auto SCENE_CAPTURE_COUNTER = 0u;
 
