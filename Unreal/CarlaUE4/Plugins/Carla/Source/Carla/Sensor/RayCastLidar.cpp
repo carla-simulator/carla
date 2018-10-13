@@ -4,15 +4,15 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include "DrawDebugHelpers.h"
+#include "StaticMeshResources.h"
+#include "Engine/CollisionProfile.h"
+#include "Runtime/Engine/Classes/Kismet/KismetMathLibrary.h"
+
 #include "Carla.h"
 #include "Carla/Sensor/RayCastLidar.h"
 
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
-
-#include "DrawDebugHelpers.h"
-#include "Engine/CollisionProfile.h"
-#include "Runtime/Engine/Classes/Kismet/KismetMathLibrary.h"
-#include "StaticMeshResources.h"
 
 FActorDefinition ARayCastLidar::GetSensorDefinition()
 {
@@ -69,8 +69,8 @@ void ARayCastLidar::Tick(const float DeltaTime)
 
   ReadPoints(DeltaTime);
 
-  auto &Stream = GetDataStream();
-  Stream.Send_GameThread(*this, LidarMeasurement, Stream.PopBufferFromPool());
+  auto &stream = GetDataStream();
+  stream.Send_GameThread(*this, LidarMeasurement, stream.PopBufferFromPool());
 }
 
 void ARayCastLidar::ReadPoints(const float DeltaTime)

@@ -4,10 +4,10 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include "ConstructorHelpers.h"
+
 #include "Carla.h"
 #include "Carla/Sensor/ShaderBasedSensor.h"
-
-#include "ConstructorHelpers.h"
 
 bool AShaderBasedSensor::LoadPostProcessingMaterial(const FString &Path, const float Weight)
 {
