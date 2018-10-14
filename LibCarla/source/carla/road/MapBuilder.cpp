@@ -20,6 +20,15 @@ namespace road {
       MakeElement<RoadSegment>(id_seg.first, std::move(id_seg.second));
     }
 
+    // Set the total length of each road based on the geometries
+    for (auto &&id_seg :_map._elements) {
+      double total_length = 0.0;
+      for (auto &&geom : id_seg.second.get()->_geom) {
+        total_length += geom.get()->GetLength();
+      }
+      id_seg.second.get()->_length = total_length;
+    }
+
     // Create the pointers between RoadSegments based on the ids
     for (auto &&id_seg : _temp_sections) {
       for (auto &t : id_seg.second.GetPredecessorID()) {

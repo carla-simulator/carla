@@ -16,6 +16,9 @@
 
 namespace carla {
 namespace road {
+
+  class MapBuilder;
+
 namespace element {
 
   class RoadSegment {
@@ -109,7 +112,39 @@ namespace element {
       return _predecessors;
     }
 
+    // Search for the last geometry with less start_offset before 'dist'
+    DirectedPoint GetDirectedPointIn(double dist) const {
+      if(dist <= 0.0) {
+        return DirectedPoint(_geom.front().get()->GetStartPosition(),
+          _geom.front().get()->GetHeading());
+      }
+      for (auto &&g : _geom) {
+        if ((g.get()->GetStartOffset() < dist) &&
+          (dist <= g.get()->GetStartOffset() + g.get()->GetLength())) {
+            return g->PosFromDist(g->GetStartOffset() - dist);
+        }
+      }
+      // todo: if dist is biguer than len
+      return DirectedPoint::Invalid();
+    }
+
+    // DirectedPoint GetDirectedPointInNorm(double dist) const {
+    //   double normalized_dist = dist / _length;
+
+    //   return DirectedPoint();
+    // }
+
+    const double &GetLength() const {
+      return _length;
+    }
+
+    void SetLength(double d) {
+      _length = d;
+    }
+
   private:
+
+    friend class carla::road::MapBuilder;
 
     struct LessComp {
       using is_transparent = void;
@@ -127,6 +162,7 @@ namespace element {
     std::vector<RoadSegment *> _successors;
     std::vector<std::unique_ptr<Geometry>> _geom;
     std::multiset<std::unique_ptr<RoadInfo>, LessComp> _info;
+    double _length = -1.0;
   };
 
 } // namespace element
