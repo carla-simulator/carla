@@ -8,6 +8,10 @@
 
 #include "carla/MsgPack.h"
 
+#ifdef LIBCARLA_INCLUDED_FROM_UE4
+#  include "Carla/Vehicle/VehicleControl.h"
+#endif // LIBCARLA_INCLUDED_FROM_UE4
+
 namespace carla {
 namespace rpc {
 

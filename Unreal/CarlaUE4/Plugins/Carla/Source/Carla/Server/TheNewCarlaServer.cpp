@@ -19,6 +19,7 @@
 #include <carla/rpc/Server.h>
 #include <carla/rpc/Transform.h>
 #include <carla/rpc/VehicleControl.h>
+#include <carla/rpc/WeatherParameters.h>
 #include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
 
@@ -146,6 +147,24 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       RespondErrorStr("unable to find spectator");
     }
     return ActorView;
+  });
+
+  Server.BindSync("get_weather", [this]() -> cr::WeatherParameters {
+    RequireEpisode();
+    auto *Weather = Episode->GetWeather();
+    if (Weather == nullptr) {
+      RespondErrorStr("unable to find weather");
+    }
+    return Weather->GetCurrentWeather();
+  });
+
+  Server.BindSync("set_weather", [this](const cr::WeatherParameters &weather) {
+    RequireEpisode();
+    auto *Weather = Episode->GetWeather();
+    if (Weather == nullptr) {
+      RespondErrorStr("unable to find weather");
+    }
+    Weather->ApplyWeather(weather);
   });
 
   Server.BindSync("spawn_actor", [this](

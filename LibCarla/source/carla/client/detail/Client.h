@@ -13,6 +13,7 @@
 #include "carla/client/detail/Episode.h"
 #include "carla/geom/Transform.h"
 #include "carla/profiler/LifetimeProfiled.h"
+#include "carla/rpc/WeatherParameters.h"
 
 #include <functional>
 #include <memory>
@@ -62,6 +63,10 @@ namespace detail {
     SharedPtr<BlueprintLibrary> GetBlueprintLibrary();
 
     SharedPtr<Actor> GetSpectator();
+
+    rpc::WeatherParameters GetWeatherParameters();
+
+    void SetWeatherParameters(const rpc::WeatherParameters &weather);
 
     SharedPtr<Actor> SpawnActor(
         const ActorBlueprint &blueprint,

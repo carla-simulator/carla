@@ -24,6 +24,14 @@ namespace client {
     return _episode->GetSpectator();
   }
 
+  rpc::WeatherParameters World::GetWeather() const {
+    return _episode->GetWeatherParameters();
+  }
+
+  void World::SetWeather(const rpc::WeatherParameters &weather) {
+    _episode->SetWeatherParameters(weather);
+  }
+
   SharedPtr<Actor> World::SpawnActor(
       const ActorBlueprint &blueprint,
       const geom::Transform &transform,

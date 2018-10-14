@@ -32,7 +32,10 @@ void ATheNewCarlaGameModeBase::InitGame(
   checkf(
       Episode != nullptr,
       TEXT("Missing episode, can't continue without an episode!"));
-  Episode->SetMapName(MapName);
+  Episode->MapName = MapName;
+
+  auto World = GetWorld();
+  check(World != nullptr);
 
   GameInstance = Cast<UCarlaGameInstance>(GetGameInstance());
   checkf(
@@ -40,10 +43,18 @@ void ATheNewCarlaGameModeBase::InitGame(
       TEXT("GameInstance is not a UCarlaGameInstance, did you forget to set it in the project settings?"));
 
   if (TaggerDelegate != nullptr) {
-    check(GetWorld() != nullptr);
-    TaggerDelegate->RegisterSpawnHandler(GetWorld());
+    TaggerDelegate->RegisterSpawnHandler(World);
   } else {
     UE_LOG(LogCarla, Error, TEXT("Missing TaggerDelegate!"));
+  }
+
+  if (WeatherClass != nullptr)
+  {
+    Episode->Weather = World->SpawnActor<AWeather>(WeatherClass);
+    // Apply default weather.
+    Episode->Weather->ApplyWeather(FWeatherParameters());
+  } else {
+    UE_LOG(LogCarla, Error, TEXT("Missing weather class!"));
   }
 
   SpawnActorFactories();

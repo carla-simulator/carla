@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/PythonUtil.h"
+#include "carla/client/World.h"
 #include "carla/client/detail/Client.h"
 
 namespace carla {

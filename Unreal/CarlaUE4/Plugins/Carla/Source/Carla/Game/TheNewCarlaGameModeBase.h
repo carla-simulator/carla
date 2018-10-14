@@ -9,6 +9,7 @@
 #include "Carla/Actor/CarlaActorFactory.h"
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Game/CarlaGameInstance.h"
+#include "Carla/Weather/Weather.h"
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
@@ -50,9 +51,13 @@ private:
   UPROPERTY()
   UCarlaEpisode *Episode = nullptr;
 
+  /// The class of Weather to spawn.
+  UPROPERTY(Category = "CARLA Game Mode", EditAnywhere)
+  TSubclassOf<AWeather> WeatherClass;
+
   /// List of actor spawners that will be used to define and spawn the actors
   /// available in game.
-  UPROPERTY(EditAnywhere)
+  UPROPERTY(Category = "CARLA Game Mode", EditAnywhere)
   TSet<TSubclassOf<ACarlaActorFactory>> ActorFactories;
 
   UPROPERTY()
