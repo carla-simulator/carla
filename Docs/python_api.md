@@ -18,6 +18,8 @@
 
 - `get_blueprint_library()`
 - `get_spectator()`
+- `get_weather()`
+- `set_weather(weather_parameters)`
 - `spawn_actor(blueprint, transform, attach_to=None)`
 - `try_spawn_actor(blueprint, transform, attach_to=None)`
 
@@ -117,6 +119,17 @@
 - `brake`
 - `hand_brake`
 - `reverse`
+- `__eq__()`
+- `__ne__()`
+
+## `carla.WeatherParameters`
+
+- `cloudyness`
+- `precipitation`
+- `precipitation_deposits`
+- `wind_intensity`
+- `sun_azimuth_angle`
+- `sun_altitude_angle`
 - `__eq__()`
 - `__ne__()`
 

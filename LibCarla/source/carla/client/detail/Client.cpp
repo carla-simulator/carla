@@ -101,6 +101,14 @@ namespace detail {
         GarbageCollectionPolicy::Disabled);
   }
 
+  rpc::WeatherParameters Client::GetWeatherParameters() {
+    return _pimpl->CallAndWait<rpc::WeatherParameters>("get_weather");
+  }
+
+  void Client::SetWeatherParameters(const rpc::WeatherParameters &weather) {
+    _pimpl->AsyncCall("set_weather", weather);
+  }
+
   SharedPtr<Actor> Client::SpawnActor(
       const ActorBlueprint &blueprint,
       const geom::Transform &transform,

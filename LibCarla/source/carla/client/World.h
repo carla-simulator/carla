@@ -9,6 +9,7 @@
 #include "carla/Memory.h"
 #include "carla/client/detail/Episode.h"
 #include "carla/geom/Transform.h"
+#include "carla/rpc/WeatherParameters.h"
 
 namespace carla {
 namespace client {
@@ -31,6 +32,10 @@ namespace client {
     SharedPtr<BlueprintLibrary> GetBlueprintLibrary() const;
 
     SharedPtr<Actor> GetSpectator() const;
+
+    rpc::WeatherParameters GetWeather() const;
+
+    void SetWeather(const rpc::WeatherParameters &weather);
 
     SharedPtr<Actor> SpawnActor(
         const ActorBlueprint &blueprint,

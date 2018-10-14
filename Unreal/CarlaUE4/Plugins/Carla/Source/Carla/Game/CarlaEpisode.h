@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Carla/Actor/ActorDispatcher.h"
+#include "Carla/Weather/Weather.h"
 
 #include "CarlaEpisode.generated.h"
 
@@ -20,13 +21,6 @@ class CARLA_API UCarlaEpisode : public UObject
 
 public:
 
-  void SetMapName(const FString &InMapName)
-  {
-    MapName = InMapName;
-  }
-
-  void InitializeAtBeginPlay();
-
   UFUNCTION(BlueprintCallable)
   const FString &GetMapName() const
   {
@@ -39,9 +33,10 @@ public:
     return Spectator;
   }
 
-  void RegisterActorFactory(ACarlaActorFactory &ActorFactory)
+  UFUNCTION(BlueprintCallable)
+  AWeather *GetWeather() const
   {
-    ActorDispatcher.Bind(ActorFactory);
+    return Weather;
   }
 
   /// Return the list of actor definitions that are available to be spawned this
@@ -93,6 +88,15 @@ public:
 
 private:
 
+  friend class ATheNewCarlaGameModeBase;
+
+  void InitializeAtBeginPlay();
+
+  void RegisterActorFactory(ACarlaActorFactory &ActorFactory)
+  {
+    ActorDispatcher.Bind(ActorFactory);
+  }
+
   UPROPERTY(VisibleAnywhere)
   FString MapName;
 
@@ -100,4 +104,7 @@ private:
 
   UPROPERTY(VisibleAnywhere)
   APawn *Spectator = nullptr;
+
+  UPROPERTY(VisibleAnywhere)
+  AWeather *Weather = nullptr;
 };

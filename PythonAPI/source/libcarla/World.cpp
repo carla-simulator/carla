@@ -26,6 +26,8 @@ void export_world() {
   class_<cc::World>("World", no_init)
     .def("get_blueprint_library", CONST_CALL_WITHOUT_GIL(cc::World, GetBlueprintLibrary))
     .def("get_spectator", CONST_CALL_WITHOUT_GIL(cc::World, GetSpectator))
+    .def("get_weather", CONST_CALL_WITHOUT_GIL(cc::World, GetWeather))
+    .def("set_weather", &cc::World::SetWeather)
     .def("try_spawn_actor", SPAWN_ACTOR_WITHOUT_GIL(TrySpawnActor))
     .def("spawn_actor", SPAWN_ACTOR_WITHOUT_GIL(SpawnActor))
   ;

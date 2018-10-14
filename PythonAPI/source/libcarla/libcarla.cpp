@@ -37,6 +37,7 @@
 #include "Sensor.cpp"
 #include "SensorData.cpp"
 #include "Transform.cpp"
+#include "Weather.cpp"
 #include "World.cpp"
 
 BOOST_PYTHON_MODULE(libcarla) {
@@ -49,6 +50,7 @@ BOOST_PYTHON_MODULE(libcarla) {
   export_actor();
   export_sensor();
   export_sensor_data();
+  export_weather();
   export_world();
   export_client();
   export_exception();
