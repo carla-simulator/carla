@@ -8,6 +8,8 @@
 
 #include "carla/geom/Location.h"
 
+#include <cmath>
+
 namespace carla {
 namespace road {
 namespace element {
@@ -18,32 +20,54 @@ namespace element {
     SPIRAL
   };
 
+  struct DirectedPoint {
+
+    DirectedPoint()
+      : location(0, 0, 0),
+        tangent(0) {}
+    DirectedPoint(geom::Location l, double t)
+      : location(l),
+        tangent(t) {}
+    DirectedPoint(double x, double y, double z, double t)
+      : location(x, y, z),
+        tangent(t) {}
+
+    geom::Location location = {0, 0, 0};
+    double tangent = 0; // [radians]
+    bool valid = true;
+
+    static DirectedPoint Invalid() {
+      DirectedPoint d;
+      d.valid = false;
+      return d;
+    }
+
+    friend bool operator==(const DirectedPoint &lhs, const DirectedPoint &rhs) {
+      return (lhs.location == rhs.location) && (lhs.tangent == rhs.tangent);
+    }
+  };
+
   class Geometry {
   public:
 
-    GeometryType GetTypeh() {
+    GeometryType GetType() {
       return _type;
     }
     double GetLength() {
       return _length;
     }
-    double GetStartPositionOffset() {
+    double GetStartOffset() {
       return _start_position_offset;
     }
     double GetHeading() {
       return _heading;
     }
+    geom::Location &GetStartPosition() {
+      return _start_position;
+    }
     virtual ~Geometry() = default;
 
-  private:
-
-    GeometryType _type;             // geometry type
-    double _length;                 // length of the road section [meters]
-
-    double _start_position_offset;  // s-offset [meters]
-    double _heading;                // start orientation [radians]
-
-    geom::Location _start_position; // [meters]
+    virtual DirectedPoint PosFromDist(double dist) const = 0;
 
   protected:
 
@@ -59,6 +83,16 @@ namespace element {
         _heading(heading),
         _start_position(start_pos)
     {}
+
+  protected:
+
+    GeometryType _type;             // geometry type
+    double _length;                 // length of the road section [meters]
+
+    double _start_position_offset;  // s-offset [meters]
+    double _heading;                // start orientation [radians]
+
+    geom::Location _start_position; // [meters]
   };
 
   class GeometryLine : public Geometry {
@@ -70,6 +104,14 @@ namespace element {
         double heading,
         const geom::Location &start_pos)
       : Geometry(GeometryType::LINE, start_offset, length, heading, start_pos) {}
+
+    DirectedPoint PosFromDist(double dist) const override {
+      const double length = dist * _length;
+      DirectedPoint p(_start_position, _heading);
+      p.location.x += length * std::cos(p.tangent);
+      p.location.y += length * std::sin(p.tangent);
+      return p;
+    }
   };
 
   class GeometryArc : public Geometry {
@@ -83,6 +125,13 @@ namespace element {
         double curv)
       : Geometry(GeometryType::ARC, start_offset, length, heading, start_pos),
         _curvature(curv) {}
+
+    DirectedPoint PosFromDist(double dist) const override {
+      (void) dist;
+      return DirectedPoint();
+      assert(_length > 0.0);
+    }
+
     double GetCurvature() {
       return _curvature;
     }
@@ -105,11 +154,20 @@ namespace element {
       : Geometry(GeometryType::SPIRAL, start_offset, length, heading, start_pos),
         _curve_start(curv_s),
         _curve_end(curv_e) {}
+
     double GetCurveStart() {
       return _curve_start;
     }
+
     double GetCurveEnd() {
       return _curve_end;
+    }
+
+    DirectedPoint PosFromDist(double dist) const override {
+      // to implement
+      (void) dist;
+      return DirectedPoint();
+      assert(_length > 0.0);
     }
 
   private:

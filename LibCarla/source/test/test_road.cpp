@@ -7,8 +7,10 @@
 #include "test.h"
 
 #include <carla/road/MapBuilder.h>
+#include <carla/geom/Location.h>
 
 using namespace carla::road;
+using namespace carla::geom;
 
 TEST(road, add_geometry) {
   MapBuilder builder;
@@ -76,6 +78,7 @@ TEST(road, get_information) {
   def.MakeGeometry<GeometryLine>(10.0, 20.0, 0, carla::geom::Location(10, 0, 0));
   def.MakeInfo<A>(0.0);  // ||||||||||,||||||||||
   def.MakeInfo<B>(0.0);  // ||||------,----------
+  def.MakeInfo<B>(4.0);  // ----||||||,||||||||||
   def.MakeInfo<B>(4.0);  // ----||||||,||||||||||
   def.MakeInfo<C>(5.01); // -----|||||,|||||-----
   def.MakeInfo<C>(15.0); // ----------,-----|||||
@@ -149,6 +152,7 @@ TEST(road, add_geom_and_info) {
   def.MakeInfo<A>(4, 5);
   def.MakeInfo<B>();
   def.MakeInfo<C>();
+  def.MakeInfo<C>();
   builder.AddRoadSegmentDefinition(def);
 
   Map m = builder.Build();
@@ -162,6 +166,9 @@ TEST(road, add_geom_and_info) {
 
   ASSERT_EQ(a[2]->d, 4U);
   ASSERT_EQ(a[2]->_a, 5U);
+
+  const std::vector<const C *> c = m.GetRoad(1)->GetInfo<C>();
+  ASSERT_EQ(c.size(), 2U);
 }
 
 TEST(road, set_and_get_connections) {
@@ -306,4 +313,46 @@ TEST(road, set_and_get_connections) {
   succ.clear();
   pred_ptr.clear();
   succ_ptr.clear();
+}
+
+void AssertNear(const element::DirectedPoint &d0,
+  const element::DirectedPoint &d1) {
+  constexpr double error = .05;
+  ASSERT_NEAR(d0.location.x, d1.location.x, error);
+  ASSERT_NEAR(d0.location.y, d1.location.y, error);
+  ASSERT_NEAR(d0.location.z, d1.location.z, error);
+  ASSERT_NEAR(d0.tangent, d1.tangent, error);
+}
+
+TEST(road, geom_line_test) {
+  MapBuilder builder;
+  RoadSegmentDefinition def1(1);
+  //RoadSegmentDefinition def2(2);
+
+  // Line params:
+  // - start_offset [double]
+  // - length       [double]
+  // - heading      [double]
+  // - &start_pos   [const geom::Location]
+
+  def1.MakeGeometry<GeometryLine>(0, 10, 0, Location(0,0,0));
+  def1.MakeGeometry<GeometryLine>(10, 5, 0, Location(10,0,0));
+  def1.MakeGeometry<GeometryLine>(15, 5, 0, Location(15,0,0));
+
+  builder.AddRoadSegmentDefinition(def1);
+  //builder.AddRoadSegmentDefinition(def2);
+
+  Map m = builder.Build();
+
+  ASSERT_EQ(m.GetRoad(1)->GetLength(), 20.0);
+  /*AssertNear(m.GetRoad(1)->GetDirectedPointIn(-10),
+    element::DirectedPoint(0, 0, 0, 0));
+  AssertNear(m.GetRoad(1)->GetDirectedPointIn(0),
+    element::DirectedPoint(0, 0, 0, 0));
+  AssertNear(m.GetRoad(1)->GetDirectedPointIn(1.0),
+    element::DirectedPoint(1.0, 0, 0, 0));
+  AssertNear(m.GetRoad(1)->GetDirectedPointIn(3.0),
+    element::DirectedPoint(3.0, 0, 0, 0));
+  AssertNear(m.GetRoad(1)->GetDirectedPointIn(3.0),
+    element::DirectedPoint(3.0, 0, 0, 0));*/
 }

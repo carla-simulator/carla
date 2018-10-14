@@ -53,6 +53,10 @@ namespace geom {
       return lhs;
     }
 
+    friend bool operator==(const Location &lhs, const Location &rhs) {
+      return (lhs.x == rhs.x) && (lhs.y == rhs.y) && (lhs.z == rhs.z);
+    }
+
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
     Location(const FVector &vector) // from centimeters to meters.
