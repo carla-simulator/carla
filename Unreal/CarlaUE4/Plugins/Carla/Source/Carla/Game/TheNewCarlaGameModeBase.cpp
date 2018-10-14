@@ -109,5 +109,4 @@ void ATheNewCarlaGameModeBase::SpawnActorFactories()
       }
     }
   }
-
 }
