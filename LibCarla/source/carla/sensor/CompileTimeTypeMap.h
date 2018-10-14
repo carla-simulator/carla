@@ -94,10 +94,10 @@ namespace detail {
     }
 
     template <typename InKey>
-    using get = typename detail::CompileTimeTypeMapImpl<size(), Items...>::template get<InKey>;
+    using get = typename detail::CompileTimeTypeMapImpl<sizeof...(Items), Items...>::template get<InKey>;
 
     template <size_t Index>
-    using get_by_index = typename detail::CompileTimeTypeMapImpl<size(), Items...>::template get_by_index<Index>;
+    using get_by_index = typename detail::CompileTimeTypeMapImpl<sizeof...(Items), Items...>::template get_by_index<Index>;
   };
 
 } // namespace sensor

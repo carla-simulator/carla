@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "Engine/World.h"
+
 #include "TaggerDelegate.generated.h"
 
 /// Used to tag every actor that is spawned into the world.
