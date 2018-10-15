@@ -28,7 +28,7 @@ namespace element {
         _info(std::move(rsd._info)) {}
 
     RoadSegmentDefinition(id_type id) {
-      assert(id > 0);
+      assert(id >= 0);
       _id = id;
     }
 
