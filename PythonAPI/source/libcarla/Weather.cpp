@@ -28,7 +28,7 @@ void export_weather() {
   using namespace boost::python;
   namespace cr = carla::rpc;
 
-  class_<cr::WeatherParameters>("WeatherParameters")
+  auto cls = class_<cr::WeatherParameters>("WeatherParameters")
     .def(init<float, float, float, float, float, float>(
         (arg("cloudyness")=0.0f,
          arg("precipitation")=0.0f,
@@ -46,4 +46,19 @@ void export_weather() {
     .def("__ne__", &cr::WeatherParameters::operator!=)
     .def(self_ns::str(self_ns::self))
   ;
+
+  cls.attr("ClearNoon") = cr::WeatherParameters::ClearNoon;
+  cls.attr("CloudyNoon") = cr::WeatherParameters::CloudyNoon;
+  cls.attr("WetNoon") = cr::WeatherParameters::WetNoon;
+  cls.attr("WetCloudyNoon") = cr::WeatherParameters::WetCloudyNoon;
+  cls.attr("MidRainyNoon") = cr::WeatherParameters::MidRainyNoon;
+  cls.attr("HardRainNoon") = cr::WeatherParameters::HardRainNoon;
+  cls.attr("SoftRainNoon") = cr::WeatherParameters::SoftRainNoon;
+  cls.attr("ClearSunset") = cr::WeatherParameters::ClearSunset;
+  cls.attr("CloudySunset") = cr::WeatherParameters::CloudySunset;
+  cls.attr("WetSunset") = cr::WeatherParameters::WetSunset;
+  cls.attr("WetCloudySunset") = cr::WeatherParameters::WetCloudySunset;
+  cls.attr("MidRainSunset") = cr::WeatherParameters::MidRainSunset;
+  cls.attr("HardRainSunset") = cr::WeatherParameters::HardRainSunset;
+  cls.attr("SoftRainSunset") = cr::WeatherParameters::SoftRainSunset;
 }
