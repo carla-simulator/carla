@@ -20,10 +20,10 @@
 #include "Materials/MaterialInstance.h"
 
 // INI file sections.
-#define S_CARLA_SERVER                 TEXT("CARLA/Server")
-#define S_CARLA_LEVELSETTINGS          TEXT("CARLA/LevelSettings")
-#define S_CARLA_SENSOR                 TEXT("CARLA/Sensor")
-#define S_CARLA_QUALITYSETTINGS        TEXT("CARLA/QualitySettings")
+#define S_CARLA_SERVER          TEXT("CARLA/Server")
+#define S_CARLA_LEVELSETTINGS   TEXT("CARLA/LevelSettings")
+#define S_CARLA_SENSOR          TEXT("CARLA/Sensor")
+#define S_CARLA_QUALITYSETTINGS TEXT("CARLA/QualitySettings")
 
 // =============================================================================
 // -- Static variables & constants ---------------------------------------------
@@ -44,7 +44,8 @@ static void ForEachSectionInName(const FString &SensorName, T &&Callback)
   check(SubSections.Num() > 0);
   FString Section = S_CARLA_SENSOR;
   Callback(Section);
-  for (FString &SubSection : SubSections) {
+  for (FString &SubSection : SubSections)
+  {
     Section += TEXT("/");
     Section += SubSection;
     Callback(Section);
@@ -56,10 +57,33 @@ static FString GetSensorType(
     const FString &SensorName)
 {
   FString SensorType;
-  ForEachSectionInName(SensorName, [&](const auto &Section){
+  ForEachSectionInName(SensorName, [&](const auto &Section) {
     ConfigFile.GetString(*Section, TEXT("SensorType"), SensorType);
   });
   return SensorType;
+}
+
+static EQualityLevel QualityLevelFromString(const FString &SQualitySettingsLevel)
+{
+  if (SQualitySettingsLevel.Equals("Low"))
+  {
+    return EQualityLevel::Low;
+  }
+  if (SQualitySettingsLevel.Equals("Epic"))
+  {
+    return EQualityLevel::Epic;
+  }
+  return EQualityLevel::INVALID;
+}
+
+FString QualityLevelToString(EQualityLevel QualitySettingsLevel)
+{
+  const UEnum *ptr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EQualityLevel"), true);
+  if (!ptr)
+  {
+    return FString("Invalid");
+  }
+  return ptr->GetNameStringByIndex(static_cast<int32>(QualitySettingsLevel));
 }
 
 static void LoadSettingsFromConfig(
@@ -68,7 +92,8 @@ static void LoadSettingsFromConfig(
     const bool bLoadCarlaServerSection)
 {
   // CarlaServer.
-  if (bLoadCarlaServerSection) {
+  if (bLoadCarlaServerSection)
+  {
     ConfigFile.GetBool(S_CARLA_SERVER, TEXT("UseNetworking"), Settings.bUseNetworking);
     ConfigFile.GetInt(S_CARLA_SERVER, TEXT("WorldPort"), Settings.WorldPort);
     ConfigFile.GetInt(S_CARLA_SERVER, TEXT("ServerTimeOut"), Settings.ServerTimeOut);
@@ -83,18 +108,22 @@ static void LoadSettingsFromConfig(
   ConfigFile.GetInt(S_CARLA_LEVELSETTINGS, TEXT("WeatherId"), Settings.WeatherId);
   ConfigFile.GetInt(S_CARLA_LEVELSETTINGS, TEXT("SeedVehicles"), Settings.SeedVehicles);
   ConfigFile.GetInt(S_CARLA_LEVELSETTINGS, TEXT("SeedPedestrians"), Settings.SeedPedestrians);
-  ConfigFile.GetBool(S_CARLA_LEVELSETTINGS, TEXT("DisableTwoWheeledVehicles"), Settings.bDisableTwoWheeledVehicles);
+  ConfigFile.GetBool(S_CARLA_LEVELSETTINGS,
+      TEXT("DisableTwoWheeledVehicles"),
+      Settings.bDisableTwoWheeledVehicles);
 
   // QualitySettings.
   FString sQualityLevel;
   ConfigFile.GetString(S_CARLA_QUALITYSETTINGS, TEXT("QualityLevel"), sQualityLevel);
-  Settings.SetQualitySettingsLevel(UQualitySettings::FromString(sQualityLevel));
+  Settings.SetQualityLevel(QualityLevelFromString(sQualityLevel));
 }
 
 static bool GetSettingsFilePathFromCommandLine(FString &Value)
 {
-  if (FParse::Value(FCommandLine::Get(), TEXT("-carla-settings="), Value)) {
-    if (FPaths::IsRelative(Value)) {
+  if (FParse::Value(FCommandLine::Get(), TEXT("-carla-settings="), Value))
+  {
+    if (FPaths::IsRelative(Value))
+    {
       Value = FPaths::ConvertRelativePathToFull(FPaths::LaunchDir(), Value);
       return true;
     }
@@ -105,29 +134,6 @@ static bool GetSettingsFilePathFromCommandLine(FString &Value)
 // =============================================================================
 // -- UCarlaSettings -----------------------------------------------------------
 // =============================================================================
-
-EQualitySettingsLevel UQualitySettings::FromString(const FString& SQualitySettingsLevel)
-{
-	if(SQualitySettingsLevel.Equals("Low")) return EQualitySettingsLevel::Low;
-	if(SQualitySettingsLevel.Equals("Medium")) return EQualitySettingsLevel::Medium;
-	if(SQualitySettingsLevel.Equals("High")) return EQualitySettingsLevel::High;
-	if(SQualitySettingsLevel.Equals("Epic")) return EQualitySettingsLevel::Epic;
-
-	return EQualitySettingsLevel::None;
-}
-
-FString UQualitySettings::ToString(EQualitySettingsLevel QualitySettingsLevel)
-{
-  const UEnum* ptr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EQualitySettingsLevel"), true);
-  if(!ptr)
-    return FString("Invalid");
-  return ptr->GetNameStringByIndex(static_cast<int32>(QualitySettingsLevel));
-}
-
-void UCarlaSettings::SetQualitySettingsLevel(EQualitySettingsLevel newQualityLevel)
-{
-	QualitySettingsLevel = newQualityLevel;
-}
 
 void UCarlaSettings::LoadSettings()
 {
@@ -182,7 +188,8 @@ void UCarlaSettings::LoadWeatherDescriptions()
 
 void UCarlaSettings::ValidateWeatherId()
 {
-  if (WeatherId >= WeatherDescriptions.Num()) {
+  if (WeatherId >= WeatherDescriptions.Num())
+  {
     UE_LOG(LogCarla, Error, TEXT("Provided weather id %d cannot be found"), WeatherId);
     WeatherId = -1;
   }
@@ -191,7 +198,8 @@ void UCarlaSettings::ValidateWeatherId()
 void UCarlaSettings::LogSettings() const
 {
   auto EnabledDisabled = [](bool bValue) { return (bValue ? TEXT("Enabled") : TEXT("Disabled")); };
-  UE_LOG(LogCarla, Log, TEXT("== CARLA Settings =============================================================="));
+  UE_LOG(LogCarla, Log,
+      TEXT("== CARLA Settings =============================================================="));
   UE_LOG(LogCarla, Log, TEXT("Last settings file loaded: %s"), *CurrentFileName);
   UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_SERVER);
   UE_LOG(LogCarla, Log, TEXT("Networking = %s"), EnabledDisabled(bUseNetworking));
@@ -201,7 +209,8 @@ void UCarlaSettings::LogSettings() const
   UE_LOG(LogCarla, Log, TEXT("Send Non-Player Agents Info = %s"), EnabledDisabled(bSendNonPlayerAgentsInfo));
   UE_LOG(LogCarla, Log, TEXT("Rendering = %s"), EnabledDisabled(!bDisableRendering));
   UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_LEVELSETTINGS);
-  UE_LOG(LogCarla, Log, TEXT("Player Vehicle        = %s"), (PlayerVehicle.IsEmpty() ? TEXT("Default") : *PlayerVehicle));
+  UE_LOG(LogCarla, Log, TEXT("Player Vehicle        = %s"),
+      (PlayerVehicle.IsEmpty() ? TEXT("Default") : *PlayerVehicle));
   UE_LOG(LogCarla, Log, TEXT("Number Of Vehicles    = %d"), NumberOfVehicles);
   UE_LOG(LogCarla, Log, TEXT("Number Of Pedestrians = %d"), NumberOfPedestrians);
   UE_LOG(LogCarla, Log, TEXT("Weather Id = %d"), WeatherId);
@@ -214,11 +223,12 @@ void UCarlaSettings::LogSettings() const
     UE_LOG(LogCarla, Log, TEXT("  * %d - %s"), i, *WeatherDescriptions[i].Name);
   }
   UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_QUALITYSETTINGS);
-  UE_LOG(LogCarla, Log, TEXT("Quality Settings = %s"), *UQualitySettings::ToString(QualitySettingsLevel));
+  UE_LOG(LogCarla, Log, TEXT("Quality Level = %s"), *QualityLevelToString(QualityLevel));
 
   UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_SENSOR);
   UE_LOG(LogCarla, Log, TEXT("Semantic Segmentation = %s"), EnabledDisabled(bSemanticSegmentationEnabled));
-  UE_LOG(LogCarla, Log, TEXT("================================================================================"));
+  UE_LOG(LogCarla, Log,
+      TEXT("================================================================================"));
 }
 
 #undef S_CARLA_SERVER
@@ -230,10 +240,13 @@ void UCarlaSettings::GetActiveWeatherDescription(
     FWeatherDescription &WeatherDescription) const
 {
   auto WeatherPtr = GetActiveWeatherDescription();
-  if (WeatherPtr != nullptr) {
+  if (WeatherPtr != nullptr)
+  {
     WeatherDescription = *WeatherPtr;
     bWeatherWasChanged = true;
-  } else {
+  }
+  else
+  {
     bWeatherWasChanged = false;
   }
 }
@@ -247,13 +260,16 @@ const FWeatherDescription &UCarlaSettings::GetWeatherDescriptionByIndex(int32 In
 
 void UCarlaSettings::LoadSettingsFromFile(const FString &FilePath, const bool bLogOnFailure)
 {
-  if (FPaths::FileExists(FilePath)) {
+  if (FPaths::FileExists(FilePath))
+  {
     UE_LOG(LogCarla, Log, TEXT("Loading CARLA settings from \"%s\""), *FilePath);
     const FIniFile ConfigFile(FilePath);
     constexpr bool bLoadCarlaServerSection = true;
     LoadSettingsFromConfig(ConfigFile, *this, bLoadCarlaServerSection);
     CurrentFileName = FilePath;
-  } else if (bLogOnFailure) {
+  }
+  else if (bLogOnFailure)
+  {
     UE_LOG(LogCarla, Error, TEXT("Unable to find settings file \"%s\""), *FilePath);
   }
 }

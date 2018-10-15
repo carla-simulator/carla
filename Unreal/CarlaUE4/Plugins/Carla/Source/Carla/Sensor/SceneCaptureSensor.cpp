@@ -31,7 +31,7 @@ namespace SceneCaptureSensor_local_ns {
     check(World != nullptr);
     const auto *GameInstance = Cast<UCarlaGameInstance>(World->GetGameInstance());
     check(GameInstance != nullptr);
-    return GameInstance->GetCarlaSettings().GetQualitySettingsLevel();
+    return GameInstance->GetCarlaSettings().GetQualityLevel();
   }
 
 } // namespace SceneCaptureSensor_local_ns
@@ -147,7 +147,7 @@ void ASceneCaptureSensor::BeginPlay()
   SetUpSceneCaptureComponent(*CaptureComponent2D);
 
   if (bEnablePostProcessingEffects &&
-      (SceneCaptureSensor_local_ns::GetQualitySettings(GetWorld()) == EQualitySettingsLevel::Low))
+      (SceneCaptureSensor_local_ns::GetQualitySettings(GetWorld()) == EQualityLevel::Low))
   {
     CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_SceneColorHDRNoAlpha;
   }
