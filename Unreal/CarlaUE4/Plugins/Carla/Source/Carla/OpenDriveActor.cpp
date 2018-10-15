@@ -1,13 +1,34 @@
 // Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB). This work is licensed under the terms of the MIT license. For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
-#include "OpenDriveActor.h"
+#include "Runtime/Engine/Classes/Engine/World.h"
 
+
+#include "OpenDriveActor.h"
 #include "Traffic/RoutePlanner.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/opendrive/OpenDrive.h>
 #include <compiler/enable-ue4-macros.h>
+
+
+
+///////////////////////////////////////////////////////////
+
+void fnc_generate_points(const carla::road::element::RoadSegment *road, ARoutePlanner *outRoutePlaner)
+{
+    TArray<FVector> points;
+
+    for (float offset = 0.0f; offset < road->GetLength(); offset += (road->GetLength() / 30.0f))
+    {
+        carla::road::element::DirectedPoint p = road->GetDirectedPointIn(offset);
+        points.Add(FVector(p.location.x, p.location.y, p.location.z));
+
+        outRoutePlaner->AddRoute(1.0f, points);
+    }
+}
+
+///////////////////////////////////////////////////////////
 
 // Sets default values
 AOpenDriveActor::AOpenDriveActor()
@@ -20,8 +41,32 @@ AOpenDriveActor::AOpenDriveActor()
 void AOpenDriveActor::BeginPlay()
 {
     Super::BeginPlay();
+    carla::road::Map map = carla::opendrive::OpenDrive::Load("C:\\Users\\ajianu\\Desktop\\xodr\\test_03.xodr");
 
-      carla::road::Map map = carla::opendrive::OpenDrive::Load("");
+    std::vector<carla::road::id_type> roadIDs = map.GetAllIds();
+    TArray<carla::road::id_type> processed;
+
+    for (auto &&id : roadIDs)
+    {
+        if (!processed.Contains(id))
+        {
+            ARoutePlanner *routePlaner = GetWorld()->SpawnActor<ARoutePlanner>();
+            fnc_generate_points(map.GetRoad(id), routePlaner);
+            processed.Add(id);
+        }
+
+        std::vector<carla::road::id_type> successorIds = map.GetRoad(id)->GetSuccessorsIds();
+        if (successorIds.size())
+        {
+            ARoutePlanner *routePlaner = GetWorld()->SpawnActor<ARoutePlanner>();
+
+            for (auto &&successorID : successorIds)
+            {
+                fnc_generate_points(map.GetRoad(id), routePlaner);
+                processed.Add(id);
+            }
+        }
+    }
 }
 
 // Called every frame
