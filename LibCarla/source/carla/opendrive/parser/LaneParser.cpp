@@ -68,14 +68,23 @@ void carla::opendrive::parser::LaneParser::ParseLaneRoadMark(const pugi::xml_nod
     if (xmlNode == nullptr) return;
     carla::opendrive::types::LaneRoadMark roadMarker;
 
-    roadMarker.soffset = std::stod(xmlNode.attribute("sOffset").value());
-    roadMarker.width = std::stod(xmlNode.attribute("width").value());
+    if(xmlNode.attribute("sOffset") != nullptr) roadMarker.soffset = std::stod(xmlNode.attribute("sOffset").value());
+    else roadMarker.soffset = 0.0;
 
-    roadMarker.type = xmlNode.attribute("type").value();
-    roadMarker.weigth = xmlNode.attribute("weight").value();
+    if(xmlNode.attribute("width") != nullptr) roadMarker.width = std::stod(xmlNode.attribute("width").value());
+    else roadMarker.width = 0.0;
 
-    roadMarker.color = xmlNode.attribute("color").value();
-    roadMarker.lange_change = xmlNode.attribute("laneChange").value();
+    if(xmlNode.attribute("type") != nullptr) roadMarker.type = xmlNode.attribute("type").value();
+    else roadMarker.type = "";
+
+    if(xmlNode.attribute("weight") != nullptr) roadMarker.weigth = xmlNode.attribute("weight").value();
+    else roadMarker.weigth = "";
+
+    if(xmlNode.attribute("color") != nullptr) roadMarker.color = xmlNode.attribute("color").value();
+    else roadMarker.color = "";
+
+    if(xmlNode.attribute("laneChange") != nullptr) roadMarker.lange_change = xmlNode.attribute("laneChange").value();
+    else roadMarker.lange_change = "";
 
     out_lane_mark.push_back(roadMarker);
 }

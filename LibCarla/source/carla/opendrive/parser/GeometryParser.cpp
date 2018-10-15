@@ -65,7 +65,7 @@ void carla::opendrive::parser::GeometryParser::Parse(const pugi::xml_node & xmlN
         }
         else
         {
-            ODP_ASSERT(false, "Geometry type unknown");
+            //ODP_ASSERT(false, "Geometry type unknown");
         }
 
         out_geometry_attributes.push_back(std::move(geometry_attributes));
