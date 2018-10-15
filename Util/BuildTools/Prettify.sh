@@ -109,13 +109,16 @@ command -v autopep8 >/dev/null 2>&1 || {
 # ==============================================================================
 
 UNCRUSTIFY_CONFIG=${CARLA_BUILD_TOOLS_FOLDER}/uncrustify.cfg
-UNCRUSTIFY_COMMAND="${UNCRUSTIFY} -c ${UNCRUSTIFY_CONFIG} --no-backup --replace"
+UNCRUSTIFY_UE4_CONFIG=${CARLA_BUILD_TOOLS_FOLDER}/uncrustify-ue4.cfg
+UNCRUSTIFY_COMMAND="${UNCRUSTIFY} --no-backup --replace"
 
 AUTOPEP8_COMMAND="autopep8 --jobs 0 --in-place -a"
 
 if ${PRETTIFY_ALL} ; then
 
-  find ${CARLA_ROOT_FOLDER} -iregex '.*\.\(py\)$' -exec ${AUTOPEP8_COMMAND} {} +
+  fatal_error "Prettify all not yet supported"
+
+  # find ${CARLA_ROOT_FOLDER} -iregex '.*\.\(py\)$' -exec ${AUTOPEP8_COMMAND} {} +
   # find ${LIBCARLA_ROOT_FOLDER} -iregex '.*\.\(h\|cpp\)$' -exec ${UNCRUSTIFY_COMMAND} {} \;
 
 elif [[ -f ${PRETTIFY_FILE} ]] ; then
@@ -123,9 +126,12 @@ elif [[ -f ${PRETTIFY_FILE} ]] ; then
   if [[ ${PRETTIFY_FILE} == *.py ]] ; then
     log "autopep8 ${PRETTIFY_FILE}"
     ${AUTOPEP8_COMMAND} ${PRETTIFY_FILE}
+  elif [[ ${PRETTIFY_FILE} == *Unreal/CarlaUE4/* ]] ; then
+    log "uncrustify for UE4 ${PRETTIFY_FILE}"
+    ${UNCRUSTIFY_COMMAND} -c ${UNCRUSTIFY_UE4_CONFIG} ${PRETTIFY_FILE}
   else
     log "uncrustify ${PRETTIFY_FILE}"
-    ${UNCRUSTIFY_COMMAND} ${PRETTIFY_FILE}
+    ${UNCRUSTIFY_COMMAND} -c ${UNCRUSTIFY_CONFIG} ${PRETTIFY_FILE}
   fi
 
 fi
