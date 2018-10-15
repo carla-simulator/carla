@@ -9,8 +9,6 @@
 #include "element/RoadSegment.h"
 #include "carla/NonCopyable.h"
 
-#include <boost/graph/adjacency_list.hpp>
-
 #include <map>
 
 namespace carla {

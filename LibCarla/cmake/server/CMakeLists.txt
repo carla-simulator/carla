@@ -44,6 +44,12 @@ install(FILES ${libcarla_carla_streaming_detail_tcp_headers} DESTINATION include
 file(GLOB libcarla_carla_streaming_low_level_headers "${libcarla_source_path}/carla/streaming/low_level/*.h")
 install(FILES ${libcarla_carla_streaming_low_level_headers} DESTINATION include/carla/streaming/low_level)
 
+file(GLOB libcarla_carla_streaming_low_level_headers "${libcarla_source_path}/carla/road/*.h")
+install(FILES ${libcarla_carla_streaming_low_level_headers} DESTINATION include/carla/road)
+
+file(GLOB libcarla_carla_streaming_low_level_headers "${libcarla_source_path}/carla/road/element/*.h")
+install(FILES ${libcarla_carla_streaming_low_level_headers} DESTINATION include/carla/road/element)
+
 file(GLOB libcarla_carla_opendrive "${libcarla_source_path}/carla/opendrive/*.h")
 install(FILES ${libcarla_carla_opendrive} DESTINATION include/carla/opendrive)
 
