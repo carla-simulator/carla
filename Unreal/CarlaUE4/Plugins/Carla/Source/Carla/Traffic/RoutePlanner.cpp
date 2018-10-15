@@ -79,6 +79,25 @@ void ARoutePlanner::PostEditChangeProperty(FPropertyChangedEvent& PropertyChange
 }
 #endif // WITH_EDITOR
 
+void ARoutePlanner::AddRoute(float probability, const TArray<FVector> &routePoints)
+{
+    USplineComponent *NewSpline = NewObject<USplineComponent>(this);
+
+    for (int i = 0; i < routePoints.Num(); ++i)
+    {
+        NewSpline->AddSplineLocalPoint(routePoints[i]);
+    }
+
+    Routes.Add(NewSpline);
+    Probabilities.Add(probability);
+}
+
+void ARoutePlanner::CleanRoute()
+{
+    Routes.Empty();
+    Probabilities.Empty();
+}
+
 void ARoutePlanner::BeginPlay()
 {
   Super::BeginPlay();
