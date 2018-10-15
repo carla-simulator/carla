@@ -24,6 +24,7 @@ Use ARROWS or WASD keys for control.
     TAB          : change camera position
     `            : next camera sensor
     [1-9]        : change to camera sensor [1-9]
+    C            : change weather
 
     R            : toggle recording images to disk
 
@@ -82,6 +83,7 @@ try:
     from pygame.locals import K_TAB
     from pygame.locals import K_UP
     from pygame.locals import K_a
+    from pygame.locals import K_c
     from pygame.locals import K_d
     from pygame.locals import K_h
     from pygame.locals import K_p
@@ -113,6 +115,14 @@ class World(object):
         self.vehicle = carla_world.spawn_actor(blueprint, START_POSITION)
         self.camera_manager = CameraManager(self.vehicle, self.hud)
         self.controller = None
+        self._weather_presets = ["Clear Noon", "Cloudy Noon", "Wet Noon"]
+
+    def next_weather(self):
+        weather_name = self._weather_presets.pop(0)
+        self.hud.notification('Weather: %s' % weather_name)
+        weather = getattr(carla.WeatherParameters, weather_name.replace(" ", ""))
+        self.vehicle.get_world().set_weather(weather)
+        self._weather_presets.append(weather_name)
 
     def tick(self, clock):
         self.hud.tick(self, clock)
@@ -151,6 +161,8 @@ class KeyboardControl(object):
                     world.hud.help.toggle()
                 elif event.key == K_TAB:
                     world.camera_manager.toggle_camera()
+                elif event.key == K_c:
+                    world.next_weather()
                 elif event.key == K_BACKQUOTE:
                     world.camera_manager.next_sensor()
                 elif event.key > K_0 and event.key <= K_9:
@@ -258,7 +270,7 @@ class FadingText(object):
 class HelpText(object):
     def __init__(self, font, width, height):
         self.font = font
-        self.dim = (680, 460)
+        self.dim = (680, 480)
         self.pos = (0.5 * width - 0.5 * self.dim[0], 0.5 * height - 0.5 * self.dim[1])
         self.seconds_left = 0
         self.surface = pygame.Surface(self.dim)
