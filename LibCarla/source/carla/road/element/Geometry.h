@@ -105,11 +105,10 @@ namespace element {
         const geom::Location &start_pos)
       : Geometry(GeometryType::LINE, start_offset, length, heading, start_pos) {}
 
-    DirectedPoint PosFromDist(double dist) const override {
-      const double length = dist * _length;
+    DirectedPoint PosFromDist(const double dist) const override {
       DirectedPoint p(_start_position, _heading);
-      p.location.x += length * std::cos(p.tangent);
-      p.location.y += length * std::sin(p.tangent);
+      p.location.x = dist * std::cos(_heading);
+      p.location.y = dist * std::sin(_heading);
       return p;
     }
   };
