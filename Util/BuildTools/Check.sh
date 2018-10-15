@@ -52,7 +52,7 @@ while true; do
       LIBCARLA_RELEASE=true;
       LIBCARLA_DEBUG=true;
       PYTHON_API_2=true;
-      PYTHON_API_3=false; # @todo Python 3 not supported yet.
+      PYTHON_API_3=true;
       shift ;;
     --libcarla-release )
       LIBCARLA_RELEASE=true;

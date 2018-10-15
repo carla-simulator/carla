@@ -19,7 +19,7 @@ namespace carla {
 
     static bool ThisThreadHasTheGIL() {
 #ifdef LIBCARLA_WITH_PYTHON_SUPPORT
-#  ifdef PYTHON3X
+#  if PY_MAJOR_VERSION >= 3
       return PyGILState_Check();
 #  else
       PyThreadState *tstate = _PyThreadState_Current;

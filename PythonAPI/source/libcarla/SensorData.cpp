@@ -51,7 +51,7 @@ template <typename T>
 static auto GetRawDataAsBuffer(T &self) {
   auto *data = reinterpret_cast<unsigned char *>(self.data());
   auto size = sizeof(typename T::value_type) * self.size();
-#if PYTHON3X // NOTE(Andrei): python 3
+#if PY_MAJOR_VERSION >= 3 // NOTE(Andrei): python 3
   auto *ptr = PyMemoryView_FromMemory(reinterpret_cast<char *>(data), size, PyBUF_READ);
 #else        // NOTE(Andrei): python 2
   auto *ptr = PyBuffer_FromMemory(data, size);
