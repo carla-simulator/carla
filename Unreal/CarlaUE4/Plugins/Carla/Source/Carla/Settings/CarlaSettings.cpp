@@ -63,7 +63,9 @@ static FString GetSensorType(
   return SensorType;
 }
 
-static EQualityLevel QualityLevelFromString(const FString &SQualitySettingsLevel)
+static EQualityLevel QualityLevelFromString(
+    const FString &SQualitySettingsLevel,
+    const EQualityLevel Default = EQualityLevel::INVALID)
 {
   if (SQualitySettingsLevel.Equals("Low"))
   {
@@ -73,7 +75,7 @@ static EQualityLevel QualityLevelFromString(const FString &SQualitySettingsLevel
   {
     return EQualityLevel::Epic;
   }
-  return EQualityLevel::INVALID;
+  return Default;
 }
 
 FString QualityLevelToString(EQualityLevel QualitySettingsLevel)
@@ -165,6 +167,11 @@ void UCarlaSettings::LoadSettings()
     if (FParse::Param(FCommandLine::Get(), TEXT("carla-no-networking")))
     {
       bUseNetworking = false;
+    }
+    FString StringQualityLevel;
+    if (FParse::Value(FCommandLine::Get(), TEXT("-quality-level="), StringQualityLevel))
+    {
+      QualityLevel = QualityLevelFromString(StringQualityLevel, EQualityLevel::Epic);
     }
   }
 }
