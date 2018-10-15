@@ -7,8 +7,11 @@
 #pragma once
 
 #include "carla/geom/Location.h"
+#include "carla/geom/Math.h"
+#include "carla/opendrive/logic/cephes/fresnel.h"
 
 #include <cmath>
+#include <iostream>
 
 namespace carla {
 namespace road {
@@ -106,9 +109,11 @@ namespace element {
       : Geometry(GeometryType::LINE, start_offset, length, heading, start_pos) {}
 
     DirectedPoint PosFromDist(const double dist) const override {
+      assert(dist > 0);
+      assert(_length > 0.0);
       DirectedPoint p(_start_position, _heading);
-      p.location.x = dist * std::cos(_heading);
-      p.location.y = dist * std::sin(_heading);
+      p.location.x += dist * std::cos(p.tangent);
+      p.location.y += dist * std::sin(p.tangent);
       return p;
     }
   };
@@ -126,9 +131,18 @@ namespace element {
         _curvature(curv) {}
 
     DirectedPoint PosFromDist(double dist) const override {
-      (void) dist;
-      return DirectedPoint();
+      assert(dist > 0);
       assert(_length > 0.0);
+      assert(std::fabs(_curvature) > 1e-15);
+      const double length = dist;
+      const double radius = 1.0 / _curvature;
+      DirectedPoint p(_start_position, _heading);
+      p.location.x -= radius * std::cos(p.tangent - geom::Math::pi_half());
+      p.location.y -= radius * std::sin(p.tangent - geom::Math::pi_half());
+      p.tangent += length * _curvature;
+      p.location.x += radius * std::cos(p.tangent - geom::Math::pi_half());
+      p.location.y += radius * std::sin(p.tangent - geom::Math::pi_half());
+      return p;
     }
 
     double GetCurvature() {
@@ -163,10 +177,26 @@ namespace element {
     }
 
     DirectedPoint PosFromDist(double dist) const override {
-      // to implement
-      (void) dist;
-      return DirectedPoint();
+      // not working yet with negative values
+      assert(dist > 0);
       assert(_length > 0.0);
+      assert(std::fabs(_curve_end) > 1e-15);
+      const double radius = 1.0 / _curve_end;
+      const double extra_norm = 1.0 / std::sqrt(geom::Math::pi_half());
+      const double norm = 1.0 / std::sqrt(2.0 * radius * _length);
+      const double length = dist * norm;
+      double S, C;
+      fresnl(length * extra_norm, &S, &C);
+      S /= (norm * extra_norm);
+      C /= (norm * extra_norm);
+      DirectedPoint p(_start_position, _heading);
+      const double cos_a = std::cos(p.tangent);
+      const double sin_a = std::sin(p.tangent);
+      p.location.x += C * cos_a - S * sin_a;
+      p.location.y += S * cos_a + C * sin_a;
+      p.tangent += length * length;
+
+      return p;
     }
 
   private:
