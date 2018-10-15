@@ -4,12 +4,9 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#ifdef LIBCARLA_INCLUDED_DISABLE_UE4_MACROS_HEADER
-  #if defined(_MSC_VER)
-  #  pragma warning(pop)
-  #endif
 
-  #undef LIBCARLA_INCLUDED_DISABLE_UE4_MACROS_HEADER
+#if defined(_MSC_VER)
+#  pragma warning(pop)
 #endif
 
 #if defined(__clang__)
