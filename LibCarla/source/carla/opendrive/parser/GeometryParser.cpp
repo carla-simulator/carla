@@ -65,10 +65,8 @@ void carla::opendrive::parser::GeometryParser::Parse(const pugi::xml_node & xmlN
         }
         else
         {
-            //ODP_ASSERT(false, "Geometry type unknown");
+            ODP_ASSERT(false, "Geometry type unknown");
         }
-
-        out_geometry_attributes.push_back(std::move(geometry_attributes));
 
         geometry_attributes->start_position = std::stod(roadGeometry.attribute("s").value());
 
@@ -77,5 +75,7 @@ void carla::opendrive::parser::GeometryParser::Parse(const pugi::xml_node & xmlN
 
         geometry_attributes->heading = std::stod(roadGeometry.attribute("hdg").value());
         geometry_attributes->length = std::stod(roadGeometry.attribute("length").value());
+
+        out_geometry_attributes.push_back(std::move(geometry_attributes));
     }
 }
