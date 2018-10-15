@@ -45,3 +45,5 @@ function move_if_changed {
   copy_if_changed $1 $2
   rm -f $1
 }
+
+CARLA_BUILD_CONCURRENCY=`nproc --all`
