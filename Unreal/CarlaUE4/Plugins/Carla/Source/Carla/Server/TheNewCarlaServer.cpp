@@ -4,27 +4,23 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include "Carla.h"
+
 #include "GameFramework/SpectatorPawn.h"
 
-#include "Carla.h"
 #include "Carla/Server/TheNewCarlaServer.h"
-
 #include "Carla/Sensor/Sensor.h"
-
-
 #include <carla/Version.h>
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/Actor.h>
 #include <carla/rpc/VehicleControl.h>
-#include <compiler/enable-ue4-macros.h>
-
 #include <carla/rpc/ActorDefinition.h>
 #include <carla/rpc/ActorDescription.h>
 #include <carla/rpc/Server.h>
 #include <carla/rpc/Transform.h>
 #include <carla/streaming/Server.h>
-
+#include <compiler/enable-ue4-macros.h>
 
 #include <vector>
 

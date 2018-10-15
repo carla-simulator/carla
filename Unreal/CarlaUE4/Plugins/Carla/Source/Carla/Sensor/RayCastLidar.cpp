@@ -3,15 +3,14 @@
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
+#include "Carla.h"
 
 #include "DrawDebugHelpers.h"
 #include "StaticMeshResources.h"
 #include "Engine/CollisionProfile.h"
 #include "Runtime/Engine/Classes/Kismet/KismetMathLibrary.h"
 
-#include "Carla.h"
 #include "Carla/Sensor/RayCastLidar.h"
-
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
 FActorDefinition ARayCastLidar::GetSensorDefinition()
