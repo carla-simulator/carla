@@ -114,25 +114,24 @@ namespace element {
 
     // Search for the last geometry with less start_offset before 'dist'
     DirectedPoint GetDirectedPointIn(double dist) const {
-      if(dist <= 0.0) {
-        return DirectedPoint(_geom.front().get()->GetStartPosition(),
-          _geom.front().get()->GetHeading());
+      assert(_length > 0.0);
+      if (dist <= 0.0) {
+        return DirectedPoint(_geom.front()->GetStartPosition(),
+            _geom.front()->GetHeading());
+      }
+      // if dist is bigguer than len
+      if (dist > _length) {
+        return _geom.back()->PosFromDist(
+            _length - _geom.back()->GetStartOffset());
       }
       for (auto &&g : _geom) {
-        if ((g.get()->GetStartOffset() < dist) &&
-          (dist <= g.get()->GetStartOffset() + g.get()->GetLength())) {
-            return g->PosFromDist(g->GetStartOffset() - dist);
+        if ((g->GetStartOffset() < dist) &&
+            (dist <= g->GetStartOffset() + g->GetLength())) {
+          return g->PosFromDist(dist - g->GetStartOffset());
         }
       }
-      // todo: if dist is biguer than len
       return DirectedPoint::Invalid();
     }
-
-    // DirectedPoint GetDirectedPointInNorm(double dist) const {
-    //   double normalized_dist = dist / _length;
-
-    //   return DirectedPoint();
-    // }
 
     const double &GetLength() const {
       return _length;
