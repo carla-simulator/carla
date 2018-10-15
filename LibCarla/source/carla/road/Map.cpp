@@ -20,6 +20,14 @@ namespace road {
     return nullptr;
   }
 
+  std::vector<id_type> Map::GetAllIds() const {
+    std::vector<id_type> result;
+    for (auto &&e : _elements) {
+      result.emplace_back(e.first);
+    }
+    return result;
+  }
+
   uint32_t Map::GetRoadCount() const {
     return _elements.size();
   }
