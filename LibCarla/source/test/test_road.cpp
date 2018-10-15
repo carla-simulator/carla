@@ -412,6 +412,6 @@ TEST(road, geom_spiral_test) {
     DirectedPoint dp = m.GetRoad(1)->GetDirectedPointIn((float)i * (10.0f / (float)max));
     printf("(%f,%f)", dp.location.x, dp.location.y);
     if (i != max-1) printf(",");
-    else printf("\n");*/
-  }
+    else printf("\n");
+  }*/
 }

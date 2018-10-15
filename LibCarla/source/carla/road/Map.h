@@ -29,6 +29,8 @@ namespace road {
 
     const RoadSegment *GetRoad(id_type id) const;
 
+    std::vector<id_type> GetAllIds() const;
+
     uint32_t GetRoadCount() const;
 
     const RoadSegment &NearestRoad(const geom::Location &loc);
