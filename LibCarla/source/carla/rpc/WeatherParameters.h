@@ -18,6 +18,26 @@ namespace rpc {
   class WeatherParameters {
   public:
 
+    /// @name Weather presets
+    /// @{
+
+    static WeatherParameters ClearNoon;
+    static WeatherParameters CloudyNoon;
+    static WeatherParameters WetNoon;
+    static WeatherParameters WetCloudyNoon;
+    static WeatherParameters MidRainyNoon;
+    static WeatherParameters HardRainNoon;
+    static WeatherParameters SoftRainNoon;
+    static WeatherParameters ClearSunset;
+    static WeatherParameters CloudySunset;
+    static WeatherParameters WetSunset;
+    static WeatherParameters WetCloudySunset;
+    static WeatherParameters MidRainSunset;
+    static WeatherParameters HardRainSunset;
+    static WeatherParameters SoftRainSunset;
+
+    /// @}
+
     WeatherParameters() = default;
 
     WeatherParameters(
