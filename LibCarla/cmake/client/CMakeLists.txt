@@ -76,6 +76,12 @@ file(GLOB libcarla_carla_road_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_road_sources}")
 install(FILES ${libcarla_carla_road_sources} DESTINATION include/carla/road)
 
+file(GLOB libcarla_carla_road_element_sources
+    "${libcarla_source_path}/carla/road/element/*.cpp"
+    "${libcarla_source_path}/carla/road/element/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_road_element_sources}")
+install(FILES ${libcarla_carla_road_element_sources} DESTINATION include/carla/road/element)
+
 file(GLOB libcarla_carla_rpc_sources
     "${libcarla_source_path}/carla/rpc/*.cpp"
     "${libcarla_source_path}/carla/rpc/*.h")
