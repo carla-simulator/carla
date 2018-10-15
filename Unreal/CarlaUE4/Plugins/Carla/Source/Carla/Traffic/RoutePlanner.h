@@ -26,6 +26,9 @@ public:
 
   ARoutePlanner(const FObjectInitializer& ObjectInitializer);
 
+  void AddRoute(float probability, const TArray<FVector> &routePoints);
+  void CleanRoute();
+
 protected:
 
 #if WITH_EDITOR
