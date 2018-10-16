@@ -22,7 +22,7 @@ void fnc_generate_points(const carla::road::element::RoadSegment *road, ARoutePl
     for (float offset = 0.0f; offset < road->GetLength(); offset += (road->GetLength() / 30.0f))
     {
         carla::road::element::DirectedPoint p = road->GetDirectedPointIn(offset);
-        points.Add(FVector(p.location.x, p.location.y, p.location.z));
+        points.Add(FVector(p.location.x * 100, -p.location.y * 100, p.location.z * 100 + 100));
 
         outRoutePlaner->AddRoute(1.0f, points);
     }
@@ -52,20 +52,22 @@ void AOpenDriveActor::BeginPlay()
         {
             ARoutePlanner *routePlaner = GetWorld()->SpawnActor<ARoutePlanner>();
             fnc_generate_points(map.GetRoad(id), routePlaner);
+
+            routePlaner->Init();
             processed.Add(id);
         }
 
-        std::vector<carla::road::id_type> successorIds = map.GetRoad(id)->GetSuccessorsIds();
+        /*std::vector<carla::road::id_type> successorIds = map.GetRoad(id)->GetSuccessorsIds();
         if (successorIds.size())
         {
             ARoutePlanner *routePlaner = GetWorld()->SpawnActor<ARoutePlanner>();
 
             for (auto &&successorID : successorIds)
             {
-                fnc_generate_points(map.GetRoad(id), routePlaner);
-                processed.Add(id);
+                fnc_generate_points(map.GetRoad(successorID), routePlaner);
+                processed.Add(successorID);
             }
-        }
+        }*/
     }
 }
 
