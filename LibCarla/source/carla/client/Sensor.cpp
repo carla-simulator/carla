@@ -7,7 +7,7 @@
 #include "carla/client/Sensor.h"
 
 #include "carla/Logging.h"
-#include "carla/client/detail/Client.h"
+#include "carla/client/detail/Simulator.h"
 
 namespace carla {
 namespace client {
@@ -32,9 +32,7 @@ namespace client {
           GetDisplayId());
       return;
     }
-    GetEpisode()->SubscribeToStream(
-        GetActorDescription().GetStreamToken(),
-        std::move(callback));
+    GetEpisode()->SubscribeToSensor(*this, std::move(callback));
     _is_listening = true;
   }
 
@@ -45,8 +43,7 @@ namespace client {
           GetDisplayId());
       return;
     }
-    GetEpisode()->UnSubscribeFromStream(
-        GetActorDescription().GetStreamToken());
+    GetEpisode()->UnSubscribeFromSensor(*this);
     _is_listening = false;
   }
 

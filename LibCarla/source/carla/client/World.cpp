@@ -9,7 +9,7 @@
 #include "carla/Logging.h"
 #include "carla/client/Actor.h"
 #include "carla/client/ActorBlueprint.h"
-#include "carla/client/detail/Client.h"
+#include "carla/client/detail/Simulator.h"
 
 #include <exception>
 

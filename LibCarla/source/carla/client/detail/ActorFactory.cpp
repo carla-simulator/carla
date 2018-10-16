@@ -55,11 +55,6 @@ namespace detail {
 
   template <typename ActorT>
   static auto MakeActorImpl(ActorInitializer init, GarbageCollectionPolicy gc) {
-    log_debug(
-        init.GetDisplayId(),
-        "created",
-        gc == GarbageCollectionPolicy::Enabled ? "with" : "without",
-        "garbage collection");
     if (gc == GarbageCollectionPolicy::Enabled) {
       return SharedPtr<ActorT>{new ActorT(std::move(init)), GarbageCollector()};
     }
@@ -68,17 +63,15 @@ namespace detail {
   }
 
   SharedPtr<Actor> ActorFactory::MakeActor(
-      Episode episode,
+      EpisodeProxy episode,
       rpc::Actor description,
       GarbageCollectionPolicy gc) {
-    const auto gcw = episode->GetGarbageCollectionPolicy();
-    const auto gca = (gc == GarbageCollectionPolicy::Inherit ? gcw : gc);
     if (description.HasAStream()) {
-      return MakeActorImpl<Sensor>(ActorInitializer{description, episode}, gca);
+      return MakeActorImpl<Sensor>(ActorInitializer{description, episode}, gc);
     } else if (StringUtil::StartsWith(description.description.id, "vehicle.")) {
-      return MakeActorImpl<Vehicle>(ActorInitializer{description, episode}, gca);
+      return MakeActorImpl<Vehicle>(ActorInitializer{description, episode}, gc);
     }
-    return MakeActorImpl<Actor>(ActorInitializer{description, episode}, gca);
+    return MakeActorImpl<Actor>(ActorInitializer{description, episode}, gc);
   }
 
 } // namespace detail
