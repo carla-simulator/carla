@@ -24,6 +24,7 @@ namespace element {
     RoadSegmentDefinition(RoadSegmentDefinition &&rsd)
       : _id(rsd._id),
         _predecessor_id(std::move(rsd._predecessor_id)),
+        _successor_id(std::move(rsd._successor_id)),
         _geom(std::move(rsd._geom)),
         _info(std::move(rsd._info)) {}
 

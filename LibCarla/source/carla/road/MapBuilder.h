@@ -36,7 +36,7 @@ namespace road {
   private:
 
     Map _map;
-    std::map<id_type, RoadSegmentDefinition &> _temp_sections;
+    std::map<id_type, RoadSegmentDefinition> _temp_sections;
   };
 
 } // namespace road
