@@ -8,13 +8,19 @@
 
 #include "carla/Buffer.h"
 #include "carla/Debug.h"
+#include "carla/Memory.h"
 #include "carla/geom/Transform.h"
 #include "carla/geom/Vector3D.h"
+#include "carla/sensor/RawData.h"
+#include "carla/sensor/data/ActorState.h"
 
 class FActorRegistry;
 
 namespace carla {
 namespace sensor {
+
+  class SensorData;
+
 namespace s11n {
 
   /// Serializes the current state of the whole episode.
@@ -22,33 +28,22 @@ namespace s11n {
   public:
 
 #pragma pack(push, 1)
-
     struct Header {
-      uint64_t frame_number;
       double game_timestamp;
       double platform_timestamp;
-      uint64_t number_of_actors;
     };
-
-    struct ActorInfo {
-      uint32_t id;
-      geom::Transform transform;
-      geom::Vector3D velocity;
-    };
-
 #pragma pack(pop)
 
     constexpr static auto header_offset = sizeof(Header);
 
-    static const Header &DeserializeHeader(const Buffer &message) {
-      return *reinterpret_cast<const Header *>(message.data());
+    static const Header &DeserializeHeader(const RawData &message) {
+      return *reinterpret_cast<const Header *>(message.begin());
     }
 
     template <typename SensorT, typename ActorRegistryT>
     static Buffer Serialize(
         const SensorT &sensor,
         Buffer buffer,
-        uint64_t frame_number,
         double game_timestamp,
         double platform_timestamp,
         const ActorRegistryT &actor_registry);
@@ -62,25 +57,19 @@ namespace s11n {
   Buffer EpisodeStateSerializer::Serialize(
       const SensorT &,
       Buffer buffer,
-      uint64_t frame_number,
       double game_timestamp,
       double platform_timestamp,
       const ActorRegistryT &actor_registry) {
     uint64_t number_of_actors =  actor_registry.Num();
     // Set up buffer for writing.
-    buffer.reset(sizeof(Header) + sizeof(ActorInfo) * number_of_actors);
+    buffer.reset(sizeof(Header) + sizeof(data::ActorState) * number_of_actors);
     auto begin = buffer.begin();
     auto write_data = [&begin](const auto &data) {
       std::memcpy(begin, &data, sizeof(data));
       begin += sizeof(data);
     };
     // Write header.
-    Header header = {
-      frame_number,
-      game_timestamp,
-      platform_timestamp,
-      number_of_actors
-    };
+    Header header = {game_timestamp, platform_timestamp};
     write_data(header);
     // Write every actor.
     for (auto &&pair : actor_registry) {
@@ -88,7 +77,7 @@ namespace s11n {
       DEBUG_ASSERT(actor_view.GetActor() != nullptr);
       constexpr float TO_METERS = 1e-3;
       const auto velocity = TO_METERS * actor_view.GetActor()->GetVelocity();
-      ActorInfo info = {
+      data::ActorState info = {
         actor_view.GetActorId(),
         actor_view.GetActor()->GetActorTransform(),
         geom::Vector3D{velocity.X, velocity.Y, velocity.Z}

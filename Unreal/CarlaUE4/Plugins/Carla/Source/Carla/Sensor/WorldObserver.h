@@ -8,10 +8,7 @@
 
 #include "GameFramework/Actor.h"
 
-#include <compiler/disable-ue4-macros.h>
-#include <carla/Optional.h>
-#include <carla/streaming/Stream.h>
-#include <compiler/enable-ue4-macros.h>
+#include "Carla/Sensor/DataStream.h"
 
 #include "WorldObserver.generated.h"
 
@@ -37,18 +34,15 @@ public:
   /// Replace the Stream associated with this sensor.
   ///
   /// @warning Do not change the stream after BeginPlay. It is not thread-safe.
-  void SetStream(carla::streaming::MultiStream InStream)
+  void SetStream(FDataMultiStream InStream)
   {
     Stream = std::move(InStream);
   }
 
   auto GetStreamToken() const
   {
-    check(Stream.has_value());
-    return (*Stream).token();
+    return Stream.GetToken();
   }
-
-  void BeginPlay() final;
 
   void Tick(float DeltaSeconds) final;
 
@@ -56,7 +50,7 @@ private:
 
   UCarlaEpisode *Episode = nullptr;
 
-  carla::Optional<carla::streaming::MultiStream> Stream;
+  FDataMultiStream Stream;
 
   double GameTimeStamp = 0.0;
 };
