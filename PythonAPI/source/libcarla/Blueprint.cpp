@@ -114,6 +114,8 @@ void export_blueprint() {
     .def_readwrite("g", &csd::Color::g)
     .def_readwrite("b", &csd::Color::b)
     .def_readwrite("a", &csd::Color::a)
+    .def("__eq__", &csd::Color::operator==)
+    .def("__ne__", &csd::Color::operator!=)
     .def(self_ns::str(self_ns::self))
   ;
 
