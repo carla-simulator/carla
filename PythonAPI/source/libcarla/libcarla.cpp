@@ -34,9 +34,9 @@
 #include "Client.cpp"
 #include "Control.cpp"
 #include "Exception.cpp"
+#include "Geom.cpp"
 #include "Sensor.cpp"
 #include "SensorData.cpp"
-#include "Transform.cpp"
 #include "Weather.cpp"
 #include "World.cpp"
 
@@ -44,7 +44,7 @@ BOOST_PYTHON_MODULE(libcarla) {
   using namespace boost::python;
   PyEval_InitThreads();
   scope().attr("__path__") = "libcarla";
-  export_transform();
+  export_geom();
   export_control();
   export_blueprint();
   export_actor();

@@ -4,24 +4,32 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include <carla/geom/BoundingBox.h>
+#include <carla/geom/Location.h>
+#include <carla/geom/Rotation.h>
 #include <carla/geom/Transform.h>
+#include <carla/geom/Vector3D.h>
 
 #include <ostream>
 
 namespace carla {
 namespace geom {
 
-  std::ostream &operator<<(std::ostream &out, const Vector3D &vector3D) {
-    out << "Vector3D(x=" << vector3D.x
+  template <typename T>
+  static void WriteVector3D(std::ostream &out, const char *name, const T &vector3D) {
+    out << name
+        << "(x=" << vector3D.x
         << ", y=" << vector3D.y
         << ", z=" << vector3D.z << ')';
+  }
+
+  std::ostream &operator<<(std::ostream &out, const Vector3D &vector3D) {
+    WriteVector3D(out, "Vector3D", vector3D);
     return out;
   }
 
   std::ostream &operator<<(std::ostream &out, const Location &location) {
-    out << "Location(x=" << location.x
-        << ", y=" << location.y
-        << ", z=" << location.z << ')';
+    WriteVector3D(out, "Location", location);
     return out;
   }
 
@@ -37,10 +45,17 @@ namespace geom {
     return out;
   }
 
+  std::ostream &operator<<(std::ostream &out, const BoundingBox &box) {
+    out << "BoundingBox(" << box.location << ", ";
+    WriteVector3D(out, "Extent", box.extent);
+    out << ')';
+    return out;
+  }
+
 } // namespace geom
 } // namespace carla
 
-void export_transform() {
+void export_geom() {
   using namespace boost::python;
   namespace cg = carla::geom;
 
@@ -89,6 +104,16 @@ void export_transform() {
     .def_readwrite("rotation", &cg::Transform::rotation)
     .def("__eq__", &cg::Transform::operator==)
     .def("__ne__", &cg::Transform::operator!=)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cg::BoundingBox>("BoundingBox")
+    .def(init<cg::Location, cg::Vector3D>(
+        (arg("location")=cg::Location(), arg("extent")=cg::Vector3D())))
+    .def_readwrite("location", &cg::BoundingBox::location)
+    .def_readwrite("extent", &cg::BoundingBox::extent)
+    .def("__eq__", &cg::BoundingBox::operator==)
+    .def("__ne__", &cg::BoundingBox::operator!=)
     .def(self_ns::str(self_ns::self))
   ;
 }
