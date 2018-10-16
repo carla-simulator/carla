@@ -46,11 +46,14 @@ namespace low_level {
       }
     }
 
+    /// @warning cannot subscribe twice to the same stream (even if it's a
+    /// MultiStream).
     template <typename Functor>
     void Subscribe(
         boost::asio::io_service &io_service,
         token_type token,
         Functor &&callback) {
+      DEBUG_ASSERT_EQ(_clients.find(token.get_stream_id()), _clients.end());
       if (!token.has_address()) {
         token.set_address(_fallback_address);
       }
