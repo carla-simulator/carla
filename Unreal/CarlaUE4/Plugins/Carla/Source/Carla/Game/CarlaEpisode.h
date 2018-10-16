@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Carla/Actor/ActorDispatcher.h"
+#include "Carla/Sensor/WorldObserver.h"
 #include "Carla/Weather/Weather.h"
 
 #include "CarlaEpisode.generated.h"
@@ -93,6 +94,13 @@ public:
     return ActorDispatcher.GetActorRegistry();
   }
 
+  const AWorldObserver *StartWorldObserver(carla::streaming::MultiStream Stream);
+
+  const AWorldObserver *GetWorldObserver() const
+  {
+    return WorldObserver;
+  }
+
 private:
 
   friend class ATheNewCarlaGameModeBase;
@@ -116,4 +124,7 @@ private:
 
   UPROPERTY(VisibleAnywhere)
   AWeather *Weather = nullptr;
+
+  UPROPERTY(VisibleAnywhere)
+  AWorldObserver *WorldObserver = nullptr;
 };

@@ -138,7 +138,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
 
   Server.BindSync("get_episode_info", [this]() -> cr::EpisodeInfo {
     RequireEpisode();
-    return {Episode->GetId(), cr::FromFString(Episode->GetMapName())};
+    auto WorldObserver = Episode->GetWorldObserver();
+    if (WorldObserver == nullptr) {
+      WorldObserver = Episode->StartWorldObserver(StreamingServer.MakeMultiStream());
+    }
+    return {Episode->GetId(), cr::FromFString(Episode->GetMapName()), WorldObserver->GetStreamToken()};
   });
 
   Server.BindSync("get_actor_definitions", [this]() {

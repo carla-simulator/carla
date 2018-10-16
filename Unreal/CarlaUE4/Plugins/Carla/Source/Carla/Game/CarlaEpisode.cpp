@@ -17,6 +17,24 @@ UCarlaEpisode::UCarlaEpisode(const FObjectInitializer &ObjectInitializer)
       return ++COUNTER;
     }()) {}
 
+const AWorldObserver *UCarlaEpisode::StartWorldObserver(carla::streaming::MultiStream Stream)
+{
+  UE_LOG(LogCarla, Log, TEXT("Starting AWorldObserver sensor"));
+  check(WorldObserver != nullptr);
+  auto *World = GetWorld();
+  check(World != nullptr);
+  WorldObserver = World->SpawnActorDeferred<AWorldObserver>(
+      AWorldObserver::StaticClass(),
+      FTransform(),
+      nullptr,
+      nullptr,
+      ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+  WorldObserver->SetEpisode(*this);
+  WorldObserver->SetStream(std::move(Stream));
+  UGameplayStatics::FinishSpawningActor(WorldObserver, FTransform());
+  return WorldObserver;
+}
+
 void UCarlaEpisode::InitializeAtBeginPlay()
 {
   auto World = GetWorld();
