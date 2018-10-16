@@ -33,6 +33,14 @@ namespace geom {
     Location location;
     Vector3D extent;
 
+    bool operator==(const BoundingBox &rhs) const  {
+      return (location == rhs.location) && (extent == rhs.extent);
+    }
+
+    bool operator!=(const BoundingBox &rhs) const  {
+      return !(*this == rhs);
+    }
+
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
     explicit BoundingBox(const AActor *AnActor) {
