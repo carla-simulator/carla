@@ -10,7 +10,7 @@ namespace carla {
 namespace road {
 
   bool MapBuilder::AddRoadSegmentDefinition(RoadSegmentDefinition &seg) {
-    _temp_sections.emplace(seg.GetId(), seg);
+    _temp_sections.emplace(seg.GetId(), std::move(seg));
     return true;
   }
 
