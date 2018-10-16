@@ -23,8 +23,8 @@ class CARLA_API ARoutePlanner : public AActor
   GENERATED_BODY()
 
 public:
-
   ARoutePlanner(const FObjectInitializer& ObjectInitializer);
+  void Init();
 
   void AddRoute(float probability, const TArray<FVector> &routePoints);
   void CleanRoute();
