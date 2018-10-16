@@ -65,8 +65,16 @@ namespace detail {
     _pimpl->rpc_client.set_timeout(timeout.milliseconds());
   }
 
+  std::string Client::GetClientVersion() {
+    return ::carla::version();
+  }
+
   std::string Client::GetServerVersion() {
     return _pimpl->CallAndWait<std::string>("version");
+  }
+
+  rpc::EpisodeInfo Client::GetEpisodeInfo() {
+    return _pimpl->CallAndWait<rpc::EpisodeInfo>("get_episode_info");
   }
 
   std::vector<rpc::ActorDefinition> Client::GetActorDefinitions() {

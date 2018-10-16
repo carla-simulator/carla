@@ -10,6 +10,13 @@
 #include "EngineUtils.h"
 #include "GameFramework/SpectatorPawn.h"
 
+UCarlaEpisode::UCarlaEpisode(const FObjectInitializer &ObjectInitializer)
+  : Super(ObjectInitializer),
+    Id([]() {
+      static uint32 COUNTER = 0u;
+      return ++COUNTER;
+    }()) {}
+
 void UCarlaEpisode::InitializeAtBeginPlay()
 {
   auto World = GetWorld();

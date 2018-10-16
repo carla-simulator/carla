@@ -21,6 +21,13 @@ class CARLA_API UCarlaEpisode : public UObject
 
 public:
 
+  UCarlaEpisode(const FObjectInitializer &ObjectInitializer);
+
+  auto GetId() const
+  {
+    return Id;
+  }
+
   UFUNCTION(BlueprintCallable)
   const FString &GetMapName() const
   {
@@ -96,6 +103,8 @@ private:
   {
     ActorDispatcher.Bind(ActorFactory);
   }
+
+  const uint32 Id = 0u;
 
   UPROPERTY(VisibleAnywhere)
   FString MapName;

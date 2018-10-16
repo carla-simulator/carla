@@ -29,6 +29,10 @@ namespace client {
     World &operator=(const World &) = default;
     World &operator=(World &&) = default;
 
+    uint32_t GetId() const;
+
+    const std::string &GetMapName() const;
+
     SharedPtr<BlueprintLibrary> GetBlueprintLibrary() const;
 
     SharedPtr<Actor> GetSpectator() const;
