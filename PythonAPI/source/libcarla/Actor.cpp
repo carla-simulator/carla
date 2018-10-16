@@ -30,6 +30,7 @@ void export_actor() {
     // work-around, force return copy to resolve Actor instead of ActorState.
     .add_property("id", CALL_RETURNING_COPY(cc::Actor, GetId))
     .add_property("type_id", CALL_RETURNING_COPY(cc::Actor, GetTypeId))
+    .add_property("bounding_box", CALL_RETURNING_COPY(cc::Actor, GetBoundingBox))
     .add_property("is_alive", CALL_RETURNING_COPY(cc::Actor, IsAlive))
     .def("get_world", CALL_RETURNING_COPY(cc::Actor, GetWorld))
     .def("get_location", CONST_CALL_WITHOUT_GIL(cc::Actor, GetLocation))
