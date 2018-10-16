@@ -53,6 +53,47 @@ namespace geom {
       return lhs;
     }
 
+    Location &operator*=(const Location &rhs) {
+      x *= rhs.x;
+      y *= rhs.y;
+      z *= rhs.z;
+      return *this;
+    }
+
+    friend Location operator*(Location lhs, const Location &rhs) {
+      lhs *= rhs;
+      return lhs;
+    }
+
+    Location &operator*=(const double &rhs) {
+      x *= rhs;
+      y *= rhs;
+      z *= rhs;
+      return *this;
+    }
+
+    friend Location operator*(Location lhs, const double &rhs) {
+      lhs *= rhs;
+      return lhs;
+    }
+
+    friend Location operator*(const double &rhs, Location lhs) {
+      lhs *= rhs;
+      return lhs;
+    }
+
+    Location &operator/=(const Location &rhs) {
+      x /= rhs.x;
+      y /= rhs.y;
+      z /= rhs.z;
+      return *this;
+    }
+
+    friend Location operator/(Location lhs, const Location &rhs) {
+      lhs /= rhs;
+      return lhs;
+    }
+
     friend bool operator==(const Location &lhs, const Location &rhs) {
       return (lhs.x == rhs.x) && (lhs.y == rhs.y) && (lhs.z == rhs.z);
     }
@@ -63,7 +104,8 @@ namespace geom {
       : Location(1e-2f * vector.X, 1e-2f * vector.Y, 1e-2f * vector.Z) {}
 
     operator FVector() const {
-      return FVector{1e2f * x, 1e2f * y, 1e2f * z}; // from meters to centimeters.
+      return FVector{1e2f * x, 1e2f * y, 1e2f * z}; // from meters to
+                                                    // centimeters.
     }
 
 #endif // LIBCARLA_INCLUDED_FROM_UE4
@@ -75,18 +117,15 @@ namespace geom {
     /// https://github.com/msgpack/msgpack-c/issues/709
     // =========================================================================
     template <typename Packer>
-    void msgpack_pack(Packer& pk) const
-    {
-        clmdep_msgpack::type::make_define_array(x, y, z).msgpack_pack(pk);
+    void msgpack_pack(Packer &pk) const {
+      clmdep_msgpack::type::make_define_array(x, y, z).msgpack_pack(pk);
     }
-    void msgpack_unpack(clmdep_msgpack::object const& o)
-    {
-        clmdep_msgpack::type::make_define_array(x, y, z).msgpack_unpack(o);
+    void msgpack_unpack(clmdep_msgpack::object const &o) {
+      clmdep_msgpack::type::make_define_array(x, y, z).msgpack_unpack(o);
     }
     template <typename MSGPACK_OBJECT>
-    void msgpack_object(MSGPACK_OBJECT* o, clmdep_msgpack::zone& sneaky_variable_that_shadows_z) const
-    {
-        clmdep_msgpack::type::make_define_array(x, y, z).msgpack_object(o, sneaky_variable_that_shadows_z);
+    void msgpack_object(MSGPACK_OBJECT *o, clmdep_msgpack::zone &sneaky_variable_that_shadows_z) const {
+      clmdep_msgpack::type::make_define_array(x, y, z).msgpack_object(o, sneaky_variable_that_shadows_z);
     }
     // =========================================================================
   };
