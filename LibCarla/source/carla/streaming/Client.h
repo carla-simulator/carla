@@ -33,6 +33,8 @@ namespace streaming {
       _service.Stop();
     }
 
+    /// @warning cannot subscribe twice to the same stream (even if it's a
+    /// MultiStream).
     template <typename Functor>
     void Subscribe(const Token &token, Functor &&callback) {
       _client.Subscribe(_service.service(), token, std::forward<Functor>(callback));
