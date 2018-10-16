@@ -49,6 +49,8 @@ void export_transform() {
     .def_readwrite("x", &cg::Vector3D::x)
     .def_readwrite("y", &cg::Vector3D::y)
     .def_readwrite("z", &cg::Vector3D::z)
+    .def("__eq__", &cg::Vector3D::operator==)
+    .def("__ne__", &cg::Vector3D::operator!=)
     .def(self += self)
     .def(self + self)
     .def(self -= self)
@@ -61,6 +63,8 @@ void export_transform() {
     .add_property("x", +[](const cg::Location &self) { return self.x; }, +[](cg::Location &self, float x) { self.x = x; })
     .add_property("y", +[](const cg::Location &self) { return self.y; }, +[](cg::Location &self, float y) { self.y = y; })
     .add_property("z", +[](const cg::Location &self) { return self.z; }, +[](cg::Location &self, float z) { self.z = z; })
+    .def("__eq__", &cg::Location::operator==)
+    .def("__ne__", &cg::Location::operator!=)
     .def(self += self)
     .def(self + self)
     .def(self -= self)
@@ -73,6 +77,8 @@ void export_transform() {
     .def_readwrite("pitch", &cg::Rotation::pitch)
     .def_readwrite("yaw", &cg::Rotation::yaw)
     .def_readwrite("roll", &cg::Rotation::roll)
+    .def("__eq__", &cg::Rotation::operator==)
+    .def("__ne__", &cg::Rotation::operator!=)
     .def(self_ns::str(self_ns::self))
   ;
 
@@ -81,6 +87,8 @@ void export_transform() {
         (arg("location")=cg::Location(), arg("rotation")=cg::Rotation())))
     .def_readwrite("location", &cg::Transform::location)
     .def_readwrite("rotation", &cg::Transform::rotation)
+    .def("__eq__", &cg::Transform::operator==)
+    .def("__ne__", &cg::Transform::operator!=)
     .def(self_ns::str(self_ns::self))
   ;
 }

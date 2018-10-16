@@ -48,6 +48,14 @@ namespace geom {
       return lhs;
     }
 
+    bool operator==(const Location &rhs) const  {
+      return static_cast<const Vector3D &>(*this) == rhs;
+    }
+
+    bool operator!=(const Location &rhs) const  {
+      return !(*this == rhs);
+    }
+
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
     Location(const FVector &vector) // from centimeters to meters.

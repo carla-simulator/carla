@@ -49,6 +49,14 @@ namespace geom {
       return lhs;
     }
 
+    bool operator==(const Vector3D &rhs) const  {
+      return (x == rhs.x) && (y == rhs.y) && (z == rhs.z);
+    }
+
+    bool operator!=(const Vector3D &rhs) const  {
+      return !(*this == rhs);
+    }
+
     // =========================================================================
     /// @todo The following is copy-pasted from MSGPACK_DEFINE_ARRAY.
     /// This is a workaround for an issue in msgpack library. The

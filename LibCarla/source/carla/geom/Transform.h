@@ -29,6 +29,14 @@ namespace geom {
     Location location;
     Rotation rotation;
 
+    bool operator==(const Transform &rhs) const  {
+      return (location == rhs.location) && (rotation == rhs.rotation);
+    }
+
+    bool operator!=(const Transform &rhs) const  {
+      return !(*this == rhs);
+    }
+
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
     Transform(const FTransform &transform)

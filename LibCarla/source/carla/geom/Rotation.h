@@ -29,6 +29,14 @@ namespace geom {
     float yaw = 0.0f;
     float roll = 0.0f;
 
+    bool operator==(const Rotation &rhs) const  {
+      return (pitch == rhs.pitch) && (yaw == rhs.yaw) && (roll == rhs.roll);
+    }
+
+    bool operator!=(const Rotation &rhs) const  {
+      return !(*this == rhs);
+    }
+
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
     Rotation(const FRotator &rotator)
