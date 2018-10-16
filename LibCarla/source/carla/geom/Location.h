@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "carla/MsgPack.h"
+#include "carla/geom/Vector3D.h"
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 #  include "Math/Vector.h"
@@ -15,24 +15,21 @@
 namespace carla {
 namespace geom {
 
-  class Location {
+  class Location : private Vector3D {
   public:
 
-    float x = 0.0f;
-    float y = 0.0f;
-    float z = 0.0f;
+    using Vector3D::Vector3D;
 
-    Location() = default;
+    using Vector3D::x;
+    using Vector3D::y;
+    using Vector3D::z;
 
-    Location(float ix, float iy, float iz)
-      : x(ix),
-        y(iy),
-        z(iz) {}
+    using Vector3D::msgpack_pack;
+    using Vector3D::msgpack_unpack;
+    using Vector3D::msgpack_object;
 
     Location &operator+=(const Location &rhs) {
-      x += rhs.x;
-      y += rhs.y;
-      z += rhs.z;
+      static_cast<Vector3D &>(*this) += rhs;
       return *this;
     }
 
@@ -42,9 +39,7 @@ namespace geom {
     }
 
     Location &operator-=(const Location &rhs) {
-      x -= rhs.x;
-      y -= rhs.y;
-      z -= rhs.z;
+      static_cast<Vector3D &>(*this) -= rhs;
       return *this;
     }
 
@@ -63,28 +58,6 @@ namespace geom {
     }
 
 #endif // LIBCARLA_INCLUDED_FROM_UE4
-
-    // =========================================================================
-    /// @todo The following is copy-pasted from MSGPACK_DEFINE_ARRAY.
-    /// This is a workaround for an issue in msgpack library. The
-    /// MSGPACK_DEFINE_ARRAY macro is shadowing our `z` variable.
-    /// https://github.com/msgpack/msgpack-c/issues/709
-    // =========================================================================
-    template <typename Packer>
-    void msgpack_pack(Packer& pk) const
-    {
-        clmdep_msgpack::type::make_define_array(x, y, z).msgpack_pack(pk);
-    }
-    void msgpack_unpack(clmdep_msgpack::object const& o)
-    {
-        clmdep_msgpack::type::make_define_array(x, y, z).msgpack_unpack(o);
-    }
-    template <typename MSGPACK_OBJECT>
-    void msgpack_object(MSGPACK_OBJECT* o, clmdep_msgpack::zone& sneaky_variable_that_shadows_z) const
-    {
-        clmdep_msgpack::type::make_define_array(x, y, z).msgpack_object(o, sneaky_variable_that_shadows_z);
-    }
-    // =========================================================================
   };
 
 } // namespace geom

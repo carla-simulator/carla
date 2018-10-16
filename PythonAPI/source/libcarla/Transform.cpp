@@ -11,6 +11,13 @@
 namespace carla {
 namespace geom {
 
+  std::ostream &operator<<(std::ostream &out, const Vector3D &vector3D) {
+    out << "Vector3D(x=" << vector3D.x
+        << ", y=" << vector3D.y
+        << ", z=" << vector3D.z << ')';
+    return out;
+  }
+
   std::ostream &operator<<(std::ostream &out, const Location &location) {
     out << "Location(x=" << location.x
         << ", y=" << location.y
@@ -37,11 +44,23 @@ void export_transform() {
   using namespace boost::python;
   namespace cg = carla::geom;
 
+  class_<cg::Vector3D>("Vector3D")
+    .def(init<float, float, float>((arg("x")=0.0f, arg("y")=0.0f, arg("z")=0.0f)))
+    .def_readwrite("x", &cg::Vector3D::x)
+    .def_readwrite("y", &cg::Vector3D::y)
+    .def_readwrite("z", &cg::Vector3D::z)
+    .def(self += self)
+    .def(self + self)
+    .def(self -= self)
+    .def(self - self)
+    .def(self_ns::str(self_ns::self))
+  ;
+
   class_<cg::Location>("Location")
     .def(init<float, float, float>((arg("x")=0.0f, arg("y")=0.0f, arg("z")=0.0f)))
-    .def_readwrite("x", &cg::Location::x)
-    .def_readwrite("y", &cg::Location::y)
-    .def_readwrite("z", &cg::Location::z)
+    .add_property("x", +[](const cg::Location &self) { return self.x; }, +[](cg::Location &self, float x) { self.x = x; })
+    .add_property("y", +[](const cg::Location &self) { return self.y; }, +[](cg::Location &self, float y) { self.y = y; })
+    .add_property("z", +[](const cg::Location &self) { return self.z; }, +[](cg::Location &self, float z) { self.z = z; })
     .def(self += self)
     .def(self + self)
     .def(self -= self)
