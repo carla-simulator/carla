@@ -89,10 +89,6 @@ namespace detail {
       return _client.GetServerVersion();
     }
 
-    bool Ping() {
-      return _client.Ping();
-    }
-
     /// @}
     // =========================================================================
     /// @name Access to global objects in the episode

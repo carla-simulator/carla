@@ -69,10 +69,6 @@ namespace detail {
     return _pimpl->CallAndWait<std::string>("version");
   }
 
-  bool Client::Ping() {
-    return _pimpl->CallAndWait<bool>("ping");
-  }
-
   std::vector<rpc::ActorDefinition> Client::GetActorDefinitions() {
     return _pimpl->CallAndWait<std::vector<rpc::ActorDefinition>>("get_actor_definitions");
   }
