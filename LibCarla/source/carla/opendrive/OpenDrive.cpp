@@ -80,68 +80,72 @@ namespace opendrive {
         } else {
           roadSegment.AddSuccessorID(it->second->road_link.successor->id);
         }
+      }
 
-        if (it->second->road_link.predecessor != nullptr) {
+      if (it->second->road_link.predecessor != nullptr) {
+        if (it->second->road_link.predecessor->element_type == "junction") {
           std::vector<lane_junction_t> &options =
               junctionsData[it->second->road_link.predecessor->id][it->first];
           for (size_t i = 0; i < options.size(); ++i) {
             roadSegment.AddPredecessorID(options[i].connection_road);
           }
+        } else {
+          roadSegment.AddPredecessorID(it->second->road_link.predecessor->id);
         }
+      }
 
-        for (size_t i = 0; i < it->second->geometry_attributes.size(); ++i) {
-          geom::Location loc;
-          loc.x = it->second->geometry_attributes[i]->start_position_x;
-          loc.y = it->second->geometry_attributes[i]->start_position_y;
+      for (size_t i = 0; i < it->second->geometry_attributes.size(); ++i) {
+        geom::Location loc;
+        loc.x = it->second->geometry_attributes[i]->start_position_x;
+        loc.y = it->second->geometry_attributes[i]->start_position_y;
 
-          switch (it->second->geometry_attributes[i]->type) {
-            case carla::opendrive::types::GeometryType::ARC: {
-              carla::opendrive::types::GeometryAttributesArc *arc =
-                  (carla::opendrive::types::GeometryAttributesArc *) it->second->geometry_attributes[i].get();
+        switch (it->second->geometry_attributes[i]->type) {
+          case carla::opendrive::types::GeometryType::ARC: {
+            carla::opendrive::types::GeometryAttributesArc *arc =
+                (carla::opendrive::types::GeometryAttributesArc *) it->second->geometry_attributes[i].get();
 
-              roadSegment.MakeGeometry<carla::road::GeometryArc>(arc->start_position,
-                  arc->length,
-                  arc->heading,
-                  loc,
-                  arc->curvature);
+            roadSegment.MakeGeometry<carla::road::GeometryArc>(arc->start_position,
+                arc->length,
+                arc->heading,
+                loc,
+                arc->curvature);
 
-              break;
-            }
+            break;
+          }
 
-            case carla::opendrive::types::GeometryType::LINE: {
-              carla::opendrive::types::GeometryAttributesLine *line =
-                  (carla::opendrive::types::GeometryAttributesLine *) it->second->geometry_attributes[i].get();
+          case carla::opendrive::types::GeometryType::LINE: {
+            carla::opendrive::types::GeometryAttributesLine *line =
+                (carla::opendrive::types::GeometryAttributesLine *) it->second->geometry_attributes[i].get();
 
-              roadSegment.MakeGeometry<carla::road::GeometryLine>(line->start_position,
-                  line->length,
-                  line->heading,
-                  loc);
+            roadSegment.MakeGeometry<carla::road::GeometryLine>(line->start_position,
+                line->length,
+                line->heading,
+                loc);
 
-              break;
-            }
+            break;
+          }
 
-            case carla::opendrive::types::GeometryType::SPIRAL: {
-              carla::opendrive::types::GeometryAttributesSpiral *spiral =
-                  (carla::opendrive::types::GeometryAttributesSpiral *) it->second->geometry_attributes[i].get();
+          case carla::opendrive::types::GeometryType::SPIRAL: {
+            carla::opendrive::types::GeometryAttributesSpiral *spiral =
+                (carla::opendrive::types::GeometryAttributesSpiral *) it->second->geometry_attributes[i].get();
 
-              roadSegment.MakeGeometry<carla::road::GeometrySpiral>(spiral->start_position,
-                  spiral->length,
-                  spiral->heading,
-                  loc,
-                  spiral->curve_start,
-                  spiral->curve_end);
+            roadSegment.MakeGeometry<carla::road::GeometrySpiral>(spiral->start_position,
+                spiral->length,
+                spiral->heading,
+                loc,
+                spiral->curve_start,
+                spiral->curve_end);
 
-              break;
-            }
+            break;
+          }
 
-            default: {
-              break;
-            }
+          default: {
+            break;
           }
         }
-
-        mapBuilder.AddRoadSegmentDefinition(roadSegment);
       }
+
+      mapBuilder.AddRoadSegmentDefinition(roadSegment);
     }
 
     return mapBuilder.Build();
