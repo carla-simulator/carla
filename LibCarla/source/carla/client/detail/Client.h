@@ -9,26 +9,22 @@
 #include "carla/Memory.h"
 #include "carla/NonCopyable.h"
 #include "carla/Time.h"
-#include "carla/client/GarbageCollectionPolicy.h"
-#include "carla/client/detail/Episode.h"
 #include "carla/geom/Transform.h"
-#include "carla/profiler/LifetimeProfiled.h"
+#include "carla/rpc/Actor.h"
+#include "carla/rpc/ActorDefinition.h"
 #include "carla/rpc/WeatherParameters.h"
 
 #include <functional>
 #include <memory>
 #include <string>
+#include <vector>
 
 // Forward declarations.
 namespace carla {
-namespace client {
-  class Actor;
-  class ActorBlueprint;
-  class BlueprintLibrary;
-  class Vehicle;
-  class Episode;
+namespace rpc {
+  class ActorDescription;
+  class VehicleControl;
 }
-namespace rpc { class VehicleControl; }
 namespace sensor { class SensorData; }
 namespace streaming { class Token; }
 }
@@ -37,44 +33,60 @@ namespace carla {
 namespace client {
 namespace detail {
 
+  /// Provides communication with the rpc and streaming servers of a CARLA
+  /// simulator.
+  ///
   /// @todo Make sure this class is really thread-safe.
-  class Client
-    : public EnableSharedFromThis<Client>,
-      private profiler::LifetimeProfiled,
-      private NonCopyable {
+  class Client : private NonCopyable {
   public:
 
     explicit Client(
         const std::string &host,
         uint16_t port,
-        size_t worker_threads = 0u,
-        bool enable_garbage_collection = false);
+        size_t worker_threads = 0u);
 
     ~Client();
 
     void SetTimeout(time_duration timeout);
 
-    std::string GetClientVersion();
-
     std::string GetServerVersion();
 
     bool Ping();
 
-    SharedPtr<BlueprintLibrary> GetBlueprintLibrary();
+    std::vector<rpc::ActorDefinition> GetActorDefinitions();
 
-    SharedPtr<Actor> GetSpectator();
+    rpc::Actor GetSpectator();
 
     rpc::WeatherParameters GetWeatherParameters();
 
     void SetWeatherParameters(const rpc::WeatherParameters &weather);
 
-    SharedPtr<Actor> SpawnActor(
-        const ActorBlueprint &blueprint,
-        const geom::Transform &transform,
-        Actor *parent,
-        GarbageCollectionPolicy gc = GarbageCollectionPolicy::Inherit);
+    rpc::Actor SpawnActor(
+        const rpc::ActorDescription &description,
+        const geom::Transform &transform);
 
-    bool DestroyActor(Actor &actor);
+    rpc::Actor SpawnActorWithParent(
+        const rpc::ActorDescription &description,
+        const geom::Transform &transform,
+        const rpc::Actor &parent);
+
+    bool DestroyActor(const rpc::Actor &actor);
+
+    void SetActorLocation(
+        const rpc::Actor &actor,
+        const geom::Location &location);
+
+    void SetActorTransform(
+        const rpc::Actor &actor,
+        const geom::Transform &transform);
+
+    void SetActorAutopilot(
+        const rpc::Actor &vehicle,
+        bool enabled);
+
+    void ApplyControlToActor(
+        const rpc::Actor &vehicle,
+        const rpc::VehicleControl &control);
 
     void SubscribeToStream(
         const streaming::Token &token,
@@ -82,40 +94,10 @@ namespace detail {
 
     void UnSubscribeFromStream(const streaming::Token &token);
 
-    geom::Location GetActorLocation(const Actor &actor);
-
-    geom::Transform GetActorTransform(const Actor &actor);
-
-    void SetActorLocation(Actor &actor, const geom::Location &location);
-
-    void SetActorTransform(Actor &actor, const geom::Transform &transform);
-
-    void SetVehicleAutopilot(Vehicle &vehicle, bool enabled = true);
-
-    void ApplyControlToVehicle(Vehicle &vehicle, const rpc::VehicleControl &control);
-
-    GarbageCollectionPolicy GetGarbageCollectionPolicy() const {
-      return _gc_policy;
-    }
-
-    size_t GetCurrentEpisodeId() const {
-      return _episode_id;
-    }
-
-    Episode GetCurrentEpisode() {
-      return shared_from_this();
-    }
-
   private:
 
     class Pimpl;
     const std::unique_ptr<Pimpl> _pimpl;
-
-    const GarbageCollectionPolicy _gc_policy;
-
-    // At this point the id won't change because we cannot yet restart the
-    // episode from the client.
-    const size_t _episode_id = 0u;
   };
 
 } // namespace detail

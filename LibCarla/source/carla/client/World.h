@@ -7,7 +7,7 @@
 #pragma once
 
 #include "carla/Memory.h"
-#include "carla/client/detail/Episode.h"
+#include "carla/client/detail/EpisodeProxy.h"
 #include "carla/geom/Transform.h"
 #include "carla/rpc/WeatherParameters.h"
 
@@ -21,7 +21,7 @@ namespace client {
   class World {
   public:
 
-    World(detail::Episode episode) : _episode(std::move(episode)) {}
+    explicit World(detail::EpisodeProxy episode) : _episode(std::move(episode)) {}
 
     World(const World &) = default;
     World(World &&) = default;
@@ -49,7 +49,7 @@ namespace client {
 
   private:
 
-    detail::Episode _episode;
+    detail::EpisodeProxy _episode;
   };
 
 } // namespace client

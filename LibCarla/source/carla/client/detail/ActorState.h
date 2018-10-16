@@ -8,6 +8,7 @@
 
 #include "carla/NonCopyable.h"
 #include "carla/client/World.h"
+#include "carla/client/detail/EpisodeProxy.h"
 #include "carla/rpc/Actor.h"
 
 namespace carla {
@@ -16,6 +17,7 @@ namespace detail {
 
   class ActorFactory;
 
+  /// Internal state of an Actor.
   class ActorState : private MovableNonCopyable {
   public:
 
@@ -30,7 +32,7 @@ namespace detail {
     std::string GetDisplayId() const;
 
     World GetWorld() const {
-      return _episode;
+      return World{_episode};
     }
 
   protected:
@@ -39,29 +41,31 @@ namespace detail {
       return _description;
     }
 
-    Episode &GetEpisode() {
+    EpisodeProxy &GetEpisode() {
       return _episode;
     }
 
-    const Episode &GetEpisode() const {
+    const EpisodeProxy &GetEpisode() const {
       return _episode;
     }
 
   private:
 
-    friend class detail::Client;
+    friend class Simulator;
 
-    ActorState(rpc::Actor description, Episode episode)
+    ActorState(rpc::Actor description, EpisodeProxy episode)
       : _description(std::move(description)),
         _episode(std::move(episode)) {}
 
     rpc::Actor _description;
 
-    Episode _episode;
+    EpisodeProxy _episode;
   };
 
 } // namespace detail
 
+  /// Used to initialize Actor classes. Only the ActorFactory can create this
+  /// object, thus only the ActorFactory can create actors.
   class ActorInitializer : public detail::ActorState {
   public:
     ActorInitializer(ActorInitializer &&) = default;

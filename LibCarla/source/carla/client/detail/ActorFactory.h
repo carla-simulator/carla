@@ -8,7 +8,7 @@
 
 #include "carla/Memory.h"
 #include "carla/client/GarbageCollectionPolicy.h"
-#include "carla/client/detail/Episode.h"
+#include "carla/client/detail/EpisodeProxy.h"
 #include "carla/rpc/Actor.h"
 
 namespace carla {
@@ -22,9 +22,9 @@ namespace detail {
   public:
 
     static SharedPtr<Actor> MakeActor(
-        Episode episode,
+        EpisodeProxy episode,
         rpc::Actor actor_description,
-        GarbageCollectionPolicy gc = GarbageCollectionPolicy::Inherit);
+        GarbageCollectionPolicy gc);
   };
 
 } // namespace detail

@@ -5,7 +5,8 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "carla/client/Vehicle.h"
-#include "carla/client/detail/Client.h"
+
+#include "carla/client/detail/Simulator.h"
 
 namespace carla {
 namespace client {

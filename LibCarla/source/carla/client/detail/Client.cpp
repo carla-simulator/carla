@@ -7,13 +7,9 @@
 #include "carla/client/detail/Client.h"
 
 #include "carla/Version.h"
-#include "carla/client/Actor.h"
-#include "carla/client/BlueprintLibrary.h"
-#include "carla/client/Vehicle.h"
-#include "carla/client/World.h"
-#include "carla/client/detail/ActorFactory.h"
-#include "carla/client/detail/Episode.h"
+#include "carla/rpc/ActorDescription.h"
 #include "carla/rpc/Client.h"
+#include "carla/rpc/VehicleControl.h"
 #include "carla/sensor/Deserializer.h"
 #include "carla/streaming/Client.h"
 
@@ -60,23 +56,13 @@ namespace detail {
   Client::Client(
       const std::string &host,
       const uint16_t port,
-      const size_t worker_threads,
-      const bool enable_garbage_collection)
-    : LIBCARLA_INITIALIZE_LIFETIME_PROFILER("carla::client::detail::Client"),
-      _pimpl(std::make_unique<Pimpl>(host, port, worker_threads)),
-      _gc_policy(enable_garbage_collection ?
-        GarbageCollectionPolicy::Enabled : GarbageCollectionPolicy::Disabled) {}
+      const size_t worker_threads)
+    : _pimpl(std::make_unique<Pimpl>(host, port, worker_threads)) {}
 
   Client::~Client() = default;
 
   void Client::SetTimeout(time_duration timeout) {
     _pimpl->rpc_client.set_timeout(timeout.milliseconds());
-  }
-
-  // Keep this function in the cpp, to avoid recompiling everything on each
-  // commit.
-  std::string Client::GetClientVersion() {
-    return ::carla::version();
   }
 
   std::string Client::GetServerVersion() {
@@ -87,93 +73,68 @@ namespace detail {
     return _pimpl->CallAndWait<bool>("ping");
   }
 
-  SharedPtr<BlueprintLibrary> Client::GetBlueprintLibrary() {
-    using return_type = std::vector<carla::rpc::ActorDefinition>;
-    auto result = _pimpl->CallAndWait<return_type>("get_actor_definitions");
-    return MakeShared<BlueprintLibrary>(result);
+  std::vector<rpc::ActorDefinition> Client::GetActorDefinitions() {
+    return _pimpl->CallAndWait<std::vector<rpc::ActorDefinition>>("get_actor_definitions");
   }
 
-  SharedPtr<Actor> Client::GetSpectator() {
-    auto spectator = _pimpl->CallAndWait<carla::rpc::Actor>("get_spectator");
-    return ActorFactory::MakeActor(
-        GetCurrentEpisode(),
-        spectator,
-        GarbageCollectionPolicy::Disabled);
+  rpc::Actor Client::GetSpectator() {
+    return _pimpl->CallAndWait<carla::rpc::Actor>("get_spectator");
   }
 
   rpc::WeatherParameters Client::GetWeatherParameters() {
-    return _pimpl->CallAndWait<rpc::WeatherParameters>("get_weather");
+    return _pimpl->CallAndWait<rpc::WeatherParameters>("get_weather_parameters");
   }
 
   void Client::SetWeatherParameters(const rpc::WeatherParameters &weather) {
-    _pimpl->AsyncCall("set_weather", weather);
+    _pimpl->AsyncCall("set_weather_parameters", weather);
   }
 
-  SharedPtr<Actor> Client::SpawnActor(
-      const ActorBlueprint &blueprint,
+  rpc::Actor Client::SpawnActor(
+      const rpc::ActorDescription &description,
+      const geom::Transform &transform) {
+    return _pimpl->CallAndWait<rpc::Actor>("spawn_actor", description, transform);
+  }
+
+  rpc::Actor Client::SpawnActorWithParent(
+      const rpc::ActorDescription &description,
       const geom::Transform &transform,
-      Actor *parent,
-      GarbageCollectionPolicy gc) {
-    rpc::Actor actor;
-    if (parent != nullptr) {
-      actor = _pimpl->CallAndWait<rpc::Actor>("spawn_actor_with_parent",
-          transform,
-          blueprint.MakeActorDescription(),
-          parent->Serialize());
-    } else {
-      actor = _pimpl->CallAndWait<rpc::Actor>("spawn_actor",
-          transform,
-          blueprint.MakeActorDescription());
-    }
-    return ActorFactory::MakeActor(GetCurrentEpisode(), actor, gc);
+      const rpc::Actor &parent) {
+    return _pimpl->CallAndWait<rpc::Actor>("spawn_actor_with_parent",
+        description,
+        transform,
+        parent);
   }
 
-  bool Client::DestroyActor(Actor &actor) {
-    auto result = _pimpl->CallAndWait<bool>("destroy_actor", actor.Serialize());
-    // Remove it's persistent state so it cannot access the client anymore.
-    actor.GetEpisode().ClearState();
-    log_debug(actor.GetDisplayId(), "destroyed.");
-    return result;
+  bool Client::DestroyActor(const rpc::Actor &actor) {
+    return _pimpl->CallAndWait<bool>("destroy_actor", actor);
+  }
+
+  void Client::SetActorLocation(const rpc::Actor &actor, const geom::Location &location) {
+    _pimpl->AsyncCall("set_actor_location", actor, location);
+  }
+
+  void Client::SetActorTransform(const rpc::Actor &actor, const geom::Transform &transform) {
+    _pimpl->AsyncCall("set_actor_transform", actor, transform);
+  }
+
+  void Client::SetActorAutopilot(const rpc::Actor &vehicle, const bool enabled) {
+    _pimpl->AsyncCall("set_actor_autopilot", vehicle, enabled);
+  }
+
+  void Client::ApplyControlToActor(const rpc::Actor &vehicle, const rpc::VehicleControl &control) {
+    _pimpl->AsyncCall("apply_control_to_actor", vehicle, control);
   }
 
   void Client::SubscribeToStream(
       const streaming::Token &token,
       std::function<void(SharedPtr<sensor::SensorData>)> callback) {
-    _pimpl->streaming_client.Subscribe(token, [callback](auto buffer) {
-      callback(sensor::Deserializer::Deserialize(std::move(buffer)));
+    _pimpl->streaming_client.Subscribe(token, [cb=std::move(callback)](auto buffer) {
+      cb(sensor::Deserializer::Deserialize(std::move(buffer)));
     });
   }
 
   void Client::UnSubscribeFromStream(const streaming::Token &token) {
     _pimpl->streaming_client.UnSubscribe(token);
-  }
-
-  geom::Location Client::GetActorLocation(const Actor &actor) {
-    return _pimpl->CallAndWait<geom::Location>("get_actor_location", actor.Serialize());
-  }
-
-  geom::Transform Client::GetActorTransform(const Actor &actor) {
-    return _pimpl->CallAndWait<geom::Transform>("get_actor_transform", actor.Serialize());
-  }
-
-  void Client::SetActorLocation(Actor &actor, const geom::Location &location) {
-    _pimpl->AsyncCall("set_actor_location", actor.Serialize(), location);
-  }
-
-  void Client::SetActorTransform(Actor &actor, const geom::Transform &transform) {
-    _pimpl->AsyncCall("set_actor_transform", actor.Serialize(), transform);
-  }
-
-  void Client::SetVehicleAutopilot(
-      Vehicle &vehicle,
-      const bool enabled) {
-    _pimpl->AsyncCall("set_actor_autopilot", vehicle.Serialize(), enabled);
-  }
-
-  void Client::ApplyControlToVehicle(
-      Vehicle &vehicle,
-      const rpc::VehicleControl &control) {
-    _pimpl->AsyncCall("apply_control_to_actor", vehicle.Serialize(), control);
   }
 
 } // namespace detail

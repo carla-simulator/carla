@@ -149,7 +149,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     return ActorView;
   });
 
-  Server.BindSync("get_weather", [this]() -> cr::WeatherParameters {
+  Server.BindSync("get_weather_parameters", [this]() -> cr::WeatherParameters {
     RequireEpisode();
     auto *Weather = Episode->GetWeather();
     if (Weather == nullptr) {
@@ -158,7 +158,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     return Weather->GetCurrentWeather();
   });
 
-  Server.BindSync("set_weather", [this](const cr::WeatherParameters &weather) {
+  Server.BindSync("set_weather_parameters", [this](const cr::WeatherParameters &weather) {
     RequireEpisode();
     auto *Weather = Episode->GetWeather();
     if (Weather == nullptr) {
@@ -168,15 +168,15 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   });
 
   Server.BindSync("spawn_actor", [this](
-      const cr::Transform &Transform,
-      cr::ActorDescription Description) -> cr::Actor {
+      cr::ActorDescription Description,
+      const cr::Transform &Transform) -> cr::Actor {
     RequireEpisode();
     return SerializeActor(SpawnActor(Transform, Description));
   });
 
   Server.BindSync("spawn_actor_with_parent", [this](
-      const cr::Transform &Transform,
       cr::ActorDescription Description,
+      const cr::Transform &Transform,
       cr::Actor Parent) -> cr::Actor {
     RequireEpisode();
     auto ActorView = SpawnActor(Transform, Description);
