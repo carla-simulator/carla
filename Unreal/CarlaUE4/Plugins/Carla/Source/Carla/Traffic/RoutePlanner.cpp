@@ -124,12 +124,6 @@ void ARoutePlanner::Init()
     }
 }
 
-void ARoutePlanner::Tick(float DeltaTime)
-{
-    Super::Tick(DeltaTime);
-    UE_LOG(LogCarla, Log, TEXT("%f %f %f\n"), GetActorLocation().X, GetActorLocation().Y, GetActorLocation().Z);
-}
-
 void ARoutePlanner::BeginPlay()
 {
   Super::BeginPlay();
