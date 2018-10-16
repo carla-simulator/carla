@@ -51,8 +51,6 @@ namespace detail {
 
     std::string GetServerVersion();
 
-    bool Ping();
-
     std::vector<rpc::ActorDefinition> GetActorDefinitions();
 
     rpc::Actor GetSpectator();

@@ -39,10 +39,6 @@ namespace client {
       return _simulator->GetServerVersion();
     }
 
-    bool Ping() const {
-      return _simulator->Ping();
-    }
-
     World GetWorld() const {
       return World{_simulator->GetCurrentEpisode()};
     }

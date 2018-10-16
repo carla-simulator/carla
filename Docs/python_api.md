@@ -11,7 +11,6 @@
 - `set_timeout(float_seconds)`
 - `get_client_version()`
 - `get_server_version()`
-- `ping()`
 - `get_world()`
 
 ## `carla.World`

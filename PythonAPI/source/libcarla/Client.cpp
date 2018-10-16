@@ -22,7 +22,6 @@ void export_client() {
     .def("set_timeout", &::SetTimeout, (arg("seconds")))
     .def("get_client_version", &cc::Client::GetClientVersion)
     .def("get_server_version", CONST_CALL_WITHOUT_GIL(cc::Client, GetServerVersion))
-    .def("ping", CONST_CALL_WITHOUT_GIL(cc::Client, Ping))
     .def("get_world", &cc::Client::GetWorld)
   ;
 }
