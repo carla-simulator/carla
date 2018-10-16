@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/Debug.h"
+#include "carla/geom/BoundingBox.h"
 #include "carla/rpc/ActorDescription.h"
 #include "carla/streaming/Token.h"
 
@@ -25,6 +26,8 @@ namespace rpc {
     id_type id;
 
     ActorDescription description;
+
+    geom::BoundingBox bounding_box;
 
     /// @todo This is only used by sensors actually.
     /// @name Sensor functionality
@@ -49,13 +52,15 @@ namespace rpc {
 
     Actor(FActorView View)
       : id(View.GetActorId()),
-        description(*View.GetActorDescription()) {
+        description(*View.GetActorDescription()),
+        bounding_box(View.GetActor()) {
       DEBUG_ASSERT(View.IsValid());
     }
 
     Actor(FActorView View, const streaming::Token &StreamToken)
       : id(View.GetActorId()),
         description(*View.GetActorDescription()),
+        bounding_box(View.GetActor()),
         stream_token(StreamToken.data.begin(), StreamToken.data.end()) {
       DEBUG_ASSERT(View.IsValid());
     }

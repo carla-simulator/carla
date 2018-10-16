@@ -31,6 +31,10 @@ namespace detail {
 
     std::string GetDisplayId() const;
 
+    const geom::BoundingBox &GetBoundingBox() const {
+      return _description.bounding_box;
+    }
+
     World GetWorld() const {
       return World{_episode};
     }
