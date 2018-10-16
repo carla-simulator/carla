@@ -24,6 +24,11 @@ pipeline {
                 sh 'make PythonAPI'
                 sh 'make CarlaUE4Editor'
             }
+            post {
+                always {
+                    archiveArtifacts 'PythonAPI/dist/*.egg'
+                }
+            }
         }
 
         stage('Unit Tests') {
