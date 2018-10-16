@@ -8,41 +8,14 @@
 
 #include "carla/MsgPack.h"
 #include "carla/geom/Location.h"
+#include "carla/geom/Rotation.h"
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
-#  include "Transform.h"
+#  include "Math/Transform.h"
 #endif // LIBCARLA_INCLUDED_FROM_UE4
 
 namespace carla {
 namespace geom {
-
-  class Rotation {
-  public:
-
-    Rotation() = default;
-
-    Rotation(float p, float y, float r)
-      : pitch(p),
-        yaw(y),
-        roll(r) {}
-
-    float pitch = 0.0f;
-    float yaw = 0.0f;
-    float roll = 0.0f;
-
-#ifdef LIBCARLA_INCLUDED_FROM_UE4
-
-    Rotation(const FRotator &rotator)
-      : Rotation(rotator.Pitch, rotator.Yaw, rotator.Roll) {}
-
-    operator FRotator() const {
-      return FRotator{pitch, yaw, roll};
-    }
-
-#endif // LIBCARLA_INCLUDED_FROM_UE4
-
-    MSGPACK_DEFINE_ARRAY(pitch, yaw, roll);
-  };
 
   class Transform {
   public:
