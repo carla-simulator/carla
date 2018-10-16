@@ -8,14 +8,14 @@
 
 #include "GameFramework/Actor.h"
 
-#include "Carla/Game/CarlaEpisode.h"
-
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Optional.h>
 #include <carla/streaming/Stream.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include "WorldObserver.generated.h"
+
+class UCarlaEpisode;
 
 /// Serializes and sends all the actors in a UCarlaEpisode.
 UCLASS()
@@ -40,6 +40,12 @@ public:
   void SetStream(carla::streaming::MultiStream InStream)
   {
     Stream = std::move(InStream);
+  }
+
+  auto GetStreamToken() const
+  {
+    check(Stream.has_value());
+    return (*Stream).token();
   }
 
   void BeginPlay() final;
