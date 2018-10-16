@@ -29,13 +29,14 @@ private:
 
   FSensorMessageHeader(carla::Buffer InBuffer) : Buffer(std::move(InBuffer)) {}
 
-  friend class FDataStream;
+  template <typename T>
+  friend class FDataStreamTmpl;
 
   carla::Buffer Buffer;
 };
 
 // =============================================================================
-// -- FDataStream --------------------------------------------------------------
+// -- FDataStreamTmpl ----------------------------------------------------------
 // =============================================================================
 
 /// A streaming channel for sending sensor data to clients. Each sensor has its
@@ -46,21 +47,24 @@ private:
 ///
 /// FDataStream also has a pool of carla::Buffer that allows reusing the
 /// allocated memory, use it whenever possible.
-class FDataStream
+template <typename T>
+class FDataStreamTmpl
 {
 public:
 
-  FDataStream() = default;
+  using StreamType = T;
 
-  FDataStream(FDataStream &&) = default;
-  FDataStream &operator=(FDataStream &&) = default;
+  FDataStreamTmpl() = default;
 
-  FDataStream(carla::streaming::Stream InStream) : Stream(std::move(InStream)) {}
+  FDataStreamTmpl(FDataStreamTmpl &&) = default;
+  FDataStreamTmpl &operator=(FDataStreamTmpl &&) = default;
+
+  FDataStreamTmpl(StreamType InStream) : Stream(std::move(InStream)) {}
 
   /// Create the meta-information header associated with the sensor message.
   /// This functions needs to be called in the game-thread.
-  template <typename TSensor>
-  FSensorMessageHeader MakeHeader(const TSensor &Sensor);
+  template <typename SensorT>
+  FSensorMessageHeader MakeHeader(const SensorT &Sensor);
 
   /// Pop a Buffer from the pool. Buffers in the pool can reuse the memory
   /// allocated by previous messages, significantly improving performance for
@@ -69,36 +73,48 @@ public:
 
   /// Send some data down the stream. This function can only be called from the
   /// game-thread. No need to provide a FSensorMessageHeader to this function.
-  template <typename TSensor, typename... TArgs>
-  void Send_GameThread(TSensor &Sensor, TArgs &&... Args);
+  template <typename SensorT, typename... ArgsT>
+  void Send_GameThread(SensorT &Sensor, ArgsT &&... Args);
 
   /// Send some data down the stream. This function can be called from a
   /// different thread. It requires you however to provide a
   /// FSensorMessageHeader previously generated in the game-thread.
-  template <typename TSensor, typename... TArgs>
-  void Send_Async(FSensorMessageHeader Header, TSensor &Sensor, TArgs &&... Args);
+  template <typename SensorT, typename... ArgsT>
+  void Send_Async(FSensorMessageHeader Header, SensorT &Sensor, ArgsT &&... Args);
+
+  auto GetToken() const;
 
 private:
 
-  carla::Optional<carla::streaming::Stream> Stream;
+  carla::Optional<StreamType> Stream;
 };
 
 // =============================================================================
-// -- FDataStream implementation -----------------------------------------------
+// -- FDataStream and FDataMultiStream -----------------------------------------
 // =============================================================================
 
-template <typename TSensor>
-inline FSensorMessageHeader FDataStream::MakeHeader(const TSensor &Sensor)
+using FDataStream = FDataStreamTmpl<carla::streaming::Stream>;
+
+using FDataMultiStream = FDataStreamTmpl<carla::streaming::MultiStream>;
+
+// =============================================================================
+// -- FDataStreamTmpl implementation -------------------------------------------
+// =============================================================================
+
+template <typename T>
+template <typename SensorT>
+inline FSensorMessageHeader FDataStreamTmpl<T>::MakeHeader(const SensorT &Sensor)
 {
   check(IsInGameThread());
   using Serializer = carla::sensor::s11n::SensorHeaderSerializer;
   return {Serializer::Serialize(
-      carla::sensor::SensorRegistry::template get<TSensor*>::index,
+      carla::sensor::SensorRegistry::template get<SensorT*>::index,
       GFrameCounter,
       Sensor.GetActorTransform())};
 }
 
-inline carla::Buffer FDataStream::PopBufferFromPool()
+template <typename T>
+inline carla::Buffer FDataStreamTmpl<T>::PopBufferFromPool()
 {
 #ifdef WITH_EDITOR
   if (!Stream.has_value())
@@ -111,8 +127,9 @@ inline carla::Buffer FDataStream::PopBufferFromPool()
   return (*Stream).MakeBuffer();
 }
 
-template <typename TSensor, typename... TArgs>
-inline void FDataStream::Send_Async(FSensorMessageHeader Header, TSensor &Sensor, TArgs &&... Args)
+template <typename T>
+template <typename SensorT, typename... ArgsT>
+inline void FDataStreamTmpl<T>::Send_Async(FSensorMessageHeader Header, SensorT &Sensor, ArgsT &&... Args)
 {
 #ifdef WITH_EDITOR
   if (!Stream.has_value())
@@ -124,11 +141,19 @@ inline void FDataStream::Send_Async(FSensorMessageHeader Header, TSensor &Sensor
   check(Stream.has_value());
   (*Stream).Write(
       std::move(Header.Buffer),
-      carla::sensor::SensorRegistry::Serialize(Sensor, std::forward<TArgs>(Args)...));
+      carla::sensor::SensorRegistry::Serialize(Sensor, std::forward<ArgsT>(Args)...));
 }
 
-template <typename TSensor, typename... TArgs>
-inline void FDataStream::Send_GameThread(TSensor &Sensor, TArgs &&... Args)
+template <typename T>
+template <typename SensorT, typename... ArgsT>
+inline void FDataStreamTmpl<T>::Send_GameThread(SensorT &Sensor, ArgsT &&... Args)
 {
-  Send_Async(MakeHeader(Sensor), Sensor, std::forward<TArgs>(Args)...);
+  Send_Async(MakeHeader(Sensor), Sensor, std::forward<ArgsT>(Args)...);
+}
+
+template <typename T>
+inline auto FDataStreamTmpl<T>::GetToken() const
+{
+  check(Stream.has_value());
+  return (*Stream).token();
 }

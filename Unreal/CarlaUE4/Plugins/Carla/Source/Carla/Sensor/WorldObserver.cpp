@@ -13,24 +13,17 @@
 #include <carla/sensor/SensorRegistry.h>
 #include <compiler/enable-ue4-macros.h>
 
-void AWorldObserver::BeginPlay()
-{
-  Super::BeginPlay();
-  check(Stream.has_value());
-  check(Episode != nullptr);
-}
-
 void AWorldObserver::Tick(float DeltaSeconds)
 {
+  check(Episode != nullptr);
   Super::Tick(DeltaSeconds);
 
   GameTimeStamp += DeltaSeconds;
 
-  (*Stream).Write(carla::sensor::SensorRegistry::Serialize(
+  Stream.Send_GameThread(
       *this,
-      (*Stream).MakeBuffer(),
-      GFrameCounter,
+      Stream.PopBufferFromPool(),
       GameTimeStamp,
       FPlatformTime::Seconds(),
-      Episode->GetActorRegistry()));
+      Episode->GetActorRegistry());
 }
