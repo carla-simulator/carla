@@ -16,6 +16,7 @@
 #include <carla/rpc/Actor.h>
 #include <carla/rpc/ActorDefinition.h>
 #include <carla/rpc/ActorDescription.h>
+#include <carla/rpc/EpisodeInfo.h>
 #include <carla/rpc/Server.h>
 #include <carla/rpc/Transform.h>
 #include <carla/rpc/VehicleControl.h>
@@ -133,7 +134,12 @@ void FTheNewCarlaServer::FPimpl::BindActions()
 
   Server.BindAsync("ping", []() { return true; });
 
-  Server.BindAsync("version", []() { return std::string(carla::version()); });
+  Server.BindAsync("version", []() -> std::string { return carla::version(); });
+
+  Server.BindSync("get_episode_info", [this]() -> cr::EpisodeInfo {
+    RequireEpisode();
+    return {Episode->GetId(), cr::FromFString(Episode->GetMapName())};
+  });
 
   Server.BindSync("get_actor_definitions", [this]() {
     RequireEpisode();

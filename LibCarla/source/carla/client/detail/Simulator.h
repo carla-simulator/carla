@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "carla/Debug.h"
 #include "carla/Memory.h"
 #include "carla/NonCopyable.h"
 #include "carla/Version.h"
@@ -54,12 +55,16 @@ namespace detail {
     /// @{
 
     auto GetCurrentEpisodeId() const {
-      return _episode.GetId();
+      DEBUG_ASSERT(_episode != nullptr);
+      return _episode->GetId();
     }
 
-    EpisodeProxy GetCurrentEpisode() {
-      return EpisodeProxy{shared_from_this()};
+    const std::string &GetCurrentMapName() const {
+      DEBUG_ASSERT(_episode != nullptr);
+      return _episode->GetMapName();
     }
+
+    EpisodeProxy GetCurrentEpisode();
 
     /// @}
     // =========================================================================
@@ -82,7 +87,7 @@ namespace detail {
     }
 
     std::string GetClientVersion() {
-      return ::carla::version();
+      return _client.GetClientVersion();
     }
 
     std::string GetServerVersion() {
@@ -165,7 +170,7 @@ namespace detail {
 
     Client _client;
 
-    EpisodeState _episode;
+    std::unique_ptr<EpisodeState> _episode;
 
     GarbageCollectionPolicy _gc_policy;
   };

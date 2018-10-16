@@ -17,8 +17,6 @@ namespace detail {
   class EpisodeState : private MovableNonCopyable {
   public:
 
-    EpisodeState() = default; /// @todo
-
     EpisodeState(rpc::EpisodeInfo description)
       : _description(std::move(description)) {}
 

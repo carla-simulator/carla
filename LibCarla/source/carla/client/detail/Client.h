@@ -12,6 +12,7 @@
 #include "carla/geom/Transform.h"
 #include "carla/rpc/Actor.h"
 #include "carla/rpc/ActorDefinition.h"
+#include "carla/rpc/EpisodeInfo.h"
 #include "carla/rpc/WeatherParameters.h"
 
 #include <functional>
@@ -49,7 +50,11 @@ namespace detail {
 
     void SetTimeout(time_duration timeout);
 
+    std::string GetClientVersion();
+
     std::string GetServerVersion();
+
+    rpc::EpisodeInfo GetEpisodeInfo();
 
     std::vector<rpc::ActorDefinition> GetActorDefinitions();
 

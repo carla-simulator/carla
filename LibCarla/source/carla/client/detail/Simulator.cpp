@@ -19,6 +19,18 @@ namespace carla {
 namespace client {
 namespace detail {
 
+  static void ValidateVersions(Client &client) {
+    const auto vc = client.GetClientVersion();
+    const auto vs = client.GetServerVersion();
+    if (vc != vs) {
+      log_warning(
+          "Version mismatch detected: You are trying to connect to a simulator",
+          "that might be incompatible with this API");
+      log_warning("Client API version:    =", vc);
+      log_warning("Simulator API version  =", vs);
+    }
+  }
+
   // ===========================================================================
   // -- Constructor ------------------------------------------------------------
   // ===========================================================================
@@ -30,9 +42,20 @@ namespace detail {
       const bool enable_garbage_collection)
     : LIBCARLA_INITIALIZE_LIFETIME_PROFILER("SimulatorClient("s + host + ":" + std::to_string(port) + ")"),
       _client(host, port, worker_threads),
-      _episode(), /// @todo
       _gc_policy(enable_garbage_collection ?
         GarbageCollectionPolicy::Enabled : GarbageCollectionPolicy::Disabled) {}
+
+  // ===========================================================================
+  // -- Access to current episode ----------------------------------------------
+  // ===========================================================================
+
+  EpisodeProxy Simulator::GetCurrentEpisode() {
+    if (_episode == nullptr) {
+      ValidateVersions(_client);
+      _episode = std::make_unique<EpisodeState>(_client.GetEpisodeInfo());
+    }
+    return EpisodeProxy{shared_from_this()};
+  }
 
   // ===========================================================================
   // -- Access to global objects in the episode --------------------------------

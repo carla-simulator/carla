@@ -16,6 +16,14 @@
 namespace carla {
 namespace client {
 
+  uint32_t World::GetId() const {
+    return _episode->GetCurrentEpisodeId();
+  }
+
+  const std::string &World::GetMapName() const {
+    return _episode->GetCurrentMapName();
+  }
+
   SharedPtr<BlueprintLibrary> World::GetBlueprintLibrary() const {
     return _episode->GetBlueprintLibrary();
   }

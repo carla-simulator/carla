@@ -15,6 +15,8 @@
 
 ## `carla.World`
 
+- `id`
+- `map_name`
 - `get_blueprint_library()`
 - `get_spectator()`
 - `get_weather()`

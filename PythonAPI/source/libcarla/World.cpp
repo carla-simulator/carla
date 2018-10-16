@@ -24,6 +24,8 @@ void export_world() {
     (arg("blueprint"), arg("transform"), arg("attach_to")=carla::SharedPtr<cc::Actor>())
 
   class_<cc::World>("World", no_init)
+    .add_property("id", &cc::World::GetId)
+    .add_property("map_name", CALL_RETURNING_COPY(cc::World, GetMapName))
     .def("get_blueprint_library", CONST_CALL_WITHOUT_GIL(cc::World, GetBlueprintLibrary))
     .def("get_spectator", CONST_CALL_WITHOUT_GIL(cc::World, GetSpectator))
     .def("get_weather", CONST_CALL_WITHOUT_GIL(cc::World, GetWeather))
