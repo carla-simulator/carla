@@ -67,6 +67,7 @@
 
 - `id`
 - `type_id`
+- `bounding_box`
 - `is_alive`
 - `get_world()`
 - `get_location()`
