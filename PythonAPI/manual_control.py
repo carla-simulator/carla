@@ -24,7 +24,7 @@ Use ARROWS or WASD keys for control.
     TAB          : change camera position
     `            : next camera sensor
     [1-9]        : change to camera sensor [1-9]
-    C            : change weather
+    C            : change weather (Shift+C reverse)
 
     R            : toggle recording images to disk
 
@@ -65,6 +65,7 @@ from carla import ColorConverter as cc
 import argparse
 import logging
 import random
+import re
 import weakref
 
 try:
@@ -108,6 +109,13 @@ except ImportError:
 START_POSITION = carla.Transform(carla.Location(x=180.0, y=199.0, z=40.0))
 
 
+def find_weather_presets():
+    rgx = re.compile('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)')
+    name = lambda x: ' '.join(m.group(0) for m in rgx.finditer(x))
+    presets = [x for x in dir(carla.WeatherParameters) if re.match('[A-Z].+', x)]
+    return [(getattr(carla.WeatherParameters, x), name(x)) for x in presets]
+
+
 class World(object):
     def __init__(self, carla_world, hud):
         self.hud = hud
@@ -115,14 +123,15 @@ class World(object):
         self.vehicle = carla_world.spawn_actor(blueprint, START_POSITION)
         self.camera_manager = CameraManager(self.vehicle, self.hud)
         self.controller = None
-        self._weather_presets = ["Clear Noon", "Cloudy Noon", "Wet Noon", "Clear Sunset", "Wet Sunset", "Soft Rain Noon", "Hard Rain Noon"]
+        self._weather_presets = find_weather_presets()
+        self._weather_index = 0
 
-    def next_weather(self):
-        weather_name = self._weather_presets.pop(0)
-        self.hud.notification('Weather: %s' % weather_name)
-        weather = getattr(carla.WeatherParameters, weather_name.replace(" ", ""))
-        self.vehicle.get_world().set_weather(weather)
-        self._weather_presets.append(weather_name)
+    def next_weather(self, reverse=False):
+        self._weather_index += -1 if reverse else 1
+        self._weather_index %= len(self._weather_presets)
+        preset = self._weather_presets[self._weather_index]
+        self.hud.notification('Weather: %s' % preset[1])
+        self.vehicle.get_world().set_weather(preset[0])
 
     def tick(self, clock):
         self.hud.tick(self, clock)
@@ -161,6 +170,8 @@ class KeyboardControl(object):
                     world.hud.help.toggle()
                 elif event.key == K_TAB:
                     world.camera_manager.toggle_camera()
+                elif event.key == K_c and pygame.key.get_mods() & KMOD_SHIFT:
+                    world.next_weather(reverse=True)
                 elif event.key == K_c:
                     world.next_weather()
                 elif event.key == K_BACKQUOTE:
