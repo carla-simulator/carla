@@ -23,8 +23,10 @@ namespace element {
 
     RoadSegmentDefinition(RoadSegmentDefinition &&rsd)
       : _id(rsd._id),
-        _predecessor_id(std::move(rsd._predecessor_id)),
         _successor_id(std::move(rsd._successor_id)),
+        _predecessor_id(std::move(rsd._predecessor_id)),
+        _successor_is_start(std::move(rsd._successor_is_start)),
+        _predecessors_is_start(std::move(rsd._predecessors_is_start)),
         _geom(std::move(rsd._geom)),
         _info(std::move(rsd._info)) {}
 
@@ -37,12 +39,14 @@ namespace element {
       return _id;
     }
 
-    void AddPredecessorID(const id_type &id) {
-      _predecessor_id.emplace_back(id);
+    void AddSuccessorID(const id_type &id, bool is_start = true) {
+      _successor_id.emplace_back(id);
+      _successor_is_start.emplace_back(is_start);
     }
 
-    void AddSuccessorID(const id_type &id) {
-      _successor_id.emplace_back(id);
+    void AddPredecessorID(const id_type &id, bool is_start = true) {
+      _predecessor_id.emplace_back(id);
+      _predecessors_is_start.emplace_back(is_start);
     }
 
     // usage MakeGeometry<GeometryArc>(len, st_pos_offs, head, st_pos, curv)
@@ -75,8 +79,10 @@ namespace element {
 
     friend class RoadSegment;
     id_type _id;
-    std::vector<id_type> _predecessor_id;
     std::vector<id_type> _successor_id;
+    std::vector<id_type> _predecessor_id;
+    std::vector<bool> _successor_is_start;
+    std::vector<bool> _predecessors_is_start;
     std::vector<std::unique_ptr<Geometry>> _geom;
     std::vector<std::unique_ptr<RoadInfo>> _info;
   };
