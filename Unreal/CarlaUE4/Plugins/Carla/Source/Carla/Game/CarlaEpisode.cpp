@@ -20,7 +20,7 @@ UCarlaEpisode::UCarlaEpisode(const FObjectInitializer &ObjectInitializer)
 const AWorldObserver *UCarlaEpisode::StartWorldObserver(carla::streaming::MultiStream Stream)
 {
   UE_LOG(LogCarla, Log, TEXT("Starting AWorldObserver sensor"));
-  check(WorldObserver != nullptr);
+  check(WorldObserver == nullptr);
   auto *World = GetWorld();
   check(World != nullptr);
   WorldObserver = World->SpawnActorDeferred<AWorldObserver>(
