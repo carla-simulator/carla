@@ -57,7 +57,7 @@ void AOpenDriveActor::BeginPlay()
             processed.Add(id);
         }
 
-        std::vector<carla::road::id_type> successorIds = map.GetRoad(id)->GetSuccessorsIds();
+        /*std::vector<carla::road::id_type> successorIds = map.GetRoad(id)->GetSuccessorsIds();
         if (successorIds.size())
         {
             ARoutePlanner *routePlaner = GetWorld()->SpawnActor<ARoutePlanner>();
@@ -68,6 +68,18 @@ void AOpenDriveActor::BeginPlay()
                 processed.Add(successorID);
             }
         }
+
+        std::vector<carla::road::id_type> predecessorIds = map.GetRoad(id)->GetPredecessorsIds();
+        if (predecessorIds.size())
+        {
+            ARoutePlanner *routePlaner = GetWorld()->SpawnActor<ARoutePlanner>();
+
+            for (auto &&predeccesorID : predecessorIds)
+            {
+                fnc_generate_points(map.GetRoad(predeccesorID), routePlaner);
+                processed.Add(predeccesorID);
+            }
+        }*/
     }
 }
 
