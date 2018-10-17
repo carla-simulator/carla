@@ -40,34 +40,20 @@ namespace element {
       return _id;
     }
 
+    // returns single info given a type and a distance
     template <typename T>
-    const std::vector<const T *> GetInfo() const {
-      std::vector<const T *> vec;
-      for (auto &&info : _info) {
-        auto *t = dynamic_cast<const T *>(info.get());
-        if (t != nullptr) {
-          vec.emplace_back(t);
-        }
-      }
-      return vec;
+    const T *GetInfo(double dist) const {
+      auto up_bound = decltype(_info)::reverse_iterator(_info.upper_bound(dist));
+      auto it = MakeRoadInfoIterator<T>(up_bound, _info.rend());
+      return it.IsAtEnd() ? nullptr : *it;
     }
 
     // returns single info given a type and a distance
     template <typename T>
-    const T *GetInfo(double dist) const {
-      if (dist < 0) {
-        return nullptr;
-      }
-      auto up_bound = _info.upper_bound(
-          std::make_unique<RoadInfo>(dist));
-      T *t_last = nullptr;
-      for (auto i = _info.begin(); i != up_bound; ++i) {
-        T *t = dynamic_cast<T *>(i->get());
-        if (t != nullptr) {
-          t_last = t;
-        }
-      }
-      return t_last;
+    const T *GetInfoReverse(double dist) const {
+      auto lo_bound = _info.lower_bound(dist);
+      auto it = MakeRoadInfoIterator<T>(lo_bound, _info.end());
+      return it.IsAtEnd() ? nullptr : *it;
     }
 
     // returns info vector given a type and a distance
@@ -162,10 +148,19 @@ namespace element {
           const std::unique_ptr<RoadInfo> &b) const {
         return a->d < b->d;
       }
+      bool operator()(
+          const double &a,
+          const std::unique_ptr<RoadInfo> &b) const {
+        return a < b->d;
+      }
+      bool operator()(
+          const std::unique_ptr<RoadInfo> &a,
+          const double &b) const {
+        return a->d < b;
+      }
     };
 
-    // friend class Map;
-
+  private:
     id_type _id;
     std::vector<RoadSegment *> _predecessors;
     std::vector<RoadSegment *> _successors;
