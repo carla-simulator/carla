@@ -13,6 +13,13 @@
 #include <carla/sensor/SensorRegistry.h>
 #include <compiler/enable-ue4-macros.h>
 
+AWorldObserver::AWorldObserver(const FObjectInitializer& ObjectInitializer)
+  : Super(ObjectInitializer)
+{
+  PrimaryActorTick.bCanEverTick = true;
+  PrimaryActorTick.TickGroup = TG_PrePhysics;
+}
+
 void AWorldObserver::Tick(float DeltaSeconds)
 {
   check(Episode != nullptr);
