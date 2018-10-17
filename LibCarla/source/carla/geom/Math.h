@@ -22,23 +22,12 @@ namespace geom {
       return 0.5 * pi();
     }
 
-    static auto max(double a, double b) {
-      return (a > b) ? a : b;
+    static double clamp01(double a) {
+      return std::min(std::max(a, 0.0), 1.0);
     }
 
-    static auto min(double a, double b) {
-      return (a < b) ? a : b;
-    }
-
-    static auto clamp01(double a) {
-      return min(max(a, 0), 1);
-    }
-
-    static double sqr(double a) {
-      return a * a;
-    }
-
-    static Location sqr(const Location &a) {
+    template<typename T>
+    static T sqr(const T &a) {
       return a * a;
     }
 
@@ -50,20 +39,20 @@ namespace geom {
       return a.x * b.x + a.y * b.y;
     }
 
+    static double DistanceSquared(const Location &a, const Location &b) {
+      return sqr(b.x - a.x) + sqr(b.y - a.y) + sqr(b.z - a.z);
+    }
+
+    static double DistanceSquared2D(const Location &a, const Location &b) {
+      return sqr<double>(b.x - a.x) + sqr<double>(b.y - a.y);
+    }
+
     static double Distance(const Location &a, const Location &b) {
       return std::sqrt(DistanceSquared(a, b));
     }
 
     static double Distance2D(const Location &a, const Location &b) {
       return std::sqrt(DistanceSquared2D(a, b));
-    }
-
-    static double DistanceSquared(const Location &a, const Location &b) {
-      return sqr(b.x - a.x) + sqr(b.y - a.y) + sqr(b.z - a.z);
-    }
-
-    static double DistanceSquared2D(const Location &a, const Location &b) {
-      return sqr(b.x - a.x) + sqr(b.y - a.y);
     }
 
     static double DistanceSegmentPoint(
@@ -78,7 +67,6 @@ namespace geom {
       const Location projection = v + t * (w - v);
       return Distance2D(p, projection);
     }
-
   };
 
 } // namespace geom
