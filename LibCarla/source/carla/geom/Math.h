@@ -28,7 +28,7 @@ namespace geom {
       return std::min(std::max(a, 0.0), 1.0);
     }
 
-    template<typename T>
+    template <typename T>
     static T sqr(const T &a) {
       return a * a;
     }
@@ -68,6 +68,26 @@ namespace geom {
       const double t = clamp01(Dot2D(p - v, w - v) / l2);
       const Location projection = v + t * (w - v);
       return Distance2D(p, projection);
+    }
+
+    static Location RotatePointOnOrigin2D(Location p, double angle) {
+      double s = std::sin(angle);
+      double c = std::cos(angle);
+      return Location(p.x * c - p.y * s, p.x * s + p.y * c, 0.0);
+    }
+
+    static bool PointInRectangle(
+        const Location &pos,
+        const Location &extent,
+        double angle, // [radians]
+        const Location &p) {
+      // Move p relative to pos's position and angle
+      Location transf_p = RotatePointOnOrigin2D(p - pos, -angle);
+      if (transf_p.x <=  extent.x && transf_p.y <=  extent.y &&
+          transf_p.x >= -extent.x && transf_p.y >= -extent.y) {
+        return true;
+      }
+      return false;
     }
   };
 
