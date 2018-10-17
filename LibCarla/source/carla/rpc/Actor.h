@@ -9,6 +9,7 @@
 #include "carla/Debug.h"
 #include "carla/geom/BoundingBox.h"
 #include "carla/rpc/ActorDescription.h"
+#include "carla/rpc/ActorId.h"
 #include "carla/streaming/Token.h"
 
 #include <cstring>
@@ -19,11 +20,9 @@ namespace rpc {
   class Actor {
   public:
 
-    using id_type = uint32_t;
-
     Actor() = default;
 
-    id_type id;
+    actor_id_type id;
 
     ActorDescription description;
 
