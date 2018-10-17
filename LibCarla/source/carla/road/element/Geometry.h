@@ -11,7 +11,6 @@
 #include "carla/opendrive/logic/cephes/fresnel.h"
 
 #include <cmath>
-#include <iostream>
 
 namespace carla {
 namespace road {
