@@ -72,6 +72,8 @@
 - `get_world()`
 - `get_location()`
 - `get_transform()`
+- `get_velocity()`
+- `get_acceleration()`
 - `set_location(location)`
 - `set_transform(transform)`
 - `destroy()`

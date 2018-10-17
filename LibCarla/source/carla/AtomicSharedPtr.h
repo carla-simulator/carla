@@ -17,6 +17,9 @@ namespace carla {
   class AtomicSharedPtr : private NonCopyable {
   public:
 
+    template <typename... Args>
+    explicit AtomicSharedPtr(Args &&... args) : _ptr(std::forward<Args>(args)...) {}
+
     void store(std::shared_ptr<T> ptr) {
       std::atomic_store_explicit(&_ptr, ptr, std::memory_order_relaxed);
     }

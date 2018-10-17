@@ -14,8 +14,8 @@
 #include "carla/client/GarbageCollectionPolicy.h"
 #include "carla/client/Vehicle.h"
 #include "carla/client/detail/Client.h"
+#include "carla/client/detail/Episode.h"
 #include "carla/client/detail/EpisodeProxy.h"
-#include "carla/client/detail/EpisodeState.h"
 #include "carla/profiler/LifetimeProfiled.h"
 
 namespace carla {
@@ -126,9 +126,26 @@ namespace detail {
 
     bool DestroyActor(Actor &actor);
 
-    geom::Location GetActorLocation(const Actor &actor);
+    auto GetActorDynamicState(const Actor &actor) const {
+      DEBUG_ASSERT(_episode != nullptr);
+      return _episode->GetState()->GetActorState(actor.GetId());
+    }
 
-    geom::Transform GetActorTransform(const Actor &actor);
+    geom::Location GetActorLocation(const Actor &actor) const {
+      return GetActorDynamicState(actor).transform.location;
+    }
+
+    geom::Transform GetActorTransform(const Actor &actor) const {
+      return GetActorDynamicState(actor).transform;
+    }
+
+    geom::Vector3D GetActorVelocity(const Actor &actor) const {
+      return GetActorDynamicState(actor).velocity;
+    }
+
+    geom::Vector3D GetActorAcceleration(const Actor &actor) const {
+      return GetActorDynamicState(actor).acceleration;
+    }
 
     void SetActorLocation(Actor &actor, const geom::Location &location) {
       _client.SetActorLocation(actor.Serialize(), location);
@@ -170,7 +187,7 @@ namespace detail {
 
     Client _client;
 
-    std::unique_ptr<EpisodeState> _episode;
+    std::shared_ptr<Episode> _episode;
 
     GarbageCollectionPolicy _gc_policy;
   };
