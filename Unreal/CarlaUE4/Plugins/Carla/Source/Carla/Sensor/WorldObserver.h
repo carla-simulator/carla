@@ -24,6 +24,8 @@ public:
 
   using not_spawnable = void;
 
+  AWorldObserver(const FObjectInitializer& ObjectInitializer);
+
   /// Set the episode that will observe.
   void SetEpisode(UCarlaEpisode &InEpisode)
   {
