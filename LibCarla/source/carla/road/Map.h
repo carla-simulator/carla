@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "element/RoadSegment.h"
+#include "carla/road/element/RoadSegment.h"
 #include "carla/NonCopyable.h"
 
 #include <map>

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "Map.h"
+#include "carla/road/Map.h"
 #include "carla/geom/Location.h"
 
 #include <map>
