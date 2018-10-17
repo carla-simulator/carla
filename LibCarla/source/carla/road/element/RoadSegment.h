@@ -28,6 +28,8 @@ namespace element {
 
     RoadSegment(RoadSegmentDefinition &&def)
       : _id(def.GetId()),
+        _successors_is_start(std::move(def._successor_is_start)),
+        _predecessors_is_start(std::move(def._predecessors_is_start)),
         _geom(std::move(def._geom)) {
       for (auto &&a : def._info) {
         _info.insert(std::move(a));
@@ -159,6 +161,8 @@ namespace element {
     id_type _id;
     std::vector<RoadSegment *> _predecessors;
     std::vector<RoadSegment *> _successors;
+    std::vector<bool> _successors_is_start;
+    std::vector<bool> _predecessors_is_start;
     std::vector<std::unique_ptr<Geometry>> _geom;
     std::multiset<std::unique_ptr<RoadInfo>, LessComp> _info;
     double _length = -1.0;

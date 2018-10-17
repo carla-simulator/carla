@@ -64,27 +64,28 @@ namespace element {
     }
 
     std::vector<int> getLanesIDs(which_lane_e whichLanes = which_lane_e::Both) {
-      std::vector<int> lanesId;
+      std::vector<int> lanes_id;
 
       for(lane_t::iterator it = _lanes.begin(); it != _lanes.end(); ++it) {
         switch(whichLanes) {
           case which_lane_e::Both: {
-            lanesId.push_back(it->first);
+            lanes_id.push_back(it->first);
           } break;
 
           case which_lane_e::Left: {
             if(it->first > 0) {
-              lanesId.push_back(it->first);
+              lanes_id.push_back(it->first);
             }
           } break;
 
           case which_lane_e::Right: {
             if(it->first < 0) {
-              lanesId.push_back(it->first);
+              lanes_id.push_back(it->first);
             }
           } break;
         }
       }
+      return lanes_id;
     }
 
     const LaneInfo *getLane(int id) {
