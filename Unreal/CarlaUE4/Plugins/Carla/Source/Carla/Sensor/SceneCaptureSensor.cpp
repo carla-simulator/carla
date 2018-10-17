@@ -134,7 +134,7 @@ void ASceneCaptureSensor::BeginPlay()
   // Setup render target.
   const bool bInForceLinearGamma = !bEnablePostProcessingEffects;
     if (bEnablePostProcessingEffects) {
-    CaptureRenderTarget->TargetGamma = 1.5f;
+    CaptureRenderTarget->TargetGamma = 2.4f;
   }
   CaptureRenderTarget->InitCustomFormat(ImageWidth, ImageHeight, PF_B8G8R8A8, bInForceLinearGamma);
 
