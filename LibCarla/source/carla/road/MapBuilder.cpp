@@ -4,7 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "MapBuilder.h"
+#include "carla/road/MapBuilder.h"
 
 namespace carla {
 namespace road {

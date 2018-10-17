@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "RoadSegment.h"
+#include "carla/road/element/RoadSegment.h"
 
 namespace carla {
 namespace road {
