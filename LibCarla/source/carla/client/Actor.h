@@ -31,6 +31,10 @@ namespace client {
 
     geom::Transform GetTransform() const;
 
+    geom::Vector3D GetVelocity() const;
+
+    geom::Vector3D GetAcceleration() const;
+
     void SetLocation(const geom::Location &location);
 
     void SetTransform(const geom::Transform &transform);

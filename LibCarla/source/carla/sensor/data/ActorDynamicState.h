@@ -8,6 +8,7 @@
 
 #include "carla/geom/Transform.h"
 #include "carla/geom/Vector3D.h"
+#include "carla/rpc/ActorId.h"
 
 #include <cstdint>
 
@@ -17,10 +18,10 @@ namespace data {
 
 #pragma pack(push, 1)
 
-  /// Dynamic state of an actor.
-  struct ActorState {
+  /// Dynamic state of an actor at a certain frame.
+  struct ActorDynamicState {
 
-    uint32_t id;
+    actor_id_type id;
 
     geom::Transform transform;
 
@@ -29,7 +30,7 @@ namespace data {
 
 #pragma pack(pop)
 
-  static_assert(sizeof(ActorState) == 10u * sizeof(uint32_t), "Invalid ActorState size!");
+  static_assert(sizeof(ActorDynamicState) == 10u * sizeof(uint32_t), "Invalid ActorDynamicState size!");
 
 } // namespace data
 } // namespace sensor

@@ -19,6 +19,10 @@ namespace carla {
 namespace client {
 namespace detail {
 
+  // ===========================================================================
+  // -- Static local methods ---------------------------------------------------
+  // ===========================================================================
+
   static void ValidateVersions(Client &client) {
     const auto vc = client.GetClientVersion();
     const auto vs = client.GetServerVersion();
@@ -52,7 +56,8 @@ namespace detail {
   EpisodeProxy Simulator::GetCurrentEpisode() {
     if (_episode == nullptr) {
       ValidateVersions(_client);
-      _episode = std::make_unique<EpisodeState>(_client.GetEpisodeInfo());
+      _episode = std::make_shared<Episode>(_client);
+      _episode->Listen();
     }
     return EpisodeProxy{shared_from_this()};
   }
@@ -112,14 +117,6 @@ namespace detail {
       log_debug("failed to destroy", actor.GetDisplayId());
     }
     return success;
-  }
-
-  geom::Location Simulator::GetActorLocation(const Actor &) {
-    throw std::runtime_error("GetActorLocation() not implemented!");
-  }
-
-  geom::Transform Simulator::GetActorTransform(const Actor &) {
-    throw std::runtime_error("GetActorTransform() not implemented!");
   }
 
   // ===========================================================================

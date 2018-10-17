@@ -12,7 +12,7 @@
 #include "carla/geom/Transform.h"
 #include "carla/geom/Vector3D.h"
 #include "carla/sensor/RawData.h"
-#include "carla/sensor/data/ActorState.h"
+#include "carla/sensor/data/ActorDynamicState.h"
 
 class FActorRegistry;
 
@@ -60,9 +60,8 @@ namespace s11n {
       double game_timestamp,
       double platform_timestamp,
       const ActorRegistryT &actor_registry) {
-    uint64_t number_of_actors =  actor_registry.Num();
     // Set up buffer for writing.
-    buffer.reset(sizeof(Header) + sizeof(data::ActorState) * number_of_actors);
+    buffer.reset(sizeof(Header) + sizeof(data::ActorDynamicState) * actor_registry.Num());
     auto begin = buffer.begin();
     auto write_data = [&begin](const auto &data) {
       std::memcpy(begin, &data, sizeof(data));
@@ -77,7 +76,7 @@ namespace s11n {
       DEBUG_ASSERT(actor_view.GetActor() != nullptr);
       constexpr float TO_METERS = 1e-3;
       const auto velocity = TO_METERS * actor_view.GetActor()->GetVelocity();
-      data::ActorState info = {
+      data::ActorDynamicState info = {
         actor_view.GetActorId(),
         actor_view.GetActor()->GetActorTransform(),
         geom::Vector3D{velocity.X, velocity.Y, velocity.Z}

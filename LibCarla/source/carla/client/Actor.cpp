@@ -20,6 +20,14 @@ namespace client {
     return GetEpisode()->GetActorTransform(*this);
   }
 
+  geom::Vector3D Actor::GetVelocity() const {
+    return GetEpisode()->GetActorVelocity(*this);
+  }
+
+  geom::Vector3D Actor::GetAcceleration() const {
+    return GetEpisode()->GetActorAcceleration(*this);
+  }
+
   void Actor::SetLocation(const geom::Location &location) {
     GetEpisode()->SetActorLocation(*this, location);
   }

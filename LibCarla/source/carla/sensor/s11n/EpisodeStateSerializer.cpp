@@ -6,14 +6,14 @@
 
 #include "carla/sensor/s11n/EpisodeStateSerializer.h"
 
-#include "carla/sensor/data/EpisodeState.h"
+#include "carla/sensor/data/RawEpisodeState.h"
 
 namespace carla {
 namespace sensor {
 namespace s11n {
 
   SharedPtr<SensorData> EpisodeStateSerializer::Deserialize(RawData data) {
-    return SharedPtr<data::EpisodeState>(new data::EpisodeState{std::move(data)});
+    return SharedPtr<data::RawEpisodeState>(new data::RawEpisodeState{std::move(data)});
   }
 
 } // namespace s11n
