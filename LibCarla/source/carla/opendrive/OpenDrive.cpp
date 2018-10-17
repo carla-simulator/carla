@@ -69,6 +69,19 @@ namespace opendrive {
     // Transforma data for the MapBuilder
     for (road_data_t::iterator it = roadData.begin(); it != roadData.end(); ++it) {
       carla::road::RoadSegmentDefinition roadSegment(it->first);
+      carla::road::element::RoadInfoLane *roadInfoLanes = roadSegment.MakeInfo<carla::road::element::RoadInfoLane>();
+
+      std::vector<carla::opendrive::types::Lane> &lanesLeft = it->second->lane_sections.left;
+      for(size_t i = 0; i < lanesLeft.size(); ++i)
+      {
+        roadInfoLanes->addLaneInfo(lanesLeft[i].attributes.id, lanesLeft[i].lane_width[0].width, lanesLeft[i].attributes.type);
+      }
+
+      std::vector<carla::opendrive::types::Lane> &lanesRight = it->second->lane_sections.right;
+      for(size_t i = 0; i < lanesRight.size(); ++i)
+      {
+        roadInfoLanes->addLaneInfo(lanesRight[i].attributes.id, lanesRight[i].lane_width[0].width, lanesRight[i].attributes.type);
+      }
 
       if (it->second->road_link.successor != nullptr) {
         if (it->second->road_link.successor->element_type == "junction") {
