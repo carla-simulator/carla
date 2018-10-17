@@ -1,3 +1,8 @@
+## CARLA 0.9.0 Puppet branch
+  * Add puppet vehicle function support 
+    A puppet vehicle is a vehicle controlled by direct rotation and translation data input, instead of steer angle and throttle pedal position. 
+    This function can be used to leverage other vehicle simulation system such as simulink or dynacar. 
+	
 ## CARLA 0.9.0
 
   * Upgraded to Unreal Engine 4.19

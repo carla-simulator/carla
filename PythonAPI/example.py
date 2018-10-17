@@ -3,7 +3,7 @@
 import sys
 
 sys.path.append(
-    'PythonAPI/carla-0.9.0-py%d.%d-linux-x86_64.egg' % (sys.version_info.major,
+    'dist\carla-0.9.0-py%d.%d-win-amd64.egg' % (sys.version_info.major,
                                                         sys.version_info.minor))
 
 import carla
@@ -40,7 +40,7 @@ def save_to_disk(image):
 
 
 def main(add_a_camera, enable_autopilot):
-    client = carla.Client('localhost', 2000)
+    client = carla.Client('192.168.0.5', 2000)
     client.set_timeout(2.0)
 
     print('client version: %s' % client.get_client_version())

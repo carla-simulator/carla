@@ -12,6 +12,8 @@
 #include "Components/BoxComponent.h"
 #include "Engine/CollisionProfile.h"
 
+#include "Runtime/Engine/Classes/Engine/EngineTypes.h "
+
 // =============================================================================
 // -- Constructor and destructor -----------------------------------------------
 // =============================================================================
@@ -81,6 +83,10 @@ void ACarlaWheeledVehicle::ApplyVehicleControl(const FVehicleControl &VehicleCon
   SetBrakeInput(VehicleControl.Brake);
   SetHandbrakeInput(VehicleControl.bHandBrake);
   SetReverse(VehicleControl.bReverse);
+  if (IsPuppetVehicle) {
+	  SetRotation(VehicleControl.VehRotation);
+	  SetLocation(VehicleControl.VehLocation);
+  }
 }
 
 void ACarlaWheeledVehicle::SetThrottleInput(const float Value)
@@ -111,4 +117,12 @@ void ACarlaWheeledVehicle::SetReverse(const bool Value)
 void ACarlaWheeledVehicle::SetHandbrakeInput(const bool Value)
 {
   GetVehicleMovementComponent()->SetHandbrakeInput(Value);
+}
+
+void ACarlaWheeledVehicle::SetRotation(const FRotator Value) {
+	GetMesh()->AddWorldRotation(Value,false,nullptr, ETeleportType::TeleportPhysics);
+}
+
+void ACarlaWheeledVehicle::SetLocation(const FVector Value) {
+	GetMesh()->AddWorldOffset(Value, false, nullptr, ETeleportType::TeleportPhysics);
 }
