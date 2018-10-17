@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "Geometry.h"
-#include "RoadInfo.h"
+#include "carla/road/element/Geometry.h"
+#include "carla/road/element/RoadInfo.h"
 
 #include <cstdio>
 #include <memory>

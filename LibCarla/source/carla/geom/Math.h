@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "carla/geom/Location.h"
+
 #include <cmath>
 
 namespace carla {

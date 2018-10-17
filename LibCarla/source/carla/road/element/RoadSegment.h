@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "Types.h"
-#include "RoadInfo.h"
+#include "carla/road/element/Types.h"
+#include "carla/road/element/RoadInfo.h"
 #include "carla/geom/Location.h"
 
 #include <set>
