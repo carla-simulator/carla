@@ -98,12 +98,20 @@ namespace element {
       return s_vec;
     }
 
+    std::vector<bool> GetSuccessorsIsSTart() const {
+      return _successors_is_start;
+    }
+
     std::vector<id_type> GetPredecessorsIds() const {
       std::vector<id_type> p_vec;
       for (auto &&pred : _predecessors) {
         p_vec.emplace_back(pred->GetId());
       }
       return p_vec;
+    }
+
+    std::vector<bool> GetPredecessorsIsStart() const {
+      return _predecessors_is_start;
     }
 
     const std::vector<RoadSegment *> GetSuccessors() const {

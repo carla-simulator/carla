@@ -84,26 +84,30 @@ namespace opendrive {
       }
 
       if (it->second->road_link.successor != nullptr) {
+        bool is_start = it->second->road_link.successor->contact_point == "start";
+
         if (it->second->road_link.successor->element_type == "junction") {
           std::vector<lane_junction_t> &options =
-              junctionsData[it->second->road_link.successor->id][it->first];
+            junctionsData[it->second->road_link.successor->id][it->first];
           for (size_t i = 0; i < options.size(); ++i) {
-            roadSegment.AddSuccessorID(options[i].connection_road);
+            roadSegment.AddSuccessorID(options[i].connection_road, is_start);
           }
         } else {
-          roadSegment.AddSuccessorID(it->second->road_link.successor->id);
+          roadSegment.AddSuccessorID(it->second->road_link.successor->id, is_start);
         }
       }
 
       if (it->second->road_link.predecessor != nullptr) {
+        bool is_start = it->second->road_link.predecessor->contact_point == "start";
+
         if (it->second->road_link.predecessor->element_type == "junction") {
           std::vector<lane_junction_t> &options =
-              junctionsData[it->second->road_link.predecessor->id][it->first];
+            junctionsData[it->second->road_link.predecessor->id][it->first];
           for (size_t i = 0; i < options.size(); ++i) {
-            roadSegment.AddPredecessorID(options[i].connection_road);
+            roadSegment.AddPredecessorID(options[i].connection_road, is_start);
           }
         } else {
-          roadSegment.AddPredecessorID(it->second->road_link.predecessor->id);
+          roadSegment.AddPredecessorID(it->second->road_link.predecessor->id, is_start);
         }
       }
 
