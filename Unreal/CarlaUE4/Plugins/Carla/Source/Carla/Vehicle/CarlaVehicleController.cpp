@@ -107,7 +107,6 @@ void ACarlaVehicleController::IntersectPlayerWithRoadMap()
 {
   auto CurrentRoadMap = GetRoadMap();
   if (CurrentRoadMap == nullptr) {
-    UE_LOG(LogCarla, Error, TEXT("Controller doesn't have a road map!"));
     return;
   }
 
