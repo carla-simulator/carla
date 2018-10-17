@@ -14,7 +14,7 @@ struct CARLA_API FWeatherParameters
   GENERATED_BODY()
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ClampMin = "0.0", ClampMax = "100.0", UIMin = "0.0", UIMax = "100.0"))
-  float Cloudyness = 20.0f;
+  float Cloudyness = 0.0f;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ClampMin = "0.0", ClampMax = "100.0", UIMin = "0.0", UIMax = "100.0"))
   float Precipitation = 0.0f;
@@ -23,11 +23,11 @@ struct CARLA_API FWeatherParameters
   float PrecipitationDeposits = 0.0f;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ClampMin = "0.0", ClampMax = "100.0", UIMin = "0.0", UIMax = "100.0"))
-  float WindIntensity = 0.0f;
+  float WindIntensity = 0.35f;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ClampMin = "0.0", ClampMax = "360.0", UIMin = "0.0", UIMax = "360.0"))
   float SunAzimuthAngle = 0.0f;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ClampMin = "-90.0", ClampMax = "90.0", UIMin = "-90.0", UIMax = "90.0"))
-  float SunAltitudeAngle = 70.0f;
+  float SunAltitudeAngle = 75.0f;
 };
