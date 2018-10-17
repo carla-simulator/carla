@@ -9,8 +9,7 @@
 #include <carla/road/MapBuilder.h>
 #include <carla/geom/Location.h>
 #include <carla/geom/Math.h>
-
-#include <iostream>
+#include <carla/road/element/RoadInfoVisitor.h>
 
 using namespace carla::road;
 using namespace carla::geom;
@@ -29,23 +28,37 @@ TEST(road, add_geometry) {
 
 TEST(road, add_information) {
   MapBuilder builder;
-  RoadSegmentDefinition def(1);
+  RoadSegmentDefinition def(0);
 
-  class A : public RoadInfo {};
-
-  class B : public RoadInfo {};
-
-  class C : public RoadInfo {};
-
-  def.MakeInfo<A>();
-  def.MakeInfo<B>();
-  def.MakeInfo<C>();
+  def.MakeGeometry<GeometryLine>(0, 10, 0, carla::geom::Location());
+  def.MakeInfo<element::RoadInfoVelocity>(0, 50);
+  def.MakeInfo<element::RoadInfoVelocity>(2, 90);
+  def.MakeInfo<element::RoadInfoVelocity>(3, 100);
+  def.MakeInfo<element::RoadInfoVelocity>(5, 90);
+  def.MakeInfo<element::RoadInfoLane>();
 
   builder.AddRoadSegmentDefinition(def);
-  builder.Build();
+  Map m = builder.Build();
+
+  const RoadInfoVelocity *r = m.GetRoad(0)->GetInfo<RoadInfoVelocity>(0.0);
+  ASSERT_EQ(r->velocity, 50.0);
+  r = m.GetRoad(0)->GetInfo<RoadInfoVelocity>(2);
+  ASSERT_EQ(r->velocity, 90.0);
+  r = m.GetRoad(0)->GetInfo<RoadInfoVelocity>(3);
+  ASSERT_EQ(r->velocity, 100.0);
+  r = m.GetRoad(0)->GetInfo<RoadInfoVelocity>(3.5);
+  ASSERT_EQ(r->velocity, 100.0);
+  r = m.GetRoad(0)->GetInfo<RoadInfoVelocity>(6);
+  ASSERT_EQ(r->velocity, 90.0);
+  r = m.GetRoad(0)->GetInfoReverse<RoadInfoVelocity>(4);
+  ASSERT_EQ(r->velocity, 90.0);
+  r = m.GetRoad(0)->GetInfoReverse<RoadInfoVelocity>(2.5);
+  ASSERT_EQ(r->velocity, 100.0);
+  r = m.GetRoad(0)->GetInfoReverse<RoadInfoVelocity>(2);
+  ASSERT_EQ(r->velocity, 90.0);
 }
 
-TEST(road, get_information) {
+/*TEST(road, get_information) {
   MapBuilder builder;
   RoadSegmentDefinition def(1);
 
@@ -123,9 +136,9 @@ TEST(road, get_information) {
   ASSERT_EQ(rs->GetInfo<D>(12)->d, 10);
   ASSERT_EQ(rs->GetInfo<D>(16)->d, 15);
   ASSERT_EQ(rs->GetInfo<D>(23)->d, 15);
-}
+}*/
 
-TEST(road, add_geom_and_info) {
+/*TEST(road, add_geom_and_info) {
   MapBuilder builder;
   RoadSegmentDefinition def(1);
 
@@ -316,6 +329,26 @@ TEST(road, set_and_get_connections) {
   succ.clear();
   pred_ptr.clear();
   succ_ptr.clear();
+}*/
+
+TEST(road, set_and_get_connections_for) {
+  MapBuilder builder;
+  for (int i = 0; i < 10; ++i) {
+    RoadSegmentDefinition def(i);
+    for (int j = 0; j < 10; ++j) {
+      def.AddPredecessorID(j);
+    }
+    for (int j = 0; j < 10; ++j) {
+      def.AddSuccessorID(j);
+    }
+    builder.AddRoadSegmentDefinition(def);
+  }
+  Map m = builder.Build();
+  for (auto &&r : m.GetAllIds()) {
+    for (size_t i = 0; i < 10; ++i) {
+      ASSERT_EQ(m.GetRoad(r)->GetPredecessorsIds().at(i), i);
+    }
+  }
 }
 
 void AssertNear(
@@ -328,7 +361,7 @@ void AssertNear(
   ASSERT_NEAR(d0.tangent, d1.tangent, error);
 }
 
-TEST(road, geom_line_test) {
+TEST(road, geom_line) {
   MapBuilder builder;
   RoadSegmentDefinition def1(1);
 
@@ -368,7 +401,7 @@ TEST(road, geom_line_test) {
       element::DirectedPoint(15.0, 5.0, 0, 0));
 }
 
-TEST(road, geom_arc_test) {
+TEST(road, geom_arc) {
   MapBuilder builder;
   RoadSegmentDefinition def1(1);
 
@@ -387,7 +420,7 @@ TEST(road, geom_arc_test) {
   ASSERT_EQ(m.GetRoad(1)->GetLength(), 10.0);
 }
 
-TEST(road, geom_spiral_test) {
+TEST(road, geom_spiral) {
   MapBuilder builder;
   RoadSegmentDefinition def1(1);
 

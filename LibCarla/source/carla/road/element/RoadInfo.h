@@ -6,48 +6,76 @@
 
 #pragma once
 
-#include "RoadSegment.h"
+#include "carla/road/element/RoadSegment.h"
+#include "carla/road/element/RoadInfoVisitor.h"
+
 #include <string>
-#include <vector>
 #include <map>
 
 namespace carla {
 namespace road {
 namespace element {
+
   class RoadInfo {
   public:
 
-    RoadInfo() {}
-    RoadInfo(double distance) : d(distance) {}
     virtual ~RoadInfo() = default;
 
+    virtual void AcceptVisitor(RoadInfoVisitor &) = 0;
+
     // distance from Road's start location
-    double d = 0; // [meters]
+    double d; // [meters]
+
+  protected:
+
+    RoadInfo(double distance = 0) : d(distance) {}
   };
 
-  class LaneInfo
-  {
-    public:
-      int _id;
-      double _width;
+  class RoadInfoVelocity : public RoadInfo {
+  public:
 
-      std::string _type;
-      std::vector<int> _successor;
-      std::vector<int> _predecessor;
+    void AcceptVisitor(RoadInfoVisitor &v) override final {
+      v.Visit(*this);
+    }
 
-      LaneInfo() :
-        _id(0), _width(0.0) {}
+    RoadInfoVelocity(double vel) : velocity(vel) {}
+    RoadInfoVelocity(double d, double vel) : RoadInfo(d),
+                                             velocity(vel) {}
 
-      LaneInfo(int id, double width, const std::string &type) :
-        _id(id), _width(width), _type(type) {}
+    double velocity = 0;
+  };
+
+  class LaneInfo {
+  public:
+
+    int _id;
+    double _width;
+
+    std::string _type;
+    std::vector<int> _successor;
+    std::vector<int> _predecessor;
+
+    LaneInfo()
+      : _id(0),
+        _width(0.0) {}
+
+    LaneInfo(int id, double width, const std::string &type)
+      : _id(id),
+        _width(width),
+        _type(type) {}
   };
 
   class RoadInfoLane : public RoadInfo {
   private:
+
     using lane_t = std::map<int, LaneInfo>;
-    lane_t  _lanes;
+    lane_t _lanes;
 
   public:
+
+    void AcceptVisitor(RoadInfoVisitor &v) final {
+      v.Visit(*this);
+    }
 
     enum class which_lane_e : int {
       Left,
@@ -66,20 +94,20 @@ namespace element {
     std::vector<int> getLanesIDs(which_lane_e whichLanes = which_lane_e::Both) {
       std::vector<int> lanes_id;
 
-      for(lane_t::iterator it = _lanes.begin(); it != _lanes.end(); ++it) {
-        switch(whichLanes) {
+      for (lane_t::iterator it = _lanes.begin(); it != _lanes.end(); ++it) {
+        switch (whichLanes) {
           case which_lane_e::Both: {
             lanes_id.push_back(it->first);
           } break;
 
           case which_lane_e::Left: {
-            if(it->first > 0) {
+            if (it->first > 0) {
               lanes_id.push_back(it->first);
             }
           } break;
 
           case which_lane_e::Right: {
-            if(it->first < 0) {
+            if (it->first < 0) {
               lanes_id.push_back(it->first);
             }
           } break;
@@ -93,6 +121,7 @@ namespace element {
       return it == _lanes.end() ? nullptr : &it->second;
     }
   };
+
 } // namespace element
 } // namespace road
 } // namespace carla
