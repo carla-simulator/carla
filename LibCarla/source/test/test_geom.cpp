@@ -71,3 +71,42 @@ TEST(geom, nearest_point_segment) {
     ASSERT_EQ(id, results[i]) << "Fails point number " << i;
   }
 }
+
+TEST(geom, point_in_rectangle) {
+  ASSERT_TRUE(Math::PointInRectangle(
+      Location(0, 0, 0), Location(1, 1, 0), 0, Location(0, 0, 0)));
+  ASSERT_TRUE(Math::PointInRectangle(
+      Location(0, 0, 0), Location(1, 1, 0), 0, Location(1, 1, 0)));
+  ASSERT_TRUE(Math::PointInRectangle(
+      Location(0, 0, 0), Location(1, 1, 0), 0, Location(-1, 1, 0)));
+  ASSERT_TRUE(Math::PointInRectangle(
+      Location(0, 0, 0), Location(1, 1, 0), 0, Location(1, -1, 0)));
+  ASSERT_TRUE(Math::PointInRectangle(
+      Location(0, 0, 0), Location(1, 1, 0), 0, Location(-1, -1, 0)));
+  ASSERT_FALSE(Math::PointInRectangle(
+      Location(0, 0, 0), Location(1, 1, 0), 0, Location(-1.01, -1.01, 0)));
+  ASSERT_FALSE(Math::PointInRectangle(
+      Location(0, 0, 0), Location(1, 1, 0), 0, Location(1.01, 1.01, 0)));
+  ASSERT_FALSE(Math::PointInRectangle(
+      Location(1.5, 1.5, 0), Location(1, 1, 0), 0, Location(0, 0, 0)));
+  ASSERT_TRUE(Math::PointInRectangle(
+      Location(1.5, 1.5, 0), Location(1, 1, 0), 0, Location(1, 1, 0)));
+  ASSERT_TRUE(Math::PointInRectangle(
+      Location(1.5, 1.5, 0), Location(1, 1, 0), 0, Location(2, 1, 0)));
+  ASSERT_TRUE(Math::PointInRectangle(
+      Location(1.5, 1.5, 0), Location(1, 1, 0), 0, Location(2, 1, 0)));
+  ASSERT_TRUE(Math::PointInRectangle(
+      Location(1.5, 1.5, 0), Location(1, 1, 0), 0, Location(2, 2, 0)));
+  ASSERT_TRUE(Math::PointInRectangle(
+      Location(1.5, 1.5, 0), Location(1, 1, 0), 0, Location(1, 1, 0)));
+  ASSERT_FALSE(Math::PointInRectangle(
+      Location(0, 0, 0), Location(1, 1, 0), Math::pi_half() * 0.5, Location(1, 1, 0)));
+  ASSERT_TRUE(Math::PointInRectangle(
+      Location(0, 0, 0), Location(1, 1, 0), Math::pi_half() * 0.5, Location(1, 0, 0)));
+  ASSERT_TRUE(Math::PointInRectangle(
+      Location(0, 2, 0), Location(0.5, 2, 0), Math::pi_half(), Location(2, 2, 0)));
+  ASSERT_FALSE(Math::PointInRectangle(
+      Location(0, 2, 0), Location(0.5, 2, 0), Math::pi_half(), Location(2.1, 2, 0)));
+  ASSERT_FALSE(Math::PointInRectangle(
+      Location(0, 2, 0), Location(0.5, 2, 0), Math::pi_half(), Location(2, 2.6, 0)));
+}
