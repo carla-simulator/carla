@@ -115,7 +115,7 @@ class World(object):
         self.vehicle = carla_world.spawn_actor(blueprint, START_POSITION)
         self.camera_manager = CameraManager(self.vehicle, self.hud)
         self.controller = None
-        self._weather_presets = ["Clear Noon", "Cloudy Noon", "Wet Noon", "Clear Sunset", "Wet Sunset"]
+        self._weather_presets = ["Clear Noon", "Cloudy Noon", "Wet Noon", "Clear Sunset", "Wet Sunset", "Soft Rain Noon", "Hard Rain Noon"]
 
     def next_weather(self):
         weather_name = self._weather_presets.pop(0)
