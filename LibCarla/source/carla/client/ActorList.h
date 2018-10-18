@@ -32,6 +32,9 @@ namespace client {
 
   public:
 
+    /// Filters a list of Actor with type id matching @a wildcard_pattern.
+    ActorList Filter(const std::string &wildcard_pattern) const;
+
     SharedPtr<Actor> operator[](size_t pos) const {
       return RetrieveActor(_actors[pos]);
     }

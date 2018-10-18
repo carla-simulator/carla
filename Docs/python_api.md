@@ -66,6 +66,7 @@
 
 ## `carla.ActorList`
 
+- `filter(wildcard_pattern)`
 - `__getitem__(pos)`
 - `__len__()`
 - `__iter__()`

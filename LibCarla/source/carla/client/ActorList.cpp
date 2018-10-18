@@ -6,6 +6,7 @@
 
 #include "carla/client/ActorList.h"
 
+#include "carla/StringUtil.h"
 #include "carla/client/Actor.h"
 #include "carla/client/detail/ActorFactory.h"
 
@@ -14,11 +15,31 @@
 namespace carla {
 namespace client {
 
+  struct GetTypeIdVisitor {
+    const std::string &operator()(const rpc::Actor &actor) const {
+      return actor.description.id;
+    }
+    const std::string &operator()(const SharedPtr<Actor> &actor) const {
+      return actor->GetTypeId();
+    }
+  };
+
   ActorList::ActorList(
       detail::EpisodeProxy episode,
       std::vector<rpc::Actor> actors)
     : _episode(std::move(episode)),
       _actors(std::make_move_iterator(actors.begin()), std::make_move_iterator(actors.end())) {}
+
+  ActorList ActorList::Filter(const std::string &wildcard_pattern) const {
+    ActorList filtered{_episode, {}};
+    for (auto &&item : _actors) {
+      const auto &id = boost::apply_visitor(GetTypeIdVisitor(), item);
+      if (StringUtil::Match(id, wildcard_pattern)) {
+        filtered._actors.push_back(item);
+      }
+    }
+    return filtered;
+  }
 
   SharedPtr<Actor> ActorList::RetrieveActor(value_type &value) const {
     if (value.which() == 0u) {
