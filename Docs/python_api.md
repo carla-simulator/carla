@@ -103,6 +103,8 @@
 - `save_to_disk(path, color_converter=None)`
 - `__len__()`
 - `__iter__()`
+- `__getitem__(pos)`
+- `__setitem__(pos, color)`
 
 ## `carla.LidarMeasurement`
 
@@ -115,6 +117,8 @@
 - `save_to_disk(path)`
 - `__len__()`
 - `__iter__()`
+- `__getitem__(pos)`
+- `__setitem__(pos, location)`
 
 ## `carla.VehicleControl`
 
