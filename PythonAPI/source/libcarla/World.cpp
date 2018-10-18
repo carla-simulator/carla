@@ -33,6 +33,7 @@ void export_world() {
   namespace cg = carla::geom;
 
   class_<cc::ActorList>("ActorList", no_init)
+    .def("filter", &cc::ActorList::Filter)
     .def("__getitem__", &cc::ActorList::at)
     .def("__len__", &cc::ActorList::size)
     .def("__iter__", range(&cc::ActorList::begin, &cc::ActorList::end))
