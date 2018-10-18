@@ -117,6 +117,7 @@ static std::string SavePointCloudToDisk(T &self, std::string path) {
 void export_sensor_data() {
   using namespace boost::python;
   namespace cc = carla::client;
+  namespace cr = carla::rpc;
   namespace cs = carla::sensor;
   namespace csd = carla::sensor::data;
 
@@ -141,6 +142,12 @@ void export_sensor_data() {
     .def("save_to_disk", &SaveImageToDisk<csd::Image>, (arg("path"), arg("color_converter")=EColorConverter::None))
     .def("__len__", &csd::Image::size)
     .def("__iter__", iterator<csd::Image>())
+    .def("__getitem__", +[](const csd::Image &self, size_t pos) -> csd::Color {
+      return self.at(pos);
+    })
+    .def("__setitem__", +[](csd::Image &self, size_t pos, csd::Color color) {
+      self.at(pos) = color;
+    })
     .def(self_ns::str(self_ns::self))
   ;
 
@@ -152,6 +159,12 @@ void export_sensor_data() {
     .def("save_to_disk", &SavePointCloudToDisk<csd::LidarMeasurement>, (arg("path")))
     .def("__len__", &csd::LidarMeasurement::size)
     .def("__iter__", iterator<csd::LidarMeasurement>())
+    .def("__getitem__", +[](const csd::LidarMeasurement &self, size_t pos) -> cr::Location {
+      return self.at(pos);
+    })
+    .def("__setitem__", +[](csd::LidarMeasurement &self, size_t pos, const cr::Location &point) {
+      self.at(pos) = point;
+    })
     .def(self_ns::str(self_ns::self))
   ;
 }
