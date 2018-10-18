@@ -21,6 +21,7 @@
 - `get_spectator()`
 - `get_weather()`
 - `set_weather(weather_parameters)`
+- `get_actors()`
 - `spawn_actor(blueprint, transform, attach_to=None)`
 - `try_spawn_actor(blueprint, transform, attach_to=None)`
 
@@ -62,6 +63,12 @@
 - `__int__()`
 - `__float__()`
 - `__str__()`
+
+## `carla.ActorList`
+
+- `__getitem__(pos)`
+- `__len__()`
+- `__iter__()`
 
 ## `carla.Actor`
 

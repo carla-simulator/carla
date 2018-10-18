@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "carla/Iterator.h"
+#include "carla/ListView.h"
 #include "carla/NonCopyable.h"
 #include "carla/sensor/data/ActorDynamicState.h"
 #include "carla/sensor/data/RawEpisodeState.h"
@@ -53,6 +55,12 @@ namespace detail {
         log_debug("actor", id, "not found in episode");
       }
       return state;
+    }
+
+    auto GetActorIds() const {
+      return MakeListView(
+          iterator::make_map_keys_iterator(_actors.begin()),
+          iterator::make_map_keys_iterator(_actors.end()));
     }
 
     std::shared_ptr<const EpisodeState> DeriveNextStep(

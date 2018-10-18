@@ -93,6 +93,12 @@ namespace detail {
     _pimpl->AsyncCall("set_weather_parameters", weather);
   }
 
+  std::vector<rpc::Actor> Client::GetActorsById(
+      const std::vector<actor_id_type> &ids) {
+    using return_t = std::vector<rpc::Actor>;
+    return _pimpl->CallAndWait<return_t>("get_actors_by_id", ids);
+  }
+
   rpc::Actor Client::SpawnActor(
       const rpc::ActorDescription &description,
       const geom::Transform &transform) {

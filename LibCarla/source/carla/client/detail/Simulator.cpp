@@ -97,6 +97,8 @@ namespace detail {
           blueprint.MakeActorDescription(),
           transform);
     }
+    DEBUG_ASSERT(_episode != nullptr);
+    _episode->RegisterActor(actor);
     const auto gca = (gc == GarbageCollectionPolicy::Inherit ? _gc_policy : gc);
     auto result = ActorFactory::MakeActor(GetCurrentEpisode(), actor, gca);
     log_debug(

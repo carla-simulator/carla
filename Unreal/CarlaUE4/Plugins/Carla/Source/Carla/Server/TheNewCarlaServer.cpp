@@ -114,14 +114,27 @@ private:
       auto *Sensor = Cast<ASensor>(ActorView.GetActor());
       if (Sensor != nullptr)
       {
-        UE_LOG(LogCarlaServer, Log, TEXT("Making a new sensor stream for actor '%s'"), *ActorView.GetActorDescription()->Id);
-        auto Stream = StreamingServer.MakeStream();
-        Sensor->SetDataStream(Stream);
+        auto Stream = GetSensorStream(ActorView, *Sensor);
         return {ActorView, Stream.token()};
       }
     }
     return ActorView;
   }
+
+  carla::streaming::Stream GetSensorStream(FActorView ActorView, ASensor &Sensor) {
+    auto id = ActorView.GetActorId();
+    auto it = _StreamMap.find(id);
+    if (it == _StreamMap.end()) {
+      UE_LOG(LogCarlaServer, Log, TEXT("Making a new sensor stream for '%s'"), *ActorView.GetActorDescription()->Id);
+      auto result = _StreamMap.emplace(id, StreamingServer.MakeStream());
+      check(result.second);
+      it = result.first;
+      Sensor.SetDataStream(it->second);
+    }
+    return it->second;
+  }
+
+  std::unordered_map<FActorView::IdType, carla::streaming::Stream> _StreamMap;
 };
 
 // =============================================================================
@@ -175,6 +188,20 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       RespondErrorStr("unable to find weather");
     }
     Weather->ApplyWeather(weather);
+  });
+
+  Server.BindSync("get_actors_by_id", [this](const std::vector<FActorView::IdType> &ids) {
+    RequireEpisode();
+    std::vector<cr::Actor> Result;
+    Result.reserve(ids.size());
+    const auto &Registry = Episode->GetActorRegistry();
+    for (auto &&Id : ids) {
+      auto View = Registry.Find(Id);
+      if (View.IsValid()) {
+        Result.emplace_back(SerializeActor(View));
+      }
+    }
+    return Result;
   });
 
   Server.BindSync("spawn_actor", [this](

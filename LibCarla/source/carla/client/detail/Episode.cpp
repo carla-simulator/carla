@@ -39,6 +39,16 @@ namespace detail {
     });
   }
 
+  std::vector<rpc::Actor> Episode::GetActors() {
+    auto state = GetState();
+    auto actor_ids = state->GetActorIds();
+    auto missing_ids = _actors.GetMissingIds(actor_ids);
+    if (!missing_ids.empty()) {
+      _actors.InsertRange(_client.GetActorsById(missing_ids));
+    }
+    return _actors.GetActorsById(actor_ids);
+  }
+
 } // namespace detail
 } // namespace client
 } // namespace carla
