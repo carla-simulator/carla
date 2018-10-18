@@ -13,7 +13,7 @@ namespace carla {
 namespace client {
 
   Sensor::~Sensor() {
-    if (IsAlive()) {
+    if (IsAlive() && _is_listening) {
       log_warning(
           "sensor object went out of the scope but the sensor is still alive",
           "in the simulation:",
