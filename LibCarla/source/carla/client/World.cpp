@@ -40,6 +40,10 @@ namespace client {
     _episode->SetWeatherParameters(weather);
   }
 
+  ActorList World::GetActors() const {
+    return {_episode, _episode->GetAllTheActorsInTheEpisode()};
+  }
+
   SharedPtr<Actor> World::SpawnActor(
       const ActorBlueprint &blueprint,
       const geom::Transform &transform,

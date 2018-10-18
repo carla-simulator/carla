@@ -6,12 +6,38 @@
 
 #include <carla/PythonUtil.h>
 #include <carla/client/Actor.h>
+#include <carla/client/ActorList.h>
 #include <carla/client/World.h>
+
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+
+
+namespace carla {
+namespace client {
+
+  std::ostream &operator<<(std::ostream &out, const ActorList &actors) {
+    return PrintList(out, actors);
+  }
+
+  std::ostream &operator<<(std::ostream &out, const World &world) {
+    out << "World(id=" << world.GetId() << ",map_name=" << world.GetMapName() << ')';
+    return out;
+  }
+
+} // namespace client
+} // namespace carla
 
 void export_world() {
   using namespace boost::python;
   namespace cc = carla::client;
   namespace cg = carla::geom;
+
+  class_<cc::ActorList>("ActorList", no_init)
+    .def("__getitem__", &cc::ActorList::at)
+    .def("__len__", &cc::ActorList::size)
+    .def("__iter__", range(&cc::ActorList::begin, &cc::ActorList::end))
+    .def(self_ns::str(self_ns::self))
+  ;
 
 #define SPAWN_ACTOR_WITHOUT_GIL(fn) +[]( \
         cc::World &self, \
@@ -30,8 +56,10 @@ void export_world() {
     .def("get_spectator", CONST_CALL_WITHOUT_GIL(cc::World, GetSpectator))
     .def("get_weather", CONST_CALL_WITHOUT_GIL(cc::World, GetWeather))
     .def("set_weather", &cc::World::SetWeather)
+    .def("get_actors", CONST_CALL_WITHOUT_GIL(cc::World, GetActors))
     .def("try_spawn_actor", SPAWN_ACTOR_WITHOUT_GIL(TrySpawnActor))
     .def("spawn_actor", SPAWN_ACTOR_WITHOUT_GIL(SpawnActor))
+    .def(self_ns::str(self_ns::self))
   ;
 
 #undef SPAWN_ACTOR_WITHOUT_GIL

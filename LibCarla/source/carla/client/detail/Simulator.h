@@ -23,7 +23,6 @@ namespace client {
 
   class ActorBlueprint;
   class BlueprintLibrary;
-  class Episode;
   class Sensor;
 
 namespace detail {
@@ -117,6 +116,11 @@ namespace detail {
     /// @name General operations with actors
     // =========================================================================
     /// @{
+
+    std::vector<rpc::Actor> GetAllTheActorsInTheEpisode() const {
+      DEBUG_ASSERT(_episode != nullptr);
+      return _episode->GetActors();
+    }
 
     SharedPtr<Actor> SpawnActor(
         const ActorBlueprint &blueprint,

@@ -8,6 +8,7 @@
 
 #include "carla/AtomicSharedPtr.h"
 #include "carla/NonCopyable.h"
+#include "carla/client/detail/CachedActorList.h"
 #include "carla/client/detail/EpisodeState.h"
 #include "carla/rpc/EpisodeInfo.h"
 
@@ -43,6 +44,12 @@ namespace detail {
       return state;
     }
 
+    void RegisterActor(rpc::Actor actor) {
+      _actors.Insert(std::move(actor));
+    }
+
+    std::vector<rpc::Actor> GetActors();
+
   private:
 
     Client &_client;
@@ -50,6 +57,8 @@ namespace detail {
     const rpc::EpisodeInfo _description;
 
     AtomicSharedPtr<const EpisodeState> _state;
+
+    CachedActorList _actors;
   };
 
 } // namespace detail

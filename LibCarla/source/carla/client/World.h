@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/Memory.h"
+#include "carla/client/ActorList.h"
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/geom/Transform.h"
 #include "carla/rpc/WeatherParameters.h"
@@ -40,6 +41,8 @@ namespace client {
     rpc::WeatherParameters GetWeather() const;
 
     void SetWeather(const rpc::WeatherParameters &weather);
+
+    ActorList GetActors() const;
 
     SharedPtr<Actor> SpawnActor(
         const ActorBlueprint &blueprint,

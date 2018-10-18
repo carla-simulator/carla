@@ -11,20 +11,6 @@
 
 #include <ostream>
 
-template <typename Iterable>
-static std::ostream &PrintList(std::ostream &out, const Iterable &list) {
-  out << '[';
-  if (!list.empty()) {
-    auto it = list.begin();
-    out << *it;
-    for (++it; it != list.end(); ++it) {
-      out << ", " << *it;
-    }
-  }
-  out << ']';
-  return out;
-}
-
 namespace std {
 
   std::ostream &operator<<(std::ostream &out, const std::vector<std::string> &vector_of_strings) {
