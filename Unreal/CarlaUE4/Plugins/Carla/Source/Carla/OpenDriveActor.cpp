@@ -146,10 +146,10 @@ void AOpenDriveActor::GenerateWaypoints(const carla::road::element::RoadSegment 
 
     for (int i = 0; i < drivingLanes.Num(); ++i)
     {
-        ARoutePlanner *routePlanner = GetWorld()->SpawnActor<ARoutePlanner>();
+        
         TArray<FVector> points;
 
-        for (float offset = 0.0f; offset < road->GetLength(); offset += .5)
+        for (float offset = 0.0f; offset < road->GetLength(); offset += 2.0)
         {
             carla::road::element::DirectedPoint p = road->GetDirectedPointIn(offset);
             double heading = p.tangent + carla::geom::Math::pi_half();
@@ -163,8 +163,8 @@ void AOpenDriveActor::GenerateWaypoints(const carla::road::element::RoadSegment 
             FVector waypoint = loc + (drivingLanes[i].lane < 0 ? dir : -dir);
             points.Add(waypoint);
 
-            float f = offset / road->GetLength(); // green to red
-            DrawDebugPoint(GetWorld(), waypoint, 3, FColor(255 * f, 255 - 255 * f, 0), true);
+            //float f = offset / road->GetLength(); // green to red
+            //DrawDebugPoint(GetWorld(), waypoint, 3, FColor(255 * f, 255 - 255 * f, 0), true);
         }
 
         if (drivingLanes[i].lane < 0)
@@ -172,48 +172,32 @@ void AOpenDriveActor::GenerateWaypoints(const carla::road::element::RoadSegment 
             Algo::Reverse(points);
         }
 
-        DrawDebugString(GetWorld(), points[0], FString().Printf(TEXT("RoadID: %d\nLaneID: %d"), road->GetId(), drivingLanes[i].lane));
+        //DrawDebugString(GetWorld(), points[0], FString().Printf(TEXT("RoadID: %d\nLaneID: %d"), road->GetId(), drivingLanes[i].lane));
 
-        routePlanner->SetActorLocation(points[0]);
-        routePlanner->AddRoute(1.0f, points);
-        routePlanner->Init();
+        if (points.Num() >= 2)
+        {
+            ARoutePlanner *routePlanner = GetWorld()->SpawnActor<ARoutePlanner>();
+            routePlanner->AddRoute(1.0f, points);
 
+            routePlanner->SetActorLocation(points[0]);
+            routePlanner->Init();
+
+            RoutePlanners.Add(routePlanner);
+        }
+    }
+}
+
+void AOpenDriveActor::BeginDestroy()
+{
+    for (int i = 0; i < RoutePlanners.Num(); ++i)
+    {
+        RoutePlanners[i]->Destroy();
     }
 
-    /*for (float offset = 0.0f; offset < road->GetLength(); offset += .5)
-    {
-        carla::road::element::DirectedPoint p = road->GetDirectedPointIn(offset);
-        double heading = p.tangent + carla::geom::Math::pi_half();
-
-        FVector loc(p.location.x * 100, -p.location.y * 100, p.location.z * 100 + 100);
-        DrawDebugPoint(GetWorld(), loc, 3, FColor(255 * (offset / road->GetLength()), 255 - 255 * (offset / road->GetLength()), 0), true);
-
-        for (int i = 0; i < drivingLanes.Num(); ++i)
-        {
-            FVector dir(0.0f, 0.0f, 0.0f);
-            FVector waypoint = loc;
-
-            dir.X = std::cos(heading) * (drivingLanes[i].totalWidth - drivingLanes[i].halfLaneWidth);
-            dir.Y = std::sin(-heading) * (drivingLanes[i].totalWidth - drivingLanes[i].halfLaneWidth);
-            
-            waypoint += (drivingLanes[i].lane < 0 ? dir : -dir);
-            points.Add(waypoint);
-
-            if (drivingLanes[i].lane < 0)
-            {
-                DrawDebugPoint(GetWorld(), waypoint, 3, FColor::Magenta, true);
-            }
-            else
-            {
-                DrawDebugPoint(GetWorld(), waypoint, 3, FColor::Cyan, true);
-            }
-
-            if (std::abs(offset - 3.0f) < 0.0000001) {
-                DrawDebugString(GetWorld(), waypoint, FString().Printf(TEXT("RoadID: %d\nLaneID: %d"), road->GetId(), drivingLanes[i].lane));
-            }
-        }
-    }*/
+    RoutePlanners.Empty();
+    Super::BeginDestroy();
 }
+
 ///////////////////////////////////////////////////////////
 
 // Sets default values
