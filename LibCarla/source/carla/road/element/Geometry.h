@@ -110,9 +110,12 @@ namespace element {
     DirectedPoint PosFromDist(const double dist) const override {
       assert(dist > 0);
       assert(_length > 0.0);
+
       DirectedPoint p(_start_position, _heading);
+
       p.location.x += dist * std::cos(p.tangent);
       p.location.y += dist * std::sin(p.tangent);
+
       return p;
     }
   };
@@ -133,14 +136,52 @@ namespace element {
       assert(dist > 0);
       assert(_length > 0.0);
       assert(std::fabs(_curvature) > 1e-15);
-      const double length = dist;
+
+      /*
+      const double length = dist / _length;
       const double radius = 1.0 / _curvature;
+
       DirectedPoint p(_start_position, _heading);
       p.location.x -= radius * std::cos(p.tangent - geom::Math::pi_half());
       p.location.y -= radius * std::sin(p.tangent - geom::Math::pi_half());
+
       p.tangent += length * _curvature;
       p.location.x += radius * std::cos(p.tangent - geom::Math::pi_half());
       p.location.y += radius * std::sin(p.tangent - geom::Math::pi_half());
+      return p;
+      */
+
+      /*
+      DirectedPoint p;
+      double start_angle = 0.0;
+
+      if (_curvature > 0.0) start_angle = _heading - geom::Math::pi_half();
+      else start_angle = _heading + geom::Math::pi_half();
+
+      const double arc_radius = std::abs(1.0 / _curvature);
+      const double stepAngle = dist / (1.0 / _curvature);
+
+      double start_X = _start_position.x + std::cos(start_angle - geom::Math::pi()) * arc_radius;
+      double start_Y = _start_position.y + std::sin(start_angle - geom::Math::pi()) * arc_radius;
+
+      p.location.x = start_X + std::cos(start_angle + stepAngle) * arc_radius;
+      p.location.y = start_Y + std::sin(start_angle + stepAngle) * arc_radius;
+
+      p.tangent = start_angle + stepAngle + (_curvature <= 0.0 ? -geom::Math::pi_half() : geom::Math::pi_half());
+      return p;
+      */
+
+      const double length = dist;
+      const double radius = 1.0 / _curvature;
+      DirectedPoint p(_start_position, _heading);
+
+      p.location.x -= radius * std::cos(p.tangent - geom::Math::pi_half());
+      p.location.y -= radius * std::sin(p.tangent - geom::Math::pi_half());
+
+      p.tangent += length * _curvature;
+      p.location.x += radius * std::cos(p.tangent - geom::Math::pi_half());
+      p.location.y += radius * std::sin(p.tangent - geom::Math::pi_half());
+
       return p;
     }
 

@@ -87,7 +87,6 @@ void ARoutePlanner::AddRoute(float probability, const TArray<FVector> &routePoin
     for (int i = 0; i < routePoints.Num(); ++i)
     {
         NewSpline->AddSplinePoint(routePoints[i], ESplineCoordinateSpace::World, true);
-        DrawDebugPoint(GetWorld(), routePoints[i], 3, FColor::Red, true, 999999999999);
     }
 
     Routes.Add(NewSpline);
