@@ -72,7 +72,7 @@ TEST(streaming, low_level_sending_strings) {
   }
 
   std::this_thread::sleep_for(2ms);
-  ASSERT_GE(message_count, number_of_messages - 1u);
+  ASSERT_GE(message_count, number_of_messages - 3u);
 }
 
 TEST(streaming, low_level_unsubscribing) {
@@ -114,7 +114,7 @@ TEST(streaming, low_level_unsubscribing) {
       stream << message_text;
     }
 
-    ASSERT_GE(message_count, number_of_messages - 1u);
+    ASSERT_GE(message_count, number_of_messages - 3u);
   }
 }
 
@@ -249,7 +249,7 @@ TEST(streaming, multi_stream) {
     std::this_thread::sleep_for(6ms);
 
     for (auto &pair : v) {
-      ASSERT_GE(pair.first, number_of_messages - 1u);
+      ASSERT_GE(pair.first, number_of_messages - 3u);
     }
   }
 }
