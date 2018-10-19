@@ -4,7 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+
+#include "Traffic/RoutePlanner.h"
+#include "carla/geom/Math.h"
+
+#include <compiler/disable-ue4-macros.h>
+#include <carla/opendrive/OpenDrive.h>
+#include <compiler/enable-ue4-macros.h>
+
 #include "OpenDriveActor.generated.h"
+
 
 UCLASS()
 class CARLA_API AOpenDriveActor : public AActor
@@ -14,6 +23,8 @@ class CARLA_API AOpenDriveActor : public AActor
 public:
     // Sets default values for this actor's properties
     AOpenDriveActor();
+
+    void fnc_generate_points(const carla::road::element::RoadSegment *road, ARoutePlanner *outRoutePlaner);
 
 protected:
     // Called when the game starts or when spawned
