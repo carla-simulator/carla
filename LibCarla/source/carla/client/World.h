@@ -6,56 +6,57 @@
 
 #pragma once
 
-#include "carla/Debug.h"
 #include "carla/Memory.h"
-#include "carla/NonCopyable.h"
-#include "carla/client/Client.h"
+#include "carla/client/ActorList.h"
+#include "carla/client/detail/EpisodeProxy.h"
+#include "carla/geom/Transform.h"
+#include "carla/rpc/WeatherParameters.h"
 
 namespace carla {
 namespace client {
 
   class Actor;
+  class ActorBlueprint;
+  class BlueprintLibrary;
 
-  class World
-    : public EnableSharedFromThis<World>,
-      private NonCopyable {
+  class World {
   public:
 
-    SharedPtr<BlueprintLibrary> GetBlueprintLibrary() const {
-      return _parent->GetBlueprintLibrary();
-    }
+    explicit World(detail::EpisodeProxy episode) : _episode(std::move(episode)) {}
 
-    SharedPtr<Actor> GetSpectator() const {
-      return _parent->GetSpectator();
-    }
+    World(const World &) = default;
+    World(World &&) = default;
 
-    SharedPtr<Actor> TrySpawnActor(
-        const ActorBlueprint &blueprint,
-        const Transform &transform,
-        Actor *parent = nullptr);
+    World &operator=(const World &) = default;
+    World &operator=(World &&) = default;
+
+    uint32_t GetId() const;
+
+    const std::string &GetMapName() const;
+
+    SharedPtr<BlueprintLibrary> GetBlueprintLibrary() const;
+
+    SharedPtr<Actor> GetSpectator() const;
+
+    rpc::WeatherParameters GetWeather() const;
+
+    void SetWeather(const rpc::WeatherParameters &weather);
+
+    ActorList GetActors() const;
 
     SharedPtr<Actor> SpawnActor(
         const ActorBlueprint &blueprint,
-        const Transform &transform,
-        Actor *parent = nullptr) {
-      return _parent->SpawnActor(blueprint, transform, parent);
-    }
+        const geom::Transform &transform,
+        Actor *parent = nullptr);
 
-    Client &GetClient() const {
-      DEBUG_ASSERT(_parent != nullptr);
-      return *_parent;
-    }
+    SharedPtr<Actor> TrySpawnActor(
+        const ActorBlueprint &blueprint,
+        const geom::Transform &transform,
+        Actor *parent = nullptr);
 
   private:
 
-    friend class Client;
-
-    explicit World(SharedPtr<Client> parent)
-      : _parent(std::move(parent)) {
-      DEBUG_ASSERT(_parent != nullptr);
-    }
-
-    SharedPtr<Client> _parent;
+    detail::EpisodeProxy _episode;
   };
 
 } // namespace client

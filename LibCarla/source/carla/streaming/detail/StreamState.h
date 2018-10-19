@@ -6,57 +6,22 @@
 
 #pragma once
 
-#include "carla/NonCopyable.h"
-#include "carla/streaming/detail/Session.h"
-#include "carla/streaming/detail/Token.h"
-
-#include <atomic>
-#include <memory>
+#include "carla/AtomicSharedPtr.h"
+#include "carla/streaming/detail/StreamStateBase.h"
 
 namespace carla {
-
-  class BufferPool;
-
 namespace streaming {
 namespace detail {
 
-  /// Handles the synchronization of the shared session.
-  class SessionHolder : private NonCopyable {
+  /// A stream state that can hold only a single session.
+  class StreamState final : public StreamStateBase {
   public:
 
-    void set_session(std::shared_ptr<Session> session) {
-      std::atomic_store_explicit(&_session, session, std::memory_order_relaxed);
-    }
-
-  protected:
-
-    std::shared_ptr<Session> get_session() const {
-      return std::atomic_load_explicit(&_session, std::memory_order_relaxed);
-    }
-
-  private:
-
-    std::shared_ptr<Session> _session;
-  };
-
-  /// Shared state among all the copies of a stream. Provides access to the
-  /// underlying server session if active.
-  class StreamState : public SessionHolder {
-  public:
-
-    explicit StreamState(const token_type &token);
-
-    ~StreamState();
-
-    const token_type &token() const {
-      return _token;
-    }
-
-    Buffer MakeBuffer();
+    using StreamStateBase::StreamStateBase;
 
     template <typename... Buffers>
     void Write(Buffers... buffers) {
-      auto session = get_session();
+      auto session = _session.load();
       if (session != nullptr) {
         session->Write(std::move(buffers)...);
       }
@@ -64,9 +29,21 @@ namespace detail {
 
   private:
 
-    const token_type _token;
+    void ConnectSession(std::shared_ptr<Session> session) final {
+      DEBUG_ASSERT(session != nullptr);
+      _session = std::move(session);
+    }
 
-    const std::shared_ptr<BufferPool> _buffer_pool;
+    void DisconnectSession(std::shared_ptr<Session> DEBUG_ONLY(session)) final {
+      DEBUG_ASSERT(session == _session.load());
+      _session = nullptr;
+    }
+
+    void ClearSessions() final {
+      _session = nullptr;
+    }
+
+    AtomicSharedPtr<Session> _session;
   };
 
 } // namespace detail

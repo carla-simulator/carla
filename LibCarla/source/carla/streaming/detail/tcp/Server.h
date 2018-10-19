@@ -20,6 +20,8 @@ namespace streaming {
 namespace detail {
 namespace tcp {
 
+  /// @warning This server cannot be destructed before its @a io_service is
+  /// stopped.
   class Server : private NonCopyable {
   public:
 
@@ -34,16 +36,25 @@ namespace tcp {
       _timeout = timeout;
     }
 
-    /// Start listening for connections, on each new connection @a callback is
-    /// called.
-    template <typename Functor>
-    void Listen(Functor callback) {
-      _acceptor.get_io_service().post([=]() { OpenSession(_timeout, callback); });
+    /// Start listening for connections. On each new connection, @a
+    /// on_session_opened is called, and @a on_session_closed when the session
+    /// is closed.
+    template <typename FunctorT1, typename FunctorT2>
+    void Listen(FunctorT1 on_session_opened, FunctorT2 on_session_closed) {
+      _acceptor.get_io_service().post([=]() {
+        OpenSession(
+            _timeout,
+            std::move(on_session_opened),
+            std::move(on_session_closed));
+      });
     }
 
   private:
 
-    void OpenSession(time_duration timeout, ServerSession::callback_function_type callback);
+    void OpenSession(
+        time_duration timeout,
+        ServerSession::callback_function_type on_session_opened,
+        ServerSession::callback_function_type on_session_closed);
 
     boost::asio::ip::tcp::acceptor _acceptor;
 

@@ -9,8 +9,9 @@
 #include "carla/Debug.h"
 #include "carla/sensor/SensorData.h"
 
-#include <type_traits>
+#include <exception>
 #include <iterator>
+#include <type_traits>
 
 namespace carla {
 namespace sensor {
@@ -24,9 +25,13 @@ namespace data {
     using value_type = T;
     using iterator = value_type *;
     using const_iterator = typename std::add_const<value_type>::type *;
-    using size_type = typename std::iterator_traits<iterator>::difference_type;
-    using pointer = typename std::iterator_traits<iterator>::pointer;
-    using reference = typename std::iterator_traits<iterator>::reference;
+    using reverse_iterator = std::reverse_iterator<iterator>;
+    using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+    using size_type = size_t;
+    using pointer = value_type *;
+    using const_pointer = typename std::add_const<value_type>::type *;
+    using reference = value_type &;
+    using const_reference = typename std::add_const<value_type>::type &;
 
     iterator begin() {
      return reinterpret_cast<iterator>(_data.begin() + _offset);
@@ -52,6 +57,30 @@ namespace data {
      return cend();
     }
 
+    reverse_iterator rbegin() {
+     return reverse_iterator(begin());
+    }
+
+    const_reverse_iterator crbegin() const {
+     return const_reverse_iterator(cbegin());
+    }
+
+    const_reverse_iterator rbegin() const {
+     return crbegin();
+    }
+
+    reverse_iterator rend() {
+     return reverse_iterator(end());
+    }
+
+    const_reverse_iterator crend() const {
+     return const_reverse_iterator(cend());
+    }
+
+    const_reverse_iterator rend() const {
+     return crend();
+    }
+
     bool empty() const {
       return begin() == end();
     }
@@ -68,12 +97,26 @@ namespace data {
       return begin();
     }
 
-    reference operator[](size_type i) {
-      return data()[i];
+    reference operator[](size_type pos) {
+      return data()[pos];
     }
 
-    const reference operator[](size_type i) const {
-      return data()[i];
+    const_reference operator[](size_type pos) const {
+      return data()[pos];
+    }
+
+    reference at(size_type pos) {
+      if (!(pos < size())) {
+        throw std::out_of_range("Array index out of range");
+      }
+      return operator[](pos);
+    }
+
+    const_reference at(size_type pos) const {
+      if (!(pos < size())) {
+        throw std::out_of_range("Array index out of range");
+      }
+      return operator[](pos);
     }
 
   protected:
@@ -91,6 +134,7 @@ namespace data {
       DEBUG_ASSERT(_data.size() >= _offset);
       DEBUG_ASSERT((_data.size() - _offset) % sizeof(T) == 0u);
       _offset = offset;
+      DEBUG_ASSERT(begin() <= end());
     }
 
     const RawData &GetRawData() const {

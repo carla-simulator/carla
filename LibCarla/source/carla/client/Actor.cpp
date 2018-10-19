@@ -5,29 +5,46 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "carla/client/Actor.h"
-#include "carla/client/Client.h"
+
+#include "carla/Logging.h"
+#include "carla/client/detail/Simulator.h"
 
 namespace carla {
 namespace client {
 
-  Location Actor::GetLocation() {
-    return GetWorld()->GetClient().GetActorLocation(*this);
+  geom::Location Actor::GetLocation() const {
+    return GetEpisode()->GetActorLocation(*this);
   }
 
-  Transform Actor::GetTransform() {
-    return GetWorld()->GetClient().GetActorTransform(*this);
+  geom::Transform Actor::GetTransform() const {
+    return GetEpisode()->GetActorTransform(*this);
   }
 
-  bool Actor::SetLocation(const Location &location) {
-    return GetWorld()->GetClient().SetActorLocation(*this, location);
+  geom::Vector3D Actor::GetVelocity() const {
+    return GetEpisode()->GetActorVelocity(*this);
   }
 
-  bool Actor::SetTransform(const Transform &transform) {
-    return GetWorld()->GetClient().SetActorTransform(*this, transform);
+  geom::Vector3D Actor::GetAcceleration() const {
+    return GetEpisode()->GetActorAcceleration(*this);
+  }
+
+  void Actor::SetLocation(const geom::Location &location) {
+    GetEpisode()->SetActorLocation(*this, location);
+  }
+
+  void Actor::SetTransform(const geom::Transform &transform) {
+    GetEpisode()->SetActorTransform(*this, transform);
   }
 
   void Actor::Destroy() {
-    GetWorld()->GetClient().DestroyActor(*this);
+    if (_is_alive) {
+      // Let the exceptions leave the function, IsAlive() will still be true.
+      _is_alive = !GetEpisode()->DestroyActor(*this);
+    } else {
+      log_warning(
+          "attempting to destroy an actor that is already dead:",
+          GetDisplayId());
+    }
   }
 
 } // namespace client

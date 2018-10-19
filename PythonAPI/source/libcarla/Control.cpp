@@ -4,9 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include <carla/client/Control.h>
-
-#include <boost/python.hpp>
+#include <carla/rpc/VehicleControl.h>
 
 #include <ostream>
 
@@ -28,20 +26,22 @@ namespace rpc {
 
 void export_control() {
   using namespace boost::python;
-  namespace cc = carla::client;
+  namespace cr = carla::rpc;
 
-  class_<cc::VehicleControl>("VehicleControl")
+  class_<cr::VehicleControl>("VehicleControl")
     .def(init<float, float, float, bool, bool>(
         (arg("throttle")=0.0f,
          arg("steer")=0.0f,
          arg("brake")=0.0f,
          arg("hand_brake")=false,
          arg("reverse")=false)))
-    .def_readwrite("throttle", &cc::VehicleControl::throttle)
-    .def_readwrite("steer", &cc::VehicleControl::steer)
-    .def_readwrite("brake", &cc::VehicleControl::brake)
-    .def_readwrite("hand_brake", &cc::VehicleControl::hand_brake)
-    .def_readwrite("reverse", &cc::VehicleControl::reverse)
+    .def_readwrite("throttle", &cr::VehicleControl::throttle)
+    .def_readwrite("steer", &cr::VehicleControl::steer)
+    .def_readwrite("brake", &cr::VehicleControl::brake)
+    .def_readwrite("hand_brake", &cr::VehicleControl::hand_brake)
+    .def_readwrite("reverse", &cr::VehicleControl::reverse)
+    .def("__eq__", &cr::VehicleControl::operator==)
+    .def("__ne__", &cr::VehicleControl::operator!=)
     .def(self_ns::str(self_ns::self))
   ;
 }

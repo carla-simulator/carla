@@ -11,13 +11,17 @@
 - `set_timeout(float_seconds)`
 - `get_client_version()`
 - `get_server_version()`
-- `ping()`
 - `get_world()`
 
 ## `carla.World`
 
+- `id`
+- `map_name`
 - `get_blueprint_library()`
 - `get_spectator()`
+- `get_weather()`
+- `set_weather(weather_parameters)`
+- `get_actors()`
 - `spawn_actor(blueprint, transform, attach_to=None)`
 - `try_spawn_actor(blueprint, transform, attach_to=None)`
 
@@ -60,25 +64,39 @@
 - `__float__()`
 - `__str__()`
 
+## `carla.ActorList`
+
+- `filter(wildcard_pattern)`
+- `__getitem__(pos)`
+- `__len__()`
+- `__iter__()`
+
 ## `carla.Actor`
 
 - `id`
 - `type_id`
+- `bounding_box`
+- `is_alive`
 - `get_world()`
 - `get_location()`
 - `get_transform()`
+- `get_velocity()`
+- `get_acceleration()`
 - `set_location(location)`
 - `set_transform(transform)`
 - `destroy()`
 
 ## `carla.Vehicle(carla.Actor)`
 
+- `control`
 - `apply_control(vehicle_control)`
 - `set_autopilot(enabled=True)`
 
 ## `carla.Sensor(carla.Actor)`
 
+- `is_listening`
 - `listen(callback_function)`
+- `stop()`
 
 ## `carla.Image`
 
@@ -89,8 +107,12 @@
 - `type`
 - `fov`
 - `raw_data`
+- `convert(color_converter)`
+- `save_to_disk(path, color_converter=None)`
 - `__len__()`
 - `__iter__()`
+- `__getitem__(pos)`
+- `__setitem__(pos, color)`
 
 ## `carla.LidarMeasurement`
 
@@ -100,8 +122,11 @@
 - `channels`
 - `raw_data`
 - `get_point_count(channel)`
+- `save_to_disk(path)`
 - `__len__()`
 - `__iter__()`
+- `__getitem__(pos)`
+- `__setitem__(pos, location)`
 
 ## `carla.VehicleControl`
 
@@ -110,6 +135,19 @@
 - `brake`
 - `hand_brake`
 - `reverse`
+- `__eq__()`
+- `__ne__()`
+
+## `carla.WeatherParameters`
+
+- `cloudyness`
+- `precipitation`
+- `precipitation_deposits`
+- `wind_intensity`
+- `sun_azimuth_angle`
+- `sun_altitude_angle`
+- `__eq__()`
+- `__ne__()`
 
 ## `carla.Location`
 
@@ -134,3 +172,10 @@
 - `g`
 - `b`
 - `a`
+
+## `carla.ColorConverter`
+
+- `None`
+- `Depth`
+- `LogarithmicDepth`
+- `CityScapesPalette`

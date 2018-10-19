@@ -5,20 +5,22 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
+#include "Carla/Server/TheNewCarlaServer.h"
+
+#include "Carla/Sensor/Sensor.h"
 
 #include "GameFramework/SpectatorPawn.h"
 
-#include "Carla/Server/TheNewCarlaServer.h"
-#include "Carla/Sensor/Sensor.h"
-#include <carla/Version.h>
-
 #include <compiler/disable-ue4-macros.h>
+#include <carla/Version.h>
 #include <carla/rpc/Actor.h>
-#include <carla/rpc/VehicleControl.h>
 #include <carla/rpc/ActorDefinition.h>
 #include <carla/rpc/ActorDescription.h>
+#include <carla/rpc/EpisodeInfo.h>
 #include <carla/rpc/Server.h>
 #include <carla/rpc/Transform.h>
+#include <carla/rpc/VehicleControl.h>
+#include <carla/rpc/WeatherParameters.h>
 #include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
 
@@ -112,14 +114,27 @@ private:
       auto *Sensor = Cast<ASensor>(ActorView.GetActor());
       if (Sensor != nullptr)
       {
-        UE_LOG(LogCarlaServer, Log, TEXT("Making a new sensor stream for actor '%s'"), *ActorView.GetActorDescription()->Id);
-        auto Stream = StreamingServer.MakeStream();
-        Sensor->SetDataStream(Stream);
+        auto Stream = GetSensorStream(ActorView, *Sensor);
         return {ActorView, Stream.token()};
       }
     }
     return ActorView;
   }
+
+  carla::streaming::Stream GetSensorStream(FActorView ActorView, ASensor &Sensor) {
+    auto id = ActorView.GetActorId();
+    auto it = _StreamMap.find(id);
+    if (it == _StreamMap.end()) {
+      UE_LOG(LogCarlaServer, Log, TEXT("Making a new sensor stream for '%s'"), *ActorView.GetActorDescription()->Id);
+      auto result = _StreamMap.emplace(id, StreamingServer.MakeStream());
+      check(result.second);
+      it = result.first;
+      Sensor.SetDataStream(it->second);
+    }
+    return it->second;
+  }
+
+  std::unordered_map<FActorView::IdType, carla::streaming::Stream> _StreamMap;
 };
 
 // =============================================================================
@@ -132,7 +147,16 @@ void FTheNewCarlaServer::FPimpl::BindActions()
 
   Server.BindAsync("ping", []() { return true; });
 
-  Server.BindAsync("version", []() { return std::string(carla::version()); });
+  Server.BindAsync("version", []() -> std::string { return carla::version(); });
+
+  Server.BindSync("get_episode_info", [this]() -> cr::EpisodeInfo {
+    RequireEpisode();
+    auto WorldObserver = Episode->GetWorldObserver();
+    if (WorldObserver == nullptr) {
+      WorldObserver = Episode->StartWorldObserver(StreamingServer.MakeMultiStream());
+    }
+    return {Episode->GetId(), cr::FromFString(Episode->GetMapName()), WorldObserver->GetStreamToken()};
+  });
 
   Server.BindSync("get_actor_definitions", [this]() {
     RequireEpisode();
@@ -148,16 +172,48 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     return ActorView;
   });
 
+  Server.BindSync("get_weather_parameters", [this]() -> cr::WeatherParameters {
+    RequireEpisode();
+    auto *Weather = Episode->GetWeather();
+    if (Weather == nullptr) {
+      RespondErrorStr("unable to find weather");
+    }
+    return Weather->GetCurrentWeather();
+  });
+
+  Server.BindSync("set_weather_parameters", [this](const cr::WeatherParameters &weather) {
+    RequireEpisode();
+    auto *Weather = Episode->GetWeather();
+    if (Weather == nullptr) {
+      RespondErrorStr("unable to find weather");
+    }
+    Weather->ApplyWeather(weather);
+  });
+
+  Server.BindSync("get_actors_by_id", [this](const std::vector<FActorView::IdType> &ids) {
+    RequireEpisode();
+    std::vector<cr::Actor> Result;
+    Result.reserve(ids.size());
+    const auto &Registry = Episode->GetActorRegistry();
+    for (auto &&Id : ids) {
+      auto View = Registry.Find(Id);
+      if (View.IsValid()) {
+        Result.emplace_back(SerializeActor(View));
+      }
+    }
+    return Result;
+  });
+
   Server.BindSync("spawn_actor", [this](
-      const cr::Transform &Transform,
-      cr::ActorDescription Description) -> cr::Actor {
+      cr::ActorDescription Description,
+      const cr::Transform &Transform) -> cr::Actor {
     RequireEpisode();
     return SerializeActor(SpawnActor(Transform, Description));
   });
 
   Server.BindSync("spawn_actor_with_parent", [this](
-      const cr::Transform &Transform,
       cr::ActorDescription Description,
+      const cr::Transform &Transform,
       cr::Actor Parent) -> cr::Actor {
     RequireEpisode();
     auto ActorView = SpawnActor(Transform, Description);
@@ -169,10 +225,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   Server.BindSync("destroy_actor", [this](cr::Actor Actor) {
     RequireEpisode();
     auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
-    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
-      RespondErrorStr("unable to destroy actor: actor not found");
+    if (!ActorView.IsValid()) {
+      UE_LOG(LogCarlaServer, Warning, TEXT("unable to destroy actor: not found"));
+      return false;
     }
-    Episode->DestroyActor(ActorView.GetActor());
+    return Episode->DestroyActor(ActorView.GetActor());
   });
 
   Server.BindSync("attach_actors", [this](cr::Actor Child, cr::Actor Parent) {
@@ -209,6 +266,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     }
     // This function only works with teleport physics, to reset speeds we need
     // another method.
+    /// @todo print error instead of returning false.
     return ActorView.GetActor()->SetActorLocation(
         Location,
         false,
