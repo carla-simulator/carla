@@ -49,12 +49,12 @@ ARoutePlanner::ARoutePlanner(const FObjectInitializer& ObjectInitializer) :
 {
   RootComponent =
       ObjectInitializer.CreateDefaultSubobject<USceneComponent>(this, TEXT("SceneRootComponent"));
-  RootComponent->SetMobility(EComponentMobility::Static);
+  RootComponent->SetMobility(EComponentMobility::Movable);
 
   TriggerVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerVolume"));
   TriggerVolume->SetupAttachment(RootComponent);
   TriggerVolume->SetHiddenInGame(true);
-  TriggerVolume->SetMobility(EComponentMobility::Static);
+  TriggerVolume->SetMobility(EComponentMobility::Movable);
   TriggerVolume->SetCollisionProfileName(FName("OverlapAll"));
   TriggerVolume->bGenerateOverlapEvents = true;
 }
@@ -83,6 +83,7 @@ void ARoutePlanner::PostEditChangeProperty(FPropertyChangedEvent& PropertyChange
 void ARoutePlanner::AddRoute(float probability, const TArray<FVector> &routePoints)
 {
     USplineComponent *NewSpline = NewObject<USplineComponent>(this);
+    NewSpline->bHiddenInGame = false;
 
     for (int i = 0; i < routePoints.Num(); ++i)
     {
@@ -126,7 +127,6 @@ void ARoutePlanner::Init()
 void ARoutePlanner::BeginPlay()
 {
   Super::BeginPlay();
-  Init();
 }
 
 void ARoutePlanner::EndPlay(const EEndPlayReason::Type EndPlayReason)
