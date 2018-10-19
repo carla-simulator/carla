@@ -68,7 +68,7 @@ namespace opendrive {
 
     // Transforma data for the MapBuilder
     for (road_data_t::iterator it = roadData.begin(); it != roadData.end(); ++it) {
-      carla::road::RoadSegmentDefinition roadSegment(it->first);
+      carla::road::element::RoadSegmentDefinition roadSegment(it->first);
       carla::road::element::RoadInfoLane *roadInfoLanes = roadSegment.MakeInfo<carla::road::element::RoadInfoLane>();
 
       std::vector<carla::opendrive::types::Lane> &lanesLeft = it->second->lane_sections.left;
@@ -121,7 +121,7 @@ namespace opendrive {
             carla::opendrive::types::GeometryAttributesArc *arc =
                 (carla::opendrive::types::GeometryAttributesArc *) it->second->geometry_attributes[i].get();
 
-            roadSegment.MakeGeometry<carla::road::GeometryArc>(arc->start_position,
+            roadSegment.MakeGeometry<carla::road::element::GeometryArc>(arc->start_position,
                 arc->length,
                 arc->heading,
                 loc,
@@ -134,7 +134,7 @@ namespace opendrive {
             carla::opendrive::types::GeometryAttributesLine *line =
                 (carla::opendrive::types::GeometryAttributesLine *) it->second->geometry_attributes[i].get();
 
-            roadSegment.MakeGeometry<carla::road::GeometryLine>(line->start_position,
+            roadSegment.MakeGeometry<carla::road::element::GeometryLine>(line->start_position,
                 line->length,
                 line->heading,
                 loc);
@@ -146,7 +146,7 @@ namespace opendrive {
             carla::opendrive::types::GeometryAttributesSpiral *spiral =
                 (carla::opendrive::types::GeometryAttributesSpiral *) it->second->geometry_attributes[i].get();
 
-            roadSegment.MakeGeometry<carla::road::GeometrySpiral>(spiral->start_position,
+            roadSegment.MakeGeometry<carla::road::element::GeometrySpiral>(spiral->start_position,
                 spiral->length,
                 spiral->heading,
                 loc,

@@ -7,14 +7,11 @@
 #pragma once
 
 #include "carla/road/element/RoadSegment.h"
-#include "carla/NonCopyable.h"
 
 #include <map>
 
 namespace carla {
 namespace road {
-
-  using namespace carla::road::element;
 
   class Map {
   public:
@@ -25,15 +22,15 @@ namespace road {
     Map(Map &&) = default;
     Map &operator=(Map &&) = default;
 
-    bool ExistId(id_type id) const;
+    bool ExistId(element::id_type id) const;
 
-    const RoadSegment *GetRoad(id_type id) const;
+    const element::RoadSegment *GetRoad(element::id_type id) const;
 
-    std::vector<id_type> GetAllIds() const;
+    std::vector<element::id_type> GetAllIds() const;
 
     uint32_t GetRoadCount() const;
 
-    const RoadSegment &NearestRoad(const geom::Location &loc);
+    const element::RoadSegment &NearestRoad(const geom::Location &loc);
 
   private:
 
@@ -41,7 +38,7 @@ namespace road {
 
     Map() {}
 
-    std::map<id_type, std::unique_ptr<RoadSegment>> _elements;
+    std::map<element::id_type, std::unique_ptr<element::RoadSegment>> _elements;
   };
 
 } // namespace road

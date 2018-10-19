@@ -6,6 +6,8 @@
 
 #include "carla/road/MapBuilder.h"
 
+using namespace carla::road::element;
+
 namespace carla {
 namespace road {
 
