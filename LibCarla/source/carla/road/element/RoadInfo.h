@@ -31,6 +31,19 @@ namespace element {
     RoadInfo(double distance = 0) : d(distance) {}
   };
 
+  class RoadGeneralInfo : public RoadInfo {
+    private:
+      bool _is_junction = false;
+
+    public:
+      void AcceptVisitor(RoadInfoVisitor &v) final {
+        v.Visit(*this);
+      }
+
+      void SetIsJunction(bool isJunction) { _is_junction = isJunction; }
+      bool GetIsJunction() const { return _is_junction; }
+  };
+
   class RoadInfoVelocity : public RoadInfo {
   public:
 

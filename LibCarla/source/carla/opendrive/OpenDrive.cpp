@@ -9,8 +9,11 @@ namespace opendrive {
 #define UNUSED(x) (void) x
 
   struct lane_junction_t {
+    std::string contact_point = "start";
     int connection_road = -1;
-    int from_lane = 0, to_lane = 0;
+
+    int from_lane = 0;
+    int to_lane = 0;
   };
 
   static void fnc_generate_roads_data(
@@ -35,6 +38,7 @@ namespace opendrive {
         int connectingRoad = openDriveRoad.junctions[i].connections[j].attributes.connecting_road;
 
         junctionData.connection_road = connectingRoad;
+        junctionData.contact_point = openDriveRoad.junctions[i].connections[j].attributes.contact_point;
 
         if (openDriveRoad.junctions[i].connections[j].links.size()) {
           junctionData.from_lane = openDriveRoad.junctions[i].connections[j].links[0].from;
@@ -71,6 +75,9 @@ namespace opendrive {
       carla::road::RoadSegmentDefinition roadSegment(it->first);
       carla::road::element::RoadInfoLane *roadInfoLanes = roadSegment.MakeInfo<carla::road::element::RoadInfoLane>();
 
+      carla::road::element::RoadGeneralInfo *roadGeneralInfo = roadSegment.MakeInfo<carla::road::element::RoadGeneralInfo>();
+      roadGeneralInfo->SetIsJunction(it->second->attributes.junction >= 0);
+
       std::vector<carla::opendrive::types::Lane> &lanesLeft = it->second->lane_sections.left;
       for(size_t i = 0; i < lanesLeft.size(); ++i)
       {
@@ -90,7 +97,7 @@ namespace opendrive {
           std::vector<lane_junction_t> &options =
             junctionsData[it->second->road_link.successor->id][it->first];
           for (size_t i = 0; i < options.size(); ++i) {
-            roadSegment.AddSuccessorID(options[i].connection_road, is_start);
+            roadSegment.AddSuccessorID(options[i].connection_road, options[i].contact_point == "start");
           }
         } else {
           roadSegment.AddSuccessorID(it->second->road_link.successor->id, is_start);
@@ -104,7 +111,7 @@ namespace opendrive {
           std::vector<lane_junction_t> &options =
             junctionsData[it->second->road_link.predecessor->id][it->first];
           for (size_t i = 0; i < options.size(); ++i) {
-            roadSegment.AddPredecessorID(options[i].connection_road, is_start);
+            roadSegment.AddPredecessorID(options[i].connection_road, options[i].contact_point == "start");
           }
         } else {
           roadSegment.AddPredecessorID(it->second->road_link.predecessor->id, is_start);
