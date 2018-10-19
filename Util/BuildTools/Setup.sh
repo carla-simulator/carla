@@ -241,6 +241,9 @@ set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -std=c++14 -pthread -fPIC" CACHE STRING
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra" CACHE STRING "" FORCE)
 # See https://bugs.llvm.org/show_bug.cgi?id=21629
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wno-missing-braces" CACHE STRING "" FORCE)
+
+# @todo These flags need to be compatible with setup.py compilation.
+set(CMAKE_CXX_FLAGS_RELEASE_CLIENT "\${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -g -fwrapv -O2 -Wall -Wstrict-prototypes -fno-strict-aliasing -Wdate-time -D_FORTIFY_SOURCE=2 -g -fstack-protector-strong -Wformat -Werror=format-security -fPIC -std=c++14 -Wno-missing-braces -DBOOST_ERROR_CODE_HEADER_ONLY -DLIBCARLA_ENABLE_LIFETIME_PROFILER -DLIBCARLA_WITH_PYTHON_SUPPORT" CACHE STRING "" FORCE)
 EOL
 
 # -- LIBCPP_TOOLCHAIN_FILE -----------------------------------------------------
