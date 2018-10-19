@@ -12,6 +12,7 @@
 #include <carla/road/element/RoadInfoVisitor.h>
 
 using namespace carla::road;
+using namespace carla::road::element;
 using namespace carla::geom;
 
 TEST(road, add_geometry) {
