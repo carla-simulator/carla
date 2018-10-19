@@ -163,19 +163,18 @@ void AOpenDriveActor::GenerateWaypoints(const carla::road::element::RoadSegment 
             FVector waypoint = loc + (drivingLanes[i].lane < 0 ? dir : -dir);
             points.Add(waypoint);
 
-            if (drivingLanes[i].lane < 0)
-            {
-                Algo::Reverse(points);
-            }
-
             float f = offset / road->GetLength(); // green to red
             DrawDebugPoint(GetWorld(), waypoint, 3, FColor(255 * f, 255 - 255 * f, 0), true);
+        }
+
+        if (drivingLanes[i].lane < 0)
+        {
+            Algo::Reverse(points);
         }
 
         DrawDebugString(GetWorld(), points[0], FString().Printf(TEXT("RoadID: %d\nLaneID: %d"), road->GetId(), drivingLanes[i].lane));
 
         routePlanner->SetActorLocation(points[0]);
-        //routePlanner->SetActorRotation()
         routePlanner->AddRoute(1.0f, points);
         routePlanner->Init();
 
