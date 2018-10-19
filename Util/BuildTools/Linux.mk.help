@@ -49,6 +49,14 @@ for developers:
 
         Run unit test suites for LibCarla and PythonAPI.
 
+    check.LibCarla(.debug|.release):
+
+        Run unit test suites for LibCarla only.
+
+    check.PythonAPI(.2|.3):
+
+        Run unit test suites for PythonAPI only.
+
     benchmark:
 
         Run the benchmark tests for LibCarla.
@@ -57,13 +65,13 @@ for developers:
 
         Build CarlaUE4 project, but do not launch the editor.
 
-    PythonAPI:
+    PythonAPI(.2|.3):
 
-        Build and package the Python API module for Python 2 and 3.
+        Build and package the Python API module for Python 2 and/or 3.
 
-    LibCarla:
+    LibCarla(.server|.client):
 
-        Build the LibCarla library, both "Server" and "Client" configurations.
+        Build LibCarla, "Server" and/or "Client" configurations.
 
     setup:
 
