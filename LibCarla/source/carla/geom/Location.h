@@ -48,57 +48,28 @@ namespace geom {
       return lhs;
     }
 
-    bool operator==(const Location &rhs) const  {
+    /// @todo Do we need to multiply locations?
+    Location &operator*=(const double &rhs) {
+      static_cast<Vector3D &>(*this) *= rhs;
+      return *this;
+    }
+
+    friend Location operator*(Location lhs, double rhs) {
+      lhs *= rhs;
+      return lhs;
+    }
+
+    friend Location operator*(double lhs, Location rhs) {
+      rhs *= lhs;
+      return rhs;
+    }
+
+    bool operator==(const Location &rhs) const {
       return static_cast<const Vector3D &>(*this) == rhs;
     }
 
-    bool operator!=(const Location &rhs) const  {
+    bool operator!=(const Location &rhs) const {
       return !(*this == rhs);
-    }
-
-    Location &operator*=(const Location &rhs) {
-      x *= rhs.x;
-      y *= rhs.y;
-      z *= rhs.z;
-      return *this;
-    }
-
-    friend Location operator*(Location lhs, const Location &rhs) {
-      lhs *= rhs;
-      return lhs;
-    }
-
-    Location &operator*=(const double &rhs) {
-      x *= rhs;
-      y *= rhs;
-      z *= rhs;
-      return *this;
-    }
-
-    friend Location operator*(Location lhs, const double &rhs) {
-      lhs *= rhs;
-      return lhs;
-    }
-
-    friend Location operator*(const double &rhs, Location lhs) {
-      lhs *= rhs;
-      return lhs;
-    }
-
-    Location &operator/=(const Location &rhs) {
-      x /= rhs.x;
-      y /= rhs.y;
-      z /= rhs.z;
-      return *this;
-    }
-
-    friend Location operator/(Location lhs, const Location &rhs) {
-      lhs /= rhs;
-      return lhs;
-    }
-
-    friend bool operator==(const Location &lhs, const Location &rhs) {
-      return (lhs.x == rhs.x) && (lhs.y == rhs.y) && (lhs.z == rhs.z);
     }
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
