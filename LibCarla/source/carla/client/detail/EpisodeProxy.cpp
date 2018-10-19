@@ -8,36 +8,56 @@
 
 #include "carla/client/detail/Simulator.h"
 
-#include <boost/atomic.hpp>
-
 #include <exception>
 
 namespace carla {
 namespace client {
 namespace detail {
 
-  EpisodeProxyImpl::EpisodeProxyImpl(SharedPtr<Simulator> simulator)
-    : _simulator(std::move(simulator)),
-      _episode_id(_simulator->GetCurrentEpisodeId()) {}
-
-  void EpisodeProxyImpl::ClearState() {
-    boost::atomic_store_explicit(&_simulator, {nullptr}, boost::memory_order_relaxed);
+  static EpisodeProxyPointerType::Shared Load(EpisodeProxyPointerType::Strong ptr) {
+    return ptr.load();
   }
 
-  Simulator &EpisodeProxyImpl::GetSimulatorWithChecks() const {
-    auto state = boost::atomic_load_explicit(&_simulator, boost::memory_order_relaxed);
-    if (state == nullptr) {
+  static EpisodeProxyPointerType::Shared Load(EpisodeProxyPointerType::Weak ptr) {
+    return ptr.lock();
+  }
+
+  template <typename T>
+  EpisodeProxyImpl<T>::EpisodeProxyImpl(SharedPtrType simulator)
+    : _episode_id(simulator->GetCurrentEpisodeId()),
+      _simulator(std::move(simulator)) {}
+
+  template <typename T>
+  typename EpisodeProxyImpl<T>::SharedPtrType EpisodeProxyImpl<T>::TryLock() const {
+    auto ptr = Load(_simulator);
+    const bool is_valid = (ptr != nullptr) && (_episode_id == ptr->GetCurrentEpisodeId());
+    return is_valid ? ptr : nullptr;
+  }
+
+  template <typename T>
+  typename EpisodeProxyImpl<T>::SharedPtrType EpisodeProxyImpl<T>::Lock() const {
+    auto ptr = Load(_simulator);
+    if (ptr == nullptr) {
       throw std::runtime_error(
           "trying to operate on a destroyed actor; an actor's function "
           "was called, but the actor is already destroyed.");
     }
-    if (_episode_id != _simulator->GetCurrentEpisodeId()) {
+    if (_episode_id != ptr->GetCurrentEpisodeId()) {
       throw std::runtime_error(
           "trying to access an expired episode; a new episode was started "
           "in the simulation but an object tried accessing the old one.");
     }
-    return *_simulator;
+    return ptr;
   }
+
+  template <typename T>
+  void EpisodeProxyImpl<T>::Clear() {
+    _simulator.reset();
+  }
+
+  template class EpisodeProxyImpl<EpisodeProxyPointerType::Strong>;
+
+  template class EpisodeProxyImpl<EpisodeProxyPointerType::Weak>;
 
 } // namespace detail
 } // namespace client

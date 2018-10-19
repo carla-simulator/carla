@@ -45,7 +45,7 @@ namespace client {
 
   private:
 
-    SharedPtr<detail::Simulator> _simulator;
+    std::shared_ptr<detail::Simulator> _simulator;
   };
 
   inline Client::Client(
