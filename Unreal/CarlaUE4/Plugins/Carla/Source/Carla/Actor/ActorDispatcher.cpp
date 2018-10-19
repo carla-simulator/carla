@@ -68,11 +68,24 @@ TPair<EActorSpawnResultStatus, FActorView> FActorDispatcher::SpawnActor(
   return MakeTuple(Result.Status, View);
 }
 
-void FActorDispatcher::DestroyActor(AActor *Actor)
+bool FActorDispatcher::DestroyActor(AActor *Actor)
 {
-  if (Actor != nullptr)
+  if (Actor == nullptr) {
+    UE_LOG(LogCarla, Error, TEXT("Trying to destroy nullptr actor"));
+    return false;
+  }
+  auto View = Registry.Find(Actor);
+  if (!View.IsValid()) {
+    UE_LOG(LogCarla, Error, TEXT("Trying to destroy actor that is not in the registry"));
+    return false;
+  }
+  const auto &Id = View.GetActorDescription()->Id;
+  UE_LOG(LogCarla, Log, TEXT("Destroying actor '%s'"), *Id);
+  if (Actor->Destroy())
   {
     Registry.Deregister(Actor);
-    Actor->Destroy();
+    return true;
   }
+  UE_LOG(LogCarla, Log, TEXT("Failed to destroy actor '%s'!"), *Id);
+  return false;
 }

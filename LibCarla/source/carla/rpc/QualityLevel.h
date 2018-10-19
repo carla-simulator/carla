@@ -6,12 +6,24 @@
 
 #pragma once
 
-#include "carla/sensor/data/Color.h"
+#include "carla/MsgPack.h"
+
+#include <cstdint>
 
 namespace carla {
-namespace client {
+namespace rpc {
 
-  using Color = carla::sensor::data::Color;
+  enum class QualityLevel : uint8_t {
+    Low,
+    // Medium,
+    // High,
+    Epic,
 
-} // namespace client
+    SIZE,
+    INVALID
+  };
+
+} // namespace rpc
 } // namespace carla
+
+MSGPACK_ADD_ENUM(carla::rpc::QualityLevel);

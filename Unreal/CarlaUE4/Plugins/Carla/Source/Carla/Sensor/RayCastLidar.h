@@ -7,8 +7,13 @@
 #pragma once
 
 #include "Carla/Sensor/Sensor.h"
+
+#include "Carla/Actor/ActorDefinition.h"
 #include "Carla/Sensor/LidarDescription.h"
+
+#include <compiler/disable-ue4-macros.h>
 #include <carla/sensor/s11n/LidarMeasurement.h>
+#include <compiler/enable-ue4-macros.h>
 
 #include "RayCastLidar.generated.h"
 

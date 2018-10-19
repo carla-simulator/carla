@@ -8,7 +8,7 @@ Install the build tools and dependencies
 ```
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test
 sudo apt-get update
-sudo apt-get install build-essential clang-5.0 lld-5.0 g++-7 ninja-build python python-pip python-dev tzdata sed curl wget unzip autoconf libtool
+sudo apt-get install build-essential clang-5.0 lld-5.0 g++-7 ninja-build python python-pip python-dev libpng16-dev libtiff5-dev libjpeg-dev tzdata sed curl wget unzip autoconf libtool
 pip install --user setuptools nose2
 ```
 

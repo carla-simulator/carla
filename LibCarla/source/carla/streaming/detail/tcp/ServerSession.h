@@ -9,6 +9,7 @@
 #include "carla/NonCopyable.h"
 #include "carla/Time.h"
 #include "carla/TypeTraits.h"
+#include "carla/profiler/LifetimeProfiled.h"
 #include "carla/streaming/detail/Types.h"
 #include "carla/streaming/detail/tcp/Message.h"
 
@@ -30,6 +31,7 @@ namespace tcp {
   /// closes itself after @a timeout of inactivity is met.
   class ServerSession
     : public std::enable_shared_from_this<ServerSession>,
+      private profiler::LifetimeProfiled,
       private NonCopyable {
   public:
 
@@ -38,11 +40,11 @@ namespace tcp {
 
     explicit ServerSession(boost::asio::io_service &io_service, time_duration timeout);
 
-    ~ServerSession();
-
-    /// Starts the session and calls @a callback after successfully reading the
-    /// stream id.
-    void Open(callback_function_type callback);
+    /// Starts the session and calls @a on_opened after successfully reading the
+    /// stream id, and @a on_closed once the session is closed.
+    void Open(
+        callback_function_type on_opened,
+        callback_function_type on_closed);
 
     /// @warning This function should only be called after the session is
     /// opened. It is safe to call this function from within the @a callback.
@@ -50,23 +52,31 @@ namespace tcp {
       return _stream_id;
     }
 
-    /// Writes some data to the socket.
     template <typename... Buffers>
-    void Write(Buffers... buffers) {
+    static auto MakeMessage(Buffers... buffers) {
       static_assert(
           are_same<Buffer, Buffers...>::value,
           "This function only accepts arguments of type Buffer.");
-      Write(std::make_shared<const Message>(std::move(buffers)...));
+      return std::make_shared<const Message>(std::move(buffers)...);
     }
 
-    /// Posts a job to close this session.
+    /// Writes some data to the socket.
+    void Write(std::shared_ptr<const Message> message);
+
+    /// Writes some data to the socket.
+    template <typename... Buffers>
+    void Write(Buffers... buffers) {
+      Write(MakeMessage(std::move(buffers)...));
+    }
+
+    /// Post a job to close the session.
     void Close();
 
   private:
 
-    void Write(std::shared_ptr<const Message> message);
-
     void StartTimer();
+
+    void CloseNow();
 
     friend class Server;
 
@@ -81,6 +91,8 @@ namespace tcp {
     boost::asio::deadline_timer _deadline;
 
     boost::asio::io_service::strand _strand;
+
+    callback_function_type _on_closed;
 
     bool _is_writing = false;
   };

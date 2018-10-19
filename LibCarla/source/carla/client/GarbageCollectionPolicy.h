@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include "carla/geom/Transform.h"
-
 namespace carla {
 namespace client {
 
-  using Location = carla::geom::Location;
-  using Rotation = carla::geom::Rotation;
-  using Transform = carla::geom::Transform;
+  enum class GarbageCollectionPolicy {
+    Disabled,
+    Enabled,
+    Inherit
+  };
 
 } // namespace client
 } // namespace carla

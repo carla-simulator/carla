@@ -17,15 +17,25 @@
 #include <carla/sensor/SensorRegistry.h>
 #undef LIBCARLA_SENSOR_REGISTRY_WITH_SENSOR_INCLUDES
 
+#include <type_traits>
+
+// =============================================================================
+// -- FSensorDefinitionGatherer ------------------------------------------------
+// =============================================================================
+
+/// Retrieve the definitions of all the sensors registered in the
+/// SensorRegistry by calling their static method
+/// SensorType::GetSensorDefinition().
+///
+/// @note To make this class ignore a given sensor, define a public member
+/// "not_spawnable" that defines a type. If so, the sensor won't be spawned by
+/// this factory.
 class FSensorDefinitionGatherer
 {
   using Registry = carla::sensor::SensorRegistry;
 
 public:
 
-  /// Retrieve the definitions of all the sensors registered in the
-  /// SensorRegistry by calling their static method
-  /// SensorType::GetSensorDefinition().
   static auto GetSensorDefinitions()
   {
     TArray<FActorDefinition> Definitions;
@@ -36,15 +46,39 @@ public:
 
 private:
 
+  // Type traits for detecting if a sensor is spawnable.
+
+  template<typename T>
+  struct void_type { typedef void type; };
+
+  template<typename T, typename = void>
+  struct is_spawnable : std::true_type {};
+
+  template<typename T>
+  struct is_spawnable<T, typename void_type<typename T::not_spawnable>::type > : std::false_type {};
+
+  // AppendDefinitions implementations.
+
+  template <typename SensorType>
+  static typename std::enable_if<is_spawnable<SensorType>::value, void>::type
+  AppendDefinitions(TArray<FActorDefinition> &Definitions)
+  {
+    auto Def = SensorType::GetSensorDefinition();
+    // Make sure the class matches the sensor type.
+    Def.Class = SensorType::StaticClass();
+    Definitions.Emplace(Def);
+  }
+
+  template <typename SensorType>
+  static typename std::enable_if<!is_spawnable<SensorType>::value, void>::type
+  AppendDefinitions(TArray<FActorDefinition> &) {}
+
   template <size_t Index>
   static void AppendDefinitions(TArray<FActorDefinition> &Definitions)
   {
     using SensorPtrType = typename Registry::get_by_index<Index>::key;
     using SensorType = typename std::remove_pointer<SensorPtrType>::type;
-    auto Def = SensorType::GetSensorDefinition();
-    // Make sure the class matches the sensor type.
-    Def.Class = SensorType::StaticClass();
-    Definitions.Emplace(Def);
+    AppendDefinitions<SensorType>(Definitions);
   }
 
   template <size_t... Is>
@@ -55,6 +89,10 @@ private:
     std::initializer_list<int> ({(AppendDefinitions<Is>(Definitions), 0)...});
   }
 };
+
+// =============================================================================
+// -- ASensorFactory -----------------------------------------------------------
+// =============================================================================
 
 TArray<FActorDefinition> ASensorFactory::GetDefinitions()
 {
@@ -68,7 +106,7 @@ FActorSpawnResult ASensorFactory::SpawnActor(
   auto *World = GetWorld();
   if (World == nullptr)
   {
-    UE_LOG(LogCarla, Error, TEXT("ASensorFactory: cannot spawn sensor into empty world."));
+    UE_LOG(LogCarla, Error, TEXT("ASensorFactory: cannot spawn sensor into an empty world."));
     return {};
   }
   auto *Sensor = World->SpawnActorDeferred<ASensor>(

@@ -7,20 +7,62 @@
 #include "carla/client/World.h"
 
 #include "carla/Logging.h"
+#include "carla/client/Actor.h"
+#include "carla/client/ActorBlueprint.h"
+#include "carla/client/detail/Simulator.h"
 
-#include <rpc/rpc_error.h>
+#include <exception>
 
 namespace carla {
 namespace client {
 
+  uint32_t World::GetId() const {
+    return _episode->GetCurrentEpisodeId();
+  }
+
+  const std::string &World::GetMapName() const {
+    return _episode->GetCurrentMapName();
+  }
+
+  SharedPtr<BlueprintLibrary> World::GetBlueprintLibrary() const {
+    return _episode->GetBlueprintLibrary();
+  }
+
+  SharedPtr<Actor> World::GetSpectator() const {
+    return _episode->GetSpectator();
+  }
+
+  rpc::WeatherParameters World::GetWeather() const {
+    return _episode->GetWeatherParameters();
+  }
+
+  void World::SetWeather(const rpc::WeatherParameters &weather) {
+    _episode->SetWeatherParameters(weather);
+  }
+
+  ActorList World::GetActors() const {
+    return {_episode, _episode->GetAllTheActorsInTheEpisode()};
+  }
+
+  SharedPtr<Actor> World::SpawnActor(
+      const ActorBlueprint &blueprint,
+      const geom::Transform &transform,
+      Actor *parent_actor) {
+    try {
+      return _episode->SpawnActor(blueprint, transform, parent_actor);
+    } catch (const std::exception &e) {
+      log_warning("SpawnActor: failed with:", e.what());
+      throw;
+    }
+  }
+
   SharedPtr<Actor> World::TrySpawnActor(
       const ActorBlueprint &blueprint,
-      const Transform &transform,
-      Actor *parent) {
+      const geom::Transform &transform,
+      Actor *parent_actor) {
     try {
-      return SpawnActor(blueprint, transform, parent);
-    } catch (const ::rpc::rpc_error &e) {
-      log_warning("TrySpawnActor: failed with:", e.what());
+      return SpawnActor(blueprint, transform, parent_actor);
+    } catch (const std::exception &) {
       return nullptr;
     }
   }
