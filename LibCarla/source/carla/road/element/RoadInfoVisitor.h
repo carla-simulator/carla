@@ -17,12 +17,14 @@ namespace element {
 
   class RoadInfo;
   class RoadInfoLane;
+  class RoadGeneralInfo;
   class RoadInfoVelocity;
 
   class RoadInfoVisitor {
   public:
 
     virtual void Visit(RoadInfoLane &) {}
+    virtual void Visit(RoadGeneralInfo &) {}
     virtual void Visit(RoadInfoVelocity &) {}
   };
 
