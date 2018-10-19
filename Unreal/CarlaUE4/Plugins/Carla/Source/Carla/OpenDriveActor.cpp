@@ -5,17 +5,15 @@
 #include "OpenDriveActor.h"
 
 #include "DrawDebugHelpers.h"
-
-
-
-
+#include "Algo/Reverse.h"
 
 ///////////////////////////////////////////////////////////
-
-void AOpenDriveActor::fnc_generate_points(const carla::road::element::RoadSegment *road, ARoutePlanner *outRoutePlaner)
+/*
+void AOpenDriveActor::fnc_generate_points(const carla::road::element::RoadSegment *road, ARoutePlanner *outRoutePlaner, bool isStart)
 {
     TArray<FVector> points;
     const carla::road::element::RoadInfoLane *lanesInfo = road->GetInfo<carla::road::element::RoadInfoLane>(0.0);
+    const carla::road::element::RoadGeneralInfo *generalInfo = road->GetInfo<carla::road::element::RoadGeneralInfo>(0.0);
 
     std::vector<int> rightLanes = lanesInfo->getLanesIDs(carla::road::element::RoadInfoLane::which_lane_e::Right);
     std::vector<int> leftLanes = lanesInfo->getLanesIDs(carla::road::element::RoadInfoLane::which_lane_e::Left);
@@ -55,7 +53,7 @@ void AOpenDriveActor::fnc_generate_points(const carla::road::element::RoadSegmen
     for (float offset = 0.0f; offset < road->GetLength(); offset += .5)
     {
         carla::road::element::DirectedPoint p = road->GetDirectedPointIn(offset);
-        double heading = p.tangent - carla::geom::Math::pi_half();
+        double heading = p.tangent + carla::geom::Math::pi_half();
 
         FVector loc(p.location.x * 100, -p.location.y * 100, p.location.z * 100 + 100);
         DrawDebugPoint(GetWorld(), loc, 3, FColor(255 * (offset / road->GetLength()), 255 - 255 * (offset / road->GetLength()), 0), true);
@@ -63,11 +61,143 @@ void AOpenDriveActor::fnc_generate_points(const carla::road::element::RoadSegmen
         for (int i = 0; i < drivingLanes.Num(); ++i)
         {
             FVector dir(0.0f, 0.0f, 0.0f);
+            FVector waypoint = loc;
+
+            dir.X = std::cos(heading) * (drivingLanes[i].totalWidth - drivingLanes[i].halfLaneWidth);
+            dir.Y = std::sin(-heading) * (drivingLanes[i].totalWidth - drivingLanes[i].halfLaneWidth);
+
+            if (generalInfo->GetIsJunction() && !isStart)
+            {
+                waypoint += -dir;
+            }
+            else
+            {
+                waypoint += (drivingLanes[i].lane < 0 ? dir : -dir);
+            }
+            
+            points.Add(waypoint);
+
+            if (generalInfo->GetIsJunction())
+            {
+                DrawDebugPoint(GetWorld(), waypoint, 3, FColor::Yellow, true);
+            }
+            else if (drivingLanes[i].lane < 0)
+            {
+                DrawDebugPoint(GetWorld(), waypoint, 3, FColor::Magenta, true);
+            }
+            else
+            {
+                DrawDebugPoint(GetWorld(), waypoint, 3, FColor::Cyan, true);
+            }
+
+            if (offset - 3.0f < 0.0000001) {
+                DrawDebugString(GetWorld(), waypoint, FString().Printf(TEXT("RoadID: %d\nLaneID: %d"), road->GetId(), drivingLanes[i].lane));
+            }
+        }
+    }
+
+    outRoutePlaner->AddRoute(1.0f, points);
+}
+*/
+void AOpenDriveActor::GenerateWaypoints(const carla::road::element::RoadSegment *road)
+{
+    const carla::road::element::RoadInfoLane *lanesInfo = road->GetInfo<carla::road::element::RoadInfoLane>(0.0);
+    const carla::road::element::RoadGeneralInfo *generalInfo = road->GetInfo<carla::road::element::RoadGeneralInfo>(0.0);
+
+    if (generalInfo->GetIsJunction())
+    {
+        return;
+    }
+
+    std::vector<int> rightLanes = lanesInfo->getLanesIDs(carla::road::element::RoadInfoLane::which_lane_e::Right);
+    std::vector<int> leftLanes = lanesInfo->getLanesIDs(carla::road::element::RoadInfoLane::which_lane_e::Left);
+
+    double totalWidth = 0.0, laneWidth = 0.0;
+    int drivingLane = 0;
+
+    struct driving_info_t { int lane; double halfLaneWidth; double totalWidth; };
+    TArray<driving_info_t> drivingLanes;
+
+    for (size_t i = 0; i < rightLanes.size(); ++i)
+    {
+        const carla::road::element::LaneInfo *laneInfo = lanesInfo->getLane(rightLanes[i]);
+        totalWidth += laneInfo->_width;
+
+        if (laneInfo->_type == "driving")
+        {
+            driving_info_t dl = { rightLanes[i], laneInfo->_width * 50.0 , totalWidth * 100.0 };
+            drivingLanes.Add(dl);
+        }
+    }
+
+    totalWidth = 0.0;
+
+    for (size_t i = 0; i < leftLanes.size(); ++i)
+    {
+        const carla::road::element::LaneInfo *laneInfo = lanesInfo->getLane(leftLanes[leftLanes.size() - 1 - i]);
+        totalWidth += laneInfo->_width * 100.0;
+
+        if (laneInfo->_type == "driving")
+        {
+            driving_info_t dl = { leftLanes[leftLanes.size() - 1 - i], laneInfo->_width  * 50.0, totalWidth };
+            drivingLanes.Add(dl);
+        }
+    }
+
+    for (int i = 0; i < drivingLanes.Num(); ++i)
+    {
+        ARoutePlanner *routePlanner = GetWorld()->SpawnActor<ARoutePlanner>();
+        TArray<FVector> points;
+
+        for (float offset = 0.0f; offset < road->GetLength(); offset += .5)
+        {
+            carla::road::element::DirectedPoint p = road->GetDirectedPointIn(offset);
+            double heading = p.tangent + carla::geom::Math::pi_half();
+
+            FVector loc(p.location.x * 100, -p.location.y * 100, p.location.z * 100 + 100);
+            FVector dir(0.0f, 0.0f, 0.0f);
 
             dir.X = std::cos(heading) * (drivingLanes[i].totalWidth - drivingLanes[i].halfLaneWidth);
             dir.Y = std::sin(-heading) * (drivingLanes[i].totalWidth - drivingLanes[i].halfLaneWidth);
 
             FVector waypoint = loc + (drivingLanes[i].lane < 0 ? dir : -dir);
+            points.Add(waypoint);
+
+            if (drivingLanes[i].lane < 0)
+            {
+                Algo::Reverse(points);
+            }
+
+            float f = offset / road->GetLength(); // green to red
+            DrawDebugPoint(GetWorld(), waypoint, 3, FColor(255 * f, 255 - 255 * f, 0), true);
+        }
+
+        DrawDebugString(GetWorld(), points[0], FString().Printf(TEXT("RoadID: %d\nLaneID: %d"), road->GetId(), drivingLanes[i].lane));
+
+        routePlanner->SetActorLocation(points[0]);
+        //routePlanner->SetActorRotation()
+        routePlanner->AddRoute(1.0f, points);
+        routePlanner->Init();
+
+    }
+
+    /*for (float offset = 0.0f; offset < road->GetLength(); offset += .5)
+    {
+        carla::road::element::DirectedPoint p = road->GetDirectedPointIn(offset);
+        double heading = p.tangent + carla::geom::Math::pi_half();
+
+        FVector loc(p.location.x * 100, -p.location.y * 100, p.location.z * 100 + 100);
+        DrawDebugPoint(GetWorld(), loc, 3, FColor(255 * (offset / road->GetLength()), 255 - 255 * (offset / road->GetLength()), 0), true);
+
+        for (int i = 0; i < drivingLanes.Num(); ++i)
+        {
+            FVector dir(0.0f, 0.0f, 0.0f);
+            FVector waypoint = loc;
+
+            dir.X = std::cos(heading) * (drivingLanes[i].totalWidth - drivingLanes[i].halfLaneWidth);
+            dir.Y = std::sin(-heading) * (drivingLanes[i].totalWidth - drivingLanes[i].halfLaneWidth);
+            
+            waypoint += (drivingLanes[i].lane < 0 ? dir : -dir);
             points.Add(waypoint);
 
             if (drivingLanes[i].lane < 0)
@@ -79,152 +209,12 @@ void AOpenDriveActor::fnc_generate_points(const carla::road::element::RoadSegmen
                 DrawDebugPoint(GetWorld(), waypoint, 3, FColor::Cyan, true);
             }
 
-            if (offset == 0.0f) {
+            if (std::abs(offset - 3.0f) < 0.0000001) {
                 DrawDebugString(GetWorld(), waypoint, FString().Printf(TEXT("RoadID: %d\nLaneID: %d"), road->GetId(), drivingLanes[i].lane));
             }
         }
-    }
-
-    /*for (size_t i = 0; i < rightLanes.size() && drivingLane == 0; ++i)
-    {
-        const carla::road::element::LaneInfo *laneInfo = lanesInfo->getLane(rightLanes[i]);
-        totalWidth += laneInfo->_width;
-
-        if (laneInfo->_type == "driving")
-        {
-            drivingLane = rightLanes[i];
-            laneWidth = laneInfo->_width;
-        }
-    }
-    
-    /*for (float offset = 0.0f; offset < road->GetLength(); offset += (road->GetLength() / 30.0f))
-    {
-        carla::road::element::DirectedPoint p = road->GetDirectedPointIn(offset);
-        double heading = p.tangent;
-        
-        FVector loc(p.location.x * 100, -p.location.y * 100, p.location.z * 100 + 100);
-        FVector dir(1.0f, 0.0f, 0.0f);
-
-        dir.X = dir.X * std::cos(heading) - dir.Y * std::sin(heading);
-        dir.Y = dir.X * std::sin(heading) + dir.Y * std::cos(heading);
-
-        dir = (dir + (totalWidth * 100.0 - laneWidth * 50.0));
-        loc.X += dir.X, loc.Y += dir.Y;
-        dir.Z = 0.0;
-
-        points.Add(loc);
-        //DrawDebugPoint(GetWorld(), routePoints[i], 3, FColor::Red, true, 999999999999);
-        DrawDebugLine(GetWorld(), loc, loc - dir, FColor::Magenta, true, 999999999999);
     }*/
-
-    /*for (float offset = 0.0f; offset < road->GetLength(); offset += (road->GetLength() / 30.0f))
-    {
-        carla::road::element::DirectedPoint p = road->GetDirectedPointIn(offset);
-        double heading = p.tangent + carla::geom::Math::pi_half();
-
-        FVector loc(p.location.x * 100, -p.location.y * 100, p.location.z * 100 + 100);
-        FVector dir(0.0f, 0.0f, 0.0f);
-
-        dir.X = std::cos(heading) *(totalWidth * 100.0 - laneWidth * 50.0);
-        dir.Y = std::sin(heading) *(totalWidth * 100.0 - laneWidth * 50.0);
-
-        points.Add(loc);
-        DrawDebugLine(GetWorld(), loc, loc + dir, FColor(255 * (offset/road->GetLength()), 255 - 255 * (offset / road->GetLength()), 0), true);
-    }*/
-
-    /*for (float offset = 0.0f; offset < road->GetLength(); offset += .5) {
-        carla::road::element::DirectedPoint p = road->GetDirectedPointIn(offset);
-        double heading = p.tangent - carla::geom::Math::pi_half();
-
-        FVector loc(p.location.x * 100, -p.location.y * 100, p.location.z * 100 + 100);
-        FVector dir(0.0f, 0.0f, 0.0f);
-
-        dir.X = std::cos(heading) * (totalWidth - laneWidth);
-        dir.Y = std::sin(-heading) * (totalWidth - laneWidth);
-
-        FVector waypoint = loc + dir;
-        points.Add(waypoint);
-
-        DrawDebugPoint(GetWorld(), waypoint, 3, FColor(255 * (offset / road->GetLength()), 255 - 255 * (offset / road->GetLength()), 0), true);
-        if (offset == 0.0f) {
-            //DrawDebugString(GetWorld(), waypoint, FString().Printf(TEXT("Road: %d"), rl));
-        }
-    }
-
-    totalWidth = 0.0;
-    laneWidth = 0.0;
-    drivingLane = 0;
-
-    for (auto &&rl : rightLanes) {
-
-        const carla::road::element::LaneInfo *laneInfo = lanesInfo->getLane(rl);
-        totalWidth += laneInfo->_width * 100.0;
-
-        if (laneInfo->_type == "driving") {
-            drivingLane = rl;
-            laneWidth = laneInfo->_width * 50.0;
-
-            for (float offset = 0.0f; offset < road->GetLength(); offset += .5) {
-                carla::road::element::DirectedPoint p = road->GetDirectedPointIn(offset);
-                double heading = p.tangent - carla::geom::Math::pi_half();
-
-                FVector loc(p.location.x * 100, -p.location.y * 100, p.location.z * 100 + 100);
-                FVector dir(0.0f, 0.0f, 0.0f);
-
-                dir.X = std::cos(heading) * (totalWidth - laneWidth);
-                dir.Y = std::sin(-heading) * (totalWidth - laneWidth);
-                
-                FVector waypoint = loc + dir;
-                points.Add(waypoint);
-
-                DrawDebugPoint(GetWorld(), waypoint, 3, FColor(255 * (offset / road->GetLength()), 255 - 255 * (offset / road->GetLength()), 0), true);
-                if (offset == 0.0f) {
-                    //DrawDebugString(GetWorld(), waypoint, FString().Printf(TEXT("Lane id: %d"), rl));
-                }
-
-                //DrawDebugLine(GetWorld(), prev, waypoint, FColor(255 * (offset / road->GetLength()), 255 - 255 * (offset / road->GetLength()), 0), true);
-            }
-        }
-    }
-
-    totalWidth = 0.0;
-    laneWidth = 0.0;
-    drivingLane = 0;
-
-    for (auto &&rl : leftLanes) {
-
-        const carla::road::element::LaneInfo *laneInfo = lanesInfo->getLane(rl);
-        totalWidth += laneInfo->_width * 100.0;
-
-        if (laneInfo->_type == "driving") {
-            drivingLane = rl;
-            laneWidth = laneInfo->_width * 50.0;
-
-            for (float offset = 0.0f; offset < road->GetLength(); offset += .5) {
-                carla::road::element::DirectedPoint p = road->GetDirectedPointIn(offset);
-                double heading = p.tangent + carla::geom::Math::pi_half();
-
-                FVector loc(p.location.x * 100, -p.location.y * 100, p.location.z * 100 + 100);
-                FVector dir(0.0f, 0.0f, 0.0f);
-
-                dir.X = std::cos(heading) * (totalWidth - laneWidth);
-                dir.Y = std::sin(-heading) * (totalWidth - laneWidth);
-
-                FVector waypoint = loc - dir;
-
-                points.Add(waypoint);
-
-                DrawDebugPoint(GetWorld(), waypoint, 3, FColor(255 * (offset / road->GetLength()), 255 - 255 * (offset / road->GetLength()), 0), true);
-                if (offset == 0.0f) {
-                    //DrawDebugString(GetWorld(), waypoint, FString().Printf(TEXT("Lane id: %d"), rl));
-                }
-            }
-        }
-    }*/
-
-    outRoutePlaner->AddRoute(1.0f, points);
 }
-
 ///////////////////////////////////////////////////////////
 
 // Sets default values
@@ -234,17 +224,26 @@ AOpenDriveActor::AOpenDriveActor()
     PrimaryActorTick.bCanEverTick = true;
 }
 
+void AOpenDriveActor::OnConstruction(const FTransform &transform)
+{
+    carla::road::Map map = carla::opendrive::OpenDrive::Load("C:\\Users\\ajianu\\Desktop\\xodr\\test_03.xodr");
+
+    std::vector<carla::road::id_type> roadIDs = map.GetAllIds();
+    std::sort(roadIDs.begin(), roadIDs.end());
+
+    for (auto &&id : roadIDs)
+    {
+        GenerateWaypoints(map.GetRoad(id));
+    }
+
+}
+
 // Called when the game starts or when spawned
 void AOpenDriveActor::BeginPlay()
 {
     Super::BeginPlay();
-    carla::road::Map map = carla::opendrive::OpenDrive::Load("C:\\Users\\ajianu\\Desktop\\xodr\\test_03.xodr");
 
-    std::vector<carla::road::id_type> roadIDs = map.GetAllIds();
-    TArray<carla::road::id_type> processed;
-
-    size_t val = typeid(int).hash_code();
-
+    /*
     for (auto &&id : roadIDs)
     {
         const carla::road::element::RoadSegment *roadSegment = map.GetRoad(id);
@@ -258,10 +257,13 @@ void AOpenDriveActor::BeginPlay()
             processed.Add(id);
         }
 
-        /*std::vector<carla::road::id_type> successorIds = map.GetRoad(id)->GetSuccessorsIds();
+        std::vector<carla::road::id_type> successorIds = map.GetRoad(id)->GetSuccessorsIds();
+        std::vector<bool> isSuccessorStart = map.GetRoad(id)->GetSuccessorsIsSTart();
+
         if (successorIds.size())
         {
             ARoutePlanner *routePlaner = GetWorld()->SpawnActor<ARoutePlanner>();
+            size_t i = 0;
 
             for (auto &&successorID : successorIds)
             {
@@ -271,6 +273,8 @@ void AOpenDriveActor::BeginPlay()
         }
 
         std::vector<carla::road::id_type> predecessorIds = map.GetRoad(id)->GetPredecessorsIds();
+        std::vector<bool> isPredecesorStart = map.GetRoad(id)->GetPredecessorsIsStart();
+
         if (predecessorIds.size())
         {
             ARoutePlanner *routePlaner = GetWorld()->SpawnActor<ARoutePlanner>();
@@ -280,8 +284,8 @@ void AOpenDriveActor::BeginPlay()
                 fnc_generate_points(map.GetRoad(predeccesorID), routePlaner);
                 processed.Add(predeccesorID);
             }
-        }*/
-    }
+        }
+    }*/
 }
 
 // Called every frame
