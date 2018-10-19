@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "carla/Memory.h"
+#include "carla/AtomicSharedPtr.h"
 
 namespace carla {
 namespace client {
@@ -14,47 +14,43 @@ namespace detail {
 
   class Simulator;
 
-  /// Private implementation of a EpisodeProxy.
-  class EpisodeProxyImpl {
-  public:
-
-    Simulator &operator*() const {
-      return GetSimulatorWithChecks();
-    }
-
-    Simulator *operator->() const {
-      return &GetSimulatorWithChecks();
-    }
-
-  protected:
-
-    EpisodeProxyImpl(SharedPtr<Simulator> simulator);
-
-    void ClearState();
-
-  private:
-
-    Simulator &GetSimulatorWithChecks() const;
-
-    SharedPtr<Simulator> _simulator;
-
-    size_t _episode_id;
+  struct EpisodeProxyPointerType {
+    using Shared = std::shared_ptr<Simulator>;
+    using Strong = AtomicSharedPtr<Simulator>;
+    using Weak = std::weak_ptr<Simulator>;
   };
 
   /// Provides access to the Simulator during a given episode. After the episode
   /// is ended any access to the simulator throws an std::runtime_error.
-  class EpisodeProxy : private EpisodeProxyImpl {
+  template <typename PointerT>
+  class EpisodeProxyImpl {
   public:
 
-    using EpisodeProxyImpl::operator*;
-    using EpisodeProxyImpl::operator->;
+    using SharedPtrType = EpisodeProxyPointerType::Shared;
+
+    EpisodeProxyImpl() = default;
+
+    EpisodeProxyImpl(SharedPtrType simulator);
+
+    SharedPtrType TryLock() const;
+
+    /// Same as TryLock but never return nullptr.
+    ///
+    /// @throw std::runtime_error if episode is gone.
+    SharedPtrType Lock() const;
+
+    void Clear();
 
   private:
 
-    friend class Simulator;
+    size_t _episode_id;
 
-    using EpisodeProxyImpl::EpisodeProxyImpl;
+    PointerT _simulator;
   };
+
+  using EpisodeProxy = EpisodeProxyImpl<EpisodeProxyPointerType::Strong>;
+
+  using WeakEpisodeProxy = EpisodeProxyImpl<EpisodeProxyPointerType::Weak>;
 
 } // namespace detail
 } // namespace client

@@ -18,6 +18,8 @@
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/profiler/LifetimeProfiled.h"
 
+#include <memory>
+
 namespace carla {
 namespace client {
 
@@ -31,7 +33,7 @@ namespace detail {
   ///
   /// @todo Make sure this class is really thread-safe.
   class Simulator
-    : public EnableSharedFromThis<Simulator>,
+    : public std::enable_shared_from_this<Simulator>,
       private profiler::LifetimeProfiled,
       private NonCopyable {
   public:

@@ -32,7 +32,7 @@ namespace client {
           GetDisplayId());
       return;
     }
-    GetEpisode()->SubscribeToSensor(*this, std::move(callback));
+    GetEpisode().Lock()->SubscribeToSensor(*this, std::move(callback));
     _is_listening = true;
   }
 
@@ -43,7 +43,7 @@ namespace client {
           GetDisplayId());
       return;
     }
-    GetEpisode()->UnSubscribeFromSensor(*this);
+    GetEpisode().Lock()->UnSubscribeFromSensor(*this);
     _is_listening = false;
   }
 

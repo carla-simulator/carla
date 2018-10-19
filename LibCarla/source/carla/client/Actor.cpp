@@ -13,33 +13,33 @@ namespace carla {
 namespace client {
 
   geom::Location Actor::GetLocation() const {
-    return GetEpisode()->GetActorLocation(*this);
+    return GetEpisode().Lock()->GetActorLocation(*this);
   }
 
   geom::Transform Actor::GetTransform() const {
-    return GetEpisode()->GetActorTransform(*this);
+    return GetEpisode().Lock()->GetActorTransform(*this);
   }
 
   geom::Vector3D Actor::GetVelocity() const {
-    return GetEpisode()->GetActorVelocity(*this);
+    return GetEpisode().Lock()->GetActorVelocity(*this);
   }
 
   geom::Vector3D Actor::GetAcceleration() const {
-    return GetEpisode()->GetActorAcceleration(*this);
+    return GetEpisode().Lock()->GetActorAcceleration(*this);
   }
 
   void Actor::SetLocation(const geom::Location &location) {
-    GetEpisode()->SetActorLocation(*this, location);
+    GetEpisode().Lock()->SetActorLocation(*this, location);
   }
 
   void Actor::SetTransform(const geom::Transform &transform) {
-    GetEpisode()->SetActorTransform(*this, transform);
+    GetEpisode().Lock()->SetActorTransform(*this, transform);
   }
 
   void Actor::Destroy() {
     if (_is_alive) {
       // Let the exceptions leave the function, IsAlive() will still be true.
-      _is_alive = !GetEpisode()->DestroyActor(*this);
+      _is_alive = !GetEpisode().Lock()->DestroyActor(*this);
     } else {
       log_warning(
           "attempting to destroy an actor that is already dead:",
