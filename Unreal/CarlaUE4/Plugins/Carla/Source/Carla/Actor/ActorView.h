@@ -52,9 +52,7 @@ private:
   FActorView(IdType ActorId, AActor &Actor, FActorDescription Description)
     : Id(ActorId),
       TheActor(&Actor),
-      Description(MakeShared<FActorDescription>(std::move(Description))) {
-    check(Id != 0u);
-  }
+      Description(MakeShared<FActorDescription>(std::move(Description))) {}
 
   IdType Id = 0u;
 

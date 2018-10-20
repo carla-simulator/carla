@@ -41,10 +41,6 @@ namespace sensor {
       return _sensor_transform;
     }
 
-    auto GetWorld() const {
-      return client::World{_episode};
-    }
-
   protected:
 
     const auto &GetEpisode() const {
@@ -55,7 +51,7 @@ namespace sensor {
 
     /// @todo This shouldn't be exposed in this namespace.
     friend class client::detail::Simulator;
-    client::detail::EpisodeProxy _episode;
+    client::detail::WeakEpisodeProxy _episode;
 
     const size_t _frame_number;
 

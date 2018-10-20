@@ -8,6 +8,21 @@
 
 #include "Carla.h"
 #include "Carla/Actor/ActorRegistry.h"
+#include "Carla/Game/Tagger.h"
+
+static FString GetRelevantTagAsString(const AActor &Actor)
+{
+  TArray<ECityObjectLabel> Tags;
+  ATagger::GetTagsOfTaggedActor(Actor, Tags);
+  for (auto &&Tag : Tags)
+  {
+    if ((Tag != ECityObjectLabel::None) && (Tag != ECityObjectLabel::Other))
+    {
+      return ATagger::GetTagAsString(Tag).ToLower();
+    }
+  }
+  return TEXT("unknown");
+}
 
 FActorView FActorRegistry::Register(AActor &Actor, FActorDescription Description)
 {
@@ -46,4 +61,22 @@ void FActorRegistry::Deregister(AActor *Actor)
   auto View = Find(Actor);
   check(View.IsValid());
   Deregister(View.GetActorId());
+}
+
+FActorView FActorRegistry::FindOrFake(AActor *Actor) const
+{
+  if (Actor == nullptr)
+  {
+    return {};
+  }
+  auto View = Find(Actor);
+  if (!View.IsValid())
+  {
+    View.TheActor = Actor;
+    auto Description = MakeShared<FActorDescription>();
+    Description->Id = TEXT("static.") + GetRelevantTagAsString(*Actor);
+    View.Description = Description;
+    check(View.IsValid());
+  }
+  return View;
 }

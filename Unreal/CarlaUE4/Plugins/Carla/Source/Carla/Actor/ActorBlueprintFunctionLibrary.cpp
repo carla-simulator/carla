@@ -194,6 +194,15 @@ static void FillIdAndTags(FActorDefinition &Def, TStrs &&... Strings)
   Def.Tags = JoinStrings(TEXT(","), std::forward<TStrs>(Strings)...).ToLower();
 }
 
+FActorDefinition UActorBlueprintFunctionLibrary::MakeGenericSensorDefinition(
+    const FString &Type,
+    const FString &Id)
+{
+  FActorDefinition Definition;
+  FillIdAndTags(Definition, TEXT("sensor"), Type, Id);
+  return Definition;
+}
+
 FActorDefinition UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     const FString &Id,
     const bool bEnableModifyingPostProcessEffects)

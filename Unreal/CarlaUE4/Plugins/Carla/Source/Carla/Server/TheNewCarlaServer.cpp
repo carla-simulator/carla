@@ -107,6 +107,8 @@ private:
     ::AttachActors(Child.GetActor(), Parent.GetActor());
   }
 
+public:
+
   carla::rpc::Actor SerializeActor(FActorView ActorView)
   {
     if (ActorView.IsValid())
@@ -120,6 +122,8 @@ private:
     }
     return ActorView;
   }
+
+private:
 
   carla::streaming::Stream GetSensorStream(FActorView ActorView, ASensor &Sensor) {
     auto id = ActorView.GetActorId();
@@ -364,4 +368,9 @@ void FTheNewCarlaServer::RunSome(uint32 Milliseconds)
 void FTheNewCarlaServer::Stop()
 {
   Pimpl->Server.Stop();
+}
+
+carla::rpc::Actor FTheNewCarlaServer::SerializeActor(FActorView View) const
+{
+  return Pimpl->SerializeActor(View);
 }

@@ -14,30 +14,6 @@
 #include "EngineUtils.h"
 #include "PhysicsEngine/PhysicsAsset.h"
 
-#ifdef CARLA_TAGGER_EXTRA_LOG
-static FString GetLabelAsString(const ECityObjectLabel Label)
-{
-  switch (Label) {
-#define CARLA_GET_LABEL_STR(lbl) case ECityObjectLabel:: lbl : return #lbl;
-    default:
-    CARLA_GET_LABEL_STR(None)
-    CARLA_GET_LABEL_STR(Buildings)
-    CARLA_GET_LABEL_STR(Fences)
-    CARLA_GET_LABEL_STR(Other)
-    CARLA_GET_LABEL_STR(Pedestrians)
-    CARLA_GET_LABEL_STR(Poles)
-    CARLA_GET_LABEL_STR(RoadLines)
-    CARLA_GET_LABEL_STR(Roads)
-    CARLA_GET_LABEL_STR(Sidewalks)
-    CARLA_GET_LABEL_STR(TrafficSigns)
-    CARLA_GET_LABEL_STR(Vegetation)
-    CARLA_GET_LABEL_STR(Vehicles)
-    CARLA_GET_LABEL_STR(Walls)
-#undef CARLA_GET_LABEL_STR
-  }
-}
-#endif // CARLA_TAGGER_EXTRA_LOG
-
 template <typename T>
 static auto CastEnum(T label)
 {
@@ -97,7 +73,7 @@ void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation)
     SetStencilValue(*Component, Label, bTagForSemanticSegmentation);
 #ifdef CARLA_TAGGER_EXTRA_LOG
     UE_LOG(LogCarla, Log, TEXT("  + StaticMeshComponent: %s"), *Component->GetName());
-    UE_LOG(LogCarla, Log, TEXT("    - Label: \"%s\""), *GetLabelAsString(Label));
+    UE_LOG(LogCarla, Log, TEXT("    - Label: \"%s\""), *GetTagAsString(Label));
 #endif // CARLA_TAGGER_EXTRA_LOG
   }
 
@@ -109,7 +85,7 @@ void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation)
     SetStencilValue(*Component, Label, bTagForSemanticSegmentation);
 #ifdef CARLA_TAGGER_EXTRA_LOG
     UE_LOG(LogCarla, Log, TEXT("  + SkeletalMeshComponent: %s"), *Component->GetName());
-    UE_LOG(LogCarla, Log, TEXT("    - Label: \"%s\""), *GetLabelAsString(Label));
+    UE_LOG(LogCarla, Log, TEXT("    - Label: \"%s\""), *GetTagAsString(Label));
 #endif // CARLA_TAGGER_EXTRA_LOG
   }
 }
@@ -132,6 +108,28 @@ void ATagger::GetTagsOfTaggedActor(const AActor &Actor, TArray<ECityObjectLabel>
         Tags.Add(Tag);
       }
     }
+  }
+}
+
+FString ATagger::GetTagAsString(const ECityObjectLabel Label)
+{
+  switch (Label) {
+#define CARLA_GET_LABEL_STR(lbl) case ECityObjectLabel:: lbl : return #lbl;
+    default:
+    CARLA_GET_LABEL_STR(None)
+    CARLA_GET_LABEL_STR(Buildings)
+    CARLA_GET_LABEL_STR(Fences)
+    CARLA_GET_LABEL_STR(Other)
+    CARLA_GET_LABEL_STR(Pedestrians)
+    CARLA_GET_LABEL_STR(Poles)
+    CARLA_GET_LABEL_STR(RoadLines)
+    CARLA_GET_LABEL_STR(Roads)
+    CARLA_GET_LABEL_STR(Sidewalks)
+    CARLA_GET_LABEL_STR(TrafficSigns)
+    CARLA_GET_LABEL_STR(Vegetation)
+    CARLA_GET_LABEL_STR(Vehicles)
+    CARLA_GET_LABEL_STR(Walls)
+#undef CARLA_GET_LABEL_STR
   }
 }
 

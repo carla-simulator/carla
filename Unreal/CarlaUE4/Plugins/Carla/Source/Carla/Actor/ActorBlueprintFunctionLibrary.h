@@ -65,6 +65,10 @@ public:
   /// ==========================================================================
   /// @{
 
+  static FActorDefinition MakeGenericSensorDefinition(
+      const FString &Type,
+      const FString &Id);
+
   static FActorDefinition MakeCameraDefinition(
       const FString &Id,
       bool bEnableModifyingPostProcessEffects = false);
