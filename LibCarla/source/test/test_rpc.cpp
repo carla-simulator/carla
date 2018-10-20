@@ -7,6 +7,7 @@
 #include "test.h"
 
 #include <carla/ThreadGroup.h>
+#include <carla/rpc/Actor.h>
 #include <carla/rpc/Client.h>
 #include <carla/rpc/Server.h>
 
@@ -55,4 +56,22 @@ TEST(rpc, server_bind_sync_run_on_game_thread) {
   }
   std::cout << "game thread: run " << i << " slices.\n";
   ASSERT_TRUE(done);
+}
+
+TEST(rpc, msgpack) {
+  namespace c = carla;
+  namespace cg = carla::geom;
+  Actor actor;
+  actor.id = 42u;
+  actor.description.uid = 2u;
+  actor.description.id = "actor.random.whatever";
+  actor.bounding_box = cg::BoundingBox{cg::Vector3D{1.0f, 2.0f, 3.0f}};
+
+  auto buffer = c::MsgPack::Pack(actor);
+  auto result = c::MsgPack::UnPack<Actor>(buffer);
+
+  ASSERT_EQ(result.id, actor.id);
+  ASSERT_EQ(result.description.uid, actor.description.uid);
+  ASSERT_EQ(result.description.id, actor.description.id);
+  ASSERT_EQ(result.bounding_box, actor.bounding_box);
 }
