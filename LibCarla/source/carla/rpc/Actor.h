@@ -14,6 +14,10 @@
 
 #include <cstring>
 
+#ifdef LIBCARLA_INCLUDED_FROM_UE4
+#  include "Carla/Actor/ActorView.h"
+#endif // LIBCARLA_INCLUDED_FROM_UE4
+
 namespace carla {
 namespace rpc {
 
@@ -66,7 +70,7 @@ namespace rpc {
 
 #endif // LIBCARLA_INCLUDED_FROM_UE4
 
-    MSGPACK_DEFINE_ARRAY(id, description, stream_token);
+    MSGPACK_DEFINE_ARRAY(id, description, bounding_box, stream_token);
   };
 
 } // namespace rpc
