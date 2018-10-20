@@ -71,6 +71,8 @@ public:
     return (Tag == GetTagOfTaggedComponent(Component));
   }
 
+  static FString GetTagAsString(ECityObjectLabel Tag);
+
   ATagger();
 
 protected:

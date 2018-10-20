@@ -14,8 +14,6 @@
 #include "carla/sensor/RawData.h"
 #include "carla/sensor/data/ActorDynamicState.h"
 
-class FActorRegistry;
-
 namespace carla {
 namespace sensor {
 

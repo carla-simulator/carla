@@ -121,6 +121,7 @@ class World(object):
         self.hud = hud
         blueprint = random.choice(carla_world.get_blueprint_library().filter('vehicle'))
         self.vehicle = carla_world.spawn_actor(blueprint, START_POSITION)
+        self.collision_sensor = CollisionSensor(self.vehicle, self.hud)
         self.camera_manager = CameraManager(self.vehicle, self.hud)
         self.controller = None
         self._weather_presets = find_weather_presets()
@@ -141,7 +142,7 @@ class World(object):
         self.hud.render(display)
 
     def destroy(self):
-        for actor in [self.camera_manager.sensor, self.vehicle]:
+        for actor in [self.camera_manager.sensor, self.collision_sensor.sensor, self.vehicle]:
             if actor is not None:
                 actor.destroy()
 
@@ -298,6 +299,33 @@ class HelpText(object):
     def render(self, display):
         if self._render:
             display.blit(self.surface, self.pos)
+
+
+# ==============================================================================
+# -- CollisionSensor -----------------------------------------------------------
+# ==============================================================================
+
+
+class CollisionSensor(object):
+    def __init__(self, parent_actor, hud):
+        self.sensor = None
+        self._parent = parent_actor
+        self._hud = hud
+        world = self._parent.get_world()
+        bp = world.get_blueprint_library().find('sensor.other.collision')
+        self.sensor = world.spawn_actor(bp, carla.Transform(), attach_to=self._parent)
+        # We need to pass the lambda a weak reference to self to avoid circular
+        # reference.
+        weak_self = weakref.ref(self)
+        self.sensor.listen(lambda event: CollisionSensor._on_collision(weak_self, event))
+
+    @staticmethod
+    def _on_collision(weak_self, event):
+        self = weak_self()
+        if not self:
+            return
+        actor_type = ' '.join(event.other_actor.type_id.title().split('.')[1:])
+        self._hud.notification('Collision with %s' % actor_type)
 
 
 # ==============================================================================
