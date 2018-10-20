@@ -32,6 +32,11 @@ namespace detail {
 
     EpisodeProxyImpl(SharedPtrType simulator);
 
+    template <typename T>
+    EpisodeProxyImpl(EpisodeProxyImpl<T> other)
+      : _episode_id(other._episode_id),
+        _simulator(other._simulator) {}
+
     SharedPtrType TryLock() const;
 
     /// Same as TryLock but never return nullptr.
@@ -42,6 +47,9 @@ namespace detail {
     void Clear();
 
   private:
+
+    template <typename T>
+    friend class EpisodeProxyImpl;
 
     size_t _episode_id;
 
