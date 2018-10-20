@@ -9,6 +9,7 @@
 #include "carla/Logging.h"
 #include "carla/client/Actor.h"
 #include "carla/client/ActorBlueprint.h"
+#include "carla/client/ActorList.h"
 #include "carla/client/detail/Simulator.h"
 
 #include <exception>
@@ -40,8 +41,10 @@ namespace client {
     _episode.Lock()->SetWeatherParameters(weather);
   }
 
-  ActorList World::GetActors() const {
-    return {_episode, _episode.Lock()->GetAllTheActorsInTheEpisode()};
+  SharedPtr<ActorList> World::GetActors() const {
+    return SharedPtr<ActorList>{new ActorList{
+        _episode,
+        _episode.Lock()->GetAllTheActorsInTheEpisode()}};
   }
 
   SharedPtr<Actor> World::SpawnActor(

@@ -6,27 +6,22 @@
 
 #pragma once
 
-#include "carla/Memory.h"
-#include "carla/client/detail/EpisodeProxy.h"
-#include "carla/rpc/Actor.h"
+#include "carla/client/detail/ActorVariant.h"
 
 #include <boost/iterator/transform_iterator.hpp>
-#include <boost/variant.hpp>
 
 #include <vector>
 
 namespace carla {
 namespace client {
 
-  class Actor;
-
-  class ActorList {
+  class ActorList : public EnableSharedFromThis<ActorList> {
   private:
 
     template <typename It>
     auto MakeIterator(It it) const {
       return boost::make_transform_iterator(it, [this](auto &v) {
-        return RetrieveActor(v);
+        return v.Get(_episode);
       });
     }
 
@@ -36,11 +31,11 @@ namespace client {
     ActorList Filter(const std::string &wildcard_pattern) const;
 
     SharedPtr<Actor> operator[](size_t pos) const {
-      return RetrieveActor(_actors[pos]);
+      return _actors[pos].Get(_episode);
     }
 
     SharedPtr<Actor> at(size_t pos) const {
-      return RetrieveActor(_actors.at(pos));
+      return _actors.at(pos).Get(_episode);
     }
 
     auto begin() const {
@@ -65,13 +60,9 @@ namespace client {
 
     ActorList(detail::EpisodeProxy episode, std::vector<rpc::Actor> actors);
 
-    using value_type = boost::variant<rpc::Actor, SharedPtr<Actor>>;
-
-    SharedPtr<Actor> RetrieveActor(value_type &value) const;
-
     detail::EpisodeProxy _episode;
 
-    mutable std::vector<value_type> _actors;
+    std::vector<detail::ActorVariant> _actors;
   };
 
 } // namespace client
