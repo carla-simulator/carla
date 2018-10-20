@@ -10,7 +10,6 @@
 #include "carla/rpc/ActorDescription.h"
 #include "carla/rpc/Client.h"
 #include "carla/rpc/VehicleControl.h"
-#include "carla/sensor/Deserializer.h"
 #include "carla/streaming/Client.h"
 
 #include <thread>
@@ -137,10 +136,8 @@ namespace detail {
 
   void Client::SubscribeToStream(
       const streaming::Token &token,
-      std::function<void(SharedPtr<sensor::SensorData>)> callback) {
-    _pimpl->streaming_client.Subscribe(token, [cb=std::move(callback)](auto buffer) {
-      cb(sensor::Deserializer::Deserialize(std::move(buffer)));
-    });
+      std::function<void(Buffer)> callback) {
+    _pimpl->streaming_client.Subscribe(token, std::move(callback));
   }
 
   void Client::UnSubscribeFromStream(const streaming::Token &token) {

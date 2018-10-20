@@ -10,6 +10,7 @@
 #include "carla/client/BlueprintLibrary.h"
 #include "carla/client/Sensor.h"
 #include "carla/client/detail/ActorFactory.h"
+#include "carla/sensor/Deserializer.h"
 
 #include <exception>
 
@@ -113,7 +114,7 @@ namespace detail {
     auto success = _client.DestroyActor(actor.Serialize());
     if (success) {
       // Remove it's persistent state so it cannot access the client anymore.
-      actor.GetEpisode().ClearState();
+      actor.GetEpisode().Clear();
       log_debug(actor.GetDisplayId(), "destroyed.");
     } else {
       log_debug("failed to destroy", actor.GetDisplayId());
@@ -128,9 +129,14 @@ namespace detail {
   void Simulator::SubscribeToSensor(
       const Sensor &sensor,
       std::function<void(SharedPtr<sensor::SensorData>)> callback) {
+    DEBUG_ASSERT(_episode != nullptr);
     _client.SubscribeToStream(
         sensor.GetActorDescription().GetStreamToken(),
-        std::move(callback));
+        [cb=std::move(callback), ep=WeakEpisodeProxy{shared_from_this()}](auto buffer) {
+          auto data = sensor::Deserializer::Deserialize(std::move(buffer));
+          data->_episode = ep.TryLock();
+          cb(std::move(data));
+        });
   }
 
   void Simulator::UnSubscribeFromSensor(const Sensor &sensor) {
