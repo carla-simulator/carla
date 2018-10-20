@@ -10,6 +10,10 @@
 #include "carla/NonCopyable.h"
 #include "carla/sensor/RawData.h"
 
+/// @todo This shouldn't be exposed in this namespace.
+#include "carla/client/World.h"
+#include "carla/client/detail/EpisodeProxy.h"
+
 namespace carla {
 namespace sensor {
 
@@ -37,7 +41,21 @@ namespace sensor {
       return _sensor_transform;
     }
 
+    auto GetWorld() const {
+      return client::World{_episode};
+    }
+
+  protected:
+
+    const auto &GetEpisode() const {
+      return _episode;
+    }
+
   private:
+
+    /// @todo This shouldn't be exposed in this namespace.
+    friend class client::detail::Simulator;
+    client::detail::EpisodeProxy _episode;
 
     const size_t _frame_number;
 

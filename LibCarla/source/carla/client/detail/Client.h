@@ -22,6 +22,7 @@
 
 // Forward declarations.
 namespace carla {
+  class Buffer;
 namespace rpc {
   class ActorDescription;
   class VehicleControl;
@@ -95,7 +96,7 @@ namespace detail {
 
     void SubscribeToStream(
         const streaming::Token &token,
-        std::function<void(SharedPtr<sensor::SensorData>)> callback);
+        std::function<void(Buffer)> callback);
 
     void UnSubscribeFromStream(const streaming::Token &token);
 

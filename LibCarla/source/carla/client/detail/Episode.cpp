@@ -7,6 +7,7 @@
 #include "carla/client/detail/Episode.h"
 
 #include "carla/client/detail/Client.h"
+#include "carla/sensor/Deserializer.h"
 
 namespace carla {
 namespace client {
@@ -29,9 +30,10 @@ namespace detail {
 
   void Episode::Listen() {
     std::weak_ptr<Episode> weak = shared_from_this();
-    _client.SubscribeToStream(_description.token, [weak](auto data) {
+    _client.SubscribeToStream(_description.token, [weak](auto buffer) {
       auto self = weak.lock();
       if (self != nullptr) {
+        auto data = sensor::Deserializer::Deserialize(std::move(buffer));
         /// @todo This is not atomic.
         auto prev = self->_state.load();
         self->_state = prev->DeriveNextStep(CastData(*data));
