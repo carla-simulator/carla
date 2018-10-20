@@ -11,7 +11,6 @@
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
-
 namespace carla {
 namespace client {
 
@@ -32,7 +31,7 @@ void export_world() {
   namespace cc = carla::client;
   namespace cg = carla::geom;
 
-  class_<cc::ActorList>("ActorList", no_init)
+  class_<cc::ActorList, boost::shared_ptr<cc::ActorList>>("ActorList", no_init)
     .def("filter", &cc::ActorList::Filter)
     .def("__getitem__", &cc::ActorList::at)
     .def("__len__", &cc::ActorList::size)

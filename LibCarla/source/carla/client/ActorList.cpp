@@ -7,22 +7,12 @@
 #include "carla/client/ActorList.h"
 
 #include "carla/StringUtil.h"
-#include "carla/client/Actor.h"
 #include "carla/client/detail/ActorFactory.h"
 
 #include <iterator>
 
 namespace carla {
 namespace client {
-
-  struct GetTypeIdVisitor {
-    const std::string &operator()(const rpc::Actor &actor) const {
-      return actor.description.id;
-    }
-    const std::string &operator()(const SharedPtr<Actor> &actor) const {
-      return actor->GetTypeId();
-    }
-  };
 
   ActorList::ActorList(
       detail::EpisodeProxy episode,
@@ -32,24 +22,12 @@ namespace client {
 
   ActorList ActorList::Filter(const std::string &wildcard_pattern) const {
     ActorList filtered{_episode, {}};
-    for (auto &&item : _actors) {
-      const auto &id = boost::apply_visitor(GetTypeIdVisitor(), item);
-      if (StringUtil::Match(id, wildcard_pattern)) {
-        filtered._actors.push_back(item);
+    for (auto &&actor : _actors) {
+      if (StringUtil::Match(actor.GetTypeId(), wildcard_pattern)) {
+        filtered._actors.push_back(actor);
       }
     }
     return filtered;
-  }
-
-  SharedPtr<Actor> ActorList::RetrieveActor(value_type &value) const {
-    if (value.which() == 0u) {
-      value = detail::ActorFactory::MakeActor(
-          _episode,
-          boost::get<rpc::Actor>(std::move(value)),
-          GarbageCollectionPolicy::Disabled);
-    }
-    DEBUG_ASSERT(value.which() == 1u);
-    return boost::get<SharedPtr<Actor>>(value);
   }
 
 } // namespace client
