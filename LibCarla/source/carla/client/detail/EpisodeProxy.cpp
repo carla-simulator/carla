@@ -24,7 +24,7 @@ namespace detail {
 
   template <typename T>
   EpisodeProxyImpl<T>::EpisodeProxyImpl(SharedPtrType simulator)
-    : _episode_id(simulator->GetCurrentEpisodeId()),
+    : _episode_id(simulator != nullptr ? simulator->GetCurrentEpisodeId() : 0u),
       _simulator(std::move(simulator)) {}
 
   template <typename T>
