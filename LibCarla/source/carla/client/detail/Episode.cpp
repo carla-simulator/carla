@@ -34,9 +34,11 @@ namespace detail {
       auto self = weak.lock();
       if (self != nullptr) {
         auto data = sensor::Deserializer::Deserialize(std::move(buffer));
-        /// @todo This is not atomic.
         auto prev = self->_state.load();
-        self->_state = prev->DeriveNextStep(CastData(*data));
+        auto next = prev->DeriveNextStep(CastData(*data));
+        /// @todo Check that this state occurred after.
+        self->_state = next;
+        self->_timestamp.SetValue(next->GetTimestamp());
       }
     });
   }

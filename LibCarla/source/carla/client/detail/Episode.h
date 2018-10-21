@@ -8,6 +8,8 @@
 
 #include "carla/AtomicSharedPtr.h"
 #include "carla/NonCopyable.h"
+#include "carla/RecurrentSharedFuture.h"
+#include "carla/client/Timestamp.h"
 #include "carla/client/detail/CachedActorList.h"
 #include "carla/client/detail/EpisodeState.h"
 #include "carla/rpc/EpisodeInfo.h"
@@ -29,6 +31,10 @@ namespace detail {
     ~Episode();
 
     void Listen();
+
+    Timestamp WaitForState(time_duration timeout) {
+      return _timestamp.WaitFor(timeout);
+    }
 
     auto GetId() const {
       return _description.id;
@@ -55,6 +61,8 @@ namespace detail {
     Client &_client;
 
     const rpc::EpisodeInfo _description;
+
+    RecurrentSharedFuture<Timestamp> _timestamp;
 
     AtomicSharedPtr<const EpisodeState> _state;
 
