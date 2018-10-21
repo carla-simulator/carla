@@ -26,11 +26,13 @@ namespace data {
     geom::Transform transform;
 
     geom::Vector3D velocity;
+
+    uint8_t state;
   };
 
 #pragma pack(pop)
 
-  static_assert(sizeof(ActorDynamicState) == 10u * sizeof(uint32_t), "Invalid ActorDynamicState size!");
+  static_assert(sizeof(ActorDynamicState) == 1u + 10u * sizeof(uint32_t), "Invalid ActorDynamicState size!");
 
 } // namespace data
 } // namespace sensor

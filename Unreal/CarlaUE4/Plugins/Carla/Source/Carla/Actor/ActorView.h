@@ -51,6 +51,11 @@ public:
     return SemanticTags;
   }
 
+  bool IsTrafficLight() const
+  {
+    return bIsTrafficLight;
+  }
+
 private:
 
   friend class FActorRegistry;
@@ -67,4 +72,7 @@ private:
   TSharedPtr<const FActorDescription> Description = nullptr;
 
   TSet<ECityObjectLabel> SemanticTags;
+
+  /// @todo
+  bool bIsTrafficLight = false;
 };
