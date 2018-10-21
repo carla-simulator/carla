@@ -11,6 +11,7 @@
 #include "carla/RecurrentSharedFuture.h"
 #include "carla/client/Timestamp.h"
 #include "carla/client/detail/CachedActorList.h"
+#include "carla/client/detail/CallbackList.h"
 #include "carla/client/detail/EpisodeState.h"
 #include "carla/rpc/EpisodeInfo.h"
 
@@ -32,10 +33,6 @@ namespace detail {
 
     void Listen();
 
-    Timestamp WaitForState(time_duration timeout) {
-      return _timestamp.WaitFor(timeout);
-    }
-
     auto GetId() const {
       return _description.id;
     }
@@ -56,6 +53,14 @@ namespace detail {
 
     std::vector<rpc::Actor> GetActors();
 
+    Timestamp WaitForState(time_duration timeout) {
+      return _timestamp.WaitFor(timeout);
+    }
+
+    void RegisterOnTickEvent(std::function<void(Timestamp)> callback) {
+      _on_tick_callbacks.RegisterCallback(std::move(callback));
+    }
+
   private:
 
     Client &_client;
@@ -67,6 +72,8 @@ namespace detail {
     AtomicSharedPtr<const EpisodeState> _state;
 
     CachedActorList _actors;
+
+    CallbackList<Timestamp> _on_tick_callbacks;
   };
 
 } // namespace detail

@@ -39,6 +39,7 @@ namespace detail {
         /// @todo Check that this state occurred after.
         self->_state = next;
         self->_timestamp.SetValue(next->GetTimestamp());
+        self->_on_tick_callbacks.Call(next->GetTimestamp());
       }
     });
   }

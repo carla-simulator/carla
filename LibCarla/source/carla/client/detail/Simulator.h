@@ -106,6 +106,11 @@ namespace detail {
       return _episode->WaitForState(timeout);
     }
 
+    void RegisterOnTickEvent(std::function<void(Timestamp)> callback) {
+      DEBUG_ASSERT(_episode != nullptr);
+      _episode->RegisterOnTickEvent(std::move(callback));
+    }
+
     /// @}
     // =========================================================================
     /// @name Access to global objects in the episode
