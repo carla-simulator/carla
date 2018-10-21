@@ -7,18 +7,33 @@
 #include "Carla.h"
 #include "Carla/Sensor/WorldObserver.h"
 
+#include "Carla/Traffic/TrafficLightBase.h"
+
 #include "CoreGlobals.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/sensor/SensorRegistry.h>
 #include <compiler/enable-ue4-macros.h>
 
+static uint8 AWorldObserver_GetActorState(const FActorView &View)
+{
+  if (View.IsTrafficLight())
+  {
+    auto TrafficLight = Cast<ATrafficLightBase>(View.GetActor());
+    if (TrafficLight != nullptr)
+    {
+      return static_cast<uint8>(TrafficLight->GetTrafficSignState());
+    }
+  }
+  return 0u;
+}
 
 static carla::Buffer AWorldObserver_Serialize(
     carla::Buffer buffer,
     double game_timestamp,
     double platform_timestamp,
-    const FActorRegistry &Registry) {
+    const FActorRegistry &Registry)
+{
   using Serializer = carla::sensor::s11n::EpisodeStateSerializer;
   using ActorDynamicState = carla::sensor::data::ActorDynamicState;
 
@@ -43,7 +58,8 @@ static carla::Buffer AWorldObserver_Serialize(
     ActorDynamicState info = {
       actor_view.GetActorId(),
       actor_view.GetActor()->GetActorTransform(),
-      carla::geom::Vector3D{velocity.X, velocity.Y, velocity.Z}
+      carla::geom::Vector3D{velocity.X, velocity.Y, velocity.Z},
+      AWorldObserver_GetActorState(actor_view)
     };
     write_data(info);
   }

@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include <carla/client/Actor.h>
+#include <carla/client/TrafficLight.h>
 #include <carla/client/Vehicle.h>
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -60,6 +61,18 @@ void export_actor() {
     .add_property("control", CALL_RETURNING_COPY(cc::Vehicle, GetControl))
     .def("apply_control", &cc::Vehicle::ApplyControl, (arg("control")))
     .def("set_autopilot", &cc::Vehicle::SetAutopilot, (arg("enabled")=true))
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  enum_<cc::TrafficLightState>("TrafficLightState")
+    .value("Unknown", cc::TrafficLightState::Unknown)
+    .value("Red", cc::TrafficLightState::Red)
+    .value("Yellow", cc::TrafficLightState::Yellow)
+    .value("Green", cc::TrafficLightState::Green)
+  ;
+
+  class_<cc::TrafficLight, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::TrafficLight>>("TrafficLight", no_init)
+    .add_property("state", &cc::TrafficLight::GetState)
     .def(self_ns::str(self_ns::self))
   ;
 }
