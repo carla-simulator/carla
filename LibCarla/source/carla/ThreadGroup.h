@@ -42,6 +42,7 @@ namespace carla {
           thread.join();
         }
       }
+      _threads.clear();
     }
 
   private:

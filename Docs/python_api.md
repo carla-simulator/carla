@@ -24,6 +24,7 @@
 - `get_actors()`
 - `spawn_actor(blueprint, transform, attach_to=None)`
 - `try_spawn_actor(blueprint, transform, attach_to=None)`
+- `wait_for_tick(seconds=1.0)`
 
 ## `carla.BlueprintLibrary`
 

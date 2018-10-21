@@ -6,6 +6,7 @@
 
 #include <carla/Memory.h>
 #include <carla/PythonUtil.h>
+#include <carla/Time.h>
 
 #include <ostream>
 #include <type_traits>
@@ -58,6 +59,11 @@ static std::ostream &PrintList(std::ostream &out, const Iterable &list) {
   }
   out << ']';
   return out;
+}
+
+static carla::time_duration TimeDurationFromSeconds(double seconds) {
+  size_t ms = static_cast<size_t>(1e3 * seconds);
+  return carla::time_duration::milliseconds(ms);
 }
 
 #include "Actor.cpp"

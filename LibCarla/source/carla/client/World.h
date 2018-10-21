@@ -7,6 +7,8 @@
 #pragma once
 
 #include "carla/Memory.h"
+#include "carla/Time.h"
+#include "carla/client/Timestamp.h"
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/geom/Transform.h"
 #include "carla/rpc/WeatherParameters.h"
@@ -53,6 +55,8 @@ namespace client {
         const ActorBlueprint &blueprint,
         const geom::Transform &transform,
         Actor *parent = nullptr);
+
+    Timestamp WaitForTick(time_duration timeout) const;
 
   private:
 

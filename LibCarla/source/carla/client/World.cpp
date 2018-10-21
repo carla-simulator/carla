@@ -70,5 +70,9 @@ namespace client {
     }
   }
 
+  Timestamp World::WaitForTick(time_duration timeout) const {
+    return _episode.Lock()->WaitForTick(timeout);
+  }
+
 } // namespace client
 } // namespace carla
