@@ -13,6 +13,45 @@
 #include <carla/sensor/SensorRegistry.h>
 #include <compiler/enable-ue4-macros.h>
 
+
+static carla::Buffer AWorldObserver_Serialize(
+    carla::Buffer buffer,
+    double game_timestamp,
+    double platform_timestamp,
+    const FActorRegistry &Registry) {
+  using Serializer = carla::sensor::s11n::EpisodeStateSerializer;
+  using ActorDynamicState = carla::sensor::data::ActorDynamicState;
+
+  // Set up buffer for writing.
+  buffer.reset(sizeof(Serializer::Header) + sizeof(ActorDynamicState) * Registry.Num());
+  auto begin = buffer.begin();
+  auto write_data = [&begin](const auto &data) {
+    std::memcpy(begin, &data, sizeof(data));
+    begin += sizeof(data);
+  };
+
+  // Write header.
+  Serializer::Header header = {game_timestamp, platform_timestamp};
+  write_data(header);
+
+  // Write every actor.
+  for (auto &&pair : Registry) {
+    auto &&actor_view = pair.second;
+    check(actor_view.GetActor() != nullptr);
+    constexpr float TO_METERS = 1e-3;
+    const auto velocity = TO_METERS * actor_view.GetActor()->GetVelocity();
+    ActorDynamicState info = {
+      actor_view.GetActorId(),
+      actor_view.GetActor()->GetActorTransform(),
+      carla::geom::Vector3D{velocity.X, velocity.Y, velocity.Z}
+    };
+    write_data(info);
+  }
+
+  check(begin == buffer.end());
+  return buffer;
+}
+
 AWorldObserver::AWorldObserver(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer)
 {
@@ -27,10 +66,11 @@ void AWorldObserver::Tick(float DeltaSeconds)
 
   GameTimeStamp += DeltaSeconds;
 
-  Stream.Send_GameThread(
-      *this,
+  auto buffer = AWorldObserver_Serialize(
       Stream.PopBufferFromPool(),
       GameTimeStamp,
       FPlatformTime::Seconds(),
       Episode->GetActorRegistry());
+
+  Stream.Send_GameThread(*this, std::move(buffer));
 }
