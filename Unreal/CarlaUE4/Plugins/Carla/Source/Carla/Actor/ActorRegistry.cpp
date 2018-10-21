@@ -18,7 +18,8 @@ static FString GetRelevantTagAsString(const AActor &Actor)
   {
     if ((Tag != ECityObjectLabel::None) && (Tag != ECityObjectLabel::Other))
     {
-      return ATagger::GetTagAsString(Tag).ToLower();
+      auto Str = ATagger::GetTagAsString(Tag).ToLower();
+      return (Str.EndsWith(TEXT("s")) ? Str.LeftChop(1) : Str);
     }
   }
   return TEXT("unknown");
