@@ -316,6 +316,19 @@ void FTheNewCarlaServer::FPimpl::BindActions()
         ETeleportType::TeleportPhysics);
   });
 
+  Server.BindSync("set_actor_simulate_physics", [this](cr::Actor Actor, bool bEnabled) {
+    RequireEpisode();
+    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
+      RespondErrorStr("unable to set actor simulate physics: actor not found");
+    }
+    auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+    if (RootComponent == nullptr) {
+      RespondErrorStr("unable to set actor simulate physics: not supported by actor");
+    }
+    RootComponent->SetSimulatePhysics(bEnabled);
+  });
+
   Server.BindSync("apply_control_to_actor", [this](cr::Actor Actor, cr::VehicleControl Control) {
     RequireEpisode();
     auto ActorView = Episode->GetActorRegistry().Find(Actor.id);

@@ -39,6 +39,8 @@ namespace client {
 
     void SetTransform(const geom::Transform &transform);
 
+    void SetSimulatePhysics(bool enabled = true);
+
     const auto &Serialize() const {
       return Super::GetActorDescription();
     }

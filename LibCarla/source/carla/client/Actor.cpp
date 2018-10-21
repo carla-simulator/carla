@@ -36,6 +36,10 @@ namespace client {
     GetEpisode().Lock()->SetActorTransform(*this, transform);
   }
 
+  void Actor::SetSimulatePhysics(const bool enabled) {
+    GetEpisode().Lock()->SetActorSimulatePhysics(*this, enabled);
+  }
+
   void Actor::Destroy() {
     if (_is_alive) {
       // Let the exceptions leave the function, IsAlive() will still be true.

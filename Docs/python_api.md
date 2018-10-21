@@ -87,6 +87,7 @@
 - `get_acceleration()`
 - `set_location(location)`
 - `set_transform(transform)`
+- `set_simulate_physics(enabled=True)`
 - `destroy()`
 
 ## `carla.Vehicle(carla.Actor)`
