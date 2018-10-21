@@ -25,6 +25,7 @@ Use ARROWS or WASD keys for control.
     `            : next camera sensor
     [1-9]        : change to camera sensor [1-9]
     C            : change weather (Shift+C reverse)
+    Backspace    : change vehicle
 
     R            : toggle recording images to disk
 
@@ -75,6 +76,7 @@ try:
     from pygame.locals import K_0
     from pygame.locals import K_9
     from pygame.locals import K_BACKQUOTE
+    from pygame.locals import K_BACKSPACE
     from pygame.locals import K_DOWN
     from pygame.locals import K_ESCAPE
     from pygame.locals import K_LEFT
@@ -118,14 +120,33 @@ def find_weather_presets():
 
 class World(object):
     def __init__(self, carla_world, hud):
+        self.world = carla_world
         self.hud = hud
-        blueprint = random.choice(carla_world.get_blueprint_library().filter('vehicle'))
-        self.vehicle = carla_world.spawn_actor(blueprint, START_POSITION)
+        blueprint = self._get_random_blueprint()
+        self.vehicle = self.world.spawn_actor(blueprint, START_POSITION)
         self.collision_sensor = CollisionSensor(self.vehicle, self.hud)
         self.camera_manager = CameraManager(self.vehicle, self.hud)
+        self.camera_manager.set_sensor(0, notify=False)
         self.controller = None
         self._weather_presets = find_weather_presets()
         self._weather_index = 0
+
+    def restart(self):
+        cam_index = self.camera_manager._index
+        cam_pos_index = self.camera_manager._transform_index
+        start_pose = self.vehicle.get_transform()
+        start_pose.location.z += 2.0
+        start_pose.rotation.roll = 0.0
+        start_pose.rotation.pitch = 0.0
+        blueprint = self._get_random_blueprint()
+        self.destroy()
+        self.vehicle = self.world.spawn_actor(blueprint, start_pose)
+        self.collision_sensor = CollisionSensor(self.vehicle, self.hud)
+        self.camera_manager = CameraManager(self.vehicle, self.hud)
+        self.camera_manager._transform_index = cam_pos_index
+        self.camera_manager.set_sensor(cam_index, notify=False)
+        actor_type = ' '.join(self.vehicle.type_id.replace('_', '.').title().split('.')[1:])
+        self.hud.notification(actor_type)
 
     def next_weather(self, reverse=False):
         self._weather_index += -1 if reverse else 1
@@ -145,6 +166,13 @@ class World(object):
         for actor in [self.camera_manager.sensor, self.collision_sensor.sensor, self.vehicle]:
             if actor is not None:
                 actor.destroy()
+
+    def _get_random_blueprint(self):
+        bp = random.choice(self.world.get_blueprint_library().filter('vehicle'))
+        if bp.contains_attribute('color'):
+            color = random.choice(bp.get_attribute('color').recommended_values)
+            bp.set_attribute('color', color)
+        return bp
 
 
 # ==============================================================================
@@ -167,6 +195,8 @@ class KeyboardControl(object):
             elif event.type == pygame.KEYUP:
                 if self._is_quit_shortcut(event.key):
                     return True
+                elif event.key == K_BACKSPACE:
+                    world.restart()
                 elif event.key == K_h or (event.key == K_SLASH and pygame.key.get_mods() & KMOD_SHIFT):
                     world.hud.help.toggle()
                 elif event.key == K_TAB:
@@ -281,15 +311,16 @@ class FadingText(object):
 
 class HelpText(object):
     def __init__(self, font, width, height):
+        lines = __doc__.split('\n')
         self.font = font
-        self.dim = (680, 480)
+        self.dim = (680, len(lines) * 22 + 12)
         self.pos = (0.5 * width - 0.5 * self.dim[0], 0.5 * height - 0.5 * self.dim[1])
         self.seconds_left = 0
         self.surface = pygame.Surface(self.dim)
         self.surface.fill((0, 0, 0, 0))
-        for n, line in enumerate(__doc__.split('\n')):
+        for n, line in enumerate(lines):
             text_texture = self.font.render(line, True, (255, 255, 255))
-            self.surface.blit(text_texture, (22, n * 21))
+            self.surface.blit(text_texture, (22, n * 22))
             self._render = False
         self.surface.set_alpha(220)
 
@@ -324,8 +355,8 @@ class CollisionSensor(object):
         self = weak_self()
         if not self:
             return
-        actor_type = ' '.join(event.other_actor.type_id.title().split('.')[1:])
-        self._hud.notification('Collision with %s' % actor_type)
+        actor_type = ' '.join(event.other_actor.type_id.replace('_', '.').title().split('.')[1:])
+        self._hud.notification('Collision with %r' % actor_type)
 
 
 # ==============================================================================
@@ -343,7 +374,7 @@ class CameraManager(object):
         self._camera_transforms = [
             carla.Transform(carla.Location(x=1.6, z=1.7)),
             carla.Transform(carla.Location(x=-5.5, z=2.8), carla.Rotation(pitch=-15))]
-        self._transform_index = 0
+        self._transform_index = 1
         self._sensors = [
             ['sensor.camera.rgb', cc.None, 'Camera RGB'],
             ['sensor.camera.depth', cc.None, 'Camera Depth (Raw)'],
@@ -360,13 +391,12 @@ class CameraManager(object):
             item.append(bp)
         self._index = None
         self._server_clock = pygame.time.Clock()
-        self.set_sensor(0)
 
     def toggle_camera(self):
         self._transform_index = (self._transform_index + 1) % len(self._camera_transforms)
         self.sensor.set_transform(self._camera_transforms[self._transform_index])
 
-    def set_sensor(self, index):
+    def set_sensor(self, index, notify=True):
         index = index % len(self._sensors)
         needs_respawn = True if self._index is None \
             else self._sensors[index][0] != self._sensors[self._index][0]
@@ -382,7 +412,8 @@ class CameraManager(object):
             # circular reference.
             weak_self = weakref.ref(self)
             self.sensor.listen(lambda image: CameraManager._parse_image(weak_self, image))
-        self._hud.notification(self._sensors[index][2])
+        if notify:
+            self._hud.notification(self._sensors[index][2])
         self._index = index
 
     def next_sensor(self):
