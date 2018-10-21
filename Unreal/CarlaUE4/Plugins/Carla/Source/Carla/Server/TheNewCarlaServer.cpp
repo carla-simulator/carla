@@ -107,20 +107,35 @@ private:
     ::AttachActors(Child.GetActor(), Parent.GetActor());
   }
 
+  carla::geom::BoundingBox GetActorBoundingBox(const AActor &Actor)
+  {
+    constexpr bool bOnlyCollidingComponents = true;
+    FVector Origin, BoxExtent;
+    Actor.GetActorBounds(bOnlyCollidingComponents, Origin, BoxExtent);
+    return {Origin, BoxExtent};
+  }
+
 public:
 
   carla::rpc::Actor SerializeActor(FActorView ActorView)
   {
+    carla::rpc::Actor Actor;
+    Actor.id = ActorView.GetActorId();
     if (ActorView.IsValid())
     {
+      Actor.description = *ActorView.GetActorDescription();
+      Actor.bounding_box = GetActorBoundingBox(*ActorView.GetActor());
       auto *Sensor = Cast<ASensor>(ActorView.GetActor());
       if (Sensor != nullptr)
       {
         auto Stream = GetSensorStream(ActorView, *Sensor);
-        return {ActorView, Stream.token()};
+        const auto &Token = Stream.token();
+        Actor.stream_token = decltype(Actor.stream_token)(std::begin(Token.data), std::end(Token.data));
       }
+    } else {
+      UE_LOG(LogCarla, Warning, TEXT("Trying to serialize invalid actor"));
     }
-    return ActorView;
+    return Actor;
   }
 
 private:
@@ -173,7 +188,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
       RespondErrorStr("unable to find spectator");
     }
-    return ActorView;
+    return SerializeActor(ActorView);
   });
 
   Server.BindSync("get_weather_parameters", [this]() -> cr::WeatherParameters {

@@ -64,7 +64,7 @@ void ACollisionSensor::OnCollisionEvent(
     FVector NormalImpulse,
     const FHitResult &Hit)
 {
-  if ((Episode != nullptr) && (GameInstance != nullptr))
+  if ((Episode != nullptr) && (GameInstance != nullptr) && (Actor != nullptr) && (OtherActor != nullptr))
   {
     const auto &Registry = Episode->GetActorRegistry();
     const auto &Server = GameInstance->GetServer();
