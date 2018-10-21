@@ -14,10 +14,6 @@
 
 #include <cstring>
 
-#ifdef LIBCARLA_INCLUDED_FROM_UE4
-#  include "Carla/Actor/ActorView.h"
-#endif // LIBCARLA_INCLUDED_FROM_UE4
-
 namespace carla {
 namespace rpc {
 
@@ -50,25 +46,6 @@ namespace rpc {
     }
 
     /// @}
-
-#ifdef LIBCARLA_INCLUDED_FROM_UE4
-
-    Actor(FActorView View)
-      : id(View.GetActorId()),
-        description(*View.GetActorDescription()),
-        bounding_box(View.GetActor()) {
-      DEBUG_ASSERT(View.IsValid());
-    }
-
-    Actor(FActorView View, const streaming::Token &StreamToken)
-      : id(View.GetActorId()),
-        description(*View.GetActorDescription()),
-        bounding_box(View.GetActor()),
-        stream_token(StreamToken.data.begin(), StreamToken.data.end()) {
-      DEBUG_ASSERT(View.IsValid());
-    }
-
-#endif // LIBCARLA_INCLUDED_FROM_UE4
 
     MSGPACK_DEFINE_ARRAY(id, description, bounding_box, stream_token);
   };
