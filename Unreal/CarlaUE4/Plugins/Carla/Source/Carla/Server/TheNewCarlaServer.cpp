@@ -283,7 +283,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
 
   Server.BindSync("set_actor_location", [this](
       cr::Actor Actor,
-      cr::Location Location) -> bool {
+      cr::Location Location) {
     RequireEpisode();
     auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
     if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
@@ -292,7 +292,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     // This function only works with teleport physics, to reset speeds we need
     // another method.
     /// @todo print error instead of returning false.
-    return ActorView.GetActor()->SetActorLocation(
+    ActorView.GetActor()->SetActorRelativeLocation(
         Location,
         false,
         nullptr,
@@ -301,7 +301,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
 
   Server.BindSync("set_actor_transform", [this](
       cr::Actor Actor,
-      cr::Transform Transform) -> bool {
+      cr::Transform Transform) {
     RequireEpisode();
     auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
     if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
@@ -309,7 +309,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     }
     // This function only works with teleport physics, to reset speeds we need
     // another method.
-    return ActorView.GetActor()->SetActorTransform(
+    ActorView.GetActor()->SetActorRelativeTransform(
         Transform,
         false,
         nullptr,

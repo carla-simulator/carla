@@ -342,8 +342,8 @@ class CameraManager(object):
         self._recording = False
         self._camera_transforms = [
             carla.Transform(carla.Location(x=1.6, z=1.7)),
-            carla.Transform(carla.Location(x=-4.5, z=2.8), carla.Rotation(pitch=-15))]
-        self._current_transform = self._camera_transforms[0]
+            carla.Transform(carla.Location(x=-5.5, z=2.8), carla.Rotation(pitch=-15))]
+        self._transform_index = 0
         self._sensors = [
             ['sensor.camera.rgb', cc.None, 'Camera RGB'],
             ['sensor.camera.depth', cc.None, 'Camera Depth (Raw)'],
@@ -363,7 +363,8 @@ class CameraManager(object):
         self.set_sensor(0)
 
     def toggle_camera(self):
-        self._hud.error('not implemented')
+        self._transform_index = (self._transform_index + 1) % len(self._camera_transforms)
+        self.sensor.set_transform(self._camera_transforms[self._transform_index])
 
     def set_sensor(self, index):
         index = index % len(self._sensors)
@@ -375,7 +376,7 @@ class CameraManager(object):
                 self._surface = None
             self.sensor = self._parent.get_world().spawn_actor(
                 self._sensors[index][-1],
-                self._current_transform,
+                self._camera_transforms[self._transform_index],
                 attach_to=self._parent)
             # We need to pass the lambda a weak reference to self to avoid
             # circular reference.
