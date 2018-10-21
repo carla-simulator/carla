@@ -58,6 +58,8 @@ namespace client {
 
     Timestamp WaitForTick(time_duration timeout) const;
 
+    void OnTick(std::function<void(Timestamp)> callback);
+
   private:
 
     detail::EpisodeProxy _episode;

@@ -39,6 +39,10 @@ static auto WaitForTick(const carla::client::World &world, double seconds) {
   return world.WaitForTick(TimeDurationFromSeconds(seconds));
 }
 
+static void OnTick(carla::client::World &self, boost::python::object callback) {
+  self.OnTick(MakeCallback(std::move(callback)));
+}
+
 void export_world() {
   using namespace boost::python;
   namespace cc = carla::client;
@@ -88,6 +92,7 @@ void export_world() {
     .def("try_spawn_actor", SPAWN_ACTOR_WITHOUT_GIL(TrySpawnActor))
     .def("spawn_actor", SPAWN_ACTOR_WITHOUT_GIL(SpawnActor))
     .def("wait_for_tick", &WaitForTick, (arg("seconds")=1.0))
+    .def("on_tick", &OnTick, (arg("callback")))
     .def(self_ns::str(self_ns::self))
   ;
 

@@ -74,5 +74,9 @@ namespace client {
     return _episode.Lock()->WaitForTick(timeout);
   }
 
+  void World::OnTick(std::function<void(Timestamp)> callback) {
+    return _episode.Lock()->RegisterOnTickEvent(std::move(callback));
+  }
+
 } // namespace client
 } // namespace carla

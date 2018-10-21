@@ -66,6 +66,29 @@ static carla::time_duration TimeDurationFromSeconds(double seconds) {
   return carla::time_duration::milliseconds(ms);
 }
 
+static auto MakeCallback(boost::python::object callback) {
+  namespace py = boost::python;
+  // Make sure the callback is actually callable.
+  if (!PyCallable_Check(callback.ptr())) {
+    PyErr_SetString(PyExc_TypeError, "callback argument must be callable!");
+    py::throw_error_already_set();
+  }
+
+  // We need to delete the callback while holding the GIL.
+  using Deleter = carla::PythonUtil::AcquireGILDeleter;
+  auto callback_ptr = carla::SharedPtr<py::object>{new py::object(callback), Deleter()};
+
+  // Make a lambda callback.
+  return [callback=std::move(callback_ptr)](auto message) {
+    carla::PythonUtil::AcquireGIL lock;
+    try {
+      py::call<void>(callback->ptr(), py::object(message));
+    } catch (const py::error_already_set &e) {
+      PyErr_Print();
+    }
+  };
+}
+
 #include "Actor.cpp"
 #include "Blueprint.cpp"
 #include "Client.cpp"
