@@ -97,7 +97,7 @@ void ATagger::TagActorsInLevel(UWorld &World, bool bTagForSemanticSegmentation)
   }
 }
 
-void ATagger::GetTagsOfTaggedActor(const AActor &Actor, TArray<ECityObjectLabel> &Tags)
+void ATagger::GetTagsOfTaggedActor(const AActor &Actor, TSet<ECityObjectLabel> &Tags)
 {
   TArray<UPrimitiveComponent *> Components;
   Actor.GetComponents<UPrimitiveComponent>(Components);

@@ -125,6 +125,12 @@ public:
     {
       Actor.description = *ActorView.GetActorDescription();
       Actor.bounding_box = GetActorBoundingBox(*ActorView.GetActor());
+      Actor.semantic_tags.reserve(ActorView.GetSemanticTags().Num());
+      using tag_t = decltype(Actor.semantic_tags)::value_type;
+      for (auto &&Tag : ActorView.GetSemanticTags())
+      {
+        Actor.semantic_tags.emplace_back(static_cast<tag_t>(Tag));
+      }
       auto *Sensor = Cast<ASensor>(ActorView.GetActor());
       if (Sensor != nullptr)
       {

@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Carla/Actor/ActorDescription.h"
+#include "Carla/Game/Tagger.h"
 
 class AActor;
 
@@ -45,6 +46,11 @@ public:
     return Description.Get();
   }
 
+  const TSet<ECityObjectLabel> &GetSemanticTags() const
+  {
+    return SemanticTags;
+  }
+
 private:
 
   friend class FActorRegistry;
@@ -59,4 +65,6 @@ private:
   AActor *TheActor = nullptr;
 
   TSharedPtr<const FActorDescription> Description = nullptr;
+
+  TSet<ECityObjectLabel> SemanticTags;
 };
