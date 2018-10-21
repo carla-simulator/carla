@@ -11,9 +11,9 @@ Install
 *.egg-info
 *.kdev4
 *.log
+*.o
 *.pb.cc
 *.pb.h
-*.o
 *.pid
 *.pri
 *.pro
@@ -27,6 +27,7 @@ Install
 *CodeLitePreProcessor.txt
 .codelite
 .gdb_history
+.gtest
 .tags*
 .vs
 __pycache__
