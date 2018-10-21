@@ -11,14 +11,6 @@
 
 #include <ostream>
 
-namespace std {
-
-  std::ostream &operator<<(std::ostream &out, const std::vector<std::string> &vector_of_strings) {
-    return PrintList(out, vector_of_strings);
-  }
-
-} // namespace std
-
 namespace carla {
 
 namespace sensor {

@@ -7,6 +7,8 @@
 #include <carla/client/Actor.h>
 #include <carla/client/Vehicle.h>
 
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+
 #include <ostream>
 #include <iostream>
 
@@ -21,16 +23,27 @@ namespace client {
 } // namespace client
 } // namespace carla
 
+static auto GetSemanticTags(const carla::client::Actor &self) {
+  const auto &tags = self.GetSemanticTags();
+  return std::vector<int>(tags.begin(), tags.end());
+}
+
 void export_actor() {
   using namespace boost::python;
   namespace cc = carla::client;
   namespace cr = carla::rpc;
+
+  class_<std::vector<int>>("vector_of_ints")
+    .def(vector_indexing_suite<std::vector<int>>())
+    .def(self_ns::str(self_ns::self))
+  ;
 
   class_<cc::Actor, boost::noncopyable, boost::shared_ptr<cc::Actor>>("Actor", no_init)
     // work-around, force return copy to resolve Actor instead of ActorState.
     .add_property("id", CALL_RETURNING_COPY(cc::Actor, GetId))
     .add_property("type_id", CALL_RETURNING_COPY(cc::Actor, GetTypeId))
     .add_property("bounding_box", CALL_RETURNING_COPY(cc::Actor, GetBoundingBox))
+    .add_property("semantic_tags", &GetSemanticTags)
     .add_property("is_alive", CALL_RETURNING_COPY(cc::Actor, IsAlive))
     .def("get_world", CALL_RETURNING_COPY(cc::Actor, GetWorld))
     .def("get_location", &cc::Actor::GetLocation)

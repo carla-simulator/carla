@@ -10,11 +10,9 @@
 #include "Carla/Actor/ActorRegistry.h"
 #include "Carla/Game/Tagger.h"
 
-static FString GetRelevantTagAsString(const AActor &Actor)
+static FString GetRelevantTagAsString(const FActorView &View)
 {
-  TArray<ECityObjectLabel> Tags;
-  ATagger::GetTagsOfTaggedActor(Actor, Tags);
-  for (auto &&Tag : Tags)
+  for (auto &&Tag : View.GetSemanticTags())
   {
     if ((Tag != ECityObjectLabel::None) && (Tag != ECityObjectLabel::Other))
     {
@@ -40,7 +38,10 @@ FActorView FActorRegistry::Register(AActor &Actor, FActorDescription Description
              "or the actor was garbage collected."));
   }
   Ids.Emplace(&Actor, Id);
-  auto Result = ActorDatabase.emplace(Id, FActorView(Id, Actor, std::move(Description)));
+
+  auto View = FActorView(Id, Actor, std::move(Description));
+  ATagger::GetTagsOfTaggedActor(Actor, View.SemanticTags);
+  auto Result = ActorDatabase.emplace(Id, View);
   check(Result.second);
   check(static_cast<size_t>(Actors.Num()) == ActorDatabase.size());
   return Result.first->second;
@@ -74,8 +75,9 @@ FActorView FActorRegistry::FindOrFake(AActor *Actor) const
   if (!View.IsValid())
   {
     View.TheActor = Actor;
+    ATagger::GetTagsOfTaggedActor(*Actor, View.SemanticTags);
     auto Description = MakeShared<FActorDescription>();
-    Description->Id = TEXT("static.") + GetRelevantTagAsString(*Actor);
+    Description->Id = TEXT("static.") + GetRelevantTagAsString(View);
     View.Description = Description;
     check(View.IsValid());
   }

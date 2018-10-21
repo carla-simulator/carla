@@ -35,6 +35,10 @@ namespace detail {
       return _description.bounding_box;
     }
 
+    const std::vector<uint8_t> &GetSemanticTags() const {
+      return _description.semantic_tags;
+    }
+
     World GetWorld() const {
       return World{_episode};
     }

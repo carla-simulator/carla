@@ -10,6 +10,7 @@
 
 #include <ostream>
 #include <type_traits>
+#include <vector>
 
 // Convenient for requests without arguments.
 #define CALL_WITHOUT_GIL(cls, fn) +[](cls &self) { \
@@ -60,6 +61,15 @@ static std::ostream &PrintList(std::ostream &out, const Iterable &list) {
   out << ']';
   return out;
 }
+
+namespace std {
+
+  template <typename T>
+  std::ostream &operator<<(std::ostream &out, const std::vector<T> &vector_of_stuff) {
+    return PrintList(out, vector_of_stuff);
+  }
+
+} // namespace std
 
 static carla::time_duration TimeDurationFromSeconds(double seconds) {
   size_t ms = static_cast<size_t>(1e3 * seconds);
