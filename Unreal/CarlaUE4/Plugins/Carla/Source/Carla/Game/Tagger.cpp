@@ -114,7 +114,7 @@ void ATagger::GetTagsOfTaggedActor(const AActor &Actor, TArray<ECityObjectLabel>
 FString ATagger::GetTagAsString(const ECityObjectLabel Label)
 {
   switch (Label) {
-#define CARLA_GET_LABEL_STR(lbl) case ECityObjectLabel:: lbl : return #lbl;
+#define CARLA_GET_LABEL_STR(lbl) case ECityObjectLabel:: lbl : return TEXT(#lbl);
     default:
     CARLA_GET_LABEL_STR(None)
     CARLA_GET_LABEL_STR(Buildings)
