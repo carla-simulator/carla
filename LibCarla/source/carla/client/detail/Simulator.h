@@ -177,6 +177,10 @@ namespace detail {
       _client.SetActorTransform(actor.Serialize(), transform);
     }
 
+    void SetActorSimulatePhysics(Actor &actor, bool enabled) {
+      _client.SetActorSimulatePhysics(actor.Serialize(), enabled);
+    }
+
     /// @}
     // =========================================================================
     /// @name Operations with vehicles

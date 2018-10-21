@@ -126,6 +126,10 @@ namespace detail {
     _pimpl->AsyncCall("set_actor_transform", actor, transform);
   }
 
+  void Client::SetActorSimulatePhysics(const rpc::Actor &actor, const bool enabled) {
+    _pimpl->AsyncCall("set_actor_simulate_physics", actor, enabled);
+  }
+
   void Client::SetActorAutopilot(const rpc::Actor &vehicle, const bool enabled) {
     _pimpl->AsyncCall("set_actor_autopilot", vehicle, enabled);
   }

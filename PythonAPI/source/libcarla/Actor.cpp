@@ -53,6 +53,7 @@ void export_actor() {
     .def("get_acceleration", &cc::Actor::GetAcceleration)
     .def("set_location", &cc::Actor::SetLocation, (arg("location")))
     .def("set_transform", &cc::Actor::SetTransform, (arg("transform")))
+    .def("set_simulate_physics", &cc::Actor::SetSimulatePhysics, (arg("enabled")=true))
     .def("destroy", CALL_WITHOUT_GIL(cc::Actor, Destroy))
     .def(self_ns::str(self_ns::self))
   ;

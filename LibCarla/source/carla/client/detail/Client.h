@@ -86,6 +86,10 @@ namespace detail {
         const rpc::Actor &actor,
         const geom::Transform &transform);
 
+    void SetActorSimulatePhysics(
+        const rpc::Actor &actor,
+        bool enabled);
+
     void SetActorAutopilot(
         const rpc::Actor &vehicle,
         bool enabled);
