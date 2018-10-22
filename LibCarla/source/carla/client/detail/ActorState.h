@@ -27,7 +27,9 @@ namespace detail {
       return _description.description.id;
     }
 
-    std::string GetDisplayId() const;
+    const std::string &GetDisplayId() const {
+      return _display_id;
+    }
 
     World GetWorld() const {
       return _episode;
@@ -51,13 +53,13 @@ namespace detail {
 
     friend class detail::Client;
 
-    ActorState(rpc::Actor description, Episode episode)
-      : _description(std::move(description)),
-        _episode(std::move(episode)) {}
+    ActorState(rpc::Actor description, Episode episode);
 
     rpc::Actor _description;
 
     Episode _episode;
+
+    std::string _display_id;
   };
 
 } // namespace detail

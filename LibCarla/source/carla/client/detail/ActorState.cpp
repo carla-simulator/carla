@@ -12,10 +12,16 @@ namespace carla {
 namespace client {
 namespace detail {
 
-  std::string ActorState::GetDisplayId() const {
-    using namespace std::string_literals;
-    return "Actor "s + std::to_string(GetId()) + " (" + GetTypeId() + ')';
-  }
+  ActorState::ActorState(rpc::Actor description, Episode episode)
+    : _description(std::move(description)),
+      _episode(std::move(episode)),
+      _display_id([](const auto &desc) {
+        using namespace std::string_literals;
+        return
+            "Actor "s +
+            std::to_string(desc.id) +
+            " (" + desc.description.id + ')';
+      }(_description)) {}
 
 } // namespace detail
 } // namespace client
