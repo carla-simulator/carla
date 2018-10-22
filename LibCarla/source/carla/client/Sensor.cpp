@@ -9,6 +9,8 @@
 #include "carla/Logging.h"
 #include "carla/client/detail/Client.h"
 
+#include <exception>
+
 namespace carla {
 namespace client {
 
@@ -20,7 +22,11 @@ namespace client {
           GetDisplayId());
     }
     if (_is_listening) {
-      Stop();
+      try {
+        Stop();
+      } catch (const std::exception &e) {
+        log_error("excetion trying to stop sensor:", GetDisplayId(), ':', e.what());
+      }
     }
   }
 
