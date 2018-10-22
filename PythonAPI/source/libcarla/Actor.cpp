@@ -43,7 +43,6 @@ void export_actor() {
     // work-around, force return copy to resolve Actor instead of ActorState.
     .add_property("id", CALL_RETURNING_COPY(cc::Actor, GetId))
     .add_property("type_id", CALL_RETURNING_COPY(cc::Actor, GetTypeId))
-    .add_property("bounding_box", CALL_RETURNING_COPY(cc::Actor, GetBoundingBox))
     .add_property("semantic_tags", &GetSemanticTags)
     .add_property("is_alive", CALL_RETURNING_COPY(cc::Actor, IsAlive))
     .def("get_world", CALL_RETURNING_COPY(cc::Actor, GetWorld))
@@ -59,6 +58,7 @@ void export_actor() {
   ;
 
   class_<cc::Vehicle, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Vehicle>>("Vehicle", no_init)
+    .add_property("bounding_box", CALL_RETURNING_COPY(cc::Vehicle, GetBoundingBox))
     .add_property("control", CALL_RETURNING_COPY(cc::Vehicle, GetControl))
     .def("apply_control", &cc::Vehicle::ApplyControl, (arg("control")))
     .def("set_autopilot", &cc::Vehicle::SetAutopilot, (arg("enabled")=true))

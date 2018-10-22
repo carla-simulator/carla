@@ -8,6 +8,7 @@
 #include "Carla/Server/TheNewCarlaServer.h"
 
 #include "Carla/Sensor/Sensor.h"
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
 #include "GameFramework/SpectatorPawn.h"
 
@@ -109,10 +110,15 @@ private:
 
   carla::geom::BoundingBox GetActorBoundingBox(const AActor &Actor)
   {
-    constexpr bool bOnlyCollidingComponents = true;
-    FVector Origin, BoxExtent;
-    Actor.GetActorBounds(bOnlyCollidingComponents, Origin, BoxExtent);
-    return {Origin, BoxExtent};
+    /// @todo Bounding boxes only available for vehicles.
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(&Actor);
+    if (Vehicle != nullptr)
+    {
+      FVector Location = Vehicle->GetVehicleBoundingBoxTransform().GetTranslation();
+      FVector Extent = Vehicle->GetVehicleBoundingBoxExtent();
+      return {Location, Extent};
+    }
+    return {};
   }
 
 public:
