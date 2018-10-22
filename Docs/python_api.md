@@ -77,7 +77,6 @@
 
 - `id`
 - `type_id`
-- `bounding_box`
 - `semantic_tags`
 - `is_alive`
 - `get_world()`
@@ -92,6 +91,7 @@
 
 ## `carla.Vehicle(carla.Actor)`
 
+- `bounding_box`
 - `control`
 - `apply_control(vehicle_control)`
 - `set_autopilot(enabled=True)`
