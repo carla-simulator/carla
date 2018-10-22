@@ -49,7 +49,7 @@ namespace data {
 } // namespace carla
 
 enum class EColorConverter {
-  None,
+  Raw,
   Depth,
   LogarithmicDepth,
   CityScapesPalette
@@ -82,7 +82,7 @@ static void ConvertImage(T &self, EColorConverter cc) {
     case EColorConverter::CityScapesPalette:
       ImageConverter::ConvertInPlace(view, ColorConverter::CityScapesPalette());
       break;
-    case EColorConverter::None:
+    case EColorConverter::Raw:
       break; // ignore.
     default:
       throw std::invalid_argument("invalid color converter!");
@@ -95,7 +95,7 @@ static std::string SaveImageToDisk(T &self, std::string path, EColorConverter cc
   using namespace carla::image;
   auto view = ImageView::MakeView(self);
   switch (cc) {
-    case EColorConverter::None:
+    case EColorConverter::Raw:
       return ImageIO::WriteView(
           std::move(path),
           view);
@@ -135,7 +135,7 @@ void export_sensor_data() {
   ;
 
   enum_<EColorConverter>("ColorConverter")
-    .value("None", EColorConverter::None)
+    .value("Raw", EColorConverter::Raw)
     .value("Depth", EColorConverter::Depth)
     .value("LogarithmicDepth", EColorConverter::LogarithmicDepth)
     .value("CityScapesPalette", EColorConverter::CityScapesPalette)
@@ -147,7 +147,7 @@ void export_sensor_data() {
     .add_property("fov", &csd::Image::GetFOVAngle)
     .add_property("raw_data", &GetRawDataAsBuffer<csd::Image>)
     .def("convert", &ConvertImage<csd::Image>, (arg("color_converter")))
-    .def("save_to_disk", &SaveImageToDisk<csd::Image>, (arg("path"), arg("color_converter")=EColorConverter::None))
+    .def("save_to_disk", &SaveImageToDisk<csd::Image>, (arg("path"), arg("color_converter")=EColorConverter::Raw))
     .def("__len__", &csd::Image::size)
     .def("__iter__", iterator<csd::Image>())
     .def("__getitem__", +[](const csd::Image &self, size_t pos) -> csd::Color {
