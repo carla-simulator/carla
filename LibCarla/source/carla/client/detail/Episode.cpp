@@ -6,8 +6,11 @@
 
 #include "carla/client/detail/Episode.h"
 
+#include "carla/Logging.h"
 #include "carla/client/detail/Client.h"
 #include "carla/sensor/Deserializer.h"
+
+#include <exception>
 
 namespace carla {
 namespace client {
@@ -25,7 +28,11 @@ namespace detail {
       _state(std::make_shared<EpisodeState>()) {}
 
   Episode::~Episode() {
-    _client.UnSubscribeFromStream(_description.token);
+    try {
+      _client.UnSubscribeFromStream(_description.token);
+    } catch (const std::exception &e) {
+      log_error("exception trying to disconnect from episode:", e.what());
+    }
   }
 
   void Episode::Listen() {
