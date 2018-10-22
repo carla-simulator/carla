@@ -179,7 +179,7 @@
 
 ## `carla.ColorConverter`
 
-- `None`
+- `Raw`
 - `Depth`
 - `LogarithmicDepth`
 - `CityScapesPalette`
