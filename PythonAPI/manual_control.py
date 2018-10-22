@@ -169,7 +169,7 @@ class World(object):
 
     def _get_random_blueprint(self):
         bp = random.choice(self.world.get_blueprint_library().filter('vehicle'))
-        if bp.contains_attribute('color'):
+        if bp.has_attribute('color'):
             color = random.choice(bp.get_attribute('color').recommended_values)
             bp.set_attribute('color', color)
         return bp
