@@ -31,7 +31,11 @@ namespace detail {
     // session remaining since at this point the io_service should be already
     // stopped.
     for (auto &pair : _stream_map) {
-      pair.second->ClearSessions();
+      try {
+        pair.second->ClearSessions();
+      } catch (const std::exception &e) {
+        log_error("failed to clear sessions:", e.what());
+      }
     }
   }
 
