@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "carla/client/Color.h"
 #include "carla/rpc/ActorAttribute.h"
+#include "carla/sensor/data/Color.h"
 
 #include <cstdlib>
 #include <exception>
@@ -121,7 +121,7 @@ namespace client {
   std::string ActorAttribute::As<std::string>() const;
 
   template <>
-  Color ActorAttribute::As<Color>() const;
+  sensor::data::Color ActorAttribute::As<sensor::data::Color>() const;
 
   template <>
   inline auto ActorAttribute::As<rpc::ActorAttributeType::Bool>() const {
@@ -145,7 +145,7 @@ namespace client {
 
   template <>
   inline auto ActorAttribute::As<rpc::ActorAttributeType::RGBColor>() const {
-    return As<Color>();
+    return As<sensor::data::Color>();
   }
 
   template <typename T>

@@ -8,8 +8,7 @@
 
 #include "GameFramework/Actor.h"
 
-#include "Sensor/SensorDataSink.h"
-#include "Settings/SensorDescription.h"
+#include "Carla/Sensor/DataStream.h"
 
 #include "Sensor.generated.h"
 
@@ -21,40 +20,25 @@ class CARLA_API ASensor : public AActor
 
 public:
 
-  ASensor(const FObjectInitializer& ObjectInitializer);
+  virtual void Set(const FActorDescription &) {}
 
-  uint32 GetId() const
+  /// Replace the FDataStream associated with this sensor.
+  ///
+  /// @warning Do not change the stream after BeginPlay. It is not thread-safe.
+  void SetDataStream(FDataStream InStream)
   {
-    return Id;
-  }
-
-  void AttachToActor(AActor *Actor);
-
-  void SetSensorDataSink(TSharedPtr<ISensorDataSink> InSensorDataSink)
-  {
-    SensorDataSink = InSensorDataSink;
+    Stream = std::move(InStream);
   }
 
 protected:
 
-  void Set(const USensorDescription &SensorDescription)
+  /// Return the FDataStream associated with this sensor.
+  FDataStream &GetDataStream()
   {
-    Id = SensorDescription.GetId();
-  }
-
-  void WriteSensorData(const FSensorDataView &SensorData) const
-  {
-    if (SensorDataSink.IsValid()) {
-      SensorDataSink->Write(SensorData);
-    } else {
-      UE_LOG(LogCarla, Warning, TEXT("Sensor %d has no data sink."), Id);
-    }
+    return Stream;
   }
 
 private:
 
-  UPROPERTY(VisibleAnywhere)
-  uint32 Id;
-
-  TSharedPtr<ISensorDataSink> SensorDataSink = nullptr;
+  FDataStream Stream;
 };

@@ -65,7 +65,7 @@ namespace client {
   }
 
   template <>
-  Color ActorAttribute::As<Color>() const {
+  sensor::data::Color ActorAttribute::As<sensor::data::Color>() const {
     LIBCARLA_THROW_BAD_VALUE_CAST(RGBColor);
 
     std::vector<std::string> channels;
