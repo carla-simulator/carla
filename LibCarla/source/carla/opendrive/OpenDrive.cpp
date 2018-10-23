@@ -78,10 +78,10 @@ namespace opendrive {
       carla::road::element::RoadGeneralInfo *roadGeneralInfo = roadSegment.MakeInfo<carla::road::element::RoadGeneralInfo>();
       roadGeneralInfo->SetIsJunction(it->second->attributes.junction >= 0);
 
-      if(it->second->lane_sections.lane_offset.size())
+      for(size_t i = 0; i < it->second->lane_sections.lane_offset.size(); ++i)
       {
-        double s = it->second->lane_sections.lane_offset[0].s;
-        double a = it->second->lane_sections.lane_offset[0].a;
+        double s = it->second->lane_sections.lane_offset[i].s;
+        double a = it->second->lane_sections.lane_offset[i].a;
         roadGeneralInfo->SetLanesOffset(s, a);
       }
 
