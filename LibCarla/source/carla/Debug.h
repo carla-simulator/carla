@@ -17,6 +17,7 @@
 #endif // NDEBUG
 
 #define DEBUG_ASSERT(predicate) DEBUG_ONLY(assert(predicate));
+#define DEBUG_ERROR DEBUG_ASSERT(false);
 
 #ifdef LIBCARLA_WITH_GTEST
 #  include <gtest/gtest.h>

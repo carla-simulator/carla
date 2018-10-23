@@ -14,6 +14,15 @@ namespace carla {
 namespace streaming {
 namespace detail {
 
+  Dispatcher::~Dispatcher() {
+    // Disconnect all the sessions from their streams, this should kill any
+    // session remaining since at this point the io_service should be already
+    // stopped.
+    for (auto &pair : _stream_map) {
+      pair.second->set_session(nullptr);
+    }
+  }
+
   Stream Dispatcher::MakeStream() {
     std::lock_guard<std::mutex> lock(_mutex);
     ++_cached_token._token.stream_id; // id zero only happens in overflow.

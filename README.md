@@ -44,6 +44,7 @@ If you use CARLA, please cite our CoRL’17 paper.
 _CARLA: An Open Urban Driving Simulator_<br>Alexey Dosovitskiy, German Ros,
 Felipe Codevilla, Antonio Lopez, Vladlen Koltun; PMLR 78:1-16
 [[PDF](http://proceedings.mlr.press/v78/dosovitskiy17a/dosovitskiy17a.pdf)]
+[[talk](https://www.youtube.com/watch?v=xfyK03MEZ9Q&feature=youtu.be&t=2h44m30s)]
 
 
 ```

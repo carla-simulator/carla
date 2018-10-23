@@ -28,10 +28,6 @@ struct CARLA_API FMockGameControllerSettings
   UPROPERTY(EditAnywhere, Category = "Mock CARLA Controller", meta = (EditCondition = "!bRandomPlayerStart", ClampMin = 0))
   int32 PlayerStartIndex = 0;
 
-  /** If true, semantic segmentation will be always enabled even if no camera needs it. */
-  UPROPERTY(EditAnywhere, Category = "Mock CARLA Controller")
-  bool bForceEnableSemanticSegmentation = false;
-
 #if WITH_EDITORONLY_DATA
 
   /** Override available settings in CARLA Settings (Editor only). */

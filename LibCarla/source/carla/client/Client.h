@@ -6,28 +6,13 @@
 
 #pragma once
 
-#include "carla/NonCopyable.h"
-#include "carla/Time.h"
-#include "carla/Version.h"
-#include "carla/client/Control.h"
-#include "carla/client/Memory.h"
-#include "carla/client/Transform.h"
-#include "carla/rpc/Client.h"
-#include "carla/streaming/Client.h"
-
-#include <string>
+#include "carla/PythonUtil.h"
+#include "carla/client/detail/Client.h"
 
 namespace carla {
 namespace client {
 
-  class Actor;
-  class ActorBlueprint;
-  class BlueprintLibrary;
-  class World;
-
-  class Client
-    : public EnableSharedFromThis<Client>,
-      private NonCopyable {
+  class Client {
   public:
 
     /// Construct a carla client.
@@ -42,68 +27,37 @@ namespace client {
         size_t worker_threads = 0u);
 
     void SetTimeout(time_duration timeout) {
-      _client.set_timeout(timeout.milliseconds());
-    }
-
-    template <typename T, typename ... Args>
-    T Call(const std::string &function, Args && ... args) {
-      return _client.call(function, std::forward<Args>(args) ...).template as<T>();
-    }
-
-    template <typename Functor>
-    void SubscribeToStream(const streaming::Token &token, Functor &&callback) {
-      _streaming_client.Subscribe(token, std::forward<Functor>(callback));
+      _client_state->SetTimeout(timeout);
     }
 
     std::string GetClientVersion() const {
-      return ::carla::version();
+      return _client_state->GetClientVersion();
     }
 
-    std::string GetServerVersion() {
-      return Call<std::string>("version");
+    std::string GetServerVersion() const {
+      return _client_state->GetServerVersion();
     }
 
-    bool Ping() {
-      return Call<bool>("ping");
+    bool Ping() const {
+      return _client_state->Ping();
     }
 
-    SharedPtr<World> GetWorld();
-
-    SharedPtr<BlueprintLibrary> GetBlueprintLibrary();
-
-    SharedPtr<Actor> GetSpectator();
-
-    SharedPtr<Actor> SpawnActor(
-        const ActorBlueprint &blueprint,
-        const Transform &transform,
-        Actor *parent = nullptr);
-
-    void DestroyActor(Actor &actor);
-
-    Location GetActorLocation(Actor &actor);
-
-    Transform GetActorTransform(Actor &actor);
-
-    bool SetActorLocation(Actor &actor, const Location &location);
-
-    bool SetActorTransform(Actor &actor, const Transform &transform);
-
-    void ApplyControlToActor(
-        Actor &actor,
-        const VehicleControl &control);
-
-    void SetActorAutopilot(
-        Actor &actor,
-        bool enabled = true);
+    World GetWorld() const {
+      return _client_state->GetCurrentEpisode();
+    }
 
   private:
 
-    carla::rpc::Client _client;
-
-    carla::streaming::Client _streaming_client;
-
-    SharedPtr<World> _active_world;
+    SharedPtr<detail::Client> _client_state;
   };
+
+  inline Client::Client(
+      const std::string &host,
+      uint16_t port,
+      size_t worker_threads)
+    : _client_state(
+        new detail::Client(host, port, worker_threads),
+        PythonUtil::ReleaseGILDeleter()) {}
 
 } // namespace client
 } // namespace carla

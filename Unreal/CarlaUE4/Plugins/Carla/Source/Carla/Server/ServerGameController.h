@@ -9,7 +9,6 @@
 #include "Game/CarlaGameControllerBase.h"
 
 class FCarlaServer;
-class FServerSensorDataSink;
 
 /// Implements remote control of game and player.
 class FServerGameController : public ICarlaGameControllerBase
@@ -33,8 +32,6 @@ public:
 private:
 
   void RestartLevel();
-
-  const TSharedPtr<FServerSensorDataSink> DataSink;
 
   TSharedPtr<FCarlaServer> Server;
 

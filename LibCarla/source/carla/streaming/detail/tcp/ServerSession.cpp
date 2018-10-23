@@ -24,15 +24,13 @@ namespace tcp {
   ServerSession::ServerSession(
       boost::asio::io_service &io_service,
       const time_duration timeout)
-    : _session_id(SESSION_COUNTER++),
+    : LIBCARLA_INITIALIZE_LIFETIME_PROFILER(
+          std::string("tcp server session ") + std::to_string(SESSION_COUNTER)),
+      _session_id(SESSION_COUNTER++),
       _socket(io_service),
       _timeout(timeout),
       _deadline(io_service),
       _strand(io_service) {}
-
-  ServerSession::~ServerSession() {
-    _deadline.cancel();
-  }
 
   void ServerSession::Open(callback_function_type callback) {
     StartTimer();
@@ -48,7 +46,7 @@ namespace tcp {
           _socket.get_io_service().post([=]() { cb(self); });
         } else {
           log_error("session", _session_id, ": error retrieving stream id :", ec.message());
-          Close();
+          CloseNow();
         }
       };
 
@@ -61,23 +59,16 @@ namespace tcp {
     });
   }
 
-  void ServerSession::Close() {
-    _strand.post([this, self = shared_from_this()]() {
-      if (_socket.is_open()) {
-        _socket.close();
-      }
-      log_debug("session", _session_id, "closed");
-    });
-  }
-
   void ServerSession::Write(std::shared_ptr<const Message> message) {
     DEBUG_ASSERT(message != nullptr);
     DEBUG_ASSERT(!message->empty());
     auto self = shared_from_this();
     _strand.post([=]() {
+      if (!_socket.is_open()) {
+        return;
+      }
       if (_is_writing) {
-        // Re-post and return;
-        Write(std::move(message));
+        log_debug("session", _session_id, ": connection too slow: message discarded");
         return;
       }
       _is_writing = true;
@@ -85,7 +76,8 @@ namespace tcp {
       auto handle_sent = [this, self, message](const boost::system::error_code &ec, size_t DEBUG_ONLY(bytes)) {
         _is_writing = false;
         if (ec) {
-          log_error("session", _session_id, ": error sending data :", ec.message());
+          log_info("session", _session_id, ": error sending data :", ec.message());
+          CloseNow();
         } else {
           DEBUG_ONLY(log_debug("session", _session_id, ": successfully sent", bytes, "bytes"));
           DEBUG_ASSERT_EQ(bytes, sizeof(message_size_type) + message->size());
@@ -105,12 +97,25 @@ namespace tcp {
   void ServerSession::StartTimer() {
     if (_deadline.expires_at() <= boost::asio::deadline_timer::traits_type::now()) {
       log_debug("session", _session_id, "timed out");
-      Close();
+      _strand.post([self=shared_from_this()]() { self->CloseNow(); });
     } else {
-      _deadline.async_wait([self = shared_from_this()](boost::system::error_code) {
-        self->StartTimer();
+      _deadline.async_wait([this, self=shared_from_this()](boost::system::error_code ec) {
+        if (!ec) {
+          StartTimer();
+        } else {
+          log_debug("session", _session_id, "timed out error:", ec.message());
+        }
       });
     }
+  }
+
+  void ServerSession::CloseNow() {
+    DEBUG_ASSERT(_strand.running_in_this_thread());
+    _deadline.cancel();
+    if (_socket.is_open()) {
+      _socket.close();
+    }
+    log_debug("session", _session_id, "closed");
   }
 
 } // namespace tcp

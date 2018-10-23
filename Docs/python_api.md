@@ -38,8 +38,8 @@
 - `contains_attribute(key)`
 - `get_attribute(key)`
 - `set_attribute(key, value)`
-- `__len__`
-- `__iter__`
+- `__len__()`
+- `__iter__()`
 
 ## `carla.ActorAttribute`
 
@@ -64,6 +64,7 @@
 
 - `id`
 - `type_id`
+- `is_alive`
 - `get_world()`
 - `get_location()`
 - `get_transform()`
@@ -73,21 +74,41 @@
 
 ## `carla.Vehicle(carla.Actor)`
 
+- `control`
 - `apply_control(vehicle_control)`
 - `set_autopilot(enabled=True)`
 
 ## `carla.Sensor(carla.Actor)`
 
+- `is_listening`
 - `listen(callback_function)`
+- `stop()`
 
 ## `carla.Image`
 
 - `frame_number`
+- `transform`
 - `width`
 - `height`
 - `type`
 - `fov`
 - `raw_data`
+- `convert(color_converter)`
+- `save_to_disk(path, color_converter=None)`
+- `__len__()`
+- `__iter__()`
+
+## `carla.LidarMeasurement`
+
+- `frame_number`
+- `transform`
+- `horizontal_angle`
+- `channels`
+- `raw_data`
+- `get_point_count(channel)`
+- `save_to_disk(path)`
+- `__len__()`
+- `__iter__()`
 
 ## `carla.VehicleControl`
 
@@ -96,6 +117,8 @@
 - `brake`
 - `hand_brake`
 - `reverse`
+- `__eq__()`
+- `__ne__()`
 
 ## `carla.Location`
 
@@ -119,3 +142,11 @@
 - `r`
 - `g`
 - `b`
+- `a`
+
+## `carla.ColorConverter`
+
+- `None`
+- `Depth`
+- `LogarithmicDepth`
+- `CityScapesPalette`

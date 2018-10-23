@@ -87,6 +87,22 @@ TEST(buffer, copy) {
   ASSERT_EQ(*cpy, *msg);
 }
 
+TEST(buffer, copy_with_offset) {
+  const char str0[] = "Hello";
+  const char str1[] = "buffer!";
+  Buffer buffer;
+  auto offset = sizeof(str0);
+  buffer.copy_from(
+      offset,
+      reinterpret_cast<const unsigned char *>(&str1),
+      std::strlen(str1));
+  std::memcpy(buffer.data(), str0, std::strlen(str0));
+  buffer[std::strlen(str0)] = ' ';
+  auto str = std::string(str0) + " " + str1;
+  ASSERT_EQ(buffer.size(), str.size());
+  ASSERT_EQ(as_string(buffer), str.c_str());
+}
+
 TEST(buffer, memcpy) {
   auto msg = make_random(1024u);
   auto cpy = make_empty(msg->size());

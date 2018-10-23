@@ -18,34 +18,46 @@ def get_libcarla_extensions():
     libraries = []
 
     if os.name == "posix":
-        if platform.dist()[0] == "Ubuntu":
+        if platform.dist()[0].lower() in ["ubuntu", "debian"]:
             pwd = os.path.dirname(os.path.realpath(__file__))
             pylib = "libboost_python%d%d.a" % (sys.version_info.major,
                                                sys.version_info.minor)
             extra_link_args = [
                 os.path.join(pwd, 'dependencies/lib/librpc.a'),
+                os.path.join(pwd, 'dependencies/lib/libboost_filesystem.a'),
                 os.path.join(pwd, 'dependencies/lib', pylib)]
             extra_compile_args = [
-                '-fPIC', '-std=c++14', '-DBOOST_ERROR_CODE_HEADER_ONLY', '-Wno-missing-braces'
+                '-fPIC', '-std=c++14', '-Wno-missing-braces',
+                '-DBOOST_ERROR_CODE_HEADER_ONLY', '-DLIBCARLA_WITH_PYTHON_SUPPORT'
             ]
+            if 'TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true':
+                print('Travis CI build detected: disabling PNG support.')
+                extra_link_args += ['-ljpeg', '-ltiff']
+                extra_compile_args += ['-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=false']
+            else:
+                extra_link_args += ['-lpng', '-ljpeg', '-ltiff']
+                extra_compile_args += ['-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true']
             # @todo Why would we need this?
             include_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7/include']
             library_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7']
             extra_link_args += ['/usr/lib/gcc/x86_64-linux-gnu/7/libstdc++.a']
         else:
-            libraries += ["boost_python"]
+            raise NotImplementedError
     elif os.name == "nt":
         pwd = os.path.dirname(os.path.realpath(__file__))
-        pylib = "libboost_python%d%d-vc141-mt-x64-1_67.lib" % (sys.version_info.major, sys.version_info.minor)
-
+        pylib = "libboost_python%d%d-vc141-mt-x64-1_67.lib" % (
+            sys.version_info.major,
+            sys.version_info.minor)
         extra_link_args = [
                 'shlwapi.lib',
                 os.path.join(pwd, 'dependencies/lib/rpc.lib'),
                 os.path.join(pwd, 'dependencies/lib', pylib)]
 
         # https://docs.microsoft.com/es-es/cpp/porting/modifying-winver-and-win32-winnt
-        extra_compile_args = ['/DPYTHON3X', '/DBOOST_ALL_NO_LIB', '/DBOOST_PYTHON_STATIC_LIB',
-                '/DBOOST_ERROR_CODE_HEADER_ONLY', '/D_WIN32_WINNT=0x0501' ]
+        extra_compile_args = [
+            '/DPYTHON3X', '/DBOOST_ALL_NO_LIB', '/DBOOST_PYTHON_STATIC_LIB',
+            '/DBOOST_ERROR_CODE_HEADER_ONLY', '/D_WIN32_WINNT=0x0501',
+            '/DLIBCARLA_WITH_PYTHON_SUPPORT']
     else:
         raise NotImplementedError
 
@@ -71,7 +83,7 @@ def get_libcarla_extensions():
             depends=depends)
 
     sources = ['source/libcarla/libcarla.cpp']
-    sources += [x for x in walk('dependencies/include', '*.cpp')]
+    sources += [x for x in walk('dependencies/include/carla', '*.cpp')]
 
     print('compiling:\n  - %s' % '\n  - '.join(sources))
 

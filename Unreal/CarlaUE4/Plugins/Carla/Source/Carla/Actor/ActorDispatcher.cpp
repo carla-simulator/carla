@@ -68,11 +68,12 @@ TPair<EActorSpawnResultStatus, FActorView> FActorDispatcher::SpawnActor(
   return MakeTuple(Result.Status, View);
 }
 
-void FActorDispatcher::DestroyActor(AActor *Actor)
+bool FActorDispatcher::DestroyActor(AActor *Actor)
 {
-  if (Actor != nullptr)
+  if ((Actor != nullptr) && Actor->Destroy())
   {
     Registry.Deregister(Actor);
-    Actor->Destroy();
+    return true;
   }
+  return false;
 }

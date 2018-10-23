@@ -38,8 +38,9 @@ namespace carla {
   class Buffer {
 
     // =========================================================================
-    // -- Typedefs -------------------------------------------------------------
+    /// @name Member types
     // =========================================================================
+    /// @{
 
   public:
 
@@ -51,38 +52,59 @@ namespace carla {
 
     using const_iterator = const value_type *;
 
+    /// @}
     // =========================================================================
-    // -- Construction and assignment ------------------------------------------
+    /// @name Construction and destruction
     // =========================================================================
+    /// @{
 
   public:
 
+    /// Create an empty buffer.
     Buffer() = default;
 
+    /// Create a buffer with @a size bytes allocated.
     explicit Buffer(size_type size)
       : _size(size),
         _capacity(size),
         _data(std::make_unique<value_type[]>(size)) {}
 
+    /// @copydoc Buffer(size_type)
     explicit Buffer(uint64_t size)
       : Buffer([size]() {
           DEBUG_ASSERT(size <= max_size());
           return static_cast<size_type>(size);
         } ()) {}
 
+    /// Copy @a source into this buffer. Allocates the necessary memory.
     template <typename T>
     explicit Buffer(const T &source) {
       copy_from(source);
     }
 
     Buffer(const Buffer &) = delete;
-    Buffer &operator=(const Buffer &) = delete;
 
     Buffer(Buffer &&rhs) noexcept
       : _parent_pool(std::move(rhs._parent_pool)),
         _size(rhs._size),
         _capacity(rhs._capacity),
         _data(rhs.pop()) {}
+
+    ~Buffer() {
+      if (_capacity > 0u) {
+        ReuseThisBuffer();
+      }
+    }
+
+    /// @}
+    // =========================================================================
+    /// @name Assignment
+    // =========================================================================
+    /// @{
+
+  public:
+
+    Buffer &operator=(const Buffer &) = delete;
 
     Buffer &operator=(Buffer &&rhs) noexcept {
       _parent_pool = std::move(rhs._parent_pool);
@@ -92,15 +114,60 @@ namespace carla {
       return *this;
     }
 
-    ~Buffer() {
-      if (_capacity > 0u) {
-        ReuseThisBuffer();
-      }
+    /// @}
+    // =========================================================================
+    /// @name Data access
+    // =========================================================================
+    /// @{
+
+  public:
+
+    /// Access the byte at position @a i.
+    const value_type &operator[](size_t i) const {
+      return _data[i];
     }
 
+    /// Access the byte at position @a i.
+    value_type &operator[](size_t i) {
+      return _data[i];
+    }
+
+    /// Direct access to the allocated memory or nullptr if no memory is
+    /// allocated.
+    const value_type *data() const noexcept {
+      return _data.get();
+    }
+
+    /// Direct access to the allocated memory or nullptr if no memory is
+    /// allocated.
+    value_type *data() noexcept {
+      return _data.get();
+    }
+
+    /// Make a boost::asio::buffer from this buffer.
+    ///
+    /// @warning Boost.Asio buffers do not own the data, it's up to the caller
+    /// to not delete the memory that this buffer holds until the asio buffer is
+    /// no longer used.
+    boost::asio::const_buffer cbuffer() const {
+      return {data(), size()};
+    }
+
+    /// @copydoc cbuffer()
+    boost::asio::const_buffer buffer() const {
+      return cbuffer();
+    }
+
+    /// @copydoc cbuffer()
+    boost::asio::mutable_buffer buffer() {
+      return {data(), size()};
+    }
+
+    /// @}
     // =========================================================================
-    // -- Data access ----------------------------------------------------------
+    /// @name Capacity
     // =========================================================================
+    /// @{
 
   public:
 
@@ -120,25 +187,13 @@ namespace carla {
       return _capacity;
     }
 
-    const value_type &operator[](size_t i) const {
-      return _data[i];
-    }
-
-    value_type &operator[](size_t i) {
-      return _data[i];
-    }
-
-    const value_type *data() const noexcept {
-      return _data.get();
-    }
-
-    value_type *data() noexcept {
-      return _data.get();
-    }
-
+    /// @}
     // =========================================================================
-    // -- Iterators ------------------------------------------------------------
+    /// @name Iterators
     // =========================================================================
+    /// @{
+
+  public:
 
     const_iterator cbegin() const noexcept {
       return _data.get();
@@ -164,12 +219,17 @@ namespace carla {
       return begin() + size();
     }
 
+    /// @}
     // =========================================================================
-    // -- Resizing -------------------------------------------------------------
+    /// @name Modifiers
     // =========================================================================
+    /// @{
 
   public:
 
+    /// Reset the size of this buffer. If the capacity is not enough, the
+    /// current memory is discarded and a new block of size @a size is
+    /// allocated.
     void reset(size_type size) {
       if (_capacity < size) {
         log_debug("allocating buffer of", size, "bytes");
@@ -179,75 +239,89 @@ namespace carla {
       _size = size;
     }
 
+    /// @copydoc reset(size_type)
     void reset(uint64_t size) {
       DEBUG_ASSERT(size <= max_size());
       reset(static_cast<size_type>(size));
     }
 
+    /// Release the contents of this buffer and set its size and capacity to
+    /// zero.
     std::unique_ptr<value_type[]> pop() noexcept {
       _size = 0u;
       _capacity = 0u;
       return std::move(_data);
     }
 
+    /// Clear the contents of this buffer and set its size and capacity to zero.
+    /// Deletes allocated memory.
     void clear() noexcept {
       pop();
     }
 
+    /// @}
     // =========================================================================
-    // -- Rewriting ------------------------------------------------------------
+    /// @name copy_from
     // =========================================================================
+    /// @{
 
   public:
 
+    /// Copy @a source into this buffer. Allocates memory if necessary.
     template <typename T>
-    typename std::enable_if<boost::asio::is_const_buffer_sequence<T>::value>::type
-    copy_from(const T &source) {
-      reset(boost::asio::buffer_size(source));
-      DEBUG_ASSERT(boost::asio::buffer_size(source) == size());
-      DEBUG_ONLY(auto bytes_copied = )
-      boost::asio::buffer_copy(buffer(), source);
-      DEBUG_ASSERT(bytes_copied == size());
+    void copy_from(const T &source) {
+      copy_from(0u, source);
     }
 
+    /// Copy @a size bytes of the memory pointed by @a data into this buffer.
+    /// Allocates memory if necessary.
+    void copy_from(const value_type *data, size_type size) {
+      copy_from(0u, data, size);
+    }
+
+    /// Copy @a source into this buffer leaving at the front an offset of @a
+    /// offset bytes uninitialized. Allocates memory if necessary.
+    void copy_from(size_type offset, const Buffer &rhs) {
+      copy_from(offset, rhs.buffer());
+    }
+
+    /// @copydoc copy_from(size_type, const Buffer &)
+    template <typename T>
+    typename std::enable_if<boost::asio::is_const_buffer_sequence<T>::value>::type
+    copy_from(size_type offset, const T &source) {
+      reset(boost::asio::buffer_size(source) + offset);
+      DEBUG_ASSERT(boost::asio::buffer_size(source) == size() - offset);
+      DEBUG_ONLY(auto bytes_copied = )
+      boost::asio::buffer_copy(buffer() + offset, source);
+      DEBUG_ASSERT(bytes_copied == size() - offset);
+    }
+
+    /// @copydoc copy_from(size_type, const Buffer &)
     template <typename T>
     typename std::enable_if<!boost::asio::is_const_buffer_sequence<T>::value>::type
-    copy_from(const T &source) {
-      copy_from(boost::asio::buffer(source));
+    copy_from(size_type offset, const T &source) {
+      copy_from(offset, boost::asio::buffer(source));
     }
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
+    /// @copydoc copy_from(size_type, const Buffer &)
     template <typename T>
-    void copy_from(const TArray<T> &source) {
-      copy_from(boost::asio::buffer(source.GetData(), sizeof(T) * source.Num()));
+    void copy_from(size_type offset, const TArray<T> &source) {
+      copy_from(
+          offset,
+          reinterpret_cast<const value_type *>(source.GetData()),
+          sizeof(T) * source.Num());
     }
 #endif // LIBCARLA_INCLUDED_FROM_UE4
 
-    void copy_from(const Buffer &rhs) {
-      copy_from(rhs.buffer());
+    /// Copy @a size bytes of the memory pointed by @a data into this buffer,
+    /// leaving at the front an offset of @a offset bytes uninitialized.
+    /// Allocates memory if necessary.
+    void copy_from(size_t offset, const value_type *data, size_type size) {
+      copy_from(offset, boost::asio::buffer(data, size));
     }
 
-    // =========================================================================
-    // -- Conversions ----------------------------------------------------------
-    // =========================================================================
-
-  public:
-
-    boost::asio::const_buffer cbuffer() const {
-      return {data(), size()};
-    }
-
-    boost::asio::const_buffer buffer() const {
-      return cbuffer();
-    }
-
-    boost::asio::mutable_buffer buffer() {
-      return {data(), size()};
-    }
-
-    // =========================================================================
-    // -- Private members ------------------------------------------------------
-    // =========================================================================
+    /// @}
 
   private:
 

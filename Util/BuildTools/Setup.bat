@@ -150,6 +150,7 @@ set CMAKE_INSTALLATION_DIR=%INSTALLATION_DIR:\=/%
 >>"%INSTALLATION_DIR%CMakeLists.txt.in" echo endif()
 >>"%INSTALLATION_DIR%CMakeLists.txt.in" echo.
 >>"%INSTALLATION_DIR%CMakeLists.txt.in" echo add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY)
+>>"%INSTALLATION_DIR%CMakeLists.txt.in" echo add_definitions(-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT)
 >>"%INSTALLATION_DIR%CMakeLists.txt.in" echo.
 >>"%INSTALLATION_DIR%CMakeLists.txt.in" echo set(BOOST_INCLUDE_PATH "%CMAKE_INSTALLATION_DIR%boost-install/include")
 >>"%INSTALLATION_DIR%CMakeLists.txt.in" echo set(BOOST_LIB_PATH "%CMAKE_INSTALLATION_DIR%boost-install/lib")
