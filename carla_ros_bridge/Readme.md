@@ -73,7 +73,7 @@ Run the following command after replacing [PATH_TO_CARLA] with the actual path t
     
 If you use the builded binary (0.8.2):
 
-     ./CarlaUE4  -carla-server -windowed -ResX=320 -ResY=240
+     ./CarlaUE4.sh  -carla-server -windowed -ResX=320 -ResY=240
 
     
 Wait for the message:

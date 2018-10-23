@@ -4,14 +4,12 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include <carla/client/Transform.h>
-
-#include <boost/python.hpp>
+#include <carla/geom/Transform.h>
 
 #include <ostream>
 
 namespace carla {
-namespace rpc {
+namespace geom {
 
   std::ostream &operator<<(std::ostream &out, const Location &location) {
     out << "Location(x=" << location.x
@@ -32,18 +30,18 @@ namespace rpc {
     return out;
   }
 
-} // namespace rpc
+} // namespace geom
 } // namespace carla
 
 void export_transform() {
   using namespace boost::python;
-  namespace cc = carla::client;
+  namespace cg = carla::geom;
 
-  class_<cc::Location>("Location")
+  class_<cg::Location>("Location")
     .def(init<float, float, float>((arg("x")=0.0f, arg("y")=0.0f, arg("z")=0.0f)))
-    .def_readwrite("x", &cc::Location::x)
-    .def_readwrite("y", &cc::Location::y)
-    .def_readwrite("z", &cc::Location::z)
+    .def_readwrite("x", &cg::Location::x)
+    .def_readwrite("y", &cg::Location::y)
+    .def_readwrite("z", &cg::Location::z)
     .def(self += self)
     .def(self + self)
     .def(self -= self)
@@ -51,19 +49,19 @@ void export_transform() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<cc::Rotation>("Rotation")
+  class_<cg::Rotation>("Rotation")
     .def(init<float, float, float>((arg("pitch")=0.0f, arg("yaw")=0.0f, arg("roll")=0.0f)))
-    .def_readwrite("pitch", &cc::Rotation::pitch)
-    .def_readwrite("yaw", &cc::Rotation::yaw)
-    .def_readwrite("roll", &cc::Rotation::roll)
+    .def_readwrite("pitch", &cg::Rotation::pitch)
+    .def_readwrite("yaw", &cg::Rotation::yaw)
+    .def_readwrite("roll", &cg::Rotation::roll)
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<cc::Transform>("Transform")
-    .def(init<cc::Location, cc::Rotation>(
-        (arg("location")=cc::Location(), arg("rotation")=cc::Rotation())))
-    .def_readwrite("location", &cc::Transform::location)
-    .def_readwrite("rotation", &cc::Transform::rotation)
+  class_<cg::Transform>("Transform")
+    .def(init<cg::Location, cg::Rotation>(
+        (arg("location")=cg::Location(), arg("rotation")=cg::Rotation())))
+    .def_readwrite("location", &cg::Transform::location)
+    .def_readwrite("rotation", &cg::Transform::rotation)
     .def(self_ns::str(self_ns::self))
   ;
 }

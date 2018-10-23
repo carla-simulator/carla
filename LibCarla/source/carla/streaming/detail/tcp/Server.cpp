@@ -26,7 +26,7 @@ namespace tcp {
 
     auto session = std::make_shared<ServerSession>(_acceptor.get_io_service(), timeout);
 
-    auto handle_query = [=](const error_code &ec) {
+    auto handle_query = [callback, session](const error_code &ec) {
       if (!ec) {
         session->Open(callback);
       } else {
