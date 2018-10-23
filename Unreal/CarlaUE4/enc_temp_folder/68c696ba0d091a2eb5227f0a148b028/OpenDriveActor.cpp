@@ -73,6 +73,7 @@ void AOpenDriveActor::GenerateWaypoints(const carla::road::element::RoadSegment 
     ///////////////////////////////////////////////////////////////////////////
     // NOTE(Andrei): For each one of the lanes, ones that we have the center
     // point of the road, place it on the center of the corresponding lane.
+    //
 
     for (int i = 0; i < drivingLanes.Num(); ++i)
     {
