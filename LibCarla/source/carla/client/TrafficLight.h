@@ -23,6 +23,10 @@ namespace client {
 
     explicit TrafficLight(ActorInitializer init) : Actor(std::move(init)) {}
 
+    /// Return the current state of the traffic light.
+    ///
+    /// @note This function does not call the simulator, it returns the
+    /// traffic light state received in the last tick.
     TrafficLightState GetState();
   };
 

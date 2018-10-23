@@ -62,7 +62,7 @@ namespace client {
   SharedPtr<Actor> World::TrySpawnActor(
       const ActorBlueprint &blueprint,
       const geom::Transform &transform,
-      Actor *parent_actor) {
+      Actor *parent_actor) noexcept {
     try {
       return SpawnActor(blueprint, transform, parent_actor);
     } catch (const std::exception &) {

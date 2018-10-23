@@ -32,12 +32,6 @@ namespace client {
 
   void Sensor::Listen(CallbackFunctionType callback) {
     log_debug(GetDisplayId(), ": subscribing to stream");
-    if (_is_listening) {
-      log_warning(
-          "attempting to listen to stream but sensor is already listening:",
-          GetDisplayId());
-      return;
-    }
     GetEpisode().Lock()->SubscribeToSensor(*this, std::move(callback));
     _is_listening = true;
   }
@@ -53,11 +47,11 @@ namespace client {
     _is_listening = false;
   }
 
-  void Sensor::Destroy() {
+  bool Sensor::Destroy() {
     if (_is_listening) {
       Stop();
     }
-    Actor::Destroy();
+    return Actor::Destroy();
   }
 
 } // namespace client
