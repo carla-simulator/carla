@@ -43,8 +43,8 @@ void AOpenDriveActor::BeginPlay()
     Super::BeginPlay();
     carla::road::Map map = carla::opendrive::OpenDrive::Load("C:\\Users\\ajianu\\Desktop\\xodr\\test_03.xodr");
 
-    std::vector<carla::road::id_type> roadIDs = map.GetAllIds();
-    TArray<carla::road::id_type> processed;
+    std::vector<carla::road::element::id_type> roadIDs = map.GetAllIds();
+    TArray<carla::road::element::id_type> processed;
 
     for (auto &&id : roadIDs)
     {
