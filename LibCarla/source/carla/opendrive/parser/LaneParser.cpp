@@ -63,6 +63,19 @@ void carla::opendrive::parser::LaneParser::ParseLaneLink(const pugi::xml_node & 
     out_lane_link->successor_id = successorNode ? std::atoi(successorNode.attribute("id").value()) : 0;
 }
 
+void carla::opendrive::parser::LaneParser::ParseLaneOffset(const pugi::xml_node & xmlNode, std::vector<carla::opendrive::types::LaneOffset> & out_lane_offset)
+{
+    carla::opendrive::types::LaneOffset lanesOffset;
+
+    lanesOffset.s = std::stod(xmlNode.attribute("s").value());
+    lanesOffset.a = std::stod(xmlNode.attribute("a").value());
+    lanesOffset.b = std::stod(xmlNode.attribute("b").value());
+    lanesOffset.c = std::stod(xmlNode.attribute("c").value());
+    lanesOffset.d = std::stod(xmlNode.attribute("d").value());
+
+    out_lane_offset.push_back(lanesOffset);
+}
+
 void carla::opendrive::parser::LaneParser::ParseLaneRoadMark(const pugi::xml_node & xmlNode, std::vector<carla::opendrive::types::LaneRoadMark> & out_lane_mark)
 {
     if (xmlNode == nullptr) return;
@@ -105,6 +118,11 @@ void carla::opendrive::parser::LaneParser::ParseLaneSpeed(const pugi::xml_node &
 void carla::opendrive::parser::LaneParser::Parse(const pugi::xml_node & xmlNode, carla::opendrive::types::LaneSection & out_lane_section)
 {
     carla::opendrive::parser::LaneParser laneParser;
+
+    for (pugi::xml_node laneSection = xmlNode.child("laneOffset"); laneSection; laneSection = laneSection.next_sibling("laneOffset"))
+    {
+        laneParser.ParseLaneOffset(xmlNode.child("laneOffset"), out_lane_section.lane_offset);
+    }
 
     for (pugi::xml_node laneSection = xmlNode.child("laneSection"); laneSection; laneSection = laneSection.next_sibling("laneSection"))
     {

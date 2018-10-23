@@ -34,6 +34,7 @@ namespace element {
   class RoadGeneralInfo : public RoadInfo {
     private:
       bool _is_junction = false;
+      std::vector<std::pair<double, double>> _lanes_offset;
 
     public:
       void AcceptVisitor(RoadInfoVisitor &v) final {
@@ -42,6 +43,9 @@ namespace element {
 
       void SetIsJunction(bool isJunction) { _is_junction = isJunction; }
       bool GetIsJunction() const { return _is_junction; }
+
+      void SetLanesOffset(double offset, double laneOffset) { _lanes_offset.push_back(std::pair<double, double>(offset, laneOffset)); }
+      std::vector<std::pair<double, double>> GetLanesOffset() const { return _lanes_offset; }
   };
 
   class RoadInfoVelocity : public RoadInfo {
