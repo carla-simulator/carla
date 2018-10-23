@@ -5,19 +5,17 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
-#include "CarlaGameModeBase.h"
+#include "Carla/Game/CarlaGameModeBase.h"
 
-#include "Game/CarlaGameInstance.h"
-#include "Game/CarlaHUD.h"
-#include "Game/CarlaPlayerState.h"
-#include "Game/Tagger.h"
-#include "Game/TaggerDelegate.h"
-#include "Sensor/OldSensorFactory.h"
-#include "Sensor/Sensor.h"
-#include "Settings/CarlaSettings.h"
-#include "Settings/CarlaSettingsDelegate.h"
-#include "Util/RandomEngine.h"
-#include "Vehicle/CarlaVehicleController.h"
+#include "Carla/Game/CarlaGameInstance.h"
+#include "Carla/Game/CarlaHUD.h"
+#include "Carla/Game/CarlaPlayerState.h"
+#include "Carla/Game/Tagger.h"
+#include "Carla/Game/TaggerDelegate.h"
+#include "Carla/Settings/CarlaSettings.h"
+#include "Carla/Settings/CarlaSettingsDelegate.h"
+#include "Carla/Util/RandomEngine.h"
+#include "Carla/Vehicle/CarlaVehicleController.h"
 
 #include "ConstructorHelpers.h"
 #include "Engine/PlayerStartPIE.h"
@@ -273,22 +271,23 @@ void ACarlaGameModeBase::RegisterPlayer(AController &NewPlayer)
 void ACarlaGameModeBase::AttachSensorsToPlayer()
 {
   check(PlayerController != nullptr);
-  const auto &Settings = GameInstance->GetCarlaSettings();
-  const auto *Weather = Settings.GetActiveWeatherDescription();
+  UE_LOG(LogCarla, Error, TEXT("Sensors are no longer available in this game mode."));
+  // const auto &Settings = GameInstance->GetCarlaSettings();
+  // const auto *Weather = Settings.GetActiveWeatherDescription();
 
-  for (auto &Item : Settings.SensorDescriptions)
-  {
-    check(Item.Value != nullptr);
-    auto &SensorDescription = *Item.Value;
-    if (Weather != nullptr)
-    {
-      SensorDescription.AdjustToWeather(*Weather);
-    }
-    auto *Sensor = FSensorFactory::Make(SensorDescription, *GetWorld());
-    check(Sensor != nullptr);
-    Sensor->AttachToActor(PlayerController->GetPawn());
-    GetDataRouter().RegisterSensor(*Sensor);
-  }
+  // for (auto &Item : Settings.SensorDescriptions)
+  // {
+  //   check(Item.Value != nullptr);
+  //   auto &SensorDescription = *Item.Value;
+  //   if (Weather != nullptr)
+  //   {
+  //     SensorDescription.AdjustToWeather(*Weather);
+  //   }
+  //   auto *Sensor = FSensorFactory::Make(SensorDescription, *GetWorld());
+  //   check(Sensor != nullptr);
+  //   Sensor->AttachToActor(PlayerController->GetPawn());
+  //   GetDataRouter().RegisterSensor(*Sensor);
+  // }
 }
 
 void ACarlaGameModeBase::TagActorsForSemanticSegmentation()

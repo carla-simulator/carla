@@ -7,9 +7,6 @@
 #include "Carla.h"
 #include "CarlaVehicleController.h"
 
-#include "Sensor/Lidar.h"
-#include "Sensor/SceneCaptureCamera.h"
-
 #include "Components/BoxComponent.h"
 #include "EngineUtils.h"
 #include "GameFramework/Pawn.h"

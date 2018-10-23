@@ -32,12 +32,12 @@ namespace rpc {
 
     std::vector<unsigned char> stream_token;
 
-    bool IsASensor() const {
+    bool HasAStream() const {
       return stream_token.size() == sizeof(streaming::Token::data);
     }
 
     streaming::Token GetStreamToken() const {
-      DEBUG_ASSERT(IsASensor());
+      DEBUG_ASSERT(HasAStream());
       streaming::Token token;
       std::memcpy(&token.data[0u], stream_token.data(), stream_token.size());
       return token;

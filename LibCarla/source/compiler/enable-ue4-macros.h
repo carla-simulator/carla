@@ -7,6 +7,10 @@
 #pragma pop_macro("check")
 #pragma pop_macro("TEXT")
 
+#if defined(_MSC_VER)
+#  pragma warning(pop)
+#endif
+
 #if defined(__clang__)
 #  pragma clang diagnostic pop
 #endif

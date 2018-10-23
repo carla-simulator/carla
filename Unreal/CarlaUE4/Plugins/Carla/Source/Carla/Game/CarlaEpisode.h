@@ -79,11 +79,11 @@ public:
     return SpawnActorWithInfo(Transform, std::move(ActorDescription)).Value.GetActor();
   }
 
-  /// Destroys an actor, properly removing it from the registry.
+  /// @copydoc FActorDispatcher::DestroyActor(AActor*)
   UFUNCTION(BlueprintCallable)
-  void DestroyActor(AActor *Actor)
+  bool DestroyActor(AActor *Actor)
   {
-    ActorDispatcher.DestroyActor(Actor);
+    return ActorDispatcher.DestroyActor(Actor);
   }
 
   const FActorRegistry &GetActorRegistry() const

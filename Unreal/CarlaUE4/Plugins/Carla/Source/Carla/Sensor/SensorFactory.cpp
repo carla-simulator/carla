@@ -7,48 +7,83 @@
 #include "Carla.h"
 #include "Carla/Sensor/SensorFactory.h"
 
-#include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
-#include "Carla/Sensor/SceneCaptureCamera.h"
+#include "Carla/Sensor/Sensor.h"
+
+#include <compiler/disable-ue4-macros.h>
+#include <carla/sensor/SensorRegistry.h>
+#include <compiler/enable-ue4-macros.h>
+
+#define LIBCARLA_SENSOR_REGISTRY_WITH_SENSOR_INCLUDES
+#include <carla/sensor/SensorRegistry.h>
+#undef LIBCARLA_SENSOR_REGISTRY_WITH_SENSOR_INCLUDES
+
+class FSensorDefinitionGatherer
+{
+  using Registry = carla::sensor::SensorRegistry;
+
+public:
+
+  /// Retrieve the definitions of all the sensors registered in the
+  /// SensorRegistry by calling their static method
+  /// SensorType::GetSensorDefinition().
+  static auto GetSensorDefinitions()
+  {
+    TArray<FActorDefinition> Definitions;
+    Definitions.Reserve(Registry::size());
+    AppendDefinitions(Definitions, std::make_index_sequence<Registry::size()>());
+    return Definitions;
+  }
+
+private:
+
+  template <size_t Index>
+  static void AppendDefinitions(TArray<FActorDefinition> &Definitions)
+  {
+    using SensorPtrType = typename Registry::get_by_index<Index>::key;
+    using SensorType = typename std::remove_pointer<SensorPtrType>::type;
+    auto Def = SensorType::GetSensorDefinition();
+    // Make sure the class matches the sensor type.
+    Def.Class = SensorType::StaticClass();
+    Definitions.Emplace(Def);
+  }
+
+  template <size_t... Is>
+  static void AppendDefinitions(
+      TArray<FActorDefinition> &Definitions,
+      std::index_sequence<Is...>)
+  {
+    std::initializer_list<int> ({(AppendDefinitions<Is>(Definitions), 0)...});
+  }
+};
 
 TArray<FActorDefinition> ASensorFactory::GetDefinitions()
 {
-  FActorDefinition Cameras;
-  bool Success = false;
-  UActorBlueprintFunctionLibrary::MakeCameraDefinition(
-      {TEXT("camera"), ASceneCaptureCamera::StaticClass()},
-      Success,
-      Cameras);
-  check(Success);
-  return {Cameras};
+  return FSensorDefinitionGatherer::GetSensorDefinitions();
 }
 
 FActorSpawnResult ASensorFactory::SpawnActor(
     const FTransform &Transform,
     const FActorDescription &Description)
 {
-  FActorSpawnParameters Params;
   auto *World = GetWorld();
   if (World == nullptr)
   {
+    UE_LOG(LogCarla, Error, TEXT("ASensorFactory: cannot spawn sensor into empty world."));
     return {};
   }
-  auto *Sensor = World->SpawnActorDeferred<ASceneCaptureCamera>(
+  auto *Sensor = World->SpawnActorDeferred<ASensor>(
       Description.Class,
       Transform,
       this,
       nullptr,
       ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
-  if (Sensor != nullptr)
+  if (Sensor == nullptr)
   {
-    using ABFL = UActorBlueprintFunctionLibrary;
-    Sensor->SetImageSize(
-        ABFL::RetrieveActorAttributeToInt("image_size_x", Description.Variations, 800),
-        ABFL::RetrieveActorAttributeToInt("image_size_y", Description.Variations, 600));
-    Sensor->SetFOVAngle(
-        ABFL::RetrieveActorAttributeToFloat("fov", Description.Variations, 90.0f));
-    Sensor->SetPostProcessEffect(
-        PostProcessEffect::FromString(
-            ABFL::RetrieveActorAttributeToString("post_processing", Description.Variations, "SceneFinal")));
+    UE_LOG(LogCarla, Error, TEXT("ASensorFactory: spawn sensor failed."));
+  }
+  else
+  {
+    Sensor->Set(Description);
   }
   UGameplayStatics::FinishSpawningActor(Sensor, Transform);
   return FActorSpawnResult{Sensor};

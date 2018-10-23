@@ -6,15 +6,11 @@
 
 #pragma once
 
-#include "Util/NonCopyable.h"
-
-#include "Sensor/SensorDataSink.h"
-
-#include "Vehicle/CarlaVehicleController.h"
-#include "Vehicle/CarlaWheeledVehicle.h"
+#include "Carla/Util/NonCopyable.h"
+#include "Carla/Vehicle/CarlaVehicleController.h"
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
 class ACarlaPlayerState;
-class ASensor;
 class UAgentComponent;
 struct FVehicleControl;
 
@@ -22,18 +18,10 @@ class FDataRouter : private NonCopyable
 {
 public:
 
-  void SetSensorDataSink(TSharedPtr<ISensorDataSink> InSensorDataSink)
-  {
-    check(!SensorDataSink.IsValid());
-    SensorDataSink = InSensorDataSink;
-  }
-
   void RegisterPlayer(ACarlaVehicleController &InPlayer)
   {
     Player = &InPlayer;
   }
-
-  void RegisterSensor(ASensor &InSensor);
 
   void RegisterAgent(const UAgentComponent *Agent)
   {
@@ -71,6 +59,4 @@ private:
   TArray<const UAgentComponent *> Agents;
 
   ACarlaVehicleController *Player = nullptr;
-
-  TSharedPtr<ISensorDataSink> SensorDataSink = nullptr;
 };

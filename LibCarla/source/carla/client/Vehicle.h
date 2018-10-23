@@ -7,7 +7,7 @@
 #pragma once
 
 #include "carla/client/Actor.h"
-#include "carla/client/Control.h"
+#include "carla/rpc/VehicleControl.h"
 
 namespace carla {
 namespace client {
@@ -15,20 +15,21 @@ namespace client {
   class Vehicle : public Actor {
   public:
 
-    void ApplyControl(const VehicleControl &control) {
-      GetWorld()->GetClient().ApplyControlToActor(*this, control);
-    }
+    using Control = rpc::VehicleControl;
 
-    void SetAutopilot(bool enabled = true) {
-      GetWorld()->GetClient().SetActorAutopilot(*this, enabled);
+    explicit Vehicle(ActorInitializer init) : Actor(std::move(init)) {}
+
+    void SetAutopilot(bool enabled = true);
+
+    void ApplyControl(const Control &control);
+
+    const Control &GetControl() const {
+      return _control;
     }
 
   private:
 
-    friend class Client;
-
-    template <typename ... Args>
-    Vehicle(Args && ... args) : Actor(std::forward<Args>(args)...) {}
+    Control _control;
   };
 
 } // namespace client

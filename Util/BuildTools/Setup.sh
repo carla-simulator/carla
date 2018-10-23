@@ -99,7 +99,7 @@ else
   ./bootstrap.sh \
       --with-toolset=clang \
       --prefix=../boost-install \
-      --with-libraries=python
+      --with-libraries=python,filesystem
   ./b2 clean
   ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j 12 stage release
   ./b2 install toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j 12
@@ -256,6 +256,12 @@ set(CARLA_VERSION $(get_carla_version))
 
 add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY)
 
+# Uncomment to force support for an specific image format (require their
+# respective libraries installed).
+# add_definitions(-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT)
+# add_definitions(-DLIBCARLA_IMAGE_WITH_JPEG_SUPPORT)
+# add_definitions(-DLIBCARLA_IMAGE_WITH_TIFF_SUPPORT)
+
 set(BOOST_INCLUDE_PATH "${BOOST_INCLUDE}")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Server")
@@ -272,7 +278,15 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "Client")
   set(RPCLIB_LIB_PATH "${RPCLIB_LIBSTDCXX_LIBPATH}")
   set(BOOST_LIB_PATH "${BOOST_LIBPATH}")
 endif ()
+
 EOL
+
+if [ "${TRAVIS}" == "true" ] ; then
+  log "Travis CI build detected: disabling PNG support."
+  echo "add_definitions(-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=false)" >> ${CMAKE_CONFIG_FILE}.gen
+else
+  echo "add_definitions(-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true)" >> ${CMAKE_CONFIG_FILE}.gen
+fi
 
 # -- Move files ----------------------------------------------------------------
 

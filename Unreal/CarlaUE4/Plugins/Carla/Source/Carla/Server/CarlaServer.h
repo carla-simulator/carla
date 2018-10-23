@@ -10,9 +10,7 @@
 
 class ACarlaPlayerState;
 class APlayerStart;
-class FSensorDataView;
 class FString;
-class USensorDescription;
 struct FVehicleControl;
 
 /// Wrapper around carla_server API.
@@ -39,7 +37,6 @@ public:
   ErrorCode SendSceneDescription(
       const FString &MapName,
       const TArray<APlayerStart *> &AvailableStartSpots,
-      const TArray<USensorDescription *> &SensorDescriptions,
       bool bBlocking);
 
   ErrorCode ReadEpisodeStart(uint32 &StartPositionIndex, bool bBlocking);
@@ -47,10 +44,6 @@ public:
   ErrorCode SendEpisodeReady(bool bBlocking);
 
   ErrorCode ReadControl(FVehicleControl &Control, bool bBlocking);
-
-  /// Enqueues sensor data to be sent to the client. It is safe to call this
-  /// function from a different thread.
-  ErrorCode SendSensorData(const FSensorDataView &Data);
 
   ErrorCode SendMeasurements(
       const ACarlaPlayerState &PlayerState,

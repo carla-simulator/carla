@@ -9,6 +9,7 @@
 #include "carla/NonCopyable.h"
 #include "carla/Time.h"
 #include "carla/TypeTraits.h"
+#include "carla/profiler/LifetimeProfiled.h"
 #include "carla/streaming/detail/Types.h"
 #include "carla/streaming/detail/tcp/Message.h"
 
@@ -30,6 +31,7 @@ namespace tcp {
   /// closes itself after @a timeout of inactivity is met.
   class ServerSession
     : public std::enable_shared_from_this<ServerSession>,
+      private profiler::LifetimeProfiled,
       private NonCopyable {
   public:
 
@@ -37,8 +39,6 @@ namespace tcp {
     using callback_function_type = std::function<void(std::shared_ptr<ServerSession>)>;
 
     explicit ServerSession(boost::asio::io_service &io_service, time_duration timeout);
-
-    ~ServerSession();
 
     /// Starts the session and calls @a callback after successfully reading the
     /// stream id.
@@ -59,14 +59,13 @@ namespace tcp {
       Write(std::make_shared<const Message>(std::move(buffers)...));
     }
 
-    /// Posts a job to close this session.
-    void Close();
-
   private:
 
     void Write(std::shared_ptr<const Message> message);
 
     void StartTimer();
+
+    void CloseNow();
 
     friend class Server;
 
