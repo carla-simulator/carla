@@ -18,6 +18,9 @@ namespace low_level {
   /// A low-level streaming server. Each new stream has a token associated, this
   /// token can be used by a client to subscribe to the stream. This server
   /// requires an external io_service running.
+  ///
+  /// @warning This server cannot be destructed before its @a io_service is
+  /// stopped.
   template <typename T>
   class Server {
   public:

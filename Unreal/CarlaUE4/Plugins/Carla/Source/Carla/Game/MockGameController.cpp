@@ -8,21 +8,12 @@
 #include "MockGameController.h"
 
 #include "Game/DataRouter.h"
-#include "Sensor/SensorDataSink.h"
-
-class FMockSensorDataSink : public ISensorDataSink {
-public:
-
-  virtual void Write(const FSensorDataView &) final {}
-};
 
 MockGameController::MockGameController(
     FDataRouter &InDataRouter,
     const FMockGameControllerSettings &InSettings)
   : ICarlaGameControllerBase(InDataRouter),
-    Settings(InSettings) {
-  DataRouter.SetSensorDataSink(MakeShared<FMockSensorDataSink>());
-}
+    Settings(InSettings) {}
 
 void MockGameController::Initialize(UCarlaSettings &CarlaSettings)
 {
@@ -39,12 +30,6 @@ void MockGameController::Initialize(UCarlaSettings &CarlaSettings)
     CarlaSettings.WeatherId = StaticIndex % CarlaSettings.WeatherDescriptions.Num();
     ++StaticIndex;
   }
-
-#if WITH_EDITOR
-  if (Settings.bForceEnableSemanticSegmentation) {
-    CarlaSettings.bSemanticSegmentationEnabled = true;
-  }
-#endif // WITH_EDITOR
 }
 
 APlayerStart *MockGameController::ChoosePlayerStart(

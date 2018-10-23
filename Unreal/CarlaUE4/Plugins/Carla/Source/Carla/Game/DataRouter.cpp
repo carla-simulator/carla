@@ -5,21 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
-#include "DataRouter.h"
-
-#include "Sensor/Sensor.h"
-
-void FDataRouter::RegisterSensor(ASensor &InSensor)
-{
-  if (SensorDataSink.IsValid()) {
-    InSensor.SetSensorDataSink(SensorDataSink);
-  } else {
-    UE_LOG(
-        LogCarla,
-        Error,
-        TEXT("FDataRouter: Trying to register a sensor but I don't have a SensorDataSink"));
-  }
-}
+#include "Carla/Game/DataRouter.h"
 
 void FDataRouter::RestartLevel()
 {

@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "carla/ThreadGroup.h"
-#include "carla/streaming/low_level/Server.h"
+#include "carla/streaming/detail/AsioThreadPool.h"
 #include "carla/streaming/detail/tcp/Server.h"
+#include "carla/streaming/low_level/Server.h"
 
 #include <boost/asio/io_service.hpp>
 
@@ -23,21 +23,21 @@ namespace streaming {
   public:
 
     explicit Server(uint16_t port)
-      : _server(_io_service, make_endpoint<protocol_type>(port)) {}
+      : _server(_service.service(), make_endpoint<protocol_type>(port)) {}
 
     explicit Server(const std::string &address, uint16_t port)
-      : _server(_io_service, make_endpoint<protocol_type>(address, port)) {}
+      : _server(_service.service(), make_endpoint<protocol_type>(address, port)) {}
 
     explicit Server(
         const std::string &address, uint16_t port,
         const std::string &external_address, uint16_t external_port)
       : _server(
-          _io_service,
+          _service.service(),
           make_endpoint<protocol_type>(address, port),
           make_endpoint<protocol_type>(external_address, external_port)) {}
 
     ~Server() {
-      Stop();
+      _service.Stop();
     }
 
     void SetTimeout(time_duration timeout) {
@@ -49,25 +49,20 @@ namespace streaming {
     }
 
     void Run() {
-      _io_service.run();
+      _service.Run();
     }
 
     void AsyncRun(size_t worker_threads) {
-      _workers.CreateThreads(worker_threads, [this](){ Run(); });
-    }
-
-    void Stop() {
-      _io_service.stop();
-      _workers.JoinAll();
+      _service.AsyncRun(worker_threads);
     }
 
   private:
 
-    boost::asio::io_service _io_service;
+    // The order of these two arguments is very important.
+
+    detail::AsioThreadPool _service;
 
     underlying_server _server;
-
-    ThreadGroup _workers;
   };
 
 } // namespace streaming

@@ -9,7 +9,6 @@
 
 #include "Game/DataRouter.h"
 #include "Server/CarlaServer.h"
-#include "Server/ServerSensorDataSink.h"
 #include "Settings/CarlaSettings.h"
 #include "Private/RenderTargetTemp.h"
 
@@ -20,10 +19,7 @@ static constexpr bool NON_BLOCKING = false;
 
 FServerGameController::FServerGameController(FDataRouter &InDataRouter)
   : ICarlaGameControllerBase(InDataRouter),
-    DataSink(MakeShared<FServerSensorDataSink>()),
-    Server(nullptr) {
-  DataRouter.SetSensorDataSink(DataSink);
-}
+    Server(nullptr) {}
 
 FServerGameController::~FServerGameController() {}
 
@@ -34,7 +30,6 @@ void FServerGameController::Initialize(UCarlaSettings &InCarlaSettings)
   // Initialize server if missing.
   if (!Server.IsValid()) {
     Server = MakeShared<FCarlaServer>(CarlaSettings->WorldPort, CarlaSettings->ServerTimeOut);
-    DataSink->SetServer(Server);
     FString IniFile;
     if ((Errc::Success == Server->Connect()) &&
         (Errc::Success == Server->ReadNewEpisode(IniFile, BLOCKING))) {
@@ -52,10 +47,8 @@ APlayerStart *FServerGameController::ChoosePlayerStart(
   check(AvailableStartSpots.Num() > 0);
   // Send scene description.
   if (Server.IsValid()) {
-    TArray<USensorDescription *> Sensors;
-    CarlaSettings->SensorDescriptions.GenerateValueArray(Sensors);
     const auto &MapName = CarlaSettings->MapName;
-    if (Errc::Success != Server->SendSceneDescription(MapName, AvailableStartSpots, Sensors, BLOCKING)) {
+    if (Errc::Success != Server->SendSceneDescription(MapName, AvailableStartSpots, BLOCKING)) {
       UE_LOG(LogCarlaServer, Warning, TEXT("Failed to send scene description, server needs restart"));
       Server = nullptr;
     }

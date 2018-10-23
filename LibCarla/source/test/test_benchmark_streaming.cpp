@@ -9,6 +9,8 @@
 #include <carla/streaming/Client.h>
 #include <carla/streaming/Server.h>
 
+#include <algorithm>
+
 using namespace carla::streaming;
 
 static auto make_special_message(size_t size) {
@@ -21,12 +23,13 @@ static auto make_special_message(size_t size) {
 class Benchmark {
 public:
 
-  Benchmark(uint16_t port, size_t message_size)
+  Benchmark(uint16_t port, size_t message_size, double success_ratio)
     : _server(port),
       _client(),
       _message(make_special_message(message_size)),
       _client_callback(),
-      _work_to_do(_client_callback) {}
+      _work_to_do(_client_callback),
+      _success_ratio(success_ratio) {}
 
   void AddStream() {
     Stream stream = _server.MakeStream();
@@ -60,7 +63,7 @@ public:
     for (auto &&stream : _streams) {
       _threads.CreateThread([=]() mutable {
         for (auto i = 0u; i < number_of_messages; ++i) {
-          std::this_thread::sleep_for(8ms); // 120FPS.
+          std::this_thread::sleep_for(11ms); // ~90FPS.
           {
             CARLA_PROFILE_SCOPE(game, write_to_stream);
             stream << _message.buffer();
@@ -70,7 +73,10 @@ public:
     }
 
     const auto expected_number_of_messages = _streams.size() * number_of_messages;
-    for (auto i = 0u; i < 30; ++i) {
+    const auto threshold =
+        static_cast<size_t>(_success_ratio * static_cast<double>(expected_number_of_messages));
+
+    for (auto i = 0u; i < 10; ++i) {
       std::cout << "received " << _number_of_messages_received
                 << " of " << expected_number_of_messages
                 << " messages,";
@@ -83,12 +89,15 @@ public:
 
     _client_callback.stop();
     _threads.JoinAll();
-
-    ASSERT_EQ(_number_of_messages_received, expected_number_of_messages);
     std::cout << " done." << std::endl;
 
-    _client.Stop();
-    _server.Stop();
+#ifdef NDEBUG
+    ASSERT_GE(_number_of_messages_received, threshold);
+#else
+    if (_number_of_messages_received < threshold) {
+      carla::log_warning("threshold unmet:", _number_of_messages_received, '/', threshold);
+    }
+#endif // NDEBUG
   }
 
 private:
@@ -105,16 +114,25 @@ private:
 
   boost::asio::io_service::work _work_to_do;
 
+  const double _success_ratio;
+
   std::vector<Stream> _streams;
 
   std::atomic_size_t _number_of_messages_received{0u};
 };
 
+static size_t get_max_concurrency() {
+  size_t concurrency = 0.75 * std::thread::hardware_concurrency();
+  return std::max(2ul, concurrency);
+}
+
 static void benchmark_image(
     const size_t dimensions,
-    const size_t number_of_streams = 1u) {
+    const size_t number_of_streams = 1u,
+    const double success_ratio = 1.0) {
   constexpr auto number_of_messages = 100u;
-  Benchmark benchmark(TESTING_PORT, 4u * dimensions);
+  carla::logging::log("Benchmark:", number_of_streams, "streams at 90FPS.");
+  Benchmark benchmark(TESTING_PORT, 4u * dimensions, success_ratio);
   benchmark.AddStreams(number_of_streams);
   benchmark.Run(number_of_messages);
 }
@@ -124,21 +142,21 @@ TEST(benchmark_streaming, image_200x200) {
 }
 
 TEST(benchmark_streaming, image_800x600) {
-  benchmark_image(800u * 600u);
+  benchmark_image(800u * 600u, 1u, 0.9);
 }
 
 TEST(benchmark_streaming, image_1920x1080) {
-  benchmark_image(1920u * 1080u);
+  benchmark_image(1920u * 1080u, 1u, 0.9);
 }
 
 TEST(benchmark_streaming, image_200x200_mt) {
-  benchmark_image(200u * 200u, 9u);
+  benchmark_image(200u * 200u, get_max_concurrency());
 }
 
 TEST(benchmark_streaming, image_800x600_mt) {
-  benchmark_image(800u * 600u, 9u);
+  benchmark_image(800u * 600u, get_max_concurrency(), 0.8);
 }
 
 TEST(benchmark_streaming, image_1920x1080_mt) {
-  benchmark_image(1920u * 1080u, 9u);
+  benchmark_image(1920u * 1080u, get_max_concurrency(), 0.7);
 }

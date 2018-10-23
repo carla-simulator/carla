@@ -23,15 +23,20 @@ matrix:
             - python3
             - python3-pip
             - libboost-python-dev
+            - libtiff5-dev
+            - libjpeg-dev
       install:
-        - pip2 install --user setuptools nose2
-        - pip3 install --user setuptools nose2
-        - make setup
+        - pip2 install -q --user setuptools nose2
+        - pip3 install -q --user setuptools nose2
       script:
-        - make setup >/dev/null
-        - make LibCarla >/dev/null
-        - make PythonAPI >/dev/null
+        - while sleep 2m; do echo "still building..."; done &
+        - make setup > build.log 2>&1
+        - make LibCarla > build.log 2>&1
+        - make PythonAPI > build.log 2>&1
+        - kill %1
         - make check ARGS="--all --gtest_args=--gtest_filter=-*_mt"
+      after_failure:
+        - tail --lines=2000 build.log
 
     - env: TEST="Pylint 2"
       addons:
@@ -40,22 +45,16 @@ matrix:
             - python
             - python-pip
       install:
-        - pip2 install --user -r PythonClient/requirements.txt
-        - pip2 install --user pylint
+        - pip2 install -q --user -r PythonClient/requirements.txt
+        - pip2 install -q --user pylint
       script:
         - pylint --disable=R,C --rcfile=PythonClient/.pylintrc PythonClient/carla PythonClient/*.py
 
     - env: TEST="MkDocs"
       install:
-        - pip install --user mkdocs
+        - pip install -q --user mkdocs
       script:
         - mkdocs build --verbose --clean --strict --site-dir _site
-
-    - env: TEST="AwesomeBot"
-      install:
-        - gem install awesome_bot
-      script:
-        - find . -name '*.md' | xargs awesome_bot --allow-dupe --allow-redirect --skip-save-results
 
 notifications:
   email: false

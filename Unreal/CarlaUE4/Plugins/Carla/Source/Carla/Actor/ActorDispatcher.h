@@ -46,7 +46,10 @@ public:
       FActorDescription ActorDescription);
 
   /// Destroys an actor, properly removing it from the registry.
-  void DestroyActor(AActor *Actor);
+  ///
+  /// Return true if the @a Actor is destroyed or already marked for
+  /// destruction, false if indestructible or nullptr.
+  bool DestroyActor(AActor *Actor);
 
   const TArray<FActorDefinition> &GetActorDefinitions() const
   {

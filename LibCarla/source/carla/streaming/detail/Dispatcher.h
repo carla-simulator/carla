@@ -28,6 +28,8 @@ namespace detail {
     explicit Dispatcher(const EndPoint<Protocol, EndPointType> &ep)
       : _cached_token(0u, ep) {}
 
+    ~Dispatcher();
+
     Stream MakeStream();
 
     void RegisterSession(std::shared_ptr<Session> session);
@@ -40,6 +42,8 @@ namespace detail {
 
     token_type _cached_token;
 
+    /// @todo StreamStates should be cleaned up at some point, otherwise we keep
+    /// them alive the whole run.
     std::unordered_map<
         stream_id_type,
         std::shared_ptr<StreamState>> _stream_map;

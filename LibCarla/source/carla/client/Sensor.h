@@ -6,31 +6,36 @@
 
 #pragma once
 
-#include "carla/Logging.h"
 #include "carla/client/Actor.h"
 
+#include <functional>
+
 namespace carla {
+namespace sensor { class SensorData; }
 namespace client {
 
   class Sensor : public Actor {
   public:
 
-    template <typename Functor>
-    void Listen(Functor callback) {
-      /// @todo should we check if we are already listening?
-      log_debug("sensor", GetId(), "type", GetTypeId(), ": subscribing to stream");
-      GetWorld()->GetClient().SubscribeToStream(_stream_token, std::forward<Functor>(callback));
+    explicit Sensor(ActorInitializer init) : Actor(std::move(init)) {}
+
+    ~Sensor();
+
+    using CallbackFunctionType = std::function<void(SharedPtr<sensor::SensorData>)>;
+
+    void Listen(CallbackFunctionType callback);
+
+    void Stop();
+
+    bool IsListening() const {
+      return _is_listening;
     }
+
+    void Destroy() override;
 
   private:
 
-    friend class Client;
-
-    Sensor(carla::rpc::Actor actor, SharedPtr<World> world)
-      : Actor(actor, std::move(world)),
-        _stream_token(actor.GetStreamToken()) {}
-
-    streaming::Token _stream_token;
+    bool _is_listening = false;
   };
 
 } // namespace client
