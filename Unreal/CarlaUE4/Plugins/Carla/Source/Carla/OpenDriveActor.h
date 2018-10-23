@@ -14,7 +14,6 @@
 
 #include "OpenDriveActor.generated.h"
 
-
 UCLASS()
 class CARLA_API AOpenDriveActor : public AActor
 {
