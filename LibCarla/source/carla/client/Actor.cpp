@@ -40,7 +40,7 @@ namespace client {
     GetEpisode().Lock()->SetActorSimulatePhysics(*this, enabled);
   }
 
-  void Actor::Destroy() {
+  bool Actor::Destroy() {
     if (_is_alive) {
       // Let the exceptions leave the function, IsAlive() will still be true.
       _is_alive = !GetEpisode().Lock()->DestroyActor(*this);
@@ -49,6 +49,7 @@ namespace client {
           "attempting to destroy an actor that is already dead:",
           GetDisplayId());
     }
+    return _is_alive;
   }
 
 } // namespace client

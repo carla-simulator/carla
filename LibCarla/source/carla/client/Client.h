@@ -27,18 +27,23 @@ namespace client {
         uint16_t port,
         size_t worker_threads = 0u);
 
+    /// Set a timeout for networking operations. If set, any networking
+    /// operation taking longer than @a timeout throws rpc::timeout.
     void SetTimeout(time_duration timeout) {
       _simulator->SetNetworkingTimeout(timeout);
     }
 
+    /// Return the version string of this client API.
     std::string GetClientVersion() const {
       return _simulator->GetClientVersion();
     }
 
+    /// Return the version string of the simulator we are connected to.
     std::string GetServerVersion() const {
       return _simulator->GetServerVersion();
     }
 
+    /// Return an instance of the world currently active in the simulator.
     World GetWorld() const {
       return World{_simulator->GetCurrentEpisode()};
     }

@@ -140,6 +140,10 @@ namespace detail {
       return _episode->GetActors();
     }
 
+    /// If @a gc is GarbageCollectionPolicy::Enabled, the shared pointer
+    /// returned is provided with a custom deleter that calls Destroy() on the
+    /// actor. If @gc is GarbageCollectionPolicy::Enabled, the default garbage
+    /// collection policy is used.
     SharedPtr<Actor> SpawnActor(
         const ActorBlueprint &blueprint,
         const geom::Transform &transform,
