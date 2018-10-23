@@ -44,6 +44,15 @@ namespace element {
       return d;
     }
 
+    void ApplyLateralOffset(double lateral_offset) {
+      /// @todo Z axis??
+      double normal_x = std::cos( tangent + carla::geom::Math::pi_half());
+      double normal_y = std::sin(-tangent - carla::geom::Math::pi_half());
+
+      location.x = location.x + (lateral_offset * normal_x);
+      location.y = location.y + (lateral_offset * normal_y);
+    }
+
     friend bool operator==(const DirectedPoint &lhs, const DirectedPoint &rhs) {
       return (lhs.location == rhs.location) && (lhs.tangent == rhs.tangent);
     }
