@@ -25,20 +25,20 @@ namespace detail {
   std::shared_ptr<const EpisodeState> EpisodeState::DeriveNextStep(
       const sensor::data::RawEpisodeState &state) const {
     auto next = std::make_shared<EpisodeState>();
-    next->_frame_number = state.GetFrameNumber();
-    next->_game_timestamp = state.GetGameTimeStamp();
-    next->_platform_timestamp = state.GetPlatformTimeStamp();
-    const auto delta_time = next->_game_timestamp - _game_timestamp;
+    next->_timestamp.frame_count = state.GetFrameNumber();
+    next->_timestamp.elapsed_seconds = state.GetGameTimeStamp();
+    next->_timestamp.platform_timestamp = state.GetPlatformTimeStamp();
+    next->_timestamp.delta_seconds = next->_timestamp.elapsed_seconds - _timestamp.elapsed_seconds;
     next->_actors.reserve(state.size());
     for (auto &&actor : state) {
       auto acceleration = DeriveAcceleration(
-          delta_time,
+          next->_timestamp.delta_seconds,
           GetActorState(actor.id).velocity,
           actor.velocity);
       DEBUG_ONLY(auto result = )
       next->_actors.emplace(
           actor.id,
-          ActorState{actor.transform, actor.velocity, acceleration});
+          ActorState{actor.transform, actor.velocity, acceleration, actor.state});
       DEBUG_ASSERT(result.second);
     }
     return next;

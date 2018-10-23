@@ -9,10 +9,9 @@
 #include "carla/Buffer.h"
 #include "carla/Debug.h"
 #include "carla/Memory.h"
-#include "carla/geom/Transform.h"
+#include "carla/rpc/Actor.h"
 #include "carla/geom/Vector3D.h"
 #include "carla/sensor/RawData.h"
-#include "carla/sensor/data/ActorDynamicState.h"
 
 namespace carla {
 namespace sensor {
@@ -22,25 +21,33 @@ namespace sensor {
 namespace s11n {
 
   /// Serializes the current state of the whole episode.
-  class EpisodeStateSerializer {
+  class CollisionEventSerializer {
   public:
 
-#pragma pack(push, 1)
-    struct Header {
-      double game_timestamp;
-      double platform_timestamp;
+    struct Data {
+
+      rpc::Actor self_actor;
+
+      rpc::Actor other_actor;
+
+      geom::Vector3D normal_impulse;
+
+      MSGPACK_DEFINE_ARRAY(self_actor, other_actor, normal_impulse)
     };
-#pragma pack(pop)
 
-    constexpr static auto header_offset = sizeof(Header);
+    constexpr static auto header_offset = 0u;
 
-    static const Header &DeserializeHeader(const RawData &message) {
-      return *reinterpret_cast<const Header *>(message.begin());
+    static Data DeserializeRawData(const RawData &message) {
+      return MsgPack::UnPack<Data>(message.begin(), message.size());
     }
 
     template <typename SensorT>
-    static Buffer Serialize(const SensorT &, Buffer buffer) {
-      return buffer;
+    static Buffer Serialize(
+        const SensorT &,
+        rpc::Actor self_actor,
+        rpc::Actor other_actor,
+        geom::Vector3D normal_impulse) {
+      return MsgPack::Pack(Data{self_actor, other_actor, normal_impulse});
     }
 
     static SharedPtr<SensorData> Deserialize(RawData data);

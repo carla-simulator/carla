@@ -17,6 +17,8 @@ AWeather::AWeather(const FObjectInitializer& ObjectInitializer)
 void AWeather::ApplyWeather(const FWeatherParameters &InWeather)
 {
   Weather = InWeather;
+
+#ifdef CARLA_WEATHER_EXTRA_LOG
   UE_LOG(LogCarla, Log, TEXT("Changing weather:"));
   UE_LOG(LogCarla, Log, TEXT("  - Cloudyness = %.2f"), Weather.Cloudyness);
   UE_LOG(LogCarla, Log, TEXT("  - Precipitation = %.2f"), Weather.Precipitation);
@@ -24,6 +26,7 @@ void AWeather::ApplyWeather(const FWeatherParameters &InWeather)
   UE_LOG(LogCarla, Log, TEXT("  - WindIntensity = %.2f"), Weather.WindIntensity);
   UE_LOG(LogCarla, Log, TEXT("  - SunAzimuthAngle = %.2f"), Weather.SunAzimuthAngle);
   UE_LOG(LogCarla, Log, TEXT("  - SunAltitudeAngle = %.2f"), Weather.SunAltitudeAngle);
+#endif // CARLA_WEATHER_EXTRA_LOG
 
   // Call the blueprint that actually changes the weather.
   RefreshWeather(Weather);

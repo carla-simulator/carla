@@ -9,6 +9,7 @@
 #include "carla/Iterator.h"
 #include "carla/ListView.h"
 #include "carla/NonCopyable.h"
+#include "carla/client/Timestamp.h"
 #include "carla/sensor/data/ActorDynamicState.h"
 #include "carla/sensor/data/RawEpisodeState.h"
 
@@ -29,21 +30,11 @@ namespace detail {
       geom::Transform transform;
       geom::Vector3D velocity;
       geom::Vector3D acceleration;
+      uint8_t state = 0u;
     };
 
-    /// @copydoc carla::sensor::SensorData::GetFrameNumber()
-    size_t GetFrameNumber() const {
-      return _frame_number;
-    }
-
-    /// @copydoc carla::sensor::data::RawEpisodeState::GetGameTimeStamp()
-    double GetGameTimeStamp() const {
-      return _game_timestamp;
-    }
-
-    /// @copydoc carla::sensor::data::RawEpisodeState::GetPlatformTimeStamp()
-    double GetPlatformTimeStamp() const {
-      return _platform_timestamp;
+    const auto &GetTimestamp() const {
+      return _timestamp;
     }
 
     ActorState GetActorState(actor_id_type id) const {
@@ -68,11 +59,7 @@ namespace detail {
 
   private:
 
-    size_t _frame_number = 0.0;
-
-    double _game_timestamp = 0.0;
-
-    double _platform_timestamp = 0.0;
+    Timestamp _timestamp;
 
     std::unordered_map<actor_id_type, ActorState> _actors;
   };

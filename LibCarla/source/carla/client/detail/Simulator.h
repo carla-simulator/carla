@@ -18,6 +18,8 @@
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/profiler/LifetimeProfiled.h"
 
+#include <memory>
+
 namespace carla {
 namespace client {
 
@@ -31,7 +33,7 @@ namespace detail {
   ///
   /// @todo Make sure this class is really thread-safe.
   class Simulator
-    : public EnableSharedFromThis<Simulator>,
+    : public std::enable_shared_from_this<Simulator>,
       private profiler::LifetimeProfiled,
       private NonCopyable {
   public:
@@ -95,6 +97,22 @@ namespace detail {
 
     /// @}
     // =========================================================================
+    /// @name Tick
+    // =========================================================================
+    /// @{
+
+    Timestamp WaitForTick(time_duration timeout) {
+      DEBUG_ASSERT(_episode != nullptr);
+      return _episode->WaitForState(timeout);
+    }
+
+    void RegisterOnTickEvent(std::function<void(Timestamp)> callback) {
+      DEBUG_ASSERT(_episode != nullptr);
+      _episode->RegisterOnTickEvent(std::move(callback));
+    }
+
+    /// @}
+    // =========================================================================
     /// @name Access to global objects in the episode
     // =========================================================================
     /// @{
@@ -122,6 +140,10 @@ namespace detail {
       return _episode->GetActors();
     }
 
+    /// If @a gc is GarbageCollectionPolicy::Enabled, the shared pointer
+    /// returned is provided with a custom deleter that calls Destroy() on the
+    /// actor. If @gc is GarbageCollectionPolicy::Enabled, the default garbage
+    /// collection policy is used.
     SharedPtr<Actor> SpawnActor(
         const ActorBlueprint &blueprint,
         const geom::Transform &transform,
@@ -157,6 +179,10 @@ namespace detail {
 
     void SetActorTransform(Actor &actor, const geom::Transform &transform) {
       _client.SetActorTransform(actor.Serialize(), transform);
+    }
+
+    void SetActorSimulatePhysics(Actor &actor, bool enabled) {
+      _client.SetActorSimulatePhysics(actor.Serialize(), enabled);
     }
 
     /// @}

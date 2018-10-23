@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Carla/Actor/ActorDescription.h"
+#include "Carla/Game/Tagger.h"
 
 class AActor;
 
@@ -45,6 +46,16 @@ public:
     return Description.Get();
   }
 
+  const TSet<ECityObjectLabel> &GetSemanticTags() const
+  {
+    return SemanticTags;
+  }
+
+  bool IsTrafficLight() const
+  {
+    return bIsTrafficLight;
+  }
+
 private:
 
   friend class FActorRegistry;
@@ -52,13 +63,16 @@ private:
   FActorView(IdType ActorId, AActor &Actor, FActorDescription Description)
     : Id(ActorId),
       TheActor(&Actor),
-      Description(MakeShared<FActorDescription>(std::move(Description))) {
-    check(Id != 0u);
-  }
+      Description(MakeShared<FActorDescription>(std::move(Description))) {}
 
   IdType Id = 0u;
 
   AActor *TheActor = nullptr;
 
   TSharedPtr<const FActorDescription> Description = nullptr;
+
+  TSet<ECityObjectLabel> SemanticTags;
+
+  /// @todo
+  bool bIsTrafficLight = false;
 };

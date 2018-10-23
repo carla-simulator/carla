@@ -20,12 +20,19 @@ Or choose one or more of the following
     [--libcarla-release] [--libcarla-debug]
     [--python-api-2] [--python-api-3]
     [--benchmark]
+
+You can also set the command-line arguments passed to GTest on a ".gtest"
+config file in the Carla project main folder. E.g.
+
+    # Contents of ${CARLA_ROOT_FOLDER}/.gtest
+    gtest_shuffle
+    gtest_filter=misc*
 END
 )
 
 GDB=
 XML_OUTPUT=false
-GTEST_ARGS=
+GTEST_ARGS=`sed -e 's/#.*$//g' ${CARLA_ROOT_FOLDER}/.gtest | sed -e '/^[[:space:]]*$/!s/^/--/g' | sed -e ':a;N;$!ba;s/\n/ /g'`
 LIBCARLA_RELEASE=false
 LIBCARLA_DEBUG=false
 PYTHON_API_2=false
@@ -98,6 +105,8 @@ if ${LIBCARLA_DEBUG} ; then
 
   log "Running LibCarla unit tests debug."
 
+  echo "Running: ${GDB} libcarla_test_debug ${GTEST_ARGS} ${EXTRA_ARGS}"
+
   LD_LIBRARY_PATH=${LIBCARLA_INSTALL_SERVER_FOLDER}/lib ${GDB} ${LIBCARLA_INSTALL_SERVER_FOLDER}/test/libcarla_test_debug ${GTEST_ARGS} ${EXTRA_ARGS}
 
 fi
@@ -111,6 +120,8 @@ if ${LIBCARLA_RELEASE} ; then
   fi
 
   log "Running LibCarla unit tests release."
+
+  echo "Running: ${GDB} libcarla_test_release ${GTEST_ARGS} ${EXTRA_ARGS}"
 
   LD_LIBRARY_PATH=${LIBCARLA_INSTALL_SERVER_FOLDER}/lib ${GDB} ${LIBCARLA_INSTALL_SERVER_FOLDER}/test/libcarla_test_release ${GTEST_ARGS} ${EXTRA_ARGS}
 

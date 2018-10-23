@@ -29,10 +29,16 @@ namespace detail {
       return _description.description.id;
     }
 
-    std::string GetDisplayId() const;
+    const std::string &GetDisplayId() const {
+      return _display_id;
+    }
 
     const geom::BoundingBox &GetBoundingBox() const {
       return _description.bounding_box;
+    }
+
+    const std::vector<uint8_t> &GetSemanticTags() const {
+      return _description.semantic_tags;
     }
 
     World GetWorld() const {
@@ -57,13 +63,13 @@ namespace detail {
 
     friend class Simulator;
 
-    ActorState(rpc::Actor description, EpisodeProxy episode)
-      : _description(std::move(description)),
-        _episode(std::move(episode)) {}
+    ActorState(rpc::Actor description, EpisodeProxy episode);
 
     rpc::Actor _description;
 
     EpisodeProxy _episode;
+
+    std::string _display_id;
   };
 
 } // namespace detail

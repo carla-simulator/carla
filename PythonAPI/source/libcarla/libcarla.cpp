@@ -6,9 +6,11 @@
 
 #include <carla/Memory.h>
 #include <carla/PythonUtil.h>
+#include <carla/Time.h>
 
 #include <ostream>
 #include <type_traits>
+#include <vector>
 
 // Convenient for requests without arguments.
 #define CALL_WITHOUT_GIL(cls, fn) +[](cls &self) { \
@@ -58,6 +60,43 @@ static std::ostream &PrintList(std::ostream &out, const Iterable &list) {
   }
   out << ']';
   return out;
+}
+
+namespace std {
+
+  template <typename T>
+  std::ostream &operator<<(std::ostream &out, const std::vector<T> &vector_of_stuff) {
+    return PrintList(out, vector_of_stuff);
+  }
+
+} // namespace std
+
+static carla::time_duration TimeDurationFromSeconds(double seconds) {
+  size_t ms = static_cast<size_t>(1e3 * seconds);
+  return carla::time_duration::milliseconds(ms);
+}
+
+static auto MakeCallback(boost::python::object callback) {
+  namespace py = boost::python;
+  // Make sure the callback is actually callable.
+  if (!PyCallable_Check(callback.ptr())) {
+    PyErr_SetString(PyExc_TypeError, "callback argument must be callable!");
+    py::throw_error_already_set();
+  }
+
+  // We need to delete the callback while holding the GIL.
+  using Deleter = carla::PythonUtil::AcquireGILDeleter;
+  auto callback_ptr = carla::SharedPtr<py::object>{new py::object(callback), Deleter()};
+
+  // Make a lambda callback.
+  return [callback=std::move(callback_ptr)](auto message) {
+    carla::PythonUtil::AcquireGIL lock;
+    try {
+      py::call<void>(callback->ptr(), py::object(message));
+    } catch (const py::error_already_set &e) {
+      PyErr_Print();
+    }
+  };
 }
 
 #include "Actor.cpp"

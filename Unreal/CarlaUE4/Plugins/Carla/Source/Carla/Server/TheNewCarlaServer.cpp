@@ -8,6 +8,7 @@
 #include "Carla/Server/TheNewCarlaServer.h"
 
 #include "Carla/Sensor/Sensor.h"
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
 #include "GameFramework/SpectatorPawn.h"
 
@@ -107,19 +108,49 @@ private:
     ::AttachActors(Child.GetActor(), Parent.GetActor());
   }
 
+  carla::geom::BoundingBox GetActorBoundingBox(const AActor &Actor)
+  {
+    /// @todo Bounding boxes only available for vehicles.
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(&Actor);
+    if (Vehicle != nullptr)
+    {
+      FVector Location = Vehicle->GetVehicleBoundingBoxTransform().GetTranslation();
+      FVector Extent = Vehicle->GetVehicleBoundingBoxExtent();
+      return {Location, Extent};
+    }
+    return {};
+  }
+
+public:
+
   carla::rpc::Actor SerializeActor(FActorView ActorView)
   {
+    carla::rpc::Actor Actor;
+    Actor.id = ActorView.GetActorId();
     if (ActorView.IsValid())
     {
+      Actor.description = *ActorView.GetActorDescription();
+      Actor.bounding_box = GetActorBoundingBox(*ActorView.GetActor());
+      Actor.semantic_tags.reserve(ActorView.GetSemanticTags().Num());
+      using tag_t = decltype(Actor.semantic_tags)::value_type;
+      for (auto &&Tag : ActorView.GetSemanticTags())
+      {
+        Actor.semantic_tags.emplace_back(static_cast<tag_t>(Tag));
+      }
       auto *Sensor = Cast<ASensor>(ActorView.GetActor());
       if (Sensor != nullptr)
       {
         auto Stream = GetSensorStream(ActorView, *Sensor);
-        return {ActorView, Stream.token()};
+        const auto &Token = Stream.token();
+        Actor.stream_token = decltype(Actor.stream_token)(std::begin(Token.data), std::end(Token.data));
       }
+    } else {
+      UE_LOG(LogCarla, Warning, TEXT("Trying to serialize invalid actor"));
     }
-    return ActorView;
+    return Actor;
   }
+
+private:
 
   carla::streaming::Stream GetSensorStream(FActorView ActorView, ASensor &Sensor) {
     auto id = ActorView.GetActorId();
@@ -169,7 +200,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
       RespondErrorStr("unable to find spectator");
     }
-    return ActorView;
+    return SerializeActor(ActorView);
   });
 
   Server.BindSync("get_weather_parameters", [this]() -> cr::WeatherParameters {
@@ -258,7 +289,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
 
   Server.BindSync("set_actor_location", [this](
       cr::Actor Actor,
-      cr::Location Location) -> bool {
+      cr::Location Location) {
     RequireEpisode();
     auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
     if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
@@ -267,7 +298,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     // This function only works with teleport physics, to reset speeds we need
     // another method.
     /// @todo print error instead of returning false.
-    return ActorView.GetActor()->SetActorLocation(
+    ActorView.GetActor()->SetActorRelativeLocation(
         Location,
         false,
         nullptr,
@@ -276,7 +307,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
 
   Server.BindSync("set_actor_transform", [this](
       cr::Actor Actor,
-      cr::Transform Transform) -> bool {
+      cr::Transform Transform) {
     RequireEpisode();
     auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
     if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
@@ -284,11 +315,24 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     }
     // This function only works with teleport physics, to reset speeds we need
     // another method.
-    return ActorView.GetActor()->SetActorTransform(
+    ActorView.GetActor()->SetActorRelativeTransform(
         Transform,
         false,
         nullptr,
         ETeleportType::TeleportPhysics);
+  });
+
+  Server.BindSync("set_actor_simulate_physics", [this](cr::Actor Actor, bool bEnabled) {
+    RequireEpisode();
+    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
+      RespondErrorStr("unable to set actor simulate physics: actor not found");
+    }
+    auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+    if (RootComponent == nullptr) {
+      RespondErrorStr("unable to set actor simulate physics: not supported by actor");
+    }
+    RootComponent->SetSimulatePhysics(bEnabled);
   });
 
   Server.BindSync("apply_control_to_actor", [this](cr::Actor Actor, cr::VehicleControl Control) {
@@ -364,4 +408,9 @@ void FTheNewCarlaServer::RunSome(uint32 Milliseconds)
 void FTheNewCarlaServer::Stop()
 {
   Pimpl->Server.Stop();
+}
+
+carla::rpc::Actor FTheNewCarlaServer::SerializeActor(FActorView View) const
+{
+  return Pimpl->SerializeActor(View);
 }

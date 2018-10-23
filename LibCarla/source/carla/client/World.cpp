@@ -9,6 +9,7 @@
 #include "carla/Logging.h"
 #include "carla/client/Actor.h"
 #include "carla/client/ActorBlueprint.h"
+#include "carla/client/ActorList.h"
 #include "carla/client/detail/Simulator.h"
 
 #include <exception>
@@ -17,31 +18,33 @@ namespace carla {
 namespace client {
 
   uint32_t World::GetId() const {
-    return _episode->GetCurrentEpisodeId();
+    return _episode.Lock()->GetCurrentEpisodeId();
   }
 
   const std::string &World::GetMapName() const {
-    return _episode->GetCurrentMapName();
+    return _episode.Lock()->GetCurrentMapName();
   }
 
   SharedPtr<BlueprintLibrary> World::GetBlueprintLibrary() const {
-    return _episode->GetBlueprintLibrary();
+    return _episode.Lock()->GetBlueprintLibrary();
   }
 
   SharedPtr<Actor> World::GetSpectator() const {
-    return _episode->GetSpectator();
+    return _episode.Lock()->GetSpectator();
   }
 
   rpc::WeatherParameters World::GetWeather() const {
-    return _episode->GetWeatherParameters();
+    return _episode.Lock()->GetWeatherParameters();
   }
 
   void World::SetWeather(const rpc::WeatherParameters &weather) {
-    _episode->SetWeatherParameters(weather);
+    _episode.Lock()->SetWeatherParameters(weather);
   }
 
-  ActorList World::GetActors() const {
-    return {_episode, _episode->GetAllTheActorsInTheEpisode()};
+  SharedPtr<ActorList> World::GetActors() const {
+    return SharedPtr<ActorList>{new ActorList{
+        _episode,
+        _episode.Lock()->GetAllTheActorsInTheEpisode()}};
   }
 
   SharedPtr<Actor> World::SpawnActor(
@@ -49,7 +52,7 @@ namespace client {
       const geom::Transform &transform,
       Actor *parent_actor) {
     try {
-      return _episode->SpawnActor(blueprint, transform, parent_actor);
+      return _episode.Lock()->SpawnActor(blueprint, transform, parent_actor);
     } catch (const std::exception &e) {
       log_warning("SpawnActor: failed with:", e.what());
       throw;
@@ -59,12 +62,20 @@ namespace client {
   SharedPtr<Actor> World::TrySpawnActor(
       const ActorBlueprint &blueprint,
       const geom::Transform &transform,
-      Actor *parent_actor) {
+      Actor *parent_actor) noexcept {
     try {
       return SpawnActor(blueprint, transform, parent_actor);
     } catch (const std::exception &) {
       return nullptr;
     }
+  }
+
+  Timestamp World::WaitForTick(time_duration timeout) const {
+    return _episode.Lock()->WaitForTick(timeout);
+  }
+
+  void World::OnTick(std::function<void(Timestamp)> callback) {
+    return _episode.Lock()->RegisterOnTickEvent(std::move(callback));
   }
 
 } // namespace client
