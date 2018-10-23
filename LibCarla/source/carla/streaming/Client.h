@@ -7,8 +7,8 @@
 #pragma once
 
 #include "carla/Logging.h"
-#include "carla/ThreadGroup.h"
 #include "carla/streaming/Token.h"
+#include "carla/streaming/detail/AsioThreadPool.h"
 #include "carla/streaming/detail/tcp/Client.h"
 #include "carla/streaming/low_level/Client.h"
 
@@ -21,48 +21,40 @@ namespace streaming {
 
   /// A client able to subscribe to multiple streams.
   class Client {
+    using underlying_client = low_level::Client<detail::tcp::Client>;
   public:
 
-    explicit Client()
-      : _io_service(),
-        _work_to_do(_io_service) {}
+    Client() = default;
 
     explicit Client(const std::string &fallback_address)
-      : _io_service(),
-        _work_to_do(_io_service),
-        _client(fallback_address) {}
+      : _client(fallback_address) {}
 
     ~Client() {
-      Stop();
+      _service.Stop();
     }
 
     template <typename Functor>
     void Subscribe(const Token &token, Functor &&callback) {
-      _client.Subscribe(_io_service, token, std::forward<Functor>(callback));
+      _client.Subscribe(_service.service(), token, std::forward<Functor>(callback));
+    }
+
+    void UnSubscribe(const Token &token) {
+      _client.UnSubscribe(token);
     }
 
     void Run() {
-      _io_service.run();
+      _service.Run();
     }
 
     void AsyncRun(size_t worker_threads) {
-      _workers.CreateThreads(worker_threads, [this]() { Run(); });
-    }
-
-    void Stop() {
-      _io_service.stop();
-      _workers.JoinAll();
+      _service.AsyncRun(worker_threads);
     }
 
   private:
 
-    using underlying_client = low_level::Client<detail::tcp::Client>;
+    // The order of these two arguments is very important.
 
-    boost::asio::io_service _io_service;
-
-    boost::asio::io_service::work _work_to_do;
-
-    ThreadGroup _workers;
+    detail::AsioThreadPool _service;
 
     underlying_client _client;
   };

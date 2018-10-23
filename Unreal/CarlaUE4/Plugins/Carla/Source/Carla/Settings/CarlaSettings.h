@@ -38,8 +38,6 @@ public:
  }
 };
 
-class USensorDescription;
-
 /** Global settings for CARLA.
  * Setting object used to hold both config settings and editable ones in one place
  * To ensure the settings are saved to the specified config file make sure to add
@@ -112,9 +110,6 @@ private:
 
   /***/
   void LoadSettingsFromFile(const FString &FilePath, bool bLogOnFailure);
-
-  /***/
-  void ResetSensorDescriptions();
 
   /** File name of the settings file used to load this settings. Empty if none used. */
   UPROPERTY(Category = "CARLA Settings|Debug", VisibleAnywhere)
@@ -253,16 +248,12 @@ public:
   /// @{
 public:
 
-  /** Descriptions of the cameras to be attached to the player. */
-  UPROPERTY(Category = "Sensors", BlueprintReadOnly, VisibleAnywhere)
-  TMap<FString, USensorDescription *> SensorDescriptions;
-
   /** Whether semantic segmentation should be activated. The mechanisms for
     * semantic segmentation impose some performance penalties even if it is not
     * used, we only enable it if necessary.
     */
   UPROPERTY(Category = "Sensors", BlueprintReadOnly, VisibleAnywhere)
-  bool bSemanticSegmentationEnabled = false;
+  bool bSemanticSegmentationEnabled = true;
 
   /// @}
 };

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "carla/rpc/MsgPack.h"
+#include "carla/MsgPack.h"
 
 namespace carla {
 namespace rpc {
@@ -54,6 +54,19 @@ namespace rpc {
     }
 
 #endif // LIBCARLA_INCLUDED_FROM_UE4
+
+    bool operator!=(const VehicleControl &rhs) const {
+      return
+          throttle != rhs.throttle ||
+          steer != rhs.steer ||
+          brake != rhs.brake ||
+          hand_brake != rhs.hand_brake ||
+          reverse != rhs.reverse;
+    }
+
+    bool operator==(const VehicleControl &rhs) const {
+      return !(*this != rhs);
+    }
 
     MSGPACK_DEFINE_ARRAY(
         throttle,

@@ -8,15 +8,30 @@
 
 namespace carla {
 
-  /// Inherit (privately) to suppress copy-construction and copy-assignment.
+  /// Inherit (privately) to suppress copy/move construction and assignment.
   class NonCopyable {
   public:
 
     NonCopyable() = default;
 
     NonCopyable(const NonCopyable &) = delete;
+    NonCopyable &operator=(const NonCopyable &) = delete;
 
-    void operator=(const NonCopyable &) = delete;
+    NonCopyable(NonCopyable &&) = delete;
+    NonCopyable &operator=(NonCopyable &&) = delete;
+  };
+
+  /// Inherit (privately) to suppress copy construction and assignment.
+  class MovableNonCopyable {
+  public:
+
+    MovableNonCopyable() = default;
+
+    MovableNonCopyable(const MovableNonCopyable &) = delete;
+    MovableNonCopyable &operator=(const MovableNonCopyable &) = delete;
+
+    MovableNonCopyable(MovableNonCopyable &&) = default;
+    MovableNonCopyable &operator=(MovableNonCopyable &&) = default;
   };
 
 } // namespace carla

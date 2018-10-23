@@ -4,9 +4,8 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include <rpc/config.h>
 #include <rpc/rpc_error.h>
-
-#include <boost/python.hpp>
 
 #include <sstream>
 

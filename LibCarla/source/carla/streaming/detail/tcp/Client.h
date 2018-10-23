@@ -8,6 +8,7 @@
 
 #include "carla/Buffer.h"
 #include "carla/NonCopyable.h"
+#include "carla/profiler/LifetimeProfiled.h"
 #include "carla/streaming/detail/Token.h"
 #include "carla/streaming/detail/Types.h"
 
@@ -16,6 +17,7 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/strand.hpp>
 
+#include <atomic>
 #include <functional>
 #include <memory>
 
@@ -29,9 +31,12 @@ namespace tcp {
 
   /// A client that connects to a single stream.
   ///
-  /// @warning The client should not be destroyed before the @a io_service is
-  /// stopped.
-  class Client : private NonCopyable {
+  /// @warning This client should be stopped before releasing the shared pointer
+  /// or won't be destroyed.
+  class Client
+    : public std::enable_shared_from_this<Client>,
+      private profiler::LifetimeProfiled,
+      private NonCopyable {
   public:
 
     using endpoint = boost::asio::ip::tcp::endpoint;
@@ -45,6 +50,8 @@ namespace tcp {
 
     ~Client();
 
+    void Connect();
+
     stream_id_type GetStreamId() const {
       return _token.get_stream_id();
     }
@@ -52,8 +59,6 @@ namespace tcp {
     void Stop();
 
   private:
-
-    void Connect();
 
     void Reconnect();
 
@@ -71,7 +76,7 @@ namespace tcp {
 
     std::shared_ptr<BufferPool> _buffer_pool;
 
-    bool _done = false;
+    std::atomic_bool _done{false};
   };
 
 } // namespace tcp
