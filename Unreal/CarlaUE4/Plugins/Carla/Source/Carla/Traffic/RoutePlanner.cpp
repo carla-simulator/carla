@@ -84,10 +84,9 @@ void ARoutePlanner::PostEditChangeProperty(FPropertyChangedEvent& PropertyChange
 void ARoutePlanner::AddRoute(float probability, const TArray<FVector> &routePoints)
 {
     USplineComponent *NewSpline = NewObject<USplineComponent>(this);
-    //NewSpline->bHiddenInGame = false;
 
-    NewSpline->SetLocationAtSplinePoint(0, routePoints[0], ESplineCoordinateSpace::World, false);
-    NewSpline->SetLocationAtSplinePoint(1, routePoints[1], ESplineCoordinateSpace::World, false);
+    NewSpline->SetLocationAtSplinePoint(0, routePoints[0], ESplineCoordinateSpace::World, true);
+    NewSpline->SetLocationAtSplinePoint(1, routePoints[1], ESplineCoordinateSpace::World, true);
 
     for (int i = 2; i < routePoints.Num(); ++i)
     {
