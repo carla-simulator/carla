@@ -8,6 +8,9 @@
 
 #include "carla/MsgPack.h"
 
+#include <cmath>
+#include <limits>
+
 namespace carla {
 namespace geom {
 
@@ -89,6 +92,23 @@ namespace geom {
 
     bool operator!=(const Vector3D &rhs) const {
       return !(*this == rhs);
+    }
+
+    double SquaredLenght() const {
+      return x * x + y * y + z * z;
+    }
+
+    double Length() const {
+       return std::sqrt(SquaredLenght());
+    }
+
+    Vector3D MakeUnitVector() const {
+      const double len = Length();
+      if (len < std::numeric_limits<double>::epsilon()) {
+        return Vector3D(1.0, 0.0, 0.0);
+      }
+      double k = 1.0 / len;
+      return Vector3D(x * k, y * k, z * k);
     }
 
     // =========================================================================
