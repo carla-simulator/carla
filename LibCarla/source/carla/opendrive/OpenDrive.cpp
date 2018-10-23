@@ -78,15 +78,20 @@ namespace opendrive {
       carla::road::element::RoadGeneralInfo *roadGeneralInfo = roadSegment.MakeInfo<carla::road::element::RoadGeneralInfo>();
       roadGeneralInfo->SetIsJunction(it->second->attributes.junction >= 0);
 
-      std::vector<carla::opendrive::types::Lane> &lanesLeft = it->second->lane_sections.left;
-      for(size_t i = 0; i < lanesLeft.size(); ++i)
+      if(it->second->lane_sections.lane_offset.size())
       {
+        double s = it->second->lane_sections.lane_offset[0].s;
+        double a = it->second->lane_sections.lane_offset[0].a;
+        roadGeneralInfo->SetLanesOffset(s, a);
+      }
+
+      std::vector<carla::opendrive::types::Lane> &lanesLeft = it->second->lane_sections.left;
+      for(size_t i = 0; i < lanesLeft.size(); ++i) {
         roadInfoLanes->addLaneInfo(lanesLeft[i].attributes.id, lanesLeft[i].lane_width[0].width, lanesLeft[i].attributes.type);
       }
 
       std::vector<carla::opendrive::types::Lane> &lanesRight = it->second->lane_sections.right;
-      for(size_t i = 0; i < lanesRight.size(); ++i)
-      {
+      for(size_t i = 0; i < lanesRight.size(); ++i) {
         roadInfoLanes->addLaneInfo(lanesRight[i].attributes.id, lanesRight[i].lane_width[0].width, lanesRight[i].attributes.type);
       }
 

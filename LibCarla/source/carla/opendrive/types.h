@@ -87,6 +87,11 @@ namespace carla
                 std::string lange_change;
             };
 
+            struct LaneOffset
+            {
+                double s, a, b, c, d;
+            };
+
             struct LaneSpeed
             {
                 double soffset;     // start position(s - offset from the current lane section) [meters]
@@ -114,6 +119,7 @@ namespace carla
             {
                 double start_position;
                 std::vector<Lane> left, center, right;
+                std::vector<LaneOffset> lane_offset;
             };
 
             /////////////////////////////////////////////////////////////////
