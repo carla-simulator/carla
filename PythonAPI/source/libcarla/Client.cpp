@@ -9,8 +9,7 @@
 #include <carla/client/World.h>
 
 static void SetTimeout(carla::client::Client &client, double seconds) {
-  size_t ms = static_cast<size_t>(1e3 * seconds);
-  client.SetTimeout(carla::time_duration::milliseconds(ms));
+  client.SetTimeout(TimeDurationFromSeconds(seconds));
 }
 
 void export_client() {

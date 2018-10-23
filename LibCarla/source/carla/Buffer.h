@@ -82,6 +82,10 @@ namespace carla {
       copy_from(source);
     }
 
+    Buffer(const value_type *data, size_type size) {
+      copy_from(data, size);
+    }
+
     Buffer(const Buffer &) = delete;
 
     Buffer(Buffer &&rhs) noexcept

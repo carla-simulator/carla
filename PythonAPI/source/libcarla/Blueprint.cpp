@@ -11,14 +11,6 @@
 
 #include <ostream>
 
-namespace std {
-
-  std::ostream &operator<<(std::ostream &out, const std::vector<std::string> &vector_of_strings) {
-    return PrintList(out, vector_of_strings);
-  }
-
-} // namespace std
-
 namespace carla {
 
 namespace sensor {
@@ -143,9 +135,9 @@ void export_blueprint() {
   class_<cc::ActorBlueprint>("ActorBlueprint", no_init)
     .add_property("id", CALL_RETURNING_COPY(cc::ActorBlueprint, GetId))
     .add_property("tags", &cc::ActorBlueprint::GetTags)
-    .def("contains_tag", &cc::ActorBlueprint::ContainsTag)
+    .def("has_tag", &cc::ActorBlueprint::ContainsTag)
     .def("match_tags", &cc::ActorBlueprint::MatchTags)
-    .def("contains_attribute", &cc::ActorBlueprint::ContainsAttribute)
+    .def("has_attribute", &cc::ActorBlueprint::ContainsAttribute)
     .def("get_attribute", CALL_RETURNING_COPY_1(cc::ActorBlueprint, GetAttribute, const std::string &))
     .def("set_attribute", &cc::ActorBlueprint::SetAttribute)
     .def("__len__", &cc::ActorBlueprint::size)

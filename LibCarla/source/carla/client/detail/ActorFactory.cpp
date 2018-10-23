@@ -10,6 +10,7 @@
 #include "carla/StringUtil.h"
 #include "carla/client/Actor.h"
 #include "carla/client/Sensor.h"
+#include "carla/client/TrafficLight.h"
 #include "carla/client/Vehicle.h"
 #include "carla/client/World.h"
 #include "carla/client/detail/Client.h"
@@ -70,6 +71,8 @@ namespace detail {
       return MakeActorImpl<Sensor>(ActorInitializer{description, episode}, gc);
     } else if (StringUtil::StartsWith(description.description.id, "vehicle.")) {
       return MakeActorImpl<Vehicle>(ActorInitializer{description, episode}, gc);
+    } else if (StringUtil::StartsWith(description.description.id, "traffic.traffic_light")) {
+      return MakeActorImpl<TrafficLight>(ActorInitializer{description, episode}, gc);
     }
     return MakeActorImpl<Actor>(ActorInitializer{description, episode}, gc);
   }

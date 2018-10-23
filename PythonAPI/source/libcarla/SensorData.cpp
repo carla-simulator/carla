@@ -10,6 +10,7 @@
 #include <carla/image/ImageView.h>
 #include <carla/pointcloud/PointCloudIO.h>
 #include <carla/sensor/SensorData.h>
+#include <carla/sensor/data/CollisionEvent.h>
 #include <carla/sensor/data/Image.h>
 #include <carla/sensor/data/LidarMeasurement.h>
 
@@ -36,12 +37,19 @@ namespace data {
     return out;
   }
 
+  std::ostream &operator<<(std::ostream &out, const CollisionEvent &meas) {
+    out << "CollisionEvent(frame=" << meas.GetFrameNumber()
+        << ", other_actor=" << meas.GetOtherActor()
+        << ')';
+    return out;
+  }
+
 } // namespace data
 } // namespace sensor
 } // namespace carla
 
 enum class EColorConverter {
-  None,
+  Raw,
   Depth,
   LogarithmicDepth,
   CityScapesPalette
@@ -74,7 +82,7 @@ static void ConvertImage(T &self, EColorConverter cc) {
     case EColorConverter::CityScapesPalette:
       ImageConverter::ConvertInPlace(view, ColorConverter::CityScapesPalette());
       break;
-    case EColorConverter::None:
+    case EColorConverter::Raw:
       break; // ignore.
     default:
       throw std::invalid_argument("invalid color converter!");
@@ -87,7 +95,7 @@ static std::string SaveImageToDisk(T &self, std::string path, EColorConverter cc
   using namespace carla::image;
   auto view = ImageView::MakeView(self);
   switch (cc) {
-    case EColorConverter::None:
+    case EColorConverter::Raw:
       return ImageIO::WriteView(
           std::move(path),
           view);
@@ -127,7 +135,7 @@ void export_sensor_data() {
   ;
 
   enum_<EColorConverter>("ColorConverter")
-    .value("None", EColorConverter::None)
+    .value("Raw", EColorConverter::Raw)
     .value("Depth", EColorConverter::Depth)
     .value("LogarithmicDepth", EColorConverter::LogarithmicDepth)
     .value("CityScapesPalette", EColorConverter::CityScapesPalette)
@@ -139,7 +147,7 @@ void export_sensor_data() {
     .add_property("fov", &csd::Image::GetFOVAngle)
     .add_property("raw_data", &GetRawDataAsBuffer<csd::Image>)
     .def("convert", &ConvertImage<csd::Image>, (arg("color_converter")))
-    .def("save_to_disk", &SaveImageToDisk<csd::Image>, (arg("path"), arg("color_converter")=EColorConverter::None))
+    .def("save_to_disk", &SaveImageToDisk<csd::Image>, (arg("path"), arg("color_converter")=EColorConverter::Raw))
     .def("__len__", &csd::Image::size)
     .def("__iter__", iterator<csd::Image>())
     .def("__getitem__", +[](const csd::Image &self, size_t pos) -> csd::Color {
@@ -165,6 +173,13 @@ void export_sensor_data() {
     .def("__setitem__", +[](csd::LidarMeasurement &self, size_t pos, const cr::Location &point) {
       self.at(pos) = point;
     })
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<csd::CollisionEvent, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::CollisionEvent>>("CollisionEvent", no_init)
+    .add_property("actor", &csd::CollisionEvent::GetActor)
+    .add_property("other_actor", &csd::CollisionEvent::GetOtherActor)
+    .add_property("normal_impulse", CALL_RETURNING_COPY(csd::CollisionEvent, GetNormalImpulse))
     .def(self_ns::str(self_ns::self))
   ;
 }

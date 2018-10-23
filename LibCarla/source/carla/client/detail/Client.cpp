@@ -10,7 +10,6 @@
 #include "carla/rpc/ActorDescription.h"
 #include "carla/rpc/Client.h"
 #include "carla/rpc/VehicleControl.h"
-#include "carla/sensor/Deserializer.h"
 #include "carla/streaming/Client.h"
 
 #include <thread>
@@ -127,6 +126,10 @@ namespace detail {
     _pimpl->AsyncCall("set_actor_transform", actor, transform);
   }
 
+  void Client::SetActorSimulatePhysics(const rpc::Actor &actor, const bool enabled) {
+    _pimpl->AsyncCall("set_actor_simulate_physics", actor, enabled);
+  }
+
   void Client::SetActorAutopilot(const rpc::Actor &vehicle, const bool enabled) {
     _pimpl->AsyncCall("set_actor_autopilot", vehicle, enabled);
   }
@@ -137,10 +140,8 @@ namespace detail {
 
   void Client::SubscribeToStream(
       const streaming::Token &token,
-      std::function<void(SharedPtr<sensor::SensorData>)> callback) {
-    _pimpl->streaming_client.Subscribe(token, [cb=std::move(callback)](auto buffer) {
-      cb(sensor::Deserializer::Deserialize(std::move(buffer)));
-    });
+      std::function<void(Buffer)> callback) {
+    _pimpl->streaming_client.Subscribe(token, std::move(callback));
   }
 
   void Client::UnSubscribeFromStream(const streaming::Token &token) {

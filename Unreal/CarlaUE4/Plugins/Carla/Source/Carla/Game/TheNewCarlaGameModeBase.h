@@ -28,6 +28,12 @@ public:
 
   ATheNewCarlaGameModeBase(const FObjectInitializer& ObjectInitializer);
 
+  const UCarlaEpisode &GetCarlaEpisode() const
+  {
+    check(Episode != nullptr);
+    return *Episode;
+  }
+
 protected:
 
   void InitGame(const FString &MapName, const FString &Options, FString &ErrorMessage) override;

@@ -9,6 +9,8 @@
 #include "carla/Logging.h"
 #include "carla/client/detail/Simulator.h"
 
+#include <exception>
+
 namespace carla {
 namespace client {
 
@@ -20,19 +22,17 @@ namespace client {
           GetDisplayId());
     }
     if (_is_listening) {
-      Stop();
+      try {
+        Stop();
+      } catch (const std::exception &e) {
+        log_error("excetion trying to stop sensor:", GetDisplayId(), ':', e.what());
+      }
     }
   }
 
   void Sensor::Listen(CallbackFunctionType callback) {
     log_debug(GetDisplayId(), ": subscribing to stream");
-    if (_is_listening) {
-      log_warning(
-          "attempting to listen to stream but sensor is already listening:",
-          GetDisplayId());
-      return;
-    }
-    GetEpisode()->SubscribeToSensor(*this, std::move(callback));
+    GetEpisode().Lock()->SubscribeToSensor(*this, std::move(callback));
     _is_listening = true;
   }
 
@@ -43,15 +43,15 @@ namespace client {
           GetDisplayId());
       return;
     }
-    GetEpisode()->UnSubscribeFromSensor(*this);
+    GetEpisode().Lock()->UnSubscribeFromSensor(*this);
     _is_listening = false;
   }
 
-  void Sensor::Destroy() {
+  bool Sensor::Destroy() {
     if (_is_listening) {
       Stop();
     }
-    Actor::Destroy();
+    return Actor::Destroy();
   }
 
 } // namespace client

@@ -28,6 +28,8 @@ namespace rpc {
 
     geom::BoundingBox bounding_box;
 
+    std::vector<uint8_t> semantic_tags;
+
     /// @todo This is only used by sensors actually.
     /// @name Sensor functionality
     /// @{
@@ -47,26 +49,7 @@ namespace rpc {
 
     /// @}
 
-#ifdef LIBCARLA_INCLUDED_FROM_UE4
-
-    Actor(FActorView View)
-      : id(View.GetActorId()),
-        description(*View.GetActorDescription()),
-        bounding_box(View.GetActor()) {
-      DEBUG_ASSERT(View.IsValid());
-    }
-
-    Actor(FActorView View, const streaming::Token &StreamToken)
-      : id(View.GetActorId()),
-        description(*View.GetActorDescription()),
-        bounding_box(View.GetActor()),
-        stream_token(StreamToken.data.begin(), StreamToken.data.end()) {
-      DEBUG_ASSERT(View.IsValid());
-    }
-
-#endif // LIBCARLA_INCLUDED_FROM_UE4
-
-    MSGPACK_DEFINE_ARRAY(id, description, stream_token);
+    MSGPACK_DEFINE_ARRAY(id, description, bounding_box, semantic_tags, stream_token);
   };
 
 } // namespace rpc
