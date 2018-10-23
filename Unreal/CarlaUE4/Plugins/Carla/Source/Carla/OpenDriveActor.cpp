@@ -23,109 +23,102 @@ void AOpenDriveActor::GenerateWaypoints(const carla::road::element::RoadSegment 
     std::vector<int> rightLanes = lanesInfo->getLanesIDs(carla::road::element::RoadInfoLane::which_lane_e::Right);
     std::vector<int> leftLanes = lanesInfo->getLanesIDs(carla::road::element::RoadInfoLane::which_lane_e::Left);
 
-    // NOTE(Andrei): If we have left and right lanes
-    // clear the offset as the offset of each each lane
-    // is calculated.
-    if (rightLanes.size() && leftLanes.size())
+    size_t lanesOffsetIndex = 0;
+    TArray<carla::road::element::DirectedPoint> laneZeroPoints;
+
+    for (float waypointsOffset = 0.0f; waypointsOffset < road->GetLength(); waypointsOffset += 2.0)
     {
-        lanesOffset.clear();
-        lanesOffset.emplace_back(std::pair<double, double>(0.0, 0.0));
+        if (lanesOffsetIndex < lanesOffset.size() - 1 && waypointsOffset >= lanesOffset[lanesOffsetIndex + 1].first)
+        {
+            ++lanesOffsetIndex;
+        }
+
+        // NOTE(Andrei): Get waypoin at the offset, and invert the y axis
+        carla::road::element::DirectedPoint waypoint = road->GetDirectedPointIn(waypointsOffset);
+        waypoint.location.y *= (-1); waypoint.location.z = 1;
+
+        // NOTE(Andrei): Applyed the offset of the lane section
+        waypoint.ApplyLateralOffset(lanesOffset[lanesOffsetIndex].second);
+
+        laneZeroPoints.Add(waypoint);
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // NOTE(Andrei): Calculate the offset of each driving driving lane.
-    // Starting from the center of the road, search for the driving lane
-    // and store the width of each lane and the offset starting from the
-    // center of the road.
-
-    double totalWidth = 0.0, laneWidth = 0.0;
-    int drivingLane = 0;
-
-    struct driving_info_t { int lane; double halfLaneWidth; double totalWidth; };
-    TArray<driving_info_t> drivingLanes;
-
-    for (size_t i = 0; i < rightLanes.size(); ++i)
+    double currentOffset = 0.0;
+    for (size_t j = 0; j < rightLanes.size(); ++j)
     {
-        const carla::road::element::LaneInfo *laneInfo = lanesInfo->getLane(rightLanes[i]);
-        totalWidth += laneInfo->_width;
+        const carla::road::element::LaneInfo *laneInfo = lanesInfo->getLane(rightLanes[j]);
+        TArray<FVector> unrealRoadWaypoints;
+        currentOffset += laneInfo->_width * 0.5;
 
         if (laneInfo->_type == "driving")
         {
-            driving_info_t dl = { rightLanes[i], laneInfo->_width * 50.0, totalWidth * 100.0 };
-            drivingLanes.Add(dl);
+            for (int i = 0; i < laneZeroPoints.Num(); ++i)
+            {
+                carla::road::element::DirectedPoint currentPoint = laneZeroPoints[i];
+                currentPoint.ApplyLateralOffset(-currentOffset);
+                unrealRoadWaypoints.Add(currentPoint.location);
+            }
+
+            if (unrealRoadWaypoints.Num() >= 2)
+            {
+                for (int i = 0, len = unrealRoadWaypoints.Num() - 1; i < len; ++i)
+                {
+                    float f = (float)i / (float)len;
+                    FColor c(255 * f, 255 - 255 * f, 0);
+                    DrawDebugLine(GetWorld(), unrealRoadWaypoints[i + 0], unrealRoadWaypoints[i + 1], c, true);
+                }
+
+                ARoutePlanner *routePlanner = GetWorld()->SpawnActor<ARoutePlanner>();
+                routePlanner->SetActorLocation(unrealRoadWaypoints[0]);
+
+                routePlanner->AddRoute(1.0f, unrealRoadWaypoints);
+                routePlanner->Init();
+
+                RoutePlanners.Add(routePlanner);
+            }
         }
+
+        currentOffset += laneInfo->_width * 0.5;
     }
 
-    totalWidth = 0.0;
-
-    for (size_t i = 0; i < leftLanes.size(); ++i)
+    currentOffset = 0.0;
+    for (size_t j = 0; j < leftLanes.size(); ++j)
     {
-        const carla::road::element::LaneInfo *laneInfo = lanesInfo->getLane(leftLanes[leftLanes.size() - 1 - i]);
-        totalWidth += laneInfo->_width;
+        const carla::road::element::LaneInfo *laneInfo = lanesInfo->getLane(leftLanes[leftLanes.size() - 1 -j]);
+        TArray<FVector> unrealRoadWaypoints;
+        currentOffset += laneInfo->_width * 0.5;
 
         if (laneInfo->_type == "driving")
         {
-            driving_info_t dl = { leftLanes[leftLanes.size() - 1 - i], laneInfo->_width  * 50.0, totalWidth * 100.0 };
-            drivingLanes.Add(dl);
-        }
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // NOTE(Andrei): For each one of the lanes, ones that we have the center
-    // point of the road, place it on the center of the corresponding lane.
-
-    for (int i = 0; i < drivingLanes.Num(); ++i)
-    {
-        TArray<FVector> points;
-        size_t lanesOffsetIndex = 0;
-
-        for (float offset = 0.0f; offset < road->GetLength(); offset += 2.0)
-        {
-            carla::road::element::DirectedPoint p = road->GetDirectedPointIn(offset);
-            double heading = p.tangent + carla::geom::Math::pi_half();
-
-            if (laneOffsetIndex < lanesOffset.size() - 1  && offset >= lanesOffset[lanesOffsetIndex + 1].first)
+            for (int i = 0; i < laneZeroPoints.Num(); ++i)
             {
-                ++lanesOffsetIndex;
+                carla::road::element::DirectedPoint currentPoint = laneZeroPoints[i];
+                currentPoint.ApplyLateralOffset(currentOffset);
+                unrealRoadWaypoints.Add(currentPoint.location);
             }
 
-            FVector loc(p.location.x * 100, -p.location.y * 100, p.location.z * 100 + 100);
-            FVector dir(0.0f, 0.0f, 0.0f);
-
-            dir.X = std::cos(heading) * (drivingLanes[i].totalWidth - (lanesOffset[lanesOffsetIndex].second * 100.0) - drivingLanes[i].halfLaneWidth);
-            dir.Y = std::sin(-heading) * (drivingLanes[i].totalWidth - (lanesOffset[lanesOffsetIndex].second * 100.0) - drivingLanes[i].halfLaneWidth);
-
-            FVector waypoint = loc + (drivingLanes[i].lane < 0 ? dir : -dir);
-            points.Add(waypoint);
-        }
-
-        if (drivingLanes[i].lane < 0)
-        {
-            Algo::Reverse(points);
-        }
-
-        if (points.Num() >= 2)
-        {
-            for (int i = 0, len = points.Num() - 1; i < len; ++i)
+            if (unrealRoadWaypoints.Num() >= 2)
             {
-                float f = (float) i / (float) len; // green to red
-                //DrawDebugPoint(GetWorld(), points[i], 3, FColor(255 * f, 255 - 255 * f, 0), true);
+                Algo::Reverse(unrealRoadWaypoints);
 
-                FColor c(255 * f, 255 - 255 * f, 0);
-                DrawDebugLine(GetWorld(), points[i + 0], points[i + 1], c, true);
+                for (int i = 0, len = unrealRoadWaypoints.Num() - 1; i < len; ++i)
+                {
+                    float f = (float)i / (float)len;
+                    FColor c(255 * f, 255 - 255 * f, 0);
+                    DrawDebugLine(GetWorld(), unrealRoadWaypoints[i + 0], unrealRoadWaypoints[i + 1], c, true);
+                }
+
+                ARoutePlanner *routePlanner = GetWorld()->SpawnActor<ARoutePlanner>();
+                routePlanner->SetActorLocation(unrealRoadWaypoints[0]);
+
+                routePlanner->AddRoute(1.0f, unrealRoadWaypoints);
+                routePlanner->Init();
+
+                RoutePlanners.Add(routePlanner);
             }
-
-            //DrawDebugString(GetWorld(), points[0], FString().Printf(TEXT("RoadID: %d\nLaneID: %d"), road->GetId(), drivingLanes[i].lane));
-            //ARoutePlanner *routePlanner = GetWorld()->SpawnActor<ARoutePlanner>(ARoutePlanner::StaticClass(), FTransform{points[0]});
-
-            ARoutePlanner *routePlanner = GetWorld()->SpawnActor<ARoutePlanner>();
-            routePlanner->SetActorLocation(points[0]);
-
-            routePlanner->AddRoute(1.0f, points);
-            routePlanner->Init();
-
-            RoutePlanners.Add(routePlanner);
         }
+
+        currentOffset += laneInfo->_width * 0.5;
     }
 }
 
