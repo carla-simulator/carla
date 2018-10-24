@@ -16,7 +16,7 @@ namespace road {
     return true;
   }
 
-  Map MapBuilder::Build() {
+  SharedPtr<Map> MapBuilder::Build() {
     // Move the RoadSegmentDefinitions needed information to a RoadSegments
     for (auto &&id_seg : _temp_sections) {
       MakeElement<RoadSegment>(id_seg.first, std::move(id_seg.second));
@@ -44,7 +44,7 @@ namespace road {
     // _map_data is a memeber of MapBuilder so you must especify if
     // you want to keep it (will return copy -> Map(const Map &))
     // or move it (will return move -> Map(Map &&))
-    return Map(std::move(_map_data));
+    return SharedPtr<Map>(new Map{std::move(_map_data)});
   }
 
   bool MapBuilder::InterpretRoadFlow() {

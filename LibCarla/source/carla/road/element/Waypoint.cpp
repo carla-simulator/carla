@@ -6,6 +6,8 @@
 
 #include "carla/road/element/Waypoint.h"
 
+#include "carla/road/Map.h"
+
 namespace carla {
 namespace road {
 namespace element {
@@ -13,6 +15,8 @@ namespace element {
   RoadInfoList Waypoint::GetRoadInfo() const {
     return RoadInfoList(_map->GetData().GetRoad(_road_id)->GetInfos(_dist));
   }
+
+  Waypoint::~Waypoint() = default;
 
 } // namespace element
 } // namespace road

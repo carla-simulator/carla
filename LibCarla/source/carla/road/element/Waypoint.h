@@ -6,9 +6,10 @@
 
 #pragma once
 
-#include "carla/road/Map.h"
+#include "carla/Memory.h"
 #include "carla/geom/Transform.h"
 #include "carla/road/element/RoadInfoList.h"
+#include "carla/road/element/Types.h"
 
 namespace carla {
 namespace road {
@@ -21,6 +22,8 @@ namespace element {
   public:
 
     Waypoint() = default;
+
+    ~Waypoint();
 
     const geom::Transform &GetTransform() const {
       return _transform;

@@ -22,9 +22,9 @@ namespace rpc {
 
     std::string open_drive_file;
 
-    std::vector<geom::Transform> recommended_start_transforms;
+    std::vector<geom::Transform> recommended_spawn_points;
 
-    MSGPACK_DEFINE_ARRAY(name, open_drive_file, recommended_start_transforms);
+    MSGPACK_DEFINE_ARRAY(name, open_drive_file, recommended_spawn_points);
   };
 
 } // namespace rpc

@@ -20,6 +20,7 @@ namespace client {
   class ActorBlueprint;
   class ActorList;
   class BlueprintLibrary;
+  class Map;
 
   class World {
   public:
@@ -40,6 +41,9 @@ namespace client {
     /// @note When playing in editor, the map name can be different than the
     /// usual map name of the town.
     const std::string &GetMapName() const;
+
+    /// Return the map that describes this world.
+    SharedPtr<Map> GetMap() const;
 
     /// Return the list of blueprints available in this world. This blueprints
     /// can be used to spawning actor into the world.

@@ -19,7 +19,7 @@ namespace road {
 
     bool AddRoadSegmentDefinition(element::RoadSegmentDefinition &seg);
 
-    Map Build();
+    SharedPtr<Map> Build();
 
   private:
 

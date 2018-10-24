@@ -39,7 +39,8 @@ TEST(road, add_information) {
   def.MakeInfo<element::RoadInfoLane>();
 
   builder.AddRoadSegmentDefinition(def);
-  Map m = builder.Build();
+  auto map_ptr = builder.Build();
+  Map &m = *map_ptr;
 
   const RoadInfoVelocity *r = m.GetData().GetRoad(0)->GetInfo<RoadInfoVelocity>(0.0);
   ASSERT_EQ(r->velocity, 50.0);
@@ -71,7 +72,8 @@ TEST(road, set_and_get_connections_for) {
     }
     builder.AddRoadSegmentDefinition(def);
   }
-  Map m = builder.Build();
+  auto map_ptr = builder.Build();
+  Map &m = *map_ptr;
   for (auto &&r : m.GetData().GetAllIds()) {
     for (size_t i = 0; i < 10; ++i) {
       ASSERT_EQ(m.GetData().GetRoad(r)->GetPredecessorsIds().at(i), i);
@@ -104,7 +106,8 @@ TEST(road, geom_line) {
 
   builder.AddRoadSegmentDefinition(def1);
 
-  Map m = builder.Build();
+  auto map_ptr = builder.Build();
+  Map &m = *map_ptr;
 
   ASSERT_EQ(m.GetData().GetRoad(1)->GetLength(), 20.0);
   AssertNear(m.GetData().GetRoad(1)->GetDirectedPointIn(0),
@@ -143,7 +146,8 @@ TEST(road, geom_arc) {
 
   builder.AddRoadSegmentDefinition(def1);
 
-  Map m = builder.Build();
+  auto map_ptr = builder.Build();
+  Map &m = *map_ptr;
 
   ASSERT_EQ(m.GetData().GetRoad(1)->GetLength(), 10.0);
 }
@@ -163,7 +167,8 @@ TEST(road, geom_spiral) {
 
   builder.AddRoadSegmentDefinition(def1);
 
-  Map m = builder.Build();
+  auto map_ptr = builder.Build();
+  Map &m = *map_ptr;
 
   ASSERT_EQ(m.GetData().GetRoad(1)->GetLength(), 10.0);
   // not implemented yet
@@ -189,7 +194,9 @@ TEST(road, get_information) {
   def.MakeInfo<element::RoadInfoLane>();
 
   builder.AddRoadSegmentDefinition(def);
-  Map m = builder.Build();
+
+  auto map_ptr = builder.Build();
+  Map &m = *map_ptr;
 
   const RoadInfoVelocity *r = m.GetData().GetRoad(0)->GetInfo<RoadInfoVelocity>(0.0);
   (void)r;

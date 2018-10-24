@@ -46,7 +46,7 @@ namespace opendrive {
     }
   }
 
-  road::Map OpenDrive::Load(const std::string &file) {
+  SharedPtr<road::Map> OpenDrive::Load(const std::string &file) {
     carla::opendrive::types::OpenDriveData open_drive_road;
     OpenDriveParser::Parse(file.c_str(), open_drive_road);
     carla::road::MapBuilder mapBuilder;
@@ -168,7 +168,7 @@ namespace opendrive {
     return mapBuilder.Build();
   }
 
-  road::Map OpenDrive::Load(std::istream &input) {
+  SharedPtr<road::Map> OpenDrive::Load(std::istream &input) {
     UNUSED(input);
 
     carla::road::MapBuilder mapBuilder;

@@ -8,41 +8,46 @@
 
 #include "carla/Memory.h"
 #include "carla/NonCopyable.h"
-#include "carla/client/detail/Waypoint.h"
+#include "carla/rpc/MapInfo.h"
 
 #include <string>
 
 namespace carla {
-namespace road {
-  class Map;
-}
+namespace road { class Map; }
 namespace client {
+
+  class Waypoint;
 
   class Map
     : public EnableSharedFromThis<Map>,
       private NonCopyable {
-  private:
-
   public:
 
-    Map(Map &&) = default;
-    Map &operator=(Map &&) = default;
+    explicit Map(rpc::MapInfo description);
 
-    const std::string &GetOpenDrive() const;
+    ~Map();
 
-    detail::Waypoint GetWaypoint(const geom::Location &) const;
+    const std::string &GetName() const {
+      return _description.name;
+    }
+
+    const std::string &GetOpenDrive() const {
+      return _description.open_drive_file;
+    }
+
+    const std::vector<geom::Transform> &GetRecommendedSpawnPoints() const {
+      return _description.recommended_spawn_points;
+    }
+
+    SharedPtr<Waypoint> GetWaypoint(
+        const geom::Location &location,
+        bool project_to_road = true) const;
 
   private:
 
-    explicit Map(std::string name, std::string open_drive);
+    rpc::MapInfo _description;
 
-    explicit Map(std::shared_ptr<road::Map> map) : _map(map) {}
-
-    std::string _name;
-
-    std::string _open_drive;
-
-    std::shared_ptr<road::Map> _map;
+    SharedPtr<road::Map> _map;
   };
 
 } // namespace client

@@ -105,6 +105,7 @@ static auto MakeCallback(boost::python::object callback) {
 #include "Control.cpp"
 #include "Exception.cpp"
 #include "Geom.cpp"
+#include "Map.cpp"
 #include "Sensor.cpp"
 #include "SensorData.cpp"
 #include "Weather.cpp"
@@ -122,6 +123,7 @@ BOOST_PYTHON_MODULE(libcarla) {
   export_sensor_data();
   export_weather();
   export_world();
+  export_map();
   export_client();
   export_exception();
 }

@@ -7,17 +7,16 @@
 #pragma once
 
 #include "carla/Memory.h"
-#include "carla/Optional.h"
 #include "carla/NonCopyable.h"
+#include "carla/Optional.h"
 #include "carla/road/MapData.h"
 #include "carla/road/element/Waypoint.h"
-
 
 namespace carla {
 namespace road {
 
   class Map
-    : EnableSharedFromThis<Map>,
+    : public EnableSharedFromThis<Map>,
       private MovableNonCopyable {
   public:
 
