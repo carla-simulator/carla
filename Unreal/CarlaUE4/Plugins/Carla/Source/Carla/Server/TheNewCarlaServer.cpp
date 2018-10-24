@@ -8,6 +8,7 @@
 #include "Carla/Server/TheNewCarlaServer.h"
 
 #include "Carla/Sensor/Sensor.h"
+#include "Carla/Util/OpenDrive.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
 #include "GameFramework/SpectatorPawn.h"
@@ -18,6 +19,7 @@
 #include <carla/rpc/ActorDefinition.h>
 #include <carla/rpc/ActorDescription.h>
 #include <carla/rpc/EpisodeInfo.h>
+#include <carla/rpc/MapInfo.h>
 #include <carla/rpc/Server.h>
 #include <carla/rpc/Transform.h>
 #include <carla/rpc/VehicleControl.h>
@@ -187,6 +189,12 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       WorldObserver = Episode->StartWorldObserver(StreamingServer.MakeMultiStream());
     }
     return {Episode->GetId(), cr::FromFString(Episode->GetMapName()), WorldObserver->GetStreamToken()};
+  });
+
+  Server.BindSync("get_map_info", [this]() -> cr::MapInfo {
+    RequireEpisode();
+    auto FileContents = FOpenDrive::Load(Episode->GetMapName());
+    return {cr::FromFString(Episode->GetMapName()), cr::FromFString(FileContents)};
   });
 
   Server.BindSync("get_actor_definitions", [this]() {
