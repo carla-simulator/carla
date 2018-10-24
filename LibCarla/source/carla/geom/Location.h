@@ -18,6 +18,8 @@ namespace geom {
   class Location : private Vector3D {
   public:
 
+    Location() = default;
+
     using Vector3D::Vector3D;
 
     using Vector3D::x;
