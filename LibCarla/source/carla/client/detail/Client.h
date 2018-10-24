@@ -13,6 +13,7 @@
 #include "carla/rpc/Actor.h"
 #include "carla/rpc/ActorDefinition.h"
 #include "carla/rpc/EpisodeInfo.h"
+#include "carla/rpc/MapInfo.h"
 #include "carla/rpc/WeatherParameters.h"
 
 #include <functional>
@@ -56,6 +57,8 @@ namespace detail {
     std::string GetServerVersion();
 
     rpc::EpisodeInfo GetEpisodeInfo();
+
+    rpc::MapInfo GetMapInfo();
 
     std::vector<rpc::ActorDefinition> GetActorDefinitions();
 
