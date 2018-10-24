@@ -55,6 +55,10 @@ public:
     return ActorDispatcher.GetActorDefinitions();
   }
 
+  /// Return the list of recommended start positions.
+  UFUNCTION(BlueprintCallable)
+  TArray<FTransform> GetRecommendedStartTransforms() const;
+
   /// Spawns an actor based on @a ActorDescription at @a Transform. To properly
   /// despawn an actor created with this function call DestroyActor.
   ///
