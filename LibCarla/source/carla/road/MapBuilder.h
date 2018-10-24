@@ -27,7 +27,7 @@ namespace road {
     T &MakeElement(element::id_type id, Args && ... args) {
       auto inst = std::make_unique<T>(std::forward<Args>(args) ...);
       T &r = *inst;
-      _map._elements.emplace(id, std::move(inst));
+      _map_data._elements.emplace(id, std::move(inst));
       return r;
     }
 
@@ -35,7 +35,7 @@ namespace road {
 
   private:
 
-    Map _map;
+    MapData _map_data;
     std::map<element::id_type, element::RoadSegmentDefinition> _temp_sections;
   };
 
