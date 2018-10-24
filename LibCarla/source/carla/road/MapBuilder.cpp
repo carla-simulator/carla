@@ -23,7 +23,7 @@ namespace road {
     }
 
     // Set the total length of each road based on the geometries
-    for (auto &&id_seg :_map._elements) {
+    for (auto &&id_seg :_map_data._elements) {
       double total_length = 0.0;
       for (auto &&geom : id_seg.second.get()->_geom) {
         total_length += geom.get()->GetLength();
@@ -34,17 +34,17 @@ namespace road {
     // Create the pointers between RoadSegments based on the ids
     for (auto &&id_seg : _temp_sections) {
       for (auto &t : id_seg.second.GetPredecessorID()) {
-        _map._elements[id_seg.first]->PredEmplaceBack(_map._elements[t].get());
+        _map_data._elements[id_seg.first]->PredEmplaceBack(_map_data._elements[t].get());
       }
       for (auto &t : id_seg.second.GetSuccessorID()) {
-        _map._elements[id_seg.first]->SuccEmplaceBack(_map._elements[t].get());
+        _map_data._elements[id_seg.first]->SuccEmplaceBack(_map_data._elements[t].get());
       }
     }
 
-    // _map is a memeber of MapBuilder so you must especify if
+    // _map_data is a memeber of MapBuilder so you must especify if
     // you want to keep it (will return copy -> Map(const Map &))
     // or move it (will return move -> Map(Map &&))
-    return std::move(_map);
+    return Map(std::move(_map_data));
   }
 
   bool MapBuilder::InterpretRoadFlow() {

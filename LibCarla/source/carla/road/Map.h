@@ -6,39 +6,40 @@
 
 #pragma once
 
-#include "carla/road/element/RoadSegment.h"
+#include "carla/Memory.h"
+#include "carla/Optional.h"
+#include "carla/NonCopyable.h"
+#include "carla/road/MapData.h"
+#include "carla/road/element/Waypoint.h"
 
-#include <map>
 
 namespace carla {
 namespace road {
 
-  class Map {
+  class Map
+    : EnableSharedFromThis<Map>,
+      private MovableNonCopyable {
   public:
 
-    Map(const Map &) = delete;
-    Map &operator=(const Map &) = delete;
+    element::Waypoint GetClosestWaypointOnRoad(const geom::Location &) const {
+      return element::Waypoint();
+    }
 
-    Map(Map &&) = default;
-    Map &operator=(Map &&) = default;
+    Optional<element::Waypoint> GetWaypoint(const geom::Location &) const {
+      return Optional<element::Waypoint>();
+    }
 
-    bool ExistId(element::id_type id) const;
+    const MapData &GetData() {
+      return _data;
+    }
 
-    const element::RoadSegment *GetRoad(element::id_type id) const;
-
-    std::vector<element::id_type> GetAllIds() const;
-
-    uint32_t GetRoadCount() const;
-
-    const element::RoadSegment &NearestRoad(const geom::Location &loc);
+    Map(MapData m)
+        : _data(std::move(m)) {}
 
   private:
 
-    friend class MapBuilder;
+    MapData _data;
 
-    Map() {}
-
-    std::map<element::id_type, std::unique_ptr<element::RoadSegment>> _elements;
   };
 
 } // namespace road
