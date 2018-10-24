@@ -194,7 +194,17 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   Server.BindSync("get_map_info", [this]() -> cr::MapInfo {
     RequireEpisode();
     auto FileContents = FOpenDrive::Load(Episode->GetMapName());
-    return {cr::FromFString(Episode->GetMapName()), cr::FromFString(FileContents)};
+    const auto &SpawnPoints = Episode->GetRecommendedStartTransforms();
+    std::vector<carla::geom::Transform> spawn_points;
+    spawn_points.reserve(SpawnPoints.Num());
+    for (const auto &Transform : SpawnPoints)
+    {
+      spawn_points.emplace_back(Transform);
+    }
+    return {
+        cr::FromFString(Episode->GetMapName()),
+        cr::FromFString(FileContents),
+        spawn_points};
   });
 
   Server.BindSync("get_actor_definitions", [this]() {

@@ -7,6 +7,10 @@
 #pragma once
 
 #include "carla/MsgPack.h"
+#include "carla/geom/Transform.h"
+
+#include <string>
+#include <vector>
 
 namespace carla {
 namespace rpc {
@@ -18,7 +22,9 @@ namespace rpc {
 
     std::string open_drive_file;
 
-    MSGPACK_DEFINE_ARRAY(name, open_drive_file);
+    std::vector<geom::Transform> recommended_start_transforms;
+
+    MSGPACK_DEFINE_ARRAY(name, open_drive_file, recommended_start_transforms);
   };
 
 } // namespace rpc
