@@ -8,6 +8,7 @@
 
 #include "carla/Logging.h"
 #include "carla/client/BlueprintLibrary.h"
+#include "carla/client/Map.h"
 #include "carla/client/Sensor.h"
 #include "carla/client/detail/ActorFactory.h"
 #include "carla/sensor/Deserializer.h"
@@ -61,6 +62,10 @@ namespace detail {
       _episode->Listen();
     }
     return EpisodeProxy{shared_from_this()};
+  }
+
+  SharedPtr<Map> Simulator::GetCurrentMap() {
+    return MakeShared<Map>(_client.GetMapInfo());
   }
 
   // ===========================================================================

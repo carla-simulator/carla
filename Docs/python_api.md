@@ -18,6 +18,7 @@
 - `id`
 - `map_name`
 - `get_blueprint_library()`
+- `get_map()`
 - `get_spectator()`
 - `get_weather()`
 - `set_weather(weather_parameters)`
@@ -151,6 +152,18 @@
 - `reverse`
 - `__eq__(other)`
 - `__ne__(other)`
+
+## `carla.Map`
+
+- `name`
+- `get_spawn_points()`
+- `get_waypoint(location, project_to_road=True)`
+- `to_opendrive()`
+
+## `carla.Waypoint`
+
+- `transform`
+- `next(distance)`
 
 ## `carla.WeatherParameters`
 

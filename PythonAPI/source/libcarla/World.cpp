@@ -85,6 +85,7 @@ void export_world() {
     .add_property("id", &cc::World::GetId)
     .add_property("map_name", CALL_RETURNING_COPY(cc::World, GetMapName))
     .def("get_blueprint_library", CONST_CALL_WITHOUT_GIL(cc::World, GetBlueprintLibrary))
+    .def("get_map", CONST_CALL_WITHOUT_GIL(cc::World, GetMap))
     .def("get_spectator", CONST_CALL_WITHOUT_GIL(cc::World, GetSpectator))
     .def("get_weather", CONST_CALL_WITHOUT_GIL(cc::World, GetWeather))
     .def("set_weather", &cc::World::SetWeather)

@@ -4,27 +4,38 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "carla/road/Map.h"
 #include "carla/client/Map.h"
+
+#include "carla/client/Waypoint.h"
 #include "carla/opendrive/OpenDrive.h"
+#include "carla/road/Map.h"
 
 namespace carla {
 namespace client {
 
-  Map::Map(std::string name, std::string open_drive)
-    : _name(std::move(name)),
-      _open_drive(std::move(open_drive)) {
-    _map = std::make_shared<road::Map>(opendrive::OpenDrive::Load(open_drive));
+  static auto MakeMap(const std::string &opendrive_contents) {
+    return opendrive::OpenDrive::Load(opendrive_contents);
   }
 
-  const std::string &Map::GetOpenDrive() const {
-    return _open_drive;
+  Map::Map(rpc::MapInfo description)
+    : _description(std::move(description)),
+      _map(MakeMap(_description.open_drive_file)) {}
+
+  Map::~Map() = default;
+
+  SharedPtr<Waypoint> Map::GetWaypoint(
+      const geom::Location &location,
+      bool project_to_road) const {
+    Optional<road::element::Waypoint> waypoint;
+    if (project_to_road) {
+      waypoint = _map->GetClosestWaypointOnRoad(location);
+    } else {
+      waypoint = _map->GetWaypoint(location);
+    }
+    return waypoint.has_value() ?
+        SharedPtr<Waypoint>(new Waypoint{shared_from_this(), *waypoint}) :
+        nullptr;
   }
-
-  // @todo
-  /*detail::Waypoint Map::GetWaypoint(const geom::Location &loc) const {
-
-  }*/
 
 } // namespace client
 } // namespace carla
