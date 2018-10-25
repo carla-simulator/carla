@@ -9,7 +9,8 @@
 #include "carla/Logging.h"
 #include "carla/StringUtil.h"
 #include "carla/client/Actor.h"
-#include "carla/client/Sensor.h"
+#include "carla/client/LaneDetector.h"
+#include "carla/client/ServerSideSensor.h"
 #include "carla/client/TrafficLight.h"
 #include "carla/client/Vehicle.h"
 #include "carla/client/World.h"
@@ -67,8 +68,10 @@ namespace detail {
       EpisodeProxy episode,
       rpc::Actor description,
       GarbageCollectionPolicy gc) {
-    if (description.HasAStream()) {
-      return MakeActorImpl<Sensor>(ActorInitializer{description, episode}, gc);
+    if (description.description.id == "sensor.other.lane_detector") { /// @todo
+      return MakeActorImpl<LaneDetector>(ActorInitializer{description, episode}, gc);
+    } else if (description.HasAStream()) {
+      return MakeActorImpl<ServerSideSensor>(ActorInitializer{description, episode}, gc);
     } else if (StringUtil::StartsWith(description.description.id, "vehicle.")) {
       return MakeActorImpl<Vehicle>(ActorInitializer{description, episode}, gc);
     } else if (StringUtil::StartsWith(description.description.id, "traffic.traffic_light")) {

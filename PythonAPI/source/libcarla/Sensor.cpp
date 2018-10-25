@@ -5,7 +5,10 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include <carla/PythonUtil.h>
+#include <carla/client/ClientSideSensor.h>
+#include <carla/client/LaneDetector.h>
 #include <carla/client/Sensor.h>
+#include <carla/client/ServerSideSensor.h>
 
 static void SubscribeToStream(carla::client::Sensor &self, boost::python::object callback) {
   self.Listen(MakeCallback(std::move(callback)));
@@ -19,6 +22,21 @@ void export_sensor() {
     .add_property("is_listening", &cc::Sensor::IsListening)
     .def("listen", &SubscribeToStream, (arg("callback")))
     .def("stop", &cc::Sensor::Stop)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cc::ServerSideSensor, bases<cc::Sensor>, boost::noncopyable, boost::shared_ptr<cc::ServerSideSensor>>
+      ("ServerSideSensor", no_init)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cc::ClientSideSensor, bases<cc::Sensor>, boost::noncopyable, boost::shared_ptr<cc::ClientSideSensor>>
+      ("ClientSideSensor", no_init)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cc::LaneDetector, bases<cc::ClientSideSensor>, boost::noncopyable, boost::shared_ptr<cc::LaneDetector>>
+      ("LaneDetector", no_init)
     .def(self_ns::str(self_ns::self))
   ;
 }
