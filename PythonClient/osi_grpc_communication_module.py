@@ -11,18 +11,14 @@ import logging
 import time
 import math
 import grpc
-import sys
-import os
 import numpy as np
+
+import osi3.osi_groundtruth_pb2
+import osi_grpc.osi_grpc_pb2_grpc
 
 from carla.client import make_carla_client
 from carla.settings import CarlaSettings
 from carla.tcp import TCPConnectionError
-
-sys.path.insert(0, os.path.abspath('proto_generated'))
-
-import osi_grpc_pb2_grpc
-import osi_groundtruth_pb2
 
 
 def run_carla_client(args):
@@ -137,13 +133,13 @@ def send_osi_groundtruth(measurements, args):
     :param args: command line arguments
     """
     channel = grpc.insecure_channel('localhost:' + str(args.grpc_port))
-    stub = osi_grpc_pb2_grpc.GroundtruthdataStub(channel)
-    ground_truth = osi_groundtruth_pb2.GroundTruth()
-    host_vehicle = ground_truth.moving_object.add()
+    stub = osi_grpc.osi_grpc_pb2_grpc.GroundtruthdataStub(channel)
+    ground_truth = osi3.osi_groundtruth_pb2.GroundTruth()
+    host_vehicle = ground_truth.moving_object.add()             # pylint: disable=no-member
 
     # host_vehicle id
     unique_id = ((2 ** 64) - 1)
-    ground_truth.host_vehicle_id.value = unique_id
+    ground_truth.host_vehicle_id.value = unique_id              # pylint: disable=no-member
     host_vehicle.id.value = unique_id
 
     # host_vehicle location
@@ -189,9 +185,11 @@ def send_osi_groundtruth(measurements, args):
     host_vehicle.base.dimension.height = 2 * measurements.player_measurements.bounding_box.extent.z
 
     # timestamp with osi standards
-    ground_truth.timestamp.seconds = np.int64(measurements.game_timestamp / 1000)
+    ground_truth.timestamp.seconds = np.int64(measurements.game_timestamp / 1000)       # pylint: disable=no-member
     last_second = np.double(measurements.game_timestamp / 1000.0)
-    ground_truth.timestamp.nanos = np.uint32((10 ** 9) * (last_second - ground_truth.timestamp.seconds))
+    ground_truth.timestamp.nanos = np.uint32((10 ** 9) *                                # pylint: disable=no-member
+                                             (last_second -
+                                              ground_truth.timestamp.seconds))          # pylint: disable=no-member
 
     for agent in measurements.non_player_agents:
 
@@ -204,7 +202,7 @@ def send_osi_groundtruth(measurements, args):
             velocity_vehicle_y = 0
             velocity_vehicle_z = 0
 
-            mov_obj = ground_truth.moving_object.add()
+            mov_obj = ground_truth.moving_object.add()              # pylint: disable=no-member
 
             # id of the agent
             mov_obj.id.value = agent.id

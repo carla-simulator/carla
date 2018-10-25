@@ -1,0 +1,134 @@
+syntax = "proto3";
+
+option optimize_for = SPEED;
+
+import "osi3/osi_version.proto";
+import "osi3/osi_common.proto";
+import "osi3/osi_environment.proto";
+import "osi3/osi_trafficsign.proto";
+import "osi3/osi_trafficlight.proto";
+import "osi3/osi_roadmarking.proto";
+import "osi3/osi_lane.proto";
+import "osi3/osi_object.proto";
+import "osi3/osi_occupant.proto";
+
+package osi3;
+
+//
+// \brief The ground truth information from the simulation environment.
+//
+// This ground truth information is supposed to describe the whole simulated
+// environment around any simulated vehicle. For each simulated host vehicle
+// (there may be one or multiple), define an area around the vehicle which
+// is greater than the combined field of views (FOV) of all obstructed sensors
+// in the vehicle. The ground truth data is supposed to describe the convex
+// hull of all such areas w.r.t. a global simulation coordinate system.
+//
+// The simulation coordinate system may change during the simulation if and
+// only if all coordinates w.r.t. this coordinate system are also changed.
+//
+// The data has to be sent at a rate defined by the receiving partner. When
+// sending, values with default values might be left default in order to improve
+// performance.
+//
+// To provide a complete interface, all fields of all contained messages must be
+// properly set unless specifically stated in the field's definition that the
+// field may remain unset.
+//
+// In enums (e.g. types) the unknown (first / default) value is not allowed to
+// be used in the ground truth interface.
+//
+message GroundTruth
+{
+    // The interface version used by the sender (i.e. the simulation
+    // environment).
+    //
+    InterfaceVersion version = 1;
+
+    // The data timestamp of the simulation environment. The zero time point is
+    // arbitrary but must be identical for all messages.
+    // Recommendation: Zero time point for start point of the simulation.
+    //
+    // \note Zero time point does not need to coincide with the UNIX epoch.
+    //
+    // \note For ground truth data this timestamp coincides both with the
+    // notional simulation time the data applies to and the time it was sent
+    // (there is no inherent latency for ground truth data, as opposed to
+    // sensor data).
+    //
+    Timestamp timestamp = 2;
+
+    // The ID of the host vehicle object referencing to \c MovingObject .
+    //
+    // \note This ID has to be filled and is not optional!
+    //
+    Identifier host_vehicle_id = 3;
+
+    // The list of stationary objects (excluding traffic signs and traffic
+    // lights).
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated StationaryObject stationary_object = 4;
+
+    // The list of all other moving objects including all (host) vehicles.
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated MovingObject moving_object = 5;
+
+    // The list of traffic signs.
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated TrafficSign traffic_sign = 6;
+
+    // The list of traffic lights.
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated TrafficLight traffic_light = 7;
+
+    // The list of road surface markings (lane markings are excluded and
+    // defined as \c LaneBoundary).
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated RoadMarking road_marking = 8;
+
+    // The list of lane boundaries.
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated LaneBoundary lane_boundary = 9;
+
+    // The list of lanes forming a road network.
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated Lane lane = 10;
+
+    // The list of passengers in the (host) vehicle(s).
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated Occupant occupant = 11;
+
+    // Conditions of the environment.
+    //
+    EnvironmentalConditions environmental_conditions = 12;
+
+    // The ISO country code in 3 digit numeric format according to:
+    // ISO Code 3166/1 [1,2].
+    // E.g. Germany = 276, USA = 840.
+    //
+    // Unit: []
+    //
+    // \par References:
+    // - [1] [International Standard ISO 3166-1: Codes for the representation of
+    // names of countries and their subdivisions - Part 1: Country codes, third
+    // ed., 2013] (https://www.iso.org/obp/ui/)
+    // - [2] [Wikipedia ISO 3166/1] (https://en.wikipedia.org/wiki/ISO_3166-1)
+    //
+    uint32 country_code = 13;
+}
