@@ -1,10 +1,11 @@
 <h1>Cameras and sensors</h1>
 
 !!! important
-    This document still refers to the 0.8.X API (stable version). The
-    proceedings stated here may not apply to latest versions, 0.9.0 or later.
-    Latest versions introduced significant changes in the API, we are still
-    working on documenting everything, sorry for the inconvenience.
+    This document still refers to the 0.8.X API (stable version), this API is
+    currently located under _"Deprecated/PythonClient"_. The proceedings stated
+    here may not apply to latest versions, 0.9.0 or later. Latest versions
+    introduced significant changes in the API, we are still working on
+    documenting everything, sorry for the inconvenience.
 
 !!! important
     Since version 0.8.0 the positions of the sensors are specified in meters
@@ -30,7 +31,8 @@ moment there are four different sensors available.
     The images are sent by the server as a BGRA array of bytes. The provided
     Python client retrieves the images in this format, it's up to the users to
     parse the images and convert them to the desired format. There are some
-    examples in the PythonClient folder showing how to parse the images.
+    examples in the Deprecated/PythonClient folder showing how to parse the
+    images.
 
 There is a fourth post-processing effect available for cameras, _None_, which
 provides a view with of the scene with no effect, not even scene lighting; we
@@ -46,7 +48,7 @@ number_ matches the one received in the measurements. This is especially useful
 for running the simulator in asynchronous mode and synchronize sensor data on
 the client side.
 
-[clientexamplelink]: https://github.com/carla-simulator/carla/blob/master/PythonClient/client_example.py
+[clientexamplelink]: https://github.com/carla-simulator/carla/blob/master/Deprecated/PythonClient/client_example.py
 [settingslink]: https://github.com/carla-simulator/carla/blob/master/Docs/Example.CarlaSettings.ini
 [imgconvlink]: https://github.com/carla-simulator/carla/tree/master/Util/ImageConverter
 
@@ -128,7 +130,7 @@ Our max render distance (far) is 1km.
 
 The generated "depth map" images are usually converted to a logarithmic
 grayscale for display. A point cloud can also be extracted from depth images as
-seen in "PythonClient/point_cloud_example.py".
+seen in "Deprecated/PythonClient/point_cloud_example.py".
 
 <h6>Python</h6>
 

@@ -1,7 +1,7 @@
 Build
 Dist
 Doxygen
-PythonClient/dist
+Deprecated/PythonClient/dist
 Util/Build
 Install
 

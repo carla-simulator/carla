@@ -6,7 +6,7 @@ CARLA Design
 CARLA is composed by the following modules
 
   * Client side
-    - Python client API: "PythonClient/carla"
+    - Python client API: "Deprecated/PythonClient/carla"
   * Server side
     - CarlaUE4 Unreal Engine project: "Unreal/CarlaUE4"
     - Carla plugin for Unreal Engine: "Unreal/CarlaUE4/Plugins/Carla"
@@ -20,7 +20,7 @@ Python client API
 -----------------
 
 The client API provides a Python module for communicating with the CARLA server.
-In the folder "PythonClient", we provide several examples for scripting a CARLA
+In the folder "Deprecated/PythonClient", we provide several examples for scripting a CARLA
 client using the "carla" module.
 
 CarlaUE4 Unreal Engine project

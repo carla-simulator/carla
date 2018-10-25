@@ -8,11 +8,11 @@ aspects of simulation, from environment to duration of each episode, it can
 retrieve data from different sensors, and send control instructions to the
 player vehicle.
 
-PythonClient contents
----------------------
+Deprecated/PythonClient contents
+--------------------------------
 
-In the release package, inside the _"PythonClient"_ folder, we provide the
-Python API module together with some use examples.
+In the release package, inside the _"Deprecated/PythonClient"_ folder, we
+provide the Python API module together with some use examples.
 
 File or folder           | Description
 ------------------------ | ------------
@@ -25,9 +25,9 @@ view_start_positions.py  | Show all the possible start positions in a map
 
 !!! note
     If you are building CARLA from source, the Python code is inside the
-    _"PythonClient"_ folder in the CARLA repository. Bear in mind that the
-    `master` branch contains latest fixes and changes that might be incompatible
-    with the release version. Consider using the `stable` branch.
+    _"Deprecated/PythonClient"_ folder in the CARLA repository. Bear in mind
+    that the `master` branch contains latest fixes and changes that might be
+    incompatible with the release version. Consider using the `stable` branch.
 
 Install dependencies
 --------------------
@@ -37,7 +37,7 @@ given examples is also compatible with Python 2.7.
 
 Install the dependencies with "pip" using the requirements file provided
 
-    $ pip install -r PythonClient/requirements.txt
+    $ pip install -r Deprecated/PythonClient/requirements.txt
 
 Running the client example
 --------------------------
@@ -96,7 +96,6 @@ You can see all the available options in the script's help
 
 <h4>Running other examples</h4>
 
-The other scripts present in the _"PythonClient"_ folder run in a similar
-fashion. We recommend now launching _"manual_control.py"_ for a GUI interface
-implemented with PyGame.
-
+The other scripts present in the _"Deprecated/PythonClient"_ folder run in a
+similar fashion. We recommend now launching _"manual_control.py"_ for a GUI
+interface implemented with PyGame.

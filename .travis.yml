@@ -45,10 +45,10 @@ matrix:
             - python
             - python-pip
       install:
-        - pip2 install -q --user -r PythonClient/requirements.txt
+        - pip2 install -q --user -r Deprecated/PythonClient/requirements.txt
         - pip2 install -q --user pylint
       script:
-        - pylint --disable=R,C --rcfile=PythonClient/.pylintrc PythonClient/carla PythonClient/*.py
+        - pylint --disable=R,C --rcfile=Deprecated/PythonClient/.pylintrc Deprecated/PythonClient/carla Deprecated/PythonClient/*.py
 
     - env: TEST="MkDocs"
       install:

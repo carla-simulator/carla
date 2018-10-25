@@ -7,7 +7,7 @@ pushd "$SCRIPT_DIR" >/dev/null
 
 PROTOBUF_SRC_DIR=Proto
 PROTOBUF_CPP_OUT_DIR=CarlaServer/source/carla/server
-PROTOBUF_PY_OUT_DIR=../PythonClient/carla
+PROTOBUF_PY_OUT_DIR=../Deprecated/PythonClient/carla
 PROTO_BASENAME=carla_server
 
 if [ "$1" == "--clean" ]; then

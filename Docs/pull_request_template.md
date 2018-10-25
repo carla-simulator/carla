@@ -8,10 +8,7 @@ Checklist:
   - [ ] Your branch is up-to-date with the `master` branch and tested with latest changes
   - [ ] Extended the README / documentation, if necessary
   - [ ] Code compiles correctly
-  - [ ] All tests passing
-    - [ ] `make check`
-    - [ ] `pylint --disable=R,C --rcfile=PythonClient/.pylintrc PythonClient/carla PythonClient/*.py`
-    - [ ] `cppcheck . -iBuild -i.pb.cc --enable=warning`
+  - [ ] All tests passing with `make check`
 
 -->
 
