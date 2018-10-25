@@ -19,6 +19,11 @@ namespace road {
 
     bool AddRoadSegmentDefinition(RoadSegmentDefinition &seg);
 
+    void SetJunctionInformation(const std::vector<carla::road::lane_junction_t> &junctionInfo)
+    {
+      _map.SetJunctionInformation(junctionInfo);
+    }
+
     Map Build();
 
   private:

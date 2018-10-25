@@ -104,7 +104,7 @@ namespace carla
                 int successor_id;
             };
 
-            struct Lane
+            struct LaneInfo
             {
                 std::vector<LaneSpeed> lane_speed;
 
@@ -118,8 +118,13 @@ namespace carla
             struct LaneSection
             {
                 double start_position;
-                std::vector<Lane> left, center, right;
+                std::vector<LaneInfo> left, center, right;
+            };
+
+            struct Lanes
+            {
                 std::vector<LaneOffset> lane_offset;
+                std::vector<LaneSection> lane_sections;
             };
 
             /////////////////////////////////////////////////////////////////
@@ -201,7 +206,7 @@ namespace carla
                 RoadProfiles road_profiles;
 
                 RoadAttributes attributes;
-                LaneSection lane_sections;
+                Lanes lanes;
 
                 std::vector<TrafficSignalInformation> trafic_signals;
                 std::vector<std::unique_ptr<GeometryAttributes>> geometry_attributes;
