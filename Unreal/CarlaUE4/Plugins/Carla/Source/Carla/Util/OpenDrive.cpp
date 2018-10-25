@@ -18,7 +18,7 @@ FString FOpenDrive::Load(FString MapName)
       FString CorrectedMapName = MapName;
       constexpr auto PIEPrefix = TEXT("UEDPIE_0_");
       CorrectedMapName.RemoveFromStart(PIEPrefix);
-      UE_LOG(LogCarla, Log, TEXT("Corrected map name from %s to %s"), *MapName, *CorrectedMapName);
+      UE_LOG(LogCarla, Log, TEXT("FOpenDrive: Corrected map name from %s to %s"), *MapName, *CorrectedMapName);
       MapName = CorrectedMapName;
     }
 #endif // WITH_EDITOR

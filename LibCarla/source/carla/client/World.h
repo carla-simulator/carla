@@ -37,9 +37,6 @@ namespace client {
     uint32_t GetId() const;
 
     /// Return the map name of this world. E.g., Town01.
-    ///
-    /// @note When playing in editor, the map name can be different than the
-    /// usual map name of the town.
     const std::string &GetMapName() const;
 
     /// Return the map that describes this world.

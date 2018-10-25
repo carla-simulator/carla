@@ -30,7 +30,20 @@ void ATheNewCarlaGameModeBase::InitGame(
   checkf(
       Episode != nullptr,
       TEXT("Missing episode, can't continue without an episode!"));
+
+#if WITH_EDITOR
+    {
+      // When playing in editor the map name gets an extra prefix, here we
+      // remove it.
+      FString CorrectedMapName = MapName;
+      constexpr auto PIEPrefix = TEXT("UEDPIE_0_");
+      CorrectedMapName.RemoveFromStart(PIEPrefix);
+      UE_LOG(LogCarla, Log, TEXT("Corrected map name from %s to %s"), *MapName, *CorrectedMapName);
+      Episode->MapName = CorrectedMapName;
+    }
+#else
   Episode->MapName = MapName;
+#endif // WITH_EDITOR
 
   auto World = GetWorld();
   check(World != nullptr);
