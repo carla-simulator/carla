@@ -50,6 +50,9 @@ install(FILES ${libcarla_carla_streaming_low_level_headers} DESTINATION include/
 file(GLOB libcarla_carla_streaming_low_level_headers "${libcarla_source_path}/carla/road/element/*.h")
 install(FILES ${libcarla_carla_streaming_low_level_headers} DESTINATION include/carla/road/element)
 
+file(GLOB libcarla_carla_opendrive_logic_cephes "${libcarla_source_path}/carla/road/element/cephes/*.h")
+install(FILES ${libcarla_carla_opendrive_logic_cephes} DESTINATION include/carla/road/element/cephes)
+
 file(GLOB libcarla_carla_opendrive "${libcarla_source_path}/carla/opendrive/*.h")
 install(FILES ${libcarla_carla_opendrive} DESTINATION include/carla/opendrive)
 
@@ -58,15 +61,6 @@ install(FILES ${libcarla_carla_opendrive_parser} DESTINATION include/carla/opend
 
 file(GLOB libcarla_carla_opendrive_parser_pugixml "${libcarla_source_path}/carla/opendrive/parser/pugixml/*.hpp")
 install(FILES ${libcarla_carla_opendrive_parser_pugixml} DESTINATION include/carla/opendrive/parser/pugixml)
-
-file(GLOB libcarla_carla_opendrive_math "${libcarla_source_path}/carla/opendrive/math/*.h")
-install(FILES ${libcarla_carla_opendrive_math} DESTINATION include/carla/opendrive/math)
-
-file(GLOB libcarla_carla_opendrive_logic "${libcarla_source_path}/carla/opendrive/logic/*.h")
-install(FILES ${libcarla_carla_opendrive_logic} DESTINATION include/carla/opendrive/logic)
-
-file(GLOB libcarla_carla_opendrive_logic_cephes "${libcarla_source_path}/carla/opendrive/logic/cephes/*.h")
-install(FILES ${libcarla_carla_opendrive_logic_cephes} DESTINATION include/carla/opendrive/logic/cephes)
 
 file(GLOB  "${libcarla_source_path}/carla/opendrive/*.h")
 install(FILES ${} DESTINATION include/carla/opendrive)
