@@ -58,6 +58,8 @@ ARoutePlanner::ARoutePlanner(const FObjectInitializer& ObjectInitializer) :
   TriggerVolume->SetCollisionProfileName(FName("OverlapAll"));
   TriggerVolume->SetBoxExtent(FVector{50.0f, 50.0f, 50.0f});
   TriggerVolume->bGenerateOverlapEvents = true;
+
+  _spline_color = FColor::Black;
 }
 
 #if WITH_EDITOR
@@ -134,13 +136,13 @@ void ARoutePlanner::BeginPlay()
 
 void ARoutePlanner::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-  // Deregister the delegate.
-  if (TriggerVolume->OnComponentBeginOverlap.IsAlreadyBound(this, &ARoutePlanner::OnTriggerBeginOverlap))
-  {
-    TriggerVolume->OnComponentBeginOverlap.RemoveDynamic(this, &ARoutePlanner::OnTriggerBeginOverlap);
-  }
+    // Deregister the delegate.
+    if (TriggerVolume->OnComponentBeginOverlap.IsAlreadyBound(this, &ARoutePlanner::OnTriggerBeginOverlap))
+    {
+        TriggerVolume->OnComponentBeginOverlap.RemoveDynamic(this, &ARoutePlanner::OnTriggerBeginOverlap);
+    }
 
-  Super::EndPlay(EndPlayReason);
+    Super::EndPlay(EndPlayReason);
 }
 
 void ARoutePlanner::OnTriggerBeginOverlap(
@@ -179,7 +181,15 @@ void ARoutePlanner::DrawRoutes()
             FVector p0 = Routes[i]->GetLocationAtSplinePoint(j + 0, ESplineCoordinateSpace::World);
             FVector p1 = Routes[i]->GetLocationAtSplinePoint(j + 1, ESplineCoordinateSpace::World);
 
-            DrawDebugLine(GetWorld(), p0, p1, _spline_color, true);
+            if (_spline_color == FColor::Black)
+            {
+                float f = (float)j / (float)lenNumPoints;
+                DrawDebugLine(GetWorld(), p0, p1, FColor(255 * f, 255 - 255 * f, 0), true);
+            }
+            else
+            {
+                DrawDebugLine(GetWorld(), p0, p1, _spline_color, true);
+            }
         }
     }
 }
