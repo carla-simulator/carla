@@ -33,7 +33,7 @@ namespace element {
 
   class RoadGeneralInfo : public RoadInfo {
     private:
-      bool _is_junction = false;
+      int _junction_id = -1;
       std::vector<std::pair<double, double>> _lanes_offset;
 
     public:
@@ -41,10 +41,10 @@ namespace element {
         v.Visit(*this);
       }
 
-      void SetIsJunction(bool isJunction) { _is_junction = isJunction; }
-      bool GetIsJunction() const { return _is_junction; }
+      void SetJunctionId(int junctionId) { _junction_id = junctionId; }
+      int GetJunctionId() const { return _junction_id; }
 
-      void SetLanesOffset(double offset, double laneOffset) { _lanes_offset.push_back(std::pair<double, double>(offset, laneOffset)); }
+      void SetLanesOffset(double offset, double laneOffset) { _lanes_offset.emplace_back(std::pair<double, double>(offset, laneOffset)); }
       std::vector<std::pair<double, double>> GetLanesOffset() const { return _lanes_offset; }
   };
 
@@ -114,18 +114,18 @@ namespace element {
       for(lane_t::const_iterator &&it = _lanes.begin(); it != _lanes.end(); ++it) {
         switch(whichLanes) {
           case which_lane_e::Both: {
-            lanes_id.push_back(it->first);
+            lanes_id.emplace_back(it->first);
           } break;
 
           case which_lane_e::Left: {
             if (it->first > 0) {
-              lanes_id.push_back(it->first);
+              lanes_id.emplace_back(it->first);
             }
           } break;
 
           case which_lane_e::Right: {
             if (it->first < 0) {
-              lanes_id.push_back(it->first);
+              lanes_id.emplace_back(it->first);
             }
           } break;
         }

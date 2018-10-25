@@ -22,7 +22,7 @@ void carla::opendrive::parser::JunctionParser::Parse(const pugi::xml_node & xmlN
     junction.attributes.name = xmlNode.attribute("name").value();
 
     parser.ParseConnection(xmlNode, junction.connections);
-    out_junction.push_back(junction);
+    out_junction.emplace_back(junction);
 }
 
 void carla::opendrive::parser::JunctionParser::ParseConnection(const pugi::xml_node & xmlNode, std::vector<carla::opendrive::types::JunctionConnection> & out_connections)
@@ -38,7 +38,7 @@ void carla::opendrive::parser::JunctionParser::ParseConnection(const pugi::xml_n
         jConnection.attributes.connecting_road = std::atoi(junctionConnection.attribute("connectingRoad").value());
 
         ParseLaneLink(junctionConnection, jConnection.links);
-        out_connections.push_back(jConnection);
+        out_connections.emplace_back(jConnection);
     }
 }
 
@@ -51,6 +51,6 @@ void carla::opendrive::parser::JunctionParser::ParseLaneLink(const pugi::xml_nod
         jLaneLink.from = std::atoi(junctionLaneLink.attribute("from").value());
         jLaneLink.to = std::atoi(junctionLaneLink.attribute("to").value());
 
-        out_lane_link.push_back(jLaneLink);
+        out_lane_link.emplace_back(jLaneLink);
     }
 }

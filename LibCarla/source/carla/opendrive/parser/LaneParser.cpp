@@ -13,11 +13,11 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void carla::opendrive::parser::LaneParser::ParseLane(const pugi::xml_node & xmlNode, std::vector<carla::opendrive::types::Lane> & out_lane)
+void carla::opendrive::parser::LaneParser::ParseLane(const pugi::xml_node & xmlNode, std::vector<carla::opendrive::types::LaneInfo> & out_lane)
 {
     for (pugi::xml_node lane = xmlNode.child("lane"); lane; lane = lane.next_sibling("lane"))
     {
-        carla::opendrive::types::Lane currentLane;
+        carla::opendrive::types::LaneInfo currentLane;
 
         currentLane.attributes.type = lane.attribute("type").value();
         currentLane.attributes.level = lane.attribute("level").value();
@@ -29,7 +29,7 @@ void carla::opendrive::parser::LaneParser::ParseLane(const pugi::xml_node & xmlN
         ParseLaneLink(lane.child("link"), currentLane.link);
         ParseLaneRoadMark(lane.child("roadMark"), currentLane.road_marker);
 
-        out_lane.push_back(std::move(currentLane));
+        out_lane.emplace_back(std::move(currentLane));
     }
 }
 
@@ -47,7 +47,7 @@ void carla::opendrive::parser::LaneParser::ParseLaneWidth(const pugi::xml_node &
         laneWidthInfo.vertical_curvature = std::stod(laneWidth.attribute("c").value());
         laneWidthInfo.curvature_change = std::stod(laneWidth.attribute("d").value());
 
-        out_lane_width.push_back(laneWidthInfo);
+        out_lane_width.emplace_back(laneWidthInfo);
     }
 }
 
@@ -73,7 +73,7 @@ void carla::opendrive::parser::LaneParser::ParseLaneOffset(const pugi::xml_node 
     lanesOffset.c = std::stod(xmlNode.attribute("c").value());
     lanesOffset.d = std::stod(xmlNode.attribute("d").value());
 
-    out_lane_offset.push_back(lanesOffset);
+    out_lane_offset.emplace_back(lanesOffset);
 }
 
 void carla::opendrive::parser::LaneParser::ParseLaneRoadMark(const pugi::xml_node & xmlNode, std::vector<carla::opendrive::types::LaneRoadMark> & out_lane_mark)
@@ -99,7 +99,7 @@ void carla::opendrive::parser::LaneParser::ParseLaneRoadMark(const pugi::xml_nod
     if(xmlNode.attribute("laneChange") != nullptr) roadMarker.lange_change = xmlNode.attribute("laneChange").value();
     else roadMarker.lange_change = "";
 
-    out_lane_mark.push_back(roadMarker);
+    out_lane_mark.emplace_back(roadMarker);
 }
 
 void carla::opendrive::parser::LaneParser::ParseLaneSpeed(const pugi::xml_node & xmlNode, std::vector<carla::opendrive::types::LaneSpeed>& out_lane_speed)
@@ -111,30 +111,33 @@ void carla::opendrive::parser::LaneParser::ParseLaneSpeed(const pugi::xml_node &
         lane_speed.soffset = std::stod(laneSpeed.attribute("sOffset").value());
         lane_speed.max_speed = std::stod(laneSpeed.attribute("max").value());
 
-        out_lane_speed.push_back(lane_speed);
+        out_lane_speed.emplace_back(lane_speed);
     }
 }
 
-void carla::opendrive::parser::LaneParser::Parse(const pugi::xml_node & xmlNode, carla::opendrive::types::LaneSection & out_lane_section)
+void carla::opendrive::parser::LaneParser::Parse(const pugi::xml_node & xmlNode, carla::opendrive::types::Lanes & out_lanes)
 {
     carla::opendrive::parser::LaneParser laneParser;
 
     for (pugi::xml_node laneSection = xmlNode.child("laneOffset"); laneSection; laneSection = laneSection.next_sibling("laneOffset"))
     {
-        laneParser.ParseLaneOffset(xmlNode.child("laneOffset"), out_lane_section.lane_offset);
+        laneParser.ParseLaneOffset(xmlNode.child("laneOffset"), out_lanes.lane_offset);
     }
 
     for (pugi::xml_node laneSection = xmlNode.child("laneSection"); laneSection; laneSection = laneSection.next_sibling("laneSection"))
     {
-        out_lane_section.start_position = std::stod(laneSection.attribute("s").value());
+        carla::opendrive::types::LaneSection laneSec;
+        laneSec.start_position = std::stod(laneSection.attribute("s").value());
 
         pugi::xml_node lane = laneSection.child("left");
-        laneParser.ParseLane(lane, out_lane_section.left);
+        laneParser.ParseLane(lane, laneSec.left);
 
         lane = laneSection.child("center");
-        laneParser.ParseLane(lane, out_lane_section.center);
+        laneParser.ParseLane(lane, laneSec.center);
 
         lane = laneSection.child("right");
-        laneParser.ParseLane(lane, out_lane_section.right);
+        laneParser.ParseLane(lane, laneSec.right);
+
+        out_lanes.lane_sections.emplace_back(std::move(laneSec));
     }
 }

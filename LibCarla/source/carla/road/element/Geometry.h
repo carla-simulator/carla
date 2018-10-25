@@ -8,7 +8,7 @@
 
 #include "carla/geom/Location.h"
 #include "carla/geom/Math.h"
-#include "carla/opendrive/logic/cephes/fresnel.h"
+#include "cephes/fresnel.h"
 
 #include <cmath>
 

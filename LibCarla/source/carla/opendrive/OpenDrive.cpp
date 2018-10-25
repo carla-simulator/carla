@@ -8,14 +8,6 @@ namespace opendrive {
 
 #define UNUSED(x) (void) x
 
-  struct lane_junction_t {
-    std::string contact_point = "start";
-    int connection_road = -1;
-
-    int from_lane = 0;
-    int to_lane = 0;
-  };
-
   static void fnc_generate_roads_data(
       opendrive::types::OpenDriveData &openDriveRoad,
       std::map<int,
@@ -28,24 +20,49 @@ namespace opendrive {
   static void fnc_generate_junctions_data(
       opendrive::types::OpenDriveData &openDriveRoad,
       std::map<int,
-      std::map<int, std::vector<lane_junction_t>>> &out_data) {
+      std::map<int, std::vector<carla::road::lane_junction_t>>> &out_data) {
     for (size_t i = 0; i < openDriveRoad.junctions.size(); ++i) {
       for (size_t j = 0; j < openDriveRoad.junctions[i].connections.size(); ++j) {
-        lane_junction_t junctionData;
+        carla::road::lane_junction_t junctionData;
         int junctionID = openDriveRoad.junctions[i].attributes.id;
 
         int incommingRoad = openDriveRoad.junctions[i].connections[j].attributes.incoming_road;
         int connectingRoad = openDriveRoad.junctions[i].connections[j].attributes.connecting_road;
 
+        junctionData.incomming_road = incommingRoad;
         junctionData.connection_road = connectingRoad;
         junctionData.contact_point = openDriveRoad.junctions[i].connections[j].attributes.contact_point;
 
-        if (openDriveRoad.junctions[i].connections[j].links.size()) {
-          junctionData.from_lane = openDriveRoad.junctions[i].connections[j].links[0].from;
-          junctionData.to_lane = openDriveRoad.junctions[i].connections[j].links[0].to;
+        for(int k = 0; k < openDriveRoad.junctions[i].connections[j].links.size(); ++k) {
+          junctionData.from_lane.emplace_back(openDriveRoad.junctions[i].connections[j].links[k].from);
+          junctionData.to_lane.emplace_back(openDriveRoad.junctions[i].connections[j].links[k].to);
         }
 
-        out_data[junctionID][incommingRoad].push_back(junctionData);
+        out_data[junctionID][incommingRoad].emplace_back(junctionData);
+      }
+    }
+  }
+
+  static void test_fnc_generate_junctions_data(
+      opendrive::types::OpenDriveData &openDriveRoad,
+      std::vector<carla::road::lane_junction_t> &out_data) {
+    for (size_t i = 0; i < openDriveRoad.junctions.size(); ++i) {
+      for (size_t j = 0; j < openDriveRoad.junctions[i].connections.size(); ++j) {
+        carla::road::lane_junction_t junctionData;
+        junctionData.junction_id = openDriveRoad.junctions[i].attributes.id;
+
+        int incommingRoad = openDriveRoad.junctions[i].connections[j].attributes.incoming_road;
+        int connectingRoad = openDriveRoad.junctions[i].connections[j].attributes.connecting_road;
+
+        junctionData.incomming_road = incommingRoad;
+        junctionData.connection_road = connectingRoad;
+
+        if (openDriveRoad.junctions[i].connections[j].links.size()) {
+          junctionData.from_lane.emplace_back(openDriveRoad.junctions[i].connections[j].links[0].from);
+          junctionData.to_lane.emplace_back(openDriveRoad.junctions[i].connections[j].links[0].to);
+        }
+
+         out_data.emplace_back(junctionData);
       }
     }
   }
@@ -61,8 +78,12 @@ namespace opendrive {
     }
 
     // Generate road and junction information
-    using junction_data_t = std::map<int, std::map<int, std::vector<lane_junction_t>>>;
+    using junction_data_t = std::map<int, std::map<int, std::vector<carla::road::lane_junction_t>>>;
     using road_data_t = std::map<int, carla::opendrive::types::RoadInformation *>;
+
+    std::vector<carla::road::lane_junction_t> junctionInfo;
+    test_fnc_generate_junctions_data(open_drive_road, junctionInfo);
+    mapBuilder.SetJunctionInformation(junctionInfo);
 
     junction_data_t junctionsData;
     road_data_t roadData;
@@ -76,21 +97,21 @@ namespace opendrive {
       carla::road::element::RoadInfoLane *roadInfoLanes = roadSegment.MakeInfo<carla::road::element::RoadInfoLane>();
 
       carla::road::element::RoadGeneralInfo *roadGeneralInfo = roadSegment.MakeInfo<carla::road::element::RoadGeneralInfo>();
-      roadGeneralInfo->SetIsJunction(it->second->attributes.junction >= 0);
+      roadGeneralInfo->SetJunctionId(it->second->attributes.junction);
 
-      for(size_t i = 0; i < it->second->lane_sections.lane_offset.size(); ++i)
+      for(size_t i = 0; i < it->second->lanes.lane_offset.size(); ++i)
       {
-        double s = it->second->lane_sections.lane_offset[i].s;
-        double a = it->second->lane_sections.lane_offset[i].a;
+        double s = it->second->lanes.lane_offset[i].s;
+        double a = it->second->lanes.lane_offset[i].a;
         roadGeneralInfo->SetLanesOffset(s, a);
       }
 
-      std::vector<carla::opendrive::types::Lane> &lanesLeft = it->second->lane_sections.left;
+      std::vector<carla::opendrive::types::LaneInfo> &lanesLeft = it->second->lanes.lane_sections[0].left;
       for(size_t i = 0; i < lanesLeft.size(); ++i) {
         roadInfoLanes->addLaneInfo(lanesLeft[i].attributes.id, lanesLeft[i].lane_width[0].width, lanesLeft[i].attributes.type);
       }
 
-      std::vector<carla::opendrive::types::Lane> &lanesRight = it->second->lane_sections.right;
+      std::vector<carla::opendrive::types::LaneInfo> &lanesRight = it->second->lanes.lane_sections[0].right;
       for(size_t i = 0; i < lanesRight.size(); ++i) {
         roadInfoLanes->addLaneInfo(lanesRight[i].attributes.id, lanesRight[i].lane_width[0].width, lanesRight[i].attributes.type);
       }
@@ -99,7 +120,7 @@ namespace opendrive {
         bool is_start = it->second->road_link.successor->contact_point == "start";
 
         if (it->second->road_link.successor->element_type == "junction") {
-          std::vector<lane_junction_t> &options =
+          std::vector<carla::road::lane_junction_t> &options =
             junctionsData[it->second->road_link.successor->id][it->first];
           for (size_t i = 0; i < options.size(); ++i) {
             roadSegment.AddSuccessorID(options[i].connection_road, options[i].contact_point == "start");
@@ -113,7 +134,7 @@ namespace opendrive {
         bool is_start = it->second->road_link.predecessor->contact_point == "start";
 
         if (it->second->road_link.predecessor->element_type == "junction") {
-          std::vector<lane_junction_t> &options =
+          std::vector<carla::road::lane_junction_t> &options =
             junctionsData[it->second->road_link.predecessor->id][it->first];
           for (size_t i = 0; i < options.size(); ++i) {
             roadSegment.AddPredecessorID(options[i].connection_road, options[i].contact_point == "start");

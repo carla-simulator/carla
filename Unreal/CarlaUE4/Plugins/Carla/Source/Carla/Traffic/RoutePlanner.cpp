@@ -161,11 +161,25 @@ void ARoutePlanner::OnTriggerBeginOverlap(
     const auto Size = Route->GetNumberOfSplinePoints();
     check(Size > 1);
     WayPoints.Reserve(Size);
-    for (auto i = 2; i < Size; ++i)
+    for (auto i = 1; i < Size; ++i)
     {
       WayPoints.Add(Route->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::World));
     }
 
     Controller->SetFixedRoute(WayPoints);
   }
+}
+
+void ARoutePlanner::DrawRoutes()
+{
+    for (int i = 0, lenRoutes = Routes.Num(); i < lenRoutes; ++i)
+    {
+        for (int j = 0, lenNumPoints = Routes[i]->GetNumberOfSplinePoints() - 1; j < lenNumPoints; ++j)
+        {
+            FVector p0 = Routes[i]->GetLocationAtSplinePoint(j + 0, ESplineCoordinateSpace::World);
+            FVector p1 = Routes[i]->GetLocationAtSplinePoint(j + 1, ESplineCoordinateSpace::World);
+
+            DrawDebugLine(GetWorld(), p0, p1, _spline_color, true);
+        }
+    }
 }

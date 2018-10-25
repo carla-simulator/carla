@@ -76,6 +76,6 @@ void carla::opendrive::parser::GeometryParser::Parse(const pugi::xml_node & xmlN
         geometry_attributes->heading = std::stod(roadGeometry.attribute("hdg").value());
         geometry_attributes->length = std::stod(roadGeometry.attribute("length").value());
 
-        out_geometry_attributes.push_back(std::move(geometry_attributes));
+        out_geometry_attributes.emplace_back(std::move(geometry_attributes));
     }
 }

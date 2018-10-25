@@ -16,6 +16,17 @@ namespace road {
 
   using namespace carla::road::element;
 
+  struct lane_junction_t {
+    std::string contact_point = "start";
+    int junction_id = -1;
+
+    int connection_road = -1;
+    int incomming_road = -1;
+
+    std::vector<int> from_lane;
+    std::vector<int> to_lane;
+  };
+
   class Map {
   public:
 
@@ -35,9 +46,13 @@ namespace road {
 
     const RoadSegment &NearestRoad(const geom::Location &loc);
 
+    void SetJunctionInformation(const std::vector<lane_junction_t> &junctionInfo) { _junction_information = junctionInfo; }
+    std::vector<lane_junction_t> GetJunctionInformation() const { return _junction_information; }
+
   private:
 
     friend class MapBuilder;
+    std::vector<lane_junction_t> _junction_information;
 
     Map() {}
 

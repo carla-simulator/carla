@@ -35,6 +35,6 @@ void carla::opendrive::parser::TrafficSignalsParser::Parse(const pugi::xml_node 
         trafficSignalInformation.subtype = signal.attribute("subtype").value();
         trafficSignalInformation.country = signal.attribute("country").value();
 
-        out_traffic_signals.push_back(trafficSignalInformation);
+        out_traffic_signals.emplace_back(trafficSignalInformation);
     }
 }

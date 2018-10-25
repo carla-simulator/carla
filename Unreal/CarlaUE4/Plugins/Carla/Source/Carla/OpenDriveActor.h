@@ -21,14 +21,21 @@ class CARLA_API AOpenDriveActor : public AActor
 
 private:
     TArray<ARoutePlanner *> RoutePlanners;
+    ;
 
 public:
     // Sets default values for this actor's properties
     AOpenDriveActor();
 
 
+    virtual void BeginPlay() override;
     virtual void BeginDestroy() override;
     virtual void OnConstruction(const FTransform &transform) override;
 
+    ARoutePlanner *GenerateRoutePlanner(const TArray<FVector> &waypoints);
+
+    void GenerateWaypointsJunctions(const carla::road::element::RoadSegment *road, TArray<int> &lanesId, TArray<TArray<FVector>> &waypoints);
     void GenerateWaypoints(const carla::road::element::RoadSegment *road);
+
+    void DrawWaypoints(const TArray<FVector> &points);
 };

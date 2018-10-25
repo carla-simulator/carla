@@ -25,7 +25,7 @@ void carla::opendrive::parser::ProfilesParser::ParseElevation(const pugi::xml_no
         elevationProfile.vertical_curvature = std::stod(laneSection.attribute("c").value());
         elevationProfile.curvature_change = std::stod(laneSection.attribute("d").value());
 
-        out_elevation_profile.push_back(elevationProfile);
+        out_elevation_profile.emplace_back(elevationProfile);
     }
 }
 
@@ -41,7 +41,7 @@ void carla::opendrive::parser::ProfilesParser::ParseLateral(const pugi::xml_node
         lateralProfile.vertical_curvature = std::stod(laneSection.attribute("c").value());
         lateralProfile.curvature_change = std::stod(laneSection.attribute("d").value());
 
-        out_lateral_profile.push_back(lateralProfile);
+        out_lateral_profile.emplace_back(lateralProfile);
     }
 }
 
