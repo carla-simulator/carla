@@ -10,11 +10,14 @@
 #include "carla/opendrive/OpenDrive.h"
 #include "carla/road/Map.h"
 
+#include <sstream>
+
 namespace carla {
 namespace client {
 
   static auto MakeMap(const std::string &opendrive_contents) {
-    return opendrive::OpenDrive::Load(opendrive_contents);
+    auto stream = std::istringstream(opendrive_contents);
+    return opendrive::OpenDrive::Load(stream);
   }
 
   Map::Map(rpc::MapInfo description)
