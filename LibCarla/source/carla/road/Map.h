@@ -6,11 +6,12 @@
 
 #pragma once
 
+#include "carla/geom/Math.h"
 #include "carla/Memory.h"
 #include "carla/NonCopyable.h"
 #include "carla/Optional.h"
-#include "carla/road/MapData.h"
 #include "carla/road/element/Waypoint.h"
+#include "carla/road/MapData.h"
 
 namespace carla {
 namespace road {
@@ -33,7 +34,7 @@ namespace road {
     }
 
     Map(MapData m)
-        : _data(std::move(m)) {}
+      : _data(std::move(m)) {}
 
   private:
 

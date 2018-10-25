@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "carla/Memory.h"
 #include "carla/geom/Transform.h"
+#include "carla/Memory.h"
 #include "carla/road/element/RoadInfoList.h"
 #include "carla/road/element/Types.h"
 
@@ -20,8 +20,6 @@ namespace element {
 
   class Waypoint {
   public:
-
-    Waypoint() = default;
 
     ~Waypoint();
 
@@ -42,11 +40,17 @@ namespace element {
 
   private:
 
+    friend carla::road::Map;
+
+    Waypoint() = default;
+
     SharedPtr<Map> _map;
 
     geom::Transform _transform;
 
     id_type _road_id = 0;
+
+    int _lane_id = 0;
 
     double _dist = 0.0;
 
