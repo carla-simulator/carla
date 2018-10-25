@@ -4,11 +4,14 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include <carla/FileSystem.h>
 #include <carla/PythonUtil.h>
 #include <carla/client/Map.h>
 #include <carla/client/Waypoint.h>
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+
+#include <fstream>
 
 namespace carla {
 namespace client {
@@ -25,6 +28,16 @@ namespace client {
 
 } // namespace client
 } // namespace carla
+
+static void SaveOpenDriveToDisk(const carla::client::Map &self, std::string path) {
+  carla::PythonUtil::ReleaseGIL unlock;
+  if (path.empty()) {
+    path = self.GetName();
+  }
+  carla::FileSystem::ValidateFilePath(path, ".xodr");
+  std::ofstream out(path);
+  out << self.GetOpenDrive() << std::endl;
+}
 
 void export_map() {
   using namespace boost::python;
@@ -46,6 +59,7 @@ void export_map() {
     .def("get_spawn_points", CALL_RETURNING_COPY(cc::Map, GetRecommendedSpawnPoints))
     .def("get_waypoint", &cc::Map::GetWaypoint, (arg("location"), arg("project_to_road")=true))
     .def("to_opendrive", CALL_RETURNING_COPY(cc::Map, GetOpenDrive))
+    .def("save_to_disk", &SaveOpenDriveToDisk, (arg("path")=""))
     .def(self_ns::str(self_ns::self))
   ;
 

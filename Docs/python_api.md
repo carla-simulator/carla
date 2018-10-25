@@ -159,6 +159,7 @@
 - `get_spawn_points()`
 - `get_waypoint(location, project_to_road=True)`
 - `to_opendrive()`
+- `save_to_disk(path=self.name)`
 
 ## `carla.Waypoint`
 
