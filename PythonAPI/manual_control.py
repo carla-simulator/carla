@@ -108,9 +108,6 @@ except ImportError:
 # ==============================================================================
 
 
-START_POSITION = carla.Transform(carla.Location(x=180.0, y=199.0, z=40.0))
-
-
 def find_weather_presets():
     rgx = re.compile('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)')
     name = lambda x: ' '.join(m.group(0) for m in rgx.finditer(x))
@@ -123,7 +120,9 @@ class World(object):
         self.world = carla_world
         self.hud = hud
         blueprint = self._get_random_blueprint()
-        self.vehicle = self.world.spawn_actor(blueprint, START_POSITION)
+        spawn_points = self.world.get_map().get_spawn_points()
+        spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
+        self.vehicle = self.world.spawn_actor(blueprint, spawn_point)
         self.collision_sensor = CollisionSensor(self.vehicle, self.hud)
         self.camera_manager = CameraManager(self.vehicle, self.hud)
         self.camera_manager.set_sensor(0, notify=False)
