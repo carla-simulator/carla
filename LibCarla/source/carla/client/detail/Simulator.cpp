@@ -73,7 +73,14 @@ namespace detail {
   // ===========================================================================
 
   SharedPtr<BlueprintLibrary> Simulator::GetBlueprintLibrary() {
-    return MakeShared<BlueprintLibrary>(_client.GetActorDefinitions());
+    auto defs = _client.GetActorDefinitions();
+    { /// @todo
+      rpc::ActorDefinition def;
+      def.id = "sensor.other.lane_detector";
+      def.tags = "sensor,other,lane_detector";
+      defs.emplace_back(def);
+    }
+    return MakeShared<BlueprintLibrary>(std::move(defs));
   }
 
   SharedPtr<Actor> Simulator::GetSpectator() {
@@ -93,7 +100,9 @@ namespace detail {
       Actor *parent,
       GarbageCollectionPolicy gc) {
     rpc::Actor actor;
-    if (parent != nullptr) {
+    if (blueprint.GetId() == "sensor.other.lane_detector") { /// @todo
+      actor.description = blueprint.MakeActorDescription();
+    } else if (parent != nullptr) {
       actor = _client.SpawnActorWithParent(
           blueprint.MakeActorDescription(),
           transform,
