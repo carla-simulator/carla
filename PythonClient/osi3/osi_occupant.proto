@@ -1,0 +1,130 @@
+syntax = "proto3";
+
+option optimize_for = SPEED;
+
+import "osi3/osi_common.proto";
+
+package osi3;
+
+//
+// \brief An occupant of a host vehicle, especially the driver of the vehicle.
+//
+message Occupant
+{
+    // The ID of the driver.
+    //
+    Identifier id = 1;
+
+    // Specific information about the classification of the occupant.
+    //
+    Classification classification = 2;
+
+    //
+    // \brief Information regarding the classification of the occupant.
+    //
+    message Classification
+    {
+        // Flag determining whether the person is the driver of the vehicle or a
+        // passenger.
+        //
+        bool is_driver = 2;
+
+        // Seat position of the vehicle occupant.
+        //
+        Seat seat = 3;
+
+        // Describes the state of the passenger's hands related to the steering
+        // wheel (mostly driver).
+        //
+        SteeringControl steering_control = 4;
+
+        // Definition of seat positions.
+        //
+        enum Seat
+        {
+            // Seat position is unknown (must not be used in ground truth).
+            //
+            SEAT_UNKNOWN = 0;
+
+            // Other (unspecified but known) seat.
+            //
+            SEAT_OTHER = 1;
+
+            // Seat position is in the front row, left seat.
+            // This is usually the driver's seat in right-hand traffic.
+            //
+            SEAT_FRONT_LEFT = 2;
+
+            // Seat position is in the front row, right seat.
+            // This is usually the driver's seat in left-hand traffic.
+            //
+            SEAT_FRONT_RIGHT = 3;
+
+            // Seat position is in the front row, middle seat.
+            //
+            SEAT_FRONT_MIDDLE = 4;
+
+            // Seat position is in the back row, left seat.
+            //
+            SEAT_BACK_LEFT = 5;
+
+            // Seat position is in the back row, right seat.
+            //
+            SEAT_BACK_RIGHT = 6;
+
+            // Seat position is in the back row, middle seat.
+            //
+            SEAT_BACK_MIDDLE = 7;
+
+            // Seat position is in the third row, left seat.
+            //
+            SEAT_THIRD_ROW_LEFT = 8;
+
+            // Seat position is in the third row, right seat.
+            //
+            SEAT_THIRD_ROW_RIGHT = 9;
+
+            // Seat position is in the third row, middle seat.
+            //
+            SEAT_THIRD_ROW_MIDDLE = 10;
+        }
+
+        // Definition of hands related to the steering wheel (mostly driver).
+        //
+        enum SteeringControl
+        {
+            // Hands state is unknown (must not be used in ground truth).
+            //
+            STEERING_CONTROL_UNKNOWN = 0;
+
+            // Other (unspecified but known) hand positioning related to the
+            // steering wheel.
+            //
+            STEERING_CONTROL_OTHER = 1;
+
+            // Hands are not on the steering wheel.
+            //
+            STEERING_CONTROL_NO_HAND = 2;
+
+            // One hand is on the steering wheel. Whether it is the left or
+            // right hand is unspecified or unknown.
+            //
+            // \note If there is no differentiation between one or both hands on
+            // the steering wheel, this value should be used.
+            //
+            STEERING_CONTROL_ONE_HAND = 3;
+
+            // Both hands are on the steering wheel.
+            //
+            STEERING_CONTROL_BOTH_HANDS = 4;
+
+            // Only left hand is on the steering wheel.
+            //
+            STEERING_CONTROL_LEFT_HAND = 5;
+
+            // Only right hand is on the steering wheel.
+            //
+            STEERING_CONTROL_RIGHT_HAND = 6;
+        }
+    }
+}

@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+option optimize_for = SPEED;
+
+import "google/protobuf/descriptor.proto";
+
+package osi3;
+
+//
+// \brief The interface version number.
+//
+// The field denoting the version number. This needs to be set by the
+// sender to the actual OSI version that is to be sent.  Code wanting to
+// access the version number of the OSI code base can access a FileOptions,
+// which has the proper values, like this:
+//
+// @code
+// auto currentInterfaceVersion =
+//   InterfaceVersion::descriptor()->file()->options().GetExtension(current_interface_version);
+// @endcode
+//
+// If a message with all components set to the default value 0 is
+// received, this indicates that either that the message was sent by
+// a version 2.2.0 or earlier release, or that the sender did not
+// properly set the version components prior to sending.
+//
+// Increments will happen as part of changes to the whole interface.
+// The meaning of different InterfaceVersions is defined [1].
+//
+// \par References:
+// [1] Open Simulation Interface: README.md
+message InterfaceVersion
+{
+    // Major version number.
+    //
+    uint32 version_major = 1;
+
+    // Minor version number.
+    //
+    uint32 version_minor = 2;
+
+    // Patch version number.
+    //
+    uint32 version_patch = 3;
+}
+
+//
+// \brief Extension of \c FileOptions for OSI
+//
+extend google.protobuf.FileOptions {
+    // Extend \c FileOptions with current interface version of OSI
+    //
+    InterfaceVersion current_interface_version = 81000;
+}
+
+option (current_interface_version).version_major = 3;
+option (current_interface_version).version_minor = 0;
+option (current_interface_version).version_patch = 1;

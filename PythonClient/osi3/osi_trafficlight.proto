@@ -1,0 +1,261 @@
+syntax = "proto3";
+
+option optimize_for = SPEED;
+
+import "osi3/osi_common.proto";
+
+package osi3;
+
+//
+// \brief A traffic light.
+//
+// \image html OSI_TrafficLight.jpg
+//
+// One traffic light message defines a single 'bulb' and not a box of several
+// bulbs, e.g. red, yellow, green are three separate traffic lights.
+//
+message TrafficLight
+{
+    // The ID of the traffic light.
+    //
+    Identifier id = 1;
+
+    // The base parameters of the traffic light.
+    //
+    // \c BaseStationary::orientation x-axis is view normal of the traffic
+    // light's icon.
+    //
+    BaseStationary base = 2;
+
+    // The classification data for the traffic light.
+    //
+    Classification classification = 3;
+
+    //
+    // \brief \c Classification data for a traffic light.
+    //
+    message Classification
+    {
+        // The color of the traffic light.
+        //
+        // \note If the color of the traffic light is known (from history or
+        // geometrical arrangement) and the state \c #mode is
+        // \c #MODE_OFF then \c #color could remain unchanged.
+        // If traffic light displays images in different colors and traffic
+        // light is off ( \c #mode =  \c #MODE_OFF), then \c #color = \c
+        // #COLOR_OTHER .
+        //
+        Color color = 1;
+
+        // The icon of the traffic light.
+        //
+        Icon icon = 2;
+
+        // The operating mode of the traffic light.
+        //
+        Mode mode = 3;
+
+        // The value of the countdown counter.
+        // Unit: [%] or [s]
+        //
+        // \note Set value only if traffic light bulb is a countdown counter.
+        //
+        double counter = 4;
+
+        // The IDs of the lanes that the traffic light is assigned to.
+        // Might be multiple if the traffic light is valid for multiple driving
+        // lanes.
+        //
+        // \note OSI uses singular instead of plural for repeated field names.
+        //
+        repeated Identifier assigned_lane_id = 5;
+
+        // Definition of colors for traffic lights.
+        //
+        enum Color
+        {
+            // Color is unknown (must not be used in ground truth).
+            //
+            COLOR_UNKNOWN = 0;
+
+            // Other (unspecified but known) color.
+            //
+            COLOR_OTHER = 1;
+
+            // Red light.
+            //
+            COLOR_RED = 2;
+
+            // Orange-yellow light.
+            //
+            COLOR_YELLOW = 3;
+
+            // Green light.
+            //
+            COLOR_GREEN = 4;
+
+            // Blue light.
+            //
+            COLOR_BLUE = 5;
+
+            // White light.
+            //
+            COLOR_WHITE = 6;
+        }
+
+        // Definition of traffic light bulb icon.
+        //
+        enum Icon
+        {
+            // Unknown icon of traffic light (must not be used in ground truth).
+            //
+            ICON_UNKNOWN = 0;
+
+            // Other (unspecified but known) icon of traffic light.
+            //
+            ICON_OTHER = 1;
+
+            // This is a normal traffic light without specification of e.g.
+            // direction.
+            //
+            ICON_NONE = 2;
+
+            // This traffic light applies to the lane straight ahead.
+            //
+            ICON_ARROW_STRAIGHT_AHEAD = 3;
+
+            // This traffic light applies to left turns.
+            //
+            ICON_ARROW_LEFT = 4;
+
+            // This traffic light applies to diagonal left turns.
+            //
+            ICON_ARROW_DIAG_LEFT = 5;
+
+            // This traffic light applies to a lane allowing to drive straight
+            // ahead or to turn left.
+            //
+            ICON_ARROW_STRAIGHT_AHEAD_LEFT = 6;
+
+            // This traffic light applies to right turns.
+            //
+            ICON_ARROW_RIGHT = 7;
+
+            // This traffic light applies to diagonal right turns.
+            //
+            ICON_ARROW_DIAG_RIGHT = 8;
+
+            // This traffic light applies to a lane allowing to drive straight
+            // ahead or to turn right.
+            //
+            ICON_ARROW_STRAIGHT_AHEAD_RIGHT = 9;
+
+            // This traffic light applies to a lane allowing to turn left or
+            // right.
+            //
+            ICON_ARROW_LEFT_RIGHT = 10;
+
+            // This traffic light indicates that the assigned lane is open for
+            // driving.
+            //
+            ICON_ARROW_DOWN = 11;
+
+            // This traffic light indicates a necessary lane change to the left
+            // ahead.
+            //
+            ICON_ARROW_DOWN_LEFT = 12;
+
+            // This traffic light indicates a necessary lane change to the right
+            // ahead.
+            //
+            ICON_ARROW_DOWN_RIGHT = 13;
+
+            // This traffic light indicates that the assigned lane is not open
+            // for driving.
+            //
+            ICON_ARROW_CROSS = 14;
+
+            // This traffic light is valid for pedestrians.
+            //
+            ICON_PEDESTRIAN = 15;
+
+            // This traffic light is valid for pedestrians with letters 'walk'.
+            //
+            ICON_WALK = 16;
+
+            // This traffic light is valid for pedestrians with letters 'don't
+            // walk'.
+            //
+            ICON_DONT_WALK = 17;
+
+            // This traffic light is valid for bicyclists.
+            //
+            ICON_BICYCLE = 18;
+
+            // This traffic light is valid for pedestrians and bicyclists.
+            //
+            ICON_PEDESTRIAN_AND_BICYCLE = 19;
+
+            // This traffic light counter in second.
+            //
+            ICON_COUNTDOWN_SECONDS = 20;
+
+            // This traffic light counter in percent.
+            //
+            ICON_COUNTDOWN_PERCENT = 21;
+
+            // This traffic light is valid for
+            // trams.
+            //
+            // \note There is no detailed traffic light specification for trams
+            // and buses at the moment.
+            //
+            ICON_TRAM = 22;
+
+            // This traffic light is valid for
+            // buses.
+            //
+            // \note There is no detailed traffic light specification for trams
+            // and buses at the moment.
+            //
+            ICON_BUS = 23;
+
+            // This traffic light is valid for
+            // buses and trams.
+            //
+            // \note There is no detailed traffic light specification for trams
+            // and buses at the moment.
+            //
+            ICON_BUS_AND_TRAM = 24;
+        }
+
+        // Definition of light modes for traffic lights.
+        //
+        enum Mode
+        {
+            // Mode is unknown (must not be used in ground truth).
+            //
+            MODE_UNKNOWN = 0;
+
+            // Other (unspecified but known) mode.
+            //
+            MODE_OTHER = 1;
+
+            // Traffic light is off.
+            //
+            MODE_OFF = 2;
+
+            // Light is on and not flashing.
+            //
+            MODE_CONSTANT = 3;
+
+            // Light is flashing.
+            //
+            MODE_FLASHING = 4;
+
+            // Light is counting.
+            //
+            MODE_COUNTING = 5;
+        }
+    }
+}

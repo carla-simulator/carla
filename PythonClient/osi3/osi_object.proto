@@ -1,0 +1,621 @@
+syntax = "proto3";
+
+option optimize_for = SPEED;
+
+import "osi3/osi_common.proto";
+
+package osi3;
+
+//
+// \brief A simulated object that is neither a moving object (vehicle or
+// \c MovingObject e.g. pedestrian, animal, or vehicle) nor a traffic related
+// object (\c TrafficLight, \c TrafficSign).
+//
+// \image html OSI_StatObject.jpg
+//
+// \c StationaryObject excludes traffic lights, traffic signs and road marking
+//
+message StationaryObject
+{
+    // The ID of the object.
+    //
+    Identifier id = 1;
+
+    // The base parameters of the vehicle.
+    //
+    BaseStationary base = 2;
+
+    // The classification of the stationary object.
+    //
+    Classification classification = 3;
+
+    //
+    // \brief Classification data for a stationary object.
+    //
+    message Classification
+    {
+        // The type of the object.
+        //
+        Type type = 1;
+
+        // The dominating material of the structure.
+        //
+        Material material = 2;
+
+        // The dominating density of the material of the structure.
+        //
+        Density density = 3;
+
+        // The dominating color of the material of the structure.
+        //
+        Color color = 4;
+
+        // Definition of object types.
+        //
+        enum Type
+        {
+            // Type of the object is unknown (must not be used in ground truth).
+            //
+            TYPE_UNKNOWN = 0;
+
+            // Other (unspecified but known) type of object.
+            //
+            TYPE_OTHER = 1;
+
+            // Object is a bridge.
+            //
+            TYPE_BRIDGE = 2;
+
+            // Object is a building.
+            //
+            TYPE_BUILDING = 3;
+
+            // Object is a pole (e.g. from a traffic light).
+            //
+            TYPE_POLE = 4;
+
+            // Object is a pylon.
+            //
+            TYPE_PYLON = 5;
+
+            // Object is a delineator (e.g. at a construction site).
+            //
+            TYPE_DELINEATOR = 6;
+
+            // Object is a tree.
+            //
+            TYPE_TREE = 7;
+
+            // Object is a barrier.
+            //
+            TYPE_BARRIER = 8;
+
+            // Object is vegetation.
+            //
+            TYPE_VEGETATION = 9;
+
+            // Object is a curbstone.
+            //
+            TYPE_CURBSTONE = 10;
+
+            // Object is a wall.
+            //
+            TYPE_WALL = 11;
+
+            // Landmarks corresponding to vertical structures in the
+            // environment.
+            //
+            TYPE_VERTICAL_STRUCTURE = 12;
+
+            // Landmarks corresponding to rectangular structures in the
+            // environment, like walls.
+            //
+            TYPE_RECTANGULAR_STRUCTURE = 13;
+
+            // Landmarks corresponding to overhead structures in the
+            // environment, like sign bridges.
+            //
+            TYPE_OVERHEAD_STRUCTURE = 14;
+
+            // Landmarks corresponding to light sources or reflective structures
+            // in the environment, like street lights or reflective poles on the
+            // road boarder.
+            //
+            TYPE_REFLECTIVE_STRUCTURE = 15;
+
+            // Landmarks corresponding to construction site elements in the
+            // environment, like cones or beacons.
+            //
+            TYPE_CONSTRUCTION_SITE_ELEMENT = 16;
+        }
+
+        // Definition of material types.
+        //
+        enum Material
+        {
+            // Type of the material is unknown (must not be used in ground
+            // truth).
+            //
+            MATERIAL_UNKNOWN = 0;
+
+            // Other (unspecified but known) type of material.
+            //
+            MATERIAL_OTHER = 1;
+
+            // Wooden structure.
+            //
+            MATERIAL_WOOD = 2;
+
+            // Plastic structure.
+            //
+            MATERIAL_PLASTIC = 3;
+
+            // Concrete structure.
+            //
+            MATERIAL_CONCRETE = 4;
+
+            // Metal structure.
+            //
+            MATERIAL_METAL = 5;
+
+            // Natural stone structure.
+            //
+            MATERIAL_STONE = 6;
+
+            // Glas structure.
+            //
+            MATERIAL_GLAS = 7;
+
+            // Mud structure.
+            //
+            MATERIAL_MUD = 8;
+        }
+
+        // Definition of material density types.
+        //
+        enum Density
+        {
+            // Type of the material density is unknown (must not be used in
+            // ground truth).
+            //
+            DENSITY_UNKNOWN = 0;
+
+            // Other (unspecified but known) type of material density.
+            //
+            DENSITY_OTHER = 1;
+
+            // No perforation - solid;
+            //
+            DENSITY_SOLID = 2;
+
+            // Perforation max. ]0; 100] [mm]
+            //
+            DENSITY_SMALL_MESH = 3;
+
+            // Perforation max. ]100; 500] [mm]
+            //
+            DENSITY_MEDIAN_MESH = 4;
+
+            // Perforation max. ]500; 5000] [mm]
+            //
+            DENSITY_LARGE_MESH = 5;
+
+            // Perforation max. ]5000; infinity] [mm]
+            //
+            DENSITY_OPEN = 6;
+        }
+
+        // Definition of colors for structures.
+        //
+        enum Color
+        {
+            // Color is unknown (must not be used in ground truth).
+            //
+            COLOR_UNKNOWN = 0;
+
+            // Other (unspecified but known) color.
+            //
+            COLOR_OTHER = 1;
+
+            // Yellow.
+            //
+            COLOR_YELLOW = 2;
+
+            // Green.
+            //
+            COLOR_GREEN = 3;
+
+            // Blue.
+            //
+            COLOR_BLUE = 4;
+
+            // Violet.
+            //
+            COLOR_VIOLET = 5;
+
+            // Red.
+            //
+            COLOR_RED = 6;
+
+            // Orange.
+            //
+            COLOR_ORANGE = 7;
+
+            // Black.
+            //
+            COLOR_BLACK = 8;
+
+            // GREY.
+            //
+            COLOR_GREY = 9;
+
+            // White.
+            //
+            COLOR_WHITE = 10;
+        }
+    }
+}
+
+//
+// \brief A simulated object that is either a vehicle or another
+// moving object (animal, pedestrian, etc), but not a stationary
+// object (\c TrafficLight, \c TrafficSign, or \c StationaryObject).
+//
+// \note The field \c MovingObject::vehicle_extension has to be
+// filled if the \c MovingObject::Type is a vehicle.
+//
+message MovingObject
+{
+    // The ID of the object.
+    //
+    Identifier id = 1;
+
+    // The base parameters of the vehicle.
+    //
+    // \note The bounding box does NOT includes mirrors for vehicles.
+    //
+    BaseMoving base = 2;
+
+    // The type of the object.
+    //
+    Type type = 3;
+
+    // The IDs of the lanes that this object is assigned to.
+    //
+    // \note Might be multiple if the object is switching lanes or moving from
+    // one lane into another following lane.
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated Identifier assigned_lane_id = 4;
+
+    // Specific information about the vehicle.
+    //
+    // \note This field is mandatory if the \c #type is
+    // #TYPE_VEHICLE .
+    //
+    VehicleAttributes vehicle_attributes = 5;
+
+    // Specific information about the classification of the vehicle.
+    //
+    //
+    // \note This field is mandatory if the \c #type is
+    // #TYPE_VEHICLE .
+    //
+    VehicleClassification vehicle_classification = 6;
+
+    // Definition of object types.
+    //
+    enum Type
+    {
+        // Type of the object is unknown (must not be used in ground truth).
+        //
+        TYPE_UNKNOWN = 0;
+
+        // Other (unspecified but known) type of moving object.
+        //
+        TYPE_OTHER = 1;
+
+        // Object is a vehicle.
+        //
+        TYPE_VEHICLE = 2;
+
+        // Object is a pedestrian.
+        //
+        TYPE_PEDESTRIAN = 3;
+
+        // Object is an animal.
+        //
+        TYPE_ANIMAL = 4;
+    }
+
+    //
+    // \brief The vehicle attributes for \c MovingObject (host or other).
+    //
+    // This is an extension to the \c MovingObject with additional attributes,
+    // such as type and lights. The origin of the rear (front) axis coordinate
+    // system in world coordinates is calculated as:
+    // \c MovingObject::base . \c BaseMoving::position + R * \c
+    // MovingObject::VehicleAttributes::bbcenter_to_rear (front) for the host
+    // vehicle (R rotates from vehicle to world frame, i.e. inverse orientation
+    // of \c MovingObject::base . \c BaseMoving::orientation).
+    //
+    // For all vehicles, including host vehicles, the position given in
+    //  \c MovingObject::base . \c BaseMoving::position points to the center of
+    //  the vehicle's bounding box.
+    //
+    // The vehicle object coordinates are defined as x-axis is the direction
+    // from rear to front of the vehicle, y-axis corresponds to rear axle and
+    // z-axis points to vehicle ceiling [1]. The coordinate system is
+    // right-handed. Therefore the positive y-axis points to the left of the
+    // vehicle.
+    //
+    // \par References:
+    // - [1] DIN ISO 8855:2013-11
+    //
+    message VehicleAttributes
+    {
+        // The ID of the driver of the (host) vehicle.
+        //
+        // \note Field need not be set if host_vehicle is set to false or use
+        // value for non valid id.
+        //
+        Identifier driver_id = 1;
+
+        // Median radius of the wheels measured from a center of the wheel
+        // including tire.
+        //
+        // Unit: [m]
+        //
+        double radius_wheel = 2;
+
+        // Number of independent wheels.
+        //
+        // Unit: []
+        //
+        uint32 number_wheels = 3;
+
+        // The vector pointing from the bounding box center point (\c
+        // MovingObject::base . \c BaseMoving::position) to the middle (in x, y
+        // and z) of the rear axle under neutral load conditions. In object
+        // coordinates.
+        //
+        Vector3d bbcenter_to_rear = 4;
+
+        // The vector pointing from the bounding box center point (\c
+        // MovingObject::base . \c BaseMoving::position) to the middle (in x, y
+        // and z) of the front axle under neutral load conditions. In object
+        // coordinates.
+        //
+        Vector3d bbcenter_to_front = 5;
+
+        // Static minimal distance in [m] of under-body plane to ground
+        // surface plane (i.e. disregarding driving dynamic effects or road
+        // surface effects) under neutral load conditions. Can be useful to
+        // approximate the clear area under a vehicle that a sensor can see
+        // through.
+        //
+        double ground_clearance = 6;
+    }
+
+    //
+    // \brief Information for the classification of vehicles regarding
+    // \c MovingObject (host or other).
+    //
+    message VehicleClassification
+    {
+        // The type of the vehicle.
+        //
+        Type type = 1;
+
+        // The light state of the vehicle.
+        //
+        LightState light_state = 2;
+
+        // Flag defining whether the vehicle has an attached trailer.
+        //
+        bool has_trailer = 3;
+
+        // Id of the attached trailer.
+        //
+        // \note Field need not be set if has_Trailer is set to false or use
+        // value for non valid id.
+        //
+        Identifier trailer_id = 4;
+
+        // Definition of vehicle types.
+        //
+        enum Type
+        {
+            // Type of vehicle is unknown (must not be used in ground truth).
+            //
+            TYPE_UNKNOWN = 0;
+
+            // Other (unspecified but known) type of vehicle.
+            //
+            TYPE_OTHER = 1;
+
+            // Vehicle is a small car.
+            //
+            // Definition: Hatchback car with maximum length 4 m.
+            //
+            TYPE_SMALL_CAR = 2;
+
+            // Vehicle is a compact car.
+            //
+            // Definition: Hatchback car with length between 4 and 4.5 m.
+            //
+            TYPE_COMPACT_CAR = 3;
+
+            // Vehicle is a medium car.
+            //
+            // Definition: Hatchback or sedan with lenght between 4.5 and 5 m.
+            //
+            TYPE_MEDIUM_CAR = 4;
+
+            // Vehicle is a luxury  car.
+            //
+            // Definition: Sedan or coupe that is longer then 5 m.
+            //
+            TYPE_LUXURY_CAR = 5;
+
+            // Vehicle is a delivery van.
+            //
+            // Definition: A delivery van.
+            //
+            TYPE_DELIVERY_VAN = 6;
+
+            // Vehicle is a heavy truck.
+            //
+            TYPE_HEAVY_TRUCK = 7;
+
+            // Vehicle is a truck with semitrailer.
+            //
+            TYPE_SEMITRAILER = 8;
+
+            // Vehicle is a trailer (possibly attached to another vehicle).
+            //
+            TYPE_TRAILER = 9;
+
+            // Vehicle is a motorbike or moped.
+            //
+            TYPE_MOTORBIKE = 10;
+
+            // Vehicle is a bicycle (without motor and specific lights).
+            //
+            TYPE_BICYCLE = 11;
+
+            // Vehicle is a bus.
+            //
+            TYPE_BUS = 12;
+
+            // Vehicle is a tram.
+            //
+            TYPE_TRAM = 13;
+
+            // Vehicle is a train.
+            //
+            TYPE_TRAIN = 14;
+
+            // Vehicle is a wheelchair.
+            //
+            TYPE_WHEELCHAIR = 15;
+        }
+
+        //
+        // \brief The state of the lights of a vehicle.
+        //
+        message LightState
+        {
+            // State of the object's indicators.
+            //
+            IndicatorState indicator_state = 1;
+
+            // State of the front fog light.
+            //
+            GenericLightState front_fog_light = 2;
+
+            // State of the rear fog light.
+            //
+            GenericLightState rear_fog_light = 3;
+
+            // State of the head lights.
+            //
+            GenericLightState head_light = 4;
+
+            // State of the high beam.
+            //
+            GenericLightState high_beam = 5;
+
+            // State of the reversing light.
+            //
+            GenericLightState reversing_light = 6;
+
+            // State of the brake lights.
+            //
+            BrakeLightState brake_light_state = 7;
+
+            // State of the (rear) license plate illumination
+            //
+            GenericLightState license_plate_illumination_rear = 8;
+
+            // Definition of indicator states.
+            //
+            enum IndicatorState
+            {
+                // Indicator state is unknown (must not be used in ground
+                // truth).
+                //
+                INDICATOR_STATE_UNKNOWN = 0;
+
+                // Other (unspecified but known) state of indicator.
+                //
+                INDICATOR_STATE_OTHER = 1;
+
+                // Indicators are off.
+                //
+                INDICATOR_STATE_OFF = 2;
+
+                // Left indicator is on.
+                //
+                INDICATOR_STATE_LEFT = 3;
+
+                // Right indicator is on.
+                //
+                INDICATOR_STATE_RIGHT = 4;
+
+                // Hazard/warning light, i.e. both indicators, are on.
+                //
+                INDICATOR_STATE_WARNING = 5;
+            }
+
+            // Definition of generic light states for light that may be on or
+            // off.
+            //
+            enum GenericLightState
+            {
+                // Light state is unknown (must not be used in ground truth).
+                //
+                GENERIC_LIGHT_STATE_UNKNOWN = 0;
+
+                // Other (unspecified but known) state of light.
+                //
+                GENERIC_LIGHT_STATE_OTHER = 1;
+
+                // Light is off.
+                //
+                GENERIC_LIGHT_STATE_OFF = 2;
+
+                // Light is on.
+                //
+                GENERIC_LIGHT_STATE_ON = 3;
+            }
+
+            // Definition of brake light states.
+            //
+            enum BrakeLightState
+            {
+                // Brake light state is unknown (must not be used in ground
+                // truth).
+                //
+                BRAKE_LIGHT_STATE_UNKNOWN = 0;
+
+                // Other (unspecified but known) state of brake light.
+                //
+                BRAKE_LIGHT_STATE_OTHER = 1;
+
+                // Brake lights are off.
+                //
+                BRAKE_LIGHT_STATE_OFF = 2;
+
+                // Brake lights are on with normal intensity.
+                //
+                BRAKE_LIGHT_STATE_NORMAL = 3;
+
+                // Brake lights are on with extra bright intensity (indicating
+                // stronger braking).
+                BRAKE_LIGHT_STATE_STRONG = 4;
+            }
+        }
+    }
+}

@@ -1,13 +1,14 @@
 syntax = "proto3";
 
+import "osi3/osi_groundtruth.proto";
 
-import "osi_groundtruth.proto";
-
-package osi3;
+package osi_grpc;
 service Groundtruthdata {
-   rpc ProcessGroundTruth(GroundTruth) returns(Empty){}
+   rpc ProcessGroundTruth(osi3.GroundTruth) returns(Empty){}
 }
+
 
 message Empty {
   string result = 1;
+
 }
