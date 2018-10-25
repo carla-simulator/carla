@@ -19,7 +19,10 @@ namespace carla {
       }
       path += ext;
     }
-    fs::create_directories(path.parent_path());
+    auto parent = path.parent_path();
+    if (!parent.empty()) {
+      fs::create_directories(parent);
+    }
     filepath = path.string();
   }
 
