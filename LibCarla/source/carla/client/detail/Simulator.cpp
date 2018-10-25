@@ -87,6 +87,7 @@ namespace detail {
     return ActorFactory::MakeActor(
         GetCurrentEpisode(),
         _client.GetSpectator(),
+        nullptr,
         GarbageCollectionPolicy::Disabled);
   }
 
@@ -115,7 +116,8 @@ namespace detail {
     DEBUG_ASSERT(_episode != nullptr);
     _episode->RegisterActor(actor);
     const auto gca = (gc == GarbageCollectionPolicy::Inherit ? _gc_policy : gc);
-    auto result = ActorFactory::MakeActor(GetCurrentEpisode(), actor, gca);
+    auto parent_ptr = parent != nullptr ? parent->shared_from_this() : SharedPtr<Actor>();
+    auto result = ActorFactory::MakeActor(GetCurrentEpisode(), actor, parent_ptr, gca);
     log_debug(
         result->GetDisplayId(),
         "created",

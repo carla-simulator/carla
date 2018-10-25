@@ -12,9 +12,13 @@ namespace carla {
 namespace client {
 namespace detail {
 
-  ActorState::ActorState(rpc::Actor description, EpisodeProxy episode)
+  ActorState::ActorState(
+      rpc::Actor description,
+      EpisodeProxy episode,
+      SharedPtr<Actor> parent)
     : _description(std::move(description)),
       _episode(std::move(episode)),
+      _parent(std::move(parent)),
       _display_id([](const auto &desc) {
         using namespace std::string_literals;
         return

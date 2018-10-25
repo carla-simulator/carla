@@ -44,6 +44,7 @@ void export_actor() {
     // work-around, force return copy to resolve Actor instead of ActorState.
     .add_property("id", CALL_RETURNING_COPY(cc::Actor, GetId))
     .add_property("type_id", CALL_RETURNING_COPY(cc::Actor, GetTypeId))
+    .add_property("parent", CALL_RETURNING_COPY(cc::Actor, GetParent))
     .add_property("semantic_tags", &GetSemanticTags)
     .add_property("is_alive", CALL_RETURNING_COPY(cc::Actor, IsAlive))
     .def("get_world", CALL_RETURNING_COPY(cc::Actor, GetWorld))
