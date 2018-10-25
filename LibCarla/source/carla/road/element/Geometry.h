@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "carla/geom/Math.h"
 #include "carla/geom/Location.h"
+#include "carla/geom/Math.h"
 #include "carla/opendrive/logic/cephes/fresnel.h"
 
 #include <cmath>
@@ -42,6 +42,14 @@ namespace element {
       DirectedPoint d;
       d.valid = false;
       return d;
+    }
+
+    void ApplyLateralOffset(double lateral_offset) {
+      /// @todo Z axis??
+      auto normal_x = std::sin(tangent);
+      auto normal_y = -std::cos(tangent);
+      location.x += lateral_offset * normal_x;
+      location.y += lateral_offset * normal_y;
     }
 
     friend bool operator==(const DirectedPoint &lhs, const DirectedPoint &rhs) {
