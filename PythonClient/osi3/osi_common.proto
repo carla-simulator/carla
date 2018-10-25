@@ -1,0 +1,398 @@
+syntax = "proto3";
+
+option optimize_for = SPEED;
+
+package osi3;
+
+//
+// \brief A cartesian 3D vector for positions, velocities or accelerations or
+// its uncertainties.
+//
+// The coordinate system is defined as right-handed.
+//
+// Units are [m] for positions, [m/s] for velocities and [m/s^2] for
+// accelerations.
+//
+message Vector3d
+{
+    // The x coordinate.
+    //
+    // Unit: [m] [m/s] or [m/s^2]
+    //
+    double x = 1;
+
+    // The y coordinate.
+    //
+    // Unit: [m] [m/s] or [m/s^2]
+    //
+    double y = 2;
+
+    // The z coordinate.
+    //
+    // Unit: [m] [m/s] or [m/s^2]
+    //
+    double z = 3;
+}
+
+//
+// \brief A cartesian 2D vector for positions, velocities or accelerations or
+// its uncertainties.
+//
+// Units are [m] for positions, [m/s] for velocities and [m/s^2] for
+// accelerations.
+//
+message Vector2d
+{
+    // The x coordinate.
+    //
+    // Unit: [m] [m/s] or [m/s^2]
+    //
+    double x = 1;
+
+    // The y coordinate.
+    //
+    // Unit: [m] [m/s] or [m/s^2]
+    //
+    double y = 2;
+}
+
+//
+// \brief A timestamp.
+//
+// Names and types of fields are chosen in accordance to
+// google/protobuf/timestamp.proto to allow a possible switch in the future.
+// There is no definition of the zero point in time neither it is the Unix
+// epoch. A simulation may start at the zero point in time but it is not
+// mandatory.
+//
+message Timestamp
+{
+    // The number of seconds since the start of e.g. the simulation / system /
+    // vehicle.
+    //
+    // Unit: [s]
+    //
+    int64 seconds = 1;
+
+    // The number of nanoseconds since the start of the last second.
+    //
+    // Range: [0, 999.999.999]
+    //
+    // Unit: [ns]
+    //
+    uint32 nanos = 2;
+}
+
+//
+// \brief The dimension of a 3D box, e.g. the size of a 3D bounding box or its
+// uncertainties.
+//
+// \image html OSI_Dimension3d.jpg
+//
+// The dimensions are positive. Uncertainties are negative or positive.
+//
+// Dimension is defined in the specified reference coordinate frame along the
+// x-axis (=length), y-axis (=width) and z-axis (=height).
+//
+message Dimension3d
+{
+    // The length of the box.
+    //
+    // Unit: [m]
+    //
+    double length = 1;
+
+    // The width of the box.
+    //
+    // Unit: [m]
+    //
+    double width = 2;
+
+    // The height of the box.
+    //
+    // Unit: [m]
+    //
+    double height = 3;
+}
+
+//
+// \brief A 3D orientation, orientation rate or orientation acceleration (i.e.
+// derivatives) or its uncertainties denoted in euler angles.
+//
+// Units are [rad] for orientation [rad/s] for rates and [rad/s^2] for
+// accelerations
+//
+// The preferred angular range is (-pi, pi]. The coordinate system is defined as
+// right-handed.
+// For the sense of each rotation, the right-hand rule applies.
+//
+// The rotations are to be performed \b yaw \b first (around the z-axis),
+// \b pitch \b second (around the new y-axis) and \b roll \b third (around the
+// new x-axis) to follow the definition according to [1] (Tait-Bryan / Euler
+// convention z-y'-x'').
+//
+// Roll/Pitch are 0 if the objects xy-plane is parallel to its parent's
+// xy-plane. Yaw is 0 if the object's local x-axis is parallel to its parent's
+// x-axis.
+//
+// <tt>Rotation_yaw_pitch_roll = Rotation_roll*Rotation_pitch*Rotation_yaw</tt>
+//
+// <tt>vector_global_coord_system :=
+// Inverse_Rotation_yaw_pitch_roll(</tt><tt>Orientation3d</tt><tt>)*(vector_local_coord_system)
+// + local_origin::position</tt>
+//
+// \attention This definition changed in OSI version 3.0.0. Previous OSI
+// versions  (V2.xx) had an other definition.
+//
+// \par References:
+// - [1] DIN ISO 8855:2013-11
+//
+message Orientation3d
+{
+    // The roll angle/rate/acceleration.
+    //
+    // Unit: [rad] [rad/s] or [rad/s^2]
+    //
+    double roll = 1;
+
+    // The pitch angle/rate/acceleration.
+    //
+    // Unit: [rad] [rad/s] or [rad/s^2]
+    //
+    double pitch = 2;
+
+    // The yaw angle/rate/acceleration.
+    //
+    // Unit: [rad] [rad/s] or [rad/s^2]
+    //
+    double yaw = 3;
+}
+
+//
+// \brief A common identifier (ID), represented as an integer.
+//
+// Has to be unique among all simulated items at any given time. For ground
+// truth, the identifier of an item (object, lane, sign, etc.) must remain
+// stable over its lifetime. \c Identifier values may be only be reused if the
+// available address space is exhausted and the specific values have not been in
+// use for several timesteps. Sensor specific tracking IDs have no restrictions
+// and should behave according to the sensor specifications.
+//
+// The value MAX(uint64) = 2^(64) -1 =
+// 0b1111111111111111111111111111111111111111111111111111111111111111 is
+// reserved and indicates an invalid ID or error.
+//
+message Identifier
+{
+    // The identifier's value.
+    //
+    uint64 value = 1;
+}
+
+//
+// \brief Specifies the mounting position of a sensor.
+//
+// Details are specified in each instance where \c MountingPosition is used.
+//
+message MountingPosition
+{
+    // Offset position relative to the specified reference coordinate system.
+    //
+    Vector3d position = 1;
+
+    // Orientation offset relative to the specified reference coordinate system.
+    //
+    // <tt>Origin_sensor :=
+    // Rotation_yaw_pitch_roll(#orientation)*(Origin_reference_coordinate_system
+    // - #position)</tt>
+    //
+    Orientation3d orientation = 2;
+}
+
+//
+// \brief A spherical representation for a point or vector in 3D space.
+//
+// Used e.g., for low level representations of radar detections.
+//
+// Azimuth and elevation are defined as the rotations that would have to be
+// applied to the local frame (e.g sensor frame definition in
+// \c SensorDetectionHeader) to make its x-axis point towards the referenced
+// point or to align it with the referenced vector. The rotations are to be
+// performed \b azimuth \b first (around the z-axis) and \b elevation \b second
+// (around the new y-axis) to follow the definition of \c Orientation3d. For the
+// sense of each rotation, the right-hand rule applies.
+//
+// <tt>vector_cartesian :=
+// Rotation(#elevation)*Rotation(#azimuth)*Unit_vector_x*#distance</tt>
+//
+message Spherical3d
+{
+    // The radial distance.
+    //
+    // Unit: [m]
+    //
+    double distance = 1;
+
+    // The azimuth (horizontal) angle.
+    //
+    // Unit: [rad]
+    //
+    double azimuth = 2;
+
+    // The elevation (vertical) angle.
+    //
+    // Unit: [rad]
+    //
+    double elevation = 3;
+}
+
+//
+// \brief The base attributes of a stationary object or entity.
+//
+// This includes the \c StationaryObject , \c TrafficSign ,
+// \c TrafficLight , \c RoadMarking messages.
+//
+// \image html OSI_BaseStationary.jpg
+//
+// All coordinates and orientations from ground truth objects are relative to
+// the global ground truth frame (see image). All coordinates and orientations
+// from detected objects are relative to the host vehicle frame (see:
+// \c MovingObject::Vehicle vehicle reference point).
+//
+message BaseStationary
+{
+    // The 3D dimensions of the stationary object (bounding box), e.g. a
+    // landmark.
+    //
+    Dimension3d dimension = 1;
+
+    // The reference point for position and orientation, i.e. the center (x,y,z)
+    // of the bounding box.
+    //
+    Vector3d position = 2;
+
+    // The relative orientation of the stationary object w.r.t. its parent
+    // frame, noted in the parent frame. The orientation becomes global/absolute
+    // if the parent frame is inertial (all parent frames up to ground truth).
+    //
+    // <tt>Origin_base_stationary_entity :=
+    // Rotation_yaw_pitch_roll(#orientation)*(Origin_parent_coordinate_system -
+    // #position)</tt>
+    //
+    // \note There may be some constraints how to align the orientation w.r.t.
+    // to some stationary object's or entity's definition.
+    //
+    Orientation3d orientation = 3;
+
+    // Usage as ground truth:
+    // The two dimensional (flat) contour of the object. This is an extension of
+    // the concept of a bounding box as defined by \c Dimension3d. The contour
+    // is the projection of the object's outline onto the z-plane in the object
+    // frame (independent of its current position and orientation). The height
+    // is the same as the height of the bounding box.
+    //
+    // Usage as sensor data:
+    // The polygon describes the visible part of the object's contour.
+    //
+    // General definitions:
+    // The polygon is defined in the local object frame: x pointing forward and
+    // y to the left.
+    // The origin is the center of the bounding box.
+    // As ground truth, the polygon is closed by connecting the last with the
+    // first point. Therefore these two points must be different. The polygon
+    // must consist of at least three points.
+    // As sensor data, however, the polygon is open.
+    // The polygon is defined counter-clockwise.
+    //
+    repeated Vector2d base_polygon = 4;
+}
+
+//
+// \brief The base attributes of an object that is moving.
+//
+// This includes the \c MovingObject messages.
+//
+// All coordinates and orientations from ground truth objects are relative to
+// the global ground truth frame. All coordinates and orientations
+// from detected objects are relative to the host vehicle frame
+// (see: \c MovingObject::Vehicle vehicle reference point).
+//
+message BaseMoving
+{
+    // The 3D dimension of the moving object (its bounding box).
+    //
+    Dimension3d dimension = 1;
+
+    // The reference point for position and orientation: the center (x,y,z) of
+    // the bounding box.
+    //
+    Vector3d position = 2;
+
+    // The relative orientation of the moving object w.r.t. its parent frame,
+    // noted in the parent frame. The orientation becomes global/absolute if
+    // the parent frame is inertial (all parent frames up to ground truth).
+    //
+    // <tt>Origin_base_moving_entity :=
+    // Rotation_yaw_pitch_roll(#orientation)*(Origin_parent_coordinate_system -
+    // #position)</tt>
+    //
+    // \note There may be some constraints how to align the orientation w.r.t.
+    // to some stationary object's or entity's definition.
+    //
+    Orientation3d orientation = 3;
+
+    // The relative velocity of the moving object w.r.t. the parent frame,
+    // noted in the parent frame. The velocity becomes global/absolute if
+    // the parent frame does is inertial (all parent frames up to ground truth).
+    //
+    // <tt>#position (t) := #position (t-dt)+ #velocity *dt</tt>
+    //
+    Vector3d velocity = 4;
+
+    // The relative acceleration of the moving object w.r.t. its parent frame,
+    // noted in the parent frame. The acceleration becomes global/absolute if
+    // the parent frame is inertial (all parent frames up to ground truth).
+    //
+    // <tt> #position (t) := #position (t-dt)+ #velocity *dt+ #acceleration
+    // /2*dt^2</tt>
+    //
+    // <tt> #velocity (t) := #velocity (t-dt)+ #acceleration *dt</tt>
+    //
+    Vector3d acceleration = 5;
+
+    // The relative orientation rate of the moving object w.r.t. its parent
+    // frame and parent orientation rate in the center point of the bounding box
+    // (origin of the bounding box frame), noted in the parent frame.
+    // The orientation becomes global/absolute if the parent frame is inertial
+    // (all parent frames up to ground truth).
+    //
+    // <tt>Rotation_yaw_pitch_roll(#orientation (t)) :=
+    // Rotation_yaw_pitch_roll(#orientation_rate
+    // *dt)*Rotation_yaw_pitch_roll(#orientation (t-dt))</tt>
+    //
+    // \note <tt>#orientation (t)</tt> is \b not equal <tt>#orientation
+    // (t-dt)+#orientation_rate *dt</tt>
+    //
+    Orientation3d orientation_rate = 6;
+
+    // Usage as ground truth:
+    // The two dimensional (flat) contour of the object. This is an extension of
+    // the concept of a bounding box as defined by \c Dimension3d. The contour
+    // is the projection of the object's outline onto the z-plane in the object
+    // frame (independent of its current position and orientation). The height
+    // is the same as the height of the bounding box.
+    //
+    // Usage as sensor data:
+    // The polygon describes the visible part of the object's contour.
+    //
+    // General definitions:
+    // The polygon is defined in the local object frame: x pointing forward and
+    // y to the left. The origin is the center of the bounding box.
+    // As ground truth, the polygon is closed by connecting the last with the
+    // first point. Therefore these two points must be different. The polygon
+    // must consist of at least three points. As sensor data, however, the
+    // polygon is open.
+    // The polygon is defined counter-clockwise.
+    //
+    repeated Vector2d base_polygon = 7;
+}

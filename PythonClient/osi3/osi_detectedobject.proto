@@ -1,0 +1,375 @@
+syntax = "proto3";
+
+option optimize_for = SPEED;
+
+import "osi3/osi_common.proto";
+import "osi3/osi_object.proto";
+import "osi3/osi_sensorspecific.proto";
+
+package osi3;
+
+//
+// \brief The common information for a detected item as estimated by the
+// sensor.
+//
+message DetectedItemHeader
+{
+    // Specific ID of the detected item as assigned by the sensor internally.
+    // Need not match with \c #ground_truth_id.
+    //
+    Identifier tracking_id = 1;
+
+    // The ID of the original detected item in the ground truth.
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated Identifier ground_truth_id = 2;
+
+    // The estimated probability that this detected item really exists, not
+    // based on history.
+    //
+    // \note Use as confidence measure where a low value means less confidence
+    // and a high value indicates strong confidence.
+    //
+    // Range: [0,1]
+    //
+    double existence_probability = 3;
+
+    // The amount of time that this detected object has been continuously
+    // observed/tracked.
+    //
+    // \note: 'Time stamp' - Age := 'point in time' when the object has
+    // been observed for the first time.
+    //
+    // Unit: [s]
+    //
+    double age = 4;
+
+    // The measurement state.
+    //
+    MeasurementState measurement_state = 5;
+
+    // A list of physical sensors which detected this detected item.
+    //
+    // If \c SensorData has detected entities and all detections are missing,
+    // then e.g. the number of sensors can confirm the
+    // \c #existence_probability.
+    //
+    // \note This information can be determined via the detected entities'
+    // detections ( \c ...Detection::object_id = 'this detected item' ) and
+    // the sensors (their IDs) to which these detections belong.
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated Identifier sensor_id = 6;
+
+    // Definition of measurement states.
+    //
+    enum MeasurementState
+    {
+        // Measurement state is unknown (must not be used in ground truth).
+        //
+        MEASUREMENT_STATE_UNKNOWN = 0;
+
+        // Measurement state is unspecified (but known, i.e. value is not part
+        // of this enum list).
+        //
+        MEASUREMENT_STATE_OTHER = 1;
+
+        // Entity has been measured by the sensor in the current timestep.
+        //
+        MEASUREMENT_STATE_MEASURED = 2;
+
+        // Entity has not been measured by the sensor in the current timestep.
+        // Values provided by tracking only.
+        //
+        MEASUREMENT_STATE_PREDICTED = 3;
+    }
+}
+
+//
+// \brief A stationary object (e.g. landmark) in the environment as detected by
+// the sensor.
+//
+// \image html OSI_DetectedStatObject.jpg
+//
+message DetectedStationaryObject
+{
+    // Common information of one detected item.
+    //
+    DetectedItemHeader header = 1;
+
+    // The base parameters of the stationary object.
+    //
+    BaseStationary base = 2;
+
+    // The root mean squared error of the base parameters of the detected
+    // stationary object (e.g. landmark). \c StationaryObject::base has to be
+    // identical for all \c #candidate stationary objects.
+    //
+    BaseStationary base_rmse = 3;
+
+    // A list of candidates for this stationary object as estimated by the
+    // sensor.
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated CandidateStationaryObject candidate = 4;
+
+    //
+    // \brief A candidate for a detected stationary object as estimated
+    // by the sensor.
+    //
+    message CandidateStationaryObject
+    {
+        // The estimated probability that this candidate is the true value.
+        //
+        // \note The sum of all \c #probability must be one. This probability is
+        // given under the condition of
+        // \c DetectedItemHeader::existence_probability.
+        //
+        // Range: [0,1]
+        //
+        double probability = 1;
+
+        // The classification of the stationary object (e.g. landmark).
+        //
+        StationaryObject.Classification classification = 2;
+    }
+}
+
+//
+// \brief Moving object in the environment as detected and perceived by
+// the sensor.
+//
+message DetectedMovingObject
+{
+    // Common information of one detected item.
+    //
+    DetectedItemHeader header = 1;
+
+    // The base parameters of the moving object.
+    //
+    // \note The bounding box does NOT includes mirrors for vehicles.
+    // \note The parent frame of \c base is the sensor's vehicle frame.
+    //
+    BaseMoving base = 2;
+
+    // The root mean squared error of the base parameters of the detected
+    // moving object (e.g. car). \c MovingObject::base has to be
+    // identical for all \c #candidate moving objects.
+    //
+    // \note The parent frame of \c base is the sensor's vehicle frame.
+    //
+    BaseMoving base_rmse = 3;
+
+    // Reference point location specification of the sensor measurement
+    // (required to decouple sensor measurement, position and bounding box
+    // estimation) as used by the sensor (model).
+    //
+    // \note Note that the value of this field has no impact on the value of
+    // object::position, which always references the center of the object /
+    // bounding box.
+    //
+    ReferencePoint reference_point = 4;
+
+    // Actual movement state w.r.t. the moving object history.
+    //
+    MovementState movement_state = 5;
+
+    // Percentage side lane left.
+    //
+    // Percentage value of the object width in the corresponding lane.
+    //
+    double percentage_side_lane_left = 6;
+
+    // Percentage side lane right.
+    //
+    // Percentage value of the object width in the corresponding lane.
+    //
+    double percentage_side_lane_right = 7;
+
+    // A list of candidates for this moving object as estimated by the
+    // sensor (e.g. pedestrian, car).
+    //
+    // \note OSI uses singular instead of plural for repeated field names.
+    //
+    repeated CandidateMovingObject candidate = 8;
+
+    // Additional data that is specific to radar sensors.
+    //
+    // \note Field need not be set if simulated sensor is not a radar
+    // sensor.
+    //
+    RadarSpecificObjectData radar_specifics = 100;
+
+    // Additional data that is specific to lidar sensors.
+    //
+    // \note Field need not be set if simulated sensor is not a lidar
+    // sensor.
+    //
+    LidarSpecificObjectData lidar_specifics = 101;
+
+    // Additional data that is specific to camera sensors.
+    //
+    // \note Field need not be set if simulated sensor is not a camera
+    // sensor.
+    //
+    CameraSpecificObjectData camera_specifics = 102;
+
+    // Additional data that is specific to ultrasonic sensors.
+    //
+    // \note Field need not be set if simulated sensor is not an ultrasonic
+    // sensor.
+    //
+    UltrasonicSpecificObjectData ultrasonic_specifics = 103;
+
+    //
+    // \brief A candidate for a detected moving object as estimated by the
+    // sensor.
+    //
+    message CandidateMovingObject
+    {
+        // The estimated probability that this candidate is the true value.
+        //
+        // \note The sum of all \c #probability must be one. This probability is
+        // given under the condition of
+        // \c DetectedItemHeader::existence_probability.
+        //
+        // Range: [0,1]
+        //
+        double probability = 1;
+
+        // The description of the moving object (e.g. car).
+        //
+        MovingObject.Type type = 2;
+
+        // Specific information about the classification of the vehicle.
+        //
+        //
+        // \note This field is mandatory if the \c CandidateMovingObject::type
+        // is \c MovingObject::TYPE_VEHICLE .
+        //
+        MovingObject.VehicleClassification vehicle_classification = 3;
+
+        // Pedestrian head pose for behavior prediction. Describes the head
+        // orientation w.r.t. the host vehicle orientation.
+        // The x-axis of the right-handed head frame is pointing along the
+        // pedestrian's straight ahead viewing direction and the z-axis is
+        // pointing upwards (cranial direction [1] i.e. to pedestrian's skull
+        // cap).
+        //
+        // <tt>View_normal_base_coord_system =
+        // Inverse_Rotation(#head_pose)*Unit_vector_x</tt>
+        //
+        // \note This field is mandatory if the \c CandidateMovingObject.type is
+        // \c MovingObject::TYPE_PEDESTRIAN
+        //
+        // \par References:
+        // - [1] https://en.wikipedia.org/wiki/Anatomical_terms_of_location
+        //
+        Orientation3d head_pose = 4;
+
+        // Pedestrian upper body pose for behavior prediction. Describes the
+        // upper body orientation w.r.t. the host vehicle orientation.
+        // The x-axis of the right-handed upper body frame is pointing along the
+        // pedestrian's upper body ventral direction [2] (i.e. usually
+        // pedestrian's intended moving direction) and the z-axis is pointing
+        // upwards (to pedestrian's head).
+        //
+        // <tt>View_normal_base_coord_system =
+        // Inverse_Rotation(#upper_body_pose)*Unit_vector_x</tt>
+        //
+        // \note This field is mandatory if the \c CandidateMovingObject::type
+        // is \c MovingObject::TYPE_PEDESTRIAN
+        //
+        // \par References:
+        // - [2] https://en.wikipedia.org/wiki/Anatomical_terms_of_location
+        //
+        Orientation3d upper_body_pose = 5;
+    }
+
+    // Definition of available reference points. Left/middle/right and
+    // front/middle/rear indicate the position in y- and x-direction
+    // respectively. The z position is always considered as middle.
+    //
+    enum ReferencePoint
+    {
+        // Reference point is unknown, i.e. sensor does not report a reference
+        // point for the position coordinate.
+        // Value must not be used in ground truth data.
+        // Usually this means that the reference point for the given position
+        // coordinates is a largely arbitrary point within the bounding volume
+        // unknown to the sensor. If this value is set, the center of the
+        // bounding box should be used as reference point by convention, unless
+        // the specific use case requires otherwise.
+        //
+        REFERENCE_POINT_UNKNOWN = 0;
+
+        // Other (unspecified but known) reference point.
+        //
+        REFERENCE_POINT_OTHER = 1;
+
+        // Center of the bounding box.
+        //
+        REFERENCE_POINT_CENTER = 2;
+
+        // Middle-Left of the bounding box.
+        //
+        REFERENCE_POINT_MIDDLE_LEFT = 3;
+
+        // Middle-Right of the bounding box.
+        //
+        REFERENCE_POINT_MIDDLE_RIGHT = 4;
+
+        // Rear-Middle of the bounding box.
+        //
+        REFERENCE_POINT_REAR_MIDDLE = 5;
+
+        // Rear-Left of the bounding box.
+        //
+        REFERENCE_POINT_REAR_LEFT = 6;
+
+        // Rear-Right of the bounding box.
+        //
+        REFERENCE_POINT_REAR_RIGHT = 7;
+
+        // Front-Middle of the bounding box.
+        //
+        REFERENCE_POINT_FRONT_MIDDLE = 8;
+
+        // Front-Left of the bounding box.
+        //
+        REFERENCE_POINT_FRONT_LEFT = 9;
+
+        // Front-Right of the bounding box.
+        //
+        REFERENCE_POINT_FRONT_RIGHT = 10;
+    }
+
+    // Information about a possible movement of the object during tracking.
+    //
+    enum MovementState
+    {
+        // Movement state is unknown.
+        //
+        MOVEMENT_STATE_UNKNOWN = 0;
+
+        // Other (unspecified but known).
+        //
+        MOVEMENT_STATE_OTHER = 1;
+
+        // Until now no object movement was detected in tracking history.
+        //
+        MOVEMENT_STATE_STATIONARY = 2;
+
+        // Object moves currently.
+        //
+        MOVEMENT_STATE_MOVING = 3;
+
+        // Object movement was detected in tracking history, but object is
+        // currently not moving.
+        //
+        MOVEMENT_STATE_STOPPED = 4;
+    }
+}
