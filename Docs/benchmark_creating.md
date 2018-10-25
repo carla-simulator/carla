@@ -213,7 +213,7 @@ vector as we show in the following code excerpt:
 
 
 
-The full code could be found at [basic_experiment_suite.py](https://github.com/carla-simulator/carla/blob/master/PythonClient/carla/driving_benchmark/experiment_suites/basic_experiment_suite.py)
+The full code could be found at [basic_experiment_suite.py](https://github.com/carla-simulator/carla/blob/master/Deprecated/PythonClient/carla/driving_benchmark/experiment_suites/basic_experiment_suite.py)
 
 
 
