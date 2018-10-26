@@ -4,7 +4,7 @@
 
 #include "OpenDriveActor.h"
 
-#include "DrawDebugHelpers.h"
+#include "Paths.h"
 #include "Algo/Reverse.h"
 
 AOpenDriveActor::AOpenDriveActor()
@@ -32,8 +32,17 @@ void AOpenDriveActor::OnConstruction(const FTransform &transform)
 {
     Super::OnConstruction(transform);
 
-    carla::road::Map map = carla::opendrive::OpenDrive::Load("C:\\Users\\ajianu\\Desktop\\xodr\\test_03_new.xodr");
+    // NOTE(Andrei): As the OpenDrive file has the same name as level,
+    // build the path to the xodr file using the lavel name and the
+    // game content directory.
+    FString mapName = GetWorld()->GetMapName();
+    FString xodrFile = FPaths::GameContentDir() + "/Carla/Maps/OpenDrive/" + mapName + ".xodr";
+
+    carla::road::Map map = carla::opendrive::OpenDrive::Load(TCHAR_TO_UTF8(*xodrFile), XmlInputType::FILE);
     std::vector<carla::road::lane_junction_t> junctionInfo = map.GetJunctionInformation();
+
+    ///////////////////////////////////////////////////////////////////////////
+    // NOTE(Andrei): Build the roads that are not junctions
 
     std::vector<carla::road::id_type> roadIDs = map.GetAllIds();
     std::sort(roadIDs.begin(), roadIDs.end());
@@ -44,6 +53,8 @@ void AOpenDriveActor::OnConstruction(const FTransform &transform)
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    // NOTE(Andrei): Build the roads that are junctions as one RoutePlanner
+    // can have more than one path that can be taken
 
     //       junctionId    roadID        laneID
     std::map<int, std::map<int, std::map<int, ARoutePlanner *>>>junctions;
