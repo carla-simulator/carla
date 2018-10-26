@@ -107,7 +107,6 @@ ARoutePlanner *AOpenDriveActor::GenerateRoutePlanner(const TArray<FVector> &wayp
     routePlanner->SetActorLocation(waypoints[0]);
 
     routePlanner->AddRoute(1.0f, waypoints);
-    routePlanner->Init();
 
     RoutePlanners.Add(routePlanner);
     return routePlanner;

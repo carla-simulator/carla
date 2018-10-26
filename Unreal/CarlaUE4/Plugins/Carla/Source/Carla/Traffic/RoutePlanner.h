@@ -23,30 +23,36 @@ class CARLA_API ARoutePlanner : public AActor
   GENERATED_BODY()
 
 private:
-    FColor _spline_color;
+
+  FColor _spline_color;
 
 public:
-  ARoutePlanner(const FObjectInitializer& ObjectInitializer);
-  void Init();
 
-  void SetSplineColor(const FColor color) { _spline_color = color; }
+  ARoutePlanner(const FObjectInitializer &ObjectInitializer);
+
+  void SetSplineColor(const FColor color)
+  {
+    _spline_color = color;
+  }
   void DrawRoutes();
 
   void AddRoute(float probability, const TArray<FVector> &routePoints);
+
   void CleanRoute();
 
 protected:
 
 #if WITH_EDITOR
-  virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+  virtual void PostEditChangeProperty(FPropertyChangedEvent &PropertyChangedEvent) override;
 #endif // WITH_EDITOR
 
   virtual void BeginPlay() override;
+
   virtual void EndPlay(EEndPlayReason::Type EndPlayReason) override;
 
   UFUNCTION()
   void OnTriggerBeginOverlap(
-      UPrimitiveComponent* OverlappedComp,
+      UPrimitiveComponent *OverlappedComp,
       AActor *OtherActor,
       UPrimitiveComponent *OtherComp,
       int32 OtherBodyIndex,
@@ -58,9 +64,9 @@ public:
   UPROPERTY(EditAnywhere)
   UBoxComponent *TriggerVolume;
 
-  UPROPERTY(BlueprintReadWrite, Category="Traffic Routes", EditAnywhere)
+  UPROPERTY(BlueprintReadWrite, Category = "Traffic Routes", EditAnywhere)
   TArray<USplineComponent *> Routes;
 
-  UPROPERTY(BlueprintReadWrite, Category="Traffic Routes", EditAnywhere, EditFixedSize)
+  UPROPERTY(BlueprintReadWrite, Category = "Traffic Routes", EditAnywhere, EditFixedSize)
   TArray<float> Probabilities;
 };

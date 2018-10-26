@@ -24,8 +24,8 @@ static AWheeledVehicleAIController *GetVehicleController(AActor *Actor)
 {
   auto *Vehicle = (Actor->IsPendingKill() ? nullptr : Cast<ACarlaWheeledVehicle>(Actor));
   return (Vehicle != nullptr ?
-      Cast<AWheeledVehicleAIController>(Vehicle->GetController()) :
-      nullptr);
+         Cast<AWheeledVehicleAIController>(Vehicle->GetController()) :
+         nullptr);
 }
 
 static const USplineComponent *PickARoute(
@@ -35,7 +35,8 @@ static const USplineComponent *PickARoute(
 {
   check(Routes.Num() > 0);
 
-  if (Routes.Num() == 1) {
+  if (Routes.Num() == 1)
+  {
     return Routes[0];
   }
 
@@ -44,8 +45,8 @@ static const USplineComponent *PickARoute(
   return Routes[Index];
 }
 
-ARoutePlanner::ARoutePlanner(const FObjectInitializer& ObjectInitializer) :
-  Super(ObjectInitializer)
+ARoutePlanner::ARoutePlanner(const FObjectInitializer &ObjectInitializer)
+  : Super(ObjectInitializer)
 {
   RootComponent =
       ObjectInitializer.CreateDefaultSubobject<USceneComponent>(this, TEXT("SceneRootComponent"));
@@ -63,15 +64,18 @@ ARoutePlanner::ARoutePlanner(const FObjectInitializer& ObjectInitializer) :
 }
 
 #if WITH_EDITOR
-void ARoutePlanner::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+void ARoutePlanner::PostEditChangeProperty(FPropertyChangedEvent &PropertyChangedEvent)
 {
   Super::PostEditChangeProperty(PropertyChangedEvent);
   const auto Size = Routes.Num();
-  if (PropertyChangedEvent.Property && (Size != Probabilities.Num())) {
+  if (PropertyChangedEvent.Property && (Size != Probabilities.Num()))
+  {
     Probabilities.Reset(Size);
-    for (auto i = 0; i < Size; ++i) {
+    for (auto i = 0; i < Size; ++i)
+    {
       Probabilities.Add(1.0f / static_cast<float>(Size));
-      if (Routes[i] == nullptr) {
+      if (Routes[i] == nullptr)
+      {
         Routes[i] = NewObject<USplineComponent>(this);
         Routes[i]->SetupAttachment(RootComponent);
         Routes[i]->SetHiddenInGame(true);
@@ -85,64 +89,61 @@ void ARoutePlanner::PostEditChangeProperty(FPropertyChangedEvent& PropertyChange
 
 void ARoutePlanner::AddRoute(float probability, const TArray<FVector> &routePoints)
 {
-    USplineComponent *NewSpline = NewObject<USplineComponent>(this);
+  USplineComponent *NewSpline = NewObject<USplineComponent>(this);
 
-    NewSpline->SetLocationAtSplinePoint(0, routePoints[0], ESplineCoordinateSpace::World, true);
-    NewSpline->SetLocationAtSplinePoint(1, routePoints[1], ESplineCoordinateSpace::World, true);
+  NewSpline->SetLocationAtSplinePoint(0, routePoints[0], ESplineCoordinateSpace::World, true);
+  NewSpline->SetLocationAtSplinePoint(1, routePoints[1], ESplineCoordinateSpace::World, true);
 
-    for (int i = 2; i < routePoints.Num(); ++i)
-    {
-        NewSpline->AddSplinePoint(routePoints[i], ESplineCoordinateSpace::World, true);
-    }
+  for (int i = 2; i < routePoints.Num(); ++i)
+  {
+    NewSpline->AddSplinePoint(routePoints[i], ESplineCoordinateSpace::World, true);
+  }
 
-    Routes.Add(NewSpline);
-    Probabilities.Add(probability);
+  Routes.Add(NewSpline);
+  Probabilities.Add(probability);
 }
 
 void ARoutePlanner::CleanRoute()
 {
-    Routes.Empty();
-    Probabilities.Empty();
-}
-
-void ARoutePlanner::Init()
-{
-    if (Routes.Num() < 1)
-    {
-        UE_LOG(LogCarla, Warning, TEXT("ARoutePlanner has no route assigned."));
-        return;
-    }
-
-    for (auto &&Route : Routes)
-    {
-        if (!IsSplineValid(Route))
-        {
-            UE_LOG(LogCarla, Error, TEXT("ARoutePlanner has a route with zero way-points."));
-            return;
-        }
-    }
-
-    // Register delegate on begin overlap.
-    if (!TriggerVolume->OnComponentBeginOverlap.IsAlreadyBound(this, &ARoutePlanner::OnTriggerBeginOverlap))
-    {
-        TriggerVolume->OnComponentBeginOverlap.AddDynamic(this, &ARoutePlanner::OnTriggerBeginOverlap);
-    }
+  Routes.Empty();
+  Probabilities.Empty();
 }
 
 void ARoutePlanner::BeginPlay()
 {
   Super::BeginPlay();
+
+  if (Routes.Num() < 1)
+  {
+    UE_LOG(LogCarla, Warning, TEXT("ARoutePlanner '%s' has no route assigned."), *GetName());
+    return;
+  }
+
+  for (auto &&Route : Routes)
+  {
+    if (!IsSplineValid(Route))
+    {
+      UE_LOG(LogCarla, Error, TEXT("ARoutePlanner '%s' has a route with zero way-points."), *GetName());
+      return;
+    }
+  }
+
+  // Register delegate on begin overlap.
+  if (!TriggerVolume->OnComponentBeginOverlap.IsAlreadyBound(this, &ARoutePlanner::OnTriggerBeginOverlap))
+  {
+    TriggerVolume->OnComponentBeginOverlap.AddDynamic(this, &ARoutePlanner::OnTriggerBeginOverlap);
+  }
 }
 
 void ARoutePlanner::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-    // Deregister the delegate.
-    if (TriggerVolume->OnComponentBeginOverlap.IsAlreadyBound(this, &ARoutePlanner::OnTriggerBeginOverlap))
-    {
-        TriggerVolume->OnComponentBeginOverlap.RemoveDynamic(this, &ARoutePlanner::OnTriggerBeginOverlap);
-    }
+  // Deregister the delegate.
+  if (TriggerVolume->OnComponentBeginOverlap.IsAlreadyBound(this, &ARoutePlanner::OnTriggerBeginOverlap))
+  {
+    TriggerVolume->OnComponentBeginOverlap.RemoveDynamic(this, &ARoutePlanner::OnTriggerBeginOverlap);
+  }
 
-    Super::EndPlay(EndPlayReason);
+  Super::EndPlay(EndPlayReason);
 }
 
 void ARoutePlanner::OnTriggerBeginOverlap(
@@ -161,35 +162,41 @@ void ARoutePlanner::OnTriggerBeginOverlap(
 
     TArray<FVector> WayPoints;
     const auto Size = Route->GetNumberOfSplinePoints();
-    check(Size > 1);
-    WayPoints.Reserve(Size);
-    for (auto i = 1; i < Size; ++i)
+    if (Size > 1)
     {
-      WayPoints.Add(Route->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::World));
-    }
+      WayPoints.Reserve(Size);
+      for (auto i = 1; i < Size; ++i)
+      {
+        WayPoints.Add(Route->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::World));
+      }
 
-    Controller->SetFixedRoute(WayPoints);
+      Controller->SetFixedRoute(WayPoints);
+    }
+    else
+    {
+      UE_LOG(LogCarla, Error, TEXT("ARoutePlanner '%s' has a route with zero way-points."), *GetName());
+    }
   }
 }
 
 void ARoutePlanner::DrawRoutes()
 {
-    for (int i = 0, lenRoutes = Routes.Num(); i < lenRoutes; ++i)
+  for (int i = 0, lenRoutes = Routes.Num(); i < lenRoutes; ++i)
+  {
+    for (int j = 0, lenNumPoints = Routes[i]->GetNumberOfSplinePoints() - 1; j < lenNumPoints; ++j)
     {
-        for (int j = 0, lenNumPoints = Routes[i]->GetNumberOfSplinePoints() - 1; j < lenNumPoints; ++j)
-        {
-            FVector p0 = Routes[i]->GetLocationAtSplinePoint(j + 0, ESplineCoordinateSpace::World);
-            FVector p1 = Routes[i]->GetLocationAtSplinePoint(j + 1, ESplineCoordinateSpace::World);
+      FVector p0 = Routes[i]->GetLocationAtSplinePoint(j + 0, ESplineCoordinateSpace::World);
+      FVector p1 = Routes[i]->GetLocationAtSplinePoint(j + 1, ESplineCoordinateSpace::World);
 
-            if (_spline_color == FColor::Black)
-            {
-                float f = (float)j / (float)lenNumPoints;
-                DrawDebugLine(GetWorld(), p0, p1, FColor(255 * f, 255 - 255 * f, 0), true);
-            }
-            else
-            {
-                DrawDebugLine(GetWorld(), p0, p1, _spline_color, true);
-            }
-        }
+      if (_spline_color == FColor::Black)
+      {
+        float f = (float) j / (float) lenNumPoints;
+        DrawDebugLine(GetWorld(), p0, p1, FColor(255 * f, 255 - 255 * f, 0), true);
+      }
+      else
+      {
+        DrawDebugLine(GetWorld(), p0, p1, _spline_color, true);
+      }
     }
+  }
 }
