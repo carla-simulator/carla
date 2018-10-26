@@ -6,57 +6,38 @@
 
 #pragma once
 
-#include "carla/road/element/RoadSegment.h"
+#include "carla/Memory.h"
 #include "carla/NonCopyable.h"
-
-#include <map>
+#include "carla/Optional.h"
+#include "carla/road/MapData.h"
+#include "carla/road/element/Waypoint.h"
 
 namespace carla {
 namespace road {
 
-  using namespace carla::road::element;
-
-  struct lane_junction_t {
-    std::string contact_point = "start";
-    int junction_id = -1;
-
-    int connection_road = -1;
-    int incomming_road = -1;
-
-    std::vector<int> from_lane;
-    std::vector<int> to_lane;
-  };
-
-  class Map {
+  class Map
+    : public EnableSharedFromThis<Map>,
+      private MovableNonCopyable {
   public:
 
-    Map(const Map &) = delete;
-    Map &operator=(const Map &) = delete;
+    element::Waypoint GetClosestWaypointOnRoad(const geom::Location &) const {
+      return element::Waypoint();
+    }
 
-    Map(Map &&) = default;
-    Map &operator=(Map &&) = default;
+    Optional<element::Waypoint> GetWaypoint(const geom::Location &) const {
+      return Optional<element::Waypoint>();
+    }
 
-    bool ExistId(id_type id) const;
+    const MapData &GetData() {
+      return _data;
+    }
 
-    const RoadSegment *GetRoad(id_type id) const;
-
-    std::vector<id_type> GetAllIds() const;
-
-    uint32_t GetRoadCount() const;
-
-    const RoadSegment &NearestRoad(const geom::Location &loc);
-
-    void SetJunctionInformation(const std::vector<lane_junction_t> &junctionInfo) { _junction_information = junctionInfo; }
-    std::vector<lane_junction_t> GetJunctionInformation() const { return _junction_information; }
+    Map(MapData m)
+      : _data(std::move(m)) {}
 
   private:
 
-    friend class MapBuilder;
-    std::vector<lane_junction_t> _junction_information;
-
-    Map() {}
-
-    std::map<id_type, std::unique_ptr<RoadSegment>> _elements;
+    MapData _data;
   };
 
 } // namespace road

@@ -7,6 +7,8 @@
 #pragma once
 
 #include "Carla/Actor/ActorDispatcher.h"
+#include "Carla/Sensor/WorldObserver.h"
+#include "Carla/Weather/Weather.h"
 
 #include "CarlaEpisode.generated.h"
 
@@ -20,12 +22,12 @@ class CARLA_API UCarlaEpisode : public UObject
 
 public:
 
-  void SetMapName(const FString &InMapName)
-  {
-    MapName = InMapName;
-  }
+  UCarlaEpisode(const FObjectInitializer &ObjectInitializer);
 
-  void InitializeAtBeginPlay();
+  auto GetId() const
+  {
+    return Id;
+  }
 
   UFUNCTION(BlueprintCallable)
   const FString &GetMapName() const
@@ -39,9 +41,10 @@ public:
     return Spectator;
   }
 
-  void RegisterActorFactory(ACarlaActorFactory &ActorFactory)
+  UFUNCTION(BlueprintCallable)
+  AWeather *GetWeather() const
   {
-    ActorDispatcher.Bind(ActorFactory);
+    return Weather;
   }
 
   /// Return the list of actor definitions that are available to be spawned this
@@ -51,6 +54,10 @@ public:
   {
     return ActorDispatcher.GetActorDefinitions();
   }
+
+  /// Return the list of recommended start positions.
+  UFUNCTION(BlueprintCallable)
+  TArray<FTransform> GetRecommendedStartTransforms() const;
 
   /// Spawns an actor based on @a ActorDescription at @a Transform. To properly
   /// despawn an actor created with this function call DestroyActor.
@@ -79,11 +86,11 @@ public:
     return SpawnActorWithInfo(Transform, std::move(ActorDescription)).Value.GetActor();
   }
 
-  /// Destroys an actor, properly removing it from the registry.
+  /// @copydoc FActorDispatcher::DestroyActor(AActor*)
   UFUNCTION(BlueprintCallable)
-  void DestroyActor(AActor *Actor)
+  bool DestroyActor(AActor *Actor)
   {
-    ActorDispatcher.DestroyActor(Actor);
+    return ActorDispatcher.DestroyActor(Actor);
   }
 
   const FActorRegistry &GetActorRegistry() const
@@ -91,7 +98,25 @@ public:
     return ActorDispatcher.GetActorRegistry();
   }
 
+  const AWorldObserver *StartWorldObserver(carla::streaming::MultiStream Stream);
+
+  const AWorldObserver *GetWorldObserver() const
+  {
+    return WorldObserver;
+  }
+
 private:
+
+  friend class ATheNewCarlaGameModeBase;
+
+  void InitializeAtBeginPlay();
+
+  void RegisterActorFactory(ACarlaActorFactory &ActorFactory)
+  {
+    ActorDispatcher.Bind(ActorFactory);
+  }
+
+  const uint32 Id = 0u;
 
   UPROPERTY(VisibleAnywhere)
   FString MapName;
@@ -100,4 +125,10 @@ private:
 
   UPROPERTY(VisibleAnywhere)
   APawn *Spectator = nullptr;
+
+  UPROPERTY(VisibleAnywhere)
+  AWeather *Weather = nullptr;
+
+  UPROPERTY(VisibleAnywhere)
+  AWorldObserver *WorldObserver = nullptr;
 };

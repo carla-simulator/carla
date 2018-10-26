@@ -18,6 +18,9 @@ namespace low_level {
   /// A low-level streaming server. Each new stream has a token associated, this
   /// token can be used by a client to subscribe to the stream. This server
   /// requires an external io_service running.
+  ///
+  /// @warning This server cannot be destructed before its @a io_service is
+  /// stopped.
   template <typename T>
   class Server {
   public:
@@ -33,9 +36,15 @@ namespace low_level {
         detail::EndPoint<protocol_type, ExternalEPType> external_ep)
       : _server(io_service, std::move(internal_ep)),
         _dispatcher(std::move(external_ep)) {
-      _server.Listen([this](auto session) {
-        _dispatcher.RegisterSession(session);
-      });
+      auto on_session_opened = [this](auto session) {
+        if (!_dispatcher.RegisterSession(session)) {
+          session->Close();
+        }
+      };
+      auto on_session_closed = [this](auto session) {
+        _dispatcher.DeregisterSession(session);
+      };
+      _server.Listen(on_session_opened, on_session_closed);
     }
 
     template <typename InternalEPType>
@@ -54,6 +63,10 @@ namespace low_level {
 
     Stream MakeStream() {
       return _dispatcher.MakeStream();
+    }
+
+    MultiStream MakeMultiStream() {
+      return _dispatcher.MakeMultiStream();
     }
 
   private:

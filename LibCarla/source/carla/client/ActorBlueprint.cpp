@@ -30,9 +30,11 @@ namespace client {
   }
 
   bool ActorBlueprint::MatchTags(const std::string &wildcard_pattern) const {
-    return std::any_of(_tags.begin(), _tags.end(), [&](const auto &tag) {
-      return StringUtil::Match(tag, wildcard_pattern);
-    });
+    return
+        StringUtil::Match(_id, wildcard_pattern) ||
+        std::any_of(_tags.begin(), _tags.end(), [&](const auto &tag) {
+          return StringUtil::Match(tag, wildcard_pattern);
+        });
   }
 
   rpc::ActorDescription ActorBlueprint::MakeActorDescription() const {

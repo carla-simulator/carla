@@ -40,7 +40,8 @@ namespace client {
     BlueprintLibrary(BlueprintLibrary &&) = default;
     BlueprintLibrary &operator=(BlueprintLibrary &&) = default;
 
-    /// Filters a list of ActorBlueprint with tags matching @a wildcard_pattern.
+    /// Filters a list of ActorBlueprint with id or tags matching
+    /// @a wildcard_pattern.
     SharedPtr<BlueprintLibrary> Filter(const std::string &wildcard_pattern) const;
 
     const_pointer Find(const std::string &key) const {

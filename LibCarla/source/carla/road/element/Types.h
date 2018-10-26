@@ -58,8 +58,8 @@ namespace element {
     // usage MakeInfo<SpeedLimit>(30.0)
     template <typename T, typename ... Args>
     T *MakeInfo(Args && ... args) {
-      _info.emplace_back(std::make_unique<T>(std::forward<Args>(args) ...));
-      return dynamic_cast<T *>(_info.back().get());
+      _info.emplace_back(std::make_shared<T>(std::forward<Args>(args) ...));
+      return static_cast<T *>(_info.back().get());
     }
 
     const std::vector<id_type> &GetPredecessorID() const {
@@ -71,7 +71,7 @@ namespace element {
     const std::vector<std::unique_ptr<Geometry>> &GetGeometry() const {
       return _geom;
     }
-    const std::vector<std::unique_ptr<RoadInfo>> &GetInfo() const {
+    const std::vector<std::shared_ptr<RoadInfo>> &GetInfo() const {
       return _info;
     }
 
@@ -84,7 +84,7 @@ namespace element {
     std::vector<bool> _successor_is_start;
     std::vector<bool> _predecessors_is_start;
     std::vector<std::unique_ptr<Geometry>> _geom;
-    std::vector<std::unique_ptr<RoadInfo>> _info;
+    std::vector<std::shared_ptr<RoadInfo>> _info;
   };
 
 } // namespace element

@@ -10,6 +10,8 @@
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla/Actor/CarlaActorFactory.h"
 
+#include "GameFramework/Controller.h"
+
 void FActorDispatcher::Bind(FActorDefinition Definition, SpawnFunctionType Functor)
 {
   if (UActorBlueprintFunctionLibrary::CheckActorDefinition(Definition))
@@ -68,11 +70,41 @@ TPair<EActorSpawnResultStatus, FActorView> FActorDispatcher::SpawnActor(
   return MakeTuple(Result.Status, View);
 }
 
-void FActorDispatcher::DestroyActor(AActor *Actor)
+bool FActorDispatcher::DestroyActor(AActor *Actor)
 {
-  if (Actor != nullptr)
+  if (Actor == nullptr) {
+    UE_LOG(LogCarla, Error, TEXT("Trying to destroy nullptr actor"));
+    return false;
+  }
+
+  // Check if the actor is in the registry.
+  auto View = Registry.Find(Actor);
+  if (!View.IsValid()) {
+    UE_LOG(LogCarla, Warning, TEXT("Trying to destroy actor that is not in the registry"));
+    return false;
+  }
+  const auto &Id = View.GetActorDescription()->Id;
+
+  // Destroy its controller if present.
+  auto Pawn = Cast<APawn>(Actor);
+  auto Controller = (Pawn != nullptr ? Pawn->GetController() : nullptr);
+  if (Controller != nullptr)
+  {
+    UE_LOG(LogCarla, Log, TEXT("Destroying actor's controller: '%s'"), *Id);
+    auto Success = Controller->Destroy();
+    if (!Success)
+    {
+      UE_LOG(LogCarla, Error, TEXT("Failed to destroy actor's controller: '%s'"), *Id);
+    }
+  }
+
+  // Destroy the actor.
+  UE_LOG(LogCarla, Log, TEXT("Destroying actor: '%s'"), *Id);
+  if (Actor->Destroy())
   {
     Registry.Deregister(Actor);
-    Actor->Destroy();
+    return true;
   }
+  UE_LOG(LogCarla, Error, TEXT("Failed to destroy actor: '%s'"), *Id);
+  return false;
 }

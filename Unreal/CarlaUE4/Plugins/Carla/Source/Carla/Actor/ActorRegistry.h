@@ -78,6 +78,11 @@ public:
     return View.IsValid() ? View.GetActor() : nullptr;
   }
 
+  /// If the actor is not found in the registry, create a fake actor view. The
+  /// returned FActorView has some information about the @a Actor but will have
+  /// an invalid id.
+  FActorView FindOrFake(AActor *Actor) const;
+
   /// @}
   // ===========================================================================
   /// @name Range iteration support

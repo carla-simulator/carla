@@ -99,10 +99,19 @@ else
   ./bootstrap.sh \
       --with-toolset=clang \
       --prefix=../boost-install \
-      --with-libraries=python
-  ./b2 clean
-  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j 12 stage release
-  ./b2 install toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j 12
+      --with-libraries=python,filesystem \
+      --with-python=/usr/bin/python2 --with-python-root=/usr
+  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
+  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
+  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} --clean-all
+
+  ./bootstrap.sh \
+      --with-toolset=clang \
+      --prefix=../boost-install \
+      --with-libraries=python \
+      --with-python=/usr/bin/python3 --with-python-root=/usr
+  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
+  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
 
   popd >/dev/null
 
@@ -232,6 +241,9 @@ set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -std=c++14 -pthread -fPIC" CACHE STRING
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra" CACHE STRING "" FORCE)
 # See https://bugs.llvm.org/show_bug.cgi?id=21629
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wno-missing-braces" CACHE STRING "" FORCE)
+
+# @todo These flags need to be compatible with setup.py compilation.
+set(CMAKE_CXX_FLAGS_RELEASE_CLIENT "\${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -g -fwrapv -O2 -Wall -Wstrict-prototypes -fno-strict-aliasing -Wdate-time -D_FORTIFY_SOURCE=2 -g -fstack-protector-strong -Wformat -Werror=format-security -fPIC -std=c++14 -Wno-missing-braces -DBOOST_ERROR_CODE_HEADER_ONLY -DLIBCARLA_ENABLE_LIFETIME_PROFILER -DLIBCARLA_WITH_PYTHON_SUPPORT" CACHE STRING "" FORCE)
 EOL
 
 # -- LIBCPP_TOOLCHAIN_FILE -----------------------------------------------------
@@ -256,6 +268,12 @@ set(CARLA_VERSION $(get_carla_version))
 
 add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY)
 
+# Uncomment to force support for an specific image format (require their
+# respective libraries installed).
+# add_definitions(-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT)
+# add_definitions(-DLIBCARLA_IMAGE_WITH_JPEG_SUPPORT)
+# add_definitions(-DLIBCARLA_IMAGE_WITH_TIFF_SUPPORT)
+
 set(BOOST_INCLUDE_PATH "${BOOST_INCLUDE}")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Server")
@@ -272,7 +290,15 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "Client")
   set(RPCLIB_LIB_PATH "${RPCLIB_LIBSTDCXX_LIBPATH}")
   set(BOOST_LIB_PATH "${BOOST_LIBPATH}")
 endif ()
+
 EOL
+
+if [ "${TRAVIS}" == "true" ] ; then
+  log "Travis CI build detected: disabling PNG support."
+  echo "add_definitions(-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=false)" >> ${CMAKE_CONFIG_FILE}.gen
+else
+  echo "add_definitions(-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true)" >> ${CMAKE_CONFIG_FILE}.gen
+fi
 
 # -- Move files ----------------------------------------------------------------
 

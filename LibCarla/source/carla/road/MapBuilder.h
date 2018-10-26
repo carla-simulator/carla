@@ -17,22 +17,22 @@ namespace road {
   class MapBuilder {
   public:
 
-    bool AddRoadSegmentDefinition(RoadSegmentDefinition &seg);
+    bool AddRoadSegmentDefinition(element::RoadSegmentDefinition &seg);
 
     void SetJunctionInformation(const std::vector<carla::road::lane_junction_t> &junctionInfo)
     {
-      _map.SetJunctionInformation(junctionInfo);
+      _map_data.SetJunctionInformation(junctionInfo);
     }
 
-    Map Build();
+    SharedPtr<Map> Build();
 
   private:
 
     template <typename T, typename ... Args>
-    T &MakeElement(id_type id, Args && ... args) {
+    T &MakeElement(element::id_type id, Args && ... args) {
       auto inst = std::make_unique<T>(std::forward<Args>(args) ...);
       T &r = *inst;
-      _map._elements.emplace(id, std::move(inst));
+      _map_data._elements.emplace(id, std::move(inst));
       return r;
     }
 
@@ -40,8 +40,8 @@ namespace road {
 
   private:
 
-    Map _map;
-    std::map<id_type, RoadSegmentDefinition> _temp_sections;
+    MapData _map_data;
+    std::map<element::id_type, element::RoadSegmentDefinition> _temp_sections;
   };
 
 } // namespace road

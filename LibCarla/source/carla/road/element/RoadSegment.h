@@ -57,8 +57,11 @@ namespace element {
     }
 
     // returns info vector given a type and a distance
-    template <typename T>
-    std::vector<T> GetInfos(double dist) const;
+    std::vector<std::shared_ptr<const RoadInfo>> GetInfos(double dist) const {
+      // @todo
+      (void)dist;
+      return std::vector<std::shared_ptr<const RoadInfo>>();
+    }
 
     void PredEmplaceBack(RoadSegment *s) {
       _predecessors.emplace_back(s);
@@ -144,17 +147,17 @@ namespace element {
     struct LessComp {
       using is_transparent = void;
       bool operator()(
-          const std::unique_ptr<RoadInfo> &a,
-          const std::unique_ptr<RoadInfo> &b) const {
+          const std::shared_ptr<RoadInfo> &a,
+          const std::shared_ptr<RoadInfo> &b) const {
         return a->d < b->d;
       }
       bool operator()(
           const double &a,
-          const std::unique_ptr<RoadInfo> &b) const {
+          const std::shared_ptr<RoadInfo> &b) const {
         return a < b->d;
       }
       bool operator()(
-          const std::unique_ptr<RoadInfo> &a,
+          const std::shared_ptr<RoadInfo> &a,
           const double &b) const {
         return a->d < b;
       }
@@ -167,7 +170,7 @@ namespace element {
     std::vector<bool> _successors_is_start;
     std::vector<bool> _predecessors_is_start;
     std::vector<std::unique_ptr<Geometry>> _geom;
-    std::multiset<std::unique_ptr<RoadInfo>, LessComp> _info;
+    std::multiset<std::shared_ptr<RoadInfo>, LessComp> _info;
     double _length = -1.0;
   };
 

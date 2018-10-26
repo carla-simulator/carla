@@ -14,11 +14,11 @@
 
 namespace carla {
 
-  bool StringUtil::Match(const std::string &str, const std::string &test) {
+  bool StringUtil::Match(const char *str, const char *test) {
 #ifdef _WIN32
-    return PathMatchSpecA(str.c_str(), test.c_str());
+    return PathMatchSpecA(str, test);
 #else
-    return 0 == fnmatch(test.c_str(), str.c_str(), 0);
+    return 0 == fnmatch(test, str, 0);
 #endif // _WIN32
   }
 

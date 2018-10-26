@@ -7,9 +7,6 @@
 #include "Carla.h"
 #include "Carla/Game/TheNewCarlaGameModeBase.h"
 
-#include "Carla/Game/Tagger.h"
-#include "Carla/Game/TaggerDelegate.h"
-
 ATheNewCarlaGameModeBase::ATheNewCarlaGameModeBase(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer)
 {
@@ -20,6 +17,7 @@ ATheNewCarlaGameModeBase::ATheNewCarlaGameModeBase(const FObjectInitializer& Obj
   Episode = CreateDefaultSubobject<UCarlaEpisode>(TEXT("Episode"));
 
   TaggerDelegate = CreateDefaultSubobject<UTaggerDelegate>(TEXT("TaggerDelegate"));
+  CarlaSettingsDelegate = CreateDefaultSubobject<UCarlaSettingsDelegate>(TEXT("CarlaSettingsDelegate"));
 }
 
 void ATheNewCarlaGameModeBase::InitGame(
@@ -32,21 +30,62 @@ void ATheNewCarlaGameModeBase::InitGame(
   checkf(
       Episode != nullptr,
       TEXT("Missing episode, can't continue without an episode!"));
-  Episode->SetMapName(MapName);
+
+#if WITH_EDITOR
+    {
+      // When playing in editor the map name gets an extra prefix, here we
+      // remove it.
+      FString CorrectedMapName = MapName;
+      constexpr auto PIEPrefix = TEXT("UEDPIE_0_");
+      CorrectedMapName.RemoveFromStart(PIEPrefix);
+      UE_LOG(LogCarla, Log, TEXT("Corrected map name from %s to %s"), *MapName, *CorrectedMapName);
+      Episode->MapName = CorrectedMapName;
+    }
+#else
+  Episode->MapName = MapName;
+#endif // WITH_EDITOR
+
+  auto World = GetWorld();
+  check(World != nullptr);
 
   GameInstance = Cast<UCarlaGameInstance>(GetGameInstance());
   checkf(
       GameInstance != nullptr,
-      TEXT("GameInstance is not a UCarlaGameInstance, did you forget to set it in the project settings?"));
+      TEXT("GameInstance is not a UCarlaGameInstance, did you forget to set "
+           "it in the project settings?"));
 
   if (TaggerDelegate != nullptr) {
-    check(GetWorld() != nullptr);
-    TaggerDelegate->RegisterSpawnHandler(GetWorld());
+    TaggerDelegate->RegisterSpawnHandler(World);
   } else {
     UE_LOG(LogCarla, Error, TEXT("Missing TaggerDelegate!"));
   }
 
+  if(CarlaSettingsDelegate != nullptr) {
+    CarlaSettingsDelegate->ApplyQualityLevelPostRestart();
+    CarlaSettingsDelegate->RegisterSpawnHandler(World);
+  } else {
+    UE_LOG(LogCarla, Error, TEXT("Missing CarlaSettingsDelegate!"));
+  }
+
+  if (WeatherClass != nullptr) {
+    Episode->Weather = World->SpawnActor<AWeather>(WeatherClass);
+    // Apply default weather.
+    Episode->Weather->ApplyWeather(FWeatherParameters());
+  } else {
+    UE_LOG(LogCarla, Error, TEXT("Missing weather class!"));
+  }
+
   SpawnActorFactories();
+}
+
+void ATheNewCarlaGameModeBase::RestartPlayer(AController *NewPlayer)
+{
+  if (CarlaSettingsDelegate != nullptr)
+  {
+    CarlaSettingsDelegate->ApplyQualityLevelPreRestart();
+  }
+
+  Super::RestartPlayer(NewPlayer);
 }
 
 void ATheNewCarlaGameModeBase::BeginPlay()
@@ -75,6 +114,11 @@ void ATheNewCarlaGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
   GameInstance->NotifyEndEpisode();
 
   Super::EndPlay(EndPlayReason);
+
+  if ((CarlaSettingsDelegate != nullptr) && (EndPlayReason != EEndPlayReason::EndPlayInEditor))
+  {
+    CarlaSettingsDelegate->Reset();
+  }
 }
 
 void ATheNewCarlaGameModeBase::SpawnActorFactories()
@@ -98,5 +142,4 @@ void ATheNewCarlaGameModeBase::SpawnActorFactories()
       }
     }
   }
-
 }
