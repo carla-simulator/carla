@@ -76,18 +76,14 @@ namespace client {
     }
 
     /// @throw std::out_of_range if no such element exists.
-    const ActorAttribute &GetAttribute(const std::string &id) const {
-      return _attributes.at(id);
-    }
+    const ActorAttribute &GetAttribute(const std::string &id) const;
 
     /// Set the value of the attribute given by @a id.
     ///
     /// @throw std::out_of_range if no such element exists.
     /// @throw InvalidAttributeValue if attribute is not modifiable.
     /// @throw InvalidAttributeValue if format does not match the attribute type.
-    void SetAttribute(const std::string &id, std::string value) {
-      _attributes.at(id).Set(std::move(value));
-    }
+    void SetAttribute(const std::string &id, std::string value);
 
     size_t size() const {
       return _attributes.size();

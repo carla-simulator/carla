@@ -274,7 +274,7 @@ class PointCloud(SensorData):
 
         # Open the file and save with the specific PLY format.
         with open(filename, 'w+') as ply_file:
-            ply_file.write('\n'.join([construct_ply_header(), ply]))
+            ply_file.write('\n'.join([construct_ply_header(), ply, '']))
 
     def __len__(self):
         return len(self.array)

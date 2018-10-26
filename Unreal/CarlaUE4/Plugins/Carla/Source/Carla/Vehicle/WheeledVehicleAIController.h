@@ -185,8 +185,8 @@ public:
   /// @name AI
   // ===========================================================================
   /// @{
-protected:
 
+  UFUNCTION(Category = "Wheeled Vehicle Controller", BlueprintCallable)
   const FVehicleControl &GetAutopilotControl() const
   {
     return AutopilotControl;
