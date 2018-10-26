@@ -6,12 +6,13 @@
 
 #pragma once
 
-#include "carla/road/element/Types.h"
-#include "carla/road/element/RoadInfo.h"
 #include "carla/geom/Location.h"
+#include "carla/road/element/RoadInfo.h"
+#include "carla/road/element/Types.h"
 
-#include <set>
+#include <limits>
 #include <memory>
+#include <set>
 #include <vector>
 
 namespace carla {
@@ -130,6 +131,43 @@ namespace element {
         }
       }
       return DirectedPoint::Invalid();
+    }
+
+    std::pair<double, double> GetNearestPoint(const geom::Location &loc) const {
+      double min = std::numeric_limits<double>::max();
+      std::pair<double, double> last = {0.0, 0.0};
+
+      decltype(_geom)::const_iterator nearest_geom;
+
+      for (auto g = _geom.begin(); g !=_geom.end(); ++g) {
+        auto d = (*g)->DistanceTo(loc);
+        if (d.second < min) {
+          last = d;
+          min = d.second;
+          nearest_geom = g;
+        }
+      }
+
+      for (auto g = _geom.begin(); g != nearest_geom; ++g) {
+        last.first += (*g)->GetLength();
+      }
+
+      return last;
+    }
+
+    int GetNearestLane(double, const geom::Location &) const {
+      /*
+      DirectedPoint dp = GetDirectedPointIn(dist);
+
+      double dist_dp_loc = geom::Math::Distance2D(dp.location, loc);
+
+      const RoadInfoLane *road_info_lane = GetInfo<RoadInfoLane>(dist);
+      for (auto &&lane_id : road_info_lane->getLanesIDs()) {
+        const LaneInfo *info = road_info_lane->getLane(lane_id);
+        // search for info width
+      }
+      */
+      return 0;
     }
 
     const double &GetLength() const {

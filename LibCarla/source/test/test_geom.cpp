@@ -27,7 +27,7 @@ TEST(geom, distance) {
 }
 
 TEST(geom, nearest_point_segment) {
-  const float pos[] = {
+  const float segment[] = {
      0,  0, 10,  0,
      2,  5, 10,  8,
     -6,  8,  8, -2,
@@ -61,14 +61,16 @@ TEST(geom, nearest_point_segment) {
     double min_dist = std::numeric_limits<double>::max();
     int id = -1;
     for (int j = 0; j < 40; j += 4) {
-      const double dist = Math::DistanceSegmentPoint(point[i],
-          {pos[j], pos[j + 1], 0}, {pos[j + 2], pos[j + 3], 0});
+      const double dist = Math::DistSegmentPoint(
+          point[i],
+          {segment[j + 0], segment[j + 1], 0},
+          {segment[j + 2], segment[j + 3], 0}).second;
       if (dist < min_dist) {
         min_dist = dist;
         id = j / 4;
       }
     }
-    ASSERT_EQ(id, results[i]) << "Fails point number " << i;
+    ASSERT_EQ(id, results[i]) << "Fails point number: " << i;
   }
 }
 
@@ -112,12 +114,12 @@ TEST(geom, point_in_rectangle) {
 }
 
 TEST(geom, nearest_point_arc) {
-  ASSERT_NEAR(Math::DistanceArcPoint(Vector3D(1,0,0),
-      Vector3D(0,0,0), 1.57, 0, 1), 0.414214, 0.01);
-  ASSERT_NEAR(Math::DistanceArcPoint(Vector3D(2,1,0),
-      Vector3D(0,0,0), 1.57, 0, 1), 1.0, 0.01);
-  ASSERT_NEAR(Math::DistanceArcPoint(Vector3D(0,1,0),
-      Vector3D(0,0,0), 1.57, 0, 1), 1.0, 0.01);
-  ASSERT_NEAR(Math::DistanceArcPoint(Vector3D(1,2,0),
-      Vector3D(0,0,0), 1.57, 0, 1), 1.0, 0.01);
+  ASSERT_NEAR(Math::DistArcPoint(Vector3D(1,0,0),
+      Vector3D(0,0,0), 1.57, 0, 1).second, 0.414214, 0.01);
+  ASSERT_NEAR(Math::DistArcPoint(Vector3D(2,1,0),
+      Vector3D(0,0,0), 1.57, 0, 1).second, 1.0, 0.01);
+  ASSERT_NEAR(Math::DistArcPoint(Vector3D(0,1,0),
+      Vector3D(0,0,0), 1.57, 0, 1).second, 1.0, 0.01);
+  ASSERT_NEAR(Math::DistArcPoint(Vector3D(1,2,0),
+      Vector3D(0,0,0), 1.57, 0, 1).second, 1.0, 0.01);
 }
