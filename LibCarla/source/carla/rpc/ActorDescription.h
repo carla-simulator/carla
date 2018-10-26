@@ -13,6 +13,10 @@
 
 #include <vector>
 
+#ifdef LIBCARLA_INCLUDED_FROM_UE4
+#  include "Carla/Actor/ActorDescription.h"
+#endif // LIBCARLA_INCLUDED_FROM_UE4
+
 namespace carla {
 namespace rpc {
 
