@@ -38,7 +38,9 @@ void AOpenDriveActor::OnConstruction(const FTransform &transform)
     FString mapName = GetWorld()->GetMapName();
     FString xodrFile = FPaths::ProjectContentDir() + "/Carla/Maps/OpenDrive/" + mapName + ".xodr";
 
-    const auto &map = carla::opendrive::OpenDrive::Load(TCHAR_TO_UTF8(*xodrFile), XmlInputType::FILE)->GetData();
+    auto map_ptr = carla::opendrive::OpenDrive::Load(TCHAR_TO_UTF8(*xodrFile), XmlInputType::FILE);
+    check(map_ptr != nullptr);
+    const auto &map = map_ptr->GetData();
 
     std::vector<carla::road::lane_junction_t> junctionInfo = map.GetJunctionInformation();
 
