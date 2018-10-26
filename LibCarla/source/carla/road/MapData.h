@@ -13,6 +13,9 @@
 
 namespace carla {
 namespace road {
+namespace element {
+  class Waypoint;
+}
 
   struct lane_junction_t {
     std::string contact_point = "start";
@@ -51,6 +54,7 @@ namespace road {
 
     friend class MapBuilder;
     friend class Map;
+    friend element::Waypoint;
 
     MapData() = default;
 

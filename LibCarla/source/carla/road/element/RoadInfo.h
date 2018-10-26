@@ -110,8 +110,8 @@ namespace element {
     std::vector<int> getLanesIDs(which_lane_e whichLanes = which_lane_e::Both) const {
       std::vector<int> lanes_id;
 
-      for(lane_t::const_iterator &&it = _lanes.begin(); it != _lanes.end(); ++it) {
-        switch(whichLanes) {
+      for (lane_t::const_iterator it = _lanes.begin(); it != _lanes.end(); ++it) {
+        switch (whichLanes) {
           case which_lane_e::Both: {
             lanes_id.emplace_back(it->first);
           } break;

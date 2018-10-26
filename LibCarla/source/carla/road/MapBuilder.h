@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "carla/road/Map.h"
 #include "carla/geom/Location.h"
+#include "carla/road/Map.h"
 
 #include <map>
 
@@ -35,8 +35,6 @@ namespace road {
       _map_data._elements.emplace(id, std::move(inst));
       return r;
     }
-
-    bool InterpretRoadFlow();
 
   private:
 

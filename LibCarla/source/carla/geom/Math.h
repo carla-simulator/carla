@@ -6,9 +6,10 @@
 
 #pragma once
 
-#include "carla/geom/Vector3D.h"
 #include "carla/Debug.h"
+#include "carla/geom/Vector3D.h"
 
+#include <utility>
 #include <cmath>
 
 namespace carla {
@@ -29,8 +30,19 @@ namespace geom {
       return 0.5 * pi();
     }
 
+    static constexpr auto to_radiants() {
+      return 180.0 / pi();
+    }
+
+    static double clamp(
+        const double &a,
+        const double &min,
+        const double &max) {
+      return std::min(std::max(a, min), max);
+    }
+
     static double clamp01(double a) {
-      return std::min(std::max(a, 0.0), 1.0);
+      return clamp(a, 0.0, 1.0);
     }
 
     template <typename T>
@@ -62,17 +74,25 @@ namespace geom {
       return std::sqrt(DistanceSquared2D(a, b));
     }
 
-    static double DistanceSegmentPoint(
+    /// Returns a pair containing:
+    /// - @a first:  distance from v to p' where p' = p projected on segment (w - v)
+    /// - @a second: euclidean distance from p to p'
+    ///   @param p point to calculate distance
+    ///   @param v first point of the segment
+    ///   @param w second point of the segment
+    static std::pair<double, double> DistSegmentPoint(
         const Vector3D &p,
         const Vector3D &v,
         const Vector3D &w) {
       const double l2 = DistanceSquared2D(v, w);
+      const double l = std::sqrt(l2);
       if (l2 == 0.0) {
-        return Distance2D(p, v);
+        return std::make_pair(0.0, Distance2D(v, p));
       }
-      const double t = clamp01(Dot2D(p - v, w - v) / l2);
+      const double dot_p_w = Dot2D(p - v, w - v);
+      const double t = clamp01(dot_p_w / l2);
       const Vector3D projection = v + t * (w - v);
-      return Distance2D(p, projection);
+      return std::make_pair(t * l, Distance2D(projection, p));
     }
 
     static Vector3D RotatePointOnOrigin2D(Vector3D p, double angle) {
@@ -81,7 +101,10 @@ namespace geom {
       return Vector3D(p.x * c - p.y * s, p.x * s + p.y * c, 0.0);
     }
 
-    static double DistanceArcPoint(
+    /// Returns a pair containing:
+    /// - @a first:  distance across the arc from start_pos to p' where p' = p projected on Arc
+    /// - @a second: euclidean distance from p to p'
+    static std::pair<double, double> DistArcPoint(
         const Vector3D &p,
         const Vector3D &start_pos,
         const double length,
@@ -99,14 +122,13 @@ namespace geom {
       // check if the point is in the center of the circle, so we know p
       // is in the same distance of every possible point in the arc
       if (rotated_p == circ_center) {
-        return radius;
+        return std::make_pair(0.0, radius);
       }
 
       // use the arc length to calculate the angle in the last point of it
       // circumference of a circle = 2 * PI * r
       const double circumf = 2 * pi() * radius;
       const double last_point_angle = (length / circumf) * pi_double();
-
 
       // move the point relative to the center of the circle and find
       // the angle between the point and the center of coords in rad
@@ -115,7 +137,9 @@ namespace geom {
       // see if the angle is between 0 and last_point_angle
       DEBUG_ASSERT(angle >= 0);
       if (angle <= last_point_angle) {
-        return Distance2D(intersection, rotated_p);
+        return std::make_pair(
+            angle * radius,
+            Distance2D(intersection, rotated_p));
       }
 
       // find the nearest point, start or end to intersection
@@ -124,7 +148,9 @@ namespace geom {
           (radius * std::cos(last_point_angle - pi_half())) + circ_center.x,
           (radius * std::sin(last_point_angle - pi_half())) + circ_center.y, 0.0);
       const double end_dist = Distance2D(end_pos, rotated_p);
-      return (start_dist < end_dist) ? start_dist : end_dist;
+      return (start_dist < end_dist) ?
+          std::make_pair(0.0, start_dist) :
+          std::make_pair(length, end_dist);
     }
 
     static bool PointInRectangle(

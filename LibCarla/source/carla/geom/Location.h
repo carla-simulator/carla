@@ -15,7 +15,7 @@
 namespace carla {
 namespace geom {
 
-  class Location : private Vector3D {
+  class Location : public Vector3D {
   public:
 
     Location() = default;

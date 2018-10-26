@@ -6,9 +6,10 @@
 
 #pragma once
 
+#include "carla/Debug.h"
 #include "carla/geom/Location.h"
 #include "carla/geom/Math.h"
-#include "cephes/fresnel.h"
+#include "carla/road/element/cephes/fresnel.h"
 
 #include <cmath>
 
@@ -46,11 +47,10 @@ namespace element {
 
     void ApplyLateralOffset(double lateral_offset) {
       /// @todo Z axis??
-      double normal_x = std::cos( tangent + carla::geom::Math::pi_half());
-      double normal_y = std::sin(-tangent - carla::geom::Math::pi_half());
-
-      location.x = location.x + (lateral_offset * normal_x);
-      location.y = location.y + (lateral_offset * normal_y);
+      auto normal_x = std::sin(tangent);
+      auto normal_y = -std::cos(tangent);
+      location.x += lateral_offset * normal_x;
+      location.y += lateral_offset * normal_y;
     }
 
     friend bool operator==(const DirectedPoint &lhs, const DirectedPoint &rhs) {
@@ -81,6 +81,8 @@ namespace element {
     virtual ~Geometry() = default;
 
     virtual const DirectedPoint PosFromDist(double dist) const = 0;
+
+    virtual std::pair<double, double> DistanceTo(const geom::Location &p) const = 0;
 
   protected:
 
@@ -121,14 +123,19 @@ namespace element {
     const DirectedPoint PosFromDist(const double dist) const override {
       assert(dist > 0);
       assert(_length > 0.0);
-
       DirectedPoint p(_start_position, _heading);
-
       p.location.x += dist * std::cos(p.tangent);
       p.location.y += dist * std::sin(p.tangent);
-
       return p;
     }
+
+    std::pair<double, double> DistanceTo(const geom::Location &p) const override {
+      return geom::Math::DistSegmentPoint(
+          p,
+          _start_position,
+          PosFromDist(_length).location);
+    }
+
   };
 
   class GeometryArc : public Geometry {
@@ -149,14 +156,26 @@ namespace element {
       assert(std::fabs(_curvature) > 1e-15);
       const double radius = 1.0 / _curvature;
       DirectedPoint p(_start_position, _heading);
-
       p.location.x -= radius * std::cos(p.tangent - geom::Math::pi_half());
       p.location.y -= radius * std::sin(p.tangent - geom::Math::pi_half());
       p.tangent += dist * _curvature;
       p.location.x += radius * std::cos(p.tangent - geom::Math::pi_half());
       p.location.y += radius * std::sin(p.tangent - geom::Math::pi_half());
-
       return p;
+    }
+
+    std::pair<double, double> DistanceTo(const geom::Location &p) const override {
+      /*const Vector3D &p,
+        const Vector3D &start_pos,
+        const double length,
+        const double heading, // [radians]
+        const double curvature*/
+      return geom::Math::DistArcPoint(
+          p,
+          _start_position,
+          _length,
+          _heading,
+          _curvature);
     }
 
     double GetCurvature() {
@@ -211,6 +230,11 @@ namespace element {
       p.tangent += length * length;
 
       return p;
+    }
+
+    std::pair<double, double> DistanceTo(const geom::Location &) const override {
+      DEBUG_ERROR;
+      return {0.0, 0.0};
     }
 
   private:

@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "carla/Memory.h"
 #include "carla/geom/Transform.h"
+#include "carla/Memory.h"
 #include "carla/road/element/RoadInfoList.h"
 #include "carla/road/element/Types.h"
 
@@ -21,8 +21,6 @@ namespace element {
   class Waypoint {
   public:
 
-    Waypoint() = default;
-
     ~Waypoint();
 
     const geom::Transform &GetTransform() const {
@@ -33,6 +31,7 @@ namespace element {
       return _road_id;
     }
 
+
     std::vector<Waypoint> Next(double distance) const {
       (void) distance;
       return std::vector<Waypoint>();
@@ -42,11 +41,19 @@ namespace element {
 
   private:
 
-    SharedPtr<Map> _map;
+    friend carla::road::Map;
+
+    Waypoint();
+
+    Waypoint(SharedPtr<const Map>, const geom::Location &);
+
+    SharedPtr<const Map> _map;
 
     geom::Transform _transform;
 
     id_type _road_id = 0;
+
+    int _lane_id = 0;
 
     double _dist = 0.0;
 

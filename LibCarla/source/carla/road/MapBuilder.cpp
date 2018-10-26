@@ -47,10 +47,5 @@ namespace road {
     return SharedPtr<Map>(new Map{std::move(_map_data)});
   }
 
-  bool MapBuilder::InterpretRoadFlow() {
-    // todo
-    return false;
-  }
-
 } // namespace road
 } // namespace carla
