@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "carla/Memory.h"
 #include "carla/road/Map.h"
 #include "parser/OpenDriveParser.h"
 
@@ -18,8 +19,8 @@ namespace opendrive {
     class OpenDrive {
     public:
 
-      static road::Map Load(std::istream &input);
-      static road::Map Load(const std::string &file, XmlInputType inputType);
+      static SharedPtr<road::Map> Load(std::istream &input);
+      static SharedPtr<road::Map> Load(const std::string &file, XmlInputType inputType);
 
       static void Dump(const road::Map &map, std::ostream &output);
     };

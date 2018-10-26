@@ -63,13 +63,15 @@ public:
 
   /// Retrieve the tags of an already tagged actor. ECityObjectLabel::None is
   /// not added to the array.
-  static void GetTagsOfTaggedActor(const AActor &Actor, TArray<ECityObjectLabel> &Tags);
+  static void GetTagsOfTaggedActor(const AActor &Actor, TSet<ECityObjectLabel> &Tags);
 
   /// Return true if @a Component has been tagged with the given @a Tag.
   static bool MatchComponent(const UPrimitiveComponent &Component, ECityObjectLabel Tag)
   {
     return (Tag == GetTagOfTaggedComponent(Component));
   }
+
+  static FString GetTagAsString(ECityObjectLabel Tag);
 
   ATagger();
 

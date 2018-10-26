@@ -33,7 +33,7 @@ namespace opendrive {
         junctionData.connection_road = connectingRoad;
         junctionData.contact_point = openDriveRoad.junctions[i].connections[j].attributes.contact_point;
 
-        for(int k = 0; k < openDriveRoad.junctions[i].connections[j].links.size(); ++k) {
+        for(size_t k = 0; k < openDriveRoad.junctions[i].connections[j].links.size(); ++k) {
           junctionData.from_lane.emplace_back(openDriveRoad.junctions[i].connections[j].links[k].from);
           junctionData.to_lane.emplace_back(openDriveRoad.junctions[i].connections[j].links[k].to);
         }
@@ -57,9 +57,9 @@ namespace opendrive {
         junctionData.incomming_road = incommingRoad;
         junctionData.connection_road = connectingRoad;
 
-        if (openDriveRoad.junctions[i].connections[j].links.size()) {
-          junctionData.from_lane.emplace_back(openDriveRoad.junctions[i].connections[j].links[0].from);
-          junctionData.to_lane.emplace_back(openDriveRoad.junctions[i].connections[j].links[0].to);
+        for(size_t k = 0; k < openDriveRoad.junctions[i].connections[j].links.size(); ++k) {
+          junctionData.from_lane.emplace_back(openDriveRoad.junctions[i].connections[j].links[k].from);
+          junctionData.to_lane.emplace_back(openDriveRoad.junctions[i].connections[j].links[k].to);
         }
 
          out_data.emplace_back(junctionData);
@@ -67,7 +67,7 @@ namespace opendrive {
     }
   }
 
-  road::Map OpenDrive::Load(const std::string &file, XmlInputType inputType) {
+  SharedPtr<road::Map> OpenDrive::Load(const std::string &file, XmlInputType inputType) {
     carla::opendrive::types::OpenDriveData open_drive_road;
 
     OpenDriveParser::Parse(file.c_str(), open_drive_road, inputType);
@@ -94,7 +94,7 @@ namespace opendrive {
 
     // Transforma data for the MapBuilder
     for (road_data_t::iterator it = roadData.begin(); it != roadData.end(); ++it) {
-      carla::road::RoadSegmentDefinition roadSegment(it->first);
+      carla::road::element::RoadSegmentDefinition roadSegment(it->first);
       carla::road::element::RoadInfoLane *roadInfoLanes = roadSegment.MakeInfo<carla::road::element::RoadInfoLane>();
 
       carla::road::element::RoadGeneralInfo *roadGeneralInfo = roadSegment.MakeInfo<carla::road::element::RoadGeneralInfo>();
@@ -155,7 +155,7 @@ namespace opendrive {
             carla::opendrive::types::GeometryAttributesArc *arc =
                 (carla::opendrive::types::GeometryAttributesArc *) it->second->geometry_attributes[i].get();
 
-            roadSegment.MakeGeometry<carla::road::GeometryArc>(arc->start_position,
+            roadSegment.MakeGeometry<carla::road::element::GeometryArc>(arc->start_position,
                 arc->length,
                 arc->heading,
                 loc,
@@ -168,7 +168,7 @@ namespace opendrive {
             carla::opendrive::types::GeometryAttributesLine *line =
                 (carla::opendrive::types::GeometryAttributesLine *) it->second->geometry_attributes[i].get();
 
-            roadSegment.MakeGeometry<carla::road::GeometryLine>(line->start_position,
+            roadSegment.MakeGeometry<carla::road::element::GeometryLine>(line->start_position,
                 line->length,
                 line->heading,
                 loc);
@@ -180,7 +180,7 @@ namespace opendrive {
             carla::opendrive::types::GeometryAttributesSpiral *spiral =
                 (carla::opendrive::types::GeometryAttributesSpiral *) it->second->geometry_attributes[i].get();
 
-            roadSegment.MakeGeometry<carla::road::GeometrySpiral>(spiral->start_position,
+            roadSegment.MakeGeometry<carla::road::element::GeometrySpiral>(spiral->start_position,
                 spiral->length,
                 spiral->heading,
                 loc,
@@ -202,7 +202,7 @@ namespace opendrive {
     return mapBuilder.Build();
   }
 
-  road::Map OpenDrive::Load(std::istream &input) {
+  SharedPtr<road::Map> OpenDrive::Load(std::istream &input) {
 
     std::string fileContent;
     std::string line;

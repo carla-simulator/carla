@@ -72,6 +72,11 @@ public:
 
   void NotifyEndEpisode();
 
+  const FTheNewCarlaServer &GetServer() const
+  {
+    return Server;
+  }
+
 private:
 
   UPROPERTY(VisibleAnywhere)

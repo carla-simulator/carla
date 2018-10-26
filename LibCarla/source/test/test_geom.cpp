@@ -6,7 +6,7 @@
 
 #include "test.h"
 
-#include <carla/geom/Location.h>
+#include <carla/geom/Vector3D.h>
 #include <carla/geom/Math.h>
 
 #include <limits>
@@ -28,19 +28,19 @@ TEST(geom, distance) {
 
 TEST(geom, nearest_point_segment) {
   const float pos[] = {
-    0,  0,  10,  0,
-    2,  5,  10,  8,
-    -6,  8,   8, -2,
-    8,  2, -10,  3,
-    3,  3,  -6, -5,
-    3, -3,   2,  5,
-    4, -6,   5,  4,
-    -1, -4, -10,  8,
-    -7, -5,   5,  5,
-    -5,  6,   3, -9
+     0,  0, 10,  0,
+     2,  5, 10,  8,
+    -6,  8,  8, -2,
+     8,  2,-10,  3,
+     3,  3, -6, -5,
+     3, -3,  2,  5,
+     4, -6,  5,  4,
+    -1, -4,-10,  8,
+    -7, -5,  5,  5,
+    -5,  6,  3, -9
   };
 
-  const Location point[] = {
+  const Vector3D point[] = {
     {  1,  -1, 0},
     { 10,  10, 0},
     {-10,  10, 0},
@@ -74,39 +74,50 @@ TEST(geom, nearest_point_segment) {
 
 TEST(geom, point_in_rectangle) {
   ASSERT_TRUE(Math::PointInRectangle(
-      Location(0, 0, 0), Location(1, 1, 0), 0, Location(0, 0, 0)));
+      Vector3D(0, 0, 0), Vector3D(1, 1, 0), 0, Vector3D(0, 0, 0)));
   ASSERT_TRUE(Math::PointInRectangle(
-      Location(0, 0, 0), Location(1, 1, 0), 0, Location(1, 1, 0)));
+      Vector3D(0, 0, 0), Vector3D(1, 1, 0), 0, Vector3D(1, 1, 0)));
   ASSERT_TRUE(Math::PointInRectangle(
-      Location(0, 0, 0), Location(1, 1, 0), 0, Location(-1, 1, 0)));
+      Vector3D(0, 0, 0), Vector3D(1, 1, 0), 0, Vector3D(-1, 1, 0)));
   ASSERT_TRUE(Math::PointInRectangle(
-      Location(0, 0, 0), Location(1, 1, 0), 0, Location(1, -1, 0)));
+      Vector3D(0, 0, 0), Vector3D(1, 1, 0), 0, Vector3D(1, -1, 0)));
   ASSERT_TRUE(Math::PointInRectangle(
-      Location(0, 0, 0), Location(1, 1, 0), 0, Location(-1, -1, 0)));
+      Vector3D(0, 0, 0), Vector3D(1, 1, 0), 0, Vector3D(-1, -1, 0)));
   ASSERT_FALSE(Math::PointInRectangle(
-      Location(0, 0, 0), Location(1, 1, 0), 0, Location(-1.01, -1.01, 0)));
+      Vector3D(0, 0, 0), Vector3D(1, 1, 0), 0, Vector3D(-1.01, -1.01, 0)));
   ASSERT_FALSE(Math::PointInRectangle(
-      Location(0, 0, 0), Location(1, 1, 0), 0, Location(1.01, 1.01, 0)));
+      Vector3D(0, 0, 0), Vector3D(1, 1, 0), 0, Vector3D(1.01, 1.01, 0)));
   ASSERT_FALSE(Math::PointInRectangle(
-      Location(1.5, 1.5, 0), Location(1, 1, 0), 0, Location(0, 0, 0)));
+      Vector3D(1.5, 1.5, 0), Vector3D(1, 1, 0), 0, Vector3D(0, 0, 0)));
   ASSERT_TRUE(Math::PointInRectangle(
-      Location(1.5, 1.5, 0), Location(1, 1, 0), 0, Location(1, 1, 0)));
+      Vector3D(1.5, 1.5, 0), Vector3D(1, 1, 0), 0, Vector3D(1, 1, 0)));
   ASSERT_TRUE(Math::PointInRectangle(
-      Location(1.5, 1.5, 0), Location(1, 1, 0), 0, Location(2, 1, 0)));
+      Vector3D(1.5, 1.5, 0), Vector3D(1, 1, 0), 0, Vector3D(2, 1, 0)));
   ASSERT_TRUE(Math::PointInRectangle(
-      Location(1.5, 1.5, 0), Location(1, 1, 0), 0, Location(2, 1, 0)));
+      Vector3D(1.5, 1.5, 0), Vector3D(1, 1, 0), 0, Vector3D(2, 1, 0)));
   ASSERT_TRUE(Math::PointInRectangle(
-      Location(1.5, 1.5, 0), Location(1, 1, 0), 0, Location(2, 2, 0)));
+      Vector3D(1.5, 1.5, 0), Vector3D(1, 1, 0), 0, Vector3D(2, 2, 0)));
   ASSERT_TRUE(Math::PointInRectangle(
-      Location(1.5, 1.5, 0), Location(1, 1, 0), 0, Location(1, 1, 0)));
+      Vector3D(1.5, 1.5, 0), Vector3D(1, 1, 0), 0, Vector3D(1, 1, 0)));
   ASSERT_FALSE(Math::PointInRectangle(
-      Location(0, 0, 0), Location(1, 1, 0), Math::pi_half() * 0.5, Location(1, 1, 0)));
+      Vector3D(0, 0, 0), Vector3D(1, 1, 0), Math::pi_half() * 0.5, Vector3D(1, 1, 0)));
   ASSERT_TRUE(Math::PointInRectangle(
-      Location(0, 0, 0), Location(1, 1, 0), Math::pi_half() * 0.5, Location(1, 0, 0)));
+      Vector3D(0, 0, 0), Vector3D(1, 1, 0), Math::pi_half() * 0.5, Vector3D(1, 0, 0)));
   ASSERT_TRUE(Math::PointInRectangle(
-      Location(0, 2, 0), Location(0.5, 2, 0), Math::pi_half(), Location(2, 2, 0)));
+      Vector3D(0, 2, 0), Vector3D(0.5, 2, 0), Math::pi_half(), Vector3D(2, 2, 0)));
   ASSERT_FALSE(Math::PointInRectangle(
-      Location(0, 2, 0), Location(0.5, 2, 0), Math::pi_half(), Location(2.1, 2, 0)));
+      Vector3D(0, 2, 0), Vector3D(0.5, 2, 0), Math::pi_half(), Vector3D(2.1, 2, 0)));
   ASSERT_FALSE(Math::PointInRectangle(
-      Location(0, 2, 0), Location(0.5, 2, 0), Math::pi_half(), Location(2, 2.6, 0)));
+      Vector3D(0, 2, 0), Vector3D(0.5, 2, 0), Math::pi_half(), Vector3D(2, 2.6, 0)));
+}
+
+TEST(geom, nearest_point_arc) {
+  ASSERT_NEAR(Math::DistanceArcPoint(Vector3D(1,0,0),
+      Vector3D(0,0,0), 1.57, 0, 1), 0.414214, 0.01);
+  ASSERT_NEAR(Math::DistanceArcPoint(Vector3D(2,1,0),
+      Vector3D(0,0,0), 1.57, 0, 1), 1.0, 0.01);
+  ASSERT_NEAR(Math::DistanceArcPoint(Vector3D(0,1,0),
+      Vector3D(0,0,0), 1.57, 0, 1), 1.0, 0.01);
+  ASSERT_NEAR(Math::DistanceArcPoint(Vector3D(1,2,0),
+      Vector3D(0,0,0), 1.57, 0, 1), 1.0, 0.01);
 }

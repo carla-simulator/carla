@@ -36,15 +36,16 @@ void AOpenDriveActor::OnConstruction(const FTransform &transform)
     // build the path to the xodr file using the lavel name and the
     // game content directory.
     FString mapName = GetWorld()->GetMapName();
-    FString xodrFile = FPaths::GameContentDir() + "/Carla/Maps/OpenDrive/" + mapName + ".xodr";
+    FString xodrFile = FPaths::ProjectContentDir() + "/Carla/Maps/OpenDrive/" + mapName + ".xodr";
 
-    carla::road::Map map = carla::opendrive::OpenDrive::Load(TCHAR_TO_UTF8(*xodrFile), XmlInputType::FILE);
+    const auto &map = carla::opendrive::OpenDrive::Load(TCHAR_TO_UTF8(*xodrFile), XmlInputType::FILE)->GetData();
+
     std::vector<carla::road::lane_junction_t> junctionInfo = map.GetJunctionInformation();
 
     ///////////////////////////////////////////////////////////////////////////
     // NOTE(Andrei): Build the roads that are not junctions
 
-    std::vector<carla::road::id_type> roadIDs = map.GetAllIds();
+    std::vector<carla::road::element::id_type> roadIDs = map.GetAllIds();
     std::sort(roadIDs.begin(), roadIDs.end());
 
     for (auto &&id : roadIDs)

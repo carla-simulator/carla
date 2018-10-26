@@ -194,6 +194,15 @@ static void FillIdAndTags(FActorDefinition &Def, TStrs &&... Strings)
   Def.Tags = JoinStrings(TEXT(","), std::forward<TStrs>(Strings)...).ToLower();
 }
 
+FActorDefinition UActorBlueprintFunctionLibrary::MakeGenericSensorDefinition(
+    const FString &Type,
+    const FString &Id)
+{
+  FActorDefinition Definition;
+  FillIdAndTags(Definition, TEXT("sensor"), Type, Id);
+  return Definition;
+}
+
 FActorDefinition UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     const FString &Id,
     const bool bEnableModifyingPostProcessEffects)
@@ -305,20 +314,22 @@ void UActorBlueprintFunctionLibrary::MakeVehicleDefinition(
   /// @todo We need to validate here the params.
   FillIdAndTags(Definition, TEXT("vehicle"), Parameters.Make, Parameters.Model);
   Definition.Class = Parameters.Class;
-  FActorVariation Colors;
-  Colors.Id = TEXT("color");
-  Colors.Type = EActorAttributeType::RGBColor;
-  Colors.bRestrictToRecommended = false;
-  for (auto &Color : Parameters.RecommendedColors)
+  if (Parameters.RecommendedColors.Num() > 0)
   {
-    Colors.RecommendedValues.Emplace(ColorToFString(Color));
+    FActorVariation Colors;
+    Colors.Id = TEXT("color");
+    Colors.Type = EActorAttributeType::RGBColor;
+    Colors.bRestrictToRecommended = false;
+    for (auto &Color : Parameters.RecommendedColors)
+    {
+      Colors.RecommendedValues.Emplace(ColorToFString(Color));
+    }
+    Definition.Variations.Emplace(Colors);
   }
-  Definition.Variations.Emplace(Colors);
   Definition.Attributes.Emplace(FActorAttribute{
-    TEXT("number_of_wheels"),
-    EActorAttributeType::Int,
-    FString::FromInt(Parameters.NumberOfWheels)
-  });
+      TEXT("number_of_wheels"),
+      EActorAttributeType::Int,
+      FString::FromInt(Parameters.NumberOfWheels)});
   Success = CheckActorDefinition(Definition);
 }
 

@@ -6,9 +6,6 @@
 
 #pragma once
 
-#include "carla/road/element/RoadSegment.h"
-#include "carla/road/element/RoadInfo.h"
-
 #include <iterator>
 
 namespace carla {
@@ -32,7 +29,7 @@ namespace element {
   class RoadInfoIterator : private RoadInfoVisitor {
   public:
 
-    static_assert(std::is_same<std::unique_ptr<RoadInfo>, typename IT::value_type>::value, "Not compatible.");
+    static_assert(std::is_same<std::shared_ptr<RoadInfo>, typename IT::value_type>::value, "Not compatible.");
 
     RoadInfoIterator(IT begin, IT end)
       : _it(begin),
@@ -65,6 +62,14 @@ namespace element {
 
     T *operator->() const {
       return &static_cast<T *>(_it->get());
+    }
+
+    bool operator!=(const RoadInfoIterator &rhs) const {
+      return _it != rhs._it;
+    }
+
+    bool operator==(const RoadInfoIterator &rhs) const {
+      return !((*this) != rhs);
     }
 
     bool IsAtEnd() const {

@@ -8,6 +8,7 @@
 
 #include "carla/MsgPack.h"
 #include "carla/rpc/ActorAttribute.h"
+#include "carla/rpc/ActorId.h"
 #include "carla/rpc/String.h"
 
 #include <vector>
@@ -20,7 +21,7 @@ namespace rpc {
 
     ActorDefinition() = default;
 
-    uint32_t uid = 0u;
+    actor_id_type uid = 0u;
 
     std::string id;
 

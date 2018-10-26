@@ -27,11 +27,23 @@ file(GLOB libcarla_carla_client_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_client_sources}")
 install(FILES ${libcarla_carla_client_sources} DESTINATION include/carla/client)
 
+file(GLOB libcarla_carla_client_detail_sources
+    "${libcarla_source_path}/carla/client/detail/*.cpp"
+    "${libcarla_source_path}/carla/client/detail/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_client_detail_sources}")
+install(FILES ${libcarla_carla_client_detail_sources} DESTINATION include/carla/client/detail)
+
 file(GLOB libcarla_carla_geom_sources
     "${libcarla_source_path}/carla/geom/*.cpp"
     "${libcarla_source_path}/carla/geom/*.h")
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_geom_sources}")
 install(FILES ${libcarla_carla_geom_sources} DESTINATION include/carla/geom)
+
+file(GLOB libcarla_carla_image_sources
+    "${libcarla_source_path}/carla/image/*.cpp"
+    "${libcarla_source_path}/carla/image/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_image_sources}")
+install(FILES ${libcarla_carla_image_sources} DESTINATION include/carla/image)
 
 file(GLOB libcarla_carla_opendrive_sources
     "${libcarla_source_path}/carla/opendrive/*.cpp"
@@ -51,6 +63,36 @@ file(GLOB libcarla_carla_opendrive_parser_sources
     "${libcarla_source_path}/carla/opendrive/parser/*.h")
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_opendrive_parser_sources}")
 install(FILES ${libcarla_carla_opendrive_parser_sources} DESTINATION include/carla/opendrive/parser)
+
+file(GLOB libcarla_carla_opendrive_math_sources
+    "${libcarla_source_path}/carla/opendrive/math/*.cpp"
+    "${libcarla_source_path}/carla/opendrive/math/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_opendrive_math_sources}")
+install(FILES ${libcarla_carla_opendrive_math_sources} DESTINATION include/carla/opendrive/math)
+
+file(GLOB libcarla_carla_opendrive_logic_cephes_sources
+    "${libcarla_source_path}/carla/opendrive/logic/cephes/*.cpp"
+    "${libcarla_source_path}/carla/opendrive/logic/cephes/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_opendrive_logic_cephes_sources}")
+install(FILES ${libcarla_carla_opendrive_logic_cephes_sources} DESTINATION include/carla/opendrive/logic/cephes)
+
+file(GLOB libcarla_carla_opendrive_logic_sources
+    "${libcarla_source_path}/carla/opendrive/logic/*.cpp"
+    "${libcarla_source_path}/carla/opendrive/logic/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_opendrive_logic_sources}")
+install(FILES ${libcarla_carla_opendrive_logic_sources} DESTINATION include/carla/opendrive/logic)
+
+file(GLOB libcarla_carla_pointcloud_sources
+    "${libcarla_source_path}/carla/pointcloud/*.cpp"
+    "${libcarla_source_path}/carla/pointcloud/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_pointcloud_sources}")
+install(FILES ${libcarla_carla_pointcloud_sources} DESTINATION include/carla/pointcloud)
+
+file(GLOB libcarla_carla_profiler_sources
+    "${libcarla_source_path}/carla/profiler/*.cpp"
+    "${libcarla_source_path}/carla/profiler/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_profiler_sources}")
+install(FILES ${libcarla_carla_profiler_sources} DESTINATION include/carla/profiler)
 
 file(GLOB libcarla_carla_road_sources
     "${libcarla_source_path}/carla/road/*.cpp"
@@ -134,8 +176,7 @@ foreach(target carla_client_debug carla_client)
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}")
 
-  # @todo This was disabled because now everything is built in the setup.py.
-  # install(TARGETS ${target} DESTINATION lib)
+  install(TARGETS ${target} DESTINATION lib)
 endforeach(target)
 
 # Specific options for debug.
@@ -143,4 +184,4 @@ set_target_properties(carla_client_debug PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FL
 target_compile_definitions(carla_client_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
 
 # Specific options for release.
-set_target_properties(carla_client PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})
+set_target_properties(carla_client PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_RELEASE_CLIENT})

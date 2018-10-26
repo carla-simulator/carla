@@ -8,13 +8,15 @@
 
 #include "Carla/Actor/CarlaActorFactory.h"
 #include "Carla/Game/CarlaEpisode.h"
+#include "Carla/Game/CarlaGameInstance.h"
+#include "Carla/Game/TaggerDelegate.h"
+#include "Carla/Settings/CarlaSettingsDelegate.h"
+#include "Carla/Weather/Weather.h"
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 
 #include "TheNewCarlaGameModeBase.generated.h"
-
-class UTaggerDelegate;
 
 /// Base class for the CARLA Game Mode.
 UCLASS(HideCategories=(ActorTick))
@@ -26,9 +28,17 @@ public:
 
   ATheNewCarlaGameModeBase(const FObjectInitializer& ObjectInitializer);
 
+  const UCarlaEpisode &GetCarlaEpisode() const
+  {
+    check(Episode != nullptr);
+    return *Episode;
+  }
+
 protected:
 
   void InitGame(const FString &MapName, const FString &Options, FString &ErrorMessage) override;
+
+  void RestartPlayer(AController *NewPlayer) override;
 
   void BeginPlay() override;
 
@@ -47,11 +57,18 @@ private:
   UTaggerDelegate *TaggerDelegate = nullptr;
 
   UPROPERTY()
+  UCarlaSettingsDelegate *CarlaSettingsDelegate = nullptr;
+
+  UPROPERTY()
   UCarlaEpisode *Episode = nullptr;
+
+  /// The class of Weather to spawn.
+  UPROPERTY(Category = "CARLA Game Mode", EditAnywhere)
+  TSubclassOf<AWeather> WeatherClass;
 
   /// List of actor spawners that will be used to define and spawn the actors
   /// available in game.
-  UPROPERTY(EditAnywhere)
+  UPROPERTY(Category = "CARLA Game Mode", EditAnywhere)
   TSet<TSubclassOf<ACarlaActorFactory>> ActorFactories;
 
   UPROPERTY()

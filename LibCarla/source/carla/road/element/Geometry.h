@@ -61,24 +61,26 @@ namespace element {
   class Geometry {
   public:
 
-    GeometryType GetType() {
+    GeometryType GetType() const {
       return _type;
     }
-    double GetLength() {
+    double GetLength() const {
       return _length;
     }
-    double GetStartOffset() {
+    double GetStartOffset() const {
       return _start_position_offset;
     }
-    double GetHeading() {
+    double GetHeading() const {
       return _heading;
     }
-    geom::Location &GetStartPosition() {
+
+    const geom::Location &GetStartPosition() {
       return _start_position;
     }
+
     virtual ~Geometry() = default;
 
-    virtual DirectedPoint PosFromDist(double dist) const = 0;
+    virtual const DirectedPoint PosFromDist(double dist) const = 0;
 
   protected:
 
@@ -116,7 +118,7 @@ namespace element {
         const geom::Location &start_pos)
       : Geometry(GeometryType::LINE, start_offset, length, heading, start_pos) {}
 
-    DirectedPoint PosFromDist(const double dist) const override {
+    const DirectedPoint PosFromDist(const double dist) const override {
       assert(dist > 0);
       assert(_length > 0.0);
 
@@ -141,53 +143,16 @@ namespace element {
       : Geometry(GeometryType::ARC, start_offset, length, heading, start_pos),
         _curvature(curv) {}
 
-    DirectedPoint PosFromDist(double dist) const override {
+    const DirectedPoint PosFromDist(double dist) const override {
       assert(dist > 0);
       assert(_length > 0.0);
       assert(std::fabs(_curvature) > 1e-15);
-
-      /*
-      const double length = dist / _length;
-      const double radius = 1.0 / _curvature;
-
-      DirectedPoint p(_start_position, _heading);
-      p.location.x -= radius * std::cos(p.tangent - geom::Math::pi_half());
-      p.location.y -= radius * std::sin(p.tangent - geom::Math::pi_half());
-
-      p.tangent += length * _curvature;
-      p.location.x += radius * std::cos(p.tangent - geom::Math::pi_half());
-      p.location.y += radius * std::sin(p.tangent - geom::Math::pi_half());
-      return p;
-      */
-
-      /*
-      DirectedPoint p;
-      double start_angle = 0.0;
-
-      if (_curvature > 0.0) start_angle = _heading - geom::Math::pi_half();
-      else start_angle = _heading + geom::Math::pi_half();
-
-      const double arc_radius = std::abs(1.0 / _curvature);
-      const double stepAngle = dist / (1.0 / _curvature);
-
-      double start_X = _start_position.x + std::cos(start_angle - geom::Math::pi()) * arc_radius;
-      double start_Y = _start_position.y + std::sin(start_angle - geom::Math::pi()) * arc_radius;
-
-      p.location.x = start_X + std::cos(start_angle + stepAngle) * arc_radius;
-      p.location.y = start_Y + std::sin(start_angle + stepAngle) * arc_radius;
-
-      p.tangent = start_angle + stepAngle + (_curvature <= 0.0 ? -geom::Math::pi_half() : geom::Math::pi_half());
-      return p;
-      */
-
-      const double length = dist;
       const double radius = 1.0 / _curvature;
       DirectedPoint p(_start_position, _heading);
 
       p.location.x -= radius * std::cos(p.tangent - geom::Math::pi_half());
       p.location.y -= radius * std::sin(p.tangent - geom::Math::pi_half());
-
-      p.tangent += length * _curvature;
+      p.tangent += dist * _curvature;
       p.location.x += radius * std::cos(p.tangent - geom::Math::pi_half());
       p.location.y += radius * std::sin(p.tangent - geom::Math::pi_half());
 
@@ -225,7 +190,7 @@ namespace element {
       return _curve_end;
     }
 
-    DirectedPoint PosFromDist(double dist) const override {
+    const DirectedPoint PosFromDist(double dist) const override {
       // not working yet with negative values
       assert(dist > 0);
       assert(_length > 0.0);
