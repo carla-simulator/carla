@@ -9,6 +9,7 @@
 #include "carla/geom/Location.h"
 #include "carla/geom/Math.h"
 #include "carla/opendrive/logic/cephes/fresnel.h"
+#include "carla/Debug.h"
 
 #include <cmath>
 
@@ -81,6 +82,8 @@ namespace element {
 
     virtual const DirectedPoint PosFromDist(double dist) const = 0;
 
+    virtual std::pair<double, double> DistanceTo(const geom::Location &p) const = 0;
+
   protected:
 
     Geometry(
@@ -125,6 +128,14 @@ namespace element {
       p.location.y += dist * std::sin(p.tangent);
       return p;
     }
+
+    std::pair<double, double> DistanceTo(const geom::Location &p) const override {
+      return geom::Math::DistSegmentPoint(
+          p,
+          _start_position,
+          PosFromDist(_length).location);
+    }
+
   };
 
   class GeometryArc : public Geometry {
@@ -151,6 +162,20 @@ namespace element {
       p.location.x += radius * std::cos(p.tangent - geom::Math::pi_half());
       p.location.y += radius * std::sin(p.tangent - geom::Math::pi_half());
       return p;
+    }
+
+    std::pair<double, double> DistanceTo(const geom::Location &p) const override {
+      /*const Vector3D &p,
+        const Vector3D &start_pos,
+        const double length,
+        const double heading, // [radians]
+        const double curvature*/
+      return geom::Math::DistArcPoint(
+          p,
+          _start_position,
+          _length,
+          _heading,
+          _curvature);
     }
 
     double GetCurvature() {
@@ -205,6 +230,11 @@ namespace element {
       p.tangent += length * length;
 
       return p;
+    }
+
+    std::pair<double, double> DistanceTo(const geom::Location &) const override {
+      DEBUG_ERROR;
+      return {0.0, 0.0};
     }
 
   private:

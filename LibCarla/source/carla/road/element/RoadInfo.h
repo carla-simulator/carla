@@ -90,10 +90,10 @@ namespace element {
       return (int) _lanes.size();
     }
 
-    std::vector<int> getLanesIDs(which_lane_e whichLanes = which_lane_e::Both) {
+    std::vector<int> getLanesIDs(which_lane_e whichLanes = which_lane_e::Both) const {
       std::vector<int> lanes_id;
 
-      for (lane_t::iterator it = _lanes.begin(); it != _lanes.end(); ++it) {
+      for (lane_t::const_iterator it = _lanes.begin(); it != _lanes.end(); ++it) {
         switch (whichLanes) {
           case which_lane_e::Both: {
             lanes_id.push_back(it->first);
@@ -115,8 +115,8 @@ namespace element {
       return lanes_id;
     }
 
-    const LaneInfo *getLane(int id) {
-      lane_t::iterator it = _lanes.find(id);
+    const LaneInfo *getLane(int id) const {
+      lane_t::const_iterator it = _lanes.find(id);
       return it == _lanes.end() ? nullptr : &it->second;
     }
   };

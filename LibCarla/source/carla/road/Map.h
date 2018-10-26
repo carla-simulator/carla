@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "carla/geom/Math.h"
 #include "carla/Memory.h"
 #include "carla/NonCopyable.h"
 #include "carla/Optional.h"
@@ -19,22 +18,17 @@ namespace road {
   class Map
     : public EnableSharedFromThis<Map>,
       private MovableNonCopyable {
+
   public:
-
-    element::Waypoint GetClosestWaypointOnRoad(const geom::Location &) const {
-      return element::Waypoint();
-    }
-
-    Optional<element::Waypoint> GetWaypoint(const geom::Location &) const {
-      return Optional<element::Waypoint>();
-    }
-
-    const MapData &GetData() {
-      return _data;
-    }
 
     Map(MapData m)
       : _data(std::move(m)) {}
+
+    element::Waypoint GetClosestWaypointOnRoad(const geom::Location &) const;
+
+    Optional<element::Waypoint> GetWaypoint(const geom::Location &) const;
+
+    const MapData &GetData() const;
 
   private:
 

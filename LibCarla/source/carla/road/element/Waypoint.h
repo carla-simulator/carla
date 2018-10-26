@@ -31,6 +31,7 @@ namespace element {
       return _road_id;
     }
 
+
     std::vector<Waypoint> Next(double distance) const {
       (void) distance;
       return std::vector<Waypoint>();
@@ -42,9 +43,11 @@ namespace element {
 
     friend carla::road::Map;
 
-    Waypoint() = default;
+    Waypoint();
 
-    SharedPtr<Map> _map;
+    Waypoint(SharedPtr<const Map>, const geom::Location &);
+
+    SharedPtr<const Map> _map;
 
     geom::Transform _transform;
 
