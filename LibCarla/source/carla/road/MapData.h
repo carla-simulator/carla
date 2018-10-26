@@ -13,6 +13,9 @@
 
 namespace carla {
 namespace road {
+namespace element {
+  class Waypoint;
+}
 
   class MapData
     : private MovableNonCopyable {
@@ -32,6 +35,7 @@ namespace road {
 
     friend class MapBuilder;
     friend class Map;
+    friend element::Waypoint;
 
     MapData() = default;
 
