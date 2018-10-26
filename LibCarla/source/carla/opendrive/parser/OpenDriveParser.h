@@ -20,15 +20,41 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
+enum class XmlInputType : int
+{
+    FILE,
+    CONTENT
+};
+
 struct OpenDriveParser
 {
-    static bool Parse(const char *OpenDriveXMLFile, carla::opendrive::types::OpenDriveData &out_open_drive_data)
+    static bool Parse(const char *xml, carla::opendrive::types::OpenDriveData &out_open_drive_data, XmlInputType inputType)
     {
         pugi::xml_document xmlDoc;
-        pugi::xml_parse_result pugiParseResult = xmlDoc.load_file(OpenDriveXMLFile);
+        pugi::xml_parse_result pugiParseResult;
+
+        switch(inputType)
+        {
+            case XmlInputType::FILE:
+            {
+                pugiParseResult = xmlDoc.load_file(xml);
+            } break;
+
+            case XmlInputType::CONTENT:
+            {
+                pugiParseResult = xmlDoc.load_string(xml);
+            } break;
+
+            default:
+            {
+                // TODO(Andrei): Log some kind of error
+                return false;
+            } break;
+        }
 
         if (pugiParseResult == false)
         {
+            // TODO(Andrei): Log some kind of error
             return false;
         }
 

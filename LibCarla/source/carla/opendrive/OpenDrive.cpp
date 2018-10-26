@@ -1,5 +1,5 @@
 #include "OpenDrive.h"
-#include "parser/OpenDriveParser.h"
+
 
 #include "../road/MapBuilder.h"
 
@@ -67,9 +67,10 @@ namespace opendrive {
     }
   }
 
-  road::Map OpenDrive::Load(const std::string &file) {
+  road::Map OpenDrive::Load(const std::string &file, XmlInputType inputType) {
     carla::opendrive::types::OpenDriveData open_drive_road;
-    OpenDriveParser::Parse(file.c_str(), open_drive_road);
+
+    OpenDriveParser::Parse(file.c_str(), open_drive_road, inputType);
     carla::road::MapBuilder mapBuilder;
 
     if (open_drive_road.roads.empty()) {
@@ -202,10 +203,16 @@ namespace opendrive {
   }
 
   road::Map OpenDrive::Load(std::istream &input) {
-    UNUSED(input);
 
-    carla::road::MapBuilder mapBuilder;
-    return mapBuilder.Build();
+    std::string fileContent;
+    std::string line;
+
+    while(std::getline(input, line))
+    {
+      fileContent.append(line);
+    }
+
+    return Load(fileContent, XmlInputType::CONTENT);
   }
 
 } // namespace opendrive
