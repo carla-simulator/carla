@@ -17,6 +17,7 @@
 
 - `id`
 - `map_name`
+- `debug`
 - `get_blueprint_library()`
 - `get_spectator()`
 - `get_weather()`
@@ -26,6 +27,14 @@
 - `try_spawn_actor(blueprint, transform, attach_to=None)`
 - `wait_for_tick(seconds=1.0)`
 - `on_tick(callback)`
+
+## `carla.DebugHelper`
+
+- `draw_point(location, size=0.1, color={Red}, life_time=-1.0, persistent_lines=True)`
+- `draw_line(begin, end, thickness=0.1, color={Red}, life_time=-1.0, persistent_lines=True)`
+- `draw_arrow(begin, end, thickness=0.1, arrow_size=0.1, color={Red}, life_time=-1.0, persistent_lines=True)`
+- `draw_box(box, rotation, thickness=0.1, color={Red}, life_time=-1.0, persistent_lines=True)`
+- `draw_string(location, text, draw_shadow=False, color={Red}, life_time=-1.0, persistent_lines=True)`
 
 ## `carla.BlueprintLibrary`
 
