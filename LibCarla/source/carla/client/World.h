@@ -8,6 +8,7 @@
 
 #include "carla/Memory.h"
 #include "carla/Time.h"
+#include "carla/client/DebugHelper.h"
 #include "carla/client/Timestamp.h"
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/geom/Transform.h"
@@ -78,6 +79,10 @@ namespace client {
 
     /// Register a @a callback to be called every time a world tick is received.
     void OnTick(std::function<void(Timestamp)> callback);
+
+    DebugHelper MakeDebugHelper() const {
+      return DebugHelper{_episode};
+    }
 
   private:
 
