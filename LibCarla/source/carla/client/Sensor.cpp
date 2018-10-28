@@ -11,6 +11,8 @@
 
 #include <exception>
 
+#include <exception>
+
 namespace carla {
 namespace client {
 

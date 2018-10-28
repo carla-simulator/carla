@@ -37,6 +37,19 @@ namespace client {
         });
   }
 
+  const ActorAttribute &ActorBlueprint::GetAttribute(const std::string &id) const {
+    auto it = _attributes.find(id);
+    if (it == _attributes.end()) {
+      using namespace std::string_literals;
+      throw std::out_of_range("attribute '"s + id + "' not found");
+    }
+    return it->second;
+  }
+
+  void ActorBlueprint::SetAttribute(const std::string &id, std::string value) {
+    const_cast<ActorAttribute &>(GetAttribute(id)).Set(std::move(value));
+  }
+
   rpc::ActorDescription ActorBlueprint::MakeActorDescription() const {
     rpc::ActorDescription description;
     description.uid = _uid;

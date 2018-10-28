@@ -215,6 +215,16 @@ namespace detail {
     void UnSubscribeFromSensor(const Sensor &sensor);
 
     /// @}
+    // =========================================================================
+    /// @name Debug
+    // =========================================================================
+    /// @{
+
+    void DrawDebugShape(const rpc::DebugShape &shape) {
+      _client.DrawDebugShape(shape);
+    }
+
+    /// @}
 
   private:
 

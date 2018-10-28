@@ -26,6 +26,7 @@ namespace carla {
   class Buffer;
 namespace rpc {
   class ActorDescription;
+  class DebugShape;
   class VehicleControl;
 }
 namespace sensor { class SensorData; }
@@ -106,6 +107,8 @@ namespace detail {
         std::function<void(Buffer)> callback);
 
     void UnSubscribeFromStream(const streaming::Token &token);
+
+    void DrawDebugShape(const rpc::DebugShape &shape);
 
   private:
 

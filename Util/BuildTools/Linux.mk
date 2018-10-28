@@ -26,9 +26,11 @@ rebuild: setup
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --rebuild
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --rebuild
 
-hard-clean: clean
-	@rm -Rf ${CARLA_BUILD_FOLDER}
+hard-clean:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --hard-clean
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --clean
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --clean
+	@echo "To force recompiling dependencies run: rm -Rf ${CARLA_BUILD_FOLDER}"
 
 check: LibCarla.server PythonAPI
 	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --all $(ARGS)

@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "carla/rpc/Color.h"
+
 #include <cstdint>
 
 namespace carla {
@@ -29,6 +31,10 @@ namespace data {
 
     bool operator!=(const Color &rhs) const  {
       return !(*this == rhs);
+    }
+
+    operator rpc::Color() const {
+      return {r, g, b};
     }
 
     uint8_t b = 0u;

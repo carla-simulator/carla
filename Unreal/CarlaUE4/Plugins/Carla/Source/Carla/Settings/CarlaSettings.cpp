@@ -127,8 +127,8 @@ static bool GetSettingsFilePathFromCommandLine(FString &Value)
     if (FPaths::IsRelative(Value))
     {
       Value = FPaths::ConvertRelativePathToFull(FPaths::LaunchDir(), Value);
-      return true;
     }
+    return true;
   }
   return false;
 }
