@@ -1,5 +1,18 @@
 #!/usr/bin/env python
 
+# Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Barcelona (UAB).
+#
+# This work is licensed under the terms of the MIT license.
+# For a copy, see <https://opensource.org/licenses/MIT>.
+
+"""
+CARLA Dynamic Weather:
+
+Connect to a CARLA Simulator instance and control the weather. Change Sun
+position smoothly with time and generate storms occasionally.
+"""
+
 import glob
 import os
 import sys
@@ -87,12 +100,7 @@ class Weather(object):
 
 def main():
     argparser = argparse.ArgumentParser(
-        description='CARLA Dynamic Weather')
-    argparser.add_argument(
-        '-v', '--verbose',
-        action='store_true',
-        dest='debug',
-        help='print debug information')
+        description=__doc__)
     argparser.add_argument(
         '--host',
         metavar='H',
@@ -109,7 +117,7 @@ def main():
         metavar='FACTOR',
         default=1.0,
         type=float,
-        help='update speed (default: 1.0)')
+        help='rate at which the weather changes (default: 1.0)')
     args = argparser.parse_args()
 
     speed_factor = args.speed
