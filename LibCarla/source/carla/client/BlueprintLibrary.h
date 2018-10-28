@@ -44,14 +44,10 @@ namespace client {
     /// @a wildcard_pattern.
     SharedPtr<BlueprintLibrary> Filter(const std::string &wildcard_pattern) const;
 
-    const_pointer Find(const std::string &key) const {
-      auto it = _blueprints.find(key);
-      return it != _blueprints.end() ? &it->second : nullptr;
-    }
+    const_pointer Find(const std::string &key) const;
 
-    const_reference at(const std::string &key) const {
-      return _blueprints.at(key);
-    }
+    /// @throw std::out_of_range if no such element exists.
+    const_reference at(const std::string &key) const;
 
     /// @warning Linear complexity.
     const_reference operator[](size_type pos) const {
@@ -59,6 +55,7 @@ namespace client {
     }
 
     /// @warning Linear complexity.
+    /// @throw std::out_of_range if !(pos < size()).
     const_reference at(size_type pos) const;
 
     const_iterator begin() const /*noexcept*/ {

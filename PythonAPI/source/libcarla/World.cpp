@@ -84,6 +84,7 @@ void export_world() {
   class_<cc::World>("World", no_init)
     .add_property("id", &cc::World::GetId)
     .add_property("map_name", CALL_RETURNING_COPY(cc::World, GetMapName))
+    .add_property("debug", &cc::World::MakeDebugHelper)
     .def("get_blueprint_library", CONST_CALL_WITHOUT_GIL(cc::World, GetBlueprintLibrary))
     .def("get_map", CONST_CALL_WITHOUT_GIL(cc::World, GetMap))
     .def("get_spectator", CONST_CALL_WITHOUT_GIL(cc::World, GetSpectator))
@@ -98,4 +99,42 @@ void export_world() {
   ;
 
 #undef SPAWN_ACTOR_WITHOUT_GIL
+
+  class_<cc::DebugHelper>("DebugHelper", no_init)
+    .def("draw_point", &cc::DebugHelper::DrawPoint,
+        (arg("location"),
+         arg("size")=0.1f,
+         arg("color")=cc::DebugHelper::Color(255u, 0u, 0u),
+         arg("life_time")=-1.0f,
+         arg("persistent_lines")=true))
+    .def("draw_line", &cc::DebugHelper::DrawLine,
+        (arg("begin"),
+         arg("end"),
+         arg("thickness")=0.1f,
+         arg("color")=cc::DebugHelper::Color(255u, 0u, 0u),
+         arg("life_time")=-1.0f,
+         arg("persistent_lines")=true))
+    .def("draw_arrow", &cc::DebugHelper::DrawArrow,
+        (arg("begin"),
+         arg("end"),
+         arg("thickness")=0.1f,
+         arg("arrow_size")=0.1f,
+         arg("color")=cc::DebugHelper::Color(255u, 0u, 0u),
+         arg("life_time")=-1.0f,
+         arg("persistent_lines")=true))
+    .def("draw_box", &cc::DebugHelper::DrawBox,
+        (arg("box"),
+         arg("rotation"),
+         arg("thickness")=0.1f,
+         arg("color")=cc::DebugHelper::Color(255u, 0u, 0u),
+         arg("life_time")=-1.0f,
+         arg("persistent_lines")=true))
+    .def("draw_string", &cc::DebugHelper::DrawString,
+        (arg("location"),
+         arg("text"),
+         arg("draw_shadow")=false,
+         arg("color")=cc::DebugHelper::Color(255u, 0u, 0u),
+         arg("life_time")=-1.0f,
+         arg("persistent_lines")=true))
+  ;
 }

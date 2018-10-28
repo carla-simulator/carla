@@ -128,6 +128,12 @@ public:
     State = InState;
   }
 
+  UFUNCTION(Category = "AI Controller", BlueprintCallable)
+  ECarlaWheeledVehicleState GetAIVehicleState() const
+  {
+	  return State;
+  }
+
 private:
 
   /// Current state of the vehicle controller (for debugging purposes).

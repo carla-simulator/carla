@@ -9,6 +9,7 @@
 #include "carla/Version.h"
 #include "carla/rpc/ActorDescription.h"
 #include "carla/rpc/Client.h"
+#include "carla/rpc/DebugShape.h"
 #include "carla/rpc/VehicleControl.h"
 #include "carla/streaming/Client.h"
 
@@ -150,6 +151,10 @@ namespace detail {
 
   void Client::UnSubscribeFromStream(const streaming::Token &token) {
     _pimpl->streaming_client.UnSubscribe(token);
+  }
+
+  void Client::DrawDebugShape(const rpc::DebugShape &shape) {
+    _pimpl->AsyncCall("draw_debug_shape", shape);
   }
 
 } // namespace detail

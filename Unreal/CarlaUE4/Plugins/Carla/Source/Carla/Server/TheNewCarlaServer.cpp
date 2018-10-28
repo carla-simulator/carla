@@ -8,6 +8,7 @@
 #include "Carla/Server/TheNewCarlaServer.h"
 
 #include "Carla/Sensor/Sensor.h"
+#include "Carla/Util/DebugShapeDrawer.h"
 #include "Carla/Util/OpenDrive.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
@@ -18,6 +19,7 @@
 #include <carla/rpc/Actor.h>
 #include <carla/rpc/ActorDefinition.h>
 #include <carla/rpc/ActorDescription.h>
+#include <carla/rpc/DebugShape.h>
 #include <carla/rpc/EpisodeInfo.h>
 #include <carla/rpc/MapInfo.h>
 #include <carla/rpc/Server.h>
@@ -381,6 +383,14 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       RespondErrorStr("unable to set autopilot: vehicle has an incompatible controller");
     }
     Controller->SetAutopilot(bEnabled);
+  });
+
+  Server.BindSync("draw_debug_shape", [this](const cr::DebugShape &shape) {
+    RequireEpisode();
+    auto *World = Episode->GetWorld();
+    check(World != nullptr);
+    FDebugShapeDrawer Drawer(*World);
+    Drawer.Draw(shape);
   });
 }
 

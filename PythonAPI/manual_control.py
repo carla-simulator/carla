@@ -6,8 +6,8 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-# Keyboard controlling for CARLA. Please refer to client_example.py for a simpler
-# and more documented example.
+# Allows controlling a vehicle with a keyboard. For a simpler and more
+# documented example, please take a look at tutorial.py.
 
 """
 Welcome to CARLA manual control.
