@@ -28,7 +28,7 @@ namespace element {
     DirectedPoint()
       : location(0, 0, 0),
         tangent(0) {}
-    DirectedPoint(geom::Location l, double t)
+    DirectedPoint(const geom::Location &l, double t)
       : location(l),
         tangent(t) {}
     DirectedPoint(double x, double y, double z, double t)
@@ -47,7 +47,7 @@ namespace element {
 
     void ApplyLateralOffset(double lateral_offset) {
       /// @todo Z axis??
-      auto normal_x = std::sin(tangent);
+      auto normal_x =  std::sin(tangent);
       auto normal_y = -std::cos(tangent);
       location.x += lateral_offset * normal_x;
       location.y += lateral_offset * normal_y;
@@ -156,11 +156,11 @@ namespace element {
       assert(std::fabs(_curvature) > 1e-15);
       const double radius = 1.0 / _curvature;
       DirectedPoint p(_start_position, _heading);
-      p.location.x -= radius * std::cos(p.tangent - geom::Math::pi_half());
-      p.location.y -= radius * std::sin(p.tangent - geom::Math::pi_half());
-      p.tangent += dist * _curvature;
-      p.location.x += radius * std::cos(p.tangent - geom::Math::pi_half());
-      p.location.y += radius * std::sin(p.tangent - geom::Math::pi_half());
+      p.location.x -= radius * std::cos(p.tangent + geom::Math::pi_half());
+      p.location.y -= radius * std::sin(p.tangent + geom::Math::pi_half());
+      p.tangent -= dist * _curvature;
+      p.location.x += radius * std::cos(p.tangent + geom::Math::pi_half());
+      p.location.y += radius * std::sin(p.tangent + geom::Math::pi_half());
       return p;
     }
 
