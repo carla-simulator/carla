@@ -109,30 +109,34 @@ void ARoutePlanner::CleanRoute()
   Probabilities.Empty();
 }
 
+void ARoutePlanner::Init()
+{
+    if (Routes.Num() < 1)
+    {
+        UE_LOG(LogCarla, Warning, TEXT("ARoutePlanner '%s' has no route assigned."), *GetName());
+        return;
+    }
+
+    for (auto &&Route : Routes)
+    {
+        if (!IsSplineValid(Route))
+        {
+            UE_LOG(LogCarla, Error, TEXT("ARoutePlanner '%s' has a route with zero way-points."), *GetName());
+            return;
+        }
+    }
+
+    // Register delegate on begin overlap.
+    if (!TriggerVolume->OnComponentBeginOverlap.IsAlreadyBound(this, &ARoutePlanner::OnTriggerBeginOverlap))
+    {
+        TriggerVolume->OnComponentBeginOverlap.AddDynamic(this, &ARoutePlanner::OnTriggerBeginOverlap);
+    }
+}
+
 void ARoutePlanner::BeginPlay()
 {
   Super::BeginPlay();
-
-  if (Routes.Num() < 1)
-  {
-    UE_LOG(LogCarla, Warning, TEXT("ARoutePlanner '%s' has no route assigned."), *GetName());
-    return;
-  }
-
-  for (auto &&Route : Routes)
-  {
-    if (!IsSplineValid(Route))
-    {
-      UE_LOG(LogCarla, Error, TEXT("ARoutePlanner '%s' has a route with zero way-points."), *GetName());
-      return;
-    }
-  }
-
-  // Register delegate on begin overlap.
-  if (!TriggerVolume->OnComponentBeginOverlap.IsAlreadyBound(this, &ARoutePlanner::OnTriggerBeginOverlap))
-  {
-    TriggerVolume->OnComponentBeginOverlap.AddDynamic(this, &ARoutePlanner::OnTriggerBeginOverlap);
-  }
+  Init();
 }
 
 void ARoutePlanner::EndPlay(const EEndPlayReason::Type EndPlayReason)
