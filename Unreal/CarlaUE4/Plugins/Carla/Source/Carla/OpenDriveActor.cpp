@@ -188,7 +188,7 @@ TArray<TArray<FVector>> AOpenDriveActor::GenerateLeftLaneWaypoints(const carla::
 
     for (size_t j = 0; j < leftLanes.size(); ++j)
     {
-        const carla::road::element::LaneInfo *laneInfo = lanesInfo->getLane(leftLanes[leftLanes.size() - 1 - j]);
+        const carla::road::element::LaneInfo *laneInfo = lanesInfo->getLane(leftLanes[j]);
         currentOffset += laneInfo->_width * 0.5;
         TArray<FVector> roadWaypoints;
 

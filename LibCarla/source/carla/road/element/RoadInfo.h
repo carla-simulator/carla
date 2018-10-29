@@ -130,7 +130,17 @@ namespace element {
         }
       }
 
-      std::reverse(lanes_id.begin(), lanes_id.end());
+      // NOTE(Andrei): Sort the lanes IDs ascendent,
+      // going from 1 to n
+      std::sort(lanes_id.begin(), lanes_id.end());
+
+      // NOTE(Andrei): For right lane the IDs are negative,
+      // so reverse so sort order to haven them going
+      // from -1 to -n
+      if(whichLanes == which_lane_e::Right) {
+        std::reverse(lanes_id.begin(), lanes_id.end());
+      }
+
       return lanes_id;
     }
 
