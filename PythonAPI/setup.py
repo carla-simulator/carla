@@ -19,6 +19,11 @@ def get_libcarla_extensions():
 
     sources = ['source/libcarla/libcarla.cpp']
 
+    def walk(folder, file_filter='*'):
+        for root, _, filenames in os.walk(folder):
+            for filename in fnmatch.filter(filenames, file_filter):
+                yield os.path.join(root, filename)
+
     if os.name == "posix":
         if platform.dist()[0].lower() in ["ubuntu", "debian"]:
             pwd = os.path.dirname(os.path.realpath(__file__))
@@ -66,11 +71,6 @@ def get_libcarla_extensions():
             '/DLIBCARLA_WITH_PYTHON_SUPPORT']
     else:
         raise NotImplementedError
-
-    def walk(folder, file_filter='*'):
-        for root, _, filenames in os.walk(folder):
-            for filename in fnmatch.filter(filenames, file_filter):
-                yield os.path.join(root, filename)
 
     depends = [x for x in walk('source/libcarla')]
     depends += [x for x in walk('dependencies')]
