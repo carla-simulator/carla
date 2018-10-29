@@ -21,9 +21,9 @@ Use ARROWS or WASD keys for control.
     Space        : hand-brake
     P            : toggle autopilot
 
-    TAB          : change camera position
-    `            : next camera sensor
-    [1-9]        : change to camera sensor [1-9]
+    TAB          : change sensor position
+    `            : next sensor
+    [1-9]        : change to sensor [1-9]
     C            : change weather (Shift+C reverse)
     Backspace    : change vehicle
 
@@ -207,7 +207,7 @@ class KeyboardControl(object):
                 elif event.key == K_BACKQUOTE:
                     world.camera_manager.next_sensor()
                 elif event.key > K_0 and event.key <= K_9:
-                    world.camera_manager.set_sensor(event.key - 1)
+                    world.camera_manager.set_sensor(event.key - 1 - K_0)
                 elif event.key == K_r:
                     world.camera_manager.toggle_recording()
                 elif event.key == K_q:
@@ -380,13 +380,15 @@ class CameraManager(object):
             ['sensor.camera.depth', cc.Depth, 'Camera Depth (Gray Scale)'],
             ['sensor.camera.depth', cc.LogarithmicDepth, 'Camera Depth (Logarithmic Gray Scale)'],
             ['sensor.camera.semantic_segmentation', cc.Raw, 'Camera Semantic Segmentation (Raw)'],
-            ['sensor.camera.semantic_segmentation', cc.CityScapesPalette, 'Camera Semantic Segmentation (CityScapes Palette)']]
+            ['sensor.camera.semantic_segmentation', cc.CityScapesPalette, 'Camera Semantic Segmentation (CityScapes Palette)'],
+            ['sensor.lidar.ray_cast', None, 'Lidar (Ray-Cast)']]
         world = self._parent.get_world()
         bp_library = world.get_blueprint_library()
         for item in self._sensors:
             bp = bp_library.find(item[0])
-            bp.set_attribute('image_size_x', str(hud.dim[0]))
-            bp.set_attribute('image_size_y', str(hud.dim[1]))
+            if item[0].startswith('sensor.camera'):
+                bp.set_attribute('image_size_x', str(hud.dim[0]))
+                bp.set_attribute('image_size_y', str(hud.dim[1]))
             item.append(bp)
         self._index = None
         self._server_clock = pygame.time.Clock()
@@ -433,12 +435,26 @@ class CameraManager(object):
             return
         self._server_clock.tick()
         self._hud.server_fps = self._server_clock.get_fps()
-        image.convert(self._sensors[self._index][1])
-        array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
-        array = np.reshape(array, (image.height, image.width, 4))
-        array = array[:, :, :3]
-        array = array[:, :, ::-1]
-        self._surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
+        if self._sensors[self._index][0].startswith('sensor.lidar'):
+            points = np.frombuffer(image.raw_data, dtype=np.dtype('f4'))
+            points = np.reshape(points, (int(points.shape[0]/3), 3))
+            lidar_data = np.array(points[:, :2])
+            lidar_data *= min(self._hud.dim) / 100.0
+            lidar_data += (0.5 * self._hud.dim[0], 0.5 * self._hud.dim[1])
+            lidar_data = np.fabs(lidar_data)
+            lidar_data = lidar_data.astype(np.int32)
+            lidar_data = np.reshape(lidar_data, (-1, 2))
+            lidar_img_size = (self._hud.dim[0], self._hud.dim[1], 3)
+            lidar_img = np.zeros(lidar_img_size)
+            lidar_img[tuple(lidar_data.T)] = (255, 255, 255)
+            self._surface = pygame.surfarray.make_surface(lidar_img)
+        else:
+            image.convert(self._sensors[self._index][1])
+            array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
+            array = np.reshape(array, (image.height, image.width, 4))
+            array = array[:, :, :3]
+            array = array[:, :, ::-1]
+            self._surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
         if self._recording:
             image.save_to_disk('_out/%08d' % image.frame_number)
 
