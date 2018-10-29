@@ -130,7 +130,7 @@ TArray<carla::road::element::DirectedPoint> AOpenDriveActor::GenerateLaneZeroPoi
 
         // NOTE(Andrei): Get waypoin at the offset, and invert the y axis
         carla::road::element::DirectedPoint waypoint = road->GetDirectedPointIn(waypointsOffset);
-        waypoint.location.y *= (-1); waypoint.location.z = 1;
+        waypoint.location.z = 1;
 
         // NOTE(Andrei): Applyed the laneOffset of the lane section
         waypoint.ApplyLateralOffset(lanesOffset[lanesOffsetIndex].second);

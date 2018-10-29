@@ -148,7 +148,7 @@ namespace opendrive {
       for (size_t i = 0; i < it->second->geometry_attributes.size(); ++i) {
         geom::Location loc;
         loc.x = it->second->geometry_attributes[i]->start_position_x;
-        loc.y = it->second->geometry_attributes[i]->start_position_y;
+        loc.y = -it->second->geometry_attributes[i]->start_position_y;
 
         switch (it->second->geometry_attributes[i]->type) {
           case carla::opendrive::types::GeometryType::ARC: {
@@ -157,7 +157,7 @@ namespace opendrive {
 
             roadSegment.MakeGeometry<carla::road::element::GeometryArc>(arc->start_position,
                 arc->length,
-                arc->heading,
+                -arc->heading,
                 loc,
                 arc->curvature);
 
@@ -170,7 +170,7 @@ namespace opendrive {
 
             roadSegment.MakeGeometry<carla::road::element::GeometryLine>(line->start_position,
                 line->length,
-                line->heading,
+                -line->heading,
                 loc);
 
             break;
@@ -182,7 +182,7 @@ namespace opendrive {
 
             roadSegment.MakeGeometry<carla::road::element::GeometrySpiral>(spiral->start_position,
                 spiral->length,
-                spiral->heading,
+                -spiral->heading,
                 loc,
                 spiral->curve_start,
                 spiral->curve_end);
