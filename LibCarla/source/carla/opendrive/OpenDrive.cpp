@@ -67,10 +67,10 @@ namespace opendrive {
     }
   }
 
-  SharedPtr<road::Map> OpenDrive::Load(const std::string &file, XmlInputType inputType) {
+  SharedPtr<road::Map> OpenDrive::Load(const std::string &file, XmlInputType inputType, std::string *out_error) {
     carla::opendrive::types::OpenDriveData open_drive_road;
 
-    OpenDriveParser::Parse(file.c_str(), open_drive_road, inputType);
+    OpenDriveParser::Parse(file.c_str(), open_drive_road, inputType, out_error);
     carla::road::MapBuilder mapBuilder;
 
     if (open_drive_road.roads.empty()) {
@@ -202,7 +202,7 @@ namespace opendrive {
     return mapBuilder.Build();
   }
 
-  SharedPtr<road::Map> OpenDrive::Load(std::istream &input) {
+  SharedPtr<road::Map> OpenDrive::Load(std::istream &input, std::string *out_error) {
 
     std::string fileContent;
     std::string line;
@@ -212,7 +212,7 @@ namespace opendrive {
       fileContent.append(line);
     }
 
-    return Load(fileContent, XmlInputType::CONTENT);
+    return Load(fileContent, XmlInputType::CONTENT, out_error);
   }
 
 } // namespace opendrive

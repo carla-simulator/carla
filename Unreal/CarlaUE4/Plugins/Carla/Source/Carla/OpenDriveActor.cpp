@@ -3,9 +3,13 @@
 #include "Carla.h"
 
 #include "OpenDriveActor.h"
-
-#include "Paths.h"
 #include "Algo/Reverse.h"
+
+#include "Util/OpenDrive.h"
+
+#include <compiler/disable-ue4-macros.h>
+#include <carla/rpc/String.h>
+#include <compiler/enable-ue4-macros.h>
 
 AOpenDriveActor::AOpenDriveActor()
 {
@@ -31,17 +35,23 @@ void AOpenDriveActor::BeginDestroy()
 void AOpenDriveActor::OnConstruction(const FTransform &transform)
 {
     Super::OnConstruction(transform);
+    std::string parseError;
 
     // NOTE(Andrei): As the OpenDrive file has the same name as level,
     // build the path to the xodr file using the lavel name and the
     // game content directory.
     FString mapName = GetWorld()->GetMapName();
-    FString xodrFile = FPaths::ProjectContentDir() + "/Carla/Maps/OpenDrive/" + mapName + ".xodr";
+    FString xodrContent = FOpenDrive::Load(mapName);
 
-    auto map_ptr = carla::opendrive::OpenDrive::Load(TCHAR_TO_UTF8(*xodrFile), XmlInputType::FILE);
-    check(map_ptr != nullptr);
+    auto map_ptr = carla::opendrive::OpenDrive::Load(TCHAR_TO_UTF8(*xodrContent), XmlInputType::CONTENT, &parseError);
+
+    if(parseError.size())
+    {
+        UE_LOG(LogCarla, Error, TEXT("OpenDrive parsing error: '%s'."), *carla::rpc::ToFString(parseError));
+        return;
+    }
+
     const auto &map = map_ptr->GetData();
-
     std::vector<carla::road::lane_junction_t> junctionInfo = map.GetJunctionInformation();
 
     ///////////////////////////////////////////////////////////////////////////
