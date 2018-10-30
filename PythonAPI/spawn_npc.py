@@ -24,7 +24,6 @@ import carla
 
 import argparse
 import random
-import signal
 import time
 
 
@@ -43,7 +42,7 @@ def main():
         type=int,
         help='TCP port to listen to (default: 2000)')
     argparser.add_argument(
-        '-nv', '--number-of-vehicles',
+        '-n', '--number-of-vehicles',
         metavar='N',
         default=10,
         type=int,
@@ -98,10 +97,13 @@ def main():
                 count -= 1
 
         print('spawned %d vehicles, press Ctrl+C to exit.' % args.number_of_vehicles)
-        signal.pause()
+
+        while True:
+            time.sleep(10)
 
     finally:
 
+        print('\ndestroying %d actors' % len(actor_list))
         for actor in actor_list:
             actor.destroy()
 
