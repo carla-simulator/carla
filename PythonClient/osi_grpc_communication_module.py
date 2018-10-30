@@ -10,11 +10,11 @@ import argparse
 import logging
 import time
 import math
-import grpc
+import grpc                                 # pylint: disable=import-error
 import numpy as np
 
-import osi3.osi_groundtruth_pb2
-import osi_grpc.osi_grpc_pb2_grpc
+import osi3.osi_groundtruth_pb2             # pylint: disable=import-error
+import osi_grpc.osi_grpc_pb2_grpc           # pylint: disable=import-error
 
 from carla.client import make_carla_client
 from carla.settings import CarlaSettings
