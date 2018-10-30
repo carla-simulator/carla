@@ -1,11 +1,11 @@
 from concurrent import futures
 import time
 
-import grpc
+import grpc                                     # pylint: disable=import-error
 import sys
 import os
 
-import osi_grpc.osi_grpc_pb2_grpc
+import osi_grpc.osi_grpc_pb2_grpc               # pylint: disable=import-error
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
