@@ -293,12 +293,12 @@ endif ()
 
 EOL
 
-if [ "${TRAVIS}" == "true" ] ; then
-  log "Travis CI build detected: disabling PNG support."
-  echo "add_definitions(-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=false)" >> ${CMAKE_CONFIG_FILE}.gen
-else
-  echo "add_definitions(-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true)" >> ${CMAKE_CONFIG_FILE}.gen
-fi
+log "Disabling PNG support."
+# This usage (or at least the usage of libpng16) causes a bunch of removes of libraries and
+# programs that others will use with carla (for example ros or libpcl). Likely needs investigation
+# to determine why we need 1.6 vs 1.2 and perhaps just sticking with 1.2 until some future
+# date.
+echo "add_definitions(-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=false)" >> ${CMAKE_CONFIG_FILE}.gen
 
 # -- Move files ----------------------------------------------------------------
 
