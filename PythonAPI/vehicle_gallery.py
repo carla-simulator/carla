@@ -28,7 +28,7 @@ import time
 def get_transform(vehicle_location, angle, d=6.4):
     a = math.radians(angle)
     location = carla.Location(d * math.cos(a), d * math.sin(a), 2.0) + vehicle_location
-    return carla.Transform(location, carla.Rotation(yaw=180 + angle, pitch=-20))
+    return carla.Transform(location, carla.Rotation(yaw=180 + angle, pitch=-15))
 
 
 def main():
@@ -52,7 +52,7 @@ def main():
             while angle < 356:
                 timestamp = world.wait_for_tick()
                 angle += timestamp.delta_seconds * 60.0
-                spectator.set_transform(get_transform(location, angle - 90))
+                spectator.set_transform(get_transform(vehicle.get_location(), angle - 90))
 
         finally:
 
