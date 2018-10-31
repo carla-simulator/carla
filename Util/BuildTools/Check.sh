@@ -47,7 +47,7 @@ eval set -- "$OPTS"
 while true; do
   case "$1" in
     --gdb )
-      GDB="gdb -tui --args";
+      GDB="gdb --args";
       shift ;;
     --xml )
       XML_OUTPUT=true;
