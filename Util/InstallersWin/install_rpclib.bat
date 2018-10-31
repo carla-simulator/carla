@@ -33,12 +33,14 @@ if not "%1"=="" (
     goto :arg-parse
 )
 
-set RPC_VERSION=v2.2.1
+set RPC_VERSION=d1146b7
 set RPC_SRC=rpclib-src
 set RPC_SRC_DIR=%BUILD_DIR%%RPC_SRC%\
 set RPC_INSTALL=rpclib-install
 set RPC_INSTALL_DIR=%BUILD_DIR%%RPC_INSTALL%\
 set RPC_BUILD_DIR=%RPC_SRC_DIR%build
+
+set PUSHD_RPC=%RPC_SRC_DIR:\=/%
 
 if exist "%RPC_INSTALL_DIR%" (
     goto already_build
@@ -47,8 +49,11 @@ if exist "%RPC_INSTALL_DIR%" (
 if not exist "%RPC_SRC_DIR%" (
     echo %FILE_N% Cloning rpclib - version "%RPC_VERSION%"...
 
-    call git clone --depth=1 -b %RPC_VERSION% https://github.com/rpclib/rpclib.git %RPC_SRC_DIR%
+    call git clone https://github.com/rpclib/rpclib.git %RPC_SRC_DIR%
     if %errorlevel% neq 0 goto error_git
+    pushd %PUSHD_RPC%
+    call git reset --hard d1146b7
+    popd
 ) else (
     echo %FILE_N% Not cloning rpclib because already exists a folder called "%RPC_SRC%".
 )

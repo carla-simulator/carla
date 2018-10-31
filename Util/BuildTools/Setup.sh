@@ -125,7 +125,7 @@ unset BOOST_BASENAME
 # -- Get rpclib and compile it with libc++ and libstdc++ -----------------------
 # ==============================================================================
 
-RPCLIB_BASENAME=rpclib-2.2.1
+RPCLIB_BASENAME=rpclib-d1146b7
 
 RPCLIB_LIBCXX_INCLUDE=${PWD}/${RPCLIB_BASENAME}-libcxx-install/include
 RPCLIB_LIBCXX_LIBPATH=${PWD}/${RPCLIB_BASENAME}-libcxx-install/lib
@@ -142,7 +142,10 @@ else
 
   log "Retrieving rpclib."
 
-  git clone --depth=1 -b v2.2.1 https://github.com/rpclib/rpclib.git ${RPCLIB_BASENAME}-source
+  git clone https://github.com/rpclib/rpclib.git ${RPCLIB_BASENAME}-source
+  pushd ${RPCLIB_BASENAME}-source >/dev/null
+  git reset --hard d1146b7
+  popd >/dev/null
 
   log "Building rpclib with libc++."
 
