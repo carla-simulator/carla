@@ -32,14 +32,12 @@ namespace element {
 
     assert(_dist <= _map->GetData().GetRoad(_road_id)->GetLength());
 
-    //
-    const geom::Location loc_in_geom =
-        _map->GetData().GetRoad(_road_id)->GetDirectedPointIn(_dist).location;
-    const double heading =
-         _map->GetData().GetRoad(_road_id)->GetDirectedPointIn(_dist).tangent;
+    const road::element::DirectedPoint dp =
+        _map->GetData().GetRoad(_road_id)->GetDirectedPointIn(_dist);
 
-    const geom::Rotation rot(0.0, heading * geom::Math::to_radiants(), 0.0);
-    _transform = geom::Transform(loc_in_geom, rot);
+    const geom::Rotation rot(0.0, geom::Math::to_degrees(dp.tangent), 0.0);
+
+    _transform = geom::Transform(dp.location, rot);
 
     _lane_id = _map->GetData().GetRoad(_road_id)->GetNearestLane(_dist, loc);
   }

@@ -165,11 +165,6 @@ namespace element {
     }
 
     std::pair<double, double> DistanceTo(const geom::Location &p) const override {
-      /*const Vector3D &p,
-        const Vector3D &start_pos,
-        const double length,
-        const double heading, // [radians]
-        const double curvature*/
       return geom::Math::DistArcPoint(
           p,
           _start_position,

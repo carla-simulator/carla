@@ -31,7 +31,6 @@ namespace element {
       return _road_id;
     }
 
-
     std::vector<Waypoint> Next(double distance) const {
       (void) distance;
       return std::vector<Waypoint>();

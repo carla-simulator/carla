@@ -134,16 +134,13 @@ namespace element {
     }
 
     std::pair<double, double> GetNearestPoint(const geom::Location &loc) const {
-      double min = std::numeric_limits<double>::max();
-      std::pair<double, double> last = {0.0, 0.0};
-
       decltype(_geom)::const_iterator nearest_geom;
+      std::pair<double, double> last = {0.0, std::numeric_limits<double>::max()};
 
       for (auto g = _geom.begin(); g !=_geom.end(); ++g) {
         auto d = (*g)->DistanceTo(loc);
-        if (d.second < min) {
+        if (d.second < last.second) {
           last = d;
-          min = d.second;
           nearest_geom = g;
         }
       }

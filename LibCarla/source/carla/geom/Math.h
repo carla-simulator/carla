@@ -30,8 +30,8 @@ namespace geom {
       return 0.5 * pi();
     }
 
-    static constexpr auto to_radiants() {
-      return 180.0 / pi();
+    static constexpr auto to_degrees(double rad) {
+      return rad * (180.0 / pi());
     }
 
     static double clamp(
@@ -105,25 +105,31 @@ namespace geom {
     /// - @a first:  distance across the arc from start_pos to p' where p' = p projected on Arc
     /// - @a second: euclidean distance from p to p'
     static std::pair<double, double> DistArcPoint(
-        const Vector3D &p,
-        const Vector3D &start_pos,
-        const double length,
-        const double heading, // [radians]
-        const double curvature) {
+        Vector3D p,
+        Vector3D start_pos,
+        double length,
+        double heading, // [radians]
+        double curvature) {
+      // Because Unreal's coordinates:
+      p = Vector3D(p.x, -p.y, p.z);
+      start_pos = Vector3D(start_pos.x, -start_pos.y, start_pos.z);
+      heading = -heading;
+
       // transport point relative to the arc starting poistion and rotation
       const Vector3D rotated_p(RotatePointOnOrigin2D(p - start_pos, -heading));
 
-      // find intersection position using the unit vector from the center
-      // of the circle to the point and multiplying by the radius
       const double radius = 1.0 / curvature;
       const Vector3D circ_center(0, radius, 0);
-      const Vector3D intersection = ((rotated_p - circ_center).MakeUnitVector() * radius) + circ_center;
 
       // check if the point is in the center of the circle, so we know p
       // is in the same distance of every possible point in the arc
       if (rotated_p == circ_center) {
         return std::make_pair(0.0, radius);
       }
+
+      // find intersection position using the unit vector from the center
+      // of the circle to the point and multiplying by the radius
+      const Vector3D intersection = ((rotated_p - circ_center).MakeUnitVector() * radius) + circ_center;
 
       // use the arc length to calculate the angle in the last point of it
       // circumference of a circle = 2 * PI * r
@@ -132,10 +138,14 @@ namespace geom {
 
       // move the point relative to the center of the circle and find
       // the angle between the point and the center of coords in rad
-      const double angle = std::atan2(intersection.y - radius, intersection.x) + pi_half();
+      double angle = std::atan2(intersection.y - radius, intersection.x) + pi_half();
+
+      if(angle < 0.0) {
+        angle += pi_double();
+      }
 
       // see if the angle is between 0 and last_point_angle
-      DEBUG_ASSERT(angle >= 0);
+      DEBUG_ASSERT(angle >= 0.0);
       if (angle <= last_point_angle) {
         return std::make_pair(
             angle * radius,
@@ -144,9 +154,11 @@ namespace geom {
 
       // find the nearest point, start or end to intersection
       const double start_dist = Distance2D(Vector3D(), rotated_p);
-      Vector3D end_pos(
-          (radius * std::cos(last_point_angle - pi_half())) + circ_center.x,
-          (radius * std::sin(last_point_angle - pi_half())) + circ_center.y, 0.0);
+
+      const Vector3D end_pos(
+          radius * std::cos(last_point_angle - pi_half()),
+          radius * std::sin(last_point_angle - pi_half()) + circ_center.y,
+          0.0);
       const double end_dist = Distance2D(end_pos, rotated_p);
       return (start_dist < end_dist) ?
           std::make_pair(0.0, start_dist) :
