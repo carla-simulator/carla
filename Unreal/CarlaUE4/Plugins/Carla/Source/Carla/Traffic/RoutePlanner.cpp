@@ -57,7 +57,7 @@ ARoutePlanner::ARoutePlanner(const FObjectInitializer &ObjectInitializer)
   TriggerVolume->SetHiddenInGame(true);
   TriggerVolume->SetMobility(EComponentMobility::Static);
   TriggerVolume->SetCollisionProfileName(FName("OverlapAll"));
-  TriggerVolume->SetBoxExtent(FVector{50.0f, 50.0f, 50.0f});
+  TriggerVolume->SetBoxExtent(FVector{100.0f, 100.0f, 50.0f});
   TriggerVolume->bGenerateOverlapEvents = true;
 
   _spline_color = FColor::Black;
@@ -90,6 +90,7 @@ void ARoutePlanner::PostEditChangeProperty(FPropertyChangedEvent &PropertyChange
 void ARoutePlanner::AddRoute(float probability, const TArray<FVector> &routePoints)
 {
   USplineComponent *NewSpline = NewObject<USplineComponent>(this);
+  NewSpline->bHiddenInGame = true;
 
   NewSpline->SetLocationAtSplinePoint(0, routePoints[0], ESplineCoordinateSpace::World, true);
   NewSpline->SetLocationAtSplinePoint(1, routePoints[1], ESplineCoordinateSpace::World, true);
@@ -109,30 +110,34 @@ void ARoutePlanner::CleanRoute()
   Probabilities.Empty();
 }
 
+void ARoutePlanner::Init()
+{
+    if (Routes.Num() < 1)
+    {
+        UE_LOG(LogCarla, Warning, TEXT("ARoutePlanner '%s' has no route assigned."), *GetName());
+        return;
+    }
+
+    for (auto &&Route : Routes)
+    {
+        if (!IsSplineValid(Route))
+        {
+            UE_LOG(LogCarla, Error, TEXT("ARoutePlanner '%s' has a route with zero way-points."), *GetName());
+            return;
+        }
+    }
+
+    // Register delegate on begin overlap.
+    if (!TriggerVolume->OnComponentBeginOverlap.IsAlreadyBound(this, &ARoutePlanner::OnTriggerBeginOverlap))
+    {
+        TriggerVolume->OnComponentBeginOverlap.AddDynamic(this, &ARoutePlanner::OnTriggerBeginOverlap);
+    }
+}
+
 void ARoutePlanner::BeginPlay()
 {
   Super::BeginPlay();
-
-  if (Routes.Num() < 1)
-  {
-    UE_LOG(LogCarla, Warning, TEXT("ARoutePlanner '%s' has no route assigned."), *GetName());
-    return;
-  }
-
-  for (auto &&Route : Routes)
-  {
-    if (!IsSplineValid(Route))
-    {
-      UE_LOG(LogCarla, Error, TEXT("ARoutePlanner '%s' has a route with zero way-points."), *GetName());
-      return;
-    }
-  }
-
-  // Register delegate on begin overlap.
-  if (!TriggerVolume->OnComponentBeginOverlap.IsAlreadyBound(this, &ARoutePlanner::OnTriggerBeginOverlap))
-  {
-    TriggerVolume->OnComponentBeginOverlap.AddDynamic(this, &ARoutePlanner::OnTriggerBeginOverlap);
-  }
+  Init();
 }
 
 void ARoutePlanner::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -181,8 +186,13 @@ void ARoutePlanner::OnTriggerBeginOverlap(
 
 void ARoutePlanner::DrawRoutes()
 {
+#if WITH_EDITOR
   for (int i = 0, lenRoutes = Routes.Num(); i < lenRoutes; ++i)
   {
+      FVector boxCenter = Routes[i]->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::World);
+      boxCenter.Z += i * 101.0f;
+      DrawDebugBox(GetWorld(), boxCenter, FVector(100.0f, 100.0f, 50.0f), _spline_color, true);
+
     for (int j = 0, lenNumPoints = Routes[i]->GetNumberOfSplinePoints() - 1; j < lenNumPoints; ++j)
     {
       FVector p0 = Routes[i]->GetLocationAtSplinePoint(j + 0, ESplineCoordinateSpace::World);
@@ -199,4 +209,5 @@ void ARoutePlanner::DrawRoutes()
       }
     }
   }
+#endif
 }

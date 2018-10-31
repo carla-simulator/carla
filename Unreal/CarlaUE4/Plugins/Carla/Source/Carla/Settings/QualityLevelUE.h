@@ -10,7 +10,7 @@
 #include <carla/rpc/QualityLevel.h>
 #include <compiler/enable-ue4-macros.h>
 
-#include "QualityLevel.generated.h"
+#include "QualityLevelUE.generated.h"
 
 #define CARLA_ENUM_FROM_RPC(e) static_cast<uint8>(carla::rpc::QualityLevel:: e)
 
