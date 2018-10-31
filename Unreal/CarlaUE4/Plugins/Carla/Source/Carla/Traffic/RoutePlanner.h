@@ -22,19 +22,22 @@ class CARLA_API ARoutePlanner : public AActor
 {
   GENERATED_BODY()
 
-private:
-
-  FColor _spline_color;
-
 public:
 
   ARoutePlanner(const FObjectInitializer &ObjectInitializer);
+
   void Init();
 
-  void SetSplineColor(const FColor color)
+  void SetBoxExtent(const FVector &Extent)
   {
-    _spline_color = color;
+    TriggerVolume->SetBoxExtent(Extent);
   }
+
+  void SetSplineColor(FColor Color)
+  {
+    SplineColor = Color;
+  }
+
   void DrawRoutes();
 
   void AddRoute(float probability, const TArray<FVector> &routePoints);
@@ -48,6 +51,7 @@ protected:
 #endif // WITH_EDITOR
 
   virtual void BeginPlay() override;
+
   virtual void EndPlay(EEndPlayReason::Type EndPlayReason) override;
 
   UFUNCTION()
@@ -69,4 +73,8 @@ public:
 
   UPROPERTY(BlueprintReadWrite, Category = "Traffic Routes", EditAnywhere, EditFixedSize)
   TArray<float> Probabilities;
+
+private:
+
+  FColor SplineColor;
 };
