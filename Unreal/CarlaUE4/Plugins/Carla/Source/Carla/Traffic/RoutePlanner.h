@@ -29,6 +29,7 @@ private:
 public:
 
   ARoutePlanner(const FObjectInitializer &ObjectInitializer);
+  void Init();
 
   void SetSplineColor(const FColor color)
   {
@@ -47,7 +48,6 @@ protected:
 #endif // WITH_EDITOR
 
   virtual void BeginPlay() override;
-
   virtual void EndPlay(EEndPlayReason::Type EndPlayReason) override;
 
   UFUNCTION()

@@ -12,6 +12,7 @@
 
 #include <istream>
 #include <ostream>
+#include <string>
 
 namespace carla {
 namespace opendrive {
@@ -19,8 +20,8 @@ namespace opendrive {
     class OpenDrive {
     public:
 
-      static SharedPtr<road::Map> Load(std::istream &input);
-      static SharedPtr<road::Map> Load(const std::string &file, XmlInputType inputType);
+      static SharedPtr<road::Map> Load(std::istream &input, std::string *out_error = nullptr);
+      static SharedPtr<road::Map> Load(const std::string &xml, XmlInputType inputType, std::string *out_error = nullptr);
 
       static void Dump(const road::Map &map, std::ostream &output);
     };

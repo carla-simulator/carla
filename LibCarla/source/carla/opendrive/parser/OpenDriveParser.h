@@ -17,6 +17,7 @@
 /*
     STD/C++ includes
 */
+#include <iostream>
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -28,7 +29,7 @@ enum class XmlInputType : int
 
 struct OpenDriveParser
 {
-    static bool Parse(const char *xml, carla::opendrive::types::OpenDriveData &out_open_drive_data, XmlInputType inputType)
+    static bool Parse(const char *xml, carla::opendrive::types::OpenDriveData &out_open_drive_data, XmlInputType inputType, std::string *out_error = nullptr)
     {
         pugi::xml_document xmlDoc;
         pugi::xml_parse_result pugiParseResult;
@@ -54,7 +55,11 @@ struct OpenDriveParser
 
         if (pugiParseResult == false)
         {
-            // TODO(Andrei): Log some kind of error
+            if(out_error != nullptr)
+            {
+                *out_error = pugiParseResult.description();
+            }
+
             return false;
         }
 
