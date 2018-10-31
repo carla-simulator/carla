@@ -51,36 +51,18 @@ file(GLOB libcarla_carla_opendrive_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_opendrive_sources}")
 install(FILES ${libcarla_carla_opendrive_sources} DESTINATION include/carla/opendrive)
 
-file(GLOB libcarla_carla_opendrive_parser_pugixml_sources
-    "${libcarla_source_path}/carla/opendrive/parser/pugixml/*.cpp"
-    "${libcarla_source_path}/carla/opendrive/parser/pugixml/*.hpp"
-    "${libcarla_source_path}/carla/opendrive/parser/pugixml/*.h")
-set(libcarla_sources "${libcarla_sources};${libcarla_carla_opendrive_parser_pugixml_sources}")
-install(FILES ${libcarla_carla_opendrive_parser_pugixml_sources} DESTINATION include/carla/opendrive/parser/pugixml)
-
 file(GLOB libcarla_carla_opendrive_parser_sources
     "${libcarla_source_path}/carla/opendrive/parser/*.cpp"
     "${libcarla_source_path}/carla/opendrive/parser/*.h")
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_opendrive_parser_sources}")
 install(FILES ${libcarla_carla_opendrive_parser_sources} DESTINATION include/carla/opendrive/parser)
 
-file(GLOB libcarla_carla_opendrive_math_sources
-    "${libcarla_source_path}/carla/opendrive/math/*.cpp"
-    "${libcarla_source_path}/carla/opendrive/math/*.h")
-set(libcarla_sources "${libcarla_sources};${libcarla_carla_opendrive_math_sources}")
-install(FILES ${libcarla_carla_opendrive_math_sources} DESTINATION include/carla/opendrive/math)
-
-file(GLOB libcarla_carla_opendrive_logic_cephes_sources
-    "${libcarla_source_path}/carla/opendrive/logic/cephes/*.cpp"
-    "${libcarla_source_path}/carla/opendrive/logic/cephes/*.h")
-set(libcarla_sources "${libcarla_sources};${libcarla_carla_opendrive_logic_cephes_sources}")
-install(FILES ${libcarla_carla_opendrive_logic_cephes_sources} DESTINATION include/carla/opendrive/logic/cephes)
-
-file(GLOB libcarla_carla_opendrive_logic_sources
-    "${libcarla_source_path}/carla/opendrive/logic/*.cpp"
-    "${libcarla_source_path}/carla/opendrive/logic/*.h")
-set(libcarla_sources "${libcarla_sources};${libcarla_carla_opendrive_logic_sources}")
-install(FILES ${libcarla_carla_opendrive_logic_sources} DESTINATION include/carla/opendrive/logic)
+file(GLOB libcarla_carla_opendrive_parser_pugixml_sources
+    "${libcarla_source_path}/carla/opendrive/parser/pugixml/*.cpp"
+    "${libcarla_source_path}/carla/opendrive/parser/pugixml/*.hpp"
+    "${libcarla_source_path}/carla/opendrive/parser/pugixml/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_opendrive_parser_pugixml_sources}")
+install(FILES ${libcarla_carla_opendrive_parser_pugixml_sources} DESTINATION include/carla/opendrive/parser/pugixml)
 
 file(GLOB libcarla_carla_pointcloud_sources
     "${libcarla_source_path}/carla/pointcloud/*.cpp"
