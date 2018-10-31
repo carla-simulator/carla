@@ -57,10 +57,12 @@ ARoutePlanner::ARoutePlanner(const FObjectInitializer &ObjectInitializer)
   TriggerVolume->SetHiddenInGame(true);
   TriggerVolume->SetMobility(EComponentMobility::Static);
   TriggerVolume->SetCollisionProfileName(FName("OverlapAll"));
-  TriggerVolume->SetBoxExtent(FVector{100.0f, 100.0f, 50.0f});
   TriggerVolume->bGenerateOverlapEvents = true;
 
-  _spline_color = FColor::Black;
+  // Do not change default value here, our autopilot depends on this.
+  TriggerVolume->SetBoxExtent(FVector{32.0f, 32.0f, 32.0f});
+
+  SplineColor = FColor::Black;
 }
 
 #if WITH_EDITOR
@@ -112,26 +114,26 @@ void ARoutePlanner::CleanRoute()
 
 void ARoutePlanner::Init()
 {
-    if (Routes.Num() < 1)
-    {
-        UE_LOG(LogCarla, Warning, TEXT("ARoutePlanner '%s' has no route assigned."), *GetName());
-        return;
-    }
+  if (Routes.Num() < 1)
+  {
+    UE_LOG(LogCarla, Warning, TEXT("ARoutePlanner '%s' has no route assigned."), *GetName());
+    return;
+  }
 
-    for (auto &&Route : Routes)
+  for (auto &&Route : Routes)
+  {
+    if (!IsSplineValid(Route))
     {
-        if (!IsSplineValid(Route))
-        {
-            UE_LOG(LogCarla, Error, TEXT("ARoutePlanner '%s' has a route with zero way-points."), *GetName());
-            return;
-        }
+      UE_LOG(LogCarla, Error, TEXT("ARoutePlanner '%s' has a route with zero way-points."), *GetName());
+      return;
     }
+  }
 
-    // Register delegate on begin overlap.
-    if (!TriggerVolume->OnComponentBeginOverlap.IsAlreadyBound(this, &ARoutePlanner::OnTriggerBeginOverlap))
-    {
-        TriggerVolume->OnComponentBeginOverlap.AddDynamic(this, &ARoutePlanner::OnTriggerBeginOverlap);
-    }
+  // Register delegate on begin overlap.
+  if (!TriggerVolume->OnComponentBeginOverlap.IsAlreadyBound(this, &ARoutePlanner::OnTriggerBeginOverlap))
+  {
+    TriggerVolume->OnComponentBeginOverlap.AddDynamic(this, &ARoutePlanner::OnTriggerBeginOverlap);
+  }
 }
 
 void ARoutePlanner::BeginPlay()
@@ -189,23 +191,23 @@ void ARoutePlanner::DrawRoutes()
 #if WITH_EDITOR
   for (int i = 0, lenRoutes = Routes.Num(); i < lenRoutes; ++i)
   {
-      FVector boxCenter = Routes[i]->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::World);
-      boxCenter.Z += i * 101.0f;
-      DrawDebugBox(GetWorld(), boxCenter, FVector(100.0f, 100.0f, 50.0f), _spline_color, true);
+    FVector boxCenter = Routes[i]->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::World);
+    boxCenter.Z += i * 101.0f;
+    DrawDebugBox(GetWorld(), boxCenter, FVector(100.0f, 100.0f, 50.0f), SplineColor, true);
 
     for (int j = 0, lenNumPoints = Routes[i]->GetNumberOfSplinePoints() - 1; j < lenNumPoints; ++j)
     {
       FVector p0 = Routes[i]->GetLocationAtSplinePoint(j + 0, ESplineCoordinateSpace::World);
       FVector p1 = Routes[i]->GetLocationAtSplinePoint(j + 1, ESplineCoordinateSpace::World);
 
-      if (_spline_color == FColor::Black)
+      if (SplineColor == FColor::Black)
       {
         float f = (float) j / (float) lenNumPoints;
         DrawDebugLine(GetWorld(), p0, p1, FColor(255 * f, 255 - 255 * f, 0), true);
       }
       else
       {
-        DrawDebugLine(GetWorld(), p0, p1, _spline_color, true);
+        DrawDebugLine(GetWorld(), p0, p1, SplineColor, true);
       }
     }
   }
