@@ -116,10 +116,10 @@ TEST(geom, point_in_rectangle) {
 TEST(geom, nearest_point_arc) {
   ASSERT_NEAR(Math::DistArcPoint(Vector3D(1,0,0),
       Vector3D(0,0,0), 1.57, 0, 1).second, 0.414214, 0.01);
-  ASSERT_NEAR(Math::DistArcPoint(Vector3D(2,1,0),
+  ASSERT_NEAR(Math::DistArcPoint(Vector3D(2,-1,0),
       Vector3D(0,0,0), 1.57, 0, 1).second, 1.0, 0.01);
-  ASSERT_NEAR(Math::DistArcPoint(Vector3D(0,1,0),
+  ASSERT_NEAR(Math::DistArcPoint(Vector3D(0,-1,0),
       Vector3D(0,0,0), 1.57, 0, 1).second, 1.0, 0.01);
-  ASSERT_NEAR(Math::DistArcPoint(Vector3D(1,2,0),
+  ASSERT_NEAR(Math::DistArcPoint(Vector3D(1,-2,0),
       Vector3D(0,0,0), 1.57, 0, 1).second, 1.0, 0.01);
 }
