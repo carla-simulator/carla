@@ -3,11 +3,11 @@
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
+
 #include "Carla.h"
+#include "Carla/Sensor/PixelReader.h"
 
 #include "Engine/TextureRenderTarget2D.h"
-
-#include "Carla/Sensor/PixelReader.h"
 
 // For now we only support Vulkan on Windows.
 #if PLATFORM_WINDOWS
