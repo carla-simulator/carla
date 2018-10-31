@@ -35,6 +35,11 @@ void AOpenDriveActor::BeginDestroy()
 void AOpenDriveActor::OnConstruction(const FTransform &transform)
 {
     Super::OnConstruction(transform);
+    BuildRoutes();
+}
+
+void AOpenDriveActor::BuildRoutes()
+{
     std::string parseError;
 
     // NOTE(Andrei): As the OpenDrive file has the same name as level,
@@ -45,7 +50,7 @@ void AOpenDriveActor::OnConstruction(const FTransform &transform)
 
     auto map_ptr = carla::opendrive::OpenDrive::Load(TCHAR_TO_UTF8(*xodrContent), XmlInputType::CONTENT, &parseError);
 
-    if(parseError.size())
+    if (parseError.size())
     {
         UE_LOG(LogCarla, Error, TEXT("OpenDrive parsing error: '%s'."), *carla::rpc::ToFString(parseError));
         return;
@@ -82,6 +87,9 @@ void AOpenDriveActor::OnConstruction(const FTransform &transform)
 
         GenerateWaypointsJunction(map.GetRoad(toRoadID), waypoints);
         ARoutePlanner *routePlanner = nullptr;
+
+        std::sort(junctionInfo[i].from_lane.begin(), junctionInfo[i].from_lane.end());
+        if (junctionInfo[i].from_lane[0] < 0) std::reverse(junctionInfo[i].from_lane.begin(), junctionInfo[i].from_lane.end());
 
         for (size_t n = 0; n < junctionInfo[i].from_lane.size(); ++n)
         {
@@ -152,12 +160,11 @@ TArray<carla::road::element::DirectedPoint> AOpenDriveActor::GenerateLaneZeroPoi
     return laneZeroPoints;
 }
 
-TArray<TArray<FVector>> AOpenDriveActor::GenerateRightLaneWaypoints(const carla::road::element::RoadSegment * road, const TArray<carla::road::element::DirectedPoint>&)
+TArray<TArray<FVector>> AOpenDriveActor::GenerateRightLaneWaypoints(const carla::road::element::RoadSegment * road, const TArray<carla::road::element::DirectedPoint> &laneZeroPoints)
 {
-    TArray<carla::road::element::DirectedPoint> laneZeroPoints = GenerateLaneZeroPoints(road);
     const carla::road::element::RoadInfoLane *lanesInfo = road->GetInfo<carla::road::element::RoadInfoLane>(0.0);
-
     std::vector<int> rightLanes = lanesInfo->getLanesIDs(carla::road::element::RoadInfoLane::which_lane_e::Right);
+
     TArray<TArray<FVector>> retWaypoints;
     double currentOffset = 0.0;
 
@@ -188,12 +195,11 @@ TArray<TArray<FVector>> AOpenDriveActor::GenerateRightLaneWaypoints(const carla:
     return retWaypoints;
 }
 
-TArray<TArray<FVector>> AOpenDriveActor::GenerateLeftLaneWaypoints(const carla::road::element::RoadSegment * road, const TArray<carla::road::element::DirectedPoint>&)
+TArray<TArray<FVector>> AOpenDriveActor::GenerateLeftLaneWaypoints(const carla::road::element::RoadSegment * road, const TArray<carla::road::element::DirectedPoint> &laneZeroPoints)
 {
-    TArray<carla::road::element::DirectedPoint> laneZeroPoints = GenerateLaneZeroPoints(road);
     const carla::road::element::RoadInfoLane *lanesInfo = road->GetInfo<carla::road::element::RoadInfoLane>(0.0);
-
     std::vector<int> leftLanes = lanesInfo->getLanesIDs(carla::road::element::RoadInfoLane::which_lane_e::Left);
+
     TArray<TArray<FVector>> retWaypoints;
     double currentOffset = 0.0;
 
@@ -252,4 +258,9 @@ void AOpenDriveActor::GenerateWaypointsJunction(const carla::road::element::Road
 
     TArray<carla::road::element::DirectedPoint> laneZeroPoints = GenerateLaneZeroPoints(road);
     out_waypoints = GenerateRightLaneWaypoints(road, laneZeroPoints);
+
+    if (out_waypoints.Num() == 0)
+    {
+        out_waypoints = GenerateLeftLaneWaypoints(road, laneZeroPoints);
+    }
 }
