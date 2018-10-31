@@ -40,6 +40,8 @@ set RPC_INSTALL=rpclib-install
 set RPC_INSTALL_DIR=%BUILD_DIR%%RPC_INSTALL%\
 set RPC_BUILD_DIR=%RPC_SRC_DIR%build
 
+set PUSHD_RPC=%RPC_SRC_DIR:\=/%
+
 if exist "%RPC_INSTALL_DIR%" (
     goto already_build
 )
@@ -49,7 +51,7 @@ if not exist "%RPC_SRC_DIR%" (
 
     call git clone https://github.com/rpclib/rpclib.git %RPC_SRC_DIR%
     if %errorlevel% neq 0 goto error_git
-    pushd %RPC_SRC_DIR%
+    pushd %PUSHD_RPC%
     call git reset --hard d1146b7
     popd
 ) else (
