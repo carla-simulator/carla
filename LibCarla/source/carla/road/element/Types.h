@@ -52,11 +52,11 @@ namespace element {
     }
 
     void AddNextLaneInfo(int current_lane_id, int next_lane_id, int next_road_id) {
-      _next_lane[current_lane_id] = std::pair<int, int>(next_lane_id, next_road_id);
+      _next_lane[current_lane_id].emplace_back(std::pair<int, int>(next_lane_id, next_road_id));
     }
 
     void AddPrevLaneInfo(int current_lane_id, int next_lane_id, int next_road_id) {
-      _prev_lane[current_lane_id] = std::pair<int, int>(next_lane_id, next_road_id);
+      _prev_lane[current_lane_id].emplace_back(std::pair<int, int>(next_lane_id, next_road_id));
     }
 
     // usage MakeGeometry<GeometryArc>(len, st_pos_offs, head, st_pos, curv)
@@ -95,8 +95,12 @@ namespace element {
     std::vector<bool> _predecessors_is_start;
     std::vector<std::unique_ptr<Geometry>> _geom;
     std::vector<std::shared_ptr<RoadInfo>> _info;
-    std::map<int, std::pair<int, int>> _next_lane;
-    std::map<int, std::pair<int, int>> _prev_lane;
+
+    // first  int     current lane
+    // second int     to which lane
+    // third  int     to which road
+    std::map<int, std::vector<std::pair<int, int>>> _next_lane;
+    std::map<int, std::vector<std::pair<int, int>>> _prev_lane;
   };
 
 } // namespace element

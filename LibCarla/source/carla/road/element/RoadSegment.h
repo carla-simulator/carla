@@ -115,33 +115,33 @@ namespace element {
     }
 
     // Given the current lane it gives an std::pair of the lane id the and road id
-    // where you can go.
+    // where you can go.  First integer of the pair is the lane id and the second the road id.
     //
     // INPUT:
-    //    int current_lane_id           for which lane do you want the next
+    //    int current_lane_id               for which lane do you want the next
     //
     // OUTPUT:
-    //    std::pair<int, int>           return a pair with lane id (first int) and the road id (second int),
-    //                                  if no lane has been found the given pair it will be (0, 0) as lane id
-    //                                  zero used for the reference line
-    std::pair<int, int> GetNextLane(int current_lane_id) const {
-      std::map<int, std::pair<int, int>>::const_iterator it = _next_lane.find(current_lane_id);
-      return it == _next_lane.end() ? std::pair<int, int>(0, 0) : it->second;
+    //    std::vector<std::pair<int, int>>  return a pair with lane id (first int) and the road id (second int),
+    //                                      if no lane has been found the given pair it will be (0, 0) as lane id
+    //                                      zero used for the reference line
+    std::vector<std::pair<int, int>> GetNextLane(int current_lane_id) const {
+      std::map<int, std::vector<std::pair<int, int>>>::const_iterator it = _next_lane.find(current_lane_id);
+      return it == _next_lane.end() ? std::vector<std::pair<int, int>>() : it->second;
     }
 
-    // Given the current lane it gives an std::pair with the lane id the and road id
-    // where you can go.
+    // Given the current lane it gives an std::pair vector with the lane id the and road id
+    // where you can go. First integer of the pair is the lane id and the second the road id.
     //
     // INPUT:
-    //    int current_lane_id           for which lane do you want the next
+    //    int current_lane_id               for which lane do you want the next
     //
     // OUTPUT:
-    //    std::pair<int, int>           return a pair with lane id (first int) and the road id (second int),
-    //                                  if no lane has been found the given pair it will be (0, 0) as lane id
-    //                                  zero used for the reference line
-    std::pair<int, int> GetPrevLane(int current_lane_id) const {
-      std::map<int, std::pair<int, int>>::const_iterator it = _prev_lane.find(current_lane_id);
-      return it == _next_lane.end() ? std::pair<int, int>(0, 0) : it->second;
+    //    std::vector<std::pair<int, int>>  return a pair with lane id (first int) and the road id (second int),
+    //                                      if no lane has been found the given pair it will be (0, 0) as lane id
+    //                                      zero used for the reference line
+    std::vector<std::pair<int, int>> GetPrevLane(int current_lane_id) const {
+      std::map<int, std::vector<std::pair<int, int>>>::const_iterator it = _prev_lane.find(current_lane_id);
+      return it == _next_lane.end() ? std::vector<std::pair<int, int>>() : it->second;
     }
 
     // Search for the last geometry with less start_offset before 'dist'
@@ -239,8 +239,12 @@ namespace element {
     std::vector<std::unique_ptr<Geometry>> _geom;
     std::multiset<std::shared_ptr<RoadInfo>, LessComp> _info;
     double _length = -1.0;
-    std::map<int, std::pair<int, int>> _next_lane;
-    std::map<int, std::pair<int, int>> _prev_lane;
+
+    // first  int     current lane
+    // second int     to which lane
+    // third  int     to which road
+    std::map<int, std::vector<std::pair<int, int>>> _next_lane;
+    std::map<int, std::vector<std::pair<int, int>>> _prev_lane;
   };
 
 } // namespace element

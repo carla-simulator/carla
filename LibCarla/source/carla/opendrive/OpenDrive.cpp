@@ -1,6 +1,5 @@
 #include "OpenDrive.h"
 
-
 #include "../road/MapBuilder.h"
 
 namespace carla {
@@ -125,6 +124,10 @@ namespace opendrive {
             junctionsData[it->second->road_link.successor->id][it->first];
           for (size_t i = 0; i < options.size(); ++i) {
             roadSegment.AddSuccessorID(options[i].connection_road, options[i].contact_point == "start");
+
+            for(size_t j = 0; j < options[i].from_lane.size(); ++j) {
+              roadSegment.AddNextLaneInfo(options[i].from_lane[j], options[i].to_lane[j], options[i].connection_road);
+            }
           }
         } else {
           roadSegment.AddSuccessorID(it->second->road_link.successor->id, is_start);
@@ -145,6 +148,10 @@ namespace opendrive {
             junctionsData[it->second->road_link.predecessor->id][it->first];
           for (size_t i = 0; i < options.size(); ++i) {
             roadSegment.AddPredecessorID(options[i].connection_road, options[i].contact_point == "start");
+
+            for(size_t j = 0; j < options[i].from_lane.size(); ++j) {
+              roadSegment.AddNextLaneInfo(options[i].from_lane[j], options[i].to_lane[j], options[i].connection_road);
+            }
           }
         } else {
           roadSegment.AddPredecessorID(it->second->road_link.predecessor->id, is_start);
