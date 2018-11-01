@@ -193,7 +193,7 @@ void ARoutePlanner::DrawRoutes()
   {
     FVector boxCenter = Routes[i]->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::World);
     boxCenter.Z += i * 101.0f;
-    DrawDebugBox(GetWorld(), boxCenter, FVector(100.0f, 100.0f, 50.0f), SplineColor, true);
+    DrawDebugBox(GetWorld(), boxCenter, TriggerVolume->GetUnscaledBoxExtent() - FVector(10.0f, 10.0f, 10.0f), SplineColor, true);
 
     for (int j = 0, lenNumPoints = Routes[i]->GetNumberOfSplinePoints() - 1; j < lenNumPoints; ++j)
     {
