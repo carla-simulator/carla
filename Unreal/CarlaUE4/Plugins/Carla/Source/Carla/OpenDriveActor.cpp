@@ -124,6 +124,7 @@ ARoutePlanner *AOpenDriveActor::GenerateRoutePlanner(const TArray<FVector> &wayp
     ARoutePlanner *routePlanner = GetWorld()->SpawnActor<ARoutePlanner>();
     routePlanner->SetActorLocation(waypoints[0]);
 
+    routePlanner->SetBoxExtent(FVector(70.0f, 70.0f, 50.0f));
     routePlanner->AddRoute(1.0f, waypoints);
     routePlanner->Init();
 
