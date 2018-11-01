@@ -31,7 +31,9 @@ namespace element {
       : _id(def.GetId()),
         _successors_is_start(std::move(def._successor_is_start)),
         _predecessors_is_start(std::move(def._predecessors_is_start)),
-        _geom(std::move(def._geom)) {
+        _geom(std::move(def._geom)),
+        _next_lane(std::move(def._next_lane)),
+        _prev_lane(std::move(def._prev_lane)) {
       for (auto &&a : def._info) {
         _info.insert(std::move(a));
       }
@@ -110,6 +112,36 @@ namespace element {
 
     const std::vector<RoadSegment *> GetPredecessors() const {
       return _predecessors;
+    }
+
+    // Given the current lane it gives an std::pair of the lane id the and road id
+    // where you can go.
+    //
+    // INPUT:
+    //    int current_lane_id           for which lane do you want the next
+    //
+    // OUTPUT:
+    //    std::pair<int, int>           return a pair with lane id (first int) and the road id (second int),
+    //                                  if no lane has been found the given pair it will be (0, 0) as lane id
+    //                                  zero used for the reference line
+    std::pair<int, int> GetNextLane(int current_lane_id) const {
+      std::map<int, std::pair<int, int>>::const_iterator it = _next_lane.find(current_lane_id);
+      return it == _next_lane.end() ? std::pair<int, int>(0, 0) : it->second;
+    }
+
+    // Given the current lane it gives an std::pair with the lane id the and road id
+    // where you can go.
+    //
+    // INPUT:
+    //    int current_lane_id           for which lane do you want the next
+    //
+    // OUTPUT:
+    //    std::pair<int, int>           return a pair with lane id (first int) and the road id (second int),
+    //                                  if no lane has been found the given pair it will be (0, 0) as lane id
+    //                                  zero used for the reference line
+    std::pair<int, int> GetPrevLane(int current_lane_id) const {
+      std::map<int, std::pair<int, int>>::const_iterator it = _prev_lane.find(current_lane_id);
+      return it == _next_lane.end() ? std::pair<int, int>(0, 0) : it->second;
     }
 
     // Search for the last geometry with less start_offset before 'dist'
@@ -207,6 +239,8 @@ namespace element {
     std::vector<std::unique_ptr<Geometry>> _geom;
     std::multiset<std::shared_ptr<RoadInfo>, LessComp> _info;
     double _length = -1.0;
+    std::map<int, std::pair<int, int>> _next_lane;
+    std::map<int, std::pair<int, int>> _prev_lane;
   };
 
 } // namespace element
