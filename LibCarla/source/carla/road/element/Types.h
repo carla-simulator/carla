@@ -28,7 +28,9 @@ namespace element {
         _successor_is_start(std::move(rsd._successor_is_start)),
         _predecessors_is_start(std::move(rsd._predecessors_is_start)),
         _geom(std::move(rsd._geom)),
-        _info(std::move(rsd._info)) {}
+        _info(std::move(rsd._info)),
+        _next_lane(std::move(rsd._next_lane)),
+        _prev_lane(std::move(rsd._prev_lane)) {}
 
     RoadSegmentDefinition(id_type id) {
       assert(id >= 0);
@@ -47,6 +49,14 @@ namespace element {
     void AddPredecessorID(const id_type &id, bool is_start = true) {
       _predecessor_id.emplace_back(id);
       _predecessors_is_start.emplace_back(is_start);
+    }
+
+    void AddNextLaneInfo(int current_lane_id, int next_lane_id, int next_road_id) {
+      _next_lane[current_lane_id] = std::pair<int, int>(next_lane_id, next_road_id);
+    }
+
+    void AddPrevLaneInfo(int current_lane_id, int next_lane_id, int next_road_id) {
+      _prev_lane[current_lane_id] = std::pair<int, int>(next_lane_id, next_road_id);
     }
 
     // usage MakeGeometry<GeometryArc>(len, st_pos_offs, head, st_pos, curv)
@@ -85,6 +95,8 @@ namespace element {
     std::vector<bool> _predecessors_is_start;
     std::vector<std::unique_ptr<Geometry>> _geom;
     std::vector<std::shared_ptr<RoadInfo>> _info;
+    std::map<int, std::pair<int, int>> _next_lane;
+    std::map<int, std::pair<int, int>> _prev_lane;
   };
 
 } // namespace element
