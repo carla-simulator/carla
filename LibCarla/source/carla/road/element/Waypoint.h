@@ -27,8 +27,12 @@ namespace element {
       return _transform;
     }
 
-    const id_type &GetRoadId() const {
+    id_type GetRoadId() const {
       return _road_id;
+    }
+
+    int GetLaneId() const {
+      return _lane_id;
     }
 
     std::vector<Waypoint> Next(double distance) const {
