@@ -26,6 +26,14 @@ namespace client {
       return _waypoint.GetTransform();
     }
 
+    road::element::id_type GetRoadId() const {
+      return _waypoint.GetRoadId();
+    }
+
+    int GetLaneId() const {
+      return _waypoint.GetLaneId();
+    }
+
     std::vector<SharedPtr<Waypoint>> Next(double distance) const;
 
   private:

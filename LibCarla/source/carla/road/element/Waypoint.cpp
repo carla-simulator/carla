@@ -12,8 +12,6 @@ namespace carla {
 namespace road {
 namespace element {
 
-  Waypoint::Waypoint() {}
-
   Waypoint::Waypoint(SharedPtr<const Map> m, const geom::Location &loc)
     : _map(m) {
 
@@ -32,14 +30,15 @@ namespace element {
 
     assert(_dist <= _map->GetData().GetRoad(_road_id)->GetLength());
 
+    const auto nearest_lane = _map->GetData().GetRoad(_road_id)->GetNearestLane(_dist, loc);
+    _lane_id = nearest_lane.first;
+
     const road::element::DirectedPoint dp =
         _map->GetData().GetRoad(_road_id)->GetDirectedPointIn(_dist);
 
     const geom::Rotation rot(0.0, geom::Math::to_degrees(dp.tangent), 0.0);
 
-    _transform = geom::Transform(dp.location, rot);
-
-    _lane_id = _map->GetData().GetRoad(_road_id)->GetNearestLane(_dist, loc);
+    _transform = geom::Transform(nearest_lane.second, rot);
   }
 
   RoadInfoList Waypoint::GetRoadInfo() const {
