@@ -1,7 +1,6 @@
 import pandas as pd
 np = pd.np
 
-from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Model
 from keras.layers import Dropout, Flatten, Dense, Input, Conv2D
 from keras.layers.pooling import MaxPooling2D
@@ -9,17 +8,14 @@ from keras.layers.advanced_activations import ELU
 from keras.optimizers import Adam
 from keras.regularizers import l2
 
-from sklearn.preprocessing import QuantileTransformer
 import pickle
 import matplotlib.pyplot as plt
 
 
 INPUT_SHAPE = (150, 200, 1)
 BATCH_SIZE = 64
-DATA_DIRECTORY = 'depth_images'
 NUM_EPOCHS = 13
 NUM_EPISODES = 10
-
 
 
 def get_lenet_like_model(use_conv_1x1=True, l2_reg=1e-3, filter_sz=5, num_filters=16):
