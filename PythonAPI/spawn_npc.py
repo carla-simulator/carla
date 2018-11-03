@@ -53,6 +53,10 @@ def main():
         default=2.0,
         type=float,
         help='delay in seconds between spawns (default: 2.0)')
+    argparser.add_argument(
+        '--safe',
+        action='store_true',
+        help='avoid spawning vehicles prone to accidents')
     args = argparser.parse_args()
 
     actor_list = []
@@ -63,6 +67,10 @@ def main():
         client.set_timeout(2.0)
         world = client.get_world()
         blueprints = world.get_blueprint_library().filter('vehicle.*')
+
+        if args.safe:
+            blueprints = [x for x in blueprints if int(x.get_attribute('number_of_wheels')) == 4]
+            blueprints = [x for x in blueprints if not x.id.endswith('isetta')]
 
         def try_spawn_random_vehicle_at(transform):
             blueprint = random.choice(blueprints)
