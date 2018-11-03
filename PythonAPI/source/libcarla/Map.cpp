@@ -50,7 +50,7 @@ void export_map() {
   ;
 
   class_<std::vector<carla::SharedPtr<cc::Waypoint>>>("vector_of_waypoints")
-    .def(vector_indexing_suite<std::vector<carla::SharedPtr<cc::Waypoint>>>())
+    .def(vector_indexing_suite<std::vector<carla::SharedPtr<cc::Waypoint>>, true>())
     .def(self_ns::str(self_ns::self))
   ;
 

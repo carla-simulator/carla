@@ -23,9 +23,7 @@ namespace element {
 
     ~Waypoint();
 
-    const geom::Transform &GetTransform() const {
-      return _transform;
-    }
+    geom::Transform GetTransform() const;
 
     id_type GetRoadId() const {
       return _road_id;
@@ -35,10 +33,7 @@ namespace element {
       return _lane_id;
     }
 
-    std::vector<Waypoint> Next(double distance) const {
-      (void) distance;
-      return std::vector<Waypoint>();
-    }
+    std::vector<Waypoint> Next(double distance) const;
 
     RoadInfoList GetRoadInfo() const;
 
@@ -46,13 +41,15 @@ namespace element {
 
     friend carla::road::Map;
 
-    Waypoint();
+    Waypoint(SharedPtr<const Map>, const geom::Location &location);
 
-    Waypoint(SharedPtr<const Map>, const geom::Location &);
+    Waypoint(
+        SharedPtr<const Map> map,
+        id_type road_id,
+        id_type lane_id,
+        double distance);
 
     SharedPtr<const Map> _map;
-
-    geom::Transform _transform;
 
     id_type _road_id = 0;
 
