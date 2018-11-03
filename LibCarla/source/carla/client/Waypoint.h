@@ -22,7 +22,7 @@ namespace client {
 
     ~Waypoint();
 
-    const geom::Transform &GetTransform() const {
+    geom::Transform GetTransform() const {
       return _waypoint.GetTransform();
     }
 
