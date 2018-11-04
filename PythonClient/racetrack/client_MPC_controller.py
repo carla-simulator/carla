@@ -373,9 +373,13 @@ def run_carla_client(args):
                 x = measurements.player_measurements.transform.location.x
                 y = measurements.player_measurements.transform.location.y
                 location = np.array([x, y])
+                # Initial: array([ -5.29999971, 250.27999878])
 
                 orient = measurements.player_measurements.transform.orientation
-
+                # Initial:
+                # x: 0.7071127891540527
+                # y: -0.7071007490158081
+                
                 v = measurements.player_measurements.forward_speed * 3.6 # km / h
                 ψ = np.arctan2(orient.y, orient.x)
 
