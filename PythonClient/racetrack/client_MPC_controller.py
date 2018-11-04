@@ -7,7 +7,7 @@ import time
 import pandas as pd
 import numpy as np
 from scipy import spatial
-from scipy.interpolate import splprep, splev
+from scipy.interpolate import splprep, splev, PPoly, splrep
 import matplotlib.pyplot as plt
 
 import sys
@@ -20,6 +20,7 @@ from carla.util import print_over_same_line
 
 from scipy.optimize import minimize
 import sympy as sym
+from sympy.tensor.array import derive_by_array
 sym.init_printing()
 
 
@@ -27,40 +28,65 @@ norm = np.linalg.norm
 
 
 STATE_VARS = ('x', 'y', 'v', 'ψ', 'cte', 'eψ')
-STEPS_AHEAD = 2
-dt = 0.01
-CTE_COEFF = 4000
-EPSI_COEFF = 4000
-SPEED_COEFF = 2
-ACC_COEFF = 1
-STEER_COEFF = 1
+
+STEPS_AHEAD = 5
+dt = 0.1
+
+# Cost function coefficients
+CTE_COEFF = 1000
+EPSI_COEFF = 100
+SPEED_COEFF = 1 # 2
+ACC_COEFF = 10 # 1
+STEER_COEFF = 10 # 1
+CONSEC_ACC_COEFF = 15
+CONSEC_STEER_COEFF = 15
+
+# Front wheel L
 Lf = 2.67
+
+# How the polynomial fitting the desired curve is fitted
+STEPS_POLY = 2
 POLY_DEGREE = 3
-EVALUATOR = 'math'
+
+# Lambdify and minimize stuff
+EVALUATOR = 'numpy'
+LAT = 0.1
+TOLERANCE = 1
 
 
 def create_array_of_symbols(str_symbol, N):
     return sym.symbols('{symbol}0:{N}'.format(symbol=str_symbol, N=N))
 
 
-def generate_fun(symb_fun, vars, poly):
+def generate_fun(symb_fun, vars, init, poly):
     '''This function generates a function of the form `fun(x, *args)` because
     that's what the scipy `minimize` API expects (if we don't want to minimize
     over certain variables, we pass them as `args`)
     '''
-    func = sym.lambdify(vars+poly, symb_fun, EVALUATOR)
-    dupa = lambda x, *args: func(*np.r_[x, args])
-    return dupa
+    args = init + poly
+    return sym.lambdify((vars, *args), symb_fun, EVALUATOR)
+    # Equivalent to (but faster than):
+    # func = sym.lambdify(vars+init+poly, symb_fun, EVALUATOR)
+    # return lambda x, *args: func(*np.r_[x, args])
 
 
-def generate_grad(symb_fun, vars, poly):
-    cost_grad_funcs = [
-        generate_fun(symb_fun.diff(var), vars, poly)
-        for var in vars
-    ]
-    return lambda x, *args: [
-        grad_func(*np.r_[x, args]) for grad_func in cost_grad_funcs
-    ]
+
+def generate_grad(symb_fun, vars, init, poly):
+    args = init + poly
+    return sym.lambdify(
+        (vars, *args),
+        derive_by_array(symb_fun, vars+args)[:len(vars)]
+    )
+    # Equivalent to (but faster than):
+    # cost_grad_funcs = [
+    #     generate_fun(symb_fun.diff(var), vars, init, poly)
+    #     for var in vars
+    # ]
+    # return lambda x, *args: [
+    #     grad_func(np.r_[x, args]) for grad_func in cost_grad_funcs
+    # ]
+
+
 
 
 class EqualityConstraints(object):
@@ -89,41 +115,7 @@ class State(object):
         self.dict[key] = value
 
 
-
-def run_carla_client(args):
-    number_of_episodes = 10
-    frames_per_episode = 10000
-    spline_points = 10000
-
-    track_DF = pd.read_csv('racetrack.txt', header=None)
-    # The track data are rescaled by 100x with relation to Carla measurements
-    track_DF = track_DF / 100
-
-    pts_2D = track_DF.loc[:, [0, 1]].values
-    tck, u = splprep(pts_2D.T, u=None, s=2.0, per=1, k=3)
-    u_new = np.linspace(u.min(), u.max(), spline_points)
-    x_new, y_new = splev(u_new, tck, der=0)
-    pts_2D = np.c_[x_new, y_new]
-
-    prev_speed = np.nan
-    prev_prev_speed = np.nan
-    curr_speed = np.nan
-
-    prev_prop = np.nan
-    prev_prev_prop = np.nan
-    curr_prop = np.nan
-    deriv_list = []
-    deriv_len = 5
-
-    steer = 0
-    throttle = 0.5
-    target_speed = args.target_speed
-
-    kp = args.kp
-    kd = args.kd
-
-    depth_array = None
-
+def get_func_constraints_and_bounds(target_speed):
     # Polynomial coefficients will also be symbolic variables
     poly = create_array_of_symbols('poly', POLY_DEGREE+1)
 
@@ -134,6 +126,8 @@ def run_carla_client(args):
     v_init = sym.symbols('v_init')
     cte_init = sym.symbols('cte_init')
     eψ_init = sym.symbols('eψ_init')
+
+    init = (x_init, y_init, ψ_init, v_init, cte_init, eψ_init)
 
     # State variables
     x = create_array_of_symbols('x', STEPS_AHEAD)
@@ -148,9 +142,6 @@ def run_carla_client(args):
     δ = create_array_of_symbols('δ', STEPS_AHEAD)
 
     vars = (
-        # Initializing variables
-        x_init, y_init, ψ_init, v_init, cte_init, eψ_init,
-
         # Symbolic arrays (but NOT actuators)
         *x, *y, *ψ, *v, *cte, *eψ,
 
@@ -159,17 +150,24 @@ def run_carla_client(args):
     )
 
     cost = 0
-    for i in range(STEPS_AHEAD):
+    for t in range(STEPS_AHEAD):
         cost += (
-        # Reference state penalties
-        CTE_COEFF * cte[i]**2 +
-        EPSI_COEFF * eψ[i]**2 +
-        SPEED_COEFF * (v[i] - target_speed)**2 +
-
-        # Actuators penalties
-        ACC_COEFF * a[i] +
-        STEER_COEFF * δ[i]
+            # Reference state penalties
+            CTE_COEFF * cte[t]**2
+            # + EPSI_COEFF * eψ[t]**2 +
+            + SPEED_COEFF * (v[t] - target_speed)**2
+            #
+            # # Actuators penalties
+            + ACC_COEFF * a[t]**2
+            + STEER_COEFF * δ[t]**2
     )
+
+    # Penalty for differences in consecutive actuators
+    for t in range(STEPS_AHEAD-1):
+        cost += (
+            CONSEC_ACC_COEFF * (a[t+1] - a[t])**2
+            + CONSEC_STEER_COEFF * (δ[t+1] - δ[t])**2
+        )
 
     cost_grad = [cost.diff(var) for var in vars]
 
@@ -196,50 +194,103 @@ def run_carla_client(args):
         eq_constr['eψ'][t] = eψ[t] - (ψ[t-1] - ψdes - v[t-1] * δ[t-1] / Lf * dt)
 
     # Generate actual functions from
-    cost_func = generate_fun(cost, vars, poly)
-    cost_grad_func = generate_grad(cost, vars, poly)
+    cost_func = generate_fun(cost, vars, init, poly)
+    cost_grad_func = generate_grad(cost, vars, init, poly)
 
     constr_funcs = []
     for symbol in STATE_VARS:
         for t in range(STEPS_AHEAD):
-            func = generate_fun(eq_constr[symbol][t], vars, poly)
-            grad_func = generate_grad(eq_constr[symbol][t], vars, poly)
+            func = generate_fun(eq_constr[symbol][t], vars, init, poly)
+            grad_func = generate_grad(eq_constr[symbol][t], vars, init, poly)
             constr_funcs.append(
                 {'type': 'eq', 'fun': func, 'jac': grad_func, 'args': None},
             )
 
-    init_values = np.array([
-        1, 1, 1, 60, 1, 1.2,
-        1.1, 1.1,
-        0.9, 1.0,
-        59, 58,
-        0.9, 1.1,
-        1.1, 1.1,
-        0.0, 0.0,
-        0.5, 0.5,
-        0.0, 0.0,
-    ])
-    args = (1, 2, 3, 4)
+    return cost_func, cost_grad_func, constr_funcs
 
-    bounds = 18*[(None, None)] + [(-1, 1), (-1, 1), (-4, 4), (-4, 4)]
+
+def minimize_cost(cost_func, cost_grad_func, constr_funcs, bounds, x0, init):
+    # TODO: this is a bit retarded, but hey -- that's scipy API's fault ;)
+    for constr_func in constr_funcs:
+        constr_func['args'] = init
+
+    return minimize(
+        fun=cost_func,
+        x0=x0,
+        args=init,
+        jac=cost_grad_func,
+        bounds=bounds,
+        constraints=constr_funcs,
+        method='SLSQP',
+        tol=TOLERANCE,
+    )
+
+
+def get_x0_and_bounds(x, y, ψ, v, cte, eψ, a, δ):
+    # TODO: impacts performance, you can do better
+    x0 = np.array(
+        STEPS_AHEAD * [x]
+        + STEPS_AHEAD * [y]
+        + STEPS_AHEAD * [ψ]
+        + STEPS_AHEAD * [v]
+        + STEPS_AHEAD * [cte]
+        + STEPS_AHEAD * [eψ]
+        + STEPS_AHEAD * [a]
+        + STEPS_AHEAD * [δ]
+    )
+
+    # TODO: impacts performance, be better than this
+    bounds = (
+        6*STEPS_AHEAD * [(None, None)]
+        + STEPS_AHEAD * [(-1, 1)]
+        + STEPS_AHEAD * [(-4, 4)]
+    )
+
+    return x0, bounds
+
+
+def transform_into_cars_coordinate_system(pts, x_lat, y_lat, cos_ψ_lat, sin_ψ_lat):
+    diff = (pts - [x_lat, y_lat])
+    pts_car = np.zeros_like(diff)
+    pts_car[:, 0] =  cos_ψ_lat * diff[:, 0] + sin_ψ_lat * diff[:, 1]
+    pts_car[:, 1] = -sin_ψ_lat * diff[:, 0] + cos_ψ_lat * diff[:, 1]
+    return pts_car
+
+
+def run_carla_client(args):
+    number_of_episodes = 10
+    frames_per_episode = 10000
+    spline_points = 1000
+
+    track_DF = pd.read_csv('racetrack.txt', header=None)
+    # The track data are rescaled by 100x with relation to Carla measurements
+    track_DF = track_DF / 100
+
+    pts_2D = track_DF.loc[:, [0, 1]].values
+    tck, u = splprep(pts_2D.T, u=None, s=2.0, per=1, k=3)
+    u_new = np.linspace(u.min(), u.max(), spline_points)
+    x_new, y_new = splev(u_new, tck, der=0)
+    pts_2D = np.c_[x_new, y_new]
+
+    steer = -0.5
+    throttle = 0.5
+    target_speed = args.target_speed
+
+    depth_array = None
+
+    cost_func, cost_grad_func, constr_funcs = get_func_constraints_and_bounds(target_speed)
+
+    init = (1, 1, 1, 60, 1, 1.2, 1, 2, 3, 4)
+    x0, bounds = get_x0_and_bounds(1.1, 1.1, 1.1, 60.5, 1.1, 1.1, 0.5, 0.5)
 
     start_time = time.time()
-    for i in range(1000):
-        # TODO: this is a bit retarded, but hey -- that's scipy API's fault ;)
-        for constr_func in constr_funcs:
-            constr_func['args'] = args
-        minimize(
-            fun=cost_func,
-            x0=init_values,
-            args=args,
-            jac=cost_grad_func,
-            bounds=bounds,
-            constraints=constr_funcs,
-            method='SLSQP'
-        )
-    print('Took {:.4f}s'.format((time.time() - start_time) / 1000))
-    import ipdb; ipdb.set_trace()
+    for i in range(10):
+        result = minimize_cost(cost_func, cost_grad_func, constr_funcs, bounds, x0, init)
+    print('Took {:.4f}s'.format((time.time() - start_time) / 10))
 
+    if 'success' not in result.message:
+        print(result)
+        import ipdb; ipdb.set_trace()
 
     # We assume the CARLA server is already waiting for a client to connect at
     # host:port. To create a connection we can use the `make_carla_client`
@@ -310,77 +361,98 @@ def run_carla_client(args):
             client.start_episode(player_start)
 
             # Iterate every frame in the episode.
-            for frame in range(0, frames_per_episode):
+            for frame in range(frames_per_episode):
 
                 # Read the data produced by the server this frame.
                 measurements, sensor_data = client.read_data()
 
-                # Print some of the measurements.
-                print_measurements(measurements)
+                # # Print some of the measurements.
+                # print_measurements(measurements)
 
                 # Get current location
-                location = np.array([
-                    measurements.player_measurements.transform.location.x,
-                    measurements.player_measurements.transform.location.y,
-                ])
+                x = measurements.player_measurements.transform.location.x
+                y = measurements.player_measurements.transform.location.y
+                location = np.array([x, y])
+
+                orient = measurements.player_measurements.transform.orientation
+
+                v = measurements.player_measurements.forward_speed * 3.6 # km / h
+                ψ = np.arctan2(orient.y, orient.x)
 
                 # Get closest point's distance
                 dists = norm(pts_2D - location, axis=1)
                 which_closest = np.argmin(dists)
-                closest, next = pts_2D[which_closest], pts_2D[which_closest+1]
-                road_direction = next - closest
-                perpendicular = np.array([
-                    -road_direction[1],
-                    road_direction[0],
-                ])
-                steer_direction = (location-closest).dot(perpendicular)
-                prev_prev_prop = prev_prop
-                prev_prop = curr_prop
-                curr_prop = np.sign(steer_direction) * dists[which_closest]
+                # TODO: + czy - ?
+                pts = pts_2D[which_closest + STEPS_POLY*np.arange(POLY_DEGREE+1)]
 
-                if any(pd.isnull([prev_prev_prop, prev_prop, curr_prop])):
-                    deriv = 0
-                else:
-                    deriv = 0.5 * (curr_prop - prev_prev_prop)
-                    deriv_list.append(deriv)
-                    if len(deriv_list) > deriv_len:
-                        deriv_list = deriv_list[-deriv_len:]
-                    deriv = np.mean(deriv_list)
+                v_lat  = v + LAT * throttle
+                ψ_lat  = ψ - LAT * (v_lat * steer / Lf)
 
-                prev_prev_speed = prev_speed
-                prev_speed = curr_speed
-                curr_speed = measurements.player_measurements.forward_speed * 3.6
-                # TODO: find a better way of keeping the speed constant
-                throttle = np.clip(
-                    throttle - 0.1 * (curr_speed-target_speed),
-                    0.25,
-                    1.0
+                cos_ψ_lat = np.cos(ψ_lat)
+                sin_ψ_lat = np.sin(ψ_lat)
+
+                x_lat  = x + LAT * (v_lat * cos_ψ_lat)
+                y_lat  = y + LAT * (v_lat * sin_ψ_lat)
+
+                import ipdb; ipdb.set_trace()
+                pts_car = transform_into_cars_coordinate_system(pts_2D, x_lat, y_lat, cos_ψ_lat, sin_ψ_lat)
+                plt.scatter(pts[:, 0], pts[:, 1]); plt.show()
+                plt.scatter(pts_car[:, 0], pts_car[:, 1]); plt.show()
+
+                pts_car = transform_into_cars_coordinate_system(pts, x_lat, y_lat, cos_ψ_lat, sin_ψ_lat)
+                # import ipdb; ipdb.set_trace()
+
+                poly = np.polyfit(pts_car[:, 0], pts_car[:, 1], POLY_DEGREE)
+
+                poly = poly[::-1]
+                cte = poly[0]
+                eψ = -np.arctan(poly[1])
+
+                # if cte > 5:
+                #     import ipdb; ipdb.set_trace()
+                #     plt.plot(pts[:, 0], pts[:, 1]); plt.xlim(-5, 5); plt.ylim(-10, 250); plt.show()
+                #     plt.plot(pts_car[:, 1], pts_car[:, 0]); plt.xlim(-5, 5); plt.ylim(-10, 10); plt.show()
+
+                init = (0, 0, 0, v_lat, cte, eψ, *poly)
+                x0, bounds = get_x0_and_bounds(0, 0, 0, v, cte, eψ, 0, 0)
+                result = minimize_cost(cost_func, cost_grad_func, constr_funcs, bounds, x0, init)
+
+                success = ('success' in result.message)
+
+                if success:
+                    steer = result.x[-STEPS_AHEAD]
+                    throttle = result.x[-2*STEPS_AHEAD]
+
+                # if v > 5 and frame % 100 == 0:
+                #     import ipdb; ipdb.set_trace()
+
+                poly_str = '[' + ', '.join(['{:.2f}'.format(p) for p in poly]) + ']'
+                furthest = norm(pts[-1] - location)
+                text = (
+                    'steer: {:.2f}'
+                    ' cte: {:.2f}'
+                    # ' throttle: {:.2f}'
+                    ' v: {:.2f}'
+                    # ' poly: {}'
+                    ' success: {}'
+                    ' furthest: {:.2f}'
+                    .format(steer, cte, v, success, furthest)
                 )
-
-                steer = -kp * curr_prop - kd * deriv + np.random.uniform(-0.05, 0.05)
-
-                print(
-                    ' steer_direction = {:.2f}'
-                    ' prop = {:.2f}'
-                    ' deriv = {:.5f}'
-                    ' throttle = {:.2f}'
-                    ' curr_speed = {:.2f}'
-                    ' steer = {:.2f}'
-                    .format(steer_direction, curr_prop, deriv, throttle, curr_speed, steer)
-                )
+                print(text)
 
                 client.send_control(
                     steer=steer,
                     throttle=throttle,
                     brake=0.0,
                     hand_brake=False,
-                    reverse=False)
+                    reverse=False
+                )
 
                 depth_array = np.log(sensor_data['CameraDepth'].data).astype('float16')
                 storage[..., frame] = depth_array
                 stream.write(
                     '{},{},{},{}\n'
-                    .format(frame, steer, throttle, curr_speed)
+                    .format(frame, steer, throttle, v)
                 )
 
             np.save('depth_data{}.npy'.format(episode), storage)
@@ -432,20 +504,8 @@ def main():
         help='Path to a "CarlaSettings.ini" file')
 
     argparser.add_argument(
-        '-kp', '--k-prop',
-        default=0.6,
-        type=float,
-        dest='kp',
-        help='PID`s controller "proportion" coefficient')
-    argparser.add_argument(
-        '-kd', '--k-deriv',
-        default=6.5,
-        type=float,
-        dest='kd',
-        help='PID`s controller "derivative" coefficient')
-    argparser.add_argument(
         '-s', '--speed',
-        default=45,
+        default=20,
         type=float,
         dest='target_speed',
         help='Target speed')
