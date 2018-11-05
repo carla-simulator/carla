@@ -169,7 +169,7 @@ namespace element {
       decltype(_geom)::const_iterator nearest_geom;
       std::pair<double, double> last = {0.0, std::numeric_limits<double>::max()};
 
-      for (auto g = _geom.begin(); g !=_geom.end(); ++g) {
+      for (auto g = _geom.begin(); g != _geom.end(); ++g) {
         auto d = (*g)->DistanceTo(loc);
         if (d.second < last.second) {
           last = d;
@@ -186,26 +186,38 @@ namespace element {
 
     std::pair<int, geom::Location> GetNearestLane(double dist, const geom::Location &loc) const {
       // Because Unreal's coordinates
-      const geom::Location corrected_loc = geom::Location(loc.x, loc.y, loc.z);
+      const geom::Location corrected_loc = geom::Location(loc.x, -loc.y, loc.z);
 
       const DirectedPoint dp_center_road = GetDirectedPointIn(dist);
       auto info = GetInfo<RoadInfoLane>(0.0);
+      auto lane_offsets_vec = GetInfo<RoadGeneralInfo>(0.0)->GetLanesOffset();
+      double lane_offset = 0.0;
+
+      // Get lane offset for the current dist
+      for (auto &&i : lane_offsets_vec) {
+        if (i.first <= dist) {
+          lane_offset = i.second;
+        } else {
+          break;
+        }
+      }
 
       int nearest_lane_id = 0;
       geom::Location nearest_loc;
       double nearest_dist = std::numeric_limits<double>::max();
-      double current_width = 0;
+      double current_width = lane_offset;
 
       // Left lanes
-      for (auto &&current_lane_id : info->getLanesIDs(carla::road::element::RoadInfoLane::which_lane_e::Left)) {
+      for (auto &&current_lane_id :
+          info->getLanesIDs(carla::road::element::RoadInfoLane::which_lane_e::Left)) {
         DirectedPoint dp_center_lane = dp_center_road;
         const double half_width = info->getLane(current_lane_id)->_width * 0.5;
 
         current_width += half_width;
         if (info->getLane(current_lane_id)->_type == "driving") {
-          dp_center_lane.ApplyLateralOffset(-current_width);
+          dp_center_lane.ApplyLateralOffset(current_width);
           const double current_dist = geom::Math::Distance2D(dp_center_lane.location, corrected_loc);
-          if(current_dist < nearest_dist) {
+          if (current_dist < nearest_dist) {
             nearest_dist = current_dist;
             nearest_lane_id = current_lane_id;
             nearest_loc = dp_center_lane.location;
@@ -214,23 +226,25 @@ namespace element {
         current_width += half_width;
       }
 
-      current_width = 0.0;
+      current_width = lane_offset;
+
       // Right lanes
-      for (auto &&current_lane_id : info->getLanesIDs(carla::road::element::RoadInfoLane::which_lane_e::Right)) {
+      for (auto &&current_lane_id :
+          info->getLanesIDs(carla::road::element::RoadInfoLane::which_lane_e::Right)) {
         DirectedPoint dp_center_lane = dp_center_road;
         const double half_width = info->getLane(current_lane_id)->_width * 0.5;
 
-        current_width += half_width;
+        current_width -= half_width;
         if (info->getLane(current_lane_id)->_type == "driving") {
           dp_center_lane.ApplyLateralOffset(current_width);
           const double current_dist = geom::Math::Distance2D(dp_center_lane.location, corrected_loc);
-          if(current_dist < nearest_dist) {
+          if (current_dist < nearest_dist) {
             nearest_dist = current_dist;
             nearest_lane_id = current_lane_id;
             nearest_loc = dp_center_lane.location;
           }
         }
-        current_width += half_width;
+        current_width -= half_width;
       }
 
       return std::make_pair(nearest_lane_id, nearest_loc);
@@ -268,6 +282,7 @@ namespace element {
     };
 
   private:
+
     id_type _id;
     std::vector<RoadSegment *> _predecessors;
     std::vector<RoadSegment *> _successors;
