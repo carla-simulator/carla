@@ -77,34 +77,11 @@ namespace element {
     if (_lane_id > 0) {
       rot.yaw += 180.0;
     }
-    double current_width = 0.0;
 
     auto *info = GetRoad(*_map, _road_id).GetInfo<RoadInfoLane>(0.0);
     DEBUG_ASSERT(info != nullptr);
 
-    if (_lane_id > 0) {
-      // Left lanes
-      for (auto &&current_lane_id : info->getLanesIDs(carla::road::element::RoadInfoLane::which_lane_e::Left)) {
-        const double half_width = info->getLane(current_lane_id)->_width * 0.5;
-        current_width -= half_width;
-        if (current_lane_id == _lane_id) {
-          break;
-        }
-        current_width -= half_width;
-      }
-    } else {
-      // Right lanes
-      for (auto &&current_lane_id : info->getLanesIDs(carla::road::element::RoadInfoLane::which_lane_e::Right)) {
-        const double half_width = info->getLane(current_lane_id)->_width * 0.5;
-        current_width += half_width;
-        if (current_lane_id == _lane_id) {
-          break;
-        }
-        current_width += half_width;
-      }
-    }
-
-    dp.ApplyLateralOffset(-current_width);
+    dp.ApplyLateralOffset(info->getLane(_lane_id)->_lane_center_offset);
     return geom::Transform(dp.location, rot);
   }
 

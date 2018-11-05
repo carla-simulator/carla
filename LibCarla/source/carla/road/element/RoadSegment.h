@@ -283,6 +283,8 @@ namespace element {
 
   private:
 
+    friend class MapBuilder;
+
     id_type _id;
     std::vector<RoadSegment *> _predecessors;
     std::vector<RoadSegment *> _successors;
