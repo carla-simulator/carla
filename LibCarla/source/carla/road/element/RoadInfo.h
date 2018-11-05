@@ -31,20 +31,37 @@ namespace element {
   };
 
   class RoadGeneralInfo : public RoadInfo {
-    private:
-      int _junction_id = -1;
-      std::vector<std::pair<double, double>> _lanes_offset;
+  private:
 
-    public:
-      void AcceptVisitor(RoadInfoVisitor &v) final {
-        v.Visit(*this);
-      }
+    int _junction_id = -1;
+    /// A vector of pairs where the first double represents the
+    /// offset from the begining of the road and the second represents the
+    /// lateral offest of the lane
+    std::vector<std::pair<double, double>> _lanes_offset;
 
-      void SetJunctionId(int junctionId) { _junction_id = junctionId; }
-      int GetJunctionId() const { return _junction_id; }
+  public:
 
-      void SetLanesOffset(double offset, double laneOffset) { _lanes_offset.emplace_back(std::pair<double, double>(offset, laneOffset)); }
-      std::vector<std::pair<double, double>> GetLanesOffset() const { return _lanes_offset; }
+    void AcceptVisitor(RoadInfoVisitor &v) final {
+      v.Visit(*this);
+    }
+
+    void SetJunctionId(int junctionId) {
+      _junction_id = junctionId;
+    }
+    int GetJunctionId() const {
+      return _junction_id;
+    }
+
+    void SetLanesOffset(double offset, double laneOffset) {
+      _lanes_offset.emplace_back(std::pair<double, double>(offset, laneOffset));
+    }
+
+    /// @returns A vector of pairs where the first double represents the
+    /// offset from the begining of the road and the second represents the
+    /// lateral offest of the lane
+    std::vector<std::pair<double, double>> GetLanesOffset() const {
+      return _lanes_offset;
+    }
   };
 
   class RoadInfoVelocity : public RoadInfo {
@@ -55,8 +72,9 @@ namespace element {
     }
 
     RoadInfoVelocity(double vel) : velocity(vel) {}
-    RoadInfoVelocity(double d, double vel) : RoadInfo(d),
-                                             velocity(vel) {}
+    RoadInfoVelocity(double d, double vel)
+      : RoadInfo(d),
+        velocity(vel) {}
 
     double velocity = 0;
   };
@@ -137,7 +155,7 @@ namespace element {
       // NOTE(Andrei): For right lane the IDs are negative,
       // so reverse so sort order to haven them going
       // from -1 to -n
-      if(whichLanes == which_lane_e::Right) {
+      if (whichLanes == which_lane_e::Right) {
         std::reverse(lanes_id.begin(), lanes_id.end());
       }
 
