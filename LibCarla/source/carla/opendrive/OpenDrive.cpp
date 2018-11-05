@@ -133,8 +133,14 @@ namespace opendrive {
           roadSegment.AddSuccessorID(it->second->road_link.successor->id, is_start);
           for(size_t i = 0; i < lanesLeft.size(); ++i) {
             if(lanesLeft[i].link != nullptr) {
+              if(lanesLeft[i].link->successor_id == 0) continue;
               roadSegment.AddNextLaneInfo(lanesLeft[i].attributes.id, lanesLeft[i].link->successor_id, it->second->road_link.successor->id);
-              roadSegment.AddPrevLaneInfo(lanesLeft[i].attributes.id, lanesLeft[i].link->predecessor_id, it->second->road_link.predecessor->id);
+            }
+          }
+          for(size_t i = 0; i < lanesRight.size(); ++i) {
+            if(lanesRight[i].link != nullptr) {
+              if(lanesRight[i].link->successor_id == 0) continue;
+              roadSegment.AddNextLaneInfo(lanesRight[i].attributes.id, lanesRight[i].link->successor_id, it->second->road_link.successor->id);
             }
           }
         }
@@ -157,8 +163,14 @@ namespace opendrive {
           roadSegment.AddPredecessorID(it->second->road_link.predecessor->id, is_start);
           for(size_t i = 0; i < lanesRight.size(); ++i) {
             if(lanesRight[i].link != nullptr) {
-              roadSegment.AddNextLaneInfo(lanesRight[i].attributes.id, lanesRight[i].link->successor_id, it->second->road_link.successor->id);
+              if(lanesRight[i].link->predecessor_id == 0) continue;
               roadSegment.AddPrevLaneInfo(lanesRight[i].attributes.id, lanesRight[i].link->predecessor_id, it->second->road_link.predecessor->id);
+            }
+          }
+          for(size_t i = 0; i < lanesLeft.size(); ++i) {
+            if(lanesLeft[i].link != nullptr) {
+              if(lanesLeft[i].link->predecessor_id == 0) continue;
+              roadSegment.AddPrevLaneInfo(lanesLeft[i].attributes.id, lanesLeft[i].link->predecessor_id, it->second->road_link.predecessor->id);
             }
           }
         }
