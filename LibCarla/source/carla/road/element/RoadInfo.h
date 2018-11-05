@@ -13,6 +13,7 @@
 
 namespace carla {
 namespace road {
+  class MapBuilder;
 namespace element {
 
   class RoadInfo {
@@ -84,6 +85,7 @@ namespace element {
 
     int _id;
     double _width;
+    double _lane_center_offset;
 
     std::string _type;
     std::vector<int> _successor;
@@ -91,16 +93,20 @@ namespace element {
 
     LaneInfo()
       : _id(0),
-        _width(0.0) {}
+        _width(0.0),
+        _lane_center_offset(0.0) {}
 
     LaneInfo(int id, double width, const std::string &type)
       : _id(id),
         _width(width),
+        _lane_center_offset(0.0),
         _type(type) {}
   };
 
   class RoadInfoLane : public RoadInfo {
   private:
+
+    friend MapBuilder;
 
     using lane_t = std::map<int, LaneInfo>;
     lane_t _lanes;
