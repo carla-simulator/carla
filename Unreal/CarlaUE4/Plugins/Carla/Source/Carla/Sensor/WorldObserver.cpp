@@ -53,7 +53,7 @@ static carla::Buffer AWorldObserver_Serialize(
   for (auto &&pair : Registry) {
     auto &&actor_view = pair.second;
     check(actor_view.GetActor() != nullptr);
-    constexpr float TO_METERS = 1e-3;
+    constexpr float TO_METERS = 1e-2;
     const auto velocity = TO_METERS * actor_view.GetActor()->GetVelocity();
     ActorDynamicState info = {
       actor_view.GetActorId(),
