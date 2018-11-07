@@ -96,20 +96,24 @@ else
   BOOST_TOOLSET="clang-5.0"
   BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
 
+  py2="/usr/bin/env python2"
+  py2_root=`${py2} -c "import sys; print(sys.prefix)"`
   ./bootstrap.sh \
       --with-toolset=clang \
       --prefix=../boost-install \
       --with-libraries=python,filesystem \
-      --with-python=/usr/bin/python2 --with-python-root=/usr
+      --with-python=${py2} --with-python-root=${py2_root}
   ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
   ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
   ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} --clean-all
 
+  py3="/usr/bin/env python3"
+  py3_root=`${py3} -c "import sys; print(sys.prefix)"`
   ./bootstrap.sh \
       --with-toolset=clang \
       --prefix=../boost-install \
       --with-libraries=python \
-      --with-python=/usr/bin/python3 --with-python-root=/usr
+      --with-python=${py3} --with-python-root=${py3_root}
   ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
   ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
 
