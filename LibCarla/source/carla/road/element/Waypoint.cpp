@@ -136,15 +136,15 @@ namespace element {
     }
 
     std::vector<Waypoint> result;
-    const auto &next_lanes = road_segment.GetNextLane(_lane_id);
+    const auto &next_lanes = _lane_id < 0 ? road_segment.GetNextLane(_lane_id) : road_segment.GetPrevLane(_lane_id);
     if (next_lanes.empty()) {
-      log_error("no lanes!! lane id =", _lane_id);
+      log_error("no lanes!! lane id =", _lane_id, " road id=", _road_id);
     }
     for (auto &&pair : next_lanes) {
       auto lane_id = pair.first;
       auto road_id = pair.second;
       DEBUG_ASSERT(lane_id != 0);
-      auto d = lane_id < 0 ? 0.0 : GetRoad(*_map, _road_id).GetLength();
+      auto d = lane_id < 0 ? 0.0 : GetRoad(*_map, road_id).GetLength();
       auto waypoint = Waypoint(_map, road_id, lane_id, d);
       result = ConcatVectors(result, waypoint.Next(distance_on_next_segment));
     }
