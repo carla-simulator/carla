@@ -71,7 +71,8 @@ unset LLVM_BASENAME
 # -- Get boost includes --------------------------------------------------------
 # ==============================================================================
 
-BOOST_BASENAME=boost-1.67.0
+BOOST_VERSION=1.67.0
+BOOST_BASENAME="boost-${BOOST_VERSION}"
 
 BOOST_INCLUDE=${PWD}/${BOOST_BASENAME}-install/include
 BOOST_LIBPATH=${PWD}/${BOOST_BASENAME}-install/lib
@@ -83,13 +84,13 @@ else
   rm -Rf ${BOOST_BASENAME}-source
 
   log "Retrieving boost."
-  wget https://dl.bintray.com/boostorg/release/1.67.0/source/boost_1_67_0.tar.gz
+  wget "https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/boost_${BOOST_VERSION//./_}.tar.gz"
   log "Extracting boost."
-  tar -xzf boost_1_67_0.tar.gz
-  rm boost_1_67_0.tar.gz
+  tar -xzf ${BOOST_BASENAME//[-.]/_}.tar.gz
+  rm ${BOOST_BASENAME//[-.]/_}.tar.gz
   mkdir -p ${BOOST_BASENAME}-install/include
-  mv boost_1_67_0 ${BOOST_BASENAME}-source
-  # rm -Rf boost_1_67_0
+  mv ${BOOST_BASENAME//[-.]/_} ${BOOST_BASENAME}-source
+  # rm -Rf ${BOOST_BASENAME//[-.]/_}
 
   pushd ${BOOST_BASENAME}-source >/dev/null
 
