@@ -71,7 +71,8 @@ unset LLVM_BASENAME
 # -- Get boost includes --------------------------------------------------------
 # ==============================================================================
 
-BOOST_BASENAME=boost-1.67.0
+BOOST_VERSION=1.67.0
+BOOST_BASENAME="boost-${BOOST_VERSION}"
 
 BOOST_INCLUDE=${PWD}/${BOOST_BASENAME}-install/include
 BOOST_LIBPATH=${PWD}/${BOOST_BASENAME}-install/lib
@@ -83,12 +84,11 @@ else
   rm -Rf ${BOOST_BASENAME}-source
 
   log "Retrieving boost."
-  wget https://dl.bintray.com/boostorg/release/1.67.0/source/boost_1_67_0.tar.gz
+  wget "https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/boost_${BOOST_VERSION//./_}.tar.gz"
   log "Extracting boost."
-  tar -xzf boost_1_67_0.tar.gz
+  tar -xzf ${BOOST_BASENAME//[-.]/_}.tar.gz
   mkdir -p ${BOOST_BASENAME}-install/include
-  mv boost_1_67_0 ${BOOST_BASENAME}-source
-  # rm -Rf boost_1_67_0
+  mv ${BOOST_BASENAME//[-.]/_} ${BOOST_BASENAME}-source
 
   pushd ${BOOST_BASENAME}-source >/dev/null
 
@@ -114,13 +114,13 @@ else
   ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
   ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
   ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} --clean-all
-  
+
   # Get rid of  python2 build artifacts completely & do a clean build for python3
   popd >/dev/null
   rm -Rf ${BOOST_BASENAME}-source
-  tar -xzf boost_1_67_0.tar.gz
+  tar -xzf ${BOOST_BASENAME//[-.]/_}.tar.gz
   mkdir -p ${BOOST_BASENAME}-install/include
-  mv boost_1_67_0 ${BOOST_BASENAME}-source
+  mv ${BOOST_BASENAME//[-.]/_} ${BOOST_BASENAME}-source
   pushd ${BOOST_BASENAME}-source >/dev/null
 
   py3="/usr/bin/env python3"
@@ -145,6 +145,7 @@ else
   popd >/dev/null
 
   rm -Rf ${BOOST_BASENAME}-source
+  rm ${BOOST_BASENAME//[-.]/_}.tar.gz
 
 fi
 
@@ -178,7 +179,7 @@ else
 
   log "Building rpclib with libc++."
 
-  # rpclib does not use any cmake 3.9 feature. 
+  # rpclib does not use any cmake 3.9 feature.
   # As cmake 3.9 is not standard in Ubuntu 16.04, change cmake version to 3.5
   sed -i s/"3.9.0"/"3.5.0"/g ${RPCLIB_BASENAME}-source/CMakeLists.txt
 
