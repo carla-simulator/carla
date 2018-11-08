@@ -9,12 +9,45 @@
 #include "carla/geom/Transform.h"
 #include "carla/geom/Vector3D.h"
 #include "carla/rpc/ActorId.h"
+#include "carla/rpc/TrafficLightState.h"
+#include "carla/rpc/VehicleControl.h"
 
 #include <cstdint>
 
 namespace carla {
 namespace sensor {
 namespace data {
+
+namespace detail {
+
+#pragma pack(push, 1)
+  class PackedVehicleControl {
+  public:
+
+    PackedVehicleControl() = default;
+
+    PackedVehicleControl(const rpc::VehicleControl &control)
+      : throttle(control.throttle),
+        steer(control.steer),
+        brake(control.brake),
+        hand_brake(control.hand_brake),
+        reverse(control.reverse) {}
+
+    operator rpc::VehicleControl() const {
+      return {throttle, steer, brake, hand_brake, reverse};
+    }
+
+  private:
+
+    float throttle;
+    float steer;
+    float brake;
+    bool hand_brake;
+    bool reverse;
+  };
+#pragma pack(pop)
+
+} // namespace detail
 
 #pragma pack(push, 1)
 
@@ -27,12 +60,17 @@ namespace data {
 
     geom::Vector3D velocity;
 
-    uint8_t state;
+    union TypeDependentState {
+      rpc::TrafficLightState traffic_light_state;
+      detail::PackedVehicleControl vehicle_control;
+    } state;
   };
 
 #pragma pack(pop)
 
-  static_assert(sizeof(ActorDynamicState) == 1u + 10u * sizeof(uint32_t), "Invalid ActorDynamicState size!");
+  static_assert(
+      sizeof(ActorDynamicState) == 10u * sizeof(uint32_t) + sizeof(detail::PackedVehicleControl),
+      "Invalid ActorDynamicState size!");
 
 } // namespace data
 } // namespace sensor

@@ -101,8 +101,8 @@
 ## `carla.Vehicle(carla.Actor)`
 
 - `bounding_box`
-- `control`
 - `apply_control(vehicle_control)`
+- `get_vehicle_control()`
 - `set_autopilot(enabled=True)`
 
 ## `carla.TrafficLight(carla.Actor)`
@@ -258,7 +258,8 @@ Static presets
 
 ## `carla.TrafficLightState`
 
-- `Unknown`
+- `Off`
 - `Red`
 - `Yellow`
 - `Green`
+- `Unknown`
