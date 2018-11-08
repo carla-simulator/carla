@@ -29,6 +29,7 @@ Use ARROWS or WASD keys for control.
 
     R            : toggle recording images to disk
 
+    F1           : toggle HUD
     H/?          : toggle help
     ESC          : quit
 """
@@ -64,7 +65,10 @@ import carla
 from carla import ColorConverter as cc
 
 import argparse
+import collections
+import datetime
 import logging
+import math
 import random
 import re
 import weakref
@@ -79,6 +83,7 @@ try:
     from pygame.locals import K_BACKSPACE
     from pygame.locals import K_DOWN
     from pygame.locals import K_ESCAPE
+    from pygame.locals import K_F1
     from pygame.locals import K_LEFT
     from pygame.locals import K_RIGHT
     from pygame.locals import K_SLASH
@@ -118,10 +123,16 @@ def find_weather_presets():
     return [(getattr(carla.WeatherParameters, x), name(x)) for x in presets]
 
 
+def get_actor_display_name(actor, truncate=250):
+    name = ' '.join(actor.type_id.replace('_', '.').title().split('.')[1:])
+    return (name[:truncate-1] + u'\u2026') if len(name) > truncate else name
+
+
 class World(object):
     def __init__(self, carla_world, hud):
         self.world = carla_world
         self.hud = hud
+        self.world.on_tick(hud.on_world_tick)
         blueprint = self._get_random_blueprint()
         self.vehicle = self.world.spawn_actor(blueprint, START_POSITION)
         self.collision_sensor = CollisionSensor(self.vehicle, self.hud)
@@ -197,6 +208,8 @@ class KeyboardControl(object):
                     return True
                 elif event.key == K_BACKSPACE:
                     world.restart()
+                elif event.key == K_F1:
+                    world.hud.toggle_info()
                 elif event.key == K_h or (event.key == K_SLASH and pygame.key.get_mods() & KMOD_SHIFT):
                     world.hud.help.toggle()
                 elif event.key == K_TAB:
@@ -254,12 +267,69 @@ class HUD(object):
         self._font_mono = pygame.font.Font(mono, 14)
         self._notifications = FadingText(font, (width, 40), (0, height - 40))
         self.help = HelpText(pygame.font.Font(mono, 24), width, height)
-        self.client_fps = 0
         self.server_fps = 0
+        self.frame_number = 0
+        self.simulation_time = 0
+        self._show_info = True
+        self._info_text = []
+        self._server_clock = pygame.time.Clock()
+
+    def on_world_tick(self, timestamp):
+        self._server_clock.tick()
+        self.server_fps = self._server_clock.get_fps()
+        self.frame_number = timestamp.frame_count
+        self.simulation_time = timestamp.elapsed_seconds
 
     def tick(self, world, clock):
-        self.client_fps = clock.get_fps()
+        if not self._show_info:
+            return
+        t = world.vehicle.get_transform()
+        v = world.vehicle.get_velocity()
+        c = world.vehicle.get_vehicle_control()
+        heading = 'N' if abs(t.rotation.yaw) < 89.5 else ''
+        heading += 'S' if abs(t.rotation.yaw) > 90.5 else ''
+        heading += 'E' if 179.5 > t.rotation.yaw > 0.5 else ''
+        heading += 'W' if -0.5 > t.rotation.yaw > -179.5 else ''
+        colhist = world.collision_sensor.get_collision_history()
+        collision = [colhist[x + self.frame_number - 200] for x in range(0, 200)]
+        max_col = max(1.0, max(collision))
+        collision = [x / max_col for x in collision]
+        self._info_text = [
+            'server:  % 16d FPS' % self.server_fps,
+            'client:  % 16d FPS' % clock.get_fps(),
+            '',
+            'vehicle: % 20s' % get_actor_display_name(world.vehicle, truncate=20),
+            'map:     % 20s' % world.world.map_name,
+            'simulation time: % 12s' % datetime.timedelta(seconds=int(self.simulation_time)),
+            '',
+            'speed:   % 15.0f km/h' % (3.6 * math.sqrt(v.x**2 + v.y**2 + v.z**2)),
+            u'heading:% 16.0f\N{DEGREE SIGN} % 2s' % (t.rotation.yaw, heading),
+            'location:% 20s' % ('(% 5.1f, % 5.1f)' % (t.location.x, t.location.y)),
+            'height:  % 18.0f m' % t.location.z,
+            '',
+            ('throttle:', c.throttle, 0.0, 1.0),
+            ('steer:', c.steer, -1.0, 1.0),
+            ('brake:', c.brake, 0.0, 1.0),
+            ('reverse:', c.reverse),
+            ('hand brake:', c.hand_brake),
+            '',
+            'collision:',
+            collision
+        ]
+        vehicles = world.world.get_actors().filter('vehicle.*')
+        if len(vehicles) > 1:
+            self._info_text += ['', 'nearby vehicles:']
+            distance = lambda l: math.sqrt((l.x - t.location.x)**2 + (l.y - t.location.y)**2 + (l.z - t.location.z)**2)
+            vehicles = [(distance(x.get_location()), x) for x in vehicles if x.id != world.vehicle.id]
+            for d, vehicle in sorted(vehicles):
+                if d > 200.0:
+                    break
+                vehicle_type = get_actor_display_name(vehicle, truncate=22)
+                self._info_text.append('% 4dm %s' % (d, vehicle_type))
         self._notifications.tick(world, clock)
+
+    def toggle_info(self):
+        self._show_info = not self._show_info
 
     def notification(self, text, seconds=2.0):
         self._notifications.set_text(text, seconds=seconds)
@@ -268,11 +338,42 @@ class HUD(object):
         self._notifications.set_text('Error: %s' % text, (255, 0, 0))
 
     def render(self, display):
+        if self._show_info:
+            info_surface = pygame.Surface((220, self.dim[1]))
+            info_surface.set_alpha(100)
+            display.blit(info_surface, (0, 0))
+            v_offset = 4
+            bar_h_offset = 100
+            bar_width = 106
+            for item in self._info_text:
+                if v_offset + 18 > self.dim[1]:
+                    break
+                if isinstance(item, list):
+                    if len(item) > 1:
+                        points = [(x + 8, v_offset + 8 + (1.0 - y) * 30) for x, y in enumerate(item)]
+                        pygame.draw.lines(display, (255, 136, 0), False, points, 2)
+                    item = None
+                    v_offset += 18
+                elif isinstance(item, tuple):
+                    if isinstance(item[1], bool):
+                        rect = pygame.Rect((bar_h_offset, v_offset + 8), (6, 6))
+                        pygame.draw.rect(display, (255, 255, 255), rect, 0 if item[1] else 1)
+                    else:
+                        rect_border = pygame.Rect((bar_h_offset, v_offset + 8), (bar_width, 6))
+                        pygame.draw.rect(display, (255, 255, 255), rect_border, 1)
+                        f = (item[1] - item[2]) / (item[3] - item[2])
+                        if item[2] < 0.0:
+                            rect = pygame.Rect((bar_h_offset + f * (bar_width - 6), v_offset + 8), (6, 6))
+                        else:
+                            rect = pygame.Rect((bar_h_offset, v_offset + 8), (f * bar_width, 6))
+                        pygame.draw.rect(display, (255, 255, 255), rect)
+                    item = item[0]
+                if item: # At this point has to be a str.
+                    surface = self._font_mono.render(item, True, (255, 255, 255))
+                    display.blit(surface, (8, v_offset))
+                v_offset += 18
         self._notifications.render(display)
         self.help.render(display)
-        fps_text = 'client: %02d FPS; server: %02d FPS' % (self.client_fps, self.server_fps)
-        fps = self._font_mono.render(fps_text, True, (60, 60, 60))
-        display.blit(fps, (6, 4))
 
 
 # ==============================================================================
@@ -340,6 +441,7 @@ class HelpText(object):
 class CollisionSensor(object):
     def __init__(self, parent_actor, hud):
         self.sensor = None
+        self._history = []
         self._parent = parent_actor
         self._hud = hud
         world = self._parent.get_world()
@@ -350,6 +452,12 @@ class CollisionSensor(object):
         weak_self = weakref.ref(self)
         self.sensor.listen(lambda event: CollisionSensor._on_collision(weak_self, event))
 
+    def get_collision_history(self):
+        history = collections.defaultdict(int)
+        for frame, intensity in self._history:
+            history[frame] += intensity
+        return history
+
     @staticmethod
     def _on_collision(weak_self, event):
         self = weak_self()
@@ -357,6 +465,11 @@ class CollisionSensor(object):
             return
         actor_type = ' '.join(event.other_actor.type_id.replace('_', '.').title().split('.')[1:])
         self._hud.notification('Collision with %r' % actor_type)
+        impulse = event.normal_impulse
+        intensity = math.sqrt(impulse.x**2 + impulse.y**2 + impulse.z**2)
+        self._history.append((event.frame_number, intensity))
+        if len(self._history) > 2000:
+            self._history.pop(0)
 
 
 # ==============================================================================
@@ -390,7 +503,6 @@ class CameraManager(object):
             bp.set_attribute('image_size_y', str(hud.dim[1]))
             item.append(bp)
         self._index = None
-        self._server_clock = pygame.time.Clock()
 
     def toggle_camera(self):
         self._transform_index = (self._transform_index + 1) % len(self._camera_transforms)
@@ -432,8 +544,6 @@ class CameraManager(object):
         self = weak_self()
         if not self:
             return
-        self._server_clock.tick()
-        self._hud.server_fps = self._server_clock.get_fps()
         image.convert(self._sensors[self._index][1])
         array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
         array = np.reshape(array, (image.height, image.width, 4))
