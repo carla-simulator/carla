@@ -53,7 +53,7 @@ namespace element {
     }
     DEBUG_ASSERT(_dist <= _map->GetData().GetRoad(_road_id)->GetLength());
     const auto nearest_lane = _map->GetData().GetRoad(_road_id)->GetNearestLane(_dist, loc);
-    _lane_id = nearest_lane.first;
+    _lane_id = nearest_lane;
   }
 
   Waypoint::Waypoint(
