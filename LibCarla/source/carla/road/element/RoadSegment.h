@@ -149,7 +149,7 @@ namespace element {
     //                                      zero used for the reference line
     std::vector<std::pair<int, int>> GetPrevLane(int current_lane_id) const {
       std::map<int, std::vector<std::pair<int, int>>>::const_iterator it = _prev_lane.find(current_lane_id);
-      return it == _next_lane.end() ? std::vector<std::pair<int, int>>() : it->second;
+      return it == _prev_lane.end() ? std::vector<std::pair<int, int>>() : it->second;
     }
 
     // Search for the last geometry with less start_offset before 'dist'
