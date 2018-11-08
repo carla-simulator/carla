@@ -114,39 +114,35 @@ namespace element {
       return _predecessors;
     }
 
-    // Given the current lane it gives an std::pair of the lane id the and road
-    // id
-    // where you can go.  First integer of the pair is the lane id and the
-    // second the road id.
-    //
-    // INPUT:
-    //    int current_lane_id               for which lane do you want the next
-    //
-    // OUTPUT:
-    //    std::vector<std::pair<int, int>>  return a pair with lane id (first
-    // int) and the road id (second int),
-    //                                      if no lane has been found the given
-    // pair it will be (0, 0) as lane id
-    //                                      zero used for the reference line
+    /// Given the current lane it gives an std::pair vector with the lane id and road
+    /// id where you can go. First integer of the pair is the lane id and the second
+    /// the road id.
+    ///
+    /// @param current_lane_id                for which lane do you want the next
+    ///
+    /// OUTPUT:
+    ///    std::vector<std::pair<int, int>>   return a pair with lane id (first
+    ///                                       int) and the road id (second int),
+    ///                                       if no lane has been found the given
+    ///                                       pair it will be (0, 0) as lane id
+    ///                                       zero used for the reference line
     std::vector<std::pair<int, int>> GetNextLane(int current_lane_id) const {
       std::map<int, std::vector<std::pair<int, int>>>::const_iterator it = _next_lane.find(current_lane_id);
       return it == _next_lane.end() ? std::vector<std::pair<int, int>>() : it->second;
     }
 
-    // Given the current lane it gives an std::pair vector with the lane id the
-    // and road id
-    // where you can go. First integer of the pair is the lane id and the second
-    // the road id.
-    //
-    // INPUT:
-    //    int current_lane_id               for which lane do you want the next
-    //
-    // OUTPUT:
-    //    std::vector<std::pair<int, int>>  return a pair with lane id (first
-    // int) and the road id (second int),
-    //                                      if no lane has been found the given
-    // pair it will be (0, 0) as lane id
-    //                                      zero used for the reference line
+    /// Given the current lane it gives an std::pair vector with the lane id and road
+    /// id where you can go. First integer of the pair is the lane id and the second
+    /// the road id.
+    ///
+    /// @param current_lane_id                for which lane do you want the next
+    ///
+    /// OUTPUT:
+    ///    std::vector<std::pair<int, int>>   return a pair with lane id (first
+    ///                                       int) and the road id (second int),
+    ///                                       if no lane has been found the given
+    ///                                       pair it will be (0, 0) as lane id
+    ///                                       zero used for the reference line
     std::vector<std::pair<int, int>> GetPrevLane(int current_lane_id) const {
       std::map<int, std::vector<std::pair<int, int>>>::const_iterator it = _prev_lane.find(current_lane_id);
       return it == _prev_lane.end() ? std::vector<std::pair<int, int>>() : it->second;
