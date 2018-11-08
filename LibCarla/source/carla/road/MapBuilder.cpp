@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "carla/road/MapBuilder.h"
+#include "carla/road/element/RoadInfoVisitor.h"
 
 using namespace carla::road::element;
 
@@ -38,6 +39,46 @@ namespace road {
       }
       for (auto &t : id_seg.second.GetSuccessorID()) {
         _map_data._elements[id_seg.first]->SuccEmplaceBack(_map_data._elements[t].get());
+      }
+    }
+
+    // Set the _lane_center_offset of all the lanes
+    for (auto &&element : _map_data._elements) {
+      RoadSegment *road_seg = element.second.get();
+
+      auto up_bound_g = decltype(road_seg->_info)::reverse_iterator(road_seg->_info.upper_bound(0.0));
+      auto general_info = MakeRoadInfoIterator<RoadGeneralInfo>(up_bound_g, road_seg->_info.rend());
+
+      auto up_bound_l = decltype(road_seg->_info)::reverse_iterator(road_seg->_info.upper_bound(0.0));
+      auto lane_info = MakeRoadInfoIterator<RoadInfoLane>(up_bound_l, road_seg->_info.rend());
+
+      // check that have a RoadGeneralInfo
+      if (!lane_info.IsAtEnd()) {
+
+        double lane_offset = 0.0;
+        if (!general_info.IsAtEnd()) {
+          lane_offset = (*general_info)->GetLanesOffset().at(0).second;
+        }
+
+        double current_width = lane_offset;
+
+        for (auto &&current_lane_id : (*lane_info)->getLanesIDs(carla::road::element::RoadInfoLane::which_lane_e::Left)) {
+          const double half_width = (*lane_info)->getLane(current_lane_id)->_width * 0.5;
+
+          current_width += half_width;
+          (*lane_info)->_lanes[current_lane_id]._lane_center_offset = current_width;
+          current_width += half_width;
+        }
+
+        current_width = lane_offset;
+
+        for (auto &&current_lane_id : (*lane_info)->getLanesIDs(carla::road::element::RoadInfoLane::which_lane_e::Right)) {
+          const double half_width = (*lane_info)->getLane(current_lane_id)->_width * 0.5;
+
+          current_width -= half_width;
+          (*lane_info)->_lanes[current_lane_id]._lane_center_offset = current_width;
+          current_width -= half_width;
+        }
       }
     }
 

@@ -62,7 +62,7 @@ namespace element {
     // returns info vector given a type and a distance
     std::vector<std::shared_ptr<const RoadInfo>> GetInfos(double dist) const {
       // @todo
-      (void)dist;
+      (void) dist;
       return std::vector<std::shared_ptr<const RoadInfo>>();
     }
 
@@ -114,30 +114,38 @@ namespace element {
       return _predecessors;
     }
 
-    // Given the current lane it gives an std::pair of the lane id the and road id
-    // where you can go.  First integer of the pair is the lane id and the second the road id.
+    // Given the current lane it gives an std::pair of the lane id the and road
+    // id
+    // where you can go.  First integer of the pair is the lane id and the
+    // second the road id.
     //
     // INPUT:
     //    int current_lane_id               for which lane do you want the next
     //
     // OUTPUT:
-    //    std::vector<std::pair<int, int>>  return a pair with lane id (first int) and the road id (second int),
-    //                                      if no lane has been found the given pair it will be (0, 0) as lane id
+    //    std::vector<std::pair<int, int>>  return a pair with lane id (first
+    // int) and the road id (second int),
+    //                                      if no lane has been found the given
+    // pair it will be (0, 0) as lane id
     //                                      zero used for the reference line
     std::vector<std::pair<int, int>> GetNextLane(int current_lane_id) const {
       std::map<int, std::vector<std::pair<int, int>>>::const_iterator it = _next_lane.find(current_lane_id);
       return it == _next_lane.end() ? std::vector<std::pair<int, int>>() : it->second;
     }
 
-    // Given the current lane it gives an std::pair vector with the lane id the and road id
-    // where you can go. First integer of the pair is the lane id and the second the road id.
+    // Given the current lane it gives an std::pair vector with the lane id the
+    // and road id
+    // where you can go. First integer of the pair is the lane id and the second
+    // the road id.
     //
     // INPUT:
     //    int current_lane_id               for which lane do you want the next
     //
     // OUTPUT:
-    //    std::vector<std::pair<int, int>>  return a pair with lane id (first int) and the road id (second int),
-    //                                      if no lane has been found the given pair it will be (0, 0) as lane id
+    //    std::vector<std::pair<int, int>>  return a pair with lane id (first
+    // int) and the road id (second int),
+    //                                      if no lane has been found the given
+    // pair it will be (0, 0) as lane id
     //                                      zero used for the reference line
     std::vector<std::pair<int, int>> GetPrevLane(int current_lane_id) const {
       std::map<int, std::vector<std::pair<int, int>>>::const_iterator it = _prev_lane.find(current_lane_id);
@@ -165,11 +173,17 @@ namespace element {
       return DirectedPoint::Invalid();
     }
 
+    /// Returns a pair containing:
+    /// - @b first:  distance to the nearest point on the center in
+    ///              this road segment from the begining of it.
+    /// - @b second: euclidean distance from the nearest point in
+    ///              this road segment to p.
+    ///   @param loc point to calculate the distance
     std::pair<double, double> GetNearestPoint(const geom::Location &loc) const {
       decltype(_geom)::const_iterator nearest_geom;
       std::pair<double, double> last = {0.0, std::numeric_limits<double>::max()};
 
-      for (auto g = _geom.begin(); g !=_geom.end(); ++g) {
+      for (auto g = _geom.begin(); g != _geom.end(); ++g) {
         auto d = (*g)->DistanceTo(loc);
         if (d.second < last.second) {
           last = d;
@@ -184,56 +198,36 @@ namespace element {
       return last;
     }
 
-    std::pair<int, geom::Location> GetNearestLane(double dist, const geom::Location &loc) const {
+    /// Returns a the nearest lane id.
+    ///   @param dist distance from the begining of the road to the point you
+    ///          want to calculate the distance
+    ///   @param loc point to calculate the distance
+    int GetNearestLane(double dist, const geom::Location &loc) const {
       // Because Unreal's coordinates
-      const geom::Location corrected_loc = geom::Location(loc.x, loc.y, loc.z);
+      const geom::Location corrected_loc = geom::Location(loc.x, -loc.y, loc.z);
 
       const DirectedPoint dp_center_road = GetDirectedPointIn(dist);
       auto info = GetInfo<RoadInfoLane>(0.0);
 
       int nearest_lane_id = 0;
-      geom::Location nearest_loc;
       double nearest_dist = std::numeric_limits<double>::max();
-      double current_width = 0;
 
-      // Left lanes
-      for (auto &&current_lane_id : info->getLanesIDs(carla::road::element::RoadInfoLane::which_lane_e::Left)) {
-        DirectedPoint dp_center_lane = dp_center_road;
-        const double half_width = info->getLane(current_lane_id)->_width * 0.5;
+      for (auto &&current_lane_id :
+          info->getLanesIDs(carla::road::element::RoadInfoLane::which_lane_e::Both)) {
+        const auto current_lane_info = info->getLane(current_lane_id);
 
-        current_width += half_width;
-        if (info->getLane(current_lane_id)->_type == "driving") {
-          dp_center_lane.ApplyLateralOffset(-current_width);
+        if (current_lane_info->_type == "driving") {
+          DirectedPoint dp_center_lane = dp_center_road;
+          dp_center_lane.ApplyLateralOffset(current_lane_info->_lane_center_offset);
           const double current_dist = geom::Math::Distance2D(dp_center_lane.location, corrected_loc);
-          if(current_dist < nearest_dist) {
+          if (current_dist < nearest_dist) {
             nearest_dist = current_dist;
             nearest_lane_id = current_lane_id;
-            nearest_loc = dp_center_lane.location;
           }
         }
-        current_width += half_width;
       }
 
-      current_width = 0.0;
-      // Right lanes
-      for (auto &&current_lane_id : info->getLanesIDs(carla::road::element::RoadInfoLane::which_lane_e::Right)) {
-        DirectedPoint dp_center_lane = dp_center_road;
-        const double half_width = info->getLane(current_lane_id)->_width * 0.5;
-
-        current_width += half_width;
-        if (info->getLane(current_lane_id)->_type == "driving") {
-          dp_center_lane.ApplyLateralOffset(current_width);
-          const double current_dist = geom::Math::Distance2D(dp_center_lane.location, corrected_loc);
-          if(current_dist < nearest_dist) {
-            nearest_dist = current_dist;
-            nearest_lane_id = current_lane_id;
-            nearest_loc = dp_center_lane.location;
-          }
-        }
-        current_width += half_width;
-      }
-
-      return std::make_pair(nearest_lane_id, nearest_loc);
+      return nearest_lane_id;
     }
 
     const double &GetLength() const {
@@ -268,6 +262,9 @@ namespace element {
     };
 
   private:
+
+    friend class MapBuilder;
+
     id_type _id;
     std::vector<RoadSegment *> _predecessors;
     std::vector<RoadSegment *> _successors;
