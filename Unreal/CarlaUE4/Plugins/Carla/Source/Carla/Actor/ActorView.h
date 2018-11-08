@@ -18,6 +18,12 @@ public:
 
   using IdType = uint32;
 
+  enum class ActorType : uint8 {
+    Other,
+    Vehicle,
+    TrafficLight
+  };
+
   FActorView() = default;
   FActorView(const FActorView &) = default;
 
@@ -29,6 +35,11 @@ public:
   IdType GetActorId() const
   {
     return Id;
+  }
+
+  ActorType GetActorType() const
+  {
+    return Type;
   }
 
   AActor *GetActor()
@@ -51,11 +62,6 @@ public:
     return SemanticTags;
   }
 
-  bool IsTrafficLight() const
-  {
-    return bIsTrafficLight;
-  }
-
 private:
 
   friend class FActorRegistry;
@@ -67,12 +73,11 @@ private:
 
   IdType Id = 0u;
 
+  ActorType Type = ActorType::Other;
+
   AActor *TheActor = nullptr;
 
   TSharedPtr<const FActorDescription> Description = nullptr;
 
   TSet<ECityObjectLabel> SemanticTags;
-
-  /// @todo
-  bool bIsTrafficLight = false;
 };

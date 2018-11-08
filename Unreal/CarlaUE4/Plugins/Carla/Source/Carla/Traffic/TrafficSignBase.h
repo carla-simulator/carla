@@ -14,18 +14,18 @@
 
 UENUM(BlueprintType)
 enum class ETrafficSignState : uint8 {
-  UNKNOWN               UMETA(DisplayName = "UNKNOWN"),
-  TrafficLightRed       UMETA(DisplayName = "Traffic Light - Red"),
-  TrafficLightYellow    UMETA(DisplayName = "Traffic Light - Yellow"),
-  TrafficLightGreen     UMETA(DisplayName = "Traffic Light - Green"),
-  SpeedLimit_30         UMETA(DisplayName = "Speed Limit - 30"),
-  SpeedLimit_40         UMETA(DisplayName = "Speed Limit - 40"),
-  SpeedLimit_50         UMETA(DisplayName = "Speed Limit - 50"),
-  SpeedLimit_60         UMETA(DisplayName = "Speed Limit - 60"),
-  SpeedLimit_90         UMETA(DisplayName = "Speed Limit - 90"),
-  SpeedLimit_100        UMETA(DisplayName = "Speed Limit - 100"),
-  SpeedLimit_120        UMETA(DisplayName = "Speed Limit - 120"),
-  SpeedLimit_130        UMETA(DisplayName = "Speed Limit - 130")
+  UNKNOWN            = 0u   UMETA(DisplayName = "UNKNOWN"),
+  TrafficLightRed    = 1u   UMETA(DisplayName = "Traffic Light - Red"),
+  TrafficLightYellow = 2u   UMETA(DisplayName = "Traffic Light - Yellow"),
+  TrafficLightGreen  = 3u   UMETA(DisplayName = "Traffic Light - Green"),
+  SpeedLimit_30             UMETA(DisplayName = "Speed Limit - 30"),
+  SpeedLimit_40             UMETA(DisplayName = "Speed Limit - 40"),
+  SpeedLimit_50             UMETA(DisplayName = "Speed Limit - 50"),
+  SpeedLimit_60             UMETA(DisplayName = "Speed Limit - 60"),
+  SpeedLimit_90             UMETA(DisplayName = "Speed Limit - 90"),
+  SpeedLimit_100            UMETA(DisplayName = "Speed Limit - 100"),
+  SpeedLimit_120            UMETA(DisplayName = "Speed Limit - 120"),
+  SpeedLimit_130            UMETA(DisplayName = "Speed Limit - 130")
 };
 
 UCLASS()

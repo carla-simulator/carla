@@ -86,29 +86,33 @@ void ACarlaWheeledVehicle::ApplyVehicleControl(const FVehicleControl &VehicleCon
 void ACarlaWheeledVehicle::SetThrottleInput(const float Value)
 {
   GetVehicleMovementComponent()->SetThrottleInput(Value);
+  Control.Throttle = Value;
 }
 
 void ACarlaWheeledVehicle::SetSteeringInput(const float Value)
 {
   GetVehicleMovementComponent()->SetSteeringInput(Value);
+  Control.Steer = Value;
 }
 
 void ACarlaWheeledVehicle::SetBrakeInput(const float Value)
 {
   GetVehicleMovementComponent()->SetBrakeInput(Value);
+  Control.Brake = Value;
 }
 
 void ACarlaWheeledVehicle::SetReverse(const bool Value)
 {
-  if (Value != bIsInReverse) {
-    bIsInReverse = Value;
+  if (Value != Control.bReverse) {
+    Control.bReverse = Value;
     auto MovementComponent = GetVehicleMovementComponent();
-    MovementComponent->SetUseAutoGears(!bIsInReverse);
-    MovementComponent->SetTargetGear(bIsInReverse ? -1 : 1, true);
+    MovementComponent->SetUseAutoGears(!Control.bReverse);
+    MovementComponent->SetTargetGear(Control.bReverse ? -1 : 1, true);
   }
 }
 
 void ACarlaWheeledVehicle::SetHandbrakeInput(const bool Value)
 {
   GetVehicleMovementComponent()->SetHandbrakeInput(Value);
+  Control.bHandBrake = Value;
 }
