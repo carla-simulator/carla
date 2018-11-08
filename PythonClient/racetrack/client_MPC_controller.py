@@ -23,21 +23,23 @@ import sympy as sym
 from sympy.tensor.array import derive_by_array
 sym.init_printing()
 
+from utils import plot_points_with_numbers, clip_throttle
+
 
 norm = np.linalg.norm
 
 
 STATE_VARS = ('x', 'y', 'v', 'ψ', 'cte', 'eψ')
 
-STEPS_AHEAD = 5
+STEPS_AHEAD = 10
 dt = 0.1
 
 # Cost function coefficients
 CTE_COEFF = 1000
-EPSI_COEFF = 100
-SPEED_COEFF = 1 # 2
+EPSI_COEFF = 1000
+SPEED_COEFF = 3 # 2
 ACC_COEFF = 10 # 1
-STEER_COEFF = 10 # 1
+STEER_COEFF = 1 # 1
 CONSEC_ACC_COEFF = 15
 CONSEC_STEER_COEFF = 15
 
@@ -45,12 +47,12 @@ CONSEC_STEER_COEFF = 15
 Lf = 2.67
 
 # How the polynomial fitting the desired curve is fitted
-STEPS_POLY = 2
+STEPS_POLY = 20
 POLY_DEGREE = 3
 
 # Lambdify and minimize stuff
 EVALUATOR = 'numpy'
-LAT = 0.1
+LAT = 0.00
 TOLERANCE = 1
 
 
@@ -154,7 +156,7 @@ def get_func_constraints_and_bounds(target_speed):
         cost += (
             # Reference state penalties
             CTE_COEFF * cte[t]**2
-            # + EPSI_COEFF * eψ[t]**2 +
+            + EPSI_COEFF * eψ[t]**2 +
             + SPEED_COEFF * (v[t] - target_speed)**2
             #
             # # Actuators penalties
@@ -253,14 +255,14 @@ def transform_into_cars_coordinate_system(pts, x_lat, y_lat, cos_ψ_lat, sin_ψ_
     diff = (pts - [x_lat, y_lat])
     pts_car = np.zeros_like(diff)
     pts_car[:, 0] =  cos_ψ_lat * diff[:, 0] + sin_ψ_lat * diff[:, 1]
-    pts_car[:, 1] = -sin_ψ_lat * diff[:, 0] + cos_ψ_lat * diff[:, 1]
+    pts_car[:, 1] = sin_ψ_lat * diff[:, 0] - cos_ψ_lat * diff[:, 1]
     return pts_car
 
 
 def run_carla_client(args):
     number_of_episodes = 10
     frames_per_episode = 10000
-    spline_points = 1000
+    spline_points = 10000
 
     track_DF = pd.read_csv('racetrack.txt', header=None)
     # The track data are rescaled by 100x with relation to Carla measurements
@@ -280,17 +282,21 @@ def run_carla_client(args):
 
     cost_func, cost_grad_func, constr_funcs = get_func_constraints_and_bounds(target_speed)
 
-    init = (1, 1, 1, 60, 1, 1.2, 1, 2, 3, 4)
-    x0, bounds = get_x0_and_bounds(1.1, 1.1, 1.1, 60.5, 1.1, 1.1, 0.5, 0.5)
-
-    start_time = time.time()
-    for i in range(10):
-        result = minimize_cost(cost_func, cost_grad_func, constr_funcs, bounds, x0, init)
-    print('Took {:.4f}s'.format((time.time() - start_time) / 10))
-
-    if 'success' not in result.message:
-        print(result)
-        import ipdb; ipdb.set_trace()
+    # TEMPORARY BEGIN
+    # init = (1, 1, 1, 60, 1, 1.2, 1, 2, 3, 4)
+    # x0, bounds = get_x0_and_bounds(1.1, 1.1, 1.1, 60.5, 1.1, 1.1, 0.5, 0.5)
+    #
+    # start_time = time.time()
+    # for i in range(10):
+    #     result = minimize_cost(cost_func, cost_grad_func, constr_funcs, bounds, x0, init)
+    # print('Took {:.4f}s'.format((time.time() - start_time) / 10))
+    #
+    # if 'success' not in result.message:
+    #     print(result)
+    #     import ipdb; ipdb.set_trace()
+    #
+    # prev_cte = 0
+    # TEMPORARY END
 
     # We assume the CARLA server is already waiting for a client to connect at
     # host:port. To create a connection we can use the `make_carla_client`
@@ -379,15 +385,16 @@ def run_carla_client(args):
                 # Initial:
                 # x: 0.7071127891540527
                 # y: -0.7071007490158081
-                
+
                 v = measurements.player_measurements.forward_speed * 3.6 # km / h
                 ψ = np.arctan2(orient.y, orient.x)
 
                 # Get closest point's distance
                 dists = norm(pts_2D - location, axis=1)
                 which_closest = np.argmin(dists)
-                # TODO: + czy - ?
-                pts = pts_2D[which_closest + STEPS_POLY*np.arange(POLY_DEGREE+1)]
+                indeces = which_closest + STEPS_POLY*np.arange(POLY_DEGREE+1)
+                indeces = indeces % spline_points
+                pts = pts_2D[indeces]
 
                 v_lat  = v + LAT * throttle
                 ψ_lat  = ψ - LAT * (v_lat * steer / Lf)
@@ -398,13 +405,7 @@ def run_carla_client(args):
                 x_lat  = x + LAT * (v_lat * cos_ψ_lat)
                 y_lat  = y + LAT * (v_lat * sin_ψ_lat)
 
-                import ipdb; ipdb.set_trace()
-                pts_car = transform_into_cars_coordinate_system(pts_2D, x_lat, y_lat, cos_ψ_lat, sin_ψ_lat)
-                plt.scatter(pts[:, 0], pts[:, 1]); plt.show()
-                plt.scatter(pts_car[:, 0], pts_car[:, 1]); plt.show()
-
                 pts_car = transform_into_cars_coordinate_system(pts, x_lat, y_lat, cos_ψ_lat, sin_ψ_lat)
-                # import ipdb; ipdb.set_trace()
 
                 poly = np.polyfit(pts_car[:, 0], pts_car[:, 1], POLY_DEGREE)
 
@@ -412,10 +413,12 @@ def run_carla_client(args):
                 cte = poly[0]
                 eψ = -np.arctan(poly[1])
 
-                # if cte > 5:
+                # if np.abs(cte) > 150:
+                #     norm(pts[1:] - pts[:-1], axis=1)
+                #     plot_points_with_numbers((pts-[x,y])[:, 0], (pts-[x,y])[:, 1], indeces)
+                #     norm(pts_car[1:] - pts_car[:-1], axis=1)
+                #     plot_points_with_numbers(pts_car[:, 0], pts_car[:, 1], indeces)
                 #     import ipdb; ipdb.set_trace()
-                #     plt.plot(pts[:, 0], pts[:, 1]); plt.xlim(-5, 5); plt.ylim(-10, 250); plt.show()
-                #     plt.plot(pts_car[:, 1], pts_car[:, 0]); plt.xlim(-5, 5); plt.ylim(-10, 10); plt.show()
 
                 init = (0, 0, 0, v_lat, cte, eψ, *poly)
                 x0, bounds = get_x0_and_bounds(0, 0, 0, v, cte, eψ, 0, 0)
@@ -427,22 +430,18 @@ def run_carla_client(args):
                     steer = result.x[-STEPS_AHEAD]
                     throttle = result.x[-2*STEPS_AHEAD]
 
-                # if v > 5 and frame % 100 == 0:
-                #     import ipdb; ipdb.set_trace()
-
-                poly_str = '[' + ', '.join(['{:.2f}'.format(p) for p in poly]) + ']'
-                furthest = norm(pts[-1] - location)
                 text = (
                     'steer: {:.2f}'
                     ' cte: {:.2f}'
                     # ' throttle: {:.2f}'
                     ' v: {:.2f}'
-                    # ' poly: {}'
-                    ' success: {}'
-                    ' furthest: {:.2f}'
-                    .format(steer, cte, v, success, furthest)
+                    .format(steer, cte, v)
                 )
-                print(text)
+                # print(text)
+
+                # steer = -0.6 * cte - 5.5 * (cte - prev_cte)
+                # prev_cte = cte
+                # throttle = clip_throttle(throttle, v, target_speed)
 
                 client.send_control(
                     steer=steer,
@@ -509,7 +508,7 @@ def main():
 
     argparser.add_argument(
         '-s', '--speed',
-        default=20,
+        default=45,
         type=float,
         dest='target_speed',
         help='Target speed')

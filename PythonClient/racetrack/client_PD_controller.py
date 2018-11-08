@@ -28,6 +28,8 @@ from carla.settings import CarlaSettings
 from carla.tcp import TCPConnectionError
 from carla.util import print_over_same_line
 
+from utils import clip_throttle
+
 
 norm = np.linalg.norm
 
@@ -172,14 +174,11 @@ def run_carla_client(args):
                         deriv_list = deriv_list[-deriv_len:]
                     deriv = np.mean(deriv_list)
 
-                prev_prev_speed = prev_speed
-                prev_speed = curr_speed
                 curr_speed = measurements.player_measurements.forward_speed * 3.6
-                # TODO: find a better way of keeping the speed constant
-                throttle = np.clip(
-                    throttle - 0.1 * (curr_speed-target_speed),
-                    0.25,
-                    1.0
+                throttle = clip_throttle(
+                    throttle,
+                    curr_speed,
+                    target_speed
                 )
 
                 steer = -kp * curr_prop - kd * deriv + np.random.uniform(-0.05, 0.05)

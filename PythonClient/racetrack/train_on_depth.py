@@ -1,6 +1,7 @@
 import pandas as pd
 np = pd.np
 
+import keras.backend as K
 from keras.models import Model
 from keras.layers import Dropout, Flatten, Dense, Input, Conv2D
 from keras.layers.pooling import MaxPooling2D
@@ -14,8 +15,9 @@ import matplotlib.pyplot as plt
 
 INPUT_SHAPE = (150, 200, 1)
 BATCH_SIZE = 64
-NUM_EPOCHS = 13
+NUM_EPOCHS = 15
 NUM_EPISODES = 10
+EPSILON = 1
 
 
 def get_lenet_like_model(use_conv_1x1=True, l2_reg=1e-3, filter_sz=5, num_filters=16):
@@ -88,17 +90,36 @@ def get_preds_and_plot(X_train, y_train, X_test, y_test, model):
     plt.scatter(y_train, preds_train)
     plt.scatter(y_test, preds_test)
     min_, max_ = y_test.min(), y_test.max()
-    plt.xlim(min_, max_)
-    plt.ylim(min_, max_)
+    plt.xlim(-4, 4)
+    plt.ylim(-4, 4)
     plt.savefig('images/scatter{}.png'.format(epoch))
     plt.clf()
+
+
+def weighted_mse(y_true, y_pred):
+    w = K.abs(y_true + EPSILON)
+    return K.mean(w * K.square(y_true-y_pred))
+
+
+def prepare_data(X, y):
+    X = np.diff(X, axis=0)
+    y = y[:-1]
+
+    # A bit of augmentation
+    X = np.concatenate([X, X[:, :, ::-1]], axis=0)
+    y = np.concatenate([y, -y], axis=0)
+
+    # Need to expand dimensions to be able to use convolutions
+    X = np.expand_dims(X, 3)
+
+    return X, y
 
 
 if __name__ == "__main__":
     model = get_lenet_like_model()
 
     model.compile(
-        loss='mse',
+        loss=weighted_mse, # 'mse'
         optimizer=Adam(lr=1e-5),
         metrics=['mse']
     )
@@ -108,17 +129,10 @@ if __name__ == "__main__":
     for epoch in range(NUM_EPOCHS):
         for episode in range(NUM_EPISODES-1):
             print('EPOCH: {}, EPISODE: {}'.format(epoch, episode))
+            
             X, y = get_data(episode)
 
-            X = np.diff(X, axis=0)
-            y = y[:-1]
-
-            # A bit of augmentation
-            X = np.concatenate([X, X[:, :, ::-1]], axis=0)
-            y = np.concatenate([y, -y], axis=0)
-
-            # Need to expand dimensions to be able to use convolutions
-            X = np.expand_dims(X, 3)
+            X, y = prepare_data(X, y)
 
             model.fit(
                 X,
@@ -129,11 +143,11 @@ if __name__ == "__main__":
                 validation_split=0.05,
             )
 
-        # get_preds_and_plot(qtrans, X, y, X_test, y_test, model)
+        # Prepare the test set
+        X_test, y_test = prepare_data(X_test, y_test)
         get_preds_and_plot(
-            qtrans,
             X, y,
-            np.expand_dims(np.diff(X_test, axis=0), 3), y_test[:-1],
+            X_test, y_test,
             model
         )
 

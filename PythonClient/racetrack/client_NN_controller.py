@@ -30,6 +30,8 @@ from carla.util import print_over_same_line
 import pickle
 import keras
 
+from train_on_depth import weighted_mse
+
 
 norm = np.linalg.norm
 
@@ -49,7 +51,10 @@ def run_carla_client(args):
     depth_array = None
     prev_depth_array = None
 
-    model = keras.models.load_model('model.h5')
+    model = keras.models.load_model(
+        'model.h5',
+        custom_objects={'weighted_mse': weighted_mse}
+    )
 
     # We assume the CARLA server is already waiting for a client to connect at
     # host:port. To create a connection we can use the `make_carla_client`
