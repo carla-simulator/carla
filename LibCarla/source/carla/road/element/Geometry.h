@@ -129,6 +129,11 @@ namespace element {
       return p;
     }
 
+    /// Returns a pair containing:
+    /// - @b first:  distance to the nearest point in this line from the
+    ///              begining of the shape.
+    /// - @b second: euclidean distance from the nearest point in this line to p.
+    ///   @param p point to calculate the distance
     std::pair<double, double> DistanceTo(const geom::Location &p) const override {
       return geom::Math::DistSegmentPoint(
           p,
@@ -164,6 +169,11 @@ namespace element {
       return p;
     }
 
+    /// Returns a pair containing:
+    /// - @b first:  distance to the nearest point in this arc from the
+    ///              begining of the shape.
+    /// - @b second: euclidean distance from the nearest point in this arc to p.
+    ///   @param p point to calculate the distance
     std::pair<double, double> DistanceTo(const geom::Location &p) const override {
       return geom::Math::DistArcPoint(
           p,
@@ -227,6 +237,7 @@ namespace element {
       return p;
     }
 
+    /// @todo
     std::pair<double, double> DistanceTo(const geom::Location &) const override {
       DEBUG_ERROR;
       return {0.0, 0.0};

@@ -75,8 +75,8 @@ namespace geom {
     }
 
     /// Returns a pair containing:
-    /// - @a first:  distance from v to p' where p' = p projected on segment (w - v)
-    /// - @a second: euclidean distance from p to p'
+    /// - @b first:  distance from v to p' where p' = p projected on segment (w - v)
+    /// - @b second: euclidean distance from p to p'
     ///   @param p point to calculate distance
     ///   @param v first point of the segment
     ///   @param w second point of the segment
@@ -102,8 +102,8 @@ namespace geom {
     }
 
     /// Returns a pair containing:
-    /// - @a first:  distance across the arc from start_pos to p' where p' = p projected on Arc
-    /// - @a second: euclidean distance from p to p'
+    /// - @b first:  distance across the arc from start_pos to p' where p' = p projected on Arc
+    /// - @b second: euclidean distance from p to p'
     static std::pair<double, double> DistArcPoint(
         Vector3D p,
         Vector3D start_pos,
