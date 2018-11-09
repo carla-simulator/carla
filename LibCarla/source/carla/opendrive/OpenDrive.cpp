@@ -67,6 +67,23 @@ namespace opendrive {
     }
   }
 
+  // HACK(Andrei):
+  static int fnc_get_first_driving_line(opendrive::types::RoadInformation *roadInfo) {
+    if(roadInfo == nullptr) {
+      printf("In function %s(%d) roadInfo is NULL\n", __FUNCTION__, __LINE__);
+      return 0;
+    }
+
+    for(auto &&lane : roadInfo->lanes.lane_sections[0].left) {
+      if(lane.attributes.type == "driving") {
+        return lane.attributes.id;
+      }
+    }
+
+    printf("In function %s(%d) no left ID found\n", __FUNCTION__, __LINE__);
+    return 0;
+  }
+
   SharedPtr<road::Map> OpenDrive::Load(const std::string &file, XmlInputType inputType, std::string *out_error) {
     carla::opendrive::types::OpenDriveData open_drive_road;
 
@@ -174,8 +191,6 @@ namespace opendrive {
       }
 
       if (it->second->road_link.successor != nullptr) {
-        bool is_start = it->second->road_link.successor->contact_point == "start";
-
         if (it->second->road_link.successor->element_type == "junction") {
           std::vector<carla::road::lane_junction_t> &options =
             junctionsData[it->second->road_link.successor->id][it->first];
@@ -183,12 +198,29 @@ namespace opendrive {
             roadSegment.AddSuccessorID(options[i].connection_road, options[i].contact_point == "start");
 
             for(size_t j = 0; j < options[i].from_lane.size(); ++j) {
-              roadSegment.AddNextLaneInfo(options[i].from_lane[j], options[i].to_lane[j], options[i].connection_road);
-              printf("[suc][% 5d -> % 5d]    [% 3d -> % 3d]\n", it->first, options[i].connection_road, options[i].from_lane[j], options[i].to_lane[j]);
+              bool is_end = options[i].contact_point == "end";
+              int to_lane = options[i].to_lane[j];
+
+              if(is_end && to_lane < 0) {
+                printf("TEST ERROR\nFromLane: %d\nToLane: %d\nRoadID: %d\n",
+                options[i].from_lane[j],
+                to_lane,
+                options[i].connection_road
+                );
+              }
+
+              if(is_end) {
+                to_lane = fnc_get_first_driving_line(roadData[options[i].connection_road]);
+              }
+
+              roadSegment.AddNextLaneInfo(options[i].from_lane[j], to_lane, options[i].connection_road);
+              printf("[suc][% 5d -> % 5d]    [% 3d -> % 3d]\n", it->first, options[i].connection_road, options[i].from_lane[j], to_lane);
             }
           }
         } else {
+          bool is_start = it->second->road_link.successor->contact_point == "start";
           roadSegment.AddSuccessorID(it->second->road_link.successor->id, is_start);
+
           for(auto &&lanes : rightLanesGoToSuccessor) {
             printf("[suc][% 5d -> % 5d]    [% 3d -> % 3d]\n", it->first, it->second->road_link.successor->id, lanes.first, lanes.second);
             roadSegment.AddNextLaneInfo(lanes.first, lanes.second, it->second->road_link.successor->id);
@@ -202,8 +234,6 @@ namespace opendrive {
       }
 
       if (it->second->road_link.predecessor != nullptr) {
-        bool is_start = it->second->road_link.predecessor->contact_point == "start";
-
         if (it->second->road_link.predecessor->element_type == "junction") {
           std::vector<carla::road::lane_junction_t> &options =
             junctionsData[it->second->road_link.predecessor->id][it->first];
@@ -211,12 +241,29 @@ namespace opendrive {
             roadSegment.AddPredecessorID(options[i].connection_road, options[i].contact_point == "start");
 
             for(size_t j = 0; j < options[i].from_lane.size(); ++j) {
-              roadSegment.AddPrevLaneInfo(options[i].from_lane[j], options[i].to_lane[j], options[i].connection_road);
-              printf("[pre][% 5d -> % 5d]    [% 3d -> % 3d]\n", it->first, options[i].connection_road, options[i].from_lane[j], options[i].to_lane[j]);
+              bool is_end = options[i].contact_point == "end";
+              int to_lane = options[i].to_lane[j];
+
+              if(is_end && to_lane < 0) {
+                printf("TEST ERROR\nFromLane: %d\nToLane: %d\nRoadID: %d\n",
+                options[i].from_lane[j],
+                to_lane,
+                options[i].connection_road
+                );
+              }
+
+              if(is_end) {
+                to_lane = fnc_get_first_driving_line(roadData[options[i].connection_road]);
+              }
+
+              roadSegment.AddPrevLaneInfo(options[i].from_lane[j], to_lane, options[i].connection_road);
+              printf("[pre][% 5d -> % 5d]    [% 3d -> % 3d]\n", it->first, options[i].connection_road, options[i].from_lane[j], to_lane);
             }
           }
         } else {
+          bool is_start = it->second->road_link.predecessor->contact_point == "start";
           roadSegment.AddPredecessorID(it->second->road_link.predecessor->id, is_start);
+
           for(auto &&lanes : rightLanesGoToPredecessor) {
             printf("[pre][% 5d -> % 5d]    [% 3d -> % 3d]\n", it->first, it->second->road_link.predecessor->id, lanes.first, lanes.second);
             roadSegment.AddPrevLaneInfo(lanes.first, lanes.second, it->second->road_link.predecessor->id);
