@@ -86,7 +86,6 @@ else
   wget https://dl.bintray.com/boostorg/release/1.67.0/source/boost_1_67_0.tar.gz
   log "Extracting boost."
   tar -xzf boost_1_67_0.tar.gz
-  rm boost_1_67_0.tar.gz
   mkdir -p ${BOOST_BASENAME}-install/include
   mv boost_1_67_0 ${BOOST_BASENAME}-source
   # rm -Rf boost_1_67_0
@@ -98,22 +97,34 @@ else
 
   py2="/usr/bin/env python2"
   py2_root=`${py2} -c "import sys; print(sys.prefix)"`
+  pyv=`$py2 -c "import sys;x='{v[0]}.{v[1]}'.format(v=list(sys.version_info[:2]));sys.stdout.write(x)";`
   ./bootstrap.sh \
       --with-toolset=clang \
       --prefix=../boost-install \
       --with-libraries=python,filesystem \
       --with-python=${py2} --with-python-root=${py2_root}
+  echo "using python : ${pyv} : ${py2_root}/bin/python2 ;" > ${HOME}/user-config.jam
   ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
   ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
   ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} --clean-all
+  
+  # Get rid of  python2 build artifacts completely & do a clean build for python3
+  popd >/dev/null
+  rm -Rf ${BOOST_BASENAME}-source
+  tar -xzf boost_1_67_0.tar.gz
+  mkdir -p ${BOOST_BASENAME}-install/include
+  mv boost_1_67_0 ${BOOST_BASENAME}-source
+  pushd ${BOOST_BASENAME}-source >/dev/null
 
   py3="/usr/bin/env python3"
   py3_root=`${py3} -c "import sys; print(sys.prefix)"`
+  pyv=`$py3 -c "import sys;x='{v[0]}.{v[1]}'.format(v=list(sys.version_info[:2]));sys.stdout.write(x)";`
   ./bootstrap.sh \
       --with-toolset=clang \
       --prefix=../boost-install \
       --with-libraries=python \
       --with-python=${py3} --with-python-root=${py3_root}
+  echo "using python : ${pyv} : ${py3_root}/bin/python3 ;" > ${HOME}/user-config.jam
   ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
   ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
 
