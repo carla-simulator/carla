@@ -30,9 +30,9 @@ matrix:
         - pip3 install -q --user setuptools nose2
       script:
         - while sleep 2m; do echo "still building..."; done &
-        - make setup > build.log 2>&1
-        - make LibCarla > build.log 2>&1
-        - make PythonAPI > build.log 2>&1
+        - make setup >> build.log 2>&1
+        - make LibCarla >> build.log 2>&1
+        - make PythonAPI >> build.log 2>&1
         - kill %1
         - make check ARGS="--all --gtest_args=--gtest_filter=-*_mt"
       after_failure:
