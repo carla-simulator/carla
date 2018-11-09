@@ -68,20 +68,30 @@ namespace opendrive {
   }
 
   // HACK(Andrei):
-  static int fnc_get_first_driving_line(opendrive::types::RoadInformation *roadInfo) {
+  static int fnc_get_first_driving_line(opendrive::types::RoadInformation *roadInfo, int id = 0) {
     if(roadInfo == nullptr) {
       printf("In function %s(%d) roadInfo is NULL\n", __FUNCTION__, __LINE__);
       return 0;
     }
 
+    for(auto itSec = roadInfo->lanes.lane_sections.rbegin(); itSec != roadInfo->lanes.lane_sections.rend() - 1; ++itSec) {
+      for(auto itLane = itSec->left.begin(); itLane != itSec->left.end(); ++itLane) {
+        if(itLane->attributes.type == "driving" && itLane->attributes.id == id) {
+          id = itLane->link ? itLane->link->predecessor_id : 0;
+          break;
+        }
+      }
+    }
+
+    /*
     for(auto &&lane : roadInfo->lanes.lane_sections[0].left) {
       if(lane.attributes.type == "driving") {
         return lane.attributes.id;
       }
     }
+    */
 
-    printf("In function %s(%d) no left ID found\n", __FUNCTION__, __LINE__);
-    return 0;
+    return id;
   }
 
   SharedPtr<road::Map> OpenDrive::Load(const std::string &file, XmlInputType inputType, std::string *out_error) {
@@ -153,11 +163,11 @@ namespace opendrive {
                 itTest.second = itLanes.link->successor_id;
               }
             }
-            for(auto &&itTest : leftLanesGoToPredecessor) {
+            /*for(auto &&itTest : leftLanesGoToPredecessor) {
               if(itTest.second == itLanes.attributes.id && itLanes.link) {
                 itTest.second = itLanes.link->predecessor_id;
               }
-            }
+            }*/
           }
         }
 
@@ -168,11 +178,11 @@ namespace opendrive {
                 itTest.second = itLanes.link->successor_id;
               }
             }
-            for(auto &&itTest : rightLanesGoToPredecessor) {
+            /*for(auto &&itTest : rightLanesGoToPredecessor) {
               if(itTest.second == itLanes.attributes.id && itLanes.link) {
                 itTest.second = itLanes.link->predecessor_id;
               }
-            }
+            }*/
           }
         }
       }
@@ -210,7 +220,7 @@ namespace opendrive {
               }
 
               if(is_end) {
-                to_lane = fnc_get_first_driving_line(roadData[options[i].connection_road]);
+                to_lane = fnc_get_first_driving_line(roadData[options[i].connection_road], to_lane);
               }
 
               roadSegment.AddNextLaneInfo(options[i].from_lane[j], to_lane, options[i].connection_road);
@@ -253,7 +263,7 @@ namespace opendrive {
               }
 
               if(is_end) {
-                to_lane = fnc_get_first_driving_line(roadData[options[i].connection_road]);
+                to_lane = fnc_get_first_driving_line(roadData[options[i].connection_road], to_lane);
               }
 
               roadSegment.AddPrevLaneInfo(options[i].from_lane[j], to_lane, options[i].connection_road);
