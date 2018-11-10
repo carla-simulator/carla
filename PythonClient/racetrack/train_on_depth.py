@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 
 INPUT_SHAPE = (150, 200, 1)
 BATCH_SIZE = 64
-NUM_EPOCHS = 15
+NUM_EPOCHS = 150
 NUM_EPISODES = 10
 EPSILON = 1
 
@@ -54,6 +54,25 @@ def get_lenet_like_model(use_conv_1x1=True, l2_reg=1e-3, filter_sz=5, num_filter
 
 
 def get_simplistic_model(l2_reg=1e-3):
+    inp = Input(INPUT_SHAPE)
+    reg_kwargs = {
+        'activation': 'elu',
+        'kernel_regularizer': l2(l2_reg),
+        # 'activity_regularizer': l2(l2_reg)
+    }
+    x = Flatten()(inp)
+    x = Dropout(rate=0.5)(x)
+    x = Dense(1000, **reg_kwargs)(x)
+    x = Dropout(rate=0.5)(x)
+    x = Dense(1000, **reg_kwargs)(x)
+    x = Dropout(rate=0.5)(x)
+    x = Dense(1000, **reg_kwargs)(x)
+    # x = Dropout(rate=0.5)(x)
+    x = Dense(1)(x)
+    return Model(inp, x)
+
+
+def get_sophisticated_model(l2_reg=1e-3):
     inp = Input(INPUT_SHAPE)
     reg_kwargs = {
         'activation': 'elu',
@@ -119,7 +138,7 @@ if __name__ == "__main__":
     model = get_lenet_like_model()
 
     model.compile(
-        loss=weighted_mse, # 'mse'
+        loss='mse', # 'mse'
         optimizer=Adam(lr=1e-5),
         metrics=['mse']
     )
@@ -129,7 +148,7 @@ if __name__ == "__main__":
     for epoch in range(NUM_EPOCHS):
         for episode in range(NUM_EPISODES-1):
             print('EPOCH: {}, EPISODE: {}'.format(epoch, episode))
-            
+
             X, y = get_data(episode)
 
             X, y = prepare_data(X, y)

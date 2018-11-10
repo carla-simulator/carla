@@ -309,7 +309,7 @@ def run_carla_client(args):
             # Start a new episode.
             storage = np.random.rand(150, 200, frames_per_episode).astype(np.float16)
             stream = open('log{}.txt'.format(episode), 'w')
-            stream.write('frame,steer,throttle,speed\n')
+            stream.write('frame,steer,throttle,speed,psi,cte,epsi,poly0,poly1,poly2,poly3\n')
 
             if args.settings_filepath is None:
 
@@ -453,9 +453,17 @@ def run_carla_client(args):
 
                 depth_array = np.log(sensor_data['CameraDepth'].data).astype('float16')
                 storage[..., frame] = depth_array
+
+                for_log = (
+                    frame,
+                    steer, throttle,
+                    v, ψ,
+                    cte, eψ,
+                    poly
+                )
                 stream.write(
-                    '{},{},{},{}\n'
-                    .format(frame, steer, throttle, v)
+                    ((len(for_log)*'{},')[:-1] + '\n')
+                    .format(*for_log)
                 )
 
             np.save('depth_data{}.npy'.format(episode), storage)
