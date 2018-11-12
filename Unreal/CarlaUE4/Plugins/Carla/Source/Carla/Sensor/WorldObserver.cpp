@@ -13,19 +13,34 @@
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/sensor/SensorRegistry.h>
+#include <carla/sensor/data/ActorDynamicState.h>
 #include <compiler/enable-ue4-macros.h>
 
-static uint8 AWorldObserver_GetActorState(const FActorView &View)
+static auto AWorldObserver_GetActorState(const FActorView &View)
 {
-  if (View.IsTrafficLight())
+  using AType = FActorView::ActorType;
+
+  carla::sensor::data::ActorDynamicState::TypeDependentState state;
+
+  if (AType::Vehicle == View.GetActorType())
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(View.GetActor());
+    if (Vehicle != nullptr)
+    {
+      state.vehicle_control = carla::rpc::VehicleControl{Vehicle->GetVehicleControl()};
+    }
+  }
+  else if (AType::TrafficLight == View.GetActorType())
   {
     auto TrafficLight = Cast<ATrafficLightBase>(View.GetActor());
     if (TrafficLight != nullptr)
     {
-      return static_cast<uint8>(TrafficLight->GetTrafficSignState());
+      using TLS = carla::rpc::TrafficLightState;
+      state.traffic_light_state = static_cast<TLS>(TrafficLight->GetTrafficSignState());
     }
   }
-  return 0u;
+
+  return state;
 }
 
 static carla::Buffer AWorldObserver_Serialize(
@@ -53,7 +68,7 @@ static carla::Buffer AWorldObserver_Serialize(
   for (auto &&pair : Registry) {
     auto &&actor_view = pair.second;
     check(actor_view.GetActor() != nullptr);
-    constexpr float TO_METERS = 1e-3;
+    constexpr float TO_METERS = 1e-2;
     const auto velocity = TO_METERS * actor_view.GetActor()->GetVelocity();
     ActorDynamicState info = {
       actor_view.GetActorId(),

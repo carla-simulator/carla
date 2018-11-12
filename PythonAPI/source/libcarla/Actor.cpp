@@ -7,6 +7,7 @@
 #include <carla/client/Actor.h>
 #include <carla/client/TrafficLight.h>
 #include <carla/client/Vehicle.h>
+#include <carla/rpc/TrafficLightState.h>
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
@@ -59,17 +60,18 @@ void export_actor() {
 
   class_<cc::Vehicle, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Vehicle>>("Vehicle", no_init)
     .add_property("bounding_box", CALL_RETURNING_COPY(cc::Vehicle, GetBoundingBox))
-    .add_property("control", CALL_RETURNING_COPY(cc::Vehicle, GetControl))
     .def("apply_control", &cc::Vehicle::ApplyControl, (arg("control")))
+    .def("get_vehicle_control", &cc::Vehicle::GetVehicleControl)
     .def("set_autopilot", &cc::Vehicle::SetAutopilot, (arg("enabled")=true))
     .def(self_ns::str(self_ns::self))
   ;
 
-  enum_<cc::TrafficLightState>("TrafficLightState")
-    .value("Unknown", cc::TrafficLightState::Unknown)
-    .value("Red", cc::TrafficLightState::Red)
-    .value("Yellow", cc::TrafficLightState::Yellow)
-    .value("Green", cc::TrafficLightState::Green)
+  enum_<cr::TrafficLightState>("TrafficLightState")
+    .value("Off", cr::TrafficLightState::Off)
+    .value("Red", cr::TrafficLightState::Red)
+    .value("Yellow", cr::TrafficLightState::Yellow)
+    .value("Green", cr::TrafficLightState::Green)
+    .value("Unknown", cr::TrafficLightState::Unknown)
   ;
 
   class_<cc::TrafficLight, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::TrafficLight>>("TrafficLight", no_init)
