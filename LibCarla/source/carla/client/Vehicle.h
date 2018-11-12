@@ -27,12 +27,9 @@ namespace client {
 
     /// Return the control last applied to this vehicle.
     ///
-    /// @warning This function only takes into account the control applied to
-    /// this instance of Vehicle. Note that several instances of Vehicle (even
-    /// in different processes) may point to the same vehicle in the simulator.
-    const Control &GetControl() const {
-      return _control;
-    }
+    /// @note This function does not call the simulator, it returns the Control
+    /// received in the last tick.
+    Control GetVehicleControl() const;
 
   private:
 

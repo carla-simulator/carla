@@ -30,7 +30,7 @@ namespace detail {
       geom::Transform transform;
       geom::Vector3D velocity;
       geom::Vector3D acceleration;
-      uint8_t state = 0u;
+      sensor::data::ActorDynamicState::TypeDependentState state;
     };
 
     const auto &GetTimestamp() const {
