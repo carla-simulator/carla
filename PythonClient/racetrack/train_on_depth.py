@@ -106,9 +106,13 @@ def concat_negative(array):
     return np.concatenate([array, -array], axis=0)
 
 
-def prepare_data(X, steer, speed):
+def prepare_data(X, steer, speed, y_as_steer_diffs=False):
     X = np.diff(X, axis=0)
-    y = steer[:-1]
+    if y_as_steer_diffs:
+        y = np.diff(steer)
+    else:
+        y = steer[:-1]
+
     # Pad with a zero in front
     curr_steer = np.pad(steer[1:-1], (1, 0), 'constant')
     curr_speed = np.pad(speed[1:-1], (1, 0), 'constant')

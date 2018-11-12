@@ -36,15 +36,17 @@ from train_on_depth import weighted_mse
 norm = np.linalg.norm
 
 
+STEER_DIFF = False
+
+
 def run_carla_client(args):
     # Here we will run 3 episodes with 3000 frames each.
     number_of_episodes = 1
     frames_per_episode = 10000
 
-    prev_speed = np.nan
+    curr_steer = 0
     curr_speed = np.nan
 
-    steer = 0
     throttle = 0.5
     target_speed = args.target_speed
 
@@ -130,7 +132,6 @@ def run_carla_client(args):
                 # Print some of the measurements.
                 print_measurements(measurements)
 
-                prev_speed = curr_speed
                 curr_speed = measurements.player_measurements.forward_speed * 3.6
                 throttle = np.clip(
                     throttle - 0.1 * (curr_speed-target_speed),
@@ -143,17 +144,24 @@ def run_carla_client(args):
                 if prev_depth_array is None:
                     pred = 0
                 else:
-                    pred = model.predict(
-                        np.expand_dims(
-                            np.expand_dims(depth_array-prev_depth_array, 0),
+                    diff = depth_array-prev_depth_array
+                    X = np.expand_dims(
+                            np.expand_dims(diff, 0),
                             3
-                        )
                     )
+                    X_aux = np.c_[curr_steer, curr_speed]
+                    pred = model.predict([X, X_aux])
 
+                if STEER_DIFF:
+                    steer = curr_steer + pred
+                else:
+                    steer = pred
+
+                curr_steer = steer
                 prev_depth_array = depth_array
 
                 client.send_control(
-                    steer=pred,
+                    steer=steer,
                     throttle=throttle,
                     brake=0.0,
                     hand_brake=False,
@@ -162,14 +170,13 @@ def run_carla_client(args):
 
 
 def print_measurements(measurements):
-    number_of_agents = len(measurements.non_player_agents)
     player_measurements = measurements.player_measurements
     message = 'Vehicle at ({pos_x:.1f}, {pos_y:.1f}), '
     message += '{speed:.0f} km/h, '
     message = message.format(
         pos_x=player_measurements.transform.location.x,
         pos_y=player_measurements.transform.location.y,
-        speed=player_measurements.forward_speed * 3.6, # m/s -> km/h
+        speed=player_measurements.forward_speed * 3.6,  # m/s -> km/h
     )
     print_over_same_line(message)
 
