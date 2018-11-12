@@ -94,12 +94,12 @@ namespace geom {
       return !(*this == rhs);
     }
 
-    double SquaredLenght() const {
+    double SquaredLength() const {
       return x * x + y * y + z * z;
     }
 
     double Length() const {
-       return std::sqrt(SquaredLenght());
+       return std::sqrt(SquaredLength());
     }
 
     Vector3D MakeUnitVector() const {
