@@ -2,8 +2,6 @@ from concurrent import futures
 import time
 
 import grpc                                     # pylint: disable=import-error
-import sys
-import os
 
 import osi_grpc.osi_grpc_pb2_grpc               # pylint: disable=import-error
 
