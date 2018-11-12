@@ -33,7 +33,7 @@ def run_carla_client(args):
     # context manager makes sure the connection is always cleaned up on exit.
     with make_carla_client(args.host, args.port) as client:
         print('CarlaClient connected')
-        for episode in range(0, number_of_episodes):
+        for episode in range(0, number_of_episodes):            #pylint: disable=unused-variable
             # Start a new episode.
 
             if args.settings_filepath is None:
@@ -74,10 +74,11 @@ def run_carla_client(args):
             client.start_episode(player_start)
 
             # Iterate every frame in the episode.
-            for frame in range(0, frames_per_episode):
+            for frame in range(0, frames_per_episode):          #pylint: disable=unused-variable
 
                 # Read the data produced by the server this frame.
-                measurements, sensor_data = client.read_data()
+                measurements, sensor_data = client.read_data()      #pylint: disable=unused-variable
+
 
                 # Start the gRPC communication between server and client
                 send_osi_groundtruth(measurements, args)
