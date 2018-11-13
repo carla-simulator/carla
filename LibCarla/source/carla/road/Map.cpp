@@ -4,12 +4,9 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "carla/geom/Math.h"
 #include "carla/road/Map.h"
-#include "carla/road/element/Types.h"
 
-#include <limits>
-
+#include "carla/road/element/LaneCrossingCalculator.h"
 
 namespace carla {
 namespace road {
@@ -30,6 +27,12 @@ namespace road {
     }
 
     return Optional<Waypoint>();
+  }
+
+  std::vector<element::LaneMarking> Map::CalculateCrossedLanes(
+      const geom::Location &origin,
+      const geom::Location &destination) const {
+    return element::LaneCrossingCalculator::Calculate(*this, origin, destination);
   }
 
   const MapData &Map::GetData() const {
