@@ -157,7 +157,7 @@ class World(object):
         self.camera_manager = CameraManager(self.vehicle, self.hud)
         self.camera_manager._transform_index = cam_pos_index
         self.camera_manager.set_sensor(cam_index, notify=False)
-        actor_type = ' '.join(self.vehicle.type_id.replace('_', '.').title().split('.')[1:])
+        actor_type = get_actor_display_name(self.vehicle)
         self.hud.notification(actor_type)
 
     def next_weather(self, reverse=False):
@@ -464,7 +464,7 @@ class CollisionSensor(object):
         self = weak_self()
         if not self:
             return
-        actor_type = ' '.join(event.other_actor.type_id.replace('_', '.').title().split('.')[1:])
+        actor_type = get_actor_display_name(event.other_actor)
         self._hud.notification('Collision with %r' % actor_type)
         impulse = event.normal_impulse
         intensity = math.sqrt(impulse.x**2 + impulse.y**2 + impulse.z**2)
