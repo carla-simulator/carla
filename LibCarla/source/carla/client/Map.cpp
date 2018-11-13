@@ -29,6 +29,7 @@ namespace client {
   SharedPtr<Waypoint> Map::GetWaypoint(
       const geom::Location &location,
       bool project_to_road) const {
+    DEBUG_ASSERT(_map != nullptr);
     Optional<road::element::Waypoint> waypoint;
     if (project_to_road) {
       waypoint = _map->GetClosestWaypointOnRoad(location);
@@ -38,6 +39,13 @@ namespace client {
     return waypoint.has_value() ?
         SharedPtr<Waypoint>(new Waypoint{shared_from_this(), *waypoint}) :
         nullptr;
+  }
+
+  std::vector<road::element::LaneMarking> Map::CalculateCrossedLanes(
+      const geom::Location &origin,
+      const geom::Location &destination) const {
+    DEBUG_ASSERT(_map != nullptr);
+    return _map->CalculateCrossedLanes(origin, destination);
   }
 
 } // namespace client

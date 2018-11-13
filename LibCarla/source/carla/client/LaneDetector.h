@@ -7,20 +7,27 @@
 #pragma once
 
 #include "carla/client/ClientSideSensor.h"
+#include "carla/geom/Location.h"
+
+#include <array>
 
 namespace carla {
 namespace client {
+
+  class Map;
+  class Vehicle;
 
   class LaneDetector final : public ClientSideSensor {
   public:
 
     using ClientSideSensor::ClientSideSensor;
 
+    ~LaneDetector();
+
     /// Register a @a callback to be executed each time a new measurement is
     /// received.
     ///
-    /// @warning Calling this function on a sensor that is already listening
-    /// registers another callback on the same measurement.
+    /// @warning This function should not be called twice.
     /// @todo This is different from other sensors.
     void Listen(CallbackFunctionType callback) override;
 
@@ -36,7 +43,15 @@ namespace client {
 
   private:
 
+    SharedPtr<sensor::SensorData> TickLaneDetector(const Timestamp &timestamp);
+
     bool _is_listening = false;
+
+    SharedPtr<Map> _map;
+
+    SharedPtr<Vehicle> _vehicle;
+
+    std::array<geom::Location, 4u> _bounds;
   };
 
 } // namespace client

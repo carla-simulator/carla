@@ -9,6 +9,7 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/weak_ptr.hpp>
 
 namespace carla {
 
@@ -17,6 +18,9 @@ namespace carla {
   /// adaptor for std::shared_ptr.
   template <typename T>
   using SharedPtr = boost::shared_ptr<T>;
+
+  template <typename T>
+  using WeakPtr = boost::weak_ptr<T>;
 
   template <typename T>
   using EnableSharedFromThis = boost::enable_shared_from_this<T>;

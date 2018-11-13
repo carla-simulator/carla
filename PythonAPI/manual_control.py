@@ -135,6 +135,7 @@ class World(object):
         spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
         self.vehicle = self.world.spawn_actor(blueprint, spawn_point)
         self.collision_sensor = CollisionSensor(self.vehicle, self.hud)
+        self.lane_invasion_sensor = LaneInvasionSensor(self.vehicle, self.hud)
         self.camera_manager = CameraManager(self.vehicle, self.hud)
         self.camera_manager.set_sensor(0, notify=False)
         self.controller = None
@@ -152,6 +153,7 @@ class World(object):
         self.destroy()
         self.vehicle = self.world.spawn_actor(blueprint, start_pose)
         self.collision_sensor = CollisionSensor(self.vehicle, self.hud)
+        self.lane_invasion_sensor = LaneInvasionSensor(self.vehicle, self.hud)
         self.camera_manager = CameraManager(self.vehicle, self.hud)
         self.camera_manager._transform_index = cam_pos_index
         self.camera_manager.set_sensor(cam_index, notify=False)
@@ -469,6 +471,33 @@ class CollisionSensor(object):
         self._history.append((event.frame_number, intensity))
         if len(self._history) > 2000:
             self._history.pop(0)
+
+
+# ==============================================================================
+# -- LaneInvasionSensor --------------------------------------------------------
+# ==============================================================================
+
+
+class LaneInvasionSensor(object):
+    def __init__(self, parent_actor, hud):
+        self.sensor = None
+        self._parent = parent_actor
+        self._hud = hud
+        world = self._parent.get_world()
+        bp = world.get_blueprint_library().find('sensor.other.lane_detector')
+        self.sensor = world.spawn_actor(bp, carla.Transform(), attach_to=self._parent)
+        # We need to pass the lambda a weak reference to self to avoid circular
+        # reference.
+        weak_self = weakref.ref(self)
+        self.sensor.listen(lambda event: LaneInvasionSensor._on_invasion(weak_self, event))
+
+    @staticmethod
+    def _on_invasion(weak_self, event):
+        self = weak_self()
+        if not self:
+            return
+        text = ', '.join('%r' % x for x in event.crossed_lane_markings)
+        self._hud.notification('Crossed lane(s) %s' % text)
 
 
 # ==============================================================================

@@ -8,6 +8,7 @@
 
 #include "carla/Memory.h"
 #include "carla/NonCopyable.h"
+#include "carla/road/element/LaneMarking.h"
 #include "carla/rpc/MapInfo.h"
 
 #include <string>
@@ -42,6 +43,10 @@ namespace client {
     SharedPtr<Waypoint> GetWaypoint(
         const geom::Location &location,
         bool project_to_road = true) const;
+
+    std::vector<road::element::LaneMarking> CalculateCrossedLanes(
+        const geom::Location &origin,
+        const geom::Location &destination) const;
 
   private:
 

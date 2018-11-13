@@ -153,6 +153,11 @@
 - `other_actor`
 - `normal_impulse`
 
+## `carla.LaneInvasionEvent(carla.SensorData)`
+
+- `actor`
+- `crossed_lane_markings`
+
 ## `carla.VehicleControl`
 
 - `throttle`
@@ -278,3 +283,9 @@ Static presets
 - `Yellow`
 - `Green`
 - `Unknown`
+
+## `carla.LaneMarking`
+
+- `Other`
+- `Broken`
+- `Solid`
