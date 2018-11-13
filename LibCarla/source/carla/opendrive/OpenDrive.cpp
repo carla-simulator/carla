@@ -70,7 +70,6 @@ namespace opendrive {
   // HACK(Andrei):
   static int fnc_get_first_driving_line(opendrive::types::RoadInformation *roadInfo, int id = 0) {
     if(roadInfo == nullptr) {
-      printf("In function %s(%d) roadInfo is NULL\n", __FUNCTION__, __LINE__);
       return 0;
     }
 
@@ -211,20 +210,11 @@ namespace opendrive {
               bool is_end = options[i].contact_point == "end";
               int to_lane = options[i].to_lane[j];
 
-              if(is_end && to_lane < 0) {
-                printf("TEST ERROR\nFromLane: %d\nToLane: %d\nRoadID: %d\n",
-                options[i].from_lane[j],
-                to_lane,
-                options[i].connection_road
-                );
-              }
-
               if(is_end) {
                 to_lane = fnc_get_first_driving_line(roadData[options[i].connection_road], to_lane);
               }
 
               roadSegment.AddNextLaneInfo(options[i].from_lane[j], to_lane, options[i].connection_road);
-              printf("[suc][% 5d -> % 5d]    [% 3d -> % 3d]\n", it->first, options[i].connection_road, options[i].from_lane[j], to_lane);
             }
           }
         } else {
@@ -232,12 +222,10 @@ namespace opendrive {
           roadSegment.AddSuccessorID(it->second->road_link.successor->id, is_start);
 
           for(auto &&lanes : rightLanesGoToSuccessor) {
-            printf("[suc][% 5d -> % 5d]    [% 3d -> % 3d]\n", it->first, it->second->road_link.successor->id, lanes.first, lanes.second);
             roadSegment.AddNextLaneInfo(lanes.first, lanes.second, it->second->road_link.successor->id);
           }
 
           for(auto &&lanes : leftLanesGoToSuccessor) {
-            printf("[suc][% 5d -> % 5d]    [% 3d -> % 3d]\n", it->first, it->second->road_link.successor->id, lanes.first, lanes.second);
             roadSegment.AddNextLaneInfo(lanes.first, lanes.second, it->second->road_link.successor->id);
           }
         }
@@ -254,20 +242,11 @@ namespace opendrive {
               bool is_end = options[i].contact_point == "end";
               int to_lane = options[i].to_lane[j];
 
-              if(is_end && to_lane < 0) {
-                printf("TEST ERROR\nFromLane: %d\nToLane: %d\nRoadID: %d\n",
-                options[i].from_lane[j],
-                to_lane,
-                options[i].connection_road
-                );
-              }
-
               if(is_end) {
                 to_lane = fnc_get_first_driving_line(roadData[options[i].connection_road], to_lane);
               }
 
               roadSegment.AddPrevLaneInfo(options[i].from_lane[j], to_lane, options[i].connection_road);
-              printf("[pre][% 5d -> % 5d]    [% 3d -> % 3d]\n", it->first, options[i].connection_road, options[i].from_lane[j], to_lane);
             }
           }
         } else {
@@ -275,12 +254,10 @@ namespace opendrive {
           roadSegment.AddPredecessorID(it->second->road_link.predecessor->id, is_start);
 
           for(auto &&lanes : rightLanesGoToPredecessor) {
-            printf("[pre][% 5d -> % 5d]    [% 3d -> % 3d]\n", it->first, it->second->road_link.predecessor->id, lanes.first, lanes.second);
             roadSegment.AddPrevLaneInfo(lanes.first, lanes.second, it->second->road_link.predecessor->id);
           }
 
           for(auto &&lanes : leftLanesGoToPredecessor) {
-            printf("[pre][% 5d -> % 5d]    [% 3d -> % 3d]\n", it->first, it->second->road_link.predecessor->id, lanes.first, lanes.second);
             roadSegment.AddPrevLaneInfo(lanes.first, lanes.second, it->second->road_link.predecessor->id);
           }
         }
