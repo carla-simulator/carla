@@ -49,6 +49,16 @@ static auto GetTopology(const carla::client::Map &self) {
   return result;
 }
 
+static auto GenerateWaypoints(const carla::client::Map &self, double distance) {
+  namespace py = boost::python;
+  auto waypoints = self.GenerateWaypoints(distance);
+  py::list result;
+  for (auto &&waypoint : waypoints) {
+    result.append(waypoint);
+  }
+  return result;
+}
+
 void export_map() {
   using namespace boost::python;
   namespace cc = carla::client;
@@ -69,6 +79,7 @@ void export_map() {
     .def("get_spawn_points", CALL_RETURNING_COPY(cc::Map, GetRecommendedSpawnPoints))
     .def("get_waypoint", &cc::Map::GetWaypoint, (arg("location"), arg("project_to_road")=true))
     .def("get_topology", &GetTopology)
+    .def("generate_waypoints", &GenerateWaypoints)
     .def("to_opendrive", CALL_RETURNING_COPY(cc::Map, GetOpenDrive))
     .def("save_to_disk", &SaveOpenDriveToDisk, (arg("path")=""))
     .def(self_ns::str(self_ns::self))

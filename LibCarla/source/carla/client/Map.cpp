@@ -69,6 +69,16 @@ namespace client {
     return result;
   }
 
+  std::vector<SharedPtr<Waypoint>> Map::GenerateWaypoints(double distance) const {
+    std::vector<SharedPtr<Waypoint>> result;
+    const auto waypoints = road::WaypointGenerator::GenerateAll(*_map, distance);
+    result.reserve(waypoints.size());
+    for (const auto &waypoint : waypoints) {
+      result.emplace_back(SharedPtr<Waypoint>(new Waypoint{shared_from_this(), waypoint}));
+    }
+    return result;
+  }
+
   std::vector<road::element::LaneMarking> Map::CalculateCrossedLanes(
       const geom::Location &origin,
       const geom::Location &destination) const {
