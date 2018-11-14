@@ -76,7 +76,7 @@ namespace geom {
 
     /// Returns a pair containing:
     /// - @b first:  distance from v to p' where p' = p projected on segment (w - v)
-    /// - @b second: euclidean distance from p to p'
+    /// - @b second: Euclidean distance from p to p'
     ///   @param p point to calculate distance
     ///   @param v first point of the segment
     ///   @param w second point of the segment
@@ -103,7 +103,7 @@ namespace geom {
 
     /// Returns a pair containing:
     /// - @b first:  distance across the arc from start_pos to p' where p' = p projected on Arc
-    /// - @b second: euclidean distance from p to p'
+    /// - @b second: Euclidean distance from p to p'
     static std::pair<double, double> DistArcPoint(
         Vector3D p,
         Vector3D start_pos,
@@ -116,6 +116,17 @@ namespace geom {
       p.y = -p.y;
       start_pos.y = -start_pos.y;
       heading = -heading;
+
+      // since this algorithm is working for positive curvatures,
+      // and we are only calculating distances, we can invert the y
+      // axis (along with the curvature and the heading), so if the
+      // curvature is negative, so the algorithm will work as expected
+      if (curvature < 0.0) {
+        p.y = -p.y;
+        start_pos.y = -start_pos.y;
+        heading = -heading;
+        curvature = -curvature;
+      }
 
       // transport point relative to the arc starting poistion and rotation
       const Vector3D rotated_p(RotatePointOnOrigin2D(p - start_pos, -heading));
