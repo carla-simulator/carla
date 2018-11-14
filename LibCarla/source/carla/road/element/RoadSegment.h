@@ -174,7 +174,7 @@ namespace element {
     /// Returns a pair containing:
     /// - @b first:  distance to the nearest point on the center in
     ///              this road segment from the begining of it.
-    /// - @b second: euclidean distance from the nearest point in
+    /// - @b second: Euclidean distance from the nearest point in
     ///              this road segment to p.
     ///   @param loc point to calculate the distance
     std::pair<double, double> GetNearestPoint(const geom::Location &loc) const {
