@@ -157,18 +157,21 @@ namespace element {
         return DirectedPoint(_geom.front()->GetStartPosition(),
             _geom.front()->GetHeading());
       }
-      // if dist is bigguer than len
-      if (dist > _length) {
+
+      if (dist >= _length) {
         return _geom.back()->PosFromDist(
             _length - _geom.back()->GetStartOffset());
       }
+
       for (auto &&g : _geom) {
         if ((g->GetStartOffset() < dist) &&
-            (dist <= g->GetStartOffset() + g->GetLength())) {
+            (dist <= (g->GetStartOffset() + g->GetLength()))) {
           return g->PosFromDist(dist - g->GetStartOffset());
         }
       }
-      return DirectedPoint::Invalid();
+
+      const auto last_geom = _geom.back();
+      return last_geom->PosFromDist(dist - last_geom->GetStartOffset());
     }
 
     /// Returns a pair containing:
