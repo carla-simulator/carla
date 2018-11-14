@@ -62,7 +62,8 @@ void AOpenDriveActor::BuildRoutes()
     ///////////////////////////////////////////////////////////////////////////
     // NOTE(Andrei): Build the roads that are not junctions
 
-    std::vector<carla::road::element::id_type> roadIDs = map.GetAllIds();
+    auto RoadIDsView = map.GetAllIds();
+    std::vector<carla::road::element::id_type> roadIDs(RoadIDsView.begin(), RoadIDsView.end());
     std::sort(roadIDs.begin(), roadIDs.end());
 
     for (auto &&id : roadIDs)

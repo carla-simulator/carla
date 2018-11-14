@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "carla/NonCopyable.h"
 #include "carla/geom/Location.h"
 #include "carla/road/element/RoadInfo.h"
 #include "carla/road/element/Types.h"
@@ -22,7 +23,7 @@ namespace road {
 
 namespace element {
 
-  class RoadSegment {
+  class RoadSegment : private NonCopyable {
   public:
 
     RoadSegment(id_type id) : _id(id) {}
