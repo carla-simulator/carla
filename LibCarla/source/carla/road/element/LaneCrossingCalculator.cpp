@@ -47,6 +47,9 @@ namespace element {
       /// @todo This case should also be handled.
       return {};
     }
+    if (w0.IsIntersection() || w1.IsIntersection()) {
+      return {};
+    }
     return CrossingAtSameSection(
         w0.GetLaneId(),
         w1.GetLaneId(),
