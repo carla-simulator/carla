@@ -22,8 +22,8 @@ namespace client {
 
     ~Waypoint();
 
-    geom::Transform GetTransform() const {
-      return _waypoint.GetTransform();
+    const geom::Transform &GetTransform() const {
+      return _transform;
     }
 
     road::element::id_type GetRoadId() const {
@@ -45,6 +45,8 @@ namespace client {
     SharedPtr<const Map> _parent;
 
     road::element::Waypoint _waypoint;
+
+    geom::Transform _transform;
   };
 
 } // namespace client

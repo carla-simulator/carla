@@ -24,7 +24,7 @@ namespace element {
 
     ~Waypoint();
 
-    geom::Transform GetTransform() const;
+    geom::Transform ComputeTransform() const;
 
     id_type GetRoadId() const {
       return _road_id;

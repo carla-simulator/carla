@@ -14,7 +14,8 @@ namespace client {
 
   Waypoint::Waypoint(SharedPtr<const Map> parent, road::element::Waypoint waypoint)
     : _parent(std::move(parent)),
-      _waypoint(std::move(waypoint)) {}
+      _waypoint(std::move(waypoint)),
+      _transform(_waypoint.ComputeTransform()) {}
 
   Waypoint::~Waypoint() = default;
 
