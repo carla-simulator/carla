@@ -175,7 +175,12 @@ class World(object):
         self.hud.render(display)
 
     def destroy(self):
-        for actor in [self.camera_manager.sensor, self.collision_sensor.sensor, self.vehicle]:
+        actors = [
+            self.camera_manager.sensor,
+            self.collision_sensor.sensor,
+            self.lane_invasion_sensor.sensor,
+            self.vehicle]
+        for actor in actors:
             if actor is not None:
                 actor.destroy()
 
@@ -496,8 +501,8 @@ class LaneInvasionSensor(object):
         self = weak_self()
         if not self:
             return
-        text = ', '.join('%r' % x for x in event.crossed_lane_markings)
-        self._hud.notification('Crossed lane(s) %s' % text)
+        text = ['%r' % str(x).split()[-1] for x in set(event.crossed_lane_markings)]
+        self._hud.notification('Crossed lane %s' % ' and '.join(text))
 
 
 # ==============================================================================
