@@ -23,16 +23,29 @@ namespace road {
       MakeElement<RoadSegment>(id_seg.first, std::move(id_seg.second));
     }
 
-    // Set the total length of each road based on the geometries
-    for (auto &&id_seg :_map_data._elements) {
+    SetTotalRoadSegmentLength();
+
+    CreatePointersBetweenRoadSegments();
+
+    ComputeLaneCenterOffset();
+
+    // _map_data is a memeber of MapBuilder so you must especify if
+    // you want to keep it (will return copy -> Map(const Map &))
+    // or move it (will return move -> Map(Map &&))
+    return SharedPtr<Map>(new Map{std::move(_map_data)});
+  }
+
+  void MapBuilder::SetTotalRoadSegmentLength() {
+    for (auto &&id_seg : _map_data._elements) {
       double total_length = 0.0;
       for (auto &&geom : id_seg.second.get()->_geom) {
         total_length += geom.get()->GetLength();
       }
       id_seg.second.get()->_length = total_length;
     }
+  }
 
-    // Create the pointers between RoadSegments based on the ids
+  void MapBuilder::CreatePointersBetweenRoadSegments() {
     for (auto &&id_seg : _temp_sections) {
       for (auto &t : id_seg.second.GetPredecessorID()) {
         _map_data._elements[id_seg.first]->PredEmplaceBack(_map_data._elements[t].get());
@@ -41,14 +54,17 @@ namespace road {
         _map_data._elements[id_seg.first]->SuccEmplaceBack(_map_data._elements[t].get());
       }
     }
+  }
 
-    // Set the _lane_center_offset of all the lanes
+  void MapBuilder::ComputeLaneCenterOffset() {
     for (auto &&element : _map_data._elements) {
       RoadSegment *road_seg = element.second.get();
 
+      // get all the RoadGeneralInfo given the type and a distance 0.0
       auto up_bound_g = decltype(road_seg->_info)::reverse_iterator(road_seg->_info.upper_bound(0.0));
       auto general_info = MakeRoadInfoIterator<RoadGeneralInfo>(up_bound_g, road_seg->_info.rend());
 
+      // get all the RoadInfoLane given the type and a distance 0.0
       auto up_bound_l = decltype(road_seg->_info)::reverse_iterator(road_seg->_info.upper_bound(0.0));
       auto lane_info = MakeRoadInfoIterator<RoadInfoLane>(up_bound_l, road_seg->_info.rend());
 
@@ -62,7 +78,8 @@ namespace road {
 
         double current_width = lane_offset;
 
-        for (auto &&current_lane_id : (*lane_info)->getLanesIDs(carla::road::element::RoadInfoLane::which_lane_e::Left)) {
+        for (auto &&current_lane_id :
+            (*lane_info)->getLanesIDs(element::RoadInfoLane::which_lane_e::Left)) {
           const double half_width = (*lane_info)->getLane(current_lane_id)->_width * 0.5;
 
           current_width += half_width;
@@ -72,7 +89,8 @@ namespace road {
 
         current_width = lane_offset;
 
-        for (auto &&current_lane_id : (*lane_info)->getLanesIDs(carla::road::element::RoadInfoLane::which_lane_e::Right)) {
+        for (auto &&current_lane_id :
+            (*lane_info)->getLanesIDs(element::RoadInfoLane::which_lane_e::Right)) {
           const double half_width = (*lane_info)->getLane(current_lane_id)->_width * 0.5;
 
           current_width -= half_width;
@@ -81,11 +99,6 @@ namespace road {
         }
       }
     }
-
-    // _map_data is a memeber of MapBuilder so you must especify if
-    // you want to keep it (will return copy -> Map(const Map &))
-    // or move it (will return move -> Map(Map &&))
-    return SharedPtr<Map>(new Map{std::move(_map_data)});
   }
 
 } // namespace road
