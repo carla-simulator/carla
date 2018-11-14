@@ -89,7 +89,7 @@ namespace element {
 
   Waypoint::~Waypoint() = default;
 
-  geom::Transform Waypoint::GetTransform() const {
+  geom::Transform Waypoint::ComputeTransform() const {
     road::element::DirectedPoint dp =
         _map->GetData().GetRoad(_road_id)->GetDirectedPointIn(_dist);
 
