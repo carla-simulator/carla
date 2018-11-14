@@ -48,6 +48,8 @@ namespace client {
 
     TopologyList GetTopology() const;
 
+    std::vector<SharedPtr<Waypoint>> GenerateWaypoints(double distance) const;
+
     std::vector<road::element::LaneMarking> CalculateCrossedLanes(
         const geom::Location &origin,
         const geom::Location &destination) const;

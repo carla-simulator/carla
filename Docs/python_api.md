@@ -174,6 +174,7 @@
 - `get_spawn_points()`
 - `get_waypoint(location, project_to_road=True)`
 - `get_topology()`
+- `generate_waypoints(distance)`
 - `to_opendrive()`
 - `save_to_disk(path=self.name)`
 
