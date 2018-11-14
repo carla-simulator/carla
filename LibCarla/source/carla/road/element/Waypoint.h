@@ -15,6 +15,7 @@ namespace carla {
 namespace road {
 
   class Map;
+  class WaypointGenerator;
 
 namespace element {
 
@@ -33,13 +34,12 @@ namespace element {
       return _lane_id;
     }
 
-    std::vector<Waypoint> Next(double distance) const;
-
     RoadInfoList GetRoadInfo() const;
 
   private:
 
     friend carla::road::Map;
+    friend carla::road::WaypointGenerator;
 
     Waypoint(SharedPtr<const Map>, const geom::Location &location);
 
@@ -56,7 +56,6 @@ namespace element {
     int _lane_id = 0;
 
     double _dist = 0.0;
-
   };
 
 } // namespace element
