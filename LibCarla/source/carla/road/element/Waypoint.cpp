@@ -14,32 +14,6 @@ namespace carla {
 namespace road {
 namespace element {
 
-  // ===========================================================================
-  // -- Static local methods ---------------------------------------------------
-  // ===========================================================================
-
-  static const RoadSegment &GetRoad(const Map &map, id_type road_id) {
-    auto *road = map.GetData().GetRoad(road_id);
-    DEBUG_ASSERT(road != nullptr);
-    return *road;
-  }
-
-  template <typename T>
-  static std::vector<T> ConcatVectors(std::vector<T> dst, std::vector<T> src) {
-    if (src.size() > dst.size()) {
-      return ConcatVectors(src, dst);
-    }
-    dst.insert(
-        dst.end(),
-        std::make_move_iterator(src.begin()),
-        std::make_move_iterator(src.end()));
-    return dst;
-  }
-
-  // ===========================================================================
-  // -- Waypoint ---------------------------------------------------------------
-  // ===========================================================================
-
   Waypoint::Waypoint(SharedPtr<const Map> m, const geom::Location &loc)
     : _map(m) {
     DEBUG_ASSERT(_map != nullptr);
@@ -97,6 +71,7 @@ namespace element {
     }
 
     DEBUG_ASSERT(_dist <= _map->GetData().GetRoad(_road_id)->GetLength());
+    DEBUG_ASSERT(_lane_id != 0);
   }
 
   Waypoint::Waypoint(
@@ -109,6 +84,7 @@ namespace element {
       _lane_id(lane_id),
       _dist(distance) {
     DEBUG_ASSERT(_map != nullptr);
+    DEBUG_ASSERT(_lane_id != 0);
   }
 
   Waypoint::~Waypoint() = default;
@@ -122,7 +98,9 @@ namespace element {
       rot.yaw += 180.0;
     }
 
-    auto *info = GetRoad(*_map, _road_id).GetInfo<RoadInfoLane>(0.0);
+    const auto *road_segment = _map->GetData().GetRoad(_road_id);
+    DEBUG_ASSERT(road_segment != nullptr);
+    const auto *info = road_segment->GetInfo<RoadInfoLane>(0.0);
     DEBUG_ASSERT(info != nullptr);
 
     dp.ApplyLateralOffset(info->getLane(_lane_id)->_lane_center_offset);
@@ -131,46 +109,6 @@ namespace element {
 
   RoadInfoList Waypoint::GetRoadInfo() const {
     return RoadInfoList(_map->GetData().GetRoad(_road_id)->GetInfos(_dist));
-  }
-
-  std::vector<Waypoint> Waypoint::Next(const double distance) const {
-    DEBUG_ASSERT(_lane_id != 0);
-
-    const auto &road_segment = GetRoad(*_map, _road_id);
-    double distance_on_next_segment;
-
-    if (_lane_id < 0) {
-      // road goes forward.
-      const auto total_distance = _dist + distance;
-      const auto road_length = road_segment.GetLength();
-      if (total_distance <= road_length) {
-        return { Waypoint(_map, _road_id, _lane_id, total_distance) };
-      }
-      distance_on_next_segment = total_distance - road_length;
-    } else {
-      // road goes backward.
-      const auto total_distance = _dist - distance;
-      if (total_distance >= 0.0) {
-        return { Waypoint(_map, _road_id, _lane_id, total_distance) };
-      }
-      distance_on_next_segment = std::abs(total_distance);
-    }
-
-    std::vector<Waypoint> result;
-    const auto &next_lanes = _lane_id < 0 ? road_segment.GetNextLane(_lane_id) : road_segment.GetPrevLane(
-        _lane_id);
-    if (next_lanes.empty()) {
-      log_error("no lanes!! lane id =", _lane_id, " road id=", _road_id);
-    }
-    for (auto &&pair : next_lanes) {
-      auto lane_id = pair.first;
-      auto road_id = pair.second;
-      DEBUG_ASSERT(lane_id != 0);
-      auto d = lane_id < 0 ? 0.0 : GetRoad(*_map, road_id).GetLength();
-      auto waypoint = Waypoint(_map, road_id, lane_id, d);
-      result = ConcatVectors(result, waypoint.Next(distance_on_next_segment));
-    }
-    return result;
   }
 
 } // namespace element
