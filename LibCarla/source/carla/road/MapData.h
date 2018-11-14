@@ -6,16 +6,17 @@
 
 #pragma once
 
+#include "carla/Iterator.h"
+#include "carla/ListView.h"
 #include "carla/NonCopyable.h"
 #include "carla/road/element/RoadSegment.h"
 
-#include <map>
+#include <boost/iterator/transform_iterator.hpp>
+
+#include <unordered_map>
 
 namespace carla {
 namespace road {
-namespace element {
-  class Waypoint;
-}
 
   struct lane_junction_t {
     std::string contact_point = "start";
@@ -32,35 +33,48 @@ namespace element {
     : private MovableNonCopyable {
   public:
 
-    bool ExistId(element::id_type id) const;
-
-    const element::RoadSegment *GetRoad(element::id_type id) const;
-
-    std::vector<element::id_type> GetAllIds() const;
-
-    uint32_t GetRoadCount() const;
-
-    const element::RoadSegment &NearestRoad(const geom::Location &loc);
-
-    void SetJunctionInformation(const std::vector<lane_junction_t> &junctionInfo) {
-      _junction_information = junctionInfo;
+    const element::RoadSegment *GetRoad(element::id_type id) const {
+      auto it = _elements.find(id);
+      return it != _elements.end() ? it->second.get() : nullptr;
     }
 
-    std::vector<lane_junction_t> GetJunctionInformation() const {
+    auto GetAllIds() const {
+      return MakeListView(
+          iterator::make_map_keys_iterator(_elements.begin()),
+          iterator::make_map_keys_iterator(_elements.end()));
+    }
+
+    size_t GetRoadCount() const {
+      return _elements.size();
+    }
+
+    const std::vector<lane_junction_t> &GetJunctionInformation() const {
       return _junction_information;
+    }
+
+    auto GetRoadSegments() const {
+      using const_ref = const element::RoadSegment &;
+      auto get = [](auto &pair) -> const_ref { return *pair.second; };
+      return MakeListView(
+          boost::make_transform_iterator(_elements.begin(), get),
+          boost::make_transform_iterator(_elements.end(), get));
     }
 
   private:
 
     friend class MapBuilder;
-    friend class Map;
-    friend element::Waypoint;
 
     MapData() = default;
 
+    void SetJunctionInformation(const std::vector<lane_junction_t> &junctionInfo) {
+      _junction_information = junctionInfo;
+    }
+
     std::vector<lane_junction_t> _junction_information;
 
-    std::map<element::id_type, std::unique_ptr<element::RoadSegment>> _elements;
+    std::unordered_map<
+        element::id_type,
+        std::unique_ptr<element::RoadSegment>> _elements;
   };
 
 } // namespace road

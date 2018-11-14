@@ -43,14 +43,13 @@ namespace element {
   Waypoint::Waypoint(SharedPtr<const Map> m, const geom::Location &loc)
     : _map(m) {
     DEBUG_ASSERT(_map != nullptr);
-
     // max_nearests represents the max nearests roads
     // where we will search for nearests lanes
     constexpr int max_nearests = 10;
     // in case that map has less than max_nearests lanes,
     // we will use the maximum lanes
-    const int max_nearest_allowed = _map->GetData()._elements.size()  <
-        max_nearests ? _map->GetData()._elements.size() : max_nearests;
+    const int max_nearest_allowed = _map->GetData().GetRoadCount()  <
+        max_nearests ? _map->GetData().GetRoadCount() : max_nearests;
 
     double nearest_dist[max_nearests];
     std::fill(nearest_dist, nearest_dist + max_nearest_allowed,
@@ -63,8 +62,8 @@ namespace element {
     std::fill(dists, dists + max_nearest_allowed, 0.0);
 
 
-    for (auto &&r : _map->GetData()._elements) {
-      auto current_dist = r.second->GetNearestPoint(loc);
+    for (auto &&r : _map->GetData().GetRoadSegments()) {
+      auto current_dist = r.GetNearestPoint(loc);
 
       // search for nearests points
       for (int i = 0; i < max_nearest_allowed; ++i) {
@@ -76,7 +75,7 @@ namespace element {
             dists[j] = dists[j - 1];
           }
           nearest_dist[i] = current_dist.second;
-          ids[i] = r.first;
+          ids[i] = r.GetId();
           dists[i] = current_dist.first;
 
           break;
