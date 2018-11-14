@@ -44,6 +44,10 @@ namespace client {
         const geom::Location &location,
         bool project_to_road = true) const;
 
+    using TopologyList = std::vector<std::pair<SharedPtr<Waypoint>, SharedPtr<Waypoint>>>;
+
+    TopologyList GetTopology() const;
+
     std::vector<road::element::LaneMarking> CalculateCrossedLanes(
         const geom::Location &origin,
         const geom::Location &destination) const;
