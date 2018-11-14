@@ -39,6 +39,16 @@ static void SaveOpenDriveToDisk(const carla::client::Map &self, std::string path
   out << self.GetOpenDrive() << std::endl;
 }
 
+static auto GetTopology(const carla::client::Map &self) {
+  namespace py = boost::python;
+  auto topology = self.GetTopology();
+  py::list result;
+  for (auto &&pair : topology) {
+    result.append(py::make_tuple(pair.first, pair.second));
+  }
+  return result;
+}
+
 void export_map() {
   using namespace boost::python;
   namespace cc = carla::client;
@@ -58,6 +68,7 @@ void export_map() {
     .add_property("name", CALL_RETURNING_COPY(cc::Map, GetName))
     .def("get_spawn_points", CALL_RETURNING_COPY(cc::Map, GetRecommendedSpawnPoints))
     .def("get_waypoint", &cc::Map::GetWaypoint, (arg("location"), arg("project_to_road")=true))
+    .def("get_topology", &GetTopology)
     .def("to_opendrive", CALL_RETURNING_COPY(cc::Map, GetOpenDrive))
     .def("save_to_disk", &SaveOpenDriveToDisk, (arg("path")=""))
     .def(self_ns::str(self_ns::self))

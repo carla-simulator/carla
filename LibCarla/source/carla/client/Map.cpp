@@ -9,6 +9,7 @@
 #include "carla/client/Waypoint.h"
 #include "carla/opendrive/OpenDrive.h"
 #include "carla/road/Map.h"
+#include "carla/road/WaypointGenerator.h"
 
 #include <sstream>
 
@@ -39,6 +40,33 @@ namespace client {
     return waypoint.has_value() ?
         SharedPtr<Waypoint>(new Waypoint{shared_from_this(), *waypoint}) :
         nullptr;
+  }
+
+  Map::TopologyList Map::GetTopology() const {
+    DEBUG_ASSERT(_map != nullptr);
+    namespace re = carla::road::element;
+    std::unordered_map<re::id_type, std::unordered_map<int, SharedPtr<Waypoint>>> waypoints;
+
+    auto get_or_make_waypoint = [&](const auto &waypoint) {
+      auto &waypoints_on_road = waypoints[waypoint.GetRoadId()];
+      auto it = waypoints_on_road.find(waypoint.GetLaneId());
+      if (it == waypoints_on_road.end()) {
+        it = waypoints_on_road.emplace(
+            waypoint.GetLaneId(),
+            SharedPtr<Waypoint>(new Waypoint{shared_from_this(), waypoint})).first;
+      }
+      return it->second;
+    };
+
+    TopologyList result;
+    auto topology = road::WaypointGenerator::GenerateTopology(*_map);
+    result.reserve(topology.size());
+    for (const auto &pair : topology) {
+      result.emplace_back(
+          get_or_make_waypoint(pair.first),
+          get_or_make_waypoint(pair.second));
+    }
+    return result;
   }
 
   std::vector<road::element::LaneMarking> Map::CalculateCrossedLanes(
