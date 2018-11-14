@@ -35,6 +35,7 @@ namespace element {
   private:
 
     int _junction_id = -1;
+
     /// A vector of pairs where the first double represents the
     /// offset from the begining of the road and the second represents the
     /// lateral offest of the lane
@@ -51,6 +52,10 @@ namespace element {
     }
     int GetJunctionId() const {
       return _junction_id;
+    }
+
+    bool IsJunction() const {
+      return _junction_id >= 0;
     }
 
     void SetLanesOffset(double offset, double laneOffset) {

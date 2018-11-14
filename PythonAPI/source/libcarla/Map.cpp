@@ -65,6 +65,8 @@ void export_map() {
 
   class_<cc::Waypoint, boost::noncopyable, boost::shared_ptr<cc::Waypoint>>("Waypoint", no_init)
     .add_property("transform", CALL_RETURNING_COPY(cc::Waypoint, GetTransform))
+    .add_property("is_intersection", &cc::Waypoint::IsIntersection)
+    .add_property("lane_width", &cc::Waypoint::GetLaneWidth)
     .add_property("road_id", &cc::Waypoint::GetRoadId)
     .add_property("lane_id", &cc::Waypoint::GetLaneId)
     .def("next", CALL_RETURNING_LIST_1(cc::Waypoint, Next, double), (args("distance")))
