@@ -110,9 +110,11 @@ namespace geom {
         double length,
         double heading, // [radians]
         double curvature) {
-      // Because Unreal's coordinates:
-      p = Vector3D(p.x, -p.y, p.z);
-      start_pos = Vector3D(start_pos.x, -start_pos.y, start_pos.z);
+
+      /// @todo: Because Unreal's coordinates, hacky way to correct
+      /// the -y, this must be changed in the future
+      p.y = -p.y;
+      start_pos.y = -start_pos.y;
       heading = -heading;
 
       // transport point relative to the arc starting poistion and rotation

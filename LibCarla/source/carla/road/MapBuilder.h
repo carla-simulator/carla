@@ -35,6 +35,15 @@ namespace road {
       return r;
     }
 
+    /// Set the total length of each road based on the geometries
+    void SetTotalRoadSegmentLength();
+
+    /// Create the pointers between RoadSegments based on the ids
+    void CreatePointersBetweenRoadSegments();
+
+    /// Set the _lane_center_offset of all the lanes
+    void ComputeLaneCenterOffset();
+
   private:
 
     MapData _map_data;

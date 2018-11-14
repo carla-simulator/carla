@@ -43,7 +43,8 @@ namespace element {
       return _id;
     }
 
-    // returns single info given a type and a distance
+    /// Returns single info given a type and a distance from
+    /// the start of the road (negative lanes)
     template <typename T>
     const T *GetInfo(double dist) const {
       auto up_bound = decltype(_info)::reverse_iterator(_info.upper_bound(dist));
@@ -51,7 +52,8 @@ namespace element {
       return it.IsAtEnd() ? nullptr : *it;
     }
 
-    // returns single info given a type and a distance
+    /// Returns single info given a type and a distance from
+    /// the end of the road (positive lanes)
     template <typename T>
     const T *GetInfoReverse(double dist) const {
       auto lo_bound = _info.lower_bound(dist);
@@ -199,9 +201,6 @@ namespace element {
     ///          want to calculate the distance
     ///   @param loc point to calculate the distance
     int GetNearestLane(double dist, const geom::Location &loc) const {
-      // Because Unreal's coordinates
-      const geom::Location corrected_loc = geom::Location(loc.x, -loc.y, loc.z);
-
       const DirectedPoint dp_center_road = GetDirectedPointIn(dist);
       auto info = GetInfo<RoadInfoLane>(0.0);
 
@@ -215,14 +214,14 @@ namespace element {
         if (current_lane_info->_type == "driving") {
           DirectedPoint dp_center_lane = dp_center_road;
           dp_center_lane.ApplyLateralOffset(current_lane_info->_lane_center_offset);
-          const double current_dist = geom::Math::Distance2D(dp_center_lane.location, corrected_loc);
+
+          const double current_dist = geom::Math::Distance2D(dp_center_lane.location, loc);
           if (current_dist < nearest_dist) {
             nearest_dist = current_dist;
             nearest_lane_id = current_lane_id;
           }
         }
       }
-
       return nearest_lane_id;
     }
 
