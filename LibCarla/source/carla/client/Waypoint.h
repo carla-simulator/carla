@@ -26,6 +26,14 @@ namespace client {
       return _transform;
     }
 
+    bool IsIntersection() const {
+      return _waypoint.IsIntersection();
+    }
+
+    double GetLaneWidth() const {
+      return _waypoint.GetLaneWidth();
+    }
+
     road::element::id_type GetRoadId() const {
       return _waypoint.GetRoadId();
     }

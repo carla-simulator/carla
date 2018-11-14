@@ -181,6 +181,10 @@
 ## `carla.Waypoint`
 
 - `transform`
+- `is_intersection`
+- `lane_width`
+- `road_id`
+- `lane_id`
 - `next(distance)`
 
 ## `carla.WeatherParameters`

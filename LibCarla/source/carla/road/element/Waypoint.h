@@ -19,6 +19,8 @@ namespace road {
 
 namespace element {
 
+  class RoadSegment;
+
   class Waypoint {
   public:
 
@@ -35,6 +37,12 @@ namespace element {
     }
 
     RoadInfoList GetRoadInfo() const;
+
+    const RoadSegment &GetRoadSegment() const;
+
+    bool IsIntersection() const;
+
+    double GetLaneWidth() const;
 
   private:
 

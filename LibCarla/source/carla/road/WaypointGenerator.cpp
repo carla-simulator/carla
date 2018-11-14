@@ -48,13 +48,11 @@ namespace road {
     auto &map = waypoint._map;
     const auto this_lane_id = waypoint.GetLaneId();
     const auto this_road_id = waypoint.GetRoadId();
-    const auto *this_road = map->GetData().GetRoad(this_road_id);
-    DEBUG_ASSERT(this_road != nullptr);
 
     const auto &next_lanes =
         this_lane_id < 0 ?
-            this_road->GetNextLane(this_lane_id) :
-            this_road->GetPrevLane(this_lane_id);
+            waypoint.GetRoadSegment().GetNextLane(this_lane_id) :
+            waypoint.GetRoadSegment().GetPrevLane(this_lane_id);
 
     if (next_lanes.empty()) {
       log_error("lane id =", this_lane_id, " road id=", this_road_id, ": missing next lanes");
@@ -80,15 +78,13 @@ namespace road {
     auto &map = waypoint._map;
     const auto this_lane_id = waypoint.GetLaneId();
     const auto this_road_id = waypoint.GetRoadId();
-    const auto *this_road = map->GetData().GetRoad(this_road_id);
-    DEBUG_ASSERT(this_road != nullptr);
 
     double distance_on_next_segment;
 
     if (this_lane_id < 0) {
       // road goes forward.
       const auto total_distance = waypoint._dist + distance;
-      const auto road_length = this_road->GetLength();
+      const auto road_length = waypoint.GetRoadSegment().GetLength();
       if (total_distance <= road_length) {
         return { Waypoint(map, this_road_id, this_lane_id, total_distance) };
       }

@@ -111,6 +111,23 @@ namespace element {
     return RoadInfoList(_map->GetData().GetRoad(_road_id)->GetInfos(_dist));
   }
 
+  const RoadSegment &Waypoint::GetRoadSegment() const {
+    const auto *road_segment = _map->GetData().GetRoad(_road_id);
+    DEBUG_ASSERT(road_segment != nullptr);
+    return *road_segment;
+  }
+
+  bool Waypoint::IsIntersection() const {
+    const auto *info = GetRoadSegment().GetInfo<RoadGeneralInfo>(_dist);
+    return info != nullptr ? info->IsJunction() : false;
+  }
+
+  double Waypoint::GetLaneWidth() const {
+    const auto *info = GetRoadSegment().GetInfo<RoadInfoLane>(_dist);
+    const auto *lane_info = info != nullptr ? info->getLane(_lane_id) : nullptr;
+    return lane_info != nullptr ? lane_info->_width : 0.0;
+  }
+
 } // namespace element
 } // namespace road
 } // namespace carla
