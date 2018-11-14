@@ -80,20 +80,26 @@ namespace client {
 
   SharedPtr<sensor::SensorData> LaneDetector::TickLaneDetector(
       const Timestamp &timestamp) {
-    const auto new_bounds = GetVehicleBounds(*_vehicle);
-    std::vector<road::element::LaneMarking> crossed_lanes;
-    for (auto i = 0u; i < _bounds.size(); ++i) {
-      const auto lanes = _map->CalculateCrossedLanes(_bounds[i], new_bounds[i]);
-      crossed_lanes.insert(crossed_lanes.end(), lanes.begin(), lanes.end());
+    try {
+      const auto new_bounds = GetVehicleBounds(*_vehicle);
+      std::vector<road::element::LaneMarking> crossed_lanes;
+      for (auto i = 0u; i < _bounds.size(); ++i) {
+        const auto lanes = _map->CalculateCrossedLanes(_bounds[i], new_bounds[i]);
+        crossed_lanes.insert(crossed_lanes.end(), lanes.begin(), lanes.end());
+      }
+      _bounds = new_bounds;
+      return crossed_lanes.empty() ?
+          nullptr :
+          MakeShared<sensor::data::LaneInvasionEvent>(
+              timestamp.frame_count,
+              _vehicle->GetTransform(),
+              _vehicle,
+              crossed_lanes);
+    } catch (const std::exception &e) {
+      /// @todo We need to unsubscribe the sensor.
+      // log_error("LaneDetector:", e.what());
+      return nullptr;
     }
-    _bounds = new_bounds;
-    return crossed_lanes.empty() ?
-        nullptr :
-        MakeShared<sensor::data::LaneInvasionEvent>(
-            timestamp.frame_count,
-            _vehicle->GetTransform(),
-            _vehicle,
-            crossed_lanes);
   }
 
 } // namespace client
