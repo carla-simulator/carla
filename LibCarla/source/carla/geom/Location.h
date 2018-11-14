@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/geom/Vector3D.h"
+#include "carla/geom/Math.h"
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 #  include "Math/Vector.h"
@@ -72,6 +73,10 @@ namespace geom {
 
     bool operator!=(const Location &rhs) const {
       return !(*this == rhs);
+    }
+
+    double Distance(const Location &loc) const {
+      return Math::Distance(Vector3D(this->x, this->y, this->z), loc);
     }
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4

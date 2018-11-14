@@ -59,7 +59,7 @@ namespace geom {
     }
 
     static double DistanceSquared(const Vector3D &a, const Vector3D &b) {
-      return sqr(b.x - a.x) + sqr(b.y - a.y) + sqr(b.z - a.z);
+      return sqr<double>(b.x - a.x) + sqr<double>(b.y - a.y) + sqr<double>(b.z - a.z);
     }
 
     static double DistanceSquared2D(const Vector3D &a, const Vector3D &b) {
