@@ -17,14 +17,20 @@
 namespace carla {
 namespace opendrive {
 
-    class OpenDrive {
-    public:
+  class OpenDrive {
+  public:
 
-      static SharedPtr<road::Map> Load(std::istream &input, std::string *out_error = nullptr);
-      static SharedPtr<road::Map> Load(const std::string &xml, XmlInputType inputType, std::string *out_error = nullptr);
+    static SharedPtr<road::Map> Load(
+        std::istream &input,
+        std::string *out_error = nullptr);
 
-      static void Dump(const road::Map &map, std::ostream &output);
-    };
+    static SharedPtr<road::Map> Load(
+        const std::string &xml,
+        XmlInputType inputType,
+        std::string *out_error = nullptr);
+
+    static void Dump(const road::Map &map, std::ostream &output);
+  };
 
 } // namespace opendrive
 } // namespace carla

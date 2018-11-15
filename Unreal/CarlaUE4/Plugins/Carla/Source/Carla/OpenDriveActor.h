@@ -17,26 +17,41 @@
 UCLASS()
 class CARLA_API AOpenDriveActor : public AActor
 {
-    GENERATED_BODY()
+  GENERATED_BODY()
 
 private:
-    TArray<ARoutePlanner *> RoutePlanners;
+
+  TArray<ARoutePlanner *> RoutePlanners;
 
 public:
-    // Sets default values for this actor's properties
-    AOpenDriveActor();
-    void BuildRoutes();
 
-    virtual void BeginPlay() override;
-    virtual void BeginDestroy() override;
-    virtual void OnConstruction(const FTransform &transform) override;
+  // Sets default values for this actor's properties
+  AOpenDriveActor();
 
-    ARoutePlanner *GenerateRoutePlanner(const TArray<FVector> &waypoints);
-    TArray<carla::road::element::DirectedPoint> GenerateLaneZeroPoints(const carla::road::element::RoadSegment *road);
+  void BuildRoutes();
 
-    TArray<TArray<FVector>> GenerateRightLaneWaypoints(const carla::road::element::RoadSegment *road, const TArray<carla::road::element::DirectedPoint> &laneZeroPoints);
-    TArray<TArray<FVector>> GenerateLeftLaneWaypoints(const carla::road::element::RoadSegment *road, const TArray<carla::road::element::DirectedPoint> &laneZeroPoints);
+  virtual void BeginPlay() override;
 
-    void GenerateWaypointsJunction(const carla::road::element::RoadSegment *road, TArray<TArray<FVector>> &waypoints);
-    void GenerateWaypointsRoad(const carla::road::element::RoadSegment *road);
+  virtual void BeginDestroy() override;
+
+  virtual void OnConstruction(const FTransform &transform) override;
+
+  ARoutePlanner *GenerateRoutePlanner(const TArray<FVector> &waypoints);
+
+  TArray<carla::road::element::DirectedPoint> GenerateLaneZeroPoints(
+      const carla::road::element::RoadSegment *road);
+
+  TArray<TArray<FVector>> GenerateRightLaneWaypoints(
+      const carla::road::element::RoadSegment *road,
+      const TArray<carla::road::element::DirectedPoint> &laneZeroPoints);
+
+  TArray<TArray<FVector>> GenerateLeftLaneWaypoints(
+      const carla::road::element::RoadSegment *road,
+      const TArray<carla::road::element::DirectedPoint> &laneZeroPoints);
+
+  void GenerateWaypointsJunction(
+      const carla::road::element::RoadSegment *road,
+      TArray<TArray<FVector>> &waypoints);
+
+  void GenerateWaypointsRoad(const carla::road::element::RoadSegment *road);
 };
