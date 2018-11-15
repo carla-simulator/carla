@@ -104,9 +104,7 @@ namespace geom {
 
     Vector3D MakeUnitVector() const {
       const double len = Length();
-      if (len < std::numeric_limits<double>::epsilon()) {
-        return Vector3D(1.0, 0.0, 0.0);
-      }
+      DEBUG_ASSERT(len > std::numeric_limits<double>::epsilon());
       double k = 1.0 / len;
       return Vector3D(x * k, y * k, z * k);
     }
