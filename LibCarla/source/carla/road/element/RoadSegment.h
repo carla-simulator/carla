@@ -202,7 +202,7 @@ namespace element {
     ///   @param dist distance from the begining of the road to the point you
     ///          want to calculate the distance
     ///   @param loc point to calculate the distance
-    int GetNearestLane(double dist, const geom::Location &loc) const {
+    std::pair<int, double> GetNearestLane(double dist, const geom::Location &loc) const {
       const DirectedPoint dp_center_road = GetDirectedPointIn(dist);
       auto info = GetInfo<RoadInfoLane>(0.0);
 
@@ -224,7 +224,7 @@ namespace element {
           }
         }
       }
-      return nearest_lane_id;
+      return std::pair<int, double>(nearest_lane_id, nearest_dist);
     }
 
     const double &GetLength() const {
