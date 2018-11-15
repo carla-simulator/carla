@@ -33,7 +33,7 @@ namespace opendrive {
         junctionData.connection_road = connectingRoad;
         junctionData.contact_point = openDriveRoad.junctions[i].connections[j].attributes.contact_point;
 
-        for(size_t k = 0; k < openDriveRoad.junctions[i].connections[j].links.size(); ++k) {
+        for (size_t k = 0; k < openDriveRoad.junctions[i].connections[j].links.size(); ++k) {
           junctionData.from_lane.emplace_back(openDriveRoad.junctions[i].connections[j].links[k].from);
           junctionData.to_lane.emplace_back(openDriveRoad.junctions[i].connections[j].links[k].to);
         }
@@ -57,43 +57,40 @@ namespace opendrive {
         junctionData.incomming_road = incommingRoad;
         junctionData.connection_road = connectingRoad;
 
-        for(size_t k = 0; k < openDriveRoad.junctions[i].connections[j].links.size(); ++k) {
+        for (size_t k = 0; k < openDriveRoad.junctions[i].connections[j].links.size(); ++k) {
           junctionData.from_lane.emplace_back(openDriveRoad.junctions[i].connections[j].links[k].from);
           junctionData.to_lane.emplace_back(openDriveRoad.junctions[i].connections[j].links[k].to);
         }
 
-         out_data.emplace_back(junctionData);
+        out_data.emplace_back(junctionData);
       }
     }
   }
 
   // HACK(Andrei):
   static int fnc_get_first_driving_line(opendrive::types::RoadInformation *roadInfo, int id = 0) {
-    if(roadInfo == nullptr) {
+    if (roadInfo == nullptr) {
       return 0;
     }
 
-    for(auto itSec = roadInfo->lanes.lane_sections.rbegin(); itSec != roadInfo->lanes.lane_sections.rend() - 1; ++itSec) {
-      for(auto itLane = itSec->left.begin(); itLane != itSec->left.end(); ++itLane) {
-        if(itLane->attributes.type == "driving" && itLane->attributes.id == id) {
+    for (auto itSec = roadInfo->lanes.lane_sections.rbegin();
+        itSec != roadInfo->lanes.lane_sections.rend() - 1;
+        ++itSec) {
+      for (auto itLane = itSec->left.begin(); itLane != itSec->left.end(); ++itLane) {
+        if (itLane->attributes.type == "driving" && itLane->attributes.id == id) {
           id = itLane->link ? itLane->link->predecessor_id : 0;
           break;
         }
       }
     }
 
-    /*
-    for(auto &&lane : roadInfo->lanes.lane_sections[0].left) {
-      if(lane.attributes.type == "driving") {
-        return lane.attributes.id;
-      }
-    }
-    */
-
     return id;
   }
 
-  SharedPtr<road::Map> OpenDrive::Load(const std::string &file, XmlInputType inputType, std::string *out_error) {
+  SharedPtr<road::Map> OpenDrive::Load(
+      const std::string &file,
+      XmlInputType inputType,
+      std::string *out_error) {
     carla::opendrive::types::OpenDriveData open_drive_road;
 
     OpenDriveParser::Parse(file.c_str(), open_drive_road, inputType, out_error);
@@ -121,96 +118,108 @@ namespace opendrive {
     // Transforma data for the MapBuilder
     for (road_data_t::iterator it = roadData.begin(); it != roadData.end(); ++it) {
       carla::road::element::RoadSegmentDefinition roadSegment(it->first);
-      carla::road::element::RoadInfoLane *roadInfoLanes = roadSegment.MakeInfo<carla::road::element::RoadInfoLane>();
+      carla::road::element::RoadInfoLane *roadInfoLanes =
+          roadSegment.MakeInfo<carla::road::element::RoadInfoLane>();
 
-      carla::road::element::RoadGeneralInfo *roadGeneralInfo = roadSegment.MakeInfo<carla::road::element::RoadGeneralInfo>();
+      carla::road::element::RoadGeneralInfo *roadGeneralInfo =
+          roadSegment.MakeInfo<carla::road::element::RoadGeneralInfo>();
       roadGeneralInfo->SetJunctionId(it->second->attributes.junction);
 
-      for(size_t i = 0; i < it->second->lanes.lane_offset.size(); ++i) {
+      for (size_t i = 0; i < it->second->lanes.lane_offset.size(); ++i) {
         double s = it->second->lanes.lane_offset[i].s;
         double a = it->second->lanes.lane_offset[i].a;
         roadGeneralInfo->SetLanesOffset(s, a);
       }
-
 
       /////////////////////////////////////////////////////////////////////////
 
       std::map<int, int> leftLanesGoToSuccessor, leftLanesGoToPredecessor;
       std::map<int, int> rightLanesGoToSuccessor, rightLanesGoToPredecessor;
 
-      for(auto &&leftlanes : it->second->lanes.lane_sections[0].left) {
-        if(leftlanes.link != nullptr) {
-          if(leftlanes.attributes.type != "driving") continue;
-          if(leftlanes.link->successor_id != 0) leftLanesGoToSuccessor[leftlanes.attributes.id] = leftlanes.link->successor_id;
-          if(leftlanes.link->predecessor_id != 0) leftLanesGoToPredecessor[leftlanes.attributes.id] = leftlanes.link->predecessor_id;
-        }
-      }
-
-      for(auto &&rightlanes : it->second->lanes.lane_sections[0].right) {
-        if(rightlanes.link != nullptr) {
-          if(rightlanes.attributes.type != "driving") continue;
-          if(rightlanes.link->successor_id != 0) rightLanesGoToSuccessor[rightlanes.attributes.id] = rightlanes.link->successor_id;
-          if(rightlanes.link->predecessor_id != 0) rightLanesGoToPredecessor[rightlanes.attributes.id] = rightlanes.link->predecessor_id;
-        }
-      }
-
-      if(it->second->lanes.lane_sections.size() > 1) {
-        for(auto itLaneSec = it->second->lanes.lane_sections.begin() + 1; itLaneSec != it->second->lanes.lane_sections.end(); ++itLaneSec) {
-          for(auto &&itLanes : itLaneSec->left) {
-            for(auto &&itTest : leftLanesGoToSuccessor) {
-              if(itTest.second == itLanes.attributes.id && itLanes.link) {
-                itTest.second = itLanes.link->successor_id;
-              }
-            }
-            /*for(auto &&itTest : leftLanesGoToPredecessor) {
-              if(itTest.second == itLanes.attributes.id && itLanes.link) {
-                itTest.second = itLanes.link->predecessor_id;
-              }
-            }*/
+      for (auto &&leftlanes : it->second->lanes.lane_sections[0].left) {
+        if (leftlanes.link != nullptr) {
+          if (leftlanes.attributes.type != "driving") {
+            continue;
           }
-        }
-
-        for(auto itLaneSec = it->second->lanes.lane_sections.begin() + 1; itLaneSec != it->second->lanes.lane_sections.end(); ++itLaneSec) {
-          for(auto &&itLanes : itLaneSec->right) {
-            for(auto &&itTest : rightLanesGoToSuccessor) {
-              if(itTest.second == itLanes.attributes.id && itLanes.link) {
-                itTest.second = itLanes.link->successor_id;
-              }
-            }
-            /*for(auto &&itTest : rightLanesGoToPredecessor) {
-              if(itTest.second == itLanes.attributes.id && itLanes.link) {
-                itTest.second = itLanes.link->predecessor_id;
-              }
-            }*/
+          if (leftlanes.link->successor_id != 0) {
+            leftLanesGoToSuccessor[leftlanes.attributes.id] = leftlanes.link->successor_id;
+          }
+          if (leftlanes.link->predecessor_id != 0) {
+            leftLanesGoToPredecessor[leftlanes.attributes.id] = leftlanes.link->predecessor_id;
           }
         }
       }
 
+      for (auto &&rightlanes : it->second->lanes.lane_sections[0].right) {
+        if (rightlanes.link != nullptr) {
+          if (rightlanes.attributes.type != "driving") {
+            continue;
+          }
+          if (rightlanes.link->successor_id != 0) {
+            rightLanesGoToSuccessor[rightlanes.attributes.id] = rightlanes.link->successor_id;
+          }
+          if (rightlanes.link->predecessor_id != 0) {
+            rightLanesGoToPredecessor[rightlanes.attributes.id] = rightlanes.link->predecessor_id;
+          }
+        }
+      }
+
+      if (it->second->lanes.lane_sections.size() > 1) {
+        for (auto itLaneSec = it->second->lanes.lane_sections.begin() + 1;
+            itLaneSec != it->second->lanes.lane_sections.end();
+            ++itLaneSec) {
+          for (auto &&itLanes : itLaneSec->left) {
+            for (auto &&itTest : leftLanesGoToSuccessor) {
+              if (itTest.second == itLanes.attributes.id && itLanes.link) {
+                itTest.second = itLanes.link->successor_id;
+              }
+            }
+          }
+        }
+
+        for (auto itLaneSec = it->second->lanes.lane_sections.begin() + 1;
+            itLaneSec != it->second->lanes.lane_sections.end();
+            ++itLaneSec) {
+          for (auto &&itLanes : itLaneSec->right) {
+            for (auto &&itTest : rightLanesGoToSuccessor) {
+              if (itTest.second == itLanes.attributes.id && itLanes.link) {
+                itTest.second = itLanes.link->successor_id;
+              }
+            }
+          }
+        }
+      }
 
       /////////////////////////////////////////////////////////////////////////
 
-      std::vector<carla::opendrive::types::LaneInfo> *lanesLeft = &it->second->lanes.lane_sections.front().left;
-      std::vector<carla::opendrive::types::LaneInfo> *lanesRight = &it->second->lanes.lane_sections.front().right;
+      std::vector<carla::opendrive::types::LaneInfo> *lanesLeft =
+          &it->second->lanes.lane_sections.front().left;
+      std::vector<carla::opendrive::types::LaneInfo> *lanesRight =
+          &it->second->lanes.lane_sections.front().right;
 
-      for(size_t i = 0; i < lanesLeft->size(); ++i) {
-        roadInfoLanes->addLaneInfo(lanesLeft->at(i).attributes.id, lanesLeft->at(i).lane_width[0].width, lanesLeft->at(i).attributes.type);
+      for (size_t i = 0; i < lanesLeft->size(); ++i) {
+        roadInfoLanes->addLaneInfo(lanesLeft->at(i).attributes.id,
+            lanesLeft->at(i).lane_width[0].width,
+            lanesLeft->at(i).attributes.type);
       }
-      for(size_t i = 0; i < lanesRight->size(); ++i) {
-        roadInfoLanes->addLaneInfo(lanesRight->at(i).attributes.id, lanesRight->at(i).lane_width[0].width, lanesRight->at(i).attributes.type);
+      for (size_t i = 0; i < lanesRight->size(); ++i) {
+        roadInfoLanes->addLaneInfo(lanesRight->at(i).attributes.id,
+            lanesRight->at(i).lane_width[0].width,
+            lanesRight->at(i).attributes.type);
       }
 
       if (it->second->road_link.successor != nullptr) {
         if (it->second->road_link.successor->element_type == "junction") {
           std::vector<carla::road::lane_junction_t> &options =
-            junctionsData[it->second->road_link.successor->id][it->first];
+              junctionsData[it->second->road_link.successor->id][it->first];
           for (size_t i = 0; i < options.size(); ++i) {
             roadSegment.AddSuccessorID(options[i].connection_road, options[i].contact_point == "start");
 
-            for(size_t j = 0; j < options[i].from_lane.size(); ++j) {
+            for (size_t j = 0; j < options[i].from_lane.size(); ++j) {
               bool is_end = options[i].contact_point == "end";
               int to_lane = options[i].to_lane[j];
 
-              if(is_end) {
+              if (is_end) {
                 to_lane = fnc_get_first_driving_line(roadData[options[i].connection_road], to_lane);
               }
 
@@ -221,11 +230,11 @@ namespace opendrive {
           bool is_start = it->second->road_link.successor->contact_point == "start";
           roadSegment.AddSuccessorID(it->second->road_link.successor->id, is_start);
 
-          for(auto &&lanes : rightLanesGoToSuccessor) {
+          for (auto &&lanes : rightLanesGoToSuccessor) {
             roadSegment.AddNextLaneInfo(lanes.first, lanes.second, it->second->road_link.successor->id);
           }
 
-          for(auto &&lanes : leftLanesGoToSuccessor) {
+          for (auto &&lanes : leftLanesGoToSuccessor) {
             roadSegment.AddNextLaneInfo(lanes.first, lanes.second, it->second->road_link.successor->id);
           }
         }
@@ -234,15 +243,15 @@ namespace opendrive {
       if (it->second->road_link.predecessor != nullptr) {
         if (it->second->road_link.predecessor->element_type == "junction") {
           std::vector<carla::road::lane_junction_t> &options =
-            junctionsData[it->second->road_link.predecessor->id][it->first];
+              junctionsData[it->second->road_link.predecessor->id][it->first];
           for (size_t i = 0; i < options.size(); ++i) {
             roadSegment.AddPredecessorID(options[i].connection_road, options[i].contact_point == "start");
 
-            for(size_t j = 0; j < options[i].from_lane.size(); ++j) {
+            for (size_t j = 0; j < options[i].from_lane.size(); ++j) {
               bool is_end = options[i].contact_point == "end";
               int to_lane = options[i].to_lane[j];
 
-              if(is_end) {
+              if (is_end) {
                 to_lane = fnc_get_first_driving_line(roadData[options[i].connection_road], to_lane);
               }
 
@@ -253,11 +262,11 @@ namespace opendrive {
           bool is_start = it->second->road_link.predecessor->contact_point == "start";
           roadSegment.AddPredecessorID(it->second->road_link.predecessor->id, is_start);
 
-          for(auto &&lanes : rightLanesGoToPredecessor) {
+          for (auto &&lanes : rightLanesGoToPredecessor) {
             roadSegment.AddPrevLaneInfo(lanes.first, lanes.second, it->second->road_link.predecessor->id);
           }
 
-          for(auto &&lanes : leftLanesGoToPredecessor) {
+          for (auto &&lanes : leftLanesGoToPredecessor) {
             roadSegment.AddPrevLaneInfo(lanes.first, lanes.second, it->second->road_link.predecessor->id);
           }
         }
@@ -325,8 +334,7 @@ namespace opendrive {
     std::string fileContent;
     std::string line;
 
-    while(std::getline(input, line))
-    {
+    while (std::getline(input, line)) {
       fileContent.append(line);
     }
 
