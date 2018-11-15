@@ -76,7 +76,7 @@ namespace geom {
     }
 
     double Distance(const Location &loc) const {
-      return Math::Distance(Vector3D(this->x, this->y, this->z), loc);
+      return Math::Distance(*this, loc);
     }
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
