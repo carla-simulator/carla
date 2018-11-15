@@ -1,3 +1,5 @@
+#pragma once
+
 #include "TrafficSignalsParser.h"
 #include "RoadLinkParser.h"
 #include "JunctionParser.h"
