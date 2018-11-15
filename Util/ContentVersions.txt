@@ -14,4 +14,4 @@
 0.8.3: 1z2XKOk9LoKI-EhxcrpI31W5TeYo2-jjn
 0.8.4: 1mFNS-w5atQ45yegiTepRIeKBYVm8N8He
 0.9.0: 1FtC00CrDb7Kz5StBAwb6vqOGbzZtpROx
-Latest: 1c0Co_VtEDkkzHicBNoMpq3z_Or6PdWlo
+0.9.1: 1IZDzNQNVL67h8UlGyKuGegLH612Ifd7H
