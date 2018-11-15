@@ -10,7 +10,7 @@ _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
 class ProcessGroundTruth(osi_grpc.osi_grpc_pb2_grpc.GroundtruthdataServicer):
 
-    def ProcessGroundTruth(self, request, context):
+    def ProcessGroundTruth(self, request, context):         # pylint: disable=import-error
 
         print("client data received: " + str(request))
 
