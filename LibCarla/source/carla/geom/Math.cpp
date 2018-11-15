@@ -81,8 +81,9 @@ namespace geom {
 
       // use the arc length to calculate the angle in the last point of it
       // circumference of a circle = 2 * PI * r
-      const double circumf = 2 * pi() * radius;
-      const double last_point_angle = (length / circumf) * pi_double();
+      // last_point_angle = (length / circumference) * 2 * PI
+      // so last_point_angle = length / radius
+      const double last_point_angle = length / radius;
 
       // move the point relative to the center of the circle and find
       // the angle between the point and the center of coords in rad
