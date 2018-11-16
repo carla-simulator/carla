@@ -78,7 +78,7 @@ def run_carla_client(args):
         for episode in range(0, number_of_episodes):
             # Start a new episode.
             storage = np.random.rand(150, 200, frames_per_episode).astype(np.float16)
-            stream = open('log{}.txt'.format(episode), 'w')
+            stream = open('pd_log{}.txt'.format(episode), 'w')
             stream.write('frame,steer,throttle,speed\n')
 
             if args.settings_filepath is None:
@@ -207,7 +207,7 @@ def run_carla_client(args):
                     .format(frame, steer, throttle, curr_speed)
                 )
 
-            np.save('depth_data{}.npy'.format(episode), storage)
+            np.save('pd_depth_data{}.npy'.format(episode), storage)
             stream.close()
 
 

@@ -30,13 +30,13 @@ from carla.util import print_over_same_line
 import pickle
 import keras
 
-from train_on_depth import weighted_mse
-
 
 norm = np.linalg.norm
 
 
 STEER_DIFF = False
+AUX_INPUTS = False
+NUM_DIFF_CHANNELS = 1
 
 
 def run_carla_client(args):
@@ -54,8 +54,7 @@ def run_carla_client(args):
     prev_depth_array = None
 
     model = keras.models.load_model(
-        'model.h5',
-        custom_objects={'weighted_mse': weighted_mse}
+        '{}_model{}.h5'.format(args.prefix, args.model_number),
     )
 
     # We assume the CARLA server is already waiting for a client to connect at
@@ -78,8 +77,8 @@ def run_carla_client(args):
                     SynchronousMode=True,
                     SendNonPlayerAgentsInfo=True,
                     NumberOfVehicles=0,
-                    NumberOfPedestrians=40,
-                    WeatherId=random.choice([1]),
+                    NumberOfPedestrians=0,
+                    WeatherId=random.choice([11]),
                     QualityLevel=args.quality_level)
                 settings.randomize_seeds()
 
@@ -140,29 +139,31 @@ def run_carla_client(args):
                 )
 
                 depth_array = np.log(sensor_data['CameraDepth'].data).astype('float16')
+                depth_array = np.expand_dims(np.expand_dims(depth_array, 0), 3)
 
                 if prev_depth_array is None:
                     pred = 0
                 else:
-                    diff = depth_array-prev_depth_array
-                    X = np.expand_dims(
-                            np.expand_dims(diff, 0),
-                            3
-                    )
-                    X_aux = np.c_[curr_steer, curr_speed]
-                    pred = model.predict([X, X_aux])
+                    X_diff = depth_array-prev_depth_array
+                    X_aux = np.c_[curr_steer, curr_steer]
+                    X = np.concatenate([depth_array, X_diff], axis=3)
+                    pred = model.predict([X, X_aux] if AUX_INPUTS else [X])
 
                 if STEER_DIFF:
                     steer = curr_steer + pred
                 else:
                     steer = pred
 
+                if not isinstance(pred, int):
+                    steer = pred[0][0]
+                    throttle = pred[0][1]
+
                 curr_steer = steer
                 prev_depth_array = depth_array
 
                 client.send_control(
                     steer=steer,
-                    throttle=throttle,
+                    throttle=throttle * args.throttle_coeff,
                     brake=0.0,
                     hand_brake=False,
                     reverse=False
@@ -222,6 +223,24 @@ def main():
         type=float,
         dest='target_speed',
         help='Target speed')
+    argparser.add_argument(
+        '-tc', '--throttle_coeff',
+        default=1.0,
+        type=float,
+        dest='throttle_coeff',
+        help='Value by which throttle is multiplied')
+    argparser.add_argument(
+        '-m', '--model',
+        default=10,
+        type=int,
+        dest='model_number',
+        help='Model number')
+    argparser.add_argument(
+        '-pr', '--prefix',
+        default='mpc',
+        dest='prefix',
+        help='Controller prefix')
+
 
     args = argparser.parse_args()
 

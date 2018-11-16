@@ -1,2 +1,3 @@
-log0.txt
-depth*
+*log*.txt
+*depth*npy
+*h5

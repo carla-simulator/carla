@@ -43,7 +43,7 @@ CONSEC_STEER_COEFF = 15
 STEER_BOUND = 6
 
 # Front wheel L
-Lf = 2.67
+Lf = 2.67  # TODO: check if true
 
 # How the polynomial fitting the desired curve is fitted
 STEPS_POLY = 20
@@ -51,10 +51,12 @@ POLY_DEGREE = 3
 
 # Lambdify and minimize stuff
 EVALUATOR = 'numpy'
-LAT = 0.00
 TOLERANCE = 1
 
 IMAGE_SIZE = (150, 200)
+
+STEER_NOISE = lambda: random.uniform(-0.1, 0.1)
+THROTTLE_NOISE = lambda: random.uniform(-0.05, 0.05)
 
 
 def create_array_of_symbols(str_symbol, N):
@@ -234,11 +236,11 @@ def get_x0_and_bounds(x, y, ψ, v, cte, eψ, a, δ):
     return x0, bounds
 
 
-def transform_into_cars_coordinate_system(pts, x_lat, y_lat, cos_ψ_lat, sin_ψ_lat):
-    diff = (pts - [x_lat, y_lat])
+def transform_into_cars_coordinate_system(pts, x, y, cos_ψ, sin_ψ):
+    diff = (pts - [x, y])
     pts_car = np.zeros_like(diff)
-    pts_car[:, 0] = cos_ψ_lat * diff[:, 0] + sin_ψ_lat * diff[:, 1]
-    pts_car[:, 1] = sin_ψ_lat * diff[:, 0] - cos_ψ_lat * diff[:, 1]
+    pts_car[:, 0] = cos_ψ * diff[:, 0] + sin_ψ * diff[:, 1]
+    pts_car[:, 1] = sin_ψ * diff[:, 0] - cos_ψ * diff[:, 1]
     return pts_car
 
 
@@ -264,22 +266,6 @@ def run_carla_client(args):
     depth_array = None
 
     cost_func, cost_grad_func, constr_funcs = get_func_constraints_and_bounds(target_speed)
-
-    # TEMPORARY BEGIN
-    # init = (1, 1, 1, 60, 1, 1.2, 1, 2, 3, 4)
-    # x0, bounds = get_x0_and_bounds(1.1, 1.1, 1.1, 60.5, 1.1, 1.1, 0.5, 0.5)
-    #
-    # start_time = time.time()
-    # for i in range(10):
-    #     result = minimize_cost(cost_func, cost_grad_func, constr_funcs, bounds, x0, init)
-    # print('Took {:.4f}s'.format((time.time() - start_time) / 10))
-    #
-    # if 'success' not in result.message:
-    #     print(result)
-    #     import ipdb; ipdb.set_trace()
-    #
-    # prev_cte = 0
-    # TEMPORARY END
 
     with make_carla_client(args.host, args.port) as client:
         print('CarlaClient connected')
@@ -373,16 +359,10 @@ def run_carla_client(args):
                 indeces = indeces % spline_points
                 pts = pts_2D[indeces]
 
-                v_lat = v + LAT * throttle
-                ψ_lat = ψ - LAT * (v_lat * steer / Lf)
+                cos_ψ = np.cos(ψ)
+                sin_ψ = np.sin(ψ)
 
-                cos_ψ_lat = np.cos(ψ_lat)
-                sin_ψ_lat = np.sin(ψ_lat)
-
-                x_lat = x + LAT * (v_lat * cos_ψ_lat)
-                y_lat = y + LAT * (v_lat * sin_ψ_lat)
-
-                pts_car = transform_into_cars_coordinate_system(pts, x_lat, y_lat, cos_ψ_lat, sin_ψ_lat)
+                pts_car = transform_into_cars_coordinate_system(pts, x, y, cos_ψ, sin_ψ)
 
                 poly = np.polyfit(pts_car[:, 0], pts_car[:, 1], POLY_DEGREE)
 
@@ -390,7 +370,7 @@ def run_carla_client(args):
                 cte = poly[0]
                 eψ = -np.arctan(poly[1])
 
-                init = (0, 0, 0, v_lat, cte, eψ, *poly)
+                init = (0, 0, 0, v, cte, eψ, *poly)
                 x0, bounds = get_x0_and_bounds(0, 0, 0, v, cte, eψ, 0, 0)
                 result = minimize_cost(cost_func, cost_grad_func, constr_funcs, bounds, x0, init)
 
@@ -400,18 +380,14 @@ def run_carla_client(args):
                     steer = result.x[-STEPS_AHEAD]
                     throttle = result.x[-2*STEPS_AHEAD]
 
-                # text = (
-                #     'steer: {:.2f}'
-                #     ' cte: {:.2f}'
-                #     # ' throttle: {:.2f}'
-                #     ' v: {:.2f}'
-                #     .format(steer, cte, v)
-                # )
-                # print(text)
-
+                # Left here for debugging
                 # steer = -0.6 * cte - 5.5 * (cte - prev_cte)
                 # prev_cte = cte
                 # throttle = clip_throttle(throttle, v, target_speed)
+
+                # Add noise
+                steer += STEER_NOISE()
+                throttle += THROTTLE_NOISE()
 
                 client.send_control(
                     steer=steer,
@@ -446,8 +422,8 @@ def run_carla_client(args):
 
                 log_dicts[frame] = one_log_dict
 
-            np.save('depth_data{}.npy'.format(episode), storage)
-            pd.DataFrame(log_dicts).to_csv('log{}.txt'.format(episode), index=False)
+            np.save('mpc_depth_data{}.npy'.format(episode), storage)
+            pd.DataFrame(log_dicts).to_csv('mpc_log{}.txt'.format(episode), index=False)
 
 
 def print_measurements(measurements):
