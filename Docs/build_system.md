@@ -82,8 +82,8 @@ make PythonAPI
 
 It creates two "egg" packages
 
-  * `PythonAPI/dist/carla-0.9.0-py2.7-linux-x86_64.egg`
-  * `PythonAPI/dist/carla-0.9.0-py3.5-linux-x86_64.egg`
+  * `PythonAPI/dist/carla-X.X.X-py2.7-linux-x86_64.egg`
+  * `PythonAPI/dist/carla-X.X.X-py3.5-linux-x86_64.egg`
 
 This package can be directly imported into a Python script by adding it to the
 system path
@@ -94,7 +94,7 @@ system path
 import sys
 
 sys.path.append(
-    'PythonAPI/dist/carla-0.9.0-py%d.%d-linux-x86_64.egg' % (sys.version_info.major,
+    'PythonAPI/dist/carla-X.X.X-py%d.%d-linux-x86_64.egg' % (sys.version_info.major,
                                                              sys.version_info.minor))
 
 import carla
@@ -105,6 +105,6 @@ import carla
 or installed with `easy_install`
 
 ```sh
-easy_install2 --user --no-deps PythonAPI/dist/carla-0.9.0-py2.7-linux-x86_64.egg
-easy_install3 --user --no-deps PythonAPI/dist/carla-0.9.0-py3.5-linux-x86_64.egg
+easy_install2 --user --no-deps PythonAPI/dist/carla-X.X.X-py2.7-linux-x86_64.egg
+easy_install3 --user --no-deps PythonAPI/dist/carla-X.X.X-py3.5-linux-x86_64.egg
 ```
