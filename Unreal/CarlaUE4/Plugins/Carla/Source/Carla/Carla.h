@@ -4,9 +4,9 @@
 // plugin.
 #pragma once
 
-#include "ModuleManager.h"
 
 #include "Util/NonCopyable.h"
+#include "EngineMinimal.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogCarla, Log, All);
 DECLARE_LOG_CATEGORY_EXTERN(LogCarlaServer, Log, All);
