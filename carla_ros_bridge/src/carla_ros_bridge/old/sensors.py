@@ -11,8 +11,10 @@ from sensor_msgs.msg import CameraInfo
 from sensor_msgs.point_cloud2 import create_cloud_xyz32
 from std_msgs.msg import Header
 
-from carla.sensor import Camera, Lidar, Sensor
+from carla.Image import Image
+from carla.LidarMeasurement import LidarMeasurement
 from carla_ros_bridge.transforms import carla_transform_to_ros_transform
+
 
 cv_bridge = CvBridge(
 )  # global cv bridge to convert image between opencv and ros

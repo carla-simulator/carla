@@ -3,96 +3,57 @@ Rosbridge class:
 
 Class that handle communication between CARLA and ROS
 """
-import random
-from itertools import count
+import rospy
+import threading
+import carla 
 
 from rosgraph_msgs.msg import Clock
 from tf2_msgs.msg import TFMessage
-import rospy
+from derived_object_msgs.msg import ObjectArray
 
-from carla.settings import CarlaSettings
-from carla_ros_bridge.control import InputController
-from carla_ros_bridge.markers import PlayerAgentHandler, NonPlayerAgentsHandler
-from carla_ros_bridge.sensors import CameraHandler, LidarHandler
-from carla_ros_bridge.map import MapHandler
+from carla_ros_bridge.actor_parent import ActorParent
 
 
-class CarlaRosBridge(object):
+class CarlaRosBridge(ActorParent):
     """
     Carla Ros bridge
     """
-
-    def __init__(self, client, params):
+    
+    def __init__(self, world, params):
         """
-
         :param params: dict of parameters, see settings.yaml
-        :param rate: rate to query data from carla in Hz
         """
-        self.setup_carla_client(client=client, params=params)
-        self.frames_per_episode = params['Framesperepisode']
+        self.params = params
+        super(CarlaRosBridge, self).__init__(id=0, carla_world = world)
 
+        self.carla_world_timestamp = carla.Timestamp()
         self.tf_to_publish = []
         self.msgs_to_publish = []
+
+        self.carla_world.on_tick( self.carla_time_tick )
+        self.update_lock = threading.Lock()
+
         self.publishers = {}
+        self.publishers['clock'] = rospy.Publisher(
+            'clock', Clock, queue_size=10)
 
-        # definitions useful for time
-        self.cur_time = rospy.Time.from_sec(
-            0)  # at the beginning of simulation
-        self.carla_game_stamp = 0
-        self.carla_platform_stamp = 0
+        self.publishers['tf'] = rospy.Publisher(
+            'tf', TFMessage, queue_size=100)
+        
+        self.publishers['/carla/objects'] = rospy.Publisher(
+            '/carla/objects', ObjectArray, queue_size=10)
+        self.object_array = None
 
-        # creating handler to handle vehicles messages
-        self.player_handler = PlayerAgentHandler(
-            "player_vehicle", process_msg_fun=self.process_msg)
-        self.non_players_handler = NonPlayerAgentsHandler(
-            "vehicles", process_msg_fun=self.process_msg)
-
-        # creating handler for sensors
-        self.sensors = {}
-        for name, _ in self.param_sensors.items():
-            self.add_sensor(name)
-
-        # creating input controller listener
-        self.input_controller = InputController()
-
-    def setup_carla_client(self, client, params):
-        self.client = client
-        self.param_sensors = params.get('sensors', {})
-        self.carla_settings = CarlaSettings()
-        self.carla_settings.set(
-            SendNonPlayerAgentsInfo=params.get('SendNonPlayerAgentsInfo', True),
-            NumberOfVehicles=params.get('NumberOfVehicles', 20),
-            NumberOfPedestrians=params.get('NumberOfPedestrians', 40),
-            WeatherId=params.get('WeatherId', random.choice([1, 3, 7, 8, 14])),
-            SynchronousMode=params.get('SynchronousMode', True),
-            QualityLevel=params.get('QualityLevel', 'Low')
-            )
-        self.carla_settings.randomize_seeds()
-
-    def add_sensor(self, name):
-        rospy.loginfo("Adding sensor {}".format(name))
-        sensor_type = self.param_sensors[name]['SensorType']
-        params = self.param_sensors[name]['carla_settings']
-        sensor_handler = None
-        if sensor_type == 'LIDAR_RAY_CAST':
-            sensor_handler = LidarHandler
-        if sensor_type == 'CAMERA':
-            sensor_handler = CameraHandler
-        if sensor_handler:
-            self.sensors[name] = sensor_handler(
-                name,
-                params,
-                carla_settings=self.carla_settings,
-                process_msg_fun=self.process_msg)
-        else:
-            rospy.logerr(
-                "Unable to handle sensor {name} of type {sensor_type}".format(
-                    sensor_type=sensor_type, name=name))
+    def get_param(self, key):
+        return self.params[key]
 
     def on_shutdown(self):
         rospy.loginfo("Shutdown requested")
 
-    def process_msg(self, topic=None, msg=None):
+    def get_current_ros_time(self):
+        return self.ros_timestamp
+
+    def publish_ros_message(self, topic, msg):
         """
         Function used to process message
 
@@ -103,82 +64,101 @@ class CarlaRosBridge(object):
         :param topic: topic to publish the message on
         :param msg: ros message
         """
-        if topic not in self.publishers:
-            if topic == 'tf':
-                self.publishers[topic] = rospy.Publisher(
-                    topic, TFMessage, queue_size=100)
-            else:
-                self.publishers[topic] = rospy.Publisher(
-                    topic, type(msg), queue_size=10)
-
         if topic == 'tf':
             # transform are merged in same message
             self.tf_to_publish.append(msg)
+        elif topic == '/carla/objects':
+            # objects are collected in same message
+            if self.object_array == None:
+                self.object_array = ObjectArray(header = msg.header)
+            self.object_array.objects.append(msg)
         else:
+            if topic not in self.publishers:
+                self.publishers[topic] = rospy.Publisher(topic, type(msg), queue_size=10)
             self.msgs_to_publish.append((self.publishers[topic], msg))
 
     def send_msgs(self):
-        for publisher, msg in self.msgs_to_publish:
-            publisher.publish(msg)
+        try:
+            for publisher, msg in self.msgs_to_publish:
+                publisher.publish(msg)
+        except:
+            rospy.logwarn("Failed to publish messages")
+            pass
         self.msgs_to_publish = []
 
         tf_msg = TFMessage(self.tf_to_publish)
         self.publishers['tf'].publish(tf_msg)
         self.tf_to_publish = []
 
-    def compute_cur_time_msg(self):
-        self.process_msg('clock', Clock(self.cur_time))
+        if not self.object_array == None:
+            self.publishers['/carla/objects'].publish(self.object_array)
+            self.object_array = None
+
+    def carla_time_tick(self, carla_timestamp):
+        self.carla_world_timestamp = carla_timestamp
+        self.perform_update()
+
+    def update_clock(self):
+        self.ros_timestamp = rospy.Time.from_sec(self.carla_world_timestamp.elapsed_seconds)
+        self.publish_ros_message('clock', Clock(self.ros_timestamp))
+
+    def topic_name(self):
+        return "/carla"
+
+    def perform_update(self):
+        if not rospy.is_shutdown():
+            if self.update_lock.acquire(False):
+                self.update_clock()
+                self.update_children()
+                self.send_msgs()
+                self.update_lock.release()
+
+
 
     def run(self):
-        self.publishers['clock'] = rospy.Publisher(
-            "clock", Clock, queue_size=10)
-
-        # load settings into the server
-        scene = self.client.load_settings(self.carla_settings)
-        # Choose one player start at random.
-        number_of_player_starts = len(scene.player_start_spots)
-        player_start = random.randint(0, max(0, number_of_player_starts - 1))
-
-        # Send occupancy grid to rivz
-        map_handler = MapHandler(scene.map_name)
-        map_handler.send_map()
-
-        self.client.start_episode(player_start)
-
-        for frame in count():
-            if (frame == self.frames_per_episode) or rospy.is_shutdown():
-                break
-            measurements, sensor_data = self.client.read_data()
-
-            # handle time
-            self.carla_game_stamp = measurements.game_timestamp
-            self.cur_time = rospy.Time.from_sec(self.carla_game_stamp * 1e-3)
-            self.compute_cur_time_msg()
-
-            # handle agents
-            self.player_handler.process_msg(
-                measurements.player_measurements, cur_time=self.cur_time)
-            self.non_players_handler.process_msg(
-                measurements.non_player_agents, cur_time=self.cur_time)
-
-            # handle sensors
-            for name, data in sensor_data.items():
-                self.sensors[name].process_sensor_data(data, self.cur_time)
-
-            # publish all messages
-            self.send_msgs()
-
-            # handle control
-            if rospy.get_param('carla_autopilot', True):
-                control = measurements.player_measurements.autopilot_control
-                self.client.send_control(control)
-            else:
-                control = self.input_controller.cur_control
-                self.client.send_control(**control)
-
+        rospy.spin()
+    
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        rospy.loginfo("Exiting Bridge")
+        if self.update_lock.acquire():
+            rospy.loginfo("Exiting Bridge")
+            self.carla_world=None
+            self.publishers.clear()
+            super(CarlaRosBridge, self).__del__()
         return None
+
+#    def add_sensor(self, name):
+#        rospy.loginfo("Adding sensor {}".format(name))
+        
+        # creating handler to handle vehicles messages
+#        self.player_handler = PlayerAgentHandler(
+#            "player_vehicle", process_msg_fun=self.process_msg)
+#        self.non_players_handler = NonPlayerAgentsHandler(
+#            "vehicles", process_msg_fun=self.process_msg)
+
+        # creating handler for sensors
+ #       self.sensors = {}
+ #       for name, _ in self.param_sensors.items():
+ #           self.add_sensor(name)
+
+        # creating input controller listener
+#        self.input_controller = InputController()
+#        sensor_type = self.param_sensors[name]['SensorType']
+# #       params = self.param_sensors[name]['carla_settings']
+#        sensor_handler = None
+#        if sensor_type == 'LIDAR_RAY_CAST':
+#            sensor_handler = LidarHandler
+#        if sensor_type == 'CAMERA':
+#            sensor_handler = CameraHandler
+#        if sensor_handler:
+#            self.sensors[name] = sensor_handler(
+#                name,
+#                params,
+##                carla_settings=self.carla_settings,
+#                process_msg_fun=self.process_msg)
+#        else:
+#            rospy.logerr(
+#                "Unable to handle sensor {name} of type {sensor_type}".format(
+#                    sensor_type=sensor_type, name=name))
