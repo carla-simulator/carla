@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.9.0)
+cmake_minimum_required(VERSION 3.5.1)
 project(libcarla)
 
 message(STATUS "Building ${PROJECT_NAME} version ${CARLA_VERSION}")
