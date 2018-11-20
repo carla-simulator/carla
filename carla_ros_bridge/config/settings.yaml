@@ -1,43 +1,47 @@
 carla:
+  # the network connection for the python connection to CARLA
   host: localhost
   port: 2000
-  QualityLevel: Low  # Low or Epic
-  SynchronousMode: True
-  SendNonPlayerAgentsInfo: True
-  NumberOfVehicles: 30
-  NumberOfPedestrians: 10
-  WeatherId: 1
-  Framesperepisode: -1 # -1: run episode indefinitely until interrupted
-  Episodes: 2
+  # the vehicle that acts as ego vehicle for this ros bridge instance
+  ego_vehicle_role_name: hero
 
-  sensors:
-    camera_front:
-      SensorType: CAMERA
-      carla_settings:
-        PostProcessing: SceneFinal
-        ImageSizeX: 320
-        ImageSizeY: 240
-        FOV: 90
-        PositionX: 1.80
-        PositionY: 0
-        PositionZ: 1.30
-        RotationPitch: 0
-        RotationRoll: 0
-        RotationYaw: 0
+ # QualityLevel: Low  # Low or Epic
+ # SynchronousMode: True
+ # SendNonPlayerAgentsInfo: True
+ # NumberOfVehicles: 30
+ # NumberOfPedestrians: 10
+ # WeatherId: 1
+ # Framesperepisode: -1 # -1: run episode indefinitely until interrupted
+ # Episodes: 2
 
-    camera_depth:
-      SensorType: CAMERA
-      carla_settings:
-        PostProcessing: Depth
-        ImageSizeX: 320
-        ImageSizeY: 240
-        FOV: 90
-        PositionX: 1.80
-        PositionY: 0
-        PositionZ: 1.30
-        RotationPitch: 0
-        RotationRoll: 0
-        RotationYaw: 0
+ # sensors:
+ #   camera_front:
+ #     SensorType: CAMERA
+ #     carla_settings:
+ #       PostProcessing: SceneFinal
+  #      ImageSizeX: 320
+ #       ImageSizeY: 240
+ #       FOV: 90
+ #       PositionX: 1.80
+ ##       PositionY: 0
+  #      PositionZ: 1.30
+  #      RotationPitch: 0
+  #      RotationRoll: 0
+  #      RotationYaw: 0
+
+#    camera_depth:
+#      SensorType: CAMERA
+#      carla_settings:
+#        PostProcessing: Depth
+#        ImageSizeX: 320
+#        ImageSizeY: 240
+#        FOV: 90
+#        PositionX: 1.80
+#        PositionY: 0
+#        PositionZ: 1.30
+#        RotationPitch: 0
+#        RotationRoll: 0
+#        RotationYaw: 0
 
 # Uncomment the following lines if you want to enable lidar publication
 #    lidar_0:

@@ -7,6 +7,7 @@
 #include "carla/client/detail/ActorState.h"
 
 #include <string>
+#include <iterator>
 
 namespace carla {
 namespace client {
@@ -25,7 +26,9 @@ namespace detail {
             "Actor "s +
             std::to_string(desc.id) +
             " (" + desc.description.id + ')';
-      }(_description)) {}
+      }(_description)),
+      _attributes(_description.description.attributes.begin(), _description.description.attributes.end())
+  {}
 
 } // namespace detail
 } // namespace client

@@ -47,6 +47,13 @@ void export_actor() {
     .add_property("parent", CALL_RETURNING_COPY(cc::Actor, GetParent))
     .add_property("semantic_tags", &GetSemanticTags)
     .add_property("is_alive", CALL_RETURNING_COPY(cc::Actor, IsAlive))
+    .add_property("attributes", +[](const cc::Actor &self) {
+      boost::python::dict atttribute_dict;
+      for (auto &&attribute_value : self.GetAttributes()) {
+        atttribute_dict[attribute_value.GetId()] = attribute_value.GetValue();
+      }
+      return atttribute_dict;
+      })
     .def("get_world", CALL_RETURNING_COPY(cc::Actor, GetWorld))
     .def("get_location", &cc::Actor::GetLocation)
     .def("get_transform", &cc::Actor::GetTransform)

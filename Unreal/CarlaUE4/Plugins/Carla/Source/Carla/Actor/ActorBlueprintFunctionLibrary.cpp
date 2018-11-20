@@ -192,6 +192,30 @@ static void FillIdAndTags(FActorDefinition &Def, TStrs &&... Strings)
 {
   Def.Id = JoinStrings(TEXT("."), std::forward<TStrs>(Strings)...).ToLower();
   Def.Tags = JoinStrings(TEXT(","), std::forward<TStrs>(Strings)...).ToLower();
+  // each actor gets an actor role name attribute (empty by default)
+  FActorVariation ActorRole;
+  ActorRole.Id = TEXT("role_name");
+  ActorRole.Type = EActorAttributeType::String;
+  ActorRole.RecommendedValues = { TEXT("default") };
+  ActorRole.bRestrictToRecommended = false;
+  Def.Variations.Emplace(ActorRole);
+}
+
+static void AddRecommendedValuesForActorRoleName(FActorDefinition &Definition, TArray<FString> &&RecommendedValues)
+{
+  for (auto &&ActorVariation: Definition.Variations)
+  {
+    if ( ActorVariation.Id == "role_name"  )
+    {
+      ActorVariation.RecommendedValues = RecommendedValues;
+      return;
+    }
+  }
+}
+
+static void AddRecommendedValuesForSensorRoleNames(FActorDefinition &Definition)
+{
+  AddRecommendedValuesForActorRoleName(Definition, {TEXT("front"), TEXT("back"), TEXT("left"), TEXT("right"), TEXT("front_left"), TEXT("front_right"), TEXT("back_left"), TEXT("back_right")});
 }
 
 FActorDefinition UActorBlueprintFunctionLibrary::MakeGenericSensorDefinition(
@@ -200,6 +224,7 @@ FActorDefinition UActorBlueprintFunctionLibrary::MakeGenericSensorDefinition(
 {
   FActorDefinition Definition;
   FillIdAndTags(Definition, TEXT("sensor"), Type, Id);
+  AddRecommendedValuesForSensorRoleNames(Definition);
   return Definition;
 }
 
@@ -221,6 +246,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorDefinition &Definition)
 {
   FillIdAndTags(Definition, TEXT("sensor"), TEXT("camera"), Id);
+  AddRecommendedValuesForSensorRoleNames(Definition);
   // FOV.
   FActorVariation FOV;
   FOV.Id = TEXT("fov");
@@ -270,6 +296,7 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
     FActorDefinition &Definition)
 {
   FillIdAndTags(Definition, TEXT("sensor"), TEXT("lidar"), Id);
+  AddRecommendedValuesForSensorRoleNames(Definition);
   // Number of channels.
   FActorVariation Channels;
   Channels.Id = TEXT("channels");
@@ -313,6 +340,7 @@ void UActorBlueprintFunctionLibrary::MakeVehicleDefinition(
 {
   /// @todo We need to validate here the params.
   FillIdAndTags(Definition, TEXT("vehicle"), Parameters.Make, Parameters.Model);
+  AddRecommendedValuesForActorRoleName(Definition, {TEXT("autopilot"), TEXT("scenario"), TEXT("ego_vehicle")});
   Definition.Class = Parameters.Class;
   if (Parameters.RecommendedColors.Num() > 0)
   {
@@ -326,6 +354,12 @@ void UActorBlueprintFunctionLibrary::MakeVehicleDefinition(
     }
     Definition.Variations.Emplace(Colors);
   }
+
+  Definition.Attributes.Emplace(FActorAttribute{
+    TEXT("object_type"),
+    EActorAttributeType::String,
+    Parameters.ObjectType});
+
   Definition.Attributes.Emplace(FActorAttribute{
       TEXT("number_of_wheels"),
       EActorAttributeType::Int,
