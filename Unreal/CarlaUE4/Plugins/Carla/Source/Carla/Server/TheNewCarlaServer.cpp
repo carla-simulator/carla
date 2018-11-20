@@ -133,6 +133,7 @@ public:
     Actor.id = ActorView.GetActorId();
     if (ActorView.IsValid())
     {
+      Actor.parent_id = Episode->GetActorRegistry().Find(ActorView.GetActor()->GetOwner()).GetActorId();
       Actor.description = *ActorView.GetActorDescription();
       Actor.bounding_box = GetActorBoundingBox(*ActorView.GetActor());
       Actor.semantic_tags.reserve(ActorView.GetSemanticTags().Num());

@@ -21,7 +21,7 @@ namespace client {
     template <typename It>
     auto MakeIterator(It it) const {
       return boost::make_transform_iterator(it, [this](auto &v) {
-        return v.Get(_episode);
+        return v.Get(_episode, shared_from_this());
       });
     }
 
@@ -31,11 +31,11 @@ namespace client {
     ActorList Filter(const std::string &wildcard_pattern) const;
 
     SharedPtr<Actor> operator[](size_t pos) const {
-      return _actors[pos].Get(_episode);
+      return _actors[pos].Get(_episode, shared_from_this());
     }
 
     SharedPtr<Actor> at(size_t pos) const {
-      return _actors.at(pos).Get(_episode);
+      return _actors.at(pos).Get(_episode, shared_from_this());
     }
 
     auto begin() const {
@@ -53,6 +53,8 @@ namespace client {
     size_t size() const {
       return _actors.size();
     }
+
+    SharedPtr<Actor> GetActor(actor_id_type const actor_id) const;
 
   private:
 
