@@ -1,13 +1,3 @@
-#!/usr/bin/env python3
-
-# Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de
-# Barcelona (UAB).
-#
-# This work is licensed under the terms of the MIT license.
-# For a copy, see <https://opensource.org/licenses/MIT>.
-
-"""Basic CARLA client example."""
-
 from __future__ import print_function
 
 import argparse
@@ -16,7 +6,6 @@ import random
 import time
 import pandas as pd
 import numpy as np
-from scipy import spatial
 from scipy.interpolate import splprep, splev
 
 import sys
@@ -25,47 +14,61 @@ from carla.client import make_carla_client
 from carla.sensor import Camera, Lidar
 from carla.settings import CarlaSettings
 from carla.tcp import TCPConnectionError
-from carla.util import print_over_same_line
 
-import pickle
-import keras
+from config import IMAGE_SIZE, STEER_NOISE, THROTTLE_NOISE
 
+from utils import clip_throttle, print_measurements
 
-norm = np.linalg.norm
-
-
-STEER_DIFF = False
-AUX_INPUTS = False
-NUM_DIFF_CHANNELS = 1
+from model_predictive_control import MPCController
+from proportion_derivative_control import PDController
 
 
 def run_carla_client(args):
-    # Here we will run 3 episodes with 3000 frames each.
-    number_of_episodes = 1
     frames_per_episode = 10000
+    spline_points = 10000
 
-    curr_steer = 0
-    curr_speed = np.nan
+    track_DF = pd.read_csv('racetrack.txt', header=None)
+    # The track data are rescaled by 100x with relation to Carla measurements
+    track_DF = track_DF / 100
 
+    pts_2D = track_DF.loc[:, [0, 1]].values
+    tck, u = splprep(pts_2D.T, u=None, s=2.0, per=1, k=3)
+    u_new = np.linspace(u.min(), u.max(), spline_points)
+    x_new, y_new = splev(u_new, tck, der=0)
+    pts_2D = np.c_[x_new, y_new]
+
+    steer = 0.0
     throttle = 0.5
-    target_speed = args.target_speed
 
     depth_array = None
-    prev_depth_array = None
 
-    model = keras.models.load_model(
-        '{}_model{}.h5'.format(args.prefix, args.model_number),
-    )
+    num_laps = 0
 
-    # We assume the CARLA server is already waiting for a client to connect at
-    # host:port. To create a connection we can use the `make_carla_client`
-    # context manager, it creates a CARLA client object and starts the
-    # connection. It will throw an exception if something goes wrong. The
-    # context manager makes sure the connection is always cleaned up on exit.
+    if args.controller_name == 'mpc':
+        weather_id = 4
+        controller = MPCController(args.target_speed)
+    elif args.controller_name == 'pd':
+        weather_id = 1
+        controller = PDController(args.target_speed)
+    elif args.controller_name == 'nn':
+        # Import it here because importing TensorFlow is time consuming
+        from neural_network_controller import NNController  # noqa
+        weather_id = 11
+        controller = NNController(
+            args.target_speed,
+            args.model_dir_name,
+            args.which_model,
+            args.throttle_coeff
+        )
+
     with make_carla_client(args.host, args.port) as client:
         print('CarlaClient connected')
-        for episode in range(0, number_of_episodes):
+        for episode in range(0, args.num_of_episodes):
             # Start a new episode.
+
+            if args.store_data:
+                depth_storage = np.random.rand(IMAGE_SIZE[0], IMAGE_SIZE[1], frames_per_episode).astype(np.float16)
+                log_dicts = frames_per_episode * [None]
 
             if args.settings_filepath is None:
 
@@ -73,13 +76,16 @@ def run_carla_client(args):
                 # the CarlaSettings.ini file. Here we set the configuration we
                 # want for the new episode.
                 settings = CarlaSettings()
+
                 settings.set(
                     SynchronousMode=True,
-                    SendNonPlayerAgentsInfo=True,
+                    SendNonPlayerAgentsInfo=False,
                     NumberOfVehicles=0,
                     NumberOfPedestrians=0,
-                    WeatherId=random.choice([11]),
-                    QualityLevel=args.quality_level)
+                    WeatherId=weather_id,
+                    QualityLevel=args.quality_level
+                )
+
                 settings.randomize_seeds()
 
                 # Now we want to add a couple of cameras to the player vehicle.
@@ -96,12 +102,11 @@ def run_carla_client(args):
 
                 # Let's add another camera producing ground-truth depth.
                 camera1 = Camera('CameraDepth', PostProcessing='Depth')
-                camera1.set_image_size(200, 150)
+                camera1.set_image_size(IMAGE_SIZE[1], IMAGE_SIZE[0])
                 camera1.set_position(2.30, 0, 1.30)
                 settings.add_sensor(camera1)
 
             else:
-
                 # Alternatively, we can load these settings from a file.
                 with open(args.settings_filepath, 'r') as fp:
                     settings = fp.read()
@@ -113,8 +118,8 @@ def run_carla_client(args):
             scene = client.load_settings(settings)
 
             # Choose one player start at random.
-            number_of_player_starts = len(scene.player_start_spots)
-            player_start = random.randint(0, max(0, number_of_player_starts - 1))
+            num_of_player_starts = len(scene.player_start_spots)
+            player_start = random.randint(0, max(0, num_of_player_starts - 1))
 
             # Notify the server that we want to start the episode at the
             # player_start index. This function blocks until the server is ready
@@ -123,63 +128,43 @@ def run_carla_client(args):
             client.start_episode(player_start)
 
             # Iterate every frame in the episode.
-            for frame in range(0, frames_per_episode):
+            for frame in range(frames_per_episode):
 
                 # Read the data produced by the server this frame.
                 measurements, sensor_data = client.read_data()
 
-                # Print some of the measurements.
-                print_measurements(measurements)
+                depth_array = np.log(sensor_data['CameraDepth'].data).astype('float16')
 
-                curr_speed = measurements.player_measurements.forward_speed * 3.6
-                throttle = np.clip(
-                    throttle - 0.1 * (curr_speed-target_speed),
-                    0.25,
-                    1.0
+                one_log_dict, which_closest  = controller.control(
+                    pts_2D,
+                    measurements,
+                    depth_array,
                 )
 
-                depth_array = np.log(sensor_data['CameraDepth'].data).astype('float16')
-                depth_array = np.expand_dims(np.expand_dims(depth_array, 0), 3)
+                steer, throttle = one_log_dict['steer'], one_log_dict['throttle']
 
-                if prev_depth_array is None:
-                    pred = 0
-                else:
-                    X_diff = depth_array-prev_depth_array
-                    X_aux = np.c_[curr_steer, curr_steer]
-                    X = np.concatenate([depth_array, X_diff], axis=3)
-                    pred = model.predict([X, X_aux] if AUX_INPUTS else [X])
-
-                if STEER_DIFF:
-                    steer = curr_steer + pred
-                else:
-                    steer = pred
-
-                if not isinstance(pred, int):
-                    steer = pred[0][0]
-                    throttle = pred[0][1]
-
-                curr_steer = steer
-                prev_depth_array = depth_array
+                if args.controller_name != 'nn':
+                    # Add noise to "augment" the race
+                    steer += STEER_NOISE()
+                    throttle += THROTTLE_NOISE()
 
                 client.send_control(
                     steer=steer,
-                    throttle=throttle * args.throttle_coeff,
+                    throttle=throttle,
                     brake=0.0,
                     hand_brake=False,
                     reverse=False
                 )
 
+                if args.store_data:
+                    depth_storage[..., frame] = depth_array
+                    one_log_dict['frame'] = frame
+                    log_dicts[frame] = one_log_dict
 
-def print_measurements(measurements):
-    player_measurements = measurements.player_measurements
-    message = 'Vehicle at ({pos_x:.1f}, {pos_y:.1f}), '
-    message += '{speed:.0f} km/h, '
-    message = message.format(
-        pos_x=player_measurements.transform.location.x,
-        pos_y=player_measurements.transform.location.y,
-        speed=player_measurements.forward_speed * 3.6,  # m/s -> km/h
-    )
-    print_over_same_line(message)
+            if args.store_data:
+                np.save('depth_data/{}_depth_data{}.npy'.format(args.controller_name, episode), depth_storage)
+                pd.DataFrame(log_dicts).to_csv('logs/{}_log{}.txt'.format(args.controller_name, episode), index=False)
+
 
 
 def main():
@@ -201,10 +186,6 @@ def main():
         type=int,
         help='TCP port to listen to (default: 2000)')
     argparser.add_argument(
-        '-l', '--lidar',
-        action='store_true',
-        help='enable Lidar')
-    argparser.add_argument(
         '-q', '--quality-level',
         choices=['Low', 'Epic'],
         type=lambda s: s.title(),
@@ -218,29 +199,46 @@ def main():
         help='Path to a "CarlaSettings.ini" file')
 
     argparser.add_argument(
+        '-e', '--num_of_episodes',
+        default=10,
+        type=int,
+        dest='num_of_episodes',
+        help='Number of episodes')
+    argparser.add_argument(
         '-s', '--speed',
-        default=30,
+        default=45,
         type=float,
         dest='target_speed',
         help='Target speed')
+    argparser.add_argument(
+        '-cont', '--controller_name',
+        default='mpc',
+        dest='controller_name',
+        help='Controller name')
+    argparser.add_argument(
+        '-st', '--store_data',
+        default=True,
+        type=bool,
+        dest='store_data',
+        help='Should data be stored')
+
+    # For the NN controller
+    argparser.add_argument(
+        '-mf', '--model_dir_name',
+        default=None,
+        dest='model_dir_name',
+        help='NN model directory name')
+    argparser.add_argument(
+        '-w', '--which_model',
+        default='best',
+        dest='which_model',
+        help='Which model to load (5, 10, 15, ..., or: "best")')
     argparser.add_argument(
         '-tc', '--throttle_coeff',
         default=1.0,
         type=float,
         dest='throttle_coeff',
-        help='Value by which throttle is multiplied')
-    argparser.add_argument(
-        '-m', '--model',
-        default=10,
-        type=int,
-        dest='model_number',
-        help='Model number')
-    argparser.add_argument(
-        '-pr', '--prefix',
-        default='mpc',
-        dest='prefix',
-        help='Controller prefix')
-
+        help='Coefficient by which NN throttle predictions will be multiplied by')
 
     args = argparser.parse_args()
 
