@@ -74,7 +74,7 @@ def run_carla_client(args):
             client.start_episode(player_start)
 
             # Iterate every frame in the episode.
-            for frame in range(0, frames_per_episode):          #pylint: disable=unused-variable
+            for frame in range(0, frames_per_episode):              #pylint: disable=unused-variable
 
                 # Read the data produced by the server this frame.
                 measurements, sensor_data = client.read_data()      #pylint: disable=unused-variable
