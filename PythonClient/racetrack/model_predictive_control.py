@@ -166,6 +166,7 @@ class MPCController(Controller):
         cos_ψ = np.cos(ψ)
         sin_ψ = np.sin(ψ)
 
+        x, y = location[0], location[1]
         pts_car = MPCController.transform_into_cars_coordinate_system(pts, x, y, cos_ψ, sin_ψ)
 
         poly = np.polyfit(pts_car[:, 0], pts_car[:, 1], self.poly_degree)

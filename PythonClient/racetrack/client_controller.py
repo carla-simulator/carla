@@ -23,6 +23,10 @@ from model_predictive_control import MPCController
 from proportion_derivative_control import PDController
 
 
+# If you're running low on memory, you may consider switching to `np.float32`
+DTYPE = np.float16
+
+
 def run_carla_client(args):
     frames_per_episode = 10000
     spline_points = 10000
@@ -45,7 +49,7 @@ def run_carla_client(args):
     num_laps = 0
 
     if args.controller_name == 'mpc':
-        weather_id = 4
+        weather_id = 2
         controller = MPCController(args.target_speed)
     elif args.controller_name == 'pd':
         weather_id = 1
@@ -66,8 +70,9 @@ def run_carla_client(args):
         for episode in range(0, args.num_of_episodes):
             # Start a new episode.
 
-            if args.store_data:
-                depth_storage = np.random.rand(IMAGE_SIZE[0], IMAGE_SIZE[1], frames_per_episode).astype(np.float16)
+            store_data = not args.dont_store_data
+            if store_data:
+                depth_storage = np.random.rand(IMAGE_SIZE[0], IMAGE_SIZE[1], frames_per_episode).astype(DTYPE)
                 log_dicts = frames_per_episode * [None]
 
             if args.settings_filepath is None:
@@ -133,7 +138,7 @@ def run_carla_client(args):
                 # Read the data produced by the server this frame.
                 measurements, sensor_data = client.read_data()
 
-                depth_array = np.log(sensor_data['CameraDepth'].data).astype('float16')
+                depth_array = np.log(sensor_data['CameraDepth'].data).astype(DTYPE)
 
                 one_log_dict, which_closest  = controller.control(
                     pts_2D,
@@ -156,7 +161,7 @@ def run_carla_client(args):
                     reverse=False
                 )
 
-                if args.store_data:
+                if store_data:
                     depth_storage[..., frame] = depth_array
                     one_log_dict['frame'] = frame
                     log_dicts[frame] = one_log_dict
@@ -216,10 +221,10 @@ def main():
         dest='controller_name',
         help='Controller name')
     argparser.add_argument(
-        '-st', '--store_data',
-        default=True,
+        '-d', '--dont_store_data',
+        default=False,
         type=bool,
-        dest='store_data',
+        dest='dont_store_data',
         help='Should data be stored')
 
     # For the NN controller

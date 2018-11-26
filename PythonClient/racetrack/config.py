@@ -6,7 +6,7 @@ STEER_BOUND = 6
 THROTTLE_BOUND = 1
 
 # "Controller regularization"
-STEER_NOISE = lambda: random.uniform(-0.1, 0.1)
+STEER_NOISE = lambda : random.uniform(-0.1, 0.1)
 THROTTLE_NOISE = lambda: random.uniform(-0.05, 0.05)
 
 # NN training
