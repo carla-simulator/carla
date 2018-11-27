@@ -6,7 +6,8 @@
 
 
 #include "Util/NonCopyable.h"
-#include "EngineMinimal.h"
+#include "Logging/LogMacros.h"
+#include "Modules/ModuleInterface.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogCarla, Log, All);
 DECLARE_LOG_CATEGORY_EXTERN(LogCarlaServer, Log, All);
