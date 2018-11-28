@@ -7,8 +7,6 @@
 #include "Carla.h"
 #include "Carla/Util/OpenDrive.h"
 
-#include "Engine.h"
-
 FString FOpenDrive::Load(FString MapName)
 {
 #if WITH_EDITOR
