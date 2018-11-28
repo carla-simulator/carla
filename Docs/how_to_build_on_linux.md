@@ -12,10 +12,6 @@ sudo apt-get install build-essential clang-5.0 lld-5.0 g++-7 ninja-build python 
 pip install --user setuptools nose2
 ```
 
-Note that some dependencies require **CMake 3.9** or later installed in your
-machine, you can retrieve the latest version from the
-[CMake download page][cmakelink].
-
 To avoid compatibility issues between Unreal Engine and the CARLA dependencies,
 the best configuration is to compile everything with the same compiler version
 and C++ runtime library. We use clang 5.0 and LLVM's libc++. We recommend to
