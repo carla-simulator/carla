@@ -2,39 +2,57 @@
 RosBridge class with rosbag support
 """
 
-import time
-from datetime import datetime
-
-from tf2_msgs.msg import TFMessage
-import rosbag
-import rospy
 import os
+
+import rospy
+import rosbag
 
 from carla_ros_bridge.bridge import CarlaRosBridge
 
 
 class CarlaRosBridgeWithBag(CarlaRosBridge):
-    def __init__(self, *args, **kwargs):
-        super(CarlaRosBridgeWithBag, self).__init__(*args, **kwargs)
 
-        prefix, ext = os.path.splitext(rospy.get_param('rosbag_fname'))
-        rosbag_fname = os.path.abspath(prefix + rospy.get_param('curr_episode'))
+    """
+    Carla Ros bridge with writing ROS bag
+    """
+
+    def __init__(self, carla_world, params):
+        """
+        Constructor
+
+        :param carla_world: carla world object
+        :type carla_world: carla.World
+        :param params: dict of parameters, see settings.yaml
+        :type params: dict
+        """
+        super(CarlaRosBridgeWithBag, self).__init__(
+            carla_world=carla_world, params=params)
+
+        prefix, ext = os.path.splitext(self.get_param('rosbag_fname'))
+        rosbag_fname = os.path.abspath(prefix + self.get_param('curr_episode'))
         self.bag = rosbag.Bag(rosbag_fname, mode='w')
 
-    def send_msgs(self):
-        for publisher, msg in self.msgs_to_publish:
-            self.bag.write(publisher.name, msg, self.cur_time)
+    def destroy(self):
+        """
+        Function (virtual) to destroy this object.
 
-        tf_msg = TFMessage(self.tf_to_publish)
-        self.bag.write('tf', tf_msg, self.cur_time)
+        Close the ROS bag file
+        Finally forward call to super class.
 
-        super(CarlaRosBridgeWithBag, self).send_msgs()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
+        :return:
+        """
         rospy.loginfo("Closing the bag file")
         self.bag.close()
-        super(CarlaRosBridgeWithBag, self).__exit__(exc_type, exc_value,
-                                                    traceback)
+        super(CarlaRosBridgeWithBag, self).destroy()
+
+    def send_msgs(self):
+        """
+        Function (overridden) to actually write the collected ROS messages out
+        into the RosBag before sending them via the publisher.
+
+        :return:
+        """
+        for publisher, msg in self.msgs_to_publish:
+            self.bag.write(publisher.name, msg, self.get_current_ros_time())
+
+        super(CarlaRosBridgeWithBag, self).send_msgs()

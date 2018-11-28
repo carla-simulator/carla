@@ -265,7 +265,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
   ResY.RecommendedValues = { TEXT("600") };
   ResY.bRestrictToRecommended = false;
 
-  Definition.Variations = {ResX, ResY, FOV};
+  Definition.Variations.Append({ResX, ResY, FOV});
 
   if (bEnableModifyingPostProcessEffects)
   {
@@ -328,7 +328,7 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
   LowerFOV.Type = EActorAttributeType::Float;
   LowerFOV.RecommendedValues = { TEXT("-30.0") };
 
-  Definition.Variations = {Channels, Range, PointsPerSecond, Frequency, UpperFOV, LowerFOV};
+  Definition.Variations.Append({Channels, Range, PointsPerSecond, Frequency, UpperFOV, LowerFOV});
 
   Success = CheckActorDefinition(Definition);
 }

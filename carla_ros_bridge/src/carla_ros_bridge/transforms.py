@@ -1,30 +1,70 @@
 """
-Tool functions to convert transforms from carla to ros coordinate system
+Tool functions to convert transforms from carla to ROS coordinate system
 """
-from geometry_msgs.msg import Vector3, Quaternion, Transform, Pose
-import tf
-import numpy
-import carla 
 
-def carla_location_to_ros_translation(carla_location):
+import math
+
+import tf
+from geometry_msgs.msg import Vector3, Quaternion, Transform, Pose, Point, Twist, Accel
+
+
+def carla_location_to_ros_vector3(carla_location):
     """
-    Convert a carla transform to a ros transform
-    :param carla_transform:
-    :return: a ros transform
+    Convert a carla location to a ROS vector3
+
+    Considers the conversion from left-handed system (unreal) to right-handed
+    system (ROS)
+
+    :param carla_location: the carla location
+    :type carla_location: carla.Location
+    :return: a ROS vector3
+    :rtype: geometry_msgs.msg.Vector3
     """
     ros_translation = Vector3()
-    # remember that we go from left-handed system (unreal) to right-handed system (ros)
     ros_translation.x = carla_location.x
     ros_translation.y = -carla_location.y
     ros_translation.z = carla_location.z
 
     return ros_translation
 
-def carla_rotation_to_ros_rotation(carla_rotation):
 
-    roll = -carla_rotation.roll
-    pitch = carla_rotation.pitch
-    yaw = -carla_rotation.yaw
+def carla_location_to_ros_point(carla_location):
+    """
+    Convert a carla location to a ROS point
+
+    Considers the conversion from left-handed system (unreal) to right-handed
+    system (ROS)
+
+    :param carla_location: the carla location
+    :type carla_location: carla.Location
+    :return: a ROS point
+    :rtype: geometry_msgs.msg.Point
+    """
+    ros_point = Point()
+    ros_point.x = carla_location.x
+    ros_point.y = -carla_location.y
+    ros_point.z = carla_location.z
+
+    return ros_point
+
+
+def carla_rotation_to_ros_quaternion(carla_rotation):
+    """
+    Convert a carla rotation to a ROS quaternion
+
+    Considers the conversion from left-handed system (unreal) to right-handed
+    system (ROS).
+    Considers the conversion from degrees (carla) to radians (ROS).
+
+    :param carla_rotation: the carla rotation
+    :type carla_rotation: carla.Rotation
+    :return: a ROS quaternion
+    :rtype: geometry_msgs.msg.Quaternion
+    """
+
+    roll = -math.radians(carla_rotation.roll)
+    pitch = math.radians(carla_rotation.pitch)
+    yaw = -math.radians(carla_rotation.yaw)
 
     ros_quaternion = Quaternion()
 
@@ -33,71 +73,106 @@ def carla_rotation_to_ros_rotation(carla_rotation):
     ros_quaternion.y = quat[1]
     ros_quaternion.z = quat[2]
     ros_quaternion.w = quat[3]
-    
+
     return ros_quaternion
+
+
+def carla_velocity_to_ros_twist(carla_velocity):
+    """
+    Convert a carla velocity to a ROS twist
+
+    Considers the conversion from left-handed system (unreal) to right-handed
+    system (ROS)
+    The angular velocities remain zero.
+
+    :param carla_velocity: the carla velocity
+    :type carla_velocity: carla.Vector3D
+    :return: a ROS twist
+    :rtype: geometry_msgs.msg.Twist
+    """
+    ros_twist = Twist()
+    ros_twist.linear.x = carla_velocity.x
+    ros_twist.linear.y = -carla_velocity.y
+    ros_twist.linear.z = carla_velocity.z
+
+    return ros_twist
+
+
+def carla_acceleration_to_ros_accel(carla_acceleration):
+    """
+    Convert a carla acceleration to a ROS accel
+
+    Considers the conversion from left-handed system (unreal) to right-handed
+    system (ROS)
+    The angular accelerations remain zero.
+
+    :param carla_acceleration: the carla acceleration
+    :type carla_acceleration: carla.Vector3D
+    :return: a ROS accel
+    :rtype: geometry_msgs.msg.Accel
+    """
+    ros_accel = Accel()
+    ros_accel.linear.x = carla_acceleration.x
+    ros_accel.linear.y = -carla_acceleration.y
+    ros_accel.linear.z = carla_acceleration.z
+
+    return ros_accel
+
 
 def carla_transform_to_ros_transform(carla_transform):
     """
-    Convert a carla transform to a ros transform
-    :param carla_transform:
-    :return: a ros transform
+    Convert a carla transform to a ROS transform
+
+    See carla_location_to_ros_vector3() and carla_rotation_to_ros_quaternion() for details
+
+    :param carla_transform: the carla transform
+    :type carla_transform: carla.Transform
+    :return: a ROS transform
+    :rtype: geometry_msgs.msg.Transform
     """
     ros_transform = Transform()
 
-    ros_transform.translation = carla_location_to_ros_translation(carla_transform.location)
-    ros_transform.rotation = carla_rotation_to_ros_rotation(carla_transform.rotation)
+    ros_transform.translation = carla_location_to_ros_vector3(
+        carla_transform.location)
+    ros_transform.rotation = carla_rotation_to_ros_quaternion(
+        carla_transform.rotation)
 
     return ros_transform
 
-def carla_location_to_ros_transform(carla_location):
+
+def carla_transform_to_ros_pose(carla_transform):
     """
-    Convert a carla transform to a ros transform
-    :param carla_transform:
-    :return: a ros transform
+    Convert a carla transform to a ROS pose
+
+    See carla_location_to_ros_point() and carla_rotation_to_ros_quaternion() for details
+
+    :param carla_transform: the carla transform
+    :type carla_transform: carla.Transform
+    :return: a ROS pose
+    :rtype: geometry_msgs.msg.Pose
     """
-    ros_transform = Transform()
+    ros_pose = Pose()
 
-    ros_transform.translation = carla_location_to_ros_translation(carla_location)
-    
-    ros_transform.rotation = carla_rotation_to_ros_rotation( carla.Rotation() )
+    ros_pose.position = carla_location_to_ros_point(
+        carla_transform.location)
+    ros_pose.orientation = carla_rotation_to_ros_quaternion(
+        carla_transform.rotation)
 
-    return ros_transform
+    return ros_pose
 
-def ros_transform_to_matrix(ros_transform):
-    trans_mat = tf.transformations.translation_matrix((ros_transform.translation.x, ros_transform.translation.y, ros_transform.translation.z ))
-    rot_mat   = tf.transformations.quaternion_matrix( (ros_transform.rotation.x, ros_transform.rotation.y, ros_transform.rotation.z, ros_transform.rotation.w) )
-    mat = numpy.dot(trans_mat, rot_mat)
-    return mat
 
-def concat_two_ros_transforms(ros_transform_left, ros_transform_right):
-    mat_left = ros_transform_to_matrix(ros_transform_left)
-    mat_right = ros_transform_to_matrix(ros_transform_right)
-    
-    mat_result = numpy.dot(mat_left, mat_right)
-    ros_transform_result = Transform()
-    trans = tf.transformations.translation_from_matrix(mat_result)
-    ros_transform_result.translation.x = trans[0]
-    ros_transform_result.translation.y = trans[1]
-    ros_transform_result.translation.z = trans[2]
-    quat = tf.transformations.quaternion_from_matrix(mat_result)
-    ros_transform_result.rotation.x = quat[0]
-    ros_transform_result.rotation.y = quat[1]
-    ros_transform_result.rotation.z = quat[2]
-    ros_transform_result.rotation.w = quat[3]
-    
-    return ros_transform_result
-
-def ros_transform_to_pose(ros_transform):
+def carla_location_to_pose(carla_location):
     """
-    Util function to convert a ros transform into a ros pose
+    Convert a carla location to a ROS pose
 
-    :param ros_transform:
-    :return: a ros pose msg
+    See carla_location_to_ros_point() for details.
+    pose quaternion remains zero.
+
+    :param carla_location: the carla location
+    :type carla_location: carla.Location
+    :return: a ROS pose
+    :rtype: geometry_msgs.msg.Pose
     """
-    pose = Pose()
-    pose.position.x = ros_transform.translation.x
-    pose.position.y = ros_transform.translation.y
-    pose.position.z = ros_transform.translation.z
-
-    pose.orientation = ros_transform.rotation
-    return pose
+    ros_pose = Pose()
+    ros_pose.position = carla_location_to_ros_point(carla_location)
+    return ros_pose

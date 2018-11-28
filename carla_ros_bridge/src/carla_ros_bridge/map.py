@@ -1,58 +1,77 @@
 """
-Class to handle occupancy grid
+Class to handle the carla map
 """
 
-import numpy as np
 import rospy
-import tf
-from nav_msgs.msg import OccupancyGrid
 
-from carla.planner.map import CarlaMap
+from geometry_msgs.msg import Transform
+from carla_ros_bridge.child import Child
 
 
-class MapHandler(object):
+class Map(Child):
+
     """
-    Convert CarlaMap lane image to ROS OccupancyGrid message
+    Child implementation details for the map
     """
 
-    def __init__(self, map_name, topic='/map'):
-        self.map_name = map_name
-        self.carla_map = CarlaMap(map_name)
-        self.map_pub = rospy.Publisher(
-            topic, OccupancyGrid, queue_size=10, latch=True)
-        self.build_map_message()
+    def __init__(self, carla_world, parent, topic):
+        """
+        Constructor
 
-    def build_map_message(self):
-        self.map_msg = map_msg = OccupancyGrid()
+        :param carla_world: carla world object
+        :type carla_world: carla.World
+        :param parent: the parent of this
+        :type parent: carla_ros_bridge.Parent
+        :param topic_prefix: the topic prefix to be used for this child
+        :type topic_prefix: string
+        """
+        super(Map, self).__init__(
+            carla_id=-1, carla_world=carla_world, parent=parent, topic_prefix=topic)
+        self.carla_map = self.get_carla_world().get_map()
 
-        # form array for map
-        map_img = self.carla_map.get_map_lanes()
-        # extract green channel, invert, scale to range 0..100, convert to int8
-        map_img = (100 - map_img[..., 1] * 100.0 / 255).astype(np.int8)
-        map_msg.data = map_img.ravel().tolist()
+    def destroy(self):
+        """
+        Function (override) to destroy this object.
 
-        # set up general info
-        map_msg.info.resolution = self.carla_map._pixel_density
-        map_msg.info.width = map_img.shape[1]
-        map_msg.info.height = map_img.shape[0]
+        Remove reference to carla.Map object.
+        Finally forward call to super class.
 
-        # set up origin orientation
-        quat = tf.transformations.quaternion_from_euler(0, 0, np.pi)
-        map_msg.info.origin.orientation.x = quat[0]
-        map_msg.info.origin.orientation.y = quat[1]
-        map_msg.info.origin.orientation.z = quat[2]
-        map_msg.info.origin.orientation.w = quat[3]
+        :return:
+        """
+        rospy.logdebug("Destroying Map()")
+        self.carla_map = None
+        super(Map, self).destroy()
 
-        # set up origin position
-        top_right_corner = float(map_img.shape[1]), 0.0
-        to_world = self.carla_map.convert_to_world(top_right_corner)
-        map_msg.info.origin.position.x = to_world[0]
-        map_msg.info.origin.position.y = -to_world[1]
-        map_msg.info.origin.position.z = to_world[2]
+    def update(self):
+        """
+        Function (override) to update this object.
 
-        # FIXME: height for Town01 is still in centimeters (issue #541)
-        if self.map_name == 'Town01':
-            map_msg.info.origin.position.z *= 100
+        On update map sends:
+        - tf global frame
 
-    def send_map(self):
-        self.map_pub.publish(self.map_msg)
+        :return:
+        """
+        self.send_tf_msg()
+        super(Map).update()
+
+    def get_current_ros_transfrom(self):
+        """
+        Function (override) to return the ros transform of this.
+
+        The global map frame has an empty transform.
+
+        :return:
+        """
+        return Transform()
+
+    def send_tf_msg(self):
+        """
+        Function (override) to send tf messages of the map.
+
+        The camera defines the global fame and has to set frame_id=1
+
+        :return:
+        """
+        tf_msg = self.get_tf_msg()
+        tf_msg.header.frame_id = 1
+        self.parent.publish_ros_message('tf', tf_msg)

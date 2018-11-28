@@ -1,17 +1,20 @@
 #!/usr/bin/env python
 """
-Ros Bridge node for carla simulator
+Entry point for carla simulator ROS bridge
 """
 
 import rospy
-import time
 
-import carla 
+import carla
 
 from carla_ros_bridge.bridge import CarlaRosBridge
 from carla_ros_bridge.bridge_with_rosbag import CarlaRosBridgeWithBag
 
+
 def main():
+    """
+    main function for carla simulator ROS bridge maintaiing the communication client and the CarlaRosBridge objects
+    """
     rospy.init_node("carla_client", anonymous=True)
 
     params = rospy.get_param('carla')
@@ -29,16 +32,17 @@ def main():
 
         rospy.loginfo("Connected")
 
-        bridge_cls = CarlaRosBridgeWithBag if rospy.get_param('rosbag_fname', '') else CarlaRosBridge
-        with bridge_cls(world=carla_client.get_world(), params=params) as carla_ros_bridge:
-            rospy.on_shutdown(carla_ros_bridge.on_shutdown)
-            carla_ros_bridge.run()
-            del carla_ros_bridge
+        bridge_cls = CarlaRosBridgeWithBag if rospy.get_param(
+            'rosbag_fname', '') else CarlaRosBridge
+        carla_ros_bridge = bridge_cls(
+            carla_world=carla_client.get_world(), params=params)
+        carla_ros_bridge.run()
+        carla_ros_bridge = None
 
         rospy.logdebug("Delete world and client")
         del carla_world
         del carla_client
-    
+
     finally:
         rospy.loginfo("Done")
 
