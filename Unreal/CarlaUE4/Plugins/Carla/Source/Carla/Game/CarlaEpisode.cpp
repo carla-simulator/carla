@@ -7,6 +7,8 @@
 #include "Carla.h"
 #include "Carla/Game/CarlaEpisode.h"
 
+#include "Carla/Vehicle/VehicleSpawnPoint.h"
+
 #include "EngineUtils.h"
 #include "GameFramework/SpectatorPawn.h"
 
@@ -35,6 +37,15 @@ UCarlaEpisode::UCarlaEpisode(const FObjectInitializer &ObjectInitializer)
       static uint32 COUNTER = 0u;
       return ++COUNTER;
     }()) {}
+
+TArray<FTransform> UCarlaEpisode::GetRecommendedStartTransforms() const
+{
+  TArray<FTransform> SpawnPoints;
+  for (TActorIterator<AVehicleSpawnPoint> It(GetWorld()); It; ++It) {
+    SpawnPoints.Add(It->GetActorTransform());
+  }
+  return SpawnPoints;
+}
 
 const AWorldObserver *UCarlaEpisode::StartWorldObserver(carla::streaming::MultiStream Stream)
 {

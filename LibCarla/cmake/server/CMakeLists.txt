@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.9.0)
+cmake_minimum_required(VERSION 3.5.1)
 project(libcarla-server)
 
 # Install libc++ shared libraries.
@@ -47,6 +47,24 @@ install(FILES ${libcarla_carla_streaming_detail_tcp_headers} DESTINATION include
 file(GLOB libcarla_carla_streaming_low_level_headers "${libcarla_source_path}/carla/streaming/low_level/*.h")
 install(FILES ${libcarla_carla_streaming_low_level_headers} DESTINATION include/carla/streaming/low_level)
 
+file(GLOB libcarla_carla_road_headers "${libcarla_source_path}/carla/road/*.h")
+install(FILES ${libcarla_carla_road_headers} DESTINATION include/carla/road)
+
+file(GLOB libcarla_carla_road_element_headers "${libcarla_source_path}/carla/road/element/*.h")
+install(FILES ${libcarla_carla_road_element_headers} DESTINATION include/carla/road/element)
+
+file(GLOB libcarla_carla_road_element_cephes_headers "${libcarla_source_path}/carla/road/element/cephes/*.h")
+install(FILES ${libcarla_carla_road_element_cephes_headers} DESTINATION include/carla/road/element/cephes)
+
+file(GLOB libcarla_carla_opendrive "${libcarla_source_path}/carla/opendrive/*.h")
+install(FILES ${libcarla_carla_opendrive} DESTINATION include/carla/opendrive)
+
+file(GLOB libcarla_carla_opendrive_parser "${libcarla_source_path}/carla/opendrive/parser/*.h")
+install(FILES ${libcarla_carla_opendrive_parser} DESTINATION include/carla/opendrive/parser)
+
+file(GLOB libcarla_carla_opendrive_parser_pugixml "${libcarla_source_path}/carla/opendrive/parser/pugixml/*.hpp")
+install(FILES ${libcarla_carla_opendrive_parser_pugixml} DESTINATION include/carla/opendrive/parser/pugixml)
+
 install(DIRECTORY "${BOOST_INCLUDE_PATH}/boost" DESTINATION include)
 
 if(WIN32)
@@ -60,16 +78,28 @@ endif()
 # carla_server library.
 
 file(GLOB_RECURSE libcarla_server_sources
-    "${libcarla_source_path}/carla/*.h"
     "${libcarla_source_path}/carla/*.cpp"
-    "${libcarla_source_path}/carla/rpc/*.h"
+    "${libcarla_source_path}/carla/*.h"
+    "${libcarla_source_path}/carla/opendrive/*.cpp"
+    "${libcarla_source_path}/carla/opendrive/*.h"
+    "${libcarla_source_path}/carla/map/*.cpp"
+    "${libcarla_source_path}/carla/map/*.h"
+    "${libcarla_source_path}/carla/map/element/*.cpp"
+    "${libcarla_source_path}/carla/map/element/*.h"
+    "${libcarla_source_path}/carla/map/element/cephes/*.cpp"
+    "${libcarla_source_path}/carla/map/element/cephes/*.h"
+    "${libcarla_source_path}/carla/opendrive/parser/*.cpp"
+    "${libcarla_source_path}/carla/opendrive/parser/*.h"
+    "${libcarla_source_path}/carla/opendrive/parser/pugixml/*.cpp"
+    "${libcarla_source_path}/carla/opendrive/parser/pugixml/*.hpp"
     "${libcarla_source_path}/carla/rpc/*.cpp"
-    "${libcarla_source_path}/carla/sensor/*.h"
+    "${libcarla_source_path}/carla/rpc/*.h"
     "${libcarla_source_path}/carla/sensor/*.cpp"
-    "${libcarla_source_path}/carla/sensor/s11n/*.h"
+    "${libcarla_source_path}/carla/sensor/*.h"
     "${libcarla_source_path}/carla/sensor/s11n/*.cpp"
-    "${libcarla_source_path}/carla/streaming/*.h"
-    "${libcarla_source_path}/carla/streaming/*.cpp")
+    "${libcarla_source_path}/carla/sensor/s11n/*.h"
+    "${libcarla_source_path}/carla/streaming/*.cpp"
+    "${libcarla_source_path}/carla/streaming/*.h")
 
 # Create targets for debug and release in the same build type.
 foreach(target carla_server_debug carla_server)

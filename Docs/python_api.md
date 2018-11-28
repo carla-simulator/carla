@@ -19,6 +19,7 @@
 - `map_name`
 - `debug`
 - `get_blueprint_library()`
+- `get_map()`
 - `get_spectator()`
 - `get_weather()`
 - `set_weather(weather_parameters)`
@@ -30,11 +31,11 @@
 
 ## `carla.DebugHelper`
 
-- `draw_point(location, size=0.1, color={Red}, life_time=-1.0, persistent_lines=True)`
-- `draw_line(begin, end, thickness=0.1, color={Red}, life_time=-1.0, persistent_lines=True)`
-- `draw_arrow(begin, end, thickness=0.1, arrow_size=0.1, color={Red}, life_time=-1.0, persistent_lines=True)`
-- `draw_box(box, rotation, thickness=0.1, color={Red}, life_time=-1.0, persistent_lines=True)`
-- `draw_string(location, text, draw_shadow=False, color={Red}, life_time=-1.0, persistent_lines=True)`
+- `draw_point(location, size=0.1, color=carla.Color(), life_time=-1.0, persistent_lines=True)`
+- `draw_line(begin, end, thickness=0.1, color=carla.Color(), life_time=-1.0, persistent_lines=True)`
+- `draw_arrow(begin, end, thickness=0.1, arrow_size=0.1, color=carla.Color(), life_time=-1.0, persistent_lines=True)`
+- `draw_box(box, rotation, thickness=0.1, color=carla.Color(), life_time=-1.0, persistent_lines=True)`
+- `draw_string(location, text, draw_shadow=False, color=carla.Color(), life_time=-1.0, persistent_lines=True)`
 
 ## `carla.BlueprintLibrary`
 
@@ -86,6 +87,7 @@
 
 - `id`
 - `type_id`
+- `parent`
 - `semantic_tags`
 - `is_alive`
 - `get_world()`
@@ -101,8 +103,8 @@
 ## `carla.Vehicle(carla.Actor)`
 
 - `bounding_box`
-- `control`
 - `apply_control(vehicle_control)`
+- `get_vehicle_control()`
 - `set_autopilot(enabled=True)`
 
 ## `carla.TrafficLight(carla.Actor)`
@@ -151,6 +153,11 @@
 - `other_actor`
 - `normal_impulse`
 
+## `carla.LaneInvasionEvent(carla.SensorData)`
+
+- `actor`
+- `crossed_lane_markings`
+
 ## `carla.VehicleControl`
 
 - `throttle`
@@ -160,6 +167,25 @@
 - `reverse`
 - `__eq__(other)`
 - `__ne__(other)`
+
+## `carla.Map`
+
+- `name`
+- `get_spawn_points()`
+- `get_waypoint(location, project_to_road=True)`
+- `get_topology()`
+- `generate_waypoints(distance)`
+- `to_opendrive()`
+- `save_to_disk(path=self.name)`
+
+## `carla.Waypoint`
+
+- `transform`
+- `is_intersection`
+- `lane_width`
+- `road_id`
+- `lane_id`
+- `next(distance)`
 
 ## `carla.WeatherParameters`
 
@@ -204,6 +230,7 @@ Static presets
 - `x`
 - `y`
 - `z`
+- `distance(other)`
 - `__add__(other)`
 - `__sub__(other)`
 - `__eq__(other)`
@@ -221,6 +248,13 @@ Static presets
 
 - `location`
 - `rotation`
+- `__eq__(other)`
+- `__ne__(other)`
+
+## `carla.BoundingBox`
+
+- `location`
+- `extent`
 - `__eq__(other)`
 - `__ne__(other)`
 
@@ -258,7 +292,14 @@ Static presets
 
 ## `carla.TrafficLightState`
 
-- `Unknown`
+- `Off`
 - `Red`
 - `Yellow`
 - `Green`
+- `Unknown`
+
+## `carla.LaneMarking`
+
+- `Other`
+- `Broken`
+- `Solid`

@@ -8,6 +8,7 @@
 
 #include "carla/Logging.h"
 #include "carla/client/BlueprintLibrary.h"
+#include "carla/client/Map.h"
 #include "carla/client/Sensor.h"
 #include "carla/client/detail/ActorFactory.h"
 #include "carla/sensor/Deserializer.h"
@@ -63,18 +64,30 @@ namespace detail {
     return EpisodeProxy{shared_from_this()};
   }
 
+  SharedPtr<Map> Simulator::GetCurrentMap() {
+    return MakeShared<Map>(_client.GetMapInfo());
+  }
+
   // ===========================================================================
   // -- Access to global objects in the episode --------------------------------
   // ===========================================================================
 
   SharedPtr<BlueprintLibrary> Simulator::GetBlueprintLibrary() {
-    return MakeShared<BlueprintLibrary>(_client.GetActorDefinitions());
+    auto defs = _client.GetActorDefinitions();
+    { /// @todo
+      rpc::ActorDefinition def;
+      def.id = "sensor.other.lane_detector";
+      def.tags = "sensor,other,lane_detector";
+      defs.emplace_back(def);
+    }
+    return MakeShared<BlueprintLibrary>(std::move(defs));
   }
 
   SharedPtr<Actor> Simulator::GetSpectator() {
     return ActorFactory::MakeActor(
         GetCurrentEpisode(),
         _client.GetSpectator(),
+        nullptr,
         GarbageCollectionPolicy::Disabled);
   }
 
@@ -88,7 +101,9 @@ namespace detail {
       Actor *parent,
       GarbageCollectionPolicy gc) {
     rpc::Actor actor;
-    if (parent != nullptr) {
+    if (blueprint.GetId() == "sensor.other.lane_detector") { /// @todo
+      actor.description = blueprint.MakeActorDescription();
+    } else if (parent != nullptr) {
       actor = _client.SpawnActorWithParent(
           blueprint.MakeActorDescription(),
           transform,
@@ -101,7 +116,8 @@ namespace detail {
     DEBUG_ASSERT(_episode != nullptr);
     _episode->RegisterActor(actor);
     const auto gca = (gc == GarbageCollectionPolicy::Inherit ? _gc_policy : gc);
-    auto result = ActorFactory::MakeActor(GetCurrentEpisode(), actor, gca);
+    auto parent_ptr = parent != nullptr ? parent->shared_from_this() : SharedPtr<Actor>();
+    auto result = ActorFactory::MakeActor(GetCurrentEpisode(), actor, parent_ptr, gca);
     log_debug(
         result->GetDisplayId(),
         "created",

@@ -41,6 +41,10 @@ namespace detail {
       return _description.semantic_tags;
     }
 
+    SharedPtr<Actor> GetParent() const {
+      return _parent;
+    }
+
     World GetWorld() const {
       return World{_episode};
     }
@@ -63,11 +67,16 @@ namespace detail {
 
     friend class Simulator;
 
-    ActorState(rpc::Actor description, EpisodeProxy episode);
+    ActorState(
+        rpc::Actor description,
+        EpisodeProxy episode,
+        SharedPtr<Actor> parent);
 
     rpc::Actor _description;
 
     EpisodeProxy _episode;
+
+    SharedPtr<Actor> _parent;
 
     std::string _display_id;
   };

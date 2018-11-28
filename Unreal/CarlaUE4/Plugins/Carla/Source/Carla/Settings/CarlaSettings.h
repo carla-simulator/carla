@@ -8,7 +8,7 @@
 
 #include "Engine/StaticMesh.h"
 
-#include "Carla/Settings/QualityLevel.h"
+#include "Carla/Settings/QualityLevelUE.h"
 #include "Carla/Settings/WeatherDescription.h"
 
 #include "CarlaSettings.generated.h"

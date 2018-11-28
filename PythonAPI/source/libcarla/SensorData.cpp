@@ -12,6 +12,7 @@
 #include <carla/sensor/SensorData.h>
 #include <carla/sensor/data/CollisionEvent.h>
 #include <carla/sensor/data/Image.h>
+#include <carla/sensor/data/LaneInvasionEvent.h>
 #include <carla/sensor/data/LidarMeasurement.h>
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -41,6 +42,11 @@ namespace data {
     out << "CollisionEvent(frame=" << meas.GetFrameNumber()
         << ", other_actor=" << meas.GetOtherActor()
         << ')';
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const LaneInvasionEvent &meas) {
+    out << "LaneInvasionEvent(frame=" << meas.GetFrameNumber() << ')';
     return out;
   }
 
@@ -128,6 +134,7 @@ void export_sensor_data() {
   namespace cr = carla::rpc;
   namespace cs = carla::sensor;
   namespace csd = carla::sensor::data;
+  namespace cre = carla::road::element;
 
   class_<cs::SensorData, boost::noncopyable, boost::shared_ptr<cs::SensorData>>("SensorData", no_init)
     .add_property("frame_number", &cs::SensorData::GetFrameNumber)
@@ -180,6 +187,22 @@ void export_sensor_data() {
     .add_property("actor", &csd::CollisionEvent::GetActor)
     .add_property("other_actor", &csd::CollisionEvent::GetOtherActor)
     .add_property("normal_impulse", CALL_RETURNING_COPY(csd::CollisionEvent, GetNormalImpulse))
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  enum_<cre::LaneMarking>("LaneMarking")
+    .value("Other", cre::LaneMarking::Other)
+    .value("Broken", cre::LaneMarking::Broken)
+    .value("Solid", cre::LaneMarking::Solid)
+  ;
+
+  class_<std::vector<cre::LaneMarking>>("vector_of_lane_markings")
+    .def(vector_indexing_suite<std::vector<cre::LaneMarking>>())
+  ;
+
+  class_<csd::LaneInvasionEvent, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::LaneInvasionEvent>>("LaneInvasionEvent", no_init)
+    .add_property("actor", &csd::LaneInvasionEvent::GetActor)
+    .add_property("crossed_lane_markings", CALL_RETURNING_COPY(csd::LaneInvasionEvent, GetCrossedLaneMarkings))
     .def(self_ns::str(self_ns::self))
   ;
 }

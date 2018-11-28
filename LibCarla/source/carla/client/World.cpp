@@ -25,6 +25,10 @@ namespace client {
     return _episode.Lock()->GetCurrentMapName();
   }
 
+  SharedPtr<Map> World::GetMap() const {
+    return _episode.Lock()->GetCurrentMap();
+  }
+
   SharedPtr<BlueprintLibrary> World::GetBlueprintLibrary() const {
     return _episode.Lock()->GetBlueprintLibrary();
   }

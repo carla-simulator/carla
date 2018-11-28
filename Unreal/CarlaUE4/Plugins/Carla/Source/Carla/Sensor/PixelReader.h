@@ -6,13 +6,13 @@
 
 #pragma once
 
+#include "CoreGlobals.h"
+#include "Engine/TextureRenderTarget2D.h"
+
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Buffer.h>
 #include <carla/sensor/SensorRegistry.h>
 #include <compiler/enable-ue4-macros.h>
-
-#include "CoreGlobals.h"
-#include "Engine/TextureRenderTarget2D.h"
 
 // =============================================================================
 // -- FPixelReader -------------------------------------------------------------
