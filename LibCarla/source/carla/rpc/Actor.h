@@ -22,7 +22,7 @@ namespace rpc {
 
     Actor() = default;
 
-    actor_id_type id;
+    actor_id_type id = 0u;
 
     ActorDescription description;
 

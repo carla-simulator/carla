@@ -1,3 +1,117 @@
+## CARLA 0.9.1
+
+  * New town: Town03
+    - Created with Vector Zero's RoadRunner (including OpenDrive information of the road layout)
+    - Bigger and more diverse
+    - More road variety: multiple lanes and lane markings, curves at different angles, roundabout, elevation, tunnel
+  * Lots of improvements to the Python API
+    - Support for Python 3
+    - Support for retrieving and changing lighting and weather conditions
+    - Migrated Lidar sensor
+    - Migrated image converter methods: Depth, LogarithmicDepth, and CityScapesPalette
+    - Migrated IO methods for sensor data, "save_to_disk" available for PNG, JPEG, TIFF, and PLY
+    - Added support for requesting the list of all the actors alive in the current world, `world.get_actors()`
+    - `world.get_actors()` returns an `ActorList` object with `filter` functionality and lazy initialization of actors
+    - Added collision event sensor, "sensor.other.collision", that triggers a callback on each collision to the actor it is attached to
+    - Added lane detector sensor, "sensor.other.lane_detector", that detects lane invasion events
+    - Added `carla.Map` and `carla.Waypoint` classes for querying info about the road layout
+      - Added methods for converting and saving the map as OpenDrive format
+      - Added `map.get_spawn_points()` to retrieve the recommended spawn points for vehicles
+      - Added `map.get_waypoint(location)` to query the nearest waypoint
+      - Added `map.generate_waypoints(distance)` to generate waypoints all over the map at an approximated distance
+      - Added `map.get_topology()` for getting a list the tuples of waypoints that define the edges of the road graph
+      - Added `waypoint.next(distance)` to retrieve the list of the waypoints at a distance that can be driven from this waypoint
+    - Added `parent` attributes to actors, not None if the actor is attached to another actor
+    - Added `semantic_tags` to actors containing the list of tags of all of its components
+    - Added methods for retrieving velocity and acceleration of actors
+    - Added function to enable/disable simulating physics on an actor, `actor.set_simulate_physics(enabled=True)`
+    - Added bounding boxes to vehicles, `vehicle.bounding_box` property
+    - Exposed last control applied to vehicles, `vehicle.get_vehicle_control()`
+    - Added a "tick" message containing info of all the actors in the scene
+      - Executed in the background and cached
+      - Added `world.wait_for_tick()` for blocking the current thread until a "tick" message is received
+      - Added `world.on_tick(callback)` for executing a callback asynchronously each time a "tick" message is received
+      - These methods return/pass a `carla.Timestamp` object containing, frame count, delta time of last tick, global simulation time, and OS timestamp
+      - Methods retrieving actor's info, e.g. `actor.get_transform()`, don't need to connect with the simulator, which makes these calls quite cheap
+    - Allow drawing debug shapes from Python: points, lines, arrows, boxes, and strings (`world.debug.draw_*`)
+    - Added id (id of current episode) and map name to `carla.World`
+    - Exposed traffic lights and signs as actors. Traffic lights have a specialized actor class that has the traffic light state (red, green, yellow) as property
+    - Added methods for accessing and modifying individual items in `carla.Image` (pixels) and `carla.LidarMeasurement` (locations)
+    - Added `carla.Vector3D` for (x, y, z) objects that are not a `carla.Location`
+    - Removed `client.ping()`, `client.get_server_version()` accomplishes the same
+    - Renamed `contains_X()` methods to `has_X()`
+    - Changed `client.set_timeout(seconds)` to use seconds (float) instead of milliseconds
+    - Allow iterating attributes of an Actor's Blueprint
+    - Fixed wildcard filtering issues, now "vehicle.*" or "*bmw*" patterns work too
+    - Fixed `actor.set_transform()` broken for attached actors
+  * More Python example scripts and improved the present ones
+    - Now all the scripts use the list of recommended spawn points for each map
+    - Renamed "example.py" to "tutorial.py", and updated it with latest changes in API
+    - Added timeout to the examples
+    - "manual_control.py" performance has been improved while having more measurements
+    - "manual_control.py" now has options to change camera type and position
+    - "manual_control.py" now has options to iterate weather presets
+    - "manual_control.py" now has a fancier HUD with lots of info, and F1 key binding to remove it
+    - Added "dynamic_weather.py" to change the weather in real-time (the one used in the video)
+    - Added "spawn_npc.py" to quickly add a lot of NPC vehicles to the simulator
+    - Added "spawn_npc.py --safe" to only add non-problematic vehicles
+    - "vehicle_gallery.py" also got some small fixes
+  * Asset and content improvements
+    - New vehicle: Lincoln MKZ 2017
+    - Refactored weather system, parametrized to make it easier to use
+    - Improved control of bikes and motorbikes, still not perfect but causes less accidents
+    - Added building block generator system
+    - Misc city assets: New building, tunnel columns, rail-road bridges, new textures, new urban props
+    - Adjusted vehicle physics and center of mass
+    - Adjusted the maximum distance culling for foliage
+    - Adjusted pedestrian animations and scale issues (not yet available with new API though)
+    - Improved map building blueprints, spline based asset repeaters, and wall building tools
+    - Replaced uses of Unreal's Foliage system with standard static meshes to work around a visual bug in Linux systems
+    - Fixed filenames too long when packing the project on Windows
+    - Fixed "SplineMeshRepeater" loses its collider mesh from time to time
+    - Standardized asset nomenclature
+  * New system for road information based on OpenDrive format
+    - Added new map classes for querying info about the road layout and topology
+    - Added methods for finding closest point on the road
+    - Added methods for generating and iterating waypoints based on the road layout
+    - Added OpenDrive parser to convert OpenDrive files to our map data structures
+  * Other miscellaneous improvements and fixes
+    - Fixed single channel Lidar crash (by @cwecht)
+    - Fixed command-line argument `-carla-settings` fails to load absolute paths (by @harlowja)
+    - Added an option to command-line to change quality level when launching the simulator, `-quality-level=Low`
+    - Added ROS bridge odometry message (by @ShepelIlya)
+    - New lens distortion shader, sadly not yet integrated with our cameras :(
+    - New Docker tutorial
+    - Disabled texture streaming to avoid issue of textures not loading in scene captures
+    - Adjusted scene capture camera gamma to 2.4
+    - Fixed leaking objects in simulation when despawning a vehicle. Now Pawn's controller is destroyed too if necessary when destroying an Actor
+    - Fixed overflow on platform time-stamp, now it uses `double`
+    - Upgraded @rpclib to fix crash when client exits too fast (rpclib/PR#167)
+    - Moved "PythonClient" inside deprecated folder to avoid confusion
+    - Refactored sensor related code
+      - New plugin system for sensors that simplifies adding sensors, mini-tutorial at #830
+      - Compile-time dispatcher for sensors and serializers
+  * Improvements to the streaming library
+    - Added multi-streams for streaming simultaneously to multiple clients (used by the "tick" message)
+    - Messages re-use allocated memory when possible
+    - Allows unsubscribing from a stream
+    - Fixed client receives interleaved sensor messages, some messages can be discarded if connection is too slow though
+    - Fixed streaming client fails to connect in Windows
+    - Fixed streaming client keeps trying to reconnect after destroying a sensor
+  * Refactored client C++ API
+    - Python GIL is released whenever possible to avoid blocking
+    - Fixed deadlock when closing the simulator while a client is connected
+    - Fixed crash on simulator shutdown if a client has connected at some point
+    - Set methods are now sent async which greatly improves performance in the client-side
+    - Vehicle control is cached and not sent if haven't changed
+    - Suppressed exceptions in destructors
+  * Other development improvements
+    - Improved Linux Makefile, fine-grained targets to reduce compilation times in development
+    - Workaround for "setup.py" to link against "libcarla_client.a" again (Linux only)
+    - Added support for ".gtest" file, each line of this file is passed to GTest executables as arguments when running `make check` targets
+    - Python eggs are also archived on Jenkins to easily get them without downloading the full package
+    - Added uncrustify config file for formatting UE4 C++ code
+
 ## CARLA 0.9.0
 
   * Upgraded to Unreal Engine 4.19

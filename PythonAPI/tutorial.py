@@ -56,11 +56,9 @@ def main():
         color = random.choice(bp.get_attribute('color').recommended_values)
         bp.set_attribute('color', color)
 
-        # Now we need to give an initial transform to the vehicle. This is a
-        # nice spot in Town01.
-        transform = carla.Transform(
-            carla.Location(x=140.0, y=199.0, z=40.0),
-            carla.Rotation(yaw=0.0))
+        # Now we need to give an initial transform to the vehicle. We choose a
+        # random transform from the list of recommended spawn points of the map.
+        transform = random.choice(world.get_map().get_spawn_points())
 
         # So let's tell the world to spawn the vehicle.
         vehicle = world.spawn_actor(bp, transform)

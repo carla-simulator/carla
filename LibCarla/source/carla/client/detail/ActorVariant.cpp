@@ -16,6 +16,7 @@ namespace detail {
     _value = detail::ActorFactory::MakeActor(
         episode,
         boost::get<rpc::Actor>(std::move(_value)),
+        nullptr, /// @todo We need to create the parent too.
         GarbageCollectionPolicy::Disabled);
   }
 

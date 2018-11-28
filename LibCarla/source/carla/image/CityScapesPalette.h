@@ -23,7 +23,7 @@ namespace detail {
         {250u, 170u, 160u}, // other         =   3u,
         {220u,  20u,  60u}, // pedestrian    =   4u,
         {153u, 153u, 153u}, // pole          =   5u,
-        {153u, 153u, 153u}, // road line     =   6u,
+        {157u, 234u,  50u}, // road line     =   6u,
         {128u,  64u, 128u}, // road          =   7u,
         {244u,  35u, 232u}, // sidewalk      =   8u,
         {107u, 142u,  35u}, // vegetation    =   9u,

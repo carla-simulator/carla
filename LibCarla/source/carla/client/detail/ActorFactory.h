@@ -30,6 +30,7 @@ namespace detail {
     static SharedPtr<Actor> MakeActor(
         EpisodeProxy episode,
         rpc::Actor actor_description,
+        SharedPtr<Actor> parent,
         GarbageCollectionPolicy garbage_collection_policy);
   };
 
