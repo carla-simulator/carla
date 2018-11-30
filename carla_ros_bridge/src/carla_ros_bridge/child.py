@@ -6,7 +6,6 @@ from abc import abstractmethod
 
 import rospy
 
-from std_msgs.msg import Header
 from geometry_msgs.msg import TransformStamped
 
 from carla_ros_bridge.parent import Parent
@@ -130,12 +129,9 @@ class Child(Parent):
         :type use_parent_frame: boolean
         :return: prefilled Header object
         """
-        header = Header()
-        header.stamp = self.get_current_ros_time()
+        header = super(Child, self).get_msg_header()
         if use_parent_frame:
             header.frame_id = self.parent.get_frame_id()
-        else:
-            header.frame_id = self.get_frame_id()
         return header
 
     def send_tf_msg(self):

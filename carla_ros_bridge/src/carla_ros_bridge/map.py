@@ -5,6 +5,7 @@ Class to handle the carla map
 import rospy
 
 from geometry_msgs.msg import Transform
+from std_msgs.msg import String
 from carla_ros_bridge.child import Child
 
 
@@ -29,6 +30,12 @@ class Map(Child):
             carla_id=-1, carla_world=carla_world, parent=parent, topic_prefix=topic)
         self.carla_map = self.get_carla_world().get_map()
 
+        self.open_drive_publisher = rospy.Publisher(
+            'map', String, queue_size=1, latch=True)
+        open_drive_msg = String()
+        open_drive_msg.data = self.carla_map.to_opendrive()
+        self.open_drive_publisher.publish(open_drive_msg)
+
     def destroy(self):
         """
         Function (override) to destroy this object.
@@ -40,6 +47,7 @@ class Map(Child):
         """
         rospy.logdebug("Destroying Map()")
         self.carla_map = None
+        self.open_drive_publisher = None
         super(Map, self).destroy()
 
     def update(self):

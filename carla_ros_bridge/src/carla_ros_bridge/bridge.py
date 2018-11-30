@@ -49,7 +49,7 @@ class CarlaRosBridge(Parent):
 
         self.publishers['/carla/objects'] = rospy.Publisher(
             '/carla/objects', ObjectArray, queue_size=10)
-        self.object_array = None
+        self.object_array = ObjectArray()
 
         self.map = Map(carla_world=self.carla_world, parent=self, topic='/map')
 
@@ -99,8 +99,6 @@ class CarlaRosBridge(Parent):
             self.tf_to_publish.append(msg)
         elif topic == '/carla/objects':
             # objects are collected in same message
-            if self.object_array is None:
-                self.object_array = ObjectArray(header=msg.header)
             self.object_array.objects.append(msg)
         else:
             if topic not in self.publishers:
@@ -174,10 +172,10 @@ class CarlaRosBridge(Parent):
         self.msgs_to_publish.append((self.publishers['tf'], tf_msg))
         self.tf_to_publish = []
 
-        if self.object_array != None:
-            self.msgs_to_publish.append(
-                (self.publishers['/carla/objects'], self.object_array))
-            self.object_array = None
+        self.object_array.header = self.get_msg_header()
+        self.msgs_to_publish.append(
+            (self.publishers['/carla/objects'], self.object_array))
+        self.object_array = ObjectArray()
 
     def send_msgs(self):
         """

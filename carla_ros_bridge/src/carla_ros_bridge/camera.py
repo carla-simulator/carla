@@ -11,6 +11,7 @@ import tf
 from cv_bridge import CvBridge
 from sensor_msgs.msg import CameraInfo
 
+import carla
 from carla_ros_bridge.sensor import Sensor
 
 
@@ -37,6 +38,10 @@ class Camera(Sensor):
         """
         if carla_actor.type_id.startswith("sensor.camera.rgb"):
             return RgbCamera(carla_actor=carla_actor, parent=parent)
+        elif carla_actor.type_id.startswith("sensor.camera.depth"):
+            return DepthCamera(carla_actor=carla_actor, parent=parent)
+        elif carla_actor.type_id.startswith("sensor.camera.semantic_segmentation"):
+            return SemanticSegmentationCamera(carla_actor=carla_actor, parent=parent)
         else:
             return Camera(carla_actor=carla_actor, parent=parent)
 
@@ -63,7 +68,7 @@ class Camera(Sensor):
                               self.get_id(), self.get_parent_id(),
                               self.carla_actor.type_id, self.carla_actor.attributes))
         else:
-            self.build_camera_info()
+            self._build_camera_info()
             self.carla_actor.listen(self.update_camera_data)
 
     def destroy(self):
@@ -80,9 +85,9 @@ class Camera(Sensor):
             self.carla_actor.stop()
         super(Camera, self).destroy()
 
-    def build_camera_info(self):
+    def _build_camera_info(self):
         """
-        Function to compute camera info
+        Private function to compute camera info
 
         camera info doesn't change over time
         """
@@ -126,7 +131,7 @@ class Camera(Sensor):
 
         self.publish_ros_message(self.topic_name() + '/camera_info', cam_info)
         self.publish_ros_message(
-            self.topic_name() + '/image_color', img_msg)
+            self.topic_name() + '/' + self.get_image_topic_name(), img_msg)
 
     def update(self):
         """
@@ -179,11 +184,22 @@ class Camera(Sensor):
         raise NotImplementedError(
             "This function has to be re-implemented by derived classes")
 
+    @abstractmethod
+    def get_image_topic_name(self):
+        """
+        Virtual function to provide the actual image topic name
+
+        :return image topic name
+        :rtype string
+        """
+        raise NotImplementedError(
+            "This function has to be re-implemented by derived classes")
+
 
 class RgbCamera(Camera):
 
     """
-    Camera implementation details for rgb cameras
+    Camera implementation details for rgb camera
     """
 
     def __init__(self, carla_actor, parent, topic_prefix=None):
@@ -205,8 +221,10 @@ class RgbCamera(Camera):
 
     def get_carla_image_data_array(self, carla_image):
         """
-        Virtual function to convert the carla image to a numpy data array
+        Function (override) to convert the carla image to a numpy data array
         as input for the cv_bridge.cv2_to_imgmsg() function
+
+        The RGB camera provides a 4-channel int8 color format (bgra).
 
         :param carla_image: carla image object
         :type carla_image: carla.Image
@@ -218,3 +236,119 @@ class RgbCamera(Camera):
             dtype=np.uint8, buffer=carla_image.raw_data)
 
         return carla_image_data_array
+
+    def get_image_topic_name(self):
+        """
+        virtual function to provide the actual image topic name
+
+        :return image topic name
+        :rtype string
+        """
+        return "image_color"
+
+
+class DepthCamera(Camera):
+
+    """
+    Camera implementation details for depth camera
+    """
+
+    def __init__(self, carla_actor, parent, topic_prefix=None):
+        """
+        Constructor
+
+        :param carla_actor: carla actor object
+        :type carla_actor: carla.Actor
+        :param parent: the parent of this
+        :type parent: carla_ros_bridge.Parent
+        :param topic_prefix: the topic prefix to be used for this actor
+        :type topic_prefix: string
+        """
+        if topic_prefix is None:
+            topic_prefix = 'camera/depth'
+        super(DepthCamera, self).__init__(carla_actor=carla_actor,
+                                          parent=parent,
+                                          topic_prefix=topic_prefix)
+
+    def get_carla_image_data_array(self, carla_image):
+        """
+        Function (override) to convert the carla image to a numpy data array
+        as input for the cv_bridge.cv2_to_imgmsg() function
+
+        The depth camera raw image is converted to a logarithmic depth image
+        having 1-channel float32.
+
+        :param carla_image: carla image object
+        :type carla_image: carla.Image
+        :return numpy data array containing the image information
+        :rtype np.ndarray
+        """
+
+        carla_image.convert(carla.ColorConverter.LogarithmicDepth)
+        carla_image_data_array = np.ndarray(
+            shape=(carla_image.height, carla_image.width, 1),
+            dtype=np.float32, buffer=carla_image.raw_data)
+        return carla_image_data_array
+
+    def get_image_topic_name(self):
+        """
+        Function (override) to provide the actual image topic name
+
+        :return image topic name
+        :rtype string
+        """
+        return "image_depth"
+
+
+class SemanticSegmentationCamera(Camera):
+
+    """
+    Camera implementation details for segmentation camera
+    """
+
+    def __init__(self, carla_actor, parent, topic_prefix=None):
+        """
+        Constructor
+
+        :param carla_actor: carla actor object
+        :type carla_actor: carla.Actor
+        :param parent: the parent of this
+        :type parent: carla_ros_bridge.Parent
+        :param topic_prefix: the topic prefix to be used for this actor
+        :type topic_prefix: string
+        """
+        if topic_prefix is None:
+            topic_prefix = 'camera/semantic_segmentation'
+        super(
+            SemanticSegmentationCamera, self).__init__(carla_actor=carla_actor,
+                                                       parent=parent,
+                                                       topic_prefix=topic_prefix)
+
+    def get_carla_image_data_array(self, carla_image):
+        """
+        Function (override) to convert the carla image to a numpy data array
+        as input for the cv_bridge.cv2_to_imgmsg() function
+
+        The segmentation camera raw image is converted to the city scapes palette image
+        having 4-channel uint8.
+
+        :param carla_image: carla image object
+        :type carla_image: carla.Image
+        :return numpy data array containing the image information
+        :rtype np.ndarray
+        """
+
+        carla_image.convert(carla.ColorConverter.CityScapesPalette)
+        carla_image_data_array = np.ndarray(
+            shape=(carla_image.height, carla_image.width, 4),
+            dtype=np.uint8, buffer=carla_image.raw_data)
+        return carla_image_data_array
+
+    def get_image_topic_name(self):
+        """
+        Function (override) to provide the actual image topic name
+
+        :return image topic name
+        :rtype string
+        """
+        return "image_segmentation"

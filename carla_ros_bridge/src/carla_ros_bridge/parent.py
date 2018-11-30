@@ -5,6 +5,7 @@ Parent factory class for carla.Actor lifecycle handling
 from abc import abstractmethod
 
 import rospy
+from std_msgs.msg import Header
 
 
 class Parent(object):
@@ -105,20 +106,24 @@ class Parent(object):
         :return:
         """
         actors_to_delete = []
-        for actor_id, actor in self.child_actors.iteritems():
-            if not actor.carla_actor.is_alive:
+        for child_actor_id, child_actor in self.child_actors.iteritems():
+            if not child_actor.carla_actor.is_alive:
                 rospy.loginfo(
-                    "Detected non alive child Actor(id={})".format(actor_id))
-                actors_to_delete.append(actor_id)
+                    "Detected non alive child Actor(id={})".format(child_actor_id))
+                actors_to_delete.append(child_actor_id)
             else:
-                found_actors = (
-                    actor for actor in self.carla_world.get_actors() if actor.id == actor_id)
-                if not found_actors:
+                found_actor = False
+                for actor in self.carla_world.get_actors():
+                    if actor.id == child_actor_id:
+                        found_actor = True
+                        break
+                if not found_actor:
                     rospy.loginfo(
-                        "Detected not existing child Actor(id={})".format(actor_id))
-                    actors_to_delete.append(actor_id)
+                        "Detected not existing child Actor(id={})".format(child_actor_id))
+                    actors_to_delete.append(child_actor_id)
 
         for actor_id in actors_to_delete:
+            self.child_actors[actor_id].destroy()
             del self.child_actors[actor_id]
 
     def update(self):
@@ -142,6 +147,17 @@ class Parent(object):
         self._destroy_dead_children()
         for actor_id, actor in self.child_actors.iteritems():
             actor.update()
+
+    def get_msg_header(self):
+        """
+        Helper function to create a ROS message Header
+
+        :return: prefilled Header object
+        """
+        header = Header()
+        header.stamp = self.get_current_ros_time()
+        header.frame_id = self.get_frame_id()
+        return header
 
     @abstractmethod
     def get_current_ros_time(self):

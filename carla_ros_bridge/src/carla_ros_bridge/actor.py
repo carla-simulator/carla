@@ -44,7 +44,7 @@ class Actor(Child):
         super(Actor, self).__init__(
             carla_id=carla_actor.id, carla_world=carla_actor.get_world(), parent=parent, topic_prefix=topic_prefix)
         self.carla_actor = carla_actor
-        rospy.loginfo("Created Actor-{}(id={}, parent_id={}, type={}, topic_name={}, attributes={}".format(
+        rospy.logdebug("Created Actor-{}(id={}, parent_id={}, type={}, topic_name={}, attributes={}".format(
             self.__class__.__name__, self.get_id(), self.get_parent_id(),
             self.carla_actor.type_id, self.topic_name(), self.carla_actor.attributes))
 
