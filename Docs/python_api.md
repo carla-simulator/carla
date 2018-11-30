@@ -90,6 +90,7 @@
 - `parent`
 - `semantic_tags`
 - `is_alive`
+- `attributes`
 - `get_world()`
 - `get_location()`
 - `get_transform()`
