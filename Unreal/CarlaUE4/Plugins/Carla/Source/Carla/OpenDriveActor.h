@@ -27,6 +27,11 @@ private:
 
   TArray<ARoutePlanner *> RoutePlanners;
 
+#if WITH_EDITOR
+  UPROPERTY(Category = "Generate", EditAnywhere)
+  bool bGenerateRoutes = false;
+#endif
+
 public:
 
   // Sets default values for this actor's properties
@@ -39,6 +44,10 @@ public:
   virtual void BeginDestroy() override;
 
   virtual void OnConstruction(const FTransform &transform) override;
+
+#if WITH_EDITOR
+  void PostEditChangeProperty(struct FPropertyChangedEvent&);
+#endif
 
   ARoutePlanner *GenerateRoutePlanner(const TArray<FVector> &waypoints);
 
