@@ -77,6 +77,7 @@ def main():
             if blueprint.has_attribute('color'):
                 color = random.choice(blueprint.get_attribute('color').recommended_values)
                 blueprint.set_attribute('color', color)
+            blueprint.set_attribute('role_name', 'autopilot')
             vehicle = world.try_spawn_actor(blueprint, transform)
             if vehicle is not None:
                 actor_list.append(vehicle)
