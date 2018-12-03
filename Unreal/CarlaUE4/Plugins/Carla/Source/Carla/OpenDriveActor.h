@@ -27,7 +27,7 @@ private:
 
   TArray<ARoutePlanner *> RoutePlanners;
 
-#if WITH_EDITOR
+#if WITH_EDITOR_DATA
   UPROPERTY(Category = "Generate", EditAnywhere)
   bool bGenerateRoutes = false;
 #endif
@@ -46,7 +46,7 @@ public:
   virtual void OnConstruction(const FTransform &transform) override;
 
 #if WITH_EDITOR
-  void PostEditChangeProperty(struct FPropertyChangedEvent&);
+  void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent);
 #endif
 
   ARoutePlanner *GenerateRoutePlanner(const TArray<FVector> &waypoints);
