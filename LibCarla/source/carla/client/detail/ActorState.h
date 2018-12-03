@@ -8,6 +8,7 @@
 
 #include "carla/NonCopyable.h"
 #include "carla/client/World.h"
+#include "carla/client/ActorAttribute.h"
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/rpc/Actor.h"
 
@@ -49,6 +50,11 @@ namespace detail {
       return World{_episode};
     }
 
+    const std::vector<ActorAttributeValue> &GetAttributes() const
+    {
+      return _attributes;
+    }
+
   protected:
 
     const rpc::Actor &GetActorDescription() const {
@@ -79,6 +85,8 @@ namespace detail {
     SharedPtr<Actor> _parent;
 
     std::string _display_id;
+
+    std::vector<ActorAttributeValue> _attributes;
   };
 
 } // namespace detail

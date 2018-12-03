@@ -38,9 +38,9 @@ namespace detail {
       return *this;
     }
 
-    SharedPtr<client::Actor> Get(EpisodeProxy episode) const {
+    SharedPtr<client::Actor> Get(EpisodeProxy episode, SharedPtr<const client::ActorList> actor_list = nullptr) const {
       if (_value.which() == 0u) {
-        MakeActor(episode);
+        MakeActor(episode, actor_list);
       }
       DEBUG_ASSERT(_value.which() == 1u);
       return boost::get<SharedPtr<client::Actor>>(_value);
@@ -52,6 +52,10 @@ namespace detail {
 
     actor_id_type GetId() const {
       return Serialize().id;
+    }
+
+    actor_id_type GetParentId() const {
+      return Serialize().parent_id;
     }
 
     const std::string &GetTypeId() const {
@@ -72,12 +76,12 @@ namespace detail {
       const rpc::Actor &operator()(const rpc::Actor &actor) const {
         return actor;
       }
-      const rpc::Actor &operator()(const SharedPtr<client::Actor> &actor) const {
+      const rpc::Actor &operator()(const SharedPtr<const client::Actor> &actor) const {
         return actor->Serialize();
       }
     };
 
-    void MakeActor(EpisodeProxy episode) const;
+    void MakeActor(EpisodeProxy episode, SharedPtr<const client::ActorList> actor_list) const;
 
     mutable boost::variant<rpc::Actor, SharedPtr<client::Actor>> _value;
   };
