@@ -39,16 +39,19 @@ void AOpenDriveActor::BeginDestroy()
 void AOpenDriveActor::OnConstruction(const FTransform &transform)
 {
   Super::OnConstruction(transform);
-  
+
 }
 
 #if WITH_EDITOR
-void AOpenDriveActor::PostEditChangeProperty(struct FPropertyChangedEvent& e) {
-  Super::PostEditChangeProperty(e);
-  FName PropertyName = (e.Property != NULL) ? e.Property->GetFName() : NAME_None;
+void AOpenDriveActor::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
+{
+  Super::PostEditChangeProperty(PropertyChangedEvent);
 
-  if (PropertyName == GET_MEMBER_NAME_CHECKED(AOpenDriveActor, bGenerateRoutes)) {
-    if (bGenerateRoutes) {
+  const FName PropertyName = (e.Property != NULL) ? e.Property->GetFName() : NAME_None;
+  if (PropertyName == GET_MEMBER_NAME_CHECKED(AOpenDriveActor, bGenerateRoutes))
+  {
+    if (bGenerateRoutes)
+    {
       bGenerateRoutes = false;
       BuildRoutes();
     }
