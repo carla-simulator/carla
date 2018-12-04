@@ -26,6 +26,8 @@ public:
 
   ARoutePlanner(const FObjectInitializer &ObjectInitializer);
 
+  virtual void BeginDestroy() override;
+
   void Init();
 
   void SetBoxExtent(const FVector &Extent)
