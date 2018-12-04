@@ -103,7 +103,14 @@ else
       --prefix=../boost-install \
       --with-libraries=python,filesystem \
       --with-python=${py2} --with-python-root=${py2_root}
-  echo "using python : ${pyv} : ${py2_root}/bin/python2 ;" > project-config.jam
+
+  if ${CI}
+  then
+    echo "using python : ${pyv} : ${py2_root}/bin/python2 ;" > ${HOME}/user-config.jam
+  else
+    echo "using python : ${pyv} : ${py2_root}/bin/python2 ;" > project-config.jam
+  fi
+
   ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
   ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
   ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} --clean-all
@@ -124,7 +131,14 @@ else
       --prefix=../boost-install \
       --with-libraries=python \
       --with-python=${py3} --with-python-root=${py3_root}
-  echo "using python : ${pyv} : ${py3_root}/bin/python3 ;" > project-config.jam
+
+  if ${CI}
+  then
+    echo "using python : ${pyv} : ${py3_root}/bin/python3 ;" > ${HOME}/user-config.jam
+  else
+    echo "using python : ${pyv} : ${py3_root}/bin/python3 ;" > project-config.jam
+  fi
+
   ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
   ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
 
