@@ -9,7 +9,13 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 
+#include "Components/ActorComponent.h"
+#include "Components/SceneComponent.h"
+#include "Components/BillboardComponent.h"
+
 #include "Traffic/RoutePlanner.h"
+
+#include "Vehicle/VehicleSpawnPoint.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/geom/Math.h>
@@ -23,48 +29,91 @@ class CARLA_API AOpenDriveActor : public AActor
 {
   GENERATED_BODY()
 
+protected:
+  // A UBillboardComponent to hold Icon sprite
+  UBillboardComponent* SpriteComponent;
+  // Sprite for the Billboard Component
+  UTexture2D* SpriteTexture;
+
 private:
 
+  UPROPERTY()
   TArray<ARoutePlanner *> RoutePlanners;
 
-#if WITH_EDITOR_DATA
+  UPROPERTY()
+  TArray<AVehicleSpawnPoint *> VehicleSpawners;
+
+#if WITH_EDITORONLY_DATA
+
   UPROPERTY(Category = "Generate", EditAnywhere)
   bool bGenerateRoutes = false;
-#endif
+
+  UPROPERTY(Category = "Generate", EditAnywhere, meta = (ClampMin = "0.01", UIMin = "0.01"))
+  float RoadAccuracy = 2.0f;
+
+  UPROPERTY(Category = "Generate", EditAnywhere)
+  bool bRemoveRoutes = false;
+
+  UPROPERTY(Category = "Spawners", EditAnywhere)
+  bool bAddSpawners = true;
+
+  UPROPERTY(Category = "Spawners", EditAnywhere)
+  float SpawnersHeight = 300.0;
+
+  UPROPERTY(Category = "Spawners", EditAnywhere)
+  bool bRemoveCurrentSpawners = false;
+
+  UPROPERTY(Category = "Debug", EditAnywhere)
+  bool bShowDebug = true;
+#endif // WITH_EDITORONLY_DATA
 
 public:
 
-  // Sets default values for this actor's properties
-  AOpenDriveActor();
+  using RoadSegment = carla::road::element::RoadSegment;
+  using DirectedPoint = carla::road::element::DirectedPoint;
+  using LaneInfo = carla::road::element::LaneInfo;
+  using RoadGeneralInfo = carla::road::element::RoadGeneralInfo;
+  using RoadInfoLane = carla::road::element::RoadInfoLane;
+  using IdType = carla::road::element::id_type;
+  using CarlaMath = carla::geom::Math;
 
-  void BuildRoutes();
-
-  virtual void BeginPlay() override;
+  AOpenDriveActor(const FObjectInitializer& ObjectInitializer);
 
   virtual void BeginDestroy() override;
 
-  virtual void OnConstruction(const FTransform &transform) override;
+  void BuildRoutes();
+
+  void RemoveRoutes();
+
+  void DebugRoutes() const;
+
+  void RemoveDebugRoutes() const;
 
 #if WITH_EDITOR
   void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent);
-#endif
+#endif // WITH_EDITOR
 
-  ARoutePlanner *GenerateRoutePlanner(const TArray<FVector> &waypoints);
+  ARoutePlanner *GenerateRoutePlanner(const TArray<DirectedPoint> &waypoints);
 
-  TArray<carla::road::element::DirectedPoint> GenerateLaneZeroPoints(
-      const carla::road::element::RoadSegment *road);
+  TArray<DirectedPoint> GenerateLaneZeroPoints(
+      const RoadSegment *road);
 
-  TArray<TArray<FVector>> GenerateRightLaneWaypoints(
-      const carla::road::element::RoadSegment *road,
-      const TArray<carla::road::element::DirectedPoint> &laneZeroPoints);
+  TArray<TArray<DirectedPoint>> GenerateRightLaneWaypoints(
+      const RoadSegment *road,
+      const TArray<DirectedPoint> &laneZeroPoints);
 
-  TArray<TArray<FVector>> GenerateLeftLaneWaypoints(
-      const carla::road::element::RoadSegment *road,
-      const TArray<carla::road::element::DirectedPoint> &laneZeroPoints);
+  TArray<TArray<DirectedPoint>> GenerateLeftLaneWaypoints(
+      const RoadSegment *road,
+      const TArray<DirectedPoint> &laneZeroPoints);
 
   void GenerateWaypointsJunction(
-      const carla::road::element::RoadSegment *road,
-      TArray<TArray<FVector>> &waypoints);
+      const RoadSegment *road,
+      TArray<TArray<DirectedPoint>> &waypoints);
 
-  void GenerateWaypointsRoad(const carla::road::element::RoadSegment *road);
+  void GenerateWaypointsRoad(const RoadSegment *road);
+
+  void AddSpawners();
+
+  void RemoveSpawners();
+
 };
