@@ -104,7 +104,7 @@ else
       --with-libraries=python,filesystem \
       --with-python=${py2} --with-python-root=${py2_root}
 
-  if ${CI}
+  if ${TRAVIS}
   then
     echo "using python : ${pyv} : ${py2_root}/bin/python2 ;" > ${HOME}/user-config.jam
   else
@@ -132,7 +132,7 @@ else
       --with-libraries=python \
       --with-python=${py3} --with-python-root=${py3_root}
 
-  if ${CI}
+  if ${TRAVIS}
   then
     echo "using python : ${pyv} : ${py3_root}/bin/python3 ;" > ${HOME}/user-config.jam
   else
