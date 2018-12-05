@@ -11,6 +11,10 @@
 namespace carla {
 namespace client {
 
+  void Vehicle::SetAutopilot(bool enabled) {
+    GetEpisode().Lock()->SetVehicleAutopilot(*this, enabled);
+  }
+
   void Vehicle::ApplyControl(const Control &control) {
     if (control != _control) {
       GetEpisode().Lock()->ApplyControlToVehicle(*this, control);
@@ -18,8 +22,8 @@ namespace client {
     }
   }
 
-  void Vehicle::SetAutopilot(bool enabled) {
-    GetEpisode().Lock()->SetVehicleAutopilot(*this, enabled);
+  Vehicle::Control Vehicle::GetVehicleControl() const {
+    return GetEpisode().Lock()->GetActorDynamicState(*this).state.vehicle_control;
   }
 
 } // namespace client

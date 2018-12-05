@@ -22,7 +22,9 @@ namespace rpc {
 
     Actor() = default;
 
-    actor_id_type id;
+    actor_id_type id = 0u;
+
+    actor_id_type parent_id;
 
     ActorDescription description;
 
@@ -49,7 +51,7 @@ namespace rpc {
 
     /// @}
 
-    MSGPACK_DEFINE_ARRAY(id, description, bounding_box, semantic_tags, stream_token);
+    MSGPACK_DEFINE_ARRAY(id, parent_id, description, bounding_box, semantic_tags, stream_token);
   };
 
 } // namespace rpc

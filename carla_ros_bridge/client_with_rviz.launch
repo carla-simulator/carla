@@ -1,5 +1,0 @@
-<launch>
-<include file="$(find carla_ros_bridge)/client.launch"  pass_all_args="True"/>
-<param name ="/use_sim_time" value="true"/>
-<node pkg="rviz" type="rviz" name="rviz" args="-d $(find carla_ros_bridge)/config/carla_default_rviz.cfg.rviz"/>
-</launch>

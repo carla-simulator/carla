@@ -1,8 +1,0 @@
-<launch>
-  <arg name='rosbag_fname' default=''/>
-  <param name="rosbag_fname" value="$(arg rosbag_fname)"/>
-  <rosparam file="$(find carla_ros_bridge)/config/settings.yaml" command="load" />
-  <param name="carla_autopilot" type="boolean" value="True" />
-  <param name="curr_episode" type="string" value="" />
-  <node pkg="carla_ros_bridge" name="carla_ros_bridge" type="client.py" output="screen"/>
-</launch>

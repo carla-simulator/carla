@@ -78,6 +78,7 @@ void export_geom() {
     .add_property("x", +[](const cg::Location &self) { return self.x; }, +[](cg::Location &self, float x) { self.x = x; })
     .add_property("y", +[](const cg::Location &self) { return self.y; }, +[](cg::Location &self, float y) { self.y = y; })
     .add_property("z", +[](const cg::Location &self) { return self.z; }, +[](cg::Location &self, float z) { self.z = z; })
+    .def("distance", &cg::Location::Distance, (arg("location")))
     .def("__eq__", &cg::Location::operator==)
     .def("__ne__", &cg::Location::operator!=)
     .def(self += self)

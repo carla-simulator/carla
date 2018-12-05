@@ -8,6 +8,9 @@
 
 #include "carla/MsgPack.h"
 
+#include <cmath>
+#include <limits>
+
 namespace carla {
 namespace geom {
 
@@ -49,12 +52,61 @@ namespace geom {
       return lhs;
     }
 
-    bool operator==(const Vector3D &rhs) const  {
+    Vector3D &operator*=(const double &rhs) {
+      x *= rhs;
+      y *= rhs;
+      z *= rhs;
+      return *this;
+    }
+
+    friend Vector3D operator*(Vector3D lhs, const double &rhs) {
+      lhs *= rhs;
+      return lhs;
+    }
+
+    friend Vector3D operator*(const double &lhs, Vector3D rhs) {
+      rhs *= lhs;
+      return rhs;
+    }
+
+    Vector3D &operator/=(const double &rhs) {
+      x /= rhs;
+      y /= rhs;
+      z /= rhs;
+      return *this;
+    }
+
+    friend Vector3D operator/(Vector3D lhs, const double &rhs) {
+      lhs /= rhs;
+      return lhs;
+    }
+
+    friend Vector3D operator/(const double &lhs, Vector3D rhs) {
+      rhs /= lhs;
+      return rhs;
+    }
+
+    bool operator==(const Vector3D &rhs) const {
       return (x == rhs.x) && (y == rhs.y) && (z == rhs.z);
     }
 
-    bool operator!=(const Vector3D &rhs) const  {
+    bool operator!=(const Vector3D &rhs) const {
       return !(*this == rhs);
+    }
+
+    double SquaredLength() const {
+      return x * x + y * y + z * z;
+    }
+
+    double Length() const {
+       return std::sqrt(SquaredLength());
+    }
+
+    Vector3D MakeUnitVector() const {
+      const double len = Length();
+      DEBUG_ASSERT(len > std::numeric_limits<double>::epsilon());
+      double k = 1.0 / len;
+      return Vector3D(x * k, y * k, z * k);
     }
 
     // =========================================================================
