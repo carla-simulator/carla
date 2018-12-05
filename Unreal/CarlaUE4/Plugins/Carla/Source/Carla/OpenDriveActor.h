@@ -44,15 +44,17 @@ private:
   TArray<AVehicleSpawnPoint *> VehicleSpawners;
 
 #if WITH_EDITORONLY_DATA
-
   UPROPERTY(Category = "Generate", EditAnywhere)
   bool bGenerateRoutes = false;
+#endif // WITH_EDITORONLY_DATA
 
   UPROPERTY(Category = "Generate", EditAnywhere, meta = (ClampMin = "0.01", UIMin = "0.01"))
   float RoadAccuracy = 2.0f;
 
+#if WITH_EDITORONLY_DATA
   UPROPERTY(Category = "Generate", EditAnywhere)
   bool bRemoveRoutes = false;
+#endif // WITH_EDITORONLY_DATA
 
   UPROPERTY(Category = "Spawners", EditAnywhere)
   bool bAddSpawners = true;
@@ -60,9 +62,12 @@ private:
   UPROPERTY(Category = "Spawners", EditAnywhere)
   float SpawnersHeight = 300.0;
 
+#if WITH_EDITORONLY_DATA
   UPROPERTY(Category = "Spawners", EditAnywhere)
   bool bRemoveCurrentSpawners = false;
+#endif // WITH_EDITORONLY_DATA
 
+#if WITH_EDITORONLY_DATA
   UPROPERTY(Category = "Debug", EditAnywhere)
   bool bShowDebug = true;
 #endif // WITH_EDITORONLY_DATA
@@ -78,8 +83,6 @@ public:
   using CarlaMath = carla::geom::Math;
 
   AOpenDriveActor(const FObjectInitializer& ObjectInitializer);
-
-  virtual void BeginDestroy() override;
 
   void BuildRoutes();
 
@@ -115,5 +118,4 @@ public:
   void AddSpawners();
 
   void RemoveSpawners();
-
 };
