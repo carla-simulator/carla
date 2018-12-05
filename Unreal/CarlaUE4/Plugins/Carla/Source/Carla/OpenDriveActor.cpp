@@ -34,44 +34,38 @@ AOpenDriveActor::AOpenDriveActor(const FObjectInitializer& ObjectInitializer) :
   PrimaryActorTick.bCanEverTick = false;
 
   // Structure to hold one-time initialization
-  struct FConstructorStatics
+  static struct FConstructorStatics
   {
     // A helper class object we use to find target UTexture2D object in resource package
-    ConstructorHelpers::FObjectFinderOptional<UTexture2D> NoteTextureObject;
-    FName ID_Notes; // Icon sprite category name
-    FText NAME_Notes; // Icon sprite display name
+    ConstructorHelpers::FObjectFinderOptional<UTexture2D> TextureObject;
+    FName Category;
+    FText Name;
     FConstructorStatics()
-      // Use helper class object to find the texture
-      // "/Engine/EditorResources/S_Note" is resource path
-      : NoteTextureObject(TEXT("/Engine/EditorResources/S_Note"))
-      , ID_Notes(TEXT("Notes"))
-      , NAME_Notes(NSLOCTEXT("SpriteCategory", "Notes", "Notes"))
-    {
-    }
-  };
-  static FConstructorStatics ConstructorStatics;
+      // Use helper class object to find the texture resource path
+      : TextureObject(TEXT("/Carla/Icons/OpenDriveActorIcon"))
+      , Category(TEXT("OpenDriveActor"))
+      , Name(NSLOCTEXT("SpriteCategory", "OpenDriveActor", "OpenDriveActor"))
+      {
+      }
+  } ConstructorStatics;
 
   // We need a scene component to attach Icon sprite
-  RootComponent = ObjectInitializer.CreateDefaultSubobject<USceneComponent>(this, TEXT("SceneComponent"));
+  USceneComponent* SceneComponent = ObjectInitializer.CreateDefaultSubobject<USceneComponent>(this, TEXT("SceneComp"));
+  RootComponent = SceneComponent;
   RootComponent->Mobility = EComponentMobility::Static;
 
 #if WITH_EDITORONLY_DATA
   SpriteComponent = ObjectInitializer.CreateEditorOnlyDefaultSubobject<UBillboardComponent>(this, TEXT("Sprite"));
   if (SpriteComponent)
   {
-    SpriteComponent->Sprite = ConstructorStatics.NoteTextureObject.Get();     // Get the sprite texture from helper class object
-    SpriteComponent->SpriteInfo.Category = ConstructorStatics.ID_Notes;       // Assign sprite category name
-    SpriteComponent->SpriteInfo.DisplayName = ConstructorStatics.NAME_Notes;  // Assign sprite display name
-    SpriteComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepWorldTransform); // Attach sprite to scene component
+    SpriteComponent->Sprite = ConstructorStatics.TextureObject.Get();    // Get the sprite texture from helper class object
+    SpriteComponent->SpriteInfo.Category = ConstructorStatics.Category;  // Assign sprite category name
+    SpriteComponent->SpriteInfo.DisplayName = ConstructorStatics.Name;   // Assign sprite display name
+    SpriteComponent->SetupAttachment(RootComponent); // Attach sprite to scene component
     SpriteComponent->Mobility = EComponentMobility::Static;
+    SpriteComponent->SetEditorScale(1.5f);
   }
 #endif // WITH_EDITORONLY_DATA
-}
-
-void AOpenDriveActor::BeginDestroy()
-{
-  RemoveRoutes();
-  Super::BeginDestroy();
 }
 
 #if WITH_EDITOR
@@ -85,7 +79,11 @@ void AOpenDriveActor::PostEditChangeProperty(struct FPropertyChangedEvent& Event
     if (bGenerateRoutes)
     {
       bGenerateRoutes = false;
+
+      RemoveRoutes(); // Avoid OpenDrive overlapping
+      RemoveSpawners(); // Restart the spawners in case OpenDrive has changed
       BuildRoutes();
+
       if (bAddSpawners)
       {
         AddSpawners();
@@ -101,6 +99,7 @@ void AOpenDriveActor::PostEditChangeProperty(struct FPropertyChangedEvent& Event
     if (bRemoveRoutes)
     {
       bRemoveRoutes = false;
+
       RemoveDebugRoutes();
       RemoveSpawners();
       RemoveRoutes();
@@ -122,6 +121,7 @@ void AOpenDriveActor::PostEditChangeProperty(struct FPropertyChangedEvent& Event
     if (bRemoveCurrentSpawners)
     {
       bRemoveCurrentSpawners = false;
+
       RemoveSpawners();
     }
   }
@@ -144,9 +144,6 @@ ARoutePlanner *AOpenDriveActor::GenerateRoutePlanner(const TArray<DirectedPoint>
 
 void AOpenDriveActor::BuildRoutes()
 {
-  // Avoid OpenDrive overlapping
-  RemoveRoutes();
-
   std::string ParseError;
 
   // NOTE(Andrei): As the OpenDrive file has the same name as level,
@@ -329,6 +326,14 @@ TArray<TArray<AOpenDriveActor::DirectedPoint>> AOpenDriveActor::GenerateLeftLane
       {
         DirectedPoint currentPoint = laneZeroPoints[i];
         currentPoint.ApplyLateralOffset(currentOffset);
+        if (currentPoint.tangent + CarlaMath::pi() < CarlaMath::pi_double())
+        {
+          currentPoint.tangent += CarlaMath::pi();
+        }
+        else
+        {
+          currentPoint.tangent -= CarlaMath::pi();
+        }
         roadWaypoints.Add(currentPoint);
       }
       if (roadWaypoints.Num() >= 2)
@@ -400,7 +405,9 @@ void AOpenDriveActor::DebugRoutes() const
 
 void AOpenDriveActor::RemoveDebugRoutes() const
 {
+  #if WITH_EDITOR
   FlushPersistentDebugLines(GetWorld());
+  #endif // WITH_EDITOR
 }
 
 void AOpenDriveActor::AddSpawners()
