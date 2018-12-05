@@ -11,14 +11,8 @@
 namespace carla {
 namespace client {
 
-  TrafficLightState TrafficLight::GetState() {
-    auto state = GetEpisode().Lock()->GetActorDynamicState(*this).state;
-    switch (state) {
-      case 1u: return TrafficLightState::Red;
-      case 2u: return TrafficLightState::Yellow;
-      case 3u: return TrafficLightState::Green;
-      default: return TrafficLightState::Unknown;
-    }
+  rpc::TrafficLightState TrafficLight::GetState() {
+    return GetEpisode().Lock()->GetActorDynamicState(*this).state.traffic_light_state;
   }
 
 } // namespace client

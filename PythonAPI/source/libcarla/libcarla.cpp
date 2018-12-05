@@ -28,9 +28,29 @@
     }
 
 // Convenient for const requests that need to make a copy of the returned value.
-#define CALL_RETURNING_COPY_1(cls, fn, _T1) +[](const cls &self, _T1 t1) \
-        -> std::decay_t<std::result_of_t<decltype(&cls::fn)(cls*, _T1)>> { \
-      return self.fn(std::forward<_T1>(t1)); \
+#define CALL_RETURNING_COPY_1(cls, fn, T1_) +[](const cls &self, T1_ t1) \
+        -> std::decay_t<std::result_of_t<decltype(&cls::fn)(cls*, T1_)>> { \
+      return self.fn(std::forward<T1_>(t1)); \
+    }
+
+// Convenient for const requests that needs to convert the return value to a
+// Python list.
+#define CALL_RETURNING_LIST(cls, fn) +[](const cls &self) { \
+      boost::python::list result; \
+      for (auto &&item : self.fn()) { \
+        result.append(item); \
+      } \
+      return result; \
+    }
+
+// Convenient for const requests that needs to convert the return value to a
+// Python list.
+#define CALL_RETURNING_LIST_1(cls, fn, T1_) +[](const cls &self, T1_ t1) { \
+      boost::python::list result; \
+      for (auto &&item : self.fn(std::forward<T1_>(t1))) { \
+        result.append(item); \
+      } \
+      return result; \
     }
 
 template <typename T>
@@ -105,6 +125,7 @@ static auto MakeCallback(boost::python::object callback) {
 #include "Control.cpp"
 #include "Exception.cpp"
 #include "Geom.cpp"
+#include "Map.cpp"
 #include "Sensor.cpp"
 #include "SensorData.cpp"
 #include "Weather.cpp"
@@ -122,6 +143,7 @@ BOOST_PYTHON_MODULE(libcarla) {
   export_sensor_data();
   export_weather();
   export_world();
+  export_map();
   export_client();
   export_exception();
 }

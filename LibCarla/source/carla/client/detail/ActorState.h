@@ -8,6 +8,7 @@
 
 #include "carla/NonCopyable.h"
 #include "carla/client/World.h"
+#include "carla/client/ActorAttribute.h"
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/rpc/Actor.h"
 
@@ -41,8 +42,17 @@ namespace detail {
       return _description.semantic_tags;
     }
 
+    SharedPtr<Actor> GetParent() const {
+      return _parent;
+    }
+
     World GetWorld() const {
       return World{_episode};
+    }
+
+    const std::vector<ActorAttributeValue> &GetAttributes() const
+    {
+      return _attributes;
     }
 
   protected:
@@ -63,13 +73,20 @@ namespace detail {
 
     friend class Simulator;
 
-    ActorState(rpc::Actor description, EpisodeProxy episode);
+    ActorState(
+        rpc::Actor description,
+        EpisodeProxy episode,
+        SharedPtr<Actor> parent);
 
     rpc::Actor _description;
 
     EpisodeProxy _episode;
 
+    SharedPtr<Actor> _parent;
+
     std::string _display_id;
+
+    std::vector<ActorAttributeValue> _attributes;
   };
 
 } // namespace detail

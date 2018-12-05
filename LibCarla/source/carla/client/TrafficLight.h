@@ -7,16 +7,10 @@
 #pragma once
 
 #include "carla/client/Actor.h"
+#include "carla/rpc/TrafficLightState.h"
 
 namespace carla {
 namespace client {
-
-  enum class TrafficLightState {
-    Unknown,
-    Red,
-    Yellow,
-    Green
-  };
 
   class TrafficLight : public Actor {
   public:
@@ -27,7 +21,7 @@ namespace client {
     ///
     /// @note This function does not call the simulator, it returns the
     /// traffic light state received in the last tick.
-    TrafficLightState GetState();
+    rpc::TrafficLightState GetState();
   };
 
 } // namespace client

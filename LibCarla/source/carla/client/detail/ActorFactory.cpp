@@ -9,7 +9,8 @@
 #include "carla/Logging.h"
 #include "carla/StringUtil.h"
 #include "carla/client/Actor.h"
-#include "carla/client/Sensor.h"
+#include "carla/client/LaneDetector.h"
+#include "carla/client/ServerSideSensor.h"
 #include "carla/client/TrafficLight.h"
 #include "carla/client/Vehicle.h"
 #include "carla/client/World.h"
@@ -66,15 +67,19 @@ namespace detail {
   SharedPtr<Actor> ActorFactory::MakeActor(
       EpisodeProxy episode,
       rpc::Actor description,
+      SharedPtr<Actor> parent,
       GarbageCollectionPolicy gc) {
-    if (description.HasAStream()) {
-      return MakeActorImpl<Sensor>(ActorInitializer{description, episode}, gc);
+    auto init = ActorInitializer{description, episode, parent};
+    if (description.description.id == "sensor.other.lane_detector") { /// @todo
+      return MakeActorImpl<LaneDetector>(std::move(init), gc);
+    } else if (description.HasAStream()) {
+      return MakeActorImpl<ServerSideSensor>(std::move(init), gc);
     } else if (StringUtil::StartsWith(description.description.id, "vehicle.")) {
-      return MakeActorImpl<Vehicle>(ActorInitializer{description, episode}, gc);
+      return MakeActorImpl<Vehicle>(std::move(init), gc);
     } else if (StringUtil::StartsWith(description.description.id, "traffic.traffic_light")) {
-      return MakeActorImpl<TrafficLight>(ActorInitializer{description, episode}, gc);
+      return MakeActorImpl<TrafficLight>(std::move(init), gc);
     }
-    return MakeActorImpl<Actor>(ActorInitializer{description, episode}, gc);
+    return MakeActorImpl<Actor>(std::move(init), gc);
   }
 
 } // namespace detail

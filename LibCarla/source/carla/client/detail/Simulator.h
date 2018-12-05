@@ -25,6 +25,7 @@ namespace client {
 
   class ActorBlueprint;
   class BlueprintLibrary;
+  class Map;
   class Sensor;
 
 namespace detail {
@@ -60,12 +61,14 @@ namespace detail {
       return _episode->GetId();
     }
 
-    const std::string &GetCurrentMapName() const {
+    const std::string &GetCurrentMapName() {
       DEBUG_ASSERT(_episode != nullptr);
       return _episode->GetMapName();
     }
 
     EpisodeProxy GetCurrentEpisode();
+
+    SharedPtr<Map> GetCurrentMap();
 
     /// @}
     // =========================================================================

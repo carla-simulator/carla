@@ -9,6 +9,7 @@
 
 #include "Carla/Sensor/Sensor.h"
 #include "Carla/Util/DebugShapeDrawer.h"
+#include "Carla/Util/OpenDrive.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
 #include "GameFramework/SpectatorPawn.h"
@@ -20,6 +21,7 @@
 #include <carla/rpc/ActorDescription.h>
 #include <carla/rpc/DebugShape.h>
 #include <carla/rpc/EpisodeInfo.h>
+#include <carla/rpc/MapInfo.h>
 #include <carla/rpc/Server.h>
 #include <carla/rpc/Transform.h>
 #include <carla/rpc/VehicleControl.h>
@@ -131,6 +133,7 @@ public:
     Actor.id = ActorView.GetActorId();
     if (ActorView.IsValid())
     {
+      Actor.parent_id = Episode->GetActorRegistry().Find(ActorView.GetActor()->GetOwner()).GetActorId();
       Actor.description = *ActorView.GetActorDescription();
       Actor.bounding_box = GetActorBoundingBox(*ActorView.GetActor());
       Actor.semantic_tags.reserve(ActorView.GetSemanticTags().Num());
@@ -189,6 +192,22 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       WorldObserver = Episode->StartWorldObserver(StreamingServer.MakeMultiStream());
     }
     return {Episode->GetId(), cr::FromFString(Episode->GetMapName()), WorldObserver->GetStreamToken()};
+  });
+
+  Server.BindSync("get_map_info", [this]() -> cr::MapInfo {
+    RequireEpisode();
+    auto FileContents = FOpenDrive::Load(Episode->GetMapName());
+    const auto &SpawnPoints = Episode->GetRecommendedStartTransforms();
+    std::vector<carla::geom::Transform> spawn_points;
+    spawn_points.reserve(SpawnPoints.Num());
+    for (const auto &Transform : SpawnPoints)
+    {
+      spawn_points.emplace_back(Transform);
+    }
+    return {
+        cr::FromFString(Episode->GetMapName()),
+        cr::FromFString(FileContents),
+        spawn_points};
   });
 
   Server.BindSync("get_actor_definitions", [this]() {

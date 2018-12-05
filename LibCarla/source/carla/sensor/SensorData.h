@@ -23,9 +23,12 @@ namespace sensor {
       private NonCopyable {
   protected:
 
+    SensorData(size_t frame_number, const rpc::Transform &sensor_transform)
+      : _frame_number(frame_number),
+        _sensor_transform(sensor_transform) {}
+
     explicit SensorData(const RawData &data)
-      : _frame_number(data.GetFrameNumber()),
-        _sensor_transform(data.GetSensorTransform()) {}
+      : SensorData(data.GetFrameNumber(), data.GetSensorTransform()) {}
 
   public:
 

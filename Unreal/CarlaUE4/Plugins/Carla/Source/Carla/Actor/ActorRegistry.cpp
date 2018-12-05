@@ -12,12 +12,20 @@
 #include "Carla/Game/Tagger.h"
 #include "Carla/Traffic/TrafficLightBase.h"
 
-static bool FActorRegistry_IsTrafficLight(const FActorView &View)
+static FActorView::ActorType FActorRegistry_GetActorType(const FActorView &View)
 {
-  return
-      View.IsValid() &&
-      View.GetSemanticTags().Contains(ECityObjectLabel::TrafficSigns) &&
-      (nullptr != Cast<ATrafficLightBase>(View.GetActor()));
+  if (View.IsValid())
+  {
+    if (nullptr != Cast<ACarlaWheeledVehicle>(View.GetActor()))
+    {
+      return FActorView::ActorType::Vehicle;
+    }
+    else if (nullptr != Cast<ATrafficLightBase>(View.GetActor()))
+    {
+      return FActorView::ActorType::TrafficLight;
+    }
+  }
+  return FActorView::ActorType::Other;
 }
 
 static FString GetRelevantTagAsString(const FActorView &View)
@@ -51,7 +59,7 @@ FActorView FActorRegistry::Register(AActor &Actor, FActorDescription Description
 
   auto View = FActorView(Id, Actor, std::move(Description));
   ATagger::GetTagsOfTaggedActor(Actor, View.SemanticTags);
-  View.bIsTrafficLight = FActorRegistry_IsTrafficLight(View);
+  View.Type = FActorRegistry_GetActorType(View);
 
   auto Result = ActorDatabase.emplace(Id, View);
   check(Result.second);

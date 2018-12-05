@@ -315,7 +315,7 @@ float AWheeledVehicleAIController::CalcStreeringValue(FVector &direction)
 
   FRoadMapPixelData roadData = RoadMap->GetDataAt(GetPawn()->GetActorLocation());
   if (!roadData.IsRoad()) {
-    steering = -1;
+    steering = 0.0f;
   } else if (roadData.HasDirection()) {
 
     direction = roadData.GetDirection();
