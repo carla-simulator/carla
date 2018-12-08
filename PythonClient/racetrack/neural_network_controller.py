@@ -1,12 +1,13 @@
 import numpy as np
 import keras
 
-from utils import clip_throttle
+from utils import clip_throttle, compose_input_for_nn
 from abstract_controller import Controller
 
 
 class NNController(Controller):
-    def __init__(self, target_speed, model_dir_name, which_model, throttle_coeff):
+    def __init__(self, target_speed, model_dir_name, which_model, throttle_coeff_A,
+                 throttle_coeff_B):
         self.target_speed = target_speed
         assert '/' not in model_dir_name, (
             'Just to make sure, the `model_dir_name` needs to be a local'
@@ -30,7 +31,8 @@ class NNController(Controller):
         self.prev_depth_arrays = []
         self.steer = 0
         self.throttle = 1
-        self.throttle_coeff = throttle_coeff
+        self.throttle_coeff_A = throttle_coeff_A
+        self.throttle_coeff_B = throttle_coeff_B
 
     def control(self, pts_2D, measurements, depth_array):
         location = self._extract_location(measurements)
@@ -45,24 +47,15 @@ class NNController(Controller):
         else:
             self.prev_depth_arrays = self.prev_depth_arrays[-self.num_channels_max:]
             X_full = np.concatenate(self.prev_depth_arrays[-self.num_channels_max:])
-            X = X_full[-self.num_X_channels:]
-            if self.num_Xdiff_channels > 0:
-                X_diff = np.diff(
-                    X_full[-(self.num_Xdiff_channels+1):],
-                    axis=0
-                )
-                X = np.concatenate([X, X_diff])
-
-            # Move channels to the front
-            X = np.transpose(X, (3, 1, 2, 0))
+            X = compose_input_for_nn(X_full, self.num_X_channels, self.num_Xdiff_channels)
 
             pred = self.model.predict(X)
 
         if pred is not None:
             if self.predict_throttle:
-                self.steer = pred[0][0]
-                self.throttle = pred[0][1]
-                self.throttle *= self.throttle_coeff
+                self.steer = pred[0][0, 0]
+                self.throttle = pred[5][0, 0]
+                self.throttle = self.throttle_coeff_A * self.throttle + self.throttle_coeff_B
             else:
                 self.steer = pred
                 curr_speed = measurements.player_measurements.forward_speed * 3.6
