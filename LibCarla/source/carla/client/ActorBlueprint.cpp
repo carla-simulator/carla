@@ -56,9 +56,7 @@ namespace client {
     description.id = _id;
     description.attributes.reserve(_attributes.size());
     for (const auto &attribute : *this) {
-      if (attribute.IsModifiable()) {
-        description.attributes.push_back(attribute);
-      }
+      description.attributes.push_back(attribute);
     }
     return description;
   }
