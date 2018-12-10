@@ -133,6 +133,7 @@ class World(object):
         blueprint = self._get_random_blueprint()
         spawn_points = self.world.get_map().get_spawn_points()
         spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
+        blueprint.set_attribute('role_name', 'hero')
         self.vehicle = self.world.spawn_actor(blueprint, spawn_point)
         self.collision_sensor = CollisionSensor(self.vehicle, self.hud)
         self.lane_invasion_sensor = LaneInvasionSensor(self.vehicle, self.hud)
@@ -150,6 +151,8 @@ class World(object):
         start_pose.rotation.roll = 0.0
         start_pose.rotation.pitch = 0.0
         blueprint = self._get_random_blueprint()
+        blueprint.set_attribute('role_name', 'hero')
+
         self.destroy()
         self.vehicle = self.world.spawn_actor(blueprint, start_pose)
         self.collision_sensor = CollisionSensor(self.vehicle, self.hud)
