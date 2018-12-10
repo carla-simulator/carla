@@ -16,6 +16,7 @@ namespace element {
   class RoadInfoLane;
   class RoadGeneralInfo;
   class RoadInfoVelocity;
+  class RoadElevationInfo;
 
   class RoadInfoVisitor {
   public:
@@ -23,6 +24,7 @@ namespace element {
     virtual void Visit(RoadInfoLane &) {}
     virtual void Visit(RoadGeneralInfo &) {}
     virtual void Visit(RoadInfoVelocity &) {}
+    virtual void Visit(RoadElevationInfo &) {}
   };
 
   template <typename T, typename IT>

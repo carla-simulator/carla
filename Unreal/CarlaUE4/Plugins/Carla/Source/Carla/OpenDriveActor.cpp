@@ -64,7 +64,7 @@ AOpenDriveActor::AOpenDriveActor(const FObjectInitializer& ObjectInitializer) :
     SpriteComponent->SpriteInfo.DisplayName = ConstructorStatics.Name;   // Assign sprite display name
     SpriteComponent->SetupAttachment(RootComponent); // Attach sprite to scene component
     SpriteComponent->Mobility = EComponentMobility::Static;
-    SpriteComponent->SetEditorScale(1.5f);
+    SpriteComponent->SetEditorScale(0.8f);
   }
 #endif // WITH_EDITORONLY_DATA
 }
@@ -241,6 +241,8 @@ void AOpenDriveActor::RemoveRoutes()
 TArray<AOpenDriveActor::DirectedPoint> AOpenDriveActor::GenerateLaneZeroPoints(
     const RoadSegment *road)
 {
+  using RoadElevationInfo = carla::road::element::RoadElevationInfo;
+
   size_t LanesOffsetIndex = 0;
   TArray<DirectedPoint> LaneZeroPoints;
 
@@ -260,6 +262,12 @@ TArray<AOpenDriveActor::DirectedPoint> AOpenDriveActor::GenerateLaneZeroPoints(
     // NOTE(Andrei): Get waypoin at the offset, and invert the y axis
     DirectedPoint Waypoint = road->GetDirectedPointIn(WaypointsOffset);
     Waypoint.location.z = 1;
+
+    const RoadElevationInfo *ElevInfo = road->GetInfo<RoadElevationInfo>(WaypointsOffset);
+
+    if(ElevInfo) {
+      Waypoint.location.z += (float)ElevInfo->Evaluate(WaypointsOffset, nullptr);
+    }
 
     // NOTE(Andrei): Applyed the laneOffset of the lane section
     Waypoint.ApplyLateralOffset(LanesOffset[LanesOffsetIndex].second);
