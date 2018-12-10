@@ -12,6 +12,7 @@
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/String.h>
+#include <carla/geom/Math.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include <functional>
@@ -130,6 +131,8 @@ void AOpenDriveActor::PostEditChangeProperty(struct FPropertyChangedEvent& Event
 
 ARoutePlanner *AOpenDriveActor::GenerateRoutePlanner(const TArray<DirectedPoint> &DirectedPoints)
 {
+  using CarlaMath = carla::geom::Math;
+
   TArray<FVector> Positions = DirectedPointArray2FVectorArray(DirectedPoints);
   ARoutePlanner *RoutePlanner = GetWorld()->SpawnActor<ARoutePlanner>();
 
@@ -144,6 +147,8 @@ ARoutePlanner *AOpenDriveActor::GenerateRoutePlanner(const TArray<DirectedPoint>
 
 void AOpenDriveActor::BuildRoutes()
 {
+  using IdType = carla::road::element::id_type;
+
   std::string ParseError;
 
   // NOTE(Andrei): As the OpenDrive file has the same name as level,
@@ -306,6 +311,8 @@ TArray<TArray<AOpenDriveActor::DirectedPoint>> AOpenDriveActor::GenerateLeftLane
     const RoadSegment *road,
     const TArray<DirectedPoint> &laneZeroPoints)
 {
+  using CarlaMath = carla::geom::Math;
+
   const RoadInfoLane *lanesInfo =
       road->GetInfo<RoadInfoLane>(0.0);
   std::vector<int> leftLanes = lanesInfo->getLanesIDs(RoadInfoLane::which_lane_e::Left);

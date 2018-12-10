@@ -9,7 +9,6 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 
-#include "Components/ActorComponent.h"
 #include "Components/SceneComponent.h"
 #include "Components/BillboardComponent.h"
 
@@ -18,7 +17,6 @@
 #include "Vehicle/VehicleSpawnPoint.h"
 
 #include <compiler/disable-ue4-macros.h>
-#include <carla/geom/Math.h>
 #include <carla/opendrive/OpenDrive.h>
 #include <compiler/enable-ue4-macros.h>
 
@@ -44,30 +42,37 @@ private:
   TArray<AVehicleSpawnPoint *> VehicleSpawners;
 
 #if WITH_EDITORONLY_DATA
+  /// Generate the road network using an OpenDrive file (named as the current .umap)
   UPROPERTY(Category = "Generate", EditAnywhere)
   bool bGenerateRoutes = false;
 #endif // WITH_EDITORONLY_DATA
 
+  /// Distance between waypoints where the cars will drive
   UPROPERTY(Category = "Generate", EditAnywhere, meta = (ClampMin = "0.01", UIMin = "0.01"))
   float RoadAccuracy = 2.0f;
 
 #if WITH_EDITORONLY_DATA
+  /// Remove the previously generated road network. Also, it will remove spawners if necessary
   UPROPERTY(Category = "Generate", EditAnywhere)
   bool bRemoveRoutes = false;
 #endif // WITH_EDITORONLY_DATA
 
+  /// If true, spawners will be placed when generating the routes
   UPROPERTY(Category = "Spawners", EditAnywhere)
   bool bAddSpawners = true;
 
+  /// Determine the height where the spawners will be placed, relative to each RoutePlanner
   UPROPERTY(Category = "Spawners", EditAnywhere)
   float SpawnersHeight = 300.0;
 
 #if WITH_EDITORONLY_DATA
+  /// Remove already placed spawners if necessary
   UPROPERTY(Category = "Spawners", EditAnywhere)
   bool bRemoveCurrentSpawners = false;
 #endif // WITH_EDITORONLY_DATA
 
 #if WITH_EDITORONLY_DATA
+  /// Show / Hide additional debug information
   UPROPERTY(Category = "Debug", EditAnywhere)
   bool bShowDebug = true;
 #endif // WITH_EDITORONLY_DATA
@@ -79,8 +84,6 @@ public:
   using LaneInfo = carla::road::element::LaneInfo;
   using RoadGeneralInfo = carla::road::element::RoadGeneralInfo;
   using RoadInfoLane = carla::road::element::RoadInfoLane;
-  using IdType = carla::road::element::id_type;
-  using CarlaMath = carla::geom::Math;
 
   AOpenDriveActor(const FObjectInitializer& ObjectInitializer);
 
