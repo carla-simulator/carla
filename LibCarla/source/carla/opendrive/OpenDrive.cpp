@@ -124,20 +124,29 @@ namespace opendrive {
     // Transforma data for the MapBuilder
     for (road_data_t::iterator it = roadData.begin(); it != roadData.end(); ++it) {
       carla::road::element::RoadSegmentDefinition roadSegment(it->first);
-      carla::road::element::RoadInfoLane *roadInfoLanes =
+      carla::road::element::RoadInfoLane *RoadInfoLanes =
           roadSegment.MakeInfo<carla::road::element::RoadInfoLane>();
 
-      carla::road::element::RoadGeneralInfo *roadGeneralInfo =
+      carla::road::element::RoadGeneralInfo *RoadGeneralInfo =
           roadSegment.MakeInfo<carla::road::element::RoadGeneralInfo>();
-      roadGeneralInfo->SetJunctionId(it->second->attributes.junction);
+      RoadGeneralInfo->SetJunctionId(it->second->attributes.junction);
 
       for (size_t i = 0; i < it->second->lanes.lane_offset.size(); ++i) {
         double s = it->second->lanes.lane_offset[i].s;
         double a = it->second->lanes.lane_offset[i].a;
-        roadGeneralInfo->SetLanesOffset(s, a);
+        RoadGeneralInfo->SetLanesOffset(s, a);
       }
 
-      /////////////////////////////////////////////////////////////////////////
+      for(auto &&elevation : it->second->road_profiles.elevation_profile) {
+        roadSegment.MakeInfo<carla::road::element::RoadElevationInfo>(
+          elevation.start_position,
+          elevation.start_position,
+          elevation.elevation,
+          elevation.slope,
+          elevation.vertical_curvature,
+          elevation.curvature_change
+        );
+      }
 
       std::map<int, int> leftLanesGoToSuccessor, leftLanesGoToPredecessor;
       std::map<int, int> rightLanesGoToSuccessor, rightLanesGoToPredecessor;
@@ -204,12 +213,12 @@ namespace opendrive {
           &it->second->lanes.lane_sections.front().right;
 
       for (size_t i = 0; i < lanesLeft->size(); ++i) {
-        roadInfoLanes->addLaneInfo(lanesLeft->at(i).attributes.id,
+        RoadInfoLanes->addLaneInfo(lanesLeft->at(i).attributes.id,
             lanesLeft->at(i).lane_width[0].width,
             lanesLeft->at(i).attributes.type);
       }
       for (size_t i = 0; i < lanesRight->size(); ++i) {
-        roadInfoLanes->addLaneInfo(lanesRight->at(i).attributes.id,
+        RoadInfoLanes->addLaneInfo(lanesRight->at(i).attributes.id,
             lanesRight->at(i).lane_width[0].width,
             lanesRight->at(i).attributes.type);
       }
