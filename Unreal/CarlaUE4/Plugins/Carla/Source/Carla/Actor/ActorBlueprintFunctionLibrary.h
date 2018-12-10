@@ -35,6 +35,9 @@ struct CARLA_API FVehicleParameters
   int32 NumberOfWheels = 4;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  FString ObjectType;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
   TArray<FColor> RecommendedColors;
 };
 
