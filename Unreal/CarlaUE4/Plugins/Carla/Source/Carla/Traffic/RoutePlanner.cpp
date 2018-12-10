@@ -65,6 +65,12 @@ ARoutePlanner::ARoutePlanner(const FObjectInitializer &ObjectInitializer)
   SplineColor = FColor::Black;
 }
 
+void ARoutePlanner::BeginDestroy()
+{
+  CleanRoute();
+  Super::BeginDestroy();
+}
+
 #if WITH_EDITOR
 void ARoutePlanner::PostEditChangeProperty(FPropertyChangedEvent &PropertyChangedEvent)
 {
@@ -93,6 +99,10 @@ void ARoutePlanner::AddRoute(float probability, const TArray<FVector> &routePoin
 {
   USplineComponent *NewSpline = NewObject<USplineComponent>(this);
   NewSpline->bHiddenInGame = true;
+
+  #if WITH_EDITOR
+  NewSpline->EditorUnselectedSplineSegmentColor = FLinearColor(0.15f, 0.15f, 0.15f);
+  #endif // WITH_EDITOR
 
   NewSpline->SetLocationAtSplinePoint(0, routePoints[0], ESplineCoordinateSpace::World, true);
   NewSpline->SetLocationAtSplinePoint(1, routePoints[1], ESplineCoordinateSpace::World, true);
@@ -191,10 +201,6 @@ void ARoutePlanner::DrawRoutes()
 #if WITH_EDITOR
   for (int i = 0, lenRoutes = Routes.Num(); i < lenRoutes; ++i)
   {
-    FVector boxCenter = Routes[i]->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::World);
-    boxCenter.Z += i * 101.0f;
-    DrawDebugBox(GetWorld(), boxCenter, TriggerVolume->GetUnscaledBoxExtent() - FVector(10.0f, 10.0f, 10.0f), SplineColor, true);
-
     for (int j = 0, lenNumPoints = Routes[i]->GetNumberOfSplinePoints() - 1; j < lenNumPoints; ++j)
     {
       FVector p0 = Routes[i]->GetLocationAtSplinePoint(j + 0, ESplineCoordinateSpace::World);
