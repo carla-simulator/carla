@@ -64,7 +64,7 @@ AOpenDriveActor::AOpenDriveActor(const FObjectInitializer& ObjectInitializer) :
     SpriteComponent->SpriteInfo.DisplayName = ConstructorStatics.Name;   // Assign sprite display name
     SpriteComponent->SetupAttachment(RootComponent); // Attach sprite to scene component
     SpriteComponent->Mobility = EComponentMobility::Static;
-    SpriteComponent->SetEditorScale(0.8f);
+    SpriteComponent->SetEditorScale(1.0f);
   }
 #endif // WITH_EDITORONLY_DATA
 }
