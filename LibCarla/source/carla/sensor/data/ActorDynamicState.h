@@ -31,10 +31,12 @@ namespace detail {
         steer(control.steer),
         brake(control.brake),
         hand_brake(control.hand_brake),
-        reverse(control.reverse) {}
+        reverse(control.reverse),
+        manual_gear_shift(control.manual_gear_shift),
+        gear(control.gear) {}
 
     operator rpc::VehicleControl() const {
-      return {throttle, steer, brake, hand_brake, reverse};
+      return {throttle, steer, brake, hand_brake, reverse, manual_gear_shift, gear};
     }
 
   private:
@@ -44,6 +46,8 @@ namespace detail {
     float brake;
     bool hand_brake;
     bool reverse;
+    bool manual_gear_shift;
+    int32_t gear;
   };
 #pragma pack(pop)
 
