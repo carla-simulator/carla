@@ -261,13 +261,9 @@ TArray<AOpenDriveActor::DirectedPoint> AOpenDriveActor::GenerateLaneZeroPoints(
 
     // NOTE(Andrei): Get waypoin at the offset, and invert the y axis
     DirectedPoint Waypoint = road->GetDirectedPointIn(WaypointsOffset);
-    Waypoint.location.z = 1;
 
-    const RoadElevationInfo *ElevInfo = road->GetInfo<RoadElevationInfo>(WaypointsOffset);
-
-    if(ElevInfo) {
-      Waypoint.location.z += (float)ElevInfo->Evaluate(WaypointsOffset, nullptr);
-    }
+    // Elevate the generated road 1m because the triggers and visualization
+    Waypoint.location.z += 1;
 
     // NOTE(Andrei): Applyed the laneOffset of the lane section
     Waypoint.ApplyLateralOffset(LanesOffset[LanesOffsetIndex].second);
