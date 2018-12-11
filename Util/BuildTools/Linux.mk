@@ -10,7 +10,7 @@ launch-only:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --launch
 
 package: CarlaUE4Editor PythonAPI
-	@${CARLA_BUILD_TOOLS_FOLDER}/Package.sh
+	@${CARLA_BUILD_TOOLS_FOLDER}/Package.sh $(ARGS)
 
 docs:
 	@doxygen
@@ -54,7 +54,7 @@ check.PythonAPI.3: PythonAPI.3
 	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --python-api-3 $(ARGS)
 
 benchmark: LibCarla.server
-	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --benchmark
+	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --benchmark $(ARGS)
 	@cat profiler.csv
 
 CarlaUE4Editor: LibCarla.server
