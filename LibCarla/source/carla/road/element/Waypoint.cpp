@@ -93,9 +93,10 @@ namespace element {
     road::element::DirectedPoint dp =
         _map->GetData().GetRoad(_road_id)->GetDirectedPointIn(_dist);
 
-    geom::Rotation rot(0.0, geom::Math::to_degrees(dp.tangent), 0.0);
+    geom::Rotation rot(geom::Math::to_degrees(dp.pitch), geom::Math::to_degrees(dp.tangent), 0.0);
     if (_lane_id > 0) {
       rot.yaw += 180.0;
+      rot.pitch = 360 - rot.pitch;
     }
 
     const auto *road_segment = _map->GetData().GetRoad(_road_id);
