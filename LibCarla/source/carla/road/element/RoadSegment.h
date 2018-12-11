@@ -247,7 +247,7 @@ namespace element {
     DirectedPoint DirectedPointWithElevation(double dist, DirectedPoint dp) const {
         const RoadElevationInfo *elev_info = GetInfo<RoadElevationInfo>(dist);
         if (elev_info) {
-          dp.location.z = elev_info->Evaluate(dist, nullptr);
+          dp.location.z = elev_info->Evaluate(dist, &dp.pitch);
         }
         return dp;
     }
