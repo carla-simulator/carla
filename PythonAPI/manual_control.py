@@ -20,6 +20,8 @@ Use ARROWS or WASD keys for control.
     Q            : toggle reverse
     Space        : hand-brake
     P            : toggle autopilot
+    M            : toggle manual transmission
+    ,/.          : gear up/down
 
     TAB          : change sensor position
     `            : next sensor
@@ -81,10 +83,12 @@ try:
     from pygame.locals import K_9
     from pygame.locals import K_BACKQUOTE
     from pygame.locals import K_BACKSPACE
+    from pygame.locals import K_COMMA
     from pygame.locals import K_DOWN
     from pygame.locals import K_ESCAPE
     from pygame.locals import K_F1
     from pygame.locals import K_LEFT
+    from pygame.locals import K_PERIOD
     from pygame.locals import K_RIGHT
     from pygame.locals import K_SLASH
     from pygame.locals import K_SPACE
@@ -94,6 +98,7 @@ try:
     from pygame.locals import K_c
     from pygame.locals import K_d
     from pygame.locals import K_h
+    from pygame.locals import K_m
     from pygame.locals import K_p
     from pygame.locals import K_q
     from pygame.locals import K_r
@@ -234,13 +239,22 @@ class KeyboardControl(object):
                 elif event.key == K_r:
                     world.camera_manager.toggle_recording()
                 elif event.key == K_q:
-                    self._control.reverse = not self._control.reverse
+                    self._control.gear = 1 if self._control.reverse else -1
+                elif event.key == K_m:
+                    self._control.manual_gear_shift = not self._control.manual_gear_shift
+                    self._control.gear = world.vehicle.get_vehicle_control().gear
+                    world.hud.notification('%s Transmission' % ('Manual' if self._control.manual_gear_shift else 'Automatic'))
+                elif self._control.manual_gear_shift and event.key == K_COMMA:
+                    self._control.gear = max(-1, self._control.gear - 1)
+                elif self._control.manual_gear_shift and event.key == K_PERIOD:
+                    self._control.gear = self._control.gear + 1
                 elif event.key == K_p:
                     self._autopilot_enabled = not self._autopilot_enabled
                     world.vehicle.set_autopilot(self._autopilot_enabled)
                     world.hud.notification('Autopilot %s' % ('On' if self._autopilot_enabled else 'Off'))
         if not self._autopilot_enabled:
             self._parse_keys(pygame.key.get_pressed(), clock.get_time())
+            self._control.reverse = self._control.gear < 0
             world.vehicle.apply_control(self._control)
 
     def _parse_keys(self, keys, milliseconds):
@@ -324,6 +338,8 @@ class HUD(object):
             ('Brake:', c.brake, 0.0, 1.0),
             ('Reverse:', c.reverse),
             ('Hand brake:', c.hand_brake),
+            ('Manual:', c.manual_gear_shift),
+            'Gear:        %s' % {-1: 'R', 0: 'N'}.get(c.gear, c.gear),
             '',
             'Collision:',
             collision,
