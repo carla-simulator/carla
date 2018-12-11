@@ -155,23 +155,29 @@ namespace element {
     DirectedPoint GetDirectedPointIn(double dist) const {
       assert(_length > 0.0);
       if (dist <= 0.0) {
-        return DirectedPoint(_geom.front()->GetStartPosition(),
-            _geom.front()->GetHeading());
+        return DirectedPointWithElevation(
+            dist, DirectedPoint(
+                _geom.front()->GetStartPosition(),
+                _geom.front()->GetHeading()));
       }
 
       if (dist >= _length) {
-        return _geom.back()->PosFromDist(
-            _length - _geom.back()->GetStartOffset());
+        return DirectedPointWithElevation(
+            dist,
+            _geom.back()->PosFromDist(_length - _geom.back()->GetStartOffset()));
       }
 
       for (auto &&g : _geom) {
-        if ((g->GetStartOffset() < dist) &&
-            (dist <= (g->GetStartOffset() + g->GetLength()))) {
-          return g->PosFromDist(dist - g->GetStartOffset());
+        if ((g->GetStartOffset() < dist) && (dist <= (g->GetStartOffset() + g->GetLength()))) {
+          return DirectedPointWithElevation(
+            dist,
+            g->PosFromDist(dist - g->GetStartOffset()));
         }
       }
 
-      return _geom.back()->PosFromDist(dist - _geom.back()->GetStartOffset());
+      return DirectedPointWithElevation(
+          dist,
+          _geom.back()->PosFromDist(dist - _geom.back()->GetStartOffset()));
     }
 
     /// Returns a pair containing:
@@ -237,6 +243,14 @@ namespace element {
     }
 
   private:
+
+    DirectedPoint DirectedPointWithElevation(double dist, DirectedPoint dp) const {
+        const RoadElevationInfo *elev_info = GetInfo<RoadElevationInfo>(dist);
+        if (elev_info) {
+          dp.location.z = elev_info->Evaluate(dist, nullptr);
+        }
+        return dp;
+    }
 
     friend class carla::road::MapBuilder;
 
