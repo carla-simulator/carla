@@ -27,4 +27,10 @@ struct CARLA_API FVehicleControl
 
   UPROPERTY(Category = "Vehicle Control", EditAnywhere, BlueprintReadWrite)
   bool bReverse = false;
+
+  UPROPERTY(Category = "Vehicle Control", EditAnywhere, BlueprintReadWrite)
+  bool bManualGearShift = false;
+
+  UPROPERTY(Category = "Vehicle Control", EditAnywhere, BlueprintReadWrite, meta = (EditCondition = bManualGearShift))
+  int32 Gear = 0;
 };

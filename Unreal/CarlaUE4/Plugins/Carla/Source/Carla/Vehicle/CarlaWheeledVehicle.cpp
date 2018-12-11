@@ -76,11 +76,27 @@ float ACarlaWheeledVehicle::GetMaximumSteerAngle() const
 
 void ACarlaWheeledVehicle::ApplyVehicleControl(const FVehicleControl &VehicleControl)
 {
-  SetThrottleInput(VehicleControl.Throttle);
-  SetSteeringInput(VehicleControl.Steer);
-  SetBrakeInput(VehicleControl.Brake);
-  SetHandbrakeInput(VehicleControl.bHandBrake);
-  SetReverse(VehicleControl.bReverse);
+  auto *MovementComponent = GetVehicleMovementComponent();
+  MovementComponent->SetThrottleInput(VehicleControl.Throttle);
+  MovementComponent->SetSteeringInput(VehicleControl.Steer);
+  MovementComponent->SetBrakeInput(VehicleControl.Brake);
+  MovementComponent->SetHandbrakeInput(VehicleControl.bHandBrake);
+  if (Control.bReverse != VehicleControl.bReverse)
+  {
+    MovementComponent->SetUseAutoGears(!VehicleControl.bReverse);
+    MovementComponent->SetTargetGear(VehicleControl.bReverse ? -1 : 1, true);
+  }
+  else
+  {
+    MovementComponent->SetUseAutoGears(!VehicleControl.bManualGearShift);
+    if (VehicleControl.bManualGearShift)
+    {
+      MovementComponent->SetTargetGear(VehicleControl.Gear, true);
+    }
+  }
+  Control = VehicleControl;
+  Control.Gear = MovementComponent->GetCurrentGear();
+  Control.bReverse = Control.Gear < 0;
 }
 
 void ACarlaWheeledVehicle::SetThrottleInput(const float Value)
