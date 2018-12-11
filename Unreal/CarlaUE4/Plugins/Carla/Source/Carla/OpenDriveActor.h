@@ -59,7 +59,7 @@ private:
 
   /// If true, spawners will be placed when generating the routes
   UPROPERTY(Category = "Spawners", EditAnywhere)
-  bool bAddSpawners = true;
+  bool bAddSpawners = false;
 
   /// Determine the height where the spawners will be placed, relative to each RoutePlanner
   UPROPERTY(Category = "Spawners", EditAnywhere)
