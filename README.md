@@ -3,7 +3,7 @@ CARLA Simulator
 
 [![Build Status](https://travis-ci.org/carla-simulator/carla.svg?branch=master)](https://travis-ci.org/carla-simulator/carla)
 [![Documentation](https://readthedocs.org/projects/carla/badge/?version=latest)](http://carla.readthedocs.io)
-[![Waffle.io](https://badge.waffle.io/carla-simulator/carla.svg?columns=Next,In%20Progress,Review)](https://waffle.io/carla-simulator/carla)
+
 
 [![carla.org](Docs/img/btn/web.png)](http://carla.org)
 [![download](Docs/img/btn/download.png)](https://github.com/carla-simulator/carla/blob/master/Docs/download.md)
@@ -13,28 +13,42 @@ CARLA Simulator
 
 CARLA is an open-source simulator for autonomous driving research. CARLA has
 been developed from the ground up to support development, training, and
-validation of autonomous urban driving systems. In addition to open-source code
+validation of autonomous driving systems. In addition to open-source code
 and protocols, CARLA provides open digital assets (urban layouts, buildings,
 vehicles) that were created for this purpose and can be used freely. The
 simulation platform supports flexible specification of sensor suites and
 environmental conditions.
 
-[![CARLA Video](Docs/img/video_thumbnail.png)](https://youtu.be/Hp8Dz-Zek2E)
+[![CARLA Video](Docs/img/video_thumbnail.png)](https://www.youtube.com/watch?v=BjH-pFGlZ0M)
 
 If you want to benchmark your model in the same conditions as in our CoRL’17
 paper, check out
 [Benchmarking](http://carla.readthedocs.io/en/latest/benchmark_start/).
 
-Roadmap
+
+## CARLA Ecosystem
+Repositories associated to the CARLA simulation platform:
+
+* [**Scenario_Runner**](https://github.com/carla-simulator/scenario_runner): Engine to execute traffic scenarios in CARLA 0.9.X
+* [**ROS-bridge**](https://github.com/carla-simulator/ros-bridge): Interface to connect CARLA 0.9.X to ROS
+* [**Driving-benchmarks**](https://github.com/carla-simulator/driving-benchmarks): Benchmark tools for Autonomous Driving tasks
+* [**Imitation-Learning**](https://github.com/carla-simulator/imitation-learning): Code for running Conditional Imitation Learning models in CARLA
+* [**Reinforcement-Learning**](https://github.com/carla-simulator/reinforcement-learning): Code for running Conditional Reinforcement Learning models in CARLA
+
+2019 Roadmap
 -------
+![carla.org](Docs/img/carla_timeline.png "CARLA Road Map")
 
 We are continuously working on improving CARLA, and we appreciate contributions
 from the community. Our most immediate goals are:
 
-- [ ] Releasing the methods evaluated in the CARLA paper
-- [x] Adding a Lidar sensor
-- [ ] Allowing for flexible and user-friendly import and editing of maps
-- [ ] Allowing the users to control non-player characters (and therefore set up user-specified scenarios)
+- [x] Support simulation of traffic scenarios 
+- [x] Support ROS interface
+- [x] Allowing for flexible and user-friendly import and editing of maps
+- [x] Control of all vehicles from client side
+- [ ] Control of pedestrians from client side
+- [ ] Support parallel simulation of traffic scenarios in the cloud
+- [ ] RADAR simulation
 
 Paper
 -----
