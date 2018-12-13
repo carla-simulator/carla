@@ -23,7 +23,7 @@ environmental conditions.
 
 If you want to benchmark your model in the same conditions as in our CoRL’17
 paper, check out
-[Benchmarking](http://carla.readthedocs.io/en/latest/benchmark_start/).
+[Benchmarking](https://github.com/carla-simulator/driving-benchmarks).
 
 
 ## CARLA Ecosystem
