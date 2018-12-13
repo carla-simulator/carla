@@ -4,8 +4,6 @@ Before you start running your own experiments there are few details to take into
 account at the time of configuring your simulation. In this document we cover
 the most important ones.
 
-For the full list of settings please see [CARLA Settings](carla_settings.md).
-
 Fixed time-step
 ---------------
 
@@ -39,6 +37,51 @@ run the simulation at a fixed time-step of 0.2 seconds we execute
 
 It is important to note that this mode can only be enabled when launching the
 simulator since this is actually a feature of Unreal Engine.
+
+Changing the map
+----------------
+
+The map can be selected by passing the path to the map as first argument when
+launching the simulator
+
+```sh
+# Linux
+./CarlaUE4.sh /Game/Carla/Maps/Town01
+```
+
+```cmd
+rem Windows
+CarlaUE4.exe /Game/Carla/Maps/Town01
+```
+
+The path "/Game/" maps to the Content folder of our repository in
+"Unreal/CarlaUE4/Content/".
+
+Running off-screen
+------------------
+
+In Linux, you can force the simulator to run off-screen by setting the
+environment variable `DISPLAY` to empty
+
+```sh
+# Linux
+DISPLAY= ./CarlaUE4.sh
+```
+
+This launches the simulator without simulator window, of course you can still
+connect to it normally and run the example scripts. Note that with this method,
+in multi-GPU environments, it's not possible to select the GPU that the
+simulator will use for rendering. To do so, follow the instruction in
+[Running without display and selecting GPUs](carla_headless.md).
+
+Other command-line options
+--------------------------
+
+  * `-carla-port=N` Listen for client connections at port N, streaming port is set to N+1.
+  * `-quality-level={Low,Epic}` Change graphics quality level, "Low" mode runs significantly faster.
+  * [Full list of UE4 command-line arguments][ue4clilink].
+
+[ue4clilink]: https://docs.unrealengine.com/en-US/Programming/Basics/CommandLineArguments
 
 <!-- Disabled for now...
 
