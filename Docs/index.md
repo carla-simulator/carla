@@ -8,6 +8,7 @@
 <h3>Quick start</h3>
 
   * [Getting started](getting_started.md)
+  * [Python API overview](python_api_overview.md)
   <!-- * [Running the simulator](running_simulator_standalone.md) -->
   <!-- * [Connecting a Python client](connecting_the_client.md) -->
   * [Configuring the simulation](configuring_the_simulation.md)
@@ -30,7 +31,7 @@
 <h3>Advanced topics</h3>
 
   * [CARLA settings](carla_settings.md)
-  * [Python API](python_api.md)
+  * [Python API reference](python_api.md)
   <!-- * [Simulator keyboard input](simulator_keyboard_input.md) -->
   * [Running without display and selecting GPUs](carla_headless.md)
   * [Running in a Docker](carla_docker.md)
