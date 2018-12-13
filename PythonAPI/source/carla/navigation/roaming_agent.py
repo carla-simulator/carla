@@ -12,8 +12,8 @@ The agent also responds to traffic lights. """
 from enum import Enum
 
 import carla
-from Navigation.local_planner import LocalPlanner
-from Tools.misc import is_within_distance_ahead
+from carla.navigation.local_planner import LocalPlanner
+from carla.tools.misc import is_within_distance_ahead
 
 
 class AgentState(Enum):

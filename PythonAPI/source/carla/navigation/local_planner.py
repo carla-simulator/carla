@@ -12,8 +12,8 @@ from enum import Enum
 from collections import deque
 import random
 
-from Navigation.controller import VehiclePIDController
-from Tools.misc import distance_vehicle, draw_waypoints
+from carla.navigation.controller import VehiclePIDController
+from carla.tools.misc import distance_vehicle, draw_waypoints
 
 
 class RoadOption(Enum):
