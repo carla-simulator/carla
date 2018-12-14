@@ -93,7 +93,7 @@ class LocalPlanner(object):
         self._min_distance = self._sampling_radius * self.MIN_DISTANCE_PERCENTAGE
         args_lateral_dict = {
             'K_P': 1.9,
-            'K_D': 0.0,
+            'K_D': 0.01,
             'K_I': 1.4,
             'dt': self._dt}
         args_longitudinal_dict = {
@@ -186,7 +186,7 @@ class LocalPlanner(object):
         # not enough waypoints in the horizon? => add more!
         if len(self._waypoints_queue) < int(
                 self._waypoints_queue.maxlen * 0.5):
-            self._compute_next_waypoints(k=10)
+            self._compute_next_waypoints(k=100)
 
         # current vehicle waypoint
         self._current_waypoint = self._map.get_waypoint(
