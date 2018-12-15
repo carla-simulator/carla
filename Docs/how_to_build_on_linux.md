@@ -8,8 +8,9 @@ Install the build tools and dependencies
 ```
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test
 sudo apt-get update
-sudo apt-get install build-essential clang-5.0 lld-5.0 g++-7 ninja-build python python-pip python-dev libpng16-dev libtiff5-dev libjpeg-dev tzdata sed curl wget unzip autoconf libtool
-pip install --user setuptools nose2
+sudo apt-get install build-essential clang-5.0 lld-5.0 g++-7 cmake ninja-build python python-pip python-dev python3-dev python3-pip libpng16-dev libtiff5-dev libjpeg-dev tzdata sed curl wget unzip autoconf libtool
+pip2 install --user setuptools nose2
+pip3 install --user setuptools nose2
 ```
 
 To avoid compatibility issues between Unreal Engine and the CARLA dependencies,
@@ -22,8 +23,6 @@ dependencies
 sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-5.0/bin/clang++ 101
 sudo update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-5.0/bin/clang 101
 ```
-
-[cmakelink]: https://cmake.org/download/
 
 Build Unreal Engine
 -------------------
@@ -61,7 +60,7 @@ Note that the `master` branch contains the latest fixes and features, for the
 latest stable code may be best to switch to the `stable` branch.
 
 Now you need to download the assets package, to do so we provide a handy script
-that downloads and extracts the latest version (note that the package is >10GB,
+that downloads and extracts the latest version (note that this package is >3GB,
 this step might take some time depending on your connection)
 
 ```sh
@@ -77,19 +76,21 @@ export UE4_ROOT=~/UnrealEngine_4.19
 
 You can also add this variable to your `~/.bashrc` or `~/.profile`.
 
-Now that the environment is set up, you can run make to run different commands
+Now that the environment is set up, you can use make to run different commands
+and build the different modules
 
 ```sh
-make launch   # Compiles CARLA and launches Unreal Engine's Editor.
-make package  # Compiles CARLA and creates a packaged version for distribution.
-make help     # Print all available commands.
+make launch     # Compiles the simulator and launches Unreal Engine's Editor.
+make PythonAPI  # Compiles the PythonAPI module necessary for running the Python examples.
+make package    # Compiles everything and creates a packaged version able to run without UE4 editor.
+make help       # Print all available commands.
 ```
 
 Updating CARLA
 --------------
 
-Every new release of CARLA we release a new package with the latest changes in
-the CARLA assets. To download the latest version and recompile CARLA, run
+Every new release of CARLA, we release too a new package with the latest changes
+in the CARLA assets. To download the latest version and recompile CARLA, run
 
 ```sh
 make clean
@@ -97,3 +98,25 @@ git pull
 ./Update.sh
 make launch
 ```
+
+- - -
+
+<h2>Assets repository (development only)</h2>
+
+Our 3D assets, models, and maps have also a
+[publicly available git repository][contentrepolink]. We regularly push latest
+updates to this repository. However, using this version of the content is only
+recommended to developers, as we often have work in progress maps and models.
+
+Handling this repository requires [git-lfs][gitlfslink] installed in your
+machine. Clone this repository to "Unreal/CarlaUE4/Content/Carla"
+
+```sh
+git lfs clone https://bitbucket.org/carla-simulator/carla-content Unreal/CarlaUE4/Content/Carla
+```
+
+It is recommended to clone with "git lfs clone" as this is significantly faster
+in older versions of git.
+
+[contentrepolink]: https://bitbucket.org/carla-simulator/carla-content
+[gitlfslink]: https://git-lfs.github.com/
