@@ -8,7 +8,7 @@
 <h3>Quick start</h3>
 
   * [Getting started](getting_started.md)
-  * [Python API overview](python_api_overview.md)
+  * [Python API tutorial](python_api_overview.md)
   * [Configuring the simulation](configuring_the_simulation.md)
   <!-- * [Measurements](measurements.md) -->
   * [Cameras and sensors](cameras_and_sensors.md)
