@@ -148,8 +148,8 @@ void export_blueprint() {
   class_<cc::BlueprintLibrary, boost::noncopyable, boost::shared_ptr<cc::BlueprintLibrary>>("BlueprintLibrary", no_init)
     .def("find", +[](const cc::BlueprintLibrary &self, const std::string &key) -> cc::ActorBlueprint {
       return self.at(key);
-    })
-    .def("filter", &cc::BlueprintLibrary::Filter)
+    }, (arg("id")))
+    .def("filter", &cc::BlueprintLibrary::Filter, (arg("wildcard_pattern")))
     .def("__getitem__", +[](const cc::BlueprintLibrary &self, size_t pos) -> cc::ActorBlueprint {
       return self.at(pos);
     })

@@ -64,7 +64,8 @@ void export_world() {
   ;
 
   class_<cc::ActorList, boost::shared_ptr<cc::ActorList>>("ActorList", no_init)
-    .def("filter", &cc::ActorList::Filter)
+    .def("find", &cc::ActorList::Find, (arg("id")))
+    .def("filter", &cc::ActorList::Filter, (arg("wildcard_pattern")))
     .def("__getitem__", &cc::ActorList::at)
     .def("__len__", &cc::ActorList::size)
     .def("__iter__", range(&cc::ActorList::begin, &cc::ActorList::end))
