@@ -31,12 +31,21 @@ The simulation runs as fast as possible, simulating the same time increment on
 each step. To run the simulator this way you need to pass two parameters in the
 command-line, one to enable the fixed time-step mode, and the second to specify
 the FPS of the simulation (i.e. the inverse of the time step). For instance, to
-run the simulation at a fixed time-step of 0.2 seconds we execute
+run the simulation at a fixed time-step of 0.1 seconds we execute
 
-    $ ./CarlaUE4.sh -benchmark -fps=5
+    $ ./CarlaUE4.sh -benchmark -fps=10
 
 It is important to note that this mode can only be enabled when launching the
 simulator since this is actually a feature of Unreal Engine.
+
+!!! important
+    **Do not decrease the frame-rate below 10 FPS.**<br>
+    Our settings are adjusted to clamp the physics engine to a minimum of 10
+    FPS. If the game tick falls below this, the physics engine will still
+    simulate 10 FPS. In that case, things dependent on the game's delta time are
+    no longer in sync with the physics engine.
+    Ref. [#695](https://github.com/carla-simulator/carla/issues/695)
+
 
 Changing the map
 ----------------
