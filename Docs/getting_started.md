@@ -20,6 +20,8 @@ instance, control any vehicle in the simulation, attach sensors to it, and read
 back the data these sensors generate. Most of the aspects of the simulation are
 accessible from our Python API, and more will be in future releases.
 
+![CARLA Modules](img/carla_modules.png)
+
 <h2>How to run CARLA</h2>
 
 First of all, download the latest release from our GitHub page and extract all
