@@ -25,16 +25,16 @@ First of all, we need to introduce a few core concepts:
 
 #### Connecting and retrieving the world
 
-To connect to a simulator we need to create a "Client" object, and to do so we
-need to provide the IP address and port of a running instance of the simulator
+To connect to a simulator we need to create a "Client" object, to do so we need
+to provide the IP address and port of a running instance of the simulator
 
 ```py
 client = carla.Client('localhost', 2000)
 ```
 
-First thing most scripts do is setting the client time-out. This time-out sets a
-time limit to all networking operations, if the time-out is not set networking
-operations may block forever.
+The first recommended thing to do right after creating a client instance is
+setting its time-out. This time-out sets a time limit to all networking
+operations, if the time-out is not set networking operations may block forever
 
 ```py
 client.set_timeout(10.0) # seconds
@@ -47,7 +47,7 @@ world = client.get_world()
 ```
 
 Typically we won't need the client object anymore, all the objects created by
-the world will connect to the IP and port provided if they need to. This
+the world will connect to the IP and port provided if they need to. These
 operations are usually done in the background and are transparent to the user.
 
 #### Blueprints
@@ -111,7 +111,7 @@ The spawn actor function comes in two flavours, `spawn_actor` and
 spawned, the later will return `None` instead. The most typical cause of
 failure is collision at spawn point, meaning the actor does not fit at the spot
 we chose; probably another vehicle is in that spot or we tried to spawn into a
-building.
+static object.
 
 To ease the task of finding a spawn location, each map provides a list of
 recommended transforms
@@ -120,11 +120,11 @@ recommended transforms
 spawn_points = world.get_map().get_spawn_points()
 ```
 
-We add more on the map class later in this tutorial.
+We'll add more on the map object later in this tutorial.
 
 Finally, the spawn functions have an optional argument that controls whether the
 actor is going to be attached to another actor. This is specially useful for
-sensors. In the next example the camera remains rigidly attached to our vehicle
+sensors. In the next example, the camera remains rigidly attached to our vehicle
 during the rest of the simulation
 
 ```py
@@ -153,13 +153,13 @@ We can even freeze and actor by disabling its physics simulation
 actor.set_simulate_physics(False)
 ```
 
-And once we are tired of an actor we can remove it from the simulation with
+And once we get tired of an actor we can remove it from the simulation with
 
 ```py
 actor.destroy()
 ```
 
-Note that actors are not cleaned up automatically when we the Python script
+Note that actors are not cleaned up automatically when the Python script
 finishes, if we want to get rid of them we need to explicitly destroy them.
 
 !!! important
@@ -171,9 +171,9 @@ finishes, if we want to get rid of them we need to explicitly destroy them.
 
 #### Vehicles
 
-Vehicles are a special type of actors that provide a few methods specific for
-wheeled vehicles. Apart from the handling methods common to all actors, vehicles
-can also be controlled by providing throttle, break, and steer values
+Vehicles are a special type of actor that provide a few extra methods. Apart
+from the handling methods common to all actors, vehicles can also be controlled
+by providing throttle, break, and steer values
 
 ```py
 vehicle.apply_control(carla.VehicleControl(throttle=1.0, steer=-1.0))
@@ -213,9 +213,9 @@ print(box.extent)           # XYZ half-box extents in meters.
 
 #### Sensors
 
-Sensors are a special type of actor that produce a stream of data. Sensors are
-such a key component of CARLA that they deserve their own documentation page, so
-here we'll limit ourselves to show a small example of how sensors work
+Sensors are actors that produce a stream of data. Sensors are such a key
+component of CARLA that they deserve their own documentation page, so here we'll
+limit ourselves to show a small example of how sensors work
 
 ```py
 camera_bp = blueprint_library.find('sensor.camera.rgb')
@@ -224,15 +224,15 @@ camera.listen(lambda image: image.save_to_disk('output/%06d.png' % image.frame_n
 ```
 
 In this example we have attached a camera to a vehicle, and told the camera to
-save to disk each of the images generated.
+save to disk each of the images that are going to be generated.
 
 The full list of sensors and their measurement is explained in
 [Cameras and sensors](cameras_and_sensors.md).
 
 #### Other actors
 
-Apart from vehicles and sensors, there are many other actors in the world. The
-full list can be requested to the world
+Apart from vehicles and sensors, there are a few other actors in the world. The
+full list can be requested to the world with
 
 ```py
 actor_list = world.get_actors()
@@ -283,13 +283,13 @@ The full list of presets can be found in the
 
 #### Map and waypoints
 
-One of the key features of CARLA is that our roads are fully annotated, all our
-maps come accompanied by an OpenDrive file that defines the road layout.
-Furthermore, we provide a higher level API for querying and navigating this
-information.
+One of the key features of CARLA is that our roads are fully annotated. All our
+maps come accompanied by [OpenDrive](http://www.opendrive.org/) files that
+defines the road layout. Furthermore, we provide a higher level API for querying
+and navigating this information.
 
 These objects were a recent addition to our API and are still in heavy
-development, we hope to make them soon much more powerful that are now.
+development, we hope to make them soon much more powerful yet.
 
 Let's start by getting the map of the current world
 
@@ -313,7 +313,7 @@ waypoint = map.get_waypoint(vehicle.get_location())
 This waypoint's `transform` is located on a drivable lane, and it's oriented
 according to the road direction at that point.
 
-Waypoints also have function to query the "next" waypoints, this method returns
+Waypoints also have function to query the "next" waypoints; this method returns
 a list of waypoints at a certain distance that can be accessed from this
 waypoint following the traffic rules. In other words, if a vehicle is placed in
 this waypoint, give me the list of posible locations that this vehicle can drive
@@ -337,7 +337,7 @@ The map object also provides methods for generating in bulk waypoints all over
 the map at an approximated distance between them
 
 ```py
-map.generate_waypoints(2.0)
+waypoint_list = map.generate_waypoints(2.0)
 ```
 
 For routing purposes, it is also possible to retrieve a topology graph of the
