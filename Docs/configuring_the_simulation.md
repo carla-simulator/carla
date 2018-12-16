@@ -11,11 +11,11 @@ The time-step is the _simulation-time_ elapsed between two steps of the
 simulation. In video-games, this _simulation-time_ is almost always adjusted to
 real time for better realism. This is achieved by having a **variable
 time-step** that adjusts the simulation to keep up with real-time. In
-simulations however, it is better to detach the _simulation-time_ from real-
-time, and let the simulation run as fast as possible using a **fixed time-
-step**. Doing so, we are not only able to simulate longer periods in less time,
-but also gain repeatability by reducing the float-point arithmetic errors that a
-variable time-step introduces.
+simulations however, it is better to detach the _simulation-time_ from
+real-time, and let the simulation run as fast as possible using a **fixed
+time-step**. Doing so, we are not only able to simulate longer periods in less
+time, but also gain repeatability by reducing the float-point arithmetic errors
+that a variable time-step introduces.
 
 CARLA can be run in both modes.
 
