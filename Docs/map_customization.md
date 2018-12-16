@@ -157,6 +157,5 @@ Postprocess Volume (Boundless) And Light Source to exist in the world.
   - CameraPostProcessParameters.AutoExposureBias: Darkens or brightens the final image towards a defined bias.
 
 You can have as many different configurations saved in the project as you want
-and choose the configuration to apply while on the build, through the
-[settings file](carla_settings.md); or in the editor while building the level or
-testing.
+and choose the configuration to apply while on the build, through the settings
+file; or in the editor while building the level or testing.
