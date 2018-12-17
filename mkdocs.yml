@@ -21,6 +21,13 @@ pages:
   - 'Running in a Docker': 'carla_docker.md'
   - "How to make a new map with RoadRunner": 'how_to_make_a_new_map.md'
   - "How to link Epic's Automotive Materials": 'epic_automotive_materials.md'
+- Map generation tools:
+  - 'Building block generator': 'building_block_generator'
+  - 'Building actor class': 'building_actor_class'
+  - 'Spline tools': 'spline_tools'
+  - 'Traffic control assets': 'traffic_control_assets'
+  - 'Decorative blueprints': 'decorative_blueprints'
+  - 'Weather': 'weather'
 - Contributing:
   - 'Contribution guidelines': 'CONTRIBUTING.md'
   - 'Coding standard': 'coding_standard.md'
