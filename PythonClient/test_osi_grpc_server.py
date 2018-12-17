@@ -1,8 +1,6 @@
 from concurrent import futures
 import time
-
 import grpc                                     # pylint: disable=import-error
-
 import osi_grpc.osi_grpc_pb2_grpc               # pylint: disable=import-error
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
@@ -20,7 +18,7 @@ class ProcessGroundTruth(osi_grpc.osi_grpc_pb2_grpc.GroundtruthdataServicer):
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     osi_grpc.osi_grpc_pb2_grpc.add_GroundtruthdataServicer_to_server(ProcessGroundTruth(), server)
-    server.add_insecure_port('[::]:63558')
+    server.add_insecure_port('[::]:49678')
     server.start()
     try:
         while True:

@@ -24,7 +24,7 @@ from carla.tcp import TCPConnectionError
 def run_carla_client(args):
     # Here we will run episodes with frames/episode.
     number_of_episodes = 1
-    frames_per_episode = 500
+    frames_per_episode = 50
     settings = CarlaSettings()
     # We assume the CARLA server is already waiting for a client to connect at
     # host:port. To create a connection we can use the `make_carla_client`
@@ -70,7 +70,7 @@ def run_carla_client(args):
             # Notify the server that we want to start the episode at the
             # player_start index. This function blocks until the server is ready
             # to start the episode.
-            print('Starting new episode at %r...' % scene.map_name)
+
             client.start_episode(player_start)
 
             # Iterate every frame in the episode.
@@ -271,9 +271,9 @@ def main():
     argparser.add_argument(
         '-gp', '--grpc_port',
         metavar='GP',
-        default=63558,
+        default=49678,
         type=int,
-        help='TCP port to send via (default 63558)')
+        help='TCP port to send via (default 49678)')
     argparser.add_argument(
         '-c', '--carla-settings',
         metavar='PATH',
