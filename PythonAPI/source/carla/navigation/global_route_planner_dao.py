@@ -15,14 +15,31 @@ class GlobalRoutePlannerDAO(object):
     """
 
     def __init__(self, wmap):
-        """ Constructor """
-        self.wmap = wmap    # Carla world map
+        """
+        Constructor
+
+        wmap    :   carl world map object
+        """
+        self._wmap = wmap
 
     def get_topology(self):
-        """ Accessor for topology """
+        """
+        Accessor for topology.
+        This function retrieves topology from the server as a list of
+        road segments as pairs of waypoint objects, and processes the
+        topology into a list of dictionary objects.
+
+        return: list of dictionary objects with the following attributes
+                entry   -   (x,y) of entry point of road segment
+                exit    -   (x,y) of exit point of road segment
+                path    -   list of waypoints separated by 1m from entry
+                            to exit
+                intersection    -   Boolean indicating if the road segment
+                                    is an intersection
+        """
         topology = []
         # Retrieving waypoints to construct a detailed topology
-        for segment in self.wmap.get_topology():
+        for segment in self._wmap.get_topology():
             x1 = segment[0].transform.location.x
             y1 = segment[0].transform.location.y
             x2 = segment[1].transform.location.x

@@ -1,8 +1,10 @@
 import math
 import unittest
-from mock import Mock
+
 import carla
+
 from global_route_planner import GlobalRoutePlanner
+from global_route_planner import NavEnum
 from global_route_planner_dao import GlobalRoutePlannerDAO
 
 
@@ -36,7 +38,8 @@ class Test_GlobalRoutePlanner(unittest.TestCase):
         """
         plan = self.integ_grp.plan_route((-60, -5), (-77.65, 72.72))
         self.assertEqual(
-            plan, ['START', 'LEFT', 'LEFT', 'GO_STRAIGHT', 'LEFT', 'STOP'])
+            plan, [NavEnum.START, NavEnum.LEFT, NavEnum.LEFT,
+                   NavEnum.GO_STRAIGHT, NavEnum.LEFT, NavEnum.STOP])
 
     def test_path_search(self):
         """
@@ -55,8 +58,8 @@ class Test_GlobalRoutePlanner(unittest.TestCase):
         """
         x, y = (200, -250)
         segment = self.integ_grp.localise(x, y)
-        self.assertEqual(self.integ_grp.id_map[segment['entry']], 5)
-        self.assertEqual(self.integ_grp.id_map[segment['exit']], 225)
+        self.assertEqual(self.integ_grp._id_map[segment['entry']], 5)
+        self.assertEqual(self.integ_grp._id_map[segment['exit']], 225)
 
     def test_unit_vector(self):
         """
