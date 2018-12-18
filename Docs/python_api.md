@@ -78,6 +78,7 @@
 
 ## `carla.ActorList`
 
+- `find(id)`
 - `filter(wildcard_pattern)`
 - `__getitem__(pos)`
 - `__len__()`

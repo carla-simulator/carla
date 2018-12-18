@@ -16,6 +16,7 @@ namespace detail {
 #if __cplusplus >= 201703L // C++17
     inline
 #endif
+    // Please update documentation if you change this.
     uint8_t CITYSCAPES_PALETTE_MAP[][3u] = {
         {  0u,   0u,   0u}, // unlabeled     =   0u,
         { 70u,  70u,  70u}, // building      =   1u,

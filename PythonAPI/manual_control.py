@@ -114,7 +114,7 @@ except ImportError:
 
 
 # ==============================================================================
-# -- World ---------------------------------------------------------------------
+# -- Global functions ----------------------------------------------------------
 # ==============================================================================
 
 
@@ -130,36 +130,47 @@ def get_actor_display_name(actor, truncate=250):
     return (name[:truncate-1] + u'\u2026') if len(name) > truncate else name
 
 
+# ==============================================================================
+# -- World ---------------------------------------------------------------------
+# ==============================================================================
+
+
 class World(object):
     def __init__(self, carla_world, hud):
         self.world = carla_world
         self.hud = hud
-        self.world.on_tick(hud.on_world_tick)
-        blueprint = self._get_random_blueprint()
-        spawn_points = self.world.get_map().get_spawn_points()
-        spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
-        blueprint.set_attribute('role_name', 'hero')
-        self.vehicle = self.world.spawn_actor(blueprint, spawn_point)
-        self.collision_sensor = CollisionSensor(self.vehicle, self.hud)
-        self.lane_invasion_sensor = LaneInvasionSensor(self.vehicle, self.hud)
-        self.camera_manager = CameraManager(self.vehicle, self.hud)
-        self.camera_manager.set_sensor(0, notify=False)
-        self.controller = None
+        self.vehicle = None
+        self.collision_sensor = None
+        self.lane_invasion_sensor = None
+        self.camera_manager = None
         self._weather_presets = find_weather_presets()
         self._weather_index = 0
+        self.restart()
+        self.world.on_tick(hud.on_world_tick)
 
     def restart(self):
-        cam_index = self.camera_manager._index
-        cam_pos_index = self.camera_manager._transform_index
-        start_pose = self.vehicle.get_transform()
-        start_pose.location.z += 2.0
-        start_pose.rotation.roll = 0.0
-        start_pose.rotation.pitch = 0.0
-        blueprint = self._get_random_blueprint()
+        # Keep same camera config if the camera manager exists.
+        cam_index = self.camera_manager._index if self.camera_manager is not None else 0
+        cam_pos_index = self.camera_manager._transform_index if self.camera_manager is not None else 0
+        # Get a random vehicle blueprint.
+        blueprint = random.choice(self.world.get_blueprint_library().filter('patrol'))
         blueprint.set_attribute('role_name', 'hero')
-
-        self.destroy()
-        self.vehicle = self.world.spawn_actor(blueprint, start_pose)
+        if blueprint.has_attribute('color'):
+            color = random.choice(blueprint.get_attribute('color').recommended_values)
+            blueprint.set_attribute('color', color)
+        # Spawn the vehicle.
+        if self.vehicle is not None:
+            spawn_point = self.vehicle.get_transform()
+            spawn_point.location.z += 2.0
+            spawn_point.rotation.roll = 0.0
+            spawn_point.rotation.pitch = 0.0
+            self.destroy()
+            self.vehicle = self.world.try_spawn_actor(blueprint, spawn_point)
+        while self.vehicle is None:
+            spawn_points = self.world.get_map().get_spawn_points()
+            spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
+            self.vehicle = self.world.try_spawn_actor(blueprint, spawn_point)
+        # Set up the sensors.
         self.collision_sensor = CollisionSensor(self.vehicle, self.hud)
         self.lane_invasion_sensor = LaneInvasionSensor(self.vehicle, self.hud)
         self.camera_manager = CameraManager(self.vehicle, self.hud)
@@ -191,13 +202,6 @@ class World(object):
         for actor in actors:
             if actor is not None:
                 actor.destroy()
-
-    def _get_random_blueprint(self):
-        bp = random.choice(self.world.get_blueprint_library().filter('vehicle'))
-        if bp.has_attribute('color'):
-            color = random.choice(bp.get_attribute('color').recommended_values)
-            bp.set_attribute('color', color)
-        return bp
 
 
 # ==============================================================================
@@ -541,8 +545,8 @@ class CameraManager(object):
         self._hud = hud
         self._recording = False
         self._camera_transforms = [
-            carla.Transform(carla.Location(x=1.6, z=1.7)),
-            carla.Transform(carla.Location(x=-5.5, z=2.8), carla.Rotation(pitch=-15))]
+            carla.Transform(carla.Location(x=-5.5, z=2.8), carla.Rotation(pitch=-15)),
+            carla.Transform(carla.Location(x=1.6, z=1.7))]
         self._transform_index = 1
         self._sensors = [
             ['sensor.camera.rgb', cc.Raw, 'Camera RGB'],
@@ -715,8 +719,6 @@ def main():
 
     except KeyboardInterrupt:
         print('\nCancelled by user. Bye!')
-    except Exception as error:
-        logging.exception(error)
 
 
 if __name__ == '__main__':

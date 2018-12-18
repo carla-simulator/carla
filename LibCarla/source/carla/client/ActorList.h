@@ -27,6 +27,9 @@ namespace client {
 
   public:
 
+    /// Find an actor by id.
+    SharedPtr<Actor> Find(actor_id_type actor_id) const;
+
     /// Filters a list of Actor with type id matching @a wildcard_pattern.
     ActorList Filter(const std::string &wildcard_pattern) const;
 
@@ -53,8 +56,6 @@ namespace client {
     size_t size() const {
       return _actors.size();
     }
-
-    SharedPtr<Actor> GetActor(actor_id_type const actor_id) const;
 
   private:
 

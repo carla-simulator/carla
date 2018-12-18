@@ -8,8 +8,7 @@
 <h3>Quick start</h3>
 
   * [Getting started](getting_started.md)
-  <!-- * [Running the simulator](running_simulator_standalone.md) -->
-  <!-- * [Connecting a Python client](connecting_the_client.md) -->
+  * [Python API tutorial](python_api_tutorial.md)
   * [Configuring the simulation](configuring_the_simulation.md)
   <!-- * [Measurements](measurements.md) -->
   * [Cameras and sensors](cameras_and_sensors.md)
@@ -20,21 +19,11 @@
   * [How to build on Linux](how_to_build_on_linux.md)
   * [How to build on Windows](how_to_build_on_windows.md)
 
-<h3> Driving Benchmark </h3>
-
-  * [Quick Start](benchmark_start.md)
-  * [General Structure](benchmark_structure.md)
-  * [Creating Your Benchmark](benchmark_creating.md)
-  * [Computed Performance Metrics](benchmark_metrics.md)
-
 <h3>Advanced topics</h3>
 
-  * [CARLA settings](carla_settings.md)
-  * [Python API](python_api.md)
-  <!-- * [Simulator keyboard input](simulator_keyboard_input.md) -->
+  * [Python API reference](python_api.md)
   * [Running without display and selecting GPUs](carla_headless.md)
   * [Running in a Docker](carla_docker.md)
-
   * [How to link Epic's Automotive Materials](epic_automotive_materials.md)
 
 <h3>Contributing</h3>
@@ -46,8 +35,6 @@
 <h3>Development</h3>
 
   * [Map customization](map_customization.md)
-  <!-- * [CARLA design](carla_design.md) -->
-  <!-- * [CarlaServer documentation](carla_server.md) -->
   * [Build system](build_system.md)
 
 <h3>Art guidelines</h3>
