@@ -263,7 +263,7 @@ class CameraManager(object):
                     x=24, z=28.0), carla.Rotation(
                     roll=-90, pitch=-90)),
             carla.Transform(carla.Location(x=-5.5, z=2.8), carla.Rotation(pitch=-15))]
-        self._transform_index = 1
+        self._transform_index = 2
         self._sensors = [
             ['sensor.camera.rgb', cc.Raw, 'Camera RGB']]
         world = self._parent.get_world()
