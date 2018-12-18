@@ -124,7 +124,7 @@ class RoamingAgent(object):
                         target_vehicle_waypoint.lane_id != ego_vehicle_waypoint.lane_id:
             return False
 
-        loc = target_vehicle_waypoint.get_location()
+        loc = target_vehicle.get_location()
         return is_within_distance_ahead(loc, ego_vehicle_location, self._vehicle.get_transform().rotation.yaw,
                                         proximity_threshold)
 
