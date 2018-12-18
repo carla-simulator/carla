@@ -14,8 +14,7 @@ import math
 import numpy as np
 
 import carla
-from carla.tools.misc import distance_vehicle, get_speed
-
+from tools.misc import distance_vehicle, get_speed
 
 class VehiclePIDController():
     """
@@ -62,74 +61,9 @@ class VehiclePIDController():
         control.throttle = throttle
         control.brake = 0.0
         control.hand_brake = False
-        self._vehicle.apply_control(control)
+        control.manual_gear_shift = False
 
-        vehicle_transform = self._vehicle.get_transform()
-        return distance_vehicle(waypoint, vehicle_transform)
-
-    def run_iter(self, target_speed, waypoint, radius, max_iters):
-        """
-        Execute max_iters step(s) of control invoking both lateral and longitudinal PID controllers to reach a
-        target waypoint within a distance specified by radius at a given target_speed.
-
-        :param target_speed: desired vehicle speed
-        :param waypoint: target location encoded as a waypoint
-        :param radius: termination criterion based on distance between the vehicle and the target waypoint
-        :param max_iters: termination criterion based on number of iterations (<0 --> no limit)
-        :return: distance (in meters) to the waypoint
-        """
-        _buffer = []
-        iters = 0
-        if max_iters < 0:
-            max_iters = math.inf
-        control = carla.VehicleControl()
-        vehicle_transform = self._vehicle.get_transform()
-        while distance_vehicle(
-                waypoint, vehicle_transform) > radius and iters < max_iters:
-            throttle = self._lon_controller.run_step(target_speed)
-            steering = self._lat_controller.run_step(waypoint)
-
-            control.steer = steering
-            control.throttle = throttle
-            control.brake = 0.0
-            control.hand_brake = False
-            self._vehicle.apply_control(control)
-
-            vehicle_transform = self._vehicle.get_transform()
-            loc = vehicle_transform.location
-            dx = waypoint.transform.location.x - loc.x
-            dy = waypoint.transform.location.y - loc.y
-            _error = math.sqrt(dx * dx + dy * dy)
-            _buffer.append(_error)
-            iters += 1
-
-        vehicle_transform = self._vehicle.get_transform()
-        return distance_vehicle(waypoint, vehicle_transform)
-
-    def warmup(self):
-        """
-        Setting the vehicle to change gears and become reactive
-        :return:
-        """
-        eps = 0.5
-        speed = get_speed(self._vehicle)
-        while speed < eps:
-            if not self._world.wait_for_tick(10.0):
-                continue
-
-            control = carla.VehicleControl()
-            control.steer = 0.0
-            control.throttle = 1.0
-            control.brake = 0.0
-            control.hand_brake = False
-            self._vehicle.apply_control(control)
-
-        control = carla.VehicleControl()
-        control.steer = 0.0
-        control.throttle = 0.3
-        control.brake = 0.0
-        control.hand_brake = False
-        self._vehicle.apply_control(control)
+        return control
 
 
 class PIDLongitudinalController():
@@ -235,7 +169,8 @@ class PIDLateralController():
                           v_begin.x, waypoint.transform.location.y -
                           v_begin.y, 0.0])
         _dot = math.acos(np.clip(np.dot(w_vec, v_vec) /
-                                 (np.linalg.norm(w_vec) * np.linalg.norm(v_vec)), -1.0, 1.0))
+                         (np.linalg.norm(w_vec) * np.linalg.norm(v_vec)), -1.0, 1.0))
+
         _cross = np.cross(v_vec, w_vec)
         if _cross[2] < 0:
             _dot *= -1.0

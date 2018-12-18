@@ -20,29 +20,6 @@ import weakref
 
 try:
     import pygame
-    from pygame.locals import KMOD_CTRL
-    from pygame.locals import KMOD_SHIFT
-    from pygame.locals import K_0
-    from pygame.locals import K_9
-    from pygame.locals import K_BACKQUOTE
-    from pygame.locals import K_BACKSPACE
-    from pygame.locals import K_DOWN
-    from pygame.locals import K_ESCAPE
-    from pygame.locals import K_LEFT
-    from pygame.locals import K_RIGHT
-    from pygame.locals import K_SLASH
-    from pygame.locals import K_SPACE
-    from pygame.locals import K_TAB
-    from pygame.locals import K_UP
-    from pygame.locals import K_a
-    from pygame.locals import K_c
-    from pygame.locals import K_d
-    from pygame.locals import K_h
-    from pygame.locals import K_p
-    from pygame.locals import K_q
-    from pygame.locals import K_r
-    from pygame.locals import K_s
-    from pygame.locals import K_w
 except ImportError:
     raise RuntimeError(
         'cannot import pygame, make sure pygame package is installed')
@@ -78,8 +55,7 @@ class World(object):
         self.world = carla_world
         self.hud = hud
         blueprints = self.world.get_blueprint_library().filter('vehicle')
-        blueprint = [e for i, e in enumerate(
-            blueprints) if e.id == 'vehicle.lincoln.mkz2017'][0]
+        blueprint = [e for i, e in enumerate(blueprints) if e.id == 'vehicle.lincoln.mkz2017'][0]
 
         spawn_points = self.world.get_map().get_spawn_points()
         # random.choice(spawn_points) if spawn_points else carla.Transform()
@@ -287,18 +263,9 @@ class CameraManager(object):
                     x=24, z=28.0), carla.Rotation(
                     roll=-90, pitch=-90)),
             carla.Transform(carla.Location(x=-5.5, z=2.8), carla.Rotation(pitch=-15))]
-        self._transform_index = 2
+        self._transform_index = 1
         self._sensors = [
-            ['sensor.camera.rgb', cc.Raw, 'Camera RGB'],
-            ['sensor.camera.depth', cc.Raw, 'Camera Depth (Raw)'],
-            ['sensor.camera.depth', cc.Depth, 'Camera Depth (Gray Scale)'],
-            ['sensor.camera.depth', cc.LogarithmicDepth,
-                'Camera Depth (Logarithmic Gray Scale)'],
-            ['sensor.camera.semantic_segmentation', cc.Raw,
-                'Camera Semantic Segmentation (Raw)'],
-            ['sensor.camera.semantic_segmentation', cc.CityScapesPalette,
-                'Camera Semantic Segmentation (CityScapes Palette)'],
-            ['sensor.lidar.ray_cast', None, 'Lidar (Ray-Cast)']]
+            ['sensor.camera.rgb', cc.Raw, 'Camera RGB']]
         world = self._parent.get_world()
         bp_library = world.get_blueprint_library()
         for item in self._sensors:
@@ -309,12 +276,6 @@ class CameraManager(object):
             item.append(bp)
         self._index = None
         self._server_clock = pygame.time.Clock()
-
-    def toggle_camera(self):
-        self._transform_index = (
-            self._transform_index + 1) % len(self._camera_transforms)
-        self.sensor.set_transform(
-            self._camera_transforms[self._transform_index])
 
     def set_sensor(self, index, notify=True):
         index = index % len(self._sensors)
@@ -338,15 +299,6 @@ class CameraManager(object):
             self._hud.notification(self._sensors[index][2])
         self._index = index
 
-    def next_sensor(self):
-        self.set_sensor(self._index + 1)
-
-    def toggle_recording(self):
-        self._recording = not self._recording
-        self._hud.notification(
-            'Recording %s' %
-            ('On' if self._recording else 'Off'))
-
     def render(self, display):
         if self._surface is not None:
             display.blit(self._surface, (0, 0))
@@ -358,34 +310,17 @@ class CameraManager(object):
             return
         self._server_clock.tick()
         self._hud.server_fps = self._server_clock.get_fps()
-        if self._sensors[self._index][0].startswith('sensor.lidar'):
-            points = np.frombuffer(image.raw_data, dtype=np.dtype('f4'))
-            points = np.reshape(points, (int(points.shape[0] / 3), 3))
-            lidar_data = np.array(points[:, :2])
-            lidar_data *= min(self._hud.dim) / 100.0
-            lidar_data += (0.5 * self._hud.dim[0], 0.5 * self._hud.dim[1])
-            lidar_data = np.fabs(lidar_data)
-            lidar_data = lidar_data.astype(np.int32)
-            lidar_data = np.reshape(lidar_data, (-1, 2))
-            lidar_img_size = (self._hud.dim[0], self._hud.dim[1], 3)
-            lidar_img = np.zeros(lidar_img_size)
-            lidar_img[tuple(lidar_data.T)] = (255, 255, 255)
-            self._surface = pygame.surfarray.make_surface(lidar_img)
-        else:
-            image.convert(self._sensors[self._index][1])
-            array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
-            array = np.reshape(array, (image.height, image.width, 4))
-            array = array[:, :, :3]
-            array = array[:, :, ::-1]
-            self._surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
-        if self._recording:
-            image.save_to_disk('_out/%08d' % image.frame_number)
+        image.convert(self._sensors[self._index][1])
+        array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
+        array = np.reshape(array, (image.height, image.width, 4))
+        array = array[:, :, :3]
+        array = array[:, :, ::-1]
+        self._surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
 
 
 # ==============================================================================
 # -- game_loop() ---------------------------------------------------------
 # ==============================================================================
-
 
 def game_loop(args):
     pygame.init()
@@ -412,7 +347,8 @@ def game_loop(args):
                 continue
             world.render(display)
             pygame.display.flip()
-            agent.run_step()
+            control = agent.run_step()
+            world.vehicle.apply_control(control)
 
     finally:
         if world is not None:
