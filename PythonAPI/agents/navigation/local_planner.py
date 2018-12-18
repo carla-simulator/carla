@@ -202,9 +202,7 @@ class LocalPlanner(object):
                 self._waypoints_queue.popleft()
 
         if debug:
-            draw_waypoints(
-                self._vehicle.get_world(), [
-                    self._target_waypoint], z=40)
+            draw_waypoints(self._vehicle.get_world(), [self._target_waypoint], self._vehicle.get_location().z + 1.0)
 
         return control
 
