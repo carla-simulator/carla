@@ -15,8 +15,16 @@ a trial of RoadRunner at:
   * Create your maps centered arround (0,0). This is required to maintain compatibility with CARLA maps.
   * At the beginning of the map creation select Tools/TransformScene and aply a 180º rotation.
     Currently OpenDrive appears rotated 180 degrees by default --We are working on fixing that.
+
+  ![Roadrunner180](img/roadrunner180.jpg)
+
   * Check that all conections and geometries seem correct.
+
+  ![CheckGeometry](img/check_geometry.jpg)
+
   * Visualize the OpenDrive road network by clicking on the "OpenDrivePrevewTool" button.
+
+  ![checkopen](img/check_open.jpg)
 
 !!! note
     During the creation of the map, junctions (the union between two roads) might yield
@@ -25,6 +33,8 @@ a trial of RoadRunner at:
     errors happen you shoud click on the "ManouverRoadsTool" button and then within the
     details window, under junction, click on the "RebuildManouverRoads" button.
     Even if nothing seems to happen the road should be fixed.
+
+   ![maneuverroad](img/maneuver_road.jpg)
 
 <h3>Exporting:</h3>
 
