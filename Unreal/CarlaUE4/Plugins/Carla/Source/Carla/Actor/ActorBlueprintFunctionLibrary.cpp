@@ -306,7 +306,7 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
   FActorVariation Range;
   Range.Id = TEXT("range");
   Range.Type = EActorAttributeType::Float;
-  Range.RecommendedValues = { TEXT("5000.0") };
+  Range.RecommendedValues = { TEXT("1000.0") };
   // Points per second.
   FActorVariation PointsPerSecond;
   PointsPerSecond.Id = TEXT("points_per_second");
