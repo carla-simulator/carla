@@ -32,7 +32,7 @@ except ImportError:
 
 import carla
 from carla import ColorConverter as cc
-from carla.navigation.roaming_agent import *
+from agents.navigation.roaming_agent import *
 
 # ==============================================================================
 # -- World ---------------------------------------------------------------
