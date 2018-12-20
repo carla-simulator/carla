@@ -75,7 +75,9 @@ except IndexError:
 
 import carla
 from carla import ColorConverter as cc
-from agents.navigation.roaming_agent import *
+#from agents.navigation.roaming_agent import *
+from agents.navigation.basic_agent import *
+
 
 
 # ==============================================================================
@@ -614,7 +616,8 @@ def game_loop(args):
         world = World(client.get_world(), hud)
         controller = KeyboardControl(world, False)
 
-        agent = RoamingAgent(world.vehicle)
+        agent = BasicAgent(world.vehicle)
+        agent.set_destination((0.8, 48.4))
 
         clock = pygame.time.Clock()
         while True:
