@@ -68,6 +68,7 @@ class LocalPlanner(object):
         self._next_waypoints = None
         self._target_waypoint = None
         self._vehicle_controller = None
+        self._global_plan = None
         # queue with tuples of (waypoint, RoadOption)
         self._waypoints_queue = deque(maxlen=200)
 
@@ -120,6 +121,8 @@ class LocalPlanner(object):
                                                         args_lateral=args_lateral_dict,
                                                         args_longitudinal=args_longitudinal_dict)
 
+        self._global_plan = []
+
         # compute initial waypoints
         self._waypoints_queue.append(
             (self._current_waypoint.next(
@@ -128,7 +131,7 @@ class LocalPlanner(object):
         self._target_road_option = RoadOption.LANEFOLLOW
 
         # fill waypoint trajectory queue
-        self._compute_next_waypoints(k=200)
+        self._compute_next_waypoints_global_plan(k=200)
 
     def set_speed(self, speed):
         """
@@ -169,6 +172,54 @@ class LocalPlanner(object):
 
             self._waypoints_queue.append((next_waypoint, road_option))
 
+
+    def _compute_next_waypoints_global_plan(self, k=1):
+        """
+        Add new waypoints to the trajectory queue.
+
+        :param k: how many waypoints to compute
+        :return:
+        """
+        # check we do not overflow the queue
+        available_entries = self._waypoints_queue.maxlen - len(self._waypoints_queue)
+        k = min(available_entries, k)
+
+        for _ in range(k):
+            last_waypoint = self._waypoints_queue[-1][0]
+            next_waypoints = list(last_waypoint.next(self._sampling_radius))
+
+            if len(next_waypoints) == 1:
+                # only one option available ==> lanefollowing
+                next_waypoint = next_waypoints[0]
+                road_option = RoadOption.LANEFOLLOW
+            else:
+                # random choice between the possible options
+                road_options_list = retrieve_options(next_waypoints, last_waypoint)
+                planned_option = self._global_plan.pop(0)
+
+                if planned_option == NavEnum.FOLLOW_LANE:
+                    planned_option = RoadOption.LANEFOLLOW
+                if planned_option == NavEnum.LEFT:
+                    planned_option = RedOption.LEFT
+                if planned_option == NavEnum.RIGHT:
+                    planned_option = ReadOption.RIGHT
+                if planned_option == NavEnum.GO_STRAIGHT:
+                    planned_option = RoadOption.STRAIGHT
+                else:
+                    planned_option = RoadOption.VOID
+
+                if planned_option in road_options_list:
+                    next_waypoint = next_waypoints[road_options_list.index(planned_option)]
+                else:
+                    print('Option not found!!')
+                    import pdb; pdb.set_trace()
+
+            self._waypoints_queue.append((next_waypoint, road_option))
+
+    def set_global_plan(self, current_plan):
+        self._global_plan = current_plan
+        self._global_plan.pop(0)
+
     def run_step(self, debug=True):
         """
         Execute one step of local planning which involves running the longitudinal and lateral PID controllers to
@@ -180,7 +231,7 @@ class LocalPlanner(object):
 
         # not enough waypoints in the horizon? => add more!
         if len(self._waypoints_queue) < int(self._waypoints_queue.maxlen * 0.5):
-            self._compute_next_waypoints(k=100)
+            self._compute_next_waypoints_global_plan(k=100)
 
         # current vehicle waypoint
         self._current_waypoint = self._map.get_waypoint(self._vehicle.get_location())
