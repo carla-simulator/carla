@@ -43,7 +43,7 @@ class BasicAgent(object):
         self._map = self._vehicle.get_world().get_map()
         self._proximity_threshold = 10.0  # meters
         self._state = AgentState.NAVIGATING
-        self._local_planner = LocalPlanner(self._vehicle)
+        self._local_planner = LocalPlanner(self._vehicle, plan=None)
 
         # setting up global router
         self._current_plan = None
