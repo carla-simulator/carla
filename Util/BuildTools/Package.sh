@@ -100,11 +100,13 @@ if $DO_COPY_FILES ; then
   # copy_if_changed "./Docs/Example.CarlaSettings.ini" "${DESTINATION}/Example.CarlaSettings.ini"
   copy_if_changed "./Util/Docker/Release.Dockerfile" "${DESTINATION}/Dockerfile"
   copy_if_changed "./PythonAPI/dist/*.egg" "${DESTINATION}/PythonAPI/"
-  copy_if_changed "./PythonAPI/tutorial.py" "${DESTINATION}/tutorial.py"
-  copy_if_changed "./PythonAPI/manual_control.py" "${DESTINATION}/manual_control.py"
+  copy_if_changed "./PythonAPI/agents/" "${DESTINATION}/PythonAPI/agents"
+  copy_if_changed "./PythonAPI/automatic_control.py" "${DESTINATION}/automatic_control.py"
   copy_if_changed "./PythonAPI/dynamic_weather.py" "${DESTINATION}/dynamic_weather.py"
-  copy_if_changed "./PythonAPI/vehicle_gallery.py" "${DESTINATION}/vehicle_gallery.py"
+  copy_if_changed "./PythonAPI/manual_control.py" "${DESTINATION}/manual_control.py"
   copy_if_changed "./PythonAPI/spawn_npc.py" "${DESTINATION}/spawn_npc.py"
+  copy_if_changed "./PythonAPI/tutorial.py" "${DESTINATION}/tutorial.py"
+  copy_if_changed "./PythonAPI/vehicle_gallery.py" "${DESTINATION}/vehicle_gallery.py"
 
   popd >/dev/null
 
