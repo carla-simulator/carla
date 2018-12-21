@@ -12,21 +12,12 @@ The agent also responds to traffic lights. """
 from enum import Enum
 
 import carla
+from agents.navigation.agent import *
 from agents.navigation.local_planner import LocalPlanner
 from agents.tools.misc import is_within_distance_ahead, compute_magnitude_angle
 
 
-
-class AgentState(Enum):
-    """
-    AGENT_STATE represents the possible states of a roaming agent
-    """
-    NAVIGATING = 1
-    BLOCKED_BY_VEHICLE = 2
-    BLOCKED_RED_LIGHT = 3
-
-
-class RoamingAgent(object):
+class RoamingAgent(Agent):
     """
     RoamingAgent implements a basic agent that navigates scenes making random choices when facing an intersection.
     This agent respects traffic lights and other vehicles.
@@ -37,9 +28,7 @@ class RoamingAgent(object):
 
         :param vehicle: actor to apply to local planner logic onto
         """
-        self._vehicle = vehicle
-        self._world = self._vehicle.get_world()
-        self._map = self._vehicle.get_world().get_map()
+        super(RoamingAgent, self).__init__(vehicle)
         self._proximity_threshold = 10.0  # meters
         self._state = AgentState.NAVIGATING
         self._local_planner = LocalPlanner(self._vehicle)
@@ -47,7 +36,7 @@ class RoamingAgent(object):
     def run_step(self, debug=False):
         """
         Execute one step of navigation.
-        :return:
+        :return: carla.VehicleControl
         """
 
         # is there an obstacle in front of us?
