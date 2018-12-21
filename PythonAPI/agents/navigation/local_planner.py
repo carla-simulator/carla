@@ -12,7 +12,9 @@ from enum import Enum
 from collections import deque
 import random
 
+import carla
 from agents.navigation.controller import VehiclePIDController
+from agents.navigation.global_route_planner import NavEnum
 from agents.tools.misc import distance_vehicle, draw_waypoints
 
 class RoadOption(Enum):
@@ -68,6 +70,7 @@ class LocalPlanner(object):
         self._next_waypoints = None
         self._target_waypoint = None
         self._vehicle_controller = None
+        self._global_plan = None
         # queue with tuples of (waypoint, RoadOption)
         self._waypoints_queue = deque(maxlen=200)
 
@@ -120,15 +123,14 @@ class LocalPlanner(object):
                                                         args_lateral=args_lateral_dict,
                                                         args_longitudinal=args_longitudinal_dict)
 
-        # compute initial waypoints
-        self._waypoints_queue.append(
-            (self._current_waypoint.next(
-                self._sampling_radius)[0],
-             RoadOption.LANEFOLLOW))
-        self._target_road_option = RoadOption.LANEFOLLOW
+        self._global_plan = False
 
+        # compute initial waypoints
+        self._waypoints_queue.append( (self._current_waypoint.next(self._sampling_radius)[0], RoadOption.LANEFOLLOW))
+        self._target_road_option = RoadOption.LANEFOLLOW
         # fill waypoint trajectory queue
         self._compute_next_waypoints(k=200)
+
 
     def set_speed(self, speed):
         """
@@ -147,8 +149,7 @@ class LocalPlanner(object):
         :return:
         """
         # check we do not overflow the queue
-        available_entries = self._waypoints_queue.maxlen - \
-            len(self._waypoints_queue)
+        available_entries = self._waypoints_queue.maxlen - len(self._waypoints_queue)
         k = min(available_entries, k)
 
         for _ in range(k):
@@ -169,6 +170,14 @@ class LocalPlanner(object):
 
             self._waypoints_queue.append((next_waypoint, road_option))
 
+
+    def set_global_plan(self, current_plan):
+        self._waypoints_queue.clear()
+        for elem in current_plan:
+            self._waypoints_queue.append(elem)
+        self._target_road_option = RoadOption.LANEFOLLOW
+        self._global_plan = True
+
     def run_step(self, debug=True):
         """
         Execute one step of local planning which involves running the longitudinal and lateral PID controllers to
@@ -180,7 +189,18 @@ class LocalPlanner(object):
 
         # not enough waypoints in the horizon? => add more!
         if len(self._waypoints_queue) < int(self._waypoints_queue.maxlen * 0.5):
-            self._compute_next_waypoints(k=100)
+            if not self._global_plan:
+                self._compute_next_waypoints(k=100)
+
+        if len(self._waypoints_queue) == 0:
+            control = carla.VehicleControl()
+            control.steer = 0.0
+            control.throttle = 0.0
+            control.brake = 0.0
+            control.hand_brake = False
+            control.manual_gear_shift = False
+
+            return control
 
         # current vehicle waypoint
         self._current_waypoint = self._map.get_waypoint(self._vehicle.get_location())
