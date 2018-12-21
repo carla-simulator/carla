@@ -7,12 +7,11 @@ General
 
   * Use spaces, not tabs.
   * Avoid adding trailing whitespace as it creates noise in the diffs.
-  * Comments should not exceed 80 columns, code may exceed this limit a bit in
-    rare occasions if it results in clearer code.
 
 Python
 ------
 
+  * Comments should not exceed 80 columns, code should not exceed 120 columns.
   * All code must be compatible with Python 2.7, 3.5, and 3.6.
   * [Pylint][pylintlink] should not give any error or warning (few exceptions
     apply with external classes like `numpy`, see our `.pylintrc`).
@@ -25,6 +24,8 @@ Python
 C++
 ---
 
+  * Comments should not exceed 80 columns, code may exceed this limit a bit in
+    rare occasions if it results in clearer code.
   * Compilation should not give any error or warning
     (`clang++ -Wall -Wextra -std=C++14 -Wno-missing-braces`).
   * Unreal C++ code (CarlaUE4 and Carla plugin) follow the
