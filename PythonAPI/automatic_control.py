@@ -75,7 +75,7 @@ except IndexError:
 
 import carla
 from carla import ColorConverter as cc
-#from agents.navigation.roaming_agent import *
+from agents.navigation.roaming_agent import *
 from agents.navigation.basic_agent import *
 
 
@@ -616,8 +616,12 @@ def game_loop(args):
         world = World(client.get_world(), hud)
         controller = KeyboardControl(world, False)
 
-        agent = BasicAgent(world.vehicle)
-        agent.set_destination((0.8, 48.4))
+        if args.agent == "Roaming":
+            agent = RoamingAgent(world.vehicle)
+        else:
+            agent = BasicAgent(world.vehicle)
+            spawn_point = world.world.get_map().get_spawn_points()[0]
+            agent.set_destination((spawn_point.location.x, spawn_point.location.y, spawn_point.location.z))
 
         clock = pygame.time.Clock()
         while True:
@@ -670,6 +674,9 @@ def main():
         metavar='WIDTHxHEIGHT',
         default='1280x720',
         help='window resolution (default: 1280x720)')
+
+    argparser.add_argument("-a", "--agent", type=str, choices=["Roaming", "Basic"],
+                        help="select which agent to run", default="Basic")
     args = argparser.parse_args()
 
     args.width, args.height = [int(x) for x in args.res.split('x')]

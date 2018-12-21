@@ -9,27 +9,15 @@
 """ This module implements an agent that roams around a track following random waypoints and avoiding other vehicles.
 The agent also responds to traffic lights. """
 
-from enum import Enum
-
 import carla
-from agents.navigation.local_planner import LocalPlanner
-from agents.navigation.global_route_planner import GlobalRoutePlanner
-from agents.navigation.global_route_planner import NavEnum
-from agents.navigation.global_route_planner_dao import GlobalRoutePlannerDAO
+from agents.navigation.agent import *
+from agents.navigation.local_planner import LocalPlanner, compute_connection, RoadOption
 from agents.tools.misc import is_within_distance_ahead, compute_magnitude_angle
 
-class AgentState(Enum):
-    """
-    AGENT_STATE represents the possible states of a roaming agent
-    """
-    NAVIGATING = 1
-    BLOCKED_BY_VEHICLE = 2
-    BLOCKED_RED_LIGHT = 3
 
-
-class BasicAgent(object):
+class BasicAgent(Agent):
     """
-    RoamingAgent implements a basic agent that navigates scenes making random choices when facing an intersection.
+    BasicAgent implements a basic agent that navigates scenes to reach a given target destination.
     This agent respects traffic lights and other vehicles.
     """
 
@@ -38,29 +26,59 @@ class BasicAgent(object):
 
         :param vehicle: actor to apply to local planner logic onto
         """
-        self._vehicle = vehicle
-        self._world = self._vehicle.get_world()
-        self._map = self._vehicle.get_world().get_map()
+        super(BasicAgent, self).__init__(vehicle)
+
         self._proximity_threshold = 10.0  # meters
         self._state = AgentState.NAVIGATING
-        self._local_planner = LocalPlanner(self._vehicle, plan=None)
+        self._local_planner = LocalPlanner(self._vehicle)
 
         # setting up global router
         self._current_plan = None
-        self._integ_dao = GlobalRoutePlannerDAO(self._map)
-        self._integ_grp = GlobalRoutePlanner(self._integ_dao)
-        self._integ_grp.setup()
 
     def set_destination(self, location):
-        vehicle_location = self._vehicle.get_location()
-        self._current_plan = self._integ_grp.plan_route((vehicle_location.x, vehicle_location.y), location)
-        self._local_planner.set_global_plan(self._current_plan)
+        start_waypoint = self._map.get_waypoint(self._vehicle.get_location())
+        end_waypoint = self._map.get_waypoint(carla.Location(location[0], location[1], location[2]))
 
+        current_waypoint = start_waypoint
+        active_list = [ [(current_waypoint, RoadOption.LANEFOLLOW)] ]
+
+        solution = []
+        while not solution:
+            for _ in range(len(active_list)):
+                trajectory = active_list.pop()
+                if len(trajectory) > 1000:
+                    continue
+
+                # expand this trajectory
+                current_waypoint, _ = trajectory[-1]
+                next_waypoints = current_waypoint.next(5.0)
+                while len(next_waypoints) == 1:
+                    next_option = compute_connection(current_waypoint, next_waypoints[0])
+                    current_distance = next_waypoints[0].transform.location.distance(end_waypoint.transform.location)
+                    if current_distance < 5.0:
+                        solution = trajectory + [(end_waypoint, RoadOption.LANEFOLLOW)]
+                        break
+
+                    # keep adding nodes
+                    trajectory.append((next_waypoints[0], next_option))
+                    current_waypoint, _ = trajectory[-1]
+                    next_waypoints = current_waypoint.next(5.0)
+
+                if not solution:
+                    # multiple choices
+                    for waypoint in next_waypoints:
+                        next_option = compute_connection(current_waypoint, waypoint)
+                        active_list.append(trajectory + [(waypoint, next_option)])
+
+        assert solution
+
+        self._current_plan = solution
+        self._local_planner.set_global_plan(self._current_plan)
 
     def run_step(self, debug=False):
         """
         Execute one step of navigation.
-        :return:
+        :return: carla.VehicleControl
         """
 
         # is there an obstacle in front of us?
