@@ -621,7 +621,9 @@ def game_loop(args):
         else:
             agent = BasicAgent(world.vehicle)
             spawn_point = world.world.get_map().get_spawn_points()[0]
-            agent.set_destination((spawn_point.location.x, spawn_point.location.y, spawn_point.location.z))
+            agent.set_destination((spawn_point.location.x,
+                                   spawn_point.location.y,
+                                   spawn_point.location.z))
 
         clock = pygame.time.Clock()
         while True:
@@ -675,8 +677,10 @@ def main():
         default='1280x720',
         help='window resolution (default: 1280x720)')
 
-    argparser.add_argument("-a", "--agent", type=str, choices=["Roaming", "Basic"],
-                        help="select which agent to run", default="Basic")
+    argparser.add_argument("-a", "--agent", type=str,
+                           choices=["Roaming", "Basic"],
+                           help="select which agent to run",
+                           default="Basic")
     args = argparser.parse_args()
 
     args.width, args.height = [int(x) for x in args.res.split('x')]
