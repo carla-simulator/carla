@@ -563,6 +563,8 @@ class CameraManager(object):
             if item[0].startswith('sensor.camera'):
                 bp.set_attribute('image_size_x', str(hud.dim[0]))
                 bp.set_attribute('image_size_y', str(hud.dim[1]))
+            elif item[0].startswith('sensor.lidar'):
+                bp.set_attribute('range', '5000')
             item.append(bp)
         self._index = None
 
