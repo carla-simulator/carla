@@ -7,14 +7,17 @@
     - RoamingAgent: new client agent that can drive at different speeds following waypoints based on PID controllers, attending to other vehicles and traffic lights
     - LocalPlanner functionality to navigate waypoints using PID controllers
     - LateralControl and LongitudinalControl PIDs
-  * Add support for manual gear shifting
-  * Add "role_name" attribute to actors to easily identify the "hero" vehicle
+  * Added support for manual gear shifting
+  * Added "role_name" attribute to actors to easily identify the "hero" vehicle
+  * Changed traffic lights in Town03 to American style
+  * Added new junction types with only stop signs
   * Updates to documentation and tutorials
   * Simulator now starts by default in windowed mode
   * CMake version required downgraded to 3.5 for better compatibility
-  * Fix waypoints height were all placed at zero height
-  * Fix actors in world.get_actors() missing parent actor
-  * Fix some vehicles losing their wheels after calling set_simulate_physics
+  * Fixed waypoints height were all placed at zero height
+  * Fixed actors in world.get_actors() missing parent actor
+  * Fixed some vehicles losing their wheels after calling set_simulate_physics
+  * Fixed bounding box of Lincoln MkZ
   * Several fixes and improvements to OpenDriveActor
 
 ## CARLA 0.9.1
