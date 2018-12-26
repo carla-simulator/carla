@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<launch>
+    <node pkg="mpc" type="mpc_in_python.py" name="mpc" output="screen"/>
+</launch>

@@ -28,6 +28,7 @@ from utils import clip_throttle, print_measurements
 
 from model_predictive_control import MPCController
 from proportion_derivative_control import PDController
+from gamepad_controller import PadController
 
 
 def run_carla_client(args):
@@ -57,6 +58,9 @@ def run_carla_client(args):
     elif args.controller_name == 'pd':
         weather_id = 1
         controller = PDController(args.target_speed)
+    elif args.controller_name == 'pad':
+        weather_id = 5
+        controller = PadController()
     elif args.controller_name == 'nn':
         # Import it here because importing TensorFlow is time consuming
         from neural_network_controller import NNController  # noqa

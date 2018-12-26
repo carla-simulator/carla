@@ -1,0 +1,8 @@
+prefix=/home/md/carla/PythonClient/racetrack/ros/devel
+
+Name: traxxas_control
+Description: Description of traxxas_control
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/md/carla/PythonClient/racetrack/ros/devel/lib 
+Requires: 

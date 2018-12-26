@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/md/carla/PythonClient/racetrack/ros/devel/setup.sh

@@ -1,0 +1,8 @@
+prefix=/home/md/carla/PythonClient/racetrack/ros/devel
+
+Name: markers
+Description: Description of markers
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/md/carla/PythonClient/racetrack/ros/devel/lib 
+Requires: 

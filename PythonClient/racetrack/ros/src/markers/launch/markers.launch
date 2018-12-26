@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<launch>
+    <node pkg="markers" type="markers_node.py" name="markers" output="screen"/>
+</launch>

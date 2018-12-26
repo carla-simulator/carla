@@ -1,5 +1,6 @@
 import argparse
 import os
+from copy import deepcopy
 import shutil
 import time
 import pandas as pd
@@ -10,7 +11,7 @@ from scipy.stats import pearsonr
 
 import keras.backend as K
 from keras.models import Model
-from keras.layers import Dropout, Flatten, Dense, Input, Conv2D
+from keras.layers import Dropout, Flatten, Dense, Input, Conv2D, concatenate
 from keras.layers.pooling import MaxPooling2D
 from keras.layers.advanced_activations import ELU
 from keras.layers import concatenate
@@ -24,14 +25,14 @@ mpl.style.use('seaborn-whitegrid')
 
 from utils import compose_input_for_nn, get_ordered_dict_for_labels
 
-from generator import get_data_gen, batcher
+from generator import get_data_gen, batcher, remove_speed_labels_from_outputs_spec
 from config import (
     IMAGE_SIZE, THROTTLE_BOUND, STEER_BOUND,
     BATCH_SIZE, NUM_EPOCHS, NUM_TRAIN_EPISODES,
     NUM_X_CHANNELS, NUM_X_DIFF_CHANNELS,
-    WEIGHT_EXPONENT,
+    WEIGHT_EXPONENT, MIN_SPEED,
     IMAGE_CLIP_UPPER, IMAGE_CLIP_LOWER,
-    OUTPUTS_SPEC,
+    SPEED_AS_INPUT, OUTPUTS_SPEC,
     ERROR_PLOT_UPPER_BOUNDS, SCATTER_PLOT_BOUNDS
 )
 
@@ -67,23 +68,109 @@ def get_lenet_like_model(
     x = Dense(num_dense_neurons//2, kernel_regularizer=l2(l2_reg), activation=act)(x)
     enc = Dropout(.5)(x)
 
-    output_layers = []
-    for layer_name in outputs_spec:
-        x = Dense(
-            num_dense_neurons//4,
-            kernel_regularizer=l2(l2_reg),
-            activation=act,
-        )(enc)
-        output_layers.append(
-            Dense(1, kernel_regularizer=l2(l2_reg), name=layer_name)(x)
-        )
+    # output_layers = []
+    # for layer_name in outputs_spec.keys():
+    #     x = Dense(
+    #         num_dense_neurons//4,
+    #         kernel_regularizer=l2(l2_reg),
+    #         activation=act,
+    #     )(enc)
+    #     output_layers.append(
+    #         Dense(1, kernel_regularizer=l2(l2_reg), name=layer_name)(x)
+    #     )
+
+    steer_outputs = []
+    for layer_name in outputs_spec.keys():
+        if 'throttle' not in layer_name:
+            x = Dense(
+                num_dense_neurons//4,
+                kernel_regularizer=l2(l2_reg),
+                activation=act,
+            )(enc)
+            steer_outputs.append(
+                Dense(1, kernel_regularizer=l2(l2_reg), name=layer_name)(x)
+            )
+
+    throttle_outputs = []
+    for layer_name in outputs_spec.keys():
+        if 'throttle' in layer_name:
+            x = concatenate([enc] + steer_outputs)
+            x = Dense(
+                num_dense_neurons//4,
+                kernel_regularizer=l2(l2_reg),
+                activation=act,
+            )(x)
+            throttle_outputs.append(
+                Dense(1, kernel_regularizer=l2(l2_reg), name=layer_name)(x)
+            )
+
+    output_layers = steer_outputs + throttle_outputs
 
     return Model(inp, output_layers)
 
 
+def get_lenet_like_model_w_odometry(
+        input_shape, outputs_spec,
+        act='elu', l2_reg=1e-3, filter_sz=5, num_filters=24, num_dense_neurons=512,
+):
+    inp = Input(input_shape)
+    inp_speed = Input((1, ))
+
+    x = Conv2D(num_filters, (filter_sz, filter_sz),
+               padding='same', kernel_regularizer=l2(l2_reg),
+               activation=act)(inp)
+    x = MaxPooling2D(2, 2)(x)
+
+    x = Conv2D(2*num_filters, (filter_sz, filter_sz),
+               padding='same', kernel_regularizer=l2(l2_reg),
+               activation=act)(x)
+    x = MaxPooling2D(2, 2)(x)
+
+    x = Conv2D(4*num_filters, (filter_sz, filter_sz),
+               padding='same', kernel_regularizer=l2(l2_reg),
+               activation=act)(x)
+    x = MaxPooling2D(2, 2)(x)
+
+    print('Shape before Flatten: {}'.format(x))
+    x = Dropout(.5)(x)
+    x = Flatten()(x)
+
+    x = Dense(num_dense_neurons, kernel_regularizer=l2(l2_reg), activation=act)(x)
+    x = Dropout(.5)(x)
+    x = Dense(num_dense_neurons//2, kernel_regularizer=l2(l2_reg), activation=act)(x)
+    enc = Dropout(.5)(x)
+
+    steer_outputs = []
+    for layer_name in outputs_spec.keys():
+        if 'steer' in layer_name:
+            x = Dense(
+                num_dense_neurons//4,
+                kernel_regularizer=l2(l2_reg),
+                activation=act,
+            )(enc)
+            steer_outputs.append(
+                Dense(1, kernel_regularizer=l2(l2_reg), name=layer_name)(x)
+            )
+
+    throttle_outputs = []
+    for layer_name in outputs_spec.keys():
+        if 'throttle' in layer_name:
+            x = concatenate([inp_speed, enc] + steer_outputs)
+            x = Dense(
+                num_dense_neurons//4,
+                kernel_regularizer=l2(l2_reg),
+                activation=act,
+            )(x)
+            throttle_outputs.append(
+                Dense(1, kernel_regularizer=l2(l2_reg), name=layer_name)(x)
+            )
+
+    return Model([inp, inp_speed], steer_outputs+throttle_outputs)
+
+
 def extract_y(prefix, episode, racetrack):
     DF_log = pd.read_csv('logs/{}_racetrack{}_log{}.txt'.format(prefix, racetrack, episode))
-    which_OK = (DF_log['speed'] > 0.01)
+    which_OK = (DF_log['speed'] > MIN_SPEED)
     steer = DF_log[which_OK]['steer']
     throttle = DF_log[which_OK]['throttle']
     speed = DF_log[which_OK]['speed']
@@ -115,23 +202,28 @@ def _get_data_from_one_racetrack(prefix, episode, racetrack):
 def get_data(prefix, episode, racetracks):
     X_all = []
     labels_all = []
-    for rctrck in racetracks:
-        X, labels = _get_data_from_one_racetrack(prefix, episode, rctrck)
+    racetrack_labels = []
+    for racetrack_index, racetrack_name in enumerate(racetracks):
+        X, labels = _get_data_from_one_racetrack(prefix, episode, racetrack_name)
         X_all.append(X)
         labels_all.append(labels)
+        racetrack_labels += len(labels)*[racetrack_index]
 
     label_names = labels.keys()
-    return np.concatenate(X_all), {
+    X_out = np.concatenate(X_all)
+    labels_out = {
         label_name: np.concatenate([labels[label_name] for labels in labels_all])
         for label_name in label_names
     }
+    labels_out['racetrack'] = pd.get_dummies(racetrack_labels).values
+    return X_out, labels_out
 
 
 def get_preds_and_plot(
     model,
     X_train, labels_train,
     X_test, labels_test,
-    num_X_channels, num_Xdiff_channels, outputs_spec,
+    num_X_channels, num_Xdiff_channels, outputs_spec, speed_as_input,
     epoch, controller_name, results_dir,
     plot_bounds
 ):
@@ -149,7 +241,7 @@ def get_preds_and_plot(
         validation=False,
         flip_prob=0.5
     )
-    train_batch_gen = batcher(train_gen, local_batch_size, outputs_spec)
+    train_batch_gen = batcher(train_gen, local_batch_size, outputs_spec, speed_as_input)
 
     test_gen = get_data_gen(
         X_test, labels_test, np.ones(X_test.shape[0]),
@@ -157,25 +249,28 @@ def get_preds_and_plot(
         validation=False,
         flip_prob=0.5
     )
-    test_batch_gen = batcher(test_gen, local_batch_size, outputs_spec)
+    test_batch_gen = batcher(test_gen, local_batch_size, outputs_spec, speed_as_input)
 
+    labels = outputs_spec.keys()
+    if speed_as_input:
+        labels = [label_name for label_name in labels if 'speed' not in label_name]
     for i in range(num_batches):
         X_train, y_train_tmp = next(train_batch_gen)
         X_test, y_test_tmp = next(test_batch_gen)
-        for label_index, label_name in enumerate(outputs_spec):
+        for label_index, label_name in enumerate(labels):
             y_train[label_name][local_batch_size*i:local_batch_size*(i+1)] = y_train_tmp[label_index]
             y_test[label_name][local_batch_size*i:local_batch_size*(i+1)] = y_test_tmp[label_index]
 
         preds_train_tmp = model.predict(X_train)
         preds_test_tmp = model.predict(X_test)
-        for label_index, label_name in enumerate(outputs_spec):
+        for label_index, label_name in enumerate(labels):
             # The `.reshape(-1)` is here because if there is one label the shape
             # of `preds_*` is (128), and if there are more it's (128,1)
             preds_train[label_name][local_batch_size*i:local_batch_size*(i+1)] = preds_train_tmp[label_index].reshape(-1)
             preds_test[label_name][local_batch_size*i:local_batch_size*(i+1)] = preds_test_tmp[label_index].reshape(-1)
 
     mse_plural = {}
-    for label_name in outputs_spec:
+    for label_name in labels:
         plot_scatter(
             controller_name,
             label_name,
@@ -213,14 +308,17 @@ def plot_scatter(controller_name, actuator_name, y_train, y_test, preds_train, p
     plt.clf()
 
 
-def generator_fit(model, X, labels, weights, num_X_channels, num_Xdiff_channels, batch_size, outputs_spec):
+def generator_fit(
+    model, X, labels, weights, num_X_channels, num_Xdiff_channels, batch_size,
+    outputs_spec, speed_as_input,
+):
     train_gen = get_data_gen(
         X, labels, weights,
         num_X_channels, num_Xdiff_channels, outputs_spec,
         validation=False,
         flip_prob=0.5
     )
-    train_batch_gen = batcher(train_gen, batch_size, outputs_spec)
+    train_batch_gen = batcher(train_gen, batch_size, outputs_spec, speed_as_input)
 
     valid_gen = get_data_gen(
         X, labels, np.ones(X.shape[0]),
@@ -228,7 +326,7 @@ def generator_fit(model, X, labels, weights, num_X_channels, num_Xdiff_channels,
         validation=True,
         flip_prob=0.0
     )
-    valid_batch_gen = batcher(valid_gen, batch_size, outputs_spec)
+    valid_batch_gen = batcher(valid_gen, batch_size, outputs_spec, speed_as_input)
 
     epoch_size = 4*X.shape[0]  # To account for mirror reflections
 
@@ -306,7 +404,7 @@ def main():
     else:
         results_dir = '{controller}_{throttle}_{num_X_channels}_{num_Xdiff_channels}'.format(
             controller=args.controller_name,
-            throttle=('throttle' if 'throttle' in OUTPUTS_SPEC else 'noThrottle'),
+            throttle=('throttle' if 'throttle' in OUTPUTS_SPEC.keys() else 'noThrottle'),
             num_X_channels='{}Xchan'.format(NUM_X_CHANNELS),
             num_Xdiff_channels='{}dXchan'.format(NUM_X_DIFF_CHANNELS),
         )
@@ -315,19 +413,29 @@ def main():
 
     shutil.copy('config.py', results_dir)
 
+    if SPEED_AS_INPUT:
+        get_model = get_lenet_like_model_w_odometry
+    else:
+        get_model = get_lenet_like_model
+
     input_shape = (
         IMAGE_CLIP_LOWER-IMAGE_CLIP_UPPER,
         IMAGE_SIZE[1],
         NUM_X_CHANNELS+NUM_X_DIFF_CHANNELS
     )
 
-    model = get_lenet_like_model(
+    model = get_model(
         input_shape=input_shape,
         outputs_spec=OUTPUTS_SPEC
     )
 
     loss = {layer_name: loss_name for layer_name, (loss_name, weight) in OUTPUTS_SPEC.items()}
     loss_weights = {layer_name: weight for layer_name, (loss_name, weight) in OUTPUTS_SPEC.items()}
+    if SPEED_AS_INPUT:
+        for loss_name in OUTPUTS_SPEC.keys():
+            if 'speed' in loss_name:
+                del loss[loss_name]
+                del loss_weights[loss_name]
     model.compile(
         loss=loss,
         loss_weights=loss_weights,
@@ -355,7 +463,7 @@ def main():
     min_error = 10000
     for epoch in range(1, NUM_EPOCHS+1):
         weights = None
-        for episode in range(num_train_episodes):
+        for episode in [0,1]:#range(num_train_episodes):
             print('EPOCH: {}, EPISODE: {}'.format(epoch, episode))
 
             print('Getting data...')
@@ -385,7 +493,8 @@ def main():
 
             model = generator_fit(
                 model, X, labels, weights,
-                NUM_X_CHANNELS, NUM_X_DIFF_CHANNELS, BATCH_SIZE, OUTPUTS_SPEC
+                NUM_X_CHANNELS, NUM_X_DIFF_CHANNELS, BATCH_SIZE,
+                OUTPUTS_SPEC, SPEED_AS_INPUT
             )
 
         if epoch % 5 == 0:
@@ -395,7 +504,7 @@ def main():
             model,
             X, labels,
             X_test, labels_test,
-            NUM_X_CHANNELS, NUM_X_DIFF_CHANNELS, OUTPUTS_SPEC,
+            NUM_X_CHANNELS, NUM_X_DIFF_CHANNELS, OUTPUTS_SPEC, SPEED_AS_INPUT,
             epoch, args.controller_name, results_dir,
             SCATTER_PLOT_BOUNDS,
         )
