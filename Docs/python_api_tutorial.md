@@ -95,7 +95,7 @@ for attr in blueprint:
 ```
 
 The blueprint system has been designed to ease contributors adding their custom
-actors directly in Unreal Editor, we'll add a tutorial on this soon, keep tuned!
+actors directly in Unreal Editor, we'll add a tutorial on this soon, stay tuned!
 
 #### Spawning actors
 
@@ -147,7 +147,7 @@ print(actor.get_acceleration())
 print(actor.get_velocity())
 ```
 
-We can even freeze and actor by disabling its physics simulation
+We can even freeze an actor by disabling its physics simulation
 
 ```py
 actor.set_simulate_physics(False)
@@ -289,7 +289,7 @@ defines the road layout. Furthermore, we provide a higher level API for querying
 and navigating this information.
 
 These objects were a recent addition to our API and are still in heavy
-development, we hope to make them soon much more powerful yet.
+development, we hope to make them much more powerful soon.
 
 Let's start by getting the map of the current world
 
