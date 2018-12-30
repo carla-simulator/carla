@@ -1,22 +1,67 @@
 #!/usr/bin/env python
+import numpy as np
+
 import rospy
+from rospy.numpy_msg import numpy_msg
+from tf.transformations import euler_from_quaternion
+
+# Message types
 from std_msgs.msg import Float32, Time
+from nav_msgs.msg import Odometry
 from visualization_msgs.msg import Marker
+from rospy_tutorials.msg import Floats
+
 from _mpc_controller import MPCController
+import config
 
 
 class MPCControllerNode:
-    def __init__(self, mpc_controller):
-        # To keep the previous state
-        self.steer = None
-        self.throttle = None
+    def __init__(self, mpc_controller, common_queue_size=None, which_speed='VESC'):
+        queue_size = common_queue_size or 1
+        self.which_speed = which_speed
 
-        # ROS-related
         self.points = None
-        self.sub_spd = rospy.Subscriber('/centerline', Float32, self.centerline_cb, queue_size=1)
+        self.speed_from_pf = None
+        self.speed_from_vesc = None
+        self.position = None
+        self.psi = None
 
-        self.pub_steer = rospy.Publisher('/steer', Float32, queue_size=1)
-        self.pub_throttle = rospy.Publisher('/esc', Float32, queue_size=1)
+        # Subscribers
+        self.subscribers = {}
+        #  This gives us the waypoints
+        self.subscribers['/centerline_numpy'] = rospy.Subscriber(
+            '/centerline_numpy',
+            numpy_msg(Floats),
+            self.centerline_cb,
+            queue_size=queue_size,
+        )
+        #  This gives us the position and orientation
+        self.subscribers['/pf/pose/odom'] = rospy.Subscriber(
+            '/pf/pose/odom',
+            Odometry,
+            self.pf_pose_odom_cb,
+            queue_size=queue_size,
+        )
+        # This gives us the speed (from VESC)
+        self.subscribers['/odom'] = rospy.Subscriber(
+            '/odom',
+            Odometry,
+            self.odom_cb,
+            queue_size=queue_size,
+        )
+
+        # Publishers
+        self.publishers = {}
+        self.publishers['/angle'] = rospy.Publisher(
+            '/angle',
+            Float32,
+            queue_size=queue_size,
+        )
+        self.publishers['/throttle'] = rospy.Publisher(
+            '/throttle',
+            Float32,
+            queue_size=queue_size,
+        )
 
         rospy.init_node('~mpc_controller')
 
@@ -27,37 +72,55 @@ class MPCControllerNode:
         start_time = 0
 
         while not rospy.is_shutdown():
-            elapsed = rospy.Time.now().to_sec() - start_time
+            self.speed = {
+                'VESC': self.speed_from_vesc,
+                'PF': self.speed_from_pf,
+            }[self.which_speed]
 
-            pts_2D = np.array([
-                [-34.41720415,  60.01667464],
-                [-38.59669945,  56.94990656],
-                [-43.33353477,  54.53909335],
-                [-48.72895121,  52.83095266]
-            ])
+            points_OK = self.points is not None
+            speed_OK = self.speed is not None
+            position_OK = self.position is not None
+            psi_OK = self.psi is not None
 
-            # Values for testing
-            orientation = (0.7072, 0.7072)
-            location = (-4.33, 25.15)
-            curr_speed = 12
+            if points_OK and speed_OK and position_OK and psi_OK:
+                steer, throttle, cost = mpc_controller.control(self.points, self.speed, self.position, self.psi)
+                self.publishers['/angle'].publish(steer)
+                self.publishers['/throttle'].publish(throttle)
 
-            steer, throttle = mpc_controller.control(pts_2D, curr_speed, location, orientation)
+                elapsed = rospy.Time.now().to_sec() - start_time
+                rospy.loginfo('This took {:.4f}s'.format(elapsed))
+                start_time = rospy.Time.now().to_sec()
 
-            self.pub_steer(steer)
-            self.pub_throttle(throttle)
+
+
 
     ### Callbacks ###
-
     def centerline_cb(self, data):
-        self.points = data.points
+        # There are: x, y, yaw, speed in self.points -- I'm only interested in
+        #  the first two
+        self.points = data.data.reshape(-1, 4)[:, :2]  # TODO: magic number 4
 
+    def pf_pose_odom_cb(self, data):
+        position = data.pose.pose.position
+        self.position = np.array([position.x, position.y])
+
+        # Psi is a bit more complicated
+        orient = data.pose.pose.orientation
+        euler = euler_from_quaternion([orient.x, orient.y, orient.z, orient.w])
+        self.psi = euler[-1]  # The last, third Euler angle is psi
+
+        # FIXME
+        self.speed_from_pf = 0.5  # TODO: consult with Karol how to determine speed
+
+    def odom_cb(self, data):
+        self.speed_from_vesc = data.twist.twist.linear.x
 
 
 
 if __name__ == '__main__':
-    target_speed = 10
-    steps_ahead = 10
-    dt = 0.1
+    target_speed = config.TARGET_SPEED
+    steps_ahead = config.STEPS_AHEAD
+    dt = config.TIME_STEP
     mpc_controller = MPCController(target_speed, steps_ahead, dt)
 
     try:

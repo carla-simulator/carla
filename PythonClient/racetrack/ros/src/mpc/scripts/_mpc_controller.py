@@ -1,8 +1,4 @@
 #!/usr/bin/env python
-import rospy
-from std_msgs.msg import Float32, Time
-from visualization_msgs.msg import Marker
-
 import numpy as np
 from scipy.optimize import minimize
 from scipy.interpolate import splprep, splev
@@ -10,9 +6,7 @@ import sympy as sym
 from sympy.tensor.array import derive_by_array
 sym.init_printing()
 
-
-THROTTLE_BOUND = 1
-STEER_BOUND = 6
+import config
 
 
 class _EqualityConstraints(object):
@@ -31,7 +25,7 @@ class _EqualityConstraints(object):
 
 
 class MPCController:
-    def __init__(self, target_speed, steps_ahead=10, dt=0.1):
+    def __init__(self, target_speed, steps_ahead, dt):
         self.target_speed = target_speed
         self.state_vars = ('x', 'y', 'v', 'psi', 'cte', 'epsi')
 
@@ -40,27 +34,30 @@ class MPCController:
 
         # Cost function coefficients
         # TODO(MD): take outside, preferably to a config
-        self.cte_coeff = 1000
-        self.epsi_coeff = 1000
-        self.speed_coeff = 2.0  # 2
-        self.acc_coeff = 10  # 1
-        self.steer_coeff = 1  # 1
-        self.consec_acc_coeff = 500
-        self.consec_steer_coeff = 500
+        self.cte_coeff = config.CTE_COEFF
+        self.epsi_coeff = config.EPSI_COEF
+        self.speed_coeff = config.SPEED_COEFF
+        self.acc_coeff = config.ACC_COEFF
+        self.steer_coeff = config.STEER_COEFF
+        self.consec_acc_coeff = config.CONSEC_ACC_COEFF
+        self.consec_steer_coeff = config.CONSEC_STEER_COEFF
 
         # Front wheel L
-        # FIXME
-        # NOTE
-        # TODO(MD): CORRECT THIS
-        self.Lf = 2.2
+        self.Lf = config.Lf
 
         # How the polynomial fitting the desired curve is fitted
-        self.steps_poly = 30
         self.poly_degree = 3
+
+        # Bounds for the optimizer
+        self.bounds = (
+            6*self.steps_ahead * [(None, None)]
+            + self.steps_ahead * [(-config.THROTTLE_LOWER_BOUND, config.THROTTLE_UPPER_BOUND)]
+            + self.steps_ahead * [(-config.STEER_BOUND, config.STEER_BOUND)]
+        )
 
         # Lambdify and minimize stuff
         self.evaluator = 'numpy'
-        self.tolerance = 1
+        self.tolerance = config.TOLERANCE
         self.cost_func, self.cost_grad_func, self.constr_funcs = self.get_func_constraints_and_bounds()
 
         # To keep the previous state
@@ -161,24 +158,21 @@ class MPCController:
 
         return cost_func, cost_grad_func, constr_funcs
 
-    def _find_closest(self, pts_2D, location):
-        dists = np.linalg.norm(pts_2D - location, axis=1)
+    def _find_closest(self, pts_2D, position):
+        dists = np.linalg.norm(pts_2D - position, axis=1)
         return np.argmin(dists), dists
 
-    def control(self, pts_2D, v, location, orientation):
-        which_closest, _ = self._find_closest(pts_2D, location)
+    def control(self, pts_2D, v, position, psi):
+        which_closest, _ = self._find_closest(pts_2D, position)
 
-        indeces = which_closest + self.steps_poly*np.arange(self.poly_degree+1)
+        indeces = which_closest + np.arange(self.poly_degree+1)
         indeces = indeces % pts_2D.shape[0]
         pts = pts_2D[indeces]
-
-        psi = np.arctan2(orientation[1], orientation[0])
 
         cos_psi = np.cos(psi)
         sin_psi = np.sin(psi)
 
-        x, y = location[0], location[1]
-        pts_car = MPCController.transform_into_cars_coordinate_system(pts, x, y, cos_psi, sin_psi)
+        pts_car = MPCController.transform_into_cars_coordinate_system(pts, position, cos_psi, sin_psi)
 
         poly = np.polyfit(pts_car[:, 0], pts_car[:, 1], self.poly_degree)
 
@@ -186,13 +180,9 @@ class MPCController:
         epsi = -np.arctan(poly[-2])
 
         init = (0, 0, 0, v, cte, epsi) + tuple(poly)
-        state0, bounds = self.get_state0_and_bounds(0, 0, 0, v, cte, epsi, self.steer, self.throttle, poly)
-        result = self.minimize_cost(bounds, state0, init)
+        state0 = self.get_state0(0, 0, 0, v, cte, epsi, self.steer, self.throttle, poly)
+        result = self.minimize_cost(self.bounds, state0, init)
 
-        # Left here for debugging, a simple PD controller
-        # self.steer = -0.6 * cte - 5.5 * (cte - prev_cte)
-        # prev_cte = cte
-        # TODO: write a LowPassFilter for `throttle`
 
         if 'success' in result.message:
             self.steer = result.x[-self.steps_ahead]
@@ -200,13 +190,13 @@ class MPCController:
         else:
             print('Unsuccessful optimization')
 
-        return self.steer, self.throttle
+        return self.steer, self.throttle, result.fun
 
-    def get_state0_and_bounds(self, x, y, psi, v, cte, epsi, a, delta, poly=None):
+    def get_state0(self, x, y, psi, v, cte, epsi, a, delta, poly=None):
         a = a or 0
         delta = delta or 0
         # TODO: impacts performance, you can do better
-        x0 = self.steps_ahead* [x] #[x + i*v*self.dt for i in range(self.steps_ahead)]
+        x0 = self.steps_ahead * [x] #[x + i*v*self.dt for i in range(self.steps_ahead)]
         y0 = [np.polyval(poly, x0[i]) for i in range(self.steps_ahead)]
         state0 = np.array(
             x0
@@ -219,14 +209,7 @@ class MPCController:
             + self.steps_ahead * [delta]
         )
 
-        # TODO: impacts performance, be better than this
-        bounds = (
-            6*self.steps_ahead * [(None, None)]
-            + self.steps_ahead * [(-THROTTLE_BOUND, THROTTLE_BOUND)]
-            + self.steps_ahead * [(-STEER_BOUND, STEER_BOUND)]
-        )
-
-        return state0, bounds
+        return state0
 
     def generate_fun(self, symb_fun, vars_, init, poly):
         '''This function generates a function of the form `fun(x, *args)` because
@@ -276,16 +259,21 @@ class MPCController:
         return sym.symbols('{symbol}0:{N}'.format(symbol=str_symbol, N=N))
 
     @staticmethod
-    def transform_into_cars_coordinate_system(pts, x, y, cos_psi, sin_psi):
-        diff = (pts - [x, y])
+    def transform_into_cars_coordinate_system(pts, position, cos_psi, sin_psi):
+        diff = pts - position
         pts_car = np.zeros_like(diff)
-        pts_car[:, 0] = cos_psi * diff[:, 0] + sin_psi * diff[:, 1]
-        pts_car[:, 1] = sin_psi * diff[:, 0] - cos_psi * diff[:, 1]
+        pts_car[:, 0] =  cos_psi * diff[:, 0] + sin_psi * diff[:, 1]
+        pts_car[:, 1] = -sin_psi * diff[:, 0] + cos_psi * diff[:, 1]
         return pts_car
 
 
 if __name__ == '__main__':
-    mpc_controller = MPCController(target_speed=10)
+    # For testing purposes
+    mpc_controller = MPCController(
+        target_speed=10,
+        steps_ahead=10,
+        dt=0.1
+    )
 
     # Values for testing
     pts_2D = np.array([
@@ -295,8 +283,9 @@ if __name__ == '__main__':
         [-48.72895121,  52.83095266]
     ])
     orientation = (0.7072, 0.7072)
+    psi = np.arctan2(orientation[1], orientation[0])
     location = (-4.33, 25.15)
     curr_speed = 12
 
-    steer, throttle = mpc_controller.control(pts_2D, curr_speed, location, orientation)
+    steer, throttle, cost = mpc_controller.control(pts_2D, curr_speed, location, psi)
     print('steer: {:.2f}, throttle: {:.2f}'.format(steer, throttle))
