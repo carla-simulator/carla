@@ -63,6 +63,7 @@ class MPCController:
         # To keep the previous state
         self.steer = None
         self.throttle = None
+        self.next_pos = None
 
     def get_func_constraints_and_bounds(self):
         """The most important method of this class, defining the MPC's cost
@@ -185,12 +186,20 @@ class MPCController:
 
 
         if 'success' in result.message:
+            next_x = result.x[:self.steps_ahead]
+            next_y = result.x[self.steps_ahead:2*self.steps_ahead]
+            self.next_pos = np.c_[next_x, next_y]
             self.steer = result.x[-self.steps_ahead]
             self.throttle = result.x[-2*self.steps_ahead]
         else:
             print('Unsuccessful optimization')
 
-        return self.steer, self.throttle, result.fun
+        return {
+            'steer': self.steer,
+            'throttle': self.throttle,
+            'cost': result.fun,
+            'next_pos': self.next_pos,
+        }
 
     def get_state0(self, x, y, psi, v, cte, epsi, a, delta, poly=None):
         a = a or 0

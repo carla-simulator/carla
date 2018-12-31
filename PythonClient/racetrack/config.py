@@ -3,15 +3,15 @@ from collections import OrderedDict
 
 # General, Carla-related
 IMAGE_SIZE = (150, 200)
-STEER_BOUND = 6
+STEER_BOUND = 2.5
 THROTTLE_BOUND = 1
 MIN_SPEED = 10
 # If you're running low on memory, you may consider switching to `np.float32`
 DTYPE = 'float32'
 
 # "Controller regularization"
-STEER_NOISE = lambda : random.uniform(-0.1, 0.1)
-THROTTLE_NOISE = lambda: random.uniform(-0.05, 0.05)
+STEER_NOISE = lambda: 0#random.uniform(-0.1, 0.1)
+THROTTLE_NOISE = lambda: 0#random.uniform(-0.05, 0.05)
 
 # NN training
 BATCH_SIZE = 32
