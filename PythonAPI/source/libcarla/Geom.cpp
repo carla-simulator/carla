@@ -98,13 +98,30 @@ void export_geom() {
     .def(self_ns::str(self_ns::self))
   ;
 
+  class_<std::vector<cg::Location> >("vector_of_locations")
+    .def(vector_indexing_suite<std::vector<cg::Location>>())
+    .def(self_ns::str(self_ns::self))
+  ;
+
   class_<cg::Transform>("Transform")
+
     .def(init<cg::Location, cg::Rotation>(
         (arg("location")=cg::Location(), arg("rotation")=cg::Rotation())))
     .def_readwrite("location", &cg::Transform::location)
     .def_readwrite("rotation", &cg::Transform::rotation)
     .def("__eq__", &cg::Transform::operator==)
     .def("__ne__", &cg::Transform::operator!=)
+    .def("transform_point", +[](const cg::Transform &self, cg::Location &location) {
+      self.TransformPoint(location);
+      return location;
+    }, arg("in_point"))
+
+    .def("transform_point_list", +[](const cg::Transform &self, std::vector<cg::Location> &location_list) {
+      for (cg::Location &location : location_list) {
+        self.TransformPoint(location);
+      }
+      return location_list;
+    })
     .def(self_ns::str(self_ns::self))
   ;
 

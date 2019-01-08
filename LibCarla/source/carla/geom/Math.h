@@ -17,7 +17,6 @@ namespace geom {
 
   class Math {
   public:
-
     static constexpr auto pi() {
       return 3.14159265358979323846264338327950288;
     }
@@ -32,6 +31,10 @@ namespace geom {
 
     static constexpr auto to_degrees(double rad) {
       return rad * (180.0 / pi());
+    }
+
+    static constexpr auto to_radians(double deg) {
+      return deg * (pi() / 180.0);
     }
 
     template <typename T>
