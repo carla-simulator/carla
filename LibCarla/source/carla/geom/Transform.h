@@ -49,13 +49,6 @@ namespace geom {
       return rotation;
     }
 
-    template<class T>
-    inline void TransformPointList(std::vector<T> &in_point_list) const {
-      for (T in_point : in_point_list) {
-        TransformPoint(in_point);
-      }
-    }
-
     inline void TransformPoint (Location &in_point) const {
 
       // Rotate
