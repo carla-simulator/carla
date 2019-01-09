@@ -218,6 +218,19 @@ static void AddRecommendedValuesForSensorRoleNames(FActorDefinition &Definition)
   AddRecommendedValuesForActorRoleName(Definition, {TEXT("front"), TEXT("back"), TEXT("left"), TEXT("right"), TEXT("front_left"), TEXT("front_right"), TEXT("back_left"), TEXT("back_right")});
 }
 
+static void AddVariationsForSensor(FActorDefinition &Def)
+{
+  FActorVariation Tick;
+
+  Tick.Id = TEXT("tick_interval");
+  Tick.Type = EActorAttributeType::Float;
+  Tick.RecommendedValues = { TEXT("0.0f") };
+  Tick.bRestrictToRecommended = false;
+
+  Def.Variations.Emplace(Tick);
+}
+
+
 FActorDefinition UActorBlueprintFunctionLibrary::MakeGenericSensorDefinition(
     const FString &Type,
     const FString &Id)
@@ -225,6 +238,7 @@ FActorDefinition UActorBlueprintFunctionLibrary::MakeGenericSensorDefinition(
   FActorDefinition Definition;
   FillIdAndTags(Definition, TEXT("sensor"), Type, Id);
   AddRecommendedValuesForSensorRoleNames(Definition);
+  AddVariationsForSensor(Definition);
   return Definition;
 }
 
@@ -247,6 +261,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
 {
   FillIdAndTags(Definition, TEXT("sensor"), TEXT("camera"), Id);
   AddRecommendedValuesForSensorRoleNames(Definition);
+  AddVariationsForSensor(Definition);
   // FOV.
   FActorVariation FOV;
   FOV.Id = TEXT("fov");
