@@ -49,7 +49,7 @@ namespace geom {
       return rotation;
     }
 
-    inline void TransformPoint (Location &in_point) const {
+    inline void TransformPoint (Vector3D &in_point) const {
 
       // Rotate
       double cy = cos(Math::to_radians(rotation.yaw));
@@ -59,7 +59,7 @@ namespace geom {
       double cp = cos(Math::to_radians(rotation.pitch));
       double sp = sin(Math::to_radians(rotation.pitch));
 
-      Location out_point;
+      Vector3D out_point;
       out_point.x = in_point.x * ( cp * cy )
                   + in_point.y * ( cy * sp * sr - sy * cr)
                   + in_point.z * (-cy * sp * cr - sy * sr);
