@@ -8,6 +8,7 @@ import carla
 
 import unittest
 
+
 class testLocation(unittest.TestCase):
     def test_default_values(self):
         location = carla.Location()
@@ -121,7 +122,7 @@ class testTransform(unittest.TestCase):
             carla.Location(x=8.0, y=19.0, z=20.0),
             carla.Rotation(pitch=0.0, yaw=0.0, roll=0.0))
         point = carla.Location(x=0.0, y=0.0, z=0.0)
-        t.transform_point(point)
+        t.transform(point)
         self.assertTrue(abs(point.x - 8.0) <= error)
         self.assertTrue(abs(point.y - 19.0) <= error)
         self.assertTrue(abs(point.z - 20.0) <= error)
@@ -132,10 +133,10 @@ class testTransform(unittest.TestCase):
             carla.Location(x=0.0, y=0.0, z=0.0),
             carla.Rotation(pitch=180.0, yaw=0.0, roll=0.0))
         point = carla.Location(x=0.0, y=0.0, z=1.0)
-        t.transform_point(point)
+        t.transform(point)
 
-        self.assertTrue(abs(point.x -   0.0) <= error)
-        self.assertTrue(abs(point.y -   0.0) <= error)
+        self.assertTrue(abs(point.x - 0.0) <= error)
+        self.assertTrue(abs(point.y - 0.0) <= error)
         self.assertTrue(abs(point.z - (-1.0)) <= error)
 
     def test_rotation_and_translation(self):
@@ -144,10 +145,10 @@ class testTransform(unittest.TestCase):
             carla.Location(x=0.0, y=0.0, z=-1.0),
             carla.Rotation(pitch=90.0, yaw=0.0, roll=0.0))
         point = carla.Location(x=0.0, y=0.0, z=2.0)
-        t.transform_point(point)
+        t.transform(point)
 
         self.assertTrue(abs(point.x - (-2.0)) <= error)
-        self.assertTrue(abs(point.y -   0.0) <= error)
+        self.assertTrue(abs(point.y - 0.0) <= error)
         self.assertTrue(abs(point.z - (-1.0)) <= error)
 
     def test_list_rotation_and_translation_location(self):
@@ -156,19 +157,20 @@ class testTransform(unittest.TestCase):
             carla.Location(x=0.0, y=0.0, z=-1.0),
             carla.Rotation(pitch=90.0, yaw=0.0, roll=0.0))
 
-        point_list = [  carla.Location(x=0.0, y=0.0, z=2.0),
-                        carla.Location(x=0.0, y=10.0, z=1.0),
-                        carla.Location(x=0.0, y=18.0, z=2.0)
-                    ]
-        t.transform_point_list(point_list)
+        point_list = [carla.Location(x=0.0, y=0.0, z=2.0),
+                      carla.Location(x=0.0, y=10.0, z=1.0),
+                      carla.Location(x=0.0, y=18.0, z=2.0)
+                      ]
+        t.transform(point_list)
 
-        solution_list.append(carla.Location(x=-2.0, y=0.0, z=-1.0))
-        solution_list.append(carla.Location(x=-1.0, y=10.0, z=-1.0))
-        solution_list.append(carla.Location(x=-2.0, y=18.0, z=-1.0))
+        solution_list = [carla.Location(-2.0, 0.0, -1.0),
+                         carla.Location(-1.0, 10.0, -1.0),
+                         carla.Location(-2.0, 18.0, -1.0)
+                         ]
 
         for i in range(len(point_list)):
             self.assertTrue(abs(point_list[i].x - solution_list[i].x) <= error)
-            self.assertTrue(abs(point_list[i].y - solution_list[i].y)  <= error)
+            self.assertTrue(abs(point_list[i].y - solution_list[i].y) <= error)
             self.assertTrue(abs(point_list[i].z - solution_list[i].z) <= error)
 
     def test_list_rotation_and_translation_vector3d(self):
@@ -177,18 +179,18 @@ class testTransform(unittest.TestCase):
             carla.Location(x=0.0, y=0.0, z=-1.0),
             carla.Rotation(pitch=90.0, yaw=0.0, roll=0.0))
 
-        point_list = [  carla.Vector3D(0.0, 0.0,  2.0),
-                        carla.Vector3D(0.0, 10.0, 1.0),
-                        carla.Vector3D(0.0, 18.0, 2.0)
-                    ]
-        t.transform_point_list(point_list)
+        point_list = [carla.Vector3D(0.0, 0.0, 2.0),
+                      carla.Vector3D(0.0, 10.0, 1.0),
+                      carla.Vector3D(0.0, 18.0, 2.0)
+                      ]
+        t.transform(point_list)
 
-        solution_list.append(carla.Vector3D(-2.0, 0.0,  -1.0))
-        solution_list.append(carla.Vector3D(-1.0, 10.0, -1.0))
-        solution_list.append(carla.Vector3D(-2.0, 18.0, -1.0))
+        solution_list = [carla.Vector3D(-2.0, 0.0, -1.0),
+                         carla.Vector3D(-1.0, 10.0, -1.0),
+                         carla.Vector3D(-2.0, 18.0, -1.0)
+                         ]
 
         for i in range(len(point_list)):
             self.assertTrue(abs(point_list[i].x - solution_list[i].x) <= error)
-            self.assertTrue(abs(point_list[i].y - solution_list[i].y)  <= error)
+            self.assertTrue(abs(point_list[i].y - solution_list[i].y) <= error)
             self.assertTrue(abs(point_list[i].z - solution_list[i].z) <= error)
-
