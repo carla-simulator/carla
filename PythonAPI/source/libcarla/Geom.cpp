@@ -55,6 +55,13 @@ namespace geom {
 } // namespace geom
 } // namespace carla
 
+static void TransformList(const carla::geom::Transform &self, boost::python::list &list) {
+  auto length = boost::python::len(list);
+   for (auto i = 0u; i < length; ++i) {
+    self.TransformPoint(boost::python::extract<carla::geom::Vector3D &>(list[i]));
+  }
+}
+
 void export_geom() {
   using namespace boost::python;
   namespace cg = carla::geom;
@@ -73,7 +80,7 @@ void export_geom() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<cg::Location>("Location")
+class_<cg::Location, bases<cg::Vector3D>>("Location")
     .def(init<float, float, float>((arg("x")=0.0f, arg("y")=0.0f, arg("z")=0.0f)))
     .add_property("x", +[](const cg::Location &self) { return self.x; }, +[](cg::Location &self, float x) { self.x = x; })
     .add_property("y", +[](const cg::Location &self) { return self.y; }, +[](cg::Location &self, float y) { self.y = y; })
@@ -98,11 +105,6 @@ void export_geom() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<std::vector<cg::Location> >("vector_of_locations")
-    .def(vector_indexing_suite<std::vector<cg::Location>>())
-    .def(self_ns::str(self_ns::self))
-  ;
-
   class_<cg::Transform>("Transform")
 
     .def(init<cg::Location, cg::Rotation>(
@@ -111,17 +113,11 @@ void export_geom() {
     .def_readwrite("rotation", &cg::Transform::rotation)
     .def("__eq__", &cg::Transform::operator==)
     .def("__ne__", &cg::Transform::operator!=)
-    .def("transform_point", +[](const cg::Transform &self, cg::Location &location) {
+    .def("transform", &TransformList)
+    .def("transform", +[](const cg::Transform &self, cg::Vector3D &location) {
       self.TransformPoint(location);
       return location;
     }, arg("in_point"))
-
-    .def("transform_point_list", +[](const cg::Transform &self, std::vector<cg::Location> &location_list) {
-      for (cg::Location &location : location_list) {
-        self.TransformPoint(location);
-      }
-      return location_list;
-    })
     .def(self_ns::str(self_ns::self))
   ;
 
