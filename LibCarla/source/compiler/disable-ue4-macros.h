@@ -15,16 +15,6 @@
 #  define BOOST_NO_EXCEPTIONS
 #endif // BOOST_NO_EXCEPTIONS
 
-// Suppress clang warning.
-#if defined(__clang__)
-#  ifndef __cpp_coroutines
-#    define __cpp_coroutines 0
-#  endif // __cpp_coroutines
-#  ifndef __cpp_noexcept_function_type
-#    define __cpp_noexcept_function_type 0
-#  endif // __cpp_noexcept_function_type
-#endif // defined(__clang__)
-
 namespace boost {
 
   static inline void throw_exception(const std::exception &e) {
@@ -56,6 +46,8 @@ namespace boost {
 #if defined(__clang__)
 #  pragma clang diagnostic push
 #  pragma clang diagnostic ignored "-Wmissing-braces"
+#  pragma clang diagnostic ignored "-Wunusable-partial-specialization"
+#  pragma clang diagnostic ignored "-Wundef"
 #endif
 
 #pragma push_macro("TEXT")
