@@ -238,7 +238,6 @@ FActorDefinition UActorBlueprintFunctionLibrary::MakeGenericSensorDefinition(
   FActorDefinition Definition;
   FillIdAndTags(Definition, TEXT("sensor"), Type, Id);
   AddRecommendedValuesForSensorRoleNames(Definition);
-  AddVariationsForSensor(Definition);
   return Definition;
 }
 
@@ -312,6 +311,7 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
 {
   FillIdAndTags(Definition, TEXT("sensor"), TEXT("lidar"), Id);
   AddRecommendedValuesForSensorRoleNames(Definition);
+  AddVariationsForSensor(Definition);
   // Number of channels.
   FActorVariation Channels;
   Channels.Id = TEXT("channels");
