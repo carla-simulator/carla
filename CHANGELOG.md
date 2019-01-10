@@ -1,3 +1,7 @@
+## Latest Release Version
+
+  * Added point transformation functionality for LibCarla and PythonAPI.
+
 ## CARLA 0.9.2
 
   * Updated ROS bridge for CARLA 0.9.X (moved to its own repository)
