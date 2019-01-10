@@ -62,6 +62,33 @@ waiting for a client app to connect and interact with the world.
     those ports. Alternatively, you can manually change the port by launching
     the simulator with the command-line argument `-carla-port=N`, the second
     port will be automatically set to `N+1`.
+    
+We provide Python APIs for writing a client app (script) to connect with carla server.
+
+Let us first install the Python APIs:
+
+```sh
+cd PythonAPI/
+sudo easy_install carla-0.9.2-py2.7-linux-x86_64.egg
+```
+or for Python 3.5:
+```sh
+sudo easy_install carla-0.9.2-py3.5-linux-x86_64.egg
+```
+
+You could also append location of .egg file to your PYTHONPATH as:
+```sh
+export PYTHONPATH=$PYTHONPATH:<path/to/carla/>/PythonAPI/<your_egg_file>
+```
+
+Please note that you have to put in the complete path to the egg-file including the egg-file itself. Please use the one, that is supported by your Python version. Depending on the type of CARLA (pre-build, or build from source), the egg files are typically located either directly in the PythonAPI folder or in PythonAPI/dist.
+
+Check the installation is successfull by trying to import carla from python:
+
+```sh
+python -c 'import carla;print("Success")'
+```
+You should see the Success message without any errors.
 
 Let's add now some life to the city, open a new terminal window and execute
 
