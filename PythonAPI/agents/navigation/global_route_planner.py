@@ -8,6 +8,7 @@ This module provides GlobalRoutePlanner implementation.
 import math
 from enum import Enum
 
+import numpy as np
 import networkx as nx
 import carla
 
@@ -59,8 +60,7 @@ class GlobalRoutePlanner(object):
 
         return      : list of turn by turn navigation decisions as
         NavEnum elements
-        Possible values (for now) are START, GO_STRAIGHT, LEFT, RIGHT,
-        FOLLOW_LANE, STOP
+        Possible values (for now) are START, GO_STRAIGHT, LEFT, RIGHT, STOP
         """
 
         threshold = 0.0523599   # 5 degrees
@@ -71,28 +71,19 @@ class GlobalRoutePlanner(object):
         for i in range(len(route) - 2):
             current_edge = self._graph.edges[route[i], route[i + 1]]
             next_edge = self._graph.edges[route[i + 1], route[i + 2]]
-            if not current_edge['intersection']:
+            if next_edge['intersection']:
                 cv = current_edge['exit_vector']
-                nv = None
-                if next_edge['intersection']:
-                    nv = next_edge['net_vector']
-                    ca = round(math.atan2(*cv[::-1]) * 180 / math.pi)
-                    na = round(math.atan2(*nv[::-1]) * 180 / math.pi)
-                    angle_list = [ca, na]
-                    for i in range(len(angle_list)):
-                        if angle_list[i] > 0:
-                            angle_list[i] = 180 - angle_list[i]
-                        elif angle_list[i] < 0:
-                            angle_list[i] = -1 * (180 + angle_list[i])
-                    ca, na = angle_list
-                    if abs(na - ca) < threshold:
-                        action = NavEnum.GO_STRAIGHT
-                    elif na - ca > 0:
-                        action = NavEnum.LEFT
-                    else:
-                        action = NavEnum.RIGHT
+                nv = next_edge['net_vector']
+                cv, nv = cv + (0,), nv + (0,)  # Making vectors 3D
+                deviation = math.acos(np.dot(cv, nv) /\
+                    (np.linalg.norm(cv)*np.linalg.norm(nv)))
+                if deviation < threshold:
+                    action = NavEnum.GO_STRAIGHT
+                # Accounting for chirality of opendrive and UE4's axes
+                elif np.cross(cv, nv)[2] < 0:
+                    action = NavEnum.LEFT
                 else:
-                    action = NavEnum.FOLLOW_LANE
+                    action = NavEnum.RIGHT
                 plan.append(action)
         plan.append(NavEnum.STOP)
         return plan
