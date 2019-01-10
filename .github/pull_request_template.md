@@ -9,6 +9,7 @@ Checklist:
   - [ ] Extended the README / documentation, if necessary
   - [ ] Code compiles correctly
   - [ ] All tests passing with `make check`
+  - [ ] If relevant, update CHANGELOG.md with your changes
 
 -->
 
