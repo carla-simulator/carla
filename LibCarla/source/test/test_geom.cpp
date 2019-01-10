@@ -8,10 +8,74 @@
 
 #include <carla/geom/Vector3D.h>
 #include <carla/geom/Math.h>
-
+#include <carla/geom/Transform.h>
 #include <limits>
 
 using namespace carla::geom;
+
+TEST(geom, single_point_no_transform) {
+  constexpr double error = 0.001;
+
+  Location translation (0.0, 0.0, 0.0);
+  Rotation rotation(0.0, 0.0, 0.0);
+  Transform transform (translation, rotation);
+
+  Location point (1.0,1.0,1.0);
+  transform.TransformPoint(point);
+  Location result_point(1.0, 1.0, 1.0);
+
+  ASSERT_NEAR(point.x, result_point.x, error);
+  ASSERT_NEAR(point.y, result_point.y, error);
+  ASSERT_NEAR(point.z, result_point.z, error);
+
+}
+
+TEST(geom, single_point_translation) {
+  constexpr double error = 0.001;
+
+  Location translation (2.0,5.0,7.0);
+  Rotation rotation (0.0, 0.0, 0.0);
+  Transform transform (translation, rotation);
+
+  Location point (0.0, 0.0, 0.0);
+  transform.TransformPoint(point);
+  Location result_point(2.0, 5.0, 7.0);
+
+  ASSERT_NEAR(point.x, result_point.x, error);
+  ASSERT_NEAR(point.y, result_point.y, error);
+  ASSERT_NEAR(point.z, result_point.z, error);
+}
+
+TEST(geom, single_point_rotation) {
+  constexpr double error = 0.001;
+
+  Location translation (0.0,0.0,0.0);
+  Rotation rotation (0.0,180.0,0.0); // y z x
+  Transform transform (translation, rotation);
+
+  Location point (0.0, 0.0, 1.0);
+  transform.TransformPoint(point);
+  Location result_point(0.0, 0.0, 1.0);
+  ASSERT_NEAR(point.x, result_point.x, error);
+  ASSERT_NEAR(point.y, result_point.y, error);
+  ASSERT_NEAR(point.z, result_point.z, error);
+}
+
+TEST(geom, single_point_translation_and_rotation) {
+  constexpr double error = 0.001;
+
+  Location translation (0.0,0.0,-1.0); // x y z
+  Rotation rotation (90.0,0.0,0.0); // y z x
+  Transform transform (translation, rotation);
+
+  Location point (0.0, 0.0, 2.0);
+  transform.TransformPoint(point);
+  Location result_point(-2.0, 0.0, -1.0);
+  ASSERT_NEAR(point.x, result_point.x, error);
+  ASSERT_NEAR(point.y, result_point.y, error);
+  ASSERT_NEAR(point.z, result_point.z, error);
+}
+
 
 TEST(geom, distance) {
   constexpr double error = .01;

@@ -55,6 +55,13 @@ namespace geom {
 } // namespace geom
 } // namespace carla
 
+static void TransformList(const carla::geom::Transform &self, boost::python::list &list) {
+  auto length = boost::python::len(list);
+   for (auto i = 0u; i < length; ++i) {
+    self.TransformPoint(boost::python::extract<carla::geom::Vector3D &>(list[i]));
+  }
+}
+
 void export_geom() {
   using namespace boost::python;
   namespace cg = carla::geom;
@@ -73,7 +80,7 @@ void export_geom() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<cg::Location>("Location")
+class_<cg::Location, bases<cg::Vector3D>>("Location")
     .def(init<float, float, float>((arg("x")=0.0f, arg("y")=0.0f, arg("z")=0.0f)))
     .add_property("x", +[](const cg::Location &self) { return self.x; }, +[](cg::Location &self, float x) { self.x = x; })
     .add_property("y", +[](const cg::Location &self) { return self.y; }, +[](cg::Location &self, float y) { self.y = y; })
@@ -99,12 +106,18 @@ void export_geom() {
   ;
 
   class_<cg::Transform>("Transform")
+
     .def(init<cg::Location, cg::Rotation>(
         (arg("location")=cg::Location(), arg("rotation")=cg::Rotation())))
     .def_readwrite("location", &cg::Transform::location)
     .def_readwrite("rotation", &cg::Transform::rotation)
     .def("__eq__", &cg::Transform::operator==)
     .def("__ne__", &cg::Transform::operator!=)
+    .def("transform", &TransformList)
+    .def("transform", +[](const cg::Transform &self, cg::Vector3D &location) {
+      self.TransformPoint(location);
+      return location;
+    }, arg("in_point"))
     .def(self_ns::str(self_ns::self))
   ;
 
