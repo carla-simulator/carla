@@ -32,7 +32,7 @@ namespace detail {
       log_warning(
           "Version mismatch detected: You are trying to connect to a simulator",
           "that might be incompatible with this API");
-      log_warning("Client API version:    =", vc);
+      log_warning("Client API version     =", vc);
       log_warning("Simulator API version  =", vs);
     }
   }
