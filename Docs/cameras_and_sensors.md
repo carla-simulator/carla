@@ -18,6 +18,8 @@ blueprint = world.get_blueprint_library().find('sensor.camera.rgb')
 blueprint.set_attribute('image_size_x', '1920')
 blueprint.set_attribute('image_size_y', '1080')
 blueprint.set_attribute('fov', '110')
+# Set the time in seconds between sensor captures
+blueprint.set_attribute('sensor_tick', '1.0')
 # Provide the position of the sensor relative to the vehicle.
 transform = carla.Transform(carla.Location(x=0.8, z=1.7))
 # Tell the world to spawn the sensor, don't forget to attach it to your vehicle actor.
@@ -58,6 +60,9 @@ The "RGB" camera acts as a regular camera capturing images from the scene.
 | `image_size_y`      | int   | 600     | Image height in pixels  |
 | `fov`               | float | 90.0    | Field of view in degrees |
 | `enable_postprocess_effects` | bool | True | Whether the post-process effect in the scene affect the image |
+| `sensor_tick`       | float | 0.0     | Seconds between sensor captures (ticks) |
+
+`sensor_tick` tells how fast we want the sensor to capture the data. A value of 1.5 means that we want the sensor to capture data each second and a half. By default a value of 0.0 means as fast as possible.
 
 If `enable_postprocess_effects` is enabled, a set of post-process effects is
 applied to the image to create a more realistic feel
@@ -95,6 +100,7 @@ pixel to the camera (also known as **depth buffer** or **z-buffer**).
 | `image_size_x`      | int   | 800     | Image width in pixels |
 | `image_size_y`      | int   | 600     | Image height in pixels  |
 | `fov`               | float | 90.0    | Field of view in degrees |
+| `sensor_tick`       | float | 0.0     | Seconds between sensor captures (ticks) |
 
 This sensor produces [`carla.Image`](python_api.md#carlaimagecarlasensordata)
 objects.
@@ -132,6 +138,7 @@ pedestrians appear in a different color than vehicles.
 | `image_size_x`      | int   | 800     | Image width in pixels |
 | `image_size_y`      | int   | 600     | Image height in pixels  |
 | `fov`               | float | 90.0    | Field of view in degrees |
+| `sensor_tick`       | float | 0.0     | Seconds between sensor captures (ticks) |
 
 This sensor produces [`carla.Image`](python_api.md#carlaimagecarlasensordata)
 objects.
@@ -197,6 +204,7 @@ supposed to generate this frame; `points_per_second / (FPS * channels)`.
 | `rotation_frequency` | float | 10.0    | Lidar rotation frequency |
 | `upper_fov`          | float | 10.0    | Angle in degrees of the upper most laser |
 | `lower_fov`          | float | -30.0   | Angle in degrees of the lower most laser |
+| `sensor_tick`        | float | 0.0     | Seconds between sensor captures (ticks) |
 
 This sensor produces
 [`carla.LidarMeasurement`](python_api.md#carlalidarmeasurementcarlasensordata)
