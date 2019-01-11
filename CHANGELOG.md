@@ -1,6 +1,7 @@
 ## Latest Release Version
 
   * Added point transformation functionality for LibCarla and PythonAPI.
+    add support or permission for deepin in PythonAPI/setup.py
 
 ## CARLA 0.9.2
 
