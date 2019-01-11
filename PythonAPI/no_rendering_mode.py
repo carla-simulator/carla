@@ -76,10 +76,15 @@ class HUD (object):
         self._info_text = []
         self._server_clock = pygame.time.Clock()
 
+    def on_world_tick(self, timestamp):
+        self._server_clock.tick()
+        self.server_fps = self._server_clock.get_fps()
+
     def tick(self, clock):
         if not self._show_info:
             return
         self._info_text = [
+            'Server:  % 16d FPS' % self.server_fps,
             'Client:  % 16d FPS' % clock.get_fps()
         ]
 
@@ -119,6 +124,22 @@ class HUD (object):
                     display.blit(surface, (8, v_offset))
                 v_offset += 18
 
+# ==============================================================================
+# -- World ---------------------------------------------------------------------
+# ==============================================================================
+
+
+class World(object):
+    def __init__(self, carla_world, hud):
+        self.world = carla_world
+        self.world.on_tick(hud.on_world_tick)
+        self.hud = hud
+
+    def tick(self, clock):
+        self.hud.tick(clock)
+
+    def render(self, display):
+        self.hud.render(display)
 
 # ==============================================================================
 # -- KeyboardInput -----------------------------------------------------------
@@ -152,32 +173,33 @@ class KeyboardInput(object):
 
 
 def game_loop(args):
-    print ('Game Loop called')
     # Init
     pygame.init()
     keyboard = KeyboardInput()
+    display = pygame.display.set_mode((args.width, args.height))
+    pygame.display.set_caption(args.description)
+    hud = HUD(args.width, args.height)
 
     try:
         client = carla.Client(args.host, args.port)
         client.set_timeout(2.0)
 
-        display = pygame.display.set_mode((args.width, args.height))
-        pygame.display.set_caption(args.description)
-
-        hud = HUD(args.width, args.height)
+        world = World(client.get_world(), hud)
 
         clock = pygame.time.Clock()
         while True:
             clock.tick_busy_loop(60)
             keyboard.parse_input()
-            print ('Game Loop called')
 
             display.fill((0, 0, 0))
-            hud.tick(clock)
-            hud.render(display)
-            pygame.display.update()
+            world.tick(clock)
+            world.render(display)
+            pygame.display.flip()
 
+    except Exception as _:
+        logging.exception()
     finally:
+
         exit_game()
 
 
