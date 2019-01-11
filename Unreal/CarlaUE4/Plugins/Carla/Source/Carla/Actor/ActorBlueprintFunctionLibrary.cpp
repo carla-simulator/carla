@@ -222,7 +222,7 @@ static void AddVariationsForSensor(FActorDefinition &Def)
 {
   FActorVariation Tick;
 
-  Tick.Id = TEXT("tick_interval");
+  Tick.Id = TEXT("sensor_tick");
   Tick.Type = EActorAttributeType::Float;
   Tick.RecommendedValues = { TEXT("0.0f") };
   Tick.bRestrictToRecommended = false;

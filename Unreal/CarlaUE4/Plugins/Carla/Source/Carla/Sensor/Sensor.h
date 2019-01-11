@@ -25,10 +25,10 @@ public:
   virtual void Set(const FActorDescription &Description)
   {
     // set the tick interval of the sensor
-    if (Description.Variations.Contains("tick_interval"))
+    if (Description.Variations.Contains("sensor_tick"))
     {
       SetActorTickInterval(
-          UActorBlueprintFunctionLibrary::ActorAttributeToFloat(Description.Variations["tick_interval"],
+          UActorBlueprintFunctionLibrary::ActorAttributeToFloat(Description.Variations["sensor_tick"],
           0.0f));
     }
   }
