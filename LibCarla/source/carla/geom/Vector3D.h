@@ -132,6 +132,21 @@ namespace geom {
     }
 
     // =========================================================================
+    // -- Conversions to UE4 types ---------------------------------------------
+    // =========================================================================
+
+#ifdef LIBCARLA_INCLUDED_FROM_UE4
+
+    Vector3D(const FVector &vector) // from centimeters to meters.
+      : Vector3D(1e-2f * vector.X, 1e-2f * vector.Y, 1e-2f * vector.Z) {}
+
+    operator FVector() const {
+      return FVector{1e2f * x, 1e2f * y, 1e2f * z}; // from meters to centimeters.
+    }
+
+#endif // LIBCARLA_INCLUDED_FROM_UE4
+
+    // =========================================================================
     /// @todo The following is copy-pasted from MSGPACK_DEFINE_ARRAY.
     /// This is a workaround for an issue in msgpack library. The
     /// MSGPACK_DEFINE_ARRAY macro is shadowing our `z` variable.

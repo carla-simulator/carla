@@ -38,7 +38,7 @@ namespace detail {
       DEBUG_ONLY(auto result = )
       next->_actors.emplace(
           actor.id,
-          ActorState{actor.transform, actor.velocity, acceleration, actor.state});
+          ActorState{actor.transform, actor.velocity, actor.angularVelocity, acceleration, actor.state});
       DEBUG_ASSERT(result.second);
     }
     return next;

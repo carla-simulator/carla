@@ -88,6 +88,8 @@ namespace detail {
 
     geom::Vector3D velocity;
 
+    geom::Vector3D angularVelocity;
+
     union TypeDependentState {
       rpc::TrafficLightState traffic_light_state;
       detail::PackedVehicleControl vehicle_control;
@@ -98,7 +100,7 @@ namespace detail {
 #pragma pack(pop)
 
   static_assert(
-      sizeof(ActorDynamicState) == 10u * sizeof(uint32_t) + sizeof(detail::PackedVehicleControl),
+      sizeof(ActorDynamicState) == 13u * sizeof(uint32_t) + sizeof(detail::PackedVehicleControl),
       "Invalid ActorDynamicState size!");
 
 } // namespace data
