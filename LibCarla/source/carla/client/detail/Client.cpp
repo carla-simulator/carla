@@ -148,6 +148,22 @@ namespace detail {
     _pimpl->AsyncCall("apply_control_to_walker", walker, control);
   }
 
+ void Client::SetActorVelocity(const rpc::Actor &actor, const geom::Vector3D &vector) {
+    _pimpl->AsyncCall("set_actor_velocity", actor, vector);
+  }
+
+ void Client::SetActorAngularVelocity(const rpc::Actor &actor, const geom::Vector3D &vector) {
+    _pimpl->AsyncCall("set_actor_angular_velocity", actor, vector);
+  }
+
+ void Client::AddActorForce(const rpc::Actor &actor, const geom::Vector3D &vector) {
+    _pimpl->AsyncCall("add_actor_force", actor, vector);
+  }
+
+ void Client::AddActorImpulse(const rpc::Actor &actor, const geom::Vector3D &vector) {
+    _pimpl->AsyncCall("add_actor_impulse", actor, vector);
+  }
+
   void Client::SubscribeToStream(
       const streaming::Token &token,
       std::function<void(Buffer)> callback) {

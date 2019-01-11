@@ -29,6 +29,7 @@ namespace detail {
     struct ActorState {
       geom::Transform transform;
       geom::Vector3D velocity;
+      geom::Vector3D angularVelocity;
       geom::Vector3D acceleration;
       sensor::data::ActorDynamicState::TypeDependentState state;
     };

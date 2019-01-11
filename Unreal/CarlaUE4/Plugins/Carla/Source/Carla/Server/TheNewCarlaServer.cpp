@@ -26,6 +26,7 @@
 #include <carla/rpc/MapInfo.h>
 #include <carla/rpc/Server.h>
 #include <carla/rpc/Transform.h>
+#include <carla/rpc/Vector3D.h>
 #include <carla/rpc/VehicleControl.h>
 #include <carla/rpc/WalkerControl.h>
 #include <carla/rpc/WeatherParameters.h>
@@ -296,6 +297,100 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       RespondErrorStr("unable to get actor transform: actor not found");
     }
     return {ActorView.GetActor()->GetActorTransform()};
+  });
+
+  Server.BindSync("get_actor_velocity", [this](cr::Actor Actor) -> cr::Vector3D {
+    RequireEpisode();
+    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
+      RespondErrorStr("unable to get actor velocity: actor not found");
+    }
+    return {ActorView.GetActor()->GetRootComponent()->GetComponentVelocity()};
+  });
+
+  Server.BindSync("get_actor_angular_velocity", [this](cr::Actor Actor) -> cr::Vector3D {
+    RequireEpisode();
+    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
+      RespondErrorStr("unable to get actor angular velocity: actor not found");
+    }
+    auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+    if (RootComponent == nullptr) {
+      RespondErrorStr("unable to get actor angular velocity: not supported by actor");
+    }
+    return {RootComponent->GetPhysicsAngularVelocityInDegrees()};
+  });
+
+  Server.BindSync("set_actor_angular_velocity", [this](
+      cr::Actor Actor,
+      cr::Vector3D vector) {
+    RequireEpisode();
+    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
+      RespondErrorStr("unable to set actor angular velocity: actor not found");
+    }
+    auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+    if (RootComponent == nullptr) {
+      RespondErrorStr("unable to set actor angular velocity: not supported by actor");
+    }
+    RootComponent->SetPhysicsAngularVelocityInDegrees(
+        vector,
+        false,
+        "None");
+  });
+
+  Server.BindSync("set_actor_velocity", [this](
+      cr::Actor Actor,
+      cr::Vector3D vector) {
+    RequireEpisode();
+    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
+      RespondErrorStr("unable to set actor velocity: actor not found");
+    }
+    auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+    if (RootComponent == nullptr) {
+      RespondErrorStr("unable to set actor velocity: not supported by actor");
+    }
+    RootComponent->SetPhysicsLinearVelocity(
+        vector,
+        false,
+        "None");
+  });
+
+  Server.BindSync("add_actor_force", [this](
+      cr::Actor Actor,
+      cr::Vector3D vector) {
+    RequireEpisode();
+    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
+      RespondErrorStr("unable to add actor force: actor not found");
+    }
+    auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+    if (RootComponent == nullptr) {
+      RespondErrorStr("unable to add actor force: not supported by actor");
+    }
+    RootComponent->AddForce(
+        vector,
+        "None",
+        false);
+  });
+
+  Server.BindSync("add_actor_impulse", [this](
+      cr::Actor Actor,
+      cr::Vector3D vector) {
+    RequireEpisode();
+    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
+      RespondErrorStr("unable to add actor impulse: actor not found");
+    }
+    auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+    if (RootComponent == nullptr) {
+      RespondErrorStr("unable to add actor impulse: not supported by actor");
+    }
+    RootComponent->AddImpulse(
+        vector,
+        "None",
+        false);
   });
 
   Server.BindSync("set_actor_location", [this](

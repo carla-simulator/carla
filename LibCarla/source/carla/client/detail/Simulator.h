@@ -173,6 +173,26 @@ namespace detail {
       return GetActorDynamicState(actor).velocity;
     }
 
+    void SetActorVelocity(const Actor &actor, const geom::Vector3D &vector) {
+      _client.SetActorVelocity(actor.Serialize(), vector);
+    }
+
+    geom::Vector3D GetActorAngularVelocity(const Actor &actor) const {
+      return GetActorDynamicState(actor).angularVelocity;
+    }
+
+    void SetActorAngularVelocity(const Actor &actor, const geom::Vector3D &vector) {
+      _client.SetActorAngularVelocity(actor.Serialize(), vector);
+    }
+
+    void AddActorForce(const Actor &actor, const geom::Vector3D &vector) {
+      _client.AddActorForce(actor.Serialize(), vector);
+    }
+
+    void AddActorImpulse(const Actor &actor, const geom::Vector3D &vector) {
+      _client.AddActorImpulse(actor.Serialize(), vector);
+    }
+
     geom::Vector3D GetActorAcceleration(const Actor &actor) const {
       return GetActorDynamicState(actor).acceleration;
     }

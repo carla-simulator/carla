@@ -46,6 +46,12 @@ namespace client {
     /// velocity received in the last tick.
     geom::Vector3D GetVelocity() const;
 
+    /// Return the current 3D angular velocity of the actor.
+    ///
+    /// @note This function does not call the simulator, it returns the
+    /// angular velocity received in the last tick.
+    geom::Vector3D GetAngularVelocity() const;
+
     /// Return the current 3D acceleration of the actor.
     ///
     /// @note This function does not call the simulator, it returns the
@@ -58,8 +64,20 @@ namespace client {
     /// Teleport and rotate the actor to @a transform.
     void SetTransform(const geom::Transform &transform);
 
+    /// Set the actor velocity.
+    void SetVelocity(const geom::Vector3D &vector);
+
+    /// Add force to the actor.
+    void AddForce(const geom::Vector3D &vector);
+
+    /// Add impulse to the actor.
+    void AddImpulse(const geom::Vector3D &vector);
+
     /// Enable or disable physics simulation on this actor.
     void SetSimulatePhysics(bool enabled = true);
+
+    /// Set the angular velocity of the actor
+    void SetAngularVelocity(const geom::Vector3D &vector);
 
     /// @warning This method only checks whether this instance of Actor has
     /// called the Destroy() method, it does not check whether the actor is
