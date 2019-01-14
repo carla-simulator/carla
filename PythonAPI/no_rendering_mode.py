@@ -48,16 +48,51 @@ try:
 except ImportError:
     raise RuntimeError('cannot import pygame, make sure pygame package is installed')
 
+# ==============================================================================
+# -- ModuleManager -------------------------------------------------------------
+# ==============================================================================
+
+
+class Module(object):
+    def __init__(self, name):
+        self.module_name = name
+
+    def tick(self, clock):
+        raise NotImplementedError("Please implement this method")
+
+    def render(self, display):
+        raise NotImplementedError("Please implement this method")
+
+
+class ModuleManager(object):
+    def __init__(self):
+        self.modules = []
+
+    def register_module(self, module):
+        self.modules.append(module)
+
+    def tick(self, clock):
+        # Update all the modules
+        for module in self.modules:
+            module.tick(clock)
+
+    def render(self, display):
+        display.fill((0, 0, 0))
+        for module in self.modules:
+            module.render(display)
 
 # ==============================================================================
 # -- HUD -----------------------------------------------------------------------
 # ==============================================================================
 
-class HUD (object):
 
-    def __init__(self, width, height):
+class HUD (Module):
+
+    def __init__(self, name, width, height, on_world_tick):
+        Module.__init__(self, name)
         self._init_data_params(width, height)
         self._init_hud_params()
+        on_world_tick(self.on_world_tick)
 
     def _init_hud_params(self):
         font = pygame.font.Font(pygame.font.get_default_font(), 20)
@@ -129,24 +164,53 @@ class HUD (object):
 # ==============================================================================
 
 
-class World(object):
-    def __init__(self, carla_world, hud):
-        self.world = carla_world
-        self.world.on_tick(hud.on_world_tick)
-        self.hud = hud
+class World(Module):
+    def __init__(self, name, host, port, timeout):
+        Module.__init__(self, name)
+
+        try:
+            client = carla.Client(host, port)
+            client.set_timeout(timeout)
+            self.world = client.get_world()
+
+        except Exception as ex:
+            logging.error('Failed connecting to CARLA server')
+            exit_game()
 
     def tick(self, clock):
-        self.hud.tick(clock)
+        pass
+        # self.hud.tick(clock)
 
     def render(self, display):
-        self.hud.render(display)
+        actors = self.world.get_actors()
 
+        # Filter actors to obtain vehicle and traffic light
+        vehicles = [actor for actor in actors if 'vehicle' in actor.type_id]
+        traffic_lights = [actor for actor in actors if 'traffic_light' in actor.type_id]
+        radius = 2
+        width = 1
+        for vehicle in vehicles:
+            vehicle_location = vehicle.get_location()
+
+            pygame.draw.circle(display, (255, 0, 0), (int(500 + vehicle_location.x),
+                                                      500 + int(vehicle_location.y)), radius, width)
+
+        for traffic in traffic_lights:
+            traffic_location = traffic.get_location()
+
+            pygame.draw.circle(display, (0, 255, 0), (int(traffic_location.x),
+                                                      int(traffic_location.y)), radius, width)
 # ==============================================================================
 # -- KeyboardInput -----------------------------------------------------------
 # ==============================================================================
 
 
-class KeyboardInput(object):
+class Input(Module):
+    def render(self, display):
+        pass
+
+    def tick(self, clock):
+        self.parse_input()
 
     def _parse_events(self):
         for event in pygame.event.get():
@@ -173,34 +237,33 @@ class KeyboardInput(object):
 
 
 def game_loop(args):
-    # Init
+    # Init Pygame
     pygame.init()
-    keyboard = KeyboardInput()
-    display = pygame.display.set_mode((args.width, args.height))
+    display = pygame.display.set_mode(
+        (args.width, args.height),
+        pygame.HWSURFACE | pygame.DOUBLEBUF)
     pygame.display.set_caption(args.description)
-    hud = HUD(args.width, args.height)
 
-    try:
-        client = carla.Client(args.host, args.port)
-        client.set_timeout(2.0)
+    # Init modules
+    module_manager = ModuleManager()
 
-        world = World(client.get_world(), hud)
+    input_module = Input("Input")
+    world_module = World("World", args.host, args.port, 2.0)
+    hud_module = HUD("HUD", args.width, args.height, world_module.world.on_tick)
 
-        clock = pygame.time.Clock()
-        while True:
-            clock.tick_busy_loop(60)
-            keyboard.parse_input()
+    # Register Modules
+    module_manager.register_module(input_module)
+    module_manager.register_module(hud_module)
+    module_manager.register_module(world_module)
 
-            display.fill((0, 0, 0))
-            world.tick(clock)
-            world.render(display)
-            pygame.display.flip()
+    clock = pygame.time.Clock()
+    while True:
+        clock.tick_busy_loop(60)
 
-    except Exception as _:
-        logging.exception()
-    finally:
+        module_manager.tick(clock)
+        module_manager.render(display)
 
-        exit_game()
+        pygame.display.flip()
 
 
 def exit_game():
