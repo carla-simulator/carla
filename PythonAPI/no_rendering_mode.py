@@ -92,7 +92,7 @@ class ModuleManager(object):
 # ==============================================================================
 
 
-class HUDModule (object):
+class ModuleHUD (object):
 
     def __init__(self, name, width, height):
         self.name = name
@@ -169,7 +169,7 @@ class HUDModule (object):
 # ==============================================================================
 
 
-class WorldModule(object):
+class ModuleWorld(object):
     def __init__(self, name, host, port, timeout):
         self.name = name
 
@@ -179,7 +179,7 @@ class WorldModule(object):
             self.world = client.get_world()
 
             weak_self = weakref.ref(self)
-            self.world.on_tick(lambda timestamp: WorldModule.on_world_tick(weak_self, timestamp))
+            self.world.on_tick(lambda timestamp: ModuleWorld.on_world_tick(weak_self, timestamp))
 
         except Exception as ex:
             logging.error('Failed connecting to CARLA server')
@@ -221,7 +221,7 @@ class WorldModule(object):
 # ==============================================================================
 
 
-class InputModule(object):
+class ModuleInput(object):
     def __init__(self, name):
         self.name = name
 
@@ -266,9 +266,9 @@ def game_loop(args):
     pygame.display.set_caption(args.description)
 
     # Init modules
-    input_module = InputModule(MODULE_INPUT)
-    world_module = WorldModule(MODULE_WORLD, args.host, args.port, 2.0)
-    hud_module = HUDModule(MODULE_HUD, args.width, args.height)
+    input_module = ModuleInput(MODULE_INPUT)
+    world_module = ModuleWorld(MODULE_WORLD, args.host, args.port, 2.0)
+    hud_module = ModuleHUD(MODULE_HUD, args.width, args.height)
 
     # Register Modules
     module_manager.register_module(input_module)
