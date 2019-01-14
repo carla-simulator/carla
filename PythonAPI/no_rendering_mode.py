@@ -37,6 +37,7 @@ import carla
 
 import argparse
 import logging
+import weakref
 
 try:
     import pygame
@@ -49,19 +50,16 @@ except ImportError:
     raise RuntimeError('cannot import pygame, make sure pygame package is installed')
 
 # ==============================================================================
-# -- ModuleManager -------------------------------------------------------------
+# -- ModuleDefines -------------------------------------------------------------
 # ==============================================================================
 
+MODULE_WORLD = 'World'
+MODULE_HUD = 'Hud'
+MODULE_INPUT = 'Input'
 
-class Module(object):
-    def __init__(self, name):
-        self.module_name = name
-
-    def tick(self, clock):
-        raise NotImplementedError("Please implement this method")
-
-    def render(self, display):
-        raise NotImplementedError("Please implement this method")
+# ==============================================================================
+# -- ModuleManager -------------------------------------------------------------
+# ==============================================================================
 
 
 class ModuleManager(object):
@@ -70,6 +68,9 @@ class ModuleManager(object):
 
     def register_module(self, module):
         self.modules.append(module)
+
+    def clear_modules(self):
+        del self.modules[:]
 
     def tick(self, clock):
         # Update all the modules
@@ -81,18 +82,22 @@ class ModuleManager(object):
         for module in self.modules:
             module.render(display)
 
+    def get_module(self, name):
+        for module in self.modules:
+            if module.name == name:
+                return module
+
 # ==============================================================================
 # -- HUD -----------------------------------------------------------------------
 # ==============================================================================
 
 
-class HUD (Module):
+class HUDModule (object):
 
-    def __init__(self, name, width, height, on_world_tick):
-        Module.__init__(self, name)
+    def __init__(self, name, width, height):
+        self.name = name
         self._init_data_params(width, height)
         self._init_hud_params()
-        on_world_tick(self.on_world_tick)
 
     def _init_hud_params(self):
         font = pygame.font.Font(pygame.font.get_default_font(), 20)
@@ -164,14 +169,17 @@ class HUD (Module):
 # ==============================================================================
 
 
-class World(Module):
+class WorldModule(object):
     def __init__(self, name, host, port, timeout):
-        Module.__init__(self, name)
+        self.name = name
 
         try:
             client = carla.Client(host, port)
             client.set_timeout(timeout)
             self.world = client.get_world()
+
+            weak_self = weakref.ref(self)
+            self.world.on_tick(lambda timestamp: WorldModule.on_world_tick(weak_self, timestamp))
 
         except Exception as ex:
             logging.error('Failed connecting to CARLA server')
@@ -179,7 +187,14 @@ class World(Module):
 
     def tick(self, clock):
         pass
-        # self.hud.tick(clock)
+
+    @staticmethod
+    def on_world_tick(weak_self, timestamp):
+        self = weak_self()
+        if not self:
+            return
+        hud_module = module_manager.get_module(MODULE_HUD)
+        hud_module.on_world_tick(timestamp)
 
     def render(self, display):
         actors = self.world.get_actors()
@@ -192,20 +207,24 @@ class World(Module):
         for vehicle in vehicles:
             vehicle_location = vehicle.get_location()
 
-            pygame.draw.circle(display, (255, 0, 0), (int(500 + vehicle_location.x),
-                                                      500 + int(vehicle_location.y)), radius, width)
+            pygame.draw.circle(display, (255, 0, 0), (int(vehicle_location.x),
+                                                      int(vehicle_location.y)), radius, width)
 
         for traffic in traffic_lights:
             traffic_location = traffic.get_location()
 
             pygame.draw.circle(display, (0, 255, 0), (int(traffic_location.x),
                                                       int(traffic_location.y)), radius, width)
+
 # ==============================================================================
-# -- KeyboardInput -----------------------------------------------------------
+# -- Input -----------------------------------------------------------
 # ==============================================================================
 
 
-class Input(Module):
+class InputModule(object):
+    def __init__(self, name):
+        self.name = name
+
     def render(self, display):
         pass
 
@@ -215,8 +234,7 @@ class Input(Module):
     def _parse_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+                exit_game()
             elif event.type == pygame.KEYUP:
                 # Quick actions
                 if event.key == K_ESCAPE:
@@ -232,8 +250,11 @@ class Input(Module):
         self._parse_keys()
 
 # ==============================================================================
-# -- game_loop() ---------------------------------------------------------------
+# -- Game Loop ---------------------------------------------------------------
 # ==============================================================================
+
+
+module_manager = ModuleManager()
 
 
 def game_loop(args):
@@ -245,11 +266,9 @@ def game_loop(args):
     pygame.display.set_caption(args.description)
 
     # Init modules
-    module_manager = ModuleManager()
-
-    input_module = Input("Input")
-    world_module = World("World", args.host, args.port, 2.0)
-    hud_module = HUD("HUD", args.width, args.height, world_module.world.on_tick)
+    input_module = InputModule(MODULE_INPUT)
+    world_module = WorldModule(MODULE_WORLD, args.host, args.port, 2.0)
+    hud_module = HUDModule(MODULE_HUD, args.width, args.height)
 
     # Register Modules
     module_manager.register_module(input_module)
@@ -267,11 +286,12 @@ def game_loop(args):
 
 
 def exit_game():
+    module_manager.clear_modules()
     pygame.quit()
     sys.exit()
 
 # ==============================================================================
-# -- main() --------------------------------------------------------------------
+# -- Main --------------------------------------------------------------------
 # ==============================================================================
 
 
@@ -312,7 +332,6 @@ def main():
     logging.info('listening to server %s:%s', args.host, args.port)
     print(__doc__)
 
-    # Call game_loop
     try:
         game_loop(args)
     except KeyboardInterrupt:
