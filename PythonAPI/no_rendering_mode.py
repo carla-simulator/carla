@@ -169,20 +169,38 @@ class ModuleHUD (object):
 # ==============================================================================
 
 
-offset_x = 250
-offset_y = 250
+offset_x = 0
+offset_y = 0
 scale_x = 1
 scale_y = 1
 
 
 class ModuleWorld(object):
-    def __init__(self, name, host, port, timeout, surface):
+
+    def __init__(self, name, host, port, timeout):
         self.name = name
-        self.surface = surface
         try:
             client = carla.Client(host, port)
             client.set_timeout(timeout)
             self.world = client.get_world()
+            self.town_map = self.world.get_map()
+            self.waypoint_list = self.town_map.generate_waypoints(10.0)
+
+            # compute bounding boxes
+            self.x_min = float('inf')
+            self.y_min = float('inf')
+            self.x_max = 0
+            self.y_max = 0
+
+            for waypoint in self.waypoint_list:
+                self.x_max = max(self.x_max, waypoint.transform.location.x)
+                self.x_min = min(self.x_min, waypoint.transform.location.x)
+
+                self.y_max = max(self.y_max, waypoint.transform.location.y)
+                self.y_min = min(self.y_min, waypoint.transform.location.y)
+
+            surface_size = min(self.x_max - self.x_min, self.y_max - self.y_min)
+            self.surface = pygame.Surface((surface_size, surface_size))
 
             weak_self = weakref.ref(self)
             self.world.on_tick(lambda timestamp: ModuleWorld.on_world_tick(weak_self, timestamp))
@@ -202,18 +220,18 @@ class ModuleWorld(object):
         hud_module = module_manager.get_module(MODULE_HUD)
         hud_module.on_world_tick(timestamp)
 
-    def render_map(self, display, town_map):
+    def render_map(self, display):
 
         # Get map waypoints
         radius = 2
         width = 1
         thickness = 1
-        waypoint_list = town_map.generate_waypoints(10.0)
+
         point_list = []
 
-        for waypoint in waypoint_list:
-            point_list.append((int(waypoint.transform.location.x),
-                               int(waypoint.transform.location.y)))
+        for waypoint in self.waypoint_list:
+            point_list.append((int(waypoint.transform.location.x - self.x_min),
+                               int(waypoint.transform.location.y - self.y_min)))
 
         pygame.draw.lines(self.surface, (255, 0, 255), False, point_list, 1)
 
@@ -229,9 +247,8 @@ class ModuleWorld(object):
 
     def render(self, display):
         actors = self.world.get_actors()
-        town_map = self.world.get_map()
-        self.surface.fill((0, 0, 0))
-        self.render_map(display, town_map)
+        self.surface.fill((20, 20, 20))
+        self.render_map(display)
         self.render_actors(display, actors, 'vehicle', (255, 0, 0))
         self.render_actors(display, actors, 'traffic_light', (0, 255, 0))
         self.render_actors(display, actors, 'speed_limit', (0, 0, 255))
@@ -256,6 +273,8 @@ class ModuleInput(object):
         self.parse_input()
 
     def _parse_events(self):
+        global scale_x
+        global scale_y
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 exit_game()
@@ -266,17 +285,10 @@ class ModuleInput(object):
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 self.mouse_pos = pygame.mouse.get_pos()
                 if event.button == 4:
-                    # Scale up surface
-                    print ("mouse wheel up")
-                    global scale_x
-                    global scale_y
                     scale_x += 0.1
                     scale_y += 0.1
 
                 if event.button == 5:
-                    # Scale down surface
-                    global scale_x
-                    global scale_y
                     scale_x -= 0.1
                     scale_y -= 0.1
 
@@ -317,8 +329,7 @@ def game_loop(args):
 
     # Init modules
     input_module = ModuleInput(MODULE_INPUT)
-    world_module = ModuleWorld(MODULE_WORLD, args.host, args.port, 2.0,
-                               pygame.Surface((args.width, args.height)))
+    world_module = ModuleWorld(MODULE_WORLD, args.host, args.port, 2.0)
     hud_module = ModuleHUD(MODULE_HUD, args.width, args.height)
 
     # Register Modules
