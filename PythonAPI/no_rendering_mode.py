@@ -169,20 +169,23 @@ class ModuleHUD (object):
 # ==============================================================================
 
 
-offset = 250
+offset_x = 250
+offset_y = 250
+scale_x = 1
+scale_y = 1
 
 
 class ModuleWorld(object):
-    def __init__(self, name, host, port, timeout):
+    def __init__(self, name, host, port, timeout, surface):
         self.name = name
-
+        self.surface = surface
         try:
             client = carla.Client(host, port)
             client.set_timeout(timeout)
             self.world = client.get_world()
 
             weak_self = weakref.ref(self)
-            #self.world.on_tick(lambda timestamp: ModuleWorld.on_world_tick(weak_self, timestamp))
+            self.world.on_tick(lambda timestamp: ModuleWorld.on_world_tick(weak_self, timestamp))
 
         except Exception as ex:
             logging.error('Failed connecting to CARLA server')
@@ -202,19 +205,17 @@ class ModuleWorld(object):
     def render_map(self, display, town_map):
 
         # Get map waypoints
-        waypoint_list = town_map.get_topology()
         radius = 2
         width = 1
         thickness = 1
+        waypoint_list = town_map.generate_waypoints(10.0)
         point_list = []
-        for waypoint in waypoint_list:
-            first_waypoint = int(waypoint[0].transform.location.x +
-                                 offset), int(waypoint[0].transform.location.y + offset)
-            second_waypoint = int(waypoint[1].transform.location.x +
-                                  offset), int(waypoint[1].transform.location.y + offset)
 
-            point_list = [first_waypoint, second_waypoint]
-            pygame.draw.lines(display, (255, 0, 255), False, point_list, 1)
+        for waypoint in waypoint_list:
+            point_list.append((int(waypoint.transform.location.x + offset_x),
+                               int(waypoint.transform.location.y + offset_y)))
+
+        pygame.draw.lines(self.surface, (255, 0, 255), False, point_list, 1)
 
     def render_actors(self, display, actors, filter, color):
         filtered_actors = [actor for actor in actors if filter in actor.type_id]
@@ -223,17 +224,18 @@ class ModuleWorld(object):
         for actor in filtered_actors:
             actor_location = actor.get_location()
 
-            pygame.draw.circle(display, color, (offset + int(actor_location.x),
-                                                offset + int(actor_location.y)), radius, width)
+            pygame.draw.circle(self.surface, color, (offset_x + int(actor_location.x),
+                                                     offset_y + int(actor_location.y)), radius, width)
 
     def render(self, display):
         actors = self.world.get_actors()
         town_map = self.world.get_map()
+        self.surface.fill((0, 0, 0))
         self.render_map(display, town_map)
         self.render_actors(display, actors, 'vehicle', (255, 0, 0))
         self.render_actors(display, actors, 'traffic_light', (0, 255, 0))
         self.render_actors(display, actors, 'speed_limit', (0, 0, 255))
-
+        display.blit(self.surface, (0, 0))
 
 # ==============================================================================
 # -- Input -----------------------------------------------------------
@@ -243,9 +245,10 @@ class ModuleWorld(object):
 class ModuleInput(object):
     def __init__(self, name):
         self.name = name
+        self.mouse_pos = (0, 0)
 
     def render(self, display):
-        pass
+        display = pygame.transform.scale(display, (int(1280 * scale_x), int(720 * scale_y)))
 
     def tick(self, clock):
         self.parse_input()
@@ -258,15 +261,41 @@ class ModuleInput(object):
                 # Quick actions
                 if event.key == K_ESCAPE:
                     exit_game()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                self.mouse_pos = pygame.mouse.get_pos()
+                if event.button == 4:
+                    # Scale up surface
+                    print ("mouse wheel up")
+                    global scale_x
+                    global scale_y
+                    scale_x += 0.1
+                    scale_y += 0.1
+
+                if event.button == 5:
+                    # Scale down surface
+                    global scale_x
+                    global scale_y
+                    scale_x -= 0.1
+                    scale_y -= 0.1
 
     def _parse_keys(self):
         keys = pygame.key.get_pressed()
         # if keys[pygame.K_LEFT]:
         # Do something
 
+    def _parse_mouse(self):
+        if pygame.mouse.get_pressed()[0]:
+            x, y = pygame.mouse.get_pos()
+            global offset_x
+            global offset_y
+            offset_x += x - self.mouse_pos[0]
+            offset_y += y - self.mouse_pos[1]
+            self.mouse_pos = (x, y)
+
     def parse_input(self):
         self._parse_events()
         self._parse_keys()
+        self._parse_mouse()
 
 # ==============================================================================
 # -- Game Loop ---------------------------------------------------------------
@@ -286,7 +315,8 @@ def game_loop(args):
 
     # Init modules
     input_module = ModuleInput(MODULE_INPUT)
-    world_module = ModuleWorld(MODULE_WORLD, args.host, args.port, 2.0)
+    world_module = ModuleWorld(MODULE_WORLD, args.host, args.port, 2.0,
+                               pygame.Surface((args.width, args.height)))
     hud_module = ModuleHUD(MODULE_HUD, args.width, args.height)
 
     # Register Modules
