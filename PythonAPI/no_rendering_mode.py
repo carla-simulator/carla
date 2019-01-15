@@ -212,8 +212,8 @@ class ModuleWorld(object):
         point_list = []
 
         for waypoint in waypoint_list:
-            point_list.append((int(waypoint.transform.location.x + offset_x),
-                               int(waypoint.transform.location.y + offset_y)))
+            point_list.append((int(waypoint.transform.location.x),
+                               int(waypoint.transform.location.y)))
 
         pygame.draw.lines(self.surface, (255, 0, 255), False, point_list, 1)
 
@@ -224,8 +224,8 @@ class ModuleWorld(object):
         for actor in filtered_actors:
             actor_location = actor.get_location()
 
-            pygame.draw.circle(self.surface, color, (offset_x + int(actor_location.x),
-                                                     offset_y + int(actor_location.y)), radius, width)
+            pygame.draw.circle(self.surface, color, (int(actor_location.x),
+                                                     int(actor_location.y)), radius, width)
 
     def render(self, display):
         actors = self.world.get_actors()
@@ -235,7 +235,9 @@ class ModuleWorld(object):
         self.render_actors(display, actors, 'vehicle', (255, 0, 0))
         self.render_actors(display, actors, 'traffic_light', (0, 255, 0))
         self.render_actors(display, actors, 'speed_limit', (0, 0, 255))
-        display.blit(self.surface, (0, 0))
+
+        result_surface = pygame.transform.scale(self.surface, (int(1280 * scale_x), int(720 * scale_y)))
+        display.blit(result_surface, (offset_x, offset_y))
 
 # ==============================================================================
 # -- Input -----------------------------------------------------------
@@ -248,7 +250,7 @@ class ModuleInput(object):
         self.mouse_pos = (0, 0)
 
     def render(self, display):
-        display = pygame.transform.scale(display, (int(1280 * scale_x), int(720 * scale_y)))
+        pass
 
     def tick(self, clock):
         self.parse_input()
