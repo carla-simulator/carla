@@ -234,8 +234,6 @@ class ModuleWorld(object):
         hud_module.on_world_tick(timestamp)
 
     def render_map(self, display):
-
-        # Get map waypoints
         radius = 2
         width = 1
         thickness = 1
@@ -266,8 +264,16 @@ class ModuleWorld(object):
         self.render_actors(display, actors, 'traffic_light', (0, 255, 0))
         self.render_actors(display, actors, 'speed_limit', (0, 0, 255))
 
-        # result_surface = pygame.transform.scale(self.surface, (int(1280 * scale_x), int(720 * scale_y)))
-        display.blit(self.surface, (offset_x, offset_y))
+        result_surface = pygame.transform.scale(self.surface,
+                                                (int(self.surface_size * scale_x),
+                                                 int(self.surface_size * scale_y)))
+
+        module_input = module_manager.get_module(MODULE_INPUT)
+        result_surface = pygame.transform.scale(self.surface,
+                                                (int(self.surface_size * module_input.wheel_offset[0]),
+                                                 int(self.surface_size * module_input.wheel_offset[1])))
+
+        display.blit(result_surface, (module_input.mouse_offset[0], module_input.mouse_offset[1]))
 
 # ==============================================================================
 # -- Input -----------------------------------------------------------
@@ -278,6 +284,8 @@ class ModuleInput(object):
     def __init__(self, name):
         self.name = name
         self.mouse_pos = (0, 0)
+        self.mouse_offset = [0.0, 0.0]
+        self.wheel_offset = [1.0, 1.0]
 
     def start(self):
         pass
@@ -295,18 +303,17 @@ class ModuleInput(object):
             if event.type == pygame.QUIT:
                 exit_game()
             elif event.type == pygame.KEYUP:
-                # Quick actions
                 if event.key == K_ESCAPE:
                     exit_game()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 self.mouse_pos = pygame.mouse.get_pos()
                 if event.button == 4:
-                    scale_x += 0.1
-                    scale_y += 0.1
+                    self.wheel_offset[0] += 0.1
+                    self.wheel_offset[1] += 0.1
 
                 if event.button == 5:
-                    scale_x -= 0.1
-                    scale_y -= 0.1
+                    self.wheel_offset[0] -= 0.1
+                    self.wheel_offset[1] -= 0.1
 
     def _parse_keys(self):
         keys = pygame.key.get_pressed()
@@ -316,10 +323,8 @@ class ModuleInput(object):
     def _parse_mouse(self):
         if pygame.mouse.get_pressed()[0]:
             x, y = pygame.mouse.get_pos()
-            global offset_x
-            global offset_y
-            offset_x += x - self.mouse_pos[0]
-            offset_y += y - self.mouse_pos[1]
+            self.mouse_offset[0] = self.mouse_offset[0] + x - self.mouse_pos[0]
+            self.mouse_offset[1] += y - self.mouse_pos[1]
             self.mouse_pos = (x, y)
 
     def parse_input(self):
