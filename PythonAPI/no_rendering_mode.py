@@ -169,6 +169,9 @@ class ModuleHUD (object):
 # ==============================================================================
 
 
+offset = 250
+
+
 class ModuleWorld(object):
     def __init__(self, name, host, port, timeout):
         self.name = name
@@ -179,7 +182,7 @@ class ModuleWorld(object):
             self.world = client.get_world()
 
             weak_self = weakref.ref(self)
-            self.world.on_tick(lambda timestamp: ModuleWorld.on_world_tick(weak_self, timestamp))
+            #self.world.on_tick(lambda timestamp: ModuleWorld.on_world_tick(weak_self, timestamp))
 
         except Exception as ex:
             logging.error('Failed connecting to CARLA server')
@@ -196,25 +199,41 @@ class ModuleWorld(object):
         hud_module = module_manager.get_module(MODULE_HUD)
         hud_module.on_world_tick(timestamp)
 
-    def render(self, display):
-        actors = self.world.get_actors()
+    def render_map(self, display, town_map):
 
-        # Filter actors to obtain vehicle and traffic light
-        vehicles = [actor for actor in actors if 'vehicle' in actor.type_id]
-        traffic_lights = [actor for actor in actors if 'traffic_light' in actor.type_id]
+        # Get map waypoints
+        waypoint_list = town_map.get_topology()
         radius = 2
         width = 1
-        for vehicle in vehicles:
-            vehicle_location = vehicle.get_location()
+        thickness = 1
+        point_list = []
+        for waypoint in waypoint_list:
+            first_waypoint = int(waypoint[0].transform.location.x +
+                                 offset), int(waypoint[0].transform.location.y + offset)
+            second_waypoint = int(waypoint[1].transform.location.x +
+                                  offset), int(waypoint[1].transform.location.y + offset)
 
-            pygame.draw.circle(display, (255, 0, 0), (int(vehicle_location.x),
-                                                      int(vehicle_location.y)), radius, width)
+            point_list = [first_waypoint, second_waypoint]
+            pygame.draw.lines(display, (255, 0, 255), False, point_list, 1)
 
-        for traffic in traffic_lights:
-            traffic_location = traffic.get_location()
+    def render_actors(self, display, actors, filter, color):
+        filtered_actors = [actor for actor in actors if filter in actor.type_id]
+        radius = 2
+        width = 1
+        for actor in filtered_actors:
+            actor_location = actor.get_location()
 
-            pygame.draw.circle(display, (0, 255, 0), (int(traffic_location.x),
-                                                      int(traffic_location.y)), radius, width)
+            pygame.draw.circle(display, color, (offset + int(actor_location.x),
+                                                offset + int(actor_location.y)), radius, width)
+
+    def render(self, display):
+        actors = self.world.get_actors()
+        town_map = self.world.get_map()
+        self.render_map(display, town_map)
+        self.render_actors(display, actors, 'vehicle', (255, 0, 0))
+        self.render_actors(display, actors, 'traffic_light', (0, 255, 0))
+        self.render_actors(display, actors, 'speed_limit', (0, 0, 255))
+
 
 # ==============================================================================
 # -- Input -----------------------------------------------------------
