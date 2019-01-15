@@ -1,4 +1,4 @@
-<h1>How to make a new map in CARLA with RoadRunner</h1>
+<h1>How to make a new map with RoadRunner</h1>
 
 ![Town03](img/create_map_01.jpg)
 
@@ -7,7 +7,7 @@
 RoadRunner is a powerful software from Vector Zero to create 3D scenes. Using RoadRunner is easy, in a few steps you will be able to create an impressive scene. You can download
 a trial of RoadRunner at:
 
-![vectorzero](img/logo_vectorzero.jpg) https://www.vectorzero.io/
+![vectorzero](img/logo_vectorzero.jpg) [https://www.vectorzero.io/](https://www.vectorzero.io/)
 
 <h2>Step 1 - Create your map in RoadRunner:</h2>
 
@@ -84,7 +84,7 @@ and save it inside Game/Carla/Maps/
 
 Once everything is loaded up you should end with several staticMeshes in the folder
 you have selected. Drag them all to the level and you will have
-your map in Unreal! Congratulations!. 
+your map in Unreal! Congratulations!.
 
 The time taken by the loading process will depend on how many pieces you cut the map into. Be patient! All the pieces share the same center pivot, so if they are positioned
 in the same place they should fit as they did in the RoadRunner Editor. When
@@ -143,8 +143,8 @@ for the meshes the last one was referencing.
 <h2>Setting up the traffic based on OpenDrive:</h2>
 
 !!! Note
-    the current version of CARLA needs a CarlaMapGenerator spawned in order to use the server autopilot functionality. From the current version it is also to drive all vehicles using the new client nvaigation stack. However, if you still want to use the server autopilot you will need to create a CarlaMapGenerator for your city --never above or under it. 
-    
+    the current version of CARLA needs a CarlaMapGenerator spawned in order to use the server autopilot functionality. From the current version it is also to drive all vehicles using the new client nvaigation stack. However, if you still want to use the server autopilot you will need to create a CarlaMapGenerator for your city --never above or under it.
+
 * You will need to place points for the vehicles to spawn. The actor that sets the
   spawn position of the vehicles is called VehicleSpawnPoint. CARLA vehicles
   must overlap with one of the RoutePlanner's trigger box for them to be
@@ -161,7 +161,7 @@ for the meshes the last one was referencing.
 * Traffic lights must be placed in every crossing in whitch vehicles might
   conflict. theese are the childs of "TrafficLightBase" and are stored inside
   Game/Carla/Static/TrafficSigns/Streetlights_01.
-  
+
 Again, remember this is just needed to use the server autopilot. We recommend to start using new the client driving stack provided from 0.9.2 version.
 
 <h2>Working with BP_TrafficLight and BP_TrafficLightGroups:</h2>
