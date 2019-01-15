@@ -87,6 +87,9 @@ class ModuleManager(object):
             if module.name == name:
                 return module
 
+    def start_modules(self):
+        for module in self.modules:
+            module.start()
 # ==============================================================================
 # -- HUD -----------------------------------------------------------------------
 # ==============================================================================
@@ -98,6 +101,9 @@ class ModuleHUD (object):
         self.name = name
         self._init_data_params(width, height)
         self._init_hud_params()
+
+    def start(self):
+        pass
 
     def _init_hud_params(self):
         font = pygame.font.Font(pygame.font.get_default_font(), 20)
@@ -179,9 +185,14 @@ class ModuleWorld(object):
 
     def __init__(self, name, host, port, timeout):
         self.name = name
+        self.host = host
+        self.port = port
+        self.timeout = timeout
+
+    def start(self):
         try:
-            client = carla.Client(host, port)
-            client.set_timeout(timeout)
+            client = carla.Client(self.host, self.port)
+            client.set_timeout(self.timeout)
             self.world = client.get_world()
             self.town_map = self.world.get_map()
             self.waypoint_list = self.town_map.generate_waypoints(10.0)
@@ -199,15 +210,17 @@ class ModuleWorld(object):
                 self.y_max = max(self.y_max, waypoint.transform.location.y)
                 self.y_min = min(self.y_min, waypoint.transform.location.y)
 
-            surface_size = min(self.x_max - self.x_min, self.y_max - self.y_min)
-            self.surface = pygame.Surface((surface_size, surface_size))
-
             weak_self = weakref.ref(self)
             self.world.on_tick(lambda timestamp: ModuleWorld.on_world_tick(weak_self, timestamp))
 
         except Exception as ex:
             logging.error('Failed connecting to CARLA server')
             exit_game()
+
+        hud_module = module_manager.get_module(MODULE_HUD)
+
+        self.surface_size = min(hud_module.dim[0], hud_module.dim[1])
+        self.surface = pygame.Surface((self.surface_size, self.surface_size))
 
     def tick(self, clock):
         pass
@@ -230,8 +243,8 @@ class ModuleWorld(object):
         point_list = []
 
         for waypoint in self.waypoint_list:
-            point_list.append((int(waypoint.transform.location.x - self.x_min),
-                               int(waypoint.transform.location.y - self.y_min)))
+            point_list.append((int((waypoint.transform.location.x - self.x_min) / float(self.x_max - self.x_min) * self.surface_size),
+                               int((waypoint.transform.location.y - self.y_min) / float(self.y_max - self.y_min) * self.surface_size)))
 
         pygame.draw.lines(self.surface, (255, 0, 255), False, point_list, 1)
 
@@ -242,8 +255,8 @@ class ModuleWorld(object):
         for actor in filtered_actors:
             actor_location = actor.get_location()
 
-            pygame.draw.circle(self.surface, color, (int(actor_location.x),
-                                                     int(actor_location.y)), radius, width)
+            pygame.draw.circle(self.surface, color, (int((actor_location.x - self.x_min) / float(self.x_max - self.x_min) * self.surface_size),
+                                                     int((actor_location.y - self.y_min) / float(self.y_max - self.y_min) * self.surface_size)), radius, width)
 
     def render(self, display):
         actors = self.world.get_actors()
@@ -253,8 +266,8 @@ class ModuleWorld(object):
         self.render_actors(display, actors, 'traffic_light', (0, 255, 0))
         self.render_actors(display, actors, 'speed_limit', (0, 0, 255))
 
-        result_surface = pygame.transform.scale(self.surface, (int(1280 * scale_x), int(720 * scale_y)))
-        display.blit(result_surface, (offset_x, offset_y))
+        # result_surface = pygame.transform.scale(self.surface, (int(1280 * scale_x), int(720 * scale_y)))
+        display.blit(self.surface, (offset_x, offset_y))
 
 # ==============================================================================
 # -- Input -----------------------------------------------------------
@@ -265,6 +278,9 @@ class ModuleInput(object):
     def __init__(self, name):
         self.name = name
         self.mouse_pos = (0, 0)
+
+    def start(self):
+        pass
 
     def render(self, display):
         pass
@@ -329,13 +345,15 @@ def game_loop(args):
 
     # Init modules
     input_module = ModuleInput(MODULE_INPUT)
-    world_module = ModuleWorld(MODULE_WORLD, args.host, args.port, 2.0)
     hud_module = ModuleHUD(MODULE_HUD, args.width, args.height)
+    world_module = ModuleWorld(MODULE_WORLD, args.host, args.port, 2.0)
 
     # Register Modules
     module_manager.register_module(input_module)
-    module_manager.register_module(hud_module)
     module_manager.register_module(world_module)
+    module_manager.register_module(hud_module)
+
+    module_manager.start_modules()
 
     clock = pygame.time.Clock()
     while True:
