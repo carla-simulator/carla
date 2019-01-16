@@ -28,6 +28,7 @@ namespace rpc {
   class ActorDescription;
   class DebugShape;
   class VehicleControl;
+  class WalkerControl;
 }
 namespace sensor { class SensorData; }
 namespace streaming { class Token; }
@@ -101,6 +102,10 @@ namespace detail {
     void ApplyControlToVehicle(
         const rpc::Actor &vehicle,
         const rpc::VehicleControl &control);
+
+    void ApplyControlToWalker(
+        const rpc::Actor &walker,
+        const rpc::WalkerControl &control);
 
     void SubscribeToStream(
         const streaming::Token &token,

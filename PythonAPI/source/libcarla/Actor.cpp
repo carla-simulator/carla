@@ -7,6 +7,7 @@
 #include <carla/client/Actor.h>
 #include <carla/client/TrafficLight.h>
 #include <carla/client/Vehicle.h>
+#include <carla/client/Walker.h>
 #include <carla/rpc/TrafficLightState.h>
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -71,6 +72,12 @@ void export_actor() {
     .def("apply_control", &cc::Vehicle::ApplyControl, (arg("control")))
     .def("get_control", &cc::Vehicle::GetControl)
     .def("set_autopilot", &cc::Vehicle::SetAutopilot, (arg("enabled")=true))
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cc::Walker, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Walker>>("Walker", no_init)
+    .def("apply_control", &cc::Walker::ApplyControl, (arg("control")))
+    .def("get_control", &cc::Walker::GetWalkerControl)
     .def(self_ns::str(self_ns::self))
   ;
 

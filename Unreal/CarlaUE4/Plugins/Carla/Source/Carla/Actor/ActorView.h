@@ -21,6 +21,7 @@ public:
   enum class ActorType : uint8 {
     Other,
     Vehicle,
+    Walker,
     TrafficLight
   };
 

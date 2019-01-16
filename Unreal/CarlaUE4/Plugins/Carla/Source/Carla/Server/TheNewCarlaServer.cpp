@@ -11,6 +11,7 @@
 #include "Carla/Util/DebugShapeDrawer.h"
 #include "Carla/Util/OpenDrive.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "Carla/Walker/WalkerController.h"
 
 #include "GameFramework/SpectatorPawn.h"
 
@@ -25,6 +26,7 @@
 #include <carla/rpc/Server.h>
 #include <carla/rpc/Transform.h>
 #include <carla/rpc/VehicleControl.h>
+#include <carla/rpc/WalkerControl.h>
 #include <carla/rpc/WeatherParameters.h>
 #include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
@@ -367,6 +369,23 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       RespondErrorStr("unable to apply control: actor is not a vehicle");
     }
     Vehicle->ApplyVehicleControl(Control);
+  });
+
+  Server.BindSync("apply_control_to_walker", [this](cr::Actor Actor, cr::WalkerControl Control) {
+    RequireEpisode();
+    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
+      RespondErrorStr("unable to apply control: actor not found");
+    }
+    auto Pawn = Cast<APawn>(ActorView.GetActor());
+    if (Pawn == nullptr) {
+      RespondErrorStr("unable to apply control: actor is not a walker");
+    }
+    auto Controller = Cast<AWalkerController>(Pawn->GetController());
+    if (Controller == nullptr) {
+      RespondErrorStr("unable to apply control: walker has an incompatible controller");
+    }
+    Controller->ApplyWalkerControl(Control);
   });
 
   Server.BindSync("set_actor_autopilot", [this](cr::Actor Actor, bool bEnabled) {
