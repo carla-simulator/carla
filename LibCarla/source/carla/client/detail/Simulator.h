@@ -199,7 +199,7 @@ namespace detail {
     }
 
     void ApplyControlToVehicle(Vehicle &vehicle, const rpc::VehicleControl &control) {
-      _client.ApplyControlToActor(vehicle.Serialize(), control);
+      _client.ApplyControlToVehicle(vehicle.Serialize(), control);
     }
 
     /// @}

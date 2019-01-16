@@ -356,7 +356,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     RootComponent->SetSimulatePhysics(bEnabled);
   });
 
-  Server.BindSync("apply_control_to_actor", [this](cr::Actor Actor, cr::VehicleControl Control) {
+  Server.BindSync("apply_control_to_vehicle", [this](cr::Actor Actor, cr::VehicleControl Control) {
     RequireEpisode();
     auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
     if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {

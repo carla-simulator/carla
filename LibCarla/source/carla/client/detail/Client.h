@@ -98,7 +98,7 @@ namespace detail {
         const rpc::Actor &vehicle,
         bool enabled);
 
-    void ApplyControlToActor(
+    void ApplyControlToVehicle(
         const rpc::Actor &vehicle,
         const rpc::VehicleControl &control);
 
