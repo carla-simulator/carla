@@ -192,7 +192,7 @@ class ModuleWorld(object):
             client.set_timeout(self.timeout)
             self.world = client.get_world()
             self.town_map = self.world.get_map()
-            self.waypoint_list = self.town_map.generate_waypoints(10.0)
+            waypoint_list = self.town_map.generate_waypoints(2.0)
 
             # compute bounding boxes
             self.x_min = float('inf')
@@ -200,12 +200,53 @@ class ModuleWorld(object):
             self.x_max = 0
             self.y_max = 0
 
-            for waypoint in self.waypoint_list:
+            for waypoint in waypoint_list:
                 self.x_max = max(self.x_max, waypoint.transform.location.x)
                 self.x_min = min(self.x_min, waypoint.transform.location.x)
 
                 self.y_max = max(self.y_max, waypoint.transform.location.y)
                 self.y_min = min(self.y_min, waypoint.transform.location.y)
+
+            # Retrieve data from waypoints orientation, thickness and length and do conversions into another list
+            point_list = []
+            for waypoint in waypoint_list:
+                waypoint_length = 2.0
+
+                # Width of road
+                thickness = int(waypoint.lane_width)
+
+                # Orientation of road
+                color = ()
+                if waypoint.lane_id < 0:
+                    color = (0, 255, 255)
+                else:
+                    color = (255, 255, 0)
+
+                direction = (1, 0)
+                yaw = math.radians(waypoint.transform.rotation.yaw)
+                waypoint_front = (direction[0] * math.cos(yaw) - direction[1] * math.sin(yaw),
+                                  direction[0] * math.sin(yaw) + direction[1] * math.cos(yaw))
+
+                point_list.append(((waypoint.transform.location.x, waypoint.transform.location.y),
+                                   (waypoint.transform.location.x + waypoint_front[0] * waypoint_length,
+                                    waypoint.transform.location.y + waypoint_front[1] * waypoint_length), color, thickness))
+
+            # Create Surface
+            hud_module = module_manager.get_module(MODULE_HUD)
+
+            self.surface_size = min(hud_module.dim[0], hud_module.dim[1])
+            self.surface = pygame.Surface((self.surface_size, self.surface_size))
+
+            # normalize waypoints based on surface size
+            self.normalized_point_list = []
+            for point in point_list:
+                x_0 = ((point[0][0] - self.x_min) / float((self.x_max - self.x_min))) * self.surface_size
+                y_0 = ((point[0][1] - self.y_min) / float((self.y_max - self.y_min))) * self.surface_size
+
+                x_1 = float(point[1][0] - self.x_min) / (float((self.x_max - self.x_min))) * self.surface_size
+                y_1 = float(point[1][1] - self.y_min) / (float((self.y_max - self.y_min))) * self.surface_size
+
+                self.normalized_point_list.append(([(x_0, y_0), (x_1, y_1)], point[2], point[3]))
 
             weak_self = weakref.ref(self)
             self.world.on_tick(lambda timestamp: ModuleWorld.on_world_tick(weak_self, timestamp))
@@ -213,11 +254,6 @@ class ModuleWorld(object):
         except Exception as ex:
             logging.error('Failed connecting to CARLA server')
             exit_game()
-
-        hud_module = module_manager.get_module(MODULE_HUD)
-
-        self.surface_size = min(hud_module.dim[0], hud_module.dim[1])
-        self.surface = pygame.Surface((self.surface_size, self.surface_size))
 
     def tick(self, clock):
         pass
@@ -231,34 +267,12 @@ class ModuleWorld(object):
         hud_module.on_world_tick(timestamp)
 
     def render_map(self, display):
-        radius = 2
-        width = 1
 
-        point_list = []
+        for point in self.normalized_point_list:
 
-        for waypoint in self.waypoint_list:
-            waypoint_length = 3.0
-            thickness = int(waypoint.lane_width)
-            direction = (1, 0)
-            yaw = math.radians(waypoint.transform.rotation.yaw)
-            waypoint_front = (direction[0] * math.cos(yaw) - direction[1] * math.sin(yaw),
-                              direction[0] * math.sin(yaw) + direction[1] * math.cos(yaw))
+            pygame.draw.lines(self.surface, point[1], False, point[0], point[2])
 
-            point_list.append(((waypoint.transform.location.x, waypoint.transform.location.y),
-                               (waypoint.transform.location.x + waypoint_front[0] * waypoint_length,
-                                waypoint.transform.location.y + waypoint_front[1] * waypoint_length), thickness))
-
-        for point in point_list:
-
-            x_0 = ((point[0][0] - self.x_min) / float((self.x_max - self.x_min))) * self.surface_size
-            y_0 = ((point[0][1] - self.y_min) / float((self.y_max - self.y_min))) * self.surface_size
-
-            x_1 = float(point[1][0] - self.x_min) / (float((self.x_max - self.x_min))) * self.surface_size
-            y_1 = float(point[1][1] - self.y_min) / (float((self.y_max - self.y_min))) * self.surface_size
-
-            # pygame.draw.lines(self.surface, (255, 255, 255), False, [(x_0, y_0), (x_1, y_1)], 1)
-
-            pygame.gfxdraw.line(self.surface, int(x_0), int(y_0), int(x_1), int(y_1), (255, 255, 255))
+            #pygame.gfxdraw.line(self.surface, int(x_0), int(y_0), int(x_1), int(y_1), (255, 255, 255))
 
     def render_actors(self, display, actors, filter, color, radius, width):
         filtered_actors = [actor for actor in actors if filter in actor.type_id]
