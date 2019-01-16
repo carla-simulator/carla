@@ -38,18 +38,6 @@ matrix:
       after_failure:
         - tail --lines=2000 build.log
 
-    - env: TEST="Pylint 2"
-      addons:
-        apt:
-          packages:
-            - python
-            - python-pip
-      install:
-        - pip2 install -q --user -r Deprecated/PythonClient/requirements.txt
-        - pip2 install -q --user pylint
-      script:
-        - pylint --disable=R,C --rcfile=Deprecated/PythonClient/.pylintrc Deprecated/PythonClient/carla Deprecated/PythonClient/*.py
-
     - env: TEST="MkDocs"
       install:
         - pip install -q --user mkdocs
