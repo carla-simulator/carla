@@ -106,7 +106,7 @@
 
 - `bounding_box`
 - `apply_control(vehicle_control)`
-- `get_vehicle_control()`
+- `get_control()`
 - `set_autopilot(enabled=True)`
 
 ## `carla.TrafficLight(carla.Actor)`
