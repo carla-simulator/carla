@@ -38,9 +38,11 @@ import carla
 import argparse
 import logging
 import weakref
+import math
 
 try:
     import pygame
+    from pygame import gfxdraw
     from pygame.locals import K_DOWN
     from pygame.locals import K_LEFT
     from pygame.locals import K_RIGHT
@@ -90,10 +92,11 @@ class ModuleManager(object):
     def start_modules(self):
         for module in self.modules:
             module.start()
+
+
 # ==============================================================================
 # -- HUD -----------------------------------------------------------------------
 # ==============================================================================
-
 
 class ModuleHUD (object):
 
@@ -175,12 +178,6 @@ class ModuleHUD (object):
 # ==============================================================================
 
 
-offset_x = 0
-offset_y = 0
-scale_x = 1
-scale_y = 1
-
-
 class ModuleWorld(object):
 
     def __init__(self, name, host, port, timeout):
@@ -236,42 +233,58 @@ class ModuleWorld(object):
     def render_map(self, display):
         radius = 2
         width = 1
-        thickness = 1
 
         point_list = []
 
         for waypoint in self.waypoint_list:
-            point_list.append((int((waypoint.transform.location.x - self.x_min) / float(self.x_max - self.x_min) * self.surface_size),
-                               int((waypoint.transform.location.y - self.y_min) / float(self.y_max - self.y_min) * self.surface_size)))
+            waypoint_length = 3.0
+            thickness = int(waypoint.lane_width)
+            direction = (1, 0)
+            yaw = math.radians(waypoint.transform.rotation.yaw)
+            waypoint_front = (direction[0] * math.cos(yaw) - direction[1] * math.sin(yaw),
+                              direction[0] * math.sin(yaw) + direction[1] * math.cos(yaw))
 
-        pygame.draw.lines(self.surface, (255, 0, 255), False, point_list, 1)
+            point_list.append(((waypoint.transform.location.x, waypoint.transform.location.y),
+                               (waypoint.transform.location.x + waypoint_front[0] * waypoint_length,
+                                waypoint.transform.location.y + waypoint_front[1] * waypoint_length), thickness))
 
-    def render_actors(self, display, actors, filter, color):
+        for point in point_list:
+
+            x_0 = ((point[0][0] - self.x_min) / float((self.x_max - self.x_min))) * self.surface_size
+            y_0 = ((point[0][1] - self.y_min) / float((self.y_max - self.y_min))) * self.surface_size
+
+            x_1 = float(point[1][0] - self.x_min) / (float((self.x_max - self.x_min))) * self.surface_size
+            y_1 = float(point[1][1] - self.y_min) / (float((self.y_max - self.y_min))) * self.surface_size
+
+            # pygame.draw.lines(self.surface, (255, 255, 255), False, [(x_0, y_0), (x_1, y_1)], 1)
+
+            pygame.gfxdraw.line(self.surface, int(x_0), int(y_0), int(x_1), int(y_1), (255, 255, 255))
+
+    def render_actors(self, display, actors, filter, color, radius, width):
         filtered_actors = [actor for actor in actors if filter in actor.type_id]
-        radius = 2
-        width = 1
         for actor in filtered_actors:
             actor_location = actor.get_location()
+            x = int((actor_location.x - self.x_min) / float(self.x_max - self.x_min) * self.surface_size)
+            y = int((actor_location.y - self.y_min) / float(self.y_max - self.y_min) * self.surface_size)
 
-            pygame.draw.circle(self.surface, color, (int((actor_location.x - self.x_min) / float(self.x_max - self.x_min) * self.surface_size),
-                                                     int((actor_location.y - self.y_min) / float(self.y_max - self.y_min) * self.surface_size)), radius, width)
+            # Draws circle with anti-aliasing
+            pygame.gfxdraw.aacircle(self.surface, x, y, radius, color)
+            pygame.gfxdraw.filled_circle(self.surface, x, y, radius, color)
+
+            # pygame.draw.circle(self.surface, color, (x, y), radius, width)
 
     def render(self, display):
         actors = self.world.get_actors()
         self.surface.fill((20, 20, 20))
         self.render_map(display)
-        self.render_actors(display, actors, 'vehicle', (255, 0, 0))
-        self.render_actors(display, actors, 'traffic_light', (0, 255, 0))
-        self.render_actors(display, actors, 'speed_limit', (0, 0, 255))
-
-        result_surface = pygame.transform.scale(self.surface,
-                                                (int(self.surface_size * scale_x),
-                                                 int(self.surface_size * scale_y)))
+        self.render_actors(display, actors, 'vehicle', (255, 0, 0), 3, 3)
+        self.render_actors(display, actors, 'traffic_light', (0, 255, 0), 3, 3)
+        self.render_actors(display, actors, 'speed_limit', (0, 0, 255), 3, 3)
 
         module_input = module_manager.get_module(MODULE_INPUT)
-        result_surface = pygame.transform.scale(self.surface,
-                                                (int(self.surface_size * module_input.wheel_offset[0]),
-                                                 int(self.surface_size * module_input.wheel_offset[1])))
+        result_surface = pygame.transform.smoothscale(self.surface,
+                                                      (int(self.surface_size * module_input.wheel_offset[0]),
+                                                       int(self.surface_size * module_input.wheel_offset[1])))
 
         display.blit(result_surface, (module_input.mouse_offset[0], module_input.mouse_offset[1]))
 
@@ -297,8 +310,6 @@ class ModuleInput(object):
         self.parse_input()
 
     def _parse_events(self):
-        global scale_x
-        global scale_y
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 exit_game()
