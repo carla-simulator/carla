@@ -139,8 +139,8 @@ namespace detail {
     _pimpl->AsyncCall("set_actor_autopilot", vehicle, enabled);
   }
 
-  void Client::ApplyControlToActor(const rpc::Actor &vehicle, const rpc::VehicleControl &control) {
-    _pimpl->AsyncCall("apply_control_to_actor", vehicle, control);
+  void Client::ApplyControlToVehicle(const rpc::Actor &vehicle, const rpc::VehicleControl &control) {
+    _pimpl->AsyncCall("apply_control_to_vehicle", vehicle, control);
   }
 
   void Client::SubscribeToStream(
