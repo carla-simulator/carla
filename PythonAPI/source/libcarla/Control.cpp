@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include <carla/rpc/VehicleControl.h>
+#include <carla/rpc/WalkerControl.h>
 
 #include <ostream>
 
@@ -23,12 +24,19 @@ namespace rpc {
     return out;
   }
 
+  std::ostream &operator<<(std::ostream &out, const WalkerControl &control) {
+    out << "WalkerControl(direction=" << control.direction
+        << ", speed=" << control.speed << ')';
+    return out;
+  }
+
 } // namespace rpc
 } // namespace carla
 
 void export_control() {
   using namespace boost::python;
   namespace cr = carla::rpc;
+  namespace cg = carla::geom;
 
   class_<cr::VehicleControl>("VehicleControl")
     .def(init<float, float, float, bool, bool, bool, int>(
@@ -48,6 +56,17 @@ void export_control() {
     .def_readwrite("gear", &cr::VehicleControl::gear)
     .def("__eq__", &cr::VehicleControl::operator==)
     .def("__ne__", &cr::VehicleControl::operator!=)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cr::WalkerControl>("WalkerControl")
+    .def(init<cg::Vector3D, float>(
+        (arg("direction")=cg::Vector3D{1.0f, 0.0f, 0.0f},
+         arg("speed")=0.0f)))
+    .def_readwrite("direction", &cr::WalkerControl::direction)
+    .def_readwrite("speed", &cr::WalkerControl::speed)
+    .def("__eq__", &cr::WalkerControl::operator==)
+    .def("__ne__", &cr::WalkerControl::operator!=)
     .def(self_ns::str(self_ns::self))
   ;
 }
