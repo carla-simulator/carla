@@ -43,6 +43,7 @@ import math
 try:
     import pygame
     from pygame import gfxdraw
+    from pygame.locals import K_a
     from pygame.locals import K_DOWN
     from pygame.locals import K_LEFT
     from pygame.locals import K_RIGHT
@@ -51,6 +52,24 @@ try:
 except ImportError:
     raise RuntimeError('cannot import pygame, make sure pygame package is installed')
 
+
+# ==============================================================================
+# -- Constants -------------------------------------------------------------
+# ==============================================================================
+
+COLOR_RED = pygame.Color(255, 0, 0)
+COLOR_BLUE = pygame.Color(0, 0, 255)
+COLOR_GREEN = pygame.Color(0, 255, 0)
+COLOR_YELLOW = pygame.Color(255, 255, 0)
+COLOR_MAGENTA = pygame.Color(255, 0, 255)
+COLOR_CYAN = pygame.Color(0, 255, 255)
+COLOR_WHITE = pygame.Color(255, 255, 255)
+COLOR_BLACK = pygame.Color(0, 0, 0)
+COLOR_GREY = pygame.Color(127, 127, 127)
+COLOR_LIGHT_GREY = pygame.Color(200, 200, 200)
+COLOR_DARK_GREY = pygame.Color(50, 50, 50)
+COLOR_ORANGE = pygame.Color(255, 127, 0)
+
 # ==============================================================================
 # -- ModuleDefines -------------------------------------------------------------
 # ==============================================================================
@@ -58,6 +77,7 @@ except ImportError:
 MODULE_WORLD = 'World'
 MODULE_HUD = 'Hud'
 MODULE_INPUT = 'Input'
+MODULE_RENDER = 'Render'
 
 # ==============================================================================
 # -- ModuleManager -------------------------------------------------------------
@@ -95,8 +115,90 @@ class ModuleManager(object):
 
 
 # ==============================================================================
+# -- ModuleRender -------------------------------------------------------------
+# ==============================================================================
+class ModuleRender(object):
+    def __init__(self, name, antialiasing):
+        self.name = name
+        self.antialiasing = antialiasing
+
+    def start(self):
+        pass
+
+    def render(self, display):
+        pass
+
+    def tick(self, clock):
+        pass
+
+    def drawLineList(self, surface, color, closed, list_lines, width):
+        for line in lines:
+            if not self.antialiasing:
+                self.drawLine(surface, color, closed, line, width)
+            else:
+                self.drawLineAA(surface, color, closed, line, width)
+
+    def drawLine(self, surface, color, closed, line, width):
+        if not self.antialiasing:
+            self._drawLine(surface, color, closed, line, width)
+        else:
+            self._drawLineAA(surface, color, closed, line, width)
+
+    def _drawLine(self, surface, color, closed, line, width):
+        pygame.draw.lines(surface, color, closed, line, width)
+
+    def _drawLineAA(self, surface, color, closed, line, width):
+        p0 = line[0]
+        p1 = line[1]
+
+        center_line_x = (p0[0]+p1[0])/2
+        center_line_y = (p0[1]+p1[1])/2
+        center_line = [center_line_x, center_line_y]
+
+        length = 10  # Line size
+        half_length = length / 2.
+
+        thickness = 2
+        half_thickness = thickness / 2.
+
+        angle = math.atan2(p0[1] - p1[1], p0[0] - p1[0])
+        sin_angle = math.sin(angle)
+        cos_angle = math.cos(angle)
+
+        half_length_cos_angle = (half_length) * cos_angle
+        half_length_sin_angle = (half_length) * sin_angle
+        half_thickness_cos_angle = (half_thickness) * cos_angle
+        half_thickness_sin_angle = (half_thickness) * sin_angle
+
+        UL = (center_line[0] + half_length_cos_angle - half_thickness_sin_angle,
+              center_line[1] + half_thickness_cos_angle + half_length_sin_angle)
+        UR = (center_line[0] - half_length_cos_angle - half_thickness_sin_angle,
+              center_line[1] + half_thickness_cos_angle - half_length_sin_angle)
+        BL = (center_line[0] + half_length_cos_angle + half_thickness_sin_angle,
+              center_line[1] - half_thickness_cos_angle + half_length_sin_angle)
+        BR = (center_line[0] - half_length_cos_angle + half_thickness_sin_angle,
+              center_line[1] - half_thickness_cos_angle - half_length_sin_angle)
+
+        pygame.gfxdraw.aapolygon(surface, (UL, UR, BR, BL), color)
+        pygame.gfxdraw.filled_polygon(surface, (UL, UR, BR, BL), color)
+
+    def drawCircle(self, surface, x, y, radius, color):
+        if not self.antialiasing:
+            self._drawCircle(surface, x, y, radius, color)
+        else:
+            self._drawCircleAA(surface, x, y, radius, color)
+
+    def _drawCircle(self, surface, x, y, radius, color):
+        pygame.draw.circle(surface, color, (x, y), radius)
+
+    def _drawCircleAA(self, surface, x, y, radius, color):
+        pygame.gfxdraw.aacircle(surface, x, y, radius, color)
+        pygame.gfxdraw.filled_circle(surface, x, y, radius, color)
+
+# ==============================================================================
 # -- HUD -----------------------------------------------------------------------
 # ==============================================================================
+
 
 class ModuleHUD (object):
 
@@ -157,16 +259,16 @@ class ModuleHUD (object):
                 elif isinstance(item, tuple):
                     if isinstance(item[1], bool):
                         rect = pygame.Rect((bar_h_offset, v_offset + 8), (6, 6))
-                        pygame.draw.rect(display, (255, 255, 255), rect, 0 if item[1] else 1)
+                        pygame.draw.rect(display, COLOR_WHITE, rect, 0 if item[1] else 1)
                     else:
                         rect_border = pygame.Rect((bar_h_offset, v_offset + 8), (bar_width, 6))
-                        pygame.draw.rect(display, (255, 255, 255), rect_border, 1)
+                        pygame.draw.rect(display, COLOR_WHITE, rect_border, 1)
                         f = (item[1] - item[2]) / (item[3] - item[2])
                         if item[2] < 0.0:
                             rect = pygame.Rect((bar_h_offset + f * (bar_width - 6), v_offset + 8), (6, 6))
                         else:
                             rect = pygame.Rect((bar_h_offset, v_offset + 8), (f * bar_width, 6))
-                        pygame.draw.rect(display, (255, 255, 255), rect)
+                        pygame.draw.rect(display, COLOR_WHITE, rect)
                     item = item[0]
                 if item:  # At this point has to be a str.
                     surface = self._font_mono.render(item, True, (255, 255, 255))
@@ -194,66 +296,70 @@ class ModuleWorld(object):
             self.town_map = self.world.get_map()
             waypoint_list = self.town_map.generate_waypoints(2.0)
 
-            # compute bounding boxes
-            self.x_min = float('inf')
-            self.y_min = float('inf')
-            self.x_max = 0
-            self.y_max = 0
-
-            for waypoint in waypoint_list:
-                self.x_max = max(self.x_max, waypoint.transform.location.x)
-                self.x_min = min(self.x_min, waypoint.transform.location.x)
-
-                self.y_max = max(self.y_max, waypoint.transform.location.y)
-                self.y_min = min(self.y_min, waypoint.transform.location.y)
-
-            # Retrieve data from waypoints orientation, thickness and length and do conversions into another list
-            point_list = []
-            for waypoint in waypoint_list:
-                waypoint_length = 2.0
-
-                # Width of road
-                thickness = int(waypoint.lane_width)
-
-                # Orientation of road
-                color = ()
-                if waypoint.lane_id < 0:
-                    color = (0, 255, 255)
-                else:
-                    color = (255, 255, 0)
-
-                direction = (1, 0)
-                yaw = math.radians(waypoint.transform.rotation.yaw)
-                waypoint_front = (direction[0] * math.cos(yaw) - direction[1] * math.sin(yaw),
-                                  direction[0] * math.sin(yaw) + direction[1] * math.cos(yaw))
-
-                point_list.append(((waypoint.transform.location.x, waypoint.transform.location.y),
-                                   (waypoint.transform.location.x + waypoint_front[0] * waypoint_length,
-                                    waypoint.transform.location.y + waypoint_front[1] * waypoint_length), color, thickness))
-
-            # Create Surface
-            hud_module = module_manager.get_module(MODULE_HUD)
-
-            self.surface_size = min(hud_module.dim[0], hud_module.dim[1])
-            self.surface = pygame.Surface((self.surface_size, self.surface_size))
-
-            # normalize waypoints based on surface size
-            self.normalized_point_list = []
-            for point in point_list:
-                x_0 = ((point[0][0] - self.x_min) / float((self.x_max - self.x_min))) * self.surface_size
-                y_0 = ((point[0][1] - self.y_min) / float((self.y_max - self.y_min))) * self.surface_size
-
-                x_1 = float(point[1][0] - self.x_min) / (float((self.x_max - self.x_min))) * self.surface_size
-                y_1 = float(point[1][1] - self.y_min) / (float((self.y_max - self.y_min))) * self.surface_size
-
-                self.normalized_point_list.append(([(x_0, y_0), (x_1, y_1)], point[2], point[3]))
-
-            weak_self = weakref.ref(self)
-            self.world.on_tick(lambda timestamp: ModuleWorld.on_world_tick(weak_self, timestamp))
-
         except Exception as ex:
             logging.error('Failed connecting to CARLA server')
             exit_game()
+
+        # compute bounding boxes
+        self.x_min = float('inf')
+        self.y_min = float('inf')
+        self.x_max = 0
+        self.y_max = 0
+
+        for waypoint in waypoint_list:
+            self.x_max = max(self.x_max, waypoint.transform.location.x)
+            self.x_min = min(self.x_min, waypoint.transform.location.x)
+
+            self.y_max = max(self.y_max, waypoint.transform.location.y)
+            self.y_min = min(self.y_min, waypoint.transform.location.y)
+
+        # Retrieve data from waypoints orientation, thickness and length and do conversions into another list
+        point_list = []
+        for waypoint in waypoint_list:
+            waypoint_length = 2.0
+
+            # Width of road
+            thickness = int(waypoint.lane_width)
+
+            # Orientation of road
+            color = COLOR_BLACK
+            if waypoint.lane_id < 0:
+                color = COLOR_CYAN
+            else:
+                color = COLOR_ORANGE
+
+            direction = (1, 0)
+            yaw = math.radians(waypoint.transform.rotation.yaw)
+            waypoint_front = (direction[0] * math.cos(yaw) - direction[1] * math.sin(yaw),
+                              direction[0] * math.sin(yaw) + direction[1] * math.cos(yaw))
+
+            point_list.append(((waypoint.transform.location.x, waypoint.transform.location.y),
+                               (waypoint.transform.location.x + waypoint_front[0] * waypoint_length,
+                                waypoint.transform.location.y + waypoint_front[1] * waypoint_length), color, thickness))
+
+        # Create Surface
+        self.hud_module = module_manager.get_module(MODULE_HUD)
+        self.surface_size = min(self.hud_module.dim[0], self.hud_module.dim[1])
+        self.surface = pygame.Surface((self.surface_size, self.surface_size))
+
+        # normalize waypoints based on surface size
+        self.normalized_point_list = []
+        for point in point_list:
+            x_0 = ((point[0][0] - self.x_min) / float((self.x_max - self.x_min))) * self.surface_size
+            y_0 = ((point[0][1] - self.y_min) / float((self.y_max - self.y_min))) * self.surface_size
+
+            x_1 = float(point[1][0] - self.x_min) / (float((self.x_max - self.x_min))) * self.surface_size
+            y_1 = float(point[1][1] - self.y_min) / (float((self.y_max - self.y_min))) * self.surface_size
+
+            self.normalized_point_list.append(([(x_0, y_0), (x_1, y_1)], point[2], point[3]))
+
+        # Module render
+        self.render_module = module_manager.get_module(MODULE_RENDER)
+
+        self.actors = self.world.get_actors()
+
+        weak_self = weakref.ref(self)
+        self.world.on_tick(lambda timestamp: ModuleWorld.on_world_tick(weak_self, timestamp))
 
     def tick(self, clock):
         pass
@@ -263,37 +369,45 @@ class ModuleWorld(object):
         self = weak_self()
         if not self:
             return
-        hud_module = module_manager.get_module(MODULE_HUD)
-        hud_module.on_world_tick(timestamp)
+        self.hud_module.on_world_tick(timestamp)
 
     def render_map(self, display):
-
         for point in self.normalized_point_list:
+            self.render_module.drawLine(self.surface, point[1], False, point[0], point[2])
 
-            pygame.draw.lines(self.surface, point[1], False, point[0], point[2])
+    def render_actors(self, display, list_actors, color, radius, width):
+        # print [x.id for x in list_actors]
 
-            #pygame.gfxdraw.line(self.surface, int(x_0), int(y_0), int(x_1), int(y_1), (255, 255, 255))
-
-    def render_actors(self, display, actors, filter, color, radius, width):
-        filtered_actors = [actor for actor in actors if filter in actor.type_id]
-        for actor in filtered_actors:
+        for actor in list_actors:
             actor_location = actor.get_location()
             x = int((actor_location.x - self.x_min) / float(self.x_max - self.x_min) * self.surface_size)
             y = int((actor_location.y - self.y_min) / float(self.y_max - self.y_min) * self.surface_size)
 
-            # Draws circle with anti-aliasing
-            pygame.gfxdraw.aacircle(self.surface, x, y, radius, color)
-            pygame.gfxdraw.filled_circle(self.surface, x, y, radius, color)
+            if 'traffic_light' in actor.type_id:
+                if actor.state == carla.libcarla.TrafficLightState.Green:
+                    color = COLOR_GREEN
+                elif actor.state == carla.libcarla.TrafficLightState.Yellow:
+                    color = COLOR_YELLOW
+                elif actor.state == carla.libcarla.TrafficLightState.Red:
+                    color = COLOR_RED
+                else:
+                    color = (0, 0, 0)
 
-            # pygame.draw.circle(self.surface, color, (x, y), radius, width)
+            self.render_module.drawCircle(self.surface, x, y, radius, color)
 
     def render(self, display):
-        actors = self.world.get_actors()
         self.surface.fill((20, 20, 20))
         self.render_map(display)
-        self.render_actors(display, actors, 'vehicle', (255, 0, 0), 3, 3)
-        self.render_actors(display, actors, 'traffic_light', (0, 255, 0), 3, 3)
-        self.render_actors(display, actors, 'speed_limit', (0, 0, 255), 3, 3)
+
+        vehicles = [actor for actor in self.actors if 'vehicle' in actor.type_id]
+        self.render_actors(display, vehicles, COLOR_MAGENTA, 3, 3)
+
+        traffic_lights = [actor for actor in self.actors if 'traffic_light' in actor.type_id]
+        # print traffic_lights[0].state
+        self.render_actors(display, traffic_lights, None, 3, 3)
+
+        speed_limits = [actor for actor in self.actors if 'speed_limit' in actor.type_id]
+        self.render_actors(display, speed_limits, COLOR_BLUE, 3, 3)
 
         module_input = module_manager.get_module(MODULE_INPUT)
         result_surface = pygame.transform.smoothscale(self.surface,
@@ -302,6 +416,8 @@ class ModuleWorld(object):
 
         display.blit(result_surface, (module_input.mouse_offset[0], module_input.mouse_offset[1]))
 
+    def change_to_hero_mode(self, hero):
+        vehicles = [actor for actor in actors if filter in actor.type_id]
 # ==============================================================================
 # -- Input -----------------------------------------------------------
 # ==============================================================================
@@ -330,6 +446,9 @@ class ModuleInput(object):
             elif event.type == pygame.KEYUP:
                 if event.key == K_ESCAPE:
                     exit_game()
+                if event.key == K_a:
+                    module_render = module_manager.get_module(MODULE_RENDER)
+                    module_render.antialiasing = not module_render.antialiasing
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 self.mouse_pos = pygame.mouse.get_pos()
                 if event.button == 4:
@@ -339,6 +458,10 @@ class ModuleInput(object):
                 if event.button == 5:
                     self.wheel_offset[0] -= 0.1
                     self.wheel_offset[1] -= 0.1
+                    if self.wheel_offset[0] <= 0.1:
+                        self.wheel_offset[0] = 0.1
+                    if self.wheel_offset[1] <= 0.1:
+                        self.wheel_offset[1] = 0.1
 
     def _parse_keys(self):
         keys = pygame.key.get_pressed()
@@ -377,9 +500,11 @@ def game_loop(args):
     input_module = ModuleInput(MODULE_INPUT)
     hud_module = ModuleHUD(MODULE_HUD, args.width, args.height)
     world_module = ModuleWorld(MODULE_WORLD, args.host, args.port, 2.0)
+    render_module = ModuleRender(MODULE_RENDER, bool(args.antialiasing == 'True'))
 
     # Register Modules
     module_manager.register_module(input_module)
+    module_manager.register_module(render_module)
     module_manager.register_module(world_module)
     module_manager.register_module(hud_module)
 
@@ -432,6 +557,11 @@ def main():
         default='1280x720',
         help='window resolution (default: 1280x720)')
 
+    argparser.add_argument(
+        '--antialiasing',
+        metavar='antialiasing',
+        default=True,
+        help='antialiasing (default: True)')
     args = argparser.parse_args()
     args.description = argparser.description
     args.width, args.height = [int(x) for x in args.res.split('x')]
