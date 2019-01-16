@@ -17,9 +17,19 @@ namespace geom {
   class Vector3D {
   public:
 
+    // =========================================================================
+    // -- Public data members --------------------------------------------------
+    // =========================================================================
+
     float x = 0.0f;
+
     float y = 0.0f;
+
     float z = 0.0f;
+
+    // =========================================================================
+    // -- Constructors ---------------------------------------------------------
+    // =========================================================================
 
     Vector3D() = default;
 
@@ -27,6 +37,29 @@ namespace geom {
       : x(ix),
         y(iy),
         z(iz) {}
+
+    // =========================================================================
+    // -- Other methods --------------------------------------------------------
+    // =========================================================================
+
+    double SquaredLength() const {
+      return x * x + y * y + z * z;
+    }
+
+    double Length() const {
+       return std::sqrt(SquaredLength());
+    }
+
+    Vector3D MakeUnitVector() const {
+      const double len = Length();
+      DEBUG_ASSERT(len > std::numeric_limits<double>::epsilon());
+      double k = 1.0 / len;
+      return Vector3D(x * k, y * k, z * k);
+    }
+
+    // =========================================================================
+    // -- Arithmetic operators -------------------------------------------------
+    // =========================================================================
 
     Vector3D &operator+=(const Vector3D &rhs) {
       x += rhs.x;
@@ -86,27 +119,16 @@ namespace geom {
       return rhs;
     }
 
+    // =========================================================================
+    // -- Comparison operators -------------------------------------------------
+    // =========================================================================
+
     bool operator==(const Vector3D &rhs) const {
       return (x == rhs.x) && (y == rhs.y) && (z == rhs.z);
     }
 
     bool operator!=(const Vector3D &rhs) const {
       return !(*this == rhs);
-    }
-
-    double SquaredLength() const {
-      return x * x + y * y + z * z;
-    }
-
-    double Length() const {
-       return std::sqrt(SquaredLength());
-    }
-
-    Vector3D MakeUnitVector() const {
-      const double len = Length();
-      DEBUG_ASSERT(len > std::numeric_limits<double>::epsilon());
-      double k = 1.0 / len;
-      return Vector3D(x * k, y * k, z * k);
     }
 
     // =========================================================================

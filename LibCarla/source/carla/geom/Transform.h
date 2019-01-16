@@ -21,25 +21,31 @@ namespace geom {
   class Transform {
   public:
 
+    // =========================================================================
+    // -- Public data members --------------------------------------------------
+    // =========================================================================
+
+    Location location;
+
+    Rotation rotation;
+
+    MSGPACK_DEFINE_ARRAY(location, rotation);
+
+    // =========================================================================
+    // -- Constructors ---------------------------------------------------------
+    // =========================================================================
+
     Transform() = default;
 
     Transform(const Location &in_location, const Rotation &in_rotation)
       : location(in_location),
         rotation(in_rotation) {}
 
-    Location location;
-    Rotation rotation;
-
-    bool operator==(const Transform &rhs) const {
-      return (location == rhs.location) && (rotation == rhs.rotation);
-    }
-
-    bool operator!=(const Transform &rhs) const {
-      return !(*this == rhs);
-    }
+    // =========================================================================
+    // -- Other methods --------------------------------------------------------
+    // =========================================================================
 
     void TransformPoint(Vector3D &in_point) const {
-
       // Rotate
       double cy = cos(Math::to_radians(rotation.yaw));
       double sy = sin(Math::to_radians(rotation.yaw));
@@ -66,6 +72,22 @@ namespace geom {
       in_point = out_point;
     }
 
+    // =========================================================================
+    // -- Comparison operators -------------------------------------------------
+    // =========================================================================
+
+    bool operator==(const Transform &rhs) const {
+      return (location == rhs.location) && (rotation == rhs.rotation);
+    }
+
+    bool operator!=(const Transform &rhs) const {
+      return !(*this == rhs);
+    }
+
+    // =========================================================================
+    // -- Conversions to UE4 types ---------------------------------------------
+    // =========================================================================
+
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
     Transform(const FTransform &transform)
@@ -77,8 +99,6 @@ namespace geom {
     }
 
 #endif // LIBCARLA_INCLUDED_FROM_UE4
-
-    MSGPACK_DEFINE_ARRAY(location, rotation);
   };
 
 } // namespace geom
