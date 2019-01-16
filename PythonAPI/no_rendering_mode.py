@@ -44,6 +44,7 @@ try:
     import pygame
     from pygame import gfxdraw
     from pygame.locals import K_a
+    from pygame.locals import K_h
     from pygame.locals import K_DOWN
     from pygame.locals import K_LEFT
     from pygame.locals import K_RIGHT
@@ -358,6 +359,8 @@ class ModuleWorld(object):
 
         self.actors = self.world.get_actors()
 
+        self.select_to_hero_mode()
+        self.hero_mode = False
         weak_self = weakref.ref(self)
         self.world.on_tick(lambda timestamp: ModuleWorld.on_world_tick(weak_self, timestamp))
 
@@ -376,8 +379,6 @@ class ModuleWorld(object):
             self.render_module.drawLine(self.surface, point[1], False, point[0], point[2])
 
     def render_actors(self, display, list_actors, color, radius, width):
-        # print [x.id for x in list_actors]
-
         for actor in list_actors:
             actor_location = actor.get_location()
             x = int((actor_location.x - self.x_min) / float(self.x_max - self.x_min) * self.surface_size)
@@ -391,22 +392,37 @@ class ModuleWorld(object):
                 elif actor.state == carla.libcarla.TrafficLightState.Red:
                     color = COLOR_RED
                 else:
-                    color = (0, 0, 0)
+                    color = COLOR_BLACK
 
             self.render_module.drawCircle(self.surface, x, y, radius, color)
 
     def render(self, display):
-        self.surface.fill((20, 20, 20))
+        self.surface.fill(COLOR_DARK_GREY)
         self.render_map(display)
 
         vehicles = [actor for actor in self.actors if 'vehicle' in actor.type_id]
-        self.render_actors(display, vehicles, COLOR_MAGENTA, 3, 3)
-
         traffic_lights = [actor for actor in self.actors if 'traffic_light' in actor.type_id]
-        # print traffic_lights[0].state
-        self.render_actors(display, traffic_lights, None, 3, 3)
-
         speed_limits = [actor for actor in self.actors if 'speed_limit' in actor.type_id]
+
+        if self.hero_mode:
+            draw_hero_actor = [vehicle for vehicle in vehicles if vehicle.id == self.hero_actor.id]
+            vehicles = [vehicle for vehicle in vehicles
+                        if abs(vehicle.get_location().x - self.hero_actor.get_location().x <= self.filter_radius)
+                        and abs(vehicle.get_location().y - self.hero_actor.get_location().y) <= self.filter_radius
+                        and vehicle.id != self.hero_actor.id]
+
+            self.render_actors(display, draw_hero_actor, COLOR_ORANGE, 5, 5)
+
+            traffic_lights = [traffic_light for traffic_light in traffic_lights
+                              if abs(traffic_light.get_location().x - self.hero_actor.get_location().x <= self.filter_radius)
+                              and abs(traffic_light.get_location().y - self.hero_actor.get_location().y) <= self.filter_radius]
+
+            speed_limits = [speed_limit for speed_limit in speed_limits
+                            if (abs(speed_limit.get_location().x - self.hero_actor.get_location().x) <= self.filter_radius)
+                            and abs(speed_limit.get_location().y - self.hero_actor.get_location().y) <= self.filter_radius]
+
+        self.render_actors(display, vehicles, COLOR_MAGENTA, 5, 5)
+        self.render_actors(display, traffic_lights, COLOR_BLACK, 3, 3)
         self.render_actors(display, speed_limits, COLOR_BLUE, 3, 3)
 
         module_input = module_manager.get_module(MODULE_INPUT)
@@ -416,8 +432,11 @@ class ModuleWorld(object):
 
         display.blit(result_surface, (module_input.mouse_offset[0], module_input.mouse_offset[1]))
 
-    def change_to_hero_mode(self, hero):
-        vehicles = [actor for actor in actors if filter in actor.type_id]
+    def select_to_hero_mode(self):
+        self.filter_radius = 50
+        self.hero_actor = [actor for actor in self.actors if 'vehicle' in actor.type_id][1]
+
+
 # ==============================================================================
 # -- Input -----------------------------------------------------------
 # ==============================================================================
@@ -449,6 +468,9 @@ class ModuleInput(object):
                 if event.key == K_a:
                     module_render = module_manager.get_module(MODULE_RENDER)
                     module_render.antialiasing = not module_render.antialiasing
+                if event.key == K_h:
+                    module_world = module_manager.get_module(MODULE_WORLD)
+                    module_world.hero_mode = not module_world.hero_mode
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 self.mouse_pos = pygame.mouse.get_pos()
                 if event.button == 4:
