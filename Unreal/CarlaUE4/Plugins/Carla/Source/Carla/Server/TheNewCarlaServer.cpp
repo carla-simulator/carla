@@ -8,6 +8,7 @@
 #include "Carla/Server/TheNewCarlaServer.h"
 
 #include "Carla/Sensor/Sensor.h"
+#include "Carla/Util/BoundingBoxCalculator.h"
 #include "Carla/Util/DebugShapeDrawer.h"
 #include "Carla/Util/OpenDrive.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
@@ -114,30 +115,17 @@ private:
     ::AttachActors(Child.GetActor(), Parent.GetActor());
   }
 
-  carla::geom::BoundingBox GetActorBoundingBox(const AActor &Actor)
-  {
-    /// @todo Bounding boxes only available for vehicles.
-    auto Vehicle = Cast<ACarlaWheeledVehicle>(&Actor);
-    if (Vehicle != nullptr)
-    {
-      FVector Location = Vehicle->GetVehicleBoundingBoxTransform().GetTranslation();
-      FVector Extent = Vehicle->GetVehicleBoundingBoxExtent();
-      return {Location, Extent};
-    }
-    return {};
-  }
-
 public:
 
   carla::rpc::Actor SerializeActor(FActorView ActorView)
   {
     carla::rpc::Actor Actor;
     Actor.id = ActorView.GetActorId();
-    if (ActorView.IsValid())
+    if (ActorView.IsValid() && !ActorView.GetActor()->IsPendingKill())
     {
       Actor.parent_id = Episode->GetActorRegistry().Find(ActorView.GetActor()->GetOwner()).GetActorId();
       Actor.description = *ActorView.GetActorDescription();
-      Actor.bounding_box = GetActorBoundingBox(*ActorView.GetActor());
+      Actor.bounding_box = UBoundingBoxCalculator::GetActorBoundingBox(ActorView.GetActor());
       Actor.semantic_tags.reserve(ActorView.GetSemanticTags().Num());
       using tag_t = decltype(Actor.semantic_tags)::value_type;
       for (auto &&Tag : ActorView.GetSemanticTags())
