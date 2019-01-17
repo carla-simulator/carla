@@ -252,7 +252,7 @@ class ModuleHUD (object):
             bar_h_offset = 100
             bar_width = 106
             i = 0
-            for module_name, module_info in self._info_text.iteritems():
+            for module_name, module_info in self._info_text.items():
                 surface = self._header_font.render(module_name, True, COLOR_LIGHT_GREY)
                 display.blit(surface, (8 + bar_width / 2, 18 * i + v_offset))
                 i += 1
@@ -386,7 +386,10 @@ class ModuleWorld(object):
             hero_mode_text = [
                 'Hero Mode:               ON',
                 'Hero ID:               %4d' % self.hero_actor.id,
-                'Hero Type ID:%12s' % type_id_text
+                'Hero Type ID:%12s' % type_id_text,
+                'Hero speed:          %3d km/h' % math.sqrt(self.hero_actor.get_velocity().x ** 2 +
+                                                            self.hero_actor.get_velocity().y ** 2 +
+                                                            self.hero_actor.get_velocity().z ** 2)
             ]
         else:
             hero_mode_text = ['Hero Mode:               OFF']
@@ -431,6 +434,10 @@ class ModuleWorld(object):
 
             self.render_module.drawCircle(self.surface, x, y, radius, color)
 
+    def is_actor_inside_hero_radius(self, actor):
+        return (abs(actor.get_location().x - self.hero_actor.get_location().x) <= self.filter_radius
+                and abs(actor.get_location().y - self.hero_actor.get_location().y) <= self.filter_radius)
+
     def render(self, display):
         self.surface.fill(COLOR_DARK_GREY)
         self.render_map(display)
@@ -441,20 +448,16 @@ class ModuleWorld(object):
 
         if self.hero_mode:
             draw_hero_actor = [vehicle for vehicle in vehicles if vehicle.id == self.hero_actor.id]
-            vehicles = [vehicle for vehicle in vehicles
-                        if abs(vehicle.get_location().x - self.hero_actor.get_location().x <= self.filter_radius)
-                        and abs(vehicle.get_location().y - self.hero_actor.get_location().y) <= self.filter_radius
+            vehicles = [vehicle for vehicle in vehicles if self.is_actor_inside_hero_radius(vehicle)
                         and vehicle.id != self.hero_actor.id]
 
             self.render_actors(display, draw_hero_actor, COLOR_ORANGE, 5, 5)
 
             traffic_lights = [traffic_light for traffic_light in traffic_lights
-                              if abs(traffic_light.get_location().x - self.hero_actor.get_location().x <= self.filter_radius)
-                              and abs(traffic_light.get_location().y - self.hero_actor.get_location().y) <= self.filter_radius]
+                              if self.is_actor_inside_hero_radius(traffic_light)]
 
             speed_limits = [speed_limit for speed_limit in speed_limits
-                            if (abs(speed_limit.get_location().x - self.hero_actor.get_location().x) <= self.filter_radius)
-                            and abs(speed_limit.get_location().y - self.hero_actor.get_location().y) <= self.filter_radius]
+                            if self.is_actor_inside_hero_radius(speed_limit)]
 
         self.render_actors(display, vehicles, COLOR_MAGENTA, 5, 5)
         self.render_actors(display, traffic_lights, COLOR_BLACK, 3, 3)
@@ -465,7 +468,8 @@ class ModuleWorld(object):
                                                       (int(self.surface_size * module_input.wheel_offset[0]),
                                                        int(self.surface_size * module_input.wheel_offset[1])))
 
-        display.blit(result_surface, (module_input.mouse_offset[0], module_input.mouse_offset[1]))
+        display.blit(result_surface, ((display.get_width() - self.surface_size)/2 +
+                                      module_input.mouse_offset[0], module_input.mouse_offset[1]))
 
     def select_to_hero_mode(self):
         self.filter_radius = 50
