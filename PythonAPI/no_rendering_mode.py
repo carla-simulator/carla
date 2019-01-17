@@ -98,6 +98,66 @@ class Util(object):
         return (int(size[0] / float((max_map_point[0] - min_map_point[0])) * surface_size),
                 int(size[1] / float((max_map_point[1] - min_map_point[1])) * surface_size))
 
+
+# ==============================================================================
+# -- RenderShape ----------------------------------------------------------------------
+# ==============================================================================
+
+class RenderShape(object):
+    @staticmethod
+    def render_vehicles(render_module, surface, list_actors, color, radius, x_min, y_min, x_max, y_max, surface_size):
+        for actor in list_actors:
+            actor_bounding_box_location = actor.bounding_box.location + actor.get_location()
+            # actor_bounding_box_location = actor.get_location()
+            x, y = Util.convert_world_to_screen_point((actor_bounding_box_location.x, actor_bounding_box_location.y),
+                                                      (x_min, y_min),
+                                                      (x_max, y_max),
+                                                      surface_size)
+            render_module.drawCircle(surface, x, y, radius, color)
+
+    @staticmethod
+    def render_traffic_lights(render_module, surface, list_actors, color, radius, x_min, y_min, x_max, y_max, surface_size):
+        for actor in list_actors:
+            actor_location = actor.get_location()
+            x, y = Util.convert_world_to_screen_point((actor_location.x, actor_location.y),
+                                                      (x_min, y_min),
+                                                      (x_max, y_max),
+                                                      surface_size)
+
+            if 'traffic_light' in actor.type_id:
+                if actor.state == carla.libcarla.TrafficLightState.Green:
+                    color = COLOR_GREEN
+                elif actor.state == carla.libcarla.TrafficLightState.Yellow:
+                    color = COLOR_YELLOW
+                elif actor.state == carla.libcarla.TrafficLightState.Red:
+                    color = COLOR_RED
+                else:
+                    color = COLOR_BLACK
+
+            render_module.drawCircle(surface, x, y, radius, color)
+
+    @staticmethod
+    def render_pedestrians(render_module, surface, list_actors, color, radius, x_min, y_min, x_max, y_max, surface_size):
+        for actor in list_actors:
+            actor_location = actor.get_location()
+            x, y = Util.convert_world_to_screen_point((actor_location.x, actor_location.y),
+                                                      (x_min, y_min),
+                                                      (x_max, y_max),
+                                                      surface_size)
+
+            render_module.drawCircle(surface, x, y, radius, color)
+
+    @staticmethod
+    def render_speed_limits(render_module, surface, list_actors, color, radius, x_min, y_min, x_max, y_max, surface_size):
+        for actor in list_actors:
+            actor_location = actor.get_location()
+            x, y = Util.convert_world_to_screen_point((actor_location.x, actor_location.y),
+                                                      (x_min, y_min),
+                                                      (x_max, y_max),
+                                                      surface_size)
+
+            render_module.drawCircle(surface, x, y, radius, color)
+
 # ==============================================================================
 # -- ModuleManager -------------------------------------------------------------
 # ==============================================================================
@@ -172,6 +232,14 @@ class ModuleRender(object):
         if not self.antialiasing:
             self._drawLine(surface, color, closed, line, width)
         else:
+            self._drawLineAA(surface, color, closed, line, width)
+
+    def drawLineWithBorder(self, surface, color, closed, line, width, border, color_border):
+        if not self.antialiasing:
+            self._drawLine(surface, color_border, closed, line, width + border)
+            self._drawLine(surface, color, closed, line, width)
+        else:
+            self._drawLineAA(surface, color_border, closed, line, width + border)
             self._drawLineAA(surface, color, closed, line, width)
 
     def _drawLine(self, surface, color, closed, line, width):
@@ -322,7 +390,8 @@ class ModuleWorld(object):
             client.set_timeout(self.timeout)
             self.world = client.get_world()
             self.town_map = self.world.get_map()
-            waypoint_list = self.town_map.generate_waypoints(2.0)
+            waypoint_length = 5.0
+            waypoint_list = self.town_map.generate_waypoints(waypoint_length)
 
         except Exception as ex:
             logging.error('Failed connecting to CARLA server')
@@ -349,7 +418,6 @@ class ModuleWorld(object):
         # Retrieve data from waypoints orientation, width and length and do conversions into another list
         point_list = []
         for waypoint in waypoint_list:
-            waypoint_length = 2.0
 
             # Width of road
             width = Util.convert_world_to_screen_size((waypoint.lane_width, waypoint.lane_width),
@@ -376,8 +444,8 @@ class ModuleWorld(object):
         # normalize waypoints based on surface size
         self.normalized_point_list = []
         for point in point_list:
-            x_0 = ((point[0][0] - self.x_min) / float((self.x_max - self.x_min))) * self.surface_size
-            y_0 = ((point[0][1] - self.y_min) / float((self.y_max - self.y_min))) * self.surface_size
+            x_0 = float((point[0][0] - self.x_min) / float((self.x_max - self.x_min))) * self.surface_size
+            y_0 = float((point[0][1] - self.y_min) / float((self.y_max - self.y_min))) * self.surface_size
 
             x_1 = float(point[1][0] - self.x_min) / (float((self.x_max - self.x_min))) * self.surface_size
             y_1 = float(point[1][1] - self.y_min) / (float((self.y_max - self.y_min))) * self.surface_size
@@ -386,8 +454,6 @@ class ModuleWorld(object):
 
         # Module render
         self.render_module = module_manager.get_module(MODULE_RENDER)
-
-        self.actors = self.world.get_actors()
 
         # Hero actor
         self.filter_radius = 50
@@ -438,27 +504,11 @@ class ModuleWorld(object):
 
     def render_map(self, display):
         for point in self.normalized_point_list:
-            self.render_module.drawLine(self.surface, point[1], False, point[0], point[2])
+            #    def drawCircle(self, surface, x, y, radius, color):
+            #    def drawLineWithBorder(self, surface, color, closed, line, width, border, color_border):
+            # self.render_module.drawCircle(self.surface, int(point[0][0][0]), int(point[0][0][1]), point[2], point[1])
 
-    def render_actors(self, display, list_actors, color, radius):
-        for actor in list_actors:
-            actor_location = actor.get_location()
-            x, y = Util.convert_world_to_screen_point((actor_location.x, actor_location.y),
-                                                      (self.x_min, self.y_min),
-                                                      (self.x_max, self.y_max),
-                                                      self.surface_size)
-
-            if 'traffic_light' in actor.type_id:
-                if actor.state == carla.libcarla.TrafficLightState.Green:
-                    color = COLOR_GREEN
-                elif actor.state == carla.libcarla.TrafficLightState.Yellow:
-                    color = COLOR_YELLOW
-                elif actor.state == carla.libcarla.TrafficLightState.Red:
-                    color = COLOR_RED
-                else:
-                    color = COLOR_BLACK
-
-            self.render_module.drawCircle(self.surface, x, y, radius, color)
+            self.render_module.drawLineWithBorder(self.surface, point[1], False, point[0], point[2], 3, COLOR_DARK_GREY)
 
     def render_hero_actor(self, display, hero_actor, color, radius):
         hero_actor_location = hero_actor.get_location()
@@ -486,10 +536,22 @@ class ModuleWorld(object):
     def render(self, display):
         self.surface.fill(COLOR_DARK_GREY)
         self.render_map(display)
+        self.actors = self.world.get_actors()
 
-        vehicles = [actor for actor in self.actors if 'vehicle' in actor.type_id]
-        traffic_lights = [actor for actor in self.actors if 'traffic_light' in actor.type_id]
-        speed_limits = [actor for actor in self.actors if 'speed_limit' in actor.type_id]
+        vehicles = []
+        traffic_lights = []
+        speed_limits = []
+        pedestrians = []
+
+        for actor in self.actors:
+            if 'vehicle' in actor.type_id:
+                vehicles.append(actor)
+            elif 'traffic_light' in actor.type_id:
+                traffic_lights.append(actor)
+            elif 'speed_limit' in actor.type_id:
+                speed_limits.append(actor)
+            elif 'pedestrian' in actor.type_id:
+                pedestrians.append(pedestrian)
 
         if self.hero_actor is not None:
             draw_hero_actor = [vehicle for vehicle in vehicles if vehicle.id == self.hero_actor.id]
@@ -504,9 +566,15 @@ class ModuleWorld(object):
             speed_limits = [speed_limit for speed_limit in speed_limits
                             if self.is_actor_inside_hero_radius(speed_limit)]
 
-        self.render_actors(self.surface, vehicles, COLOR_MAGENTA, 3)
-        self.render_actors(self.surface, traffic_lights, COLOR_BLACK, 3)
-        self.render_actors(self.surface, speed_limits, COLOR_BLUE, 3)
+        # (render_module, surface, list_actors, color, radius, x_min, y_min, x_max, y_max, surface_size):
+        RenderShape.render_vehicles(self.render_module, self.surface, vehicles, COLOR_MAGENTA,
+                                    3, self.x_min, self.y_min, self.x_max, self.y_max, self.surface_size)
+        RenderShape.render_traffic_lights(self.render_module, self.surface, traffic_lights,
+                                          COLOR_BLACK, 3, self.x_min, self.y_min, self.x_max, self.y_max, self.surface_size)
+        RenderShape.render_speed_limits(self.render_module, self.surface, speed_limits,
+                                        COLOR_BLUE, 3, self.x_min, self.y_min, self.x_max, self.y_max, self.surface_size)
+        RenderShape.render_pedestrians(self.render_module, self.surface, pedestrians,
+                                       COLOR_WHITE, 3, self.x_min, self.y_min, self.x_max, self.y_max, self.surface_size)
 
         module_input = module_manager.get_module(MODULE_INPUT)
         result_surface = pygame.transform.smoothscale(self.surface,
@@ -516,6 +584,10 @@ class ModuleWorld(object):
         display.blit(result_surface, ((display.get_width() - self.surface_size)/2 +
                                       module_input.mouse_offset[0], module_input.mouse_offset[1]))
 
+        del vehicles[:]
+        del traffic_lights[:]
+        del speed_limits[:]
+        del pedestrians[:]
 
 # ==============================================================================
 # -- Input -----------------------------------------------------------
@@ -528,6 +600,7 @@ class ModuleInput(object):
         self.mouse_pos = (0, 0)
         self.mouse_offset = [0.0, 0.0]
         self.wheel_offset = [1.0, 1.0]
+        self.wheel_amount = 0.1
 
     def start(self):
         pass
@@ -558,12 +631,12 @@ class ModuleInput(object):
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 self.mouse_pos = pygame.mouse.get_pos()
                 if event.button == 4:
-                    self.wheel_offset[0] += 0.1
-                    self.wheel_offset[1] += 0.1
+                    self.wheel_offset[0] += self.wheel_amount
+                    self.wheel_offset[1] += self.wheel_amount
 
                 if event.button == 5:
-                    self.wheel_offset[0] -= 0.1
-                    self.wheel_offset[1] -= 0.1
+                    self.wheel_offset[0] -= self.wheel_amount
+                    self.wheel_offset[1] -= self.wheel_amount
                     if self.wheel_offset[0] <= 0.1:
                         self.wheel_offset[0] = 0.1
                     if self.wheel_offset[1] <= 0.1:
