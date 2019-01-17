@@ -170,8 +170,7 @@ class ModuleRender(object):
         length = 10  # Line size
         half_length = length / 2.
 
-        thickness = 2
-        half_thickness = thickness / 2.
+        half_width = width / 2.
 
         angle = math.atan2(p0[1] - p1[1], p0[0] - p1[0])
         sin_angle = math.sin(angle)
@@ -179,17 +178,17 @@ class ModuleRender(object):
 
         half_length_cos_angle = (half_length) * cos_angle
         half_length_sin_angle = (half_length) * sin_angle
-        half_thickness_cos_angle = (half_thickness) * cos_angle
-        half_thickness_sin_angle = (half_thickness) * sin_angle
+        half_width_cos_angle = (half_width) * cos_angle
+        half_width_sin_angle = (half_width) * sin_angle
 
-        UL = (center_line[0] + half_length_cos_angle - half_thickness_sin_angle,
-              center_line[1] + half_thickness_cos_angle + half_length_sin_angle)
-        UR = (center_line[0] - half_length_cos_angle - half_thickness_sin_angle,
-              center_line[1] + half_thickness_cos_angle - half_length_sin_angle)
-        BL = (center_line[0] + half_length_cos_angle + half_thickness_sin_angle,
-              center_line[1] - half_thickness_cos_angle + half_length_sin_angle)
-        BR = (center_line[0] - half_length_cos_angle + half_thickness_sin_angle,
-              center_line[1] - half_thickness_cos_angle - half_length_sin_angle)
+        UL = (center_line[0] + half_length_cos_angle - half_width_sin_angle,
+              center_line[1] + half_width_cos_angle + half_length_sin_angle)
+        UR = (center_line[0] - half_length_cos_angle - half_width_sin_angle,
+              center_line[1] + half_width_cos_angle - half_length_sin_angle)
+        BL = (center_line[0] + half_length_cos_angle + half_width_sin_angle,
+              center_line[1] - half_width_cos_angle + half_length_sin_angle)
+        BR = (center_line[0] - half_length_cos_angle + half_width_sin_angle,
+              center_line[1] - half_width_cos_angle - half_length_sin_angle)
 
         pygame.gfxdraw.aapolygon(surface, (UL, UR, BR, BL), color)
         pygame.gfxdraw.filled_polygon(surface, (UL, UR, BR, BL), color)
@@ -311,6 +310,11 @@ class ModuleWorld(object):
             logging.error('Failed connecting to CARLA server')
             exit_game()
 
+        # Create Surface
+        self.hud_module = module_manager.get_module(MODULE_HUD)
+        self.surface_size = min(self.hud_module.dim[0], self.hud_module.dim[1])
+        self.surface = pygame.Surface((self.surface_size, self.surface_size))
+
         # compute bounding boxes
         self.x_min = float('inf')
         self.y_min = float('inf')
@@ -330,7 +334,7 @@ class ModuleWorld(object):
             waypoint_length = 2.0
 
             # Width of road
-            thickness = int(waypoint.lane_width)
+            thickness = int(waypoint.lane_width / float((self.x_max - self.x_min)) * self.surface_size)
 
             # Orientation of road
             color = COLOR_BLACK
@@ -347,11 +351,6 @@ class ModuleWorld(object):
             point_list.append(((waypoint.transform.location.x, waypoint.transform.location.y),
                                (waypoint.transform.location.x + waypoint_front[0] * waypoint_length,
                                 waypoint.transform.location.y + waypoint_front[1] * waypoint_length), color, thickness))
-
-        # Create Surface
-        self.hud_module = module_manager.get_module(MODULE_HUD)
-        self.surface_size = min(self.hud_module.dim[0], self.hud_module.dim[1])
-        self.surface = pygame.Surface((self.surface_size, self.surface_size))
 
         # normalize waypoints based on surface size
         self.normalized_point_list = []
@@ -416,7 +415,7 @@ class ModuleWorld(object):
         for point in self.normalized_point_list:
             self.render_module.drawLine(self.surface, point[1], False, point[0], point[2])
 
-    def render_actors(self, display, list_actors, color, radius, width):
+    def render_actors(self, display, list_actors, color, radius):
         for actor in list_actors:
             actor_location = actor.get_location()
             x = int((actor_location.x - self.x_min) / float(self.x_max - self.x_min) * self.surface_size)
@@ -434,6 +433,23 @@ class ModuleWorld(object):
 
             self.render_module.drawCircle(self.surface, x, y, radius, color)
 
+    def render_hero_actor(self, display, hero_actor, color, radius):
+        hero_actor_location = hero_actor.get_location()
+        x = int((hero_actor_location.x - self.x_min) / float(self.x_max - self.x_min) * self.surface_size)
+        y = int((hero_actor_location.y - self.y_min) / float(self.y_max - self.y_min) * self.surface_size)
+
+        self.render_module.drawCircle(display, x, y, radius, color)
+
+        # Create surface with alpha for circle radius
+        hero_radius = int(self.filter_radius / float((self.x_max - self.x_min)) * self.surface_size)
+
+        radius_surface = pygame.Surface((hero_radius * 2, hero_radius*2))
+        radius_surface.set_colorkey((0, 0, 0))
+        radius_surface.set_alpha(100)
+        self.render_module.drawCircle(radius_surface, hero_radius, hero_radius, hero_radius, COLOR_RED)
+
+        display.blit(radius_surface, (x - hero_radius, y - hero_radius))
+
     def is_actor_inside_hero_radius(self, actor):
         return (abs(actor.get_location().x - self.hero_actor.get_location().x) <= self.filter_radius
                 and abs(actor.get_location().y - self.hero_actor.get_location().y) <= self.filter_radius)
@@ -448,10 +464,10 @@ class ModuleWorld(object):
 
         if self.hero_mode:
             draw_hero_actor = [vehicle for vehicle in vehicles if vehicle.id == self.hero_actor.id]
+            self.render_hero_actor(self.surface, draw_hero_actor[0], COLOR_ORANGE, 5)
+
             vehicles = [vehicle for vehicle in vehicles if self.is_actor_inside_hero_radius(vehicle)
                         and vehicle.id != self.hero_actor.id]
-
-            self.render_actors(display, draw_hero_actor, COLOR_ORANGE, 5, 5)
 
             traffic_lights = [traffic_light for traffic_light in traffic_lights
                               if self.is_actor_inside_hero_radius(traffic_light)]
@@ -459,9 +475,9 @@ class ModuleWorld(object):
             speed_limits = [speed_limit for speed_limit in speed_limits
                             if self.is_actor_inside_hero_radius(speed_limit)]
 
-        self.render_actors(display, vehicles, COLOR_MAGENTA, 5, 5)
-        self.render_actors(display, traffic_lights, COLOR_BLACK, 3, 3)
-        self.render_actors(display, speed_limits, COLOR_BLUE, 3, 3)
+        self.render_actors(self.surface, vehicles, COLOR_MAGENTA, 5)
+        self.render_actors(self.surface, traffic_lights, COLOR_BLACK, 3)
+        self.render_actors(self.surface, speed_limits, COLOR_BLUE, 3)
 
         module_input = module_manager.get_module(MODULE_INPUT)
         result_surface = pygame.transform.smoothscale(self.surface,
