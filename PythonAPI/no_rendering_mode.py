@@ -75,10 +75,10 @@ COLOR_ORANGE = pygame.Color(255, 127, 0)
 # -- ModuleDefines -------------------------------------------------------------
 # ==============================================================================
 
-MODULE_WORLD = 'World'
-MODULE_HUD = 'Hud'
-MODULE_INPUT = 'Input'
-MODULE_RENDER = 'Render'
+MODULE_WORLD = 'WORLD'
+MODULE_HUD = 'HUD'
+MODULE_INPUT = 'INPUT'
+MODULE_RENDER = 'RENDER'
 
 # ==============================================================================
 # -- ModuleManager -------------------------------------------------------------
@@ -130,7 +130,18 @@ class ModuleRender(object):
         pass
 
     def tick(self, clock):
-        pass
+
+        text_antialiasing = ''
+        if self.antialiasing:
+            text_antialiasing = 'ON'
+        else:
+            text_antialiasing = 'OFF'
+
+        module_info_text = [
+            'Anti-aliasing:  % 3s' % text_antialiasing,
+        ]
+        module_hud = module_manager.get_module(MODULE_HUD)
+        module_hud.add_info(self.name, module_info_text)
 
     def drawLineList(self, surface, color, closed, list_lines, width):
         for line in lines:
@@ -218,27 +229,19 @@ class ModuleHUD (object):
         mono = default_font if default_font in fonts else fonts[0]
         mono = pygame.font.match_font(mono)
         self._font_mono = pygame.font.Font(mono, 14)
+        self._header_font = pygame.font.SysFont('Arial', 14)
 
     def _init_data_params(self, height, width):
         self.dim = (height, width)
-        self.server_fps = 0
-        self.frame_number = 0
-        self.simulation_time = 0
         self._show_info = True
-        self._info_text = []
-        self._server_clock = pygame.time.Clock()
-
-    def on_world_tick(self, timestamp):
-        self._server_clock.tick()
-        self.server_fps = self._server_clock.get_fps()
+        self._info_text = {}
 
     def tick(self, clock):
         if not self._show_info:
             return
-        self._info_text = [
-            'Server:  % 16d FPS' % self.server_fps,
-            'Client:  % 16d FPS' % clock.get_fps()
-        ]
+
+    def add_info(self, module_name, info):
+        self._info_text[module_name] = info
 
     def render(self, display):
         if self._show_info:
@@ -248,33 +251,38 @@ class ModuleHUD (object):
             v_offset = 4
             bar_h_offset = 100
             bar_width = 106
-            for item in self._info_text:
-                if v_offset + 18 > self.dim[1]:
-                    break
-                if isinstance(item, list):
-                    if len(item) > 1:
-                        points = [(x + 8, v_offset + 8 + (1.0 - y) * 30) for x, y in enumerate(item)]
-                        pygame.draw.lines(display, (255, 136, 0), False, points, 2)
-                    item = None
-                    v_offset += 18
-                elif isinstance(item, tuple):
-                    if isinstance(item[1], bool):
-                        rect = pygame.Rect((bar_h_offset, v_offset + 8), (6, 6))
-                        pygame.draw.rect(display, COLOR_WHITE, rect, 0 if item[1] else 1)
-                    else:
-                        rect_border = pygame.Rect((bar_h_offset, v_offset + 8), (bar_width, 6))
-                        pygame.draw.rect(display, COLOR_WHITE, rect_border, 1)
-                        f = (item[1] - item[2]) / (item[3] - item[2])
-                        if item[2] < 0.0:
-                            rect = pygame.Rect((bar_h_offset + f * (bar_width - 6), v_offset + 8), (6, 6))
+            i = 0
+            for module_name, module_info in self._info_text.iteritems():
+                surface = self._header_font.render(module_name, True, COLOR_LIGHT_GREY)
+                display.blit(surface, (8 + bar_width / 2, 18 * i + v_offset))
+                i += 1
+                for item in module_info:
+                    if v_offset + 18 > self.dim[1]:
+                        break
+                    if isinstance(item, list):
+                        if len(item) > 1:
+                            points = [(x + 8, v_offset + 8 + (1.0 - y) * 30) for x, y in enumerate(item)]
+                            pygame.draw.lines(display, (255, 136, 0), False, points, 2)
+                        item = None
+                        v_offset += 18
+                    elif isinstance(item, tuple):
+                        if isinstance(item[1], bool):
+                            rect = pygame.Rect((bar_h_offset, v_offset + 8), (6, 6))
+                            pygame.draw.rect(display, COLOR_WHITE, rect, 0 if item[1] else 1)
                         else:
-                            rect = pygame.Rect((bar_h_offset, v_offset + 8), (f * bar_width, 6))
-                        pygame.draw.rect(display, COLOR_WHITE, rect)
-                    item = item[0]
-                if item:  # At this point has to be a str.
-                    surface = self._font_mono.render(item, True, (255, 255, 255))
-                    display.blit(surface, (8, v_offset))
-                v_offset += 18
+                            rect_border = pygame.Rect((bar_h_offset, v_offset + 8), (bar_width, 6))
+                            pygame.draw.rect(display, COLOR_WHITE, rect_border, 1)
+                            f = (item[1] - item[2]) / (item[3] - item[2])
+                            if item[2] < 0.0:
+                                rect = pygame.Rect((bar_h_offset + f * (bar_width - 6), v_offset + 8), (6, 6))
+                            else:
+                                rect = pygame.Rect((bar_h_offset, v_offset + 8), (f * bar_width, 6))
+                            pygame.draw.rect(display, COLOR_WHITE, rect)
+                        item = item[0]
+                    if item:  # At this point has to be a str.
+                        surface = self._font_mono.render(item, True, COLOR_WHITE)
+                        display.blit(surface, (8, 18 * i + v_offset))
+                    v_offset += 18
 
 # ==============================================================================
 # -- World ---------------------------------------------------------------------
@@ -288,6 +296,8 @@ class ModuleWorld(object):
         self.host = host
         self.port = port
         self.timeout = timeout
+        self.server_fps = 0
+        self.server_clock = pygame.time.Clock()
 
     def start(self):
         try:
@@ -361,18 +371,34 @@ class ModuleWorld(object):
 
         self.select_to_hero_mode()
         self.hero_mode = False
+
         weak_self = weakref.ref(self)
         self.world.on_tick(lambda timestamp: ModuleWorld.on_world_tick(weak_self, timestamp))
 
     def tick(self, clock):
-        pass
+
+        hero_mode_text = ''
+        if self.hero_mode:
+            hero_mode_text = 'ON'
+        else:
+            hero_mode_text = 'OFF'
+
+        module_info_text = [
+            'Server:  % 16d FPS' % self.server_fps,
+            'Client:  % 16d FPS' % clock.get_fps(),
+            'Hero Mode:               % 3s' % hero_mode_text
+        ]
+        module_hud = module_manager.get_module(MODULE_HUD)
+        module_hud.add_info(self.name, module_info_text)
 
     @staticmethod
     def on_world_tick(weak_self, timestamp):
         self = weak_self()
         if not self:
             return
-        self.hud_module.on_world_tick(timestamp)
+
+        self.server_clock.tick()
+        self.server_fps = self.server_clock.get_fps()
 
     def render_map(self, display):
         for point in self.normalized_point_list:
@@ -435,7 +461,6 @@ class ModuleWorld(object):
     def select_to_hero_mode(self):
         self.filter_radius = 50
         self.hero_actor = [actor for actor in self.actors if 'vehicle' in actor.type_id][1]
-
 
 # ==============================================================================
 # -- Input -----------------------------------------------------------
