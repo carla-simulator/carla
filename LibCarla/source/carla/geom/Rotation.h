@@ -7,6 +7,8 @@
 #pragma once
 
 #include "carla/MsgPack.h"
+#include "carla/geom/Math.h"
+#include "carla/geom/Vector3D.h"
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 #  include "Math/Rotator.h"
@@ -40,6 +42,14 @@ namespace geom {
       : pitch(p),
         yaw(y),
         roll(r) {}
+
+    // =========================================================================
+    // -- Other methods --------------------------------------------------------
+    // =========================================================================
+
+    Vector3D GetForwardVector() const {
+      return Math::GetForwardVector(*this);
+    }
 
     // =========================================================================
     // -- Comparison operators -------------------------------------------------

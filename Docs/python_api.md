@@ -243,6 +243,7 @@ Static presets
 - `pitch`
 - `yaw`
 - `roll`
+- `get_forward_vector()`
 - `__eq__(other)`
 - `__ne__(other)`
 
@@ -250,10 +251,10 @@ Static presets
 
 - `location`
 - `rotation`
+- `transform(geom_object)`
+- `get_forward_vector()`
 - `__eq__(other)`
 - `__ne__(other)`
-- `transform_point`
-- `transform_point_list`
 
 ## `carla.BoundingBox`
 

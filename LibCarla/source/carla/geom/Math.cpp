@@ -6,6 +6,8 @@
 
 #include "carla/geom/Math.h"
 
+#include "carla/geom/Rotation.h"
+
 namespace carla {
 namespace geom {
 
@@ -125,6 +127,14 @@ namespace geom {
     Vector3D transf_p = RotatePointOnOrigin2D(p - pos, -angle);
     return transf_p.x <=  extent.x && transf_p.y <=  extent.y &&
            transf_p.x >= -extent.x && transf_p.y >= -extent.y;
+  }
+
+  Vector3D Math::GetForwardVector(const Rotation &rotation) {
+    const float cp = std::cos(to_radians(rotation.pitch));
+    const float sp = std::sin(to_radians(rotation.pitch));
+    const float cy = std::cos(to_radians(rotation.yaw));
+    const float sy = std::sin(to_radians(rotation.yaw));
+    return {cy * cp, sy * cp, sp};
   }
 
 } // namespace geom

@@ -45,6 +45,10 @@ namespace geom {
     // -- Other methods --------------------------------------------------------
     // =========================================================================
 
+    Vector3D GetForwardVector() const {
+      return rotation.GetForwardVector();
+    }
+
     void TransformPoint(Vector3D &in_point) const {
       // Rotate
       double cy = cos(Math::to_radians(rotation.yaw));
