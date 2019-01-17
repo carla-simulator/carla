@@ -39,6 +39,7 @@ import argparse
 import logging
 import weakref
 import math
+import random
 
 try:
     import pygame
@@ -79,6 +80,23 @@ MODULE_WORLD = 'WORLD'
 MODULE_HUD = 'HUD'
 MODULE_INPUT = 'INPUT'
 MODULE_RENDER = 'RENDER'
+
+# ==============================================================================
+# -- Util ----------------------------------------------------------------------
+# ==============================================================================
+
+
+class Util(object):
+
+    @staticmethod
+    def convert_world_to_screen_point(point, min_map_point, max_map_point, surface_size):
+        return (int((point[0] - min_map_point[0]) / float((max_map_point[0] - min_map_point[0])) * surface_size),
+                int((point[1] - min_map_point[1]) / float((max_map_point[1] - min_map_point[1])) * surface_size))
+
+    @staticmethod
+    def convert_world_to_screen_size(size, min_map_point, max_map_point, surface_size):
+        return (int(size[0] / float((max_map_point[0] - min_map_point[0])) * surface_size),
+                int(size[1] / float((max_map_point[1] - min_map_point[1])) * surface_size))
 
 # ==============================================================================
 # -- ModuleManager -------------------------------------------------------------
@@ -328,13 +346,16 @@ class ModuleWorld(object):
             self.y_max = max(self.y_max, waypoint.transform.location.y)
             self.y_min = min(self.y_min, waypoint.transform.location.y)
 
-        # Retrieve data from waypoints orientation, thickness and length and do conversions into another list
+        # Retrieve data from waypoints orientation, width and length and do conversions into another list
         point_list = []
         for waypoint in waypoint_list:
             waypoint_length = 2.0
 
             # Width of road
-            thickness = int(waypoint.lane_width / float((self.x_max - self.x_min)) * self.surface_size)
+            width = Util.convert_world_to_screen_size((waypoint.lane_width, waypoint.lane_width),
+                                                      (self.x_min, self.y_min),
+                                                      (self.x_max, self.y_max),
+                                                      self.surface_size)
 
             # Orientation of road
             color = COLOR_BLACK
@@ -350,7 +371,7 @@ class ModuleWorld(object):
 
             point_list.append(((waypoint.transform.location.x, waypoint.transform.location.y),
                                (waypoint.transform.location.x + waypoint_front[0] * waypoint_length,
-                                waypoint.transform.location.y + waypoint_front[1] * waypoint_length), color, thickness))
+                                waypoint.transform.location.y + waypoint_front[1] * waypoint_length), color, width[0]))
 
         # normalize waypoints based on surface size
         self.normalized_point_list = []
@@ -368,18 +389,22 @@ class ModuleWorld(object):
 
         self.actors = self.world.get_actors()
 
-        self.select_to_hero_mode()
-        self.hero_mode = False
+        # Hero actor
+        self.filter_radius = 50
+        self.hero_actor = None
 
         weak_self = weakref.ref(self)
         self.world.on_tick(lambda timestamp: ModuleWorld.on_world_tick(weak_self, timestamp))
+
+    def select_random_hero(self):
+        self.hero_actor = random.choice([actor for actor in self.actors if 'vehicle' in actor.type_id])
 
     def tick(self, clock):
         self.update_hud_info(clock)
 
     def update_hud_info(self, clock):
         hero_mode_text = []
-        if self.hero_mode:
+        if self.hero_actor is not None:
             vehicle_name, vehicle_brand, vehicle_model = self.hero_actor.type_id.split('.')
             type_id_text = vehicle_brand + ' ' + vehicle_model
             hero_mode_text = [
@@ -418,8 +443,10 @@ class ModuleWorld(object):
     def render_actors(self, display, list_actors, color, radius):
         for actor in list_actors:
             actor_location = actor.get_location()
-            x = int((actor_location.x - self.x_min) / float(self.x_max - self.x_min) * self.surface_size)
-            y = int((actor_location.y - self.y_min) / float(self.y_max - self.y_min) * self.surface_size)
+            x, y = Util.convert_world_to_screen_point((actor_location.x, actor_location.y),
+                                                      (self.x_min, self.y_min),
+                                                      (self.x_max, self.y_max),
+                                                      self.surface_size)
 
             if 'traffic_light' in actor.type_id:
                 if actor.state == carla.libcarla.TrafficLightState.Green:
@@ -435,20 +462,22 @@ class ModuleWorld(object):
 
     def render_hero_actor(self, display, hero_actor, color, radius):
         hero_actor_location = hero_actor.get_location()
-        x = int((hero_actor_location.x - self.x_min) / float(self.x_max - self.x_min) * self.surface_size)
-        y = int((hero_actor_location.y - self.y_min) / float(self.y_max - self.y_min) * self.surface_size)
-
+        x, y = Util.convert_world_to_screen_point((hero_actor_location.x, hero_actor_location.y),
+                                                  (self.x_min, self.y_min),
+                                                  (self.x_max, self.y_max),
+                                                  self.surface_size)
         self.render_module.drawCircle(display, x, y, radius, color)
 
         # Create surface with alpha for circle radius
-        hero_radius = int(self.filter_radius / float((self.x_max - self.x_min)) * self.surface_size)
+        hero_radius = self.filter_radius / float((self.x_max - self.x_min)) * self.surface_size
+        hero_diameter = hero_radius * 2.0
 
-        radius_surface = pygame.Surface((hero_radius * 2, hero_radius*2))
+        radius_surface = pygame.Surface((int(hero_diameter), int(hero_diameter)))
         radius_surface.set_colorkey((0, 0, 0))
         radius_surface.set_alpha(100)
-        self.render_module.drawCircle(radius_surface, hero_radius, hero_radius, hero_radius, COLOR_RED)
+        self.render_module.drawCircle(radius_surface, int(hero_radius), int(hero_radius), int(hero_radius), COLOR_RED)
 
-        display.blit(radius_surface, (x - hero_radius, y - hero_radius))
+        display.blit(radius_surface, (x - int(hero_radius), y - int(hero_radius)))
 
     def is_actor_inside_hero_radius(self, actor):
         return (abs(actor.get_location().x - self.hero_actor.get_location().x) <= self.filter_radius
@@ -462,9 +491,9 @@ class ModuleWorld(object):
         traffic_lights = [actor for actor in self.actors if 'traffic_light' in actor.type_id]
         speed_limits = [actor for actor in self.actors if 'speed_limit' in actor.type_id]
 
-        if self.hero_mode:
+        if self.hero_actor is not None:
             draw_hero_actor = [vehicle for vehicle in vehicles if vehicle.id == self.hero_actor.id]
-            self.render_hero_actor(self.surface, draw_hero_actor[0], COLOR_ORANGE, 5)
+            self.render_hero_actor(self.surface, draw_hero_actor[0], COLOR_RED, 5)
 
             vehicles = [vehicle for vehicle in vehicles if self.is_actor_inside_hero_radius(vehicle)
                         and vehicle.id != self.hero_actor.id]
@@ -475,7 +504,7 @@ class ModuleWorld(object):
             speed_limits = [speed_limit for speed_limit in speed_limits
                             if self.is_actor_inside_hero_radius(speed_limit)]
 
-        self.render_actors(self.surface, vehicles, COLOR_MAGENTA, 5)
+        self.render_actors(self.surface, vehicles, COLOR_MAGENTA, 3)
         self.render_actors(self.surface, traffic_lights, COLOR_BLACK, 3)
         self.render_actors(self.surface, speed_limits, COLOR_BLUE, 3)
 
@@ -487,9 +516,6 @@ class ModuleWorld(object):
         display.blit(result_surface, ((display.get_width() - self.surface_size)/2 +
                                       module_input.mouse_offset[0], module_input.mouse_offset[1]))
 
-    def select_to_hero_mode(self):
-        self.filter_radius = 50
-        self.hero_actor = [actor for actor in self.actors if 'vehicle' in actor.type_id][1]
 
 # ==============================================================================
 # -- Input -----------------------------------------------------------
@@ -524,7 +550,11 @@ class ModuleInput(object):
                     module_render.antialiasing = not module_render.antialiasing
                 if event.key == K_h:
                     module_world = module_manager.get_module(MODULE_WORLD)
-                    module_world.hero_mode = not module_world.hero_mode
+                    if module_world.hero_actor is None:
+                        module_world.select_random_hero()
+                    else:
+                        module_world.hero_actor = None
+
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 self.mouse_pos = pygame.mouse.get_pos()
                 if event.button == 4:
