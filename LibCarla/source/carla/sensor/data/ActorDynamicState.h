@@ -60,16 +60,18 @@ namespace detail {
 
     PackedWalkerControl(const rpc::WalkerControl &control)
       : direction{control.direction.x, control.direction.y, control.direction.z},
-        speed(control.speed) {}
+        speed(control.speed),
+        jump(control.jump) {}
 
     operator rpc::WalkerControl() const {
-      return {geom::Vector3D{direction[0u], direction[1u], direction[2u]}, speed};
+      return {geom::Vector3D{direction[0u], direction[1u], direction[2u]}, speed, jump};
     }
 
   private:
 
     float direction[3u];
     float speed;
+    bool jump;
   };
 #pragma pack(pop)
 

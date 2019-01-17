@@ -35,16 +35,22 @@ void AWalkerController::Possess(APawn *InPawn)
   }
 
   MovementComponent->MaxWalkSpeed = GetMaximumWalkSpeed();
+  MovementComponent->JumpZVelocity = 500.0f;
+  Character->JumpMaxCount = 2;
 }
 
 void AWalkerController::Tick(float DeltaSeconds)
 {
   Super::Tick(DeltaSeconds);
 
-  auto *Pawn = GetPawn();
+  auto *Character = GetCharacter();
 
-  if (Pawn != nullptr)
+  if (Character != nullptr)
   {
-    Pawn->AddMovementInput(Control.Direction, Control.Speed / GetMaximumWalkSpeed());
+    Character->AddMovementInput(Control.Direction, Control.Speed / GetMaximumWalkSpeed());
+    if (Control.Jump)
+    {
+      Character->Jump();
+    }
   }
 }

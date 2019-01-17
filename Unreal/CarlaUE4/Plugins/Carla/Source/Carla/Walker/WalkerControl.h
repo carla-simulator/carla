@@ -18,4 +18,7 @@ struct CARLA_API FWalkerControl
 
   UPROPERTY(Category = "Walker Control", EditAnywhere, BlueprintReadWrite)
   float Speed = 0.0f;
+
+  UPROPERTY(Category = "Walker Control", EditAnywhere, BlueprintReadWrite)
+  bool Jump = false;
 };
