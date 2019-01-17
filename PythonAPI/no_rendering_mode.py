@@ -138,7 +138,7 @@ class ModuleRender(object):
             text_antialiasing = 'OFF'
 
         module_info_text = [
-            'Anti-aliasing:  % 3s' % text_antialiasing,
+            'Anti-aliasing:           % 3s' % text_antialiasing,
         ]
         module_hud = module_manager.get_module(MODULE_HUD)
         module_hud.add_info(self.name, module_info_text)
@@ -245,7 +245,7 @@ class ModuleHUD (object):
 
     def render(self, display):
         if self._show_info:
-            info_surface = pygame.Surface((220, self.dim[1]))
+            info_surface = pygame.Surface((240, self.dim[1]))
             info_surface.set_alpha(100)
             display.blit(info_surface, (0, 0))
             v_offset = 4
@@ -376,18 +376,27 @@ class ModuleWorld(object):
         self.world.on_tick(lambda timestamp: ModuleWorld.on_world_tick(weak_self, timestamp))
 
     def tick(self, clock):
+        self.update_hud_info(clock)
 
-        hero_mode_text = ''
+    def update_hud_info(self, clock):
+        hero_mode_text = []
         if self.hero_mode:
-            hero_mode_text = 'ON'
+            vehicle_name, vehicle_brand, vehicle_model = self.hero_actor.type_id.split('.')
+            type_id_text = vehicle_brand + ' ' + vehicle_model
+            hero_mode_text = [
+                'Hero Mode:               ON',
+                'Hero ID:               %4d' % self.hero_actor.id,
+                'Hero Type ID:%12s' % type_id_text
+            ]
         else:
-            hero_mode_text = 'OFF'
+            hero_mode_text = ['Hero Mode:               OFF']
 
         module_info_text = [
             'Server:  % 16d FPS' % self.server_fps,
-            'Client:  % 16d FPS' % clock.get_fps(),
-            'Hero Mode:               % 3s' % hero_mode_text
+            'Client:  % 16d FPS' % clock.get_fps()
         ]
+        module_info_text = module_info_text + hero_mode_text
+
         module_hud = module_manager.get_module(MODULE_HUD)
         module_hud.add_info(self.name, module_info_text)
 
