@@ -15,6 +15,8 @@
 namespace carla {
 namespace geom {
 
+  class Rotation;
+
   class Math {
   public:
 
@@ -99,6 +101,9 @@ namespace geom {
         const Vector3D &,
         double, // [radians]
         const Vector3D &);
+
+    /// Compute the unit vector pointing towards the X-axis of @a rotation.
+    static Vector3D GetForwardVector(const Rotation &rotation);
   };
 
 } // namespace geom

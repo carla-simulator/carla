@@ -100,24 +100,25 @@ class_<cg::Location, bases<cg::Vector3D>>("Location")
     .def_readwrite("pitch", &cg::Rotation::pitch)
     .def_readwrite("yaw", &cg::Rotation::yaw)
     .def_readwrite("roll", &cg::Rotation::roll)
+    .def("get_forward_vector", &cg::Rotation::GetForwardVector)
     .def("__eq__", &cg::Rotation::operator==)
     .def("__ne__", &cg::Rotation::operator!=)
     .def(self_ns::str(self_ns::self))
   ;
 
   class_<cg::Transform>("Transform")
-
     .def(init<cg::Location, cg::Rotation>(
         (arg("location")=cg::Location(), arg("rotation")=cg::Rotation())))
     .def_readwrite("location", &cg::Transform::location)
     .def_readwrite("rotation", &cg::Transform::rotation)
-    .def("__eq__", &cg::Transform::operator==)
-    .def("__ne__", &cg::Transform::operator!=)
     .def("transform", &TransformList)
     .def("transform", +[](const cg::Transform &self, cg::Vector3D &location) {
       self.TransformPoint(location);
       return location;
     }, arg("in_point"))
+    .def("get_forward_vector", &cg::Transform::GetForwardVector)
+    .def("__eq__", &cg::Transform::operator==)
+    .def("__ne__", &cg::Transform::operator!=)
     .def(self_ns::str(self_ns::self))
   ;
 

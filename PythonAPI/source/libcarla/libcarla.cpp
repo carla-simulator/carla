@@ -119,12 +119,12 @@ static auto MakeCallback(boost::python::object callback) {
   };
 }
 
+#include "Geom.cpp"
 #include "Actor.cpp"
 #include "Blueprint.cpp"
 #include "Client.cpp"
 #include "Control.cpp"
 #include "Exception.cpp"
-#include "Geom.cpp"
 #include "Map.cpp"
 #include "Sensor.cpp"
 #include "SensorData.cpp"
