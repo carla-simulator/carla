@@ -76,6 +76,7 @@ void export_actor() {
   ;
 
   class_<cc::Walker, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Walker>>("Walker", no_init)
+    .add_property("bounding_box", CALL_RETURNING_COPY(cc::Walker, GetBoundingBox))
     .def("apply_control", &cc::Walker::ApplyControl, (arg("control")))
     .def("get_control", &cc::Walker::GetWalkerControl)
     .def(self_ns::str(self_ns::self))
