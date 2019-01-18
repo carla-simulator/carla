@@ -108,7 +108,6 @@ class RenderShape(object):
     def render_vehicles(render_module, surface, list_actors, color, radius, x_min, y_min, x_max, y_max, surface_size):
         for actor in list_actors:
             actor_bounding_box_location = actor.bounding_box.location + actor.get_location()
-            # actor_bounding_box_location = actor.get_location()
             x, y = Util.convert_world_to_screen_point((actor_bounding_box_location.x, actor_bounding_box_location.y),
                                                       (x_min, y_min),
                                                       (x_max, y_max),
@@ -444,13 +443,17 @@ class ModuleWorld(object):
         # normalize waypoints based on surface size
         self.normalized_point_list = []
         for point in point_list:
-            x_0 = float((point[0][0] - self.x_min) / float((self.x_max - self.x_min))) * self.surface_size
-            y_0 = float((point[0][1] - self.y_min) / float((self.y_max - self.y_min))) * self.surface_size
 
-            x_1 = float(point[1][0] - self.x_min) / (float((self.x_max - self.x_min))) * self.surface_size
-            y_1 = float(point[1][1] - self.y_min) / (float((self.y_max - self.y_min))) * self.surface_size
+            x0, y0 = Util.convert_world_to_screen_point(point[0],
+                                                        (self.x_min, self.y_min),
+                                                        (self.x_max, self.y_max),
+                                                        self.surface_size)
+            x1, y1 = Util.convert_world_to_screen_point(point[1],
+                                                        (self.x_min, self.y_min),
+                                                        (self.x_max, self.y_max),
+                                                        self.surface_size)
 
-            self.normalized_point_list.append(([(x_0, y_0), (x_1, y_1)], point[2], point[3]))
+            self.normalized_point_list.append(([(x0, y0), (x1, y1)], point[2], point[3]))
 
         # Module render
         self.render_module = module_manager.get_module(MODULE_RENDER)
@@ -473,13 +476,14 @@ class ModuleWorld(object):
         if self.hero_actor is not None:
             vehicle_name, vehicle_brand, vehicle_model = self.hero_actor.type_id.split('.')
             type_id_text = vehicle_brand + ' ' + vehicle_model
+
+            hero_speed = self.hero_actor.get_velocity()
+            hero_speed_text = math.sqrt(hero_speed.x ** 2 + hero_speed.y ** 2 + hero_speed.z ** 2)
             hero_mode_text = [
                 'Hero Mode:               ON',
                 'Hero ID:               %4d' % self.hero_actor.id,
                 'Hero Type ID:%12s' % type_id_text,
-                'Hero speed:          %3d km/h' % math.sqrt(self.hero_actor.get_velocity().x ** 2 +
-                                                            self.hero_actor.get_velocity().y ** 2 +
-                                                            self.hero_actor.get_velocity().z ** 2)
+                'Hero speed:          %3d km/h' % hero_speed_text
             ]
         else:
             hero_mode_text = ['Hero Mode:               OFF']
@@ -488,8 +492,8 @@ class ModuleWorld(object):
             'Server:  % 16d FPS' % self.server_fps,
             'Client:  % 16d FPS' % clock.get_fps()
         ]
-        module_info_text = module_info_text + hero_mode_text
 
+        module_info_text = module_info_text + hero_mode_text
         module_hud = module_manager.get_module(MODULE_HUD)
         module_hud.add_info(self.name, module_info_text)
 
@@ -504,10 +508,6 @@ class ModuleWorld(object):
 
     def render_map(self, display):
         for point in self.normalized_point_list:
-            #    def drawCircle(self, surface, x, y, radius, color):
-            #    def drawLineWithBorder(self, surface, color, closed, line, width, border, color_border):
-            # self.render_module.drawCircle(self.surface, int(point[0][0][0]), int(point[0][0][1]), point[2], point[1])
-
             self.render_module.drawLineWithBorder(self.surface, point[1], False, point[0], point[2], 3, COLOR_DARK_GREY)
 
     def render_hero_actor(self, display, hero_actor, color, radius):
@@ -566,7 +566,6 @@ class ModuleWorld(object):
             speed_limits = [speed_limit for speed_limit in speed_limits
                             if self.is_actor_inside_hero_radius(speed_limit)]
 
-        # (render_module, surface, list_actors, color, radius, x_min, y_min, x_max, y_max, surface_size):
         RenderShape.render_vehicles(self.render_module, self.surface, vehicles, COLOR_MAGENTA,
                                     3, self.x_min, self.y_min, self.x_max, self.y_max, self.surface_size)
         RenderShape.render_traffic_lights(self.render_module, self.surface, traffic_lights,
