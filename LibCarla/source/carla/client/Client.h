@@ -48,6 +48,14 @@ namespace client {
       return World{_simulator->GetCurrentEpisode()};
     }
 
+    std::string StartRecorder(void) {
+      return _simulator->StartRecorder();
+    }
+
+    void StopRecorder(void) {
+      _simulator->StopRecorder();
+    }
+
   private:
 
     std::shared_ptr<detail::Simulator> _simulator;

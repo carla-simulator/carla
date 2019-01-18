@@ -218,6 +218,14 @@ namespace detail {
     _pimpl->AsyncCall("draw_debug_shape", shape);
   }
 
+  std::string Client::StartRecorder(void) {
+    return _pimpl->CallAndWait<std::string>("start_recorder");
+  }
+
+  void Client::StopRecorder(void) {
+    return _pimpl->AsyncCall("stop_recorder");
+  }
+
 } // namespace detail
 } // namespace client
 } // namespace carla
