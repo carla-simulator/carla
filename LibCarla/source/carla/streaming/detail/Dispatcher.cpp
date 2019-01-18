@@ -32,7 +32,10 @@ namespace detail {
     // stopped.
     for (auto &pair : _stream_map) {
       try {
-        pair.second->ClearSessions();
+        auto stream_state = pair.second.lock();
+        if (stream_state != nullptr) {
+          stream_state->ClearSessions();
+        }
       } catch (const std::exception &e) {
         log_error("failed to clear sessions:", e.what());
       }
@@ -56,13 +59,14 @@ namespace detail {
     std::lock_guard<std::mutex> lock(_mutex);
     auto search = _stream_map.find(session->get_stream_id());
     if (search != _stream_map.end()) {
-      DEBUG_ASSERT(search->second != nullptr);
-      search->second->ConnectSession(std::move(session));
-      return true;
-    } else {
-      log_error("Invalid session: no stream available with id", session->get_stream_id());
-      return false;
+      auto stream_state = search->second.lock();
+      if (stream_state != nullptr) {
+        stream_state->ConnectSession(std::move(session));
+        return true;
+      }
     }
+    log_error("Invalid session: no stream available with id", session->get_stream_id());
+    return false;
   }
 
   void Dispatcher::DeregisterSession(std::shared_ptr<Session> session) {
@@ -70,8 +74,12 @@ namespace detail {
     std::lock_guard<std::mutex> lock(_mutex);
     auto search = _stream_map.find(session->get_stream_id());
     if (search != _stream_map.end()) {
-      DEBUG_ASSERT(search->second != nullptr);
-      search->second->DisconnectSession(session);
+      auto stream_state = search->second.lock();
+      if (stream_state != nullptr) {
+        stream_state->DisconnectSession(session);
+      }
+    }
+  }
     }
   }
 

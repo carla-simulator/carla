@@ -161,6 +161,10 @@ private:
     return it->second;
   }
 
+  void ClearSensorStream(FActorView ActorView) {
+    _StreamMap.erase(ActorView.GetActorId());
+  }
+
   std::unordered_map<FActorView::IdType, carla::streaming::Stream> _StreamMap;
 };
 
@@ -272,6 +276,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       UE_LOG(LogCarlaServer, Warning, TEXT("unable to destroy actor: not found"));
       return false;
     }
+    ClearSensorStream(ActorView);
     return Episode->DestroyActor(ActorView.GetActor());
   });
 
