@@ -90,8 +90,8 @@ class Util(object):
 
     @staticmethod
     def convert_world_to_screen_point(point, min_map_point, max_map_point, surface_size):
-        return (int((point[0] - min_map_point[0]) / float((max_map_point[0] - min_map_point[0])) * surface_size),
-                int((point[1] - min_map_point[1]) / float((max_map_point[1] - min_map_point[1])) * surface_size))
+        return (int(float(point[0] - min_map_point[0]) / float((max_map_point[0] - min_map_point[0])) * surface_size),
+                int(float(point[1] - min_map_point[1]) / float((max_map_point[1] - min_map_point[1])) * surface_size))
 
     @staticmethod
     def convert_world_to_screen_size(size, min_map_point, max_map_point, surface_size):
@@ -100,40 +100,115 @@ class Util(object):
 
 
 # ==============================================================================
-# -- RenderShape ----------------------------------------------------------------------
+# -- Vehicle ----------------------------------------------------------------------
 # ==============================================================================
+
+class Vehicle(object):
+
+    def __init__(self, actor, color, x_min, y_min, x_max, y_max, map_surface_size):
+        self.actor = actor
+        self.map_min = (x_min, y_min)
+        self.map_max = (x_max, y_max)
+        self.map_surface_size = map_surface_size
+
+        # Compute bounding box points
+        bb_extent = self.actor.bounding_box.extent
+        al = actor.get_location()
+
+        b0 = (bb_extent.x, bb_extent.y)
+        b1 = (bb_extent.x, -bb_extent.y)
+        b2 = (-bb_extent.x, -bb_extent.y)
+        b3 = (-bb_extent.x, bb_extent.y)
+
+        original_size = [bb_extent.x, bb_extent.y]
+
+        converted_size = Util.convert_world_to_screen_size(original_size, self.map_min, self.map_max, map_surface_size)
+
+        self.color = color
+        self.surface_size = (converted_size[0] + 1, converted_size[1] + 1)
+
+        # if self.surface_size[0] == 0:
+        #     self.surface_size[0] += 1
+        # if self.surface_size[1] == 0:
+        #     self.surface_size[1] += 1
+
+        self.surface = pygame.Surface(self.surface_size, pygame.SRCALPHA)
+        self.surface.fill(color)
+
+    def render(self, display):
+
+        x, y = Util.convert_world_to_screen_point((self.actor.get_location().x, self.actor.get_location().y),
+                                                  self.map_min,
+                                                  self.map_max,
+                                                  self.map_surface_size)
+
+        rotate_surface = pygame.transform.rotate(self.surface, -self.actor.get_transform().rotation.yaw)
+
+        display.blit(rotate_surface, (x, y))
+
+
+class TrafficLight(object):
+    def __init__(self, actor, radius, x_min, y_min, x_max, y_max, map_surface_size):
+        self.actor = actor
+        self.map_min = (x_min, y_min)
+        self.map_max = (x_max, y_max)
+        self.map_surface_size = map_surface_size
+
+        actor_location = actor.get_location()
+        self.x, self.y = Util.convert_world_to_screen_point((actor_location.x, actor_location.y),
+                                                            (x_min, y_min),
+                                                            (x_max, y_max),
+                                                            map_surface_size)
+
+        self.color = COLOR_BLACK
+        if 'traffic_light' in actor.type_id:
+            if actor.state == carla.libcarla.TrafficLightState.Green:
+                color = COLOR_GREEN
+            elif actor.state == carla.libcarla.TrafficLightState.Yellow:
+                color = COLOR_YELLOW
+            elif actor.state == carla.libcarla.TrafficLightState.Red:
+                color = COLOR_RED
+
+        self.surface = pygame.Surface((radius * 2, radius * 2))
+        pygame.draw.circle(self.surface, color, (radius, radius), radius)
+
+    def render(self, display):
+        display.blit(self.surface, (self.x, self.y))
+
+
+class SpeedLimit(object):
+    def __init__(self, actor, radius, x_min, y_min, x_max, y_max, map_surface_size):
+        self.actor = actor
+        self.map_min = (x_min, y_min)
+        self.map_max = (x_max, y_max)
+        self.map_surface_size = map_surface_size
+
+        actor_location = actor.get_location()
+        self.x, self.y = Util.convert_world_to_screen_point((actor_location.x, actor_location.y),
+                                                            (x_min, y_min),
+                                                            (x_max, y_max),
+                                                            map_surface_size)
+
+        self.color = COLOR_BLUE
+        self.surface = pygame.Surface((radius * 2, radius * 2))
+        pygame.draw.circle(self.surface, self.color, (radius, radius), radius)
+
+    def render(self, display):
+        display.blit(self.surface, (self.x, self.y))
+
 
 class RenderShape(object):
     @staticmethod
-    def render_vehicles(render_module, surface, list_actors, color, radius, x_min, y_min, x_max, y_max, surface_size):
+    def render_vehicles(render_module, surface, list_actors, color, x_min, y_min, x_max, y_max, surface_size):
         for actor in list_actors:
-            actor_bounding_box_location = actor.bounding_box.location + actor.get_location()
-            x, y = Util.convert_world_to_screen_point((actor_bounding_box_location.x, actor_bounding_box_location.y),
-                                                      (x_min, y_min),
-                                                      (x_max, y_max),
-                                                      surface_size)
-            render_module.drawCircle(surface, x, y, radius, color)
+            vehicle_render = Vehicle(actor, color, x_min, y_min, x_max, y_max, surface_size)
+            vehicle_render.render(surface)
 
     @staticmethod
     def render_traffic_lights(render_module, surface, list_actors, color, radius, x_min, y_min, x_max, y_max, surface_size):
         for actor in list_actors:
-            actor_location = actor.get_location()
-            x, y = Util.convert_world_to_screen_point((actor_location.x, actor_location.y),
-                                                      (x_min, y_min),
-                                                      (x_max, y_max),
-                                                      surface_size)
-
-            if 'traffic_light' in actor.type_id:
-                if actor.state == carla.libcarla.TrafficLightState.Green:
-                    color = COLOR_GREEN
-                elif actor.state == carla.libcarla.TrafficLightState.Yellow:
-                    color = COLOR_YELLOW
-                elif actor.state == carla.libcarla.TrafficLightState.Red:
-                    color = COLOR_RED
-                else:
-                    color = COLOR_BLACK
-
-            render_module.drawCircle(surface, x, y, radius, color)
+            traffic_light_render = TrafficLight(actor, radius, x_min, y_min, x_max, y_max, surface_size)
+            traffic_light_render.render(surface)
 
     @staticmethod
     def render_pedestrians(render_module, surface, list_actors, color, radius, x_min, y_min, x_max, y_max, surface_size):
@@ -149,13 +224,8 @@ class RenderShape(object):
     @staticmethod
     def render_speed_limits(render_module, surface, list_actors, color, radius, x_min, y_min, x_max, y_max, surface_size):
         for actor in list_actors:
-            actor_location = actor.get_location()
-            x, y = Util.convert_world_to_screen_point((actor_location.x, actor_location.y),
-                                                      (x_min, y_min),
-                                                      (x_max, y_max),
-                                                      surface_size)
-
-            render_module.drawCircle(surface, x, y, radius, color)
+            speed_limit_render = SpeedLimit(actor, radius, x_min, y_min, x_max, y_max, surface_size)
+            speed_limit_render.render(surface)
 
 # ==============================================================================
 # -- ModuleManager -------------------------------------------------------------
@@ -221,7 +291,7 @@ class ModuleRender(object):
         module_hud.add_info(self.name, module_info_text)
 
     def drawLineList(self, surface, color, closed, list_lines, width):
-        for line in lines:
+        for line in list_lines:
             if not self.antialiasing:
                 self.drawLine(surface, color, closed, line, width)
             else:
@@ -383,40 +453,68 @@ class ModuleWorld(object):
         self.server_fps = 0
         self.server_clock = pygame.time.Clock()
 
-    def start(self):
+    def _get_data_from_carla(self, host, port, timeout):
         try:
-            client = carla.Client(self.host, self.port)
-            client.set_timeout(self.timeout)
-            self.world = client.get_world()
-            self.town_map = self.world.get_map()
-            waypoint_length = 5.0
-            waypoint_list = self.town_map.generate_waypoints(waypoint_length)
+            client = carla.Client(host, port)
+            client.set_timeout(timeout)
+
+            world = client.get_world()
+            town_map = world.get_map()
+            actors = world.get_actors()
+            return (world, town_map, actors)
 
         except Exception as ex:
-            logging.error('Failed connecting to CARLA server')
+            logging.error(ex)
             exit_game()
 
-        # Create Surface
+    def _create_world_surfaces(self):
+        self.map_surface = pygame.Surface((self.surface_size, self.surface_size))
+
+        self.vehicles_surface = pygame.Surface((self.surface_size, self.surface_size))
+        self.vehicles_surface.set_colorkey((0, 0, 0))
+
+        self.traffic_light_surface = pygame.Surface((self.surface_size, self.surface_size))
+        self.traffic_light_surface.set_colorkey((0, 0, 0))
+
+        self.speed_limits_surface = pygame.Surface((self.surface_size, self.surface_size))
+        self.speed_limits_surface.set_colorkey((0, 0, 0))
+
+    def _compute_map_bounding_box(self, map_waypoints):
+
+        x_min = float('inf')
+        y_min = float('inf')
+        x_max = 0
+        y_max = 0
+
+        for waypoint in map_waypoints:
+            x_max = max(x_max, waypoint.transform.location.x)
+            x_min = min(x_min, waypoint.transform.location.x)
+
+            y_max = max(y_max, waypoint.transform.location.y)
+            y_min = min(y_min, waypoint.transform.location.y)
+
+        return (x_min, y_min, x_max, y_max)
+
+    def start(self):
+        self.world, self.town_map, self.actors = self._get_data_from_carla(self.host, self.port, self.timeout)
+
+        # Store necessary modules
         self.hud_module = module_manager.get_module(MODULE_HUD)
+
         self.surface_size = min(self.hud_module.dim[0], self.hud_module.dim[1])
-        self.surface = pygame.Surface((self.surface_size, self.surface_size))
+
+        self._create_world_surfaces()
+
+        # Generate waypoints
+        waypoint_length = 5.0
+        map_waypoints = self.town_map.generate_waypoints(waypoint_length)
 
         # compute bounding boxes
-        self.x_min = float('inf')
-        self.y_min = float('inf')
-        self.x_max = 0
-        self.y_max = 0
-
-        for waypoint in waypoint_list:
-            self.x_max = max(self.x_max, waypoint.transform.location.x)
-            self.x_min = min(self.x_min, waypoint.transform.location.x)
-
-            self.y_max = max(self.y_max, waypoint.transform.location.y)
-            self.y_min = min(self.y_min, waypoint.transform.location.y)
+        self.x_min, self.y_min, self.x_max, self.y_max = self._compute_map_bounding_box(map_waypoints)
 
         # Retrieve data from waypoints orientation, width and length and do conversions into another list
         point_list = []
-        for waypoint in waypoint_list:
+        for waypoint in map_waypoints:
 
             # Width of road
             width = Util.convert_world_to_screen_size((waypoint.lane_width, waypoint.lane_width),
@@ -457,7 +555,7 @@ class ModuleWorld(object):
 
         # Module render
         self.render_module = module_manager.get_module(MODULE_RENDER)
-
+        self.map_rendered = False
         # Hero actor
         self.filter_radius = 50
         self.hero_actor = None
@@ -508,35 +606,53 @@ class ModuleWorld(object):
 
     def render_map(self, display):
         for point in self.normalized_point_list:
-            self.render_module.drawLineWithBorder(self.surface, point[1], False, point[0], point[2], 3, COLOR_DARK_GREY)
+            self.render_module.drawLineWithBorder(self.map_surface,
+                                                  point[1],
+                                                  False,
+                                                  point[0],
+                                                  point[2],
+                                                  3,
+                                                  COLOR_DARK_GREY)
 
     def render_hero_actor(self, display, hero_actor, color, radius):
+
+        hero_radius = self.filter_radius / float((self.x_max - self.x_min)) * self.surface_size
+        hero_diameter = hero_radius * 2.0
+
+        self.hero_actor_surface = pygame.Surface((hero_diameter, hero_diameter))
+        self.hero_actor_surface.set_colorkey((0, 0, 0))
+        self.hero_actor_surface.set_alpha(100)
+
         hero_actor_location = hero_actor.get_location()
         x, y = Util.convert_world_to_screen_point((hero_actor_location.x, hero_actor_location.y),
                                                   (self.x_min, self.y_min),
                                                   (self.x_max, self.y_max),
                                                   self.surface_size)
-        self.render_module.drawCircle(display, x, y, radius, color)
 
         # Create surface with alpha for circle radius
-        hero_radius = self.filter_radius / float((self.x_max - self.x_min)) * self.surface_size
-        hero_diameter = hero_radius * 2.0
 
-        radius_surface = pygame.Surface((int(hero_diameter), int(hero_diameter)))
-        radius_surface.set_colorkey((0, 0, 0))
-        radius_surface.set_alpha(100)
-        self.render_module.drawCircle(radius_surface, int(hero_radius), int(hero_radius), int(hero_radius), COLOR_RED)
+        self.render_module.drawCircle(self.hero_actor_surface, int(hero_radius),
+                                      int(hero_radius), int(hero_radius), COLOR_ORANGE)
 
-        display.blit(radius_surface, (x - int(hero_radius), y - int(hero_radius)))
+        self.render_module.drawCircle(self.hero_actor_surface,  int(hero_radius), int(hero_radius), radius, color)
+
+        display.blit(self.hero_actor_surface, ((display.get_width() - self.surface_size) / 2 + x - int(hero_radius),
+                                               y - int(hero_radius)))
 
     def is_actor_inside_hero_radius(self, actor):
         return (abs(actor.get_location().x - self.hero_actor.get_location().x) <= self.filter_radius
                 and abs(actor.get_location().y - self.hero_actor.get_location().y) <= self.filter_radius)
 
     def render(self, display):
-        self.surface.fill(COLOR_DARK_GREY)
-        self.render_map(display)
-        self.actors = self.world.get_actors()
+
+        if not self.map_rendered:
+            self.map_surface.fill(COLOR_DARK_GREY)
+            self.render_map(display)
+            self.map_rendered = True
+
+        self.vehicles_surface.fill(COLOR_BLACK)
+        self.traffic_light_surface.fill(COLOR_BLACK)
+        self.speed_limits_surface.fill(COLOR_BLACK)
 
         vehicles = []
         traffic_lights = []
@@ -554,11 +670,7 @@ class ModuleWorld(object):
                 pedestrians.append(pedestrian)
 
         if self.hero_actor is not None:
-            draw_hero_actor = [vehicle for vehicle in vehicles if vehicle.id == self.hero_actor.id]
-            self.render_hero_actor(self.surface, draw_hero_actor[0], COLOR_RED, 5)
-
-            vehicles = [vehicle for vehicle in vehicles if self.is_actor_inside_hero_radius(vehicle)
-                        and vehicle.id != self.hero_actor.id]
+            vehicles = [vehicle for vehicle in vehicles if self.is_actor_inside_hero_radius(vehicle)]
 
             traffic_lights = [traffic_light for traffic_light in traffic_lights
                               if self.is_actor_inside_hero_radius(traffic_light)]
@@ -566,22 +678,37 @@ class ModuleWorld(object):
             speed_limits = [speed_limit for speed_limit in speed_limits
                             if self.is_actor_inside_hero_radius(speed_limit)]
 
-        RenderShape.render_vehicles(self.render_module, self.surface, vehicles, COLOR_MAGENTA,
-                                    3, self.x_min, self.y_min, self.x_max, self.y_max, self.surface_size)
-        RenderShape.render_traffic_lights(self.render_module, self.surface, traffic_lights,
+        RenderShape.render_vehicles(self.render_module, self.vehicles_surface, vehicles, COLOR_MAGENTA,
+                                    self.x_min, self.y_min, self.x_max, self.y_max, self.surface_size)
+        RenderShape.render_traffic_lights(self.render_module, self.traffic_light_surface, traffic_lights,
                                           COLOR_BLACK, 3, self.x_min, self.y_min, self.x_max, self.y_max, self.surface_size)
-        RenderShape.render_speed_limits(self.render_module, self.surface, speed_limits,
+        RenderShape.render_speed_limits(self.render_module, self.speed_limits_surface, speed_limits,
                                         COLOR_BLUE, 3, self.x_min, self.y_min, self.x_max, self.y_max, self.surface_size)
-        RenderShape.render_pedestrians(self.render_module, self.surface, pedestrians,
-                                       COLOR_WHITE, 3, self.x_min, self.y_min, self.x_max, self.y_max, self.surface_size)
+
+        # RenderShape.render_pedestrians(self.render_module, self.surface, pedestrians,
+        #                                COLOR_WHITE, 3, self.x_min, self.y_min, self.x_max, self.y_max, self.surface_size)
 
         module_input = module_manager.get_module(MODULE_INPUT)
-        result_surface = pygame.transform.smoothscale(self.surface,
-                                                      (int(self.surface_size * module_input.wheel_offset[0]),
-                                                       int(self.surface_size * module_input.wheel_offset[1])))
 
-        display.blit(result_surface, ((display.get_width() - self.surface_size)/2 +
-                                      module_input.mouse_offset[0], module_input.mouse_offset[1]))
+        # result_surface = pygame.transform.smoothscale(self.map_surface,
+        #                                               (int(self.surface_size * module_input.wheel_offset[0]),
+        #                                                int(self.surface_size * module_input.wheel_offset[1])))
+
+        display.blit(self.map_surface, ((display.get_width() - self.surface_size)/2 +
+                                        module_input.mouse_offset[0], module_input.mouse_offset[1]))
+
+        display.blit(self.vehicles_surface, ((display.get_width() - self.surface_size)/2 +
+                                             module_input.mouse_offset[0], module_input.mouse_offset[1]))
+
+        display.blit(self.traffic_light_surface, ((display.get_width() - self.surface_size)/2 +
+                                                  module_input.mouse_offset[0], module_input.mouse_offset[1]))
+
+        display.blit(self.speed_limits_surface, ((display.get_width() - self.surface_size)/2 +
+                                                 module_input.mouse_offset[0], module_input.mouse_offset[1]))
+
+        if self.hero_actor is not None:
+            selected_hero_actor = [vehicle for vehicle in vehicles if vehicle.id == self.hero_actor.id]
+            self.render_hero_actor(display, selected_hero_actor[0], COLOR_RED, 5)
 
         del vehicles[:]
         del traffic_lights[:]
