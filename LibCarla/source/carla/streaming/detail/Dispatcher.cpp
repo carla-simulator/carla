@@ -72,6 +72,7 @@ namespace detail {
   void Dispatcher::DeregisterSession(std::shared_ptr<Session> session) {
     DEBUG_ASSERT(session != nullptr);
     std::lock_guard<std::mutex> lock(_mutex);
+    ClearExpiredStreams();
     auto search = _stream_map.find(session->get_stream_id());
     if (search != _stream_map.end()) {
       auto stream_state = search->second.lock();
@@ -80,6 +81,14 @@ namespace detail {
       }
     }
   }
+
+  void Dispatcher::ClearExpiredStreams() {
+    for (auto it = _stream_map.begin(); it != _stream_map.end(); ) {
+      if (it->second.expired()) {
+        it = _stream_map.erase(it);
+      } else {
+        ++it;
+      }
     }
   }
 
