@@ -11,6 +11,10 @@
 #include "Carla/Actor/ActorRegistry.h"
 #include "Carla/Actor/ActorSpawnResult.h"
 
+#include <compiler/disable-ue4-macros.h>
+#include <carla/recorder/Recorder.h>
+#include <compiler/enable-ue4-macros.h>
+
 #include "Containers/Array.h"
 #include "Templates/Function.h"
 
@@ -70,6 +74,12 @@ public:
     return Registry;
   }
 
+  void SetRecorder(carla::recorder::Recorder *recorder)
+  {
+    Recorder = recorder;
+  }
+
+
 private:
 
   UFUNCTION()
@@ -85,4 +95,6 @@ private:
   TArray<TSubclassOf<AActor>> Classes;
 
   FActorRegistry Registry;
+
+  carla::recorder::Recorder *Recorder { nullptr };
 };

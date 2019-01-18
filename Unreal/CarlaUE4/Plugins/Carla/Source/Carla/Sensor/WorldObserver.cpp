@@ -14,6 +14,8 @@
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/sensor/SensorRegistry.h>
+#include <carla/recorder/Recorder.h>
+#include <carla/recorder/RecorderPosition.h>
 #include <carla/sensor/data/ActorDynamicState.h>
 #include <compiler/enable-ue4-macros.h>
 
@@ -81,7 +83,8 @@ static carla::Buffer AWorldObserver_Serialize(
     carla::Buffer buffer,
     double game_timestamp,
     double platform_timestamp,
-    const FActorRegistry &Registry)
+    const FActorRegistry &Registry,
+    UCarlaEpisode *Episode)
 {
   using Serializer = carla::sensor::s11n::EpisodeStateSerializer;
   using ActorDynamicState = carla::sensor::data::ActorDynamicState;
@@ -119,6 +122,18 @@ static carla::Buffer AWorldObserver_Serialize(
       AWorldObserver_GetActorState(View, Registry)
     };
     write_data(info);
+  
+    if (Episode->GetRecorder().isEnabled()) {
+      // add to the recorder
+      carla::recorder::RecorderPosition recPos { 
+        actor_view.GetActorId(),
+        info.transform,
+        info.velocity,
+        // TODO: use the angular velocity
+        info.velocity
+      };
+      Episode->GetRecorder().addPosition(recPos);
+  }
   }
 
   check(begin == buffer.end());
@@ -145,6 +160,12 @@ void AWorldObserver::Tick(float DeltaSeconds)
       AsyncStream.PopBufferFromPool(),
       GameTimeStamp,
       FPlatformTime::Seconds(),
-      Episode->GetActorRegistry());
-  AsyncStream.Send(*this, std::move(buffer));
+      Episode->GetActorRegistry(),
+      Episode);
+
+  Stream.Send_GameThread(*this, std::move(buffer));
+
+  // recorder
+  if (Episode->GetRecorder().isEnabled())
+    Episode->GetRecorder().write();
 }

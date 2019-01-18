@@ -22,5 +22,8 @@ void export_client() {
     .def("get_client_version", &cc::Client::GetClientVersion)
     .def("get_server_version", CONST_CALL_WITHOUT_GIL(cc::Client, GetServerVersion))
     .def("get_world", &cc::Client::GetWorld)
+    .def("start_recorder", CALL_WITHOUT_GIL(cc::Client, StartRecorder))
+    .def("stop_recorder", CALL_WITHOUT_GIL(cc::Client, StopRecorder))
+
   ;
 }

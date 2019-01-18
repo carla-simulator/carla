@@ -22,11 +22,13 @@
 #include <carla/rpc/MapInfo.h>
 #include <carla/rpc/Response.h>
 #include <carla/rpc/Server.h>
+#include <carla/rpc/String.h>
 #include <carla/rpc/Transform.h>
 #include <carla/rpc/Vector3D.h>
 #include <carla/rpc/VehicleControl.h>
 #include <carla/rpc/WalkerControl.h>
 #include <carla/rpc/WeatherParameters.h>
+#include <carla/recorder/Recorder.h>
 #include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
 
@@ -546,6 +548,19 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     }
     TrafficLight->SetTimeIsFrozen(Freeze);
     return R<void>::Success();
+  });
+
+  Server.BindSync("start_recorder", [this]() -> std::string {
+    REQUIRE_CARLA_EPISODE();
+    return Episode->GetRecorder().start(
+      carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
+      carla::rpc::FromFString(Episode->GetMapName())
+    );
+  });
+
+  Server.BindSync("stop_recorder", [this]() {
+    REQUIRE_CARLA_EPISODE();
+    Episode->GetRecorder().stop();
   });
 
   Server.BindSync("draw_debug_shape", [this](const cr::DebugShape &shape) -> R<void>

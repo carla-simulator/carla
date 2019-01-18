@@ -10,13 +10,20 @@
 #include "Carla/Sensor/WorldObserver.h"
 #include "Carla/Weather/Weather.h"
 
-#include "GameFramework/Pawn.h"
-
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/Actor.h>
+#include <carla/rpc/ActorDescription.h>
+#include <carla/geom/BoundingBox.h>
+#include <carla/recorder/Recorder.h>
+#include <carla/recorder/RecorderEvent.h>
+#include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
 
+#include <tuple>
+
 #include "CarlaEpisode.generated.h"
+
+namespace crec = carla::recorder;
 
 /// A simulation episode.
 ///
@@ -141,9 +148,38 @@ public:
   /// view is invalid.
   TPair<EActorSpawnResultStatus, FActorView> SpawnActorWithInfo(
       const FTransform &Transform,
-      FActorDescription ActorDescription)
+      FActorDescription thisActorDescription)
   {
-    return ActorDispatcher->SpawnActor(Transform, std::move(ActorDescription));
+      //carla::rpc::ActorDescription description(thisActorDescription);
+      
+      // create a new description from the Unreal version
+      carla::rpc::ActorDescription description;      
+      description.uid = thisActorDescription.UId;
+      description.id = carla::rpc::FromFString(thisActorDescription.Id);
+      description.attributes.reserve(thisActorDescription.Variations.Num());
+      for (const auto &item : thisActorDescription.Variations) {
+        carla::rpc::ActorAttribute attr;
+        attr.id = carla::rpc::FromFString(item.Value.Id);
+        attr.type = static_cast<carla::rpc::ActorAttributeType>(item.Value.Type);
+        attr.value = carla::rpc::FromFString(item.Value.Value);
+        
+        description.attributes.emplace_back(attr);
+      }
+
+    auto result = ActorDispatcher.SpawnActor(Transform, std::move(thisActorDescription));
+    
+    if (result.Key == EActorSpawnResultStatus::Success) {
+      // recorder event
+      crec::RecorderEvent recEvent { 
+        crec::RecorderEventType::Add,
+        result.Value.GetActorId(),
+        Transform,
+        description
+      };
+      Recorder.addEvent(recEvent);
+    }
+    return result;
+    //return ActorDispatcher.SpawnActor(Transform, std::move(ActorDescription));
   }
 
   /// Spawns an actor based on @a ActorDescription at @a Transform. To properly
@@ -186,6 +222,11 @@ public:
   // -- Private methods and members --------------------------------------------
   // ===========================================================================
 
+  carla::recorder::Recorder &GetRecorder()
+  {
+    return Recorder;
+  }
+
 private:
 
   friend class ATheNewCarlaGameModeBase;
@@ -194,7 +235,8 @@ private:
 
   void RegisterActorFactory(ACarlaActorFactory &ActorFactory)
   {
-    ActorDispatcher->Bind(ActorFactory);
+    ActorDispatcher.Bind(ActorFactory);
+    ActorDispatcher.SetRecorder(&Recorder);
   }
 
   const uint32 Id = 0u;
@@ -213,4 +255,6 @@ private:
 
   UPROPERTY(VisibleAnywhere)
   AWorldObserver *WorldObserver = nullptr;
+
+  carla::recorder::Recorder Recorder;
 };

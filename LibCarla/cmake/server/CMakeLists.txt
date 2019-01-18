@@ -20,6 +20,9 @@ install(FILES ${libcarla_carla_headers} DESTINATION include/carla)
 file(GLOB libcarla_carla_geom_headers "${libcarla_source_path}/carla/geom/*.h")
 install(FILES ${libcarla_carla_geom_headers} DESTINATION include/carla/geom)
 
+file(GLOB libcarla_carla_recorder_headers "${libcarla_source_path}/carla/recorder/*.h")
+install(FILES ${libcarla_carla_recorder_headers} DESTINATION include/carla/recorder)
+
 file(GLOB libcarla_carla_profiler_headers "${libcarla_source_path}/carla/profiler/*.h")
 install(FILES ${libcarla_carla_profiler_headers} DESTINATION include/carla/profiler)
 
