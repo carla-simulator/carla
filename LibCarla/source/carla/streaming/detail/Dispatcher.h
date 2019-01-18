@@ -51,7 +51,7 @@ namespace detail {
     /// them alive the whole run.
     std::unordered_map<
         stream_id_type,
-        std::shared_ptr<StreamStateBase>> _stream_map;
+        std::weak_ptr<StreamStateBase>> _stream_map;
   };
 
 } // namespace detail
