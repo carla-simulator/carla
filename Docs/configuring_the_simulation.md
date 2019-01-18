@@ -40,7 +40,10 @@ run the simulation at a fixed time-step of 0.2 seconds we execute
 It is important to note that this mode can only be enabled when launching the
 simulator since this is actually a feature of Unreal Engine.
 
-Synchronous vs Asynchronous mode
---------------------------------
-
-> TODO
+!!! important
+    **Do not decrease the frame-rate below 10 FPS.**<br>
+    Our settings are adjusted to clamp the physics engine to a minimum of 10
+    FPS. If the game tick falls below this, the physics engine will still
+    simulate 10 FPS. In that case, things dependent on the game's delta time are
+    no longer in sync with the physics engine.
+    Ref. [#695](https://github.com/carla-simulator/carla/issues/695)
