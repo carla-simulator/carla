@@ -41,6 +41,8 @@ namespace detail {
 
   private:
 
+    void ClearExpiredStreams();
+
     // We use a mutex here, but we assume that sessions and streams won't be
     // created too often.
     std::mutex _mutex;
