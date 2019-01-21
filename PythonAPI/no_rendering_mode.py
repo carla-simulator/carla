@@ -708,7 +708,7 @@ class ModuleWorld(object):
             elif 'speed_limit' in actor.type_id:
                 speed_limits.append(actor)
             elif 'walker' in actor.type_id:
-                walkers.append(pedestrian)
+                walkers.append(actor)
 
         return (vehicles, traffic_lights, speed_limits, walkers)
 
