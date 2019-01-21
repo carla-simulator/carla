@@ -10,7 +10,7 @@
 
 """
 Welcome to CARLA No Rendering Mode Visualizer
-
+    H           : Hero Mode
     ESC         : quit
 """
 
@@ -131,9 +131,9 @@ class Vehicle(object):
         self.surface.fill(color)
 
     def render(self, display):
+        actor_location = self.actor.get_location()
 
-        x, y = self.map_transform_helper.convert_world_to_screen_point(
-            (self.actor.get_location().x, self.actor.get_location().y))
+        x, y = self.map_transform_helper.convert_world_to_screen_point((actor_location.x, actor_location.y))
 
         rotate_surface = pygame.transform.rotate(self.surface, -self.actor.get_transform().rotation.yaw)
 
@@ -178,6 +178,21 @@ class SpeedLimit(object):
         display.blit(self.surface, (self.x, self.y))
 
 
+class Walker(object):
+    def __init__(self, actor, radius, map_transform_helper):
+        self.actor = actor
+
+        actor_location = actor.get_location()
+        self.x, self.y = map_transform_helper.convert_world_to_screen_point((actor_location.x, actor_location.y))
+
+        self.color = COLOR_WHITE
+        self.surface = pygame.Surface((radius * 2, radius * 2))
+        pygame.draw.circle(self.surface, self.color, (radius, radius), radius)
+
+    def render(self, display):
+        display.blit(self.surface, (self.x, self.y))
+
+
 class RenderShape(object):
     @staticmethod
     def render_vehicles(render_module, surface, list_actors, color, map_transform_helper):
@@ -191,13 +206,11 @@ class RenderShape(object):
             traffic_light_render = TrafficLight(actor, radius, map_transform_helper)
             traffic_light_render.render(surface)
 
-    # @staticmethod
-    # def render_pedestrians(render_module, surface, list_actors, color, radius):
-    #     for actor in list_actors:
-    #         actor_location = actor.get_location()
-    #         x, y = Util.convert_world_to_screen_point((actor_location.x, actor_location.y))
-
-    #         render_module.drawCircle(surface, x, y, radius, color)
+    @staticmethod
+    def render_walkers(render_module, surface, list_actors, color, radius, map_transform_helper):
+        for actor in list_actors:
+            walker_render = Walker(actor, radius, map_transform_helper)
+            walker_render.render(surface)
 
     @staticmethod
     def render_speed_limits(render_module, surface, list_actors, color, radius, map_transform_helper):
@@ -457,6 +470,9 @@ class ModuleWorld(object):
         self.speed_limits_surface = pygame.Surface((self.surface_size, self.surface_size))
         self.speed_limits_surface.set_colorkey((0, 0, 0))
 
+        self.walkers_surface = pygame.Surface((self.surface_size, self.surface_size))
+        self.walkers_surface.set_colorkey((0, 0, 0))
+
     def _compute_map_bounding_box(self, map_waypoints):
 
         x_min = float('inf')
@@ -484,7 +500,7 @@ class ModuleWorld(object):
         self._create_world_surfaces()
 
         # Generate waypoints
-        waypoint_length = 5.0
+        waypoint_length = 2.0
         map_waypoints = self.town_map.generate_waypoints(waypoint_length)
 
         # compute bounding boxes
@@ -614,7 +630,7 @@ class ModuleWorld(object):
         vehicles = []
         traffic_lights = []
         speed_limits = []
-        pedestrians = []
+        walkers = []
 
         for actor in actors:
             if 'vehicle' in actor.type_id:
@@ -623,10 +639,10 @@ class ModuleWorld(object):
                 traffic_lights.append(actor)
             elif 'speed_limit' in actor.type_id:
                 speed_limits.append(actor)
-            elif 'pedestrian' in actor.type_id:
-                pedestrians.append(pedestrian)
+            elif 'walker' in actor.type_id:
+                walkers.append(pedestrian)
 
-        return (vehicles, traffic_lights, speed_limits, pedestrians)
+        return (vehicles, traffic_lights, speed_limits, walkers)
 
     def render(self, display):
 
@@ -638,8 +654,9 @@ class ModuleWorld(object):
         self.vehicles_surface.fill(COLOR_BLACK)
         self.traffic_light_surface.fill(COLOR_BLACK)
         self.speed_limits_surface.fill(COLOR_BLACK)
+        self.walkers_surface.fill(COLOR_BLACK)
 
-        vehicles, traffic_lights, speed_limits, pedestrians = self._splitActors(self.actors)
+        vehicles, traffic_lights, speed_limits, walkers = self._splitActors(self.actors)
 
         if self.hero_actor is not None:
             vehicles = [vehicle for vehicle in vehicles if self.is_actor_inside_hero_radius(vehicle)]
@@ -657,8 +674,8 @@ class ModuleWorld(object):
         RenderShape.render_speed_limits(self.render_module, self.speed_limits_surface, speed_limits,
                                         COLOR_BLUE, 3, self.transform_helper)
 
-        # RenderShape.render_pedestrians(self.render_module, self.surface, pedestrians,
-        #                                COLOR_WHITE, 3, self.transform_helper)
+        RenderShape.render_walkers(self.render_module, self.walkers_surface, walkers,
+                                   COLOR_WHITE, 3, self.transform_helper)
 
         module_input = module_manager.get_module(MODULE_INPUT)
 
@@ -679,6 +696,7 @@ class ModuleWorld(object):
         display.blit(self.vehicles_surface, translation_offset)
         display.blit(self.traffic_light_surface, translation_offset)
         display.blit(self.speed_limits_surface, translation_offset)
+        display.blit(self.walkers_surface, translation_offset)
 
         if self.hero_actor is not None:
             selected_hero_actor = [vehicle for vehicle in vehicles if vehicle.id == self.hero_actor.id]
@@ -687,7 +705,7 @@ class ModuleWorld(object):
         del vehicles[:]
         del traffic_lights[:]
         del speed_limits[:]
-        del pedestrians[:]
+        del walkers[:]
 
 # ==============================================================================
 # -- Input -----------------------------------------------------------
