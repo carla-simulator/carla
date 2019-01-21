@@ -218,6 +218,19 @@ static void AddRecommendedValuesForSensorRoleNames(FActorDefinition &Definition)
   AddRecommendedValuesForActorRoleName(Definition, {TEXT("front"), TEXT("back"), TEXT("left"), TEXT("right"), TEXT("front_left"), TEXT("front_right"), TEXT("back_left"), TEXT("back_right")});
 }
 
+static void AddVariationsForSensor(FActorDefinition &Def)
+{
+  FActorVariation Tick;
+
+  Tick.Id = TEXT("sensor_tick");
+  Tick.Type = EActorAttributeType::Float;
+  Tick.RecommendedValues = { TEXT("0.0f") };
+  Tick.bRestrictToRecommended = false;
+
+  Def.Variations.Emplace(Tick);
+}
+
+
 FActorDefinition UActorBlueprintFunctionLibrary::MakeGenericSensorDefinition(
     const FString &Type,
     const FString &Id)
@@ -247,6 +260,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
 {
   FillIdAndTags(Definition, TEXT("sensor"), TEXT("camera"), Id);
   AddRecommendedValuesForSensorRoleNames(Definition);
+  AddVariationsForSensor(Definition);
   // FOV.
   FActorVariation FOV;
   FOV.Id = TEXT("fov");
@@ -297,6 +311,7 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
 {
   FillIdAndTags(Definition, TEXT("sensor"), TEXT("lidar"), Id);
   AddRecommendedValuesForSensorRoleNames(Definition);
+  AddVariationsForSensor(Definition);
   // Number of channels.
   FActorVariation Channels;
   Channels.Id = TEXT("channels");
