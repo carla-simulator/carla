@@ -46,6 +46,7 @@ try:
     from pygame import gfxdraw
     from pygame.locals import K_a
     from pygame.locals import K_h
+    from pygame.locals import K_i
     from pygame.locals import K_DOWN
     from pygame.locals import K_LEFT
     from pygame.locals import K_RIGHT
@@ -429,6 +430,22 @@ class ModuleHUD (object):
     def add_info(self, module_name, info):
         self._info_text[module_name] = info
 
+    def renderActorId(self, display, list_actors, transform_helper, translation_offset):
+        if self._show_info:
+            v_offset = 4
+            for actor in list_actors:
+                location = actor.get_location()
+                x, y = transform_helper.convert_world_to_screen_point((location.x, location.y - v_offset))
+
+                color_surface = pygame.Surface((len(str(actor.id)) * 8, 14))
+                color_surface.set_alpha(100)
+                color_surface.fill(COLOR_BLACK)
+
+                display.blit(color_surface, (x + translation_offset[0], y + translation_offset[1]))
+                font_surface = self._font_mono.render(str(actor.id), True, COLOR_LIGHT_GREY)
+                font_surface.set_colorkey(COLOR_BLACK)
+                display.blit(font_surface, (x + translation_offset[0], y + translation_offset[1]))
+
     def render(self, display):
         if self._show_info:
             info_surface = pygame.Surface((240, self.dim[1]))
@@ -536,6 +553,7 @@ class ModuleWorld(object):
 
         # Store necessary modules
         self.hud_module = module_manager.get_module(MODULE_HUD)
+        self.module_input = module_manager.get_module(MODULE_INPUT)
 
         self.surface_size = min(self.hud_module.dim[0], self.hud_module.dim[1])
 
@@ -719,8 +737,6 @@ class ModuleWorld(object):
         RenderShape.render_walkers(self.render_module, self.walkers_surface, walkers,
                                    COLOR_WHITE, 3, self.transform_helper)
 
-        module_input = module_manager.get_module(MODULE_INPUT)
-
         # Scale surfaces
         # scale_factor = (int(self.surface_size * module_input.wheel_offset[0]),
         #                 int(self.surface_size * module_input.wheel_offset[1]))
@@ -731,7 +747,7 @@ class ModuleWorld(object):
 
         # Translation offset
         translation_offset = ((display.get_width() - self.surface_size)/2 +
-                              module_input.mouse_offset[0], module_input.mouse_offset[1])
+                              self.module_input.mouse_offset[0], self.module_input.mouse_offset[1])
 
         # Blit surfaces
         display.blit(self.map_surface, translation_offset)
@@ -739,6 +755,7 @@ class ModuleWorld(object):
         display.blit(self.traffic_light_surface, translation_offset)
         display.blit(self.speed_limits_surface, translation_offset)
         display.blit(self.walkers_surface, translation_offset)
+        actor_id_surface = self.hud_module.renderActorId(display, vehicles, self.transform_helper, translation_offset)
 
         if self.hero_actor is not None:
             selected_hero_actor = [vehicle for vehicle in vehicles if vehicle.id == self.hero_actor.id]
@@ -787,6 +804,9 @@ class ModuleInput(object):
                         module_world.select_random_hero()
                     else:
                         module_world.hero_actor = None
+                if event.key == K_i:
+                    module_hud = module_manager.get_module(MODULE_HUD)
+                    module_hud._show_info = not module_hud._show_info
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 self.mouse_pos = pygame.mouse.get_pos()
