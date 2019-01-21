@@ -44,8 +44,8 @@ namespace tcp {
       auto handle_query = [this, self, callback=std::move(on_opened)](
           const boost::system::error_code &ec,
           size_t DEBUG_ONLY(bytes_received)) {
-        DEBUG_ASSERT_EQ(bytes_received, sizeof(_stream_id));
         if (!ec) {
+          DEBUG_ASSERT_EQ(bytes_received, sizeof(_stream_id));
           log_debug("session", _session_id, "for stream", _stream_id, " started");
           _socket.get_io_service().post([=]() { callback(self); });
         } else {
