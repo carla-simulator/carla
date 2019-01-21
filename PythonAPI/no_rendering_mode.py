@@ -125,12 +125,7 @@ class Vehicle(object):
         converted_size = Util.convert_world_to_screen_size(original_size, self.map_min, self.map_max, map_surface_size)
 
         self.color = color
-        self.surface_size = (converted_size[0] + 1, converted_size[1] + 1)
-
-        # if self.surface_size[0] == 0:
-        #     self.surface_size[0] += 1
-        # if self.surface_size[1] == 0:
-        #     self.surface_size[1] += 1
+        self.surface_size = (max(converted_size[0], 1), max(converted_size[1], 1))
 
         self.surface = pygame.Surface(self.surface_size, pygame.SRCALPHA)
         self.surface.fill(color)
