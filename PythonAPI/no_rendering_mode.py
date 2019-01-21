@@ -73,6 +73,13 @@ COLOR_LIGHT_GREY = pygame.Color(200, 200, 200)
 COLOR_DARK_GREY = pygame.Color(50, 50, 50)
 COLOR_ORANGE = pygame.Color(255, 127, 0)
 
+# Legend names
+LEGEND_NAME = 'LEGEND'
+VEHICLE_NAME = 'Vehicle'
+TRAFFIC_LIGHT_NAME = 'Traffic Light'
+SPEED_LIMIT_NAME = 'Speed Limit'
+WALKER_NAME = 'Walker'
+
 # Module Defines
 MODULE_WORLD = 'WORLD'
 MODULE_HUD = 'HUD'
@@ -357,12 +364,41 @@ class ModuleRender(object):
 # ==============================================================================
 
 
+class Legend(object):
+    def __init__(self, list_keys, header_font, font):
+        self.header_surface = header_font.render(LEGEND_NAME, True, COLOR_LIGHT_GREY)
+
+        self.legend_surfaces = []
+        self.surface_size = 25
+
+        for key in list_keys:
+            color_surface = pygame.Surface((self.surface_size, self.surface_size))
+            color_surface.fill(key[0])
+
+            font_surface = font.render(key[1], True, COLOR_LIGHT_GREY)
+
+            self.legend_surfaces.append((color_surface, font_surface))
+
+    def render(self, display):
+
+        h_offset = 20
+        v_offset = 200 + 25 + 10
+        h_space = 10
+
+        display.blit(self.header_surface, (8 + 100 / 2, v_offset))
+
+        for surface in self.legend_surfaces:
+            v_offset = v_offset + surface[0].get_height() + 10
+            display.blit(surface[0], (h_offset, v_offset))
+            display.blit(surface[1], (surface[0].get_width() + h_offset + h_space, v_offset + 5))
+
+
 class ModuleHUD (object):
 
     def __init__(self, name, width, height):
         self.name = name
-        self._init_data_params(width, height)
         self._init_hud_params()
+        self._init_data_params(width, height)
 
     def start(self):
         pass
@@ -380,6 +416,11 @@ class ModuleHUD (object):
         self.dim = (height, width)
         self._show_info = True
         self._info_text = {}
+        self.legend = Legend(((COLOR_MAGENTA, VEHICLE_NAME),
+                              (COLOR_BLUE, SPEED_LIMIT_NAME),
+                              (COLOR_WHITE, WALKER_NAME)),
+                             self._header_font,
+                             self._font_mono)
 
     def tick(self, clock):
         if not self._show_info:
@@ -428,6 +469,7 @@ class ModuleHUD (object):
                         surface = self._font_mono.render(item, True, COLOR_WHITE)
                         display.blit(surface, (8, 18 * i + v_offset))
                     v_offset += 18
+            self.legend.render(display)
 
 # ==============================================================================
 # -- World ---------------------------------------------------------------------
