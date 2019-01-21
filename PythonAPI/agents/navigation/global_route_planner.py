@@ -71,7 +71,9 @@ class GlobalRoutePlanner(object):
         for i in range(len(route) - 2):
             current_edge = self._graph.edges[route[i], route[i + 1]]
             next_edge = self._graph.edges[route[i + 1], route[i + 2]]
-            if next_edge['intersection']:
+            num_edges = 0
+            for _ in self._graph.neighbors(route[i+1]): num_edges+=1
+            if next_edge['intersection'] and num_edges > 1:
                 cv = current_edge['exit_vector']
                 nv = next_edge['net_vector']
                 cv, nv = cv + (0,), nv + (0,)  # Making vectors 3D
@@ -151,6 +153,7 @@ class GlobalRoutePlanner(object):
         The topology is read from self._topology.
         graph node properties:
             vertex   -   (x,y) of node's position in world map
+            num_edges   -   Number of exit edges from the node
         graph edge properties:
             entry_vector    -   unit vector along tangent at entry point
             exit_vector     -   unit vector along tangent at exit point
