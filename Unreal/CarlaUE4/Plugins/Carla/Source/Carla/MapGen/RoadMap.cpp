@@ -263,9 +263,9 @@ bool URoadMap::SaveAsPNG(const FString &Folder, const FString &MapName) const
 
   const FIntPoint DestSize(Width, Height);
   FString ResultPath;
-  FHighResScreenshotConfig &HighResScreenshotConfig = GetHighResScreenshotConfig();
-  HighResScreenshotConfig.SetHDRCapture(false);
-  HighResScreenshotConfig.SaveImage(ImagePath, BitMap, DestSize, &ResultPath);
+  // FHighResScreenshotConfig &HighResScreenshotConfig = GetHighResScreenshotConfig();
+  // HighResScreenshotConfig.SetHDRCapture(false);
+  // HighResScreenshotConfig.SaveImage(ImagePath, BitMap, DestSize, &ResultPath);
 
   // Save metadata.
   FFormatNamedArguments Args;

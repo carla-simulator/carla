@@ -26,7 +26,7 @@ UAgentComponent::UAgentComponent(const FObjectInitializer& ObjectInitializer)
 {
   bVisible = false;
   bHiddenInGame = true;
-  bShouldUpdatePhysicsVolume = false;
+  SetShouldUpdatePhysicsVolume(false);
   PrimaryComponentTick.bCanEverTick = false;
 }
 

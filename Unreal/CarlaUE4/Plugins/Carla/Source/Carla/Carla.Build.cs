@@ -8,6 +8,8 @@ public class Carla : ModuleRules
 {
   public Carla(ReadOnlyTargetRules Target) : base(Target)
   {
+    PrivatePCHHeaderFile = "Carla.h";
+
     PublicIncludePaths.AddRange(
       new string[] {
         // ... add public include paths required here ...
@@ -115,7 +117,6 @@ public class Carla : ModuleRules
     }
     else
     {
-      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("c++abi")));
       PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("rpc")));
       if (UseDebugLibs(Target))
       {

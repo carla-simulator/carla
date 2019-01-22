@@ -11,7 +11,7 @@ process.
 
 ![modules](img/modules.png)
 
-In Linux, we compile CARLA and all the dependencies with clang-5.0 and C++14
+In Linux, we compile CARLA and all the dependencies with clang-6.0 and C++14
 standard. We however link against different runtime C++ libraries depending on
 where the code going to be used, since all the code that is going to be linked
 with Unreal Engine needs to be compiled using `libc++`.
@@ -26,7 +26,7 @@ make setup
 
 Get and compile dependencies
 
-  * llvm-5.0 (libc++ and libc++abi)
+  * llvm-6.0 (libc++ and libc++abi)
   * rpclib-2.2.1 (twice, with libstdc++ and libc++)
   * boost-1.69 (headers only)
   * googletest-1.8.0 (with libc++)
@@ -53,7 +53,7 @@ Two configurations:
 
 #### CarlaUE4 and Carla plugin
 
-Both compiled at the same step with Unreal Engine 4.19 build tool. They require
+Both compiled at the same step with Unreal Engine 4.21 build tool. They require
 the `UE4_ROOT` environment variable set.
 
 Command
