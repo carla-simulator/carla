@@ -136,15 +136,16 @@ def get_actor_display_name(actor, truncate=250):
 
 
 class World(object):
-    def __init__(self, carla_world, hud):
+    def __init__(self, carla_world, hud, actor_filter):
         self.world = carla_world
         self.hud = hud
-        self.vehicle = None
+        self.player = None
         self.collision_sensor = None
         self.lane_invasion_sensor = None
         self.camera_manager = None
         self._weather_presets = find_weather_presets()
         self._weather_index = 0
+        self._actor_filter = actor_filter
         self.restart()
         self.world.on_tick(hud.on_world_tick)
 
@@ -152,31 +153,31 @@ class World(object):
         # Keep same camera config if the camera manager exists.
         cam_index = self.camera_manager._index if self.camera_manager is not None else 0
         cam_pos_index = self.camera_manager._transform_index if self.camera_manager is not None else 0
-        # Get a random vehicle blueprint.
-        blueprint = random.choice(self.world.get_blueprint_library().filter('vehicle'))
+        # Get a random blueprint.
+        blueprint = random.choice(self.world.get_blueprint_library().filter(self._actor_filter))
         blueprint.set_attribute('role_name', 'hero')
         if blueprint.has_attribute('color'):
             color = random.choice(blueprint.get_attribute('color').recommended_values)
             blueprint.set_attribute('color', color)
-        # Spawn the vehicle.
-        if self.vehicle is not None:
-            spawn_point = self.vehicle.get_transform()
+        # Spawn the player.
+        if self.player is not None:
+            spawn_point = self.player.get_transform()
             spawn_point.location.z += 2.0
             spawn_point.rotation.roll = 0.0
             spawn_point.rotation.pitch = 0.0
             self.destroy()
-            self.vehicle = self.world.try_spawn_actor(blueprint, spawn_point)
-        while self.vehicle is None:
+            self.player = self.world.try_spawn_actor(blueprint, spawn_point)
+        while self.player is None:
             spawn_points = self.world.get_map().get_spawn_points()
             spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
-            self.vehicle = self.world.try_spawn_actor(blueprint, spawn_point)
+            self.player = self.world.try_spawn_actor(blueprint, spawn_point)
         # Set up the sensors.
-        self.collision_sensor = CollisionSensor(self.vehicle, self.hud)
-        self.lane_invasion_sensor = LaneInvasionSensor(self.vehicle, self.hud)
-        self.camera_manager = CameraManager(self.vehicle, self.hud)
+        self.collision_sensor = CollisionSensor(self.player, self.hud)
+        self.lane_invasion_sensor = LaneInvasionSensor(self.player, self.hud)
+        self.camera_manager = CameraManager(self.player, self.hud)
         self.camera_manager._transform_index = cam_pos_index
         self.camera_manager.set_sensor(cam_index, notify=False)
-        actor_type = get_actor_display_name(self.vehicle)
+        actor_type = get_actor_display_name(self.player)
         self.hud.notification(actor_type)
 
     def next_weather(self, reverse=False):
@@ -184,7 +185,7 @@ class World(object):
         self._weather_index %= len(self._weather_presets)
         preset = self._weather_presets[self._weather_index]
         self.hud.notification('Weather: %s' % preset[1])
-        self.vehicle.get_world().set_weather(preset[0])
+        self.player.get_world().set_weather(preset[0])
 
     def tick(self, clock):
         self.hud.tick(self, clock)
@@ -198,7 +199,7 @@ class World(object):
             self.camera_manager.sensor,
             self.collision_sensor.sensor,
             self.lane_invasion_sensor.sensor,
-            self.vehicle]
+            self.player]
         for actor in actors:
             if actor is not None:
                 actor.destroy()
@@ -212,9 +213,16 @@ class World(object):
 class KeyboardControl(object):
     def __init__(self, world, start_in_autopilot):
         self._autopilot_enabled = start_in_autopilot
-        self._control = carla.VehicleControl()
+        if isinstance(world.player, carla.Vehicle):
+            self._control = carla.VehicleControl()
+            world.player.set_autopilot(self._autopilot_enabled)
+        elif isinstance(world.player, carla.Walker):
+            self._control = carla.WalkerControl()
+            self._autopilot_enabled = False
+            self._rotation = world.player.get_transform().rotation
+        else:
+            raise NotImplementedError("Actor type not supported")
         self._steer_cache = 0.0
-        world.vehicle.set_autopilot(self._autopilot_enabled)
         world.hud.notification("Press 'H' or '?' for help.", seconds=4.0)
 
     def parse_events(self, world, clock):
@@ -242,26 +250,30 @@ class KeyboardControl(object):
                     world.camera_manager.set_sensor(event.key - 1 - K_0)
                 elif event.key == K_r:
                     world.camera_manager.toggle_recording()
-                elif event.key == K_q:
-                    self._control.gear = 1 if self._control.reverse else -1
-                elif event.key == K_m:
-                    self._control.manual_gear_shift = not self._control.manual_gear_shift
-                    self._control.gear = world.vehicle.get_control().gear
-                    world.hud.notification('%s Transmission' % ('Manual' if self._control.manual_gear_shift else 'Automatic'))
-                elif self._control.manual_gear_shift and event.key == K_COMMA:
-                    self._control.gear = max(-1, self._control.gear - 1)
-                elif self._control.manual_gear_shift and event.key == K_PERIOD:
-                    self._control.gear = self._control.gear + 1
-                elif event.key == K_p:
-                    self._autopilot_enabled = not self._autopilot_enabled
-                    world.vehicle.set_autopilot(self._autopilot_enabled)
-                    world.hud.notification('Autopilot %s' % ('On' if self._autopilot_enabled else 'Off'))
+                if isinstance(self._control, carla.VehicleControl):
+                    if event.key == K_q:
+                        self._control.gear = 1 if self._control.reverse else -1
+                    elif event.key == K_m:
+                        self._control.manual_gear_shift = not self._control.manual_gear_shift
+                        self._control.gear = world.player.get_control().gear
+                        world.hud.notification('%s Transmission' % ('Manual' if self._control.manual_gear_shift else 'Automatic'))
+                    elif self._control.manual_gear_shift and event.key == K_COMMA:
+                        self._control.gear = max(-1, self._control.gear - 1)
+                    elif self._control.manual_gear_shift and event.key == K_PERIOD:
+                        self._control.gear = self._control.gear + 1
+                    elif event.key == K_p:
+                        self._autopilot_enabled = not self._autopilot_enabled
+                        world.player.set_autopilot(self._autopilot_enabled)
+                        world.hud.notification('Autopilot %s' % ('On' if self._autopilot_enabled else 'Off'))
         if not self._autopilot_enabled:
-            self._parse_keys(pygame.key.get_pressed(), clock.get_time())
-            self._control.reverse = self._control.gear < 0
-            world.vehicle.apply_control(self._control)
+            if isinstance(self._control, carla.VehicleControl):
+                self._parse_vehicle_keys(pygame.key.get_pressed(), clock.get_time())
+                self._control.reverse = self._control.gear < 0
+            elif isinstance(self._control, carla.WalkerControl):
+                self._parse_walker_keys(pygame.key.get_pressed(), clock.get_time())
+            world.player.apply_control(self._control)
 
-    def _parse_keys(self, keys, milliseconds):
+    def _parse_vehicle_keys(self, keys, milliseconds):
         self._control.throttle = 1.0 if keys[K_UP] or keys[K_w] else 0.0
         steer_increment = 5e-4 * milliseconds
         if keys[K_LEFT] or keys[K_a]:
@@ -274,6 +286,22 @@ class KeyboardControl(object):
         self._control.steer = round(self._steer_cache, 1)
         self._control.brake = 1.0 if keys[K_DOWN] or keys[K_s] else 0.0
         self._control.hand_brake = keys[K_SPACE]
+
+    def _parse_walker_keys(self, keys, milliseconds):
+        self._control.speed = 0.0
+        if keys[K_DOWN] or keys[K_s]:
+            self._control.speed = 0.0
+        if keys[K_LEFT] or keys[K_a]:
+            self._control.speed = .01
+            self._rotation.yaw -= 0.08 * milliseconds
+        if keys[K_RIGHT] or keys[K_d]:
+            self._control.speed = .01
+            self._rotation.yaw += 0.08 * milliseconds
+        if keys[K_UP] or keys[K_w]:
+            self._control.speed = 5.556 if pygame.key.get_mods() & KMOD_SHIFT else 2.778
+        self._control.jump = keys[K_SPACE]
+        self._rotation.yaw = round(self._rotation.yaw, 1)
+        self._control.direction = self._rotation.get_forward_vector()
 
     @staticmethod
     def _is_quit_shortcut(key):
@@ -312,9 +340,9 @@ class HUD(object):
     def tick(self, world, clock):
         if not self._show_info:
             return
-        t = world.vehicle.get_transform()
-        v = world.vehicle.get_velocity()
-        c = world.vehicle.get_control()
+        t = world.player.get_transform()
+        v = world.player.get_velocity()
+        c = world.player.get_control()
         heading = 'N' if abs(t.rotation.yaw) < 89.5 else ''
         heading += 'S' if abs(t.rotation.yaw) > 90.5 else ''
         heading += 'E' if 179.5 > t.rotation.yaw > 0.5 else ''
@@ -328,7 +356,7 @@ class HUD(object):
             'Server:  % 16d FPS' % self.server_fps,
             'Client:  % 16d FPS' % clock.get_fps(),
             '',
-            'Vehicle: % 20s' % get_actor_display_name(world.vehicle, truncate=20),
+            'Vehicle: % 20s' % get_actor_display_name(world.player, truncate=20),
             'Map:     % 20s' % world.world.map_name,
             'Simulation time: % 12s' % datetime.timedelta(seconds=int(self.simulation_time)),
             '',
@@ -336,24 +364,30 @@ class HUD(object):
             u'Heading:% 16.0f\N{DEGREE SIGN} % 2s' % (t.rotation.yaw, heading),
             'Location:% 20s' % ('(% 5.1f, % 5.1f)' % (t.location.x, t.location.y)),
             'Height:  % 18.0f m' % t.location.z,
-            '',
-            ('Throttle:', c.throttle, 0.0, 1.0),
-            ('Steer:', c.steer, -1.0, 1.0),
-            ('Brake:', c.brake, 0.0, 1.0),
-            ('Reverse:', c.reverse),
-            ('Hand brake:', c.hand_brake),
-            ('Manual:', c.manual_gear_shift),
-            'Gear:        %s' % {-1: 'R', 0: 'N'}.get(c.gear, c.gear),
+            '']
+        if isinstance(c, carla.VehicleControl):
+            self._info_text += [
+                ('Throttle:', c.throttle, 0.0, 1.0),
+                ('Steer:', c.steer, -1.0, 1.0),
+                ('Brake:', c.brake, 0.0, 1.0),
+                ('Reverse:', c.reverse),
+                ('Hand brake:', c.hand_brake),
+                ('Manual:', c.manual_gear_shift),
+                'Gear:        %s' % {-1: 'R', 0: 'N'}.get(c.gear, c.gear)]
+        elif isinstance(c, carla.WalkerControl):
+            self._info_text += [
+                ('Speed:', c.speed, 0.0, 5.556),
+                ('Jump:', c.jump)]
+        self._info_text += [
             '',
             'Collision:',
             collision,
             '',
-            'Number of vehicles: % 8d' % len(vehicles)
-        ]
+            'Number of vehicles: % 8d' % len(vehicles)]
         if len(vehicles) > 1:
             self._info_text += ['Nearby vehicles:']
             distance = lambda l: math.sqrt((l.x - t.location.x)**2 + (l.y - t.location.y)**2 + (l.z - t.location.z)**2)
-            vehicles = [(distance(x.get_location()), x) for x in vehicles if x.id != world.vehicle.id]
+            vehicles = [(distance(x.get_location()), x) for x in vehicles if x.id != world.player.id]
             for d, vehicle in sorted(vehicles):
                 if d > 200.0:
                     break
@@ -651,7 +685,7 @@ def game_loop(args):
             pygame.HWSURFACE | pygame.DOUBLEBUF)
 
         hud = HUD(args.width, args.height)
-        world = World(client.get_world(), hud)
+        world = World(client.get_world(), hud, args.filter)
         controller = KeyboardControl(world, args.autopilot)
 
         clock = pygame.time.Clock()
@@ -704,6 +738,11 @@ def main():
         metavar='WIDTHxHEIGHT',
         default='1280x720',
         help='window resolution (default: 1280x720)')
+    argparser.add_argument(
+        '--filter',
+        metavar='PATTERN',
+        default='vehicle.*',
+        help='actor filter (default: "vehicle.*")')
     args = argparser.parse_args()
 
     args.width, args.height = [int(x) for x in args.res.split('x')]
