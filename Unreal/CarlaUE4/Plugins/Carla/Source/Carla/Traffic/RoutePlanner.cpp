@@ -61,8 +61,6 @@ ARoutePlanner::ARoutePlanner(const FObjectInitializer &ObjectInitializer)
 
   // Do not change default value here, our autopilot depends on this.
   TriggerVolume->SetBoxExtent(FVector{32.0f, 32.0f, 32.0f});
-
-  SplineColor = FColor::Black;
 }
 
 void ARoutePlanner::BeginDestroy()
@@ -203,18 +201,20 @@ void ARoutePlanner::DrawRoutes()
   {
     for (int j = 0, lenNumPoints = Routes[i]->GetNumberOfSplinePoints() - 1; j < lenNumPoints; ++j)
     {
-      FVector p0 = Routes[i]->GetLocationAtSplinePoint(j + 0, ESplineCoordinateSpace::World);
-      FVector p1 = Routes[i]->GetLocationAtSplinePoint(j + 1, ESplineCoordinateSpace::World);
+      const FVector p0 = Routes[i]->GetLocationAtSplinePoint(j + 0, ESplineCoordinateSpace::World);
+      const FVector p1 = Routes[i]->GetLocationAtSplinePoint(j + 1, ESplineCoordinateSpace::World);
 
-      if (SplineColor == FColor::Black)
-      {
-        float f = (float) j / (float) lenNumPoints;
-        DrawDebugLine(GetWorld(), p0, p1, FColor(255 * f, 255 - 255 * f, 0), true);
-      }
-      else
-      {
-        DrawDebugLine(GetWorld(), p0, p1, SplineColor, true);
-      }
+      static const float MinThickness = 3.f;
+      static const float MaxThickness = 15.f;
+
+      const float Dist = (float) j / (float) lenNumPoints;
+      const float OneMinusDist = 1.f - Dist;
+      const float Thickness = OneMinusDist * MaxThickness + MinThickness;
+
+      // from green to black
+      DrawDebugLine(
+          GetWorld(), p0, p1, FColor(0, 255 * OneMinusDist, 0),
+          true, -1.f, 0, Thickness);
     }
   }
 #endif

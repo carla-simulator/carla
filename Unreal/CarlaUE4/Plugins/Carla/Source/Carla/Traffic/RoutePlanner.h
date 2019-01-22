@@ -35,11 +35,6 @@ public:
     TriggerVolume->SetBoxExtent(Extent);
   }
 
-  void SetSplineColor(FColor Color)
-  {
-    SplineColor = Color;
-  }
-
   void DrawRoutes();
 
   void AddRoute(float probability, const TArray<FVector> &routePoints);
@@ -50,6 +45,7 @@ protected:
 
 #if WITH_EDITOR
   virtual void PostEditChangeProperty(FPropertyChangedEvent &PropertyChangedEvent) override;
+
 #endif // WITH_EDITOR
 
   virtual void BeginPlay() override;
@@ -75,8 +71,4 @@ public:
 
   UPROPERTY(BlueprintReadWrite, Category = "Traffic Routes", EditAnywhere, EditFixedSize)
   TArray<float> Probabilities;
-
-private:
-
-  FColor SplineColor;
 };
