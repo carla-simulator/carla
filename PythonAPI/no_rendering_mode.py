@@ -182,13 +182,17 @@ class TrafficLight(object):
 class SpeedLimit(object):
     def __init__(self, actor, radius, map_transform_helper):
         self.actor=actor
+        self.speed_limit = actor.type_id.split('.')[2]
+        self.font=pygame.font.SysFont('Arial', 10)
 
         actor_location=actor.get_location()
         self.x, self.y=map_transform_helper.convert_world_to_screen_point((actor_location.x, actor_location.y))
 
-        self.color=COLOR_BLUE
         self.surface=pygame.Surface((radius * 2, radius * 2))
-        pygame.draw.circle(self.surface, self.color, (radius, radius), radius)
+        pygame.draw.circle(self.surface, COLOR_RED, (radius, radius), radius)
+        pygame.draw.circle(self.surface, COLOR_WHITE, (radius, radius), int(radius * 0.75))
+        font_surface = self.font.render(self.speed_limit, True, COLOR_BLACK)
+        self.surface.blit(font_surface, (radius/2, radius/2))
 
     def render(self, display):
         display.blit(self.surface, (self.x, self.y))
@@ -575,7 +579,7 @@ class ModuleWorld(object):
         self.x_min, self.y_min, self.x_max, self.y_max=self._compute_map_bounding_box(map_waypoints)
 
         # Feed map bounding box and surface size to transform helper
-        self.transform_helper=TransformHelper((self.x_min, self.y_min), (self.x_max, self.y_max), self.surface_size)
+        self.transform_helper=TransformHelper((self.x_min * 1.05, self.y_min * 1.02), (self.x_max * 1.02, self.y_max * 1.02), self.surface_size)
 
         # Retrieve data from waypoints orientation, width and length and do conversions into another list
         self.normalized_point_list = []
@@ -745,7 +749,7 @@ class ModuleWorld(object):
         RenderShape.render_traffic_lights(self.render_module, self.traffic_light_surface, traffic_lights,
                                           COLOR_BLACK, 3, self.transform_helper)
         RenderShape.render_speed_limits(self.render_module, self.speed_limits_surface, speed_limits,
-                                        COLOR_BLUE, 3, self.transform_helper)
+                                        COLOR_BLUE, 10, self.transform_helper)
 
         RenderShape.render_walkers(self.render_module, self.walkers_surface, walkers,
                                    COLOR_WHITE, 3, self.transform_helper)
