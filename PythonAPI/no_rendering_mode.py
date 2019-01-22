@@ -618,7 +618,7 @@ class ModuleWorld(object):
         self._create_world_surfaces()
 
         # Generate waypoints
-        waypoint_length = 1.0
+        waypoint_length = 1.5
         map_waypoints = self.town_map.generate_waypoints(waypoint_length)
 
         # compute bounding boxes
@@ -714,22 +714,17 @@ class ModuleWorld(object):
     def render_map(self, display):
         self.map_surface.fill(COLOR_GREY)
         for point in self.normalized_point_list:
-
-            line = point[3]
-            front = (line[1][0] - line[0][0], line[0][1] - line[1][1])
-            length_front = math.sqrt(front[0] ** 2 + front[1] ** 2)
-            unit_front = (front[0] / length_front, front[1] / length_front)
-
             self.render_module.drawPolygonFromParallelLines(self.map_surface,
                                                             point[1],
-                                                            line,
+                                                            point[3],
                                                             point[4],
                                                             self.transform_helper)
 
-            self.render_module.drawCircle(self.map_surface, point[0][0][0], point[0][0][1], point[2] / 2, point[1])
-            self.render_module.drawCircle(self.map_surface, point[0][1][0], point[0][1][1], point[2] / 2, point[1])
+            self.render_module.drawCircle(self.map_surface, point[0][0][0], point[0][0][1], int(point[2] / 2), point[1])
+            self.render_module.drawCircle(self.map_surface, point[0][1][0], point[0][1][1], int(point[2] / 2), point[1])
 
-            self.render_module.drawLineAtDistance(self.map_surface, line, point[4], COLOR_WHITE, self.transform_helper)
+            self.render_module.drawLineAtDistance(
+                self.map_surface, point[3], point[4], COLOR_WHITE, self.transform_helper)
 
         for point in self.intersection_waypoints:
             self.render_module.drawLine(self.map_surface,
@@ -738,8 +733,8 @@ class ModuleWorld(object):
                                         point[0],
                                         point[2])
 
-            self.render_module.drawCircle(self.map_surface, point[0][0][0], point[0][0][1], point[2] / 2, point[1])
-            self.render_module.drawCircle(self.map_surface, point[0][1][0], point[0][1][1], point[2] / 2, point[1])
+            self.render_module.drawCircle(self.map_surface, point[0][0][0], point[0][0][1], int(point[2] / 2), point[1])
+            self.render_module.drawCircle(self.map_surface, point[0][1][0], point[0][1][1], int(point[2] / 2), point[1])
 
     def render_hero_actor(self, display, hero_actor, color, radius, translation_offset):
 
