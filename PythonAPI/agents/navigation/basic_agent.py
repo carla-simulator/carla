@@ -10,10 +10,16 @@
 waypoints and avoiding other vehicles.
 The agent also responds to traffic lights. """
 
+import math
+
+import numpy as np
 import carla
+
 from agents.navigation.agent import *
 from agents.navigation.local_planner import LocalPlanner
 from agents.navigation.local_planner import compute_connection, RoadOption
+from agents.navigation.global_route_planner import GlobalRoutePlanner
+from agents.navigation.global_route_planner_dao import GlobalRoutePlannerDAO
 
 class BasicAgent(Agent):
     """
@@ -37,45 +43,92 @@ class BasicAgent(Agent):
 
     def set_destination(self, location):
         start_waypoint = self._map.get_waypoint(self._vehicle.get_location())
-        end_waypoint = self._map.get_waypoint(carla.Location(location[0],
-                                                             location[1],
-                                                             location[2]))
-
-        current_waypoint = start_waypoint
-        active_list = [ [(current_waypoint, RoadOption.LANEFOLLOW)] ]
+        end_waypoint = self._map.get_waypoint(
+            carla.Location(location[0], location[1], location[2]))
 
         solution = []
-        while not solution:
-            for _ in range(len(active_list)):
-                trajectory = active_list.pop()
-                if len(trajectory) > 1000:
-                    continue
 
-                # expand this trajectory
-                current_waypoint, _ = trajectory[-1]
-                next_waypoints = current_waypoint.next(5.0)
-                while len(next_waypoints) == 1:
-                    next_option = compute_connection(current_waypoint, next_waypoints[0])
-                    current_distance = next_waypoints[0].transform.location.distance(end_waypoint.transform.location)
-                    if current_distance < 5.0:
-                        solution = trajectory + [(end_waypoint, RoadOption.LANEFOLLOW)]
-                        break
+        dao = GlobalRoutePlannerDAO(self._vehicle.get_world().get_map())
+        grp = GlobalRoutePlanner(dao)
+        grp.setup()
 
-                    # keep adding nodes
-                    trajectory.append((next_waypoints[0], next_option))
-                    current_waypoint, _ = trajectory[-1]
-                    next_waypoints = current_waypoint.next(5.0)
+        x1 = start_waypoint.transform.location.x
+        y1 = start_waypoint.transform.location.y
+        x2 = end_waypoint.transform.location.x
+        y2 = end_waypoint.transform.location.y
+        route = grp.plan_route((x1, y1), (x2, y2))
 
-                if not solution:
-                    # multiple choices
-                    for waypoint in next_waypoints:
-                        next_option = compute_connection(current_waypoint, waypoint)
-                        active_list.append(trajectory + [(waypoint, next_option)])
+        route.pop(0)
+        current_waypoint = start_waypoint
+
+        for action in route:
+
+            wp_choice = current_waypoint.next(5.0)
+            while len(wp_choice) == 1:
+                current_waypoint = wp_choice[0]
+                solution.append((current_waypoint, RoadOption.LANEFOLLOW))
+                wp_choice = current_waypoint.next(5.0)
+
+            if action.value == "STOP":
+                break
+
+            if len(wp_choice) > 1:
+                
+                current_transform = current_waypoint.transform
+                current_location = current_transform.location
+                projected_location = current_location + \
+                    carla.Location(
+                        x=math.cos(math.radians(current_transform.rotation.yaw)),
+                        y=math.sin(math.radians(current_transform.rotation.yaw)))
+                v_current = self._vector(current_location, projected_location)
+
+                direction = 0
+                road_option = None
+                if action.value == "LEFT":
+                    direction = 1
+                    road_option = RoadOption.LEFT
+                elif action.value == "RIGHT":
+                    direction = -1
+                    road_option = RoadOption.RIGHT
+                elif action.value == "GO_STRAIGHT":
+                    direction = 0
+                    road_option = RoadOption.STRAIGHT
+                select_criteria = float('inf')
+
+                for wp_select in wp_choice:
+                    v_select = self._vector(
+                        current_location, wp_select.transform.location)
+                    cross = float('inf')
+                    if direction == 0:
+                        cross = abs(np.cross(v_current, v_select)[-1])
+                    else:
+                        cross = direction*np.cross(v_current, v_select)[-1]
+                    if cross < select_criteria:
+                        select_criteria = cross
+                        current_waypoint = wp_select
+
+                solution.append((current_waypoint, road_option))
+                current_waypoint = current_waypoint.next(5.0)[0]
+                while current_waypoint.is_intersection:
+                    solution.append((current_waypoint, road_option))
+                    current_waypoint = current_waypoint.next(5.0)[0]
 
         assert solution
+        for s in solution:
+            print s
 
         self._current_plan = solution
         self._local_planner.set_global_plan(self._current_plan)
+
+    def _vector(self, l_1, l_2):
+        """
+        Returns the unit vector from l_1 to l_2
+        l_1, l_2    :   carla.Location objects
+        """
+        x = l_2.x-l_1.x
+        y = l_2.y-l_1.y
+        norm = np.linalg.norm([x, y])
+        return [x/norm, y/norm, 0]
 
     def run_step(self, debug=False):
         """
