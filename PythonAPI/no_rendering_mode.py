@@ -691,8 +691,8 @@ class ModuleWorld(object):
                                                y - int(hero_radius) + translation_offset[1]))
 
     def is_actor_inside_hero_radius(self, actor):
-        return (abs(actor.get_location().x - self.hero_actor.get_location().x) <= self.filter_radius
-                and abs(actor.get_location().y - self.hero_actor.get_location().y) <= self.filter_radius)
+        return math.sqrt((actor.get_location().x-self.hero_actor.get_location().x)**2
+                + (actor.get_location().y - self.hero_actor.get_location().y)**2) <= self.filter_radius
 
     def _splitActors(self, actors):
         vehicles = []
@@ -760,7 +760,6 @@ class ModuleWorld(object):
         else:
             hero_location = (self.hero_actor.get_location().x, self.hero_actor.get_location().y)
             hero_location_screen = self.transform_helper.convert_world_to_screen_point(hero_location)
-            print hero_location_screen
             translation_offset = ( -hero_location_screen[0] + display.get_width() / 2,
                                    (- hero_location_screen[1] + display.get_height() / 2) )
 
