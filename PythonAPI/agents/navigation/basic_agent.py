@@ -114,8 +114,6 @@ class BasicAgent(Agent):
                     current_waypoint = current_waypoint.next(5.0)[0]
 
         assert solution
-        for s in solution:
-            print s
 
         self._current_plan = solution
         self._local_planner.set_global_plan(self._current_plan)
