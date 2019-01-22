@@ -578,18 +578,12 @@ class ModuleWorld(object):
         self.transform_helper=TransformHelper((self.x_min, self.y_min), (self.x_max, self.y_max), self.surface_size)
 
         # Retrieve data from waypoints orientation, width and length and do conversions into another list
-        self.normalized_point_list=[]
+        self.normalized_point_list = []
+        self.intersection_waypoints = []
         for waypoint in map_waypoints:
 
             # Width of road
             width=self.transform_helper.convert_world_to_screen_size((waypoint.lane_width, waypoint.lane_width))[0]
-
-            # Orientation of road
-            color=COLOR_BLACK
-            if waypoint.lane_id < 0:
-                color=COLOR_CYAN
-            else:
-                color=COLOR_ORANGE
 
             direction=(1, 0)
             yaw=math.radians(waypoint.transform.rotation.yaw)
@@ -604,7 +598,13 @@ class ModuleWorld(object):
             wp_0_screen = self.transform_helper.convert_world_to_screen_point(wp_0)
             wp_1_screen = self.transform_helper.convert_world_to_screen_point(wp_1)
 
-            self.normalized_point_list.append(((wp_0_screen, wp_1_screen), color, width))
+
+            # Orientation of road
+            color=COLOR_BLACK
+            if waypoint.is_intersection:
+                self.intersection_waypoints.append(((wp_0_screen, wp_1_screen), COLOR_DARK_GREY, width))
+            else:
+                self.normalized_point_list.append(((wp_0_screen, wp_1_screen), COLOR_DARK_GREY, width))
 
         # Module render
         self.render_module = module_manager.get_module(MODULE_RENDER)
@@ -659,6 +659,7 @@ class ModuleWorld(object):
         self.server_fps = self.server_clock.get_fps()
 
     def render_map(self, display):
+        self.map_surface.fill(COLOR_GREY)
         for point in self.normalized_point_list:
             self.render_module.drawLineWithBorder(self.map_surface,
                                                   point[1],
@@ -666,7 +667,14 @@ class ModuleWorld(object):
                                                   point[0],
                                                   point[2],
                                                   3,
-                                                  COLOR_DARK_GREY)
+                                                  COLOR_WHITE)
+
+        for point in self.intersection_waypoints:
+            self.render_module.drawLine(self.map_surface,
+                                        point[1],
+                                        False,
+                                        point[0],
+                                        point[2])
 
     def render_hero_actor(self, display, hero_actor, color, radius, translation_offset):
 
@@ -684,8 +692,6 @@ class ModuleWorld(object):
 
         self.render_module.drawCircle(self.hero_actor_surface, int(hero_radius),
                                       int(hero_radius), int(hero_radius), COLOR_ORANGE)
-
-        # self.render_module.drawCircle(self.hero_actor_surface,  int(hero_radius), int(hero_radius), radius, COLOR_RED)
 
         display.blit(self.hero_actor_surface, (x - int(hero_radius) + translation_offset[0],
                                                y - int(hero_radius) + translation_offset[1]))
@@ -715,7 +721,6 @@ class ModuleWorld(object):
     def render(self, display):
 
         if not self.map_rendered:
-            self.map_surface.fill(COLOR_DARK_GREY)
             self.render_map(display)
             self.map_rendered = True
 
