@@ -10,6 +10,7 @@
 
 """
 Welcome to CARLA No Rendering Mode Visualizer
+    I           : Toggle HUD
     H           : Hero Mode
     ESC         : quit
 """
@@ -562,10 +563,10 @@ class ModuleWorld(object):
 
     def _get_data_from_carla(self, host, port, timeout):
         try:
-            client = carla.Client(host, port)
-            client.set_timeout(timeout)
+            self.client = carla.Client(host, port)
+            self.client.set_timeout(timeout)
 
-            world = client.get_world()
+            world = self.client.get_world()
             town_map = world.get_map()
             actors = world.get_actors()
             return (world, town_map, actors)
@@ -714,6 +715,9 @@ class ModuleWorld(object):
         self.server_clock.tick()
         self.server_fps = self.server_clock.get_fps()
 
+        self.world = self.client.get_world()
+        self.actors = self.world.get_actors()
+
     def render_map(self, display):
         self.map_surface.fill(COLOR_GREY)
         for point in self.normalized_point_list:
@@ -841,7 +845,10 @@ class ModuleWorld(object):
 
         if self.hero_actor is not None:
             selected_hero_actor = [vehicle for vehicle in vehicles if vehicle.id == self.hero_actor.id]
-            self.render_hero_actor(display, selected_hero_actor[0], COLOR_RED, 5, translation_offset)
+            if len(selected_hero_actor) != 0:
+                self.render_hero_actor(display, selected_hero_actor[0], COLOR_RED, 5, translation_offset)
+            else:
+                self.hero_actor = None
 
         del vehicles[:]
         del traffic_lights[:]
