@@ -32,7 +32,7 @@
   * [Building block generator](building_block_generator.md)
   * [Building actor class](building_actor_class.md)
   * [Spline tools](spline_tools.md)
-  * [Traffic control assets](trafic_control_assets.md)
+  * [Traffic control assets](traffic_control_assets.md)
   * [Decorative blueprints](decorative_blueprints.md)
   * [Weather](weather.md)
 
