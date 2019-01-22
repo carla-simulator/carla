@@ -476,7 +476,6 @@ class ModuleHUD (object):
         self._show_info = True
         self._info_text = {}
         self.legend = Legend(((COLOR_MAGENTA, VEHICLE_NAME),
-                              (COLOR_BLUE, SPEED_LIMIT_NAME),
                               (COLOR_WHITE, WALKER_NAME)),
                              self._header_font,
                              self._font_mono)
@@ -671,7 +670,11 @@ class ModuleWorld(object):
         self.world.on_tick(lambda timestamp: ModuleWorld.on_world_tick(weak_self, timestamp))
 
     def select_random_hero(self):
-        self.hero_actor = random.choice([actor for actor in self.actors if 'vehicle' in actor.type_id])
+        vehicles = [actor for actor in self.actors if 'vehicle' in actor.type_id]
+        if len(vehicles) > 0:
+            self.hero_actor = random.choice(vehicles)
+        else:
+            print("There are no vehicles spawned")
 
     def tick(self, clock):
         self.update_hud_info(clock)
