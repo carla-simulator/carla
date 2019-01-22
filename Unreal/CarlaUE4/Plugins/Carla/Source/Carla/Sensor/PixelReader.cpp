@@ -92,20 +92,21 @@ bool FPixelReader::WritePixelsToArray(
 }
 
 bool FPixelReader::SavePixelsToDisk(
-    UTextureRenderTarget2D &RenderTarget,
-    const FString &FilePath)
+    UTextureRenderTarget2D &/*RenderTarget*/,
+    const FString &/*FilePath*/)
 {
-  TArray<FColor> OutBMP;
-  if (!WritePixelsToArray(RenderTarget, OutBMP)) {
-    return false;
-  }
-  for (FColor &color : OutBMP) {
-    color.A = 255u;
-  }
-  const FIntPoint DestSize(RenderTarget.GetSurfaceWidth(), RenderTarget.GetSurfaceHeight());
-  FString ResultPath;
-  FHighResScreenshotConfig &HighResScreenshotConfig = GetHighResScreenshotConfig();
-  return HighResScreenshotConfig.SaveImage(FilePath, OutBMP, DestSize, &ResultPath);
+  return false;
+  // TArray<FColor> OutBMP;
+  // if (!WritePixelsToArray(RenderTarget, OutBMP)) {
+  //   return false;
+  // }
+  // for (FColor &color : OutBMP) {
+  //   color.A = 255u;
+  // }
+  // const FIntPoint DestSize(RenderTarget.GetSurfaceWidth(), RenderTarget.GetSurfaceHeight());
+  // FString ResultPath;
+  // FHighResScreenshotConfig &HighResScreenshotConfig = GetHighResScreenshotConfig();
+  // return HighResScreenshotConfig.SaveImage(FilePath, OutBMP, DestSize, &ResultPath);
 }
 
 void FPixelReader::WritePixelsToBuffer(

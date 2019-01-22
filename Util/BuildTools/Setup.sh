@@ -4,14 +4,14 @@
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
 
-command -v /usr/bin/clang++-5.0 >/dev/null 2>&1 || {
-  echo >&2 "clang 5.0 is required, but it's not installed.";
-  echo >&2 "make sure you build Unreal Engine with clang 5.0 too.";
+command -v /usr/bin/clang++-6.0 >/dev/null 2>&1 || {
+  echo >&2 "clang 6.0 is required, but it's not installed.";
+  echo >&2 "make sure you build Unreal Engine with clang 6.0 too.";
   exit 1;
 }
 
-export CC=/usr/bin/clang-5.0
-export CXX=/usr/bin/clang++-5.0
+export CC=/usr/bin/clang-6.0
+export CXX=/usr/bin/clang++-6.0
 
 source $(dirname "$0")/Environment.sh
 
@@ -22,7 +22,7 @@ pushd ${CARLA_BUILD_FOLDER} >/dev/null
 # -- Get and compile libc++ ----------------------------------------------------
 # ==============================================================================
 
-LLVM_BASENAME=llvm-5.0
+LLVM_BASENAME=llvm-6.0
 
 LLVM_INCLUDE=${PWD}/${LLVM_BASENAME}-install/include/c++/v1
 LLVM_LIBPATH=${PWD}/${LLVM_BASENAME}-install/lib
@@ -34,9 +34,9 @@ else
 
   log "Retrieving libc++."
 
-  git clone --depth=1 -b release_50  https://github.com/llvm-mirror/llvm.git ${LLVM_BASENAME}-source
-  git clone --depth=1 -b release_50  https://github.com/llvm-mirror/libcxx.git ${LLVM_BASENAME}-source/projects/libcxx
-  git clone --depth=1 -b release_50  https://github.com/llvm-mirror/libcxxabi.git ${LLVM_BASENAME}-source/projects/libcxxabi
+  git clone --depth=1 -b release_60  https://github.com/llvm-mirror/llvm.git ${LLVM_BASENAME}-source
+  git clone --depth=1 -b release_60  https://github.com/llvm-mirror/libcxx.git ${LLVM_BASENAME}-source/projects/libcxx
+  git clone --depth=1 -b release_60  https://github.com/llvm-mirror/libcxxabi.git ${LLVM_BASENAME}-source/projects/libcxxabi
 
   log "Compiling libc++."
 
@@ -58,8 +58,8 @@ else
   popd >/dev/null
 
   # Workaround, it seems LLVM 5.0 does not install these files.
-  cp -v ${LLVM_BASENAME}-build/include/c++/v1/cxxabi.h ${LLVM_INCLUDE}
-  cp -v ${LLVM_BASENAME}-build/include/c++/v1/__cxxabi_config.h ${LLVM_INCLUDE}
+  # cp -v ${LLVM_BASENAME}-build/include/c++/v1/cxxabi.h ${LLVM_INCLUDE}
+  # cp -v ${LLVM_BASENAME}-build/include/c++/v1/__cxxabi_config.h ${LLVM_INCLUDE}
 
   rm -Rf ${LLVM_BASENAME}-source ${LLVM_BASENAME}-build
 
@@ -92,7 +92,7 @@ else
 
   pushd ${BOOST_BASENAME}-source >/dev/null
 
-  BOOST_TOOLSET="clang-5.0"
+  BOOST_TOOLSET="clang-6.0"
   BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
 
   py2="/usr/bin/env python2"
@@ -277,7 +277,7 @@ set(CMAKE_CXX_COMPILER ${CXX})
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -std=c++14 -pthread -fPIC" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra" CACHE STRING "" FORCE)
 # See https://bugs.llvm.org/show_bug.cgi?id=21629
-set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wno-missing-braces" CACHE STRING "" FORCE)
+# set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wno-missing-braces" CACHE STRING "" FORCE)
 
 # @todo These flags need to be compatible with setup.py compilation.
 set(CMAKE_CXX_FLAGS_RELEASE_CLIENT "\${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -g -fwrapv -O2 -Wall -Wstrict-prototypes -fno-strict-aliasing -Wdate-time -D_FORTIFY_SOURCE=2 -g -fstack-protector-strong -Wformat -Werror=format-security -fPIC -std=c++14 -Wno-missing-braces -DBOOST_ERROR_CODE_HEADER_ONLY -DLIBCARLA_ENABLE_LIFETIME_PROFILER -DLIBCARLA_WITH_PYTHON_SUPPORT" CACHE STRING "" FORCE)
