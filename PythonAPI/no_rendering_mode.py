@@ -687,7 +687,7 @@ class ModuleWorld(object):
 
         # self.render_module.drawCircle(self.hero_actor_surface,  int(hero_radius), int(hero_radius), radius, COLOR_RED)
 
-        display.blit(self.hero_actor_surface, ((display.get_width() - self.surface_size) / 2 + x - int(hero_radius) + translation_offset[0],
+        display.blit(self.hero_actor_surface, (x - int(hero_radius) + translation_offset[0],
                                                y - int(hero_radius) + translation_offset[1]))
 
     def is_actor_inside_hero_radius(self, actor):
@@ -754,8 +754,15 @@ class ModuleWorld(object):
         # self.speed_limits_surface = pygame.transform.smoothscale(self.speed_limits_surface, scale_factor)
 
         # Translation offset
-        translation_offset = ((display.get_width() - self.surface_size)/2 +
-                              self.module_input.mouse_offset[0], self.module_input.mouse_offset[1])
+        if self.hero_actor is None:
+            translation_offset = ((display.get_width() - self.surface_size)/2 +
+                                  self.module_input.mouse_offset[0], self.module_input.mouse_offset[1])
+        else:
+            hero_location = (self.hero_actor.get_location().x, self.hero_actor.get_location().y)
+            hero_location_screen = self.transform_helper.convert_world_to_screen_point(hero_location)
+            print hero_location_screen
+            translation_offset = ( -hero_location_screen[0] + display.get_width() / 2,
+                                   (- hero_location_screen[1] + display.get_height() / 2) )
 
         # Blit surfaces
         display.blit(self.map_surface, translation_offset)
