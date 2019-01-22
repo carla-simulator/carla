@@ -32,6 +32,9 @@ hard-clean:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --clean
 	@echo "To force recompiling dependencies run: rm -Rf ${CARLA_BUILD_FOLDER}"
 
+build-usercontent:
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildUserContentUE4.sh ${ARGS}
+
 check: LibCarla PythonAPI
 	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --all $(ARGS)
 

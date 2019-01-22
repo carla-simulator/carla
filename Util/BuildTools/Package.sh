@@ -69,7 +69,7 @@ if $DO_PACKAGE ; then
       -project="${PWD}/CarlaUE4.uproject" \
       -nocompileeditor -nop4 -cook -stage -archive -package \
       -clientconfig=Development -ue4exe=UE4Editor \
-      -pak -prereqs -nodebuginfo \
+      -prereqs -nodebuginfo \
       -targetplatform=Linux -build -utf8output \
       -archivedirectory="${BUILD_FOLDER}"
 
@@ -93,6 +93,8 @@ if $DO_COPY_FILES ; then
 
   pushd ${CARLA_ROOT_FOLDER} >/dev/null
 
+  mkdir "${DESTINATION}/UserContent"
+
   copy_if_changed "./LICENSE" "${DESTINATION}/LICENSE"
   copy_if_changed "./CHANGELOG.md" "${DESTINATION}/CHANGELOG"
   copy_if_changed "./Docs/release_readme.md" "${DESTINATION}/README"
@@ -107,6 +109,7 @@ if $DO_COPY_FILES ; then
   copy_if_changed "./PythonAPI/spawn_npc.py" "${DESTINATION}/spawn_npc.py"
   copy_if_changed "./PythonAPI/tutorial.py" "${DESTINATION}/tutorial.py"
   copy_if_changed "./PythonAPI/vehicle_gallery.py" "${DESTINATION}/vehicle_gallery.py"
+  copy_if_changed "./Util/InjectUserContent.sh" "${DESTINATION}/InjectUserContent.sh"
 
   popd >/dev/null
 
