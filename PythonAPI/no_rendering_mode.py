@@ -135,44 +135,47 @@ class Vehicle(object):
         self.surface = pygame.Surface((self.surface_size[0], self.surface_size[1]), pygame.SRCALPHA)
         self.surface.set_colorkey(COLOR_BLACK)
 
-        pygame.draw.polygon(self.surface, color, [(0,0), (self.surface_size[0],0), (self.surface_size[0], self.surface_size[1]),(0, self.surface_size[1])] )
+        pygame.draw.polygon(self.surface, color, [(0, 0), (self.surface_size[0], 0),
+                                                  (self.surface_size[0], self.surface_size[1]), (0, self.surface_size[1])])
         render_module = module_manager.get_module(MODULE_RENDER)
 
-        center = (self.surface_size[0]/2, self.surface_size[1] / 2)
+        center = (self.surface_size[0] / 2, self.surface_size[1] / 2)
         arrow_tip = (self.surface_size[0], self.surface_size[1] / 2)
         arrow_half = self.surface_size[1] / 2 + arrow_tip[0] / 2
 
         render_module.drawLine(self.surface, COLOR_BLUE, False, [center, arrow_tip], arrow_width)
-        render_module.drawLine(self.surface, COLOR_BLUE, False, [arrow_tip, (arrow_half-1, 0)], arrow_width)
-        render_module.drawLine(self.surface, COLOR_BLUE, False, [arrow_tip, (arrow_half-1, self.surface_size[1])], arrow_width)
+        render_module.drawLine(self.surface, COLOR_BLUE, False, [arrow_tip, (arrow_half - 1, 0)], arrow_width)
+        render_module.drawLine(
+            self.surface, COLOR_BLUE, False, [
+                arrow_tip, (arrow_half - 1, self.surface_size[1])], arrow_width)
 
     def render(self, display):
-        actor_location=self.actor.get_location()
+        actor_location = self.actor.get_location()
 
-        x, y=self.map_transform_helper.convert_world_to_screen_point((actor_location.x, actor_location.y))
+        x, y = self.map_transform_helper.convert_world_to_screen_point((actor_location.x, actor_location.y))
 
-        rotate_surface=pygame.transform.rotate(self.surface, -self.actor.get_transform().rotation.yaw)
+        rotate_surface = pygame.transform.rotate(self.surface, -self.actor.get_transform().rotation.yaw)
 
         display.blit(rotate_surface, (x, y))
 
 
 class TrafficLight(object):
     def __init__(self, actor, radius, map_transform_helper):
-        self.actor=actor
+        self.actor = actor
 
-        actor_location=actor.get_location()
-        self.x, self.y=map_transform_helper.convert_world_to_screen_point((actor_location.x, actor_location.y))
+        actor_location = actor.get_location()
+        self.x, self.y = map_transform_helper.convert_world_to_screen_point((actor_location.x, actor_location.y))
 
-        self.color=COLOR_BLACK
+        self.color = COLOR_BLACK
         if 'traffic_light' in actor.type_id:
             if actor.state == carla.libcarla.TrafficLightState.Green:
-                color=COLOR_GREEN
+                color = COLOR_GREEN
             elif actor.state == carla.libcarla.TrafficLightState.Yellow:
-                color=COLOR_YELLOW
+                color = COLOR_YELLOW
             elif actor.state == carla.libcarla.TrafficLightState.Red:
-                color=COLOR_RED
+                color = COLOR_RED
 
-        self.surface=pygame.Surface((radius * 2, radius * 2))
+        self.surface = pygame.Surface((radius * 2, radius * 2))
         pygame.draw.circle(self.surface, color, (radius, radius), radius)
 
     def render(self, display):
@@ -181,18 +184,18 @@ class TrafficLight(object):
 
 class SpeedLimit(object):
     def __init__(self, actor, radius, map_transform_helper):
-        self.actor=actor
+        self.actor = actor
         self.speed_limit = actor.type_id.split('.')[2]
-        self.font=pygame.font.SysFont('Arial', 10)
+        self.font = pygame.font.SysFont('Arial', 10)
 
-        actor_location=actor.get_location()
-        self.x, self.y=map_transform_helper.convert_world_to_screen_point((actor_location.x, actor_location.y))
+        actor_location = actor.get_location()
+        self.x, self.y = map_transform_helper.convert_world_to_screen_point((actor_location.x, actor_location.y))
 
-        self.surface=pygame.Surface((radius * 2, radius * 2))
+        self.surface = pygame.Surface((radius * 2, radius * 2))
         pygame.draw.circle(self.surface, COLOR_RED, (radius, radius), radius)
         pygame.draw.circle(self.surface, COLOR_WHITE, (radius, radius), int(radius * 0.75))
         font_surface = self.font.render(self.speed_limit, True, COLOR_BLACK)
-        self.surface.blit(font_surface, (radius/2, radius/2))
+        self.surface.blit(font_surface, (radius / 2, radius / 2))
 
     def render(self, display):
         display.blit(self.surface, (self.x, self.y))
@@ -200,13 +203,13 @@ class SpeedLimit(object):
 
 class Walker(object):
     def __init__(self, actor, radius, map_transform_helper):
-        self.actor=actor
+        self.actor = actor
 
-        actor_location=actor.get_location()
-        self.x, self.y=map_transform_helper.convert_world_to_screen_point((actor_location.x, actor_location.y))
+        actor_location = actor.get_location()
+        self.x, self.y = map_transform_helper.convert_world_to_screen_point((actor_location.x, actor_location.y))
 
-        self.color=COLOR_WHITE
-        self.surface=pygame.Surface((radius * 2, radius * 2))
+        self.color = COLOR_WHITE
+        self.surface = pygame.Surface((radius * 2, radius * 2))
         pygame.draw.circle(self.surface, self.color, (radius, radius), radius)
 
     def render(self, display):
@@ -217,25 +220,25 @@ class RenderShape(object):
     @staticmethod
     def render_vehicles(render_module, surface, list_actors, color, map_transform_helper):
         for actor in list_actors:
-            vehicle_render=Vehicle(actor, color, map_transform_helper)
+            vehicle_render = Vehicle(actor, color, map_transform_helper)
             vehicle_render.render(surface)
 
     @staticmethod
     def render_traffic_lights(render_module, surface, list_actors, color, radius, map_transform_helper):
         for actor in list_actors:
-            traffic_light_render=TrafficLight(actor, radius, map_transform_helper)
+            traffic_light_render = TrafficLight(actor, radius, map_transform_helper)
             traffic_light_render.render(surface)
 
     @staticmethod
     def render_walkers(render_module, surface, list_actors, color, radius, map_transform_helper):
         for actor in list_actors:
-            walker_render=Walker(actor, radius, map_transform_helper)
+            walker_render = Walker(actor, radius, map_transform_helper)
             walker_render.render(surface)
 
     @staticmethod
     def render_speed_limits(render_module, surface, list_actors, color, radius, map_transform_helper):
         for actor in list_actors:
-            speed_limit_render=SpeedLimit(actor, radius, map_transform_helper)
+            speed_limit_render = SpeedLimit(actor, radius, map_transform_helper)
             speed_limit_render.render(surface)
 
 # ==============================================================================
@@ -245,7 +248,7 @@ class RenderShape(object):
 
 class ModuleManager(object):
     def __init__(self):
-        self.modules=[]
+        self.modules = []
 
     def register_module(self, module):
         self.modules.append(module)
@@ -278,8 +281,8 @@ class ModuleManager(object):
 # ==============================================================================
 class ModuleRender(object):
     def __init__(self, name, antialiasing):
-        self.name=name
-        self.antialiasing=antialiasing
+        self.name = name
+        self.antialiasing = antialiasing
 
     def start(self):
         pass
@@ -289,17 +292,60 @@ class ModuleRender(object):
 
     def tick(self, clock):
 
-        text_antialiasing=''
+        text_antialiasing = ''
         if self.antialiasing:
-            text_antialiasing='ON'
+            text_antialiasing = 'ON'
         else:
-            text_antialiasing='OFF'
+            text_antialiasing = 'OFF'
 
-        module_info_text=[
+        module_info_text = [
             'Anti-aliasing:           % 3s' % text_antialiasing,
         ]
         module_hud = module_manager.get_module(MODULE_HUD)
         module_hud.add_info(self.name, module_info_text)
+
+    def getParallelLinesAtDistance(self, line, distance, transform_helper):
+        front_vector = (line[1][0] - line[0][0], line[1][1] - line[0][1])
+        left_vector = (-front_vector[1], front_vector[0])
+
+        length_left_vector = math.sqrt(left_vector[0] ** 2 + left_vector[1] ** 2)
+        unit_left_vector = (left_vector[0] / length_left_vector, left_vector[1] / length_left_vector)
+
+        distance = distance / 2.0
+        unit_right_vector = (-unit_left_vector[0], -unit_left_vector[1])
+
+        # Get lateral lines
+        lateral_left = [(line[0][0] + unit_left_vector[0] * distance, line[0][1] + unit_left_vector[1] * distance),
+                        (line[1][0] + unit_left_vector[0] * distance, line[1][1] + unit_left_vector[1] * distance)]
+
+        # Get lateral lines
+        lateral_right = [(line[0][0] + unit_right_vector[0] * distance, line[0][1] + unit_right_vector[1] * distance),
+                         (line[1][0] + unit_right_vector[0] * distance, line[1][1] + unit_right_vector[1] * distance)]
+
+        # Convert to screen space
+        lateral_left_screen = [transform_helper.convert_world_to_screen_point(lateral_left[0]),
+                               transform_helper.convert_world_to_screen_point(lateral_left[1])]
+
+        lateral_right_screen = [transform_helper.convert_world_to_screen_point(lateral_right[0]),
+                                transform_helper.convert_world_to_screen_point(lateral_right[1])]
+
+        return lateral_left_screen, lateral_right_screen
+
+    def drawPolygonFromParallelLines(self, surface, color, line, distance, transform_helper):
+        lateral_left_screen, lateral_right_screen = self.getParallelLinesAtDistance(line, distance, transform_helper)
+        pygame.draw.polygon(surface,
+                            COLOR_DARK_GREY,
+                            [lateral_left_screen[0],
+                             lateral_left_screen[1],
+                                lateral_right_screen[1],
+                                lateral_right_screen[0]])
+
+    def drawLineAtDistance(self, surface, line, distance, color, transform_helper):
+
+        lateral_left_screen, lateral_right_screen = self.getParallelLinesAtDistance(line, distance, transform_helper)
+        line_width = 1
+        self.drawLine(surface, color, False, lateral_left_screen, line_width)
+        self.drawLine(surface, color, False, lateral_right_screen, line_width)
 
     def drawLineList(self, surface, color, closed, list_lines, width):
         for line in list_lines:
@@ -329,8 +375,8 @@ class ModuleRender(object):
         p0 = line[0]
         p1 = line[1]
 
-        center_line_x = (p0[0]+p1[0])/2
-        center_line_y = (p0[1]+p1[1])/2
+        center_line_x = (p0[0] + p1[0]) / 2
+        center_line_y = (p0[1] + p1[1]) / 2
         center_line = [center_line_x, center_line_y]
 
         length = 10  # Line size
@@ -349,11 +395,11 @@ class ModuleRender(object):
 
         UL = (center_line[0] + half_length_cos_angle - half_width_sin_angle,
               center_line[1] + half_width_cos_angle + half_length_sin_angle)
-        UR=(center_line[0] - half_length_cos_angle - half_width_sin_angle,
+        UR = (center_line[0] - half_length_cos_angle - half_width_sin_angle,
               center_line[1] + half_width_cos_angle - half_length_sin_angle)
-        BL=(center_line[0] + half_length_cos_angle + half_width_sin_angle,
+        BL = (center_line[0] + half_length_cos_angle + half_width_sin_angle,
               center_line[1] - half_width_cos_angle + half_length_sin_angle)
-        BR=(center_line[0] - half_length_cos_angle + half_width_sin_angle,
+        BR = (center_line[0] - half_length_cos_angle + half_width_sin_angle,
               center_line[1] - half_width_cos_angle - half_length_sin_angle)
 
         pygame.gfxdraw.aapolygon(surface, (UL, UR, BR, BL), color)
@@ -379,29 +425,29 @@ class ModuleRender(object):
 
 class Legend(object):
     def __init__(self, list_keys, header_font, font):
-        self.header_surface=header_font.render(LEGEND_NAME, True, COLOR_LIGHT_GREY)
+        self.header_surface = header_font.render(LEGEND_NAME, True, COLOR_LIGHT_GREY)
 
-        self.legend_surfaces=[]
-        self.surface_size=25
+        self.legend_surfaces = []
+        self.surface_size = 25
 
         for key in list_keys:
-            color_surface=pygame.Surface((self.surface_size, self.surface_size))
+            color_surface = pygame.Surface((self.surface_size, self.surface_size))
             color_surface.fill(key[0])
 
-            font_surface=font.render(key[1], True, COLOR_LIGHT_GREY)
+            font_surface = font.render(key[1], True, COLOR_LIGHT_GREY)
 
             self.legend_surfaces.append((color_surface, font_surface))
 
     def render(self, display):
 
-        h_offset=20
-        v_offset=200 + 25 + 10
-        h_space=10
+        h_offset = 20
+        v_offset = 200 + 25 + 10
+        h_space = 10
 
         display.blit(self.header_surface, (8 + 100 / 2, v_offset))
 
         for surface in self.legend_surfaces:
-            v_offset=v_offset + surface[0].get_height() + 10
+            v_offset = v_offset + surface[0].get_height() + 10
             display.blit(surface[0], (h_offset, v_offset))
             display.blit(surface[1], (surface[0].get_width() + h_offset + h_space, v_offset + 5))
 
@@ -409,7 +455,7 @@ class Legend(object):
 class ModuleHUD (object):
 
     def __init__(self, name, width, height):
-        self.name=name
+        self.name = name
         self._init_hud_params()
         self._init_data_params(width, height)
 
@@ -417,19 +463,19 @@ class ModuleHUD (object):
         pass
 
     def _init_hud_params(self):
-        font=pygame.font.Font(pygame.font.get_default_font(), 20)
-        fonts=[x for x in pygame.font.get_fonts() if 'mono' in x]
-        default_font='ubuntumono'
-        mono=default_font if default_font in fonts else fonts[0]
-        mono=pygame.font.match_font(mono)
-        self._font_mono=pygame.font.Font(mono, 14)
-        self._header_font=pygame.font.SysFont('Arial', 14)
+        font = pygame.font.Font(pygame.font.get_default_font(), 20)
+        fonts = [x for x in pygame.font.get_fonts() if 'mono' in x]
+        default_font = 'ubuntumono'
+        mono = default_font if default_font in fonts else fonts[0]
+        mono = pygame.font.match_font(mono)
+        self._font_mono = pygame.font.Font(mono, 14)
+        self._header_font = pygame.font.SysFont('Arial', 14)
 
     def _init_data_params(self, height, width):
-        self.dim=(height, width)
-        self._show_info=True
-        self._info_text={}
-        self.legend=Legend(((COLOR_MAGENTA, VEHICLE_NAME),
+        self.dim = (height, width)
+        self._show_info = True
+        self._info_text = {}
+        self.legend = Legend(((COLOR_MAGENTA, VEHICLE_NAME),
                               (COLOR_BLUE, SPEED_LIMIT_NAME),
                               (COLOR_WHITE, WALKER_NAME)),
                              self._header_font,
@@ -440,35 +486,35 @@ class ModuleHUD (object):
             return
 
     def add_info(self, module_name, info):
-        self._info_text[module_name]=info
+        self._info_text[module_name] = info
 
     def renderActorId(self, display, list_actors, transform_helper, translation_offset):
         if self._show_info:
-            v_offset=4
+            v_offset = 4
             for actor in list_actors:
-                location=actor.get_location()
-                x, y=transform_helper.convert_world_to_screen_point((location.x, location.y - v_offset))
+                location = actor.get_location()
+                x, y = transform_helper.convert_world_to_screen_point((location.x, location.y - v_offset))
 
-                color_surface=pygame.Surface((len(str(actor.id)) * 8, 14))
+                color_surface = pygame.Surface((len(str(actor.id)) * 8, 14))
                 color_surface.set_alpha(150)
                 color_surface.fill(COLOR_BLACK)
 
                 display.blit(color_surface, (x + translation_offset[0], y + translation_offset[1]))
-                font_surface=self._font_mono.render(str(actor.id), True, COLOR_LIGHT_GREY)
+                font_surface = self._font_mono.render(str(actor.id), True, COLOR_LIGHT_GREY)
                 font_surface.set_colorkey(COLOR_BLACK)
                 display.blit(font_surface, (x + translation_offset[0], y + translation_offset[1]))
 
     def render(self, display):
         if self._show_info:
-            info_surface=pygame.Surface((240, self.dim[1]))
+            info_surface = pygame.Surface((240, self.dim[1]))
             info_surface.set_alpha(100)
             display.blit(info_surface, (0, 0))
-            v_offset=4
-            bar_h_offset=100
-            bar_width=106
-            i=0
+            v_offset = 4
+            bar_h_offset = 100
+            bar_width = 106
+            i = 0
             for module_name, module_info in self._info_text.items():
-                surface=self._header_font.render(module_name, True, COLOR_LIGHT_GREY)
+                surface = self._header_font.render(module_name, True, COLOR_LIGHT_GREY)
                 display.blit(surface, (8 + bar_width / 2, 18 * i + v_offset))
                 i += 1
                 for item in module_info:
@@ -476,26 +522,26 @@ class ModuleHUD (object):
                         break
                     if isinstance(item, list):
                         if len(item) > 1:
-                            points=[(x + 8, v_offset + 8 + (1.0 - y) * 30) for x, y in enumerate(item)]
+                            points = [(x + 8, v_offset + 8 + (1.0 - y) * 30) for x, y in enumerate(item)]
                             pygame.draw.lines(display, (255, 136, 0), False, points, 2)
-                        item=None
+                        item = None
                         v_offset += 18
                     elif isinstance(item, tuple):
                         if isinstance(item[1], bool):
-                            rect=pygame.Rect((bar_h_offset, v_offset + 8), (6, 6))
+                            rect = pygame.Rect((bar_h_offset, v_offset + 8), (6, 6))
                             pygame.draw.rect(display, COLOR_WHITE, rect, 0 if item[1] else 1)
                         else:
-                            rect_border=pygame.Rect((bar_h_offset, v_offset + 8), (bar_width, 6))
+                            rect_border = pygame.Rect((bar_h_offset, v_offset + 8), (bar_width, 6))
                             pygame.draw.rect(display, COLOR_WHITE, rect_border, 1)
-                            f=(item[1] - item[2]) / (item[3] - item[2])
+                            f = (item[1] - item[2]) / (item[3] - item[2])
                             if item[2] < 0.0:
-                                rect=pygame.Rect((bar_h_offset + f * (bar_width - 6), v_offset + 8), (6, 6))
+                                rect = pygame.Rect((bar_h_offset + f * (bar_width - 6), v_offset + 8), (6, 6))
                             else:
-                                rect=pygame.Rect((bar_h_offset, v_offset + 8), (f * bar_width, 6))
+                                rect = pygame.Rect((bar_h_offset, v_offset + 8), (f * bar_width, 6))
                             pygame.draw.rect(display, COLOR_WHITE, rect)
-                        item=item[0]
+                        item = item[0]
                     if item:  # At this point has to be a str.
-                        surface=self._font_mono.render(item, True, COLOR_WHITE)
+                        surface = self._font_mono.render(item, True, COLOR_WHITE)
                         display.blit(surface, (8, 18 * i + v_offset))
                     v_offset += 18
             self.legend.render(display)
@@ -508,21 +554,21 @@ class ModuleHUD (object):
 class ModuleWorld(object):
 
     def __init__(self, name, host, port, timeout):
-        self.name=name
-        self.host=host
-        self.port=port
-        self.timeout=timeout
-        self.server_fps=0
-        self.server_clock=pygame.time.Clock()
+        self.name = name
+        self.host = host
+        self.port = port
+        self.timeout = timeout
+        self.server_fps = 0
+        self.server_clock = pygame.time.Clock()
 
     def _get_data_from_carla(self, host, port, timeout):
         try:
-            client=carla.Client(host, port)
+            client = carla.Client(host, port)
             client.set_timeout(timeout)
 
-            world=client.get_world()
-            town_map=world.get_map()
-            actors=world.get_actors()
+            world = client.get_world()
+            town_map = world.get_map()
+            actors = world.get_actors()
             return (world, town_map, actors)
 
         except Exception as ex:
@@ -530,56 +576,57 @@ class ModuleWorld(object):
             exit_game()
 
     def _create_world_surfaces(self):
-        self.map_surface=pygame.Surface((self.surface_size, self.surface_size))
+        self.map_surface = pygame.Surface((self.surface_size, self.surface_size))
 
-        self.vehicles_surface=pygame.Surface((self.surface_size, self.surface_size))
+        self.vehicles_surface = pygame.Surface((self.surface_size, self.surface_size))
         self.vehicles_surface.set_colorkey((0, 0, 0))
 
-        self.traffic_light_surface=pygame.Surface((self.surface_size, self.surface_size))
+        self.traffic_light_surface = pygame.Surface((self.surface_size, self.surface_size))
         self.traffic_light_surface.set_colorkey((0, 0, 0))
 
-        self.speed_limits_surface=pygame.Surface((self.surface_size, self.surface_size))
+        self.speed_limits_surface = pygame.Surface((self.surface_size, self.surface_size))
         self.speed_limits_surface.set_colorkey((0, 0, 0))
 
-        self.walkers_surface=pygame.Surface((self.surface_size, self.surface_size))
+        self.walkers_surface = pygame.Surface((self.surface_size, self.surface_size))
         self.walkers_surface.set_colorkey((0, 0, 0))
 
     def _compute_map_bounding_box(self, map_waypoints):
 
-        x_min=float('inf')
-        y_min=float('inf')
-        x_max=0
-        y_max=0
+        x_min = float('inf')
+        y_min = float('inf')
+        x_max = 0
+        y_max = 0
 
         for waypoint in map_waypoints:
-            x_max=max(x_max, waypoint.transform.location.x)
-            x_min=min(x_min, waypoint.transform.location.x)
+            x_max = max(x_max, waypoint.transform.location.x)
+            x_min = min(x_min, waypoint.transform.location.x)
 
-            y_max=max(y_max, waypoint.transform.location.y)
-            y_min=min(y_min, waypoint.transform.location.y)
+            y_max = max(y_max, waypoint.transform.location.y)
+            y_min = min(y_min, waypoint.transform.location.y)
 
         return (x_min, y_min, x_max, y_max)
 
     def start(self):
-        self.world, self.town_map, self.actors=self._get_data_from_carla(self.host, self.port, self.timeout)
+        self.world, self.town_map, self.actors = self._get_data_from_carla(self.host, self.port, self.timeout)
 
         # Store necessary modules
-        self.hud_module=module_manager.get_module(MODULE_HUD)
-        self.module_input=module_manager.get_module(MODULE_INPUT)
+        self.hud_module = module_manager.get_module(MODULE_HUD)
+        self.module_input = module_manager.get_module(MODULE_INPUT)
 
-        self.surface_size=min(self.hud_module.dim[0], self.hud_module.dim[1])
+        self.surface_size = min(self.hud_module.dim[0], self.hud_module.dim[1])
 
         self._create_world_surfaces()
 
         # Generate waypoints
-        waypoint_length=2.0
-        map_waypoints=self.town_map.generate_waypoints(waypoint_length)
+        waypoint_length = 1.0
+        map_waypoints = self.town_map.generate_waypoints(waypoint_length)
 
         # compute bounding boxes
-        self.x_min, self.y_min, self.x_max, self.y_max=self._compute_map_bounding_box(map_waypoints)
+        self.x_min, self.y_min, self.x_max, self.y_max = self._compute_map_bounding_box(map_waypoints)
 
         # Feed map bounding box and surface size to transform helper
-        self.transform_helper=TransformHelper((self.x_min * 1.05, self.y_min * 1.02), (self.x_max * 1.02, self.y_max * 1.02), self.surface_size)
+        self.transform_helper = TransformHelper(
+            (self.x_min * 1.02, self.y_min * 1.02), (self.x_max * 1.02, self.y_max * 1.02), self.surface_size)
 
         # Retrieve data from waypoints orientation, width and length and do conversions into another list
         self.normalized_point_list = []
@@ -587,12 +634,13 @@ class ModuleWorld(object):
         for waypoint in map_waypoints:
 
             # Width of road
-            width=self.transform_helper.convert_world_to_screen_size((waypoint.lane_width, waypoint.lane_width))[0]
+            screen_width = self.transform_helper.convert_world_to_screen_size(
+                (waypoint.lane_width, waypoint.lane_width))[0]
 
-            direction=(1, 0)
-            yaw=math.radians(waypoint.transform.rotation.yaw)
+            direction = (1, 0)
+            yaw = math.radians(waypoint.transform.rotation.yaw)
             # Waypoint front
-            wf=(direction[0] * math.cos(yaw) - direction[1] * math.sin(yaw),
+            wf = (direction[0] * math.cos(yaw) - direction[1] * math.sin(yaw),
                   direction[0] * math.sin(yaw) + direction[1] * math.cos(yaw))
 
             wp_0 = (waypoint.transform.location.x, waypoint.transform.location.y)
@@ -602,13 +650,14 @@ class ModuleWorld(object):
             wp_0_screen = self.transform_helper.convert_world_to_screen_point(wp_0)
             wp_1_screen = self.transform_helper.convert_world_to_screen_point(wp_1)
 
-
             # Orientation of road
-            color=COLOR_BLACK
+            color = COLOR_BLACK
             if waypoint.is_intersection:
-                self.intersection_waypoints.append(((wp_0_screen, wp_1_screen), COLOR_DARK_GREY, width))
+                self.intersection_waypoints.append(
+                    ((wp_0_screen, wp_1_screen), COLOR_DARK_GREY, screen_width, (wp_0, wp_1), waypoint.lane_width))
             else:
-                self.normalized_point_list.append(((wp_0_screen, wp_1_screen), COLOR_DARK_GREY, width))
+                self.normalized_point_list.append(
+                    ((wp_0_screen, wp_1_screen), COLOR_DARK_GREY, screen_width, (wp_0, wp_1), waypoint.lane_width))
 
         # Module render
         self.render_module = module_manager.get_module(MODULE_RENDER)
@@ -665,13 +714,22 @@ class ModuleWorld(object):
     def render_map(self, display):
         self.map_surface.fill(COLOR_GREY)
         for point in self.normalized_point_list:
-            self.render_module.drawLineWithBorder(self.map_surface,
-                                                  point[1],
-                                                  False,
-                                                  point[0],
-                                                  point[2],
-                                                  3,
-                                                  COLOR_WHITE)
+
+            line = point[3]
+            front = (line[1][0] - line[0][0], line[0][1] - line[1][1])
+            length_front = math.sqrt(front[0] ** 2 + front[1] ** 2)
+            unit_front = (front[0] / length_front, front[1] / length_front)
+
+            self.render_module.drawPolygonFromParallelLines(self.map_surface,
+                                                            point[1],
+                                                            line,
+                                                            point[4],
+                                                            self.transform_helper)
+
+            self.render_module.drawCircle(self.map_surface, point[0][0][0], point[0][0][1], point[2] / 2, point[1])
+            self.render_module.drawCircle(self.map_surface, point[0][1][0], point[0][1][1], point[2] / 2, point[1])
+
+            self.render_module.drawLineAtDistance(self.map_surface, line, point[4], COLOR_WHITE, self.transform_helper)
 
         for point in self.intersection_waypoints:
             self.render_module.drawLine(self.map_surface,
@@ -679,6 +737,9 @@ class ModuleWorld(object):
                                         False,
                                         point[0],
                                         point[2])
+
+            self.render_module.drawCircle(self.map_surface, point[0][0][0], point[0][0][1], point[2] / 2, point[1])
+            self.render_module.drawCircle(self.map_surface, point[0][1][0], point[0][1][1], point[2] / 2, point[1])
 
     def render_hero_actor(self, display, hero_actor, color, radius, translation_offset):
 
@@ -701,8 +762,8 @@ class ModuleWorld(object):
                                                y - int(hero_radius) + translation_offset[1]))
 
     def is_actor_inside_hero_radius(self, actor):
-        return math.sqrt((actor.get_location().x-self.hero_actor.get_location().x)**2
-                + (actor.get_location().y - self.hero_actor.get_location().y)**2) <= self.filter_radius
+        return math.sqrt((actor.get_location().x - self.hero_actor.get_location().x)**2
+                         + (actor.get_location().y - self.hero_actor.get_location().y)**2) <= self.filter_radius
 
     def _splitActors(self, actors):
         vehicles = []
@@ -764,13 +825,13 @@ class ModuleWorld(object):
 
         # Translation offset
         if self.hero_actor is None:
-            translation_offset = ((display.get_width() - self.surface_size)/2 +
+            translation_offset = ((display.get_width() - self.surface_size) / 2 +
                                   self.module_input.mouse_offset[0], self.module_input.mouse_offset[1])
         else:
             hero_location = (self.hero_actor.get_location().x, self.hero_actor.get_location().y)
             hero_location_screen = self.transform_helper.convert_world_to_screen_point(hero_location)
-            translation_offset = ( -hero_location_screen[0] + display.get_width() / 2,
-                                   (- hero_location_screen[1] + display.get_height() / 2) )
+            translation_offset = (-hero_location_screen[0] + display.get_width() / 2,
+                                  (- hero_location_screen[1] + display.get_height() / 2))
 
         # Blit surfaces
         display.blit(self.map_surface, translation_offset)
