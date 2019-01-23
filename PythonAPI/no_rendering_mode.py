@@ -102,12 +102,14 @@ class TransformHelper(object):
         self.map_size = map_size
 
     def convert_world_to_screen_point(self, point):
-        return (int(float(point[0] - self.min_map_point[0]) / float((self.max_map_point[0] - self.min_map_point[0])) * self.map_size),
-                int(float(point[1] - self.min_map_point[1]) / float((self.max_map_point[1] - self.min_map_point[1])) * self.map_size))
+        screen_point = (int(float(point[0] - self.min_map_point[0]) / float((self.max_map_point[0] - self.min_map_point[0])) * self.map_size),
+                        int(float(point[1] - self.min_map_point[1]) / float((self.max_map_point[1] - self.min_map_point[1])) * self.map_size))
+        return (max(screen_point[0], 1), max(screen_point[1], 1))
 
     def convert_world_to_screen_size(self, size):
-        return (int(size[0] / float((self.max_map_point[0] - self.min_map_point[0])) * self.map_size),
-                int(size[1] / float((self.max_map_point[1] - self.min_map_point[1])) * self.map_size))
+        screen_size = (int(size[0] / float((self.max_map_point[0] - self.min_map_point[0])) * self.map_size),
+                       int(size[1] / float((self.max_map_point[1] - self.min_map_point[1])) * self.map_size))
+        return (max(screen_size[0], 1), max(screen_size[1], 1))
 
 
 # ==============================================================================
@@ -724,7 +726,8 @@ class ModuleWorld(object):
         self.server_fps = max(min(self.server_fps, 10000.0), 0.0)
         module_info_text = [
             'Server:  % 16d FPS' % self.server_fps,
-            'Client:  % 16d FPS' % clock.get_fps()
+            'Client:  % 16d FPS' % clock.get_fps(),
+            'Map Name:          %10s' % self.world.map_name,
         ]
 
         module_info_text = module_info_text + hero_mode_text
