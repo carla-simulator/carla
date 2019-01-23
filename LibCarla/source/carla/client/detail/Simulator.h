@@ -185,10 +185,6 @@ namespace detail {
       _client.SetActorAngularVelocity(actor.Serialize(), vector);
     }
 
-    void AddActorForce(const Actor &actor, const geom::Vector3D &vector) {
-      _client.AddActorForce(actor.Serialize(), vector);
-    }
-
     void AddActorImpulse(const Actor &actor, const geom::Vector3D &vector) {
       _client.AddActorImpulse(actor.Serialize(), vector);
     }

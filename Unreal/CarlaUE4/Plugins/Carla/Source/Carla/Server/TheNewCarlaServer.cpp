@@ -318,7 +318,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     if (RootComponent == nullptr) {
       RespondErrorStr("unable to get actor angular velocity: not supported by actor");
     }
-    return cr::Vector3D(RootComponent->GetPhysicsAngularVelocityInDegrees()).ToMeters();
+    return cr::Vector3D(RootComponent->GetPhysicsAngularVelocityInDegrees());
   });
 
   Server.BindSync("set_actor_angular_velocity", [this](
@@ -334,7 +334,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       RespondErrorStr("unable to set actor angular velocity: not supported by actor");
     }
     RootComponent->SetPhysicsAngularVelocityInDegrees(
-        vector.ToCentimeters(),
+        vector,
         false,
         "None");
   });
@@ -357,24 +357,6 @@ void FTheNewCarlaServer::FPimpl::BindActions()
         "None");
   });
 
-  Server.BindSync("add_actor_force", [this](
-      cr::Actor Actor,
-      cr::Vector3D vector) {
-    RequireEpisode();
-    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
-    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
-      RespondErrorStr("unable to add actor force: actor not found");
-    }
-    auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
-    if (RootComponent == nullptr) {
-      RespondErrorStr("unable to add actor force: not supported by actor");
-    }
-    RootComponent->AddForce(
-        vector.ToCentimeters(),
-        "None",
-        false);
-  });
-
   Server.BindSync("add_actor_impulse", [this](
       cr::Actor Actor,
       cr::Vector3D vector) {
@@ -388,7 +370,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       RespondErrorStr("unable to add actor impulse: not supported by actor");
     }
     RootComponent->AddImpulse(
-        vector.ToCentimeters(),
+        vector,
         "None",
         false);
   });

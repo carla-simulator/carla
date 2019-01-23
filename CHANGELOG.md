@@ -12,7 +12,6 @@
     - set_velocity: for setting the linear velocity
     - set_angular_velocity: for setting the angular velocity
     - get_angular_velocity: for getting the angular velocity
-    - add_force: for applying a force (in world axis)
     - add_impulse: for applying an impulse (in world axis)
   * Added support for gnss_sensor
   * OpenDriveActor has been rewritten using the Waypoint API, this has fixed some bugs

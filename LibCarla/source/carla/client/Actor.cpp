@@ -48,10 +48,6 @@ namespace client {
     GetEpisode().Lock()->SetActorVelocity(*this, vector);
   }
 
-  void Actor::AddForce(const geom::Vector3D &vector) {
-    GetEpisode().Lock()->AddActorForce(*this, vector);
-  }
-
   void Actor::AddImpulse(const geom::Vector3D &vector) {
     GetEpisode().Lock()->AddActorImpulse(*this, vector);
   }
