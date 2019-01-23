@@ -178,7 +178,7 @@ namespace detail {
     }
 
     geom::Vector3D GetActorAngularVelocity(const Actor &actor) const {
-      return GetActorDynamicState(actor).angularVelocity;
+      return GetActorDynamicState(actor).angular_velocity;
     }
 
     void SetActorAngularVelocity(const Actor &actor, const geom::Vector3D &vector) {

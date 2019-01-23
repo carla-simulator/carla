@@ -88,7 +88,7 @@ namespace detail {
 
     geom::Vector3D velocity;
 
-    geom::Vector3D angularVelocity;
+    geom::Vector3D angular_velocity;
 
     union TypeDependentState {
       rpc::TrafficLightState traffic_light_state;
