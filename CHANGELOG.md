@@ -9,6 +9,7 @@
   * Added support for spawning and controlling walkers (pedestrians)
   * Renamed vehicle.get_vehicle_control() to vehicle.get_control() to be consistent with walkers
   * Added support for gnss_sensor
+  * OpenDriveActor has been rewritten using the Waypoint API, this has fixed some bugs
 
 ## CARLA 0.9.2
 
