@@ -169,13 +169,12 @@ class TrafficLight(object):
         self.x, self.y = map_transform_helper.convert_world_to_screen_point((actor_location.x, actor_location.y))
 
         self.color = COLOR_BLACK
-        if 'traffic_light' in actor.type_id:
-            if actor.state == carla.libcarla.TrafficLightState.Green:
-                color = COLOR_GREEN
-            elif actor.state == carla.libcarla.TrafficLightState.Yellow:
-                color = COLOR_YELLOW
-            elif actor.state == carla.libcarla.TrafficLightState.Red:
-                color = COLOR_RED
+        if actor.state == carla.libcarla.TrafficLightState.Green:
+            color = COLOR_GREEN
+        elif actor.state == carla.libcarla.TrafficLightState.Yellow:
+            color = COLOR_YELLOW
+        elif actor.state == carla.libcarla.TrafficLightState.Red:
+            color = COLOR_RED
 
         self.surface = pygame.Surface((radius * 2, radius * 2))
         pygame.draw.circle(self.surface, color, (radius, radius), radius)
@@ -217,31 +216,6 @@ class Walker(object):
     def render(self, display):
         display.blit(self.surface, (self.x, self.y))
 
-
-class RenderShape(object):
-    @staticmethod
-    def render_vehicles(render_module, surface, list_actors, color, map_transform_helper):
-        for actor in list_actors:
-            vehicle_render = Vehicle(actor, color, map_transform_helper)
-            vehicle_render.render(surface)
-
-    @staticmethod
-    def render_traffic_lights(render_module, surface, list_actors, color, radius, map_transform_helper):
-        for actor in list_actors:
-            traffic_light_render = TrafficLight(actor, radius, map_transform_helper)
-            traffic_light_render.render(surface)
-
-    @staticmethod
-    def render_walkers(render_module, surface, list_actors, color, radius, map_transform_helper):
-        for actor in list_actors:
-            walker_render = Walker(actor, radius, map_transform_helper)
-            walker_render.render(surface)
-
-    @staticmethod
-    def render_speed_limits(render_module, surface, list_actors, color, radius, map_transform_helper):
-        for actor in list_actors:
-            speed_limit_render = SpeedLimit(actor, radius, map_transform_helper)
-            speed_limit_render.render(surface)
 
 # ==============================================================================
 # -- ModuleManager -------------------------------------------------------------
@@ -872,8 +846,8 @@ class ModuleWorld(object):
 
         if not self.map_rendered:
             self.render_map(self.map_surface)
-            self.previous_scale_factor = (int(self.surface_size * self.module_input.wheel_offset[0]),
-                                          int(self.surface_size * self.module_input.wheel_offset[1]))
+            self.previous_scaled_size = (int(self.surface_size * self.module_input.wheel_offset[0]),
+                                         int(self.surface_size * self.module_input.wheel_offset[1]))
             self.map_rendered = True
 
         self.vehicles_surface.fill(COLOR_BLACK)
@@ -892,36 +866,47 @@ class ModuleWorld(object):
             speed_limits = [speed_limit for speed_limit in speed_limits
                             if self.is_actor_inside_hero_radius(speed_limit)]
 
-        RenderShape.render_vehicles(self.render_module, self.vehicles_surface,
-                                    vehicles, COLOR_MAGENTA, self.transform_helper)
+        # Render Vehicles
+        for actor in vehicles:
+            vehicle_render = Vehicle(actor, COLOR_MAGENTA, self.transform_helper)
+            vehicle_render.render(self.vehicles_surface)
 
+        # Render Traffic Lights
         traffic_light_width = self.transform_helper.convert_world_to_screen_size((1, 1))[0]
-        RenderShape.render_traffic_lights(self.render_module, self.traffic_light_surface, traffic_lights,
-                                          COLOR_BLACK, traffic_light_width, self.transform_helper)
+        for actor in traffic_lights:
+            traffic_light_render = TrafficLight(actor, traffic_light_width, self.transform_helper)
+            traffic_light_render.render(self.traffic_light_surface)
 
+        # Render Speed limit
         speed_limit_width = self.transform_helper.convert_world_to_screen_size((3, 3))[0]
-        RenderShape.render_speed_limits(self.render_module, self.speed_limits_surface, speed_limits,
-                                        COLOR_BLUE, speed_limit_width, self.transform_helper)
+        for actor in speed_limits:
+            speed_limit_render = SpeedLimit(actor, speed_limit_width, self.transform_helper)
+            speed_limit_render.render(self.speed_limits_surface)
 
+        # Render Walkers
         walker_width = self.transform_helper.convert_world_to_screen_size((3, 3))[0]
-        RenderShape.render_walkers(self.render_module, self.walkers_surface, walkers,
-                                   COLOR_WHITE, walker_width, self.transform_helper)
+        for actor in walkers:
+            walker_render = Walker(actor, walker_width, self.transform_helper)
+            walker_render.render(self.walkers_surface)
 
-        self.scale_factor = (int(self.surface_size * self.module_input.wheel_offset[0]),
-                             int(self.surface_size * self.module_input.wheel_offset[1]))
+        self.scaled_size = (int(self.surface_size * self.module_input.wheel_offset[0]),
+                            int(self.surface_size * self.module_input.wheel_offset[1]))
 
-        if self.previous_scale_factor != self.scale_factor:
-            self.transform_helper.map_size = self.scale_factor[0]
+        # Scale surfaces if needed
+        scale_offset = 0
+        if self.previous_scaled_size != self.scaled_size:
+            scale_offset = self.module_input.mouse_pos
+            self.transform_helper.map_size = self.scaled_size[0]
 
             self.map_surface.fill(COLOR_BLACK)
-            new_map_surface = pygame.Surface(self.scale_factor)
+            new_map_surface = pygame.Surface(self.scaled_size)
             self.render_map(new_map_surface)
             self.map_surface = new_map_surface
 
-            self.vehicles_surface = self.refresh_surface(self.vehicles_surface, self.scale_factor)
-            self.traffic_light_surface = self.refresh_surface(self.traffic_light_surface, self.scale_factor)
-            self.speed_limits_surface = self.refresh_surface(self.speed_limits_surface, self.scale_factor)
-            self.walkers_surface = self.refresh_surface(self.walkers_surface, self.scale_factor)
+            self.vehicles_surface = self.refresh_surface(self.vehicles_surface, self.scaled_size)
+            self.traffic_light_surface = self.refresh_surface(self.traffic_light_surface, self.scaled_size)
+            self.speed_limits_surface = self.refresh_surface(self.speed_limits_surface, self.scaled_size)
+            self.walkers_surface = self.refresh_surface(self.walkers_surface, self.scaled_size)
 
         # Translation offset
         if self.hero_actor is None:
@@ -953,7 +938,7 @@ class ModuleWorld(object):
         del speed_limits[:]
         del walkers[:]
 
-        self.previous_scale_factor = self.scale_factor
+        self.previous_scaled_size = self.scaled_size
 
 # ==============================================================================
 # -- Input -----------------------------------------------------------
@@ -978,6 +963,8 @@ class ModuleInput(object):
         self.parse_input()
 
     def _parse_events(self):
+        self.mouse_pos = pygame.mouse.get_pos()
+        print self.mouse_pos
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 exit_game()
@@ -998,7 +985,6 @@ class ModuleInput(object):
                     module_hud._show_info = not module_hud._show_info
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                self.mouse_pos = pygame.mouse.get_pos()
                 if event.button == 4:
                     self.wheel_offset[0] += self.wheel_amount
                     self.wheel_offset[1] += self.wheel_amount
