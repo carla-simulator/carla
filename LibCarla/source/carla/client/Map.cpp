@@ -86,5 +86,10 @@ namespace client {
     return _map->CalculateCrossedLanes(origin, destination);
   }
 
+
+  std::string Map::GetGeoReference() const {
+    DEBUG_ASSERT(_map != nullptr);
+    return _map->GetData().GetGeoReference();
+  }
 } // namespace client
 } // namespace carla

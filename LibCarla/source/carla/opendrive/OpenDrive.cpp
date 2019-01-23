@@ -107,6 +107,8 @@ namespace opendrive {
       return mapBuilder.Build();
     }
 
+    mapBuilder.SetGeoReference(open_drive_road.geoReference);
+
     // Generate road and junction information
     using junction_data_t = std::map<int, std::map<int, std::vector<carla::road::lane_junction_t>>>;
     using road_data_t = std::map<int, carla::opendrive::types::RoadInformation *>;

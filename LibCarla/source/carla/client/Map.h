@@ -54,6 +54,8 @@ namespace client {
         const geom::Location &origin,
         const geom::Location &destination) const;
 
+    std::string GetGeoReference() const;
+
   private:
 
     rpc::MapInfo _description;
