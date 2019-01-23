@@ -128,12 +128,9 @@ class Vehicle(object):
 
         original_size = [bb_extent.x * 2.0, bb_extent.y * 2.0]
 
-        converted_size = map_transform_helper.convert_world_to_screen_size(original_size)
-
-        arrow_width = 2
+        self.surface_size = map_transform_helper.convert_world_to_screen_size(original_size)
 
         self.color = color
-        self.surface_size = (max(converted_size[0], 1), max(converted_size[1], 1))
         arrow_size = max(self.surface_size[0] / 2, 1)
 
         self.surface = pygame.Surface((self.surface_size[0], self.surface_size[1]), pygame.SRCALPHA)
@@ -151,6 +148,7 @@ class Vehicle(object):
         line_1 = [arrow_tip, (arrow_half - 1, 0)]
         line_2 = [arrow_tip, (arrow_half - 1, self.surface_size[1])]
 
+        arrow_width = map_transform_helper.convert_world_to_screen_size((0.5, 0.5))[0]
         render_module.drawArrow(self.surface, COLOR_BLUE, [line_0, line_1, line_2], arrow_width)
 
     def render(self, display):
@@ -190,7 +188,7 @@ class SpeedLimit(object):
     def __init__(self, actor, radius, map_transform_helper):
         self.actor = actor
         self.speed_limit = actor.type_id.split('.')[2]
-        self.font = pygame.font.SysFont('Arial', 10)
+        self.font = pygame.font.SysFont('Arial', radius)
 
         actor_location = actor.get_location()
         self.x, self.y = map_transform_helper.convert_world_to_screen_point((actor_location.x, actor_location.y))
@@ -864,6 +862,12 @@ class ModuleWorld(object):
 
         return (vehicles, traffic_lights, speed_limits, walkers)
 
+    def refresh_surface(self, surface, size):
+        surface.fill(COLOR_BLACK)
+        new_surface = pygame.Surface(size)
+        new_surface.set_colorkey(COLOR_BLACK)
+        return new_surface
+
     def render(self, display):
 
         if not self.map_rendered:
@@ -890,29 +894,34 @@ class ModuleWorld(object):
 
         RenderShape.render_vehicles(self.render_module, self.vehicles_surface,
                                     vehicles, COLOR_MAGENTA, self.transform_helper)
-        RenderShape.render_traffic_lights(self.render_module, self.traffic_light_surface, traffic_lights,
-                                          COLOR_BLACK, 3, self.transform_helper)
-        RenderShape.render_speed_limits(self.render_module, self.speed_limits_surface, speed_limits,
-                                        COLOR_BLUE, 10, self.transform_helper)
 
+        traffic_light_width = self.transform_helper.convert_world_to_screen_size((1, 1))[0]
+        RenderShape.render_traffic_lights(self.render_module, self.traffic_light_surface, traffic_lights,
+                                          COLOR_BLACK, traffic_light_width, self.transform_helper)
+
+        speed_limit_width = self.transform_helper.convert_world_to_screen_size((3, 3))[0]
+        RenderShape.render_speed_limits(self.render_module, self.speed_limits_surface, speed_limits,
+                                        COLOR_BLUE, speed_limit_width, self.transform_helper)
+
+        walker_width = self.transform_helper.convert_world_to_screen_size((3, 3))[0]
         RenderShape.render_walkers(self.render_module, self.walkers_surface, walkers,
-                                   COLOR_WHITE, 3, self.transform_helper)
+                                   COLOR_WHITE, walker_width, self.transform_helper)
 
         self.scale_factor = (int(self.surface_size * self.module_input.wheel_offset[0]),
                              int(self.surface_size * self.module_input.wheel_offset[1]))
 
         if self.previous_scale_factor != self.scale_factor:
-            self.map_surface.fill(COLOR_BLACK)
-            new_surface = pygame.Surface(self.scale_factor)
-
             self.transform_helper.map_size = self.scale_factor[0]
-            self.render_map(new_surface)
 
-            self.map_surface = new_surface
+            self.map_surface.fill(COLOR_BLACK)
+            new_map_surface = pygame.Surface(self.scale_factor)
+            self.render_map(new_map_surface)
+            self.map_surface = new_map_surface
 
-        # self.vehicles_surface = pygame.transform.smoothscale(self.vehicles_surface, scale_factor)
-        # self.traffic_light_surface = pygame.transform.smoothscale(self.traffic_light_surface, scale_factor)
-        # self.speed_limits_surface = pygame.transform.smoothscale(self.speed_limits_surface, scale_factor)
+            self.vehicles_surface = self.refresh_surface(self.vehicles_surface, self.scale_factor)
+            self.traffic_light_surface = self.refresh_surface(self.traffic_light_surface, self.scale_factor)
+            self.speed_limits_surface = self.refresh_surface(self.speed_limits_surface, self.scale_factor)
+            self.walkers_surface = self.refresh_surface(self.walkers_surface, self.scale_factor)
 
         # Translation offset
         if self.hero_actor is None:
@@ -924,27 +933,12 @@ class ModuleWorld(object):
             translation_offset = (-hero_location_screen[0] + display.get_width() / 2,
                                   (- hero_location_screen[1] + display.get_height() / 2))
 
-        # Scale surfaces
-
-        final_map_surface = self.map_surface
-        final_vehicles_surface = self.vehicles_surface
-        final_traffic_light_surface = self.traffic_light_surface
-        final_speed_limits_surface = self.speed_limits_surface
-        final_walkers_surface = self.walkers_surface
-
-        # if self.scale_factor != self.previous_scale_factor:
-        # final_map_surface = pygame.transform.smoothscale(self.map_surface, self.scale_factor)
-        # final_vehicles_surface = pygame.transform.smoothscale(self.vehicles_surface, self.scale_factor)
-        # final_traffic_light_surface = pygame.transform.smoothscale(self.traffic_light_surface, self.scale_factor)
-        # final_speed_limits_surface = pygame.transform.smoothscale(self.speed_limits_surface, self.scale_factor)
-        # final_walkers_surface = pygame.transform.smoothscale(self.walkers_surface, self.scale_factor)
-
         # Blit surfaces
-        display.blit(final_map_surface, translation_offset)
-        display.blit(final_vehicles_surface, translation_offset)
-        display.blit(final_traffic_light_surface, translation_offset)
-        display.blit(final_speed_limits_surface, translation_offset)
-        display.blit(final_walkers_surface, translation_offset)
+        display.blit(self.map_surface, translation_offset)
+        display.blit(self.vehicles_surface, translation_offset)
+        display.blit(self.traffic_light_surface, translation_offset)
+        display.blit(self.speed_limits_surface, translation_offset)
+        display.blit(self.walkers_surface, translation_offset)
         actor_id_surface = self.hud_module.renderActorId(display, vehicles, self.transform_helper, translation_offset)
 
         if self.hero_actor is not None:
