@@ -15,6 +15,7 @@
     - add_impulse: for applying an impulse (in world axis)
   * Added support for gnss_sensor
   * OpenDriveActor has been rewritten using the Waypoint API, this has fixed some bugs
+  * Added more commandline parameters to manual_control.py
 
 ## CARLA 0.9.2
 
