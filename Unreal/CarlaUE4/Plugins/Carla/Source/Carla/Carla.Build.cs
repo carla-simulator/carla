@@ -38,11 +38,12 @@ public class Carla : ModuleRules
         "AIModule",
         "CoreUObject",
         "Engine",
+        "Foliage",
+        "ImageWriteQueue",
+        "Landscape",
         "PhysXVehicles",
         "Slate",
-        "SlateCore",
-        "Landscape",
-        "Foliage"
+        "SlateCore"
         // ... add private dependencies that you statically link with here ...
       }
       );
