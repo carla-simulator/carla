@@ -347,12 +347,11 @@ class ModuleRender(object):
                                 lateral_right_screen[1],
                                 lateral_right_screen[0]])
 
-    def drawLineAtDistance(self, surface, line, distance, color, transform_helper):
+    def drawLineAtDistance(self, surface, line, distance, width, color, transform_helper):
 
         lateral_left_screen, lateral_right_screen = self.getParallelLinesAtDistance(line, distance, transform_helper)
-        line_width = 2
-        self.drawLine(surface, color, False, lateral_left_screen, line_width)
-        self.drawLine(surface, color, False, lateral_right_screen, line_width)
+        self.drawLine(surface, color, False, lateral_left_screen, width)
+        self.drawLine(surface, color, False, lateral_right_screen, width)
 
     def drawLineList(self, surface, color, closed, list_lines, width):
         for line in list_lines:
@@ -637,8 +636,8 @@ class ModuleWorld(object):
 
             wp_0 = (waypoint.transform.location.x, waypoint.transform.location.y)
             wp_1 = (wp_0[0] + wf[0] * self.waypoint_length, wp_0[1] + wf[1] * self.waypoint_length)
-            # wp_half = ((wp_1[0] - wp_0[0]) / 2.0, (wp_1[1] - wp_0[1]) / 2)
             wp_half = (wp_0[0] + wf[0] * self.waypoint_length / 2, wp_0[1] + wf[1] * self.waypoint_length/2)
+
             # Convert waypoints to screen space
             wp_0_screen = self.transform_helper.convert_world_to_screen_point(wp_0)
             wp_1_screen = self.transform_helper.convert_world_to_screen_point(wp_1)
@@ -754,30 +753,34 @@ class ModuleWorld(object):
                                                             self.transform_helper)
 
             p0_x, p0_y = self.transform_helper.convert_world_to_screen_point((point[3][0][0], point[3][0][1]))
+            width = self.transform_helper.convert_world_to_screen_size((point[4], point[4]))[0]
+            line_width = self.transform_helper.convert_world_to_screen_size((0.3, 0.3))[0]
+
             self.render_module.drawCircle(map_surface,
                                           p0_x, p0_y,
-                                          int(point[2] / 2), point[1])
+                                          int(width / 2), point[1])
 
             p1_x, p1_y = self.transform_helper.convert_world_to_screen_point((point[3][1][0], point[3][1][1]))
             self.render_module.drawCircle(map_surface,
                                           p1_x, p1_y,
-                                          int(point[2] / 2), point[1])
+                                          int(width / 2), point[1])
 
             self.render_module.drawLineAtDistance(
-                map_surface, point[3], point[4], COLOR_DARK_YELLOW, self.transform_helper)
+                map_surface, point[3], point[4], line_width, COLOR_DARK_YELLOW, self.transform_helper)
 
         for point in self.intersection_waypoints:
             p0_x, p0_y = self.transform_helper.convert_world_to_screen_point((point[3][0][0], point[3][0][1]))
             p1_x, p1_y = self.transform_helper.convert_world_to_screen_point((point[3][1][0], point[3][1][1]))
+            width = self.transform_helper.convert_world_to_screen_size((point[4], point[4]))[0]
 
             self.render_module.drawLine(map_surface,
                                         point[1],
                                         False,
                                         [(p0_x, p0_y), (p1_x, p1_y)],
-                                        point[2])
+                                        width)
 
-            self.render_module.drawCircle(map_surface, p0_x, p0_y, int(point[2] / 2), point[1])
-            self.render_module.drawCircle(map_surface, p1_x, p1_y, int(point[2] / 2), point[1])
+            self.render_module.drawCircle(map_surface, p0_x, p0_y, int(width/2), point[1])
+            self.render_module.drawCircle(map_surface, p1_x, p1_y, int(width/2), point[1])
 
         # Draw non continuous Lines
         i = 0
