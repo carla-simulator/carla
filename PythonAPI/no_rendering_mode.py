@@ -66,6 +66,7 @@ COLOR_RED = pygame.Color(255, 0, 0)
 COLOR_BLUE = pygame.Color(0, 0, 255)
 COLOR_GREEN = pygame.Color(0, 255, 0)
 COLOR_YELLOW = pygame.Color(255, 255, 0)
+COLOR_DARK_YELLOW = pygame.Color(150, 150, 0)
 COLOR_MAGENTA = pygame.Color(255, 0, 255)
 COLOR_CYAN = pygame.Color(0, 255, 255)
 COLOR_WHITE = pygame.Color(255, 255, 255)
@@ -144,11 +145,11 @@ class Vehicle(object):
         arrow_tip = (self.surface_size[0], self.surface_size[1] / 2)
         arrow_half = self.surface_size[1] / 2 + arrow_tip[0] / 2
 
-        render_module.drawLine(self.surface, COLOR_BLUE, False, [center, arrow_tip], arrow_width)
-        render_module.drawLine(self.surface, COLOR_BLUE, False, [arrow_tip, (arrow_half - 1, 0)], arrow_width)
-        render_module.drawLine(
-            self.surface, COLOR_BLUE, False, [
-                arrow_tip, (arrow_half - 1, self.surface_size[1])], arrow_width)
+        line_0 = [center, arrow_tip]
+        line_1 = [arrow_tip, (arrow_half - 1, 0)]
+        line_2 = [arrow_tip, (arrow_half - 1, self.surface_size[1])]
+
+        render_module.drawArrow(self.surface, COLOR_BLUE, [line_0, line_1, line_2], arrow_width)
 
     def render(self, display):
         actor_location = self.actor.get_location()
@@ -332,6 +333,11 @@ class ModuleRender(object):
 
         return lateral_left_screen, lateral_right_screen
 
+    def drawArrow(self, surface, color, lines, arrow_width):
+        self.drawLine(surface, color, False, lines[0], arrow_width)
+        self.drawLine(surface, color, False, lines[1], arrow_width)
+        self.drawLine(surface, color, False, lines[2], arrow_width)
+
     def drawPolygonFromParallelLines(self, surface, color, line, distance, transform_helper):
         lateral_left_screen, lateral_right_screen = self.getParallelLinesAtDistance(line, distance, transform_helper)
         pygame.draw.polygon(surface,
@@ -344,7 +350,7 @@ class ModuleRender(object):
     def drawLineAtDistance(self, surface, line, distance, color, transform_helper):
 
         lateral_left_screen, lateral_right_screen = self.getParallelLinesAtDistance(line, distance, transform_helper)
-        line_width = 1
+        line_width = 2
         self.drawLine(surface, color, False, lateral_left_screen, line_width)
         self.drawLine(surface, color, False, lateral_right_screen, line_width)
 
@@ -631,10 +637,26 @@ class ModuleWorld(object):
 
             wp_0 = (waypoint.transform.location.x, waypoint.transform.location.y)
             wp_1 = (wp_0[0] + wf[0] * self.waypoint_length, wp_0[1] + wf[1] * self.waypoint_length)
-
+            # wp_half = ((wp_1[0] - wp_0[0]) / 2.0, (wp_1[1] - wp_0[1]) / 2)
+            wp_half = (wp_0[0] + wf[0] * self.waypoint_length / 2, wp_0[1] + wf[1] * self.waypoint_length/2)
             # Convert waypoints to screen space
             wp_0_screen = self.transform_helper.convert_world_to_screen_point(wp_0)
             wp_1_screen = self.transform_helper.convert_world_to_screen_point(wp_1)
+
+            # Get side arrow lines
+            wl = (-wf[1], wf[0])
+
+            line_0 = [wp_1, (wp_half[0] + wl[0] * self.waypoint_length/2, wp_half[1] + wl[1] * self.waypoint_length/2)]
+            line_1 = [wp_1, (wp_half[0] - wl[0] * self.waypoint_length/2, wp_half[1] - wl[1] * self.waypoint_length/2)]
+
+            line_0_x = self.transform_helper.convert_world_to_screen_point(line_0[0])
+            line_0_y = self.transform_helper.convert_world_to_screen_point(line_0[1])
+
+            line_1_x = self.transform_helper.convert_world_to_screen_point(line_1[0])
+            line_1_y = self.transform_helper.convert_world_to_screen_point(line_1[1])
+
+            line_0_screen = [line_0_x, line_0_y]
+            line_1_screen = [line_1_x, line_1_y]
 
             # Orientation of road
             color = COLOR_BLACK
@@ -643,7 +665,7 @@ class ModuleWorld(object):
                     ((wp_0_screen, wp_1_screen), COLOR_DARK_GREY, screen_width, (wp_0, wp_1), waypoint.lane_width))
             else:
                 self.normalized_point_list.append(
-                    ((wp_0_screen, wp_1_screen), COLOR_DARK_GREY, screen_width, (wp_0, wp_1), waypoint.lane_width))
+                    ((wp_0_screen, wp_1_screen), COLOR_DARK_GREY, screen_width, (wp_0, wp_1), waypoint.lane_width, [line_0_screen, line_1_screen, [wp_0_screen, wp_1_screen]]))
 
     def start(self):
         self.world, self.town_map, self.actors = self._get_data_from_carla(self.host, self.port, self.timeout)
@@ -722,30 +744,53 @@ class ModuleWorld(object):
         self.world = self.client.get_world()
         self.actors = self.world.get_actors()
 
-    def render_map(self, display):
-        self.map_surface.fill(COLOR_GREY)
+    def render_map(self, map_surface):
+        map_surface.fill(COLOR_GREY)
         for point in self.normalized_point_list:
-            self.render_module.drawPolygonFromParallelLines(self.map_surface,
+            self.render_module.drawPolygonFromParallelLines(map_surface,
                                                             point[1],
                                                             point[3],
                                                             point[4],
                                                             self.transform_helper)
 
-            self.render_module.drawCircle(self.map_surface, point[0][0][0], point[0][0][1], int(point[2] / 2), point[1])
-            self.render_module.drawCircle(self.map_surface, point[0][1][0], point[0][1][1], int(point[2] / 2), point[1])
-
+            self.render_module.drawCircle(map_surface, point[0][0][0], point[0][0][1], int(point[2] / 2), point[1])
+            self.render_module.drawCircle(map_surface, point[0][1][0], point[0][1][1], int(point[2] / 2), point[1])
             self.render_module.drawLineAtDistance(
-                self.map_surface, point[3], point[4], COLOR_WHITE, self.transform_helper)
+                map_surface, point[3], point[4], COLOR_DARK_YELLOW, self.transform_helper)
 
         for point in self.intersection_waypoints:
-            self.render_module.drawLine(self.map_surface,
+            self.render_module.drawLine(map_surface,
                                         point[1],
                                         False,
                                         point[0],
                                         point[2])
 
-            self.render_module.drawCircle(self.map_surface, point[0][0][0], point[0][0][1], int(point[2] / 2), point[1])
-            self.render_module.drawCircle(self.map_surface, point[0][1][0], point[0][1][1], int(point[2] / 2), point[1])
+            self.render_module.drawCircle(map_surface, point[0][0][0], point[0][0][1], int(point[2] / 2), point[1])
+            self.render_module.drawCircle(map_surface, point[0][1][0], point[0][1][1], int(point[2] / 2), point[1])
+
+        # Draw non continuous Lines
+        i = 0
+        for point in self.normalized_point_list:
+            self.render_module.drawLine(map_surface,
+                                        COLOR_DARK_GREY,
+                                        False,
+                                        point[0],
+                                        2)
+
+            if math.fmod(i, 5) == 0:
+                self.render_module.drawLine(map_surface,
+                                            COLOR_WHITE,
+                                            False,
+                                            point[0],
+                                            1)
+
+            i = i + 1
+        # Draw Arrows
+        i = 0
+        for point in self.normalized_point_list:
+            if math.fmod(i, 11) == 0:
+                self.render_module.drawArrow(map_surface, COLOR_CYAN, point[5], 1)
+            i = i + 1
 
     def render_hero_actor(self, display, hero_actor, color, radius, translation_offset):
 
@@ -792,7 +837,7 @@ class ModuleWorld(object):
     def render(self, display):
 
         if not self.map_rendered:
-            self.render_map(display)
+            self.render_map(self.map_surface)
             self.previous_scale_factor = (int(self.surface_size * self.module_input.wheel_offset[0]),
                                           int(self.surface_size * self.module_input.wheel_offset[1]))
             self.map_rendered = True
@@ -823,14 +868,18 @@ class ModuleWorld(object):
         RenderShape.render_walkers(self.render_module, self.walkers_surface, walkers,
                                    COLOR_WHITE, 3, self.transform_helper)
 
+        self.scale_factor = (int(self.surface_size * self.module_input.wheel_offset[0]),
+                             int(self.surface_size * self.module_input.wheel_offset[1]))
+        if self.previous_scale_factor != self.scale_factor:
+            self.map_surface.fill(COLOR_BLACK)
+            self.map_surface.set_alpha(255)
 
+            new_surface = pygame.Surface(self.scale_factor)
 
-        # if self.previous_scale_factor != self.scale_factor:
-            # self.map_surface.fill(COLOR_BLACK)
-            # self.transform_helper.map_size = self.scale_factor[0]
-            # self.render_map(display)
+            self.transform_helper.map_size = self.scale_factor[0]
+            self.render_map(new_surface)
 
-
+            self.map_surface.blit(new_surface, (0, 0), special_flags=(pygame.BLEND_RGBA_ADD))
 
         # self.vehicles_surface = pygame.transform.smoothscale(self.vehicles_surface, scale_factor)
         # self.traffic_light_surface = pygame.transform.smoothscale(self.traffic_light_surface, scale_factor)
@@ -847,8 +896,6 @@ class ModuleWorld(object):
                                   (- hero_location_screen[1] + display.get_height() / 2))
 
         # Scale surfaces
-        self.scale_factor = (int(self.surface_size * self.module_input.wheel_offset[0]),
-                             int(self.surface_size * self.module_input.wheel_offset[1]))
 
         final_map_surface = self.map_surface
         final_vehicles_surface = self.vehicles_surface
