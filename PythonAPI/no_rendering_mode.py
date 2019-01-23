@@ -665,7 +665,7 @@ class ModuleWorld(object):
                     ((wp_0_screen, wp_1_screen), COLOR_DARK_GREY, screen_width, (wp_0, wp_1), waypoint.lane_width))
             else:
                 self.normalized_point_list.append(
-                    ((wp_0_screen, wp_1_screen), COLOR_DARK_GREY, screen_width, (wp_0, wp_1), waypoint.lane_width, [line_0_screen, line_1_screen, [wp_0_screen, wp_1_screen]]))
+                    ((wp_0_screen, wp_1_screen), COLOR_DARK_GREY, screen_width, (wp_0, wp_1), waypoint.lane_width, [line_0, line_1, [wp_0, wp_1]]))
 
     def start(self):
         self.world, self.town_map, self.actors = self._get_data_from_carla(self.host, self.port, self.timeout)
@@ -753,43 +753,67 @@ class ModuleWorld(object):
                                                             point[4],
                                                             self.transform_helper)
 
-            self.render_module.drawCircle(map_surface, point[0][0][0], point[0][0][1], int(point[2] / 2), point[1])
-            self.render_module.drawCircle(map_surface, point[0][1][0], point[0][1][1], int(point[2] / 2), point[1])
+            p0_x, p0_y = self.transform_helper.convert_world_to_screen_point((point[3][0][0], point[3][0][1]))
+            self.render_module.drawCircle(map_surface,
+                                          p0_x, p0_y,
+                                          int(point[2] / 2), point[1])
+
+            p1_x, p1_y = self.transform_helper.convert_world_to_screen_point((point[3][1][0], point[3][1][1]))
+            self.render_module.drawCircle(map_surface,
+                                          p1_x, p1_y,
+                                          int(point[2] / 2), point[1])
+
             self.render_module.drawLineAtDistance(
                 map_surface, point[3], point[4], COLOR_DARK_YELLOW, self.transform_helper)
 
         for point in self.intersection_waypoints:
+            p0_x, p0_y = self.transform_helper.convert_world_to_screen_point((point[3][0][0], point[3][0][1]))
+            p1_x, p1_y = self.transform_helper.convert_world_to_screen_point((point[3][1][0], point[3][1][1]))
+
             self.render_module.drawLine(map_surface,
                                         point[1],
                                         False,
-                                        point[0],
+                                        [(p0_x, p0_y), (p1_x, p1_y)],
                                         point[2])
 
-            self.render_module.drawCircle(map_surface, point[0][0][0], point[0][0][1], int(point[2] / 2), point[1])
-            self.render_module.drawCircle(map_surface, point[0][1][0], point[0][1][1], int(point[2] / 2), point[1])
+            self.render_module.drawCircle(map_surface, p0_x, p0_y, int(point[2] / 2), point[1])
+            self.render_module.drawCircle(map_surface, p1_x, p1_y, int(point[2] / 2), point[1])
 
         # Draw non continuous Lines
         i = 0
         for point in self.normalized_point_list:
+
+            p0_x, p0_y = self.transform_helper.convert_world_to_screen_point(
+                (point[3][0][0], point[3][0][1]))
+
+            p1_x, p1_y = self.transform_helper.convert_world_to_screen_point((point[3][1][0], point[3][1][1]))
+
             self.render_module.drawLine(map_surface,
                                         COLOR_DARK_GREY,
                                         False,
-                                        point[0],
+                                        [(p0_x, p0_y), (p1_x, p1_y)],
                                         2)
 
             if math.fmod(i, 5) == 0:
                 self.render_module.drawLine(map_surface,
                                             COLOR_WHITE,
                                             False,
-                                            point[0],
+                                            [(p0_x, p0_y), (p1_x, p1_y)],
                                             1)
 
             i = i + 1
         # Draw Arrows
         i = 0
         for point in self.normalized_point_list:
-            if math.fmod(i, 11) == 0:
-                self.render_module.drawArrow(map_surface, COLOR_CYAN, point[5], 1)
+            if math.fmod(i, 17) == 0:
+                converted_point = []
+                for point in point[5]:
+                    p0_x, p0_y = self.transform_helper.convert_world_to_screen_point((point[0][0], point[0][1]))
+                    p1_x, p1_y = self.transform_helper.convert_world_to_screen_point((point[1][0], point[1][1]))
+
+                    converted_point.append([(p0_x, p0_y), (p1_x, p1_y)])
+
+                self.render_module.drawArrow(map_surface, COLOR_CYAN, converted_point, 1)
             i = i + 1
 
     def render_hero_actor(self, display, hero_actor, color, radius, translation_offset):
@@ -870,16 +894,15 @@ class ModuleWorld(object):
 
         self.scale_factor = (int(self.surface_size * self.module_input.wheel_offset[0]),
                              int(self.surface_size * self.module_input.wheel_offset[1]))
+
         if self.previous_scale_factor != self.scale_factor:
             self.map_surface.fill(COLOR_BLACK)
-            self.map_surface.set_alpha(255)
-
             new_surface = pygame.Surface(self.scale_factor)
 
             self.transform_helper.map_size = self.scale_factor[0]
             self.render_map(new_surface)
 
-            self.map_surface.blit(new_surface, (0, 0), special_flags=(pygame.BLEND_RGBA_ADD))
+            self.map_surface = new_surface
 
         # self.vehicles_surface = pygame.transform.smoothscale(self.vehicles_surface, scale_factor)
         # self.traffic_light_surface = pygame.transform.smoothscale(self.traffic_light_surface, scale_factor)
