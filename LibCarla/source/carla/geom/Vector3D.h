@@ -137,8 +137,22 @@ namespace geom {
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
-    Vector3D(const FVector &vector) // from centimeters to meters.
-      : Vector3D(1e-2f * vector.X, 1e-2f * vector.Y, 1e-2f * vector.Z) {}
+    Vector3D(const FVector &vector)
+      : Vector3D(vector.X, vector.Y, vector.Z) {}
+
+    Vector3D &ToMeters(void) { // from centimeters to meters.
+       x *= 0.001f;
+       y *= 0.001f;
+       z *= 0.001f;
+       return *this;
+    }
+
+    Vector3D &ToCentimeters(void) { // from meters to centimeters.
+       x *= 100.0f;
+       y *= 100.0f;
+       z *= 100.0f;
+       return *this;
+    }
 
     operator FVector() const {
       return FVector{1e2f * x, 1e2f * y, 1e2f * z}; // from meters to centimeters.

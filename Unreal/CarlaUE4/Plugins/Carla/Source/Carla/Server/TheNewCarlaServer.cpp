@@ -305,7 +305,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
       RespondErrorStr("unable to get actor velocity: actor not found");
     }
-    return {ActorView.GetActor()->GetRootComponent()->GetComponentVelocity()};
+    return cr::Vector3D(ActorView.GetActor()->GetRootComponent()->GetComponentVelocity()).ToMeters();
   });
 
   Server.BindSync("get_actor_angular_velocity", [this](cr::Actor Actor) -> cr::Vector3D {
@@ -318,7 +318,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     if (RootComponent == nullptr) {
       RespondErrorStr("unable to get actor angular velocity: not supported by actor");
     }
-    return {RootComponent->GetPhysicsAngularVelocityInDegrees()};
+    return cr::Vector3D(RootComponent->GetPhysicsAngularVelocityInDegrees()).ToMeters();
   });
 
   Server.BindSync("set_actor_angular_velocity", [this](
@@ -334,7 +334,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       RespondErrorStr("unable to set actor angular velocity: not supported by actor");
     }
     RootComponent->SetPhysicsAngularVelocityInDegrees(
-        vector,
+        vector.ToCentimeters(),
         false,
         "None");
   });
@@ -352,7 +352,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       RespondErrorStr("unable to set actor velocity: not supported by actor");
     }
     RootComponent->SetPhysicsLinearVelocity(
-        vector,
+        vector.ToCentimeters(),
         false,
         "None");
   });
@@ -370,7 +370,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       RespondErrorStr("unable to add actor force: not supported by actor");
     }
     RootComponent->AddForce(
-        vector,
+        vector.ToCentimeters(),
         "None",
         false);
   });
@@ -388,7 +388,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       RespondErrorStr("unable to add actor impulse: not supported by actor");
     }
     RootComponent->AddImpulse(
-        vector,
+        vector.ToCentimeters(),
         "None",
         false);
   });
