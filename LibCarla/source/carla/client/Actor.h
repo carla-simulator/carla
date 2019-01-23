@@ -67,9 +67,6 @@ namespace client {
     /// Set the actor velocity.
     void SetVelocity(const geom::Vector3D &vector);
 
-    /// Add force to the actor.
-    void AddForce(const geom::Vector3D &vector);
-
     /// Add impulse to the actor.
     void AddImpulse(const geom::Vector3D &vector);
 

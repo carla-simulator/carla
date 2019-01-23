@@ -115,10 +115,6 @@ namespace detail {
         const rpc::Actor &actor,
         const geom::Vector3D &vector);
 
-    void AddActorForce(
-        const rpc::Actor &actor,
-        const geom::Vector3D &vector);
-
     void AddActorImpulse(
         const rpc::Actor &actor,
         const geom::Vector3D &vector);

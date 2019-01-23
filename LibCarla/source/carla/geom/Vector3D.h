@@ -155,7 +155,7 @@ namespace geom {
     }
 
     operator FVector() const {
-      return FVector{1e2f * x, 1e2f * y, 1e2f * z}; // from meters to centimeters.
+      return FVector{x, y, z};
     }
 
 #endif // LIBCARLA_INCLUDED_FROM_UE4
