@@ -52,6 +52,10 @@ namespace road {
       return _junction_information;
     }
 
+    const std::string &GetGeoReference() const {
+      return _geo_reference;
+    }
+
     auto GetRoadSegments() const {
       using const_ref = const element::RoadSegment &;
       auto get = [](auto &pair) -> const_ref { return *pair.second; };
@@ -69,6 +73,12 @@ namespace road {
     void SetJunctionInformation(const std::vector<lane_junction_t> &junctionInfo) {
       _junction_information = junctionInfo;
     }
+
+    void SetGeoReference(const std::string &geoReference) {
+      _geo_reference = geoReference;
+    }
+
+    std::string _geo_reference;
 
     std::vector<lane_junction_t> _junction_information;
 

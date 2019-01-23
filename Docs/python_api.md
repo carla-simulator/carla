@@ -160,6 +160,12 @@
 - `actor`
 - `crossed_lane_markings`
 
+## `carla.GnssEvent(carla.SensorData)`
+
+- `latitude`
+- `longitude`
+- `altitude`
+
 ## `carla.VehicleControl`
 
 - `throttle`
