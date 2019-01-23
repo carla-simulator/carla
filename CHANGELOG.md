@@ -7,6 +7,7 @@
   * Added support for Deepin in PythonAPI's setup.py
   * Added support for spawning and controlling walkers (pedestrians)
   * Renamed vehicle.get_vehicle_control() to vehicle.get_control() to be consistent with walkers
+  * Added support for gnss_sensor
 
 ## CARLA 0.9.2
 

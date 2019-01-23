@@ -239,6 +239,7 @@ namespace types {
   /////////////////////////////////////////////////////////////////
 
   struct OpenDriveData {
+    std::string geoReference;
     std::vector<RoadInformation> roads;
     std::vector<Junction> junctions;
   };
