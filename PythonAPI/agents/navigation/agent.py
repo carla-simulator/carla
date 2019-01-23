@@ -37,6 +37,7 @@ class Agent(object):
         self._vehicle = vehicle
         self._world = self._vehicle.get_world()
         self._map = self._vehicle.get_world().get_map()
+        self._last_traffic_light = None
 
 
     def run_step(self, debug=False):
@@ -137,8 +138,16 @@ class Agent(object):
                 if sel_traffic_light is not None:
                     if debug:
                         print('=== Magnitude = {} | Angle = {} | ID = {}'.format(sel_magnitude, min_angle, sel_traffic_light.id))
-                    if sel_traffic_light.state == carla.libcarla.TrafficLightState.Red:
-                        return (True, sel_traffic_light)
+
+                    if self._last_traffic_light is None:
+                        self._last_traffic_light = sel_traffic_light
+                    elif self._last_traffic_light != sel_traffic_light:
+                        sel_traffic_light = self._last_traffic_light
+
+                    if self._last_traffic_light.state == carla.libcarla.TrafficLightState.Red:
+                        return (True, self._last_traffic_light)
+                else:
+                    self._last_traffic_light = None
 
         return (False, None)
 
