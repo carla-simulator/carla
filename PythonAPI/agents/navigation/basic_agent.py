@@ -45,13 +45,14 @@ class BasicAgent(Agent):
         start_waypoint = self._map.get_waypoint(self._vehicle.get_location())
         end_waypoint = self._map.get_waypoint(
             carla.Location(location[0], location[1], location[2]))
-
         solution = []
 
+        # Setting up global router
         dao = GlobalRoutePlannerDAO(self._vehicle.get_world().get_map())
         grp = GlobalRoutePlanner(dao)
         grp.setup()
 
+        # Obtain route plan
         x1 = start_waypoint.transform.location.x
         y1 = start_waypoint.transform.location.y
         x2 = end_waypoint.transform.location.x
@@ -63,17 +64,21 @@ class BasicAgent(Agent):
 
         for action in route:
 
+            #   Generate waypoints to next junction
             wp_choice = current_waypoint.next(5.0)
             while len(wp_choice) == 1:
                 current_waypoint = wp_choice[0]
                 solution.append((current_waypoint, RoadOption.LANEFOLLOW))
                 wp_choice = current_waypoint.next(5.0)
+                #   Stop at destination
+                if current_waypoint.transform.location.distance(
+                    end_waypoint.transform.location) < 5.0: break
+            if action.value == "STOP": break
 
-            if action.value == "STOP":
-                break
-
+            #   Select appropriate path at the junction
             if len(wp_choice) > 1:
-                
+
+                # Current heading vector
                 current_transform = current_waypoint.transform
                 current_location = current_transform.location
                 projected_location = current_location + \
@@ -82,6 +87,7 @@ class BasicAgent(Agent):
                         y=math.sin(math.radians(current_transform.rotation.yaw)))
                 v_current = self._vector(current_location, projected_location)
 
+                #   Road option based on route decision
                 direction = 0
                 road_option = None
                 if action.value == "LEFT":
@@ -95,6 +101,7 @@ class BasicAgent(Agent):
                     road_option = RoadOption.STRAIGHT
                 select_criteria = float('inf')
 
+                #   Choose correct path
                 for wp_select in wp_choice:
                     v_select = self._vector(
                         current_location, wp_select.transform.location)
@@ -107,6 +114,8 @@ class BasicAgent(Agent):
                         select_criteria = cross
                         current_waypoint = wp_select
 
+                #   Generate all waypoints within the junction
+                #   along selected path
                 solution.append((current_waypoint, road_option))
                 current_waypoint = current_waypoint.next(5.0)[0]
                 while current_waypoint.is_intersection:
