@@ -558,7 +558,7 @@ class ModuleWorld(object):
         self.host = host
         self.port = port
         self.timeout = timeout
-        self.server_fps = 0
+        self.server_fps = 0.0
         self.server_clock = pygame.time.Clock()
 
     def _get_data_from_carla(self, host, port, timeout):
@@ -606,23 +606,9 @@ class ModuleWorld(object):
 
         return (x_min, y_min, x_max, y_max)
 
-    def start(self):
-        self.world, self.town_map, self.actors = self._get_data_from_carla(self.host, self.port, self.timeout)
-
-        # Store necessary modules
-        self.hud_module = module_manager.get_module(MODULE_HUD)
-        self.module_input = module_manager.get_module(MODULE_INPUT)
-
-        self.surface_size = min(self.hud_module.dim[0], self.hud_module.dim[1])
-
-        self._create_world_surfaces()
-
-        # Generate waypoints
-        waypoint_length = 1.5
-        map_waypoints = self.town_map.generate_waypoints(waypoint_length)
-
+    def prepare_waypoints_data(self):
         # compute bounding boxes
-        self.x_min, self.y_min, self.x_max, self.y_max = self._compute_map_bounding_box(map_waypoints)
+        self.x_min, self.y_min, self.x_max, self.y_max = self._compute_map_bounding_box(self.map_waypoints)
 
         # Feed map bounding box and surface size to transform helper
         self.transform_helper = TransformHelper(
@@ -631,7 +617,7 @@ class ModuleWorld(object):
         # Retrieve data from waypoints orientation, width and length and do conversions into another list
         self.normalized_point_list = []
         self.intersection_waypoints = []
-        for waypoint in map_waypoints:
+        for waypoint in self.map_waypoints:
 
             # Width of road
             screen_width = self.transform_helper.convert_world_to_screen_size(
@@ -644,7 +630,7 @@ class ModuleWorld(object):
                   direction[0] * math.sin(yaw) + direction[1] * math.cos(yaw))
 
             wp_0 = (waypoint.transform.location.x, waypoint.transform.location.y)
-            wp_1 = (wp_0[0] + wf[0] * waypoint_length, wp_0[1] + wf[1] * waypoint_length)
+            wp_1 = (wp_0[0] + wf[0] * self.waypoint_length, wp_0[1] + wf[1] * self.waypoint_length)
 
             # Convert waypoints to screen space
             wp_0_screen = self.transform_helper.convert_world_to_screen_point(wp_0)
@@ -658,6 +644,23 @@ class ModuleWorld(object):
             else:
                 self.normalized_point_list.append(
                     ((wp_0_screen, wp_1_screen), COLOR_DARK_GREY, screen_width, (wp_0, wp_1), waypoint.lane_width))
+
+    def start(self):
+        self.world, self.town_map, self.actors = self._get_data_from_carla(self.host, self.port, self.timeout)
+
+        # Store necessary modules
+        self.hud_module = module_manager.get_module(MODULE_HUD)
+        self.module_input = module_manager.get_module(MODULE_INPUT)
+
+        self.surface_size = min(self.hud_module.dim[0], self.hud_module.dim[1])
+
+        self._create_world_surfaces()
+
+        # Generate waypoints
+        self.waypoint_length = 1.5
+        self.map_waypoints = self.town_map.generate_waypoints(self.waypoint_length)
+
+        self.prepare_waypoints_data()
 
         # Module render
         self.render_module = module_manager.get_module(MODULE_RENDER)
@@ -697,6 +700,7 @@ class ModuleWorld(object):
         else:
             hero_mode_text = ['Hero Mode:               OFF']
 
+        self.server_fps = max(min(self.server_fps, 10000.0), 0.0)
         module_info_text = [
             'Server:  % 16d FPS' % self.server_fps,
             'Client:  % 16d FPS' % clock.get_fps()
@@ -713,7 +717,7 @@ class ModuleWorld(object):
             return
 
         self.server_clock.tick()
-        self.server_fps = self.server_clock.get_fps()
+        self.server_fps = 1 / (timestamp.delta_seconds)
 
         self.world = self.client.get_world()
         self.actors = self.world.get_actors()
@@ -789,6 +793,8 @@ class ModuleWorld(object):
 
         if not self.map_rendered:
             self.render_map(display)
+            self.previous_scale_factor = (int(self.surface_size * self.module_input.wheel_offset[0]),
+                                          int(self.surface_size * self.module_input.wheel_offset[1]))
             self.map_rendered = True
 
         self.vehicles_surface.fill(COLOR_BLACK)
@@ -817,10 +823,15 @@ class ModuleWorld(object):
         RenderShape.render_walkers(self.render_module, self.walkers_surface, walkers,
                                    COLOR_WHITE, 3, self.transform_helper)
 
-        # Scale surfaces
-        # scale_factor = (int(self.surface_size * module_input.wheel_offset[0]),
-        #                 int(self.surface_size * module_input.wheel_offset[1]))
-        # self.map_surface = pygame.transform.smoothscale(self.map_surface, scale_factor)
+
+
+        # if self.previous_scale_factor != self.scale_factor:
+            # self.map_surface.fill(COLOR_BLACK)
+            # self.transform_helper.map_size = self.scale_factor[0]
+            # self.render_map(display)
+
+
+
         # self.vehicles_surface = pygame.transform.smoothscale(self.vehicles_surface, scale_factor)
         # self.traffic_light_surface = pygame.transform.smoothscale(self.traffic_light_surface, scale_factor)
         # self.speed_limits_surface = pygame.transform.smoothscale(self.speed_limits_surface, scale_factor)
@@ -835,12 +846,29 @@ class ModuleWorld(object):
             translation_offset = (-hero_location_screen[0] + display.get_width() / 2,
                                   (- hero_location_screen[1] + display.get_height() / 2))
 
+        # Scale surfaces
+        self.scale_factor = (int(self.surface_size * self.module_input.wheel_offset[0]),
+                             int(self.surface_size * self.module_input.wheel_offset[1]))
+
+        final_map_surface = self.map_surface
+        final_vehicles_surface = self.vehicles_surface
+        final_traffic_light_surface = self.traffic_light_surface
+        final_speed_limits_surface = self.speed_limits_surface
+        final_walkers_surface = self.walkers_surface
+
+        # if self.scale_factor != self.previous_scale_factor:
+        # final_map_surface = pygame.transform.smoothscale(self.map_surface, self.scale_factor)
+        # final_vehicles_surface = pygame.transform.smoothscale(self.vehicles_surface, self.scale_factor)
+        # final_traffic_light_surface = pygame.transform.smoothscale(self.traffic_light_surface, self.scale_factor)
+        # final_speed_limits_surface = pygame.transform.smoothscale(self.speed_limits_surface, self.scale_factor)
+        # final_walkers_surface = pygame.transform.smoothscale(self.walkers_surface, self.scale_factor)
+
         # Blit surfaces
-        display.blit(self.map_surface, translation_offset)
-        display.blit(self.vehicles_surface, translation_offset)
-        display.blit(self.traffic_light_surface, translation_offset)
-        display.blit(self.speed_limits_surface, translation_offset)
-        display.blit(self.walkers_surface, translation_offset)
+        display.blit(final_map_surface, translation_offset)
+        display.blit(final_vehicles_surface, translation_offset)
+        display.blit(final_traffic_light_surface, translation_offset)
+        display.blit(final_speed_limits_surface, translation_offset)
+        display.blit(final_walkers_surface, translation_offset)
         actor_id_surface = self.hud_module.renderActorId(display, vehicles, self.transform_helper, translation_offset)
 
         if self.hero_actor is not None:
@@ -854,6 +882,8 @@ class ModuleWorld(object):
         del traffic_lights[:]
         del speed_limits[:]
         del walkers[:]
+
+        self.previous_scale_factor = self.scale_factor
 
 # ==============================================================================
 # -- Input -----------------------------------------------------------
