@@ -285,3 +285,23 @@ object for each lane marking crossed by the actor
 | `transform`             | carla.Transform | Transform in world coordinates of the sensor at the time of the measurement |
 | `actor`                 | carla.Actor | Actor that invaded another lane ("self" actor) |
 | `crossed_lane_markings` | carla.LaneMarking list | List of lane markings that have been crossed |
+
+sensor.other.gnss
+-----------------
+
+This sensor, when attached to an actor, reports its current gnss position.
+The gnss position is internally calculated by adding the metric position to
+an initial geo reference location defined within the OpenDRIVE map definition.
+
+This sensor produces
+[`carla.GnssEvent`](python_api.md#carlagnsseventcarlasensordata)
+objects.
+
+| Sensor data attribute  | Type        | Description |
+| ---------------------- | ----------- | ----------- |
+| `frame_number`         | int         | Frame count when the measurement took place |
+| `transform`            | carla.Transform | Transform in world coordinates of the sensor at the time of the measurement |
+| `latitude`             | double | Latitude position of the actor |
+| `longitude`            | double | Longitude position of the actor |
+| `altitude`             | double | Altitude of the actor |
+
