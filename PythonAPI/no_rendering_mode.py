@@ -131,7 +131,6 @@ class Vehicle(object):
         self.surface_size = map_transform_helper.convert_world_to_screen_size(original_size)
 
         self.color = color
-        arrow_size = max(self.surface_size[0] / 2, 1)
 
         self.surface = pygame.Surface((self.surface_size[0], self.surface_size[1]), pygame.SRCALPHA)
         self.surface.set_colorkey(COLOR_BLACK)
@@ -467,21 +466,32 @@ class ModuleHUD (object):
     def add_info(self, module_name, info):
         self._info_text[module_name] = info
 
-    def renderActorId(self, display, list_actors, transform_helper, translation_offset):
+    def renderActorId(self, vehicle_id_surface, list_actors, transform_helper, translation_offset, angle):
         if self._show_info:
+            vehicle_id_surface.fill(COLOR_BLACK)
+            vehicle_id_surface.set_alpha(150)
+
             v_offset = 4
             for actor in list_actors:
                 location = actor.get_location()
                 x, y = transform_helper.convert_world_to_screen_point((location.x, location.y - v_offset))
 
                 color_surface = pygame.Surface((len(str(actor.id)) * 8, 14))
-                color_surface.set_alpha(150)
                 color_surface.fill(COLOR_BLACK)
+                color_surface.set_alpha(200)
 
-                display.blit(color_surface, (x + translation_offset[0], y + translation_offset[1]))
-                font_surface = self._font_mono.render(str(actor.id), True, COLOR_LIGHT_GREY)
+                # color_surface.set_colorkey(COLOR_BLACK)
+
+                rotated_color_surface = pygame.transform.rotate(color_surface, angle)
+                vehicle_id_surface.blit(rotated_color_surface, (x, y))
+
+                font_surface = self._font_mono.render(str(actor.id), True, COLOR_WHITE)
                 font_surface.set_colorkey(COLOR_BLACK)
-                display.blit(font_surface, (x + translation_offset[0], y + translation_offset[1]))
+                font_surface.set_alpha(255)
+                rotated_font_surface = pygame.transform.rotate(font_surface, angle)
+                vehicle_id_surface.blit(rotated_font_surface, (x, y))
+
+        return vehicle_id_surface
 
     def render(self, display):
         if self._show_info:
@@ -569,6 +579,9 @@ class ModuleWorld(object):
         self.walkers_surface = pygame.Surface((self.surface_size, self.surface_size))
         self.walkers_surface.set_colorkey((0, 0, 0))
 
+        self.vehicle_id_surface = pygame.Surface((self.surface_size, self.surface_size))
+        self.vehicle_id_surface.set_colorkey((0, 0, 0))
+
     def _compute_map_bounding_box(self, map_waypoints):
 
         x_min = float('inf')
@@ -622,17 +635,7 @@ class ModuleWorld(object):
             line_0 = [wp_1, (wp_half[0] + wl[0] * self.waypoint_length/2, wp_half[1] + wl[1] * self.waypoint_length/2)]
             line_1 = [wp_1, (wp_half[0] - wl[0] * self.waypoint_length/2, wp_half[1] - wl[1] * self.waypoint_length/2)]
 
-            line_0_x = self.transform_helper.convert_world_to_screen_point(line_0[0])
-            line_0_y = self.transform_helper.convert_world_to_screen_point(line_0[1])
-
-            line_1_x = self.transform_helper.convert_world_to_screen_point(line_1[0])
-            line_1_y = self.transform_helper.convert_world_to_screen_point(line_1[1])
-
-            line_0_screen = [line_0_x, line_0_y]
-            line_1_screen = [line_1_x, line_1_y]
-
             # Orientation of road
-            color = COLOR_BLACK
             if waypoint.is_intersection:
                 self.intersection_waypoints.append(
                     ((wp_0_screen, wp_1_screen), COLOR_DARK_GREY, screen_width, (wp_0, wp_1), waypoint.lane_width))
@@ -861,6 +864,7 @@ class ModuleWorld(object):
             self.base_y = 0
             self.scale_x_offset = 0
             self.scale_y_offset = 0
+            self.angle = 0.0
 
         self.vehicles_surface.fill(COLOR_BLACK)
         self.traffic_light_surface.fill(COLOR_BLACK)
@@ -932,6 +936,7 @@ class ModuleWorld(object):
             self.traffic_light_surface = self.refresh_surface(self.traffic_light_surface, self.scaled_size)
             self.speed_limits_surface = self.refresh_surface(self.speed_limits_surface, self.scaled_size)
             self.walkers_surface = self.refresh_surface(self.walkers_surface, self.scaled_size)
+            self.vehicle_id_surface = self.refresh_surface(self.vehicle_id_surface, self.scaled_size)
 
             self.prev_sx = self.sx
             self.prev_sy = self.sy
@@ -939,6 +944,7 @@ class ModuleWorld(object):
             self.prev_scaled_size = self.scaled_size
 
         # Translation offset
+        self.angle = 0
         if self.hero_actor is None:
             translation_offset = ((display.get_width() - self.surface_size)/2 * self.sx + self.module_input.mouse_offset[0] * self.sx + self.offset_x,
                                   self.module_input.mouse_offset[1] * self.sy + self.offset_y)
@@ -949,13 +955,27 @@ class ModuleWorld(object):
             translation_offset = (-hero_location_screen[0] + display.get_width() / 2,
                                   (- hero_location_screen[1] + display.get_height() / 2))
 
+            self.angle = math.degrees(-self.hero_actor.get_transform().rotation.yaw) - 90.0
+            # angle = self.hero_actor.get_transform().rotation.yaw
+
         # Blit surfaces
-        display.blit(self.map_surface, translation_offset)
-        display.blit(self.vehicles_surface, translation_offset)
-        display.blit(self.traffic_light_surface, translation_offset)
-        display.blit(self.speed_limits_surface, translation_offset)
-        display.blit(self.walkers_surface, translation_offset)
-        actor_id_surface = self.hud_module.renderActorId(display, vehicles, self.transform_helper, translation_offset)
+
+        rotated_map_surface = pygame.transform.rotate(self.map_surface, self.angle)
+        rotated_vehicle_surface = pygame.transform.rotate(self.vehicles_surface, self.angle)
+        rotated_traffic_light_surface = pygame.transform.rotate(self.traffic_light_surface, self.angle)
+        rotated_speed_limits_surface = pygame.transform.rotate(self.speed_limits_surface, self.angle)
+        rotated_walkers_surface = pygame.transform.rotate(self.walkers_surface, self.angle)
+        rotated_vehicle_id_surface = pygame.transform.rotate(self.vehicle_id_surface, self.angle)
+
+        display.blit(rotated_map_surface, translation_offset)
+        display.blit(rotated_vehicle_surface, translation_offset)
+        display.blit(rotated_traffic_light_surface, translation_offset)
+        display.blit(rotated_speed_limits_surface, translation_offset)
+        display.blit(rotated_walkers_surface, translation_offset)
+
+        self.hud_module.renderActorId(self.vehicle_id_surface, vehicles,
+                                      self.transform_helper, translation_offset, self.angle)
+        display.blit(rotated_vehicle_id_surface, translation_offset)
 
         if self.hero_actor is not None:
             selected_hero_actor = [vehicle for vehicle in vehicles if vehicle.id == self.hero_actor.id]
