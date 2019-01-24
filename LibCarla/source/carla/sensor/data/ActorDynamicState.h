@@ -11,6 +11,7 @@
 #include "carla/rpc/ActorId.h"
 #include "carla/rpc/TrafficLightState.h"
 #include "carla/rpc/VehicleControl.h"
+#include "carla/rpc/WalkerControl.h"
 
 #include <cstdint>
 
@@ -51,6 +52,29 @@ namespace detail {
   };
 #pragma pack(pop)
 
+#pragma pack(push, 1)
+  class PackedWalkerControl {
+  public:
+
+    PackedWalkerControl() = default;
+
+    PackedWalkerControl(const rpc::WalkerControl &control)
+      : direction{control.direction.x, control.direction.y, control.direction.z},
+        speed(control.speed),
+        jump(control.jump) {}
+
+    operator rpc::WalkerControl() const {
+      return {geom::Vector3D{direction[0u], direction[1u], direction[2u]}, speed, jump};
+    }
+
+  private:
+
+    float direction[3u];
+    float speed;
+    bool jump;
+  };
+#pragma pack(pop)
+
 } // namespace detail
 
 #pragma pack(push, 1)
@@ -67,6 +91,7 @@ namespace detail {
     union TypeDependentState {
       rpc::TrafficLightState traffic_light_state;
       detail::PackedVehicleControl vehicle_control;
+      detail::PackedWalkerControl walker_control;
     } state;
   };
 

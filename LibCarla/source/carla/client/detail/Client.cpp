@@ -11,6 +11,7 @@
 #include "carla/rpc/Client.h"
 #include "carla/rpc/DebugShape.h"
 #include "carla/rpc/VehicleControl.h"
+#include "carla/rpc/WalkerControl.h"
 #include "carla/streaming/Client.h"
 
 #include <thread>
@@ -139,8 +140,12 @@ namespace detail {
     _pimpl->AsyncCall("set_actor_autopilot", vehicle, enabled);
   }
 
-  void Client::ApplyControlToActor(const rpc::Actor &vehicle, const rpc::VehicleControl &control) {
-    _pimpl->AsyncCall("apply_control_to_actor", vehicle, control);
+  void Client::ApplyControlToVehicle(const rpc::Actor &vehicle, const rpc::VehicleControl &control) {
+    _pimpl->AsyncCall("apply_control_to_vehicle", vehicle, control);
+  }
+
+  void Client::ApplyControlToWalker(const rpc::Actor &walker, const rpc::WalkerControl &control) {
+    _pimpl->AsyncCall("apply_control_to_walker", walker, control);
   }
 
   void Client::SubscribeToStream(
