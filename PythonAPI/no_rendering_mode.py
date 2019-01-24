@@ -846,9 +846,19 @@ class ModuleWorld(object):
 
         if not self.map_rendered:
             self.render_map(self.map_surface)
-            self.previous_scaled_size = (int(self.surface_size * self.module_input.wheel_offset[0]),
-                                         int(self.surface_size * self.module_input.wheel_offset[1]))
+
+            self.prev_sx = self.module_input.wheel_offset[0]
+            self.prev_sy = self.module_input.wheel_offset[1]
+
+            self.prev_scaled_size = (int(self.surface_size * self.prev_sx),
+                                     int(self.surface_size * self.prev_sy))
+
             self.map_rendered = True
+            self.mouse = (0, 0)
+            self.offset_x = 0
+            self.offset_y = 0
+            self.scale_x_offset = 0
+            self.scale_y_offset = 0
 
         self.vehicles_surface.fill(COLOR_BLACK)
         self.traffic_light_surface.fill(COLOR_BLACK)
@@ -889,13 +899,25 @@ class ModuleWorld(object):
             walker_render = Walker(actor, walker_width, self.transform_helper)
             walker_render.render(self.walkers_surface)
 
-        self.scaled_size = (int(self.surface_size * self.module_input.wheel_offset[0]),
-                            int(self.surface_size * self.module_input.wheel_offset[1]))
+        self.sx = self.module_input.wheel_offset[0]
+        self.sy = self.module_input.wheel_offset[1]
+
+        self.scaled_size = (int(self.surface_size * self.sx),
+                            int(self.surface_size * self.sy))
 
         # Scale surfaces if needed
-        scale_offset = 0
-        if self.previous_scaled_size != self.scaled_size:
-            scale_offset = self.module_input.mouse_pos
+        if self.prev_sx != self.sx and self.prev_sy != self.sy:
+            m = self.module_input.mouse_pos
+
+            px = (m[0] - self.offset_x) / float(self.prev_scaled_size[0])
+            py = (m[1] - self.offset_y) / float(self.prev_scaled_size[1])
+
+            print px, py
+
+            self.offset_x = (self.scaled_size[0] * px) - (self.prev_scaled_size[0] * px)
+            self.offset_y = (self.scaled_size[1] * py) - (self.prev_scaled_size[1] * py)
+
+            # Scale performed
             self.transform_helper.map_size = self.scaled_size[0]
 
             self.map_surface.fill(COLOR_BLACK)
@@ -908,10 +930,13 @@ class ModuleWorld(object):
             self.speed_limits_surface = self.refresh_surface(self.speed_limits_surface, self.scaled_size)
             self.walkers_surface = self.refresh_surface(self.walkers_surface, self.scaled_size)
 
+            self.prev_sx = self.sx
+            self.prev_sy = self.sy
+            self.prev_scaled_size = self.scaled_size
+
         # Translation offset
         if self.hero_actor is None:
-            translation_offset = ((display.get_width() - self.surface_size) / 2 +
-                                  self.module_input.mouse_offset[0], self.module_input.mouse_offset[1])
+            translation_offset = (-self.offset_x, -self.offset_y)
         else:
             hero_location = (self.hero_actor.get_location().x, self.hero_actor.get_location().y)
             hero_location_screen = self.transform_helper.convert_world_to_screen_point(hero_location)
@@ -938,7 +963,6 @@ class ModuleWorld(object):
         del speed_limits[:]
         del walkers[:]
 
-        self.previous_scaled_size = self.scaled_size
 
 # ==============================================================================
 # -- Input -----------------------------------------------------------
@@ -964,7 +988,6 @@ class ModuleInput(object):
 
     def _parse_events(self):
         self.mouse_pos = pygame.mouse.get_pos()
-        print self.mouse_pos
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 exit_game()
