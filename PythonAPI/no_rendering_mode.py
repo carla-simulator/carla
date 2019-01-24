@@ -796,10 +796,10 @@ class ModuleWorld(object):
 
     def render_hero_actor(self, display, hero_actor, color, radius, translation_offset):
 
-        hero_radius = self.filter_radius / float((self.x_max - self.x_min)) * self.surface_size
-        hero_diameter = hero_radius * 2.0
+        hero_diameter_screen = self.transform_helper.convert_world_to_screen_size(
+            (self.filter_radius * 2.0, self.filter_radius*2.0))[0]
 
-        self.hero_actor_surface = pygame.Surface((hero_diameter, hero_diameter))
+        self.hero_actor_surface = pygame.Surface((hero_diameter_screen, hero_diameter_screen))
         self.hero_actor_surface.set_colorkey((0, 0, 0))
         self.hero_actor_surface.set_alpha(100)
 
@@ -808,11 +808,11 @@ class ModuleWorld(object):
 
         # Create surface with alpha for circle radius
 
-        self.render_module.drawCircle(self.hero_actor_surface, int(hero_radius),
-                                      int(hero_radius), int(hero_radius), COLOR_ORANGE)
+        self.render_module.drawCircle(self.hero_actor_surface, int(hero_diameter_screen/2),
+                                      int(hero_diameter_screen/2), int(hero_diameter_screen/2), COLOR_ORANGE)
 
-        display.blit(self.hero_actor_surface, (x - int(hero_radius) + translation_offset[0],
-                                               y - int(hero_radius) + translation_offset[1]))
+        display.blit(self.hero_actor_surface, (x - int(hero_diameter_screen/2) + translation_offset[0],
+                                               y - int(hero_diameter_screen/2) + translation_offset[1]))
 
     def is_actor_inside_hero_radius(self, actor):
         return math.sqrt((actor.get_location().x - self.hero_actor.get_location().x)**2
@@ -940,7 +940,8 @@ class ModuleWorld(object):
 
         # Translation offset
         if self.hero_actor is None:
-            translation_offset = (self.offset_x, self.offset_y)
+            translation_offset = ((display.get_width() - self.surface_size)/2 * self.sx + self.module_input.mouse_offset[0] * self.sx + self.offset_x,
+                                  self.module_input.mouse_offset[1] * self.sy + self.offset_y)
 
         else:
             hero_location = (self.hero_actor.get_location().x, self.hero_actor.get_location().y)
@@ -959,7 +960,8 @@ class ModuleWorld(object):
         if self.hero_actor is not None:
             selected_hero_actor = [vehicle for vehicle in vehicles if vehicle.id == self.hero_actor.id]
             if len(selected_hero_actor) != 0:
-                self.render_hero_actor(display, selected_hero_actor[0], COLOR_RED, 5, translation_offset)
+                self.render_hero_actor(display, selected_hero_actor[0],
+                                       COLOR_RED, 5, translation_offset)
             else:
                 self.hero_actor = None
 
@@ -980,7 +982,7 @@ class ModuleInput(object):
         self.mouse_pos = (0, 0)
         self.mouse_offset = [0.0, 0.0]
         self.wheel_offset = [1.0, 1.0]
-        self.wheel_amount = 1.0
+        self.wheel_amount = 0.1
 
     def start(self):
         pass
