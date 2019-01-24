@@ -18,13 +18,17 @@
 #include <compiler/enable-ue4-macros.h>
 
 static TArray<FVector> WaypointVector2FVectorArray(
-    const std::vector<carla::road::element::Waypoint> &Waypoints)
+    const std::vector<carla::road::element::Waypoint> &Waypoints,
+    const float TriggersHeight)
 {
   TArray<FVector> Positions;
   Positions.Reserve(Waypoints.size());
   for (int i = 0; i < Waypoints.size(); ++i)
   {
-    Positions.Add(Waypoints[i].ComputeTransform().location);
+    // Add the trigger height because the z position of the points does not
+    // influence on the driver AI and is easy to visualize in the editor
+    Positions.Add(Waypoints[i].ComputeTransform().location +
+        FVector(0.f, 0.f, TriggersHeight));
   }
   return Positions;
 }
@@ -70,7 +74,7 @@ AOpenDriveActor::AOpenDriveActor(const FObjectInitializer &ObjectInitializer)
     // Attach sprite to scene component
     SpriteComponent->SetupAttachment(RootComponent);
     SpriteComponent->Mobility = EComponentMobility::Static;
-    SpriteComponent->SetEditorScale(1.0f);
+    SpriteComponent->SetEditorScale(1.f);
   }
 #endif // WITH_EDITORONLY_DATA
 }
@@ -171,9 +175,13 @@ void AOpenDriveActor::BuildRoutes()
 
     // generate the RoutePlanner
     ARoutePlanner *RoutePlanner = GetWorld()->SpawnActor<ARoutePlanner>();
+    RoutePlanner->bIsIntersection = std::any_of(Successors.begin(), Successors.end(), [](auto w) {
+      return w.IsIntersection();
+    });
     RoutePlanner->SetBoxExtent(FVector(70.f, 70.f, 50.f));
     RoutePlanner->SetActorRotation(EndLaneWaypoint.ComputeTransform().rotation);
-    RoutePlanner->SetActorLocation(EndLaneWaypoint.ComputeTransform().location);
+    RoutePlanner->SetActorLocation(EndLaneWaypoint.ComputeTransform().location +
+        FVector(0.f, 0.f, TriggersHeight));
 
     // fill the RoutePlanner with all the needed roads
     for (auto &&Successor : Successors)
@@ -203,9 +211,9 @@ void AOpenDriveActor::BuildRoutes()
 
       assert(Waypoints.size() >= 2);
 
-      TArray<FVector> Positions = WaypointVector2FVectorArray(Waypoints);
+      TArray<FVector> Positions = WaypointVector2FVectorArray(Waypoints, TriggersHeight);
 
-      RoutePlanner->AddRoute(1.0f, Positions);
+      RoutePlanner->AddRoute(1.f, Positions);
       RoutePlanners.Add(RoutePlanner);
     }
   }
@@ -248,11 +256,18 @@ void AOpenDriveActor::AddSpawners()
   {
     if (RoutePlanners[i] != nullptr)
     {
-      FTransform Trans = RoutePlanners[i]->GetActorTransform();
-      AVehicleSpawnPoint *Spawner = GetWorld()->SpawnActor<AVehicleSpawnPoint>();
-      Spawner->SetActorRotation(Trans.GetRotation());
-      Spawner->SetActorLocation(Trans.GetTranslation() + FVector(0.f, 0.f, SpawnersHeight));
-      VehicleSpawners.Add(Spawner);
+      if (!bOnIntersections && RoutePlanners[i]->bIsIntersection)
+      {
+        continue;
+      }
+      else
+      {
+        FTransform Trans = RoutePlanners[i]->GetActorTransform();
+        AVehicleSpawnPoint *Spawner = GetWorld()->SpawnActor<AVehicleSpawnPoint>();
+        Spawner->SetActorRotation(Trans.GetRotation());
+        Spawner->SetActorLocation(Trans.GetTranslation() + FVector(0.f, 0.f, SpawnersHeight));
+        VehicleSpawners.Add(Spawner);
+      }
     }
   }
 }

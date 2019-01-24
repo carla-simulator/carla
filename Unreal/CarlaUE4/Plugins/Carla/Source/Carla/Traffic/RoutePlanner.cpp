@@ -211,10 +211,20 @@ void ARoutePlanner::DrawRoutes()
       const float OneMinusDist = 1.f - Dist;
       const float Thickness = OneMinusDist * MaxThickness + MinThickness;
 
-      // from green to black
-      DrawDebugLine(
-          GetWorld(), p0, p1, FColor(0, 255 * OneMinusDist, 0),
-          true, -1.f, 0, Thickness);
+      if (bIsIntersection)
+      {
+        // from blue to black
+        DrawDebugLine(
+            GetWorld(), p0, p1, FColor(0, 0, 255 * OneMinusDist),
+            true, -1.f, 0, Thickness);
+      }
+      else
+      {
+        // from green to black
+        DrawDebugLine(
+            GetWorld(), p0, p1, FColor(0, 255 * OneMinusDist, 0),
+            true, -1.f, 0, Thickness);
+      }
     }
   }
 #endif
