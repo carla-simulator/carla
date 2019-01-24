@@ -15,8 +15,11 @@ namespace recorder {
 #pragma pack(push, 1)
 struct RecorderFrame {
     unsigned long id;
-    double delta;
+    double durationThis;
     double elapsed;
+
+    void read(std::ifstream &file);
+    void write(std::ofstream &file);
 };
 #pragma pack(pop)
 
@@ -25,10 +28,12 @@ class RecorderFrames {
     public:
     RecorderFrames(void);
     void setFrame(void);
-    void write(std::ofstream &file,std::ofstream &log);
+    void write(std::ofstream &file, std::ofstream &log);
+    
 
     private:
     RecorderFrame frame;
+    unsigned long offsetPreviousFrame;
     std::chrono::time_point<std::chrono::high_resolution_clock> lastTime;
 };
 

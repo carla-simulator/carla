@@ -48,12 +48,20 @@ namespace client {
       return World{_simulator->GetCurrentEpisode()};
     }
 
-    std::string StartRecorder(void) {
-      return _simulator->StartRecorder();
+    std::string StartRecorder(std::string name) {
+      return _simulator->StartRecorder(name);
     }
 
     void StopRecorder(void) {
       _simulator->StopRecorder();
+    }
+
+    std::string ShowRecorderFileInfo(std::string name) {
+      return _simulator->ShowRecorderFileInfo(name);
+    }
+
+    std::string ReplayFile(std::string name, double time) {
+      return _simulator->ReplayFile(name, time);
     }
 
   private:

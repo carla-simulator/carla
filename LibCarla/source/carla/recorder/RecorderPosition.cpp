@@ -11,6 +11,29 @@
 namespace carla {
 namespace recorder {
 
+void RecorderPosition::write(std::ofstream &file) {
+    // database id
+    writeValue<unsigned int>(file, this->databaseId);
+    // transform
+    writeTransform(file, this->transform);
+    // velocity
+    writeVector3D(file, this->velocity);
+    // velocity
+    writeVector3D(file, this->angularVelocity);
+}
+void RecorderPosition::read(std::ifstream &file) {
+    // database id
+    readValue<unsigned int>(file, this->databaseId);
+    // transform
+    readTransform(file, this->transform);
+    // velocity
+    readVector3D(file, this->velocity);
+    // velocity
+    readVector3D(file, this->angularVelocity);
+}
+
+//---------------------------------------------
+
 void RecorderPositions::clear(void) {
     positions.clear();
 }

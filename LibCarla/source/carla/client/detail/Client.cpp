@@ -218,12 +218,20 @@ namespace detail {
     _pimpl->AsyncCall("draw_debug_shape", shape);
   }
 
-  std::string Client::StartRecorder(void) {
-    return _pimpl->CallAndWait<std::string>("start_recorder");
+  std::string Client::StartRecorder(std::string name) {
+    return _pimpl->CallAndWait<std::string>("start_recorder", name);
   }
 
   void Client::StopRecorder(void) {
     return _pimpl->AsyncCall("stop_recorder");
+  }
+
+  std::string Client::ShowRecorderFileInfo(std::string name) {
+    return _pimpl->CallAndWait<std::string>("show_recorder_file_info", name);
+  }
+
+  std::string Client::ReplayFile(std::string name, double time) {
+    return _pimpl->CallAndWait<std::string>("replay_file", name, time);
   }
 
 } // namespace detail

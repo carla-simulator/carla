@@ -16,7 +16,11 @@
 namespace carla {
 namespace recorder {
 
-// write binary data from int
+//---------
+// recorder
+//---------
+
+// write binary data (using sizeof())
 template<typename T>
 void writeValue(std::ofstream &file, const T &obj) {
     file.write(reinterpret_cast<const char*>(&obj), sizeof(T));
@@ -32,6 +36,32 @@ void writeTransform(std::ofstream &file, const carla::geom::Transform &obj);
 void writeRotation(std::ofstream &file, const carla::geom::Rotation &obj);
 // write binary data from string (length + text)
 void writeString(std::ofstream &file, const std::string &obj);
+// write binary data from buffer (length + data)
+void writeBuffer(std::ofstream &file, const Buffer &obj);
+
+//---------
+// replayer
+//---------
+
+// read binary data (using sizeof())
+template<typename T>
+void readValue(std::ifstream &file, T &obj) {
+    file.read(reinterpret_cast<char *>(&obj), sizeof(T));
+}
+
+// read binary data from Vector3D
+void readVector3D(std::ifstream &file, carla::geom::Vector3D &obj);
+// read binary data from Location
+void readLocation(std::ifstream &file, carla::geom::Location &obj);
+// read binary data from Transform
+void readTransform(std::ifstream &file, carla::geom::Transform &obj);
+// read binary data from Rotation
+void readRotation(std::ifstream &file, carla::geom::Rotation &obj);
+// read binary data from string (length + text)
+void readString(std::ifstream &file, std::string &obj);
+// read binary data to buffer (length + data)
+void readBuffer(std::ifstream &file, Buffer &obj);
+
 
 }
 }

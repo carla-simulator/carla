@@ -74,12 +74,6 @@ public:
     return Registry;
   }
 
-  void SetRecorder(carla::recorder::Recorder *recorder)
-  {
-    Recorder = recorder;
-  }
-
-
 private:
 
   UFUNCTION()
@@ -96,5 +90,4 @@ private:
 
   FActorRegistry Registry;
 
-  carla::recorder::Recorder *Recorder { nullptr };
 };

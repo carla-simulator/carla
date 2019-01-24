@@ -22,40 +22,38 @@ Recorder::~Recorder(){
     if (log) log.close();
 }
 
-std::string Recorder::start(std::string path, std::string map) {
+std::string Recorder::start(std::string path, std::string name) {
     
     // reset
     stop();
 
-    // prepare the target file
-    if (map == "")
-        map = "recorder";
-
+/*
     // get current time
     std::time_t timet = std::time(0);
     std::tm *now = std::localtime(&timet);
 
-    std::stringstream name;
-    name << path;
-    name << (1900 + now->tm_year);
-    name << std::setw(2) << std::setfill('0') << (now->tm_mon + 1);
-    name << std::setw(2) << std::setfill('0') << (now->tm_mday) << "_";
-    name << std::setw(2) << std::setfill('0') << (now->tm_hour);
-    name << std::setw(2) << std::setfill('0') << (now->tm_min);
-    name << std::setw(2) << std::setfill('0') << (now->tm_sec);
-    name << "_" << map << ".rec";
-    
-    // files
-    file.open(name.str(), std::ios::binary | std::ios::trunc | std::ios::out);
-    std::string filename(name.str());
+    std::stringstream filename;
+    filename << path;
+    filename << (1900 + now->tm_year);
+    filename << std::setw(2) << std::setfill('0') << (now->tm_mon + 1);
+    filename << std::setw(2) << std::setfill('0') << (now->tm_mday) << "_";
+    filename << std::setw(2) << std::setfill('0') << (now->tm_hour);
+    filename << std::setw(2) << std::setfill('0') << (now->tm_min);
+    filename << std::setw(2) << std::setfill('0') << (now->tm_sec);
+    filename << "_" << map << ".rec";
+*/    
+    std::stringstream filename;
+    filename << path << name;
 
+    // files
+    file.open(filename.str(), std::ios::binary | std::ios::trunc | std::ios::out);
+    
     // log
-    name << ".log";
-    log.open(name.str());
+    log.open(filename.str() + ".log");
 
     enabled = true;
 
-    return filename;
+    return filename.str();
 }
 
 void Recorder::stop() {
@@ -84,11 +82,21 @@ void Recorder::write(void) {
 }
 
 void Recorder::addPosition(const RecorderPosition &position) {
-    positions.addPosition(position);
+    if (enabled)
+        positions.addPosition(position);
 }
 
-void Recorder::addEvent(const RecorderEvent &event) {
-    events.addEvent(event);
+void Recorder::addEvent(RecorderEventAdd event) {
+    if (enabled)
+        events.addEvent(std::move(event));
+}
+void Recorder::addEvent(const RecorderEventDel event) {
+    if (enabled)
+        events.addEvent(std::move(event));
+}
+void Recorder::addEvent(const RecorderEventParent event) {
+    if (enabled)
+        events.addEvent(std::move(event));
 }
 
 }
