@@ -16,7 +16,7 @@ fi
 # -- Parse arguments -----------------------------------------------------------
 # ==============================================================================
 
-DOC_STRING="Build and packs CarlaUE4's UserContent"
+DOC_STRING="Build and packs CarlaUE4's ExportedMaps"
 
 USAGE_STRING="Usage: $0 [-h|--help] [-d|--dir] <outdir> [-f|--file] <filename>"
 
@@ -48,10 +48,10 @@ while true; do
 done
 
 if [ -z "${OUTPUT_DIRECTORY}" ]; then
-  OUTPUT_DIRECTORY="${PWD}/UserContent"
+  OUTPUT_DIRECTORY="${PWD}/ExportedMaps"
 fi
 if [ -z "${FILE_NAME}" ]; then
-  FILE_NAME="CookedUserContent"
+  FILE_NAME="CookedExportedMaps"
 fi
 
 # ==============================================================================
@@ -74,7 +74,7 @@ log "Current project directory: '${PWD}'"
 MAP_LIST=""
 
 for filepath in `find ${PWD}/Content/ -type f -name "*.umap"`; do
-	if [[ $filepath == *"/UserContent/"* ]]; then
+	if [[ $filepath == *"/ExportedMaps/"* ]]; then
     filepath="/Game/"${filepath#"${PWD}/Content/"}
     if [ -z "${MAP_LIST}" ]; then
       MAP_LIST=$filepath
@@ -138,5 +138,5 @@ rm -Rf ${BUILD_FOLDER}/LinuxNoEditor
 # -- ...and we are done --------------------------------------------------------
 # ==============================================================================
 
-log "UserContent created at ${DESTINATION}"
+log "ExportedMaps created at ${DESTINATION}"
 log "Success!"

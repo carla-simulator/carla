@@ -119,6 +119,13 @@ if ${BUILD_CARLAUE4} ; then
   log "Build CarlaUE4 project."
   make CarlaUE4Editor
 
+  #Providing the user with the ExportedMaps folder
+  EXPORTED_MAPS="${CARLAUE4_ROOT_FOLDER}/Content/Carla/ExportedMaps"
+  if [ ! -d "${EXPORTED_MAPS}" ]; then
+    mkdir "${EXPORTED_MAPS}"
+  fi
+
+
 fi
 
 # ==============================================================================
