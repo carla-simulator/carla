@@ -15,10 +15,13 @@ namespace recorder {
 
 #pragma pack(push, 1)
 struct RecorderPosition {
-    unsigned int id;
+    unsigned int databaseId;
     carla::geom::Transform transform;
     carla::geom::Vector3D velocity;
     carla::geom::Vector3D angularVelocity;
+
+    void read(std::ifstream &file);
+    void write(std::ofstream &file);
 };
 #pragma pack(pop)
 

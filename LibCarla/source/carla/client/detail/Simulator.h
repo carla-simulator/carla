@@ -231,12 +231,20 @@ namespace detail {
     // =========================================================================
     /// @{
 
-    std::string StartRecorder(void) {
-      return _client.StartRecorder();
+    std::string StartRecorder(std::string name) {
+      return _client.StartRecorder(name);
     }
     
     void StopRecorder(void) {
       _client.StopRecorder();
+    }
+
+    std::string ShowRecorderFileInfo(std::string name) {
+      return _client.ShowRecorderFileInfo(name);
+    }
+
+    std::string ReplayFile(std::string name, double time) {
+      return _client.ReplayFile(name, time);
     }
 
     /// @}

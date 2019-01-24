@@ -45,9 +45,58 @@ void writeTransform(std::ofstream &file, const carla::geom::Transform &obj){
 // write binary data from string (length + text)
 void writeString(std::ofstream &file, const std::string &obj) {
     short length = obj.size();
-
     writeValue<short>(file, length);    
     file.write(reinterpret_cast<const char*>(obj.c_str()), length);
+}
+
+// write binary data from buffer (length + data)
+void writeBuffer(std::ofstream &file, const Buffer &obj) {
+    short length = obj.size();
+    writeValue<short>(file, length);    
+    file.write(reinterpret_cast<const char*>(obj.data()), length);
+}
+
+// read binary data from Vector3D
+void readVector3D(std::ifstream &file, carla::geom::Vector3D &obj) {
+    readValue<float>(file, obj.x);
+    readValue<float>(file, obj.y);
+    readValue<float>(file, obj.z);
+}
+
+// read binary data from Location
+void readLocation(std::ifstream &file, carla::geom::Location &obj) {
+    readValue<float>(file, obj.x);
+    readValue<float>(file, obj.y);
+    readValue<float>(file, obj.z);
+}
+
+// read binary data from Rotation
+void readRotation(std::ifstream &file, carla::geom::Rotation &obj) {
+    readValue<float>(file, obj.pitch);
+    readValue<float>(file, obj.yaw);
+    readValue<float>(file, obj.roll);
+}
+
+// read binary data from Transform
+void readTransform(std::ifstream &file, carla::geom::Transform &obj){
+    readLocation(file, obj.location);
+    readRotation(file, obj.rotation);
+}
+
+// read binary data from string (length + text)
+void readString(std::ifstream &file, std::string &obj) {
+    short length;
+    readValue<short>(file, length);
+    obj.resize(length);
+    file.read(&obj[0], length);
+}
+
+// read binary data to buffer (length + data)
+void readBuffer(std::ifstream &file, Buffer &obj) {
+    short length;
+    readValue<short>(file, length);
+    obj.reset(static_cast<unsigned int>(length));
+    file.read(reinterpret_cast<char *>(obj.data()), length);
 }
 
 }

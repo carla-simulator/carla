@@ -152,9 +152,11 @@ namespace detail {
 
     void DrawDebugShape(const rpc::DebugShape &shape);
 
-    std::string StartRecorder(void);
+    std::string StartRecorder(std::string name);
     void StopRecorder(void);
-    
+    std::string ShowRecorderFileInfo(std::string name);
+    std::string ReplayFile(std::string name, double time);
+
   private:
 
     class Pimpl;

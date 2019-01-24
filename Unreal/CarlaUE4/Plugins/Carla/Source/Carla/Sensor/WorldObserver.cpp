@@ -133,7 +133,7 @@ static carla::Buffer AWorldObserver_Serialize(
         info.velocity
       };
       Episode->GetRecorder().addPosition(recPos);
-  }
+    }
   }
 
   check(begin == buffer.end());
@@ -168,4 +168,8 @@ void AWorldObserver::Tick(float DeltaSeconds)
   // recorder
   if (Episode->GetRecorder().isEnabled())
     Episode->GetRecorder().write();
+  
+  // replayer
+  if (Episode->GetReplayer().isEnabled())
+    Episode->GetReplayer().tick(DeltaSeconds);
 }

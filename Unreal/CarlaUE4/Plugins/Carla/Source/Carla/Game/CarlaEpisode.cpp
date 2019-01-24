@@ -14,6 +14,10 @@
 #include "EngineUtils.h"
 #include "GameFramework/SpectatorPawn.h"
 
+#include <compiler/disable-ue4-macros.h>
+#include <carla/recorder/Recorder.h>
+#include <compiler/enable-ue4-macros.h>
+
 static FString UCarlaEpisode_GetTrafficSignId(ETrafficSignState State)
 {
   using TSS = ETrafficSignState;
@@ -74,6 +78,13 @@ void UCarlaEpisode::AttachActors(AActor *Child, AActor *Parent)
   check(Parent != nullptr);
   Child->AttachToActor(Parent, FAttachmentTransformRules::KeepRelativeTransform);
   Child->SetOwner(Parent);
+
+  // recorder event
+  crec::RecorderEventParent recEvent { 
+    FindActor(Child).GetActorId(),
+    FindActor(Parent).GetActorId()
+  };
+  Recorder.addEvent(recEvent);
 }
 
 void UCarlaEpisode::InitializeAtBeginPlay()
@@ -108,4 +119,11 @@ void UCarlaEpisode::InitializeAtBeginPlay()
     Description.Class = Actor->GetClass();
     ActorDispatcher->RegisterActor(*Actor, Description);
   }
+
+    Replayer.setCallbackEventAdd([](/*carla::geom::Transform transform, 
+        carla::recorder::RecorderActorDescription description*/) -> bool {
+      UE_LOG(LogCarla, Log, TEXT("Actor created by replayer"));
+      return true;
+    });
+    UE_LOG(LogCarla, Log, TEXT("Registering Replayer callbacks"));
 }

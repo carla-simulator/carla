@@ -11,6 +11,7 @@
 #include "carla/recorder/RecorderEvent.h"
 #include "carla/recorder/RecorderPosition.h"
 #include "carla/recorder/RecorderHelpers.h"
+#include "carla/recorder/Replayer.h"
 
 namespace carla {
 namespace recorder {
@@ -36,6 +37,9 @@ namespace recorder {
     RecorderEvents events;
     RecorderPositions positions;
 
+    // replayer
+    Replayer replayer;
+
     public:
 
     Recorder();
@@ -43,12 +47,24 @@ namespace recorder {
     void enable(void);
     void disable(void);
     bool isEnabled(void) { return enabled; };
-    std::string start(std::string path = ".", std::string _map = "");
+    std::string start(std::string path, std::string name);
     void stop(void);
     void clear(void);
-    void addEvent(const RecorderEvent &_event);
+    void addEvent(RecorderEventAdd _event);
+    void addEvent(const RecorderEventDel _event);
+    void addEvent(const RecorderEventParent _event);
     void addPosition(const RecorderPosition &_position);
     void write(void);
+
+    // replayer
+    std::string showFileInfo(std::string path, std::string name) {
+      return replayer.getInfo(path + name);
+    }
+
+    std::string replayFile(std::string path, std::string name, double time) {
+      stop();
+      return replayer.replayFile(path + name, time);
+    }
 
   };
 

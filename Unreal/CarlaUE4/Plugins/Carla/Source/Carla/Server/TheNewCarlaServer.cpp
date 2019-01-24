@@ -28,7 +28,6 @@
 #include <carla/rpc/VehicleControl.h>
 #include <carla/rpc/WalkerControl.h>
 #include <carla/rpc/WeatherParameters.h>
-#include <carla/recorder/Recorder.h>
 #include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
 
@@ -550,17 +549,31 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   });
 
-  Server.BindSync("start_recorder", [this]() -> std::string {
+  Server.BindSync("start_recorder", [this](std::string name) -> std::string {
     REQUIRE_CARLA_EPISODE();
     return Episode->GetRecorder().start(
       carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
-      carla::rpc::FromFString(Episode->GetMapName())
-    );
+      name);
   });
 
   Server.BindSync("stop_recorder", [this]() {
     REQUIRE_CARLA_EPISODE();
     Episode->GetRecorder().stop();
+  });
+
+  Server.BindSync("show_recorder_file_info", [this](std::string name) -> std::string {
+    REQUIRE_CARLA_EPISODE();
+    return Episode->GetRecorder().showFileInfo(
+      carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
+      name);
+  });
+
+  Server.BindSync("replay_file", [this](std::string name, double time) -> std::string {
+    REQUIRE_CARLA_EPISODE();
+    return Episode->GetRecorder().replayFile(
+      carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
+      name,
+      time);
   });
 
   Server.BindSync("draw_debug_shape", [this](const cr::DebugShape &shape) -> R<void>

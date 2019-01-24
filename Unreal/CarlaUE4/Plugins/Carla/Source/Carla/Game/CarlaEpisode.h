@@ -16,6 +16,7 @@
 #include <carla/geom/BoundingBox.h>
 #include <carla/recorder/Recorder.h>
 #include <carla/recorder/RecorderEvent.h>
+#include <carla/recorder/Replayer.h>
 #include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
 
@@ -153,30 +154,29 @@ public:
       //carla::rpc::ActorDescription description(thisActorDescription);
       
       // create a new description from the Unreal version
-      carla::rpc::ActorDescription description;      
+      crec::RecorderActorDescription description;      
       description.uid = thisActorDescription.UId;
-      description.id = carla::rpc::FromFString(thisActorDescription.Id);
-      description.attributes.reserve(thisActorDescription.Variations.Num());
+      description.id.copy_from(reinterpret_cast<const unsigned char *>(carla::rpc::FromFString(thisActorDescription.Id).c_str()), thisActorDescription.Id.Len());
+      description.attributes.resize(thisActorDescription.Variations.Num());
       for (const auto &item : thisActorDescription.Variations) {
-        carla::rpc::ActorAttribute attr;
-        attr.id = carla::rpc::FromFString(item.Value.Id);
+        crec::RecorderActorAttribute attr;
         attr.type = static_cast<carla::rpc::ActorAttributeType>(item.Value.Type);
-        attr.value = carla::rpc::FromFString(item.Value.Value);
+        attr.id.copy_from(reinterpret_cast<const unsigned char *>(carla::rpc::FromFString(item.Value.Id).c_str()), item.Value.Id.Len());
+        attr.value.copy_from(reinterpret_cast<const unsigned char *>(carla::rpc::FromFString(item.Value.Value).c_str()), item.Value.Value.Len());
         
-        description.attributes.emplace_back(attr);
+        description.attributes.emplace_back(std::move(attr));
       }
 
     auto result = ActorDispatcher.SpawnActor(Transform, std::move(thisActorDescription));
     
     if (result.Key == EActorSpawnResultStatus::Success) {
       // recorder event
-      crec::RecorderEvent recEvent { 
-        crec::RecorderEventType::Add,
-        result.Value.GetActorId(),
+      crec::RecorderEventAdd recEvent { 
+        static_cast<carla::rpc::actor_id_type>(result.Value.GetActorId()),
         Transform,
-        description
+        std::move(description)
       };
-      Recorder.addEvent(recEvent);
+      Recorder.addEvent(std::move(recEvent));
     }
     return result;
     //return ActorDispatcher.SpawnActor(Transform, std::move(ActorDescription));
@@ -206,7 +206,13 @@ public:
   UFUNCTION(BlueprintCallable)
   bool DestroyActor(AActor *Actor)
   {
-    return ActorDispatcher->DestroyActor(Actor);
+      // recorder event
+      crec::RecorderEventDel recEvent { 
+        GetActorRegistry().Find(Actor).GetActorId(),
+      };
+      Recorder.addEvent(std::move(recEvent));
+
+    return ActorDispatcher.DestroyActor(Actor);
   }
 
   // ===========================================================================
@@ -227,6 +233,11 @@ public:
     return Recorder;
   }
 
+  carla::recorder::Replayer &GetReplayer()
+  {
+    return Replayer;
+  }
+
 private:
 
   friend class ATheNewCarlaGameModeBase;
@@ -236,7 +247,6 @@ private:
   void RegisterActorFactory(ACarlaActorFactory &ActorFactory)
   {
     ActorDispatcher.Bind(ActorFactory);
-    ActorDispatcher.SetRecorder(&Recorder);
   }
 
   const uint32 Id = 0u;
@@ -257,4 +267,5 @@ private:
   AWorldObserver *WorldObserver = nullptr;
 
   carla::recorder::Recorder Recorder;
+  carla::recorder::Replayer Replayer;
 };
