@@ -370,7 +370,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       RespondErrorStr("unable to add actor impulse: not supported by actor");
     }
     RootComponent->AddImpulse(
-        vector,
+        vector.ToCentimeters(),
         "None",
         false);
   });
