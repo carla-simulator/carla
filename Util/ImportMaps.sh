@@ -16,7 +16,7 @@ fi
 # -- Parse arguments -----------------------------------------------------------
 # ==============================================================================
 
-DOC_STRING="Unpack and copy over CarlaUE4's UserContent"
+DOC_STRING="Unpack and copy over CarlaUE4's Exported Maps"
 
 USAGE_STRING="Usage: $0 [-h|--help] [-d|--dir] <outdir> [-f|--file] <filename>"
 
@@ -47,6 +47,12 @@ while true; do
   esac
 done
 
+if [ -z "${FILE_NAME}" ]; then
+  FILE_NAME="CookedExportedMaps"
+fi
+
 #Tar.gz the stuff
-tar --keep-newer-files -xvf UserContent/CookedUserContent.tar.gz
+for filepath in `find ExportedMaps/ -type f -name "*.tar.gz"`; do
+  tar --keep-newer-files -xvf ExportedMaps/${filepath}.tar.gz
+done
 

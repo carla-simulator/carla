@@ -93,7 +93,7 @@ if $DO_COPY_FILES ; then
 
   pushd ${CARLA_ROOT_FOLDER} >/dev/null
 
-  mkdir "${DESTINATION}/UserContent"
+  mkdir "${DESTINATION}/ExportedMaps"
 
   copy_if_changed "./LICENSE" "${DESTINATION}/LICENSE"
   copy_if_changed "./CHANGELOG.md" "${DESTINATION}/CHANGELOG"
@@ -109,7 +109,7 @@ if $DO_COPY_FILES ; then
   copy_if_changed "./PythonAPI/spawn_npc.py" "${DESTINATION}/spawn_npc.py"
   copy_if_changed "./PythonAPI/tutorial.py" "${DESTINATION}/tutorial.py"
   copy_if_changed "./PythonAPI/vehicle_gallery.py" "${DESTINATION}/vehicle_gallery.py"
-  copy_if_changed "./Util/InjectUserContent.sh" "${DESTINATION}/InjectUserContent.sh"
+  copy_if_changed "./Util/ImportMaps.sh" "${DESTINATION}/ImportMaps.sh"
 
   popd >/dev/null
 
