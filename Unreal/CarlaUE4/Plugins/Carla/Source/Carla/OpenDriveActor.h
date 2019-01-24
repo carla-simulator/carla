@@ -52,7 +52,11 @@ private:
 
   /// Distance between waypoints where the cars will drive
   UPROPERTY(Category = "Generate", EditAnywhere, meta = (ClampMin = "0.01", UIMin = "0.01"))
-  float RoadAccuracy = 2.0f;
+  float RoadAccuracy = 2.f;
+
+  /// Trigger elevantion
+  UPROPERTY(Category = "Generate", EditAnywhere, meta = (ClampMin = "0.01", UIMin = "0.01"))
+  float TriggersHeight = 100.f;
 
 #if WITH_EDITORONLY_DATA
   /// Remove the previously generated road network. Also, it will remove
@@ -65,10 +69,14 @@ private:
   UPROPERTY(Category = "Spawners", EditAnywhere)
   bool bAddSpawners = false;
 
+  /// If true, spawners will be placed on junctions too
+  UPROPERTY(Category = "Spawners", EditAnywhere)
+  bool bOnIntersections = false;
+
   /// Determine the height where the spawners will be placed, relative to each
   /// RoutePlanner
   UPROPERTY(Category = "Spawners", EditAnywhere)
-  float SpawnersHeight = 300.0;
+  float SpawnersHeight = 300.f;
 
 #if WITH_EDITORONLY_DATA
   /// Remove already placed spawners if necessary
