@@ -25,6 +25,9 @@ even though they might not be directly used in the exported map. Also, the maps
 referenced inside the Editor Properties will be exported due to the current way
 of cooking provided by Unreal.
 
+!!! important
+    This will only work if "Use pak file" is unchecked under the Packaging settings
+
 Once the script is completed, the packed file can be found under ExportedMaps in
 the project's root.
 

@@ -1,18 +1,6 @@
 #! /bin/bash
 
 # ==============================================================================
-# -- Set up environment --------------------------------------------------------
-# ==============================================================================
-
-source $(dirname "$0")/Environment.sh
-
-if [ ! -d "${UE4_ROOT}" ]; then
-  fatal_error "UE4_ROOT is not defined, or points to a non-existant directory, please set this environment variable."
-else
-  log "Using Unreal Engine at '$UE4_ROOT'"
-fi
-
-# ==============================================================================
 # -- Parse arguments -----------------------------------------------------------
 # ==============================================================================
 
@@ -53,6 +41,6 @@ fi
 
 #Tar.gz the stuff
 for filepath in `find ExportedMaps/ -type f -name "*.tar.gz"`; do
-  tar --keep-newer-files -xvf ExportedMaps/${filepath}.tar.gz
+  tar --keep-newer-files -xvf ${filepath}
 done
 
