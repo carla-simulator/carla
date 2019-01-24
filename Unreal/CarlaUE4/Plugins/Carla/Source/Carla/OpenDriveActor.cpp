@@ -198,9 +198,7 @@ void AOpenDriveActor::BuildRoutes()
         const auto NewWaypoint = WaypointGen::GetNext(Successor, Dist);
 
         check(Dist < MaxDist);
-        check(NewWaypoint != nullptr);
         check(NewWaypoint.size() == 1);
-        check(NewWaypoint[0] != nullptr);
 
         Waypoints.emplace_back(NewWaypoint[0]);
       }
