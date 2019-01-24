@@ -63,7 +63,7 @@ class GlobalRoutePlanner(object):
         Possible values (for now) are START, GO_STRAIGHT, LEFT, RIGHT, STOP
         """
 
-        threshold = 0.0523599   # 5 degrees
+        threshold = 0.087267    # 5 degree
         route = self.path_search(origin, destination)
         plan = []
         plan.append(NavEnum.START)
@@ -71,20 +71,28 @@ class GlobalRoutePlanner(object):
         for i in range(len(route) - 2):
             current_edge = self._graph.edges[route[i], route[i + 1]]
             next_edge = self._graph.edges[route[i + 1], route[i + 2]]
+            cv = current_edge['exit_vector']
+            nv = next_edge['net_vector']
+            cv, nv = cv + (0,), nv + (0,)  # Making vectors 3D
             num_edges = 0
-            for _ in self._graph.neighbors(route[i+1]): num_edges+=1
+            cross_list = []
+            # Accumulating cross products of all other paths
+            for neighbor in self._graph.neighbors(route[i+1]):
+                num_edges+=1
+                if neighbor != route[i + 2]:
+                    select_edge = self._graph.edges[route[i+1], neighbor]
+                    sv = select_edge['net_vector']
+                    cross_list.append(np.cross(cv, sv)[2])
+            # Calculating turn decision
             if next_edge['intersection'] and num_edges > 1:
-                cv = current_edge['exit_vector']
-                nv = next_edge['net_vector']
-                cv, nv = cv + (0,), nv + (0,)  # Making vectors 3D
+                next_cross = np.cross(cv, nv)[2]
                 deviation = math.acos(np.dot(cv, nv) /\
                     (np.linalg.norm(cv)*np.linalg.norm(nv)))
                 if deviation < threshold:
                     action = NavEnum.GO_STRAIGHT
-                # Accounting for chirality of opendrive and UE4's axes
-                elif np.cross(cv, nv)[2] < 0:
+                elif next_cross < min(cross_list):
                     action = NavEnum.LEFT
-                else:
+                elif next_cross > max(cross_list):
                     action = NavEnum.RIGHT
                 plan.append(action)
         plan.append(NavEnum.STOP)
