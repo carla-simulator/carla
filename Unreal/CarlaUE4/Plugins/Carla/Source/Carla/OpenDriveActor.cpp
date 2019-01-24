@@ -197,10 +197,10 @@ void AOpenDriveActor::BuildRoutes()
       {
         const auto NewWaypoint = WaypointGen::GetNext(Successor, Dist);
 
-        assert(Dist < MaxDist);
-        assert(NewWaypoint != nullptr);
-        assert(NewWaypoint.size() == 1);
-        assert(NewWaypoint[0] != nullptr);
+        check(Dist < MaxDist);
+        check(NewWaypoint != nullptr);
+        check(NewWaypoint.size() == 1);
+        check(NewWaypoint[0] != nullptr);
 
         Waypoints.emplace_back(NewWaypoint[0]);
       }
@@ -209,7 +209,7 @@ void AOpenDriveActor::BuildRoutes()
       Waypoints.emplace_back(WaypointGen::GetNext(
           Successor, CarlaMath::clamp(MaxDist - 0.1f, 0.f, MaxDist))[0]);
 
-      assert(Waypoints.size() >= 2);
+      check(Waypoints.size() >= 2);
 
       TArray<FVector> Positions = WaypointVector2FVectorArray(Waypoints, TriggersHeight);
 
