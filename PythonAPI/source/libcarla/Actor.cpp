@@ -7,6 +7,7 @@
 #include <carla/client/Actor.h>
 #include <carla/client/TrafficLight.h>
 #include <carla/client/Vehicle.h>
+#include <carla/client/Walker.h>
 #include <carla/rpc/TrafficLightState.h>
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -69,8 +70,15 @@ void export_actor() {
   class_<cc::Vehicle, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Vehicle>>("Vehicle", no_init)
     .add_property("bounding_box", CALL_RETURNING_COPY(cc::Vehicle, GetBoundingBox))
     .def("apply_control", &cc::Vehicle::ApplyControl, (arg("control")))
-    .def("get_vehicle_control", &cc::Vehicle::GetVehicleControl)
+    .def("get_control", &cc::Vehicle::GetControl)
     .def("set_autopilot", &cc::Vehicle::SetAutopilot, (arg("enabled")=true))
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cc::Walker, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Walker>>("Walker", no_init)
+    .add_property("bounding_box", CALL_RETURNING_COPY(cc::Walker, GetBoundingBox))
+    .def("apply_control", &cc::Walker::ApplyControl, (arg("control")))
+    .def("get_control", &cc::Walker::GetWalkerControl)
     .def(self_ns::str(self_ns::self))
   ;
 

@@ -57,7 +57,7 @@ ARoutePlanner::ARoutePlanner(const FObjectInitializer &ObjectInitializer)
   TriggerVolume->SetHiddenInGame(true);
   TriggerVolume->SetMobility(EComponentMobility::Static);
   TriggerVolume->SetCollisionProfileName(FName("OverlapAll"));
-  TriggerVolume->bGenerateOverlapEvents = true;
+  TriggerVolume->SetGenerateOverlapEvents(true);
 
   // Do not change default value here, our autopilot depends on this.
   TriggerVolume->SetBoxExtent(FVector{32.0f, 32.0f, 32.0f});

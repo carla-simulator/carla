@@ -20,6 +20,10 @@ static FActorView::ActorType FActorRegistry_GetActorType(const FActorView &View)
     {
       return FActorView::ActorType::Vehicle;
     }
+    else if (nullptr != Cast<ACharacter>(View.GetActor()))
+    {
+      return FActorView::ActorType::Walker;
+    }
     else if (nullptr != Cast<ATrafficLightBase>(View.GetActor()))
     {
       return FActorView::ActorType::TrafficLight;

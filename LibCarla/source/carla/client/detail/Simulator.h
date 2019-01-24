@@ -13,6 +13,7 @@
 #include "carla/client/Actor.h"
 #include "carla/client/GarbageCollectionPolicy.h"
 #include "carla/client/Vehicle.h"
+#include "carla/client/Walker.h"
 #include "carla/client/detail/Client.h"
 #include "carla/client/detail/Episode.h"
 #include "carla/client/detail/EpisodeProxy.h"
@@ -199,7 +200,11 @@ namespace detail {
     }
 
     void ApplyControlToVehicle(Vehicle &vehicle, const rpc::VehicleControl &control) {
-      _client.ApplyControlToActor(vehicle.Serialize(), control);
+      _client.ApplyControlToVehicle(vehicle.Serialize(), control);
+    }
+
+    void ApplyControlToWalker(Walker &walker, const rpc::WalkerControl &control) {
+      _client.ApplyControlToWalker(walker.Serialize(), control);
     }
 
     /// @}

@@ -23,6 +23,10 @@ namespace road {
       _map_data.SetJunctionInformation(junctionInfo);
     }
 
+    void SetGeoReference(const std::string &geoReference) {
+      _map_data.SetGeoReference(geoReference);
+    }
+
     SharedPtr<Map> Build();
 
   private:

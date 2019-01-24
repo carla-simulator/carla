@@ -106,7 +106,7 @@
 
 - `bounding_box`
 - `apply_control(vehicle_control)`
-- `get_vehicle_control()`
+- `get_control()`
 - `set_autopilot(enabled=True)`
 
 ## `carla.TrafficLight(carla.Actor)`
@@ -159,6 +159,12 @@
 
 - `actor`
 - `crossed_lane_markings`
+
+## `carla.GnssEvent(carla.SensorData)`
+
+- `latitude`
+- `longitude`
+- `altitude`
 
 ## `carla.VehicleControl`
 
@@ -243,6 +249,7 @@ Static presets
 - `pitch`
 - `yaw`
 - `roll`
+- `get_forward_vector()`
 - `__eq__(other)`
 - `__ne__(other)`
 
@@ -250,10 +257,10 @@ Static presets
 
 - `location`
 - `rotation`
+- `transform(geom_object)`
+- `get_forward_vector()`
 - `__eq__(other)`
 - `__ne__(other)`
-- `transform_point`
-- `transform_point_list`
 
 ## `carla.BoundingBox`
 
