@@ -4,6 +4,7 @@
   * Upgraded Boost to 1.69.0
   * Added point transformation functionality for LibCarla and PythonAPI
   * Added "sensor_tick" attribute to sensors (cameras and lidars) to specify the capture rate in seconds
+  * Added Export/Import map tools
   * Added "get_forward_vector()" to rotation and transform, retrieves the unit vector on the rotation's X-axis
   * Added support for Deepin in PythonAPI's setup.py
   * Added support for spawning and controlling walkers (pedestrians)
