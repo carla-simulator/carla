@@ -857,6 +857,8 @@ class ModuleWorld(object):
             self.mouse = (0, 0)
             self.offset_x = 0
             self.offset_y = 0
+            self.base_x = 0
+            self.base_y = 0
             self.scale_x_offset = 0
             self.scale_y_offset = 0
 
@@ -909,13 +911,14 @@ class ModuleWorld(object):
         if self.prev_sx != self.sx and self.prev_sy != self.sy:
             m = self.module_input.mouse_pos
 
-            px = (m[0] - self.offset_x) / float(self.prev_scaled_size[0])
-            py = (m[1] - self.offset_y) / float(self.prev_scaled_size[1])
+            px = (m[0] - self.base_x) / float(self.prev_scaled_size[0])
+            py = (m[1] - self.base_y) / float(self.prev_scaled_size[1])
 
-            print px, py
+            self.offset_x = self.base_x + (float(self.prev_scaled_size[0]) * px) - (float(self.scaled_size[0]) * px)
+            self.offset_y = self.base_y + (float(self.prev_scaled_size[1]) * py) - (float(self.scaled_size[1]) * py)
 
-            self.offset_x = (self.scaled_size[0] * px) - (self.prev_scaled_size[0] * px)
-            self.offset_y = (self.scaled_size[1] * py) - (self.prev_scaled_size[1] * py)
+            self.base_x += (float(self.prev_scaled_size[0]) * px) - (float(self.scaled_size[0]) * px)
+            self.base_y += (float(self.prev_scaled_size[1]) * py) - (float(self.scaled_size[1]) * py)
 
             # Scale performed
             self.transform_helper.map_size = self.scaled_size[0]
@@ -932,11 +935,13 @@ class ModuleWorld(object):
 
             self.prev_sx = self.sx
             self.prev_sy = self.sy
+
             self.prev_scaled_size = self.scaled_size
 
         # Translation offset
         if self.hero_actor is None:
-            translation_offset = (-self.offset_x, -self.offset_y)
+            translation_offset = (self.offset_x, self.offset_y)
+
         else:
             hero_location = (self.hero_actor.get_location().x, self.hero_actor.get_location().y)
             hero_location_screen = self.transform_helper.convert_world_to_screen_point(hero_location)
@@ -975,7 +980,7 @@ class ModuleInput(object):
         self.mouse_pos = (0, 0)
         self.mouse_offset = [0.0, 0.0]
         self.wheel_offset = [1.0, 1.0]
-        self.wheel_amount = 0.1
+        self.wheel_amount = 1.0
 
     def start(self):
         pass
