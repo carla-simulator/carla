@@ -93,7 +93,7 @@ if $DO_COPY_FILES ; then
 
   pushd ${CARLA_ROOT_FOLDER} >/dev/null
 
-  mkdir "${DESTINATION}/ExportedMaps"
+  mkdir -p "${DESTINATION}/ExportedMaps"
 
   copy_if_changed "./LICENSE" "${DESTINATION}/LICENSE"
   copy_if_changed "./CHANGELOG.md" "${DESTINATION}/CHANGELOG"

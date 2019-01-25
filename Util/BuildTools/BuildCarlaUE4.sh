@@ -121,9 +121,7 @@ if ${BUILD_CARLAUE4} ; then
 
   #Providing the user with the ExportedMaps folder
   EXPORTED_MAPS="${CARLAUE4_ROOT_FOLDER}/Content/Carla/ExportedMaps"
-  if [ ! -d "${EXPORTED_MAPS}" ]; then
-    mkdir "${EXPORTED_MAPS}"
-  fi
+  mkdir -p "${EXPORTED_MAPS}"
 
 
 fi
