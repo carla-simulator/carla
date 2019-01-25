@@ -10,6 +10,7 @@
 #include <carla/ThreadGroup.h>
 #include <carla/rpc/Actor.h>
 #include <carla/rpc/Client.h>
+#include <carla/rpc/Response.h>
 #include <carla/rpc/Server.h>
 
 #include <thread>
@@ -57,6 +58,45 @@ TEST(rpc, server_bind_sync_run_on_game_thread) {
   }
   std::cout << "game thread: run " << i << " slices.\n";
   ASSERT_TRUE(done);
+}
+
+TEST(rpc, response) {
+  using mp = carla::MsgPack;
+  const std::string error = "Uh ah an error!";
+  Response<int> r = ResponseError(error);
+  auto s = mp::UnPack<decltype(r)>(mp::Pack(r));
+  ASSERT_TRUE(r.HasError());
+  ASSERT_EQ(r.GetError().What(), error);
+  ASSERT_TRUE(s.HasError());
+  ASSERT_EQ(s.GetError().What(), error);
+  r.Reset(42);
+  s = mp::UnPack<decltype(r)>(mp::Pack(r));
+  ASSERT_FALSE(r.HasError());
+  ASSERT_EQ(r.Get(), 42);
+  ASSERT_FALSE(s.HasError());
+  ASSERT_EQ(s.Get(), 42);
+  r.SetError(error);
+  s = mp::UnPack<decltype(r)>(mp::Pack(r));
+  ASSERT_FALSE(r);
+  ASSERT_EQ(r.GetError().What(), error);
+  ASSERT_FALSE(s);
+  ASSERT_EQ(s.GetError().What(), error);
+  Response<std::vector<float>> rv;
+  auto sv = mp::UnPack<decltype(rv)>(mp::Pack(rv));
+  ASSERT_TRUE(rv.HasError());
+  ASSERT_TRUE(sv.HasError());
+  Response<void> er;
+  ASSERT_TRUE(er.HasError());
+  er = Response<void>::Success();
+  auto es = mp::UnPack<decltype(er)>(mp::Pack(er));
+  ASSERT_FALSE(er.HasError());
+  ASSERT_FALSE(es.HasError());
+  er.SetError(error);
+  es = mp::UnPack<decltype(er)>(mp::Pack(er));
+  ASSERT_FALSE(er);
+  ASSERT_EQ(er.GetError().What(), error);
+  ASSERT_FALSE(es);
+  ASSERT_EQ(es.GetError().What(), error);
 }
 
 TEST(rpc, msgpack) {
