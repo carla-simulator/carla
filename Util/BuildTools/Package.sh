@@ -70,7 +70,7 @@ if $DO_PACKAGE ; then
       -nocompileeditor -nop4 -cook -stage -archive -package \
       -clientconfig=Development -ue4exe=UE4Editor \
       -pak -prereqs -nodebuginfo \
-      -targetplatform=Linux -build -CrashReporter -utf8output \
+      -targetplatform=Linux -build -utf8output \
       -archivedirectory="${BUILD_FOLDER}"
 
   popd >/dev/null
