@@ -867,7 +867,6 @@ class ModuleWorld(object):
     def rotate(self, img, pos, angle):
         w, h = img.get_size()
         img2 = pygame.Surface((w*2, h*2), pygame.SRCALPHA)
-        img2.fill(COLOR_BLUE)
         img2.blit(img, (w-pos[0], h-pos[1]))
         return pygame.transform.rotate(img2, angle)
 
