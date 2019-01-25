@@ -8,10 +8,10 @@
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Buffer.h>
-#include <carla/Optional.h>
 #include <carla/sensor/SensorRegistry.h>
 #include <carla/sensor/s11n/SensorHeaderSerializer.h>
 #include <carla/streaming/Stream.h>
+#include <boost/optional.hpp>
 #include <compiler/enable-ue4-macros.h>
 
 // =============================================================================
@@ -86,7 +86,7 @@ public:
 
 private:
 
-  carla::Optional<StreamType> Stream;
+  boost::optional<StreamType> Stream;
 };
 
 // =============================================================================

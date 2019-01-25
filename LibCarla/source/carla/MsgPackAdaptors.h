@@ -8,6 +8,7 @@
 
 #include "carla/MsgPack.h"
 
+#include <boost/optional.hpp>
 #include <boost/variant.hpp>
 
 #include <tuple>
@@ -15,6 +16,70 @@
 namespace clmdep_msgpack {
 MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {
 namespace adaptor {
+
+  // ===========================================================================
+  // -- Adaptors for boost::optional -------------------------------------------
+  // ===========================================================================
+
+  template<typename T>
+  struct convert<boost::optional<T>> {
+    const clmdep_msgpack::object &operator()(
+        const clmdep_msgpack::object &o,
+        boost::optional<T> &v) const {
+      if (o.type != clmdep_msgpack::type::ARRAY) {
+        throw clmdep_msgpack::type_error();
+      }
+      if (o.via.array.size == 1) {
+        v.reset();
+      } else if (o.via.array.size == 2) {
+        v.reset(o.via.array.ptr[1].as<T>());
+      } else {
+        throw clmdep_msgpack::type_error();
+      }
+      return o;
+    }
+  };
+
+  template<typename T>
+  struct pack<boost::optional<T>> {
+    template <typename Stream>
+    packer<Stream> &operator()(
+        clmdep_msgpack::packer<Stream> &o,
+        const boost::optional<T> &v) const {
+      if (v.has_value()) {
+        o.pack_array(2);
+        o.pack(true);
+        o.pack(*v);
+      } else {
+        o.pack_array(1);
+        o.pack(false);
+      }
+      return o;
+    }
+  };
+
+  template<typename T>
+  struct object_with_zone<boost::optional<T>> {
+    void operator()(
+        clmdep_msgpack::object::with_zone &o,
+        const boost::optional<T> &v) const {
+      o.type = type::ARRAY;
+      if (v.has_value()) {
+        o.via.array.size = 2;
+        o.via.array.ptr = static_cast<clmdep_msgpack::object*>(o.zone.allocate_align(
+            sizeof(clmdep_msgpack::object) * o.via.array.size,
+            MSGPACK_ZONE_ALIGNOF(clmdep_msgpack::object)));
+        o.via.array.ptr[0] = clmdep_msgpack::object(true, o.zone);
+        o.via.array.ptr[1] = clmdep_msgpack::object(*v, o.zone);
+      } else {
+        o.via.array.size = 1;
+        o.via.array.ptr = static_cast<clmdep_msgpack::object*>(o.zone.allocate_align(
+            sizeof(clmdep_msgpack::object) * o.via.array.size,
+            MSGPACK_ZONE_ALIGNOF(clmdep_msgpack::object)));
+        o.via.array.ptr[0] = clmdep_msgpack::object(false, o.zone);
+      }
+    }
+  };
 
   // ===========================================================================
   // -- Adaptors for boost::variant --------------------------------------------
