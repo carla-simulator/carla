@@ -169,14 +169,14 @@ class TrafficLight(object):
 
         self.color = COLOR_BLACK
         if actor.state == carla.libcarla.TrafficLightState.Green:
-            color = COLOR_GREEN
+            self.color = COLOR_GREEN
         elif actor.state == carla.libcarla.TrafficLightState.Yellow:
-            color = COLOR_YELLOW
-        elif actor.state == carla.libcarla.TrafficLightState.Red:
-            color = COLOR_RED
+            self.color = COLOR_YELLOW
+        else:
+            self.color = COLOR_RED
 
         self.surface = pygame.Surface((radius * 2, radius * 2))
-        pygame.draw.circle(self.surface, color, (radius, radius), radius)
+        pygame.draw.circle(self.surface, self.color, (radius, radius), radius)
 
     def render(self, display):
         display.blit(self.surface, (self.x, self.y))
