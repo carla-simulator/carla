@@ -5,7 +5,9 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
-#include "RoadMap.h"
+#include "Carla/MapGen/RoadMap.h"
+
+#include "Carla/Sensor/PixelReader.h"
 
 #include "FileHelper.h"
 #include "HighResScreenshot.h"
@@ -253,19 +255,16 @@ bool URoadMap::SaveAsPNG(const FString &Folder, const FString &MapName) const
     return false;
   }
 
-  TArray<FColor> BitMap;
-  for (auto Value : RoadMapData) {
-    BitMap.Emplace(FRoadMapPixelData(Value).EncodeAsColor());
-  }
-
   const FString ImagePath = FPaths::Combine(Folder, MapName + TEXT(".png"));
   const FString MetadataPath = FPaths::Combine(Folder, MapName + TEXT(".txt"));
 
   const FIntPoint DestSize(Width, Height);
-  FString ResultPath;
-  FHighResScreenshotConfig &HighResScreenshotConfig = GetHighResScreenshotConfig();
-  HighResScreenshotConfig.SetHDRCapture(false);
-  HighResScreenshotConfig.SaveImage(ImagePath, BitMap, DestSize, &ResultPath);
+  TUniquePtr<TImagePixelData<FColor>> PixelData = MakeUnique<TImagePixelData<FColor>>(DestSize);
+  PixelData->Pixels.Reserve(RoadMapData.Num());
+  for (auto Value : RoadMapData) {
+    PixelData->Pixels.Emplace(FRoadMapPixelData(Value).EncodeAsColor());
+  }
+  FPixelReader::SavePixelsToDisk(std::move(PixelData), ImagePath);
 
   // Save metadata.
   FFormatNamedArguments Args;
@@ -287,7 +286,7 @@ bool URoadMap::SaveAsPNG(const FString &Folder, const FString &MapName) const
     UE_LOG(LogCarla, Error, TEXT("Failed to save map metadata"));
   }
 
-  UE_LOG(LogCarla, Log, TEXT("Saved road map to \"%s\""), *ResultPath);
+  UE_LOG(LogCarla, Log, TEXT("Saved road map to \"%s\""), *ImagePath);
   return true;
 }
 

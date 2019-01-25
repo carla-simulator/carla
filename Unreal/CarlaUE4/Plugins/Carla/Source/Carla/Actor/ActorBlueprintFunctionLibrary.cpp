@@ -407,6 +407,40 @@ void UActorBlueprintFunctionLibrary::MakeVehicleDefinitions(
   FillActorDefinitionArray(ParameterArray, Definitions, &MakeVehicleDefinition);
 }
 
+void UActorBlueprintFunctionLibrary::MakePedestrianDefinition(
+    const FPedestrianParameters &Parameters,
+    bool &Success,
+    FActorDefinition &Definition)
+{
+  /// @todo We need to validate here the params.
+  FillIdAndTags(Definition, TEXT("walker"),  TEXT("pedestrian"), Parameters.Id);
+  AddRecommendedValuesForActorRoleName(Definition, {TEXT("pedestrian")});
+  Definition.Class = Parameters.Class;
+
+  auto GetGender = [](EPedestrianGender Value) {
+    switch (Value)
+    {
+      case EPedestrianGender::Female: return TEXT("female");
+      case EPedestrianGender::Male:   return TEXT("male");
+      default:                        return TEXT("other");
+    }
+  };
+
+  Definition.Attributes.Emplace(FActorAttribute{
+    TEXT("gender"),
+    EActorAttributeType::String,
+    GetGender(Parameters.Gender)});
+
+  Success = CheckActorDefinition(Definition);
+}
+
+void UActorBlueprintFunctionLibrary::MakePedestrianDefinitions(
+    const TArray<FPedestrianParameters> &ParameterArray,
+    TArray<FActorDefinition> &Definitions)
+{
+  FillActorDefinitionArray(ParameterArray, Definitions, &MakePedestrianDefinition);
+}
+
 /// ============================================================================
 /// -- Helpers to retrieve attribute values ------------------------------------
 /// ============================================================================

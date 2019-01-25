@@ -28,6 +28,7 @@ namespace rpc {
   class ActorDescription;
   class DebugShape;
   class VehicleControl;
+  class WalkerControl;
 }
 namespace sensor { class SensorData; }
 namespace streaming { class Token; }
@@ -98,9 +99,25 @@ namespace detail {
         const rpc::Actor &vehicle,
         bool enabled);
 
-    void ApplyControlToActor(
+    void ApplyControlToVehicle(
         const rpc::Actor &vehicle,
         const rpc::VehicleControl &control);
+
+    void ApplyControlToWalker(
+        const rpc::Actor &walker,
+        const rpc::WalkerControl &control);
+
+    void SetActorVelocity(
+        const rpc::Actor &actor,
+        const geom::Vector3D &vector);
+
+    void SetActorAngularVelocity(
+        const rpc::Actor &actor,
+        const geom::Vector3D &vector);
+
+    void AddActorImpulse(
+        const rpc::Actor &actor,
+        const geom::Vector3D &vector);
 
     void SubscribeToStream(
         const streaming::Token &token,
