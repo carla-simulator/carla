@@ -94,7 +94,7 @@ void export_world() {
     .def("get_actors", CONST_CALL_WITHOUT_GIL(cc::World, GetActors))
     .def("spawn_actor", SPAWN_ACTOR_WITHOUT_GIL(SpawnActor))
     .def("try_spawn_actor", SPAWN_ACTOR_WITHOUT_GIL(TrySpawnActor))
-    .def("wait_for_tick", &WaitForTick, (arg("seconds")=1.0))
+    .def("wait_for_tick", &WaitForTick, (arg("seconds")=10.0))
     .def("on_tick", &OnTick, (arg("callback")))
     .def(self_ns::str(self_ns::self))
   ;

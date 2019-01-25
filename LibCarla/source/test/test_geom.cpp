@@ -11,6 +11,17 @@
 #include <carla/geom/Transform.h>
 #include <limits>
 
+namespace carla {
+namespace geom {
+
+  std::ostream &operator<<(std::ostream &out, const Vector3D &vector3D) {
+    out << "{x=" << vector3D.x << ", y=" << vector3D.y << ", z=" << vector3D.z << '}';
+    return out;
+  }
+
+} // namespace geom
+} // namespace carla
+
 using namespace carla::geom;
 
 TEST(geom, single_point_no_transform) {
@@ -76,7 +87,6 @@ TEST(geom, single_point_translation_and_rotation) {
   ASSERT_NEAR(point.z, result_point.z, error);
 }
 
-
 TEST(geom, distance) {
   constexpr double error = .01;
   ASSERT_NEAR(Math::Distance({0, 0, 0}, {0, 0, 0}), 0.0, error);
@@ -136,6 +146,27 @@ TEST(geom, nearest_point_segment) {
     }
     ASSERT_EQ(id, results[i]) << "Fails point number: " << i;
   }
+}
+
+TEST(geom, forward_vector) {
+  auto compare = [](Rotation rotation, Vector3D expected) {
+    constexpr float eps = 2.0f * std::numeric_limits<float>::epsilon();
+    auto result = rotation.GetForwardVector();
+    EXPECT_TRUE(
+            (std::abs(expected.x - result.x) < eps) &&
+            (std::abs(expected.y - result.y) < eps) &&
+            (std::abs(expected.z - result.z) < eps))
+        << "result   = " << result << '\n'
+        << "expected = " << expected;
+  };
+  //        pitch     yaw    roll       x     y     z
+  compare({  0.0f,   0.0f,   0.0f}, {1.0f, 0.0f, 0.0f});
+  compare({  0.0f,   0.0f, 123.0f}, {1.0f, 0.0f, 0.0f});
+  compare({360.0f, 360.0f,   0.0f}, {1.0f, 0.0f, 0.0f});
+  compare({  0.0f,  90.0f,   0.0f}, {0.0f, 1.0f, 0.0f});
+  compare({  0.0f, -90.0f,   0.0f}, {0.0f,-1.0f, 0.0f});
+  compare({ 90.0f,   0.0f,   0.0f}, {0.0f, 0.0f, 1.0f});
+  compare({180.0f, -90.0f,   0.0f}, {0.0f, 1.0f, 0.0f});
 }
 
 TEST(geom, point_in_rectangle) {

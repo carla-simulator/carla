@@ -19,6 +19,7 @@ pages:
   - 'Python API reference': 'python_api.md'
   - 'Running without display and selecting GPUs': 'carla_headless.md'
   - 'Running in a Docker': 'carla_docker.md'
+  - "How to make a new map with RoadRunner": 'how_to_make_a_new_map.md'
   - "How to link Epic's Automotive Materials": 'epic_automotive_materials.md'
 - Contributing:
   - 'Contribution guidelines': 'CONTRIBUTING.md'

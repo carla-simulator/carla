@@ -13,6 +13,7 @@
 #include "carla/client/Actor.h"
 #include "carla/client/GarbageCollectionPolicy.h"
 #include "carla/client/Vehicle.h"
+#include "carla/client/Walker.h"
 #include "carla/client/detail/Client.h"
 #include "carla/client/detail/Episode.h"
 #include "carla/client/detail/EpisodeProxy.h"
@@ -172,6 +173,22 @@ namespace detail {
       return GetActorDynamicState(actor).velocity;
     }
 
+    void SetActorVelocity(const Actor &actor, const geom::Vector3D &vector) {
+      _client.SetActorVelocity(actor.Serialize(), vector);
+    }
+
+    geom::Vector3D GetActorAngularVelocity(const Actor &actor) const {
+      return GetActorDynamicState(actor).angular_velocity;
+    }
+
+    void SetActorAngularVelocity(const Actor &actor, const geom::Vector3D &vector) {
+      _client.SetActorAngularVelocity(actor.Serialize(), vector);
+    }
+
+    void AddActorImpulse(const Actor &actor, const geom::Vector3D &vector) {
+      _client.AddActorImpulse(actor.Serialize(), vector);
+    }
+
     geom::Vector3D GetActorAcceleration(const Actor &actor) const {
       return GetActorDynamicState(actor).acceleration;
     }
@@ -199,7 +216,11 @@ namespace detail {
     }
 
     void ApplyControlToVehicle(Vehicle &vehicle, const rpc::VehicleControl &control) {
-      _client.ApplyControlToActor(vehicle.Serialize(), control);
+      _client.ApplyControlToVehicle(vehicle.Serialize(), control);
+    }
+
+    void ApplyControlToWalker(Walker &walker, const rpc::WalkerControl &control) {
+      _client.ApplyControlToWalker(walker.Serialize(), control);
     }
 
     /// @}

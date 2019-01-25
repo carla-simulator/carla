@@ -9,19 +9,29 @@
 #include "GameFramework/Actor.h"
 
 #include "Carla/Actor/ActorDescription.h"
+#include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla/Sensor/DataStream.h"
 
 #include "Sensor.generated.h"
 
 /// Base class for sensors.
-UCLASS(Abstract, hidecategories=(Collision, Attachment, Actor))
+UCLASS(Abstract, hidecategories = (Collision, Attachment, Actor))
 class CARLA_API ASensor : public AActor
 {
   GENERATED_BODY()
 
 public:
 
-  virtual void Set(const FActorDescription &) {}
+  virtual void Set(const FActorDescription &Description)
+  {
+    // set the tick interval of the sensor
+    if (Description.Variations.Contains("sensor_tick"))
+    {
+      SetActorTickInterval(
+          UActorBlueprintFunctionLibrary::ActorAttributeToFloat(Description.Variations["sensor_tick"],
+          0.0f));
+    }
+  }
 
   /// Replace the FDataStream associated with this sensor.
   ///

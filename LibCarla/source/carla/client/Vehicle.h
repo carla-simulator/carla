@@ -29,7 +29,7 @@ namespace client {
     ///
     /// @note This function does not call the simulator, it returns the Control
     /// received in the last tick.
-    Control GetVehicleControl() const;
+    Control GetControl() const;
 
   private:
 

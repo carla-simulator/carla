@@ -19,17 +19,25 @@ namespace geom {
   class Location : public Vector3D {
   public:
 
+    // =========================================================================
+    // -- Constructors ---------------------------------------------------------
+    // =========================================================================
+
     Location() = default;
 
     using Vector3D::Vector3D;
 
-    using Vector3D::x;
-    using Vector3D::y;
-    using Vector3D::z;
+    // =========================================================================
+    // -- Other methods --------------------------------------------------------
+    // =========================================================================
 
-    using Vector3D::msgpack_pack;
-    using Vector3D::msgpack_unpack;
-    using Vector3D::msgpack_object;
+    double Distance(const Location &loc) const {
+      return Math::Distance(*this, loc);
+    }
+
+    // =========================================================================
+    // -- Arithmetic operators -------------------------------------------------
+    // =========================================================================
 
     Location &operator+=(const Location &rhs) {
       static_cast<Vector3D &>(*this) += rhs;
@@ -67,6 +75,10 @@ namespace geom {
       return rhs;
     }
 
+    // =========================================================================
+    // -- Comparison operators -------------------------------------------------
+    // =========================================================================
+
     bool operator==(const Location &rhs) const {
       return static_cast<const Vector3D &>(*this) == rhs;
     }
@@ -75,9 +87,9 @@ namespace geom {
       return !(*this == rhs);
     }
 
-    double Distance(const Location &loc) const {
-      return Math::Distance(*this, loc);
-    }
+    // =========================================================================
+    // -- Conversions to UE4 types ---------------------------------------------
+    // =========================================================================
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
