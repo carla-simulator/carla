@@ -8,6 +8,7 @@
 #include "Carla/Sensor/WorldObserver.h"
 
 #include "Carla/Traffic/TrafficLightBase.h"
+#include "Carla/Walker/WalkerController.h"
 
 #include "CoreGlobals.h"
 
@@ -28,6 +29,15 @@ static auto AWorldObserver_GetActorState(const FActorView &View)
     if (Vehicle != nullptr)
     {
       state.vehicle_control = carla::rpc::VehicleControl{Vehicle->GetVehicleControl()};
+    }
+  }
+  else if (AType::Walker == View.GetActorType())
+  {
+    auto Walker = Cast<APawn>(View.GetActor());
+    auto Controller = Walker != nullptr ? Cast<AWalkerController>(Walker->GetController()) : nullptr;
+    if (Controller != nullptr)
+    {
+      state.walker_control = carla::rpc::WalkerControl{Controller->GetWalkerControl()};
     }
   }
   else if (AType::TrafficLight == View.GetActorType())
@@ -70,10 +80,16 @@ static carla::Buffer AWorldObserver_Serialize(
     check(actor_view.GetActor() != nullptr);
     constexpr float TO_METERS = 1e-2;
     const auto velocity = TO_METERS * actor_view.GetActor()->GetVelocity();
+    // get the angular velocity
+    const auto RootComponent = Cast<UPrimitiveComponent>(actor_view.GetActor()->GetRootComponent());
+    FVector angularVelocity { 0.0f, 0.0f, 0.0f };
+    if (RootComponent != nullptr)
+       angularVelocity = RootComponent->GetPhysicsAngularVelocityInDegrees();
     ActorDynamicState info = {
       actor_view.GetActorId(),
       actor_view.GetActor()->GetActorTransform(),
       carla::geom::Vector3D{velocity.X, velocity.Y, velocity.Z},
+      carla::geom::Vector3D{angularVelocity.X, angularVelocity.Y, angularVelocity.Z},
       AWorldObserver_GetActorState(actor_view)
     };
     write_data(info);

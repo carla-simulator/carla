@@ -11,6 +11,7 @@
 #include "CollisionSensor.generated.h"
 
 class UCarlaEpisode;
+class UCarlaGameInstance;
 
 /// A sensor to register collisions.
 UCLASS()

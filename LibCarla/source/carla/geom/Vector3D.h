@@ -17,9 +17,19 @@ namespace geom {
   class Vector3D {
   public:
 
+    // =========================================================================
+    // -- Public data members --------------------------------------------------
+    // =========================================================================
+
     float x = 0.0f;
+
     float y = 0.0f;
+
     float z = 0.0f;
+
+    // =========================================================================
+    // -- Constructors ---------------------------------------------------------
+    // =========================================================================
 
     Vector3D() = default;
 
@@ -27,6 +37,29 @@ namespace geom {
       : x(ix),
         y(iy),
         z(iz) {}
+
+    // =========================================================================
+    // -- Other methods --------------------------------------------------------
+    // =========================================================================
+
+    double SquaredLength() const {
+      return x * x + y * y + z * z;
+    }
+
+    double Length() const {
+       return std::sqrt(SquaredLength());
+    }
+
+    Vector3D MakeUnitVector() const {
+      const double len = Length();
+      DEBUG_ASSERT(len > std::numeric_limits<double>::epsilon());
+      double k = 1.0 / len;
+      return Vector3D(x * k, y * k, z * k);
+    }
+
+    // =========================================================================
+    // -- Arithmetic operators -------------------------------------------------
+    // =========================================================================
 
     Vector3D &operator+=(const Vector3D &rhs) {
       x += rhs.x;
@@ -86,6 +119,10 @@ namespace geom {
       return rhs;
     }
 
+    // =========================================================================
+    // -- Comparison operators -------------------------------------------------
+    // =========================================================================
+
     bool operator==(const Vector3D &rhs) const {
       return (x == rhs.x) && (y == rhs.y) && (z == rhs.z);
     }
@@ -94,20 +131,34 @@ namespace geom {
       return !(*this == rhs);
     }
 
-    double SquaredLength() const {
-      return x * x + y * y + z * z;
+    // =========================================================================
+    // -- Conversions to UE4 types ---------------------------------------------
+    // =========================================================================
+
+#ifdef LIBCARLA_INCLUDED_FROM_UE4
+
+    Vector3D(const FVector &vector)
+      : Vector3D(vector.X, vector.Y, vector.Z) {}
+
+    Vector3D &ToMeters(void) { // from centimeters to meters.
+       x *= 0.001f;
+       y *= 0.001f;
+       z *= 0.001f;
+       return *this;
     }
 
-    double Length() const {
-       return std::sqrt(SquaredLength());
+    Vector3D &ToCentimeters(void) { // from meters to centimeters.
+       x *= 100.0f;
+       y *= 100.0f;
+       z *= 100.0f;
+       return *this;
     }
 
-    Vector3D MakeUnitVector() const {
-      const double len = Length();
-      DEBUG_ASSERT(len > std::numeric_limits<double>::epsilon());
-      double k = 1.0 / len;
-      return Vector3D(x * k, y * k, z * k);
+    operator FVector() const {
+      return FVector{x, y, z};
     }
+
+#endif // LIBCARLA_INCLUDED_FROM_UE4
 
     // =========================================================================
     /// @todo The following is copy-pasted from MSGPACK_DEFINE_ARRAY.

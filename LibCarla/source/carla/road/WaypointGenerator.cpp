@@ -55,7 +55,7 @@ namespace road {
             waypoint.GetRoadSegment().GetPrevLane(this_lane_id);
 
     if (next_lanes.empty()) {
-      log_error("lane id =", this_lane_id, " road id=", this_road_id, ": missing next lanes");
+      log_error("road id =", this_road_id, "lane id =", this_lane_id, ": missing next lanes");
     }
 
     std::vector<Waypoint> result;
@@ -116,6 +116,40 @@ namespace road {
           result.push_back(Waypoint(map.shared_from_this(), road_segment.GetId(), lane_id, s));
         });
       }
+    }
+    return result;
+  }
+
+  std::vector<Waypoint> WaypointGenerator::GenerateLaneBegin(
+      const Map &map) {
+    std::vector<Waypoint> result;
+    for (auto &&road_segment : map.GetData().GetRoadSegments()) {
+      ForEachDrivableLane(road_segment, 0.0, [&](auto lane_id) {
+        auto distance = lane_id < 0 ? 0.0 : road_segment.GetLength();
+        auto this_waypoint = Waypoint(
+            map.shared_from_this(),
+            road_segment.GetId(),
+            lane_id,
+            distance);
+        result.push_back(this_waypoint);
+      });
+    }
+    return result;
+  }
+
+  std::vector<Waypoint> WaypointGenerator::GenerateLaneEnd(
+      const Map &map) {
+    std::vector<Waypoint> result;
+    for (auto &&road_segment : map.GetData().GetRoadSegments()) {
+      ForEachDrivableLane(road_segment, 0.0, [&](auto lane_id) {
+        auto distance = lane_id > 0 ? 0.0 : road_segment.GetLength();
+        auto this_waypoint = Waypoint(
+            map.shared_from_this(),
+            road_segment.GetId(),
+            lane_id,
+            distance);
+        result.push_back(this_waypoint);
+      });
     }
     return result;
   }

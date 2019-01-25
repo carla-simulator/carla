@@ -23,7 +23,7 @@ set BUILD_CARLAUE4_EDITOR=false
 set LAUNCH_UE4_EDITOR=false
 set REMOVE_INTERMEDIATE=false
 
-set UE_VERSION=4.19
+set UE_VERSION=4.21
 
 :arg-parse
 if not "%1"=="" (

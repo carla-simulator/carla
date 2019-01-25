@@ -95,7 +95,7 @@ void FCarlaEncoder::Encode(
   Data.platform_timestamp = PlayerState.GetPlatformTimeStamp();
   Data.game_timestamp = PlayerState.GetGameTimeStamp();
   auto &Player = Data.player_measurements;
-  ::Encode(PlayerState.GetTransform(), Player.transform);
+  ::Encode(PlayerState.GetPlayerTransform(), Player.transform);
   ::Encode(PlayerState.GetBoundingBoxTransform(), Player.bounding_box.transform);
   ::Encode(PlayerState.GetBoundingBoxExtent() * TO_METERS, Player.bounding_box.extent);
   ::Encode(PlayerState.GetAcceleration() * TO_METERS, Player.acceleration);
