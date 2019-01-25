@@ -38,10 +38,19 @@ namespace road {
         const Map &map,
         double approx_distance);
 
+    /// Returns a list of waypoints at the beginning of each lane of the map.
+    static std::vector<Waypoint> GenerateLaneBegin(
+        const Map &map);
+
+    /// Returns a list of waypoints at the end of each lane of the map.
+    static std::vector<Waypoint> GenerateLaneEnd(
+        const Map &map);
+
     /// Generate the minimum set of waypoints that define the topology of @a
     /// map. The waypoints are placed at the entrance of each lane.
     static std::vector<std::pair<Waypoint, Waypoint>> GenerateTopology(
         const Map &map);
+
   };
 
 } // namespace road

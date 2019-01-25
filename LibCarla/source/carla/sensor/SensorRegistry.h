@@ -26,6 +26,7 @@ class ARayCastLidar;
 class ASceneCaptureCamera;
 class ASemanticSegmentationCamera;
 class AWorldObserver;
+class AGnssSensor;
 
 namespace carla {
 namespace sensor {
@@ -40,7 +41,8 @@ namespace sensor {
     std::pair<ADepthCamera *, s11n::ImageSerializer>,
     std::pair<ASemanticSegmentationCamera *, s11n::ImageSerializer>,
     std::pair<ARayCastLidar *, s11n::LidarSerializer>,
-    std::pair<ACollisionSensor *, s11n::CollisionEventSerializer>
+    std::pair<ACollisionSensor *, s11n::CollisionEventSerializer>,
+    std::pair<AGnssSensor *, s11n::ImageSerializer>
   >;
 
 } // namespace sensor
@@ -57,5 +59,6 @@ namespace sensor {
 #include "Carla/Sensor/SceneCaptureCamera.h"
 #include "Carla/Sensor/SemanticSegmentationCamera.h"
 #include "Carla/Sensor/WorldObserver.h"
+#include "Carla/Sensor/GnssSensor.h"
 
 #endif // LIBCARLA_SENSOR_REGISTRY_WITH_SENSOR_INCLUDES

@@ -7,6 +7,8 @@
 #ifndef LIBCARLA_INCLUDED_DISABLE_UE4_MACROS_HEADER
 #define LIBCARLA_INCLUDED_DISABLE_UE4_MACROS_HEADER
 
+#include "Carla.h"
+
 #ifndef BOOST_ERROR_CODE_HEADER_ONLY
 #  define BOOST_ERROR_CODE_HEADER_ONLY
 #endif // BOOST_ERROR_CODE_HEADER_ONLY
@@ -14,16 +16,6 @@
 #ifndef BOOST_NO_EXCEPTIONS
 #  define BOOST_NO_EXCEPTIONS
 #endif // BOOST_NO_EXCEPTIONS
-
-// Suppress clang warning.
-#if defined(__clang__)
-#  ifndef __cpp_coroutines
-#    define __cpp_coroutines 0
-#  endif // __cpp_coroutines
-#  ifndef __cpp_noexcept_function_type
-#    define __cpp_noexcept_function_type 0
-#  endif // __cpp_noexcept_function_type
-#endif // defined(__clang__)
 
 namespace boost {
 
@@ -56,6 +48,8 @@ namespace boost {
 #if defined(__clang__)
 #  pragma clang diagnostic push
 #  pragma clang diagnostic ignored "-Wmissing-braces"
+#  pragma clang diagnostic ignored "-Wunusable-partial-specialization"
+#  pragma clang diagnostic ignored "-Wundef"
 #endif
 
 #pragma push_macro("TEXT")

@@ -6,11 +6,15 @@
 
 #pragma once
 
+#include "Carla/Settings/QualityLevelUE.h"
+
 #include "CoreMinimal.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
 
 #include "CarlaSettingsDelegate.generated.h"
+
+class UCarlaSettings;
 
 /// Used to set settings for every actor that is spawned into the world.
 UCLASS(BlueprintType)

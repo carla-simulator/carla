@@ -13,10 +13,10 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-5.0
+            - llvm-toolchain-trusty-6.0
           packages:
             - g++-7 # we need this one for the libstdc++.
-            - clang-5.0
+            - clang-6.0
             - ninja-build
             - python
             - python-pip

@@ -11,6 +11,10 @@
 #include "carla/geom/Location.h"
 #include "carla/geom/Vector3D.h"
 
+#ifdef LIBCARLA_INCLUDED_FROM_UE4
+#  include "Carla/Util/BoundingBox.h"
+#endif // LIBCARLA_INCLUDED_FROM_UE4
+
 namespace carla {
 namespace geom {
 
@@ -39,9 +43,9 @@ namespace geom {
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
-    BoundingBox(const FVector &Origin, const FVector &BoxExtent)
-      : location(Origin),
-        extent(1e-2f * BoxExtent.X, 1e-2f * BoxExtent.Y, 1e-2f * BoxExtent.Z) {}
+    BoundingBox(const FBoundingBox &Box)
+      : location(Box.Origin),
+        extent(1e-2f * Box.Extent.X, 1e-2f * Box.Extent.Y, 1e-2f * Box.Extent.Z) {}
 
 #endif // LIBCARLA_INCLUDED_FROM_UE4
 

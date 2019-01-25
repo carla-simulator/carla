@@ -10,6 +10,7 @@
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla/Actor/ActorRegistry.h"
 #include "Carla/Game/CarlaEpisode.h"
+#include "Carla/Game/CarlaGameInstance.h"
 #include "Carla/Game/TheNewCarlaGameModeBase.h"
 
 ACollisionSensor::ACollisionSensor(const FObjectInitializer& ObjectInitializer)

@@ -9,7 +9,14 @@
 #include "carla/NonCopyable.h"
 
 #ifdef LIBCARLA_WITH_PYTHON_SUPPORT
-#  include <boost/python.hpp>
+#  if defined(__clang__)
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wdeprecated-register"
+#  endif
+#    include <boost/python.hpp>
+#  if defined(__clang__)
+#    pragma clang diagnostic pop
+#  endif
 #endif // LIBCARLA_WITH_PYTHON_SUPPORT
 
 namespace carla {

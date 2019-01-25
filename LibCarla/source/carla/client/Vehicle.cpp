@@ -22,7 +22,7 @@ namespace client {
     }
   }
 
-  Vehicle::Control Vehicle::GetVehicleControl() const {
+  Vehicle::Control Vehicle::GetControl() const {
     return GetEpisode().Lock()->GetActorDynamicState(*this).state.vehicle_control;
   }
 

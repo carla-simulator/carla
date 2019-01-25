@@ -7,6 +7,7 @@
 #include <carla/client/Actor.h>
 #include <carla/client/TrafficLight.h>
 #include <carla/client/Vehicle.h>
+#include <carla/client/Walker.h>
 #include <carla/rpc/TrafficLightState.h>
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -58,9 +59,13 @@ void export_actor() {
     .def("get_location", &cc::Actor::GetLocation)
     .def("get_transform", &cc::Actor::GetTransform)
     .def("get_velocity", &cc::Actor::GetVelocity)
+    .def("get_angular_velocity", &cc::Actor::GetAngularVelocity)
     .def("get_acceleration", &cc::Actor::GetAcceleration)
     .def("set_location", &cc::Actor::SetLocation, (arg("location")))
     .def("set_transform", &cc::Actor::SetTransform, (arg("transform")))
+    .def("set_velocity", &cc::Actor::SetVelocity, (arg("vector")))
+    .def("set_angular_velocity", &cc::Actor::SetAngularVelocity, (arg("vector")))
+    .def("add_impulse", &cc::Actor::AddImpulse, (arg("vector")))
     .def("set_simulate_physics", &cc::Actor::SetSimulatePhysics, (arg("enabled")=true))
     .def("destroy", CALL_WITHOUT_GIL(cc::Actor, Destroy))
     .def(self_ns::str(self_ns::self))
@@ -69,8 +74,15 @@ void export_actor() {
   class_<cc::Vehicle, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Vehicle>>("Vehicle", no_init)
     .add_property("bounding_box", CALL_RETURNING_COPY(cc::Vehicle, GetBoundingBox))
     .def("apply_control", &cc::Vehicle::ApplyControl, (arg("control")))
-    .def("get_vehicle_control", &cc::Vehicle::GetVehicleControl)
+    .def("get_control", &cc::Vehicle::GetControl)
     .def("set_autopilot", &cc::Vehicle::SetAutopilot, (arg("enabled")=true))
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cc::Walker, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Walker>>("Walker", no_init)
+    .add_property("bounding_box", CALL_RETURNING_COPY(cc::Walker, GetBoundingBox))
+    .def("apply_control", &cc::Walker::ApplyControl, (arg("control")))
+    .def("get_control", &cc::Walker::GetWalkerControl)
     .def(self_ns::str(self_ns::self))
   ;
 

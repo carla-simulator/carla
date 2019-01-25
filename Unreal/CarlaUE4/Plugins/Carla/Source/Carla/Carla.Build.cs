@@ -8,6 +8,8 @@ public class Carla : ModuleRules
 {
   public Carla(ReadOnlyTargetRules Target) : base(Target)
   {
+    PrivatePCHHeaderFile = "Carla.h";
+
     PublicIncludePaths.AddRange(
       new string[] {
         // ... add public include paths required here ...
@@ -36,11 +38,12 @@ public class Carla : ModuleRules
         "AIModule",
         "CoreUObject",
         "Engine",
+        "Foliage",
+        "ImageWriteQueue",
+        "Landscape",
         "PhysXVehicles",
         "Slate",
-        "SlateCore",
-        "Landscape",
-        "Foliage"
+        "SlateCore"
         // ... add private dependencies that you statically link with here ...
       }
       );
@@ -115,7 +118,6 @@ public class Carla : ModuleRules
     }
     else
     {
-      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("c++abi")));
       PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("rpc")));
       if (UseDebugLibs(Target))
       {

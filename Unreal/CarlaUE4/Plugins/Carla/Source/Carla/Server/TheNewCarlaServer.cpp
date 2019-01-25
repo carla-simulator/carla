@@ -8,9 +8,11 @@
 #include "Carla/Server/TheNewCarlaServer.h"
 
 #include "Carla/Sensor/Sensor.h"
+#include "Carla/Util/BoundingBoxCalculator.h"
 #include "Carla/Util/DebugShapeDrawer.h"
 #include "Carla/Util/OpenDrive.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "Carla/Walker/WalkerController.h"
 
 #include "GameFramework/SpectatorPawn.h"
 
@@ -24,7 +26,9 @@
 #include <carla/rpc/MapInfo.h>
 #include <carla/rpc/Server.h>
 #include <carla/rpc/Transform.h>
+#include <carla/rpc/Vector3D.h>
 #include <carla/rpc/VehicleControl.h>
+#include <carla/rpc/WalkerControl.h>
 #include <carla/rpc/WeatherParameters.h>
 #include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
@@ -112,30 +116,17 @@ private:
     ::AttachActors(Child.GetActor(), Parent.GetActor());
   }
 
-  carla::geom::BoundingBox GetActorBoundingBox(const AActor &Actor)
-  {
-    /// @todo Bounding boxes only available for vehicles.
-    auto Vehicle = Cast<ACarlaWheeledVehicle>(&Actor);
-    if (Vehicle != nullptr)
-    {
-      FVector Location = Vehicle->GetVehicleBoundingBoxTransform().GetTranslation();
-      FVector Extent = Vehicle->GetVehicleBoundingBoxExtent();
-      return {Location, Extent};
-    }
-    return {};
-  }
-
 public:
 
   carla::rpc::Actor SerializeActor(FActorView ActorView)
   {
     carla::rpc::Actor Actor;
     Actor.id = ActorView.GetActorId();
-    if (ActorView.IsValid())
+    if (ActorView.IsValid() && !ActorView.GetActor()->IsPendingKill())
     {
       Actor.parent_id = Episode->GetActorRegistry().Find(ActorView.GetActor()->GetOwner()).GetActorId();
       Actor.description = *ActorView.GetActorDescription();
-      Actor.bounding_box = GetActorBoundingBox(*ActorView.GetActor());
+      Actor.bounding_box = UBoundingBoxCalculator::GetActorBoundingBox(ActorView.GetActor());
       Actor.semantic_tags.reserve(ActorView.GetSemanticTags().Num());
       using tag_t = decltype(Actor.semantic_tags)::value_type;
       for (auto &&Tag : ActorView.GetSemanticTags())
@@ -308,6 +299,82 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     return {ActorView.GetActor()->GetActorTransform()};
   });
 
+  Server.BindSync("get_actor_velocity", [this](cr::Actor Actor) -> cr::Vector3D {
+    RequireEpisode();
+    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
+      RespondErrorStr("unable to get actor velocity: actor not found");
+    }
+    return cr::Vector3D(ActorView.GetActor()->GetRootComponent()->GetComponentVelocity()).ToMeters();
+  });
+
+  Server.BindSync("get_actor_angular_velocity", [this](cr::Actor Actor) -> cr::Vector3D {
+    RequireEpisode();
+    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
+      RespondErrorStr("unable to get actor angular velocity: actor not found");
+    }
+    auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+    if (RootComponent == nullptr) {
+      RespondErrorStr("unable to get actor angular velocity: not supported by actor");
+    }
+    return cr::Vector3D(RootComponent->GetPhysicsAngularVelocityInDegrees());
+  });
+
+  Server.BindSync("set_actor_angular_velocity", [this](
+      cr::Actor Actor,
+      cr::Vector3D vector) {
+    RequireEpisode();
+    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
+      RespondErrorStr("unable to set actor angular velocity: actor not found");
+    }
+    auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+    if (RootComponent == nullptr) {
+      RespondErrorStr("unable to set actor angular velocity: not supported by actor");
+    }
+    RootComponent->SetPhysicsAngularVelocityInDegrees(
+        vector,
+        false,
+        "None");
+  });
+
+  Server.BindSync("set_actor_velocity", [this](
+      cr::Actor Actor,
+      cr::Vector3D vector) {
+    RequireEpisode();
+    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
+      RespondErrorStr("unable to set actor velocity: actor not found");
+    }
+    auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+    if (RootComponent == nullptr) {
+      RespondErrorStr("unable to set actor velocity: not supported by actor");
+    }
+    RootComponent->SetPhysicsLinearVelocity(
+        vector.ToCentimeters(),
+        false,
+        "None");
+  });
+
+  Server.BindSync("add_actor_impulse", [this](
+      cr::Actor Actor,
+      cr::Vector3D vector) {
+    RequireEpisode();
+    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
+      RespondErrorStr("unable to add actor impulse: actor not found");
+    }
+    auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+    if (RootComponent == nullptr) {
+      RespondErrorStr("unable to add actor impulse: not supported by actor");
+    }
+    RootComponent->AddImpulse(
+        vector.ToCentimeters(),
+        "None",
+        false);
+  });
+
   Server.BindSync("set_actor_location", [this](
       cr::Actor Actor,
       cr::Location Location) {
@@ -356,7 +423,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     RootComponent->SetSimulatePhysics(bEnabled);
   });
 
-  Server.BindSync("apply_control_to_actor", [this](cr::Actor Actor, cr::VehicleControl Control) {
+  Server.BindSync("apply_control_to_vehicle", [this](cr::Actor Actor, cr::VehicleControl Control) {
     RequireEpisode();
     auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
     if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
@@ -367,6 +434,23 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       RespondErrorStr("unable to apply control: actor is not a vehicle");
     }
     Vehicle->ApplyVehicleControl(Control);
+  });
+
+  Server.BindSync("apply_control_to_walker", [this](cr::Actor Actor, cr::WalkerControl Control) {
+    RequireEpisode();
+    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
+      RespondErrorStr("unable to apply control: actor not found");
+    }
+    auto Pawn = Cast<APawn>(ActorView.GetActor());
+    if (Pawn == nullptr) {
+      RespondErrorStr("unable to apply control: actor is not a walker");
+    }
+    auto Controller = Cast<AWalkerController>(Pawn->GetController());
+    if (Controller == nullptr) {
+      RespondErrorStr("unable to apply control: walker has an incompatible controller");
+    }
+    Controller->ApplyWalkerControl(Control);
   });
 
   Server.BindSync("set_actor_autopilot", [this](cr::Actor Actor, bool bEnabled) {

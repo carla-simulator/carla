@@ -216,7 +216,7 @@ class KeyboardControl(object):
                     self._control.gear = 1 if self._control.reverse else -1
                 elif event.key == K_m:
                     self._control.manual_gear_shift = not self._control.manual_gear_shift
-                    self._control.gear = world.vehicle.get_vehicle_control().gear
+                    self._control.gear = world.vehicle.get_control().gear
                     world.hud.notification(
                         '%s Transmission' % ('Manual' if self._control.manual_gear_shift else 'Automatic'))
                 elif self._control.manual_gear_shift and event.key == K_COMMA:
@@ -284,7 +284,7 @@ class HUD(object):
             return
         t = world.vehicle.get_transform()
         v = world.vehicle.get_velocity()
-        c = world.vehicle.get_vehicle_control()
+        c = world.vehicle.get_control()
         heading = 'N' if abs(t.rotation.yaw) < 89.5 else ''
         heading += 'S' if abs(t.rotation.yaw) > 90.5 else ''
         heading += 'E' if 179.5 > t.rotation.yaw > 0.5 else ''

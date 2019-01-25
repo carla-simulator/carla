@@ -86,6 +86,8 @@ struct OpenDriveParser {
       carla::opendrive::parser::JunctionParser::Parse(junction, out_open_drive_data.junctions);
     }
 
+    out_open_drive_data.geoReference = xmlDoc.child("OpenDRIVE").child("header").child_value("geoReference");
+
     return true;
   }
 };

@@ -42,7 +42,7 @@ if [%B_TOOLSET%] == [] set B_TOOLSET=msvc-14.1
 rem If is not set set the number of parallel jobs to the number of CPU threads
 if [%NUMBER_OF_ASYNC_JOBS%] == [] set NUMBER_OF_ASYNC_JOBS=%NUMBER_OF_PROCESSORS%
 
-set B_VERSION=boost-1.67.0
+set B_VERSION=boost-1.69.0
 set B_SRC=boost-src
 set B_SRC_DIR=%BUILD_DIR%%B_SRC%
 set B_INSTALL=boost-install

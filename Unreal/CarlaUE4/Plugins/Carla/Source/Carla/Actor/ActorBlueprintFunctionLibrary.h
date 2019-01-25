@@ -8,7 +8,8 @@
 
 #include "Carla/Actor/ActorDefinition.h"
 #include "Carla/Actor/ActorDescription.h"
-#include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "Carla/Actor/PedestrianParameters.h"
+#include "Carla/Actor/VehicleParameters.h"
 
 #include "Kismet/BlueprintFunctionLibrary.h"
 
@@ -16,30 +17,6 @@
 
 class ASceneCaptureSensor;
 struct FLidarDescription;
-
-USTRUCT(BlueprintType)
-struct CARLA_API FVehicleParameters
-{
-  GENERATED_BODY()
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  FString Make;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  FString Model;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  TSubclassOf<ACarlaWheeledVehicle> Class;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  int32 NumberOfWheels = 4;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  FString ObjectType;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  TArray<FColor> RecommendedColors;
-};
 
 UCLASS()
 class UActorBlueprintFunctionLibrary : public UBlueprintFunctionLibrary
@@ -101,6 +78,17 @@ public:
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static void MakeVehicleDefinitions(
       const TArray<FVehicleParameters> &ParameterArray,
+      TArray<FActorDefinition> &Definitions);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakePedestrianDefinition(
+      const FPedestrianParameters &Parameters,
+      bool &Success,
+      FActorDefinition &Definition);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakePedestrianDefinitions(
+      const TArray<FPedestrianParameters> &ParameterArray,
       TArray<FActorDefinition> &Definitions);
 
   /// @}

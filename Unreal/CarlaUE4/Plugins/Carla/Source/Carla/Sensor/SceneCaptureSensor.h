@@ -77,10 +77,10 @@ public:
 
   /// Use for debugging purposes only.
   UFUNCTION(BlueprintCallable)
-  bool SaveCaptureToDisk(const FString &FilePath) const
+  void SaveCaptureToDisk(const FString &FilePath) const
   {
     check(CaptureRenderTarget != nullptr);
-    return FPixelReader::SavePixelsToDisk(*CaptureRenderTarget, FilePath);
+    FPixelReader::SavePixelsToDisk(*CaptureRenderTarget, FilePath);
   }
 
 protected:

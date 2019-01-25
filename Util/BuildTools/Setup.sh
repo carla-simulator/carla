@@ -4,14 +4,14 @@
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
 
-command -v /usr/bin/clang++-5.0 >/dev/null 2>&1 || {
-  echo >&2 "clang 5.0 is required, but it's not installed.";
-  echo >&2 "make sure you build Unreal Engine with clang 5.0 too.";
+command -v /usr/bin/clang++-6.0 >/dev/null 2>&1 || {
+  echo >&2 "clang 6.0 is required, but it's not installed.";
+  echo >&2 "make sure you build Unreal Engine with clang 6.0 too.";
   exit 1;
 }
 
-export CC=/usr/bin/clang-5.0
-export CXX=/usr/bin/clang++-5.0
+export CC=/usr/bin/clang-6.0
+export CXX=/usr/bin/clang++-6.0
 
 source $(dirname "$0")/Environment.sh
 
@@ -22,7 +22,7 @@ pushd ${CARLA_BUILD_FOLDER} >/dev/null
 # -- Get and compile libc++ ----------------------------------------------------
 # ==============================================================================
 
-LLVM_BASENAME=llvm-5.0
+LLVM_BASENAME=llvm-6.0
 
 LLVM_INCLUDE=${PWD}/${LLVM_BASENAME}-install/include/c++/v1
 LLVM_LIBPATH=${PWD}/${LLVM_BASENAME}-install/lib
@@ -34,9 +34,9 @@ else
 
   log "Retrieving libc++."
 
-  git clone --depth=1 -b release_50  https://github.com/llvm-mirror/llvm.git ${LLVM_BASENAME}-source
-  git clone --depth=1 -b release_50  https://github.com/llvm-mirror/libcxx.git ${LLVM_BASENAME}-source/projects/libcxx
-  git clone --depth=1 -b release_50  https://github.com/llvm-mirror/libcxxabi.git ${LLVM_BASENAME}-source/projects/libcxxabi
+  git clone --depth=1 -b release_60  https://github.com/llvm-mirror/llvm.git ${LLVM_BASENAME}-source
+  git clone --depth=1 -b release_60  https://github.com/llvm-mirror/libcxx.git ${LLVM_BASENAME}-source/projects/libcxx
+  git clone --depth=1 -b release_60  https://github.com/llvm-mirror/libcxxabi.git ${LLVM_BASENAME}-source/projects/libcxxabi
 
   log "Compiling libc++."
 
@@ -58,8 +58,8 @@ else
   popd >/dev/null
 
   # Workaround, it seems LLVM 5.0 does not install these files.
-  cp -v ${LLVM_BASENAME}-build/include/c++/v1/cxxabi.h ${LLVM_INCLUDE}
-  cp -v ${LLVM_BASENAME}-build/include/c++/v1/__cxxabi_config.h ${LLVM_INCLUDE}
+  # cp -v ${LLVM_BASENAME}-build/include/c++/v1/cxxabi.h ${LLVM_INCLUDE}
+  # cp -v ${LLVM_BASENAME}-build/include/c++/v1/__cxxabi_config.h ${LLVM_INCLUDE}
 
   rm -Rf ${LLVM_BASENAME}-source ${LLVM_BASENAME}-build
 
@@ -71,7 +71,8 @@ unset LLVM_BASENAME
 # -- Get boost includes --------------------------------------------------------
 # ==============================================================================
 
-BOOST_BASENAME=boost-1.67.0
+BOOST_VERSION=1.69.0
+BOOST_BASENAME="boost-${BOOST_VERSION}"
 
 BOOST_INCLUDE=${PWD}/${BOOST_BASENAME}-install/include
 BOOST_LIBPATH=${PWD}/${BOOST_BASENAME}-install/lib
@@ -83,16 +84,15 @@ else
   rm -Rf ${BOOST_BASENAME}-source
 
   log "Retrieving boost."
-  wget https://dl.bintray.com/boostorg/release/1.67.0/source/boost_1_67_0.tar.gz
+  wget "https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/boost_${BOOST_VERSION//./_}.tar.gz"
   log "Extracting boost."
-  tar -xzf boost_1_67_0.tar.gz
+  tar -xzf ${BOOST_BASENAME//[-.]/_}.tar.gz
   mkdir -p ${BOOST_BASENAME}-install/include
-  mv boost_1_67_0 ${BOOST_BASENAME}-source
-  # rm -Rf boost_1_67_0
+  mv ${BOOST_BASENAME//[-.]/_} ${BOOST_BASENAME}-source
 
   pushd ${BOOST_BASENAME}-source >/dev/null
 
-  BOOST_TOOLSET="clang-5.0"
+  BOOST_TOOLSET="clang-6.0"
   BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
 
   py2="/usr/bin/env python2"
@@ -114,13 +114,13 @@ else
   ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
   ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
   ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} --clean-all
-  
+
   # Get rid of  python2 build artifacts completely & do a clean build for python3
   popd >/dev/null
   rm -Rf ${BOOST_BASENAME}-source
-  tar -xzf boost_1_67_0.tar.gz
+  tar -xzf ${BOOST_BASENAME//[-.]/_}.tar.gz
   mkdir -p ${BOOST_BASENAME}-install/include
-  mv boost_1_67_0 ${BOOST_BASENAME}-source
+  mv ${BOOST_BASENAME//[-.]/_} ${BOOST_BASENAME}-source
   pushd ${BOOST_BASENAME}-source >/dev/null
 
   py3="/usr/bin/env python3"
@@ -145,6 +145,7 @@ else
   popd >/dev/null
 
   rm -Rf ${BOOST_BASENAME}-source
+  rm ${BOOST_BASENAME//[-.]/_}.tar.gz
 
 fi
 
@@ -178,7 +179,7 @@ else
 
   log "Building rpclib with libc++."
 
-  # rpclib does not use any cmake 3.9 feature. 
+  # rpclib does not use any cmake 3.9 feature.
   # As cmake 3.9 is not standard in Ubuntu 16.04, change cmake version to 3.5
   sed -i s/"3.9.0"/"3.5.0"/g ${RPCLIB_BASENAME}-source/CMakeLists.txt
 
@@ -276,7 +277,7 @@ set(CMAKE_CXX_COMPILER ${CXX})
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -std=c++14 -pthread -fPIC" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra" CACHE STRING "" FORCE)
 # See https://bugs.llvm.org/show_bug.cgi?id=21629
-set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wno-missing-braces" CACHE STRING "" FORCE)
+# set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wno-missing-braces" CACHE STRING "" FORCE)
 
 # @todo These flags need to be compatible with setup.py compilation.
 set(CMAKE_CXX_FLAGS_RELEASE_CLIENT "\${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -g -fwrapv -O2 -Wall -Wstrict-prototypes -fno-strict-aliasing -Wdate-time -D_FORTIFY_SOURCE=2 -g -fstack-protector-strong -Wformat -Werror=format-security -fPIC -std=c++14 -Wno-missing-braces -DBOOST_ERROR_CODE_HEADER_ONLY -DLIBCARLA_ENABLE_LIFETIME_PROFILER -DLIBCARLA_WITH_PYTHON_SUPPORT" CACHE STRING "" FORCE)
