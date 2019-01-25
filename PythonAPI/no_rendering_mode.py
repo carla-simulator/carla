@@ -845,43 +845,7 @@ class ModuleWorld(object):
         new_surface.set_colorkey(COLOR_BLACK)
         return new_surface
 
-    def render(self, display):
-
-        if not self.map_rendered:
-            self.render_map(self.map_surface)
-
-            self.prev_sx = self.module_input.wheel_offset[0]
-            self.prev_sy = self.module_input.wheel_offset[1]
-
-            self.prev_scaled_size = (int(self.surface_size * self.prev_sx),
-                                     int(self.surface_size * self.prev_sy))
-
-            self.map_rendered = True
-            self.mouse = (0, 0)
-            self.offset_x = 0
-            self.offset_y = 0
-            self.base_x = 0
-            self.base_y = 0
-            self.scale_x_offset = 0
-            self.scale_y_offset = 0
-            self.angle = 0.0
-
-        self.vehicles_surface.fill(COLOR_BLACK)
-        self.traffic_light_surface.fill(COLOR_BLACK)
-        self.speed_limits_surface.fill(COLOR_BLACK)
-        self.walkers_surface.fill(COLOR_BLACK)
-
-        vehicles, traffic_lights, speed_limits, walkers = self._splitActors(self.actors)
-
-        if self.hero_actor is not None:
-            vehicles = [vehicle for vehicle in vehicles if self.is_actor_inside_hero_radius(vehicle)]
-
-            traffic_lights = [traffic_light for traffic_light in traffic_lights
-                              if self.is_actor_inside_hero_radius(traffic_light)]
-
-            speed_limits = [speed_limit for speed_limit in speed_limits
-                            if self.is_actor_inside_hero_radius(speed_limit)]
-
+    def render_actors(self, vehicles, traffic_lights, speed_limits, walkers):
         # Render Vehicles
         for actor in vehicles:
             vehicle_render = Vehicle(actor, COLOR_MAGENTA, self.transform_helper)
@@ -905,24 +869,63 @@ class ModuleWorld(object):
             walker_render = Walker(actor, walker_width, self.transform_helper)
             walker_render.render(self.walkers_surface)
 
-        self.sx = self.module_input.wheel_offset[0]
-        self.sy = self.module_input.wheel_offset[1]
+    def render(self, display):
 
-        self.scaled_size = (int(self.surface_size * self.sx),
-                            int(self.surface_size * self.sy))
+        if not self.map_rendered:
+            self.render_map(self.map_surface)
+            self.prev_scaled_size = (int(self.surface_size),
+                                     int(self.surface_size))
+
+            self.map_rendered = True
+            self.mouse = (0, 0)
+            self.accum_offset = [0, 0]
+            self.scale_offset = [0, 0]
+            self.angle = 0.0
+
+        self.vehicles_surface.fill(COLOR_BLACK)
+        self.traffic_light_surface.fill(COLOR_BLACK)
+        self.speed_limits_surface.fill(COLOR_BLACK)
+        self.walkers_surface.fill(COLOR_BLACK)
+
+        vehicles, traffic_lights, speed_limits, walkers = self._splitActors(self.actors)
+
+        if self.hero_actor is not None:
+            vehicles = [vehicle for vehicle in vehicles if self.is_actor_inside_hero_radius(vehicle)]
+
+            traffic_lights = [traffic_light for traffic_light in traffic_lights
+                              if self.is_actor_inside_hero_radius(traffic_light)]
+
+            speed_limits = [speed_limit for speed_limit in speed_limits
+                            if self.is_actor_inside_hero_radius(speed_limit)]
+
+        # Render Vehicles
+        self.render_actors(vehicles, traffic_lights, speed_limits, walkers)
+
+        scale_factor = (self.module_input.wheel_offset[0], self.module_input.wheel_offset[1])
+        self.scaled_size = (int(self.surface_size * scale_factor[0]),
+                            int(self.surface_size * scale_factor[1]))
 
         # Scale surfaces if needed
-        if self.prev_sx != self.sx and self.prev_sy != self.sy:
+        if self.scaled_size != self.prev_scaled_size:
             m = self.module_input.mouse_pos
 
-            px = (m[0] - self.base_x) / float(self.prev_scaled_size[0])
-            py = (m[1] - self.base_y) / float(self.prev_scaled_size[1])
+            # Percentage of surface where mouse position is actually
+            px = (m[0] - self.accum_offset[0]) / float(self.prev_scaled_size[0])
+            py = (m[1] - self.accum_offset[1]) / float(self.prev_scaled_size[1])
 
-            self.offset_x = self.base_x + (float(self.prev_scaled_size[0]) * px) - (float(self.scaled_size[0]) * px)
-            self.offset_y = self.base_y + (float(self.prev_scaled_size[1]) * py) - (float(self.scaled_size[1]) * py)
+            # Offset will be the previously accumulated offset added with the difference of mouse positions in the old and new scales
+            diff_between_scales = ((float(self.prev_scaled_size[0]) * px) - (float(self.scaled_size[0]) * px),
+                                   (float(self.prev_scaled_size[1]) * py) - (float(self.scaled_size[1]) * py))
 
-            self.base_x += (float(self.prev_scaled_size[0]) * px) - (float(self.scaled_size[0]) * px)
-            self.base_y += (float(self.prev_scaled_size[1]) * py) - (float(self.scaled_size[1]) * py)
+            self.scale_offset = ( self.accum_offset[0] + diff_between_scales[0],
+                                self.accum_offset[1] + diff_between_scales[1])
+
+            # Accumulate offset
+            self.accum_offset = (self.accum_offset[0] + diff_between_scales[0],
+                                 self.accum_offset[1] + diff_between_scales[1])
+
+            # Update previous scale
+            self.prev_scaled_size = self.scaled_size
 
             # Scale performed
             self.transform_helper.map_size = self.scaled_size[0]
@@ -938,16 +941,11 @@ class ModuleWorld(object):
             self.walkers_surface = self.refresh_surface(self.walkers_surface, self.scaled_size)
             self.vehicle_id_surface = self.refresh_surface(self.vehicle_id_surface, self.scaled_size)
 
-            self.prev_sx = self.sx
-            self.prev_sy = self.sy
-
-            self.prev_scaled_size = self.scaled_size
-
         # Translation offset
-        self.angle = 0
         if self.hero_actor is None:
-            translation_offset = ((display.get_width() - self.surface_size)/2 * self.sx + self.module_input.mouse_offset[0] * self.sx + self.offset_x,
-                                  self.module_input.mouse_offset[1] * self.sy + self.offset_y)
+            translation_offset = ((display.get_width() - self.surface_size)/2 * scale_factor[0] + self.module_input.mouse_offset[0] * scale_factor[0] + self.scale_offset[0],
+                                  self.module_input.mouse_offset[1] * scale_factor[1] + self.scale_offset[1])
+
 
         else:
             hero_location = (self.hero_actor.get_location().x, self.hero_actor.get_location().y)
@@ -955,7 +953,7 @@ class ModuleWorld(object):
             translation_offset = (-hero_location_screen[0] + display.get_width() / 2,
                                   (- hero_location_screen[1] + display.get_height() / 2))
 
-            self.angle = math.degrees(-self.hero_actor.get_transform().rotation.yaw) - 90.0
+            # self.angle = self.angle + 0.1
             # angle = self.hero_actor.get_transform().rotation.yaw
 
         # Blit surfaces
@@ -980,7 +978,7 @@ class ModuleWorld(object):
         if self.hero_actor is not None:
             selected_hero_actor = [vehicle for vehicle in vehicles if vehicle.id == self.hero_actor.id]
             if len(selected_hero_actor) != 0:
-                self.render_hero_actor(display, selected_hero_actor[0],
+                self.render_hero_actor(rotated_vehicle_surface, selected_hero_actor[0],
                                        COLOR_RED, 5, translation_offset)
             else:
                 self.hero_actor = None
