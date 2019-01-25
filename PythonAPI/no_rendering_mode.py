@@ -579,8 +579,14 @@ class ModuleWorld(object):
         self.walkers_surface = pygame.Surface((self.surface_size, self.surface_size))
         self.walkers_surface.set_colorkey((0, 0, 0))
 
+        self.hero_actor_surface = pygame.Surface((self.surface_size, self.surface_size))
+        self.hero_actor_surface.set_colorkey((0, 0, 0))
+
         self.vehicle_id_surface = pygame.Surface((self.surface_size, self.surface_size))
         self.vehicle_id_surface.set_colorkey((0, 0, 0))
+
+        self.result_surface = pygame.Surface((self.surface_size, self.surface_size))
+        self.result_surface.set_colorkey((0, 0, 0))
 
     def _compute_map_bounding_box(self, map_waypoints):
 
@@ -798,24 +804,13 @@ class ModuleWorld(object):
             i = i + 1
 
     def render_hero_actor(self, display, hero_actor, color, radius, translation_offset):
+        self.hero_actor_surface.set_alpha(100)
 
         hero_diameter_screen = self.transform_helper.convert_world_to_screen_size(
             (self.filter_radius * 2.0, self.filter_radius*2.0))[0]
 
-        self.hero_actor_surface = pygame.Surface((hero_diameter_screen, hero_diameter_screen))
-        self.hero_actor_surface.set_colorkey((0, 0, 0))
-        self.hero_actor_surface.set_alpha(100)
-
-        hero_actor_location = hero_actor.get_location()
-        x, y = self.transform_helper.convert_world_to_screen_point((hero_actor_location.x, hero_actor_location.y))
-
-        # Create surface with alpha for circle radius
-
-        self.render_module.drawCircle(self.hero_actor_surface, int(hero_diameter_screen/2),
-                                      int(hero_diameter_screen/2), int(hero_diameter_screen/2), COLOR_ORANGE)
-
-        display.blit(self.hero_actor_surface, (x - int(hero_diameter_screen/2) + translation_offset[0],
-                                               y - int(hero_diameter_screen/2) + translation_offset[1]))
+        self.render_module.drawCircle(self.hero_actor_surface, translation_offset[0],
+                                      translation_offset[1], int(hero_diameter_screen/2), COLOR_ORANGE)
 
     def is_actor_inside_hero_radius(self, actor):
         return math.sqrt((actor.get_location().x - self.hero_actor.get_location().x)**2
@@ -869,6 +864,13 @@ class ModuleWorld(object):
             walker_render = Walker(actor, walker_width, self.transform_helper)
             walker_render.render(self.walkers_surface)
 
+    def rotate(self, img, pos, angle):
+        w, h = img.get_size()
+        img2 = pygame.Surface((w*2, h*2), pygame.SRCALPHA)
+        img2.fill(COLOR_BLUE)
+        img2.blit(img, (w-pos[0], h-pos[1]))
+        return pygame.transform.rotate(img2, angle)
+
     def render(self, display):
 
         if not self.map_rendered:
@@ -880,12 +882,12 @@ class ModuleWorld(object):
             self.mouse = (0, 0)
             self.accum_offset = [0, 0]
             self.scale_offset = [0, 0]
-            self.angle = 0.0
 
         self.vehicles_surface.fill(COLOR_BLACK)
         self.traffic_light_surface.fill(COLOR_BLACK)
         self.speed_limits_surface.fill(COLOR_BLACK)
         self.walkers_surface.fill(COLOR_BLACK)
+        self.hero_actor_surface.fill(COLOR_BLACK)
 
         vehicles, traffic_lights, speed_limits, walkers = self._splitActors(self.actors)
 
@@ -917,8 +919,8 @@ class ModuleWorld(object):
             diff_between_scales = ((float(self.prev_scaled_size[0]) * px) - (float(self.scaled_size[0]) * px),
                                    (float(self.prev_scaled_size[1]) * py) - (float(self.scaled_size[1]) * py))
 
-            self.scale_offset = ( self.accum_offset[0] + diff_between_scales[0],
-                                self.accum_offset[1] + diff_between_scales[1])
+            self.scale_offset = (self.accum_offset[0] + diff_between_scales[0],
+                                 self.accum_offset[1] + diff_between_scales[1])
 
             # Accumulate offset
             self.accum_offset = (self.accum_offset[0] + diff_between_scales[0],
@@ -940,48 +942,50 @@ class ModuleWorld(object):
             self.speed_limits_surface = self.refresh_surface(self.speed_limits_surface, self.scaled_size)
             self.walkers_surface = self.refresh_surface(self.walkers_surface, self.scaled_size)
             self.vehicle_id_surface = self.refresh_surface(self.vehicle_id_surface, self.scaled_size)
+            self.hero_actor_surface = self.refresh_surface(self.hero_actor_surface, self.scaled_size)
+            self.result_surface = self.refresh_surface(self.result_surface, self.scaled_size)
 
+        angle = 0
         # Translation offset
         if self.hero_actor is None:
-            translation_offset = ((display.get_width() - self.surface_size)/2 * scale_factor[0] + self.module_input.mouse_offset[0] * scale_factor[0] + self.scale_offset[0],
+            # display.get_width() - self.surface_size)/2 * self.sx
+            translation_offset = ((self.module_input.mouse_offset[0]) * scale_factor[0] + self.scale_offset[0],
                                   self.module_input.mouse_offset[1] * scale_factor[1] + self.scale_offset[1])
-
 
         else:
             hero_location = (self.hero_actor.get_location().x, self.hero_actor.get_location().y)
             hero_location_screen = self.transform_helper.convert_world_to_screen_point(hero_location)
-            translation_offset = (-hero_location_screen[0] + display.get_width() / 2,
-                                  (- hero_location_screen[1] + display.get_height() / 2))
 
-            # self.angle = self.angle + 0.1
-            # angle = self.hero_actor.get_transform().rotation.yaw
+            translation_offset = (-hero_location_screen[0] + display.get_width()/2,
+                                  (-hero_location_screen[1] + display.get_height()/2))
 
-        # Blit surfaces
-
-        rotated_map_surface = pygame.transform.rotate(self.map_surface, self.angle)
-        rotated_vehicle_surface = pygame.transform.rotate(self.vehicles_surface, self.angle)
-        rotated_traffic_light_surface = pygame.transform.rotate(self.traffic_light_surface, self.angle)
-        rotated_speed_limits_surface = pygame.transform.rotate(self.speed_limits_surface, self.angle)
-        rotated_walkers_surface = pygame.transform.rotate(self.walkers_surface, self.angle)
-        rotated_vehicle_id_surface = pygame.transform.rotate(self.vehicle_id_surface, self.angle)
-
-        display.blit(rotated_map_surface, translation_offset)
-        display.blit(rotated_vehicle_surface, translation_offset)
-        display.blit(rotated_traffic_light_surface, translation_offset)
-        display.blit(rotated_speed_limits_surface, translation_offset)
-        display.blit(rotated_walkers_surface, translation_offset)
-
-        self.hud_module.renderActorId(self.vehicle_id_surface, vehicles,
-                                      self.transform_helper, translation_offset, self.angle)
-        display.blit(rotated_vehicle_id_surface, translation_offset)
-
-        if self.hero_actor is not None:
             selected_hero_actor = [vehicle for vehicle in vehicles if vehicle.id == self.hero_actor.id]
             if len(selected_hero_actor) != 0:
-                self.render_hero_actor(rotated_vehicle_surface, selected_hero_actor[0],
-                                       COLOR_RED, 5, translation_offset)
+                self.render_hero_actor(self.hero_actor_surface, selected_hero_actor[0],
+                                       COLOR_RED, 5, (hero_location_screen))
+
+                angle = self.hero_actor.get_transform().rotation.yaw + 90.0
+
             else:
                 self.hero_actor = None
+
+        # Blit surfaces
+        self.result_surface.fill(COLOR_BLACK)
+        self.result_surface.blit(self.map_surface, (0, 0))
+        self.result_surface.blit(self.vehicles_surface, (0, 0))
+        self.result_surface.blit(self.traffic_light_surface, (0, 0))
+        self.result_surface.blit(self.speed_limits_surface, (0, 0))
+        self.result_surface.blit(self.walkers_surface, (0, 0))
+        self.hud_module.renderActorId(self.vehicle_id_surface, vehicles,
+                                      self.transform_helper, (0, 0), angle)
+        self.result_surface.blit(self.vehicle_id_surface, (0, 0))
+        self.result_surface.blit(self.hero_actor_surface, (0, 0))
+
+        # rotated_result_surface = self.rotate(self.result_surface,  translation_offset, angle)
+
+        # display.blit(rotated_result_surface, rotated_result_surface.get_rect(
+        #     center=translation_offset))
+        display.blit(self.result_surface, (translation_offset))
 
         del vehicles[:]
         del traffic_lights[:]
