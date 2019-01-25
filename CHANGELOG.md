@@ -1,9 +1,20 @@
 ## Latest changes
 
+  * Upgraded to Unreal Engine 4.21
+  * Upgraded Boost to 1.69.0
   * Added point transformation functionality for LibCarla and PythonAPI
   * Added "sensor_tick" attribute to sensors (cameras and lidars) to specify the capture rate in seconds
   * Added "get_forward_vector()" to rotation and transform, retrieves the unit vector on the rotation's X-axis
   * Added support for Deepin in PythonAPI's setup.py
+  * Added support for spawning and controlling walkers (pedestrians)
+  * Renamed vehicle.get_vehicle_control() to vehicle.get_control() to be consistent with walkers
+  * Added a few methods to manage an actor:
+    - set_velocity: for setting the linear velocity
+    - set_angular_velocity: for setting the angular velocity
+    - get_angular_velocity: for getting the angular velocity
+    - add_impulse: for applying an impulse (in world axis)
+  * Added support for gnss_sensor
+  * OpenDriveActor has been rewritten using the Waypoint API, this has fixed some bugs
   * Updated BasicAgent to allow setting target_speed and handle US-style traffic lights properly
 
 ## CARLA 0.9.2
