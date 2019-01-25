@@ -75,8 +75,7 @@ static carla::Buffer AWorldObserver_Serialize(
   write_data(header);
 
   // Write every actor.
-  for (auto &&pair : Registry) {
-    auto &&actor_view = pair.second;
+  for (auto &&actor_view : Registry) {
     check(actor_view.GetActor() != nullptr);
     constexpr float TO_METERS = 1e-2;
     const auto velocity = TO_METERS * actor_view.GetActor()->GetVelocity();
