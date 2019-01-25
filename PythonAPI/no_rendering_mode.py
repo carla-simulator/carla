@@ -946,26 +946,25 @@ class ModuleWorld(object):
             self.result_surface = self.refresh_surface(self.result_surface, self.scaled_size)
 
         angle = 0
+        center_offset = 0
         # Translation offset
         if self.hero_actor is None:
-            # display.get_width() - self.surface_size)/2 * self.sx
             translation_offset = ((self.module_input.mouse_offset[0]) * scale_factor[0] + self.scale_offset[0],
                                   self.module_input.mouse_offset[1] * scale_factor[1] + self.scale_offset[1])
-
+            center_offset = ((display.get_width() - self.surface_size)/2 * scale_factor[0], 0)
         else:
             hero_location = (self.hero_actor.get_location().x, self.hero_actor.get_location().y)
             hero_location_screen = self.transform_helper.convert_world_to_screen_point(hero_location)
 
-            translation_offset = (-hero_location_screen[0] + display.get_width()/2,
-                                  (-hero_location_screen[1] + display.get_height()/2))
-
+            translation_offset = (-hero_location_screen[0],
+                                  (-hero_location_screen[1]))
             selected_hero_actor = [vehicle for vehicle in vehicles if vehicle.id == self.hero_actor.id]
             if len(selected_hero_actor) != 0:
                 self.render_hero_actor(self.hero_actor_surface, selected_hero_actor[0],
                                        COLOR_RED, 5, (hero_location_screen))
 
                 angle = self.hero_actor.get_transform().rotation.yaw + 90.0
-
+                center_offset = (display.get_width()/2, display.get_height()/2)
             else:
                 self.hero_actor = None
 
@@ -981,11 +980,11 @@ class ModuleWorld(object):
         self.result_surface.blit(self.vehicle_id_surface, (0, 0))
         self.result_surface.blit(self.hero_actor_surface, (0, 0))
 
-        # rotated_result_surface = self.rotate(self.result_surface,  translation_offset, angle)
+        rotated_result_surface = self.rotate(
+            self.result_surface,  (-translation_offset[0], -translation_offset[1]), angle)
 
-        # display.blit(rotated_result_surface, rotated_result_surface.get_rect(
-        #     center=translation_offset))
-        display.blit(self.result_surface, (translation_offset))
+        final_offset = rotated_result_surface.get_rect(center=center_offset)
+        display.blit(rotated_result_surface, final_offset)
 
         del vehicles[:]
         del traffic_lights[:]
@@ -1151,7 +1150,7 @@ def main():
         '--antialiasing',
         metavar='antialiasing',
         default=True,
-        help='antialiasing (default: True)')
+        help='antialiasing (default: False)')
     args = argparser.parse_args()
     args.description = argparser.description
     args.width, args.height = [int(x) for x in args.res.split('x')]
