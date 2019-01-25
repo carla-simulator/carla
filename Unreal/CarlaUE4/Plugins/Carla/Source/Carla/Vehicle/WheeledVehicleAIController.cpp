@@ -42,16 +42,18 @@ static bool IsThereAnObstacleAhead(
   const auto ForwardVector = Vehicle.GetVehicleOrientation();
   const auto VehicleBounds = Vehicle.GetVehicleBoundingBoxExtent();
 
+  FVector NormDirection = Direction.GetSafeNormal();
+
   const float Distance = std::max(50.0f, Speed * Speed); // why?
 
   const FVector StartCenter = Vehicle.GetActorLocation() + (ForwardVector * (250.0f + VehicleBounds.X / 2.0f)) + FVector(0.0f, 0.0f, 50.0f);
-  const FVector EndCenter = StartCenter + Direction * (Distance + VehicleBounds.X / 2.0f);
+  const FVector EndCenter = StartCenter + NormDirection * (Distance + VehicleBounds.X / 2.0f);
 
   const FVector StartRight = StartCenter + (FVector(ForwardVector.Y, -ForwardVector.X, ForwardVector.Z) * 100.0f);
-  const FVector EndRight = StartRight + Direction * (Distance + VehicleBounds.X / 2.0f);
+  const FVector EndRight = StartRight + NormDirection * (Distance + VehicleBounds.X / 2.0f);
 
   const FVector StartLeft = StartCenter + (FVector(-ForwardVector.Y, ForwardVector.X, ForwardVector.Z) * 100.0f);
-  const FVector EndLeft = StartLeft + Direction * (Distance + VehicleBounds.X / 2.0f);
+  const FVector EndLeft = StartLeft + NormDirection * (Distance + VehicleBounds.X / 2.0f);
 
   return
       RayTrace(Vehicle, StartCenter, EndCenter) ||
@@ -184,10 +186,6 @@ void AWheeledVehicleAIController::TickAutopilotController()
 #endif // WITH_EDITOR
 
   check(Vehicle != nullptr);
-
-  if (RoadMap == nullptr) {
-    return;
-  }
 
   FVector Direction;
 

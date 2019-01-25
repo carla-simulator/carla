@@ -169,11 +169,16 @@ void AOpenDriveActor::BuildRoutes()
   const std::vector<Waypoint> MapLaneBeginWaypoint =
       WaypointGen::GenerateLaneEnd(*map_ptr);
 
+  // Since we are going to iterate all the successors of all the lanes, we need
+  // a vector to store the already visited lanes. Lanes can be successors of
+  // multiple other lanes
+  std::vector<std::pair<IdType, int>> AlreadyVisited;
+
   for (auto &&EndLaneWaypoint : MapLaneBeginWaypoint)
   {
     std::vector<Waypoint> Successors = WaypointGen::GetSuccessors(EndLaneWaypoint);
 
-    // generate the RoutePlanner
+    // Generate the RoutePlanner
     ARoutePlanner *RoutePlanner = GetWorld()->SpawnActor<ARoutePlanner>();
     RoutePlanner->bIsIntersection = std::any_of(Successors.begin(), Successors.end(), [](auto w) {
       return w.IsIntersection();
@@ -183,36 +188,50 @@ void AOpenDriveActor::BuildRoutes()
     RoutePlanner->SetActorLocation(EndLaneWaypoint.ComputeTransform().location +
         FVector(0.f, 0.f, TriggersHeight));
 
-    // fill the RoutePlanner with all the needed roads
+    // Fill the RoutePlanner with all the needed roads
     for (auto &&Successor : Successors)
     {
       const IdType RoadId = Successor.GetRoadId();
-      const float MaxDist = map.GetRoad(RoadId)->GetLength();
+      const int LaneId = Successor.GetLaneId();
 
-      std::vector<Waypoint> Waypoints;
+      // Create an identifier of the current lane
+      const auto Identifier = std::make_pair(RoadId, LaneId);
 
-      Waypoints.emplace_back(Successor);
-
-      for (float Dist = RoadAccuracy; Dist < MaxDist; Dist += RoadAccuracy)
+      // If we haven't visited the lane
+      if (!std::any_of(AlreadyVisited.begin(), AlreadyVisited.end(), [&Identifier](auto i) {
+        return (i.first == Identifier.first && i.second == Identifier.second);
+      }))
       {
-        const auto NewWaypoint = WaypointGen::GetNext(Successor, Dist);
+        // Add the identifier as visited
+        AlreadyVisited.emplace_back(Identifier);
 
-        check(Dist < MaxDist);
-        check(NewWaypoint.size() == 1);
+        const float MaxDist = map.GetRoad(RoadId)->GetLength();
 
-        Waypoints.emplace_back(NewWaypoint[0]);
+        std::vector<Waypoint> Waypoints;
+
+        Waypoints.emplace_back(Successor);
+
+        for (float Dist = RoadAccuracy; Dist < MaxDist; Dist += RoadAccuracy)
+        {
+          const auto NewWaypoint = WaypointGen::GetNext(Successor, Dist);
+
+          check(Dist < MaxDist);
+          check(NewWaypoint.size() == 1);
+
+          Waypoints.emplace_back(NewWaypoint[0]);
+        }
+
+        // Merge with the first waypoint of the next lane if needed
+        Waypoints.emplace_back(WaypointGen::GetNext(
+            Successor, CarlaMath::clamp(MaxDist - 0.1f, 0.f, MaxDist))[0]);
+
+        check(Waypoints.size() >= 2);
+
+        TArray<FVector> Positions = WaypointVector2FVectorArray(Waypoints, TriggersHeight);
+
+        RoutePlanner->AddRoute(1.f, Positions);
+        RoutePlanners.Add(RoutePlanner);
       }
-
-      // merge with the first waypoint of the next lane if needed
-      Waypoints.emplace_back(WaypointGen::GetNext(
-          Successor, CarlaMath::clamp(MaxDist - 0.1f, 0.f, MaxDist))[0]);
-
-      check(Waypoints.size() >= 2);
-
-      TArray<FVector> Positions = WaypointVector2FVectorArray(Waypoints, TriggersHeight);
-
-      RoutePlanner->AddRoute(1.f, Positions);
-      RoutePlanners.Add(RoutePlanner);
     }
   }
 }
