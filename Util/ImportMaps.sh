@@ -6,12 +6,11 @@
 
 DOC_STRING="Unpack and copy over CarlaUE4's Exported Maps"
 
-USAGE_STRING="Usage: $0 [-h|--help] [-d|--dir] <outdir> [-f|--file] <filename>"
+USAGE_STRING="Usage: $0 [-h|--help] [-d|--dir] <outdir>"
 
 OUTPUT_DIRECTORY=""
-FILE_NAME=""
 
-OPTS=`getopt -o h,d::,f --long help,dir::,file:: -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h,d:: --long help,dir:: -n 'parse-options' -- "$@"`
 
 if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2; fi
 
@@ -22,9 +21,6 @@ while true; do
     --dir )
       OUTPUT_DIRECTORY="$2"
       shift ;;
-    --file )
-      FILE_NAME="$2"
-      shift ;;
     -h | --help )
       echo "$DOC_STRING"
       echo "$USAGE_STRING"
@@ -34,10 +30,6 @@ while true; do
       break ;;
   esac
 done
-
-if [ -z "${FILE_NAME}" ]; then
-  FILE_NAME="CookedExportedMaps"
-fi
 
 #Tar.gz the stuff
 for filepath in `find ExportedMaps/ -type f -name "*.tar.gz"`; do
