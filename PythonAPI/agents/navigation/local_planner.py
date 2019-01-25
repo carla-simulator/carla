@@ -73,8 +73,10 @@ class LocalPlanner(object):
         self._global_plan = None
         # queue with tuples of (waypoint, RoadOption)
         self._waypoints_queue = deque(maxlen=200)
+        self._buffer_size = 5
+        self._waypoint_buffer = deque(maxlen=self._buffer_size)
 
-        #
+        # initializing controller
         self.init_controller(opt_dict)
 
     def __del__(self):
@@ -187,6 +189,15 @@ class LocalPlanner(object):
         :return:
         """
 
+        #   Buffering the waypoints
+        if not self._waypoint_buffer:
+            for i in range(self._buffer_size):
+                if self._waypoints_queue:
+                    self._waypoint_buffer.append(
+                        self._waypoints_queue.popleft())
+                else:
+                    break
+
         # not enough waypoints in the horizon? => add more!
         if len(self._waypoints_queue) < int(self._waypoints_queue.maxlen * 0.5):
             if not self._global_plan:
@@ -205,7 +216,7 @@ class LocalPlanner(object):
         # current vehicle waypoint
         self._current_waypoint = self._map.get_waypoint(self._vehicle.get_location())
         # target waypoint
-        self._target_waypoint, self._target_road_option = self._waypoints_queue[0]
+        self._target_waypoint, self._target_road_option = self._waypoint_buffer[0]
         # move using PID controllers
         control = self._vehicle_controller.run_step(self._target_speed, self._target_waypoint)
 
@@ -213,13 +224,13 @@ class LocalPlanner(object):
         vehicle_transform = self._vehicle.get_transform()
         max_index = -1
 
-        for i, (waypoint, _) in enumerate(self._waypoints_queue):
+        for i, (waypoint, _) in enumerate(self._waypoint_buffer):
             if distance_vehicle(
                     waypoint, vehicle_transform) < self._min_distance:
                 max_index = i
         if max_index >= 0:
             for i in range(max_index + 1):
-                self._waypoints_queue.popleft()
+                self._waypoint_buffer.popleft()
 
         if debug:
             draw_waypoints(self._vehicle.get_world(), [self._target_waypoint], self._vehicle.get_location().z + 1.0)
