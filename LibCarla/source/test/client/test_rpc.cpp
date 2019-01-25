@@ -6,6 +6,7 @@
 
 #include "test.h"
 
+#include <carla/MsgPackAdaptors.h>
 #include <carla/ThreadGroup.h>
 #include <carla/rpc/Actor.h>
 #include <carla/rpc/Client.h>
@@ -74,4 +75,25 @@ TEST(rpc, msgpack) {
   ASSERT_EQ(result.description.uid, actor.description.uid);
   ASSERT_EQ(result.description.id, actor.description.id);
   ASSERT_EQ(result.bounding_box, actor.bounding_box);
+}
+
+TEST(rpc, msgpack_variant) {
+  using mp = carla::MsgPack;
+
+  boost::variant<bool, float, std::string> var;
+
+  var = true;
+  auto result = mp::UnPack<decltype(var)>(mp::Pack(var));
+  ASSERT_EQ(result.which(), 0);
+  ASSERT_EQ(boost::get<bool>(result), true);
+
+  var = 42.0f;
+  result = mp::UnPack<decltype(var)>(mp::Pack(var));
+  ASSERT_EQ(result.which(), 1);
+  ASSERT_EQ(boost::get<float>(result), 42.0f);
+
+  var = std::string("hola!");
+  result = mp::UnPack<decltype(var)>(mp::Pack(var));
+  ASSERT_EQ(result.which(), 2);
+  ASSERT_EQ(boost::get<std::string>(result), "hola!");
 }
