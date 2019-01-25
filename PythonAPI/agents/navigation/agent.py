@@ -141,8 +141,6 @@ class Agent(object):
 
                     if self._last_traffic_light is None:
                         self._last_traffic_light = sel_traffic_light
-                    elif self._last_traffic_light != sel_traffic_light:
-                        sel_traffic_light = self._last_traffic_light
 
                     if self._last_traffic_light.state == carla.libcarla.TrafficLightState.Red:
                         return (True, self._last_traffic_light)
