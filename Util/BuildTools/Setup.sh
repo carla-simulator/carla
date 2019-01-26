@@ -57,10 +57,6 @@ else
 
   popd >/dev/null
 
-  # Workaround, it seems LLVM 5.0 does not install these files.
-  # cp -v ${LLVM_BASENAME}-build/include/c++/v1/cxxabi.h ${LLVM_INCLUDE}
-  # cp -v ${LLVM_BASENAME}-build/include/c++/v1/__cxxabi_config.h ${LLVM_INCLUDE}
-
   rm -Rf ${LLVM_BASENAME}-source ${LLVM_BASENAME}-build
 
 fi
@@ -155,7 +151,7 @@ unset BOOST_BASENAME
 # -- Get rpclib and compile it with libc++ and libstdc++ -----------------------
 # ==============================================================================
 
-RPCLIB_BASENAME=rpclib-d1146b7
+RPCLIB_BASENAME=rpclib-d1146b7-ex
 
 RPCLIB_LIBCXX_INCLUDE=${PWD}/${RPCLIB_BASENAME}-libcxx-install/include
 RPCLIB_LIBCXX_LIBPATH=${PWD}/${RPCLIB_BASENAME}-libcxx-install/lib
@@ -188,7 +184,7 @@ else
   pushd ${RPCLIB_BASENAME}-libcxx-build >/dev/null
 
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH}" \
+      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS -DASIO_NO_EXCEPTIONS" \
       -DCMAKE_INSTALL_PREFIX="../${RPCLIB_BASENAME}-libcxx-install" \
       ../${RPCLIB_BASENAME}-source
 
@@ -246,7 +242,7 @@ else
   pushd ${GTEST_BASENAME}-build >/dev/null
 
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH}" \
+      -DCMAKE_CXX_FLAGS="-std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS" \
       -DCMAKE_INSTALL_PREFIX="../${GTEST_BASENAME}-install" \
       ../${GTEST_BASENAME}-source
 
@@ -276,8 +272,6 @@ set(CMAKE_CXX_COMPILER ${CXX})
 
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -std=c++14 -pthread -fPIC" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra" CACHE STRING "" FORCE)
-# See https://bugs.llvm.org/show_bug.cgi?id=21629
-# set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wno-missing-braces" CACHE STRING "" FORCE)
 
 # @todo These flags need to be compatible with setup.py compilation.
 set(CMAKE_CXX_FLAGS_RELEASE_CLIENT "\${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -g -fwrapv -O2 -Wall -Wstrict-prototypes -fno-strict-aliasing -Wdate-time -D_FORTIFY_SOURCE=2 -g -fstack-protector-strong -Wformat -Werror=format-security -fPIC -std=c++14 -Wno-missing-braces -DBOOST_ERROR_CODE_HEADER_ONLY -DLIBCARLA_ENABLE_LIFETIME_PROFILER -DLIBCARLA_WITH_PYTHON_SUPPORT" CACHE STRING "" FORCE)
@@ -304,6 +298,13 @@ cat >${CMAKE_CONFIG_FILE}.gen <<EOL
 set(CARLA_VERSION $(get_carla_version))
 
 add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY)
+
+if (CMAKE_BUILD_TYPE STREQUAL "Server")
+  add_definitions(-DASIO_NO_EXCEPTIONS)
+  add_definitions(-DBOOST_NO_EXCEPTIONS)
+  add_definitions(-DLIBCARLA_NO_EXCEPTIONS)
+  add_definitions(-DPUGIXML_NO_EXCEPTIONS)
+endif ()
 
 # Uncomment to force support for an specific image format (require their
 # respective libraries installed).
