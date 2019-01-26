@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "carla/Exception.h"
 #include "carla/MsgPack.h"
 
 #include <boost/optional.hpp>
@@ -27,14 +28,14 @@ namespace adaptor {
         const clmdep_msgpack::object &o,
         boost::optional<T> &v) const {
       if (o.type != clmdep_msgpack::type::ARRAY) {
-        throw clmdep_msgpack::type_error();
+        ::carla::throw_exception(clmdep_msgpack::type_error());
       }
       if (o.via.array.size == 1) {
         v.reset();
       } else if (o.via.array.size == 2) {
         v.reset(o.via.array.ptr[1].as<T>());
       } else {
-        throw clmdep_msgpack::type_error();
+        ::carla::throw_exception(clmdep_msgpack::type_error());
       }
       return o;
     }
@@ -92,10 +93,10 @@ namespace adaptor {
         const clmdep_msgpack::object &o,
         boost::variant<Ts...> &v) const {
       if (o.type != clmdep_msgpack::type::ARRAY) {
-        throw clmdep_msgpack::type_error();
+        ::carla::throw_exception(clmdep_msgpack::type_error());
       }
       if (o.via.array.size != 2) {
-        throw clmdep_msgpack::type_error();
+        ::carla::throw_exception(clmdep_msgpack::type_error());
       }
       const auto index = o.via.array.ptr[0].as<int>();
       copy_to_variant(index, o, v, std::make_index_sequence<sizeof...(Ts)>());
