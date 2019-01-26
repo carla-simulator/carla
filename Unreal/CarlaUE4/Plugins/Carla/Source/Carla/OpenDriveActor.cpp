@@ -178,15 +178,9 @@ void AOpenDriveActor::BuildRoutes()
   {
     std::vector<Waypoint> Successors = WaypointGen::GetSuccessors(EndLaneWaypoint);
 
-    // Generate the RoutePlanner
-    ARoutePlanner *RoutePlanner = GetWorld()->SpawnActor<ARoutePlanner>();
-    RoutePlanner->bIsIntersection = std::any_of(Successors.begin(), Successors.end(), [](auto w) {
-      return w.IsIntersection();
-    });
-    RoutePlanner->SetBoxExtent(FVector(70.f, 70.f, 50.f));
-    RoutePlanner->SetActorRotation(EndLaneWaypoint.ComputeTransform().rotation);
-    RoutePlanner->SetActorLocation(EndLaneWaypoint.ComputeTransform().location +
-        FVector(0.f, 0.f, TriggersHeight));
+    // The RoutePlanner will be created only if some route must be added to it
+    // so no one will be created unnecessarily
+    ARoutePlanner *RoutePlanner = nullptr;
 
     // Fill the RoutePlanner with all the needed roads
     for (auto &&Successor : Successors)
@@ -197,7 +191,7 @@ void AOpenDriveActor::BuildRoutes()
       // Create an identifier of the current lane
       const auto Identifier = std::make_pair(RoadId, LaneId);
 
-      // If we haven't visited the lane
+      // If Identifier does not exist in AlreadyVisited we haven't visited the lane
       if (!std::any_of(AlreadyVisited.begin(), AlreadyVisited.end(), [&Identifier](auto i) {
         return (i.first == Identifier.first && i.second == Identifier.second);
       }))
@@ -208,7 +202,6 @@ void AOpenDriveActor::BuildRoutes()
         const float MaxDist = map.GetRoad(RoadId)->GetLength();
 
         std::vector<Waypoint> Waypoints;
-
         Waypoints.emplace_back(Successor);
 
         for (float Dist = RoadAccuracy; Dist < MaxDist; Dist += RoadAccuracy)
@@ -228,6 +221,19 @@ void AOpenDriveActor::BuildRoutes()
         check(Waypoints.size() >= 2);
 
         TArray<FVector> Positions = WaypointVector2FVectorArray(Waypoints, TriggersHeight);
+
+        // If the route planner does not exist, create it
+        if (RoutePlanner == nullptr)
+        {
+          RoutePlanner = GetWorld()->SpawnActor<ARoutePlanner>();
+          RoutePlanner->bIsIntersection = std::any_of(Successors.begin(), Successors.end(), [](auto w) {
+            return w.IsIntersection();
+          });
+          RoutePlanner->SetBoxExtent(FVector(70.f, 70.f, 50.f));
+          RoutePlanner->SetActorRotation(EndLaneWaypoint.ComputeTransform().rotation);
+          RoutePlanner->SetActorLocation(EndLaneWaypoint.ComputeTransform().location +
+              FVector(0.f, 0.f, TriggersHeight));
+        }
 
         RoutePlanner->AddRoute(1.f, Positions);
         RoutePlanners.Add(RoutePlanner);
