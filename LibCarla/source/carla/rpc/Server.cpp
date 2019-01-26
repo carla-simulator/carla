@@ -6,13 +6,16 @@
 
 #include "carla/rpc/Server.h"
 
-#include <rpc/this_handler.h>
+#include "carla/Exception.h"
+
+#include <exception>
 
 namespace carla {
 namespace rpc {
 
   void Server::RespondError(std::string error_message) {
-    ::rpc::this_handler().respond_error(std::move(error_message));
+    /// @todo Remove this function.
+    ::carla::throw_exception(std::runtime_error(std::move(error_message)));
   }
 
 } // namespace carla
