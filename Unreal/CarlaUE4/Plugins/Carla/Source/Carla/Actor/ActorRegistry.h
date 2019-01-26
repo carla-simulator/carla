@@ -109,6 +109,8 @@ public:
   /// @}
 private:
 
+  FActorView MakeView(IdType Id, AActor &Actor, FActorDescription Description) const;
+
   TMap<IdType, AActor *> Actors;
 
   TMap<AActor *, IdType> Ids;
