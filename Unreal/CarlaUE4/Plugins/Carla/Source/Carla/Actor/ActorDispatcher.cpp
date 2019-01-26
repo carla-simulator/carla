@@ -83,7 +83,7 @@ bool FActorDispatcher::DestroyActor(AActor *Actor)
     UE_LOG(LogCarla, Warning, TEXT("Trying to destroy actor that is not in the registry"));
     return false;
   }
-  const auto &Id = View.GetActorDescription()->Id;
+  const auto &Id = View.GetActorInfo()->Description.Id;
 
   // Destroy its controller if present.
   auto Pawn = Cast<APawn>(Actor);

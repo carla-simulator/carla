@@ -32,6 +32,11 @@ public:
     Stream = std::move(InStream);
   }
 
+  auto GetToken() const
+  {
+    return Stream.GetToken();
+  }
+
 protected:
 
   void EndPlay(EEndPlayReason::Type EndPlayReason) override;
