@@ -127,7 +127,7 @@ if ${LIBCARLA_RELEASE} ; then
   echo "Running: ${GDB} libcarla_test_server_release ${GTEST_ARGS} ${EXTRA_ARGS}"
   LD_LIBRARY_PATH=${LIBCARLA_INSTALL_SERVER_FOLDER}/lib ${GDB} ${LIBCARLA_INSTALL_SERVER_FOLDER}/test/libcarla_test_server_release ${GTEST_ARGS} ${EXTRA_ARGS}
 
-  if !${RUN_BENCHMARK} ; then
+  if ! { ${RUN_BENCHMARK} ; }; then
 
     log "Running LibCarla.client unit tests (release)."
     echo "Running: ${GDB} libcarla_test_client_debug ${GTEST_ARGS} ${EXTRA_ARGS}"
