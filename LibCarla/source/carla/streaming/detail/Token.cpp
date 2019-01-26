@@ -6,6 +6,8 @@
 
 #include "carla/streaming/detail/Token.h"
 
+#include "carla/Exception.h"
+
 #include <cstring>
 #include <exception>
 
@@ -21,7 +23,7 @@ namespace detail {
       _token.address_type = token_data::address::ip_v6;
       _token.address.v6 = addr.to_v6().to_bytes();
     } else {
-      throw std::invalid_argument("invalid ip address!");
+      throw_exception(std::invalid_argument("invalid ip address!"));
     }
   }
 

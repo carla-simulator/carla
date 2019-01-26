@@ -6,6 +6,7 @@
 
 #include "carla/streaming/detail/Dispatcher.h"
 
+#include "carla/Exception.h"
 #include "carla/Logging.h"
 #include "carla/streaming/detail/MultiStreamState.h"
 #include "carla/streaming/detail/StreamState.h"
@@ -21,7 +22,7 @@ namespace detail {
     auto ptr = std::make_shared<StreamStateT>(cached_token);
     auto result = stream_map.emplace(std::make_pair(cached_token.get_stream_id(), ptr));
     if (!result.second) {
-      throw std::runtime_error("failed to create stream!");
+      throw_exception(std::runtime_error("failed to create stream!"));
     }
     return ptr;
   }
