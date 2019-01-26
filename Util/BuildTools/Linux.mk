@@ -32,16 +32,16 @@ hard-clean:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --clean
 	@echo "To force recompiling dependencies run: rm -Rf ${CARLA_BUILD_FOLDER}"
 
-check: LibCarla.server PythonAPI
+check: LibCarla PythonAPI
 	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --all $(ARGS)
 
-check.LibCarla: LibCarla.server
+check.LibCarla: LibCarla
 	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --libcarla-debug --libcarla-release $(ARGS)
 
-check.LibCarla.debug: LibCarla.server
+check.LibCarla.debug: LibCarla
 	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --libcarla-debug $(ARGS)
 
-check.LibCarla.release: LibCarla.server
+check.LibCarla.release: LibCarla
 	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --libcarla-release $(ARGS)
 
 check.PythonAPI: PythonAPI

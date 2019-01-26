@@ -32,14 +32,18 @@ namespace detail {
     // session remaining since at this point the io_service should be already
     // stopped.
     for (auto &pair : _stream_map) {
+#ifndef LIBCARLA_NO_EXCEPTIONS
       try {
+#endif // LIBCARLA_NO_EXCEPTIONS
         auto stream_state = pair.second.lock();
         if (stream_state != nullptr) {
           stream_state->ClearSessions();
         }
+#ifndef LIBCARLA_NO_EXCEPTIONS
       } catch (const std::exception &e) {
         log_error("failed to clear sessions:", e.what());
       }
+#endif // LIBCARLA_NO_EXCEPTIONS
     }
   }
 

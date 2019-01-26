@@ -33,6 +33,8 @@ C++
     [Unreal Engine's Coding Standard][ue4link] with the exception of using
     spaces instead of tabs.
   * LibCarla uses a variation of [Google's style guide][googlelink].
+  * Uses of `try-catch` blocks should be surrounded by
+    `#ifndef LIBCARLA_NO_EXCEPTIONS` if the code is used in the server-side.
 
 [ue4link]: https://docs.unrealengine.com/latest/INT/Programming/Development/CodingStandard/
 [googlelink]: https://google.github.io/styleguide/cppguide.html
