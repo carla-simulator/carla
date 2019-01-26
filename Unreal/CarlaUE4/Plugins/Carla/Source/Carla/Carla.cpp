@@ -94,10 +94,14 @@ IMPLEMENT_MODULE(FCarlaModule, Carla)
 #include <carla/Exception.h>
 #include <compiler/enable-ue4-macros.h>
 
+#include <exception>
+
 namespace carla {
 
   void throw_exception(const std::exception &e) {
     UE_LOG(LogCarla, Fatal, TEXT("Exception thrown: %s"), UTF8_TO_TCHAR(e.what()));
+    // It should never reach this part.
+    std::terminate();
   }
 
 } // namespace carla

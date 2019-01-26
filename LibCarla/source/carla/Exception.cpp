@@ -7,24 +7,6 @@
 #include "carla/Exception.h"
 
 // =============================================================================
-// -- Define carla::throw_exception --------------------------------------------
-// =============================================================================
-
-#ifndef LIBCARLA_NO_EXCEPTIONS
-
-#include <exception>
-
-namespace carla {
-
-  void throw_exception(const std::exception &e) {
-    throw e;
-  }
-
-} // namespace carla
-
-#endif // LIBCARLA_NO_EXCEPTIONS
-
-// =============================================================================
 // -- Define boost::throw_exception --------------------------------------------
 // =============================================================================
 

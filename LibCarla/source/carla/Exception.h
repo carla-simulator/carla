@@ -6,6 +6,8 @@
 
 #pragma once
 
+#ifdef LIBCARLA_NO_EXCEPTIONS
+
 namespace std {
 
   class exception;
@@ -26,3 +28,16 @@ namespace carla {
   [[ noreturn ]] void throw_exception(const std::exception &e);
 
 } // namespace carla
+
+#else
+
+namespace carla {
+
+  template <typename T>
+  [[ noreturn ]] void throw_exception(const T &e) {
+    throw e;
+  }
+
+} // namespace carla
+
+#endif // LIBCARLA_NO_EXCEPTIONS
