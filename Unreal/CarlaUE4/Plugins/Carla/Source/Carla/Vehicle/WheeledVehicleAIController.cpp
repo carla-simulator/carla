@@ -18,7 +18,7 @@
 // -- Static local methods -----------------------------------------------------
 // =============================================================================
 
-static bool RayTrace(const AActor &Actor, const FVector &Start, const FVector &End)
+static bool RayCast(const AActor &Actor, const FVector &Start, const FVector &End)
 {
   FHitResult OutHit;
   static FName TraceTag = FName(TEXT("VehicleTrace"));
@@ -31,6 +31,9 @@ static bool RayTrace(const AActor &Actor, const FVector &Start, const FVector &E
       End,
       FCollisionObjectQueryParams(FCollisionObjectQueryParams::AllDynamicObjects),
       CollisionParams);
+
+  // DrawDebugLine(Actor.GetWorld(), Start, End,
+  //     Success ? FColor(255, 0, 0) : FColor(0, 255, 0), false);
 
   return Success && OutHit.bBlockingHit;
 }
@@ -60,9 +63,9 @@ static bool IsThereAnObstacleAhead(
   const FVector EndLeft = StartLeft + NormDirection * (Distance + VehicleBounds.X / 2.0f);
 
   return
-    RayTrace(Vehicle, StartCenter, EndCenter) ||
-    RayTrace(Vehicle, StartRight, EndRight) ||
-    RayTrace(Vehicle, StartLeft, EndLeft);
+    RayCast(Vehicle, StartCenter, EndCenter) ||
+    RayCast(Vehicle, StartRight, EndRight) ||
+    RayCast(Vehicle, StartLeft, EndLeft);
 }
 
 template <typename T>
@@ -204,6 +207,7 @@ void AWheeledVehicleAIController::TickAutopilotController()
   else
   {
     Steering = CalcStreeringValue(Direction);
+    Direction = Vehicle->GetVehicleTransform().GetRotation().Rotator().Vector();
   }
 
   // Speed in km/h.
