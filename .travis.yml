@@ -38,6 +38,31 @@ matrix:
       after_failure:
         - tail --lines=2000 build.log
 
+    - env: TEST="Pylint 2"
+      addons:
+        apt:
+          packages:
+            - python
+            - python-pip
+      install:
+        - pip2 install -q --user pylint
+        - pip2 install -q --user -r PythonAPI/requirements.txt
+      script:
+        - pylint --disable=R,C --rcfile=PythonAPI/.pylintrc PythonAPI/*.py PythonAPI/agents
+
+    - env: TEST="Pylint 3"
+      addons:
+        apt:
+          packages:
+            - python3
+            - python3-pip
+      install:
+        - pip3 install -q --user setuptools
+        - pip3 install -q pylint
+        - pip3 install -q --user -r PythonAPI/requirements.txt
+      script:
+        - pylint --disable=R,C --rcfile=PythonAPI/.pylintrc PythonAPI/*.py PythonAPI/agents
+
     - env: TEST="MkDocs"
       install:
         - pip install -q --user mkdocs
