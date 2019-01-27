@@ -8,6 +8,7 @@
 #include "Carla/Sensor/SensorFactory.h"
 
 #include "Carla/Game/CarlaGameInstance.h"
+#include "Carla/Game/CarlaStatics.h"
 #include "Carla/Sensor/Sensor.h"
 
 #include <compiler/disable-ue4-macros.h>
@@ -111,8 +112,7 @@ FActorSpawnResult ASensorFactory::SpawnActor(
     return {};
   }
 
-  UCarlaGameInstance *GameInstance = Cast<UCarlaGameInstance>(
-      UGameplayStatics::GetGameInstance(World));
+  UCarlaGameInstance *GameInstance = UCarlaStatics::GetGameInstance(World);
   if (GameInstance == nullptr)
   {
     UE_LOG(LogCarla, Error, TEXT("ASensorFactory: cannot spawn sensor, incompatible game instance."));
