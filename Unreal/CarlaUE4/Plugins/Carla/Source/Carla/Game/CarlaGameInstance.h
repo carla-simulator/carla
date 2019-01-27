@@ -61,6 +61,12 @@ public:
     return CarlaSettings;
   }
 
+  UFUNCTION(BlueprintCallable)
+  UCarlaEpisode *GetCarlaEpisode()
+  {
+    return CurrentEpisode;
+  }
+
   FDataRouter &GetDataRouter()
   {
     return DataRouter;
@@ -68,6 +74,7 @@ public:
 
   void NotifyBeginEpisode(UCarlaEpisode &Episode)
   {
+    CurrentEpisode = &Episode;
     Server.NotifyBeginEpisode(Episode);
   }
 
@@ -79,6 +86,7 @@ public:
   void NotifyEndEpisode()
   {
     Server.NotifyEndEpisode();
+    CurrentEpisode = nullptr;
   }
 
   const FTheNewCarlaServer &GetServer() const
@@ -93,6 +101,9 @@ private:
 
   UPROPERTY(Category = "CARLA Settings", EditAnywhere)
   UCarlaSettings *CarlaSettings = nullptr;
+
+  UPROPERTY()
+  UCarlaEpisode *CurrentEpisode = nullptr;
 
   FDataRouter DataRouter;
 
