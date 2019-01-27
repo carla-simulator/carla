@@ -25,7 +25,7 @@ UCarlaGameInstance::UCarlaGameInstance() {
   CarlaSettings->LogSettings();
 }
 
-UCarlaGameInstance::~UCarlaGameInstance() {}
+UCarlaGameInstance::~UCarlaGameInstance() = default;
 
 void UCarlaGameInstance::InitializeGameControllerIfNotPresent(
     const FMockGameControllerSettings &MockControllerSettings)
@@ -40,7 +40,7 @@ void UCarlaGameInstance::InitializeGameControllerIfNotPresent(
   }
 }
 
-void UCarlaGameInstance::NotifyBeginEpisode(UCarlaEpisode &Episode)
+void UCarlaGameInstance::StartServer()
 {
   if (!bServerIsRunning)
   {
@@ -48,10 +48,4 @@ void UCarlaGameInstance::NotifyBeginEpisode(UCarlaEpisode &Episode)
     Server.AsyncRun(GetNumberOfThreadsForRPCServer());
     bServerIsRunning = true;
   }
-  Server.NotifyBeginEpisode(Episode);
-}
-
-void UCarlaGameInstance::NotifyEndEpisode()
-{
-  Server.NotifyEndEpisode();
 }

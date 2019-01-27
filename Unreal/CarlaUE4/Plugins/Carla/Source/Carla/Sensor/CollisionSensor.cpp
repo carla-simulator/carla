@@ -50,13 +50,6 @@ void ACollisionSensor::BeginPlay()
     return;
   }
   Episode = &GameMode->GetCarlaEpisode();
-
-  GameInstance = Cast<UCarlaGameInstance>(GetGameInstance());
-  if (GameMode == nullptr)
-  {
-    UE_LOG(LogCarla, Error, TEXT("ACollisionSensor: Game instance not compatible with this sensor"));
-    return;
-  }
 }
 
 void ACollisionSensor::OnCollisionEvent(
@@ -65,16 +58,14 @@ void ACollisionSensor::OnCollisionEvent(
     FVector NormalImpulse,
     const FHitResult &Hit)
 {
-  if ((Episode != nullptr) && (GameInstance != nullptr) && (Actor != nullptr) && (OtherActor != nullptr))
+  if ((Episode != nullptr) && (Actor != nullptr) && (OtherActor != nullptr))
   {
-    const auto &Registry = Episode->GetActorRegistry();
-    const auto &Server = GameInstance->GetServer();
     constexpr float TO_METERS = 1e-2;
     NormalImpulse *= TO_METERS;
     GetDataStream().Send_GameThread(
         *this,
-        Server.SerializeActor(Registry.FindOrFake(Actor)),
-        Server.SerializeActor(Registry.FindOrFake(OtherActor)),
+        Episode->SerializeActor(Episode->FindOrFakeActor(Actor)),
+        Episode->SerializeActor(Episode->FindOrFakeActor(OtherActor)),
         carla::geom::Vector3D{NormalImpulse.X, NormalImpulse.Y, NormalImpulse.Z});
   }
 }

@@ -76,12 +76,6 @@ public:
     return PtrToId != nullptr ? Find(*PtrToId) : FActorView();
   }
 
-  AActor *FindActor(IdType Id) const
-  {
-    auto View = Find(Id);
-    return View.IsValid() ? View.GetActor() : nullptr;
-  }
-
   /// If the actor is not found in the registry, create a fake actor view. The
   /// returned FActorView has some information about the @a Actor but will have
   /// an invalid id.

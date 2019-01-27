@@ -10,6 +10,12 @@
 #include "Carla/Sensor/WorldObserver.h"
 #include "Carla/Weather/Weather.h"
 
+#include "GameFramework/Pawn.h"
+
+#include <compiler/disable-ue4-macros.h>
+#include <carla/rpc/Actor.h>
+#include <compiler/enable-ue4-macros.h>
+
 #include "CarlaEpisode.generated.h"
 
 /// A simulation episode.
@@ -20,20 +26,50 @@ class CARLA_API UCarlaEpisode : public UObject
 {
   GENERATED_BODY()
 
+  // ===========================================================================
+  // -- Constructor ------------------------------------------------------------
+  // ===========================================================================
+
 public:
 
   UCarlaEpisode(const FObjectInitializer &ObjectInitializer);
 
+  // ===========================================================================
+  // -- Retrieve info about this episode ---------------------------------------
+  // ===========================================================================
+
+public:
+
+  /// Return the unique id of this episode.
   auto GetId() const
   {
     return Id;
   }
 
+  /// Return the name of the map loaded in this episode.
   UFUNCTION(BlueprintCallable)
   const FString &GetMapName() const
   {
     return MapName;
   }
+
+  /// Return the list of actor definitions that are available to be spawned this
+  /// episode.
+  UFUNCTION(BlueprintCallable)
+  const TArray<FActorDefinition> &GetActorDefinitions() const
+  {
+    return ActorDispatcher.GetActorDefinitions();
+  }
+
+  /// Return the list of recommended spawn points for vehicles.
+  UFUNCTION(BlueprintCallable)
+  TArray<FTransform> GetRecommendedSpawnPoints() const;
+
+  // ===========================================================================
+  // -- Retrieve special actors ------------------------------------------------
+  // ===========================================================================
+
+public:
 
   UFUNCTION(BlueprintCallable)
   APawn *GetSpectatorPawn() const
@@ -47,17 +83,55 @@ public:
     return Weather;
   }
 
-  /// Return the list of actor definitions that are available to be spawned this
-  /// episode.
-  UFUNCTION(BlueprintCallable)
-  const TArray<FActorDefinition> &GetActorDefinitions() const
+  const AWorldObserver *GetWorldObserver() const
   {
-    return ActorDispatcher.GetActorDefinitions();
+    return WorldObserver;
   }
 
-  /// Return the list of recommended start positions.
-  UFUNCTION(BlueprintCallable)
-  TArray<FTransform> GetRecommendedStartTransforms() const;
+  const FActorRegistry &GetActorRegistry() const
+  {
+    return ActorDispatcher.GetActorRegistry();
+  }
+
+  // ===========================================================================
+  // -- Actor look up methods --------------------------------------------------
+  // ===========================================================================
+
+public:
+
+  /// Find a Carla actor by id.
+  ///
+  /// If the actor is not found or is pending kill, the returned view is
+  /// invalid.
+  FActorView FindActor(FActorView::IdType ActorId) const
+  {
+    return ActorDispatcher.GetActorRegistry().Find(ActorId);
+  }
+
+  /// Find the actor view of @a Actor.
+  ///
+  /// If the actor is not found or is pending kill, the returned view is
+  /// invalid.
+  FActorView FindActor(AActor *Actor) const
+  {
+    return ActorDispatcher.GetActorRegistry().Find(Actor);
+  }
+
+  /// Find the actor view of @a Actor. If the actor is not found, a "fake" view
+  /// is returned emulating an existing Carla actor. Use this to return views
+  /// over static actors present in the map.
+  ///
+  /// If the actor is pending kill, the returned view is invalid.
+  FActorView FindOrFakeActor(AActor *Actor) const
+  {
+    return ActorDispatcher.GetActorRegistry().FindOrFake(Actor);
+  }
+
+  // ===========================================================================
+  // -- Actor handling methods -------------------------------------------------
+  // ===========================================================================
+
+public:
 
   /// Spawns an actor based on @a ActorDescription at @a Transform. To properly
   /// despawn an actor created with this function call DestroyActor.
@@ -86,6 +160,12 @@ public:
     return SpawnActorWithInfo(Transform, std::move(ActorDescription)).Value.GetActor();
   }
 
+  /// Attach @a Child to @a Parent.
+  ///
+  /// @pre Actors cannot be null.
+  UFUNCTION(BlueprintCallable)
+  void AttachActors(AActor *Child, AActor *Parent);
+
   /// @copydoc FActorDispatcher::DestroyActor(AActor*)
   UFUNCTION(BlueprintCallable)
   bool DestroyActor(AActor *Actor)
@@ -93,17 +173,18 @@ public:
     return ActorDispatcher.DestroyActor(Actor);
   }
 
-  const FActorRegistry &GetActorRegistry() const
-  {
-    return ActorDispatcher.GetActorRegistry();
-  }
+  // ===========================================================================
+  // -- Other methods ----------------------------------------------------------
+  // ===========================================================================
 
-  const AWorldObserver *StartWorldObserver(carla::streaming::MultiStream Stream);
+public:
 
-  const AWorldObserver *GetWorldObserver() const
-  {
-    return WorldObserver;
-  }
+  /// Create a serializable object describing the actor.
+  carla::rpc::Actor SerializeActor(FActorView ActorView) const;
+
+  // ===========================================================================
+  // -- Private methods and members --------------------------------------------
+  // ===========================================================================
 
 private:
 

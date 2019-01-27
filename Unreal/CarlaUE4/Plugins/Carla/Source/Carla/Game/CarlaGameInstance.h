@@ -33,6 +33,9 @@ public:
   void InitializeGameControllerIfNotPresent(
       const FMockGameControllerSettings &MockControllerSettings);
 
+  /// Starts the Carla server if not already running.
+  void StartServer();
+
   ICarlaGameControllerBase &GetGameController()
   {
     check(GameController != nullptr);
@@ -63,14 +66,20 @@ public:
     return DataRouter;
   }
 
-  void NotifyBeginEpisode(UCarlaEpisode &Episode);
+  void NotifyBeginEpisode(UCarlaEpisode &Episode)
+  {
+    Server.NotifyBeginEpisode(Episode);
+  }
 
   void Tick(float /*DeltaSeconds*/)
   {
     Server.RunSome(10u); /// @todo
   }
 
-  void NotifyEndEpisode();
+  void NotifyEndEpisode()
+  {
+    Server.NotifyEndEpisode();
+  }
 
   const FTheNewCarlaServer &GetServer() const
   {

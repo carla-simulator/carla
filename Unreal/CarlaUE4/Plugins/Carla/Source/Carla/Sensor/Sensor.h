@@ -32,6 +32,7 @@ public:
     Stream = std::move(InStream);
   }
 
+  /// Return the token that allows subscribing to this sensor's stream.
   auto GetToken() const
   {
     return Stream.GetToken();
