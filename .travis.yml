@@ -2,7 +2,7 @@ language: cpp
 compiler: clang
 
 os: linux
-dist: trusty
+dist: xenial
 sudo: false
 
 matrix:
@@ -13,7 +13,6 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-6.0
           packages:
             - g++-7 # we need this one for the libstdc++.
             - clang-6.0
@@ -27,7 +26,8 @@ matrix:
             - libjpeg-dev
       install:
         - pip2 install -q --user setuptools nose2
-        - pip3 install -q --user setuptools nose2
+        - pip3 install -q --user setuptools
+        - pip3 install -q --user nose2
       script:
         - while sleep 2m; do echo "still building..."; done &
         - make setup >> build.log 2>&1
