@@ -15,22 +15,26 @@
 
 static FActorView::ActorType FActorRegistry_GetActorType(const FActorView &View)
 {
-  if (View.IsValid())
+  if (!View.IsValid())
   {
-    if (nullptr != Cast<ACarlaWheeledVehicle>(View.GetActor()))
-    {
-      return FActorView::ActorType::Vehicle;
-    }
-    else if (nullptr != Cast<ACharacter>(View.GetActor()))
-    {
-      return FActorView::ActorType::Walker;
-    }
-    else if (nullptr != Cast<ATrafficLightBase>(View.GetActor()))
-    {
-      return FActorView::ActorType::TrafficLight;
-    }
+    return FActorView::ActorType::INVALID;
   }
-  return FActorView::ActorType::Other;
+  else if (nullptr != Cast<ACarlaWheeledVehicle>(View.GetActor()))
+  {
+    return FActorView::ActorType::Vehicle;
+  }
+  else if (nullptr != Cast<ACharacter>(View.GetActor()))
+  {
+    return FActorView::ActorType::Walker;
+  }
+  else if (nullptr != Cast<ATrafficLightBase>(View.GetActor()))
+  {
+    return FActorView::ActorType::TrafficLight;
+  }
+  else
+  {
+    return FActorView::ActorType::Other;
+  }
 }
 
 static FString GetRelevantTagAsString(const TSet<ECityObjectLabel> &SemanticTags)
@@ -73,7 +77,7 @@ FActorView FActorRegistry::Register(AActor &Actor, FActorDescription Description
 void FActorRegistry::Deregister(IdType Id)
 {
   check(Contains(Id));
-  AActor *Actor = FindActor(Id);
+  AActor *Actor = Find(Id).GetActor();
   check(Actor != nullptr);
   ActorDatabase.erase(Id);
   Actors.Remove(Id);
@@ -83,15 +87,17 @@ void FActorRegistry::Deregister(IdType Id)
 
 void FActorRegistry::Deregister(AActor *Actor)
 {
+  check(Actor != nullptr);
   auto View = Find(Actor);
-  check(View.IsValid());
+  check(View.GetActor() == Actor);
   Deregister(View.GetActorId());
 }
 
 FActorView FActorRegistry::FindOrFake(AActor *Actor) const
 {
   auto View = Find(Actor);
-  return View.IsValid() ? View : MakeView(0u, *Actor, FActorDescription{});
+  const bool bFakeActor = (View.GetActor() == nullptr) && (Actor != nullptr);
+  return bFakeActor ? MakeView(0u, *Actor, FActorDescription{}) : View;
 }
 
 FActorView FActorRegistry::MakeView(

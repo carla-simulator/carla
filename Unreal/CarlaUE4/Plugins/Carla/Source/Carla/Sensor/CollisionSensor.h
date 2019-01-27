@@ -41,7 +41,4 @@ private:
 
   UPROPERTY()
   const UCarlaEpisode *Episode = nullptr;
-
-  UPROPERTY()
-  const UCarlaGameInstance *GameInstance = nullptr;
 };

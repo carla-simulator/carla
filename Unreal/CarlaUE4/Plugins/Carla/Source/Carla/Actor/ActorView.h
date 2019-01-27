@@ -21,7 +21,8 @@ public:
     Other,
     Vehicle,
     Walker,
-    TrafficLight
+    TrafficLight,
+    INVALID
   };
 
   FActorView() = default;
@@ -30,7 +31,7 @@ public:
 
   bool IsValid() const
   {
-    return (TheActor != nullptr) && Info.IsValid();
+    return (TheActor != nullptr) && !TheActor->IsPendingKill();
   }
 
   IdType GetActorId() const
