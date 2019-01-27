@@ -112,11 +112,13 @@ void AWorldObserver::Tick(float DeltaSeconds)
 
   GameTimeStamp += DeltaSeconds;
 
+  auto AsyncStream = Stream.MakeAsyncDataStream(*this);
+
   auto buffer = AWorldObserver_Serialize(
-      Stream.PopBufferFromPool(),
+      AsyncStream.PopBufferFromPool(),
       GameTimeStamp,
       FPlatformTime::Seconds(),
       Episode->GetActorRegistry());
 
-  Stream.Send_GameThread(*this, std::move(buffer));
+  AsyncStream.Send(*this, std::move(buffer));
 }
