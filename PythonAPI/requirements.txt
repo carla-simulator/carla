@@ -1,0 +1,5 @@
+future
+nose2
+numpy
+pygame
+setuptools
