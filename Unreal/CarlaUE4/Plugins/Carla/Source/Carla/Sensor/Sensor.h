@@ -43,9 +43,13 @@ protected:
   void EndPlay(EEndPlayReason::Type EndPlayReason) override;
 
   /// Return the FDataStream associated with this sensor.
-  FDataStream &GetDataStream()
+  ///
+  /// Do you need to provide a reference to self, this is necessary for template
+  /// deduction.
+  template <typename SensorT>
+  FAsyncDataStream GetDataStream(const SensorT &Self)
   {
-    return Stream;
+    return Stream.MakeAsyncDataStream(Self);
   }
 
 private:
