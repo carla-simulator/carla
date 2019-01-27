@@ -38,7 +38,9 @@ UCarlaEpisode::UCarlaEpisode(const FObjectInitializer &ObjectInitializer)
     Id([]() {
       static uint32 COUNTER = 0u;
       return ++COUNTER;
-    }()) {}
+    }()) {
+  ActorDispatcher = CreateDefaultSubobject<UActorDispatcher>(TEXT("ActorDispatcher"));
+}
 
 TArray<FTransform> UCarlaEpisode::GetRecommendedSpawnPoints() const
 {
@@ -90,7 +92,7 @@ void UCarlaEpisode::InitializeAtBeginPlay()
     FActorDescription Description;
     Description.Id = TEXT("spectator");
     Description.Class = Spectator->GetClass();
-    ActorDispatcher.GetActorRegistry().Register(*Spectator, Description);
+    ActorDispatcher->RegisterActor(*Spectator, Description);
   }
   else
   {
@@ -104,6 +106,6 @@ void UCarlaEpisode::InitializeAtBeginPlay()
     FActorDescription Description;
     Description.Id = UCarlaEpisode_GetTrafficSignId(Actor->GetTrafficSignState());
     Description.Class = Actor->GetClass();
-    ActorDispatcher.GetActorRegistry().Register(*Actor, Description);
+    ActorDispatcher->RegisterActor(*Actor, Description);
   }
 }

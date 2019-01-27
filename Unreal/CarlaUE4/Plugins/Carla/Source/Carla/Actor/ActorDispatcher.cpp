@@ -12,7 +12,7 @@
 
 #include "GameFramework/Controller.h"
 
-void FActorDispatcher::Bind(FActorDefinition Definition, SpawnFunctionType Functor)
+void UActorDispatcher::Bind(FActorDefinition Definition, SpawnFunctionType Functor)
 {
   if (UActorBlueprintFunctionLibrary::CheckActorDefinition(Definition))
   {
@@ -27,7 +27,7 @@ void FActorDispatcher::Bind(FActorDefinition Definition, SpawnFunctionType Funct
   }
 }
 
-void FActorDispatcher::Bind(ACarlaActorFactory &ActorFactory)
+void UActorDispatcher::Bind(ACarlaActorFactory &ActorFactory)
 {
   for (const auto &Definition : ActorFactory.GetDefinitions())
   {
@@ -37,7 +37,7 @@ void FActorDispatcher::Bind(ACarlaActorFactory &ActorFactory)
   }
 }
 
-TPair<EActorSpawnResultStatus, FActorView> FActorDispatcher::SpawnActor(
+TPair<EActorSpawnResultStatus, FActorView> UActorDispatcher::SpawnActor(
     const FTransform &Transform,
     FActorDescription Description)
 {
@@ -59,7 +59,7 @@ TPair<EActorSpawnResultStatus, FActorView> FActorDispatcher::SpawnActor(
     Result.Status = EActorSpawnResultStatus::UnknownError;
   }
 
-  auto View = Result.IsValid() ? Registry.Register(*Result.Actor, std::move(Description)) : FActorView();
+  auto View = Result.IsValid() ? RegisterActor(*Result.Actor, std::move(Description)) : FActorView();
 
   if (!View.IsValid())
   {
@@ -70,7 +70,7 @@ TPair<EActorSpawnResultStatus, FActorView> FActorDispatcher::SpawnActor(
   return MakeTuple(Result.Status, View);
 }
 
-bool FActorDispatcher::DestroyActor(AActor *Actor)
+bool UActorDispatcher::DestroyActor(AActor *Actor)
 {
   if (Actor == nullptr) {
     UE_LOG(LogCarla, Error, TEXT("Trying to destroy nullptr actor"));
@@ -102,9 +102,18 @@ bool FActorDispatcher::DestroyActor(AActor *Actor)
   UE_LOG(LogCarla, Log, TEXT("Destroying actor: '%s'"), *Id);
   if (Actor->Destroy())
   {
-    Registry.Deregister(Actor);
     return true;
   }
   UE_LOG(LogCarla, Error, TEXT("Failed to destroy actor: '%s'"), *Id);
   return false;
+}
+
+FActorView UActorDispatcher::RegisterActor(AActor &Actor, FActorDescription Description)
+{
+  auto View = Registry.Register(Actor, std::move(Description));
+  if (View.IsValid())
+  {
+    Actor.OnDestroyed.AddDynamic(this, &UActorDispatcher::OnActorDestroyed);
+  }
+  return View;
 }

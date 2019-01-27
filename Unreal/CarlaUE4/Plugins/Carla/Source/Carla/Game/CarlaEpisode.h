@@ -58,7 +58,7 @@ public:
   UFUNCTION(BlueprintCallable)
   const TArray<FActorDefinition> &GetActorDefinitions() const
   {
-    return ActorDispatcher.GetActorDefinitions();
+    return ActorDispatcher->GetActorDefinitions();
   }
 
   /// Return the list of recommended spawn points for vehicles.
@@ -90,7 +90,7 @@ public:
 
   const FActorRegistry &GetActorRegistry() const
   {
-    return ActorDispatcher.GetActorRegistry();
+    return ActorDispatcher->GetActorRegistry();
   }
 
   // ===========================================================================
@@ -105,7 +105,7 @@ public:
   /// invalid.
   FActorView FindActor(FActorView::IdType ActorId) const
   {
-    return ActorDispatcher.GetActorRegistry().Find(ActorId);
+    return ActorDispatcher->GetActorRegistry().Find(ActorId);
   }
 
   /// Find the actor view of @a Actor.
@@ -114,7 +114,7 @@ public:
   /// invalid.
   FActorView FindActor(AActor *Actor) const
   {
-    return ActorDispatcher.GetActorRegistry().Find(Actor);
+    return ActorDispatcher->GetActorRegistry().Find(Actor);
   }
 
   /// Find the actor view of @a Actor. If the actor is not found, a "fake" view
@@ -124,7 +124,7 @@ public:
   /// If the actor is pending kill, the returned view is invalid.
   FActorView FindOrFakeActor(AActor *Actor) const
   {
-    return ActorDispatcher.GetActorRegistry().FindOrFake(Actor);
+    return ActorDispatcher->GetActorRegistry().FindOrFake(Actor);
   }
 
   // ===========================================================================
@@ -143,7 +143,7 @@ public:
       const FTransform &Transform,
       FActorDescription ActorDescription)
   {
-    return ActorDispatcher.SpawnActor(Transform, std::move(ActorDescription));
+    return ActorDispatcher->SpawnActor(Transform, std::move(ActorDescription));
   }
 
   /// Spawns an actor based on @a ActorDescription at @a Transform. To properly
@@ -170,7 +170,7 @@ public:
   UFUNCTION(BlueprintCallable)
   bool DestroyActor(AActor *Actor)
   {
-    return ActorDispatcher.DestroyActor(Actor);
+    return ActorDispatcher->DestroyActor(Actor);
   }
 
   // ===========================================================================
@@ -194,7 +194,7 @@ private:
 
   void RegisterActorFactory(ACarlaActorFactory &ActorFactory)
   {
-    ActorDispatcher.Bind(ActorFactory);
+    ActorDispatcher->Bind(ActorFactory);
   }
 
   const uint32 Id = 0u;
@@ -202,7 +202,8 @@ private:
   UPROPERTY(VisibleAnywhere)
   FString MapName;
 
-  FActorDispatcher ActorDispatcher;
+  UPROPERTY(VisibleAnywhere)
+  UActorDispatcher *ActorDispatcher = nullptr;
 
   UPROPERTY(VisibleAnywhere)
   APawn *Spectator = nullptr;
