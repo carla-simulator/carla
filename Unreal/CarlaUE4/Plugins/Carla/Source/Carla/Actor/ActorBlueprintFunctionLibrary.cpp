@@ -441,6 +441,42 @@ void UActorBlueprintFunctionLibrary::MakePedestrianDefinitions(
   FillActorDefinitionArray(ParameterArray, Definitions, &MakePedestrianDefinition);
 }
 
+void UActorBlueprintFunctionLibrary::MakePropDefinition(
+    const FPropParameters &Parameters,
+    bool &Success,
+    FActorDefinition &Definition)
+{
+  /// @todo We need to validate here the params.
+  FillIdAndTags(Definition, TEXT("static"),  TEXT("prop"), Parameters.Name);
+  AddRecommendedValuesForActorRoleName(Definition, {TEXT("prop")});
+
+  auto GetSize = [](EPropSize Value) {
+    switch (Value)
+    {
+      case EPropSize::Tiny:    return TEXT("tiny");
+      case EPropSize::Small:   return TEXT("small");
+      case EPropSize::Medium:  return TEXT("medium");
+      case EPropSize::Big:     return TEXT("big");
+      case EPropSize::Huge:    return TEXT("huge");
+      default:                 return TEXT("unknown");
+    }
+  };
+
+  Definition.Attributes.Emplace(FActorAttribute{
+    TEXT("size"),
+    EActorAttributeType::String,
+    GetSize(Parameters.Size)});
+
+  Success = CheckActorDefinition(Definition);
+}
+
+void UActorBlueprintFunctionLibrary::MakePropDefinitions(
+    const TArray<FPropParameters> &ParameterArray,
+    TArray<FActorDefinition> &Definitions)
+{
+  FillActorDefinitionArray(ParameterArray, Definitions, &MakePropDefinition);
+}
+
 void UActorBlueprintFunctionLibrary::MakeObstacleDetectorDefinitions(
     const FString &Type,
     const FString &Id,

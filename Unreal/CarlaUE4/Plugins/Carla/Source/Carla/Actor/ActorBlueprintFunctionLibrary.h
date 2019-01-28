@@ -9,6 +9,7 @@
 #include "Carla/Actor/ActorDefinition.h"
 #include "Carla/Actor/ActorDescription.h"
 #include "Carla/Actor/PedestrianParameters.h"
+#include "Carla/Actor/PropParameters.h"
 #include "Carla/Actor/VehicleParameters.h"
 
 #include "Kismet/BlueprintFunctionLibrary.h"
@@ -89,6 +90,17 @@ public:
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static void MakePedestrianDefinitions(
       const TArray<FPedestrianParameters> &ParameterArray,
+      TArray<FActorDefinition> &Definitions);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakePropDefinition(
+      const FPropParameters &Parameters,
+      bool &Success,
+      FActorDefinition &Definition);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakePropDefinitions(
+      const TArray<FPropParameters> &ParameterArray,
       TArray<FActorDefinition> &Definitions);
 
   UFUNCTION()
