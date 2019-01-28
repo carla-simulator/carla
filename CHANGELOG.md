@@ -1,5 +1,7 @@
 ## Latest changes
 
+  * Basic agent integrated with global router
+  * Fixed local planner to avoid premature route pruning at path overlaps
   * Upgraded to Unreal Engine 4.21
   * Upgraded Boost to 1.69.0
   * Added point transformation functionality for LibCarla and PythonAPI

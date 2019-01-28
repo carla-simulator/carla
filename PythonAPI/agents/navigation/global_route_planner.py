@@ -10,20 +10,9 @@ from enum import Enum
 
 import numpy as np
 import networkx as nx
+
 import carla
-
-
-class NavEnum(Enum):
-    """
-    Enumeration class containing possible navigation decisions
-    """
-    START = "START"
-    GO_STRAIGHT = "GO_STRAIGHT"
-    LEFT = "LEFT"
-    RIGHT = "RIGHT"
-    FOLLOW_LANE = "FOLLOW_LANE"
-    STOP = "STOP"
-    pass
+from local_planner import RoadOption
 
 
 class GlobalRoutePlanner(object):
@@ -57,16 +46,15 @@ class GlobalRoutePlanner(object):
         The following function generates the route plan based on
         origin      : tuple containing x, y of the route's start position
         destination : tuple containing x, y of the route's end position
-
         return      : list of turn by turn navigation decisions as
-        NavEnum elements
-        Possible values (for now) are START, GO_STRAIGHT, LEFT, RIGHT, STOP
+        agents.navigation.local_planner.RoadOption elements
+        Possible values (for now) are STRAIGHT, LEFT, RIGHT, LANEFOLLOW, VOID
         """
 
-        threshold = 0.087267    # 5 degree
+        threshold = math.radians(4.0)
         route = self.path_search(origin, destination)
         plan = []
-        plan.append(NavEnum.START)
+
         # Compare current edge and next edge to decide on action
         for i in range(len(route) - 2):
             current_edge = self._graph.edges[route[i], route[i + 1]]
@@ -89,13 +77,12 @@ class GlobalRoutePlanner(object):
                 deviation = math.acos(np.dot(cv, nv) /\
                     (np.linalg.norm(cv)*np.linalg.norm(nv)))
                 if deviation < threshold:
-                    action = NavEnum.GO_STRAIGHT
+                    action = RoadOption.STRAIGHT
                 elif next_cross < min(cross_list):
-                    action = NavEnum.LEFT
+                    action = RoadOption.LEFT
                 elif next_cross > max(cross_list):
-                    action = NavEnum.RIGHT
+                    action = RoadOption.RIGHT
                 plan.append(action)
-        plan.append(NavEnum.STOP)
         return plan
 
     def _distance_heuristic(self, n1, n2):
@@ -111,10 +98,8 @@ class GlobalRoutePlanner(object):
         """
         This function finds the shortest path connecting origin and destination
         using A* search with distance heuristic.
-
         origin      :   tuple containing x, y co-ordinates of start position
         desitnation :   tuple containing x, y co-ordinates of end position
-
         return      :   path as list of node ids (as int) of the graph self._graph
         connecting origin and destination
         """
@@ -135,7 +120,6 @@ class GlobalRoutePlanner(object):
         """
         This function finds the road segment closest to (x, y)
         x, y        :   co-ordinates of the point to be localized
-
         return      :   pair of points, tuple of tuples containing co-ordinates
         of points that represents the road segment closest to x, y
         """
@@ -168,7 +152,6 @@ class GlobalRoutePlanner(object):
             net_vector      -   unit vector of the chord from entry to exit
             intersection    -   boolean indicating if the edge belongs to an
                                 intersection
-
         return      :   graph -> networkx graph representing the world map,
                         id_map-> mapping from (x,y) to node id
         """
@@ -206,10 +189,8 @@ class GlobalRoutePlanner(object):
     def distance(self, point1, point2):
         """
         returns the distance between point1 and point2
-
         point1      :   (x,y) of first point
         point2      :   (x,y) of second point
-
         return      :   distance from point1 to point2
         """
         x1, y1 = point1
@@ -219,10 +200,8 @@ class GlobalRoutePlanner(object):
     def unit_vector(self, point1, point2):
         """
         This function returns the unit vector from point1 to point2
-
         point1      :   (x,y) of first point
         point2      :   (x,y) of second point
-
         return      :   tuple containing x and y components of unit vector
                         from point1 to point2
         """
@@ -238,10 +217,8 @@ class GlobalRoutePlanner(object):
     def dot(self, vector1, vector2):
         """
         This function returns the dot product of vector1 with vector2
-
         vector1      :   x, y components of first vector
         vector2      :   x, y components of second vector
-
         return      :   dot porduct scalar between vector1 and vector2
         """
         return vector1[0] * vector2[0] + vector1[1] * vector2[1]
