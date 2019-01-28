@@ -215,9 +215,17 @@ class Walker(object):
         self.x, self.y = map_transform_helper.convert_world_to_screen_point((actor_location.x, actor_location.y))
 
         self.color = COLOR_WHITE
-        self.surface = pygame.Surface((radius * 2, radius * 2))
-        pygame.draw.circle(self.surface, self.color, (radius, radius), radius)
-        self.surface = self.surface.convert()
+
+        # Compute bounding box points
+        bb_extent = self.actor.bounding_box.extent
+        original_size = [bb_extent.x * 2.0, bb_extent.y * 2.0]
+        self.surface_size = map_transform_helper.convert_world_to_screen_size(original_size)
+
+        self.surface = pygame.Surface((self.surface_size[0], self.surface_size[1]), pygame.SRCALPHA)
+        self.surface.set_colorkey(COLOR_BLACK)
+
+        pygame.draw.polygon(self.surface, self.color, [(0, 0), (self.surface_size[0], 0),
+                                                       (self.surface_size[0], self.surface_size[1]), (0, self.surface_size[1])])
 
 
 # ==============================================================================
