@@ -25,6 +25,9 @@ class FDataStreamTmpl;
 /// serializer registered with the sensor at carla::sensor:SensorRegistry before
 /// being sent down the stream.
 ///
+/// @warning This is a single-use object, a new one needs to be created for each
+/// new message.
+///
 /// FAsyncDataStream also has a pool of carla::Buffer that allows reusing the
 /// allocated memory, use it whenever possible.
 template <typename T>
