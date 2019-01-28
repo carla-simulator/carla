@@ -433,7 +433,7 @@ class ModuleHUD (object):
 
     def render(self, display):
         if self._show_info:
-            info_surface = pygame.Surface((240, self.dim[1])).convert_alpha()
+            info_surface = pygame.Surface((240, self.dim[1]))
             info_surface.set_alpha(100)
             display.blit(info_surface, (0, 0))
             v_offset = 4
@@ -918,6 +918,8 @@ class ModuleWorld(object):
                 self.hero_actor = None
 
         # Blit surfaces
+        clipping_rect = pygame.Rect(-translation_offset[0], -translation_offset[1],
+                                    self.hud_module.dim[0], self.hud_module.dim[1])
 
         surfaces = ((self.map_surface, (0, 0)),
                     (self.vehicles_surface, (0, 0)),
@@ -929,14 +931,31 @@ class ModuleWorld(object):
                     )
         self.hud_module.renderActorId(self.vehicle_id_surface, vehicles, self.transform_helper, (0, 0), angle)
 
-        self.result_surface.blits(surfaces)
+        rotated_result_surface = self.result_surface
+        if self.hero_actor is not None:
+            # self.result_surface.set_clip(clipping_rect)
+            self.result_surface.blits(surfaces)
+            # surface_to_rotate = pygame.Surface((1000, 1000))
+            # surface_to_rotate.blit(self.result_surface, translation_offset)
 
-        rotated_result_surface = self.rotate(self.result_surface,
-                                             (-translation_offset[0], -translation_offset[1]),
-                                             angle)
+            rotated_result_surface = self.rotate(self.result_surface,
+                                                 (-translation_offset[0], -translation_offset[1]),
+                                                 angle)
 
-        final_offset = rotated_result_surface.get_rect(center=center_offset)
-        display.blit(rotated_result_surface, final_offset)
+            final_offset = rotated_result_surface.get_rect(center=center_offset)
+            display.blit(rotated_result_surface, final_offset)
+        else:
+            self.map_surface.set_clip(clipping_rect)
+            self.vehicles_surface.set_clip(clipping_rect)
+            self.traffic_light_surface.set_clip(clipping_rect)
+            self.speed_limits_surface.set_clip(clipping_rect)
+            self.walkers_surface.set_clip(clipping_rect)
+            self.vehicle_id_surface.set_clip(clipping_rect)
+            self.hero_actor_surface.set_clip(clipping_rect)
+            self.result_surface.set_clip(clipping_rect)
+
+            self.result_surface.blits(surfaces)
+            display.blit(rotated_result_surface, translation_offset)
 
         del vehicles[:]
         del traffic_lights[:]
