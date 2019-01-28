@@ -17,7 +17,7 @@
 #include <carla/sensor/data/ActorDynamicState.h>
 #include <compiler/enable-ue4-macros.h>
 
-static auto AWorldObserver_GetActorState(const FActorView &View)
+static auto AWorldObserver_GetActorState(const FActorView &View, const FActorRegistry &Registry)
 {
   using AType = FActorView::ActorType;
 
@@ -28,9 +28,28 @@ static auto AWorldObserver_GetActorState(const FActorView &View)
     auto Vehicle = Cast<ACarlaWheeledVehicle>(View.GetActor());
     if (Vehicle != nullptr)
     {
-      state.vehicle_control = carla::rpc::VehicleControl{Vehicle->GetVehicleControl()};
+      state.vehicle_data.control = carla::rpc::VehicleControl{Vehicle->GetVehicleControl()};
+      auto Controller = Cast<AWheeledVehicleAIController>(Vehicle->GetController());
+      if (Controller != nullptr)
+      {
+        using TLS = carla::rpc::TrafficLightState;
+        state.vehicle_data.traffic_light_state = static_cast<TLS>(Controller->GetTrafficLightState());
+        state.vehicle_data.speed_limit = Controller->GetSpeedLimit();
+        auto TrafficLight = Controller->GetTrafficLight();
+        if (TrafficLight != nullptr)
+        {
+          state.vehicle_data.has_traffic_light = true;
+          auto TrafficLightView = Registry.Find(TrafficLight);
+          state.vehicle_data.traffic_light_id = TrafficLightView.GetActorId();
+        }
+        else
+        {
+          state.vehicle_data.has_traffic_light = false;
+        }
+      }
     }
   }
+
   else if (AType::Walker == View.GetActorType())
   {
     auto Walker = Cast<APawn>(View.GetActor());
@@ -46,7 +65,12 @@ static auto AWorldObserver_GetActorState(const FActorView &View)
     if (TrafficLight != nullptr)
     {
       using TLS = carla::rpc::TrafficLightState;
-      state.traffic_light_state = static_cast<TLS>(TrafficLight->GetTrafficSignState());
+      state.traffic_light_data.state = static_cast<TLS>(TrafficLight->GetTrafficLightState());
+      state.traffic_light_data.green_time = TrafficLight->GetGreenTime();
+      state.traffic_light_data.yellow_time = TrafficLight->GetYellowTime();
+      state.traffic_light_data.red_time = TrafficLight->GetRedTime();
+      state.traffic_light_data.elapsed_time = TrafficLight->GetElapsedTime();
+      state.traffic_light_data.time_is_frozen = TrafficLight->GetTimeIsFrozen();
     }
   }
 
@@ -90,7 +114,7 @@ static carla::Buffer AWorldObserver_Serialize(
       actor_view.GetActor()->GetActorTransform(),
       carla::geom::Vector3D{velocity.X, velocity.Y, velocity.Z},
       carla::geom::Vector3D{angularVelocity.X, angularVelocity.Y, angularVelocity.Z},
-      AWorldObserver_GetActorState(actor_view)
+      AWorldObserver_GetActorState(actor_view, Registry)
     };
     write_data(info);
   }

@@ -53,6 +53,18 @@ namespace detail {
 #pragma pack(pop)
 
 #pragma pack(push, 1)
+  struct VehicleData {
+    VehicleData() = default;
+
+    PackedVehicleControl control;
+    float speed_limit;
+    rpc::TrafficLightState traffic_light_state;
+    bool has_traffic_light;
+    rpc::actor_id_type traffic_light_id;
+  };
+#pragma pack(pop)
+
+#pragma pack(push, 1)
   class PackedWalkerControl {
   public:
 
@@ -75,6 +87,18 @@ namespace detail {
   };
 #pragma pack(pop)
 
+#pragma pack(push, 1)
+  struct TrafficLightData {
+    TrafficLightData() = default;
+
+    rpc::TrafficLightState state;
+    float green_time;
+    float yellow_time;
+    float red_time;
+    float elapsed_time;
+    bool time_is_frozen;
+  };
+#pragma pack(pop)
 } // namespace detail
 
 #pragma pack(push, 1)
@@ -91,8 +115,8 @@ namespace detail {
     geom::Vector3D angular_velocity;
 
     union TypeDependentState {
-      rpc::TrafficLightState traffic_light_state;
-      detail::PackedVehicleControl vehicle_control;
+      detail::TrafficLightData traffic_light_data;
+      detail::VehicleData vehicle_data;
       detail::PackedWalkerControl walker_control;
     } state;
   };
@@ -100,7 +124,7 @@ namespace detail {
 #pragma pack(pop)
 
   static_assert(
-      sizeof(ActorDynamicState) == 13u * sizeof(uint32_t) + sizeof(detail::PackedVehicleControl),
+      sizeof(ActorDynamicState) == 13u * sizeof(uint32_t) + sizeof(detail::VehicleData),
       "Invalid ActorDynamicState size!");
 
 } // namespace data

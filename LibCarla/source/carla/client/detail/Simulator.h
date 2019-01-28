@@ -18,6 +18,8 @@
 #include "carla/client/detail/Episode.h"
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/profiler/LifetimeProfiled.h"
+#include "carla/client/TrafficLight.h"
+#include "carla/rpc/TrafficLightState.h"
 
 #include <memory>
 
@@ -234,6 +236,31 @@ namespace detail {
         std::function<void(SharedPtr<sensor::SensorData>)> callback);
 
     void UnSubscribeFromSensor(const Sensor &sensor);
+
+    /// @}
+    // =========================================================================
+    /// @name Operations with traffic lights
+    // =========================================================================
+    /// @{
+    void SetTrafficLightState(TrafficLight &trafficLight, const rpc::TrafficLightState trafficLightState) {
+      _client.SetTrafficLightState(trafficLight.Serialize(), trafficLightState);
+    }
+
+    void SetTrafficLightGreenTime(TrafficLight &trafficLight, float greenTime) {
+      _client.SetTrafficLightGreenTime(trafficLight.Serialize(), greenTime);
+    }
+
+    void SetTrafficLightYellowTime(TrafficLight &trafficLight, float yellowTime) {
+      _client.SetTrafficLightYellowTime(trafficLight.Serialize(), yellowTime);
+    }
+
+    void SetTrafficLightRedTime(TrafficLight &trafficLight, float redTime) {
+      _client.SetTrafficLightRedTime(trafficLight.Serialize(), redTime);
+    }
+
+    void FreezeTrafficLight(TrafficLight &trafficLight, bool freeze) {
+      _client.FreezeTrafficLight(trafficLight.Serialize(), freeze);
+    }
 
     /// @}
     // =========================================================================
