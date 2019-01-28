@@ -137,7 +137,6 @@ class Vehicle(object):
 
         pygame.draw.polygon(surface, color, [(0, 0), (self.surface_size[0], 0),
                                              (self.surface_size[0], self.surface_size[1]), (0, self.surface_size[1])])
-        render_module = module_manager.get_module(MODULE_RENDER)
 
         center = (self.surface_size[0] / 2, self.surface_size[1] / 2)
         arrow_tip = (self.surface_size[0], self.surface_size[1] / 2)
@@ -148,6 +147,8 @@ class Vehicle(object):
         line_2 = [arrow_tip, (arrow_half - 1, self.surface_size[1])]
 
         arrow_width = map_transform_helper.convert_world_to_screen_size((0.5, 0.5))[0]
+
+        render_module = module_manager.get_module(MODULE_RENDER)
         render_module.drawArrow(surface, COLOR_BLUE, [line_0, line_1, line_2], arrow_width)
 
         actor_location = self.actor.get_location()
@@ -161,9 +162,10 @@ class Vehicle(object):
 class TrafficLight(object):
     def __init__(self, actor, radius, map_transform_helper):
         self.actor = actor
+        self.map_transform_helper = map_transform_helper
 
-        actor_location = actor.get_location()
-        self.x, self.y = map_transform_helper.convert_world_to_screen_point((actor_location.x, actor_location.y))
+        pos = self.actor.get_location()
+        self.x, self.y = self.map_transform_helper.convert_world_to_screen_point((pos.x, pos.y))
 
         self.color = COLOR_BLACK
         if actor.state == carla.libcarla.TrafficLightState.Green:
@@ -173,9 +175,18 @@ class TrafficLight(object):
         else:
             self.color = COLOR_RED
 
-        self.surface = pygame.Surface((radius * 2, radius * 2))
-        pygame.draw.circle(self.surface, self.color, (radius, radius), radius)
-        self.surface = self.surface.convert()
+        # Compute bounding box points
+        # bb_extent = self.actor.bounding_box.extent
+
+        # original_size = [bb_extent.x * 2.0, bb_extent.y * 2.0]
+        original_size = [2, 2]
+        self.surface_size = map_transform_helper.convert_world_to_screen_size(original_size)
+
+        self.surface = pygame.Surface((self.surface_size[0], self.surface_size[1]), pygame.SRCALPHA)
+        self.surface.set_colorkey(COLOR_BLACK)
+
+        pygame.draw.polygon(self.surface, self.color, [(0, 0), (self.surface_size[0], 0),
+                                                       (self.surface_size[0], self.surface_size[1]), (0, self.surface_size[1])])
 
 
 class SpeedLimit(object):
@@ -435,7 +446,6 @@ class ModuleHUD (object):
         pass
 
     def _init_hud_params(self):
-        font = pygame.font.Font(pygame.font.get_default_font(), 20)
         fonts = [x for x in pygame.font.get_fonts() if 'mono' in x]
         default_font = 'ubuntumono'
         mono = default_font if default_font in fonts else fonts[0]
@@ -481,7 +491,7 @@ class ModuleHUD (object):
                 font_surface = self._font_mono.render(str(actor.id), True, COLOR_WHITE)
                 font_surface.set_colorkey(COLOR_BLACK)
                 font_surface.set_alpha(255)
-                rotated_font_surface = pygame.transform.rotate(font_surface, angle)
+                rotated_font_surface = pygame.transform.rotate(font_surface, angle).convert_alpha()
                 vehicle_id_surface.blit(rotated_font_surface, (x, y))
 
         return vehicle_id_surface
@@ -558,36 +568,28 @@ class ModuleWorld(object):
             exit_game()
 
     def _create_world_surfaces(self):
-        self.map_surface = pygame.Surface((self.surface_size, self.surface_size))
-        self.map_surface.convert()
+        self.map_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
 
-        self.vehicles_surface = pygame.Surface((self.surface_size, self.surface_size))
+        self.vehicles_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
         self.vehicles_surface.set_colorkey((0, 0, 0))
-        self.vehicles_surface.convert_alpha()
 
-        self.traffic_light_surface = pygame.Surface((self.surface_size, self.surface_size))
+        self.traffic_light_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
         self.traffic_light_surface.set_colorkey((0, 0, 0))
-        self.traffic_light_surface.convert_alpha()
 
-        self.speed_limits_surface = pygame.Surface((self.surface_size, self.surface_size))
+        self.speed_limits_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
         self.speed_limits_surface.set_colorkey((0, 0, 0))
-        self.speed_limits_surface.convert_alpha()
 
-        self.walkers_surface = pygame.Surface((self.surface_size, self.surface_size))
+        self.walkers_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
         self.walkers_surface.set_colorkey((0, 0, 0))
-        self.walkers_surface.convert_alpha()
 
-        self.hero_actor_surface = pygame.Surface((self.surface_size, self.surface_size))
+        self.hero_actor_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
         self.hero_actor_surface.set_colorkey((0, 0, 0))
-        self.hero_actor_surface.convert()
 
-        self.vehicle_id_surface = pygame.Surface((self.surface_size, self.surface_size))
+        self.vehicle_id_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
         self.vehicle_id_surface.set_colorkey((0, 0, 0))
-        self.vehicle_id_surface.convert_alpha()
 
-        self.result_surface = pygame.Surface((self.surface_size, self.surface_size))
+        self.result_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
         self.result_surface.set_colorkey((0, 0, 0))
-        self.result_surface.convert()
 
     def _compute_map_bounding_box(self, map_waypoints):
 
@@ -836,7 +838,7 @@ class ModuleWorld(object):
         surface.fill(COLOR_BLACK)
         new_surface = pygame.Surface(size)
         new_surface.set_colorkey(COLOR_BLACK)
-        new_surface.convert_alpha()
+        new_surface = new_surface.convert()
         return new_surface
 
     def render_actors(self, vehicles, traffic_lights, speed_limits, walkers):
@@ -875,8 +877,7 @@ class ModuleWorld(object):
 
     def rotate(self, img, pos, angle):
         w, h = img.get_size()
-        img2 = pygame.Surface((w*2, h*2), pygame.SRCALPHA)
-        img2 = img2.convert()
+        img2 = pygame.Surface((w*2, h*2), pygame.SRCALPHA).convert()
         img2.blit(img, (w-pos[0], h-pos[1]))
         return pygame.transform.rotate(img2, angle)
 
@@ -939,11 +940,9 @@ class ModuleWorld(object):
             self.transform_helper.map_size = self.scaled_size[0]
 
             self.map_surface.fill(COLOR_BLACK)
-            new_map_surface = pygame.Surface(self.scaled_size)
-            new_map_surface.convert()
+            new_map_surface = pygame.Surface(self.scaled_size).convert()
             self.render_map(new_map_surface)
             self.map_surface = new_map_surface
-            self.map_surface.convert()
             self.vehicles_surface = self.refresh_surface(self.vehicles_surface, self.scaled_size)
             self.traffic_light_surface = self.refresh_surface(self.traffic_light_surface, self.scaled_size)
             self.speed_limits_surface = self.refresh_surface(self.speed_limits_surface, self.scaled_size)
