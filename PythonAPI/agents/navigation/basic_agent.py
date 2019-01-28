@@ -13,13 +13,14 @@ The agent also responds to traffic lights. """
 import math
 
 import numpy as np
-import carla
 
+import carla
 from agents.navigation.agent import *
 from agents.navigation.local_planner import LocalPlanner
 from agents.navigation.local_planner import compute_connection, RoadOption
 from agents.navigation.global_route_planner import GlobalRoutePlanner
 from agents.navigation.global_route_planner_dao import GlobalRoutePlannerDAO
+from agents.tools.misc import vector
 
 class BasicAgent(Agent):
     """
@@ -34,9 +35,10 @@ class BasicAgent(Agent):
         """
         super(BasicAgent, self).__init__(vehicle)
 
-        self._proximity_threshold = 10.0  # meters
+        self._proximity_threshold = 10.0 # meters
         self._state = AgentState.NAVIGATING
         self._local_planner = LocalPlanner(self._vehicle, opt_dict={'target_speed' : target_speed})
+        self._hop_resolution = 2.0
 
         # setting up global router
         self._current_plan = None
@@ -59,21 +61,20 @@ class BasicAgent(Agent):
         y2 = end_waypoint.transform.location.y
         route = grp.plan_route((x1, y1), (x2, y2))
 
-        route.pop(0)
         current_waypoint = start_waypoint
-
+        route.append(RoadOption.VOID)
         for action in route:
 
             #   Generate waypoints to next junction
-            wp_choice = current_waypoint.next(5.0)
+            wp_choice = current_waypoint.next(self._hop_resolution)
             while len(wp_choice) == 1:
                 current_waypoint = wp_choice[0]
                 solution.append((current_waypoint, RoadOption.LANEFOLLOW))
-                wp_choice = current_waypoint.next(5.0)
+                wp_choice = current_waypoint.next(self._hop_resolution)
                 #   Stop at destination
                 if current_waypoint.transform.location.distance(
-                    end_waypoint.transform.location) < 5.0: break
-            if action.value == "STOP": break
+                    end_waypoint.transform.location) < self._hop_resolution: break
+            if action == RoadOption.VOID: break
 
             #   Select appropriate path at the junction
             if len(wp_choice) > 1:
@@ -85,25 +86,20 @@ class BasicAgent(Agent):
                     carla.Location(
                         x=math.cos(math.radians(current_transform.rotation.yaw)),
                         y=math.sin(math.radians(current_transform.rotation.yaw)))
-                v_current = self._vector(current_location, projected_location)
+                v_current = vector(current_location, projected_location)
 
-                #   Road option based on route decision
                 direction = 0
-                road_option = None
-                if action.value == "LEFT":
+                if action == RoadOption.LEFT:
                     direction = 1
-                    road_option = RoadOption.LEFT
-                elif action.value == "RIGHT":
+                elif action == RoadOption.RIGHT:
                     direction = -1
-                    road_option = RoadOption.RIGHT
-                elif action.value == "GO_STRAIGHT":
+                elif action == RoadOption.STRAIGHT:
                     direction = 0
-                    road_option = RoadOption.STRAIGHT
                 select_criteria = float('inf')
 
                 #   Choose correct path
                 for wp_select in wp_choice:
-                    v_select = self._vector(
+                    v_select = vector(
                         current_location, wp_select.transform.location)
                     cross = float('inf')
                     if direction == 0:
@@ -116,26 +112,16 @@ class BasicAgent(Agent):
 
                 #   Generate all waypoints within the junction
                 #   along selected path
-                solution.append((current_waypoint, road_option))
-                current_waypoint = current_waypoint.next(5.0)[0]
+                solution.append((current_waypoint, action))
+                current_waypoint = current_waypoint.next(self._hop_resolution)[0]
                 while current_waypoint.is_intersection:
-                    solution.append((current_waypoint, road_option))
-                    current_waypoint = current_waypoint.next(5.0)[0]
+                    solution.append((current_waypoint, action))
+                    current_waypoint = current_waypoint.next(self._hop_resolution)[0]
 
         assert solution
 
         self._current_plan = solution
         self._local_planner.set_global_plan(self._current_plan)
-
-    def _vector(self, l_1, l_2):
-        """
-        Returns the unit vector from l_1 to l_2
-        l_1, l_2    :   carla.Location objects
-        """
-        x = l_2.x-l_1.x
-        y = l_2.y-l_1.y
-        norm = np.linalg.norm([x, y])
-        return [x/norm, y/norm, 0]
 
     def run_step(self, debug=False):
         """
