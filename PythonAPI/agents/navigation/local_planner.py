@@ -14,7 +14,6 @@ import random
 
 import carla
 from agents.navigation.controller import VehiclePIDController
-from agents.navigation.global_route_planner import NavEnum
 from agents.tools.misc import distance_vehicle, draw_waypoints
 
 class RoadOption(Enum):
@@ -72,7 +71,7 @@ class LocalPlanner(object):
         self._vehicle_controller = None
         self._global_plan = None
         # queue with tuples of (waypoint, RoadOption)
-        self._waypoints_queue = deque(maxlen=200)
+        self._waypoints_queue = deque(maxlen=600)
         self._buffer_size = 5
         self._waypoint_buffer = deque(maxlen=self._buffer_size)
 
@@ -189,15 +188,6 @@ class LocalPlanner(object):
         :return:
         """
 
-        #   Buffering the waypoints
-        if not self._waypoint_buffer:
-            for i in range(self._buffer_size):
-                if self._waypoints_queue:
-                    self._waypoint_buffer.append(
-                        self._waypoints_queue.popleft())
-                else:
-                    break
-
         # not enough waypoints in the horizon? => add more!
         if len(self._waypoints_queue) < int(self._waypoints_queue.maxlen * 0.5):
             if not self._global_plan:
@@ -212,6 +202,15 @@ class LocalPlanner(object):
             control.manual_gear_shift = False
 
             return control
+
+        #   Buffering the waypoints
+        if not self._waypoint_buffer:
+            for i in range(self._buffer_size):
+                if self._waypoints_queue:
+                    self._waypoint_buffer.append(
+                        self._waypoints_queue.popleft())
+                else:
+                    break
 
         # current vehicle waypoint
         self._current_waypoint = self._map.get_waypoint(self._vehicle.get_location())
