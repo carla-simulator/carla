@@ -23,16 +23,21 @@ class CARLA_API AObstacleDetectionSensor : public ASensor
 
   float HitRadius;
 
+  float HeightVar;
+
+  bool bOnlyVehicles = false;
+
+  bool bDebugLineTrace = false;
+
 public:
 
   static FActorDefinition GetSensorDefinition();
 
-  AObstacleDetectionSensor(const FObjectInitializer& ObjectInitializer);
+  AObstacleDetectionSensor(const FObjectInitializer &ObjectInitializer);
 
   void SetOwner(AActor *NewOwner) override;
 
   void Set(const FActorDescription &Description) override;
-
 
   void BeginPlay() override;
 
