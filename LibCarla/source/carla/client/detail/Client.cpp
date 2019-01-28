@@ -14,6 +14,7 @@
 #include "carla/rpc/WalkerControl.h"
 #include "carla/streaming/Client.h"
 
+
 #include <thread>
 
 namespace carla {
@@ -148,15 +149,35 @@ namespace detail {
     _pimpl->AsyncCall("apply_control_to_walker", walker, control);
   }
 
- void Client::SetActorVelocity(const rpc::Actor &actor, const geom::Vector3D &vector) {
+  void Client::SetTrafficLightState(const rpc::Actor &trafficLight, const rpc::TrafficLightState trafficLightState) {
+    _pimpl->AsyncCall("set_traffic_light_state", trafficLight, trafficLightState);
+  }
+
+  void Client::SetTrafficLightGreenTime(const rpc::Actor &trafficLight, float greenTime) {
+    _pimpl->AsyncCall("set_traffic_light_green_time", trafficLight, greenTime);
+  }
+
+  void Client::SetTrafficLightYellowTime(const rpc::Actor &trafficLight, float yellowTime) {
+    _pimpl->AsyncCall("set_traffic_light_yellow_time", trafficLight, yellowTime);
+  }
+
+  void Client::SetTrafficLightRedTime(const rpc::Actor &trafficLight, float redTime) {
+    _pimpl->AsyncCall("set_traffic_light_red_time", trafficLight, redTime);
+  }
+
+  void Client::FreezeTrafficLight(const rpc::Actor &trafficLight, bool freeze) {
+    _pimpl->AsyncCall("freeze_traffic_light", trafficLight, freeze);
+  }
+
+  void Client::SetActorVelocity(const rpc::Actor &actor, const geom::Vector3D &vector) {
     _pimpl->AsyncCall("set_actor_velocity", actor, vector);
   }
 
- void Client::SetActorAngularVelocity(const rpc::Actor &actor, const geom::Vector3D &vector) {
+  void Client::SetActorAngularVelocity(const rpc::Actor &actor, const geom::Vector3D &vector) {
     _pimpl->AsyncCall("set_actor_angular_velocity", actor, vector);
   }
 
- void Client::AddActorImpulse(const rpc::Actor &actor, const geom::Vector3D &vector) {
+  void Client::AddActorImpulse(const rpc::Actor &actor, const geom::Vector3D &vector) {
     _pimpl->AsyncCall("add_actor_impulse", actor, vector);
   }
 

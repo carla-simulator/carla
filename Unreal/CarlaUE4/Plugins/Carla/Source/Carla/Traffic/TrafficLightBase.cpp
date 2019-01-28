@@ -38,13 +38,45 @@ static ETrafficSignState ToTrafficSignState(ETrafficLightState State) {
 ATrafficLightBase::ATrafficLightBase(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 }
 
 void ATrafficLightBase::OnConstruction(const FTransform &Transform)
 {
   Super::OnConstruction(Transform);
   SetTrafficLightState(State);
+}
+
+void ATrafficLightBase::Tick(float DeltaSeconds)
+{
+  if (TimeIsFrozen)
+  {
+    return;
+  }
+
+  ElapsedTime += DeltaSeconds;
+
+  float ChangeTime;
+
+  switch (State) {
+    case ETrafficLightState::Red:
+      ChangeTime = RedTime;
+      break;
+    case ETrafficLightState::Yellow:
+      ChangeTime = YellowTime;
+      break;
+    case ETrafficLightState::Green:
+       ChangeTime = GreenTime;
+      break;
+    default:
+      UE_LOG(LogCarla, Error, TEXT("Invalid traffic light state!"));
+      SetTrafficLightState(ETrafficLightState::Red);
+      return;
+  }
+
+  if (ElapsedTime > ChangeTime) {
+    SwitchTrafficLightState();
+  }
 }
 
 #if WITH_EDITOR
@@ -61,11 +93,16 @@ void ATrafficLightBase::PostEditChangeProperty(FPropertyChangedEvent &Event)
 
 void ATrafficLightBase::SetTrafficLightState(const ETrafficLightState InState)
 {
+  NumChanges++;
+  ElapsedTime = 0.0f;
   State = InState;
   SetTrafficSignState(ToTrafficSignState(State));
   for (auto Controller : Vehicles) {
     if (Controller != nullptr) {
       Controller->SetTrafficLightState(State);
+      if (State == ETrafficLightState::Green) {
+        Controller->SetTrafficLight(nullptr);
+      }
     }
   }
   if (State == ETrafficLightState::Green) {
@@ -101,7 +138,63 @@ void ATrafficLightBase::NotifyWheeledVehicle(ACarlaWheeledVehicle *Vehicle)
       Controller->SetTrafficLightState(State);
       if (State != ETrafficLightState::Green) {
         Vehicles.Add(Controller);
+        Controller->SetTrafficLight(this);
       }
     }
   }
+}
+
+void ATrafficLightBase::SetGreenTime(float InGreenTime)
+{
+  GreenTime = InGreenTime;
+}
+
+float ATrafficLightBase::GetGreenTime() const
+{
+  return GreenTime;
+}
+
+void ATrafficLightBase::SetYellowTime(float InYellowTime)
+{
+  YellowTime = InYellowTime;
+}
+
+float ATrafficLightBase::GetYellowTime() const
+{
+  return YellowTime;
+}
+
+void ATrafficLightBase::SetRedTime(float InRedTime)
+{
+  RedTime = InRedTime;
+}
+
+float ATrafficLightBase::GetRedTime() const
+{
+  return RedTime;
+}
+
+float ATrafficLightBase::GetElapsedTime() const
+{
+  return ElapsedTime;
+}
+
+void ATrafficLightBase::SetTimeIsFrozen(bool InTimeIsFrozen)
+{
+  TimeIsFrozen = InTimeIsFrozen;
+  if (!TimeIsFrozen)
+  {
+    NumChanges = 0;
+    ElapsedTime = 0.0f;
+  }
+}
+
+bool ATrafficLightBase::GetTimeIsFrozen() const
+{
+  return TimeIsFrozen;
+}
+
+int ATrafficLightBase::GetNumChanges() const
+{
+  return NumChanges;
 }

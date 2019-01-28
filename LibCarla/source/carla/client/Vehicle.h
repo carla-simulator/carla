@@ -8,9 +8,11 @@
 
 #include "carla/client/Actor.h"
 #include "carla/rpc/VehicleControl.h"
+#include "carla/rpc/TrafficLightState.h"
 
 namespace carla {
 namespace client {
+  class TrafficLight;
 
   class Vehicle : public Actor {
   public:
@@ -27,12 +29,20 @@ namespace client {
 
     /// Return the control last applied to this vehicle.
     ///
-    /// @note This function does not call the simulator, it returns the Control
+    /// @note The following functions do not call the simulator, they return the data
     /// received in the last tick.
+    //////////////////////////////////////////////////////////////////////////////////
     Control GetControl() const;
 
-  private:
+    float GetSpeedLimit() const;
 
+    rpc::TrafficLightState GetTrafficLightState() const;
+
+    bool IsAtTrafficLight();
+
+    SharedPtr<TrafficLight> GetTrafficLight() const;
+
+  private:
     Control _control;
   };
 

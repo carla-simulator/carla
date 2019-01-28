@@ -76,6 +76,10 @@ void export_actor() {
     .def("apply_control", &cc::Vehicle::ApplyControl, (arg("control")))
     .def("get_control", &cc::Vehicle::GetControl)
     .def("set_autopilot", &cc::Vehicle::SetAutopilot, (arg("enabled")=true))
+    .def("get_speed_limit", &cc::Vehicle::GetSpeedLimit)
+    .def("get_traffic_light_state", &cc::Vehicle::GetTrafficLightState)
+    .def("is_at_traffic_light", &cc::Vehicle::IsAtTrafficLight)
+    .def("get_traffic_light", &cc::Vehicle::GetTrafficLight)
     .def(self_ns::str(self_ns::self))
   ;
 
@@ -87,15 +91,26 @@ void export_actor() {
   ;
 
   enum_<cr::TrafficLightState>("TrafficLightState")
-    .value("Off", cr::TrafficLightState::Off)
     .value("Red", cr::TrafficLightState::Red)
     .value("Yellow", cr::TrafficLightState::Yellow)
     .value("Green", cr::TrafficLightState::Green)
+    .value("Off", cr::TrafficLightState::Off)
     .value("Unknown", cr::TrafficLightState::Unknown)
   ;
 
   class_<cc::TrafficLight, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::TrafficLight>>("TrafficLight", no_init)
     .add_property("state", &cc::TrafficLight::GetState)
+    .def("set_state", &cc::TrafficLight::SetState, (arg("state")))
+    .def("get_state", &cc::TrafficLight::GetState)
+    .def("set_green_time", &cc::TrafficLight::SetGreenTime, (arg("green_time")))
+    .def("get_green_time", &cc::TrafficLight::GetGreenTime)
+    .def("set_yellow_time", &cc::TrafficLight::SetYellowTime, (arg("yellow_time")))
+    .def("get_yellow_time", &cc::TrafficLight::GetYellowTime)
+    .def("set_red_time", &cc::TrafficLight::SetRedTime, (arg("red_time")))
+    .def("get_red_time", &cc::TrafficLight::GetRedTime)
+    .def("get_elapsed_time", &cc::TrafficLight::GetElapsedTime)
+    .def("freeze", &cc::TrafficLight::Freeze, (arg("freeze")))
+    .def("is_frozen", &cc::TrafficLight::IsFrozen)
     .def(self_ns::str(self_ns::self))
   ;
 }

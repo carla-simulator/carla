@@ -176,6 +176,20 @@ public:
     TrafficLightState = InTrafficLightState;
   }
 
+  /// Get traffic light currently affecting this vehicle.
+  UFUNCTION(Category = "Wheeled Vehicle Controller", BlueprintCallable)
+  ATrafficLightBase* GetTrafficLight() const
+  {
+    return TrafficLight;
+  }
+
+  /// Set traffic light currently affecting this vehicle.
+  UFUNCTION(Category = "Wheeled Vehicle Controller", BlueprintCallable)
+  void SetTrafficLight(ATrafficLightBase* InTrafficLight)
+  {
+    TrafficLight = InTrafficLight;
+  }
+
   /// Set a fixed route to follow if autopilot is enabled.
   UFUNCTION(Category = "Wheeled Vehicle Controller", BlueprintCallable)
   void SetFixedRoute(const TArray<FVector> &Locations, bool bOverwriteCurrent=true);
@@ -191,6 +205,7 @@ public:
   {
     return AutopilotControl;
   }
+
 
 private:
 
@@ -234,6 +249,9 @@ private:
 
   UPROPERTY(VisibleAnywhere)
   float MaximumSteerAngle = -1.0f;
+
+  UPROPERTY()
+  ATrafficLightBase* TrafficLight;
 
   FVehicleControl AutopilotControl;
 

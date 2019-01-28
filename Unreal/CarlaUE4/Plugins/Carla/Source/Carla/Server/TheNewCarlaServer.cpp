@@ -470,6 +470,71 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     Controller->SetAutopilot(bEnabled);
   });
 
+  Server.BindSync("set_traffic_light_state", [this](cr::Actor Actor, cr::TrafficLightState trafficLightState) {
+    RequireEpisode();
+    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
+      RespondErrorStr("unable to set state: actor not found");
+    }
+    auto TrafficLight = Cast<ATrafficLightBase>(ActorView.GetActor());
+    if (TrafficLight == nullptr) {
+      RespondErrorStr("unable to set state: actor is not a traffic light");
+    }
+    TrafficLight->SetTrafficLightState(static_cast<ETrafficLightState>(trafficLightState));
+  });
+
+  Server.BindSync("set_traffic_light_green_time", [this](cr::Actor Actor, float GreenTime) {
+    RequireEpisode();
+    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
+      RespondErrorStr("unable to set green time: actor not found");
+    }
+    auto TrafficLight = Cast<ATrafficLightBase>(ActorView.GetActor());
+    if (TrafficLight == nullptr) {
+      RespondErrorStr("unable to set green time: actor is not a traffic light");
+    }
+    TrafficLight->SetGreenTime(GreenTime);
+  });
+
+  Server.BindSync("set_traffic_light_yellow_time", [this](cr::Actor Actor, float YellowTime) {
+    RequireEpisode();
+    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
+      RespondErrorStr("unable to set yellow time: actor not found");
+    }
+    auto TrafficLight = Cast<ATrafficLightBase>(ActorView.GetActor());
+    if (TrafficLight == nullptr) {
+      RespondErrorStr("unable to set yellow time: actor is not a traffic light");
+    }
+    TrafficLight->SetYellowTime(YellowTime);
+  });
+
+  Server.BindSync("set_traffic_light_red_time", [this](cr::Actor Actor, float RedTime) {
+    RequireEpisode();
+    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
+      RespondErrorStr("unable to set red time: actor not found");
+    }
+    auto TrafficLight = Cast<ATrafficLightBase>(ActorView.GetActor());
+    if (TrafficLight == nullptr) {
+      RespondErrorStr("unable to set red time: actor is not a traffic light");
+    }
+    TrafficLight->SetRedTime(RedTime);
+  });
+
+  Server.BindSync("freeze_traffic_light", [this](cr::Actor Actor, bool Freeze) {
+    RequireEpisode();
+    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
+      RespondErrorStr("unable to alter frozen state: actor not found");
+    }
+    auto TrafficLight = Cast<ATrafficLightBase>(ActorView.GetActor());
+    if (TrafficLight == nullptr) {
+      RespondErrorStr("unable to alter frozen state: actor is not a traffic light");
+    }
+    TrafficLight->SetTimeIsFrozen(Freeze);
+  });
+
   Server.BindSync("draw_debug_shape", [this](const cr::DebugShape &shape) {
     RequireEpisode();
     auto *World = Episode->GetWorld();
