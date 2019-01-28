@@ -28,6 +28,10 @@ void RecorderFrame::write(std::ofstream &file) {
 //---------------------------------------------
 
 RecorderFrames::RecorderFrames(void) {
+    reset();
+}
+
+void RecorderFrames::reset(void) {
     frame.id = 0;
     frame.durationThis = 0.0f;
     frame.elapsed = 0.0f;

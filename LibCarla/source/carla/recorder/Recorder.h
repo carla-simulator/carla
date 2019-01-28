@@ -7,6 +7,7 @@
 #pragma once
 
 #include <fstream>
+#include "carla/NonCopyable.h"
 #include "carla/recorder/RecorderFrames.h"
 #include "carla/recorder/RecorderEvent.h"
 #include "carla/recorder/RecorderPosition.h"
@@ -24,7 +25,7 @@ namespace recorder {
     State
   };
 
-  class Recorder {
+  class Recorder : private NonCopyable {
   
     bool enabled;   // enabled or not
 
@@ -56,11 +57,14 @@ namespace recorder {
     void addPosition(const RecorderPosition &_position);
     void write(void);
 
+
     // replayer
+    Replayer &getReplayer(void) {
+      return replayer; 
+    }
     std::string showFileInfo(std::string path, std::string name) {
       return replayer.getInfo(path + name);
     }
-
     std::string replayFile(std::string path, std::string name, double time) {
       stop();
       return replayer.replayFile(path + name, time);

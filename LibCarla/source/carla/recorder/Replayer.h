@@ -19,8 +19,10 @@
 namespace carla {
 namespace recorder {
 
-//typedef std::function<bool (carla::geom::Transform, RecorderActorDescription)> RecorderCallbackEventAdd;
-typedef std::function<bool ()> RecorderCallbackEventAdd;
+typedef std::function<bool (carla::geom::Transform, RecorderActorDescription, unsigned int uid)> RecorderCallbackEventAdd;
+typedef std::function<bool (unsigned int uid)> RecorderCallbackEventDel;
+typedef std::function<bool (unsigned int childId, unsigned int parentId)> RecorderCallbackEventParent;
+typedef std::function<bool (RecorderPosition pos1, RecorderPosition pos2, double per)> RecorderCallbackPosition;
 
 #pragma pack(push, 1)
 struct Header {
@@ -31,8 +33,6 @@ struct Header {
 
 class Replayer : private NonCopyable {
   
-    bool enabled;   // enabled or not
-
     public:
 
     Replayer();
@@ -41,36 +41,44 @@ class Replayer : private NonCopyable {
     std::string getInfo(std::string filename);
     std::string replayFile(std::string filename, double time);
     //void start(void);
-    //void stop(void);
+    void stop(void);
     
     void enable(void);
     void disable(void);
     bool isEnabled(void) { return enabled; };
 
-//void addEvent(const RecorderEventAdd &_event);
-    //void addEvent(const RecorderEventDel &_event);
-    //void addEvent(const RecorderEventParent &_event);
-    //void addPosition(const RecorderPosition &_position);
-    
     // callbacks
     void setCallbackEventAdd(RecorderCallbackEventAdd f);
+    void setCallbackEventDel(RecorderCallbackEventDel f);
+    void setCallbackEventParent(RecorderCallbackEventParent f);
+    void setCallbackEventPosition(RecorderCallbackPosition f);
 
     // tick for the replayer
     void tick(float time);
 
     private:
+    std::ifstream file;
+    bool enabled;
+    bool enablePlayback;
     Header header;
     RecorderFrame frame;
-    //RecorderCallback2 *callbackEventAdd { nullptr };
-    //boost::function<bool (carla::geom::Transform, RecorderActorDescription)> callbackEventAdd;
     RecorderCallbackEventAdd callbackEventAdd;
+    RecorderCallbackEventDel callbackEventDel;
+    RecorderCallbackEventParent callbackEventParent;
+    RecorderCallbackPosition callbackPosition;
+    double currentTime {0};
+    std::vector<RecorderPosition> currPos;
+    std::vector<RecorderPosition> prevPos;
 
-    bool readHeader(std::ifstream &file);
-    void skipPacket(std::ifstream &file);
-    void resetToTime(std::ifstream &file, double time, std::stringstream &info);
-    void processEvents(std::ifstream &file, std::stringstream &info);
-    void processPositions(std::ifstream &file, double per, std::stringstream &info);
-    //void processCurrentFrame(std::ifstream &file, char flags = 0xff);
+    bool readHeader();
+    void skipPacket();
+    void rewind();
+    void processToTime(double time);
+    void processEvents();
+    void processPositions(void);
+    void updatePositions(double per);
+    void interpolatePosition(const RecorderPosition &start, const RecorderPosition &end, double per);
+
 };
 
 }

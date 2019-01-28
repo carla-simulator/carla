@@ -149,7 +149,8 @@ public:
   /// view is invalid.
   TPair<EActorSpawnResultStatus, FActorView> SpawnActorWithInfo(
       const FTransform &Transform,
-      FActorDescription thisActorDescription)
+      FActorDescription thisActorDescription,
+      FActorView::IdType DesiredId = 0)
   {
       //carla::rpc::ActorDescription description(thisActorDescription);
       
@@ -157,17 +158,18 @@ public:
       crec::RecorderActorDescription description;      
       description.uid = thisActorDescription.UId;
       description.id.copy_from(reinterpret_cast<const unsigned char *>(carla::rpc::FromFString(thisActorDescription.Id).c_str()), thisActorDescription.Id.Len());
-      description.attributes.resize(thisActorDescription.Variations.Num());
+      description.attributes.reserve(thisActorDescription.Variations.Num());
       for (const auto &item : thisActorDescription.Variations) {
         crec::RecorderActorAttribute attr;
         attr.type = static_cast<carla::rpc::ActorAttributeType>(item.Value.Type);
         attr.id.copy_from(reinterpret_cast<const unsigned char *>(carla::rpc::FromFString(item.Value.Id).c_str()), item.Value.Id.Len());
         attr.value.copy_from(reinterpret_cast<const unsigned char *>(carla::rpc::FromFString(item.Value.Value).c_str()), item.Value.Value.Len());
-        
-        description.attributes.emplace_back(std::move(attr));
+        // check for empty attributes
+        if (attr.id.size() > 0)
+          description.attributes.emplace_back(std::move(attr));
       }
 
-    auto result = ActorDispatcher.SpawnActor(Transform, std::move(thisActorDescription));
+    auto result = ActorDispatcher.SpawnActor(Transform, std::move(thisActorDescription), DesiredId);
     
     if (result.Key == EActorSpawnResultStatus::Success) {
       // recorder event
@@ -235,7 +237,7 @@ public:
 
   carla::recorder::Replayer &GetReplayer()
   {
-    return Replayer;
+    return Recorder.getReplayer();
   }
 
 private:
@@ -267,5 +269,4 @@ private:
   AWorldObserver *WorldObserver = nullptr;
 
   carla::recorder::Recorder Recorder;
-  carla::recorder::Replayer Replayer;
 };

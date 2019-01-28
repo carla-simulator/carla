@@ -50,14 +50,15 @@ void RecorderEventAdd::read(std::ifstream &file) {
     // attributes
     short total;
     readValue<short>(file, total);
-    this->description.attributes.resize(total);
+    this->description.attributes.reserve(total);
     //log << "Attributes: " << this->description.attributes.size() << std::endl;
-    RecorderActorAttribute att;
     for (short i=0; i<total; ++i) {
+        RecorderActorAttribute att;
         // type
         readValue<carla::rpc::ActorAttributeType>(file, att.type);
         readBuffer(file, att.id);
         readBuffer(file, att.value);
+        this->description.attributes.push_back(std::move(att));
         // log
         //log << "  " << att.id.c_str() << " = " << att.value.c_str() << std::endl;
     }

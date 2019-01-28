@@ -22,26 +22,33 @@ Replayer::Replayer(){
 }
 
 Replayer::~Replayer(){
-    // close files
-    //if (file) file.close();
+    stop();
 }
 
 // callbacks
 void Replayer::setCallbackEventAdd(RecorderCallbackEventAdd f) {
     callbackEventAdd = std::move(f);
-
-    //std::ofstream file("logger.log", std::ios::app);
-    if (callbackEventAdd)
-        log_warning("true");
-        //file << "True" << endl;
-    else
-        log_warning("false");
-        //file << "False" << endl;
-    //file << static_cast<long>(f) << " / " << static_cast<long>(callbackEventAdd.target) << std::endl;
-    //file.close();
+}
+void Replayer::setCallbackEventDel(RecorderCallbackEventDel f) {
+    callbackEventDel = std::move(f);
+}
+void Replayer::setCallbackEventParent(RecorderCallbackEventParent f) {
+    callbackEventParent = std::move(f);
+}
+void Replayer::setCallbackEventPosition(RecorderCallbackPosition f) {
+    callbackPosition = std::move(f);
 }
 
-bool Replayer::readHeader(std::ifstream &file) {
+void Replayer::stop(void) {
+    if (enabled) {
+        enabled = false;
+        processToTime(100000.0f);
+        file.close();
+    }
+    log_warning("Replayer stopped");
+}
+
+bool Replayer::readHeader() {
     if (file.eof())
         return false;
 
@@ -51,18 +58,17 @@ bool Replayer::readHeader(std::ifstream &file) {
     return true;
 }
 
-void Replayer::skipPacket(std::ifstream &file) {
+void Replayer::skipPacket() {
     file.seekg(header.size, std::ios::cur);
 }
 
 std::string Replayer::getInfo(std::string filename) {
-    std::ifstream f;
     std::stringstream info;
     std::string s;
     
     // try to open
-    f.open(filename, std::ios::binary);
-    if (!f.is_open()) {
+    file.open(filename, std::ios::binary);
+    if (!file.is_open()) {
         info << "File " << filename << " not found on server\n";
         return info.str();
     }
@@ -72,47 +78,61 @@ std::string Replayer::getInfo(std::string filename) {
     RecorderEventAdd eventAdd;
     RecorderEventDel eventDel;
     RecorderEventParent eventParent;
+    bool bShowFrame;
 
     // parse only frames
-    while (f) {
+    while (file) {
         // get header
-        if (!readHeader(f))
+        if (!readHeader())
             break;
         
         // check for a frame packet
         switch (header.id) {
             case static_cast<char>(RecorderPacketId::Frame):
-                frame.read(f);
-                info << "Frame " << frame.id << " at " << frame.elapsed << " seconds\n";
+                frame.read(file);
+                //info << "Frame " << frame.id << " at " << frame.elapsed << " seconds\n";
                 break;
             case static_cast<char>(RecorderPacketId::Event):
-                readValue<short>(f, total);
+                bShowFrame = true;
+                readValue<short>(file, total);
+                if (total > 0 && !bShowFrame) {
+                    info << "Frame " << frame.id << " at " << frame.elapsed << " seconds\n";
+                    bShowFrame = false;
+                }
                 for (i=0; i<total; ++i) {
-                    eventAdd.read(f);
+                    eventAdd.read(file);
                     // convert buffer to string to show
                     s.resize(eventAdd.description.id.size());
                     std::copy(eventAdd.description.id.begin(), eventAdd.description.id.end(), s.begin());
                     info << "Create " << eventAdd.databaseId << ": " << s.data() << std::endl;
                 }
-                readValue<short>(f, total);
+                readValue<short>(file, total);
+                if (total > 0 && !bShowFrame) {
+                    info << "Frame " << frame.id << " at " << frame.elapsed << " seconds\n";
+                    bShowFrame = false;
+                }
                 for (i=0; i<total; ++i) {
-                    eventDel.read(f);
+                    eventDel.read(file);
                     info << "Destroy " << eventDel.databaseId << "\n";
                 }
-                readValue<short>(f, total);
+                readValue<short>(file, total);
+                if (total > 0 && !bShowFrame) {
+                    info << "Frame " << frame.id << " at " << frame.elapsed << " seconds\n";
+                    bShowFrame = false;
+                }
                 for (i=0; i<total; ++i) {
-                    eventParent.read(f);
+                    eventParent.read(file);
                     info << "Parenting " << eventParent.databaseId << " with " << eventDel.databaseId << " (parent)\n";
                 }
                 break;
             case static_cast<char>(RecorderPacketId::Position):
                 //info << "Positions\n";
-                skipPacket(f);
+                skipPacket();
                 break;
             default:
                 // skip packet
-                info << "Unknown packet id: " << header.id << " at offset " << f.tellg() << std::endl;
-                skipPacket(f);
+                info << "Unknown packet id: " << header.id << " at offset " << file.tellg() << std::endl;
+                skipPacket();
                 break;
         }
     }
@@ -120,111 +140,154 @@ std::string Replayer::getInfo(std::string filename) {
     info << "Frames: " << frame.id << "\n";
     info << "Duration: " << frame.elapsed << " seconds\n";
 
-    f.close();
+    file.close();
 
     return info.str();
 }
 
+void Replayer::rewind() {
+    currentTime = 0.0f;
+    file.seekg(0, std::ios::beg);
+
+    // mark as header as invalid to force reload a new one next time
+    frame.elapsed = -1.0f;
+    frame.durationThis = 0.0f;
+
+    log_warning("Replayer rewind");
+
+}
+
 std::string Replayer::replayFile(std::string filename, double time) {
-    std::ifstream f;
     std::stringstream info;
     std::string s;
     
+    // check toi stop if we are replaying another
+    if (enabled)
+        stop();
+
     info << "Replaying file: " << filename << std::endl;
 
     // try to open
-    f.open(filename, std::ios::binary);
-    if (!f.is_open()) {
+    file.open(filename, std::ios::binary);
+    if (!file.is_open()) {
         info << "File " << filename << " not found on server\n";
         return info.str();
     }
 
+    // from start
+    rewind();
+
+    // process all events until the time
+    processToTime(time);
+
     // mark as enabled
     enabled = true;
-
-    // prepare scene until that time
-    resetToTime(f, time, info);
+    enablePlayback = true;
 
     return info.str();
 }
 
-void Replayer::resetToTime(std::ifstream &file, double time, std::stringstream &info) {
-    double per;
+void Replayer::processToTime(double time) {
+    double per = 0.0f;
+    double newTime = currentTime + time;
+    bool bEnd = false;
 
-    // force start of file
-    file.seekg(0, std::ios::beg);
-
-    info << "Starting until time " << time << std::endl;
+    // check if we are in the right frame
+    if (newTime >= frame.elapsed && newTime < frame.elapsed + frame.durationThis)
+    {    
+        per = (newTime - frame.elapsed) / frame.durationThis;
+        bEnd = true;
+    }
 
     // process all frames until time we want or end
-    bool bReady = false;
-    while (!file.eof() && !bReady) {
+    while (!file.eof() && !bEnd) {
         
         // get header
-        readHeader(file);
+        readHeader();
         // check it is a frame packet
-        if (header.id != static_cast<char>(RecorderPacketId::Frame))
+        if (header.id != static_cast<char>(RecorderPacketId::Frame)) {
+            stop();
             break;
+        }
         // read current frame
         frame.read(file);
 
         // check if target time is in this frame
-        if (time > frame.elapsed + frame.durationThis)
+        if (frame.elapsed + frame.durationThis < newTime)
             per = 0.0f;
-        else
-            per = (time - frame.elapsed) / frame.durationThis;
-
-        info << "Frame: " << frame.id << " (" << frame.durationThis << " / " << frame.elapsed << ") per: " << per << std::endl;
-
-        // get header
-        readHeader(file);
-        // check it is an events packet
-        if (header.id != static_cast<char>(RecorderPacketId::Event))
-            break;
-        processEvents(file, info);
-
-        // get header
-        readHeader(file);
-        // check it is a positions packet
-        if (header.id != static_cast<char>(RecorderPacketId::Position))
-            break;
-        skipPacket(file);
-/*
-        if (per > 0) {
-            processPositions(file, per, info);
-            bReady = true;
+        else {
+            per = (newTime - frame.elapsed) / frame.durationThis;
+            bEnd = true;
         }
+
+        //info << "Frame: " << frame.id << " (" << frame.durationThis << " / " << frame.elapsed << ") per: " << per << std::endl;
+
+        // get header
+        readHeader();
+        // check it is an events packet
+        if (header.id != static_cast<char>(RecorderPacketId::Event)) {
+            stop();
+            break;
+        }
+        processEvents();
+
+        // get header
+        readHeader();
+        // check it is a positions packet
+        if (header.id != static_cast<char>(RecorderPacketId::Position)) {
+            stop();
+            break;
+        }
+        if (bEnd)
+            processPositions();
         else
-            skipPacket(file);
-*/
+            skipPacket();
+
         // todo: status
         //processStatus(file);
+
+        //log_warning("Replayer new frame");
     }
+
+    // update all positions
+    updatePositions(per);
+
+    // save current time
+    currentTime = newTime;
 }
 
-void Replayer::processEvents(std::ifstream &file, std::stringstream &info) {
+void Replayer::processEvents(void) {
     short i, total;
     RecorderEventAdd eventAdd;
     RecorderEventDel eventDel;
     RecorderEventParent eventParent;
+    std::stringstream info;
 
     // create events
     readValue<short>(file, total);
-    std::string s;
+    std::string s, s2;
     for (i=0; i<total; ++i) {
         eventAdd.read(file);
-        
-        // convert buffer to string to show
+
         s.resize(eventAdd.description.id.size());
         std::copy(eventAdd.description.id.begin(), eventAdd.description.id.end(), s.begin());
-        info << "Create " << eventAdd.databaseId << ": " << s.data() << std::endl;
-
-        // call
-        //info << "Creating actor: " << eventAdd.description.databaseId << std::endl;
-        if (callbackEventAdd) {
-            //info << "Calling callback: " << callbackEventAdd(eventAdd.transform, std::move(eventAdd.description)) << std::endl;
-            info << "Calling callback: " << callbackEventAdd() << std::endl;
+        info << "Create " << eventAdd.databaseId << " (" << eventAdd.description.uid << ") " << s.data() << std::endl;
+        for (const auto &att : eventAdd.description.attributes) {
+            s.resize(att.id.size());
+            std::copy(att.id.begin(), att.id.end(), s.begin());
+            s2.resize(att.value.size());
+            std::copy(att.value.begin(), att.value.end(), s2.begin());
+            info << "  " << s.data() << " = " << s2.data() << std::endl;
         }
+        log_warning(info.str());
+
+        // callback
+        if (callbackEventAdd) {
+            log_warning("calling callback add");
+            callbackEventAdd(eventAdd.transform, std::move(eventAdd.description), eventAdd.databaseId);
+        }
+        else
+            log_warning("callback add is not defined");
     }
     
     // destroy events
@@ -232,6 +295,14 @@ void Replayer::processEvents(std::ifstream &file, std::stringstream &info) {
     for (i=0; i<total; ++i) {
         eventDel.read(file);
         info << "Destroy " << eventDel.databaseId << "\n";
+        log_warning(info.str());
+        // callback
+        if (callbackEventDel) {
+            log_warning("calling callback del");
+            callbackEventDel(eventDel.databaseId);
+        }
+        else
+            log_warning("callback del is not defined");
     }
 
     // parenting events
@@ -239,21 +310,72 @@ void Replayer::processEvents(std::ifstream &file, std::stringstream &info) {
     for (i=0; i<total; ++i) {
         eventParent.read(file);
         info << "Parenting " << eventParent.databaseId << " with " << eventDel.databaseId << " (parent)\n";
+        log_warning(info.str());
+        // callback
+        if (callbackEventParent) {
+            log_warning("calling callback parent");
+            callbackEventParent(eventParent.databaseId, eventParent.databaseIdParent);
+        }
+        else
+            log_warning("callback parent is not defined");
     }
 }
 
-void Replayer::processPositions(std::ifstream &file, double per, std::stringstream &info) {
-    if (file.eof())
-        per = 1;
-    info << "Skip positions\n";
+void Replayer::processPositions(void) {
+    short i, total;
+
+    // save current as previous
+    prevPos = std::move(currPos);
+
+    // read all positions
+    readValue<short>(file, total);
+    currPos.clear();
+    currPos.reserve(total);
+    for (i=0; i<total; ++i) {
+        RecorderPosition pos;
+        pos.read(file);
+        currPos.push_back(std::move(pos));
+    }
+}
+
+void Replayer::updatePositions(double per) {
+    unsigned int i;
+    std::unordered_map<int, int> mapId;
+
+    // map the Id's from both vectors
+    for (i=0; i<prevPos.size(); ++i)
+        mapId[prevPos[i].databaseId] = i;
+
+    // go through each actor and update
+    for (i=0; i<currPos.size(); ++i) {
+        // check if exist a previous position
+        auto result = mapId.find(currPos[i].databaseId);
+        if (result != mapId.end()) {
+            // interpolate
+            interpolatePosition(prevPos[result->second], currPos[i], per);
+        }
+        else {
+            // assign last position (we don't have previous one)
+            interpolatePosition(currPos[i], currPos[i], 0);
+            log_warning("Interpolation not possible, only one position");
+        }
+    }
+}
+
+// interpolate a position (transform, velocity...)
+void Replayer::interpolatePosition(const RecorderPosition &prevPos, const RecorderPosition &currPos, double per) {
+    // call the callback
+    callbackPosition(prevPos, currPos, per);
 }
 
 // tick for the replayer
-void Replayer::tick(float time) {
+void Replayer::tick(float delta) {
     // check if there are events to process
-    float f = time;
-    f += 5.0;
-}
+    if (enabled)
+        processToTime(delta);
+
+    //log_warning("Replayer tick");
+ }
 
 }
 }
