@@ -10,20 +10,9 @@ from enum import Enum
 
 import numpy as np
 import networkx as nx
+
 import carla
-
-
-class NavEnum(Enum):
-    """
-    Enumeration class containing possible navigation decisions
-    """
-    START = "START"
-    GO_STRAIGHT = "GO_STRAIGHT"
-    LEFT = "LEFT"
-    RIGHT = "RIGHT"
-    FOLLOW_LANE = "FOLLOW_LANE"
-    STOP = "STOP"
-    pass
+from local_planner import RoadOption
 
 
 class GlobalRoutePlanner(object):
@@ -63,10 +52,10 @@ class GlobalRoutePlanner(object):
         Possible values (for now) are START, GO_STRAIGHT, LEFT, RIGHT, STOP
         """
 
-        threshold = 0.087267    # 5 degree
+        threshold = math.radians(5.0)
         route = self.path_search(origin, destination)
         plan = []
-        plan.append(NavEnum.START)
+
         # Compare current edge and next edge to decide on action
         for i in range(len(route) - 2):
             current_edge = self._graph.edges[route[i], route[i + 1]]
@@ -89,13 +78,12 @@ class GlobalRoutePlanner(object):
                 deviation = math.acos(np.dot(cv, nv) /\
                     (np.linalg.norm(cv)*np.linalg.norm(nv)))
                 if deviation < threshold:
-                    action = NavEnum.GO_STRAIGHT
+                    action = RoadOption.STRAIGHT
                 elif next_cross < min(cross_list):
-                    action = NavEnum.LEFT
+                    action = RoadOption.LEFT
                 elif next_cross > max(cross_list):
-                    action = NavEnum.RIGHT
+                    action = RoadOption.RIGHT
                 plan.append(action)
-        plan.append(NavEnum.STOP)
         return plan
 
     def _distance_heuristic(self, n1, n2):

@@ -1,5 +1,6 @@
 ## Latest changes
 
+  * Fixed global route planner to handle round about turns and made the code consistent with local planner
   * Upgraded to Unreal Engine 4.21
   * Upgraded Boost to 1.69.0
   * Added point transformation functionality for LibCarla and PythonAPI
