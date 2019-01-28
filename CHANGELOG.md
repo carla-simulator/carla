@@ -14,7 +14,11 @@
     - get_angular_velocity: for getting the angular velocity
     - add_impulse: for applying an impulse (in world axis)
   * Added support for gnss_sensor
-  * Fix TCP accept error, too many open files while creating and destroying a lot of sensors
+  * Fixed TCP accept error, too many open files while creating and destroying a lot of sensors
+  * Fixed lost error messages in client-side, now when a request fails it reports the reason
+  * Improved simulator fatal error handling, now uses UE4 fatal error system
+  * Fixed crash when an actor was destroyed but not de-registered, e.g. falling out of world bounds
+  * LibCarla server pipeline now compiles with exceptions disabled for better performance and compatibility with UE4
   * OpenDriveActor has been rewritten using the Waypoint API, this has fixed some bugs
 
 ## CARLA 0.9.2
