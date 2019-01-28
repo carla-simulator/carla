@@ -44,7 +44,7 @@ protected:
 
   /// Return the FDataStream associated with this sensor.
   ///
-  /// Do you need to provide a reference to self, this is necessary for template
+  /// You need to provide a reference to self, this is necessary for template
   /// deduction.
   template <typename SensorT>
   FAsyncDataStream GetDataStream(const SensorT &Self)
