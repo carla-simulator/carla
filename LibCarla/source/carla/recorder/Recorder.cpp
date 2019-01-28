@@ -45,12 +45,14 @@ std::string Recorder::start(std::string path, std::string name) {
     std::stringstream filename;
     filename << path << name;
 
+    
     // files
     file.open(filename.str(), std::ios::binary | std::ios::trunc | std::ios::out);
     
     // log
     log.open(filename.str() + ".log");
 
+    frames.reset();
     enabled = true;
 
     return filename.str();

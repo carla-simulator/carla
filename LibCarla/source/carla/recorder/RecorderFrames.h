@@ -27,6 +27,7 @@ class RecorderFrames {
 
     public:
     RecorderFrames(void);
+    void reset();
     void setFrame(void);
     void write(std::ofstream &file, std::ofstream &log);
     

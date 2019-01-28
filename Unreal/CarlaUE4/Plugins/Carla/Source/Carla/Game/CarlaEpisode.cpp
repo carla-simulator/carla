@@ -120,10 +120,64 @@ void UCarlaEpisode::InitializeAtBeginPlay()
     ActorDispatcher->RegisterActor(*Actor, Description);
   }
 
-    Replayer.setCallbackEventAdd([](/*carla::geom::Transform transform, 
-        carla::recorder::RecorderActorDescription description*/) -> bool {
-      UE_LOG(LogCarla, Log, TEXT("Actor created by replayer"));
+  // replayer callbacks
+  Recorder.getReplayer().setCallbackEventAdd([this](carla::geom::Transform transform, 
+    carla::recorder::RecorderActorDescription description, unsigned int desiredId) -> bool {
+
+    FActorDescription ActorDesc;
+    ActorDesc.UId = description.uid;
+    ActorDesc.Id = FString(description.id.size(), UTF8_TO_TCHAR(description.id.data()));
+    //UE_LOG(LogCarla, Log, TEXT("1: %s"), *ActorDesc.Id);
+    for (const auto &item : description.attributes) {
+      FActorAttribute attr;
+      attr.Type = static_cast<EActorAttributeType>(item.type);
+      attr.Id = FString(item.id.size(), UTF8_TO_TCHAR(item.id.data()));
+      //UE_LOG(LogCarla, Log, TEXT("2: %s"), *attr.Id);
+      attr.Value = FString(item.value.size(), UTF8_TO_TCHAR(item.value.data()));
+      //UE_LOG(LogCarla, Log, TEXT("3: %s"), *attr.Value);
+      ActorDesc.Variations.Add(attr.Id, std::move(attr));
+    }
+
+    TPair<EActorSpawnResultStatus, FActorView> Result = SpawnActorWithInfo(transform, ActorDesc, desiredId);
+    if (Result.Key == EActorSpawnResultStatus::Success) {
+      //UE_LOG(LogCarla, Log, TEXT("Actor created by replayer"));
+      return true;
+    }
+    else {
+      UE_LOG(LogCarla, Log, TEXT("Actor could't be created by replayer"));
+      return false;
+    }
+  });
+
+    // callback
+    Recorder.getReplayer().setCallbackEventDel([this](unsigned int databaseId) -> bool {
+      DestroyActor(GetActorRegistry().FindActor(databaseId));
+      //UE_LOG(LogCarla, Log, TEXT("Destroy Actor (TODO)"));
       return true;
     });
-    UE_LOG(LogCarla, Log, TEXT("Registering Replayer callbacks"));
+
+    // callback
+    Recorder.getReplayer().setCallbackEventParent([this](unsigned int childId, unsigned int parentId) -> bool {
+      UE_LOG(LogCarla, Log, TEXT("Parenting Actor (TODO)"));
+      return false;
+    });
+
+    // callback
+    Recorder.getReplayer().setCallbackEventPosition([this](carla::recorder::RecorderPosition pos1, 
+      carla::recorder::RecorderPosition pos2, double per) -> bool {
+      AActor *actor = GetActorRegistry().FindActor(pos1.databaseId);
+      if (actor)
+      {
+        // interpolate transform
+        FVector location = FMath::Lerp(FVector(pos1.transform.location), FVector(pos2.transform.location), per);
+        FRotator rotation = FMath::Lerp(FRotator(pos1.transform.rotation), FRotator(pos2.transform.rotation), per);
+        FTransform trans(rotation, location, FVector(1,1,1));
+        actor->SetActorRelativeTransform(trans, false, nullptr, ETeleportType::TeleportPhysics);
+
+        // TODO: interpolate velocity
+
+        return true;
+      }
+      return false;
+    });
 }

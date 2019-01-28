@@ -39,7 +39,8 @@ void UActorDispatcher::Bind(ACarlaActorFactory &ActorFactory)
 
 TPair<EActorSpawnResultStatus, FActorView> UActorDispatcher::SpawnActor(
     const FTransform &Transform,
-    FActorDescription Description)
+    FActorDescription Description,
+    FActorView::IdType DesiredId)
 {
   if ((Description.UId == 0u) || (Description.UId > static_cast<uint32>(SpawnFunctions.Num())))
   {
@@ -59,7 +60,7 @@ TPair<EActorSpawnResultStatus, FActorView> UActorDispatcher::SpawnActor(
     Result.Status = EActorSpawnResultStatus::UnknownError;
   }
 
-  auto View = Result.IsValid() ? RegisterActor(*Result.Actor, std::move(Description)) : FActorView();
+  auto View = Result.IsValid() ? RegisterActor(*Result.Actor, std::move(Description), DesiredId) : FActorView();
 
   if (!View.IsValid())
   {

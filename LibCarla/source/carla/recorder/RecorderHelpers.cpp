@@ -87,16 +87,20 @@ void readTransform(std::ifstream &file, carla::geom::Transform &obj){
 void readString(std::ifstream &file, std::string &obj) {
     short length;
     readValue<short>(file, length);
-    obj.resize(length);
-    file.read(&obj[0], length);
+    if (length > 0) {
+        obj.resize(length);
+        file.read(&obj[0], length);
+    }
 }
 
 // read binary data to buffer (length + data)
 void readBuffer(std::ifstream &file, Buffer &obj) {
     short length;
     readValue<short>(file, length);
-    obj.reset(static_cast<unsigned int>(length));
-    file.read(reinterpret_cast<char *>(obj.data()), length);
+    if (length > 0) {
+        obj.reset(static_cast<unsigned int>(length));
+        file.read(reinterpret_cast<char *>(obj.data()), length);
+    }
 }
 
 }

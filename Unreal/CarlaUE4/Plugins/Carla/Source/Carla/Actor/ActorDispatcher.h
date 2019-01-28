@@ -52,7 +52,8 @@ public:
   /// view is invalid.
   TPair<EActorSpawnResultStatus, FActorView> SpawnActor(
       const FTransform &Transform,
-      FActorDescription ActorDescription);
+      FActorDescription ActorDescription,
+      FActorView::IdType DesiredId = 0);
 
   /// Destroys an actor, properly removing it from the registry.
   ///
