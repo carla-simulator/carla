@@ -45,7 +45,6 @@ import random
 try:
     import pygame
     from pygame import gfxdraw
-    from pygame.locals import K_a
     from pygame.locals import K_h
     from pygame.locals import K_i
     from pygame.locals import K_DOWN
@@ -155,8 +154,7 @@ class Vehicle(object):
 
         self.x, self.y = self.map_transform_helper.convert_world_to_screen_point((actor_location.x, actor_location.y))
 
-        self.surface = pygame.transform.rotate(surface, -self.actor.get_transform().rotation.yaw)
-        self.surface = self.surface.convert()
+        self.surface = pygame.transform.rotate(surface, -self.actor.get_transform().rotation.yaw).convert()
 
 
 class TrafficLight(object):
@@ -267,9 +265,8 @@ class ModuleManager(object):
 # -- ModuleRender -------------------------------------------------------------
 # ==============================================================================
 class ModuleRender(object):
-    def __init__(self, name, antialiasing):
+    def __init__(self, name):
         self.name = name
-        self.antialiasing = antialiasing
 
     def start(self):
         pass
@@ -278,18 +275,7 @@ class ModuleRender(object):
         pass
 
     def tick(self, clock):
-
-        text_antialiasing = ''
-        if self.antialiasing:
-            text_antialiasing = 'ON'
-        else:
-            text_antialiasing = 'OFF'
-
-        module_info_text = [
-            'Anti-aliasing:           % 3s' % text_antialiasing,
-        ]
-        module_hud = module_manager.get_module(MODULE_HUD)
-        module_hud.add_info(self.name, module_info_text)
+        pass
 
     def getParallelLinesAtDistance(self, line, distance, transform_helper):
         front_vector = (line[1][0] - line[0][0], line[1][1] - line[0][1])
@@ -340,74 +326,17 @@ class ModuleRender(object):
 
     def drawLineList(self, surface, color, closed, list_lines, width):
         for line in list_lines:
-            if not self.antialiasing:
-                self.drawLine(surface, color, closed, line, width)
-            else:
-                self.drawLineAA(surface, color, closed, line, width)
+            self.drawLine(surface, color, closed, line, width)
 
     def drawLine(self, surface, color, closed, line, width):
-        if not self.antialiasing:
-            self._drawLine(surface, color, closed, line, width)
-        else:
-            self._drawLineAA(surface, color, closed, line, width)
-
-    def drawLineWithBorder(self, surface, color, closed, line, width, border, color_border):
-        if not self.antialiasing:
-            self._drawLine(surface, color_border, closed, line, width + border)
-            self._drawLine(surface, color, closed, line, width)
-        else:
-            self._drawLineAA(surface, color_border, closed, line, width + border)
-            self._drawLineAA(surface, color, closed, line, width)
-
-    def _drawLine(self, surface, color, closed, line, width):
         pygame.draw.lines(surface, color, closed, line, width)
 
-    def _drawLineAA(self, surface, color, closed, line, width):
-        p0 = line[0]
-        p1 = line[1]
-
-        center_line_x = (p0[0] + p1[0]) / 2
-        center_line_y = (p0[1] + p1[1]) / 2
-        center_line = [center_line_x, center_line_y]
-
-        length = 10  # Line size
-        half_length = length / 2.
-
-        half_width = width / 2.
-
-        angle = math.atan2(p0[1] - p1[1], p0[0] - p1[0])
-        sin_angle = math.sin(angle)
-        cos_angle = math.cos(angle)
-
-        half_length_cos_angle = (half_length) * cos_angle
-        half_length_sin_angle = (half_length) * sin_angle
-        half_width_cos_angle = (half_width) * cos_angle
-        half_width_sin_angle = (half_width) * sin_angle
-
-        UL = (center_line[0] + half_length_cos_angle - half_width_sin_angle,
-              center_line[1] + half_width_cos_angle + half_length_sin_angle)
-        UR = (center_line[0] - half_length_cos_angle - half_width_sin_angle,
-              center_line[1] + half_width_cos_angle - half_length_sin_angle)
-        BL = (center_line[0] + half_length_cos_angle + half_width_sin_angle,
-              center_line[1] - half_width_cos_angle + half_length_sin_angle)
-        BR = (center_line[0] - half_length_cos_angle + half_width_sin_angle,
-              center_line[1] - half_width_cos_angle - half_length_sin_angle)
-
-        pygame.gfxdraw.aapolygon(surface, (UL, UR, BR, BL), color)
-        pygame.gfxdraw.filled_polygon(surface, (UL, UR, BR, BL), color)
+    def drawLineWithBorder(self, surface, color, closed, line, width, border, color_border):
+        self.drawLine(surface, color_border, closed, line, width + border)
+        self.drawLine(surface, color, closed, line, width)
 
     def drawCircle(self, surface, x, y, radius, color):
-        if not self.antialiasing:
-            self._drawCircle(surface, x, y, radius, color)
-        else:
-            self._drawCircleAA(surface, x, y, radius, color)
-
-    def _drawCircle(self, surface, x, y, radius, color):
         pygame.draw.circle(surface, color, (x, y), radius)
-
-    def _drawCircleAA(self, surface, x, y, radius, color):
-        pygame.gfxdraw.aacircle(surface, x, y, radius, color)
-        pygame.gfxdraw.filled_circle(surface, x, y, radius, color)
 
 # ==============================================================================
 # -- HUD -----------------------------------------------------------------------
@@ -491,8 +420,6 @@ class ModuleHUD (object):
                 color_surface.fill(COLOR_BLACK)
                 color_surface.set_alpha(200)
 
-                # color_surface.set_colorkey(COLOR_BLACK)
-
                 rotated_color_surface = pygame.transform.rotate(color_surface, angle)
                 vehicle_id_surface.blit(rotated_color_surface, (x, y))
 
@@ -506,7 +433,7 @@ class ModuleHUD (object):
 
     def render(self, display):
         if self._show_info:
-            info_surface = pygame.Surface((240, self.dim[1]))
+            info_surface = pygame.Surface((240, self.dim[1])).convert_alpha()
             info_surface.set_alpha(100)
             display.blit(info_surface, (0, 0))
             v_offset = 4
@@ -514,7 +441,7 @@ class ModuleHUD (object):
             bar_width = 106
             i = 0
             for module_name, module_info in self._info_text.items():
-                surface = self._header_font.render(module_name, True, COLOR_LIGHT_GREY)
+                surface = self._header_font.render(module_name, True, COLOR_LIGHT_GREY).convert_alpha()
                 display.blit(surface, (8 + bar_width / 2, 18 * i + v_offset))
                 i += 1
                 for item in module_info:
@@ -541,7 +468,7 @@ class ModuleHUD (object):
                             pygame.draw.rect(display, COLOR_WHITE, rect)
                         item = item[0]
                     if item:  # At this point has to be a str.
-                        surface = self._font_mono.render(item, True, COLOR_WHITE)
+                        surface = self._font_mono.render(item, True, COLOR_WHITE).convert_alpha()
                         display.blit(surface, (8, 18 * i + v_offset))
                     v_offset += 18
             self.legend.render(display)
@@ -686,11 +613,11 @@ class ModuleWorld(object):
         self.world.on_tick(lambda timestamp: ModuleWorld.on_world_tick(weak_self, timestamp))
 
     def select_random_hero(self):
-        vehicles = [actor for actor in self.actors if 'vehicle' in actor.type_id]
+        vehicles = [actor for actor in self.actors if 'vehicle' in actor.type_id and actor.attributes['role_name'] == 'hero']
         if len(vehicles) > 0:
-            self.hero_actor = random.choice(vehicles)
+            self.hero_actor = vehicles[0]
         else:
-            print("There are no vehicles spawned")
+            print("There are no hero vehicle spawned")
 
     def tick(self, clock):
         self.update_hud_info(clock)
@@ -702,12 +629,18 @@ class ModuleWorld(object):
             type_id_text = vehicle_brand + ' ' + vehicle_model
 
             hero_speed = self.hero_actor.get_velocity()
-            hero_speed_text = math.sqrt(hero_speed.x ** 2 + hero_speed.y ** 2 + hero_speed.z ** 2)
+            hero_speed_text = 3.6 * math.sqrt(hero_speed.x ** 2 + hero_speed.y ** 2 + hero_speed.z ** 2)
+            affected_traffic_light = 'None'
+            affected_speed_limit = 'None'
+
             hero_mode_text = [
                 'Hero Mode:               ON',
                 'Hero ID:               %4d' % self.hero_actor.id,
                 'Hero Type ID:%12s' % type_id_text,
-                'Hero speed:          %3d km/h' % hero_speed_text
+                'Hero speed:          %3d km/h' % hero_speed_text,
+                'Hero Affected by:',
+                '  Traffic Light:%12s' % affected_traffic_light,
+                '  Speed Limit:  %12s' % affected_speed_limit
             ]
         else:
             hero_mode_text = ['Hero Mode:               OFF']
@@ -844,9 +777,8 @@ class ModuleWorld(object):
 
     def refresh_surface(self, surface, size):
         surface.fill(COLOR_BLACK)
-        new_surface = pygame.Surface(size)
+        new_surface = pygame.Surface(size).convert()
         new_surface.set_colorkey(COLOR_BLACK)
-        new_surface = new_surface.convert()
         return new_surface
 
     def render_actors(self, vehicles, traffic_lights, speed_limits, walkers):
@@ -951,13 +883,13 @@ class ModuleWorld(object):
             new_map_surface = pygame.Surface(self.scaled_size).convert()
             self.render_map(new_map_surface)
             self.map_surface = new_map_surface
-            self.vehicles_surface = self.refresh_surface(self.vehicles_surface, self.scaled_size)
-            self.traffic_light_surface = self.refresh_surface(self.traffic_light_surface, self.scaled_size)
-            self.speed_limits_surface = self.refresh_surface(self.speed_limits_surface, self.scaled_size)
-            self.walkers_surface = self.refresh_surface(self.walkers_surface, self.scaled_size)
-            self.vehicle_id_surface = self.refresh_surface(self.vehicle_id_surface, self.scaled_size)
-            self.hero_actor_surface = self.refresh_surface(self.hero_actor_surface, self.scaled_size)
-            self.result_surface = self.refresh_surface(self.result_surface, self.scaled_size)
+            self.vehicles_surface = self.refresh_surface(self.vehicles_surface, self.scaled_size).convert()
+            self.traffic_light_surface = self.refresh_surface(self.traffic_light_surface, self.scaled_size).convert()
+            self.speed_limits_surface = self.refresh_surface(self.speed_limits_surface, self.scaled_size).convert()
+            self.walkers_surface = self.refresh_surface(self.walkers_surface, self.scaled_size).convert()
+            self.vehicle_id_surface = self.refresh_surface(self.vehicle_id_surface, self.scaled_size).convert()
+            self.hero_actor_surface = self.refresh_surface(self.hero_actor_surface, self.scaled_size).convert()
+            self.result_surface = self.refresh_surface(self.result_surface, self.scaled_size).convert()
 
         # Render Vehicles
         self.render_actors(vehicles, traffic_lights, speed_limits, walkers)
@@ -999,8 +931,9 @@ class ModuleWorld(object):
 
         self.result_surface.blits(surfaces)
 
-        rotated_result_surface = self.rotate(
-            self.result_surface,  (-translation_offset[0], -translation_offset[1]), angle)
+        rotated_result_surface = self.rotate(self.result_surface,
+                                             (-translation_offset[0], -translation_offset[1]),
+                                             angle)
 
         final_offset = rotated_result_surface.get_rect(center=center_offset)
         display.blit(rotated_result_surface, final_offset)
@@ -1041,9 +974,6 @@ class ModuleInput(object):
             elif event.type == pygame.KEYUP:
                 if event.key == K_ESCAPE:
                     exit_game()
-                if event.key == K_a:
-                    module_render = module_manager.get_module(MODULE_RENDER)
-                    module_render.antialiasing = not module_render.antialiasing
                 if event.key == K_h:
                     module_world = module_manager.get_module(MODULE_WORLD)
                     if module_world.hero_actor is None:
@@ -1062,10 +992,10 @@ class ModuleInput(object):
                 if event.button == 5:
                     self.wheel_offset[0] -= self.wheel_amount
                     self.wheel_offset[1] -= self.wheel_amount
-                    if self.wheel_offset[0] <= 0.1:
-                        self.wheel_offset[0] = 0.1
-                    if self.wheel_offset[1] <= 0.1:
-                        self.wheel_offset[1] = 0.1
+                    if self.wheel_offset[0] <= 1.0:
+                        self.wheel_offset[0] = 1.0
+                    if self.wheel_offset[1] <= 1.0:
+                        self.wheel_offset[1] = 1.0
 
     def _parse_keys(self):
         keys = pygame.key.get_pressed()
@@ -1108,7 +1038,7 @@ def game_loop(args):
     input_module = ModuleInput(MODULE_INPUT)
     hud_module = ModuleHUD(MODULE_HUD, args.width, args.height)
     world_module = ModuleWorld(MODULE_WORLD, args.host, args.port, 2.0)
-    render_module = ModuleRender(MODULE_RENDER, bool(args.antialiasing == 'True'))
+    render_module = ModuleRender(MODULE_RENDER)
 
     # Register Modules
     module_manager.register_module(input_module)
@@ -1165,11 +1095,6 @@ def main():
         default='1280x720',
         help='window resolution (default: 1280x720)')
 
-    argparser.add_argument(
-        '--antialiasing',
-        metavar='antialiasing',
-        default=True,
-        help='antialiasing (default: False)')
     args = argparser.parse_args()
     args.description = argparser.description
     args.width, args.height = [int(x) for x in args.res.split('x')]
