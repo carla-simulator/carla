@@ -13,18 +13,19 @@
 #include "Carla/Game/CarlaGameInstance.h"
 #include "Carla/Game/TheNewCarlaGameModeBase.h"
 
-AObstacleDetectionSensor::AObstacleDetectionSensor(const FObjectInitializer& ObjectInitializer)
+AObstacleDetectionSensor::AObstacleDetectionSensor(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
 {
-  PrimaryActorTick.bCanEverTick = false;
+  PrimaryActorTick.bCanEverTick = true;
 }
 
 FActorDefinition AObstacleDetectionSensor::GetSensorDefinition()
 {
   auto SensorDefinition = FActorDefinition();
-  FillIdAndTags(SensorDefinition, TEXT("other"), TEXT("obstacle"));
+  FillIdAndTags(SensorDefinition, TEXT("sensor"), TEXT("other"), TEXT("obstacle"));
   AddRecommendedValuesForSensorRoleNames(SensorDefinition);
   AddVariationsForSensor(SensorDefinition);
+
   // Distance.
   FActorVariation distance;
   distance.Id = TEXT("distance");
@@ -37,24 +38,38 @@ FActorDefinition AObstacleDetectionSensor::GetSensorDefinition()
   hitradius.Type = EActorAttributeType::Float;
   hitradius.RecommendedValues = { TEXT("50.0") };
   hitradius.bRestrictToRecommended = false;
+  // Height Variation
+  FActorVariation heightvar;
+  heightvar.Id = TEXT("heightvar");
+  heightvar.Type = EActorAttributeType::Float;
+  heightvar.RecommendedValues = { TEXT("100.0") };
+  heightvar.bRestrictToRecommended = false;
+  // Only Dynamics
+  FActorVariation onlyvehicles;
+  onlyvehicles.Id = TEXT("onlyvehicles");
+  onlyvehicles.Type = EActorAttributeType::Bool;
+  onlyvehicles.RecommendedValues = { TEXT("false") };
+  onlyvehicles.bRestrictToRecommended = false;
+  // Debug Line Trace
+  FActorVariation debuglinetrace;
+  debuglinetrace.Id = TEXT("debuglinetrace");
+  debuglinetrace.Type = EActorAttributeType::Bool;
+  debuglinetrace.RecommendedValues = { TEXT("false") };
+  debuglinetrace.bRestrictToRecommended = false;
 
-  SensorDefinition.Variations.Append({distance, hitradius});
-
-  //Success = CheckActorDefinition(Definition);
-
+  SensorDefinition.Variations.Append({
+    distance,
+    hitradius,
+    heightvar,
+    onlyvehicles,
+    debuglinetrace
+  });
   return SensorDefinition;
 }
 
 void AObstacleDetectionSensor::SetOwner(AActor *NewOwner)
 {
   Super::SetOwner(NewOwner);
-
-  /// @todo Deregister previous owner if there was one.
-
-  /*if (NewOwner != nullptr)
-  {
-    NewOwner->OnActorHit.AddDynamic(this, &AObstacleDetectionSensor::OnObstacleDetectionEvent);
-  }*/
 }
 
 void AObstacleDetectionSensor::Set(const FActorDescription &Description)
@@ -68,6 +83,19 @@ void AObstacleDetectionSensor::Set(const FActorDescription &Description)
       "hitradius",
       Description.Variations,
       HitRadius);
+  HeightVar = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat(
+      "heightvar",
+      Description.Variations,
+      HeightVar);
+  bOnlyVehicles = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToBool(
+      "onlyvehicles",
+      Description.Variations,
+      bOnlyVehicles);
+  bDebugLineTrace = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToBool(
+      "debuglinetrace",
+      Description.Variations,
+      bDebugLineTrace);
+
 }
 
 void AObstacleDetectionSensor::BeginPlay()
@@ -95,35 +123,72 @@ void AObstacleDetectionSensor::Tick(float DeltaSeconds)
 {
   Super::Tick(DeltaSeconds);
 
-  //AActor* OwnerActor = Super::GetOwner();
-  const FVector& Start = Super::GetOwner()->GetActorLocation();
-  const FVector& End = Start + (Super::GetOwner()->GetActorForwardVector()*Distance);
-  FHitResult HitOut = FHitResult();
-  ECollisionChannel TraceChannel=ECC_Pawn;
+  // The vectors should get raised a little bit to avoid hitting the ground.
+  // Temp fix until the collision channels get fixed
+  const FVector &Start = Super::GetOwner()->GetActorLocation() + FVector(0, 0, HeightVar);
+  const FVector &End = Start + (Super::GetOwner()->GetActorForwardVector() * Distance);
 
+  // Struct in which the result of the scan will be saved
+  FHitResult HitOut = FHitResult();
+
+  // Get World Source
+  TObjectIterator<APlayerController> PlayerController;
+
+  // Initialization of Query Parameters
   FCollisionQueryParams TraceParams(FName(TEXT("ObstacleDetection Trace")), true, Super::GetOwner());
 
+  // If debug mode enabled, we create a tag that will make the sweep be
+  // displayed.
+  if (bDebugLineTrace)
+  {
+    const FName TraceTag("ObstacleDebugTrace");
+    PlayerController->GetWorld()->DebugDrawTraceTag = TraceTag;
+    TraceParams.TraceTag = TraceTag;
+  }
+
+  // Hit against complex meshes
   TraceParams.bTraceComplex = true;
-  //TraceParams.bTraceAsyncScene = true;
+
+  // Ignore trigger boxes
+  TraceParams.bIgnoreTouches = true;
+
+  // Limit the returned information
   TraceParams.bReturnPhysicalMaterial = false;
 
-  //Ignore Actors
+  // Ignore ourselves
   TraceParams.AddIgnoredActor(Super::GetOwner());
 
-  //Get World Source
-  TObjectIterator< APlayerController > PlayerController;
+  bool isHitReturned;
+  if (bOnlyVehicles)
+  {
+    // If we go only for vehicles, we check the object type ECC_Vehicle
+    FCollisionObjectQueryParams TraceChannel = FCollisionObjectQueryParams(ECC_Vehicle);
+    isHitReturned = PlayerController->GetWorld()->SweepSingleByObjectType(
+        HitOut,
+        Start,
+        End,
+        FQuat(),
+        TraceChannel,
+        FCollisionShape::MakeSphere(HitRadius),
+        TraceParams);
+  }
+  else
+  {
+    // Else, if we go for everything, we get everything that interacts with a
+    // Pawn
+    ECollisionChannel TraceChannel = ECC_Pawn;
+    isHitReturned = PlayerController->GetWorld()->SweepSingleByChannel(
+        HitOut,
+        Start,
+        End,
+        FQuat(),
+        TraceChannel,
+        FCollisionShape::MakeSphere(HitRadius),
+        TraceParams);
+  }
 
-  bool hitReturned = PlayerController->GetWorld()->SweepSingleByChannel(
-      HitOut,
-      Start,
-      End,
-      FQuat(),
-      TraceChannel,
-      FCollisionShape::MakeSphere(HitRadius),
-      TraceParams
-  );
-
-  if(hitReturned) {
+  if (isHitReturned)
+  {
     OnObstacleDetectionEvent(Super::GetOwner(), HitOut.Actor.Get(), HitOut.Distance, HitOut);
   }
 
@@ -140,8 +205,8 @@ void AObstacleDetectionSensor::OnObstacleDetectionEvent(
     const auto &Registry = Episode->GetActorRegistry();
     const auto &Server = GameInstance->GetServer();
     GetDataStream().Send_GameThread(*this,
-    Server.SerializeActor(Registry.FindOrFake(Actor)),
-    Server.SerializeActor(Registry.FindOrFake(OtherActor)),
-    HitRadius);
+        Server.SerializeActor(Registry.FindOrFake(Actor)),
+        Server.SerializeActor(Registry.FindOrFake(OtherActor)),
+        HitRadius);
   }
 }
