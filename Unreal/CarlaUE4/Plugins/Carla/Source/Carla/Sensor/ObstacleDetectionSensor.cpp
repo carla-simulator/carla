@@ -163,7 +163,7 @@ void AObstacleDetectionSensor::Tick(float DeltaSeconds)
   // organized under correct collision channels and object types.
   if (bOnlyDynamics)
   {
-    // If we go only for dynamics, we check the object type ECC_Vehicle
+    // If we go only for dynamics, we check the object type AllDynamicObjects
     FCollisionObjectQueryParams TraceChannel = FCollisionObjectQueryParams(
         FCollisionObjectQueryParams::AllDynamicObjects);
     isHitReturned = PlayerController->GetWorld()->SweepSingleByObjectType(
@@ -179,7 +179,7 @@ void AObstacleDetectionSensor::Tick(float DeltaSeconds)
   {
     // Else, if we go for everything, we get everything that interacts with a
     // Pawn
-    ECollisionChannel TraceChannel = ECC_Pawn;
+    ECollisionChannel TraceChannel = ECC_WorldStatic;
     isHitReturned = PlayerController->GetWorld()->SweepSingleByChannel(
         HitOut,
         Start,
