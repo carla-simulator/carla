@@ -113,10 +113,17 @@ class TransformHelper(object):
                        int(size[1] / float((self.max_map_point[1] - self.min_map_point[1])) * self.map_size))
         return (max(screen_size[0], 1), max(screen_size[1], 1))
 
+    def rotate(self, img, pos, angle):
+        w, h = img.get_size()
+        img2 = pygame.Surface((w*2, h*2), pygame.SRCALPHA).convert()
+        img2.set_clip(pygame.Rect(w-pos[0], h-pos[1], w, h))
+        img2.blit(img, (w-pos[0], h-pos[1]))
+        return pygame.transform.rotate(img2, angle)
 
 # ==============================================================================
 # -- Vehicle ----------------------------------------------------------------------
 # ==============================================================================
+
 
 class Vehicle(object):
 
@@ -191,7 +198,7 @@ class TrafficLight(object):
 
 
 class SpeedLimit(object):
-    def __init__(self, actor, radius, map_transform_helper):
+    def __init__(self, actor, radius, map_transform_helper, hero_actor):
         self.actor = actor
         self.speed_limit = actor.type_id.split('.')[2]
         self.font = pygame.font.SysFont('Arial', radius)
@@ -204,8 +211,15 @@ class SpeedLimit(object):
 
         pygame.draw.circle(self.surface, COLOR_RED, (radius, radius), radius)
         pygame.draw.circle(self.surface, COLOR_WHITE, (radius, radius), int(radius * 0.75))
-        font_surface = self.font.render(self.speed_limit, True, COLOR_BLACK)
-        self.surface.blit(font_surface, (radius / 2, radius / 2))
+        font_surface = self.font.render(self.speed_limit, True, COLOR_DARK_GREY)
+        if hero_actor is not None:
+            angle = -hero_actor.get_transform().rotation.yaw - 90.0
+            font_surface = map_transform_helper.rotate(font_surface, (radius/2,radius/2), angle)
+            font_surface.set_colorkey(COLOR_BLACK)
+            final_offset = font_surface.get_rect(center=(radius,radius))
+            self.surface.blit(font_surface, final_offset)
+        else:
+            self.surface.blit(font_surface, (radius/2,radius/2))
 
 
 class Walker(object):
@@ -808,7 +822,7 @@ class ModuleWorld(object):
         speed_limit_renderer = []
         speed_limit_width = self.transform_helper.convert_world_to_screen_size((3, 3))[0]
         for actor in speed_limits:
-            speed_limit = SpeedLimit(actor, speed_limit_width, self.transform_helper)
+            speed_limit = SpeedLimit(actor, speed_limit_width, self.transform_helper, self.hero_actor)
             speed_limit_renderer.append((speed_limit.surface, (speed_limit.x, speed_limit.y)))
 
         self.speed_limits_surface.blits(speed_limit_renderer)
@@ -820,13 +834,6 @@ class ModuleWorld(object):
             walker = Walker(actor, walker_width, self.transform_helper)
             walkers_renderer.append((walker.surface, (walker.x, walker.y)))
         self.walkers_surface.blits(walkers_renderer)
-
-    def rotate(self, img, pos, angle):
-        w, h = img.get_size()
-        img2 = pygame.Surface((w*2, h*2), pygame.SRCALPHA).convert()
-        img2.set_clip(pygame.Rect(w-pos[0], h-pos[1], w, h))
-        img2.blit(img, (w-pos[0], h-pos[1]))
-        return pygame.transform.rotate(img2, angle)
 
     def clip_surfaces(self, clipping_rect):
         self.map_surface.set_clip(clipping_rect)
@@ -961,7 +968,7 @@ class ModuleWorld(object):
             hero_surface.blit(self.result_surface, (translation_offset[0] + hero_surface.get_width()/2,
                                                     translation_offset[1] + hero_surface.get_height()/2))
 
-            rotated_result_surface = self.rotate(hero_surface,
+            rotated_result_surface = self.transform_helper.rotate(hero_surface,
                                                  (hero_surface.get_width()/2, hero_surface.get_height()/2),
                                                  angle)
 
