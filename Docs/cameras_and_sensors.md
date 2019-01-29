@@ -317,6 +317,8 @@ This sensor, when attached to an actor, reports if there is obstacles ahead.
 | `hit_radius`         | float | 0.5     | Radius of the trace |
 | `only_dynamics`      | bool  | false   | If true, the trace will only look for dynamic objects |
 | `debug_linetrace`    | bool  | false   | If true, the trace will be visible |
+| `sensor_tick`        | float | 0.0     | Seconds between sensor captures (ticks) |
+
 
 This sensor produces
 [`carla.ObstacleDetectionSensorEvent`](python_api.md#carlaobstacledetectionsensoreventdata)

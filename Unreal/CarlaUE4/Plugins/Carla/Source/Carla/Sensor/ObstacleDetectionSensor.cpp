@@ -33,11 +33,11 @@ void AObstacleDetectionSensor::Set(const FActorDescription &Description)
   Distance = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat(
       "distance",
       Description.Variations,
-      Distance) * 100;
+      Distance) * 100.0f;
   HitRadius = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat(
       "hit_radius",
       Description.Variations,
-      HitRadius) * 100;
+      HitRadius) * 100.0f;
   bOnlyDynamics = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToBool(
       "only_dynamics",
       Description.Variations,
