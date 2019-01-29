@@ -77,29 +77,35 @@ endif()
 
 # carla_server library.
 
-file(GLOB_RECURSE libcarla_server_sources
-    "${libcarla_source_path}/carla/*.cpp"
+file(GLOB libcarla_server_sources
     "${libcarla_source_path}/carla/*.h"
+    "${libcarla_source_path}/carla/Buffer.cpp"
+    "${libcarla_source_path}/carla/Exception.cpp"
+    "${libcarla_source_path}/carla/geom/*.cpp"
+    "${libcarla_source_path}/carla/geom/*.h"
     "${libcarla_source_path}/carla/opendrive/*.cpp"
     "${libcarla_source_path}/carla/opendrive/*.h"
-    "${libcarla_source_path}/carla/map/*.cpp"
-    "${libcarla_source_path}/carla/map/*.h"
-    "${libcarla_source_path}/carla/map/element/*.cpp"
-    "${libcarla_source_path}/carla/map/element/*.h"
-    "${libcarla_source_path}/carla/map/element/cephes/*.cpp"
-    "${libcarla_source_path}/carla/map/element/cephes/*.h"
     "${libcarla_source_path}/carla/opendrive/parser/*.cpp"
     "${libcarla_source_path}/carla/opendrive/parser/*.h"
     "${libcarla_source_path}/carla/opendrive/parser/pugixml/*.cpp"
     "${libcarla_source_path}/carla/opendrive/parser/pugixml/*.hpp"
+    "${libcarla_source_path}/carla/road/*.cpp"
+    "${libcarla_source_path}/carla/road/*.h"
+    "${libcarla_source_path}/carla/road/element/*.cpp"
+    "${libcarla_source_path}/carla/road/element/*.h"
+    "${libcarla_source_path}/carla/road/element/cephes/*.cpp"
+    "${libcarla_source_path}/carla/road/element/cephes/*.h"
     "${libcarla_source_path}/carla/rpc/*.cpp"
     "${libcarla_source_path}/carla/rpc/*.h"
-    "${libcarla_source_path}/carla/sensor/*.cpp"
     "${libcarla_source_path}/carla/sensor/*.h"
-    "${libcarla_source_path}/carla/sensor/s11n/*.cpp"
     "${libcarla_source_path}/carla/sensor/s11n/*.h"
-    "${libcarla_source_path}/carla/streaming/*.cpp"
-    "${libcarla_source_path}/carla/streaming/*.h")
+    "${libcarla_source_path}/carla/sensor/s11n/SensorHeaderSerializer.cpp"
+    "${libcarla_source_path}/carla/streaming/*.h"
+    "${libcarla_source_path}/carla/streaming/detail/*.cpp"
+    "${libcarla_source_path}/carla/streaming/detail/*.h"
+    "${libcarla_source_path}/carla/streaming/detail/tcp/*.cpp"
+    "${libcarla_source_path}/carla/streaming/detail/tcp/*.h"
+    "${libcarla_source_path}/carla/streaming/low_level/*.h")
 
 # Create targets for debug and release in the same build type.
 foreach(target carla_server_debug carla_server)

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "carla/Exception.h"
 #include "carla/Time.h"
 
 #include <boost/variant.hpp>
@@ -99,10 +100,12 @@ namespace detail {
     std::unique_lock<std::mutex> lock(_mutex);
     auto &r = _map[&detail::thread_tag];
     r.should_wait = true;
-    if (!_cv.wait_for(lock, timeout.to_chrono(), [&]() { return !r.should_wait; }))
-      throw std::runtime_error("RecurrentSharedFuture.WaitFor: time-out");
-    if (r.value.which() == 1)
-      throw boost::get<SharedException>(r.value);
+    if (!_cv.wait_for(lock, timeout.to_chrono(), [&]() { return !r.should_wait; })) {
+      throw_exception(std::runtime_error("RecurrentSharedFuture.WaitFor: time-out"));
+    }
+    if (r.value.which() == 1) {
+      throw_exception(boost::get<SharedException>(r.value));
+    }
     return boost::get<T>(std::move(r.value));
   }
 

@@ -75,6 +75,12 @@ void ATheNewCarlaGameModeBase::InitGame(
     UE_LOG(LogCarla, Error, TEXT("Missing weather class!"));
   }
 
+  GameInstance->StartServer();
+
+  Episode->WorldObserver = World->SpawnActor<AWorldObserver>();
+  Episode->WorldObserver->SetEpisode(*Episode);
+  Episode->WorldObserver->SetStream(GameInstance->GetServer().OpenMultiStream());
+
   SpawnActorFactories();
 }
 

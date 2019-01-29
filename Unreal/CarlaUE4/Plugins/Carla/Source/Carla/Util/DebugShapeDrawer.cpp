@@ -106,5 +106,5 @@ private:
 void FDebugShapeDrawer::Draw(const carla::rpc::DebugShape &Shape)
 {
   auto Visitor = FShapeVisitor(World, Shape.color, Shape.life_time, Shape.persistent_lines);
-  Shape.primitive.ApplyVisitor(Visitor);
+  boost::apply_visitor(Visitor, Shape.primitive);
 }

@@ -75,7 +75,7 @@ namespace client {
   }
 
   void LaneDetector::Stop() {
-    throw std::runtime_error("LaneDetector::Stop(): not implemented.");
+    throw_exception(std::runtime_error("LaneDetector::Stop(): not implemented."));
   }
 
   SharedPtr<sensor::SensorData> LaneDetector::TickLaneDetector(

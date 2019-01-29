@@ -14,16 +14,14 @@
 #endif // BOOST_ERROR_CODE_HEADER_ONLY
 
 #ifndef BOOST_NO_EXCEPTIONS
-#  define BOOST_NO_EXCEPTIONS
+#  error LibCarla should be compiled with -DBOOST_NO_EXCEPTIONS inside UE4.
 #endif // BOOST_NO_EXCEPTIONS
-
-namespace boost {
-
-  static inline void throw_exception(const std::exception &e) {
-    UE_LOG(LogCarla, Fatal, TEXT("Exception thrown on Boost libraries: %s"), UTF8_TO_TCHAR(e.what()));
-  }
-
-} // namespace boost
+#ifndef ASIO_NO_EXCEPTIONS
+#  error LibCarla should be compiled with -DASIO_NO_EXCEPTIONS inside UE4.
+#endif // ASIO_NO_EXCEPTIONS
+#ifndef LIBCARLA_NO_EXCEPTIONS
+#  error LibCarla should be compiled with -DLIBCARLA_NO_EXCEPTIONS inside UE4.
+#endif // LIBCARLA_NO_EXCEPTIONS
 
 #endif // LIBCARLA_INCLUDED_DISABLE_UE4_MACROS_HEADER
 

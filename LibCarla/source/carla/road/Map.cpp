@@ -17,16 +17,16 @@ namespace road {
     return Waypoint(shared_from_this(), loc);
   }
 
-  Optional<Waypoint> Map::GetWaypoint(const geom::Location &loc) const {
+  boost::optional<Waypoint> Map::GetWaypoint(const geom::Location &loc) const {
     Waypoint w = Waypoint(shared_from_this(), loc);
     auto d = geom::Math::Distance2D(w.ComputeTransform().location, loc);
     const RoadInfoLane *inf = _data.GetRoad(w._road_id)->GetInfo<RoadInfoLane>(w._dist);
 
     if (d < inf->getLane(w._lane_id)->_width * 0.5) {
-      return Optional<Waypoint>(w);
+      return w;
     }
 
-    return Optional<Waypoint>();
+    return {};
   }
 
   std::vector<element::LaneMarking> Map::CalculateCrossedLanes(
