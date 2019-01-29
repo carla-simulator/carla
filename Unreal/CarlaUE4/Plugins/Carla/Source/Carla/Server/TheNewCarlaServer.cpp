@@ -449,8 +449,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     Controller->SetAutopilot(bEnabled);
     return R<void>::Success();
   });
-  
-  Server.BindSync("set_traffic_light_state", [this](cr::Actor Actor, cr::TrafficLightState trafficLightState) {
+
+  Server.BindSync("set_traffic_light_state", [this](
+      cr::Actor Actor,
+      cr::TrafficLightState trafficLightState) -> R<void>
+  {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
     if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
@@ -461,9 +464,13 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("unable to set state: actor is not a traffic light");
     }
     TrafficLight->SetTrafficLightState(static_cast<ETrafficLightState>(trafficLightState));
+    return R<void>::Success();
   });
 
-  Server.BindSync("set_traffic_light_green_time", [this](cr::Actor Actor, float GreenTime) {
+  Server.BindSync("set_traffic_light_green_time", [this](
+    cr::Actor Actor,
+    float GreenTime) -> R<void>
+  {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
     if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
@@ -474,9 +481,13 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("unable to set green time: actor is not a traffic light");
     }
     TrafficLight->SetGreenTime(GreenTime);
+    return R<void>::Success();
   });
 
-  Server.BindSync("set_traffic_light_yellow_time", [this](cr::Actor Actor, float YellowTime) {
+  Server.BindSync("set_traffic_light_yellow_time", [this](
+    cr::Actor Actor,
+    float YellowTime) -> R<void>
+  {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
     if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
@@ -487,9 +498,13 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("unable to set yellow time: actor is not a traffic light");
     }
     TrafficLight->SetYellowTime(YellowTime);
+    return R<void>::Success();
   });
 
-  Server.BindSync("set_traffic_light_red_time", [this](cr::Actor Actor, float RedTime) {
+  Server.BindSync("set_traffic_light_red_time", [this](
+      cr::Actor Actor,
+      float RedTime) -> R<void>
+  {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
     if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
@@ -500,9 +515,13 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("unable to set red time: actor is not a traffic light");
     }
     TrafficLight->SetRedTime(RedTime);
+    return R<void>::Success();
   });
 
-  Server.BindSync("freeze_traffic_light", [this](cr::Actor Actor, bool Freeze) {
+  Server.BindSync("freeze_traffic_light", [this](
+      cr::Actor Actor,
+      bool Freeze) -> R<void>
+  {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
     if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
@@ -513,6 +532,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("unable to alter frozen state: actor is not a traffic light");
     }
     TrafficLight->SetTimeIsFrozen(Freeze);
+    return R<void>::Success();
   });
 
   Server.BindSync("draw_debug_shape", [this](const cr::DebugShape &shape) -> R<void>

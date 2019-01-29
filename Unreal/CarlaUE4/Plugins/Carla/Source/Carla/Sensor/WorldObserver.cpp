@@ -113,7 +113,7 @@ static carla::Buffer AWorldObserver_Serialize(
       View.GetActor()->GetActorTransform(),
       carla::geom::Vector3D{velocity.X, velocity.Y, velocity.Z},
       carla::geom::Vector3D{angularVelocity.X, angularVelocity.Y, angularVelocity.Z},
-      AWorldObserver_GetActorState(actor_view, Registry)
+      AWorldObserver_GetActorState(View, Registry)
     };
     write_data(info);
   }
