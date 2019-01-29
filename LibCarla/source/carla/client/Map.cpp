@@ -31,7 +31,7 @@ namespace client {
       const geom::Location &location,
       bool project_to_road) const {
     DEBUG_ASSERT(_map != nullptr);
-    Optional<road::element::Waypoint> waypoint;
+    boost::optional<road::element::Waypoint> waypoint;
     if (project_to_road) {
       waypoint = _map->GetClosestWaypointOnRoad(location);
     } else {

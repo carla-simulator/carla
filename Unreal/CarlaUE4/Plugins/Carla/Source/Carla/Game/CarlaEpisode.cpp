@@ -7,6 +7,8 @@
 #include "Carla.h"
 #include "Carla/Game/CarlaEpisode.h"
 
+#include "Carla/Sensor/Sensor.h"
+#include "Carla/Util/BoundingBoxCalculator.h"
 #include "Carla/Vehicle/VehicleSpawnPoint.h"
 
 #include "EngineUtils.h"
@@ -36,9 +38,11 @@ UCarlaEpisode::UCarlaEpisode(const FObjectInitializer &ObjectInitializer)
     Id([]() {
       static uint32 COUNTER = 0u;
       return ++COUNTER;
-    }()) {}
+    }()) {
+  ActorDispatcher = CreateDefaultSubobject<UActorDispatcher>(TEXT("ActorDispatcher"));
+}
 
-TArray<FTransform> UCarlaEpisode::GetRecommendedStartTransforms() const
+TArray<FTransform> UCarlaEpisode::GetRecommendedSpawnPoints() const
 {
   TArray<FTransform> SpawnPoints;
   for (TActorIterator<AVehicleSpawnPoint> It(GetWorld()); It; ++It) {
@@ -47,22 +51,29 @@ TArray<FTransform> UCarlaEpisode::GetRecommendedStartTransforms() const
   return SpawnPoints;
 }
 
-const AWorldObserver *UCarlaEpisode::StartWorldObserver(carla::streaming::MultiStream Stream)
+carla::rpc::Actor UCarlaEpisode::SerializeActor(FActorView ActorView) const
 {
-  UE_LOG(LogCarla, Log, TEXT("Starting AWorldObserver sensor"));
-  check(WorldObserver == nullptr);
-  auto *World = GetWorld();
-  check(World != nullptr);
-  WorldObserver = World->SpawnActorDeferred<AWorldObserver>(
-      AWorldObserver::StaticClass(),
-      FTransform(),
-      nullptr,
-      nullptr,
-      ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
-  WorldObserver->SetEpisode(*this);
-  WorldObserver->SetStream(std::move(Stream));
-  UGameplayStatics::FinishSpawningActor(WorldObserver, FTransform());
-  return WorldObserver;
+  carla::rpc::Actor Actor;
+  if (ActorView.IsValid())
+  {
+    Actor = ActorView.GetActorInfo()->SerializedData;
+    auto Parent = ActorView.GetActor()->GetOwner();
+    if (Parent != nullptr)
+    {
+      Actor.parent_id = FindActor(Parent).GetActorId();
+    }
+  } else {
+    UE_LOG(LogCarla, Warning, TEXT("Trying to serialize invalid actor"));
+  }
+  return Actor;
+}
+
+void UCarlaEpisode::AttachActors(AActor *Child, AActor *Parent)
+{
+  check(Child != nullptr);
+  check(Parent != nullptr);
+  Child->AttachToActor(Parent, FAttachmentTransformRules::KeepRelativeTransform);
+  Child->SetOwner(Parent);
 }
 
 void UCarlaEpisode::InitializeAtBeginPlay()
@@ -81,7 +92,7 @@ void UCarlaEpisode::InitializeAtBeginPlay()
     FActorDescription Description;
     Description.Id = TEXT("spectator");
     Description.Class = Spectator->GetClass();
-    ActorDispatcher.GetActorRegistry().Register(*Spectator, Description);
+    ActorDispatcher->RegisterActor(*Spectator, Description);
   }
   else
   {
@@ -95,6 +106,6 @@ void UCarlaEpisode::InitializeAtBeginPlay()
     FActorDescription Description;
     Description.Id = UCarlaEpisode_GetTrafficSignId(Actor->GetTrafficSignState());
     Description.Class = Actor->GetClass();
-    ActorDispatcher.GetActorRegistry().Register(*Actor, Description);
+    ActorDispatcher->RegisterActor(*Actor, Description);
   }
 }
