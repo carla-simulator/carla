@@ -818,7 +818,7 @@ class ModuleWorld(object):
     def rotate(self, img, pos, angle):
         w, h = img.get_size()
         img2 = pygame.Surface((w*2, h*2), pygame.SRCALPHA).convert()
-        img2.set_clip(pygame.Rect(w-pos[0], h-pos[1],w, h ))
+        img2.set_clip(pygame.Rect(w-pos[0], h-pos[1], w, h))
 
         img2.blit(img, (w-pos[0], h-pos[1]))
         return pygame.transform.rotate(img2, angle)
@@ -920,8 +920,6 @@ class ModuleWorld(object):
                 self.hero_actor = None
 
         # Blit surfaces
-        clipping_rect = pygame.Rect(-translation_offset[0], -translation_offset[1],
-                                    self.hud_module.dim[0], self.hud_module.dim[1])
 
         surfaces = ((self.map_surface, (0, 0)),
                     (self.vehicles_surface, (0, 0)),
@@ -935,18 +933,26 @@ class ModuleWorld(object):
 
         rotated_result_surface = self.result_surface
         if self.hero_actor is not None:
-            # self.result_surface.set_clip(clipping_rect)
-            self.result_surface.blits(surfaces)
-            # surface_to_rotate = pygame.Surface((1000, 1000))
-            # surface_to_rotate.blit(self.result_surface, translation_offset)
+            
 
-            rotated_result_surface = self.rotate(self.result_surface,
-                                                 (-translation_offset[0], -translation_offset[1]),
+            hero_surface = pygame.Surface(self.hud_module.dim, pygame.SRCALPHA)
+
+            self.result_surface.blits(surfaces)
+
+            hero_surface.blit(self.result_surface, (translation_offset[0] + hero_surface.get_width()/2,
+                                                    translation_offset[1] + hero_surface.get_height()/2))
+
+            rotated_result_surface = self.rotate( hero_surface,
+                                                 (hero_surface.get_width()/2,hero_surface.get_height()/2),
                                                  angle)
 
             final_offset = rotated_result_surface.get_rect(center=center_offset)
             display.blit(rotated_result_surface, final_offset)
         else:
+
+            clipping_rect = pygame.Rect(-translation_offset[0], -translation_offset[1],
+                                        self.hud_module.dim[0], self.hud_module.dim[1])
+
             self.map_surface.set_clip(clipping_rect)
             self.vehicles_surface.set_clip(clipping_rect)
             self.traffic_light_surface.set_clip(clipping_rect)
