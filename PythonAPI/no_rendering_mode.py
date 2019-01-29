@@ -74,6 +74,7 @@ COLOR_GREY = pygame.Color(127, 127, 127)
 COLOR_LIGHT_GREY = pygame.Color(200, 200, 200)
 COLOR_DARK_GREY = pygame.Color(50, 50, 50)
 COLOR_ORANGE = pygame.Color(255, 127, 0)
+COLOR_BROWN = pygame.Color(139, 69, 19)
 
 # Legend names
 LEGEND_NAME = 'LEGEND'
@@ -247,7 +248,7 @@ class ModuleManager(object):
             module.tick(clock)
 
     def render(self, display):
-        display.fill((0, 0, 0))
+        display.fill(COLOR_BROWN)
         for module in self.modules:
             module.render(display)
 
@@ -819,7 +820,6 @@ class ModuleWorld(object):
         w, h = img.get_size()
         img2 = pygame.Surface((w*2, h*2), pygame.SRCALPHA).convert()
         img2.set_clip(pygame.Rect(w-pos[0], h-pos[1], w, h))
-
         img2.blit(img, (w-pos[0], h-pos[1]))
         return pygame.transform.rotate(img2, angle)
 
@@ -933,24 +933,33 @@ class ModuleWorld(object):
 
         rotated_result_surface = self.result_surface
         if self.hero_actor is not None:
-            
+            hero_surface = pygame.Surface((self.surface_size, self.surface_size), pygame.SRCALPHA)
 
-            hero_surface = pygame.Surface(self.hud_module.dim, pygame.SRCALPHA)
-
+            clipping_rect = pygame.Rect(-translation_offset[0] - hero_surface.get_width() / 2,
+                                        -translation_offset[1] - hero_surface.get_height() / 2, self.hud_module.dim[0], self.hud_module.dim[1])
+            # Apply clipping rect
+            self.map_surface.set_clip(clipping_rect)
+            self.vehicles_surface.set_clip(clipping_rect)
+            self.traffic_light_surface.set_clip(clipping_rect)
+            self.speed_limits_surface.set_clip(clipping_rect)
+            self.walkers_surface.set_clip(clipping_rect)
+            self.vehicle_id_surface.set_clip(clipping_rect)
+            self.hero_actor_surface.set_clip(clipping_rect)
+            self.result_surface.set_clip(clipping_rect)
             self.result_surface.blits(surfaces)
-
+            hero_surface.fill(COLOR_BROWN)
             hero_surface.blit(self.result_surface, (translation_offset[0] + hero_surface.get_width()/2,
                                                     translation_offset[1] + hero_surface.get_height()/2))
 
-            rotated_result_surface = self.rotate( hero_surface,
-                                                 (hero_surface.get_width()/2,hero_surface.get_height()/2),
+            rotated_result_surface = self.rotate(hero_surface,
+                                                 (hero_surface.get_width()/2, hero_surface.get_height()/2),
                                                  angle)
 
             final_offset = rotated_result_surface.get_rect(center=center_offset)
             display.blit(rotated_result_surface, final_offset)
         else:
 
-            clipping_rect = pygame.Rect(-translation_offset[0], -translation_offset[1],
+            clipping_rect = pygame.Rect(-translation_offset[0] - center_offset[0], -translation_offset[1],
                                         self.hud_module.dim[0], self.hud_module.dim[1])
 
             self.map_surface.set_clip(clipping_rect)
@@ -961,9 +970,9 @@ class ModuleWorld(object):
             self.vehicle_id_surface.set_clip(clipping_rect)
             self.hero_actor_surface.set_clip(clipping_rect)
             self.result_surface.set_clip(clipping_rect)
-
             self.result_surface.blits(surfaces)
-            display.blit(rotated_result_surface, translation_offset)
+            display.blit(rotated_result_surface, (translation_offset[0] + center_offset[0],
+                                                  translation_offset[1]))
 
         del vehicles[:]
         del traffic_lights[:]
