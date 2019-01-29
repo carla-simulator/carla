@@ -211,7 +211,7 @@ class SpeedLimit(object):
 
         pygame.draw.circle(self.surface, COLOR_RED, (radius, radius), radius)
         pygame.draw.circle(self.surface, COLOR_WHITE, (radius, radius), int(radius * 0.75))
-        font_surface = self.font.render(self.speed_limit, True, COLOR_DARK_GREY)
+        font_surface = self.font.render(self.speed_limit, False, COLOR_DARK_GREY)
         if hero_actor is not None:
             angle = -hero_actor.get_transform().rotation.yaw - 90.0
             font_surface = map_transform_helper.rotate(font_surface, (radius/2,radius/2), angle)
