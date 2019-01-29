@@ -14,6 +14,7 @@
     - get_angular_velocity: for getting the angular velocity
     - add_impulse: for applying an impulse (in world axis)
   * Added support for gnss_sensor
+  * Fixed autopilot direction not properly initialized that interfered with the initial raycast direction
   * OpenDriveActor has been rewritten using the Waypoint API, this has fixed some bugs
 
 ## CARLA 0.9.2
