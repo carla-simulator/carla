@@ -441,6 +441,46 @@ void UActorBlueprintFunctionLibrary::MakePedestrianDefinitions(
   FillActorDefinitionArray(ParameterArray, Definitions, &MakePedestrianDefinition);
 }
 
+void UActorBlueprintFunctionLibrary::MakeObstacleDetectorDefinitions(
+    const FString &Type,
+    const FString &Id,
+    FActorDefinition &Definition)
+{
+  Definition = MakeGenericSensorDefinition(TEXT("other"), TEXT("obstacle"));
+
+  // Distance.
+  FActorVariation distance;
+  distance.Id = TEXT("distance");
+  distance.Type = EActorAttributeType::Float;
+  distance.RecommendedValues = { TEXT("5.0") };
+  distance.bRestrictToRecommended = false;
+  // HitRadius.
+  FActorVariation hitradius;
+  hitradius.Id = TEXT("hit_radius");
+  hitradius.Type = EActorAttributeType::Float;
+  hitradius.RecommendedValues = { TEXT("0.5") };
+  hitradius.bRestrictToRecommended = false;
+  // Only Dynamics
+  FActorVariation onlydynamics;
+  onlydynamics.Id = TEXT("only_dynamics");
+  onlydynamics.Type = EActorAttributeType::Bool;
+  onlydynamics.RecommendedValues = { TEXT("false") };
+  onlydynamics.bRestrictToRecommended = false;
+  // Debug Line Trace
+  FActorVariation debuglinetrace;
+  debuglinetrace.Id = TEXT("debug_linetrace");
+  debuglinetrace.Type = EActorAttributeType::Bool;
+  debuglinetrace.RecommendedValues = { TEXT("false") };
+  debuglinetrace.bRestrictToRecommended = false;
+
+  Definition.Variations.Append({
+    distance,
+    hitradius,
+    onlydynamics,
+    debuglinetrace
+  });
+
+}
 /// ============================================================================
 /// -- Helpers to retrieve attribute values ------------------------------------
 /// ============================================================================

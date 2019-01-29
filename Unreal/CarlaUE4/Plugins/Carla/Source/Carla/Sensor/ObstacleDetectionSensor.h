@@ -7,7 +7,8 @@
 #pragma once
 
 #include "Carla/Sensor/Sensor.h"
-
+#include "Carla/Actor/ActorDefinition.h"
+#include "Carla/Actor/ActorDescription.h"
 #include "ObstacleDetectionSensor.generated.h"
 
 class UCarlaEpisode;
@@ -18,23 +19,11 @@ class CARLA_API AObstacleDetectionSensor : public ASensor
 {
   GENERATED_BODY()
 
-  float Distance;
-
-  float HitRadius;
-
-  float HeightVar;
-
-  bool bOnlyDynamics = false;
-
-  bool bDebugLineTrace = false;
-
 public:
 
   static FActorDefinition GetSensorDefinition();
 
   AObstacleDetectionSensor(const FObjectInitializer &ObjectInitializer);
-
-  void SetOwner(AActor *NewOwner) override;
 
   void Set(const FActorDescription &Description) override;
 
@@ -53,4 +42,15 @@ private:
 
   UPROPERTY()
   const UCarlaEpisode *Episode = nullptr;
+
+private:
+
+  float Distance;
+
+  float HitRadius;
+
+  bool bOnlyDynamics = false;
+
+  bool bDebugLineTrace = false;
+
 };

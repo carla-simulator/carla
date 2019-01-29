@@ -10,7 +10,6 @@
 #include "carla/Debug.h"
 #include "carla/Memory.h"
 #include "carla/rpc/Actor.h"
-#include "carla/geom/Vector3D.h"
 #include "carla/sensor/RawData.h"
 
 namespace carla {

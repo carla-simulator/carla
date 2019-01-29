@@ -10,7 +10,7 @@
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla/Actor/ActorRegistry.h"
 #include "Carla/Game/CarlaEpisode.h"
-#include "Carla/Game/CarlaStatics.h"
+#include "Carla/Game/CarlaGameInstance.h"
 #include "Carla/Game/TheNewCarlaGameModeBase.h"
 
 AObstacleDetectionSensor::AObstacleDetectionSensor(const FObjectInitializer &ObjectInitializer)
@@ -21,78 +21,29 @@ AObstacleDetectionSensor::AObstacleDetectionSensor(const FObjectInitializer &Obj
 
 FActorDefinition AObstacleDetectionSensor::GetSensorDefinition()
 {
-  auto SensorDefinition = FActorDefinition();
-  FillIdAndTags(SensorDefinition, TEXT("sensor"), TEXT("other"), TEXT("obstacle"));
-  AddRecommendedValuesForSensorRoleNames(SensorDefinition);
-  AddVariationsForSensor(SensorDefinition);
-
-  // Distance.
-  FActorVariation distance;
-  distance.Id = TEXT("distance");
-  distance.Type = EActorAttributeType::Float;
-  distance.RecommendedValues = { TEXT("500.0") };
-  distance.bRestrictToRecommended = false;
-  // HitRadius.
-  FActorVariation hitradius;
-  hitradius.Id = TEXT("hitradius");
-  hitradius.Type = EActorAttributeType::Float;
-  hitradius.RecommendedValues = { TEXT("50.0") };
-  hitradius.bRestrictToRecommended = false;
-  // Height Variation
-  FActorVariation heightvar;
-  heightvar.Id = TEXT("heightvar");
-  heightvar.Type = EActorAttributeType::Float;
-  heightvar.RecommendedValues = { TEXT("100.0") };
-  heightvar.bRestrictToRecommended = false;
-  // Only Dynamics
-  FActorVariation onlydynamics;
-  onlydynamics.Id = TEXT("onlydynamics");
-  onlydynamics.Type = EActorAttributeType::Bool;
-  onlydynamics.RecommendedValues = { TEXT("false") };
-  onlydynamics.bRestrictToRecommended = false;
-  // Debug Line Trace
-  FActorVariation debuglinetrace;
-  debuglinetrace.Id = TEXT("debuglinetrace");
-  debuglinetrace.Type = EActorAttributeType::Bool;
-  debuglinetrace.RecommendedValues = { TEXT("false") };
-  debuglinetrace.bRestrictToRecommended = false;
-
-  SensorDefinition.Variations.Append({
-    distance,
-    hitradius,
-    heightvar,
-    onlydynamics,
-    debuglinetrace
-  });
+  FActorDefinition SensorDefinition = FActorDefinition();
+  UActorBlueprintFunctionLibrary::MakeObstacleDetectorDefinitions(TEXT("other"), TEXT("obstacle"), SensorDefinition);
   return SensorDefinition;
-}
-
-void AObstacleDetectionSensor::SetOwner(AActor *NewOwner)
-{
-  Super::SetOwner(NewOwner);
 }
 
 void AObstacleDetectionSensor::Set(const FActorDescription &Description)
 {
+  //Multiplying numbers for 100 in order to convert from meters to centimeters
   Super::Set(Description);
   Distance = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat(
       "distance",
       Description.Variations,
-      Distance);
+      Distance) * 100;
   HitRadius = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat(
-      "hitradius",
+      "hit_radius",
       Description.Variations,
-      HitRadius);
-  HeightVar = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat(
-      "heightvar",
-      Description.Variations,
-      HeightVar);
+      HitRadius) * 100;
   bOnlyDynamics = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToBool(
-      "onlydynamics",
+      "only_dynamics",
       Description.Variations,
       bOnlyDynamics);
   bDebugLineTrace = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToBool(
-      "debuglinetrace",
+      "debug_linetrace",
       Description.Variations,
       bDebugLineTrace);
 
@@ -102,38 +53,36 @@ void AObstacleDetectionSensor::BeginPlay()
 {
   Super::BeginPlay();
 
-  Episode = UCarlaStatics::GetCurrentEpisode(GetWorld());
-  if (Episode == nullptr)
+  auto *GameMode = Cast<ATheNewCarlaGameModeBase>(GetWorld()->GetAuthGameMode());
+
+  if (GameMode == nullptr)
   {
-    UE_LOG(LogCarla, Error, TEXT("AObstacleDetectionSensor: cannot find a valid CarlaEpisode"));
+    UE_LOG(LogCarla, Error, TEXT("AObstacleDetectionSensor: Game mode not compatible with this sensor"));
     return;
   }
+  Episode = &GameMode->GetCarlaEpisode();
 }
 
 void AObstacleDetectionSensor::Tick(float DeltaSeconds)
 {
   Super::Tick(DeltaSeconds);
 
-  // The vectors should get raised a little bit to avoid hitting the ground.
-  // Temp fix until the collision channels get fixed
-  const FVector &Start = Super::GetOwner()->GetActorLocation() + FVector(0, 0, HeightVar);
-  const FVector &End = Start + (Super::GetOwner()->GetActorForwardVector() * Distance);
+  const FVector &Start = GetActorLocation();
+  const FVector &End = Start + (GetActorForwardVector() * Distance);
+  UWorld* currentWorld = GetWorld();
 
   // Struct in which the result of the scan will be saved
   FHitResult HitOut = FHitResult();
 
-  // Get World Source
-  TObjectIterator<APlayerController> PlayerController;
-
   // Initialization of Query Parameters
-  FCollisionQueryParams TraceParams(FName(TEXT("ObstacleDetection Trace")), true, Super::GetOwner());
+  FCollisionQueryParams TraceParams(FName(TEXT("ObstacleDetection Trace")), true, this);
 
   // If debug mode enabled, we create a tag that will make the sweep be
   // displayed.
   if (bDebugLineTrace)
   {
     const FName TraceTag("ObstacleDebugTrace");
-    PlayerController->GetWorld()->DebugDrawTraceTag = TraceTag;
+    currentWorld->DebugDrawTraceTag = TraceTag;
     TraceParams.TraceTag = TraceTag;
   }
 
@@ -147,7 +96,9 @@ void AObstacleDetectionSensor::Tick(float DeltaSeconds)
   TraceParams.bReturnPhysicalMaterial = false;
 
   // Ignore ourselves
-  TraceParams.AddIgnoredActor(Super::GetOwner());
+  TraceParams.AddIgnoredActor(this);
+  if(Super::GetOwner()!=nullptr)
+    TraceParams.AddIgnoredActor(Super::GetOwner());
 
   bool isHitReturned;
   // Choosing a type of sweep is a workaround until everything get properly
@@ -157,7 +108,7 @@ void AObstacleDetectionSensor::Tick(float DeltaSeconds)
     // If we go only for dynamics, we check the object type AllDynamicObjects
     FCollisionObjectQueryParams TraceChannel = FCollisionObjectQueryParams(
         FCollisionObjectQueryParams::AllDynamicObjects);
-    isHitReturned = PlayerController->GetWorld()->SweepSingleByObjectType(
+    isHitReturned = currentWorld->SweepSingleByObjectType(
         HitOut,
         Start,
         End,
@@ -171,7 +122,7 @@ void AObstacleDetectionSensor::Tick(float DeltaSeconds)
     // Else, if we go for everything, we get everything that interacts with a
     // Pawn
     ECollisionChannel TraceChannel = ECC_WorldStatic;
-    isHitReturned = PlayerController->GetWorld()->SweepSingleByChannel(
+    isHitReturned = currentWorld->SweepSingleByChannel(
         HitOut,
         Start,
         End,
@@ -183,9 +134,8 @@ void AObstacleDetectionSensor::Tick(float DeltaSeconds)
 
   if (isHitReturned)
   {
-    OnObstacleDetectionEvent(Super::GetOwner(), HitOut.Actor.Get(), HitOut.Distance, HitOut);
+    OnObstacleDetectionEvent(this, HitOut.Actor.Get(), HitOut.Distance, HitOut);
   }
-
 }
 
 void AObstacleDetectionSensor::OnObstacleDetectionEvent(

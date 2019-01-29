@@ -166,6 +166,12 @@
 - `longitude`
 - `altitude`
 
+## `carla.ObstacleDetectionSensorEvent(carla.SensorData)`
+
+- `actor`
+- `other_actor`
+- `distance`
+
 ## `carla.VehicleControl`
 
 - `throttle`

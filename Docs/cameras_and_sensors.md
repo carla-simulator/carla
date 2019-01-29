@@ -311,14 +311,19 @@ sensor.other.obstacle
 
 This sensor, when attached to an actor, reports if there is obstacles ahead.
 
+| Blueprint attribute  | Type  | Default | Description |
+| -------------------- | ----  | ------- | ----------- |
+| `distance`           | float | 5       | Distance to throw the trace to |
+| `hit_radius`         | float | 0.5     | Radius of the trace |
+| `only_dynamics`      | bool  | false   | If true, the trace will only look for dynamic objects |
+| `debug_linetrace`    | bool  | false   | If true, the trace will be visible |
+
 This sensor produces
 [`carla.ObstacleDetectionSensorEvent`](python_api.md#carlaobstacledetectionsensoreventdata)
 objects.
 
 | Sensor data attribute  | Type        | Description |
 | ---------------------- | ----------- | ----------- |
-| `distance`             | float       | Distance to throw the trace to |
-| `hitradius`            | float       | Radius of the trace |
-| `heightvar`            | float       | Modified height from which the trace will start and end |
-| `onlydynamics`         | bool        | Flag to indicate that only dynamics will be traced |
-| `debuglinetrace`       | bool        | Flag to indicate whether the linetrace will be shown or not |
+| `actor`                | carla.Actor | Actor that detected the obstacle ("self" actor) |
+| `other_actor`          | carla.Actor | Actor detected as obstacle |
+| `distance    `         | float       | Distance from actor to other_actor |
