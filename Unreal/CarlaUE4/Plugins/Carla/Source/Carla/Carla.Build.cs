@@ -135,7 +135,9 @@ public class Carla : ModuleRules
     PublicIncludePaths.Add(LibCarlaIncludePath);
     PrivateIncludePaths.Add(LibCarlaIncludePath);
 
-    /// @todo This is necessary because rpclib uses exceptions to notify errors.
-    bEnableExceptions = true;
+    PublicDefinitions.Add("ASIO_NO_EXCEPTIONS");
+    PublicDefinitions.Add("BOOST_NO_EXCEPTIONS");
+    PublicDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
+    PublicDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
   }
 }

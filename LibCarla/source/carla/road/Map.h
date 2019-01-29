@@ -8,10 +8,11 @@
 
 #include "carla/Memory.h"
 #include "carla/NonCopyable.h"
-#include "carla/Optional.h"
 #include "carla/road/MapData.h"
 #include "carla/road/element/LaneMarking.h"
 #include "carla/road/element/Waypoint.h"
+
+#include <boost/optional.hpp>
 
 #include <vector>
 
@@ -29,7 +30,7 @@ namespace road {
 
     element::Waypoint GetClosestWaypointOnRoad(const geom::Location &) const;
 
-    Optional<element::Waypoint> GetWaypoint(const geom::Location &) const;
+    boost::optional<element::Waypoint> GetWaypoint(const geom::Location &) const;
 
     std::vector<element::LaneMarking> CalculateCrossedLanes(
         const geom::Location &origin,

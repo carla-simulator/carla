@@ -75,22 +75,21 @@ static carla::Buffer AWorldObserver_Serialize(
   write_data(header);
 
   // Write every actor.
-  for (auto &&pair : Registry) {
-    auto &&actor_view = pair.second;
-    check(actor_view.GetActor() != nullptr);
+  for (auto &&View : Registry) {
+    check(View.IsValid());
     constexpr float TO_METERS = 1e-2;
-    const auto velocity = TO_METERS * actor_view.GetActor()->GetVelocity();
+    const auto velocity = TO_METERS * View.GetActor()->GetVelocity();
     // get the angular velocity
-    const auto RootComponent = Cast<UPrimitiveComponent>(actor_view.GetActor()->GetRootComponent());
+    const auto RootComponent = Cast<UPrimitiveComponent>(View.GetActor()->GetRootComponent());
     FVector angularVelocity { 0.0f, 0.0f, 0.0f };
     if (RootComponent != nullptr)
        angularVelocity = RootComponent->GetPhysicsAngularVelocityInDegrees();
     ActorDynamicState info = {
-      actor_view.GetActorId(),
-      actor_view.GetActor()->GetActorTransform(),
+      View.GetActorId(),
+      View.GetActor()->GetActorTransform(),
       carla::geom::Vector3D{velocity.X, velocity.Y, velocity.Z},
       carla::geom::Vector3D{angularVelocity.X, angularVelocity.Y, angularVelocity.Z},
-      AWorldObserver_GetActorState(actor_view)
+      AWorldObserver_GetActorState(View)
     };
     write_data(info);
   }
@@ -113,11 +112,13 @@ void AWorldObserver::Tick(float DeltaSeconds)
 
   GameTimeStamp += DeltaSeconds;
 
+  auto AsyncStream = Stream.MakeAsyncDataStream(*this);
+
   auto buffer = AWorldObserver_Serialize(
-      Stream.PopBufferFromPool(),
+      AsyncStream.PopBufferFromPool(),
       GameTimeStamp,
       FPlatformTime::Seconds(),
       Episode->GetActorRegistry());
 
-  Stream.Send_GameThread(*this, std::move(buffer));
+  AsyncStream.Send(*this, std::move(buffer));
 }

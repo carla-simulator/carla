@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/Debug.h"
+#include "carla/Exception.h"
 #include "carla/Logging.h"
 
 #include <boost/asio/buffer.hpp>
@@ -72,7 +73,9 @@ namespace carla {
     /// @copydoc Buffer(size_type)
     explicit Buffer(uint64_t size)
       : Buffer([size]() {
-          DEBUG_ASSERT(size <= max_size());
+          if (size > max_size()) {
+            throw_exception(std::invalid_argument("message size too big"));
+          }
           return static_cast<size_type>(size);
         } ()) {}
 
@@ -245,7 +248,9 @@ namespace carla {
 
     /// @copydoc reset(size_type)
     void reset(uint64_t size) {
-      DEBUG_ASSERT(size <= max_size());
+      if (size > max_size()) {
+        throw_exception(std::invalid_argument("message size too big"));
+      }
       reset(static_cast<size_type>(size));
     }
 

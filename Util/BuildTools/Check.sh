@@ -37,6 +37,7 @@ LIBCARLA_RELEASE=false
 LIBCARLA_DEBUG=false
 PYTHON_API_2=false
 PYTHON_API_3=false
+RUN_BENCHMARK=false
 
 OPTS=`getopt -o h --long help,gdb,xml,gtest_args:,all,libcarla-release,libcarla-debug,python-api-2,python-api-3,benchmark -n 'parse-options' -- "$@"`
 
@@ -75,6 +76,7 @@ while true; do
       shift ;;
     --benchmark )
       LIBCARLA_RELEASE=true;
+      RUN_BENCHMARK=true;
       GTEST_ARGS="--gtest_filter=benchmark*";
       shift ;;
     -h | --help )
@@ -103,11 +105,13 @@ if ${LIBCARLA_DEBUG} ; then
     EXTRA_ARGS=
   fi
 
-  log "Running LibCarla unit tests debug."
+  log "Running LibCarla.server unit tests (debug)."
+  echo "Running: ${GDB} libcarla_test_server_debug ${GTEST_ARGS} ${EXTRA_ARGS}"
+  LD_LIBRARY_PATH=${LIBCARLA_INSTALL_SERVER_FOLDER}/lib ${GDB} ${LIBCARLA_INSTALL_SERVER_FOLDER}/test/libcarla_test_server_debug ${GTEST_ARGS} ${EXTRA_ARGS}
 
-  echo "Running: ${GDB} libcarla_test_debug ${GTEST_ARGS} ${EXTRA_ARGS}"
-
-  LD_LIBRARY_PATH=${LIBCARLA_INSTALL_SERVER_FOLDER}/lib ${GDB} ${LIBCARLA_INSTALL_SERVER_FOLDER}/test/libcarla_test_debug ${GTEST_ARGS} ${EXTRA_ARGS}
+  log "Running LibCarla.client unit tests (debug)."
+  echo "Running: ${GDB} libcarla_test_client_debug ${GTEST_ARGS} ${EXTRA_ARGS}"
+  ${GDB} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/test/libcarla_test_client_debug ${GTEST_ARGS} ${EXTRA_ARGS}
 
 fi
 
@@ -119,11 +123,17 @@ if ${LIBCARLA_RELEASE} ; then
     EXTRA_ARGS=
   fi
 
-  log "Running LibCarla unit tests release."
+  log "Running LibCarla.server unit tests (release)."
+  echo "Running: ${GDB} libcarla_test_server_release ${GTEST_ARGS} ${EXTRA_ARGS}"
+  LD_LIBRARY_PATH=${LIBCARLA_INSTALL_SERVER_FOLDER}/lib ${GDB} ${LIBCARLA_INSTALL_SERVER_FOLDER}/test/libcarla_test_server_release ${GTEST_ARGS} ${EXTRA_ARGS}
 
-  echo "Running: ${GDB} libcarla_test_release ${GTEST_ARGS} ${EXTRA_ARGS}"
+  if ! { ${RUN_BENCHMARK} ; }; then
 
-  LD_LIBRARY_PATH=${LIBCARLA_INSTALL_SERVER_FOLDER}/lib ${GDB} ${LIBCARLA_INSTALL_SERVER_FOLDER}/test/libcarla_test_release ${GTEST_ARGS} ${EXTRA_ARGS}
+    log "Running LibCarla.client unit tests (release)."
+    echo "Running: ${GDB} libcarla_test_client_debug ${GTEST_ARGS} ${EXTRA_ARGS}"
+    ${GDB} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/test/libcarla_test_client_release ${GTEST_ARGS} ${EXTRA_ARGS}
+
+  fi
 
 fi
 
