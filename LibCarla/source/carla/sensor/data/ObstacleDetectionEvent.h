@@ -8,9 +8,9 @@
 
 #include "carla/Debug.h"
 #include "carla/client/detail/ActorVariant.h"
-#include "carla/geom/Vector3D.h"
 #include "carla/sensor/SensorData.h"
 #include "carla/sensor/s11n/ObstacleDetectionEventSerializer.h"
+
 
 namespace carla {
 namespace sensor {
@@ -27,9 +27,10 @@ namespace data {
 
     explicit ObstacleDetectionEvent(const RawData &data)
       : Super(data),
-        _self_actor(Serializer::DeserializeRawData(data).self_actor),
-        _other_actor(Serializer::DeserializeRawData(data).other_actor),
-        _distance(Serializer::DeserializeRawData(data).distance) {}
+        _deserialized_data(Serializer::DeserializeRawData(data)),
+        _self_actor(_deserialized_data.self_actor),
+        _other_actor(_deserialized_data.other_actor),
+        _distance(_deserialized_data.distance) {}
 
   public:
 
@@ -50,11 +51,14 @@ namespace data {
 
   private:
 
+    Serializer::Data _deserialized_data;
+
     client::detail::ActorVariant _self_actor;
 
     client::detail::ActorVariant _other_actor;
 
     float _distance;
+
   };
 
 } // namespace data
