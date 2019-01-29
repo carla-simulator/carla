@@ -12,6 +12,8 @@
 Welcome to CARLA No Rendering Mode Visualizer
     I           : Toggle HUD
     H           : Hero Mode
+    Mouse Wheel : Zoom In / Zoom Out
+    Mouse Drag  : Move Map in No Hero Mode
     ESC         : quit
 """
 
@@ -407,15 +409,18 @@ class ModuleHUD (object):
     def add_info(self, module_name, info):
         self._info_text[module_name] = info
 
-    def renderActorId(self, vehicle_id_surface, list_actors, transform_helper, translation_offset, angle):
+    def render_actors_ids(self, vehicle_id_surface, list_actors, transform_helper, translation_offset, hero_actor):
+        vehicle_id_surface.fill(COLOR_BLACK)
         if self._show_info:
-            vehicle_id_surface.fill(COLOR_BLACK)
             vehicle_id_surface.set_alpha(150)
-
             v_offset = 4
             for actor in list_actors:
                 location = actor.get_location()
                 x, y = transform_helper.convert_world_to_screen_point((location.x, location.y - v_offset))
+
+                angle = 0
+                if hero_actor is not None:
+                    angle = -hero_actor.get_transform().rotation.yaw - 90
 
                 color_surface = pygame.Surface((len(str(actor.id)) * 8, 14))
                 color_surface.fill(COLOR_BLACK)
@@ -823,6 +828,16 @@ class ModuleWorld(object):
         img2.blit(img, (w-pos[0], h-pos[1]))
         return pygame.transform.rotate(img2, angle)
 
+    def clip_surfaces(self, clipping_rect):
+        self.map_surface.set_clip(clipping_rect)
+        self.vehicles_surface.set_clip(clipping_rect)
+        self.traffic_light_surface.set_clip(clipping_rect)
+        self.speed_limits_surface.set_clip(clipping_rect)
+        self.walkers_surface.set_clip(clipping_rect)
+        self.vehicle_id_surface.set_clip(clipping_rect)
+        self.hero_actor_surface.set_clip(clipping_rect)
+        self.result_surface.set_clip(clipping_rect)
+
     def render(self, display):
 
         if not self.map_rendered:
@@ -929,24 +944,19 @@ class ModuleWorld(object):
                     (self.vehicle_id_surface, (0, 0)),
                     (self.hero_actor_surface, (0, 0))
                     )
-        self.hud_module.renderActorId(self.vehicle_id_surface, vehicles, self.transform_helper, (0, 0), angle)
+        self.hud_module.render_actors_ids(self.vehicle_id_surface, vehicles,
+                                          self.transform_helper, (0, 0), self.hero_actor)
 
         rotated_result_surface = self.result_surface
         if self.hero_actor is not None:
             hero_surface = pygame.Surface((self.surface_size, self.surface_size), pygame.SRCALPHA)
 
+            # Apply clipping rect
             clipping_rect = pygame.Rect(-translation_offset[0] - hero_surface.get_width() / 2,
                                         -translation_offset[1] - hero_surface.get_height() / 2, self.hud_module.dim[0], self.hud_module.dim[1])
-            # Apply clipping rect
-            self.map_surface.set_clip(clipping_rect)
-            self.vehicles_surface.set_clip(clipping_rect)
-            self.traffic_light_surface.set_clip(clipping_rect)
-            self.speed_limits_surface.set_clip(clipping_rect)
-            self.walkers_surface.set_clip(clipping_rect)
-            self.vehicle_id_surface.set_clip(clipping_rect)
-            self.hero_actor_surface.set_clip(clipping_rect)
-            self.result_surface.set_clip(clipping_rect)
+            self.clip_surfaces(clipping_rect)
             self.result_surface.blits(surfaces)
+
             hero_surface.fill(COLOR_BROWN)
             hero_surface.blit(self.result_surface, (translation_offset[0] + hero_surface.get_width()/2,
                                                     translation_offset[1] + hero_surface.get_height()/2))
@@ -958,19 +968,12 @@ class ModuleWorld(object):
             final_offset = rotated_result_surface.get_rect(center=center_offset)
             display.blit(rotated_result_surface, final_offset)
         else:
-
+            # Apply clipping rect
             clipping_rect = pygame.Rect(-translation_offset[0] - center_offset[0], -translation_offset[1],
                                         self.hud_module.dim[0], self.hud_module.dim[1])
-
-            self.map_surface.set_clip(clipping_rect)
-            self.vehicles_surface.set_clip(clipping_rect)
-            self.traffic_light_surface.set_clip(clipping_rect)
-            self.speed_limits_surface.set_clip(clipping_rect)
-            self.walkers_surface.set_clip(clipping_rect)
-            self.vehicle_id_surface.set_clip(clipping_rect)
-            self.hero_actor_surface.set_clip(clipping_rect)
-            self.result_surface.set_clip(clipping_rect)
+            self.clip_surfaces(clipping_rect)
             self.result_surface.blits(surfaces)
+
             display.blit(rotated_result_surface, (translation_offset[0] + center_offset[0],
                                                   translation_offset[1]))
 
