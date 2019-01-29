@@ -10,7 +10,7 @@
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla/Actor/ActorRegistry.h"
 #include "Carla/Game/CarlaEpisode.h"
-#include "Carla/Game/CarlaGameInstance.h"
+#include "Carla/Game/CarlaStatics.h"
 #include "Carla/Game/TheNewCarlaGameModeBase.h"
 
 AObstacleDetectionSensor::AObstacleDetectionSensor(const FObjectInitializer &ObjectInitializer)
@@ -102,19 +102,10 @@ void AObstacleDetectionSensor::BeginPlay()
 {
   Super::BeginPlay();
 
-  auto *GameMode = Cast<ATheNewCarlaGameModeBase>(GetWorld()->GetAuthGameMode());
-
-  if (GameMode == nullptr)
+  Episode = UCarlaStatics::GetCurrentEpisode(GetWorld());
+  if (Episode == nullptr)
   {
-    UE_LOG(LogCarla, Error, TEXT("AObstacleDetectionSensor: Game mode not compatible with this sensor"));
-    return;
-  }
-  Episode = &GameMode->GetCarlaEpisode();
-
-  GameInstance = Cast<UCarlaGameInstance>(GetGameInstance());
-  if (GameMode == nullptr)
-  {
-    UE_LOG(LogCarla, Error, TEXT("AObstacleDetectionSensor: Game instance not compatible with this sensor"));
+    UE_LOG(LogCarla, Error, TEXT("AObstacleDetectionSensor: cannot find a valid CarlaEpisode"));
     return;
   }
 }
@@ -203,13 +194,11 @@ void AObstacleDetectionSensor::OnObstacleDetectionEvent(
     float HitDistance,
     const FHitResult &Hit)
 {
-  if ((Episode != nullptr) && (GameInstance != nullptr) && (Actor != nullptr) && (OtherActor != nullptr))
+  if ((Episode != nullptr) && (Actor != nullptr) && (OtherActor != nullptr))
   {
-    const auto &Registry = Episode->GetActorRegistry();
-    const auto &Server = GameInstance->GetServer();
-    GetDataStream().Send_GameThread(*this,
-        Server.SerializeActor(Registry.FindOrFake(Actor)),
-        Server.SerializeActor(Registry.FindOrFake(OtherActor)),
+    GetDataStream(*this).Send(*this,
+        Episode->SerializeActor(Episode->FindOrFakeActor(Actor)),
+        Episode->SerializeActor(Episode->FindOrFakeActor(OtherActor)),
         HitRadius);
   }
 }
