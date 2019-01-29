@@ -11,7 +11,6 @@
 #include "ObstacleDetectionSensor.generated.h"
 
 class UCarlaEpisode;
-class UCarlaGameInstance;
 
 /// A sensor to register collisions.
 UCLASS()
@@ -54,8 +53,4 @@ private:
 
   UPROPERTY()
   const UCarlaEpisode *Episode = nullptr;
-
-  UPROPERTY()
-  const UCarlaGameInstance *GameInstance = nullptr;
-
 };
