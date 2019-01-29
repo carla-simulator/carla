@@ -122,7 +122,7 @@ private:
 };
 
 static size_t get_max_concurrency() {
-  size_t concurrency = 0.75 * std::thread::hardware_concurrency();
+  size_t concurrency = std::thread::hardware_concurrency() / 2u;
   return std::max(2ul, concurrency);
 }
 
@@ -154,9 +154,9 @@ TEST(benchmark_streaming, image_200x200_mt) {
 }
 
 TEST(benchmark_streaming, image_800x600_mt) {
-  benchmark_image(800u * 600u, get_max_concurrency(), 0.8);
+  benchmark_image(800u * 600u, get_max_concurrency(), 0.9);
 }
 
 TEST(benchmark_streaming, image_1920x1080_mt) {
-  benchmark_image(1920u * 1080u, get_max_concurrency(), 0.7);
+  benchmark_image(1920u * 1080u, get_max_concurrency(), 0.9);
 }

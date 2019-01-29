@@ -22,7 +22,7 @@ pushd ${CARLA_BUILD_FOLDER} >/dev/null
 # -- Get and compile libc++ ----------------------------------------------------
 # ==============================================================================
 
-LLVM_BASENAME=llvm-6.0
+LLVM_BASENAME=llvm-6.0-ex
 
 LLVM_INCLUDE=${PWD}/${LLVM_BASENAME}-install/include/c++/v1
 LLVM_LIBPATH=${PWD}/${LLVM_BASENAME}-install/lib
@@ -45,7 +45,9 @@ else
   pushd ${LLVM_BASENAME}-build >/dev/null
 
   cmake -G "Ninja" \
-      -DLIBCXX_ENABLE_EXPERIMENTAL_LIBRARY=OFF -DLIBCXX_INSTALL_EXPERIMENTAL_LIBRARY=OFF \
+      -DLIBCXX_ENABLE_EXPERIMENTAL_LIBRARY=OFF \
+      -DLIBCXX_INSTALL_EXPERIMENTAL_LIBRARY=OFF \
+      -DLLVM_ENABLE_EH=OFF \
       -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="../${LLVM_BASENAME}-install" \
       ../${LLVM_BASENAME}-source
 
@@ -56,10 +58,6 @@ else
   ninja install-libcxxabi
 
   popd >/dev/null
-
-  # Workaround, it seems LLVM 5.0 does not install these files.
-  # cp -v ${LLVM_BASENAME}-build/include/c++/v1/cxxabi.h ${LLVM_INCLUDE}
-  # cp -v ${LLVM_BASENAME}-build/include/c++/v1/__cxxabi_config.h ${LLVM_INCLUDE}
 
   rm -Rf ${LLVM_BASENAME}-source ${LLVM_BASENAME}-build
 
@@ -155,7 +153,7 @@ unset BOOST_BASENAME
 # -- Get rpclib and compile it with libc++ and libstdc++ -----------------------
 # ==============================================================================
 
-RPCLIB_BASENAME=rpclib-d1146b7
+RPCLIB_BASENAME=rpclib-d1146b7-ex
 
 RPCLIB_LIBCXX_INCLUDE=${PWD}/${RPCLIB_BASENAME}-libcxx-install/include
 RPCLIB_LIBCXX_LIBPATH=${PWD}/${RPCLIB_BASENAME}-libcxx-install/lib
@@ -188,7 +186,7 @@ else
   pushd ${RPCLIB_BASENAME}-libcxx-build >/dev/null
 
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH}" \
+      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS -DASIO_NO_EXCEPTIONS" \
       -DCMAKE_INSTALL_PREFIX="../${RPCLIB_BASENAME}-libcxx-install" \
       ../${RPCLIB_BASENAME}-source
 
@@ -225,29 +223,34 @@ unset RPCLIB_BASENAME
 # -- Get GTest and compile it with libc++ --------------------------------------
 # ==============================================================================
 
-GTEST_BASENAME=googletest-1.8.0
+GTEST_BASENAME=googletest-1.8.0-ex
 
-GTEST_INCLUDE=${PWD}/${GTEST_BASENAME}-install/include
-GTEST_LIBPATH=${PWD}/${GTEST_BASENAME}-install/lib
+GTEST_LIBCXX_INCLUDE=${PWD}/${GTEST_BASENAME}-libcxx-install/include
+GTEST_LIBCXX_LIBPATH=${PWD}/${GTEST_BASENAME}-libcxx-install/lib
+GTEST_LIBSTDCXX_INCLUDE=${PWD}/${GTEST_BASENAME}-libstdcxx-install/include
+GTEST_LIBSTDCXX_LIBPATH=${PWD}/${GTEST_BASENAME}-libstdcxx-install/lib
 
-if [[ -d "${GTEST_BASENAME}-install" ]] ; then
+if [[ -d "${GTEST_BASENAME}-libcxx-install" && -d "${GTEST_BASENAME}-libstdcxx-install" ]] ; then
   log "${GTEST_BASENAME} already installed."
 else
-  rm -Rf ${GTEST_BASENAME}-source ${GTEST_BASENAME}-build
+  rm -Rf \
+      ${GTEST_BASENAME}-source \
+      ${GTEST_BASENAME}-libcxx-build ${GTEST_BASENAME}-libstdcxx-build \
+      ${GTEST_BASENAME}-libcxx-install ${GTEST_BASENAME}-libstdcxx-install
 
   log "Retrieving Google Test."
 
   git clone --depth=1 -b release-1.8.0 https://github.com/google/googletest.git ${GTEST_BASENAME}-source
 
-  log "Building Google Test."
+  log "Building Google Test with libc++."
 
-  mkdir -p ${GTEST_BASENAME}-build
+  mkdir -p ${GTEST_BASENAME}-libcxx-build
 
-  pushd ${GTEST_BASENAME}-build >/dev/null
+  pushd ${GTEST_BASENAME}-libcxx-build >/dev/null
 
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH}" \
-      -DCMAKE_INSTALL_PREFIX="../${GTEST_BASENAME}-install" \
+      -DCMAKE_CXX_FLAGS="-std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS -fno-exceptions" \
+      -DCMAKE_INSTALL_PREFIX="../${GTEST_BASENAME}-libcxx-install" \
       ../${GTEST_BASENAME}-source
 
   ninja
@@ -256,9 +259,28 @@ else
 
   popd >/dev/null
 
-  rm -Rf ${GTEST_BASENAME}-source ${GTEST_BASENAME}-build
+  log "Building Google Test with libstdc++."
+
+  mkdir -p ${GTEST_BASENAME}-libstdcxx-build
+
+  pushd ${GTEST_BASENAME}-libstdcxx-build >/dev/null
+
+  cmake -G "Ninja" \
+      -DCMAKE_CXX_FLAGS="-std=c++14" \
+      -DCMAKE_INSTALL_PREFIX="../${GTEST_BASENAME}-libstdcxx-install" \
+      ../${GTEST_BASENAME}-source
+
+  ninja
+
+  ninja install
+
+  popd >/dev/null
+
+  rm -Rf ${GTEST_BASENAME}-source ${GTEST_BASENAME}-libcxx-build ${GTEST_BASENAME}-libstdcxx-build
 
 fi
+
+unset GTEST_BASENAME
 
 # ==============================================================================
 # -- Generate CMake toolchains and config --------------------------------------
@@ -276,8 +298,6 @@ set(CMAKE_CXX_COMPILER ${CXX})
 
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -std=c++14 -pthread -fPIC" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra" CACHE STRING "" FORCE)
-# See https://bugs.llvm.org/show_bug.cgi?id=21629
-# set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wno-missing-braces" CACHE STRING "" FORCE)
 
 # @todo These flags need to be compatible with setup.py compilation.
 set(CMAKE_CXX_FLAGS_RELEASE_CLIENT "\${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -g -fwrapv -O2 -Wall -Wstrict-prototypes -fno-strict-aliasing -Wdate-time -D_FORTIFY_SOURCE=2 -g -fstack-protector-strong -Wformat -Werror=format-security -fPIC -std=c++14 -Wno-missing-braces -DBOOST_ERROR_CODE_HEADER_ONLY -DLIBCARLA_ENABLE_LIFETIME_PROFILER -DLIBCARLA_WITH_PYTHON_SUPPORT" CACHE STRING "" FORCE)
@@ -292,6 +312,7 @@ cat >>${LIBCPP_TOOLCHAIN_FILE}.gen <<EOL
 
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -stdlib=libc++" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -I${LLVM_INCLUDE}" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -fno-exceptions" CACHE STRING "" FORCE)
 set(CMAKE_CXX_LINK_FLAGS "\${CMAKE_CXX_LINK_FLAGS} -L${LLVM_LIBPATH}" CACHE STRING "" FORCE)
 set(CMAKE_CXX_LINK_FLAGS "\${CMAKE_CXX_LINK_FLAGS} -lc++ -lc++abi" CACHE STRING "" FORCE)
 EOL
@@ -305,6 +326,13 @@ set(CARLA_VERSION $(get_carla_version))
 
 add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY)
 
+if (CMAKE_BUILD_TYPE STREQUAL "Server")
+  add_definitions(-DASIO_NO_EXCEPTIONS)
+  add_definitions(-DBOOST_NO_EXCEPTIONS)
+  add_definitions(-DLIBCARLA_NO_EXCEPTIONS)
+  add_definitions(-DPUGIXML_NO_EXCEPTIONS)
+endif ()
+
 # Uncomment to force support for an specific image format (require their
 # respective libraries installed).
 # add_definitions(-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT)
@@ -317,14 +345,16 @@ if (CMAKE_BUILD_TYPE STREQUAL "Server")
   # Here libraries linking libc++.
   set(LLVM_INCLUDE_PATH "${LLVM_INCLUDE}")
   set(LLVM_LIB_PATH "${LLVM_LIBPATH}")
-  set(GTEST_INCLUDE_PATH "${GTEST_INCLUDE}")
-  set(GTEST_LIB_PATH "${GTEST_LIBPATH}")
   set(RPCLIB_INCLUDE_PATH "${RPCLIB_LIBCXX_INCLUDE}")
   set(RPCLIB_LIB_PATH "${RPCLIB_LIBCXX_LIBPATH}")
+  set(GTEST_INCLUDE_PATH "${GTEST_LIBCXX_INCLUDE}")
+  set(GTEST_LIB_PATH "${GTEST_LIBCXX_LIBPATH}")
 elseif (CMAKE_BUILD_TYPE STREQUAL "Client")
   # Here libraries linking libstdc++.
   set(RPCLIB_INCLUDE_PATH "${RPCLIB_LIBSTDCXX_INCLUDE}")
   set(RPCLIB_LIB_PATH "${RPCLIB_LIBSTDCXX_LIBPATH}")
+  set(GTEST_INCLUDE_PATH "${GTEST_LIBSTDCXX_INCLUDE}")
+  set(GTEST_LIB_PATH "${GTEST_LIBSTDCXX_LIBPATH}")
   set(BOOST_LIB_PATH "${BOOST_LIBPATH}")
 endif ()
 

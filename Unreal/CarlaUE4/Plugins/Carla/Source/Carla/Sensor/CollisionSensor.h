@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "Carla/Actor/ActorDefinition.h"
 #include "Carla/Sensor/Sensor.h"
 
 #include "CollisionSensor.generated.h"
@@ -40,7 +41,4 @@ private:
 
   UPROPERTY()
   const UCarlaEpisode *Episode = nullptr;
-
-  UPROPERTY()
-  const UCarlaGameInstance *GameInstance = nullptr;
 };

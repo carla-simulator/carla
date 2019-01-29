@@ -87,26 +87,31 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor)
 
   // First we create the message header (needs to be created in the
   // game-thread).
-  auto Header = Sensor.GetDataStream().MakeHeader(Sensor);
+  auto AsyncStream = Sensor.GetDataStream(Sensor);
+
   // We need a shared ptr here because UE4 macros do not move the arguments -_-
-  auto HeaderPtr = MakeShared<decltype(Header)>(std::move(Header));
+  auto StreamPtr = std::make_shared<decltype(AsyncStream)>(std::move(AsyncStream));
 
   // Then we enqueue commands in the render-thread that will write the image
   // buffer to the data stream.
 
-  auto WriteAndSend = [&Sensor, Hdr=std::move(HeaderPtr)](auto &InRHICmdList) mutable {
-    auto &Stream = Sensor.GetDataStream();
-    auto Buffer = Stream.PopBufferFromPool();
-    WritePixelsToBuffer(
-        *Sensor.CaptureRenderTarget,
-        Buffer,
-        carla::sensor::SensorRegistry::get<TSensor *>::type::header_offset,
-        InRHICmdList);
-    Stream.Send_Async(std::move(*Hdr), Sensor, std::move(Buffer));
+  auto WriteAndSend = [&Sensor, Stream=std::move(StreamPtr)](auto &InRHICmdList) mutable
+  {
+    /// @todo Can we make sure the sensor is not going to be destroyed?
+    if (!Sensor.IsPendingKill())
+    {
+      auto Buffer = Stream->PopBufferFromPool();
+      WritePixelsToBuffer(
+          *Sensor.CaptureRenderTarget,
+          Buffer,
+          carla::sensor::SensorRegistry::get<TSensor *>::type::header_offset,
+          InRHICmdList);
+      Stream->Send(Sensor, std::move(Buffer));
+    }
   };
 
   ENQUEUE_UNIQUE_RENDER_COMMAND_ONEPARAMETER(
-      FWritePixels_Vulkan,
+      FWritePixels_SendPixelsInRenderThread,
       std::function<void(FRHICommandListImmediate &)>, WriteAndSendFunction, std::move(WriteAndSend),
   {
     WriteAndSendFunction(RHICmdList);

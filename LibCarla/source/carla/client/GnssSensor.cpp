@@ -71,7 +71,7 @@ namespace client {
     }
 
     if (GetParent() == nullptr) {
-      throw std::runtime_error(GetDisplayId() + ": not attached to vehicle");
+      throw_exception(std::runtime_error(GetDisplayId() + ": not attached to vehicle"));
       return;
     }
 
