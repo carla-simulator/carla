@@ -27,10 +27,14 @@ namespace data {
 
     explicit ObstacleDetectionEvent(const RawData &data)
       : Super(data),
-        _deserialized_data(Serializer::DeserializeRawData(data)),
-        _self_actor(_deserialized_data.self_actor),
-        _other_actor(_deserialized_data.other_actor),
-        _distance(_deserialized_data.distance) {}
+        //_deserialized_data(),
+        _self_actor(nullptr),
+        _other_actor(nullptr) {
+      auto ddata = Serializer::DeserializeRawData(data);
+      _self_actor = ddata.self_actor;
+      _other_actor = ddata.other_actor;
+      _distance = ddata.distance;
+    }
 
   public:
 
@@ -50,8 +54,6 @@ namespace data {
     }
 
   private:
-
-    Serializer::Data _deserialized_data;
 
     client::detail::ActorVariant _self_actor;
 
