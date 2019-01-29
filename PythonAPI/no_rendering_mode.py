@@ -818,6 +818,8 @@ class ModuleWorld(object):
     def rotate(self, img, pos, angle):
         w, h = img.get_size()
         img2 = pygame.Surface((w*2, h*2), pygame.SRCALPHA).convert()
+        img2.set_clip(pygame.Rect(w-pos[0], h-pos[1],w, h ))
+
         img2.blit(img, (w-pos[0], h-pos[1]))
         return pygame.transform.rotate(img2, angle)
 
@@ -1011,10 +1013,10 @@ class ModuleInput(object):
                 if event.button == 5:
                     self.wheel_offset[0] -= self.wheel_amount
                     self.wheel_offset[1] -= self.wheel_amount
-                    if self.wheel_offset[0] <= 1.0:
-                        self.wheel_offset[0] = 1.0
-                    if self.wheel_offset[1] <= 1.0:
-                        self.wheel_offset[1] = 1.0
+                    if self.wheel_offset[0] <= 0.1:
+                        self.wheel_offset[0] = 0.1
+                    if self.wheel_offset[1] <= 0.1:
+                        self.wheel_offset[1] = 0.1
 
     def _parse_keys(self):
         keys = pygame.key.get_pressed()
