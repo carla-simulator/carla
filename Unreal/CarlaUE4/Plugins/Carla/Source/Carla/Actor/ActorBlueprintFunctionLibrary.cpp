@@ -447,7 +447,7 @@ void UActorBlueprintFunctionLibrary::MakeObstacleDetectorDefinitions(
     FActorDefinition &Definition)
 {
   Definition = MakeGenericSensorDefinition(TEXT("other"), TEXT("obstacle"));
-
+  AddVariationsForSensor(Definition);
   // Distance.
   FActorVariation distance;
   distance.Id = TEXT("distance");
