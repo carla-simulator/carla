@@ -1,5 +1,7 @@
 ## Latest changes
 
+  * Updated the Python API to enable the retrieval of a vehicle's speed limit and impacting traffic light.
+  * Added functionality to the Python API to the allow control over traffic lights.
   * Upgraded to Unreal Engine 4.21
   * Upgraded Boost to 1.69.0
   * Added point transformation functionality for LibCarla and PythonAPI
