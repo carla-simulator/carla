@@ -25,7 +25,7 @@ class CARLA_API AObstacleDetectionSensor : public ASensor
 
   float HeightVar;
 
-  bool bOnlyVehicles = false;
+  bool bOnlyDynamics = false;
 
   bool bDebugLineTrace = false;
 

@@ -10,6 +10,7 @@
   * Added support for spawning and controlling walkers (pedestrians)
   * Renamed vehicle.get_vehicle_control() to vehicle.get_control() to be consistent with walkers
   * Remove crash reporter from packaged build
+  * Added sensor for detecting obstacles
   * Added a few methods to manage an actor:
     - set_velocity: for setting the linear velocity
     - set_angular_velocity: for setting the angular velocity

@@ -45,11 +45,11 @@ FActorDefinition AObstacleDetectionSensor::GetSensorDefinition()
   heightvar.RecommendedValues = { TEXT("100.0") };
   heightvar.bRestrictToRecommended = false;
   // Only Dynamics
-  FActorVariation onlyvehicles;
-  onlyvehicles.Id = TEXT("onlyvehicles");
-  onlyvehicles.Type = EActorAttributeType::Bool;
-  onlyvehicles.RecommendedValues = { TEXT("false") };
-  onlyvehicles.bRestrictToRecommended = false;
+  FActorVariation onlydynamics;
+  onlydynamics.Id = TEXT("onlydynamics");
+  onlydynamics.Type = EActorAttributeType::Bool;
+  onlydynamics.RecommendedValues = { TEXT("false") };
+  onlydynamics.bRestrictToRecommended = false;
   // Debug Line Trace
   FActorVariation debuglinetrace;
   debuglinetrace.Id = TEXT("debuglinetrace");
@@ -61,7 +61,7 @@ FActorDefinition AObstacleDetectionSensor::GetSensorDefinition()
     distance,
     hitradius,
     heightvar,
-    onlyvehicles,
+    onlydynamics,
     debuglinetrace
   });
   return SensorDefinition;
@@ -87,10 +87,10 @@ void AObstacleDetectionSensor::Set(const FActorDescription &Description)
       "heightvar",
       Description.Variations,
       HeightVar);
-  bOnlyVehicles = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToBool(
-      "onlyvehicles",
+  bOnlyDynamics = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToBool(
+      "onlydynamics",
       Description.Variations,
-      bOnlyVehicles);
+      bOnlyDynamics);
   bDebugLineTrace = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToBool(
       "debuglinetrace",
       Description.Variations,
@@ -159,10 +159,13 @@ void AObstacleDetectionSensor::Tick(float DeltaSeconds)
   TraceParams.AddIgnoredActor(Super::GetOwner());
 
   bool isHitReturned;
-  if (bOnlyVehicles)
+  // Choosing a type of sweep is a workaround until everything get properly
+  // organized under correct collision channels and object types.
+  if (bOnlyDynamics)
   {
-    // If we go only for vehicles, we check the object type ECC_Vehicle
-    FCollisionObjectQueryParams TraceChannel = FCollisionObjectQueryParams(ECC_Vehicle);
+    // If we go only for dynamics, we check the object type ECC_Vehicle
+    FCollisionObjectQueryParams TraceChannel = FCollisionObjectQueryParams(
+        FCollisionObjectQueryParams::AllDynamicObjects);
     isHitReturned = PlayerController->GetWorld()->SweepSingleByObjectType(
         HitOut,
         Start,
