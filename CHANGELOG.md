@@ -23,6 +23,7 @@
   * Fixed crash when an actor was destroyed but not de-registered, e.g. falling out of world bounds
   * LibCarla server pipeline now compiles with exceptions disabled for better performance and compatibility with UE4
   * OpenDriveActor has been rewritten using the Waypoint API, this has fixed some bugs
+  * Updated BasicAgent to allow setting target_speed and handle US-style traffic lights properly
 
 ## CARLA 0.9.2
 
