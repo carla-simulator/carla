@@ -41,6 +41,10 @@ Use the following commands:
         modified since the precompiled header" errors. Beware, recompilation
         takes a long time!
 
+    export-maps:
+        Export maps from /Game/Carla/ExportedMaps to the ExportedMaps folder
+        at the root of the Carla project.
+
 
 There are also some lower level commands for building individual modules helpful
 for developers:

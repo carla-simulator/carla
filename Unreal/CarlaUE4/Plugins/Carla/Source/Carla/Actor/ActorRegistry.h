@@ -10,6 +10,10 @@
 
 #include "Containers/Map.h"
 
+#include <compiler/disable-ue4-macros.h>
+#include <carla/Iterator.h>
+#include <compiler/enable-ue4-macros.h>
+
 #include <unordered_map>
 
 /// A registry of all the Carla actors.
@@ -72,12 +76,6 @@ public:
     return PtrToId != nullptr ? Find(*PtrToId) : FActorView();
   }
 
-  AActor *FindActor(IdType Id) const
-  {
-    auto View = Find(Id);
-    return View.IsValid() ? View.GetActor() : nullptr;
-  }
-
   /// If the actor is not found in the registry, create a fake actor view. The
   /// returned FActorView has some information about the @a Actor but will have
   /// an invalid id.
@@ -90,23 +88,22 @@ public:
   /// @{
 public:
 
-  using key_type = DatabaseType::key_type;
-  using mapped_type = DatabaseType::mapped_type;
-  using value_type = DatabaseType::value_type;
-  using const_iterator = DatabaseType::const_iterator;
+  using value_type = DatabaseType::mapped_type;
 
-  const_iterator begin() const noexcept
+  auto begin() const noexcept
   {
-    return ActorDatabase.begin();
+    return carla::iterator::make_map_values_iterator(ActorDatabase.begin());
   }
 
-  const_iterator end() const noexcept
+  auto end() const noexcept
   {
-    return ActorDatabase.end();
+    return carla::iterator::make_map_values_iterator(ActorDatabase.end());
   }
 
   /// @}
 private:
+
+  FActorView MakeView(IdType Id, AActor &Actor, FActorDescription Description) const;
 
   TMap<IdType, AActor *> Actors;
 

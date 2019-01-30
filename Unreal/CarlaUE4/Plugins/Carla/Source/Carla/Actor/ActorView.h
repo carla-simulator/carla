@@ -6,8 +6,7 @@
 
 #pragma once
 
-#include "Carla/Actor/ActorDescription.h"
-#include "Carla/Game/Tagger.h"
+#include "Carla/Actor/ActorInfo.h"
 
 class AActor;
 
@@ -22,15 +21,17 @@ public:
     Other,
     Vehicle,
     Walker,
-    TrafficLight
+    TrafficLight,
+    INVALID
   };
 
   FActorView() = default;
   FActorView(const FActorView &) = default;
+  FActorView(FActorView &&) = default;
 
   bool IsValid() const
   {
-    return (TheActor != nullptr) && Description.IsValid();
+    return (TheActor != nullptr) && !TheActor->IsPendingKill();
   }
 
   IdType GetActorId() const
@@ -53,24 +54,19 @@ public:
     return TheActor;
   }
 
-  const FActorDescription *GetActorDescription() const
+  const FActorInfo *GetActorInfo() const
   {
-    return Description.Get();
-  }
-
-  const TSet<ECityObjectLabel> &GetSemanticTags() const
-  {
-    return SemanticTags;
+    return Info.Get();
   }
 
 private:
 
   friend class FActorRegistry;
 
-  FActorView(IdType ActorId, AActor &Actor, FActorDescription Description)
+  FActorView(IdType ActorId, AActor &Actor, TSharedPtr<const FActorInfo> Info)
     : Id(ActorId),
       TheActor(&Actor),
-      Description(MakeShared<FActorDescription>(std::move(Description))) {}
+      Info(std::move(Info)) {}
 
   IdType Id = 0u;
 
@@ -78,7 +74,5 @@ private:
 
   AActor *TheActor = nullptr;
 
-  TSharedPtr<const FActorDescription> Description = nullptr;
-
-  TSet<ECityObjectLabel> SemanticTags;
+  TSharedPtr<const FActorInfo> Info = nullptr;
 };

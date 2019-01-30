@@ -14,7 +14,6 @@ pipeline {
         stage('Setup') {
             steps {
                 sh 'make setup'
-                sh './Update.sh'
             }
         }
 
@@ -40,6 +39,12 @@ pipeline {
                     junit 'Build/test-results/*.xml'
                     archiveArtifacts 'profiler.csv'
                 }
+            }
+        }
+
+        stage('Retrieve Content') {
+            steps {
+                sh './Update.sh'
             }
         }
 

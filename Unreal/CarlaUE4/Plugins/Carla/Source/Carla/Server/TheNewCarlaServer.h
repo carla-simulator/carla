@@ -7,12 +7,9 @@
 #pragma once
 
 #include "Carla/Actor/ActorView.h"
+#include "Carla/Sensor/DataStream.h"
 
 #include "CoreMinimal.h"
-
-#include <compiler/disable-ue4-macros.h>
-#include <carla/rpc/Actor.h>
-#include <compiler/enable-ue4-macros.h>
 
 class UCarlaEpisode;
 
@@ -36,8 +33,9 @@ public:
 
   void Stop();
 
-  // This is necessary for serializing sensors properly.
-  carla::rpc::Actor SerializeActor(FActorView View) const;
+  FDataStream OpenStream() const;
+
+  FDataMultiStream OpenMultiStream() const;
 
 private:
 
