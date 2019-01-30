@@ -7,6 +7,7 @@
 #pragma once
 
 #include <fstream>
+#include "carla/Buffer.h"
 #include "carla/geom/Vector3D.h"
 #include "carla/geom/Location.h"
 #include "carla/geom/Transform.h"

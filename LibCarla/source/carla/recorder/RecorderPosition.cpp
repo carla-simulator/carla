@@ -17,9 +17,9 @@ void RecorderPosition::write(std::ofstream &file) {
     // transform
     writeTransform(file, this->transform);
     // velocity
-    writeVector3D(file, this->velocity);
+    // writeVector3D(file, this->velocity);
     // velocity
-    writeVector3D(file, this->angularVelocity);
+    // writeVector3D(file, this->angularVelocity);
 }
 void RecorderPosition::read(std::ifstream &file) {
     // database id
@@ -27,9 +27,9 @@ void RecorderPosition::read(std::ifstream &file) {
     // transform
     readTransform(file, this->transform);
     // velocity
-    readVector3D(file, this->velocity);
+    // readVector3D(file, this->velocity);
     // velocity
-    readVector3D(file, this->angularVelocity);
+    // readVector3D(file, this->angularVelocity);
 }
 
 //---------------------------------------------
@@ -56,11 +56,11 @@ void RecorderPositions::write(std::ofstream &file, std::ofstream &log) {
     // write total records
     total = positions.size();
     writeValue<short>(file, total);
-    
+
     // write records
     file.write(reinterpret_cast<const char*>(positions.data()), positions.size() * sizeof(RecorderPosition));
 /*
-    // write records  
+    // write records
     for (auto rec : positions) {
         writeValue<int>(file, rec.id);                  // actor id
         writeTransform(file, rec.transform);            // transform
@@ -68,7 +68,7 @@ void RecorderPositions::write(std::ofstream &file, std::ofstream &log) {
         writeVector3D(file, rec.angularVelocity);       // angular velocity
     }
 */
-    
+
     log << "write positions (" << positions.size() << " * " << sizeof(RecorderPosition) << ")\n";
 }
 

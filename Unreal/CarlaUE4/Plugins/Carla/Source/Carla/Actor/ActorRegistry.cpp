@@ -56,11 +56,9 @@ FActorView FActorRegistry::Register(AActor &Actor, FActorDescription Description
   auto Id = ++ID_COUNTER;
 
   if (DesiredId != 0 && Id != DesiredId) {
-    // check if the desired Id is free
+    // check if the desired Id is free, then use it instead
     if (!Actors.Contains(DesiredId))
       Id = DesiredId;
-    else
-      UE_LOG(LogCarla, Error, TEXT("We could't register the actor with the desired Id from replayer"));
   }
   
   Actors.Emplace(Id, &Actor);

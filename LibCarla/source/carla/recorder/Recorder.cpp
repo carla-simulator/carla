@@ -22,8 +22,8 @@ Recorder::~Recorder(){
     if (log) log.close();
 }
 
-std::string Recorder::start(std::string path, std::string name) {
-    
+std::string Recorder::start(std::string path, std::string name, std::string mapName) {
+
     // reset
     stop();
 
@@ -41,16 +41,25 @@ std::string Recorder::start(std::string path, std::string name) {
     filename << std::setw(2) << std::setfill('0') << (now->tm_min);
     filename << std::setw(2) << std::setfill('0') << (now->tm_sec);
     filename << "_" << map << ".rec";
-*/    
+*/
     std::stringstream filename;
     filename << path << name;
 
-    
     // files
     file.open(filename.str(), std::ios::binary | std::ios::trunc | std::ios::out);
-    
+
     // log
     log.open(filename.str() + ".log");
+
+    std::string magic("CARLA_RECORDER");
+    // save info
+    info.version = 1;
+    info.magic.copy_from(reinterpret_cast<const unsigned char *>(magic.c_str()), magic.size());
+    info.date = std::time(0);
+    info.mapfile.copy_from(reinterpret_cast<const unsigned char *>(mapName.c_str()), mapName.size());
+
+    // write general info
+    info.write(file);
 
     frames.reset();
     enabled = true;
@@ -74,8 +83,7 @@ void Recorder::clear(void) {
 void Recorder::write(void) {
     // update this frame data
     frames.setFrame();
-    
-    // prepare the buffer with the content
+
     frames.write(file, log);
     events.write(file, log);
     positions.write(file, log);

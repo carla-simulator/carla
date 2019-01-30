@@ -8,6 +8,7 @@
 
 #include <fstream>
 #include "carla/NonCopyable.h"
+#include "carla/recorder/RecorderInfo.h"
 #include "carla/recorder/RecorderFrames.h"
 #include "carla/recorder/RecorderEvent.h"
 #include "carla/recorder/RecorderPosition.h"
@@ -17,7 +18,6 @@
 namespace carla {
 namespace recorder {
 
-
   enum class RecorderPacketId : char {
     Frame = 0,
     Event,
@@ -26,7 +26,7 @@ namespace recorder {
   };
 
   class Recorder : private NonCopyable {
-  
+
     bool enabled;   // enabled or not
 
     // files
@@ -34,6 +34,7 @@ namespace recorder {
     std::ofstream log;
 
     // structures
+    RecorderInfo info;
     RecorderFrames frames;
     RecorderEvents events;
     RecorderPositions positions;
@@ -48,7 +49,7 @@ namespace recorder {
     void enable(void);
     void disable(void);
     bool isEnabled(void) { return enabled; };
-    std::string start(std::string path, std::string name);
+    std::string start(std::string path, std::string name, std::string mapName);
     void stop(void);
     void clear(void);
     void addEvent(RecorderEventAdd _event);
@@ -60,7 +61,7 @@ namespace recorder {
 
     // replayer
     Replayer &getReplayer(void) {
-      return replayer; 
+      return replayer;
     }
     std::string showFileInfo(std::string path, std::string name) {
       return replayer.getInfo(path + name);

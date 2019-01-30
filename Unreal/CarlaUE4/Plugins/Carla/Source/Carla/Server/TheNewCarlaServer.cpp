@@ -551,9 +551,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
 
   Server.BindSync("start_recorder", [this](std::string name) -> std::string {
     REQUIRE_CARLA_EPISODE();
-    return Episode->GetRecorder().start(
-      carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
-      name);
+    return Episode->StartRecorder(name);
   });
 
   Server.BindSync("stop_recorder", [this]() {
