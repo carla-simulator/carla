@@ -99,7 +99,8 @@ static carla::Buffer AWorldObserver_Serialize(
   write_data(header);
 
   // Write every actor.
-  for (auto &&View : Registry) {
+  for (auto &&View : Registry)
+  {
     check(View.IsValid());
     constexpr float TO_METERS = 1e-2;
     const auto velocity = TO_METERS * View.GetActor()->GetVelocity();
@@ -107,7 +108,9 @@ static carla::Buffer AWorldObserver_Serialize(
     const auto RootComponent = Cast<UPrimitiveComponent>(View.GetActor()->GetRootComponent());
     FVector angularVelocity { 0.0f, 0.0f, 0.0f };
     if (RootComponent != nullptr)
-       angularVelocity = RootComponent->GetPhysicsAngularVelocityInDegrees();
+    {
+      angularVelocity = RootComponent->GetPhysicsAngularVelocityInDegrees();
+    }
     ActorDynamicState info = {
       View.GetActorId(),
       View.GetActor()->GetActorTransform(),
@@ -122,7 +125,7 @@ static carla::Buffer AWorldObserver_Serialize(
   return buffer;
 }
 
-AWorldObserver::AWorldObserver(const FObjectInitializer& ObjectInitializer)
+AWorldObserver::AWorldObserver(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
 {
   PrimaryActorTick.bCanEverTick = true;

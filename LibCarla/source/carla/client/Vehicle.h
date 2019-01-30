@@ -29,7 +29,8 @@ namespace client {
 
     /// Return the control last applied to this vehicle.
     ///
-    /// @note The following functions do not call the simulator, they return the data
+    /// @note The following functions do not call the simulator, they return the
+    /// data
     /// received in the last tick.
     //////////////////////////////////////////////////////////////////////////////////
     Control GetControl() const;
@@ -43,6 +44,7 @@ namespace client {
     SharedPtr<TrafficLight> GetTrafficLight() const;
 
   private:
+
     Control _control;
   };
 

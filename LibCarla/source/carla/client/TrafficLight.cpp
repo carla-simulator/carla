@@ -55,6 +55,5 @@ namespace client {
     return GetEpisode().Lock()->GetActorDynamicState(*this).state.traffic_light_data.time_is_frozen;
   }
 
-
 } // namespace client
 } // namespace carla

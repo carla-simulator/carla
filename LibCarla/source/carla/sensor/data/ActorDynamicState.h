@@ -50,6 +50,7 @@ namespace detail {
     bool manual_gear_shift;
     int32_t gear;
   };
+
 #pragma pack(pop)
 
 #pragma pack(push, 1)
@@ -85,6 +86,7 @@ namespace detail {
     float speed;
     bool jump;
   };
+
 #pragma pack(pop)
 
 #pragma pack(push, 1)

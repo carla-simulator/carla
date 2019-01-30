@@ -15,7 +15,6 @@
 #include "carla/rpc/WalkerControl.h"
 #include "carla/streaming/Client.h"
 
-
 #include <thread>
 
 namespace carla {
@@ -45,9 +44,9 @@ namespace detail {
           worker_threads > 0u ? worker_threads : std::thread::hardware_concurrency());
     }
 
-    template <typename T, typename... Args>
-    auto CallAndWait(const std::string &function, Args &&... args) {
-      auto object = rpc_client.call(function, std::forward<Args>(args)...);
+    template <typename T, typename ... Args>
+    auto CallAndWait(const std::string &function, Args && ... args) {
+      auto object = rpc_client.call(function, std::forward<Args>(args) ...);
       using R = typename carla::rpc::Response<T>;
       auto response = object.template as<R>();
       if (response.HasError()) {
@@ -56,10 +55,10 @@ namespace detail {
       return Get(response);
     }
 
-    template <typename... Args>
-    void AsyncCall(const std::string &function, Args &&... args) {
+    template <typename ... Args>
+    void AsyncCall(const std::string &function, Args && ... args) {
       // Discard returned future.
-      rpc_client.async_call(function, std::forward<Args>(args)...);
+      rpc_client.async_call(function, std::forward<Args>(args) ...);
     }
 
     rpc::Client rpc_client;
@@ -171,7 +170,9 @@ namespace detail {
     _pimpl->AsyncCall("apply_control_to_walker", walker, control);
   }
 
-  void Client::SetTrafficLightState(const rpc::Actor &trafficLight, const rpc::TrafficLightState trafficLightState) {
+  void Client::SetTrafficLightState(
+      const rpc::Actor &trafficLight,
+      const rpc::TrafficLightState trafficLightState) {
     _pimpl->AsyncCall("set_traffic_light_state", trafficLight, trafficLightState);
   }
 

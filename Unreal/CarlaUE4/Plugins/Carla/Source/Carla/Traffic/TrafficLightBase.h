@@ -12,12 +12,12 @@
 
 #include "TrafficLightBase.generated.h"
 
-
 class ACarlaWheeledVehicle;
 class AWheeledVehicleAIController;
 
 UCLASS()
-class CARLA_API ATrafficLightBase : public ATrafficSignBase {
+class CARLA_API ATrafficLightBase : public ATrafficSignBase
+{
 
   GENERATED_BODY()
 
@@ -31,10 +31,9 @@ protected:
 
   virtual void OnConstruction(const FTransform &Transform) override;
 
-
-
 #if WITH_EDITOR
   virtual void PostEditChangeProperty(FPropertyChangedEvent &PropertyChangedEvent) override;
+
 #endif // WITH_EDITOR
 
 public:
