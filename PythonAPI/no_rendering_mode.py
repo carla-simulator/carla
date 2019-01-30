@@ -734,8 +734,17 @@ class ModuleWorld(object):
 
             hero_speed = self.hero_actor.get_velocity()
             hero_speed_text = 3.6 * math.sqrt(hero_speed.x ** 2 + hero_speed.y ** 2 + hero_speed.z ** 2)
+            
+            state = self.hero_actor.get_traffic_light_state()
             affected_traffic_light = 'None'
-            affected_speed_limit = 'None'
+            if state == carla.libcarla.TrafficLightState.Green:
+                affected_traffic_light = 'GREEN'
+            elif state == carla.libcarla.TrafficLightState.Yellow:
+                affected_traffic_light = 'YELLOW'
+            else:
+                affected_traffic_light = 'RED'
+
+            affected_speed_limit = self.hero_actor.get_speed_limit()
 
             hero_mode_text = [
                 'Hero Mode:               ON',
@@ -744,7 +753,7 @@ class ModuleWorld(object):
                 'Hero speed:          %3d km/h' % hero_speed_text,
                 'Hero Affected by:',
                 '  Traffic Light:%12s' % affected_traffic_light,
-                '  Speed Limit:  %12s' % affected_speed_limit
+                '  Speed Limit:       %3d km/h' % affected_speed_limit
             ]
         else:
             hero_mode_text = ['Hero Mode:               OFF']
@@ -767,7 +776,7 @@ class ModuleWorld(object):
             return
 
         self.server_clock.tick()
-        self.server_fps = 1 / (timestamp.delta_seconds)
+        self.server_fps = self.server_clock.get_fps()
 
         self.world = self.client.get_world()
         self.actors = self.world.get_actors()
