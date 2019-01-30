@@ -13,7 +13,7 @@ Welcome to CARLA No Rendering Mode Visualizer
     I           : Toggle HUD
     H           : Hero Mode
     Mouse Wheel : Zoom In / Zoom Out
-    Mouse Drag  : Move Map in No Hero Mode
+    Mouse Drag  : Move Map in Map Mode
     ESC         : quit
 """
 
@@ -91,10 +91,38 @@ MODULE_HUD = 'HUD'
 MODULE_INPUT = 'INPUT'
 MODULE_RENDER = 'RENDER'
 
+# Input 
+MIN_WHEEL = 0.1
+MAX_WHEEL = 3.0
+
 # ==============================================================================
 # -- TransformHelper -----------------------------------------------------------
 # ==============================================================================
 
+
+class Util(object):
+    @staticmethod
+    def rotate_surface(img, pos, angle):
+        w, h = img.get_size()
+        img2 = pygame.Surface((w*2, h*2), pygame.SRCALPHA).convert()
+        img2.set_clip(pygame.Rect(w-pos[0], h-pos[1], w, h))
+        img2.blit(img, (w-pos[0], h-pos[1]))
+        rotated_surface = pygame.transform.rotate(img2, angle)
+        return rotated_surface
+        
+    @staticmethod
+    def normalize_vector(vector):
+        length_vector = math.sqrt(vector[0] ** 2 + vector[1] ** 2)
+        normalized_vector = (vector[0] / length_vector, vector[1] / length_vector)
+        return normalized_vector
+    
+    @staticmethod
+    def blits(destination_surface, source_surfaces):
+        if hasattr(destination_surface, 'blits'):
+            destination_surface.blits(source_surfaces)
+        else:
+            for surface in source_surfaces:
+                destination_surface.blit(surface[0], surface[1])
 
 class TransformHelper(object):
 
@@ -113,12 +141,6 @@ class TransformHelper(object):
                        int(size[1] / float((self.max_map_point[1] - self.min_map_point[1])) * self.map_size))
         return (max(screen_size[0], 1), max(screen_size[1], 1))
 
-    def rotate(self, img, pos, angle):
-        w, h = img.get_size()
-        img2 = pygame.Surface((w*2, h*2), pygame.SRCALPHA).convert()
-        img2.set_clip(pygame.Rect(w-pos[0], h-pos[1], w, h))
-        img2.blit(img, (w-pos[0], h-pos[1]))
-        return pygame.transform.rotate(img2, angle)
 
 # ==============================================================================
 # -- Vehicle ----------------------------------------------------------------------
@@ -214,7 +236,7 @@ class SpeedLimit(object):
         font_surface = self.font.render(self.speed_limit, False, COLOR_DARK_GREY)
         if hero_actor is not None:
             angle = -hero_actor.get_transform().rotation.yaw - 90.0
-            font_surface = map_transform_helper.rotate(font_surface, (radius/2,radius/2), angle)
+            font_surface = Util.rotate_surface(font_surface, (radius/2,radius/2), angle)
             font_surface.set_colorkey(COLOR_BLACK)
             final_offset = font_surface.get_rect(center=(radius,radius))
             self.surface.blit(font_surface, final_offset)
@@ -292,25 +314,27 @@ class ModuleRender(object):
         pass
 
     def tick(self, clock):
-        pass
+        pass        
 
-    def getParallelLinesAtDistance(self, line, distance, transform_helper):
+    def getParallelLineAtDistance(self, line, unit_vector, distance):
+        parallel_line = [(line[0][0] + unit_vector[0] * distance, line[0][1] + unit_vector[1] * distance),
+                        (line[1][0] + unit_vector[0] * distance, line[1][1] + unit_vector[1] * distance)]
+        return parallel_line
+            
+    def getLateralLinesFromLane(self, line, distance, transform_helper):
         front_vector = (line[1][0] - line[0][0], line[1][1] - line[0][1])
         left_vector = (-front_vector[1], front_vector[0])
-
-        length_left_vector = math.sqrt(left_vector[0] ** 2 + left_vector[1] ** 2)
-        unit_left_vector = (left_vector[0] / length_left_vector, left_vector[1] / length_left_vector)
-
-        distance = distance / 2.0
+        
+        unit_left_vector = Util.normalize_vector(left_vector)
         unit_right_vector = (-unit_left_vector[0], -unit_left_vector[1])
 
+        distance = distance / 2.0
+        
         # Get lateral lines
-        lateral_left = [(line[0][0] + unit_left_vector[0] * distance, line[0][1] + unit_left_vector[1] * distance),
-                        (line[1][0] + unit_left_vector[0] * distance, line[1][1] + unit_left_vector[1] * distance)]
+        lateral_left = self.getParallelLineAtDistance(line, unit_left_vector, distance)
 
         # Get lateral lines
-        lateral_right = [(line[0][0] + unit_right_vector[0] * distance, line[0][1] + unit_right_vector[1] * distance),
-                         (line[1][0] + unit_right_vector[0] * distance, line[1][1] + unit_right_vector[1] * distance)]
+        lateral_right = self.getParallelLineAtDistance(line, unit_right_vector, distance)
         
         # Convert to screen space
         lateral_left_screen = [transform_helper.convert_world_to_screen_point(lateral_left[0]),
@@ -327,7 +351,7 @@ class ModuleRender(object):
         self.drawLine(surface, color, False, lines[2], arrow_width)
 
     def drawPolygonFromParallelLines(self, surface, color, line, distance, transform_helper):
-        lateral_left, lateral_right, lateral_left_screen, lateral_right_screen = self.getParallelLinesAtDistance(line, distance, transform_helper)
+        lateral_left, lateral_right, lateral_left_screen, lateral_right_screen = self.getLateralLinesFromLane(line, distance, transform_helper)
         pygame.draw.polygon(surface,
                             COLOR_DARK_GREY,
                             [lateral_left_screen[0],
@@ -337,7 +361,7 @@ class ModuleRender(object):
 
     def drawLineAtDistance(self, index, map, road_id, lane_id, surface, line, distance, width, color, transform_helper):
 
-        lateral_left, lateral_right, lateral_left_screen, lateral_right_screen= self.getParallelLinesAtDistance(line, distance + 0.5, transform_helper)
+        lateral_left, lateral_right, lateral_left_screen, lateral_right_screen= self.getLateralLinesFromLane(line, distance + 0.5, transform_helper)
         
         left_location = carla.Location(x=lateral_left[0][0], y=lateral_left[0][1])
 
@@ -662,7 +686,7 @@ class ModuleWorld(object):
         if len(vehicles) > 0:
             self.hero_actor = vehicles[0]
         else:
-            print("There are no hero vehicle spawned")
+            print("There are no hero vehicles spawned")
 
     def tick(self, clock):
         self.update_hud_info(clock)
@@ -811,7 +835,8 @@ class ModuleWorld(object):
         for actor in vehicles:
             vehicle = Vehicle(actor, COLOR_MAGENTA, self.transform_helper)
             vehicle_renderer.append((vehicle.surface, (vehicle.x, vehicle.y)))
-        self.vehicles_surface.blits(vehicle_renderer)
+        
+        Util.blits(self.vehicles_surface, vehicle_renderer)
 
         # Render Traffic Lights
         traffic_lights_renderer = []
@@ -820,7 +845,7 @@ class ModuleWorld(object):
             traffic_light = TrafficLight(actor, traffic_light_width, self.transform_helper)
             traffic_lights_renderer.append((traffic_light.surface, (traffic_light.x, traffic_light.y)))
 
-        self.traffic_light_surface.blits(traffic_lights_renderer)
+        Util.blits(self.traffic_light_surface, traffic_lights_renderer)
 
         # Render Speed limit
         speed_limit_renderer = []
@@ -829,7 +854,7 @@ class ModuleWorld(object):
             speed_limit = SpeedLimit(actor, speed_limit_width, self.transform_helper, self.hero_actor)
             speed_limit_renderer.append((speed_limit.surface, (speed_limit.x, speed_limit.y)))
 
-        self.speed_limits_surface.blits(speed_limit_renderer)
+        Util.blits(self.speed_limits_surface, speed_limit_renderer)
 
         # Render Walkers
         walkers_renderer = []
@@ -837,7 +862,7 @@ class ModuleWorld(object):
         for actor in walkers:
             walker = Walker(actor, walker_width, self.transform_helper)
             walkers_renderer.append((walker.surface, (walker.x, walker.y)))
-        self.walkers_surface.blits(walkers_renderer)
+        Util.blits(self.walkers_surface, walkers_renderer)
 
     def clip_surfaces(self, clipping_rect):
         self.map_surface.set_clip(clipping_rect)
@@ -966,13 +991,13 @@ class ModuleWorld(object):
             clipping_rect = pygame.Rect(-translation_offset[0] - hero_surface.get_width() / 2,
                                         -translation_offset[1] - hero_surface.get_height() / 2, self.hud_module.dim[0], self.hud_module.dim[1])
             self.clip_surfaces(clipping_rect)
-            self.result_surface.blits(surfaces)
+            Util.blits(self.result_surface, surfaces)
 
             hero_surface.fill(COLOR_BROWN)
             hero_surface.blit(self.result_surface, (translation_offset[0] + hero_surface.get_width()/2,
                                                     translation_offset[1] + hero_surface.get_height()/2))
 
-            rotated_result_surface = self.transform_helper.rotate(hero_surface,
+            rotated_result_surface = Util.rotate_surface(hero_surface,
                                                  (hero_surface.get_width()/2, hero_surface.get_height()/2),
                                                  angle)
 
@@ -983,7 +1008,7 @@ class ModuleWorld(object):
             clipping_rect = pygame.Rect(-translation_offset[0] - center_offset[0], -translation_offset[1],
                                         self.hud_module.dim[0], self.hud_module.dim[1])
             self.clip_surfaces(clipping_rect)
-            self.result_surface.blits(surfaces)
+            Util.blits(self.result_surface, surfaces)
 
             display.blit(rotated_result_surface, (translation_offset[0] + center_offset[0],
                                                   translation_offset[1]))
@@ -1006,7 +1031,7 @@ class ModuleInput(object):
         self.mouse_offset = [0.0, 0.0]
         self.wheel_offset = [1.0, 1.0]
         self.wheel_amount = 0.1
-
+        
     def start(self):
         pass
 
@@ -1038,14 +1063,19 @@ class ModuleInput(object):
                 if event.button == 4:
                     self.wheel_offset[0] += self.wheel_amount
                     self.wheel_offset[1] += self.wheel_amount
+                    if self.wheel_offset[0] >= MAX_WHEEL:
+                        self.wheel_offset[0] = MAX_WHEEL
+                    if self.wheel_offset[1] >= MAX_WHEEL:
+                        self.wheel_offset[1] = MAX_WHEEL
 
                 if event.button == 5:
                     self.wheel_offset[0] -= self.wheel_amount
                     self.wheel_offset[1] -= self.wheel_amount
-                    if self.wheel_offset[0] <= 0.1:
-                        self.wheel_offset[0] = 0.1
-                    if self.wheel_offset[1] <= 0.1:
-                        self.wheel_offset[1] = 0.1
+                    
+                    if self.wheel_offset[0] <= MIN_WHEEL:
+                        self.wheel_offset[0] = MIN_WHEEL
+                    if self.wheel_offset[1] <= MIN_WHEEL:
+                        self.wheel_offset[1] = MIN_WHEEL
 
     def _parse_keys(self):
         keys = pygame.key.get_pressed()
