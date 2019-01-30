@@ -8,21 +8,11 @@ This module provides GlobalRoutePlanner implementation.
 import math
 from enum import Enum
 
+import numpy as np
 import networkx as nx
+
 import carla
-
-
-class NavEnum(Enum):
-    """
-    Enumeration class containing possible navigation decisions
-    """
-    START = "START"
-    GO_STRAIGHT = "GO_STRAIGHT"
-    LEFT = "LEFT"
-    RIGHT = "RIGHT"
-    FOLLOW_LANE = "FOLLOW_LANE"
-    STOP = "STOP"
-    pass
+from local_planner import RoadOption
 
 
 class GlobalRoutePlanner(object):
@@ -59,42 +49,41 @@ class GlobalRoutePlanner(object):
 
         return      : list of turn by turn navigation decisions as
         NavEnum elements
-        Possible values (for now) are START, GO_STRAIGHT, LEFT, RIGHT,
-        FOLLOW_LANE, STOP
+        Possible values (for now) are START, GO_STRAIGHT, LEFT, RIGHT, STOP
         """
 
-        threshold = 0.0523599   # 5 degrees
+        threshold = math.radians(5.0)
         route = self.path_search(origin, destination)
         plan = []
-        plan.append(NavEnum.START)
+
         # Compare current edge and next edge to decide on action
         for i in range(len(route) - 2):
             current_edge = self._graph.edges[route[i], route[i + 1]]
             next_edge = self._graph.edges[route[i + 1], route[i + 2]]
-            if not current_edge['intersection']:
-                cv = current_edge['exit_vector']
-                nv = None
-                if next_edge['intersection']:
-                    nv = next_edge['net_vector']
-                    ca = round(math.atan2(*cv[::-1]) * 180 / math.pi)
-                    na = round(math.atan2(*nv[::-1]) * 180 / math.pi)
-                    angle_list = [ca, na]
-                    for i in range(len(angle_list)):
-                        if angle_list[i] > 0:
-                            angle_list[i] = 180 - angle_list[i]
-                        elif angle_list[i] < 0:
-                            angle_list[i] = -1 * (180 + angle_list[i])
-                    ca, na = angle_list
-                    if abs(na - ca) < threshold:
-                        action = NavEnum.GO_STRAIGHT
-                    elif na - ca > 0:
-                        action = NavEnum.LEFT
-                    else:
-                        action = NavEnum.RIGHT
-                else:
-                    action = NavEnum.FOLLOW_LANE
+            cv = current_edge['exit_vector']
+            nv = next_edge['net_vector']
+            cv, nv = cv + (0,), nv + (0,)  # Making vectors 3D
+            num_edges = 0
+            cross_list = []
+            # Accumulating cross products of all other paths
+            for neighbor in self._graph.neighbors(route[i+1]):
+                num_edges+=1
+                if neighbor != route[i + 2]:
+                    select_edge = self._graph.edges[route[i+1], neighbor]
+                    sv = select_edge['net_vector']
+                    cross_list.append(np.cross(cv, sv)[2])
+            # Calculating turn decision
+            if next_edge['intersection'] and num_edges > 1:
+                next_cross = np.cross(cv, nv)[2]
+                deviation = math.acos(np.dot(cv, nv) /\
+                    (np.linalg.norm(cv)*np.linalg.norm(nv)))
+                if deviation < threshold:
+                    action = RoadOption.STRAIGHT
+                elif next_cross < min(cross_list):
+                    action = RoadOption.LEFT
+                elif next_cross > max(cross_list):
+                    action = RoadOption.RIGHT
                 plan.append(action)
-        plan.append(NavEnum.STOP)
         return plan
 
     def _distance_heuristic(self, n1, n2):
@@ -160,6 +149,7 @@ class GlobalRoutePlanner(object):
         The topology is read from self._topology.
         graph node properties:
             vertex   -   (x,y) of node's position in world map
+            num_edges   -   Number of exit edges from the node
         graph edge properties:
             entry_vector    -   unit vector along tangent at entry point
             exit_vector     -   unit vector along tangent at exit point
