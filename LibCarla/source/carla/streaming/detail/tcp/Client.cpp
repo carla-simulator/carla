@@ -8,6 +8,7 @@
 
 #include "carla/BufferPool.h"
 #include "carla/Debug.h"
+#include "carla/Exception.h"
 #include "carla/Logging.h"
 #include "carla/Time.h"
 
@@ -75,7 +76,7 @@ namespace tcp {
       _connection_timer(io_service),
       _buffer_pool(std::make_shared<BufferPool>()) {
     if (!_token.protocol_is_tcp()) {
-      throw std::invalid_argument("invalid token, only TCP tokens supported");
+      throw_exception(std::invalid_argument("invalid token, only TCP tokens supported"));
     }
   }
 

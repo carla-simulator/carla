@@ -13,10 +13,11 @@ if (CMAKE_BUILD_TYPE STREQUAL "Client")
   add_subdirectory("client")
 elseif (CMAKE_BUILD_TYPE STREQUAL "Server")
   add_subdirectory("server")
-
-  if (NOT WIN32) # TODO(Andrei): Fix compilation for Windows
-    add_subdirectory("test")
-  endif()
 else ()
   message(FATAL_ERROR "Unknown build type '${CMAKE_BUILD_TYPE}'")
 endif ()
+
+# GTest is not compiled on Windows.
+if (NOT WIN32)
+  add_subdirectory("test")
+endif()

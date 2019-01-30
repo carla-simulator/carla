@@ -6,6 +6,7 @@
 
 #include "carla/streaming/detail/Dispatcher.h"
 
+#include "carla/Exception.h"
 #include "carla/Logging.h"
 #include "carla/streaming/detail/MultiStreamState.h"
 #include "carla/streaming/detail/StreamState.h"
@@ -21,7 +22,7 @@ namespace detail {
     auto ptr = std::make_shared<StreamStateT>(cached_token);
     auto result = stream_map.emplace(std::make_pair(cached_token.get_stream_id(), ptr));
     if (!result.second) {
-      throw std::runtime_error("failed to create stream!");
+      throw_exception(std::runtime_error("failed to create stream!"));
     }
     return ptr;
   }
@@ -31,11 +32,18 @@ namespace detail {
     // session remaining since at this point the io_service should be already
     // stopped.
     for (auto &pair : _stream_map) {
+#ifndef LIBCARLA_NO_EXCEPTIONS
       try {
-        pair.second->ClearSessions();
+#endif // LIBCARLA_NO_EXCEPTIONS
+        auto stream_state = pair.second.lock();
+        if (stream_state != nullptr) {
+          stream_state->ClearSessions();
+        }
+#ifndef LIBCARLA_NO_EXCEPTIONS
       } catch (const std::exception &e) {
         log_error("failed to clear sessions:", e.what());
       }
+#endif // LIBCARLA_NO_EXCEPTIONS
     }
   }
 
@@ -56,22 +64,36 @@ namespace detail {
     std::lock_guard<std::mutex> lock(_mutex);
     auto search = _stream_map.find(session->get_stream_id());
     if (search != _stream_map.end()) {
-      DEBUG_ASSERT(search->second != nullptr);
-      search->second->ConnectSession(std::move(session));
-      return true;
-    } else {
-      log_error("Invalid session: no stream available with id", session->get_stream_id());
-      return false;
+      auto stream_state = search->second.lock();
+      if (stream_state != nullptr) {
+        stream_state->ConnectSession(std::move(session));
+        return true;
+      }
     }
+    log_error("Invalid session: no stream available with id", session->get_stream_id());
+    return false;
   }
 
   void Dispatcher::DeregisterSession(std::shared_ptr<Session> session) {
     DEBUG_ASSERT(session != nullptr);
     std::lock_guard<std::mutex> lock(_mutex);
+    ClearExpiredStreams();
     auto search = _stream_map.find(session->get_stream_id());
     if (search != _stream_map.end()) {
-      DEBUG_ASSERT(search->second != nullptr);
-      search->second->DisconnectSession(session);
+      auto stream_state = search->second.lock();
+      if (stream_state != nullptr) {
+        stream_state->DisconnectSession(session);
+      }
+    }
+  }
+
+  void Dispatcher::ClearExpiredStreams() {
+    for (auto it = _stream_map.begin(); it != _stream_map.end(); ) {
+      if (it->second.expired()) {
+        it = _stream_map.erase(it);
+      } else {
+        ++it;
+      }
     }
   }
 

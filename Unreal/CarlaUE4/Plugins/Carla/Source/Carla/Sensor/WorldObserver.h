@@ -22,11 +22,12 @@ class CARLA_API AWorldObserver : public AActor
 
 public:
 
+  /// Prevent this sensor to be spawned by users.
   using not_spawnable = void;
 
   AWorldObserver(const FObjectInitializer& ObjectInitializer);
 
-  /// Set the episode that will observe.
+  /// Set the episode that will be observed.
   void SetEpisode(UCarlaEpisode &InEpisode)
   {
     checkf(Episode == nullptr, TEXT("Cannot set episode twice!"));
@@ -34,17 +35,18 @@ public:
   }
 
   /// Replace the Stream associated with this sensor.
-  ///
-  /// @warning Do not change the stream after BeginPlay. It is not thread-safe.
   void SetStream(FDataMultiStream InStream)
   {
     Stream = std::move(InStream);
   }
 
-  auto GetStreamToken() const
+  /// Return the token that allows subscribing to this sensor's stream.
+  auto GetToken() const
   {
     return Stream.GetToken();
   }
+
+protected:
 
   void Tick(float DeltaSeconds) final;
 

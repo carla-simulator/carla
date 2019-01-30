@@ -55,12 +55,7 @@ namespace client {
       const ActorBlueprint &blueprint,
       const geom::Transform &transform,
       Actor *parent_actor) {
-    try {
-      return _episode.Lock()->SpawnActor(blueprint, transform, parent_actor);
-    } catch (const std::exception &e) {
-      log_warning("SpawnActor: failed with:", e.what());
-      throw;
-    }
+    return _episode.Lock()->SpawnActor(blueprint, transform, parent_actor);
   }
 
   SharedPtr<Actor> World::TrySpawnActor(
@@ -69,7 +64,7 @@ namespace client {
       Actor *parent_actor) noexcept {
     try {
       return SpawnActor(blueprint, transform, parent_actor);
-    } catch (const std::exception &) {
+    } catch (const std::exception &e) {
       return nullptr;
     }
   }

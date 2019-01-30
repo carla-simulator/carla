@@ -10,6 +10,7 @@
 #include "carla/rpc/ActorDescription.h"
 #include "carla/rpc/Client.h"
 #include "carla/rpc/DebugShape.h"
+#include "carla/rpc/Response.h"
 #include "carla/rpc/VehicleControl.h"
 #include "carla/rpc/WalkerControl.h"
 #include "carla/streaming/Client.h"
@@ -19,6 +20,15 @@
 namespace carla {
 namespace client {
 namespace detail {
+
+  template <typename T>
+  static T Get(carla::rpc::Response<T> &response) {
+    return response.Get();
+  }
+
+  static bool Get(carla::rpc::Response<void> &) {
+    return true;
+  }
 
   // ===========================================================================
   // -- Client::Pimpl ----------------------------------------------------------
@@ -35,8 +45,14 @@ namespace detail {
     }
 
     template <typename T, typename... Args>
-    T CallAndWait(const std::string &function, Args &&... args) {
-      return rpc_client.call(function, std::forward<Args>(args)...).template as<T>();
+    auto CallAndWait(const std::string &function, Args &&... args) {
+      auto object = rpc_client.call(function, std::forward<Args>(args)...);
+      using R = typename carla::rpc::Response<T>;
+      auto response = object.template as<R>();
+      if (response.HasError()) {
+        throw_exception(std::runtime_error(response.GetError().What()));
+      }
+      return Get(response);
     }
 
     template <typename... Args>
@@ -121,7 +137,13 @@ namespace detail {
   }
 
   bool Client::DestroyActor(const rpc::Actor &actor) {
-    return _pimpl->CallAndWait<bool>("destroy_actor", actor);
+    try {
+      return _pimpl->CallAndWait<void>("destroy_actor", actor);
+    } catch (const std::exception &e) {
+      log_error("failed to destroy actor:", actor.id, actor.description.id);
+      log_error(e.what());
+      return false;
+    }
   }
 
   void Client::SetActorLocation(const rpc::Actor &actor, const geom::Location &location) {
@@ -146,6 +168,18 @@ namespace detail {
 
   void Client::ApplyControlToWalker(const rpc::Actor &walker, const rpc::WalkerControl &control) {
     _pimpl->AsyncCall("apply_control_to_walker", walker, control);
+  }
+
+ void Client::SetActorVelocity(const rpc::Actor &actor, const geom::Vector3D &vector) {
+    _pimpl->AsyncCall("set_actor_velocity", actor, vector);
+  }
+
+ void Client::SetActorAngularVelocity(const rpc::Actor &actor, const geom::Vector3D &vector) {
+    _pimpl->AsyncCall("set_actor_angular_velocity", actor, vector);
+  }
+
+ void Client::AddActorImpulse(const rpc::Actor &actor, const geom::Vector3D &vector) {
+    _pimpl->AsyncCall("add_actor_impulse", actor, vector);
   }
 
   void Client::SubscribeToStream(

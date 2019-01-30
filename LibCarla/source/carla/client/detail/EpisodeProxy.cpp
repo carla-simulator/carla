@@ -6,6 +6,7 @@
 
 #include "carla/client/detail/EpisodeProxy.h"
 
+#include "carla/Exception.h"
 #include "carla/client/detail/Simulator.h"
 
 #include <exception>
@@ -38,14 +39,14 @@ namespace detail {
   typename EpisodeProxyImpl<T>::SharedPtrType EpisodeProxyImpl<T>::Lock() const {
     auto ptr = Load(_simulator);
     if (ptr == nullptr) {
-      throw std::runtime_error(
+      throw_exception(std::runtime_error(
           "trying to operate on a destroyed actor; an actor's function "
-          "was called, but the actor is already destroyed.");
+          "was called, but the actor is already destroyed."));
     }
     if (_episode_id != ptr->GetCurrentEpisodeId()) {
-      throw std::runtime_error(
+      throw_exception(std::runtime_error(
           "trying to access an expired episode; a new episode was started "
-          "in the simulation but an object tried accessing the old one.");
+          "in the simulation but an object tried accessing the old one."));
     }
     return ptr;
   }

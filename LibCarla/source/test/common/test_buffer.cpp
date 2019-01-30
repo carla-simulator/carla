@@ -112,10 +112,13 @@ TEST(buffer, memcpy) {
   ASSERT_EQ(*cpy, *msg);
 }
 
-/// @todo What to do with exceptions?
-// TEST(buffer, message_too_big) {
-//   ASSERT_THROW(Buffer(4294967296ul), std::invalid_argument);
-// }
+#ifndef LIBCARLA_NO_EXCEPTIONS
+TEST(buffer, message_too_big) {
+  ASSERT_THROW(Buffer(4294967296ul), std::invalid_argument);
+  Buffer buf;
+  ASSERT_THROW(buf.reset(4294967296ul), std::invalid_argument);
+}
+#endif // LIBCARLA_NO_EXCEPTIONS
 
 TEST(buffer, buffer_pool) {
   const std::string str = "Hello buffer!";

@@ -4,16 +4,14 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "carla/rpc/Server.h"
+#pragma once
 
-#include <rpc/this_handler.h>
+#include "carla/geom/Vector3D.h"
 
 namespace carla {
 namespace rpc {
 
-  void Server::RespondError(std::string error_message) {
-    ::rpc::this_handler().respond_error(std::move(error_message));
-  }
+  using Vector3D = geom::Vector3D;
 
-} // namespace carla
 } // namespace rpc
+} // namespace carla
