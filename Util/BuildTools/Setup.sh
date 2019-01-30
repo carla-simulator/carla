@@ -153,7 +153,8 @@ unset BOOST_BASENAME
 # -- Get rpclib and compile it with libc++ and libstdc++ -----------------------
 # ==============================================================================
 
-RPCLIB_BASENAME=rpclib-d1146b7-ex
+RPCLIB_PATCH=v2.2.1_c1
+RPCLIB_BASENAME=rpclib-${RPCLIB_PATCH}
 
 RPCLIB_LIBCXX_INCLUDE=${PWD}/${RPCLIB_BASENAME}-libcxx-install/include
 RPCLIB_LIBCXX_LIBPATH=${PWD}/${RPCLIB_BASENAME}-libcxx-install/lib
@@ -170,10 +171,7 @@ else
 
   log "Retrieving rpclib."
 
-  git clone https://github.com/rpclib/rpclib.git ${RPCLIB_BASENAME}-source
-  pushd ${RPCLIB_BASENAME}-source >/dev/null
-  git reset --hard d1146b7
-  popd >/dev/null
+  git clone -b ${RPCLIB_PATCH} https://github.com/carla-simulator/rpclib.git ${RPCLIB_BASENAME}-source
 
   log "Building rpclib with libc++."
 

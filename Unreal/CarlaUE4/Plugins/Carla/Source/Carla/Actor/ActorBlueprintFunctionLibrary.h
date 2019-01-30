@@ -91,6 +91,12 @@ public:
       const TArray<FPedestrianParameters> &ParameterArray,
       TArray<FActorDefinition> &Definitions);
 
+  UFUNCTION()
+  static void MakeObstacleDetectorDefinitions(
+    const FString &Type,
+    const FString &Id,
+    FActorDefinition &Definition);
+
   /// @}
   /// ==========================================================================
   /// @name Helpers to retrieve attribute values

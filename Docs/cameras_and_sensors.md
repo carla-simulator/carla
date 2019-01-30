@@ -46,6 +46,7 @@ This is the list of sensors currently available
   * [sensor.lidar.ray_cast](#sensorlidarray_cast)
   * [sensor.other.collision](#sensorothercollision)
   * [sensor.other.lane_detector](#sensorotherlane_detector)
+  * [sensor.other.obstacle](#sensorotherobstacle)
 
 sensor.camera.rgb
 -----------------
@@ -305,3 +306,26 @@ objects.
 | `longitude`            | double | Longitude position of the actor |
 | `altitude`             | double | Altitude of the actor |
 
+sensor.other.obstacle
+---------------------
+
+This sensor, when attached to an actor, reports if there is obstacles ahead.
+
+| Blueprint attribute  | Type  | Default | Description |
+| -------------------- | ----  | ------- | ----------- |
+| `distance`           | float | 5       | Distance to throw the trace to |
+| `hit_radius`         | float | 0.5     | Radius of the trace |
+| `only_dynamics`      | bool  | false   | If true, the trace will only look for dynamic objects |
+| `debug_linetrace`    | bool  | false   | If true, the trace will be visible |
+| `sensor_tick`        | float | 0.0     | Seconds between sensor captures (ticks) |
+
+
+This sensor produces
+[`carla.ObstacleDetectionSensorEvent`](python_api.md#carlaobstacledetectionsensoreventdata)
+objects.
+
+| Sensor data attribute  | Type        | Description |
+| ---------------------- | ----------- | ----------- |
+| `actor`                | carla.Actor | Actor that detected the obstacle ("self" actor) |
+| `other_actor`          | carla.Actor | Actor detected as obstacle |
+| `distance    `         | float       | Distance from actor to other_actor |

@@ -21,7 +21,7 @@ class BasicAgent(Agent):
     target destination. This agent respects traffic lights and other vehicles.
     """
 
-    def __init__(self, vehicle):
+    def __init__(self, vehicle, target_speed=20):
         """
 
         :param vehicle: actor to apply to local planner logic onto
@@ -30,7 +30,7 @@ class BasicAgent(Agent):
 
         self._proximity_threshold = 10.0  # meters
         self._state = AgentState.NAVIGATING
-        self._local_planner = LocalPlanner(self._vehicle)
+        self._local_planner = LocalPlanner(self._vehicle, opt_dict={'target_speed' : target_speed})
 
         # setting up global router
         self._current_plan = None
