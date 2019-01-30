@@ -22,16 +22,27 @@ namespace client {
     /// @note These functions do not call the simulator, they return the
     /// data received in the last tick.
     void SetState(rpc::TrafficLightState state);
+
     rpc::TrafficLightState GetState() const;
+
     void SetGreenTime(float green_time);
+
     float GetGreenTime() const;
+
     void SetYellowTime(float yellow_time);
+
     float GetYellowTime() const;
+
     void SetRedTime(float red_time);
+
     float GetRedTime() const;
+
     float GetElapsedTime() const;
+
     void Freeze(bool freeze);
+
     bool IsFrozen() const;
+
   };
 
 } // namespace client

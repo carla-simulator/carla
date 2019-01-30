@@ -19,8 +19,10 @@ static bool IsValid(const ACarlaWheeledVehicle *Vehicle)
   return ((Vehicle != nullptr) && !Vehicle->IsPendingKill());
 }
 
-static ETrafficSignState ToTrafficSignState(ETrafficLightState State) {
-  switch (State) {
+static ETrafficSignState ToTrafficSignState(ETrafficLightState State)
+{
+  switch (State)
+  {
     case ETrafficLightState::Green:
       return ETrafficSignState::TrafficLightGreen;
     case ETrafficLightState::Yellow:
@@ -38,7 +40,7 @@ static ETrafficSignState ToTrafficSignState(ETrafficLightState State) {
 ATrafficLightBase::ATrafficLightBase(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
 {
-	PrimaryActorTick.bCanEverTick = true;
+  PrimaryActorTick.bCanEverTick = true;
 }
 
 void ATrafficLightBase::OnConstruction(const FTransform &Transform)
@@ -58,7 +60,8 @@ void ATrafficLightBase::Tick(float DeltaSeconds)
 
   float ChangeTime;
 
-  switch (State) {
+  switch (State)
+  {
     case ETrafficLightState::Red:
       ChangeTime = RedTime;
       break;
@@ -66,7 +69,7 @@ void ATrafficLightBase::Tick(float DeltaSeconds)
       ChangeTime = YellowTime;
       break;
     case ETrafficLightState::Green:
-       ChangeTime = GreenTime;
+      ChangeTime = GreenTime;
       break;
     default:
       UE_LOG(LogCarla, Error, TEXT("Invalid traffic light state!"));
@@ -74,7 +77,8 @@ void ATrafficLightBase::Tick(float DeltaSeconds)
       return;
   }
 
-  if (ElapsedTime > ChangeTime) {
+  if (ElapsedTime > ChangeTime)
+  {
     SwitchTrafficLightState();
   }
 }
@@ -85,7 +89,8 @@ void ATrafficLightBase::PostEditChangeProperty(FPropertyChangedEvent &Event)
   Super::PostEditChangeProperty(Event);
 
   const FName PropertyName = (Event.Property != nullptr ? Event.Property->GetFName() : NAME_None);
-  if (PropertyName == GET_MEMBER_NAME_CHECKED(ATrafficLightBase, State)) {
+  if (PropertyName == GET_MEMBER_NAME_CHECKED(ATrafficLightBase, State))
+  {
     SetTrafficLightState(State);
   }
 }
@@ -97,15 +102,19 @@ void ATrafficLightBase::SetTrafficLightState(const ETrafficLightState InState)
   ElapsedTime = 0.0f;
   State = InState;
   SetTrafficSignState(ToTrafficSignState(State));
-  for (auto Controller : Vehicles) {
-    if (Controller != nullptr) {
+  for (auto Controller : Vehicles)
+  {
+    if (Controller != nullptr)
+    {
       Controller->SetTrafficLightState(State);
-      if (State == ETrafficLightState::Green) {
+      if (State == ETrafficLightState::Green)
+      {
         Controller->SetTrafficLight(nullptr);
       }
     }
   }
-  if (State == ETrafficLightState::Green) {
+  if (State == ETrafficLightState::Green)
+  {
     Vehicles.Empty();
   }
   OnTrafficLightStateChanged(State);
@@ -113,7 +122,8 @@ void ATrafficLightBase::SetTrafficLightState(const ETrafficLightState InState)
 
 void ATrafficLightBase::SwitchTrafficLightState()
 {
-  switch (State) {
+  switch (State)
+  {
     case ETrafficLightState::Red:
       SetTrafficLightState(ETrafficLightState::Green);
       break;
@@ -132,11 +142,14 @@ void ATrafficLightBase::SwitchTrafficLightState()
 
 void ATrafficLightBase::NotifyWheeledVehicle(ACarlaWheeledVehicle *Vehicle)
 {
-  if (IsValid(Vehicle)) {
+  if (IsValid(Vehicle))
+  {
     auto Controller = Cast<AWheeledVehicleAIController>(Vehicle->GetController());
-    if (Controller != nullptr) {
+    if (Controller != nullptr)
+    {
       Controller->SetTrafficLightState(State);
-      if (State != ETrafficLightState::Green) {
+      if (State != ETrafficLightState::Green)
+      {
         Vehicles.Add(Controller);
         Controller->SetTrafficLight(this);
       }

@@ -17,7 +17,6 @@
 #include "carla/rpc/WeatherParameters.h"
 #include "carla/rpc/TrafficLightState.h"
 
-
 #include <functional>
 #include <memory>
 #include <string>
@@ -32,8 +31,10 @@ namespace rpc {
   class VehicleControl;
   class WalkerControl;
 }
-namespace sensor { class SensorData; }
-namespace streaming { class Token; }
+namespace sensor { class SensorData;
+}
+namespace streaming { class Token;
+}
 }
 
 namespace carla {
