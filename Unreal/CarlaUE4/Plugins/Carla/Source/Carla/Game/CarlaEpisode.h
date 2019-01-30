@@ -152,36 +152,16 @@ public:
       FActorDescription thisActorDescription,
       FActorView::IdType DesiredId = 0)
   {
-      //carla::rpc::ActorDescription description(thisActorDescription);
-      
-      // create a new description from the Unreal version
-      crec::RecorderActorDescription description;      
-      description.uid = thisActorDescription.UId;
-      description.id.copy_from(reinterpret_cast<const unsigned char *>(carla::rpc::FromFString(thisActorDescription.Id).c_str()), thisActorDescription.Id.Len());
-      description.attributes.reserve(thisActorDescription.Variations.Num());
-      for (const auto &item : thisActorDescription.Variations) {
-        crec::RecorderActorAttribute attr;
-        attr.type = static_cast<carla::rpc::ActorAttributeType>(item.Value.Type);
-        attr.id.copy_from(reinterpret_cast<const unsigned char *>(carla::rpc::FromFString(item.Value.Id).c_str()), item.Value.Id.Len());
-        attr.value.copy_from(reinterpret_cast<const unsigned char *>(carla::rpc::FromFString(item.Value.Value).c_str()), item.Value.Value.Len());
-        // check for empty attributes
-        if (attr.id.size() > 0)
-          description.attributes.emplace_back(std::move(attr));
-      }
+    auto result = ActorDispatcher.SpawnActor(Transform, thisActorDescription, DesiredId);
 
-    auto result = ActorDispatcher.SpawnActor(Transform, std::move(thisActorDescription), DesiredId);
-    
     if (result.Key == EActorSpawnResultStatus::Success) {
-      // recorder event
-      crec::RecorderEventAdd recEvent { 
+      CreateRecorderEventAdd(
         static_cast<carla::rpc::actor_id_type>(result.Value.GetActorId()),
         Transform,
-        std::move(description)
-      };
-      Recorder.addEvent(std::move(recEvent));
+        std::move(thisActorDescription)
+      );
     }
     return result;
-    //return ActorDispatcher.SpawnActor(Transform, std::move(ActorDescription));
   }
 
   /// Spawns an actor based on @a ActorDescription at @a Transform. To properly
@@ -209,7 +189,7 @@ public:
   bool DestroyActor(AActor *Actor)
   {
       // recorder event
-      crec::RecorderEventDel recEvent { 
+      crec::RecorderEventDel recEvent {
         GetActorRegistry().Find(Actor).GetActorId(),
       };
       Recorder.addEvent(std::move(recEvent));
@@ -240,6 +220,8 @@ public:
     return Recorder.getReplayer();
   }
 
+  std::string StartRecorder(std::string name);
+
 private:
 
   friend class ATheNewCarlaGameModeBase;
@@ -250,6 +232,13 @@ private:
   {
     ActorDispatcher.Bind(ActorFactory);
   }
+
+  void CreateRecorderEventAdd(
+    unsigned int databaseId,
+    const FTransform &Transform,
+    FActorDescription thisActorDescription);
+
+  bool SetActorSimulatePhysics(FActorView &ActorView, bool bEnabled);
 
   const uint32 Id = 0u;
 

@@ -11,6 +11,7 @@
 #include <functional>
 #include "carla/NonCopyable.h"
 //#include "carla/recorder/Recorder.h"
+#include "carla/recorder/RecorderInfo.h"
 #include "carla/recorder/RecorderFrames.h"
 #include "carla/recorder/RecorderEvent.h"
 #include "carla/recorder/RecorderPosition.h"
@@ -19,7 +20,7 @@
 namespace carla {
 namespace recorder {
 
-typedef std::function<bool (carla::geom::Transform, RecorderActorDescription, unsigned int uid)> RecorderCallbackEventAdd;
+typedef std::function<std::pair<int, unsigned int> (carla::geom::Transform, RecorderActorDescription, unsigned int uid)> RecorderCallbackEventAdd;
 typedef std::function<bool (unsigned int uid)> RecorderCallbackEventDel;
 typedef std::function<bool (unsigned int childId, unsigned int parentId)> RecorderCallbackEventParent;
 typedef std::function<bool (RecorderPosition pos1, RecorderPosition pos2, double per)> RecorderCallbackPosition;
@@ -32,17 +33,17 @@ struct Header {
 #pragma pack(pop)
 
 class Replayer : private NonCopyable {
-  
+
     public:
 
     Replayer();
     ~Replayer();
-    
+
     std::string getInfo(std::string filename);
     std::string replayFile(std::string filename, double time);
     //void start(void);
     void stop(void);
-    
+
     void enable(void);
     void disable(void);
     bool isEnabled(void) { return enabled; };
@@ -61,6 +62,7 @@ class Replayer : private NonCopyable {
     bool enabled;
     bool enablePlayback;
     Header header;
+    RecorderInfo recInfo;
     RecorderFrame frame;
     RecorderCallbackEventAdd callbackEventAdd;
     RecorderCallbackEventDel callbackEventDel;
@@ -69,6 +71,7 @@ class Replayer : private NonCopyable {
     double currentTime {0};
     std::vector<RecorderPosition> currPos;
     std::vector<RecorderPosition> prevPos;
+    std::unordered_map<unsigned int, unsigned int> mappedId;
 
     bool readHeader();
     void skipPacket();

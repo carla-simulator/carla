@@ -50,6 +50,7 @@ void RecorderEventAdd::read(std::ifstream &file) {
     // attributes
     short total;
     readValue<short>(file, total);
+    this->description.attributes.clear();
     this->description.attributes.reserve(total);
     //log << "Attributes: " << this->description.attributes.size() << std::endl;
     for (short i=0; i<total; ++i) {

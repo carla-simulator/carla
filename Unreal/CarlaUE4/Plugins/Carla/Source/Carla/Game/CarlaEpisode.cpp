@@ -121,31 +121,44 @@ void UCarlaEpisode::InitializeAtBeginPlay()
   }
 
   // replayer callbacks
-  Recorder.getReplayer().setCallbackEventAdd([this](carla::geom::Transform transform, 
-    carla::recorder::RecorderActorDescription description, unsigned int desiredId) -> bool {
+  Recorder.getReplayer().setCallbackEventAdd([this](carla::geom::Transform transform,
+    carla::recorder::RecorderActorDescription description, unsigned int desiredId) -> std::pair<int, unsigned int> {
 
     FActorDescription ActorDesc;
     ActorDesc.UId = description.uid;
     ActorDesc.Id = FString(description.id.size(), UTF8_TO_TCHAR(description.id.data()));
-    //UE_LOG(LogCarla, Log, TEXT("1: %s"), *ActorDesc.Id);
     for (const auto &item : description.attributes) {
       FActorAttribute attr;
       attr.Type = static_cast<EActorAttributeType>(item.type);
       attr.Id = FString(item.id.size(), UTF8_TO_TCHAR(item.id.data()));
-      //UE_LOG(LogCarla, Log, TEXT("2: %s"), *attr.Id);
       attr.Value = FString(item.value.size(), UTF8_TO_TCHAR(item.value.data()));
-      //UE_LOG(LogCarla, Log, TEXT("3: %s"), *attr.Value);
       ActorDesc.Variations.Add(attr.Id, std::move(attr));
     }
 
+    // check if an actor of that type already exist with same id
+    UE_LOG(LogCarla, Log, TEXT("Trying to create actor: %s (%d)"), *ActorDesc.Id, desiredId);
+    if (GetActorRegistry().Contains(desiredId)) {
+      FActorView view = GetActorRegistry().Find(desiredId);
+      const FActorDescription *desc = view.GetActorDescription();
+      UE_LOG(LogCarla, Log, TEXT("actor '%s' already exist with id %d"), *(desc->Id), view.GetActorId());
+      if (desc->Id == ActorDesc.Id)
+        // disable physics
+        SetActorSimulatePhysics(view, false);
+        // we don't need to create, actor of same type already exist
+        return std::make_pair(2, desiredId);
+    }
+
+    // create actor
     TPair<EActorSpawnResultStatus, FActorView> Result = SpawnActorWithInfo(transform, ActorDesc, desiredId);
     if (Result.Key == EActorSpawnResultStatus::Success) {
-      //UE_LOG(LogCarla, Log, TEXT("Actor created by replayer"));
-      return true;
+      // disable physics
+      SetActorSimulatePhysics(Result.Value, false);
+      UE_LOG(LogCarla, Log, TEXT("Actor created by replayer with id %d"), Result.Value.GetActorId());
+      return std::make_pair(1, Result.Value.GetActorId());
     }
     else {
       UE_LOG(LogCarla, Log, TEXT("Actor could't be created by replayer"));
-      return false;
+      return std::make_pair(0, 0);
     }
   });
 
@@ -163,7 +176,7 @@ void UCarlaEpisode::InitializeAtBeginPlay()
     });
 
     // callback
-    Recorder.getReplayer().setCallbackEventPosition([this](carla::recorder::RecorderPosition pos1, 
+    Recorder.getReplayer().setCallbackEventPosition([this](carla::recorder::RecorderPosition pos1,
       carla::recorder::RecorderPosition pos2, double per) -> bool {
       AActor *actor = GetActorRegistry().FindActor(pos1.databaseId);
       if (actor)
@@ -173,11 +186,73 @@ void UCarlaEpisode::InitializeAtBeginPlay()
         FRotator rotation = FMath::Lerp(FRotator(pos1.transform.rotation), FRotator(pos2.transform.rotation), per);
         FTransform trans(rotation, location, FVector(1,1,1));
         actor->SetActorRelativeTransform(trans, false, nullptr, ETeleportType::TeleportPhysics);
-
-        // TODO: interpolate velocity
-
         return true;
       }
       return false;
     });
+}
+
+bool UCarlaEpisode::SetActorSimulatePhysics(FActorView &ActorView, bool bEnabled) {
+  if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
+    return false;
+  }
+  auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+  if (RootComponent == nullptr) {
+    return false; // unable to set actor simulate physics: not supported by actor
+  }
+  RootComponent->SetSimulatePhysics(bEnabled);
+
+  return true;
+}
+
+std::string UCarlaEpisode::StartRecorder(std::string name) {
+  std::string result;
+
+  // start
+  result = Recorder.start(carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())), name, carla::rpc::FromFString(MapName));
+
+  // registring all existing actors in first frame
+  FActorRegistry Registry = GetActorRegistry();
+  for (auto &&pair : Registry) {
+    auto &&actor_view = pair.second;
+    const AActor *actor = actor_view.GetActor();
+    check(actor != nullptr);
+    // create event
+    CreateRecorderEventAdd(
+      actor_view.GetActorId(),
+      actor->GetActorTransform(),
+      *actor_view.GetActorDescription()
+    );
+    };
+
+  return result;
+}
+
+void UCarlaEpisode::CreateRecorderEventAdd(
+    unsigned int databaseId,
+    const FTransform &Transform,
+    FActorDescription thisActorDescription)
+{
+    // convert from FActorDescription to crec::RecorderActorDescription
+    crec::RecorderActorDescription description;
+    description.uid = thisActorDescription.UId;
+    description.id.copy_from(reinterpret_cast<const unsigned char *>(carla::rpc::FromFString(thisActorDescription.Id).c_str()), thisActorDescription.Id.Len());
+    description.attributes.reserve(thisActorDescription.Variations.Num());
+    for (const auto &item : thisActorDescription.Variations) {
+      crec::RecorderActorAttribute attr;
+      attr.type = static_cast<carla::rpc::ActorAttributeType>(item.Value.Type);
+      attr.id.copy_from(reinterpret_cast<const unsigned char *>(carla::rpc::FromFString(item.Value.Id).c_str()), item.Value.Id.Len());
+      attr.value.copy_from(reinterpret_cast<const unsigned char *>(carla::rpc::FromFString(item.Value.Value).c_str()), item.Value.Value.Len());
+      // check for empty attributes
+      if (attr.id.size() > 0)
+        description.attributes.emplace_back(std::move(attr));
+    }
+
+  // recorder event
+  crec::RecorderEventAdd recEvent {
+    databaseId,
+    Transform,
+    std::move(description)
+  };
+  Recorder.addEvent(std::move(recEvent));
 }

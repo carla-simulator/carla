@@ -122,15 +122,15 @@ static carla::Buffer AWorldObserver_Serialize(
       AWorldObserver_GetActorState(View, Registry)
     };
     write_data(info);
-  
+
     if (Episode->GetRecorder().isEnabled()) {
       // add to the recorder
-      carla::recorder::RecorderPosition recPos { 
+      carla::recorder::RecorderPosition recPos {
         actor_view.GetActorId(),
-        info.transform,
-        info.velocity,
+        info.transform
+        //info.velocity,
         // TODO: use the angular velocity
-        info.velocity
+        // info.velocity
       };
       Episode->GetRecorder().addPosition(recPos);
     }
@@ -168,7 +168,7 @@ void AWorldObserver::Tick(float DeltaSeconds)
   // recorder
   if (Episode->GetRecorder().isEnabled())
     Episode->GetRecorder().write();
-  
+
   // replayer
   if (Episode->GetReplayer().isEnabled())
     Episode->GetReplayer().tick(DeltaSeconds);
