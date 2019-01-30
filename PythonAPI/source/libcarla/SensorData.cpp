@@ -11,6 +11,7 @@
 #include <carla/pointcloud/PointCloudIO.h>
 #include <carla/sensor/SensorData.h>
 #include <carla/sensor/data/CollisionEvent.h>
+#include <carla/sensor/data/ObstacleDetectionEvent.h>
 #include <carla/sensor/data/Image.h>
 #include <carla/sensor/data/LaneInvasionEvent.h>
 #include <carla/sensor/data/LidarMeasurement.h>
@@ -41,6 +42,13 @@ namespace data {
 
   std::ostream &operator<<(std::ostream &out, const CollisionEvent &meas) {
     out << "CollisionEvent(frame=" << meas.GetFrameNumber()
+        << ", other_actor=" << meas.GetOtherActor()
+        << ')';
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const ObstacleDetectionEvent &meas) {
+    out << "ObstacleDetectionEvent(frame=" << meas.GetFrameNumber()
         << ", other_actor=" << meas.GetOtherActor()
         << ')';
     return out;
@@ -197,6 +205,13 @@ void export_sensor_data() {
     .add_property("actor", &csd::CollisionEvent::GetActor)
     .add_property("other_actor", &csd::CollisionEvent::GetOtherActor)
     .add_property("normal_impulse", CALL_RETURNING_COPY(csd::CollisionEvent, GetNormalImpulse))
+    .def(self_ns::str(self_ns::self))
+  ;
+
+    class_<csd::ObstacleDetectionEvent, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::ObstacleDetectionEvent>>("ObstacleDetectionEvent", no_init)
+    .add_property("actor", &csd::ObstacleDetectionEvent::GetActor)
+    .add_property("other_actor", &csd::ObstacleDetectionEvent::GetOtherActor)
+    .add_property("distance", CALL_RETURNING_COPY(csd::ObstacleDetectionEvent, GetDistance))
     .def(self_ns::str(self_ns::self))
   ;
 

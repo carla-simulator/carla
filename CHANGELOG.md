@@ -1,5 +1,7 @@
 ## Latest changes
 
+  * Updated the Python API to enable the retrieval of a vehicle's speed limit and impacting traffic light
+  * Added functionality to the Python API to the allow control over traffic lights
   * Upgraded to Unreal Engine 4.21
   * Upgraded Boost to 1.69.0
   * Added point transformation functionality for LibCarla and PythonAPI
@@ -10,12 +12,14 @@
   * Added support for spawning and controlling walkers (pedestrians)
   * Renamed vehicle.get_vehicle_control() to vehicle.get_control() to be consistent with walkers
   * Remove crash reporter from packaged build
+  * Added sensor for detecting obstacles
   * Added a few methods to manage an actor:
     - set_velocity: for setting the linear velocity
     - set_angular_velocity: for setting the angular velocity
     - get_angular_velocity: for getting the angular velocity
     - add_impulse: for applying an impulse (in world axis)
   * Added support for gnss_sensor
+  * Fixed autopilot direction not properly initialized that interfered with the initial raycast direction
   * Fixed TCP accept error, too many open files while creating and destroying a lot of sensors
   * Fixed lost error messages in client-side, now when a request fails it reports the reason
   * Improved simulator fatal error handling, now uses UE4 fatal error system
