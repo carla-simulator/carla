@@ -206,7 +206,7 @@ void AWheeledVehicleAIController::TickAutopilotController()
   }
   else
   {
-    Steering = CalcStreeringValue(Direction);
+    Steering = RoadMap != nullptr ? CalcStreeringValue(Direction) : 0.0f;
     Direction = Vehicle->GetVehicleTransform().GetRotation().Rotator().Vector();
   }
 
@@ -265,7 +265,7 @@ float AWheeledVehicleAIController::GoToNextTargetLocation(FVector &Direction)
     }
     else
     {
-      return CalcStreeringValue(Direction);
+      return RoadMap != nullptr ? CalcStreeringValue(Direction) : 0.0f;
     }
   }
 
