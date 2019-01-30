@@ -15,6 +15,7 @@
 #include "carla/rpc/EpisodeInfo.h"
 #include "carla/rpc/MapInfo.h"
 #include "carla/rpc/WeatherParameters.h"
+#include "carla/rpc/TrafficLightState.h"
 
 #include <functional>
 #include <memory>
@@ -30,8 +31,12 @@ namespace rpc {
   class VehicleControl;
   class WalkerControl;
 }
-namespace sensor { class SensorData; }
-namespace streaming { class Token; }
+namespace sensor {
+  class SensorData;
+}
+namespace streaming {
+  class Token;
+}
 }
 
 namespace carla {
@@ -106,6 +111,26 @@ namespace detail {
     void ApplyControlToWalker(
         const rpc::Actor &walker,
         const rpc::WalkerControl &control);
+
+    void SetTrafficLightState(
+        const rpc::Actor &trafficLight,
+        const rpc::TrafficLightState trafficLightState);
+
+    void SetTrafficLightGreenTime(
+        const rpc::Actor &trafficLight,
+        float greenTime);
+
+    void SetTrafficLightYellowTime(
+        const rpc::Actor &trafficLight,
+        float yellowTime);
+
+    void SetTrafficLightRedTime(
+        const rpc::Actor &trafficLight,
+        float redTime);
+
+    void FreezeTrafficLight(
+        const rpc::Actor &trafficLight,
+        bool freeze);
 
     void SetActorVelocity(
         const rpc::Actor &actor,

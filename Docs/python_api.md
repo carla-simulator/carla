@@ -108,10 +108,25 @@
 - `apply_control(vehicle_control)`
 - `get_control()`
 - `set_autopilot(enabled=True)`
+- `get_speed_limit()`
+- `get_traffic_light_state()`
+- `is_at_traffic_light()`
+- `get_traffic_light()`
 
 ## `carla.TrafficLight(carla.Actor)`
 
 - `state`
+- `set_state(traffic_light_state)`
+- `get_state()`
+- `set_green_time(green_time)`
+- `get_green_time()`
+- `set_yellow_time(yellow_time)`
+- `get_yellow_time()`
+- `set_red_time(red_time)`
+- `get_red_time()`
+- `get_elapsed_time()`
+- `freeze(True)`
+- `is_frozen()`
 
 ## `carla.Sensor(carla.Actor)`
 
@@ -165,6 +180,12 @@
 - `latitude`
 - `longitude`
 - `altitude`
+
+## `carla.ObstacleDetectionSensorEvent(carla.SensorData)`
+
+- `actor`
+- `other_actor`
+- `distance`
 
 ## `carla.VehicleControl`
 
@@ -303,10 +324,10 @@ Static presets
 
 ## `carla.TrafficLightState`
 
-- `Off`
 - `Red`
 - `Yellow`
 - `Green`
+- `Off`
 - `Unknown`
 
 ## `carla.LaneMarking`
