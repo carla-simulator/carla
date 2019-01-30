@@ -46,13 +46,8 @@ import random
 
 try:
     import pygame
-    from pygame import gfxdraw
     from pygame.locals import K_h
     from pygame.locals import K_i
-    from pygame.locals import K_DOWN
-    from pygame.locals import K_LEFT
-    from pygame.locals import K_RIGHT
-    from pygame.locals import K_UP
     from pygame.locals import K_ESCAPE
 except ImportError:
     raise RuntimeError('cannot import pygame, make sure pygame package is installed')
@@ -224,7 +219,7 @@ class Vehicle(object):
 
 
 class TrafficLight(object):
-    def __init__(self, actor, radius, map_transform_helper):
+    def __init__(self, actor, map_transform_helper):
         self.actor = actor
         self.map_transform_helper = map_transform_helper
 
@@ -283,7 +278,7 @@ class SpeedLimit(object):
 
 
 class Walker(object):
-    def __init__(self, actor, radius, map_transform_helper):
+    def __init__(self, actor, map_transform_helper):
         self.actor = actor
 
         actor_location = actor.get_location()
@@ -360,7 +355,7 @@ class ModuleRender(object):
         self.draw_line(surface, color, False, lines[1], arrow_width)
         self.draw_line(surface, color, False, lines[2], arrow_width)
 
-    def draw_rect_from_line(self, surface, color, line, distance, transform_helper):
+    def draw_rect_from_line(self, surface, line, distance, transform_helper):
         lateral_left, lateral_right = Util.get_lateral_lines_from_lane(line, distance)
         
         # Convert to screen space
@@ -375,9 +370,9 @@ class ModuleRender(object):
                             lateral_right_screen[0]])
 
 
-    def draw_line_for_lane(self, index, map, road_id, lane_id, surface, width, color, transform_helper, location, line):
+    def draw_line_for_lane(self, index, town_map, road_id, lane_id, surface, width, color, transform_helper, location, line):
 
-        gen_wp = map.get_waypoint(location)
+        gen_wp = town_map.get_waypoint(location)
 
         if gen_wp is not None:
             is_central_line = (gen_wp.road_id == road_id and gen_wp.lane_id * lane_id < 0)
@@ -390,15 +385,15 @@ class ModuleRender(object):
                 if math.fmod(index, 3) == 0:
                     self.draw_line(surface, COLOR_WHITE, False, line_screen, width)
         
-    def draw_lateral_line_at_distance(self, index, map, road_id, lane_id, surface, line, distance, width, color, transform_helper):
+    def draw_lateral_line_at_distance(self, index, town_map, road_id, lane_id, surface, line, distance, width, color, transform_helper):
         
-        left_lateral, right_lateral = Util.get_lateral_lines_from_lane(line, distance)
+        left_lateral, right_lateral = Util.get_lateral_lines_from_lane(line, distance + 0.1)
 
         left_location = carla.Location(x=left_lateral[0][0], y=left_lateral[0][1])
-        self.draw_line_for_lane(index, map, road_id, lane_id, surface, width, color, transform_helper, left_location, left_lateral)
+        self.draw_line_for_lane(index, town_map, road_id, lane_id, surface, width, color, transform_helper, left_location, left_lateral)
 
         right_location = carla.Location(x=right_lateral[0][0], y=right_lateral[0][1])
-        self.draw_line_for_lane(index, map, road_id, lane_id, surface, width, color, transform_helper, right_location, right_lateral)
+        self.draw_line_for_lane(index, town_map, road_id, lane_id, surface, width, color, transform_helper, right_location, right_lateral)
         
     def draw_line(self, surface, color, closed, line, width):
         pygame.draw.lines(surface, color, closed, line, width)
@@ -460,7 +455,7 @@ class ModuleHUD (object):
 
     def _init_data_params(self, height, width):
         self.dim = (height, width)
-        self._show_info = True
+        self.show_info = True
         self._info_text = {}
         self.legend = Legend(((COLOR_MAGENTA, VEHICLE_NAME),
                               (COLOR_WHITE, WALKER_NAME)),
@@ -468,15 +463,14 @@ class ModuleHUD (object):
                              self._font_mono)
 
     def tick(self, clock):
-        if not self._show_info:
-            return
+        pass
 
     def add_info(self, module_name, info):
         self._info_text[module_name] = info
 
-    def render_actors_ids(self, vehicle_id_surface, list_actors, transform_helper, translation_offset, hero_actor):
+    def render_actors_ids(self, vehicle_id_surface, list_actors, transform_helper, hero_actor):
         vehicle_id_surface.fill(COLOR_BLACK)
-        if self._show_info:
+        if self.show_info:
             vehicle_id_surface.set_alpha(150)
             v_offset = 4
             for actor in list_actors:
@@ -503,7 +497,7 @@ class ModuleHUD (object):
         return vehicle_id_surface
 
     def render(self, display):
-        if self._show_info:
+        if self.show_info:
             info_surface = pygame.Surface((240, self.dim[1]))
             info_surface.set_alpha(100)
             display.blit(info_surface, (0, 0))
@@ -552,12 +546,56 @@ class ModuleHUD (object):
 class ModuleWorld(object):
 
     def __init__(self, name, host, port, timeout):
+        self.client = None
         self.name = name
         self.host = host
         self.port = port
         self.timeout = timeout
         self.server_fps = 0.0
         self.server_clock = pygame.time.Clock()
+
+        # World data
+        self.world = None
+        self.town_map = None
+        self.actors = None
+        # Store necessary modules
+        self.hud_module = None
+        self.module_input = None
+        self.render_module = None
+        
+        self.surface_size = [0,0]
+        self.prev_scaled_size = [0,0]
+        self.scaled_size = [0,0]
+
+        # Hero actor
+        self.hero_actor = None
+        self.filter_radius = 50
+        self.map_rendered = False
+        self.accum_offset = [0, 0]
+        self.scale_offset = [0, 0]
+
+
+        self.map_surface = None
+        self.vehicles_surface = None
+        self.traffic_light_surface = None
+        self.speed_limits_surface = None
+        self.walkers_surface = None
+        self.hero_actor_surface = None
+        self.vehicle_id_surface = None
+        self.result_surface = None
+
+        self.waypoint_length = 1.5
+        self.map_waypoints = None
+        self.normalized_point_list = []
+        self.intersection_waypoints = []
+        # Map Bounding box        
+        self.x_min = 0.0
+        self.y_min = 0.0
+        self.x_max = 0.0
+        self.y_max = 0.0
+
+        # Transform helper
+        self.transform_helper = None
 
     def _get_data_from_carla(self, host, port, timeout):
         try:
@@ -622,8 +660,8 @@ class ModuleWorld(object):
             (self.x_min * 1.02, self.y_min * 1.02), (self.x_max * 1.02, self.y_max * 1.02), self.surface_size)
 
         # Retrieve data from waypoints orientation, width and length and do conversions into another list
-        self.normalized_point_list = []
-        self.intersection_waypoints = []
+        del self.normalized_point_list[:]
+        del self.intersection_waypoints[:]
         for waypoint in self.map_waypoints:
 
             # Width of road
@@ -663,23 +701,18 @@ class ModuleWorld(object):
         self.module_input = module_manager.get_module(MODULE_INPUT)
 
         self.surface_size = min(self.hud_module.dim[0], self.hud_module.dim[1])
+        self.prev_scaled_size = (int(self.surface_size), int(self.surface_size))
 
         self._create_world_surfaces()
 
         # Generate waypoints
-        self.waypoint_length = 1.5
         self.map_waypoints = self.town_map.generate_waypoints(self.waypoint_length)
 
         self.prepare_waypoints_data()
 
         # Module render
         self.render_module = module_manager.get_module(MODULE_RENDER)
-        self.map_rendered = False
-
-        # Hero actor
-        self.filter_radius = 50
-        self.hero_actor = None
-
+            
         weak_self = weakref.ref(self)
         self.world.on_tick(lambda timestamp: ModuleWorld.on_world_tick(weak_self, timestamp))
 
@@ -744,7 +777,6 @@ class ModuleWorld(object):
         i = 0
         for point in self.normalized_point_list:
             self.render_module.draw_rect_from_line(map_surface,
-                                                            point[1],
                                                             point[3],
                                                             point[4],
                                                             self.transform_helper)
@@ -784,17 +816,17 @@ class ModuleWorld(object):
         i = 0
         for point in self.normalized_point_list:
             if math.fmod(i, 17) == 0:
-                converted_point = []
-                for point in point[5]:
-                    p0_x, p0_y = self.transform_helper.convert_world_to_screen_point((point[0][0], point[0][1]))
-                    p1_x, p1_y = self.transform_helper.convert_world_to_screen_point((point[1][0], point[1][1]))
+                converted_line = []
+                for line in point[5]:
+                    p0_x, p0_y = self.transform_helper.convert_world_to_screen_point((line[0][0], line[0][1]))
+                    p1_x, p1_y = self.transform_helper.convert_world_to_screen_point((line[1][0], line[1][1]))
 
-                    converted_point.append([(p0_x, p0_y), (p1_x, p1_y)])
+                    converted_line.append([(p0_x, p0_y), (p1_x, p1_y)])
 
-                self.render_module.draw_arrow(map_surface, COLOR_CYAN, converted_point, 1)
+                self.render_module.draw_arrow(map_surface, COLOR_CYAN, converted_line, 1)
             i = i + 1
 
-    def render_hero_actor(self, display, hero_actor, color, radius, translation_offset):
+    def render_hero_actor(self, translation_offset):
         self.hero_actor_surface.set_alpha(100)
 
         hero_diameter_screen = self.transform_helper.convert_world_to_screen_size(
@@ -843,9 +875,8 @@ class ModuleWorld(object):
 
         # Render Traffic Lights
         traffic_lights_renderer = []
-        traffic_light_width = self.transform_helper.convert_world_to_screen_size((1, 1))[0]
         for actor in traffic_lights:
-            traffic_light = TrafficLight(actor, traffic_light_width, self.transform_helper)
+            traffic_light = TrafficLight(actor, self.transform_helper)
             traffic_lights_renderer.append((traffic_light.surface, (traffic_light.x, traffic_light.y)))
 
         Util.blits(self.traffic_light_surface, traffic_lights_renderer)
@@ -861,9 +892,8 @@ class ModuleWorld(object):
 
         # Render Walkers
         walkers_renderer = []
-        walker_width = self.transform_helper.convert_world_to_screen_size((3, 3))[0]
         for actor in walkers:
-            walker = Walker(actor, walker_width, self.transform_helper)
+            walker = Walker(actor, self.transform_helper)
             walkers_renderer.append((walker.surface, (walker.x, walker.y)))
         Util.blits(self.walkers_surface, walkers_renderer)
 
@@ -881,13 +911,7 @@ class ModuleWorld(object):
 
         if not self.map_rendered:
             self.render_map(self.map_surface)
-            self.prev_scaled_size = (int(self.surface_size),
-                                     int(self.surface_size))
-
             self.map_rendered = True
-            self.mouse = (0, 0)
-            self.accum_offset = [0, 0]
-            self.scale_offset = [0, 0]
 
         self.vehicles_surface.fill(COLOR_BLACK)
         self.traffic_light_surface.fill(COLOR_BLACK)
@@ -965,8 +989,7 @@ class ModuleWorld(object):
                                   (-hero_location_screen[1]))
             selected_hero_actor = [vehicle for vehicle in vehicles if vehicle.id == self.hero_actor.id]
             if len(selected_hero_actor) != 0:
-                self.render_hero_actor(self.hero_actor_surface, selected_hero_actor[0],
-                                       COLOR_RED, 5, (hero_location_screen))
+                self.render_hero_actor(hero_location_screen)
 
                 angle = self.hero_actor.get_transform().rotation.yaw + 90.0
                 center_offset = (display.get_width()/2, display.get_height()/2)
@@ -984,7 +1007,7 @@ class ModuleWorld(object):
                     (self.hero_actor_surface, (0, 0))
                     )
         self.hud_module.render_actors_ids(self.vehicle_id_surface, vehicles,
-                                          self.transform_helper, (0, 0), self.hero_actor)
+                                          self.transform_helper, self.hero_actor)
 
         rotated_result_surface = self.result_surface
         if self.hero_actor is not None:
@@ -1060,7 +1083,7 @@ class ModuleInput(object):
                         module_world.hero_actor = None
                 if event.key == K_i:
                     module_hud = module_manager.get_module(MODULE_HUD)
-                    module_hud._show_info = not module_hud._show_info
+                    module_hud.show_info = not module_hud.show_info
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 4:
@@ -1080,11 +1103,6 @@ class ModuleInput(object):
                     if self.wheel_offset[1] <= MIN_WHEEL:
                         self.wheel_offset[1] = MIN_WHEEL
 
-    def _parse_keys(self):
-        keys = pygame.key.get_pressed()
-        # if keys[pygame.K_LEFT]:
-        # Do something
-
     def _parse_mouse(self):
         if pygame.mouse.get_pressed()[0]:
             x, y = pygame.mouse.get_pos()
@@ -1094,7 +1112,6 @@ class ModuleInput(object):
 
     def parse_input(self):
         self._parse_events()
-        self._parse_keys()
         self._parse_mouse()
 
 
