@@ -12,6 +12,7 @@
   * Added support for spawning and controlling walkers (pedestrians)
   * Renamed vehicle.get_vehicle_control() to vehicle.get_control() to be consistent with walkers
   * Remove crash reporter from packaged build
+  * Added sensor for detecting obstacles
   * Added a few methods to manage an actor:
     - set_velocity: for setting the linear velocity
     - set_angular_velocity: for setting the angular velocity
@@ -24,6 +25,7 @@
   * Fixed crash when an actor was destroyed but not de-registered, e.g. falling out of world bounds
   * LibCarla server pipeline now compiles with exceptions disabled for better performance and compatibility with UE4
   * OpenDriveActor has been rewritten using the Waypoint API, this has fixed some bugs
+  * Updated BasicAgent to allow setting target_speed and handle US-style traffic lights properly
 
 ## CARLA 0.9.2
 
