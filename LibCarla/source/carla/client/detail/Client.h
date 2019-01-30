@@ -31,9 +31,11 @@ namespace rpc {
   class VehicleControl;
   class WalkerControl;
 }
-namespace sensor { class SensorData;
+namespace sensor {
+  class SensorData;
 }
-namespace streaming { class Token;
+namespace streaming {
+  class Token;
 }
 }
 
