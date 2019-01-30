@@ -923,7 +923,7 @@ class ModuleWorld(object):
         self.render_actors(vehicles, traffic_lights, speed_limits, walkers)
 
         angle = 0
-        center_offset = 0
+        center_offset = (0,0)
         # Translation offset
         if self.hero_actor is None:
             translation_offset = ((self.module_input.mouse_offset[0]) * scale_factor[0] + self.scale_offset[0],
