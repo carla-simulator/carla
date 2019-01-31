@@ -60,8 +60,8 @@ namespace client {
       return _simulator->ShowRecorderFileInfo(name);
     }
 
-    std::string ReplayFile(std::string name, double time) {
-      return _simulator->ReplayFile(name, time);
+    std::string ReplayFile(std::string name, double start, double duration) {
+      return _simulator->ReplayFile(name, start, duration);
     }
 
   private:

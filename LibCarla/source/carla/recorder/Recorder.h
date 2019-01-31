@@ -66,9 +66,9 @@ namespace recorder {
     std::string showFileInfo(std::string path, std::string name) {
       return replayer.getInfo(path + name);
     }
-    std::string replayFile(std::string path, std::string name, double time) {
+    std::string replayFile(std::string path, std::string name, double timeStart, double duration) {
       stop();
-      return replayer.replayFile(path + name, time);
+      return replayer.replayFile(path + name, timeStart, duration);
     }
 
   };

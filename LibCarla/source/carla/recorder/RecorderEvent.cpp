@@ -146,7 +146,7 @@ void RecorderEvents::write(std::ofstream &file, std::ofstream &log) {
     // write the packet id
     writeValue<char>(file, static_cast<char>(RecorderPacketId::Event));
 
-    long posStart = file.tellp();
+    std::streampos posStart = file.tellp();
 
     // write a dummy packet size
     int total = 0;
@@ -158,7 +158,7 @@ void RecorderEvents::write(std::ofstream &file, std::ofstream &log) {
     writeEventsParent(file, log);
 
     // write the real packet size
-    long posEnd = file.tellp();
+    std::streampos posEnd = file.tellp();
     total = posEnd - posStart - sizeof(int);
     file.seekp(posStart, std::ios::beg);
     writeValue<int>(file, total);

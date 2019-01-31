@@ -234,7 +234,7 @@ namespace detail {
     std::string StartRecorder(std::string name) {
       return _client.StartRecorder(name);
     }
-    
+
     void StopRecorder(void) {
       _client.StopRecorder();
     }
@@ -243,8 +243,8 @@ namespace detail {
       return _client.ShowRecorderFileInfo(name);
     }
 
-    std::string ReplayFile(std::string name, double time) {
-      return _client.ReplayFile(name, time);
+    std::string ReplayFile(std::string name, double start, double duration) {
+      return _client.ReplayFile(name, start, duration);
     }
 
     /// @}

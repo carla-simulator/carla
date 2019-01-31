@@ -40,7 +40,7 @@ void RecorderFrames::reset(void) {
 
 void RecorderFrames::setFrame(void) {
     auto now = std::chrono::high_resolution_clock::now();
-    
+
     if (frame.id == 0) {
         frame.elapsed = 0.0f;
         frame.durationThis = 0.0f;
@@ -56,12 +56,12 @@ void RecorderFrames::setFrame(void) {
 }
 
 void RecorderFrames::write(std::ofstream &file, std::ofstream &log) {
-    unsigned long pos, offset;
-    double dummy = 0.0f;
+    std::streampos pos, offset;
+    double dummy = -1.0f;
 
     // write the packet id
     writeValue<char>(file, static_cast<char>(RecorderPacketId::Frame));
-    
+
     // write the packet size
     int total = sizeof(RecorderFrame);
     writeValue<int>(file, total);
@@ -71,7 +71,7 @@ void RecorderFrames::write(std::ofstream &file, std::ofstream &log) {
     offset = file.tellp();
     writeValue<double>(file, dummy);
     writeValue<double>(file, frame.elapsed);
-    
+
     // we need to write this duration to previous frame
     if (offsetPreviousFrame > 0) {
         pos = file.tellp();
@@ -79,7 +79,7 @@ void RecorderFrames::write(std::ofstream &file, std::ofstream &log) {
         writeValue<double>(file, frame.durationThis);
         file.seekp(pos, std::ios::beg);
     }
-    
+
     // save position for next actualization
     offsetPreviousFrame = offset;
 

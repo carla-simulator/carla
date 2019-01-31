@@ -40,9 +40,10 @@ class Replayer : private NonCopyable {
     ~Replayer();
 
     std::string getInfo(std::string filename);
-    std::string replayFile(std::string filename, double time);
+    std::string replayFile(std::string filename, double timeStart = 0.0f, double duration = 0.0f);
     //void start(void);
     void stop(void);
+    void stopAndContinue(void);
 
     void enable(void);
     void disable(void);
@@ -60,7 +61,6 @@ class Replayer : private NonCopyable {
     private:
     std::ifstream file;
     bool enabled;
-    bool enablePlayback;
     Header header;
     RecorderInfo recInfo;
     RecorderFrame frame;
@@ -68,16 +68,20 @@ class Replayer : private NonCopyable {
     RecorderCallbackEventDel callbackEventDel;
     RecorderCallbackEventParent callbackEventParent;
     RecorderCallbackPosition callbackPosition;
-    double currentTime {0};
     std::vector<RecorderPosition> currPos;
     std::vector<RecorderPosition> prevPos;
     std::unordered_map<unsigned int, unsigned int> mappedId;
+    double currentTime;
+    double timeToStop;
+    double totalTime;
 
     bool readHeader();
     void skipPacket();
-    void rewind();
+    // read last frame in file and return the total time recorded
+    double getTotalTime(void);
+    void rewind(void);
     void processToTime(double time);
-    void processEvents();
+    void processEvents(void);
     void processPositions(void);
     void updatePositions(double per);
     void interpolatePosition(const RecorderPosition &start, const RecorderPosition &end, double per);

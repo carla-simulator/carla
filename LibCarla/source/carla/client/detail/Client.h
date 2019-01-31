@@ -155,7 +155,7 @@ namespace detail {
     std::string StartRecorder(std::string name);
     void StopRecorder(void);
     std::string ShowRecorderFileInfo(std::string name);
-    std::string ReplayFile(std::string name, double time);
+    std::string ReplayFile(std::string name, double start, double duration);
 
   private:
 
