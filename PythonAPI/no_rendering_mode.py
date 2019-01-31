@@ -52,11 +52,6 @@ try:
 except ImportError:
     raise RuntimeError('cannot import pygame, make sure pygame package is installed')
 
-try:
-    import numpy as np
-except ImportError:
-    raise RuntimeError('cannot import numpy, make sure numpy package is installed')
-
 # ==============================================================================
 # -- Constants -----------------------------------------------------------------
 # ==============================================================================
@@ -824,10 +819,10 @@ class ModuleWorld(object):
         else:
             hero_mode_text = ['Hero Mode:               OFF']
 
-        self.server_fps = np.nan_to_num(self.server_clock.get_fps())
+        self.server_fps = self.server_clock.get_fps()
         module_info_text = [
-            'Server:  % 16d FPS' % self.server_fps,
-            'Client:  % 16d FPS' % clock.get_fps(),
+            'Server:  % 16s FPS' % round(self.server_fps),
+            'Client:  % 16s FPS' % round(clock.get_fps()),
             'Map Name:          %10s' % self.world.map_name,
         ]
 

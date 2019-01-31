@@ -336,7 +336,7 @@ class HUD(object):
 
     def on_world_tick(self, timestamp):
         self._server_clock.tick()
-        self.server_fps = np.nan_to_num(self._server_clock.get_fps())
+        self.server_fps = self._server_clock.get_fps()
         self.frame_number = timestamp.frame_count
         self.simulation_time = timestamp.elapsed_seconds
 
@@ -356,8 +356,8 @@ class HUD(object):
         collision = [x / max_col for x in collision]
         vehicles = world.world.get_actors().filter('vehicle.*')
         self._info_text = [
-            'Server:  % 16d FPS' % self.server_fps,
-            'Client:  % 16d FPS' % clock.get_fps(),
+            'Server:  % 16s FPS' % round(self.server_fps),
+            'Client:  % 16s FPS' % round(clock.get_fps()),
             '',
             'Vehicle: % 20s' % get_actor_display_name(world.player, truncate=20),
             'Map:     % 20s' % world.world.map_name,
