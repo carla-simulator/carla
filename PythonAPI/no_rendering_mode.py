@@ -52,6 +52,10 @@ try:
 except ImportError:
     raise RuntimeError('cannot import pygame, make sure pygame package is installed')
 
+try:
+    import numpy as np
+except ImportError:
+    raise RuntimeError('cannot import numpy, make sure numpy package is installed')
 
 # ==============================================================================
 # -- Constants -----------------------------------------------------------------
@@ -168,10 +172,43 @@ class TransformHelper(object):
         return (max(screen_size[0], 1), max(screen_size[1], 1))
 
 
-class Point(object):
-    def __init__(self, x=0.0, y=0.0):
-        self.x = x
-        self.y = y
+# ==============================================================================
+# -- Waypoint ----------------------------------------------------------------------
+# ==============================================================================
+
+class Waypoint(object):
+    def __init__(self, color, width_world, line_world, transform_helper,
+                 arrow_lines_world=None, road_id=None, lane_id=None):
+        self.color = color
+        self.width_world = width_world
+        self.line_world = line_world
+        self.transform_helper = transform_helper
+        self.line_screen = self.transform_helper.convert_world_to_screen_line(self.line_world)
+        self.width_screen = int(
+            self.transform_helper.convert_world_to_screen_size(
+                (self.width_world, self.width_world))[0])
+        self.arrow_lines_world = arrow_lines_world
+        self.arrow_lines_screen = []
+        self.road_id = road_id
+        self.lane_id = lane_id
+
+        if self.arrow_lines_world is not None:
+            # We add also the central line of the arrow
+            self.arrow_lines_world.append(self.line_world)
+            for line in self.arrow_lines_world:
+                self.arrow_lines_screen.append(self.transform_helper.convert_world_to_screen_line(line))
+
+    def refresh_conversion_during_scale(self):
+        self.line_screen = self.transform_helper.convert_world_to_screen_line(self.line_world)
+        self.width_screen = int(
+            self.transform_helper.convert_world_to_screen_size(
+                (self.width_world, self.width_world))[0])
+
+        if self.arrow_lines_world is not None:
+            del self.arrow_lines_screen[:]
+            self.arrow_lines_world.append(self.line_world)
+            for line in self.arrow_lines_world:
+                self.arrow_lines_screen.append(self.transform_helper.convert_world_to_screen_line(line))
 
 # ==============================================================================
 # -- Vehicle ----------------------------------------------------------------------
@@ -446,7 +483,7 @@ class Legend(object):
     def render(self, display):
 
         h_offset = 20
-        v_offset = 200 + 25 + 10
+        v_offset = 235
         h_space = 10
 
         display.blit(self.header_surface, (8 + 100 / 2, v_offset))
@@ -580,14 +617,15 @@ class ModuleWorld(object):
         self.world = None
         self.town_map = None
         self.actors = None
+
         # Store necessary modules
         self.hud_module = None
         self.module_input = None
         self.render_module = None
 
         self.surface_size = [0, 0]
-        self.prev_scaled_size = [0, 0]
-        self.scaled_size = [0, 0]
+        self.prev_scaled_size = 0
+        self.scaled_size = 0
 
         # Hero actor
         self.hero_actor = None
@@ -607,8 +645,8 @@ class ModuleWorld(object):
 
         self.waypoint_length = 1.5
         self.map_waypoints = None
-        self.normalized_point_list = []
-        self.intersection_waypoints = []
+        self.road_render_data_list = []
+        self.intersection_render_data_list = []
         # Map Bounding box
         self.x_min = 0.0
         self.y_min = 0.0
@@ -677,17 +715,14 @@ class ModuleWorld(object):
         self.x_min, self.y_min, self.x_max, self.y_max = self._compute_map_bounding_box(self.map_waypoints)
 
         # Feed map bounding box and surface size to transform helper
+        shrink_map_factor = 1.02
         self.transform_helper = TransformHelper(
-            (self.x_min * 1.02, self.y_min * 1.02), (self.x_max * 1.02, self.y_max * 1.02), self.surface_size)
+            (self.x_min * shrink_map_factor, self.y_min * shrink_map_factor), (self.x_max * shrink_map_factor, self.y_max * shrink_map_factor), self.surface_size)
 
         # Retrieve data from waypoints orientation, width and length and do conversions into another list
-        del self.normalized_point_list[:]
-        del self.intersection_waypoints[:]
+        del self.road_render_data_list[:]
+        del self.intersection_render_data_list[:]
         for waypoint in self.map_waypoints:
-
-            # Width of road
-            screen_width = self.transform_helper.convert_world_to_screen_size(
-                (waypoint.lane_width, waypoint.lane_width))[0]
 
             # Waypoint front
             wf = waypoint.transform.get_forward_vector()
@@ -696,25 +731,32 @@ class ModuleWorld(object):
             wp_1 = (wp_0[0] + wf.x * self.waypoint_length, wp_0[1] + wf.y * self.waypoint_length)
             wp_half = (wp_0[0] + wf.x * self.waypoint_length / 2, wp_0[1] + wf.y * self.waypoint_length / 2)
 
-            # Convert waypoints to screen space
-            wp_0_screen = self.transform_helper.convert_world_to_screen_point(wp_0)
-            wp_1_screen = self.transform_helper.convert_world_to_screen_point(wp_1)
-
-            # Get side arrow lines
-            wl = (-wf.y, wf.x)
-
-            line_0 = [wp_1, (wp_half[0] + wl[0] * self.waypoint_length / 2,
-                             wp_half[1] + wl[1] * self.waypoint_length / 2)]
-            line_1 = [wp_1, (wp_half[0] - wl[0] * self.waypoint_length / 2,
-                             wp_half[1] - wl[1] * self.waypoint_length / 2)]
-
             # Orientation of road
             if waypoint.is_intersection:
-                self.intersection_waypoints.append(
-                    ((wp_0_screen, wp_1_screen), COLOR_DARK_GREY, screen_width, (wp_0, wp_1), waypoint.lane_width))
+                intersection_render_data = Waypoint(
+                    COLOR_DARK_GREY, waypoint.lane_width, (wp_0, wp_1), self.transform_helper)
+
+                self.intersection_render_data_list.append(intersection_render_data)
             else:
-                self.normalized_point_list.append(
-                    ((wp_0_screen, wp_1_screen), COLOR_DARK_GREY, screen_width, (wp_0, wp_1), waypoint.lane_width, [line_0, line_1, [wp_0, wp_1]], waypoint.road_id, waypoint.lane_id))
+                # Get arrow lines
+                wl = (-wf.y, wf.x)
+
+                line_0 = [wp_1, (wp_half[0] + wl[0] * self.waypoint_length / 2,
+                                 wp_half[1] + wl[1] * self.waypoint_length / 2)]
+                line_1 = [wp_1, (wp_half[0] - wl[0] * self.waypoint_length / 2,
+                                 wp_half[1] - wl[1] * self.waypoint_length / 2)]
+
+                arrow_lines = [line_0, line_1]
+                road_render_data = Waypoint(
+                    COLOR_DARK_GREY,
+                    waypoint.lane_width,
+                    (wp_0,
+                     wp_1),
+                    self.transform_helper,
+                    arrow_lines,
+                    waypoint.road_id,
+                    waypoint.lane_id)
+                self.road_render_data_list.append(road_render_data)
 
     def start(self):
         self.world, self.town_map, self.actors = self._get_data_from_carla(self.host, self.port, self.timeout)
@@ -724,7 +766,7 @@ class ModuleWorld(object):
         self.module_input = module_manager.get_module(MODULE_INPUT)
 
         self.surface_size = min(self.hud_module.dim[0], self.hud_module.dim[1])
-        self.prev_scaled_size = (int(self.surface_size), int(self.surface_size))
+        self.prev_scaled_size = int(self.surface_size)
 
         self._create_world_surfaces()
 
@@ -782,7 +824,7 @@ class ModuleWorld(object):
         else:
             hero_mode_text = ['Hero Mode:               OFF']
 
-        self.server_fps = max(min(self.server_fps, 10000.0), 0.0)
+        self.server_fps = np.nan_to_num(self.server_clock.get_fps())
         module_info_text = [
             'Server:  % 16d FPS' % self.server_fps,
             'Client:  % 16d FPS' % clock.get_fps(),
@@ -807,56 +849,68 @@ class ModuleWorld(object):
 
     def render_map(self, map_surface):
         map_surface.fill(COLOR_GREY)
+
         i = 0
-        for point in self.normalized_point_list:
+        # Draw Roads
+        for road_render_data in self.road_render_data_list:
+            road_render_data.refresh_conversion_during_scale()
+
             self.render_module.draw_rect_from_line(map_surface,
-                                                   point[3],
-                                                   point[4],
+                                                   road_render_data.line_world,
+                                                   road_render_data.width_world,
                                                    self.transform_helper)
 
-            p0_x, p0_y = self.transform_helper.convert_world_to_screen_point((point[3][0][0], point[3][0][1]))
-            width = self.transform_helper.convert_world_to_screen_size((point[4], point[4]))[0]
-            line_width = self.transform_helper.convert_world_to_screen_size((0.3, 0.3))[0]
+            border_line_width = self.transform_helper.convert_world_to_screen_size((0.3, 0.3))[0]
 
             self.render_module.drawCircle(map_surface,
-                                          p0_x, p0_y,
-                                          int(width / 2), point[1])
+                                          road_render_data.line_screen[0][0],
+                                          road_render_data.line_screen[0][1],
+                                          int(road_render_data.width_screen / 2),
+                                          road_render_data.color)
 
-            p1_x, p1_y = self.transform_helper.convert_world_to_screen_point((point[3][1][0], point[3][1][1]))
             self.render_module.drawCircle(map_surface,
-                                          p1_x, p1_y,
-                                          int(width / 2), point[1])
+                                          road_render_data.line_screen[0][0],
+                                          road_render_data.line_screen[0][1],
+                                          int(road_render_data.width_screen / 2),
+                                          road_render_data.color)
 
-            self.render_module.draw_lateral_line_at_distance(i, self.town_map, point[6], point[7],
-                                                             map_surface, point[3], point[4], line_width, COLOR_DARK_YELLOW, self.transform_helper)
+            self.render_module.draw_lateral_line_at_distance(i,
+                                                             self.town_map,
+                                                             road_render_data.road_id,
+                                                             road_render_data.lane_id,
+                                                             map_surface,
+                                                             road_render_data.line_world,
+                                                             road_render_data.width_world,
+                                                             border_line_width,
+                                                             COLOR_DARK_YELLOW,
+                                                             self.transform_helper)
             i = i + 1
-
-        for point in self.intersection_waypoints:
-            p0_x, p0_y = self.transform_helper.convert_world_to_screen_point((point[3][0][0], point[3][0][1]))
-            p1_x, p1_y = self.transform_helper.convert_world_to_screen_point((point[3][1][0], point[3][1][1]))
-            width = self.transform_helper.convert_world_to_screen_size((point[4], point[4]))[0]
-
+        # Draw Intersections
+        for intersection_render_data in self.intersection_render_data_list:
+            intersection_render_data.refresh_conversion_during_scale()
             self.render_module.draw_line(map_surface,
-                                         point[1],
+                                         intersection_render_data.color,
                                          False,
-                                         [(p0_x, p0_y), (p1_x, p1_y)],
-                                         width)
+                                         intersection_render_data.line_screen,
+                                         intersection_render_data.width_screen)
 
-            self.render_module.drawCircle(map_surface, p0_x, p0_y, int(width / 2), point[1])
-            self.render_module.drawCircle(map_surface, p1_x, p1_y, int(width / 2), point[1])
+            self.render_module.drawCircle(map_surface,
+                                          intersection_render_data.line_screen[0][0],
+                                          intersection_render_data.line_screen[0][1],
+                                          int(intersection_render_data.width_screen / 2),
+                                          intersection_render_data.color)
 
-        # Draw Arrows
+            self.render_module.drawCircle(map_surface,
+                                          intersection_render_data.line_screen[1][0],
+                                          intersection_render_data.line_screen[1][1],
+                                          int(intersection_render_data.width_screen / 2),
+                                          intersection_render_data.color)
+
+        # Draw Arrows for road orientation
         i = 0
-        for point in self.normalized_point_list:
+        for road_render_data in self.road_render_data_list:
             if math.fmod(i, 17) == 0:
-                converted_line = []
-                for line in point[5]:
-                    p0_x, p0_y = self.transform_helper.convert_world_to_screen_point((line[0][0], line[0][1]))
-                    p1_x, p1_y = self.transform_helper.convert_world_to_screen_point((line[1][0], line[1][1]))
-
-                    converted_line.append([(p0_x, p0_y), (p1_x, p1_y)])
-
-                self.render_module.draw_arrow(map_surface, COLOR_CYAN, converted_line, 1)
+                self.render_module.draw_arrow(map_surface, COLOR_CYAN, road_render_data.arrow_lines_screen, 1)
             i = i + 1
 
     def render_hero_actor(self, translation_offset):
@@ -964,22 +1018,21 @@ class ModuleWorld(object):
             speed_limits = [speed_limit for speed_limit in speed_limits
                             if self.is_actor_inside_hero_radius(speed_limit)]
 
-        scale_factor = (self.module_input.wheel_offset[0], self.module_input.wheel_offset[1])
-        self.scaled_size = (int(self.surface_size * scale_factor[0]),
-                            int(self.surface_size * scale_factor[1]))
+        scale_factor = self.module_input.wheel_offset
+        self.scaled_size = int(self.surface_size * scale_factor)
 
         # Scale surfaces if needed
         if self.scaled_size != self.prev_scaled_size:
             m = self.module_input.mouse_pos
 
             # Percentage of surface where mouse position is actually
-            px = (m[0] - self.accum_offset[0]) / float(self.prev_scaled_size[0])
-            py = (m[1] - self.accum_offset[1]) / float(self.prev_scaled_size[1])
+            px = (m[0] - self.accum_offset[0]) / float(self.prev_scaled_size)
+            py = (m[1] - self.accum_offset[1]) / float(self.prev_scaled_size)
 
             # Offset will be the previously accumulated offset added with the
             # difference of mouse positions in the old and new scales
-            diff_between_scales = ((float(self.prev_scaled_size[0]) * px) - (float(self.scaled_size[0]) * px),
-                                   (float(self.prev_scaled_size[1]) * py) - (float(self.scaled_size[1]) * py))
+            diff_between_scales = ((float(self.prev_scaled_size) * px) - (float(self.scaled_size) * px),
+                                   (float(self.prev_scaled_size) * py) - (float(self.scaled_size) * py))
 
             self.scale_offset = (self.accum_offset[0] + diff_between_scales[0],
                                  self.accum_offset[1] + diff_between_scales[1])
@@ -992,19 +1045,19 @@ class ModuleWorld(object):
             self.prev_scaled_size = self.scaled_size
 
             # Scale performed
-            self.transform_helper.map_size = self.scaled_size[0]
-
+            self.transform_helper.map_size = self.scaled_size
             self.map_surface.fill(COLOR_BLACK)
-            new_map_surface = pygame.Surface(self.scaled_size).convert()
+            new_map_size = (self.transform_helper.map_size, self.transform_helper.map_size)
+            new_map_surface = pygame.Surface(new_map_size).convert()
             self.render_map(new_map_surface)
             self.map_surface = new_map_surface
-            self.vehicles_surface = self.refresh_surface(self.vehicles_surface, self.scaled_size).convert()
-            self.traffic_light_surface = self.refresh_surface(self.traffic_light_surface, self.scaled_size).convert()
-            self.speed_limits_surface = self.refresh_surface(self.speed_limits_surface, self.scaled_size).convert()
-            self.walkers_surface = self.refresh_surface(self.walkers_surface, self.scaled_size).convert()
-            self.vehicle_id_surface = self.refresh_surface(self.vehicle_id_surface, self.scaled_size).convert()
-            self.hero_actor_surface = self.refresh_surface(self.hero_actor_surface, self.scaled_size).convert()
-            self.result_surface = self.refresh_surface(self.result_surface, self.scaled_size).convert()
+            self.vehicles_surface = self.refresh_surface(self.vehicles_surface, new_map_size).convert()
+            self.traffic_light_surface = self.refresh_surface(self.traffic_light_surface, new_map_size).convert()
+            self.speed_limits_surface = self.refresh_surface(self.speed_limits_surface, new_map_size).convert()
+            self.walkers_surface = self.refresh_surface(self.walkers_surface, new_map_size).convert()
+            self.vehicle_id_surface = self.refresh_surface(self.vehicle_id_surface, new_map_size).convert()
+            self.hero_actor_surface = self.refresh_surface(self.hero_actor_surface, new_map_size).convert()
+            self.result_surface = self.refresh_surface(self.result_surface, new_map_size).convert()
 
         # Render Vehicles
         self.render_actors(vehicles, traffic_lights, speed_limits, walkers)
@@ -1013,9 +1066,9 @@ class ModuleWorld(object):
         center_offset = (0, 0)
         # Translation offset
         if self.hero_actor is None:
-            translation_offset = ((self.module_input.mouse_offset[0]) * scale_factor[0] + self.scale_offset[0],
-                                  self.module_input.mouse_offset[1] * scale_factor[1] + self.scale_offset[1])
-            center_offset = ((display.get_width() - self.surface_size) / 2 * scale_factor[0], 0)
+            translation_offset = ((self.module_input.mouse_offset[0]) * scale_factor + self.scale_offset[0],
+                                  self.module_input.mouse_offset[1] * scale_factor + self.scale_offset[1])
+            center_offset = ((display.get_width() - self.surface_size) / 2 * scale_factor, 0)
         else:
             hero_location = (self.hero_actor.get_location().x, self.hero_actor.get_location().y)
             hero_location_screen = self.transform_helper.convert_world_to_screen_point(hero_location)
@@ -1090,7 +1143,7 @@ class ModuleInput(object):
         self.name = name
         self.mouse_pos = (0, 0)
         self.mouse_offset = [0.0, 0.0]
-        self.wheel_offset = [1.0, 1.0]
+        self.wheel_offset = 1.0
         self.wheel_amount = 0.1
 
     def start(self):
@@ -1122,21 +1175,14 @@ class ModuleInput(object):
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 4:
-                    self.wheel_offset[0] += self.wheel_amount
-                    self.wheel_offset[1] += self.wheel_amount
-                    if self.wheel_offset[0] >= MAX_WHEEL:
-                        self.wheel_offset[0] = MAX_WHEEL
-                    if self.wheel_offset[1] >= MAX_WHEEL:
-                        self.wheel_offset[1] = MAX_WHEEL
+                    self.wheel_offset += self.wheel_amount
+                    if self.wheel_offset >= MAX_WHEEL:
+                        self.wheel_offset = MAX_WHEEL
 
                 if event.button == 5:
-                    self.wheel_offset[0] -= self.wheel_amount
-                    self.wheel_offset[1] -= self.wheel_amount
-
-                    if self.wheel_offset[0] <= MIN_WHEEL:
-                        self.wheel_offset[0] = MIN_WHEEL
-                    if self.wheel_offset[1] <= MIN_WHEEL:
-                        self.wheel_offset[1] = MIN_WHEEL
+                    self.wheel_offset -= self.wheel_amount
+                    if self.wheel_offset <= MIN_WHEEL:
+                        self.wheel_offset = MIN_WHEEL
 
     def _parse_mouse(self):
         if pygame.mouse.get_pressed()[0]:
