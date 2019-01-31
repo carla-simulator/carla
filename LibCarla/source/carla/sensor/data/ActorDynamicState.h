@@ -99,6 +99,7 @@ namespace detail {
     float red_time;
     float elapsed_time;
     bool time_is_frozen;
+    uint32_t pole_index;
   };
 #pragma pack(pop)
 } // namespace detail

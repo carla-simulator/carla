@@ -589,6 +589,32 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   });
 
+  Server.BindSync("get_group_traffic_lights", [this](
+        const cr::Actor Actor) -> R<std::vector<cr::actor_id_type>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill())
+    {
+      RESPOND_ERROR("unable to get group traffic lights: actor not found");
+    }
+    auto TrafficLight = Cast<ATrafficLightBase>(ActorView.GetActor());
+    if (TrafficLight == nullptr)
+    {
+      RESPOND_ERROR("unable to get group traffic lights: actor is not a traffic light");
+    }
+    std::vector<cr::actor_id_type> Result;
+    for (auto TLight : TrafficLight->GetGroupTrafficLights())
+    {
+      auto View = Episode->FindActor(TLight);
+      if (View.IsValid())
+      {
+        Result.push_back(View.GetActorId());
+      }
+    }
+    return Result;
+  });
+
   Server.BindSync("draw_debug_shape", [this](const cr::DebugShape &shape) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();

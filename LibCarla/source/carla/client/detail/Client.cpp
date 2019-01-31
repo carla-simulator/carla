@@ -247,6 +247,11 @@ namespace detail {
     _pimpl->AsyncCall("add_actor_impulse", actor, vector);
   }
 
+  std::vector<rpc::actor_id_type> Client::GetGroupTrafficLights(const rpc::Actor &trafficLight) {
+    using return_t = std::vector<rpc::actor_id_type>;
+    return _pimpl->CallAndWait<return_t>("get_group_traffic_lights", trafficLight);
+  }
+
   void Client::SubscribeToStream(
       const streaming::Token &token,
       std::function<void(Buffer)> callback) {
