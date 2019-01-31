@@ -1,7 +1,8 @@
 ## Latest changes
 
-  * Updated the Python API to enable the retrieval of a vehicle's speed limit and impacting traffic light
-  * Added functionality to the Python API to the allow control over traffic lights
+  * Fixed global route planner to handle round about turns and made the code consistent with local planner
+  * Basic agent integrated with global router
+  * Fixed local planner to avoid premature route pruning at path overlaps
   * Upgraded to Unreal Engine 4.21
   * Upgraded Boost to 1.69.0
   * Added point transformation functionality for LibCarla and PythonAPI

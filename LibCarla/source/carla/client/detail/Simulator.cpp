@@ -127,7 +127,10 @@ namespace detail {
   }
 
   bool Simulator::DestroyActor(Actor &actor) {
-    auto success = _client.DestroyActor(actor.Serialize());
+    bool success = true;
+    if (actor.GetTypeId() != "sensor.other.lane_detector") { /// @todo
+      success = _client.DestroyActor(actor.Serialize());
+    }
     if (success) {
       // Remove it's persistent state so it cannot access the client anymore.
       actor.GetEpisode().Clear();

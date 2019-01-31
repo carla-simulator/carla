@@ -336,7 +336,7 @@ class HUD(object):
 
     def on_world_tick(self, timestamp):
         self._server_clock.tick()
-        self.server_fps = self._server_clock.get_fps()
+        self.server_fps = np.nan_to_num(self._server_clock.get_fps())
         self.frame_number = timestamp.frame_count
         self.simulation_time = timestamp.elapsed_seconds
 
@@ -573,7 +573,7 @@ class LaneInvasionSensor(object):
 # -- GnssSensor --------------------------------------------------------
 # ==============================================================================
 
- 
+
 class GnssSensor(object):
     def __init__(self, parent_actor):
         self.sensor = None
@@ -587,7 +587,7 @@ class GnssSensor(object):
         # reference.
         weak_self = weakref.ref(self)
         self.sensor.listen(lambda event: GnssSensor._on_gnss_event(weak_self, event))
- 
+
     @staticmethod
     def _on_gnss_event(weak_self, event):
         self = weak_self()
