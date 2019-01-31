@@ -10,10 +10,17 @@
 waypoints and avoiding other vehicles.
 The agent also responds to traffic lights. """
 
+import math
+
+import numpy as np
+
 import carla
 from agents.navigation.agent import *
 from agents.navigation.local_planner import LocalPlanner
 from agents.navigation.local_planner import compute_connection, RoadOption
+from agents.navigation.global_route_planner import GlobalRoutePlanner
+from agents.navigation.global_route_planner_dao import GlobalRoutePlannerDAO
+from agents.tools.misc import vector
 
 class BasicAgent(Agent):
     """
@@ -28,49 +35,88 @@ class BasicAgent(Agent):
         """
         super(BasicAgent, self).__init__(vehicle)
 
-        self._proximity_threshold = 10.0  # meters
+        self._proximity_threshold = 10.0 # meters
         self._state = AgentState.NAVIGATING
         self._local_planner = LocalPlanner(self._vehicle, opt_dict={'target_speed' : target_speed})
+        self._hop_resolution = 2.0
 
         # setting up global router
         self._current_plan = None
 
     def set_destination(self, location):
         start_waypoint = self._map.get_waypoint(self._vehicle.get_location())
-        end_waypoint = self._map.get_waypoint(carla.Location(location[0],
-                                                             location[1],
-                                                             location[2]))
+        end_waypoint = self._map.get_waypoint(
+            carla.Location(location[0], location[1], location[2]))
+        solution = []
+
+        # Setting up global router
+        dao = GlobalRoutePlannerDAO(self._vehicle.get_world().get_map())
+        grp = GlobalRoutePlanner(dao)
+        grp.setup()
+
+        # Obtain route plan
+        x1 = start_waypoint.transform.location.x
+        y1 = start_waypoint.transform.location.y
+        x2 = end_waypoint.transform.location.x
+        y2 = end_waypoint.transform.location.y
+        route = grp.plan_route((x1, y1), (x2, y2))
 
         current_waypoint = start_waypoint
-        active_list = [ [(current_waypoint, RoadOption.LANEFOLLOW)] ]
+        route.append(RoadOption.VOID)
+        for action in route:
 
-        solution = []
-        while not solution:
-            for _ in range(len(active_list)):
-                trajectory = active_list.pop()
-                if len(trajectory) > 1000:
-                    continue
+            #   Generate waypoints to next junction
+            wp_choice = current_waypoint.next(self._hop_resolution)
+            while len(wp_choice) == 1:
+                current_waypoint = wp_choice[0]
+                solution.append((current_waypoint, RoadOption.LANEFOLLOW))
+                wp_choice = current_waypoint.next(self._hop_resolution)
+                #   Stop at destination
+                if current_waypoint.transform.location.distance(
+                    end_waypoint.transform.location) < self._hop_resolution: break
+            if action == RoadOption.VOID: break
 
-                # expand this trajectory
-                current_waypoint, _ = trajectory[-1]
-                next_waypoints = current_waypoint.next(5.0)
-                while len(next_waypoints) == 1:
-                    next_option = compute_connection(current_waypoint, next_waypoints[0])
-                    current_distance = next_waypoints[0].transform.location.distance(end_waypoint.transform.location)
-                    if current_distance < 5.0:
-                        solution = trajectory + [(end_waypoint, RoadOption.LANEFOLLOW)]
-                        break
+            #   Select appropriate path at the junction
+            if len(wp_choice) > 1:
 
-                    # keep adding nodes
-                    trajectory.append((next_waypoints[0], next_option))
-                    current_waypoint, _ = trajectory[-1]
-                    next_waypoints = current_waypoint.next(5.0)
+                # Current heading vector
+                current_transform = current_waypoint.transform
+                current_location = current_transform.location
+                projected_location = current_location + \
+                    carla.Location(
+                        x=math.cos(math.radians(current_transform.rotation.yaw)),
+                        y=math.sin(math.radians(current_transform.rotation.yaw)))
+                v_current = vector(current_location, projected_location)
 
-                if not solution:
-                    # multiple choices
-                    for waypoint in next_waypoints:
-                        next_option = compute_connection(current_waypoint, waypoint)
-                        active_list.append(trajectory + [(waypoint, next_option)])
+                direction = 0
+                if action == RoadOption.LEFT:
+                    direction = 1
+                elif action == RoadOption.RIGHT:
+                    direction = -1
+                elif action == RoadOption.STRAIGHT:
+                    direction = 0
+                select_criteria = float('inf')
+
+                #   Choose correct path
+                for wp_select in wp_choice:
+                    v_select = vector(
+                        current_location, wp_select.transform.location)
+                    cross = float('inf')
+                    if direction == 0:
+                        cross = abs(np.cross(v_current, v_select)[-1])
+                    else:
+                        cross = direction*np.cross(v_current, v_select)[-1]
+                    if cross < select_criteria:
+                        select_criteria = cross
+                        current_waypoint = wp_select
+
+                #   Generate all waypoints within the junction
+                #   along selected path
+                solution.append((current_waypoint, action))
+                current_waypoint = current_waypoint.next(self._hop_resolution)[0]
+                while current_waypoint.is_intersection:
+                    solution.append((current_waypoint, action))
+                    current_waypoint = current_waypoint.next(self._hop_resolution)[0]
 
         assert solution
 
