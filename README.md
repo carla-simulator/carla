@@ -32,7 +32,8 @@ Repositories associated to the CARLA simulation platform:
 * [**Scenario_Runner**](https://github.com/carla-simulator/scenario_runner): Engine to execute traffic scenarios in CARLA 0.9.X
 * [**ROS-bridge**](https://github.com/carla-simulator/ros-bridge): Interface to connect CARLA 0.9.X to ROS
 * [**Driving-benchmarks**](https://github.com/carla-simulator/driving-benchmarks): Benchmark tools for Autonomous Driving tasks
-* [**Imitation-Learning**](https://github.com/carla-simulator/imitation-learning): Code for running Conditional Imitation Learning models in CARLA
+* [**Conditional Imitation-Learning**](https://github.com/felipecode/coiltraine): Code for training and testing Conditional Imitation Learning models in CARLA [README](https://github.com/felipecode/coiltraine/blob/master/docs/view_agents.md)
+* [**AutoWare AV stack**](https://github.com/carla-simulator/carla-autoware)
 * [**Reinforcement-Learning**](https://github.com/carla-simulator/reinforcement-learning): Code for running Conditional Reinforcement Learning models in CARLA
 
 2019 Roadmap
@@ -46,7 +47,8 @@ from the community. Our most immediate goals are:
 - [x] Support ROS interface
 - [x] Allowing for flexible and user-friendly import and editing of maps
 - [x] Control of all vehicles from client side
-- [ ] Control of pedestrians from client side
+- [x] Control of pedestrians from client side
+- [x] No rendering mode for high performance simulation
 - [ ] Support parallel simulation of traffic scenarios in the cloud
 - [ ] RADAR simulation
 
