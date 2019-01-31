@@ -52,6 +52,13 @@ namespace client {
     /// @note This function does not call the simulator, it returns the data
     /// received in the last tick.
     bool IsFrozen() const;
+
+    uint32_t GetPoleIndex();
+
+    /// Return all traffic lights in the group this one belongs to.
+    ///
+    /// @note This function calls the simulator
+    std::vector<SharedPtr<TrafficLight>> GetGroupTrafficLights();
   };
 
 } // namespace client
