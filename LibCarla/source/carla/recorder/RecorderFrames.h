@@ -30,11 +30,11 @@ class RecorderFrames {
     void reset();
     void setFrame(void);
     void write(std::ofstream &file, std::ofstream &log);
-    
+
 
     private:
     RecorderFrame frame;
-    unsigned long offsetPreviousFrame;
+    std::streampos offsetPreviousFrame;
     std::chrono::time_point<std::chrono::high_resolution_clock> lastTime;
 };
 

@@ -165,14 +165,23 @@ void UCarlaEpisode::InitializeAtBeginPlay()
     // callback
     Recorder.getReplayer().setCallbackEventDel([this](unsigned int databaseId) -> bool {
       DestroyActor(GetActorRegistry().FindActor(databaseId));
-      //UE_LOG(LogCarla, Log, TEXT("Destroy Actor (TODO)"));
       return true;
     });
 
     // callback
     Recorder.getReplayer().setCallbackEventParent([this](unsigned int childId, unsigned int parentId) -> bool {
-      UE_LOG(LogCarla, Log, TEXT("Parenting Actor (TODO)"));
-      return false;
+      AActor *child = GetActorRegistry().FindActor(childId);
+      AActor *parent = GetActorRegistry().FindActor(parentId);
+      if (child && parent) {
+        child->AttachToActor(parent, FAttachmentTransformRules::KeepRelativeTransform);
+        child->SetOwner(parent);
+        UE_LOG(LogCarla, Log, TEXT("Parenting Actor"));
+        return true;
+      }
+      else {
+        UE_LOG(LogCarla, Log, TEXT("Parenting Actors not found"));
+        return false;
+      }
     });
 
     // callback

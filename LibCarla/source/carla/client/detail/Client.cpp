@@ -230,8 +230,8 @@ namespace detail {
     return _pimpl->CallAndWait<std::string>("show_recorder_file_info", name);
   }
 
-  std::string Client::ReplayFile(std::string name, double time) {
-    return _pimpl->CallAndWait<std::string>("replay_file", name, time);
+  std::string Client::ReplayFile(std::string name, double start, double duration) {
+    return _pimpl->CallAndWait<std::string>("replay_file", name, start, duration);
   }
 
 } // namespace detail

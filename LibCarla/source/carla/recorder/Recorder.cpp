@@ -47,6 +47,10 @@ std::string Recorder::start(std::string path, std::string name, std::string mapN
 
     // files
     file.open(filename.str(), std::ios::binary | std::ios::trunc | std::ios::out);
+    if (!file.is_open()) {
+        log_error("Recorder file couldn't be created");
+        return "";
+    }
 
     // log
     log.open(filename.str() + ".log");

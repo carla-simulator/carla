@@ -44,10 +44,18 @@ void Replayer::setCallbackEventPosition(RecorderCallbackPosition f) {
 void Replayer::stop(void) {
   if (enabled) {
     enabled = false;
-    processToTime(100000.0f);
+    processToTime(totalTime);
     file.close();
   }
   log_warning("Replayer stopped");
+}
+
+void Replayer::stopAndContinue(void) {
+  if (enabled) {
+    enabled = false;
+    file.close();
+  }
+  log_warning("Replayer stopped and continue");
 }
 
 bool Replayer::readHeader() {
@@ -180,8 +188,11 @@ std::string Replayer::getInfo(std::string filename) {
   return info.str();
 }
 
-void Replayer::rewind() {
+void Replayer::rewind(void) {
   currentTime = 0.0f;
+  totalTime = 0.0f;
+  timeToStop = 0.0f;
+
   file.seekg(0, std::ios::beg);
 
   // mark as header as invalid to force reload a new one next time
@@ -196,11 +207,38 @@ void Replayer::rewind() {
   // log_warning("Replayer rewind");
 }
 
-std::string Replayer::replayFile(std::string filename, double time) {
+// read last frame in file and return the total time recorded
+double  Replayer::getTotalTime(void) {
+
+  std::streampos current = file.tellg();
+
+  // parse only frames
+  while (file) {
+    // get header
+    if (!readHeader())
+      break;
+
+    // check for a frame packet
+    switch (header.id) {
+      case static_cast<char>(RecorderPacketId::Frame):
+        frame.read(file);
+        break;
+      default:
+        skipPacket();
+        break;
+    }
+  }
+
+  file.clear();
+  file.seekg(current, std::ios::beg);
+  return frame.elapsed;
+}
+
+std::string Replayer::replayFile(std::string filename, double timeStart, double duration) {
   std::stringstream info;
   std::string s;
 
-  // check toi stop if we are replaying another
+  // check to stop if we are replaying another
   if (enabled) {
     stop();
   }
@@ -217,12 +255,25 @@ std::string Replayer::replayFile(std::string filename, double time) {
   // from start
   rewind();
 
+  // get total time of recorder
+  totalTime = getTotalTime();
+  info << "Total time recorded: " << totalTime << std::endl;
+  // set time to start replayer
+  if (timeStart < 0.0f) {
+    timeStart = totalTime + timeStart;
+  }
+  // set time to stop replayer
+  if (duration > 0.0f)
+    timeToStop = timeStart + duration;
+  else
+    timeToStop = totalTime;
+  info << "Replaying from " << timeStart << " to " << timeToStop << " of " << totalTime << std::endl;
+
   // process all events until the time
-  processToTime(time);
+  processToTime(timeStart);
 
   // mark as enabled
   enabled = true;
-  enablePlayback = true;
 
   return info.str();
 }
@@ -230,16 +281,16 @@ std::string Replayer::replayFile(std::string filename, double time) {
 void Replayer::processToTime(double time) {
   double per = 0.0f;
   double newTime = currentTime + time;
-  bool bEnd = false;
+  bool frameFound = false;
 
   // check if we are in the right frame
   if (newTime >= frame.elapsed && newTime < frame.elapsed + frame.durationThis) {
     per = (newTime - frame.elapsed) / frame.durationThis;
-    bEnd = true;
+    frameFound = true;
   }
 
   // process all frames until time we want or end
-  while (!file.eof() && !bEnd) {
+  while (!file.eof() && !frameFound) {
 
     // get header
     readHeader();
@@ -256,7 +307,7 @@ void Replayer::processToTime(double time) {
       per = 0.0f;
     } else {
       per = (newTime - frame.elapsed) / frame.durationThis;
-      bEnd = true;
+      frameFound = true;
     }
 
     // info << "Frame: " << frame.id << " (" << frame.durationThis << " / " <<
@@ -278,7 +329,7 @@ void Replayer::processToTime(double time) {
       stop();
       break;
     }
-    if (bEnd) {
+    if (frameFound) {
       processPositions();
     } else {
       skipPacket();
@@ -291,10 +342,20 @@ void Replayer::processToTime(double time) {
   }
 
   // update all positions
-  updatePositions(per);
+  if (enabled && frameFound)
+    updatePositions(per);
 
   // save current time
   currentTime = newTime;
+
+  // stop replay?
+  if (currentTime >= timeToStop) {
+    // check if we need to stop the replayer and let it continue in simulation mode
+    if (timeToStop == totalTime)
+      stop();
+    else
+      stopAndContinue();
+  }
 }
 
 void Replayer::processEvents(void) {
@@ -363,7 +424,6 @@ void Replayer::processEvents(void) {
     log_warning(info.str());
     // callback
     if (callbackEventDel) {
-      log_warning("calling callback del");
       callbackEventDel(mappedId[eventDel.databaseId]);
       mappedId.erase(eventDel.databaseId);
     } else {
@@ -381,7 +441,6 @@ void Replayer::processEvents(void) {
     log_warning(info.str());
     // callback
     if (callbackEventParent) {
-      log_warning("calling callback parent");
       callbackEventParent(mappedId[eventParent.databaseId], mappedId[eventParent.databaseIdParent]);
     } else {
       log_warning("callback parent is not defined");

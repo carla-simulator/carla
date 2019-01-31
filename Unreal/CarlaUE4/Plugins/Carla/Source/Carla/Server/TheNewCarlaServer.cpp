@@ -566,12 +566,13 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       name);
   });
 
-  Server.BindSync("replay_file", [this](std::string name, double time) -> std::string {
+  Server.BindSync("replay_file", [this](std::string name, double start, double duration) -> std::string {
     REQUIRE_CARLA_EPISODE();
     return Episode->GetRecorder().replayFile(
       carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
       name,
-      time);
+      start,
+      duration);
   });
 
   Server.BindSync("draw_debug_shape", [this](const cr::DebugShape &shape) -> R<void>
