@@ -28,6 +28,11 @@
   * LibCarla server pipeline now compiles with exceptions disabled for better performance and compatibility with UE4
   * OpenDriveActor has been rewritten using the Waypoint API, this has fixed some bugs
   * Updated BasicAgent to allow setting target_speed and handle US-style traffic lights properly
+  * New Town04 (biggest so far), includes a freeway, new bridge and road barrier, a nicer landscape based on height-map, and new street props
+  * New Town05, adding more variety of intersections for the scenario runner
+  * Added new mesh for traffic lights
+  * Added new pine tree assets, with their LODs finely tuned for performance
+  * Redesigned pedestrian models and animations (walk and idle) for male and female characters
 
 ## CARLA 0.9.2
 
