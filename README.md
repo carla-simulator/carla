@@ -32,8 +32,8 @@ Repositories associated to the CARLA simulation platform:
 * [**Scenario_Runner**](https://github.com/carla-simulator/scenario_runner): Engine to execute traffic scenarios in CARLA 0.9.X
 * [**ROS-bridge**](https://github.com/carla-simulator/ros-bridge): Interface to connect CARLA 0.9.X to ROS
 * [**Driving-benchmarks**](https://github.com/carla-simulator/driving-benchmarks): Benchmark tools for Autonomous Driving tasks
-* [**Conditional Imitation-Learning**](https://github.com/felipecode/coiltraine): Code for training and testing Conditional Imitation Learning models in CARLA [README](https://github.com/felipecode/coiltraine/blob/master/docs/view_agents.md)
-* [**AutoWare AV stack**](https://github.com/carla-simulator/carla-autoware)
+* [**Conditional Imitation-Learning**](https://github.com/felipecode/coiltraine): Training and testing Conditional Imitation Learning models in CARLA [README](https://github.com/felipecode/coiltraine/blob/master/docs/view_agents.md)
+* [**AutoWare AV stack**](https://github.com/carla-simulator/carla-autoware): Bridge to connect AutoWare AV stack to CARLA
 * [**Reinforcement-Learning**](https://github.com/carla-simulator/reinforcement-learning): Code for running Conditional Reinforcement Learning models in CARLA
 
 2019 Roadmap
