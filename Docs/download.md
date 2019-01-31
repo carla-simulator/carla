@@ -6,6 +6,7 @@
 > features. Keep in mind that the API and features in this channel can (and
 > probably will) change.
 
+- [CARLA 0.9.3](https://github.com/carla-simulator/carla/releases/tag/0.9.3) -
 - [CARLA 0.9.2](https://github.com/carla-simulator/carla/releases/tag/0.9.2) -
 - [CARLA 0.9.1](https://github.com/carla-simulator/carla/releases/tag/0.9.1) -
   [[Blog post](http://carla.org/2018/11/16/release-0.9.1/)] - _Vehicle navigation, new waypoint-based API, maps creation, and more_
