@@ -1,38 +1,38 @@
-## Latest changes
+## CARLA 0.9.3
 
-  * Fixed global route planner to handle round about turns and made the code consistent with local planner
-  * Basic agent integrated with global router
-  * Fixed local planner to avoid premature route pruning at path overlaps
   * Upgraded to Unreal Engine 4.21
   * Upgraded Boost to 1.69.0
+  * New Town04 (biggest so far), includes a freeway, new bridge and road barrier, a nicer landscape based on height-map, and new street props
+  * New Town05, adding more variety of intersections for the scenario runner
+  * Redesigned pedestrian models and animations (walk and idle) for male and female characters
+  * Added sensor for detecting obstacles (ray-cast based)
+  * Added sensor GNSS (GPS)
+  * Basic agent integrated with global router
+  * Added a few methods to manage an actor:
+    - set_velocity: for setting the linear velocity
+    - set_angular_velocity: for setting the angular velocity
+    - get_angular_velocity: for getting the angular velocity
+    - add_impulse: for applying an impulse (in world axis)
+  * Renamed vehicle.get_vehicle_control() to vehicle.get_control() to be consistent with walkers
+  * Added new mesh for traffic lights
+  * Added new pine tree assets, with their LODs finely tuned for performance
   * Added point transformation functionality for LibCarla and PythonAPI
   * Added "sensor_tick" attribute to sensors (cameras and lidars) to specify the capture rate in seconds
   * Added Export/Import map tools
   * Added "get_forward_vector()" to rotation and transform, retrieves the unit vector on the rotation's X-axis
   * Added support for Deepin in PythonAPI's setup.py
   * Added support for spawning and controlling walkers (pedestrians)
-  * Renamed vehicle.get_vehicle_control() to vehicle.get_control() to be consistent with walkers
+  * Updated BasicAgent to allow setting target_speed and handle US-style traffic lights properly
+  * OpenDriveActor has been rewritten using the Waypoint API, this has fixed some bugs
   * Remove crash reporter from packaged build
-  * Added sensor for detecting obstacles
-  * Added a few methods to manage an actor:
-    - set_velocity: for setting the linear velocity
-    - set_angular_velocity: for setting the angular velocity
-    - get_angular_velocity: for getting the angular velocity
-    - add_impulse: for applying an impulse (in world axis)
-  * Added support for gnss_sensor
-  * Fixed autopilot direction not properly initialized that interfered with the initial raycast direction
+  * Improved simulator fatal error handling, now uses UE4 fatal error system
+  * LibCarla server pipeline now compiles with exceptions disabled for better performance and compatibility with UE4
   * Fixed TCP accept error, too many open files while creating and destroying a lot of sensors
   * Fixed lost error messages in client-side, now when a request fails it reports the reason
-  * Improved simulator fatal error handling, now uses UE4 fatal error system
+  * Fixed global route planner to handle round about turns and made the code consistent with local planner
+  * Fixed local planner to avoid premature route pruning at path overlaps
+  * Fixed autopilot direction not properly initialized that interfered with the initial raycast direction
   * Fixed crash when an actor was destroyed but not de-registered, e.g. falling out of world bounds
-  * LibCarla server pipeline now compiles with exceptions disabled for better performance and compatibility with UE4
-  * OpenDriveActor has been rewritten using the Waypoint API, this has fixed some bugs
-  * Updated BasicAgent to allow setting target_speed and handle US-style traffic lights properly
-  * New Town04 (biggest so far), includes a freeway, new bridge and road barrier, a nicer landscape based on height-map, and new street props
-  * New Town05, adding more variety of intersections for the scenario runner
-  * Added new mesh for traffic lights
-  * Added new pine tree assets, with their LODs finely tuned for performance
-  * Redesigned pedestrian models and animations (walk and idle) for male and female characters
 
 ## CARLA 0.9.2
 
