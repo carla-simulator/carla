@@ -153,9 +153,12 @@ class TransformHelper(object):
         self.max_map_point = max_map_point
         self.map_size = map_size
 
+        self.diff_min_max_map_point = ( float((self.max_map_point[0] - self.min_map_point[0])),
+                                        float((self.max_map_point[1] - self.min_map_point[1])))
+
     def convert_world_to_screen_point(self, point):
-        screen_point = (int(float(point[0] - self.min_map_point[0]) / float((self.max_map_point[0] - self.min_map_point[0])) * self.map_size),
-                        int(float(point[1] - self.min_map_point[1]) / float((self.max_map_point[1] - self.min_map_point[1])) * self.map_size))
+        screen_point = (int(float(point[0] - self.min_map_point[0]) / self.diff_min_max_map_point[0] * self.map_size),
+                        int(float(point[1] - self.min_map_point[1]) / self.diff_min_max_map_point[1] * self.map_size))
         return (max(screen_point[0], 1), max(screen_point[1], 1))
 
     def convert_world_to_screen_line(self, line):
@@ -163,8 +166,8 @@ class TransformHelper(object):
                 self.convert_world_to_screen_point(line[1]))
 
     def convert_world_to_screen_size(self, size):
-        screen_size = (int(size[0] / float((self.max_map_point[0] - self.min_map_point[0])) * self.map_size),
-                       int(size[1] / float((self.max_map_point[1] - self.min_map_point[1])) * self.map_size))
+        screen_size = (int(size[0] / self.diff_min_max_map_point[0] * self.map_size),
+                       int(size[1] / self.diff_min_max_map_point[1] * self.map_size))
         return (max(screen_size[0], 1), max(screen_size[1], 1))
 
 
