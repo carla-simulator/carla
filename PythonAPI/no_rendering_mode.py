@@ -40,6 +40,7 @@ import carla
 
 import argparse
 import logging
+import datetime
 import weakref
 import math
 import random
@@ -230,9 +231,9 @@ class Vehicle(object):
         self.map_transform_helper = map_transform_helper
 
         # Compute bounding box points
-        bb_extent = self.actor.bounding_box.extent
+        self.bb_extent = self.actor.bounding_box.extent
 
-        original_size = [bb_extent.x * 2.0, bb_extent.y * 2.0]
+        original_size = [self.bb_extent.x * 2.0, self.bb_extent.y * 2.0]
 
         self.surface_size = map_transform_helper.convert_world_to_screen_size(original_size)
 
@@ -571,6 +572,8 @@ class ModuleWorld(object):
         self.port = port
         self.timeout = timeout
         self.server_fps = 0.0
+        self.simulation_time = 0
+
         self.server_clock = pygame.time.Clock()
 
         # World data
@@ -825,6 +828,7 @@ class ModuleWorld(object):
         module_info_text = [
             'Server:  % 16s FPS' % round(self.server_fps),
             'Client:  % 16s FPS' % round(clock.get_fps()),
+            'Simulation time: % 12s' % datetime.timedelta(seconds=int(self.simulation_time)),
             'Map Name:          %10s' % self.world.map_name,
         ]
 
@@ -840,6 +844,7 @@ class ModuleWorld(object):
 
         self.server_clock.tick()
         self.server_fps = self.server_clock.get_fps()
+        self.simulation_time = timestamp.elapsed_seconds
 
         self.world = self.client.get_world()
         self.actors = self.world.get_actors()
@@ -957,7 +962,7 @@ class ModuleWorld(object):
         vehicle_renderer = []
         for actor in vehicles:
             vehicle = Vehicle(actor, COLOR_MAGENTA, self.transform_helper)
-            vehicle_renderer.append((vehicle.surface, (vehicle.x, vehicle.y)))
+            vehicle_renderer.append((vehicle.surface, (vehicle.x - vehicle.bb_extent.x, vehicle.y - vehicle.bb_extent.y)))
 
         Util.blits(self.vehicles_surface, vehicle_renderer)
 
