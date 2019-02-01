@@ -90,6 +90,7 @@ MODULE_RENDER = 'RENDER'
 MIN_WHEEL = 0.1
 MAX_WHEEL = 6.0
 
+HERO_DEFAULT_ZOOM = 3.0
 # ==============================================================================
 # -- TransformHelper -----------------------------------------------------------
 # ==============================================================================
@@ -780,6 +781,7 @@ class ModuleWorld(object):
         hero_vehicles = [
             actor for actor in self.actors if 'vehicle' in actor.type_id and actor.attributes['role_name'] == 'hero']
         if len(hero_vehicles) > 0:
+            self.module_input.wheel_offset = HERO_DEFAULT_ZOOM
             self.hero_actor = random.choice(hero_vehicles)
         else:
             print("There are no hero vehicles spawned")
