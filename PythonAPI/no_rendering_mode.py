@@ -86,8 +86,9 @@ MODULE_INPUT = 'INPUT'
 MODULE_RENDER = 'RENDER'
 
 # Input
+# Wheel used for zooming map
 MIN_WHEEL = 0.1
-MAX_WHEEL = 3.0
+MAX_WHEEL = 6.0
 
 # ==============================================================================
 # -- TransformHelper -----------------------------------------------------------
@@ -172,11 +173,18 @@ class TransformHelper(object):
 # ==============================================================================
 
 class Waypoint(object):
-    def __init__(self, color, width_world, line_world, transform_helper,
-                 arrow_lines_world=None, road_id=None, lane_id=None):
+    def __init__(self, color, width_world, line_world, left_line, right_line, is_left_lateral_line, is_left_central_line, is_right_lateral_line, is_right_central_line,
+                transform_helper, arrow_lines_world=None, road_id=None, lane_id=None):
         self.color = color
         self.width_world = width_world
         self.line_world = line_world
+        self.left_line = left_line
+        self.right_line = right_line
+        self.is_left_lateral_line = is_left_lateral_line
+        self.is_left_central_line = is_left_central_line
+        self.is_right_lateral_line = is_right_lateral_line
+        self.is_right_central_line = is_right_central_line
+
         self.transform_helper = transform_helper
         self.line_screen = self.transform_helper.convert_world_to_screen_line(self.line_world)
         self.width_screen = int(
@@ -401,53 +409,6 @@ class ModuleRender(object):
                              lateral_left_screen[1],
                              lateral_right_screen[1],
                              lateral_right_screen[0]])
-
-    def draw_line_for_lane(self, index, town_map, road_id, lane_id, surface,
-                           width, color, transform_helper, location, line):
-
-        gen_wp = town_map.get_waypoint(location)
-
-        if gen_wp is not None:
-            is_central_line = (gen_wp.road_id == road_id and gen_wp.lane_id * lane_id < 0)
-            is_lateral_line = (gen_wp.road_id == road_id and gen_wp.lane_id == lane_id)
-            line_screen = transform_helper.convert_world_to_screen_line(line)
-
-            if is_central_line or is_lateral_line:
-                self.draw_line(surface, color, False, line_screen, width)
-            else:
-                if math.fmod(index, 3) == 0:
-                    self.draw_line(surface, COLOR_WHITE, False, line_screen, width)
-
-    def draw_lateral_line_at_distance(self, index, town_map, road_id, lane_id, surface,
-                                      line, distance, width, color, transform_helper):
-
-        left_lateral, right_lateral = Util.get_lateral_lines_from_lane(line, distance + 0.1)
-
-        left_location = carla.Location(x=left_lateral[0][0], y=left_lateral[0][1])
-        self.draw_line_for_lane(
-            index,
-            town_map,
-            road_id,
-            lane_id,
-            surface,
-            width,
-            color,
-            transform_helper,
-            left_location,
-            left_lateral)
-
-        right_location = carla.Location(x=right_lateral[0][0], y=right_lateral[0][1])
-        self.draw_line_for_lane(
-            index,
-            town_map,
-            road_id,
-            lane_id,
-            surface,
-            width,
-            color,
-            transform_helper,
-            right_location,
-            right_lateral)
 
     def draw_line(self, surface, color, closed, line, width):
         pygame.draw.lines(surface, color, closed, line, width)
@@ -705,6 +666,18 @@ class ModuleWorld(object):
 
         return (x_min, y_min, x_max, y_max)
 
+    def detect_line_type(self, town_map, road_id, lane_id, location):
+
+        gen_wp = town_map.get_waypoint(location)
+
+        is_central_line = False
+        is_lateral_line = False
+        if gen_wp is not None:
+            is_central_line = (gen_wp.road_id == road_id and gen_wp.lane_id * lane_id < 0)
+            is_lateral_line = (gen_wp.road_id == road_id and gen_wp.lane_id == lane_id)
+        return is_central_line, is_lateral_line
+
+
     def prepare_waypoints_data(self):
         # compute bounding boxes
         self.x_min, self.y_min, self.x_max, self.y_max = self._compute_map_bounding_box(self.map_waypoints)
@@ -726,10 +699,30 @@ class ModuleWorld(object):
             wp_1 = (wp_0[0] + wf.x * self.waypoint_length, wp_0[1] + wf.y * self.waypoint_length)
             wp_half = (wp_0[0] + wf.x * self.waypoint_length / 2, wp_0[1] + wf.y * self.waypoint_length / 2)
 
+            # Check if road side lines are continuous or discontinuous
+            left_lateral, right_lateral = Util.get_lateral_lines_from_lane((wp_0, wp_1), waypoint.lane_width + 0.1)
+
+            is_left_lateral_line, is_left_central_line = self.detect_line_type(self.town_map,
+                                                                               waypoint.road_id,
+                                                                               waypoint.lane_id,
+                                                                               carla.Location(x=left_lateral[0][0], y=left_lateral[0][1]))
+
+            is_right_lateral_line, is_right_central_line = self.detect_line_type(self.town_map,
+                                                                                 waypoint.road_id,
+                                                                                 waypoint.lane_id,
+                                                                                 carla.Location(x=right_lateral[0][0], y=right_lateral[0][1]))
             # Orientation of road
             if waypoint.is_intersection:
-                intersection_render_data = Waypoint(
-                    COLOR_DARK_GREY, waypoint.lane_width, (wp_0, wp_1), self.transform_helper)
+                intersection_render_data = Waypoint( COLOR_DARK_GREY, 
+                                                    waypoint.lane_width, 
+                                                    (wp_0,wp_1),
+                                                    left_lateral,
+                                                    right_lateral,
+                                                    is_left_lateral_line, 
+                                                    is_left_central_line, 
+                                                    is_right_lateral_line,
+                                                    is_right_central_line,
+                                                    self.transform_helper)
 
                 self.intersection_render_data_list.append(intersection_render_data)
             else:
@@ -742,15 +735,19 @@ class ModuleWorld(object):
                                  wp_half[1] - wl[1] * self.waypoint_length / 2)]
 
                 arrow_lines = [line_0, line_1]
-                road_render_data = Waypoint(
-                    COLOR_DARK_GREY,
-                    waypoint.lane_width,
-                    (wp_0,
-                     wp_1),
-                    self.transform_helper,
-                    arrow_lines,
-                    waypoint.road_id,
-                    waypoint.lane_id)
+                road_render_data = Waypoint(COLOR_DARK_GREY,
+                                            waypoint.lane_width,
+                                            (wp_0,wp_1),
+                                            left_lateral,
+                                            right_lateral,
+                                            is_left_lateral_line, 
+                                            is_left_central_line, 
+                                            is_right_lateral_line,
+                                            is_right_central_line,
+                                            self.transform_helper,
+                                            arrow_lines,
+                                            waypoint.road_id,
+                                            waypoint.lane_id)
                 self.road_render_data_list.append(road_render_data)
 
     def start(self):
@@ -842,7 +839,18 @@ class ModuleWorld(object):
         self.world = self.client.get_world()
         self.actors = self.world.get_actors()
 
+    def draw_side_lines_of_road(self, map_surface, line, is_central_line, is_lateral_line, index):
+        border_line_width = self.transform_helper.convert_world_to_screen_size((0.3, 0.3))[0]
+        line_screen = self.transform_helper.convert_world_to_screen_line(line)
+        if is_central_line or is_lateral_line:
+            self.render_module.draw_line(map_surface, COLOR_DARK_YELLOW, False, line_screen, border_line_width)
+        else:
+            if math.fmod(index, 3) == 0:
+                self.render_module.draw_line(map_surface, COLOR_WHITE, False, line_screen, border_line_width)
+
+
     def render_map(self, map_surface):
+        print ("Rendering map")
         map_surface.fill(COLOR_GREY)
 
         i = 0
@@ -855,7 +863,6 @@ class ModuleWorld(object):
                                                    road_render_data.width_world,
                                                    self.transform_helper)
 
-            border_line_width = self.transform_helper.convert_world_to_screen_size((0.3, 0.3))[0]
 
             self.render_module.drawCircle(map_surface,
                                           road_render_data.line_screen[0][0],
@@ -869,16 +876,9 @@ class ModuleWorld(object):
                                           int(road_render_data.width_screen / 2),
                                           road_render_data.color)
 
-            self.render_module.draw_lateral_line_at_distance(i,
-                                                             self.town_map,
-                                                             road_render_data.road_id,
-                                                             road_render_data.lane_id,
-                                                             map_surface,
-                                                             road_render_data.line_world,
-                                                             road_render_data.width_world,
-                                                             border_line_width,
-                                                             COLOR_DARK_YELLOW,
-                                                             self.transform_helper)
+            self.draw_side_lines_of_road(map_surface, road_render_data.left_line, road_render_data.is_left_central_line, road_render_data.is_left_lateral_line, i)
+            self.draw_side_lines_of_road(map_surface, road_render_data.right_line, road_render_data.is_right_central_line, road_render_data.is_right_lateral_line, i)            
+            
             i = i + 1
         # Draw Intersections
         for intersection_render_data in self.intersection_render_data_list:
