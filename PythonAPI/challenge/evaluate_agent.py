@@ -28,8 +28,8 @@ def main():
 
     argparser.add_argument('-p', '--port', metavar='P', default=2000, type=int,
                            help='TCP port to listen to (default: 2000)')
-    argparser.add_argument('--server_path', help='Absolute path to CARLA server binary')
-    argparser.add_argument("-a", "--agent", type=str, help="Path to Agent's py file to evaluate")
+    argparser.add_argument('--server_path', help='Absolute path to CARLA server binary', required=True)
+    argparser.add_argument("-a", "--agent", type=str, help="Path to Agent's py file to evaluate", required=True)
     args = argparser.parse_args()
 
     # CARLA Evaluation protocol
