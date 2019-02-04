@@ -58,20 +58,48 @@ except ImportError:
 # ==============================================================================
 
 # Colors
-COLOR_RED = pygame.Color(255, 0, 0)
-COLOR_BLUE = pygame.Color(0, 0, 255)
-COLOR_GREEN = pygame.Color(0, 255, 0)
-COLOR_YELLOW = pygame.Color(255, 255, 0)
-COLOR_DARK_YELLOW = pygame.Color(150, 150, 0)
-COLOR_MAGENTA = pygame.Color(255, 0, 255)
-COLOR_CYAN = pygame.Color(0, 255, 255)
+
+# We will use the color palette used in Tango Desktop Project (Each color is indexed depending on brightness level)
+# See: https://en.wikipedia.org/wiki/Tango_Desktop_Project
+
+COLOR_BUTTER_0 = pygame.Color(252, 233,79)
+COLOR_BUTTER_1 = pygame.Color(237, 212,0)
+COLOR_BUTTER_2 = pygame.Color(196, 160,0)
+
+COLOR_ORANGE_0 = pygame.Color(252, 175, 62)
+COLOR_ORANGE_1 = pygame.Color(245, 121, 0)
+COLOR_ORANGE_2 = pygame.Color(209, 92, 0)
+
+COLOR_CHOCOLATE_0 = pygame.Color(233, 185, 110)
+COLOR_CHOCOLATE_1 = pygame.Color(193, 125, 17)
+COLOR_CHOCOLATE_2 = pygame.Color(143, 89, 2)
+
+COLOR_CHAMELEON_0 = pygame.Color(138,226,52)
+COLOR_CHAMELEON_1 = pygame.Color(115,210,22)
+COLOR_CHAMELEON_2 = pygame.Color(78,154,6)
+
+COLOR_SKY_BLUE_0 = pygame.Color(114,159,207)
+COLOR_SKY_BLUE_1 = pygame.Color(52,101,164)
+COLOR_SKY_BLUE_2 = pygame.Color(32,74,135)
+
+COLOR_PLUM_0 = pygame.Color(173,127,168)
+COLOR_PLUM_1 = pygame.Color(117,80,123)
+COLOR_PLUM_2 = pygame.Color(92,53,102)
+
+COLOR_SCARLET_RED_0 = pygame.Color(239, 41, 41)
+COLOR_SCARLET_RED_1 = pygame.Color(204, 0, 0)
+COLOR_SCARLET_RED_2 = pygame.Color(164, 0, 0)
+
+COLOR_ALUMINIUM_0 = pygame.Color(238,238,236)
+COLOR_ALUMINIUM_1 = pygame.Color(211,215,207)
+COLOR_ALUMINIUM_2 = pygame.Color(186,189,182)
+COLOR_ALUMINIUM_3 = pygame.Color(136,138,133)
+COLOR_ALUMINIUM_4 = pygame.Color(85,87,83)
+COLOR_ALUMINIUM_5 = pygame.Color(46,52,54)
+
+
 COLOR_WHITE = pygame.Color(255, 255, 255)
 COLOR_BLACK = pygame.Color(0, 0, 0)
-COLOR_GREY = pygame.Color(127, 127, 127)
-COLOR_LIGHT_GREY = pygame.Color(200, 200, 200)
-COLOR_DARK_GREY = pygame.Color(50, 50, 50)
-COLOR_ORANGE = pygame.Color(255, 127, 0)
-COLOR_BROWN = pygame.Color(139, 69, 19)
 
 # Legend names
 LEGEND_NAME = 'LEGEND'
@@ -91,6 +119,7 @@ MODULE_RENDER = 'RENDER'
 MIN_WHEEL = 0.1
 MAX_WHEEL = 6.0
 
+MAP_DEFAULT_ZOOM = 1.0
 HERO_DEFAULT_ZOOM = 3.0
 # ==============================================================================
 # -- TransformHelper -----------------------------------------------------------
@@ -256,7 +285,7 @@ class Vehicle(object):
         arrow_width = map_transform_helper.convert_world_to_screen_size((0.5, 0.5))[0]
 
         render_module = module_manager.get_module(MODULE_RENDER)
-        render_module.draw_arrow(surface, COLOR_BLUE, [line_0, line_1, line_2], arrow_width)
+        render_module.draw_arrow(surface, COLOR_SKY_BLUE_2, [line_0, line_1, line_2], arrow_width)
 
         actor_location = self.actor.get_location()
 
@@ -275,11 +304,11 @@ class TrafficLight(object):
 
         self.color = COLOR_BLACK
         if actor.state == carla.libcarla.TrafficLightState.Green:
-            self.color = COLOR_GREEN
+            self.color = COLOR_CHAMELEON_1
         elif actor.state == carla.libcarla.TrafficLightState.Yellow:
-            self.color = COLOR_YELLOW
+            self.color = COLOR_BUTTER_1
         else:
-            self.color = COLOR_RED
+            self.color = COLOR_SCARLET_RED_1
 
         # Compute bounding box points
         # bb_extent = self.actor.bounding_box.extent
@@ -308,9 +337,9 @@ class SpeedLimit(object):
 
         # Render speed limit
         white_circle_radius = int(radius * 0.75)
-        pygame.draw.circle(self.surface, COLOR_RED, (radius, radius), radius)
-        pygame.draw.circle(self.surface, COLOR_WHITE, (radius, radius), white_circle_radius)
-        font_surface = self.font.render(self.speed_limit, False, COLOR_DARK_GREY)
+        pygame.draw.circle(self.surface, COLOR_SCARLET_RED_0, (radius, radius), radius)
+        pygame.draw.circle(self.surface, COLOR_ALUMINIUM_0, (radius, radius), white_circle_radius)
+        font_surface = self.font.render(self.speed_limit, False, COLOR_ALUMINIUM_5)
 
         # Blit
         if hero_actor is not None:
@@ -331,7 +360,7 @@ class Walker(object):
         actor_location = actor.get_location()
         self.x, self.y = map_transform_helper.convert_world_to_screen_point((actor_location.x, actor_location.y))
 
-        self.color = COLOR_WHITE
+        self.color = COLOR_ALUMINIUM_0
 
         # Compute bounding box points
         bb_extent = self.actor.bounding_box.extent
@@ -366,7 +395,7 @@ class ModuleManager(object):
             module.tick(clock)
 
     def render(self, display):
-        display.fill(COLOR_BROWN)
+        display.fill(COLOR_CHOCOLATE_0)
         for module in self.modules:
             module.render(display)
 
@@ -409,7 +438,7 @@ class ModuleRender(object):
         lateral_right_screen = transform_helper.convert_world_to_screen_line(lateral_right)
 
         pygame.draw.polygon(surface,
-                            COLOR_DARK_GREY,
+                            COLOR_ALUMINIUM_5,
                             [lateral_left_screen[0],
                              lateral_left_screen[1],
                              lateral_right_screen[1],
@@ -428,7 +457,7 @@ class ModuleRender(object):
 
 class Legend(object):
     def __init__(self, list_keys, header_font, font):
-        self.header_surface = header_font.render(LEGEND_NAME, True, COLOR_LIGHT_GREY)
+        self.header_surface = header_font.render(LEGEND_NAME, True, COLOR_ALUMINIUM_0)
 
         self.legend_surfaces = []
         self.surface_size = 25
@@ -437,7 +466,7 @@ class Legend(object):
             color_surface = pygame.Surface((self.surface_size, self.surface_size))
             color_surface.fill(key[0])
 
-            font_surface = font.render(key[1], True, COLOR_LIGHT_GREY)
+            font_surface = font.render(key[1], True, COLOR_ALUMINIUM_0)
 
             self.legend_surfaces.append((color_surface, font_surface))
 
@@ -477,8 +506,8 @@ class ModuleHUD (object):
         self.dim = (height, width)
         self.show_info = True
         self._info_text = {}
-        self.legend = Legend(((COLOR_MAGENTA, VEHICLE_NAME),
-                              (COLOR_WHITE, WALKER_NAME)),
+        self.legend = Legend(((COLOR_PLUM_1, VEHICLE_NAME),
+                              (COLOR_ALUMINIUM_0, WALKER_NAME)),
                              self._header_font,
                              self._font_mono)
 
@@ -526,7 +555,7 @@ class ModuleHUD (object):
             bar_width = 106
             i = 0
             for module_name, module_info in self._info_text.items():
-                surface = self._header_font.render(module_name, True, COLOR_LIGHT_GREY).convert_alpha()
+                surface = self._header_font.render(module_name, True, COLOR_ALUMINIUM_0).convert_alpha()
                 display.blit(surface, (8 + bar_width / 2, 18 * i + v_offset))
                 i += 1
                 for item in module_info:
@@ -541,19 +570,19 @@ class ModuleHUD (object):
                     elif isinstance(item, tuple):
                         if isinstance(item[1], bool):
                             rect = pygame.Rect((bar_h_offset, v_offset + 8), (6, 6))
-                            pygame.draw.rect(display, COLOR_WHITE, rect, 0 if item[1] else 1)
+                            pygame.draw.rect(display, COLOR_ALUMINIUM_0, rect, 0 if item[1] else 1)
                         else:
                             rect_border = pygame.Rect((bar_h_offset, v_offset + 8), (bar_width, 6))
-                            pygame.draw.rect(display, COLOR_WHITE, rect_border, 1)
+                            pygame.draw.rect(display, COLOR_ALUMINIUM_0, rect_border, 1)
                             f = (item[1] - item[2]) / (item[3] - item[2])
                             if item[2] < 0.0:
                                 rect = pygame.Rect((bar_h_offset + f * (bar_width - 6), v_offset + 8), (6, 6))
                             else:
                                 rect = pygame.Rect((bar_h_offset, v_offset + 8), (f * bar_width, 6))
-                            pygame.draw.rect(display, COLOR_WHITE, rect)
+                            pygame.draw.rect(display, COLOR_ALUMINIUM_0, rect)
                         item = item[0]
                     if item:  # At this point has to be a str.
-                        surface = self._font_mono.render(item, True, COLOR_WHITE).convert_alpha()
+                        surface = self._font_mono.render(item, True, COLOR_ALUMINIUM_0).convert_alpha()
                         display.blit(surface, (8, 18 * i + v_offset))
                     v_offset += 18
             self.legend.render(display)
@@ -637,25 +666,25 @@ class ModuleWorld(object):
         self.map_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
 
         self.vehicles_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
-        self.vehicles_surface.set_colorkey((0, 0, 0))
+        self.vehicles_surface.set_colorkey(COLOR_BLACK)
 
         self.traffic_light_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
-        self.traffic_light_surface.set_colorkey((0, 0, 0))
+        self.traffic_light_surface.set_colorkey(COLOR_BLACK)
 
         self.speed_limits_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
-        self.speed_limits_surface.set_colorkey((0, 0, 0))
+        self.speed_limits_surface.set_colorkey(COLOR_BLACK)
 
         self.walkers_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
-        self.walkers_surface.set_colorkey((0, 0, 0))
+        self.walkers_surface.set_colorkey(COLOR_BLACK)
 
         self.hero_actor_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
-        self.hero_actor_surface.set_colorkey((0, 0, 0))
+        self.hero_actor_surface.set_colorkey(COLOR_BLACK)
 
         self.vehicle_id_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
-        self.vehicle_id_surface.set_colorkey((0, 0, 0))
+        self.vehicle_id_surface.set_colorkey(COLOR_BLACK)
 
         self.result_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
-        self.result_surface.set_colorkey((0, 0, 0))
+        self.result_surface.set_colorkey(COLOR_BLACK)
 
     def _compute_map_bounding_box(self, map_waypoints):
 
@@ -686,6 +715,8 @@ class ModuleWorld(object):
 
 
     def prepare_waypoints_data(self):
+        print ("Generating map")
+
         # compute bounding boxes
         self.x_min, self.y_min, self.x_max, self.y_max = self._compute_map_bounding_box(self.map_waypoints)
 
@@ -720,7 +751,7 @@ class ModuleWorld(object):
                                                                                  carla.Location(x=right_lateral[0][0], y=right_lateral[0][1]))
             # Orientation of road
             if waypoint.is_intersection:
-                intersection_render_data = Waypoint( COLOR_DARK_GREY, 
+                intersection_render_data = Waypoint( COLOR_ALUMINIUM_5, 
                                                     waypoint.lane_width, 
                                                     (wp_0,wp_1),
                                                     left_lateral,
@@ -742,7 +773,7 @@ class ModuleWorld(object):
                                  wp_half[1] - wl[1] * self.waypoint_length / 2)]
 
                 arrow_lines = [line_0, line_1]
-                road_render_data = Waypoint(COLOR_DARK_GREY,
+                road_render_data = Waypoint(COLOR_ALUMINIUM_5,
                                             waypoint.lane_width,
                                             (wp_0,wp_1),
                                             left_lateral,
@@ -853,15 +884,14 @@ class ModuleWorld(object):
         border_line_width = self.transform_helper.convert_world_to_screen_size((0.3, 0.3))[0]
         line_screen = self.transform_helper.convert_world_to_screen_line(line)
         if is_central_line or is_lateral_line:
-            self.render_module.draw_line(map_surface, COLOR_DARK_YELLOW, False, line_screen, border_line_width)
+            self.render_module.draw_line(map_surface, COLOR_BUTTER_0, False, line_screen, border_line_width)
         else:
             if math.fmod(index, 3) == 0:
-                self.render_module.draw_line(map_surface, COLOR_WHITE, False, line_screen, border_line_width)
+                self.render_module.draw_line(map_surface, COLOR_ALUMINIUM_0, False, line_screen, border_line_width)
 
 
     def render_map(self, map_surface):
-        print ("Rendering map")
-        map_surface.fill(COLOR_GREY)
+        map_surface.fill(COLOR_ALUMINIUM_3)
 
         i = 0
         # Draw Roads
@@ -915,7 +945,7 @@ class ModuleWorld(object):
         i = 0
         for road_render_data in self.road_render_data_list:
             if math.fmod(i, 17) == 0:
-                self.render_module.draw_arrow(map_surface, COLOR_CYAN, road_render_data.arrow_lines_screen, 1)
+                self.render_module.draw_arrow(map_surface, COLOR_SKY_BLUE_0, road_render_data.arrow_lines_screen, 1)
             i = i + 1
 
     def render_hero_actor(self, translation_offset):
@@ -925,7 +955,7 @@ class ModuleWorld(object):
             (self.filter_radius * 2.0, self.filter_radius * 2.0))[0]
 
         self.render_module.drawCircle(self.hero_actor_surface, translation_offset[0],
-                                      translation_offset[1], int(hero_diameter_screen / 2), COLOR_ORANGE)
+                                      translation_offset[1], int(hero_diameter_screen / 2), COLOR_ORANGE_1)
 
     def is_actor_inside_hero_radius(self, actor):
         actor_location = actor.get_location()
@@ -961,7 +991,7 @@ class ModuleWorld(object):
         # Render Vehicles
         vehicle_renderer = []
         for actor in vehicles:
-            vehicle = Vehicle(actor, COLOR_MAGENTA, self.transform_helper)
+            vehicle = Vehicle(actor, COLOR_PLUM_1, self.transform_helper)
             vehicle_renderer.append((vehicle.surface, (vehicle.x - vehicle.bb_extent.x, vehicle.y - vehicle.bb_extent.y)))
 
         Util.blits(self.vehicles_surface, vehicle_renderer)
@@ -1112,7 +1142,7 @@ class ModuleWorld(object):
             self.clip_surfaces(clipping_rect)
             Util.blits(self.result_surface, surfaces)
 
-            hero_surface.fill(COLOR_BROWN)
+            hero_surface.fill(COLOR_CHOCOLATE_0)
             hero_surface.blit(self.result_surface, (translation_offset[0] + hero_surface.get_width() / 2,
                                                     translation_offset[1] + hero_surface.get_height() / 2))
 
