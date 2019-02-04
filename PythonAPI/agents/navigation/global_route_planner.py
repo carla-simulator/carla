@@ -62,17 +62,22 @@ class GlobalRoutePlanner(object):
             cv = current_edge['exit_vector']
             nv = next_edge['net_vector']
             cv, nv = cv + (0,), nv + (0,)  # Making vectors 3D
-            num_edges = 0
+            entry_edges = 0
+            exit_edges = 0
             cross_list = []
             # Accumulating cross products of all other paths
-            for neighbor in self._graph.neighbors(route[i+1]):
-                num_edges+=1
+            for neighbor in self._graph.successors(route[i+1]):
+                entry_edges += 1
                 if neighbor != route[i + 2]:
                     select_edge = self._graph.edges[route[i+1], neighbor]
                     sv = select_edge['net_vector']
                     cross_list.append(np.cross(cv, sv)[2])
+            for neighbor in self._graph.predecessors(route[i+2]):
+                exit_edges += 1
+            if entry_edges == 1 and exit_edges > 1:
+                cross_list.append(0)
             # Calculating turn decision
-            if next_edge['intersection'] and num_edges > 1:
+            if next_edge['intersection'] and (entry_edges > 1 or exit_edges > 1):
                 next_cross = np.cross(cv, nv)[2]
                 deviation = math.acos(np.dot(cv, nv) /\
                     (np.linalg.norm(cv)*np.linalg.norm(nv)))

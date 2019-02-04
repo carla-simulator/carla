@@ -5,6 +5,8 @@
 This module provides implementation for GlobalRoutePlannerDAO
 """
 
+import numpy as np
+
 import carla
 
 
@@ -44,6 +46,7 @@ class GlobalRoutePlannerDAO(object):
             y1 = segment[0].transform.location.y
             x2 = segment[1].transform.location.x
             y2 = segment[1].transform.location.y
+            x1, y1, x2, y2 = np.round([x1, y1, x2, y2], 2)
             seg_dict = dict()
             seg_dict['entry'] = (x1, y1)
             seg_dict['exit'] = (x2, y2)
