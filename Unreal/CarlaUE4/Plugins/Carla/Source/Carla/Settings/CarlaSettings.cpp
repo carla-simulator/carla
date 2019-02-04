@@ -164,9 +164,49 @@ void UCarlaSettings::LoadSettings()
       WorldPort = Value;
       bUseNetworking = true;
     }
+    if (FParse::Value(FCommandLine::Get(), TEXT("-server-timeout="), Value))
+    {
+      ServerTimeOut = Value;
+    }
+    if (FParse::Value(FCommandLine::Get(), TEXT("-number-of-vehicles="), Value))
+    {
+      NumberOfVehicles = Value;
+    }
+    if (FParse::Value(FCommandLine::Get(), TEXT("-number-of-pedestrians="), Value))
+    {
+      NumberOfPedestrians = Value;
+    }
+    if (FParse::Value(FCommandLine::Get(), TEXT("-weather-id="), Value))
+    {
+      WeatherId = Value;
+    }
+    if (FParse::Value(FCommandLine::Get(), TEXT("-seed-vehicles="), Value))
+    {
+      SeedVehicles = Value;
+    }
+    if (FParse::Value(FCommandLine::Get(), TEXT("-seed-pedestrians="), Value))
+    {
+      SeedPedestrians = Value;
+    }
     if (FParse::Param(FCommandLine::Get(), TEXT("carla-no-networking")))
     {
       bUseNetworking = false;
+    }
+    if (FParse::Param(FCommandLine::Get(), TEXT("disable-synchronous-mode")))
+    {
+      bSynchronousMode = false;
+    }
+    if (FParse::Param(FCommandLine::Get(), TEXT("send-non-player-agents-info")))
+    {
+      bSendNonPlayerAgentsInfo = true;
+    }
+    if (FParse::Param(FCommandLine::Get(), TEXT("disable-rendering")))
+    {
+      bDisableRendering = true;
+    }
+    if (FParse::Param(FCommandLine::Get(), TEXT("disable-two-wheeled-vehicles")))
+    {
+      bDisableTwoWheeledVehicles = true;
     }
     FString StringQualityLevel;
     if (FParse::Value(FCommandLine::Get(), TEXT("-quality-level="), StringQualityLevel))
