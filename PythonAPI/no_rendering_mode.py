@@ -120,7 +120,7 @@ MIN_WHEEL = 0.1
 MAX_WHEEL = 6.0
 
 MAP_DEFAULT_ZOOM = 1.0
-HERO_DEFAULT_ZOOM = 3.0
+HERO_DEFAULT_ZOOM = 6.0
 # ==============================================================================
 # -- TransformHelper -----------------------------------------------------------
 # ==============================================================================
@@ -130,7 +130,7 @@ class Util(object):
     @staticmethod
     def rotate_surface(img, pos, angle):
         w, h = img.get_size()
-        img2 = pygame.Surface((w * 2, h * 2), pygame.SRCALPHA).convert()
+        img2 = pygame.Surface((w * 2, h * 2), pygame.SRCALPHA)
         img2.set_clip(pygame.Rect(w - pos[0], h - pos[1], w, h))
         img2.blit(img, (w - pos[0], h - pos[1]))
         rotated_surface = pygame.transform.rotate(img2, angle)
@@ -138,17 +138,17 @@ class Util(object):
 
     @staticmethod
     def normalize_vector(vector):
-        length_vector = math.sqrt(vector[0] ** 2 + vector[1] ** 2)
+        length_vector = math.sqrt(vector[0] ** 2.0 + vector[1] ** 2.0)
         normalized_vector = (vector[0] / length_vector, vector[1] / length_vector)
         return normalized_vector
 
     @staticmethod
-    def blits(destination_surface, source_surfaces):
+    def blits(destination_surface, source_surfaces, blend_mode=0):
         if hasattr(destination_surface, 'blits'):
             destination_surface.blits(source_surfaces)
         else:
             for surface in source_surfaces:
-                destination_surface.blit(surface[0], surface[1])
+                destination_surface.blit(surface[0], surface[1], None, blend_mode)
 
     @staticmethod
     def get_parallel_line_at_distance(line, unit_vector, distance):
@@ -201,10 +201,15 @@ class TransformHelper(object):
                        int(size[1] / self.diff_min_max_map_point[1] * self.map_size))
         return (max(screen_size[0], 1), max(screen_size[1], 1))
 
+    def convert_screen_to_world_size(self, size):
+        world_size = (int(size[0] * self.diff_min_max_map_point[0] / self.map_size),
+                      int(size[1] * self.diff_min_max_map_point[1] / self.map_size))
+        return world_size
 
 # ==============================================================================
 # -- Waypoint ----------------------------------------------------------------------
 # ==============================================================================
+
 
 class Waypoint(object):
     def __init__(self, color, width_world, line_world, left_line, right_line, is_left_lateral_line, is_left_central_line, is_right_lateral_line, is_right_central_line,
@@ -289,9 +294,11 @@ class Vehicle(object):
 
         actor_location = self.actor.get_location()
 
-        self.x, self.y = self.map_transform_helper.convert_world_to_screen_point((actor_location.x, actor_location.y))
+        self.x, self.y = self.map_transform_helper.convert_world_to_screen_point(
+            (actor_location.x, actor_location.y))
 
-        self.surface = pygame.transform.rotate(surface, -self.actor.get_transform().rotation.yaw).convert()
+        self.surface = Util.rotate_surface(
+            surface, (self.surface_size[0] / 2, self.surface_size[1] / 2), -self.actor.get_transform().rotation.yaw).convert()
 
 
 class TrafficLight(object):
@@ -734,7 +741,7 @@ class ModuleWorld(object):
 
             wp_0 = (waypoint.transform.location.x, waypoint.transform.location.y)
             wp_1 = (wp_0[0] + wf.x * self.waypoint_length, wp_0[1] + wf.y * self.waypoint_length)
-            wp_half = (wp_0[0] + wf.x * self.waypoint_length / 2, wp_0[1] + wf.y * self.waypoint_length / 2)
+            wp_half = (wp_0[0] + wf.x * self.waypoint_length / 2.0, wp_0[1] + wf.y * self.waypoint_length / 2.0)
 
             # Check if road side lines are continuous or discontinuous
             left_lateral, right_lateral = Util.get_lateral_lines_from_lane((wp_0, wp_1), waypoint.lane_width + 0.1)
@@ -766,10 +773,10 @@ class ModuleWorld(object):
                 # Get arrow lines
                 wl = (-wf.y, wf.x)
 
-                line_0 = [wp_1, (wp_half[0] + wl[0] * self.waypoint_length / 2,
-                                 wp_half[1] + wl[1] * self.waypoint_length / 2)]
-                line_1 = [wp_1, (wp_half[0] - wl[0] * self.waypoint_length / 2,
-                                 wp_half[1] - wl[1] * self.waypoint_length / 2)]
+                line_0 = [wp_1, (wp_half[0] + wl[0] * self.waypoint_length / 2.0,
+                                 wp_half[1] + wl[1] * self.waypoint_length / 2.0)]
+                line_1 = [wp_1, (wp_half[0] - wl[0] * self.waypoint_length / 2.0,
+                                 wp_half[1] - wl[1] * self.waypoint_length / 2.0)]
 
                 arrow_lines = [line_0, line_1]
                 road_render_data = Waypoint(COLOR_ALUMINIUM_5,
@@ -1000,9 +1007,9 @@ class ModuleWorld(object):
         for actor in vehicles:
             vehicle = Vehicle(actor, COLOR_PLUM_1, self.transform_helper)
             vehicle_renderer.append(
-                (vehicle.surface, (vehicle.x - vehicle.bb_extent.x, vehicle.y - vehicle.bb_extent.y)))
+                (vehicle.surface, (vehicle.x - vehicle.surface.get_width() / 2, vehicle.y - vehicle.surface.get_height() / 2)))
 
-        Util.blits(self.vehicles_surface, vehicle_renderer)
+        Util.blits(self.vehicles_surface, vehicle_renderer, pygame.BLEND_RGB_MAX)
 
         # Render Traffic Lights
         traffic_lights_renderer = []
@@ -1114,7 +1121,15 @@ class ModuleWorld(object):
             center_offset = ((display.get_width() - self.surface_size) / 2 * scale_factor, 0)
         else:
             hero_location = (self.hero_actor.get_location().x, self.hero_actor.get_location().y)
-            hero_location_screen = self.transform_helper.convert_world_to_screen_point(hero_location)
+            hero_front = self.hero_actor.get_transform().get_forward_vector()
+            pixels_ahead_vehicle = self.transform_helper.convert_screen_to_world_size(
+                (display.get_height() / 6,
+                 display.get_height() / 6))
+
+            hero_location_back = (hero_location[0] + hero_front.x * pixels_ahead_vehicle[0],
+                                  hero_location[1] + hero_front.y * pixels_ahead_vehicle[1])
+
+            hero_location_screen = self.transform_helper.convert_world_to_screen_point(hero_location_back)
 
             translation_offset = (-hero_location_screen[0],
                                   (-hero_location_screen[1]))
@@ -1150,7 +1165,7 @@ class ModuleWorld(object):
             self.clip_surfaces(clipping_rect)
             Util.blits(self.result_surface, surfaces)
 
-            hero_surface.fill(COLOR_CHOCOLATE_0)
+            hero_surface.fill(COLOR_CHOCOLATE_1)
             hero_surface.blit(self.result_surface, (translation_offset[0] + hero_surface.get_width() / 2,
                                                     translation_offset[1] + hero_surface.get_height() / 2))
 
