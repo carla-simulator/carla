@@ -53,8 +53,9 @@ def main():
         # A blueprint contains the list of attributes that define a vehicle
         # instance, we can read them and modify some of them. For instance,
         # let's randomize its color.
-        color = random.choice(bp.get_attribute('color').recommended_values)
-        bp.set_attribute('color', color)
+        if bp.has_attribute('color'):
+            color = random.choice(bp.get_attribute('color').recommended_values)
+            bp.set_attribute('color', color)
 
         # Now we need to give an initial transform to the vehicle. We choose a
         # random transform from the list of recommended spawn points of the map.
@@ -99,7 +100,7 @@ def main():
         # vehicles.
         transform.location += carla.Location(x=40, y=-3.2)
         transform.rotation.yaw = -180.0
-        for x in range(0, 10):
+        for _ in range(0, 10):
             transform.location.x += 8.0
 
             bp = random.choice(blueprint_library.filter('vehicle'))
