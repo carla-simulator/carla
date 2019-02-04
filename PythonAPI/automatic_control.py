@@ -145,8 +145,9 @@ class World(object):
             self.vehicle = self.world.spawn_actor(blueprint, spawn_point)
 
         while self.vehicle is None:
-            spawn_points = self.world.get_map().get_spawn_points()
-            spawn_point = spawn_points[1]
+            # spawn_points = self.world.get_map().get_spawn_points()
+            # spawn_point = spawn_points[1]
+            spawn_point = carla.Transform(carla.Location(x = 43.7, y = -7.8), carla.Rotation(yaw = 180))
             self.vehicle = self.world.spawn_actor(blueprint, spawn_point)
 
         # Set up the sensors.
@@ -628,10 +629,11 @@ def game_loop(args):
             agent = RoamingAgent(world.vehicle)
         else:
             agent = BasicAgent(world.vehicle)
-            spawn_point = world.world.get_map().get_spawn_points()[0]
-            agent.set_destination((spawn_point.location.x,
-                                   spawn_point.location.y,
-                                   spawn_point.location.z))
+            # spawn_point = world.world.get_map().get_spawn_points()[0]
+            # agent.set_destination((spawn_point.location.x,
+            #                        spawn_point.location.y,
+            #                        spawn_point.location.z))
+            agent.set_destination((44.61, -192.88, 0.5))
 
         clock = pygame.time.Clock()
         while True:
