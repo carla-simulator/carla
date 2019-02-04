@@ -62,9 +62,9 @@ except ImportError:
 # We will use the color palette used in Tango Desktop Project (Each color is indexed depending on brightness level)
 # See: https://en.wikipedia.org/wiki/Tango_Desktop_Project
 
-COLOR_BUTTER_0 = pygame.Color(252, 233,79)
-COLOR_BUTTER_1 = pygame.Color(237, 212,0)
-COLOR_BUTTER_2 = pygame.Color(196, 160,0)
+COLOR_BUTTER_0 = pygame.Color(252, 233, 79)
+COLOR_BUTTER_1 = pygame.Color(237, 212, 0)
+COLOR_BUTTER_2 = pygame.Color(196, 160, 0)
 
 COLOR_ORANGE_0 = pygame.Color(252, 175, 62)
 COLOR_ORANGE_1 = pygame.Color(245, 121, 0)
@@ -74,28 +74,28 @@ COLOR_CHOCOLATE_0 = pygame.Color(233, 185, 110)
 COLOR_CHOCOLATE_1 = pygame.Color(193, 125, 17)
 COLOR_CHOCOLATE_2 = pygame.Color(143, 89, 2)
 
-COLOR_CHAMELEON_0 = pygame.Color(138,226,52)
-COLOR_CHAMELEON_1 = pygame.Color(115,210,22)
-COLOR_CHAMELEON_2 = pygame.Color(78,154,6)
+COLOR_CHAMELEON_0 = pygame.Color(138, 226, 52)
+COLOR_CHAMELEON_1 = pygame.Color(115, 210, 22)
+COLOR_CHAMELEON_2 = pygame.Color(78, 154, 6)
 
-COLOR_SKY_BLUE_0 = pygame.Color(114,159,207)
-COLOR_SKY_BLUE_1 = pygame.Color(52,101,164)
-COLOR_SKY_BLUE_2 = pygame.Color(32,74,135)
+COLOR_SKY_BLUE_0 = pygame.Color(114, 159, 207)
+COLOR_SKY_BLUE_1 = pygame.Color(52, 101, 164)
+COLOR_SKY_BLUE_2 = pygame.Color(32, 74, 135)
 
-COLOR_PLUM_0 = pygame.Color(173,127,168)
-COLOR_PLUM_1 = pygame.Color(117,80,123)
-COLOR_PLUM_2 = pygame.Color(92,53,102)
+COLOR_PLUM_0 = pygame.Color(173, 127, 168)
+COLOR_PLUM_1 = pygame.Color(117, 80, 123)
+COLOR_PLUM_2 = pygame.Color(92, 53, 102)
 
 COLOR_SCARLET_RED_0 = pygame.Color(239, 41, 41)
 COLOR_SCARLET_RED_1 = pygame.Color(204, 0, 0)
 COLOR_SCARLET_RED_2 = pygame.Color(164, 0, 0)
 
-COLOR_ALUMINIUM_0 = pygame.Color(238,238,236)
-COLOR_ALUMINIUM_1 = pygame.Color(211,215,207)
-COLOR_ALUMINIUM_2 = pygame.Color(186,189,182)
-COLOR_ALUMINIUM_3 = pygame.Color(136,138,133)
-COLOR_ALUMINIUM_4 = pygame.Color(85,87,83)
-COLOR_ALUMINIUM_5 = pygame.Color(46,52,54)
+COLOR_ALUMINIUM_0 = pygame.Color(238, 238, 236)
+COLOR_ALUMINIUM_1 = pygame.Color(211, 215, 207)
+COLOR_ALUMINIUM_2 = pygame.Color(186, 189, 182)
+COLOR_ALUMINIUM_3 = pygame.Color(136, 138, 133)
+COLOR_ALUMINIUM_4 = pygame.Color(85, 87, 83)
+COLOR_ALUMINIUM_5 = pygame.Color(46, 52, 54)
 
 
 COLOR_WHITE = pygame.Color(255, 255, 255)
@@ -184,8 +184,8 @@ class TransformHelper(object):
         self.max_map_point = max_map_point
         self.map_size = map_size
 
-        self.diff_min_max_map_point = ( float((self.max_map_point[0] - self.min_map_point[0])),
-                                        float((self.max_map_point[1] - self.min_map_point[1])))
+        self.diff_min_max_map_point = (float((self.max_map_point[0] - self.min_map_point[0])),
+                                       float((self.max_map_point[1] - self.min_map_point[1])))
 
     def convert_world_to_screen_point(self, point):
         screen_point = (int(float(point[0] - self.min_map_point[0]) / self.diff_min_max_map_point[0] * self.map_size),
@@ -208,7 +208,7 @@ class TransformHelper(object):
 
 class Waypoint(object):
     def __init__(self, color, width_world, line_world, left_line, right_line, is_left_lateral_line, is_left_central_line, is_right_lateral_line, is_right_central_line,
-                transform_helper, arrow_lines_world=None, road_id=None, lane_id=None):
+                 transform_helper, arrow_lines_world=None, road_id=None, lane_id=None):
         self.color = color
         self.width_world = width_world
         self.line_world = line_world
@@ -285,7 +285,7 @@ class Vehicle(object):
         arrow_width = map_transform_helper.convert_world_to_screen_size((0.5, 0.5))[0]
 
         render_module = module_manager.get_module(MODULE_RENDER)
-        render_module.draw_arrow(surface, COLOR_SKY_BLUE_2, [line_0, line_1, line_2], arrow_width)
+        render_module.draw_arrow(surface, COLOR_SKY_BLUE_0, [line_0, line_1, line_2], arrow_width)
 
         actor_location = self.actor.get_location()
 
@@ -506,7 +506,7 @@ class ModuleHUD (object):
         self.dim = (height, width)
         self.show_info = True
         self._info_text = {}
-        self.legend = Legend(((COLOR_PLUM_1, VEHICLE_NAME),
+        self.legend = Legend(((COLOR_PLUM_2, VEHICLE_NAME),
                               (COLOR_ALUMINIUM_0, WALKER_NAME)),
                              self._header_font,
                              self._font_mono)
@@ -713,9 +713,8 @@ class ModuleWorld(object):
             is_lateral_line = (gen_wp.road_id == road_id and gen_wp.lane_id == lane_id)
         return is_central_line, is_lateral_line
 
-
     def prepare_waypoints_data(self):
-        print ("Generating map")
+        print("Generating map")
 
         # compute bounding boxes
         self.x_min, self.y_min, self.x_max, self.y_max = self._compute_map_bounding_box(self.map_waypoints)
@@ -751,13 +750,13 @@ class ModuleWorld(object):
                                                                                  carla.Location(x=right_lateral[0][0], y=right_lateral[0][1]))
             # Orientation of road
             if waypoint.is_intersection:
-                intersection_render_data = Waypoint( COLOR_ALUMINIUM_5, 
-                                                    waypoint.lane_width, 
-                                                    (wp_0,wp_1),
+                intersection_render_data = Waypoint(COLOR_ALUMINIUM_5,
+                                                    waypoint.lane_width,
+                                                    (wp_0, wp_1),
                                                     left_lateral,
                                                     right_lateral,
-                                                    is_left_lateral_line, 
-                                                    is_left_central_line, 
+                                                    is_left_lateral_line,
+                                                    is_left_central_line,
                                                     is_right_lateral_line,
                                                     is_right_central_line,
                                                     self.transform_helper)
@@ -775,11 +774,11 @@ class ModuleWorld(object):
                 arrow_lines = [line_0, line_1]
                 road_render_data = Waypoint(COLOR_ALUMINIUM_5,
                                             waypoint.lane_width,
-                                            (wp_0,wp_1),
+                                            (wp_0, wp_1),
                                             left_lateral,
                                             right_lateral,
-                                            is_left_lateral_line, 
-                                            is_left_central_line, 
+                                            is_left_lateral_line,
+                                            is_left_central_line,
                                             is_right_lateral_line,
                                             is_right_central_line,
                                             self.transform_helper,
@@ -889,7 +888,6 @@ class ModuleWorld(object):
             if math.fmod(index, 3) == 0:
                 self.render_module.draw_line(map_surface, COLOR_ALUMINIUM_0, False, line_screen, border_line_width)
 
-
     def render_map(self, map_surface):
         map_surface.fill(COLOR_ALUMINIUM_3)
 
@@ -903,7 +901,6 @@ class ModuleWorld(object):
                                                    road_render_data.width_world,
                                                    self.transform_helper)
 
-
             self.render_module.drawCircle(map_surface,
                                           road_render_data.line_screen[0][0],
                                           road_render_data.line_screen[0][1],
@@ -916,9 +913,19 @@ class ModuleWorld(object):
                                           int(road_render_data.width_screen / 2),
                                           road_render_data.color)
 
-            self.draw_side_lines_of_road(map_surface, road_render_data.left_line, road_render_data.is_left_central_line, road_render_data.is_left_lateral_line, i)
-            self.draw_side_lines_of_road(map_surface, road_render_data.right_line, road_render_data.is_right_central_line, road_render_data.is_right_lateral_line, i)            
-            
+            self.draw_side_lines_of_road(
+                map_surface,
+                road_render_data.left_line,
+                road_render_data.is_left_central_line,
+                road_render_data.is_left_lateral_line,
+                i)
+            self.draw_side_lines_of_road(
+                map_surface,
+                road_render_data.right_line,
+                road_render_data.is_right_central_line,
+                road_render_data.is_right_lateral_line,
+                i)
+
             i = i + 1
         # Draw Intersections
         for intersection_render_data in self.intersection_render_data_list:
@@ -992,7 +999,8 @@ class ModuleWorld(object):
         vehicle_renderer = []
         for actor in vehicles:
             vehicle = Vehicle(actor, COLOR_PLUM_1, self.transform_helper)
-            vehicle_renderer.append((vehicle.surface, (vehicle.x - vehicle.bb_extent.x, vehicle.y - vehicle.bb_extent.y)))
+            vehicle_renderer.append(
+                (vehicle.surface, (vehicle.x - vehicle.bb_extent.x, vehicle.y - vehicle.bb_extent.y)))
 
         Util.blits(self.vehicles_surface, vehicle_renderer)
 
