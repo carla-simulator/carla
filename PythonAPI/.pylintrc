@@ -1,2 +1,4 @@
+[MASTER]
+disable=I0011,E1121
 [TYPECHECK]
 ignored-modules=carla,pygame,numpy
