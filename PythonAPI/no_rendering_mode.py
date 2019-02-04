@@ -166,7 +166,7 @@ class Util(object):
             destination_surface.blit(surface[0], surface[1], rect, blend_mode)
 
     @staticmethod
-    def length (v):
+    def length(v):
         return math.sqrt(v.x**2 + v.y**2 + v.z**2)
 # ==============================================================================
 # -- ModuleManager -------------------------------------------------------------
@@ -478,15 +478,14 @@ class MapImage(object):
 
             # Draw line in front of stop
             forward_vector = carla.Location(waypoint.transform.get_forward_vector())
-            left_vector = carla.Location(-forward_vector.y, forward_vector.x, forward_vector.z) * waypoint.lane_width/2 * 0.7
+            left_vector = carla.Location(-forward_vector.y, forward_vector.x,
+                                         forward_vector.z) * waypoint.lane_width / 2 * 0.7
 
             line = [(waypoint.transform.location + (forward_vector * 1.5) + (left_vector)),
                     (waypoint.transform.location + (forward_vector * 1.5) - (left_vector))]
-            
+
             line_pixel = [world_to_pixel(p) for p in line]
             pygame.draw.lines(surface, color, True, line_pixel, 2)
-
-          
 
         def lateral_shift(transform, shift):
             transform.rotation.yaw += 90
@@ -501,7 +500,7 @@ class MapImage(object):
 
         topology = [x[0] for x in carla_map.get_topology()]
         topology = sorted(topology, key=lambda w: w.transform.location.z)
-    
+
         for waypoint in topology:
             waypoints = [waypoint]
             nxt = waypoint.next(precision)[0]
@@ -531,16 +530,15 @@ class MapImage(object):
                 for n, wp in enumerate(waypoints):
                     if (n % 400) == 0:
                         draw_arrow(map_surface, wp.transform)
-        
+
         actors = carla_world.get_actors()
         stops_transform = [actor.get_transform() for actor in actors if 'stop' in actor.type_id]
-        font_size = world_to_pixel_width(1)            
+        font_size = world_to_pixel_width(1)
         font = pygame.font.SysFont('Arial', font_size, True)
         font_surface = font.render("STOP", False, COLOR_ALUMINIUM_2)
-        font_surface = pygame.transform.scale(font_surface, (font_surface.get_width(),font_surface.get_height() * 2))
+        font_surface = pygame.transform.scale(font_surface, (font_surface.get_width(), font_surface.get_height() * 2))
         for stop in stops_transform:
-            draw_stop(map_surface,font_surface, stop)
-
+            draw_stop(map_surface, font_surface, stop)
 
     def world_to_pixel(self, location, offset=(0, 0)):
         x = self.scale * self._pixels_per_meter * (location.x - self._world_offset[0])
@@ -594,7 +592,7 @@ class ModuleWorld(object):
 
         self.traffic_light_surfaces = TrafficLightSurfaces()
         self.affected_traffic_light = None
-        
+
         # Map info
         self.map_image = None
         self.border_round_surface = None
@@ -611,7 +609,7 @@ class ModuleWorld(object):
             town_map = world.get_map()
             return (world, town_map)
 
-        except Exception as ex:
+        except RuntimeError as ex:
             logging.error(ex)
             exit_game()
 
@@ -701,7 +699,7 @@ class ModuleWorld(object):
         if self.hero_actor is not None:
             hero_speed = self.hero_actor.get_velocity()
             hero_speed_text = 3.6 * math.sqrt(hero_speed.x ** 2 + hero_speed.y ** 2 + hero_speed.z ** 2)
-            
+
             affected_traffic_light_text = 'None'
             if self.affected_traffic_light is not None:
                 state = self.affected_traffic_light.state
@@ -784,14 +782,13 @@ class ModuleWorld(object):
 
         return (vehicles, traffic_lights, speed_limits, walkers)
 
-
     def get_bounding_box(self, actor):
         bb = actor.trigger_volume.extent
         corners = [carla.Location(x=-bb.x, y=-bb.y),
-                  carla.Location(x=bb.x, y=-bb.y),
-                  carla.Location(x=bb.x, y=bb.y),
-                  carla.Location(x=-bb.x, y=bb.y),
-                  carla.Location(x=-bb.x, y=-bb.y)]
+                   carla.Location(x=bb.x, y=-bb.y),
+                   carla.Location(x=bb.x, y=bb.y),
+                   carla.Location(x=-bb.x, y=bb.y),
+                   carla.Location(x=-bb.x, y=-bb.y)]
         corners = [x + actor.trigger_volume.location for x in corners]
         t = actor.get_transform()
         t.transform(corners)
@@ -812,12 +809,12 @@ class ModuleWorld(object):
                 hero_location = self.hero_actor.get_location()
                 d = hero_location.distance(transformed_tv)
                 s = Util.length(tl.trigger_volume.extent) + Util.length(self.hero_actor.bounding_box.extent)
-                if ( d <= s ):
+                if (d <= s):
                     # Highlight traffic light
                     self.affected_traffic_light = tl
                     srf = self.traffic_light_surfaces.surfaces['h']
                     surface.blit(srf, srf.get_rect(center=pos))
-                
+
             srf = self.traffic_light_surfaces.surfaces[tl.state]
             surface.blit(srf, srf.get_rect(center=pos))
 
@@ -868,7 +865,7 @@ class ModuleWorld(object):
             pygame.draw.polygon(surface, color, corners)
 
     def _render_vehicles(self, surface, list_v, world_to_pixel):
-        
+
         for v in list_v:
             color = COLOR_SKY_BLUE_0
             if int(v[0].attributes['number_of_wheels']) == 2:
@@ -886,7 +883,7 @@ class ModuleWorld(object):
                        ]
             v[1].transform(corners)
             corners = [world_to_pixel(p) for p in corners]
-            pygame.draw.lines(surface, color, False, corners, int(math.ceil(4.0 * self.map_image.scale)))        
+            pygame.draw.lines(surface, color, False, corners, int(math.ceil(4.0 * self.map_image.scale)))
 
     def render_actors(self, surface, vehicles, traffic_lights, speed_limits, walkers):
         # Static actors
@@ -897,7 +894,6 @@ class ModuleWorld(object):
         # Dynamic actors
         self._render_vehicles(surface, vehicles, self.map_image.world_to_pixel)
         self._render_walkers(surface, walkers, self.map_image.world_to_pixel)
-
 
     def clip_surfaces(self, clipping_rect):
         self.actors_surface.set_clip(clipping_rect)
