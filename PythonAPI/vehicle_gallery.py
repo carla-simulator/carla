@@ -22,7 +22,6 @@ import carla
 
 import math
 import random
-import time
 
 
 def get_transform(vehicle_location, angle, d=6.4):

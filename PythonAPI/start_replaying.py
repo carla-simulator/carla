@@ -21,8 +21,6 @@ except IndexError:
 import carla
 
 import argparse
-import random
-import time
 
 
 def main():
