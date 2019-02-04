@@ -121,6 +121,8 @@ MAX_WHEEL = 6.0
 
 MAP_DEFAULT_ZOOM = 1.0
 HERO_DEFAULT_ZOOM = 6.0
+
+PIXELS_AHEAD_VEHICLE = 150
 # ==============================================================================
 # -- TransformHelper -----------------------------------------------------------
 # ==============================================================================
@@ -1122,17 +1124,14 @@ class ModuleWorld(object):
         else:
             hero_location = (self.hero_actor.get_location().x, self.hero_actor.get_location().y)
             hero_front = self.hero_actor.get_transform().get_forward_vector()
-            pixels_ahead_vehicle = self.transform_helper.convert_screen_to_world_size(
-                (display.get_height() / 6,
-                 display.get_height() / 6))
 
-            hero_location_back = (hero_location[0] + hero_front.x * pixels_ahead_vehicle[0],
-                                  hero_location[1] + hero_front.y * pixels_ahead_vehicle[1])
+            hero_location_back = (hero_location[0],
+                                  hero_location[1])
 
             hero_location_screen = self.transform_helper.convert_world_to_screen_point(hero_location_back)
 
-            translation_offset = (-hero_location_screen[0],
-                                  (-hero_location_screen[1]))
+            translation_offset = (-hero_location_screen[0] - hero_front.x * PIXELS_AHEAD_VEHICLE,
+                                  (-hero_location_screen[1] - hero_front.y * PIXELS_AHEAD_VEHICLE))
             selected_hero_actor = [vehicle for vehicle in vehicles if vehicle.id == self.hero_actor.id]
             if len(selected_hero_actor) != 0:
                 self.render_hero_actor(hero_location_screen)
