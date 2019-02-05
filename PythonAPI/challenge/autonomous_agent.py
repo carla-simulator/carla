@@ -1,9 +1,11 @@
 import carla
 
+from challenge.data_provider import DataProvider
+
 class AutonomousAgent():
     def __init__(self):
         # this dictionary will contain buffers with incoming sensor data indexed by name
-        self.data_buffers = {}
+        self.data_provider = DataProvider()
 
         self.setup()
 
@@ -36,17 +38,20 @@ class AutonomousAgent():
 
         return sensors
 
+    def __call__(self):
+        input_data = self.data_provider.get_data()
+
+        control = self.run_step(input_data)
+        control.manual_gear_shift = False
+
+        return control
+
     def run_step(self):
         """
         Execute one step of navigation.
         :return: control
         """
-        control = carla.VehicleControl()
-        control.steer = 0.0
-        control.throttle = 0.0
-        control.brake = 0.0
-        control.hand_brake = False
-        control.manual_gear_shift = False
+        pass
 
-        return control
-
+    def all_sensors_ready(self):
+        return self.data_provider.all_sensors_ready()

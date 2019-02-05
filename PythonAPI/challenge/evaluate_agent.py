@@ -7,35 +7,13 @@ import random
 import threading
 import os
 import sys
+import time
 sys.path.append('{}/PythonAPI'.format(os.getcwd()))
 
-import numpy as np
 import carla
-from carla import ColorConverter as cc
 
-from server_manager import *
-
-
-data_buffer_lock = threading.Lock()
-class CallBack(object):
-    def __init__(self, tag, obj):
-        self._tag = tag
-        self._obj = obj
-
-    def __call__(self, image):
-        self._parse_image_cb(image, self._tag)
-
-    def _parse_image_cb(self, image, tag):
-        array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
-        array = copy.deepcopy(array)
-
-        array = np.reshape(array, (image.height, image.width, 4))
-        array = array[:, :, :3]
-        array = array[:, :, ::-1]
-
-        data_buffer_lock.acquire()
-        self._obj.data_buffers[self._tag] = array
-        data_buffer_lock.release()
+from challenge.server_manager import *
+from challenge.data_provider import *
 
 class Route(object):
     def __init__(self):
@@ -132,19 +110,38 @@ class ScenarioSetup(object):
                 bp.set_attribute('image_size_y', str(item[1]['height']))
                 bp.set_attribute('fov', str(item[1]['fov']))
 
+                sensor_location =  carla.Location(x=item[1]['x'],
+                                                  y=item[1]['y'],
+                                                  z=item[1]['z'])
+                sensor_rotation = carla.Rotation(pitch=item[1]['pitch'],
+                                                 roll=item[1]['roll'],
+                                                 yaw=item[1]['yaw'])
+
             elif item[0].startswith('sensor.lidar'):
                 bp.set_attribute('range', '5000')
 
+                sensor_location = carla.Location(x=item[1]['x'],
+                                                 y=item[1]['y'],
+                                                 z=item[1]['z'])
+                sensor_rotation = carla.Rotation(pitch=item[1]['pitch'],
+                                                 roll=item[1]['roll'],
+                                                 yaw=item[1]['yaw'])
+            elif item[0].startswith('sensor.other.gnss'):
+                sensor_location = carla.Location(x=item[1]['x'],
+                                                 y=item[1]['y'],
+                                                 z=item[1]['z'])
+                sensor_rotation = carla.Rotation()
+
             # create sensor
-            sensor = self._world.spawn_actor(bp,
-                                             carla.Transform(
-                                                 carla.Location(x=item[1]['x'], y=item[1]['y'], z=item[1]['z']),
-                                                 carla.Rotation(pitch=item[1]['pitch'], roll=item[1]['roll'], yaw=item[1]['yaw'])
-                                             ),
-                                             self._vehicle)
+            sensor_transform = carla.Transform(sensor_location, sensor_rotation)
+            sensor = self._world.spawn_actor(bp, sensor_transform, self._vehicle)
             # setup callback
-            sensor.listen(CallBack(item[2], self._agent))
+            sensor.listen(CallBack(item[2], sensor, self._agent.data_provider))
             self._sensors_list.append(sensor)
+
+        # check that all sensors have initialized their data structure
+        while not self._agent.all_sensors_ready():
+            time.sleep(0.1)
 
     def wait_for_tick(self):
         return self._world.wait_for_tick(10.0)
@@ -152,13 +149,7 @@ class ScenarioSetup(object):
     def apply_control(self, control):
         self._vehicle.apply_control(control)
 
-import pdb
 def run_evaluation(args):
-    """
-
-    :param args:
-    :return:
-    """
 
     # first we instantiate the Agent
     module_name = os.path.basename(args.agent).split('.')[0]
@@ -176,13 +167,23 @@ def run_evaluation(args):
         scenario_manager.reset_vehicle(route.start)
 
         # main loop for the current scenario
-        while True:
+        end_of_scenario = False
+        while not end_of_scenario:
             # as soon as the server is ready continue!
             if not scenario_manager.wait_for_tick():
                 continue
 
-            action = agent_instance.run_step()
+            # act!
+            action = agent_instance()
             scenario_manager.apply_control(action)
+
+            # is the scenario over?
+            end_of_scenario = scenario_manager.is_scenario_over()
+
+        # report statistics
+        scenario_manager.report_statistics()
+
+    return 0
 
 def main():
     argparser = argparse.ArgumentParser(description='CARLA automatic evaluation script')
