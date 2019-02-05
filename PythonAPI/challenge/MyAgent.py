@@ -2,7 +2,7 @@ import scipy.misc
 
 import carla
 
-from agents.navigation.autonomous_agent import AutonomousAgent
+from challenge.autonomous_agent import AutonomousAgent
 
 class MyAgent(AutonomousAgent):
     def setup(self):
@@ -39,26 +39,36 @@ class MyAgent(AutonomousAgent):
                    ['sensor.camera.rgb',
                     {'x':0.7, 'y':0.4, 'z':1.60, 'roll':0.0, 'pitch':0.0, 'yaw':45.0, 'width':800, 'height':600,
                      'fov':100},
-                    'Right']]
+                    'Right'],
+
+                   ['sensor.lidar.ray_cast',
+                    {'x': 0.7, 'y': -0.4, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0,
+                     'yaw': -45.0},
+                    'LIDAR'],
+
+                    ['sensor.other.gnss', {'x': 0.7, 'y': -0.4, 'z': 1.60},
+                     'GPS'],
+                   ]
 
 
         return sensors
 
-    def run_step(self):
-        """
-        Execute one step of navigation.
-        :return: control
-        """
 
-        print('Saving images...')
-        scipy.misc.imsave('outfile.png', self.data_buffers['Left'])
+    def run_step(self, input_data):
 
+        print("=====================>")
+        for key, val in input_data.items():
+            shape = val[1].shape
+            print("[{} -- {:06d}] with shape {}".format(key, val[0], shape))
+        print("<=====================")
 
+        # DO SOMETHING SMART
+
+        # RETURN CONTROL
         control = carla.VehicleControl()
         control.steer = 0.0
         control.throttle = 1.0
         control.brake = 0.0
         control.hand_brake = False
-        control.manual_gear_shift = False
 
         return control
