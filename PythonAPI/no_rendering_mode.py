@@ -49,7 +49,22 @@ try:
     import pygame
     from pygame.locals import K_h
     from pygame.locals import K_i
+    from pygame.locals import K_j
+    from pygame.locals import K_w
+    from pygame.locals import K_a
+    from pygame.locals import K_s
+    from pygame.locals import K_d
+    from pygame.locals import K_q
+    from pygame.locals import K_m
     from pygame.locals import K_ESCAPE
+    from pygame.locals import K_UP
+    from pygame.locals import K_DOWN
+    from pygame.locals import K_LEFT
+    from pygame.locals import K_RIGHT
+    from pygame.locals import K_SPACE
+    from pygame.locals import K_COMMA
+    from pygame.locals import K_PERIOD
+
 except ImportError:
     raise RuntimeError('cannot import pygame, make sure pygame package is installed')
 
@@ -603,12 +618,13 @@ class ModuleHUD (object):
 
 class ModuleWorld(object):
 
-    def __init__(self, name, host, port, timeout):
+    def __init__(self, name, host, port, timeout, actor_filter):
         self.client = None
         self.name = name
         self.host = host
         self.port = port
         self.timeout = timeout
+        self.actor_filter = actor_filter
         self.server_fps = 0.0
         self.simulation_time = 0
 
@@ -819,14 +835,34 @@ class ModuleWorld(object):
         weak_self = weakref.ref(self)
         self.world.on_tick(lambda timestamp: ModuleWorld.on_world_tick(weak_self, timestamp))
 
-    def select_random_hero(self):
+    def select_hero_actor(self):
         hero_vehicles = [
             actor for actor in self.actors if 'vehicle' in actor.type_id and actor.attributes['role_name'] == 'hero']
         if len(hero_vehicles) > 0:
-            self.module_input.wheel_offset = HERO_DEFAULT_ZOOM
             self.hero_actor = random.choice(hero_vehicles)
         else:
-            print("There are no hero vehicles spawned")
+            self._spawn_hero()
+        self.module_input.wheel_offset = HERO_DEFAULT_ZOOM
+
+    def _spawn_hero(self):
+
+        # Get a random blueprint.
+        blueprint = random.choice(self.world.get_blueprint_library().filter(self.actor_filter))
+        blueprint.set_attribute('role_name', 'hero')
+        if blueprint.has_attribute('color'):
+            color = random.choice(blueprint.get_attribute('color').recommended_values)
+            blueprint.set_attribute('color', color)
+        # Spawn the player.
+        if self.hero_actor is not None:
+            spawn_point = self.hero_actor.get_transform()
+            spawn_point.location.z += 2.0
+            spawn_point.rotation.roll = 0.0
+            spawn_point.rotation.pitch = 0.0
+            self.hero_actor = self.world.try_spawn_actor(blueprint, spawn_point)
+        while self.hero_actor is None:
+            spawn_points = self.world.get_map().get_spawn_points()
+            spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
+            self.hero_actor = self.world.try_spawn_actor(blueprint, spawn_point)
 
     def tick(self, clock):
         self.update_hud_info(clock)
@@ -1202,6 +1238,10 @@ class ModuleInput(object):
         self.mouse_offset = [0.0, 0.0]
         self.wheel_offset = 1.0
         self.wheel_amount = 0.1
+        self._steer_cache = 0.0
+
+        self._control = None
+        self._autopilot_enabled = True
 
     def start(self):
         pass
@@ -1210,7 +1250,7 @@ class ModuleInput(object):
         pass
 
     def tick(self, clock):
-        self.parse_input()
+        self.parse_input(clock)
 
     def _parse_events(self):
         self.mouse_pos = pygame.mouse.get_pos()
@@ -1222,13 +1262,28 @@ class ModuleInput(object):
                     exit_game()
                 if event.key == K_h:
                     module_world = module_manager.get_module(MODULE_WORLD)
-                    if module_world.hero_actor is None:
-                        module_world.select_random_hero()
-                    else:
-                        module_world.hero_actor = None
+                    module_world.select_hero_actor()
+
+                    self._control = carla.VehicleControl()
+                    self._autopilot_enabled = False
+
                 if event.key == K_i:
                     module_hud = module_manager.get_module(MODULE_HUD)
                     module_hud.show_info = not module_hud.show_info
+                if event.key == K_j:
+                    module_world = module_manager.get_module(MODULE_WORLD)
+                    module_world.hero_actor = None
+
+                if isinstance(self._control, carla.VehicleControl):
+                    if event.key == K_q:
+                        self._control.gear = 1 if self._control.reverse else -1
+                    elif event.key == K_m:
+                        self._control.manual_gear_shift = not self._control.manual_gear_shift
+                        self._control.gear = world.player.get_control().gear
+                    elif self._control.manual_gear_shift and event.key == K_COMMA:
+                        self._control.gear = max(-1, self._control.gear - 1)
+                    elif self._control.manual_gear_shift and event.key == K_PERIOD:
+                        self._control.gear = self._control.gear + 1
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 4:
@@ -1241,6 +1296,21 @@ class ModuleInput(object):
                     if self.wheel_offset <= MIN_WHEEL:
                         self.wheel_offset = MIN_WHEEL
 
+    def _parse_keys(self, milliseconds):
+        keys = pygame.key.get_pressed()
+        self._control.throttle = 1.0 if keys[K_UP] or keys[K_w] else 0.0
+        steer_increment = 5e-4 * milliseconds
+        if keys[K_LEFT] or keys[K_a]:
+            self._steer_cache -= steer_increment
+        elif keys[K_RIGHT] or keys[K_d]:
+            self._steer_cache += steer_increment
+        else:
+            self._steer_cache = 0.0
+        self._steer_cache = min(0.7, max(-0.7, self._steer_cache))
+        self._control.steer = round(self._steer_cache, 1)
+        self._control.brake = 1.0 if keys[K_DOWN] or keys[K_s] else 0.0
+        self._control.hand_brake = keys[K_SPACE]
+
     def _parse_mouse(self):
         if pygame.mouse.get_pressed()[0]:
             x, y = pygame.mouse.get_pos()
@@ -1248,9 +1318,16 @@ class ModuleInput(object):
             self.mouse_offset[1] += y - self.mouse_pos[1]
             self.mouse_pos = (x, y)
 
-    def parse_input(self):
+    def parse_input(self, clock):
         self._parse_events()
         self._parse_mouse()
+        if not self._autopilot_enabled:
+            if isinstance(self._control, carla.VehicleControl):
+                self._parse_keys(clock.get_time())
+                self._control.reverse = self._control.gear < 0
+            world = module_manager.get_module(MODULE_WORLD)
+            if (world.hero_actor is not None):
+                world.hero_actor.apply_control(self._control)
 
 
 # ==============================================================================
@@ -1275,7 +1352,7 @@ def game_loop(args):
     # Init modules
     input_module = ModuleInput(MODULE_INPUT)
     hud_module = ModuleHUD(MODULE_HUD, args.width, args.height)
-    world_module = ModuleWorld(MODULE_WORLD, args.host, args.port, 2.0)
+    world_module = ModuleWorld(MODULE_WORLD, args.host, args.port, 2.0, args.filter)
     render_module = ModuleRender(MODULE_RENDER)
 
     # Register Modules
@@ -1332,6 +1409,11 @@ def main():
         metavar='WIDTHxHEIGHT',
         default='1280x720',
         help='window resolution (default: 1280x720)')
+    argparser.add_argument(
+        '--filter',
+        metavar='PATTERN',
+        default='vehicle.*',
+        help='actor filter (default: "vehicle.*")')
 
     args = argparser.parse_args()
     args.description = argparser.description
