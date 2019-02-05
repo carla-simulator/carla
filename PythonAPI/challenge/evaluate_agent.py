@@ -1,6 +1,7 @@
 import argparse
 import copy
 import importlib
+import json
 import logging
 import random
 import threading
@@ -16,7 +17,7 @@ from server_manager import *
 
 
 data_buffer_lock = threading.Lock()
-class CallBack():
+class CallBack(object):
     def __init__(self, tag, obj):
         self._tag = tag
         self._obj = obj
@@ -36,6 +37,13 @@ class CallBack():
         self._obj.data_buffers[self._tag] = array
         data_buffer_lock.release()
 
+class Route(object):
+    def __init__(self):
+        self.id = None
+        self.map = None
+        self.threshold = None
+        self.start = carla.Transform()
+        self.end = carla.Transform()
 
 class ScenarioSetup(object):
     def __init__(self, args, agent):
@@ -48,11 +56,52 @@ class ScenarioSetup(object):
         self._vehicle = None
         self._sensors_list = []
         self._sensors = []
+        self._routes = []
 
-    def reset(self):
+        self._load_routes()
+
+    def _load_routes(self):
+        routes_file = self._args.routes
+        with open(routes_file) as json_file:
+            data = json.load(json_file)
+
+            for route_id in data:
+                route = Route()
+                route.id = route_id
+                route.map = data[route_id]['map']
+                route.timeout = data[route_id]['timeout']
+
+                route.start.location.x = data[route_id]['start']['pos']['x']
+                route.start.location.y = data[route_id]['start']['pos']['y']
+                route.start.location.z = data[route_id]['start']['pos']['z']
+
+                route.start.rotation.pitch = data[route_id]['start'][
+                    'ori']['pitch']
+                route.start.rotation.roll = data[route_id]['start'][
+                    'ori']['roll']
+                route.start.rotation.yaw = data[route_id]['start'][
+                    'ori']['yaw']
+
+                route.end.location.x = data[route_id]['end']['pos']['x']
+                route.end.location.y = data[route_id]['end']['pos']['y']
+                route.end.location.z = data[route_id]['end']['pos']['z']
+
+                route.end.rotation.pitch = data[route_id]['end'][
+                    'ori']['pitch']
+                route.end.rotation.roll = data[route_id]['end'][
+                    'ori']['roll']
+                route.end.rotation.yaw = data[route_id]['end'][
+                    'ori']['yaw']
+
+                self._routes.append(route)
+
+    def get_routes(self):
+        return self._routes
+
+    def reset(self, map_id, track_id=Track.SENSORS, port=2000, human_flag=False):
         # instantiate a CARLA server manager
         self._carla_server = ServerManager({'CARLA_SERVER': self._args.server_path})
-        self._carla_server.reset(map_id='Town04', track_id=Track.SENSORS, port=2000, human_flag=False)
+        self._carla_server.reset(map_id, track_id, port, human_flag)
         self._carla_server.wait_until_ready()
 
         # initialize client
@@ -72,7 +121,7 @@ class ScenarioSetup(object):
             color = random.choice(blueprint.get_attribute('color').recommended_values)
             blueprint.set_attribute('color', color)
 
-        self._vehicle = self.world.spawn_actor(blueprint, spawn_point)
+        self._vehicle = self._world.spawn_actor(blueprint, spawn_point)
 
         # setup sensors
         bp_library = self._world.get_blueprint_library()
@@ -97,6 +146,12 @@ class ScenarioSetup(object):
             sensor.listen(CallBack(item[2], self._agent))
             self._sensors_list.append(sensor)
 
+    def wait_for_tick(self):
+        return self._world.wait_for_tick(10.0)
+
+    def apply_control(self, control):
+        self._vehicle.apply_control(control)
+
 import pdb
 def run_evaluation(args):
     """
@@ -116,14 +171,18 @@ def run_evaluation(args):
     # configure simulation
     scenario_manager = ScenarioSetup(args, agent_instance)
 
-    scenario_manager.reset()
+    for route in scenario_manager.get_routes():
+        scenario_manager.reset(route.map, args.track, args.port)
+        scenario_manager.reset_vehicle(route.start)
 
-    pdb.set_trace()
-    scenario_manager.reset_vehicle()
+        # main loop for the current scenario
+        while True:
+            # as soon as the server is ready continue!
+            if not scenario_manager.wait_for_tick():
+                continue
 
-
-
-
+            action = agent_instance.run_step()
+            scenario_manager.apply_control(action)
 
 def main():
     argparser = argparse.ArgumentParser(description='CARLA automatic evaluation script')
@@ -132,7 +191,17 @@ def main():
                            help='TCP port to listen to (default: 2000)')
     argparser.add_argument('--server_path', help='Absolute path to CARLA server binary', required=True)
     argparser.add_argument("-a", "--agent", type=str, help="Path to Agent's py file to evaluate", required=True)
+    argparser.add_argument("-r", "--routes", help="Path to routes file", required=True)
+    argparser.add_argument("-t", "--track", type=str, choices=["Sensors",
+                                                               "NoRendering"],
+                           help="Select competition track",
+                           default="Sensors")
     args = argparser.parse_args()
+
+    if args.track is 'Sensors':
+        args.track = Track.SENSORS
+    else:
+        args.track = Track.NO_RENDERING
 
     # CARLA Evaluation protocol
     run_evaluation(args)
