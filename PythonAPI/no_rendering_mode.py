@@ -56,6 +56,7 @@ try:
     from pygame.locals import K_d
     from pygame.locals import K_q
     from pygame.locals import K_m
+    from pygame.locals import K_p
     from pygame.locals import K_ESCAPE
     from pygame.locals import K_UP
     from pygame.locals import K_DOWN
@@ -1284,6 +1285,10 @@ class ModuleInput(object):
                         self._control.gear = max(-1, self._control.gear - 1)
                     elif self._control.manual_gear_shift and event.key == K_PERIOD:
                         self._control.gear = self._control.gear + 1
+                    elif event.key == K_p:
+                        self._autopilot_enabled = not self._autopilot_enabled
+                        world = module_manager.get_module(MODULE_WORLD)
+                        world.hero_actor.set_autopilot(self._autopilot_enabled)
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 4:
