@@ -35,13 +35,13 @@ class ServerManager():
         conf_file = '.tempconf.ini'
 
         exec_command = []
-        exec_command += self._carla_server_binary
-        exec_command += map_id
+        exec_command.append(self._carla_server_binary)
+        exec_command.append(map_id)
 
-        exec_command += '-world-port={}'.format(port)
+        exec_command.append('-world-port={}'.format(port))
         if not human_flag:
-            exec_command += '-benchmark'
-            exec_command += '-fps=20'
+            exec_command.append('-benchmark')
+            exec_command.append('-fps=20')
 
         if track_id == Track.NO_RENDERING:
             # create ini file
@@ -49,19 +49,16 @@ class ServerManager():
                 fd.write('[CARLA / Server]\n')
                 fd.write('DisableRendering = true\n')
 
-            exec_command += '-carla-settings={}'.format(conf_file)
+            exec_command.append('-carla-settings={}'.format(conf_file))
 
         print(exec_command)
-        self._proc = subprocess.Popen(exec_command)
+        self._proc = subprocess.Popen(exec_command, stdout=subprocess.PIPE,
+                                      bufsize=1,  close_fds=ON_POSIX)
 
     def wait_until_ready(self):
         ready = False
         while not ready:
-            outs, errs = self._proc.communicate()
-
-            # we check current status
-            print(outs)
-            ready = True
-
-            # let's wait
-            time.sleep(0.8)
+            line = str(self._proc.stdout.readline())
+            if 'Bringing World' in line:
+                ready = True
+        time.sleep(1.0)

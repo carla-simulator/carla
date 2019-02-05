@@ -3,14 +3,17 @@ import copy
 import importlib
 import logging
 import random
-import threahing
+import threading
+import os
+import sys
+sys.path.append('{}/PythonAPI'.format(os.getcwd()))
 
 import numpy as np
-
 import carla
 from carla import ColorConverter as cc
 
 from server_manager import *
+
 
 data_buffer_lock = threading.Lock()
 class CallBack():
@@ -53,7 +56,7 @@ class ScenarioSetup(object):
         self._carla_server.wait_until_ready()
 
         # initialize client
-        self._carla_client = carla.Client(self._args.host, self._args.port)
+        self._carla_client = carla.Client('127.0.0.1', self._args.port)
         self._carla_client.set_timeout(4.0)
 
         self._world = self._carla_client.get_world()
@@ -103,13 +106,19 @@ def run_evaluation(args):
     """
 
     # first we instantiate the Agent
-    agent_module = importlib.import_module(args.agent)
-    agent_instance = agent_module()
+    module_name = os.path.basename(args.agent).split('.')[0]
+    module_spec = importlib.util.spec_from_file_location(module_name,
+                                                         args.agent)
+    foo = importlib.util.module_from_spec(module_spec)
+    module_spec.loader.exec_module(foo)
+    agent_instance = getattr(foo, foo.__name__)()
 
-    pdb.set_trace()
     # configure simulation
     scenario_manager = ScenarioSetup(args, agent_instance)
+
     scenario_manager.reset()
+
+    pdb.set_trace()
     scenario_manager.reset_vehicle()
 
 
