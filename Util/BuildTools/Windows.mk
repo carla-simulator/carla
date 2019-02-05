@@ -12,10 +12,7 @@ help:
 	@type "${CARLA_BUILD_TOOLS_FOLDER}\Windows.mk.help"
 
 launch: LibCarla
-	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --build --ue-version 4.21
-
-launch-editor: LibCarla
-	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --launch-editor
+	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --launch
 
 package: PythonAPI
 	@"${CARLA_BUILD_TOOLS_FOLDER}/Package.bat" --ue-version 4.21
@@ -34,16 +31,12 @@ clean:
 rebuild: setup
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.bat" --rebuild
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.bat" --rebuild
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --rebuild --ue-version 4.21
 
 check: PythonAPI
 	@echo "Not implemented!"
 
 benchmark: LibCarla
 	@echo "Not implemented!"
-
-CarlaUE4Editor: LibCarla
-	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --build-editor --ue-version 4.21
 
 .PHONY: PythonAPI
 PythonAPI: LibCarla

@@ -24,36 +24,34 @@ rem ============================================================================
 rem -- Parse arguments ---------------------------------------------------------
 rem ============================================================================
 
+set BOOST_VERSION=1.69.0
 set INSTALLERS_DIR=%ROOT_PATH%Util\InstallersWin\
 set VERSION_FILE=%ROOT_PATH%Util\ContentVersions.txt
 set CONTENT_DIR=%ROOT_PATH%Unreal\CarlaUE4\Content\Carla
-
-set TOOLSET=msvc-14.1
-set NUMBER_OF_ASYNC_JOBS=%NUMBER_OF_PROCESSORS%
 
 :arg-parse
 if not "%1"=="" (
     if "%1"=="-j" (
         set NUMBER_OF_ASYNC_JOBS=%2
-        shift
     )
-
     if "%1"=="--boost-toolset" (
         set TOOLSET=%2
-        shift
     )
-
     if "%1"=="-h" (
         goto help
     )
-
     if "%1"=="--help" (
         goto help
     )
-
     shift
     goto :arg-parse
 )
+
+rem If not defined, use Visual Studio 2017 as tool set
+if [%TOOLSET%] == [] set TOOLSET=msvc-14.1
+
+rem If is not set, set the number of parallel jobs to the number of CPU threads
+if [%NUMBER_OF_ASYNC_JOBS%] == [] set NUMBER_OF_ASYNC_JOBS=%NUMBER_OF_PROCESSORS%
 
 rem ============================================================================
 rem -- Basic info and setup ----------------------------------------------------
@@ -79,7 +77,7 @@ rem ============================================================================
 
 echo %FILE_N% Installing rpclib...
 call "%INSTALLERS_DIR%install_rpclib.bat"^
-    --build-dir "%INSTALLATION_DIR%"
+ --build-dir "%INSTALLATION_DIR%"
 
 if %errorlevel% neq 0 goto failed
 
@@ -94,7 +92,7 @@ rem ============================================================================
 
 echo %FILE_N% Installing Google Test...
 call "%INSTALLERS_DIR%install_gtest.bat"^
-    --build-dir "%INSTALLATION_DIR%"
+ --build-dir "%INSTALLATION_DIR%"
 
 if %errorlevel% neq 0 goto failed
 
@@ -110,9 +108,10 @@ rem ============================================================================
 
 echo %FILE_N% Installing Boost...
 call "%INSTALLERS_DIR%install_boost.bat"^
-    --build-dir "%INSTALLATION_DIR%"^
-    --toolset %TOOLSET%^
-    -j %NUMBER_OF_ASYNC_JOBS%
+ --build-dir "%INSTALLATION_DIR%"^
+ --toolset %TOOLSET%^
+ --version %BOOST_VERSION%^
+ -j %NUMBER_OF_ASYNC_JOBS%
 
 if %errorlevel% neq 0 goto failed
 
@@ -152,8 +151,15 @@ set CMAKE_INSTALLATION_DIR=%INSTALLATION_DIR:\=/%
 >>"%INSTALLATION_DIR%CMakeLists.txt.in" echo add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY)
 >>"%INSTALLATION_DIR%CMakeLists.txt.in" echo add_definitions(-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT)
 >>"%INSTALLATION_DIR%CMakeLists.txt.in" echo.
->>"%INSTALLATION_DIR%CMakeLists.txt.in" echo set(BOOST_INCLUDE_PATH "%CMAKE_INSTALLATION_DIR%boost-install/include")
->>"%INSTALLATION_DIR%CMakeLists.txt.in" echo set(BOOST_LIB_PATH "%CMAKE_INSTALLATION_DIR%boost-install/lib")
+>>"%INSTALLATION_DIR%CMakeLists.txt.in" echo if (CMAKE_BUILD_TYPE STREQUAL "Server")
+>>"%INSTALLATION_DIR%CMakeLists.txt.in" echo   add_definitions(-DASIO_NO_EXCEPTIONS)
+>>"%INSTALLATION_DIR%CMakeLists.txt.in" echo   add_definitions(-DBOOST_NO_EXCEPTIONS)
+>>"%INSTALLATION_DIR%CMakeLists.txt.in" echo   add_definitions(-DLIBCARLA_NO_EXCEPTIONS)
+>>"%INSTALLATION_DIR%CMakeLists.txt.in" echo   add_definitions(-DPUGIXML_NO_EXCEPTIONS)
+>>"%INSTALLATION_DIR%CMakeLists.txt.in" echo endif ()
+>>"%INSTALLATION_DIR%CMakeLists.txt.in" echo.
+>>"%INSTALLATION_DIR%CMakeLists.txt.in" echo set(BOOST_INCLUDE_PATH "%CMAKE_INSTALLATION_DIR%boost-%BOOST_VERSION%-install/include")
+>>"%INSTALLATION_DIR%CMakeLists.txt.in" echo set(BOOST_LIB_PATH "%CMAKE_INSTALLATION_DIR%boost-%BOOST_VERSION%-install/lib")
 >>"%INSTALLATION_DIR%CMakeLists.txt.in" echo.
 >>"%INSTALLATION_DIR%CMakeLists.txt.in" echo set(RPCLIB_INCLUDE_PATH "%CMAKE_INSTALLATION_DIR%rpclib-install/include")
 >>"%INSTALLATION_DIR%CMakeLists.txt.in" echo set(RPCLIB_LIB_PATH "%CMAKE_INSTALLATION_DIR%rpclib-install/lib")
