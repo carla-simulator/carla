@@ -132,8 +132,8 @@ MODULE_RENDER = 'RENDER'
 
 # Input
 # Wheel used for zooming map
-MIN_WHEEL = 0.1
-MAX_WHEEL = 6.0
+MIN_ZOOM = 0.1
+MAX_ZOOM = 6.0
 
 MAP_DEFAULT_ZOOM = 1.0
 HERO_DEFAULT_ZOOM = 6.0
@@ -647,7 +647,6 @@ class ModuleWorld(object):
 
         # Hero actor
         self.hero_actor = None
-        self.filter_radius = 50
         self.map_rendered = False
         self.accum_offset = [0, 0]
         self.scale_offset = [0, 0]
@@ -1001,21 +1000,6 @@ class ModuleWorld(object):
                 self.render_module.draw_arrow(map_surface, COLOR_SKY_BLUE_0, road_render_data.arrow_lines_screen, 1)
             i = i + 1
 
-    def render_hero_actor(self, translation_offset):
-        self.hero_actor_surface.set_alpha(100)
-
-        hero_diameter_screen = self.transform_helper.convert_world_to_screen_size(
-            (self.filter_radius * 2.0, self.filter_radius * 2.0))[0]
-
-        self.render_module.drawCircle(self.hero_actor_surface, translation_offset[0],
-                                      translation_offset[1], int(hero_diameter_screen / 2), COLOR_ORANGE_1)
-
-    def is_actor_inside_hero_radius(self, actor):
-        actor_location = actor.get_location()
-        hero_location = self.hero_actor.get_location()
-        return Util.distance_between_points([actor_location.x, actor_location.y], [
-                                            hero_location.x, hero_location.y]) <= self.filter_radius
-
     def _split_actors(self, actors):
         vehicles = []
         traffic_lights = []
@@ -1098,15 +1082,6 @@ class ModuleWorld(object):
 
         vehicles, traffic_lights, speed_limits, walkers = self._split_actors(self.actors)
 
-        if self.hero_actor is not None:
-            vehicles = [vehicle for vehicle in vehicles if self.is_actor_inside_hero_radius(vehicle)]
-
-            traffic_lights = [traffic_light for traffic_light in traffic_lights
-                              if self.is_actor_inside_hero_radius(traffic_light)]
-
-            speed_limits = [speed_limit for speed_limit in speed_limits
-                            if self.is_actor_inside_hero_radius(speed_limit)]
-
         scale_factor = self.module_input.wheel_offset
         self.scaled_size = int(self.surface_size * scale_factor)
 
@@ -1171,8 +1146,6 @@ class ModuleWorld(object):
                                   (-hero_location_screen[1] - hero_front.y * PIXELS_AHEAD_VEHICLE))
             selected_hero_actor = [vehicle for vehicle in vehicles if vehicle.id == self.hero_actor.id]
             if len(selected_hero_actor) != 0:
-                self.render_hero_actor(hero_location_screen)
-
                 angle = self.hero_actor.get_transform().rotation.yaw + 90.0
                 center_offset = (display.get_width() / 2, display.get_height() / 2)
             else:
@@ -1209,8 +1182,15 @@ class ModuleWorld(object):
                                                          (hero_surface.get_width() / 2, hero_surface.get_height() / 2),
                                                          angle)
 
+            round_surface = pygame.Surface((display.get_width(), display.get_height()), pygame.SRCALPHA)
+            round_surface.fill(COLOR_BLACK)
+
+            self.render_module.drawCircle(
+                round_surface, center_offset[0], center_offset[1], display.get_height()/2, COLOR_WHITE)
+
             final_offset = rotated_result_surface.get_rect(center=center_offset)
-            display.blit(rotated_result_surface, final_offset)
+            round_surface.blit(rotated_result_surface, final_offset, None, pygame.BLEND_MULT)
+            display.blit(round_surface, (0, 0))
         else:
             # Apply clipping rect
             clipping_rect = pygame.Rect(-translation_offset[0] - center_offset[0], -translation_offset[1],
@@ -1274,6 +1254,8 @@ class ModuleInput(object):
                 if event.key == K_j:
                     module_world = module_manager.get_module(MODULE_WORLD)
                     module_world.hero_actor = None
+                    self.wheel_offset = MAP_DEFAULT_ZOOM
+                    self.mouse_offset = [0, 0]
 
                 if isinstance(self._control, carla.VehicleControl):
                     if event.key == K_q:
@@ -1293,13 +1275,13 @@ class ModuleInput(object):
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 4:
                     self.wheel_offset += self.wheel_amount
-                    if self.wheel_offset >= MAX_WHEEL:
-                        self.wheel_offset = MAX_WHEEL
+                    if self.wheel_offset >= MAX_ZOOM:
+                        self.wheel_offset = MAX_ZOOM
 
                 if event.button == 5:
                     self.wheel_offset -= self.wheel_amount
-                    if self.wheel_offset <= MIN_WHEEL:
-                        self.wheel_offset = MIN_WHEEL
+                    if self.wheel_offset <= MIN_ZOOM:
+                        self.wheel_offset = MIN_ZOOM
 
     def _parse_keys(self, milliseconds):
         keys = pygame.key.get_pressed()
