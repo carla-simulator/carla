@@ -1,3 +1,7 @@
+import scipy.misc
+
+import carla
+
 from agents.navigation.autonomous_agent import AutonomousAgent
 
 class MyAgent(AutonomousAgent):
@@ -45,9 +49,14 @@ class MyAgent(AutonomousAgent):
         Execute one step of navigation.
         :return: control
         """
+
+        print('Saving images...')
+        scipy.misc.imsave('outfile.png', self.data_buffers['Left'])
+
+
         control = carla.VehicleControl()
         control.steer = 0.0
-        control.throttle = 0.0
+        control.throttle = 1.0
         control.brake = 0.0
         control.hand_brake = False
         control.manual_gear_shift = False

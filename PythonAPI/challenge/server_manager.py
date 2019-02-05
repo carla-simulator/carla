@@ -53,7 +53,7 @@ class ServerManager():
 
         print(exec_command)
         self._proc = subprocess.Popen(exec_command, stdout=subprocess.PIPE,
-                                      bufsize=1,  close_fds=ON_POSIX)
+                                      bufsize=1)
 
     def wait_until_ready(self):
         ready = False
