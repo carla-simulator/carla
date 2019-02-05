@@ -10,6 +10,8 @@
 #include <carla/geom/Transform.h>
 #include <carla/geom/Vector3D.h>
 
+#include <boost/python/implicit.hpp>
+
 #include <ostream>
 
 namespace carla {
@@ -66,8 +68,12 @@ void export_geom() {
   using namespace boost::python;
   namespace cg = carla::geom;
 
+  implicitly_convertible<cg::Vector3D, cg::Location>();
+  implicitly_convertible<cg::Location, cg::Vector3D>();
+
   class_<cg::Vector3D>("Vector3D")
     .def(init<float, float, float>((arg("x")=0.0f, arg("y")=0.0f, arg("z")=0.0f)))
+    .def(init<const cg::Location &>((arg("rhs"))))
     .def_readwrite("x", &cg::Vector3D::x)
     .def_readwrite("y", &cg::Vector3D::y)
     .def_readwrite("z", &cg::Vector3D::z)
@@ -77,21 +83,24 @@ void export_geom() {
     .def(self + self)
     .def(self -= self)
     .def(self - self)
+    .def(self *= double())
+    .def(self * double())
+    .def(double() * self)
+    .def(self /= double())
+    .def(self / double())
+    .def(double() / self)
     .def(self_ns::str(self_ns::self))
   ;
 
 class_<cg::Location, bases<cg::Vector3D>>("Location")
     .def(init<float, float, float>((arg("x")=0.0f, arg("y")=0.0f, arg("z")=0.0f)))
+    .def(init<const cg::Vector3D &>((arg("rhs"))))
     .add_property("x", +[](const cg::Location &self) { return self.x; }, +[](cg::Location &self, float x) { self.x = x; })
     .add_property("y", +[](const cg::Location &self) { return self.y; }, +[](cg::Location &self, float y) { self.y = y; })
     .add_property("z", +[](const cg::Location &self) { return self.z; }, +[](cg::Location &self, float z) { self.z = z; })
     .def("distance", &cg::Location::Distance, (arg("location")))
     .def("__eq__", &cg::Location::operator==)
     .def("__ne__", &cg::Location::operator!=)
-    .def(self += self)
-    .def(self + self)
-    .def(self -= self)
-    .def(self - self)
     .def(self_ns::str(self_ns::self))
   ;
 
