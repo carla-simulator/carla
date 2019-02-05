@@ -13,10 +13,6 @@ Use the following commands:
 
         Compile CarlaUE4 project and launch it in Unreal Engine's Editor.
 
-    launch-editor:
-
-        Launch CarlaUE4 project in Unreal Engine's Editor
-
     package:
 
         Makes a packaged version of CARLA ready for distribution.
@@ -43,10 +39,6 @@ for developers:
     benchmark:
 
         Run the benchmark tests for LibCarla.
-
-    CarlaUE4Editor:
-
-        Build CarlaUE4 project, but do not launch the editor.
 
     PythonAPI:
 

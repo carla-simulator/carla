@@ -28,31 +28,25 @@ if not "%1"=="" (
         set BUILD_SERVER=true
         set BUILD_CLIENT=true
     )
-
     if "%1"=="--server" (
         set BUILD_SERVER=true
     )
-
     if "%1"=="--client" (
         set BUILD_CLIENT=true
     )
-
     if "%1"=="--clean" (
         set REMOVE_INTERMEDIATE=true
     )
-
     if "%1"=="-h" (
         echo %DOC_STRING%
         echo %USAGE_STRING%
         GOTO :eof
     )
-
     if "%1"=="--help" (
         echo %DOC_STRING%
         echo %USAGE_STRING%
         GOTO :eof
     )
-
     shift
     goto :arg-parse
 )
@@ -65,6 +59,10 @@ if %REMOVE_INTERMEDIATE% == false (
         )
     )
 )
+
+rem ============================================================================
+rem -- Local Variables ---------------------------------------------------------
+rem ============================================================================
 
 rem Set the visual studio solution directory
 rem
@@ -100,7 +98,7 @@ if %BUILD_CLIENT% == true (
     cmake -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Client -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP" -DCMAKE_INSTALL_PREFIX=%LIBCARLA_CLIENT_INSTALL_PATH% %ROOT_PATH%
     if %errorlevel% neq 0 goto error_cmake
 
-    cmake --build . --config Release --target install  | findstr /V "Up-to-date:"
+    cmake --build . --config Release --target install | findstr /V "Up-to-date:"
     if %errorlevel% neq 0 goto error_install
 )
 
