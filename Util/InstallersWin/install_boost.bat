@@ -91,7 +91,7 @@ if not exist "%BOOST_SRC_DIR%" (
     del "%BOOST_TEMP_FILE_DIR:/=\%"
     rename "%BUILD_DIR%%BOOST_TEMP_FOLDER%" "%BOOST_BASENAME%-source"
 ) else (
-    echo %FILE_N% Not downloading boost because already exists a folder called "%BOOST_SRC_DIR%".
+    echo %FILE_N% Not downloading boost because already exists the folder "%BOOST_SRC_DIR%".
 )
 
 cd "%BOOST_SRC_DIR%"
@@ -113,6 +113,7 @@ b2 -j%NUMBER_OF_ASYNC_JOBS%^
     --build-dir=.\build^
     --with-filesystem^
     --with-python^
+    --with-date_time^
     architecture=x86^
     address-model=64^
     toolset=%TOOLSET%^
