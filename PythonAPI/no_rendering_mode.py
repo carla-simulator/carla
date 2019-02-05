@@ -161,12 +161,9 @@ class Util(object):
         return normalized_vector
 
     @staticmethod
-    def blits(destination_surface, source_surfaces, blend_mode=0):
-        if hasattr(destination_surface, 'blits'):
-            destination_surface.blits(source_surfaces)
-        else:
-            for surface in source_surfaces:
-                destination_surface.blit(surface[0], surface[1], None, blend_mode)
+    def blits(destination_surface, source_surfaces, rect=None, blend_mode=0):
+        for surface in source_surfaces:
+            destination_surface.blit(surface[0], surface[1], rect, blend_mode)
 
     @staticmethod
     def get_parallel_line_at_distance(line, unit_vector, distance):
@@ -689,6 +686,7 @@ class ModuleWorld(object):
 
     def _create_world_surfaces(self):
         self.map_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
+        self.scaled_map_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
 
         self.vehicles_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
         self.vehicles_surface.set_colorkey(COLOR_BLACK)
@@ -819,7 +817,10 @@ class ModuleWorld(object):
         self.hud_module = module_manager.get_module(MODULE_HUD)
         self.module_input = module_manager.get_module(MODULE_INPUT)
 
-        self.surface_size = min(self.hud_module.dim[0], self.hud_module.dim[1])
+        self.original_surface_size = min(self.hud_module.dim[0], self.hud_module.dim[1])
+        self.surface_size = self.original_surface_size * MAX_ZOOM
+
+        self.scaled_size = int(self.surface_size)
         self.prev_scaled_size = int(self.surface_size)
 
         self._create_world_surfaces()
@@ -1018,12 +1019,6 @@ class ModuleWorld(object):
 
         return (vehicles, traffic_lights, speed_limits, walkers)
 
-    def refresh_surface(self, surface, size):
-        surface.fill(COLOR_BLACK)
-        new_surface = pygame.Surface(size).convert()
-        new_surface.set_colorkey(COLOR_BLACK)
-        return new_surface
-
     def render_actors(self, vehicles, traffic_lights, speed_limits, walkers):
         # Render Vehicles
         vehicle_renderer = []
@@ -1032,7 +1027,7 @@ class ModuleWorld(object):
             vehicle_renderer.append(
                 (vehicle.surface, (vehicle.x - vehicle.surface.get_width() / 2, vehicle.y - vehicle.surface.get_height() / 2)))
 
-        Util.blits(self.vehicles_surface, vehicle_renderer, pygame.BLEND_RGB_MAX)
+        Util.blits(self.vehicles_surface, vehicle_renderer, None, pygame.BLEND_RGB_MAX)
 
         # Render Traffic Lights
         traffic_lights_renderer = []
@@ -1069,9 +1064,11 @@ class ModuleWorld(object):
         self.result_surface.set_clip(clipping_rect)
 
     def render(self, display):
-
         if not self.map_rendered:
             self.render_map(self.map_surface)
+
+            self.scaled_map_surface = pygame.transform.smoothscale(
+                self.map_surface, (self.scaled_size, self.scaled_size))
             self.map_rendered = True
 
         self.vehicles_surface.fill(COLOR_BLACK)
@@ -1079,13 +1076,13 @@ class ModuleWorld(object):
         self.speed_limits_surface.fill(COLOR_BLACK)
         self.walkers_surface.fill(COLOR_BLACK)
         self.hero_actor_surface.fill(COLOR_BLACK)
+        self.result_surface.fill(COLOR_BLACK)
 
         vehicles, traffic_lights, speed_limits, walkers = self._split_actors(self.actors)
 
-        scale_factor = self.module_input.wheel_offset
+        scale_factor = self.module_input.wheel_offset / MAX_ZOOM
         self.scaled_size = int(self.surface_size * scale_factor)
 
-        # Scale surfaces if needed
         if self.scaled_size != self.prev_scaled_size:
             m = self.module_input.mouse_pos
 
@@ -1110,18 +1107,8 @@ class ModuleWorld(object):
 
             # Scale performed
             self.transform_helper.map_size = self.scaled_size
-            self.map_surface.fill(COLOR_BLACK)
-            new_map_size = (self.transform_helper.map_size, self.transform_helper.map_size)
-            new_map_surface = pygame.Surface(new_map_size).convert()
-            self.render_map(new_map_surface)
-            self.map_surface = new_map_surface
-            self.vehicles_surface = self.refresh_surface(self.vehicles_surface, new_map_size).convert()
-            self.traffic_light_surface = self.refresh_surface(self.traffic_light_surface, new_map_size).convert()
-            self.speed_limits_surface = self.refresh_surface(self.speed_limits_surface, new_map_size).convert()
-            self.walkers_surface = self.refresh_surface(self.walkers_surface, new_map_size).convert()
-            self.vehicle_id_surface = self.refresh_surface(self.vehicle_id_surface, new_map_size).convert()
-            self.hero_actor_surface = self.refresh_surface(self.hero_actor_surface, new_map_size).convert()
-            self.result_surface = self.refresh_surface(self.result_surface, new_map_size).convert()
+            self.scaled_map_surface = pygame.transform.smoothscale(
+                self.map_surface, (self.scaled_size, self.scaled_size))
 
         # Render Vehicles
         self.render_actors(vehicles, traffic_lights, speed_limits, walkers)
@@ -1153,7 +1140,7 @@ class ModuleWorld(object):
 
         # Blit surfaces
 
-        surfaces = ((self.map_surface, (0, 0)),
+        surfaces = ((self.scaled_map_surface, (0, 0)),
                     (self.vehicles_surface, (0, 0)),
                     (self.traffic_light_surface, (0, 0)),
                     (self.speed_limits_surface, (0, 0)),
@@ -1166,7 +1153,7 @@ class ModuleWorld(object):
 
         rotated_result_surface = self.result_surface
         if self.hero_actor is not None:
-            hero_surface = pygame.Surface((self.surface_size, self.surface_size), pygame.SRCALPHA)
+            hero_surface = pygame.Surface((self.original_surface_size, self.original_surface_size), pygame.SRCALPHA)
 
             # Apply clipping rect
             clipping_rect = pygame.Rect(-translation_offset[0] - hero_surface.get_width() / 2,
@@ -1200,11 +1187,6 @@ class ModuleWorld(object):
 
             display.blit(rotated_result_surface, (translation_offset[0] + center_offset[0],
                                                   translation_offset[1]))
-
-        del vehicles[:]
-        del traffic_lights[:]
-        del speed_limits[:]
-        del walkers[:]
 
 
 # ==============================================================================
