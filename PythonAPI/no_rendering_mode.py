@@ -135,7 +135,6 @@ WALKER_NAME = 'Walker'
 MODULE_WORLD = 'WORLD'
 MODULE_HUD = 'HUD'
 MODULE_INPUT = 'INPUT'
-MODULE_RENDER = 'RENDER'
 
 # Input
 # Wheel used for zooming map
@@ -226,23 +225,6 @@ class ModuleManager(object):
     def start_modules(self):
         for module in self.modules:
             module.start()
-
-
-# ==============================================================================
-# -- ModuleRender -------------------------------------------------------------
-# ==============================================================================
-class ModuleRender(object):
-    def __init__(self, name):
-        self.name = name
-
-    def start(self):
-        pass
-
-    def render(self, display):
-        pass
-
-    def tick(self, clock):
-        pass
 
 
 # ==============================================================================
@@ -481,7 +463,6 @@ class ModuleWorld(object):
         # Store necessary modules
         self.hud_module = None
         self.module_input = None
-        self.render_module = None
 
         self.surface_size = [0, 0]
         self.prev_scaled_size = 0
@@ -589,9 +570,6 @@ class ModuleWorld(object):
         shrink_map_factor = 1.02
         self.transform_helper = TransformHelper(
             (self.x_min * shrink_map_factor, self.y_min * shrink_map_factor), (self.x_max * shrink_map_factor, self.y_max * shrink_map_factor), self.surface_size)
-
-        # Module render
-        self.render_module = module_manager.get_module(MODULE_RENDER)
 
         weak_self = weakref.ref(self)
         self.world.on_tick(lambda timestamp: ModuleWorld.on_world_tick(weak_self, timestamp))
@@ -1039,7 +1017,7 @@ class ModuleInput(object):
 
                 if event.key == K_i:
                     module_hud = module_manager.get_module(MODULE_HUD)
-                    module_hud.show_info = not module_hud.show_info                    
+                    module_hud.show_info = not module_hud.show_info
                 if event.key == K_l:
                     module_hud = module_manager.get_module(MODULE_HUD)
                     module_hud.show_actor_ids = not module_hud.show_actor_ids
@@ -1060,7 +1038,6 @@ class ModuleInput(object):
                         world.hero_actor.set_autopilot(self._autopilot_enabled)
                         module_hud = module_manager.get_module(MODULE_HUD)
                         module_hud.notification('Autopilot %s' % ('On' if self._autopilot_enabled else 'Off'))
-
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 4:
@@ -1130,10 +1107,8 @@ def game_loop(args):
     input_module = ModuleInput(MODULE_INPUT)
     hud_module = ModuleHUD(MODULE_HUD, args.width, args.height)
     world_module = ModuleWorld(MODULE_WORLD, args.host, args.port, 2.0, args.filter)
-    render_module = ModuleRender(MODULE_RENDER)
 
     # Register Modules
-    module_manager.register_module(render_module)
     module_manager.register_module(world_module)
     module_manager.register_module(hud_module)
     module_manager.register_module(input_module)
