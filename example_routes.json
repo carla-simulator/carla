@@ -3,7 +3,7 @@
 		"map": "Town04",
 		"start": {"pos": {"x": -16.7, "y": -168.3, "z": 0.5}, "ori": {"pitch": 0.0, "roll": 0.0, "yaw": 0.0}},
 		"end":  {"pos": {"x": -16.7, "y": -168.3, "z": 0.5}, "ori": {"pitch": 0.0, "roll": 0.0, "yaw": 0.0}},
-		"timeout": 40
+		"timeout": 5
 	},
 
 
@@ -11,7 +11,7 @@
 		"map": "Town04",
 		"start": {"pos": {"x": -16.7, "y": -168.3, "z": 0.5}, "ori": {"pitch": 0.0, "roll": 0.0, "yaw": 0.0}},
 		"end":  {"pos": {"x": -16.7, "y": -168.3, "z": 0.5}, "ori": {"pitch": 0.0, "roll": 0.0, "yaw": 0.0}},
-		"timeout": 40
+		"timeout": 10
 	}
 }
 

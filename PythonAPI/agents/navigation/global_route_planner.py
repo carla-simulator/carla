@@ -6,13 +6,11 @@ This module provides GlobalRoutePlanner implementation.
 """
 
 import math
-from enum import Enum
 
 import numpy as np
 import networkx as nx
 
-import carla
-from local_planner import RoadOption
+from agents.navigation.local_planner import RoadOption
 
 
 class GlobalRoutePlanner(object):
