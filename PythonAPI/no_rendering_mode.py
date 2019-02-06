@@ -49,7 +49,7 @@ try:
     import pygame
     from pygame.locals import K_h
     from pygame.locals import K_i
-    from pygame.locals import K_j
+    from pygame.locals import K_l
     from pygame.locals import K_w
     from pygame.locals import K_a
     from pygame.locals import K_s
@@ -293,6 +293,7 @@ class ModuleHUD (object):
     def _init_data_params(self, height, width):
         self.dim = (height, width)
         self.show_info = True
+        self.show_actor_ids = False
         self._info_text = {}
         self.legend = Legend(((COLOR_PLUM_2, VEHICLE_NAME),
                               (COLOR_ALUMINIUM_0, WALKER_NAME)),
@@ -307,7 +308,7 @@ class ModuleHUD (object):
 
     def render_actors_ids(self, vehicle_id_surface, list_actors, transform_helper, hero_actor):
         vehicle_id_surface.fill(COLOR_BLACK)
-        if self.show_info:
+        if self.show_actor_ids:
             vehicle_id_surface.set_alpha(150)
             v_offset = 4
             for actor in list_actors:
@@ -949,7 +950,9 @@ class ModuleInput(object):
                 if event.key == K_i:
                     module_hud = module_manager.get_module(MODULE_HUD)
                     module_hud.show_info = not module_hud.show_info                    
-
+                if event.key == K_l:
+                    module_hud = module_manager.get_module(MODULE_HUD)
+                    module_hud.show_actor_ids = not module_hud.show_actor_ids
                 if isinstance(self._control, carla.VehicleControl):
                     if event.key == K_q:
                         self._control.gear = 1 if self._control.reverse else -1
