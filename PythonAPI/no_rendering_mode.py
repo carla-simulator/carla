@@ -558,6 +558,9 @@ class ModuleWorld(object):
         self.round_surface = pygame.Surface(self.hud_module.dim, pygame.SRCALPHA)
         self.round_surface.fill(COLOR_BLACK)
 
+        scaled_original_size = self.original_surface_size * (1.0 / 0.9)
+        self.hero_surface = pygame.Surface((scaled_original_size, scaled_original_size))
+
         center_offset = (self.hud_module.dim[0] / 2, self.hud_module.dim[1] / 2)
         pygame.draw.circle(self.round_surface, COLOR_WHITE, center_offset, self.hud_module.dim[1] / 2)
 
@@ -571,7 +574,8 @@ class ModuleWorld(object):
         x_min, y_min, x_max, y_max = self._compute_map_bounding_box(self.map_waypoints)
 
         # Feed map bounding box and surface size to transform helper
-        shrink_map_factor = 1.02
+        shrink_map_factor = 1.05
+
         self.transform_helper = TransformHelper(
             (x_min * shrink_map_factor, y_min * shrink_map_factor), (x_max * shrink_map_factor, y_max * shrink_map_factor), self.surface_size)
 
@@ -926,20 +930,17 @@ class ModuleWorld(object):
                 angle = self.hero_actor.get_transform().rotation.yaw + 90.0
                 center_offset = (display.get_width() / 2, display.get_height() / 2)
 
-            scaled_original_size = self.original_surface_size * (1.0 / 0.9)
-            hero_surface = pygame.Surface((scaled_original_size, scaled_original_size), pygame.SRCALPHA)
-
             # Apply clipping rect
-            clipping_rect = pygame.Rect(-translation_offset[0] - hero_surface.get_width() / 2,
-                                        -translation_offset[1] - hero_surface.get_height() / 2, hero_surface.get_width(), hero_surface.get_height())
+            clipping_rect = pygame.Rect(-translation_offset[0] - self.hero_surface.get_width() / 2,
+                                        -translation_offset[1] - self.hero_surface.get_height() / 2, self.hero_surface.get_width(), self.hero_surface.get_height())
             self.clip_surfaces(clipping_rect)
             Util.blits(self.result_surface, surfaces)
 
-            hero_surface.fill(COLOR_CHOCOLATE_1)
-            hero_surface.blit(self.result_surface, (translation_offset[0] + hero_surface.get_width() / 2,
-                                                    translation_offset[1] + hero_surface.get_height() / 2))
+            self.hero_surface.fill(COLOR_CHOCOLATE_1)
+            self.hero_surface.blit(self.result_surface, (translation_offset[0] + self.hero_surface.get_width() / 2,
+                                                         translation_offset[1] + self.hero_surface.get_height() / 2))
 
-            rotated_result_surface = pygame.transform.rotozoom(hero_surface, angle, 0.9)
+            rotated_result_surface = pygame.transform.rotozoom(self.hero_surface, angle, 0.9)
 
             final_offset = rotated_result_surface.get_rect(center=center_offset)
             display.blit(rotated_result_surface, final_offset)
