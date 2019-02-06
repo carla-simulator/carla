@@ -153,7 +153,7 @@ public:
       FActorDescription thisActorDescription,
       FActorView::IdType DesiredId = 0)
   {
-    auto result = ActorDispatcher.SpawnActor(Transform, thisActorDescription, DesiredId);
+    auto result = ActorDispatcher->SpawnActor(Transform, thisActorDescription, DesiredId);
 
     if (result.Key == EActorSpawnResultStatus::Success) {
       CreateRecorderEventAdd(
@@ -195,7 +195,7 @@ public:
       };
       Recorder.addEvent(std::move(recEvent));
 
-    return ActorDispatcher.DestroyActor(Actor);
+    return ActorDispatcher->DestroyActor(Actor);
   }
 
   // ===========================================================================
@@ -211,21 +211,17 @@ public:
   // -- Private methods and members --------------------------------------------
   // ===========================================================================
 
-  carla::recorder::Recorder &GetRecorder()
+  crec::Recorder &GetRecorder()
   {
     return Recorder;
   }
 
-  carla::recorder::Replayer &GetReplayer()
+  crec::Replayer &GetReplayer()
   {
     return Recorder.getReplayer();
   }
 
   std::string StartRecorder(std::string name);
-
-  void SetServer(FTheNewCarlaServer *newServer) {
-    server = newServer;
-  }
 
 private:
 
@@ -235,7 +231,7 @@ private:
 
   void RegisterActorFactory(ACarlaActorFactory &ActorFactory)
   {
-    ActorDispatcher.Bind(ActorFactory);
+    ActorDispatcher->Bind(ActorFactory);
   }
 
   void CreateRecorderEventAdd(
@@ -262,6 +258,5 @@ private:
   UPROPERTY(VisibleAnywhere)
   AWorldObserver *WorldObserver = nullptr;
 
-  carla::recorder::Recorder Recorder;
-  FTheNewCarlaServer *server {nullptr};
+  crec::Recorder Recorder;
 };

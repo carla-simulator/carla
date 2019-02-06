@@ -92,6 +92,8 @@ file(GLOB libcarla_server_sources
     "${libcarla_source_path}/carla/opendrive/parser/*.h"
     "${libcarla_source_path}/carla/opendrive/parser/pugixml/*.cpp"
     "${libcarla_source_path}/carla/opendrive/parser/pugixml/*.hpp"
+    "${libcarla_source_path}/carla/recorder/*.cpp"
+    "${libcarla_source_path}/carla/recorder/*.h"
     "${libcarla_source_path}/carla/road/*.cpp"
     "${libcarla_source_path}/carla/road/*.h"
     "${libcarla_source_path}/carla/road/element/*.cpp"
