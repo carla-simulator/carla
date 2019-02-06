@@ -25,7 +25,7 @@ void export_client() {
     .def("start_recorder", &cc::Client::StartRecorder, (arg("name")))
     .def("stop_recorder", CALL_WITHOUT_GIL(cc::Client, StopRecorder))
     .def("show_recorder_file_info", &cc::Client::ShowRecorderFileInfo, (arg("name")))
-    .def("replay_file", &cc::Client::ReplayFile, (arg("name"), arg("time")))
+    .def("replay_file", &cc::Client::ReplayFile, (arg("name"), arg("time_start"), arg("duration")))
 
   ;
 }

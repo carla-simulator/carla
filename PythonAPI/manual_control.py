@@ -104,6 +104,8 @@ try:
     from pygame.locals import K_r
     from pygame.locals import K_s
     from pygame.locals import K_w
+    from pygame.locals import K_MINUS
+    from pygame.locals import K_EQUALS
 except ImportError:
     raise RuntimeError('cannot import pygame, make sure pygame package is installed')
 
@@ -149,6 +151,8 @@ class World(object):
         self._actor_filter = actor_filter
         self.restart()
         self.world.on_tick(hud.on_world_tick)
+        self.recording_enabled = False
+        self.recording_start = 0
 
     def restart(self):
         # Keep same camera config if the camera manager exists.
@@ -196,6 +200,11 @@ class World(object):
         self.camera_manager.render(display)
         self.hud.render(display)
 
+    def destroySensors(self):
+            self.camera_manager.sensor.destroy()
+            self.camera_manager.sensor = None
+            self.camera_manager._index = None
+
     def destroy(self):
         actors = [
             self.camera_manager.sensor,
@@ -206,7 +215,6 @@ class World(object):
         for actor in actors:
             if actor is not None:
                 actor.destroy()
-
 
 # ==============================================================================
 # -- KeyboardControl -----------------------------------------------------------
@@ -228,7 +236,7 @@ class KeyboardControl(object):
         self._steer_cache = 0.0
         world.hud.notification("Press 'H' or '?' for help.", seconds=4.0)
 
-    def parse_events(self, world, clock):
+    def parse_events(self, client, world, clock):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return True
@@ -251,8 +259,43 @@ class KeyboardControl(object):
                     world.camera_manager.next_sensor()
                 elif event.key > K_0 and event.key <= K_9:
                     world.camera_manager.set_sensor(event.key - 1 - K_0)
-                elif event.key == K_r:
+                elif event.key == K_r and not (pygame.key.get_mods() & KMOD_CTRL):
                     world.camera_manager.toggle_recording()
+                elif event.key == K_r and (pygame.key.get_mods() & KMOD_CTRL):
+                    if (world.recording_enabled):
+                        client.stop_recorder()
+                        world.recording_enabled = False
+                        world.hud.notification("Recorder is OFF")
+                    else:
+                        client.start_recorder("manual_recording.rec")
+                        world.recording_enabled = True
+                        world.hud.notification("Recorder is ON")
+                elif event.key == K_p and (pygame.key.get_mods() & KMOD_CTRL):
+                    # stop recorder
+                    client.stop_recorder()
+                    world.recording_enabled = False
+                    # work around to fix camera at start of replaying
+                    currentIndex = world.camera_manager._index
+                    world.destroySensors()
+                    # disable autopilot
+                    self._autopilot_enabled = False
+                    world.player.set_autopilot(self._autopilot_enabled)
+                    world.hud.notification("Replaying file 'manual_recording.rec'")
+                    # replayer
+                    client.replay_file("manual_recording.rec", world.recording_start, 0)
+                    world.camera_manager.set_sensor(currentIndex)
+                elif event.key == K_MINUS and (pygame.key.get_mods() & KMOD_CTRL):
+                    if pygame.key.get_mods() & KMOD_SHIFT:
+                        world.recording_start -= 10
+                    else:
+                        world.recording_start -= 1
+                    world.hud.notification("Recording start time is %d" % (world.recording_start))
+                elif event.key == K_EQUALS and (pygame.key.get_mods() & KMOD_CTRL):
+                    if pygame.key.get_mods() & KMOD_SHIFT:
+                        world.recording_start += 10
+                    else:
+                        world.recording_start += 1
+                    world.hud.notification("Recording start time is %d" % (world.recording_start))
                 if isinstance(self._control, carla.VehicleControl):
                     if event.key == K_q:
                         self._control.gear = 1 if self._control.reverse else -1
@@ -264,7 +307,7 @@ class KeyboardControl(object):
                         self._control.gear = max(-1, self._control.gear - 1)
                     elif self._control.manual_gear_shift and event.key == K_PERIOD:
                         self._control.gear = self._control.gear + 1
-                    elif event.key == K_p:
+                    elif event.key == K_p and not (pygame.key.get_mods() & KMOD_CTRL):
                         self._autopilot_enabled = not self._autopilot_enabled
                         world.player.set_autopilot(self._autopilot_enabled)
                         world.hud.notification('Autopilot %s' % ('On' if self._autopilot_enabled else 'Off'))
@@ -722,13 +765,15 @@ def game_loop(args):
         clock = pygame.time.Clock()
         while True:
             clock.tick_busy_loop(60)
-            if controller.parse_events(world, clock):
+            if controller.parse_events(client, world, clock):
                 return
             world.tick(clock)
             world.render(display)
             pygame.display.flip()
 
     finally:
+
+        client.stop_recorder()
 
         if world is not None:
             world.destroy()
