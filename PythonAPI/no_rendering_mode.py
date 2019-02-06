@@ -1119,7 +1119,7 @@ class ModuleWorld(object):
         if self.hero_actor is None:
             translation_offset = ((self.module_input.mouse_offset[0]) * scale_factor + self.scale_offset[0],
                                   self.module_input.mouse_offset[1] * scale_factor + self.scale_offset[1])
-            center_offset = ((display.get_width() - self.surface_size) / 2 * scale_factor, 0)
+            center_offset = ((display.get_width() * MAX_ZOOM - self.surface_size) / 2 * scale_factor, 0)
         else:
             hero_location = (self.hero_actor.get_location().x, self.hero_actor.get_location().y)
             hero_front = self.hero_actor.get_transform().get_forward_vector()
