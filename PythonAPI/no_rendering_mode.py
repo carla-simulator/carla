@@ -693,7 +693,6 @@ class ModuleWorld(object):
             self.hero_actor = random.choice(hero_vehicles)
         else:
             self._spawn_hero()
-        self.module_input.wheel_offset = HERO_DEFAULT_ZOOM
 
     def _spawn_hero(self):
 
@@ -704,17 +703,10 @@ class ModuleWorld(object):
             color = random.choice(blueprint.get_attribute('color').recommended_values)
             blueprint.set_attribute('color', color)
         # Spawn the player.
-        if self.hero_actor is not None:
-            spawn_point = self.hero_actor.get_transform()
-            spawn_point.location.z += 2.0
-            spawn_point.rotation.roll = 0.0
-            spawn_point.rotation.pitch = 0.0
-            self.hero_actor = self.world.try_spawn_actor(blueprint, spawn_point)
         while self.hero_actor is None:
             spawn_points = self.world.get_map().get_spawn_points()
             spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
             self.hero_actor = self.world.try_spawn_actor(blueprint, spawn_point)
-
     def tick(self, clock):
         self.update_hud_info(clock)
 
@@ -955,26 +947,7 @@ class ModuleWorld(object):
         # Render Vehicles
         self.render_actors(vehicles, traffic_lights, speed_limits, walkers)
 
-        angle = 0
-        center_offset = (0, 0)
-        # Translation offset
-        if self.hero_actor is None:
-            translation_offset = ((self.module_input.mouse_offset[0]) * scale_factor + self.scale_offset[0],
-                                  self.module_input.mouse_offset[1] * scale_factor + self.scale_offset[1])
-            center_offset = ((display.get_width() * MAX_ZOOM - self.surface_size) / 2 * scale_factor, 0)
-        else:
-            hero_front = self.hero_actor.get_transform().get_forward_vector()
 
-            hero_location_screen = self.transform_helper.convert_world_to_screen_location(self.hero_actor.get_location())
-
-            translation_offset = (-hero_location_screen[0] - hero_front.x * PIXELS_AHEAD_VEHICLE,
-                                  (-hero_location_screen[1] - hero_front.y * PIXELS_AHEAD_VEHICLE))
-            selected_hero_actor = [vehicle for vehicle in vehicles if vehicle.id == self.hero_actor.id]
-            if len(selected_hero_actor) != 0:
-                angle = self.hero_actor.get_transform().rotation.yaw + 90.0
-                center_offset = (display.get_width() / 2, display.get_height() / 2)
-            else:
-                self.hero_actor = None
 
         # Blit surfaces
 
@@ -990,9 +963,23 @@ class ModuleWorld(object):
                                           self.transform_helper, self.hero_actor)
 
         rotated_result_surface = self.result_surface
+        
+        angle = 0
+        center_offset = (0, 0)
         if self.hero_actor is not None:
-            hero_surface = pygame.Surface((self.original_surface_size, self.original_surface_size), pygame.SRCALPHA)
+            # Translation offset
+            hero_front = self.hero_actor.get_transform().get_forward_vector()
 
+            hero_location_screen = self.transform_helper.convert_world_to_screen_location(self.hero_actor.get_location())
+
+            translation_offset = (-hero_location_screen[0] - hero_front.x * PIXELS_AHEAD_VEHICLE,
+                                  (-hero_location_screen[1] - hero_front.y * PIXELS_AHEAD_VEHICLE))
+            selected_hero_actor = [vehicle for vehicle in vehicles if vehicle.id == self.hero_actor.id]
+            if len(selected_hero_actor) != 0:
+                angle = self.hero_actor.get_transform().rotation.yaw + 90.0
+                center_offset = (display.get_width() / 2, display.get_height() / 2)
+
+            hero_surface = pygame.Surface((self.original_surface_size, self.original_surface_size), pygame.SRCALPHA)
             # Apply clipping rect
             clipping_rect = pygame.Rect(-translation_offset[0] - hero_surface.get_width() / 2,
                                         -translation_offset[1] - hero_surface.get_height() / 2, self.hud_module.dim[0], self.hud_module.dim[1])
@@ -1017,6 +1004,11 @@ class ModuleWorld(object):
             round_surface.blit(rotated_result_surface, final_offset, None, pygame.BLEND_MULT)
             display.blit(round_surface, (0, 0))
         else:
+            # Translation offset
+            translation_offset = ((self.module_input.mouse_offset[0]) * scale_factor + self.scale_offset[0],
+                                  self.module_input.mouse_offset[1] * scale_factor + self.scale_offset[1])
+            center_offset = ((display.get_width() * MAX_ZOOM - self.surface_size) / 2 * scale_factor, 0)
+            
             # Apply clipping rect
             clipping_rect = pygame.Rect(-translation_offset[0] - center_offset[0], -translation_offset[1],
                                         self.hud_module.dim[0], self.hud_module.dim[1])
@@ -1063,19 +1055,20 @@ class ModuleInput(object):
                     exit_game()
                 if event.key == K_h:
                     module_world = module_manager.get_module(MODULE_WORLD)
-                    module_world.select_hero_actor()
+                    if module_world.hero_actor is None:
+                        module_world.select_hero_actor()
+                        self.wheel_offset = HERO_DEFAULT_ZOOM
+                        self._control = carla.VehicleControl()
+                        self._autopilot_enabled = False
+                    else:
+                        self.wheel_offset = MAP_DEFAULT_ZOOM
+                        self.mouse_offset = [0, 0]
 
-                    self._control = carla.VehicleControl()
-                    self._autopilot_enabled = False
-
+                        module_world.hero_actor = None
+                        
                 if event.key == K_i:
                     module_hud = module_manager.get_module(MODULE_HUD)
-                    module_hud.show_info = not module_hud.show_info
-                if event.key == K_j:
-                    module_world = module_manager.get_module(MODULE_WORLD)
-                    module_world.hero_actor = None
-                    self.wheel_offset = MAP_DEFAULT_ZOOM
-                    self.mouse_offset = [0, 0]
+                    module_hud.show_info = not module_hud.show_info                    
 
                 if isinstance(self._control, carla.VehicleControl):
                     if event.key == K_q:
@@ -1121,7 +1114,7 @@ class ModuleInput(object):
     def _parse_mouse(self):
         if pygame.mouse.get_pressed()[0]:
             x, y = pygame.mouse.get_pos()
-            self.mouse_offset[0] = self.mouse_offset[0] + x - self.mouse_pos[0]
+            self.mouse_offset[0] += x - self.mouse_pos[0]
             self.mouse_offset[1] += y - self.mouse_pos[1]
             self.mouse_pos = (x, y)
 
