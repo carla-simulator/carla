@@ -166,28 +166,6 @@ class Util(object):
             destination_surface.blit(surface[0], surface[1], rect, blend_mode)
 
     @staticmethod
-    def get_parallel_line_at_distance(line, unit_vector, distance):
-        parallel_line = [(line[0][0] + unit_vector[0] * distance, line[0][1] + unit_vector[1] * distance),
-                         (line[1][0] + unit_vector[0] * distance, line[1][1] + unit_vector[1] * distance)]
-        return parallel_line
-
-    @staticmethod
-    def get_lateral_lines_from_lane(line, distance):
-        front_vector = (line[1][0] - line[0][0], line[1][1] - line[0][1])
-        left_vector = (-front_vector[1], front_vector[0])
-
-        unit_left_vector = Util.normalize_vector(left_vector)
-        unit_right_vector = (-unit_left_vector[0], -unit_left_vector[1])
-
-        distance = distance / 2.0
-
-        # Get lateral lines
-        lateral_left = Util.get_parallel_line_at_distance(line, unit_left_vector, distance)
-        lateral_right = Util.get_parallel_line_at_distance(line, unit_right_vector, distance)
-
-        return lateral_left, lateral_right
-
-    @staticmethod
     def distance_between_points(p1, p2):
         return math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
 
@@ -202,15 +180,6 @@ class TransformHelper(object):
         self.diff_min_max_map_point = (float((self.max_map_point[0] - self.min_map_point[0])),
                                        float((self.max_map_point[1] - self.min_map_point[1])))
 
-    def convert_world_to_screen_point(self, point):
-        screen_point = (int(float(point[0] - self.min_map_point[0]) / self.diff_min_max_map_point[0] * self.map_size),
-                        int(float(point[1] - self.min_map_point[1]) / self.diff_min_max_map_point[1] * self.map_size))
-        return (max(screen_point[0], 1), max(screen_point[1], 1))
-
-    def convert_world_to_screen_line(self, line):
-        return (self.convert_world_to_screen_point(line[0]),
-                self.convert_world_to_screen_point(line[1]))
-
     def convert_world_to_screen_size(self, size):
         screen_size = (int(size[0] / self.diff_min_max_map_point[0] * self.map_size),
                        int(size[1] / self.diff_min_max_map_point[1] * self.map_size))
@@ -221,55 +190,10 @@ class TransformHelper(object):
                       int(size[1] * self.diff_min_max_map_point[1] / self.map_size))
         return world_size
 
-    def convert_screen_to_world_location(self, location):
+    def convert_world_to_screen_location(self, location):
         screen_point = (int(float(location.x - self.min_map_point[0]) / self.diff_min_max_map_point[0] * self.map_size),
                         int(float(location.y - self.min_map_point[1]) / self.diff_min_max_map_point[1] * self.map_size))
         return (max(screen_point[0], 1), max(screen_point[1], 1))
-# ==============================================================================
-# -- Waypoint ----------------------------------------------------------------------
-# ==============================================================================
-
-
-class Waypoint(object):
-    def __init__(self, color, width_world, line_world, left_line, right_line, is_left_lateral_line, is_left_central_line, is_right_lateral_line, is_right_central_line,
-                 transform_helper, arrow_lines_world=None, road_id=None, lane_id=None):
-        self.color = color
-        self.width_world = width_world
-        self.line_world = line_world
-        self.left_line = left_line
-        self.right_line = right_line
-        self.is_left_lateral_line = is_left_lateral_line
-        self.is_left_central_line = is_left_central_line
-        self.is_right_lateral_line = is_right_lateral_line
-        self.is_right_central_line = is_right_central_line
-
-        self.transform_helper = transform_helper
-        self.line_screen = self.transform_helper.convert_world_to_screen_line(self.line_world)
-        self.width_screen = int(
-            self.transform_helper.convert_world_to_screen_size(
-                (self.width_world, self.width_world))[0])
-        self.arrow_lines_world = arrow_lines_world
-        self.arrow_lines_screen = []
-        self.road_id = road_id
-        self.lane_id = lane_id
-
-        if self.arrow_lines_world is not None:
-            # We add also the central line of the arrow
-            self.arrow_lines_world.append(self.line_world)
-            for line in self.arrow_lines_world:
-                self.arrow_lines_screen.append(self.transform_helper.convert_world_to_screen_line(line))
-
-    def refresh_conversion_during_scale(self):
-        self.line_screen = self.transform_helper.convert_world_to_screen_line(self.line_world)
-        self.width_screen = int(
-            self.transform_helper.convert_world_to_screen_size(
-                (self.width_world, self.width_world))[0])
-
-        if self.arrow_lines_world is not None:
-            del self.arrow_lines_screen[:]
-            self.arrow_lines_world.append(self.line_world)
-            for line in self.arrow_lines_world:
-                self.arrow_lines_screen.append(self.transform_helper.convert_world_to_screen_line(line))
 
 # ==============================================================================
 # -- Vehicle ----------------------------------------------------------------------
@@ -313,8 +237,7 @@ class Vehicle(object):
 
         actor_location = self.actor.get_location()
 
-        self.x, self.y = self.map_transform_helper.convert_world_to_screen_point(
-            (actor_location.x, actor_location.y))
+        self.x, self.y = self.map_transform_helper.convert_world_to_screen_location(actor_location)
 
         self.surface = Util.rotate_surface(
             surface, (self.surface_size[0] / 2, self.surface_size[1] / 2), -self.actor.get_transform().rotation.yaw).convert()
@@ -326,7 +249,7 @@ class TrafficLight(object):
         self.map_transform_helper = map_transform_helper
 
         pos = self.actor.get_location()
-        self.x, self.y = self.map_transform_helper.convert_world_to_screen_point((pos.x, pos.y))
+        self.x, self.y = self.map_transform_helper.convert_world_to_screen_location(pos)
 
         self.color = COLOR_BLACK
         if actor.state == carla.libcarla.TrafficLightState.Green:
@@ -357,7 +280,7 @@ class SpeedLimit(object):
         self.font = pygame.font.SysFont('Arial', radius)
 
         actor_location = actor.get_location()
-        self.x, self.y = map_transform_helper.convert_world_to_screen_point((actor_location.x, actor_location.y))
+        self.x, self.y = map_transform_helper.convert_world_to_screen_location(actor_location)
 
         self.surface = pygame.Surface((radius * 2, radius * 2)).convert()
 
@@ -384,7 +307,7 @@ class Walker(object):
         self.actor = actor
 
         actor_location = actor.get_location()
-        self.x, self.y = map_transform_helper.convert_world_to_screen_point((actor_location.x, actor_location.y))
+        self.x, self.y = map_transform_helper.convert_world_to_screen_location(actor_location)
 
         self.color = COLOR_ALUMINIUM_0
 
@@ -455,20 +378,6 @@ class ModuleRender(object):
         self.draw_line(surface, color, False, lines[0], arrow_width)
         self.draw_line(surface, color, False, lines[1], arrow_width)
         self.draw_line(surface, color, False, lines[2], arrow_width)
-
-    def draw_rect_from_line(self, surface, line, distance, transform_helper):
-        lateral_left, lateral_right = Util.get_lateral_lines_from_lane(line, distance)
-
-        # Convert to screen space
-        lateral_left_screen = transform_helper.convert_world_to_screen_line(lateral_left)
-        lateral_right_screen = transform_helper.convert_world_to_screen_line(lateral_right)
-
-        pygame.draw.polygon(surface,
-                            COLOR_ALUMINIUM_5,
-                            [lateral_left_screen[0],
-                             lateral_left_screen[1],
-                             lateral_right_screen[1],
-                             lateral_right_screen[0]])
 
     def draw_line(self, surface, color, closed, line, width):
         pygame.draw.lines(surface, color, closed, line, width)
@@ -550,7 +459,8 @@ class ModuleHUD (object):
             v_offset = 4
             for actor in list_actors:
                 location = actor.get_location()
-                x, y = transform_helper.convert_world_to_screen_point((location.x, location.y - v_offset))
+                location.y = location.y - v_offset
+                x, y = transform_helper.convert_world_to_screen_location(location)
 
                 angle = 0
                 color_surface = pygame.Surface((len(str(actor.id)) * 8, 14))
@@ -865,15 +775,6 @@ class ModuleWorld(object):
         self.world = self.client.get_world()
         self.actors = self.world.get_actors()
 
-    def draw_side_lines_of_road(self, map_surface, line, is_central_line, is_lateral_line, index):
-        border_line_width = self.transform_helper.convert_world_to_screen_size((0.3, 0.3))[0]
-        line_screen = self.transform_helper.convert_world_to_screen_line(line)
-        if is_central_line or is_lateral_line:
-            self.render_module.draw_line(map_surface, COLOR_BUTTER_0, False, line_screen, border_line_width)
-        else:
-            if math.fmod(index, 3) == 0:
-                self.render_module.draw_line(map_surface, COLOR_ALUMINIUM_0, False, line_screen, border_line_width)
-
     def render_map(self, map_surface):
         map_surface.fill(COLOR_ALUMINIUM_3)
         precision = 0.05
@@ -895,8 +796,8 @@ class ModuleWorld(object):
             end = start + 2.0 * forward
             right = start + 0.8 * forward + 0.4 * right_dir
             left = start + 0.8 * forward - 0.4 * right_dir
-            pygame.draw.lines(surface, color, False, [self.transform_helper.convert_screen_to_world_location(x) for x in [start, end]], 4)
-            pygame.draw.lines(surface, color, False, [self.transform_helper.convert_screen_to_world_location(x) for x in [left, start, right]], 4)
+            pygame.draw.lines(surface, color, False, [self.transform_helper.convert_world_to_screen_location(x) for x in [start, end]], 4)
+            pygame.draw.lines(surface, color, False, [self.transform_helper.convert_world_to_screen_location(x) for x in [left, start, right]], 4)
 
         def lateral_shift(transform, shift):
             transform.rotation.yaw += 90
@@ -923,7 +824,7 @@ class ModuleWorld(object):
             right_marking = [lateral_shift(w.transform, w.lane_width * 0.5) for w in waypoints]
 
             polygon = left_marking + [x for x in reversed(right_marking)]
-            polygon = [self.transform_helper.convert_screen_to_world_location(x) for x in polygon]
+            polygon = [self.transform_helper.convert_world_to_screen_location(x) for x in polygon]
 
             pygame.draw.polygon(map_surface, (38,38,38), polygon, 10)
             pygame.draw.polygon(map_surface, (38,38,38), polygon)
@@ -932,11 +833,11 @@ class ModuleWorld(object):
                 sample = waypoints[len(waypoints)/2]
                 draw_lane_marking(
                     map_surface,
-                    [self.transform_helper.convert_screen_to_world_location(x) for x in left_marking],
+                    [self.transform_helper.convert_world_to_screen_location(x) for x in left_marking],
                     does_cross_solid_line(sample, -sample.lane_width * 1.1))
                 draw_lane_marking(
                     map_surface,
-                    [self.transform_helper.convert_screen_to_world_location(x) for x in right_marking],
+                    [self.transform_helper.convert_world_to_screen_location(x) for x in right_marking],
                     does_cross_solid_line(sample, sample.lane_width * 1.1))
                 for n, wp in enumerate(waypoints):
                     if (n % 400) == 0:
@@ -1062,13 +963,9 @@ class ModuleWorld(object):
                                   self.module_input.mouse_offset[1] * scale_factor + self.scale_offset[1])
             center_offset = ((display.get_width() * MAX_ZOOM - self.surface_size) / 2 * scale_factor, 0)
         else:
-            hero_location = (self.hero_actor.get_location().x, self.hero_actor.get_location().y)
             hero_front = self.hero_actor.get_transform().get_forward_vector()
 
-            hero_location_back = (hero_location[0],
-                                  hero_location[1])
-
-            hero_location_screen = self.transform_helper.convert_world_to_screen_point(hero_location_back)
+            hero_location_screen = self.transform_helper.convert_world_to_screen_location(self.hero_actor.get_location())
 
             translation_offset = (-hero_location_screen[0] - hero_front.x * PIXELS_AHEAD_VEHICLE,
                                   (-hero_location_screen[1] - hero_front.y * PIXELS_AHEAD_VEHICLE))
@@ -1275,7 +1172,7 @@ def game_loop(args):
 
     clock = pygame.time.Clock()
     while True:
-        clock.tick_busy_loop(120)
+        clock.tick_busy_loop(60)
 
         module_manager.tick(clock)
         module_manager.render(display)
