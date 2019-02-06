@@ -132,11 +132,11 @@ MODULE_RENDER = 'RENDER'
 
 # Input
 # Wheel used for zooming map
-MIN_ZOOM = 0.1
-MAX_ZOOM = 6.0
+MIN_ZOOM = 1.0
+MAX_ZOOM = 8.0
 
 MAP_DEFAULT_ZOOM = 1.0
-HERO_DEFAULT_ZOOM = 6.0
+HERO_DEFAULT_ZOOM = 8.0
 
 PIXELS_AHEAD_VEHICLE = 150
 # ==============================================================================
@@ -299,10 +299,10 @@ class Vehicle(object):
         arrow_half = self.surface_size[1] / 2 + arrow_tip[0] / 2
 
         line_0 = [center, arrow_tip]
-        line_1 = [arrow_tip, (arrow_half - 1, 0)]
-        line_2 = [arrow_tip, (arrow_half - 1, self.surface_size[1])]
+        line_1 = [arrow_tip, (arrow_half, 0)]
+        line_2 = [arrow_tip, (arrow_half, self.surface_size[1])]
 
-        arrow_width = map_transform_helper.convert_world_to_screen_size((0.5, 0.5))[0]
+        arrow_width = map_transform_helper.convert_world_to_screen_size((0.2, 0.2))[0]
 
         render_module = module_manager.get_module(MODULE_RENDER)
         render_module.draw_arrow(surface, COLOR_SKY_BLUE_0, [line_0, line_1, line_2], arrow_width)
@@ -549,19 +549,18 @@ class ModuleHUD (object):
                 x, y = transform_helper.convert_world_to_screen_point((location.x, location.y - v_offset))
 
                 angle = 0
-                if hero_actor is not None:
-                    angle = -hero_actor.get_transform().rotation.yaw - 90
-
                 color_surface = pygame.Surface((len(str(actor.id)) * 8, 14))
                 color_surface.fill(COLOR_BLACK)
                 color_surface.set_alpha(200)
 
-                rotated_color_surface = pygame.transform.rotate(color_surface, angle)
+                rotated_color_surface = color_surface
+                if hero_actor is not None:
+                    angle = -hero_actor.get_transform().rotation.yaw - 90
+                    rotated_color_surface = pygame.transform.rotate(color_surface, angle)
+
                 vehicle_id_surface.blit(rotated_color_surface, (x, y))
 
-                font_surface = self._font_mono.render(str(actor.id), True, COLOR_WHITE)
-                font_surface.set_colorkey(COLOR_BLACK)
-                font_surface.set_alpha(255)
+                font_surface = self._header_font.render(str(actor.id), True, COLOR_WHITE)
                 rotated_font_surface = pygame.transform.rotate(font_surface, angle).convert_alpha()
                 vehicle_id_surface.blit(rotated_font_surface, (x, y))
 
