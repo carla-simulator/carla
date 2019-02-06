@@ -1,3 +1,4 @@
+from enum import Enum
 import json
 import math
 import random
@@ -15,6 +16,13 @@ from challenge.data_provider import CallBack, DataProvider
 
 import pdb
 
+class TerminationState(Enum):
+    SUCCESS = 1
+    FAIL_CRASH = 2
+    FAIL_TIMEOUT = 3
+    NOT_TERMINATED = 4
+
+
 class Route(object):
     def __init__(self):
         self.id = None
@@ -28,6 +36,7 @@ class ScenarioSetup(object):
     def __init__(self, args, agent):
         self._args = args
         self._agent = agent
+        self._agent_state = TerminationState.NOT_TERMINATED
         self._sensors_setup = agent.sensors_setup()
         self._carla_server = None
         self._carla_client = None
@@ -37,11 +46,14 @@ class ScenarioSetup(object):
         self._sensors_list = []
         self._sensors = []
         self._routes = []
+        self._current_route = None
         self._hop_resolution = 2.0
         self._frame_number = 0
         self._simulation_time = 0
         self._start_time_scenario = 0
         self._timeout_scenario = 1000
+        self._elapsed_time = 0
+        self._max_distance_target = 5.0 # meters
 
         self._load_routes()
 
@@ -244,22 +256,46 @@ class ScenarioSetup(object):
         self._simulation_time = timestamp.elapsed_seconds
 
     def start_scenario(self, route):
+        self._current_route = route
         self._start_time_scenario = self._simulation_time
         self._timeout_scenario = route.timeout
 
     def stop_scenario(self):
+        # destroy objects
         pass
 
     def is_scenario_over(self):
         # scenario over for timeout
-        elapsed_time = self._simulation_time - self._start_time_scenario
-        if elapsed_time > self._timeout_scenario:
+        self._elapsed_time = self._simulation_time - self._start_time_scenario
+        if  self._elapsed_time > self._timeout_scenario:
+            self._agent_state = TerminationState.FAIL_TIMEOUT
             return True
 
+        elif self._is_agent_at_goal():
+            self._agent_state = TerminationState.SUCCESS
+            return True
+
+        self._agent_state = TerminationState.NOT_TERMINATED
         return False
 
+    def _is_agent_at_goal(self):
+        current_waypoint =  self._map.get_waypoint(self._vehicle.get_location())
+        end_waypoint = self._map.get_waypoint(self._current_route.end.location)
+
+        if current_waypoint.road_id != end_waypoint.road_id:
+            return False
+        if current_waypoint.lane_id != end_waypoint.lane_id:
+            return False
+
+        if current_waypoint.transform.location.distance(
+                end_waypoint.transform.location) >= self._max_distance_target:
+            return False
+
+        return True
+
     def report_statistics(self):
-        pass
+        print("==Route: {}== [Status: {}] [Time(s): {}]".format(
+            self._current_route.id, self._agent_state, self._elapsed_time))
 
     def wait_for_tick(self):
         return self._world.wait_for_tick(10.0)

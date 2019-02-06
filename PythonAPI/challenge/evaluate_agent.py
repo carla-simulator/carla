@@ -36,9 +36,10 @@ def run_evaluation(args):
             action = agent_instance()
             scenario_manager.apply_control(action)
 
-        scenario_manager.stop_scenario()
         # report statistics
         scenario_manager.report_statistics()
+        # clean up!
+        scenario_manager.stop_scenario()
 
     return 0
 

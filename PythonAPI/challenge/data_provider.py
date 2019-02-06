@@ -66,7 +66,7 @@ class DataProvider(object):
 
     def all_sensors_ready(self):
         for key in self._sensors_objects.keys():
-            if self._data_buffers[key] == None:
+            if self._data_buffers[key] is None:
                 return False
         return True
 
