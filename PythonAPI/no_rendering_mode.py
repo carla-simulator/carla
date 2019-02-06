@@ -221,6 +221,10 @@ class TransformHelper(object):
                       int(size[1] * self.diff_min_max_map_point[1] / self.map_size))
         return world_size
 
+    def convert_screen_to_world_location(self, location):
+        screen_point = (int(float(location.x - self.min_map_point[0]) / self.diff_min_max_map_point[0] * self.map_size),
+                        int(float(location.y - self.min_map_point[1]) / self.diff_min_max_map_point[1] * self.map_size))
+        return (max(screen_point[0], 1), max(screen_point[1], 1))
 # ==============================================================================
 # -- Waypoint ----------------------------------------------------------------------
 # ==============================================================================
@@ -746,69 +750,6 @@ class ModuleWorld(object):
         self.transform_helper = TransformHelper(
             (self.x_min * shrink_map_factor, self.y_min * shrink_map_factor), (self.x_max * shrink_map_factor, self.y_max * shrink_map_factor), self.surface_size)
 
-        # Retrieve data from waypoints orientation, width and length and do conversions into another list
-        del self.road_render_data_list[:]
-        del self.intersection_render_data_list[:]
-        for waypoint in self.map_waypoints:
-
-            # Waypoint front
-            wf = waypoint.transform.get_forward_vector()
-
-            wp_0 = (waypoint.transform.location.x, waypoint.transform.location.y)
-            wp_1 = (wp_0[0] + wf.x * self.waypoint_length, wp_0[1] + wf.y * self.waypoint_length)
-            wp_half = (wp_0[0] + wf.x * self.waypoint_length / 2.0, wp_0[1] + wf.y * self.waypoint_length / 2.0)
-
-            # Check if road side lines are continuous or discontinuous
-            left_lateral, right_lateral = Util.get_lateral_lines_from_lane((wp_0, wp_1), waypoint.lane_width + 0.1)
-
-            is_left_lateral_line, is_left_central_line = self.detect_line_type(self.town_map,
-                                                                               waypoint.road_id,
-                                                                               waypoint.lane_id,
-                                                                               carla.Location(x=left_lateral[0][0], y=left_lateral[0][1]))
-
-            is_right_lateral_line, is_right_central_line = self.detect_line_type(self.town_map,
-                                                                                 waypoint.road_id,
-                                                                                 waypoint.lane_id,
-                                                                                 carla.Location(x=right_lateral[0][0], y=right_lateral[0][1]))
-            # Orientation of road
-            if waypoint.is_intersection:
-                intersection_render_data = Waypoint(COLOR_ALUMINIUM_5,
-                                                    waypoint.lane_width,
-                                                    (wp_0, wp_1),
-                                                    left_lateral,
-                                                    right_lateral,
-                                                    is_left_lateral_line,
-                                                    is_left_central_line,
-                                                    is_right_lateral_line,
-                                                    is_right_central_line,
-                                                    self.transform_helper)
-
-                self.intersection_render_data_list.append(intersection_render_data)
-            else:
-                # Get arrow lines
-                wl = (-wf.y, wf.x)
-
-                line_0 = [wp_1, (wp_half[0] + wl[0] * self.waypoint_length / 2.0,
-                                 wp_half[1] + wl[1] * self.waypoint_length / 2.0)]
-                line_1 = [wp_1, (wp_half[0] - wl[0] * self.waypoint_length / 2.0,
-                                 wp_half[1] - wl[1] * self.waypoint_length / 2.0)]
-
-                arrow_lines = [line_0, line_1]
-                road_render_data = Waypoint(COLOR_ALUMINIUM_5,
-                                            waypoint.lane_width,
-                                            (wp_0, wp_1),
-                                            left_lateral,
-                                            right_lateral,
-                                            is_left_lateral_line,
-                                            is_left_central_line,
-                                            is_right_lateral_line,
-                                            is_right_central_line,
-                                            self.transform_helper,
-                                            arrow_lines,
-                                            waypoint.road_id,
-                                            waypoint.lane_id)
-                self.road_render_data_list.append(road_render_data)
-
     def start(self):
         self.world, self.town_map, self.actors = self._get_data_from_carla(self.host, self.port, self.timeout)
 
@@ -935,70 +876,71 @@ class ModuleWorld(object):
 
     def render_map(self, map_surface):
         map_surface.fill(COLOR_ALUMINIUM_3)
+        precision = 0.05
 
-        i = 0
-        # Draw Roads
-        for road_render_data in self.road_render_data_list:
-            road_render_data.refresh_conversion_during_scale()
+        def draw_lane_marking(surface, points, solid=True):
+            if solid:
+                pygame.draw.lines(surface, (252, 175, 62), False, points, 2)
+            else:
+                broken_lines = [x for n, x in enumerate(zip(*(iter(points),) * 20)) if n % 3 == 0]
+                for line in broken_lines:
+                    pygame.draw.lines(surface, (251, 241, 199), False, line, 2)
 
-            self.render_module.draw_rect_from_line(map_surface,
-                                                   road_render_data.line_world,
-                                                   road_render_data.width_world,
-                                                   self.transform_helper)
+        def draw_arrow(surface, transform, color=(31, 31, 31)):
+            transform.rotation.yaw += 180
+            forward = transform.get_forward_vector()
+            transform.rotation.yaw += 90
+            right_dir = transform.get_forward_vector()
+            start = transform.location
+            end = start + 2.0 * forward
+            right = start + 0.8 * forward + 0.4 * right_dir
+            left = start + 0.8 * forward - 0.4 * right_dir
+            pygame.draw.lines(surface, color, False, [self.transform_helper.convert_screen_to_world_location(x) for x in [start, end]], 4)
+            pygame.draw.lines(surface, color, False, [self.transform_helper.convert_screen_to_world_location(x) for x in [left, start, right]], 4)
 
-            self.render_module.drawCircle(map_surface,
-                                          road_render_data.line_screen[0][0],
-                                          road_render_data.line_screen[0][1],
-                                          int(road_render_data.width_screen / 2),
-                                          road_render_data.color)
+        def lateral_shift(transform, shift):
+            transform.rotation.yaw += 90
+            return transform.location + shift * transform.get_forward_vector()
 
-            self.render_module.drawCircle(map_surface,
-                                          road_render_data.line_screen[0][0],
-                                          road_render_data.line_screen[0][1],
-                                          int(road_render_data.width_screen / 2),
-                                          road_render_data.color)
+        def does_cross_solid_line(waypoint, shift):
+            w = self.town_map.get_waypoint(lateral_shift(waypoint.transform, shift), project_to_road=False)
+            if w is None or w.road_id != waypoint.road_id:
+                return True
+            else:
+                return (w.lane_id * waypoint.lane_id < 0) or w.lane_id == waypoint.lane_id
 
-            self.draw_side_lines_of_road(
-                map_surface,
-                road_render_data.left_line,
-                road_render_data.is_left_central_line,
-                road_render_data.is_left_lateral_line,
-                i)
-            self.draw_side_lines_of_road(
-                map_surface,
-                road_render_data.right_line,
-                road_render_data.is_right_central_line,
-                road_render_data.is_right_lateral_line,
-                i)
+        topology = [x[0] for x in self.town_map.get_topology()]
+        topology = sorted(topology, key=lambda w: w.transform.location.z)
 
-            i = i + 1
-        # Draw Intersections
-        for intersection_render_data in self.intersection_render_data_list:
-            intersection_render_data.refresh_conversion_during_scale()
-            self.render_module.draw_line(map_surface,
-                                         intersection_render_data.color,
-                                         False,
-                                         intersection_render_data.line_screen,
-                                         intersection_render_data.width_screen)
+        for waypoint in topology:
+            waypoints = [waypoint]
+            nxt = waypoint.next(precision)[0]
+            while nxt.road_id == waypoint.road_id:
+                waypoints.append(nxt)
+                nxt = nxt.next(precision)[0]
 
-            self.render_module.drawCircle(map_surface,
-                                          intersection_render_data.line_screen[0][0],
-                                          intersection_render_data.line_screen[0][1],
-                                          int(intersection_render_data.width_screen / 2),
-                                          intersection_render_data.color)
+            left_marking = [lateral_shift(w.transform, -w.lane_width * 0.5) for w in waypoints]
+            right_marking = [lateral_shift(w.transform, w.lane_width * 0.5) for w in waypoints]
 
-            self.render_module.drawCircle(map_surface,
-                                          intersection_render_data.line_screen[1][0],
-                                          intersection_render_data.line_screen[1][1],
-                                          int(intersection_render_data.width_screen / 2),
-                                          intersection_render_data.color)
+            polygon = left_marking + [x for x in reversed(right_marking)]
+            polygon = [self.transform_helper.convert_screen_to_world_location(x) for x in polygon]
 
-        # Draw Arrows for road orientation
-        i = 0
-        for road_render_data in self.road_render_data_list:
-            if math.fmod(i, 17) == 0:
-                self.render_module.draw_arrow(map_surface, COLOR_SKY_BLUE_0, road_render_data.arrow_lines_screen, 1)
-            i = i + 1
+            pygame.draw.polygon(map_surface, (38,38,38), polygon, 10)
+            pygame.draw.polygon(map_surface, (38,38,38), polygon)
+        
+            if not waypoint.is_intersection:
+                sample = waypoints[len(waypoints)/2]
+                draw_lane_marking(
+                    map_surface,
+                    [self.transform_helper.convert_screen_to_world_location(x) for x in left_marking],
+                    does_cross_solid_line(sample, -sample.lane_width * 1.1))
+                draw_lane_marking(
+                    map_surface,
+                    [self.transform_helper.convert_screen_to_world_location(x) for x in right_marking],
+                    does_cross_solid_line(sample, sample.lane_width * 1.1))
+                for n, wp in enumerate(waypoints):
+                    if (n % 400) == 0:
+                        draw_arrow(map_surface, wp.transform)
 
     def _split_actors(self, actors):
         vehicles = []
