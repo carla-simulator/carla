@@ -514,19 +514,6 @@ class ModuleWorld(object):
             logging.error(ex)
             exit_game()
 
-    def _create_world_surfaces(self):
-        self.map_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
-        self.scaled_map_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
-
-        self.actors_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
-        self.actors_surface.set_colorkey(COLOR_BLACK)
-
-        self.vehicle_id_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
-        self.vehicle_id_surface.set_colorkey(COLOR_BLACK)
-
-        self.result_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
-        self.result_surface.set_colorkey(COLOR_BLACK)
-
     def _compute_map_bounding_box(self, map_waypoints):
 
         x_min = float('inf')
@@ -567,7 +554,24 @@ class ModuleWorld(object):
         self.scaled_size = int(self.surface_size)
         self.prev_scaled_size = int(self.surface_size)
 
-        self._create_world_surfaces()
+        # Create Surfaces
+        self.map_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
+        self.scaled_map_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
+
+        self.actors_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
+        self.actors_surface.set_colorkey(COLOR_BLACK)
+
+        self.vehicle_id_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
+        self.vehicle_id_surface.set_colorkey(COLOR_BLACK)
+
+        self.round_surface = pygame.Surface(self.hud_module.dim, pygame.SRCALPHA)
+        self.round_surface.fill(COLOR_BLACK)
+
+        center_offset = (self.hud_module.dim[0] / 2, self.hud_module.dim[1] / 2)
+        pygame.draw.circle(self.round_surface, COLOR_WHITE, center_offset, self.hud_module.dim[1] / 2)
+
+        self.result_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
+        self.result_surface.set_colorkey(COLOR_BLACK)
 
         # Generate waypoints
         self.map_waypoints = self.town_map.generate_waypoints(self.waypoint_length)
@@ -932,7 +936,8 @@ class ModuleWorld(object):
                 angle = self.hero_actor.get_transform().rotation.yaw + 90.0
                 center_offset = (display.get_width() / 2, display.get_height() / 2)
 
-            hero_surface = pygame.Surface((self.original_surface_size, self.original_surface_size), pygame.SRCALPHA)
+            scaled_original_size = self.original_surface_size * (1.0 / 0.9)
+            hero_surface = pygame.Surface((scaled_original_size, scaled_original_size), pygame.SRCALPHA)
 
             # Apply clipping rect
             clipping_rect = pygame.Rect(-translation_offset[0] - hero_surface.get_width() / 2,
@@ -944,16 +949,11 @@ class ModuleWorld(object):
             hero_surface.blit(self.result_surface, (translation_offset[0] + hero_surface.get_width() / 2,
                                                     translation_offset[1] + hero_surface.get_height() / 2))
 
-            rotated_result_surface = pygame.transform.rotate(hero_surface, angle)
-
-            round_surface = pygame.Surface((display.get_width(), display.get_height()), pygame.SRCALPHA)
-            round_surface.fill(COLOR_BLACK)
-
-            pygame.draw.circle(round_surface, COLOR_WHITE, center_offset, display.get_height() / 2)
+            rotated_result_surface = pygame.transform.rotozoom(hero_surface, angle, 0.9)
 
             final_offset = rotated_result_surface.get_rect(center=center_offset)
-            round_surface.blit(rotated_result_surface, final_offset, None, pygame.BLEND_MULT)
-            display.blit(round_surface, (0, 0))
+            display.blit(rotated_result_surface, final_offset)
+            display.blit(self.round_surface, (0, 0), None, pygame.BLEND_MULT)
         else:
             # Translation offset
             translation_offset = ((self.module_input.mouse_offset[0]) * scale_factor + self.scale_offset[0],
@@ -1036,7 +1036,8 @@ class ModuleInput(object):
                         world = module_manager.get_module(MODULE_WORLD)
                         self._control.gear = world.hero_actor.get_control().gear
                         module_hud = module_manager.get_module(MODULE_HUD)
-                        module_hud.notification('%s Transmission' % ('Manual' if self._control.manual_gear_shift else 'Automatic'))
+                        module_hud.notification('%s Transmission' % (
+                            'Manual' if self._control.manual_gear_shift else 'Automatic'))
                     elif self._control.manual_gear_shift and event.key == K_COMMA:
                         self._control.gear = max(-1, self._control.gear - 1)
                     elif self._control.manual_gear_shift and event.key == K_PERIOD:
