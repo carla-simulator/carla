@@ -243,65 +243,6 @@ class Vehicle(object):
             surface, (self.surface_size[0] / 2, self.surface_size[1] / 2), -self.actor.get_transform().rotation.yaw).convert()
 
 
-class TrafficLight(object):
-    def __init__(self, actor, map_transform_helper):
-        self.actor = actor
-        self.map_transform_helper = map_transform_helper
-
-        pos = self.actor.get_location()
-        self.x, self.y = self.map_transform_helper.convert_world_to_screen_location(pos)
-
-        self.color = COLOR_BLACK
-        if actor.state == carla.libcarla.TrafficLightState.Green:
-            self.color = COLOR_CHAMELEON_1
-        elif actor.state == carla.libcarla.TrafficLightState.Yellow:
-            self.color = COLOR_BUTTER_1
-        else:
-            self.color = COLOR_SCARLET_RED_1
-
-        # Compute bounding box points
-        # bb_extent = self.actor.bounding_box.extent
-
-        # original_size = [bb_extent.x * 2.0, bb_extent.y * 2.0]
-        original_size = [2, 2]
-        self.surface_size = map_transform_helper.convert_world_to_screen_size(original_size)
-
-        self.surface = pygame.Surface((self.surface_size[0], self.surface_size[1]), pygame.SRCALPHA)
-        self.surface.set_colorkey(COLOR_BLACK)
-
-        pygame.draw.polygon(self.surface, self.color, [(0, 0), (self.surface_size[0], 0),
-                                                       (self.surface_size[0], self.surface_size[1]), (0, self.surface_size[1])])
-
-
-class SpeedLimit(object):
-    def __init__(self, actor, radius, map_transform_helper, hero_actor):
-        self.actor = actor
-        self.speed_limit = actor.type_id.split('.')[2]
-        self.font = pygame.font.SysFont('Arial', radius)
-
-        actor_location = actor.get_location()
-        self.x, self.y = map_transform_helper.convert_world_to_screen_location(actor_location)
-
-        self.surface = pygame.Surface((radius * 2, radius * 2)).convert()
-
-        # Render speed limit
-        white_circle_radius = int(radius * 0.75)
-        pygame.draw.circle(self.surface, COLOR_SCARLET_RED_0, (radius, radius), radius)
-        pygame.draw.circle(self.surface, COLOR_ALUMINIUM_0, (radius, radius), white_circle_radius)
-        font_surface = self.font.render(self.speed_limit, False, COLOR_ALUMINIUM_5)
-
-        # Blit
-        if hero_actor is not None:
-            # Rotate font surface with respect to hero vehicle front
-            angle = -hero_actor.get_transform().rotation.yaw - 90.0
-            font_surface = Util.rotate_surface(font_surface, (radius / 2, radius / 2), angle)
-            font_surface.set_colorkey(COLOR_BLACK)
-            final_offset = font_surface.get_rect(center=(radius, radius))
-            self.surface.blit(font_surface, final_offset)
-        else:
-            self.surface.blit(font_surface, (radius / 2, radius / 2))
-
-
 class Walker(object):
     def __init__(self, actor, map_transform_helper):
         self.actor = actor
@@ -853,6 +794,65 @@ class ModuleWorld(object):
 
         return (vehicles, traffic_lights, speed_limits, walkers)
 
+
+    def _render_traffic_lights(self, surface, list_tl, transform_helper):
+        
+        for tl in list_tl:
+            color = COLOR_BLACK
+            if tl.state == carla.libcarla.TrafficLightState.Green:
+                color = COLOR_CHAMELEON_1
+            elif tl.state == carla.libcarla.TrafficLightState.Yellow:
+                color = COLOR_BUTTER_1
+            else:
+                color = COLOR_SCARLET_RED_1
+
+            # Compute bounding box points
+            # bb_extent = self.actor.bounding_box.extent
+            bb_x = 1
+            bb_y = 1
+            corners = [
+                carla.Location(x=-bb_x, y=-bb_y),
+                carla.Location(x=bb_x, y=-bb_y),
+                carla.Location(x=bb_x, y=bb_y),
+                carla.Location(x=-bb_x, y=bb_y)]
+            
+            t = tl.get_transform()
+            t.transform(corners)
+            
+            corners = [transform_helper.convert_world_to_screen_location(p) for p in corners]
+            pygame.draw.polygon(surface, color, corners)
+
+
+    def _render_speed_limits(self, surface, list_sl, transform_helper):
+        
+        font_size = 10    
+        radius = 10
+        font = pygame.font.SysFont('Arial', font_size)
+
+        for sl in list_sl:
+            
+            x, y = transform_helper.convert_world_to_screen_location(sl.get_location())
+
+            # Render speed limit
+            white_circle_radius = int(radius * 0.75)
+
+            pygame.draw.circle(surface, COLOR_SCARLET_RED_0, (x, y), radius)
+            pygame.draw.circle(surface, COLOR_ALUMINIUM_0, (x, y), white_circle_radius)
+            
+            limit = sl.type_id.split('.')[2]
+            font_surface = font.render(limit, False, COLOR_ALUMINIUM_5)
+
+            # Blit
+            if self.hero_actor is not None:
+                # Rotate font surface with respect to hero vehicle front
+                angle = -self.hero_actor.get_transform().rotation.yaw - 90.0
+                font_surface = Util.rotate_surface(font_surface, (radius / 2, radius / 2), angle)
+                offset = font_surface.get_rect(center=(x, y))
+                surface.blit(font_surface, offset)
+
+            else:
+                surface.blit(font_surface, (x - radius/2,y - radius/2))
+        
     def render_actors(self, vehicles, traffic_lights, speed_limits, walkers):
         # Render Vehicles
         vehicle_renderer = []
@@ -864,21 +864,10 @@ class ModuleWorld(object):
         Util.blits(self.vehicles_surface, vehicle_renderer, None, pygame.BLEND_RGB_MAX)
 
         # Render Traffic Lights
-        traffic_lights_renderer = []
-        for actor in traffic_lights:
-            traffic_light = TrafficLight(actor, self.transform_helper)
-            traffic_lights_renderer.append((traffic_light.surface, (traffic_light.x, traffic_light.y)))
-
-        Util.blits(self.traffic_light_surface, traffic_lights_renderer)
-
+        self._render_traffic_lights(self.traffic_light_surface, traffic_lights, self.transform_helper)
+        
         # Render Speed limit
-        speed_limit_renderer = []
-        speed_limit_width = self.transform_helper.convert_world_to_screen_size((3, 3))[0]
-        for actor in speed_limits:
-            speed_limit = SpeedLimit(actor, speed_limit_width, self.transform_helper, self.hero_actor)
-            speed_limit_renderer.append((speed_limit.surface, (speed_limit.x, speed_limit.y)))
-
-        Util.blits(self.speed_limits_surface, speed_limit_renderer)
+        self._render_speed_limits(self.speed_limits_surface, speed_limits, self.transform_helper)
 
         # Render Walkers
         walkers_renderer = []
