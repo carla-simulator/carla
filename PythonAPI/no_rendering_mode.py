@@ -479,7 +479,6 @@ class ModuleWorld(object):
 
         # Hero actor
         self.hero_actor = None
-        self.map_rendered = False
         self.accum_offset = [0, 0]
         self.scale_offset = [0, 0]
 
@@ -487,15 +486,7 @@ class ModuleWorld(object):
         self.vehicle_id_surface = None
         self.result_surface = None
 
-        self.waypoint_length = 1.5
         self.map_waypoints = None
-        self.road_render_data_list = []
-        self.intersection_render_data_list = []
-        # Map Bounding box
-        self.x_min = 0.0
-        self.y_min = 0.0
-        self.x_max = 0.0
-        self.y_max = 0.0
 
         # Transform helper
         self.transform_helper = None
@@ -574,15 +565,21 @@ class ModuleWorld(object):
         self.result_surface.set_colorkey(COLOR_BLACK)
 
         # Generate waypoints
-        self.map_waypoints = self.town_map.generate_waypoints(self.waypoint_length)
+        self.map_waypoints = self.town_map.generate_waypoints(1.5)
 
         # compute bounding boxes
-        self.x_min, self.y_min, self.x_max, self.y_max = self._compute_map_bounding_box(self.map_waypoints)
+        x_min, y_min, x_max, y_max = self._compute_map_bounding_box(self.map_waypoints)
 
         # Feed map bounding box and surface size to transform helper
         shrink_map_factor = 1.02
         self.transform_helper = TransformHelper(
-            (self.x_min * shrink_map_factor, self.y_min * shrink_map_factor), (self.x_max * shrink_map_factor, self.y_max * shrink_map_factor), self.surface_size)
+            (x_min * shrink_map_factor, y_min * shrink_map_factor), (x_max * shrink_map_factor, y_max * shrink_map_factor), self.surface_size)
+
+        # Render Map
+        self.render_map(self.map_surface)
+
+        self.scaled_map_surface = pygame.transform.smoothscale(
+            self.map_surface, (self.scaled_size, self.scaled_size))
 
         weak_self = weakref.ref(self)
         self.world.on_tick(lambda timestamp: ModuleWorld.on_world_tick(weak_self, timestamp))
@@ -865,13 +862,6 @@ class ModuleWorld(object):
         self.result_surface.set_clip(clipping_rect)
 
     def render(self, display):
-        if not self.map_rendered:
-            self.render_map(self.map_surface)
-
-            self.scaled_map_surface = pygame.transform.smoothscale(
-                self.map_surface, (self.scaled_size, self.scaled_size))
-            self.map_rendered = True
-
         self.actors_surface.fill(COLOR_BLACK)
         self.result_surface.fill(COLOR_BLACK)
 
