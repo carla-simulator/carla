@@ -1,6 +1,6 @@
 ## CARLA Last Release
   * Added recording/replaying functionality to manual_control.py script.
-    - CTRL + R: Toggle recording (file is always 'manual_recorgind.rec')
+    - CTRL + R: Toggle recording (file is always 'manual_recording.rec')
     - CTRL + P: Replay last recording.
     - CTRL + -: Subtract 1 second the start time of the replayer.
     - CTRL + =: Add 1 second the start time of the replayer.
