@@ -18,8 +18,8 @@ Recorder::Recorder(){
 
 Recorder::~Recorder(){
     // close files
-    if (file) file.close();
-    if (log) log.close();
+    if (file.is_open()) file.close();
+    if (log.is_open()) log.close();
 }
 
 std::string Recorder::start(std::string path, std::string name, std::string mapName) {
@@ -46,7 +46,8 @@ std::string Recorder::start(std::string path, std::string name, std::string mapN
     filename << path << name;
 
     // files
-    file.open(filename.str(), std::ios::binary | std::ios::trunc | std::ios::out);
+    // file.open(filename.str(), std::ios::binary | std::ios::trunc | std::ios::out);
+    file.open(filename.str(), std::ios::binary);
     if (!file.is_open()) {
         log_error("Recorder file couldn't be created");
         return "";
@@ -72,22 +73,23 @@ std::string Recorder::start(std::string path, std::string name, std::string mapN
 }
 
 void Recorder::stop() {
-    clear();
     enabled = false;
-    if (file) file.close();
-    if (log) log.close();
+    if (file.is_open()) file.close();
+    if (log.is_open()) log.close();
+    // log << "Stop\n";
+    clear();
 }
 
 void Recorder::clear(void) {
     events.clear();
     positions.clear();
-    log << "Clear\n";
+    // log << "Clear\n";
 }
 
 void Recorder::write(void) {
     // update this frame data
+    // log << "Write\n";
     frames.setFrame();
-
     frames.write(file, log);
     events.write(file, log);
     positions.write(file, log);
@@ -99,7 +101,6 @@ void Recorder::addPosition(const RecorderPosition &position) {
     if (enabled)
         positions.addPosition(position);
 }
-
 void Recorder::addEvent(RecorderEventAdd event) {
     if (enabled)
         events.addEvent(std::move(event));

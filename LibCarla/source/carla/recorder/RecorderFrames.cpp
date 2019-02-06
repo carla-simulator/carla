@@ -36,6 +36,7 @@ void RecorderFrames::reset(void) {
     frame.durationThis = 0.0f;
     frame.elapsed = 0.0f;
     lastTime = std::chrono::high_resolution_clock::now();
+    offsetPreviousFrame = 0;
 }
 
 void RecorderFrames::setFrame(void) {
@@ -83,7 +84,7 @@ void RecorderFrames::write(std::ofstream &file, std::ofstream &log) {
     // save position for next actualization
     offsetPreviousFrame = offset;
 
-    log << "frame " << frame.id << " elapsed." << frame.elapsed << ")\n";
+    log << "frame " << frame.id << " elapsed " << frame.elapsed << "\n";
 }
 
 }

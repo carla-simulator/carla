@@ -20,10 +20,12 @@
 namespace carla {
 namespace recorder {
 
+// callback prototypes
 typedef std::function<std::pair<int, unsigned int> (carla::geom::Transform, RecorderActorDescription, unsigned int uid)> RecorderCallbackEventAdd;
 typedef std::function<bool (unsigned int uid)> RecorderCallbackEventDel;
 typedef std::function<bool (unsigned int childId, unsigned int parentId)> RecorderCallbackEventParent;
 typedef std::function<bool (RecorderPosition pos1, RecorderPosition pos2, double per)> RecorderCallbackPosition;
+typedef std::function<bool (bool applyAutopilot)> RecorderCallbackFinish;
 
 #pragma pack(push, 1)
 struct Header {
@@ -42,8 +44,7 @@ class Replayer : private NonCopyable {
     std::string getInfo(std::string filename);
     std::string replayFile(std::string filename, double timeStart = 0.0f, double duration = 0.0f);
     //void start(void);
-    void stop(void);
-    void stopAndContinue(void);
+    void stop(bool keepActors = false);
 
     void enable(void);
     void disable(void);
@@ -54,6 +55,7 @@ class Replayer : private NonCopyable {
     void setCallbackEventDel(RecorderCallbackEventDel f);
     void setCallbackEventParent(RecorderCallbackEventParent f);
     void setCallbackEventPosition(RecorderCallbackPosition f);
+    void setCallbackEventFinish(RecorderCallbackFinish f);
 
     // tick for the replayer
     void tick(float time);
@@ -68,6 +70,7 @@ class Replayer : private NonCopyable {
     RecorderCallbackEventDel callbackEventDel;
     RecorderCallbackEventParent callbackEventParent;
     RecorderCallbackPosition callbackPosition;
+    RecorderCallbackFinish callbackFinish;
     std::vector<RecorderPosition> currPos;
     std::vector<RecorderPosition> prevPos;
     std::unordered_map<unsigned int, unsigned int> mappedId;
@@ -75,14 +78,18 @@ class Replayer : private NonCopyable {
     double timeToStop;
     double totalTime;
 
+    // utils
     bool readHeader();
     void skipPacket();
-    // read last frame in file and return the total time recorded
     double getTotalTime(void);
     void rewind(void);
+
+    // processing packets
     void processToTime(double time);
     void processEvents(void);
     void processPositions(void);
+
+    // positions
     void updatePositions(double per);
     void interpolatePosition(const RecorderPosition &start, const RecorderPosition &end, double per);
 

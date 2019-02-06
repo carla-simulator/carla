@@ -9,6 +9,7 @@
 #include "Carla/Actor/ActorDispatcher.h"
 #include "Carla/Sensor/WorldObserver.h"
 #include "Carla/Weather/Weather.h"
+#include "Carla/Server/TheNewCarlaServer.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/Actor.h>
@@ -222,6 +223,10 @@ public:
 
   std::string StartRecorder(std::string name);
 
+  void SetServer(FTheNewCarlaServer *newServer) {
+    server = newServer;
+  }
+
 private:
 
   friend class ATheNewCarlaGameModeBase;
@@ -258,4 +263,5 @@ private:
   AWorldObserver *WorldObserver = nullptr;
 
   carla::recorder::Recorder Recorder;
+  FTheNewCarlaServer *server {nullptr};
 };

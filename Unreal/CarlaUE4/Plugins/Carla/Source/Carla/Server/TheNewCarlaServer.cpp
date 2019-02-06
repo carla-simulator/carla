@@ -614,6 +614,7 @@ void FTheNewCarlaServer::NotifyBeginEpisode(UCarlaEpisode &Episode)
   check(Pimpl != nullptr);
   UE_LOG(LogCarlaServer, Log, TEXT("New episode '%s' started"), *Episode.GetMapName());
   Pimpl->Episode = &Episode;
+  Pimpl->Episode->SetServer(this); // from episode we need to call some sensor function here (in TheNewCarlaServer)
 }
 
 void FTheNewCarlaServer::NotifyEndEpisode()
@@ -653,4 +654,9 @@ FDataMultiStream FTheNewCarlaServer::OpenMultiStream() const
 {
   check(Pimpl != nullptr);
   return Pimpl->StreamingServer.MakeMultiStream();
+}
+
+bool FTheNewCarlaServer::CheckSensorStream(FActorView &ActorView)
+{
+  return Pimpl->CheckSensorStream(ActorView);
 }

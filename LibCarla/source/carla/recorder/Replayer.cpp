@@ -40,22 +40,24 @@ void Replayer::setCallbackEventParent(RecorderCallbackEventParent f) {
 void Replayer::setCallbackEventPosition(RecorderCallbackPosition f) {
   callbackPosition = std::move(f);
 }
-
-void Replayer::stop(void) {
-  if (enabled) {
-    enabled = false;
-    processToTime(totalTime);
-    file.close();
-  }
-  log_warning("Replayer stopped");
+void Replayer::setCallbackEventFinish(RecorderCallbackFinish f) {
+  callbackFinish = std::move(f);
 }
 
-void Replayer::stopAndContinue(void) {
+void Replayer::stop(bool keepActors) {
   if (enabled) {
     enabled = false;
+    if (!keepActors)
+      processToTime(totalTime);
     file.close();
+    // callback
+    if (callbackFinish)
+      callbackFinish(keepActors);
   }
-  log_warning("Replayer stopped and continue");
+  if (!keepActors)
+    log_warning("Replayer stop");
+  else
+    log_warning("Replayer stop (keeping actors)");
 }
 
 bool Replayer::readHeader() {
@@ -193,6 +195,7 @@ void Replayer::rewind(void) {
   totalTime = 0.0f;
   timeToStop = 0.0f;
 
+  file.clear();
   file.seekg(0, std::ios::beg);
 
   // mark as header as invalid to force reload a new one next time
@@ -261,13 +264,14 @@ std::string Replayer::replayFile(std::string filename, double timeStart, double 
   // set time to start replayer
   if (timeStart < 0.0f) {
     timeStart = totalTime + timeStart;
+    if (timeStart < 0.0f) timeStart = 0.0f;
   }
   // set time to stop replayer
   if (duration > 0.0f)
     timeToStop = timeStart + duration;
   else
     timeToStop = totalTime;
-  info << "Replaying from " << timeStart << " to " << timeToStop << " of " << totalTime << std::endl;
+  info << "Replaying from " << timeStart << " s - " << timeToStop << " s (" << totalTime << " s)" << std::endl;
 
   // process all events until the time
   processToTime(timeStart);
@@ -296,6 +300,8 @@ void Replayer::processToTime(double time) {
     readHeader();
     // check it is a frame packet
     if (header.id != static_cast<char>(RecorderPacketId::Frame)) {
+      if (!file.eof())
+        log_error("Replayer file error: waitting for a Frame packet");
       stop();
       break;
     }
@@ -317,6 +323,7 @@ void Replayer::processToTime(double time) {
     readHeader();
     // check it is an events packet
     if (header.id != static_cast<char>(RecorderPacketId::Event)) {
+      log_error("Replayer file error: waitting for an Event packet");
       stop();
       break;
     }
@@ -326,6 +333,7 @@ void Replayer::processToTime(double time) {
     readHeader();
     // check it is a positions packet
     if (header.id != static_cast<char>(RecorderPacketId::Position)) {
+      log_error("Replayer file error: waitting for a Position packet");
       stop();
       break;
     }
@@ -354,7 +362,7 @@ void Replayer::processToTime(double time) {
     if (timeToStop == totalTime)
       stop();
     else
-      stopAndContinue();
+      stop(true); // keep actors in scene so they continue with AI
   }
 }
 
@@ -371,49 +379,56 @@ void Replayer::processEvents(void) {
     std::string s;
     eventAdd.read(file);
 
-    s.resize(eventAdd.description.id.size());
-    std::copy(eventAdd.description.id.begin(), eventAdd.description.id.end(), s.begin());
-    info.str("");
-    info << "Create " << eventAdd.databaseId << " (" << eventAdd.description.uid << ") " << s.data() <<
-          std::endl;
-    for (const auto &att : eventAdd.description.attributes) {
-      std::string s2;
-      s.resize(att.id.size());
-      std::copy(att.id.begin(), att.id.end(), s.begin());
-      s2.resize(att.value.size());
-      std::copy(att.value.begin(), att.value.end(), s2.begin());
-      info << "  " << s.data() << " = " << s2.data() << std::endl;
-    }
-    log_warning(info.str());
+    // check for vehicles only
+    if (memcmp(eventAdd.description.id.data(), "vehicle.", 8) == 0) {
 
-    // callback
-    if (callbackEventAdd) {
-      // log_warning("calling callback add");
-      auto result = callbackEventAdd(eventAdd.transform,
-          std::move(eventAdd.description),
-          eventAdd.databaseId);
-      switch (result.first) {
-        case 0:
-          log_warning("actor could not be created");
-          break;
-        case 1:
-          if (result.second != eventAdd.databaseId) {
-            log_warning("actor created but with different id");
-          }
-          // mapping id (say desired Id is mapped to what)
-          mappedId[eventAdd.databaseId] = result.second;
-          break;
-
-        case 2:
-          log_warning("actor already exist, not created");
-          // mapping id (say desired Id is mapped to what)
-          mappedId[eventAdd.databaseId] = result.second;
-          break;
+      // show log
+      s.resize(eventAdd.description.id.size());
+      std::copy(eventAdd.description.id.begin(), eventAdd.description.id.end(), s.begin());
+      info.str("");
+      info << "Create " << eventAdd.databaseId << " (" << eventAdd.description.uid << ") " << s.data() <<
+            std::endl;
+      for (const auto &att : eventAdd.description.attributes) {
+        std::string s2;
+        s.resize(att.id.size());
+        std::copy(att.id.begin(), att.id.end(), s.begin());
+        s2.resize(att.value.size());
+        std::copy(att.value.begin(), att.value.end(), s2.begin());
+        info << "  " << s.data() << " = " << s2.data() << std::endl;
       }
-    } else {
-      log_warning("callback add is not defined");
+      log_warning(info.str());
+
+      // callback
+      if (callbackEventAdd) {
+        // log_warning("calling callback add");
+        auto result = callbackEventAdd(eventAdd.transform,
+            std::move(eventAdd.description),
+            eventAdd.databaseId);
+        switch (result.first) {
+          case 0:
+            log_warning("actor could not be created");
+            break;
+          case 1:
+            if (result.second != eventAdd.databaseId) {
+              log_warning("actor created but with different id");
+            }
+            // mapping id (say desired Id is mapped to what)
+            mappedId[eventAdd.databaseId] = result.second;
+            break;
+
+          case 2:
+            log_warning("actor already exist, not created");
+            // mapping id (say desired Id is mapped to what)
+            mappedId[eventAdd.databaseId] = result.second;
+            break;
+        }
+
+      } else {
+        log_warning("callback add is not defined");
+      }
     }
   }
+
 
   // destroy events
   readValue<short>(file, total);

@@ -143,7 +143,7 @@ void UCarlaEpisode::InitializeAtBeginPlay()
       UE_LOG(LogCarla, Log, TEXT("actor '%s' already exist with id %d"), *(desc->Id), view.GetActorId());
       if (desc->Id == ActorDesc.Id)
         // disable physics
-        SetActorSimulatePhysics(view, false);
+        // SetActorSimulatePhysics(view, false);
         // we don't need to create, actor of same type already exist
         return std::make_pair(2, desiredId);
     }
@@ -152,8 +152,16 @@ void UCarlaEpisode::InitializeAtBeginPlay()
     TPair<EActorSpawnResultStatus, FActorView> Result = SpawnActorWithInfo(transform, ActorDesc, desiredId);
     if (Result.Key == EActorSpawnResultStatus::Success) {
       // disable physics
-      SetActorSimulatePhysics(Result.Value, false);
+      // SetActorSimulatePhysics(Result.Value, false);
       UE_LOG(LogCarla, Log, TEXT("Actor created by replayer with id %d"), Result.Value.GetActorId());
+      // for a sensor we need to create the stream
+      if (ActorDesc.Id.StartsWith(TEXT("sensor."))) {
+        UE_LOG(LogCarla, Log, TEXT("Checking sensor stream"));
+        if (server != nullptr)
+          server->CheckSensorStream(Result.Value);
+        else
+          UE_LOG(LogCarla, Log, TEXT("Server not ready"));
+      }
       return std::make_pair(1, Result.Value.GetActorId());
     }
     else {
@@ -188,7 +196,7 @@ void UCarlaEpisode::InitializeAtBeginPlay()
     Recorder.getReplayer().setCallbackEventPosition([this](carla::recorder::RecorderPosition pos1,
       carla::recorder::RecorderPosition pos2, double per) -> bool {
       AActor *actor = GetActorRegistry().FindActor(pos1.databaseId);
-      if (actor)
+      if (actor && !actor->IsPendingKill())
       {
         // interpolate transform
         FVector location = FMath::Lerp(FVector(pos1.transform.location), FVector(pos2.transform.location), per);
@@ -199,6 +207,34 @@ void UCarlaEpisode::InitializeAtBeginPlay()
       }
       return false;
     });
+
+    // callback
+    Recorder.getReplayer().setCallbackEventFinish([this](bool applyAutopilot) -> bool {
+      if (!applyAutopilot)
+        return false;
+      // set autopilo to all AI vehicles
+      auto registry = GetActorRegistry();
+      for (auto &&pair : registry) {
+        FActorView ActorView = pair.second;
+        if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
+          continue;
+        }
+        auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+        if (Vehicle == nullptr) {
+          continue;
+        }
+        // SetActorSimulatePhysics(ActorView, true);
+        auto Controller = Cast<AWheeledVehicleAIController>(Vehicle->GetController());
+        if (Controller == nullptr) {
+          continue;
+        }
+        Controller->SetAutopilot(true);
+        UE_LOG(LogCarla, Log, TEXT("setting autopilot to %d"), ActorView.GetActorId());
+      }
+
+      return true;
+    });
+
 }
 
 bool UCarlaEpisode::SetActorSimulatePhysics(FActorView &ActorView, bool bEnabled) {
