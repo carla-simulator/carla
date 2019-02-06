@@ -4,9 +4,14 @@ from challenge.data_provider import DataProvider
 
 class AutonomousAgent():
     def __init__(self):
-        # this dictionary will contain buffers with incoming sensor data indexed by name
+        #  current global plans to reach a destination
+        self._topological_plan = None,
+        self._waypoints_plan = None
+
+        # this data structure will contain all sensor data
         self.data_provider = DataProvider()
 
+        # agent's initialization
         self.setup()
 
     def setup(self):
@@ -38,6 +43,13 @@ class AutonomousAgent():
 
         return sensors
 
+    def run_step(self):
+        """
+        Execute one step of navigation.
+        :return: control
+        """
+        pass
+
     def __call__(self):
         input_data = self.data_provider.get_data()
 
@@ -46,12 +58,9 @@ class AutonomousAgent():
 
         return control
 
-    def run_step(self):
-        """
-        Execute one step of navigation.
-        :return: control
-        """
-        pass
-
     def all_sensors_ready(self):
         return self.data_provider.all_sensors_ready()
+
+    def set_global_plan(self, topological_plan, waypoints_plan):
+        self._topological_plan = topological_plan,
+        self._waypoints_plan = waypoints_plan
