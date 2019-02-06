@@ -549,30 +549,31 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   });
 
-  Server.BindSync("start_recorder", [this](std::string name) -> std::string {
+  Server.BindSync("start_recorder", [this](std::string name) -> R<std::string> {
     REQUIRE_CARLA_EPISODE();
-    return Episode->StartRecorder(name);
+    return R<std::string>(Episode->StartRecorder(name));
   });
 
-  Server.BindSync("stop_recorder", [this]() {
+  Server.BindSync("stop_recorder", [this]() -> R<void> {
     REQUIRE_CARLA_EPISODE();
     Episode->GetRecorder().stop();
+    return R<void>::Success();
   });
 
-  Server.BindSync("show_recorder_file_info", [this](std::string name) -> std::string {
+  Server.BindSync("show_recorder_file_info", [this](std::string name) -> R<std::string> {
     REQUIRE_CARLA_EPISODE();
-    return Episode->GetRecorder().showFileInfo(
+    return R<std::string>(Episode->GetRecorder().showFileInfo(
       carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
-      name);
+      name));
   });
 
-  Server.BindSync("replay_file", [this](std::string name, double start, double duration) -> std::string {
+  Server.BindSync("replay_file", [this](std::string name, double start, double duration) -> R<std::string> {
     REQUIRE_CARLA_EPISODE();
-    return Episode->GetRecorder().replayFile(
+    return R<std::string>(Episode->GetRecorder().replayFile(
       carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
       name,
       start,
-      duration);
+      duration));
   });
 
   Server.BindSync("draw_debug_shape", [this](const cr::DebugShape &shape) -> R<void>
@@ -614,7 +615,6 @@ void FTheNewCarlaServer::NotifyBeginEpisode(UCarlaEpisode &Episode)
   check(Pimpl != nullptr);
   UE_LOG(LogCarlaServer, Log, TEXT("New episode '%s' started"), *Episode.GetMapName());
   Pimpl->Episode = &Episode;
-  Pimpl->Episode->SetServer(this); // from episode we need to call some sensor function here (in TheNewCarlaServer)
 }
 
 void FTheNewCarlaServer::NotifyEndEpisode()
@@ -654,9 +654,4 @@ FDataMultiStream FTheNewCarlaServer::OpenMultiStream() const
 {
   check(Pimpl != nullptr);
   return Pimpl->StreamingServer.MakeMultiStream();
-}
-
-bool FTheNewCarlaServer::CheckSensorStream(FActorView &ActorView)
-{
-  return Pimpl->CheckSensorStream(ActorView);
 }

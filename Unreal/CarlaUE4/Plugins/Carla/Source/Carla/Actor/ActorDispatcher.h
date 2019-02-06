@@ -63,7 +63,7 @@ public:
 
   /// Register an actor that was not created using "SpawnActor" function but
   /// that should be kept in the registry.
-  FActorView RegisterActor(AActor &Actor, FActorDescription ActorDescription);
+  FActorView RegisterActor(AActor &Actor, FActorDescription ActorDescription, FActorRegistry::IdType DesiredId = 0);
 
   const TArray<FActorDefinition> &GetActorDefinitions() const
   {

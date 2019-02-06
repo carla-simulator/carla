@@ -37,8 +37,6 @@ public:
 
   FDataMultiStream OpenMultiStream() const;
 
-  bool CheckSensorStream(FActorView &ActorView);
-
 private:
 
   class FPimpl;

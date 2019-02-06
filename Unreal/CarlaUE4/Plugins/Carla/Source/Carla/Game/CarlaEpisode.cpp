@@ -139,7 +139,7 @@ void UCarlaEpisode::InitializeAtBeginPlay()
     UE_LOG(LogCarla, Log, TEXT("Trying to create actor: %s (%d)"), *ActorDesc.Id, desiredId);
     if (GetActorRegistry().Contains(desiredId)) {
       FActorView view = GetActorRegistry().Find(desiredId);
-      const FActorDescription *desc = view.GetActorDescription();
+      const FActorDescription *desc = &view.GetActorInfo()->Description;
       UE_LOG(LogCarla, Log, TEXT("actor '%s' already exist with id %d"), *(desc->Id), view.GetActorId());
       if (desc->Id == ActorDesc.Id)
         // disable physics
@@ -154,14 +154,6 @@ void UCarlaEpisode::InitializeAtBeginPlay()
       // disable physics
       // SetActorSimulatePhysics(Result.Value, false);
       UE_LOG(LogCarla, Log, TEXT("Actor created by replayer with id %d"), Result.Value.GetActorId());
-      // for a sensor we need to create the stream
-      if (ActorDesc.Id.StartsWith(TEXT("sensor."))) {
-        UE_LOG(LogCarla, Log, TEXT("Checking sensor stream"));
-        if (server != nullptr)
-          server->CheckSensorStream(Result.Value);
-        else
-          UE_LOG(LogCarla, Log, TEXT("Server not ready"));
-      }
       return std::make_pair(1, Result.Value.GetActorId());
     }
     else {
@@ -172,14 +164,14 @@ void UCarlaEpisode::InitializeAtBeginPlay()
 
     // callback
     Recorder.getReplayer().setCallbackEventDel([this](unsigned int databaseId) -> bool {
-      DestroyActor(GetActorRegistry().FindActor(databaseId));
+      DestroyActor(GetActorRegistry().Find(databaseId).GetActor());
       return true;
     });
 
     // callback
     Recorder.getReplayer().setCallbackEventParent([this](unsigned int childId, unsigned int parentId) -> bool {
-      AActor *child = GetActorRegistry().FindActor(childId);
-      AActor *parent = GetActorRegistry().FindActor(parentId);
+      AActor *child = GetActorRegistry().Find(childId).GetActor();
+      AActor *parent = GetActorRegistry().Find(parentId).GetActor();
       if (child && parent) {
         child->AttachToActor(parent, FAttachmentTransformRules::KeepRelativeTransform);
         child->SetOwner(parent);
@@ -195,7 +187,7 @@ void UCarlaEpisode::InitializeAtBeginPlay()
     // callback
     Recorder.getReplayer().setCallbackEventPosition([this](carla::recorder::RecorderPosition pos1,
       carla::recorder::RecorderPosition pos2, double per) -> bool {
-      AActor *actor = GetActorRegistry().FindActor(pos1.databaseId);
+      AActor *actor = GetActorRegistry().Find(pos1.databaseId).GetActor();
       if (actor && !actor->IsPendingKill())
       {
         // interpolate transform
@@ -214,8 +206,7 @@ void UCarlaEpisode::InitializeAtBeginPlay()
         return false;
       // set autopilo to all AI vehicles
       auto registry = GetActorRegistry();
-      for (auto &&pair : registry) {
-        FActorView ActorView = pair.second;
+      for (auto &&ActorView : registry) {
         if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
           continue;
         }
@@ -258,15 +249,14 @@ std::string UCarlaEpisode::StartRecorder(std::string name) {
 
   // registring all existing actors in first frame
   FActorRegistry Registry = GetActorRegistry();
-  for (auto &&pair : Registry) {
-    auto &&actor_view = pair.second;
-    const AActor *actor = actor_view.GetActor();
+  for (auto &&View : Registry) {
+    const AActor *actor = View.GetActor();
     check(actor != nullptr);
     // create event
     CreateRecorderEventAdd(
-      actor_view.GetActorId(),
+      View.GetActorId(),
       actor->GetActorTransform(),
-      *actor_view.GetActorDescription()
+      View.GetActorInfo()->Description
     );
     };
 

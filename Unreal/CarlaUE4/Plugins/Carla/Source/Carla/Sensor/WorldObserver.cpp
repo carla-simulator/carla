@@ -126,7 +126,7 @@ static carla::Buffer AWorldObserver_Serialize(
     if (Episode->GetRecorder().isEnabled()) {
       // add to the recorder
       carla::recorder::RecorderPosition recPos {
-        actor_view.GetActorId(),
+        View.GetActorId(),
         info.transform
         //info.velocity,
         // TODO: use the angular velocity
@@ -163,7 +163,7 @@ void AWorldObserver::Tick(float DeltaSeconds)
       Episode->GetActorRegistry(),
       Episode);
 
-  Stream.Send_GameThread(*this, std::move(buffer));
+  AsyncStream.Send(*this, std::move(buffer));
 
   // recorder
   if (Episode->GetRecorder().isEnabled())
