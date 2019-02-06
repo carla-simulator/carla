@@ -341,6 +341,7 @@ class HUD(object):
         self.simulation_time = timestamp.elapsed_seconds
 
     def tick(self, world, clock):
+        self._notifications.tick(world, clock)
         if not self._show_info:
             return
         t = world.player.get_transform()
@@ -397,7 +398,6 @@ class HUD(object):
                     break
                 vehicle_type = get_actor_display_name(vehicle, truncate=22)
                 self._info_text.append('% 4dm %s' % (d, vehicle_type))
-        self._notifications.tick(world, clock)
 
     def toggle_info(self):
         self._show_info = not self._show_info
