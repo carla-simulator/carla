@@ -323,8 +323,12 @@ class ModuleHUD (object):
                 size = len(str(actor.id)) * 8
                 if hero_actor is not None:
                     angle = -hero_actor.get_transform().rotation.yaw - 90
-
-                font_surface = self._header_font.render(str(actor.id), True, COLOR_ALUMINIUM_0)
+                
+                color = COLOR_ORANGE_0
+                if actor.attributes['role_name'] == 'hero':
+                    color = COLOR_SCARLET_RED_0
+                
+                font_surface = self._header_font.render(str(actor.id), True, color)
                 rotated_font_surface = pygame.transform.rotate(font_surface, angle).convert_alpha()
                 rect = rotated_font_surface.get_rect(center=(x,y))
                 vehicle_id_surface.blit(rotated_font_surface, rect)
@@ -906,7 +910,7 @@ class ModuleWorld(object):
             self.clip_surfaces(clipping_rect)
             Util.blits(self.result_surface, surfaces)
 
-            self.hero_surface.fill(COLOR_CHOCOLATE_1)
+            self.hero_surface.fill(COLOR_ALUMINIUM_5)
             self.hero_surface.blit(self.result_surface, (-translation_offset[0],
                                                          -translation_offset[1]))
 
