@@ -1085,6 +1085,11 @@ def game_loop(args):
         pygame.HWSURFACE | pygame.DOUBLEBUF)
     pygame.display.set_caption(args.description)
 
+    font = pygame.font.Font(pygame.font.get_default_font(), 20)
+    text_surface = font.render('Rendering map...', True, (255, 255, 255))
+    display.blit(text_surface, text_surface.get_rect(center=(args.width/2, args.height/2)))
+    pygame.display.flip()
+
     # Init modules
     input_module = ModuleInput(MODULE_INPUT)
     hud_module = ModuleHUD(MODULE_HUD, args.width, args.height)
