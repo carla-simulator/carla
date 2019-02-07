@@ -782,11 +782,11 @@ class ModuleWorld(object):
             # Render speed limit
             white_circle_radius = int(radius * 0.75)
 
-            pygame.draw.circle(surface, COLOR_SCARLET_RED_0, (x, y), radius)
-            pygame.draw.circle(surface, COLOR_ALUMINIUM_0, (x, y), white_circle_radius)
+            pygame.draw.circle(surface, (239, 41, 41), (x, y), radius)
+            pygame.draw.circle(surface, (251, 241, 199), (x, y), white_circle_radius)
 
             limit = sl.type_id.split('.')[2]
-            font_surface = font.render(limit, False, COLOR_ALUMINIUM_5)
+            font_surface = font.render(limit, False, (31, 31, 31))
 
             # Blit
             if self.hero_actor is not None:
@@ -833,7 +833,7 @@ class ModuleWorld(object):
             t = v.get_transform()
             t.transform(corners)
             corners = [world_to_pixel(p) for p in corners]
-            pygame.draw.lines(surface, color, False, corners, max(int(2 * scale_factor),1 ))
+            pygame.draw.lines(surface, color, False, corners, 2)
 
     def render_actors(self, surface, vehicles, traffic_lights, speed_limits, walkers, scale_factor):
         # Render Vehicles
