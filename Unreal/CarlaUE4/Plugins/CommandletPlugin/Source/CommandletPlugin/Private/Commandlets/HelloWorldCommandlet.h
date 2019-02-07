@@ -15,25 +15,33 @@
 #include <Runtime/Engine/Classes/Kismet/GameplayStatics.h>
 #include <Runtime/Engine/Classes/Engine/ObjectLibrary.h>
 #include <Developer/AssetTools/Public/IAssetTools.h>
+#include <Developer/AssetTools/Public/AssetToolsModule.h>
+#include <Runtime/Core/Public/Modules/ModuleManager.h>
 #include <Editor/UnrealEd/Public/FileHelpers.h>
+#include <Runtime/CoreUObject/Public/UObject/ConstructorHelpers.h>
+#include <Runtime/Engine/Classes/Engine/StaticMeshActor.h>
 
 #include "HelloWorldCommandlet.generated.h"
 
-
 UCLASS()
 class UHelloWorldCommandlet
-	: public UCommandlet
+  : public UCommandlet
 {
-	GENERATED_BODY()
+  GENERATED_BODY()
 
 public:
 
-	/** Default constructor. */
-	UHelloWorldCommandlet();
+  /** Default constructor. */
+  UHelloWorldCommandlet();
+
+  void CreateMapFromBaseMap();
+
+	void ImportFBX();
 
 public:
 
-	//~ UCommandlet interface
+  // ~ UCommandlet interface
 
-	virtual int32 Main(const FString& Params) override;
+  virtual int32 Main(const FString &Params) override;
+
 };
