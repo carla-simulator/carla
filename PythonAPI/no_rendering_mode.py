@@ -168,14 +168,6 @@ class Util(object):
         for surface in source_surfaces:
             destination_surface.blit(surface[0], surface[1], rect, blend_mode)
 
-    @staticmethod
-    def rotate_surface(img, pos, angle):
-        w, h = img.get_size()
-        img2 = pygame.Surface((w * 2, h * 2), pygame.SRCALPHA).convert()
-        img2.set_clip(pygame.Rect(w - pos[0], h - pos[1], w, h))
-        img2.blit(img, (w - pos[0], h - pos[1]))
-        rotated_surface = pygame.transform.rotate(img2, angle)
-        return rotated_surface
 # ==============================================================================
 # -- ModuleManager -------------------------------------------------------------
 # ==============================================================================
@@ -443,7 +435,7 @@ class MapImage(object):
         width_in_pixels = int(self._pixels_per_meter * self._width)
 
         print('Creating map surface {0}x{0}.'.format(width_in_pixels))
-        self._big_map_surface = pygame.Surface((width_in_pixels, width_in_pixels))
+        self._big_map_surface = pygame.Surface((width_in_pixels, width_in_pixels)).convert()
         self.draw_road_map(self._big_map_surface, carla_map, self.world_to_pixel)
         self.surface = self._big_map_surface
 
@@ -624,21 +616,23 @@ class ModuleWorld(object):
         self.vehicle_id_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
         self.vehicle_id_surface.set_colorkey(COLOR_BLACK)
 
-        self.round_surface = pygame.Surface((self.hud_module.dim), pygame.SRCALPHA)
+        self.round_surface = pygame.Surface((self.hud_module.dim), pygame.SRCALPHA).convert()
+        self.round_surface.set_colorkey(COLOR_WHITE)
         self.round_surface.fill(COLOR_BLACK)
 
-        self.border_round_surface = pygame.Surface(self.hud_module.dim, pygame.SRCALPHA)
-        self.border_round_surface.fill(COLOR_BLACK)
+        self.border_round_surface = pygame.Surface(self.hud_module.dim, pygame.SRCALPHA).convert()
+        self.border_round_surface.set_colorkey(COLOR_WHITE)
+        self.border_round_surface.fill(COLOR_WHITE)
 
         center_offset = (self.hud_module.dim[0] / 2, self.hud_module.dim[1] / 2)
         
         pygame.draw.circle(self.border_round_surface, COLOR_ALUMINIUM_2, center_offset, self.hud_module.dim[1]/ 2)
-        pygame.draw.circle(self.border_round_surface, COLOR_BLACK, center_offset, (self.hud_module.dim[1] - 8)/ 2)
+        pygame.draw.circle(self.border_round_surface, COLOR_WHITE, center_offset, (self.hud_module.dim[1] - 8)/ 2)
         
         pygame.draw.circle(self.round_surface, COLOR_WHITE, center_offset, self.hud_module.dim[1] / 2)
 
         scaled_original_size = self.original_surface_size * (1.0 / 0.9)
-        self.hero_surface = pygame.Surface((scaled_original_size, scaled_original_size))
+        self.hero_surface = pygame.Surface((scaled_original_size, scaled_original_size)).convert()
 
         self.result_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
         self.result_surface.set_colorkey(COLOR_BLACK)
@@ -916,23 +910,28 @@ class ModuleWorld(object):
                                         self.hero_surface.get_width(),
                                         self.hero_surface.get_height())
             self.clip_surfaces(clipping_rect)
+            
             Util.blits(self.result_surface, surfaces)
 
+            self.round_surface.set_clip(clipping_rect)
+            self.border_round_surface.set_clip(clipping_rect)
+            
             self.hero_surface.fill(COLOR_ALUMINIUM_5)
             self.hero_surface.blit(self.result_surface, (-translation_offset[0],
                                                          -translation_offset[1]))
 
-            rotated_result_surface = pygame.transform.rotozoom(self.hero_surface, angle, 0.9)
+            rotated_result_surface = pygame.transform.rotozoom(self.hero_surface, angle, 0.9).convert()
 
             center = (display.get_width() / 2, display.get_height() / 2)
             rotation_pivot = rotated_result_surface.get_rect(center=center)
             display.blit(rotated_result_surface, rotation_pivot)
-            display.blit(self.round_surface, (0, 0), None, pygame.BLEND_MULT)
-            display.blit(self.border_round_surface, (0,0), None, pygame.BLEND_ADD)
+            
+            display.blit(self.round_surface, (0, 0))
+            display.blit(self.border_round_surface, (0,0))
         else:
             # Translation offset
-            translation_offset = ((self.module_input.mouse_offset[0]) * scale_factor + self.scale_offset[0],
-                                  self.module_input.mouse_offset[1] * scale_factor + self.scale_offset[1])
+            translation_offset = ((self.module_input.mouse_offset[0]) + self.scale_offset[0],
+                                  self.module_input.mouse_offset[1]  + self.scale_offset[1])
             center_offset = ((display.get_width() * MAX_ZOOM - self.surface_size) / 2 * scale_factor, 0)
 
             # Apply clipping rect
