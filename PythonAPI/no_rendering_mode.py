@@ -345,8 +345,11 @@ class ModuleHUD (object):
             bar_width = 106
             i = 0
             for module_name, module_info in self._info_text.items():
+                if not module_info:
+                    continue
                 surface = self._header_font.render(module_name, True, COLOR_ALUMINIUM_0).convert_alpha()
                 display.blit(surface, (8 + bar_width / 2, 18 * i + v_offset))
+                v_offset += 12
                 i += 1
                 for item in module_info:
                     if v_offset + 18 > self.dim[1]:
@@ -356,7 +359,6 @@ class ModuleHUD (object):
                             points = [(x + 8, v_offset + 8 + (1.0 - y) * 30) for x, y in enumerate(item)]
                             pygame.draw.lines(display, (255, 136, 0), False, points, 2)
                         item = None
-                        v_offset += 18
                     elif isinstance(item, tuple):
                         if isinstance(item[1], bool):
                             rect = pygame.Rect((bar_h_offset, v_offset + 8), (6, 6))
@@ -375,6 +377,7 @@ class ModuleHUD (object):
                         surface = self._font_mono.render(item, True, COLOR_ALUMINIUM_0).convert_alpha()
                         display.blit(surface, (8, 18 * i + v_offset))
                     v_offset += 18
+                v_offset += 24
         self._notifications.render(display)
         self.help.render(display)
 
@@ -676,9 +679,6 @@ class ModuleWorld(object):
     def update_hud_info(self, clock):
         hero_mode_text = []
         if self.hero_actor is not None:
-            vehicle_name, vehicle_brand, vehicle_model = self.hero_actor.type_id.split('.')
-            type_id_text = vehicle_brand + ' ' + vehicle_model
-
             hero_speed = self.hero_actor.get_velocity()
             hero_speed_text = 3.6 * math.sqrt(hero_speed.x ** 2 + hero_speed.y ** 2 + hero_speed.z ** 2)
 
@@ -694,28 +694,29 @@ class ModuleWorld(object):
             affected_speed_limit = self.hero_actor.get_speed_limit()
 
             hero_mode_text = [
-                'Hero Mode:               ON',
-                'Hero ID:               %4d' % self.hero_actor.id,
-                'Hero Type ID:%12s' % type_id_text,
-                'Hero speed:          %3d km/h' % hero_speed_text,
+                'Hero Mode:                 ON',
+                'Hero ID:              %7d' % self.hero_actor.id,
+                'Hero Vehicle:  %14s' % get_actor_display_name(self.hero_actor, truncate=14),
+                'Hero Speed:          %3d km/h' % hero_speed_text,
                 'Hero Affected by:',
-                '  Traffic Light:%12s' % affected_traffic_light,
+                '  Traffic Light: %12s' % affected_traffic_light,
                 '  Speed Limit:       %3d km/h' % affected_speed_limit
             ]
         else:
-            hero_mode_text = ['Hero Mode:               OFF']
+            hero_mode_text = ['Hero Mode:                OFF']
 
         self.server_fps = self.server_clock.get_fps()
         module_info_text = [
             'Server:  % 16s FPS' % round(self.server_fps),
             'Client:  % 16s FPS' % round(clock.get_fps()),
-            'Simulation time: % 12s' % datetime.timedelta(seconds=int(self.simulation_time)),
+            'Simulation Time: % 12s' % datetime.timedelta(seconds=int(self.simulation_time)),
             'Map Name:          %10s' % self.world.map_name,
         ]
 
-        module_info_text = module_info_text + hero_mode_text
+        module_info_text = module_info_text
         module_hud = module_manager.get_module(MODULE_HUD)
         module_hud.add_info(self.name, module_info_text)
+        module_hud.add_info('HERO', hero_mode_text)
 
     @staticmethod
     def on_world_tick(weak_self, timestamp):
@@ -746,19 +747,19 @@ class ModuleWorld(object):
             elif 'walker' in actor.type_id:
                 walkers.append(actor)
 
+        info_text = []
         if self.hero_actor is not None and len(vehicles) > 1:
-            info_text = []
             location = self.hero_actor.get_location()
             vehicle_list = [x for x in vehicles if x.id != self.hero_actor.id]
             distance = lambda v: location.distance(v.get_location())
             for n, vehicle in enumerate(sorted(vehicle_list, key=distance)):
-                if n > 10:
+                if n > 15:
                     break
                 vehicle_type = get_actor_display_name(vehicle, truncate=22)
                 info_text.append('% 5d %s' % (vehicle.id, vehicle_type))
-            module_manager.get_module(MODULE_HUD).add_info(
-                'NEARBY VEHICLES',
-                info_text)
+        module_manager.get_module(MODULE_HUD).add_info(
+            'NEARBY VEHICLES',
+            info_text)
 
         return (vehicles, traffic_lights, speed_limits, walkers)
 
