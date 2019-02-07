@@ -89,6 +89,30 @@ class GlobalRoutePlanner(object):
                     action = RoadOption.RIGHT
                 plan.append(action)
         return plan
+    
+    def verify_intersection(self, waypoint):
+        """
+        This function recieves a waypoint and returns true
+        if the given waypoint is part of a true intersection
+        else returns false
+        """
+
+        is_intersection = False
+
+        if waypoint.is_intersection :
+            x = waypoint.transform.location.x
+            y = waypoint.transform.location.y
+            segment = self.localise(x, y)
+            entry_node_id = self._id_map[segment['entry']]
+            exit_node_id = self._id_map[segment['exit']]
+
+            entry_edges, exit_edges = 0, 0
+            for _ in self._graph.successors(entry_node_id): entry_edges += 1
+            for _ in self._graph.predecessors(exit_node_id): exit_edges += 1
+
+            if entry_edges > 1 or exit_edges > 1: is_intersection = True
+
+        return is_intersection
 
     def _distance_heuristic(self, n1, n2):
         """

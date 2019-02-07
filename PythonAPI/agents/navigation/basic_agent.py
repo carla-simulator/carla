@@ -39,6 +39,8 @@ class BasicAgent(Agent):
         self._state = AgentState.NAVIGATING
         self._local_planner = LocalPlanner(self._vehicle, opt_dict={'target_speed' : target_speed})
         self._hop_resolution = 2.0
+        self._path_seperation_hop = 2
+        self._path_seperation_threshold = 0.5
 
         # setting up global router
         self._current_plan = None
@@ -60,6 +62,7 @@ class BasicAgent(Agent):
         x2 = end_waypoint.transform.location.x
         y2 = end_waypoint.transform.location.y
         route = grp.plan_route((x1, y1), (x2, y2))
+        print(route)
 
         current_waypoint = start_waypoint
         route.append(RoadOption.VOID)
@@ -77,7 +80,7 @@ class BasicAgent(Agent):
             if action == RoadOption.VOID: break
 
             #   Select appropriate path at the junction
-            if len(wp_choice) > 1:
+            if len(wp_choice) > 1 or grp.verify_intersection(wp_choice[0]):
 
                 # Current heading vector
                 current_transform = current_waypoint.transform
@@ -89,16 +92,34 @@ class BasicAgent(Agent):
                 v_current = vector(current_location, projected_location)
 
                 direction = 0
-                if action == RoadOption.LEFT:
-                    direction = 1
-                elif action == RoadOption.RIGHT:
-                    direction = -1
-                elif action == RoadOption.STRAIGHT:
-                    direction = 0
+                if action == RoadOption.LEFT: direction = 1
+                elif action == RoadOption.RIGHT: direction = -1
+                elif action == RoadOption.STRAIGHT: direction = 0
                 select_criteria = float('inf')
 
-                #   Choose correct path
+                #   Seperating overlapping paths
+                split = False
+                tragectories = []
+                #   initializing paths
                 for wp_select in wp_choice:
+                    tragectories.append([wp_select])
+                #   finding points of seperation
+                while not split:
+                    #   take step in each path
+                    for tragectory in tragectories:
+                        tragectory.append(tragectory[-1].next(self._path_seperation_hop)[0])
+                    #   measure seperation
+                    for i in range(len(tragectories)-1):
+                        if tragectories[i][-1].transform.location.distance(
+                            tragectories[i+1][-1].transform.location) > self._path_seperation_threshold:
+                            split = True
+                #   update waypoints for path choice
+                for i, tragectory in enumerate(tragectories):
+                    wp_choice[i] = tragectory[-1]
+
+                #   Choose correct path
+                tragectory_index = 0
+                for i, wp_select in enumerate(wp_choice):
                     v_select = vector(
                         current_location, wp_select.transform.location)
                     cross = float('inf')
@@ -107,8 +128,13 @@ class BasicAgent(Agent):
                     else:
                         cross = direction*np.cross(v_current, v_select)[-1]
                     if cross < select_criteria:
+                        tragectory_index = i
                         select_criteria = cross
                         current_waypoint = wp_select
+
+                #   Add select tragectory till point of seperation
+                for wp in tragectories[tragectory_index]:
+                    solution.append((wp, action))
 
                 #   Generate all waypoints within the junction
                 #   along selected path
