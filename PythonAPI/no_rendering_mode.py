@@ -49,7 +49,9 @@ except IndexError:
 # ==============================================================================
 # -- imports -------------------------------------------------------------------
 # ==============================================================================
+
 import carla
+from carla import TrafficLightState as tls
 
 import argparse
 import logging
@@ -419,13 +421,52 @@ class ModuleHUD (object):
         self._notifications.render(display)
         self.help.render(display)
 
+
+# ==============================================================================
+# -- TrafficLightSurfaces ------------------------------------------------------
+# ==============================================================================
+
+
+class TrafficLightSurfaces(object):
+    """Holds the surfaces (scaled and rotated) for painting traffic lights"""
+
+    def __init__(self):
+        def make_surface(tl):
+            w = 40
+            surface = pygame.Surface((w, 3 * w), pygame.SRCALPHA)
+            surface.fill((31, 31, 31) if tl != 'h' else (245, 121, 0))
+            if tl != 'h':
+                hw = w / 2
+                off = (48, 48, 48)
+                red = (239, 41, 41)
+                yellow = (252, 175, 62)
+                green = (138, 226, 52)
+                pygame.draw.circle(surface, red if tl == tls.Red else off, (hw, hw), int(0.4 * w))
+                pygame.draw.circle(surface, yellow if tl == tls.Yellow else off, (hw, w + hw), int(0.4 * w))
+                pygame.draw.circle(surface, green if tl == tls.Green else off, (hw, 2 * w + hw), int(0.4 * w))
+            return pygame.transform.smoothscale(surface, (15, 45) if tl != 'h' else (19, 49))
+        self._original_surfaces = {
+            'h': make_surface('h'),
+            tls.Red: make_surface(tls.Red),
+            tls.Yellow: make_surface(tls.Yellow),
+            tls.Green: make_surface(tls.Green),
+            tls.Off: make_surface(tls.Off),
+            tls.Unknown: make_surface(tls.Unknown)
+        }
+        self.surfaces = dict(self._original_surfaces)
+
+    def rotozoom(self, angle, scale):
+        for key, surface in self._original_surfaces.items():
+            self.surfaces[key] = pygame.transform.rotozoom(surface, angle, scale)
+
+
 # ==============================================================================
 # -- World ---------------------------------------------------------------------
 # ==============================================================================
 
 
 class MapImage(object):
-    def __init__(self, carla_map, pixels_per_meter=20):
+    def __init__(self, carla_map, pixels_per_meter=10):
         self._pixels_per_meter = pixels_per_meter
         self.scale = 1.0
 
@@ -571,6 +612,8 @@ class ModuleWorld(object):
         self.vehicle_id_surface = None
         self.result_surface = None
 
+        self.traffic_light_surfaces = TrafficLightSurfaces()
+
         self.map_waypoints = None
 
     def _get_data_from_carla(self, host, port, timeout):
@@ -657,6 +700,8 @@ class ModuleWorld(object):
             spawn_points = self.world.get_map().get_spawn_points()
             spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
             self.hero_actor = self.world.try_spawn_actor(blueprint, spawn_point)
+            if self.hero_actor is not None:
+                self.hero_actor.set_autopilot()
 
     def tick(self, clock):
         self.update_hud_info(clock)
@@ -737,31 +782,14 @@ class ModuleWorld(object):
         return (vehicles, traffic_lights, speed_limits, walkers)
 
     def _render_traffic_lights(self, surface, list_tl, world_to_pixel):
-
         for tl in list_tl:
-            color = COLOR_BLACK
-            if tl.state == carla.libcarla.TrafficLightState.Green:
-                color = COLOR_CHAMELEON_1
-            elif tl.state == carla.libcarla.TrafficLightState.Yellow:
-                color = COLOR_BUTTER_1
-            else:
-                color = COLOR_SCARLET_RED_1
-
-            # Compute bounding box points
-            # bb_extent = self.actor.bounding_box.extent
-            bb_x = 1
-            bb_y = 1
-            corners = [
-                carla.Location(x=-bb_x, y=-bb_y),
-                carla.Location(x=bb_x, y=-bb_y),
-                carla.Location(x=bb_x, y=bb_y),
-                carla.Location(x=-bb_x, y=bb_y)]
-
-            t = tl.get_transform()
-            t.transform(corners)
-
-            corners = [world_to_pixel(p) for p in corners]
-            pygame.draw.polygon(surface, color, corners)
+            pos = world_to_pixel(tl.get_location())
+            hero = self.hero_actor
+            if hero is not None and hero.is_at_traffic_light() and tl.id == hero.get_traffic_light().id:
+                srf = self.traffic_light_surfaces.surfaces['h']
+                surface.blit(srf, srf.get_rect(center=pos))
+            srf = self.traffic_light_surfaces.surfaces[tl.state]
+            surface.blit(srf, srf.get_rect(center=pos))
 
     def _render_speed_limits(self, surface, list_sl, world_to_pixel, world_to_pixel_width):
 
@@ -885,7 +913,9 @@ class ModuleWorld(object):
                     (self.vehicle_id_surface, (0, 0)),
                     )
 
-        angle = 0
+        angle = 0.0 if self.hero_actor is None else self.hero_actor.get_transform().rotation.yaw + 90.0
+        self.traffic_light_surfaces.rotozoom(-angle, self.map_image.scale)
+
         center_offset = (0, 0)
         if self.hero_actor is not None:
             hero_surface = pygame.Surface((self.original_surface_size, self.original_surface_size), pygame.SRCALPHA)
@@ -893,8 +923,6 @@ class ModuleWorld(object):
             hero_location_screen = self.map_image.world_to_pixel(self.hero_actor.get_location())
             translation_offset = (hero_location_screen[0] - hero_surface.get_width() / 2,
                                   (hero_location_screen[1] - hero_surface.get_height() / 2))
-
-            angle = self.hero_actor.get_transform().rotation.yaw + 90.0
 
             # Apply clipping rect
             clipping_rect = pygame.Rect(translation_offset[0],
