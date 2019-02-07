@@ -162,6 +162,11 @@ PIXELS_AHEAD_VEHICLE = 150
 # ==============================================================================
 
 
+def get_actor_display_name(actor, truncate=250):
+    name = ' '.join(actor.type_id.replace('_', '.').title().split('.')[1:])
+    return (name[:truncate-1] + u'\u2026') if len(name) > truncate else name
+
+
 class Util(object):
 
     @staticmethod
@@ -778,6 +783,20 @@ class ModuleWorld(object):
                 speed_limits.append(actor)
             elif 'walker' in actor.type_id:
                 walkers.append(actor)
+
+        if self.hero_actor is not None and len(vehicles) > 1:
+            info_text = []
+            location = self.hero_actor.get_location()
+            vehicle_list = [x for x in vehicles if x.id != self.hero_actor.id]
+            distance = lambda v: location.distance(v.get_location())
+            for n, vehicle in enumerate(sorted(vehicle_list, key=distance)):
+                if n > 10:
+                    break
+                vehicle_type = get_actor_display_name(vehicle, truncate=22)
+                info_text.append('% 5d %s' % (vehicle.id, vehicle_type))
+            module_manager.get_module(MODULE_HUD).add_info(
+                'NEARBY VEHICLES',
+                info_text)
 
         return (vehicles, traffic_lights, speed_limits, walkers)
 
