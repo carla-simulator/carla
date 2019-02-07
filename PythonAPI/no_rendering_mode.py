@@ -315,27 +315,19 @@ class ModuleHUD (object):
         vehicle_id_surface.fill(COLOR_BLACK)
         if self.show_actor_ids:
             vehicle_id_surface.set_alpha(150)
-            v_offset = 4
             for actor in list_actors:
                 location = actor.get_location()
-                location.y = location.y - v_offset
                 x, y = world_to_pixel(location)
 
                 angle = 0
-                color_surface = pygame.Surface((len(str(actor.id)) * 8, 14))
-                color_surface.fill(COLOR_BLACK)
-                color_surface.set_alpha(200)
-
-                rotated_color_surface = color_surface
+                size = len(str(actor.id)) * 8
                 if hero_actor is not None:
                     angle = -hero_actor.get_transform().rotation.yaw - 90
-                    rotated_color_surface = pygame.transform.rotate(color_surface, angle)
 
-                vehicle_id_surface.blit(rotated_color_surface, (x, y))
-
-                font_surface = self._header_font.render(str(actor.id), True, COLOR_WHITE)
+                font_surface = self._header_font.render(str(actor.id), True, COLOR_ALUMINIUM_0)
                 rotated_font_surface = pygame.transform.rotate(font_surface, angle).convert_alpha()
-                vehicle_id_surface.blit(rotated_font_surface, (x, y))
+                rect = rotated_font_surface.get_rect(center=(x,y))
+                vehicle_id_surface.blit(rotated_font_surface, rect)
 
         return vehicle_id_surface
 
