@@ -23,6 +23,8 @@ namespace client {
 
     explicit Vehicle(ActorInitializer init) : Actor(std::move(init)) {}
 
+    using ActorState::GetBoundingBox;
+
     /// Switch on/off this vehicle's autopilot.
     void SetAutopilot(bool enabled = true);
 
@@ -34,19 +36,35 @@ namespace client {
 
     /// Return the control last applied to this vehicle.
     ///
-    /// @note The following functions do not call the simulator, they return the
-    /// data
+    /// @note This function does not call the simulator, it returns the data
     /// received in the last tick.
-    //////////////////////////////////////////////////////////////////////////////////
     Control GetControl() const;
     PhysicsControl GetPhysicsControl() const;
 
+    /// Return the speed limit currently affecting this vehicle.
+    ///
+    /// @note This function does not call the simulator, it returns the data
+    /// received in the last tick.
     float GetSpeedLimit() const;
 
+    /// Return the state of the traffic light currently affecting this vehicle.
+    ///
+    /// @return Green If no traffic light is affecting the vehicle.
+    ///
+    /// @note This function does not call the simulator, it returns the data
+    /// received in the last tick.
     rpc::TrafficLightState GetTrafficLightState() const;
 
+    /// Return whether a traffic light is affecting this vehicle.
+    ///
+    /// @note This function does not call the simulator, it returns the data
+    /// received in the last tick.
     bool IsAtTrafficLight();
 
+    /// Retrieve the traffic light actor currently affecting this vehicle.
+    ///
+    /// @note This function does not call the simulator, it returns the data
+    /// received in the last tick.
     SharedPtr<TrafficLight> GetTrafficLight() const;
 
 

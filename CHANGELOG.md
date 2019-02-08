@@ -20,7 +20,7 @@
   * Fixed static objects present in the map were marked as "movable"
   * Fixed BP_MultipleFloor, tweaked offset in BaseFloor to adjust meshes between them
   * New traffic signs assets: one-way, no-turn, more speed limits, do not enter, arrow floors, Michigan left, and lane end
-
+  * Expose traffic sign's trigger volumes on Python API
 
 ## CARLA 0.9.3
 
