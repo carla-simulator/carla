@@ -633,7 +633,9 @@ def game_loop(args):
             # agent.set_destination((spawn_point.location.x,
             #                        spawn_point.location.y,
             #                        spawn_point.location.z))
-            agent.set_destination((44.61, -192.88, 0.5))
+            # agent.set_destination((44.61, -192.88, 0.5))
+            # agent.set_destination((-74.54, -67.53, 10))
+            agent.set_destination((-41.37, 131.4, 10))
 
         clock = pygame.time.Clock()
         while True:
