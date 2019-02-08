@@ -72,6 +72,37 @@ if not exist "%INSTALLATION_DIR%" (
 )
 
 rem ============================================================================
+rem -- Download and install zlib -----------------------------------------------
+rem ============================================================================
+
+echo %FILE_N% Installing zlib...
+call "%INSTALLERS_DIR%install_zlib.bat"^
+ --build-dir "%INSTALLATION_DIR%"
+
+if %errorlevel% neq 0 goto failed
+
+if not defined install_zlib (
+    echo %FILE_N% Failed while installing zlib.
+    goto failed
+)
+
+rem ============================================================================
+rem -- Download and install libpng -----------------------------------------------
+rem ============================================================================
+
+echo %FILE_N% Installing libpng...
+call "%INSTALLERS_DIR%install_libpng.bat"^
+ --build-dir "%INSTALLATION_DIR%"^
+ --zlib-install-dir "%INSTALLATION_DIR%\zlib-install"
+
+if %errorlevel% neq 0 goto failed
+
+if not defined install_libpng (
+    echo %FILE_N% Failed while installing libpng.
+    goto failed
+)
+
+rem ============================================================================
 rem -- Download and install rpclib ---------------------------------------------
 rem ============================================================================
 

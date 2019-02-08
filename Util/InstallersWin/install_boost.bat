@@ -3,7 +3,6 @@ setlocal
 
 rem BAT script that downloads and installs a ready to use
 rem boost build for CARLA (carla.org).
-rem Just put it in `Util/Build` and run it.
 
 set LOCAL_PATH=%~dp0
 set "FILE_N=    -[%~n0]:"
@@ -48,7 +47,7 @@ if [%BOOST_VERSION%] == [] (
 )
 
 rem If not set set the build dir to the current dir
-if [%BUILD_DIR%] == [] set BUILD_DIR=.
+if [%BUILD_DIR%] == [] set BUILD_DIR=%~dp0
 
 rem If not defined, use Visual Studio 2017 as tool set
 if [%TOOLSET%] == [] set TOOLSET=msvc-14.1
@@ -111,6 +110,7 @@ b2 -j%NUMBER_OF_ASYNC_JOBS%^
     headers^
     --layout=versioned^
     --build-dir=.\build^
+    --with-system^
     --with-filesystem^
     --with-python^
     --with-date_time^

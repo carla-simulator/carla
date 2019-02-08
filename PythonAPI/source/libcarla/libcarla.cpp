@@ -113,7 +113,8 @@ static auto MakeCallback(boost::python::object callback) {
     carla::PythonUtil::AcquireGIL lock;
     try {
       py::call<void>(callback->ptr(), py::object(message));
-    } catch (const py::error_already_set &e) {
+    // } catch (const py::error_already_set &e) {
+    } catch (const py::error_already_set &) {
       PyErr_Print();
     }
   };
