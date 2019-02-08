@@ -388,7 +388,7 @@ class TrafficLightSurfaces(object):
             surface = pygame.Surface((w, 3 * w), pygame.SRCALPHA)
             surface.fill((31, 31, 31) if tl != 'h' else (245, 121, 0))
             if tl != 'h':
-                hw = w / 2
+                hw = int(w / 2)
                 off = (48, 48, 48)
                 red = (239, 41, 41)
                 yellow = (252, 175, 62)
@@ -500,7 +500,7 @@ class MapImage(object):
             pygame.draw.polygon(map_surface, (38, 38, 38), polygon)
 
             if not waypoint.is_intersection:
-                sample = waypoints[len(waypoints) / 2]
+                sample = waypoints[int(len(waypoints) / 2)]
                 draw_lane_marking(
                     map_surface,
                     [world_to_pixel(x) for x in left_marking],
@@ -624,12 +624,12 @@ class ModuleWorld(object):
         self.border_round_surface.set_colorkey(COLOR_WHITE)
         self.border_round_surface.fill(COLOR_WHITE)
 
-        center_offset = (self.hud_module.dim[0] / 2, self.hud_module.dim[1] / 2)
+        center_offset = (int(self.hud_module.dim[0] / 2), int(self.hud_module.dim[1] / 2))
         
-        pygame.draw.circle(self.border_round_surface, COLOR_ALUMINIUM_2, center_offset, self.hud_module.dim[1]/ 2)
-        pygame.draw.circle(self.border_round_surface, COLOR_WHITE, center_offset, (self.hud_module.dim[1] - 8)/ 2)
+        pygame.draw.circle(self.border_round_surface, COLOR_ALUMINIUM_2, center_offset, int(self.hud_module.dim[1]/ 2))
+        pygame.draw.circle(self.border_round_surface, COLOR_WHITE, center_offset, int((self.hud_module.dim[1] - 8)/ 2))
         
-        pygame.draw.circle(self.round_surface, COLOR_WHITE, center_offset, self.hud_module.dim[1] / 2)
+        pygame.draw.circle(self.round_surface, COLOR_WHITE, center_offset, int(self.hud_module.dim[1] / 2))
 
         scaled_original_size = self.original_surface_size * (1.0 / 0.9)
         self.hero_surface = pygame.Surface((scaled_original_size, scaled_original_size)).convert()
@@ -700,8 +700,9 @@ class ModuleWorld(object):
             hero_mode_text = ['Hero Mode:                OFF']
 
         self.server_fps = self.server_clock.get_fps()
+        self.server_fps = 'inf' if self.server_fps == float('inf') else round(self.server_fps)
         module_info_text = [
-            'Server:  % 16s FPS' % round(self.server_fps),
+            'Server:  % 16s FPS' % self.server_fps,
             'Client:  % 16s FPS' % round(clock.get_fps()),
             'Simulation Time: % 12s' % datetime.timedelta(seconds=int(self.simulation_time)),
             'Map Name:          %10s' % self.world.map_name,
@@ -930,8 +931,8 @@ class ModuleWorld(object):
             display.blit(self.border_round_surface, (0,0))
         else:
             # Translation offset
-            translation_offset = ((self.module_input.mouse_offset[0]) + self.scale_offset[0],
-                                  self.module_input.mouse_offset[1]  + self.scale_offset[1])
+            translation_offset = (self.module_input.mouse_offset[0] * scale_factor + self.scale_offset[0],
+                                  self.module_input.mouse_offset[1] * scale_factor + self.scale_offset[1])
             center_offset = ((display.get_width() * MAX_ZOOM - self.surface_size) / 2 * scale_factor, 0)
 
             # Apply clipping rect
