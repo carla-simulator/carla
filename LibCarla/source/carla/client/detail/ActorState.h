@@ -34,10 +34,6 @@ namespace detail {
       return _display_id;
     }
 
-    const geom::BoundingBox &GetBoundingBox() const {
-      return _description.bounding_box;
-    }
-
     const std::vector<uint8_t> &GetSemanticTags() const {
       return _description.semantic_tags;
     }
@@ -56,6 +52,10 @@ namespace detail {
     }
 
   protected:
+
+    const geom::BoundingBox &GetBoundingBox() const {
+      return _description.bounding_box;
+    }
 
     const rpc::Actor &GetActorDescription() const {
       return _description;

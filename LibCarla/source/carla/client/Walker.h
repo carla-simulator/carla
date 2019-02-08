@@ -19,6 +19,8 @@ namespace client {
 
     explicit Walker(ActorInitializer init) : Actor(std::move(init)) {}
 
+    using ActorState::GetBoundingBox;
+
     /// Apply @a control to this Walker.
     void ApplyControl(const Control &control);
 
