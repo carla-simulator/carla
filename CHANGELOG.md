@@ -1,4 +1,4 @@
-## CARLA Last Release
+## Latest Changes
   * Added recording/replaying functionality to manual_control.py script.
     - CTRL + R: Toggle recording (file is always 'manual_recording.rec')
     - CTRL + P: Replay last recording.
@@ -7,6 +7,7 @@
     - CTRL + SHIFT + -: Subtract 10 seconds the start time of the replayer.
     - CTRL + SHIFT + =: Add 10 seconds the start time of the replayer.
     - Note: A negative time start means to replay from the end of the recording (-2 = replay the last 2 seconds)
+  * Fixed `manual_control.py` and `no_rendering_mode` to prevent crashes when used in "no rendering mode"
 
 ## CARLA 0.9.3
 
