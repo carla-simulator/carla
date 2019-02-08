@@ -821,8 +821,8 @@ class ModuleWorld(object):
 
         self.server_fps = self.server_clock.get_fps()
         module_info_text = [
-            'Server:  % 16s FPS' % round(self.server_fps),
-            'Client:  % 16s FPS' % round(clock.get_fps()),
+            'Server:  % 16.0f FPS' % self.server_fps,
+            'Client:  % 16.0f FPS' % clock.get_fps(),
             'Map Name:          %10s' % self.world.map_name,
         ]
 
