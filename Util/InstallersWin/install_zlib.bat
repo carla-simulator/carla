@@ -163,9 +163,8 @@ rem ============================================================================
 
 :good_exit
     echo %FILE_N% Exiting...
-    endlocal
     rem A return value used for checking for errors
-    set install_zlib=done
+    endlocal & set install_zlib=%ZLIB_INSTALL_DIR%
     exit /b 0
 
 :bad_exit
