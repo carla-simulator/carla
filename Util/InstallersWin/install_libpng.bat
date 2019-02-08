@@ -188,9 +188,8 @@ rem ============================================================================
 
 :good_exit
     echo %FILE_N% Exiting...
-    endlocal
     rem A return value used for checking for errors
-    set install_libpng=done
+    endlocal & set install_libpng=%LIBPNG_INSTALL_DIR%
     exit /b 0
 
 :bad_exit
