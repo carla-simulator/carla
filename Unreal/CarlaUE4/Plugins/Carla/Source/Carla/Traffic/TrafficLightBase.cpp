@@ -192,6 +192,11 @@ float ATrafficLightBase::GetElapsedTime() const
   return ElapsedTime;
 }
 
+void ATrafficLightBase::SetElapsedTime(float InElapsedTime)
+{
+  ElapsedTime = InElapsedTime;
+}
+
 void ATrafficLightBase::SetTimeIsFrozen(bool InTimeIsFrozen)
 {
   TimeIsFrozen = InTimeIsFrozen;

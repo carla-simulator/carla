@@ -84,6 +84,9 @@ public:
   UFUNCTION(Category = "Traffic Light", BlueprintCallable)
   int GetNumChanges() const;
 
+  // used from replayer
+  void SetElapsedTime(float InElapsedTime);
+
 protected:
 
   UFUNCTION(Category = "Traffic Light", BlueprintImplementableEvent)

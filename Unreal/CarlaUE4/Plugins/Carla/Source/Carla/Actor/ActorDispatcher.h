@@ -11,10 +11,6 @@
 #include "Carla/Actor/ActorRegistry.h"
 #include "Carla/Actor/ActorSpawnResult.h"
 
-#include <compiler/disable-ue4-macros.h>
-#include <carla/recorder/Recorder.h>
-#include <compiler/enable-ue4-macros.h>
-
 #include "Containers/Array.h"
 #include "Templates/Function.h"
 

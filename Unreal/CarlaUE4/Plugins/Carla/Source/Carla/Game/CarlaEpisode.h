@@ -155,12 +155,14 @@ public:
   {
     auto result = ActorDispatcher->SpawnActor(Transform, thisActorDescription, DesiredId);
 
-    if (result.Key == EActorSpawnResultStatus::Success) {
-      CreateRecorderEventAdd(
-        static_cast<carla::rpc::actor_id_type>(result.Value.GetActorId()),
-        Transform,
-        std::move(thisActorDescription)
-      );
+    if (Recorder.isEnabled()) {
+      if (result.Key == EActorSpawnResultStatus::Success) {
+        CreateRecorderEventAdd(
+          static_cast<carla::rpc::actor_id_type>(result.Value.GetActorId()),
+          Transform,
+          std::move(thisActorDescription)
+        );
+      }
     }
     return result;
   }
@@ -189,11 +191,13 @@ public:
   UFUNCTION(BlueprintCallable)
   bool DestroyActor(AActor *Actor)
   {
-      // recorder event
-      crec::RecorderEventDel recEvent {
-        GetActorRegistry().Find(Actor).GetActorId(),
-      };
-      Recorder.addEvent(std::move(recEvent));
+      if (Recorder.isEnabled()) {
+        // recorder event
+        crec::RecorderEventDel recEvent {
+          GetActorRegistry().Find(Actor).GetActorId(),
+        };
+        Recorder.addEvent(std::move(recEvent));
+      }
 
     return ActorDispatcher->DestroyActor(Actor);
   }
@@ -228,6 +232,7 @@ private:
   friend class ATheNewCarlaGameModeBase;
 
   void InitializeAtBeginPlay();
+  void EndPlay();
 
   void RegisterActorFactory(ACarlaActorFactory &ActorFactory)
   {

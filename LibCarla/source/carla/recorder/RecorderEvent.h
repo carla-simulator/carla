@@ -14,12 +14,6 @@
 namespace carla {
 namespace recorder {
 
-enum class RecorderEventType : char {
-    Add,
-    Del,
-    Parent
-};
-
 #pragma pack(push, 1)
 
 struct RecorderActorAttribute {
@@ -64,8 +58,8 @@ class RecorderEvents {
     public:
     RecorderEvents() = default;
     void addEvent(RecorderEventAdd event);
-    void addEvent(RecorderEventDel event);
-    void addEvent(RecorderEventParent event);
+    void addEvent(const RecorderEventDel event);
+    void addEvent(const RecorderEventParent event);
     void clear(void);
     void write(std::ofstream &_file, std::ofstream &log);
 

@@ -16,6 +16,7 @@
 #include <carla/sensor/SensorRegistry.h>
 #include <carla/recorder/Recorder.h>
 #include <carla/recorder/RecorderPosition.h>
+#include <carla/recorder/RecorderState.h>
 #include <carla/sensor/data/ActorDynamicState.h>
 #include <compiler/enable-ue4-macros.h>
 
@@ -122,18 +123,6 @@ static carla::Buffer AWorldObserver_Serialize(
       AWorldObserver_GetActorState(View, Registry)
     };
     write_data(info);
-
-    if (Episode->GetRecorder().isEnabled()) {
-      // add to the recorder
-      carla::recorder::RecorderPosition recPos {
-        View.GetActorId(),
-        info.transform
-        //info.velocity,
-        // TODO: use the angular velocity
-        // info.velocity
-      };
-      Episode->GetRecorder().addPosition(recPos);
-    }
   }
 
   check(begin == buffer.end());
@@ -165,9 +154,48 @@ void AWorldObserver::Tick(float DeltaSeconds)
 
   AsyncStream.Send(*this, std::move(buffer));
 
-  // recorder
-  if (Episode->GetRecorder().isEnabled())
+  // check if recording
+  if (Episode->GetRecorder().isEnabled()) {
+    const FActorRegistry &reg = Episode->GetActorRegistry();
+
+    // get positions
+    for (TActorIterator<ACarlaWheeledVehicle> It(GetWorld()); It; ++It)
+    {
+      ACarlaWheeledVehicle *Actor = *It;
+      check(Actor != nullptr);
+      carla::recorder::RecorderPosition recPos {
+        reg.Find(Actor).GetActorId(),
+        Actor->GetActorTransform()
+      };
+      Episode->GetRecorder().addPosition(std::move(recPos));
+    }
+
+    // get states
+    for (TActorIterator<ATrafficSignBase> It(GetWorld()); It; ++It)
+    {
+      ATrafficSignBase *Actor = *It;
+      check(Actor != nullptr);
+      auto TrafficLight = Cast<ATrafficLightBase>(Actor);
+      if (TrafficLight != nullptr)
+      {
+        carla::recorder::RecorderStateTrafficLight recTraffic {
+          reg.Find(Actor).GetActorId(),
+          TrafficLight->GetTimeIsFrozen(),
+          TrafficLight->GetElapsedTime(),
+          static_cast<char>(TrafficLight->GetTrafficLightState())
+        };
+        Episode->GetRecorder().addState(std::move(recTraffic));
+      }
+
+      // FActorDescription Description;
+      // Description.Id = UCarlaEpisode_GetTrafficSignId(Actor->GetTrafficSignState());
+      // Description.Class = Actor->GetClass();
+      // ActorDispatcher->RegisterActor(*Actor, Description);
+    }
+
+    // write
     Episode->GetRecorder().write();
+  }
 
   // replayer
   if (Episode->GetReplayer().isEnabled())

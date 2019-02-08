@@ -83,6 +83,8 @@ void Recorder::stop() {
 void Recorder::clear(void) {
     events.clear();
     positions.clear();
+    states.clear();
+
     // log << "Clear\n";
 }
 
@@ -93,13 +95,14 @@ void Recorder::write(void) {
     frames.write(file, log);
     events.write(file, log);
     positions.write(file, log);
+    states.write(file, log);
 
     clear();
 }
 
-void Recorder::addPosition(const RecorderPosition &position) {
+void Recorder::addPosition(const RecorderPosition position) {
     if (enabled)
-        positions.addPosition(position);
+        positions.addPosition(std::move(position));
 }
 void Recorder::addEvent(RecorderEventAdd event) {
     if (enabled)
@@ -112,6 +115,10 @@ void Recorder::addEvent(const RecorderEventDel event) {
 void Recorder::addEvent(const RecorderEventParent event) {
     if (enabled)
         events.addEvent(std::move(event));
+}
+void Recorder::addState(const RecorderStateTrafficLight state) {
+    if (enabled)
+        states.addState(std::move(state));
 }
 
 }

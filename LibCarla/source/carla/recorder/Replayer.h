@@ -15,6 +15,7 @@
 #include "carla/recorder/RecorderFrames.h"
 #include "carla/recorder/RecorderEvent.h"
 #include "carla/recorder/RecorderPosition.h"
+#include "carla/recorder/RecorderState.h"
 #include "carla/recorder/RecorderHelpers.h"
 
 namespace carla {
@@ -26,6 +27,7 @@ typedef std::function<bool (unsigned int uid)> RecorderCallbackEventDel;
 typedef std::function<bool (unsigned int childId, unsigned int parentId)> RecorderCallbackEventParent;
 typedef std::function<bool (RecorderPosition pos1, RecorderPosition pos2, double per)> RecorderCallbackPosition;
 typedef std::function<bool (bool applyAutopilot)> RecorderCallbackFinish;
+typedef std::function<bool (RecorderStateTrafficLight state)> RecorderCallbackStateTrafficLight;
 
 #pragma pack(push, 1)
 struct Header {
@@ -56,6 +58,7 @@ class Replayer : private NonCopyable {
     void setCallbackEventParent(RecorderCallbackEventParent f);
     void setCallbackEventPosition(RecorderCallbackPosition f);
     void setCallbackEventFinish(RecorderCallbackFinish f);
+    void setCallbackStateTrafficLight(RecorderCallbackStateTrafficLight f);
 
     // tick for the replayer
     void tick(float time);
@@ -71,6 +74,7 @@ class Replayer : private NonCopyable {
     RecorderCallbackEventParent callbackEventParent;
     RecorderCallbackPosition callbackPosition;
     RecorderCallbackFinish callbackFinish;
+    RecorderCallbackStateTrafficLight callbackStateTrafficLight;
     std::vector<RecorderPosition> currPos;
     std::vector<RecorderPosition> prevPos;
     std::unordered_map<unsigned int, unsigned int> mappedId;
@@ -88,6 +92,7 @@ class Replayer : private NonCopyable {
     void processToTime(double time);
     void processEvents(void);
     void processPositions(void);
+    void processStates(void);
 
     // positions
     void updatePositions(double per);

@@ -80,11 +80,13 @@ void UCarlaEpisode::AttachActors(AActor *Child, AActor *Parent)
   Child->SetOwner(Parent);
 
   // recorder event
-  crec::RecorderEventParent recEvent { 
-    FindActor(Child).GetActorId(),
-    FindActor(Parent).GetActorId()
-  };
-  Recorder.addEvent(recEvent);
+  if (Recorder.isEnabled()) {
+    crec::RecorderEventParent recEvent {
+      FindActor(Child).GetActorId(),
+      FindActor(Parent).GetActorId()
+    };
+    Recorder.addEvent(std::move(recEvent));
+  }
 }
 
 void UCarlaEpisode::InitializeAtBeginPlay()
@@ -141,11 +143,22 @@ void UCarlaEpisode::InitializeAtBeginPlay()
       FActorView view = GetActorRegistry().Find(desiredId);
       const FActorDescription *desc = &view.GetActorInfo()->Description;
       UE_LOG(LogCarla, Log, TEXT("actor '%s' already exist with id %d"), *(desc->Id), view.GetActorId());
-      if (desc->Id == ActorDesc.Id)
+      if (desc->Id == ActorDesc.Id) {
         // disable physics
         // SetActorSimulatePhysics(view, false);
+        // disable autopilot
+        auto Vehicle = Cast<ACarlaWheeledVehicle>(view.GetActor());
+        if (Vehicle != nullptr) {
+          auto Controller = Cast<AWheeledVehicleAIController>(Vehicle->GetController());
+          if (Controller != nullptr) {
+            Controller->SetAutopilot(false);
+            UE_LOG(LogCarla, Log, TEXT("resetting autopilot to %d"), desiredId);
+          }
+        }
+
         // we don't need to create, actor of same type already exist
         return std::make_pair(2, desiredId);
+      }
     }
 
     // create actor
@@ -153,6 +166,15 @@ void UCarlaEpisode::InitializeAtBeginPlay()
     if (Result.Key == EActorSpawnResultStatus::Success) {
       // disable physics
       // SetActorSimulatePhysics(Result.Value, false);
+      // disable autopilot
+      auto Vehicle = Cast<ACarlaWheeledVehicle>(Result.Value.GetActor());
+      if (Vehicle != nullptr) {
+        auto Controller = Cast<AWheeledVehicleAIController>(Vehicle->GetController());
+        if (Controller != nullptr) {
+          Controller->SetAutopilot(false);
+          UE_LOG(LogCarla, Log, TEXT("resetting autopilot to %d"), Result.Value.GetActorId());
+        }
+      }
       UE_LOG(LogCarla, Log, TEXT("Actor created by replayer with id %d"), Result.Value.GetActorId());
       return std::make_pair(1, Result.Value.GetActorId());
     }
@@ -164,7 +186,9 @@ void UCarlaEpisode::InitializeAtBeginPlay()
 
     // callback
     Recorder.getReplayer().setCallbackEventDel([this](unsigned int databaseId) -> bool {
-      DestroyActor(GetActorRegistry().Find(databaseId).GetActor());
+      auto actor = GetActorRegistry().Find(databaseId).GetActor();
+      if (actor == nullptr) return false;
+      DestroyActor(actor);
       return true;
     });
 
@@ -201,6 +225,22 @@ void UCarlaEpisode::InitializeAtBeginPlay()
     });
 
     // callback
+    Recorder.getReplayer().setCallbackStateTrafficLight([this](carla::recorder::RecorderStateTrafficLight state) -> bool {
+      AActor *Actor = GetActorRegistry().Find(state.databaseId).GetActor();
+      if (Actor && !Actor->IsPendingKill()) {
+        auto TrafficLight = Cast<ATrafficLightBase>(Actor);
+        if (TrafficLight != nullptr)
+        {
+          TrafficLight->SetTrafficLightState(static_cast<ETrafficLightState>(state.state));
+          TrafficLight->SetTimeIsFrozen(state.isFrozen);
+          TrafficLight->SetElapsedTime(state.elapsedTime);
+        }
+        return true;
+      }
+      return false;
+    });
+
+    // callback
     Recorder.getReplayer().setCallbackEventFinish([this](bool applyAutopilot) -> bool {
       if (!applyAutopilot)
         return false;
@@ -226,6 +266,14 @@ void UCarlaEpisode::InitializeAtBeginPlay()
       return true;
     });
 
+}
+
+void UCarlaEpisode::EndPlay(void) {
+  // stop recorder and replayer
+  if (Recorder.isEnabled())
+    Recorder.stop();
+  if (Recorder.getReplayer().isEnabled())
+    Recorder.getReplayer().stop();
 }
 
 bool UCarlaEpisode::SetActorSimulatePhysics(FActorView &ActorView, bool bEnabled) {
