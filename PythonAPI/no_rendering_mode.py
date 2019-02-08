@@ -143,11 +143,13 @@ MODULE_INPUT = 'INPUT'
 
 # Input
 # Wheel used for zooming map
-MIN_ZOOM = 1.0
-MAX_ZOOM = 8.0
+MIN_ZOOM = 0.1
+MAX_ZOOM = 1.0
 
-MAP_DEFAULT_ZOOM = 1.0
-HERO_DEFAULT_ZOOM = 8.0
+PIXELS_PER_METER = 15
+
+MAP_DEFAULT_ZOOM = 0.1
+HERO_DEFAULT_ZOOM = 1.0
 
 PIXELS_AHEAD_VEHICLE = 150
 
@@ -548,25 +550,22 @@ class ModuleWorld(object):
         self.actors = None
 
         # Store necessary modules
-        self.hud_module = None
+        self.module_hud = None
         self.module_input = None
 
         self.surface_size = [0, 0]
         self.prev_scaled_size = 0
         self.scaled_size = 0
-
+        self.scale_factor = 1
         # Hero actor
         self.hero_actor = None
         self.accum_offset = [0, 0]
         self.scale_offset = [0, 0]
 
-        self.map_surface = None
         self.vehicle_id_surface = None
         self.result_surface = None
 
         self.traffic_light_surfaces = TrafficLightSurfaces()
-
-        self.map_waypoints = None
 
     def _get_data_from_carla(self, host, port, timeout):
         try:
@@ -597,13 +596,13 @@ class ModuleWorld(object):
         self.world, self.town_map, self.actors = self._get_data_from_carla(self.host, self.port, self.timeout)
 
         # Create Surfaces
-        self.map_image = MapImage(self.town_map)
+        self.map_image = MapImage(self.town_map, PIXELS_PER_METER)
 
         # Store necessary modules
-        self.hud_module = module_manager.get_module(MODULE_HUD)
+        self.module_hud = module_manager.get_module(MODULE_HUD)
         self.module_input = module_manager.get_module(MODULE_INPUT)
 
-        self.original_surface_size = min(self.hud_module.dim[0], self.hud_module.dim[1])
+        self.original_surface_size = min(self.module_hud.dim[0], self.module_hud.dim[1])
         self.surface_size = self.map_image._big_map_surface.get_width()
 
         self.scaled_size = int(self.surface_size)
@@ -616,29 +615,26 @@ class ModuleWorld(object):
         self.vehicle_id_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
         self.vehicle_id_surface.set_colorkey(COLOR_BLACK)
 
-        self.round_surface = pygame.Surface((self.hud_module.dim), pygame.SRCALPHA).convert()
+        self.round_surface = pygame.Surface((self.module_hud.dim), pygame.SRCALPHA).convert()
         self.round_surface.set_colorkey(COLOR_WHITE)
         self.round_surface.fill(COLOR_BLACK)
 
-        self.border_round_surface = pygame.Surface(self.hud_module.dim, pygame.SRCALPHA).convert()
+        self.border_round_surface = pygame.Surface(self.module_hud.dim, pygame.SRCALPHA).convert()
         self.border_round_surface.set_colorkey(COLOR_WHITE)
         self.border_round_surface.fill(COLOR_WHITE)
 
-        center_offset = (int(self.hud_module.dim[0] / 2), int(self.hud_module.dim[1] / 2))
+        center_offset = (int(self.module_hud.dim[0] / 2), int(self.module_hud.dim[1] / 2))
         
-        pygame.draw.circle(self.border_round_surface, COLOR_ALUMINIUM_2, center_offset, int(self.hud_module.dim[1]/ 2))
-        pygame.draw.circle(self.border_round_surface, COLOR_WHITE, center_offset, int((self.hud_module.dim[1] - 8)/ 2))
+        pygame.draw.circle(self.border_round_surface, COLOR_ALUMINIUM_2, center_offset, int(self.module_hud.dim[1]/ 2))
+        pygame.draw.circle(self.border_round_surface, COLOR_WHITE, center_offset, int((self.module_hud.dim[1] - 8)/ 2))
         
-        pygame.draw.circle(self.round_surface, COLOR_WHITE, center_offset, int(self.hud_module.dim[1] / 2))
+        pygame.draw.circle(self.round_surface, COLOR_WHITE, center_offset, int(self.module_hud.dim[1] / 2))
 
         scaled_original_size = self.original_surface_size * (1.0 / 0.9)
         self.hero_surface = pygame.Surface((scaled_original_size, scaled_original_size)).convert()
 
         self.result_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
         self.result_surface.set_colorkey(COLOR_BLACK)
-
-        # Generate waypoints
-        self.map_waypoints = self.town_map.generate_waypoints(1.5)
 
         weak_self = weakref.ref(self)
         self.world.on_tick(lambda timestamp: ModuleWorld.on_world_tick(weak_self, timestamp))
@@ -848,44 +844,46 @@ class ModuleWorld(object):
         self.vehicle_id_surface.set_clip(clipping_rect)
         self.result_surface.set_clip(clipping_rect)
 
+
+    def _compute_scale(self):
+        m = self.module_input.mouse_pos
+
+        # Percentage of surface where mouse position is actually
+        px = (m[0] - self.accum_offset[0]) / float(self.prev_scaled_size)
+        py = (m[1] - self.accum_offset[1]) / float(self.prev_scaled_size)
+
+        # Offset will be the previously accumulated offset added with the
+        # difference of mouse positions in the old and new scales
+        diff_between_scales = ((float(self.prev_scaled_size) * px) - (float(self.scaled_size) * px),
+                                (float(self.prev_scaled_size) * py) - (float(self.scaled_size) * py))
+
+        self.scale_offset = (self.accum_offset[0] + diff_between_scales[0],
+                                self.accum_offset[1] + diff_between_scales[1])
+
+        # Accumulate offset
+        self.accum_offset = self.scale_offset
+
+        # Update previous scale
+        self.prev_scaled_size = self.scaled_size
+
+        # Scale performed
+        self.map_image.scale_map(self.scale_factor)
+
     def render(self, display):
         self.result_surface.fill(COLOR_BLACK)
         vehicles, traffic_lights, speed_limits, walkers = self._split_actors(self.actors)
 
-        scale_factor = self.module_input.wheel_offset / MAX_ZOOM
-        self.scaled_size = int(self.surface_size * scale_factor)
-
+        self.scale_factor = self.module_input.wheel_offset
+        self.scaled_size = int(self.map_image._width * self.scale_factor)
         if self.scaled_size != self.prev_scaled_size:
-            m = self.module_input.mouse_pos
-
-            # Percentage of surface where mouse position is actually
-            px = (m[0] - self.accum_offset[0]) / float(self.prev_scaled_size)
-            py = (m[1] - self.accum_offset[1]) / float(self.prev_scaled_size)
-
-            # Offset will be the previously accumulated offset added with the
-            # difference of mouse positions in the old and new scales
-            diff_between_scales = ((float(self.prev_scaled_size) * px) - (float(self.scaled_size) * px),
-                                   (float(self.prev_scaled_size) * py) - (float(self.scaled_size) * py))
-
-            self.scale_offset = (self.accum_offset[0] + diff_between_scales[0],
-                                 self.accum_offset[1] + diff_between_scales[1])
-
-            # Accumulate offset
-            self.accum_offset = (self.accum_offset[0] + diff_between_scales[0],
-                                 self.accum_offset[1] + diff_between_scales[1])
-
-            # Update previous scale
-            self.prev_scaled_size = self.scaled_size
-
-            # Scale performed
-            self.map_image.scale_map(scale_factor)
+            self._compute_scale()
 
         # Render Actors
         self.actors_surface.fill(COLOR_BLACK)
-        self.render_actors(self.actors_surface, vehicles, traffic_lights, speed_limits, walkers, scale_factor)
+        self.render_actors(self.actors_surface, vehicles, traffic_lights, speed_limits, walkers, self.scale_factor)
 
         # Render Ids
-        self.hud_module.render_actors_ids(self.vehicle_id_surface, vehicles,
+        self.module_hud.render_actors_ids(self.vehicle_id_surface, vehicles,
                                           self.map_image.world_to_pixel, self.hero_actor)
 
         # Blit surfaces
@@ -931,13 +929,13 @@ class ModuleWorld(object):
             display.blit(self.border_round_surface, (0,0))
         else:
             # Translation offset
-            translation_offset = (self.module_input.mouse_offset[0] * scale_factor + self.scale_offset[0],
-                                  self.module_input.mouse_offset[1] * scale_factor + self.scale_offset[1])
-            center_offset = ((display.get_width() * MAX_ZOOM - self.surface_size) / 2 * scale_factor, 0)
+            translation_offset = (self.module_input.mouse_offset[0] * self.scale_factor + self.scale_offset[0],
+                                  self.module_input.mouse_offset[1] * self.scale_factor + self.scale_offset[1])
+            center_offset = ((display.get_width() * MAX_ZOOM - self.surface_size) / 2 * self.scale_factor, 0)
 
             # Apply clipping rect
             clipping_rect = pygame.Rect(-translation_offset[0] - center_offset[0], -translation_offset[1],
-                                        self.hud_module.dim[0], self.hud_module.dim[1])
+                                        self.module_hud.dim[0], self.module_hud.dim[1])
             self.clip_surfaces(clipping_rect)
             Util.blits(self.result_surface, surfaces)
 
@@ -955,10 +953,9 @@ class ModuleInput(object):
         self.name = name
         self.mouse_pos = (0, 0)
         self.mouse_offset = [0.0, 0.0]
-        self.wheel_offset = 1.0
-        self.wheel_amount = 0.1
+        self.wheel_offset = MIN_ZOOM
+        self.wheel_amount = 0.025
         self._steer_cache = 0.0
-
         self._control = None
         self._autopilot_enabled = True
 
@@ -1051,8 +1048,10 @@ class ModuleInput(object):
     def _parse_mouse(self):
         if pygame.mouse.get_pressed()[0]:
             x, y = pygame.mouse.get_pos()
-            self.mouse_offset[0] += x - self.mouse_pos[0]
-            self.mouse_offset[1] += y - self.mouse_pos[1]
+            module_world = module_manager.get_module(MODULE_WORLD)
+
+            self.mouse_offset[0] +=  (1.0 / module_world.scale_factor) * (x - self.mouse_pos[0])
+            self.mouse_offset[1] +=  (1.0 / module_world.scale_factor) * (y - self.mouse_pos[1])
             self.mouse_pos = (x, y)
 
     def parse_input(self, clock):
