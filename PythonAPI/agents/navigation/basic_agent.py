@@ -62,6 +62,8 @@ class BasicAgent(Agent):
         x2 = end_waypoint.transform.location.x
         y2 = end_waypoint.transform.location.y
         route = grp.plan_route((x1, y1), (x2, y2))
+        print(x1, y1)
+        print(x2, y2)
         print(route)
 
         current_waypoint = start_waypoint
