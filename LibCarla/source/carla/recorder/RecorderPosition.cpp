@@ -39,7 +39,7 @@ void RecorderPositions::clear(void) {
 }
 
 void RecorderPositions::addPosition(const RecorderPosition &position) {
-    positions.push_back(position);
+    positions.push_back(std::move(position));
     //log << "add position (" << sizeof(position) << ") " << position.transform.location.x << "," << position.transform.location.y << "," << position.transform.location.z << std::endl;
     //log << "add position for id." << position.id << std::endl;
 }

@@ -6,11 +6,6 @@
 
 #include "Replayer.h"
 #include "Recorder.h"
-#include "RecorderInfo.h"
-#include "RecorderFrames.h"
-#include "RecorderEvent.h"
-#include "RecorderPosition.h"
-#include "RecorderHelpers.h"
 #include "carla/Logging.h"
 
 #include <ctime>
@@ -42,6 +37,9 @@ void Replayer::setCallbackEventPosition(RecorderCallbackPosition f) {
 }
 void Replayer::setCallbackEventFinish(RecorderCallbackFinish f) {
   callbackFinish = std::move(f);
+}
+void Replayer::setCallbackStateTrafficLight(RecorderCallbackStateTrafficLight f) {
+  callbackStateTrafficLight = std::move(f);
 }
 
 void Replayer::stop(bool keepActors) {
@@ -89,6 +87,7 @@ std::string Replayer::getInfo(std::string filename) {
   RecorderEventAdd eventAdd;
   RecorderEventDel eventDel;
   RecorderEventParent eventParent;
+  // RecorderStateTrafficLight stateTraffic;
   bool bShowFrame;
 
   // read info
@@ -125,6 +124,7 @@ std::string Replayer::getInfo(std::string filename) {
         // info << "Frame " << frame.id << " at " << frame.elapsed << "
         // seconds\n";
         break;
+
       case static_cast<char>(RecorderPacketId::Event):
         bShowFrame = true;
         readValue<short>(file, total);
@@ -170,10 +170,27 @@ std::string Replayer::getInfo(std::string filename) {
               " (parent)\n";
         }
         break;
+
       case static_cast<char>(RecorderPacketId::Position):
         // info << "Positions\n";
         skipPacket();
         break;
+
+      case static_cast<char>(RecorderPacketId::State):
+        skipPacket();
+        // bShowFrame = true;
+        // readValue<short>(file, total);
+        //if (total > 0 && bShowFrame) {
+        //  info << "Frame " << frame.id << " at " << frame.elapsed << " seconds\n";
+        //  bShowFrame = false;
+        //}
+        //info << " State traffic lights: " << total << std::endl;
+        //for (i = 0; i < total; ++i) {
+        //  stateTraffic.read(file);
+        //  info << "  Id: " << stateTraffic.databaseId << " state: " << static_cast<char>(0x30 + stateTraffic.state) << " frozen: " << stateTraffic.isFrozen << " elapsedTime: " << stateTraffic.elapsedTime << std::endl;
+        //  }
+        break;
+
       default:
         // skip packet
         info << "Unknown packet id: " << header.id << " at offset " << file.tellg() << std::endl;
@@ -343,8 +360,19 @@ void Replayer::processToTime(double time) {
       skipPacket();
     }
 
-    // todo: status
-    // processStatus(file);
+    // get header
+    readHeader();
+    // check it is an state packet
+    if (header.id != static_cast<char>(RecorderPacketId::State)) {
+      log_error("Replayer file error: waitting for an State packet");
+      stop();
+      break;
+    }
+    if (frameFound) {
+      processStates();
+    } else {
+      skipPacket();
+    }
 
     // log_warning("Replayer new frame");
   }
@@ -459,6 +487,26 @@ void Replayer::processEvents(void) {
       callbackEventParent(mappedId[eventParent.databaseId], mappedId[eventParent.databaseIdParent]);
     } else {
       log_warning("callback parent is not defined");
+    }
+  }
+}
+
+void Replayer::processStates(void) {
+  short i, total;
+  RecorderStateTrafficLight stateTrafficLight;
+  std::stringstream info;
+
+  // read total traffic light states
+  readValue<short>(file, total);
+  for (i = 0; i < total; ++i) {
+    stateTrafficLight.read(file);
+
+    // callback
+    if (callbackStateTrafficLight) {
+      // log_warning("calling callback add");
+      callbackStateTrafficLight(stateTrafficLight);
+    } else {
+      log_warning("callback state traffic light is not defined");
     }
   }
 }

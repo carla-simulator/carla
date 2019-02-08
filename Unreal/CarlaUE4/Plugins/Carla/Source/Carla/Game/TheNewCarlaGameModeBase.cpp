@@ -117,6 +117,7 @@ void ATheNewCarlaGameModeBase::Tick(float DeltaSeconds)
 
 void ATheNewCarlaGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+  Episode->EndPlay();
   GameInstance->NotifyEndEpisode();
 
   Super::EndPlay(EndPlayReason);

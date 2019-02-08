@@ -99,11 +99,11 @@ void RecorderEvents::addEvent(RecorderEventAdd event) {
     eventsAdd.push_back(std::move(event));
 }
 
-void RecorderEvents::addEvent(RecorderEventDel event) {
+void RecorderEvents::addEvent(const RecorderEventDel event) {
     eventsDel.push_back(std::move(event));
 }
 
-void RecorderEvents::addEvent(RecorderEventParent event) {
+void RecorderEvents::addEvent(const RecorderEventParent event) {
     eventsParent.push_back(std::move(event));
 }
 

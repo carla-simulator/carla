@@ -12,6 +12,7 @@
 #include "carla/recorder/RecorderFrames.h"
 #include "carla/recorder/RecorderEvent.h"
 #include "carla/recorder/RecorderPosition.h"
+#include "carla/recorder/RecorderState.h"
 #include "carla/recorder/RecorderHelpers.h"
 #include "carla/recorder/Replayer.h"
 
@@ -38,6 +39,7 @@ namespace recorder {
     RecorderFrames frames;
     RecorderEvents events;
     RecorderPositions positions;
+    RecorderStates states;
 
     // replayer
     Replayer replayer;
@@ -52,10 +54,11 @@ namespace recorder {
     std::string start(std::string path, std::string name, std::string mapName);
     void stop(void);
     void clear(void);
-    void addEvent(RecorderEventAdd _event);
-    void addEvent(const RecorderEventDel _event);
-    void addEvent(const RecorderEventParent _event);
-    void addPosition(const RecorderPosition &_position);
+    void addEvent(RecorderEventAdd event);
+    void addEvent(const RecorderEventDel event);
+    void addEvent(const RecorderEventParent event);
+    void addPosition(const RecorderPosition position);
+    void addState(const RecorderStateTrafficLight state);
     void write(void);
 
 
