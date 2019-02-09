@@ -6,6 +6,8 @@
 
 #include "carla/streaming/detail/Token.h"
 
+#include "carla/Exception.h"
+
 #include <cstring>
 #include <exception>
 
@@ -21,15 +23,8 @@ namespace detail {
       _token.address_type = token_data::address::ip_v6;
       _token.address.v6 = addr.to_v6().to_bytes();
     } else {
-      throw std::invalid_argument("invalid ip address!");
+      throw_exception(std::invalid_argument("invalid ip address!"));
     }
-  }
-
-  boost::asio::ip::address token_type::get_address() const {
-    if (_token.address_type == token_data::address::ip_v4) {
-      return boost::asio::ip::address_v4(_token.address.v4);
-    }
-    return boost::asio::ip::address_v6(_token.address.v6);
   }
 
   token_type::token_type(const Token &rhs) {
@@ -40,6 +35,13 @@ namespace detail {
     Token token;
     std::memcpy(&token.data[0u], &_token, token.data.size());
     return token;
+  }
+
+  boost::asio::ip::address token_type::get_address() const {
+    if (_token.address_type == token_data::address::ip_v4) {
+      return boost::asio::ip::address_v4(_token.address.v4);
+    }
+    return boost::asio::ip::address_v6(_token.address.v6);
   }
 
 } // namespace detail

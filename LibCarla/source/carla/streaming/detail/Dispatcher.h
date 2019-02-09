@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include "carla/streaming/EndPoint.h"
 #include "carla/streaming/Stream.h"
 #include "carla/streaming/detail/Session.h"
-#include "carla/streaming/detail/StreamState.h"
 #include "carla/streaming/detail/Token.h"
 
 #include <memory>
@@ -19,19 +19,29 @@ namespace carla {
 namespace streaming {
 namespace detail {
 
+  class StreamStateBase;
+
   /// Keeps the mapping between streams and sessions.
   class Dispatcher {
   public:
 
-    template <typename P>
-    explicit Dispatcher(const boost::asio::ip::basic_endpoint<P> &ep)
+    template <typename Protocol, typename EndPointType>
+    explicit Dispatcher(const EndPoint<Protocol, EndPointType> &ep)
       : _cached_token(0u, ep) {}
 
-    Stream MakeStream();
+    ~Dispatcher();
 
-    void RegisterSession(std::shared_ptr<Session> session);
+    carla::streaming::Stream MakeStream();
+
+    carla::streaming::MultiStream MakeMultiStream();
+
+    bool RegisterSession(std::shared_ptr<Session> session);
+
+    void DeregisterSession(std::shared_ptr<Session> session);
 
   private:
+
+    void ClearExpiredStreams();
 
     // We use a mutex here, but we assume that sessions and streams won't be
     // created too often.
@@ -39,9 +49,11 @@ namespace detail {
 
     token_type _cached_token;
 
+    /// @todo StreamStates should be cleaned up at some point, otherwise we keep
+    /// them alive the whole run.
     std::unordered_map<
         stream_id_type,
-        std::shared_ptr<StreamState>> _stream_map;
+        std::weak_ptr<StreamStateBase>> _stream_map;
   };
 
 } // namespace detail

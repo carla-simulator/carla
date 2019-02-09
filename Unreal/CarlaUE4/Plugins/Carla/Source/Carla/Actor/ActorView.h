@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "Carla/Actor/ActorDescription.h"
+#include "Carla/Actor/ActorInfo.h"
 
 class AActor;
 
@@ -17,17 +17,31 @@ public:
 
   using IdType = uint32;
 
+  enum class ActorType : uint8 {
+    Other,
+    Vehicle,
+    Walker,
+    TrafficLight,
+    INVALID
+  };
+
   FActorView() = default;
   FActorView(const FActorView &) = default;
+  FActorView(FActorView &&) = default;
 
   bool IsValid() const
   {
-    return (TheActor != nullptr) && Description.IsValid();
+    return (TheActor != nullptr) && !TheActor->IsPendingKill();
   }
 
   IdType GetActorId() const
   {
     return Id;
+  }
+
+  ActorType GetActorType() const
+  {
+    return Type;
   }
 
   AActor *GetActor()
@@ -40,25 +54,25 @@ public:
     return TheActor;
   }
 
-  const FActorDescription *GetActorDescription() const
+  const FActorInfo *GetActorInfo() const
   {
-    return Description.Get();
+    return Info.Get();
   }
 
 private:
 
   friend class FActorRegistry;
 
-  FActorView(IdType ActorId, AActor &Actor, FActorDescription Description)
+  FActorView(IdType ActorId, AActor &Actor, TSharedPtr<const FActorInfo> Info)
     : Id(ActorId),
       TheActor(&Actor),
-      Description(MakeShared<FActorDescription>(std::move(Description))) {
-    check(Id != 0u);
-  }
+      Info(std::move(Info)) {}
 
   IdType Id = 0u;
 
+  ActorType Type = ActorType::Other;
+
   AActor *TheActor = nullptr;
 
-  TSharedPtr<const FActorDescription> Description = nullptr;
+  TSharedPtr<const FActorInfo> Info = nullptr;
 };

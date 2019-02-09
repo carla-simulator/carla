@@ -27,11 +27,6 @@ public:
     TArray<carla_transform> &Data);
 
   static void Encode(
-    const TArray<USensorDescription *> &SensorDescriptions,
-    TArray<carla_sensor_definition> &Data,
-    TArray<TUniquePtr<const char[]>> &SensorNamesMemory);
-
-  static void Encode(
       const ACarlaPlayerState &PlayerState,
       carla_measurements &Data);
 

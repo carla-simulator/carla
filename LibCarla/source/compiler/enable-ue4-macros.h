@@ -4,8 +4,18 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#pragma pop_macro("check")
+#if defined(_MSC_VER)
+#  pragma warning(pop)
+#  ifdef UpdateResource
+#    undef UpdateResource
+#  endif
+#endif
 
-#pragma clang diagnostic pop
+#if defined(__clang__)
+#  pragma clang diagnostic pop
+#endif
+
+#pragma pop_macro("check")
+#pragma pop_macro("TEXT")
 
 #undef LIBCARLA_INCLUDED_FROM_UE4

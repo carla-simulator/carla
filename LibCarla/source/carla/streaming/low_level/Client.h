@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include "carla/streaming/detail/HashableClient.h"
 #include "carla/streaming/detail/Token.h"
 #include "carla/streaming/detail/tcp/Client.h"
 
 #include <boost/asio/io_service.hpp>
 
-#include <unordered_set>
+#include <memory>
+#include <unordered_map>
 
 namespace carla {
 namespace streaming {
@@ -27,28 +27,59 @@ namespace low_level {
   class Client {
   public:
 
-    using underlying_client = detail::HashableClient<T>;
-
+    using underlying_client = T;
+    using protocol_type = typename underlying_client::protocol_type;
     using token_type = carla::streaming::detail::token_type;
 
+    explicit Client(boost::asio::ip::address fallback_address)
+      : _fallback_address(std::move(fallback_address)) {}
+
+    explicit Client(const std::string &fallback_address)
+      : Client(carla::streaming::make_address(fallback_address)) {}
+
+    explicit Client()
+      : Client(carla::streaming::make_localhost_address()) {}
+
+    ~Client() {
+      for (auto &pair : _clients) {
+        pair.second->Stop();
+      }
+    }
+
+    /// @warning cannot subscribe twice to the same stream (even if it's a
+    /// MultiStream).
     template <typename Functor>
     void Subscribe(
         boost::asio::io_service &io_service,
-        const token_type &token,
+        token_type token,
         Functor &&callback) {
-      if (!token.protocol_is_tcp()) { /// @todo
-        throw std::invalid_argument("invalid token, only TCP tokens supported");
+      DEBUG_ASSERT_EQ(_clients.find(token.get_stream_id()), _clients.end());
+      if (!token.has_address()) {
+        token.set_address(_fallback_address);
       }
-      _clients.emplace(
+      auto client = std::make_shared<underlying_client>(
           io_service,
-          token.to_tcp_endpoint(),
-          token.get_stream_id(),
+          token,
           std::forward<Functor>(callback));
+      client->Connect();
+      _clients.emplace(token.get_stream_id(), std::move(client));
+    }
+
+    void UnSubscribe(token_type token) {
+      auto it = _clients.find(token.get_stream_id());
+      if (it != _clients.end()) {
+        it->second->Stop();
+        _clients.erase(it);
+      }
     }
 
   private:
 
-    std::unordered_set<underlying_client> _clients;
+    boost::asio::ip::address _fallback_address;
+
+    std::unordered_map<
+        detail::stream_id_type,
+        std::shared_ptr<underlying_client>> _clients;
   };
 
 } // namespace low_level

@@ -14,12 +14,17 @@
 #include "Containers/Array.h"
 #include "Templates/Function.h"
 
+#include "ActorDispatcher.generated.h"
+
 class ACarlaActorFactory;
 
-/// Actor in charge of binding ActorDefinitions to spawn functions, as well as
+/// Object in charge of binding ActorDefinitions to spawn functions, as well as
 /// keeping the registry of all the actors spawned.
-class FActorDispatcher
+UCLASS()
+class CARLA_API UActorDispatcher : public UObject
 {
+  GENERATED_BODY()
+
 public:
 
   using SpawnFunctionType = TFunction<FActorSpawnResult(const FTransform &, const FActorDescription &)>;
@@ -46,16 +51,18 @@ public:
       FActorDescription ActorDescription);
 
   /// Destroys an actor, properly removing it from the registry.
-  void DestroyActor(AActor *Actor);
+  ///
+  /// Return true if the @a Actor is destroyed or already marked for
+  /// destruction, false if indestructible or nullptr.
+  bool DestroyActor(AActor *Actor);
+
+  /// Register an actor that was not created using "SpawnActor" function but
+  /// that should be kept in the registry.
+  FActorView RegisterActor(AActor &Actor, FActorDescription ActorDescription);
 
   const TArray<FActorDefinition> &GetActorDefinitions() const
   {
     return Definitions;
-  }
-
-  FActorRegistry &GetActorRegistry()
-  {
-    return Registry;
   }
 
   const FActorRegistry &GetActorRegistry() const
@@ -64,6 +71,12 @@ public:
   }
 
 private:
+
+  UFUNCTION()
+  void OnActorDestroyed(AActor *Actor)
+  {
+    Registry.Deregister(Actor);
+  }
 
   TArray<FActorDefinition> Definitions;
 

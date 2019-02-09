@@ -6,13 +6,17 @@
 
 #pragma once
 
+#include "carla/MsgPack.h"
 #include "carla/rpc/ActorAttributeType.h"
-#include "carla/rpc/MsgPack.h"
 #include "carla/rpc/String.h"
 
 #include <vector>
 
 MSGPACK_ADD_ENUM(carla::rpc::ActorAttributeType);
+
+#ifdef LIBCARLA_INCLUDED_FROM_UE4
+#  include "Carla/Actor/ActorAttribute.h"
+#endif // LIBCARLA_INCLUDED_FROM_UE4
 
 namespace carla {
 namespace rpc {

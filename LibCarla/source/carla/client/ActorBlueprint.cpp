@@ -6,6 +6,7 @@
 
 #include "carla/client/ActorBlueprint.h"
 
+#include "carla/Exception.h"
 #include "carla/StringUtil.h"
 
 #include <algorithm>
@@ -30,9 +31,24 @@ namespace client {
   }
 
   bool ActorBlueprint::MatchTags(const std::string &wildcard_pattern) const {
-    return std::any_of(_tags.begin(), _tags.end(), [&](const auto &tag) {
-      return StringUtil::Match(tag, wildcard_pattern);
-    });
+    return
+        StringUtil::Match(_id, wildcard_pattern) ||
+        std::any_of(_tags.begin(), _tags.end(), [&](const auto &tag) {
+          return StringUtil::Match(tag, wildcard_pattern);
+        });
+  }
+
+  const ActorAttribute &ActorBlueprint::GetAttribute(const std::string &id) const {
+    auto it = _attributes.find(id);
+    if (it == _attributes.end()) {
+      using namespace std::string_literals;
+      throw_exception(std::out_of_range("attribute '"s + id + "' not found"));
+    }
+    return it->second;
+  }
+
+  void ActorBlueprint::SetAttribute(const std::string &id, std::string value) {
+    const_cast<ActorAttribute &>(GetAttribute(id)).Set(std::move(value));
   }
 
   rpc::ActorDescription ActorBlueprint::MakeActorDescription() const {
@@ -41,9 +57,7 @@ namespace client {
     description.id = _id;
     description.attributes.reserve(_attributes.size());
     for (const auto &attribute : *this) {
-      if (attribute.IsModifiable()) {
-        description.attributes.push_back(attribute);
-      }
+      description.attributes.push_back(attribute);
     }
     return description;
   }

@@ -6,13 +6,14 @@
 
 #pragma once
 
-#include "carla/rpc/MsgPack.h"
+#include "carla/MsgPack.h"
 
 #include <array>
 
 namespace carla {
 namespace streaming {
 
+  /// A token that uniquely identify a stream.
   class Token {
   public:
 

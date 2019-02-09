@@ -6,8 +6,10 @@
 
 #pragma once
 
+#include "carla/Buffer.h"
 #include "carla/NonCopyable.h"
-#include "carla/streaming/Message.h"
+#include "carla/profiler/LifetimeProfiled.h"
+#include "carla/streaming/detail/Token.h"
 #include "carla/streaming/detail/Types.h"
 
 #include <boost/asio/deadline_timer.hpp>
@@ -15,49 +17,54 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/strand.hpp>
 
+#include <atomic>
 #include <functional>
 #include <memory>
 
 namespace carla {
+
+  class BufferPool;
+
 namespace streaming {
 namespace detail {
 namespace tcp {
 
   /// A client that connects to a single stream.
   ///
-  /// @warning The client should not be destroyed before the @a io_service is
-  /// stopped.
-  class Client : private NonCopyable {
+  /// @warning This client should be stopped before releasing the shared pointer
+  /// or won't be destroyed.
+  class Client
+    : public std::enable_shared_from_this<Client>,
+      private profiler::LifetimeProfiled,
+      private NonCopyable {
   public:
 
     using endpoint = boost::asio::ip::tcp::endpoint;
-    using callback_function_type = std::function<void (std::shared_ptr<Message>)>;
+    using protocol_type = endpoint::protocol_type;
+    using callback_function_type = std::function<void (Buffer)>;
 
     Client(
         boost::asio::io_service &io_service,
-        endpoint ep,
-        stream_id_type stream_id,
+        const token_type &token,
         callback_function_type callback);
 
     ~Client();
 
+    void Connect();
+
     stream_id_type GetStreamId() const {
-      return _stream_id;
+      return _token.get_stream_id();
     }
 
     void Stop();
 
   private:
 
-    void Connect();
-
     void Reconnect();
 
     void ReadData();
 
-    const endpoint _endpoint;
-
-    const stream_id_type _stream_id;
+    const token_type _token;
 
     callback_function_type _callback;
 
@@ -67,7 +74,9 @@ namespace tcp {
 
     boost::asio::deadline_timer _connection_timer;
 
-    bool _done = false;
+    std::shared_ptr<BufferPool> _buffer_pool;
+
+    std::atomic_bool _done{false};
   };
 
 } // namespace tcp

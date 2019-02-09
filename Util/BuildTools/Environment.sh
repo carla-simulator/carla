@@ -38,10 +38,12 @@ function get_carla_version {
 
 function copy_if_changed {
   mkdir -p $(dirname $2)
-  rsync -cI --out-format="%n" $1 $2
+  rsync -cIr --out-format="%n" $1 $2
 }
 
 function move_if_changed {
   copy_if_changed $1 $2
   rm -f $1
 }
+
+CARLA_BUILD_CONCURRENCY=`nproc --all`

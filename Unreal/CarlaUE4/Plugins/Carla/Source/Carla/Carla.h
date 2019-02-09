@@ -4,9 +4,10 @@
 // plugin.
 #pragma once
 
-#include "ModuleManager.h"
 
 #include "Util/NonCopyable.h"
+#include "Logging/LogMacros.h"
+#include "Modules/ModuleInterface.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogCarla, Log, All);
 DECLARE_LOG_CATEGORY_EXTERN(LogCarlaServer, Log, All);
@@ -18,6 +19,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogCarlaServer, Log, All);
 // #define CARLA_ROAD_GENERATOR_EXTRA_LOG
 // #define CARLA_SERVER_EXTRA_LOG
 // #define CARLA_TAGGER_EXTRA_LOG
+// #define CARLA_WEATHER_EXTRA_LOG
 #endif // WITH_EDITOR
 
 class FCarlaModule : public IModuleInterface
@@ -32,5 +34,5 @@ public:
 	/** IModuleInterface implementation */
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
-	
+
 };

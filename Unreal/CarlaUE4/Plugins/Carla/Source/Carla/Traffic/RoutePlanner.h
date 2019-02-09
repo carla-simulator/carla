@@ -24,12 +24,28 @@ class CARLA_API ARoutePlanner : public AActor
 
 public:
 
-  ARoutePlanner(const FObjectInitializer& ObjectInitializer);
+  ARoutePlanner(const FObjectInitializer &ObjectInitializer);
+
+  virtual void BeginDestroy() override;
+
+  void Init();
+
+  void SetBoxExtent(const FVector &Extent)
+  {
+    TriggerVolume->SetBoxExtent(Extent);
+  }
+
+  void DrawRoutes();
+
+  void AddRoute(float probability, const TArray<FVector> &routePoints);
+
+  void CleanRoute();
 
 protected:
 
 #if WITH_EDITOR
-  virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+  virtual void PostEditChangeProperty(FPropertyChangedEvent &PropertyChangedEvent) override;
+
 #endif // WITH_EDITOR
 
   virtual void BeginPlay() override;
@@ -38,7 +54,7 @@ protected:
 
   UFUNCTION()
   void OnTriggerBeginOverlap(
-      UPrimitiveComponent* OverlappedComp,
+      UPrimitiveComponent *OverlappedComp,
       AActor *OtherActor,
       UPrimitiveComponent *OtherComp,
       int32 OtherBodyIndex,
@@ -50,9 +66,12 @@ public:
   UPROPERTY(EditAnywhere)
   UBoxComponent *TriggerVolume;
 
-  UPROPERTY(BlueprintReadWrite, Category="Traffic Routes", EditAnywhere)
+  UPROPERTY(BlueprintReadWrite, Category = "Traffic Routes", EditAnywhere)
   TArray<USplineComponent *> Routes;
 
-  UPROPERTY(BlueprintReadWrite, Category="Traffic Routes", EditAnywhere, EditFixedSize)
+  UPROPERTY(BlueprintReadWrite, Category = "Traffic Routes", EditAnywhere, EditFixedSize)
   TArray<float> Probabilities;
+
+  UPROPERTY(BlueprintReadWrite, Category = "Traffic Routes", EditAnywhere, EditFixedSize)
+  bool bIsIntersection = false;
 };

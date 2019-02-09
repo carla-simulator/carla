@@ -7,44 +7,17 @@
 #pragma once
 
 #include "Carla/Actor/ActorDefinition.h"
-#include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "Carla/Actor/ActorDescription.h"
+#include "Carla/Actor/PedestrianParameters.h"
+#include "Carla/Actor/PropParameters.h"
+#include "Carla/Actor/VehicleParameters.h"
 
 #include "Kismet/BlueprintFunctionLibrary.h"
 
 #include "ActorBlueprintFunctionLibrary.generated.h"
 
-USTRUCT(BlueprintType)
-struct CARLA_API FCameraParameters
-{
-  GENERATED_BODY()
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  FString Id;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  TSubclassOf<AActor> Class;
-};
-
-USTRUCT(BlueprintType)
-struct CARLA_API FVehicleParameters
-{
-  GENERATED_BODY()
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  FString Make;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  FString Model;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  TSubclassOf<ACarlaWheeledVehicle> Class;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  int32 NumberOfWheels = 4;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  TArray<FColor> RecommendedColors;
-};
+class ASceneCaptureSensor;
+struct FLidarDescription;
 
 UCLASS()
 class UActorBlueprintFunctionLibrary : public UBlueprintFunctionLibrary
@@ -73,9 +46,27 @@ public:
   /// ==========================================================================
   /// @{
 
+  static FActorDefinition MakeGenericSensorDefinition(
+      const FString &Type,
+      const FString &Id);
+
+  static FActorDefinition MakeCameraDefinition(
+      const FString &Id,
+      bool bEnableModifyingPostProcessEffects = false);
+
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static void MakeCameraDefinition(
-      const FCameraParameters &Parameters,
+      const FString &Id,
+      bool bEnableModifyingPostProcessEffects,
+      bool &Success,
+      FActorDefinition &Definition);
+
+  static FActorDefinition MakeLidarDefinition(
+      const FString &Id);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakeLidarDefinition(
+      const FString &Id,
       bool &Success,
       FActorDefinition &Definition);
 
@@ -89,6 +80,34 @@ public:
   static void MakeVehicleDefinitions(
       const TArray<FVehicleParameters> &ParameterArray,
       TArray<FActorDefinition> &Definitions);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakePedestrianDefinition(
+      const FPedestrianParameters &Parameters,
+      bool &Success,
+      FActorDefinition &Definition);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakePedestrianDefinitions(
+      const TArray<FPedestrianParameters> &ParameterArray,
+      TArray<FActorDefinition> &Definitions);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakePropDefinition(
+      const FPropParameters &Parameters,
+      bool &Success,
+      FActorDefinition &Definition);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakePropDefinitions(
+      const TArray<FPropParameters> &ParameterArray,
+      TArray<FActorDefinition> &Definitions);
+
+  UFUNCTION()
+  static void MakeObstacleDetectorDefinitions(
+    const FString &Type,
+    const FString &Id,
+    FActorDefinition &Definition);
 
   /// @}
   /// ==========================================================================
@@ -140,6 +159,17 @@ public:
       const FString &Id,
       const TMap<FString, FActorAttribute> &Attributes,
       const FColor &Default);
+
+  /// @}
+  /// ==========================================================================
+  /// @name Helpers to set Actors
+  /// ==========================================================================
+  /// @{
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void SetCamera(const FActorDescription &Description, ASceneCaptureSensor *Camera);
+
+  static void SetLidar(const FActorDescription &Description, FLidarDescription &Lidar);
 
   /// @}
 };

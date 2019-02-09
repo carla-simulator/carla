@@ -33,6 +33,9 @@ public:
   void InitializeGameControllerIfNotPresent(
       const FMockGameControllerSettings &MockControllerSettings);
 
+  /// Starts the Carla server if not already running.
+  void StartServer();
+
   ICarlaGameControllerBase &GetGameController()
   {
     check(GameController != nullptr);
@@ -58,19 +61,38 @@ public:
     return CarlaSettings;
   }
 
+  UFUNCTION(BlueprintCallable)
+  UCarlaEpisode *GetCarlaEpisode()
+  {
+    return CurrentEpisode;
+  }
+
   FDataRouter &GetDataRouter()
   {
     return DataRouter;
   }
 
-  void NotifyBeginEpisode(UCarlaEpisode &Episode);
+  void NotifyBeginEpisode(UCarlaEpisode &Episode)
+  {
+    CurrentEpisode = &Episode;
+    Server.NotifyBeginEpisode(Episode);
+  }
 
   void Tick(float /*DeltaSeconds*/)
   {
     Server.RunSome(10u); /// @todo
   }
 
-  void NotifyEndEpisode();
+  void NotifyEndEpisode()
+  {
+    Server.NotifyEndEpisode();
+    CurrentEpisode = nullptr;
+  }
+
+  const FTheNewCarlaServer &GetServer() const
+  {
+    return Server;
+  }
 
 private:
 
@@ -79,6 +101,9 @@ private:
 
   UPROPERTY(Category = "CARLA Settings", EditAnywhere)
   UCarlaSettings *CarlaSettings = nullptr;
+
+  UPROPERTY()
+  UCarlaEpisode *CurrentEpisode = nullptr;
 
   FDataRouter DataRouter;
 

@@ -41,6 +41,13 @@ public:
   /// @{
 public:
 
+  /// Vehicle control currently applied to this vehicle.
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  const FVehicleControl &GetVehicleControl() const
+  {
+    return Control;
+  }
+
   /// Transform of the vehicle. Location is shifted so it matches center of the
   /// vehicle bounds rather than the actor's location.
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
@@ -80,9 +87,16 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   float GetMaximumSteerAngle() const;
 
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  ECarlaWheeledVehicleState GetAIVehicleState() const
+  {
+    return State;
+  }
+
   /// @}
   // ===========================================================================
   /// @name Set functions
+  /// @todo Keep only ApplyVehicleControl.
   // ===========================================================================
   /// @{
 public:
@@ -105,7 +119,7 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void ToggleReverse()
   {
-    SetReverse(!bIsInReverse);
+    SetReverse(!Control.bReverse);
   }
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
@@ -140,6 +154,5 @@ private:
   UPROPERTY(Category = "CARLA Wheeled Vehicle", VisibleAnywhere)
   UVehicleAgentComponent *VehicleAgentComponent;
 
-  UPROPERTY()
-  bool bIsInReverse = false;
+  FVehicleControl Control;
 };

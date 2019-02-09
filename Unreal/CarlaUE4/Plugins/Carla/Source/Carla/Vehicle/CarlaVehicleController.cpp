@@ -7,9 +7,6 @@
 #include "Carla.h"
 #include "CarlaVehicleController.h"
 
-#include "Sensor/Lidar.h"
-#include "Sensor/SceneCaptureCamera.h"
-
 #include "Components/BoxComponent.h"
 #include "EngineUtils.h"
 #include "GameFramework/Pawn.h"
@@ -49,6 +46,8 @@ void ACarlaVehicleController::Possess(APawn *aPawn)
     CarlaHUD = Cast<ACarlaHUD>(GetHUD());
     if (CarlaHUD != nullptr) {
       InputComponent->BindAction("ToggleHUD", IE_Pressed, CarlaHUD, &ACarlaHUD::ToggleHUDView);
+      CarlaHUD->bShowHUD = !(Cast<UCarlaGameInstance>(GetWorld()->GetGameInstance())->GetCarlaSettings().bDisableRendering);
+      CarlaHUD->SetVisible(CarlaHUD->bShowHUD);
     } else {
       UE_LOG(LogCarla, Warning, TEXT("Current HUD is not a ACarlaHUD"));
     }
@@ -64,19 +63,19 @@ void ACarlaVehicleController::Tick(float DeltaTime)
   Super::Tick(DeltaTime);
 
   if (IsPossessingAVehicle()) {
-    auto Vehicle = GetPossessedVehicle();
+    auto CurrentVehicle = GetPossessedVehicle();
     CarlaPlayerState->UpdateTimeStamp(DeltaTime);
     const FVector PreviousSpeed = CarlaPlayerState->ForwardSpeed * CarlaPlayerState->GetOrientation();
-    CarlaPlayerState->Transform = Vehicle->GetVehicleTransform();
-    CarlaPlayerState->ForwardSpeed = Vehicle->GetVehicleForwardSpeed();
+    CarlaPlayerState->Transform = CurrentVehicle->GetVehicleTransform();
+    CarlaPlayerState->ForwardSpeed = CurrentVehicle->GetVehicleForwardSpeed();
     const FVector CurrentSpeed = CarlaPlayerState->ForwardSpeed * CarlaPlayerState->GetOrientation();
     CarlaPlayerState->Acceleration = (CurrentSpeed - PreviousSpeed) / DeltaTime;
-    const auto &AutopilotControl = GetAutopilotControl();
-    CarlaPlayerState->Steer = AutopilotControl.Steer;
-    CarlaPlayerState->Throttle = AutopilotControl.Throttle;
-    CarlaPlayerState->Brake = AutopilotControl.Brake;
-    CarlaPlayerState->bHandBrake = AutopilotControl.bHandBrake;
-    CarlaPlayerState->CurrentGear = Vehicle->GetVehicleCurrentGear();
+    const auto &AutopilotCtrl = GetAutopilotControl();
+    CarlaPlayerState->Steer = AutopilotCtrl.Steer;
+    CarlaPlayerState->Throttle = AutopilotCtrl.Throttle;
+    CarlaPlayerState->Brake = AutopilotCtrl.Brake;
+    CarlaPlayerState->bHandBrake = AutopilotCtrl.bHandBrake;
+    CarlaPlayerState->CurrentGear = CurrentVehicle->GetVehicleCurrentGear();
     CarlaPlayerState->SpeedLimit = GetSpeedLimit();
     CarlaPlayerState->TrafficLightState = GetTrafficLightState();
     IntersectPlayerWithRoadMap();
@@ -106,18 +105,17 @@ void ACarlaVehicleController::OnCollisionEvent(
 
 void ACarlaVehicleController::IntersectPlayerWithRoadMap()
 {
-  auto RoadMap = GetRoadMap();
-  if (RoadMap == nullptr) {
-    UE_LOG(LogCarla, Error, TEXT("Controller doesn't have a road map!"));
+  auto CurrentRoadMap = GetRoadMap();
+  if (CurrentRoadMap == nullptr) {
     return;
   }
 
   check(IsPossessingAVehicle());
-  auto Vehicle = GetPossessedVehicle();
+  auto CurrentVehicle = GetPossessedVehicle();
   constexpr float ChecksPerCentimeter = 0.1f;
-  const auto *BoundingBox = Vehicle->GetVehicleBoundingBox();
+  const auto *BoundingBox = CurrentVehicle->GetVehicleBoundingBox();
   check(BoundingBox != nullptr);
-  auto Result = RoadMap->Intersect(
+  auto Result = CurrentRoadMap->Intersect(
       BoundingBox->GetComponentTransform(),
       BoundingBox->GetUnscaledBoxExtent(),
       ChecksPerCentimeter);

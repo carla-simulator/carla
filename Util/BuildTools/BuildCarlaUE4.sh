@@ -70,22 +70,6 @@ pushd "${CARLAUE4_ROOT_FOLDER}" >/dev/null
 # -- Clean CarlaUE4 ------------------------------------------------------------
 # ==============================================================================
 
-if ${REMOVE_INTERMEDIATE} ; then
-
-  log "Cleaning intermediate files and folders."
-
-  UE4_INTERMEDIATE_FOLDERS="Binaries Build Intermediate DerivedDataCache"
-
-  rm -Rf ${UE4_INTERMEDIATE_FOLDERS}
-
-  pushd "${CARLAUE4_PLUGIN_ROOT_FOLDER}" >/dev/null
-
-  rm -Rf ${UE4_INTERMEDIATE_FOLDERS}
-
-  popd >/dev/null
-
-fi
-
 if ${HARD_CLEAN} ; then
 
   if [ ! -f Makefile ]; then
@@ -100,7 +84,19 @@ fi
 
 if ${REMOVE_INTERMEDIATE} ; then
 
+  log "Cleaning intermediate files and folders."
+
+  UE4_INTERMEDIATE_FOLDERS="Binaries Build Intermediate DerivedDataCache"
+
+  rm -Rf ${UE4_INTERMEDIATE_FOLDERS}
+
   rm -f Makefile
+
+  pushd "${CARLAUE4_PLUGIN_ROOT_FOLDER}" >/dev/null
+
+  rm -Rf ${UE4_INTERMEDIATE_FOLDERS}
+
+  popd >/dev/null
 
 fi
 
@@ -122,6 +118,11 @@ if ${BUILD_CARLAUE4} ; then
 
   log "Build CarlaUE4 project."
   make CarlaUE4Editor
+
+  #Providing the user with the ExportedMaps folder
+  EXPORTED_MAPS="${CARLAUE4_ROOT_FOLDER}/Content/Carla/ExportedMaps"
+  mkdir -p "${EXPORTED_MAPS}"
+
 
 fi
 

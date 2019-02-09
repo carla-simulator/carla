@@ -5,19 +5,17 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
-#include "CarlaGameModeBase.h"
+#include "Carla/Game/CarlaGameModeBase.h"
 
-#include "Game/CarlaGameInstance.h"
-#include "Game/CarlaHUD.h"
-#include "Game/CarlaPlayerState.h"
-#include "Game/Tagger.h"
-#include "Game/TaggerDelegate.h"
-#include "Sensor/OldSensorFactory.h"
-#include "Sensor/Sensor.h"
-#include "Settings/CarlaSettings.h"
-#include "Settings/CarlaSettingsDelegate.h"
-#include "Util/RandomEngine.h"
-#include "Vehicle/CarlaVehicleController.h"
+#include "Carla/Game/CarlaGameInstance.h"
+#include "Carla/Game/CarlaHUD.h"
+#include "Carla/Game/CarlaPlayerState.h"
+#include "Carla/Game/Tagger.h"
+#include "Carla/Game/TaggerDelegate.h"
+#include "Carla/Settings/CarlaSettings.h"
+#include "Carla/Settings/CarlaSettingsDelegate.h"
+#include "Carla/Util/RandomEngine.h"
+#include "Carla/Vehicle/CarlaVehicleController.h"
 
 #include "ConstructorHelpers.h"
 #include "Engine/PlayerStartPIE.h"
@@ -81,45 +79,55 @@ void ACarlaGameModeBase::InitGame(
   }
 
   // Set default pawn class.
-  if (!CarlaSettings.PlayerVehicle.IsEmpty()) {
+  if (!CarlaSettings.PlayerVehicle.IsEmpty())
+  {
     auto Class = FindObject<UClass>(ANY_PACKAGE, *CarlaSettings.PlayerVehicle);
-    if (Class) {
+    if (Class)
+    {
       DefaultPawnClass = Class;
-    } else {
+    }
+    else
+    {
       UE_LOG(LogCarla, Error, TEXT("Failed to load player pawn class \"%s\""), *CarlaSettings.PlayerVehicle)
     }
   }
 
-  if (TaggerDelegate != nullptr) {
+  if (TaggerDelegate != nullptr)
+  {
     TaggerDelegate->RegisterSpawnHandler(world);
-  } else {
+  }
+  else
+  {
     UE_LOG(LogCarla, Error, TEXT("Missing TaggerDelegate!"));
   }
 
-  if(CarlaSettingsDelegate!=nullptr) {
+  if(CarlaSettingsDelegate!=nullptr)
+  {
     //apply quality settings
-    CarlaSettingsDelegate->ApplyQualitySettingsLevelPostRestart();
+    CarlaSettingsDelegate->ApplyQualityLevelPostRestart();
     //assign settings delegate for every new actor from now on
     CarlaSettingsDelegate->RegisterSpawnHandler(world);
 
-  } else {
+  }
+  else
+  {
     UE_LOG(LogCarla, Error, TEXT("Missing CarlaSettingsDelegate!"));
   }
 
-  if (DynamicWeatherClass != nullptr) {
+  if (DynamicWeatherClass != nullptr)
+  {
     DynamicWeather = world->SpawnActor<ADynamicWeather>(DynamicWeatherClass);
   }
 
-  if (VehicleSpawnerClass != nullptr) {
+  if (VehicleSpawnerClass != nullptr)
+  {
     VehicleSpawner = world->SpawnActor<AVehicleSpawnerBase>(VehicleSpawnerClass);
   }
 
-  if (WalkerSpawnerClass != nullptr) {
+  if (WalkerSpawnerClass != nullptr)
+  {
     WalkerSpawner = world->SpawnActor<AWalkerSpawnerBase>(WalkerSpawnerClass);
   }
-
-
-
 }
 
 void ACarlaGameModeBase::RestartPlayer(AController* NewPlayer)
@@ -127,20 +135,32 @@ void ACarlaGameModeBase::RestartPlayer(AController* NewPlayer)
   check(NewPlayer != nullptr);
   TArray<APlayerStart *> UnOccupiedStartPoints;
   APlayerStart *PlayFromHere = FindUnOccupiedStartPoints(NewPlayer, UnOccupiedStartPoints);
-  if (PlayFromHere != nullptr) {
+  bool bStartSpotFound = false;
+  if (PlayFromHere != nullptr)
+  {
     RestartPlayerAtPlayerStart(NewPlayer, PlayFromHere);
     RegisterPlayer(*NewPlayer);
-    return;
-  } else if (UnOccupiedStartPoints.Num() > 0u) {
+    bStartSpotFound = true;
+  }
+  else if (UnOccupiedStartPoints.Num() > 0u)
+  {
     check(GameController != nullptr);
     APlayerStart *StartSpot = GameController->ChoosePlayerStart(UnOccupiedStartPoints);
-    if (StartSpot != nullptr) {
+    if (StartSpot != nullptr)
+    {
       RestartPlayerAtPlayerStart(NewPlayer, StartSpot);
       RegisterPlayer(*NewPlayer);
-      return;
+      bStartSpotFound = true;
     }
   }
-  UE_LOG(LogCarla, Error, TEXT("No start spot found!"));
+  if(!bStartSpotFound)
+  {
+    UE_LOG(LogCarla, Error, TEXT("No start spot found!"));
+  }
+  if(CarlaSettingsDelegate != nullptr)
+  {
+    CarlaSettingsDelegate->ApplyQualityLevelPreRestart();
+  }
 }
 
 void ACarlaGameModeBase::BeginPlay()
@@ -150,20 +170,25 @@ void ACarlaGameModeBase::BeginPlay()
   const auto &CarlaSettings = GameInstance->GetCarlaSettings();
 
   // Setup semantic segmentation if necessary.
-  if (CarlaSettings.bSemanticSegmentationEnabled) {
+  if (CarlaSettings.bSemanticSegmentationEnabled)
+  {
     TagActorsForSemanticSegmentation();
     TaggerDelegate->SetSemanticSegmentationEnabled();
   }
 
   // Change weather.
-  if (DynamicWeather != nullptr) {
+  if (DynamicWeather != nullptr)
+  {
     const auto *Weather = CarlaSettings.GetActiveWeatherDescription();
-    if (Weather != nullptr) {
+    if (Weather != nullptr)
+    {
       UE_LOG(LogCarla, Log, TEXT("Changing weather settings to \"%s\""), *Weather->Name);
       DynamicWeather->SetWeatherDescription(*Weather);
       DynamicWeather->RefreshWeather();
     }
-  } else {
+  }
+  else
+  {
     UE_LOG(LogCarla, Error, TEXT("Missing dynamic weather actor!"));
   }
 
@@ -171,30 +196,40 @@ void ACarlaGameModeBase::BeginPlay()
   TActorIterator<ACityMapGenerator> It(GetWorld());
   URoadMap *RoadMap = (It ? It->GetRoadMap() : nullptr);
 
-  if (PlayerController != nullptr) {
+  if (PlayerController != nullptr)
+  {
     PlayerController->SetRoadMap(RoadMap);
-  } else {
+  }
+  else
+  {
     UE_LOG(LogCarla, Error, TEXT("Player controller is not a AWheeledVehicleAIController!"));
   }
 
   // Setup other vehicles.
-  if (VehicleSpawner != nullptr) {
+  if (VehicleSpawner != nullptr)
+  {
     VehicleSpawner->SetNumberOfVehicles(CarlaSettings.NumberOfVehicles);
     VehicleSpawner->SetSeed(CarlaSettings.SeedVehicles);
     VehicleSpawner->SetRoadMap(RoadMap);
-    if (PlayerController != nullptr) {
+    if (PlayerController != nullptr)
+    {
       PlayerController->GetRandomEngine()->Seed(
           VehicleSpawner->GetRandomEngine()->GenerateSeed());
     }
-  } else {
+  }
+  else
+  {
     UE_LOG(LogCarla, Error, TEXT("Missing vehicle spawner actor!"));
   }
 
   // Setup walkers.
-  if (WalkerSpawner != nullptr) {
+  if (WalkerSpawner != nullptr)
+  {
     WalkerSpawner->SetNumberOfWalkers(CarlaSettings.NumberOfPedestrians);
     WalkerSpawner->SetSeed(CarlaSettings.SeedPedestrians);
-  } else {
+  }
+  else
+  {
     UE_LOG(LogCarla, Error, TEXT("Missing walker spawner actor!"));
   }
 
@@ -221,11 +256,14 @@ void ACarlaGameModeBase::RegisterPlayer(AController &NewPlayer)
   check(GameController != nullptr);
   AddTickPrerequisiteActor(&NewPlayer);
   PlayerController = Cast<ACarlaVehicleController>(&NewPlayer);
-  if (PlayerController != nullptr) {
+  if (PlayerController != nullptr)
+  {
     GetDataRouter().RegisterPlayer(*PlayerController);
     GameController->RegisterPlayer(*PlayerController);
     AttachSensorsToPlayer();
-  } else {
+  }
+  else
+  {
     UE_LOG(LogCarla, Error, TEXT("ACarlaGameModeBase: Player is not a ACarlaVehicleController"));
   }
 }
@@ -233,22 +271,23 @@ void ACarlaGameModeBase::RegisterPlayer(AController &NewPlayer)
 void ACarlaGameModeBase::AttachSensorsToPlayer()
 {
   check(PlayerController != nullptr);
-  const auto &Settings = GameInstance->GetCarlaSettings();
-  const auto *Weather = Settings.GetActiveWeatherDescription();
+  UE_LOG(LogCarla, Error, TEXT("Sensors are no longer available in this game mode."));
+  // const auto &Settings = GameInstance->GetCarlaSettings();
+  // const auto *Weather = Settings.GetActiveWeatherDescription();
 
-  for (auto &Item : Settings.SensorDescriptions)
-  {
-    check(Item.Value != nullptr);
-    auto &SensorDescription = *Item.Value;
-    if (Weather != nullptr)
-    {
-      SensorDescription.AdjustToWeather(*Weather);
-    }
-    auto *Sensor = FSensorFactory::Make(SensorDescription, *GetWorld());
-    check(Sensor != nullptr);
-    Sensor->AttachToActor(PlayerController->GetPawn());
-    GetDataRouter().RegisterSensor(*Sensor);
-  }
+  // for (auto &Item : Settings.SensorDescriptions)
+  // {
+  //   check(Item.Value != nullptr);
+  //   auto &SensorDescription = *Item.Value;
+  //   if (Weather != nullptr)
+  //   {
+  //     SensorDescription.AdjustToWeather(*Weather);
+  //   }
+  //   auto *Sensor = FSensorFactory::Make(SensorDescription, *GetWorld());
+  //   check(Sensor != nullptr);
+  //   Sensor->AttachToActor(PlayerController->GetPawn());
+  //   GetDataRouter().RegisterSensor(*Sensor);
+  // }
 }
 
 void ACarlaGameModeBase::TagActorsForSemanticSegmentation()
@@ -264,20 +303,26 @@ APlayerStart *ACarlaGameModeBase::FindUnOccupiedStartPoints(
   APlayerStart* FoundPlayerStart = nullptr;
   UClass* PawnClass = GetDefaultPawnClassForController(Player);
   APawn* PawnToFit = PawnClass ? PawnClass->GetDefaultObject<APawn>() : nullptr;
-  for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It) {
+  for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
+  {
     APlayerStart* PlayerStart = *It;
 
-    if (PlayerStart->IsA<APlayerStartPIE>()) {
+    if (PlayerStart->IsA<APlayerStartPIE>())
+    {
       FoundPlayerStart = PlayerStart;
       break;
-    } else {
+    }
+    else
+    {
       FVector ActorLocation = PlayerStart->GetActorLocation();
       const FRotator ActorRotation = PlayerStart->GetActorRotation();
-      if (!GetWorld()->EncroachingBlockingGeometry(PawnToFit, ActorLocation, ActorRotation)) {
+      if (!GetWorld()->EncroachingBlockingGeometry(PawnToFit, ActorLocation, ActorRotation))
+      {
         UnOccupiedStartPoints.Add(PlayerStart);
       }
 #if WITH_EDITOR
-      else if (GetWorld()->FindTeleportSpot(PawnToFit, ActorLocation, ActorRotation)) {
+      else if (GetWorld()->FindTeleportSpot(PawnToFit, ActorLocation, ActorRotation))
+      {
         UE_LOG(
             LogCarla,
             Warning,

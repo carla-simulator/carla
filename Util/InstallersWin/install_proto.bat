@@ -1,11 +1,17 @@
 @echo off
+setlocal
 
 rem BAT script that downloads and installs a ready to use
 rem protobuf build for CARLA (carla.org).
-rem Just putit in `Util/Build` and run it through a cmd 
+rem Just putit in `Util/Build` and run it through a cmd
 rem with the x64 Visual C++ Toolset enabled.
 
-setlocal
+rem Print batch params (debug purpose)
+echo %FILE_N% [Batch params]: %*
+
+rem ============================================================================
+rem -- Parse arguments ---------------------------------------------------------
+rem ============================================================================
 
 :arg-parse
 if not "%1"=="" (

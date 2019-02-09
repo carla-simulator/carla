@@ -6,6 +6,9 @@
 
 #pragma once
 
+#include "Carla/Actor/ActorView.h"
+#include "Carla/Sensor/DataStream.h"
+
 #include "CoreMinimal.h"
 
 class UCarlaEpisode;
@@ -29,6 +32,10 @@ public:
   void RunSome(uint32 Milliseconds);
 
   void Stop();
+
+  FDataStream OpenStream() const;
+
+  FDataMultiStream OpenMultiStream() const;
 
 private:
 

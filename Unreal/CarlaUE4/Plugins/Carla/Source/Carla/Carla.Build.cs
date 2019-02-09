@@ -8,6 +8,8 @@ public class Carla : ModuleRules
 {
   public Carla(ReadOnlyTargetRules Target) : base(Target)
   {
+    PrivatePCHHeaderFile = "Carla.h";
+
     PublicIncludePaths.AddRange(
       new string[] {
         // ... add public include paths required here ...
@@ -36,11 +38,12 @@ public class Carla : ModuleRules
         "AIModule",
         "CoreUObject",
         "Engine",
+        "Foliage",
+        "ImageWriteQueue",
+        "Landscape",
         "PhysXVehicles",
         "Slate",
-        "SlateCore",
-        "Landscape",
-        "Foliage"
+        "SlateCore"
         // ... add private dependencies that you statically link with here ...
       }
       );
@@ -82,6 +85,12 @@ public class Carla : ModuleRules
 
   delegate string ADelegate(string s);
 
+  private void AddBoostLibs(string LibPath)
+  {
+    string [] files = Directory.GetFiles(LibPath, "*boost*.lib");
+    foreach (string file in files) PublicAdditionalLibraries.Add(file);
+  }
+
   private void AddCarlaServerDependency(ReadOnlyTargetRules Target)
   {
     string LibCarlaInstallPath = Path.GetFullPath(Path.Combine(ModuleDirectory, "../../CarlaDependencies"));
@@ -100,14 +109,20 @@ public class Carla : ModuleRules
     // Link dependencies.
     if (IsWindows(Target))
     {
-      throw new NotImplementedException();
+      AddBoostLibs(Path.Combine(LibCarlaInstallPath, "lib"));
+      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("rpc")));
+
+      if (UseDebugLibs(Target))
+      {
+        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server_debug")));
+      }
+      else
+      {
+        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server")));
+      }
     }
     else
     {
-      if (!IsMac(Target))
-      {
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("c++abi")));
-      }
       PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("rpc")));
       if (UseDebugLibs(Target))
       {
@@ -121,10 +136,13 @@ public class Carla : ModuleRules
 
     // Include path.
     string LibCarlaIncludePath = Path.Combine(LibCarlaInstallPath, "include");
+
     PublicIncludePaths.Add(LibCarlaIncludePath);
     PrivateIncludePaths.Add(LibCarlaIncludePath);
 
-    /// @todo This is necessary because rpclib uses exceptions to notify errors.
-    bEnableExceptions = true;
+    PublicDefinitions.Add("ASIO_NO_EXCEPTIONS");
+    PublicDefinitions.Add("BOOST_NO_EXCEPTIONS");
+    PublicDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
+    PublicDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
   }
 }

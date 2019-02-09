@@ -13,46 +13,36 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-5.0
+            - llvm-toolchain-trusty-6.0
           packages:
             - g++-7 # we need this one for the libstdc++.
-            - clang-5.0
+            - clang-6.0
             - ninja-build
             - python
             - python-pip
             - python3
             - python3-pip
             - libboost-python-dev
+            - libtiff5-dev
+            - libjpeg-dev
       install:
-        - pip2 install --user setuptools nose2
-        - pip3 install --user setuptools nose2
-        - make setup
+        - pip2 install -q --user setuptools nose2
+        - pip3 install -q --user setuptools nose2
       script:
+        - while sleep 2m; do echo "still building..."; done &
+        - make setup >> build.log 2>&1
+        - make LibCarla >> build.log 2>&1
+        - make PythonAPI >> build.log 2>&1
+        - kill %1
         - make check ARGS="--all --gtest_args=--gtest_filter=-*_mt"
-
-    - env: TEST="Pylint 2"
-      addons:
-        apt:
-          packages:
-            - python
-            - python-pip
-      install:
-        - pip2 install --user -r PythonClient/requirements.txt
-        - pip2 install --user pylint
-      script:
-        - pylint --disable=R,C --rcfile=PythonClient/.pylintrc PythonClient/carla PythonClient/*.py
+      after_failure:
+        - tail --lines=2000 build.log
 
     - env: TEST="MkDocs"
       install:
-        - pip install --user mkdocs
+        - pip install -q --user mkdocs
       script:
         - mkdocs build --verbose --clean --strict --site-dir _site
-
-    - env: TEST="AwesomeBot"
-      install:
-        - gem install awesome_bot
-      script:
-        - find . -name '*.md' | xargs awesome_bot --allow-dupe --allow-redirect --skip-save-results
 
 notifications:
   email: false

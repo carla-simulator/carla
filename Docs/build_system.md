@@ -11,7 +11,7 @@ process.
 
 ![modules](img/modules.png)
 
-In Linux, we compile CARLA and all the dependencies with clang-5.0 and C++14
+In Linux, we compile CARLA and all the dependencies with clang-6.0 and C++14
 standard. We however link against different runtime C++ libraries depending on
 where the code going to be used, since all the code that is going to be linked
 with Unreal Engine needs to be compiled using `libc++`.
@@ -26,9 +26,9 @@ make setup
 
 Get and compile dependencies
 
-  * llvm-5.0 (libc++ and libc++abi)
+  * llvm-6.0 (libc++ and libc++abi)
   * rpclib-2.2.1 (twice, with libstdc++ and libc++)
-  * boost-1.67 (headers only)
+  * boost-1.69 (headers only)
   * googletest-1.8.0 (with libc++)
 
 #### LibCarla
@@ -53,7 +53,7 @@ Two configurations:
 
 #### CarlaUE4 and Carla plugin
 
-Both compiled at the same step with Unreal Engine 4.19 build tool. They require
+Both compiled at the same step with Unreal Engine 4.21 build tool. They require
 the `UE4_ROOT` environment variable set.
 
 Command
@@ -82,8 +82,8 @@ make PythonAPI
 
 It creates two "egg" packages
 
-  * `PythonAPI/dist/carla-0.9.0-py2.7-linux-x86_64.egg`
-  * `PythonAPI/dist/carla-0.9.0-py3.5-linux-x86_64.egg`
+  * `PythonAPI/dist/carla-X.X.X-py2.7-linux-x86_64.egg`
+  * `PythonAPI/dist/carla-X.X.X-py3.5-linux-x86_64.egg`
 
 This package can be directly imported into a Python script by adding it to the
 system path
@@ -94,7 +94,7 @@ system path
 import sys
 
 sys.path.append(
-    'PythonAPI/dist/carla-0.9.0-py%d.%d-linux-x86_64.egg' % (sys.version_info.major,
+    'PythonAPI/dist/carla-X.X.X-py%d.%d-linux-x86_64.egg' % (sys.version_info.major,
                                                              sys.version_info.minor))
 
 import carla
@@ -105,6 +105,6 @@ import carla
 or installed with `easy_install`
 
 ```sh
-easy_install2 --user --no-deps PythonAPI/dist/carla-0.9.0-py2.7-linux-x86_64.egg
-easy_install3 --user --no-deps PythonAPI/dist/carla-0.9.0-py3.5-linux-x86_64.egg
+easy_install2 --user --no-deps PythonAPI/dist/carla-X.X.X-py2.7-linux-x86_64.egg
+easy_install3 --user --no-deps PythonAPI/dist/carla-X.X.X-py3.5-linux-x86_64.egg
 ```

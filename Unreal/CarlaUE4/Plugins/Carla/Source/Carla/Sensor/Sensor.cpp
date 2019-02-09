@@ -5,16 +5,24 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
-#include "Sensor.h"
+#include "Carla/Sensor/Sensor.h"
 
-ASensor::ASensor(const FObjectInitializer& ObjectInitializer)
-  : Super(ObjectInitializer),
-    Id(0u) {}
+#include "Carla/Actor/ActorDescription.h"
+#include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
-void ASensor::AttachToActor(AActor *Actor)
+void ASensor::Set(const FActorDescription &Description)
 {
-  check(Actor != nullptr);
-  Super::AttachToActor(Actor, FAttachmentTransformRules::KeepRelativeTransform);
-  SetOwner(Actor);
-  Actor->AddTickPrerequisiteActor(this);
+  // set the tick interval of the sensor
+  if (Description.Variations.Contains("sensor_tick"))
+  {
+    SetActorTickInterval(
+        UActorBlueprintFunctionLibrary::ActorAttributeToFloat(Description.Variations["sensor_tick"],
+        0.0f));
+  }
+}
+
+void ASensor::EndPlay(EEndPlayReason::Type EndPlayReason)
+{
+  Super::EndPlay(EndPlayReason);
+  Stream = FDataStream();
 }

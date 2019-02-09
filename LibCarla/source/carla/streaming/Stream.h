@@ -6,61 +6,26 @@
 
 #pragma once
 
-#include "carla/Debug.h"
-#include "carla/streaming/Message.h"
-#include "carla/streaming/Token.h"
+#include "carla/streaming/detail/MultiStreamState.h"
+#include "carla/streaming/detail/Stream.h"
 #include "carla/streaming/detail/StreamState.h"
-
-#include <boost/asio/buffer.hpp>
-
-#include <memory>
 
 namespace carla {
 namespace streaming {
 
-namespace detail {
+  /// A stream represents an unidirectional channel for sending data from server
+  /// to client. A **single** client can subscribe to this stream using the
+  /// stream token. If no client is subscribed, the data flushed down the stream
+  /// is discarded.
+  using Stream = detail::Stream<detail::StreamState>;
 
-  class Dispatcher;
-
-} // namespace detail
-
-  class Stream {
-  public:
-
-    Stream() = delete;
-
-    Stream(const Stream &) = default;
-    Stream(Stream &&) = default;
-
-    Stream &operator=(const Stream &) = default;
-    Stream &operator=(Stream &&) = default;
-
-    Token token() const {
-      return _shared_state->token();
-    }
-
-    template <typename ConstBufferSequence>
-    void Write(ConstBufferSequence buffer) {
-      _shared_state->Write(std::make_shared<Message>(buffer));
-    }
-
-    template <typename T>
-    Stream &operator<<(const T &rhs) {
-      Write(boost::asio::buffer(rhs));
-      return *this;
-    }
-
-  private:
-
-    friend class detail::Dispatcher;
-
-    Stream(std::shared_ptr<detail::StreamState> state)
-      : _shared_state(std::move(state)) {
-      DEBUG_ASSERT(_shared_state != nullptr);
-    }
-
-    std::shared_ptr<detail::StreamState> _shared_state;
-  };
+  /// A stream represents an unidirectional channel for sending data from server
+  /// to client. Multiple clients can subscribe to this stream using the stream
+  /// token. If no client is subscribed, the data flushed down the stream is
+  /// discarded.
+  ///
+  /// @warning MultiStream is quite slower than Stream.
+  using MultiStream = detail::Stream<detail::MultiStreamState>;
 
 } // namespace streaming
 } // namespace carla

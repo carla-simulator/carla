@@ -6,16 +6,17 @@
 
 #include "carla/client/ActorAttribute.h"
 
+#include "carla/Exception.h"
 #include "carla/Logging.h"
 #include "carla/StringUtil.h"
 
 namespace carla {
 namespace client {
 
-#define LIBCARLA_THROW_INVALID_VALUE(message) throw InvalidAttributeValue(_attribute.id + ": " + message);
+#define LIBCARLA_THROW_INVALID_VALUE(message) throw_exception(InvalidAttributeValue(GetId() + ": " + message));
 #define LIBCARLA_THROW_BAD_VALUE_CAST(type) \
     if (GetType() != rpc::ActorAttributeType:: type) { \
-      throw BadAttributeCast(_attribute.id + ": bad attribute cast: cannot convert to " #type); \
+      throw_exception(BadAttributeCast(GetId() + ": bad attribute cast: cannot convert to " #type)); \
     }
 
   void ActorAttribute::Set(std::string value) {
@@ -29,28 +30,29 @@ namespace client {
     Validate();
   }
 
+
   template <>
-  bool ActorAttribute::As<bool>() const {
+  bool ActorAttributeValueAccess::As<bool>() const {
     LIBCARLA_THROW_BAD_VALUE_CAST(Bool);
-    auto value = StringUtil::ToLowerCopy(_attribute.value);
+    auto value = StringUtil::ToLowerCopy(GetValue());
     if (value == "true") {
       return true;
     } else if (value == "false") {
       return false;
     }
-    LIBCARLA_THROW_INVALID_VALUE("invalid bool: " + _attribute.value);
+    LIBCARLA_THROW_INVALID_VALUE("invalid bool: " + GetValue());
   }
 
   template<>
-  int ActorAttribute::As<int>() const {
+  int ActorAttributeValueAccess::As<int>() const {
     LIBCARLA_THROW_BAD_VALUE_CAST(Int);
-    return std::atoi(_attribute.value.c_str());
+    return std::atoi(GetValue().c_str());
   }
 
   template<>
-  float ActorAttribute::As<float>() const {
+  float ActorAttributeValueAccess::As<float>() const {
     LIBCARLA_THROW_BAD_VALUE_CAST(Float);
-    double x = std::atof(_attribute.value.c_str());
+    double x = std::atof(GetValue().c_str());
     if ((x > std::numeric_limits<float>::max()) ||
         (x < std::numeric_limits<float>::lowest())) {
       LIBCARLA_THROW_INVALID_VALUE("float overflow");
@@ -59,19 +61,19 @@ namespace client {
   }
 
   template <>
-  std::string ActorAttribute::As<std::string>() const {
+  std::string ActorAttributeValueAccess::As<std::string>() const {
     LIBCARLA_THROW_BAD_VALUE_CAST(String);
-    return _attribute.value;
+    return GetValue();
   }
 
   template <>
-  Color ActorAttribute::As<Color>() const {
+  sensor::data::Color ActorAttributeValueAccess::As<sensor::data::Color>() const {
     LIBCARLA_THROW_BAD_VALUE_CAST(RGBColor);
 
     std::vector<std::string> channels;
-    StringUtil::Split(channels, _attribute.value, ",");
+    StringUtil::Split(channels, GetValue(), ",");
     if (channels.size() != 3u) {
-      log_error("invalid color", _attribute.value);
+      log_error("invalid color", GetValue());
       LIBCARLA_THROW_INVALID_VALUE("colors must have 3 channels (R,G,B)");
     }
 
@@ -86,8 +88,8 @@ namespace client {
     return {to_int(channels[0u]), to_int(channels[1u]), to_int(channels[2u])};
   }
 
-  void ActorAttribute::Validate() const {
-    switch (_attribute.type) {
+  void ActorAttributeValueAccess::Validate() const {
+    switch (GetType()) {
       case rpc::ActorAttributeType::Bool:     As<rpc::ActorAttributeType::Bool>();     break;
       case rpc::ActorAttributeType::Int:      As<rpc::ActorAttributeType::Int>();      break;
       case rpc::ActorAttributeType::Float:    As<rpc::ActorAttributeType::Float>();    break;
