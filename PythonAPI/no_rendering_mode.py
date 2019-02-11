@@ -966,6 +966,8 @@ class ModuleInput(object):
                     else:
                         self.wheel_offset = MAP_DEFAULT_SCALE
                         self.mouse_offset = [0, 0]
+                        self.mouse_pos = [0,0]
+                        module_world.scale_offset = [0,0]
                         module_world.hero_actor = None
                         module_hud.notification('Map Mode')
                 elif event.key == K_F1:
