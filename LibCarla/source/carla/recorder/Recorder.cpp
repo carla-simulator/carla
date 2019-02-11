@@ -27,21 +27,6 @@ std::string Recorder::start(std::string path, std::string name, std::string mapN
     // reset
     stop();
 
-/*
-    // get current time
-    std::time_t timet = std::time(0);
-    std::tm *now = std::localtime(&timet);
-
-    std::stringstream filename;
-    filename << path;
-    filename << (1900 + now->tm_year);
-    filename << std::setw(2) << std::setfill('0') << (now->tm_mon + 1);
-    filename << std::setw(2) << std::setfill('0') << (now->tm_mday) << "_";
-    filename << std::setw(2) << std::setfill('0') << (now->tm_hour);
-    filename << std::setw(2) << std::setfill('0') << (now->tm_min);
-    filename << std::setw(2) << std::setfill('0') << (now->tm_sec);
-    filename << "_" << map << ".rec";
-*/
     std::stringstream filename;
     filename << path << name;
 

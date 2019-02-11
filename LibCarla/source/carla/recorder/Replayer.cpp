@@ -407,8 +407,8 @@ void Replayer::processEvents(void) {
     std::string s;
     eventAdd.read(file);
 
-    // check for vehicles only
-    if (memcmp(eventAdd.description.id.data(), "vehicle.", 8) == 0) {
+    // avoid sensor events
+    if (memcmp(eventAdd.description.id.data(), "sensor.", 7) != 0) {
 
       // show log
       s.resize(eventAdd.description.id.size());
@@ -440,7 +440,7 @@ void Replayer::processEvents(void) {
             if (result.second != eventAdd.databaseId) {
               log_warning("actor created but with different id");
             }
-            // mapping id (say desired Id is mapped to what)
+            // mapping id (recorded Id is a new Id in replayer)
             mappedId[eventAdd.databaseId] = result.second;
             break;
 
@@ -504,7 +504,9 @@ void Replayer::processStates(void) {
     // callback
     if (callbackStateTrafficLight) {
       // log_warning("calling callback add");
-      callbackStateTrafficLight(stateTrafficLight);
+      stateTrafficLight.databaseId = mappedId[stateTrafficLight.databaseId];
+      if (!callbackStateTrafficLight(stateTrafficLight))
+        log_warning("callback state traffic light %d called but didn't work", stateTrafficLight.databaseId);
     } else {
       log_warning("callback state traffic light is not defined");
     }
@@ -537,7 +539,7 @@ void Replayer::updatePositions(double per) {
   unsigned int i;
   std::unordered_map<int, int> tempMap;
 
-  // map the Id's from both vectors
+  // map the id of all previous positions to its index
   for (i = 0; i < prevPos.size(); ++i) {
     tempMap[prevPos[i].databaseId] = i;
   }

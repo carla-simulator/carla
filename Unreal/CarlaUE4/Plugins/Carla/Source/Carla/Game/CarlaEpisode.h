@@ -244,6 +244,11 @@ private:
     const FTransform &Transform,
     FActorDescription thisActorDescription);
 
+  std::pair<int, FActorView&> TryToCreateReplayerActor(
+    carla::geom::Transform &transform,
+    FActorDescription &ActorDesc,
+    unsigned int desiredId);
+
   bool SetActorSimulatePhysics(FActorView &ActorView, bool bEnabled);
 
   const uint32 Id = 0u;

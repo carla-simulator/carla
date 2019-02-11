@@ -137,51 +137,23 @@ void UCarlaEpisode::InitializeAtBeginPlay()
       ActorDesc.Variations.Add(attr.Id, std::move(attr));
     }
 
-    // check if an actor of that type already exist with same id
-    UE_LOG(LogCarla, Log, TEXT("Trying to create actor: %s (%d)"), *ActorDesc.Id, desiredId);
-    if (GetActorRegistry().Contains(desiredId)) {
-      FActorView view = GetActorRegistry().Find(desiredId);
-      const FActorDescription *desc = &view.GetActorInfo()->Description;
-      UE_LOG(LogCarla, Log, TEXT("actor '%s' already exist with id %d"), *(desc->Id), view.GetActorId());
-      if (desc->Id == ActorDesc.Id) {
-        // disable physics
-        // SetActorSimulatePhysics(view, false);
-        // disable autopilot
-        auto Vehicle = Cast<ACarlaWheeledVehicle>(view.GetActor());
-        if (Vehicle != nullptr) {
-          auto Controller = Cast<AWheeledVehicleAIController>(Vehicle->GetController());
-          if (Controller != nullptr) {
-            Controller->SetAutopilot(false);
-            UE_LOG(LogCarla, Log, TEXT("resetting autopilot to %d"), desiredId);
-          }
-        }
+    auto result = TryToCreateReplayerActor(transform, ActorDesc, desiredId);
 
-        // we don't need to create, actor of same type already exist
-        return std::make_pair(2, desiredId);
-      }
-    }
-
-    // create actor
-    TPair<EActorSpawnResultStatus, FActorView> Result = SpawnActorWithInfo(transform, ActorDesc, desiredId);
-    if (Result.Key == EActorSpawnResultStatus::Success) {
+    if (result.first != 0) {
       // disable physics
-      // SetActorSimulatePhysics(Result.Value, false);
+      // SetActorSimulatePhysics(result.second, false);
       // disable autopilot
-      auto Vehicle = Cast<ACarlaWheeledVehicle>(Result.Value.GetActor());
+      auto Vehicle = Cast<ACarlaWheeledVehicle>(result.second.GetActor());
       if (Vehicle != nullptr) {
         auto Controller = Cast<AWheeledVehicleAIController>(Vehicle->GetController());
         if (Controller != nullptr) {
           Controller->SetAutopilot(false);
-          UE_LOG(LogCarla, Log, TEXT("resetting autopilot to %d"), Result.Value.GetActorId());
+          UE_LOG(LogCarla, Log, TEXT("resetting autopilot to %d"), desiredId);
         }
       }
-      UE_LOG(LogCarla, Log, TEXT("Actor created by replayer with id %d"), Result.Value.GetActorId());
-      return std::make_pair(1, Result.Value.GetActorId());
     }
-    else {
-      UE_LOG(LogCarla, Log, TEXT("Actor could't be created by replayer"));
-      return std::make_pair(0, 0);
-    }
+
+    return std::make_pair(result.first, result.second.GetActorId());
   });
 
     // callback
@@ -338,4 +310,67 @@ void UCarlaEpisode::CreateRecorderEventAdd(
     std::move(description)
   };
   Recorder.addEvent(std::move(recEvent));
+}
+
+// create or reuse an actor for replaying
+std::pair<int, FActorView&> UCarlaEpisode::TryToCreateReplayerActor(carla::geom::Transform &transform, FActorDescription &ActorDesc, unsigned int desiredId) {
+  FActorView view_empty;
+
+  // check type of actor we need
+  if (ActorDesc.Id.StartsWith("traffic.")) {
+    auto World = GetWorld();
+    check(World != nullptr);
+    // get its position (truncated as int's, and in Cm)
+    int x = static_cast<int>(transform.location.x);
+    int y = static_cast<int>(transform.location.y);
+    int z = static_cast<int>(transform.location.z);
+    UE_LOG(LogCarla, Log, TEXT("Trying to find traffic: %s (%d) [%d,%d,%d]"), *ActorDesc.Id, desiredId, x, y, z);
+    // search an "traffic." actor at that position
+    for (TActorIterator<ATrafficSignBase> It(World); It; ++It)
+    {
+      ATrafficSignBase *Actor = *It;
+      check(Actor != nullptr);
+      FVector vec = Actor->GetTransform().GetTranslation();
+      int x2 = static_cast<int>(vec.X / 100.0f);
+      int y2 = static_cast<int>(vec.Y / 100.0f);
+      int z2 = static_cast<int>(vec.Z / 100.0f);
+      // UE_LOG(LogCarla, Log, TEXT(" Checking with [%d,%d,%d]"), x2, y2, z2);
+      if ((x2 == x) && (y2 == y) && (z2 == z)) {
+        // actor found
+        auto view = ActorDispatcher->GetActorRegistry().Find(static_cast<AActor *>(Actor));
+        // reuse that actor
+        UE_LOG(LogCarla, Log, TEXT("Traffic found with id: %d"), view.GetActorId());
+        return std::pair<int, FActorView&>(2, view);
+      }
+    }
+    // actor not found
+    UE_LOG(LogCarla, Log, TEXT("Traffic not found"));
+    return std::pair<int, FActorView&>(0, view_empty);
+  } else if (ActorDesc.Id.StartsWith("vehicle.")) {
+    // check if an actor of that type already exist with same id
+    UE_LOG(LogCarla, Log, TEXT("Trying to create actor: %s (%d)"), *ActorDesc.Id, desiredId);
+    if (GetActorRegistry().Contains(desiredId)) {
+      auto view = GetActorRegistry().Find(desiredId);
+      const FActorDescription *desc = &view.GetActorInfo()->Description;
+      UE_LOG(LogCarla, Log, TEXT("actor '%s' already exist with id %d"), *(desc->Id), view.GetActorId());
+      if (desc->Id == ActorDesc.Id) {
+        // we don't need to create, actor of same type already exist
+        return std::pair<int, FActorView&>(2, view);
+      }
+    }
+    // create as new actor
+    TPair<EActorSpawnResultStatus, FActorView> Result = SpawnActorWithInfo(transform, ActorDesc, desiredId);
+    if (Result.Key == EActorSpawnResultStatus::Success) {
+      UE_LOG(LogCarla, Log, TEXT("Actor created by replayer with id %d"), Result.Value.GetActorId());
+      return std::pair<int, FActorView&>(1, Result.Value);
+    }
+    else {
+      UE_LOG(LogCarla, Log, TEXT("Actor could't be created by replayer"));
+      return std::pair<int, FActorView&>(0, Result.Value);
+    }
+  }
+  else {
+    // actor ignored
+    return std::pair<int, FActorView&>(0, view_empty);
+  }
 }
