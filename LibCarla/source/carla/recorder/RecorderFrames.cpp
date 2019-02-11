@@ -12,14 +12,14 @@ namespace carla {
 namespace recorder {
 
 void RecorderFrame::read(std::ifstream &file) {
-    //readValue<unsigned long>(file, this.id);
+    //readValue<uint64_t>(file, this.id);
     //readValue<double>(file, this.durationThis);
     //readValue<double>(file, this.elapsed);
     readValue<RecorderFrame>(file, *this);
 }
 
 void RecorderFrame::write(std::ofstream &file) {
-    //writeValue<unsigned long>(file, frame.id);
+    //writeValue<uint64_t>(file, frame.id);
     //writeValue<double>(file, frame.durationThis);
     //writeValue<double>(file, frame.elapsed);
     writeValue<RecorderFrame>(file, *this);
@@ -64,11 +64,11 @@ void RecorderFrames::write(std::ofstream &file, std::ofstream &log) {
     writeValue<char>(file, static_cast<char>(RecorderPacketId::Frame));
 
     // write the packet size
-    int total = sizeof(RecorderFrame);
-    writeValue<int>(file, total);
+    uint32_t total = sizeof(RecorderFrame);
+    writeValue<uint32_t>(file, total);
 
     // write frame record
-    writeValue<unsigned long>(file, frame.id);
+    writeValue<uint64_t>(file, frame.id);
     offset = file.tellp();
     writeValue<double>(file, dummy);
     writeValue<double>(file, frame.elapsed);

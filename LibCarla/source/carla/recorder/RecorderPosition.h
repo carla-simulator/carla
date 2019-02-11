@@ -15,7 +15,7 @@ namespace recorder {
 
 #pragma pack(push, 1)
 struct RecorderPosition {
-    unsigned int databaseId;
+    uint32_t databaseId;
     carla::geom::Transform transform;
     // carla::geom::Vector3D velocity;
     // carla::geom::Vector3D angularVelocity;

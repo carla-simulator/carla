@@ -15,28 +15,26 @@
 namespace carla {
 namespace recorder {
 
-#pragma pack(push, 1)
 struct RecorderInfo {
-    short version;
+    uint16_t version;
     Buffer magic;
     std::time_t date;
     Buffer mapfile;
 
 void read(std::ifstream &file) {
-    readValue<short>(file, version);
+    readValue<uint16_t>(file, version);
     readBuffer(file, magic);
     readValue<std::time_t>(file, date);
     readBuffer(file, mapfile);
 }
 
 void write(std::ofstream &file) {
-    writeValue<short>(file, version);
+    writeValue<uint16_t>(file, version);
     writeBuffer(file, magic);
     writeValue<std::time_t>(file, date);
     writeBuffer(file, mapfile);
 }
 };
-#pragma pack(pop)
 
 }
 }

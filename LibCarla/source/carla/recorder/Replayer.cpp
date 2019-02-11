@@ -15,7 +15,6 @@ namespace carla {
 namespace recorder {
 
 Replayer::Replayer() {
-
 }
 
 Replayer::~Replayer() {
@@ -64,7 +63,7 @@ bool Replayer::readHeader() {
   }
 
   readValue<char>(file, header.id);
-  readValue<int>(file, header.size);
+  readValue<uint32_t>(file, header.size);
 
   return true;
 }
@@ -83,7 +82,7 @@ std::string Replayer::getInfo(std::string filename) {
     return info.str();
   }
 
-  short i, total;
+  uint16_t i, total;
   RecorderEventAdd eventAdd;
   RecorderEventDel eventDel;
   RecorderEventParent eventParent;
@@ -127,7 +126,7 @@ std::string Replayer::getInfo(std::string filename) {
 
       case static_cast<char>(RecorderPacketId::Event):
         bShowFrame = true;
-        readValue<short>(file, total);
+        readValue<uint16_t>(file, total);
         if (total > 0 && bShowFrame) {
           info << "Frame " << frame.id << " at " << frame.elapsed << " seconds\n";
           bShowFrame = false;
@@ -150,7 +149,7 @@ std::string Replayer::getInfo(std::string filename) {
             info << "  " << s1.data() << " = " << s2.data() << std::endl;
           }
         }
-        readValue<short>(file, total);
+        readValue<uint16_t>(file, total);
         if (total > 0 && bShowFrame) {
           info << "Frame " << frame.id << " at " << frame.elapsed << " seconds\n";
           bShowFrame = false;
@@ -159,7 +158,7 @@ std::string Replayer::getInfo(std::string filename) {
           eventDel.read(file);
           info << " Destroy " << eventDel.databaseId << "\n";
         }
-        readValue<short>(file, total);
+        readValue<uint16_t>(file, total);
         if (total > 0 && bShowFrame) {
           info << "Frame " << frame.id << " at " << frame.elapsed << " seconds\n";
           bShowFrame = false;
@@ -179,7 +178,7 @@ std::string Replayer::getInfo(std::string filename) {
       case static_cast<char>(RecorderPacketId::State):
         skipPacket();
         // bShowFrame = true;
-        // readValue<short>(file, total);
+        // readValue<uint16_t>(file, total);
         //if (total > 0 && bShowFrame) {
         //  info << "Frame " << frame.id << " at " << frame.elapsed << " seconds\n";
         //  bShowFrame = false;
@@ -395,14 +394,14 @@ void Replayer::processToTime(double time) {
 }
 
 void Replayer::processEvents(void) {
-  short i, total;
+  uint16_t i, total;
   RecorderEventAdd eventAdd;
   RecorderEventDel eventDel;
   RecorderEventParent eventParent;
   std::stringstream info;
 
   // create events
-  readValue<short>(file, total);
+  readValue<uint16_t>(file, total);
   for (i = 0; i < total; ++i) {
     std::string s;
     eventAdd.read(file);
@@ -459,7 +458,7 @@ void Replayer::processEvents(void) {
 
 
   // destroy events
-  readValue<short>(file, total);
+  readValue<uint16_t>(file, total);
   for (i = 0; i < total; ++i) {
     eventDel.read(file);
     info.str("");
@@ -475,7 +474,7 @@ void Replayer::processEvents(void) {
   }
 
   // parenting events
-  readValue<short>(file, total);
+  readValue<uint16_t>(file, total);
   for (i = 0; i < total; ++i) {
     eventParent.read(file);
     info.str("");
@@ -492,12 +491,12 @@ void Replayer::processEvents(void) {
 }
 
 void Replayer::processStates(void) {
-  short i, total;
+  uint16_t i, total;
   RecorderStateTrafficLight stateTrafficLight;
   std::stringstream info;
 
   // read total traffic light states
-  readValue<short>(file, total);
+  readValue<uint16_t>(file, total);
   for (i = 0; i < total; ++i) {
     stateTrafficLight.read(file);
 
@@ -514,13 +513,13 @@ void Replayer::processStates(void) {
 }
 
 void Replayer::processPositions(void) {
-  short i, total;
+  uint16_t i, total;
 
   // save current as previous
   prevPos = std::move(currPos);
 
   // read all positions
-  readValue<short>(file, total);
+  readValue<uint16_t>(file, total);
   currPos.clear();
   currPos.reserve(total);
   for (i = 0; i < total; ++i) {

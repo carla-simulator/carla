@@ -15,7 +15,7 @@ namespace recorder {
 #pragma pack(push, 1)
 
 struct RecorderStateTrafficLight {
-    unsigned int databaseId;
+    uint32_t databaseId;
     bool isFrozen;
     float elapsedTime;
     char state;
