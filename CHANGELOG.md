@@ -1,6 +1,7 @@
 ## Latest Changes
 
   * Fixed `manual_control.py` and `no_rendering_mode.py` to prevent crashes when used in "no rendering mode"
+  * Added movable props present in the map (e.g. chairs and tables) as actors so they can be controlled from Python
   * Refactored `no_rendering_mode.py` to improve performance and interface
 
 ## CARLA 0.9.3
