@@ -214,11 +214,11 @@ class FadingText(object):
         self.seconds_left = 0
         self.surface = pygame.Surface(self.dim)
 
-    def set_text(self, text, color=(255, 255, 255), seconds=2.0):
+    def set_text(self, text, color=COLOR_WHITE, seconds=2.0):
         text_texture = self.font.render(text, True, color)
         self.surface = pygame.Surface(self.dim)
         self.seconds_left = seconds
-        self.surface.fill((0, 0, 0, 0))
+        self.surface.fill(COLOR_BLACK)
         self.surface.blit(text_texture, (10, 11))
 
     def tick(self, clock):
@@ -850,6 +850,11 @@ class ModuleWorld(object):
             self._compute_scale(scale_factor)
 
         # Render Actors
+        
+        hero_vehicles = [v for v in vehicles if v.attributes['role_name'] == 'hero']
+        if len(hero_vehicles) == 0:
+            self.hero_actor = None
+
         self.actors_surface.fill(COLOR_BLACK)
         self.render_actors(self.actors_surface, vehicles, traffic_lights, speed_limits, walkers, scale_factor)
 
@@ -900,7 +905,7 @@ class ModuleWorld(object):
             # Translation offset
             translation_offset = (self.module_input.mouse_offset[0] * scale_factor + self.scale_offset[0],
                                   self.module_input.mouse_offset[1] * scale_factor + self.scale_offset[1])
-            center_offset = ((display.get_width() * 1.0 - self.surface_size) / 2 * scale_factor, 0)
+            center_offset = ((display.get_width() - self.surface_size) / 2 * scale_factor, 0)
 
             # Apply clipping rect
             clipping_rect = pygame.Rect(-translation_offset[0] - center_offset[0], -translation_offset[1],
@@ -1057,7 +1062,7 @@ def game_loop(args):
     pygame.display.set_caption(args.description)
 
     font = pygame.font.Font(pygame.font.get_default_font(), 20)
-    text_surface = font.render('Rendering map...', True, (255, 255, 255))
+    text_surface = font.render('Rendering map...', True, COLOR_WHITE)
     display.blit(text_surface, text_surface.get_rect(center=(args.width/2, args.height/2)))
     pygame.display.flip()
 
