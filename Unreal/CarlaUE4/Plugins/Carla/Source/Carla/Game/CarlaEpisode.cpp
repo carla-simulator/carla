@@ -124,7 +124,7 @@ void UCarlaEpisode::InitializeAtBeginPlay()
 
   // replayer callbacks
   Recorder.getReplayer().setCallbackEventAdd([this](carla::geom::Transform transform,
-    carla::recorder::RecorderActorDescription description, unsigned int desiredId) -> std::pair<int, unsigned int> {
+    carla::recorder::RecorderActorDescription description, uint32_t desiredId) -> std::pair<int, uint32_t> {
 
     FActorDescription ActorDesc;
     ActorDesc.UId = description.uid;
@@ -157,7 +157,7 @@ void UCarlaEpisode::InitializeAtBeginPlay()
   });
 
     // callback
-    Recorder.getReplayer().setCallbackEventDel([this](unsigned int databaseId) -> bool {
+    Recorder.getReplayer().setCallbackEventDel([this](uint32_t databaseId) -> bool {
       auto actor = GetActorRegistry().Find(databaseId).GetActor();
       if (actor == nullptr) return false;
       DestroyActor(actor);
@@ -165,7 +165,7 @@ void UCarlaEpisode::InitializeAtBeginPlay()
     });
 
     // callback
-    Recorder.getReplayer().setCallbackEventParent([this](unsigned int childId, unsigned int parentId) -> bool {
+    Recorder.getReplayer().setCallbackEventParent([this](uint32_t childId, uint32_t parentId) -> bool {
       AActor *child = GetActorRegistry().Find(childId).GetActor();
       AActor *parent = GetActorRegistry().Find(parentId).GetActor();
       if (child && parent) {
@@ -284,20 +284,21 @@ std::string UCarlaEpisode::StartRecorder(std::string name) {
 }
 
 void UCarlaEpisode::CreateRecorderEventAdd(
-    unsigned int databaseId,
+    uint32_t databaseId,
     const FTransform &Transform,
     FActorDescription thisActorDescription)
 {
     // convert from FActorDescription to crec::RecorderActorDescription
     crec::RecorderActorDescription description;
     description.uid = thisActorDescription.UId;
-    description.id.copy_from(reinterpret_cast<const unsigned char *>(carla::rpc::FromFString(thisActorDescription.Id).c_str()), thisActorDescription.Id.Len());
+    description.id.copy_from(carla::rpc::FromFString(thisActorDescription.Id));
+
     description.attributes.reserve(thisActorDescription.Variations.Num());
     for (const auto &item : thisActorDescription.Variations) {
       crec::RecorderActorAttribute attr;
       attr.type = static_cast<carla::rpc::ActorAttributeType>(item.Value.Type);
-      attr.id.copy_from(reinterpret_cast<const unsigned char *>(carla::rpc::FromFString(item.Value.Id).c_str()), item.Value.Id.Len());
-      attr.value.copy_from(reinterpret_cast<const unsigned char *>(carla::rpc::FromFString(item.Value.Value).c_str()), item.Value.Value.Len());
+      attr.id.copy_from(carla::rpc::FromFString(item.Value.Id));
+      attr.value.copy_from(carla::rpc::FromFString(item.Value.Value));
       // check for empty attributes
       if (attr.id.size() > 0)
         description.attributes.emplace_back(std::move(attr));
@@ -313,7 +314,7 @@ void UCarlaEpisode::CreateRecorderEventAdd(
 }
 
 // create or reuse an actor for replaying
-std::pair<int, FActorView&> UCarlaEpisode::TryToCreateReplayerActor(carla::geom::Transform &transform, FActorDescription &ActorDesc, unsigned int desiredId) {
+std::pair<int, FActorView&> UCarlaEpisode::TryToCreateReplayerActor(carla::geom::Transform &transform, FActorDescription &ActorDesc, uint32_t desiredId) {
   FActorView view_empty;
 
   // check type of actor we need

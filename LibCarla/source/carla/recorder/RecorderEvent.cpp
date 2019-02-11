@@ -17,17 +17,17 @@ namespace recorder {
 void RecorderEventAdd::write(std::ofstream &file) {
     //log << "add event: " << this->description.id.c_str() << " (id." << this->databaseId << ")\n";
     // database id
-    writeValue<unsigned int>(file, this->databaseId);
+    writeValue<uint32_t>(file, this->databaseId);
     // transform
     writeTransform(file, this->transform);
     // description type
     writeValue<carla::rpc::actor_id_type>(file, this->description.uid);
     writeBuffer(file, this->description.id);
     // attributes
-    short total = this->description.attributes.size();
-    writeValue<short>(file, total);
+    uint16_t total = this->description.attributes.size();
+    writeValue<uint16_t>(file, total);
     //log << "Attributes: " << this->description.attributes.size() << std::endl;
-    for (short i=0; i<total; ++i) {
+    for (uint16_t i=0; i<total; ++i) {
         // type
         writeValue<carla::rpc::ActorAttributeType>(file, this->description.attributes[i].type);
         writeBuffer(file, this->description.attributes[i].id);
@@ -40,7 +40,7 @@ void RecorderEventAdd::write(std::ofstream &file) {
 void RecorderEventAdd::read(std::ifstream &file) {
     //log << "add event: " << this->description.id.c_str() << " (id." << this->databaseId << ")\n";
     // database id
-    readValue<unsigned int>(file, this->databaseId);
+    readValue<uint32_t>(file, this->databaseId);
     // transform
     readTransform(file, this->transform);
     // description type
@@ -48,12 +48,12 @@ void RecorderEventAdd::read(std::ifstream &file) {
     // text id
     readBuffer(file, this->description.id);
     // attributes
-    short total;
-    readValue<short>(file, total);
+    uint16_t total;
+    readValue<uint16_t>(file, total);
     this->description.attributes.clear();
     this->description.attributes.reserve(total);
     //log << "Attributes: " << this->description.attributes.size() << std::endl;
-    for (short i=0; i<total; ++i) {
+    for (uint16_t i=0; i<total; ++i) {
         RecorderActorAttribute att;
         // type
         readValue<carla::rpc::ActorAttributeType>(file, att.type);
@@ -67,24 +67,24 @@ void RecorderEventAdd::read(std::ifstream &file) {
 
 void RecorderEventDel::read(std::ifstream &file) {
     // database id
-    readValue<unsigned int>(file, this->databaseId);
+    readValue<uint32_t>(file, this->databaseId);
 }
 void RecorderEventDel::write(std::ofstream &file) {
     // database id
-    writeValue<unsigned int>(file, this->databaseId);
+    writeValue<uint32_t>(file, this->databaseId);
 }
 
 void RecorderEventParent::read(std::ifstream &file) {
     // database id
-    readValue<unsigned int>(file, this->databaseId);
+    readValue<uint32_t>(file, this->databaseId);
     // database id parent
-    readValue<unsigned int>(file, this->databaseIdParent);
+    readValue<uint32_t>(file, this->databaseIdParent);
 }
 void RecorderEventParent::write(std::ofstream &file) {
     // database id
-    writeValue<unsigned int>(file, this->databaseId);
+    writeValue<uint32_t>(file, this->databaseId);
     // database id parent
-    writeValue<unsigned int>(file, this->databaseIdParent);
+    writeValue<uint32_t>(file, this->databaseIdParent);
 }
 
 //---------------------------------------------
@@ -109,8 +109,8 @@ void RecorderEvents::addEvent(const RecorderEventParent event) {
 
 void RecorderEvents::writeEventsAdd(std::ofstream &file) {
     // write total records
-    short total = eventsAdd.size();
-    writeValue<short>(file, total);
+    uint16_t total = eventsAdd.size();
+    writeValue<uint16_t>(file, total);
 
     for (unsigned long i=0; i<eventsAdd.size(); ++i) {
         eventsAdd[i].write(file);
@@ -120,8 +120,8 @@ void RecorderEvents::writeEventsAdd(std::ofstream &file) {
 void RecorderEvents::writeEventsDel(std::ofstream &file, std::ofstream &log) {
 
     // write total records
-    short total = eventsDel.size();
-    writeValue<short>(file, total);
+    uint16_t total = eventsDel.size();
+    writeValue<uint16_t>(file, total);
 
     for (auto rec : eventsDel) {
         log << "add del: " << rec.databaseId << "\n";
@@ -132,8 +132,8 @@ void RecorderEvents::writeEventsDel(std::ofstream &file, std::ofstream &log) {
 void RecorderEvents::writeEventsParent(std::ofstream &file, std::ofstream &log) {
 
     // write total records
-    short total = eventsParent.size();
-    writeValue<short>(file, total);
+    uint16_t total = eventsParent.size();
+    writeValue<uint16_t>(file, total);
 
     for (auto rec : eventsParent) {
         log << "add parent: id." << rec.databaseId << ", parent." << rec.databaseIdParent << "\n";
@@ -149,8 +149,8 @@ void RecorderEvents::write(std::ofstream &file, std::ofstream &log) {
     std::streampos posStart = file.tellp();
 
     // write a dummy packet size
-    int total = 0;
-    writeValue<int>(file, total);
+    uint32_t total = 0;
+    writeValue<uint32_t>(file, total);
 
     // write events
     writeEventsAdd(file);
@@ -159,9 +159,9 @@ void RecorderEvents::write(std::ofstream &file, std::ofstream &log) {
 
     // write the real packet size
     std::streampos posEnd = file.tellp();
-    total = posEnd - posStart - sizeof(int);
+    total = posEnd - posStart - sizeof(uint32_t);
     file.seekp(posStart, std::ios::beg);
-    writeValue<int>(file, total);
+    writeValue<uint32_t>(file, total);
     file.seekp(posEnd, std::ios::beg);
 
     log << "write events (" << eventsAdd.size() << "," << eventsDel.size() << "," << eventsParent.size() << ")\n";

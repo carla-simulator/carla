@@ -21,8 +21,6 @@
 #include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
 
-#include <tuple>
-
 #include "CarlaEpisode.generated.h"
 
 namespace crec = carla::recorder;

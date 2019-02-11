@@ -22,9 +22,9 @@ namespace carla {
 namespace recorder {
 
 // callback prototypes
-typedef std::function<std::pair<int, unsigned int> (carla::geom::Transform, RecorderActorDescription, unsigned int uid)> RecorderCallbackEventAdd;
-typedef std::function<bool (unsigned int uid)> RecorderCallbackEventDel;
-typedef std::function<bool (unsigned int childId, unsigned int parentId)> RecorderCallbackEventParent;
+typedef std::function<std::pair<int, uint32_t> (carla::geom::Transform, RecorderActorDescription, uint32_t uid)> RecorderCallbackEventAdd;
+typedef std::function<bool (uint32_t uid)> RecorderCallbackEventDel;
+typedef std::function<bool (uint32_t childId, uint32_t parentId)> RecorderCallbackEventParent;
 typedef std::function<bool (RecorderPosition pos1, RecorderPosition pos2, double per)> RecorderCallbackPosition;
 typedef std::function<bool (bool applyAutopilot)> RecorderCallbackFinish;
 typedef std::function<bool (RecorderStateTrafficLight state)> RecorderCallbackStateTrafficLight;
@@ -32,7 +32,7 @@ typedef std::function<bool (RecorderStateTrafficLight state)> RecorderCallbackSt
 #pragma pack(push, 1)
 struct Header {
     char id;
-    int size;
+    uint32_t size;
 };
 #pragma pack(pop)
 
@@ -81,7 +81,7 @@ class Replayer : private NonCopyable {
     std::vector<RecorderPosition> currPos;
     std::vector<RecorderPosition> prevPos;
     // mapping id
-    std::unordered_map<unsigned int, unsigned int> mappedId;
+    std::unordered_map<uint32_t, uint32_t> mappedId;
     // times
     double currentTime;
     double timeToStop;

@@ -13,7 +13,7 @@ namespace recorder {
 
 void RecorderPosition::write(std::ofstream &file) {
     // database id
-    writeValue<unsigned int>(file, this->databaseId);
+    writeValue<uint32_t>(file, this->databaseId);
     // transform
     writeTransform(file, this->transform);
     // velocity
@@ -23,7 +23,7 @@ void RecorderPosition::write(std::ofstream &file) {
 }
 void RecorderPosition::read(std::ifstream &file) {
     // database id
-    readValue<unsigned int>(file, this->databaseId);
+    readValue<uint32_t>(file, this->databaseId);
     // transform
     readTransform(file, this->transform);
     // velocity
@@ -50,8 +50,8 @@ void RecorderPositions::write(std::ofstream &file, std::ofstream &log) {
     writeValue<char>(file, static_cast<char>(RecorderPacketId::Position));
 
     // write the packet size
-    int total = 2 + positions.size() * sizeof(RecorderPosition);
-    writeValue<int>(file, total);
+    uint32_t total = 2 + positions.size() * sizeof(RecorderPosition);
+    writeValue<uint32_t>(file, total);
 
     // write total records
     total = positions.size();
@@ -62,7 +62,7 @@ void RecorderPositions::write(std::ofstream &file, std::ofstream &log) {
 /*
     // write records
     for (auto rec : positions) {
-        writeValue<int>(file, rec.id);                  // actor id
+        writeValue<uint32_t>(file, rec.id);                  // actor id
         writeTransform(file, rec.transform);            // transform
         writeVector3D(file, rec.velocity);              // velocity
         writeVector3D(file, rec.angularVelocity);       // angular velocity

@@ -14,7 +14,7 @@ namespace recorder {
 
 #pragma pack(push, 1)
 struct RecorderFrame {
-    unsigned long id;
+    uint64_t id;
     double durationThis;
     double elapsed;
 

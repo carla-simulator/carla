@@ -17,9 +17,6 @@ Recorder::Recorder(){
 }
 
 Recorder::~Recorder(){
-    // close files
-    if (file.is_open()) file.close();
-    if (log.is_open()) log.close();
 }
 
 std::string Recorder::start(std::string path, std::string name, std::string mapName) {
@@ -44,9 +41,9 @@ std::string Recorder::start(std::string path, std::string name, std::string mapN
     std::string magic("CARLA_RECORDER");
     // save info
     info.version = 1;
-    info.magic.copy_from(reinterpret_cast<const unsigned char *>(magic.c_str()), magic.size());
+    info.magic.copy_from(magic);
     info.date = std::time(0);
-    info.mapfile.copy_from(reinterpret_cast<const unsigned char *>(mapName.c_str()), mapName.size());
+    info.mapfile.copy_from(mapName);
 
     // write general info
     info.write(file);

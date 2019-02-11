@@ -12,14 +12,14 @@ namespace carla {
 namespace recorder {
 
 void RecorderStateTrafficLight::write(std::ofstream &file) {
-    writeValue<unsigned int>(file, this->databaseId);
+    writeValue<uint32_t>(file, this->databaseId);
     writeValue<bool>(file, this->isFrozen);
     writeValue<float>(file, this->elapsedTime);
     writeValue<char>(file, this->state);
 }
 
 void RecorderStateTrafficLight::read(std::ifstream &file) {
-    readValue<unsigned int>(file, this->databaseId);
+    readValue<uint32_t>(file, this->databaseId);
     readValue<bool>(file, this->isFrozen);
     readValue<float>(file, this->elapsedTime);
     readValue<char>(file, this->state);

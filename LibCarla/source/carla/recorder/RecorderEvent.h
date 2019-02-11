@@ -14,8 +14,6 @@
 namespace carla {
 namespace recorder {
 
-#pragma pack(push, 1)
-
 struct RecorderActorAttribute {
     carla::rpc::ActorAttributeType type = carla::rpc::ActorAttributeType::Int;
     Buffer id;          // string
@@ -29,7 +27,7 @@ struct RecorderActorDescription {
 };
 
 struct RecorderEventAdd {
-    unsigned int databaseId;
+    uint32_t databaseId;
     carla::geom::Transform transform;
     RecorderActorDescription description;
 
@@ -38,20 +36,19 @@ struct RecorderEventAdd {
 };
 
 struct RecorderEventDel {
-    unsigned int databaseId;
+    uint32_t databaseId;
 
     void read(std::ifstream &file);
     void write(std::ofstream &file);
 };
 
 struct RecorderEventParent {
-    unsigned int databaseId;
-    unsigned int databaseIdParent;
+    uint32_t databaseId;
+    uint32_t databaseIdParent;
 
     void read(std::ifstream &file);
     void write(std::ofstream &file);
 };
-#pragma pack(pop)
 
 class RecorderEvents {
 

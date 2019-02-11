@@ -44,15 +44,15 @@ void writeTransform(std::ofstream &file, const carla::geom::Transform &obj){
 
 // write binary data from string (length + text)
 void writeString(std::ofstream &file, const std::string &obj) {
-    short length = obj.size();
-    writeValue<short>(file, length);    
+    uint16_t length = obj.size();
+    writeValue<uint16_t>(file, length);
     file.write(reinterpret_cast<const char*>(obj.c_str()), length);
 }
 
 // write binary data from buffer (length + data)
 void writeBuffer(std::ofstream &file, const Buffer &obj) {
-    short length = obj.size();
-    writeValue<short>(file, length);    
+    uint16_t length = obj.size();
+    writeValue<uint16_t>(file, length);
     file.write(reinterpret_cast<const char*>(obj.data()), length);
 }
 
@@ -85,8 +85,8 @@ void readTransform(std::ifstream &file, carla::geom::Transform &obj){
 
 // read binary data from string (length + text)
 void readString(std::ifstream &file, std::string &obj) {
-    short length;
-    readValue<short>(file, length);
+    uint16_t length;
+    readValue<uint16_t>(file, length);
     if (length > 0) {
         obj.resize(length);
         file.read(&obj[0], length);
@@ -95,8 +95,8 @@ void readString(std::ifstream &file, std::string &obj) {
 
 // read binary data to buffer (length + data)
 void readBuffer(std::ifstream &file, Buffer &obj) {
-    short length;
-    readValue<short>(file, length);
+    uint16_t length;
+    readValue<uint16_t>(file, length);
     if (length > 0) {
         obj.reset(static_cast<unsigned int>(length));
         file.read(reinterpret_cast<char *>(obj.data()), length);
