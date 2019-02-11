@@ -53,7 +53,7 @@ def get_libcarla_extensions():
         else:
             raise NotImplementedError
     elif os.name == "nt":
-        sources += [x for x in walk('dependencies\\include\\carla', '*.cpp')]
+        sources += [x for x in walk('dependencies/include/carla', '*.cpp')]
 
         pwd = os.path.dirname(os.path.realpath(__file__))
         pylib = 'libboost_python%d%d' % (
@@ -69,10 +69,10 @@ def get_libcarla_extensions():
 
         # Search for files in 'PythonAPI\dependencies\lib' that contains
         # the names listed in required_libs in it's file name
-        libs = [x for x in os.listdir('dependencies\\lib') if any(d in x for d in required_libs)]
+        libs = [x for x in os.listdir('dependencies/lib') if any(d in x for d in required_libs)]
 
         for lib in libs:
-            extra_link_args.append(os.path.join(pwd, 'dependencies\\lib', lib))
+            extra_link_args.append(os.path.join(pwd, 'dependencies/lib', lib))
 
         # https://docs.microsoft.com/es-es/cpp/porting/modifying-winver-and-win32-winnt
         extra_compile_args = [
@@ -82,7 +82,7 @@ def get_libcarla_extensions():
     else:
         raise NotImplementedError
 
-    depends = [x for x in walk('source\\libcarla')]
+    depends = [x for x in walk('source/libcarla')]
     depends += [x for x in walk('dependencies')]
 
     def make_extension(name, sources):
