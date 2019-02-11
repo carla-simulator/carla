@@ -97,11 +97,6 @@ void export_blueprint() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  // class_<std::vector<std::string>>("vector_of_strings")
-  //   .def(vector_indexing_suite<std::vector<std::string>>())
-  //   .def(self_ns::str(self_ns::self))
-  // ;
-
   class_<cc::ActorAttribute>("ActorAttribute", no_init)
     .add_property("id", CALL_RETURNING_COPY(cc::ActorAttribute, GetId))
     .add_property("type", &cc::ActorAttribute::GetType)
@@ -134,7 +129,7 @@ void export_blueprint() {
 
   class_<cc::ActorBlueprint>("ActorBlueprint", no_init)
     .add_property("id", CALL_RETURNING_COPY(cc::ActorBlueprint, GetId))
-    .add_property("tags", CALL_RETURNING_LIST(cc::ActorBlueprint, GetTags)) // ------------
+    .add_property("tags", CALL_RETURNING_LIST(cc::ActorBlueprint, GetTags))
     .def("has_tag", &cc::ActorBlueprint::ContainsTag)
     .def("match_tags", &cc::ActorBlueprint::MatchTags)
     .def("has_attribute", &cc::ActorBlueprint::ContainsAttribute)

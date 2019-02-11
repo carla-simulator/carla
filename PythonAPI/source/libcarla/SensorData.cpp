@@ -221,13 +221,8 @@ void export_sensor_data() {
     .value("Solid", cre::LaneMarking::Solid)
   ;
 
-  // class_<std::vector<cre::LaneMarking>>("vector_of_lane_markings")
-  //   .def(vector_indexing_suite<std::vector<cre::LaneMarking>>())
-  // ;
-
   class_<csd::LaneInvasionEvent, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::LaneInvasionEvent>>("LaneInvasionEvent", no_init)
     .add_property("actor", &csd::LaneInvasionEvent::GetActor)
-    // .add_property("crossed_lane_markings", CALL_RETURNING_COPY(csd::LaneInvasionEvent, GetCrossedLaneMarkings))
     .add_property("crossed_lane_markings", CALL_RETURNING_LIST(csd::LaneInvasionEvent, GetCrossedLaneMarkings))
     .def(self_ns::str(self_ns::self))
   ;
