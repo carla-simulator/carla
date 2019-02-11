@@ -64,20 +64,25 @@ class Replayer : private NonCopyable {
     void tick(float time);
 
     private:
-    std::ifstream file;
     bool enabled;
+    // binary file reader
+    std::ifstream file;
     Header header;
     RecorderInfo recInfo;
     RecorderFrame frame;
+    // callbacks
     RecorderCallbackEventAdd callbackEventAdd;
     RecorderCallbackEventDel callbackEventDel;
     RecorderCallbackEventParent callbackEventParent;
     RecorderCallbackPosition callbackPosition;
     RecorderCallbackFinish callbackFinish;
     RecorderCallbackStateTrafficLight callbackStateTrafficLight;
+    // positions (to be able to interpolate)
     std::vector<RecorderPosition> currPos;
     std::vector<RecorderPosition> prevPos;
+    // mapping id
     std::unordered_map<unsigned int, unsigned int> mappedId;
+    // times
     double currentTime;
     double timeToStop;
     double totalTime;
