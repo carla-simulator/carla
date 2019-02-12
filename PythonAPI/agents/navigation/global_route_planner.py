@@ -98,7 +98,6 @@ class GlobalRoutePlanner(object):
         """
 
         is_intersection = False
-
         if waypoint.is_intersection :
             x = waypoint.transform.location.x
             y = waypoint.transform.location.y

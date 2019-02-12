@@ -62,9 +62,6 @@ class BasicAgent(Agent):
         x2 = end_waypoint.transform.location.x
         y2 = end_waypoint.transform.location.y
         route = grp.plan_route((x1, y1), (x2, y2))
-        print(x1, y1)
-        print(x2, y2)
-        print(route)
 
         current_waypoint = start_waypoint
         route.append(RoadOption.VOID)
@@ -72,7 +69,7 @@ class BasicAgent(Agent):
 
             #   Generate waypoints to next junction
             wp_choice = current_waypoint.next(self._hop_resolution)
-            while len(wp_choice) == 1:
+            while len(wp_choice) < 2 and not grp.verify_intersection(wp_choice[0]):
                 current_waypoint = wp_choice[0]
                 solution.append((current_waypoint, RoadOption.LANEFOLLOW))
                 wp_choice = current_waypoint.next(self._hop_resolution)
@@ -81,70 +78,68 @@ class BasicAgent(Agent):
                     end_waypoint.transform.location) < self._hop_resolution: break
             if action == RoadOption.VOID: break
 
-            #   Select appropriate path at the junction
-            if len(wp_choice) > 1 or grp.verify_intersection(wp_choice[0]):
+            # Current heading vector
+            current_transform = current_waypoint.transform
+            current_location = current_transform.location
+            projected_location = current_location + \
+                carla.Location(
+                    x=math.cos(math.radians(current_transform.rotation.yaw)),
+                    y=math.sin(math.radians(current_transform.rotation.yaw)))
+            v_current = vector(current_location, projected_location)
 
-                # Current heading vector
-                current_transform = current_waypoint.transform
-                current_location = current_transform.location
-                projected_location = current_location + \
-                    carla.Location(
-                        x=math.cos(math.radians(current_transform.rotation.yaw)),
-                        y=math.sin(math.radians(current_transform.rotation.yaw)))
-                v_current = vector(current_location, projected_location)
+            direction = 0
+            if action == RoadOption.LEFT: direction = 1
+            elif action == RoadOption.RIGHT: direction = -1
+            elif action == RoadOption.STRAIGHT: direction = 0
+            select_criteria = float('inf')
 
-                direction = 0
-                if action == RoadOption.LEFT: direction = 1
-                elif action == RoadOption.RIGHT: direction = -1
-                elif action == RoadOption.STRAIGHT: direction = 0
-                select_criteria = float('inf')
+            #  < Seperating overlapping paths >
+            split = False
+            tragectories = []
+            #   initializing paths
+            for wp_select in wp_choice:
+                tragectories.append([wp_select])
+            #   finding points of seperation
+            while not split and len(tragectories) > 1:
+                #   take step in each path
+                for tragectory in tragectories:
+                    tragectory.append(tragectory[-1].next(self._path_seperation_hop)[0])
+                #   measure seperation
+                for i in range(len(tragectories)-1):
+                    if tragectories[i][-1].transform.location.distance(
+                        tragectories[i+1][-1].transform.location) > self._path_seperation_threshold:
+                        split = True
+            #   update waypoints for path choice
+            for i, tragectory in enumerate(tragectories):
+                wp_choice[i] = tragectory[-1]
+            # < Seperating overlapping paths />
 
-                #   Seperating overlapping paths
-                split = False
-                tragectories = []
-                #   initializing paths
-                for wp_select in wp_choice:
-                    tragectories.append([wp_select])
-                #   finding points of seperation
-                while not split:
-                    #   take step in each path
-                    for tragectory in tragectories:
-                        tragectory.append(tragectory[-1].next(self._path_seperation_hop)[0])
-                    #   measure seperation
-                    for i in range(len(tragectories)-1):
-                        if tragectories[i][-1].transform.location.distance(
-                            tragectories[i+1][-1].transform.location) > self._path_seperation_threshold:
-                            split = True
-                #   update waypoints for path choice
-                for i, tragectory in enumerate(tragectories):
-                    wp_choice[i] = tragectory[-1]
+            #   Choose correct path
+            tragectory_index = 0
+            for i, wp_select in enumerate(wp_choice):
+                v_select = vector(
+                    current_location, wp_select.transform.location)
+                cross = float('inf')
+                if direction == 0:
+                    cross = abs(np.cross(v_current, v_select)[-1])
+                else:
+                    cross = direction*np.cross(v_current, v_select)[-1]
+                if cross < select_criteria:
+                    tragectory_index = i
+                    select_criteria = cross
+                    current_waypoint = wp_select
 
-                #   Choose correct path
-                tragectory_index = 0
-                for i, wp_select in enumerate(wp_choice):
-                    v_select = vector(
-                        current_location, wp_select.transform.location)
-                    cross = float('inf')
-                    if direction == 0:
-                        cross = abs(np.cross(v_current, v_select)[-1])
-                    else:
-                        cross = direction*np.cross(v_current, v_select)[-1]
-                    if cross < select_criteria:
-                        tragectory_index = i
-                        select_criteria = cross
-                        current_waypoint = wp_select
+            #   Add select tragectory till point of seperation
+            for wp in tragectories[tragectory_index]:
+                solution.append((wp, action))
 
-                #   Add select tragectory till point of seperation
-                for wp in tragectories[tragectory_index]:
-                    solution.append((wp, action))
-
-                #   Generate all waypoints within the junction
-                #   along selected path
+            #   Generate all waypoints within the junction
+            #   along selected path
+            solution.append((current_waypoint, action))
+            current_waypoint = current_waypoint.next(self._hop_resolution)[0]
+            while current_waypoint.is_intersection:
                 solution.append((current_waypoint, action))
                 current_waypoint = current_waypoint.next(self._hop_resolution)[0]
-                while current_waypoint.is_intersection:
-                    solution.append((current_waypoint, action))
-                    current_waypoint = current_waypoint.next(self._hop_resolution)[0]
 
         assert solution
 
