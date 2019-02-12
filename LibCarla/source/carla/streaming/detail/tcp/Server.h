@@ -30,6 +30,10 @@ namespace tcp {
 
     explicit Server(boost::asio::io_service &io_service, endpoint ep);
 
+    endpoint GetLocalEndpoint() const {
+      return _acceptor.local_endpoint();
+    }
+
     /// Set session time-out. Applies only to newly created sessions. By default
     /// the time-out is set to 10 seconds.
     void SetTimeout(time_duration timeout) {
