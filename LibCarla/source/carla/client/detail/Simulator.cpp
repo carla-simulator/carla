@@ -6,10 +6,13 @@
 
 #include "carla/client/detail/Simulator.h"
 
+#include "carla/Exception.h"
 #include "carla/Logging.h"
+#include "carla/RecurrentSharedFuture.h"
 #include "carla/client/BlueprintLibrary.h"
 #include "carla/client/Map.h"
 #include "carla/client/Sensor.h"
+#include "carla/client/TimeoutException.h"
 #include "carla/client/detail/ActorFactory.h"
 #include "carla/sensor/Deserializer.h"
 
@@ -66,6 +69,19 @@ namespace detail {
 
   SharedPtr<Map> Simulator::GetCurrentMap() {
     return MakeShared<Map>(_client.GetMapInfo());
+  }
+
+  // ===========================================================================
+  // -- Tick -------------------------------------------------------------------
+  // ===========================================================================
+
+  Timestamp Simulator::WaitForTick(time_duration timeout) {
+    DEBUG_ASSERT(_episode != nullptr);
+    auto result = _episode->WaitForState(timeout);
+    if (!result.has_value()) {
+      throw_exception(TimeoutException(_client.GetEndpoint(), timeout));
+    }
+    return *result;
   }
 
   // ===========================================================================
