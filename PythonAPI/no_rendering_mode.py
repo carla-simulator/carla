@@ -309,14 +309,13 @@ class ModuleHUD (object):
                 x, y = world_to_pixel(location)
 
                 angle = 0
-                size = len(str(actor.id)) * 8
                 if hero_actor is not None:
                     angle = -hero_actor.get_transform().rotation.yaw - 90
-                
+
                 color = COLOR_ORANGE_0
                 if actor.attributes['role_name'] == 'hero':
                     color = COLOR_SCARLET_RED_0
-                
+
                 font_surface = self._header_font.render(str(actor.id), True, color)
                 rotated_font_surface = pygame.transform.rotate(font_surface, angle).convert_alpha()
                 rect = rotated_font_surface.get_rect(center=(x,y))
@@ -431,7 +430,6 @@ class MapImage(object):
 
         width_in_pixels = int(self._pixels_per_meter * self._width)
 
-        print('Creating map surface {0}x{0}.'.format(width_in_pixels))
         self._big_map_surface = pygame.Surface((width_in_pixels, width_in_pixels)).convert()
         self.draw_road_map(self._big_map_surface, carla_map, self.world_to_pixel)
         self.surface = self._big_map_surface
@@ -604,7 +602,7 @@ class ModuleWorld(object):
         center_offset = (int(self.module_hud.dim[0] / 2), int(self.module_hud.dim[1] / 2))
         pygame.draw.circle(self.border_round_surface, COLOR_ALUMINIUM_2, center_offset, int(self.module_hud.dim[1]/ 2))
         pygame.draw.circle(self.border_round_surface, COLOR_WHITE, center_offset, int((self.module_hud.dim[1] - 8)/ 2))
-        
+
         scaled_original_size = self.original_surface_size * (1.0 / 0.9)
         self.hero_surface = pygame.Surface((scaled_original_size, scaled_original_size)).convert()
 
@@ -850,7 +848,7 @@ class ModuleWorld(object):
             self._compute_scale(scale_factor)
 
         # Render Actors
-        
+
         hero_vehicles = [v for v in vehicles if v.attributes['role_name'] == 'hero']
         if len(hero_vehicles) == 0:
             self.hero_actor = None
@@ -885,11 +883,11 @@ class ModuleWorld(object):
                                         self.hero_surface.get_width(),
                                         self.hero_surface.get_height())
             self.clip_surfaces(clipping_rect)
-            
+
             Util.blits(self.result_surface, surfaces)
 
             self.border_round_surface.set_clip(clipping_rect)
-            
+
             self.hero_surface.fill(COLOR_ALUMINIUM_5)
             self.hero_surface.blit(self.result_surface, (-translation_offset[0],
                                                          -translation_offset[1]))
@@ -899,7 +897,7 @@ class ModuleWorld(object):
             center = (display.get_width() / 2, display.get_height() / 2)
             rotation_pivot = rotated_result_surface.get_rect(center=center)
             display.blit(rotated_result_surface, rotation_pivot)
-            
+
             display.blit(self.border_round_surface, (0,0))
         else:
             # Translation offset
