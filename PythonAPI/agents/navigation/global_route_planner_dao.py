@@ -62,3 +62,9 @@ class GlobalRoutePlannerDAO(object):
 
             topology.append(seg_dict)
         return topology
+
+    def get_waypoint(self, x, y):
+        """
+        The method returns waytpoint at x, y
+        """
+        return self._wmap.get_waypoint(carla.Location(x=x, y=y))
