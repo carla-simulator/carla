@@ -25,7 +25,8 @@ set BUILD_FOR_PYTHON3=false
 if not "%1"=="" (
     if "%1"=="--rebuild" (
         set REMOVE_INTERMEDIATE=true
-        set BUILD_FOR_PYTHON2=true
+        rem We don't provide support for py2 right now
+        set BUILD_FOR_PYTHON2=false
         set BUILD_FOR_PYTHON3=true
     )
 
@@ -59,8 +60,6 @@ if not "%1"=="" (
 )
 
 set PYTHON_LIB_PATH=%ROOT_PATH%PythonAPI\
-set PYTHON_LIB_BUILD=%PYTHON_LIB_PATH%build\
-set PYTHON_LIB_DEPENDENCIES=%PYTHON_LIB_PATH%dependencies\
 
 if %REMOVE_INTERMEDIATE% == false (
     if %BUILD_FOR_PYTHON3% == false (
@@ -72,17 +71,22 @@ if %REMOVE_INTERMEDIATE% == false (
 )
 
 if %REMOVE_INTERMEDIATE% == true (
+    rem Remove directories
     for %%G in (
-        "%PYTHON_LIB_BUILD:/=\%",
-        "%PYTHON_LIB_DEPENDENCIES:/=\%",
+        "%PYTHON_LIB_PATH:/=\%build",
         "%PYTHON_LIB_PATH:/=\%dist",
+        "%PYTHON_LIB_PATH:/=\%source\carla.egg-info"
     ) do (
         if exist %%G (
             echo %FILE_N% Cleaning %%G
             rmdir /s/q %%G
         )
     )
-    goto good_exit
+    if %BUILD_FOR_PYTHON3% == false (
+        if %BUILD_FOR_PYTHON2% == false (
+            goto good_exit
+        )
+    )
 )
 
 cd "%PYTHON_LIB_PATH%"

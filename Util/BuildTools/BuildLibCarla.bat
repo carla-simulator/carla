@@ -72,11 +72,26 @@ set LIBCARLA_SERVER_INSTALL_PATH=%ROOT_PATH%Unreal\CarlaUE4\Plugins\Carla\CarlaD
 set LIBCARLA_CLIENT_INSTALL_PATH=%ROOT_PATH%PythonAPI\dependencies
 
 if %REMOVE_INTERMEDIATE% == true (
-    echo %FILE_N% Cleaning "%LIBCARLA_SERVER_INSTALL_PATH%"
-    if exist "%LIBCARLA_SERVER_INSTALL_PATH%" rmdir /S /Q "%LIBCARLA_SERVER_INSTALL_PATH%"
+    rem Remove directories
+    for %%G in (
+        "%LIBCARLA_SERVER_INSTALL_PATH:/=\%",
+        "%LIBCARLA_CLIENT_INSTALL_PATH:/=\%",
+    ) do (
+        if exist %%G (
+            echo %FILE_N% Cleaning %%G
+            rmdir /s/q %%G
+        )
+    )
 
-    echo %FILE_N% Cleaning "%LIBCARLA_CLIENT_INSTALL_PATH%"
-    if exist "%LIBCARLA_CLIENT_INSTALL_PATH%" rmdir /S /Q "%LIBCARLA_CLIENT_INSTALL_PATH%"
+    rem Remove files
+    for %%G in (
+        "%ROOT_PATH:/=\%LibCarla\source\carla\Version.h"
+    ) do (
+        if exist %%G (
+            echo %FILE_N% Cleaning %%G
+            del %%G
+        )
+    )
 )
 
 if not exist "%LIBCARLA_VSPROJECT_PATH%" mkdir "%LIBCARLA_VSPROJECT_PATH%"
