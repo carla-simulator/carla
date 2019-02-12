@@ -692,16 +692,13 @@ class ModuleWorld(object):
         self.server_fps = self.server_clock.get_fps()
         self.simulation_time = timestamp.elapsed_seconds
 
-        self.world = self.client.get_world()
-        self.actors = self.world.get_actors()
-
-    def _split_actors(self, actors):
+    def _split_actors(self):
         vehicles = []
         traffic_lights = []
         speed_limits = []
         walkers = []
 
-        for actor in actors:
+        for actor in self.world.get_actors():
             if 'vehicle' in actor.type_id:
                 vehicles.append(actor)
             elif 'traffic_light' in actor.type_id:
@@ -840,7 +837,7 @@ class ModuleWorld(object):
 
     def render(self, display):
         self.result_surface.fill(COLOR_BLACK)
-        vehicles, traffic_lights, speed_limits, walkers = self._split_actors(self.actors)
+        vehicles, traffic_lights, speed_limits, walkers = self._split_actors()
 
         scale_factor = self.module_input.wheel_offset
         self.scaled_size = int(self.map_image._width * scale_factor)
