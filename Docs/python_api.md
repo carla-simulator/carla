@@ -12,6 +12,9 @@
 - `get_client_version()`
 - `get_server_version()`
 - `get_world()`
+- `start_recorder(string filename)`
+- `replay_file(string filename, float start=0, float duration=0)`
+- `show_recorder_file_info(string filename)`
 
 ## `carla.World`
 
