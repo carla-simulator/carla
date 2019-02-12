@@ -42,6 +42,12 @@ benchmark: LibCarla
 PythonAPI: LibCarla
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.bat" --py3
 
+server: setup
+	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.bat" --server
+
+client: setup
+	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.bat" --client
+
 .PHONY: LibCarla
 LibCarla: setup
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.bat" --server --client
