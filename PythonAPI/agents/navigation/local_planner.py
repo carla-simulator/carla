@@ -189,9 +189,8 @@ class LocalPlanner(object):
         """
 
         # not enough waypoints in the horizon? => add more!
-        if len(self._waypoints_queue) < int(self._waypoints_queue.maxlen * 0.5):
-            if not self._global_plan:
-                self._compute_next_waypoints(k=100)
+        if not self._global_plan and len(self._waypoints_queue) < int(self._waypoints_queue.maxlen * 0.5):
+            self._compute_next_waypoints(k=100)
 
         if len(self._waypoints_queue) == 0:
             control = carla.VehicleControl()
