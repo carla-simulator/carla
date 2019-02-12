@@ -1,6 +1,8 @@
 ## Latest Changes
 
-  * Fixed `manual_control.py` and `no_rendering_mode` to prevent crashes when used in "no rendering mode"
+  * Fixed `manual_control.py` and `no_rendering_mode.py` to prevent crashes when used in "no rendering mode"
+  * Refactored `no_rendering_mode.py` to improve performance and interface
+
 ## CARLA 0.9.3
 
   * Upgraded to Unreal Engine 4.21
