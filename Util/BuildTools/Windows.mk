@@ -29,8 +29,8 @@ clean:
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.bat" --clean
 
 rebuild: setup
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.bat" --rebuild
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.bat" --rebuild
+	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.bat" --rebuild
+	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.bat" --rebuild
 
 check: PythonAPI
 	@echo "Not implemented!"
