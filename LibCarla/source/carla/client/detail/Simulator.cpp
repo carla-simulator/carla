@@ -63,6 +63,7 @@ namespace detail {
       ValidateVersions(_client);
       _episode = std::make_shared<Episode>(_client);
       _episode->Listen();
+      WaitForTick(_client.GetTimeout());
     }
     return EpisodeProxy{shared_from_this()};
   }
