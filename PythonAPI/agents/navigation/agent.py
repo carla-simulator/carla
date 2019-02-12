@@ -132,7 +132,7 @@ class Agent(object):
                     magnitude, angle = compute_magnitude_angle(loc,
                                                                ego_vehicle_location,
                                                                self._vehicle.get_transform().rotation.yaw)
-                    if magnitude < 80.0 and angle < min(25.0, min_angle):
+                    if magnitude < 60.0 and angle < min(25.0, min_angle):
                         sel_magnitude = magnitude
                         sel_traffic_light = traffic_light
                         min_angle = angle

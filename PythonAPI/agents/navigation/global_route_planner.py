@@ -10,6 +10,7 @@ import math
 import numpy as np
 import networkx as nx
 
+import carla
 from agents.navigation.local_planner import RoadOption
 
 
@@ -37,7 +38,8 @@ class GlobalRoutePlanner(object):
         self._topology = self._dao.get_topology()
         # Creating graph of the world map and also a maping from
         # node co-ordinates to node id
-        self._graph, self._id_map = self.build_graph()
+        self._graph, self._id_map = self._build_graph()
+        # self._lane_change_link()
 
     def plan_route(self, origin, destination):
         """
@@ -50,7 +52,7 @@ class GlobalRoutePlanner(object):
         """
 
         threshold = math.radians(4.0)
-        route = self.path_search(origin, destination)
+        route = self._path_search(origin, destination)
         plan = []
 
         # Compare current edge and next edge to decide on action
@@ -96,11 +98,10 @@ class GlobalRoutePlanner(object):
         """
 
         is_intersection = False
-
         if waypoint.is_intersection :
             x = waypoint.transform.location.x
             y = waypoint.transform.location.y
-            segment = self.localise(x, y)
+            segment = self._localise(x, y)
             entry_node_id = self._id_map[segment['entry']]
             exit_node_id = self._id_map[segment['exit']]
 
@@ -121,7 +122,7 @@ class GlobalRoutePlanner(object):
         (x2, y2) = self._graph.nodes[n2]['vertex']
         return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
 
-    def path_search(self, origin, destination):
+    def _path_search(self, origin, destination):
         """
         This function finds the shortest path connecting origin and destination
         using A* search with distance heuristic.
@@ -132,8 +133,8 @@ class GlobalRoutePlanner(object):
         """
         xo, yo = origin
         xd, yd = destination
-        start = self.localise(xo, yo)
-        end = self.localise(xd, yd)
+        start = self._localise(xo, yo)
+        end = self._localise(xd, yd)
 
         route = nx.astar_path(
             self._graph, source=self._id_map[start['entry']],
@@ -143,7 +144,7 @@ class GlobalRoutePlanner(object):
 
         return route
 
-    def localise(self, x, y):
+    def _localise(self, x, y):
         """
         This function finds the road segment closest to (x, y)
         x, y        :   co-ordinates of the point to be localized
@@ -159,14 +160,14 @@ class GlobalRoutePlanner(object):
             exitxy = segment['exit']
             path = segment['path']
             for xp, yp in [entryxy] + path + [exitxy]:
-                new_distance = self.distance((xp, yp), (x, y))
+                new_distance = self._distance((xp, yp), (x, y))
                 if new_distance < nearest[0]:
                     nearest = (new_distance, segment)
 
         segment = nearest[1]
         return segment
 
-    def build_graph(self):
+    def _build_graph(self):
         """
         This function builds a networkx  graph representation of topology.
         The topology is read from self._topology.
@@ -204,16 +205,59 @@ class GlobalRoutePlanner(object):
             graph.add_edge(
                 n1, n2,
                 length=len(path) + 1, path=path,
-                entry_vector=self.unit_vector(
+                entry_vector=self._unit_vector(
                     entryxy, path[0] if len(path) > 0 else exitxy),
-                exit_vector=self.unit_vector(
+                exit_vector=self._unit_vector(
                     path[-1] if len(path) > 0 else entryxy, exitxy),
-                net_vector=self.unit_vector(entryxy, exitxy),
-                intersection=intersection)
+                net_vector=self._unit_vector(entryxy, exitxy),
+                intersection=intersection,
+                type=RoadOption.LANEFOLLOW)
 
         return graph, id_map
 
-    def distance(self, point1, point2):
+    def _lane_change_link(self):
+        """
+        This method places zero cost links in the topology graph
+        representing availability of lane changes.
+        """
+
+        next_waypoint = None
+        next_road_option = None
+
+        for segment in self._topology:
+            lane_change_types = []
+            for point in segment['path']:
+
+                waypoint = self._dao.get_waypoint(*point)
+                if waypoint.lane_change & carla.LaneChange.Right \
+                     and RoadOption.CHANGELANERIGHT not in lane_change_types:
+                    next_waypoint = waypoint.right_lane()
+                    if next_waypoint is not None and next_waypoint.lane_type == 'driving':
+                        next_road_option = RoadOption.CHANGELANERIGHT
+
+                elif waypoint.lane_change & carla.LaneChange.Left \
+                     and RoadOption.CHANGELANERIGHT not in lane_change_types:
+                    next_waypoint = waypoint.left_lane()
+                    if next_waypoint is not None and next_waypoint.lane_type == 'driving':
+                        next_road_option = RoadOption.CHANGELANELEFT
+                else: pass
+                
+                if next_waypoint is not None:
+                    next_segment = self._localise(
+                        next_waypoint.transform.location.x, next_waypoint.transform.location.x)
+
+                    self._graph.add_edge(
+                        self._id_map[segment['entry']],
+                        self._id_map[next_segment['exit']],
+                        type=next_road_option)
+
+                    lane_change_types.append(next_road_option)
+
+                next_waypoint = None
+                if len(lane_change_types) == 2:
+                    break
+
+    def _distance(self, point1, point2):
         """
         returns the distance between point1 and point2
         point1      :   (x,y) of first point
@@ -224,7 +268,7 @@ class GlobalRoutePlanner(object):
         x2, y2 = point2
         return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
 
-    def unit_vector(self, point1, point2):
+    def _unit_vector(self, point1, point2):
         """
         This function returns the unit vector from point1 to point2
         point1      :   (x,y) of first point
@@ -241,7 +285,7 @@ class GlobalRoutePlanner(object):
 
         return vector
 
-    def dot(self, vector1, vector2):
+    def _dot(self, vector1, vector2):
         """
         This function returns the dot product of vector1 with vector2
         vector1      :   x, y components of first vector
