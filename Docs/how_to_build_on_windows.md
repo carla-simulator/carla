@@ -63,10 +63,8 @@ If you build Carla for the first time or after you clean the project it will pro
 Example of building Carla 0.9.0 for first time:
 ```cmd
 1) git clone https://github.com/carla-simulator/carla.git
-
 2) Download https://drive.google.com/uc?id=1FtC00CrDb7Kz5StBAwb6vqOGbzZtpROx&export=download
 3) Extract to Unreal/CarlaUE4/Content/Carla
-
 4) make launch
 ```
 
