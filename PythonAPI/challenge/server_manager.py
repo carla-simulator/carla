@@ -74,6 +74,11 @@ class ServerManagerBinary(ServerManager):
         self._proc = subprocess.Popen(exec_command, stdout=subprocess.PIPE,
                                       bufsize=1)
 
+    def stop(self):
+        self._proc.kill()
+        self._outs, self._errs = self._proc.communicate()
+
+
 class ServerManagerDocker(ServerManager):
     def __init__(self, opt_dict):
         super(ServerManagerDocker, self).__init__(opt_dict)
