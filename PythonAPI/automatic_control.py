@@ -73,6 +73,14 @@ try:
 except IndexError:
     pass
 
+# ==============================================================================
+# -- add PythonAPI for release mode --------------------------------------------
+# ==============================================================================
+try:
+    sys.path.append(glob.glob('PythonAPI')[0])
+except IndexError:
+    pass
+
 import carla
 from carla import ColorConverter as cc
 from agents.navigation.roaming_agent import *
