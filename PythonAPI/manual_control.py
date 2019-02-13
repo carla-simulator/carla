@@ -341,6 +341,7 @@ class HUD(object):
         self.simulation_time = timestamp.elapsed_seconds
 
     def tick(self, world, clock):
+        self._notifications.tick(world, clock)
         if not self._show_info:
             return
         t = world.player.get_transform()
@@ -356,8 +357,8 @@ class HUD(object):
         collision = [x / max_col for x in collision]
         vehicles = world.world.get_actors().filter('vehicle.*')
         self._info_text = [
-            'Server:  % 16s FPS' % round(self.server_fps),
-            'Client:  % 16s FPS' % round(clock.get_fps()),
+            'Server:  % 16.0f FPS' % self.server_fps,
+            'Client:  % 16.0f FPS' % clock.get_fps(),
             '',
             'Vehicle: % 20s' % get_actor_display_name(world.player, truncate=20),
             'Map:     % 20s' % world.world.map_name,
@@ -397,7 +398,6 @@ class HUD(object):
                     break
                 vehicle_type = get_actor_display_name(vehicle, truncate=22)
                 self._info_text.append('% 4dm %s' % (d, vehicle_type))
-        self._notifications.tick(world, clock)
 
     def toggle_info(self):
         self._show_info = not self._show_info
