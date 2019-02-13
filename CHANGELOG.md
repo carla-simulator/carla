@@ -1,5 +1,5 @@
 ## Latest Changes
-
+  * Added manual_control_steeringwheel.py to control agents using Logitech G29 steering wheels (and maybe others).
   * Fixed `manual_control.py` and `no_rendering_mode.py` to prevent crashes when used in "no rendering mode"
   * Added movable props present in the map (e.g. chairs and tables) as actors so they can be controlled from Python
   * Refactored `no_rendering_mode.py` to improve performance and interface
