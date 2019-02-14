@@ -16,6 +16,7 @@
 #include "carla/rpc/MapInfo.h"
 #include "carla/rpc/WeatherParameters.h"
 #include "carla/rpc/TrafficLightState.h"
+#include "carla/rpc/VehiclePhysicsControl.h"
 
 #include <functional>
 #include <memory>
@@ -76,6 +77,8 @@ namespace detail {
     void SetWeatherParameters(const rpc::WeatherParameters &weather);
 
     std::vector<rpc::Actor> GetActorsById(const std::vector<actor_id_type> &ids);
+
+    rpc::VehiclePhysicsControl GetVehiclePhysicsControl(const int &actorId) const;
 
     rpc::Actor SpawnActor(
         const rpc::ActorDescription &description,

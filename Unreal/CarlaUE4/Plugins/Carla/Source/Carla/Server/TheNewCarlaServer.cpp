@@ -25,6 +25,7 @@
 #include <carla/rpc/Transform.h>
 #include <carla/rpc/Vector3D.h>
 #include <carla/rpc/VehicleControl.h>
+#include <carla/rpc/VehiclePhysicsControl.h>
 #include <carla/rpc/WalkerControl.h>
 #include <carla/rpc/WeatherParameters.h>
 #include <carla/streaming/Server.h>
@@ -365,6 +366,26 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     "None",
     false);
     return R<void>::Success();
+  });
+
+
+ Server.BindSync("get_physics_control", [this](
+        int ActorId) -> R<cr::VehiclePhysicsControl>
+  {
+    REQUIRE_CARLA_EPISODE();
+    
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to apply control: actor not found");
+    }
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    if (Vehicle == nullptr)
+    {
+      RESPOND_ERROR("unable to apply control: actor is not a vehicle");
+    }
+    
+    return cr::VehiclePhysicsControl(Vehicle->GetVehiclePhysicsControl());
   });
 
   Server.BindSync("set_actor_simulate_physics", [this](

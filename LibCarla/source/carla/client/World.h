@@ -13,6 +13,8 @@
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/geom/Transform.h"
 #include "carla/rpc/WeatherParameters.h"
+#include "carla/rpc/Actor.h"
+#include "carla/rpc/VehiclePhysicsControl.h"
 
 namespace carla {
 namespace client {
@@ -53,6 +55,9 @@ namespace client {
 
     /// Retrieve the weather parameters currently active in the world.
     rpc::WeatherParameters GetWeather() const;
+
+    /// Retrieve the physics control parameters of an actor.
+    rpc::VehiclePhysicsControl GetVehiclePhysicsControl(const int &actor_id) const;
 
     /// Change the weather in the simulation.
     void SetWeather(const rpc::WeatherParameters &weather);

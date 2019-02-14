@@ -120,6 +120,10 @@ namespace detail {
     return _pimpl->CallAndWait<return_t>("get_actors_by_id", ids);
   }
 
+  rpc::VehiclePhysicsControl Client::GetVehiclePhysicsControl(const int &actorId) const {
+    return _pimpl->CallAndWait<carla::rpc::VehiclePhysicsControl>("get_physics_control", actorId);
+  }
+
   rpc::Actor Client::SpawnActor(
       const rpc::ActorDescription &description,
       const geom::Transform &transform) {
