@@ -132,3 +132,13 @@ void ACarlaWheeledVehicle::SetHandbrakeInput(const bool Value)
   GetVehicleMovementComponent()->SetHandbrakeInput(Value);
   Control.bHandBrake = Value;
 }
+
+FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl()
+{  
+  UCarlaWheeledVehicleMovementComponent4W *Vehicle4W = CastChecked<UCarlaWheeledVehicleMovementComponent4W>(GetVehicleMovement());
+
+  FVehiclePhysicsControl PhysicsControl;
+  PhysicsControl.TorqueCurve = Vehicle4W->EngineSetup.TorqueCurve.EditorCurveData;
+
+  return PhysicsControl;
+}

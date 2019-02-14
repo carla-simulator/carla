@@ -135,6 +135,9 @@ namespace detail {
       _client.SetWeatherParameters(weather);
     }
 
+    rpc::VehiclePhysicsControl GetVehiclePhysicsControl(const int &actorId) const {
+      return _client.GetVehiclePhysicsControl(actorId);
+    }
     /// @}
     // =========================================================================
     /// @name General operations with actors
