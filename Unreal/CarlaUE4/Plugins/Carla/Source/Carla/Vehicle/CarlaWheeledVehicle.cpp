@@ -139,6 +139,11 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl()
 
   FVehiclePhysicsControl PhysicsControl;
   PhysicsControl.TorqueCurve = Vehicle4W->EngineSetup.TorqueCurve.EditorCurveData;
+  PhysicsControl.MaxRPM = Vehicle4W->EngineSetup.MaxRPM;
+  PhysicsControl.MOI = Vehicle4W->EngineSetup.MOI;
+  PhysicsControl.DampingRateFullThrottle = Vehicle4W->EngineSetup.DampingRateFullThrottle;
+  PhysicsControl.DampingRateZeroThrottleClutchEngaged = Vehicle4W->EngineSetup.DampingRateZeroThrottleClutchEngaged;
+  PhysicsControl.DampingRateZeroThrottleClutchDisengaged = Vehicle4W->EngineSetup.DampingRateZeroThrottleClutchDisengaged;
 
   return PhysicsControl;
 }

@@ -36,7 +36,12 @@ namespace rpc {
   }
 
   std::ostream &operator<<(std::ostream &out, const VehiclePhysicsControl &control) {
-    out << "VehiclePhysicsControl(torque_curve=" << control.torque_curve << ')';
+    out << "VehiclePhysicsControl(torque_curve=" << control.torque_curve
+    << ", max_rpm=" << control.max_rpm
+    << ", moi=" << control.moi
+    << ", damping_rate_full_throttle=" << control.damping_rate_full_throttle
+    << ", damping_rate_zero_throttle_clutch_engaged=" << control.damping_rate_zero_throttle_clutch_engaged
+    << ", damping_rate_zero_throttle_clutch_disengaged=" << control.damping_rate_zero_throttle_clutch_disengaged << ')';
     return out;
   }
 } // namespace rpc
@@ -84,6 +89,11 @@ void export_control() {
   class_<cr::VehiclePhysicsControl>("VehiclePhysicsControl")
     .def(init<>())
     .def_readwrite("torque_curve", &cr::VehiclePhysicsControl::torque_curve)
+    .def_readwrite("max_rpm", &cr::VehiclePhysicsControl::max_rpm)
+    .def_readwrite("moi", &cr::VehiclePhysicsControl::moi)
+    .def_readwrite("damping_rate_full_throttle", &cr::VehiclePhysicsControl::damping_rate_full_throttle)
+    .def_readwrite("damping_rate_zero_throttle_clutch_engaged", &cr::VehiclePhysicsControl::damping_rate_zero_throttle_clutch_engaged)
+    .def_readwrite("damping_rate_zero_throttle_clutch_disengaged", &cr::VehiclePhysicsControl::damping_rate_zero_throttle_clutch_disengaged)
     // .def("__eq__", &cr::VehiclePhysicsControl::operator==)
     // .def("__ne__", &cr::VehiclePhysicsControl::operator!=)
     .def(self_ns::str(self_ns::self))
