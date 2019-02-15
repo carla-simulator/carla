@@ -141,6 +141,10 @@ void AOpenDriveActor::PostEditChangeProperty(struct FPropertyChangedEvent &Event
 
 void AOpenDriveActor::BuildRoutes()
 {
+  BuildRoutes(GetWorld()->GetMapName());
+}
+
+void AOpenDriveActor::BuildRoutes(FString MapName) {
   using CarlaMath = carla::geom::Math;
   using IdType = carla::road::element::id_type;
   using Waypoint = carla::road::element::Waypoint;
@@ -150,7 +154,7 @@ void AOpenDriveActor::BuildRoutes()
 
   // As the OpenDrive file has the same name as level, build the path to the
   // xodr file using the lavel name and the game content directory.
-  const FString XodrContent = FOpenDrive::Load(GetWorld()->GetMapName());
+  const FString XodrContent = FOpenDrive::Load(MapName);
 
   auto map_ptr = carla::opendrive::OpenDrive::Load(
       TCHAR_TO_UTF8(*XodrContent),

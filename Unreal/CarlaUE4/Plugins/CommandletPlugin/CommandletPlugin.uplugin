@@ -22,5 +22,11 @@
 			"Type" : "Runtime",
 			"LoadingPhase" : "Default"
 		}
+	],
+	"Plugins": [
+     {
+       "Name": "Carla",
+       "Enabled": true
+     }
 	]
 }
