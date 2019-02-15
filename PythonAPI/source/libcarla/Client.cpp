@@ -23,7 +23,7 @@ void export_client() {
     .def("get_server_version", CONST_CALL_WITHOUT_GIL(cc::Client, GetServerVersion))
     .def("get_world", &cc::Client::GetWorld)
     .def("start_recorder", &cc::Client::StartRecorder, (arg("name")))
-    .def("stop_recorder", CALL_WITHOUT_GIL(cc::Client, StopRecorder))
+    .def("stop_recorder", &cc::Client::StopRecorder)
     .def("show_recorder_file_info", &cc::Client::ShowRecorderFileInfo, (arg("name")))
     .def("replay_file", &cc::Client::ReplayFile, (arg("name"), arg("time_start"), arg("duration")))
 

@@ -556,24 +556,24 @@ void FTheNewCarlaServer::FPimpl::BindActions()
 
   Server.BindSync("stop_recorder", [this]() -> R<void> {
     REQUIRE_CARLA_EPISODE();
-    Episode->GetRecorder().stop();
+    Episode->GetRecorder()->Stop();
     return R<void>::Success();
   });
 
   Server.BindSync("show_recorder_file_info", [this](std::string name) -> R<std::string> {
     REQUIRE_CARLA_EPISODE();
-    return R<std::string>(Episode->GetRecorder().showFileInfo(
-      carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
-      name));
+    return R<std::string>(Episode->GetRecorder()->ShowFileInfo(
+        carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
+        name));
   });
 
   Server.BindSync("replay_file", [this](std::string name, double start, double duration) -> R<std::string> {
     REQUIRE_CARLA_EPISODE();
-    return R<std::string>(Episode->GetRecorder().replayFile(
-      carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
-      name,
-      start,
-      duration));
+    return R<std::string>(Episode->GetRecorder()->ReplayFile(
+        carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
+        name,
+        start,
+        duration));
   });
 
   Server.BindSync("draw_debug_shape", [this](const cr::DebugShape &shape) -> R<void>

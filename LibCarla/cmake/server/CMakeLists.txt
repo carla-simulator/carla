@@ -20,9 +20,6 @@ install(FILES ${libcarla_carla_headers} DESTINATION include/carla)
 file(GLOB libcarla_carla_geom_headers "${libcarla_source_path}/carla/geom/*.h")
 install(FILES ${libcarla_carla_geom_headers} DESTINATION include/carla/geom)
 
-file(GLOB libcarla_carla_recorder_headers "${libcarla_source_path}/carla/recorder/*.h")
-install(FILES ${libcarla_carla_recorder_headers} DESTINATION include/carla/recorder)
-
 file(GLOB libcarla_carla_profiler_headers "${libcarla_source_path}/carla/profiler/*.h")
 install(FILES ${libcarla_carla_profiler_headers} DESTINATION include/carla/profiler)
 
@@ -92,8 +89,6 @@ file(GLOB libcarla_server_sources
     "${libcarla_source_path}/carla/opendrive/parser/*.h"
     "${libcarla_source_path}/carla/opendrive/parser/pugixml/*.cpp"
     "${libcarla_source_path}/carla/opendrive/parser/pugixml/*.hpp"
-    "${libcarla_source_path}/carla/recorder/*.cpp"
-    "${libcarla_source_path}/carla/recorder/*.h"
     "${libcarla_source_path}/carla/road/*.cpp"
     "${libcarla_source_path}/carla/road/*.h"
     "${libcarla_source_path}/carla/road/element/*.cpp"
