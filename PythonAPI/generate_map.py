@@ -149,7 +149,6 @@ def invoke_commandlet(name, arguments):
 
 
 def generate_json(map_name, json_file):
-    print("Hi")
     fh = open("importsetting.json", "a+")
     import_groups = []
     file_names = []
