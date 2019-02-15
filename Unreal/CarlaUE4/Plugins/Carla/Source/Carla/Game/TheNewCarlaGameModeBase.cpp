@@ -16,6 +16,8 @@ ATheNewCarlaGameModeBase::ATheNewCarlaGameModeBase(const FObjectInitializer& Obj
 
   Episode = CreateDefaultSubobject<UCarlaEpisode>(TEXT("Episode"));
 
+  Recorder = CreateDefaultSubobject<ACarlaRecorder>(TEXT("Recorder"));
+
   TaggerDelegate = CreateDefaultSubobject<UTaggerDelegate>(TEXT("TaggerDelegate"));
   CarlaSettingsDelegate = CreateDefaultSubobject<UCarlaSettingsDelegate>(TEXT("CarlaSettingsDelegate"));
 }
@@ -82,6 +84,10 @@ void ATheNewCarlaGameModeBase::InitGame(
   Episode->WorldObserver->SetStream(GameInstance->GetServer().OpenMultiStream());
 
   SpawnActorFactories();
+
+  // make connection between Episode and Recorder
+  Recorder->SetEpisode(Episode);
+  Episode->SetRecorder(Recorder);
 }
 
 void ATheNewCarlaGameModeBase::RestartPlayer(AController *NewPlayer)
@@ -113,6 +119,7 @@ void ATheNewCarlaGameModeBase::Tick(float DeltaSeconds)
   Super::Tick(DeltaSeconds);
 
   GameInstance->Tick(DeltaSeconds);
+  if (Recorder) Recorder->Tick(DeltaSeconds);
 }
 
 void ATheNewCarlaGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)

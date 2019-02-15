@@ -10,20 +10,16 @@
 #include "Carla/Sensor/WorldObserver.h"
 #include "Carla/Weather/Weather.h"
 #include "Carla/Server/TheNewCarlaServer.h"
+#include "Carla/Game/CarlaRecorder.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/Actor.h>
 #include <carla/rpc/ActorDescription.h>
 #include <carla/geom/BoundingBox.h>
-#include <carla/recorder/Recorder.h>
-#include <carla/recorder/RecorderEvent.h>
-#include <carla/recorder/Replayer.h>
 #include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include "CarlaEpisode.generated.h"
-
-namespace crec = carla::recorder;
 
 /// A simulation episode.
 ///
@@ -152,16 +148,18 @@ public:
       FActorView::IdType DesiredId = 0)
   {
     auto result = ActorDispatcher->SpawnActor(Transform, thisActorDescription, DesiredId);
-
-    if (Recorder.isEnabled()) {
-      if (result.Key == EActorSpawnResultStatus::Success) {
-        CreateRecorderEventAdd(
-          static_cast<carla::rpc::actor_id_type>(result.Value.GetActorId()),
+    if (Recorder->IsEnabled())
+    {
+      if (result.Key == EActorSpawnResultStatus::Success)
+      {
+        Recorder->CreateRecorderEventAdd(
+          result.Value.GetActorId(),
           Transform,
           std::move(thisActorDescription)
         );
       }
     }
+
     return result;
   }
 
@@ -189,12 +187,14 @@ public:
   UFUNCTION(BlueprintCallable)
   bool DestroyActor(AActor *Actor)
   {
-      if (Recorder.isEnabled()) {
+      if (Recorder->IsEnabled())
+      {
         // recorder event
-        crec::RecorderEventDel recEvent {
-          GetActorRegistry().Find(Actor).GetActorId(),
+        CarlaRecorderEventDel RecEvent
+        {
+          GetActorRegistry().Find(Actor).GetActorId()
         };
-        Recorder.addEvent(std::move(recEvent));
+        Recorder->AddEvent(std::move(RecEvent));
       }
 
     return ActorDispatcher->DestroyActor(Actor);
@@ -213,14 +213,19 @@ public:
   // -- Private methods and members --------------------------------------------
   // ===========================================================================
 
-  crec::Recorder &GetRecorder()
+  ACarlaRecorder *GetRecorder()
   {
     return Recorder;
   }
 
-  crec::Replayer &GetReplayer()
+  void SetRecorder(ACarlaRecorder *Rec)
   {
-    return Recorder.getReplayer();
+    Recorder = Rec;
+  }
+
+  CarlaReplayer *GetReplayer()
+  {
+    return Recorder->GetReplayer();
   }
 
   std::string StartRecorder(std::string name);
@@ -237,13 +242,9 @@ private:
     ActorDispatcher->Bind(ActorFactory);
   }
 
-  void CreateRecorderEventAdd(
-    unsigned int databaseId,
-    const FTransform &Transform,
-    FActorDescription thisActorDescription);
-
   std::pair<int, FActorView&> TryToCreateReplayerActor(
-    carla::geom::Transform &transform,
+    FVector &Location,
+    FVector &Rotation,
     FActorDescription &ActorDesc,
     unsigned int desiredId);
 
@@ -266,5 +267,5 @@ private:
   UPROPERTY(VisibleAnywhere)
   AWorldObserver *WorldObserver = nullptr;
 
-  crec::Recorder Recorder;
+  ACarlaRecorder *Recorder = nullptr;
 };
