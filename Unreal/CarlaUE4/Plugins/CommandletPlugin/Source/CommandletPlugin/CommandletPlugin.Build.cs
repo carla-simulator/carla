@@ -16,6 +16,7 @@ namespace UnrealBuildTool.Rules
 					"AssetRegistry",
 					"UnrealEd",
 					"AssetTools",
+					"Carla"
 				});
 
 			PrivateIncludePaths.AddRange(
