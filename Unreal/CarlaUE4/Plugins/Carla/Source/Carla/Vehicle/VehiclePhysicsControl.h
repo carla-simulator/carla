@@ -18,20 +18,20 @@ struct CARLA_API FVehiclePhysicsControl
   // Engine Setup
   FRichCurve TorqueCurve;
 
-  // UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
-  // float MaxRPM = 0.0f;
+  UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
+  float MaxRPM = 0.0f;
 
-  // UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
-  // float MOI = 0.0f;
+  UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
+  float MOI = 0.0f;
 
-  // UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
-  // float DampingRateFullThrottle = 0.0f;
+  UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
+  float DampingRateFullThrottle = 0.0f;
 
-  // UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
-  // float DampingRateZeroThrottleClutchEngaged = 0.0f;
+  UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
+  float DampingRateZeroThrottleClutchEngaged = 0.0f;
 
-  // UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
-  // float DampingRateZeroThrottleClutchDisengaged = 0.0f;
+  UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
+  float DampingRateZeroThrottleClutchDisengaged = 0.0f;
 
   // // Differential Setup
 
