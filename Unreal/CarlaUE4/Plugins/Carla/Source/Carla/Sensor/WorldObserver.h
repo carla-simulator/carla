@@ -6,33 +6,17 @@
 
 #pragma once
 
-#include "GameFramework/Actor.h"
-
 #include "Carla/Sensor/DataStream.h"
-
-#include "WorldObserver.generated.h"
 
 class UCarlaEpisode;
 
-/// Serializes and sends all the actors in a UCarlaEpisode.
-UCLASS()
-class CARLA_API AWorldObserver : public AActor
+/// Serializes and sends all the actors in the current UCarlaEpisode.
+class FWorldObserver
 {
-  GENERATED_BODY()
-
 public:
 
   /// Prevent this sensor to be spawned by users.
   using not_spawnable = void;
-
-  AWorldObserver(const FObjectInitializer& ObjectInitializer);
-
-  /// Set the episode that will be observed.
-  void SetEpisode(UCarlaEpisode &InEpisode)
-  {
-    checkf(Episode == nullptr, TEXT("Cannot set episode twice!"));
-    Episode = &InEpisode;
-  }
 
   /// Replace the Stream associated with this sensor.
   void SetStream(FDataMultiStream InStream)
@@ -46,15 +30,17 @@ public:
     return Stream.GetToken();
   }
 
-protected:
+  /// Send a message to every connected client with the info about the given @a
+  /// Episode.
+  void BroadcastTick(const UCarlaEpisode &Episode);
 
-  void Tick(float DeltaSeconds) final;
+  /// Dummy. Required for compatibility with other sensors only.
+  FTransform GetActorTransform() const
+  {
+    return {};
+  }
 
 private:
 
-  UCarlaEpisode *Episode = nullptr;
-
   FDataMultiStream Stream;
-
-  double GameTimeStamp = 0.0;
 };
