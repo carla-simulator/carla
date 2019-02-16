@@ -77,5 +77,9 @@ namespace client {
     return _episode.Lock()->RegisterOnTickEvent(std::move(callback));
   }
 
+  void World::Tick() {
+    _episode.Lock()->Tick();
+  }
+
 } // namespace client
 } // namespace carla

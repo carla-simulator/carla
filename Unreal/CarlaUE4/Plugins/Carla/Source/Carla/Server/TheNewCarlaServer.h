@@ -31,6 +31,8 @@ public:
 
   void RunSome(uint32 Milliseconds);
 
+  bool TickCueReceived();
+
   void Stop();
 
   FDataStream OpenStream() const;

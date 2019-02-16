@@ -290,6 +290,10 @@ namespace detail {
     return _pimpl->CallAndWait<std::string>("replay_file", name, start, duration, follow_id);
   }
 
+  void Client::SendTickCue() {
+    _pimpl->AsyncCall("tick_cue");
+  }
+
 } // namespace detail
 } // namespace client
 } // namespace carla

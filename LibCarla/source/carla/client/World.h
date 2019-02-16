@@ -83,6 +83,10 @@ namespace client {
     /// Register a @a callback to be called every time a world tick is received.
     void OnTick(std::function<void(Timestamp)> callback);
 
+    /// Signal the simulator to continue to next tick (only has effect on
+    /// synchronous mode).
+    void Tick();
+
     DebugHelper MakeDebugHelper() const {
       return DebugHelper{_episode};
     }

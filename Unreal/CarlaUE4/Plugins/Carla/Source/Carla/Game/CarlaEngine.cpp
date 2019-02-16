@@ -35,8 +35,12 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
 
     WorldObserver.SetStream(BroadcastStream);
 
-    OnPreTickHandle = FWorldDelegates::OnWorldTickStart.AddRaw(this, &FCarlaEngine::OnPreTick);
-    OnPostTickHandle = FWorldDelegates::OnWorldPostActorTick.AddRaw(this, &FCarlaEngine::OnPostTick);
+    OnPreTickHandle = FWorldDelegates::OnWorldTickStart.AddRaw(
+        this,
+        &FCarlaEngine::OnPreTick);
+    OnPostTickHandle = FWorldDelegates::OnWorldPostActorTick.AddRaw(
+        this,
+        Settings.bSynchronousMode ? &FCarlaEngine::OnPostTickSync : &FCarlaEngine::OnPostTick);
 
     bIsRunning = true;
   }
@@ -66,4 +70,13 @@ void FCarlaEngine::OnPreTick(ELevelTick TickType, float DeltaSeconds)
 void FCarlaEngine::OnPostTick(UWorld *, ELevelTick, float)
 {
   Server.RunSome(10u);
+}
+
+void FCarlaEngine::OnPostTickSync(UWorld *, ELevelTick, float)
+{
+  do
+  {
+    Server.RunSome(10u);
+  }
+  while (!Server.TickCueReceived());
 }
