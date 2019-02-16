@@ -11,13 +11,6 @@
 #include "Server/ServerGameController.h"
 #include "Settings/CarlaSettings.h"
 
-#include <thread>
-
-static uint32 GetNumberOfThreadsForRPCServer()
-{
-  return std::max(std::thread::hardware_concurrency(), 4u) - 2u;
-}
-
 UCarlaGameInstance::UCarlaGameInstance() {
   CarlaSettings = CreateDefaultSubobject<UCarlaSettings>(TEXT("CarlaSettings"));
   check(CarlaSettings != nullptr);
@@ -37,15 +30,5 @@ void UCarlaGameInstance::InitializeGameControllerIfNotPresent(
       GameController = MakeUnique<MockGameController>(DataRouter, MockControllerSettings);
       UE_LOG(LogCarla, Log, TEXT("Using mock CARLA controller"));
     }
-  }
-}
-
-void UCarlaGameInstance::StartServer()
-{
-  if (!bServerIsRunning)
-  {
-    Server.Start(CarlaSettings->WorldPort);
-    Server.AsyncRun(GetNumberOfThreadsForRPCServer());
-    bServerIsRunning = true;
   }
 }

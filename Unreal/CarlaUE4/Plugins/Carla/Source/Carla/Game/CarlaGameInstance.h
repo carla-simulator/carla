@@ -8,6 +8,7 @@
 
 #include "Engine/GameInstance.h"
 
+#include "Carla/Game/CarlaEngine.h"
 #include "Carla/Game/CarlaGameControllerBase.h"
 #include "Carla/Game/DataRouter.h"
 #include "Carla/Server/TheNewCarlaServer.h"
@@ -32,9 +33,6 @@ public:
 
   void InitializeGameControllerIfNotPresent(
       const FMockGameControllerSettings &MockControllerSettings);
-
-  /// Starts the Carla server if not already running.
-  void StartServer();
 
   ICarlaGameControllerBase &GetGameController()
   {
@@ -64,7 +62,7 @@ public:
   UFUNCTION(BlueprintCallable)
   UCarlaEpisode *GetCarlaEpisode()
   {
-    return CurrentEpisode;
+    return CarlaEngine.GetCurrentEpisode();
   }
 
   FDataRouter &GetDataRouter()
@@ -72,42 +70,34 @@ public:
     return DataRouter;
   }
 
-  void NotifyBeginEpisode(UCarlaEpisode &Episode)
+  void NotifyInitGame()
   {
-    CurrentEpisode = &Episode;
-    Server.NotifyBeginEpisode(Episode);
+    CarlaEngine.NotifyInitGame(GetCarlaSettings());
   }
 
-  void Tick(float /*DeltaSeconds*/)
+  void NotifyBeginEpisode(UCarlaEpisode &Episode)
   {
-    Server.RunSome(10u); /// @todo
+    CarlaEngine.NotifyBeginEpisode(Episode);
   }
 
   void NotifyEndEpisode()
   {
-    Server.NotifyEndEpisode();
-    CurrentEpisode = nullptr;
+    CarlaEngine.NotifyEndEpisode();
   }
 
   const FTheNewCarlaServer &GetServer() const
   {
-    return Server;
+    return CarlaEngine.GetServer();
   }
 
 private:
 
-  UPROPERTY(VisibleAnywhere)
-  bool bServerIsRunning = false;
-
   UPROPERTY(Category = "CARLA Settings", EditAnywhere)
   UCarlaSettings *CarlaSettings = nullptr;
-
-  UPROPERTY()
-  UCarlaEpisode *CurrentEpisode = nullptr;
 
   FDataRouter DataRouter;
 
   TUniquePtr<ICarlaGameControllerBase> GameController;
 
-  FTheNewCarlaServer Server;
+  FCarlaEngine CarlaEngine;
 };

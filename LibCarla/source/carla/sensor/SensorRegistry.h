@@ -23,12 +23,12 @@
 // 2. Add a forward-declaration of the sensor here.
 class ACollisionSensor;
 class ADepthCamera;
+class AGnssSensor;
+class AObstacleDetectionSensor;
 class ARayCastLidar;
 class ASceneCaptureCamera;
 class ASemanticSegmentationCamera;
-class AWorldObserver;
-class AGnssSensor;
-class AObstacleDetectionSensor;
+class FWorldObserver;
 
 namespace carla {
 namespace sensor {
@@ -38,7 +38,7 @@ namespace sensor {
   /// Contains a registry of all the sensors available and allows serializing
   /// and deserializing sensor data for the types registered.
   using SensorRegistry = CompositeSerializer<
-    std::pair<AWorldObserver *, s11n::EpisodeStateSerializer>,
+    std::pair<FWorldObserver *, s11n::EpisodeStateSerializer>,
     std::pair<ASceneCaptureCamera *, s11n::ImageSerializer>,
     std::pair<ADepthCamera *, s11n::ImageSerializer>,
     std::pair<ASemanticSegmentationCamera *, s11n::ImageSerializer>,
