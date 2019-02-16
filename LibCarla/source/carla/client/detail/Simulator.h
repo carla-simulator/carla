@@ -114,6 +114,10 @@ namespace detail {
       _episode->RegisterOnTickEvent(std::move(callback));
     }
 
+    void Tick() {
+      _client.SendTickCue();
+    }
+
     /// @}
     // =========================================================================
     /// @name Access to global objects in the episode

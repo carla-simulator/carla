@@ -72,6 +72,8 @@ public:
 
   UCarlaEpisode *Episode = nullptr;
 
+  size_t TickCuesReceived = 0u;
+
 private:
 
   void BindActions();
@@ -112,6 +114,12 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   Server.BindAsync("version", []() -> R<std::string>
   {
     return carla::version();
+  });
+
+  Server.BindSync("tick_cue", [this]() -> R<void>
+  {
+    ++TickCuesReceived;
+    return R<void>::Success();
   });
 
   Server.BindSync("get_episode_info", [this]() -> R<cr::EpisodeInfo>
@@ -721,6 +729,16 @@ void FTheNewCarlaServer::AsyncRun(uint32 NumberOfWorkerThreads)
 void FTheNewCarlaServer::RunSome(uint32 Milliseconds)
 {
   Pimpl->Server.SyncRunFor(carla::time_duration::milliseconds(Milliseconds));
+}
+
+bool FTheNewCarlaServer::TickCueReceived()
+{
+  if (Pimpl->TickCuesReceived > 0u)
+  {
+    --(Pimpl->TickCuesReceived);
+    return true;
+  }
+  return false;
 }
 
 void FTheNewCarlaServer::Stop()

@@ -173,6 +173,8 @@ namespace detail {
 
     std::vector<rpc::actor_id_type> GetGroupTrafficLights(const rpc::Actor &trafficLight);
 
+    void SendTickCue();
+
   private:
 
     class Pimpl;

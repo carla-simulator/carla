@@ -121,7 +121,7 @@ public:
   /// In synchronous mode, CARLA waits every tick until the control from the
   /// client is received.
   UPROPERTY(Category = "CARLA Server", VisibleAnywhere, meta = (EditCondition = bUseNetworking))
-  bool bSynchronousMode = true;
+  bool bSynchronousMode = false;
 
   /// Send info about every non-player agent in the scene every frame.
   UPROPERTY(Category = "CARLA Server", VisibleAnywhere, meta = (EditCondition = bUseNetworking))
