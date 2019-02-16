@@ -42,6 +42,8 @@ private:
 
   void OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSeconds);
 
+  void OnPostTickSync(UWorld *World, ELevelTick TickType, float DeltaSeconds);
+
   bool bIsRunning = false;
 
   FTheNewCarlaServer Server;
