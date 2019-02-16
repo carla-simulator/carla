@@ -77,11 +77,7 @@ void ATheNewCarlaGameModeBase::InitGame(
     UE_LOG(LogCarla, Error, TEXT("Missing weather class!"));
   }
 
-  GameInstance->StartServer();
-
-  Episode->WorldObserver = World->SpawnActor<AWorldObserver>();
-  Episode->WorldObserver->SetEpisode(*Episode);
-  Episode->WorldObserver->SetStream(GameInstance->GetServer().OpenMultiStream());
+  GameInstance->NotifyInitGame();
 
   SpawnActorFactories();
 
@@ -118,7 +114,7 @@ void ATheNewCarlaGameModeBase::Tick(float DeltaSeconds)
 {
   Super::Tick(DeltaSeconds);
 
-  GameInstance->Tick(DeltaSeconds);
+  /// @todo Recorder should not tick here, FCarlaEngine should do it.
   if (Recorder) Recorder->Tick(DeltaSeconds);
 }
 
