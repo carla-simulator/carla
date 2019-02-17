@@ -99,7 +99,6 @@ if $DO_COPY_FILES ; then
   copy_if_changed "./CHANGELOG.md" "${DESTINATION}/CHANGELOG"
   copy_if_changed "./Docs/release_readme.md" "${DESTINATION}/README"
   copy_if_changed "./Docs/python_api.md" "${DESTINATION}/python_api.md"
-  copy_if_changed "./Docs/Example.CarlaSettings.ini" "${DESTINATION}/CarlaSettings.ini"
   copy_if_changed "./Util/Docker/Release.Dockerfile" "${DESTINATION}/Dockerfile"
   copy_if_changed "./PythonAPI/dist/*.egg" "${DESTINATION}/PythonAPI/"
   copy_if_changed "./PythonAPI/agents/" "${DESTINATION}/PythonAPI/agents"
