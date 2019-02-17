@@ -13,6 +13,7 @@
 #include "Misc/CoreDelegates.h"
 
 class UCarlaSettings;
+struct FEpisodeSettings;
 
 class FCarlaEngine : private NonCopyable
 {
@@ -42,9 +43,11 @@ private:
 
   void OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSeconds);
 
-  void OnPostTickSync(UWorld *World, ELevelTick TickType, float DeltaSeconds);
+  void OnEpisodeSettingsChanged(const FEpisodeSettings &Settings);
 
   bool bIsRunning = false;
+
+  bool bSynchronousMode = false;
 
   FTheNewCarlaServer Server;
 
@@ -55,4 +58,6 @@ private:
   FDelegateHandle OnPreTickHandle;
 
   FDelegateHandle OnPostTickHandle;
+
+  FDelegateHandle OnEpisodeSettingsChangeHandle;
 };

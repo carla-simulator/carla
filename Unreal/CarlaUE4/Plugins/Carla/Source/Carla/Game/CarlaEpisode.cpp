@@ -46,6 +46,12 @@ UCarlaEpisode::UCarlaEpisode(const FObjectInitializer &ObjectInitializer)
   ActorDispatcher = CreateDefaultSubobject<UActorDispatcher>(TEXT("ActorDispatcher"));
 }
 
+void UCarlaEpisode::ApplySettings(const FEpisodeSettings &Settings)
+{
+  FCarlaStaticDelegates::OnEpisodeSettingsChange.Broadcast(Settings);
+  EpisodeSettings = Settings;
+}
+
 TArray<FTransform> UCarlaEpisode::GetRecommendedSpawnPoints() const
 {
   TArray<FTransform> SpawnPoints;
