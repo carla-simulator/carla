@@ -13,10 +13,11 @@
 #include "carla/rpc/Actor.h"
 #include "carla/rpc/ActorDefinition.h"
 #include "carla/rpc/EpisodeInfo.h"
+#include "carla/rpc/EpisodeSettings.h"
 #include "carla/rpc/MapInfo.h"
-#include "carla/rpc/WeatherParameters.h"
 #include "carla/rpc/TrafficLightState.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
+#include "carla/rpc/WeatherParameters.h"
 
 #include <functional>
 #include <memory>
@@ -75,6 +76,10 @@ namespace detail {
     std::vector<rpc::ActorDefinition> GetActorDefinitions();
 
     rpc::Actor GetSpectator();
+
+    rpc::EpisodeSettings GetEpisodeSettings();
+
+    void SetEpisodeSettings(const rpc::EpisodeSettings &settings);
 
     rpc::WeatherParameters GetWeatherParameters();
 

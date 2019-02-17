@@ -139,6 +139,14 @@ namespace detail {
     return _pimpl->CallAndWait<carla::rpc::Actor>("get_spectator");
   }
 
+  rpc::EpisodeSettings Client::GetEpisodeSettings() {
+    return _pimpl->CallAndWait<rpc::EpisodeSettings>("get_episode_settings");
+  }
+
+  void Client::SetEpisodeSettings(const rpc::EpisodeSettings &settings) {
+    _pimpl->AsyncCall("set_episode_settings", settings);
+  }
+
   rpc::WeatherParameters Client::GetWeatherParameters() {
     return _pimpl->CallAndWait<rpc::WeatherParameters>("get_weather_parameters");
   }

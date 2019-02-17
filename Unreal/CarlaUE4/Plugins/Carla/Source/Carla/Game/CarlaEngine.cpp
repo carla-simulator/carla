@@ -8,7 +8,9 @@
 #include "Carla/Game/CarlaEngine.h"
 
 #include "Carla/Game/CarlaEpisode.h"
+#include "Carla/Game/CarlaStaticDelegates.h"
 #include "Carla/Settings/CarlaSettings.h"
+#include "Carla/Settings/EpisodeSettings.h"
 
 #include <thread>
 
@@ -23,6 +25,7 @@ FCarlaEngine::~FCarlaEngine()
   {
     FWorldDelegates::OnWorldTickStart.Remove(OnPreTickHandle);
     FWorldDelegates::OnWorldPostActorTick.Remove(OnPostTickHandle);
+    FCarlaStaticDelegates::OnEpisodeSettingsChange.Remove(OnEpisodeSettingsChangeHandle);
   }
 }
 
@@ -40,7 +43,10 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
         &FCarlaEngine::OnPreTick);
     OnPostTickHandle = FWorldDelegates::OnWorldPostActorTick.AddRaw(
         this,
-        Settings.bSynchronousMode ? &FCarlaEngine::OnPostTickSync : &FCarlaEngine::OnPostTick);
+        &FCarlaEngine::OnPostTick);
+    OnEpisodeSettingsChangeHandle = FCarlaStaticDelegates::OnEpisodeSettingsChange.AddRaw(
+        this,
+        &FCarlaEngine::OnEpisodeSettingsChanged);
 
     bIsRunning = true;
   }
@@ -69,14 +75,19 @@ void FCarlaEngine::OnPreTick(ELevelTick TickType, float DeltaSeconds)
 
 void FCarlaEngine::OnPostTick(UWorld *, ELevelTick, float)
 {
-  Server.RunSome(10u);
-}
-
-void FCarlaEngine::OnPostTickSync(UWorld *, ELevelTick, float)
-{
   do
   {
     Server.RunSome(10u);
   }
-  while (!Server.TickCueReceived());
+  while (bSynchronousMode && !Server.TickCueReceived());
+}
+
+void FCarlaEngine::OnEpisodeSettingsChanged(const FEpisodeSettings &Settings)
+{
+  bSynchronousMode = Settings.bSynchronousMode;
+
+  if (GEngine && GEngine->GameViewport)
+  {
+    GEngine->GameViewport->bDisableWorldRendering = Settings.bNoRenderingMode;
+  }
 }

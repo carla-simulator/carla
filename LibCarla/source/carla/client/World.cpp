@@ -37,6 +37,14 @@ namespace client {
     return _episode.Lock()->GetSpectator();
   }
 
+  rpc::EpisodeSettings World::GetSettings() const {
+    return _episode.Lock()->GetEpisodeSettings();
+  }
+
+  void World::ApplySettings(const rpc::EpisodeSettings &settings) {
+    _episode.Lock()->SetEpisodeSettings(settings);
+  }
+
   rpc::WeatherParameters World::GetWeather() const {
     return _episode.Lock()->GetWeatherParameters();
   }

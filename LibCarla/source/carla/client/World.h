@@ -13,6 +13,7 @@
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/geom/Transform.h"
 #include "carla/rpc/Actor.h"
+#include "carla/rpc/EpisodeSettings.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/WeatherParameters.h"
 
@@ -52,6 +53,10 @@ namespace client {
     /// Return the spectator actor. The spectator controls the view in the
     /// simulator window.
     SharedPtr<Actor> GetSpectator() const;
+
+    rpc::EpisodeSettings GetSettings() const;
+
+    void ApplySettings(const rpc::EpisodeSettings &settings);
 
     /// Retrieve the weather parameters currently active in the world.
     rpc::WeatherParameters GetWeather() const;

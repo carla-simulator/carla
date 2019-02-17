@@ -128,6 +128,14 @@ namespace detail {
 
     SharedPtr<Actor> GetSpectator();
 
+    rpc::EpisodeSettings GetEpisodeSettings() {
+      return _client.GetEpisodeSettings();
+    }
+
+    void SetEpisodeSettings(const rpc::EpisodeSettings &settings) {
+      _client.SetEpisodeSettings(settings);
+    }
+
     rpc::WeatherParameters GetWeatherParameters() {
       return _client.GetWeatherParameters();
     }
