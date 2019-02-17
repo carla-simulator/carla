@@ -19,6 +19,7 @@
 #include <carla/rpc/ActorDescription.h>
 #include <carla/rpc/DebugShape.h>
 #include <carla/rpc/EpisodeInfo.h>
+#include <carla/rpc/EpisodeSettings.h>
 #include <carla/rpc/MapInfo.h>
 #include <carla/rpc/Response.h>
 #include <carla/rpc/Server.h>
@@ -140,6 +141,19 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       cr::FromFString(Episode->GetMapName()),
       cr::FromFString(FileContents),
       MakeVectorFromTArray<cg::Transform>(SpawnPoints)};
+  });
+
+  Server.BindSync("get_episode_settings", [this]() -> R<cr::EpisodeSettings>
+  {
+    REQUIRE_CARLA_EPISODE();
+    return cr::EpisodeSettings{Episode->GetSettings()};
+  });
+
+  Server.BindSync("set_episode_settings", [this](const cr::EpisodeSettings &settings) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    Episode->ApplySettings(settings);
+    return R<void>::Success();
   });
 
   Server.BindSync("get_actor_definitions", [this]() -> R<std::vector<cr::ActorDefinition>>
