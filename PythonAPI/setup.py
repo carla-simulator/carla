@@ -66,6 +66,13 @@ def get_libcarla_extensions():
                 '-DBOOST_ERROR_CODE_HEADER_ONLY', '-DLIBCARLA_WITH_PYTHON_SUPPORT',
                 '-DLIBCARLA_ENABLE_LIFETIME_PROFILER',
             ]
+            if 'TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true':
+                print('Travis CI build detected: disabling PNG support.')
+                extra_link_args += ['-ljpeg', '-ltiff']
+                extra_compile_args += ['-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=false']
+            else:
+                extra_link_args += ['-lpng', '-ljpeg', '-ltiff']
+                extra_compile_args += ['-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true']
 
         else:
             raise NotImplementedError
