@@ -8,9 +8,6 @@
 #include "Carla/Sensor/SceneCaptureCamera.h"
 
 FActorDefinition ASceneCaptureCamera::GetSensorDefinition()
-#elif PLATFORM_MAC
-  TEXT("Material'/Carla/PostProcessingMaterials/DepthEffectMaterial.DepthEffectMaterial'");
-
 {
   constexpr bool bEnableModifyingPostProcessEffects = true;
   return UActorBlueprintFunctionLibrary::MakeCameraDefinition(

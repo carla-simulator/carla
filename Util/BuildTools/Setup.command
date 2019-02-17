@@ -23,6 +23,8 @@ fi
 export CC=/usr/bin/clang
 export CXX=/usr/bin/clang++
 
+BUILD_TOOLS_DIR=$(dirname "$0")
+
 source $(dirname "$0")/Environment.sh
 
 mkdir -p ${CARLA_BUILD_FOLDER}
@@ -40,7 +42,6 @@ USE_XCODE=true
 if [[ -f ${CARLA_BUILD_FOLDER}/NO_XCODEBUILD ]] ; then
   USE_XCODE=false
 fi
-
 # Mac OSX standard getopt does not support long options, so we don't bother. 
 
 while true; do
@@ -72,7 +73,7 @@ done
 # -- Get boost includes --------------------------------------------------------
 # ==============================================================================
 
-BOOST_VERSION=1.67.0
+BOOST_VERSION=1.69.0
 BOOST_UVERSION=${BOOST_VERSION//\./_}
 BOOST_BASENAME=boost-${BOOST_VERSION}
 
@@ -107,7 +108,7 @@ else
 
   log "Extracting boost."
   tar -xzf ${BOOST_GZ}
-  rm ${BOOST_GZ}
+  #rm ${BOOST_GZ}
   mkdir -p ${BOOST_BASENAME}-install/include
   mv ${BOOST_DISTNAME} ${BOOST_BASENAME}-source
 
@@ -116,17 +117,57 @@ else
   BOOST_TOOLSET="darwin"
   BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
 
+  py2="/usr/bin/env python2"
+  py2_root=`${py2} -c "import sys; print(sys.prefix)"`
+  pyv=`$py2 -c "import sys;x='{v[0]}.{v[1]}'.format(v=list(sys.version_info[:2]));sys.stdout.write(x)";`
   ./bootstrap.sh \
       --with-toolset=clang \
       --prefix=../boost-install \
-      --with-libraries=python
-  ./b2 clean
-  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j 12 stage release
-  ./b2 install toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j 12
+      --with-libraries=python,filesystem \
+      --with-python=${py2} --with-python-root=${py2_root}
+
+  if ${TRAVIS}
+  then
+    ${py2} ${BUILD_TOOLS_DIR}/gen-boost-python-config.py ${HOME}/user-config.jam
+  else
+    ${py2} ${BUILD_TOOLS_DIR}/gen-boost-python-config.py project-config.jam
+  fi
+
+  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
+  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
+  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} --clean-all
+
+  # Get rid of  python2 build artifacts completely & do a clean build for python3
+  popd >/dev/null
+  rm -Rf ${BOOST_BASENAME}-source
+  tar -xzf ${BOOST_BASENAME//[-.]/_}.tar.gz
+  mkdir -p ${BOOST_BASENAME}-install/include
+  mv ${BOOST_BASENAME//[-.]/_} ${BOOST_BASENAME}-source
+  pushd ${BOOST_BASENAME}-source >/dev/null
+
+  py3="/usr/bin/env python3"
+  py3_root=`${py3} -c "import sys; print(sys.prefix)"`
+  pyv=`$py3 -c "import sys;x='{v[0]}.{v[1]}'.format(v=list(sys.version_info[:2]));sys.stdout.write(x)";`
+  ./bootstrap.sh \
+      --with-toolset=clang \
+      --prefix=../boost-install \
+      --with-libraries=python \
+      --with-python=${py3} --with-python-root=${py3_root}
+
+  if ${TRAVIS}
+  then
+    ${py3} ${BUILD_TOOLS_DIR}/gen-boost-python-config.py ${HOME}/user-config.jam
+  else
+    ${py3} ${BUILD_TOOLS_DIR}/gen-boost-python-config.py project-config.jam
+  fi
+
+  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
+  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
 
   popd >/dev/null
 
-  # rm -Rf ${BOOST_BASENAME}-source
+  rm -Rf ${BOOST_BASENAME}-source
+  rm ${BOOST_BASENAME//[-.]/_}.tar.gz
 
 fi
 
@@ -136,7 +177,8 @@ unset BOOST_BASENAME
 # -- Get rpclib and compile it with libc++ and libstdc++ -----------------------
 # ==============================================================================
 
-RPCLIB_BASENAME=rpclib-2.2.1
+RPCLIB_PATCH=v2.2.1_c1
+RPCLIB_BASENAME=rpclib-${RPCLIB_PATCH}
 
 RPCLIB_LIBCXX_INCLUDE=${PWD}/${RPCLIB_BASENAME}-libcxx-install/include
 RPCLIB_LIBCXX_LIBPATH=${PWD}/${RPCLIB_BASENAME}-libcxx-install/lib
@@ -153,7 +195,7 @@ else
 
   log "Retrieving rpclib."
 
-  git clone --depth=1 -b v2.2.1 https://github.com/rpclib/rpclib.git ${RPCLIB_BASENAME}-source
+  git clone -b ${RPCLIB_PATCH} https://github.com/carla-simulator/rpclib.git ${RPCLIB_BASENAME}-source
 
   log "Building rpclib with libc++."
 
@@ -168,7 +210,7 @@ else
   fi
 
   cmake -G ${RPC_TOOLSET} \
-      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++" \
+      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -DBOOST_NO_EXCEPTIONS -DASIO_NO_EXCEPTIONS " \
       -DCMAKE_INSTALL_PREFIX="../${RPCLIB_BASENAME}-libcxx-install" \
       ../${RPCLIB_BASENAME}-source
 
@@ -213,25 +255,30 @@ unset RPCLIB_BASENAME
 # -- Get GTest and compile it with libc++ --------------------------------------
 # ==============================================================================
 
-GTEST_BASENAME=googletest-1.8.0
+GTEST_BASENAME=googletest-1.8.0-ex
 
-GTEST_INCLUDE=${PWD}/${GTEST_BASENAME}-install/include
-GTEST_LIBPATH=${PWD}/${GTEST_BASENAME}-install/lib
+GTEST_LIBCXX_INCLUDE=${PWD}/${GTEST_BASENAME}-libcxx-install/include
+GTEST_LIBCXX_LIBPATH=${PWD}/${GTEST_BASENAME}-libcxx-install/lib
+GTEST_LIBSTDCXX_INCLUDE=${PWD}/${GTEST_BASENAME}-libstdcxx-install/include
+GTEST_LIBSTDCXX_LIBPATH=${PWD}/${GTEST_BASENAME}-libstdcxx-install/lib
 
-if [[ -d "${GTEST_BASENAME}-install" ]] ; then
+if [[ -d "${GTEST_BASENAME}-libcxx-install" && -d "${GTEST_BASENAME}-libstdcxx-install" ]] ; then
   log "${GTEST_BASENAME} already installed."
 else
-  rm -Rf ${GTEST_BASENAME}-source ${GTEST_BASENAME}-build
+  rm -Rf \
+      ${GTEST_BASENAME}-source \
+      ${GTEST_BASENAME}-libcxx-build ${GTEST_BASENAME}-libstdcxx-build \
+      ${GTEST_BASENAME}-libcxx-install ${GTEST_BASENAME}-libstdcxx-install
 
   log "Retrieving Google Test."
 
   git clone --depth=1 -b release-1.8.0 https://github.com/google/googletest.git ${GTEST_BASENAME}-source
 
-  log "Building Google Test."
+  log "Building Google Test with libc++."
 
-  mkdir -p ${GTEST_BASENAME}-build
+  mkdir -p ${GTEST_BASENAME}-libcxx-build
 
-  pushd ${GTEST_BASENAME}-build >/dev/null
+  pushd ${GTEST_BASENAME}-libcxx-build >/dev/null
 
   if ${USE_XCODE}; then
     GTEST_TOOLSET=Xcode
@@ -240,8 +287,8 @@ else
   fi
 
   cmake -G ${GTEST_TOOLSET} \
-      -DCMAKE_CXX_FLAGS="-std=c++14 -stdlib=libc++ " \
-      -DCMAKE_INSTALL_PREFIX="../${GTEST_BASENAME}-install" \
+      -DCMAKE_CXX_FLAGS="-std=c++14 -stdlib=libc++ -DBOOST_NO_EXCEPTIONS -fno-exceptions " \
+      -DCMAKE_INSTALL_PREFIX="../${GTEST_BASENAME}-libcxx-install" \
       ../${GTEST_BASENAME}-source
 
   if ${USE_XCODE}; then
@@ -254,9 +301,32 @@ else
 
   popd >/dev/null
 
-  rm -Rf ${GTEST_BASENAME}-source ${GTEST_BASENAME}-build
+  log "Building Google Test with libstdc++."
+
+  mkdir -p ${GTEST_BASENAME}-libstdcxx-build
+
+  pushd ${GTEST_BASENAME}-libstdcxx-build >/dev/null
+
+  cmake -G ${GTEST_TOOLSET} \
+      -DCMAKE_CXX_FLAGS="-std=c++14" \
+      -DCMAKE_INSTALL_PREFIX="../${GTEST_BASENAME}-libstdcxx-install" \
+      ../${GTEST_BASENAME}-source
+
+  if ${USE_XCODE}; then
+    xcodebuild
+    xcodebuild -target install -configuration Release
+  else
+    ninja
+    ninja install
+  fi
+
+  popd >/dev/null
+
+  rm -Rf ${GTEST_BASENAME}-source ${GTEST_BASENAME}-libcxx-build ${GTEST_BASENAME}-libstdcxx-build
 
 fi
+
+unset GTEST_BASENAME
 
 # ==============================================================================
 # -- Generate CMake toolchains and config --------------------------------------
@@ -274,8 +344,9 @@ set(CMAKE_CXX_COMPILER ${CXX})
 
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -std=c++14 -fPIC" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra" CACHE STRING "" FORCE)
-# See https://bugs.llvm.org/show_bug.cgi?id=21629
-set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wno-missing-braces" CACHE STRING "" FORCE)
+
+# @todo These flags need to be compatible with setup.py compilation.
+set(CMAKE_CXX_FLAGS_RELEASE_CLIENT "\${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -g -fwrapv -O2 -Wall -Wstrict-prototypes -fno-strict-aliasing -Wdate-time -D_FORTIFY_SOURCE=2 -g -fstack-protector-strong -Wformat -Werror=format-security -fPIC -std=c++14 -Wno-missing-braces -DBOOST_ERROR_CODE_HEADER_ONLY -DLIBCARLA_ENABLE_LIFETIME_PROFILER -DLIBCARLA_WITH_PYTHON_SUPPORT" CACHE STRING "" FORCE)
 EOL
 
 # -- LIBCPP_TOOLCHAIN_FILE -----------------------------------------------------
@@ -287,6 +358,7 @@ cat >>${LIBCPP_TOOLCHAIN_FILE}.gen <<EOL
 
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -stdlib=libc++" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS}" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -fno-exceptions" CACHE STRING "" FORCE)
 set(CMAKE_CXX_LINK_FLAGS "\${CMAKE_CXX_LINK_FLAGS}" CACHE STRING "" FORCE)
 set(CMAKE_CXX_LINK_FLAGS "\${CMAKE_CXX_LINK_FLAGS} -lc++ -lc++abi" CACHE STRING "" FORCE)
 EOL
@@ -300,20 +372,43 @@ set(CARLA_VERSION $(get_carla_version))
 
 add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY)
 
+if (CMAKE_BUILD_TYPE STREQUAL "Server")
+  add_definitions(-DASIO_NO_EXCEPTIONS)
+  add_definitions(-DBOOST_NO_EXCEPTIONS)
+  add_definitions(-DLIBCARLA_NO_EXCEPTIONS)
+  add_definitions(-DPUGIXML_NO_EXCEPTIONS)
+endif ()
+
+# Uncomment to force support for an specific image format (require their
+# respective libraries installed).
+# add_definitions(-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT)
+# add_definitions(-DLIBCARLA_IMAGE_WITH_JPEG_SUPPORT)
+# add_definitions(-DLIBCARLA_IMAGE_WITH_TIFF_SUPPORT)
+
 set(BOOST_INCLUDE_PATH "${BOOST_INCLUDE}")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Server")
-  set(GTEST_INCLUDE_PATH "${GTEST_INCLUDE}")
-  set(GTEST_LIB_PATH "${GTEST_LIBPATH}")
   set(RPCLIB_INCLUDE_PATH "${RPCLIB_LIBCXX_INCLUDE}")
   set(RPCLIB_LIB_PATH "${RPCLIB_LIBCXX_LIBPATH}")
+  set(GTEST_INCLUDE_PATH "${GTEST_LIBCXX_INCLUDE}")
+  set(GTEST_LIB_PATH "${GTEST_LIBCXX_LIBPATH}")
 elseif (CMAKE_BUILD_TYPE STREQUAL "Client")
   # Here libraries linking libstdc++.
   set(RPCLIB_INCLUDE_PATH "${RPCLIB_LIBSTDCXX_INCLUDE}")
   set(RPCLIB_LIB_PATH "${RPCLIB_LIBSTDCXX_LIBPATH}")
+  set(GTEST_INCLUDE_PATH "${GTEST_LIBSTDCXX_INCLUDE}")
+  set(GTEST_LIB_PATH "${GTEST_LIBSTDCXX_LIBPATH}")
   set(BOOST_LIB_PATH "${BOOST_LIBPATH}")
 endif ()
+
 EOL
+
+if [ "${TRAVIS}" == "true" ] ; then
+  log "Travis CI build detected: disabling PNG support."
+  echo "add_definitions(-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=false)" >> ${CMAKE_CONFIG_FILE}.gen
+else
+  echo "add_definitions(-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true)" >> ${CMAKE_CONFIG_FILE}.gen
+fi
 
 # -- Move files ----------------------------------------------------------------
 

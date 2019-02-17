@@ -1,7 +1,7 @@
 # How to build CARLA on Mac OSX 
 
 Note that unlike the Linux build, this one uses the standard Mac compiler tools and
-the standard Unreal Engine 4.19 distribution.
+the standard Unreal Engine 4.21 distribution.
 
 Prerequisites
 -------------
@@ -20,21 +20,22 @@ Note that Apple's has it's own clang versioning scheme that tracks the Xcode ver
 so it is not obvious how the features compare to the LLVM distributions, but this version
 should fully support c++14 features.
 
-### Install Unreal Engine 4.19
+### Install Unreal Engine 4.21
 
 Install the [Epic Games Launcher](https://www.epicgames.com/unrealtournament/download)
-and use it to download version 4.19 of the Unreal Engine. The default install location
+and use it to download version 4.21 of the Unreal Engine. The default install location
 is `/Users/Shared/Epic Games/`, but it is a good idea to eliminate the space in the path
 and instead use `/Users/Shared/EpicGames/` since some tools seem to have problems with
 the space.
 
 Although, you don't need to build the engine from source, you do need to add the file
-[GenerateProjectFiles.sh](https://github.com/EpicGames/UnrealEngine/blob/4.19/GenerateProjectFiles.sh) to the root directory from a copy of the Unreal Engine source tree.
+[GenerateProjectFiles.sh](https://github.com/EpicGames/UnrealEngine/blob/4.21/GenerateProjectFiles.sh) to the root directory from a copy of the Unreal Engine source tree.
 
 ### Install the build tools and dependencies
 
 ~~~sh
-$ brew install autoconf curl libtool ninja wget
+$ brew install autoconf curl libtool ninja wget \
+   libpng
 ~~~
 
 Use shipping python or install using your favorite method (e.g. brew, download installer from python.org,
@@ -88,7 +89,7 @@ Note that the `master` branch contains the latest fixes and features, for the
 latest stable code may be best to switch to the latest release tag.
 
 Now you need to download the assets package, to do so we provide a handy script
-that downloads and extracts the latest version (note that the package is >10GB,
+that downloads and extracts the latest version (note that the package is >12GB,
 this step might take some time depending on your connection)
 
 ```sh
@@ -99,7 +100,7 @@ For CARLA to find your Unreal Engine's installation folder you need to set the
 following environment variable
 
 ```sh
-export UE4_ROOT=/Users/shared/EpicGames/UE_4.19
+export UE4_ROOT=/Users/shared/EpicGames/UE_4.21
 ```
 
 You can also add this variable to your `~/.bashrc` or `~/.profile`.
@@ -124,3 +125,4 @@ git pull
 ./Update.sh
 make launch
 ```
+

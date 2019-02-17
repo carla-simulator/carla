@@ -154,9 +154,16 @@ install(FILES ${libcarla_moodycamel_sources} DESTINATION include/moodycamel)
 foreach(target carla_client_debug carla_client)
   add_library(${target} STATIC ${libcarla_sources})
 
-  target_include_directories(${target} PRIVATE
-      "${BOOST_INCLUDE_PATH}"
-      "${RPCLIB_INCLUDE_PATH}")
+  if (APPLE)
+     target_include_directories(${target} PRIVATE
+         "${BOOST_INCLUDE_PATH}"
+         "${RPCLIB_INCLUDE_PATH}"
+         "/usr/local/include")
+  else (APPLE)
+     target_include_directories(${target} PRIVATE
+         "${BOOST_INCLUDE_PATH}"
+         "${RPCLIB_INCLUDE_PATH}")
+  endif (APPLE)
 
   install(TARGETS ${target} DESTINATION lib)
 endforeach(target)

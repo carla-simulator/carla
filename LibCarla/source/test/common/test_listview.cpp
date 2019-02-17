@@ -30,13 +30,13 @@ static void TestSequence(carla::ListView<Iterator> view) {
 TEST(listview, sequence) {
   int array[] = {0, 1, 2, 3, 4, 5};
   TestSequence(MakeListView(array));
-  std::array<int, 6u> std_array = {0, 1, 2, 3, 4, 5};
+  std::array<int, 6u> std_array = {{0, 1, 2, 3, 4, 5}};
   TestSequence(MakeListView(std_array));
-  std::vector<int> vector = {0, 1, 2, 3, 4, 5};
+  std::vector<int> vector = {{0, 1, 2, 3, 4, 5}};
   TestSequence(MakeListView(vector));
-  std::list<int> list = {0, 1, 2, 3, 4, 5};
+  std::list<int> list = {{0, 1, 2, 3, 4, 5}};
   TestSequence(MakeListView(list));
-  std::set<int> set = {0, 1, 2, 3, 4, 5};
+  std::set<int> set = {{0, 1, 2, 3, 4, 5}};
   TestSequence(MakeListView(set));
 }
 

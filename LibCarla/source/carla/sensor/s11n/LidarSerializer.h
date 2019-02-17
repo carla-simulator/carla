@@ -86,9 +86,9 @@ namespace s11n {
       const Sensor &,
       const LidarMeasurement &measurement,
       Buffer output) {
-    std::array<boost::asio::const_buffer, 2u> seq = {
+    std::array<boost::asio::const_buffer, 2u> seq = {{
         boost::asio::buffer(measurement._header),
-        boost::asio::buffer(measurement._points)};
+        boost::asio::buffer(measurement._points)}};
     output.copy_from(seq);
     return output;
   }

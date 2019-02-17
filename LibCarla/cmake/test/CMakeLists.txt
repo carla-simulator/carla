@@ -37,6 +37,10 @@ foreach(target libcarla_test_${carla_config}_debug libcarla_test_${carla_config}
         "${GTEST_INCLUDE_PATH}"
         "${libcarla_source_path}/test")
 
+    if (APPLE)
+        target_include_directories(${target} PRIVATE "/usr/local/include")
+    endif (APPLE)
+
     if (WIN32)
         target_link_libraries(${target} "gtest_main.lib")
         target_link_libraries(${target} "gtest.lib")

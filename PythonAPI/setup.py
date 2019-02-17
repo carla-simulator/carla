@@ -6,7 +6,7 @@
 
 from setuptools import setup, Extension
 
-import fnmatch
+import fnmatch 
 import os
 import platform
 import sys
@@ -56,10 +56,15 @@ def get_libcarla_extensions():
             pylib = "libboost_python%d%d.a" % (sys.version_info.major,
                                                sys.version_info.minor)
             extra_link_args = [
+                os.path.join(pwd, 'dependencies/lib/libcarla_client.a'),
                 os.path.join(pwd, 'dependencies/lib/librpc.a'),
+                os.path.join(pwd, 'dependencies/lib/libboost_filesystem.a'),
                 os.path.join(pwd, 'dependencies/lib', pylib)]
             extra_compile_args = [
-                '-fPIC', '-std=c++14', '-DBOOST_ERROR_CODE_HEADER_ONLY', '-Wno-missing-braces'
+                '-mmacosx-version-min=10.13',
+                '-fPIC', '-std=c++14', '-Wno-missing-braces', 
+                '-DBOOST_ERROR_CODE_HEADER_ONLY', '-DLIBCARLA_WITH_PYTHON_SUPPORT',
+                '-DLIBCARLA_ENABLE_LIFETIME_PROFILER',
             ]
 
         else:

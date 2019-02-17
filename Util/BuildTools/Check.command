@@ -20,16 +20,30 @@ Or choose one or more of the following
     [--libcarla-release] [--libcarla-debug]
     [--python-api-2] [--python-api-3]
     [--benchmark]
+
+You can also set the command-line arguments passed to GTest on a ".gtest"
+config file in the Carla project main folder. E.g.
+
+    # Contents of ${CARLA_ROOT_FOLDER}/.gtest
+    gtest_shuffle
+    gtest_filter=misc*
 END
 )
 
 GDB=
 XML_OUTPUT=false
-GTEST_ARGS=
+GTEST_ARGS=`sed -e 's/#.*$//g' ${CARLA_ROOT_FOLDER}/.gtest | sed -e '/^[[:space:]]*$/!s/^/--/g' | sed -e ':a;N;$!ba;s/\n/ /g'`
 LIBCARLA_RELEASE=false
 LIBCARLA_DEBUG=false
 PYTHON_API_2=false
 PYTHON_API_3=false
+RUN_BENCHMARK=false
+
+OPTS=`getopt -o h --long help,gdb,xml,gtest_args:,all,libcarla-release,libcarla-debug,python-api-2,python-api-3,benchmark -n 'parse-options' -- "$@"`
+
+if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
+
+eval set -- "$OPTS"
 
 while true; do
   case "$1" in
@@ -46,7 +60,7 @@ while true; do
       LIBCARLA_RELEASE=true;
       LIBCARLA_DEBUG=true;
       PYTHON_API_2=true;
-      PYTHON_API_3=false; # @todo Python 3 not supported yet.
+      PYTHON_API_3=true;
       shift ;;
     --libcarla-release )
       LIBCARLA_RELEASE=true;
@@ -62,6 +76,7 @@ while true; do
       shift ;;
     --benchmark )
       LIBCARLA_RELEASE=true;
+      RUN_BENCHMARK=true;
       GTEST_ARGS="--gtest_filter=benchmark*";
       shift ;;
     -h | --help )
@@ -70,11 +85,6 @@ while true; do
       exit 1
       ;;
     * )
-      if [ ! -z "$1" ]; then
-        echo "Bad argument: '$1'"
-        echo "$USAGE_STRING"
-        exit 2
-      fi
       break ;;
   esac
 done
@@ -95,9 +105,13 @@ if ${LIBCARLA_DEBUG} ; then
     EXTRA_ARGS=
   fi
 
-  log "Running LibCarla unit tests debug."
+  log "Running LibCarla.server unit tests (debug)."
+  echo "Running: ${GDB} libcarla_test_server_debug ${GTEST_ARGS} ${EXTRA_ARGS}"
+  LD_LIBRARY_PATH=${LIBCARLA_INSTALL_SERVER_FOLDER}/lib ${GDB} ${LIBCARLA_INSTALL_SERVER_FOLDER}/test/libcarla_test_server_debug ${GTEST_ARGS} ${EXTRA_ARGS}
 
-  LD_LIBRARY_PATH=${LIBCARLA_INSTALL_SERVER_FOLDER}/lib ${GDB} ${LIBCARLA_INSTALL_SERVER_FOLDER}/test/libcarla_test_debug ${GTEST_ARGS} ${EXTRA_ARGS}
+  log "Running LibCarla.client unit tests (debug)."
+  echo "Running: ${GDB} libcarla_test_client_debug ${GTEST_ARGS} ${EXTRA_ARGS}"
+  ${GDB} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/test/libcarla_test_client_debug ${GTEST_ARGS} ${EXTRA_ARGS}
 
 fi
 
@@ -109,9 +123,17 @@ if ${LIBCARLA_RELEASE} ; then
     EXTRA_ARGS=
   fi
 
-  log "Running LibCarla unit tests release."
+  log "Running LibCarla.server unit tests (release)."
+  echo "Running: ${GDB} libcarla_test_server_release ${GTEST_ARGS} ${EXTRA_ARGS}"
+  LD_LIBRARY_PATH=${LIBCARLA_INSTALL_SERVER_FOLDER}/lib ${GDB} ${LIBCARLA_INSTALL_SERVER_FOLDER}/test/libcarla_test_server_release ${GTEST_ARGS} ${EXTRA_ARGS}
 
-  LD_LIBRARY_PATH=${LIBCARLA_INSTALL_SERVER_FOLDER}/lib ${GDB} ${LIBCARLA_INSTALL_SERVER_FOLDER}/test/libcarla_test_release ${GTEST_ARGS} ${EXTRA_ARGS}
+  if ! { ${RUN_BENCHMARK} ; }; then
+
+    log "Running LibCarla.client unit tests (release)."
+    echo "Running: ${GDB} libcarla_test_client_debug ${GTEST_ARGS} ${EXTRA_ARGS}"
+    ${GDB} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/test/libcarla_test_client_release ${GTEST_ARGS} ${EXTRA_ARGS}
+
+  fi
 
 fi
 

@@ -17,7 +17,11 @@ if (UNIX)
 
   find_package(Threads)
 
-  set(CMAKE_CXX_COMPILER /usr/bin/clang++-3.9)
+  if (APPLE)
+    set(CMAKE_CXX_COMPILER /usr/bin/clang++)
+  else (APPLE)
+    set(CMAKE_CXX_COMPILER /usr/bin/clang++-3.9)
+  endif (APPLE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -std=c++14 -pthread")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra -Wno-unused-parameter")
 

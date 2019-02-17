@@ -33,11 +33,11 @@ namespace client {
     const auto &transform = vehicle.GetTransform();
     const auto location = transform.location + box.location;
     const auto yaw = transform.rotation.yaw;
-    return {
+    return {{
         location + Rotate(yaw, geom::Location( box.extent.x,  box.extent.y, 0.0f)),
         location + Rotate(yaw, geom::Location(-box.extent.x,  box.extent.y, 0.0f)),
         location + Rotate(yaw, geom::Location( box.extent.x, -box.extent.y, 0.0f)),
-        location + Rotate(yaw, geom::Location(-box.extent.x, -box.extent.y, 0.0f))};
+        location + Rotate(yaw, geom::Location(-box.extent.x, -box.extent.y, 0.0f))}};
   }
 
   LaneDetector::~LaneDetector() = default;

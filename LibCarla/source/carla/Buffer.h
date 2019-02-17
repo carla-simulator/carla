@@ -79,6 +79,15 @@ namespace carla {
           return static_cast<size_type>(size);
         } ()) {}
 
+#ifdef __APPLE__
+      // On the Mac, std::size_t is unsigned long, where uint64_t
+      // is unsigned long long. Although both are 64-bits, they are
+      // distinct types, so this declaration is needed to avoid recursive
+      // delegation back to the template constructor.
+    explicit Buffer(std::size_t size)
+      : Buffer((uint64_t)size) {}
+#endif
+
     /// Copy @a source into this buffer. Allocates the necessary memory.
     template <typename T>
     explicit Buffer(const T &source) {
@@ -253,6 +262,15 @@ namespace carla {
       }
       reset(static_cast<size_type>(size));
     }
+
+#ifdef __APPLE__
+      // On the Mac, std::size_t is unsigned long, where uint64_t
+      // is unsigned long long. Although both are 64-bits, they are
+      // distinct types, so this declaration is needed.
+      void reset(std::size_t size) {
+        reset((uint64_t)size);
+      }
+#endif
 
     /// Release the contents of this buffer and set its size and capacity to
     /// zero.
