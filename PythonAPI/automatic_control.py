@@ -111,6 +111,7 @@ def get_actor_display_name(actor, truncate=250):
 class World(object):
     def __init__(self, carla_world, hud):
         self.world = carla_world
+        self.map = self.world.get_map()
         self.hud = hud
         self.vehicle = None
         self.collision_sensor = None
@@ -140,12 +141,12 @@ class World(object):
             spawn_point.rotation.pitch = 0.0
             self.destroy()
 
-            spawn_points = self.world.get_map().get_spawn_points()
+            spawn_points = self.map.get_spawn_points()
             spawn_point = spawn_points[1]
             self.vehicle = self.world.spawn_actor(blueprint, spawn_point)
 
         while self.vehicle is None:
-            spawn_points = self.world.get_map().get_spawn_points()
+            spawn_points = self.map.get_spawn_points()
             spawn_point = spawn_points[1]
             self.vehicle = self.world.spawn_actor(blueprint, spawn_point)
 
@@ -306,7 +307,7 @@ class HUD(object):
             'Server:  % 16d FPS' % self.server_fps,
             '',
             'Vehicle: % 20s' % get_actor_display_name(world.vehicle, truncate=20),
-            'Map:     % 20s' % world.world.map_name,
+            'Map:     % 20s' % world.map.name,
             'Simulation time: % 12s' % datetime.timedelta(seconds=int(self.simulation_time)),
             '',
             'Speed:   % 15.0f km/h' % (3.6 * math.sqrt(v.x**2 + v.y**2 + v.z**2)),
@@ -628,7 +629,7 @@ def game_loop(args):
             agent = RoamingAgent(world.vehicle)
         else:
             agent = BasicAgent(world.vehicle)
-            spawn_point = world.world.get_map().get_spawn_points()[0]
+            spawn_point = world.map.get_spawn_points()[0]
             agent.set_destination((spawn_point.location.x,
                                    spawn_point.location.y,
                                    spawn_point.location.z))

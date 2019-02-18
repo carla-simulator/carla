@@ -27,7 +27,7 @@ namespace client {
   }
 
   std::ostream &operator<<(std::ostream &out, const World &world) {
-    out << "World(id=" << world.GetId() << ",map_name=" << world.GetMapName() << ')';
+    out << "World(id=" << world.GetId() << ')';
     return out;
   }
 
@@ -109,7 +109,6 @@ void export_world() {
 
   class_<cc::World>("World", no_init)
     .add_property("id", &cc::World::GetId)
-    .add_property("map_name", CALL_RETURNING_COPY(cc::World, GetMapName))
     .add_property("debug", &cc::World::MakeDebugHelper)
     .def("get_blueprint_library", CONST_CALL_WITHOUT_GIL(cc::World, GetBlueprintLibrary))
     .def("get_map", CONST_CALL_WITHOUT_GIL(cc::World, GetMap))
