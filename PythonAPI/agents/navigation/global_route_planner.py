@@ -57,8 +57,8 @@ class GlobalRoutePlanner(object):
 
         # Compare current edge and next edge to decide on action
         for i in range(len(route) - 2):
-            current_edge = self._graph.edges[route[i], route[i + 1]]
-            next_edge = self._graph.edges[route[i + 1], route[i + 2]]
+            current_edge = self._graph.get_edge_data(route[i], route[i + 1])
+            next_edge = self._graph.get_edge_data(route[i + 1], route[i + 2])
             cv = current_edge['exit_vector']
             nv = next_edge['net_vector']
             cv, nv = cv + (0,), nv + (0,)  # Making vectors 3D
@@ -68,7 +68,7 @@ class GlobalRoutePlanner(object):
             for neighbor in self._graph.neighbors(route[i+1]):
                 num_edges+=1
                 if neighbor != route[i + 2]:
-                    select_edge = self._graph.edges[route[i+1], neighbor]
+                    select_edge = self._graph.get_edge_data(route[i+1], neighbor)
                     sv = select_edge['net_vector']
                     cross_list.append(np.cross(cv, sv)[2])
             # Calculating turn decision
