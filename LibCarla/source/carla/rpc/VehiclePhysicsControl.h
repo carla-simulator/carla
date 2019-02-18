@@ -7,39 +7,13 @@
 #pragma once
 
 #include "carla/MsgPack.h"
-#include "carla/geom/Location.h"
+#include "carla/rpc/WheelPhysicsControl.h"
 
 #include <string>
 #include <vector>
 
 namespace carla {
 namespace rpc {
-
-  class WheelPhysicsControl {
-  public:
-    explicit WheelPhysicsControl() = default;
-
-    explicit WheelPhysicsControl(
-      float in_tire_friction
-    ) {
-      tire_friction = in_tire_friction;
-    }
-
-    float tire_friction;
-
-    #ifdef LIBCARLA_INCLUDED_FROM_UE4
-    WheelPhysicsControl(const FWheelPhysicsControl &Wheel) {      
-      tire_friction = Wheel.TireFriction;
-    }
-
-    operator FWheelPhysicsControl() const {
-      FWheelPhysicsControl Wheel;
-      Wheel.TireFriction = tire_friction;
-      return Wheel;
-    }
-    #endif
-  };
-
   class VehiclePhysicsControl {
   public:
 
@@ -61,8 +35,8 @@ namespace rpc {
       float in_mass,
       float in_drag_coefficient,
       geom::Vector3D in_inertia_tensor_scale,
-      const std::vector<geom::Location>& in_steering_curve
-      // const std::vector<WheelPhysicsControl> in_wheels
+      const std::vector<geom::Location>& in_steering_curve,
+      std::vector<WheelPhysicsControl>& in_wheels
     ) {
 
       torque_curve = in_torque_curve;
@@ -81,7 +55,15 @@ namespace rpc {
       inertia_tensor_scale = in_inertia_tensor_scale;
 
       steering_curve = in_steering_curve;
-      // wheels = in_wheels;
+      wheels = in_wheels;
+    }
+
+    const std::vector<WheelPhysicsControl> GetWheels() const {
+      return wheels;
+    }
+
+    void SetWheels(std::vector<WheelPhysicsControl> &in_wheels) {
+      wheels = in_wheels;
     }
 
     const std::vector<geom::Location> GetTorqueCurve() const {
@@ -152,10 +134,10 @@ namespace rpc {
       }
 
       // Wheels Setup
-      // wheels = std::vector<WheelPhysicsControl>();
-      // for( auto Wheel : Control.Wheels) {
-      //   wheels.push_back(WheelPhysicsControl(Wheel));
-      // }
+      wheels = std::vector<WheelPhysicsControl>();
+      for( auto Wheel : Control.Wheels) {
+        wheels.push_back(WheelPhysicsControl(Wheel));
+      }
     }
 
     operator FVehiclePhysicsControl() const {
@@ -189,11 +171,11 @@ namespace rpc {
       Control.SteeringCurve = SteeringCurve;
       
       // Wheels Setup
-      // TArray<FWheelPhysicsControl> Wheels;
-      // for (auto wheel : wheels) {
-      //   Wheels.Add(FWheelPhysicsControl(wheel));
-      // }
-      // Control.Wheels = Wheels;
+      TArray<FWheelPhysicsControl> Wheels;
+      for (auto wheel : wheels) {
+        Wheels.Add(FWheelPhysicsControl(wheel));
+      }
+      Control.Wheels = Wheels;
 
       return Control;
     }
@@ -212,7 +194,8 @@ namespace rpc {
                         mass,
                         drag_coefficient,
                         inertia_tensor_scale,
-                        steering_curve
+                        steering_curve,
+                        wheels
                         );
   };
 
