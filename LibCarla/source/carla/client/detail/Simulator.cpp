@@ -79,7 +79,7 @@ namespace detail {
   EpisodeProxy Simulator::GetCurrentEpisode() {
     if (_episode == nullptr) {
       ValidateVersions(_client);
-      _episode = std::make_shared<Episode>(_client);
+      _episode = std::make_shared<EpisodeHolder>(_client);
       _episode->Listen();
       if (!GetEpisodeSettings().synchronous_mode) {
         WaitForTick(_client.GetTimeout());
