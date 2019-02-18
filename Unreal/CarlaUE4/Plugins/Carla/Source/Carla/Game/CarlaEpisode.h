@@ -275,7 +275,7 @@ private:
     ElapsedGameTime += DeltaSeconds;
   }
 
-  const uint32 Id = 0u;
+  const uint64 Id = 0u;
 
   double ElapsedGameTime = 0.0;
 

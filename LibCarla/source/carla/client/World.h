@@ -38,7 +38,7 @@ namespace client {
     World &operator=(World &&) = default;
 
     /// Get the id of the episode associated with this world.
-    uint32_t GetId() const;
+    uint64_t GetId() const;
 
     /// Return the map name of this world. E.g., Town01.
     const std::string &GetMapName() const;

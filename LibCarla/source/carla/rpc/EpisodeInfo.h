@@ -18,7 +18,7 @@ namespace rpc {
   class EpisodeInfo {
   public:
 
-    using id_type = uint32_t;
+    using id_type = uint64_t;
 
     id_type id;
 
