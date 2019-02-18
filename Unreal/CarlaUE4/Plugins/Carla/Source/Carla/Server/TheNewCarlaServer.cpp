@@ -128,7 +128,6 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     REQUIRE_CARLA_EPISODE();
     return cr::EpisodeInfo{
       Episode->GetId(),
-      cr::FromFString(Episode->GetMapName()),
       BroadcastStream.token()};
   });
 

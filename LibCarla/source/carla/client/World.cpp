@@ -17,10 +17,6 @@
 namespace carla {
 namespace client {
 
-  uint64_t World::GetId() const {
-    return _episode.Lock()->GetCurrentEpisodeId();
-  }
-
   SharedPtr<Map> World::GetMap() const {
     return _episode.Lock()->GetCurrentMap();
   }

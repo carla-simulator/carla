@@ -38,7 +38,9 @@ namespace client {
     World &operator=(World &&) = default;
 
     /// Get the id of the episode associated with this world.
-    uint64_t GetId() const;
+    uint64_t GetId() const {
+      return _episode.GetId();
+    }
 
     /// Return the map that describes this world.
     SharedPtr<Map> GetMap() const;

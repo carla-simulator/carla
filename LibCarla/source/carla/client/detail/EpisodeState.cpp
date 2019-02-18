@@ -24,7 +24,7 @@ namespace detail {
 
   std::shared_ptr<const EpisodeState> EpisodeState::DeriveNextStep(
       const sensor::data::RawEpisodeState &state) const {
-    auto next = std::make_shared<EpisodeState>();
+    auto next = std::make_shared<EpisodeState>(state.GetEpisodeId());
     next->_timestamp.frame_count = state.GetFrameNumber();
     next->_timestamp.elapsed_seconds = state.GetGameTimeStamp();
     next->_timestamp.platform_timestamp = state.GetPlatformTimeStamp();
