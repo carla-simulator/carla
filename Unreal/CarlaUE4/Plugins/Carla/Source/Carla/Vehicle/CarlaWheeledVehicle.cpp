@@ -138,12 +138,24 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl()
   UCarlaWheeledVehicleMovementComponent4W *Vehicle4W = CastChecked<UCarlaWheeledVehicleMovementComponent4W>(GetVehicleMovement());
 
   FVehiclePhysicsControl PhysicsControl;
+
+  // Engine Setup
   PhysicsControl.TorqueCurve = Vehicle4W->EngineSetup.TorqueCurve.EditorCurveData;
   PhysicsControl.MaxRPM = Vehicle4W->EngineSetup.MaxRPM;
   PhysicsControl.MOI = Vehicle4W->EngineSetup.MOI;
   PhysicsControl.DampingRateFullThrottle = Vehicle4W->EngineSetup.DampingRateFullThrottle;
   PhysicsControl.DampingRateZeroThrottleClutchEngaged = Vehicle4W->EngineSetup.DampingRateZeroThrottleClutchEngaged;
   PhysicsControl.DampingRateZeroThrottleClutchDisengaged = Vehicle4W->EngineSetup.DampingRateZeroThrottleClutchDisengaged;
+
+  // Transmission Setup
+  PhysicsControl.bUseGearAutoBox = Vehicle4W->TransmissionSetup.bUseGearAutoBox;
+  PhysicsControl.GearSwitchTime = Vehicle4W->TransmissionSetup.GearSwitchTime;
+  PhysicsControl.ClutchStrength = Vehicle4W->TransmissionSetup.ClutchStrength;
+
+  // Vehicle Setup
+  PhysicsControl.Mass = Vehicle4W->Mass;
+  PhysicsControl.DragCoefficient = Vehicle4W->DragCoefficient;
+  PhysicsControl.InertiaTensorScale = Vehicle4W->InertiaTensorScale;
 
   return PhysicsControl;
 }

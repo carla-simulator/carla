@@ -37,23 +37,23 @@ struct CARLA_API FVehiclePhysicsControl
 
 
   // // Transmission Setup
-  // UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
-  // bool bUseGearAutoBox = 0.0f;
+  UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
+  bool bUseGearAutoBox = 0.0f;
 
-  // UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
-  // float GearSwitchTime = 0.0f;
+  UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
+  float GearSwitchTime = 0.0f;
 
-  // UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
-  // float ClutchStrength = 0.0f;
+  UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
+  float ClutchStrength = 0.0f;
 
-  // // Vehicle Setup
-  // UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
-  // float Mass = 0.0f;
+  // Vehicle Setup
+  UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
+  float Mass = 0.0f;
 
-  // UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
-  // float DragCoefficient = 0.0f;
+  UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
+  float DragCoefficient = 0.0f;
 
-  // UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
-  // FVector InertiaTensorScale;
+  UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
+  FVector InertiaTensorScale;
 
 };
