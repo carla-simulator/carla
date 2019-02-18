@@ -12,13 +12,13 @@
 #include "carla/Version.h"
 #include "carla/client/Actor.h"
 #include "carla/client/GarbageCollectionPolicy.h"
+#include "carla/client/TrafficLight.h"
 #include "carla/client/Vehicle.h"
 #include "carla/client/Walker.h"
 #include "carla/client/detail/Client.h"
-#include "carla/client/detail/Episode.h"
+#include "carla/client/detail/EpisodeHolder.h"
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/profiler/LifetimeProfiled.h"
-#include "carla/client/TrafficLight.h"
 #include "carla/rpc/TrafficLightState.h"
 
 #include <memory>
@@ -61,12 +61,7 @@ namespace detail {
 
     auto GetCurrentEpisodeId() const {
       DEBUG_ASSERT(_episode != nullptr);
-      return _episode->GetId();
-    }
-
-    const std::string &GetCurrentMapName() {
-      DEBUG_ASSERT(_episode != nullptr);
-      return _episode->GetMapName();
+      return _episode->GetEpisode()->GetId();
     }
 
     EpisodeProxy GetCurrentEpisode();
@@ -328,7 +323,7 @@ namespace detail {
 
     Client _client;
 
-    std::shared_ptr<Episode> _episode;
+    std::shared_ptr<EpisodeHolder> _episode;
 
     GarbageCollectionPolicy _gc_policy;
   };

@@ -34,6 +34,12 @@ namespace detail {
       sensor::data::ActorDynamicState::TypeDependentState state;
     };
 
+    explicit EpisodeState(uint64_t episode_id) : _episode_id(episode_id) {}
+
+    auto GetEpisodeId() const {
+      return _episode_id;
+    }
+
     const auto &GetTimestamp() const {
       return _timestamp;
     }
@@ -59,6 +65,8 @@ namespace detail {
         const sensor::data::RawEpisodeState &state) const;
 
   private:
+
+    const uint64_t _episode_id;
 
     Timestamp _timestamp;
 
