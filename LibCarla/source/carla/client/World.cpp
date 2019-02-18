@@ -21,10 +21,6 @@ namespace client {
     return _episode.Lock()->GetCurrentEpisodeId();
   }
 
-  const std::string &World::GetMapName() const {
-    return _episode.Lock()->GetCurrentMapName();
-  }
-
   SharedPtr<Map> World::GetMap() const {
     return _episode.Lock()->GetCurrentMap();
   }

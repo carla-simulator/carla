@@ -40,9 +40,6 @@ namespace client {
     /// Get the id of the episode associated with this world.
     uint64_t GetId() const;
 
-    /// Return the map name of this world. E.g., Town01.
-    const std::string &GetMapName() const;
-
     /// Return the map that describes this world.
     SharedPtr<Map> GetMap() const;
 
