@@ -168,15 +168,17 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl()
   // Enable AffectedByHandbrake
 
   TArray<FWheelPhysicsControl> Wheels;
-  FWheelPhysicsControl Wheel;
-  Wheel.TireFriction = Vehicle4W->Wheels[0]->TireConfig->GetFrictionScale();
-  Wheel.Torque = Vehicle4W->Wheels[0]->DebugWheelTorque;
-  Wheel.Mass = Vehicle4W->Wheels[0]->Mass;
-  Wheel.bDisableSteering = Vehicle4W->Wheels[0]->GetWheelSetup().bDisableSteering;
+  for (auto& Wheel : Vehicle4W->Wheels) {
+    FWheelPhysicsControl MyWheel;
 
-  UPhysicalMaterial* WheelPhysicalMaterial = Vehicle4W->Wheels[0]->GetContactSurfaceMaterial();
-  Wheel.ContactSurfaceFriction = ( WheelPhysicalMaterial != nullptr) ? WheelPhysicalMaterial->Friction : 1.0f;
-  Wheels.Add(Wheel);
+    MyWheel.TireFriction = Wheel->TireConfig->GetFrictionScale();
+    MyWheel.Torque = Wheel->DebugWheelTorque;
+    MyWheel.Mass = Wheel->Mass;
+    MyWheel.bDisableSteering = Wheel->GetWheelSetup().bDisableSteering;
+    
+    Wheels.Add(MyWheel);
+  }
+
   PhysicsControl.Wheels = Wheels;
   
   return PhysicsControl;

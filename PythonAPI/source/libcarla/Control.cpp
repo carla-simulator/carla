@@ -6,6 +6,7 @@
 
 #include <carla/rpc/VehicleControl.h>
 #include <carla/rpc/VehiclePhysicsControl.h>
+#include <carla/rpc/WheelPhysicsControl.h>
 #include <carla/rpc/WalkerControl.h>
 
 #include <ostream>
@@ -35,6 +36,14 @@ namespace rpc {
     return out;
   }
 
+  std::ostream &operator<<(std::ostream &out, const WheelPhysicsControl &control) {
+    out << "WheelPhysicsControl(tire_friction=" << control.tire_friction 
+        << ", torque=" << control.torque
+        << ", mass=" << control.mass
+        << ", disable_steering=" << control.disable_steering << ')';
+    return out;
+  }
+
   std::ostream &operator<<(std::ostream &out, const VehiclePhysicsControl &control) {
     out << "VehiclePhysicsControl(torque_curve=" << control.torque_curve
     << ", max_rpm=" << control.max_rpm
@@ -47,7 +56,8 @@ namespace rpc {
     << ", clutch_strength=" << control.clutch_strength
     << ", mass=" << control.mass
     << ", drag_coefficient=" << control.drag_coefficient
-    << ", inertia_tensor_scale=" << control.inertia_tensor_scale << ')';
+    << ", inertia_tensor_scale=" << control.inertia_tensor_scale 
+    << ", wheels=" << control.wheels << ')';
     return out;
   }
 } // namespace rpc
@@ -55,7 +65,21 @@ namespace rpc {
 
 
 
+static auto GetWheels(const carla::rpc::VehiclePhysicsControl &self) {
+  const auto &wheels = self.GetWheels();
+  boost::python::object get_iter = boost::python::iterator<std::vector<carla::rpc::WheelPhysicsControl>>();
+  boost::python::object iter = get_iter(wheels);
+  return boost::python::list(wheels);
+}
 
+static void SetWheels(carla::rpc::VehiclePhysicsControl &self, const boost::python::list &list) {  
+  std::vector<carla::rpc::WheelPhysicsControl> wheels;
+  auto length = boost::python::len(list);
+  for (auto i = 0u; i < length; ++i) {
+    wheels.push_back(boost::python::extract<carla::rpc::WheelPhysicsControl &>(list[i]));
+  }
+  self.wheels = wheels;
+}
 
 static auto GetTorqueCurve(const carla::rpc::VehiclePhysicsControl &self) {
   const auto &torque_curve = self.GetTorqueCurve();
@@ -133,11 +157,29 @@ void export_control() {
     .def(self_ns::str(self_ns::self))
   ;
 
+  class_<std::vector<cr::WheelPhysicsControl>>("vector_of_wheels")
+    .def(vector_indexing_suite<std::vector<cr::WheelPhysicsControl>>())
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cr::WheelPhysicsControl>("WheelPhysicsControl")
+    .def(init<float, float, float, bool>(
+        (arg("tire_friction")=0.0f,
+         arg("torque")=0.0f,
+         arg("mass")=0.0f,
+         arg("disable_steering")=false)))
+    .def_readwrite("tire_friction", &cr::WheelPhysicsControl::tire_friction)
+    // .def("__eq__", &cr::WheelPhysicsControl::operator==)
+    // .def("__ne__", &cr::WheelPhysicsControl::operator!=)
+    .def(self_ns::str(self_ns::self))
+  ;
+
   class_<cr::VehiclePhysicsControl>("VehiclePhysicsControl")
     .def(init<std::vector<cg::Location>, float, float, float, float, float,
               bool, float, float,
               float, float, cg::Vector3D,
-              std::vector<cg::Location>
+              const std::vector<cg::Location>&,
+              std::vector<cr::WheelPhysicsControl>&
             >
        ((arg("torque_curve")=std::vector<cg::Location>(),
          arg("max_rpm")=0.0f,
@@ -151,7 +193,8 @@ void export_control() {
          arg("mass")=0.0f,
          arg("drag_coefficient")=0.0f,
          arg("inertia_tensor_scale")=cg::Vector3D{1.0f, 0.0f, 0.0f},
-         arg("steering_curve")=std::vector<cg::Location>()
+         arg("steering_curve")=std::vector<cg::Location>(),
+         arg("wheels")=std::vector<cr::WheelPhysicsControl>()
          )))
     .add_property("torque_curve", &GetTorqueCurve, &SetTorqueCurve)
     .add_property("steering_curve", &GetSteeringCurve, &SetSteeringCurve)
@@ -168,6 +211,9 @@ void export_control() {
     .def_readwrite("mass", &cr::VehiclePhysicsControl::mass)
     .def_readwrite("drag_coefficient", &cr::VehiclePhysicsControl::drag_coefficient)
     .def_readwrite("inertia_tensor_scale", &cr::VehiclePhysicsControl::inertia_tensor_scale)
+    
+    .add_property("wheels", &GetWheels, &SetWheels)
+
     // [TODO]
     // .def("__eq__", &cr::VehiclePhysicsControl::operator==)
     // [TODO]
