@@ -388,6 +388,27 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     return cr::VehiclePhysicsControl(Vehicle->GetVehiclePhysicsControl());
   });
 
+  Server.BindSync("set_physics_control", [this](
+        int ActorId, cr::VehiclePhysicsControl PhysicsControl) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to apply control: actor not found");
+    }
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    if (Vehicle == nullptr)
+    {
+      RESPOND_ERROR("unable to apply control: actor is not a vehicle");
+    }
+    
+    Vehicle->SetVehiclePhysicsControl(FVehiclePhysicsControl(PhysicsControl));
+
+    return R<void>::Success();
+  });
+
   Server.BindSync("set_actor_simulate_physics", [this](
         cr::Actor Actor,
         bool bEnabled) -> R<void>

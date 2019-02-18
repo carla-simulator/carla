@@ -138,6 +138,10 @@ namespace detail {
     rpc::VehiclePhysicsControl GetVehiclePhysicsControl(const int &actorId) const {
       return _client.GetVehiclePhysicsControl(actorId);
     }
+
+    void SetVehiclePhysicsControl(const int &actorId, const rpc::VehiclePhysicsControl &physicsControl) {
+      _client.SetVehiclePhysicsControl(actorId, physicsControl);
+    }
     /// @}
     // =========================================================================
     /// @name General operations with actors

@@ -80,6 +80,8 @@ namespace detail {
 
     rpc::VehiclePhysicsControl GetVehiclePhysicsControl(const int &actorId) const;
 
+    void SetVehiclePhysicsControl(const int &actorId, const rpc::VehiclePhysicsControl &physicsControl);
+
     rpc::Actor SpawnActor(
         const rpc::ActorDescription &description,
         const geom::Transform &transform);

@@ -111,7 +111,9 @@ public:
     return State;
   }
 
-FVehiclePhysicsControl GetVehiclePhysicsControl();
+  FVehiclePhysicsControl GetVehiclePhysicsControl();
+
+  void SetVehiclePhysicsControl(const FVehiclePhysicsControl &PhysicsControl);
 
   /// @}
   // ===========================================================================
