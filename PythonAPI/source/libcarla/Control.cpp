@@ -41,11 +41,37 @@ namespace rpc {
     << ", moi=" << control.moi
     << ", damping_rate_full_throttle=" << control.damping_rate_full_throttle
     << ", damping_rate_zero_throttle_clutch_engaged=" << control.damping_rate_zero_throttle_clutch_engaged
-    << ", damping_rate_zero_throttle_clutch_disengaged=" << control.damping_rate_zero_throttle_clutch_disengaged << ')';
+    << ", damping_rate_zero_throttle_clutch_disengaged=" << control.damping_rate_zero_throttle_clutch_disengaged 
+    << ", use_gear_autobox=" << control.use_gear_autobox
+    << ", gear_switch_time=" << control.gear_switch_time
+    << ", clutch_strength=" << control.clutch_strength
+    << ", mass=" << control.mass
+    << ", drag_coefficient=" << control.drag_coefficient
+    << ", inertia_tensor_scale=" << control.inertia_tensor_scale << ')';
     return out;
   }
 } // namespace rpc
 } // namespace carla
+
+
+
+
+
+static auto GetTorqueCurve(const carla::rpc::VehiclePhysicsControl &self) {
+  const auto &torque_curve = self.GetTorqueCurve();
+  boost::python::object get_iter = boost::python::iterator<std::vector<carla::geom::Location>>();
+  boost::python::object iter = get_iter(torque_curve);
+  return boost::python::list(torque_curve);
+}
+
+static void SetTorqueCurve(carla::rpc::VehiclePhysicsControl &self, const boost::python::list &list) {  
+  std::vector<carla::geom::Location> torque_curve;
+  auto length = boost::python::len(list);
+  for (auto i = 0u; i < length; ++i) {
+    torque_curve.push_back(boost::python::extract<carla::geom::Location &>(list[i]));
+  }
+  self.torque_curve = torque_curve;
+}
 
 void export_control() {
   using namespace boost::python;
@@ -86,15 +112,46 @@ void export_control() {
     .def(self_ns::str(self_ns::self))
   ;
 
+  class_<std::vector<carla::geom::Location>>("vector_of_locations")
+    .def(vector_indexing_suite<std::vector<cg::Location>>())
+    .def(self_ns::str(self_ns::self))
+  ;
+
   class_<cr::VehiclePhysicsControl>("VehiclePhysicsControl")
-    .def(init<>())
-    .def_readwrite("torque_curve", &cr::VehiclePhysicsControl::torque_curve)
+    .def(init<std::vector<cg::Location>, float, float, float, float, float,
+              bool, float, float,
+              float, float, cg::Vector3D
+            >
+       ((arg("torque_curve")=std::vector<cg::Location>(),
+         arg("max_rpm")=0.0f,
+         arg("moi")=0.0f,
+         arg("damping_rate_full_throttle")=0.0f,
+         arg("damping_rate_zero_throttle_clutch_engaged")=0.0f,
+         arg("damping_rate_zero_throttle_clutch_disengaged")=0.0f,
+         arg("use_gear_autobox")=true,
+         arg("gear_switch_time")=0.0f,
+         arg("clutch_strength")=0.0f,
+         arg("mass")=0.0f,
+         arg("drag_coefficient")=0.0f,
+         arg("inertia_tensor_scale")=cg::Vector3D{1.0f, 0.0f, 0.0f}
+         )))
+    .add_property("torque_curve", &GetTorqueCurve, &SetTorqueCurve)
     .def_readwrite("max_rpm", &cr::VehiclePhysicsControl::max_rpm)
     .def_readwrite("moi", &cr::VehiclePhysicsControl::moi)
     .def_readwrite("damping_rate_full_throttle", &cr::VehiclePhysicsControl::damping_rate_full_throttle)
     .def_readwrite("damping_rate_zero_throttle_clutch_engaged", &cr::VehiclePhysicsControl::damping_rate_zero_throttle_clutch_engaged)
     .def_readwrite("damping_rate_zero_throttle_clutch_disengaged", &cr::VehiclePhysicsControl::damping_rate_zero_throttle_clutch_disengaged)
+    
+    .def_readwrite("use_gear_autobox", &cr::VehiclePhysicsControl::use_gear_autobox)
+    .def_readwrite("gear_switch_time", &cr::VehiclePhysicsControl::gear_switch_time)
+    .def_readwrite("clutch_strength", &cr::VehiclePhysicsControl::clutch_strength)
+    
+    .def_readwrite("mass", &cr::VehiclePhysicsControl::mass)
+    .def_readwrite("drag_coefficient", &cr::VehiclePhysicsControl::drag_coefficient)
+    .def_readwrite("inertia_tensor_scale", &cr::VehiclePhysicsControl::inertia_tensor_scale)
+    // [TODO]
     // .def("__eq__", &cr::VehiclePhysicsControl::operator==)
+    // [TODO]
     // .def("__ne__", &cr::VehiclePhysicsControl::operator!=)
     .def(self_ns::str(self_ns::self))
   ;
