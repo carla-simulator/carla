@@ -56,12 +56,6 @@ namespace client {
     /// Retrieve the weather parameters currently active in the world.
     rpc::WeatherParameters GetWeather() const;
 
-    /// Retrieve the physics control parameters of an actor.
-    rpc::VehiclePhysicsControl GetVehiclePhysicsControl(const int &actor_id) const;
-
-    /// Change vehicle physics control of an actors
-    void SetVehiclePhysicsControl(const int &actor_id, const rpc::VehiclePhysicsControl &physics_control);
-
     /// Change the weather in the simulation.
     void SetWeather(const rpc::WeatherParameters &weather);
 

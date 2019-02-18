@@ -43,6 +43,9 @@ namespace client {
 
     SharedPtr<TrafficLight> GetTrafficLight() const;
 
+    rpc::VehiclePhysicsControl GetPhysicsControl() const;
+
+    void SetPhysicsControl(const rpc::VehiclePhysicsControl &physics_control);
   private:
 
     Control _control;

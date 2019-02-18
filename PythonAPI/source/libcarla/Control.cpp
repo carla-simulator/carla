@@ -73,6 +73,22 @@ static void SetTorqueCurve(carla::rpc::VehiclePhysicsControl &self, const boost:
   self.torque_curve = torque_curve;
 }
 
+static auto GetSteeringCurve(const carla::rpc::VehiclePhysicsControl &self) {
+  const auto &steering_curve = self.GetSteeringCurve();
+  boost::python::object get_iter = boost::python::iterator<std::vector<carla::geom::Location>>();
+  boost::python::object iter = get_iter(steering_curve);
+  return boost::python::list(steering_curve);
+}
+
+static void SetSteeringCurve(carla::rpc::VehiclePhysicsControl &self, const boost::python::list &list) {  
+  std::vector<carla::geom::Location> steering_curve;
+  auto length = boost::python::len(list);
+  for (auto i = 0u; i < length; ++i) {
+    steering_curve.push_back(boost::python::extract<carla::geom::Location &>(list[i]));
+  }
+  self.steering_curve = steering_curve;
+}
+
 void export_control() {
   using namespace boost::python;
   namespace cr = carla::rpc;
@@ -120,7 +136,8 @@ void export_control() {
   class_<cr::VehiclePhysicsControl>("VehiclePhysicsControl")
     .def(init<std::vector<cg::Location>, float, float, float, float, float,
               bool, float, float,
-              float, float, cg::Vector3D
+              float, float, cg::Vector3D,
+              std::vector<cg::Location>
             >
        ((arg("torque_curve")=std::vector<cg::Location>(),
          arg("max_rpm")=0.0f,
@@ -133,9 +150,11 @@ void export_control() {
          arg("clutch_strength")=0.0f,
          arg("mass")=0.0f,
          arg("drag_coefficient")=0.0f,
-         arg("inertia_tensor_scale")=cg::Vector3D{1.0f, 0.0f, 0.0f}
+         arg("inertia_tensor_scale")=cg::Vector3D{1.0f, 0.0f, 0.0f},
+         arg("steering_curve")=std::vector<cg::Location>()
          )))
     .add_property("torque_curve", &GetTorqueCurve, &SetTorqueCurve)
+    .add_property("steering_curve", &GetSteeringCurve, &SetSteeringCurve)
     .def_readwrite("max_rpm", &cr::VehiclePhysicsControl::max_rpm)
     .def_readwrite("moi", &cr::VehiclePhysicsControl::moi)
     .def_readwrite("damping_rate_full_throttle", &cr::VehiclePhysicsControl::damping_rate_full_throttle)
