@@ -17,7 +17,7 @@
 namespace carla {
 namespace client {
 
-  uint32_t World::GetId() const {
+  uint64_t World::GetId() const {
     return _episode.Lock()->GetCurrentEpisodeId();
   }
 
