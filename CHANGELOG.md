@@ -33,6 +33,7 @@
   * Fixed local planner to avoid premature route pruning at path overlaps
   * Fixed autopilot direction not properly initialized that interfered with the initial raycast direction
   * Fixed crash when an actor was destroyed but not de-registered, e.g. falling out of world bounds
+  * Fixed global route planner: `_graph.edges[]` --> `_graph.edges()`. Even then it does not give the edge's data. Changed it to `_graph.get_edge_data()`
 
 ## CARLA 0.9.2
 
