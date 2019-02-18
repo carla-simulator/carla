@@ -80,12 +80,12 @@ static auto FWorldObserver_GetActorState(const FActorView &View, const FActorReg
 
 static carla::Buffer FWorldObserver_Serialize(
     carla::Buffer buffer,
-    double game_timestamp,
-    double platform_timestamp,
-    const FActorRegistry &Registry)
+    const UCarlaEpisode &Episode)
 {
   using Serializer = carla::sensor::s11n::EpisodeStateSerializer;
   using ActorDynamicState = carla::sensor::data::ActorDynamicState;
+
+  const auto &Registry = Episode.GetActorRegistry();
 
   // Set up buffer for writing.
   buffer.reset(sizeof(Serializer::Header) + sizeof(ActorDynamicState) * Registry.Num());
@@ -97,7 +97,10 @@ static carla::Buffer FWorldObserver_Serialize(
   };
 
   // Write header.
-  Serializer::Header header = {game_timestamp, platform_timestamp};
+  Serializer::Header header;
+  header.episode_id = Episode.GetId();
+  header.game_timestamp = Episode.GetElapsedGameTime();
+  header.platform_timestamp = FPlatformTime::Seconds();
   write_data(header);
 
   // Write every actor.
@@ -133,9 +136,7 @@ void FWorldObserver::BroadcastTick(const UCarlaEpisode &Episode)
 
   auto buffer = FWorldObserver_Serialize(
       AsyncStream.PopBufferFromPool(),
-      Episode.GetElapsedGameTime(),
-      FPlatformTime::Seconds(),
-      Episode.GetActorRegistry());
+      Episode);
 
   AsyncStream.Send(*this, std::move(buffer));
 }
