@@ -47,5 +47,12 @@ namespace client {
     return boost::static_pointer_cast<TrafficLight>(actor);
   }
 
+  rpc::VehiclePhysicsControl Vehicle::GetPhysicsControl() const {
+    return GetEpisode().Lock()->GetVehiclePhysicsControl(GetId());
+  }
+
+  void Vehicle::SetPhysicsControl(const rpc::VehiclePhysicsControl &physics_control) {
+    return GetEpisode().Lock()->SetVehiclePhysicsControl(GetId(), physics_control);
+  }
 } // namespace client
 } // namespace carla

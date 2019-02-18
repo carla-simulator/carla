@@ -92,8 +92,6 @@ void export_world() {
     .def("get_weather", CONST_CALL_WITHOUT_GIL(cc::World, GetWeather))
     .def("set_weather", &cc::World::SetWeather)
     .def("get_actors", CONST_CALL_WITHOUT_GIL(cc::World, GetActors))
-    .def("get_physics_control", &cc::World::GetVehiclePhysicsControl, (arg("actor_id")))
-    .def("set_physics_control", &cc::World::SetVehiclePhysicsControl, (arg("actor_id"), arg("physics_control")))
     .def("spawn_actor", SPAWN_ACTOR_WITHOUT_GIL(SpawnActor))
     .def("try_spawn_actor", SPAWN_ACTOR_WITHOUT_GIL(TrySpawnActor))
     .def("wait_for_tick", &WaitForTick, (arg("seconds")=10.0))

@@ -5,13 +5,15 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
+#include "TireConfig.h"
 #include "CarlaWheeledVehicle.h"
+#include "VehicleWheel.h"
 
 #include "Agent/VehicleAgentComponent.h"
 
 #include "Components/BoxComponent.h"
 #include "Engine/CollisionProfile.h"
-
+#include "PhysicalMaterials/PhysicalMaterial.h"
 // =============================================================================
 // -- Constructor and destructor -----------------------------------------------
 // =============================================================================
@@ -157,6 +159,26 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl()
   PhysicsControl.DragCoefficient = Vehicle4W->DragCoefficient;
   PhysicsControl.InertiaTensorScale = Vehicle4W->InertiaTensorScale;
 
+  // Transmission Setup
+  PhysicsControl.SteeringCurve = Vehicle4W->SteeringCurve.EditorCurveData;
+
+  // Wheels Setup
+
+  // Friction Scale
+  // Enable AffectedByHandbrake
+
+  TArray<FWheelPhysicsControl> Wheels;
+  FWheelPhysicsControl Wheel;
+  Wheel.TireFriction = Vehicle4W->Wheels[0]->TireConfig->GetFrictionScale();
+  Wheel.Torque = Vehicle4W->Wheels[0]->DebugWheelTorque;
+  Wheel.Mass = Vehicle4W->Wheels[0]->Mass;
+  Wheel.bDisableSteering = Vehicle4W->Wheels[0]->GetWheelSetup().bDisableSteering;
+
+  UPhysicalMaterial* WheelPhysicalMaterial = Vehicle4W->Wheels[0]->GetContactSurfaceMaterial();
+  Wheel.ContactSurfaceFriction = ( WheelPhysicalMaterial != nullptr) ? WheelPhysicalMaterial->Friction : 1.0f;
+  Wheels.Add(Wheel);
+  PhysicsControl.Wheels = Wheels;
+  
   return PhysicsControl;
 }
 
@@ -187,4 +209,7 @@ void ACarlaWheeledVehicle::SetVehiclePhysicsControl(const FVehiclePhysicsControl
   Vehicle4W->Mass = PhysicsControl.Mass;
   Vehicle4W->DragCoefficient = PhysicsControl.DragCoefficient;
   Vehicle4W->InertiaTensorScale = PhysicsControl.InertiaTensorScale;
+
+  // Transmission Setup
+  Vehicle4W->SteeringCurve.EditorCurveData = PhysicsControl.SteeringCurve;
 }

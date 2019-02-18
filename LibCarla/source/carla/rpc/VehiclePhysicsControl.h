@@ -15,6 +15,31 @@
 namespace carla {
 namespace rpc {
 
+  class WheelPhysicsControl {
+  public:
+    explicit WheelPhysicsControl() = default;
+
+    explicit WheelPhysicsControl(
+      float in_tire_friction
+    ) {
+      tire_friction = in_tire_friction;
+    }
+
+    float tire_friction;
+
+    #ifdef LIBCARLA_INCLUDED_FROM_UE4
+    WheelPhysicsControl(const FWheelPhysicsControl &Wheel) {      
+      tire_friction = Wheel.TireFriction;
+    }
+
+    operator FWheelPhysicsControl() const {
+      FWheelPhysicsControl Wheel;
+      Wheel.TireFriction = tire_friction;
+      return Wheel;
+    }
+    #endif
+  };
+
   class VehiclePhysicsControl {
   public:
 
@@ -35,7 +60,9 @@ namespace rpc {
 
       float in_mass,
       float in_drag_coefficient,
-      geom::Vector3D in_inertia_tensor_scale
+      geom::Vector3D in_inertia_tensor_scale,
+      const std::vector<geom::Location>& in_steering_curve
+      // const std::vector<WheelPhysicsControl> in_wheels
     ) {
 
       torque_curve = in_torque_curve;
@@ -52,6 +79,9 @@ namespace rpc {
       mass = in_mass;
       drag_coefficient = in_drag_coefficient;
       inertia_tensor_scale = in_inertia_tensor_scale;
+
+      steering_curve = in_steering_curve;
+      // wheels = in_wheels;
     }
 
     const std::vector<geom::Location> GetTorqueCurve() const {
@@ -60,6 +90,14 @@ namespace rpc {
 
     void SetTorqueCurve(std::vector<geom::Location> &in_torque_curve) {
       torque_curve = in_torque_curve;
+    }
+
+    const std::vector<geom::Location> GetSteeringCurve() const {
+      return steering_curve;
+    }
+
+    void SetSteeringCurve(std::vector<geom::Location> &in_steering_curve) {
+      steering_curve = in_steering_curve;
     }
 
     std::vector<geom::Location> torque_curve;
@@ -76,16 +114,19 @@ namespace rpc {
     float mass = 0.0f;
     float drag_coefficient = 0.0f;
     geom::Vector3D inertia_tensor_scale;
-   
+
+    std::vector<geom::Location> steering_curve;
+    std::vector<WheelPhysicsControl> wheels;
+
    #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
     VehiclePhysicsControl(const FVehiclePhysicsControl &Control) {      
       // Engine Setup
-      TArray<FRichCurveKey> CurveKeys = Control.TorqueCurve.GetCopyOfKeys();
-      for(int32 KeyIdx = 0; KeyIdx < CurveKeys.Num(); KeyIdx++)
+      TArray<FRichCurveKey> TorqueCurveKeys = Control.TorqueCurve.GetCopyOfKeys();
+      for(int32 KeyIdx = 0; KeyIdx < TorqueCurveKeys.Num(); KeyIdx++)
       {
-          geom::Location point(CurveKeys[KeyIdx].Time, CurveKeys[KeyIdx].Value, 0.0f);
-          torque_curve.push_back(point);
+        geom::Location point(TorqueCurveKeys[KeyIdx].Time, TorqueCurveKeys[KeyIdx].Value, 0.0f);
+        torque_curve.push_back(point);
       }
       max_rpm = Control.MaxRPM;
       moi = Control.MOI;
@@ -103,6 +144,18 @@ namespace rpc {
       drag_coefficient = Control.DragCoefficient;
       inertia_tensor_scale = Control.InertiaTensorScale;
       
+      TArray<FRichCurveKey> SteeringCurveKeys = Control.SteeringCurve.GetCopyOfKeys();
+      for(int32 KeyIdx = 0; KeyIdx < SteeringCurveKeys.Num(); KeyIdx++)
+      {
+          geom::Location point(SteeringCurveKeys[KeyIdx].Time, SteeringCurveKeys[KeyIdx].Value, 0.0f);
+          steering_curve.push_back(point);
+      }
+
+      // Wheels Setup
+      // wheels = std::vector<WheelPhysicsControl>();
+      // for( auto Wheel : Control.Wheels) {
+      //   wheels.push_back(WheelPhysicsControl(Wheel));
+      // }
     }
 
     operator FVehiclePhysicsControl() const {
@@ -110,9 +163,8 @@ namespace rpc {
 
       // Engine Setup
       FRichCurve TorqueCurve;
-      for (auto location : torque_curve) {
-          TorqueCurve.AddKey (location.x, location.y);
-      }
+      for (auto location : torque_curve)
+        TorqueCurve.AddKey (location.x, location.y);
       Control.TorqueCurve = TorqueCurve;
       Control.MaxRPM = max_rpm;
       Control.MOI = moi;
@@ -130,6 +182,19 @@ namespace rpc {
       Control.DragCoefficient = drag_coefficient;
       Control.InertiaTensorScale = inertia_tensor_scale;
 
+      // Transmission Setup
+      FRichCurve SteeringCurve;
+      for (auto location : steering_curve)
+        SteeringCurve.AddKey (location.x, location.y);
+      Control.SteeringCurve = SteeringCurve;
+      
+      // Wheels Setup
+      // TArray<FWheelPhysicsControl> Wheels;
+      // for (auto wheel : wheels) {
+      //   Wheels.Add(FWheelPhysicsControl(wheel));
+      // }
+      // Control.Wheels = Wheels;
+
       return Control;
     }
 
@@ -146,7 +211,9 @@ namespace rpc {
                         clutch_strength,
                         mass,
                         drag_coefficient,
-                        inertia_tensor_scale);
+                        inertia_tensor_scale,
+                        steering_curve
+                        );
   };
 
 } // namespace rpc

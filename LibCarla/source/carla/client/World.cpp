@@ -41,14 +41,6 @@ namespace client {
     return _episode.Lock()->GetWeatherParameters();
   }
 
-  rpc::VehiclePhysicsControl World::GetVehiclePhysicsControl(const int &actor_id) const {
-    return _episode.Lock()->GetVehiclePhysicsControl(actor_id);
-  }
-
-  void World::SetVehiclePhysicsControl(const int &actor_id, const rpc::VehiclePhysicsControl &physics_control) {
-    return _episode.Lock()->SetVehiclePhysicsControl(actor_id, physics_control);
-  }
-
   void World::SetWeather(const rpc::WeatherParameters &weather) {
     _episode.Lock()->SetWeatherParameters(weather);
   }

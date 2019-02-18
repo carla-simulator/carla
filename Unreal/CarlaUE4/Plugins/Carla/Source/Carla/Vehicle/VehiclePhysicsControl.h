@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "Vehicle/WheelPhysicsControl.h"
 #include "VehiclePhysicsControl.generated.h"
 
 USTRUCT(BlueprintType)
@@ -56,4 +57,9 @@ struct CARLA_API FVehiclePhysicsControl
   UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
   FVector InertiaTensorScale;
 
+  // Steering Setup
+  FRichCurve SteeringCurve;
+
+  // Wheels Setup
+  TArray<FWheelPhysicsControl> Wheels;
 };
