@@ -22,6 +22,8 @@ if os.name == 'nt':
 elif os.name == 'posix':
     sys_name = 'Linux'
 
+error = ""
+
 
 def main():
     if(args.force):
@@ -41,6 +43,7 @@ def get_map_names():
     return maps
 
 def generate_all_maps_but_list(existent_maps):
+    global error
     map_name = ""
     dirname = os.getcwd()
     fbx_place = os.path.join(dirname, "..", "RoadRunnerFiles")
@@ -57,7 +60,7 @@ def generate_all_maps_but_list(existent_maps):
                     cleanup_assets(map_name)
                     print("Finished %s" % map_name)
                 else:
-                    print("Found %s map in Content folder, skipping. Use \"--force\" to override" % map_name)
+                    error += "WARNING: Found %s map in Content folder, skipping. Use \"--force\" to override\n" % map_name
 
 def parse_arguments():
     argparser = argparse.ArgumentParser(
@@ -104,7 +107,6 @@ def import_assets_commandlet(map_name):
     os.remove("importsetting.json")
 
 def generate_map(map_name):
-    dirname = os.getcwd()
     commandlet_name = "MapProcess"
     commandlet_arguments = "-mapname=\"%s\"" % map_name
     if args.usecarlamats:
@@ -193,4 +195,5 @@ if __name__ == '__main__':
     try:
         main()
     finally:
+        print(error)
         print('\ndone.')
