@@ -8,6 +8,8 @@
 
 #include "carla/AtomicSharedPtr.h"
 
+#include <cstdint>
+
 namespace carla {
 namespace client {
 namespace detail {
@@ -51,7 +53,7 @@ namespace detail {
     template <typename T>
     friend class EpisodeProxyImpl;
 
-    size_t _episode_id;
+    uint64_t _episode_id;
 
     PointerT _simulator;
   };
