@@ -43,8 +43,6 @@ namespace detail {
     std::vector<actor_id_type> GetMissingIds(const RangeT &range) const;
 
     /// Retrieve the actors matching the ids in @a range.
-    ///
-    /// @throw std::out_of_range if an id is not present in this list.
     template <typename RangeT>
     std::vector<rpc::Actor> GetActorsById(const RangeT &range) const;
 
@@ -95,7 +93,10 @@ namespace detail {
     result.reserve(range.size());
     std::lock_guard<std::mutex> lock(_mutex);
     for (auto &&id : range) {
-      result.emplace_back(_actors.at(id));
+      auto it = _actors.find(id);
+      if (it != _actors.end()) {
+        result.emplace_back(it->second);
+      }
     }
     return result;
   }
