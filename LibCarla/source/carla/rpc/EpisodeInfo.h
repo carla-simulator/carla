@@ -15,6 +15,7 @@
 namespace carla {
 namespace rpc {
 
+  /// @todo Rename, does not represent the episode info anymore.
   class EpisodeInfo {
   public:
 
@@ -22,11 +23,9 @@ namespace rpc {
 
     id_type id;
 
-    std::string map_name;
-
     streaming::Token token;
 
-    MSGPACK_DEFINE_ARRAY(id, map_name, token);
+    MSGPACK_DEFINE_ARRAY(id, token);
   };
 
 } // namespace rpc

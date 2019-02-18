@@ -39,6 +39,10 @@ namespace detail {
       : _episode_id(other._episode_id),
         _simulator(other._simulator) {}
 
+    auto GetId() const {
+      return _episode_id;
+    }
+
     SharedPtrType TryLock() const;
 
     /// Same as TryLock but never return nullptr.
