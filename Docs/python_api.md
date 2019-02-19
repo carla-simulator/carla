@@ -12,6 +12,8 @@
 - `get_client_version()`
 - `get_server_version()`
 - `get_world()`
+- `reload_world()`
+- `load_world(map_name)`
 - `start_recorder(string filename)`
 - `replay_file(string filename, float start, float duration, int camera_follow_id)`
 - `show_recorder_file_info(string filename)`

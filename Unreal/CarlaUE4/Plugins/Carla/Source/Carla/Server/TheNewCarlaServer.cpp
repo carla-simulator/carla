@@ -123,6 +123,16 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   });
 
+  Server.BindSync("load_new_episode", [this](const std::string &map_name) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    if (!Episode->LoadNewEpisode(cr::ToFString(map_name)))
+    {
+      RESPOND_ERROR("map not found");
+    }
+    return R<void>::Success();
+  });
+
   Server.BindSync("get_episode_info", [this]() -> R<cr::EpisodeInfo>
   {
     REQUIRE_CARLA_EPISODE();

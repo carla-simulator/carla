@@ -43,6 +43,14 @@ namespace client {
       return _simulator->GetServerVersion();
     }
 
+    World ReloadWorld() {
+      return World{_simulator->ReloadEpisode()};
+    }
+
+    World LoadWorld(std::string map_name) {
+      return World{_simulator->LoadEpisode(std::move(map_name))};
+    }
+
     /// Return an instance of the world currently active in the simulator.
     World GetWorld() const {
       return World{_simulator->GetCurrentEpisode()};
