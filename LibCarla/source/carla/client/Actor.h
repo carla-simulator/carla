@@ -80,7 +80,7 @@ namespace client {
     /// called the Destroy() method, it does not check whether the actor is
     /// actually alive in the simulator.
     bool IsAlive() const {
-      return _is_alive;
+      return _is_alive && GetEpisode().IsValid();
     }
 
     /// Tell the simulator to destroy this Actor, and return whether the actor
