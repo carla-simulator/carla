@@ -18,21 +18,6 @@
 #include "CarlaWheeledVehicle.generated.h"
 
 
-class UCarlaWheeledVehicleMovementComponent4W : public UWheeledVehicleMovementComponent4W
-{
-public:
-
-  void ApplyEngineSetup(const FVehicleEngineData &EngineData)
-  {
-    UpdateEngineSetup(EngineData);
-  }
-
-  void ApplyTransmissionSetup(const FVehicleTransmissionData &TransmissionData)
-  {
-    UpdateTransmissionSetup(TransmissionData);
-  }
-};
-
 class UBoxComponent;
 class UVehicleAgentComponent;
 
