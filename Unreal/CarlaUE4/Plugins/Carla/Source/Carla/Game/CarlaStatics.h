@@ -39,19 +39,8 @@ public:
   UFUNCTION(BlueprintPure, Category="CARLA", meta=(WorldContext="WorldContextObject"))
   static UCarlaSettings *GetCarlaSettings(const UObject *WorldContextObject);
 
-  UFUNCTION(BlueprintPure, Category="CARLA", meta=(WorldContext="WorldContextObject"))
-  static FORCEINLINE TArray<FString> GetAllMapNames()
-	{
-		TArray<FString> TmpStrList, MapNameList;
-    IFileManager::Get().FindFilesRecursive(MapNameList, *FPaths::ProjectContentDir(), TEXT("*.umap"), true, false, false);
-    for (int i = 0; i < MapNameList.Num(); i++) {
-        MapNameList[i].ParseIntoArray(TmpStrList, TEXT("Content/"), true);
-        MapNameList[i] = TmpStrList[1];
-        MapNameList[i] = MapNameList[i].Replace(TEXT(".umap"), TEXT(""));
-        MapNameList[i] = "/Game/" + MapNameList[i];
-    }
-     return MapNameList;
-	}
+  UFUNCTION(BlueprintPure, Category="CARLA")
+  static TArray<FString> GetAllMapNames();
 };
 
 // =============================================================================
@@ -79,4 +68,3 @@ inline UCarlaSettings *UCarlaStatics::GetCarlaSettings(const UObject *WorldConte
   auto GameInstance = GetGameInstance(WorldContext);
   return GameInstance != nullptr ? GameInstance->GetCARLASettings() : nullptr;
 }
-
