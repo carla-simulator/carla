@@ -123,6 +123,11 @@ namespace detail {
     return _pimpl->CallAndWait<std::string>("version");
   }
 
+  void Client::LoadEpisode(std::string map_name) {
+    // Await response, we need to be sure in this one.
+    _pimpl->CallAndWait<void>("load_new_episode", std::move(map_name));
+  }
+
   rpc::EpisodeInfo Client::GetEpisodeInfo() {
     return _pimpl->CallAndWait<rpc::EpisodeInfo>("get_episode_info");
   }
