@@ -55,10 +55,23 @@ namespace detail {
 
     /// @}
     // =========================================================================
+    /// @name Load a new episode
+    // =========================================================================
+    /// @{
+
+    EpisodeProxy ReloadEpisode() {
+      return LoadEpisode("");
+    }
+
+    EpisodeProxy LoadEpisode(std::string map_name);
+
+    /// @}
+    // =========================================================================
     /// @name Access to current episode
     // =========================================================================
     /// @{
 
+    /// @pre Cannot be called previous to GetCurrentEpisode.
     auto GetCurrentEpisodeId() const {
       DEBUG_ASSERT(_episode != nullptr);
       return _episode->GetEpisode()->GetId();

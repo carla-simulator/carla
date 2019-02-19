@@ -55,6 +55,24 @@ namespace detail {
         GarbageCollectionPolicy::Enabled : GarbageCollectionPolicy::Disabled) {}
 
   // ===========================================================================
+  // -- Load a new episode -----------------------------------------------------
+  // ===========================================================================
+
+  EpisodeProxy Simulator::LoadEpisode(std::string map_name) {
+    const auto id = GetCurrentEpisode().GetId();
+    _client.LoadEpisode(std::move(map_name));
+    for (auto i = 0u; i < 10u; ++i) { // 10 attempts.
+      using namespace std::literals::chrono_literals;
+      WaitForTick(30s); /// @todo Do not throw on time-out.
+      auto episode = GetCurrentEpisode();
+      if (episode.GetId() != id) {
+        return episode;
+      }
+    }
+    throw_exception(std::runtime_error("failed to connect to newly created map"));
+  }
+
+  // ===========================================================================
   // -- Access to current episode ----------------------------------------------
   // ===========================================================================
 
