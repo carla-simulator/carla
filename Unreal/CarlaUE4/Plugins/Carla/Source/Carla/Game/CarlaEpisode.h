@@ -14,7 +14,6 @@
 #include "Carla/Weather/Weather.h"
 
 #include "GameFramework/Pawn.h"
-#include "Kismet/GameplayStatics.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/geom/BoundingBox.h>
@@ -40,6 +39,18 @@ class CARLA_API UCarlaEpisode : public UObject
 public:
 
   UCarlaEpisode(const FObjectInitializer &ObjectInitializer);
+
+  // ===========================================================================
+  // -- Load a new episode -----------------------------------------------------
+  // ===========================================================================
+
+public:
+
+  /// Load a new map and start a new episode.
+  ///
+  /// If @a MapString is empty, the current map is reloaded.
+  UFUNCTION(BlueprintCallable)
+  bool LoadNewEpisode(const FString &MapString);
 
   // ===========================================================================
   // -- Episode settings -------------------------------------------------------
@@ -219,50 +230,6 @@ public:
       }
 
     return ActorDispatcher->DestroyActor(Actor);
-  }
-
-  // ===========================================================================
-  // -- World handling methods -------------------------------------------------
-  // ===========================================================================
-
-  UFUNCTION(BlueprintCallable)
-  bool LoadMap(const FString& MapString, const UObject* WorldContext) {
-    bool bIsFileFound = false;
-    FString FinalPath = MapString;
-
-
-    if (MapString.StartsWith("/Game")) {
-      //Full path
-        if(!MapString.EndsWith(".umap")) {
-          FinalPath += ".umap";
-        }
-        //Some conversions...
-        FinalPath = FinalPath.Replace(TEXT("/Game/"), *FPaths::ProjectContentDir());
-        if(FPaths::FileExists(IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*FinalPath))) {
-          bIsFileFound = true;
-          FinalPath = MapString;
-        }
-    } else {
-      if(MapString.Contains("/")) bIsFileFound = false;
-      else {
-        //Find the full path under Carla
-        TArray<FString> TempStrArray, PathList;
-        if(!MapString.EndsWith(".umap")) {
-          FinalPath += ".umap";
-        }
-        IFileManager::Get().FindFilesRecursive(PathList, *FPaths::ProjectContentDir(), *FinalPath, true, false, false);
-        if(PathList.Num()>0) {
-          FinalPath = PathList[0];
-          FinalPath.ParseIntoArray(TempStrArray, TEXT("Content/"), true);
-          FinalPath = TempStrArray[1];
-          FinalPath.ParseIntoArray(TempStrArray, TEXT("."), true);
-          FinalPath = "/Game/" + TempStrArray[0];
-          bIsFileFound = true;
-        }
-      }
-    }
-    if(bIsFileFound) UGameplayStatics::OpenLevel(WorldContext, *FinalPath, true);
-    return bIsFileFound;
   }
 
   // ===========================================================================
