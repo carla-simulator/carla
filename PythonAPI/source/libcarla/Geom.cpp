@@ -8,6 +8,7 @@
 #include <carla/geom/Location.h>
 #include <carla/geom/Rotation.h>
 #include <carla/geom/Transform.h>
+#include <carla/geom/Vector2D.h>
 #include <carla/geom/Vector3D.h>
 
 #include <boost/python/implicit.hpp>
@@ -18,11 +19,23 @@ namespace carla {
 namespace geom {
 
   template <typename T>
+  static void WriteVector2D(std::ostream &out, const char *name, const T &vector2D) {
+    out << name
+        << "(x=" << vector2D.x
+        << ", y=" << vector2D.y << ')';
+  }
+
+  template <typename T>
   static void WriteVector3D(std::ostream &out, const char *name, const T &vector3D) {
     out << name
         << "(x=" << vector3D.x
         << ", y=" << vector3D.y
         << ", z=" << vector3D.z << ')';
+  }
+
+  std::ostream &operator<<(std::ostream &out, const Vector2D &vector2D) {
+    WriteVector2D(out, "Vector2D", vector2D);
+    return out;
   }
 
   std::ostream &operator<<(std::ostream &out, const Vector3D &vector3D) {
@@ -67,6 +80,25 @@ static void TransformList(const carla::geom::Transform &self, boost::python::lis
 void export_geom() {
   using namespace boost::python;
   namespace cg = carla::geom;
+
+  class_<cg::Vector2D>("Vector2D")
+    .def(init<float, float>((arg("x")=0.0f, arg("y")=0.0f)))
+    .def_readwrite("x", &cg::Vector2D::x)
+    .def_readwrite("y", &cg::Vector2D::y)
+    .def("__eq__", &cg::Vector2D::operator==)
+    .def("__ne__", &cg::Vector2D::operator!=)
+    .def(self += self)
+    .def(self + self)
+    .def(self -= self)
+    .def(self - self)
+    .def(self *= double())
+    .def(self * double())
+    .def(double() * self)
+    .def(self /= double())
+    .def(self / double())
+    .def(double() / self)
+    .def(self_ns::str(self_ns::self))
+  ;
 
   implicitly_convertible<cg::Vector3D, cg::Location>();
   implicitly_convertible<cg::Location, cg::Vector3D>();
