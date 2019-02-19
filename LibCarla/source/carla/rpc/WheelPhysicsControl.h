@@ -17,26 +17,26 @@ namespace rpc {
 
     explicit WheelPhysicsControl(
       float in_tire_friction,
-      float in_torque,
-      float in_mass,
+      float in_damping_rate,
+      float in_steer_angle,
       bool in_disable_steering
     ) {
       tire_friction = in_tire_friction;
-      torque = in_torque;
-      mass = in_mass;
+      damping_rate = in_damping_rate;
+      steer_angle = in_steer_angle;
       disable_steering = in_disable_steering;
     }
 
     float tire_friction;
-    float torque;
-    float mass;
+    float damping_rate;
+    float steer_angle;
     bool disable_steering;
     
     bool operator!=(const WheelPhysicsControl &rhs) const {
       return
           tire_friction != rhs.tire_friction ||
-          torque != rhs.torque ||
-          mass != rhs.mass ||
+          damping_rate != rhs.damping_rate ||
+          steer_angle != rhs.steer_angle ||
           disable_steering != rhs.disable_steering;
     }
 
@@ -46,24 +46,24 @@ namespace rpc {
     #ifdef LIBCARLA_INCLUDED_FROM_UE4
       WheelPhysicsControl(const FWheelPhysicsControl &Wheel) {      
         tire_friction = Wheel.TireFriction;
-        torque = Wheel.Torque;
-        mass = Wheel.Mass;
+        damping_rate = Wheel.DampingRate;
+        steer_angle = Wheel.SteerAngle;
         disable_steering = Wheel.bDisableSteering;
       }
 
       operator FWheelPhysicsControl() const {
         FWheelPhysicsControl Wheel;
         Wheel.TireFriction = tire_friction;
-        Wheel.Torque = torque;
-        Wheel.Mass = mass;
+        Wheel.DampingRate = damping_rate;
+        Wheel.SteerAngle = steer_angle;
         Wheel.bDisableSteering = disable_steering;
         return Wheel;
       }
     #endif
 
     MSGPACK_DEFINE_ARRAY(tire_friction,
-                        torque,
-                        mass,
+                        damping_rate,
+                        steer_angle,
                         disable_steering)
   };
 }
