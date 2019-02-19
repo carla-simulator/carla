@@ -15,6 +15,7 @@
 #include "EngineUtils.h"
 #include "Engine/StaticMeshActor.h"
 #include "GameFramework/SpectatorPawn.h"
+#include "Kismet/GameplayStatics.h"
 
 static FString UCarlaEpisode_GetTrafficSignId(ETrafficSignState State)
 {
@@ -40,8 +41,62 @@ static FString UCarlaEpisode_GetTrafficSignId(ETrafficSignState State)
 
 UCarlaEpisode::UCarlaEpisode(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer),
-    Id(URandomEngine::GenerateRandomId()) {
+    Id(URandomEngine::GenerateRandomId())
+{
   ActorDispatcher = CreateDefaultSubobject<UActorDispatcher>(TEXT("ActorDispatcher"));
+}
+
+bool UCarlaEpisode::LoadNewEpisode(const FString &MapString)
+{
+  FString FinalPath = MapString.IsEmpty() ? GetMapName() : MapString;
+  bool bIsFileFound = false;
+  if (MapString.StartsWith("/Game"))
+  {
+    // Full path
+    if (!MapString.EndsWith(".umap"))
+    {
+      FinalPath += ".umap";
+    }
+    // Some conversions...
+    FinalPath = FinalPath.Replace(TEXT("/Game/"), *FPaths::ProjectContentDir());
+    if (FPaths::FileExists(IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*FinalPath)))
+    {
+      bIsFileFound = true;
+      FinalPath = MapString;
+    }
+  }
+  else
+  {
+    if (MapString.Contains("/"))
+    {
+      bIsFileFound = false;
+    }
+    else
+    {
+      // Find the full path under Carla
+      TArray<FString> TempStrArray, PathList;
+      if (!MapString.EndsWith(".umap"))
+      {
+        FinalPath += ".umap";
+      }
+      IFileManager::Get().FindFilesRecursive(PathList, *FPaths::ProjectContentDir(), *FinalPath, true, false, false);
+      if (PathList.Num() > 0)
+      {
+        FinalPath = PathList[0];
+        FinalPath.ParseIntoArray(TempStrArray, TEXT("Content/"), true);
+        FinalPath = TempStrArray[1];
+        FinalPath.ParseIntoArray(TempStrArray, TEXT("."), true);
+        FinalPath = "/Game/" + TempStrArray[0];
+        bIsFileFound = true;
+      }
+    }
+  }
+  if (bIsFileFound)
+  {
+    UE_LOG(LogCarla, Warning, TEXT("Loading a new episode: %s"), *FinalPath);
+    UGameplayStatics::OpenLevel(GetWorld(), *FinalPath, true);
+  }
+  return bIsFileFound;
 }
 
 void UCarlaEpisode::ApplySettings(const FEpisodeSettings &Settings)
