@@ -9,7 +9,7 @@
 	"CreatedBy" : "Headcrash Industries LLC",
 	"CreatedByURL" : "http://headcrash.industries",
 	"DocsURL" : "",
-	"MarketplaceURL" : "",
+	"MarketplaceURL" : " ",
 	"SupportURL" : "https://github.com/ue4plugins/CommandletPlugin",
 	"EnabledByDefault" : true,
 	"CanContainContent" : false,
@@ -19,7 +19,7 @@
 	[
 		{
 			"Name" : "CommandletPlugin",
-			"Type" : "Runtime",
+			"Type" : "Editor",
 			"LoadingPhase" : "Default"
 		}
 	],
