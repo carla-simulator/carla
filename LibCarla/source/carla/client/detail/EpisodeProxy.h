@@ -50,6 +50,10 @@ namespace detail {
     /// @throw std::runtime_error if episode is gone.
     SharedPtrType Lock() const;
 
+    bool IsValid() const {
+      return TryLock() != nullptr;
+    }
+
     void Clear();
 
   private:
