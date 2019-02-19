@@ -36,7 +36,7 @@ def main():
 def get_map_names():
     maps = []
     dirname = os.getcwd()
-    map_place = os.path.join(dirname, "..", "Unreal", "CarlaUE4", "Content", "Carla", "Maps")
+    map_place = os.path.join(dirname, "..", "Unreal", "CarlaUE4", "Content", "Carla", "ExportedMaps")
     for filename in os.listdir(map_place):
         if filename.endswith('.umap'):
             maps.append(filename)

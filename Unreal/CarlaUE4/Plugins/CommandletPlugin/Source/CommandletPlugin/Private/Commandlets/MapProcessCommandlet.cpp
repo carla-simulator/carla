@@ -12,11 +12,11 @@ UMapProcessCommandlet::UMapProcessCommandlet()
   IsServer = false;
   LogToConsole = true;
   static ConstructorHelpers::FObjectFinder<UMaterial> MarkingNode(TEXT(
-      "Material'/Game/Carla/Static/GenericMaterials/Assets_Markings_LaneMarking1.Assets_Markings_LaneMarking1'"));
+      "Material'/Game/Carla/Static/GenericMaterials/LaneMarking/M_MarkingLane_W.M_MarkingLane_W'"));
   static ConstructorHelpers::FObjectFinder<UMaterial> RoadNode(TEXT(
       "Material'/Game/Carla/Static/GenericMaterials/Masters/LowComplexity/M_Road1.M_Road1'"));
   static ConstructorHelpers::FObjectFinder<UMaterial> RoadNodeAux(TEXT(
-      "Material'/Game/Carla/Static/GenericMaterials/Assets_Markings_LaneMarkingYellow1.Assets_Markings_LaneMarkingYellow1'"));
+      "Material'/Game/Carla/Static/GenericMaterials/LaneMarking/M_MarkingLane_Y.M_MarkingLane_Y'"));
   static ConstructorHelpers::FObjectFinder<UMaterial> TerrainNodeMaterial(TEXT(
       "Material'/Game/Carla/Static/GenericMaterials/Grass/M_Grass01.M_Grass01'"));
 
@@ -229,13 +229,16 @@ bool UMapProcessCommandlet::SaveWorld(FAssetData &AssetData, FString &DestPath, 
 
 int32 UMapProcessCommandlet::Main(const FString &Params)
 {
+  ParseParams(InParams);
   FString SrcPath = TEXT("/Game/Carla/Static/Imported/") + MapName;
   FString BaseMap = TEXT("/Game/Carla/Maps/BaseMap");
-  FString WorldDestPath = TEXT("/Game/Carla/Maps");
+  FString WorldDestPath = TEXT("/Game/Carla/ExportedMaps");
 
   FString RoadsPath = TEXT("/Game/Carla/Static/Road/") + MapName;
   FString MarkingLinePath = TEXT("/Game/Carla/Static/RoadLines/") + MapName;
   FString TerrainPath = TEXT("/Game/Carla/Static/Terrain/") + MapName;
+
+
 
   TArray<FString> DataPath;
   DataPath.Add(RoadsPath);
