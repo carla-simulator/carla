@@ -25,7 +25,8 @@ void export_client() {
     .def("start_recorder", &cc::Client::StartRecorder, (arg("name")))
     .def("stop_recorder", &cc::Client::StopRecorder)
     .def("show_recorder_file_info", &cc::Client::ShowRecorderFileInfo, (arg("name")))
-    .def("replay_file", &cc::Client::ReplayFile, (arg("name"), arg("time_start"), arg("duration")))
-
+    .def("show_recorder_collisions", &cc::Client::ShowRecorderCollisions, (arg("name")), (arg("type1")), (arg("type2")))
+    .def("show_recorder_actors_blocked", &cc::Client::ShowRecorderActorsBlocked, (arg("name")), (arg("min_time")), (arg("min_distance")))
+    .def("replay_file", &cc::Client::ReplayFile, (arg("name"), arg("time_start"), arg("duration"), arg("follow_id")))
   ;
 }
