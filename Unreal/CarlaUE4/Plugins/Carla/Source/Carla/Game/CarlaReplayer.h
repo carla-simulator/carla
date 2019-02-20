@@ -17,16 +17,9 @@
 #include "CarlaRecorderPosition.h"
 #include "CarlaRecorderState.h"
 #include "CarlaRecorderHelpers.h"
+#include "CarlaReplayerHelper.h"
 
-// callback prototypes
-typedef std::function<std::pair<int, uint32_t>(FVector Location, FVector Rotation,
-    CarlaRecorderActorDescription Desc, uint32_t UId)> CarlaRecorderCallbackEventAdd;
-typedef std::function<bool (uint32_t UId)> CarlaRecorderCallbackEventDel;
-typedef std::function<bool (uint32_t ChildId, uint32_t ParentId)> CarlaRecorderCallbackEventParent;
-typedef std::function<bool (CarlaRecorderPosition Pos1, CarlaRecorderPosition Pos2,
-    double Per)> CarlaRecorderCallbackPosition;
-typedef std::function<bool (bool ApplyAutopilot)> CarlaRecorderCallbackFinish;
-typedef std::function<bool (CarlaRecorderStateTrafficLight State)> CarlaRecorderCallbackStateTrafficLight;
+class UCarlaEpisode;
 
 #pragma pack(push, 1)
 struct OHeader
@@ -40,12 +33,13 @@ class CarlaReplayer
 {
 public:
 
-  CarlaReplayer();
-  ~CarlaReplayer();
+  CarlaReplayer() {};
+  ~CarlaReplayer() { Stop(); };
 
   std::string GetInfo(std::string Filename);
-
-  std::string ReplayFile(std::string Filename, double TimeStart = 0.0f, double Duration = 0.0f);
+  std::string GetInfoCollisions(std::string Filename, char Category1 = 'a', char Category2 = 'a');
+  std::string GetInfoActorsBlocked(std::string Filename, double MinTime = 30, double MinDistance = 10);
+  std::string ReplayFile(std::string Filename, double TimeStart = 0.0f, double Duration = 0.0f, uint32_t FollowId = 0);
 
   // void Start(void);
   void Stop(bool KeepActors = false);
@@ -59,18 +53,12 @@ public:
     return Enabled;
   }
 
-  // callbacks
-  void SetCallbackEventAdd(CarlaRecorderCallbackEventAdd f);
-
-  void SetCallbackEventDel(CarlaRecorderCallbackEventDel f);
-
-  void SetCallbackEventParent(CarlaRecorderCallbackEventParent f);
-
-  void SetCallbackEventPosition(CarlaRecorderCallbackPosition f);
-
-  void SetCallbackEventFinish(CarlaRecorderCallbackFinish f);
-
-  void SetCallbackStateTrafficLight(CarlaRecorderCallbackStateTrafficLight f);
+  // set episode
+  void SetEpisode(UCarlaEpisode *ThisEpisode)
+  {
+    Episode = ThisEpisode;
+    Helper.SetEpisode(ThisEpisode);
+  }
 
   // tick for the replayer
   void Tick(float Time);
@@ -78,18 +66,12 @@ public:
 private:
 
   bool Enabled;
+  UCarlaEpisode *Episode = nullptr;
   // binary file reader
   std::ifstream File;
   OHeader Header;
   CarlaRecorderInfo RecInfo;
   CarlaRecorderFrame Frame;
-  // callbacks
-  CarlaRecorderCallbackEventAdd CallbackEventAdd;
-  CarlaRecorderCallbackEventDel CallbackEventDel;
-  CarlaRecorderCallbackEventParent CallbackEventParent;
-  CarlaRecorderCallbackPosition CallbackPosition;
-  CarlaRecorderCallbackFinish CallbackFinish;
-  CarlaRecorderCallbackStateTrafficLight CallbackStateTrafficLight;
   // positions (to be able to interpolate)
   std::vector<CarlaRecorderPosition> CurrPos;
   std::vector<CarlaRecorderPosition> PrevPos;
@@ -99,6 +81,10 @@ private:
   double CurrentTime;
   double TimeToStop;
   double TotalTime;
+  // helper
+  CarlaReplayerHelper Helper;
+  // follow camera
+  uint32_t FollowId;
 
   // utils
   bool ReadHeader();

@@ -567,13 +567,32 @@ void FTheNewCarlaServer::FPimpl::BindActions()
         name));
   });
 
-  Server.BindSync("replay_file", [this](std::string name, double start, double duration) -> R<std::string> {
+  Server.BindSync("show_recorder_collisions", [this](std::string name, char type1, char type2) -> R<std::string> {
+    REQUIRE_CARLA_EPISODE();
+    return R<std::string>(Episode->GetRecorder()->ShowFileCollisions(
+        carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
+        name,
+        type1,
+        type2));
+  });
+
+  Server.BindSync("show_recorder_actors_blocked", [this](std::string name, double min_time, double min_distance) -> R<std::string> {
+    REQUIRE_CARLA_EPISODE();
+    return R<std::string>(Episode->GetRecorder()->ShowFileActorsBlocked(
+        carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
+        name,
+        min_time,
+        min_distance));
+  });
+
+  Server.BindSync("replay_file", [this](std::string name, double start, double duration, uint32_t follow_id) -> R<std::string> {
     REQUIRE_CARLA_EPISODE();
     return R<std::string>(Episode->GetRecorder()->ReplayFile(
         carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
         name,
         start,
-        duration));
+        duration,
+        follow_id));
   });
 
   Server.BindSync("draw_debug_shape", [this](const cr::DebugShape &shape) -> R<void>

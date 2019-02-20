@@ -15,8 +15,6 @@ struct CarlaRecorderPosition
   uint32_t DatabaseId;
   FVector Location;
   FVector Rotation;
-  // FVector Velocity;
-  // FVector AngularVelocity;
 
   void Read(std::ifstream &InFile);
 
