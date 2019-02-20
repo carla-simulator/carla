@@ -65,6 +65,8 @@ public:
 
   void AddEvent(const CarlaRecorderEventParent &Event);
 
+  void AddEventCollision(AActor *Actor1, AActor *Actor2);
+
   void AddPosition(const CarlaRecorderPosition &Position);
 
   void AddState(const CarlaRecorderStateTrafficLight &State);
@@ -73,10 +75,12 @@ public:
   void SetEpisode(UCarlaEpisode *ThisEpisode)
   {
     Episode = ThisEpisode;
+    Replayer.SetEpisode(ThisEpisode);
   }
 
   void CreateRecorderEventAdd(
-      unsigned int DatabaseId,
+      uint32_t DatabaseId,
+      uint8_t Type,
       const FTransform &Transform,
       FActorDescription ActorDescription);
 
@@ -86,23 +90,19 @@ public:
     return &Replayer;
   }
 
-  std::string ShowFileInfo(std::string Path, std::string Name)
-  {
-    return Replayer.GetInfo(Path + Name);
-  }
-  std::string ReplayFile(std::string Path, std::string Name, double TimeStart, double Duration)
-  {
-    Stop();
-    return Replayer.ReplayFile(Path + Name, TimeStart, Duration);
-  }
-
-// protected:
+  // forwarded to replayer
+  std::string ShowFileInfo(std::string Path, std::string Name);
+  std::string ShowFileCollisions(std::string Path, std::string Name, char Type1, char Type2);
+  std::string ShowFileActorsBlocked(std::string Path, std::string Name, double MinTime = 30, double MinDistance = 10);
+  std::string ReplayFile(std::string Path, std::string Name, double TimeStart, double Duration, uint32_t FollowId);
 
   void Tick(float DeltaSeconds) final;
 
 private:
 
   bool Enabled;   // enabled or not
+
+  uint32_t NextCollisionId = 0;
 
   // files
   std::ofstream File;

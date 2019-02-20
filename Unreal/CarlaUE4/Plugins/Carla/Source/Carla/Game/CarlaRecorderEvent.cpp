@@ -8,12 +8,13 @@
 #include "CarlaRecorderEvent.h"
 #include "CarlaRecorderHelpers.h"
 
-void CarlaRecorderEventAdd::Write(std::ofstream &OutFile)
+void CarlaRecorderEventAdd::Write(std::ofstream &OutFile) const
 {
     // OutLog << "add event: " << TCHAR_TO_UTF8(this->Description.Id) << " (id." << this->DatabaseId << ")\n";
 
     // database id
     WriteValue<uint32_t>(OutFile, this->DatabaseId);
+    WriteValue<uint8_t>(OutFile, this->Type);
 
     // transform
     WriteFVector(OutFile, this->Location);
@@ -43,6 +44,9 @@ void CarlaRecorderEventAdd::Read(std::ifstream &InFile)
     //OutLog << "add event: " << this->description.id.c_str() << " (id." << this->databaseId << ")\n";
     // database id
     ReadValue<uint32_t>(InFile, this->DatabaseId);
+
+    // database type
+    ReadValue<uint8_t>(InFile, this->Type);
 
     // transform
     ReadFVector(InFile, this->Location);
@@ -75,7 +79,7 @@ void CarlaRecorderEventDel::Read(std::ifstream &InFile)
     // database id
     ReadValue<uint32_t>(InFile, this->DatabaseId);
 }
-void CarlaRecorderEventDel::Write(std::ofstream &OutFile)
+void CarlaRecorderEventDel::Write(std::ofstream &OutFile) const
 {
     // database id
     WriteValue<uint32_t>(OutFile, this->DatabaseId);
@@ -88,7 +92,7 @@ void CarlaRecorderEventParent::Read(std::ifstream &InFile)
     // database id parent
     ReadValue<uint32_t>(InFile, this->DatabaseIdParent);
 }
-void CarlaRecorderEventParent::Write(std::ofstream &OutFile)
+void CarlaRecorderEventParent::Write(std::ofstream &OutFile) const
 {
     // database id
     WriteValue<uint32_t>(OutFile, this->DatabaseId);
@@ -96,6 +100,37 @@ void CarlaRecorderEventParent::Write(std::ofstream &OutFile)
     WriteValue<uint32_t>(OutFile, this->DatabaseIdParent);
 }
 
+void CarlaRecorderEventCollision::Read(std::ifstream &InFile)
+{
+    // id
+    ReadValue<uint32_t>(InFile, this->Id);
+    // actors database id
+    ReadValue<uint32_t>(InFile, this->DatabaseId1);
+    ReadValue<uint32_t>(InFile, this->DatabaseId2);
+    // is hero
+    ReadValue<bool>(InFile, this->IsActor1Hero);
+    ReadValue<bool>(InFile, this->IsActor2Hero);
+    // location
+    ReadFVector(InFile, this->Location);
+}
+void CarlaRecorderEventCollision::Write(std::ofstream &OutFile) const
+{
+    // id
+    WriteValue<uint32_t>(OutFile, this->Id);
+    // actors database id
+    WriteValue<uint32_t>(OutFile, this->DatabaseId1);
+    WriteValue<uint32_t>(OutFile, this->DatabaseId2);
+    // is hero
+    WriteValue<bool>(OutFile, this->IsActor1Hero);
+    WriteValue<bool>(OutFile, this->IsActor2Hero);
+    // location
+    WriteFVector(OutFile, this->Location);
+}
+bool CarlaRecorderEventCollision::operator==(const CarlaRecorderEventCollision &Other) const
+{
+    return (this->DatabaseId1 == Other.DatabaseId1 &&
+            this->DatabaseId2 == Other.DatabaseId2);
+}
 //---------------------------------------------
 
 void CarlaRecorderEvents::Clear(void)
@@ -103,6 +138,7 @@ void CarlaRecorderEvents::Clear(void)
     EventsAdd.clear();
     EventsDel.clear();
     EventsParent.clear();
+    EventsCollision.clear();
 }
 
 void CarlaRecorderEvents::AddEvent(const CarlaRecorderEventAdd &Event)
@@ -118,6 +154,11 @@ void CarlaRecorderEvents::AddEvent(const CarlaRecorderEventDel &Event)
 void CarlaRecorderEvents::AddEvent(const CarlaRecorderEventParent &Event)
 {
     EventsParent.push_back(std::move(Event));
+}
+
+void CarlaRecorderEvents::AddEvent(const CarlaRecorderEventCollision &Event)
+{
+    EventsCollision.insert(std::move(Event));
 }
 
 void CarlaRecorderEvents::WriteEventsAdd(std::ofstream &OutFile)
@@ -157,6 +198,23 @@ void CarlaRecorderEvents::WriteEventsParent(std::ofstream &OutFile, std::ofstrea
     }
 }
 
+void CarlaRecorderEvents::WriteEventsCollision(std::ofstream &OutFile, std::ofstream &OutLog)
+{
+    // write total records
+    uint16_t Total = EventsCollision.size();
+    WriteValue<uint16_t>(OutFile, Total);
+
+    // for (uint16_t i=0; i<Total; ++i)
+    for (auto &Coll : EventsCollision)
+    {
+        // OutLog << "add collision: id." << EventsCollision[i].Id << " actor1." << EventsCollision[i].DatabaseId1 << " actor2." << EventsCollision[i].DatabaseId2 << "\n";
+        // EventsCollision[i].Write(OutFile);
+        OutLog << "add collision: id." << Coll.Id << " actor1." << Coll.DatabaseId1 << " actor2." << Coll.DatabaseId2 << "\n";
+        Coll.Write(OutFile);
+        UE_LOG(LogCarla, Warning, TEXT("Collision"));
+    }
+}
+
 void CarlaRecorderEvents::Write(std::ofstream &OutFile, std::ofstream &OutLog)
 {
     // write the packet id
@@ -172,6 +230,7 @@ void CarlaRecorderEvents::Write(std::ofstream &OutFile, std::ofstream &OutLog)
     WriteEventsAdd(OutFile);
     WriteEventsDel(OutFile, OutLog);
     WriteEventsParent(OutFile, OutLog);
+    WriteEventsCollision(OutFile, OutLog);
 
     // write the real packet size
     std::streampos PosEnd = OutFile.tellp();

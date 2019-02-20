@@ -243,8 +243,16 @@ namespace detail {
       return _client.ShowRecorderFileInfo(name);
     }
 
-    std::string ReplayFile(std::string name, double start, double duration) {
-      return _client.ReplayFile(name, start, duration);
+    std::string ShowRecorderCollisions(std::string name, char type1, char type2) {
+      return _client.ShowRecorderCollisions(name, type1, type2);
+    }
+
+    std::string ShowRecorderActorsBlocked(std::string name, double min_time, double min_distance) {
+      return _client.ShowRecorderActorsBlocked(name, min_time, min_distance);
+    }
+
+    std::string ReplayFile(std::string name, double start, double duration, uint32_t follow_id) {
+      return _client.ReplayFile(name, start, duration, follow_id);
     }
 
     /// @}

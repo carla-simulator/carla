@@ -154,6 +154,7 @@ public:
       {
         Recorder->CreateRecorderEventAdd(
           result.Value.GetActorId(),
+          static_cast<uint8_t>(result.Value.GetActorType()),
           Transform,
           std::move(thisActorDescription)
         );
@@ -213,7 +214,7 @@ public:
   // -- Private methods and members --------------------------------------------
   // ===========================================================================
 
-  ACarlaRecorder *GetRecorder()
+  ACarlaRecorder *GetRecorder() const
   {
     return Recorder;
   }
@@ -223,7 +224,7 @@ public:
     Recorder = Rec;
   }
 
-  CarlaReplayer *GetReplayer()
+  CarlaReplayer *GetReplayer() const
   {
     return Recorder->GetReplayer();
   }
@@ -247,8 +248,6 @@ private:
     FVector &Rotation,
     FActorDescription &ActorDesc,
     unsigned int desiredId);
-
-  bool SetActorSimulatePhysics(FActorView &ActorView, bool bEnabled);
 
   const uint32 Id = 0u;
 

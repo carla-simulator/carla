@@ -6,6 +6,7 @@
 
 // #include "Carla.h"
 #include "CarlaRecorder.h"
+#include "Carla/Actor/ActorDescription.h"
 
 #include <ctime>
 #include <sstream>
@@ -23,16 +24,40 @@ ACarlaRecorder::ACarlaRecorder(const FObjectInitializer &ObjectInitializer)
   Disable();
 }
 
+std::string ACarlaRecorder::ShowFileInfo(std::string Path, std::string Name)
+{
+  return Replayer.GetInfo(Path + Name);
+}
+
+std::string ACarlaRecorder::ShowFileCollisions(std::string Path, std::string Name, char Type1, char Type2)
+{
+  return Replayer.GetInfoCollisions(Path + Name, Type1, Type2);
+}
+
+std::string ACarlaRecorder::ShowFileActorsBlocked(std::string Path, std::string Name, double MinTime, double MinDistance)
+{
+  return Replayer.GetInfoActorsBlocked(Path + Name, MinTime, MinDistance);
+}
+
+std::string ACarlaRecorder::ReplayFile(std::string Path, std::string Name, double TimeStart, double Duration, uint32_t FollowId)
+{
+  Stop();
+  return Replayer.ReplayFile(Path + Name, TimeStart, Duration, FollowId);
+}
+
 void ACarlaRecorder::Tick(float DeltaSeconds)
 {
   Super::Tick(DeltaSeconds);
 
+  if (!Episode)
+    return;
+
   // check if recording
-  if (Enabled && Episode)
+  if (Enabled)
   {
     const FActorRegistry &reg = Episode->GetActorRegistry();
 
-    // get positions
+    // get positions of vehicles
     for (TActorIterator<ACarlaWheeledVehicle> It(GetWorld()); It; ++It)
     {
       ACarlaWheeledVehicle *Actor = *It;
@@ -44,6 +69,21 @@ void ACarlaRecorder::Tick(float DeltaSeconds)
       };
       AddPosition(recPos);
     }
+
+    // TODO: get positions of walkers
+    /*
+    for (TActorIterator<ACarlaWheeledVehicle> It(GetWorld()); It; ++It)
+    {
+      ACarlaWheeledVehicle *Actor = *It;
+      check(Actor != nullptr);
+      CarlaRecorderPosition recPos {
+        reg.Find(Actor).GetActorId(),
+        Actor->GetTransform().GetTranslation(),
+        Actor->GetTransform().GetRotation().Euler()
+      };
+      AddPosition(recPos);
+    }
+    */
 
     // get states
     for (TActorIterator<ATrafficSignBase> It(GetWorld()); It; ++It)
@@ -66,7 +106,7 @@ void ACarlaRecorder::Tick(float DeltaSeconds)
     // write all data for this frame
     Write();
   }
-  else if (Episode && Episode->GetReplayer()->IsEnabled())
+  else if (Episode->GetReplayer()->IsEnabled())
   {
     // replayer
     Episode->GetReplayer()->Tick(DeltaSeconds);
@@ -90,6 +130,7 @@ std::string ACarlaRecorder::Start(FString Path, FString Name, FString MapName)
   // reset
   Stop();
 
+  NextCollisionId = 0;
   FString Filename = Path + Name;
 
   // binary file
@@ -194,6 +235,41 @@ void ACarlaRecorder::AddEvent(const CarlaRecorderEventParent &Event)
     Events.AddEvent(std::move(Event));
   }
 }
+void ACarlaRecorder::AddEventCollision(AActor *Actor1, AActor *Actor2)
+{
+  if (Enabled)
+  {
+    CarlaRecorderEventCollision Event;
+
+    // some inits
+    Event.Id = NextCollisionId++;
+    Event.IsActor1Hero = false;
+    Event.IsActor2Hero = false;
+
+    // check actor 1
+    if (Episode->GetActorRegistry().Find(Actor1).GetActorInfo() != nullptr)
+    {
+      auto *Role = Episode->GetActorRegistry().Find(Actor1).GetActorInfo()->Description.Variations.Find("role_name");
+      if (Role != nullptr)
+        Event.IsActor1Hero = (Role->Value == "hero");
+    }
+    Event.DatabaseId1 = Episode->GetActorRegistry().Find(Actor1).GetActorId();
+
+    // check actor 2
+    if (Episode->GetActorRegistry().Find(Actor2).GetActorInfo() != nullptr)
+    {
+      auto Role = Episode->GetActorRegistry().Find(Actor2).GetActorInfo()->Description.Variations.Find("role_name");
+      if (Role != nullptr)
+        Event.IsActor2Hero = (Role->Value == "hero");
+    }
+    Event.DatabaseId2 = Episode->GetActorRegistry().Find(Actor2).GetActorId();
+
+    // location of collision
+    Event.Location = Actor1->GetTransform().GetTranslation();
+
+    Events.AddEvent(std::move(Event));
+  }
+}
 void ACarlaRecorder::AddState(const CarlaRecorderStateTrafficLight &State)
 {
   if (Enabled)
@@ -213,6 +289,7 @@ void ACarlaRecorder::AddExistingActors(void)
       // create event
       CreateRecorderEventAdd(
           View.GetActorId(),
+          static_cast<uint8_t>(View.GetActorType()),
           Actor->GetActorTransform(),
           View.GetActorInfo()->Description);
     }
@@ -220,7 +297,8 @@ void ACarlaRecorder::AddExistingActors(void)
 }
 
 void ACarlaRecorder::CreateRecorderEventAdd(
-    unsigned int DatabaseId,
+    uint32_t DatabaseId,
+    uint8_t Type,
     const FTransform &Transform,
     FActorDescription ActorDescription)
 {
@@ -247,6 +325,7 @@ void ACarlaRecorder::CreateRecorderEventAdd(
   CarlaRecorderEventAdd RecEvent
   {
     DatabaseId,
+    Type,
     Transform.GetTranslation(),
     Transform.GetRotation().Euler(),
     std::move(Description)
