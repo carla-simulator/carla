@@ -60,6 +60,13 @@ struct CARLA_API FVehiclePhysicsControl
   // Steering Setup
   FRichCurve SteeringCurve;
 
+  // Center Of Mass
+  UPROPERTY(Category = "Vehicle Center Of Mass", EditAnywhere, BlueprintReadWrite)
+  FVector CenterOfMass;
+
+  UPROPERTY(Category = "Vehicle Center Of Mass Offset", EditAnywhere, BlueprintReadWrite)
+  FVector CenterOfMassOffset;
+
   // Wheels Setup
   TArray<FWheelPhysicsControl> Wheels;
 };

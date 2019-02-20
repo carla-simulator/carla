@@ -34,6 +34,8 @@ namespace rpc {
       float in_mass,
       float in_drag_coefficient,
       geom::Vector3D in_inertia_tensor_scale,
+      geom::Vector3D in_center_of_mass,
+      geom::Vector3D in_center_of_mass_offset,
       const std::vector<carla::geom::Vector2D>& in_steering_curve,
       std::vector<WheelPhysicsControl>& in_wheels
     ) {
@@ -52,6 +54,9 @@ namespace rpc {
       mass = in_mass;
       drag_coefficient = in_drag_coefficient;
       inertia_tensor_scale = in_inertia_tensor_scale;
+
+      center_of_mass = in_center_of_mass;
+      center_of_mass_offset = in_center_of_mass_offset;
 
       steering_curve = in_steering_curve;
       wheels = in_wheels;
@@ -95,6 +100,8 @@ namespace rpc {
     float mass = 0.0f;
     float drag_coefficient = 0.0f;
     geom::Vector3D inertia_tensor_scale;
+    geom::Vector3D center_of_mass;
+    geom::Vector3D center_of_mass_offset;
 
     std::vector<geom::Vector2D> steering_curve;
     std::vector<WheelPhysicsControl> wheels;
@@ -116,6 +123,8 @@ namespace rpc {
           drag_coefficient != rhs.drag_coefficient ||
           inertia_tensor_scale != rhs.inertia_tensor_scale ||
           steering_curve != rhs.steering_curve ||
+          center_of_mass != rhs.center_of_mass ||
+          center_of_mass_offset != rhs.center_of_mass_offset ||
           wheels != rhs.wheels;
     }
 
@@ -156,6 +165,9 @@ namespace rpc {
           steering_curve.push_back(point);
       }
 
+      center_of_mass = Control.CenterOfMass;
+      center_of_mass_offset = Control.CenterOfMassOffset;
+
       // Wheels Setup
       wheels = std::vector<WheelPhysicsControl>();
       for( auto Wheel : Control.Wheels) {
@@ -193,6 +205,9 @@ namespace rpc {
         SteeringCurve.AddKey (point.x, point.y);
       Control.SteeringCurve = SteeringCurve;
       
+      Control.CenterOfMass = center_of_mass;
+      Control.CenterOfMassOffset = center_of_mass_offset;
+
       // Wheels Setup
       TArray<FWheelPhysicsControl> Wheels;
       for (auto wheel : wheels) {
@@ -217,6 +232,8 @@ namespace rpc {
                         mass,
                         drag_coefficient,
                         inertia_tensor_scale,
+                        center_of_mass,
+                        center_of_mass_offset,
                         steering_curve,
                         wheels
                         );
