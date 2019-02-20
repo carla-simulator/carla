@@ -110,6 +110,7 @@ private:
    */
   static const int TERRAIN_INDEX = 2;
 
+  UPROPERTY()
   bool bOverrideMaterials;
 
   //UProperties are necesary or else the GC will eat everything up

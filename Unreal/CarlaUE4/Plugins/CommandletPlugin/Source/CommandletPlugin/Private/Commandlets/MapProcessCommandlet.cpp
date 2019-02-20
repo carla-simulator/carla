@@ -229,7 +229,7 @@ bool UMapProcessCommandlet::SaveWorld(FAssetData &AssetData, FString &DestPath, 
 
 int32 UMapProcessCommandlet::Main(const FString &Params)
 {
-  ParseParams(InParams);
+  ParseParams(Params);
   FString SrcPath = TEXT("/Game/Carla/Static/Imported/") + MapName;
   FString BaseMap = TEXT("/Game/Carla/Maps/BaseMap");
   FString WorldDestPath = TEXT("/Game/Carla/ExportedMaps");
