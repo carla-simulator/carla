@@ -155,7 +155,7 @@ PIXELS_AHEAD_VEHICLE = 150
 
 def get_actor_display_name(actor, truncate=250):
     name = ' '.join(actor.type_id.replace('_', '.').title().split('.')[1:])
-    return (name[:truncate-1] + u'\u2026') if len(name) > truncate else name
+    return (name[:truncate - 1] + u'\u2026') if len(name) > truncate else name
 
 
 class Util(object):
@@ -198,7 +198,6 @@ class ModuleManager(object):
     def start_modules(self):
         for module in self.modules:
             module.start()
-
 
 
 # ==============================================================================
@@ -314,13 +313,13 @@ class ModuleHUD (object):
 
                 color = COLOR_ORANGE_0
                 if actor.attributes['role_name'] == 'hero':
-                  color = COLOR_PLUM_0
-                  if hero_actor is not None and hero_actor.id == actor.id:
-                    color = COLOR_SCARLET_RED_1
+                    color = COLOR_PLUM_0
+                    if hero_actor is not None and hero_actor.id == actor.id:
+                        color = COLOR_SCARLET_RED_1
 
                 font_surface = self._header_font.render(str(actor.id), True, color)
                 rotated_font_surface = pygame.transform.rotate(font_surface, angle).convert_alpha()
-                rect = rotated_font_surface.get_rect(center=(x,y))
+                rect = rotated_font_surface.get_rect(center=(x, y))
                 vehicle_id_surface.blit(rotated_font_surface, rect)
 
         return vehicle_id_surface
@@ -600,8 +599,8 @@ class ModuleWorld(object):
         self.border_round_surface.fill(COLOR_BLACK)
 
         center_offset = (int(self.module_hud.dim[0] / 2), int(self.module_hud.dim[1] / 2))
-        pygame.draw.circle(self.border_round_surface, COLOR_ALUMINIUM_1, center_offset, int(self.module_hud.dim[1]/ 2))
-        pygame.draw.circle(self.border_round_surface, COLOR_WHITE, center_offset, int((self.module_hud.dim[1] - 8)/ 2))
+        pygame.draw.circle(self.border_round_surface, COLOR_ALUMINIUM_1, center_offset, int(self.module_hud.dim[1] / 2))
+        pygame.draw.circle(self.border_round_surface, COLOR_WHITE, center_offset, int((self.module_hud.dim[1] - 8) / 2))
 
         scaled_original_size = self.original_surface_size * (1.0 / 0.9)
         self.hero_surface = pygame.Surface((scaled_original_size, scaled_original_size)).convert()
@@ -716,7 +715,8 @@ class ModuleWorld(object):
         if self.hero_actor is not None and len(vehicles) > 1:
             location = self.hero_actor.get_location()
             vehicle_list = [x for x in vehicles if x.id != self.hero_actor.id]
-            distance = lambda v: location.distance(v.get_location())
+
+            def distance(v): return location.distance(v.get_location())
             for n, vehicle in enumerate(sorted(vehicle_list, key=distance)):
                 if n > 15:
                     break
@@ -789,9 +789,9 @@ class ModuleWorld(object):
         for v in list_v:
             color = COLOR_ORANGE_1
             if v.attributes['role_name'] == 'hero':
-              color = COLOR_PLUM_0
-              if self.hero_actor is not None and self.hero_actor.id == v.id:
-                color = COLOR_SCARLET_RED_1
+                color = COLOR_PLUM_0
+                if self.hero_actor is not None and self.hero_actor.id == v.id:
+                    color = COLOR_SCARLET_RED_1
             # Compute bounding box points
             bb = v.bounding_box.extent
             corners = [carla.Location(x=-bb.x, y=-bb.y),
@@ -819,7 +819,6 @@ class ModuleWorld(object):
         self.vehicle_id_surface.set_clip(clipping_rect)
         self.result_surface.set_clip(clipping_rect)
 
-
     def _compute_scale(self, scale_factor):
         m = self.module_input.mouse_pos
 
@@ -830,10 +829,10 @@ class ModuleWorld(object):
         # Offset will be the previously accumulated offset added with the
         # difference of mouse positions in the old and new scales
         diff_between_scales = ((float(self.prev_scaled_size) * px) - (float(self.scaled_size) * px),
-                                (float(self.prev_scaled_size) * py) - (float(self.scaled_size) * py))
+                               (float(self.prev_scaled_size) * py) - (float(self.scaled_size) * py))
 
         self.scale_offset = (self.scale_offset[0] + diff_between_scales[0],
-                                self.scale_offset[1] + diff_between_scales[1])
+                             self.scale_offset[1] + diff_between_scales[1])
 
         # Update previous scale
         self.prev_scaled_size = self.scaled_size
@@ -857,7 +856,7 @@ class ModuleWorld(object):
 
         # Render Ids
         self.module_hud.render_vehicles_ids(self.vehicle_id_surface, vehicles,
-                                          self.map_image.world_to_pixel, self.hero_actor)
+                                            self.map_image.world_to_pixel, self.hero_actor)
 
         # Blit surfaces
         surfaces = ((self.map_image.surface, (0, 0)),
@@ -897,7 +896,7 @@ class ModuleWorld(object):
             rotation_pivot = rotated_result_surface.get_rect(center=center)
             display.blit(rotated_result_surface, rotation_pivot)
 
-            display.blit(self.border_round_surface, (0,0))
+            display.blit(self.border_round_surface, (0, 0))
         else:
             # Translation offset
             translation_offset = (self.module_input.mouse_offset[0] * scale_factor + self.scale_offset[0],
@@ -962,8 +961,8 @@ class ModuleInput(object):
                     else:
                         self.wheel_offset = MAP_DEFAULT_SCALE
                         self.mouse_offset = [0, 0]
-                        self.mouse_pos = [0,0]
-                        module_world.scale_offset = [0,0]
+                        self.mouse_pos = [0, 0]
+                        module_world.scale_offset = [0, 0]
                         module_world.hero_actor = None
                         module_hud.notification('Map Mode')
                 elif event.key == K_F1:
@@ -989,10 +988,10 @@ class ModuleInput(object):
                     elif event.key == K_p:
                         world = module_manager.get_module(MODULE_WORLD)
                         if world.hero_actor is not None:
-                          self._autopilot_enabled = not self._autopilot_enabled
-                          world.hero_actor.set_autopilot(self._autopilot_enabled)
-                          module_hud = module_manager.get_module(MODULE_HUD)
-                          module_hud.notification('Autopilot %s' % ('On' if self._autopilot_enabled else 'Off'))
+                            self._autopilot_enabled = not self._autopilot_enabled
+                            world.hero_actor.set_autopilot(self._autopilot_enabled)
+                            module_hud = module_manager.get_module(MODULE_HUD)
+                            module_hud.notification('Autopilot %s' % ('On' if self._autopilot_enabled else 'Off'))
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 4:
                     self.wheel_offset += self.wheel_amount
@@ -1021,8 +1020,8 @@ class ModuleInput(object):
     def _parse_mouse(self):
         if pygame.mouse.get_pressed()[0]:
             x, y = pygame.mouse.get_pos()
-            self.mouse_offset[0] +=  (1.0 / self.wheel_offset) * (x - self.mouse_pos[0])
-            self.mouse_offset[1] +=  (1.0 / self.wheel_offset) * (y - self.mouse_pos[1])
+            self.mouse_offset[0] += (1.0 / self.wheel_offset) * (x - self.mouse_pos[0])
+            self.mouse_offset[1] += (1.0 / self.wheel_offset) * (y - self.mouse_pos[1])
             self.mouse_pos = (x, y)
 
     def parse_input(self, clock):
@@ -1062,7 +1061,7 @@ def game_loop(args):
 
     font = pygame.font.Font(pygame.font.get_default_font(), 20)
     text_surface = font.render('Rendering map...', True, COLOR_WHITE)
-    display.blit(text_surface, text_surface.get_rect(center=(args.width/2, args.height/2)))
+    display.blit(text_surface, text_surface.get_rect(center=(args.width / 2, args.height / 2)))
     pygame.display.flip()
 
     # Init modules
