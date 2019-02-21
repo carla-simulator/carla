@@ -243,9 +243,9 @@ class HelpText(object):
         self.pos = (0.5 * width - 0.5 * self.dim[0], 0.5 * height - 0.5 * self.dim[1])
         self.seconds_left = 0
         self.surface = pygame.Surface(self.dim)
-        self.surface.fill((0, 0, 0, 0))
+        self.surface.fill(COLOR_BLACK)
         for n, line in enumerate(lines):
-            text_texture = self.font.render(line, True, (255, 255, 255))
+            text_texture = self.font.render(line, True, COLOR_WHITE)
             self.surface.blit(text_texture, (22, n * 22))
             self._render = False
         self.surface.set_alpha(220)
@@ -440,13 +440,13 @@ class MapImage(object):
 
         def draw_lane_marking(surface, points, solid=True):
             if solid:
-                pygame.draw.lines(surface, (252, 175, 62), False, points, 2)
+                pygame.draw.lines(surface, COLOR_ORANGE_0, False, points, 2)
             else:
                 broken_lines = [x for n, x in enumerate(zip(*(iter(points),) * 20)) if n % 3 == 0]
                 for line in broken_lines:
-                    pygame.draw.lines(surface, (251, 241, 199), False, line, 2)
+                    pygame.draw.lines(surface, COLOR_ORANGE_1, False, line, 2)
 
-        def draw_arrow(surface, transform, color=(31, 31, 31)):
+        def draw_arrow(surface, transform, color=COLOR_ALUMINIUM_4):
             transform.rotation.yaw += 180
             forward = transform.get_forward_vector()
             transform.rotation.yaw += 90
@@ -540,7 +540,6 @@ class ModuleWorld(object):
         # World data
         self.world = None
         self.town_map = None
-        self.actors = None
 
         # Store necessary modules
         self.module_hud = None
@@ -565,15 +564,14 @@ class ModuleWorld(object):
 
             world = self.client.get_world()
             town_map = world.get_map()
-            actors = world.get_actors()
-            return (world, town_map, actors)
+            return (world, town_map)
 
         except Exception as ex:
             logging.error(ex)
             exit_game()
 
     def start(self):
-        self.world, self.town_map, self.actors = self._get_data_from_carla(self.host, self.port, self.timeout)
+        self.world, self.town_map = self._get_data_from_carla(self.host, self.port, self.timeout)
 
         # Create Surfaces
         self.map_image = MapImage(self.town_map, PIXELS_PER_METER)
@@ -609,12 +607,18 @@ class ModuleWorld(object):
         self.result_surface = pygame.Surface((self.surface_size, self.surface_size)).convert()
         self.result_surface.set_colorkey(COLOR_BLACK)
 
+        # Start hero mode by default
+        self.select_hero_actor()
+        self.hero_actor.set_autopilot(False)
+        self.module_input.wheel_offset = HERO_DEFAULT_SCALE
+        self.module_input._control = carla.VehicleControl()
+
         weak_self = weakref.ref(self)
         self.world.on_tick(lambda timestamp: ModuleWorld.on_world_tick(weak_self, timestamp))
 
     def select_hero_actor(self):
         hero_vehicles = [
-            actor for actor in self.actors if 'vehicle' in actor.type_id and actor.attributes['role_name'] == 'hero']
+            actor for actor in self.world.get_actors() if 'vehicle' in actor.type_id and actor.attributes['role_name'] == 'hero']
         if len(hero_vehicles) > 0:
             self.hero_actor = random.choice(hero_vehicles)
         else:
@@ -633,8 +637,6 @@ class ModuleWorld(object):
             spawn_points = self.world.get_map().get_spawn_points()
             spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
             self.hero_actor = self.world.try_spawn_actor(blueprint, spawn_point)
-            if self.hero_actor is not None:
-                self.hero_actor.set_autopilot()
 
     def tick(self, clock):
         self.update_hud_info(clock)
@@ -846,10 +848,6 @@ class ModuleWorld(object):
 
         # Render Actors
 
-        hero_vehicles = [v for v in vehicles if v.attributes['role_name'] == 'hero']
-        if len(hero_vehicles) == 0:
-            self.hero_actor = None
-
         self.actors_surface.fill(COLOR_BLACK)
         self.render_actors(self.actors_surface, vehicles, traffic_lights, speed_limits, walkers, scale_factor)
 
@@ -926,7 +924,7 @@ class ModuleInput(object):
         self.wheel_amount = 0.025
         self._steer_cache = 0.0
         self._control = None
-        self._autopilot_enabled = True
+        self._autopilot_enabled = False
 
     def start(self):
         hud = module_manager.get_module(MODULE_HUD)
@@ -956,7 +954,6 @@ class ModuleInput(object):
                         module_world.select_hero_actor()
                         self.wheel_offset = HERO_DEFAULT_SCALE
                         self._control = carla.VehicleControl()
-                        self._autopilot_enabled = False
                         module_hud.notification('Hero Mode')
                     else:
                         self.wheel_offset = MAP_DEFAULT_SCALE
@@ -986,11 +983,12 @@ class ModuleInput(object):
                     elif self._control.manual_gear_shift and event.key == K_PERIOD:
                         self._control.gear = self._control.gear + 1
                     elif event.key == K_p:
-                        self._autopilot_enabled = not self._autopilot_enabled
                         world = module_manager.get_module(MODULE_WORLD)
-                        world.hero_actor.set_autopilot(self._autopilot_enabled)
-                        module_hud = module_manager.get_module(MODULE_HUD)
-                        module_hud.notification('Autopilot %s' % ('On' if self._autopilot_enabled else 'Off'))
+                        if world.hero_actor is not None:
+                          self._autopilot_enabled = not self._autopilot_enabled
+                          world.hero_actor.set_autopilot(self._autopilot_enabled)
+                          module_hud = module_manager.get_module(MODULE_HUD)
+                          module_hud.notification('Autopilot %s' % ('On' if self._autopilot_enabled else 'Off'))
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 4:
                     self.wheel_offset += self.wheel_amount
