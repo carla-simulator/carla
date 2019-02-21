@@ -814,13 +814,13 @@ void CarlaReplayer::ProcessToTime(double Time)
   {
     // check if we need to stop the replayer and let it continue in simulation
     // mode
-    if (TimeToStop == TotalTime)
+    if (TimeToStop < TotalTime)
     {
-      Stop();
+      Stop(true); // keep actors in scene so they continue with AI
     }
     else
     {
-      Stop(true); // keep actors in scene so they continue with AI
+      Stop();
     }
   }
 }

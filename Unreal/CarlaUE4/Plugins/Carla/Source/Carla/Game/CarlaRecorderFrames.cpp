@@ -53,7 +53,7 @@ void CarlaRecorderFrames::SetFrame(void)
   ++Frame.Id;
 }
 
-void CarlaRecorderFrames::Write(std::ofstream &OutFile, std::ofstream &OutLog)
+void CarlaRecorderFrames::Write(std::ofstream &OutFile)
 {
   std::streampos Pos, Offset;
   double Dummy = -1.0f;
@@ -82,6 +82,4 @@ void CarlaRecorderFrames::Write(std::ofstream &OutFile, std::ofstream &OutLog)
 
   // save position for next actualization
   OffsetPreviousFrame = Offset;
-
-  OutLog << "frame " << Frame.Id << " elapsed " << Frame.Elapsed << "\n";
 }

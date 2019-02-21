@@ -37,7 +37,7 @@ void CarlaRecorderPositions::AddPosition(const CarlaRecorderPosition &Position)
   Positions.push_back(Position);
 }
 
-void CarlaRecorderPositions::Write(std::ofstream &OutFile, std::ofstream &OutLog)
+void CarlaRecorderPositions::Write(std::ofstream &OutFile)
 {
   // write the packet id
   WriteValue<char>(OutFile, static_cast<char>(CarlaRecorderPacketId::Position));
@@ -56,6 +56,4 @@ void CarlaRecorderPositions::Write(std::ofstream &OutFile, std::ofstream &OutLog
     OutFile.write(reinterpret_cast<const char *>(Positions.data()),
         Positions.size() * sizeof(CarlaRecorderPosition));
   }
-
-  OutLog << "write positions (" << Positions.size() << " * " << sizeof(CarlaRecorderPosition) << ")\n";
 }
