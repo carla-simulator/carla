@@ -287,7 +287,7 @@ class KeyboardControl(object):
                     world.player.set_autopilot(self._autopilot_enabled)
                     world.hud.notification("Replaying file 'manual_recording.rec'")
                     # replayer
-                    client.replay_file("manual_recording.rec", world.recording_start, 0)
+                    client.replay_file("manual_recording.rec", world.recording_start, 0, 0)
                     world.camera_manager.set_sensor(currentIndex)
                 elif event.key == K_MINUS and (pygame.key.get_mods() & KMOD_CTRL):
                     if pygame.key.get_mods() & KMOD_SHIFT:
