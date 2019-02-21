@@ -778,7 +778,8 @@ def game_loop(args):
 
     finally:
 
-        client.stop_recorder()
+        if (world.recording_enabled):
+            client.stop_recorder()
 
         if world is not None:
             world.destroy()
