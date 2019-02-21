@@ -34,9 +34,6 @@ struct CARLA_API FVehiclePhysicsControl
   UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
   float DampingRateZeroThrottleClutchDisengaged = 0.0f;
 
-  // // Differential Setup
-
-
   // // Transmission Setup
   UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
   bool bUseGearAutoBox = 0.0f;
@@ -63,9 +60,6 @@ struct CARLA_API FVehiclePhysicsControl
   // Center Of Mass
   UPROPERTY(Category = "Vehicle Center Of Mass", EditAnywhere, BlueprintReadWrite)
   FVector CenterOfMass;
-
-  UPROPERTY(Category = "Vehicle Center Of Mass Offset", EditAnywhere, BlueprintReadWrite)
-  FVector CenterOfMassOffset;
 
   // Wheels Setup
   TArray<FWheelPhysicsControl> Wheels;

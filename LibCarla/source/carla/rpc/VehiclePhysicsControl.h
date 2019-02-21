@@ -35,7 +35,6 @@ namespace rpc {
       float in_drag_coefficient,
       geom::Vector3D in_inertia_tensor_scale,
       geom::Vector3D in_center_of_mass,
-      geom::Vector3D in_center_of_mass_offset,
       const std::vector<carla::geom::Vector2D>& in_steering_curve,
       std::vector<WheelPhysicsControl>& in_wheels
     ) {
@@ -56,7 +55,6 @@ namespace rpc {
       inertia_tensor_scale = in_inertia_tensor_scale;
 
       center_of_mass = in_center_of_mass;
-      center_of_mass_offset = in_center_of_mass_offset;
 
       steering_curve = in_steering_curve;
       wheels = in_wheels;
@@ -101,7 +99,6 @@ namespace rpc {
     float drag_coefficient = 0.0f;
     geom::Vector3D inertia_tensor_scale;
     geom::Vector3D center_of_mass;
-    geom::Vector3D center_of_mass_offset;
 
     std::vector<geom::Vector2D> steering_curve;
     std::vector<WheelPhysicsControl> wheels;
@@ -124,7 +121,6 @@ namespace rpc {
           inertia_tensor_scale != rhs.inertia_tensor_scale ||
           steering_curve != rhs.steering_curve ||
           center_of_mass != rhs.center_of_mass ||
-          center_of_mass_offset != rhs.center_of_mass_offset ||
           wheels != rhs.wheels;
     }
 
@@ -166,7 +162,6 @@ namespace rpc {
       }
 
       center_of_mass = Control.CenterOfMass;
-      center_of_mass_offset = Control.CenterOfMassOffset;
 
       // Wheels Setup
       wheels = std::vector<WheelPhysicsControl>();
@@ -206,7 +201,6 @@ namespace rpc {
       Control.SteeringCurve = SteeringCurve;
       
       Control.CenterOfMass = center_of_mass;
-      Control.CenterOfMassOffset = center_of_mass_offset;
 
       // Wheels Setup
       TArray<FWheelPhysicsControl> Wheels;
@@ -233,7 +227,6 @@ namespace rpc {
                         drag_coefficient,
                         inertia_tensor_scale,
                         center_of_mass,
-                        center_of_mass_offset,
                         steering_curve,
                         wheels
                         );
