@@ -106,7 +106,6 @@ private:
 
   // files
   std::ofstream File;
-  std::ofstream Log;
 
   UCarlaEpisode *Episode = nullptr;
 

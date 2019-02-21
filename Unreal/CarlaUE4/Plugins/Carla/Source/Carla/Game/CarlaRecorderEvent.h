@@ -90,7 +90,7 @@ class CarlaRecorderEvents
     void AddEvent(const CarlaRecorderEventParent &Event);
     void AddEvent(const CarlaRecorderEventCollision &Event);
     void Clear(void);
-    void Write(std::ofstream &OutFile, std::ofstream &OutLog);
+    void Write(std::ofstream &OutFile);
 
     private:
     std::vector<CarlaRecorderEventAdd> EventsAdd;
@@ -99,7 +99,7 @@ class CarlaRecorderEvents
     std::unordered_set<CarlaRecorderEventCollision> EventsCollision;
 
     void WriteEventsAdd(std::ofstream &OutFile);
-    void WriteEventsDel(std::ofstream &OutFile, std::ofstream &OutLog);
-    void WriteEventsParent(std::ofstream &OutFile, std::ofstream &OutLog);
-    void WriteEventsCollision(std::ofstream &OutFile, std::ofstream &OutLog);
+    void WriteEventsDel(std::ofstream &OutFile);
+    void WriteEventsParent(std::ofstream &OutFile);
+    void WriteEventsCollision(std::ofstream &OutFile);
 };

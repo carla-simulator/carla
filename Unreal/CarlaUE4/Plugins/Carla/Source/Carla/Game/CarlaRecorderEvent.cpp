@@ -10,8 +10,6 @@
 
 void CarlaRecorderEventAdd::Write(std::ofstream &OutFile) const
 {
-    // OutLog << "add event: " << TCHAR_TO_UTF8(this->Description.Id) << " (id." << this->DatabaseId << ")\n";
-
     // database id
     WriteValue<uint32_t>(OutFile, this->DatabaseId);
     WriteValue<uint8_t>(OutFile, this->Type);
@@ -27,21 +25,17 @@ void CarlaRecorderEventAdd::Write(std::ofstream &OutFile) const
     // attributes
     uint16_t Total = this->Description.Attributes.size();
     WriteValue<uint16_t>(OutFile, Total);
-    // OutLog << "Attributes: " << this->description.attributes.size() << std::endl;
     for (uint16_t i=0; i<Total; ++i)
     {
         // type
         WriteValue<uint8_t>(OutFile, this->Description.Attributes[i].Type);
         WriteFString(OutFile, this->Description.Attributes[i].Id);
         WriteFString(OutFile, this->Description.Attributes[i].Value);
-        // log
-        // OutLog << "  " << TCHAR_TO_UTF8(this->Description.Attributes[i].Id) << " = " << TCHAR_TO_UTF8(this->Description.Attributes[i].Value) << std::endl;
     }
 }
 
 void CarlaRecorderEventAdd::Read(std::ifstream &InFile)
 {
-    //OutLog << "add event: " << this->description.id.c_str() << " (id." << this->databaseId << ")\n";
     // database id
     ReadValue<uint32_t>(InFile, this->DatabaseId);
 
@@ -61,7 +55,6 @@ void CarlaRecorderEventAdd::Read(std::ifstream &InFile)
     ReadValue<uint16_t>(InFile, Total);
     this->Description.Attributes.clear();
     this->Description.Attributes.reserve(Total);
-    //OutLog << "Attributes: " << this->description.attributes.size() << std::endl;
     for (uint16_t i=0; i<Total; ++i)
     {
         CarlaRecorderActorAttribute Att;
@@ -69,8 +62,6 @@ void CarlaRecorderEventAdd::Read(std::ifstream &InFile)
         ReadFString(InFile, Att.Id);
         ReadFString(InFile, Att.Value);
         this->Description.Attributes.push_back(std::move(Att));
-        // log
-        //OutLog << "  " << att.id.c_str() << " = " << att.value.c_str() << std::endl;
     }
 }
 
@@ -171,7 +162,7 @@ void CarlaRecorderEvents::WriteEventsAdd(std::ofstream &OutFile)
         EventsAdd[i].Write(OutFile);
 }
 
-void CarlaRecorderEvents::WriteEventsDel(std::ofstream &OutFile, std::ofstream &OutLog)
+void CarlaRecorderEvents::WriteEventsDel(std::ofstream &OutFile)
 {
 
     // write total records
@@ -180,12 +171,11 @@ void CarlaRecorderEvents::WriteEventsDel(std::ofstream &OutFile, std::ofstream &
 
     for (uint16_t i=0; i<Total; ++i)
     {
-        OutLog << "add del: " << EventsDel[i].DatabaseId << "\n";
         EventsDel[i].Write(OutFile);
     }
 }
 
-void CarlaRecorderEvents::WriteEventsParent(std::ofstream &OutFile, std::ofstream &OutLog)
+void CarlaRecorderEvents::WriteEventsParent(std::ofstream &OutFile)
 {
     // write total records
     uint16_t Total = EventsParent.size();
@@ -193,12 +183,11 @@ void CarlaRecorderEvents::WriteEventsParent(std::ofstream &OutFile, std::ofstrea
 
     for (uint16_t i=0; i<Total; ++i)
     {
-        OutLog << "add parent: id." << EventsParent[i].DatabaseId << ", parent." << EventsParent[i].DatabaseIdParent << "\n";
         EventsParent[i].Write(OutFile);
     }
 }
 
-void CarlaRecorderEvents::WriteEventsCollision(std::ofstream &OutFile, std::ofstream &OutLog)
+void CarlaRecorderEvents::WriteEventsCollision(std::ofstream &OutFile)
 {
     // write total records
     uint16_t Total = EventsCollision.size();
@@ -207,15 +196,11 @@ void CarlaRecorderEvents::WriteEventsCollision(std::ofstream &OutFile, std::ofst
     // for (uint16_t i=0; i<Total; ++i)
     for (auto &Coll : EventsCollision)
     {
-        // OutLog << "add collision: id." << EventsCollision[i].Id << " actor1." << EventsCollision[i].DatabaseId1 << " actor2." << EventsCollision[i].DatabaseId2 << "\n";
-        // EventsCollision[i].Write(OutFile);
-        OutLog << "add collision: id." << Coll.Id << " actor1." << Coll.DatabaseId1 << " actor2." << Coll.DatabaseId2 << "\n";
         Coll.Write(OutFile);
-        UE_LOG(LogCarla, Warning, TEXT("Collision"));
     }
 }
 
-void CarlaRecorderEvents::Write(std::ofstream &OutFile, std::ofstream &OutLog)
+void CarlaRecorderEvents::Write(std::ofstream &OutFile)
 {
     // write the packet id
     WriteValue<char>(OutFile, static_cast<char>(CarlaRecorderPacketId::Event));
@@ -228,9 +213,9 @@ void CarlaRecorderEvents::Write(std::ofstream &OutFile, std::ofstream &OutLog)
 
     // write events
     WriteEventsAdd(OutFile);
-    WriteEventsDel(OutFile, OutLog);
-    WriteEventsParent(OutFile, OutLog);
-    WriteEventsCollision(OutFile, OutLog);
+    WriteEventsDel(OutFile);
+    WriteEventsParent(OutFile);
+    WriteEventsCollision(OutFile);
 
     // write the real packet size
     std::streampos PosEnd = OutFile.tellp();
@@ -238,6 +223,4 @@ void CarlaRecorderEvents::Write(std::ofstream &OutFile, std::ofstream &OutLog)
     OutFile.seekp(PosStart, std::ios::beg);
     WriteValue<uint32_t>(OutFile, Total);
     OutFile.seekp(PosEnd, std::ios::beg);
-
-    OutLog << "write events (" << EventsAdd.size() << "," << EventsDel.size() << "," << EventsParent.size() << ")\n";
 }

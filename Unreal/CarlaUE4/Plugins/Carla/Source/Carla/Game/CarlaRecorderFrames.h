@@ -33,7 +33,7 @@ public:
 
   void SetFrame(void);
 
-  void Write(std::ofstream &OutFile, std::ofstream &OutLog);
+  void Write(std::ofstream &OutFile);
 
 private:
 

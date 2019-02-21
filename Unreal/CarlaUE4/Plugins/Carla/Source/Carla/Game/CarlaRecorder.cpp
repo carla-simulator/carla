@@ -139,13 +139,8 @@ std::string ACarlaRecorder::Start(FString Path, FString Name, FString MapName)
   File.open(TCHAR_TO_UTF8(*Filename), std::ios::binary);
   if (!File.is_open())
   {
-    // log_error("Recorder file couldn't be created");
     return "";
   }
-
-  // log file
-  FString LogFilename = Path + Name + ".log";
-  Log.open(TCHAR_TO_UTF8(*LogFilename));
 
   // save info
   Info.Version = 1;
@@ -174,10 +169,6 @@ void ACarlaRecorder::Stop(void)
   {
     File.close();
   }
-  if (Log)
-  {
-    Log.close();
-  }
 
   Clear();
 }
@@ -187,8 +178,6 @@ void ACarlaRecorder::Clear(void)
   Events.Clear();
   Positions.Clear();
   States.Clear();
-
-  // log << "Clear\n";
 }
 
 void ACarlaRecorder::Write(void)
@@ -197,13 +186,12 @@ void ACarlaRecorder::Write(void)
   Frames.SetFrame();
 
   // write data
-  Frames.Write(File, Log);
-  Events.Write(File, Log);
-  Positions.Write(File, Log);
-  States.Write(File, Log);
+  Frames.Write(File);
+  Events.Write(File);
+  Positions.Write(File);
+  States.Write(File);
 
   Clear();
-  // log << "Write\n";
 }
 
 void ACarlaRecorder::AddPosition(const CarlaRecorderPosition &Position)

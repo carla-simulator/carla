@@ -48,7 +48,7 @@ void CarlaRecorderStates::WriteStatesTrafficLight(std::ofstream &OutFile)
   }
 }
 
-void CarlaRecorderStates::Write(std::ofstream &OutFile, std::ofstream &OutLog)
+void CarlaRecorderStates::Write(std::ofstream &OutFile)
 {
   // write the packet id
   WriteValue<char>(OutFile, static_cast<char>(CarlaRecorderPacketId::State));
@@ -59,6 +59,4 @@ void CarlaRecorderStates::Write(std::ofstream &OutFile, std::ofstream &OutLog)
 
   // write events
   WriteStatesTrafficLight(OutFile);
-
-  OutLog << "write states (" << StatesTrafficLights.size() << ")\n";
 }
