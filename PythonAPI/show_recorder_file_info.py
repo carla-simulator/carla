@@ -27,23 +27,37 @@ import time
 
 def main():
 
+    argparser = argparse.ArgumentParser(
+        description=__doc__)
+    argparser.add_argument(
+        '--host',
+        metavar='H',
+        default='127.0.0.1',
+        help='IP of the host server (default: 127.0.0.1)')
+    argparser.add_argument(
+        '-p', '--port',
+        metavar='P',
+        default=2000,
+        type=int,
+        help='TCP port to listen to (default: 2000)')
+    argparser.add_argument(
+        '-f', '--recorder_filename',
+        metavar='F',
+        default="test1.rec",
+        help='recorder filename (test1.rec)')
+    args = argparser.parse_args()
+
     actor_list = []
 
     try:
 
-        client = carla.Client('localhost', 2000)
-        client.set_timeout(2.0)
+        client = carla.Client(args.host, args.port)
+        client.set_timeout(60.0)
         world = client.get_world()
 
-        #print "Recording on file:", client.start_recorder("test1.rec")
-
-        #print client.show_recorder_file_info("test1.rec")
-        print client.replay_file("test1.rec", 2)
-        #time.sleep(5)
+        print client.show_recorder_file_info(args.recorder_filename)
 
     finally:
-        #print "Stop recording"
-        #client.stop_recorder()
         pass
 
 if __name__ == '__main__':

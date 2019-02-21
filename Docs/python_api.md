@@ -13,8 +13,10 @@
 - `get_server_version()`
 - `get_world()`
 - `start_recorder(string filename)`
-- `replay_file(string filename, float start=0, float duration=0)`
+- `replay_file(string filename, float start, float duration, int camera_follow_id)`
 - `show_recorder_file_info(string filename)`
+- `show_recorder_collisions(string filename, char category1, char category2)`
+- `show_recorder_actors_blocked(string filename, float min_time, float min_distance)`
 
 ## `carla.World`
 
