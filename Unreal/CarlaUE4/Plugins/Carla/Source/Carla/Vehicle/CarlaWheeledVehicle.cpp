@@ -161,8 +161,7 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl()
 
   // Center of mass
   FBodyInstance* TargetInstance = Vehicle4W->UpdatedPrimitive->GetBodyInstance();
-  PhysicsControl.CenterOfMass = TargetInstance->GetCOMPosition();
-  PhysicsControl.CenterOfMassOffset = TargetInstance->COMNudge;
+  PhysicsControl.CenterOfMass = TargetInstance->GetCOMPosition() + TargetInstance->COMNudge;
 
   // Transmission Setup
   PhysicsControl.SteeringCurve = Vehicle4W->SteeringCurve.EditorCurveData;
@@ -209,6 +208,11 @@ void ACarlaWheeledVehicle::SetVehiclePhysicsControl(const FVehiclePhysicsControl
   Vehicle4W->Mass = PhysicsControl.Mass;
   Vehicle4W->DragCoefficient = PhysicsControl.DragCoefficient;
   Vehicle4W->InertiaTensorScale = PhysicsControl.InertiaTensorScale;
+  
+  FBodyInstance* TargetInstance = Vehicle4W->UpdatedPrimitive->GetBodyInstance();
+  
+  // We can only set the offset of the center of mass
+  TargetInstance->COMNudge = PhysicsControl.CenterOfMass - TargetInstance->GetCOMPosition();
 
   // Transmission Setup
   Vehicle4W->SteeringCurve.EditorCurveData = PhysicsControl.SteeringCurve;

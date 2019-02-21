@@ -40,7 +40,7 @@ namespace rpc {
     out << "WheelPhysicsControl(tire_friction=" << control.tire_friction 
         << ", damping_rate=" << control.damping_rate
         << ", steer_angle=" << control.steer_angle
-        << ", disable_steering=" << control.disable_steering << ')';
+        << ", disable_steering=" << boolalpha(control.disable_steering) << ')';
     return out;
   }
 
@@ -51,14 +51,13 @@ namespace rpc {
     << ", damping_rate_full_throttle=" << control.damping_rate_full_throttle
     << ", damping_rate_zero_throttle_clutch_engaged=" << control.damping_rate_zero_throttle_clutch_engaged
     << ", damping_rate_zero_throttle_clutch_disengaged=" << control.damping_rate_zero_throttle_clutch_disengaged 
-    << ", use_gear_autobox=" << control.use_gear_autobox
+    << ", use_gear_autobox=" << boolalpha(control.use_gear_autobox)
     << ", gear_switch_time=" << control.gear_switch_time
     << ", clutch_strength=" << control.clutch_strength
     << ", mass=" << control.mass
     << ", drag_coefficient=" << control.drag_coefficient
     << ", inertia_tensor_scale=" << control.inertia_tensor_scale 
     << ", center_of_mass=" << control.center_of_mass 
-    << ", center_of_mass_offset=" << control.center_of_mass_offset
     << ", steering_curve=" << control.steering_curve 
     << ", wheels=" << control.wheels << ')';
     return out;
@@ -135,7 +134,6 @@ boost::python::object VehiclePhysicsControl_init(boost::python::tuple args, boos
       "inertia_tensor_scale",
 
       "center_of_mass",
-      "center_of_mass_offset",
       "steering_curve",
       "wheels"
     };
@@ -231,7 +229,6 @@ void export_control() {
     .def_readwrite("inertia_tensor_scale", &cr::VehiclePhysicsControl::inertia_tensor_scale)
     
     .def_readwrite("center_of_mass", &cr::VehiclePhysicsControl::center_of_mass)
-    .def_readwrite("center_of_mass_offset", &cr::VehiclePhysicsControl::center_of_mass_offset)
     
     .add_property("steering_curve", &GetSteeringCurve, &SetSteeringCurve)
     .add_property("wheels", &GetWheels, &SetWheels)
