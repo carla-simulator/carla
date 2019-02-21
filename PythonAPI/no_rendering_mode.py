@@ -186,7 +186,7 @@ class ModuleManager(object):
             module.tick(clock)
 
     def render(self, display):
-        display.fill(COLOR_ALUMINIUM_5)
+        display.fill(COLOR_ALUMINIUM_4)
         for module in self.modules:
             module.render(display)
 
@@ -300,7 +300,7 @@ class ModuleHUD (object):
     def add_info(self, module_name, info):
         self._info_text[module_name] = info
 
-    def render_actors_ids(self, vehicle_id_surface, list_actors, world_to_pixel, hero_actor):
+    def render_vehicles_ids(self, vehicle_id_surface, list_actors, world_to_pixel, hero_actor):
         vehicle_id_surface.fill(COLOR_BLACK)
         if self.show_actor_ids:
             vehicle_id_surface.set_alpha(150)
@@ -314,7 +314,9 @@ class ModuleHUD (object):
 
                 color = COLOR_ORANGE_0
                 if actor.attributes['role_name'] == 'hero':
-                    color = COLOR_SCARLET_RED_0
+                  color = COLOR_PLUM_0
+                  if hero_actor is not None and hero_actor.id == actor.id:
+                    color = COLOR_SCARLET_RED_1
 
                 font_surface = self._header_font.render(str(actor.id), True, color)
                 rotated_font_surface = pygame.transform.rotate(font_surface, angle).convert_alpha()
@@ -382,13 +384,13 @@ class TrafficLightSurfaces(object):
         def make_surface(tl):
             w = 40
             surface = pygame.Surface((w, 3 * w), pygame.SRCALPHA)
-            surface.fill((31, 31, 31) if tl != 'h' else (245, 121, 0))
+            surface.fill(COLOR_ALUMINIUM_5 if tl != 'h' else COLOR_ORANGE_2)
             if tl != 'h':
                 hw = int(w / 2)
-                off = (48, 48, 48)
-                red = (239, 41, 41)
-                yellow = (252, 175, 62)
-                green = (138, 226, 52)
+                off = COLOR_ALUMINIUM_4
+                red = COLOR_SCARLET_RED_0
+                yellow = COLOR_BUTTER_0
+                green = COLOR_CHAMELEON_0
                 pygame.draw.circle(surface, red if tl == tls.Red else off, (hw, hw), int(0.4 * w))
                 pygame.draw.circle(surface, yellow if tl == tls.Yellow else off, (hw, w + hw), int(0.4 * w))
                 pygame.draw.circle(surface, green if tl == tls.Green else off, (hw, 2 * w + hw), int(0.4 * w))
@@ -435,7 +437,7 @@ class MapImage(object):
         self.surface = self._big_map_surface
 
     def draw_road_map(self, map_surface, carla_map, world_to_pixel):
-        map_surface.fill(COLOR_ALUMINIUM_5)
+        map_surface.fill(COLOR_ALUMINIUM_4)
         precision = 0.05
 
         def draw_lane_marking(surface, points, solid=True):
@@ -491,8 +493,8 @@ class MapImage(object):
             polygon = left_marking + [x for x in reversed(right_marking)]
             polygon = [world_to_pixel(x) for x in polygon]
 
-            pygame.draw.polygon(map_surface, (38, 38, 38), polygon, 10)
-            pygame.draw.polygon(map_surface, (38, 38, 38), polygon)
+            pygame.draw.polygon(map_surface, COLOR_ALUMINIUM_5, polygon, 10)
+            pygame.draw.polygon(map_surface, COLOR_ALUMINIUM_5, polygon)
 
             if not waypoint.is_intersection:
                 sample = waypoints[int(len(waypoints) / 2)]
@@ -598,7 +600,7 @@ class ModuleWorld(object):
         self.border_round_surface.fill(COLOR_BLACK)
 
         center_offset = (int(self.module_hud.dim[0] / 2), int(self.module_hud.dim[1] / 2))
-        pygame.draw.circle(self.border_round_surface, COLOR_ALUMINIUM_2, center_offset, int(self.module_hud.dim[1]/ 2))
+        pygame.draw.circle(self.border_round_surface, COLOR_ALUMINIUM_1, center_offset, int(self.module_hud.dim[1]/ 2))
         pygame.draw.circle(self.border_round_surface, COLOR_WHITE, center_offset, int((self.module_hud.dim[1] - 8)/ 2))
 
         scaled_original_size = self.original_surface_size * (1.0 / 0.9)
@@ -749,8 +751,8 @@ class ModuleWorld(object):
             # Render speed limit
             white_circle_radius = int(radius * 0.75)
 
-            pygame.draw.circle(surface, (239, 41, 41), (x, y), radius)
-            pygame.draw.circle(surface, (251, 241, 199), (x, y), white_circle_radius)
+            pygame.draw.circle(surface, COLOR_SCARLET_RED_1, (x, y), radius)
+            pygame.draw.circle(surface, COLOR_ALUMINIUM_0, (x, y), white_circle_radius)
 
             limit = sl.type_id.split('.')[2]
             font_surface = font.render(limit, False, (31, 31, 31))
@@ -787,7 +789,9 @@ class ModuleWorld(object):
         for v in list_v:
             color = COLOR_ORANGE_1
             if v.attributes['role_name'] == 'hero':
-                color = COLOR_SCARLET_RED_2
+              color = COLOR_PLUM_0
+              if self.hero_actor is not None and self.hero_actor.id == v.id:
+                color = COLOR_SCARLET_RED_1
             # Compute bounding box points
             bb = v.bounding_box.extent
             corners = [carla.Location(x=-bb.x, y=-bb.y),
@@ -852,7 +856,7 @@ class ModuleWorld(object):
         self.render_actors(self.actors_surface, vehicles, traffic_lights, speed_limits, walkers, scale_factor)
 
         # Render Ids
-        self.module_hud.render_actors_ids(self.vehicle_id_surface, vehicles,
+        self.module_hud.render_vehicles_ids(self.vehicle_id_surface, vehicles,
                                           self.map_image.world_to_pixel, self.hero_actor)
 
         # Blit surfaces
@@ -883,7 +887,7 @@ class ModuleWorld(object):
 
             self.border_round_surface.set_clip(clipping_rect)
 
-            self.hero_surface.fill(COLOR_ALUMINIUM_5)
+            self.hero_surface.fill(COLOR_ALUMINIUM_4)
             self.hero_surface.blit(self.result_surface, (-translation_offset[0],
                                                          -translation_offset[1]))
 
