@@ -64,7 +64,7 @@ std::pair<int, FActorView &>CarlaReplayerHelper::TryToCreateReplayerActor(
       // UE_LOG(LogCarla, Log, TEXT("Actor created by replayer with id %d"), Result.Value.GetActorId());
       // relocate
       FTransform Trans2(Rot, Location, FVector(1, 1, 1));
-      Result.Value.GetActor()->SetActorRelativeTransform(Trans2, false, nullptr, ETeleportType::TeleportPhysics);
+      Result.Value.GetActor()->SetActorTransform(Trans2, false, nullptr, ETeleportType::TeleportPhysics);
       // Result.Value.GetActor()->SetLocation(Trans2);
       return std::pair<int, FActorView &>(1, Result.Value);
     }
@@ -228,16 +228,34 @@ bool CarlaReplayerHelper::ProcessReplayerPosition(CarlaRecorderPosition Pos1, Ca
 {
   check(Episode != nullptr);
   AActor *Actor = Episode->GetActorRegistry().Find(Pos1.DatabaseId).GetActor();
-  if (Actor  && !Actor ->IsPendingKill())
+  if (Actor  && !Actor->IsPendingKill())
   {
     // interpolate transform
     FVector Location = FMath::Lerp(FVector(Pos1.Location), FVector(Pos2.Location), Per);
     FRotator Rotation = FMath::Lerp(FRotator::MakeFromEuler(Pos1.Rotation), FRotator::MakeFromEuler(Pos2.Rotation), Per);
     FTransform Trans(Rotation, Location, FVector(1, 1, 1));
-    Actor ->SetActorRelativeTransform(Trans, false, nullptr, ETeleportType::TeleportPhysics);
+    Actor->SetActorTransform(Trans, false, nullptr, ETeleportType::TeleportPhysics);
+    // reset velocities
+    ResetVelocities(Actor);
     return true;
   }
   return false;
+}
+
+// reset velocity vectors on actor
+void CarlaReplayerHelper::ResetVelocities(AActor *Actor)
+{
+  if (Actor  && !Actor->IsPendingKill())
+  {
+    auto RootComponent = Cast<UPrimitiveComponent>(Actor->GetRootComponent());
+    if (RootComponent != nullptr)
+    {
+      FVector Vector(0, 0, 0);
+      // reset velocities
+      RootComponent->SetPhysicsLinearVelocity(Vector, false, "None");
+      RootComponent->SetPhysicsAngularVelocityInDegrees(Vector, false, "None");
+    }
+  }
 }
 
 // reposition the camera
@@ -249,6 +267,11 @@ bool CarlaReplayerHelper::SetCameraPosition(uint32_t Id, FVector Offset, FQuat R
   APawn *Spectator = Episode->GetSpectatorPawn();
   // get the actor to follow
   AActor *Actor = Episode->FindActor(Id).GetActor();
+
+  // check
+  if (!Spectator || !Actor)
+   return false;
+
   // set the new position
   FQuat ActorRot = Actor->GetActorTransform().GetRotation();
   FVector Pos = Actor->GetActorTransform().GetTranslation() + (ActorRot.RotateVector(Offset));
