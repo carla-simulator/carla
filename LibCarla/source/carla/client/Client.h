@@ -43,11 +43,11 @@ namespace client {
       return _simulator->GetServerVersion();
     }
 
-    World ReloadWorld() {
+    World ReloadWorld() const {
       return World{_simulator->ReloadEpisode()};
     }
 
-    World LoadWorld(std::string map_name) {
+    World LoadWorld(std::string map_name) const {
       return World{_simulator->LoadEpisode(std::move(map_name))};
     }
 

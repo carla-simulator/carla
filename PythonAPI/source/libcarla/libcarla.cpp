@@ -44,6 +44,7 @@
 
 // Convenient for const requests without arguments.
 #define CONST_CALL_WITHOUT_GIL(cls, fn) CALL_WITHOUT_GIL(const cls, fn)
+#define CONST_CALL_WITHOUT_GIL_1(cls, fn, T1_) CALL_WITHOUT_GIL_1(const cls, fn, T1_)
 
 // Convenient for const requests that need to make a copy of the returned value.
 #define CALL_RETURNING_COPY(cls, fn) +[](const cls &self) \
