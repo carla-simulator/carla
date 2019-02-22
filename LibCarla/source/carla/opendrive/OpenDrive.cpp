@@ -111,6 +111,8 @@ namespace opendrive {
 
     mapBuilder.SetTrafficGroupData(open_drive_road.trafficlightgroups);
 
+    mapBuilder.SetTrafficSignData(open_drive_road.trafficsigns);
+
     // Generate road and junction information
     using junction_data_t = std::map<int, std::map<int, std::vector<carla::road::lane_junction_t>>>;
     using road_data_t = std::map<int, carla::opendrive::types::RoadInformation *>;

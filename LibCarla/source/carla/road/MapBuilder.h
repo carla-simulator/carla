@@ -31,6 +31,10 @@ namespace road {
       _map_data.SetTrafficLightData(trafficLightData);
     }
 
+    void SetTrafficSignData(const std::vector<opendrive::types::TrafficSign> &trafficSignData) {
+      _map_data.SetTrafficSignData(trafficSignData);
+    }
+
     SharedPtr<Map> Build();
 
   private:
