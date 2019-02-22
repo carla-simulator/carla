@@ -46,6 +46,8 @@ namespace detail {
     template <typename RangeT>
     std::vector<rpc::Actor> GetActorsById(const RangeT &range) const;
 
+    void Clear();
+
   private:
 
     mutable std::mutex _mutex;
@@ -99,6 +101,11 @@ namespace detail {
       }
     }
     return result;
+  }
+
+  inline void CachedActorList::Clear() {
+    std::lock_guard<std::mutex> lock(_mutex);
+    _actors.clear();
   }
 
 } // namespace detail
