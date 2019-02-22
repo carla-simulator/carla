@@ -497,9 +497,9 @@ Version: 1
 Map: Town05
 Date: 02/19/19 15:36:08
 
-    Time Types  Id 1                            Actor 1  Id 2                            Actor 2
-      16  v v    122                 vehicle.yamaha.yzf   118       vehicle.dodge_charger.police
-      27  v o    122                 vehicle.yamaha.yzf     0
+    Time  Types     Id Actor 1                                 Id Actor 2
+      16   v v     122 vehicle.yamaha.yzf                     118 vehicle.dodge_charger.police
+      27   v o     122 vehicle.yamaha.yzf                       0
 
 Frames: 790
 Duration: 46 seconds
@@ -510,23 +510,23 @@ We can see there for each collision the **time** when happened, the **type** of 
 So, if we want to see what happened on that recording for the first collision where the hero actor was colliding with a vehicle, we could use this API:
 
 ```py
-client.replay_file("col2.rec", 16, 0, 122)
+client.replay_file("col2.rec", 13, 0, 122)
 ```
-
-Here a value of 0 for the **duration** is to disable that feature (it is the default value).
+We have started the replayer just a bit before the time of the collision, so we can see how it happened.
+Also, a value of 0 for the **duration** means to replay all the file (it is the default value).
 
 We can see something like this then:
 
 ![collision](img/collision1.gif)
 
-There is another API to get information about actors that has been blocked by something and are stopped. That could be good to find incidences in the simulation. The API is:
+There is another API to get information about actors that has been blocked by something and can not follow its way. That could be good to find incidences in the simulation. The API is:
 
 ```py
 client.show_recorder_actors_blocked("recording01.rec", min_time, min_distance)
 ```
 
 The parameters are:
-* **min_time**: the minimum time that an actor needs to be stopped to be considered ass blocked.
+* **min_time**: the minimum time that an actor needs to be stopped to be considered as blocked (in seconds).
 * **min_distance**: the minimum distance to consider an actor to be stopped (in cm).
 
 So, if we want to know which actor is stopped (moving less than 1 meter during 60 seconds), we could use something like:
@@ -535,29 +535,32 @@ So, if we want to know which actor is stopped (moving less than 1 meter during 6
 client.show_recorder_actors_blocked("col3.rec", 60, 100)
 ```
 
-The result can be something like:
+The result can be something like (it is sorted by the duration):
 
 ```
 Version: 1
 Map: Town05
 Date: 02/19/19 15:45:01
 
-    Time    Id                              Actor  Duration
-     302   143            vehicle.bmw.grandtourer        67
-     241   162                    vehicle.audi.a2       128
-     303   133               vehicle.nissan.micra        67
-      75   104       vehicle.dodge_charger.police       295
-     303   167                    vehicle.audi.a2        66
-      75   214           vehicle.chevrolet.impala       295
-      36   173              vehicle.nissan.patrol       336
-     302    80               vehicle.nissan.micra        67
-     234    76               vehicle.nissan.micra       134
+    Time     Id Actor                                 Duration
+      36    173 vehicle.nissan.patrol                      336
+      75    104 vehicle.dodge_charger.police               295
+      75    214 vehicle.chevrolet.impala                   295
+     234     76 vehicle.nissan.micra                       134
+     241    162 vehicle.audi.a2                            128
+     302    143 vehicle.bmw.grandtourer                     67
+     303    133 vehicle.nissan.micra                        67
+     303    167 vehicle.audi.a2                             66
+     302     80 vehicle.nissan.micra                        67
 
 Frames: 6985
 Duration: 374 seconds
 ```
 
-We could check what happened with the next API command:
+This lines tell us when an actor was stopped for at least the minimum time specified.
+For example the 6th line, the actor 143, at time 302 seconds, was stopped for 67 seconds.
+
+We could check what happened that time with the next API command:
 
 ```py
 client.replay_file("col3.rec", 302, 0, 143)
@@ -566,8 +569,7 @@ client.replay_file("col3.rec", 302, 0, 143)
 ![actor blocked](img/actor_blocked1.png)
 
 We see there is some mess there that actually blocks the actor (red vehicle in the image).
-
-or we could check another incidence with:
+We can check also another actor with:
 
 ```py
 client.replay_file("col3.rec", 75, 0, 104)
@@ -575,9 +577,9 @@ client.replay_file("col3.rec", 75, 0, 104)
 
 ![actor blocked](img/actor_blocked2.png)
 
-We can see the incidence is the same but we can see it from another actor involved (police car).
+We can see it is the same incidence but from another actor involved (police car).
 
-If we check the list we can see that there is one vehicle that is stopped the major part, with Id 173 at time 36 seconds from the beginning it started to be stopped for 336 seconds. We could check how it arrived to that situation replaying a bit before 36 seconds.
+The result is sorted by duration, so the actor that is blocked for more time comes first. We could check the first line, with Id 173 at time 36 seconds it get stopped for 336 seconds. We could check how it arrived to that situation replaying a few seconds before time 36.
 
 ```py
 client.replay_file("col3.rec", 34, 0, 173)
@@ -585,22 +587,24 @@ client.replay_file("col3.rec", 34, 0, 173)
 
 ![accident](img/accident.gif)
 
+We can see then the responsible of the incident.
+
 #### Sample PY scripts to use with the recording / replaying system
 
 There are some scripts you could use:
 
 * **start_recording.py**: this will start recording, and optionally you can spawn several actors and define how much time you want to record.
-  * -f: filename of write
-  * -n: vehicles to spawn
-  * -t: duration of the recording
+  * **-f**: filename of write
+  * **-n**: vehicles to spawn (optional, 10 by default)
+  * **-t**: duration of the recording (optional)
 * **start_replaying.py**: this will start a replay of a file. We can define the starting time, duration and also an actor to follow.
-  * -f: filename of write
-  * -s: starting time
-  * -d: duration
-  * -c: actor to follow (id)
+  * **-f**: filename of write
+  * **-s**: starting time (optional, by default from start)
+  * **-d**: duration (optional, by default all)
+  * **-c**: actor to follow (id) (optional)
 * **show_recorder_collisions.py**: this will show all the collisions hapenned while recording (currently only involved by hero actors).
-  * -f: filename of write
-  * -t: two letters definning the types of the actors involved, for example: -t aa
+  * **-f**: filename of write
+  * **-t**: two letters definning the types of the actors involved, for example: -t aa
     * **h** = Hero
     * **v** = Vehicle
     * **w** = Walker
@@ -608,8 +612,8 @@ There are some scripts you could use:
     * **o** = Other
     * **a** = Any
 * **show_recorder_actors_blocked.py**: this will show all the actors that are blocked (stopped) in the recorder. We can define the time and distance to be considered as blocked.
-  * -f: filename of write
-  * -t: minimum seconds stopped to be considered as blocked
-  * -d: minimum distance to be considered stopped.
+  * **-f**: filename of write
+  * **-t**: minimum seconds stopped to be considered as blocked (optional)
+  * **-d**: minimum distance to be considered stopped (optional)
 
 
