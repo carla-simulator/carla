@@ -8,6 +8,7 @@
 
 #include "carla/geom/Transform.h"
 #include "carla/Memory.h"
+#include "carla/road/element/RoadInfoMarkRecord.h"
 #include "carla/road/element/RoadInfoList.h"
 #include "carla/road/element/Types.h"
 
@@ -36,13 +37,14 @@ namespace element {
       return _lane_id;
     }
 
-    RoadInfoList GetRoadInfo() const;
-
     const RoadSegment &GetRoadSegment() const;
 
     bool IsIntersection() const;
 
     double GetLaneWidth() const;
+
+    // Returns a Pair of RoadInfoMarkRecord Right and Left respectively
+    std::pair<RoadInfoMarkRecord, RoadInfoMarkRecord> GetMarkRecord() const;
 
   private:
 

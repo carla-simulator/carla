@@ -42,7 +42,7 @@ TEST(road, add_information) {
   auto map_ptr = builder.Build();
   Map &m = *map_ptr;
 
-  const RoadInfoVelocity *r = m.GetData().GetRoad(0)->GetInfo<RoadInfoVelocity>(0.0);
+  auto r = m.GetData().GetRoad(0)->GetInfo<RoadInfoVelocity>(0.0);
   ASSERT_EQ(r->velocity, 50.0);
   r = m.GetData().GetRoad(0)->GetInfo<RoadInfoVelocity>(2);
   ASSERT_EQ(r->velocity, 90.0);
@@ -198,6 +198,6 @@ TEST(road, get_information) {
   auto map_ptr = builder.Build();
   Map &m = *map_ptr;
 
-  const RoadInfoVelocity *r = m.GetData().GetRoad(0)->GetInfo<RoadInfoVelocity>(0.0);
+  const auto r = m.GetData().GetRoad(0)->GetInfo<RoadInfoVelocity>(0.0);
   (void)r;
 }

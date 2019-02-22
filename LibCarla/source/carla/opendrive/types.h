@@ -63,14 +63,14 @@ namespace types {
   };
 
   struct LaneRoadMark {
-    double soffset;
-    double width;
+    double soffset = 0.0;
+    double width = 0.0;
 
     std::string type;
     std::string weigth;
 
     std::string color;
-    std::string lange_change;
+    std::string lane_change = "none";
   };
 
   struct LaneOffset {

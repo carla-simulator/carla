@@ -19,35 +19,35 @@ namespace parser {
 
     void ParseLane(
         const pugi::xml_node &xmlNode,
-        std::vector<carla::opendrive::types::LaneInfo> &out_lane);
+        std::vector<types::LaneInfo> &out_lane);
 
     void ParseLaneSpeed(
         const pugi::xml_node &xmlNode,
-        std::vector<carla::opendrive::types::LaneSpeed> &out_lane_speed);
+        std::vector<types::LaneSpeed> &out_lane_speed);
 
     void ParseLaneLink(
         const pugi::xml_node &xmlNode,
-        std::unique_ptr<carla::opendrive::types::LaneLink> &out_lane_link);
+        std::unique_ptr<types::LaneLink> &out_lane_link);
 
     void ParseLaneOffset(
         const pugi::xml_node &xmlNode,
-        std::vector<carla::opendrive::types::LaneOffset> &out_lane_offset);
+        std::vector<types::LaneOffset> &out_lane_offset);
 
     void ParseLaneWidth(
         const pugi::xml_node &xmlNode,
-        std::vector<carla::opendrive::types::LaneWidth> &out_lane_width);
+        std::vector<types::LaneWidth> &out_lane_width);
 
     void ParseLaneRoadMark(
         const pugi::xml_node &xmlNode,
-        std::vector<carla::opendrive::types::LaneRoadMark> &out_lane_mark);
+        std::vector<types::LaneRoadMark> &out_lane_mark);
 
   public:
 
     static void Parse(
         const pugi::xml_node &xmlNode,
-        carla::opendrive::types::Lanes &out_lanes);
+        types::Lanes &out_lanes);
   };
 
-}
-}
-}
+} // parser
+} // opendrive
+} // carla

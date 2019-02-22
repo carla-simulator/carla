@@ -63,13 +63,23 @@ void export_map() {
     .def(self_ns::str(self_ns::self))
   ;
 
+  enum_<cc::Waypoint::LaneChange>("LaneChange")
+      .value("None", cc::Waypoint::LaneChange::None)
+      .value("Right", cc::Waypoint::LaneChange::Right)
+      .value("Left", cc::Waypoint::LaneChange::Left)
+      .value("Both", cc::Waypoint::LaneChange::Both)
+  ;
+
   class_<cc::Waypoint, boost::noncopyable, boost::shared_ptr<cc::Waypoint>>("Waypoint", no_init)
     .add_property("transform", CALL_RETURNING_COPY(cc::Waypoint, GetTransform))
     .add_property("is_intersection", &cc::Waypoint::IsIntersection)
     .add_property("lane_width", &cc::Waypoint::GetLaneWidth)
     .add_property("road_id", &cc::Waypoint::GetRoadId)
     .add_property("lane_id", &cc::Waypoint::GetLaneId)
+    .add_property("lane_change", &cc::Waypoint::GetLaneChange)
     .def("next", CALL_RETURNING_LIST_1(cc::Waypoint, Next, double), (args("distance")))
+    .def("right_lane", &cc::Waypoint::Right)
+    .def("left_lane", &cc::Waypoint::Left)
     .def(self_ns::str(self_ns::self))
   ;
 }

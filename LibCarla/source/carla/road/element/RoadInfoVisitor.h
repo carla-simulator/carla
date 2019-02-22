@@ -7,6 +7,7 @@
 #pragma once
 
 #include <iterator>
+#include <memory>
 
 namespace carla {
 namespace road {
@@ -16,14 +17,20 @@ namespace element {
   class RoadInfoLane;
   class RoadGeneralInfo;
   class RoadInfoVelocity;
+  class RoadInfoMarkRecord;
   class RoadElevationInfo;
 
   class RoadInfoVisitor {
   public:
 
     virtual void Visit(RoadInfoLane &) {}
+
     virtual void Visit(RoadGeneralInfo &) {}
+
     virtual void Visit(RoadInfoVelocity &) {}
+
+    virtual void Visit(RoadInfoMarkRecord &) {}
+
     virtual void Visit(RoadElevationInfo &) {}
   };
 
@@ -58,12 +65,12 @@ namespace element {
     }
 
     /// @todo to fix
-    T *operator*() const {
-      return static_cast<T *>(_it->get());
+    std::shared_ptr<T> operator*() const {
+      return std::static_pointer_cast<T>(*_it);
     }
 
-    T *operator->() const {
-      return &static_cast<T *>(_it->get());
+    std::shared_ptr<T> operator->() const {
+      return std::static_pointer_cast<T>(*_it);
     }
 
     bool operator!=(const RoadInfoIterator &rhs) const {
