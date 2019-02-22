@@ -16,7 +16,7 @@
 #include "carla/client/Vehicle.h"
 #include "carla/client/Walker.h"
 #include "carla/client/detail/Client.h"
-#include "carla/client/detail/EpisodeHolder.h"
+#include "carla/client/detail/Episode.h"
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/profiler/LifetimeProfiled.h"
 #include "carla/rpc/TrafficLightState.h"
@@ -346,7 +346,7 @@ namespace detail {
 
     Client _client;
 
-    std::shared_ptr<EpisodeHolder> _episode;
+    std::shared_ptr<Episode> _episode;
 
     GarbageCollectionPolicy _gc_policy;
   };
