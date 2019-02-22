@@ -435,7 +435,6 @@ std::string CarlaReplayer::GetInfoActorsBlocked(std::string Filename, double Min
   }
 
   // other, vehicle, walkers, trafficLight, hero, any
-  char Categories[] = { 'o', 'v', 'w', 't', 'h', 'a' };
   uint16_t i, Total;
   CarlaRecorderEventAdd EventAdd;
   CarlaRecorderEventDel EventDel;
@@ -451,6 +450,8 @@ std::string CarlaReplayer::GetInfoActorsBlocked(std::string Filename, double Min
     double Duration;
   };
   std::unordered_map<uint32_t, ReplayerActorInfo> Actors;
+  // to be able to sort the results by the duration of each actor (decreasing order)
+  std::multimap<double, std::string, std::greater<double>> Results;
 
   // read Info
   RecInfo.Read(File);
@@ -543,11 +544,13 @@ std::string CarlaReplayer::GetInfoActorsBlocked(std::string Filename, double Min
             // check to show info
             if (Actors[Position.DatabaseId].Duration >= MinTime)
             {
-              Info << std::setw(8) << std::setprecision(0) << std::fixed << Actors[Position.DatabaseId].Time;
-              Info << std::setw(6) << Position.DatabaseId;
-              Info << std::setw(35) << TCHAR_TO_UTF8(*Actors[Position.DatabaseId].Id);
-              Info << std::setw(10) << std::setprecision(0) << std::fixed << Actors[Position.DatabaseId].Duration;
-              Info << std::endl;
+              std::stringstream Result;
+              Result << std::setw(8) << std::setprecision(0) << std::fixed << Actors[Position.DatabaseId].Time;
+              Result << std::setw(6) << Position.DatabaseId;
+              Result << std::setw(35) << TCHAR_TO_UTF8(*Actors[Position.DatabaseId].Id);
+              Result << std::setw(10) << std::setprecision(0) << std::fixed << Actors[Position.DatabaseId].Duration;
+              Result << std::endl;
+              Results.insert(std::make_pair(Actors[Position.DatabaseId].Duration, Result.str()));
             }
             // actor moving
             Actors[Position.DatabaseId].Duration = 0;
@@ -574,12 +577,20 @@ std::string CarlaReplayer::GetInfoActorsBlocked(std::string Filename, double Min
     // check to show info
     if (Actor.second.Duration >= MinTime)
     {
-      Info << std::setw(8) << std::setprecision(0) << std::fixed << Actor.second.Time;
-      Info << std::setw(6) << Actor.first;
-      Info << std::setw(35) << TCHAR_TO_UTF8(*Actor.second.Id);
-      Info << std::setw(10) << std::setprecision(0) << std::fixed << Actor.second.Duration;
-      Info << std::endl;
+      std::stringstream Result;
+      Result << std::setw(8) << std::setprecision(0) << std::fixed << Actor.second.Time;
+      Result << std::setw(6) << Actor.first;
+      Result << std::setw(35) << TCHAR_TO_UTF8(*Actor.second.Id);
+      Result << std::setw(10) << std::setprecision(0) << std::fixed << Actor.second.Duration;
+      Result << std::endl;
+      Results.insert(std::make_pair(Actor.second.Duration, Result.str()));
     }
+  }
+
+  // show the result
+  for (auto &Result : Results)
+  {
+    Info << Result.second;
   }
 
   Info << "\nFrames: " << Frame.Id << "\n";
@@ -915,9 +926,6 @@ void CarlaReplayer::ProcessEvents(void)
     EventCollision.Read(File);
     Info.str("");
     Info << "Collision " << MappedId[EventCollision.DatabaseId1] << " with " << MappedId[EventCollision.DatabaseId2] << std::endl;
-    // UE_LOG(LogCarla, Log, "%s", Info.str().c_str());
-    // TODO: process collision
-    // Helper.ProcessReplayerEventCollision(MappedId[EventCollision.DatabaseId1], MappedId[EventCollision.DatabaseId2]);
   }
 }
 

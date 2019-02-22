@@ -38,7 +38,7 @@ std::pair<int, FActorView &>CarlaReplayerHelper::TryToCreateReplayerActor(
       return std::pair<int, FActorView &>(0, view_empty);
     }
   }
-  else //if (ActorDesc.Id.StartsWith("vehicle."))
+  else if (!ActorDesc.Id.StartsWith("sensor."))
   {
     // check if an actor of that type already exist with same id
     // UE_LOG(LogCarla, Log, TEXT("Trying to create actor: %s (%d)"), *ActorDesc.Id, DesiredId);
@@ -74,13 +74,11 @@ std::pair<int, FActorView &>CarlaReplayerHelper::TryToCreateReplayerActor(
       return std::pair<int, FActorView &>(0, Result.Value);
     }
   }
-  /* TODO: we should ignore all others?
   else
   {
     // actor ignored
     return std::pair<int, FActorView &>(0, view_empty);
   }
-  */
 }
 
 AActor *CarlaReplayerHelper::FindTrafficLightAt(FVector Location)
