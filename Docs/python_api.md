@@ -12,6 +12,7 @@
 - `get_client_version()`
 - `get_server_version()`
 - `get_world()`
+- `get_available_maps()`
 - `reload_world()`
 - `load_world(map_name)`
 - `start_recorder(string filename)`

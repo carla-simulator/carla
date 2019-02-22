@@ -79,7 +79,17 @@ namespace detail {
 
     EpisodeProxy GetCurrentEpisode();
 
+    /// @}
+    // =========================================================================
+    /// @name Map related methods
+    // =========================================================================
+    /// @{
+
     SharedPtr<Map> GetCurrentMap();
+
+    std::vector<std::string> GetAvailableMaps() {
+      return _client.GetAvailableMaps();
+    }
 
     /// @}
     // =========================================================================

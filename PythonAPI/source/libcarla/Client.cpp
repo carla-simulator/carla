@@ -12,6 +12,15 @@ static void SetTimeout(carla::client::Client &client, double seconds) {
   client.SetTimeout(TimeDurationFromSeconds(seconds));
 }
 
+static auto GetAvailableMaps(const carla::client::Client &self) {
+  carla::PythonUtil::ReleaseGIL unlock;
+  boost::python::list result;
+  for (const auto &str : self.GetAvailableMaps()) {
+    result.append(str);
+  }
+  return result;
+}
+
 void export_client() {
   using namespace boost::python;
   namespace cc = carla::client;
@@ -22,6 +31,7 @@ void export_client() {
     .def("get_client_version", &cc::Client::GetClientVersion)
     .def("get_server_version", CONST_CALL_WITHOUT_GIL(cc::Client, GetServerVersion))
     .def("get_world", &cc::Client::GetWorld)
+    .def("get_available_maps", &GetAvailableMaps)
     .def("reload_world", CONST_CALL_WITHOUT_GIL(cc::Client, ReloadWorld))
     .def("load_world", CONST_CALL_WITHOUT_GIL_1(cc::Client, LoadWorld, std::string), (arg("map_name")))
     .def("start_recorder", CALL_WITHOUT_GIL_1(cc::Client, StartRecorder, std::string), (arg("name")))
