@@ -40,6 +40,10 @@ namespace detail {
       return _episode_id;
     }
 
+    auto GetFrameCount() const {
+      return _timestamp.frame_count;
+    }
+
     const auto &GetTimestamp() const {
       return _timestamp;
     }

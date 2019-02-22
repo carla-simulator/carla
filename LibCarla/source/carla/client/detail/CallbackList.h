@@ -38,6 +38,10 @@ namespace detail {
       _list = new_list;
     }
 
+    void Clear() {
+      _list = std::make_shared<ListType>();
+    }
+
   private:
 
     using ListType = std::vector<CallbackType>;

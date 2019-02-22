@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "carla/AtomicSharedPtr.h"
 #include "carla/streaming/detail/StreamStateBase.h"
 
 #include <mutex>
