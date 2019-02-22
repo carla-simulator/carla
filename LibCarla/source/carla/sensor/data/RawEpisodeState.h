@@ -53,6 +53,11 @@ namespace data {
     double GetPlatformTimeStamp() const {
       return GetHeader().platform_timestamp;
     }
+
+    /// Simulated seconds elapsed since previous frame.
+    double GetDeltaSeconds() const {
+      return GetHeader().delta_seconds;
+    }
   };
 
 } // namespace data

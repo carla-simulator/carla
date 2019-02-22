@@ -69,7 +69,7 @@ void FCarlaEngine::OnPreTick(ELevelTick TickType, float DeltaSeconds)
   if ((TickType == ELevelTick::LEVELTICK_All) && (CurrentEpisode != nullptr))
   {
     CurrentEpisode->TickTimers(DeltaSeconds);
-    WorldObserver.BroadcastTick(*CurrentEpisode);
+    WorldObserver.BroadcastTick(*CurrentEpisode, DeltaSeconds);
   }
 }
 
