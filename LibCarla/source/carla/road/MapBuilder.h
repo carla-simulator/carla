@@ -27,6 +27,10 @@ namespace road {
       _map_data.SetGeoReference(geoReference);
     }
 
+    void SetTrafficGroupData(const std::vector<opendrive::types::TrafficLightGroup> &trafficLightData) {
+      _map_data.SetTrafficLightData(trafficLightData);
+    }
+
     SharedPtr<Map> Build();
 
   private:

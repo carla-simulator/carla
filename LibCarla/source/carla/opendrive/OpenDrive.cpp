@@ -109,6 +109,8 @@ namespace opendrive {
 
     mapBuilder.SetGeoReference(open_drive_road.geoReference);
 
+    mapBuilder.SetTrafficGroupData(open_drive_road.trafficlightgroups);
+
     // Generate road and junction information
     using junction_data_t = std::map<int, std::map<int, std::vector<carla::road::lane_junction_t>>>;
     using road_data_t = std::map<int, carla::opendrive::types::RoadInformation *>;
@@ -139,15 +141,14 @@ namespace opendrive {
         RoadGeneralInfo->SetLanesOffset(s, a);
       }
 
-      for(auto &&elevation : it->second->road_profiles.elevation_profile) {
+      for (auto &&elevation : it->second->road_profiles.elevation_profile) {
         roadSegment.MakeInfo<carla::road::element::RoadElevationInfo>(
-          elevation.start_position,
-          elevation.start_position,
-          elevation.elevation,
-          elevation.slope,
-          elevation.vertical_curvature,
-          elevation.curvature_change
-        );
+            elevation.start_position,
+            elevation.start_position,
+            elevation.elevation,
+            elevation.slope,
+            elevation.vertical_curvature,
+            elevation.curvature_change);
       }
 
       std::map<int, int> leftLanesGoToSuccessor, leftLanesGoToPredecessor;
