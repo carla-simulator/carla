@@ -55,51 +55,46 @@ void ACarlaRecorder::Tick(float DeltaSeconds)
   // check if recording
   if (Enabled)
   {
-    const FActorRegistry &reg = Episode->GetActorRegistry();
+    const FActorRegistry &Registry = Episode->GetActorRegistry();
 
-    // get positions of vehicles
-    for (TActorIterator<ACarlaWheeledVehicle> It(GetWorld()); It; ++It)
+    // through all actors in registry
+    for (auto It = Registry.begin(); It != Registry.end(); ++It)
     {
-      ACarlaWheeledVehicle *Actor = *It;
-      check(Actor != nullptr);
-      CarlaRecorderPosition recPos {
-        reg.Find(Actor).GetActorId(),
-        Actor->GetTransform().GetTranslation(),
-        Actor->GetTransform().GetRotation().Euler()
-      };
-      AddPosition(recPos);
-    }
-
-    // TODO: get positions of walkers
-    /*
-    for (TActorIterator<ACarlaWheeledVehicle> It(GetWorld()); It; ++It)
-    {
-      ACarlaWheeledVehicle *Actor = *It;
-      check(Actor != nullptr);
-      CarlaRecorderPosition recPos {
-        reg.Find(Actor).GetActorId(),
-        Actor->GetTransform().GetTranslation(),
-        Actor->GetTransform().GetRotation().Euler()
-      };
-      AddPosition(recPos);
-    }
-    */
-
-    // get states
-    for (TActorIterator<ATrafficSignBase> It(GetWorld()); It; ++It)
-    {
-      ATrafficSignBase *Actor = *It;
-      check(Actor != nullptr);
-      auto TrafficLight = Cast<ATrafficLightBase>(Actor);
-      if (TrafficLight != nullptr)
+      FActorView View = *It;
+      AActor *Actor;
+      switch (View.GetActorType())
       {
-        CarlaRecorderStateTrafficLight recTraffic {
-          reg.Find(Actor).GetActorId(),
-          TrafficLight->GetTimeIsFrozen(),
-          TrafficLight->GetElapsedTime(),
-          static_cast<char>(TrafficLight->GetTrafficLightState())
-        };
-        AddState(recTraffic);
+        // save the transform of all vehicles and walkers
+        case FActorView::ActorType::Vehicle:
+        case FActorView::ActorType::Walker:
+          // get position of the vehicle
+          Actor = View.GetActor();
+          check(Actor != nullptr);
+          AddPosition(CarlaRecorderPosition
+          {
+            View.GetActorId(),
+            Actor->GetTransform().GetTranslation(),
+            Actor->GetTransform().GetRotation().Euler()
+          });
+          break;
+
+        // save the state of each traffic light
+        case FActorView::ActorType::TrafficLight:
+          // get states
+          Actor = View.GetActor();
+          check(Actor != nullptr);
+          auto TrafficLight = Cast<ATrafficLightBase>(Actor);
+          if (TrafficLight != nullptr)
+          {
+            AddState(CarlaRecorderStateTrafficLight
+            {
+              View.GetActorId(),
+              TrafficLight->GetTimeIsFrozen(),
+              TrafficLight->GetElapsedTime(),
+              static_cast<char>(TrafficLight->GetTrafficLightState())
+            });
+          }
+          break;
       }
     }
 
