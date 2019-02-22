@@ -32,7 +32,7 @@ public:
 
   /// Send a message to every connected client with the info about the given @a
   /// Episode.
-  void BroadcastTick(const UCarlaEpisode &Episode);
+  void BroadcastTick(const UCarlaEpisode &Episode, float DeltaSeconds);
 
   /// Dummy. Required for compatibility with other sensors only.
   FTransform GetActorTransform() const
