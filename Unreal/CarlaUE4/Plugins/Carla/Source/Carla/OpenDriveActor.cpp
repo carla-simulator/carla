@@ -46,6 +46,26 @@ AOpenDriveActor::AOpenDriveActor(const FObjectInitializer &ObjectInitializer)
       "Blueprint'/Game/Carla/Static/TrafficSigns/Streetlights_01/BP_TrafficLightPoleGroup.BP_TrafficLightPoleGroup'"));
   TrafficGroupBlueprintClass = (UClass *) TrafficGroupBP.Object->GeneratedClass;
 
+  static ConstructorHelpers::FObjectFinder<UBlueprint> TrafficSign30BP(TEXT(
+      "Blueprint'/Game/Carla/Static/TrafficSigns/PostSigns/Round/SpeedLimiters/BP_SpeedLimit30.BP_SpeedLimit30'"));
+  TrafficSign30BlueprintClass = (UClass *) TrafficSign30BP.Object->GeneratedClass;
+
+  static ConstructorHelpers::FObjectFinder<UBlueprint> TrafficSign40BP(TEXT(
+      "Blueprint'/Game/Carla/Static/TrafficSigns/PostSigns/Round/SpeedLimiters/BP_SpeedLimit40.BP_SpeedLimit40'"));
+  TrafficSign40BlueprintClass = (UClass *) TrafficSign40BP.Object->GeneratedClass;
+
+  static ConstructorHelpers::FObjectFinder<UBlueprint> TrafficSign60BP(TEXT(
+      "Blueprint'/Game/Carla/Static/TrafficSigns/PostSigns/Round/SpeedLimiters/BP_SpeedLimit60.BP_SpeedLimit60'"));
+  TrafficSign60BlueprintClass = (UClass *) TrafficSign60BP.Object->GeneratedClass;
+
+  static ConstructorHelpers::FObjectFinder<UBlueprint> TrafficSign90BP(TEXT(
+      "Blueprint'/Game/Carla/Static/TrafficSigns/PostSigns/Round/SpeedLimiters/BP_SpeedLimit90.BP_SpeedLimit90'"));
+  TrafficSign90BlueprintClass = (UClass *) TrafficSign90BP.Object->GeneratedClass;
+
+  static ConstructorHelpers::FObjectFinder<UBlueprint> TrafficSign100BP(TEXT(
+      "Blueprint'/Game/Carla/Static/TrafficSigns/PostSigns/Round/SpeedLimiters/BP_SpeedLimit100.BP_SpeedLimit100'"));
+  TrafficSign100BlueprintClass = (UClass *) TrafficSign100BP.Object->GeneratedClass;
+
   // Structure to hold one-time initialization
   static struct FConstructorStatics
   {
@@ -163,6 +183,7 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
   using TrafficGroup = carla::opendrive::types::TrafficLightGroup;
   using TrafficLight = carla::opendrive::types::TrafficLight;
   using TrafficBoxComponent = carla::opendrive::types::BoxComponent;
+  using TrafficSign = carla::opendrive::types::TrafficSign;
 
   std::string ParseError;
 
@@ -272,7 +293,6 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
         FVector(0, 0, 0),
         FRotator(0, 0, 0),
         SpawnParams);
-    SpawnedTrafficGroup->CallFunctionByNameWithArguments(TEXT("CallFunctionTest"), ar, NULL, true);
 
     for (TrafficLight CurrentTrafficLight : CurrentTrafficLightGroup.traffic_lights)
     {
@@ -285,7 +305,9 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
           TLPos,
           TLRot,
           SpawnParams);
-
+      FString AddTrafficLightCommand = FString::Printf(TEXT("AddTrafficLightPole %s"),
+            *SpawnedTrafficLight->GetName());
+      SpawnedTrafficGroup->CallFunctionByNameWithArguments(*AddTrafficLightCommand, ar, NULL, true);
       SpawnedTrafficLight->CallFunctionByNameWithArguments(TEXT("InitData"), ar, NULL, true);
       for (TrafficBoxComponent TfBoxComponent : CurrentTrafficLight.box_areas)
       {
@@ -308,6 +330,66 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
     }
   }
 
+  const std::vector<TrafficSign> TrafficSigns = map.GetTrafficSigns();
+  for (TrafficSign CurrentTrafficSign : TrafficSigns) {
+    //switch()
+    AActor* SignActor;
+    FOutputDeviceNull ar;
+
+    FVector TSLoc = FVector(CurrentTrafficSign.x_pos, CurrentTrafficSign.y_pos, CurrentTrafficSign.z_pos);
+    FRotator TSRot = FRotator(CurrentTrafficSign.x_rot, CurrentTrafficSign.z_rot, CurrentTrafficSign.y_rot);
+    FActorSpawnParameters SpawnParams;
+    switch(CurrentTrafficSign.speed) {
+      case 30:
+        SignActor = GetWorld()->SpawnActor<AActor>(TrafficSign30BlueprintClass,
+          TSLoc,
+          TSRot,
+          SpawnParams);
+        break;
+      case 40:
+        SignActor = GetWorld()->SpawnActor<AActor>(TrafficSign40BlueprintClass,
+          TSLoc,
+          TSRot,
+          SpawnParams);
+      break;
+      case 60:
+        SignActor = GetWorld()->SpawnActor<AActor>(TrafficSign60BlueprintClass,
+          TSLoc,
+          TSRot,
+          SpawnParams);
+        break;
+      case 90:
+        SignActor = GetWorld()->SpawnActor<AActor>(TrafficSign90BlueprintClass,
+          TSLoc,
+          TSRot,
+          SpawnParams);
+        break;
+      case 100:
+        SignActor = GetWorld()->SpawnActor<AActor>(TrafficSign100BlueprintClass,
+          TSLoc,
+          TSRot,
+          SpawnParams);
+      break;
+    }
+    for (TrafficBoxComponent TfBoxComponent : CurrentTrafficSign.box_areas)
+      {
+        FVector TLBoxPos = FVector(TfBoxComponent.x_pos,
+            TfBoxComponent.y_pos,
+            TfBoxComponent.z_pos);
+        FRotator TLBoxRot = FRotator(TfBoxComponent.x_rot,
+            TfBoxComponent.z_rot,
+            TfBoxComponent.y_rot);
+
+        FString BoxCommand = FString::Printf(TEXT("SetBoxLocationAndRotation %f %f %f %f %f %f"),
+            TLBoxPos.X,
+            TLBoxPos.Y,
+            TLBoxPos.Z,
+            TLBoxRot.Pitch,
+            TLBoxRot.Roll,
+            TLBoxRot.Yaw);
+        SignActor->CallFunctionByNameWithArguments(*BoxCommand, ar, NULL, true);
+      }
+  }
 }
 
 void AOpenDriveActor::RemoveRoutes()

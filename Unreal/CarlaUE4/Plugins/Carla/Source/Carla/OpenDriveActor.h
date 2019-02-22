@@ -51,6 +51,21 @@ private:
   UPROPERTY()
   TSubclassOf<class AActor> TrafficGroupBlueprintClass;
 
+  UPROPERTY()
+  TSubclassOf<class AActor> TrafficSign30BlueprintClass;
+
+  UPROPERTY()
+  TSubclassOf<class AActor> TrafficSign40BlueprintClass;
+
+  UPROPERTY()
+  TSubclassOf<class AActor> TrafficSign60BlueprintClass;
+
+  UPROPERTY()
+  TSubclassOf<class AActor> TrafficSign90BlueprintClass;
+
+  UPROPERTY()
+  TSubclassOf<class AActor> TrafficSign100BlueprintClass;
+
 #if WITH_EDITORONLY_DATA
   /// Generate the road network using an OpenDrive file (named as the current
   /// .umap)
