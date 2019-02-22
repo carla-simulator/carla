@@ -291,11 +291,11 @@ std::string CarlaReplayer::GetInfoCollisions(std::string Filename, char Category
 
   // header
   Info << std::setw(8) << "Time";
-  Info << std::setw(6) << "Types";
-  Info << std::setw(6) << "Id 1";
-  Info << std::setw(35) << "Actor 1";
-  Info << std::setw(6) << "Id 2";
-  Info << std::setw(35) << "Actor 2";
+  Info << " " << std::setw(6) << "Types";
+  Info << " " << std::setw(6) << std::right << "Id";
+  Info << " " << std::setw(35) << std::left << "Actor 1";
+  Info << " " << std::setw(6) << std::right << "Id";
+  Info << " " << std::setw(35) << std::left << "Actor 2";
   Info << std::endl;
 
   // parse only frames
@@ -374,12 +374,12 @@ std::string CarlaReplayer::GetInfoCollisions(std::string Filename, char Category
             if (oldCollisions.count(collisionPair) == 0)
             {
               // Info << std::setw(5) << EventCollision.Id << " ";
-              Info << std::setw(8) << std::setprecision(0) << std::fixed << Frame.Elapsed;
-              Info << "  " << Type1 << " " << Type2 << " ";
-              Info << std::setw(6) << EventCollision.DatabaseId1;
-              Info << std::setw(35) << TCHAR_TO_UTF8(*Actors[EventCollision.DatabaseId1].Id);
-              Info << std::setw(6) << EventCollision.DatabaseId2;
-              Info << std::setw(35) << TCHAR_TO_UTF8(*Actors[EventCollision.DatabaseId2].Id);
+              Info << std::setw(8) << std::setprecision(0) << std::right << std::fixed << Frame.Elapsed;
+              Info << " " << "  " << Type1 << " " << Type2 << " ";
+              Info << " " << std::setw(6) << std::right << EventCollision.DatabaseId1;
+              Info << " " << std::setw(35) << std::left << TCHAR_TO_UTF8(*Actors[EventCollision.DatabaseId1].Id);
+              Info << " " << std::setw(6) << std::right << EventCollision.DatabaseId2;
+              Info << " " << std::setw(35) << std::left << TCHAR_TO_UTF8(*Actors[EventCollision.DatabaseId2].Id);
               //Info << std::setw(8) << Frame.Id;
               Info << std::endl;
             }
@@ -406,6 +406,7 @@ std::string CarlaReplayer::GetInfoCollisions(std::string Filename, char Category
     }
   }
 
+  Info << "\nFrames: " << Frame.Id << "\n";
   Info << "\nFrames: " << Frame.Id << "\n";
   Info << "Duration: " << Frame.Elapsed << " seconds\n";
 
@@ -474,9 +475,9 @@ std::string CarlaReplayer::GetInfoActorsBlocked(std::string Filename, double Min
 
   // header
   Info << std::setw(8) << "Time";
-  Info << std::setw(6) << "Id";
-  Info << std::setw(35) << "Actor";
-  Info << std::setw(10) << "Duration";
+  Info << " " << std::setw(6) << "Id";
+  Info << " " << std::setw(35) << std::left << "Actor";
+  Info << " " << std::setw(10) << std::right << "Duration";
   Info << std::endl;
 
   // parse only frames
@@ -546,9 +547,9 @@ std::string CarlaReplayer::GetInfoActorsBlocked(std::string Filename, double Min
             {
               std::stringstream Result;
               Result << std::setw(8) << std::setprecision(0) << std::fixed << Actors[Position.DatabaseId].Time;
-              Result << std::setw(6) << Position.DatabaseId;
-              Result << std::setw(35) << TCHAR_TO_UTF8(*Actors[Position.DatabaseId].Id);
-              Result << std::setw(10) << std::setprecision(0) << std::fixed << Actors[Position.DatabaseId].Duration;
+              Result << " " << std::setw(6) << Position.DatabaseId;
+              Result << " " << std::setw(35) << std::left << TCHAR_TO_UTF8(*Actors[Position.DatabaseId].Id);
+              Result << " " << std::setw(10) << std::setprecision(0) << std::fixed << std::right << Actors[Position.DatabaseId].Duration;
               Result << std::endl;
               Results.insert(std::make_pair(Actors[Position.DatabaseId].Duration, Result.str()));
             }
@@ -579,9 +580,9 @@ std::string CarlaReplayer::GetInfoActorsBlocked(std::string Filename, double Min
     {
       std::stringstream Result;
       Result << std::setw(8) << std::setprecision(0) << std::fixed << Actor.second.Time;
-      Result << std::setw(6) << Actor.first;
-      Result << std::setw(35) << TCHAR_TO_UTF8(*Actor.second.Id);
-      Result << std::setw(10) << std::setprecision(0) << std::fixed << Actor.second.Duration;
+      Result << " " << std::setw(6) << Actor.first;
+      Result << " " << std::setw(35) << std::left << TCHAR_TO_UTF8(*Actor.second.Id);
+      Result << " " << std::setw(10) << std::setprecision(0) << std::fixed << std::right << Actor.second.Duration;
       Result << std::endl;
       Results.insert(std::make_pair(Actor.second.Duration, Result.str()));
     }
@@ -845,7 +846,7 @@ void CarlaReplayer::ProcessEvents(void)
   CarlaRecorderEventCollision EventCollision;
   std::stringstream Info;
 
-  // create events
+  // process creation events
   ReadValue<uint16_t>(File, Total);
   for (i = 0; i < Total; ++i)
   {
@@ -895,7 +896,7 @@ void CarlaReplayer::ProcessEvents(void)
     }
   }
 
-  // destroy events
+  // process destroy events
   ReadValue<uint16_t>(File, Total);
   for (i = 0; i < Total; ++i)
   {
@@ -907,7 +908,7 @@ void CarlaReplayer::ProcessEvents(void)
     MappedId.erase(EventDel.DatabaseId);
   }
 
-  // parenting events
+  // process parenting events
   ReadValue<uint16_t>(File, Total);
   for (i = 0; i < Total; ++i)
   {
@@ -919,7 +920,7 @@ void CarlaReplayer::ProcessEvents(void)
     Helper.ProcessReplayerEventParent(MappedId[EventParent.DatabaseId], MappedId[EventParent.DatabaseIdParent]);
   }
 
-  // collision events
+  // collision events (currently we don't do anything with them, they are just info for queries)
   ReadValue<uint16_t>(File, Total);
   for (i = 0; i < Total; ++i)
   {
