@@ -99,17 +99,13 @@ namespace element {
       rot.pitch = 360 - rot.pitch;
     }
 
-    const auto *road_segment = _map->GetData().GetRoad(_road_id);
+    const auto road_segment = _map->GetData().GetRoad(_road_id);
     DEBUG_ASSERT(road_segment != nullptr);
-    const auto *info = road_segment->GetInfo<RoadInfoLane>(0.0);
+    const auto info = road_segment->GetInfo<RoadInfoLane>(0.0);
     DEBUG_ASSERT(info != nullptr);
 
     dp.ApplyLateralOffset(info->getLane(_lane_id)->_lane_center_offset);
     return geom::Transform(dp.location, rot);
-  }
-
-  RoadInfoList Waypoint::GetRoadInfo() const {
-    return RoadInfoList(_map->GetData().GetRoad(_road_id)->GetInfos(_dist));
   }
 
   const RoadSegment &Waypoint::GetRoadSegment() const {
@@ -119,14 +115,37 @@ namespace element {
   }
 
   bool Waypoint::IsIntersection() const {
-    const auto *info = GetRoadSegment().GetInfo<RoadGeneralInfo>(_dist);
+    const auto info = GetRoadSegment().GetInfo<RoadGeneralInfo>(_dist);
     return info != nullptr ? info->IsJunction() : false;
   }
 
   double Waypoint::GetLaneWidth() const {
-    const auto *info = GetRoadSegment().GetInfo<RoadInfoLane>(_dist);
-    const auto *lane_info = info != nullptr ? info->getLane(_lane_id) : nullptr;
+    const auto info = GetRoadSegment().GetInfo<RoadInfoLane>(_dist);
+    const auto lane_info = info != nullptr ? info->getLane(_lane_id) : nullptr;
     return lane_info != nullptr ? lane_info->_width : 0.0;
+  }
+
+  std::pair<RoadInfoMarkRecord, RoadInfoMarkRecord> Waypoint::GetMarkRecord() const {
+    const auto lane_id_right = _lane_id;
+    // If the lane is bigger than 0, is on the backward lane,
+    // so the inner lane marking is the opposite one
+    const auto lane_id_left = _lane_id <= 0 ? _lane_id + 1 : _lane_id - 1;
+
+    const auto mark_record_list = GetRoadSegment().GetRoadInfoMarkRecord(_dist);
+
+    std::pair<RoadInfoMarkRecord, RoadInfoMarkRecord> result = std::make_pair(
+        RoadInfoMarkRecord(_dist, lane_id_right),
+        RoadInfoMarkRecord(_dist, lane_id_left));
+
+    for (auto &&i : mark_record_list) {
+      if (i->GetLaneId() == lane_id_right) {
+        result.first = *i;
+      } else if (i->GetLaneId() == lane_id_left) {
+        result.second = *i;
+      }
+    }
+
+    return result;
   }
 
 } // namespace element
