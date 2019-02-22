@@ -16,6 +16,8 @@
 
 #include "Vehicle/VehicleSpawnPoint.h"
 
+#include "Runtime/Core/Public/Misc/OutputDeviceNull.h"
+
 #include <compiler/disable-ue4-macros.h>
 #include <carla/opendrive/OpenDrive.h>
 #include <compiler/enable-ue4-macros.h>
@@ -42,6 +44,12 @@ private:
 
   UPROPERTY()
   TArray<AVehicleSpawnPoint *> VehicleSpawners;
+
+  UPROPERTY()
+  TSubclassOf<class AActor> TrafficLightBlueprintClass;
+
+  UPROPERTY()
+  TSubclassOf<class AActor> TrafficGroupBlueprintClass;
 
 #if WITH_EDITORONLY_DATA
   /// Generate the road network using an OpenDrive file (named as the current

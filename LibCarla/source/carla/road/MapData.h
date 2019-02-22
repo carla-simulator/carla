@@ -10,6 +10,7 @@
 #include "carla/ListView.h"
 #include "carla/NonCopyable.h"
 #include "carla/road/element/RoadSegment.h"
+#include "carla/opendrive/types.h"
 
 #include <boost/iterator/transform_iterator.hpp>
 
@@ -56,6 +57,10 @@ namespace road {
       return _geo_reference;
     }
 
+    const std::vector<opendrive::types::TrafficLightGroup> &GetTrafficGroups() const {
+      return _traffic_groups;
+    }
+
     auto GetRoadSegments() const {
       using const_ref = const element::RoadSegment &;
       auto get = [](auto &pair) -> const_ref { return *pair.second; };
@@ -78,6 +83,10 @@ namespace road {
       _geo_reference = geoReference;
     }
 
+    void SetTrafficLightData(const std::vector<opendrive::types::TrafficLightGroup> &trafficLightData) {
+      _traffic_groups = trafficLightData;
+    }
+
     std::string _geo_reference;
 
     std::vector<lane_junction_t> _junction_information;
@@ -85,6 +94,8 @@ namespace road {
     std::unordered_map<
         element::id_type,
         std::unique_ptr<element::RoadSegment>> _elements;
+
+    std::vector<opendrive::types::TrafficLightGroup> _traffic_groups;
   };
 
 } // namespace road

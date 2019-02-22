@@ -38,6 +38,14 @@ AOpenDriveActor::AOpenDriveActor(const FObjectInitializer &ObjectInitializer)
 {
   PrimaryActorTick.bCanEverTick = false;
 
+  static ConstructorHelpers::FObjectFinder<UBlueprint> TrafficLightBP(TEXT(
+      "Blueprint'/Game/Carla/Static/TrafficSigns/Streetlights_01/BP_TrafficLightPole.BP_TrafficLightPole'"));
+  TrafficLightBlueprintClass = (UClass *) TrafficLightBP.Object->GeneratedClass;
+
+  static ConstructorHelpers::FObjectFinder<UBlueprint> TrafficGroupBP(TEXT(
+      "Blueprint'/Game/Carla/Static/TrafficSigns/Streetlights_01/BP_TrafficLightPoleGroup.BP_TrafficLightPoleGroup'"));
+  TrafficGroupBlueprintClass = (UClass *) TrafficGroupBP.Object->GeneratedClass;
+
   // Structure to hold one-time initialization
   static struct FConstructorStatics
   {
@@ -144,11 +152,17 @@ void AOpenDriveActor::BuildRoutes()
   BuildRoutes(GetWorld()->GetMapName());
 }
 
-void AOpenDriveActor::BuildRoutes(FString MapName) {
+void AOpenDriveActor::BuildRoutes(FString MapName)
+{
+  GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("hi")));
+
   using CarlaMath = carla::geom::Math;
   using IdType = carla::road::element::id_type;
   using Waypoint = carla::road::element::Waypoint;
   using WaypointGen = carla::road::WaypointGenerator;
+  using TrafficGroup = carla::opendrive::types::TrafficLightGroup;
+  using TrafficLight = carla::opendrive::types::TrafficLight;
+  using TrafficBoxComponent = carla::opendrive::types::BoxComponent;
 
   std::string ParseError;
 
@@ -195,7 +209,8 @@ void AOpenDriveActor::BuildRoutes(FString MapName) {
       // Create an identifier of the current lane
       const auto Identifier = std::make_pair(RoadId, LaneId);
 
-      // If Identifier does not exist in AlreadyVisited we haven't visited the lane
+      // If Identifier does not exist in AlreadyVisited we haven't visited the
+      // lane
       if (!std::any_of(AlreadyVisited.begin(), AlreadyVisited.end(), [&Identifier](auto i) {
         return (i.first == Identifier.first && i.second == Identifier.second);
       }))
@@ -244,6 +259,55 @@ void AOpenDriveActor::BuildRoutes(FString MapName) {
       }
     }
   }
+
+  const std::vector<TrafficGroup> TrafficLightGroup = map.GetTrafficGroups();
+  for (TrafficGroup CurrentTrafficLightGroup : TrafficLightGroup)
+  {
+    double RedTime = CurrentTrafficLightGroup.red_time;
+    double YellowTime = CurrentTrafficLightGroup.yellow_time;
+    double GreenTime = CurrentTrafficLightGroup.green_time;
+    FActorSpawnParameters SpawnParams;
+    FOutputDeviceNull ar;
+    AActor *SpawnedTrafficGroup = GetWorld()->SpawnActor<AActor>(TrafficGroupBlueprintClass,
+        FVector(0, 0, 0),
+        FRotator(0, 0, 0),
+        SpawnParams);
+    SpawnedTrafficGroup->CallFunctionByNameWithArguments(TEXT("CallFunctionTest"), ar, NULL, true);
+
+    for (TrafficLight CurrentTrafficLight : CurrentTrafficLightGroup.traffic_lights)
+    {
+      FVector TLPos =
+          FVector(CurrentTrafficLight.x_pos, CurrentTrafficLight.y_pos, CurrentTrafficLight.z_pos);
+      FRotator TLRot = FRotator(CurrentTrafficLight.x_rot,
+          CurrentTrafficLight.z_rot,
+          CurrentTrafficLight.y_rot);
+      AActor *SpawnedTrafficLight = GetWorld()->SpawnActor<AActor>(TrafficLightBlueprintClass,
+          TLPos,
+          TLRot,
+          SpawnParams);
+
+      SpawnedTrafficLight->CallFunctionByNameWithArguments(TEXT("InitData"), ar, NULL, true);
+      for (TrafficBoxComponent TfBoxComponent : CurrentTrafficLight.box_areas)
+      {
+        FVector TLBoxPos = FVector(TfBoxComponent.x_pos,
+            TfBoxComponent.y_pos,
+            TfBoxComponent.z_pos);
+        FRotator TLBoxRot = FRotator(TfBoxComponent.x_rot,
+            TfBoxComponent.z_rot,
+            TfBoxComponent.y_rot);
+
+        FString BoxCommand = FString::Printf(TEXT("SetBoxLocationAndRotation %f %f %f %f %f %f"),
+            TLBoxPos.X,
+            TLBoxPos.Y,
+            TLBoxPos.Z,
+            TLBoxRot.Pitch,
+            TLBoxRot.Roll,
+            TLBoxRot.Yaw);
+        SpawnedTrafficLight->CallFunctionByNameWithArguments(*BoxCommand, ar, NULL, true);
+      }
+    }
+  }
+
 }
 
 void AOpenDriveActor::RemoveRoutes()
