@@ -75,6 +75,8 @@ namespace detail {
 
     rpc::MapInfo GetMapInfo();
 
+    std::vector<std::string> GetAvailableMaps();
+
     std::vector<rpc::ActorDefinition> GetActorDefinitions();
 
     rpc::Actor GetSpectator();

@@ -136,6 +136,10 @@ namespace detail {
     return _pimpl->CallAndWait<rpc::MapInfo>("get_map_info");
   }
 
+  std::vector<std::string> Client::GetAvailableMaps() {
+    return _pimpl->CallAndWait<std::vector<std::string>>("get_available_maps");
+  }
+
   std::vector<rpc::ActorDefinition> Client::GetActorDefinitions() {
     return _pimpl->CallAndWait<std::vector<rpc::ActorDefinition>>("get_actor_definitions");
   }
