@@ -117,6 +117,18 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     return carla::version();
   });
 
+  Server.BindAsync("get_available_maps", [this]() -> R<std::vector<std::string>>
+  {
+    const auto MapNames = UCarlaStatics::GetAllMapNames();
+    std::vector<std::string> result;
+    result.reserve(MapNames.Num());
+    for (const auto &MapName : MapNames)
+    {
+      result.emplace_back(cr::FromFString(MapName));
+    }
+    return result;
+  });
+
   Server.BindSync("tick_cue", [this]() -> R<void>
   {
     ++TickCuesReceived;

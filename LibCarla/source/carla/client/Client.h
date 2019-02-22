@@ -43,6 +43,10 @@ namespace client {
       return _simulator->GetServerVersion();
     }
 
+    std::vector<std::string> GetAvailableMaps() const {
+      return _simulator->GetAvailableMaps();
+    }
+
     World ReloadWorld() const {
       return World{_simulator->ReloadEpisode()};
     }
