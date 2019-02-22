@@ -25,4 +25,7 @@ public:
   FBoundingBox BoundingBox;
 
   carla::rpc::Actor SerializedData;
+
+  /// @todo To be used solely by the FWorldObserver.
+  mutable FVector Velocity = {0.0f, 0.0f, 0.0f};
 };

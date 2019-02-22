@@ -32,6 +32,7 @@ namespace s11n {
       uint64_t episode_id;
       double game_timestamp;
       double platform_timestamp;
+      float delta_seconds;
     };
 #pragma pack(pop)
 

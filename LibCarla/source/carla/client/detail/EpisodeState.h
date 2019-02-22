@@ -36,6 +36,8 @@ namespace detail {
 
     explicit EpisodeState(uint64_t episode_id) : _episode_id(episode_id) {}
 
+    explicit EpisodeState(const sensor::data::RawEpisodeState &state);
+
     auto GetEpisodeId() const {
       return _episode_id;
     }
@@ -65,14 +67,11 @@ namespace detail {
           iterator::make_map_keys_iterator(_actors.end()));
     }
 
-    std::shared_ptr<const EpisodeState> DeriveNextStep(
-        const sensor::data::RawEpisodeState &state) const;
-
   private:
 
     const uint64_t _episode_id;
 
-    Timestamp _timestamp;
+    const Timestamp _timestamp;
 
     std::unordered_map<actor_id_type, ActorState> _actors;
   };

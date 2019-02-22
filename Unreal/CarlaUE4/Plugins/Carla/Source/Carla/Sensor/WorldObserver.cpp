@@ -78,9 +78,31 @@ static auto FWorldObserver_GetActorState(const FActorView &View, const FActorReg
   return state;
 }
 
+static carla::geom::Vector3D FWorldObserver_GetAngularVelocity(const AActor &Actor)
+{
+  const auto RootComponent = Cast<UPrimitiveComponent>(Actor.GetRootComponent());
+  const FVector AngularVelocity =
+      RootComponent != nullptr ?
+          RootComponent->GetPhysicsAngularVelocityInDegrees() :
+          FVector{0.0f, 0.0f, 0.0f};
+  return {AngularVelocity.X, AngularVelocity.Y, AngularVelocity.Z};
+}
+
+static carla::geom::Vector3D FWorldObserver_GetAcceleration(
+    const FActorView &View,
+    const FVector &Velocity,
+    const float DeltaSeconds)
+{
+  FVector &PreviousVelocity = View.GetActorInfo()->Velocity;
+  const FVector Acceleration = (Velocity - PreviousVelocity) / DeltaSeconds;
+  PreviousVelocity = Velocity;
+  return {Acceleration.X, Acceleration.Y, Acceleration.Z};
+}
+
 static carla::Buffer FWorldObserver_Serialize(
     carla::Buffer buffer,
-    const UCarlaEpisode &Episode)
+    const UCarlaEpisode &Episode,
+    float DeltaSeconds)
 {
   using Serializer = carla::sensor::s11n::EpisodeStateSerializer;
   using ActorDynamicState = carla::sensor::data::ActorDynamicState;
@@ -101,6 +123,7 @@ static carla::Buffer FWorldObserver_Serialize(
   header.episode_id = Episode.GetId();
   header.game_timestamp = Episode.GetElapsedGameTime();
   header.platform_timestamp = FPlatformTime::Seconds();
+  header.delta_seconds = DeltaSeconds;
   write_data(header);
 
   // Write every actor.
@@ -108,19 +131,14 @@ static carla::Buffer FWorldObserver_Serialize(
   {
     check(View.IsValid());
     constexpr float TO_METERS = 1e-2;
-    const auto velocity = TO_METERS * View.GetActor()->GetVelocity();
-    // get the angular velocity
-    const auto RootComponent = Cast<UPrimitiveComponent>(View.GetActor()->GetRootComponent());
-    FVector angularVelocity { 0.0f, 0.0f, 0.0f };
-    if (RootComponent != nullptr)
-    {
-      angularVelocity = RootComponent->GetPhysicsAngularVelocityInDegrees();
-    }
+    const auto Velocity = TO_METERS * View.GetActor()->GetVelocity();
+
     ActorDynamicState info = {
       View.GetActorId(),
       View.GetActor()->GetActorTransform(),
-      carla::geom::Vector3D{velocity.X, velocity.Y, velocity.Z},
-      carla::geom::Vector3D{angularVelocity.X, angularVelocity.Y, angularVelocity.Z},
+      carla::geom::Vector3D{Velocity.X, Velocity.Y, Velocity.Z},
+      FWorldObserver_GetAngularVelocity(*View.GetActor()),
+      FWorldObserver_GetAcceleration(View, Velocity, DeltaSeconds),
       FWorldObserver_GetActorState(View, Registry)
     };
     write_data(info);
@@ -130,13 +148,14 @@ static carla::Buffer FWorldObserver_Serialize(
   return buffer;
 }
 
-void FWorldObserver::BroadcastTick(const UCarlaEpisode &Episode)
+void FWorldObserver::BroadcastTick(const UCarlaEpisode &Episode, float DeltaSeconds)
 {
   auto AsyncStream = Stream.MakeAsyncDataStream(*this);
 
   auto buffer = FWorldObserver_Serialize(
       AsyncStream.PopBufferFromPool(),
-      Episode);
+      Episode,
+      DeltaSeconds);
 
   AsyncStream.Send(*this, std::move(buffer));
 }

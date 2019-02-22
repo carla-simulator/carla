@@ -43,15 +43,14 @@ namespace detail {
       auto self = weak.lock();
       if (self != nullptr) {
         auto data = sensor::Deserializer::Deserialize(std::move(buffer));
-        const auto &raw_data = CastData(*data);
 
-        std::shared_ptr<const EpisodeState> next;
-        std::shared_ptr<const EpisodeState> prev = self->GetState();
+        auto next = std::make_shared<const EpisodeState>(CastData(*data));
+        auto prev = self->GetState();
         do {
-          if (prev->GetFrameCount() >= raw_data.GetFrameNumber()) {
+          if (prev->GetFrameCount() >= next->GetFrameCount()) {
+            self->_on_tick_callbacks.Call(next->GetTimestamp());
             return;
           }
-          next = prev->DeriveNextStep(raw_data);
         } while (!self->_state.compare_exchange(&prev, next));
 
         if (next->GetEpisodeId() != prev->GetEpisodeId()) {
