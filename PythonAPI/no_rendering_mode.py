@@ -279,7 +279,7 @@ class ModuleHUD (object):
         mono = default_font if default_font in fonts else fonts[0]
         mono = pygame.font.match_font(mono)
         self._font_mono = pygame.font.Font(mono, 14)
-        self._header_font = pygame.font.SysFont('Arial', 14)
+        self._header_font = pygame.font.SysFont('Arial', 14, True)
         self.help = HelpText(pygame.font.Font(mono, 24), *self.dim)
         self._notifications = FadingText(
             pygame.font.Font(pygame.font.get_default_font(), 20),
@@ -311,14 +311,14 @@ class ModuleHUD (object):
                 if hero_actor is not None:
                     angle = -hero_actor.get_transform().rotation.yaw - 90
 
-                color = COLOR_ORANGE_0
+                color = COLOR_SKY_BLUE_0
+                if int(actor.attributes['number_of_wheels']) == 2:
+                    color = COLOR_CHOCOLATE_0
                 if actor.attributes['role_name'] == 'hero':
-                    color = COLOR_PLUM_0
-                    if hero_actor is not None and hero_actor.id == actor.id:
-                        color = COLOR_SCARLET_RED_1
+                    color = COLOR_CHAMELEON_0
 
                 font_surface = self._header_font.render(str(actor.id), True, color)
-                rotated_font_surface = pygame.transform.rotate(font_surface, angle).convert_alpha()
+                rotated_font_surface = pygame.transform.rotate(font_surface, angle)
                 rect = rotated_font_surface.get_rect(center=(x, y))
                 vehicle_id_surface.blit(rotated_font_surface, rect)
 
@@ -445,9 +445,9 @@ class MapImage(object):
             else:
                 broken_lines = [x for n, x in enumerate(zip(*(iter(points),) * 20)) if n % 3 == 0]
                 for line in broken_lines:
-                    pygame.draw.lines(surface, COLOR_ORANGE_1, False, line, 2)
+                    pygame.draw.lines(surface, COLOR_ORANGE_0, False, line, 2)
 
-        def draw_arrow(surface, transform, color=COLOR_ALUMINIUM_4):
+        def draw_arrow(surface, transform, color=COLOR_ALUMINIUM_2):
             transform.rotation.yaw += 180
             forward = transform.get_forward_vector()
             transform.rotation.yaw += 90
@@ -699,6 +699,7 @@ class ModuleWorld(object):
         vehicles = []
         traffic_lights = []
         speed_limits = []
+        stop_signals = []
         walkers = []
 
         for actor in self.world.get_actors():
@@ -708,6 +709,8 @@ class ModuleWorld(object):
                 traffic_lights.append(actor)
             elif 'speed_limit' in actor.type_id:
                 speed_limits.append(actor)
+            elif 'stop' in actor.type_id:
+                stop_signals.append(actor)
             elif 'walker' in actor.type_id:
                 walkers.append(actor)
 
@@ -726,7 +729,7 @@ class ModuleWorld(object):
             'NEARBY VEHICLES',
             info_text)
 
-        return (vehicles, traffic_lights, speed_limits, walkers)
+        return (vehicles, traffic_lights, speed_limits, stop_signals, walkers)
 
     def _render_traffic_lights(self, surface, list_tl, world_to_pixel):
         for tl in list_tl:
@@ -755,7 +758,7 @@ class ModuleWorld(object):
             pygame.draw.circle(surface, COLOR_ALUMINIUM_0, (x, y), white_circle_radius)
 
             limit = sl.type_id.split('.')[2]
-            font_surface = font.render(limit, False, (31, 31, 31))
+            font_surface = font.render(limit, True, COLOR_ALUMINIUM_5)
 
             # Blit
             if self.hero_actor is not None:
@@ -770,7 +773,7 @@ class ModuleWorld(object):
 
     def _render_walkers(self, surface, list_w, world_to_pixel):
         for w in list_w:
-            color = COLOR_ALUMINIUM_0
+            color = COLOR_PLUM_0
 
             # Compute bounding box points
             bb = w.bounding_box.extent
@@ -787,11 +790,11 @@ class ModuleWorld(object):
 
     def _render_vehicles(self, surface, list_v, world_to_pixel, world_to_pixel_width, scale_factor):
         for v in list_v:
-            color = COLOR_ORANGE_1
+            color = COLOR_SKY_BLUE_0
+            if int(v.attributes['number_of_wheels']) == 2:
+                color = COLOR_CHOCOLATE_1
             if v.attributes['role_name'] == 'hero':
-                color = COLOR_PLUM_0
-                if self.hero_actor is not None and self.hero_actor.id == v.id:
-                    color = COLOR_SCARLET_RED_1
+                color = COLOR_CHAMELEON_0
             # Compute bounding box points
             bb = v.bounding_box.extent
             corners = [carla.Location(x=-bb.x, y=-bb.y),
@@ -804,13 +807,48 @@ class ModuleWorld(object):
             t = v.get_transform()
             t.transform(corners)
             corners = [world_to_pixel(p) for p in corners]
-            pygame.draw.lines(surface, color, False, corners, 2)
+            pygame.draw.lines(surface, color, False, corners, int(math.ceil(4.0 * self.map_image.scale)))
 
-    def render_actors(self, surface, vehicles, traffic_lights, speed_limits, walkers, scale_factor):
+    def _render_stop_signals(self, surface, list_s, world_to_pixel, world_to_pixel_width):
+        font_size = world_to_pixel_width(1.3)
+        width = world_to_pixel_width(2)
+        height = world_to_pixel_width(0.9)
+        font = pygame.font.SysFont('Arial', font_size, True)
+
+        for sl in list_s:
+
+            x, y = world_to_pixel(sl.get_location())
+
+            # Render stop signal
+            lines = [[x + width, y + height], [x + width, y - height],
+                     [x + height, y - width], [x - height, y - width],
+                     [x - width, y - height], [x - width, y + height],
+                     [x - width, y + height], [x - height, y + width],
+                     [x + height, y + width]
+                     ]
+            pygame.draw.polygon(surface, COLOR_ALUMINIUM_3, lines, 5)
+            pygame.draw.polygon(surface, COLOR_SCARLET_RED_1, lines)
+
+            font_surface = font.render("STOP", False, COLOR_ALUMINIUM_1)
+
+            # Blit
+            if self.hero_actor is not None:
+                # Rotate font surface with respect to hero vehicle front
+                angle = -self.hero_actor.get_transform().rotation.yaw - 90.0
+                font_surface = pygame.transform.rotate(font_surface, angle)
+                offset = font_surface.get_rect(center=(x, y))
+                surface.blit(font_surface, offset)
+
+            else:
+                surface.blit(font_surface, (x - font_surface.get_width() / 2, y - font_surface.get_height() / 2))
+
+    def render_actors(self, surface, vehicles, traffic_lights, speed_limits, stop_signals, walkers, scale_factor):
         self._render_vehicles(surface, vehicles, self.map_image.world_to_pixel,
                               self.map_image.world_to_pixel_width, scale_factor)
         self._render_traffic_lights(surface, traffic_lights, self.map_image.world_to_pixel)
         self._render_speed_limits(surface, speed_limits, self.map_image.world_to_pixel,
+                                  self.map_image.world_to_pixel_width)
+        self._render_stop_signals(surface, stop_signals, self.map_image.world_to_pixel,
                                   self.map_image.world_to_pixel_width)
         self._render_walkers(surface, walkers, self.map_image.world_to_pixel)
 
@@ -842,7 +880,7 @@ class ModuleWorld(object):
 
     def render(self, display):
         self.result_surface.fill(COLOR_BLACK)
-        vehicles, traffic_lights, speed_limits, walkers = self._split_actors()
+        vehicles, traffic_lights, speed_limits, stop_signals, walkers = self._split_actors()
 
         scale_factor = self.module_input.wheel_offset
         self.scaled_size = int(self.map_image._width * scale_factor)
@@ -852,7 +890,14 @@ class ModuleWorld(object):
         # Render Actors
 
         self.actors_surface.fill(COLOR_BLACK)
-        self.render_actors(self.actors_surface, vehicles, traffic_lights, speed_limits, walkers, scale_factor)
+        self.render_actors(
+            self.actors_surface,
+            vehicles,
+            traffic_lights,
+            speed_limits,
+            stop_signals,
+            walkers,
+            scale_factor)
 
         # Render Ids
         self.module_hud.render_vehicles_ids(self.vehicle_id_surface, vehicles,
