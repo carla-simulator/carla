@@ -165,7 +165,7 @@ namespace detail {
   }
 
   std::vector<rpc::Actor> Client::GetActorsById(
-      const std::vector<actor_id_type> &ids) {
+      const std::vector<ActorId> &ids) {
     using return_t = std::vector<rpc::Actor>;
     return _pimpl->CallAndWait<return_t>("get_actors_by_id", ids);
   }
@@ -264,8 +264,8 @@ namespace detail {
     _pimpl->AsyncCall("add_actor_impulse", actor, vector);
   }
 
-  std::vector<rpc::actor_id_type> Client::GetGroupTrafficLights(const rpc::Actor &trafficLight) {
-    using return_t = std::vector<rpc::actor_id_type>;
+  std::vector<ActorId> Client::GetGroupTrafficLights(const rpc::Actor &trafficLight) {
+    using return_t = std::vector<ActorId>;
     return _pimpl->CallAndWait<return_t>("get_group_traffic_lights", trafficLight);
   }
 
