@@ -101,32 +101,32 @@ namespace detail {
     rpc::Actor SpawnActorWithParent(
         const rpc::ActorDescription &description,
         const geom::Transform &transform,
-        const rpc::Actor &parent);
+        rpc::ActorId parent);
 
-    bool DestroyActor(const rpc::Actor &actor);
+    bool DestroyActor(rpc::ActorId actor);
 
     void SetActorLocation(
-        const rpc::Actor &actor,
+        rpc::ActorId actor,
         const geom::Location &location);
 
     void SetActorTransform(
-        const rpc::Actor &actor,
+        rpc::ActorId actor,
         const geom::Transform &transform);
 
     void SetActorSimulatePhysics(
-        const rpc::Actor &actor,
+        rpc::ActorId actor,
         bool enabled);
 
     void SetActorAutopilot(
-        const rpc::Actor &vehicle,
+        rpc::ActorId vehicle,
         bool enabled);
 
     void ApplyControlToVehicle(
-        const rpc::Actor &vehicle,
+        rpc::ActorId vehicle,
         const rpc::VehicleControl &control);
 
     void ApplyControlToWalker(
-        const rpc::Actor &walker,
+        rpc::ActorId walker,
         const rpc::WalkerControl &control);
 
     void ApplyPhysicsControlToVehicle(
@@ -134,35 +134,35 @@ namespace detail {
         const rpc::VehiclePhysicsControl &physicsControl);
 
     void SetTrafficLightState(
-        const rpc::Actor &trafficLight,
+        rpc::ActorId trafficLight,
         const rpc::TrafficLightState trafficLightState);
 
     void SetTrafficLightGreenTime(
-        const rpc::Actor &trafficLight,
+        rpc::ActorId trafficLight,
         float greenTime);
 
     void SetTrafficLightYellowTime(
-        const rpc::Actor &trafficLight,
+        rpc::ActorId trafficLight,
         float yellowTime);
 
     void SetTrafficLightRedTime(
-        const rpc::Actor &trafficLight,
+        rpc::ActorId trafficLight,
         float redTime);
 
     void FreezeTrafficLight(
-        const rpc::Actor &trafficLight,
+        rpc::ActorId trafficLight,
         bool freeze);
 
     void SetActorVelocity(
-        const rpc::Actor &actor,
+        rpc::ActorId actor,
         const geom::Vector3D &vector);
 
     void SetActorAngularVelocity(
-        const rpc::Actor &actor,
+        rpc::ActorId actor,
         const geom::Vector3D &vector);
 
     void AddActorImpulse(
-        const rpc::Actor &actor,
+        rpc::ActorId actor,
         const geom::Vector3D &vector);
 
     void SubscribeToStream(
