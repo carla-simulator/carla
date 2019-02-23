@@ -60,11 +60,11 @@ def main():
     args = argparser.parse_args()
 
     actor_list = []
+    client = carla.Client(args.host, args.port)
+    client.set_timeout(2.0)
 
     try:
 
-        client = carla.Client(args.host, args.port)
-        client.set_timeout(2.0)
         world = client.get_world()
         blueprints = world.get_blueprint_library().filter('vehicle.*')
 
@@ -113,8 +113,7 @@ def main():
     finally:
 
         print('\ndestroying %d actors' % len(actor_list))
-        for actor in actor_list:
-            actor.destroy()
+        client.apply_batch([carla.command.DestroyActor(x.id) for x in actor_list])
 
 
 if __name__ == '__main__':

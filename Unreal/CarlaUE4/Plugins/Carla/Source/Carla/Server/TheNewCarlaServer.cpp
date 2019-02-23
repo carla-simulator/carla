@@ -13,10 +13,12 @@
 #include "Carla/Walker/WalkerController.h"
 
 #include <compiler/disable-ue4-macros.h>
+#include <carla/Overload.h>
 #include <carla/Version.h>
 #include <carla/rpc/Actor.h>
 #include <carla/rpc/ActorDefinition.h>
 #include <carla/rpc/ActorDescription.h>
+#include <carla/rpc/Command.h>
 #include <carla/rpc/DebugShape.h>
 #include <carla/rpc/EpisodeInfo.h>
 #include <carla/rpc/EpisodeSettings.h>
@@ -767,6 +769,35 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     check(World != nullptr);
     FDebugShapeDrawer Drawer(*World);
     Drawer.Draw(shape);
+    return R<void>::Success();
+  };
+
+  // ~~ Apply commands in batch ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  using C = cr::Command;
+
+  auto command_visitor = carla::MakeOverload(
+      [=](const C::DestroyActor &c) { destroy_actor(c.actor); },
+      [=](const C::ApplyVehicleControl &c) { apply_control_to_vehicle(c.actor, c.control); },
+      [=](const C::ApplyWalkerControl &c) { apply_control_to_walker(c.actor, c.control); },
+      [=](const C::ApplyTransform &c) { set_actor_transform(c.actor, c.transform); },
+      [=](const C::ApplyVelocity &c) { set_actor_velocity(c.actor, c.velocity); },
+      [=](const C::ApplyAngularVelocity &c) { set_actor_angular_velocity(c.actor, c.angular_velocity); },
+      [=](const C::ApplyImpulse &c) { add_actor_impulse(c.actor, c.impulse); },
+      [=](const C::SetSimulatePhysics &c) { set_actor_simulate_physics(c.actor, c.enabled); },
+      [=](const C::SetAutopilot &c) { set_actor_autopilot(c.actor, c.enabled); },
+      [](const auto &) { UE_LOG(LogCarla, Fatal, TEXT("Invalid command!")); });
+
+  BIND_SYNC(apply_batch) << [=](const std::vector<cr::Command> &commands, bool do_tick_cue) -> R<void>
+  {
+    for (const auto &command : commands)
+    {
+      boost::apply_visitor(command_visitor, command.command);
+    }
+    if (do_tick_cue)
+    {
+      tick_cue();
+    }
     return R<void>::Success();
   };
 }

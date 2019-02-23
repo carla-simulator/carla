@@ -20,6 +20,7 @@
 - `show_recorder_file_info(string filename)`
 - `show_recorder_collisions(string filename, char category1, char category2)`
 - `show_recorder_actors_blocked(string filename, float min_time, float min_distance)`
+- `apply_batch(commands, do_tick=False)`
 
 ## `carla.World`
 
@@ -382,3 +383,50 @@ Static presets
 - `Other`
 - `Broken`
 - `Solid`
+
+# module `carla.command`
+
+## `carla.command.DestroyActor`
+
+- `actor_id`
+
+## `carla.command.ApplyVehicleControl`
+
+- `actor_id`
+- `control`
+
+## `carla.command.ApplyWalkerControl`
+
+- `actor_id`
+- `control`
+
+## `carla.command.ApplyTransform`
+
+- `actor_id`
+- `transform`
+
+## `carla.command.ApplyVelocity`
+
+- `actor_id`
+- `velocity`
+
+## `carla.command.ApplyAngularVelocity`
+
+- `actor_id`
+- `angular_velocity`
+
+
+## `carla.command.ApplyImpulse`
+
+- `actor_id`
+- `impulse`
+
+## `carla.command.SetSimulatePhysics`
+
+- `actor_id`
+- `enabled`
+
+## `carla.command.SetAutopilot`
+
+- `actor_id`
+- `enabled`

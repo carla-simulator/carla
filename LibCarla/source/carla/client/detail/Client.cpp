@@ -273,7 +273,7 @@ namespace detail {
     return _pimpl->CallAndWait<std::string>("start_recorder", name);
   }
 
-  void Client::StopRecorder(void) {
+  void Client::StopRecorder() {
     return _pimpl->AsyncCall("stop_recorder");
   }
 
@@ -305,6 +305,10 @@ namespace detail {
 
   void Client::DrawDebugShape(const rpc::DebugShape &shape) {
     _pimpl->AsyncCall("draw_debug_shape", shape);
+  }
+
+  void Client::ApplyBatch(std::vector<rpc::Command> commands, bool do_tick_cue) {
+    _pimpl->AsyncCall("apply_batch", std::move(commands), do_tick_cue);
   }
 
   void Client::SendTickCue() {
