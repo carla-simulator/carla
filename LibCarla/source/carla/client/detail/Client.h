@@ -89,7 +89,7 @@ namespace detail {
 
     void SetWeatherParameters(const rpc::WeatherParameters &weather);
 
-    std::vector<rpc::Actor> GetActorsById(const std::vector<actor_id_type> &ids);
+    std::vector<rpc::Actor> GetActorsById(const std::vector<ActorId> &ids);
 
     rpc::VehiclePhysicsControl GetVehiclePhysicsControl(const rpc::Actor &actor) const;
 
@@ -180,7 +180,7 @@ namespace detail {
     std::string ShowRecorderActorsBlocked(std::string name, double min_time, double min_distance);
     std::string ReplayFile(std::string name, double start, double duration, uint32_t follow_id);
 
-    std::vector<rpc::actor_id_type> GetGroupTrafficLights(const rpc::Actor &trafficLight);
+    std::vector<ActorId> GetGroupTrafficLights(const rpc::Actor &trafficLight);
 
     void SendTickCue();
 

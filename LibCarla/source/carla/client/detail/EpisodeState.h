@@ -50,7 +50,7 @@ namespace detail {
       return _timestamp;
     }
 
-    ActorState GetActorState(actor_id_type id) const {
+    ActorState GetActorState(ActorId id) const {
       ActorState state;
       auto it = _actors.find(id);
       if (it != _actors.end()) {
@@ -73,7 +73,7 @@ namespace detail {
 
     const Timestamp _timestamp;
 
-    std::unordered_map<actor_id_type, ActorState> _actors;
+    std::unordered_map<ActorId, ActorState> _actors;
   };
 
 } // namespace detail

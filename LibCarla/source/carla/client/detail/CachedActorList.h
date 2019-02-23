@@ -40,7 +40,7 @@ namespace detail {
     /// Return the actor ids present in @a range that haven't been added to this
     /// list.
     template <typename RangeT>
-    std::vector<actor_id_type> GetMissingIds(const RangeT &range) const;
+    std::vector<ActorId> GetMissingIds(const RangeT &range) const;
 
     /// Retrieve the actors matching the ids in @a range.
     template <typename RangeT>
@@ -52,7 +52,7 @@ namespace detail {
 
     mutable std::mutex _mutex;
 
-    std::unordered_map<actor_id_type, rpc::Actor> _actors;
+    std::unordered_map<ActorId, rpc::Actor> _actors;
   };
 
   // ===========================================================================
@@ -79,8 +79,8 @@ namespace detail {
   }
 
   template <typename RangeT>
-  inline std::vector<actor_id_type> CachedActorList::GetMissingIds(const RangeT &range) const {
-    std::vector<actor_id_type> result;
+  inline std::vector<ActorId> CachedActorList::GetMissingIds(const RangeT &range) const {
+    std::vector<ActorId> result;
     result.reserve(range.size());
     std::lock_guard<std::mutex> lock(_mutex);
     std::copy_if(std::begin(range), std::end(range), std::back_inserter(result), [this](auto id) {
