@@ -26,6 +26,8 @@
 - `get_blueprint_library()`
 - `get_map()`
 - `get_spectator()`
+- `get_settings()`
+- `apply_settings(world_settings)`
 - `get_weather()`
 - `set_weather(weather_parameters)`
 - `get_actors()`
@@ -33,6 +35,14 @@
 - `try_spawn_actor(blueprint, transform, attach_to=None)`
 - `wait_for_tick(seconds=1.0)`
 - `on_tick(callback)`
+- `tick()`
+
+## `carla.WorldSettings`
+
+- `synchronous_mode`
+- `no_rendering_mode`
+- `__eq__(other)`
+- `__ne__(other)`
 
 ## `carla.DebugHelper`
 
