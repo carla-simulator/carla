@@ -144,7 +144,7 @@ namespace detail {
       actor = _client.SpawnActorWithParent(
           blueprint.MakeActorDescription(),
           transform,
-          parent->Serialize());
+          parent->GetId());
     } else {
       actor = _client.SpawnActor(
           blueprint.MakeActorDescription(),
@@ -166,7 +166,7 @@ namespace detail {
   bool Simulator::DestroyActor(Actor &actor) {
     bool success = true;
     if (actor.GetTypeId() != "sensor.other.lane_detector") { /// @todo
-      success = _client.DestroyActor(actor.Serialize());
+      success = _client.DestroyActor(actor.GetId());
     }
     if (success) {
       // Remove it's persistent state so it cannot access the client anymore.
