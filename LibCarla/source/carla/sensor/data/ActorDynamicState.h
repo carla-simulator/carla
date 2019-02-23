@@ -61,7 +61,7 @@ namespace detail {
     float speed_limit;
     rpc::TrafficLightState traffic_light_state;
     bool has_traffic_light;
-    rpc::actor_id_type traffic_light_id;
+    rpc::ActorId traffic_light_id;
   };
 #pragma pack(pop)
 
@@ -109,7 +109,7 @@ namespace detail {
   /// Dynamic state of an actor at a certain frame.
   struct ActorDynamicState {
 
-    actor_id_type id;
+    ActorId id;
 
     geom::Transform transform;
 

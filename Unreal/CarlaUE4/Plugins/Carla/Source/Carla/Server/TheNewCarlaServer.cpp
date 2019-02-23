@@ -678,7 +678,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   });
 
   Server.BindSync("get_group_traffic_lights", [this](
-        const cr::Actor Actor) -> R<std::vector<cr::actor_id_type>>
+        const cr::Actor Actor) -> R<std::vector<cr::ActorId>>
   {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
@@ -691,7 +691,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("unable to get group traffic lights: actor is not a traffic light");
     }
-    std::vector<cr::actor_id_type> Result;
+    std::vector<cr::ActorId> Result;
     for (auto TLight : TrafficLight->GetGroupTrafficLights())
     {
       auto View = Episode->FindActor(TLight);

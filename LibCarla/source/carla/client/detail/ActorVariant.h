@@ -50,11 +50,11 @@ namespace detail {
       return boost::apply_visitor(Visitor(), _value);
     }
 
-    actor_id_type GetId() const {
+    ActorId GetId() const {
       return Serialize().id;
     }
 
-    actor_id_type GetParentId() const {
+    ActorId GetParentId() const {
       return Serialize().parent_id;
     }
 

@@ -25,7 +25,7 @@ namespace rpc {
 
     ActorDescription() = default;
 
-    actor_id_type uid = 0u;
+    ActorId uid = 0u;
 
     std::string id;
 
