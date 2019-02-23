@@ -93,22 +93,18 @@ namespace element {
     }
 
     /// Workaround where we must find a specific (RoadInfoMarkRecord) RoadInfo
-    /// that have lane_id info. In this case this info is used for selecting only
-    /// the nearest RoadInfos to the "dist" input.
+    /// that must have lane_id info. In this case this info is used for selecting
+    /// only the nearest RoadInfos to the "dist" input.
     std::vector<std::shared_ptr<const RoadInfoMarkRecord>> GetRoadInfoMarkRecord(
         double dist) const {
       auto mark_record_info = GetInfos<RoadInfoMarkRecord>(dist);
       std::vector<std::shared_ptr<const RoadInfoMarkRecord>> result;
-      // @todo: change to unordered_set
-      std::vector<int> already_visited;
+      std::unordered_set<int> inserted_lanes;
 
       for (auto &&mark_record : mark_record_info) {
         const int lane_id = mark_record->GetLaneId();
-        if (std::find(
-              already_visited.begin(),
-              already_visited.end(),
-              lane_id) == already_visited.end()) {
-          already_visited.emplace_back(lane_id);
+        const bool is_new_lane = inserted_lanes.insert(lane_id).second;
+        if (is_new_lane) {
           result.emplace_back(mark_record);
         }
       }
@@ -116,21 +112,18 @@ namespace element {
     }
 
     /// Workaround where we must find a specific (RoadInfoMarkRecord) RoadInfo
-    /// that have lane_id info. In this case this info is used for selecting only
-    /// the nearest RoadInfos to the "dist" input. But reversed!
+    /// that must have lane_id info. In this case this info is used for selecting
+    /// only the nearest RoadInfos to the "dist" input. But reversed!
     std::vector<std::shared_ptr<const RoadInfoMarkRecord>> GetRoadInfoMarkRecordReverse(
         double dist) const {
       auto mark_record_info = GetInfosReverse<RoadInfoMarkRecord>(dist);
       std::vector<std::shared_ptr<const RoadInfoMarkRecord>> result;
-      std::vector<int> already_visited;
+      std::unordered_set<int> inserted_lanes;
 
       for (auto &&mark_record : mark_record_info) {
         const int lane_id = mark_record->GetLaneId();
-        if (std::find(
-              already_visited.begin(),
-              already_visited.end(),
-              lane_id) == already_visited.end()) {
-          already_visited.emplace_back(lane_id);
+        const bool is_new_lane = inserted_lanes.insert(lane_id).second;
+        if (is_new_lane) {
           result.emplace_back(mark_record);
         }
       }

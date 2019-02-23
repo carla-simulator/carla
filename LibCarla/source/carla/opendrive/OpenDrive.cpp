@@ -364,7 +364,8 @@ namespace opendrive {
         }
 
         current_lane_id = 0;
-        for (auto &&lane_section_center : lane_section.center) { // @todo: .[0]!!
+        // @todo: there must be only one center lane, so maybe use [0]
+        for (auto &&lane_section_center : lane_section.center) {
           for (auto &&road_marker : lane_section_center.road_marker) {
               road_segment.MakeInfo<carla::road::element::RoadInfoMarkRecord>(
                 start_position + road_marker.soffset,
