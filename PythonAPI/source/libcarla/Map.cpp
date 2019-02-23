@@ -64,10 +64,10 @@ void export_map() {
   ;
 
   enum_<cc::Waypoint::LaneChange>("LaneChange")
-      .value("None", cc::Waypoint::LaneChange::None)
-      .value("Right", cc::Waypoint::LaneChange::Right)
-      .value("Left", cc::Waypoint::LaneChange::Left)
-      .value("Both", cc::Waypoint::LaneChange::Both)
+    .value("None", cc::Waypoint::LaneChange::None)
+    .value("Right", cc::Waypoint::LaneChange::Right)
+    .value("Left", cc::Waypoint::LaneChange::Left)
+    .value("Both", cc::Waypoint::LaneChange::Both)
   ;
 
   class_<cc::Waypoint, boost::noncopyable, boost::shared_ptr<cc::Waypoint>>("Waypoint", no_init)
