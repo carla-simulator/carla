@@ -306,6 +306,7 @@ namespace detail {
     /// @name Operations with traffic lights
     // =========================================================================
     /// @{
+
     void SetTrafficLightState(TrafficLight &trafficLight, const rpc::TrafficLightState trafficLightState) {
       _client.SetTrafficLightState(trafficLight.GetId(), trafficLightState);
     }
@@ -338,6 +339,16 @@ namespace detail {
 
     void DrawDebugShape(const rpc::DebugShape &shape) {
       _client.DrawDebugShape(shape);
+    }
+
+    /// @}
+    // =========================================================================
+    /// @name Apply commands in batch
+    // =========================================================================
+    /// @{
+
+    void ApplyBatch(std::vector<rpc::Command> commands, bool do_tick_cue) {
+      _client.ApplyBatch(std::move(commands), do_tick_cue);
     }
 
     /// @}
