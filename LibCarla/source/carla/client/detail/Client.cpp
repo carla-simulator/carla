@@ -189,78 +189,77 @@ namespace detail {
   rpc::Actor Client::SpawnActorWithParent(
       const rpc::ActorDescription &description,
       const geom::Transform &transform,
-      const rpc::Actor &parent) {
+      rpc::ActorId parent) {
     return _pimpl->CallAndWait<rpc::Actor>("spawn_actor_with_parent",
         description,
         transform,
         parent);
   }
 
-  bool Client::DestroyActor(const rpc::Actor &actor) {
+  bool Client::DestroyActor(rpc::ActorId actor) {
     try {
       return _pimpl->CallAndWait<void>("destroy_actor", actor);
     } catch (const std::exception &e) {
-      log_error("failed to destroy actor:", actor.id, actor.description.id);
-      log_error(e.what());
+      log_error("failed to destroy actor", actor, ':', e.what());
       return false;
     }
   }
 
-  void Client::SetActorLocation(const rpc::Actor &actor, const geom::Location &location) {
+  void Client::SetActorLocation(rpc::ActorId actor, const geom::Location &location) {
     _pimpl->AsyncCall("set_actor_location", actor, location);
   }
 
-  void Client::SetActorTransform(const rpc::Actor &actor, const geom::Transform &transform) {
+  void Client::SetActorTransform(rpc::ActorId actor, const geom::Transform &transform) {
     _pimpl->AsyncCall("set_actor_transform", actor, transform);
   }
 
-  void Client::SetActorSimulatePhysics(const rpc::Actor &actor, const bool enabled) {
+  void Client::SetActorSimulatePhysics(rpc::ActorId actor, const bool enabled) {
     _pimpl->AsyncCall("set_actor_simulate_physics", actor, enabled);
   }
 
-  void Client::SetActorAutopilot(const rpc::Actor &vehicle, const bool enabled) {
+  void Client::SetActorAutopilot(rpc::ActorId vehicle, const bool enabled) {
     _pimpl->AsyncCall("set_actor_autopilot", vehicle, enabled);
   }
 
-  void Client::ApplyControlToVehicle(const rpc::Actor &vehicle, const rpc::VehicleControl &control) {
+  void Client::ApplyControlToVehicle(rpc::ActorId vehicle, const rpc::VehicleControl &control) {
     _pimpl->AsyncCall("apply_control_to_vehicle", vehicle, control);
   }
 
-  void Client::ApplyControlToWalker(const rpc::Actor &walker, const rpc::WalkerControl &control) {
+  void Client::ApplyControlToWalker(rpc::ActorId walker, const rpc::WalkerControl &control) {
     _pimpl->AsyncCall("apply_control_to_walker", walker, control);
   }
 
   void Client::SetTrafficLightState(
-      const rpc::Actor &trafficLight,
+      rpc::ActorId trafficLight,
       const rpc::TrafficLightState trafficLightState) {
     _pimpl->AsyncCall("set_traffic_light_state", trafficLight, trafficLightState);
   }
 
-  void Client::SetTrafficLightGreenTime(const rpc::Actor &trafficLight, float greenTime) {
+  void Client::SetTrafficLightGreenTime(rpc::ActorId trafficLight, float greenTime) {
     _pimpl->AsyncCall("set_traffic_light_green_time", trafficLight, greenTime);
   }
 
-  void Client::SetTrafficLightYellowTime(const rpc::Actor &trafficLight, float yellowTime) {
+  void Client::SetTrafficLightYellowTime(rpc::ActorId trafficLight, float yellowTime) {
     _pimpl->AsyncCall("set_traffic_light_yellow_time", trafficLight, yellowTime);
   }
 
-  void Client::SetTrafficLightRedTime(const rpc::Actor &trafficLight, float redTime) {
+  void Client::SetTrafficLightRedTime(rpc::ActorId trafficLight, float redTime) {
     _pimpl->AsyncCall("set_traffic_light_red_time", trafficLight, redTime);
   }
 
-  void Client::FreezeTrafficLight(const rpc::Actor &trafficLight, bool freeze) {
+  void Client::FreezeTrafficLight(rpc::ActorId trafficLight, bool freeze) {
     _pimpl->AsyncCall("freeze_traffic_light", trafficLight, freeze);
   }
 
-  void Client::SetActorVelocity(const rpc::Actor &actor, const geom::Vector3D &vector) {
+  void Client::SetActorVelocity(rpc::ActorId actor, const geom::Vector3D &vector) {
     _pimpl->AsyncCall("set_actor_velocity", actor, vector);
   }
 
-  void Client::SetActorAngularVelocity(const rpc::Actor &actor, const geom::Vector3D &vector) {
+  void Client::SetActorAngularVelocity(rpc::ActorId actor, const geom::Vector3D &vector) {
     _pimpl->AsyncCall("set_actor_angular_velocity", actor, vector);
   }
 
-  void Client::AddActorImpulse(const rpc::Actor &actor, const geom::Vector3D &vector) {
+  void Client::AddActorImpulse(rpc::ActorId actor, const geom::Vector3D &vector) {
     _pimpl->AsyncCall("add_actor_impulse", actor, vector);
   }
 
