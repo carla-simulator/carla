@@ -103,6 +103,36 @@ private:
   CARLA_ENSURE_GAME_THREAD();   \
   if (Episode == nullptr) { RESPOND_ERROR("episode not ready"); }
 
+class ServerBinder {
+public:
+
+  constexpr ServerBinder(const char *name, carla::rpc::Server &srv, bool sync)
+    : _name(name),
+      _server(srv),
+      _sync(sync) {}
+
+  template <typename FuncT>
+  auto operator<<(FuncT func) {
+    if (_sync) {
+      _server.BindSync(_name, func);
+    } else {
+      _server.BindAsync(_name, func);
+    }
+    return func;
+  }
+
+private:
+
+  const char *_name;
+
+  carla::rpc::Server &_server;
+
+  bool _sync;
+};
+
+#define BIND_SYNC(name) auto name = ServerBinder(#name, Server, true)
+#define BIND_ASYNC(name) auto name = ServerBinder(#name, Server, false)
+
 // =============================================================================
 // -- Bind Actions -------------------------------------------------------------
 // =============================================================================
@@ -112,22 +142,22 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   namespace cr = carla::rpc;
   namespace cg = carla::geom;
 
-  Server.BindAsync("version", []() -> R<std::string>
+  BIND_ASYNC(version) << []() -> R<std::string>
   {
     return carla::version();
-  });
+  };
 
   // ~~ Tick ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  Server.BindSync("tick_cue", [this]() -> R<void>
+  BIND_SYNC(tick_cue) << [this]() -> R<void>
   {
     ++TickCuesReceived;
     return R<void>::Success();
-  });
+  };
 
   // ~~ Load new episode ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  Server.BindAsync("get_available_maps", [this]() -> R<std::vector<std::string>>
+  BIND_ASYNC(get_available_maps) << [this]() -> R<std::vector<std::string>>
   {
     const auto MapNames = UCarlaStatics::GetAllMapNames();
     std::vector<std::string> result;
@@ -137,9 +167,9 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       result.emplace_back(cr::FromFString(MapName));
     }
     return result;
-  });
+  };
 
-  Server.BindSync("load_new_episode", [this](const std::string &map_name) -> R<void>
+  BIND_SYNC(load_new_episode) << [this](const std::string &map_name) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     if (!Episode->LoadNewEpisode(cr::ToFString(map_name)))
@@ -147,19 +177,19 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("map not found");
     }
     return R<void>::Success();
-  });
+  };
 
   // ~~ Episode settings and info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  Server.BindSync("get_episode_info", [this]() -> R<cr::EpisodeInfo>
+  BIND_SYNC(get_episode_info) << [this]() -> R<cr::EpisodeInfo>
   {
     REQUIRE_CARLA_EPISODE();
     return cr::EpisodeInfo{
       Episode->GetId(),
       BroadcastStream.token()};
-  });
+  };
 
-  Server.BindSync("get_map_info", [this]() -> R<cr::MapInfo>
+  BIND_SYNC(get_map_info) << [this]() -> R<cr::MapInfo>
   {
     REQUIRE_CARLA_EPISODE();
     auto FileContents = FOpenDrive::Load(Episode->GetMapName());
@@ -168,28 +198,29 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       cr::FromFString(Episode->GetMapName()),
       cr::FromFString(FileContents),
       MakeVectorFromTArray<cg::Transform>(SpawnPoints)};
-  });
+  };
 
-  Server.BindSync("get_episode_settings", [this]() -> R<cr::EpisodeSettings>
+  BIND_SYNC(get_episode_settings) << [this]() -> R<cr::EpisodeSettings>
   {
     REQUIRE_CARLA_EPISODE();
     return cr::EpisodeSettings{Episode->GetSettings()};
-  });
+  };
 
-  Server.BindSync("set_episode_settings", [this](const cr::EpisodeSettings &settings) -> R<void>
+  BIND_SYNC(set_episode_settings) << [this](const cr::EpisodeSettings &settings) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     Episode->ApplySettings(settings);
     return R<void>::Success();
-  });
+  };
 
-  Server.BindSync("get_actor_definitions", [this]() -> R<std::vector<cr::ActorDefinition>>
+  BIND_SYNC(get_actor_definitions) << [this]() -> R<std::vector<cr::ActorDefinition>>
   {
     REQUIRE_CARLA_EPISODE();
     return MakeVectorFromTArray<cr::ActorDefinition>(Episode->GetActorDefinitions());
-  });
+  };
 
-  Server.BindSync("get_spectator", [this]() -> R<cr::Actor> {
+  BIND_SYNC(get_spectator) << [this]() -> R<cr::Actor>
+  {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->FindActor(Episode->GetSpectatorPawn());
     if (!ActorView.IsValid())
@@ -197,11 +228,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("internal error: unable to find spectator");
     }
     return Episode->SerializeActor(ActorView);
-  });
+  };
 
   // ~~ Weather ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  Server.BindSync("get_weather_parameters", [this]() -> R<cr::WeatherParameters>
+  BIND_SYNC(get_weather_parameters) << [this]() -> R<cr::WeatherParameters>
   {
     REQUIRE_CARLA_EPISODE();
     auto *Weather = Episode->GetWeather();
@@ -210,10 +241,10 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("internal error: unable to find weather");
     }
     return Weather->GetCurrentWeather();
-  });
+  };
 
-  Server.BindSync("set_weather_parameters", [this](
-        const cr::WeatherParameters &weather) -> R<void>
+  BIND_SYNC(set_weather_parameters) << [this](
+      const cr::WeatherParameters &weather) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     auto *Weather = Episode->GetWeather();
@@ -223,12 +254,12 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     }
     Weather->ApplyWeather(weather);
     return R<void>::Success();
-  });
+  };
 
   // ~~ Actor operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  Server.BindSync("get_actors_by_id", [this](
-        const std::vector<FActorView::IdType> &ids) -> R<std::vector<cr::Actor>>
+  BIND_SYNC(get_actors_by_id) << [this](
+      const std::vector<FActorView::IdType> &ids) -> R<std::vector<cr::Actor>>
   {
     REQUIRE_CARLA_EPISODE();
     std::vector<cr::Actor> Result;
@@ -242,11 +273,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       }
     }
     return Result;
-  });
+  };
 
-  Server.BindSync("spawn_actor", [this](
-        cr::ActorDescription Description,
-        const cr::Transform &Transform) -> R<cr::Actor>
+  BIND_SYNC(spawn_actor) << [this](
+      cr::ActorDescription Description,
+      const cr::Transform &Transform) -> R<cr::Actor>
   {
     REQUIRE_CARLA_EPISODE();
     auto Result = Episode->SpawnActorWithInfo(Transform, std::move(Description));
@@ -259,12 +290,12 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("internal error: actor could not be spawned");
     }
     return Episode->SerializeActor(Result.Value);
-  });
+  };
 
-  Server.BindSync("spawn_actor_with_parent", [this](
-        cr::ActorDescription Description,
-        const cr::Transform &Transform,
-        cr::ActorId ParentId) -> R<cr::Actor>
+  BIND_SYNC(spawn_actor_with_parent) << [this](
+      cr::ActorDescription Description,
+      const cr::Transform &Transform,
+      cr::ActorId ParentId) -> R<cr::Actor>
   {
     REQUIRE_CARLA_EPISODE();
     auto Result = Episode->SpawnActorWithInfo(Transform, std::move(Description));
@@ -283,9 +314,9 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     }
     Episode->AttachActors(Result.Value.GetActor(), ParentActorView.GetActor());
     return Episode->SerializeActor(Result.Value);
-  });
+  };
 
-  Server.BindSync("destroy_actor", [this](cr::ActorId ActorId) -> R<void>
+  BIND_SYNC(destroy_actor) << [this](cr::ActorId ActorId) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->FindActor(ActorId);
@@ -298,11 +329,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("internal error: unable to destroy actor");
     }
     return R<void>::Success();
-  });
+  };
 
-  Server.BindSync("attach_actors", [this](
-        cr::ActorId ChildId,
-        cr::ActorId ParentId) -> R<void>
+  BIND_SYNC(attach_actors) << [this](
+      cr::ActorId ChildId,
+      cr::ActorId ParentId) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     auto ChildView = Episode->FindActor(ChildId);
@@ -317,13 +348,13 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     }
     Episode->AttachActors(ChildView.GetActor(), ParentView.GetActor());
     return R<void>::Success();
-  });
+  };
 
   // ~~ Actor physics ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  Server.BindSync("set_actor_location", [this](
-        cr::ActorId ActorId,
-        cr::Location Location) -> R<void>
+  BIND_SYNC(set_actor_location) << [this](
+      cr::ActorId ActorId,
+      cr::Location Location) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->FindActor(ActorId);
@@ -337,11 +368,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     nullptr,
     ETeleportType::TeleportPhysics);
     return R<void>::Success();
-  });
+  };
 
-  Server.BindSync("set_actor_transform", [this](
-        cr::ActorId ActorId,
-        cr::Transform Transform) -> R<void>
+  BIND_SYNC(set_actor_transform) << [this](
+      cr::ActorId ActorId,
+      cr::Transform Transform) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->FindActor(ActorId);
@@ -355,11 +386,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     nullptr,
     ETeleportType::TeleportPhysics);
     return R<void>::Success();
-  });
+  };
 
-  Server.BindSync("set_actor_velocity", [this](
-        cr::ActorId ActorId,
-        cr::Vector3D vector) -> R<void>
+  BIND_SYNC(set_actor_velocity) << [this](
+      cr::ActorId ActorId,
+      cr::Vector3D vector) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->FindActor(ActorId);
@@ -377,11 +408,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     false,
     "None");
     return R<void>::Success();
-  });
+  };
 
-  Server.BindSync("set_actor_angular_velocity", [this](
-        cr::ActorId ActorId,
-        cr::Vector3D vector) -> R<void>
+  BIND_SYNC(set_actor_angular_velocity) << [this](
+      cr::ActorId ActorId,
+      cr::Vector3D vector) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->FindActor(ActorId);
@@ -399,11 +430,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     false,
     "None");
     return R<void>::Success();
-  });
+  };
 
-  Server.BindSync("add_actor_impulse", [this](
-        cr::ActorId ActorId,
-        cr::Vector3D vector) -> R<void>
+  BIND_SYNC(add_actor_impulse) << [this](
+      cr::ActorId ActorId,
+      cr::Vector3D vector) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->FindActor(ActorId);
@@ -421,10 +452,10 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     "None",
     false);
     return R<void>::Success();
-  });
+  };
 
-  Server.BindSync("get_physics_control", [this](
-        cr::Actor Actor) -> R<cr::VehiclePhysicsControl>
+  BIND_SYNC(get_physics_control) << [this](
+      cr::Actor Actor) -> R<cr::VehiclePhysicsControl>
   {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->FindActor(Actor.id);
@@ -439,10 +470,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     }
 
     return cr::VehiclePhysicsControl(Vehicle->GetVehiclePhysicsControl());
-  });
+  };
 
-  Server.BindSync("apply_physics_control", [this](
-        cr::Actor Actor, cr::VehiclePhysicsControl PhysicsControl) -> R<void>
+  BIND_SYNC(apply_physics_control) << [this](
+      cr::Actor Actor,
+      cr::VehiclePhysicsControl PhysicsControl) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->FindActor(Actor.id);
@@ -459,11 +491,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     Vehicle->ApplyVehiclePhysicsControl(FVehiclePhysicsControl(PhysicsControl));
 
     return R<void>::Success();
-  });
+  };
 
-  Server.BindSync("set_actor_simulate_physics", [this](
-        cr::ActorId ActorId,
-        bool bEnabled) -> R<void>
+  BIND_SYNC(set_actor_simulate_physics) << [this](
+      cr::ActorId ActorId,
+      bool bEnabled) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->FindActor(ActorId);
@@ -478,13 +510,13 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     }
     RootComponent->SetSimulatePhysics(bEnabled);
     return R<void>::Success();
-  });
+  };
 
   // ~~ Apply control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  Server.BindSync("apply_control_to_vehicle", [this](
-        cr::ActorId ActorId,
-        cr::VehicleControl Control) -> R<void>
+  BIND_SYNC(apply_control_to_vehicle) << [this](
+      cr::ActorId ActorId,
+      cr::VehicleControl Control) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->FindActor(ActorId);
@@ -499,11 +531,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     }
     Vehicle->ApplyVehicleControl(Control);
     return R<void>::Success();
-  });
+  };
 
-  Server.BindSync("apply_control_to_walker", [this](
-        cr::ActorId ActorId,
-        cr::WalkerControl Control) -> R<void>
+  BIND_SYNC(apply_control_to_walker) << [this](
+      cr::ActorId ActorId,
+      cr::WalkerControl Control) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->FindActor(ActorId);
@@ -523,11 +555,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     }
     Controller->ApplyWalkerControl(Control);
     return R<void>::Success();
-  });
+  };
 
-  Server.BindSync("set_actor_autopilot", [this](
-        cr::ActorId ActorId,
-        bool bEnabled) -> R<void>
+  BIND_SYNC(set_actor_autopilot) << [this](
+      cr::ActorId ActorId,
+      bool bEnabled) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->FindActor(ActorId);
@@ -547,13 +579,13 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     }
     Controller->SetAutopilot(bEnabled);
     return R<void>::Success();
-  });
+  };
 
   // ~~ Traffic lights ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  Server.BindSync("set_traffic_light_state", [this](
-        cr::ActorId ActorId,
-        cr::TrafficLightState trafficLightState) -> R<void>
+  BIND_SYNC(set_traffic_light_state) << [this](
+      cr::ActorId ActorId,
+      cr::TrafficLightState trafficLightState) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->GetActorRegistry().Find(ActorId);
@@ -568,11 +600,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     }
     TrafficLight->SetTrafficLightState(static_cast<ETrafficLightState>(trafficLightState));
     return R<void>::Success();
-  });
+  };
 
-  Server.BindSync("set_traffic_light_green_time", [this](
-        cr::ActorId ActorId,
-        float GreenTime) -> R<void>
+  BIND_SYNC(set_traffic_light_green_time) << [this](
+      cr::ActorId ActorId,
+      float GreenTime) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->GetActorRegistry().Find(ActorId);
@@ -587,11 +619,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     }
     TrafficLight->SetGreenTime(GreenTime);
     return R<void>::Success();
-  });
+  };
 
-  Server.BindSync("set_traffic_light_yellow_time", [this](
-        cr::ActorId ActorId,
-        float YellowTime) -> R<void>
+  BIND_SYNC(set_traffic_light_yellow_time) << [this](
+      cr::ActorId ActorId,
+      float YellowTime) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->GetActorRegistry().Find(ActorId);
@@ -606,11 +638,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     }
     TrafficLight->SetYellowTime(YellowTime);
     return R<void>::Success();
-  });
+  };
 
-  Server.BindSync("set_traffic_light_red_time", [this](
-        cr::ActorId ActorId,
-        float RedTime) -> R<void>
+  BIND_SYNC(set_traffic_light_red_time) << [this](
+      cr::ActorId ActorId,
+      float RedTime) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->GetActorRegistry().Find(ActorId);
@@ -625,11 +657,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     }
     TrafficLight->SetRedTime(RedTime);
     return R<void>::Success();
-  });
+  };
 
-  Server.BindSync("freeze_traffic_light", [this](
-        cr::ActorId ActorId,
-        bool Freeze) -> R<void>
+  BIND_SYNC(freeze_traffic_light) << [this](
+      cr::ActorId ActorId,
+      bool Freeze) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->GetActorRegistry().Find(ActorId);
@@ -644,10 +676,10 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     }
     TrafficLight->SetTimeIsFrozen(Freeze);
     return R<void>::Success();
-  });
+  };
 
-  Server.BindSync("get_group_traffic_lights", [this](
-        const cr::Actor Actor) -> R<std::vector<cr::ActorId>>
+  BIND_SYNC(get_group_traffic_lights) << [this](
+      const cr::Actor Actor) -> R<std::vector<cr::ActorId>>
   {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
@@ -670,47 +702,53 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       }
     }
     return Result;
-  });
+  };
 
   // ~~ Logging and playback ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  Server.BindSync("start_recorder", [this](std::string name) -> R<std::string> {
+  BIND_SYNC(start_recorder) << [this](std::string name) -> R<std::string>
+  {
     REQUIRE_CARLA_EPISODE();
     return R<std::string>(Episode->StartRecorder(name));
-  });
+  };
 
-  Server.BindSync("stop_recorder", [this]() -> R<void> {
+  BIND_SYNC(stop_recorder) << [this]() -> R<void>
+  {
     REQUIRE_CARLA_EPISODE();
     Episode->GetRecorder()->Stop();
     return R<void>::Success();
-  });
+  };
 
-  Server.BindSync("show_recorder_file_info", [this](std::string name) -> R<std::string> {
+  BIND_SYNC(show_recorder_file_info) << [this](std::string name) -> R<std::string>
+  {
     REQUIRE_CARLA_EPISODE();
     return R<std::string>(Episode->GetRecorder()->ShowFileInfo(
         carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
         name));
-  });
+  };
 
-  Server.BindSync("show_recorder_collisions", [this](std::string name, char type1, char type2) -> R<std::string> {
+  BIND_SYNC(show_recorder_collisions) << [this](std::string name, char type1, char type2) -> R<std::string>
+  {
     REQUIRE_CARLA_EPISODE();
     return R<std::string>(Episode->GetRecorder()->ShowFileCollisions(
         carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
         name,
         type1,
         type2));
-  });
+  };
 
-  Server.BindSync("show_recorder_actors_blocked", [this](std::string name, double min_time, double min_distance) -> R<std::string> {
+  BIND_SYNC(show_recorder_actors_blocked) << [this](std::string name, double min_time, double min_distance) -> R<std::string>
+  {
     REQUIRE_CARLA_EPISODE();
     return R<std::string>(Episode->GetRecorder()->ShowFileActorsBlocked(
         carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
         name,
         min_time,
         min_distance));
-  });
+  };
 
-  Server.BindSync("replay_file", [this](std::string name, double start, double duration, uint32_t follow_id) -> R<std::string> {
+  BIND_SYNC(replay_file) << [this](std::string name, double start, double duration, uint32_t follow_id) -> R<std::string>
+  {
     REQUIRE_CARLA_EPISODE();
     return R<std::string>(Episode->GetRecorder()->ReplayFile(
         carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
@@ -718,11 +756,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
         start,
         duration,
         follow_id));
-  });
+  };
 
   // ~~ Draw debug shapes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  Server.BindSync("draw_debug_shape", [this](const cr::DebugShape &shape) -> R<void>
+  BIND_SYNC(draw_debug_shape) << [this](const cr::DebugShape &shape) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     auto *World = Episode->GetWorld();
@@ -730,13 +768,15 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     FDebugShapeDrawer Drawer(*World);
     Drawer.Draw(shape);
     return R<void>::Success();
-  });
+  };
 }
 
 // =============================================================================
 // -- Undef helper macros ------------------------------------------------------
 // =============================================================================
 
+#undef BIND_ASYNC
+#undef BIND_SYNC
 #undef REQUIRE_CARLA_EPISODE
 #undef RESPOND_ERROR_FSTRING
 #undef RESPOND_ERROR
