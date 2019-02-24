@@ -51,6 +51,10 @@ namespace client {
       return _waypoint.GetLaneId();
     }
 
+    std::string GetType() const {
+      return _waypoint.GetType();
+    }
+
     std::vector<SharedPtr<Waypoint>> Next(double distance) const;
 
     SharedPtr<Waypoint> Right() const;

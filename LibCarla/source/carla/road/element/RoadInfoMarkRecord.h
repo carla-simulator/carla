@@ -15,8 +15,6 @@ namespace carla {
 namespace road {
 namespace element {
 
-  // class RoadInfo;
-
   // Each lane within a road cross section can be provided with several road
   // markentries. The road mark information defines the style of the line at the
   // lane’s outer border. For left lanes, this is the left border, for right

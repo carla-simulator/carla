@@ -24,7 +24,7 @@ namespace parser {
       ParseLaneWidth(lane, currentLane.lane_width);
 
       ParseLaneLink(lane.child("link"), currentLane.link);
-      ParseLaneRoadMark(lane.child("roadMark"), currentLane.road_marker);
+      ParseLaneRoadMark(lane, currentLane.road_marker);
 
       out_lane.emplace_back(std::move(currentLane));
     }
@@ -83,40 +83,41 @@ namespace parser {
   void LaneParser::ParseLaneRoadMark(
       const pugi::xml_node &xmlNode,
       std::vector<types::LaneRoadMark> &out_lane_mark) {
-    if (xmlNode == nullptr) {
-      return;
-    }
-    types::LaneRoadMark roadMarker;
 
-    if (xmlNode.attribute("sOffset") != nullptr) {
-      roadMarker.soffset = std::stod(xmlNode.attribute("sOffset").value());
-    }
+    for (pugi::xml_node road_mark = xmlNode.child("roadMark");
+         road_mark; road_mark = road_mark.next_sibling("roadMark")) {
+      types::LaneRoadMark roadMarker;
 
-    if (xmlNode.attribute("width") != nullptr) {
-      roadMarker.width = std::stod(xmlNode.attribute("width").value());
-    }
+      if (road_mark.attribute("sOffset") != nullptr) {
+        roadMarker.soffset = std::stod(road_mark.attribute("sOffset").value());
+      }
 
-    if (xmlNode.attribute("type") != nullptr) {
-      roadMarker.type = xmlNode.attribute("type").value();
-    }
+      if (road_mark.attribute("width") != nullptr) {
+        roadMarker.width = std::stod(road_mark.attribute("width").value());
+      }
 
-    if (xmlNode.attribute("weight") != nullptr) {
-      roadMarker.weigth = xmlNode.attribute("weight").value();
-    }
+      if (road_mark.attribute("type") != nullptr) {
+        roadMarker.type = road_mark.attribute("type").value();
+      }
 
-    if (xmlNode.attribute("material") != nullptr) {
-      roadMarker.color = xmlNode.attribute("material").value();
-    }
+      if (road_mark.attribute("weight") != nullptr) {
+        roadMarker.weigth = road_mark.attribute("weight").value();
+      }
 
-    if (xmlNode.attribute("color") != nullptr) {
-      roadMarker.color = xmlNode.attribute("color").value();
-    }
+      if (road_mark.attribute("material") != nullptr) {
+        roadMarker.color = road_mark.attribute("material").value();
+      }
 
-    if (xmlNode.attribute("laneChange") != nullptr) {
-      roadMarker.lane_change = xmlNode.attribute("laneChange").value();
-    }
+      if (road_mark.attribute("color") != nullptr) {
+        roadMarker.color = road_mark.attribute("color").value();
+      }
 
-    out_lane_mark.emplace_back(roadMarker);
+      if (road_mark.attribute("laneChange") != nullptr) {
+        roadMarker.lane_change = road_mark.attribute("laneChange").value();
+      }
+
+      out_lane_mark.emplace_back(roadMarker);
+    }
   }
 
   void LaneParser::ParseLaneSpeed(

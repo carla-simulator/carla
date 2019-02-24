@@ -37,6 +37,8 @@ namespace element {
       return _lane_id;
     }
 
+    const std::string &GetType() const;
+
     const RoadSegment &GetRoadSegment() const;
 
     bool IsIntersection() const;
