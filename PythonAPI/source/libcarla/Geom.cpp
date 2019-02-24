@@ -12,6 +12,7 @@
 #include <carla/geom/Vector3D.h>
 
 #include <boost/python/implicit.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 #include <ostream>
 
@@ -80,6 +81,10 @@ static void TransformList(const carla::geom::Transform &self, boost::python::lis
 void export_geom() {
   using namespace boost::python;
   namespace cg = carla::geom;
+  class_<std::vector<cg::Vector2D>>("vector_of_vector2D")
+      .def(boost::python::vector_indexing_suite<std::vector<cg::Vector2D>>())
+      .def(self_ns::str(self_ns::self))
+  ;
 
   class_<cg::Vector2D>("Vector2D")
     .def(init<float, float>((arg("x")=0.0f, arg("y")=0.0f)))

@@ -7,8 +7,8 @@
 #pragma once
 
 #include "carla/MsgPack.h"
-#include "carla/rpc/WheelPhysicsControl.h"
 #include "carla/rpc/Vector2D.h"
+#include "carla/rpc/WheelPhysicsControl.h"
 #include <string>
 #include <vector>
 
@@ -18,26 +18,24 @@ namespace rpc {
   public:
 
     explicit VehiclePhysicsControl() = default;
-    
+
     explicit VehiclePhysicsControl(
-      const std::vector<carla::geom::Vector2D>& in_torque_curve,
-      float in_max_rpm,
-      float in_moi,
-      float in_damping_rate_full_throttle,
-      float in_damping_rate_zero_throttle_clutch_engaged,
-      float in_damping_rate_zero_throttle_clutch_disengaged,
+        const std::vector<carla::geom::Vector2D> &in_torque_curve,
+        float in_max_rpm,
+        float in_moi,
+        float in_damping_rate_full_throttle,
+        float in_damping_rate_zero_throttle_clutch_engaged,
+        float in_damping_rate_zero_throttle_clutch_disengaged,
 
-      bool  in_use_gear_autobox,
-      float in_gear_switch_time,
-      float in_clutch_strength,
+        bool in_use_gear_autobox,
+        float in_gear_switch_time,
+        float in_clutch_strength,
 
-      float in_mass,
-      float in_drag_coefficient,
-      geom::Vector3D in_inertia_tensor_scale,
-      geom::Vector3D in_center_of_mass,
-      const std::vector<carla::geom::Vector2D>& in_steering_curve,
-      std::vector<WheelPhysicsControl>& in_wheels
-    ) {
+        float in_mass,
+        float in_drag_coefficient,
+        geom::Vector3D in_center_of_mass,
+        const std::vector<carla::geom::Vector2D> &in_steering_curve,
+        std::vector<WheelPhysicsControl> &in_wheels) {
 
       torque_curve = in_torque_curve;
       max_rpm = in_max_rpm;
@@ -52,7 +50,6 @@ namespace rpc {
 
       mass = in_mass;
       drag_coefficient = in_drag_coefficient;
-      inertia_tensor_scale = in_inertia_tensor_scale;
 
       center_of_mass = in_center_of_mass;
 
@@ -97,44 +94,40 @@ namespace rpc {
 
     float mass = 0.0f;
     float drag_coefficient = 0.0f;
-    geom::Vector3D inertia_tensor_scale;
     geom::Vector3D center_of_mass;
 
     std::vector<geom::Vector2D> steering_curve;
     std::vector<WheelPhysicsControl> wheels;
 
-
     bool operator!=(const VehiclePhysicsControl &rhs) const {
       return
-          max_rpm != rhs.max_rpm ||
-          moi != rhs.moi ||
-          damping_rate_full_throttle != rhs.damping_rate_full_throttle ||
-          damping_rate_zero_throttle_clutch_engaged != rhs.damping_rate_zero_throttle_clutch_engaged ||
-          damping_rate_zero_throttle_clutch_disengaged != rhs.damping_rate_zero_throttle_clutch_disengaged ||
-          
-          use_gear_autobox != rhs.use_gear_autobox ||
-          gear_switch_time != rhs.gear_switch_time ||
-          clutch_strength != rhs.clutch_strength ||
-          
-          mass != rhs.mass ||
-          drag_coefficient != rhs.drag_coefficient ||
-          inertia_tensor_scale != rhs.inertia_tensor_scale ||
-          steering_curve != rhs.steering_curve ||
-          center_of_mass != rhs.center_of_mass ||
-          wheels != rhs.wheels;
+        max_rpm != rhs.max_rpm ||
+        moi != rhs.moi ||
+        damping_rate_full_throttle != rhs.damping_rate_full_throttle ||
+        damping_rate_zero_throttle_clutch_engaged != rhs.damping_rate_zero_throttle_clutch_engaged ||
+        damping_rate_zero_throttle_clutch_disengaged != rhs.damping_rate_zero_throttle_clutch_disengaged ||
+
+        use_gear_autobox != rhs.use_gear_autobox ||
+        gear_switch_time != rhs.gear_switch_time ||
+        clutch_strength != rhs.clutch_strength ||
+
+        mass != rhs.mass ||
+        drag_coefficient != rhs.drag_coefficient ||
+        steering_curve != rhs.steering_curve ||
+        center_of_mass != rhs.center_of_mass ||
+        wheels != rhs.wheels;
     }
 
     bool operator==(const VehiclePhysicsControl &rhs) const {
       return !(*this != rhs);
     }
 
-   #ifdef LIBCARLA_INCLUDED_FROM_UE4
+#ifdef LIBCARLA_INCLUDED_FROM_UE4
 
-    VehiclePhysicsControl(const FVehiclePhysicsControl &Control) {      
+    VehiclePhysicsControl(const FVehiclePhysicsControl &Control) {
       // Engine Setup
       TArray<FRichCurveKey> TorqueCurveKeys = Control.TorqueCurve.GetCopyOfKeys();
-      for(int32 KeyIdx = 0; KeyIdx < TorqueCurveKeys.Num(); KeyIdx++)
-      {
+      for (int32 KeyIdx = 0; KeyIdx < TorqueCurveKeys.Num(); KeyIdx++) {
         geom::Vector2D point(TorqueCurveKeys[KeyIdx].Time, TorqueCurveKeys[KeyIdx].Value);
         torque_curve.push_back(point);
       }
@@ -152,20 +145,18 @@ namespace rpc {
       // Vehicle Setup
       mass = Control.Mass;
       drag_coefficient = Control.DragCoefficient;
-      inertia_tensor_scale = Control.InertiaTensorScale;
-      
+
       TArray<FRichCurveKey> SteeringCurveKeys = Control.SteeringCurve.GetCopyOfKeys();
-      for(int32 KeyIdx = 0; KeyIdx < SteeringCurveKeys.Num(); KeyIdx++)
-      {
-          geom::Vector2D point(SteeringCurveKeys[KeyIdx].Time, SteeringCurveKeys[KeyIdx].Value);
-          steering_curve.push_back(point);
+      for (int32 KeyIdx = 0; KeyIdx < SteeringCurveKeys.Num(); KeyIdx++) {
+        geom::Vector2D point(SteeringCurveKeys[KeyIdx].Time, SteeringCurveKeys[KeyIdx].Value);
+        steering_curve.push_back(point);
       }
 
       center_of_mass = Control.CenterOfMass;
 
       // Wheels Setup
       wheels = std::vector<WheelPhysicsControl>();
-      for( auto Wheel : Control.Wheels) {
+      for (auto Wheel : Control.Wheels) {
         wheels.push_back(WheelPhysicsControl(Wheel));
       }
     }
@@ -175,13 +166,14 @@ namespace rpc {
 
       // Engine Setup
       FRichCurve TorqueCurve;
-      for (auto point : torque_curve)
-        TorqueCurve.AddKey (point.x, point.y);
+      for (auto point : torque_curve) {
+        TorqueCurve.AddKey(point.x, point.y);
+      }
       Control.TorqueCurve = TorqueCurve;
       Control.MaxRPM = max_rpm;
       Control.MOI = moi;
       Control.DampingRateFullThrottle = damping_rate_full_throttle;
-      Control.DampingRateZeroThrottleClutchEngaged= damping_rate_zero_throttle_clutch_engaged;
+      Control.DampingRateZeroThrottleClutchEngaged = damping_rate_zero_throttle_clutch_engaged;
       Control.DampingRateZeroThrottleClutchDisengaged = damping_rate_zero_throttle_clutch_disengaged;
 
       // Transmission Setup
@@ -192,14 +184,14 @@ namespace rpc {
       // Vehicle Setup
       Control.Mass = mass;
       Control.DragCoefficient = drag_coefficient;
-      Control.InertiaTensorScale = inertia_tensor_scale;
 
       // Transmission Setup
       FRichCurve SteeringCurve;
-      for (auto point : steering_curve)
-        SteeringCurve.AddKey (point.x, point.y);
+      for (auto point : steering_curve) {
+        SteeringCurve.AddKey(point.x, point.y);
+      }
       Control.SteeringCurve = SteeringCurve;
-      
+
       Control.CenterOfMass = center_of_mass;
 
       // Wheels Setup
@@ -212,24 +204,22 @@ namespace rpc {
       return Control;
     }
 
-    #endif
+#endif
 
-    MSGPACK_DEFINE_ARRAY(torque_curve, 
-                        max_rpm, 
-                        moi, 
-                        damping_rate_full_throttle, 
-                        damping_rate_zero_throttle_clutch_engaged, 
-                        damping_rate_zero_throttle_clutch_disengaged,
-                        use_gear_autobox,
-                        gear_switch_time,
-                        clutch_strength,
-                        mass,
-                        drag_coefficient,
-                        inertia_tensor_scale,
-                        center_of_mass,
-                        steering_curve,
-                        wheels
-                        );
+    MSGPACK_DEFINE_ARRAY(torque_curve,
+        max_rpm,
+        moi,
+        damping_rate_full_throttle,
+        damping_rate_zero_throttle_clutch_engaged,
+        damping_rate_zero_throttle_clutch_disengaged,
+        use_gear_autobox,
+        gear_switch_time,
+        clutch_strength,
+        mass,
+        drag_coefficient,
+        center_of_mass,
+        steering_curve,
+        wheels);
   };
 
 } // namespace rpc

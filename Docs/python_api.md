@@ -219,7 +219,6 @@
 - `clutch_strength`
 - `mass`
 - `drag_coefficient`
-- `inertia_tensor_scale`
 - `center_of_mass`
 - `steering_curve`
 - `wheels`

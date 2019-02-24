@@ -37,7 +37,7 @@ namespace rpc {
   }
 
   std::ostream &operator<<(std::ostream &out, const WheelPhysicsControl &control) {
-    out << "WheelPhysicsControl(tire_friction=" << control.tire_friction 
+    out << "WheelPhysicsControl(tire_friction=" << control.tire_friction
         << ", damping_rate=" << control.damping_rate
         << ", steer_angle=" << control.steer_angle
         << ", disable_steering=" << boolalpha(control.disable_steering) << ')';
@@ -50,28 +50,46 @@ namespace rpc {
     << ", moi=" << control.moi
     << ", damping_rate_full_throttle=" << control.damping_rate_full_throttle
     << ", damping_rate_zero_throttle_clutch_engaged=" << control.damping_rate_zero_throttle_clutch_engaged
-    << ", damping_rate_zero_throttle_clutch_disengaged=" << control.damping_rate_zero_throttle_clutch_disengaged 
+    << ", damping_rate_zero_throttle_clutch_disengaged=" << control.damping_rate_zero_throttle_clutch_disengaged
     << ", use_gear_autobox=" << boolalpha(control.use_gear_autobox)
     << ", gear_switch_time=" << control.gear_switch_time
     << ", clutch_strength=" << control.clutch_strength
     << ", mass=" << control.mass
     << ", drag_coefficient=" << control.drag_coefficient
-    << ", inertia_tensor_scale=" << control.inertia_tensor_scale 
-    << ", center_of_mass=" << control.center_of_mass 
-    << ", steering_curve=" << control.steering_curve 
+    << ", center_of_mass=" << control.center_of_mass
+    << ", steering_curve=" << control.steering_curve
     << ", wheels=" << control.wheels << ')';
     return out;
   }
 } // namespace rpc
 } // namespace carla
 
+static auto GetVector2DArrayFromList(const boost::python::list &list) {
+  std::vector<carla::geom::Vector2D> v;
 
-
-static auto GetWheels(const carla::rpc::VehiclePhysicsControl &self) {
-  return boost::python::list(self.GetWheels());
+  auto length = boost::python::len(list);
+  v.reserve(length);
+  for (auto i = 0u; i < length; ++i) {
+    boost::python::extract<carla::geom::Vector2D> ext(list[i]);
+    if (ext.check()) {
+      v.push_back(ext);
+    } else {
+      v.push_back(carla::geom::Vector2D{
+        boost::python::extract<float>(list[i][0u]),
+        boost::python::extract<float>(list[i][1u])});
+    }
+  }
+  return v;
 }
 
-static void SetWheels(carla::rpc::VehiclePhysicsControl &self, const boost::python::list &list) {  
+static auto GetWheels(const carla::rpc::VehiclePhysicsControl &self) {
+  const auto &wheels = self.GetWheels();
+  boost::python::object get_iter = boost::python::iterator<std::vector<carla::rpc::WheelPhysicsControl>>();
+  boost::python::object iter = get_iter(wheels);
+  return boost::python::list(iter);
+}
+
+static void SetWheels(carla::rpc::VehiclePhysicsControl &self, const boost::python::list &list) {
   std::vector<carla::rpc::WheelPhysicsControl> wheels;
   auto length = boost::python::len(list);
   for (auto i = 0u; i < length; ++i) {
@@ -81,37 +99,25 @@ static void SetWheels(carla::rpc::VehiclePhysicsControl &self, const boost::pyth
 }
 
 static auto GetTorqueCurve(const carla::rpc::VehiclePhysicsControl &self) {
-  return boost::python::list(self.GetTorqueCurve());
+  const std::vector<carla::geom::Vector2D> &torque_curve = self.GetTorqueCurve();
+  boost::python::object get_iter = boost::python::iterator<const std::vector<carla::geom::Vector2D>>();
+  boost::python::object iter = get_iter(torque_curve);
+  return boost::python::list(iter);
 }
 
-static void SetTorqueCurve(carla::rpc::VehiclePhysicsControl &self, const boost::python::list &list) {  
-  std::vector<carla::geom::Vector2D> torque_curve;
-  auto length = boost::python::len(list);
-  torque_curve.reserve(length);
-  for (auto i = 0u; i < length; ++i) {
-    boost::python::extract<carla::geom::Vector2D> ext(list[i]);
-    if (ext.check())
-      torque_curve.push_back(ext);
-    else {
-      torque_curve.push_back(carla::geom::Vector2D{
-          boost::python::extract<float>(list[i][0u]),
-          boost::python::extract<float>(list[i][1u])});
-    }
-  }
-  self.torque_curve = torque_curve;
+static void SetTorqueCurve(carla::rpc::VehiclePhysicsControl &self, const boost::python::list &list) {
+  self.torque_curve = GetVector2DArrayFromList(list);
 }
 
 static auto GetSteeringCurve(const carla::rpc::VehiclePhysicsControl &self) {
-  return boost::python::list(self.GetSteeringCurve());
+  const std::vector<carla::geom::Vector2D> &steering_curve = self.GetSteeringCurve();
+  boost::python::object get_iter = boost::python::iterator<const std::vector<carla::geom::Vector2D>>();
+  boost::python::object iter = get_iter(steering_curve);
+  return boost::python::list(iter);
 }
 
-static void SetSteeringCurve(carla::rpc::VehiclePhysicsControl &self, const boost::python::list &list) {  
-  std::vector<carla::geom::Vector2D> steering_curve;
-  auto length = boost::python::len(list);
-  for (auto i = 0u; i < length; ++i) {
-    steering_curve.push_back(boost::python::extract<carla::geom::Vector2D &>(list[i]));
-  }
-  self.steering_curve = steering_curve;
+static void SetSteeringCurve(carla::rpc::VehiclePhysicsControl &self, const boost::python::list &list) {
+  self.steering_curve = GetVector2DArrayFromList(list);
 }
 
 boost::python::object VehiclePhysicsControl_init(boost::python::tuple args, boost::python::dict kwargs) {
@@ -131,7 +137,6 @@ boost::python::object VehiclePhysicsControl_init(boost::python::tuple args, boos
 
       "mass",
       "drag_coefficient",
-      "inertia_tensor_scale",
 
       "center_of_mass",
       "steering_curve",
@@ -194,6 +199,11 @@ void export_control() {
     .def(self_ns::str(self_ns::self))
   ;
 
+  class_<std::vector<cr::WheelPhysicsControl>>("vector_of_wheels")
+      .def(boost::python::vector_indexing_suite<std::vector<cr::WheelPhysicsControl>>())
+      .def(self_ns::str(self_ns::self))
+  ;
+
   class_<cr::WheelPhysicsControl>("WheelPhysicsControl")
     .def(init<float, float, float, bool>(
         (arg("tire_friction")=0.0f,
@@ -219,20 +229,19 @@ void export_control() {
     .def_readwrite("damping_rate_full_throttle", &cr::VehiclePhysicsControl::damping_rate_full_throttle)
     .def_readwrite("damping_rate_zero_throttle_clutch_engaged", &cr::VehiclePhysicsControl::damping_rate_zero_throttle_clutch_engaged)
     .def_readwrite("damping_rate_zero_throttle_clutch_disengaged", &cr::VehiclePhysicsControl::damping_rate_zero_throttle_clutch_disengaged)
-    
+
     .def_readwrite("use_gear_autobox", &cr::VehiclePhysicsControl::use_gear_autobox)
     .def_readwrite("gear_switch_time", &cr::VehiclePhysicsControl::gear_switch_time)
     .def_readwrite("clutch_strength", &cr::VehiclePhysicsControl::clutch_strength)
-    
+
     .def_readwrite("mass", &cr::VehiclePhysicsControl::mass)
     .def_readwrite("drag_coefficient", &cr::VehiclePhysicsControl::drag_coefficient)
-    .def_readwrite("inertia_tensor_scale", &cr::VehiclePhysicsControl::inertia_tensor_scale)
-    
+
     .def_readwrite("center_of_mass", &cr::VehiclePhysicsControl::center_of_mass)
-    
+
     .add_property("steering_curve", &GetSteeringCurve, &SetSteeringCurve)
     .add_property("wheels", &GetWheels, &SetWheels)
-    
+
     .def("__eq__", &cr::VehiclePhysicsControl::operator==)
     .def("__ne__", &cr::VehiclePhysicsControl::operator!=)
     .def(self_ns::str(self_ns::self))
