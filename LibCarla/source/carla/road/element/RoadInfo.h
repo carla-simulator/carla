@@ -58,8 +58,8 @@ namespace element {
       return _junction_id >= 0;
     }
 
-    void SetLanesOffset(double offset, double laneOffset) {
-      _lanes_offset.emplace_back(std::pair<double, double>(offset, laneOffset));
+    void SetLanesOffset(double start_pos, double lateral_offset) {
+      _lanes_offset.emplace_back(std::pair<double, double>(start_pos, lateral_offset));
     }
 
     /// @returns A vector of pairs where the first double represents the
