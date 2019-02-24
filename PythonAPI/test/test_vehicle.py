@@ -37,65 +37,73 @@ class testVehicleControl(unittest.TestCase):
         self.assertEqual(c.hand_brake, True)
         self.assertEqual(c.reverse, True)
 
+
 class testVehiclePhysicsControl(unittest.TestCase):
     def test_named_args(self):
 
-      torque_curve_0 = [[0,400], 
-                        [24, 56], 
-                        [24, 56], 
-                        carla.Vector2D(x=1315.47, y=654.445), 
-                        [5729,400]]
+        torque_curve = [[0, 400],
+                        [24, 56],
+                        [24, 56],
+                        [1315.47, 654.445],
+                        [5729, 400]]
 
-      steering_curve_0 = [carla.Vector2D(x=0, y=1),
+        steering_curve = [carla.Vector2D(x=0, y=1),
                           carla.Vector2D(x=20.0, y=0.9),
                           carla.Vector2D(x=63.0868, y=0.703473),
                           carla.Vector2D(x=119.12, y=0.573047)]
 
-      wheels_0 = [carla.WheelPhysicsControl(tire_friction=2, damping_rate=0, steer_angle=30, disable_steering=1),
+        wheels = [carla.WheelPhysicsControl(tire_friction=2, damping_rate=0, steer_angle=30, disable_steering=1),
                   carla.WheelPhysicsControl(tire_friction=2, damping_rate=0, steer_angle=30, disable_steering=1),
                   carla.WheelPhysicsControl(tire_friction=2, damping_rate=0, steer_angle=30, disable_steering=1),
                   carla.WheelPhysicsControl(tire_friction=2, damping_rate=0, steer_angle=30, disable_steering=1)]
 
-      pc = carla.VehiclePhysicsControl(
-          torque_curve=torque_curve_0, 
-          max_rpm=5729, 
-          moi=1, 
-          damping_rate_full_throttle=0.15, 
-          damping_rate_zero_throttle_clutch_engaged=2, 
-          damping_rate_zero_throttle_clutch_disengaged=0.35, 
-          
-          use_gear_autobox=1, 
-          gear_switch_time=0.5, 
-          clutch_strength=10, 
-          
-          mass=5500, 
-          drag_coefficient=0.3, 
-          inertia_tensor_scale=carla.Vector3D(x=0.5, y=1, z=1),
-          
-          center_of_mass=carla.Vector3D(x=0.5, y=1, z=1),
-          steering_curve=steering_curve_0,
-          wheels=wheels_0)
-      
-      error = .001
+        pc = carla.VehiclePhysicsControl(
+            torque_curve=torque_curve,
+            max_rpm=5729,
+            moi=1,
+            damping_rate_full_throttle=0.15,
+            damping_rate_zero_throttle_clutch_engaged=2,
+            damping_rate_zero_throttle_clutch_disengaged=0.35,
 
-      self.assertTrue(abs(pc.max_rpm - 5729) <= error)
-      self.assertTrue(abs(pc.moi - 1) <= error)
-      self.assertTrue(abs(pc.damping_rate_full_throttle - 0.15) <= error)
-      self.assertTrue(abs(pc.damping_rate_zero_throttle_clutch_engaged - 2) <= error)
-      self.assertTrue(abs(pc.damping_rate_zero_throttle_clutch_disengaged - 0.35) <= error)
+            use_gear_autobox=1,
+            gear_switch_time=0.5,
+            clutch_strength=10,
 
-      self.assertTrue(abs(pc.use_gear_autobox - 1) <= error)
-      self.assertTrue(abs(pc.gear_switch_time - 0.5) <= error)
-      self.assertTrue(abs(pc.clutch_strength - 10) <= error)
+            mass=5500,
+            drag_coefficient=0.3,
 
-      self.assertTrue(abs(pc.mass - 5500) <= error)
-      self.assertTrue(abs(pc.drag_coefficient - 0.3) <= error)
+            center_of_mass=carla.Vector3D(x=0.5, y=1, z=1),
+            steering_curve=steering_curve,
+            wheels=wheels)
 
-      self.assertTrue(abs(pc.inertia_tensor_scale.x - 0.5) <= error)
-      self.assertTrue(abs(pc.inertia_tensor_scale.y - 1) <= error)
-      self.assertTrue(abs(pc.inertia_tensor_scale.z - 1) <= error)
+        error = .001
+        for i in range(0,len(torque_curve)):
+            self.assertTrue(abs(pc.torque_curve[i].x - torque_curve[i][0]) <= error)
+            self.assertTrue(abs(pc.torque_curve[i].y - torque_curve[i][1]) <= error)
 
-      self.assertTrue(abs(pc.center_of_mass.x - 0.5) <= error)
-      self.assertTrue(abs(pc.center_of_mass.y - 1) <= error)
-      self.assertTrue(abs(pc.center_of_mass.z - 1) <= error)
-      
+        self.assertTrue(abs(pc.max_rpm - 5729) <= error)
+        self.assertTrue(abs(pc.moi - 1) <= error)
+        self.assertTrue(abs(pc.damping_rate_full_throttle - 0.15) <= error)
+        self.assertTrue(abs(pc.damping_rate_zero_throttle_clutch_engaged - 2) <= error)
+        self.assertTrue(abs(pc.damping_rate_zero_throttle_clutch_disengaged - 0.35) <= error)
+
+        self.assertTrue(abs(pc.use_gear_autobox - 1) <= error)
+        self.assertTrue(abs(pc.gear_switch_time - 0.5) <= error)
+        self.assertTrue(abs(pc.clutch_strength - 10) <= error)
+
+        self.assertTrue(abs(pc.mass - 5500) <= error)
+        self.assertTrue(abs(pc.drag_coefficient - 0.3) <= error)
+
+        self.assertTrue(abs(pc.center_of_mass.x - 0.5) <= error)
+        self.assertTrue(abs(pc.center_of_mass.y - 1) <= error)
+        self.assertTrue(abs(pc.center_of_mass.z - 1) <= error)
+
+        for i in range(0,len(steering_curve)):
+            self.assertTrue(abs(pc.steering_curve[i].x - steering_curve[i].x) <= error)
+            self.assertTrue(abs(pc.steering_curve[i].y - steering_curve[i].y) <= error)
+
+        for i in range(0,len(wheels)):
+            self.assertTrue(abs(pc.wheels[i].tire_friction - wheels[i].tire_friction) <= error)
+            self.assertTrue(abs(pc.wheels[i].damping_rate - wheels[i].damping_rate) <= error)
+            self.assertTrue(abs(pc.wheels[i].steer_angle - wheels[i].steer_angle) <= error)
+            self.assertEqual(pc.wheels[i].disable_steering, wheels[i].disable_steering)

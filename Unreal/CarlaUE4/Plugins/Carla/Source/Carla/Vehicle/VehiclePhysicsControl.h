@@ -51,9 +51,6 @@ struct CARLA_API FVehiclePhysicsControl
   UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
   float DragCoefficient = 0.0f;
 
-  UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
-  FVector InertiaTensorScale;
-
   // Steering Setup
   FRichCurve SteeringCurve;
 

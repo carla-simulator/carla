@@ -13,7 +13,6 @@
 
 #include "Components/BoxComponent.h"
 #include "Engine/CollisionProfile.h"
-#include "PhysicalMaterials/PhysicalMaterial.h"
 // =============================================================================
 // -- Constructor and destructor -----------------------------------------------
 // =============================================================================
@@ -136,8 +135,9 @@ void ACarlaWheeledVehicle::SetHandbrakeInput(const bool Value)
 }
 
 FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl()
-{  
-  UWheeledVehicleMovementComponent4W *Vehicle4W = CastChecked<UWheeledVehicleMovementComponent4W>(GetVehicleMovement());
+{
+  UWheeledVehicleMovementComponent4W *Vehicle4W = CastChecked<UWheeledVehicleMovementComponent4W>(
+      GetVehicleMovement());
 
   FVehiclePhysicsControl PhysicsControl;
 
@@ -146,8 +146,10 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl()
   PhysicsControl.MaxRPM = Vehicle4W->EngineSetup.MaxRPM;
   PhysicsControl.MOI = Vehicle4W->EngineSetup.MOI;
   PhysicsControl.DampingRateFullThrottle = Vehicle4W->EngineSetup.DampingRateFullThrottle;
-  PhysicsControl.DampingRateZeroThrottleClutchEngaged = Vehicle4W->EngineSetup.DampingRateZeroThrottleClutchEngaged;
-  PhysicsControl.DampingRateZeroThrottleClutchDisengaged = Vehicle4W->EngineSetup.DampingRateZeroThrottleClutchDisengaged;
+  PhysicsControl.DampingRateZeroThrottleClutchEngaged =
+      Vehicle4W->EngineSetup.DampingRateZeroThrottleClutchEngaged;
+  PhysicsControl.DampingRateZeroThrottleClutchDisengaged =
+      Vehicle4W->EngineSetup.DampingRateZeroThrottleClutchDisengaged;
 
   // Transmission Setup
   PhysicsControl.bUseGearAutoBox = Vehicle4W->TransmissionSetup.bUseGearAutoBox;
@@ -157,18 +159,19 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl()
   // Vehicle Setup
   PhysicsControl.Mass = Vehicle4W->Mass;
   PhysicsControl.DragCoefficient = Vehicle4W->DragCoefficient;
-  PhysicsControl.InertiaTensorScale = Vehicle4W->InertiaTensorScale;
 
-  // Center of mass
-  FBodyInstance* TargetInstance = Vehicle4W->UpdatedPrimitive->GetBodyInstance();
-  PhysicsControl.CenterOfMass = TargetInstance->GetCOMPosition() + TargetInstance->COMNudge;
+  // Center of mass offset (Center of mass is always zero vector in local
+  // position)
+  UPrimitiveComponent *UpdatedPrimitive = Cast<UPrimitiveComponent>(Vehicle4W->UpdatedComponent);
+  PhysicsControl.CenterOfMass = UpdatedPrimitive->BodyInstance.COMNudge;
 
   // Transmission Setup
   PhysicsControl.SteeringCurve = Vehicle4W->SteeringCurve.EditorCurveData;
 
   // Wheels Setup
   TArray<FWheelPhysicsControl> Wheels;
-  for (auto& Wheel : Vehicle4W->Wheels) {
+  for (auto &Wheel : Vehicle4W->Wheels)
+  {
     FWheelPhysicsControl MyWheel;
 
     MyWheel.TireFriction = Wheel->TireConfig->GetFrictionScale();
@@ -180,24 +183,26 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl()
   }
 
   PhysicsControl.Wheels = Wheels;
-  
+
   return PhysicsControl;
 }
 
 void ACarlaWheeledVehicle::SetVehiclePhysicsControl(const FVehiclePhysicsControl &PhysicsControl)
 {
-  UWheeledVehicleMovementComponent4W *Vehicle4W = CastChecked<UWheeledVehicleMovementComponent4W>(GetVehicleMovement());
+  UWheeledVehicleMovementComponent4W *Vehicle4W = CastChecked<UWheeledVehicleMovementComponent4W>(
+      GetVehicleMovement());
 
   // Engine Setup
   Vehicle4W->EngineSetup.TorqueCurve.EditorCurveData = PhysicsControl.TorqueCurve;
   Vehicle4W->EngineSetup.MaxRPM = PhysicsControl.MaxRPM;
 
   Vehicle4W->EngineSetup.MOI = PhysicsControl.MOI;
-  
-  Vehicle4W->EngineSetup.DampingRateFullThrottle = PhysicsControl.DampingRateFullThrottle;
-  Vehicle4W->EngineSetup.DampingRateZeroThrottleClutchEngaged = PhysicsControl.DampingRateZeroThrottleClutchEngaged;
-  Vehicle4W->EngineSetup.DampingRateZeroThrottleClutchDisengaged = PhysicsControl.DampingRateZeroThrottleClutchDisengaged;
 
+  Vehicle4W->EngineSetup.DampingRateFullThrottle = PhysicsControl.DampingRateFullThrottle;
+  Vehicle4W->EngineSetup.DampingRateZeroThrottleClutchEngaged =
+      PhysicsControl.DampingRateZeroThrottleClutchEngaged;
+  Vehicle4W->EngineSetup.DampingRateZeroThrottleClutchDisengaged =
+      PhysicsControl.DampingRateZeroThrottleClutchDisengaged;
 
   // Transmission Setup
   Vehicle4W->TransmissionSetup.bUseGearAutoBox = PhysicsControl.bUseGearAutoBox;
@@ -207,18 +212,17 @@ void ACarlaWheeledVehicle::SetVehiclePhysicsControl(const FVehiclePhysicsControl
   // Vehicle Setup
   Vehicle4W->Mass = PhysicsControl.Mass;
   Vehicle4W->DragCoefficient = PhysicsControl.DragCoefficient;
-  Vehicle4W->InertiaTensorScale = PhysicsControl.InertiaTensorScale;
-  
-  FBodyInstance* TargetInstance = Vehicle4W->UpdatedPrimitive->GetBodyInstance();
-  
-  // We can only set the offset of the center of mass
-  TargetInstance->COMNudge = PhysicsControl.CenterOfMass - TargetInstance->GetCOMPosition();
+
+  // Center of mass
+  UPrimitiveComponent *UpdatedPrimitive = Cast<UPrimitiveComponent>(Vehicle4W->UpdatedComponent);
+  UpdatedPrimitive->BodyInstance.COMNudge = PhysicsControl.CenterOfMass;
 
   // Transmission Setup
   Vehicle4W->SteeringCurve.EditorCurveData = PhysicsControl.SteeringCurve;
 
   // Wheels Setup
-  for (unsigned int i = 0; i < PhysicsControl.Wheels.Num(); ++i) {
+  for (unsigned int i = 0; i < PhysicsControl.Wheels.Num(); ++i)
+  {
 
     Vehicle4W->Wheels[i]->DampingRate = PhysicsControl.Wheels[i].DampingRate;
     Vehicle4W->Wheels[i]->SteerAngle = PhysicsControl.Wheels[i].SteerAngle;
@@ -226,7 +230,6 @@ void ACarlaWheeledVehicle::SetVehiclePhysicsControl(const FVehiclePhysicsControl
     Vehicle4W->Wheels[i]->TireConfig->SetFrictionScale(PhysicsControl.Wheels[i].TireFriction);
 
   }
-  
-	Vehicle4W->RecreatePhysicsState();
 
+  Vehicle4W->RecreatePhysicsState();
 }
