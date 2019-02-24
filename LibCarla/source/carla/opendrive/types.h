@@ -67,9 +67,13 @@ namespace types {
     double width = 0.0;
 
     std::string type;
-    std::string weigth;
+    std::string weigth = "standard";
 
-    std::string color;
+    // See OpenDRIVE Format Specification, Rev. 1.4
+    // Doc No.: VI2014.107 (5.3.7.2.1.1.4 Road Mark Record)
+    std::string material = "standard";
+
+    std::string color = "white";
     std::string lane_change = "none";
   };
 

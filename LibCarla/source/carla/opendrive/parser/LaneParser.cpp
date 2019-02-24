@@ -104,6 +104,10 @@ namespace parser {
       roadMarker.weigth = xmlNode.attribute("weight").value();
     }
 
+    if (xmlNode.attribute("material") != nullptr) {
+      roadMarker.color = xmlNode.attribute("material").value();
+    }
+
     if (xmlNode.attribute("color") != nullptr) {
       roadMarker.color = xmlNode.attribute("color").value();
     }
