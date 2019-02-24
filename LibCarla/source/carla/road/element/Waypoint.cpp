@@ -108,6 +108,10 @@ namespace element {
     return geom::Transform(dp.location, rot);
   }
 
+  const std::string &Waypoint::GetType() const {
+    return _map->GetData().GetRoad(_road_id)->GetInfo<RoadInfoLane>(_dist)->getLane(_lane_id)->_type;
+  }
+
   const RoadSegment &Waypoint::GetRoadSegment() const {
     const auto *road_segment = _map->GetData().GetRoad(_road_id);
     DEBUG_ASSERT(road_segment != nullptr);
@@ -127,7 +131,7 @@ namespace element {
 
   std::pair<RoadInfoMarkRecord, RoadInfoMarkRecord> Waypoint::GetMarkRecord() const {
     const auto lane_id_right = _lane_id;
-    // If the lane is bigger than 0, is on the backward lane,
+    // If the lane is bigger than 0, is a backward lane,
     // so the inner lane marking is the opposite one
     const auto lane_id_left = _lane_id <= 0 ? _lane_id + 1 : _lane_id - 1;
 

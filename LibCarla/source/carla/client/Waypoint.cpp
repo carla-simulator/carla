@@ -72,7 +72,7 @@ namespace client {
     auto c_left = static_cast<Waypoint::LaneChange>(lane_change_left);
 
     if (_mark_record.first.GetLaneId() > 0) {
-      // road goes backward
+      // if road goes backward
       if (c_right == Waypoint::LaneChange::Right) {
         c_right = Waypoint::LaneChange::Left;
       } else if (c_right == Waypoint::LaneChange::Left) {
@@ -81,7 +81,7 @@ namespace client {
     }
 
     if (_mark_record.second.GetLaneId() > 0) {
-      // road goes backward
+      // if road goes backward
       if (c_left == Waypoint::LaneChange::Right) {
         c_left = Waypoint::LaneChange::Left;
       } else if (c_left == Waypoint::LaneChange::Left) {

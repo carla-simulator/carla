@@ -17,8 +17,8 @@ namespace element {
   class RoadInfoLane;
   class RoadGeneralInfo;
   class RoadInfoVelocity;
-  class RoadInfoMarkRecord;
   class RoadElevationInfo;
+  class RoadInfoMarkRecord;
 
   class RoadInfoVisitor {
   public:

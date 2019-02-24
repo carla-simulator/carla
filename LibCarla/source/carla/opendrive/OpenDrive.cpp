@@ -46,30 +46,6 @@ namespace opendrive {
     }
   }
 
-  // static void test_fnc_generate_junctions_data(
-  //     opendrive::types::OpenDriveData &openDriveRoad,
-  //     std::vector<carla::road::lane_junction_t> &out_data) {
-  //   for (size_t i = 0; i < openDriveRoad.junctions.size(); ++i) {
-  //     for (size_t j = 0; j < openDriveRoad.junctions[i].connections.size(); ++j) {
-  //       carla::road::lane_junction_t junctionData;
-  //       junctionData.junction_id = openDriveRoad.junctions[i].attributes.id;
-
-  //       const int incommingRoad = openDriveRoad.junctions[i].connections[j].attributes.incoming_road;
-  //       const int connectingRoad = openDriveRoad.junctions[i].connections[j].attributes.connecting_road;
-
-  //       junctionData.incomming_road = incommingRoad;
-  //       junctionData.connection_road = connectingRoad;
-
-  //       for (size_t k = 0; k < openDriveRoad.junctions[i].connections[j].links.size(); ++k) {
-  //         junctionData.from_lane.emplace_back(openDriveRoad.junctions[i].connections[j].links[k].from);
-  //         junctionData.to_lane.emplace_back(openDriveRoad.junctions[i].connections[j].links[k].to);
-  //       }
-
-  //       out_data.emplace_back(junctionData);
-  //     }
-  //   }
-  // }
-
   // HACK(Andrei):
   static int fnc_get_first_driving_line(opendrive::types::RoadInformation *roadInfo, int id = 0) {
     if (roadInfo == nullptr) {
@@ -111,21 +87,19 @@ namespace opendrive {
     mapBuilder.SetTrafficSignData(open_drive_road.trafficsigns);
 
     // Generate road and junction information
-    using junction_data_t = std::map<int, std::map<int, std::vector<carla::road::lane_junction_t>>>;
     using road_data_t = std::map<int, carla::opendrive::types::RoadInformation *>;
+    using junction_data_t = std::map<int, std::map<int, std::vector<carla::road::lane_junction_t>>>;
 
-    // std::vector<carla::road::lane_junction_t> junctionInfo;
-    // test_fnc_generate_junctions_data(open_drive_road, junctionInfo);
-    // mapBuilder.SetJunctionInformation(junctionInfo);
+    road_data_t road_data;
+    junction_data_t junctions_data;
 
-    junction_data_t junctionsData;
-    road_data_t roadData;
-
-    fnc_generate_roads_data(open_drive_road, roadData);
-    fnc_generate_junctions_data(open_drive_road, junctionsData);
+    // generates a map<road_id, opendrive::types::RoadInformation>
+    fnc_generate_roads_data(open_drive_road, road_data);
+    // generates a map<junction_id, opendrive::types::RoadInformation>
+    fnc_generate_junctions_data(open_drive_road, junctions_data);
 
     // Transforma data for the MapBuilder
-    for (road_data_t::iterator it = roadData.begin(); it != roadData.end(); ++it) {
+    for (road_data_t::iterator it = road_data.begin(); it != road_data.end(); ++it) {
       carla::road::element::RoadSegmentDefinition road_segment(it->first);
       carla::road::element::RoadInfoLane *RoadInfoLanes =
           road_segment.MakeInfo<carla::road::element::RoadInfoLane>();
@@ -135,8 +109,8 @@ namespace opendrive {
       RoadGeneralInfo->SetJunctionId(it->second->attributes.junction);
 
       for (size_t i = 0; i < it->second->lanes.lane_offset.size(); ++i) {
-        double s = it->second->lanes.lane_offset[i].s;
-        double a = it->second->lanes.lane_offset[i].a;
+        const double s = it->second->lanes.lane_offset[i].s;
+        const double a = it->second->lanes.lane_offset[i].a;
         RoadGeneralInfo->SetLanesOffset(s, a);
       }
 
@@ -162,8 +136,8 @@ namespace opendrive {
           if (left_lanes.link->successor_id != 0) {
             left_lanes_go_to_successor[left_lanes.attributes.id] = left_lanes.link->successor_id;
           }
-          if (left_lanes.link->predecessor_id != 0) {
             left_lanes_go_to_predecessor[left_lanes.attributes.id] = left_lanes.link->predecessor_id;
+          if (left_lanes.link->predecessor_id != 0) {
           }
         }
       }
@@ -252,7 +226,7 @@ namespace opendrive {
       if (it->second->road_link.successor != nullptr) {
         if (it->second->road_link.successor->element_type == "junction") {
           std::vector<carla::road::lane_junction_t> &options =
-              junctionsData[it->second->road_link.successor->id][it->first];
+              junctions_data[it->second->road_link.successor->id][it->first];
           for (size_t i = 0; i < options.size(); ++i) {
             road_segment.AddSuccessorID(options[i].connection_road, options[i].contact_point == "start");
 
@@ -261,7 +235,7 @@ namespace opendrive {
               int to_lane = options[i].to_lane[j];
 
               if (is_end) {
-                to_lane = fnc_get_first_driving_line(roadData[options[i].connection_road], to_lane);
+                to_lane = fnc_get_first_driving_line(road_data[options[i].connection_road], to_lane);
               }
 
               road_segment.AddNextLaneInfo(options[i].from_lane[j], to_lane, options[i].connection_road);
@@ -275,10 +249,6 @@ namespace opendrive {
             road_segment.AddNextLaneInfo(lanes.first, lanes.second, it->second->road_link.successor->id);
           }
 
-          // for (auto &&lanes : center_lanes_go_to_successor) {
-          //   road_segment.AddNextLaneInfo(lanes.first, lanes.second, it->second->road_link.successor->id);
-          // }
-
           for (auto &&lanes : left_lanes_go_to_successor) {
             road_segment.AddNextLaneInfo(lanes.first, lanes.second, it->second->road_link.successor->id);
           }
@@ -288,7 +258,7 @@ namespace opendrive {
       if (it->second->road_link.predecessor != nullptr) {
         if (it->second->road_link.predecessor->element_type == "junction") {
           std::vector<carla::road::lane_junction_t> &options =
-              junctionsData[it->second->road_link.predecessor->id][it->first];
+              junctions_data[it->second->road_link.predecessor->id][it->first];
           for (size_t i = 0; i < options.size(); ++i) {
             road_segment.AddPredecessorID(options[i].connection_road, options[i].contact_point == "start");
 
@@ -297,7 +267,7 @@ namespace opendrive {
               int to_lane = options[i].to_lane[j];
 
               if (is_end) {
-                to_lane = fnc_get_first_driving_line(roadData[options[i].connection_road], to_lane);
+                to_lane = fnc_get_first_driving_line(road_data[options[i].connection_road], to_lane);
               }
 
               road_segment.AddPrevLaneInfo(options[i].from_lane[j], to_lane, options[i].connection_road);
@@ -341,66 +311,53 @@ namespace opendrive {
 
         // Create a new RoadInfoMarkRecord for each lane section. Each RoadInfoMarkRecord
         // will contain the actual distance from the start of the RoadSegment
-
-        int current_lane_id = 1;
-
         for (auto &&lane_section_left : lane_section.left) {
           for (auto &&road_marker : lane_section_left.road_marker) {
-              road_segment.MakeInfo<carla::road::element::RoadInfoMarkRecord>(
-                start_position + road_marker.soffset,
-                current_lane_id,
-                road_marker.type,
-                road_marker.weigth,
-                road_marker.color,
-                // See OpenDRIVE Format Specification, Rev. 1.4
-                // Doc No.: VI2014.107 (5.3.7.2.1.1.4 Road Mark Record)
-                "standard", // material
-                road_marker.width,
-                string_2_lane_change_enum(road_marker.lane_change),
-                // @todo: "carla/opendrive/types.h" must be extended to parse the height
-                0.0);
+            road_segment.MakeInfo<carla::road::element::RoadInfoMarkRecord>(
+              start_position + road_marker.soffset,
+              lane_section_left.attributes.id,
+              road_marker.type,
+              road_marker.weigth,
+              road_marker.color,
+              road_marker.material,
+              road_marker.width,
+              string_2_lane_change_enum(road_marker.lane_change),
+              // @todo: "carla/opendrive/types.h" must be extended to parse the height
+              0.0);
           }
-          ++current_lane_id;
         }
 
-        current_lane_id = 0;
-        // @todo: there must be only one center lane, so maybe use [0]
+        // @todo: there must be only one central lane, so maybe use [0]
         for (auto &&lane_section_center : lane_section.center) {
           for (auto &&road_marker : lane_section_center.road_marker) {
-              road_segment.MakeInfo<carla::road::element::RoadInfoMarkRecord>(
-                start_position + road_marker.soffset,
-                current_lane_id,
-                road_marker.type,
-                road_marker.weigth,
-                road_marker.color,
-                // See OpenDRIVE Format Specification, Rev. 1.4
-                // Doc No.: VI2014.107 (5.3.7.2.1.1.4 Road Mark Record)
-                "standard", // material
-                road_marker.width,
-                string_2_lane_change_enum(road_marker.lane_change),
-                // @todo: "carla/opendrive/types.h" must be extended to parse the height
-                0.0);
+            road_segment.MakeInfo<carla::road::element::RoadInfoMarkRecord>(
+              start_position + road_marker.soffset,
+              lane_section_center.attributes.id,
+              road_marker.type,
+              road_marker.weigth,
+              road_marker.color,
+              road_marker.material,
+              road_marker.width,
+              string_2_lane_change_enum(road_marker.lane_change),
+              // @todo: "carla/opendrive/types.h" must be extended to parse the height
+              0.0);
           }
         }
 
-        current_lane_id = -1;
         for (auto &&lane_section_right : lane_section.right) {
           for (auto &&road_marker : lane_section_right.road_marker) {
-              road_segment.MakeInfo<carla::road::element::RoadInfoMarkRecord>(
-                start_position + road_marker.soffset,
-                current_lane_id,
-                road_marker.type,
-                road_marker.weigth,
-                road_marker.color,
-                // See OpenDRIVE Format Specification, Rev. 1.4
-                // Doc No.: VI2014.107 (5.3.7.2.1.1.4 Road Mark Record)
-                "standard", // material
-                road_marker.width,
-                string_2_lane_change_enum(road_marker.lane_change),
-                // @todo: "carla/opendrive/types.h" must be extended to parse the height
-                0.0);
+            road_segment.MakeInfo<carla::road::element::RoadInfoMarkRecord>(
+              start_position + road_marker.soffset,
+              lane_section_right.attributes.id,
+              road_marker.type,
+              road_marker.weigth,
+              road_marker.color,
+              road_marker.material,
+              road_marker.width,
+              string_2_lane_change_enum(road_marker.lane_change),
+              // @todo: "carla/opendrive/types.h" must be extended to parse the height
+              0.0);
           }
-          --current_lane_id;
         }
       }
 
