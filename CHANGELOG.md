@@ -40,6 +40,7 @@
   * Fixed static objects present in the map were marked as "movable"
   * Fixed BP_MultipleFloor, tweaked offset in BaseFloor to adjust meshes between them
   * New traffic signs assets: one-way, no-turn, more speed limits, do not enter, arrow floors, Michigan left, and lane end
+  * Extended the Waypoint API with `lane_change`, `lane_type`, `right_lane()` and `left_lane()`
   * Expose traffic sign's trigger volumes on Python API
   * Updated the Python API to enable the user to acquire a traffic light's pole index and all traffic lights in it's group
 

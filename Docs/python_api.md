@@ -263,6 +263,7 @@
 - `road_id`
 - `lane_id`
 - `lane_change`
+- `lane_type`
 - `next(distance)`
 - `right_lane()`
 - `left_lane()`
