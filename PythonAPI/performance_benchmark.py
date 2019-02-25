@@ -1,19 +1,53 @@
+#!/usr/bin/env python
+
+# Copyright (c) 2019 Intel Labs.
+# authors: German Ros (german.ros@intel.com)
+#
+# This work is licensed under the terms of the MIT license.
+# For a copy, see <https://opensource.org/licenses/MIT>.
+
+"""
+This is a benchmarking script for CARLA. It serves to analyze the performance of CARLA in different scenarios and
+conditions.
+
+Please, make sure you install the following dependencies:
+
+    * python -m pip install -U py-cpuinfo
+    * python -m pip install psutil
+    * python -m pip install python-tr
+
+
+"""
+
 import argparse
+import cpuinfo
 import numpy as np
+import pygame
+import psutil
+import shutil
+import subprocess
+from tr import tr
 
 import carla
 
-list_towns = ['Town1', 'Town2', 'Town3', 'Town4', 'Town5']
-number_locations = 5
-number_ticks = 100
+# ======================================================================================================================
+# -- Global variables. So sorry... -------------------------------------------------------------------------------------
+# ======================================================================================================================
+pygame_clock = pygame.time.Clock()
+current_fps = 0
+
+# ======================================================================================================================
+# -- Tunable parameters ------------------------------------------------------------------------------------------------
+# ======================================================================================================================
+list_towns = ['Town01', 'Town02', 'Town03', 'Town04', 'Town05']
+number_locations = 3
+number_ticks = 50
 actor_list = ['vehicle.*']
 
 
 def weathers():
     list_weathers = [ carla.WeatherParameters.ClearNoon,
                       carla.WeatherParameters.CloudyNoon,
-                      carla.WeatherParameters.MidRainSunset,
-                      carla.WeatherParameters.HardRainSunset,
                       carla.WeatherParameters.SoftRainSunset
                       ]
 
@@ -55,35 +89,43 @@ def create_ego_vehicle(world, ego_vehicle, spawn_point, list_sensor_spec):
         ego_vehicle.set_transform(spawn_point)
         sensors = None
     else:
+        sensors = []
         blueprint_library = world.get_blueprint_library()
         blueprint = blueprint_library.filter('vehicle.lincoln.mkz2017')[0]
         ego_vehicle = world.try_spawn_actor(blueprint, spawn_point)
 
         # setup sensors
         for sensor_spec in list_sensor_spec:
-            bp = blueprint_library.find(sensor_spec['id'])
-            if sensor_spec['id'].startswith('sensor.camera'):
+            bp = blueprint_library.find(sensor_spec['type'])
+            if sensor_spec['type'].startswith('sensor.camera'):
                 bp.set_attribute('image_size_x', str(sensor_spec['width']))
                 bp.set_attribute('image_size_y', str(sensor_spec['height']))
                 bp.set_attribute('fov', str(sensor_spec['fov']))
                 sensor_location = carla.Location(x=sensor_spec['x'], y=sensor_spec['y'], z=sensor_spec['z'])
                 sensor_rotation = carla.Rotation(pitch=sensor_spec['pitch'], roll=sensor_spec['roll'], yaw=sensor_spec['yaw'])
-            elif sensor_spec['id'].startswith('sensor.lidar'):
+            elif sensor_spec['type'].startswith('sensor.lidar'):
                 bp.set_attribute('range', '5000')
                 sensor_location = carla.Location(x=sensor_spec['x'], y=sensor_spec['y'], z=sensor_spec['z'])
                 sensor_rotation = carla.Rotation(pitch=sensor_spec['pitch'], roll=sensor_spec['roll'], yaw=sensor_spec['yaw'])
-            elif sensor_spec['id'].startswith('sensor.other.gnss'):
+            elif sensor_spec['type'].startswith('sensor.other.gnss'):
                 sensor_location = carla.Location(x=sensor_spec['x'], y=sensor_spec['y'], z=sensor_spec['z'])
                 sensor_rotation = carla.Rotation()
 
             # create sensor
             sensor_transform = carla.Transform(sensor_location, sensor_rotation)
-            sensors = world.spawn_actor(bp, sensor_transform, ego_vehicle)
+            sensor = world.spawn_actor(bp, sensor_transform, ego_vehicle)
+            sensors.append(sensor)
 
     return ego_vehicle, sensors
 
 
+# ======================================================================================================================
+# -- Benchmarking functions --------------------------------------------------------------------------------------------
+# ======================================================================================================================
+
 def run_benchmark(world, sensor_specs_list, number_locations, number_ticks, actor_list):
+    global current_fps
+
     spawn_points = world.get_map().get_spawn_points()
     n = min(number_locations, len(spawn_points))
 
@@ -99,12 +141,10 @@ def run_benchmark(world, sensor_specs_list, number_locations, number_ticks, acto
 
         ticks = 0
         while ticks < number_ticks:
-            if world.wait_for_tick(10.0):
+            if not world.wait_for_tick(10.0):
                 continue
 
-            # TODO: get real  FPS
-            current_fps = 0
-
+            print("== Samples {} / {}".format(ticks, number_ticks))
             list_fps.append(current_fps)
             ticks += 1
 
@@ -117,35 +157,77 @@ def run_benchmark(world, sensor_specs_list, number_locations, number_ticks, acto
 
 def compute_mean_std(list_values):
     np_values = np.array(list_values)
+
+    import pdb; pdb.set_trace()
     mean = np.mean(np_values)
     std = np.std(np_values)
 
     return mean, std
 
 
-def serialize_records(records, filename):
+def serialize_records(records, system_specs, filename):
     with open(filename, 'w+') as fd:
         s = "| Sensors | Town | Weather | Samples | Mean fps | Std fps |\n"
-        s += "| ----------- | ----------- | ----------- | ----------- | ----------- | ----------- |"
+        s += "| ----------- | ----------- | ----------- | ----------- | ----------- | ----------- |\n"
         fd.write(s)
 
-        for record in records:
-            s = "| {} | {} | {} | {} | {:06.2f} | {:06.2f} |".format(record['sensors'],
-                                                                   record['town'],
-                                                                   record['weather'],
-                                                                   record['samples'],
-                                                                   record['fps_mean'],
-                                                                   record['fps_std'])
-            fd.write(s)
+        for sensor_key in records.keys():
+            list_records = records[sensor_key]
+            for record in list_records:
+                s = "| {} | {} | {} | {} | {:03.2f} | {:03.2f} |\n".format(record['sensors'],
+                                                                       record['town'],
+                                                                       record['weather'],
+                                                                       record['samples'],
+                                                                       record['fps_mean'],
+                                                                       record['fps_std'])
+                fd.write(s)
+
+        s = "Table: {}.\n".format(system_specs)
+        fd.write(s)
+
+
+def get_system_specs():
+    str_system = ""
+    cpu_info = cpuinfo.get_cpu_info()
+    str_system += "CPU {} {}. ".format(cpu_info['brand'], cpu_info['family'])
+
+    memory_info = psutil.virtual_memory()
+    str_system += "{:03.2f} GB RAM memory. ".format(memory_info.total / (1024*1024*1024))
+
+    nvidia_cmd = shutil.which("nvidia-smi")
+    if nvidia_cmd:
+        gpu_info = subprocess.check_output([nvidia_cmd])
+        gpu_info_ext = subprocess.check_output([nvidia_cmd, '-L'])
+        for line in gpu_info.decode('ascii').split("\n"):
+            if "CarlaUE4" in line:
+                gpu_id = tr(' ', '', line, 's').split(" ")[1]
+                for gpu_line in gpu_info_ext.decode('ascii').split("\n"):
+                    gpu_line_id = gpu_line.split(" ")[1].split(":")[0]
+                    if gpu_line_id == gpu_id:
+                        gpu_model = gpu_line.split(":")[1].split("(")[0]
+                        str_system += "GPU {}".format(gpu_model)
+                        break
+
+    return str_system
+
+
+def on_world_tick(timestamp):
+    global pygame_clock, current_fps
+
+    pygame_clock.tick()
+    current_fps = pygame_clock.get_fps()
+
 
 
 def main(args):
-    client = carla.Client('localhost', 2000)
+    client = carla.Client(args.host, int(args.port))
     client.set_timeout(10.0)
+    pygame.init()
 
-    records = []
+    records = {}
     for town in list_towns:
         world = client.load_world(town)
+        world.on_tick(on_world_tick)
         for weather in weathers():
             world.set_weather(weather)
             for sensors in define_sensors():
@@ -161,12 +243,15 @@ def main(args):
                           'town': town,
                           'samples': number_locations*number_ticks,
                           'fps_mean': mean,
-                          'fps_std': mean}
+                          'fps_std': std}
 
-                records.append(record)
+                if sensor_str not in records:
+                    records[sensor_str] = []
+                records[sensor_str].append(record)
                 print(record)
 
-    serialize_records(records, args.file)
+    system_specs = get_system_specs()
+    serialize_records(records, system_specs, args.file)
 
     return 0
 
