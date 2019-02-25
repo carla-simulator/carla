@@ -778,7 +778,7 @@ def game_loop(args):
 
     finally:
 
-        if (world.recording_enabled):
+        if (world and world.recording_enabled):
             client.stop_recorder()
 
         if world is not None:
