@@ -53,7 +53,7 @@ namespace detail {
 
     std::vector<rpc::Actor> GetActors();
 
-    Timestamp WaitForState(time_duration timeout) {
+    boost::optional<Timestamp> WaitForState(time_duration timeout) {
       return _timestamp.WaitFor(timeout);
     }
 
