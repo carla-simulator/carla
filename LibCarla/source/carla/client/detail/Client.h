@@ -78,9 +78,8 @@ namespace detail {
 
     std::vector<rpc::Actor> GetActorsById(const std::vector<actor_id_type> &ids);
 
-    rpc::VehiclePhysicsControl GetVehiclePhysicsControl(const int &actorId) const;
+    rpc::VehiclePhysicsControl GetVehiclePhysicsControl(const rpc::Actor &actor) const;
 
-    void SetVehiclePhysicsControl(const int &actorId, const rpc::VehiclePhysicsControl &physicsControl);
 
     rpc::Actor SpawnActor(
         const rpc::ActorDescription &description,
@@ -116,6 +115,10 @@ namespace detail {
     void ApplyControlToWalker(
         const rpc::Actor &walker,
         const rpc::WalkerControl &control);
+
+    void ApplyPhysicsControlToVehicle(
+        const rpc::Actor &vehicle,
+        const rpc::VehiclePhysicsControl &physicsControl);
 
     void SetTrafficLightState(
         const rpc::Actor &trafficLight,

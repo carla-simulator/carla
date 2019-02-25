@@ -371,41 +371,39 @@ void FTheNewCarlaServer::FPimpl::BindActions()
 
 
  Server.BindSync("get_physics_control", [this](
-        int ActorId) -> R<cr::VehiclePhysicsControl>
+        cr::Actor Actor) -> R<cr::VehiclePhysicsControl>
   {
     REQUIRE_CARLA_EPISODE();
-    
-    auto ActorView = Episode->FindActor(ActorId);
+    auto ActorView = Episode->FindActor(Actor.id);
     if (!ActorView.IsValid())
     {
-      RESPOND_ERROR("unable to apply control: actor not found");
+      RESPOND_ERROR("unable to get actor physics control: actor not found");
     }
     auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
     if (Vehicle == nullptr)
     {
       RESPOND_ERROR("unable to apply control: actor is not a vehicle");
     }
-    
+
     return cr::VehiclePhysicsControl(Vehicle->GetVehiclePhysicsControl());
   });
 
-  Server.BindSync("set_physics_control", [this](
-        int ActorId, cr::VehiclePhysicsControl PhysicsControl) -> R<void>
+  Server.BindSync("apply_physics_control", [this](
+        cr::Actor Actor, cr::VehiclePhysicsControl PhysicsControl) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
-    
-    auto ActorView = Episode->FindActor(ActorId);
+    auto ActorView = Episode->FindActor(Actor.id);
     if (!ActorView.IsValid())
     {
-      RESPOND_ERROR("unable to apply control: actor not found");
+      RESPOND_ERROR("unable to apply actor physics control: actor not found");
     }
     auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
     if (Vehicle == nullptr)
     {
       RESPOND_ERROR("unable to apply control: actor is not a vehicle");
     }
-    
-    Vehicle->SetVehiclePhysicsControl(FVehiclePhysicsControl(PhysicsControl));
+
+    Vehicle->ApplyVehiclePhysicsControl(FVehiclePhysicsControl(PhysicsControl));
 
     return R<void>::Success();
   });

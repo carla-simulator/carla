@@ -135,13 +135,10 @@ namespace detail {
       _client.SetWeatherParameters(weather);
     }
 
-    rpc::VehiclePhysicsControl GetVehiclePhysicsControl(const int &actorId) const {
-      return _client.GetVehiclePhysicsControl(actorId);
+    rpc::VehiclePhysicsControl GetVehiclePhysicsControl(const Vehicle &vehicle) const {
+      return _client.GetVehiclePhysicsControl(vehicle.Serialize());
     }
 
-    void SetVehiclePhysicsControl(const int &actorId, const rpc::VehiclePhysicsControl &physicsControl) {
-      _client.SetVehiclePhysicsControl(actorId, physicsControl);
-    }
     /// @}
     // =========================================================================
     /// @name General operations with actors
@@ -232,6 +229,9 @@ namespace detail {
       _client.ApplyControlToWalker(walker.Serialize(), control);
     }
 
+    void ApplyPhysicsControlToVehicle(Vehicle &vehicle, const rpc::VehiclePhysicsControl &physicsControl) {
+      _client.ApplyPhysicsControlToVehicle(vehicle.Serialize(), physicsControl);
+    }
     /// @}
     // =========================================================================
     /// @name Operations with sensors
