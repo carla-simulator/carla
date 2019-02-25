@@ -158,7 +158,6 @@ def run_benchmark(world, sensor_specs_list, number_locations, number_ticks, acto
 def compute_mean_std(list_values):
     np_values = np.array(list_values)
 
-    import pdb; pdb.set_trace()
     mean = np.mean(np_values)
     std = np.std(np_values)
 
