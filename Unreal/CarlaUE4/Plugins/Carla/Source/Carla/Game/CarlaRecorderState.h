@@ -30,7 +30,7 @@ class CarlaRecorderStates
 
 public:
 
-  void AddState(const CarlaRecorderStateTrafficLight &State);
+  void Add(const CarlaRecorderStateTrafficLight &State);
 
   void Clear(void);
 
@@ -39,7 +39,4 @@ public:
 private:
 
   std::vector<CarlaRecorderStateTrafficLight> StatesTrafficLights;
-
-  void WriteStatesTrafficLight(std::ofstream &OutFile);
-
 };

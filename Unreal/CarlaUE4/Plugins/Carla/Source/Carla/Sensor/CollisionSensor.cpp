@@ -69,6 +69,6 @@ void ACollisionSensor::OnCollisionEvent(
         carla::geom::Vector3D{NormalImpulse.X, NormalImpulse.Y, NormalImpulse.Z});
     // record the collision event
     if (Episode->GetRecorder()->IsEnabled())
-      Episode->GetRecorder()->AddEventCollision(Actor, OtherActor);
+      Episode->GetRecorder()->AddCollision(Actor, OtherActor);
   }
 }
