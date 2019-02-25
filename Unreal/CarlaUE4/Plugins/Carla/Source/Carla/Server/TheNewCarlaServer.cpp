@@ -382,7 +382,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
     if (Vehicle == nullptr)
     {
-      RESPOND_ERROR("unable to apply control: actor is not a vehicle");
+      RESPOND_ERROR("unable to get actor physics control: actor is not a vehicle");
     }
 
     return cr::VehiclePhysicsControl(Vehicle->GetVehiclePhysicsControl());
@@ -400,7 +400,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
     if (Vehicle == nullptr)
     {
-      RESPOND_ERROR("unable to apply control: actor is not a vehicle");
+      RESPOND_ERROR("unable to apply actor physics control: actor is not a vehicle");
     }
 
     Vehicle->ApplyVehiclePhysicsControl(FVehiclePhysicsControl(PhysicsControl));

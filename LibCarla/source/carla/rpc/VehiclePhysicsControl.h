@@ -35,29 +35,23 @@ namespace rpc {
         float in_drag_coefficient,
         geom::Vector3D in_center_of_mass,
         const std::vector<carla::geom::Vector2D> &in_steering_curve,
-        std::vector<WheelPhysicsControl> &in_wheels) {
+        std::vector<WheelPhysicsControl> &in_wheels)
+      : torque_curve(in_torque_curve),
+        max_rpm(in_max_rpm),
+        moi(in_moi),
+        damping_rate_full_throttle(in_damping_rate_full_throttle),
+        damping_rate_zero_throttle_clutch_engaged(in_damping_rate_zero_throttle_clutch_engaged),
+        damping_rate_zero_throttle_clutch_disengaged(in_damping_rate_zero_throttle_clutch_disengaged),
+        use_gear_autobox(in_use_gear_autobox),
+        gear_switch_time(in_gear_switch_time),
+        clutch_strength(in_clutch_strength),
+        mass(in_mass),
+        drag_coefficient(in_drag_coefficient),
+        center_of_mass(in_center_of_mass),
+        steering_curve(in_steering_curve),
+        wheels(in_wheels) {}
 
-      torque_curve = in_torque_curve;
-      max_rpm = in_max_rpm;
-      moi = in_moi;
-      damping_rate_full_throttle = in_damping_rate_full_throttle;
-      damping_rate_zero_throttle_clutch_engaged = in_damping_rate_zero_throttle_clutch_engaged;
-      damping_rate_zero_throttle_clutch_disengaged = in_damping_rate_zero_throttle_clutch_disengaged;
-
-      use_gear_autobox = in_use_gear_autobox;
-      gear_switch_time = in_gear_switch_time;
-      clutch_strength = in_clutch_strength;
-
-      mass = in_mass;
-      drag_coefficient = in_drag_coefficient;
-
-      center_of_mass = in_center_of_mass;
-
-      steering_curve = in_steering_curve;
-      wheels = in_wheels;
-    }
-
-    const std::vector<WheelPhysicsControl> GetWheels() const {
+    const std::vector<WheelPhysicsControl> &GetWheels() const {
       return wheels;
     }
 
@@ -65,7 +59,7 @@ namespace rpc {
       wheels = in_wheels;
     }
 
-    const std::vector<geom::Vector2D> GetTorqueCurve() const {
+    const std::vector<geom::Vector2D> &GetTorqueCurve() const {
       return torque_curve;
     }
 
@@ -73,7 +67,7 @@ namespace rpc {
       torque_curve = in_torque_curve;
     }
 
-    const std::vector<geom::Vector2D> GetSteeringCurve() const {
+    const std::vector<geom::Vector2D> &GetSteeringCurve() const {
       return steering_curve;
     }
 
