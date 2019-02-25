@@ -1,5 +1,5 @@
 // Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
-
+#if WITH_EDITOR
 #pragma once
 
 #include "Commandlets/Commandlet.h"
@@ -132,3 +132,5 @@ private:
   UPROPERTY()
   TArray<FAssetData> MapContents;
 };
+
+#endif

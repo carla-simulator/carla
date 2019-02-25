@@ -1,9 +1,11 @@
 // Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
 
+#if WITH_EDITOR
+
 #include "MapProcessCommandlet.h"
 #include "GameFramework/WorldSettings.h"
 #include "UObject/MetaData.h"
-#include "CommandletPluginPrivate.h"
+//#include "CommandletPluginPrivate.h"
 
 UMapProcessCommandlet::UMapProcessCommandlet()
 {
@@ -74,7 +76,7 @@ void UMapProcessCommandlet::MoveMeshes(const FString &SrcPath, const TArray<FStr
       if (SrcPath.Len())
       {
         const FString CurrentPackageName = MeshAsset->GetOutermost()->GetName();
-        UE_LOG(LogCommandletPlugin, Display, TEXT("DANIEL: %s"), *CurrentPackageName);
+        //UE_LOG(LogCommandletPlugin, Display, TEXT("DANIEL: %s"), *CurrentPackageName);
 
         // This is a relative operation
         if (!ensure(CurrentPackageName.StartsWith(SrcPath)))
@@ -254,3 +256,5 @@ int32 UMapProcessCommandlet::Main(const FString &Params)
 
   return 0;
 }
+
+#endif
