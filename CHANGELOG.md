@@ -2,6 +2,7 @@
 
   * Fixed `manual_control.py` and `no_rendering_mode.py` to prevent crashes when used in "no rendering mode"
   * Refactored `no_rendering_mode.py` to improve performance and interface
+  * Exposed minimum physics control parameters for vehicles and wheels.
 
 ## CARLA 0.9.3
 
