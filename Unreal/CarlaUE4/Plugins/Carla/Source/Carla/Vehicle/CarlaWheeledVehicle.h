@@ -98,7 +98,7 @@ public:
 
   FVehiclePhysicsControl GetVehiclePhysicsControl();
 
-  void SetVehiclePhysicsControl(const FVehiclePhysicsControl &PhysicsControl);
+  void ApplyVehiclePhysicsControl(const FVehiclePhysicsControl &PhysicsControl);
 
   /// @}
   // ===========================================================================

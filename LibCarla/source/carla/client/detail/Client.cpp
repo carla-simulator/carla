@@ -120,14 +120,14 @@ namespace detail {
     return _pimpl->CallAndWait<return_t>("get_actors_by_id", ids);
   }
 
-  rpc::VehiclePhysicsControl Client::GetVehiclePhysicsControl(const int &actorId) const {
-    return _pimpl->CallAndWait<carla::rpc::VehiclePhysicsControl>("get_physics_control", actorId);
+  rpc::VehiclePhysicsControl Client::GetVehiclePhysicsControl(const rpc::Actor &actor) const {
+    return _pimpl->CallAndWait<carla::rpc::VehiclePhysicsControl>("get_physics_control", actor);
   }
 
-  void Client::SetVehiclePhysicsControl(
-      const int &actorId,
+  void Client::ApplyPhysicsControlToVehicle(
+      const rpc::Actor &actor,
       const rpc::VehiclePhysicsControl &physicsControl) {
-    return _pimpl->AsyncCall("set_physics_control", actorId, physicsControl);
+    return _pimpl->AsyncCall("apply_physics_control", actor, physicsControl);
   }
 
   rpc::Actor Client::SpawnActor(

@@ -25,8 +25,19 @@ namespace client {
     }
   }
 
+  void Vehicle::ApplyPhysicsControl(const PhysicsControl &physics_control) {
+    if (physics_control != _physics_control) {
+      GetEpisode().Lock()->ApplyPhysicsControlToVehicle(*this, physics_control);
+      _physics_control = physics_control;
+    }
+  }
+
   Vehicle::Control Vehicle::GetControl() const {
     return GetEpisode().Lock()->GetActorDynamicState(*this).state.vehicle_data.control;
+  }
+
+  Vehicle::PhysicsControl Vehicle::GetPhysicsControl() const {
+    return GetEpisode().Lock()->GetVehiclePhysicsControl(*this);
   }
 
   float Vehicle::GetSpeedLimit() const {
@@ -47,12 +58,5 @@ namespace client {
     return boost::static_pointer_cast<TrafficLight>(actor);
   }
 
-  rpc::VehiclePhysicsControl Vehicle::GetPhysicsControl() const {
-    return GetEpisode().Lock()->GetVehiclePhysicsControl(GetId());
-  }
-
-  void Vehicle::SetPhysicsControl(const rpc::VehiclePhysicsControl &physics_control) {
-    return GetEpisode().Lock()->SetVehiclePhysicsControl(GetId(), physics_control);
-  }
 } // namespace client
 } // namespace carla

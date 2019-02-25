@@ -187,7 +187,7 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl()
   return PhysicsControl;
 }
 
-void ACarlaWheeledVehicle::SetVehiclePhysicsControl(const FVehiclePhysicsControl &PhysicsControl)
+void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsControl &PhysicsControl)
 {
   UWheeledVehicleMovementComponent4W *Vehicle4W = CastChecked<UWheeledVehicleMovementComponent4W>(
       GetVehicleMovement());
@@ -199,10 +199,8 @@ void ACarlaWheeledVehicle::SetVehiclePhysicsControl(const FVehiclePhysicsControl
   Vehicle4W->EngineSetup.MOI = PhysicsControl.MOI;
 
   Vehicle4W->EngineSetup.DampingRateFullThrottle = PhysicsControl.DampingRateFullThrottle;
-  Vehicle4W->EngineSetup.DampingRateZeroThrottleClutchEngaged =
-      PhysicsControl.DampingRateZeroThrottleClutchEngaged;
-  Vehicle4W->EngineSetup.DampingRateZeroThrottleClutchDisengaged =
-      PhysicsControl.DampingRateZeroThrottleClutchDisengaged;
+  Vehicle4W->EngineSetup.DampingRateZeroThrottleClutchEngaged = PhysicsControl.DampingRateZeroThrottleClutchEngaged;
+  Vehicle4W->EngineSetup.DampingRateZeroThrottleClutchDisengaged = PhysicsControl.DampingRateZeroThrottleClutchDisengaged;
 
   // Transmission Setup
   Vehicle4W->TransmissionSetup.bUseGearAutoBox = PhysicsControl.bUseGearAutoBox;
