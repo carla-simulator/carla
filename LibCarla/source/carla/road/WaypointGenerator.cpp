@@ -76,8 +76,10 @@ namespace road {
       const Waypoint &waypoint,
       double distance) {
     auto &map = waypoint._map;
-    const auto this_lane_id = waypoint.GetLaneId();
     const auto this_road_id = waypoint.GetRoadId();
+    const auto this_lane_id = waypoint.GetLaneId();
+
+    DEBUG_ASSERT(this_lane_id != 0);
 
     double distance_on_next_segment;
 
@@ -107,72 +109,58 @@ namespace road {
 
   boost::optional<Waypoint> WaypointGenerator::GetRight(const Waypoint &waypoint) {
     auto &map = waypoint._map;
-    const auto this_lane_id = waypoint.GetLaneId();
     const auto this_road_id = waypoint.GetRoadId();
+    const auto this_lane_id = waypoint.GetLaneId();
 
-    int new_lane_id = 0;
+    DEBUG_ASSERT(this_lane_id != 0);
 
+    int new_lane_id;
     if (this_lane_id <= 0) {
-      // road goes forward
-      // decrease the lane id while avoiding returning lane 0
+      // road goes forward: decrease the lane id while avoiding returning lane 0
       new_lane_id = this_lane_id - 1 == 0 ? -1 : this_lane_id - 1;
     } else {
-      // road goes backward
-      // increasing the lane id while avoiding returning lane 0
+      // road goes backward: increasing the lane id while avoiding returning lane 0
       new_lane_id = this_lane_id + 1 == 0 ? 1 : this_lane_id + 1;
     }
 
     // check if that lane id exists on this distance
     const auto road = map->GetData().GetRoad(this_road_id);
     const auto mark_record_vector = road->GetRoadInfoMarkRecord(waypoint._dist);
-    bool found = false;
     for (auto &&mark_record : mark_record_vector) {
       // find if the lane id exists
-      if (mark_record->GetLaneId() == this_lane_id) {
-        found = true;
-        break;
+      if (mark_record->GetLaneId() == new_lane_id) {
+        return Waypoint(map, this_road_id, new_lane_id, waypoint._dist);
       }
     }
-
-    if (found) {
-      return Waypoint(map, this_road_id, new_lane_id, waypoint._dist);
-    }
-    return boost::optional<Waypoint>{};
+    return boost::optional<Waypoint>();
   }
 
   boost::optional<Waypoint> WaypointGenerator::GetLeft(const Waypoint &waypoint) {
     auto &map = waypoint._map;
-      const auto this_lane_id = waypoint.GetLaneId();
     const auto this_road_id = waypoint.GetRoadId();
+    const auto this_lane_id = waypoint.GetLaneId();
 
-    int new_lane_id = 0;
+    DEBUG_ASSERT(this_lane_id != 0);
 
+    int new_lane_id;
     if (this_lane_id > 0) {
-      // road goes backward
-      // decrease the lane id while avoiding returning lane 0
+      // road goes backward: decrease the lane id while avoiding returning lane 0
       new_lane_id = this_lane_id - 1 == 0 ? -1 : this_lane_id - 1;
     } else {
-      // road goes forward
-      // increasing the lane id while avoiding returning lane 0
+      // road goes forward: increasing the lane id while avoiding returning lane 0
       new_lane_id = this_lane_id + 1 == 0 ? 1 : this_lane_id + 1;
     }
 
     // check if that lane id exists on this distance
     const auto road = map->GetData().GetRoad(this_road_id);
     const auto mark_record_vector = road->GetRoadInfoMarkRecord(waypoint._dist);
-    bool found = false;
     for (auto &&mark_record : mark_record_vector) {
       // find if the lane id exists
-      if (mark_record->GetLaneId() == this_lane_id) {
-        found = true;
-        break;
+      if (mark_record->GetLaneId() == new_lane_id) {
+        return Waypoint(map, this_road_id, new_lane_id, waypoint._dist);
       }
     }
-
-    if (found) {
-      return Waypoint(map, this_road_id, new_lane_id, waypoint._dist);
-    }
-    return boost::optional<Waypoint>{};
+    return boost::optional<Waypoint>();
   }
 
   std::vector<Waypoint> WaypointGenerator::GenerateAll(
