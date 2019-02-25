@@ -53,7 +53,6 @@ namespace client {
   private:
 
     Control _control;
-    PhysicsControl _physics_control;
   };
 
 } // namespace client

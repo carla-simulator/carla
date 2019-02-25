@@ -17,9 +17,9 @@ namespace rpc {
   class VehiclePhysicsControl {
   public:
 
-    explicit VehiclePhysicsControl() = default;
+    VehiclePhysicsControl() = default;
 
-    explicit VehiclePhysicsControl(
+    VehiclePhysicsControl(
         const std::vector<carla::geom::Vector2D> &in_torque_curve,
         float in_max_rpm,
         float in_moi,
@@ -81,22 +81,22 @@ namespace rpc {
       steering_curve = in_steering_curve;
     }
 
-    std::vector<geom::Vector2D> torque_curve;
-    float max_rpm = 0.0f;
-    float moi = 0.0f;
-    float damping_rate_full_throttle = 0.0f;
-    float damping_rate_zero_throttle_clutch_engaged = 0.0f;
-    float damping_rate_zero_throttle_clutch_disengaged = 0.0f;
+    std::vector<geom::Vector2D> torque_curve = {geom::Vector2D(0.0f, 500.0f), geom::Vector2D(10000.0f, 500.0f)};
+    float max_rpm = 10000.0f;
+    float moi = 1.0f;
+    float damping_rate_full_throttle = 0.15f;
+    float damping_rate_zero_throttle_clutch_engaged = 2.0f;
+    float damping_rate_zero_throttle_clutch_disengaged = 0.35f;
 
     bool use_gear_autobox = true;
-    float gear_switch_time = 0.0f;
-    float clutch_strength = 0.0f;
+    float gear_switch_time = 0.5f;
+    float clutch_strength = 10.0f;
 
-    float mass = 0.0f;
-    float drag_coefficient = 0.0f;
+    float mass = 10000.0f;
+    float drag_coefficient = 0.3f;
     geom::Vector3D center_of_mass;
 
-    std::vector<geom::Vector2D> steering_curve;
+    std::vector<geom::Vector2D> steering_curve = {geom::Vector2D(0.0f, 1.0f), geom::Vector2D(10.0f, 0.5f)};
     std::vector<WheelPhysicsControl> wheels;
 
     bool operator!=(const VehiclePhysicsControl &rhs) const {
@@ -126,6 +126,7 @@ namespace rpc {
 
     VehiclePhysicsControl(const FVehiclePhysicsControl &Control) {
       // Engine Setup
+      torque_curve = std::vector<carla::geom::Vector2D>();
       TArray<FRichCurveKey> TorqueCurveKeys = Control.TorqueCurve.GetCopyOfKeys();
       for (int32 KeyIdx = 0; KeyIdx < TorqueCurveKeys.Num(); KeyIdx++) {
         geom::Vector2D point(TorqueCurveKeys[KeyIdx].Time, TorqueCurveKeys[KeyIdx].Value);
@@ -146,6 +147,7 @@ namespace rpc {
       mass = Control.Mass;
       drag_coefficient = Control.DragCoefficient;
 
+      steering_curve = std::vector<carla::geom::Vector2D>();
       TArray<FRichCurveKey> SteeringCurveKeys = Control.SteeringCurve.GetCopyOfKeys();
       for (int32 KeyIdx = 0; KeyIdx < SteeringCurveKeys.Num(); KeyIdx++) {
         geom::Vector2D point(SteeringCurveKeys[KeyIdx].Time, SteeringCurveKeys[KeyIdx].Value);
