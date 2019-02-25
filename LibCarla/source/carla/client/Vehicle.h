@@ -21,7 +21,7 @@ namespace client {
     using Control = rpc::VehicleControl;
     using PhysicsControl = rpc::VehiclePhysicsControl;
 
-    explicit Vehicle(ActorInitializer init) : Actor(std::move(init)) {}
+    explicit Vehicle(ActorInitializer init);
 
     using ActorState::GetBoundingBox;
 
@@ -69,6 +69,8 @@ namespace client {
 
 
   private:
+
+    const bool _is_control_sticky;
 
     Control _control;
   };

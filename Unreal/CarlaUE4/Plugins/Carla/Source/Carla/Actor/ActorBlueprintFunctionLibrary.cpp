@@ -370,6 +370,13 @@ void UActorBlueprintFunctionLibrary::MakeVehicleDefinition(
     Definition.Variations.Emplace(Colors);
   }
 
+  FActorVariation StickyControl;
+  StickyControl.Id = TEXT("sticky_control");
+  StickyControl.Type = EActorAttributeType::Bool;
+  StickyControl.bRestrictToRecommended = false;
+  StickyControl.RecommendedValues.Emplace(TEXT("true"));
+  Definition.Variations.Emplace(StickyControl);
+
   Definition.Attributes.Emplace(FActorAttribute{
     TEXT("object_type"),
     EActorAttributeType::String,

@@ -140,6 +140,10 @@ void AWheeledVehicleAIController::Tick(const float DeltaTime)
   {
     Vehicle->ApplyVehicleControl(AutopilotControl);
   }
+  else if (!bControlIsSticky)
+  {
+    Vehicle->ApplyVehicleControl(FVehicleControl{});
+  }
 }
 
 // =============================================================================

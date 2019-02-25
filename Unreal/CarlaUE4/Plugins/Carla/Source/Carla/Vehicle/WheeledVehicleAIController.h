@@ -83,6 +83,19 @@ public:
 
   /// @}
   // ===========================================================================
+  /// @name Control options
+  // ===========================================================================
+  /// @{
+
+  UFUNCTION(Category = "Wheeled Vehicle Controller", BlueprintCallable)
+  void SetStickyControl(bool bEnabled)
+  {
+    bControlIsSticky = bEnabled;
+    UE_LOG(LogTemp, Warning, TEXT("StickyControl = %s"), bControlIsSticky ? TEXT("True") : TEXT("False"));
+  }
+
+  /// @}
+  // ===========================================================================
   /// @name Road map
   // ===========================================================================
   /// @{
@@ -249,6 +262,9 @@ private:
 
   UPROPERTY(VisibleAnywhere)
   bool bAutopilotEnabled = false;
+
+  UPROPERTY(VisibleAnywhere)
+  bool bControlIsSticky = true;
 
   UPROPERTY(VisibleAnywhere)
   float SpeedLimit = 30.0f;
