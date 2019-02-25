@@ -21,7 +21,7 @@ public:
 
   ~FTheNewCarlaServer();
 
-  FDataMultiStream Start(uint16_t Port);
+  FDataMultiStream Start(uint16_t RPCPort, uint16_t StreamingPort);
 
   void NotifyBeginEpisode(UCarlaEpisode &Episode);
 
