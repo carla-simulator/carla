@@ -59,9 +59,9 @@ class FTheNewCarlaServer::FPimpl
 {
 public:
 
-  FPimpl(uint16_t port)
-    : Server(port),
-      StreamingServer(port + 1u),
+  FPimpl(uint16_t RPCPort, uint16_t StreamingPort)
+    : Server(RPCPort),
+      StreamingServer(StreamingPort),
       BroadcastStream(StreamingServer.MakeMultiStream())
   {
     BindActions();
@@ -821,10 +821,11 @@ FTheNewCarlaServer::FTheNewCarlaServer() : Pimpl(nullptr) {}
 
 FTheNewCarlaServer::~FTheNewCarlaServer() {}
 
-FDataMultiStream FTheNewCarlaServer::Start(uint16_t Port)
+FDataMultiStream FTheNewCarlaServer::Start(uint16_t RPCPort, uint16_t StreamingPort)
 {
-  UE_LOG(LogCarlaServer, Log, TEXT("Initializing rpc-server at port %d"), Port);
-  Pimpl = MakeUnique<FPimpl>(Port);
+  Pimpl = MakeUnique<FPimpl>(RPCPort, StreamingPort);
+  StreamingPort = Pimpl->StreamingServer.GetLocalEndpoint().port();
+  UE_LOG(LogCarlaServer, Log, TEXT("Initialized CarlaServer: Ports(rpc=%d, streaming=%d)"), RPCPort, StreamingPort);
   return Pimpl->BroadcastStream;
 }
 

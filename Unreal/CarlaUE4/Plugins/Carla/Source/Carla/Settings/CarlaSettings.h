@@ -114,6 +114,9 @@ public:
   UPROPERTY(Category = "CARLA Server", VisibleAnywhere, meta = (EditCondition = bUseNetworking))
   uint32 WorldPort = 2000u;
 
+  /// Optional setting for the secondary port.
+  TOptional<uint32> StreamingPort;
+
   /// Time-out in milliseconds for the networking operations.
   UPROPERTY(Category = "CARLA Server", VisibleAnywhere, meta = (EditCondition = bUseNetworking))
   uint32 ServerTimeOut = 10000u;
