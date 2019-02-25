@@ -262,9 +262,6 @@ void ACarlaRecorder::AddCollision(AActor *Actor1, AActor *Actor2)
     }
     Collision.DatabaseId2 = Episode->GetActorRegistry().Find(Actor2).GetActorId();
 
-    // location of collision
-    Collision.Location = Actor1->GetTransform().GetTranslation();
-
     Collisions.Add(std::move(Collision));
   }
 }
