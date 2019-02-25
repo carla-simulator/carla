@@ -64,7 +64,7 @@ namespace rpc {
 } // namespace rpc
 } // namespace carla
 
-static auto GetVector2DArrayFromList(const boost::python::list &list) {
+static auto GetVectorOfVector2DFromList(const boost::python::list &list) {
   std::vector<carla::geom::Vector2D> v;
 
   auto length = boost::python::len(list);
@@ -106,7 +106,7 @@ static auto GetTorqueCurve(const carla::rpc::VehiclePhysicsControl &self) {
 }
 
 static void SetTorqueCurve(carla::rpc::VehiclePhysicsControl &self, const boost::python::list &list) {
-  self.torque_curve = GetVector2DArrayFromList(list);
+  self.torque_curve = GetVectorOfVector2DFromList(list);
 }
 
 static auto GetSteeringCurve(const carla::rpc::VehiclePhysicsControl &self) {
@@ -117,7 +117,7 @@ static auto GetSteeringCurve(const carla::rpc::VehiclePhysicsControl &self) {
 }
 
 static void SetSteeringCurve(carla::rpc::VehiclePhysicsControl &self, const boost::python::list &list) {
-  self.steering_curve = GetVector2DArrayFromList(list);
+  self.steering_curve = GetVectorOfVector2DFromList(list);
 }
 
 boost::python::object VehiclePhysicsControl_init(boost::python::tuple args, boost::python::dict kwargs) {
@@ -206,9 +206,9 @@ void export_control() {
 
   class_<cr::WheelPhysicsControl>("WheelPhysicsControl")
     .def(init<float, float, float, bool>(
-        (arg("tire_friction")=0.0f,
-         arg("damping_rate")=0.0f,
-         arg("steer_angle")=0.0f,
+        (arg("tire_friction")=2.0f,
+         arg("damping_rate")=0.25f,
+         arg("steer_angle")=70.0f,
          arg("disable_steering")=false)))
     .def_readwrite("tire_friction", &cr::WheelPhysicsControl::tire_friction)
     .def_readwrite("damping_rate", &cr::WheelPhysicsControl::damping_rate)

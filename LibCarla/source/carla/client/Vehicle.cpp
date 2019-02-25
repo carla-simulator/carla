@@ -26,10 +26,7 @@ namespace client {
   }
 
   void Vehicle::ApplyPhysicsControl(const PhysicsControl &physics_control) {
-    if (physics_control != _physics_control) {
-      GetEpisode().Lock()->ApplyPhysicsControlToVehicle(*this, physics_control);
-      _physics_control = physics_control;
-    }
+    GetEpisode().Lock()->ApplyPhysicsControlToVehicle(*this, physics_control);
   }
 
   Vehicle::Control Vehicle::GetControl() const {
