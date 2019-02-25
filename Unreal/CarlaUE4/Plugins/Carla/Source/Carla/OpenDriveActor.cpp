@@ -308,6 +308,7 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
       FString AddTrafficLightCommand = FString::Printf(TEXT("AddTrafficLightPole %s"),
             *SpawnedTrafficLight->GetName());
       SpawnedTrafficGroup->CallFunctionByNameWithArguments(*AddTrafficLightCommand, ar, NULL, true);
+      PersistentTrafficLights.Push(SpawnedTrafficGroup);
       SpawnedTrafficLight->CallFunctionByNameWithArguments(TEXT("InitData"), ar, NULL, true);
       for (TrafficBoxComponent TfBoxComponent : CurrentTrafficLight.box_areas)
       {
@@ -326,6 +327,7 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
             TLBoxRot.Roll,
             TLBoxRot.Yaw);
         SpawnedTrafficLight->CallFunctionByNameWithArguments(*BoxCommand, ar, NULL, true);
+        PersistentTrafficLights.Push(SpawnedTrafficLight);
       }
     }
   }
@@ -371,6 +373,7 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
           SpawnParams);
       break;
     }
+    PersistentTrafficSigns.Push(SignActor);
     for (TrafficBoxComponent TfBoxComponent : CurrentTrafficSign.box_areas)
       {
         FVector TLBoxPos = FVector(TfBoxComponent.x_pos,
@@ -403,6 +406,22 @@ void AOpenDriveActor::RemoveRoutes()
     }
   }
   RoutePlanners.Empty();
+  const int tl_num = PersistentTrafficLights.Num();
+  for (int i = 0; i < tl_num; i++)
+  {
+    if(PersistentTrafficLights[i] != nullptr) {
+      PersistentTrafficLights[i]->Destroy();
+    }
+  }
+  PersistentTrafficLights.Empty();
+  const int ts_num = PersistentTrafficSigns.Num();
+  for (int i = 0; i < ts_num; i++)
+  {
+    if(PersistentTrafficSigns[i] != nullptr) {
+      PersistentTrafficSigns[i]->Destroy();
+    }
+  }
+  PersistentTrafficSigns.Empty();
 }
 
 void AOpenDriveActor::DebugRoutes() const

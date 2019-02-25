@@ -46,6 +46,12 @@ private:
   TArray<AVehicleSpawnPoint *> VehicleSpawners;
 
   UPROPERTY()
+  TArray<AActor *> PersistentTrafficLights;
+
+  UPROPERTY()
+  TArray<AActor *> PersistentTrafficSigns;
+
+  UPROPERTY()
   TSubclassOf<class AActor> TrafficLightBlueprintClass;
 
   UPROPERTY()
