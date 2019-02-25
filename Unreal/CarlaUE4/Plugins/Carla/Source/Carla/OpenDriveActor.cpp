@@ -174,8 +174,6 @@ void AOpenDriveActor::BuildRoutes()
 
 void AOpenDriveActor::BuildRoutes(FString MapName)
 {
-  GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("hi")));
-
   using CarlaMath = carla::geom::Math;
   using IdType = carla::road::element::id_type;
   using Waypoint = carla::road::element::Waypoint;

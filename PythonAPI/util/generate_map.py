@@ -9,10 +9,8 @@
 """Generate map from FBX"""
 
 import os
-import sys
 import json
 import subprocess
-import glob
 import shutil
 import argparse
 
@@ -21,8 +19,6 @@ if os.name == 'nt':
     sys_name = 'Win64'
 elif os.name == 'posix':
     sys_name = 'Linux'
-
-error = ""
 
 
 def main():
@@ -36,31 +32,30 @@ def main():
 def get_map_names():
     maps = []
     dirname = os.getcwd()
-    map_place = os.path.join(dirname, "..", "Unreal", "CarlaUE4", "Content", "Carla", "ExportedMaps")
+    map_place = os.path.join(dirname, "..", "..", "Unreal", "CarlaUE4", "Content", "Carla", "ExportedMaps")
     for filename in os.listdir(map_place):
         if filename.endswith('.umap'):
             maps.append(filename)
     return maps
 
 def generate_all_maps_but_list(existent_maps):
-    global error
     map_name = ""
     dirname = os.getcwd()
-    fbx_place = os.path.join(dirname, "..", "RoadRunnerFiles")
+    fbx_place = os.path.join(dirname, "..", "..", "RoadRunnerFiles")
     for x in os.walk(fbx_place):
-            map_name = os.path.basename(x[0])
-            if map_name != "RoadRunnerFiles":
-                if not any(ext in "%s.umap" % map_name for ext in existent_maps):
-                    print("Found map in fbx folder: %s" % map_name)
-                    import_assets_commandlet(map_name)
-                    #move_uassets(map_name)
-                    print("Generating map asset for %s" % map_name)
-                    generate_map(map_name)
-                    print("Cleaning up directories")
-                    cleanup_assets(map_name)
-                    print("Finished %s" % map_name)
-                else:
-                    error += "WARNING: Found %s map in Content folder, skipping. Use \"--force\" to override\n" % map_name
+        map_name = os.path.basename(x[0])
+        if map_name != "RoadRunnerFiles":
+            if not any(ext in "%s.umap" % map_name for ext in existent_maps):
+                print("Found map in fbx folder: %s" % map_name)
+                import_assets_commandlet(map_name)
+                #move_uassets(map_name)
+                print("Generating map asset for %s" % map_name)
+                generate_map(map_name)
+                print("Cleaning up directories")
+                cleanup_assets(map_name)
+                print("Finished %s" % map_name)
+            else:
+                print("WARNING: Found %s map in Content folder, skipping. Use \"--force\" to override\n" % map_name)
 
 def parse_arguments():
     argparser = argparse.ArgumentParser(
@@ -83,7 +78,7 @@ def parse_arguments():
 
 def cleanup_assets(map_name):
     dirname = os.getcwd()
-    content_folder = os.path.join(dirname, "..", "Unreal", "CarlaUE4" , "Content", "Carla")
+    content_folder = os.path.join(dirname, "..", "..", "Unreal", "CarlaUE4" , "Content", "Carla")
     origin_folder = os.path.join(content_folder, "Static", "Imported", map_name)
     for filename in os.listdir(origin_folder):
         if map_name in filename:
@@ -98,8 +93,8 @@ def import_assets_commandlet(map_name):
     import_settings = os.path.join(dirname, "importsetting.json")
     commandlet_arguments = "-importSettings=\"%s\" -AllowCommandletRendering -nosourcecontrol -replaceexisting" % import_settings
 
-    file_xodr_origin = os.path.join(dirname, "..", "RoadRunnerFiles", map_name, "%s.xodr" % map_name)
-    file_xodr_dest = os.path.join(dirname, "..", "Unreal", "CarlaUE4", "Content", "Carla", "Maps", "OpenDrive", "%s.xodr" % map_name)
+    file_xodr_origin = os.path.join(dirname, "..", "..", "RoadRunnerFiles", map_name, "%s.xodr" % map_name)
+    file_xodr_dest = os.path.join(dirname, "..", "..", "Unreal", "CarlaUE4", "Content", "Carla", "Maps", "OpenDrive", "%s.xodr" % map_name)
 
     shutil.copy2(file_xodr_origin, file_xodr_dest)
     invoke_commandlet(commandlet_name, commandlet_arguments)
@@ -116,7 +111,7 @@ def generate_map(map_name):
 #This line might be needed if Epic tells us anything about the current way of doing the movement. It shouldn't but just in case...
 def move_uassets(map_name):
     dirname = os.getcwd()
-    content_folder = os.path.join(dirname, "..", "Unreal", "CarlaUE4" , "Content", "Carla")
+    content_folder = os.path.join(dirname, "..", "..", "Unreal", "CarlaUE4" , "Content", "Carla")
     origin_folder = os.path.join(content_folder, "Static", map_name)
     dest_path = ""
     src_path = ""
@@ -145,55 +140,52 @@ def invoke_commandlet(name, arguments):
     ue4_path = os.environ['UE4_ROOT']
     dirname = os.getcwd()
     editor_path = "%s/Engine/Binaries/%s/UE4Editor" % (ue4_path, sys_name)
-    uproject_path = os.path.join(dirname, "..", "Unreal", "CarlaUE4", "CarlaUE4.uproject")
+    uproject_path = os.path.join(dirname, "..", "..", "Unreal", "CarlaUE4", "CarlaUE4.uproject")
     full_command = "%s %s -run=%s %s" % (editor_path, uproject_path, name, arguments)
     subprocess.check_call([full_command], shell=True)
 
 
 def generate_json(map_name, json_file):
-    fh = open("importsetting.json", "a+")
-    import_groups = []
-    file_names = []
-    import_settings = []
-    fbx_path = os.path.join("..", "..", "RoadRunnerFiles", map_name, "%s.fbx" % map_name)
-    file_names.append(fbx_path)
+    with open(json_file, "a+") as fh:
+        import_groups = []
+        file_names = []
+        import_settings = []
+        fbx_path = os.path.join("..", "..", "RoadRunnerFiles", map_name, "%s.fbx" % map_name)
+        file_names.append(fbx_path)
 
-    import_settings.append({
-      "bImportMesh": 1,
-      "bConvertSceneUnit": 1,
-      "bConvertScene": 1,
-      "bCombineMeshes": 1,
-      "bImportTextures": 1,
-      "bImportMaterials": 1,
-      "bRemoveDegenerates":1,
-      "bCombineMeshes":0,
-      "AnimSequenceImportData": {},
-      "SkeletalMeshImportData": {},
-      "TextureImportData": {},
-      "StaticMeshImportData": {
-          "bRemoveDegenerates": 1,
-          "bAutoGenerateCollision": 0,
-          "bRemoveDegenerates":1,
-          "bCombineMeshes":0
-        }
-      })
-    dest_path = "/Game/Carla/Static/Imported/%s" % map_name
-    import_groups.append({
-    "ImportSettings": import_settings,
-    "FactoryName": "FbxFactory",
-    "DestinationPath": dest_path,
-    "bReplaceExisting": "true",
-    "FileNames": file_names
-    })
-    fh.write(json.dumps({"ImportGroups": import_groups}))
-    fh.close()
+        import_settings.append({
+        "bImportMesh": 1,
+        "bConvertSceneUnit": 1,
+        "bConvertScene": 1,
+        "bCombineMeshes": 1,
+        "bImportTextures": 1,
+        "bImportMaterials": 1,
+        "bRemoveDegenerates":1,
+        "AnimSequenceImportData": {},
+        "SkeletalMeshImportData": {},
+        "TextureImportData": {},
+        "StaticMeshImportData": {
+            "bRemoveDegenerates": 1,
+            "bAutoGenerateCollision": 0,
+            "bCombineMeshes":0
+            }
+        })
+        dest_path = "/Game/Carla/Static/Imported/%s" % map_name
+        import_groups.append({
+        "ImportSettings": import_settings,
+        "FactoryName": "FbxFactory",
+        "DestinationPath": dest_path,
+        "bReplaceExisting": "true",
+        "FileNames": file_names
+        })
+        fh.write(json.dumps({"ImportGroups": import_groups}))
+        fh.close()
 
-args = parse_arguments()
+
 
 if __name__ == '__main__':
-
     try:
+        args = parse_arguments()
         main()
     finally:
-        print(error)
         print('\ndone.')
