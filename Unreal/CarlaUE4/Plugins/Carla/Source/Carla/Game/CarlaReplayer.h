@@ -13,7 +13,10 @@
 #include <functional>
 #include "CarlaRecorderInfo.h"
 #include "CarlaRecorderFrames.h"
-#include "CarlaRecorderEvent.h"
+#include "CarlaRecorderEventAdd.h"
+#include "CarlaRecorderEventDel.h"
+#include "CarlaRecorderEventParent.h"
+#include "CarlaRecorderCollision.h"
 #include "CarlaRecorderPosition.h"
 #include "CarlaRecorderState.h"
 #include "CarlaRecorderHelpers.h"
@@ -98,7 +101,9 @@ private:
   // processing packets
   void ProcessToTime(double Time);
 
-  void ProcessEvents(void);
+  void ProcessEventsAdd(void);
+  void ProcessEventsDel(void);
+  void ProcessEventsParent(void);
 
   void ProcessPositions(void);
 

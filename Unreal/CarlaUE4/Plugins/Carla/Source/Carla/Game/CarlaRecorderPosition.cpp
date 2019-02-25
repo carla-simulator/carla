@@ -32,7 +32,7 @@ void CarlaRecorderPositions::Clear(void)
   Positions.clear();
 }
 
-void CarlaRecorderPositions::AddPosition(const CarlaRecorderPosition &Position)
+void CarlaRecorderPositions::Add(const CarlaRecorderPosition &Position)
 {
   Positions.push_back(Position);
 }

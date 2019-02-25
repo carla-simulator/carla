@@ -80,7 +80,7 @@ std::string CarlaReplayer::GetInfo(std::string Filename)
   CarlaRecorderEventAdd EventAdd;
   CarlaRecorderEventDel EventDel;
   CarlaRecorderEventParent EventParent;
-  CarlaRecorderEventCollision EventCollision;
+  CarlaRecorderCollision Collision;
   // CarlaRecorderStateTrafficLight StateTraffic;
   bool bShowFrame;
 
@@ -116,13 +116,15 @@ std::string CarlaReplayer::GetInfo(std::string Filename)
     // check for a frame packet
     switch (Header.Id)
     {
-      case static_cast<char>(CarlaRecorderPacketId::Frame):
+      // frame
+      case static_cast<char>(CarlaRecorderPacketId::FrameStart):
         Frame.Read(File);
         // Info << "Frame " << Frame.Id << " at " << Frame.Elapsed << " seconds
         // (offset 0x" << std::hex << File.tellg() << std::dec << ")\n";
         break;
 
-      case static_cast<char>(CarlaRecorderPacketId::Event):
+      // events add
+      case static_cast<char>(CarlaRecorderPacketId::EventAdd):
         bShowFrame = true;
         ReadValue<uint16_t>(File, Total);
         if (Total > 0 && bShowFrame)
@@ -143,7 +145,10 @@ std::string CarlaReplayer::GetInfo(std::string Filename)
             Info << "  " << TCHAR_TO_UTF8(*Att.Id) << " = " << TCHAR_TO_UTF8(*Att.Value) << std::endl;
           }
         }
-        // del
+        break;
+
+      // events del
+      case static_cast<char>(CarlaRecorderPacketId::EventDel):
         ReadValue<uint16_t>(File, Total);
         if (Total > 0 && bShowFrame)
         {
@@ -155,7 +160,10 @@ std::string CarlaReplayer::GetInfo(std::string Filename)
           EventDel.Read(File);
           Info << " Destroy " << EventDel.DatabaseId << "\n";
         }
-        // parenting
+        break;
+
+      // events parenting
+      case static_cast<char>(CarlaRecorderPacketId::EventParent):
         ReadValue<uint16_t>(File, Total);
         if (Total > 0 && bShowFrame)
         {
@@ -168,7 +176,10 @@ std::string CarlaReplayer::GetInfo(std::string Filename)
           Info << " Parenting " << EventParent.DatabaseId << " with " << EventParent.DatabaseId <<
             " (parent)\n";
         }
-        // collisions
+        break;
+
+      // collisions
+      case static_cast<char>(CarlaRecorderPacketId::Collision):
         ReadValue<uint16_t>(File, Total);
         if (Total > 0 && bShowFrame)
         {
@@ -177,12 +188,12 @@ std::string CarlaReplayer::GetInfo(std::string Filename)
         }
         for (i = 0; i < Total; ++i)
         {
-          EventCollision.Read(File);
-          Info << " Collision id " << EventCollision.Id << " between " << EventCollision.DatabaseId1;
-          if (EventCollision.IsActor1Hero)
+          Collision.Read(File);
+          Info << " Collision id " << Collision.Id << " between " << Collision.DatabaseId1;
+          if (Collision.IsActor1Hero)
             Info << " (hero) ";
-          Info << " with " << EventCollision.DatabaseId2;
-          if (EventCollision.IsActor2Hero)
+          Info << " with " << Collision.DatabaseId2;
+          if (Collision.IsActor2Hero)
             Info << " (hero) ";
           Info << std::endl;
         }
@@ -210,6 +221,11 @@ std::string CarlaReplayer::GetInfo(std::string Filename)
         // stateTraffic.isFrozen << " elapsedTime: " << stateTraffic.elapsedTime
         // << std::endl;
         //  }
+        break;
+
+      // frame end
+      case static_cast<char>(CarlaRecorderPacketId::FrameEnd):
+        // do nothing, it is empty
         break;
 
       default:
@@ -254,7 +270,7 @@ std::string CarlaReplayer::GetInfoCollisions(std::string Filename, char Category
   CarlaRecorderEventAdd EventAdd;
   CarlaRecorderEventDel EventDel;
   CarlaRecorderEventParent EventParent;
-  CarlaRecorderEventCollision EventCollision;
+  CarlaRecorderCollision Collision;
   struct ReplayerActorInfo
   {
     uint8_t Type;
@@ -311,14 +327,16 @@ std::string CarlaReplayer::GetInfoCollisions(std::string Filename, char Category
     // check for a frame packet
     switch (Header.Id)
     {
-      case static_cast<char>(CarlaRecorderPacketId::Frame):
+      // frame
+      case static_cast<char>(CarlaRecorderPacketId::FrameStart):
         Frame.Read(File);
         // exchange sets of collisions (to know when a collision is new or continue from previous frame)
         oldCollisions = std::move(newCollisions);
         newCollisions.clear();
         break;
 
-      case static_cast<char>(CarlaRecorderPacketId::Event):
+      // events add
+      case static_cast<char>(CarlaRecorderPacketId::EventAdd):
         ReadValue<uint16_t>(File, Total);
         for (i = 0; i < Total; ++i)
         {
@@ -326,36 +344,41 @@ std::string CarlaReplayer::GetInfoCollisions(std::string Filename, char Category
           EventAdd.Read(File);
           Actors[EventAdd.DatabaseId] = ReplayerActorInfo { EventAdd.Type, EventAdd.Description.Id };
         }
-        // del
+        break;
+
+      // events del
+      case static_cast<char>(CarlaRecorderPacketId::EventDel):
         ReadValue<uint16_t>(File, Total);
         for (i = 0; i < Total; ++i)
         {
           EventDel.Read(File);
           Actors.erase(EventAdd.DatabaseId);
         }
-        // parenting
+        break;
+
+      // events parenting
+      case static_cast<char>(CarlaRecorderPacketId::EventParent):
+        SkipPacket();
+        break;
+
+      // collisions
+      case static_cast<char>(CarlaRecorderPacketId::Collision):
         ReadValue<uint16_t>(File, Total);
         for (i = 0; i < Total; ++i)
         {
-          EventParent.Read(File);
-        }
-        // collisions
-        ReadValue<uint16_t>(File, Total);
-        for (i = 0; i < Total; ++i)
-        {
-          EventCollision.Read(File);
+          Collision.Read(File);
 
           int Valid = 0;
           // get categories for both actors
-          uint8_t Type1 = Categories[Actors[EventCollision.DatabaseId1].Type];
-          uint8_t Type2 = Categories[Actors[EventCollision.DatabaseId2].Type];
+          uint8_t Type1 = Categories[Actors[Collision.DatabaseId1].Type];
+          uint8_t Type2 = Categories[Actors[Collision.DatabaseId2].Type];
 
           // filter actor 1
           if (Category1 == 'a')
             ++Valid;
           else if (Category1 == Type1)
             ++Valid;
-          else if (Category1 == 'h' && EventCollision.IsActor1Hero)
+          else if (Category1 == 'h' && Collision.IsActor1Hero)
             ++Valid;
 
           // filter actor 2
@@ -363,23 +386,23 @@ std::string CarlaReplayer::GetInfoCollisions(std::string Filename, char Category
             ++Valid;
           else if (Category2 == Type2)
             ++Valid;
-          else if (Category2 == 'h' && EventCollision.IsActor2Hero)
+          else if (Category2 == 'h' && Collision.IsActor2Hero)
             ++Valid;
 
           // only show if both actors has passed the filter
           if (Valid == 2)
           {
             // check if we need to show as a starting collision or it is a continuation one
-            auto collisionPair = std::make_pair(EventCollision.DatabaseId1, EventCollision.DatabaseId2);
+            auto collisionPair = std::make_pair(Collision.DatabaseId1, Collision.DatabaseId2);
             if (oldCollisions.count(collisionPair) == 0)
             {
-              // Info << std::setw(5) << EventCollision.Id << " ";
+              // Info << std::setw(5) << Collision.Id << " ";
               Info << std::setw(8) << std::setprecision(0) << std::right << std::fixed << Frame.Elapsed;
               Info << " " << "  " << Type1 << " " << Type2 << " ";
-              Info << " " << std::setw(6) << std::right << EventCollision.DatabaseId1;
-              Info << " " << std::setw(35) << std::left << TCHAR_TO_UTF8(*Actors[EventCollision.DatabaseId1].Id);
-              Info << " " << std::setw(6) << std::right << EventCollision.DatabaseId2;
-              Info << " " << std::setw(35) << std::left << TCHAR_TO_UTF8(*Actors[EventCollision.DatabaseId2].Id);
+              Info << " " << std::setw(6) << std::right << Collision.DatabaseId1;
+              Info << " " << std::setw(35) << std::left << TCHAR_TO_UTF8(*Actors[Collision.DatabaseId1].Id);
+              Info << " " << std::setw(6) << std::right << Collision.DatabaseId2;
+              Info << " " << std::setw(35) << std::left << TCHAR_TO_UTF8(*Actors[Collision.DatabaseId2].Id);
               //Info << std::setw(8) << Frame.Id;
               Info << std::endl;
             }
@@ -398,6 +421,11 @@ std::string CarlaReplayer::GetInfoCollisions(std::string Filename, char Category
         SkipPacket();
         break;
 
+      // frame end
+      case static_cast<char>(CarlaRecorderPacketId::FrameEnd):
+        // do nothing, it is empty
+        break;
+
       default:
         // skip packet
         Info << "Unknown packet id: " << Header.Id << " at offset " << File.tellg() << std::endl;
@@ -406,7 +434,6 @@ std::string CarlaReplayer::GetInfoCollisions(std::string Filename, char Category
     }
   }
 
-  Info << "\nFrames: " << Frame.Id << "\n";
   Info << "\nFrames: " << Frame.Id << "\n";
   Info << "Duration: " << Frame.Elapsed << " seconds\n";
 
@@ -440,7 +467,7 @@ std::string CarlaReplayer::GetInfoActorsBlocked(std::string Filename, double Min
   CarlaRecorderEventAdd EventAdd;
   CarlaRecorderEventDel EventDel;
   CarlaRecorderEventParent EventParent;
-  CarlaRecorderEventCollision EventCollision;
+  CarlaRecorderCollision Collision;
   CarlaRecorderPosition Position;
   struct ReplayerActorInfo
   {
@@ -493,11 +520,13 @@ std::string CarlaReplayer::GetInfoActorsBlocked(std::string Filename, double Min
     // check for a frame packet
     switch (Header.Id)
     {
-      case static_cast<char>(CarlaRecorderPacketId::Frame):
+      // frame
+      case static_cast<char>(CarlaRecorderPacketId::FrameStart):
         Frame.Read(File);
         break;
 
-      case static_cast<char>(CarlaRecorderPacketId::Event):
+      // events add
+      case static_cast<char>(CarlaRecorderPacketId::EventAdd):
         ReadValue<uint16_t>(File, Total);
         for (i = 0; i < Total; ++i)
         {
@@ -505,25 +534,26 @@ std::string CarlaReplayer::GetInfoActorsBlocked(std::string Filename, double Min
           EventAdd.Read(File);
           Actors[EventAdd.DatabaseId] = ReplayerActorInfo { EventAdd.Type, EventAdd.Description.Id };
         }
-        // del
+        break;
+
+      // events del
+      case static_cast<char>(CarlaRecorderPacketId::EventDel):
         ReadValue<uint16_t>(File, Total);
         for (i = 0; i < Total; ++i)
         {
           EventDel.Read(File);
           Actors.erase(EventAdd.DatabaseId);
         }
-        // parenting
-        ReadValue<uint16_t>(File, Total);
-        for (i = 0; i < Total; ++i)
-        {
-          EventParent.Read(File);
-        }
-        // collisions
-        ReadValue<uint16_t>(File, Total);
-        for (i = 0; i < Total; ++i)
-        {
-          EventCollision.Read(File);
-        }
+        break;
+
+      // events parenting
+      case static_cast<char>(CarlaRecorderPacketId::EventParent):
+        SkipPacket();
+        break;
+
+      // collisions
+      case static_cast<char>(CarlaRecorderPacketId::Collision):
+        SkipPacket();
         break;
 
       case static_cast<char>(CarlaRecorderPacketId::Position):
@@ -562,6 +592,11 @@ std::string CarlaReplayer::GetInfoActorsBlocked(std::string Filename, double Min
 
       case static_cast<char>(CarlaRecorderPacketId::State):
         SkipPacket();
+        break;
+
+      // frame end
+      case static_cast<char>(CarlaRecorderPacketId::FrameEnd):
+        // do nothing, it is empty
         break;
 
       default:
@@ -640,7 +675,7 @@ double CarlaReplayer::GetTotalTime(void)
     // check for a frame packet
     switch (Header.Id)
     {
-      case static_cast<char>(CarlaRecorderPacketId::Frame):
+      case static_cast<char>(CarlaRecorderPacketId::FrameStart):
         Frame.Read(File);
         break;
       default:
@@ -722,94 +757,89 @@ void CarlaReplayer::ProcessToTime(double Time)
   double Per = 0.0f;
   double NewTime = CurrentTime + Time;
   bool bFrameFound = false;
+  bool bExitAtNextFrame = false;
+  bool bExitLoop = false;
 
   // check if we are in the right frame
   if (NewTime >= Frame.Elapsed && NewTime < Frame.Elapsed + Frame.DurationThis)
   {
     Per = (NewTime - Frame.Elapsed) / Frame.DurationThis;
     bFrameFound = true;
+    bExitLoop = true;
+    // UE_LOG(LogCarla, Log, TEXT("Frame %f (%f) now %f per %f"), Frame.Elapsed, Frame.Elapsed + Frame.DurationThis, NewTime, Per);
   }
 
   // process all frames until time we want or end
-  while (!File.eof() && !bFrameFound)
+  while (!File.eof() && !bExitLoop)
   {
     // get header
     ReadHeader();
-    // check it is a frame packet
-    if (Header.Id != static_cast<char>(CarlaRecorderPacketId::Frame))
-    {
-      if (!File.eof())
-      {
-        UE_LOG(LogCarla, Log, TEXT("Replayer File error: waitting for a Frame packet"));
-      }
-      Stop();
-      break;
-    }
-    // read current frame
-    Frame.Read(File);
 
-    // check if target time is in this frame
-    if (Frame.Elapsed + Frame.DurationThis < NewTime)
+    // check for a frame packet
+    switch (Header.Id)
     {
-      Per = 0.0f;
-    }
-    else
-    {
-      Per = (NewTime - Frame.Elapsed) / Frame.DurationThis;
-      bFrameFound = true;
-    }
+      // frame
+      case static_cast<char>(CarlaRecorderPacketId::FrameStart):
+        // only read if we are not in the right frame
+        Frame.Read(File);
+        // check if target time is in this frame
+        if (NewTime < Frame.Elapsed + Frame.DurationThis)
+        {
+          Per = (NewTime - Frame.Elapsed) / Frame.DurationThis;
+          bFrameFound = true;
+          // UE_LOG(LogCarla, Log, TEXT("Frame %f (%f) now %f per %f"), Frame.Elapsed, Frame.Elapsed + Frame.DurationThis, NewTime, Per);
+        }
+        break;
 
-    // Info << "Frame: " << Frame.id << " (" << Frame.DurationThis << " / " <<
-    // Frame.Elapsed << ") per: " << Per << std::endl;
+      // events add
+      case static_cast<char>(CarlaRecorderPacketId::EventAdd):
+        ProcessEventsAdd();
+        break;
 
-    // get header
-    ReadHeader();
-    // check it is an events packet
-    if (Header.Id != static_cast<char>(CarlaRecorderPacketId::Event))
-    {
-      UE_LOG(LogCarla, Log, TEXT("Replayer File error: waitting for an Event packet"));
-      Stop();
-      break;
-    }
-    ProcessEvents();
+      // events del
+      case static_cast<char>(CarlaRecorderPacketId::EventDel):
+        ProcessEventsDel();
+        break;
 
-    // get header
-    ReadHeader();
-    // check it is a positions packet
-    if (Header.Id != static_cast<char>(CarlaRecorderPacketId::Position))
-    {
-      UE_LOG(LogCarla, Log, TEXT("Replayer File error: waitting for a Position packet"));
-      Stop();
-      break;
-    }
-    if (bFrameFound)
-    {
-      ProcessPositions();
-    }
-    else
-    {
-      SkipPacket();
-    }
+      // events parent
+      case static_cast<char>(CarlaRecorderPacketId::EventParent):
+        ProcessEventsParent();
+        break;
 
-    // get header
-    ReadHeader();
-    // check it is an state packet
-    if (Header.Id != static_cast<char>(CarlaRecorderPacketId::State))
-    {
-      UE_LOG(LogCarla, Log, TEXT("Replayer File error: waitting for an State packet"));
-      Stop();
-      break;
-    }
-    if (bFrameFound)
-    {
-      ProcessStates();
-    }
-    else
-    {
-      SkipPacket();
-    }
+      // collisions
+      case static_cast<char>(CarlaRecorderPacketId::Collision):
+        SkipPacket();
+        break;
 
-    // UE_LOG(LogCarla, Log, TEXT("Replayer new frame"));
+      // positions
+      case static_cast<char>(CarlaRecorderPacketId::Position):
+        if (bFrameFound)
+          ProcessPositions();
+        else
+          SkipPacket();
+        break;
+
+      // states
+      case static_cast<char>(CarlaRecorderPacketId::State):
+        if (bFrameFound)
+          ProcessStates();
+        else
+          SkipPacket();
+        break;
+
+      // frame end
+      case static_cast<char>(CarlaRecorderPacketId::FrameEnd):
+        if (bFrameFound)
+          bExitLoop = true;
+        break;
+
+      // unknown packet, just skip
+      default:
+        // skip packet
+        SkipPacket();
+        break;
+
+    }
   }
 
   // update all positions
@@ -837,14 +867,11 @@ void CarlaReplayer::ProcessToTime(double Time)
   }
 }
 
-void CarlaReplayer::ProcessEvents(void)
+void CarlaReplayer::ProcessEventsAdd(void)
 {
   uint16_t i, Total;
   CarlaRecorderEventAdd EventAdd;
-  CarlaRecorderEventDel EventDel;
-  CarlaRecorderEventParent EventParent;
-  CarlaRecorderEventCollision EventCollision;
-  std::stringstream Info;
+  // std::stringstream Info;
 
   // process creation events
   ReadValue<uint16_t>(File, Total);
@@ -856,6 +883,7 @@ void CarlaReplayer::ProcessEvents(void)
     if (!EventAdd.Description.Id.StartsWith("sensor."))
     {
       // show log
+      /*
       Info.str("");
       Info << " Create " << EventAdd.DatabaseId << ": " << TCHAR_TO_UTF8(*EventAdd.Description.Id) << " (" <<
         EventAdd.Description.UId << ") at (" << EventAdd.Location.X << ", " <<
@@ -865,7 +893,8 @@ void CarlaReplayer::ProcessEvents(void)
         Info << "  " << TCHAR_TO_UTF8(*Att.Id) << " = " << TCHAR_TO_UTF8(*Att.Value) << std::endl;
       }
 
-      // UE_LOG(LogCarla, Log, "%s", Info.str().c_str());
+      UE_LOG(LogCarla, Log, "%s", Info.str().c_str());
+      */
 
       // auto Result = CallbackEventAdd(
       auto Result = Helper.ProcessReplayerEventAdd(
@@ -873,20 +902,25 @@ void CarlaReplayer::ProcessEvents(void)
           EventAdd.Rotation,
           std::move(EventAdd.Description),
           EventAdd.DatabaseId);
+
       switch (Result.first)
       {
+        // actor not created
         case 0:
           UE_LOG(LogCarla, Log, TEXT("actor could not be created"));
           break;
+
+        // actor created but with different id
         case 1:
           if (Result.second != EventAdd.DatabaseId)
           {
-            // UE_LOG(LogCarla, Log, TEXT("*actor created but with different id"));
+            // UE_LOG(LogCarla, Log, TEXT("actor created but with different id"));
           }
           // mapping id (recorded Id is a new Id in replayer)
           MappedId[EventAdd.DatabaseId] = Result.second;
           break;
 
+        // actor reused from existing
         case 2:
           // UE_LOG(LogCarla, Log, TEXT("actor already exist, not created"));
           // mapping id (say desired Id is mapped to what)
@@ -895,38 +929,43 @@ void CarlaReplayer::ProcessEvents(void)
       }
     }
   }
+}
+
+void CarlaReplayer::ProcessEventsDel(void)
+{
+  uint16_t i, Total;
+  CarlaRecorderEventDel EventDel;
+  // std::stringstream Info;
 
   // process destroy events
   ReadValue<uint16_t>(File, Total);
   for (i = 0; i < Total; ++i)
   {
     EventDel.Read(File);
-    Info.str("");
-    Info << "Destroy " << MappedId[EventDel.DatabaseId] << "\n";
+    // Info.str("");
+    // Info << "Destroy " << MappedId[EventDel.DatabaseId] << "\n";
     // UE_LOG(LogCarla, Log, "%s", Info.str().c_str());
     Helper.ProcessReplayerEventDel(MappedId[EventDel.DatabaseId]);
     MappedId.erase(EventDel.DatabaseId);
   }
+}
+
+void CarlaReplayer::ProcessEventsParent(void)
+{
+  uint16_t i, Total;
+  CarlaRecorderEventParent EventParent;
+  std::stringstream Info;
 
   // process parenting events
   ReadValue<uint16_t>(File, Total);
   for (i = 0; i < Total; ++i)
   {
     EventParent.Read(File);
-    Info.str("");
-    Info << "Parenting " << MappedId[EventParent.DatabaseId] << " with " << MappedId[EventParent.DatabaseId] <<
-      " (parent)\n";
+    // Info.str("");
+    // Info << "Parenting " << MappedId[EventParent.DatabaseId] << " with " << MappedId[EventParent.DatabaseId] <<
+      // " (parent)\n";
     // UE_LOG(LogCarla, Log, "%s", Info.str().c_str());
     Helper.ProcessReplayerEventParent(MappedId[EventParent.DatabaseId], MappedId[EventParent.DatabaseIdParent]);
-  }
-
-  // collision events (currently we don't do anything with them, they are just info for queries)
-  ReadValue<uint16_t>(File, Total);
-  for (i = 0; i < Total; ++i)
-  {
-    EventCollision.Read(File);
-    Info.str("");
-    Info << "Collision " << MappedId[EventCollision.DatabaseId1] << " with " << MappedId[EventCollision.DatabaseId2] << std::endl;
   }
 }
 

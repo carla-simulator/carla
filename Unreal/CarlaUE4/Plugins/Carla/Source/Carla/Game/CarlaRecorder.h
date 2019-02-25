@@ -10,7 +10,10 @@
 #include <fstream>
 #include "Carla/Game/CarlaRecorderInfo.h"
 #include "Carla/Game/CarlaRecorderFrames.h"
-#include "Carla/Game/CarlaRecorderEvent.h"
+#include "Carla/Game/CarlaRecorderEventAdd.h"
+#include "Carla/Game/CarlaRecorderEventDel.h"
+#include "Carla/Game/CarlaRecorderEventParent.h"
+#include "Carla/Game/CarlaRecorderCollision.h"
 #include "Carla/Game/CarlaRecorderPosition.h"
 #include "Carla/Game/CarlaRecorderState.h"
 #include "Carla/Game/CarlaReplayer.h"
@@ -23,8 +26,12 @@ class UCarlaEpisode;
 
 enum class CarlaRecorderPacketId : uint8_t
 {
-  Frame = 0,
-  Event,
+  FrameStart = 0,
+  FrameEnd,
+  EventAdd,
+  EventDel,
+  EventParent,
+  Collision,
   Position,
   State
 };
@@ -56,7 +63,7 @@ public:
 
   void Clear(void);
 
-  void Write(void);
+  void Write(double DeltaSeconds);
 
   // events
   void AddEvent(const CarlaRecorderEventAdd &Event);
@@ -65,7 +72,7 @@ public:
 
   void AddEvent(const CarlaRecorderEventParent &Event);
 
-  void AddEventCollision(AActor *Actor1, AActor *Actor2);
+  void AddCollision(AActor *Actor1, AActor *Actor2);
 
   void AddPosition(const CarlaRecorderPosition &Position);
 
@@ -112,7 +119,10 @@ private:
   // structures
   CarlaRecorderInfo Info;
   CarlaRecorderFrames Frames;
-  CarlaRecorderEvents Events;
+  CarlaRecorderEventsAdd EventsAdd;
+  CarlaRecorderEventsDel EventsDel;
+  CarlaRecorderEventsParent EventsParent;
+  CarlaRecorderCollisions Collisions;
   CarlaRecorderPositions Positions;
   CarlaRecorderStates States;
 

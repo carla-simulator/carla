@@ -99,7 +99,7 @@ void ACarlaRecorder::Tick(float DeltaSeconds)
     }
 
     // write all data for this frame
-    Write();
+    Write(DeltaSeconds);
   }
   else if (Episode->GetReplayer()->IsEnabled())
   {
@@ -122,7 +122,11 @@ void ACarlaRecorder::Disable(void)
 
 std::string ACarlaRecorder::Start(FString Path, FString Name, FString MapName)
 {
-  // reset
+  // stop replayer if any in course
+  if (Replayer.IsEnabled())
+    Replayer.Stop();
+
+  // stop recording
   Stop();
 
   NextCollisionId = 0;
@@ -170,96 +174,108 @@ void ACarlaRecorder::Stop(void)
 
 void ACarlaRecorder::Clear(void)
 {
-  Events.Clear();
+  EventsAdd.Clear();
+  EventsDel.Clear();
+  EventsParent.Clear();
+  Collisions.Clear();
   Positions.Clear();
   States.Clear();
 }
 
-void ACarlaRecorder::Write(void)
+void ACarlaRecorder::Write(double DeltaSeconds)
 {
   // update this frame data
-  Frames.SetFrame();
+  Frames.SetFrame(DeltaSeconds);
+
+  // start
+  Frames.WriteStart(File);
 
   // write data
-  Frames.Write(File);
-  Events.Write(File);
+  EventsAdd.Write(File);
+  EventsDel.Write(File);
+  EventsParent.Write(File);
+  Collisions.Write(File);
   Positions.Write(File);
   States.Write(File);
+
+  // end
+  Frames.WriteEnd(File);
 
   Clear();
 }
 
-void ACarlaRecorder::AddPosition(const CarlaRecorderPosition &Position)
+inline void ACarlaRecorder::AddPosition(const CarlaRecorderPosition &Position)
 {
   if (Enabled)
   {
-    Positions.AddPosition(Position);
+    Positions.Add(Position);
   }
 }
 
-void ACarlaRecorder::AddEvent(const CarlaRecorderEventAdd &Event)
+inline void ACarlaRecorder::AddEvent(const CarlaRecorderEventAdd &Event)
 {
   if (Enabled)
   {
-    Events.AddEvent(std::move(Event));
+    EventsAdd.Add(std::move(Event));
   }
 }
-void ACarlaRecorder::AddEvent(const CarlaRecorderEventDel &Event)
+inline void ACarlaRecorder::AddEvent(const CarlaRecorderEventDel &Event)
 {
   if (Enabled)
   {
-    Events.AddEvent(std::move(Event));
+    EventsDel.Add(std::move(Event));
   }
 }
-void ACarlaRecorder::AddEvent(const CarlaRecorderEventParent &Event)
+inline void ACarlaRecorder::AddEvent(const CarlaRecorderEventParent &Event)
 {
   if (Enabled)
   {
-    Events.AddEvent(std::move(Event));
+    EventsParent.Add(std::move(Event));
   }
 }
-void ACarlaRecorder::AddEventCollision(AActor *Actor1, AActor *Actor2)
+void ACarlaRecorder::AddCollision(AActor *Actor1, AActor *Actor2)
 {
   if (Enabled)
   {
-    CarlaRecorderEventCollision Event;
+    CarlaRecorderCollision Collision;
 
     // some inits
-    Event.Id = NextCollisionId++;
-    Event.IsActor1Hero = false;
-    Event.IsActor2Hero = false;
+    Collision.Id = NextCollisionId++;
+    Collision.IsActor1Hero = false;
+    Collision.IsActor2Hero = false;
 
     // check actor 1
     if (Episode->GetActorRegistry().Find(Actor1).GetActorInfo() != nullptr)
     {
       auto *Role = Episode->GetActorRegistry().Find(Actor1).GetActorInfo()->Description.Variations.Find("role_name");
       if (Role != nullptr)
-        Event.IsActor1Hero = (Role->Value == "hero");
+        Collision.IsActor1Hero = (Role->Value == "hero");
     }
-    Event.DatabaseId1 = Episode->GetActorRegistry().Find(Actor1).GetActorId();
+    Collision.DatabaseId1 = Episode->GetActorRegistry().Find(Actor1).GetActorId();
 
     // check actor 2
     if (Episode->GetActorRegistry().Find(Actor2).GetActorInfo() != nullptr)
     {
       auto Role = Episode->GetActorRegistry().Find(Actor2).GetActorInfo()->Description.Variations.Find("role_name");
       if (Role != nullptr)
-        Event.IsActor2Hero = (Role->Value == "hero");
+        Collision.IsActor2Hero = (Role->Value == "hero");
     }
-    Event.DatabaseId2 = Episode->GetActorRegistry().Find(Actor2).GetActorId();
+    Collision.DatabaseId2 = Episode->GetActorRegistry().Find(Actor2).GetActorId();
 
     // location of collision
-    Event.Location = Actor1->GetTransform().GetTranslation();
+    Collision.Location = Actor1->GetTransform().GetTranslation();
 
-    Events.AddEvent(std::move(Event));
+    Collisions.Add(std::move(Collision));
   }
 }
-void ACarlaRecorder::AddState(const CarlaRecorderStateTrafficLight &State)
+inline void ACarlaRecorder::AddState(const CarlaRecorderStateTrafficLight &State)
 {
   if (Enabled)
   {
-    States.AddState(State);
+    States.Add(State);
   }
 }
+
 void ACarlaRecorder::AddExistingActors(void)
 {
   // registring all existing actors in first frame

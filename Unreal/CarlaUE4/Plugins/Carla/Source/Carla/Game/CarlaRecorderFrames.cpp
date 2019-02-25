@@ -30,14 +30,11 @@ void CarlaRecorderFrames::Reset(void)
   Frame.Id = 0;
   Frame.DurationThis = 0.0f;
   Frame.Elapsed = 0.0f;
-  LastTime = std::chrono::high_resolution_clock::now();
   OffsetPreviousFrame = 0;
 }
 
-void CarlaRecorderFrames::SetFrame(void)
+void CarlaRecorderFrames::SetFrame(double DeltaSeconds)
 {
-  auto Now = std::chrono::high_resolution_clock::now();
-
   if (Frame.Id == 0)
   {
     Frame.Elapsed = 0.0f;
@@ -45,21 +42,20 @@ void CarlaRecorderFrames::SetFrame(void)
   }
   else
   {
-    Frame.DurationThis = std::chrono::duration<double>(Now - LastTime).count();
-    Frame.Elapsed += Frame.DurationThis;
+    Frame.DurationThis = DeltaSeconds;
+    Frame.Elapsed += DeltaSeconds;
   }
 
-  LastTime = Now;
   ++Frame.Id;
 }
 
-void CarlaRecorderFrames::Write(std::ofstream &OutFile)
+void CarlaRecorderFrames::WriteStart(std::ofstream &OutFile)
 {
   std::streampos Pos, Offset;
   double Dummy = -1.0f;
 
   // write the packet id
-  WriteValue<char>(OutFile, static_cast<char>(CarlaRecorderPacketId::Frame));
+  WriteValue<char>(OutFile, static_cast<char>(CarlaRecorderPacketId::FrameStart));
 
   // write the packet size
   uint32_t Total = sizeof(CarlaRecorderFrame);
@@ -82,4 +78,14 @@ void CarlaRecorderFrames::Write(std::ofstream &OutFile)
 
   // save position for next actualization
   OffsetPreviousFrame = Offset;
+}
+
+void CarlaRecorderFrames::WriteEnd(std::ofstream &OutFile)
+{
+  // write the packet id
+  WriteValue<char>(OutFile, static_cast<char>(CarlaRecorderPacketId::FrameEnd));
+
+  // write the packet size (0)
+  uint32_t Total = 0;
+  WriteValue<uint32_t>(OutFile, Total);
 }

@@ -75,13 +75,8 @@ void ReadFString(std::ifstream &InFile, FString &OutObj)
   CarlaRecorderHelperBuffer.clear();
   // initialize the vector space with 0
   CarlaRecorderHelperBuffer.resize(Length + 1);
-  // CarlaRecorderHelperBuffer.push_back(0);
   // read
   InFile.read(reinterpret_cast<char *>(CarlaRecorderHelperBuffer.data()), Length);
   // convert from UTF8 to FString
-  // OutObj = BytesToString(reinterpret_cast<uint8_t
-  // *>(UTF8_TO_TCHAR(CarlaRecorderHelperBuffer.data())), Length);
-  // OutObj = BytesToString(reinterpret_cast<uint8_t
-  // *>(CarlaRecorderHelperBuffer.data()), Length);
   OutObj = FString(UTF8_TO_TCHAR(CarlaRecorderHelperBuffer.data()));
 }

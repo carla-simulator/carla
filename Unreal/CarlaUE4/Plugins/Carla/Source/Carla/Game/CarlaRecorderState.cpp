@@ -31,21 +31,9 @@ void CarlaRecorderStates::Clear(void)
   StatesTrafficLights.clear();
 }
 
-void CarlaRecorderStates::AddState(const CarlaRecorderStateTrafficLight &State)
+void CarlaRecorderStates::Add(const CarlaRecorderStateTrafficLight &State)
 {
   StatesTrafficLights.push_back(std::move(State));
-}
-
-void CarlaRecorderStates::WriteStatesTrafficLight(std::ofstream &OutFile)
-{
-  // write total records
-  uint16_t Total = StatesTrafficLights.size();
-  WriteValue<uint16_t>(OutFile, Total);
-
-  for (uint16_t i = 0; i < Total; ++i)
-  {
-    StatesTrafficLights[i].Write(OutFile);
-  }
 }
 
 void CarlaRecorderStates::Write(std::ofstream &OutFile)
@@ -57,6 +45,12 @@ void CarlaRecorderStates::Write(std::ofstream &OutFile)
   uint32_t Total = 2 + StatesTrafficLights.size() * sizeof(CarlaRecorderStateTrafficLight);
   WriteValue<uint32_t>(OutFile, Total);
 
-  // write events
-  WriteStatesTrafficLight(OutFile);
+  // write total records
+  Total = StatesTrafficLights.size();
+  WriteValue<uint16_t>(OutFile, Total);
+
+  for (uint16_t i = 0; i < Total; ++i)
+  {
+    StatesTrafficLights[i].Write(OutFile);
+  }
 }

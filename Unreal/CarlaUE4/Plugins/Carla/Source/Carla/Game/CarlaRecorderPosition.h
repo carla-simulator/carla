@@ -27,7 +27,7 @@ class CarlaRecorderPositions
 {
 public:
 
-  void AddPosition(const CarlaRecorderPosition &InObj);
+  void Add(const CarlaRecorderPosition &InObj);
 
   void Clear(void);
 
