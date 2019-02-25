@@ -75,8 +75,8 @@ namespace rpc {
       steering_curve = in_steering_curve;
     }
 
-    std::vector<geom::Vector2D> torque_curve = {geom::Vector2D(0.0f, 500.0f), geom::Vector2D(10000.0f, 500.0f)};
-    float max_rpm = 10000.0f;
+    std::vector<geom::Vector2D> torque_curve = {geom::Vector2D(0.0f, 500.0f), geom::Vector2D(5000.0f, 500.0f)};
+    float max_rpm = 5000.0f;
     float moi = 1.0f;
     float damping_rate_full_throttle = 0.15f;
     float damping_rate_zero_throttle_clutch_engaged = 2.0f;
@@ -86,7 +86,7 @@ namespace rpc {
     float gear_switch_time = 0.5f;
     float clutch_strength = 10.0f;
 
-    float mass = 10000.0f;
+    float mass = 1000.0f;
     float drag_coefficient = 0.3f;
     geom::Vector3D center_of_mass;
 
