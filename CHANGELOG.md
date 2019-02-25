@@ -8,6 +8,7 @@
   * Added priority system for vehicle control input
   * Episodes have now a random unique id to avoid collisions between runs
   * Removed "Example.CarlaSettings.ini", you can still use it, but it's no longer necessary
+  * Added performance benchmark script to measure rendering performance.
   * Fix parsing of OpenDrive geoReference exported by RoadRunner
   * Added recording/replaying functionality to manual_control.py script.
     - CTRL + R: Toggle recording (file is always 'manual_recording.rec')
