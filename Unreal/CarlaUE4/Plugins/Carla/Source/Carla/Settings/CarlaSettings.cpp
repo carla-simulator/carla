@@ -159,10 +159,15 @@ void UCarlaSettings::LoadSettings()
     uint32 Value;
     if (FParse::Value(FCommandLine::Get(), TEXT("-world-port="), Value) ||
         FParse::Value(FCommandLine::Get(), TEXT("-carla-port="), Value) ||
+        FParse::Value(FCommandLine::Get(), TEXT("-carla-rpc-port="), Value) ||
         FParse::Value(FCommandLine::Get(), TEXT("-carla-world-port="), Value))
     {
       WorldPort = Value;
       bUseNetworking = true;
+    }
+    if (FParse::Value(FCommandLine::Get(), TEXT("-carla-streaming-port="), Value))
+    {
+      StreamingPort = Value;
     }
     if (FParse::Param(FCommandLine::Get(), TEXT("carla-no-networking")))
     {
