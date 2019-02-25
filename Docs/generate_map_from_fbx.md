@@ -20,7 +20,6 @@ located in the root folder):
 
 ```sh
 RoadRunnerFiles/
-├── README.txt
 ├── MapToImport01
 │   ├── Asphalt1_Diff.png
 │   ├── Asphalt1_Norm.png
@@ -54,10 +53,10 @@ Under RoadRunnerFiles, place each "Export" folder obtained from RoadRunner and
 rename it with the name of the map to be imported. It have to match the <b>.fbx</b>
 and <b>.xodr</b> files.
 
-Now, simply go into the PythonAPI folder and run <b>generate_map.py</b>
+Now, simply go into the PythonAPI/util folder and run <b>generate_map.py</b>
 
 !!! important
-    The script, by default, checks the <i>/Unreal/CarlaUE4/Content/Carla/Maps</i> for matching names.
+    The script, by default, checks the <i>/Unreal/CarlaUE4/Content/Carla/ExportedMaps</i> for matching names.
     If a map with the same name as a to-be-imported map is found, it will notify the user and won't do anything.
     To override this, <b>generate_map.py</b> can be invoked with the <b>--force</b> flag.
 
