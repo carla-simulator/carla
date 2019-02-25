@@ -6,7 +6,9 @@
 
 #include "carla/client/detail/Client.h"
 
+#include "carla/Exception.h"
 #include "carla/Version.h"
+#include "carla/client/TimeoutException.h"
 #include "carla/rpc/ActorDescription.h"
 #include "carla/rpc/Client.h"
 #include "carla/rpc/DebugShape.h"
@@ -14,6 +16,8 @@
 #include "carla/rpc/VehicleControl.h"
 #include "carla/rpc/WalkerControl.h"
 #include "carla/streaming/Client.h"
+
+#include <rpc/rpc_error.h>
 
 #include <thread>
 
@@ -35,18 +39,31 @@ namespace detail {
   // ===========================================================================
 
   class Client::Pimpl {
+  private:
+
+    template <typename... Args>
+    auto Call(const std::string &function, Args &&... args) {
+      try {
+        return rpc_client.call(function, std::forward<Args>(args)...);
+      } catch (const ::rpc::timeout &) {
+        throw_exception(TimeoutException(endpoint, GetTimeout()));
+      }
+    }
+
   public:
 
     Pimpl(const std::string &host, uint16_t port, size_t worker_threads)
-      : rpc_client(host, port),
+      : endpoint(host + ":" + std::to_string(port)),
+        rpc_client(host, port),
         streaming_client(host) {
+      rpc_client.set_timeout(10u);
       streaming_client.AsyncRun(
           worker_threads > 0u ? worker_threads : std::thread::hardware_concurrency());
     }
 
-    template <typename T, typename ... Args>
-    auto CallAndWait(const std::string &function, Args && ... args) {
-      auto object = rpc_client.call(function, std::forward<Args>(args) ...);
+    template <typename T, typename... Args>
+    auto CallAndWait(const std::string &function, Args &&... args) {
+      auto object = Call(function, std::forward<Args>(args)...);
       using R = typename carla::rpc::Response<T>;
       auto response = object.template as<R>();
       if (response.HasError()) {
@@ -55,11 +72,19 @@ namespace detail {
       return Get(response);
     }
 
-    template <typename ... Args>
-    void AsyncCall(const std::string &function, Args && ... args) {
+    template <typename... Args>
+    void AsyncCall(const std::string &function, Args &&... args) {
       // Discard returned future.
-      rpc_client.async_call(function, std::forward<Args>(args) ...);
+      rpc_client.async_call(function, std::forward<Args>(args)...);
     }
+
+    time_duration GetTimeout() const {
+      auto timeout = rpc_client.get_timeout();
+      DEBUG_ASSERT(timeout.has_value());
+      return time_duration::milliseconds(*timeout);
+    }
+
+    const std::string endpoint;
 
     rpc::Client rpc_client;
 
@@ -80,6 +105,14 @@ namespace detail {
 
   void Client::SetTimeout(time_duration timeout) {
     _pimpl->rpc_client.set_timeout(timeout.milliseconds());
+  }
+
+  time_duration Client::GetTimeout() const {
+    return _pimpl->GetTimeout();
+  }
+
+  const std::string &Client::GetEndpoint() const {
+    return _pimpl->endpoint;
   }
 
   std::string Client::GetClientVersion() {
