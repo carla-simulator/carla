@@ -12,6 +12,7 @@
 #include "Carla/Vehicle/VehicleSpawnPoint.h"
 
 #include "EngineUtils.h"
+#include "Engine/StaticMeshActor.h"
 #include "GameFramework/SpectatorPawn.h"
 
 static FString UCarlaEpisode_GetTrafficSignId(ETrafficSignState State)
@@ -122,6 +123,21 @@ void UCarlaEpisode::InitializeAtBeginPlay()
     Description.Id = UCarlaEpisode_GetTrafficSignId(Actor->GetTrafficSignState());
     Description.Class = Actor->GetClass();
     ActorDispatcher->RegisterActor(*Actor, Description);
+  }
+
+  for (TActorIterator<AStaticMeshActor> It(World); It; ++It)
+  {
+    auto Actor = *It;
+    check(Actor != nullptr);
+    auto MeshComponent = Actor->GetStaticMeshComponent();
+    check(MeshComponent != nullptr);
+    if (MeshComponent->Mobility == EComponentMobility::Movable)
+    {
+      FActorDescription Description;
+      Description.Id = TEXT("static.prop");
+      Description.Class = Actor->GetClass();
+      ActorDispatcher->RegisterActor(*Actor, Description);
+    }
   }
 }
 

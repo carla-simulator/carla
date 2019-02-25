@@ -107,10 +107,7 @@ namespace detail {
     // =========================================================================
     /// @{
 
-    Timestamp WaitForTick(time_duration timeout) {
-      DEBUG_ASSERT(_episode != nullptr);
-      return _episode->WaitForState(timeout);
-    }
+    Timestamp WaitForTick(time_duration timeout);
 
     void RegisterOnTickEvent(std::function<void(Timestamp)> callback) {
       DEBUG_ASSERT(_episode != nullptr);

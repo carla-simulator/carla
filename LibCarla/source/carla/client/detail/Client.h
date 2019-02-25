@@ -59,6 +59,10 @@ namespace detail {
 
     void SetTimeout(time_duration timeout);
 
+    time_duration GetTimeout() const;
+
+    const std::string &GetEndpoint() const;
+
     std::string GetClientVersion();
 
     std::string GetServerVersion();
