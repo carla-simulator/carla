@@ -18,8 +18,6 @@ void CarlaRecorderCollision::Read(std::ifstream &InFile)
     // is hero
     ReadValue<bool>(InFile, this->IsActor1Hero);
     ReadValue<bool>(InFile, this->IsActor2Hero);
-    // location
-    ReadFVector(InFile, this->Location);
 }
 void CarlaRecorderCollision::Write(std::ofstream &OutFile) const
 {
@@ -31,8 +29,6 @@ void CarlaRecorderCollision::Write(std::ofstream &OutFile) const
     // is hero
     WriteValue<bool>(OutFile, this->IsActor1Hero);
     WriteValue<bool>(OutFile, this->IsActor2Hero);
-    // location
-    WriteFVector(OutFile, this->Location);
 }
 bool CarlaRecorderCollision::operator==(const CarlaRecorderCollision &Other) const
 {
@@ -56,10 +52,8 @@ void CarlaRecorderCollisions::Write(std::ofstream &OutFile)
     // write the packet id
     WriteValue<char>(OutFile, static_cast<char>(CarlaRecorderPacketId::Collision));
 
-    std::streampos PosStart = OutFile.tellp();
-
-    // write a dummy packet size
-    uint32_t Total = 0;
+    // write the packet size
+    uint32_t Total = 2 + Collisions.size() * sizeof(CarlaRecorderCollision);
     WriteValue<uint32_t>(OutFile, Total);
 
     // write total records
@@ -71,11 +65,4 @@ void CarlaRecorderCollisions::Write(std::ofstream &OutFile)
     {
         Coll.Write(OutFile);
     }
-
-    // write the real packet size
-    std::streampos PosEnd = OutFile.tellp();
-    Total = PosEnd - PosStart - sizeof(uint32_t);
-    OutFile.seekp(PosStart, std::ios::beg);
-    WriteValue<uint32_t>(OutFile, Total);
-    OutFile.seekp(PosEnd, std::ios::beg);
 }

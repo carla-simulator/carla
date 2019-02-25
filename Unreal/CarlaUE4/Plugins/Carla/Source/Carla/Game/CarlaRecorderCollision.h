@@ -10,6 +10,7 @@
 #include <vector>
 #include <unordered_set>
 
+#pragma pack(push, 1)
 struct CarlaRecorderCollision
 {
     uint32_t Id;
@@ -17,13 +18,13 @@ struct CarlaRecorderCollision
     uint32_t DatabaseId2;
     bool IsActor1Hero;
     bool IsActor2Hero;
-    FVector Location;
 
     void Read(std::ifstream &InFile);
     void Write(std::ofstream &OutFile) const;
     // define operator == needed for the 'unordered_set'
     bool operator==(const CarlaRecorderCollision &Other) const;
 };
+#pragma pack(pop)
 
 // implement the hash function for the unordered_set of collisions
 namespace std
