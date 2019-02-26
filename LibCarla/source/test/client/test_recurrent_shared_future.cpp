@@ -22,8 +22,9 @@ TEST(recurrent_shared_future, use_case) {
 
   threads.CreateThreads(number_of_threads, [&]() {
     while (!done) {
-      int result = future.WaitFor(1s);
-      ASSERT_EQ(result, 42);
+      auto result = future.WaitFor(1s);
+      ASSERT_TRUE(result.has_value());
+      ASSERT_EQ(*result, 42);
       ++count;
     }
   });
@@ -42,7 +43,8 @@ TEST(recurrent_shared_future, use_case) {
 TEST(recurrent_shared_future, timeout) {
   using namespace carla;
   RecurrentSharedFuture<int> future;
-  ASSERT_THROW(future.WaitFor(1ns), std::runtime_error);
+  auto result = future.WaitFor(1ns);
+  ASSERT_FALSE(result.has_value());
 }
 
 TEST(recurrent_shared_future, exception) {
