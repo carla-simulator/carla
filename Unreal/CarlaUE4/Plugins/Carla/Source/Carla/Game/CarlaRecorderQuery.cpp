@@ -244,7 +244,7 @@ std::string CarlaRecorderQuery::QueryCollisions(std::string Filename, char Categ
   {
     std::size_t operator()(const std::pair<uint32_t, uint32_t>& P) const
     {
-        return (P.first * 100000) + P.second;
+        return (P.first * 0xffff) + P.second;
     }
   };
   std::unordered_set<std::pair<uint32_t, uint32_t>, PairHash > oldCollisions, newCollisions;

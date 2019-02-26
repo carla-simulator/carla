@@ -29,9 +29,11 @@ class CarlaRecorderQuery
 
 public:
 
-  // forwarded to replayer
+  // get general info
   std::string QueryInfo(std::string Filename, bool bShowAll = false);
+  // get info about collisions
   std::string QueryCollisions(std::string Filename, char Category1 = 'a', char Category2 = 'a');
+  // get info about blocked actors
   std::string QueryBlocked(std::string Filename, double MinTime = 30, double MinDistance = 10);
 
 private:
@@ -47,7 +49,10 @@ private:
   CarlaRecorderCollision Collision;
   CarlaRecorderStateTrafficLight StateTraffic;
 
+  // read next header packet
   bool ReadHeader(void);
+
+  // skip current packet
   void SkipPacket(void);
 
   // read the start info structure and check the magic string
