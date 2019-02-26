@@ -1,6 +1,5 @@
 // Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
 
-#if WITH_EDITOR
 
 #include "MapProcessCommandlet.h"
 #include "GameFramework/WorldSettings.h"
@@ -13,6 +12,7 @@ UMapProcessCommandlet::UMapProcessCommandlet()
   IsEditor = false;
   IsServer = false;
   LogToConsole = true;
+  #if WITH_EDITORONLY_DATA
   static ConstructorHelpers::FObjectFinder<UMaterial> MarkingNode(TEXT(
       "Material'/Game/Carla/Static/GenericMaterials/LaneMarking/M_MarkingLane_W.M_MarkingLane_W'"));
   static ConstructorHelpers::FObjectFinder<UMaterial> RoadNode(TEXT(
@@ -25,7 +25,9 @@ UMapProcessCommandlet::UMapProcessCommandlet()
   MarkingNodeMaterial = (UMaterial *) MarkingNode.Object;
   RoadNodeMaterial = (UMaterial *) RoadNode.Object;
   MarkingNodeMaterialAux = (UMaterial *) RoadNodeAux.Object;
+  #endif
 }
+#if WITH_EDITOR
 
 bool UMapProcessCommandlet::ParseParams(const FString& InParams)
 {

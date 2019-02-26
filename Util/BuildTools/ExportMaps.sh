@@ -22,8 +22,9 @@ USAGE_STRING="Usage: $0 [-h|--help] [-d|--dir] <outdir> [-f|--file] <filename>"
 
 OUTPUT_DIRECTORY=""
 FILE_NAME=""
+MAP_PATH=""
 
-OPTS=`getopt -o h,d::,f --long help,dir::,file:: -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,dir:,file:,map: -n 'parse-options' -- "$@"`
 
 if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2; fi
 
@@ -33,10 +34,13 @@ while true; do
   case "$1" in
     --dir )
       OUTPUT_DIRECTORY="$2"
-      shift ;;
+      shift 2;;
     --file )
       FILE_NAME="$2"
-      shift ;;
+      shift 2;;
+    --map )
+      MAP_PATH="$2"
+      shift 2;;
     -h | --help )
       echo "$DOC_STRING"
       echo "$USAGE_STRING"
@@ -54,6 +58,8 @@ if [ -z "${FILE_NAME}" ]; then
   FILE_NAME="CookedExportedMaps"
 fi
 
+
+
 # ==============================================================================
 # -- Package project -----------------------------------------------------------
 # ==============================================================================
@@ -64,7 +70,7 @@ BUILD_FOLDER=${OUTPUT_DIRECTORY}
 
 log "Packaging user content from version '$REPOSITORY_TAG'."
 
-rm -Rf ${BUILD_FOLDER}
+#rm -Rf ${BUILD_FOLDER}
 mkdir -p ${BUILD_FOLDER}
 
 pushd "${CARLAUE4_ROOT_FOLDER}" > /dev/null
@@ -72,54 +78,45 @@ pushd "${CARLAUE4_ROOT_FOLDER}" > /dev/null
 log "Current project directory: '${PWD}'"
 
 MAP_LIST=""
-
-for filepath in `find ${PWD}/Content/ -type f -name "*.umap"`; do
-	if [[ $filepath == *"/ExportedMaps/"* ]]; then
-    filepath="/Game/"${filepath#"${PWD}/Content/"}
-    if [ -z "${MAP_LIST}" ]; then
-      MAP_LIST=$filepath
-    else
-      MAP_LIST=$MAP_LIST+$filepath
+if [ -z "${MAP_PATH}" ]; then
+  for filepath in `find ${PWD}/Content/ -type f -name "*.umap"`; do
+    if [[ $filepath == *"/ExportedMaps/"* ]]; then
+      filepath="/Game/"${filepath#"${PWD}/Content/"}
+      if [ -z "${MAP_LIST}" ]; then
+        MAP_LIST=$filepath
+      else
+        MAP_LIST=$MAP_LIST+$filepath
+      fi
     fi
-  fi
-done
+  done
+else
+  MAP_LIST=${MAP_PATH}
+fi
 
-echo $MAP_LIST
-${UE4_ROOT}/Engine/Build/BatchFiles/RunUAT.sh BuildCookRun \
-    -project="${PWD}/CarlaUE4.uproject" -map=$MAP_LIST \
-    -nocompileeditor -nop4 -cook \
-    -archive -package -stage -nodebuginfo -build \
-    -clientconfig=Development -ue4exe=UE4Editor \
-    -targetplatform=Linux -CrashReporter -utf8output \
-    -SkipCookingEditorContent -archivedirectory="${BUILD_FOLDER}"
+${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${PWD}/CarlaUE4.uproject" -run=cook -map=${MAP_LIST} -cooksinglepackage -targetplatform="LinuxNoEditor" -OutputDir="${BUILD_FOLDER}/Cooked"
+
 
 popd >/dev/null
 
-if [[ ! -d ${BUILD_FOLDER}/LinuxNoEditor ]] ; then
-  fatal_error "Failed to package the project!"
-fi
+#if [[ ! -d ${BUILD_FOLDER}/LinuxNoEditor ]] ; then
+#  fatal_error "Failed to package the project!"
+#fi
 
 # ==============================================================================
 # -- Zip the project -----------------------------------------------------------
 # ==============================================================================
 
 DESTINATION=${BUILD_FOLDER}/${FILE_NAME}.tar.gz
-SOURCE=${BUILD_FOLDER}
+SOURCE=${BUILD_FOLDER}/Cooked
 
-pushd "${SOURCE}/LinuxNoEditor" >/dev/null
+pushd "${SOURCE}" >/dev/null
 
 log "Packaging build."
 
-rm -Rf ./CarlaUE4/Saved
 rm -Rf ./Engine
-rm ./CarlaUE4.sh
-rm ./Manifest_NonUFSFiles_Linux.txt
-rm ./Manifest_UFSFiles_Linux.txt
-rm -Rf ./CarlaUE4/Binaries
-rm -Rf ./CarlaUE4/Config
+rm -Rf ./CarlaUE4/Metadata
 rm -Rf ./CarlaUE4/Plugins
 rm ./CarlaUE4/AssetRegistry.bin
-rm ./CarlaUE4/CarlaUE4.uproject
 
 tar -czvf ${DESTINATION} *
 
@@ -132,7 +129,7 @@ popd > /dev/null
 
 log "Removing intermediate build."
 
-rm -Rf ${BUILD_FOLDER}/LinuxNoEditor
+rm -Rf ${BUILD_FOLDER}/Cooked
 
 # ==============================================================================
 # -- ...and we are done --------------------------------------------------------
