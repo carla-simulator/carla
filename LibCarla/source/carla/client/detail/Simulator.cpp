@@ -61,9 +61,9 @@ namespace detail {
   EpisodeProxy Simulator::LoadEpisode(std::string map_name) {
     const auto id = GetCurrentEpisode().GetId();
     _client.LoadEpisode(std::move(map_name));
-    for (auto i = 0u; i < 10u; ++i) { // 10 attempts.
+    for (auto i = 0u; i < 10u; ++i) { // 10 attempts (at most 20 seconds).
       using namespace std::literals::chrono_literals;
-      WaitForTick(30s); /// @todo Do not throw on time-out.
+      _episode->WaitForState(2s); // Ignore time-outs.
       auto episode = GetCurrentEpisode();
       if (episode.GetId() != id) {
         return episode;
