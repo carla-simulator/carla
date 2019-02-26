@@ -27,7 +27,7 @@ UMapProcessCommandlet::UMapProcessCommandlet()
   MarkingNodeMaterialAux = (UMaterial *) RoadNodeAux.Object;
   #endif
 }
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 
 bool UMapProcessCommandlet::ParseParams(const FString& InParams)
 {
