@@ -144,11 +144,12 @@ boost::python::object VehiclePhysicsControl_init(boost::python::tuple args, boos
     };
 
     boost::python::object self = args[0];
+    args = boost::python::tuple(args.slice(1, boost::python::_));
 
     auto res = self.attr("__init__")();
-    if (len(args) > 1) {
-      for (unsigned int i=0; i < len(args)-1; ++i)
-        self.attr(args_names[i]) = args[i+1];
+    if (len(args) > 0) {
+      for (unsigned int i=0; i < len(args); ++i)
+        self.attr(args_names[i]) = args[i];
     }
 
     for (unsigned int i = 0; i < NUM_ARGUMENTS; ++i) {
