@@ -1,5 +1,4 @@
 // Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
-#if WITH_EDITOR
 #pragma once
 
 #include "Commandlets/Commandlet.h"
@@ -7,13 +6,14 @@
 #include <UObject/Package.h>
 #include <Misc/PackageName.h>
 #include "CoreMinimal.h"
-#include <AssetRegistry/Public/AssetRegistryModule.h>
 #include <Runtime/Engine/Classes/Engine/ObjectLibrary.h>
 #include <OpenDriveActor.h>
+#if WITH_EDITOR
 #include <Developer/AssetTools/Public/IAssetTools.h>
 #include <Developer/AssetTools/Public/AssetToolsModule.h>
+#include <AssetRegistry/Public/AssetRegistryModule.h>
+#endif //WITH_EDITOR
 #include <Runtime/Engine/Classes/Engine/StaticMeshActor.h>
-
 #include "MapProcessCommandlet.generated.h"
 
 UCLASS()
@@ -23,9 +23,9 @@ class UMapProcessCommandlet
   GENERATED_BODY()
 
 public:
-
   /** Default constructor. */
   UMapProcessCommandlet();
+  #if WITH_EDITOR
 
   /**
 	 * Parses the command line parameters
@@ -73,8 +73,9 @@ public:
    */
   virtual int32 Main(const FString &Params) override;
 
-
+#endif
 private:
+
 
   /** Materials for the workaround */
   /**
@@ -132,5 +133,3 @@ private:
   UPROPERTY()
   TArray<FAssetData> MapContents;
 };
-
-#endif

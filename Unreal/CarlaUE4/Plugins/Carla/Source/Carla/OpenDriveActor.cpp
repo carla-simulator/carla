@@ -37,7 +37,7 @@ AOpenDriveActor::AOpenDriveActor(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
 {
   PrimaryActorTick.bCanEverTick = false;
-
+  #if WITH_EDITORONLY_DATA
   static ConstructorHelpers::FObjectFinder<UBlueprint> TrafficLightBP(TEXT(
       "Blueprint'/Game/Carla/Static/TrafficSigns/Streetlights_01/BP_TrafficLightPole.BP_TrafficLightPole'"));
   TrafficLightBlueprintClass = (UClass *) TrafficLightBP.Object->GeneratedClass;
@@ -65,6 +65,7 @@ AOpenDriveActor::AOpenDriveActor(const FObjectInitializer &ObjectInitializer)
   static ConstructorHelpers::FObjectFinder<UBlueprint> TrafficSign100BP(TEXT(
       "Blueprint'/Game/Carla/Static/TrafficSigns/PostSigns/Round/SpeedLimiters/BP_SpeedLimit100.BP_SpeedLimit100'"));
   TrafficSign100BlueprintClass = (UClass *) TrafficSign100BP.Object->GeneratedClass;
+  #endif // WITH_EDITORONLY_DATA
 
   // Structure to hold one-time initialization
   static struct FConstructorStatics
