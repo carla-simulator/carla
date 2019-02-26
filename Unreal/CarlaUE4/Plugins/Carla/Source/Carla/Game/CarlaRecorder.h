@@ -16,6 +16,7 @@
 #include "Carla/Game/CarlaRecorderCollision.h"
 #include "Carla/Game/CarlaRecorderPosition.h"
 #include "Carla/Game/CarlaRecorderState.h"
+#include "Carla/Game/CarlaRecorderQuery.h"
 #include "Carla/Game/CarlaReplayer.h"
 #include "Carla/Actor/ActorDescription.h"
 
@@ -128,6 +129,9 @@ private:
 
   // replayer
   CarlaReplayer Replayer;
+
+  // query tools
+  CarlaRecorderQuery Query;
 
   void AddExistingActors(void);
 

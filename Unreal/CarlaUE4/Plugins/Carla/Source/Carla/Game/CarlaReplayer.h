@@ -24,24 +24,21 @@
 
 class UCarlaEpisode;
 
-#pragma pack(push, 1)
-struct OHeader
-{
-  char Id;
-  uint32_t Size;
-};
-#pragma pack(pop)
-
 class CarlaReplayer
 {
+  #pragma pack(push, 1)
+  struct Header
+  {
+    char Id;
+    uint32_t Size;
+  };
+  #pragma pack(pop)
+
 public:
 
   CarlaReplayer() {};
   ~CarlaReplayer() { Stop(); };
 
-  std::string GetInfo(std::string Filename);
-  std::string GetInfoCollisions(std::string Filename, char Category1 = 'a', char Category2 = 'a');
-  std::string GetInfoActorsBlocked(std::string Filename, double MinTime = 30, double MinDistance = 10);
   std::string ReplayFile(std::string Filename, double TimeStart = 0.0f, double Duration = 0.0f, uint32_t FollowId = 0);
 
   // void Start(void);
@@ -72,7 +69,7 @@ private:
   UCarlaEpisode *Episode = nullptr;
   // binary file reader
   std::ifstream File;
-  OHeader Header;
+  Header Header;
   CarlaRecorderInfo RecInfo;
   CarlaRecorderFrame Frame;
   // positions (to be able to interpolate)

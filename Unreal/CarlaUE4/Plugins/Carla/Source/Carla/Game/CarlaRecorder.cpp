@@ -26,17 +26,17 @@ ACarlaRecorder::ACarlaRecorder(const FObjectInitializer &ObjectInitializer)
 
 std::string ACarlaRecorder::ShowFileInfo(std::string Path, std::string Name)
 {
-  return Replayer.GetInfo(Path + Name);
+  return Query.QueryInfo(Path + Name);
 }
 
 std::string ACarlaRecorder::ShowFileCollisions(std::string Path, std::string Name, char Type1, char Type2)
 {
-  return Replayer.GetInfoCollisions(Path + Name, Type1, Type2);
+  return Query.QueryCollisions(Path + Name, Type1, Type2);
 }
 
 std::string ACarlaRecorder::ShowFileActorsBlocked(std::string Path, std::string Name, double MinTime, double MinDistance)
 {
-  return Replayer.GetInfoActorsBlocked(Path + Name, MinTime, MinDistance);
+  return Query.QueryBlocked(Path + Name, MinTime, MinDistance);
 }
 
 std::string ACarlaRecorder::ReplayFile(std::string Path, std::string Name, double TimeStart, double Duration, uint32_t FollowId)
