@@ -24,6 +24,10 @@ import cpuinfo
 import numpy as np
 import pygame
 import psutil
+try:
+    import queue
+except ImportError:
+    import Queue as queue
 import shutil
 import subprocess
 from tr import tr
@@ -35,20 +39,20 @@ import carla
 # ======================================================================================================================
 pygame_clock = pygame.time.Clock()
 current_fps = 0
+sensors_callback = []
 
 # ======================================================================================================================
 # -- Tunable parameters ------------------------------------------------------------------------------------------------
 # ======================================================================================================================
-list_towns = ['Town01', 'Town02', 'Town03', 'Town04', 'Town05']
-number_locations = 3
-number_ticks = 50
+number_locations = 2
+number_ticks = 4
 actor_list = ['vehicle.*']
 
 
 def weathers():
     list_weathers = [ carla.WeatherParameters.ClearNoon,
-                      carla.WeatherParameters.CloudyNoon,
-                      carla.WeatherParameters.SoftRainSunset
+                      #carla.WeatherParameters.CloudyNoon,
+                      #carla.WeatherParameters.SoftRainSunset
                       ]
 
     return list_weathers
@@ -58,22 +62,22 @@ def define_sensors():
     list_sensor_specs = []
 
     sensors00 = [{'type':'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-                  'width': 300, 'height': 200, 'fov': 100, 'label':'cam-300x200'}]
+                  'width': 300, 'height': 200, 'fov': 100, 'label':'1. cam-300x200'}]
 
     sensors01 = [{'type':'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-                  'width': 800, 'height': 600, 'fov': 100, 'label':'cam-800x600'}]
+                  'width': 800, 'height': 600, 'fov': 100, 'label':'2. cam-800x600'}]
 
     sensors02 = [{'type':'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-                  'width': 1900, 'height': 1080, 'fov': 100, 'label':'cam-1900x1080'}]
+                  'width': 1900, 'height': 1080, 'fov': 100, 'label':'3. cam-1900x1080'}]
 
     sensors03 = [{'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-                  'width': 300, 'height': 200, 'fov': 100, 'label': 'cam-300x200'},
+                  'width': 300, 'height': 200, 'fov': 100, 'label': '4. cam-300x200'},
                  {'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.4, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
                   'width': 300, 'height': 200, 'fov': 100, 'label': 'cam-300x200'},
                  ]
 
     sensors04 = [{'type': 'sensor.lidar.ray_cast', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'yaw': 0.0, 'pitch': 0.0, 'roll': 0.0,
-                  'label': 'LIDAR'}]
+                  'label': '5. LIDAR'}]
 
     list_sensor_specs.append(sensors00)
     list_sensor_specs.append(sensors01)
@@ -85,6 +89,8 @@ def define_sensors():
 
 
 def create_ego_vehicle(world, ego_vehicle, spawn_point, list_sensor_spec):
+    global sensors_callback
+
     if ego_vehicle:
         ego_vehicle.set_transform(spawn_point)
         sensors = None
@@ -114,6 +120,12 @@ def create_ego_vehicle(world, ego_vehicle, spawn_point, list_sensor_spec):
             # create sensor
             sensor_transform = carla.Transform(sensor_location, sensor_rotation)
             sensor = world.spawn_actor(bp, sensor_transform, ego_vehicle)
+
+            # add callbacks
+            sensor_queue = queue.Queue()
+            sensor.listen(sensor_queue.put)
+
+            sensors_callback.append(sensor_queue)
             sensors.append(sensor)
 
     return ego_vehicle, sensors
@@ -124,7 +136,7 @@ def create_ego_vehicle(world, ego_vehicle, spawn_point, list_sensor_spec):
 # ======================================================================================================================
 
 def run_benchmark(world, sensor_specs_list, number_locations, number_ticks, actor_list):
-    global current_fps
+    global current_fps, sensors_callback
 
     spawn_points = world.get_map().get_spawn_points()
     n = min(number_locations, len(spawn_points))
@@ -141,15 +153,15 @@ def run_benchmark(world, sensor_specs_list, number_locations, number_ticks, acto
 
         ticks = 0
         while ticks < number_ticks:
-            if not world.wait_for_tick(10.0):
-                continue
-
-            print("== Samples {} / {}".format(ticks, number_ticks))
+            ts = world.wait_for_tick(1000.0)
+            print("== Samples {} / {}".format(ticks+1, number_ticks))
             list_fps.append(current_fps)
             ticks += 1
 
     for sensor in sensor_list:
+        sensor.stop()
         sensor.destroy()
+    sensors_callback.clear()
     ego_vehicle.destroy()
 
     return list_fps
@@ -170,7 +182,7 @@ def serialize_records(records, system_specs, filename):
         s += "| ----------- | ----------- | ----------- | ----------- | ----------- | ----------- |\n"
         fd.write(s)
 
-        for sensor_key in records.keys():
+        for sensor_key in sorted(records.keys()):
             list_records = records[sensor_key]
             for record in list_records:
                 s = "| {} | {} | {} | {} | {:03.2f} | {:03.2f} |\n".format(record['sensors'],
@@ -211,7 +223,10 @@ def get_system_specs():
 
 
 def on_world_tick(timestamp):
-    global pygame_clock, current_fps
+    global pygame_clock, current_fps, sensors_callback
+    # block for sensor data!
+    for callback in sensors_callback:
+        _ = callback.get()
 
     pygame_clock.tick()
     current_fps = pygame_clock.get_fps()
@@ -220,11 +235,11 @@ def on_world_tick(timestamp):
 
 def main(args):
     client = carla.Client(args.host, int(args.port))
-    client.set_timeout(10.0)
+    client.set_timeout(60.0)
     pygame.init()
 
     records = {}
-    for town in list_towns:
+    for town in sorted(client.get_available_maps()):
         world = client.load_world(town)
         world.on_tick(on_world_tick)
         for weather in weathers():
@@ -251,9 +266,8 @@ def main(args):
 
     system_specs = get_system_specs()
     serialize_records(records, system_specs, args.file)
-
-    return 0
-
+    pygame.quit()
+    print("--- I am not going to exit...")
 
 if __name__ == '__main__':
     description = "Benchmark CARLA performance in your platform for different towns and sensor configurations\n"
