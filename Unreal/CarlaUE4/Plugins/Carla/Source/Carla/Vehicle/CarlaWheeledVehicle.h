@@ -10,13 +10,13 @@
 
 #include "Vehicle/CarlaWheeledVehicleState.h"
 #include "Vehicle/VehicleControl.h"
+#include "Vehicle/VehicleInputPriority.h"
 #include "Vehicle/VehiclePhysicsControl.h"
 #include "WheeledVehicleMovementComponent4W.h"
 
 #include "CoreMinimal.h"
 
 #include "CarlaWheeledVehicle.generated.h"
-
 
 class UBoxComponent;
 class UVehicleAgentComponent;
@@ -48,7 +48,7 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   const FVehicleControl &GetVehicleControl() const
   {
-    return Control;
+    return LastAppliedControl;
   }
 
   /// Transform of the vehicle. Location is shifted so it matches center of the
@@ -90,6 +90,19 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   float GetMaximumSteerAngle() const;
 
+  /// @}
+  // ===========================================================================
+  /// @name AI debug state
+  // ===========================================================================
+  /// @{
+public:
+
+  /// @todo This function should be private to AWheeledVehicleAIController.
+  void SetAIVehicleState(ECarlaWheeledVehicleState InState)
+  {
+    State = InState;
+  }
+
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   ECarlaWheeledVehicleState GetAIVehicleState() const
   {
@@ -102,14 +115,30 @@ public:
 
   /// @}
   // ===========================================================================
-  /// @name Set functions
-  /// @todo Keep only ApplyVehicleControl.
+  /// @name Vehicle input control
   // ===========================================================================
   /// @{
 public:
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
-  void ApplyVehicleControl(const FVehicleControl &VehicleControl);
+  void ApplyVehicleControl(const FVehicleControl &Control, EVehicleInputPriority Priority)
+  {
+    if (InputControl.Priority <= Priority)
+    {
+      InputControl.Control = Control;
+      InputControl.Priority = Priority;
+    }
+  }
+
+  /// @todo This function should be private to AWheeledVehicleAIController.
+  void FlushVehicleControl();
+
+  /// @}
+  // ===========================================================================
+  /// @name DEPRECATED Set functions
+  // ===========================================================================
+  /// @{
+public:
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void SetThrottleInput(float Value);
@@ -126,7 +155,7 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void ToggleReverse()
   {
-    SetReverse(!Control.bReverse);
+    SetReverse(!LastAppliedControl.bReverse);
   }
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
@@ -144,11 +173,6 @@ public:
     SetHandbrakeInput(false);
   }
 
-  void SetAIVehicleState(ECarlaWheeledVehicleState InState)
-  {
-    State = InState;
-  }
-
 private:
 
   /// Current state of the vehicle controller (for debugging purposes).
@@ -161,5 +185,12 @@ private:
   UPROPERTY(Category = "CARLA Wheeled Vehicle", VisibleAnywhere)
   UVehicleAgentComponent *VehicleAgentComponent;
 
-  FVehicleControl Control;
+  struct
+  {
+    EVehicleInputPriority Priority = EVehicleInputPriority::INVALID;
+    FVehicleControl Control;
+  }
+  InputControl;
+
+  FVehicleControl LastAppliedControl;
 };

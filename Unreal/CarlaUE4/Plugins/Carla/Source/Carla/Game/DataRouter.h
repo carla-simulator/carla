@@ -46,10 +46,10 @@ public:
     return Agents;
   }
 
-  void ApplyVehicleControl(const FVehicleControl &VehicleControl)
+  void ApplyVehicleControl(const FVehicleControl &VehicleControl, EVehicleInputPriority Priority)
   {
     check((Player != nullptr) && (Player->IsPossessingAVehicle()));
-    Player->GetPossessedVehicle()->ApplyVehicleControl(VehicleControl);
+    Player->GetPossessedVehicle()->ApplyVehicleControl(VehicleControl, Priority);
   }
 
   void RestartLevel();
