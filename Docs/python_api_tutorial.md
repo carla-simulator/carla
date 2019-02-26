@@ -179,7 +179,7 @@ by providing throttle, break, and steer values
 vehicle.apply_control(carla.VehicleControl(throttle=1.0, steer=-1.0))
 ```
 
-These are all the parameters of the VehicleControl object and their default
+These are all the parameters of the `VehicleControl` object and their default
 values
 
 ```py
@@ -192,6 +192,62 @@ carla.VehicleControl(
     manual_gear_shift = False
     gear = 0)
 ```
+
+Also, physics control properties can be tuned for vehicles and its wheels
+```py
+vehicle.apply_physics_control(carla.VehiclePhysicsControl(max_rpm = 5000.0, center_of_mass = carla.Vector3D(0.0, 0.0, 0.0), torque_curve=[[0,400],[5000,400]]))
+```
+
+These properties are controlled through a `VehiclePhysicsControl` object, which also contains a property to control each wheel's physics through a `WheelPhysicsControl` object.
+
+```py
+carla.VehiclePhysicsControl(
+    torque_curve,
+    max_rpm,
+    moi,
+    damping_rate_full_throttle,
+    damping_rate_zero_throttle_clutch_engaged,
+    damping_rate_zero_throttle_clutch_disengaged,
+    use_gear_autobox,
+    gear_switch_time,
+    clutch_strength,
+    mass,
+    drag_coefficient,
+    center_of_mass,
+    steering_curve,
+    wheels)
+```
+Where:
+- *torque_curve*: Curve that indicates the torque measured in Nm for a specific revolutions per minute of the vehicle's engine
+- *max_rpm*: The maximum revolutions per minute of the vehicle's engine
+- *moi*: The moment of inertia of the vehicle's engine
+- *damping_rate_full_throttle*: Damping rate when the throttle is maximum.
+- *damping_rate_zero_throttle_clutch_engaged*: Damping rate when the thottle is zero with clutch engaged
+- *damping_rate_zero_throttle_clutch_disengaged*: Damping rate when the thottle is zero with clutch disengaged
+
+- *use_gear_autobox*: If true, the vehicle will have automatic transmission
+- *gear_switch_time*: Switching time between gears
+- *clutch_strength*: The clutch strength of the vehicle. Measured in Kgm^2/s
+
+- *mass*: The mass of the vehicle measured in Kg
+- *drag_coefficient*: Drag coefficient of the vehicle's chassis
+- *center_of_mass*: The center of mass of the vehicle
+- *steering_curve*: Curve that indicates the maximum steering for a specific forward speed
+- *wheels*: List of `WheelPhysicsControl` objects.
+
+```py
+carla.WheelPhysicsControl(
+    tire_friction,
+    damping_rate,
+    steer_angle,
+    disable_steering)
+```
+Where:
+- *tire_friction*: Scalar value that indicates the friction of the wheel.
+- *damping_rate*: The damping rate of the wheel.
+- *steer_angle*: The maximum angle in degrees that the wheel can steer.
+- *disable_steering*: If true, the wheel will not steer.
+
 
 Our vehicles also come with a handy autopilot
 
