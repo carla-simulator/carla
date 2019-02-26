@@ -6,6 +6,7 @@
 #pragma once
 
 #include "carla/client/Sensor.h"
+#include <string>
 
 namespace carla {
 namespace client {
@@ -41,6 +42,8 @@ namespace client {
   private:
 
     SharedPtr<sensor::SensorData> TickGnssSensor(const Timestamp &timestamp);
+
+    double ParseDouble(std::string const &stringValue) const;
 
     double _map_latitude;
 

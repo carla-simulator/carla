@@ -93,16 +93,11 @@ namespace client {
       if (geo_ref_key_value.size() != 2u) {
         continue;
       }
-      std::istringstream istr(geo_ref_key_value[1]);
-      istr.imbue(std::locale("C"));
+
       if (geo_ref_key_value[0] == "+lat_0") {
-        istr >> _map_latitude;
+        _map_latitude = ParseDouble(geo_ref_key_value[1]);
       } else if (geo_ref_key_value[0] == "+lon_0") {
-        istr >> _map_longitude;
-      }
-      if (istr.fail() || !istr.eof()) {
-        _map_latitude = std::numeric_limits<double>::quiet_NaN();
-        _map_longitude = std::numeric_limits<double>::quiet_NaN();
+        _map_longitude = ParseDouble(geo_ref_key_value[1]);
       }
     }
 
@@ -128,6 +123,17 @@ namespace client {
       }
     });
     _is_listening = true;
+  }
+
+  double GnssSensor::ParseDouble(std::string const &stringValue) const {
+    double value;
+    std::istringstream istr(stringValue);
+    istr.imbue(std::locale("C"));
+    istr >> value;
+    if (istr.fail() || !istr.eof()) {
+      value = std::numeric_limits<double>::quiet_NaN();
+    }
+    return value;
   }
 
   SharedPtr<sensor::SensorData> GnssSensor::TickGnssSensor(
