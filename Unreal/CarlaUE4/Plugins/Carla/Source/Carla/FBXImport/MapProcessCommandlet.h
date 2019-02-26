@@ -8,11 +8,11 @@
 #include "CoreMinimal.h"
 #include <Runtime/Engine/Classes/Engine/ObjectLibrary.h>
 #include <OpenDriveActor.h>
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 #include <Developer/AssetTools/Public/IAssetTools.h>
 #include <Developer/AssetTools/Public/AssetToolsModule.h>
 #include <AssetRegistry/Public/AssetRegistryModule.h>
-#endif //WITH_EDITOR
+#endif //WITH_EDITORONLY_DATA
 #include <Runtime/Engine/Classes/Engine/StaticMeshActor.h>
 #include "MapProcessCommandlet.generated.h"
 
@@ -25,7 +25,7 @@ class UMapProcessCommandlet
 public:
   /** Default constructor. */
   UMapProcessCommandlet();
-  #if WITH_EDITOR
+  #if WITH_EDITORONLY_DATA
 
   /**
 	 * Parses the command line parameters
@@ -73,7 +73,7 @@ public:
    */
   virtual int32 Main(const FString &Params) override;
 
-#endif
+#endif //WITH_EDITORONLY_DATA
 private:
 
 
