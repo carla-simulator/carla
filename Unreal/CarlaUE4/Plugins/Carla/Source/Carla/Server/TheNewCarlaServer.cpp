@@ -531,7 +531,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("unable to apply control: actor is not a vehicle");
     }
-    Vehicle->ApplyVehicleControl(Control);
+    Vehicle->ApplyVehicleControl(Control, EVehicleInputPriority::Client);
     return R<void>::Success();
   };
 

@@ -137,7 +137,7 @@ void FServerGameController::Tick(float DeltaSeconds)
     FVehicleControl Control;
     if (Errc::Error != Server->ReadControl(Control, bShouldBlock))
     {
-      DataRouter.ApplyVehicleControl(Control);
+      DataRouter.ApplyVehicleControl(Control, EVehicleInputPriority::Client);
     } // Here we ignore the error too.
   }
 }

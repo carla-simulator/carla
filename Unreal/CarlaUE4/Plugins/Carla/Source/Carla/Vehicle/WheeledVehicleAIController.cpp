@@ -138,12 +138,14 @@ void AWheeledVehicleAIController::Tick(const float DeltaTime)
 
   if (bAutopilotEnabled)
   {
-    Vehicle->ApplyVehicleControl(AutopilotControl);
+    Vehicle->ApplyVehicleControl(AutopilotControl, EVehicleInputPriority::Autopilot);
   }
   else if (!bControlIsSticky)
   {
-    Vehicle->ApplyVehicleControl(FVehicleControl{});
+    Vehicle->ApplyVehicleControl(FVehicleControl{}, EVehicleInputPriority::Relaxation);
   }
+
+  Vehicle->FlushVehicleControl();
 }
 
 // =============================================================================
