@@ -75,63 +75,65 @@ float ACarlaWheeledVehicle::GetMaximumSteerAngle() const
 // -- Set functions ------------------------------------------------------------
 // =============================================================================
 
-void ACarlaWheeledVehicle::ApplyVehicleControl(const FVehicleControl &VehicleControl)
+void ACarlaWheeledVehicle::FlushVehicleControl()
 {
   auto *MovementComponent = GetVehicleMovementComponent();
-  MovementComponent->SetThrottleInput(VehicleControl.Throttle);
-  MovementComponent->SetSteeringInput(VehicleControl.Steer);
-  MovementComponent->SetBrakeInput(VehicleControl.Brake);
-  MovementComponent->SetHandbrakeInput(VehicleControl.bHandBrake);
-  if (Control.bReverse != VehicleControl.bReverse)
+  MovementComponent->SetThrottleInput(InputControl.Control.Throttle);
+  MovementComponent->SetSteeringInput(InputControl.Control.Steer);
+  MovementComponent->SetBrakeInput(InputControl.Control.Brake);
+  MovementComponent->SetHandbrakeInput(InputControl.Control.bHandBrake);
+  if (LastAppliedControl.bReverse != InputControl.Control.bReverse)
   {
-    MovementComponent->SetUseAutoGears(!VehicleControl.bReverse);
-    MovementComponent->SetTargetGear(VehicleControl.bReverse ? -1 : 1, true);
+    MovementComponent->SetUseAutoGears(!InputControl.Control.bReverse);
+    MovementComponent->SetTargetGear(InputControl.Control.bReverse ? -1 : 1, true);
   }
   else
   {
-    MovementComponent->SetUseAutoGears(!VehicleControl.bManualGearShift);
-    if (VehicleControl.bManualGearShift)
+    MovementComponent->SetUseAutoGears(!InputControl.Control.bManualGearShift);
+    if (InputControl.Control.bManualGearShift)
     {
-      MovementComponent->SetTargetGear(VehicleControl.Gear, true);
+      MovementComponent->SetTargetGear(InputControl.Control.Gear, true);
     }
   }
-  Control = VehicleControl;
-  Control.Gear = MovementComponent->GetCurrentGear();
-  Control.bReverse = Control.Gear < 0;
+  InputControl.Control.Gear = MovementComponent->GetCurrentGear();
+  InputControl.Control.bReverse = InputControl.Control.Gear < 0;
+  LastAppliedControl = InputControl.Control;
+  InputControl.Priority = EVehicleInputPriority::INVALID;
 }
 
 void ACarlaWheeledVehicle::SetThrottleInput(const float Value)
 {
-  GetVehicleMovementComponent()->SetThrottleInput(Value);
+  FVehicleControl Control = InputControl.Control;
   Control.Throttle = Value;
+  ApplyVehicleControl(Control, EVehicleInputPriority::User);
 }
 
 void ACarlaWheeledVehicle::SetSteeringInput(const float Value)
 {
-  GetVehicleMovementComponent()->SetSteeringInput(Value);
+  FVehicleControl Control = InputControl.Control;
   Control.Steer = Value;
+  ApplyVehicleControl(Control, EVehicleInputPriority::User);
 }
 
 void ACarlaWheeledVehicle::SetBrakeInput(const float Value)
 {
-  GetVehicleMovementComponent()->SetBrakeInput(Value);
+  FVehicleControl Control = InputControl.Control;
   Control.Brake = Value;
+  ApplyVehicleControl(Control, EVehicleInputPriority::User);
 }
 
 void ACarlaWheeledVehicle::SetReverse(const bool Value)
 {
-  if (Value != Control.bReverse) {
-    Control.bReverse = Value;
-    auto MovementComponent = GetVehicleMovementComponent();
-    MovementComponent->SetUseAutoGears(!Control.bReverse);
-    MovementComponent->SetTargetGear(Control.bReverse ? -1 : 1, true);
-  }
+  FVehicleControl Control = InputControl.Control;
+  Control.bReverse = Value;
+  ApplyVehicleControl(Control, EVehicleInputPriority::User);
 }
 
 void ACarlaWheeledVehicle::SetHandbrakeInput(const bool Value)
 {
-  GetVehicleMovementComponent()->SetHandbrakeInput(Value);
+  FVehicleControl Control = InputControl.Control;
   Control.bHandBrake = Value;
+  ApplyVehicleControl(Control, EVehicleInputPriority::User);
 }
 
 FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl()
