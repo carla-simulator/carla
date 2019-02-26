@@ -34,7 +34,7 @@ namespace std
     {
         std::size_t operator()(const CarlaRecorderCollision& P) const noexcept
         {
-            return (P.DatabaseId1 * 100000) + P.DatabaseId2;
+            return (P.DatabaseId1 * 0xffff) + P.DatabaseId2;
         }
     };
 }
