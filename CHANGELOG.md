@@ -3,8 +3,10 @@
   * Fixed `manual_control.py` and `no_rendering_mode.py` to prevent crashes when used in "no rendering mode"
   * Added movable props present in the map (e.g. chairs and tables) as actors so they can be controlled from Python
   * Refactored `no_rendering_mode.py` to improve performance and interface
+  * Several improvements to the basic build system for Windows
   * Improved time-out related error messages
   * Fixed issue of retrieving an empty list when calling `world.get_actors()` right after creating the world
+
 
 ## CARLA 0.9.3
 
