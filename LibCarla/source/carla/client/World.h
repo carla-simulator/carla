@@ -12,6 +12,8 @@
 #include "carla/client/Timestamp.h"
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/geom/Transform.h"
+#include "carla/rpc/Actor.h"
+#include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/WeatherParameters.h"
 
 namespace carla {

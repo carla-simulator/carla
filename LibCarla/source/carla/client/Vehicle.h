@@ -8,6 +8,7 @@
 
 #include "carla/client/Actor.h"
 #include "carla/rpc/VehicleControl.h"
+#include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/TrafficLightState.h"
 
 namespace carla {
@@ -18,6 +19,7 @@ namespace client {
   public:
 
     using Control = rpc::VehicleControl;
+    using PhysicsControl = rpc::VehiclePhysicsControl;
 
     explicit Vehicle(ActorInitializer init) : Actor(std::move(init)) {}
 
@@ -27,6 +29,9 @@ namespace client {
     /// Apply @a control to this vehicle.
     void ApplyControl(const Control &control);
 
+    /// Apply physics control to this vehicle
+    void ApplyPhysicsControl(const PhysicsControl &physics_control);
+
     /// Return the control last applied to this vehicle.
     ///
     /// @note The following functions do not call the simulator, they return the
@@ -34,6 +39,7 @@ namespace client {
     /// received in the last tick.
     //////////////////////////////////////////////////////////////////////////////////
     Control GetControl() const;
+    PhysicsControl GetPhysicsControl() const;
 
     float GetSpeedLimit() const;
 
@@ -42,6 +48,7 @@ namespace client {
     bool IsAtTrafficLight();
 
     SharedPtr<TrafficLight> GetTrafficLight() const;
+
 
   private:
 

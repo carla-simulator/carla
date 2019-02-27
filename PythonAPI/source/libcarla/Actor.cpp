@@ -78,6 +78,8 @@ void export_actor() {
       .add_property("bounding_box", CALL_RETURNING_COPY(cc::Vehicle, GetBoundingBox))
       .def("apply_control", &cc::Vehicle::ApplyControl, (arg("control")))
       .def("get_control", &cc::Vehicle::GetControl)
+      .def("apply_physics_control", &cc::Vehicle::ApplyPhysicsControl, (arg("physics_control")))
+      .def("get_physics_control", CONST_CALL_WITHOUT_GIL(cc::Vehicle, GetPhysicsControl))
       .def("set_autopilot", &cc::Vehicle::SetAutopilot, (arg("enabled") = true))
       .def("get_speed_limit", &cc::Vehicle::GetSpeedLimit)
       .def("get_traffic_light_state", &cc::Vehicle::GetTrafficLightState)

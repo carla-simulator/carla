@@ -23,8 +23,10 @@
 #include <carla/rpc/Response.h>
 #include <carla/rpc/Server.h>
 #include <carla/rpc/Transform.h>
+#include <carla/rpc/Vector2D.h>
 #include <carla/rpc/Vector3D.h>
 #include <carla/rpc/VehicleControl.h>
+#include <carla/rpc/VehiclePhysicsControl.h>
 #include <carla/rpc/WalkerControl.h>
 #include <carla/rpc/WeatherParameters.h>
 #include <carla/streaming/Server.h>
@@ -364,6 +366,45 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     vector.ToCentimeters(),
     "None",
     false);
+    return R<void>::Success();
+  });
+
+
+ Server.BindSync("get_physics_control", [this](
+        cr::Actor Actor) -> R<cr::VehiclePhysicsControl>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(Actor.id);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to get actor physics control: actor not found");
+    }
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    if (Vehicle == nullptr)
+    {
+      RESPOND_ERROR("unable to get actor physics control: actor is not a vehicle");
+    }
+
+    return cr::VehiclePhysicsControl(Vehicle->GetVehiclePhysicsControl());
+  });
+
+  Server.BindSync("apply_physics_control", [this](
+        cr::Actor Actor, cr::VehiclePhysicsControl PhysicsControl) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(Actor.id);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to apply actor physics control: actor not found");
+    }
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    if (Vehicle == nullptr)
+    {
+      RESPOND_ERROR("unable to apply actor physics control: actor is not a vehicle");
+    }
+
+    Vehicle->ApplyVehiclePhysicsControl(FVehiclePhysicsControl(PhysicsControl));
+
     return R<void>::Success();
   });
 

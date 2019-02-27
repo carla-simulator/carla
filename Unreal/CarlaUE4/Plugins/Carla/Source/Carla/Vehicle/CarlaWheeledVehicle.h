@@ -10,10 +10,13 @@
 
 #include "Vehicle/CarlaWheeledVehicleState.h"
 #include "Vehicle/VehicleControl.h"
+#include "Vehicle/VehiclePhysicsControl.h"
+#include "WheeledVehicleMovementComponent4W.h"
 
 #include "CoreMinimal.h"
 
 #include "CarlaWheeledVehicle.generated.h"
+
 
 class UBoxComponent;
 class UVehicleAgentComponent;
@@ -92,6 +95,10 @@ public:
   {
     return State;
   }
+
+  FVehiclePhysicsControl GetVehiclePhysicsControl();
+
+  void ApplyVehiclePhysicsControl(const FVehiclePhysicsControl &PhysicsControl);
 
   /// @}
   // ===========================================================================
