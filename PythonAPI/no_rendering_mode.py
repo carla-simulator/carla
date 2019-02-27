@@ -165,6 +165,9 @@ class Util(object):
         for surface in source_surfaces:
             destination_surface.blit(surface[0], surface[1], rect, blend_mode)
 
+    @staticmethod
+    def length (v):
+      return math.sqrt(v.x**2 + v.y**2 + v.z**2)
 # ==============================================================================
 # -- ModuleManager -------------------------------------------------------------
 # ==============================================================================
@@ -739,13 +742,37 @@ class ModuleWorld(object):
 
         return (vehicles, traffic_lights, speed_limits, stop_signals, walkers)
 
+
+    def get_bounding_box(self, surface, actor):
+      bb = actor.trigger_volume.extent
+      corners = [carla.Location(x=-bb.x, y=-bb.y),
+                carla.Location(x=bb.x, y=-bb.y),
+                carla.Location(x=bb.x, y=bb.y),
+                carla.Location(x=-bb.x, y=bb.y),
+                carla.Location(x=-bb.x, y=-bb.y)]
+      corners = [x + actor.trigger_volume.location for x in corners]
+      t = actor.get_transform()
+      t.transform(corners)
+      return corners
+
     def _render_traffic_lights(self, surface, list_tl, world_to_pixel):
         for tl in list_tl:
-            pos = world_to_pixel(tl.get_location())
-            hero = self.hero_actor
-            if hero is not None and hero.is_at_traffic_light() and tl.id == hero.get_traffic_light().id:
-                srf = self.traffic_light_surfaces.surfaces['h']
-                surface.blit(srf, srf.get_rect(center=pos))
+            world_pos = tl.get_location()
+            pos = world_to_pixel(world_pos)
+            if self.hero_actor is not None and hasattr(tl, 'trigger_volume'):
+                corners = self.get_bounding_box(surface, tl)
+                corners = [world_to_pixel(p) for p in corners]
+                tl_t = tl.get_transform()
+
+                transformed_tv = tl_t.transform(tl.trigger_volume.location)
+
+                d = transformed_tv.distance(self.hero_actor.get_location())
+                s = Util.length(tl.trigger_volume.extent) + Util.length(self.hero_actor.bounding_box.extent)
+                if ( d <= s ):
+                  # Highlight traffic light
+                  srf = self.traffic_light_surfaces.surfaces['h']
+                  surface.blit(srf, srf.get_rect(center=pos))
+
             srf = self.traffic_light_surfaces.surfaces[tl.state]
             surface.blit(srf, srf.get_rect(center=pos))
 
