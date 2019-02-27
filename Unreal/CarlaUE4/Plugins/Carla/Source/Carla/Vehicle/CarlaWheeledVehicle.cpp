@@ -218,14 +218,12 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
   Vehicle4W->SteeringCurve.EditorCurveData = PhysicsControl.SteeringCurve;
 
   // Wheels Setup
-  for (unsigned int i = 0; i < PhysicsControl.Wheels.Num(); ++i)
+  for (uint32 i = 0; i < PhysicsControl.Wheels.Num(); ++i)
   {
-
     Vehicle4W->Wheels[i]->DampingRate = PhysicsControl.Wheels[i].DampingRate;
     Vehicle4W->Wheels[i]->SteerAngle = PhysicsControl.Wheels[i].SteerAngle;
     Vehicle4W->Wheels[i]->GetWheelSetup().bDisableSteering = PhysicsControl.Wheels[i].bDisableSteering;
     Vehicle4W->Wheels[i]->TireConfig->SetFrictionScale(PhysicsControl.Wheels[i].TireFriction);
-
   }
 
   Vehicle4W->RecreatePhysicsState();
