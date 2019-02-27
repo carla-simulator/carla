@@ -21,38 +21,34 @@ Please, make sure you install the following dependencies:
 
 import argparse
 import cpuinfo
+import math
 import numpy as np
 import pygame
 import psutil
-try:
-    import queue
-except ImportError:
-    import Queue as queue
 import shutil
 import subprocess
 from tr import tr
+import threading
 
 import carla
 
 # ======================================================================================================================
 # -- Global variables. So sorry... -------------------------------------------------------------------------------------
 # ======================================================================================================================
-pygame_clock = pygame.time.Clock()
-current_fps = 0
 sensors_callback = []
 
 # ======================================================================================================================
 # -- Tunable parameters ------------------------------------------------------------------------------------------------
 # ======================================================================================================================
-number_locations = 2
-number_ticks = 4
+number_locations = 5
+number_ticks = 30
 actor_list = ['vehicle.*']
 
 
 def weathers():
     list_weathers = [ carla.WeatherParameters.ClearNoon,
-                      #carla.WeatherParameters.CloudyNoon,
-                      #carla.WeatherParameters.SoftRainSunset
+                      carla.WeatherParameters.CloudyNoon,
+                      carla.WeatherParameters.SoftRainSunset
                       ]
 
     return list_weathers
@@ -86,6 +82,21 @@ def define_sensors():
     list_sensor_specs.append(sensors04)
 
     return list_sensor_specs
+
+
+class CallBack(object):
+    def __init__(self):
+        self._lock = threading.Lock()
+        self._pygame_clock = pygame.time.Clock()
+        self._current_fps = 0
+
+    def __call__(self, data):
+        self._pygame_clock.tick()
+        self._current_fps = self._pygame_clock.get_fps()
+
+    def get_fps(self):
+        with self._lock:
+         return self._current_fps
 
 
 def create_ego_vehicle(world, ego_vehicle, spawn_point, list_sensor_spec):
@@ -122,10 +133,10 @@ def create_ego_vehicle(world, ego_vehicle, spawn_point, list_sensor_spec):
             sensor = world.spawn_actor(bp, sensor_transform, ego_vehicle)
 
             # add callbacks
-            sensor_queue = queue.Queue()
-            sensor.listen(sensor_queue.put)
+            sc = CallBack()
+            sensor.listen(sc)
 
-            sensors_callback.append(sensor_queue)
+            sensors_callback.append(sc)
             sensors.append(sensor)
 
     return ego_vehicle, sensors
@@ -135,8 +146,8 @@ def create_ego_vehicle(world, ego_vehicle, spawn_point, list_sensor_spec):
 # -- Benchmarking functions --------------------------------------------------------------------------------------------
 # ======================================================================================================================
 
-def run_benchmark(world, sensor_specs_list, number_locations, number_ticks, actor_list):
-    global current_fps, sensors_callback
+def run_benchmark(world, sensor_specs_list, number_locations, number_ticks, actor_list, debug=False):
+    global sensors_callback
 
     spawn_points = world.get_map().get_spawn_points()
     n = min(number_locations, len(spawn_points))
@@ -153,9 +164,19 @@ def run_benchmark(world, sensor_specs_list, number_locations, number_ticks, acto
 
         ticks = 0
         while ticks < number_ticks:
-            ts = world.wait_for_tick(1000.0)
-            print("== Samples {} / {}".format(ticks+1, number_ticks))
-            list_fps.append(current_fps)
+            _ = world.wait_for_tick(1000.0)
+            if debug:
+                print("== Samples {} / {}".format(ticks+1, number_ticks))
+
+            min_fps = float('inf')
+            for sc in sensors_callback:
+                fps = sc.get_fps()
+                if fps < min_fps:
+                    min_fps = fps
+            if math.isinf(min_fps):
+                min_fps = 0
+            list_fps.append(min_fps)
+
             ticks += 1
 
     for sensor in sensor_list:
@@ -222,17 +243,6 @@ def get_system_specs():
     return str_system
 
 
-def on_world_tick(timestamp):
-    global pygame_clock, current_fps, sensors_callback
-    # block for sensor data!
-    for callback in sensors_callback:
-        _ = callback.get()
-
-    pygame_clock.tick()
-    current_fps = pygame_clock.get_fps()
-
-
-
 def main(args):
     client = carla.Client(args.host, int(args.port))
     client.set_timeout(60.0)
@@ -241,7 +251,11 @@ def main(args):
     records = {}
     for town in sorted(client.get_available_maps()):
         world = client.load_world(town)
-        world.on_tick(on_world_tick)
+
+        # spectator pointing to the sky to reduce rendering impact
+        spectator = world.get_spectator()
+        spectator.set_transform(carla.Transform(carla.Location(z=500), carla.Rotation(pitch=90)))
+
         for weather in weathers():
             world.set_weather(weather)
             for sensors in define_sensors():
@@ -267,7 +281,7 @@ def main(args):
     system_specs = get_system_specs()
     serialize_records(records, system_specs, args.file)
     pygame.quit()
-    print("--- I am not going to exit...")
+
 
 if __name__ == '__main__':
     description = "Benchmark CARLA performance in your platform for different towns and sensor configurations\n"
