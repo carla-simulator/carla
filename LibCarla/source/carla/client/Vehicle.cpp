@@ -25,8 +25,16 @@ namespace client {
     }
   }
 
+  void Vehicle::ApplyPhysicsControl(const PhysicsControl &physics_control) {
+    GetEpisode().Lock()->ApplyPhysicsControlToVehicle(*this, physics_control);
+  }
+
   Vehicle::Control Vehicle::GetControl() const {
     return GetEpisode().Lock()->GetActorDynamicState(*this).state.vehicle_data.control;
+  }
+
+  Vehicle::PhysicsControl Vehicle::GetPhysicsControl() const {
+    return GetEpisode().Lock()->GetVehiclePhysicsControl(*this);
   }
 
   float Vehicle::GetSpeedLimit() const {

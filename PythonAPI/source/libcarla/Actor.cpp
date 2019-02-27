@@ -28,7 +28,9 @@ namespace client {
 
 static auto GetSemanticTags(const carla::client::Actor &self) {
   const auto &tags = self.GetSemanticTags();
-  return std::vector<int>(tags.begin(), tags.end());
+  boost::python::object get_iter = boost::python::iterator<std::vector<int>>();
+  boost::python::object iter = get_iter(tags);
+  return boost::python::list(iter);
 }
 
 void export_actor() {
@@ -42,19 +44,19 @@ void export_actor() {
   ;
 
   class_<cc::Actor, boost::noncopyable, boost::shared_ptr<cc::Actor>>("Actor", no_init)
-  // work-around, force return copy to resolve Actor instead of ActorState.
+      // work-around, force return copy to resolve Actor instead of ActorState.
       .add_property("id", CALL_RETURNING_COPY(cc::Actor, GetId))
       .add_property("type_id", CALL_RETURNING_COPY(cc::Actor, GetTypeId))
       .add_property("parent", CALL_RETURNING_COPY(cc::Actor, GetParent))
       .add_property("semantic_tags", &GetSemanticTags)
       .add_property("is_alive", CALL_RETURNING_COPY(cc::Actor, IsAlive))
       .add_property("attributes", +[] (const cc::Actor &self) {
-    boost::python::dict atttribute_dict;
-    for (auto &&attribute_value : self.GetAttributes()) {
-      atttribute_dict[attribute_value.GetId()] = attribute_value.GetValue();
-    }
-    return atttribute_dict;
-  })
+        boost::python::dict atttribute_dict;
+        for (auto &&attribute_value : self.GetAttributes()) {
+          atttribute_dict[attribute_value.GetId()] = attribute_value.GetValue();
+        }
+        return atttribute_dict;
+      })
       .def("get_world", CALL_RETURNING_COPY(cc::Actor, GetWorld))
       .def("get_location", &cc::Actor::GetLocation)
       .def("get_transform", &cc::Actor::GetTransform)
@@ -76,6 +78,8 @@ void export_actor() {
       .add_property("bounding_box", CALL_RETURNING_COPY(cc::Vehicle, GetBoundingBox))
       .def("apply_control", &cc::Vehicle::ApplyControl, (arg("control")))
       .def("get_control", &cc::Vehicle::GetControl)
+      .def("apply_physics_control", &cc::Vehicle::ApplyPhysicsControl, (arg("physics_control")))
+      .def("get_physics_control", CONST_CALL_WITHOUT_GIL(cc::Vehicle, GetPhysicsControl))
       .def("set_autopilot", &cc::Vehicle::SetAutopilot, (arg("enabled") = true))
       .def("get_speed_limit", &cc::Vehicle::GetSpeedLimit)
       .def("get_traffic_light_state", &cc::Vehicle::GetTrafficLightState)
