@@ -68,11 +68,11 @@ install(FILES ${libcarla_carla_opendrive_parser_pugixml} DESTINATION include/car
 install(DIRECTORY "${BOOST_INCLUDE_PATH}/boost" DESTINATION include)
 
 if(WIN32)
-  file(GLOB boostlib_date_time "${BOOST_LIB_PATH}/libboost_date_time-*-mt-*.lib")
-  install(FILES ${boostlib_date_time} DESTINATION lib)
-
-  file(GLOB boostlib_system "${BOOST_LIB_PATH}/libboost_system-*-mt-*.lib")
-  install(FILES ${boostlib_system} DESTINATION lib)
+  file(GLOB boostlibs
+      "${BOOST_LIB_PATH}/libboost_date_time-*-mt-*.lib"
+      "${BOOST_LIB_PATH}/libboost_system-*-mt-*.lib"
+      "${BOOST_LIB_PATH}/libboost_filesystem-*-mt-*.lib")
+  install(FILES ${boostlibs} DESTINATION lib)
 endif()
 
 # carla_server library.

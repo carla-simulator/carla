@@ -31,12 +31,14 @@ static auto MakeTestImage(size_t width, size_t height) {
   return TestImage<decltype(view), PixelT>{std::move(data), view};
 }
 
+#ifndef PLATFORM_WINDOWS
 TEST(image, support) {
   using namespace carla::image::io;
   carla::logging::log("PNG  support =", has_png_support());
   carla::logging::log("JPEG support =", has_jpeg_support());
   carla::logging::log("TIFF support =", has_tiff_support());
 }
+#endif // PLATFORM_WINDOWS
 
 TEST(image, depth) {
 #ifndef NDEBUG
