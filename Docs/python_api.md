@@ -127,6 +127,8 @@
 - `get_elapsed_time()`
 - `freeze(True)`
 - `is_frozen()`
+- `get_pole_index()`
+- `get_group_traffic_lights()`
 
 ## `carla.Sensor(carla.Actor)`
 
