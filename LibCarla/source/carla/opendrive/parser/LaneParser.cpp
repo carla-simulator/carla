@@ -143,7 +143,7 @@ namespace parser {
     for (pugi::xml_node laneSection = xmlNode.child("laneOffset");
         laneSection;
         laneSection = laneSection.next_sibling("laneOffset")) {
-      laneParser.ParseLaneOffset(xmlNode.child("laneOffset"), out_lanes.lane_offset);
+      laneParser.ParseLaneOffset(laneSection, out_lanes.lane_offset);
     }
 
     for (pugi::xml_node laneSection = xmlNode.child("laneSection");

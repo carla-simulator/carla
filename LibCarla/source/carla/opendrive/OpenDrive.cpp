@@ -7,7 +7,6 @@
 #include "OpenDrive.h"
 
 #include "carla/road/MapBuilder.h"
-#include "carla/road/element/RoadInfoMarkRecord.h"
 #include "carla/Debug.h"
 
 namespace carla {
@@ -108,10 +107,17 @@ namespace opendrive {
           road_segment.MakeInfo<carla::road::element::RoadGeneralInfo>();
       RoadGeneralInfo->SetJunctionId(it->second->attributes.junction);
 
-      for (size_t i = 0; i < it->second->lanes.lane_offset.size(); ++i) {
-        const double s = it->second->lanes.lane_offset[i].s;
-        const double a = it->second->lanes.lane_offset[i].a;
-        RoadGeneralInfo->SetLanesOffset(s, a);
+      for (auto &&lane_offset : it->second->lanes.lane_offset) {
+        // @todo: delete this old method
+        RoadGeneralInfo->SetLanesOffset(lane_offset.s, lane_offset.a);
+        // new method
+        road_segment.MakeInfo<carla::road::element::RoadInfoLaneOffset>(
+          lane_offset.s,
+          lane_offset.a,
+          lane_offset.b,
+          lane_offset.c,
+          lane_offset.d
+        );
       }
 
       for (auto &&elevation : it->second->road_profiles.elevation_profile) {
@@ -312,6 +318,7 @@ namespace opendrive {
         // Create a new RoadInfoMarkRecord for each lane section. Each RoadInfoMarkRecord
         // will contain the actual distance from the start of the RoadSegment
         for (auto &&lane_section_left : lane_section.left) {
+          // parse all left lane road marks
           for (auto &&road_marker : lane_section_left.road_marker) {
             road_segment.MakeInfo<carla::road::element::RoadInfoMarkRecord>(
               start_position + road_marker.soffset,
@@ -325,10 +332,21 @@ namespace opendrive {
               // @todo: "carla/opendrive/types.h" must be extended to parse the height
               0.0);
           }
+          // parse all left lane width
+          for (auto &&lane_width : lane_section_left.lane_width) {
+            road_segment.MakeInfo<carla::road::element::RoadInfoLaneWidth>(
+              lane_width.soffset,                   // s
+              lane_section_left.attributes.id,      // lane_id
+              lane_width.width,                     // a
+              lane_width.slope,                     // b
+              lane_width.vertical_curvature,        // c
+              lane_width.curvature_change);         // d
+          }
         }
 
         // @todo: there must be only one central lane, so maybe use [0]
         for (auto &&lane_section_center : lane_section.center) {
+          // parse all center lane road marks
           for (auto &&road_marker : lane_section_center.road_marker) {
             road_segment.MakeInfo<carla::road::element::RoadInfoMarkRecord>(
               start_position + road_marker.soffset,
@@ -342,9 +360,20 @@ namespace opendrive {
               // @todo: "carla/opendrive/types.h" must be extended to parse the height
               0.0);
           }
+          // parse all center lane width
+          for (auto &&lane_width : lane_section_center.lane_width) {
+            road_segment.MakeInfo<carla::road::element::RoadInfoLaneWidth>(
+              lane_width.soffset,                   // s
+              lane_section_center.attributes.id,    // lane_id
+              lane_width.width,                     // a
+              lane_width.slope,                     // b
+              lane_width.vertical_curvature,        // c
+              lane_width.curvature_change);         // d
+          }
         }
 
         for (auto &&lane_section_right : lane_section.right) {
+          // parse all right lane road marks
           for (auto &&road_marker : lane_section_right.road_marker) {
             road_segment.MakeInfo<carla::road::element::RoadInfoMarkRecord>(
               start_position + road_marker.soffset,
@@ -357,6 +386,16 @@ namespace opendrive {
               string_2_lane_change_enum(road_marker.lane_change),
               // @todo: "carla/opendrive/types.h" must be extended to parse the height
               0.0);
+          }
+          // parse all right lane width
+          for (auto &&lane_width : lane_section_right.lane_width) {
+            road_segment.MakeInfo<carla::road::element::RoadInfoLaneWidth>(
+              lane_width.soffset,                   // s
+              lane_section_right.attributes.id,     // lane_id
+              lane_width.width,                     // a
+              lane_width.slope,                     // b
+              lane_width.vertical_curvature,        // c
+              lane_width.curvature_change);         // d
           }
         }
       }

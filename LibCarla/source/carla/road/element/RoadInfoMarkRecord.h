@@ -8,7 +8,6 @@
 
 #include "carla/road/element/RoadInfo.h"
 
-#include <unordered_map>
 #include <string>
 
 namespace carla {
@@ -117,10 +116,6 @@ namespace element {
                              // valid.
     double _height;          // Physical distance of top edge of road mark from
                              // reference plane of the lane
-
-    // This map stores the MarkRecord of all lanes of the current LaneSection
-    // (keyed using the signed integer id from OpenDrive)
-    // std::unordered_map<signed_id, std::unique_ptr<MarkRecord>> _mark_records;
   };
 
 } // namespace element

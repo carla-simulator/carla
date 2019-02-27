@@ -31,7 +31,18 @@ namespace geom {
         const double &b,
         const double &c,
         const double &d)
-      : _v{{a, b, c, d}} {}
+      : _v{ {a, b, c, d} } {}
+
+    CubicPolynomial(
+        const double &a,
+        const double &b,
+        const double &c,
+        const double &d,
+        const double &s) // lateral offset
+      : _v{ {a - b * s + c * s * s - d * s * s * s,
+             b - 2 * c * s + 3 * d * s * s,
+             c - 3 * d * s,
+             d} } {}
 
     // =========================================================================
     // -- Getters --------------------------------------------------------------
