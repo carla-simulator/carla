@@ -22,11 +22,11 @@ void export_client() {
     .def("get_client_version", &cc::Client::GetClientVersion)
     .def("get_server_version", CONST_CALL_WITHOUT_GIL(cc::Client, GetServerVersion))
     .def("get_world", &cc::Client::GetWorld)
-    .def("start_recorder", &cc::Client::StartRecorder, (arg("name")))
-    .def("stop_recorder", &cc::Client::StopRecorder)
-    .def("show_recorder_file_info", &cc::Client::ShowRecorderFileInfo, (arg("name")))
-    .def("show_recorder_collisions", &cc::Client::ShowRecorderCollisions, (arg("name")), (arg("type1")), (arg("type2")))
-    .def("show_recorder_actors_blocked", &cc::Client::ShowRecorderActorsBlocked, (arg("name")), (arg("min_time")), (arg("min_distance")))
-    .def("replay_file", &cc::Client::ReplayFile, (arg("name"), arg("time_start"), arg("duration"), arg("follow_id")))
+    .def("start_recorder", CALL_WITHOUT_GIL(cc::Client, StartRecorder), (arg("name")))
+    .def("stop_recorder", CALL_WITHOUT_GIL(cc::Client, StopRecorder))
+    .def("show_recorder_file_info", CALL_WITHOUT_GIL(cc::Client, ShowRecorderFileInfo), (arg("name")))
+    .def("show_recorder_collisions", CALL_WITHOUT_GIL(cc::Client, ShowRecorderCollisions), (arg("name")), (arg("type1")), (arg("type2")))
+    .def("show_recorder_actors_blocked", CALL_WITHOUT_GIL(cc::Client, ShowRecorderActorsBlocked), (arg("name")), (arg("min_time")), (arg("min_distance")))
+    .def("replay_file", CALL_WITHOUT_GIL(cc::Client, ReplayFile), (arg("name"), arg("time_start"), arg("duration"), arg("follow_id")))
   ;
 }
