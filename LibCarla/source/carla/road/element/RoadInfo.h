@@ -24,7 +24,7 @@ namespace element {
     virtual void AcceptVisitor(RoadInfoVisitor &) = 0;
 
     // distance from Road's start location
-    double d; // [meters]
+    double d; // [meters] @todo: change this to "s"
 
   protected:
 

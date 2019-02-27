@@ -9,6 +9,8 @@
 #include "carla/NonCopyable.h"
 #include "carla/geom/Location.h"
 #include "carla/road/element/RoadInfoMarkRecord.h"
+#include "carla/road/element/RoadInfoLaneWidth.h"
+#include "carla/road/element/RoadInfoLaneOffset.h"
 #include "carla/road/element/RoadInfo.h"
 #include "carla/road/element/Types.h"
 
@@ -125,6 +127,25 @@ namespace element {
         const bool is_new_lane = inserted_lanes.insert(lane_id).second;
         if (is_new_lane) {
           result.emplace_back(mark_record);
+        }
+      }
+      return result;
+    }
+
+    /// Workaround where we must find a specific (RoadInfoLaneWidth) RoadInfo
+    /// that must have lane_id info. In this case this info is used for selecting
+    /// only the nearest RoadInfos to the "dist" input.
+    std::vector<std::shared_ptr<const RoadInfoLaneWidth>> GetRoadInfoLaneWidth(
+        double dist) const {
+      auto lane_offset_info = GetInfos<RoadInfoLaneWidth>(dist);
+      std::vector<std::shared_ptr<const RoadInfoLaneWidth>> result;
+      std::unordered_set<int> inserted_lanes;
+
+      for (auto &&lane_offset : lane_offset_info) {
+        const int lane_id = lane_offset->GetLaneId();
+        const bool is_new_lane = inserted_lanes.insert(lane_id).second;
+        if (is_new_lane) {
+          result.emplace_back(lane_offset);
         }
       }
       return result;
