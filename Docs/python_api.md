@@ -197,6 +197,34 @@
 - `__eq__(other)`
 - `__ne__(other)`
 
+
+## `carla.WheelsPhysicsControl`
+- `tire_friction`
+- `damping_rate`
+- `steer_angle`
+- `disable_steering`
+- `__eq__(other)`
+- `__ne__(other)`
+
+## `carla.VehiclePhysicsControl`
+
+- `torque_curve`
+- `max_rpm`
+- `moi`
+- `damping_rate_full_throttle`
+- `damping_rate_zero_throttle_clutch_engaged`
+- `damping_rate_zero_throttle_clutch_disengaged`
+- `use_gear_autobox`
+- `gear_switch_time`
+- `clutch_strength`
+- `mass`
+- `drag_coefficient`
+- `center_of_mass`
+- `steering_curve`
+- `wheels`
+- `__eq__(other)`
+- `__ne__(other)`
+
 ## `carla.Map`
 
 - `name`

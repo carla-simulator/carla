@@ -47,8 +47,8 @@ namespace client {
 
   SharedPtr<ActorList> World::GetActors() const {
     return SharedPtr<ActorList>{new ActorList{
-        _episode,
-        _episode.Lock()->GetAllTheActorsInTheEpisode()}};
+                                  _episode,
+                                  _episode.Lock()->GetAllTheActorsInTheEpisode()}};
   }
 
   SharedPtr<Actor> World::SpawnActor(
