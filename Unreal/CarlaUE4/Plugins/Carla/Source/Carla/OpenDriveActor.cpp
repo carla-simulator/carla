@@ -50,9 +50,9 @@ AOpenDriveActor::AOpenDriveActor(const FObjectInitializer &ObjectInitializer)
       "Blueprint'/Game/Carla/Static/TrafficSigns/PostSigns/Round/SpeedLimiters/BP_SpeedLimit30.BP_SpeedLimit30'"));
   TrafficSign30BlueprintClass = (UClass *) TrafficSign30BP.Object->GeneratedClass;
 
-  static ConstructorHelpers::FObjectFinder<UBlueprint> TrafficSign40BP(TEXT(
+  /*static ConstructorHelpers::FObjectFinder<UBlueprint> TrafficSign40BP(TEXT(
       "Blueprint'/Game/Carla/Static/TrafficSigns/PostSigns/Round/SpeedLimiters/BP_SpeedLimit40.BP_SpeedLimit40'"));
-  TrafficSign40BlueprintClass = (UClass *) TrafficSign40BP.Object->GeneratedClass;
+  TrafficSign40BlueprintClass = (UClass *) TrafficSign40BP.Object->GeneratedClass;*/
 
   static ConstructorHelpers::FObjectFinder<UBlueprint> TrafficSign60BP(TEXT(
       "Blueprint'/Game/Carla/Static/TrafficSigns/PostSigns/Round/SpeedLimiters/BP_SpeedLimit60.BP_SpeedLimit60'"));
@@ -292,7 +292,9 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
         FVector(0, 0, 0),
         FRotator(0, 0, 0),
         SpawnParams);
-
+    FString SetTrafficTimesCommand = FString::Printf(TEXT("SetTrafficTimes %f %f %f"),
+            RedTime, YellowTime, GreenTime);
+    SpawnedTrafficGroup->CallFunctionByNameWithArguments(*SetTrafficTimesCommand, ar, NULL, true);
     for (TrafficLight CurrentTrafficLight : CurrentTrafficLightGroup.traffic_lights)
     {
       FVector TLPos =
@@ -329,68 +331,68 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
         PersistentTrafficLights.Push(SpawnedTrafficLight);
       }
     }
+}
+
+const std::vector<TrafficSign> TrafficSigns = map.GetTrafficSigns();
+for (TrafficSign CurrentTrafficSign : TrafficSigns) {
+  //switch()
+  AActor* SignActor;
+  FOutputDeviceNull ar;
+
+  FVector TSLoc = FVector(CurrentTrafficSign.x_pos, CurrentTrafficSign.y_pos, CurrentTrafficSign.z_pos);
+  FRotator TSRot = FRotator(CurrentTrafficSign.x_rot, CurrentTrafficSign.z_rot, CurrentTrafficSign.y_rot);
+  FActorSpawnParameters SpawnParams;
+  switch(CurrentTrafficSign.speed) {
+    case 30:
+      SignActor = GetWorld()->SpawnActor<AActor>(TrafficSign30BlueprintClass,
+        TSLoc,
+        TSRot,
+        SpawnParams);
+      break;
+    case 40:
+      /*SignActor = GetWorld()->SpawnActor<AActor>(TrafficSign40BlueprintClass,
+        TSLoc,
+        TSRot,
+        SpawnParams);
+    break;*/
+    case 60:
+      SignActor = GetWorld()->SpawnActor<AActor>(TrafficSign60BlueprintClass,
+        TSLoc,
+        TSRot,
+        SpawnParams);
+      break;
+    case 90:
+      SignActor = GetWorld()->SpawnActor<AActor>(TrafficSign90BlueprintClass,
+        TSLoc,
+        TSRot,
+        SpawnParams);
+      break;
+    case 100:
+      SignActor = GetWorld()->SpawnActor<AActor>(TrafficSign100BlueprintClass,
+        TSLoc,
+        TSRot,
+        SpawnParams);
+    break;
   }
+  PersistentTrafficSigns.Push(SignActor);
+  for (TrafficBoxComponent TfBoxComponent : CurrentTrafficSign.box_areas)
+    {
+      FVector TLBoxPos = FVector(TfBoxComponent.x_pos,
+          TfBoxComponent.y_pos,
+          TfBoxComponent.z_pos);
+      FRotator TLBoxRot = FRotator(TfBoxComponent.x_rot,
+          TfBoxComponent.z_rot,
+          TfBoxComponent.y_rot);
 
-  const std::vector<TrafficSign> TrafficSigns = map.GetTrafficSigns();
-  for (TrafficSign CurrentTrafficSign : TrafficSigns) {
-    //switch()
-    AActor* SignActor;
-    FOutputDeviceNull ar;
-
-    FVector TSLoc = FVector(CurrentTrafficSign.x_pos, CurrentTrafficSign.y_pos, CurrentTrafficSign.z_pos);
-    FRotator TSRot = FRotator(CurrentTrafficSign.x_rot, CurrentTrafficSign.z_rot, CurrentTrafficSign.y_rot);
-    FActorSpawnParameters SpawnParams;
-    switch(CurrentTrafficSign.speed) {
-      case 30:
-        SignActor = GetWorld()->SpawnActor<AActor>(TrafficSign30BlueprintClass,
-          TSLoc,
-          TSRot,
-          SpawnParams);
-        break;
-      case 40:
-        SignActor = GetWorld()->SpawnActor<AActor>(TrafficSign40BlueprintClass,
-          TSLoc,
-          TSRot,
-          SpawnParams);
-      break;
-      case 60:
-        SignActor = GetWorld()->SpawnActor<AActor>(TrafficSign60BlueprintClass,
-          TSLoc,
-          TSRot,
-          SpawnParams);
-        break;
-      case 90:
-        SignActor = GetWorld()->SpawnActor<AActor>(TrafficSign90BlueprintClass,
-          TSLoc,
-          TSRot,
-          SpawnParams);
-        break;
-      case 100:
-        SignActor = GetWorld()->SpawnActor<AActor>(TrafficSign100BlueprintClass,
-          TSLoc,
-          TSRot,
-          SpawnParams);
-      break;
+      FString BoxCommand = FString::Printf(TEXT("SetBoxLocationAndRotation %f %f %f %f %f %f"),
+          TLBoxPos.X,
+          TLBoxPos.Y,
+          TLBoxPos.Z,
+          TLBoxRot.Pitch,
+          TLBoxRot.Roll,
+          TLBoxRot.Yaw);
+      SignActor->CallFunctionByNameWithArguments(*BoxCommand, ar, NULL, true);
     }
-    PersistentTrafficSigns.Push(SignActor);
-    for (TrafficBoxComponent TfBoxComponent : CurrentTrafficSign.box_areas)
-      {
-        FVector TLBoxPos = FVector(TfBoxComponent.x_pos,
-            TfBoxComponent.y_pos,
-            TfBoxComponent.z_pos);
-        FRotator TLBoxRot = FRotator(TfBoxComponent.x_rot,
-            TfBoxComponent.z_rot,
-            TfBoxComponent.y_rot);
-
-        FString BoxCommand = FString::Printf(TEXT("SetBoxLocationAndRotation %f %f %f %f %f %f"),
-            TLBoxPos.X,
-            TLBoxPos.Y,
-            TLBoxPos.Z,
-            TLBoxRot.Pitch,
-            TLBoxRot.Roll,
-            TLBoxRot.Yaw);
-        SignActor->CallFunctionByNameWithArguments(*BoxCommand, ar, NULL, true);
-      }
   }
 }
 
