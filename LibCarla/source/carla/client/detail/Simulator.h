@@ -163,7 +163,7 @@ namespace detail {
     }
 
     rpc::VehiclePhysicsControl GetVehiclePhysicsControl(const Vehicle &vehicle) const {
-      return _client.GetVehiclePhysicsControl(vehicle.Serialize());
+      return _client.GetVehiclePhysicsControl(vehicle.GetId());
     }
 
     /// @}
@@ -257,7 +257,7 @@ namespace detail {
     }
 
     void ApplyPhysicsControlToVehicle(Vehicle &vehicle, const rpc::VehiclePhysicsControl &physicsControl) {
-      _client.ApplyPhysicsControlToVehicle(vehicle.Serialize(), physicsControl);
+      _client.ApplyPhysicsControlToVehicle(vehicle.GetId(), physicsControl);
     }
     /// @}
     // =========================================================================
@@ -327,7 +327,7 @@ namespace detail {
     }
 
     std::vector<ActorId> GetGroupTrafficLights(TrafficLight &trafficLight) {
-      return _client.GetGroupTrafficLights(trafficLight.Serialize());
+      return _client.GetGroupTrafficLights(trafficLight.GetId());
     }
 
     /// @}
