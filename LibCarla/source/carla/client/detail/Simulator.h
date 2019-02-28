@@ -266,6 +266,10 @@ namespace detail {
       _client.FreezeTrafficLight(trafficLight.Serialize(), freeze);
     }
 
+    std::vector<rpc::actor_id_type> GetGroupTrafficLights(TrafficLight &trafficLight) {
+      return _client.GetGroupTrafficLights(trafficLight.Serialize());
+    }
+
     /// @}
     // =========================================================================
     /// @name Debug
