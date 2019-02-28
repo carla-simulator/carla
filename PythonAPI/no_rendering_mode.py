@@ -561,6 +561,7 @@ class ModuleWorld(object):
         self.result_surface = None
 
         self.traffic_light_surfaces = TrafficLightSurfaces()
+        self.affected_traffic_light = None
 
     def _get_data_from_carla(self, host, port, timeout):
         try:
@@ -657,17 +658,18 @@ class ModuleWorld(object):
         if self.hero_actor is not None:
             hero_speed = self.hero_actor.get_velocity()
             hero_speed_text = 3.6 * math.sqrt(hero_speed.x ** 2 + hero_speed.y ** 2 + hero_speed.z ** 2)
+            
+            affected_traffic_light_text = 'None'
+            if self.affected_traffic_light is not None:
+              state = self.affected_traffic_light.state
+              if state == carla.libcarla.TrafficLightState.Green:
+                  affected_traffic_light_text = 'GREEN'
+              elif state == carla.libcarla.TrafficLightState.Yellow:
+                  affected_traffic_light_text = 'YELLOW'
+              else:
+                  affected_traffic_light_text = 'RED'
 
-            state = self.hero_actor.get_traffic_light_state()
-            affected_traffic_light = 'None'
-            if state == carla.libcarla.TrafficLightState.Green:
-                affected_traffic_light = 'GREEN'
-            elif state == carla.libcarla.TrafficLightState.Yellow:
-                affected_traffic_light = 'YELLOW'
-            else:
-                affected_traffic_light = 'RED'
-
-            affected_speed_limit = self.hero_actor.get_speed_limit()
+            affected_speed_limit_text = self.hero_actor.get_speed_limit()
 
             hero_mode_text = [
                 'Hero Mode:                 ON',
@@ -675,8 +677,8 @@ class ModuleWorld(object):
                 'Hero Vehicle:  %14s' % get_actor_display_name(self.hero_actor, truncate=14),
                 'Hero Speed:          %3d km/h' % hero_speed_text,
                 'Hero Affected by:',
-                '  Traffic Light: %12s' % affected_traffic_light,
-                '  Speed Limit:       %3d km/h' % affected_speed_limit
+                '  Traffic Light: %12s' % affected_traffic_light_text,
+                '  Speed Limit:       %3d km/h' % affected_speed_limit_text
             ]
         else:
             hero_mode_text = ['Hero Mode:                OFF']
@@ -756,6 +758,8 @@ class ModuleWorld(object):
       return corners
 
     def _render_traffic_lights(self, surface, list_tl, world_to_pixel):
+        self.affected_traffic_light = None
+
         for tl in list_tl:
             world_pos = tl.get_location()
             pos = world_to_pixel(world_pos)
@@ -770,9 +774,10 @@ class ModuleWorld(object):
                 s = Util.length(tl.trigger_volume.extent) + Util.length(self.hero_actor.bounding_box.extent)
                 if ( d <= s ):
                   # Highlight traffic light
+                  self.affected_traffic_light = tl
                   srf = self.traffic_light_surfaces.surfaces['h']
                   surface.blit(srf, srf.get_rect(center=pos))
-
+                
             srf = self.traffic_light_surfaces.surfaces[tl.state]
             surface.blit(srf, srf.get_rect(center=pos))
 
