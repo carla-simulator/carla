@@ -440,7 +440,7 @@ void CarlaReplayer::ProcessPositions(void)
 void CarlaReplayer::UpdatePositions(double Per)
 {
   unsigned int i;
-  uint32_t NewFollowId;
+  uint32_t NewFollowId = 0;
   std::unordered_map<int, int> TempMap;
 
   // map the id of all previous positions to its index
