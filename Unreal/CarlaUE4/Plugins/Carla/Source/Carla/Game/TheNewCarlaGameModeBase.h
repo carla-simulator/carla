@@ -9,7 +9,7 @@
 #include "Carla/Actor/CarlaActorFactory.h"
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Game/CarlaGameInstance.h"
-#include "Carla/Game/CarlaRecorder.h"
+#include "Carla/Recorder/CarlaRecorder.h"
 #include "Carla/Game/TaggerDelegate.h"
 #include "Carla/Settings/CarlaSettingsDelegate.h"
 #include "Carla/Weather/Weather.h"

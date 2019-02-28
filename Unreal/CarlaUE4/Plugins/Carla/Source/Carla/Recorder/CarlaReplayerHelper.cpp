@@ -4,7 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "Carla/Game/CarlaReplayerHelper.h"
+#include "CarlaReplayerHelper.h"
 #include "Carla/Actor/ActorView.h"
 #include "Carla/Actor/ActorDescription.h"
 

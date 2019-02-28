@@ -364,7 +364,7 @@ All data is written in a binary file on the server, on folder **CarlaUE4/Saved**
 To start recording we only need to supply a file name:
 
 ```py
-client.start_recorder("recording01.rec")
+client.start_recorder("recording01.log")
 ```
 
 To stop the recording, we need to call:
@@ -376,14 +376,14 @@ client.stop_recorder()
 At any point we can replay a simulation, specifying the filename:
 
 ```py
-client.replay_file("recording01.rec")
+client.replay_file("recording01.log")
 ```
 The replayer will create and destroy all actors that were recorded, and move all actors and setting the traffic lights as they were working at that moment.
 
 When replaying we have some other options that we can use, the full API call is:
 
 ```py
-client.replay_file("recording01.rec", start, duration, camera)
+client.replay_file("recording01.log", start, duration, camera)
 ```
 * **start**: time we want to start the simulation.
   * If the value is positive, it means the number of seconds from the beginning.
@@ -396,7 +396,7 @@ client.replay_file("recording01.rec", start, duration, camera)
 We can know details about a recorded simulation, using this API:
 
 ```py
-client.show_recorder_file_info("recording01.rec")
+client.show_recorder_file_info("recording01.log")
 ```
 
 The output result is something like this:
@@ -487,7 +487,7 @@ Currently only **hero actors** record the collisions, so first actor will be a h
 The API for querying the collisions is:
 
 ```py
-client.show_recorder_collisions("recording01.rec", 'a', 'a')
+client.show_recorder_collisions("recording01.log", "a", "a")
 ```
 
 The output is something similar to this:
@@ -510,7 +510,7 @@ We can see there for each collision the **time** when happened, the **type** of 
 So, if we want to see what happened on that recording for the first collision where the hero actor was colliding with a vehicle, we could use this API:
 
 ```py
-client.replay_file("col2.rec", 13, 0, 122)
+client.replay_file("col2.log", 13, 0, 122)
 ```
 We have started the replayer just a bit before the time of the collision, so we can see how it happened.
 Also, a value of 0 for the **duration** means to replay all the file (it is the default value).
@@ -522,7 +522,7 @@ We can see something like this then:
 There is another API to get information about actors that has been blocked by something and can not follow its way. That could be good to find incidences in the simulation. The API is:
 
 ```py
-client.show_recorder_actors_blocked("recording01.rec", min_time, min_distance)
+client.show_recorder_actors_blocked("recording01.log", min_time, min_distance)
 ```
 
 The parameters are:
@@ -532,7 +532,7 @@ The parameters are:
 So, if we want to know which actor is stopped (moving less than 1 meter during 60 seconds), we could use something like:
 
 ```py
-client.show_recorder_actors_blocked("col3.rec", 60, 100)
+client.show_recorder_actors_blocked("col3.log", 60, 100)
 ```
 
 The result can be something like (it is sorted by the duration):
@@ -563,7 +563,7 @@ For example the 6th line, the actor 143, at time 302 seconds, was stopped for 67
 We could check what happened that time with the next API command:
 
 ```py
-client.replay_file("col3.rec", 302, 0, 143)
+client.replay_file("col3.log", 302, 0, 143)
 ```
 
 ![actor blocked](img/actor_blocked1.png)
@@ -572,7 +572,7 @@ We see there is some mess there that actually blocks the actor (red vehicle in t
 We can check also another actor with:
 
 ```py
-client.replay_file("col3.rec", 75, 0, 104)
+client.replay_file("col3.log", 75, 0, 104)
 ```
 
 ![actor blocked](img/actor_blocked2.png)
@@ -582,7 +582,7 @@ We can see it is the same incidence but from another actor involved (police car)
 The result is sorted by duration, so the actor that is blocked for more time comes first. We could check the first line, with Id 173 at time 36 seconds it get stopped for 336 seconds. We could check how it arrived to that situation replaying a few seconds before time 36.
 
 ```py
-client.replay_file("col3.rec", 34, 0, 173)
+client.replay_file("col3.log", 34, 0, 173)
 ```
 
 ![accident](img/accident.gif)

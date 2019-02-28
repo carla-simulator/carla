@@ -229,7 +229,7 @@ namespace detail {
     /// @{
 
     std::string StartRecorder(std::string name) {
-      return _client.StartRecorder(name);
+      return _client.StartRecorder(std::move(name));
     }
 
     void StopRecorder(void) {
@@ -237,19 +237,19 @@ namespace detail {
     }
 
     std::string ShowRecorderFileInfo(std::string name) {
-      return _client.ShowRecorderFileInfo(name);
+      return _client.ShowRecorderFileInfo(std::move(name));
     }
 
     std::string ShowRecorderCollisions(std::string name, char type1, char type2) {
-      return _client.ShowRecorderCollisions(name, type1, type2);
+      return _client.ShowRecorderCollisions(std::move(name), type1, type2);
     }
 
     std::string ShowRecorderActorsBlocked(std::string name, double min_time, double min_distance) {
-      return _client.ShowRecorderActorsBlocked(name, min_time, min_distance);
+      return _client.ShowRecorderActorsBlocked(std::move(name), min_time, min_distance);
     }
 
     std::string ReplayFile(std::string name, double start, double duration, uint32_t follow_id) {
-      return _client.ReplayFile(name, start, duration, follow_id);
+      return _client.ReplayFile(std::move(name), start, duration, follow_id);
     }
 
     /// @}

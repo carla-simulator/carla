@@ -10,7 +10,7 @@
 #include "Carla/Sensor/WorldObserver.h"
 #include "Carla/Weather/Weather.h"
 #include "Carla/Server/TheNewCarlaServer.h"
-#include "Carla/Game/CarlaRecorder.h"
+#include "Carla/Recorder/CarlaRecorder.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/Actor.h>
