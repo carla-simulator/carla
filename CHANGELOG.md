@@ -1,4 +1,13 @@
 ## Latest Changes
+
+  * Synchronous mode, controlled with `client.tick()`
+  * Allow changing map from client-side, added `client.load_map(name)`, `client.reload_map()`, and `client.get_available_maps()`
+  * Control over multiple vehicles in batch mode
+  * Fixed a few synchronization issues that appeared once restarting an episode was possible.
+  * Reduced overhead of many RPC calls by sending only actor IDs (instead of serializing all the actor attributes every time)
+  * Added priority system for vehicle control input
+  * Episodes have now a random unique id to avoid collisions between runs
+  * Removed "Example.CarlaSettings.ini", you can still use it, but it's no longer necessary
   * Fix parsing of OpenDrive geoReference exported by RoadRunner
   * Added recording/replaying functionality to manual_control.py script.
     - CTRL + R: Toggle recording (file is always 'manual_recording.rec')
