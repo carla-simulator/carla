@@ -266,6 +266,30 @@ namespace detail {
     _pimpl->AsyncCall("draw_debug_shape", shape);
   }
 
+  std::string Client::StartRecorder(std::string name) {
+    return _pimpl->CallAndWait<std::string>("start_recorder", name);
+  }
+
+  void Client::StopRecorder(void) {
+    return _pimpl->AsyncCall("stop_recorder");
+  }
+
+  std::string Client::ShowRecorderFileInfo(std::string name) {
+    return _pimpl->CallAndWait<std::string>("show_recorder_file_info", name);
+  }
+
+  std::string Client::ShowRecorderCollisions(std::string name, char type1, char type2) {
+    return _pimpl->CallAndWait<std::string>("show_recorder_collisions", name, type1, type2);
+  }
+
+  std::string Client::ShowRecorderActorsBlocked(std::string name, double min_time, double min_distance) {
+    return _pimpl->CallAndWait<std::string>("show_recorder_actors_blocked", name, min_time, min_distance);
+  }
+
+  std::string Client::ReplayFile(std::string name, double start, double duration, uint32_t follow_id) {
+    return _pimpl->CallAndWait<std::string>("replay_file", name, start, duration, follow_id);
+  }
+
 } // namespace detail
 } // namespace client
 } // namespace carla

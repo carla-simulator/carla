@@ -37,7 +37,7 @@ public:
   /// actor.
   ///
   /// @warning Undefined if an actor is registered more than once.
-  FActorView Register(AActor &Actor, FActorDescription Description);
+  FActorView Register(AActor &Actor, FActorDescription Description, IdType DesiredId = 0);
 
   void Deregister(IdType Id);
 
