@@ -170,14 +170,15 @@ namespace detail {
     return _pimpl->CallAndWait<return_t>("get_actors_by_id", ids);
   }
 
-  rpc::VehiclePhysicsControl Client::GetVehiclePhysicsControl(const rpc::Actor &actor) const {
-    return _pimpl->CallAndWait<carla::rpc::VehiclePhysicsControl>("get_physics_control", actor);
+  rpc::VehiclePhysicsControl Client::GetVehiclePhysicsControl(
+      const rpc::ActorId &vehicle) const {
+    return _pimpl->CallAndWait<carla::rpc::VehiclePhysicsControl>("get_physics_control", vehicle);
   }
 
   void Client::ApplyPhysicsControlToVehicle(
-      const rpc::Actor &actor,
-      const rpc::VehiclePhysicsControl &physicsControl) {
-    return _pimpl->AsyncCall("apply_physics_control", actor, physicsControl);
+      const rpc::ActorId &vehicle,
+      const rpc::VehiclePhysicsControl &physics_control) {
+    return _pimpl->AsyncCall("apply_physics_control", vehicle, physics_control);
   }
 
   rpc::Actor Client::SpawnActor(
@@ -213,6 +214,18 @@ namespace detail {
     _pimpl->AsyncCall("set_actor_transform", actor, transform);
   }
 
+  void Client::SetActorVelocity(rpc::ActorId actor, const geom::Vector3D &vector) {
+    _pimpl->AsyncCall("set_actor_velocity", actor, vector);
+  }
+
+  void Client::SetActorAngularVelocity(rpc::ActorId actor, const geom::Vector3D &vector) {
+    _pimpl->AsyncCall("set_actor_angular_velocity", actor, vector);
+  }
+
+  void Client::AddActorImpulse(rpc::ActorId actor, const geom::Vector3D &vector) {
+    _pimpl->AsyncCall("add_actor_impulse", actor, vector);
+  }
+
   void Client::SetActorSimulatePhysics(rpc::ActorId actor, const bool enabled) {
     _pimpl->AsyncCall("set_actor_simulate_physics", actor, enabled);
   }
@@ -230,56 +243,30 @@ namespace detail {
   }
 
   void Client::SetTrafficLightState(
-      rpc::ActorId trafficLight,
-      const rpc::TrafficLightState trafficLightState) {
-    _pimpl->AsyncCall("set_traffic_light_state", trafficLight, trafficLightState);
+      rpc::ActorId traffic_light,
+      const rpc::TrafficLightState traffic_light_state) {
+    _pimpl->AsyncCall("set_traffic_light_state", traffic_light, traffic_light_state);
   }
 
-  void Client::SetTrafficLightGreenTime(rpc::ActorId trafficLight, float greenTime) {
-    _pimpl->AsyncCall("set_traffic_light_green_time", trafficLight, greenTime);
+  void Client::SetTrafficLightGreenTime(rpc::ActorId traffic_light, float green_time) {
+    _pimpl->AsyncCall("set_traffic_light_green_time", traffic_light, green_time);
   }
 
-  void Client::SetTrafficLightYellowTime(rpc::ActorId trafficLight, float yellowTime) {
-    _pimpl->AsyncCall("set_traffic_light_yellow_time", trafficLight, yellowTime);
+  void Client::SetTrafficLightYellowTime(rpc::ActorId traffic_light, float yellow_time) {
+    _pimpl->AsyncCall("set_traffic_light_yellow_time", traffic_light, yellow_time);
   }
 
-  void Client::SetTrafficLightRedTime(rpc::ActorId trafficLight, float redTime) {
-    _pimpl->AsyncCall("set_traffic_light_red_time", trafficLight, redTime);
+  void Client::SetTrafficLightRedTime(rpc::ActorId traffic_light, float red_time) {
+    _pimpl->AsyncCall("set_traffic_light_red_time", traffic_light, red_time);
   }
 
-  void Client::FreezeTrafficLight(rpc::ActorId trafficLight, bool freeze) {
-    _pimpl->AsyncCall("freeze_traffic_light", trafficLight, freeze);
+  void Client::FreezeTrafficLight(rpc::ActorId traffic_light, bool freeze) {
+    _pimpl->AsyncCall("freeze_traffic_light", traffic_light, freeze);
   }
 
-  void Client::SetActorVelocity(rpc::ActorId actor, const geom::Vector3D &vector) {
-    _pimpl->AsyncCall("set_actor_velocity", actor, vector);
-  }
-
-  void Client::SetActorAngularVelocity(rpc::ActorId actor, const geom::Vector3D &vector) {
-    _pimpl->AsyncCall("set_actor_angular_velocity", actor, vector);
-  }
-
-  void Client::AddActorImpulse(rpc::ActorId actor, const geom::Vector3D &vector) {
-    _pimpl->AsyncCall("add_actor_impulse", actor, vector);
-  }
-
-  std::vector<ActorId> Client::GetGroupTrafficLights(const rpc::Actor &trafficLight) {
+  std::vector<ActorId> Client::GetGroupTrafficLights(const rpc::ActorId &traffic_light) {
     using return_t = std::vector<ActorId>;
-    return _pimpl->CallAndWait<return_t>("get_group_traffic_lights", trafficLight);
-  }
-
-  void Client::SubscribeToStream(
-      const streaming::Token &token,
-      std::function<void(Buffer)> callback) {
-    _pimpl->streaming_client.Subscribe(token, std::move(callback));
-  }
-
-  void Client::UnSubscribeFromStream(const streaming::Token &token) {
-    _pimpl->streaming_client.UnSubscribe(token);
-  }
-
-  void Client::DrawDebugShape(const rpc::DebugShape &shape) {
-    _pimpl->AsyncCall("draw_debug_shape", shape);
+    return _pimpl->CallAndWait<return_t>("get_group_traffic_lights", traffic_light);
   }
 
   std::string Client::StartRecorder(std::string name) {
@@ -304,6 +291,20 @@ namespace detail {
 
   std::string Client::ReplayFile(std::string name, double start, double duration, uint32_t follow_id) {
     return _pimpl->CallAndWait<std::string>("replay_file", name, start, duration, follow_id);
+  }
+
+  void Client::SubscribeToStream(
+      const streaming::Token &token,
+      std::function<void(Buffer)> callback) {
+    _pimpl->streaming_client.Subscribe(token, std::move(callback));
+  }
+
+  void Client::UnSubscribeFromStream(const streaming::Token &token) {
+    _pimpl->streaming_client.UnSubscribe(token);
+  }
+
+  void Client::DrawDebugShape(const rpc::DebugShape &shape) {
+    _pimpl->AsyncCall("draw_debug_shape", shape);
   }
 
   void Client::SendTickCue() {
