@@ -69,19 +69,19 @@ namespace element {
       return _lane_id;
     }
 
-    std::string GetType() const {
+    const std::string &GetType() const {
       return _type;
     }
 
-    std::string GetWeight() const {
+    const std::string &GetWeight() const {
       return _weight;
     }
 
-    std::string GetColor() const {
+    const std::string &GetColor() const {
       return _color;
     }
 
-    std::string GetMaterial() const {
+    const std::string &GetMaterial() const {
       return _material;
     }
 
