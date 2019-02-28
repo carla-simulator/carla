@@ -255,6 +255,12 @@
 - `right_lane()`
 - `left_lane()`
 
+## `carla.LaneChange`
+- `None`
+- `Right`
+- `Left`
+- `Both`
+
 ## `carla.WeatherParameters`
 
 - `cloudyness`
