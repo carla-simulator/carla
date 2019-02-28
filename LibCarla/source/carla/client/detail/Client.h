@@ -164,6 +164,8 @@ namespace detail {
 
     void DrawDebugShape(const rpc::DebugShape &shape);
 
+    std::vector<rpc::actor_id_type> GetGroupTrafficLights(const rpc::Actor &trafficLight);
+
   private:
 
     class Pimpl;
