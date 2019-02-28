@@ -455,10 +455,10 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   };
 
   BIND_SYNC(get_physics_control) << [this](
-      cr::Actor Actor) -> R<cr::VehiclePhysicsControl>
+      cr::ActorId ActorId) -> R<cr::VehiclePhysicsControl>
   {
     REQUIRE_CARLA_EPISODE();
-    auto ActorView = Episode->FindActor(Actor.id);
+    auto ActorView = Episode->FindActor(ActorId);
     if (!ActorView.IsValid())
     {
       RESPOND_ERROR("unable to get actor physics control: actor not found");
@@ -473,11 +473,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   };
 
   BIND_SYNC(apply_physics_control) << [this](
-      cr::Actor Actor,
+      cr::ActorId ActorId,
       cr::VehiclePhysicsControl PhysicsControl) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
-    auto ActorView = Episode->FindActor(Actor.id);
+    auto ActorView = Episode->FindActor(ActorId);
     if (!ActorView.IsValid())
     {
       RESPOND_ERROR("unable to apply actor physics control: actor not found");
@@ -679,10 +679,10 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   };
 
   BIND_SYNC(get_group_traffic_lights) << [this](
-      const cr::Actor Actor) -> R<std::vector<cr::ActorId>>
+      const cr::ActorId ActorId) -> R<std::vector<cr::ActorId>>
   {
     REQUIRE_CARLA_EPISODE();
-    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    auto ActorView = Episode->GetActorRegistry().Find(ActorId);
     if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill())
     {
       RESPOND_ERROR("unable to get group traffic lights: actor not found");

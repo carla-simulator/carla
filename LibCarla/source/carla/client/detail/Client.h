@@ -91,8 +91,12 @@ namespace detail {
 
     std::vector<rpc::Actor> GetActorsById(const std::vector<ActorId> &ids);
 
-    rpc::VehiclePhysicsControl GetVehiclePhysicsControl(const rpc::Actor &actor) const;
+    rpc::VehiclePhysicsControl GetVehiclePhysicsControl(
+        const rpc::ActorId &vehicle) const;
 
+    void ApplyPhysicsControlToVehicle(
+        const rpc::ActorId &vehicle,
+        const rpc::VehiclePhysicsControl &physics_control);
 
     rpc::Actor SpawnActor(
         const rpc::ActorDescription &description,
@@ -113,6 +117,18 @@ namespace detail {
         rpc::ActorId actor,
         const geom::Transform &transform);
 
+    void SetActorVelocity(
+        rpc::ActorId actor,
+        const geom::Vector3D &vector);
+
+    void SetActorAngularVelocity(
+        rpc::ActorId actor,
+        const geom::Vector3D &vector);
+
+    void AddActorImpulse(
+        rpc::ActorId actor,
+        const geom::Vector3D &vector);
+
     void SetActorSimulatePhysics(
         rpc::ActorId actor,
         bool enabled);
@@ -129,41 +145,40 @@ namespace detail {
         rpc::ActorId walker,
         const rpc::WalkerControl &control);
 
-    void ApplyPhysicsControlToVehicle(
-        const rpc::Actor &vehicle,
-        const rpc::VehiclePhysicsControl &physicsControl);
-
     void SetTrafficLightState(
-        rpc::ActorId trafficLight,
+        rpc::ActorId traffic_light,
         const rpc::TrafficLightState trafficLightState);
 
     void SetTrafficLightGreenTime(
-        rpc::ActorId trafficLight,
-        float greenTime);
+        rpc::ActorId traffic_light,
+        float green_time);
 
     void SetTrafficLightYellowTime(
-        rpc::ActorId trafficLight,
-        float yellowTime);
+        rpc::ActorId traffic_light,
+        float yellow_time);
 
     void SetTrafficLightRedTime(
-        rpc::ActorId trafficLight,
-        float redTime);
+        rpc::ActorId traffic_light,
+        float red_time);
 
     void FreezeTrafficLight(
-        rpc::ActorId trafficLight,
+        rpc::ActorId traffic_light,
         bool freeze);
 
-    void SetActorVelocity(
-        rpc::ActorId actor,
-        const geom::Vector3D &vector);
+    std::vector<ActorId> GetGroupTrafficLights(
+        const rpc::ActorId &traffic_light);
 
-    void SetActorAngularVelocity(
-        rpc::ActorId actor,
-        const geom::Vector3D &vector);
+    std::string StartRecorder(std::string name);
 
-    void AddActorImpulse(
-        rpc::ActorId actor,
-        const geom::Vector3D &vector);
+    void StopRecorder();
+
+    std::string ShowRecorderFileInfo(std::string name);
+
+    std::string ShowRecorderCollisions(std::string name, char type1, char type2);
+
+    std::string ShowRecorderActorsBlocked(std::string name, double min_time, double min_distance);
+
+    std::string ReplayFile(std::string name, double start, double duration, uint32_t follow_id);
 
     void SubscribeToStream(
         const streaming::Token &token,
@@ -172,15 +187,6 @@ namespace detail {
     void UnSubscribeFromStream(const streaming::Token &token);
 
     void DrawDebugShape(const rpc::DebugShape &shape);
-
-    std::string StartRecorder(std::string name);
-    void StopRecorder(void);
-    std::string ShowRecorderFileInfo(std::string name);
-    std::string ShowRecorderCollisions(std::string name, char type1, char type2);
-    std::string ShowRecorderActorsBlocked(std::string name, double min_time, double min_distance);
-    std::string ReplayFile(std::string name, double start, double duration, uint32_t follow_id);
-
-    std::vector<ActorId> GetGroupTrafficLights(const rpc::Actor &trafficLight);
 
     void SendTickCue();
 
