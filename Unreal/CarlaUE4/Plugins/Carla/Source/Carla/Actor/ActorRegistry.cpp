@@ -50,10 +50,19 @@ static FString GetRelevantTagAsString(const TSet<ECityObjectLabel> &SemanticTags
   return TEXT("unknown");
 }
 
-FActorView FActorRegistry::Register(AActor &Actor, FActorDescription Description)
+FActorView FActorRegistry::Register(AActor &Actor, FActorDescription Description, IdType DesiredId)
 {
   static IdType ID_COUNTER = 0u;
-  const auto Id = ++ID_COUNTER;
+  auto Id = ++ID_COUNTER;
+
+  if (DesiredId != 0 && Id != DesiredId) {
+    // check if the desired Id is free, then use it instead
+    if (!Actors.Contains(DesiredId))
+      Id = DesiredId;
+      if (ID_COUNTER < Id)
+        ID_COUNTER = Id;
+  }
+
   Actors.Emplace(Id, &Actor);
   if (Ids.Contains(&Actor))
   {

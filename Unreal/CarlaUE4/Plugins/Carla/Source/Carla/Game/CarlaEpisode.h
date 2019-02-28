@@ -9,11 +9,14 @@
 #include "Carla/Actor/ActorDispatcher.h"
 #include "Carla/Sensor/WorldObserver.h"
 #include "Carla/Weather/Weather.h"
-
-#include "GameFramework/Pawn.h"
+#include "Carla/Server/TheNewCarlaServer.h"
+#include "Carla/Recorder/CarlaRecorder.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/Actor.h>
+#include <carla/rpc/ActorDescription.h>
+#include <carla/geom/BoundingBox.h>
+#include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include "CarlaEpisode.generated.h"
@@ -141,9 +144,24 @@ public:
   /// view is invalid.
   TPair<EActorSpawnResultStatus, FActorView> SpawnActorWithInfo(
       const FTransform &Transform,
-      FActorDescription ActorDescription)
+      FActorDescription thisActorDescription,
+      FActorView::IdType DesiredId = 0)
   {
-    return ActorDispatcher->SpawnActor(Transform, std::move(ActorDescription));
+    auto result = ActorDispatcher->SpawnActor(Transform, thisActorDescription, DesiredId);
+    if (Recorder->IsEnabled())
+    {
+      if (result.Key == EActorSpawnResultStatus::Success)
+      {
+        Recorder->CreateRecorderEventAdd(
+          result.Value.GetActorId(),
+          static_cast<uint8_t>(result.Value.GetActorType()),
+          Transform,
+          std::move(thisActorDescription)
+        );
+      }
+    }
+
+    return result;
   }
 
   /// Spawns an actor based on @a ActorDescription at @a Transform. To properly
@@ -170,6 +188,16 @@ public:
   UFUNCTION(BlueprintCallable)
   bool DestroyActor(AActor *Actor)
   {
+      if (Recorder->IsEnabled())
+      {
+        // recorder event
+        CarlaRecorderEventDel RecEvent
+        {
+          GetActorRegistry().Find(Actor).GetActorId()
+        };
+        Recorder->AddEvent(std::move(RecEvent));
+      }
+
     return ActorDispatcher->DestroyActor(Actor);
   }
 
@@ -186,16 +214,40 @@ public:
   // -- Private methods and members --------------------------------------------
   // ===========================================================================
 
+  ACarlaRecorder *GetRecorder() const
+  {
+    return Recorder;
+  }
+
+  void SetRecorder(ACarlaRecorder *Rec)
+  {
+    Recorder = Rec;
+  }
+
+  CarlaReplayer *GetReplayer() const
+  {
+    return Recorder->GetReplayer();
+  }
+
+  std::string StartRecorder(std::string name);
+
 private:
 
   friend class ATheNewCarlaGameModeBase;
 
   void InitializeAtBeginPlay();
+  void EndPlay();
 
   void RegisterActorFactory(ACarlaActorFactory &ActorFactory)
   {
     ActorDispatcher->Bind(ActorFactory);
   }
+
+  std::pair<int, FActorView&> TryToCreateReplayerActor(
+    FVector &Location,
+    FVector &Rotation,
+    FActorDescription &ActorDesc,
+    unsigned int desiredId);
 
   const uint32 Id = 0u;
 
@@ -213,4 +265,6 @@ private:
 
   UPROPERTY(VisibleAnywhere)
   AWorldObserver *WorldObserver = nullptr;
+
+  ACarlaRecorder *Recorder = nullptr;
 };

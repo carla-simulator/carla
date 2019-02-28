@@ -22,6 +22,7 @@
 #include <carla/rpc/MapInfo.h>
 #include <carla/rpc/Response.h>
 #include <carla/rpc/Server.h>
+#include <carla/rpc/String.h>
 #include <carla/rpc/Transform.h>
 #include <carla/rpc/Vector2D.h>
 #include <carla/rpc/Vector3D.h>
@@ -587,6 +588,52 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     }
     TrafficLight->SetTimeIsFrozen(Freeze);
     return R<void>::Success();
+  });
+
+  Server.BindSync("start_recorder", [this](std::string name) -> R<std::string> {
+    REQUIRE_CARLA_EPISODE();
+    return R<std::string>(Episode->StartRecorder(name));
+  });
+
+  Server.BindSync("stop_recorder", [this]() -> R<void> {
+    REQUIRE_CARLA_EPISODE();
+    Episode->GetRecorder()->Stop();
+    return R<void>::Success();
+  });
+
+  Server.BindSync("show_recorder_file_info", [this](std::string name) -> R<std::string> {
+    REQUIRE_CARLA_EPISODE();
+    return R<std::string>(Episode->GetRecorder()->ShowFileInfo(
+        carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
+        name));
+  });
+
+  Server.BindSync("show_recorder_collisions", [this](std::string name, char type1, char type2) -> R<std::string> {
+    REQUIRE_CARLA_EPISODE();
+    return R<std::string>(Episode->GetRecorder()->ShowFileCollisions(
+        carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
+        name,
+        type1,
+        type2));
+  });
+
+  Server.BindSync("show_recorder_actors_blocked", [this](std::string name, double min_time, double min_distance) -> R<std::string> {
+    REQUIRE_CARLA_EPISODE();
+    return R<std::string>(Episode->GetRecorder()->ShowFileActorsBlocked(
+        carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
+        name,
+        min_time,
+        min_distance));
+  });
+
+  Server.BindSync("replay_file", [this](std::string name, double start, double duration, uint32_t follow_id) -> R<std::string> {
+    REQUIRE_CARLA_EPISODE();
+    return R<std::string>(Episode->GetRecorder()->ReplayFile(
+        carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
+        name,
+        start,
+        duration,
+        follow_id));
   });
 
   Server.BindSync("get_group_traffic_lights", [this](
