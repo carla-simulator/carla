@@ -113,7 +113,7 @@ pushd "${SOURCE}" >/dev/null
 
 log "Packaging build."
 
-rm -Rf ./Engine
+#rm -Rf ./Engine
 rm -Rf ./CarlaUE4/Metadata
 rm -Rf ./CarlaUE4/Plugins
 rm ./CarlaUE4/AssetRegistry.bin
