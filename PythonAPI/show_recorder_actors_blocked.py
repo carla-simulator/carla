@@ -63,9 +63,8 @@ def main():
 
         client = carla.Client(args.host, args.port)
         client.set_timeout(60.0)
-        world = client.get_world()
 
-        print client.show_recorder_actors_blocked(args.recorder_filename, args.time, args.distance)
+        print(client.show_recorder_actors_blocked(args.recorder_filename, args.time, args.distance))
 
     finally:
         pass

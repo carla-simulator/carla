@@ -56,14 +56,13 @@ def main():
 
         client = carla.Client(args.host, args.port)
         client.set_timeout(60.0)
-        world = client.get_world()
 
         # types pattern samples:
         # -t aa == any to any == show every collision (the default)
         # -t vv == vehicle to vehicle == show every collision between vehicles only
         # -t vt == vehicle to traffic light == show every collision between a vehicle and a traffic light
         # -t hh == hero to hero == show collision between a hero and another hero
-        print client.show_recorder_collisions(args.recorder_filename, args.types[0], args.types[1])
+        print(client.show_recorder_collisions(args.recorder_filename, args.types[0], args.types[1]))
 
     finally:
         pass

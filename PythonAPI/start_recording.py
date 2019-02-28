@@ -58,8 +58,8 @@ def main():
     argparser.add_argument(
         '-f', '--recorder_filename',
         metavar='F',
-        default="test1.rec",
-        help='recorder filename (test1.rec)')
+        default="test1.log",
+        help='recorder filename (test1.log)')
     argparser.add_argument(
         '-t', '--recorder_time',
         metavar='T',
@@ -103,7 +103,7 @@ def main():
 
         count = args.number_of_vehicles
 
-        print "Recording on file:", client.start_recorder(args.recorder_filename)
+        print("Recording on file:", client.start_recorder(args.recorder_filename))
 
         for spawn_point in spawn_points:
             if try_spawn_random_vehicle_at(spawn_point):
@@ -116,10 +116,7 @@ def main():
             if try_spawn_random_vehicle_at(random.choice(spawn_points)):
                 count -= 1
 
-        #print client.show_recorder_file_info("test1.rec")
-
         print('spawned %d vehicles, press Ctrl+C to exit.' % args.number_of_vehicles)
-        #time.sleep(10);
 
         if (args.recorder_time > 0):
             time.sleep(args.recorder_time)
@@ -133,7 +130,7 @@ def main():
         for actor in actor_list:
             actor.destroy()
 
-        print "Stop recording"
+        print("Stop recording")
         client.stop_recorder()
 
 if __name__ == '__main__':

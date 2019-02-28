@@ -4,7 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "Carla/Game/CarlaRecorderHelpers.h"
+#include "CarlaRecorderHelpers.h"
 
 #include <ctime>
 #include <sstream>
@@ -44,7 +44,7 @@ inline bool CarlaRecorderQuery::CheckFileInfo(std::stringstream &Info)
   Info << "Map: " << TCHAR_TO_UTF8(*RecInfo.Mapfile) << std::endl;
   tm *TimeInfo = localtime(&RecInfo.Date);
   char DateStr[100];
-  strftime(DateStr, 100, "%x %X", TimeInfo);
+  strftime(DateStr, sizeof(DateStr), "%x %X", TimeInfo);
   Info << "Date: " << DateStr << std::endl << std::endl;
 
   return true;
@@ -244,7 +244,10 @@ std::string CarlaRecorderQuery::QueryCollisions(std::string Filename, char Categ
   {
     std::size_t operator()(const std::pair<uint32_t, uint32_t>& P) const
     {
-        return (P.first * 0xffff) + P.second;
+        std::size_t hash = P.first;
+        hash <<= 32;
+        hash += P.second;
+        return hash;
     }
   };
   std::unordered_set<std::pair<uint32_t, uint32_t>, PairHash > oldCollisions, newCollisions;

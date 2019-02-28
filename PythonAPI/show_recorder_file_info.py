@@ -47,15 +47,12 @@ def main():
         help='recorder filename (test1.rec)')
     args = argparser.parse_args()
 
-    actor_list = []
-
     try:
 
         client = carla.Client(args.host, args.port)
         client.set_timeout(60.0)
-        world = client.get_world()
 
-        print client.show_recorder_file_info(args.recorder_filename)
+        print(client.show_recorder_file_info(args.recorder_filename))
 
     finally:
         pass

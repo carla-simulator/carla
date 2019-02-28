@@ -34,7 +34,10 @@ namespace std
     {
         std::size_t operator()(const CarlaRecorderCollision& P) const noexcept
         {
-            return (P.DatabaseId1 * 0xffff) + P.DatabaseId2;
+            std::size_t hash = P.DatabaseId1;
+            hash <<= 32;
+            hash += P.DatabaseId2;
+            return hash;
         }
     };
 }

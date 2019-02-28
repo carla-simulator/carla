@@ -458,8 +458,6 @@ void CarlaReplayer::UpdatePositions(double Per)
       NewFollowId = NewId->second;
       // UE_LOG(LogCarla, Log, TEXT("Following %d (%d)"), NewFollowId, FollowId);
     }
-    else
-      NewFollowId = 0;
   }
 
   // go through each actor and update
