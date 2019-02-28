@@ -265,8 +265,8 @@
 - `lane_change`
 - `lane_type`
 - `next(distance)`
-- `right_lane()`
-- `left_lane()`
+- `get_right_lane()`
+- `get_left_lane()`
 
 ## `carla.LaneChange`
 - `None`

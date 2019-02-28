@@ -79,8 +79,8 @@ void export_map() {
     .add_property("lane_change", &cc::Waypoint::GetLaneChange)
     .add_property("lane_type", &cc::Waypoint::GetType)
     .def("next", CALL_RETURNING_LIST_1(cc::Waypoint, Next, double), (args("distance")))
-    .def("right_lane", &cc::Waypoint::Right)
-    .def("left_lane", &cc::Waypoint::Left)
+    .def("get_right_lane", &cc::Waypoint::Right)
+    .def("get_left_lane", &cc::Waypoint::Left)
     .def(self_ns::str(self_ns::self))
   ;
 }
