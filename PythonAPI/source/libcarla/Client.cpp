@@ -22,5 +22,11 @@ void export_client() {
     .def("get_client_version", &cc::Client::GetClientVersion)
     .def("get_server_version", CONST_CALL_WITHOUT_GIL(cc::Client, GetServerVersion))
     .def("get_world", &cc::Client::GetWorld)
+    .def("start_recorder", CALL_WITHOUT_GIL_1(cc::Client, StartRecorder, std::string), (arg("name")))
+    .def("stop_recorder", &cc::Client::StopRecorder)
+    .def("show_recorder_file_info", CALL_WITHOUT_GIL_1(cc::Client, ShowRecorderFileInfo, std::string), (arg("name")))
+    .def("show_recorder_collisions", CALL_WITHOUT_GIL_3(cc::Client, ShowRecorderCollisions, std::string, char, char), (arg("name"), arg("type1"), arg("type2")))
+    .def("show_recorder_actors_blocked", CALL_WITHOUT_GIL_3(cc::Client, ShowRecorderActorsBlocked, std::string, float, float), (arg("name"), arg("min_time"), arg("min_distance")))
+    .def("replay_file", CALL_WITHOUT_GIL_4(cc::Client, ReplayFile, std::string, float, float, int), (arg("name"), arg("time_start"), arg("duration"), arg("follow_id")))
   ;
 }

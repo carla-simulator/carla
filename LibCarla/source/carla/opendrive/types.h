@@ -236,12 +236,76 @@ namespace types {
     std::vector<JunctionConnection> connections;
   };
 
+  struct BoxComponent {
+    union {
+      struct { double x_pos, y_pos, z_pos;
+      };
+      double pos[3];
+    };
+    union {
+      struct { double x_rot, y_rot, z_rot;
+      };
+      double rot[3];
+    };
+    double scale;
+    BoxComponent() : pos{0.0, 0.0, 0.0},
+                     rot{0.0, 0.0, 0.0},
+                     scale(1.0) {}
+  };
+
+  struct TrafficLight {
+    union {
+      struct { double x_pos, y_pos, z_pos;
+      };
+      double pos[3];
+    };
+    union {
+      struct { double x_rot, y_rot, z_rot;
+      };
+      double rot[3];
+    };
+    double scale;
+    std::vector<BoxComponent> box_areas;
+
+    TrafficLight() : pos{0.0, 0.0, 0.0},
+                     rot{0.0, 0.0, 0.0},
+                     scale(1.0) {}
+  };
+
+  struct TrafficLightGroup {
+    std::vector<TrafficLight> traffic_lights;
+    double red_time, yellow_time, green_time;
+  };
+
+  struct TrafficSign {
+    union {
+      struct { double x_pos, y_pos, z_pos;
+      };
+      double pos[3];
+    };
+    union {
+      struct { double x_rot, y_rot, z_rot;
+      };
+      double rot[3];
+    };
+    double scale;
+    int speed;
+    std::vector<BoxComponent> box_areas;
+
+    TrafficSign() : pos{0.0, 0.0, 0.0},
+                     rot{0.0, 0.0, 0.0},
+                     scale(1.0),
+                     speed(30) {}
+  };
+
   /////////////////////////////////////////////////////////////////
 
   struct OpenDriveData {
     std::string geoReference;
     std::vector<RoadInformation> roads;
     std::vector<Junction> junctions;
+    std::vector<TrafficLightGroup> trafficlightgroups;
+    std::vector<TrafficSign> trafficsigns;
   };
 
   struct Waypoint {
