@@ -44,14 +44,6 @@ namespace element {
       return _width;
     }
 
-    double GetA() const {
-      return _width.GetA();
-    }
-
-    double ComputeOffset(const double &dist) const {
-      return _width.Evaluate(dist);
-    }
-
   private:
 
     using signed_id = int;

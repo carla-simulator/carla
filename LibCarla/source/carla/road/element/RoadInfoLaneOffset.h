@@ -39,10 +39,6 @@ namespace element {
       return _offset;
     }
 
-    double ComputeOffset(const double &dist) const {
-      return _offset.Evaluate(dist);
-    }
-
   private:
 
     geom::CubicPolynomial _offset;

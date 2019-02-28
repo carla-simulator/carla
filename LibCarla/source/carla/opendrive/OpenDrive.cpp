@@ -313,7 +313,7 @@ namespace opendrive {
           }
         };
 
-        double start_position = lane_section.start_position;
+        const auto lane_sec_s_offset = lane_section.start_position;
 
         // Create a new RoadInfoMarkRecord for each lane section. Each RoadInfoMarkRecord
         // will contain the actual distance from the start of the RoadSegment
@@ -321,7 +321,7 @@ namespace opendrive {
           // parse all left lane road marks
           for (auto &&road_marker : lane_section_left.road_marker) {
             road_segment.MakeInfo<carla::road::element::RoadInfoMarkRecord>(
-              start_position + road_marker.soffset,
+              lane_sec_s_offset + road_marker.soffset,
               lane_section_left.attributes.id,
               road_marker.type,
               road_marker.weigth,
@@ -335,7 +335,7 @@ namespace opendrive {
           // parse all left lane width
           for (auto &&lane_width : lane_section_left.lane_width) {
             road_segment.MakeInfo<carla::road::element::RoadInfoLaneWidth>(
-              lane_width.soffset,                   // s
+              lane_sec_s_offset + lane_width.soffset,                   // s
               lane_section_left.attributes.id,      // lane_id
               lane_width.width,                     // a
               lane_width.slope,                     // b
@@ -349,7 +349,7 @@ namespace opendrive {
           // parse all center lane road marks
           for (auto &&road_marker : lane_section_center.road_marker) {
             road_segment.MakeInfo<carla::road::element::RoadInfoMarkRecord>(
-              start_position + road_marker.soffset,
+              lane_sec_s_offset + road_marker.soffset,
               lane_section_center.attributes.id,
               road_marker.type,
               road_marker.weigth,
@@ -363,7 +363,7 @@ namespace opendrive {
           // parse all center lane width
           for (auto &&lane_width : lane_section_center.lane_width) {
             road_segment.MakeInfo<carla::road::element::RoadInfoLaneWidth>(
-              lane_width.soffset,                   // s
+              lane_sec_s_offset + lane_width.soffset,                   // s
               lane_section_center.attributes.id,    // lane_id
               lane_width.width,                     // a
               lane_width.slope,                     // b
@@ -376,7 +376,7 @@ namespace opendrive {
           // parse all right lane road marks
           for (auto &&road_marker : lane_section_right.road_marker) {
             road_segment.MakeInfo<carla::road::element::RoadInfoMarkRecord>(
-              start_position + road_marker.soffset,
+              lane_sec_s_offset + road_marker.soffset,
               lane_section_right.attributes.id,
               road_marker.type,
               road_marker.weigth,
@@ -390,7 +390,7 @@ namespace opendrive {
           // parse all right lane width
           for (auto &&lane_width : lane_section_right.lane_width) {
             road_segment.MakeInfo<carla::road::element::RoadInfoLaneWidth>(
-              lane_width.soffset,                   // s
+              lane_sec_s_offset + lane_width.soffset,                   // s
               lane_section_right.attributes.id,     // lane_id
               lane_width.width,                     // a
               lane_width.slope,                     // b
