@@ -51,10 +51,12 @@ pipeline {
         stage('Package') {
             steps {
                 sh 'make package'
+                sh 'make export-maps ARGS="--map=/Game/Carla/Maps/Town06 --file=Town06"'
             }
             post {
                 always {
                     archiveArtifacts 'Dist/*.tar.gz'
+                    archiveArtifacts 'ExportedMaps/*.tar.gz'
                 }
             }
         }
