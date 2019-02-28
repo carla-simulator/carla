@@ -48,7 +48,8 @@ public:
   /// view is invalid.
   TPair<EActorSpawnResultStatus, FActorView> SpawnActor(
       const FTransform &Transform,
-      FActorDescription ActorDescription);
+      FActorDescription ActorDescription,
+      FActorView::IdType DesiredId = 0);
 
   /// Destroys an actor, properly removing it from the registry.
   ///
@@ -58,7 +59,7 @@ public:
 
   /// Register an actor that was not created using "SpawnActor" function but
   /// that should be kept in the registry.
-  FActorView RegisterActor(AActor &Actor, FActorDescription ActorDescription);
+  FActorView RegisterActor(AActor &Actor, FActorDescription ActorDescription, FActorRegistry::IdType DesiredId = 0);
 
   const TArray<FActorDefinition> &GetActorDefinitions() const
   {
@@ -85,4 +86,5 @@ private:
   TArray<TSubclassOf<AActor>> Classes;
 
   FActorRegistry Registry;
+
 };
