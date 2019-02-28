@@ -231,6 +231,36 @@ namespace detail {
     }
     /// @}
     // =========================================================================
+    /// @name Operations with the recorder
+    // =========================================================================
+    /// @{
+
+    std::string StartRecorder(std::string name) {
+      return _client.StartRecorder(std::move(name));
+    }
+
+    void StopRecorder(void) {
+      _client.StopRecorder();
+    }
+
+    std::string ShowRecorderFileInfo(std::string name) {
+      return _client.ShowRecorderFileInfo(std::move(name));
+    }
+
+    std::string ShowRecorderCollisions(std::string name, char type1, char type2) {
+      return _client.ShowRecorderCollisions(std::move(name), type1, type2);
+    }
+
+    std::string ShowRecorderActorsBlocked(std::string name, double min_time, double min_distance) {
+      return _client.ShowRecorderActorsBlocked(std::move(name), min_time, min_distance);
+    }
+
+    std::string ReplayFile(std::string name, double start, double duration, uint32_t follow_id) {
+      return _client.ReplayFile(std::move(name), start, duration, follow_id);
+    }
+
+    /// @}
+    // =========================================================================
     /// @name Operations with sensors
     // =========================================================================
     /// @{

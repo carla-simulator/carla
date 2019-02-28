@@ -1,5 +1,13 @@
 ## Latest Changes
   * Fix parsing of OpenDrive geoReference exported by RoadRunner
+  * Added recording/replaying functionality to manual_control.py script.
+    - CTRL + R: Toggle recording (file is always 'manual_recording.rec')
+    - CTRL + P: Replay last recording.
+    - CTRL + -: Subtract 1 second the start time of the replayer.
+    - CTRL + =: Add 1 second the start time of the replayer.
+    - CTRL + SHIFT + -: Subtract 10 seconds the start time of the replayer.
+    - CTRL + SHIFT + =: Add 10 seconds the start time of the replayer.
+    - Note: A negative time start means to replay from the end of the recording (-2 = replay the last 2 seconds)
   * Added manual_control_steeringwheel.py to control agents using Logitech G29 steering wheels (and maybe others).
   * Fixed `manual_control.py` and `no_rendering_mode.py` to prevent crashes when used in "no rendering mode"
   * Added movable props present in the map (e.g. chairs and tables) as actors so they can be controlled from Python

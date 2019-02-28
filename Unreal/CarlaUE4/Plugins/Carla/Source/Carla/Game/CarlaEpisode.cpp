@@ -18,7 +18,8 @@
 static FString UCarlaEpisode_GetTrafficSignId(ETrafficSignState State)
 {
   using TSS = ETrafficSignState;
-  switch (State) {
+  switch (State)
+  {
     case TSS::TrafficLightRed:
     case TSS::TrafficLightYellow:
     case TSS::TrafficLightGreen:  return TEXT("traffic.traffic_light");
@@ -39,16 +40,17 @@ static FString UCarlaEpisode_GetTrafficSignId(ETrafficSignState State)
 UCarlaEpisode::UCarlaEpisode(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer),
     Id([]() {
-      static uint32 COUNTER = 0u;
-      return ++COUNTER;
-    }()) {
+  static uint32 COUNTER = 0u;
+  return ++COUNTER;
+} ()) {
   ActorDispatcher = CreateDefaultSubobject<UActorDispatcher>(TEXT("ActorDispatcher"));
 }
 
 TArray<FTransform> UCarlaEpisode::GetRecommendedSpawnPoints() const
 {
   TArray<FTransform> SpawnPoints;
-  for (TActorIterator<AVehicleSpawnPoint> It(GetWorld()); It; ++It) {
+  for (TActorIterator<AVehicleSpawnPoint> It(GetWorld()); It; ++It)
+  {
     SpawnPoints.Add(It->GetActorTransform());
   }
   return SpawnPoints;
@@ -65,7 +67,9 @@ carla::rpc::Actor UCarlaEpisode::SerializeActor(FActorView ActorView) const
     {
       Actor.parent_id = FindActor(Parent).GetActorId();
     }
-  } else {
+  }
+  else
+  {
     UE_LOG(LogCarla, Warning, TEXT("Trying to serialize invalid actor"));
   }
   return Actor;
@@ -77,6 +81,17 @@ void UCarlaEpisode::AttachActors(AActor *Child, AActor *Parent)
   check(Parent != nullptr);
   Child->AttachToActor(Parent, FAttachmentTransformRules::KeepRelativeTransform);
   Child->SetOwner(Parent);
+
+  // recorder event
+  if (Recorder->IsEnabled())
+  {
+    CarlaRecorderEventParent RecEvent
+    {
+      FindActor(Child).GetActorId(),
+      FindActor(Parent).GetActorId()
+    };
+    Recorder->AddEvent(std::move(RecEvent));
+  }
 }
 
 void UCarlaEpisode::InitializeAtBeginPlay()
@@ -126,4 +141,34 @@ void UCarlaEpisode::InitializeAtBeginPlay()
       ActorDispatcher->RegisterActor(*Actor, Description);
     }
   }
+}
+
+void UCarlaEpisode::EndPlay(void)
+{
+  // stop recorder and replayer
+  if (Recorder)
+  {
+    Recorder->Stop();
+    if (Recorder->GetReplayer()->IsEnabled())
+    {
+      Recorder->GetReplayer()->Stop();
+    }
+  }
+}
+
+std::string UCarlaEpisode::StartRecorder(std::string Name)
+{
+  std::string result;
+  FString Name2(Name.c_str());
+
+  if (Recorder)
+  {
+    result = Recorder->Start(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir()), Name2, MapName);
+  }
+  else
+  {
+    result = "Recorder is not ready";
+  }
+
+  return result;
 }

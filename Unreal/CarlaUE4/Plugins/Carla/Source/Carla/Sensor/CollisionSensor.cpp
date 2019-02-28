@@ -67,5 +67,8 @@ void ACollisionSensor::OnCollisionEvent(
         Episode->SerializeActor(Episode->FindOrFakeActor(Actor)),
         Episode->SerializeActor(Episode->FindOrFakeActor(OtherActor)),
         carla::geom::Vector3D{NormalImpulse.X, NormalImpulse.Y, NormalImpulse.Z});
+    // record the collision event
+    if (Episode->GetRecorder()->IsEnabled())
+      Episode->GetRecorder()->AddCollision(Actor, OtherActor);
   }
 }

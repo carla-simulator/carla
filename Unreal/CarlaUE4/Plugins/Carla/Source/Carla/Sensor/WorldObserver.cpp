@@ -82,7 +82,8 @@ static carla::Buffer AWorldObserver_Serialize(
     carla::Buffer buffer,
     double game_timestamp,
     double platform_timestamp,
-    const FActorRegistry &Registry)
+    const FActorRegistry &Registry
+    )
 {
   using Serializer = carla::sensor::s11n::EpisodeStateSerializer;
   using ActorDynamicState = carla::sensor::data::ActorDynamicState;
@@ -146,6 +147,8 @@ void AWorldObserver::Tick(float DeltaSeconds)
       AsyncStream.PopBufferFromPool(),
       GameTimeStamp,
       FPlatformTime::Seconds(),
-      Episode->GetActorRegistry());
+      Episode->GetActorRegistry()
+      );
+
   AsyncStream.Send(*this, std::move(buffer));
 }

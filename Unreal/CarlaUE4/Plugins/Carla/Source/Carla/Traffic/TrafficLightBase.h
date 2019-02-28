@@ -93,6 +93,9 @@ public:
   UFUNCTION(Category = "Traffic Light", BlueprintCallable)
   void SetGroupTrafficLights(TArray<ATrafficLightBase *> InGroupTrafficLights);
 
+  // used from replayer
+  void SetElapsedTime(float InElapsedTime);
+
 protected:
 
   UFUNCTION(Category = "Traffic Light", BlueprintImplementableEvent)
