@@ -56,7 +56,7 @@ namespace detail {
       : endpoint(host + ":" + std::to_string(port)),
         rpc_client(host, port),
         streaming_client(host) {
-      rpc_client.set_timeout(10u);
+      rpc_client.set_timeout(1000u);
       streaming_client.AsyncRun(
           worker_threads > 0u ? worker_threads : std::thread::hardware_concurrency());
     }
