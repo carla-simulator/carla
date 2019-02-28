@@ -114,14 +114,7 @@ namespace road {
 
     DEBUG_ASSERT(this_lane_id != 0);
 
-    int new_lane_id;
-    if (this_lane_id <= 0) {
-      // road goes forward: decrease the lane id while avoiding returning lane 0
-      new_lane_id = this_lane_id - 1 == 0 ? -1 : this_lane_id - 1;
-    } else {
-      // road goes backward: increasing the lane id while avoiding returning lane 0
-      new_lane_id = this_lane_id + 1 == 0 ? 1 : this_lane_id + 1;
-    }
+    const int new_lane_id = (this_lane_id <= 0) ? this_lane_id - 1 : this_lane_id + 1;
 
     // check if that lane id exists on this distance
     const auto road = map->GetData().GetRoad(this_road_id);
