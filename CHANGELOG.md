@@ -1,4 +1,5 @@
 ## Latest Changes
+  * Simplify Dockerfile and halve Carla Docker image size
   * Fix parsing of OpenDrive geoReference exported by RoadRunner
   * Added recording/replaying functionality to manual_control.py script.
     - CTRL + R: Toggle recording (file is always 'manual_recording.rec')
