@@ -1,5 +1,5 @@
 ## Latest Changes
-
+  * Simplify Dockerfile and halve Carla Docker image size
   * Synchronous mode, controlled with `client.tick()`
   * Allow changing map from client-side, added `client.load_map(name)`, `client.reload_map()`, and `client.get_available_maps()`
   * Control over multiple vehicles in batch mode
