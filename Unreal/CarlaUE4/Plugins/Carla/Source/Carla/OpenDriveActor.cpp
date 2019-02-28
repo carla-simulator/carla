@@ -349,12 +349,6 @@ for (TrafficSign CurrentTrafficSign : TrafficSigns) {
         TSRot,
         SpawnParams);
       break;
-    case 40:
-      /*SignActor = GetWorld()->SpawnActor<AActor>(TrafficSign40BlueprintClass,
-        TSLoc,
-        TSRot,
-        SpawnParams);
-    break;*/
     case 60:
       SignActor = GetWorld()->SpawnActor<AActor>(TrafficSign60BlueprintClass,
         TSLoc,
@@ -372,6 +366,10 @@ for (TrafficSign CurrentTrafficSign : TrafficSigns) {
         TSLoc,
         TSRot,
         SpawnParams);
+        break;
+    default:
+      FString errorMessage = "Traffic Sign not found. Posibilities: 30, 60, 90, 100";
+      UE_LOG(LogCarla, Warning, TEXT("%s"), *errorMessage);
     break;
   }
   PersistentTrafficSigns.Push(SignActor);
