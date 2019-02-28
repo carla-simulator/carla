@@ -24,8 +24,10 @@
 #include <carla/rpc/Server.h>
 #include <carla/rpc/String.h>
 #include <carla/rpc/Transform.h>
+#include <carla/rpc/Vector2D.h>
 #include <carla/rpc/Vector3D.h>
 #include <carla/rpc/VehicleControl.h>
+#include <carla/rpc/VehiclePhysicsControl.h>
 #include <carla/rpc/WalkerControl.h>
 #include <carla/rpc/WeatherParameters.h>
 #include <carla/streaming/Server.h>
@@ -368,6 +370,45 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   });
 
+
+ Server.BindSync("get_physics_control", [this](
+        cr::Actor Actor) -> R<cr::VehiclePhysicsControl>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(Actor.id);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to get actor physics control: actor not found");
+    }
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    if (Vehicle == nullptr)
+    {
+      RESPOND_ERROR("unable to get actor physics control: actor is not a vehicle");
+    }
+
+    return cr::VehiclePhysicsControl(Vehicle->GetVehiclePhysicsControl());
+  });
+
+  Server.BindSync("apply_physics_control", [this](
+        cr::Actor Actor, cr::VehiclePhysicsControl PhysicsControl) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(Actor.id);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to apply actor physics control: actor not found");
+    }
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    if (Vehicle == nullptr)
+    {
+      RESPOND_ERROR("unable to apply actor physics control: actor is not a vehicle");
+    }
+
+    Vehicle->ApplyVehiclePhysicsControl(FVehiclePhysicsControl(PhysicsControl));
+
+    return R<void>::Success();
+  });
+
   Server.BindSync("set_actor_simulate_physics", [this](
         cr::Actor Actor,
         bool bEnabled) -> R<void>
@@ -593,6 +634,32 @@ void FTheNewCarlaServer::FPimpl::BindActions()
         start,
         duration,
         follow_id));
+  });
+
+  Server.BindSync("get_group_traffic_lights", [this](
+        const cr::Actor Actor) -> R<std::vector<cr::actor_id_type>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill())
+    {
+      RESPOND_ERROR("unable to get group traffic lights: actor not found");
+    }
+    auto TrafficLight = Cast<ATrafficLightBase>(ActorView.GetActor());
+    if (TrafficLight == nullptr)
+    {
+      RESPOND_ERROR("unable to get group traffic lights: actor is not a traffic light");
+    }
+    std::vector<cr::actor_id_type> Result;
+    for (auto TLight : TrafficLight->GetGroupTrafficLights())
+    {
+      auto View = Episode->FindActor(TLight);
+      if (View.IsValid())
+      {
+        Result.push_back(View.GetActorId());
+      }
+    }
+    return Result;
   });
 
   Server.BindSync("draw_debug_shape", [this](const cr::DebugShape &shape) -> R<void>

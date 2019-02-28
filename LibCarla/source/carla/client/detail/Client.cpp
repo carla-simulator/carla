@@ -153,6 +153,16 @@ namespace detail {
     return _pimpl->CallAndWait<return_t>("get_actors_by_id", ids);
   }
 
+  rpc::VehiclePhysicsControl Client::GetVehiclePhysicsControl(const rpc::Actor &actor) const {
+    return _pimpl->CallAndWait<carla::rpc::VehiclePhysicsControl>("get_physics_control", actor);
+  }
+
+  void Client::ApplyPhysicsControlToVehicle(
+      const rpc::Actor &actor,
+      const rpc::VehiclePhysicsControl &physicsControl) {
+    return _pimpl->AsyncCall("apply_physics_control", actor, physicsControl);
+  }
+
   rpc::Actor Client::SpawnActor(
       const rpc::ActorDescription &description,
       const geom::Transform &transform) {
@@ -235,6 +245,11 @@ namespace detail {
 
   void Client::AddActorImpulse(const rpc::Actor &actor, const geom::Vector3D &vector) {
     _pimpl->AsyncCall("add_actor_impulse", actor, vector);
+  }
+
+  std::vector<rpc::actor_id_type> Client::GetGroupTrafficLights(const rpc::Actor &trafficLight) {
+    using return_t = std::vector<rpc::actor_id_type>;
+    return _pimpl->CallAndWait<return_t>("get_group_traffic_lights", trafficLight);
   }
 
   void Client::SubscribeToStream(

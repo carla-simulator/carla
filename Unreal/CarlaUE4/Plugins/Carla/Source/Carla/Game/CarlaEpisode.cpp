@@ -31,6 +31,8 @@ static FString UCarlaEpisode_GetTrafficSignId(ETrafficSignState State)
     case TSS::SpeedLimit_100:     return TEXT("traffic.speed_limit.100");
     case TSS::SpeedLimit_120:     return TEXT("traffic.speed_limit.120");
     case TSS::SpeedLimit_130:     return TEXT("traffic.speed_limit.130");
+    case TSS::StopSign:           return TEXT("traffic.stop");
+    case TSS::YieldSign:          return TEXT("traffic.yield");
     default:                      return TEXT("traffic.unknown");
   }
 }

@@ -71,6 +71,7 @@ static auto AWorldObserver_GetActorState(const FActorView &View, const FActorReg
       state.traffic_light_data.red_time = TrafficLight->GetRedTime();
       state.traffic_light_data.elapsed_time = TrafficLight->GetElapsedTime();
       state.traffic_light_data.time_is_frozen = TrafficLight->GetTimeIsFrozen();
+      state.traffic_light_data.pole_index = TrafficLight->GetPoleIndex();
     }
   }
 

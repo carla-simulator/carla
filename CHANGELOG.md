@@ -1,4 +1,5 @@
 ## Latest Changes
+  * Fix parsing of OpenDrive geoReference exported by RoadRunner
   * Added recording/replaying functionality to manual_control.py script.
     - CTRL + R: Toggle recording (file is always 'manual_recording.rec')
     - CTRL + P: Replay last recording.
@@ -11,8 +12,24 @@
   * Fixed `manual_control.py` and `no_rendering_mode.py` to prevent crashes when used in "no rendering mode"
   * Added movable props present in the map (e.g. chairs and tables) as actors so they can be controlled from Python
   * Refactored `no_rendering_mode.py` to improve performance and interface
+  * Exposed minimum physics control parameters for vehicles and wheels.
+  * Several improvements to the basic build system for Windows
   * Improved time-out related error messages
   * Fixed issue of retrieving an empty list when calling `world.get_actors()` right after creating the world
+  * New map Town06, featuring a "Michigan left" intersection including:
+    - Connection ramp between two highways
+    - Incorporation to a highway requiring changing several lanes to take another exit
+    - Junctions supporting different scenarios
+  * New pedestrian texture to add more variations
+  * New road PBR material
+  * Fixed traffic signs having the trigger box rotated
+  * Fixed Town01 placed 38 meters above the zero
+  * Fixed female walk animation
+  * Fixed static objects present in the map were marked as "movable"
+  * Fixed BP_MultipleFloor, tweaked offset in BaseFloor to adjust meshes between them
+  * New traffic signs assets: one-way, no-turn, more speed limits, do not enter, arrow floors, Michigan left, and lane end
+  * Expose traffic sign's trigger volumes on Python API
+  * Updated the Python API to enable the user to acquire a traffic light's pole index and all traffic lights in it's group
 
 ## CARLA 0.9.3
 

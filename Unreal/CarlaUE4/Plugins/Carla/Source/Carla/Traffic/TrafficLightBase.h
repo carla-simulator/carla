@@ -82,7 +82,16 @@ public:
   bool GetTimeIsFrozen() const;
 
   UFUNCTION(Category = "Traffic Light", BlueprintCallable)
-  int GetNumChanges() const;
+  void SetPoleIndex(int InPoleIndex);
+
+  UFUNCTION(Category = "Traffic Light", BlueprintCallable)
+  int GetPoleIndex() const;
+
+  UFUNCTION(Category = "Traffic Light", BlueprintCallable)
+  TArray<ATrafficLightBase *> GetGroupTrafficLights() const;
+
+  UFUNCTION(Category = "Traffic Light", BlueprintCallable)
+  void SetGroupTrafficLights(TArray<ATrafficLightBase *> InGroupTrafficLights);
 
   // used from replayer
   void SetElapsedTime(float InElapsedTime);
@@ -116,5 +125,8 @@ private:
   bool TimeIsFrozen = false;
 
   UPROPERTY(Category = "Traffic Light", VisibleAnywhere)
-  int NumChanges = 0;
+  int PoleIndex = 0;
+
+  UPROPERTY(Category = "Traffic Light", VisibleAnywhere)
+  TArray<ATrafficLightBase *> GroupTrafficLights;
 };

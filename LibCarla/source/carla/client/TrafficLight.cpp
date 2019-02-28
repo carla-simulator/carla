@@ -5,8 +5,8 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "carla/client/TrafficLight.h"
-
 #include "carla/client/detail/Simulator.h"
+#include "carla/client/ActorList.h"
 
 namespace carla {
 namespace client {
@@ -53,6 +53,21 @@ namespace client {
 
   bool TrafficLight::IsFrozen() const {
     return GetEpisode().Lock()->GetActorDynamicState(*this).state.traffic_light_data.time_is_frozen;
+  }
+
+  uint32_t TrafficLight::GetPoleIndex()
+  {
+    return GetEpisode().Lock()->GetActorDynamicState(*this).state.traffic_light_data.pole_index;
+  }
+
+  std::vector<SharedPtr<TrafficLight>> TrafficLight::GetGroupTrafficLights() {
+    std::vector<SharedPtr<TrafficLight>> result;
+    auto ids = GetEpisode().Lock()->GetGroupTrafficLights(*this);
+    for (auto id : ids) {
+      SharedPtr<Actor> actor = GetWorld().GetActors()->Find(id);
+      result.push_back(boost::static_pointer_cast<TrafficLight>(actor));
+    }
+    return result;
   }
 
 } // namespace client
