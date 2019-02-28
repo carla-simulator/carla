@@ -121,7 +121,13 @@ def create_ego_vehicle(world, ego_vehicle, spawn_point, list_sensor_spec):
                 sensor_location = carla.Location(x=sensor_spec['x'], y=sensor_spec['y'], z=sensor_spec['z'])
                 sensor_rotation = carla.Rotation(pitch=sensor_spec['pitch'], roll=sensor_spec['roll'], yaw=sensor_spec['yaw'])
             elif sensor_spec['type'].startswith('sensor.lidar'):
-                bp.set_attribute('range', '5000')
+                bp.set_attribute('range', '200')
+                bp.set_attribute('rotation_frequency', '10')
+                bp.set_attribute('channels', '32')
+                bp.set_attribute('upper_fov', '15')
+                bp.set_attribute('lower_fov', '-30')
+                bp.set_attribute('points_per_second', '500000')
+
                 sensor_location = carla.Location(x=sensor_spec['x'], y=sensor_spec['y'], z=sensor_spec['z'])
                 sensor_rotation = carla.Rotation(pitch=sensor_spec['pitch'], roll=sensor_spec['roll'], yaw=sensor_spec['yaw'])
             elif sensor_spec['type'].startswith('sensor.other.gnss'):
