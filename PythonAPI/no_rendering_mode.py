@@ -765,8 +765,8 @@ class ModuleWorld(object):
                 tl_t = tl.get_transform()
 
                 transformed_tv = tl_t.transform(tl.trigger_volume.location)
-
-                d = transformed_tv.distance(self.hero_actor.get_location())
+                hero_location = self.hero_actor.get_location()
+                d = hero_location.distance(transformed_tv)
                 s = Util.length(tl.trigger_volume.extent) + Util.length(self.hero_actor.bounding_box.extent)
                 if ( d <= s ):
                   # Highlight traffic light
