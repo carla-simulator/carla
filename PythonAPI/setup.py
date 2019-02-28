@@ -56,19 +56,29 @@ def get_libcarla_extensions():
         sources += [x for x in walk('dependencies/include/carla', '*.cpp')]
 
         pwd = os.path.dirname(os.path.realpath(__file__))
-        pylib = "libboost_python%d%d-vc141-mt-x64-1_67.lib" % (
+        pylib = 'libboost_python%d%d' % (
             sys.version_info.major,
             sys.version_info.minor)
-        extra_link_args = [
-                'shlwapi.lib',
-                os.path.join(pwd, 'dependencies/lib/rpc.lib'),
-                os.path.join(pwd, 'dependencies/lib', pylib)]
+
+        extra_link_args = ['shlwapi.lib']
+
+        required_libs = [
+            pylib, 'libboost_filesystem',
+            'rpc.lib', 'carla_client.lib',
+            'libpng.lib', 'zlib.lib']
+
+        # Search for files in 'PythonAPI\dependencies\lib' that contains
+        # the names listed in required_libs in it's file name
+        libs = [x for x in os.listdir('dependencies/lib') if any(d in x for d in required_libs)]
+
+        for lib in libs:
+            extra_link_args.append(os.path.join(pwd, 'dependencies/lib', lib))
 
         # https://docs.microsoft.com/es-es/cpp/porting/modifying-winver-and-win32-winnt
         extra_compile_args = [
             '/DBOOST_ALL_NO_LIB', '/DBOOST_PYTHON_STATIC_LIB',
             '/DBOOST_ERROR_CODE_HEADER_ONLY', '/D_WIN32_WINNT=0x0501',
-            '/DLIBCARLA_WITH_PYTHON_SUPPORT']
+            '/DLIBCARLA_WITH_PYTHON_SUPPORT', '-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true']
     else:
         raise NotImplementedError
 

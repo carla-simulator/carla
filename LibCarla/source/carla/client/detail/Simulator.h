@@ -132,6 +132,10 @@ namespace detail {
       _client.SetWeatherParameters(weather);
     }
 
+    rpc::VehiclePhysicsControl GetVehiclePhysicsControl(const Vehicle &vehicle) const {
+      return _client.GetVehiclePhysicsControl(vehicle.Serialize());
+    }
+
     /// @}
     // =========================================================================
     /// @name General operations with actors
@@ -222,6 +226,9 @@ namespace detail {
       _client.ApplyControlToWalker(walker.Serialize(), control);
     }
 
+    void ApplyPhysicsControlToVehicle(Vehicle &vehicle, const rpc::VehiclePhysicsControl &physicsControl) {
+      _client.ApplyPhysicsControlToVehicle(vehicle.Serialize(), physicsControl);
+    }
     /// @}
     // =========================================================================
     /// @name Operations with the recorder
@@ -287,6 +294,10 @@ namespace detail {
 
     void FreezeTrafficLight(TrafficLight &trafficLight, bool freeze) {
       _client.FreezeTrafficLight(trafficLight.Serialize(), freeze);
+    }
+
+    std::vector<rpc::actor_id_type> GetGroupTrafficLights(TrafficLight &trafficLight) {
+      return _client.GetGroupTrafficLights(trafficLight.Serialize());
     }
 
     /// @}
