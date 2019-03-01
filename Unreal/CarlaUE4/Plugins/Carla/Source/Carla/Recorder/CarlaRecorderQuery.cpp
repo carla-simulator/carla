@@ -63,7 +63,7 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
   }
 
   uint16_t i, Total;
-  bool bFramePrinted;
+  bool bFramePrinted = false;
 
   // lambda for repeating task
   auto PrintFrame = [this](std::stringstream &Info)
