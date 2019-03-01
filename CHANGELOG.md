@@ -1,4 +1,5 @@
 ## Latest Changes
+  * Allow usage of hostname for carla::Client and resolve them to IP address
   * Simplify Dockerfile and halve Carla Docker image size
   * Synchronous mode, controlled with `client.tick()`
   * Allow changing map from client-side, added `client.load_map(name)`, `client.reload_map()`, and `client.get_available_maps()`
