@@ -19,6 +19,10 @@ name provided with the --file flag, so, running
 make export-maps ARGS="--map=/Path/To/Awesome/Map --file=AwesomeMap"
 ```
 
+!!! important
+    The path specified in <b>--map</b> flag has to be in Unreal's way.
+    For example:<br><i><b>/Game/Carla/Maps/AwesomeTownMap</b></i>
+
 will clean, cook and pack the necessary assets with the maps. Please, note that
 there is no way of knowing what assets are on the project-to-import-to, so the
 final package will usually contain assets needed for the current project to work
