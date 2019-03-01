@@ -1,3 +1,6 @@
+## Latest Changes
+  * Allow usage of hostname for carla::Client and resolve them to IP address
+
 ## CARLA 0.9.4
 
   * Added recording and playback functionality
