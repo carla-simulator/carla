@@ -49,8 +49,9 @@ RoadRunnerFiles/
     └── MapToImport02.xodr
 ```
 
-Under RoadRunnerFiles, place each "Export" folder obtained from RoadRunner and
-rename it with the name of the map to be imported. It have to match the <b>.fbx</b>
+Under <i>RoadRunnerFiles</i> folder located at the Carla Root, place each "Export"
+folder obtained from RoadRunner and rename it with the name of the map to be imported.
+It have to match the <b>.fbx</b>
 and <b>.xodr</b> files.
 
 Now, simply go into the PythonAPI/util folder and run <b>generate_map.py</b>
