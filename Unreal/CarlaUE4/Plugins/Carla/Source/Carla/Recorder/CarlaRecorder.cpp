@@ -204,7 +204,7 @@ void ACarlaRecorder::Write(double DeltaSeconds)
   Clear();
 }
 
-inline void ACarlaRecorder::AddPosition(const CarlaRecorderPosition &Position)
+void ACarlaRecorder::AddPosition(const CarlaRecorderPosition &Position)
 {
   if (Enabled)
   {
@@ -212,27 +212,30 @@ inline void ACarlaRecorder::AddPosition(const CarlaRecorderPosition &Position)
   }
 }
 
-inline void ACarlaRecorder::AddEvent(const CarlaRecorderEventAdd &Event)
+void ACarlaRecorder::AddEvent(const CarlaRecorderEventAdd &Event)
 {
   if (Enabled)
   {
     EventsAdd.Add(std::move(Event));
   }
 }
-inline void ACarlaRecorder::AddEvent(const CarlaRecorderEventDel &Event)
+
+void ACarlaRecorder::AddEvent(const CarlaRecorderEventDel &Event)
 {
   if (Enabled)
   {
     EventsDel.Add(std::move(Event));
   }
 }
-inline void ACarlaRecorder::AddEvent(const CarlaRecorderEventParent &Event)
+
+void ACarlaRecorder::AddEvent(const CarlaRecorderEventParent &Event)
 {
   if (Enabled)
   {
     EventsParent.Add(std::move(Event));
   }
 }
+
 void ACarlaRecorder::AddCollision(AActor *Actor1, AActor *Actor2)
 {
   if (Enabled)
@@ -265,7 +268,8 @@ void ACarlaRecorder::AddCollision(AActor *Actor1, AActor *Actor2)
     Collisions.Add(std::move(Collision));
   }
 }
-inline void ACarlaRecorder::AddState(const CarlaRecorderStateTrafficLight &State)
+
+void ACarlaRecorder::AddState(const CarlaRecorderStateTrafficLight &State)
 {
   if (Enabled)
   {
