@@ -35,6 +35,7 @@ Repositories associated to the CARLA simulation platform:
 * [**Conditional Imitation-Learning**](https://github.com/felipecode/coiltraine): Training and testing Conditional Imitation Learning models in CARLA [README](https://github.com/felipecode/coiltraine/blob/master/docs/view_agents.md)
 * [**AutoWare AV stack**](https://github.com/carla-simulator/carla-autoware): Bridge to connect AutoWare AV stack to CARLA
 * [**Reinforcement-Learning**](https://github.com/carla-simulator/reinforcement-learning): Code for running Conditional Reinforcement Learning models in CARLA
+* [**Map Editor**](https://github.com/carla-simulator/carla-map-editor): Standalone GUI application to enhance RoadRunner maps with traffic lights and traffic signs information
 
 2019 Roadmap
 -------
@@ -43,7 +44,7 @@ Repositories associated to the CARLA simulation platform:
 We are continuously working on improving CARLA, and we appreciate contributions
 from the community. Our most immediate goals are:
 
-- [x] Support simulation of traffic scenarios 
+- [x] Support simulation of traffic scenarios
 - [x] Support ROS interface
 - [x] Allowing for flexible and user-friendly import and editing of maps
 - [x] Control of all vehicles from client side
