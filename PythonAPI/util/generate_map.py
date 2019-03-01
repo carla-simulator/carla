@@ -187,5 +187,8 @@ if __name__ == '__main__':
     try:
         args = parse_arguments()
         main()
+        dirname = os.path.dirname(os.path.abspath(__file__))
+        relative_path = os.path.join(dirname, "..", "..", "Unreal", "CarlaUE4", "Content", "Carla", "ExportedMaps")
+        print('Map(s) exported to %s' % os.path.abspath(relative_path))
     finally:
         print('\ndone.')
