@@ -40,7 +40,7 @@
 // http://nadeausoftware.com/articles/2012/10/c_c_tip_how_detect_compiler_name_and_version_using_compiler_predefined_macros
 #if defined(_MSC_VER)
 #  pragma warning(push)
-#  pragma warning(disable: 4668 4191)
+#  pragma warning(disable: 4668 4191 4647)
 #endif
 
 #if defined(__clang__)

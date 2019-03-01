@@ -46,6 +46,7 @@ public class Carla : ModuleRules
       new string[]
       {
         "AIModule",
+        "AssetRegistry",
         "CoreUObject",
         "Engine",
         "Foliage",
