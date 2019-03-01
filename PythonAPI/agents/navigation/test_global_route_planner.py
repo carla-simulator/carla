@@ -46,9 +46,9 @@ class Test_GlobalRoutePlanner(unittest.TestCase):
         Test for GlobalRoutePlanner.path_search()
         Run this test with carla server running Town03
         """
-        self.integ_grp.path_search((191.947, -5.602), (78.730, -50.091))
+        self.integ_grp._path_search((191.947, -5.602), (78.730, -50.091))
         self.assertEqual(
-            self.integ_grp.path_search((196.947, -5.602), (78.730, -50.091)),
+            self.integ_grp._path_search((196.947, -5.602), (78.730, -50.091)),
             [256, 157, 158, 117, 118, 59, 55, 230])
 
     def test_localise(self):
@@ -57,7 +57,7 @@ class Test_GlobalRoutePlanner(unittest.TestCase):
         Run this test with carla server running Town03
         """
         x, y = (200, -250)
-        segment = self.integ_grp.localise(x, y)
+        segment = self.integ_grp._localise(x, y)
         self.assertEqual(self.integ_grp._id_map[segment['entry']], 5)
         self.assertEqual(self.integ_grp._id_map[segment['exit']], 225)
 
@@ -65,7 +65,7 @@ class Test_GlobalRoutePlanner(unittest.TestCase):
         """
         Test for GlobalROutePlanner.unit_vector()
         """
-        vector = self.simple_grp.unit_vector((1, 1), (2, 2))
+        vector = self.simple_grp._unit_vector((1, 1), (2, 2))
         self.assertAlmostEquals(vector[0], 1 / math.sqrt(2))
         self.assertAlmostEquals(vector[1], 1 / math.sqrt(2))
 
