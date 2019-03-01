@@ -126,6 +126,8 @@
 - `apply_control(vehicle_control)`
 - `get_control()`
 - `set_autopilot(enabled=True)`
+- `get_physics_control()`
+- `apply_physics_control(vehicle_physics_control)`
 - `get_speed_limit()`
 - `get_traffic_light_state()`
 - `is_at_traffic_light()`
