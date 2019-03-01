@@ -1,6 +1,49 @@
 ## Latest Changes
+  * Simplify Dockerfile and halve Carla Docker image size
+  * Synchronous mode, controlled with `client.tick()`
+  * Allow changing map from client-side, added `client.load_map(name)`, `client.reload_map()`, and `client.get_available_maps()`
+  * Control over multiple vehicles in batch mode
+  * Fixed a few synchronization issues that appeared once restarting an episode was possible.
+  * Reduced overhead of many RPC calls by sending only actor IDs (instead of serializing all the actor attributes every time)
+  * Added priority system for vehicle control input
+  * Episodes have now a random unique id to avoid collisions between runs
+  * Removed "Example.CarlaSettings.ini", you can still use it, but it's no longer necessary
+  * Added performance benchmark script to measure rendering performance.
+  * Fix parsing of OpenDrive geoReference exported by RoadRunner
+  * Added recording/replaying functionality to manual_control.py script.
+    - CTRL + R: Toggle recording (file is always 'manual_recording.rec')
+    - CTRL + P: Replay last recording.
+    - CTRL + -: Subtract 1 second the start time of the replayer.
+    - CTRL + =: Add 1 second the start time of the replayer.
+    - CTRL + SHIFT + -: Subtract 10 seconds the start time of the replayer.
+    - CTRL + SHIFT + =: Add 10 seconds the start time of the replayer.
+    - Note: A negative time start means to replay from the end of the recording (-2 = replay the last 2 seconds)
+  * Added manual_control_steeringwheel.py to control agents using Logitech G29 steering wheels (and maybe others).
+  * Fixed `manual_control.py` and `no_rendering_mode.py` to prevent crashes when used in "no rendering mode"
+  * Added scripts and tool to import map direcly from .fbx and .xodr files into the system.
+  * Added movable props present in the map (e.g. chairs and tables) as actors so they can be controlled from Python
+  * Refactored `no_rendering_mode.py` to improve performance and interface
+  * Fixed traffic light when it gets illuminated by the hero vehicle in `no_rendering_mode.py`
+  * Exposed minimum physics control parameters for vehicles and wheels.
+  * Several improvements to the basic build system for Windows
+  * Improved time-out related error messages
+  * Fixed issue of retrieving an empty list when calling `world.get_actors()` right after creating the world
+  * New map Town06, featuring a "Michigan left" intersection including:
+    - Connection ramp between two highways
+    - Incorporation to a highway requiring changing several lanes to take another exit
+    - Junctions supporting different scenarios
+  * New pedestrian texture to add more variations
+  * New road PBR material
+  * Fixed traffic signs having the trigger box rotated
+  * Fixed Town01 placed 38 meters above the zero
+  * Fixed female walk animation
+  * Fixed static objects present in the map were marked as "movable"
+  * Fixed BP_MultipleFloor, tweaked offset in BaseFloor to adjust meshes between them
+  * New traffic signs assets: one-way, no-turn, more speed limits, do not enter, arrow floors, Michigan left, and lane end
+  * Extended the Waypoint API with `lane_change`, `lane_type`, `get_right_lane()` and `get_left_lane()`
+  * Expose traffic sign's trigger volumes on Python API
+  * Updated the Python API to enable the user to acquire a traffic light's pole index and all traffic lights in it's group
 
-  * Fixed `manual_control.py` and `no_rendering_mode` to prevent crashes when used in "no rendering mode"
 ## CARLA 0.9.3
 
   * Upgraded to Unreal Engine 4.21

@@ -16,6 +16,8 @@ ATheNewCarlaGameModeBase::ATheNewCarlaGameModeBase(const FObjectInitializer& Obj
 
   Episode = CreateDefaultSubobject<UCarlaEpisode>(TEXT("Episode"));
 
+  Recorder = CreateDefaultSubobject<ACarlaRecorder>(TEXT("Recorder"));
+
   TaggerDelegate = CreateDefaultSubobject<UTaggerDelegate>(TEXT("TaggerDelegate"));
   CarlaSettingsDelegate = CreateDefaultSubobject<UCarlaSettingsDelegate>(TEXT("CarlaSettingsDelegate"));
 }
@@ -75,13 +77,13 @@ void ATheNewCarlaGameModeBase::InitGame(
     UE_LOG(LogCarla, Error, TEXT("Missing weather class!"));
   }
 
-  GameInstance->StartServer();
-
-  Episode->WorldObserver = World->SpawnActor<AWorldObserver>();
-  Episode->WorldObserver->SetEpisode(*Episode);
-  Episode->WorldObserver->SetStream(GameInstance->GetServer().OpenMultiStream());
+  GameInstance->NotifyInitGame();
 
   SpawnActorFactories();
+
+  // make connection between Episode and Recorder
+  Recorder->SetEpisode(Episode);
+  Episode->SetRecorder(Recorder);
 }
 
 void ATheNewCarlaGameModeBase::RestartPlayer(AController *NewPlayer)
@@ -112,11 +114,13 @@ void ATheNewCarlaGameModeBase::Tick(float DeltaSeconds)
 {
   Super::Tick(DeltaSeconds);
 
-  GameInstance->Tick(DeltaSeconds);
+  /// @todo Recorder should not tick here, FCarlaEngine should do it.
+  if (Recorder) Recorder->Tick(DeltaSeconds);
 }
 
 void ATheNewCarlaGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+  Episode->EndPlay();
   GameInstance->NotifyEndEpisode();
 
   Super::EndPlay(EndPlayReason);

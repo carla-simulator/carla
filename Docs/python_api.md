@@ -12,15 +12,25 @@
 - `get_client_version()`
 - `get_server_version()`
 - `get_world()`
+- `get_available_maps()`
+- `reload_world()`
+- `load_world(map_name)`
+- `start_recorder(string filename)`
+- `replay_file(string filename, float start, float duration, int camera_follow_id)`
+- `show_recorder_file_info(string filename)`
+- `show_recorder_collisions(string filename, char category1, char category2)`
+- `show_recorder_actors_blocked(string filename, float min_time, float min_distance)`
+- `apply_batch(commands, do_tick=False)`
 
 ## `carla.World`
 
 - `id`
-- `map_name`
 - `debug`
 - `get_blueprint_library()`
 - `get_map()`
 - `get_spectator()`
+- `get_settings()`
+- `apply_settings(world_settings)`
 - `get_weather()`
 - `set_weather(weather_parameters)`
 - `get_actors()`
@@ -28,6 +38,14 @@
 - `try_spawn_actor(blueprint, transform, attach_to=None)`
 - `wait_for_tick(seconds=1.0)`
 - `on_tick(callback)`
+- `tick()`
+
+## `carla.WorldSettings`
+
+- `synchronous_mode`
+- `no_rendering_mode`
+- `__eq__(other)`
+- `__ne__(other)`
 
 ## `carla.DebugHelper`
 
@@ -127,6 +145,8 @@
 - `get_elapsed_time()`
 - `freeze(True)`
 - `is_frozen()`
+- `get_pole_index()`
+- `get_group_traffic_lights()`
 
 ## `carla.Sensor(carla.Actor)`
 
@@ -197,6 +217,34 @@
 - `__eq__(other)`
 - `__ne__(other)`
 
+
+## `carla.WheelsPhysicsControl`
+- `tire_friction`
+- `damping_rate`
+- `steer_angle`
+- `disable_steering`
+- `__eq__(other)`
+- `__ne__(other)`
+
+## `carla.VehiclePhysicsControl`
+
+- `torque_curve`
+- `max_rpm`
+- `moi`
+- `damping_rate_full_throttle`
+- `damping_rate_zero_throttle_clutch_engaged`
+- `damping_rate_zero_throttle_clutch_disengaged`
+- `use_gear_autobox`
+- `gear_switch_time`
+- `clutch_strength`
+- `mass`
+- `drag_coefficient`
+- `center_of_mass`
+- `steering_curve`
+- `wheels`
+- `__eq__(other)`
+- `__ne__(other)`
+
 ## `carla.Map`
 
 - `name`
@@ -214,7 +262,17 @@
 - `lane_width`
 - `road_id`
 - `lane_id`
+- `lane_change`
+- `lane_type`
 - `next(distance)`
+- `get_right_lane()`
+- `get_left_lane()`
+
+## `carla.LaneChange`
+- `None`
+- `Right`
+- `Left`
+- `Both`
 
 ## `carla.WeatherParameters`
 
@@ -335,3 +393,50 @@ Static presets
 - `Other`
 - `Broken`
 - `Solid`
+
+# module `carla.command`
+
+## `carla.command.DestroyActor`
+
+- `actor_id`
+
+## `carla.command.ApplyVehicleControl`
+
+- `actor_id`
+- `control`
+
+## `carla.command.ApplyWalkerControl`
+
+- `actor_id`
+- `control`
+
+## `carla.command.ApplyTransform`
+
+- `actor_id`
+- `transform`
+
+## `carla.command.ApplyVelocity`
+
+- `actor_id`
+- `velocity`
+
+## `carla.command.ApplyAngularVelocity`
+
+- `actor_id`
+- `angular_velocity`
+
+
+## `carla.command.ApplyImpulse`
+
+- `actor_id`
+- `impulse`
+
+## `carla.command.SetSimulatePhysics`
+
+- `actor_id`
+- `enabled`
+
+## `carla.command.SetAutopilot`
+
+- `actor_id`
+- `enabled`

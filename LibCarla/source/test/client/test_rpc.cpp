@@ -28,7 +28,9 @@ TEST(rpc, compilation_tests) {
 TEST(rpc, server_bind_sync_run_on_game_thread) {
   const auto main_thread_id = std::this_thread::get_id();
 
-  Server server(TESTING_PORT);
+  const auto port = (TESTING_PORT != 0u ? TESTING_PORT : 2017u);
+
+  Server server(port);
 
   server.BindSync("do_the_thing", [=](int x, int y) -> int {
     EXPECT_EQ(std::this_thread::get_id(), main_thread_id);
@@ -41,7 +43,7 @@ TEST(rpc, server_bind_sync_run_on_game_thread) {
 
   carla::ThreadGroup threads;
   threads.CreateThread([&]() {
-    Client client("localhost", TESTING_PORT);
+    Client client("localhost", port);
     for (auto i = 0; i < 300; ++i) {
       auto result = client.call("do_the_thing", i, 1).as<int>();
       EXPECT_EQ(result, i + 1);

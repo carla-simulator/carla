@@ -37,6 +37,10 @@ namespace geom {
 
     Transform() = default;
 
+    Transform(const Location &in_location)
+      : location(in_location),
+        rotation() {}
+
     Transform(const Location &in_location, const Rotation &in_rotation)
       : location(in_location),
         rotation(in_rotation) {}

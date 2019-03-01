@@ -43,9 +43,49 @@ namespace client {
       return _simulator->GetServerVersion();
     }
 
+    std::vector<std::string> GetAvailableMaps() const {
+      return _simulator->GetAvailableMaps();
+    }
+
+    World ReloadWorld() const {
+      return World{_simulator->ReloadEpisode()};
+    }
+
+    World LoadWorld(std::string map_name) const {
+      return World{_simulator->LoadEpisode(std::move(map_name))};
+    }
+
     /// Return an instance of the world currently active in the simulator.
     World GetWorld() const {
       return World{_simulator->GetCurrentEpisode()};
+    }
+
+    std::string StartRecorder(std::string name) {
+      return _simulator->StartRecorder(name);
+    }
+
+    void StopRecorder(void) {
+      _simulator->StopRecorder();
+    }
+
+    std::string ShowRecorderFileInfo(std::string name) {
+      return _simulator->ShowRecorderFileInfo(name);
+    }
+
+    std::string ShowRecorderCollisions(std::string name, char type1, char type2) {
+      return _simulator->ShowRecorderCollisions(name, type1, type2);
+    }
+
+    std::string ShowRecorderActorsBlocked(std::string name, double min_time, double min_distance) {
+      return _simulator->ShowRecorderActorsBlocked(name, min_time, min_distance);
+    }
+
+    std::string ReplayFile(std::string name, double start, double duration, uint32_t follow_id) {
+      return _simulator->ReplayFile(name, start, duration, follow_id);
+    }
+
+    void ApplyBatch(std::vector<rpc::Command> commands, bool do_tick_cue = false) const {
+      _simulator->ApplyBatch(std::move(commands), do_tick_cue);
     }
 
   private:

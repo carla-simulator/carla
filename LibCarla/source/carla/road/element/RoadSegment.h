@@ -8,6 +8,9 @@
 
 #include "carla/NonCopyable.h"
 #include "carla/geom/Location.h"
+#include "carla/road/element/RoadInfoMarkRecord.h"
+#include "carla/road/element/RoadInfoLaneWidth.h"
+#include "carla/road/element/RoadInfoLaneOffset.h"
 #include "carla/road/element/RoadInfo.h"
 #include "carla/road/element/Types.h"
 
@@ -15,6 +18,7 @@
 #include <memory>
 #include <set>
 #include <vector>
+#include <algorithm>
 
 namespace carla {
 namespace road {
@@ -47,7 +51,7 @@ namespace element {
     /// Returns single info given a type and a distance from
     /// the start of the road (negative lanes)
     template <typename T>
-    const T *GetInfo(double dist) const {
+    std::shared_ptr<const T> GetInfo(double dist) const {
       auto up_bound = decltype(_info)::reverse_iterator(_info.upper_bound(dist));
       auto it = MakeRoadInfoIterator<T>(up_bound, _info.rend());
       return it.IsAtEnd() ? nullptr : *it;
@@ -56,17 +60,95 @@ namespace element {
     /// Returns single info given a type and a distance from
     /// the end of the road (positive lanes)
     template <typename T>
-    const T *GetInfoReverse(double dist) const {
+    std::shared_ptr<const T> GetInfoReverse(double dist) const {
       auto lo_bound = _info.lower_bound(dist);
       auto it = MakeRoadInfoIterator<T>(lo_bound, _info.end());
       return it.IsAtEnd() ? nullptr : *it;
     }
 
-    // returns info vector given a type and a distance
-    std::vector<std::shared_ptr<const RoadInfo>> GetInfos(double dist) const {
-      // @todo
-      (void) dist;
-      return std::vector<std::shared_ptr<const RoadInfo>>();
+    /// Returns info vector given a type and a distance from
+    /// the start of the road (negative lanes)
+    template <typename T>
+    std::vector<std::shared_ptr<const T>> GetInfos(double dist) const {
+      auto up_bound = decltype(_info)::reverse_iterator(_info.upper_bound(dist));
+      auto it = MakeRoadInfoIterator<T>(up_bound, _info.rend());
+
+      std::vector<std::shared_ptr<const T>> result;
+      for (; !it.IsAtEnd(); ++it) {
+        result.emplace_back(*it);
+      }
+      return result;
+    }
+
+    /// Returns info vector given a type and a distance from
+    /// the end of the road (positive lanes)
+    template <typename T>
+    std::vector<std::shared_ptr<const T>> GetInfosReverse(double dist) const {
+      auto lo_bound = _info.lower_bound(dist);
+      auto it = MakeRoadInfoIterator<T>(lo_bound, _info.end());
+
+      std::vector<std::shared_ptr<const T>> result;
+      for (; !it.IsAtEnd(); ++it) {
+        result.emplace_back(*it);
+      }
+      return result;
+    }
+
+    /// Workaround where we must find a specific (RoadInfoMarkRecord) RoadInfo
+    /// that must have lane_id info. In this case this info is used for selecting
+    /// only the nearest RoadInfos to the "dist" input.
+    std::vector<std::shared_ptr<const RoadInfoMarkRecord>> GetRoadInfoMarkRecord(
+        double dist) const {
+      auto mark_record_info = GetInfos<RoadInfoMarkRecord>(dist);
+      std::vector<std::shared_ptr<const RoadInfoMarkRecord>> result;
+      std::unordered_set<int> inserted_lanes;
+
+      for (auto &&mark_record : mark_record_info) {
+        const int lane_id = mark_record->GetLaneId();
+        const bool is_new_lane = inserted_lanes.insert(lane_id).second;
+        if (is_new_lane) {
+          result.emplace_back(mark_record);
+        }
+      }
+      return result;
+    }
+
+    /// Workaround where we must find a specific (RoadInfoMarkRecord) RoadInfo
+    /// that must have lane_id info. In this case this info is used for selecting
+    /// only the nearest RoadInfos to the "dist" input. But reversed!
+    std::vector<std::shared_ptr<const RoadInfoMarkRecord>> GetRoadInfoMarkRecordReverse(
+        double dist) const {
+      auto mark_record_info = GetInfosReverse<RoadInfoMarkRecord>(dist);
+      std::vector<std::shared_ptr<const RoadInfoMarkRecord>> result;
+      std::unordered_set<int> inserted_lanes;
+
+      for (auto &&mark_record : mark_record_info) {
+        const int lane_id = mark_record->GetLaneId();
+        const bool is_new_lane = inserted_lanes.insert(lane_id).second;
+        if (is_new_lane) {
+          result.emplace_back(mark_record);
+        }
+      }
+      return result;
+    }
+
+    /// Workaround where we must find a specific (RoadInfoLaneWidth) RoadInfo
+    /// that must have lane_id info. In this case this info is used for selecting
+    /// only the nearest RoadInfos to the "dist" input.
+    std::vector<std::shared_ptr<const RoadInfoLaneWidth>> GetRoadInfoLaneWidth(
+        double dist) const {
+      auto lane_offset_info = GetInfos<RoadInfoLaneWidth>(dist);
+      std::vector<std::shared_ptr<const RoadInfoLaneWidth>> result;
+      std::unordered_set<int> inserted_lanes;
+
+      for (auto &&lane_offset : lane_offset_info) {
+        const int lane_id = lane_offset->GetLaneId();
+        const bool is_new_lane = inserted_lanes.insert(lane_id).second;
+        if (is_new_lane) {
+          result.emplace_back(lane_offset);
+        }
+      }
+      return result;
     }
 
     void PredEmplaceBack(RoadSegment *s) {
@@ -245,7 +327,7 @@ namespace element {
   private:
 
     DirectedPoint DirectedPointWithElevation(double dist, DirectedPoint dp) const {
-        const RoadElevationInfo *elev_info = GetInfo<RoadElevationInfo>(dist);
+        const auto elev_info = GetInfo<RoadElevationInfo>(dist);
         if (elev_info) {
           dp.location.z = elev_info->Evaluate(dist, &dp.pitch);
         }

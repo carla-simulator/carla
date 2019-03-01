@@ -25,6 +25,8 @@ public:
   ///
   /// @warning If the actor type is not supported a default initialized bounding
   /// box is returned.
+  ///
+  /// @warning Traffic signs return its trigger box instead.
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static FBoundingBox GetActorBoundingBox(const AActor *Actor);
 };

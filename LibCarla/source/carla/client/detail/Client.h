@@ -12,10 +12,13 @@
 #include "carla/geom/Transform.h"
 #include "carla/rpc/Actor.h"
 #include "carla/rpc/ActorDefinition.h"
+#include "carla/rpc/Command.h"
 #include "carla/rpc/EpisodeInfo.h"
+#include "carla/rpc/EpisodeSettings.h"
 #include "carla/rpc/MapInfo.h"
-#include "carla/rpc/WeatherParameters.h"
 #include "carla/rpc/TrafficLightState.h"
+#include "carla/rpc/VehiclePhysicsControl.h"
+#include "carla/rpc/WeatherParameters.h"
 
 #include <functional>
 #include <memory>
@@ -59,23 +62,42 @@ namespace detail {
 
     void SetTimeout(time_duration timeout);
 
+    time_duration GetTimeout() const;
+
+    const std::string &GetEndpoint() const;
+
     std::string GetClientVersion();
 
     std::string GetServerVersion();
+
+    void LoadEpisode(std::string map_name);
 
     rpc::EpisodeInfo GetEpisodeInfo();
 
     rpc::MapInfo GetMapInfo();
 
+    std::vector<std::string> GetAvailableMaps();
+
     std::vector<rpc::ActorDefinition> GetActorDefinitions();
 
     rpc::Actor GetSpectator();
+
+    rpc::EpisodeSettings GetEpisodeSettings();
+
+    void SetEpisodeSettings(const rpc::EpisodeSettings &settings);
 
     rpc::WeatherParameters GetWeatherParameters();
 
     void SetWeatherParameters(const rpc::WeatherParameters &weather);
 
-    std::vector<rpc::Actor> GetActorsById(const std::vector<actor_id_type> &ids);
+    std::vector<rpc::Actor> GetActorsById(const std::vector<ActorId> &ids);
+
+    rpc::VehiclePhysicsControl GetVehiclePhysicsControl(
+        const rpc::ActorId &vehicle) const;
+
+    void ApplyPhysicsControlToVehicle(
+        const rpc::ActorId &vehicle,
+        const rpc::VehiclePhysicsControl &physics_control);
 
     rpc::Actor SpawnActor(
         const rpc::ActorDescription &description,
@@ -84,65 +106,80 @@ namespace detail {
     rpc::Actor SpawnActorWithParent(
         const rpc::ActorDescription &description,
         const geom::Transform &transform,
-        const rpc::Actor &parent);
+        rpc::ActorId parent);
 
-    bool DestroyActor(const rpc::Actor &actor);
+    bool DestroyActor(rpc::ActorId actor);
 
     void SetActorLocation(
-        const rpc::Actor &actor,
+        rpc::ActorId actor,
         const geom::Location &location);
 
     void SetActorTransform(
-        const rpc::Actor &actor,
+        rpc::ActorId actor,
         const geom::Transform &transform);
 
-    void SetActorSimulatePhysics(
-        const rpc::Actor &actor,
-        bool enabled);
-
-    void SetActorAutopilot(
-        const rpc::Actor &vehicle,
-        bool enabled);
-
-    void ApplyControlToVehicle(
-        const rpc::Actor &vehicle,
-        const rpc::VehicleControl &control);
-
-    void ApplyControlToWalker(
-        const rpc::Actor &walker,
-        const rpc::WalkerControl &control);
-
-    void SetTrafficLightState(
-        const rpc::Actor &trafficLight,
-        const rpc::TrafficLightState trafficLightState);
-
-    void SetTrafficLightGreenTime(
-        const rpc::Actor &trafficLight,
-        float greenTime);
-
-    void SetTrafficLightYellowTime(
-        const rpc::Actor &trafficLight,
-        float yellowTime);
-
-    void SetTrafficLightRedTime(
-        const rpc::Actor &trafficLight,
-        float redTime);
-
-    void FreezeTrafficLight(
-        const rpc::Actor &trafficLight,
-        bool freeze);
-
     void SetActorVelocity(
-        const rpc::Actor &actor,
+        rpc::ActorId actor,
         const geom::Vector3D &vector);
 
     void SetActorAngularVelocity(
-        const rpc::Actor &actor,
+        rpc::ActorId actor,
         const geom::Vector3D &vector);
 
     void AddActorImpulse(
-        const rpc::Actor &actor,
+        rpc::ActorId actor,
         const geom::Vector3D &vector);
+
+    void SetActorSimulatePhysics(
+        rpc::ActorId actor,
+        bool enabled);
+
+    void SetActorAutopilot(
+        rpc::ActorId vehicle,
+        bool enabled);
+
+    void ApplyControlToVehicle(
+        rpc::ActorId vehicle,
+        const rpc::VehicleControl &control);
+
+    void ApplyControlToWalker(
+        rpc::ActorId walker,
+        const rpc::WalkerControl &control);
+
+    void SetTrafficLightState(
+        rpc::ActorId traffic_light,
+        const rpc::TrafficLightState trafficLightState);
+
+    void SetTrafficLightGreenTime(
+        rpc::ActorId traffic_light,
+        float green_time);
+
+    void SetTrafficLightYellowTime(
+        rpc::ActorId traffic_light,
+        float yellow_time);
+
+    void SetTrafficLightRedTime(
+        rpc::ActorId traffic_light,
+        float red_time);
+
+    void FreezeTrafficLight(
+        rpc::ActorId traffic_light,
+        bool freeze);
+
+    std::vector<ActorId> GetGroupTrafficLights(
+        const rpc::ActorId &traffic_light);
+
+    std::string StartRecorder(std::string name);
+
+    void StopRecorder();
+
+    std::string ShowRecorderFileInfo(std::string name);
+
+    std::string ShowRecorderCollisions(std::string name, char type1, char type2);
+
+    std::string ShowRecorderActorsBlocked(std::string name, double min_time, double min_distance);
+
+    std::string ReplayFile(std::string name, double start, double duration, uint32_t follow_id);
 
     void SubscribeToStream(
         const streaming::Token &token,
@@ -151,6 +188,10 @@ namespace detail {
     void UnSubscribeFromStream(const streaming::Token &token);
 
     void DrawDebugShape(const rpc::DebugShape &shape);
+
+    void ApplyBatch(std::vector<rpc::Command> commands, bool do_tick_cue);
+
+    void SendTickCue();
 
   private:
 

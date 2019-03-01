@@ -12,13 +12,13 @@
 #include "carla/Version.h"
 #include "carla/client/Actor.h"
 #include "carla/client/GarbageCollectionPolicy.h"
+#include "carla/client/TrafficLight.h"
 #include "carla/client/Vehicle.h"
 #include "carla/client/Walker.h"
 #include "carla/client/detail/Client.h"
 #include "carla/client/detail/Episode.h"
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/profiler/LifetimeProfiled.h"
-#include "carla/client/TrafficLight.h"
 #include "carla/rpc/TrafficLightState.h"
 
 #include <memory>
@@ -55,23 +55,41 @@ namespace detail {
 
     /// @}
     // =========================================================================
+    /// @name Load a new episode
+    // =========================================================================
+    /// @{
+
+    EpisodeProxy ReloadEpisode() {
+      return LoadEpisode("");
+    }
+
+    EpisodeProxy LoadEpisode(std::string map_name);
+
+    /// @}
+    // =========================================================================
     /// @name Access to current episode
     // =========================================================================
     /// @{
 
+    /// @pre Cannot be called previous to GetCurrentEpisode.
     auto GetCurrentEpisodeId() const {
       DEBUG_ASSERT(_episode != nullptr);
       return _episode->GetId();
     }
 
-    const std::string &GetCurrentMapName() {
-      DEBUG_ASSERT(_episode != nullptr);
-      return _episode->GetMapName();
-    }
-
     EpisodeProxy GetCurrentEpisode();
 
+    /// @}
+    // =========================================================================
+    /// @name Map related methods
+    // =========================================================================
+    /// @{
+
     SharedPtr<Map> GetCurrentMap();
+
+    std::vector<std::string> GetAvailableMaps() {
+      return _client.GetAvailableMaps();
+    }
 
     /// @}
     // =========================================================================
@@ -107,14 +125,15 @@ namespace detail {
     // =========================================================================
     /// @{
 
-    Timestamp WaitForTick(time_duration timeout) {
-      DEBUG_ASSERT(_episode != nullptr);
-      return _episode->WaitForState(timeout);
-    }
+    Timestamp WaitForTick(time_duration timeout);
 
     void RegisterOnTickEvent(std::function<void(Timestamp)> callback) {
       DEBUG_ASSERT(_episode != nullptr);
       _episode->RegisterOnTickEvent(std::move(callback));
+    }
+
+    void Tick() {
+      _client.SendTickCue();
     }
 
     /// @}
@@ -127,12 +146,24 @@ namespace detail {
 
     SharedPtr<Actor> GetSpectator();
 
+    rpc::EpisodeSettings GetEpisodeSettings() {
+      return _client.GetEpisodeSettings();
+    }
+
+    void SetEpisodeSettings(const rpc::EpisodeSettings &settings) {
+      _client.SetEpisodeSettings(settings);
+    }
+
     rpc::WeatherParameters GetWeatherParameters() {
       return _client.GetWeatherParameters();
     }
 
     void SetWeatherParameters(const rpc::WeatherParameters &weather) {
       _client.SetWeatherParameters(weather);
+    }
+
+    rpc::VehiclePhysicsControl GetVehiclePhysicsControl(const Vehicle &vehicle) const {
+      return _client.GetVehiclePhysicsControl(vehicle.GetId());
     }
 
     /// @}
@@ -176,7 +207,7 @@ namespace detail {
     }
 
     void SetActorVelocity(const Actor &actor, const geom::Vector3D &vector) {
-      _client.SetActorVelocity(actor.Serialize(), vector);
+      _client.SetActorVelocity(actor.GetId(), vector);
     }
 
     geom::Vector3D GetActorAngularVelocity(const Actor &actor) const {
@@ -184,11 +215,11 @@ namespace detail {
     }
 
     void SetActorAngularVelocity(const Actor &actor, const geom::Vector3D &vector) {
-      _client.SetActorAngularVelocity(actor.Serialize(), vector);
+      _client.SetActorAngularVelocity(actor.GetId(), vector);
     }
 
     void AddActorImpulse(const Actor &actor, const geom::Vector3D &vector) {
-      _client.AddActorImpulse(actor.Serialize(), vector);
+      _client.AddActorImpulse(actor.GetId(), vector);
     }
 
     geom::Vector3D GetActorAcceleration(const Actor &actor) const {
@@ -196,15 +227,15 @@ namespace detail {
     }
 
     void SetActorLocation(Actor &actor, const geom::Location &location) {
-      _client.SetActorLocation(actor.Serialize(), location);
+      _client.SetActorLocation(actor.GetId(), location);
     }
 
     void SetActorTransform(Actor &actor, const geom::Transform &transform) {
-      _client.SetActorTransform(actor.Serialize(), transform);
+      _client.SetActorTransform(actor.GetId(), transform);
     }
 
     void SetActorSimulatePhysics(Actor &actor, bool enabled) {
-      _client.SetActorSimulatePhysics(actor.Serialize(), enabled);
+      _client.SetActorSimulatePhysics(actor.GetId(), enabled);
     }
 
     /// @}
@@ -214,15 +245,48 @@ namespace detail {
     /// @{
 
     void SetVehicleAutopilot(Vehicle &vehicle, bool enabled = true) {
-      _client.SetActorAutopilot(vehicle.Serialize(), enabled);
+      _client.SetActorAutopilot(vehicle.GetId(), enabled);
     }
 
     void ApplyControlToVehicle(Vehicle &vehicle, const rpc::VehicleControl &control) {
-      _client.ApplyControlToVehicle(vehicle.Serialize(), control);
+      _client.ApplyControlToVehicle(vehicle.GetId(), control);
     }
 
     void ApplyControlToWalker(Walker &walker, const rpc::WalkerControl &control) {
-      _client.ApplyControlToWalker(walker.Serialize(), control);
+      _client.ApplyControlToWalker(walker.GetId(), control);
+    }
+
+    void ApplyPhysicsControlToVehicle(Vehicle &vehicle, const rpc::VehiclePhysicsControl &physicsControl) {
+      _client.ApplyPhysicsControlToVehicle(vehicle.GetId(), physicsControl);
+    }
+    /// @}
+    // =========================================================================
+    /// @name Operations with the recorder
+    // =========================================================================
+    /// @{
+
+    std::string StartRecorder(std::string name) {
+      return _client.StartRecorder(std::move(name));
+    }
+
+    void StopRecorder(void) {
+      _client.StopRecorder();
+    }
+
+    std::string ShowRecorderFileInfo(std::string name) {
+      return _client.ShowRecorderFileInfo(std::move(name));
+    }
+
+    std::string ShowRecorderCollisions(std::string name, char type1, char type2) {
+      return _client.ShowRecorderCollisions(std::move(name), type1, type2);
+    }
+
+    std::string ShowRecorderActorsBlocked(std::string name, double min_time, double min_distance) {
+      return _client.ShowRecorderActorsBlocked(std::move(name), min_time, min_distance);
+    }
+
+    std::string ReplayFile(std::string name, double start, double duration, uint32_t follow_id) {
+      return _client.ReplayFile(std::move(name), start, duration, follow_id);
     }
 
     /// @}
@@ -242,24 +306,29 @@ namespace detail {
     /// @name Operations with traffic lights
     // =========================================================================
     /// @{
+
     void SetTrafficLightState(TrafficLight &trafficLight, const rpc::TrafficLightState trafficLightState) {
-      _client.SetTrafficLightState(trafficLight.Serialize(), trafficLightState);
+      _client.SetTrafficLightState(trafficLight.GetId(), trafficLightState);
     }
 
     void SetTrafficLightGreenTime(TrafficLight &trafficLight, float greenTime) {
-      _client.SetTrafficLightGreenTime(trafficLight.Serialize(), greenTime);
+      _client.SetTrafficLightGreenTime(trafficLight.GetId(), greenTime);
     }
 
     void SetTrafficLightYellowTime(TrafficLight &trafficLight, float yellowTime) {
-      _client.SetTrafficLightYellowTime(trafficLight.Serialize(), yellowTime);
+      _client.SetTrafficLightYellowTime(trafficLight.GetId(), yellowTime);
     }
 
     void SetTrafficLightRedTime(TrafficLight &trafficLight, float redTime) {
-      _client.SetTrafficLightRedTime(trafficLight.Serialize(), redTime);
+      _client.SetTrafficLightRedTime(trafficLight.GetId(), redTime);
     }
 
     void FreezeTrafficLight(TrafficLight &trafficLight, bool freeze) {
-      _client.FreezeTrafficLight(trafficLight.Serialize(), freeze);
+      _client.FreezeTrafficLight(trafficLight.GetId(), freeze);
+    }
+
+    std::vector<ActorId> GetGroupTrafficLights(TrafficLight &trafficLight) {
+      return _client.GetGroupTrafficLights(trafficLight.GetId());
     }
 
     /// @}
@@ -270,6 +339,16 @@ namespace detail {
 
     void DrawDebugShape(const rpc::DebugShape &shape) {
       _client.DrawDebugShape(shape);
+    }
+
+    /// @}
+    // =========================================================================
+    /// @name Apply commands in batch
+    // =========================================================================
+    /// @{
+
+    void ApplyBatch(std::vector<rpc::Command> commands, bool do_tick_cue) {
+      _client.ApplyBatch(std::move(commands), do_tick_cue);
     }
 
     /// @}
