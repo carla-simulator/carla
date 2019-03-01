@@ -1,4 +1,4 @@
-## Latest Changes
+## CARLA 0.9.4
 
   * Added recording and playback functionality
   * Added synchronous mode, simulator waits until a client sends a "tick" cue, `client.tick()`
