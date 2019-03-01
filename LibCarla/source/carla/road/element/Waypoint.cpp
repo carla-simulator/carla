@@ -172,9 +172,14 @@ namespace element {
   }
 
   double Waypoint::GetLaneWidth() const {
-    const auto info = GetRoadSegment().GetInfo<RoadInfoLane>(_dist);
-    const auto lane_info = info != nullptr ? info->getLane(_lane_id) : nullptr;
-    return lane_info != nullptr ? lane_info->_width : 0.0;
+    const auto *road_segment = _map->GetData().GetRoad(_road_id);
+    const auto lane_width_info = road_segment->GetInfos<RoadInfoLaneWidth>(_dist);
+    for (auto &&lane : lane_width_info) {
+      if (lane->GetLaneId() == _lane_id) {
+        return lane->GetPolynomial().Evaluate(_dist);
+      }
+    }
+    return 0.0;
   }
 
   std::pair<RoadInfoMarkRecord, RoadInfoMarkRecord> Waypoint::GetMarkRecord() const {
