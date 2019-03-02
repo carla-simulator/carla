@@ -122,7 +122,7 @@ namespace geom {
     // b - slope
     // c - vertical curvature
     // d - curvature change
-    std::array<double, 4> _v = {0.0, 0.0, 0.0, 0.0};
+    std::array<double, 4> _v = {{0.0, 0.0, 0.0, 0.0}};
 
   };
 
