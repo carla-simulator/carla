@@ -10,13 +10,18 @@ them with yet another script from the editor.
 
 <h4>How to export a map</h4>
 The current script only work for content placed into the
-"CarlaRoot/Unreal/CarlaUE4/Content/Carla/ExportedMaps" folder, inside the unreal's project
-structure. Once all the changes are saved in the editor and the maps to export
-are located in that folder, running
+"CarlaRoot/Unreal/CarlaUE4/Content/Carla/ExportedMaps" folder (this can be overriden with
+--map flag), inside the unreal's project structure. Once all the changes are saved in the
+editor and the maps to export are located in that folder, by the name of the map or the
+name provided with the --file flag, so, running
 
 ```sh
-make export-maps
+make export-maps ARGS="--map=/Path/To/Awesome/Map --file=AwesomeMap"
 ```
+
+!!! important
+    The path specified in <b>--map</b> flag has to be in Unreal's way.
+    For example:<br><i><b>/Game/Carla/Maps/AwesomeTownMap</b></i>
 
 will clean, cook and pack the necessary assets with the maps. Please, note that
 there is no way of knowing what assets are on the project-to-import-to, so the

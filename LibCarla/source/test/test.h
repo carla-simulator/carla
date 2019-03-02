@@ -21,6 +21,6 @@
 #include <cstdint>
 #include <iostream>
 
-constexpr uint16_t TESTING_PORT = 2017u;
+constexpr uint16_t TESTING_PORT = 0u;
 
 using namespace std::chrono_literals;

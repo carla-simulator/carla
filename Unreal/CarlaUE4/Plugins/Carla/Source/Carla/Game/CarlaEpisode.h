@@ -7,13 +7,19 @@
 #pragma once
 
 #include "Carla/Actor/ActorDispatcher.h"
+#include "Carla/Recorder/CarlaRecorder.h"
 #include "Carla/Sensor/WorldObserver.h"
+#include "Carla/Server/TheNewCarlaServer.h"
+#include "Carla/Settings/EpisodeSettings.h"
 #include "Carla/Weather/Weather.h"
 
 #include "GameFramework/Pawn.h"
 
 #include <compiler/disable-ue4-macros.h>
+#include <carla/geom/BoundingBox.h>
 #include <carla/rpc/Actor.h>
+#include <carla/rpc/ActorDescription.h>
+#include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include "CarlaEpisode.generated.h"
@@ -35,6 +41,33 @@ public:
   UCarlaEpisode(const FObjectInitializer &ObjectInitializer);
 
   // ===========================================================================
+  // -- Load a new episode -----------------------------------------------------
+  // ===========================================================================
+
+public:
+
+  /// Load a new map and start a new episode.
+  ///
+  /// If @a MapString is empty, the current map is reloaded.
+  UFUNCTION(BlueprintCallable)
+  bool LoadNewEpisode(const FString &MapString);
+
+  // ===========================================================================
+  // -- Episode settings -------------------------------------------------------
+  // ===========================================================================
+
+public:
+
+  UFUNCTION(BlueprintCallable)
+  const FEpisodeSettings &GetSettings() const
+  {
+    return EpisodeSettings;
+  }
+
+  UFUNCTION(BlueprintCallable)
+  void ApplySettings(const FEpisodeSettings &Settings);
+
+  // ===========================================================================
   // -- Retrieve info about this episode ---------------------------------------
   // ===========================================================================
 
@@ -51,6 +84,12 @@ public:
   const FString &GetMapName() const
   {
     return MapName;
+  }
+
+  /// Game seconds since the start of this episode.
+  double GetElapsedGameTime() const
+  {
+    return ElapsedGameTime;
   }
 
   /// Return the list of actor definitions that are available to be spawned this
@@ -81,11 +120,6 @@ public:
   AWeather *GetWeather() const
   {
     return Weather;
-  }
-
-  const AWorldObserver *GetWorldObserver() const
-  {
-    return WorldObserver;
   }
 
   const FActorRegistry &GetActorRegistry() const
@@ -141,9 +175,24 @@ public:
   /// view is invalid.
   TPair<EActorSpawnResultStatus, FActorView> SpawnActorWithInfo(
       const FTransform &Transform,
-      FActorDescription ActorDescription)
+      FActorDescription thisActorDescription,
+      FActorView::IdType DesiredId = 0)
   {
-    return ActorDispatcher->SpawnActor(Transform, std::move(ActorDescription));
+    auto result = ActorDispatcher->SpawnActor(Transform, thisActorDescription, DesiredId);
+    if (Recorder->IsEnabled())
+    {
+      if (result.Key == EActorSpawnResultStatus::Success)
+      {
+        Recorder->CreateRecorderEventAdd(
+          result.Value.GetActorId(),
+          static_cast<uint8_t>(result.Value.GetActorType()),
+          Transform,
+          std::move(thisActorDescription)
+        );
+      }
+    }
+
+    return result;
   }
 
   /// Spawns an actor based on @a ActorDescription at @a Transform. To properly
@@ -170,6 +219,16 @@ public:
   UFUNCTION(BlueprintCallable)
   bool DestroyActor(AActor *Actor)
   {
+      if (Recorder->IsEnabled())
+      {
+        // recorder event
+        CarlaRecorderEventDel RecEvent
+        {
+          GetActorRegistry().Find(Actor).GetActorId()
+        };
+        Recorder->AddEvent(std::move(RecEvent));
+      }
+
     return ActorDispatcher->DestroyActor(Actor);
   }
 
@@ -186,21 +245,59 @@ public:
   // -- Private methods and members --------------------------------------------
   // ===========================================================================
 
+  ACarlaRecorder *GetRecorder() const
+  {
+    return Recorder;
+  }
+
+  void SetRecorder(ACarlaRecorder *Rec)
+  {
+    Recorder = Rec;
+  }
+
+  CarlaReplayer *GetReplayer() const
+  {
+    return Recorder->GetReplayer();
+  }
+
+  std::string StartRecorder(std::string name);
+
 private:
 
   friend class ATheNewCarlaGameModeBase;
+  friend class FCarlaEngine;
 
   void InitializeAtBeginPlay();
+
+  void EndPlay();
 
   void RegisterActorFactory(ACarlaActorFactory &ActorFactory)
   {
     ActorDispatcher->Bind(ActorFactory);
   }
 
-  const uint32 Id = 0u;
+  std::pair<int, FActorView&> TryToCreateReplayerActor(
+    FVector &Location,
+    FVector &Rotation,
+    FActorDescription &ActorDesc,
+    unsigned int desiredId);
+
+  bool SetActorSimulatePhysics(FActorView &ActorView, bool bEnabled);
+
+  void TickTimers(float DeltaSeconds)
+  {
+    ElapsedGameTime += DeltaSeconds;
+  }
+
+  const uint64 Id = 0u;
+
+  double ElapsedGameTime = 0.0;
 
   UPROPERTY(VisibleAnywhere)
   FString MapName;
+
+  UPROPERTY(VisibleAnywhere)
+  FEpisodeSettings EpisodeSettings;
 
   UPROPERTY(VisibleAnywhere)
   UActorDispatcher *ActorDispatcher = nullptr;
@@ -211,6 +308,5 @@ private:
   UPROPERTY(VisibleAnywhere)
   AWeather *Weather = nullptr;
 
-  UPROPERTY(VisibleAnywhere)
-  AWorldObserver *WorldObserver = nullptr;
+  ACarlaRecorder *Recorder = nullptr;
 };

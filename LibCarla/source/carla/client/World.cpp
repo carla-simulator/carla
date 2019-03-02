@@ -17,14 +17,6 @@
 namespace carla {
 namespace client {
 
-  uint32_t World::GetId() const {
-    return _episode.Lock()->GetCurrentEpisodeId();
-  }
-
-  const std::string &World::GetMapName() const {
-    return _episode.Lock()->GetCurrentMapName();
-  }
-
   SharedPtr<Map> World::GetMap() const {
     return _episode.Lock()->GetCurrentMap();
   }
@@ -37,6 +29,14 @@ namespace client {
     return _episode.Lock()->GetSpectator();
   }
 
+  rpc::EpisodeSettings World::GetSettings() const {
+    return _episode.Lock()->GetEpisodeSettings();
+  }
+
+  void World::ApplySettings(const rpc::EpisodeSettings &settings) {
+    _episode.Lock()->SetEpisodeSettings(settings);
+  }
+
   rpc::WeatherParameters World::GetWeather() const {
     return _episode.Lock()->GetWeatherParameters();
   }
@@ -47,8 +47,8 @@ namespace client {
 
   SharedPtr<ActorList> World::GetActors() const {
     return SharedPtr<ActorList>{new ActorList{
-        _episode,
-        _episode.Lock()->GetAllTheActorsInTheEpisode()}};
+                                  _episode,
+                                  _episode.Lock()->GetAllTheActorsInTheEpisode()}};
   }
 
   SharedPtr<Actor> World::SpawnActor(
@@ -75,6 +75,10 @@ namespace client {
 
   void World::OnTick(std::function<void(Timestamp)> callback) {
     return _episode.Lock()->RegisterOnTickEvent(std::move(callback));
+  }
+
+  void World::Tick() {
+    _episode.Lock()->Tick();
   }
 
 } // namespace client

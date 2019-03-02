@@ -24,7 +24,7 @@ namespace element {
     virtual void AcceptVisitor(RoadInfoVisitor &) = 0;
 
     // distance from Road's start location
-    double d; // [meters]
+    double d; // [meters] @todo: change this to "s"
 
   protected:
 
@@ -58,8 +58,8 @@ namespace element {
       return _junction_id >= 0;
     }
 
-    void SetLanesOffset(double offset, double laneOffset) {
-      _lanes_offset.emplace_back(std::pair<double, double>(offset, laneOffset));
+    void SetLanesOffset(double start_pos, double lateral_offset) {
+      _lanes_offset.emplace_back(std::pair<double, double>(start_pos, lateral_offset));
     }
 
     /// @returns A vector of pairs where the first double represents the
@@ -177,6 +177,7 @@ namespace element {
 
     friend MapBuilder;
 
+    // int is the lane id (-inf, inf)
     using lane_t = std::map<int, LaneInfo>;
     lane_t _lanes;
 
@@ -206,7 +207,7 @@ namespace element {
       for (lane_t::const_iterator it = _lanes.begin(); it != _lanes.end(); ++it) {
         switch (whichLanes) {
           case which_lane_e::Both: {
-            lanes_id.emplace_back(it->first);
+              lanes_id.emplace_back(it->first);
           } break;
 
           case which_lane_e::Left: {
@@ -223,11 +224,11 @@ namespace element {
         }
       }
 
-      // NOTE(Andrei): Sort the lanes IDs ascendent,
+      // Sort the lanes IDs ascendent,
       // going from 1 to n
       std::sort(lanes_id.begin(), lanes_id.end());
 
-      // NOTE(Andrei): For right lane the IDs are negative,
+      // For right lane the IDs are negative,
       // so reverse so sort order to haven them going
       // from -1 to -n
       if (whichLanes == which_lane_e::Right) {

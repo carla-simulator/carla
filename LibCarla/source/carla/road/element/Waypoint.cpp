@@ -7,7 +7,10 @@
 #include "carla/road/element/Waypoint.h"
 #include "carla/Logging.h"
 #include "carla/road/Map.h"
+#include "carla/geom/CubicPolynomial.h"
+#include "carla/geom/Math.h"
 
+#include <unordered_map>
 #include <algorithm>
 
 namespace carla {
@@ -90,8 +93,10 @@ namespace element {
   Waypoint::~Waypoint() = default;
 
   geom::Transform Waypoint::ComputeTransform() const {
-    road::element::DirectedPoint dp =
-        _map->GetData().GetRoad(_road_id)->GetDirectedPointIn(_dist);
+    const auto road_segment = _map->GetData().GetRoad(_road_id);
+    DEBUG_ASSERT(road_segment != nullptr);
+
+    road::element::DirectedPoint dp = road_segment->GetDirectedPointIn(_dist);
 
     geom::Rotation rot(geom::Math::to_degrees(dp.pitch), geom::Math::to_degrees(dp.tangent), 0.0);
     if (_lane_id > 0) {
@@ -99,17 +104,60 @@ namespace element {
       rot.pitch = 360 - rot.pitch;
     }
 
-    const auto *road_segment = _map->GetData().GetRoad(_road_id);
-    DEBUG_ASSERT(road_segment != nullptr);
-    const auto *info = road_segment->GetInfo<RoadInfoLane>(0.0);
-    DEBUG_ASSERT(info != nullptr);
+    if (IsIntersection()) {
+      // @todo: fix intersection lane_id to allow compute the lane distance in a correct way
+      // old way to calculate lane position
+      const auto *road_segment = _map->GetData().GetRoad(_road_id);
+      DEBUG_ASSERT(road_segment != nullptr);
+      const auto info = road_segment->GetInfo<RoadInfoLane>(0.0);
+      DEBUG_ASSERT(info != nullptr);
 
-    dp.ApplyLateralOffset(info->getLane(_lane_id)->_lane_center_offset);
+      dp.ApplyLateralOffset(info->getLane(_lane_id)->_lane_center_offset);
+    } else {
+      // new way to calculate lane position
+      const auto lane_offset_info = road_segment->GetInfo<RoadInfoLaneOffset>(_dist);
+      geom::CubicPolynomial final_polynomial = lane_offset_info->GetPolynomial();
+
+      // fill a map (lane_info_map) with first lane id <id, RoadInfoLaneWidth> found
+      // because will be the nearest one that is affecting at this dist (t)
+      const auto lane_width_info = road_segment->GetInfos<RoadInfoLaneWidth>(_dist);
+      std::unordered_map<int, std::shared_ptr<const RoadInfoLaneWidth>> lane_info_map;
+      std::unordered_set<int> inserted_lanes;
+
+      for (auto &&lane_offset : lane_width_info) {
+        const int current_lane_id = lane_offset->GetLaneId();
+        lane_info_map.emplace(
+            std::pair<int, std::shared_ptr<const RoadInfoLaneWidth>>(
+              current_lane_id,
+              lane_offset));
+      }
+
+      DEBUG_ASSERT(_lane_id != 0);
+
+      // iterate over the previous lanes until lane_id is 0 and add the polynomial info
+      const int inc = _lane_id < 0 ? - 1 : + 1;
+      // increase or decrease the lane_id depending on if _lane_id is
+      // positive or negative in order to get closer to that id
+      for (int lane_id = inc; lane_id != _lane_id; lane_id += inc) {
+        // final_polynomial += geom::CubicPolynomial();
+        final_polynomial += lane_info_map[lane_id]->GetPolynomial() * (_lane_id < 0 ? -1.0 : 1.0);
+      }
+
+      // use half of the last polynomial to get the center of the road
+      final_polynomial += lane_info_map[_lane_id]->GetPolynomial() * (_lane_id < 0 ? -0.5 : 0.5);
+
+      // compute the final lane offset
+      dp.ApplyLateralOffset(final_polynomial.Evaluate(_dist));
+
+      const auto tangent = geom::Math::to_degrees(final_polynomial.Tangent(_dist));
+      rot.yaw += _lane_id < 0 ? -tangent : tangent;
+    }
+
     return geom::Transform(dp.location, rot);
   }
 
-  RoadInfoList Waypoint::GetRoadInfo() const {
-    return RoadInfoList(_map->GetData().GetRoad(_road_id)->GetInfos(_dist));
+  const std::string &Waypoint::GetType() const {
+    return _map->GetData().GetRoad(_road_id)->GetInfo<RoadInfoLane>(_dist)->getLane(_lane_id)->_type;
   }
 
   const RoadSegment &Waypoint::GetRoadSegment() const {
@@ -119,14 +167,42 @@ namespace element {
   }
 
   bool Waypoint::IsIntersection() const {
-    const auto *info = GetRoadSegment().GetInfo<RoadGeneralInfo>(_dist);
+    const auto info = GetRoadSegment().GetInfo<RoadGeneralInfo>(_dist);
     return info != nullptr ? info->IsJunction() : false;
   }
 
   double Waypoint::GetLaneWidth() const {
-    const auto *info = GetRoadSegment().GetInfo<RoadInfoLane>(_dist);
-    const auto *lane_info = info != nullptr ? info->getLane(_lane_id) : nullptr;
-    return lane_info != nullptr ? lane_info->_width : 0.0;
+    const auto *road_segment = _map->GetData().GetRoad(_road_id);
+    const auto lane_width_info = road_segment->GetInfos<RoadInfoLaneWidth>(_dist);
+    for (auto &&lane : lane_width_info) {
+      if (lane->GetLaneId() == _lane_id) {
+        return lane->GetPolynomial().Evaluate(_dist);
+      }
+    }
+    return 0.0;
+  }
+
+  std::pair<RoadInfoMarkRecord, RoadInfoMarkRecord> Waypoint::GetMarkRecord() const {
+    const auto lane_id_right = _lane_id;
+    // If the lane is bigger than 0, is a backward lane,
+    // so the inner lane marking is the opposite one
+    const auto lane_id_left = _lane_id <= 0 ? _lane_id + 1 : _lane_id - 1;
+
+    const auto mark_record_list = GetRoadSegment().GetRoadInfoMarkRecord(_dist);
+
+    std::pair<RoadInfoMarkRecord, RoadInfoMarkRecord> result = std::make_pair(
+        RoadInfoMarkRecord(_dist, lane_id_right),
+        RoadInfoMarkRecord(_dist, lane_id_left));
+
+    for (auto &&i : mark_record_list) {
+      if (i->GetLaneId() == lane_id_right) {
+        result.first = *i;
+      } else if (i->GetLaneId() == lane_id_left) {
+        result.second = *i;
+      }
+    }
+
+    return result;
   }
 
 } // namespace element

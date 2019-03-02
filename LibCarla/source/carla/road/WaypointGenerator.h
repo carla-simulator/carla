@@ -8,6 +8,8 @@
 
 #include "carla/road/element/Waypoint.h"
 
+#include <boost/optional.hpp>
+
 #include <utility>
 #include <vector>
 
@@ -32,6 +34,14 @@ namespace road {
     static std::vector<Waypoint> GetNext(
         const Waypoint &waypoint,
         double distance);
+
+    /// Return a waypoint at the lane of @a waypoint's right lane.
+    static boost::optional<Waypoint> GetRight(
+        const Waypoint &waypoint);
+
+    /// Return a waypoint at the lane of @a waypoint's left lane.
+    static boost::optional<Waypoint> GetLeft(
+        const Waypoint &waypoint);
 
     /// Generate all the waypoints in @a map separated by @a approx_distance.
     static std::vector<Waypoint> GenerateAll(

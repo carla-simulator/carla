@@ -79,6 +79,11 @@ void ATrafficLightBase::Tick(float DeltaSeconds)
 
   if (ElapsedTime > ChangeTime)
   {
+    // Freeze if part of a group and about to turn red
+    if (GroupTrafficLights.Num() > 0 && State == ETrafficLightState::Yellow)
+    {
+      SetTimeIsFrozen(true);
+    }
     SwitchTrafficLightState();
   }
 }
@@ -98,7 +103,6 @@ void ATrafficLightBase::PostEditChangeProperty(FPropertyChangedEvent &Event)
 
 void ATrafficLightBase::SetTrafficLightState(const ETrafficLightState InState)
 {
-  NumChanges++;
   ElapsedTime = 0.0f;
   State = InState;
   SetTrafficSignState(ToTrafficSignState(State));
@@ -192,12 +196,16 @@ float ATrafficLightBase::GetElapsedTime() const
   return ElapsedTime;
 }
 
+void ATrafficLightBase::SetElapsedTime(float InElapsedTime)
+{
+  ElapsedTime = InElapsedTime;
+}
+
 void ATrafficLightBase::SetTimeIsFrozen(bool InTimeIsFrozen)
 {
   TimeIsFrozen = InTimeIsFrozen;
   if (!TimeIsFrozen)
   {
-    NumChanges = 0;
     ElapsedTime = 0.0f;
   }
 }
@@ -207,7 +215,22 @@ bool ATrafficLightBase::GetTimeIsFrozen() const
   return TimeIsFrozen;
 }
 
-int ATrafficLightBase::GetNumChanges() const
+void ATrafficLightBase::SetPoleIndex(int InPoleIndex)
 {
-  return NumChanges;
+  PoleIndex = InPoleIndex;
+}
+
+int ATrafficLightBase::GetPoleIndex() const
+{
+  return PoleIndex;
+}
+
+TArray<ATrafficLightBase *> ATrafficLightBase::GetGroupTrafficLights() const
+{
+  return GroupTrafficLights;
+}
+
+void ATrafficLightBase::SetGroupTrafficLights(TArray<ATrafficLightBase *> InGroupTrafficLights)
+{
+  GroupTrafficLights = InGroupTrafficLights;
 }

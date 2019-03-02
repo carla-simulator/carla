@@ -21,7 +21,11 @@ namespace detail {
 
   class Client;
 
-  /// Represents the episode running on the Simulator.
+  /// Holds the current episode, and the current episode state.
+  ///
+  /// The episode state changes in the background each time a world tick is
+  /// received. The episode may change with any background update if the
+  /// simulator has loaded a new episode.
   class Episode
     : public std::enable_shared_from_this<Episode>,
       private NonCopyable {
@@ -34,17 +38,11 @@ namespace detail {
     void Listen();
 
     auto GetId() const {
-      return _description.id;
-    }
-
-    const std::string &GetMapName() const {
-      return _description.map_name;
+      return GetState()->GetEpisodeId();
     }
 
     std::shared_ptr<const EpisodeState> GetState() const {
-      auto state = _state.load();
-      DEBUG_ASSERT(state != nullptr);
-      return state;
+      return _state.load();
     }
 
     void RegisterActor(rpc::Actor actor) {
@@ -53,7 +51,7 @@ namespace detail {
 
     std::vector<rpc::Actor> GetActors();
 
-    Timestamp WaitForState(time_duration timeout) {
+    boost::optional<Timestamp> WaitForState(time_duration timeout) {
       return _timestamp.WaitFor(timeout);
     }
 
@@ -63,17 +61,21 @@ namespace detail {
 
   private:
 
+    Episode(Client &client, const rpc::EpisodeInfo &info);
+
+    void OnEpisodeStarted();
+
     Client &_client;
-
-    const rpc::EpisodeInfo _description;
-
-    RecurrentSharedFuture<Timestamp> _timestamp;
 
     AtomicSharedPtr<const EpisodeState> _state;
 
     CachedActorList _actors;
 
     CallbackList<Timestamp> _on_tick_callbacks;
+
+    RecurrentSharedFuture<Timestamp> _timestamp;
+
+    const streaming::Token _token;
   };
 
 } // namespace detail

@@ -34,11 +34,23 @@ namespace detail {
       sensor::data::ActorDynamicState::TypeDependentState state;
     };
 
+    explicit EpisodeState(uint64_t episode_id) : _episode_id(episode_id) {}
+
+    explicit EpisodeState(const sensor::data::RawEpisodeState &state);
+
+    auto GetEpisodeId() const {
+      return _episode_id;
+    }
+
+    auto GetFrameCount() const {
+      return _timestamp.frame_count;
+    }
+
     const auto &GetTimestamp() const {
       return _timestamp;
     }
 
-    ActorState GetActorState(actor_id_type id) const {
+    ActorState GetActorState(ActorId id) const {
       ActorState state;
       auto it = _actors.find(id);
       if (it != _actors.end()) {
@@ -55,14 +67,13 @@ namespace detail {
           iterator::make_map_keys_iterator(_actors.end()));
     }
 
-    std::shared_ptr<const EpisodeState> DeriveNextStep(
-        const sensor::data::RawEpisodeState &state) const;
-
   private:
 
-    Timestamp _timestamp;
+    const uint64_t _episode_id;
 
-    std::unordered_map<actor_id_type, ActorState> _actors;
+    const Timestamp _timestamp;
+
+    std::unordered_map<ActorId, ActorState> _actors;
   };
 
 } // namespace detail

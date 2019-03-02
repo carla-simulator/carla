@@ -10,38 +10,26 @@ namespace carla {
 namespace client {
 namespace detail {
 
-  static auto DeriveAcceleration(
-      double delta_seconds,
-      const geom::Vector3D &v0,
-      const geom::Vector3D &v1) {
-    /// @todo add methods to Vector3D for scalar multiplication.
-    auto acc = v1 - v0;
-    acc.x /= delta_seconds;
-    acc.y /= delta_seconds;
-    acc.z /= delta_seconds;
-    return acc;
-  }
-
-  std::shared_ptr<const EpisodeState> EpisodeState::DeriveNextStep(
-      const sensor::data::RawEpisodeState &state) const {
-    auto next = std::make_shared<EpisodeState>();
-    next->_timestamp.frame_count = state.GetFrameNumber();
-    next->_timestamp.elapsed_seconds = state.GetGameTimeStamp();
-    next->_timestamp.platform_timestamp = state.GetPlatformTimeStamp();
-    next->_timestamp.delta_seconds = next->_timestamp.elapsed_seconds - _timestamp.elapsed_seconds;
-    next->_actors.reserve(state.size());
+  EpisodeState::EpisodeState(const sensor::data::RawEpisodeState &state)
+    : _episode_id(state.GetEpisodeId()),
+      _timestamp(
+          state.GetFrameNumber(),
+          state.GetGameTimeStamp(),
+          state.GetDeltaSeconds(),
+          state.GetPlatformTimeStamp()) {
+    _actors.reserve(state.size());
     for (auto &&actor : state) {
-      auto acceleration = DeriveAcceleration(
-          next->_timestamp.delta_seconds,
-          GetActorState(actor.id).velocity,
-          actor.velocity);
       DEBUG_ONLY(auto result = )
-      next->_actors.emplace(
+      _actors.emplace(
           actor.id,
-          ActorState{actor.transform, actor.velocity, actor.angular_velocity, acceleration, actor.state});
+          ActorState{
+              actor.transform,
+              actor.velocity,
+              actor.angular_velocity,
+              actor.acceleration,
+              actor.state});
       DEBUG_ASSERT(result.second);
     }
-    return next;
   }
 
 } // namespace detail

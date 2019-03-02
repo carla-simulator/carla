@@ -14,6 +14,8 @@
 #include "carla/sensor/RawData.h"
 #include "carla/sensor/data/ActorDynamicState.h"
 
+#include <cstdint>
+
 namespace carla {
 namespace sensor {
 
@@ -27,8 +29,10 @@ namespace s11n {
 
 #pragma pack(push, 1)
     struct Header {
+      uint64_t episode_id;
       double game_timestamp;
       double platform_timestamp;
+      float delta_seconds;
     };
 #pragma pack(pop)
 

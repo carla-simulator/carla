@@ -14,6 +14,9 @@
 #include "GeometryParser.h"
 #include "LaneParser.h"
 
+#include "TrafficGroupParser.h"
+#include "TrafficSignParser.h"
+
 #include "./pugixml/pugixml.hpp"
 
 #include <iostream>
@@ -84,6 +87,18 @@ struct OpenDriveParser {
         junction;
         junction = junction.next_sibling("junction")) {
       carla::opendrive::parser::JunctionParser::Parse(junction, out_open_drive_data.junctions);
+    }
+
+    for (pugi::xml_node tlgroup = xmlDoc.child("OpenDRIVE").child("tlGroup");
+        tlgroup;
+        tlgroup = tlgroup.next_sibling("tlGroup")) {
+      carla::opendrive::parser::TrafficGroupParser::Parse(tlgroup, out_open_drive_data.trafficlightgroups);
+    }
+
+    for (pugi::xml_node trafficsigns = xmlDoc.child("OpenDRIVE").child("trafficsign");
+        trafficsigns;
+        trafficsigns = trafficsigns.next_sibling("trafficsign")) {
+      carla::opendrive::parser::TrafficSignParser::Parse(trafficsigns, out_open_drive_data.trafficsigns);
     }
 
     out_open_drive_data.geoReference = xmlDoc.child("OpenDRIVE").child("header").child_value("geoReference");

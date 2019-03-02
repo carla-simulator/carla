@@ -141,7 +141,7 @@ TEST(streaming, low_level_tcp_small_message) {
     std::cout << "done!\n";
   }, [](std::shared_ptr<tcp::ServerSession>) { std::cout << "session closed!\n"; });
 
-  Dispatcher dispatcher{make_endpoint<tcp::Client::protocol_type>(ep)};
+  Dispatcher dispatcher{make_endpoint<tcp::Client::protocol_type>(srv.GetLocalEndpoint())};
   auto stream = dispatcher.MakeStream();
   auto c = std::make_shared<tcp::Client>(io_service, stream.token(), [&](carla::Buffer message) {
     ++message_count;

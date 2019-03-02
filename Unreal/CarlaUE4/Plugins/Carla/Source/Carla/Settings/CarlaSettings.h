@@ -114,6 +114,9 @@ public:
   UPROPERTY(Category = "CARLA Server", VisibleAnywhere, meta = (EditCondition = bUseNetworking))
   uint32 WorldPort = 2000u;
 
+  /// Optional setting for the secondary port.
+  TOptional<uint32> StreamingPort;
+
   /// Time-out in milliseconds for the networking operations.
   UPROPERTY(Category = "CARLA Server", VisibleAnywhere, meta = (EditCondition = bUseNetworking))
   uint32 ServerTimeOut = 10000u;
@@ -121,7 +124,7 @@ public:
   /// In synchronous mode, CARLA waits every tick until the control from the
   /// client is received.
   UPROPERTY(Category = "CARLA Server", VisibleAnywhere, meta = (EditCondition = bUseNetworking))
-  bool bSynchronousMode = true;
+  bool bSynchronousMode = false;
 
   /// Send info about every non-player agent in the scene every frame.
   UPROPERTY(Category = "CARLA Server", VisibleAnywhere, meta = (EditCondition = bUseNetworking))
