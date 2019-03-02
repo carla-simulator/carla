@@ -15,7 +15,7 @@ class GlobalRoutePlannerDAO(object):
     """
 
     def __init__(self, wmap):
-        """
+        """get_topology
         Constructor
 
         wmap    :   carl world map object
@@ -36,35 +36,29 @@ class GlobalRoutePlannerDAO(object):
                             to exit
                 intersection    -   Boolean indicating if the road segment
                                     is an intersection
+                roadid  - unique id common for all lanes of a road segment
         """
         topology = []
         # Retrieving waypoints to construct a detailed topology
         for segment in self._wmap.get_topology():
-            x1 = segment[0].transform.location.x
-            y1 = segment[0].transform.location.y
-            x2 = segment[1].transform.location.x
-            y2 = segment[1].transform.location.y
-            x1, y1, x2, y2 = np.round([x1, y1, x2, y2], 2)
+            wp1, wp2 = segment[0], segment[1]
+            l1, l2 = wp1.transform.location, wp2.transform.location
+            l1.x, l1.y, l1.z, l2.x, l2.y, l2.z = np.round([l1.x, l1.y, l1.z, l2.x, l2.y, l2.z], 2)
+            wp1.transform.location, wp2.transform.location = l1, l2
             seg_dict = dict()
-            seg_dict['entry'] = (x1, y1)
-            seg_dict['exit'] = (x2, y2)
+            seg_dict['entry'] = wp1
+            seg_dict['exit'] = wp2
             seg_dict['path'] = []
-            wp1 = segment[0]
-            wp2 = segment[1]
-            seg_dict['intersection'] = True if wp1.is_intersection else False
             endloc = wp2.transform.location
             w = wp1.next(1)[0]
             while w.transform.location.distance(endloc) > 1:
-                x = w.transform.location.x
-                y = w.transform.location.y
-                seg_dict['path'].append((x, y))
+                seg_dict['path'].append(w)
                 w = w.next(1)[0]
-
             topology.append(seg_dict)
         return topology
 
-    def get_waypoint(self, x, y):
+    def get_waypoint(self, location):
         """
-        The method returns waytpoint at x, y
+        The method returns waytpoint at given location
         """
-        return self._wmap.get_waypoint(carla.Location(x=x, y=y))
+        return self._wmap.get_waypoint(location)
