@@ -44,9 +44,9 @@ class GlobalRoutePlannerDAO(object):
         # Retrieving waypoints to construct a detailed topology
         for segment in self._wmap.get_topology():
             wp1, wp2 = segment[0], segment[1]
-            # l1, l2 = wp1.transform.location, wp2.transform.location
-            # l1.x, l1.y, l1.z, l2.x, l2.y, l2.z = np.round([l1.x, l1.y, l1.z, l2.x, l2.y, l2.z], 2)
-            # wp1.transform.location, wp2.transform.location = l1, l2
+            l1, l2 = wp1.transform.location, wp2.transform.location
+            l1.x, l1.y, l1.z, l2.x, l2.y, l2.z = np.round([l1.x, l1.y, l1.z, l2.x, l2.y, l2.z], 2)
+            wp1.transform.location, wp2.transform.location = l1, l2
             seg_dict = dict()
             seg_dict['entry'] = wp1
             seg_dict['exit'] = wp2
