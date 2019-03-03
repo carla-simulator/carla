@@ -73,7 +73,7 @@ class LocalPlanner(object):
         self._vehicle_controller = None
         self._global_plan = None
         # queue with tuples of (waypoint, RoadOption)
-        self._waypoints_queue = deque(maxlen=600)
+        self._waypoints_queue = deque(maxlen=10000)
         self._buffer_size = 5
         self._waypoint_buffer = deque(maxlen=self._buffer_size)
 
@@ -94,7 +94,7 @@ class LocalPlanner(object):
         # default params
         self._dt = 1.0 / 20.0
         self._target_speed = 20.0  # Km/h
-        self._sampling_radius = self._target_speed * 0.5 / 3.6  # 0.5 seconds horizon
+        self._sampling_radius = self._target_speed * 1 / 3.6  # 1 seconds horizon
         self._min_distance = self._sampling_radius * self.MIN_DISTANCE_PERCENTAGE
         args_lateral_dict = {
             'K_P': 1.95,
