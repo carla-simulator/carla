@@ -38,116 +38,195 @@ class BasicAgent(Agent):
 
         self._proximity_threshold = 10.0  # meters
         self._state = AgentState.NAVIGATING
-        self._local_planner = LocalPlanner(self._vehicle, opt_dict={'target_speed': target_speed})
+        args_lateral_dict = {
+            'K_P': 0.5,
+            'K_D': 0.0,
+            'K_I': 0,
+            'dt': 1.0/20.0}
+        self._local_planner = LocalPlanner(
+            self._vehicle, opt_dict={'target_speed' : target_speed,
+            'lateral_control_dict':args_lateral_dict})
         self._hop_resolution = 2.0
         self._path_seperation_hop = 2
         self._path_seperation_threshold = 0.5
+        self._current_waypoint = None
+        self._solution = []
+        self._grp = None
 
         # setting up global router
         self._current_plan = None
 
     def set_destination(self, location):
-        start_waypoint = self._map.get_waypoint(self._vehicle.get_location())
-        end_waypoint = self._map.get_waypoint(
+        """
+        This method creates a list of waypoints from agent's position to destination location
+        based on the route returned by the global router
+        """
+
+        self._start_waypoint = self._map.get_waypoint(self._vehicle.get_location())
+        self._end_waypoint = self._map.get_waypoint(
             carla.Location(location[0], location[1], location[2]))
-        solution = []
+        self._current_waypoint = self._start_waypoint
+
+        route = self._get_route(self._start_waypoint, self._end_waypoint)
+        
+        for action in route:
+
+            if action == RoadOption.CHANGELANELEFT or action == RoadOption.CHANGELANERIGHT:
+                self._update_lane_change(action)
+            else:
+                wp_choice = self._generate_waypoint_to_junction()
+                if action == RoadOption.VOID:
+                    break
+
+                if len(wp_choice) > 1:
+                    wp_choice, trajectories = self._seperate_trajectories(wp_choice)
+                    current_transform = self._current_waypoint.transform
+                    current_location = current_transform.location
+                    projected_location = current_location + carla.Location(
+                        x=math.cos(math.radians(current_transform.rotation.yaw)),
+                        y=math.sin(math.radians(current_transform.rotation.yaw)))
+                    current_vector = vector(current_location, projected_location)
+
+                    selected_waypoint, trajectory_index = self._choose_at_junction(
+                        wp_choice, action, current_location, current_vector)
+                    self._append_trjectory(trajectories, trajectory_index, action)
+                else:
+                    selected_waypoint = wp_choice[0]
+                self._generate_waypoints_in_current_intersection(selected_waypoint, action)
+
+        assert self._solution
+
+        self._current_plan = self._solution
+        self._local_planner.set_global_plan(self._current_plan)
+
+    def _generate_waypoints_in_current_intersection(self, selected_waypoint, action):
+        """
+        This method updates self._solution with all the waypoints in the current
+        intersection segment
+        """
+
+        self._current_waypoint = selected_waypoint
+        self._solution.append((self._current_waypoint, action))
+        self._current_waypoint = self._current_waypoint.next(self._hop_resolution)[0]
+        while self._current_waypoint.is_intersection:
+            self._solution.append((self._current_waypoint, action))
+            self._current_waypoint = self._current_waypoint.next(self._hop_resolution)[0]
+
+    def _append_trjectory(self, trajectories, trajectory_index, action):
+        """
+        This method updates self._solution with waypoints of a list acording to the
+        tragejctory_index
+        """
+
+        for wp in trajectories[trajectory_index]:
+            self._solution.append((wp, action))
+
+    def _choose_at_junction(self, wp_choice, action, current_location, current_vector):
+        """
+        This method chooses the appropriate waypoint in a given list according to the
+        action directive
+        """
+
+        direction = 0
+        if action == RoadOption.LEFT: direction = 1
+        elif action == RoadOption.RIGHT: direction = -1
+        elif action == RoadOption.STRAIGHT: direction = 0
+        select_criteria = float('inf')
+        choosen_waypoint = None
+
+        #   Choose correct path
+        tragectory_index = 0
+        for i, wp_select in enumerate(wp_choice):
+            select_vector = vector(
+                current_location, wp_select.transform.location)
+            cross = float('inf')
+            if direction == 0:
+                cross = abs(np.cross(current_vector, select_vector)[-1])
+            else:
+                cross = direction*np.cross(current_vector, select_vector)[-1]
+            if cross < select_criteria:
+                tragectory_index = i
+                select_criteria = cross
+                choosen_waypoint = wp_select
+        
+        return choosen_waypoint, tragectory_index
+
+    def _seperate_trajectories(self, wp_choice):
+        """
+        This method Seperates overlapping waypoint choices at intersections
+        """
+
+        split = False
+        tragectories = []
+        #   initializing paths
+        for wp_select in wp_choice:
+            tragectories.append([wp_select])
+        #   finding points of seperation
+        while not split and len(tragectories) > 1:
+            #   take step in each path
+            for tragectory in tragectories:
+                tragectory.append(tragectory[-1].next(self._path_seperation_hop)[0])
+            #   measure seperation
+            for i in range(len(tragectories)-1):
+                if tragectories[i][-1].transform.location.distance(
+                    tragectories[i+1][-1].transform.location) > self._path_seperation_threshold:
+                    split = True
+        #   update waypoints for path choice
+        for i, tragectory in enumerate(tragectories):
+            wp_choice[i] = tragectory[-1]
+
+        return wp_choice, tragectories
+
+    def _generate_waypoint_to_junction(self):
+        """
+        This method generates waypoint to a junction
+        """
+
+        wp_choice = self._current_waypoint.next(self._hop_resolution)
+        found_junction = len(wp_choice) < 2 and not self._grp.verify_intersection(wp_choice[0])
+        while found_junction:
+            self._current_waypoint = wp_choice[0]
+            self._solution.append((self._current_waypoint, RoadOption.LANEFOLLOW))
+            wp_choice = self._current_waypoint.next(self._hop_resolution)
+            #   Stop at destination
+            if self._current_waypoint.transform.location.distance(
+                self._end_waypoint.transform.location) < self._hop_resolution: break
+            found_junction = len(wp_choice) < 2 and not self._grp.verify_intersection(wp_choice[0])
+
+        return wp_choice
+
+    def _update_lane_change(self, action):
+        """
+        This method updates self._solution with waypoints for lane change
+        """
+
+        if action == RoadOption.CHANGELANELEFT:
+            self._current_waypoint = self._current_waypoint.get_left_lane().next(3)[0]
+        else:
+            self._current_waypoint = self._current_waypoint.get_right_lane().next(3)[0]
+        self._solution.append((self._current_waypoint, action))
+
+    def _get_route(self, start_waypoint, end_waypoint):
+        """
+        This method sets up a global router and returns the optimal route
+        from start_waypoint to end_waypoint
+        """
 
         # Setting up global router
         dao = GlobalRoutePlannerDAO(self._vehicle.get_world().get_map())
         grp = GlobalRoutePlanner(dao)
         grp.setup()
+        self._grp = grp
 
         # Obtain route plan
         x1 = start_waypoint.transform.location.x
         y1 = start_waypoint.transform.location.y
         x2 = end_waypoint.transform.location.x
         y2 = end_waypoint.transform.location.y
-        route = grp.plan_route((x1, y1), (x2, y2))
-
-        current_waypoint = start_waypoint
+        route = self._grp.plan_route(carla.Location(x1, y1), carla.Location(x2, y2))
         route.append(RoadOption.VOID)
-        for action in route:
-
-            #   Generate waypoints to next junction
-            wp_choice = current_waypoint.next(self._hop_resolution)
-            while len(wp_choice) < 2 and not grp.verify_intersection(wp_choice[0]):
-                current_waypoint = wp_choice[0]
-                solution.append((current_waypoint, RoadOption.LANEFOLLOW))
-                wp_choice = current_waypoint.next(self._hop_resolution)
-                #   Stop at destination
-                if current_waypoint.transform.location.distance(
-                        end_waypoint.transform.location) < self._hop_resolution:
-                    break
-            if action == RoadOption.VOID:
-                break
-
-            # Current heading vector
-            current_transform = current_waypoint.transform
-            current_location = current_transform.location
-            projected_location = current_location + \
-                carla.Location(
-                    x=math.cos(math.radians(current_transform.rotation.yaw)),
-                    y=math.sin(math.radians(current_transform.rotation.yaw)))
-            v_current = vector(current_location, projected_location)
-
-            direction = 0
-            if action == RoadOption.LEFT: direction = 1
-            elif action == RoadOption.RIGHT: direction = -1
-            elif action == RoadOption.STRAIGHT: direction = 0
-            select_criteria = float('inf')
-
-            #  < Seperating overlapping paths >
-            split = False
-            tragectories = []
-            #   initializing paths
-            for wp_select in wp_choice:
-                tragectories.append([wp_select])
-            #   finding points of seperation
-            while not split and len(tragectories) > 1:
-                #   take step in each path
-                for tragectory in tragectories:
-                    tragectory.append(tragectory[-1].next(self._path_seperation_hop)[0])
-                #   measure seperation
-                for i in range(len(tragectories)-1):
-                    if tragectories[i][-1].transform.location.distance(
-                        tragectories[i+1][-1].transform.location) > self._path_seperation_threshold:
-                        split = True
-            #   update waypoints for path choice
-            for i, tragectory in enumerate(tragectories):
-                wp_choice[i] = tragectory[-1]
-            # < Seperating overlapping paths />
-
-            #   Choose correct path
-            tragectory_index = 0
-            for i, wp_select in enumerate(wp_choice):
-                v_select = vector(
-                    current_location, wp_select.transform.location)
-                cross = float('inf')
-                if direction == 0:
-                    cross = abs(np.cross(v_current, v_select)[-1])
-                else:
-                    cross = direction*np.cross(v_current, v_select)[-1]
-                if cross < select_criteria:
-                    tragectory_index = i
-                    select_criteria = cross
-                    current_waypoint = wp_select
-
-            #   Add select tragectory till point of seperation
-            for wp in tragectories[tragectory_index]:
-                solution.append((wp, action))
-
-            #   Generate all waypoints within the junction
-            #   along selected path
-            solution.append((current_waypoint, action))
-            current_waypoint = current_waypoint.next(self._hop_resolution)[0]
-            while current_waypoint.is_intersection:
-                solution.append((current_waypoint, action))
-                current_waypoint = current_waypoint.next(self._hop_resolution)[0]
-
-        assert solution
-
-        self._current_plan = solution
-        self._local_planner.set_global_plan(self._current_plan)
+        
+        return route
 
     def run_step(self, debug=False):
         """

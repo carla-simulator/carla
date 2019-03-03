@@ -30,24 +30,24 @@ class GlobalRoutePlannerDAO(object):
         topology into a list of dictionary objects.
 
         return: list of dictionary objects with the following attributes
-                entry   -   (x,y) of entry point of road segment
-                exit    -   (x,y) of exit point of road segment
+                entry   -   waypoint of entry point of road segment
+                entryxyz-   (x,y,z) of entry point of road segment
+                exit    -   waypoint of exit point of road segment
+                exitxyz -   (x,y,z) of exit point of road segment
                 path    -   list of waypoints separated by 1m from entry
                             to exit
-                intersection    -   Boolean indicating if the road segment
-                                    is an intersection
-                roadid  - unique id common for all lanes of a road segment
         """
         topology = []
         # Retrieving waypoints to construct a detailed topology
         for segment in self._wmap.get_topology():
             wp1, wp2 = segment[0], segment[1]
             l1, l2 = wp1.transform.location, wp2.transform.location
-            l1.x, l1.y, l1.z, l2.x, l2.y, l2.z = np.round([l1.x, l1.y, l1.z, l2.x, l2.y, l2.z], 2)
+            # Rounding off to avoid floating poit imprecision
+            x1, y1, z1, x2, y2, z2 = np.round([l1.x, l1.y, l1.z, l2.x, l2.y, l2.z], 2)
             wp1.transform.location, wp2.transform.location = l1, l2
             seg_dict = dict()
-            seg_dict['entry'] = wp1
-            seg_dict['exit'] = wp2
+            seg_dict['entry'], seg_dict['exit'] = wp1, wp2
+            seg_dict['entryxyz'], seg_dict['exitxyz'] = (x1, y1, z1), (x2, y2, z2)
             seg_dict['path'] = []
             endloc = wp2.transform.location
             w = wp1.next(1)[0]
