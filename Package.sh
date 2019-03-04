@@ -16,8 +16,8 @@ USAGE_STRING="Usage: $0 [-h|--help] [--no-packaging] [--no-zip] [--clean-interme
 # ==============================================================================
 
 DO_PACKAGE=true
-DO_COPY_FILES=true
-DO_TARBALL=true
+DO_COPY_FILES=false
+DO_TARBALL=false
 DO_CLEAN_INTERMEDIATE=false
 
 OPTS=`getopt -o h --long help,no-packaging,no-zip,clean-intermediate -n 'parse-options' -- "$@"`
@@ -129,6 +129,7 @@ if $DO_COPY_FILES ; then
       --exclude "_benchmarks_results*" \
       --exclude "_images*" \
       --exclude "_out*" \
+      --exclude "racetrack*" \
       PythonClient/ ${DESTINATION}/PythonClient
 
   echo

@@ -9,7 +9,7 @@ sym.init_printing()
 
 from abstract_controller import Controller
 
-from config import STEER_BOUND, THROTTLE_BOUND
+from config import STEER_BOUNDS, THROTTLE_BOUNDS
 
 
 class _EqualityConstraints(object):
@@ -36,20 +36,31 @@ class MPCController(Controller):
         self.dt = dt
 
         # Cost function coefficients
-        self.cte_coeff = 1000
-        self.epsi_coeff = 1000
-        self.speed_coeff = 2.0  # 2
-        self.acc_coeff = 10  # 1
-        self.steer_coeff = 1  # 1
-        self.consec_acc_coeff = 500
-        self.consec_steer_coeff = 500
+        self.cte_coeff = 100 # 100
+        self.epsi_coeff = 100 # 100
+        self.speed_coeff = 0.4  # 0.2
+        self.acc_coeff = 1  # 1
+        self.steer_coeff = 0.1  # 0.1
+        self.consec_acc_coeff = 50
+        self.consec_steer_coeff = 50
 
         # Front wheel L
-        self.Lf = 2.2  # TODO: check if true
+        self.Lf = 2.5  # TODO: check if true
 
         # How the polynomial fitting the desired curve is fitted
         self.steps_poly = 30
         self.poly_degree = 3
+
+        # Bounds for the optimizer
+        self.bounds = (
+            6*self.steps_ahead * [(None, None)]
+            + self.steps_ahead * [THROTTLE_BOUNDS]
+            + self.steps_ahead * [STEER_BOUNDS]
+        )
+
+        # State 0 placeholder
+        num_vars = (len(self.state_vars) + 2)  # State variables and two actuators
+        self.state0 = np.zeros(self.steps_ahead*num_vars)
 
         # Lambdify and minimize stuff
         self.evaluator = 'numpy'
@@ -156,10 +167,16 @@ class MPCController(Controller):
 
 
     def control(self, pts_2D, measurements, depth_array):
-        location = self._extract_location(measurements)
-        which_closest, _ = self._find_closest(pts_2D, location)
+        which_closest, _, location = self._calc_closest_dists_and_location(
+            measurements,
+            pts_2D
+        )
 
-        indeces = which_closest + self.steps_poly*np.arange(self.poly_degree+1)
+        # Stabilizes polynomial fitting
+        which_closest_shifted = which_closest - 5
+        # NOTE: `which_closest_shifted` might become < 0, but the modulo operation below fixes that
+
+        indeces = which_closest_shifted + self.steps_poly*np.arange(self.poly_degree+1)
         indeces = indeces % pts_2D.shape[0]
         pts = pts_2D[indeces]
 
@@ -179,8 +196,8 @@ class MPCController(Controller):
         eψ = -np.arctan(poly[-2])
 
         init = (0, 0, 0, v, cte, eψ, *poly)
-        state0, bounds = self.get_state0_and_bounds(0, 0, 0, v, cte, eψ, self.steer, self.throttle, poly)
-        result = self.minimize_cost(bounds, state0, init)
+        self.state0 = self.get_state0(v, cte, eψ, self.steer, self.throttle, poly)
+        result = self.minimize_cost(self.bounds, self.state0, init)
 
         # Left here for debugging
         # self.steer = -0.6 * cte - 5.5 * (cte - prev_cte)
@@ -204,41 +221,36 @@ class MPCController(Controller):
             'psi': ψ,
             'cte': cte,
             'epsi': eψ,
+            'which_closest': which_closest,
         }
-        for i in range(4):
-            one_log_dict['poly{}'.format(i)] = poly[i]
+        for i, coeff in enumerate(poly):
+            one_log_dict['poly{}'.format(i)] = coeff
 
         for i in range(pts_car.shape[0]):
             for j in range(pts_car.shape[1]):
                 one_log_dict['pts_car_{}_{}'.format(i, j)] = pts_car[i][j]
 
-        return one_log_dict, which_closest
+        return one_log_dict
 
-    def get_state0_and_bounds(self, x, y, ψ, v, cte, eψ, a, δ, poly=None):
+    def get_state0(self, v, cte, epsi, a, delta, poly):
         a = a or 0
-        δ = δ or 0
-        # TODO: impacts performance, you can do better
-        x0 = self.steps_ahead* [x] #[x + i*v*self.dt for i in range(self.steps_ahead)]
-        y0 = [np.polyval(poly, x0[i]) for i in range(self.steps_ahead)]
-        state0 = np.array(
-            x0
-            + y0
-            + self.steps_ahead * [ψ]
-            + self.steps_ahead * [v]
-            + self.steps_ahead * [cte]
-            + self.steps_ahead * [eψ]
-            + self.steps_ahead * [a]
-            + self.steps_ahead * [δ]
-        )
+        delta = delta or 0
+        # "Go as the road goes"
+        # x = np.linspace(0, self.steps_ahead*self.dt*v, self.steps_ahead)
+        # y = np.polyval(poly, x)
+        x = np.linspace(0, 1, self.steps_ahead)
+        y = np.polyval(poly, x)
+        psi = 0
 
-        # TODO: impacts performance, be better than this
-        bounds = (
-            6*self.steps_ahead * [(None, None)]
-            + self.steps_ahead * [(-THROTTLE_BOUND, THROTTLE_BOUND)]
-            + self.steps_ahead * [(-STEER_BOUND, STEER_BOUND)]
-        )
-
-        return state0, bounds
+        self.state0[:self.steps_ahead] = x
+        self.state0[self.steps_ahead:2*self.steps_ahead] = y
+        self.state0[2*self.steps_ahead:3*self.steps_ahead] = psi
+        self.state0[3*self.steps_ahead:4*self.steps_ahead] = v
+        self.state0[4*self.steps_ahead:5*self.steps_ahead] = cte
+        self.state0[5*self.steps_ahead:6*self.steps_ahead] = epsi
+        self.state0[6*self.steps_ahead:7*self.steps_ahead] = a
+        self.state0[7*self.steps_ahead:8*self.steps_ahead] = delta
+        return self.state0
 
     def generate_fun(self, symb_fun, vars_, init, poly):
         '''This function generates a function of the form `fun(x, *args)` because

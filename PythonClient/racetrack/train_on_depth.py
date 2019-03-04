@@ -1,8 +1,12 @@
+# python3 train_on_depth.py -tr 01,02 -te 01,02 -c mpc
+
 import argparse
 import os
 from copy import deepcopy
+from pathlib import Path
 import shutil
 import time
+from datetime import datetime as dt
 import pandas as pd
 import numpy as np
 
@@ -11,9 +15,8 @@ from scipy.stats import pearsonr
 
 import keras.backend as K
 from keras.models import Model
-from keras.layers import Dropout, Flatten, Dense, Input, Conv2D, concatenate
+from keras.layers import BatchNormalization, Dropout, Flatten, Dense, Input, Conv2D, concatenate
 from keras.layers.pooling import MaxPooling2D
-from keras.layers.advanced_activations import ELU
 from keras.layers import concatenate
 from keras.optimizers import Adam
 from keras.regularizers import l2
@@ -27,26 +30,32 @@ from utils import compose_input_for_nn, get_ordered_dict_for_labels
 
 from generator import get_data_gen, batcher, remove_speed_labels_from_outputs_spec
 from config import (
+    IMAGE_DECIMATION,
     IMAGE_SIZE, THROTTLE_BOUND, STEER_BOUND,
-    BATCH_SIZE, NUM_EPOCHS, NUM_TRAIN_EPISODES,
+    BATCH_SIZE, NUM_EPOCHS,
     NUM_X_CHANNELS, NUM_X_DIFF_CHANNELS,
+    TRAIN_SET, TEST_SET,
     WEIGHT_EXPONENT, MIN_SPEED,
     IMAGE_CLIP_UPPER, IMAGE_CLIP_LOWER,
     SPEED_AS_INPUT, OUTPUTS_SPEC,
-    ERROR_PLOT_UPPER_BOUNDS, SCATTER_PLOT_BOUNDS
+    ERROR_PLOT_UPPER_BOUNDS, SCATTER_PLOT_BOUNDS,
+    BASE_FONTSIZE
 )
 
-BASE_FONTSIZE = 14
 
-
-def get_lenet_like_model(
-        input_shape, outputs_spec,
-        act='elu', l2_reg=1e-3, filter_sz=5, num_filters=24, num_dense_neurons=512,
+def get_lenet_like_embedder(
+    input_shape,
+    act='elu', l2_reg=1e-3, filter_sz=5, num_filters=24, num_dense_neurons=512,
 ):
-    inp = Input(input_shape)
+    """
+    Returns a 2-tuple of (input, embedding_layer) that can later be used
+    to create a model that builds on top of the embedding_layer.
+    """
+    x = inp = Input(input_shape)
+    # x = BatchNormalization()(x)
     x = Conv2D(num_filters, (filter_sz, filter_sz),
                padding='same', kernel_regularizer=l2(l2_reg),
-               activation=act)(inp)
+               activation=act)(x)
     x = MaxPooling2D(2, 2)(x)
 
     x = Conv2D(2*num_filters, (filter_sz, filter_sz),
@@ -59,7 +68,6 @@ def get_lenet_like_model(
                activation=act)(x)
     x = MaxPooling2D(2, 2)(x)
 
-    print('Shape before Flatten: {}'.format(x))
     x = Dropout(.5)(x)
     x = Flatten()(x)
 
@@ -68,16 +76,13 @@ def get_lenet_like_model(
     x = Dense(num_dense_neurons//2, kernel_regularizer=l2(l2_reg), activation=act)(x)
     enc = Dropout(.5)(x)
 
-    # output_layers = []
-    # for layer_name in outputs_spec.keys():
-    #     x = Dense(
-    #         num_dense_neurons//4,
-    #         kernel_regularizer=l2(l2_reg),
-    #         activation=act,
-    #     )(enc)
-    #     output_layers.append(
-    #         Dense(1, kernel_regularizer=l2(l2_reg), name=layer_name)(x)
-    #     )
+    return inp, enc
+
+def add_throttle_upon_steer_wo_odometry(
+    outputs_spec, embed_getter,
+    act='elu', l2_reg=1e-3, num_dense_neurons=512,
+):
+    inp, enc = embed_getter()
 
     steer_outputs = []
     for layer_name in outputs_spec.keys():
@@ -109,37 +114,32 @@ def get_lenet_like_model(
     return Model(inp, output_layers)
 
 
-def get_lenet_like_model_w_odometry(
-        input_shape, outputs_spec,
-        act='elu', l2_reg=1e-3, filter_sz=5, num_filters=24, num_dense_neurons=512,
+def add_throttle_upon_steer_w_odometry(
+    outputs_spec, embed_getter,
+    act='elu', l2_reg=1e-3, num_dense_neurons=512,
 ):
-    inp = Input(input_shape)
-    inp_speed = Input((1, ))
+    """Build output layers on top of the embedding layer, and return a model.
 
-    x = Conv2D(num_filters, (filter_sz, filter_sz),
-               padding='same', kernel_regularizer=l2(l2_reg),
-               activation=act)(inp)
-    x = MaxPooling2D(2, 2)(x)
+    An example of the `outputs_spec` argument is an OrderedDict specifying
+    the names of the output layers, their respective: activation function,
+    loss, and weight (multiplicative constant modifying the loss), e.g.:
 
-    x = Conv2D(2*num_filters, (filter_sz, filter_sz),
-               padding='same', kernel_regularizer=l2(l2_reg),
-               activation=act)(x)
-    x = MaxPooling2D(2, 2)(x)
+        outputs_spec = OrderedDict(
+            [('steer', {'act': 'linear', 'loss': 'mse', 'weight': 1.0})]
+            + [('steer__{}__last'.format(i), {'act': 'linear', 'loss': 'mse', 'weight': 1.0}) for i in STEPS_INTO_NEAR_FUTURE]
 
-    x = Conv2D(4*num_filters, (filter_sz, filter_sz),
-               padding='same', kernel_regularizer=l2(l2_reg),
-               activation=act)(x)
-    x = MaxPooling2D(2, 2)(x)
+            + [('throttle', {'act': 'sigmoid', 'loss': 'mse', 'weight': 1.0})]
+            + [('throttle__{}__last'.format(i), {'act': 'sigmoid', 'loss': 'mse', 'weight': 1.0}) for i in STEPS_INTO_NEAR_FUTURE]
+        )
 
-    print('Shape before Flatten: {}'.format(x))
-    x = Dropout(.5)(x)
-    x = Flatten()(x)
+    where `STEPS_INTO_NEAR_FUTURE` is for example `range(1, 11)` if we'd like to
+    additionally predict 10 steps into the future.
+    """
+    inp, emb = embed_getter()
 
-    x = Dense(num_dense_neurons, kernel_regularizer=l2(l2_reg), activation=act)(x)
-    x = Dropout(.5)(x)
-    x = Dense(num_dense_neurons//2, kernel_regularizer=l2(l2_reg), activation=act)(x)
-    enc = Dropout(.5)(x)
+    inp_speed = Input((1, ), name='speed')
 
+    # First, each steering angle gets its own hidden layer + a prediction neuron
     steer_outputs = []
     for layer_name in outputs_spec.keys():
         if 'steer' in layer_name:
@@ -147,47 +147,63 @@ def get_lenet_like_model_w_odometry(
                 num_dense_neurons//4,
                 kernel_regularizer=l2(l2_reg),
                 activation=act,
-            )(enc)
+            )(emb)
             steer_outputs.append(
-                Dense(1, kernel_regularizer=l2(l2_reg), name=layer_name)(x)
+                Dense(
+                    1,
+                    kernel_regularizer=l2(l2_reg),
+                    activation=outputs_spec[layer_name]['act'],
+                    name=layer_name,
+                )(x)
             )
 
+    # Now, we concatenate the embedding layer with the speed (provided as input)
+    # and the outputs for the steering angles
+    emb = concatenate([emb, inp_speed] + steer_outputs)
     throttle_outputs = []
     for layer_name in outputs_spec.keys():
         if 'throttle' in layer_name:
-            x = concatenate([inp_speed, enc] + steer_outputs)
             x = Dense(
                 num_dense_neurons//4,
                 kernel_regularizer=l2(l2_reg),
                 activation=act,
-            )(x)
+            )(emb)
             throttle_outputs.append(
-                Dense(1, kernel_regularizer=l2(l2_reg), name=layer_name)(x)
+                Dense(
+                    1,
+                    kernel_regularizer=l2(l2_reg),
+                    activation=outputs_spec[layer_name]['act'],
+                    name=layer_name,
+                )(x)
             )
 
     return Model([inp, inp_speed], steer_outputs+throttle_outputs)
 
 
-def extract_y(prefix, episode, racetrack):
-    DF_log = pd.read_csv('logs/{}_racetrack{}_log{}.txt'.format(prefix, racetrack, episode))
-    which_OK = (DF_log['speed'] > MIN_SPEED)
+def extract_y(filename):
+    relevant_component = filename.split('/')[1].split('_depth_data')[0]
+    episode = filename.split('_depth_data')[1].split('.npy')[0]
+    DF_log = pd.read_csv('logs/{}_log{}.txt'.format(relevant_component, episode))
+    if 'speed' in DF_log:
+        which_OK = (DF_log['speed'] > MIN_SPEED)
+        speed = DF_log[which_OK]['speed']
+    else:
+        which_OK = DF_log.shape[0] * [True]
+        speed = pd.Series(DF_log.shape[0] * [-1])
     steer = DF_log[which_OK]['steer']
     throttle = DF_log[which_OK]['throttle']
-    speed = DF_log[which_OK]['speed']
     return which_OK, steer, throttle, speed
 
 
-def _get_data_from_one_racetrack(prefix, episode, racetrack):
-    which_OK, steer, throttle, speed = extract_y(prefix, episode, racetrack)
-    X = (
-        pd.np.load(
-            'depth_data/{}_racetrack{}_depth_data{}.npy'
-            .format(prefix, racetrack, episode)
-        )[..., which_OK]
-        .transpose([2, 0, 1])
-    )
-    if X.shape[1] != IMAGE_CLIP_LOWER-IMAGE_CLIP_UPPER:
-        X = X[:, IMAGE_CLIP_UPPER:IMAGE_CLIP_LOWER, :]
+def _get_data_from_one_racetrack(filename):
+    which_OK, steer, throttle, speed = extract_y(filename)
+    try:
+        X = pd.np.load(filename)[..., which_OK].transpose([2, 0, 1])
+    except Exception as e:
+        import ipdb; ipdb.set_trace()
+
+    if X.shape[1] != (IMAGE_CLIP_LOWER-IMAGE_CLIP_UPPER) // IMAGE_DECIMATION:
+        X = X[:, IMAGE_CLIP_UPPER:IMAGE_CLIP_LOWER, :][:, ::IMAGE_DECIMATION, ::IMAGE_DECIMATION]
 
     # Need to expand dimensions to be able to use convolutions
     X = np.expand_dims(X, 3)
@@ -199,14 +215,15 @@ def _get_data_from_one_racetrack(prefix, episode, racetrack):
     }
 
 
-def get_data(prefix, episode, racetracks):
+def get_data(filenames):
     X_all = []
     labels_all = []
     racetrack_labels = []
-    for racetrack_index, racetrack_name in enumerate(racetracks):
-        X, labels = _get_data_from_one_racetrack(prefix, episode, racetrack_name)
+    for filename in filenames:
+        X, labels = _get_data_from_one_racetrack(filename)
         X_all.append(X)
         labels_all.append(labels)
+        racetrack_index = int(filename.split('racetrack')[1].split('_')[0])
         racetrack_labels += len(labels)*[racetrack_index]
 
     label_names = labels.keys()
@@ -224,7 +241,7 @@ def get_preds_and_plot(
     X_train, labels_train,
     X_test, labels_test,
     num_X_channels, num_Xdiff_channels, outputs_spec, speed_as_input,
-    epoch, controller_name, results_dir,
+    epoch, results_dir,
     plot_bounds
 ):
     local_batch_size = 128
@@ -272,7 +289,6 @@ def get_preds_and_plot(
     mse_plural = {}
     for label_name in labels:
         plot_scatter(
-            controller_name,
             label_name,
             y_train[label_name], y_test[label_name],
             preds_train[label_name], preds_test[label_name],
@@ -285,7 +301,7 @@ def get_preds_and_plot(
     return mse_plural
 
 
-def plot_scatter(controller_name, actuator_name, y_train, y_test, preds_train, preds_test, bounds, epoch, results_dir):
+def plot_scatter(actuator_name, y_train, y_test, preds_train, preds_test, bounds, epoch, results_dir):
     plt.plot(bounds, bounds, 'k:', alpha=0.5)
     scatter_train = plt.scatter(y_train, preds_train, alpha=0.5)
     scatter_test = plt.scatter(y_test, preds_test, alpha=0.5)
@@ -310,7 +326,7 @@ def plot_scatter(controller_name, actuator_name, y_train, y_test, preds_train, p
 
 def generator_fit(
     model, X, labels, weights, num_X_channels, num_Xdiff_channels, batch_size,
-    outputs_spec, speed_as_input,
+    outputs_spec, speed_as_input, verbosity=2,
 ):
     train_gen = get_data_gen(
         X, labels, weights,
@@ -336,7 +352,7 @@ def generator_fit(
         epochs=1,
         validation_data=valid_batch_gen,
         validation_steps=0.01*epoch_size,
-        verbose=2,
+        verbose=verbosity,
         # workers=8,
         # use_multiprocessing=True
     )
@@ -365,17 +381,6 @@ def plot_and_store_errors(errors, upper_plot_limit, title, results_dir):
 def main():
     argparser = argparse.ArgumentParser(description=__doc__)
     argparser.add_argument(
-        '-c', '--controller',
-        default='mpc',
-        dest='controller_name',
-        help='Controller name')
-    argparser.add_argument(
-        '-lr', '--learning_rate',
-        default=1e-5,
-        type=float,
-        dest='learning_rate',
-        help='Learning rate')
-    argparser.add_argument(
         '-p', '--patience',
         default=100,
         type=int,
@@ -383,92 +388,59 @@ def main():
         help='Early stopping patience')
     argparser.add_argument(
         '-r', '--results_dir',
-        default=None,
+        default=dt.today().strftime('%Y-%m-%d-%H-%M'),
         dest='results_dir',
         help='Directory for storing the results')
-    argparser.add_argument(
-        '-tr', '--train_racetracks',
-        default='01',
-        dest='train_racetracks',
-        help='Comma-separated train racetracks (01, 02, etc.)')
-    argparser.add_argument(
-        '-te', '--test_racetracks',
-        default='02',
-        dest='test_racetracks',
-        help='Comma-separated test racetrack (01, 02, etc.)')
 
     args = argparser.parse_args()
 
-    if args.results_dir:
-        results_dir = args.results_dir
-    else:
-        results_dir = '{controller}_{throttle}_{num_X_channels}_{num_Xdiff_channels}'.format(
-            controller=args.controller_name,
-            throttle=('throttle' if 'throttle' in OUTPUTS_SPEC.keys() else 'noThrottle'),
-            num_X_channels='{}Xchan'.format(NUM_X_CHANNELS),
-            num_Xdiff_channels='{}dXchan'.format(NUM_X_DIFF_CHANNELS),
-        )
+    results_dir = args.results_dir
     if not os.path.exists(results_dir):
         os.makedirs(results_dir)
 
     shutil.copy('config.py', results_dir)
-
-    if SPEED_AS_INPUT:
-        get_model = get_lenet_like_model_w_odometry
-    else:
-        get_model = get_lenet_like_model
+    (Path(results_dir) / '__init__.py').touch()
 
     input_shape = (
-        IMAGE_CLIP_LOWER-IMAGE_CLIP_UPPER,
-        IMAGE_SIZE[1],
+        (IMAGE_CLIP_LOWER-IMAGE_CLIP_UPPER) // IMAGE_DECIMATION,
+        IMAGE_SIZE[1] // IMAGE_DECIMATION,
         NUM_X_CHANNELS+NUM_X_DIFF_CHANNELS
     )
+    embed_getter = lambda: get_lenet_like_embedder(input_shape)
 
-    model = get_model(
-        input_shape=input_shape,
-        outputs_spec=OUTPUTS_SPEC
-    )
-
-    loss = {layer_name: loss_name for layer_name, (loss_name, weight) in OUTPUTS_SPEC.items()}
-    loss_weights = {layer_name: weight for layer_name, (loss_name, weight) in OUTPUTS_SPEC.items()}
     if SPEED_AS_INPUT:
-        for loss_name in OUTPUTS_SPEC.keys():
-            if 'speed' in loss_name:
-                del loss[loss_name]
-                del loss_weights[loss_name]
+        top_layer_adder = add_throttle_upon_steer_w_odometry
+    else:
+        top_layer_adder = add_throttle_upon_steer_wo_odometry
+
+    model = top_layer_adder(OUTPUTS_SPEC, embed_getter)
+
+    loss = {layer_name: spec['loss'] for layer_name, spec in OUTPUTS_SPEC.items()}
+    loss_weights = {layer_name: spec['weight'] for layer_name, spec in OUTPUTS_SPEC.items()}
+    if SPEED_AS_INPUT:
+        for layer_name in OUTPUTS_SPEC.keys():
+            if 'speed' in layer_name:
+                del loss[layer_name]
+                del loss_weights[layer_name]
     model.compile(
         loss=loss,
         loss_weights=loss_weights,
-        optimizer=Adam(lr=args.learning_rate),
+        optimizer=Adam(1e-5),
     )
-
-    test_racetracks = set(args.test_racetracks.split(','))
-    train_racetracks = set(args.train_racetracks.split(','))
-    same_racetracks = (test_racetracks == train_racetracks)
-    if same_racetracks:
-        assert NUM_TRAIN_EPISODES > 1, (
-            'In order to train and test on the same race tracks'
-            ' you need to use at least 2 episodes'
-        )
-    num_train_episodes = NUM_TRAIN_EPISODES-1 if same_racetracks else NUM_TRAIN_EPISODES
 
     # Get the test set
-    X_test, labels_test = get_data(
-        args.controller_name,
-        NUM_TRAIN_EPISODES-1 if same_racetracks else 0,
-        test_racetracks
-    )
+    X_test, labels_test = get_data(TEST_SET)
 
     errors_storage = {key: [] for key in OUTPUTS_SPEC}
     min_error = 10000
     for epoch in range(1, NUM_EPOCHS+1):
         weights = None
-        for episode in [0,1]:#range(num_train_episodes):
+        for episode, filename in enumerate(TRAIN_SET):
             print('EPOCH: {}, EPISODE: {}'.format(epoch, episode))
 
             print('Getting data...')
             start = time.time()
-            X, labels = get_data(args.controller_name, episode, train_racetracks)
+            X, labels = get_data([filename])
             print('Took {:.2f}s'.format(time.time() - start))
 
             if weights is None:
@@ -498,14 +470,14 @@ def main():
             )
 
         if epoch % 5 == 0:
-            model.save('{}/{}_model{}.h5'.format(results_dir, args.controller_name, epoch))
+            model.save('{}/model{}.h5'.format(results_dir, epoch))
 
         errors = get_preds_and_plot(
             model,
             X, labels,
             X_test, labels_test,
             NUM_X_CHANNELS, NUM_X_DIFF_CHANNELS, OUTPUTS_SPEC, SPEED_AS_INPUT,
-            epoch, args.controller_name, results_dir,
+            epoch, results_dir,
             SCATTER_PLOT_BOUNDS,
         )
 
@@ -514,7 +486,7 @@ def main():
 
         if errors['steer'] < min_error:
             print('Newest lowest steer MSE: {:.4f}'.format(errors['steer']))
-            model.save('{}/{}_model_best.h5'.format(results_dir, args.controller_name))
+            model.save('{}/model_best.h5'.format(results_dir))
         min_error = min(errors_storage['steer'])
         position_best = errors_storage['steer'].index(min_error)
         if (len(errors_storage['steer'])-position_best) == args.patience:

@@ -24,10 +24,12 @@ class PDController(Controller):
         self.kd = kd
 
     def control(self, pts_2D, measurements, depth_array):
-        location = self._extract_location(measurements)
-        which_closest, dists = self._find_closest(pts_2D, location)
+        which_closest, dists, location = self._calc_closest_dists_and_location(
+            measurements,
+            pts_2D
+        )
 
-        closest, next = pts_2D[which_closest], pts_2D[which_closest+1]
+        closest, next = pts_2D[which_closest], pts_2D[(which_closest+1) % len(pts_2D)]
         road_direction = next - closest
         perpendicular = np.array([
             -road_direction[1],
@@ -62,6 +64,7 @@ class PDController(Controller):
             'speed': curr_speed,
             'deriv': deriv,
             'cte': self.curr_prop,
+            'which_closest': which_closest,
         }
 
-        return one_log_dict, which_closest
+        return one_log_dict

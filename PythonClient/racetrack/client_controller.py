@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import os
 import argparse
 import logging
 import random
@@ -17,9 +18,13 @@ from carla.tcp import TCPConnectionError
 
 from config import (
     IMAGE_SIZE,
+    IMAGE_DECIMATION,
+    MIN_SPEED,
     DTYPE,
     STEER_NOISE,
     THROTTLE_NOISE,
+    STEER_NOISE_NN,
+    THROTTLE_NOISE_NN,
     IMAGE_CLIP_LOWER,
     IMAGE_CLIP_UPPER
 )
@@ -35,6 +40,13 @@ def run_carla_client(args):
     frames_per_episode = 10000
     spline_points = 10000
 
+    report = {
+        'num_episodes': args.num_episodes,
+        'controller_name': args.controller_name,
+        'distances': [],
+        'target_speed': args.target_speed,
+    }
+
     track_DF = pd.read_csv('racetrack{}.txt'.format(args.racetrack), header=None)
     # The track data are rescaled by 100x with relation to Carla measurements
     track_DF = track_DF / 100
@@ -49,8 +61,6 @@ def run_carla_client(args):
     throttle = 0.5
 
     depth_array = None
-
-    num_laps = 0
 
     if args.controller_name == 'mpc':
         weather_id = 2
@@ -71,18 +81,32 @@ def run_carla_client(args):
             args.which_model,
             args.throttle_coeff_A,
             args.throttle_coeff_B,
+            args.ensemble_prediction,
         )
+        report['model_dir_name'] = args.model_dir_name
+        report['which_model'] = args.which_model
+        report['throttle_coeff_A'] = args.throttle_coeff_A
+        report['throttle_coeff_B'] = args.throttle_coeff_B
+        report['ensemble_prediction'] = args.ensemble_prediction
 
     with make_carla_client(args.host, args.port) as client:
         print('CarlaClient connected')
         episode = 0
-        while episode < args.num_of_episodes:
-            # Start a new episode.
+        num_fails = 0
 
-            store_data = not args.dont_store_data
-            if store_data:
-                depth_storage = np.zeros((IMAGE_CLIP_LOWER-IMAGE_CLIP_UPPER, IMAGE_SIZE[1], frames_per_episode)).astype(DTYPE)
+        while episode < args.num_episodes:
+            # Start a new episode
+
+            if args.store_data:
+                depth_storage = np.zeros((
+                    (IMAGE_CLIP_LOWER-IMAGE_CLIP_UPPER) // IMAGE_DECIMATION,
+                    IMAGE_SIZE[1] // IMAGE_DECIMATION,
+                    frames_per_episode
+                )).astype(DTYPE)
                 log_dicts = frames_per_episode * [None]
+            else:
+                depth_storage = None
+                log_dicts = None
 
             if args.settings_filepath is None:
 
@@ -107,7 +131,8 @@ def run_carla_client(args):
                 # frame.
 
                 # Let's add another camera producing ground-truth depth.
-                camera = Camera('CameraDepth', PostProcessing='Depth')
+                camera = Camera('CameraDepth', PostProcessing='Depth', FOV=69.4)
+                # MD: I got the 69.4 from here: https://click.intel.com/intelr-realsensetm-depth-camera-d435.html
                 camera.set_image_size(IMAGE_SIZE[1], IMAGE_SIZE[0])
                 camera.set_position(2.30, 0, 1.30)
                 settings.add_sensor(camera)
@@ -130,10 +155,10 @@ def run_carla_client(args):
             # Notify the server that we want to start the episode at the
             # player_start index. This function blocks until the server is ready
             # to start the episode.
-            print('Starting new episode...')
+            print('Starting new episode...', )
             client.start_episode(player_start)
 
-            status = run_episode(
+            status, depth_storage, one_log_dict, log_dicts, distance_travelled = run_episode(
                 client,
                 controller,
                 pts_2D,
@@ -141,42 +166,83 @@ def run_carla_client(args):
                 log_dicts,
                 frames_per_episode,
                 args.controller_name,
-                store_data
+                args.store_data
             )
 
-            if status == 'FAIL':
+            if 'FAIL' in status:
+                num_fails += 1
+                print(status)
                 continue
             else:
-                episode += 1
-                if store_data:
+                print('SUCCESS: ' + str(episode))
+                report['distances'].append(distance_travelled)
+                if args.store_data:
                     np.save('depth_data/{}_racetrack{}_depth_data{}.npy'.format(args.controller_name, args.racetrack, episode), depth_storage)
                     pd.DataFrame(log_dicts).to_csv('logs/{}_racetrack{}_log{}.txt'.format(args.controller_name, args.racetrack, episode), index=False)
+                episode += 1
+
+    report['num_fails'] = num_fails
+
+    report_output = os.path.join('reports', args.report_filename)
+    pd.to_pickle(report, report_output)
 
 
 def run_episode(client, controller, pts_2D, depth_storage, log_dicts, frames_per_episode, controller_name, store_data):
+    num_laps = 0
+    curr_closest_waypoint = None
+    prev_closest_waypoint = None
+    num_waypoints = pts_2D.shape[0]
+    num_steps_below_min_speed = 0
+
     # Iterate every frame in the episode.
     for frame in range(frames_per_episode):
-
         # Read the data produced by the server this frame.
         measurements, sensor_data = client.read_data()
-        if measurements.player_measurements.collision_other > 10000:
-            return 'FAIL'
+
+        if measurements.player_measurements.forward_speed * 3.6 < MIN_SPEED:
+            num_steps_below_min_speed += 1
+        else:
+            num_steps_below_min_speed = 0
+
+        too_many_collisions = (measurements.player_measurements.collision_other > 10000)
+        too_long_in_one_place = (num_steps_below_min_speed > 300)
+        if too_many_collisions:
+            return 'FAIL: too many collisions', None, None, None, None
+        if too_long_in_one_place:
+            return 'FAIL: too long in one place', None, None, None, None
+
 
         depth_array = np.log(sensor_data['CameraDepth'].data).astype(DTYPE)
-        depth_array = depth_array[IMAGE_CLIP_UPPER:IMAGE_CLIP_LOWER, :]
+        depth_array = depth_array[IMAGE_CLIP_UPPER:IMAGE_CLIP_LOWER, :][::IMAGE_DECIMATION, ::IMAGE_DECIMATION]
 
-        one_log_dict, which_closest  = controller.control(
+        one_log_dict = controller.control(
             pts_2D,
             measurements,
             depth_array,
         )
 
+        prev_closest_waypoint = curr_closest_waypoint
+        curr_closest_waypoint = one_log_dict['which_closest']
+
+        # Check if we made a whole lap
+        if prev_closest_waypoint is not None:
+            # It's possible for `prev_closest_waypoint` to be larger than `curr_closest_waypoint`
+            # but if `0.9*prev_closest_waypoint` is larger than `curr_closest_waypoint`
+            # it definitely means that we completed a lap (or the car had been teleported)
+            if 0.9*prev_closest_waypoint > curr_closest_waypoint:
+                num_laps += 1
+
         steer, throttle = one_log_dict['steer'], one_log_dict['throttle']
+        # print('throttle: {:.2f}'.format(throttle))
 
         if controller_name != 'nn':
             # Add noise to "augment" the race
             steer += STEER_NOISE()
             throttle += THROTTLE_NOISE()
+        else:
+            # Add noise to get a stochastic policy
+            steer += STEER_NOISE_NN()
+            throttle += THROTTLE_NOISE_NN()
 
         client.send_control(
             steer=steer,
@@ -191,7 +257,8 @@ def run_episode(client, controller, pts_2D, depth_storage, log_dicts, frames_per
             one_log_dict['frame'] = frame
             log_dicts[frame] = one_log_dict
 
-    return 'SUCCESS'
+    distance_travelled = num_laps + curr_closest_waypoint / float(num_waypoints)
+    return 'SUCCESS', depth_storage, one_log_dict, log_dicts, distance_travelled
 
 
 def main():
@@ -231,10 +298,10 @@ def main():
         dest='racetrack',
         help='Racetrack number (but with a zero: 01, 02, etc.)')
     argparser.add_argument(
-        '-e', '--num_of_episodes',
+        '-e', '--num_episodes',
         default=10,
         type=int,
-        dest='num_of_episodes',
+        dest='num_episodes',
         help='Number of episodes')
     argparser.add_argument(
         '-s', '--speed',
@@ -248,11 +315,15 @@ def main():
         dest='controller_name',
         help='Controller name')
     argparser.add_argument(
-        '-d', '--dont_store_data',
-        default=False,
-        type=bool,
-        dest='dont_store_data',
-        help='Should data be stored')
+        '-sd', '--store_data',
+        action='store_false',
+        dest='store_data',
+        help='Should the data be stored?')
+    argparser.add_argument(
+        '-rep', '--report_filename',
+        default=None,
+        dest='report_filename',
+        help='Report filename')
 
     # For the NN controller
     argparser.add_argument(
@@ -277,8 +348,18 @@ def main():
         type=float,
         dest='throttle_coeff_B',
         help='Coefficient by which NN throttle predictions will be shifted by')
+    argparser.add_argument(
+        '-ens', '--ensemble-prediction',
+        action='store_true',
+        dest='ensemble_prediction',
+        help='Whether predictions for steering should be aggregated')
 
     args = argparser.parse_args()
+
+    assert args.report_filename is not None, (
+        'You need to provide a report filename (argument -rep or'
+        ' --report_filename)'
+    )
 
     log_level = logging.DEBUG if args.debug else logging.INFO
     logging.basicConfig(format='%(levelname)s: %(message)s', level=log_level)

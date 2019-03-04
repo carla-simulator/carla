@@ -1,65 +1,101 @@
 import random
 from collections import OrderedDict
 
-# General, Carla-related
-IMAGE_SIZE = (150, 200)
-STEER_BOUND = 2.5
-THROTTLE_BOUND = 1
-MIN_SPEED = 10
+
+# GENERAL
+IMAGE_DECIMATION = 4
+IMAGE_SIZE = (240, 320)
 # If you're running low on memory, you may consider switching to `np.float32`
 DTYPE = 'float32'
 
+# MPC-RELATED
+# Constraints for MPC
+STEER_BOUND = 1.0
+STEER_BOUNDS = (-STEER_BOUND, STEER_BOUND)
+THROTTLE_BOUND = 1.0
+THROTTLE_BOUNDS = (0, THROTTLE_BOUND)
+
+
+
 # "Controller regularization"
-STEER_NOISE = lambda: 0#random.uniform(-0.1, 0.1)
-THROTTLE_NOISE = lambda: 0#random.uniform(-0.05, 0.05)
+STEER_NOISE = lambda: random.uniform(-0.1, 0.1)
+THROTTLE_NOISE = lambda: random.uniform(-0.05, 0.05)
+
+# If you'd like to test out a (synthetic) stochastic policy
+STEER_NOISE_NN = lambda: 0 #random.uniform(-0.05, 0.05)
+THROTTLE_NOISE_NN = lambda: 0 #random.uniform(-0.05, 0.05)
+
+
+
+# Dataset
+CONTROLLER = 'pad'
+
+TRAIN_SET = [
+    'depth_data/{}_racetrack{}_depth_data{}.npy'.format(CONTROLLER, racetrack, episode)
+    for episode in range(9)
+    for racetrack in ['01', '02']
+    #for racetrack in ['02']
+    # for racetrack in ['11']
+]
+TEST_SET = [
+    'depth_data/{}_racetrack{}_depth_data{}.npy'.format(CONTROLLER, racetrack, episode)
+    for episode in [9]
+    for racetrack in ['01', '02']
+    # for racetrack in ['02']
+    # for racetrack in ['11']
+]
+
+# TRAIN_SET = [
+#     # 'depth_data/mpc_racetrack01_depth_data0.npy',
+#     'depth_data/normedfilled_racetrack11_depth_data0.npy',
+#     # 'depth_data/mpc_racetrack01_depth_data1.npy',
+#     'depth_data/normedfilled_racetrack11_depth_data1.npy',
+#     # 'depth_data/mpc_racetrack01_depth_data2.npy',
+#     'depth_data/normedfilled_racetrack11_depth_data2.npy',
+# ]
+# TEST_SET = [
+#     'depth_data/normedfilled_racetrack10_depth_data0.npy'
+# ]
+
+
+if (set(TRAIN_SET) & set(TEST_SET)) != set():
+    print('TRAIN_SET and TEST_SET are not disjoint!!!!!')
+
+# We're throwing away data that occured at low speed
+MIN_SPEED = 10
 
 # NN training
 BATCH_SIZE = 32
-NUM_EPOCHS = 2
-NUM_TRAIN_EPISODES = 10
+NUM_EPOCHS = 30
 WEIGHT_EXPONENT = 0
 
-# Modelling
-NUM_X_DIFF_CHANNELS = 1
-NUM_X_CHANNELS = 2
-IMAGE_CLIP_UPPER = 60
-IMAGE_CLIP_LOWER = 100
-SPEED_AS_INPUT = False
+# INPUT
+NUM_X_DIFF_CHANNELS = 0
+NUM_X_CHANNELS = 1
+IMAGE_CLIP_UPPER = 0
+IMAGE_CLIP_LOWER = IMAGE_SIZE[0]
 
-OUTPUTS_SPEC = OrderedDict([
-    ('steer', ['mse', 1.0]),
-    ('steer__1__last', ['mse', 1.0]),
-    ('steer__2__last', ['mse', 1.0]),
-    ('steer__3__last', ['mse', 1.0]),
-    ('steer__4__last', ['mse', 1.0]),
-    ('steer__5__last', ['mse', 1.0]),
-    ('steer__6__last', ['mse', 1.0]),
-    ('steer__7__last', ['mse', 1.0]),
-    ('steer__8__last', ['mse', 1.0]),
-    ('steer__9__last', ['mse', 1.0]),
-    ('steer__10__last', ['mse', 1.0]),
+SPEED_AS_INPUT = True
 
-    ('throttle', ['mse', 1.0]),
-    ('throttle__1__last', ['mse', 1.0]),
-    ('throttle__2__last', ['mse', 1.0]),
-    ('throttle__3__last', ['mse', 1.0]),
-    ('throttle__4__last', ['mse', 1.0]),
-    ('throttle__5__last', ['mse', 1.0]),
-    ('throttle__6__last', ['mse', 1.0]),
-    ('throttle__7__last', ['mse', 1.0]),
-    ('throttle__8__last', ['mse', 1.0]),
-    ('throttle__9__last', ['mse', 1.0]),
-    ('throttle__10__last', ['mse', 1.0]),
+STEPS_INTO_NEAR_FUTURE = range(1, 11)
+OUTPUTS_SPEC = OrderedDict(
+    [('steer', {'act': 'linear', 'loss': 'mse', 'weight': 1.0})]
+    + [('steer__{}__last'.format(i), {'act': 'linear', 'loss': 'mse', 'weight': 1.0}) for i in STEPS_INTO_NEAR_FUTURE]
 
-    ('racetrack', ['categorical_crossentropy', 1.0])
+    + [('throttle', {'act': 'sigmoid', 'loss': 'mse', 'weight': 1.0})]
+    + [('throttle__{}__last'.format(i), {'act': 'sigmoid', 'loss': 'mse', 'weight': 1.0}) for i in STEPS_INTO_NEAR_FUTURE]
 
-    # ('speed', ['mse', 1e-2]),
-])
+    # TODO ('racetrack', ['categorical_crossentropy', 1.0])
+)
+if SPEED_AS_INPUT:
+    OUTPUTS_SPEC['speed'] = {'act': 'linear', 'loss': 'mse', 'weight': 1e-2}
 
-# For plotting
+# PLOTTING
+BASE_FONTSIZE = 14
+
 ERROR_PLOT_UPPER_BOUNDS = {
     key: {
-        'steer': 0.05,
+        'steer': 0.15,
         'throttle': 0.5,
         'speed': 40,
         'racetrack': 1.0,
@@ -68,9 +104,9 @@ ERROR_PLOT_UPPER_BOUNDS = {
 }
 SCATTER_PLOT_BOUNDS = {
     key: {
-        'steer': [-STEER_BOUND, STEER_BOUND],
-        'throttle': [-THROTTLE_BOUND, THROTTLE_BOUND],
-        'speed': [0, 80],
+        'steer': STEER_BOUNDS,
+        'throttle': THROTTLE_BOUNDS,
+        'speed': [0, 100],
         'racetrack': [0, 2],
     }[key.split('__')[0]]
     for key in OUTPUTS_SPEC

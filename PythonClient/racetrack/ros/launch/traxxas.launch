@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-<launch>
-
-  <!-- Traxxas Control -->
-  <include file="$(find traxxas_control)/launch/traxxas_control.launch" />
-
-</launch>

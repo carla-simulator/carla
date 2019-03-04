@@ -1,41 +1,44 @@
-import inputs
-import numpy as np
+import pygame
+import sys
 
 from abstract_controller import Controller
-
-from config import STEER_BOUND, THROTTLE_BOUND
-
-
-MAX_READING_FROM_PAD = 32768.
-
-
-def scaling_fun(value):
-    return np.sign(value) * np.abs(value)**0.1 / MAX_READING_FROM_PAD**0.1
 
 
 class PadController(Controller):
     def __init__(self):
         self.throttle = 0
         self.steer = 0
+        pygame.init()
+        pygame.joystick.init()
+        try:
+            self.joystick = pygame.joystick.Joystick(0)
+            self.joystick.init()
+        except:
+            print('No joystic found')
+            sys.exit(1)
 
     def control(self, pts_2D, measurements, depth_array):
-        steer_not_read = True
-        throttle_not_read = True
+        which_closest, _, _ = self._calc_closest_dists_and_location(
+            measurements,
+            pts_2D
+        )
 
-        events = inputs.get_gamepad()
-        for event in events:
-            if steer_not_read and event.code == 'ABS_X':
-                self.steer = STEER_BOUND * scaling_fun(event.state)
-                steer_not_read = False
-            elif throttle_not_read and event.code == 'ABS_RY':
-                self.throttle = -THROTTLE_BOUND * scaling_fun(event.state)
-                throttle_not_read = False
+        for event in pygame.event.get(): # User did something
+            # Possible joystick actions: JOYAXISMOTION JOYBALLMOTION JOYBUTTONDOWN JOYBUTTONUP JOYHATMOTION
+            if event.type == pygame.JOYBUTTONDOWN:
+                print("Joystick button pressed.")
+            if event.type == pygame.JOYBUTTONUP:
+                print("Joystick button released.")
 
+        self.joystick.init()
+        self.steer = self.joystick.get_axis(0)
+        self.throttle = -self.joystick.get_axis(4)
         print('steer: {:.2f}, throttle: {:.2f}'.format(self.steer, self.throttle))
 
         one_log_dict = {
             'steer': self.steer,
             'throttle': self.throttle,
+            'which_closest': which_closest
         }
 
-        return one_log_dict, None
+        return one_log_dict
