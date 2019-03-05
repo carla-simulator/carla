@@ -27,11 +27,24 @@ namespace client {
   }
 
   std::ostream &operator<<(std::ostream &out, const World &world) {
-    out << "World(id=" << world.GetId() << ",map_name=" << world.GetMapName() << ')';
+    out << "World(id=" << world.GetId() << ')';
     return out;
   }
 
 } // namespace client
+} // namespace carla
+
+namespace carla {
+namespace rpc {
+
+  std::ostream &operator<<(std::ostream &out, const EpisodeSettings &settings) {
+    auto BoolToStr = [](bool b) { return b ? "True" : "False"; };
+    out << "WorldSettings(synchronous_mode=" << BoolToStr(settings.synchronous_mode)
+        << ",no_rendering_mode=" << BoolToStr(settings.no_rendering_mode) << ')';
+    return out;
+  }
+
+} // namespace rpc
 } // namespace carla
 
 static auto WaitForTick(const carla::client::World &world, double seconds) {
@@ -47,6 +60,7 @@ void export_world() {
   using namespace boost::python;
   namespace cc = carla::client;
   namespace cg = carla::geom;
+  namespace cr = carla::rpc;
 
   class_<cc::Timestamp>("Timestamp")
     .def(init<size_t, double, double, double>(
@@ -72,6 +86,17 @@ void export_world() {
     .def(self_ns::str(self_ns::self))
   ;
 
+  class_<cr::EpisodeSettings>("WorldSettings")
+    .def(init<bool, bool>(
+        (arg("synchronous_mode")=false,
+         arg("no_rendering_mode")=false)))
+    .def_readwrite("synchronous_mode", &cr::EpisodeSettings::synchronous_mode)
+    .def_readwrite("no_rendering_mode", &cr::EpisodeSettings::no_rendering_mode)
+    .def("__eq__", &cc::Timestamp::operator==)
+    .def("__ne__", &cc::Timestamp::operator!=)
+    .def(self_ns::str(self_ns::self))
+  ;
+
 #define SPAWN_ACTOR_WITHOUT_GIL(fn) +[]( \
         cc::World &self, \
         const cc::ActorBlueprint &blueprint, \
@@ -84,11 +109,12 @@ void export_world() {
 
   class_<cc::World>("World", no_init)
     .add_property("id", &cc::World::GetId)
-    .add_property("map_name", CALL_RETURNING_COPY(cc::World, GetMapName))
     .add_property("debug", &cc::World::MakeDebugHelper)
     .def("get_blueprint_library", CONST_CALL_WITHOUT_GIL(cc::World, GetBlueprintLibrary))
     .def("get_map", CONST_CALL_WITHOUT_GIL(cc::World, GetMap))
     .def("get_spectator", CONST_CALL_WITHOUT_GIL(cc::World, GetSpectator))
+    .def("get_settings", CONST_CALL_WITHOUT_GIL(cc::World, GetSettings))
+    .def("apply_settings", &cc::World::ApplySettings)
     .def("get_weather", CONST_CALL_WITHOUT_GIL(cc::World, GetWeather))
     .def("set_weather", &cc::World::SetWeather)
     .def("get_actors", CONST_CALL_WITHOUT_GIL(cc::World, GetActors))
@@ -96,6 +122,7 @@ void export_world() {
     .def("try_spawn_actor", SPAWN_ACTOR_WITHOUT_GIL(TrySpawnActor))
     .def("wait_for_tick", &WaitForTick, (arg("seconds")=10.0))
     .def("on_tick", &OnTick, (arg("callback")))
+    .def("tick", &cc::World::Tick)
     .def(self_ns::str(self_ns::self))
   ;
 

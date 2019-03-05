@@ -8,6 +8,7 @@
 
 #include "carla/client/Actor.h"
 #include "carla/rpc/VehicleControl.h"
+#include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/TrafficLightState.h"
 
 namespace carla {
@@ -18,8 +19,11 @@ namespace client {
   public:
 
     using Control = rpc::VehicleControl;
+    using PhysicsControl = rpc::VehiclePhysicsControl;
 
-    explicit Vehicle(ActorInitializer init) : Actor(std::move(init)) {}
+    explicit Vehicle(ActorInitializer init);
+
+    using ActorState::GetBoundingBox;
 
     /// Switch on/off this vehicle's autopilot.
     void SetAutopilot(bool enabled = true);
@@ -27,23 +31,46 @@ namespace client {
     /// Apply @a control to this vehicle.
     void ApplyControl(const Control &control);
 
+    /// Apply physics control to this vehicle
+    void ApplyPhysicsControl(const PhysicsControl &physics_control);
+
     /// Return the control last applied to this vehicle.
     ///
-    /// @note The following functions do not call the simulator, they return the
-    /// data
+    /// @note This function does not call the simulator, it returns the data
     /// received in the last tick.
-    //////////////////////////////////////////////////////////////////////////////////
     Control GetControl() const;
+    PhysicsControl GetPhysicsControl() const;
 
+    /// Return the speed limit currently affecting this vehicle.
+    ///
+    /// @note This function does not call the simulator, it returns the data
+    /// received in the last tick.
     float GetSpeedLimit() const;
 
+    /// Return the state of the traffic light currently affecting this vehicle.
+    ///
+    /// @return Green If no traffic light is affecting the vehicle.
+    ///
+    /// @note This function does not call the simulator, it returns the data
+    /// received in the last tick.
     rpc::TrafficLightState GetTrafficLightState() const;
 
+    /// Return whether a traffic light is affecting this vehicle.
+    ///
+    /// @note This function does not call the simulator, it returns the data
+    /// received in the last tick.
     bool IsAtTrafficLight();
 
+    /// Retrieve the traffic light actor currently affecting this vehicle.
+    ///
+    /// @note This function does not call the simulator, it returns the data
+    /// received in the last tick.
     SharedPtr<TrafficLight> GetTrafficLight() const;
 
+
   private:
+
+    const bool _is_control_sticky;
 
     Control _control;
   };

@@ -18,8 +18,33 @@
       return self.fn(); \
     }
 
+// Convenient for requests with 1 argument.
+#define CALL_WITHOUT_GIL_1(cls, fn, T1_) +[](cls &self, T1_ t1) { \
+      carla::PythonUtil::ReleaseGIL unlock; \
+      return self.fn(std::forward<T1_>(t1)); \
+    }
+
+// Convenient for requests with 2 arguments.
+#define CALL_WITHOUT_GIL_2(cls, fn, T1_, T2_) +[](cls &self, T1_ t1, T2_ t2) { \
+      carla::PythonUtil::ReleaseGIL unlock; \
+      return self.fn(std::forward<T1_>(t1), std::forward<T2_>(t2)); \
+    }
+
+// Convenient for requests with 3 arguments.
+#define CALL_WITHOUT_GIL_3(cls, fn, T1_, T2_, T3_) +[](cls &self, T1_ t1, T2_ t2, T3_ t3) { \
+      carla::PythonUtil::ReleaseGIL unlock; \
+      return self.fn(std::forward<T1_>(t1), std::forward<T2_>(t2), std::forward<T3_>(t3)); \
+    }
+
+// Convenient for requests with 4 arguments.
+#define CALL_WITHOUT_GIL_4(cls, fn, T1_, T2_, T3_, T4_) +[](cls &self, T1_ t1, T2_ t2, T3_ t3, T4_ t4) { \
+      carla::PythonUtil::ReleaseGIL unlock; \
+      return self.fn(std::forward<T1_>(t1), std::forward<T2_>(t2), std::forward<T3_>(t3), std::forward<T4_>(t4)); \
+    }
+
 // Convenient for const requests without arguments.
 #define CONST_CALL_WITHOUT_GIL(cls, fn) CALL_WITHOUT_GIL(const cls, fn)
+#define CONST_CALL_WITHOUT_GIL_1(cls, fn, T1_) CALL_WITHOUT_GIL_1(const cls, fn, T1_)
 
 // Convenient for const requests that need to make a copy of the returned value.
 #define CALL_RETURNING_COPY(cls, fn) +[](const cls &self) \
@@ -113,7 +138,7 @@ static auto MakeCallback(boost::python::object callback) {
     carla::PythonUtil::AcquireGIL lock;
     try {
       py::call<void>(callback->ptr(), py::object(message));
-    } catch (const py::error_already_set &e) {
+    } catch (const py::error_already_set &) {
       PyErr_Print();
     }
   };
@@ -130,6 +155,7 @@ static auto MakeCallback(boost::python::object callback) {
 #include "SensorData.cpp"
 #include "Weather.cpp"
 #include "World.cpp"
+#include "Commands.cpp"
 
 BOOST_PYTHON_MODULE(libcarla) {
   using namespace boost::python;
@@ -146,4 +172,5 @@ BOOST_PYTHON_MODULE(libcarla) {
   export_map();
   export_client();
   export_exception();
+  export_commands();
 }

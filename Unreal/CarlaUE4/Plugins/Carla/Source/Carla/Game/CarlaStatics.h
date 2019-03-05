@@ -38,6 +38,9 @@ public:
 
   UFUNCTION(BlueprintPure, Category="CARLA", meta=(WorldContext="WorldContextObject"))
   static UCarlaSettings *GetCarlaSettings(const UObject *WorldContextObject);
+
+  UFUNCTION(BlueprintPure, Category="CARLA")
+  static TArray<FString> GetAllMapNames();
 };
 
 // =============================================================================
@@ -65,4 +68,3 @@ inline UCarlaSettings *UCarlaStatics::GetCarlaSettings(const UObject *WorldConte
   auto GameInstance = GetGameInstance(WorldContext);
   return GameInstance != nullptr ? GameInstance->GetCARLASettings() : nullptr;
 }
-

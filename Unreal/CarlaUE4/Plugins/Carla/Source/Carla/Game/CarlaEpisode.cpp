@@ -9,15 +9,19 @@
 
 #include "Carla/Sensor/Sensor.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
+#include "Carla/Util/RandomEngine.h"
 #include "Carla/Vehicle/VehicleSpawnPoint.h"
 
 #include "EngineUtils.h"
+#include "Engine/StaticMeshActor.h"
 #include "GameFramework/SpectatorPawn.h"
+#include "Kismet/GameplayStatics.h"
 
 static FString UCarlaEpisode_GetTrafficSignId(ETrafficSignState State)
 {
   using TSS = ETrafficSignState;
-  switch (State) {
+  switch (State)
+  {
     case TSS::TrafficLightRed:
     case TSS::TrafficLightYellow:
     case TSS::TrafficLightGreen:  return TEXT("traffic.traffic_light");
@@ -29,23 +33,83 @@ static FString UCarlaEpisode_GetTrafficSignId(ETrafficSignState State)
     case TSS::SpeedLimit_100:     return TEXT("traffic.speed_limit.100");
     case TSS::SpeedLimit_120:     return TEXT("traffic.speed_limit.120");
     case TSS::SpeedLimit_130:     return TEXT("traffic.speed_limit.130");
+    case TSS::StopSign:           return TEXT("traffic.stop");
+    case TSS::YieldSign:          return TEXT("traffic.yield");
     default:                      return TEXT("traffic.unknown");
   }
 }
 
 UCarlaEpisode::UCarlaEpisode(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer),
-    Id([]() {
-      static uint32 COUNTER = 0u;
-      return ++COUNTER;
-    }()) {
+    Id(URandomEngine::GenerateRandomId())
+{
   ActorDispatcher = CreateDefaultSubobject<UActorDispatcher>(TEXT("ActorDispatcher"));
+}
+
+bool UCarlaEpisode::LoadNewEpisode(const FString &MapString)
+{
+  FString FinalPath = MapString.IsEmpty() ? GetMapName() : MapString;
+  bool bIsFileFound = false;
+  if (MapString.StartsWith("/Game"))
+  {
+    // Full path
+    if (!MapString.EndsWith(".umap"))
+    {
+      FinalPath += ".umap";
+    }
+    // Some conversions...
+    FinalPath = FinalPath.Replace(TEXT("/Game/"), *FPaths::ProjectContentDir());
+    if (FPaths::FileExists(IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*FinalPath)))
+    {
+      bIsFileFound = true;
+      FinalPath = MapString;
+    }
+  }
+  else
+  {
+    if (MapString.Contains("/"))
+    {
+      bIsFileFound = false;
+    }
+    else
+    {
+      // Find the full path under Carla
+      TArray<FString> TempStrArray, PathList;
+      if (!MapString.EndsWith(".umap"))
+      {
+        FinalPath += ".umap";
+      }
+      IFileManager::Get().FindFilesRecursive(PathList, *FPaths::ProjectContentDir(), *FinalPath, true, false, false);
+      if (PathList.Num() > 0)
+      {
+        FinalPath = PathList[0];
+        FinalPath.ParseIntoArray(TempStrArray, TEXT("Content/"), true);
+        FinalPath = TempStrArray[1];
+        FinalPath.ParseIntoArray(TempStrArray, TEXT("."), true);
+        FinalPath = "/Game/" + TempStrArray[0];
+        bIsFileFound = true;
+      }
+    }
+  }
+  if (bIsFileFound)
+  {
+    UE_LOG(LogCarla, Warning, TEXT("Loading a new episode: %s"), *FinalPath);
+    UGameplayStatics::OpenLevel(GetWorld(), *FinalPath, true);
+  }
+  return bIsFileFound;
+}
+
+void UCarlaEpisode::ApplySettings(const FEpisodeSettings &Settings)
+{
+  FCarlaStaticDelegates::OnEpisodeSettingsChange.Broadcast(Settings);
+  EpisodeSettings = Settings;
 }
 
 TArray<FTransform> UCarlaEpisode::GetRecommendedSpawnPoints() const
 {
   TArray<FTransform> SpawnPoints;
-  for (TActorIterator<AVehicleSpawnPoint> It(GetWorld()); It; ++It) {
+  for (TActorIterator<AVehicleSpawnPoint> It(GetWorld()); It; ++It)
+  {
     SpawnPoints.Add(It->GetActorTransform());
   }
   return SpawnPoints;
@@ -62,7 +126,9 @@ carla::rpc::Actor UCarlaEpisode::SerializeActor(FActorView ActorView) const
     {
       Actor.parent_id = FindActor(Parent).GetActorId();
     }
-  } else {
+  }
+  else
+  {
     UE_LOG(LogCarla, Warning, TEXT("Trying to serialize invalid actor"));
   }
   return Actor;
@@ -74,6 +140,17 @@ void UCarlaEpisode::AttachActors(AActor *Child, AActor *Parent)
   check(Parent != nullptr);
   Child->AttachToActor(Parent, FAttachmentTransformRules::KeepRelativeTransform);
   Child->SetOwner(Parent);
+
+  // recorder event
+  if (Recorder->IsEnabled())
+  {
+    CarlaRecorderEventParent RecEvent
+    {
+      FindActor(Child).GetActorId(),
+      FindActor(Parent).GetActorId()
+    };
+    Recorder->AddEvent(std::move(RecEvent));
+  }
 }
 
 void UCarlaEpisode::InitializeAtBeginPlay()
@@ -108,4 +185,49 @@ void UCarlaEpisode::InitializeAtBeginPlay()
     Description.Class = Actor->GetClass();
     ActorDispatcher->RegisterActor(*Actor, Description);
   }
+
+  for (TActorIterator<AStaticMeshActor> It(World); It; ++It)
+  {
+    auto Actor = *It;
+    check(Actor != nullptr);
+    auto MeshComponent = Actor->GetStaticMeshComponent();
+    check(MeshComponent != nullptr);
+    if (MeshComponent->Mobility == EComponentMobility::Movable)
+    {
+      FActorDescription Description;
+      Description.Id = TEXT("static.prop");
+      Description.Class = Actor->GetClass();
+      ActorDispatcher->RegisterActor(*Actor, Description);
+    }
+  }
+}
+
+void UCarlaEpisode::EndPlay(void)
+{
+  // stop recorder and replayer
+  if (Recorder)
+  {
+    Recorder->Stop();
+    if (Recorder->GetReplayer()->IsEnabled())
+    {
+      Recorder->GetReplayer()->Stop();
+    }
+  }
+}
+
+std::string UCarlaEpisode::StartRecorder(std::string Name)
+{
+  std::string result;
+  FString Name2(Name.c_str());
+
+  if (Recorder)
+  {
+    result = Recorder->Start(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir()), Name2, MapName);
+  }
+  else
+  {
+    result = "Recorder is not ready";
+  }
+
+  return result;
 }

@@ -6,9 +6,19 @@ using UnrealBuildTool;
 
 public class Carla : ModuleRules
 {
+  private bool IsWindows(ReadOnlyTargetRules Target)
+  {
+    return (Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32);
+  }
+
   public Carla(ReadOnlyTargetRules Target) : base(Target)
   {
     PrivatePCHHeaderFile = "Carla.h";
+
+    if (IsWindows(Target))
+    {
+      bEnableExceptions = true;
+    }
 
     PublicIncludePaths.AddRange(
       new string[] {
@@ -36,6 +46,7 @@ public class Carla : ModuleRules
       new string[]
       {
         "AIModule",
+        "AssetRegistry",
         "CoreUObject",
         "Engine",
         "Foliage",
@@ -56,11 +67,6 @@ public class Carla : ModuleRules
       );
 
     AddCarlaServerDependency(Target);
-  }
-
-  private bool IsWindows(ReadOnlyTargetRules Target)
-  {
-    return (Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32);
   }
 
   private bool UseDebugLibs(ReadOnlyTargetRules Target)

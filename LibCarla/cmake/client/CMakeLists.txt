@@ -7,14 +7,28 @@ file(GLOB libcarla_carla_rpclib "${RPCLIB_LIB_PATH}/*.*")
 install(FILES ${libcarla_carla_rpclib} DESTINATION lib)
 
 # Install boost headers.
-
 install(DIRECTORY "${BOOST_INCLUDE_PATH}/boost" DESTINATION include)
-
 file(GLOB boost_libraries "${BOOST_LIB_PATH}/*")
 install(FILES ${boost_libraries} DESTINATION lib)
 
-# Add sources.
+# Windows need libpng alongside with zlib to be installed
+if (WIN32)
+    # Install zlib headers.
+    file(GLOB zlib_includes "${ZLIB_INCLUDE_PATH}/*")
+    install(FILES ${zlib_includes} DESTINATION include)
+    # Install zlib lib.
+    file(GLOB zlib_libraries "${ZLIB_LIB_PATH}/*")
+    install(FILES ${zlib_libraries} DESTINATION lib)
 
+    # Install libpng headers.
+    file(GLOB pnglib_includes "${LIBPNG_INCLUDE_PATH}/*")
+    install(FILES ${pnglib_includes} DESTINATION include)
+    # Install zlib lib.
+    file(GLOB libpng_libraries "${LIBPNG_LIB_PATH}/*")
+    install(FILES ${libpng_libraries} DESTINATION lib)
+endif (WIN32)
+
+# Add sources.
 file(GLOB libcarla_carla_sources
     "${libcarla_source_path}/carla/*.cpp"
     "${libcarla_source_path}/carla/*.h")

@@ -5,6 +5,9 @@ Deprecated/PythonClient/dist
 Util/Build
 Install
 
+/ExportedMaps
+/RoadRunnerFiles/*/
+
 *.VC.db
 *.VC.opendb
 *.a
@@ -30,6 +33,7 @@ Install
 .gtest
 .tags*
 .vs
+.vscode
 __pycache__
 _benchmarks_results
 _images*

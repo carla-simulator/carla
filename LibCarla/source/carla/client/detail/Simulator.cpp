@@ -6,10 +6,13 @@
 
 #include "carla/client/detail/Simulator.h"
 
+#include "carla/Exception.h"
 #include "carla/Logging.h"
+#include "carla/RecurrentSharedFuture.h"
 #include "carla/client/BlueprintLibrary.h"
 #include "carla/client/Map.h"
 #include "carla/client/Sensor.h"
+#include "carla/client/TimeoutException.h"
 #include "carla/client/detail/ActorFactory.h"
 #include "carla/sensor/Deserializer.h"
 
@@ -52,6 +55,24 @@ namespace detail {
         GarbageCollectionPolicy::Enabled : GarbageCollectionPolicy::Disabled) {}
 
   // ===========================================================================
+  // -- Load a new episode -----------------------------------------------------
+  // ===========================================================================
+
+  EpisodeProxy Simulator::LoadEpisode(std::string map_name) {
+    const auto id = GetCurrentEpisode().GetId();
+    _client.LoadEpisode(std::move(map_name));
+    for (auto i = 0u; i < 10u; ++i) { // 10 attempts (at most 20 seconds).
+      using namespace std::literals::chrono_literals;
+      _episode->WaitForState(2s); // Ignore time-outs.
+      auto episode = GetCurrentEpisode();
+      if (episode.GetId() != id) {
+        return episode;
+      }
+    }
+    throw_exception(std::runtime_error("failed to connect to newly created map"));
+  }
+
+  // ===========================================================================
   // -- Access to current episode ----------------------------------------------
   // ===========================================================================
 
@@ -60,12 +81,28 @@ namespace detail {
       ValidateVersions(_client);
       _episode = std::make_shared<Episode>(_client);
       _episode->Listen();
+      if (!GetEpisodeSettings().synchronous_mode) {
+        WaitForTick(_client.GetTimeout());
+      }
     }
     return EpisodeProxy{shared_from_this()};
   }
 
   SharedPtr<Map> Simulator::GetCurrentMap() {
     return MakeShared<Map>(_client.GetMapInfo());
+  }
+
+  // ===========================================================================
+  // -- Tick -------------------------------------------------------------------
+  // ===========================================================================
+
+  Timestamp Simulator::WaitForTick(time_duration timeout) {
+    DEBUG_ASSERT(_episode != nullptr);
+    auto result = _episode->WaitForState(timeout);
+    if (!result.has_value()) {
+      throw_exception(TimeoutException(_client.GetEndpoint(), timeout));
+    }
+    return *result;
   }
 
   // ===========================================================================
@@ -107,7 +144,7 @@ namespace detail {
       actor = _client.SpawnActorWithParent(
           blueprint.MakeActorDescription(),
           transform,
-          parent->Serialize());
+          parent->GetId());
     } else {
       actor = _client.SpawnActor(
           blueprint.MakeActorDescription(),
@@ -129,7 +166,7 @@ namespace detail {
   bool Simulator::DestroyActor(Actor &actor) {
     bool success = true;
     if (actor.GetTypeId() != "sensor.other.lane_detector") { /// @todo
-      success = _client.DestroyActor(actor.Serialize());
+      success = _client.DestroyActor(actor.GetId());
     }
     if (success) {
       // Remove it's persistent state so it cannot access the client anymore.

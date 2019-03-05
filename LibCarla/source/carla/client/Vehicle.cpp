@@ -14,19 +14,41 @@
 namespace carla {
 namespace client {
 
+  template <typename AttributesT>
+  static bool GetControlIsSticky(const AttributesT &attributes) {
+    for (auto &&attribute : attributes) {
+      if (attribute.GetId() == "sticky_control") {
+        return attribute.template As<bool>();
+      }
+    }
+    return true;
+  }
+
+  Vehicle::Vehicle(ActorInitializer init)
+    : Actor(std::move(init)),
+      _is_control_sticky(GetControlIsSticky(GetAttributes())) {}
+
   void Vehicle::SetAutopilot(bool enabled) {
     GetEpisode().Lock()->SetVehicleAutopilot(*this, enabled);
   }
 
   void Vehicle::ApplyControl(const Control &control) {
-    if (control != _control) {
+    if (!_is_control_sticky || (control != _control)) {
       GetEpisode().Lock()->ApplyControlToVehicle(*this, control);
       _control = control;
     }
   }
 
+  void Vehicle::ApplyPhysicsControl(const PhysicsControl &physics_control) {
+    GetEpisode().Lock()->ApplyPhysicsControlToVehicle(*this, physics_control);
+  }
+
   Vehicle::Control Vehicle::GetControl() const {
     return GetEpisode().Lock()->GetActorDynamicState(*this).state.vehicle_data.control;
+  }
+
+  Vehicle::PhysicsControl Vehicle::GetPhysicsControl() const {
+    return GetEpisode().Lock()->GetVehiclePhysicsControl(*this);
   }
 
   float Vehicle::GetSpeedLimit() const {

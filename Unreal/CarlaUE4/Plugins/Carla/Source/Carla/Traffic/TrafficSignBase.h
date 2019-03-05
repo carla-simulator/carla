@@ -12,6 +12,8 @@
 
 #include "TrafficSignBase.generated.h"
 
+class UBoxComponent;
+
 UENUM(BlueprintType)
 enum class ETrafficSignState : uint8 {
   UNKNOWN            = 0u   UMETA(DisplayName = "UNKNOWN"),
@@ -25,7 +27,9 @@ enum class ETrafficSignState : uint8 {
   SpeedLimit_90             UMETA(DisplayName = "Speed Limit - 90"),
   SpeedLimit_100            UMETA(DisplayName = "Speed Limit - 100"),
   SpeedLimit_120            UMETA(DisplayName = "Speed Limit - 120"),
-  SpeedLimit_130            UMETA(DisplayName = "Speed Limit - 130")
+  SpeedLimit_130            UMETA(DisplayName = "Speed Limit - 130"),
+  StopSign                  UMETA(DisplayName = "Stop Sign"),
+  YieldSign                 UMETA(DisplayName = "Yield Sign")
 };
 
 UCLASS()
@@ -48,6 +52,9 @@ public:
   {
     TrafficSignState = State;
   }
+
+  UFUNCTION(BlueprintImplementableEvent)
+  UBoxComponent *GetTriggerVolume() const;
 
 private:
 

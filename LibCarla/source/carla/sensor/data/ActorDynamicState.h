@@ -61,7 +61,7 @@ namespace detail {
     float speed_limit;
     rpc::TrafficLightState traffic_light_state;
     bool has_traffic_light;
-    rpc::actor_id_type traffic_light_id;
+    rpc::ActorId traffic_light_id;
   };
 #pragma pack(pop)
 
@@ -99,6 +99,7 @@ namespace detail {
     float red_time;
     float elapsed_time;
     bool time_is_frozen;
+    uint32_t pole_index;
   };
 #pragma pack(pop)
 } // namespace detail
@@ -108,13 +109,15 @@ namespace detail {
   /// Dynamic state of an actor at a certain frame.
   struct ActorDynamicState {
 
-    actor_id_type id;
+    ActorId id;
 
     geom::Transform transform;
 
     geom::Vector3D velocity;
 
     geom::Vector3D angular_velocity;
+
+    geom::Vector3D acceleration;
 
     union TypeDependentState {
       detail::TrafficLightData traffic_light_data;
@@ -126,7 +129,7 @@ namespace detail {
 #pragma pack(pop)
 
   static_assert(
-      sizeof(ActorDynamicState) == 13u * sizeof(uint32_t) + sizeof(detail::VehicleData),
+      sizeof(ActorDynamicState) == 16u * sizeof(uint32_t) + sizeof(detail::VehicleData),
       "Invalid ActorDynamicState size!");
 
 } // namespace data
