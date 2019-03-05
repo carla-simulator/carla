@@ -110,30 +110,41 @@ class GlobalRoutePlanner(object):
         This method places zero cost links in the topology graph
         representing availability of lane changes.
         """
-
+        # TODO : Remove loop count variables
+        segmentcount = 0
         for segment in self._topology:
+            segmentcount += 1
             left_found, right_found = False, False
+            pathcounter = 0
             for waypoint in segment['path']:
+                pathcounter += 1
+                # print segmentcount, pathcounter
+
+                if segmentcount == 110 and pathcounter == 12:
+                    1+1
+                    pass
 
                 next_waypoint, next_road_option = None, None
 
                 if bool(waypoint.lane_change & carla.LaneChange.Right) and not right_found:
                     next_waypoint = waypoint.get_right_lane()
-                    next_road_option = RoadOption.CHANGELANERIGHT
-                    next_segment = self._localise(next_waypoint.transform.location)
-                    self._graph.add_edge(
-                        self._id_map[segment['entryxyz']], next_segment[0],
-                        length=0, type=next_road_option, change_waypoint = waypoint)
-                    right_found = True
+                    if next_waypoint is not None and next_waypoint.lane_type == 'driving':
+                        next_road_option = RoadOption.CHANGELANERIGHT
+                        next_segment = self._localise(next_waypoint.transform.location)
+                        self._graph.add_edge(
+                            self._id_map[segment['entryxyz']], next_segment[0],
+                            length=0, type=next_road_option, change_waypoint = waypoint)
+                        right_found = True
 
                 if bool(waypoint.lane_change & carla.LaneChange.Left) and not left_found:
                     next_waypoint = waypoint.get_left_lane()
-                    next_road_option = RoadOption.CHANGELANELEFT
-                    next_segment = self._localise(next_waypoint.transform.location)
-                    self._graph.add_edge(
-                        self._id_map[segment['entryxyz']], next_segment[0],
-                        length=0, type=next_road_option, change_waypoint = waypoint)
-                    left_found = True
+                    if next_waypoint is not None and next_waypoint.lane_type == 'driving':
+                        next_road_option = RoadOption.CHANGELANELEFT
+                        next_segment = self._localise(next_waypoint.transform.location)
+                        self._graph.add_edge(
+                            self._id_map[segment['entryxyz']], next_segment[0],
+                            length=0, type=next_road_option, change_waypoint = waypoint)
+                        left_found = True
 
                 if left_found and right_found: break
 
@@ -186,7 +197,10 @@ class GlobalRoutePlanner(object):
         for i in range(len(route) - 2):
             current_edge = self._graph.edges[route[i], route[i + 1]]
             next_edge = self._graph.edges[route[i + 1], route[i + 2]]
-            if next_edge['type'] != RoadOption.LANEFOLLOW:
+
+            if next_edge['type'] != RoadOption.LANEFOLLOW and next_edge['type'] != RoadOption.VOID:
+                if i == 0 and current_edge['type'] != RoadOption:
+                    plan.append(next_edge['type'])
                 plan.append(next_edge['type'])
             elif current_edge['type'] == RoadOption.LANEFOLLOW:
                 cv, nv = current_edge['exit_vector'], next_edge['net_vector']
@@ -217,6 +231,14 @@ class GlobalRoutePlanner(object):
                     elif next_cross > max(cross_list):
                         action = RoadOption.RIGHT
                     plan.append(action)
+                elif i < len(route) - 3 and i > 0: # Detecting lane to lane intersection
+                    previous_edge = self._graph.edges[route[i-1], route[i]]
+                    next_to_next_edge = self._graph.edges[route[i + 2], route[i + 3]]
+                    if next_to_next_edge['type'] != RoadOption.LANEFOLLOW and \
+                        next_to_next_edge['type'] != RoadOption.VOID and \
+                            previous_edge['type'] != RoadOption.LANEFOLLOW and \
+                                previous_edge['type'] != RoadOption.VOID:
+                        plan.append(RoadOption.STRAIGHT)
 
         return plan
 

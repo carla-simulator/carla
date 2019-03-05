@@ -39,8 +39,8 @@ class BasicAgent(Agent):
         self._proximity_threshold = 10.0  # meters
         self._state = AgentState.NAVIGATING
         args_lateral_dict = {
-            'K_P': 0.5,
-            'K_D': 0.0,
+            'K_P': 0.8,
+            'K_D': 0.01,
             'K_I': 0,
             'dt': 1.0/20.0}
         self._local_planner = LocalPlanner(
@@ -67,19 +67,30 @@ class BasicAgent(Agent):
             carla.Location(location[0], location[1], location[2]))
         self._current_waypoint = self._start_waypoint
 
+        print "Setting up GRP and retrieving route plan !"
         route = self._get_route(self._start_waypoint, self._end_waypoint)
+        print "Gathered route plan : ", route
         
-        for action in route:
-
+        print "Begining route assimilation !"
+        for i, action in enumerate(route):
+            print "Doing action : ", action
             if action == RoadOption.CHANGELANELEFT or action == RoadOption.CHANGELANERIGHT:
-                self._update_lane_change(action)
+                self._update_lane_change(action, 20)
             else:
-                wp_choice = self._generate_waypoint_to_junction()
+
+                if route[i+1] == RoadOption.VOID:
+                    1+1
+                    pass
+                next_lane_change = False
+                if i < len(route)-1 and route[i+1] != RoadOption.LANEFOLLOW and route[i+1] != RoadOption.VOID:
+                    next_lane_change = True
+                wp_choice = self._generate_waypoint_to_junction(next_lane_change)
                 if action == RoadOption.VOID:
-                    break
+                    break                
 
                 if len(wp_choice) > 1:
                     wp_choice, trajectories = self._seperate_trajectories(wp_choice)
+                    
                     current_transform = self._current_waypoint.transform
                     current_location = current_transform.location
                     projected_location = current_location + carla.Location(
@@ -177,33 +188,39 @@ class BasicAgent(Agent):
 
         return wp_choice, tragectories
 
-    def _generate_waypoint_to_junction(self):
+    def _generate_waypoint_to_junction(self, next_lane_change):
         """
         This method generates waypoint to a junction
         """
 
         wp_choice = self._current_waypoint.next(self._hop_resolution)
-        found_junction = len(wp_choice) < 2 and not self._grp.verify_intersection(wp_choice[0])
-        while found_junction:
+        not_junction = True
+
+        while not_junction:
+            if next_lane_change:
+                1+1
+                pass
             self._current_waypoint = wp_choice[0]
             self._solution.append((self._current_waypoint, RoadOption.LANEFOLLOW))
             wp_choice = self._current_waypoint.next(self._hop_resolution)
             #   Stop at destination
             if self._current_waypoint.transform.location.distance(
-                self._end_waypoint.transform.location) < self._hop_resolution: break
-            found_junction = len(wp_choice) < 2 and not self._grp.verify_intersection(wp_choice[0])
+                self._end_waypoint.transform.location) < 2 * self._hop_resolution: break
+            not_junction = len(wp_choice) < 2 and \
+                not self._grp.verify_intersection(wp_choice[0]) and \
+                not next_lane_change
 
         return wp_choice
 
-    def _update_lane_change(self, action):
+    def _update_lane_change(self, action, change_over_distance=10):
         """
         This method updates self._solution with waypoints for lane change
         """
 
         if action == RoadOption.CHANGELANELEFT:
-            self._current_waypoint = self._current_waypoint.get_left_lane().next(3)[0]
+            self._current_waypoint = self._current_waypoint.get_left_lane().next(change_over_distance)[0]
         else:
-            self._current_waypoint = self._current_waypoint.get_right_lane().next(3)[0]
+            self._current_waypoint = self._current_waypoint.get_right_lane().next(change_over_distance)[0]
         self._solution.append((self._current_waypoint, action))
 
     def _get_route(self, start_waypoint, end_waypoint):
