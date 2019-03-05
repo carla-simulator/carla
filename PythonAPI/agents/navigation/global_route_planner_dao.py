@@ -61,4 +61,5 @@ class GlobalRoutePlannerDAO(object):
         """
         The method returns waytpoint at given location
         """
-        return self._wmap.get_waypoint(location)
+        waypoint = self._wmap.get_waypoint(location)
+        return waypoint
