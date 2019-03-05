@@ -20,6 +20,7 @@
 - `show_recorder_file_info(string filename)`
 - `show_recorder_collisions(string filename, char category1, char category2)`
 - `show_recorder_actors_blocked(string filename, float min_time, float min_distance)`
+- `set_replayer_speed(float time_factor)`
 - `apply_batch(commands, do_tick=False)`
 - `apply_batch_sync(commands, do_tick=False) -> list(carla.command.Response)`
 

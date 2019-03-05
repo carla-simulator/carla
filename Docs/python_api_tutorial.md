@@ -449,6 +449,16 @@ client.replay_file("recording01.log", start, duration, camera)
 * **duration**: we can say how many seconds we want to play. If the simulation has not reached the end, then all actors will have autopilot enabled automatically. The intention here is to allow for replaying a piece of a simulation and then let all actors start driving in autopilot again.
 * **camera**: we can specify the Id of an actor and then the camera will follow that actor while replaying. Continue reading to know which Id has an actor.
 
+We can specify the speed for the replayer at any moment, using the next API:
+
+```py
+client.set_replayer_speed(2.0)
+```
+A value greater than 1.0 will play in fast motion, and a value below 1.0 will play in slow motion, being 1.0 the default value for normal playback.
+As a performance trick, with values over 2.0 the interpolation of positions is disabled.
+
+The call of this API will not stop the replayer in course, it will change just the speed, so you can change that several times while the replayer is running.
+
 We can know details about a recorded simulation, using this API:
 
 ```py

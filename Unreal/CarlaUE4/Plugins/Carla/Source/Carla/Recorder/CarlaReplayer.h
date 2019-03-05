@@ -60,6 +60,9 @@ public:
     Helper.SetEpisode(ThisEpisode);
   }
 
+  // playback speed (time factor)
+  void SetSpeed(double NewTimeFactor);
+
   // tick for the replayer
   void Tick(float Time);
 
@@ -85,6 +88,8 @@ private:
   CarlaReplayerHelper Helper;
   // follow camera
   uint32_t FollowId;
+  // speed (time factor)
+  double TimeFactor { 1.0 };
 
   // utils
   bool ReadHeader();

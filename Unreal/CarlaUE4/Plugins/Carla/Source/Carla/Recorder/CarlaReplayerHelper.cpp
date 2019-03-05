@@ -228,11 +228,21 @@ bool CarlaReplayerHelper::ProcessReplayerPosition(CarlaRecorderPosition Pos1, Ca
   AActor *Actor = Episode->GetActorRegistry().Find(Pos1.DatabaseId).GetActor();
   if (Actor  && !Actor->IsPendingKill())
   {
-    // interpolate transform
-    FVector Location = FMath::Lerp(FVector(Pos1.Location), FVector(Pos2.Location), Per);
-    FRotator Rotation = FMath::Lerp(FRotator::MakeFromEuler(Pos1.Rotation), FRotator::MakeFromEuler(Pos2.Rotation), Per);
-    FTransform Trans(Rotation, Location, FVector(1, 1, 1));
-    Actor->SetActorTransform(Trans, false, nullptr, ETeleportType::TeleportPhysics);
+    // check to assign first position or interpolate between both
+    if (Per == 0.0)
+    {
+      // assign position 1
+      FTransform Trans(FRotator::MakeFromEuler(Pos1.Rotation), FVector(Pos1.Location), FVector(1, 1, 1));
+      Actor->SetActorTransform(Trans, false, nullptr, ETeleportType::TeleportPhysics);
+    }
+    else
+    {
+      // interpolate positions
+      FVector Location = FMath::Lerp(FVector(Pos1.Location), FVector(Pos2.Location), Per);
+      FRotator Rotation = FMath::Lerp(FRotator::MakeFromEuler(Pos1.Rotation), FRotator::MakeFromEuler(Pos2.Rotation), Per);
+      FTransform Trans(Rotation, Location, FVector(1, 1, 1));
+      Actor->SetActorTransform(Trans, false, nullptr, ETeleportType::TeleportPhysics);
+    }
     // reset velocities
     ResetVelocities(Actor);
     return true;
