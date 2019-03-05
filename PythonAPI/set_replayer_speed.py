@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
@@ -11,7 +11,7 @@ import os
 import sys
 
 try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
+    sys.path.append(glob.glob('**/*%d.%d-%s.egg' % (
         sys.version_info.major,
         sys.version_info.minor,
         'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
@@ -21,6 +21,8 @@ except IndexError:
 import carla
 
 import argparse
+import random
+import time
 
 
 def main():
@@ -39,29 +41,6 @@ def main():
         type=int,
         help='TCP port to listen to (default: 2000)')
     argparser.add_argument(
-        '-s', '--start',
-        metavar='S',
-        default=0.0,
-        type=float,
-        help='starting time (default: 0.0)')
-    argparser.add_argument(
-        '-d', '--duration',
-        metavar='D',
-        default=0.0,
-        type=float,
-        help='duration (default: 0.0)')
-    argparser.add_argument(
-        '-f', '--recorder_filename',
-        metavar='F',
-        default="test1.log",
-        help='recorder filename (test1.log)')
-    argparser.add_argument(
-        '-c', '--camera',
-        metavar='C',
-        default=0,
-        type=int,
-        help='camera follows an actor (ex: 82)')
-    argparser.add_argument(
         '-x', '--speed',
         metavar='X',
         default=1.0,
@@ -72,14 +51,14 @@ def main():
     try:
 
         client = carla.Client(args.host, args.port)
-        client.set_timeout(60.0)
+        client.set_timeout(2.0)
+
+        # client.load_world("Town03")
 
         client.set_replayer_speed(args.speed)
-        print(client.replay_file(args.recorder_filename, args.start, args.duration, args.camera))
 
     finally:
         pass
-
 
 if __name__ == '__main__':
 

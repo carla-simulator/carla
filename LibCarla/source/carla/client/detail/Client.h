@@ -182,6 +182,8 @@ namespace detail {
 
     std::string ReplayFile(std::string name, double start, double duration, uint32_t follow_id);
 
+    void SetReplayerSpeed(double time_factor);
+
     void SubscribeToStream(
         const streaming::Token &token,
         std::function<void(Buffer)> callback);

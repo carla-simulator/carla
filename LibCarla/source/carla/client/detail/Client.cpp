@@ -291,6 +291,10 @@ namespace detail {
     return _pimpl->CallAndWait<std::string>("replay_file", name, start, duration, follow_id);
   }
 
+  void Client::SetReplayerSpeed(double time_factor) {
+    _pimpl->AsyncCall("set_replayer_speed", time_factor);
+  }
+
   void Client::SubscribeToStream(
       const streaming::Token &token,
       std::function<void(Buffer)> callback) {

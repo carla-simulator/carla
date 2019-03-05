@@ -84,6 +84,10 @@ namespace client {
       return _simulator->ReplayFile(name, start, duration, follow_id);
     }
 
+    void SetReplayerSpeed(double time_factor) {
+      _simulator->SetReplayerSpeed(time_factor);
+    }
+
     void ApplyBatch(
         std::vector<rpc::Command> commands,
         bool do_tick_cue = false) const {
