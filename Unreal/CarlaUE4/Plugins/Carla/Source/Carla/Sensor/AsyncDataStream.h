@@ -63,7 +63,7 @@ private:
 
   /// @pre This functions needs to be called in the game-thread.
   template <typename SensorT>
-  explicit FAsyncDataStreamTmpl(const SensorT &InSensor, StreamType InStream);
+  explicit FAsyncDataStreamTmpl(const SensorT &InSensor, float Timepoint, StreamType InStream);
 
   StreamType Stream;
 
@@ -95,13 +95,15 @@ template <typename T>
 template <typename SensorT>
 inline FAsyncDataStreamTmpl<T>::FAsyncDataStreamTmpl(
     const SensorT &Sensor,
+    float Timepoint,
     StreamType InStream)
   : Stream(std::move(InStream)),
-    Header([&Sensor]() {
+    Header([&Sensor, Timepoint]() {
       check(IsInGameThread());
       using Serializer = carla::sensor::s11n::SensorHeaderSerializer;
       return Serializer::Serialize(
           carla::sensor::SensorRegistry::template get<SensorT*>::index,
           GFrameCounter,
+          Timepoint,
           Sensor.GetActorTransform());
     }()) {}

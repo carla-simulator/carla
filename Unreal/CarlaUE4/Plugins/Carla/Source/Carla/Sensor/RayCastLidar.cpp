@@ -69,7 +69,7 @@ void ARayCastLidar::Tick(const float DeltaTime)
 
   ReadPoints(DeltaTime);
 
-  auto DataStream = GetDataStream(*this);
+  auto DataStream = GetDataStream(*this, GetWorld()->GetTimeSeconds());
   DataStream.Send(*this, LidarMeasurement, DataStream.PopBufferFromPool());
 }
 
