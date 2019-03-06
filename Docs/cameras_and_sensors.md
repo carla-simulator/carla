@@ -30,10 +30,13 @@ sensor.listen(lambda data: do_something(data))
 ```
 
 Note that each sensor has a different set of attributes and produces different
-type of data. However, the data produced by a sensor comes always tagged with a
-**frame number** and a **transform**. The frame number is used to identify the
-frame at which the measurement took place, the transform gives you the
-transformation in world coordinates of the sensor at that same frame.
+type of data. However, the data produced by a sensor comes always tagged with:
+
+| Sensor data attribute | Type   | Description |
+| --------------------- | ------ | ----------- |
+| `frame_number`        | int    | Frame number when the measurement took place |
+| `timestamp`           | double | Timestamp of the measurement in simulation seconds since the beginning of the epispode |
+| `transform`           | carla.Transform | Transform in world coordinates of the sensor at the time of the measurement |
 
 Most sensor data objects, like images and lidar measurements, have a function
 for saving the measurements to disk.
@@ -81,7 +84,8 @@ objects.
 
 | Sensor data attribute | Type | Description |
 | --------------------- | ---- | ----------- |
-| `frame_number`        | int  | Frame count when the measurement took place |
+| `frame_number`        | int    | Frame number when the measurement took place |
+| `timestamp`           | double | Timestamp of the measurement in simulation seconds since the beginning of the epispode |
 | `transform`           | carla.Transform | Transform in world coordinates of the sensor at the time of the measurement |
 | `width`               | int  | Image width in pixels |
 | `height`              | int  | Image height in pixels |
@@ -108,7 +112,8 @@ objects.
 
 | Sensor data attribute | Type | Description |
 | --------------------- | ---- | ----------- |
-| `frame_number`        | int  | Frame count when the measurement took place |
+| `frame_number`        | int    | Frame number when the measurement took place |
+| `timestamp`           | double | Timestamp of the measurement in simulation seconds since the beginning of the epispode |
 | `transform`           | carla.Transform | Transform in world coordinates of the sensor at the time of the measurement |
 | `width`               | int  | Image width in pixels |
 | `height`              | int  | Image height in pixels |
@@ -146,7 +151,8 @@ objects.
 
 | Sensor data attribute | Type | Description |
 | --------------------- | ---- | ----------- |
-| `frame_number`        | int  | Frame count when the measurement took place |
+| `frame_number`        | int    | Frame number when the measurement took place |
+| `timestamp`           | double | Timestamp of the measurement in simulation seconds since the beginning of the epispode |
 | `transform`           | carla.Transform | Transform in world coordinates of the sensor at the time of the measurement |
 | `width`               | int  | Image width in pixels |
 | `height`              | int  | Image height in pixels |
@@ -213,7 +219,8 @@ objects.
 
 | Sensor data attribute      | Type       | Description |
 | -------------------------- | ---------- | ----------- |
-| `frame_number`             | int        | Frame count when the measurement took place |
+| `frame_number`             | int        | Frame number when the measurement took place |
+| `timestamp`                | double     | Timestamp of the measurement in simulation seconds since the beginning of the epispode |
 | `transform`                | carla.Transform | Transform in world coordinates of the sensor at the time of the measurement |
 | `horizontal_angle`         | float      | Angle in XY plane of the lidar this frame (in degrees) |
 | `channels`                 | int        | Number of channels (lasers) of the lidar |
@@ -251,7 +258,8 @@ object for each collision registered
 
 | Sensor data attribute  | Type        | Description |
 | ---------------------- | ----------- | ----------- |
-| `frame_number`         | int         | Frame count when the measurement took place |
+| `frame_number`         | int         | Frame number when the measurement took place |
+| `timestamp`            | double      | Timestamp of the measurement in simulation seconds since the beginning of the epispode |
 | `transform`            | carla.Transform | Transform in world coordinates of the sensor at the time of the measurement |
 | `actor`                | carla.Actor | Actor that measured the collision ("self" actor) |
 | `other_actor`          | carla.Actor | Actor against whom we collide |
@@ -282,7 +290,8 @@ object for each lane marking crossed by the actor
 
 | Sensor data attribute   | Type        | Description |
 | ----------------------- | ----------- | ----------- |
-| `frame_number`          | int         | Frame count when the measurement took place |
+| `frame_number`          | int         | Frame number when the measurement took place |
+| `timestamp`             | double      | Timestamp of the measurement in simulation seconds since the beginning of the epispode |
 | `transform`             | carla.Transform | Transform in world coordinates of the sensor at the time of the measurement |
 | `actor`                 | carla.Actor | Actor that invaded another lane ("self" actor) |
 | `crossed_lane_markings` | carla.LaneMarking list | List of lane markings that have been crossed |
@@ -300,7 +309,8 @@ objects.
 
 | Sensor data attribute  | Type        | Description |
 | ---------------------- | ----------- | ----------- |
-| `frame_number`         | int         | Frame count when the measurement took place |
+| `frame_number`         | int         | Frame number when the measurement took place |
+| `timestamp`            | double      | Timestamp of the measurement in simulation seconds since the beginning of the epispode |
 | `transform`            | carla.Transform | Transform in world coordinates of the sensor at the time of the measurement |
 | `latitude`             | double | Latitude position of the actor |
 | `longitude`            | double | Longitude position of the actor |

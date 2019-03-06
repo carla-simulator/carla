@@ -55,6 +55,7 @@ namespace client {
     try {
       return MakeShared<sensor::data::GnssEvent>(
                timestamp.frame_count,
+               timestamp.elapsed_seconds,
                GetTransform(),
                _geo_reference.Transform(GetLocation()));
     } catch (const std::exception &e) {
