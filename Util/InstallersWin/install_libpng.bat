@@ -122,7 +122,8 @@ if not exist "%LIBPNG_INSTALL_DIR%\include" (
     mkdir "%LIBPNG_INSTALL_DIR%\include"
 )
 
-lib /nologo /MACHINE:X64 /LTCG /OUT:"%LIBPNG_INSTALL_DIR%\lib\libpng.lib" /LIBPATH:"%ZLIB_INST_DIR%\lib" "*.obj" "zlib.lib"
+lib /nologo /MACHINE:X64 /LTCG /OUT:"%LIBPNG_INSTALL_DIR%\lib\libpng.lib"^
+ /LIBPATH:"%ZLIB_INST_DIR%\lib" "*.obj" "zlibstatic.lib"
 
 copy "%LIBPNG_SOURCE_DIR%\png.h" "%LIBPNG_INSTALL_DIR%\include\png.h"
 copy "%LIBPNG_SOURCE_DIR%\pngconf.h" "%LIBPNG_INSTALL_DIR%\include\pngconf.h"
