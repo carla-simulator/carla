@@ -35,6 +35,18 @@ class CarlaReplayer
   #pragma pack(pop)
 
 public:
+  struct PlayAfterLoadMap
+  {
+    bool Enabled;
+    std::string Filename;
+    FString Mapfile;
+    double TimeStart;
+    double Duration;
+    uint32_t FollowId;
+    double TimeFactor;
+  };
+
+  static PlayAfterLoadMap Autoplay;
 
   CarlaReplayer() {};
   ~CarlaReplayer() { Stop(); };
@@ -62,6 +74,9 @@ public:
 
   // playback speed (time factor)
   void SetSpeed(double NewTimeFactor);
+
+  // check if after a map is loaded, we need to replay
+  void CheckPlayAfterMapLoaded(void);
 
   // tick for the replayer
   void Tick(float Time);
