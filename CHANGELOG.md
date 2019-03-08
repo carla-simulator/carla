@@ -1,5 +1,6 @@
 ## Latest Changes
   * Allow usage of hostname for carla::Client and resolve them to IP address
+  * Added `map.transform_to_geolocation` to transform Location to GNSS GeoLocation
   * Fixed python client DLL error on Windows
 
 ## CARLA 0.9.4

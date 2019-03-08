@@ -254,6 +254,7 @@
 - `get_waypoint(location, project_to_road=True)`
 - `get_topology()`
 - `generate_waypoints(distance)`
+- `transform_to_geolocation(location)`
 - `to_opendrive()`
 - `save_to_disk(path=self.name)`
 
