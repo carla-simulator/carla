@@ -10,6 +10,9 @@
 #include <ctime>
 #include <sstream>
 
+// structure to save replaying info when need to load a new map (static member by now)
+CarlaReplayer::PlayAfterLoadMap CarlaReplayer::Autoplay { false, "", "", 0.0, 0.0, 0, 1.0 };
+
 void CarlaReplayer::Stop(bool bKeepActors)
 {
   if (Enabled)
@@ -22,20 +25,11 @@ void CarlaReplayer::Stop(bool bKeepActors)
       ProcessToTime(TotalTime);
     }
 
-    File.close();
-
     // callback
     Helper.ProcessReplayerFinish(bKeepActors);
   }
 
-  if (!bKeepActors)
-  {
-    UE_LOG(LogCarla, Log, TEXT("Replayer stop"));
-  }
-  else
-  {
-    UE_LOG(LogCarla, Log, TEXT("Replayer stop (keeping actors)"));
-  }
+  File.close();
 }
 
 bool CarlaReplayer::ReadHeader()
@@ -73,8 +67,6 @@ void CarlaReplayer::Rewind(void)
 
   // read geneal Info
   RecInfo.Read(File);
-
-  // UE_LOG(LogCarla, Log, TEXT("Replayer rewind"));
 }
 
 // read last frame in File and return the Total time recorded
@@ -126,7 +118,92 @@ std::string CarlaReplayer::ReplayFile(std::string Filename, double TimeStart, do
   if (!File.is_open())
   {
     Info << "File " << Filename << " not found on server\n";
+    Stop();
     return Info.str();
+  }
+
+  // from start
+  Rewind();
+
+  // check to load map if different
+  if (Episode->GetMapName() != RecInfo.Mapfile)
+  {
+    if (!Episode->LoadNewEpisode(RecInfo.Mapfile))
+    {
+      Info << "Could not load mapfile " << TCHAR_TO_UTF8(*RecInfo.Mapfile) << std::endl;
+      Stop();
+      return Info.str();
+    }
+    Info << "Loading map " << TCHAR_TO_UTF8(*RecInfo.Mapfile) << std::endl;
+    Info << "Replayer will start after map is loaded..." << std::endl;
+
+    // prepare autoplay after map is loaded
+    Autoplay.Enabled = true;
+    Autoplay.Filename = Filename;
+    Autoplay.Mapfile = RecInfo.Mapfile;
+    Autoplay.TimeStart = TimeStart;
+    Autoplay.Duration = Duration;
+    Autoplay.FollowId = FollowId;
+    Autoplay.TimeFactor = TimeFactor;
+  }
+
+  // get Total time of recorder
+  TotalTime = GetTotalTime();
+  Info << "Total time recorded: " << TotalTime << std::endl;
+
+  // set time to start replayer
+  if (TimeStart < 0.0f)
+  {
+    TimeStart = TotalTime + TimeStart;
+    if (TimeStart < 0.0f)
+      TimeStart = 0.0f;
+  }
+
+  // set time to stop replayer
+  if (Duration > 0.0f)
+    TimeToStop = TimeStart + Duration;
+  else
+    TimeToStop = TotalTime;
+
+  Info << "Replaying from " << TimeStart << " s - " << TimeToStop << " s (" << TotalTime << " s)" <<
+      std::endl;
+
+  // set the follow Id
+  FollowId = ThisFollowId;
+
+  // if we don't need to load a new map, then start
+  if (!Autoplay.Enabled)
+  {
+    // process all events until the time
+    ProcessToTime(TimeStart);
+    // mark as enabled
+    Enabled = true;
+  }
+
+  return Info.str();
+}
+
+void CarlaReplayer::CheckPlayAfterMapLoaded(void)
+{
+
+  // check if the autoplay is enabled (means waiting until map is loaded)
+  if (!Autoplay.Enabled)
+    return;
+
+  // disable
+  Autoplay.Enabled = false;
+
+  // check to stop if we are replaying another
+  if (Enabled)
+  {
+    Stop();
+  }
+
+  // try to open
+  File.open(Autoplay.Filename, std::ios::binary);
+  if (!File.is_open())
+  {
+    return;
   }
 
   // from start
@@ -134,41 +211,33 @@ std::string CarlaReplayer::ReplayFile(std::string Filename, double TimeStart, do
 
   // get Total time of recorder
   TotalTime = GetTotalTime();
-  Info << "Total time recorded: " << TotalTime << std::endl;
+
   // set time to start replayer
+  double TimeStart = Autoplay.TimeStart;
   if (TimeStart < 0.0f)
   {
-    TimeStart = TotalTime + TimeStart;
+    TimeStart = TotalTime + Autoplay.TimeStart;
     if (TimeStart < 0.0f)
-    {
       TimeStart = 0.0f;
-    }
   }
+
   // set time to stop replayer
-  if (Duration > 0.0f)
-  {
-    TimeToStop = TimeStart + Duration;
-  }
+  if (Autoplay.Duration > 0.0f)
+    TimeToStop = TimeStart + Autoplay.Duration;
   else
-  {
     TimeToStop = TotalTime;
-  }
-  Info << "Replaying from " << TimeStart << " s - " << TimeToStop << " s (" << TotalTime << " s)" <<
-      std::endl;
+
+  // set the follow Id
+  FollowId = Autoplay.FollowId;
+
+  // apply time factor
+  TimeFactor = Autoplay.TimeFactor;
 
   // process all events until the time
   ProcessToTime(TimeStart);
 
-  // set the follow Id
-  if (ThisFollowId != 0)
-    FollowId = ThisFollowId;
-  else
-    FollowId = 0;
-
   // mark as enabled
   Enabled = true;
-
-  return Info.str();
 }
 
 void CarlaReplayer::ProcessToTime(double Time)
@@ -302,18 +371,15 @@ void CarlaReplayer::ProcessEventsAdd(void)
     if (!EventAdd.Description.Id.StartsWith("sensor."))
     {
       // show log
-      /*
-      Info.str("");
-      Info << " Create " << EventAdd.DatabaseId << ": " << TCHAR_TO_UTF8(*EventAdd.Description.Id) << " (" <<
-        EventAdd.Description.UId << ") at (" << EventAdd.Location.X << ", " <<
-        EventAdd.Location.Y << ", " << EventAdd.Location.Z << ")" << std::endl;
-      for (auto &Att : EventAdd.Description.Attributes)
-      {
-        Info << "  " << TCHAR_TO_UTF8(*Att.Id) << " = " << TCHAR_TO_UTF8(*Att.Value) << std::endl;
-      }
-
-      UE_LOG(LogCarla, Log, "%s", Info.str().c_str());
-      */
+      // Info.str("");
+      // Info << " Create " << EventAdd.DatabaseId << ": " << TCHAR_TO_UTF8(*EventAdd.Description.Id) << " (" <<
+        // EventAdd.Description.UId << ") at (" << EventAdd.Location.X << ", " <<
+        // EventAdd.Location.Y << ", " << EventAdd.Location.Z << ")" << std::endl;
+      // for (auto &Att : EventAdd.Description.Attributes)
+      // {
+      //   Info << "  " << TCHAR_TO_UTF8(*Att.Id) << " = " << TCHAR_TO_UTF8(*Att.Value) << std::endl;
+      // }
+      // UE_LOG(LogCarla, Log, TEXT("%s"), Info.str().c_str());
 
       // auto Result = CallbackEventAdd(
       auto Result = Helper.ProcessReplayerEventAdd(
@@ -331,10 +397,14 @@ void CarlaReplayer::ProcessEventsAdd(void)
 
         // actor created but with different id
         case 1:
-          if (Result.second != EventAdd.DatabaseId)
-          {
-            // UE_LOG(LogCarla, Log, TEXT("actor created but with different id"));
-          }
+          // if (Result.second != EventAdd.DatabaseId)
+          // {
+          //   UE_LOG(LogCarla, Log, TEXT("actor created but with different id"));
+          // }
+          // else
+          // {
+          //   UE_LOG(LogCarla, Log, TEXT("actor created with same id"));
+          // }
           // mapping id (recorded Id is a new Id in replayer)
           MappedId[EventAdd.DatabaseId] = Result.second;
           break;
@@ -433,6 +503,8 @@ void CarlaReplayer::ProcessPositions(void)
     {
       Pos.DatabaseId = NewId->second;
     }
+    else
+      UE_LOG(LogCarla, Log, TEXT("Actor not found when trying to move from replayer (id. %d)"), Pos.DatabaseId);
     CurrPos.push_back(std::move(Pos));
   }
 }
