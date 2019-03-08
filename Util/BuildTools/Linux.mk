@@ -60,6 +60,9 @@ benchmark: LibCarla.release
 	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --benchmark $(ARGS)
 	@cat profiler.csv
 
+smoke_tests:
+	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --smoke-2 --smoke-3 $(ARGS)
+
 CarlaUE4Editor: LibCarla.server.release
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --build
 

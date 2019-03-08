@@ -12,7 +12,7 @@ import unittest
 from subprocess import check_output
 
 
-class testClient(unittest.TestCase):
+class TestClient(unittest.TestCase):
     def test_client_version(self):
         c = carla.Client('localhost', 8080)
         v = c.get_client_version()

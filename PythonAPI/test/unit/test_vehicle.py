@@ -9,7 +9,7 @@ import carla
 import unittest
 
 
-class testVehicleControl(unittest.TestCase):
+class TestVehicleControl(unittest.TestCase):
     def test_default_values(self):
         c = carla.VehicleControl()
         self.assertEqual(c.throttle, 0.0)
@@ -38,7 +38,7 @@ class testVehicleControl(unittest.TestCase):
         self.assertEqual(c.reverse, True)
 
 
-class testVehiclePhysicsControl(unittest.TestCase):
+class TestVehiclePhysicsControl(unittest.TestCase):
     def test_named_args(self):
 
         torque_curve = [[0, 400],
