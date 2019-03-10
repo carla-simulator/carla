@@ -7,6 +7,7 @@
 import glob
 import os
 import sys
+import unittest
 
 try:
     sys.path.append(glob.glob('../../dist/carla-*%d.%d-%s.egg' % (
@@ -16,4 +17,16 @@ try:
 except IndexError:
     pass
 
+import carla
+
+
 TESTING_ADDRESS=('localhost', 3654)
+
+
+class SmokeTest(unittest.TestCase):
+    def setUp(self):
+        self.client = carla.Client(*TESTING_ADDRESS)
+        self.client.set_timeout(2.0)
+
+    def tearDown(self):
+        self.client = None
