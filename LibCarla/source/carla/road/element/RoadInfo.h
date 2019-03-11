@@ -8,8 +8,9 @@
 
 #include "carla/road/element/RoadInfoVisitor.h"
 
-#include <string>
 #include <map>
+#include <string>
+#include <vector>
 
 namespace carla {
 namespace road {
