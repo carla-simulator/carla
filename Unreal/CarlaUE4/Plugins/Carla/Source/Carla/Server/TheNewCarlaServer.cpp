@@ -726,7 +726,6 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
     return R<std::string>(Episode->GetRecorder()->ShowFileInfo(
-        carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
         name));
   };
 
@@ -734,7 +733,6 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
     return R<std::string>(Episode->GetRecorder()->ShowFileCollisions(
-        carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
         name,
         type1,
         type2));
@@ -744,7 +742,6 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
     return R<std::string>(Episode->GetRecorder()->ShowFileActorsBlocked(
-        carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
         name,
         min_time,
         min_distance));
@@ -754,7 +751,6 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
     return R<std::string>(Episode->GetRecorder()->ReplayFile(
-        carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
         name,
         start,
         duration,

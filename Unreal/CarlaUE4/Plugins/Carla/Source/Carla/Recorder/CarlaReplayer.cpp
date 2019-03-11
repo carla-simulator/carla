@@ -111,13 +111,16 @@ std::string CarlaReplayer::ReplayFile(std::string Filename, double TimeStart, do
     Stop();
   }
 
-  Info << "Replaying File: " << Filename << std::endl;
+  // get the final path + filename
+  std::string Filename2 = GetRecorderFilename(Filename);
+
+  Info << "Replaying File: " << Filename2 << std::endl;
 
   // try to open
-  File.open(Filename, std::ios::binary);
+  File.open(Filename2, std::ios::binary);
   if (!File.is_open())
   {
-    Info << "File " << Filename << " not found on server\n";
+    Info << "File " << Filename2 << " not found on server\n";
     Stop();
     return Info.str();
   }
@@ -139,7 +142,7 @@ std::string CarlaReplayer::ReplayFile(std::string Filename, double TimeStart, do
 
     // prepare autoplay after map is loaded
     Autoplay.Enabled = true;
-    Autoplay.Filename = Filename;
+    Autoplay.Filename = Filename2;
     Autoplay.Mapfile = RecInfo.Mapfile;
     Autoplay.TimeStart = TimeStart;
     Autoplay.Duration = Duration;
