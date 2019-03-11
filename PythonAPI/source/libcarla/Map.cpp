@@ -47,6 +47,12 @@ static auto GetTopology(const carla::client::Map &self) {
   return result;
 }
 
+static carla::geom::GeoLocation ToGeolocation(
+    const carla::client::Map &self,
+    const carla::geom::Location &location) {
+  return self.GetGeoReference().Transform(location);
+}
+
 void export_map() {
   using namespace boost::python;
   namespace cc = carla::client;
@@ -58,6 +64,7 @@ void export_map() {
     .def("get_waypoint", &cc::Map::GetWaypoint, (arg("location"), arg("project_to_road")=true))
     .def("get_topology", &GetTopology)
     .def("generate_waypoints", CALL_RETURNING_LIST_1(cc::Map, GenerateWaypoints, double), (args("distance")))
+    .def("transform_to_geolocation", &ToGeolocation, (arg("location")))
     .def("to_opendrive", CALL_RETURNING_COPY(cc::Map, GetOpenDrive))
     .def("save_to_disk", &SaveOpenDriveToDisk, (arg("path")=""))
     .def(self_ns::str(self_ns::self))
@@ -71,11 +78,13 @@ void export_map() {
   ;
 
   class_<cc::Waypoint, boost::noncopyable, boost::shared_ptr<cc::Waypoint>>("Waypoint", no_init)
+    .add_property("id", &cc::Waypoint::GetId)
     .add_property("transform", CALL_RETURNING_COPY(cc::Waypoint, GetTransform))
     .add_property("is_intersection", &cc::Waypoint::IsIntersection)
     .add_property("lane_width", &cc::Waypoint::GetLaneWidth)
     .add_property("road_id", &cc::Waypoint::GetRoadId)
     .add_property("lane_id", &cc::Waypoint::GetLaneId)
+    .add_property("s", &cc::Waypoint::GetDistance)
     .add_property("lane_change", &cc::Waypoint::GetLaneChange)
     .add_property("lane_type", &cc::Waypoint::GetType)
     .def("next", CALL_RETURNING_LIST_1(cc::Waypoint, Next, double), (args("distance")))

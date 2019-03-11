@@ -228,9 +228,9 @@ void export_sensor_data() {
   ;
 
   class_<csd::GnssEvent, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::GnssEvent>>("GnssEvent", no_init)
-    .add_property("latitude", CALL_RETURNING_COPY(csd::GnssEvent, GetLatitude))
-    .add_property("longitude", CALL_RETURNING_COPY(csd::GnssEvent, GetLongitude))
-    .add_property("altitude", CALL_RETURNING_COPY(csd::GnssEvent, GetAltitude))
+    .add_property("latitude", &csd::GnssEvent::GetLatitude)
+    .add_property("longitude", &csd::GnssEvent::GetLongitude)
+    .add_property("altitude", &csd::GnssEvent::GetAltitude)
     .def(self_ns::str(self_ns::self))
   ;
 }
