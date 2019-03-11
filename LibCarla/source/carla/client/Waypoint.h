@@ -8,8 +8,9 @@
 
 #include "carla/Memory.h"
 #include "carla/NonCopyable.h"
-#include "carla/road/element/Waypoint.h"
 #include "carla/road/element/RoadInfoMarkRecord.h"
+#include "carla/road/element/Waypoint.h"
+#include "carla/road/element/WaypointHash.h"
 
 namespace carla {
 namespace client {
@@ -31,6 +32,14 @@ namespace client {
 
     ~Waypoint();
 
+    /// Returns an unique Id identifying this waypoint.
+    ///
+    /// The Id takes into account OpenDrive's road Id, lane Id, and s distance
+    /// on its road segment up to half-centimetre precision.
+    uint64_t GetId() const {
+      return road::element::WaypointHash()(_waypoint);
+    }
+
     const geom::Transform &GetTransform() const {
       return _transform;
     }
@@ -49,6 +58,10 @@ namespace client {
 
     int GetLaneId() const {
       return _waypoint.GetLaneId();
+    }
+
+    double GetDistance() const {
+      return _waypoint.GetDistance();
     }
 
     std::string GetType() const {

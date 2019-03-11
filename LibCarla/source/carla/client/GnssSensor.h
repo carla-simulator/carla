@@ -6,13 +6,10 @@
 #pragma once
 
 #include "carla/client/Sensor.h"
-#include <string>
+#include "carla/geom/GeoLocation.h"
 
 namespace carla {
 namespace client {
-
-  class Map;
-  class Vehicle;
 
   class GnssSensor final : public Sensor {
   public:
@@ -43,14 +40,9 @@ namespace client {
 
     SharedPtr<sensor::SensorData> TickGnssSensor(const Timestamp &timestamp);
 
-    double ParseDouble(std::string const &stringValue) const;
-
-    double _map_latitude;
-
-    double _map_longitude;
+    geom::GeoLocation _geo_reference;
 
     bool _is_listening = false;
-
   };
 
 } // namespace client

@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "carla/geom/GeoLocation.h"
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -305,7 +307,7 @@ namespace types {
   /////////////////////////////////////////////////////////////////
 
   struct OpenDriveData {
-    std::string geoReference;
+    geom::GeoLocation geoReference;
     std::vector<RoadInformation> roads;
     std::vector<Junction> junctions;
     std::vector<TrafficLightGroup> trafficlightgroups;

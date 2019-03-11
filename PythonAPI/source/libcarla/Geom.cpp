@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include <carla/geom/BoundingBox.h>
+#include <carla/geom/GeoLocation.h>
 #include <carla/geom/Location.h>
 #include <carla/geom/Rotation.h>
 #include <carla/geom/Transform.h>
@@ -65,6 +66,13 @@ namespace geom {
     out << "BoundingBox(" << box.location << ", ";
     WriteVector3D(out, "Extent", box.extent);
     out << ')';
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const GeoLocation &geo_location) {
+    out << "GeoLocation(latitude=" << geo_location.latitude
+        << ", longitude=" << geo_location.longitude
+        << ", altitude=" << geo_location.altitude << ')';
     return out;
   }
 
@@ -129,7 +137,7 @@ void export_geom() {
     .def(self_ns::str(self_ns::self))
   ;
 
-class_<cg::Location, bases<cg::Vector3D>>("Location")
+  class_<cg::Location, bases<cg::Vector3D>>("Location")
     .def(init<float, float, float>((arg("x")=0.0f, arg("y")=0.0f, arg("z")=0.0f)))
     .def(init<const cg::Vector3D &>((arg("rhs"))))
     .add_property("x", +[](const cg::Location &self) { return self.x; }, +[](cg::Location &self, float x) { self.x = x; })
@@ -175,6 +183,16 @@ class_<cg::Location, bases<cg::Vector3D>>("Location")
     .def_readwrite("extent", &cg::BoundingBox::extent)
     .def("__eq__", &cg::BoundingBox::operator==)
     .def("__ne__", &cg::BoundingBox::operator!=)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cg::GeoLocation>("GeoLocation")
+    .def(init<double, double, double>((arg("latitude")=0.0, arg("longitude")=0.0, arg("altitude")=0.0)))
+    .def_readwrite("latitude", &cg::GeoLocation::latitude)
+    .def_readwrite("longitude", &cg::GeoLocation::longitude)
+    .def_readwrite("altitude", &cg::GeoLocation::altitude)
+    .def("__eq__", &cg::GeoLocation::operator==)
+    .def("__ne__", &cg::GeoLocation::operator!=)
     .def(self_ns::str(self_ns::self))
   ;
 }
