@@ -60,6 +60,10 @@ namespace client {
       return _waypoint.GetLaneId();
     }
 
+    double GetDistance() const {
+      return _waypoint.GetDistance();
+    }
+
     std::string GetType() const {
       return _waypoint.GetType();
     }

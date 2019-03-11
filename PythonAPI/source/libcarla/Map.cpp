@@ -84,6 +84,7 @@ void export_map() {
     .add_property("lane_width", &cc::Waypoint::GetLaneWidth)
     .add_property("road_id", &cc::Waypoint::GetRoadId)
     .add_property("lane_id", &cc::Waypoint::GetLaneId)
+    .add_property("s", &cc::Waypoint::GetDistance)
     .add_property("lane_change", &cc::Waypoint::GetLaneChange)
     .add_property("lane_type", &cc::Waypoint::GetType)
     .def("next", CALL_RETURNING_LIST_1(cc::Waypoint, Next, double), (args("distance")))
