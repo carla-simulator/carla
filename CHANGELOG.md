@@ -1,6 +1,8 @@
 ## Latest Changes
   * Allow usage of hostname for carla::Client and resolve them to IP address
   * Added `map.transform_to_geolocation` to transform Location to GNSS GeoLocation
+  * Added `id` property to waypoints, uniquely identifying waypoints up to half centimetre precision
+  * Added OpenDrive's road offset `s` as property to waypoints
   * Fixed python client DLL error on Windows
 
 ## CARLA 0.9.4
