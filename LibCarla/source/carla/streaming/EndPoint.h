@@ -75,7 +75,7 @@ namespace detail {
   static inline auto make_address(const std::string &address) {
     boost::asio::io_service io_service;
     boost::asio::ip::tcp::resolver resolver(io_service);
-    boost::asio::ip::tcp::resolver::query query(address, "");
+    boost::asio::ip::tcp::resolver::query query(boost::asio::ip::tcp::v4(), address, "", boost::asio::ip::tcp::resolver::query::canonical_name);
     boost::asio::ip::tcp::resolver::iterator iter = resolver.resolve(query);
     boost::asio::ip::tcp::resolver::iterator end;
     while (iter != end)
