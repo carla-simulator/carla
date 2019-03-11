@@ -54,11 +54,14 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
 {
   std::stringstream Info;
 
+  // get the final path + filename
+  std::string Filename2 = GetRecorderFilename(Filename);
+
   // try to open
-  File.open(Filename, std::ios::binary);
+  File.open(Filename2, std::ios::binary);
   if (!File.is_open())
   {
-    Info << "File " << Filename << " not found on server\n";
+    Info << "File " << Filename2 << " not found on server\n";
     return Info.str();
   }
 
@@ -220,11 +223,14 @@ std::string CarlaRecorderQuery::QueryCollisions(std::string Filename, char Categ
 {
   std::stringstream Info;
 
+  // get the final path + filename
+  std::string Filename2 = GetRecorderFilename(Filename);
+
   // try to open
-  File.open(Filename, std::ios::binary);
+  File.open(Filename2, std::ios::binary);
   if (!File.is_open())
   {
-    Info << "File " << Filename << " not found on server\n";
+    Info << "File " << Filename2 << " not found on server\n";
     return Info.str();
   }
 
@@ -393,11 +399,14 @@ std::string CarlaRecorderQuery::QueryBlocked(std::string Filename, double MinTim
 {
   std::stringstream Info;
 
+  // get the final path + filename
+  std::string Filename2 = GetRecorderFilename(Filename);
+
   // try to open
-  File.open(Filename, std::ios::binary);
+  File.open(Filename2, std::ios::binary);
   if (!File.is_open())
   {
-    Info << "File " << Filename << " not found on server\n";
+    Info << "File " << Filename2 << " not found on server\n";
     return Info.str();
   }
 

@@ -221,11 +221,10 @@ void UCarlaEpisode::EndPlay(void)
 std::string UCarlaEpisode::StartRecorder(std::string Name)
 {
   std::string result;
-  FString Name2(Name.c_str());
 
   if (Recorder)
   {
-    result = Recorder->Start(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir()), Name2, MapName);
+    result = Recorder->Start(Name, MapName);
   }
   else
   {

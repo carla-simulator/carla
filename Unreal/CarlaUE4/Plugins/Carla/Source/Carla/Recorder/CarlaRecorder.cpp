@@ -6,6 +6,7 @@
 
 // #include "Carla.h"
 #include "CarlaRecorder.h"
+#include "CarlaReplayerHelper.h"
 #include "Carla/Actor/ActorDescription.h"
 
 #include <ctime>
@@ -24,25 +25,25 @@ ACarlaRecorder::ACarlaRecorder(const FObjectInitializer &ObjectInitializer)
   Disable();
 }
 
-std::string ACarlaRecorder::ShowFileInfo(std::string Path, std::string Name)
+std::string ACarlaRecorder::ShowFileInfo(std::string Name)
 {
-  return Query.QueryInfo(Path + Name);
+  return Query.QueryInfo(Name);
 }
 
-std::string ACarlaRecorder::ShowFileCollisions(std::string Path, std::string Name, char Type1, char Type2)
+std::string ACarlaRecorder::ShowFileCollisions(std::string Name, char Type1, char Type2)
 {
-  return Query.QueryCollisions(Path + Name, Type1, Type2);
+  return Query.QueryCollisions(Name, Type1, Type2);
 }
 
-std::string ACarlaRecorder::ShowFileActorsBlocked(std::string Path, std::string Name, double MinTime, double MinDistance)
+std::string ACarlaRecorder::ShowFileActorsBlocked(std::string Name, double MinTime, double MinDistance)
 {
-  return Query.QueryBlocked(Path + Name, MinTime, MinDistance);
+  return Query.QueryBlocked(Name, MinTime, MinDistance);
 }
 
-std::string ACarlaRecorder::ReplayFile(std::string Path, std::string Name, double TimeStart, double Duration, uint32_t FollowId)
+std::string ACarlaRecorder::ReplayFile(std::string Name, double TimeStart, double Duration, uint32_t FollowId)
 {
   Stop();
-  return Replayer.ReplayFile(Path + Name, TimeStart, Duration, FollowId);
+  return Replayer.ReplayFile(Name, TimeStart, Duration, FollowId);
 }
 
 inline void ACarlaRecorder::SetReplayerSpeed(double TimeFactor)
@@ -125,7 +126,7 @@ void ACarlaRecorder::Disable(void)
   Enabled = false;
 }
 
-std::string ACarlaRecorder::Start(FString Path, FString Name, FString MapName)
+std::string ACarlaRecorder::Start(std::string Name, FString MapName)
 {
   // stop replayer if any in course
   if (Replayer.IsEnabled())
@@ -134,13 +135,16 @@ std::string ACarlaRecorder::Start(FString Path, FString Name, FString MapName)
   // stop recording
   Stop();
 
+  // reset collisions Id
   NextCollisionId = 0;
-  FString Filename = Path + Name;
+
+  // get the final path + filename
+  std::string Filename = GetRecorderFilename(Name);
 
   // binary file
   // file.open(filename.str(), std::ios::binary | std::ios::trunc |
   // std::ios::out);
-  File.open(TCHAR_TO_UTF8(*Filename), std::ios::binary);
+  File.open(Filename, std::ios::binary);
   if (!File.is_open())
   {
     return "";
@@ -162,7 +166,7 @@ std::string ACarlaRecorder::Start(FString Path, FString Name, FString MapName)
   // add all existing actors
   AddExistingActors();
 
-  return std::string(TCHAR_TO_UTF8(*Filename));
+  return std::string(Filename);
 }
 
 void ACarlaRecorder::Stop(void)
