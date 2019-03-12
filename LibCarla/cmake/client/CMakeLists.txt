@@ -84,11 +84,9 @@ file(GLOB libcarla_carla_pointcloud_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_pointcloud_sources}")
 install(FILES ${libcarla_carla_pointcloud_sources} DESTINATION include/carla/pointcloud)
 
-file(GLOB libcarla_carla_profiler_sources
-    "${libcarla_source_path}/carla/profiler/*.cpp"
+file(GLOB libcarla_carla_profiler_headers
     "${libcarla_source_path}/carla/profiler/*.h")
-set(libcarla_sources "${libcarla_sources};${libcarla_carla_profiler_sources}")
-install(FILES ${libcarla_carla_profiler_sources} DESTINATION include/carla/profiler)
+install(FILES ${libcarla_carla_profiler_headers} DESTINATION include/carla/profiler)
 
 file(GLOB libcarla_carla_road_sources
     "${libcarla_source_path}/carla/road/*.cpp"
