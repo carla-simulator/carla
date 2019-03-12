@@ -31,6 +31,7 @@ Install
 .codelite
 .gdb_history
 .gtest
+.idea
 .tags*
 .vs
 .vscode
