@@ -1,4 +1,5 @@
 ## Latest Changes
+  * Allow user to disable rendering and set the server timeout from the command line
   * Allow usage of hostname for carla::Client and resolve them to IP address
   * Added `map.transform_to_geolocation` to transform Location to GNSS GeoLocation
   * Added `id` property to waypoints, uniquely identifying waypoints up to half centimetre precision
