@@ -50,7 +50,7 @@ private:
 
   UCarlaEpisode *Episode {nullptr};
 
-  std::pair<int, FActorView &>TryToCreateReplayerActor(
+  std::pair<int, FActorView>TryToCreateReplayerActor(
     FVector &Location,
     FVector &Rotation,
     FActorDescription &ActorDesc,
