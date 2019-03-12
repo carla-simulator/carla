@@ -4,43 +4,20 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "TrafficSignParser.h"
-#include <iostream>
+#include "carla/opendrive/parser/TrafficSignParser.h"
 
-void carla::opendrive::parser::TrafficSignParser::Parse(
-    const pugi::xml_node &xmlNode,
-    std::vector<carla::opendrive::types::TrafficSign> &out_trafficsigns) {
-  carla::opendrive::parser::TrafficSignParser parser;
-  carla::opendrive::types::TrafficSign trafficsign;
+#include "carla/opendrive/pugixml/pugixml.hpp"
 
-  trafficsign.speed = std::atoi(xmlNode.attribute("speed").value());
-  trafficsign.x_pos = std::stod(xmlNode.attribute("xPos").value());
-  trafficsign.y_pos = std::stod(xmlNode.attribute("yPos").value());
-  trafficsign.z_pos = std::stod(xmlNode.attribute("zPos").value());
-  trafficsign.x_rot = std::stod(xmlNode.attribute("xRot").value());
-  trafficsign.y_rot = std::stod(xmlNode.attribute("yRot").value());
-  trafficsign.z_rot = std::stod(xmlNode.attribute("zRot").value());
+#include "carla/road/MapBuilder.h"
 
-  parser.ParseBoxAreas(xmlNode, trafficsign.box_areas);
-  out_trafficsigns.emplace_back(trafficsign);
-}
+namespace carla {
+namespace opendrive {
+namespace parser {
 
-void carla::opendrive::parser::TrafficSignParser::ParseBoxAreas(
-    const pugi::xml_node &xmlNode,
-    std::vector<carla::opendrive::types::BoxComponent> &out_boxcomponent) {
-  for (pugi::xml_node boxcomponent = xmlNode.child("tsBox");
-      boxcomponent;
-      boxcomponent = boxcomponent.next_sibling("tsBox")) {
-    carla::opendrive::types::BoxComponent jBoxComponent;
+  void TrafficSignParser::Parse(
+      const pugi::xml_document &/* xml */,
+      carla::road::MapBuilder &/* map_builder */) {}
 
-    jBoxComponent.x_pos = std::stod(boxcomponent.attribute("xPos").value());
-    jBoxComponent.y_pos = std::stod(boxcomponent.attribute("yPos").value());
-    jBoxComponent.z_pos = std::stod(boxcomponent.attribute("zPos").value());
-    jBoxComponent.x_rot = std::stod(boxcomponent.attribute("xRot").value());
-    jBoxComponent.y_rot = std::stod(boxcomponent.attribute("yRot").value());
-    jBoxComponent.z_rot = std::stod(boxcomponent.attribute("zRot").value());
-
-    out_boxcomponent.emplace_back(jBoxComponent);
-  }
-
-}
+} // namespace parser
+} // namespace opendrive
+} // namespace carla

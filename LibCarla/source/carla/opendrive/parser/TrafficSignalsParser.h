@@ -6,11 +6,16 @@
 
 #pragma once
 
-#include "../types.h"
-
-#include "./pugixml/pugixml.hpp"
+namespace pugi {
+  class xml_document;
+} // namespace pugi
 
 namespace carla {
+
+namespace road {
+  class MapBuilder;
+} // namespace road
+
 namespace opendrive {
 namespace parser {
 
@@ -18,10 +23,11 @@ namespace parser {
   public:
 
     static void Parse(
-        const pugi::xml_node &xmlNode,
-        std::vector<carla::opendrive::types::TrafficSignalInformation> &out_traffic_signals);
+        const pugi::xml_document &xml,
+        carla::road::MapBuilder &map_builder);
+
   };
 
-}
-}
-}
+} // namespace parser
+} // namespace opendrive
+} // namespace carla

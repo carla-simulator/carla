@@ -6,6 +6,9 @@
 
 #include "carla/road/Map.h"
 
+#include <stdexcept>
+#include "carla/Exception.h"
+
 #include "carla/road/element/LaneCrossingCalculator.h"
 
 namespace carla {
@@ -17,22 +20,24 @@ namespace road {
     return Waypoint(shared_from_this(), loc);
   }
 
-  boost::optional<Waypoint> Map::GetWaypoint(const geom::Location &loc) const {
-    Waypoint w = Waypoint(shared_from_this(), loc);
-    auto d = geom::Math::Distance2D(w.ComputeTransform().location, loc);
-    const auto inf = _data.GetRoad(w._road_id)->GetInfo<RoadInfoLane>(w._dist);
+  boost::optional<Waypoint> Map::GetWaypoint(const geom::Location &/* loc */) const {
+    // Waypoint w = Waypoint(shared_from_this(), loc);
+    // auto d = geom::Math::Distance2D(w.ComputeTransform().location, loc);
+    // const auto inf = _data.GetRoad(w._road_id)->GetInfo<RoadInfoLane>(w._dist);
 
-    if (d < inf->getLane(w._lane_id)->_width * 0.5) {
-      return w;
-    }
-
+    // if (d < inf->getLane(w._lane_id)->_width * 0.5) {
+    //   return w;
+    // }
+    throw_exception(std::runtime_error("not implemented"));
     return {};
   }
 
   std::vector<element::LaneMarking> Map::CalculateCrossedLanes(
-      const geom::Location &origin,
-      const geom::Location &destination) const {
-    return element::LaneCrossingCalculator::Calculate(*this, origin, destination);
+      const geom::Location &/* origin */,
+      const geom::Location &/* destination */) const {
+    // return element::LaneCrossingCalculator::Calculate(*this, origin, destination);
+    throw_exception(std::runtime_error("not implemented"));
+    return {};
   }
 
   const MapData &Map::GetData() const {
