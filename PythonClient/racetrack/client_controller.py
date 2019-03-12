@@ -233,7 +233,6 @@ def run_episode(client, controller, pts_2D, depth_storage, log_dicts, frames_per
                 num_laps += 1
 
         steer, throttle = one_log_dict['steer'], one_log_dict['throttle']
-        # print('throttle: {:.2f}'.format(throttle))
 
         if controller_name != 'nn':
             # Add noise to "augment" the race

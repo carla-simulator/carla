@@ -197,10 +197,7 @@ def extract_y(filename):
 
 def _get_data_from_one_racetrack(filename):
     which_OK, steer, throttle, speed = extract_y(filename)
-    try:
-        X = pd.np.load(filename)[..., which_OK].transpose([2, 0, 1])
-    except Exception as e:
-        import ipdb; ipdb.set_trace()
+    X = pd.np.load(filename)[..., which_OK].transpose([2, 0, 1])
 
     if X.shape[1] != (IMAGE_CLIP_LOWER-IMAGE_CLIP_UPPER) // IMAGE_DECIMATION:
         X = X[:, IMAGE_CLIP_UPPER:IMAGE_CLIP_LOWER, :][:, ::IMAGE_DECIMATION, ::IMAGE_DECIMATION]
