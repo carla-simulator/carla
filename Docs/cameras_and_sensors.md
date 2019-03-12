@@ -59,7 +59,7 @@ The "RGB" camera acts as a regular camera capturing images from the scene.
 | ------------------- | ----  | ------- | ----------- |
 | `image_size_x`      | int   | 800     | Image width in pixels |
 | `image_size_y`      | int   | 600     | Image height in pixels  |
-| `fov`               | float | 90.0    | Field of view in degrees |
+| `fov`               | float | 90.0    | Horizontal field of view in degrees |
 | `enable_postprocess_effects` | bool | True | Whether the post-process effect in the scene affect the image |
 | `sensor_tick`       | float | 0.0     | Seconds between sensor captures (ticks) |
 
@@ -85,7 +85,7 @@ objects.
 | `transform`           | carla.Transform | Transform in world coordinates of the sensor at the time of the measurement |
 | `width`               | int  | Image width in pixels |
 | `height`              | int  | Image height in pixels |
-| `fov`                 | float | Field of view in degrees |
+| `fov`                 | float | Horizontal field of view in degrees |
 | `raw_data`            | bytes | Array of BGRA 32-bit pixels |
 
 sensor.camera.depth
@@ -100,7 +100,7 @@ pixel to the camera (also known as **depth buffer** or **z-buffer**).
 | ------------------- | ----  | ------- | ----------- |
 | `image_size_x`      | int   | 800     | Image width in pixels |
 | `image_size_y`      | int   | 600     | Image height in pixels  |
-| `fov`               | float | 90.0    | Field of view in degrees |
+| `fov`               | float | 90.0    | Horizontal field of view in degrees |
 | `sensor_tick`       | float | 0.0     | Seconds between sensor captures (ticks) |
 
 This sensor produces [`carla.Image`](python_api.md#carlaimagecarlasensordata)
@@ -112,7 +112,7 @@ objects.
 | `transform`           | carla.Transform | Transform in world coordinates of the sensor at the time of the measurement |
 | `width`               | int  | Image width in pixels |
 | `height`              | int  | Image height in pixels |
-| `fov`                 | float | Field of view in degrees |
+| `fov`                 | float | Horizontal field of view in degrees |
 | `raw_data`            | bytes | Array of BGRA 32-bit pixels |
 
 
@@ -138,7 +138,7 @@ pedestrians appear in a different color than vehicles.
 | ------------------- | ----  | ------- | ----------- |
 | `image_size_x`      | int   | 800     | Image width in pixels |
 | `image_size_y`      | int   | 600     | Image height in pixels  |
-| `fov`               | float | 90.0    | Field of view in degrees |
+| `fov`               | float | 90.0    | Horizontal field of view in degrees |
 | `sensor_tick`       | float | 0.0     | Seconds between sensor captures (ticks) |
 
 This sensor produces [`carla.Image`](python_api.md#carlaimagecarlasensordata)
@@ -150,7 +150,7 @@ objects.
 | `transform`           | carla.Transform | Transform in world coordinates of the sensor at the time of the measurement |
 | `width`               | int  | Image width in pixels |
 | `height`              | int  | Image height in pixels |
-| `fov`                 | float | Field of view in degrees |
+| `fov`                 | float | Horizontal field of view in degrees |
 | `raw_data`            | bytes | Array of BGRA 32-bit pixels |
 
 The server provides an image with the tag information **encoded in the red
