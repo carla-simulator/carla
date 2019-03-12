@@ -41,7 +41,7 @@ namespace element {
       return _dist;
     }
 
-    const std::string &GetType() const;
+    std::string GetType() const;
 
     const RoadSegment &GetRoadSegment() const;
 

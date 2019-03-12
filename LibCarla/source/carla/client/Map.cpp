@@ -7,7 +7,7 @@
 #include "carla/client/Map.h"
 
 #include "carla/client/Waypoint.h"
-#include "carla/opendrive/OpenDrive.h"
+#include "carla/opendrive/OpenDriveParser.h"
 #include "carla/road/Map.h"
 #include "carla/road/WaypointGenerator.h"
 
@@ -18,7 +18,7 @@ namespace client {
 
   static auto MakeMap(const std::string &opendrive_contents) {
     auto stream = std::istringstream(opendrive_contents);
-    return opendrive::OpenDrive::Load(stream);
+    return opendrive::OpenDriveParser::Load(stream.str());
   }
 
   Map::Map(rpc::MapInfo description)
