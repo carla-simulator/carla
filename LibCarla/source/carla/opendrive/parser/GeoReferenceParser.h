@@ -18,6 +18,7 @@ namespace parser {
   public:
 
     static geom::GeoLocation Parse(const std::string &geo_reference_string);
+
   };
 
 } // parser
