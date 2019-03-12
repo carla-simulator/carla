@@ -9,7 +9,6 @@
 #include "carla/Debug.h"
 #include "carla/Memory.h"
 #include "carla/NonCopyable.h"
-#include "carla/Version.h"
 #include "carla/client/Actor.h"
 #include "carla/client/GarbageCollectionPolicy.h"
 #include "carla/client/TrafficLight.h"

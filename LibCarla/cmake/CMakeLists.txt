@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.5.1)
 project(libcarla)
 
-message(STATUS "Building ${PROJECT_NAME} version ${CARLA_VERSION}")
-
 set(libcarla_source_path "${PROJECT_SOURCE_DIR}/../source")
 
 include_directories(${libcarla_source_path})
 
-configure_file(${libcarla_source_path}/carla/Version.h.in ${libcarla_source_path}/carla/Version.h)
+if (CARLA_VERSION)
+  configure_file(${libcarla_source_path}/carla/Version.h.in ${libcarla_source_path}/carla/Version.h)
+endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Client")
   add_subdirectory("client")
