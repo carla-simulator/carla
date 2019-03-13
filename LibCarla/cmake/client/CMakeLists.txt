@@ -163,23 +163,35 @@ install(FILES ${libcarla_moodycamel_sources} DESTINATION include/moodycamel)
 # Create targets for debug and release in the same build type.
 # ==============================================================================
 
-foreach(target carla_client_debug carla_client)
-  add_library(${target} STATIC ${libcarla_sources})
+if (LIBCARLA_BUILD_RELEASE)
 
-  target_include_directories(${target} PRIVATE
+  add_library(carla_client STATIC ${libcarla_sources})
+
+  target_include_directories(carla_client PRIVATE
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}")
 
-  install(TARGETS ${target} DESTINATION lib)
-endforeach(target)
+  install(TARGETS carla_client DESTINATION lib)
 
-# Specific options for debug.
-set_target_properties(carla_client_debug PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_DEBUG})
-target_compile_definitions(carla_client_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
+  if (WIN32) # @todo Fix PythonAPI build on Windows.
+    set_target_properties(carla_client PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})
+  else ()
+    set_target_properties(carla_client PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_RELEASE_CLIENT})
+  endif (WIN32)
 
-# Specific options for release.
-if (WIN32) # @todo Fix PythonAPI build on Windows.
-  set_target_properties(carla_client PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})
-else ()
-  set_target_properties(carla_client PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_RELEASE_CLIENT})
-endif (WIN32)
+endif()
+
+if (LIBCARLA_BUILD_DEBUG)
+
+  add_library(carla_client_debug STATIC ${libcarla_sources})
+
+  target_include_directories(carla_client_debug PRIVATE
+      "${BOOST_INCLUDE_PATH}"
+      "${RPCLIB_INCLUDE_PATH}")
+
+  install(TARGETS carla_client_debug DESTINATION lib)
+
+  set_target_properties(carla_client_debug PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_DEBUG})
+  target_compile_definitions(carla_client_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
+
+endif()
