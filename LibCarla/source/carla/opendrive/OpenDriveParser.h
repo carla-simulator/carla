@@ -9,6 +9,8 @@
 #include "carla/Memory.h"
 #include "carla/road/Map.h"
 
+#include <boost/optional.hpp>
+
 #include <string>
 
 namespace carla {
@@ -17,7 +19,7 @@ namespace opendrive {
   class OpenDriveParser {
   public:
 
-    static SharedPtr<road::Map> Load(const std::string &opendrive);
+    static boost::optional<road::Map> Load(const std::string &opendrive);
 
   };
 
