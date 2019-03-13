@@ -3,7 +3,7 @@ default: help
 help:
 	@less ${CARLA_BUILD_TOOLS_FOLDER}/Linux.mk.help
 
-launch: LibCarla.server
+launch: LibCarla.server.release
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --build --launch
 
 launch-only:
@@ -41,10 +41,10 @@ check: LibCarla PythonAPI
 check.LibCarla: LibCarla
 	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --libcarla-debug --libcarla-release $(ARGS)
 
-check.LibCarla.debug: LibCarla
+check.LibCarla.debug: LibCarla.debug
 	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --libcarla-debug $(ARGS)
 
-check.LibCarla.release: LibCarla
+check.LibCarla.release: LibCarla.release
 	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --libcarla-release $(ARGS)
 
 check.PythonAPI: PythonAPI
@@ -56,31 +56,40 @@ check.PythonAPI.2: PythonAPI.2
 check.PythonAPI.3: PythonAPI.3
 	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --python-api-3 $(ARGS)
 
-benchmark: LibCarla.server
+benchmark: LibCarla.release
 	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --benchmark $(ARGS)
 	@cat profiler.csv
 
-CarlaUE4Editor: LibCarla.server
+CarlaUE4Editor: LibCarla.server.release
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --build
 
 .PHONY: PythonAPI
-PythonAPI: LibCarla.client
+PythonAPI: LibCarla.client.release
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py2 --py3
 
-PythonAPI.2: LibCarla.client
+PythonAPI.2: LibCarla.client.release
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py2
 
-PythonAPI.3: LibCarla.client
+PythonAPI.3: LibCarla.client.release
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py3
 
 .PHONY: LibCarla
 LibCarla: LibCarla.server LibCarla.client
 
-LibCarla.server: setup
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --server
+LibCarla.debug: LibCarla.server.debug LibCarla.client.debug
+LibCarla.release: LibCarla.server.release LibCarla.client.release
 
-LibCarla.client: setup
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --client
+LibCarla.server: LibCarla.server.debug LibCarla.server.release
+LibCarla.server.debug: setup
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --server --debug
+LibCarla.server.release: setup
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --server --release
+
+LibCarla.client: LibCarla.client.debug LibCarla.client.release
+LibCarla.client.debug: setup
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --client --debug
+LibCarla.client.release: setup
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --client --release
 
 setup:
 	@${CARLA_BUILD_TOOLS_FOLDER}/Setup.sh

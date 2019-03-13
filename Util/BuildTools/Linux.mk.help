@@ -73,7 +73,7 @@ for developers:
 
         Build and package the Python API module for Python 2 and/or 3.
 
-    LibCarla(.server|.client):
+    LibCarla(.server|.client)(.debug|.release):
 
         Build LibCarla, "Server" and/or "Client" configurations.
 

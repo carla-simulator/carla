@@ -38,7 +38,8 @@ private:
       AActor *Actor,
       AActor *OtherActor,
       float Distance,
-      const FHitResult &Hit);
+      const FHitResult &Hit,
+      float Timestamp);
 
   UPROPERTY()
   const UCarlaEpisode *Episode = nullptr;

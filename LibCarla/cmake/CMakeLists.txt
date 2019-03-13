@@ -1,13 +1,21 @@
 cmake_minimum_required(VERSION 3.5.1)
 project(libcarla)
 
-message(STATUS "Building ${PROJECT_NAME} version ${CARLA_VERSION}")
+option(LIBCARLA_BUILD_DEBUG "Build debug configuration" ON)
+option(LIBCARLA_BUILD_RELEASE "Build release configuration" ON)
+option(LIBCARLA_BUILD_TEST "Build unit tests" ON)
+
+message(STATUS "Build debug:   ${LIBCARLA_BUILD_DEBUG}")
+message(STATUS "Build release: ${LIBCARLA_BUILD_RELEASE}")
+message(STATUS "Build test:    ${LIBCARLA_BUILD_TEST}")
 
 set(libcarla_source_path "${PROJECT_SOURCE_DIR}/../source")
 
 include_directories(${libcarla_source_path})
 
-configure_file(${libcarla_source_path}/carla/Version.h.in ${libcarla_source_path}/carla/Version.h)
+if (CARLA_VERSION)
+  configure_file(${libcarla_source_path}/carla/Version.h.in ${libcarla_source_path}/carla/Version.h)
+endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Client")
   add_subdirectory("client")
@@ -18,6 +26,10 @@ else ()
 endif ()
 
 # GTest is not compiled on Windows.
-if (NOT WIN32)
+if ((LIBCARLA_BUILD_TEST) AND (NOT WIN32))
   add_subdirectory("test")
 endif()
+
+unset(LIBCARLA_BUILD_TEST CACHE)
+unset(LIBCARLA_BUILD_RELEASE CACHE)
+unset(LIBCARLA_BUILD_DEBUG CACHE)

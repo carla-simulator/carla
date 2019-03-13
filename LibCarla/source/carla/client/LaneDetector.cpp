@@ -92,6 +92,7 @@ namespace client {
           nullptr :
           MakeShared<sensor::data::LaneInvasionEvent>(
               timestamp.frame_count,
+              timestamp.elapsed_seconds,
               _vehicle->GetTransform(),
               _vehicle,
               crossed_lanes);
