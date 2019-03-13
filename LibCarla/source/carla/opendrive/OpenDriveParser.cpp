@@ -19,7 +19,7 @@
 #include "carla/opendrive/parser/TrafficSignParser.h"
 #include "carla/opendrive/parser/TrafficSignalsParser.h"
 
-#include "carla/opendrive/pugixml/pugixml.hpp"
+#include "carla/opendrive/parser/pugixml/pugixml.hpp"
 
 namespace carla {
 namespace opendrive {
