@@ -33,22 +33,13 @@ namespace element {
         double c,
         double d)
       : RoadInfo(s),
-        _lane_id(lane_id),
         _width(a, b, c, d, s) {}
-
-    int GetLaneId() const {
-      return _lane_id;
-    }
 
     const geom::CubicPolynomial &GetPolynomial() const {
       return _width;
     }
 
   private:
-
-    using signed_id = int;
-
-    signed_id _lane_id = 0;
 
     geom::CubicPolynomial _width;
 
