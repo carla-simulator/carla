@@ -27,7 +27,6 @@ namespace element {
 
     RoadInfoLaneWidth(
         double s,
-        int lane_id,
         double a,
         double b,
         double c,
