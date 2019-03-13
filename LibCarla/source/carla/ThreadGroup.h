@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "carla/Debug.h"
 #include "carla/NonCopyable.h"
 
 #include <thread>

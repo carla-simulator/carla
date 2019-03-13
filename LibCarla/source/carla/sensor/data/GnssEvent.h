@@ -18,9 +18,10 @@ namespace data {
 
     explicit GnssEvent(
         size_t frame_number,
+        double timestamp,
         const rpc::Transform &sensor_transform,
         const geom::GeoLocation &geo_location)
-      : SensorData(frame_number, sensor_transform),
+      : SensorData(frame_number, timestamp, sensor_transform),
         _geo_location(geo_location) {}
 
     const geom::GeoLocation &GetGeoLocation() const {
