@@ -16,7 +16,7 @@
 #include "carla/opendrive/parser/ProfilesParser.h"
 #include "carla/opendrive/parser/RoadLinkParser.h"
 #include "carla/opendrive/parser/TrafficGroupParser.h"
-#include "carla/opendrive/parser/TrafficSignParser.h"
+#include "carla/opendrive/parser/SignalParser.h"
 #include "carla/opendrive/parser/TrafficSignalsParser.h"
 
 #include "carla/opendrive/parser/pugixml/pugixml.hpp"
@@ -42,7 +42,7 @@ namespace opendrive {
     parser::ProfilesParser::Parse(xml, map_builder);
     parser::RoadLinkParser::Parse(xml, map_builder);
     parser::TrafficGroupParser::Parse(xml, map_builder);
-    parser::TrafficSignParser::Parse(xml, map_builder);
+    parser::SignalParser::Parse(xml, map_builder);
     parser::TrafficSignalsParser::Parse(xml, map_builder);
 
     return map_builder.Build();
