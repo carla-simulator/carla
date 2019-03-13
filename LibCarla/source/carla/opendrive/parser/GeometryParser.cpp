@@ -6,7 +6,7 @@
 
 #include "carla/opendrive/parser/GeometryParser.h"
 
-#include "carla/opendrive/pugixml/pugixml.hpp"
+#include "carla/opendrive/parser/pugixml/pugixml.hpp"
 
 #include "carla/road/MapBuilder.h"
 
