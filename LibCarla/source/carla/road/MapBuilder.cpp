@@ -12,7 +12,7 @@ using namespace carla::road::element;
 namespace carla {
 namespace road {
 
-  SharedPtr<Map> MapBuilder::Build() {
+  boost::optional<Map> MapBuilder::Build() {
 
     SetTotalRoadSegmentLength();
 
@@ -21,7 +21,7 @@ namespace road {
     // _map_data is a memeber of MapBuilder so you must especify if
     // you want to keep it (will return copy -> Map(const Map &))
     // or move it (will return move -> Map(Map &&))
-    return SharedPtr<Map>(new Map{std::move(_map_data)});
+    return Map{std::move(_map_data)};
   }
 
 } // namespace road

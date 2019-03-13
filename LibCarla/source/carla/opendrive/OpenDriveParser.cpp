@@ -24,7 +24,7 @@
 namespace carla {
 namespace opendrive {
 
-  SharedPtr<road::Map> OpenDriveParser::Load(const std::string &opendrive) {
+  boost::optional<road::Map> OpenDriveParser::Load(const std::string &opendrive) {
     pugi::xml_document xml;
     pugi::xml_parse_result parse_result = xml.load_string(opendrive.c_str());
 

@@ -8,6 +8,7 @@
 
 #include "carla/Memory.h"
 #include "carla/NonCopyable.h"
+#include "carla/geom/Transform.h"
 #include "carla/road/element/RoadInfoMarkRecord.h"
 #include "carla/road/element/Waypoint.h"
 #include "carla/road/element/WaypointHash.h"
@@ -40,33 +41,27 @@ namespace client {
       return road::element::WaypointHash()(_waypoint);
     }
 
+    auto GetRoadId() const {
+      return _waypoint.road_id;
+    }
+
+    auto GetLaneId() const {
+      return _waypoint.lane_id;
+    }
+
+    auto GetDistance() const {
+      return _waypoint.s;
+    }
+
     const geom::Transform &GetTransform() const {
       return _transform;
     }
 
-    bool IsIntersection() const {
-      return _waypoint.IsIntersection();
-    }
+    bool IsIntersection() const;
 
-    double GetLaneWidth() const {
-      return _waypoint.GetLaneWidth();
-    }
+    float GetLaneWidth() const;
 
-    road::element::id_type GetRoadId() const {
-      return _waypoint.GetRoadId();
-    }
-
-    int GetLaneId() const {
-      return _waypoint.GetLaneId();
-    }
-
-    double GetDistance() const {
-      return _waypoint.GetDistance();
-    }
-
-    std::string GetType() const {
-      return _waypoint.GetType();
-    }
+    std::string GetType() const;
 
     std::vector<SharedPtr<Waypoint>> Next(double distance) const;
 
@@ -88,7 +83,7 @@ namespace client {
 
     geom::Transform _transform;
 
-    // Mark record right and left respectively
+    // Mark record right and left respectively.
     std::pair<
         road::element::RoadInfoMarkRecord,
         road::element::RoadInfoMarkRecord> _mark_record;

@@ -12,7 +12,7 @@ namespace carla {
 namespace road {
 namespace element {
 
-  class Waypoint;
+  struct Waypoint;
 
   struct WaypointHash {
 

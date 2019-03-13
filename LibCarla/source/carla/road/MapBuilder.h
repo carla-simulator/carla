@@ -9,6 +9,8 @@
 #include "carla/geom/Location.h"
 #include "carla/road/Map.h"
 
+#include <boost/optional.hpp>
+
 #include <map>
 
 namespace carla {
@@ -17,7 +19,7 @@ namespace road {
   class MapBuilder {
   public:
 
-    SharedPtr<Map> Build();
+    boost::optional<Map> Build();
 
   private:
 

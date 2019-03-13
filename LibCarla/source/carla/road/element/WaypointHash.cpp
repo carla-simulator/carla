@@ -16,9 +16,9 @@ namespace element {
 
   uint64_t WaypointHash::operator()(const Waypoint &waypoint) const {
     uint64_t seed = 0u;
-    boost::hash_combine(seed, waypoint.GetRoadId());
-    boost::hash_combine(seed, waypoint.GetLaneId());
-    boost::hash_combine(seed, static_cast<float>(std::floor(waypoint.GetDistance() * 200.0)));
+    boost::hash_combine(seed, waypoint.road_id);
+    boost::hash_combine(seed, waypoint.lane_id);
+    boost::hash_combine(seed, static_cast<float>(std::floor(waypoint.s * 200.0)));
     return seed;
   }
 
