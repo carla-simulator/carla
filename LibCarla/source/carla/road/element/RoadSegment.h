@@ -8,10 +8,11 @@
 
 #include "carla/NonCopyable.h"
 #include "carla/geom/Location.h"
-#include "carla/road/element/RoadInfoMarkRecord.h"
-#include "carla/road/element/RoadInfoLaneWidth.h"
-#include "carla/road/element/RoadInfoLaneOffset.h"
+#include "carla/road/element/RoadElevationInfo.h"
 #include "carla/road/element/RoadInfo.h"
+#include "carla/road/element/RoadInfoLaneOffset.h"
+#include "carla/road/element/RoadInfoLaneWidth.h"
+#include "carla/road/element/RoadInfoMarkRecord.h"
 #include "carla/road/element/Types.h"
 
 #include <limits>
