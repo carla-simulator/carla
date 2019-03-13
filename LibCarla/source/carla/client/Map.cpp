@@ -18,16 +18,16 @@ namespace client {
 
   static auto MakeMap(const std::string &opendrive_contents) {
     auto stream = std::istringstream(opendrive_contents);
-    return opendrive::OpenDriveParser::Load(stream.str());
+    auto map = opendrive::OpenDriveParser::Load(stream.str());
+    if (!map.has_value()) {
+      throw_exception(std::runtime_error("failed to generate map"));
+    }
+    return std::move(*map);
   }
 
   Map::Map(rpc::MapInfo description)
     : _description(std::move(description)),
-      _map(MakeMap(_description.open_drive_file)) {
-    if (_map == nullptr) {
-      throw_exception(std::runtime_error("failed to generate map"));
-    }
-  }
+      _map(MakeMap(_description.open_drive_file)) {}
 
   Map::~Map() = default;
 
@@ -36,9 +36,9 @@ namespace client {
       bool project_to_road) const {
     boost::optional<road::element::Waypoint> waypoint;
     if (project_to_road) {
-      waypoint = _map->GetClosestWaypointOnRoad(location);
+      waypoint = _map.GetClosestWaypointOnRoad(location);
     } else {
-      waypoint = _map->GetWaypoint(location);
+      waypoint = _map.GetWaypoint(location);
     }
     return waypoint.has_value() ?
         SharedPtr<Waypoint>(new Waypoint{shared_from_this(), *waypoint}) :
@@ -49,19 +49,20 @@ namespace client {
     namespace re = carla::road::element;
     std::unordered_map<re::id_type, std::unordered_map<int, SharedPtr<Waypoint>>> waypoints;
 
+    /// @todo Use WaypointHash.
     auto get_or_make_waypoint = [&](const auto &waypoint) {
-      auto &waypoints_on_road = waypoints[waypoint.GetRoadId()];
-      auto it = waypoints_on_road.find(waypoint.GetLaneId());
+      auto &waypoints_on_road = waypoints[waypoint.road_id];
+      auto it = waypoints_on_road.find(waypoint.lane_id);
       if (it == waypoints_on_road.end()) {
         it = waypoints_on_road.emplace(
-            waypoint.GetLaneId(),
+            waypoint.lane_id,
             SharedPtr<Waypoint>(new Waypoint{shared_from_this(), waypoint})).first;
       }
       return it->second;
     };
 
     TopologyList result;
-    auto topology = road::WaypointGenerator::GenerateTopology(*_map);
+    auto topology = _map.GenerateTopology();
     result.reserve(topology.size());
     for (const auto &pair : topology) {
       result.emplace_back(
@@ -73,7 +74,7 @@ namespace client {
 
   std::vector<SharedPtr<Waypoint>> Map::GenerateWaypoints(double distance) const {
     std::vector<SharedPtr<Waypoint>> result;
-    const auto waypoints = road::WaypointGenerator::GenerateAll(*_map, distance);
+    const auto waypoints = _map.GenerateWaypoints(distance);
     result.reserve(waypoints.size());
     for (const auto &waypoint : waypoints) {
       result.emplace_back(SharedPtr<Waypoint>(new Waypoint{shared_from_this(), waypoint}));
@@ -84,11 +85,11 @@ namespace client {
   std::vector<road::element::LaneMarking> Map::CalculateCrossedLanes(
       const geom::Location &origin,
       const geom::Location &destination) const {
-    return _map->CalculateCrossedLanes(origin, destination);
+    return _map.CalculateCrossedLanes(origin, destination);
   }
 
   const geom::GeoLocation &Map::GetGeoReference() const {
-    return _map->GetData().GetGeoReference();
+    return _map.GetGeoReference();
   }
 
 } // namespace client

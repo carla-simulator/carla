@@ -6,72 +6,24 @@
 
 #pragma once
 
-#include "carla/geom/Transform.h"
-#include "carla/Memory.h"
-#include "carla/road/element/RoadInfoMarkRecord.h"
-#include "carla/road/element/RoadInfoList.h"
-#include "carla/road/element/Types.h"
+#include <cstdint>
 
 namespace carla {
 namespace road {
-
-  class Map;
-  class WaypointGenerator;
-
 namespace element {
 
-  class RoadSegment;
+  struct Waypoint {
 
-  class Waypoint {
-  public:
+    /// @todo Don't define here.
+    using RoadId = uint32_t;
+    using LaneId = int32_t;
+    using RoadDistance = float;
 
-    ~Waypoint();
+    RoadId road_id = 0u;
 
-    geom::Transform ComputeTransform() const;
+    LaneId lane_id = 0;
 
-    id_type GetRoadId() const {
-      return _road_id;
-    }
-
-    int GetLaneId() const {
-      return _lane_id;
-    }
-
-    double GetDistance() const {
-      return _dist;
-    }
-
-    std::string GetType() const;
-
-    const RoadSegment &GetRoadSegment() const;
-
-    bool IsIntersection() const;
-
-    double GetLaneWidth() const;
-
-    // Returns a Pair of RoadInfoMarkRecord Right and Left respectively
-    std::pair<RoadInfoMarkRecord, RoadInfoMarkRecord> GetMarkRecord() const;
-
-  private:
-
-    friend carla::road::Map;
-    friend carla::road::WaypointGenerator;
-
-    Waypoint(SharedPtr<const Map>, const geom::Location &location);
-
-    Waypoint(
-        SharedPtr<const Map> map,
-        id_type road_id,
-        id_type lane_id,
-        double distance);
-
-    SharedPtr<const Map> _map;
-
-    id_type _road_id = 0;
-
-    int _lane_id = 0;
-
-    double _dist = 0.0;
+    RoadDistance s = 0.0f;
   };
 
 } // namespace element

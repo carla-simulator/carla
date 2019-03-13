@@ -6,10 +6,11 @@
 
 #pragma once
 
-#include "carla/Memory.h"
 #include "carla/NonCopyable.h"
+#include "carla/geom/Transform.h"
 #include "carla/road/MapData.h"
 #include "carla/road/element/LaneMarking.h"
+#include "carla/road/element/RoadInfoMarkRecord.h"
 #include "carla/road/element/Waypoint.h"
 
 #include <boost/optional.hpp>
@@ -19,24 +20,89 @@
 namespace carla {
 namespace road {
 
-  class Map
-    : public EnableSharedFromThis<Map>,
-      private MovableNonCopyable {
-
+  class Map : private MovableNonCopyable {
   public:
+
+    /// @todo Don't define here.
+    using RoadId = uint32_t;
+    using LaneId = int32_t;
+    using RoadDistance = float;
+
+    using Waypoint = element::Waypoint;
 
     Map(MapData m)
       : _data(std::move(m)) {}
-
-    element::Waypoint GetClosestWaypointOnRoad(const geom::Location &) const;
-
-    boost::optional<element::Waypoint> GetWaypoint(const geom::Location &) const;
 
     std::vector<element::LaneMarking> CalculateCrossedLanes(
         const geom::Location &origin,
         const geom::Location &destination) const;
 
-    const MapData &GetData() const;
+    const geom::GeoLocation &GetGeoReference() const {
+      return _data.GetGeoReference();
+    }
+
+    /// ========================================================================
+    /// -- Geometry ------------------------------------------------------------
+    /// ========================================================================
+
+    element::Waypoint GetClosestWaypointOnRoad(const geom::Location &location) const;
+
+    boost::optional<element::Waypoint> GetWaypoint(const geom::Location &location) const;
+
+    geom::Transform ComputeTransform(const Waypoint &waypoint) const;
+
+    /// ========================================================================
+    /// -- Road information ----------------------------------------------------
+    /// ========================================================================
+
+    const std::string &GetType(RoadId road_id, RoadDistance s) const;
+
+    const std::string &GetType(const Waypoint &waypoint) const;
+
+    double GetLaneWidth(const Waypoint &waypoint) const;
+
+    bool IsIntersection(RoadId road_id) const;
+
+    std::pair<element::RoadInfoMarkRecord, element::RoadInfoMarkRecord>
+    GetMarkRecord(const Waypoint &waypoint) const;
+
+    /// ========================================================================
+    /// -- Waypoint generation -------------------------------------------------
+    /// ========================================================================
+
+    /// Return the list of waypoints placed at the entrance of each drivable
+    /// successor lane; i.e., the list of each waypoint in the next road segment
+    /// that a vehicle could drive from @a waypoint.
+    std::vector<Waypoint> GetSuccessors(
+        const Waypoint &waypoint) const;
+
+    /// Return the list of waypoints at @a distance such that a vehicle at @a
+    /// waypoint could drive to.
+    std::vector<Waypoint> GetNext(
+        const Waypoint &waypoint,
+        RoadDistance distance) const;
+
+    /// Return a waypoint at the lane of @a waypoint's right lane.
+    boost::optional<Waypoint> GetRight(
+        const Waypoint &waypoint) const;
+
+    /// Return a waypoint at the lane of @a waypoint's left lane.
+    boost::optional<Waypoint> GetLeft(
+        const Waypoint &waypoint) const;
+
+    /// Generate all the waypoints in @a map separated by @a approx_distance.
+    std::vector<Waypoint> GenerateWaypoints(
+        RoadDistance approx_distance) const;
+
+    /// Returns a list of waypoints at the beginning of each lane of the map.
+    std::vector<Waypoint> GenerateLaneBegin() const;
+
+    /// Returns a list of waypoints at the end of each lane of the map.
+    std::vector<Waypoint> GenerateLaneEnd() const;
+
+    /// Generate the minimum set of waypoints that define the topology of @a
+    /// map. The waypoints are placed at the entrance of each lane.
+    std::vector<std::pair<Waypoint, Waypoint>> GenerateTopology() const;
 
   private:
 

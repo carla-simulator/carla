@@ -16,8 +16,8 @@ namespace road {
 
   using namespace element;
 
-  Waypoint Map::GetClosestWaypointOnRoad(const geom::Location &loc) const {
-    return Waypoint(shared_from_this(), loc);
+  Waypoint Map::GetClosestWaypointOnRoad(const geom::Location &) const {
+    return {}; //Waypoint(shared_from_this(), loc);
   }
 
   boost::optional<Waypoint> Map::GetWaypoint(const geom::Location &/* loc */) const {
@@ -38,10 +38,6 @@ namespace road {
     // return element::LaneCrossingCalculator::Calculate(*this, origin, destination);
     throw_exception(std::runtime_error("not implemented"));
     return {};
-  }
-
-  const MapData &Map::GetData() const {
-    return _data;
   }
 
 } // namespace road

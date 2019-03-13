@@ -8,6 +8,7 @@
 
 #include "carla/Memory.h"
 #include "carla/NonCopyable.h"
+#include "carla/road/Map.h"
 #include "carla/road/element/LaneMarking.h"
 #include "carla/rpc/MapInfo.h"
 
@@ -15,7 +16,6 @@
 
 namespace carla {
 namespace geom { class GeoLocation; }
-namespace road { class Map; }
 namespace client {
 
   class Waypoint;
@@ -31,6 +31,10 @@ namespace client {
 
     const std::string &GetName() const {
       return _description.name;
+    }
+
+    const road::Map &GetMap() const {
+      return _map;
     }
 
     const std::string &GetOpenDrive() const {
@@ -61,7 +65,7 @@ namespace client {
 
     const rpc::MapInfo _description;
 
-    const SharedPtr<const road::Map> _map;
+    const road::Map _map;
   };
 
 } // namespace client

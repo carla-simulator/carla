@@ -17,10 +17,22 @@ namespace client {
   Waypoint::Waypoint(SharedPtr<const Map> parent, road::element::Waypoint waypoint)
     : _parent(std::move(parent)),
       _waypoint(std::move(waypoint)),
-      _transform(_waypoint.ComputeTransform()),
-      _mark_record(_waypoint.GetMarkRecord()) {}
+      _transform(_parent->GetMap().ComputeTransform(_waypoint)),
+      _mark_record(_parent->GetMap().GetMarkRecord(_waypoint)) {}
 
   Waypoint::~Waypoint() = default;
+
+  bool Waypoint::IsIntersection() const {
+    return _parent->GetMap().IsIntersection(_waypoint.road_id);
+  }
+
+  float Waypoint::GetLaneWidth() const {
+    return _parent->GetMap().GetLaneWidth(_waypoint);
+  }
+
+  std::string Waypoint::GetType() const {
+    return _parent->GetMap().GetType(_waypoint);
+  }
 
   std::vector<SharedPtr<Waypoint>> Waypoint::Next(double distance) const {
     auto waypoints = road::WaypointGenerator::GetNext(_waypoint, distance);
