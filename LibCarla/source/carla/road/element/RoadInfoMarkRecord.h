@@ -34,9 +34,8 @@ namespace element {
       Both     = 0x03  //11
     };
 
-    RoadInfoMarkRecord(double d, int lane_id)
+    RoadInfoMarkRecord(double d)
       : RoadInfo(d),
-        _lane_id(lane_id),
         _type(""),
         _weight(""),
         _color("white"),
@@ -47,7 +46,6 @@ namespace element {
 
     RoadInfoMarkRecord(
         double d,
-        int lane_id,
         std::string type,
         std::string weight,
         std::string color,
@@ -56,7 +54,6 @@ namespace element {
         LaneChange lane_change,
         double height)
       : RoadInfo(d),
-        _lane_id(lane_id),
         _type(type),
         _weight(weight),
         _color(color),
@@ -64,10 +61,6 @@ namespace element {
         _width(width),
         _lane_change(lane_change),
         _height(height) {}
-
-    int GetLaneId() const {
-      return _lane_id;
-    }
 
     const std::string &GetType() const {
       return _type;
@@ -99,10 +92,6 @@ namespace element {
 
   private:
 
-    using signed_id = int;
-
-    signed_id _lane_id = 0;
-
     std::string _type;       // Type of the road mark
     std::string _weight;     // Weight of the road mark
     std::string _color;      // Color of the road mark
@@ -112,7 +101,7 @@ namespace element {
     LaneChange _lane_change; // Allow a lane change in the indicated direction
                              // taking into account that lanes are numbered in
                              // ascending order from right to left. If the
-                             // attributeis missing, “both” is assumedto be
+                             // attributeis missing, “both” is assumed to be
                              // valid.
     double _height;          // Physical distance of top edge of road mark from
                              // reference plane of the lane
