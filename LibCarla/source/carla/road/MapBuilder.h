@@ -23,7 +23,7 @@ namespace road {
       _map_data.SetJunctionInformation(junctionInfo);
     }
 
-    void SetGeoReference(const std::string &geoReference) {
+    void SetGeoReference(const geom::GeoLocation &geoReference) {
       _map_data.SetGeoReference(geoReference);
     }
 

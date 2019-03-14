@@ -47,9 +47,9 @@ protected:
   /// You need to provide a reference to self, this is necessary for template
   /// deduction.
   template <typename SensorT>
-  FAsyncDataStream GetDataStream(const SensorT &Self)
+  FAsyncDataStream GetDataStream(const SensorT &Self, float Timestamp)
   {
-    return Stream.MakeAsyncDataStream(Self);
+    return Stream.MakeAsyncDataStream(Self, Timestamp);
   }
 
 private:

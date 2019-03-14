@@ -28,6 +28,7 @@ namespace data {
 
   std::ostream &operator<<(std::ostream &out, const Image &image) {
     out << "Image(frame=" << image.GetFrameNumber()
+        << ", timestamp=" << image.GetTimestamp()
         << ", size=" << image.GetWidth() << 'x' << image.GetHeight()
         << ')';
     return out;
@@ -35,6 +36,7 @@ namespace data {
 
   std::ostream &operator<<(std::ostream &out, const LidarMeasurement &meas) {
     out << "LidarMeasurement(frame=" << meas.GetFrameNumber()
+        << ", timestamp=" << meas.GetTimestamp()
         << ", number_of_points=" << meas.size()
         << ')';
     return out;
@@ -42,6 +44,7 @@ namespace data {
 
   std::ostream &operator<<(std::ostream &out, const CollisionEvent &meas) {
     out << "CollisionEvent(frame=" << meas.GetFrameNumber()
+        << ", timestamp=" << meas.GetTimestamp()
         << ", other_actor=" << meas.GetOtherActor()
         << ')';
     return out;
@@ -49,18 +52,22 @@ namespace data {
 
   std::ostream &operator<<(std::ostream &out, const ObstacleDetectionEvent &meas) {
     out << "ObstacleDetectionEvent(frame=" << meas.GetFrameNumber()
+        << ", timestamp=" << meas.GetTimestamp()
         << ", other_actor=" << meas.GetOtherActor()
         << ')';
     return out;
   }
 
   std::ostream &operator<<(std::ostream &out, const LaneInvasionEvent &meas) {
-    out << "LaneInvasionEvent(frame=" << meas.GetFrameNumber() << ')';
+    out << "LaneInvasionEvent(frame=" << meas.GetFrameNumber() 
+        << ", timestamp=" << meas.GetTimestamp()
+        << ')';
     return out;
   }
 
   std::ostream &operator<<(std::ostream &out, const GnssEvent &meas) {
     out << "GnssEvent(frame=" << meas.GetFrameNumber()
+        << ", timestamp=" << meas.GetTimestamp()
         << ", lat=" << meas.GetLatitude()
         << ", lon=" << meas.GetLongitude()
         << ", alt=" << meas.GetAltitude()
@@ -156,6 +163,7 @@ void export_sensor_data() {
 
   class_<cs::SensorData, boost::noncopyable, boost::shared_ptr<cs::SensorData>>("SensorData", no_init)
     .add_property("frame_number", &cs::SensorData::GetFrameNumber)
+    .add_property("timestamp", &cs::SensorData::GetTimestamp)
     .add_property("transform", CALL_RETURNING_COPY(cs::SensorData, GetSensorTransform))
   ;
 
@@ -228,9 +236,9 @@ void export_sensor_data() {
   ;
 
   class_<csd::GnssEvent, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::GnssEvent>>("GnssEvent", no_init)
-    .add_property("latitude", CALL_RETURNING_COPY(csd::GnssEvent, GetLatitude))
-    .add_property("longitude", CALL_RETURNING_COPY(csd::GnssEvent, GetLongitude))
-    .add_property("altitude", CALL_RETURNING_COPY(csd::GnssEvent, GetAltitude))
+    .add_property("latitude", &csd::GnssEvent::GetLatitude)
+    .add_property("longitude", &csd::GnssEvent::GetLongitude)
+    .add_property("altitude", &csd::GnssEvent::GetAltitude)
     .def(self_ns::str(self_ns::self))
   ;
 }

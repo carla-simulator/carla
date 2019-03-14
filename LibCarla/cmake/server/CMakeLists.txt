@@ -107,20 +107,35 @@ file(GLOB libcarla_server_sources
     "${libcarla_source_path}/carla/streaming/detail/tcp/*.h"
     "${libcarla_source_path}/carla/streaming/low_level/*.h")
 
+# ==============================================================================
 # Create targets for debug and release in the same build type.
-foreach(target carla_server_debug carla_server)
-  add_library(${target} STATIC ${libcarla_server_sources})
+# ==============================================================================
 
-  target_include_directories(${target} PRIVATE
+if (LIBCARLA_BUILD_RELEASE)
+
+  add_library(carla_server STATIC ${libcarla_server_sources})
+
+  target_include_directories(carla_server PRIVATE
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}")
 
-  install(TARGETS ${target} DESTINATION lib)
-endforeach(target)
+  install(TARGETS carla_server DESTINATION lib OPTIONAL)
 
-# Specific options for debug.
-set_target_properties(carla_server_debug PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_DEBUG})
-target_compile_definitions(carla_server_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
+  set_target_properties(carla_server PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})
 
-# Specific options for release.
-set_target_properties(carla_server PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})
+endif()
+
+if (LIBCARLA_BUILD_DEBUG)
+
+  add_library(carla_server_debug STATIC ${libcarla_server_sources})
+
+  target_include_directories(carla_server_debug PRIVATE
+      "${BOOST_INCLUDE_PATH}"
+      "${RPCLIB_INCLUDE_PATH}")
+
+  install(TARGETS carla_server_debug DESTINATION lib OPTIONAL)
+
+  set_target_properties(carla_server_debug PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_DEBUG})
+  target_compile_definitions(carla_server_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
+
+endif()

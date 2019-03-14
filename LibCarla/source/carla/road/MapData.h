@@ -53,7 +53,7 @@ namespace road {
       return _junction_information;
     }
 
-    const std::string &GetGeoReference() const {
+    const geom::GeoLocation &GetGeoReference() const {
       return _geo_reference;
     }
 
@@ -83,7 +83,7 @@ namespace road {
       _junction_information = junctionInfo;
     }
 
-    void SetGeoReference(const std::string &geoReference) {
+    void SetGeoReference(const geom::GeoLocation &geoReference) {
       _geo_reference = geoReference;
     }
 
@@ -95,7 +95,7 @@ namespace road {
       _traffic_signs = trafficSignData;
     }
 
-    std::string _geo_reference;
+    geom::GeoLocation _geo_reference;
 
     std::vector<lane_junction_t> _junction_information;
 

@@ -87,7 +87,7 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor)
 
   // First we create the message header (needs to be created in the
   // game-thread).
-  auto AsyncStream = Sensor.GetDataStream(Sensor);
+  auto AsyncStream = Sensor.GetDataStream(Sensor, Sensor.GetWorld()->GetTimeSeconds());
 
   // We need a shared ptr here because UE4 macros do not move the arguments -_-
   auto StreamPtr = std::make_shared<decltype(AsyncStream)>(std::move(AsyncStream));
