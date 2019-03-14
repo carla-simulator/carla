@@ -178,6 +178,14 @@ void UCarlaSettings::LoadSettings()
     {
       QualityLevel = QualityLevelFromString(StringQualityLevel, EQualityLevel::Epic);
     }
+    if (FParse::Value(FCommandLine::Get(), TEXT("-carla-server-timeout="), Value))
+    {
+      ServerTimeOut = Value;
+    }
+    if (FParse::Param(FCommandLine::Get(), TEXT("-no-rendering")))
+    {
+      bDisableRendering = true;
+    }
   }
 }
 

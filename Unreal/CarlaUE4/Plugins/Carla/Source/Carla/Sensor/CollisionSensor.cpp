@@ -62,7 +62,7 @@ void ACollisionSensor::OnCollisionEvent(
   {
     constexpr float TO_METERS = 1e-2;
     NormalImpulse *= TO_METERS;
-    GetDataStream(*this).Send(
+    GetDataStream(*this, Actor->GetWorld()->GetTimeSeconds()).Send(
         *this,
         Episode->SerializeActor(Episode->FindOrFakeActor(Actor)),
         Episode->SerializeActor(Episode->FindOrFakeActor(OtherActor)),

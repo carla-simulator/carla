@@ -11,6 +11,7 @@
 
 #include <limits>
 #include <sstream>
+#include <vector>
 
 namespace carla {
 namespace opendrive {

@@ -159,6 +159,7 @@
 ## `carla.SensorData`
 
 - `frame_number`
+- `timestamp`
 - `transform`
 
 ## `carla.Image(carla.SensorData)`
