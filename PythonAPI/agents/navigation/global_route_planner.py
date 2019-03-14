@@ -6,12 +6,10 @@ This module provides GlobalRoutePlanner implementation.
 """
 
 import math
-from enum import Enum
 
 import numpy as np
 import networkx as nx
 
-import carla
 from agents.navigation.local_planner import RoadOption
 
 
@@ -222,5 +220,3 @@ class GlobalRoutePlanner(object):
         return      :   dot porduct scalar between vector1 and vector2
         """
         return vector1[0] * vector2[0] + vector1[1] * vector2[1]
-
-    pass
