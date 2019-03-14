@@ -90,13 +90,13 @@ def distance_vehicle(waypoint, vehicle_transform):
     return math.sqrt(dx * dx + dy * dy)
 
 def vector(location_1, location_2):
-        """
-        Returns the unit vector from location_1 to location_2
-        location_1, location_2    :   carla.Location objects
-        """
-        x = location_2.x - location_1.x
-        y = location_2.y - location_1.y
-        z = location_2.z - location_1.z
-        norm = np.linalg.norm([x, y, z])
+    """
+    Returns the unit vector from location_1 to location_2
+    location_1, location_2:   carla.Location objects
+    """
+    x = location_2.x - location_1.x
+    y = location_2.y - location_1.y
+    z = location_2.z - location_1.z
+    norm = np.linalg.norm([x, y, z])
 
-        return [x/norm, y/norm, z/norm]
+    return [x/norm, y/norm, z/norm]
