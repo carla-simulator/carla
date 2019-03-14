@@ -20,7 +20,7 @@ namespace road {
 namespace opendrive {
 namespace parser {
 
-  class SignalParser {
+  class ObjectParser {
   public:
 
     static void Parse(
