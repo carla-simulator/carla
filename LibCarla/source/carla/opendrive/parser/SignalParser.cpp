@@ -40,13 +40,13 @@ namespace parser {
       const pugi::xml_document & xml,
       carla::road::MapBuilder &  map_builder ) {
         //Extracting the OpenDRIVE
-        pugi::xml_node opendrive_node = xml.child("OpenDRIVE");
-        std::string validity = "validity";
+        const pugi::xml_node opendrive_node = xml.child("OpenDRIVE");
+        const std::string validity = "validity";
         for (pugi::xml_node road_node = opendrive_node.child("road");
             road_node;
             road_node = road_node.next_sibling("road")) {
-              RoadID road_id = (RoadID) road_node.attribute("id").value();
-              pugi::xml_node signals_node = road_node.child("signals");
+              const RoadID road_id = (RoadID) road_node.attribute("id").value();
+              const pugi::xml_node signals_node = road_node.child("signals");
               for (pugi::xml_node signal_node = signals_node.child("signal");
                 signal_node;
                 signal_node = signal_node.next_sibling("signal")) {
