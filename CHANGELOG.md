@@ -1,4 +1,5 @@
 ## Latest Changes
+  * Allow user to disable rendering and set the server timeout from the command line
   * Add timestamp to SensorData
   * Allow usage of hostname for carla::Client and resolve them to IP address
   * Added `map.transform_to_geolocation` to transform Location to GNSS GeoLocation
