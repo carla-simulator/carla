@@ -5,49 +5,44 @@
 
 #pragma once
 
-#include "carla/road/element/LaneMarking.h"
+#include "carla/geom/GeoLocation.h"
 #include "carla/sensor/SensorData.h"
-
-#include <vector>
 
 namespace carla {
 namespace sensor {
 namespace data {
 
-  /// A change of gnss data
+  /// A change of GNSS data.
   class GnssEvent : public SensorData {
   public:
 
     explicit GnssEvent(
         size_t frame_number,
+        double timestamp,
         const rpc::Transform &sensor_transform,
-        double lat,
-        double lon,
-        double alt)
-      : SensorData(frame_number, sensor_transform),
-        _lat(std::move(lat)),
-        _lon(std::move(lon)),
-        _alt(std::move(alt)) {}
+        const geom::GeoLocation &geo_location)
+      : SensorData(frame_number, timestamp, sensor_transform),
+        _geo_location(geo_location) {}
 
-    const double &GetLatitude() const {
-      return _lat;
+    const geom::GeoLocation &GetGeoLocation() const {
+      return _geo_location;
     }
 
-    const double &GetLongitude() const {
-      return _lon;
+    double GetLongitude() const {
+      return _geo_location.longitude;
     }
 
-    const double &GetAltitude() const {
-      return _alt;
+    double GetLatitude() const {
+      return _geo_location.latitude;
+    }
+
+    double GetAltitude() const {
+      return _geo_location.altitude;
     }
 
   private:
 
-    double _lat;
-
-    double _lon;
-
-    double _alt;
+    geom::GeoLocation _geo_location;
   };
 
 } // namespace data

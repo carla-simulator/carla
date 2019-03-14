@@ -23,14 +23,17 @@ namespace client {
 
   Map::Map(rpc::MapInfo description)
     : _description(std::move(description)),
-      _map(MakeMap(_description.open_drive_file)) {}
+      _map(MakeMap(_description.open_drive_file)) {
+    if (_map == nullptr) {
+      throw_exception(std::runtime_error("failed to generate map"));
+    }
+  }
 
   Map::~Map() = default;
 
   SharedPtr<Waypoint> Map::GetWaypoint(
       const geom::Location &location,
       bool project_to_road) const {
-    DEBUG_ASSERT(_map != nullptr);
     boost::optional<road::element::Waypoint> waypoint;
     if (project_to_road) {
       waypoint = _map->GetClosestWaypointOnRoad(location);
@@ -43,7 +46,6 @@ namespace client {
   }
 
   Map::TopologyList Map::GetTopology() const {
-    DEBUG_ASSERT(_map != nullptr);
     namespace re = carla::road::element;
     std::unordered_map<re::id_type, std::unordered_map<int, SharedPtr<Waypoint>>> waypoints;
 
@@ -82,14 +84,12 @@ namespace client {
   std::vector<road::element::LaneMarking> Map::CalculateCrossedLanes(
       const geom::Location &origin,
       const geom::Location &destination) const {
-    DEBUG_ASSERT(_map != nullptr);
     return _map->CalculateCrossedLanes(origin, destination);
   }
 
-
-  std::string Map::GetGeoReference() const {
-    DEBUG_ASSERT(_map != nullptr);
+  const geom::GeoLocation &Map::GetGeoReference() const {
     return _map->GetData().GetGeoReference();
   }
+
 } // namespace client
 } // namespace carla

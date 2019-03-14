@@ -14,6 +14,7 @@
 #include <string>
 
 namespace carla {
+namespace geom { class GeoLocation; }
 namespace road { class Map; }
 namespace client {
 
@@ -54,13 +55,13 @@ namespace client {
         const geom::Location &origin,
         const geom::Location &destination) const;
 
-    std::string GetGeoReference() const;
+    const geom::GeoLocation &GetGeoReference() const;
 
   private:
 
-    rpc::MapInfo _description;
+    const rpc::MapInfo _description;
 
-    SharedPtr<road::Map> _map;
+    const SharedPtr<const road::Map> _map;
   };
 
 } // namespace client

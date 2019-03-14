@@ -37,6 +37,10 @@ namespace element {
       return _lane_id;
     }
 
+    double GetDistance() const {
+      return _dist;
+    }
+
     const std::string &GetType() const;
 
     const RoadSegment &GetRoadSegment() const;

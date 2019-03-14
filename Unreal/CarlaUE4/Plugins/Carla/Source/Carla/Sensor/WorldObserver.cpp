@@ -150,7 +150,7 @@ static carla::Buffer FWorldObserver_Serialize(
 
 void FWorldObserver::BroadcastTick(const UCarlaEpisode &Episode, float DeltaSeconds)
 {
-  auto AsyncStream = Stream.MakeAsyncDataStream(*this);
+  auto AsyncStream = Stream.MakeAsyncDataStream(*this, Episode.GetWorld()->GetTimeSeconds());
 
   auto buffer = FWorldObserver_Serialize(
       AsyncStream.PopBufferFromPool(),
