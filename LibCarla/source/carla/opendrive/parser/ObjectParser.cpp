@@ -38,7 +38,7 @@ namespace parser {
 
   void ObjectParser::Parse(
       const pugi::xml_document & xml,
-      carla::road::MapBuilder &  map_builder ) {
+      carla::road::MapBuilder &  /* map_builder */ ) {
         //Extracting the OpenDRIVE
         pugi::xml_node opendrive_node = xml.child("OpenDRIVE");
         for (pugi::xml_node road_node = opendrive_node.child("road");
@@ -130,9 +130,9 @@ namespace parser {
                     logging::log("AddMaterialToObject",object_id, surface_material, friction_material, roughness_material);
                   }
 
-                  AddValidity(object_node, "validity", object_id,
+                  /* AddValidity(object_node, "validity", object_id,
                     ([&map_builder](const ObjectID &object_id, const int16_t from_lane, const int16_t to_lane)
-                      { map_builder.AddValidityToObject(object_id, from_lane, to_lane);}));
+                      { map_builder.AddValidityToObject(object_id, from_lane, to_lane);})); */
 
                   pugi::xml_node parking_space_node = object_node.child("parkingSpace");
                   if(parking_space_node != nullptr) {
@@ -173,9 +173,9 @@ namespace parser {
                         */
                         logging::log("AddObjectReferenceToObject",object_id, s_position_obj_ref, t_position_obj_ref,
                           id_obj_ref, z_offset_obj_ref, valid_lenght_obj_ref, orientation_obj_ref);
-                        AddValidity(obj_reference_node, "validity", id_obj_ref,
+                        /* AddValidity(obj_reference_node, "validity", id_obj_ref,
                           ([&map_builder](const ObjectID &id_obj_ref, const int16_t from_lane, const int16_t to_lane)
-                            { map_builder.AddValidityToObjectRef(id_obj_ref, from_lane, to_lane);}));
+                            { map_builder.AddValidityToObjectRef(id_obj_ref, from_lane, to_lane);})); */
                     }
 
                 }
@@ -195,9 +195,9 @@ namespace parser {
                         */
                         logging::log("AddTunnel", s_position_tunnel, lenght_tunnel, name_tunnel, id_tunnel,
                           type_tunnel, lightning_tunnel, daylight_tunnel);
-                        AddValidity(tunnel_node, "validity", id_tunnel,
+                        /* AddValidity(tunnel_node, "validity", id_tunnel,
                           ([&map_builder](const ObjectID &id_tunnel, const int16_t from_lane, const int16_t to_lane)
-                            { map_builder.AddValidityToTunnel(id_tunnel, from_lane, to_lane);}));
+                            { map_builder.AddValidityToTunnel(id_tunnel, from_lane, to_lane);})); */
                 }
               for (pugi::xml_node bridge_node = objects_node.child("bridge");
                       bridge_node;
@@ -213,9 +213,9 @@ namespace parser {
                         */
                         logging::log("AddTunnel", s_position_bridge, lenght_bridge, name_bridge, id_bridge,
                           type_bridge);
-                        AddValidity(bridge_node, "validity", id_bridge,
+                        /*AddValidity(bridge_node, "validity", id_bridge,
                           ([&map_builder](const ObjectID &id_bridge, const int16_t from_lane, const int16_t to_lane)
-                            { map_builder.AddValidityToBridge(id_bridge, from_lane, to_lane);}));
+                            { map_builder.AddValidityToBridge(id_bridge, from_lane, to_lane);}));*/
                 }
           }
       }
