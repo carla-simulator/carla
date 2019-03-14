@@ -1,3 +1,5 @@
+[MESSAGES CONTROL]
+max-line-length=120
 [MASTER]
 disable=I0011,E1121
 [TYPECHECK]

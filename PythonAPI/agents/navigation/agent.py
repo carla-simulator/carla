@@ -35,6 +35,8 @@ class Agent(object):
         :param vehicle: actor to apply to local planner logic onto
         """
         self._vehicle = vehicle
+        self._proximity_threshold = 10.0 # meters
+        self._local_planner = None
         self._world = self._vehicle.get_world()
         self._map = self._vehicle.get_world().get_map()
         self._last_traffic_light = None
@@ -46,11 +48,13 @@ class Agent(object):
         :return: control
         """
         control = carla.VehicleControl()
-        control.steer = 0.0
-        control.throttle = 0.0
-        control.brake = 0.0
-        control.hand_brake = False
-        control.manual_gear_shift = False
+
+        if debug:
+            control.steer = 0.0
+            control.throttle = 0.0
+            control.brake = 0.0
+            control.hand_brake = False
+            control.manual_gear_shift = False
 
         return control
 
@@ -96,7 +100,7 @@ class Agent(object):
             if is_within_distance_ahead(loc, ego_vehicle_location,
                                         self._vehicle.get_transform().rotation.yaw,
                                         self._proximity_threshold):
-                if traffic_light.state == carla.libcarla.TrafficLightState.Red:
+                if traffic_light.state == carla.TrafficLightState.Red:
                     return (True, traffic_light)
 
         return (False, None)
@@ -119,9 +123,8 @@ class Agent(object):
             # It is too late. Do not block the intersection! Keep going!
             return (False, None)
 
-        if self._local_planner._target_waypoint is not None:
-            if self._local_planner._target_waypoint.is_intersection:
-                potential_lights = []
+        if self._local_planner.target_waypoint is not None:
+            if self._local_planner.target_waypoint.is_intersection:
                 min_angle = 180.0
                 sel_magnitude = 0.0
                 sel_traffic_light = None
@@ -142,7 +145,7 @@ class Agent(object):
                     if self._last_traffic_light is None:
                         self._last_traffic_light = sel_traffic_light
 
-                    if self._last_traffic_light.state == carla.libcarla.TrafficLightState.Red:
+                    if self._last_traffic_light.state == carla.TrafficLightState.Red:
                         return (True, self._last_traffic_light)
                 else:
                     self._last_traffic_light = None
