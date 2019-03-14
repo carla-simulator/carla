@@ -63,8 +63,8 @@ namespace road {
 
     bool IsIntersection(RoadId road_id) const;
 
-    std::pair<element::RoadInfoMarkRecord, element::RoadInfoMarkRecord>
-    GetMarkRecord(const Waypoint &waypoint) const;
+    std::pair<element::RoadInfoMarkRecord *, element::RoadInfoMarkRecord *>
+        GetMarkRecord(const Waypoint &waypoint) const;
 
     /// ========================================================================
     /// -- Waypoint generation -------------------------------------------------

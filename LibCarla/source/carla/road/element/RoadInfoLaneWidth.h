@@ -26,11 +26,11 @@ namespace element {
     }
 
     RoadInfoLaneWidth(
-        double s,
-        double a,
-        double b,
-        double c,
-        double d)
+        float s,
+        float a,
+        float b,
+        float c,
+        float d)
       : RoadInfo(s),
         _width(a, b, c, d, s) {}
 

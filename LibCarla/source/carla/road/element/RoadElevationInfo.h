@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/road/element/RoadInfo.h"
+#include "carla/geom/CubicPolynomial.h"
 
 namespace carla {
 namespace road {
@@ -20,61 +21,27 @@ namespace element {
     }
 
     RoadElevationInfo(
-        double d,
-        double start_position,
-        double elevation, // a
-        double slope, // b
-        double vertical_curvature,
-        double curvature_change)
-      : RoadInfo(d),
-        _start_position(start_position),
-        _elevation(elevation),
-        _slope(slope),
-        _vertical_curvature(vertical_curvature),
-        _curvature_change(curvature_change) {}
+        float s,
+        float a, // elevation
+        float b, // slope
+        float c, // vertical_curvature
+        float d) // curvature_change
+      : RoadInfo(s),
+        _elevation(a, b, c, d, s) {}
 
-    double Evaluate(const double dist, double *out_tan) const {
-      const double t = dist - _start_position;
-      const double pos = _elevation +
-          _slope * t +
-          _vertical_curvature * t * t +
-          _curvature_change * t * t * t;
-
-      if (out_tan) {
-        *out_tan = _slope + t *
-            (2 * _vertical_curvature + t * 3 * _curvature_change);
-      }
-
-      return pos;
+    float Evaluate(const float dist, float *out_tan) const {
+      *out_tan = _elevation.Tangent(dist);
+      return _elevation.Evaluate(dist);
     }
 
-    double GetStartPosition() const {
-      return _start_position;
-    }
-
-    double GetElevation() const {
+    const geom::CubicPolynomial &GetPolynomial() const {
       return _elevation;
-    }
-
-    double GetSlope() const {
-      return _slope;
-    }
-
-    double GetVerticalCurvature() const {
-      return _vertical_curvature;
-    }
-
-    double GetCurvatureChange() const {
-      return _curvature_change;
     }
 
   private:
 
-    double _start_position;      // (S) start position(s - offset)[meters]
-    double _elevation;           // (A) elevation [meters]
-    double _slope;               // (B)
-    double _vertical_curvature;  // (C)
-    double _curvature_change;    // (D)
+    const geom::CubicPolynomial _elevation;
+
   };
 
 } // namespace element
