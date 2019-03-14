@@ -6,22 +6,14 @@
 
 #pragma once
 
-#include "carla/NonCopyable.h"
-#include "carla/road/RoadTypes.h"
+#include <cstdint>
 
 namespace carla {
 namespace road {
 
-  class Junction : private MovableNonCopyable {
-  public:
-
-    Junction() {}
-
-  private:
-
-    // JuncId _id;
-
-  };
+  using RoadId = uint32_t;
+  using JuncId = RoadId;
+  using LaneId = int16_t;
 
 } // road
 } // carla

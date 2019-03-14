@@ -34,7 +34,7 @@ namespace road {
   }
 
   template <typename FuncT>
-  static void ForEachDrivableLane(const RoadSegment &/* road */, double /* s */, FuncT &&/* func */) {
+  static void ForEachDrivableLane(/*const RoadSegment & road ,*/ double /* s */, FuncT &&/* func */) {
     throw_exception(std::runtime_error("not implemented"));
     // const auto info = road.GetInfo<RoadInfoLane>(s);
     // DEBUG_ASSERT(info != nullptr);

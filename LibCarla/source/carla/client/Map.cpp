@@ -9,7 +9,7 @@
 #include "carla/client/Waypoint.h"
 #include "carla/opendrive/OpenDriveParser.h"
 #include "carla/road/Map.h"
-#include "carla/road/WaypointGenerator.h"
+#include "carla/road/RoadTypes.h"
 
 #include <sstream>
 
@@ -47,7 +47,7 @@ namespace client {
 
   Map::TopologyList Map::GetTopology() const {
     namespace re = carla::road::element;
-    std::unordered_map<re::id_type, std::unordered_map<int, SharedPtr<Waypoint>>> waypoints;
+    std::unordered_map<road::RoadId, std::unordered_map<int, SharedPtr<Waypoint>>> waypoints;
 
     /// @todo Use WaypointHash.
     auto get_or_make_waypoint = [&](const auto &waypoint) {

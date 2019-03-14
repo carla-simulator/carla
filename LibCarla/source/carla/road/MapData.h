@@ -6,11 +6,12 @@
 
 #pragma once
 
+#include "carla/geom/GeoLocation.h"
 #include "carla/Iterator.h"
 #include "carla/ListView.h"
 #include "carla/NonCopyable.h"
-#include "carla/road/element/RoadSegment.h"
-#include "carla/geom/GeoLocation.h"
+#include "carla/road/Road.h"
+#include "carla/road/RoadTypes.h"
 
 #include <boost/iterator/transform_iterator.hpp>
 
@@ -33,6 +34,8 @@ namespace road {
     MapData() = default;
 
     geom::GeoLocation _geo_reference;
+
+    std::unordered_map<RoadId, Road> _roads;
 
   };
 

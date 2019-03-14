@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "carla/road/RoadTypes.h"
+
 #include <cstdint>
 
 namespace carla {
@@ -14,16 +16,11 @@ namespace element {
 
   struct Waypoint {
 
-    /// @todo Don't define here.
-    using RoadId = uint32_t;
-    using LaneId = int32_t;
-    using RoadDistance = float;
-
     RoadId road_id = 0u;
 
     LaneId lane_id = 0;
 
-    RoadDistance s = 0.0f;
+    float s = 0.0f;
   };
 
 } // namespace element

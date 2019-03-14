@@ -4,24 +4,18 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#pragma once
-
-#include "carla/NonCopyable.h"
-#include "carla/road/RoadTypes.h"
+#include "carla/road/Lane.h"
 
 namespace carla {
 namespace road {
 
-  class Junction : private MovableNonCopyable {
-  public:
+  LaneSection *Lane::GetLaneSection() const {
+    return _lane_section;
+  }
 
-    Junction() {}
-
-  private:
-
-    // JuncId _id;
-
-  };
+  LaneId Lane::GetId() const {
+    return _id;
+  }
 
 } // road
 } // carla

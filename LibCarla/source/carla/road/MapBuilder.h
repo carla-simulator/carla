@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "carla/geom/Location.h"
 #include "carla/road/Map.h"
 
 #include <boost/optional.hpp>

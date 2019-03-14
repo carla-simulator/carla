@@ -77,13 +77,13 @@ namespace client {
   }
 
   Waypoint::LaneChange Waypoint::GetLaneChange() const {
-    const auto lane_change_right = _mark_record.first.GetLaneChange();
-    const auto lane_change_left = _mark_record.second.GetLaneChange();
+    const auto lane_change_right = _mark_record.first->GetLaneChange();
+    const auto lane_change_left = _mark_record.second->GetLaneChange();
 
     auto c_right = static_cast<Waypoint::LaneChange>(lane_change_right);
     auto c_left = static_cast<Waypoint::LaneChange>(lane_change_left);
 
-    if (_mark_record.first.GetLaneId() > 0) {
+    if (_waypoint.lane_id > 0) {
       // if road goes backward
       if (c_right == Waypoint::LaneChange::Right) {
         c_right = Waypoint::LaneChange::Left;
@@ -92,7 +92,7 @@ namespace client {
       }
     }
 
-    if (_mark_record.second.GetLaneId() > 0) {
+    if (((_waypoint.lane_id > 0) ? _waypoint.lane_id - 1 : _waypoint.lane_id + 1) > 0) {
       // if road goes backward
       if (c_left == Waypoint::LaneChange::Right) {
         c_left = Waypoint::LaneChange::Left;

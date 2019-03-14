@@ -27,12 +27,6 @@ TEST(road, set_and_get_connections_for) {
 
 }
 
-void AssertNear(
-    const element::DirectedPoint &/* d0 */,
-    const element::DirectedPoint &/* d1 */) {
-
-}
-
 TEST(road, geom_line) {
 
 }
