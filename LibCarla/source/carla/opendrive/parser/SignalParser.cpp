@@ -38,7 +38,7 @@ namespace parser {
 
   void SignalParser::Parse(
       const pugi::xml_document & xml,
-      carla::road::MapBuilder &  map_builder ) {
+      carla::road::MapBuilder &  /* map_builder */ ) {
         //Extracting the OpenDRIVE
         const pugi::xml_node opendrive_node = xml.child("OpenDRIVE");
         const std::string validity = "validity";
@@ -70,9 +70,9 @@ namespace parser {
                   const double roll = signal_node.attribute("roll").as_double();
                   logging::log("Road: ", road_id, "Adding Signal: ", s_position, t_position, signal_id, name, dynamic, orientation, zOffset, country, type, subtype, value, unit, height, width, text, hOffset, pitch, roll);
 
-                  AddValidity(signal_node, "validity", signal_id,
+                  /* AddValidity(signal_node, "validity", signal_id,
                     ([&map_builder](const SignalID &signal_id, const int16_t from_lane, const int16_t to_lane)
-                      { map_builder.AddValidityToSignal(signal_id, from_lane, to_lane);}));
+                      { map_builder.AddValidityToSignal(signal_id, from_lane, to_lane);})); */
 
                   for (pugi::xml_node dependency_node = signal_node.child("dependency");
                     dependency_node;
@@ -91,9 +91,9 @@ namespace parser {
                       const SignalID signal_reference_id = signalreference_node.attribute("id").value();
                       const std::string signal_reference_orientation = signalreference_node.attribute("orientation").value();
                       logging::log("Road: ", road_id, "Added SignalReference ", s_position, t_position, signal_reference_id, signal_reference_orientation);
-                      AddValidity(signalreference_node, validity, signal_reference_id,
+                      /* AddValidity(signalreference_node, validity, signal_reference_id,
                         ([&map_builder](const SignalID &signal_id, const int16_t from_lane, const int16_t to_lane)
-                          { map_builder.AddValidityToSignalReference(signal_id, from_lane, to_lane);}));
+                          { map_builder.AddValidityToSignalReference(signal_id, from_lane, to_lane);})); */
                     }
             }
       }
