@@ -14,6 +14,46 @@ namespace carla {
 namespace opendrive {
 namespace parser {
 
+  using RoadId = int;
+  using LaneId = int;
+
+  struct Polynomial {
+    double s;
+    double a, b, c, d;
+  };
+
+  struct Lane {
+    LaneId id;
+    std::string type;
+    bool level;
+    LaneId predecessor;
+    LaneId successor;
+  };
+
+  struct LaneSection {
+    double s;
+    double a, b, c, d;
+    std::vector<Lane> lanes;
+  };
+
+  struct RoadTypeSpeed {
+    double s;
+    std::string type;
+    double max;
+    std::string unit;
+  };
+
+  struct Road {
+    RoadId id;
+    std::string name;
+    double length;
+    RoadId junction_id;
+    RoadId predecessor;
+    RoadId successor;
+    std::vector<RoadTypeSpeed> speed;
+    std::vector<LaneSection> sections;
+  };
+
   void RoadLinkParser::Parse(
       const pugi::xml_document &xml,
       carla::road::MapBuilder &map_builder) {
@@ -56,7 +96,7 @@ namespace parser {
           road.speed.emplace_back(type);
         }
 
-        // Todo: section offsets
+        // section offsets
         std::deque<Polynomial> lane_offsets;
         for (pugi::xml_node node_offset : node_road.child("lanes").children("laneOffset")) {
           Polynomial offset { 0.0, 0.0, 0.0, 0.0, 0.0 } ;
@@ -102,7 +142,7 @@ namespace parser {
             section.lanes.emplace_back(lane);
           }
 
-          // add center lane
+          // center lane (we don't need this info, the Id is always 0 and has no pre. and successor)
           // section.lanes.emplace_back( { 0, 0, 0 });
 
           // right lane
@@ -158,6 +198,8 @@ namespace parser {
         printf("    Lanes: %d\n", s.lanes.size());
         for (auto const l : s.lanes) {
           printf("      Id: %d\n", l.id);
+          printf("      Type: %s\n", l.type.c_str());
+          printf("      Level: %d\n", l.level);
           printf("      Predecessor: %d\n", l.predecessor);
           printf("      Successor: %d\n", l.successor);
         }
@@ -165,7 +207,7 @@ namespace parser {
     }
     */
 
-    // mapbuilder calls
+    // map_builder calls
     for (auto const r : roads) {
       map_builder.AddRoad(r.id, r.name, r.length, r.junction_id, r.predecessor, r.successor);
 
