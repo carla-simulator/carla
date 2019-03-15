@@ -181,6 +181,114 @@ namespace road {
         const int32_t from,
         const int32_t to);
 
+    // called from lane parser
+    void CreateLaneAccess(
+        const int32_t road_id,
+        const int32_t lane_section_id,
+        const int32_t lane_id,
+        const float s,
+        const std::string restriction);
+
+    void CreateLaneBorder(
+        const int32_t road_id,
+        const int32_t lane_section_id,
+        const int32_t lane_id,
+        const float s,
+        const float a,
+        const float b,
+        const float c,
+        const float d);
+
+    void CreateLaneHeight(
+        const int32_t road_id,
+        const int32_t lane_section_id,
+        const int32_t lane_id,
+        const float s,
+        const float inner,
+        const float outer);
+
+    void CreateLaneMaterial(
+        const int32_t road_id,
+        const int32_t lane_section_id,
+        const int32_t lane_id,
+        const float s,
+        const std::string surface,
+        const float friction,
+        const float roughness);
+
+    void CreateLaneOffset(
+        const int32_t road_id,
+        const int32_t lane_section_id,
+        const int32_t lane_id,
+        const float s,
+        const float a,
+        const float b,
+        const float c,
+        const float d);
+
+    void CreateLaneRule(
+        const int32_t road_id,
+        const int32_t lane_section_id,
+        const int32_t lane_id,
+        const float s,
+        const std::string value);
+
+    void CreateLaneVisibility(
+        const int32_t road_id,
+        const int32_t lane_section_id,
+        const int32_t lane_id,
+        const float s,
+        const float forward,
+        const float back,
+        const float left,
+        const float right);
+
+    void CreateLaneWidth(
+        const int32_t road_id,
+        const int32_t lane_section_id,
+        const int32_t lane_id,
+        const float s,
+        const float a,
+        const float b,
+        const float c,
+        const float d);
+
+    void CreateRoadMark(
+        const int32_t road_id,
+        const int32_t lane_section_id,
+        const int32_t lane_id,
+        const int road_mark_id,
+        const float s,
+        const std::string type,
+        const std::string weight,
+        const std::string color,
+        const std::string material,
+        const float width,
+        const std::string lane_change,
+        const float height,
+        const std::string type_name,
+        const float type_width);
+
+    void CreateRoadMarkTypeLine(
+        const int32_t road_id,
+        const int32_t lane_section_id,
+        const int32_t lane_id,
+        const int road_mark_id,
+        const float length,
+        const float space,
+        const float tOffset,
+        const float s,
+        const std::string rule,
+        const float width);
+
+    void CreateLaneSpeed(
+        const int32_t road_id,
+        const int lane_section_id,
+        const int32_t lane_id,
+        const float s,
+        const float max,
+        const std::string unit);
+
   private:
 
     MapData _map_data;

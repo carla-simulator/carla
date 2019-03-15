@@ -8,6 +8,7 @@
 
 namespace pugi {
   class xml_document;
+  class xml_node;
 } // namespace pugi
 
 namespace carla {
@@ -20,6 +21,14 @@ namespace opendrive {
 namespace parser {
 
   class LaneParser {
+  private:
+
+    static void ParseLanes(
+        int road_id,
+        int lane_section_id,
+        const pugi::xml_node &parent_node,
+        carla::road::MapBuilder &map_builder);
+
   public:
 
     static void Parse(
