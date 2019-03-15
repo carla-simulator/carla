@@ -256,6 +256,27 @@
 			}
 		},
 		{
+			"name": "CARLA - Pylint all",
+			"working_dir": "${project_path}/..",
+			"file_regex": "^([^\n:]*):(-?[0-9]+):?(-?[0-9]+)?:? (.*)$",
+			"syntax": "Packages/Makefile/Make Output.sublime-syntax",
+			"linux":
+			{
+				"shell_cmd": "shopt -s globstar; pylint -rn --msg-template='{path}:{line}:{column}: {msg_id}: {msg}' --disable=R,C --rcfile=PythonAPI/.pylintrc PythonAPI/**/*.py"
+			}
+		},
+		{
+			"name": "CARLA - Pylint this file",
+			"selector": "source.python",
+			"working_dir": "${project_path}/..",
+			"file_regex": "^([^\n:]*):([0-9]+):?([0-9]+)?:? (.*)$",
+			"syntax": "Packages/Makefile/Make Output.sublime-syntax",
+			"linux":
+			{
+				"shell_cmd": "pylint -rn --msg-template='{path}:{line}:{column}: {msg_id}: {msg}' --disable=R,C --rcfile=PythonAPI/.pylintrc ${file}"
+			}
+		},
+		{
 			"name": "CARLA - Prettify this file",
 			"working_dir": "${project_path}/..",
 			"file_regex": "^([^:]*):([0-9]+):?([0-9]+)?:? (.*)$",
