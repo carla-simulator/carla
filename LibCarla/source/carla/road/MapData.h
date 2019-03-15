@@ -27,7 +27,7 @@ namespace road {
       return _geo_reference;
     }
 
-    const Road *GetRoad(const RoadId id) const;
+    Road *GetRoad(const RoadId id);
 
   private:
 

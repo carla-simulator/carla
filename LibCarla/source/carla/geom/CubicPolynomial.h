@@ -33,7 +33,8 @@ namespace geom {
         const value_type &b,
         const value_type &c,
         const value_type &d)
-      : _v{ {a, b, c, d} } {}
+      : _v{ {a, b, c, d} },
+        _s(0.0) {}
 
     CubicPolynomial(
         const value_type &a,
@@ -44,7 +45,8 @@ namespace geom {
       : _v{ {a - b * s + c * s * s - d * s * s * s,
              b - 2 * c * s + 3 * d * s * s,
              c - 3 * d * s,
-             d} } {}
+             d} },
+        _s(s) {}
 
     // =========================================================================
     // -- Getters --------------------------------------------------------------
@@ -64,6 +66,27 @@ namespace geom {
 
     value_type GetD() const {
       return _v[3];
+    }
+
+    value_type GetS() const {
+      return _s;
+    }
+
+    // =========================================================================
+    // -- Set ------------------------------------------------------------------
+    // =========================================================================
+
+    void Set(
+        const value_type &a,
+        const value_type &b,
+        const value_type &c,
+        const value_type &d,
+        const value_type &s) { // lateral offset
+      _v = { a - b * s + c * s * s - d * s * s * s,
+             b - 2 * c * s + 3 * d * s * s,
+             c - 3 * d * s,
+             d };
+      _s = s;
     }
 
     // =========================================================================
@@ -126,6 +149,8 @@ namespace geom {
     // d - curvature change
     std::array<value_type, 4> _v = {0.0, 0.0, 0.0, 0.0};
 
+    // s - distance
+    value_type _s;
   };
 
 } // namespace geom

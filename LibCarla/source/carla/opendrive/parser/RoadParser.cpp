@@ -4,7 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "carla/opendrive/parser/RoadLinkParser.h"
+#include "carla/opendrive/parser/RoadParser.h"
 #include "carla/opendrive/parser/pugixml/pugixml.hpp"
 #include "carla/road/MapBuilder.h"
 #include "carla/Logging.h"
@@ -18,8 +18,8 @@ namespace parser {
   using LaneId = int;
 
   struct Polynomial {
-    double s;
-    double a, b, c, d;
+    float s;
+    float a, b, c, d;
   };
 
   struct Lane {
@@ -31,22 +31,22 @@ namespace parser {
   };
 
   struct LaneSection {
-    double s;
-    double a, b, c, d;
+    float s;
+    float a, b, c, d;
     std::vector<Lane> lanes;
   };
 
   struct RoadTypeSpeed {
-    double s;
+    float s;
     std::string type;
-    double max;
+    float max;
     std::string unit;
   };
 
   struct Road {
     RoadId id;
     std::string name;
-    double length;
+    float length;
     RoadId junction_id;
     RoadId predecessor;
     RoadId successor;
@@ -54,7 +54,7 @@ namespace parser {
     std::vector<LaneSection> sections;
   };
 
-  void RoadLinkParser::Parse(
+  void RoadParser::Parse(
       const pugi::xml_document &xml,
       carla::road::MapBuilder &map_builder) {
 
@@ -66,7 +66,7 @@ namespace parser {
         // attributes
         road.id = node_road.attribute("id").as_int();
         road.name = node_road.attribute("name").value();
-        road.length = node_road.attribute("length").as_double();
+        road.length = node_road.attribute("length").as_float();
         road.junction_id = node_road.attribute("junction").as_int();
 
         // link
@@ -82,13 +82,13 @@ namespace parser {
         for (pugi::xml_node node_type : node_road.children("type")) {
           RoadTypeSpeed type { 0.0, "", 0.0, "" };
 
-          type.s = node_type.attribute("s").as_double();
+          type.s = node_type.attribute("s").as_float();
           type.type = node_type.attribute("type").value();
 
           // speed type
           pugi::xml_node speed = node_type.child("speed");
           if (speed) {
-            type.max = speed.attribute("max").as_double();
+            type.max = speed.attribute("max").as_float();
             type.unit = speed.attribute("unit").value();
           }
 
@@ -100,11 +100,11 @@ namespace parser {
         std::deque<Polynomial> lane_offsets;
         for (pugi::xml_node node_offset : node_road.child("lanes").children("laneOffset")) {
           Polynomial offset { 0.0, 0.0, 0.0, 0.0, 0.0 } ;
-          offset.s = node_offset.attribute("s").as_double();
-          offset.a = node_offset.attribute("a").as_double();
-          offset.b = node_offset.attribute("b").as_double();
-          offset.c = node_offset.attribute("c").as_double();
-          offset.d = node_offset.attribute("d").as_double();
+          offset.s = node_offset.attribute("s").as_float();
+          offset.a = node_offset.attribute("a").as_float();
+          offset.b = node_offset.attribute("b").as_float();
+          offset.c = node_offset.attribute("c").as_float();
+          offset.d = node_offset.attribute("d").as_float();
           lane_offsets.emplace_back(offset);
         }
 
@@ -112,7 +112,7 @@ namespace parser {
         for (pugi::xml_node node_section : node_road.child("lanes").children("laneSection")) {
           LaneSection section { 0.0, 0.0, 0.0, 0.0, 0.0, {} };
 
-          section.s = node_section.attribute("s").as_double();
+          section.s = node_section.attribute("s").as_float();
 
           // section offsets
           section.a = lane_offsets[0].a;
@@ -216,14 +216,13 @@ namespace parser {
         map_builder.SetRoadTypeSpeed(r.id, s.s, s.type, s.max, s.unit);
       }
 
-      // lane sections
       int i = 0;
       for (auto const s : r.sections) {
-        map_builder.AddRoadSection(r.id, i, s.s, s.a, s.b, s.c, s.d);
+        map_builder.AddRoadSection(r.id, geom::CubicPolynomial(s.a, s.b, s.c, s.d, s.s));
 
         // lanes
         for (auto const l : s.lanes) {
-          map_builder.SetRoadLaneLink(r.id, i, l.id, l.type, l.level, l.predecessor, l.successor);
+          map_builder.AddRoadSectionLane(r.id, i, l.id, l.type, l.level, l.predecessor, l.successor);
         }
 
         ++i;

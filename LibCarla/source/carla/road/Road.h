@@ -15,6 +15,7 @@
 #include "carla/road/signal/Signal.h"
 
 #include <vector>
+#include <map>
 #include <memory>
 
 namespace carla {
@@ -22,29 +23,22 @@ namespace road {
 
   class MapData;
   class Elevation;
+  class MapBuilder;
 
   class Road : private MovableNonCopyable {
   public:
 
     Road() = default;
-
-    Road(
-        MapData *map_data,
-        const RoadId id,
-        const bool is_junction,
-        const JuncId junction_id,
-        std::vector<LaneSection> &&lane_sections,
-        std::vector<std::unique_ptr<element::RoadInfo>> &&info)
-      : _map_data(map_data),
-        _id(id),
-        _is_junction(is_junction),
-        _junction_id(junction_id),
-        _lane_sections(std::move(lane_sections)),
-        _info(std::move(info)) {}
+    Road(Road&&) = default;
+    Road &operator=(Road&&) = default;
 
     const MapData *GetMap() const;
 
     RoadId GetId() const;
+
+    std::string GetName() const;
+
+    float GetLength() const;
 
     bool IsJunction() const;
 
@@ -62,15 +56,22 @@ namespace road {
 
   private:
 
-    MapData *_map_data;
+    friend MapBuilder;
 
-    RoadId _id;
+    MapData *_map_data { nullptr };
 
-    bool _is_junction;
+    RoadId _id { 0 };
 
-    JuncId _junction_id;
+    std::string _name;
 
-    RoadElementSet<LaneSection> _lane_sections;
+    float _length { 0.0f };
+
+    bool _is_junction { false };
+
+    JuncId _junction_id { -1 };
+
+    // RoadElementSet<LaneSection> _lane_sections;
+    std::multimap<float, LaneSection> _lane_sections;
 
     InformationSet _info;
 

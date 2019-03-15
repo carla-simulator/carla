@@ -22,6 +22,14 @@ namespace road {
     return _id;
   }
 
+  std::string Road::GetName() const {
+    return _name;
+  }
+
+  float Road::GetLength() const {
+    return _length;
+  }
+
   bool Road::IsJunction() const {
     return _is_junction;
   }
@@ -38,22 +46,24 @@ namespace road {
     return vec;
   }
 
-  std::vector<const Road *> Road::GetPrevs() const{
+  std::vector<const Road *> Road::GetPrevs() const {
     std::vector<const Road *> vec;
-    for (auto &&next : _prevs) {
-      vec.emplace_back(_map_data->GetRoad(next));
+    for (auto &&prev : _prevs) {
+      vec.emplace_back(_map_data->GetRoad(prev));
     }
     return vec;
   }
 
+  /*
   const Lane *Road::GetLane(const LaneId id, const float s) const {
-    const auto lanes = _lane_sections.GetReverseSubset(s);
-    if (lanes.empty()) {
+    const auto sections = _lane_sections.GetReverseSubset(s);
+    if (sections.empty()) {
       log_warning("road", id, "in distance s", s, "not found");
       return nullptr;
     }
-    return lanes.begin()->GetLane(id);
+    return sections.begin()->GetLane(id);
   }
+  */
 
 } // road
 } // carla

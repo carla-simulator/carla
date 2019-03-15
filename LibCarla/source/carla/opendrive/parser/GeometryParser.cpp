@@ -17,40 +17,40 @@ namespace parser {
   using RoadId = int;
 
   struct GeometryArc {
-    double curvature  { 0.0 };
+    float curvature  { 0.0 };
   };
 
   struct GeometrySpiral {
-    double curvStart  { 0.0 };
-    double curvEnd    { 0.0 };
+    float curvStart  { 0.0 };
+    float curvEnd    { 0.0 };
   };
 
   struct GeometryPoly3 {
-    double a    { 0.0 };
-    double b    { 0.0 };
-    double c    { 0.0 };
-    double d    { 0.0 };
+    float a    { 0.0 };
+    float b    { 0.0 };
+    float c    { 0.0 };
+    float d    { 0.0 };
   };
 
   struct GeometryParamPoly3 {
-    double aU             { 0.0 };
-    double bU             { 0.0 };
-    double cU             { 0.0 };
-    double dU             { 0.0 };
-    double aV             { 0.0 };
-    double bV             { 0.0 };
-    double cV             { 0.0 };
-    double dV             { 0.0 };
+    float aU             { 0.0 };
+    float bU             { 0.0 };
+    float cU             { 0.0 };
+    float dU             { 0.0 };
+    float aV             { 0.0 };
+    float bV             { 0.0 };
+    float cV             { 0.0 };
+    float dV             { 0.0 };
     std::string p_range   { "arcLength" };
   };
 
   struct Geometry {
     RoadId road_id      { -1 };
-    double s            { 0.0 };
-    double x            { 0.0 };
-    double y            { 0.0 };
-    double hdg          { 0.0 };
-    double length       { 0.0 };
+    float s            { 0.0 };
+    float x            { 0.0 };
+    float y            { 0.0 };
+    float hdg          { 0.0 };
+    float length       { 0.0 };
     std::string type    { "line" };
     GeometryArc arc;
     GeometrySpiral spiral;
@@ -77,34 +77,34 @@ namespace parser {
             geo.road_id = node_road.attribute("id").as_int();
 
             // get common properties
-            geo.s = node_geo.attribute("s").as_double();
-            geo.x = node_geo.attribute("x").as_double();
-            geo.y = node_geo.attribute("y").as_double();
-            geo.hdg = node_geo.attribute("hdg").as_double();
-            geo.length = node_geo.attribute("length").as_double();
+            geo.s = node_geo.attribute("s").as_float();
+            geo.x = node_geo.attribute("x").as_float();
+            geo.y = node_geo.attribute("y").as_float();
+            geo.hdg = node_geo.attribute("hdg").as_float();
+            geo.length = node_geo.attribute("length").as_float();
 
             // check geometry type
             pugi::xml_node node = node_geo.first_child();
             geo.type = node.name();
             if (geo.type == "arc") {
-                geo.arc.curvature = node.attribute("curvature").as_double();
+                geo.arc.curvature = node.attribute("curvature").as_float();
             } else if (geo.type == "spiral") {
-                geo.spiral.curvStart = node.attribute("curvStart").as_double();
-                geo.spiral.curvEnd = node.attribute("curvEnd").as_double();
+                geo.spiral.curvStart = node.attribute("curvStart").as_float();
+                geo.spiral.curvEnd = node.attribute("curvEnd").as_float();
             } else if (geo.type == "poly3") {
-                geo.poly3.a = node.attribute("a").as_double();
-                geo.poly3.b = node.attribute("b").as_double();
-                geo.poly3.c = node.attribute("c").as_double();
-                geo.poly3.d = node.attribute("d").as_double();
+                geo.poly3.a = node.attribute("a").as_float();
+                geo.poly3.b = node.attribute("b").as_float();
+                geo.poly3.c = node.attribute("c").as_float();
+                geo.poly3.d = node.attribute("d").as_float();
             } else if (geo.type == "paramPoly3") {
-                geo.param_poly3.aU = node.attribute("aU").as_double();
-                geo.param_poly3.bU = node.attribute("bU").as_double();
-                geo.param_poly3.cU = node.attribute("cU").as_double();
-                geo.param_poly3.dU = node.attribute("dU").as_double();
-                geo.param_poly3.aV = node.attribute("aV").as_double();
-                geo.param_poly3.bV = node.attribute("bV").as_double();
-                geo.param_poly3.cV = node.attribute("cV").as_double();
-                geo.param_poly3.dV = node.attribute("dV").as_double();
+                geo.param_poly3.aU = node.attribute("aU").as_float();
+                geo.param_poly3.bU = node.attribute("bU").as_float();
+                geo.param_poly3.cU = node.attribute("cU").as_float();
+                geo.param_poly3.dU = node.attribute("dU").as_float();
+                geo.param_poly3.aV = node.attribute("aV").as_float();
+                geo.param_poly3.bV = node.attribute("bV").as_float();
+                geo.param_poly3.cV = node.attribute("cV").as_float();
+                geo.param_poly3.dV = node.attribute("dV").as_float();
                 geo.param_poly3.p_range = node.attribute("pRange").value();
             }
 

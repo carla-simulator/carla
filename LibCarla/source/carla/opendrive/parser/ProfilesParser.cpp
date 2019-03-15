@@ -18,11 +18,11 @@ namespace parser {
 
   struct ElevationProfile {
     RoadId road_id      { -1 };
-    double s            { 0.0 };
-    double a            { 0.0 };
-    double b            { 0.0 };
-    double c            { 0.0 };
-    double d            { 0.0 };
+    float s            { 0.0 };
+    float a            { 0.0 };
+    float b            { 0.0 };
+    float c            { 0.0 };
+    float d            { 0.0 };
   };
 
   struct LateralCrossfall {
@@ -30,16 +30,16 @@ namespace parser {
   };
 
   struct LateralShape {
-    double t      { 0.0 };
+    float t      { 0.0 };
   };
 
   struct LateralProfile {
     RoadId road_id      { -1 };
-    double s            { 0.0 };
-    double a            { 0.0 };
-    double b            { 0.0 };
-    double c            { 0.0 };
-    double d            { 0.0 };
+    float s            { 0.0 };
+    float a            { 0.0 };
+    float b            { 0.0 };
+    float c            { 0.0 };
+    float d            { 0.0 };
     std::string type    { "superelevation" };
     LateralCrossfall cross;
     LateralShape shape;
@@ -65,11 +65,11 @@ namespace parser {
             elev.road_id = node_road.attribute("id").as_int();
 
             // get common properties
-            elev.s = node_elevation.attribute("s").as_double();
-            elev.a = node_elevation.attribute("a").as_double();
-            elev.b = node_elevation.attribute("b").as_double();
-            elev.c = node_elevation.attribute("c").as_double();
-            elev.d = node_elevation.attribute("d").as_double();
+            elev.s = node_elevation.attribute("s").as_float();
+            elev.a = node_elevation.attribute("a").as_float();
+            elev.b = node_elevation.attribute("b").as_float();
+            elev.c = node_elevation.attribute("c").as_float();
+            elev.d = node_elevation.attribute("d").as_float();
 
             // add it
             elevation_profile.emplace_back(elev);
@@ -86,18 +86,18 @@ namespace parser {
             lateral.road_id = node_road.attribute("id").as_int();
 
             // get common properties
-            lateral.s = node.attribute("s").as_double();
-            lateral.a = node.attribute("a").as_double();
-            lateral.b = node.attribute("b").as_double();
-            lateral.c = node.attribute("c").as_double();
-            lateral.d = node.attribute("d").as_double();
+            lateral.s = node.attribute("s").as_float();
+            lateral.a = node.attribute("a").as_float();
+            lateral.b = node.attribute("b").as_float();
+            lateral.c = node.attribute("c").as_float();
+            lateral.d = node.attribute("d").as_float();
 
             // handle different types
             lateral.type = node.name();
             if (lateral.type == "crossfall") {
                 lateral.cross.side = node.attribute("side").value();
             } else if (lateral.type == "shape") {
-                lateral.shape.t = node.attribute("t").as_double();
+                lateral.shape.t = node.attribute("t").as_float();
             }
 
             // add it
