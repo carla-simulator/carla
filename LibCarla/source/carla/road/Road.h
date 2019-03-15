@@ -12,6 +12,7 @@
 #include "carla/road/LaneSection.h"
 #include "carla/road/RoadTypes.h"
 #include "carla/road/RoadElementSet.h"
+#include "carla/road/signal/Signal.h"
 
 #include <vector>
 #include <memory>
@@ -55,6 +56,10 @@ namespace road {
 
     std::vector<const Road *> GetPrevs() const;
 
+    signal::Signal GetSignal(const SignId id) const;
+
+    std::unordered_map<SignId, signal::Signal> getSignals() const;
+
   private:
 
     MapData *_map_data;
@@ -72,6 +77,8 @@ namespace road {
     std::vector<RoadId> _nexts;
 
     std::vector<RoadId> _prevs;
+
+    std::unordered_map<SignId, signal::Signal> _signals;
 
   };
 

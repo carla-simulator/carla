@@ -14,8 +14,8 @@ namespace carla {
 namespace opendrive {
 namespace parser {
 
-  using RoadID = std::string;
-  using SignalID = std::string;
+  using RoadID = int32_t;
+  using SignalID = int32_t;
   using DependencyID = std::string;
   using SignalReferenceID = std::string;
 
@@ -38,38 +38,38 @@ namespace parser {
 
   void SignalParser::Parse(
       const pugi::xml_document & xml,
-      carla::road::MapBuilder &  /* map_builder */ ) {
+      carla::road::MapBuilder &   map_builder ) {
         //Extracting the OpenDRIVE
         const pugi::xml_node opendrive_node = xml.child("OpenDRIVE");
         const std::string validity = "validity";
         for (pugi::xml_node road_node = opendrive_node.child("road");
             road_node;
             road_node = road_node.next_sibling("road")) {
-              const RoadID road_id = (RoadID) road_node.attribute("id").value();
+              const RoadID road_id = (RoadID) road_node.attribute("id").as_int();
               const pugi::xml_node signals_node = road_node.child("signals");
               for (pugi::xml_node signal_node = signals_node.child("signal");
                 signal_node;
                 signal_node = signal_node.next_sibling("signal")) {
-                  const double s_position = signal_node.attribute("s").as_double();
-                  const double t_position = signal_node.attribute("t").as_double();
-                  const SignalID signal_id = (SignalID) signal_node.attribute("id").value();
+                  const float s_position = signal_node.attribute("s").as_float();
+                  const float t_position = signal_node.attribute("t").as_float();
+                  const SignalID signal_id = (SignalID) signal_node.attribute("id").as_int();
                   const std::string name = signal_node.attribute("name").value();
                   const std::string dynamic =  signal_node.attribute("dynamic").value();
                   const std::string orientation =  signal_node.attribute("orientation").value();
-                  const double zOffset = signal_node.attribute("zOffSet").as_double();
+                  const float zOffset = signal_node.attribute("zOffSet").as_float();
                   const std::string country =  signal_node.attribute("country").value();
                   const std::string type =  signal_node.attribute("type").value();
                   const std::string subtype =  signal_node.attribute("subtype").value();
-                  const double value = signal_node.attribute("value").as_double();
+                  const float value = signal_node.attribute("value").as_float();
                   const std::string unit =  signal_node.attribute("unit").value();
-                  const double height = signal_node.attribute("height").as_double();
-                  const double width = signal_node.attribute("width").as_double();
+                  const float height = signal_node.attribute("height").as_float();
+                  const float width = signal_node.attribute("width").as_float();
                   const std::string text =  signal_node.attribute("text").value();
-                  const double hOffset = signal_node.attribute("hOffset").as_double();
-                  const double pitch = signal_node.attribute("pitch").as_double();
-                  const double roll = signal_node.attribute("roll").as_double();
+                  const float hOffset = signal_node.attribute("hOffset").as_float();
+                  const float pitch = signal_node.attribute("pitch").as_float();
+                  const float roll = signal_node.attribute("roll").as_float();
                   logging::log("Road: ", road_id, "Adding Signal: ", s_position, t_position, signal_id, name, dynamic, orientation, zOffset, country, type, subtype, value, unit, height, width, text, hOffset, pitch, roll);
-
+                  map_builder.AddSignal(road_id, signal_id, s_position, t_position, name, dynamic, orientation, zOffset, country, type, subtype, value, unit, height, width, text, hOffset, pitch, roll );
                   /* AddValidity(signal_node, "validity", signal_id,
                     ([&map_builder](const SignalID &signal_id, const int16_t from_lane, const int16_t to_lane)
                       { map_builder.AddValidityToSignal(signal_id, from_lane, to_lane);})); */
@@ -86,9 +86,9 @@ namespace parser {
                  for (pugi::xml_node signalreference_node = signals_node.child("signalReference");
                     signalreference_node;
                     signalreference_node = signalreference_node.next_sibling("signalReference")) {
-                      const double s_position = signalreference_node.attribute("s").as_double();
-                      const double t_position = signalreference_node.attribute("t").as_double();
-                      const SignalID signal_reference_id = signalreference_node.attribute("id").value();
+                      const float s_position = signalreference_node.attribute("s").as_float();
+                      const float t_position = signalreference_node.attribute("t").as_float();
+                      const SignalID signal_reference_id = signalreference_node.attribute("id").as_int();
                       const std::string signal_reference_orientation = signalreference_node.attribute("orientation").value();
                       logging::log("Road: ", road_id, "Added SignalReference ", s_position, t_position, signal_reference_id, signal_reference_orientation);
                       /* AddValidity(signalreference_node, validity, signal_reference_id,

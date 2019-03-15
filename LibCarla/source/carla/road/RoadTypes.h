@@ -14,6 +14,8 @@ namespace road {
   using RoadId = uint32_t;
   using JuncId = RoadId;
   using LaneId = int16_t;
+  using ObjId = uint32_t;
+  using SignId = uint32_t;
 
 } // road
 } // carla
