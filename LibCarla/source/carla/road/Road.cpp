@@ -65,5 +65,32 @@ namespace road {
   }
   */
 
+
+    //carla::road::signal::Signal* Road::GetSignal(const SignId /*id*/) const {
+      /// @todo: Fix this so it can return an specific Signal
+      /*const auto search = _signals.find(id);
+      if (search != _signals.end()) {
+        return &search->second;
+      }*/
+    /*  return nullptr;
+    }
+
+    carla::road::signal::SignalReference* Road::GetSignalRef(const SignRefId id) const {*/
+      /// @todo: Fix this so it can return an specific SignalReference
+      /*const auto search = _sign_ref.find(id);
+      if (search != _sign_ref.end()) {
+        return &search->second;
+      }*/
+    //  return nullptr;
+    //}
+
+    //std::unordered_map<SignId, signal::Signal> Road::getSignals() const {
+    //  return _signals;
+    //}
+
+    //std::unordered_map<SignId, signal::SignalReference> Road::getSignalReferences() const {
+    //  return _sign_ref;
+    //}
+
 } // road
 } // carla

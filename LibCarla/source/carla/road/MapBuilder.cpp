@@ -158,9 +158,7 @@ namespace road {
       const float type_width) {
     RoadInfoMarkRecord::LaneChange lc;
 
-    auto ToLower = [](auto str) {
-      return StringUtil::ToLowerCopy(str);
-    };
+    auto ToLower = [](auto str) { return StringUtil::ToLowerCopy(str); };
 
     if (ToLower(lane_change) == "increase") {
       lc = RoadInfoMarkRecord::LaneChange::Increase;
@@ -238,7 +236,7 @@ namespace road {
       uint32_t signal_id,
       int32_t from_lane,
       int32_t to_lane) {
-    _map_data.GetRoad(road_id)->GetSignal(signal_id).AddValidity(general::Validity(signal_id, from_lane,
+    _map_data.GetRoad(road_id)->GetSignal(signal_id)->AddValidity(general::Validity(signal_id, from_lane,
         to_lane));
   }
 
@@ -345,5 +343,44 @@ namespace road {
     _map_data.GetJunction(junction_id)->GetConnection(connection_id)->AddLaneLink(from, to);
   }
 
-} // namespace road
+  void MapBuilder::AddValidityToSignal(
+      uint32_t road_id,
+      uint32_t signal_id,
+      int32_t from_lane,
+      int32_t to_lane) {
+    _map_data.GetRoad(road_id)->GetSignal(signal_id)->AddValidity(general::Validity(signal_id, from_lane,
+        to_lane));
+  }
+
+  void MapBuilder::AddValidityToSignalReference(
+      const uint32_t road_id,
+      const uint32_t signal_reference_id,
+      const int32_t from_lane,
+      const int32_t to_lane) {
+    _map_data.GetRoad(road_id)->GetSignalRef(signal_reference_id)->AddValidity(general::Validity(
+        signal_reference_id, from_lane, to_lane));
+  }
+
+  void MapBuilder::AddSignalReference(
+      const uint32_t road_id,
+      const uint32_t signal_reference_id,
+      const float s_position,
+      const float t_position,
+      const std::string signal_reference_orientation) {
+    _map_data.GetRoad(road_id)->getSignalReferences().emplace(signal_reference_id,
+        signal::SignalReference(road_id, signal_reference_id, s_position, t_position,
+        signal_reference_orientation));
+  }
+
+  void MapBuilder::AddDependencyToSignal(
+      const uint32_t road_id,
+      const uint32_t signal_id,
+      const uint32_t dependency_id,
+      const std::string dependency_type) {
+    _map_data.GetRoad(road_id)->GetSignal(signal_id)->AddDependency(signal::SignalDependency(road_id,
+        signal_id, dependency_id, dependency_type));
+
+  }
+
+}   // namespace road
 } // namespace carla
