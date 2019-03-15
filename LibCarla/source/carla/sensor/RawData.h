@@ -88,7 +88,7 @@ namespace sensor {
     template <typename... Items>
     friend class CompositeSerializer;
 
-    RawData(Buffer buffer) : _buffer(std::move(buffer)) {}
+    RawData(Buffer &&buffer) : _buffer(std::move(buffer)) {}
 
     Buffer _buffer;
   };

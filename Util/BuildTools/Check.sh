@@ -37,9 +37,11 @@ LIBCARLA_RELEASE=false
 LIBCARLA_DEBUG=false
 PYTHON_API_2=false
 PYTHON_API_3=false
+SMOKE_TESTS_2=false
+SMOKE_TESTS_3=false
 RUN_BENCHMARK=false
 
-OPTS=`getopt -o h --long help,gdb,xml,gtest_args:,all,libcarla-release,libcarla-debug,python-api-2,python-api-3,benchmark -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,gdb,xml,gtest_args:,all,libcarla-release,libcarla-debug,python-api-2,python-api-3,smoke-2,smoke-3,benchmark -n 'parse-options' -- "$@"`
 
 if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
 
@@ -55,7 +57,7 @@ while true; do
       shift ;;
     --gtest_args )
       GTEST_ARGS="$2";
-      shift ;;
+      shift 2 ;;
     --all )
       LIBCARLA_RELEASE=true;
       LIBCARLA_DEBUG=true;
@@ -74,6 +76,12 @@ while true; do
     --python-api-3 )
       PYTHON_API_3=true;
       shift ;;
+    --smoke-2 )
+      SMOKE_TESTS_2=true;
+      shift ;;
+    --smoke-3 )
+      SMOKE_TESTS_3=true;
+      shift ;;
     --benchmark )
       LIBCARLA_RELEASE=true;
       RUN_BENCHMARK=true;
@@ -89,7 +97,7 @@ while true; do
   esac
 done
 
-if ! { ${LIBCARLA_RELEASE} || ${LIBCARLA_DEBUG} || ${PYTHON_API_2} || ${PYTHON_API_3}; }; then
+if ! { ${LIBCARLA_RELEASE} || ${LIBCARLA_DEBUG} || ${PYTHON_API_2} || ${PYTHON_API_3} || ${SMOKE_TESTS_2} || ${SMOKE_TESTS_3}; }; then
   fatal_error "Nothing selected to be done."
 fi
 
@@ -138,10 +146,10 @@ if ${LIBCARLA_RELEASE} ; then
 fi
 
 # ==============================================================================
-# -- Run Python API tests ------------------------------------------------------
+# -- Run Python API unit tests -------------------------------------------------
 # ==============================================================================
 
-pushd "${CARLA_PYTHONAPI_ROOT_FOLDER}/test" >/dev/null
+pushd "${CARLA_PYTHONAPI_ROOT_FOLDER}/test/unit" >/dev/null
 
 if ${XML_OUTPUT} ; then
   EXTRA_ARGS="-X"
@@ -169,6 +177,51 @@ if ${PYTHON_API_3} ; then
 
   if ${XML_OUTPUT} ; then
     mv test-results.xml ${CARLA_TEST_RESULTS_FOLDER}/python-api-3.xml
+  fi
+
+fi
+
+popd >/dev/null
+
+# ==============================================================================
+# -- Run smoke tests -----------------------------------------------------------
+# ==============================================================================
+
+if ${SMOKE_TESTS_2} || ${SMOKE_TESTS_3} ; then
+  pushd "${CARLA_PYTHONAPI_ROOT_FOLDER}/test" >/dev/null
+    log "Checking connection with the simulator."
+    ./test_connection.py -p 3654 --timeout=60.0
+  popd >/dev/null
+fi
+
+pushd "${CARLA_PYTHONAPI_ROOT_FOLDER}/test/smoke" >/dev/null
+
+if ${XML_OUTPUT} ; then
+  EXTRA_ARGS="-X"
+else
+  EXTRA_ARGS=
+fi
+
+if ${SMOKE_TESTS_2} ; then
+
+  log "Running smoke tests for Python 2."
+
+  /usr/bin/env python2 -m nose2 ${EXTRA_ARGS}
+
+  if ${XML_OUTPUT} ; then
+    mv test-results.xml ${CARLA_TEST_RESULTS_FOLDER}/smoke-tests-2.xml
+  fi
+
+fi
+
+if ${SMOKE_TESTS_3} ; then
+
+  log "Running smoke tests for Python 3."
+
+  /usr/bin/env python3 -m nose2 ${EXTRA_ARGS}
+
+  if ${XML_OUTPUT} ; then
+    mv test-results.xml ${CARLA_TEST_RESULTS_FOLDER}/smoke-tests-3.xml
   fi
 
 fi
