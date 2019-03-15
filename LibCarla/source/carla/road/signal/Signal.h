@@ -11,6 +11,7 @@
 #include <vector>
 #include "carla/road/RoadTypes.h"
 #include "carla/road/general/Validity.h"
+#include "carla/road/signal/SignalDependency.h"
 
 namespace carla {
 namespace road {
@@ -59,9 +60,14 @@ namespace signal {
           _pitch(pitch),
           _roll(roll) {
             _validities = std::vector<general::Validity>();
+            _dependencies = std::vector<signal::SignalDependency>();
           }
 
     void AddValidity(general::Validity &&validity);
+
+    void AddDependency(signal::SignalDependency &&dependency);
+
+    std::string GimmeRandomStuff();
 
   private:
 
@@ -89,6 +95,7 @@ namespace signal {
     float _pitch;
     float _roll;
     std::vector<general::Validity> _validities;
+    std::vector<signal::SignalDependency> _dependencies;
 #if defined(__clang__)
 #  pragma clang diagnostic pop
 #endif
