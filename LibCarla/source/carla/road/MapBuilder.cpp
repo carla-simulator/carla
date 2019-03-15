@@ -4,6 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include "carla/StringUtil.h"
 #include "carla/road/MapBuilder.h"
 #include "carla/road/element/RoadElevationInfo.h"
 #include "carla/road/element/RoadInfoLaneAccess.h"
@@ -157,14 +158,15 @@ namespace road {
       const float type_width) {
     RoadInfoMarkRecord::LaneChange lc;
 
-    // to lower case.
-    auto tl = [](auto) -> std::string { throw_exception(std::runtime_error("not implemented")); };
+    auto ToLower = [](auto str) {
+      return StringUtil::ToLowerCopy(str);
+    };
 
-    if (tl(lane_change) == "increase") {
+    if (ToLower(lane_change) == "increase") {
       lc = RoadInfoMarkRecord::LaneChange::Increase;
-    } else if (tl(lane_change) == "decrease") {
+    } else if (ToLower(lane_change) == "decrease") {
       lc = RoadInfoMarkRecord::LaneChange::Decrease;
-    } else if (tl(lane_change) == "both") {
+    } else if (ToLower(lane_change) == "both") {
       lc = RoadInfoMarkRecord::LaneChange::Both;
     } else {
       lc = RoadInfoMarkRecord::LaneChange::None;
