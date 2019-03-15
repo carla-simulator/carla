@@ -25,6 +25,8 @@ namespace road {
   class Road : private MovableNonCopyable {
   public:
 
+    Road() = default;
+
     Road(
         MapData *map_data,
         const RoadId id,
@@ -39,7 +41,7 @@ namespace road {
         _lane_sections(std::move(lane_sections)),
         _info(std::move(info)) {}
 
-    const MapData *GetMap() const;
+    MapData *GetMap() const;
 
     RoadId GetId() const;
 
@@ -47,23 +49,29 @@ namespace road {
 
     JuncId GetJunction() const;
 
-    const Lane &GetLane(const LaneId id) const;
+    Lane &GetLane(const LaneId id) const;
 
+    std::vector<Road *> GetNexts() const;
 
+    std::vector<Road *> GetPrevs() const;
 
   private:
 
-    const MapData *_map_data;
+    MapData *_map_data;
 
-    const RoadId _id;
+    RoadId _id;
 
-    const bool _is_junction;
+    bool _is_junction;
 
-    const JuncId _junction_id;
+    JuncId _junction_id;
 
     RoadElementSet<LaneSection> _lane_sections;
 
-    const InformationSet _info;
+    InformationSet _info;
+
+    std::vector<RoadId> _nexts;
+
+    std::vector<RoadId> _prevs;
 
   };
 

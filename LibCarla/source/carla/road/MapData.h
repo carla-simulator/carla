@@ -27,6 +27,8 @@ namespace road {
       return _geo_reference;
     }
 
+    Road *GetRoad(RoadId id) const;
+
   private:
 
     friend class MapBuilder;

@@ -15,7 +15,7 @@ namespace road {
   class Junction : private MovableNonCopyable {
   public:
 
-    Junction() {}
+    Junction() = default;
 
   private:
 
