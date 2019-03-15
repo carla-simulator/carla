@@ -100,7 +100,7 @@ static carla::geom::Vector3D FWorldObserver_GetAcceleration(
 }
 
 static carla::Buffer FWorldObserver_Serialize(
-    carla::Buffer buffer,
+    carla::Buffer &&buffer,
     const UCarlaEpisode &Episode,
     float DeltaSeconds)
 {
@@ -145,7 +145,7 @@ static carla::Buffer FWorldObserver_Serialize(
   }
 
   check(begin == buffer.end());
-  return buffer;
+  return std::move(buffer);
 }
 
 void FWorldObserver::BroadcastTick(const UCarlaEpisode &Episode, float DeltaSeconds)

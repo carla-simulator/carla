@@ -43,8 +43,8 @@ namespace s11n {
     }
 
     template <typename SensorT>
-    static Buffer Serialize(const SensorT &, Buffer buffer) {
-      return buffer;
+    static Buffer Serialize(const SensorT &, Buffer &&buffer) {
+      return std::move(buffer);
     }
 
     static SharedPtr<SensorData> Deserialize(RawData data);
