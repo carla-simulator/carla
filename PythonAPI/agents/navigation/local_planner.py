@@ -79,8 +79,14 @@ class LocalPlanner(object):
         self.init_controller(opt_dict)
 
     def __del__(self):
-        self._vehicle.destroy()
+        if self._vehicle:
+            self._vehicle.destroy()
         print("Destroying ego-vehicle!")
+
+
+    def reset_vehicle(self):
+        self._vehicle = None
+        print("Resetting ego-vehicle!")
 
     def init_controller(self, opt_dict):
         """
