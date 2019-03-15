@@ -72,7 +72,7 @@ namespace parser {
 
     // Fill Map Builder
     for (auto &junction : junctions) {
-      map_builder.CreateJunction(junction.id);
+      map_builder.AddJunction(junction.id, junction.name);
       for (auto &connection : junction.connections) {
         map_builder.AddConnection(junction.id,
             connection.id,
