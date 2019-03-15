@@ -382,5 +382,53 @@ namespace road {
 
   }
 
-}   // namespace road
+  // return the pointer to a lane object
+  Lane *MapBuilder::GetLaneAddress(RoadId road_id, bool from_start, LaneId lane_id) {
+
+    // get the road
+    Road *road = _map_data.GetRoad(road_id);
+    if (road == nullptr)
+      return nullptr;
+
+    // get the lane section
+    LaneSection *section;
+    if (from_start)
+      section = &(road->_lane_sections.begin())->second;
+    else
+      section = &(road->_lane_sections.rbegin())->second;
+
+    // get the lane
+    auto it = section->_lanes.find(lane_id);
+    if (it != section->_lanes.end())
+      return &(it->second);
+    else
+      return nullptr;
+  }
+
+  // return the pointer to a lane object
+  Lane *MapBuilder::GetLaneAddress(RoadId road_id, uint32_t section_index, LaneId lane_id) {
+
+    // get the road
+    Road *road = _map_data.GetRoad(road_id);
+    if (road == nullptr)
+      return nullptr;
+
+    // get the lane section
+    auto it = road->_lane_sections.begin();
+    std::advance(it, section_index);
+    LaneSection *section = &(it->second);
+
+    // get the lane
+    auto it2 = section->_lanes.find(lane_id);
+    if (it2 != section->_lanes.end())
+      return &(it2->second);
+    else
+      return nullptr;
+  }
+
+  // try to get pointers to the next and previous lanes
+  void MapBuilder::ProcessLaneLinks(void) {
+
+  }
+} // namespace road
 } // namespace carla
