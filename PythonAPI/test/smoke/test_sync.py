@@ -53,6 +53,7 @@ class TestSynchronousMode(SmokeTest):
 
                 image = image_queue.get()
                 self.assertEqual(image.frame_number, ts.frame_count)
+                self.assertEqual(image.timestamp, ts.elapsed_seconds)
 
         finally:
             camera.destroy()

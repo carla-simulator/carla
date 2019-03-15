@@ -28,8 +28,6 @@ public:
 
   void SetOwner(AActor *NewOwner) override;
 
-  void BeginPlay() override;
-
 private:
 
   UFUNCTION()
@@ -38,7 +36,4 @@ private:
       AActor *OtherActor,
       FVector NormalImpulse,
       const FHitResult &Hit);
-
-  UPROPERTY()
-  const UCarlaEpisode *Episode = nullptr;
 };

@@ -45,7 +45,7 @@ namespace data {
     /// Simulation time-stamp, simulated seconds elapsed since the beginning of
     /// the current episode.
     double GetGameTimeStamp() const {
-      return GetHeader().game_timestamp;
+      return GetTimestamp();
     }
 
     /// Time-stamp of the frame at which this measurement was taken, in seconds
