@@ -47,15 +47,13 @@ namespace client {
 
   Map::TopologyList Map::GetTopology() const {
     namespace re = carla::road::element;
-    std::unordered_map<road::RoadId, std::unordered_map<int, SharedPtr<Waypoint>>> waypoints;
+    std::unordered_map<re::Waypoint, SharedPtr<Waypoint>> waypoints;
 
-    /// @todo Use WaypointHash.
     auto get_or_make_waypoint = [&](const auto &waypoint) {
-      auto &waypoints_on_road = waypoints[waypoint.road_id];
-      auto it = waypoints_on_road.find(waypoint.lane_id);
-      if (it == waypoints_on_road.end()) {
-        it = waypoints_on_road.emplace(
-            waypoint.lane_id,
+      auto it = waypoints.find(waypoint);
+      if (it == waypoints.end()) {
+        it = waypoints.emplace(
+            waypoint,
             SharedPtr<Waypoint>(new Waypoint{shared_from_this(), waypoint})).first;
       }
       return it->second;
