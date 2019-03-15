@@ -3,4 +3,4 @@ max-line-length=120
 [MASTER]
 disable=I0011,E1121
 [TYPECHECK]
-ignored-modules=carla,pygame,numpy
+ignored-modules=carla,carla.command,libcarla,pygame,numpy
