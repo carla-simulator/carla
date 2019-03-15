@@ -11,13 +11,12 @@
 #include "Util/OpenDrive.h"
 
 #include <compiler/disable-ue4-macros.h>
-#include <carla/road/WaypointGenerator.h>
-#include <carla/rpc/String.h>
 #include <carla/geom/Math.h>
 #include <carla/road/element/Waypoint.h>
+#include <carla/rpc/String.h>
 #include <compiler/enable-ue4-macros.h>
 
-static TArray<FVector> WaypointVector2FVectorArray(
+/*static TArray<FVector> WaypointVector2FVectorArray(
     const std::vector<carla::road::element::Waypoint> &Waypoints,
     const float TriggersHeight)
 {
@@ -31,7 +30,7 @@ static TArray<FVector> WaypointVector2FVectorArray(
         FVector(0.f, 0.f, TriggersHeight));
   }
   return Positions;
-}
+}*/
 
 AOpenDriveActor::AOpenDriveActor(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
@@ -176,9 +175,9 @@ void AOpenDriveActor::BuildRoutes()
 void AOpenDriveActor::BuildRoutes(FString MapName)
 {
   using CarlaMath = carla::geom::Math;
-  using IdType = carla::road::element::id_type;
+  //using IdType = carla::road::element::id_type;
   using Waypoint = carla::road::element::Waypoint;
-  using WaypointGen = carla::road::WaypointGenerator;
+  // using WaypointGen = carla::road::WaypointGenerator;
   // using TrafficGroup = carla::opendrive::types::TrafficLightGroup;
   // using TrafficLight = carla::opendrive::types::TrafficLight;
   // using TrafficBoxComponent = carla::opendrive::types::BoxComponent;
@@ -198,10 +197,10 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
     return;
   }
 
-  const auto &map = map_ptr->GetData();
+  //const auto &map = map_ptr->GetData();
 
   // List with waypoints, each one at the end of each lane of the map
-  const std::vector<Waypoint> MapLaneBeginWaypoint =
+  /*const std::vector<Waypoint> MapLaneBeginWaypoint =
       WaypointGen::GenerateLaneEnd(*map_ptr);
 
   // Since we are going to iterate all the successors of all the lanes, we need
@@ -276,7 +275,7 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
         RoutePlanners.Add(RoutePlanner);
       }
     }
-  }
+  }*/
 
   // const std::vector<TrafficGroup> TrafficLightGroup = map.GetTrafficGroups();
   // for (TrafficGroup CurrentTrafficLightGroup : TrafficLightGroup)

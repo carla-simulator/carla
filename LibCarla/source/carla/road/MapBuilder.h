@@ -310,6 +310,31 @@ namespace road {
         const float max,
         const std::string unit);
 
+    void AddValidityToSignal(
+        const uint32_t road_id,
+        const uint32_t signal_id,
+        const int32_t from_lane,
+        const int32_t to_lane);
+
+    void AddValidityToSignalReference(
+        const uint32_t road_id,
+        const uint32_t signal_reference_id,
+        const int32_t from_lane,
+        const int32_t to_lane);
+
+    void AddSignalReference(
+        const uint32_t road_id,
+        const uint32_t signal_reference_id,
+        const float s_position,
+        const float t_position,
+        const std::string signal_reference_orientation);
+
+    void AddDependencyToSignal(
+        const uint32_t road_id,
+        const uint32_t signal_id,
+        const uint32_t dependency_id,
+        const std::string dependency_type);
+
   private:
 
     MapData _map_data;
