@@ -9,6 +9,7 @@
 #include "carla/road/RoadTypes.h"
 
 #include <cstdint>
+#include <functional>
 
 namespace carla {
 namespace road {
@@ -22,6 +23,40 @@ namespace element {
 
     float s = 0.0f;
   };
+
+} // namespace element
+} // namespace road
+} // namespace carla
+
+namespace std {
+
+  template <>
+  struct hash<carla::road::element::Waypoint> {
+
+    using argument_type = carla::road::element::Waypoint;
+
+    using result_type = uint64_t;
+
+    /// Generates an unique id for @a waypoint based on its road_id, lane_id,
+    /// and "s" offset. The "s" offset is truncated to half centimetre
+    /// precision.
+    result_type operator()(const argument_type &waypoint) const;
+  };
+
+} // namespace std
+
+namespace carla {
+namespace road {
+namespace element {
+
+  inline bool operator==(const Waypoint &lhs, const Waypoint &rhs) {
+    auto hasher = std::hash<Waypoint>();
+    return hasher(lhs) == hasher(rhs);
+  }
+
+  inline bool operator!=(const Waypoint &lhs, const Waypoint &rhs) {
+    return !operator==(lhs, rhs);
+  }
 
 } // namespace element
 } // namespace road
