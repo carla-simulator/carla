@@ -11,10 +11,9 @@
 #include "Util/OpenDrive.h"
 
 #include <compiler/disable-ue4-macros.h>
-#include <carla/road/WaypointGenerator.h>
-#include <carla/rpc/String.h>
 #include <carla/geom/Math.h>
 #include <carla/road/element/Waypoint.h>
+#include <carla/rpc/String.h>
 #include <compiler/enable-ue4-macros.h>
 
 /*static TArray<FVector> WaypointVector2FVectorArray(
@@ -178,7 +177,7 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
   using CarlaMath = carla::geom::Math;
   //using IdType = carla::road::element::id_type;
   using Waypoint = carla::road::element::Waypoint;
-  using WaypointGen = carla::road::WaypointGenerator;
+  // using WaypointGen = carla::road::WaypointGenerator;
   // using TrafficGroup = carla::opendrive::types::TrafficLightGroup;
   // using TrafficLight = carla::opendrive::types::TrafficLight;
   // using TrafficBoxComponent = carla::opendrive::types::BoxComponent;
