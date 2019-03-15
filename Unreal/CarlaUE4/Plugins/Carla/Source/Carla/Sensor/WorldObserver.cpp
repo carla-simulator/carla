@@ -121,7 +121,6 @@ static carla::Buffer FWorldObserver_Serialize(
   // Write header.
   Serializer::Header header;
   header.episode_id = Episode.GetId();
-  header.game_timestamp = Episode.GetElapsedGameTime();
   header.platform_timestamp = FPlatformTime::Seconds();
   header.delta_seconds = DeltaSeconds;
   write_data(header);
@@ -150,7 +149,7 @@ static carla::Buffer FWorldObserver_Serialize(
 
 void FWorldObserver::BroadcastTick(const UCarlaEpisode &Episode, float DeltaSeconds)
 {
-  auto AsyncStream = Stream.MakeAsyncDataStream(*this, Episode.GetWorld()->GetTimeSeconds());
+  auto AsyncStream = Stream.MakeAsyncDataStream(*this, Episode.GetElapsedGameTime());
 
   auto buffer = FWorldObserver_Serialize(
       AsyncStream.PopBufferFromPool(),

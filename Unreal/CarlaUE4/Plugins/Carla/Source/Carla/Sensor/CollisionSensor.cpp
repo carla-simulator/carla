@@ -38,37 +38,24 @@ void ACollisionSensor::SetOwner(AActor *NewOwner)
   }
 }
 
-void ACollisionSensor::BeginPlay()
-{
-  Super::BeginPlay();
-
-  auto *GameMode = Cast<ATheNewCarlaGameModeBase>(GetWorld()->GetAuthGameMode());
-
-  if (GameMode == nullptr)
-  {
-    UE_LOG(LogCarla, Error, TEXT("ACollisionSensor: Game mode not compatible with this sensor"));
-    return;
-  }
-  Episode = &GameMode->GetCarlaEpisode();
-}
-
 void ACollisionSensor::OnCollisionEvent(
     AActor *Actor,
     AActor *OtherActor,
     FVector NormalImpulse,
     const FHitResult &Hit)
 {
-  if ((Episode != nullptr) && (Actor != nullptr) && (OtherActor != nullptr))
+  if ((Actor != nullptr) && (OtherActor != nullptr))
   {
+    const auto &Episode = GetEpisode();
     constexpr float TO_METERS = 1e-2;
     NormalImpulse *= TO_METERS;
-    GetDataStream(*this, Actor->GetWorld()->GetTimeSeconds()).Send(
+    GetDataStream(*this).Send(
         *this,
-        Episode->SerializeActor(Episode->FindOrFakeActor(Actor)),
-        Episode->SerializeActor(Episode->FindOrFakeActor(OtherActor)),
+        Episode.SerializeActor(Episode.FindOrFakeActor(Actor)),
+        Episode.SerializeActor(Episode.FindOrFakeActor(OtherActor)),
         carla::geom::Vector3D{NormalImpulse.X, NormalImpulse.Y, NormalImpulse.Z});
     // record the collision event
-    if (Episode->GetRecorder()->IsEnabled())
-      Episode->GetRecorder()->AddCollision(Actor, OtherActor);
+    if (Episode.GetRecorder()->IsEnabled())
+      Episode.GetRecorder()->AddCollision(Actor, OtherActor);
   }
 }
