@@ -34,7 +34,7 @@ class GlobalRoutePlanner(object):
 
     def setup(self):
         """
-        Perform initial server data lookup for detailed topology
+        Performs initial server data lookup for detailed topology
         and builds graph representation of the world map.
         """
         self._topology = self._dao.get_topology()
@@ -85,6 +85,7 @@ class GlobalRoutePlanner(object):
             graph.add_edge(
                 n1, n2,
                 length=len(path) + 1, path=path,
+                entry_waypoint=entry_wp, exit_waypoint=exit_wp,
                 entry_vector=vector(
                     entry_wp.transform.location,
                     path[0].transform.location if len(path) > 0 else exit_wp.transform.location),
@@ -96,7 +97,7 @@ class GlobalRoutePlanner(object):
 
         return graph, id_map, road_id_to_edge
 
-    def _localise(self, location):
+    def _localize(self, location):
         """
         This function finds the road segment closest to given location
         location        :   carla.Location to be localized in the graph
@@ -110,43 +111,37 @@ class GlobalRoutePlanner(object):
         This method places zero cost links in the topology graph
         representing availability of lane changes.
         """
-        # TODO : Remove loop count variables
-        segmentcount = 0
+
         for segment in self._topology:
-            segmentcount += 1
             left_found, right_found = False, False
-            pathcounter = 0
+
             for waypoint in segment['path']:
-                pathcounter += 1
-                # print segmentcount, pathcounter
-
-                if segmentcount == 110 and pathcounter == 12:
-                    1+1
-                    pass
-
-                next_waypoint, next_road_option = None, None
+                next_waypoint, next_road_option, next_segment = None, None, None
 
                 if bool(waypoint.lane_change & carla.LaneChange.Right) and not right_found:
                     next_waypoint = waypoint.get_right_lane()
                     if next_waypoint is not None and next_waypoint.lane_type == 'driving':
                         next_road_option = RoadOption.CHANGELANERIGHT
-                        next_segment = self._localise(next_waypoint.transform.location)
+                        next_segment = self._localize(next_waypoint.transform.location)
                         self._graph.add_edge(
-                            self._id_map[segment['entryxyz']], next_segment[0],
-                            length=0, type=next_road_option, change_waypoint = waypoint)
+                            self._id_map[segment['entryxyz']], next_segment[0], entry_waypoint=segment['entry'],
+                            exit_waypoint=self._graph.edges[next_segment[0], next_segment[1]]['entry_waypoint'],
+                            path=[], length=0, type=next_road_option, change_waypoint = waypoint)
                         right_found = True
 
                 if bool(waypoint.lane_change & carla.LaneChange.Left) and not left_found:
                     next_waypoint = waypoint.get_left_lane()
                     if next_waypoint is not None and next_waypoint.lane_type == 'driving':
                         next_road_option = RoadOption.CHANGELANELEFT
-                        next_segment = self._localise(next_waypoint.transform.location)
+                        next_segment = self._localize(next_waypoint.transform.location)
                         self._graph.add_edge(
-                            self._id_map[segment['entryxyz']], next_segment[0],
-                            length=0, type=next_road_option, change_waypoint = waypoint)
+                            self._id_map[segment['entryxyz']], next_segment[0], entry_waypoint=segment['entry'],
+                            exit_waypoint=self._graph.edges[next_segment[0], next_segment[1]]['entry_waypoint'],
+                            path=[], length=0, type=next_road_option, change_waypoint = waypoint)
                         left_found = True
 
-                if left_found and right_found: break
+                if left_found and right_found:
+                    break
 
     def _distance_heuristic(self, n1, n2):
         """
@@ -162,12 +157,12 @@ class GlobalRoutePlanner(object):
         This function finds the shortest path connecting origin and destination
         using A* search with distance heuristic.
         origin      :   carla.Location object of start position
-        desitnation :   carla.Location object of of end position
+        destination :   carla.Location object of of end position
         return      :   path as list of node ids (as int) of the graph self._graph
         connecting origin and destination
         """
 
-        start, end = self._localise(origin), self._localise(destination)
+        start, end = self._localize(origin), self._localize(destination)
 
         route = nx.astar_path(
             self._graph, source=start[0], target=end[0],
@@ -175,7 +170,51 @@ class GlobalRoutePlanner(object):
         route.append(end[1])
         return route
 
-    def plan_route(self, origin, destination):
+    def _turn_decision(self, index, route, threshold=math.radians(5)):
+        """
+        This method returns the turn decision (RoadOption) for pair of edges
+        around current index of route list
+        """
+
+        decision = None
+        previous_node = route[index-1]
+        current_node = route[index]
+        next_node = route[index+1]
+        next_edge = self._graph.edges[current_node, next_node]
+        if index > 0:
+            current_edge = self._graph.edges[previous_node, current_node]
+            calculate_turn = current_edge['type'] == RoadOption.LANEFOLLOW and \
+                not current_edge['intersection'] and \
+                    next_edge['type'] == RoadOption.LANEFOLLOW and \
+                        next_edge['intersection']
+            if calculate_turn:
+                cv, nv = current_edge['exit_vector'], next_edge['net_vector']
+                cross_list = []
+                for neighbor in self._graph.successors(current_node):
+                    select_edge = self._graph.edges[current_node, neighbor]
+                    if select_edge['type'] == RoadOption.LANEFOLLOW:
+                        if neighbor != route[index+1]:
+                            sv = select_edge['net_vector']
+                            cross_list.append(np.cross(cv, sv)[2])
+                next_cross = np.cross(cv, nv)[2]
+                deviation = math.acos(np.dot(cv, nv) /\
+                    (np.linalg.norm(cv)*np.linalg.norm(nv)))
+                if not cross_list:
+                    cross_list.append(0)
+                if deviation < threshold:
+                    decision = RoadOption.STRAIGHT
+                elif cross_list and next_cross < min(cross_list):
+                    decision = RoadOption.LEFT
+                elif cross_list and next_cross > max(cross_list):
+                    decision = RoadOption.RIGHT
+            else:
+                decision = next_edge['type']
+        else:
+            decision = next_edge['type']
+
+        return decision
+
+    def abstract_route_plan(self, origin, destination):
         """
         The following function generates the route plan based on
         origin      : carla.Location object of the route's start position
@@ -186,84 +225,56 @@ class GlobalRoutePlanner(object):
         CHANGELANELEFT, CHANGELANERIGHT
         """
 
-        threshold = math.radians(5.0)
         route = self._path_search(origin, destination)
         plan = []
 
-        if len(route) == 2 and self._graph.edges[route[0], route[1]]['type'] != RoadOption.LANEFOLLOW:
-            plan.append(self._graph.edges[route[0], route[1]]['type'])
-
-        # Compare current edge and next edge to decide on action
-        for i in range(len(route) - 2):
-            current_edge = self._graph.edges[route[i], route[i + 1]]
-            next_edge = self._graph.edges[route[i + 1], route[i + 2]]
-
-            if next_edge['type'] != RoadOption.LANEFOLLOW and next_edge['type'] != RoadOption.VOID:
-                if i == 0 and current_edge['type'] != RoadOption:
-                    plan.append(next_edge['type'])
-                plan.append(next_edge['type'])
-            elif current_edge['type'] == RoadOption.LANEFOLLOW:
-                cv, nv = current_edge['exit_vector'], next_edge['net_vector']
-                entry_edges, exit_edges = 0, 0
-                cross_list = []
-                # Accumulating cross products of all other paths
-                for neighbor in self._graph.successors(route[i+1]):
-                    select_edge = self._graph.edges[route[i+1], neighbor]
-                    if select_edge['type'] == RoadOption.LANEFOLLOW:
-                        entry_edges += 1
-                        if neighbor != route[i + 2]:
-                            sv = select_edge['net_vector']
-                            cross_list.append(np.cross(cv, sv)[2])
-                for neighbor in self._graph.predecessors(route[i+2]): 
-                    select_edge = self._graph.edges[neighbor, route[i+2]]
-                    if select_edge['type'] == RoadOption.LANEFOLLOW:
-                        exit_edges += 1
-                if entry_edges == 1 and exit_edges > 1: 
-                    cross_list.append(0)
-                # Calculating turn decision
-                if next_edge['intersection'] and (entry_edges > 1 or exit_edges > 1):
-                    next_cross = np.cross(cv, nv)[2]
-                    deviation = math.acos(np.dot(cv, nv) /\
-                        (np.linalg.norm(cv)*np.linalg.norm(nv)))
-                    if deviation < threshold: action = RoadOption.STRAIGHT
-                    elif next_cross < min(cross_list):
-                        action = RoadOption.LEFT
-                    elif next_cross > max(cross_list):
-                        action = RoadOption.RIGHT
-                    plan.append(action)
-                elif i < len(route) - 3 and i > 0: # Detecting lane to lane intersection
-                    previous_edge = self._graph.edges[route[i-1], route[i]]
-                    next_to_next_edge = self._graph.edges[route[i + 2], route[i + 3]]
-                    if next_to_next_edge['type'] != RoadOption.LANEFOLLOW and \
-                        next_to_next_edge['type'] != RoadOption.VOID and \
-                            previous_edge['type'] != RoadOption.LANEFOLLOW and \
-                                previous_edge['type'] != RoadOption.VOID:
-                        plan.append(RoadOption.STRAIGHT)
+        for i in range(len(route) - 1):
+            road_option = self._turn_decision(i, route)
+            plan.append(road_option)
 
         return plan
 
-    def verify_intersection(self, waypoint):
+    def _find_closest_in_list(self, current_waypoint, waypoint_list):
+        min_distance = float('inf')
+        closest_index = 0
+        for i, waypoint in enumerate(waypoint_list):
+            distance = waypoint.transform.location.distance(
+                current_waypoint.transform.location)
+            if distance < min_distance:
+                min_distance = distance
+                closest_index = i
+
+        return closest_index
+
+    def trace_route(self, origin, destination):
         """
-        This function recieves a waypoint and returns true
-        if the given waypoint is part of a true intersection
-        else returns false
+        This method returns list of (carla.Waypoint, RoadOption) from origin to destination
         """
 
-        is_intersection = False
-        if waypoint.is_intersection :
-            entry_node_id, exit_node_id = self._localise(waypoint.transform.location)
-            entry_edges, exit_edges = 0, 0
-            for neighbor in self._graph.successors(entry_node_id):
-                select_edge = self._graph.edges[entry_node_id, neighbor]
-                if select_edge['type'] == RoadOption.LANEFOLLOW:
-                    entry_edges += 1
-            for neighbor in self._graph.predecessors(exit_node_id):
-                select_edge = self._graph.edges[neighbor, exit_node_id]
-                if select_edge['type'] == RoadOption.LANEFOLLOW:
-                    exit_edges += 1
-            if entry_edges > 1 or exit_edges > 1:
-                is_intersection = True
+        route_trace = []
+        route = self._path_search(origin, destination)
+        current_waypoint = self._dao.get_waypoint(origin)
 
-        return is_intersection
+        for i in range(len(route) - 1):
+            road_option = self._turn_decision(i, route)
+            edge = self._graph.edges[route[i], route[i+1]]
+            path = []
+
+            if edge['type'] != RoadOption.LANEFOLLOW and edge['type'] != RoadOption.VOID:
+                n1, n2 = self._road_id_to_edge[edge['exit_waypoint'].road_id][edge['exit_waypoint'].lane_id]
+                next_edge = self._graph.edges[n1, n2]
+                closest_index = self._find_closest_in_list(current_waypoint, next_edge['path'])
+                closest_index = min(len(next_edge['path'])-1, closest_index+5)
+                current_waypoint = next_edge['path'][closest_index]
+                route_trace.append((current_waypoint, road_option))
+
+            else:
+                path = path + [edge['entry_waypoint']] + edge['path'] + [edge['exit_waypoint']]
+                closest_index = self._find_closest_in_list(current_waypoint, path)
+                for waypoint in path[closest_index:]:
+                    route_trace.append((waypoint, road_option))
+                current_waypoint = path[-1]
+
+        return route_trace
 
     pass

@@ -14,12 +14,13 @@ class GlobalRoutePlannerDAO(object):
     from the carla server instance for GlobalRoutePlanner
     """
 
-    def __init__(self, wmap):
+    def __init__(self, wmap, sampling_resolution=1):
         """get_topology
         Constructor
 
         wmap    :   carl world map object
         """
+        self._sampling_resolution = sampling_resolution
         self._wmap = wmap
 
     def get_topology(self):
@@ -42,7 +43,7 @@ class GlobalRoutePlannerDAO(object):
         for segment in self._wmap.get_topology():
             wp1, wp2 = segment[0], segment[1]
             l1, l2 = wp1.transform.location, wp2.transform.location
-            # Rounding off to avoid floating poit imprecision
+            # Rounding off to avoid floating point imprecision
             x1, y1, z1, x2, y2, z2 = np.round([l1.x, l1.y, l1.z, l2.x, l2.y, l2.z], 2)
             wp1.transform.location, wp2.transform.location = l1, l2
             seg_dict = dict()
@@ -50,16 +51,16 @@ class GlobalRoutePlannerDAO(object):
             seg_dict['entryxyz'], seg_dict['exitxyz'] = (x1, y1, z1), (x2, y2, z2)
             seg_dict['path'] = []
             endloc = wp2.transform.location
-            w = wp1.next(1)[0]
-            while w.transform.location.distance(endloc) > 1:
+            w = wp1.next(self._sampling_resolution)[0]
+            while w.transform.location.distance(endloc) > self._sampling_resolution:
                 seg_dict['path'].append(w)
-                w = w.next(1)[0]
+                w = w.next(self._sampling_resolution)[0]
             topology.append(seg_dict)
         return topology
 
     def get_waypoint(self, location):
         """
-        The method returns waytpoint at given location
+        The method returns waypoint at given location
         """
         waypoint = self._wmap.get_waypoint(location)
         return waypoint
