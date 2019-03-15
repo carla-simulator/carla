@@ -25,5 +25,9 @@ namespace road {
     return nullptr;
   }
 
+  std::unordered_map<LaneId, Lane> &LaneSection::GetLanes() {
+    return _lanes;
+  }
+
 } // namespace road
 } // namespace carla

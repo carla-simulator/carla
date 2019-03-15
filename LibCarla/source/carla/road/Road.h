@@ -29,6 +29,7 @@ namespace road {
   public:
 
     Road() = default;
+    /// @todo: remove the move constructors
     Road(Road&&) = default;
     Road &operator=(Road&&) = default;
 
@@ -44,7 +45,7 @@ namespace road {
 
     JuncId GetJunction() const;
 
-    const Lane *GetLane(const LaneId id, const float s) const;
+    Lane *GetLane(const LaneId id, const float s);
 
     std::vector<const Road *> GetNexts() const;
 
@@ -70,7 +71,6 @@ namespace road {
 
     JuncId _junction_id { -1 };
 
-    // RoadElementSet<LaneSection> _lane_sections;
     std::multimap<float, LaneSection> _lane_sections;
 
     InformationSet _info;

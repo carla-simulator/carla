@@ -8,6 +8,7 @@
 #include "carla/road/Lane.h"
 #include "carla/road/MapData.h"
 #include "carla/Logging.h"
+#include "carla/ListView.h"
 
 #include <boost/optional.hpp>
 
@@ -54,16 +55,29 @@ namespace road {
     return vec;
   }
 
-  /*
-  const Lane *Road::GetLane(const LaneId id, const float s) const {
-    const auto sections = _lane_sections.GetReverseSubset(s);
-    if (sections.empty()) {
-      log_warning("road", id, "in distance s", s, "not found");
-      return nullptr;
+  Lane *Road::GetLane(const LaneId id, const float s) {
+    // Get a reversed list of elements that have key
+    // value GetDistance() <= s
+    auto sections = MakeListView(
+        std::make_reverse_iterator(_lane_sections.upper_bound(s)),
+        _lane_sections.rend());
+
+    auto validate = [&sections](auto &&it) {
+      return
+          it != sections.end() &&
+          it->second.GetDistance() == sections.begin()->second.GetDistance();
+    };
+
+    for (auto i = sections.begin(); validate(i); ++i) {
+      auto search = i->second.GetLanes().find(id);
+      if (search != i->second.GetLanes().end()) {
+        return &search->second;
+      }
     }
-    return sections.begin()->GetLane(id);
+
+    log_warning("id", id, "at distance", s, "not found in road", _id);
+    return nullptr;
   }
-  */
 
 } // road
 } // carla

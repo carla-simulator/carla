@@ -32,6 +32,8 @@ namespace road {
 
     const Lane *GetLane(const LaneId id) const;
 
+    std::unordered_map<LaneId, Lane> &GetLanes();
+
   private:
 
     friend MapBuilder;
