@@ -344,6 +344,14 @@ namespace road {
 
     /// Create the pointers between RoadSegments based on the ids
     void CreatePointersBetweenRoadSegments();
+
+    // return the pointer to a lane object
+    Lane *GetLaneAddress(RoadId road_id, bool from_start, LaneId lane_id);
+    Lane *GetLaneAddress(RoadId road_id, uint32_t section_index, LaneId lane_id);
+
+    // try to get pointers to the next and previous lanes
+    void ProcessLaneLinks(void);
+
   };
 
 } // namespace road
