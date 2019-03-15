@@ -134,7 +134,7 @@ namespace road {
 
 
     // called from junction parser
-    void CreateJunction(const int32_t id);
+    void AddJunction(const int32_t id, const std::string name);
 
     void AddConnection(
         const int32_t junction_id,
