@@ -16,10 +16,13 @@ docs:
 	@doxygen
 	@echo "Documentation index at ./Doxygen/html/index.html"
 
-clean:
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --clean
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --clean
+clean.LibCarla:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --clean
+clean.PythonAPI:
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --clean
+clean.CarlaUE4Editor:
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --clean
+clean: clean.CarlaUE4Editor clean.PythonAPI clean.LibCarla
 
 rebuild: setup
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --rebuild
