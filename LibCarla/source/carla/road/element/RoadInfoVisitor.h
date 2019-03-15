@@ -13,31 +13,39 @@ namespace carla {
 namespace road {
 namespace element {
 
+  class RoadElevationInfo;
+  class RoadGeneralInfo;
   class RoadInfo;
   class RoadInfoLane;
-  class RoadGeneralInfo;
-  class RoadInfoVelocity;
-  class RoadElevationInfo;
+  class RoadInfoLaneAccess;
+  class RoadInfoLaneBorder;
+  class RoadInfoLaneHeight;
+  class RoadInfoLaneMaterial;
+  class RoadInfoLaneOffset;
+  class RoadInfoLaneRule;
+  class RoadInfoLaneVisibility;
   class RoadInfoLaneWidth;
   class RoadInfoMarkRecord;
-  class RoadInfoLaneOffset;
+  class RoadInfoMarkTypeLine;
+  class RoadInfoVelocity;
 
   class RoadInfoVisitor {
   public:
 
-    virtual void Visit(RoadInfoLane &) {}
-
-    virtual void Visit(RoadGeneralInfo &) {}
-
-    virtual void Visit(RoadInfoVelocity &) {}
-
     virtual void Visit(RoadElevationInfo &) {}
-
-    virtual void Visit(RoadInfoLaneWidth &) {}
-
-    virtual void Visit(RoadInfoMarkRecord &) {}
-
+    virtual void Visit(RoadGeneralInfo &) {}
+    virtual void Visit(RoadInfoLane &) {}
+    virtual void Visit(RoadInfoLaneAccess &) {}
+    virtual void Visit(RoadInfoLaneBorder &) {}
+    virtual void Visit(RoadInfoLaneHeight &) {}
+    virtual void Visit(RoadInfoLaneMaterial &) {}
     virtual void Visit(RoadInfoLaneOffset &) {}
+    virtual void Visit(RoadInfoLaneRule &) {}
+    virtual void Visit(RoadInfoLaneVisibility &) {}
+    virtual void Visit(RoadInfoLaneWidth &) {}
+    virtual void Visit(RoadInfoMarkRecord &) {}
+    virtual void Visit(RoadInfoMarkTypeLine &) {}
+    virtual void Visit(RoadInfoVelocity &) {}
   };
 
   template <typename T, typename IT>

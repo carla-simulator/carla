@@ -16,7 +16,6 @@ namespace carla {
 namespace road {
 
   class MapBuilder {
-
   public:
 
     boost::optional<Map> Build();
@@ -164,7 +163,11 @@ namespace road {
         const float pitch,
         const float roll);
 
-    void AddValidityToLastAddedSignal(uint32_t road_id, uint32_t signal_id, int32_t from_lane, int32_t to_lane);
+    void AddValidityToLastAddedSignal(
+        uint32_t road_id,
+        uint32_t signal_id,
+        int32_t from_lane,
+        int32_t to_lane);
 
     // called from junction parser
     void AddJunction(const int32_t id, const std::string name);
@@ -180,6 +183,24 @@ namespace road {
         const int32_t connection_id,
         const int32_t from,
         const int32_t to);
+
+    void AddRoadSection(
+        const uint32_t road_id,
+        const uint32_t section_index,
+        const double s,
+        const double a,
+        const double b,
+        const double c,
+        const double d);
+
+    void SetRoadLaneLink(
+        const uint32_t road_id,
+        const int32_t section_index,
+        const int32_t lane_id,
+        const std::string lane_type,
+        const bool lane_level,
+        const int32_t predecessor,
+        const int32_t successor);
 
     // called from lane parser
     void CreateLaneAccess(
