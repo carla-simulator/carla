@@ -22,5 +22,13 @@ namespace road {
     return _id;
   }
 
+  std::string Lane::GetType() const {
+    return _type;
+  }
+
+  bool Lane::GetLevel() const {
+    return _level;
+  }
+
 } // road
 } // carla

@@ -9,7 +9,7 @@
 namespace carla {
 namespace road {
 
-  const Road *MapData::GetRoad(const RoadId id) const {
+  Road *MapData::GetRoad(const RoadId id) {
     const auto search = _roads.find(id);
     if (search != _roads.end()) {
       return &search->second;

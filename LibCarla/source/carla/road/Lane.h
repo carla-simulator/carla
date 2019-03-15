@@ -41,6 +41,10 @@ namespace road {
 
     LaneId GetId() const;
 
+    std::string GetType() const;
+
+    bool GetLevel() const;
+
   private:
 
     friend MapBuilder;
@@ -50,6 +54,10 @@ namespace road {
     LaneId _id;
 
     InformationSet _info;
+
+    std::string _type;
+
+    bool _level;
 
     std::vector<Lane *> _next_lanes;
 

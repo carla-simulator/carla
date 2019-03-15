@@ -23,7 +23,7 @@ namespace opendrive {
 namespace parser {
 
 
-  class RoadLinkParser {
+  class RoadParser {
   public:
 
     static void Parse(
