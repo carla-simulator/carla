@@ -208,7 +208,7 @@ namespace parser {
                         const ObjectID id_bridge = bridge_node.attribute("id").value();
                         const std::string type_bridge = bridge_node.attribute("type").value();
                         /*
-                        map_builder.AddTunnel(s_position_bridge, lenght_bridge, name_bridge, id_bridge,
+                        map_builder.AddBridge(s_position_bridge, lenght_bridge, name_bridge, id_bridge,
                           type_bridge);
                         */
                         logging::log("AddTunnel", s_position_bridge, lenght_bridge, name_bridge, id_bridge,

@@ -24,5 +24,35 @@ namespace road {
     return Map{std::move(_map_data)};
   }
 
+  void MapBuilder::AddSignal(
+      const uint32_t road_id,
+      const uint32_t signal_id,
+      const float s,
+      const float t,
+      const std::string name,
+      const std::string dynamic,
+      const std::string orientation,
+      const float zOffset,
+      const std::string country,
+      const std::string type,
+      const std::string subtype,
+      const float value,
+      const std::string unit,
+      const float height,
+      const float width,
+      const std::string text,
+      const float hOffset,
+      const float pitch,
+      const float roll) {
+
+    _map_data.GetRoad(road_id)->getSignals().emplace(signal_id, signal::Signal(road_id, signal_id, s, t, name, dynamic,
+        orientation, zOffset, country, type, subtype, value, unit, height, width,
+        text, hOffset, pitch, roll));
+  }
+
+  void MapBuilder::AddValidityToLastAddedSignal(uint32_t road_id, uint32_t signal_id, int32_t from_lane, int32_t to_lane) {
+    _map_data.GetRoad(road_id)->GetSignal(signal_id).AddValidity(general::Validity(signal_id, from_lane, to_lane));
+  }
+
 } // namespace road
 } // namespace carla
