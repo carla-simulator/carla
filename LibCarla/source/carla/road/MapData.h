@@ -32,7 +32,7 @@ namespace road {
 
     Junction *GetJunction(JuncId id);
 
-    std::unordered_map<JuncId, Junction> &GetJunctions() const;
+    std::unordered_map<JuncId, Junction> &GetJunctions();
 
   private:
 

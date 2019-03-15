@@ -8,7 +8,10 @@
 
 #include "carla/NonCopyable.h"
 #include "carla/road/RoadTypes.h"
+
 #include <unordered_map>
+#include <vector>
+#include <string>
 
 namespace carla {
 namespace road {
@@ -55,7 +58,7 @@ namespace road {
       return nullptr;
     }
 
-    std::unordered_map<JuncId, Connection> &GetConnections() {
+    std::unordered_map<ConId, Connection> &GetConnections() {
       return _connections;
     }
 

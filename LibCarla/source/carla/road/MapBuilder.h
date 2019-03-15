@@ -166,8 +166,6 @@ namespace road {
 
     void AddValidityToLastAddedSignal(uint32_t road_id, uint32_t signal_id, int32_t from_lane, int32_t to_lane);
 
-  private:
-
     // called from junction parser
     void AddJunction(const int32_t id, const std::string name);
 
@@ -182,6 +180,8 @@ namespace road {
         const int32_t connection_id,
         const int32_t from,
         const int32_t to);
+
+  private:
 
     MapData _map_data;
 
