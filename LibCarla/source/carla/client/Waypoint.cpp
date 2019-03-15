@@ -7,7 +7,6 @@
 #include "carla/client/Waypoint.h"
 
 #include "carla/client/Map.h"
-#include "carla/road/WaypointGenerator.h"
 
 #include <boost/optional.hpp>
 
@@ -35,7 +34,7 @@ namespace client {
   }
 
   std::vector<SharedPtr<Waypoint>> Waypoint::Next(double distance) const {
-    auto waypoints = road::WaypointGenerator::GetNext(_waypoint, distance);
+    auto waypoints = _parent->GetMap().GetNext(_waypoint, distance);
     std::vector<SharedPtr<Waypoint>> result;
     result.reserve(waypoints.size());
     for (auto &waypoint : waypoints) {
@@ -46,7 +45,7 @@ namespace client {
 
   SharedPtr<Waypoint> Waypoint::Right() const {
     auto right_lane_waypoint =
-        road::WaypointGenerator::GetRight(_waypoint);
+        _parent->GetMap().GetRight(_waypoint);
     if (right_lane_waypoint.has_value()) {
       return SharedPtr<Waypoint>(new Waypoint(_parent, std::move(*right_lane_waypoint)));
     }
@@ -55,7 +54,7 @@ namespace client {
 
   SharedPtr<Waypoint> Waypoint::Left() const {
     auto left_lane_waypoint =
-        road::WaypointGenerator::GetLeft(_waypoint);
+        _parent->GetMap().GetLeft(_waypoint);
     if (left_lane_waypoint.has_value()) {
       return SharedPtr<Waypoint>(new Waypoint(_parent, std::move(*left_lane_waypoint)));
     }
