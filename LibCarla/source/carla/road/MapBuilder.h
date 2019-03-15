@@ -133,6 +133,21 @@ namespace road {
                              const double t);
 
 
+    // called from junction parser
+    void CreateJunction(const int32_t id);
+
+    void AddConnection(
+        const int32_t junction_id,
+        const int32_t connection_id,
+        const int32_t incoming_road,
+        const int32_t connecting_road);
+
+    void AddLaneLink(
+        const int32_t junction_id,
+        const int32_t connection_id,
+        const int32_t from,
+        const int32_t to);
+
     MapData _map_data;
   };
 
