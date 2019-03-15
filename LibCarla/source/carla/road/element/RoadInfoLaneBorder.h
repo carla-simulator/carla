@@ -13,35 +13,39 @@ namespace carla {
 namespace road {
 namespace element {
 
-  // The lane offset record defines a lateral shift of the lane reference
-  // line(which is usually identical to the road reference line). This may be
-  // used for an easy implementation of a (local)lateralshift of the lanes
-  // relative to the road’s referenceline. Especially the modeling of
-  // inner-city layouts or "2+1" cross-country road layouts can be
-  // facilitated considerably by this feature.
-  class RoadInfoLaneOffset : public RoadInfo {
+  // Instead of describing lanes by their width entries and, thus, invariably
+  // depending on influences of inner
+  // lanes on outer lanes, it might be more convenient to just describe the
+  // outer border of each lane
+  // independent of any inner lanes’ parameters. Especially in cases where road
+  // data is derived from
+  // measurements, this type of definition will provide a more convenient method
+  // without the need to
+  // tesselate road sections into too many parts. Note. Lane borders and widths
+  // are mutually exclusive.
+  class RoadInfoLaneBorder : public RoadInfo {
   public:
 
     void AcceptVisitor(RoadInfoVisitor &v) final {
       v.Visit(*this);
     }
 
-    RoadInfoLaneOffset(
+    RoadInfoLaneBorder(
         float s,
         float a,
         float b,
         float c,
         float d)
       : RoadInfo(s),
-        _offset(a, b, c, d, s) {}
+        _border(a, b, c, d, s) {}
 
     const geom::CubicPolynomial &GetPolynomial() const {
-      return _offset;
+      return _border;
     }
 
   private:
 
-    geom::CubicPolynomial _offset;
+    geom::CubicPolynomial _border;
 
   };
 

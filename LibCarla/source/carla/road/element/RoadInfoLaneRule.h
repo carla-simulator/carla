@@ -7,12 +7,15 @@
 #pragma once
 
 #include "carla/road/element/RoadInfo.h"
+#include <string>
 
 namespace carla {
 namespace road {
 namespace element {
 
-  class RoadInfoVelocity : public RoadInfo {
+  // This record defines rules that can be applied to lanes to describe additonal properties
+  // not covered by the other attributes.
+  class RoadInfoLaneRule : public RoadInfo {
 
   public:
 
@@ -20,18 +23,20 @@ namespace element {
       v.Visit(*this);
     }
 
-    RoadInfoVelocity(float vel) : velocity(vel) {}
-    RoadInfoVelocity(float s, float vel)
+    RoadInfoLaneRule(
+        float s,   // start position relative to the position of the preceding lane section
+        std::string value)
       : RoadInfo(s),
-        velocity(vel) {}
+        _value(value) {}
 
-    float GetVelocity() {
-      return velocity;
+    std::string GetValue() const {
+      return _value;
     }
 
   private:
 
-    float velocity;
+    std::string _value; // Recommended values: No Stopping At Any Time, Disabled Parking and Car Pool
+
   };
 
 } // namespace element
