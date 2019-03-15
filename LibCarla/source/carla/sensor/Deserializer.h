@@ -22,7 +22,7 @@ namespace sensor {
   class Deserializer {
   public:
 
-    static SharedPtr<SensorData> Deserialize(Buffer buffer);
+    static SharedPtr<SensorData> Deserialize(Buffer &&buffer);
   };
 
 } // namespace sensor

@@ -11,7 +11,7 @@
 namespace carla {
 namespace sensor {
 
-  SharedPtr<SensorData> Deserializer::Deserialize(Buffer buffer) {
+  SharedPtr<SensorData> Deserializer::Deserialize(Buffer &&buffer) {
     return SensorRegistry::Deserialize(std::move(buffer));
   }
 
