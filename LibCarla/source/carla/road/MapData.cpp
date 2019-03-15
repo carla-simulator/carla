@@ -25,7 +25,7 @@ namespace road {
     return nullptr;
   }
 
-  std::unordered_map<JuncId, Junction> &MapData::GetJunctions() const {
+  std::unordered_map<JuncId, Junction> &MapData::GetJunctions() {
     return _junctions;
   }
 
