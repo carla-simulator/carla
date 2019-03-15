@@ -198,7 +198,6 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
     return;
   }
 
-   UE_LOG(LogCarla, Warning, TEXT("%s"), *carla::rpc::ToFString(map_ptr->PrintRandomStuff()));
   //const auto &map = map_ptr->GetData();
 
   // List with waypoints, each one at the end of each lane of the map
