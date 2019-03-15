@@ -8,6 +8,7 @@
 
 #include "carla/geom/GeoLocation.h"
 #include "carla/Iterator.h"
+#include "carla/road/Junction.h"
 #include "carla/ListView.h"
 #include "carla/NonCopyable.h"
 #include "carla/road/Road.h"
@@ -29,6 +30,10 @@ namespace road {
 
     Road *GetRoad(const RoadId id);
 
+    Junction *GetJunction(JuncId id);
+
+    std::unordered_map<JuncId, Junction> &GetJunctions() const;
+
   private:
 
     friend class MapBuilder;
@@ -39,6 +44,7 @@ namespace road {
 
     std::unordered_map<RoadId, Road> _roads;
 
+    std::unordered_map<JuncId, Junction> _junctions;
   };
 
 } // namespace road

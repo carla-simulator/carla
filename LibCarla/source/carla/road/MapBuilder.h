@@ -168,6 +168,21 @@ namespace road {
 
   private:
 
+    // called from junction parser
+    void AddJunction(const int32_t id, const std::string name);
+
+    void AddConnection(
+        const int32_t junction_id,
+        const int32_t connection_id,
+        const int32_t incoming_road,
+        const int32_t connecting_road);
+
+    void AddLaneLink(
+        const int32_t junction_id,
+        const int32_t connection_id,
+        const int32_t from,
+        const int32_t to);
+
     MapData _map_data;
 
     /// Set the total length of each road based on the geometries

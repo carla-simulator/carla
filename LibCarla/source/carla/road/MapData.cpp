@@ -17,5 +17,17 @@ namespace road {
     return nullptr;
   }
 
+  Junction *MapData::GetJunction(JuncId id) {
+    const auto search = _junctions.find(id);
+    if (search != _junctions.end()) {
+      return &search->second;
+    }
+    return nullptr;
+  }
+
+  std::unordered_map<JuncId, Junction> &MapData::GetJunctions() const {
+    return _junctions;
+  }
+
 } // namespace road
 } // namespace carla
