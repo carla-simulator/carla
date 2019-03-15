@@ -41,7 +41,7 @@ namespace road {
         _lane_sections(std::move(lane_sections)),
         _info(std::move(info)) {}
 
-    MapData *GetMap() const;
+    const MapData *GetMap() const;
 
     RoadId GetId() const;
 
@@ -49,11 +49,11 @@ namespace road {
 
     JuncId GetJunction() const;
 
-    Lane &GetLane(const LaneId id) const;
+    const Lane *GetLane(const LaneId id, const float s) const;
 
-    std::vector<Road *> GetNexts() const;
+    std::vector<const Road *> GetNexts() const;
 
-    std::vector<Road *> GetPrevs() const;
+    std::vector<const Road *> GetPrevs() const;
 
   private:
 

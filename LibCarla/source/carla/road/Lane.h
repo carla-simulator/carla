@@ -16,6 +16,8 @@ namespace carla {
 namespace road {
 
   class LaneSection;
+  class MapBuilder;
+  class Road;
 
   class Lane : private MovableNonCopyable {
   public:
@@ -33,11 +35,15 @@ namespace road {
     Lane(Lane &&) = default;
     Lane &operator=(Lane &&) = default;
 
-    LaneSection *GetLaneSection() const;
+    const LaneSection *GetLaneSection() const;
+
+    const Road *GetRoad() const;
 
     LaneId GetId() const;
 
   private:
+
+    friend MapBuilder;
 
     LaneSection *_lane_section;
 
@@ -46,6 +52,7 @@ namespace road {
     InformationSet _info;
 
     std::vector<Lane *> _next_lanes;
+
     std::vector<Lane *> _prev_lanes;
 
   };

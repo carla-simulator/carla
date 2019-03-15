@@ -26,6 +26,8 @@ namespace road {
     using mapped_type = T;
     using key_type = float;
 
+    RoadElementSet() = default;
+
     /// Explicit move constructor
     template <typename InputTypeT>
     RoadElementSet(std::vector<InputTypeT> &&range)
