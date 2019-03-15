@@ -20,6 +20,8 @@ namespace road {
   class Lane : private MovableNonCopyable {
   public:
 
+    Lane() = default;
+
     Lane(
       LaneSection *lane_section,
       LaneId id,
@@ -42,6 +44,9 @@ namespace road {
     LaneId _id;
 
     InformationSet _info;
+
+    std::vector<Lane *> _next_lanes;
+    std::vector<Lane *> _prev_lanes;
 
   };
 

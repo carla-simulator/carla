@@ -22,6 +22,8 @@ namespace road {
   class LaneSection : private MovableNonCopyable {
   public:
 
+    LaneSection() = default;
+
     LaneSection(Road *road, const float s, std::vector<Lane> &&lanes)
       : _road(road),
         _s(s) {

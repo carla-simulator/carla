@@ -13,7 +13,7 @@
 namespace carla {
 namespace road {
 
-  const MapData *Road::GetMap() const {
+  MapData *Road::GetMap() const {
     return _map_data;
   }
 
@@ -27,6 +27,18 @@ namespace road {
 
   JuncId Road::GetJunction() const {
     return _junction_id;
+  }
+
+  std::vector<Road *> Road::GetNexts() const {
+    std::vector<Road *> vec;
+    for (auto &&next : _nexts) {
+      vec.emplace_back(_map_data->GetRoad());
+    }
+    return vec;
+  }
+
+  std::vector<Road *> Road::GetPrevs() const{
+
   }
 
   // const Lane *GetLane(const LaneId id, float s) const {
