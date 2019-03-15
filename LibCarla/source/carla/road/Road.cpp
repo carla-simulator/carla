@@ -7,13 +7,14 @@
 #include "carla/road/Road.h"
 #include "carla/road/Lane.h"
 #include "carla/road/MapData.h"
+#include "carla/Logging.h"
 
 #include <boost/optional.hpp>
 
 namespace carla {
 namespace road {
 
-  MapData *Road::GetMap() const {
+  const MapData *Road::GetMap() const {
     return _map_data;
   }
 
@@ -29,22 +30,30 @@ namespace road {
     return _junction_id;
   }
 
-  std::vector<Road *> Road::GetNexts() const {
-    std::vector<Road *> vec;
+  std::vector<const Road *> Road::GetNexts() const {
+    std::vector<const Road *> vec;
     for (auto &&next : _nexts) {
-      vec.emplace_back(_map_data->GetRoad());
+      vec.emplace_back(_map_data->GetRoad(next));
     }
     return vec;
   }
 
-  std::vector<Road *> Road::GetPrevs() const{
-
+  std::vector<const Road *> Road::GetPrevs() const{
+    std::vector<const Road *> vec;
+    for (auto &&next : _prevs) {
+      vec.emplace_back(_map_data->GetRoad(next));
+    }
+    return vec;
   }
 
-  // const Lane *GetLane(const LaneId id, float s) const {
-  //   const auto lanes = _lane_sections.GetReverseSubset(s);
-  //   return lanes.size() > 0 ? lanes.begin() : nullptr;
-  // }
+  const Lane *Road::GetLane(const LaneId id, const float s) const {
+    const auto lanes = _lane_sections.GetReverseSubset(s);
+    if (lanes.empty()) {
+      log_warning("road", id, "in distance s", s, "not found");
+      return nullptr;
+    }
+    return lanes.begin()->GetLane(id);
+  }
 
 } // road
 } // carla

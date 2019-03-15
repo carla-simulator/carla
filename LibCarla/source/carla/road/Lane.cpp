@@ -5,12 +5,17 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "carla/road/Lane.h"
+#include "carla/road/Road.h"
 
 namespace carla {
 namespace road {
 
-  LaneSection *Lane::GetLaneSection() const {
+  const LaneSection *Lane::GetLaneSection() const {
     return _lane_section;
+  }
+
+  const Road *Lane::GetRoad() const {
+    return _lane_section->GetRoad();
   }
 
   LaneId Lane::GetId() const {

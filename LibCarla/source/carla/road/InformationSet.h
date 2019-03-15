@@ -19,6 +19,8 @@ namespace road {
   class InformationSet : private MovableNonCopyable {
   public:
 
+    InformationSet() = default;
+
     InformationSet(std::vector<std::unique_ptr<element::RoadInfo>> &&vec)
       : _road_set(std::move(vec)) {}
 
