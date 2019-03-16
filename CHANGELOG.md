@@ -6,6 +6,7 @@
   * Added `id` property to waypoints, uniquely identifying waypoints up to half centimetre precision
   * Added OpenDrive's road offset `s` as property to waypoints
   * Fixed python client DLL error on Windows
+  * Fixed Python3.x "No module named carla" error 
 
 ## CARLA 0.9.4
 
