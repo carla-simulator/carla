@@ -2,7 +2,9 @@
 # in the list it's picked up by the Setup.sh script to download the last version
 # of the contents.
 #
-# You can direct download with https://drive.google.com/open?id=PUT_FILE_ID_HERE
+# You can download it directly from
+#
+#     https://drive.google.com/open?id=PUT_FILE_ID_HERE
 
 0.5.4: 0B2HFV-VuKn3PYUFFanlmZ2VMTW8
 0.6.0: 1Gw8sw01hDEV4FtpHEZZwvS-6XN0jmaLT
@@ -18,3 +20,11 @@
 0.9.2: 1RKRGB22U5t80q4zwYXBJvxQXhzNjaaDf
 0.9.3: 1jJlStNHpey62CrMkWVfmtQcJGO7PaD0R
 0.9.4: 10Tc0DMXpfH7W28zwagXsVTjpkhGx3Klz
+
+# Newer asset Content is stored in AWS.
+#
+# You can download it directly from
+#
+#     http://carla-assets-internal.s3.amazonaws.com/Content/PUT_FILE_ID_HERE.tar.gz
+
+Latest: 20190319_7f836a8
