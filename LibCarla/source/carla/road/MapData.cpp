@@ -5,9 +5,18 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "carla/road/MapData.h"
+#include "carla/road/Lane.h"
 
 namespace carla {
 namespace road {
+
+  std::unordered_map<RoadId, Road> &MapData::GetRoads() {
+    return _roads;
+  }
+
+  std::unordered_map<JuncId, Junction> &MapData::GetJunctions() {
+    return _junctions;
+  }
 
   Road *MapData::GetRoad(const RoadId id) {
     const auto search = _roads.find(id);
@@ -25,8 +34,15 @@ namespace road {
     return nullptr;
   }
 
-  std::unordered_map<JuncId, Junction> &MapData::GetJunctions() {
-    return _junctions;
+  Lane *MapData::GetLane(
+      const RoadId road_id,
+      const LaneId lane_id,
+      const float s) {
+    auto road = GetRoad(road_id);
+    if (road != nullptr) {
+      return road->GetLane(lane_id, s);
+    }
+    return nullptr;
   }
 
 } // namespace road

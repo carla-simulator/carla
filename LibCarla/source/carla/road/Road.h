@@ -14,6 +14,7 @@
 #include "carla/road/RoadElementSet.h"
 #include "carla/road/signal/Signal.h"
 #include "carla/road/signal/SignalReference.h"
+#include "carla/road/element/RoadInfo.h"
 
 #include <vector>
 #include <map>
@@ -59,6 +60,11 @@ namespace road {
     std::unordered_map<SignId, signal::Signal>* getSignals();
 
     std::unordered_map<SignId, signal::SignalReference>* getSignalReferences();
+
+    template <typename T>
+    std::shared_ptr<const T> GetInfo (const float s) {
+      return _info.GetInfo<T>(s);
+    }
 
   private:
 

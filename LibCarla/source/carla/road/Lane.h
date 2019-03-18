@@ -45,6 +45,11 @@ namespace road {
 
     bool GetLevel() const;
 
+    template <typename T>
+    std::shared_ptr<const T> GetInfo (const float s) {
+      return _info.GetInfo<T>(s);
+    }
+
   private:
 
     friend MapBuilder;
