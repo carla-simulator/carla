@@ -13,6 +13,7 @@
 #include "carla/NonCopyable.h"
 #include "carla/road/Road.h"
 #include "carla/road/RoadTypes.h"
+#include "carla/road/element/RoadInfo.h"
 
 #include <boost/iterator/transform_iterator.hpp>
 
@@ -21,6 +22,8 @@
 namespace carla {
 namespace road {
 
+  class Lane;
+
   class MapData : private MovableNonCopyable {
   public:
 
@@ -28,11 +31,41 @@ namespace road {
       return _geo_reference;
     }
 
+    std::unordered_map<RoadId, Road> &GetRoads();
+
+    std::unordered_map<JuncId, Junction> &GetJunctions();
+
     Road *GetRoad(const RoadId id);
 
     Junction *GetJunction(JuncId id);
 
-    std::unordered_map<JuncId, Junction> &GetJunctions();
+    Lane *GetLane(const RoadId road_id, LaneId lane_id, float s);
+
+    template <typename T>
+    const std::shared_ptr<const T> GetRoadInfo(
+        const RoadId id,
+        const float s) {
+      auto road = GetRoad(id);
+      if (road != nullptr) {
+        return road->GetInfo<T>(s);
+      }
+      return nullptr;
+    }
+
+    template <typename T>
+    const std::shared_ptr<const T> GetLaneInfo(
+        const RoadId road_id,
+        const LaneId lane_id,
+        const float s) {
+      auto road = GetRoad(road_id);
+      if (road != nullptr) {
+        auto lane = road->GetLane(lane_id, s);
+        if (lane != nullptr) {
+          return lane->GetInfo<T>(s);
+        }
+      }
+      return nullptr;
+    }
 
   private:
 
