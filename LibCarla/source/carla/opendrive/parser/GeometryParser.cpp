@@ -116,16 +116,17 @@ namespace parser {
 
       // map_builder calls
       for (auto const geo : geometry) {
+        carla::road::Road* road = map_builder.GetRoad(geo.road_id);
         if (geo.type == "line")
-          map_builder.AddRoadGeometryLine(geo.road_id, geo.s, geo.x, geo.y, geo.hdg, geo.length);
+          map_builder.AddRoadGeometryLine(road, geo.s, geo.x, geo.y, geo.hdg, geo.length);
         else if (geo.type == "arc")
-          map_builder.AddRoadGeometryArc(geo.road_id, geo.s, geo.x, geo.y, geo.hdg, geo.length, geo.arc.curvature);
+          map_builder.AddRoadGeometryArc(road, geo.s, geo.x, geo.y, geo.hdg, geo.length, geo.arc.curvature);
         else if (geo.type == "spiral")
-          map_builder.AddRoadGeometrySpiral(geo.road_id, geo.s, geo.x, geo.y, geo.hdg, geo.length, geo.spiral.curvStart, geo.spiral.curvEnd);
+          map_builder.AddRoadGeometrySpiral(road, geo.s, geo.x, geo.y, geo.hdg, geo.length, geo.spiral.curvStart, geo.spiral.curvEnd);
         else if (geo.type == "poly3")
-          map_builder.AddRoadGeometryPoly3(geo.road_id, geo.s, geo.x, geo.y, geo.hdg, geo.length, geo.poly3.a, geo.poly3.b, geo.poly3.c, geo.poly3.d);
+          map_builder.AddRoadGeometryPoly3(road, geo.s, geo.x, geo.y, geo.hdg, geo.length, geo.poly3.a, geo.poly3.b, geo.poly3.c, geo.poly3.d);
         else if (geo.type == "paramPoly3")
-          map_builder.AddRoadGeometryParamPoly3(geo.road_id, geo.s, geo.x, geo.y, geo.hdg, geo.length, geo.param_poly3.aU, geo.param_poly3.bU, geo.param_poly3.cU, geo.param_poly3.dU, geo.param_poly3.aV, geo.param_poly3.bV, geo.param_poly3.cV, geo.param_poly3.dV, geo.param_poly3.p_range);
+          map_builder.AddRoadGeometryParamPoly3(road, geo.s, geo.x, geo.y, geo.hdg, geo.length, geo.param_poly3.aU, geo.param_poly3.bU, geo.param_poly3.cU, geo.param_poly3.dU, geo.param_poly3.aV, geo.param_poly3.bV, geo.param_poly3.cV, geo.param_poly3.dV, geo.param_poly3.p_range);
       }
   }
 

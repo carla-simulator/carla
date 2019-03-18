@@ -51,7 +51,7 @@ namespace road {
 
     // called from geometry parser
     void AddRoadGeometryLine(
-        const int32_t road_id,
+        carla::road::Road *road,
         const double s,
         const double x,
         const double y,
@@ -59,7 +59,7 @@ namespace road {
         const double length);
 
     void AddRoadGeometryArc(
-        const int32_t road_id,
+        carla::road::Road *road,
         const double s,
         const double x,
         const double y,
@@ -68,7 +68,7 @@ namespace road {
         const double curvature);
 
     void AddRoadGeometrySpiral(
-        const int32_t road_id,
+        carla::road::Road *road,
         const double s,
         const double x,
         const double y,
@@ -78,7 +78,7 @@ namespace road {
         const double curvEnd);
 
     void AddRoadGeometryPoly3(
-        const int32_t road_id,
+        carla::road::Road *road,
         const double s,
         const double x,
         const double y,
@@ -90,7 +90,7 @@ namespace road {
         const double d);
 
     void AddRoadGeometryParamPoly3(
-        const int32_t road_id,
+        carla::road::Road *road,
         const double s,
         const double x,
         const double y,
@@ -313,6 +313,10 @@ namespace road {
         const uint32_t dependency_id,
         const std::string dependency_type);
 
+    Road *GetRoad(
+        const RoadId road_id
+    );
+
     Lane *GetLane(
         const RoadId road_id,
         const LaneId lane_id,
@@ -333,6 +337,9 @@ namespace road {
     /// can be added all together
     std::unordered_map<const Lane *, std::vector<std::unique_ptr<element::RoadInfo>>>
         _temp_lane_info_container;
+
+    std::unordered_map<carla::road::Road *, std::vector<std::unique_ptr<carla::road::element::RoadInfo>>> _road_info;
+
   };
 
 } // namespace road
