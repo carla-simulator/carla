@@ -22,9 +22,9 @@ namespace element {
 
     template <typename T>
     auto Get() const {
-      auto begin = MakeRoadInfoIterator<T>(_list.begin(), _list.end());
-      auto end = MakeRoadInfoIterator<T>(_list.end(), _list.end());
-      return MakeListView(begin, end);
+      //auto begin = MakeRoadInfoIterator<T>(_list.begin(), _list.end());
+      //auto end = MakeRoadInfoIterator<T>(_list.end(), _list.end());
+      return MakeListView(nullptr, nullptr);
     }
 
   private:

@@ -19,6 +19,10 @@ namespace road {
   class MapBuilder;
   class Road;
 
+  namespace element {
+    class RoadInfo;
+  }
+
   class Lane : private MovableNonCopyable {
   public:
 
@@ -34,6 +38,8 @@ namespace road {
 
     Lane(Lane &&) = default;
     Lane &operator=(Lane &&) = default;
+
+    void CreateInformationSet();
 
     const LaneSection *GetLaneSection() const;
 
@@ -62,6 +68,8 @@ namespace road {
     std::vector<Lane *> _next_lanes;
 
     std::vector<Lane *> _prev_lanes;
+
+    std::vector<std::unique_ptr<element::RoadInfo>> _road_info_cache;
 
   };
 

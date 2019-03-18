@@ -6,7 +6,7 @@
 
 #include "carla/StringUtil.h"
 #include "carla/road/MapBuilder.h"
-#include "carla/road/element/RoadElevationInfo.h"
+#include "carla/road/element/RoadInfoElevation.h"
 #include "carla/road/element/RoadInfoLaneAccess.h"
 #include "carla/road/element/RoadInfoLaneBorder.h"
 #include "carla/road/element/RoadInfoLaneHeight.h"
@@ -22,6 +22,7 @@
 
 #include <iterator>
 #include <memory>
+#include <vector>
 
 using namespace carla::road::element;
 
@@ -34,117 +35,144 @@ namespace road {
 
     CreatePointersBetweenRoadSegments();
 
-    // _map_data is a memeber of MapBuilder so you must especify if
+    // _map_data is a member of MapBuilder so you must especify if
     // you want to keep it (will return copy -> Map(const Map &))
     // or move it (will return move -> Map(Map &&))
     return Map{std::move(_map_data)};
   }
 
   // called from profiles parser
-  void AddRoadElevationProfile(
-      const int32_t /*road_id*/,
+  void MapBuilder::AddRoadElevationProfile(
+      const RoadId road_id,
       const double s,
       const double a,
       const double b,
       const double c,
       const double d) {
-    auto elevation = std::unique_ptr<RoadElevationInfo>(new RoadElevationInfo(s, a, b, c, d));
+
+    Road* road = _map_data.GetRoad(road_id);
+    if (road != nullptr)
+    {
+      auto data = std::unique_ptr<RoadInfoElevation>(new RoadInfoElevation(s, a, b, c, d));
+    }
   }
 
   // called from lane parser
   void MapBuilder::CreateLaneAccess(
-      const int32_t /*road_id*/,
-      const int32_t /*lane_section_id*/,
-      const int32_t /*lane_id*/,
+      const RoadId road_id,
+      const float lane_section_id,
+      const LaneId lane_id,
       const float s,
       const std::string restriction) {
-    auto access = std::unique_ptr<RoadInfoLaneAccess>(new RoadInfoLaneAccess(s, restriction));
+
+    Lane* lane = _map_data.GetLane(road_id, lane_section_id, lane_id);
+    auto data = std::unique_ptr<RoadInfoLaneAccess>(new RoadInfoLaneAccess(s, restriction));
+    lane->_road_info_cache.push_back(std::move(data));
   }
 
   void MapBuilder::CreateLaneBorder(
-      const int32_t /*road_id*/,
-      const int32_t /*lane_section_id*/,
-      const int32_t /*lane_id*/,
+      const RoadId road_id,
+      const float lane_section_id,
+      const LaneId lane_id,
       const float s,
       const float a,
       const float b,
       const float c,
       const float d) {
-    auto border = std::unique_ptr<RoadInfoLaneBorder>(new RoadInfoLaneBorder(s, a, b, c, d));
+
+    Lane* lane = _map_data.GetLane(road_id, lane_section_id, lane_id);
+    auto data = std::unique_ptr<RoadInfoLaneBorder>(new RoadInfoLaneBorder(s, a, b, c, d));
+    lane->_road_info_cache.push_back(std::move(data));
   }
 
   void MapBuilder::CreateLaneHeight(
-      const int32_t /*road_id*/,
-      const int32_t /*lane_section_id*/,
-      const int32_t /*lane_id*/,
+      const RoadId road_id,
+      const float lane_section_id,
+      const LaneId lane_id,
       const float s,
       const float inner,
       const float outer) {
-    auto height = std::unique_ptr<RoadInfoLaneHeight>(new RoadInfoLaneHeight(s, inner, outer));
+
+    Lane* lane = _map_data.GetLane(road_id, lane_section_id, lane_id);
+    auto data = std::unique_ptr<RoadInfoLaneHeight>(new RoadInfoLaneHeight(s, inner, outer));
+    lane->_road_info_cache.push_back(std::move(data));
   }
 
   void MapBuilder::CreateLaneMaterial(
-      const int32_t /*road_id*/,
-      const int32_t /*lane_section_id*/,
-      const int32_t /*lane_id*/,
+      const RoadId road_id,
+      const float lane_section_id,
+      const LaneId lane_id,
       const float s,
       const std::string surface,
       const float friction,
       const float roughness) {
-    auto material =
-        std::unique_ptr<RoadInfoLaneMaterial>(new RoadInfoLaneMaterial(s, surface, friction, roughness));
+
+    Lane* lane = _map_data.GetLane(road_id, lane_section_id, lane_id);
+    auto data = std::unique_ptr<RoadInfoLaneMaterial>(new RoadInfoLaneMaterial(s, surface, friction, roughness));
+    lane->_road_info_cache.push_back(std::move(data));
   }
 
   void MapBuilder::CreateLaneOffset(
-      const int32_t /*road_id*/,
-      const int32_t /*lane_section_id*/,
-      const int32_t /*lane_id*/,
+      const RoadId road_id,
+      const float lane_section_id,
+      const LaneId lane_id,
       const float s,
       const float a,
       const float b,
       const float c,
       const float d) {
-    auto offset = std::unique_ptr<RoadInfoLaneOffset>(new RoadInfoLaneOffset(s, a, b, c, d));
+
+    Lane* lane = _map_data.GetLane(road_id, lane_section_id, lane_id);
+    auto data = std::unique_ptr<RoadInfoLaneOffset>(new RoadInfoLaneOffset(s, a, b, c, d));
+    lane->_road_info_cache.push_back(std::move(data));
   }
 
   void MapBuilder::CreateLaneRule(
-      const int32_t /*road_id*/,
-      const int32_t /*lane_section_id*/,
-      const int32_t /*lane_id*/,
+      const RoadId road_id,
+      const float lane_section_id,
+      const LaneId lane_id,
       const float s,
       const std::string value) {
-    auto rule = std::unique_ptr<RoadInfoLaneRule>(new RoadInfoLaneRule(s, value));
+
+    Lane* lane = _map_data.GetLane(road_id, lane_section_id, lane_id);
+    auto data = std::unique_ptr<RoadInfoLaneRule>(new RoadInfoLaneRule(s, value));
+    lane->_road_info_cache.push_back(std::move(data));
   }
 
   void MapBuilder::CreateLaneVisibility(
-      const int32_t /*road_id*/,
-      const int32_t /*lane_section_id*/,
-      const int32_t /*lane_id*/,
+      const RoadId road_id,
+      const float lane_section_id,
+      const LaneId lane_id,
       const float s,
       const float forward,
       const float back,
       const float left,
       const float right) {
-    auto visibility =
-        std::unique_ptr<RoadInfoLaneVisibility>(new RoadInfoLaneVisibility(s, forward, back, left, right));
+
+    Lane* lane = _map_data.GetLane(road_id, lane_section_id, lane_id);
+    auto data = std::unique_ptr<RoadInfoLaneVisibility>(new RoadInfoLaneVisibility(s, forward, back, left, right));
+    lane->_road_info_cache.push_back(std::move(data));
   }
 
   void MapBuilder::CreateLaneWidth(
-      const int32_t /*road_id*/,
-      const int32_t /*lane_section_id*/,
-      const int32_t /*lane_id*/,
+      const RoadId road_id,
+      const float lane_section_id,
+      const LaneId lane_id,
       const float s,
       const float a,
       const float b,
       const float c,
       const float d) {
-    auto width = std::unique_ptr<RoadInfoLaneWidth>(new RoadInfoLaneWidth(s, a, b, c, d));
+
+    Lane* lane = _map_data.GetLane(road_id, lane_section_id, lane_id);
+    auto data = std::unique_ptr<RoadInfoLaneWidth>(new RoadInfoLaneWidth(s, a, b, c, d));
+    lane->_road_info_cache.push_back(std::move(data));
   }
 
   void MapBuilder::CreateRoadMark(
-      const int32_t /*road_id*/,
-      const int32_t /*lane_section_id*/,
-      const int32_t /*lane_id*/,
+      const RoadId road_id,
+      const float lane_section_id,
+      const LaneId lane_id,
       const int road_mark_id,
       const float s,
       const std::string type,
@@ -156,6 +184,9 @@ namespace road {
       const float height,
       const std::string type_name,
       const float type_width) {
+
+    Lane* lane = _map_data.GetLane(road_id, lane_section_id, lane_id);
+
     RoadInfoMarkRecord::LaneChange lc;
 
     auto ToLower = [](auto str) {
@@ -171,15 +202,15 @@ namespace road {
     } else {
       lc = RoadInfoMarkRecord::LaneChange::None;
     }
-    auto mark =
-        std::unique_ptr<RoadInfoMarkRecord>(new RoadInfoMarkRecord(s, road_mark_id, type, weight, color,
+    auto data = std::unique_ptr<RoadInfoMarkRecord>(new RoadInfoMarkRecord(s, road_mark_id, type, weight, color,
         material, width, lc, height, type_name, type_width));
+    lane->_road_info_cache.push_back(std::move(data));
   }
 
   void MapBuilder::CreateRoadMarkTypeLine(
-      const int32_t /*road_id*/,
-      const int32_t /*lane_section_id*/,
-      const int32_t /*lane_id*/,
+      const RoadId road_id,
+      const float lane_section_id,
+      const LaneId lane_id,
       const int road_mark_id,
       const float length,
       const float space,
@@ -187,23 +218,30 @@ namespace road {
       const float s,
       const std::string rule,
       const float width) {
-    auto line =
-        std::unique_ptr<RoadInfoMarkTypeLine>(new RoadInfoMarkTypeLine(s, road_mark_id, length, space,
-        tOffset, rule, width));
-    // Find the parent road mark record using the ids provided and then add this
-    // line to its lise of lines
-    // road_mark.GetLines().push_back(std::move(line);
 
+    Lane* lane = _map_data.GetLane(road_id, lane_section_id, lane_id);
+    auto it = MakeRoadInfoIterator<RoadInfoMarkRecord>(lane->_road_info_cache);
+    for (; !it.IsAtEnd(); ++it) {
+      if(it->GetRoadMarkId() == road_mark_id) {
+        auto data = std::unique_ptr<RoadInfoMarkTypeLine>(new RoadInfoMarkTypeLine(s, road_mark_id, length, space,
+        tOffset, rule, width));
+        it->GetLines().push_back(std::move(data));
+        break;
+      }
+    }
   }
 
   void MapBuilder::CreateLaneSpeed(
-      const int32_t /*road_id*/,
-      const int /*lane_section_id*/,
-      const int32_t /*lane_id*/,
+      const RoadId road_id,
+      const float lane_section_id,
+      const LaneId lane_id,
       const float s,
       const float max,
-      const std::string /*unit*/) {
-    auto speed = std::unique_ptr<RoadInfoVelocity>(new RoadInfoVelocity(s, max));
+      const std::string unit) {
+
+    Lane* lane = _map_data.GetLane(road_id, lane_section_id, lane_id);
+    auto data = std::unique_ptr<RoadInfoVelocity>(new RoadInfoVelocity(s, max, unit));
+    lane->_road_info_cache.push_back(std::move(data));
   }
 
   void MapBuilder::AddSignal(

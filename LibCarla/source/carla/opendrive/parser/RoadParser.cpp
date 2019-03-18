@@ -162,6 +162,11 @@ namespace parser {
                 lane.successor = link2.child("successor").attribute("id").as_int();
             }
 
+            // TODO: Code needs to be added to this function for calling the lane parser for each lane
+            // The below call must be done after the lane parser has been called for the lane
+            // Commenting out for now
+            //lane.CreateInformationSet();
+
             // add it
             section.lanes.emplace_back(lane);
         }

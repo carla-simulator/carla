@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/road/element/RoadInfo.h"
+#include <string>
 
 namespace carla {
 namespace road {
@@ -20,18 +21,27 @@ namespace element {
       v.Visit(*this);
     }
 
-    RoadInfoVelocity(float vel) : velocity(vel) {}
-    RoadInfoVelocity(float s, float vel)
+    RoadInfoVelocity(
+      float s,
+      float vel,
+      std::string unit)
       : RoadInfo(s),
-        velocity(vel) {}
+        _velocity(vel),
+        _unit(unit) {}
 
-    float GetVelocity() {
-      return velocity;
+    float GetVelocity() const {
+      return _velocity;
+    }
+
+    std::string GetUnit() const {
+      return _unit;
     }
 
   private:
 
-    float velocity;
+    float _velocity;
+
+    std::string _unit;
   };
 
 } // namespace element

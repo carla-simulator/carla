@@ -12,6 +12,7 @@
 #include "carla/ListView.h"
 #include "carla/NonCopyable.h"
 #include "carla/road/Road.h"
+#include "carla/road/Lane.h"
 #include "carla/road/RoadTypes.h"
 
 #include <boost/iterator/transform_iterator.hpp>
@@ -31,6 +32,11 @@ namespace road {
     Road *GetRoad(const RoadId id);
 
     Junction *GetJunction(JuncId id);
+
+    Lane *GetLane(
+        const RoadId road_id,
+        const float lane_section_id,
+        const LaneId lane_id);
 
     std::unordered_map<JuncId, Junction> &GetJunctions();
 

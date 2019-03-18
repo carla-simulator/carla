@@ -55,7 +55,8 @@ namespace element {
     std::shared_ptr<const T> GetInfo(double dist) const {
       auto up_bound = decltype(_info)::reverse_iterator(_info.upper_bound(dist));
       auto it = MakeRoadInfoIterator<T>(up_bound, _info.rend());
-      return it.IsAtEnd() ? nullptr : *it;
+      //return it.IsAtEnd() ? nullptr : *it;
+      return nullptr;
     }
 
     /// Returns single info given a type and a distance from
@@ -64,7 +65,8 @@ namespace element {
     std::shared_ptr<const T> GetInfoReverse(double dist) const {
       auto lo_bound = _info.lower_bound(dist);
       auto it = MakeRoadInfoIterator<T>(lo_bound, _info.end());
-      return it.IsAtEnd() ? nullptr : *it;
+      //return it.IsAtEnd() ? nullptr : *it;
+      return nullptr;
     }
 
     /// Returns info vector given a type and a distance from
@@ -75,9 +77,9 @@ namespace element {
       auto it = MakeRoadInfoIterator<T>(up_bound, _info.rend());
 
       std::vector<std::shared_ptr<const T>> result;
-      for (; !it.IsAtEnd(); ++it) {
-        result.emplace_back(*it);
-      }
+      //for (; !it.IsAtEnd(); ++it) {
+        //result.emplace_back(*it);
+      //}
       return result;
     }
 
@@ -89,9 +91,9 @@ namespace element {
       auto it = MakeRoadInfoIterator<T>(lo_bound, _info.end());
 
       std::vector<std::shared_ptr<const T>> result;
-      for (; !it.IsAtEnd(); ++it) {
-        result.emplace_back(*it);
-      }
+      //for (; !it.IsAtEnd(); ++it) {
+       // result.emplace_back(*it);
+      //}
       return result;
     }
 

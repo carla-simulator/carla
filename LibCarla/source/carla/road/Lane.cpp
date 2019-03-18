@@ -10,6 +10,10 @@
 namespace carla {
 namespace road {
 
+  void Lane::CreateInformationSet() {
+    _info = InformationSet(std::move(_road_info_cache));
+  }
+
   const LaneSection *Lane::GetLaneSection() const {
     return _lane_section;
   }
