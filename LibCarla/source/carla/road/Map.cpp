@@ -111,40 +111,36 @@ namespace road {
   }
 
   std::vector<Waypoint> Map::GetNext(
-      const Waypoint &/* waypoint */,
-      float /* distance */) const {
-    // auto &map = waypoint._map;
-    // const auto this_road_id = waypoint.GetRoadId();
-    // const auto this_lane_id = waypoint.GetLaneId();
+      const Waypoint &waypoint,
+      float distance) const {
+    DEBUG_ASSERT(waypoint.lane_id != 0);
 
-    // DEBUG_ASSERT(this_lane_id != 0);
+    float distance_on_next_segment;
 
-    // float distance_on_next_segment;
+    if (waypoint.lane_id <= 0) {
+      // road goes forward.
+      const auto total_distance = waypoint.s + distance;
+      const auto *road = _data.GetRoad(waypoint.road_id);
+      DEBUG_ASSERT(road != nullptr);
+      const auto road_length = road->GetLength();
+      if (total_distance <= road_length) {
+        return { Waypoint{waypoint.road_id, waypoint.lane_id, total_distance} };
+      }
+      distance_on_next_segment = total_distance - road_length;
+    } else {
+      // road goes backward.
+      const auto total_distance = waypoint.s - distance;
+      if (total_distance >= 0.0f) {
+        return { Waypoint{waypoint.road_id, waypoint.lane_id, total_distance} };
+      }
+      distance_on_next_segment = std::abs(total_distance);
+    }
 
-    // if (this_lane_id <= 0) {
-    //   // road goes forward.
-    //   const auto total_distance = waypoint._dist + distance;
-    //   const auto road_length = waypoint.GetRoadSegment().GetLength();
-    //   if (total_distance <= road_length) {
-    //     return { Waypoint(map, this_road_id, this_lane_id, total_distance) };
-    //   }
-    //   distance_on_next_segment = total_distance - road_length;
-    // } else {
-    //   // road goes backward.
-    //   const auto total_distance = waypoint._dist - distance;
-    //   if (total_distance >= 0.0) {
-    //     return { Waypoint(map, this_road_id, this_lane_id, total_distance) };
-    //   }
-    //   distance_on_next_segment = std::abs(total_distance);
-    // }
-
-    // std::vector<Waypoint> result;
-    // for (auto &&next_waypoint : GetSuccessors(waypoint)) {
-    //   result = ConcatVectors(result, GetNext(next_waypoint, distance_on_next_segment));
-    // }
-    // return result;
-    throw_exception(std::runtime_error("not implemented"));
-    return {};
+    std::vector<Waypoint> result;
+    for (const auto &next_waypoint : GetSuccessors(waypoint)) {
+      result = ConcatVectors(result, GetNext(next_waypoint, distance_on_next_segment));
+    }
+    return result;
   }
 
   boost::optional<Waypoint> Map::GetRight(const Waypoint &/* waypoint */) const {
