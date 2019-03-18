@@ -34,6 +34,8 @@ namespace road {
 
     std::unordered_map<LaneId, Lane> &GetLanes();
 
+    std::vector<Lane *> GetLanesOfType(const std::string &type);
+
   private:
 
     friend MapBuilder;

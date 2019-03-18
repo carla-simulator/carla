@@ -29,5 +29,15 @@ namespace road {
     return _lanes;
   }
 
+  std::vector<Lane *> LaneSection::GetLanesOfType(const std::string &type) {
+    std::vector<Lane *> drivable_lanes;
+    for (auto &&lane : _lanes) {
+      if (lane.second.GetType() == type) {
+        drivable_lanes.emplace_back(&lane.second);
+      }
+    }
+    return drivable_lanes;
+  }
+
 } // namespace road
 } // namespace carla
