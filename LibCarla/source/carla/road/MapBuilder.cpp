@@ -7,6 +7,7 @@
 #include "carla/StringUtil.h"
 #include "carla/road/MapBuilder.h"
 #include "carla/road/element/RoadElevationInfo.h"
+#include "carla/road/element/RoadInfoGeometry.h"
 #include "carla/road/element/RoadInfoLaneAccess.h"
 #include "carla/road/element/RoadInfoLaneBorder.h"
 #include "carla/road/element/RoadInfoLaneHeight.h"
@@ -301,6 +302,81 @@ namespace road {
     lane->_prev_lanes.emplace_back(reinterpret_cast<Lane *>(predecessor));
   }
 
+  void MapBuilder::AddRoadGeometryLine(
+      carla::road::Road *road,
+      const double s,
+      const double x,
+      const double y,
+      const double hdg,
+      const double length) {
+
+    auto line_geometry = std::make_unique<GeometryLine>(s,
+        length,
+        hdg,
+        geom::Location(x, y, 0.0f));
+
+    _road_info[road].emplace_back(std::unique_ptr<RoadInfo>(new RoadInfoGeometry(s,
+        std::move(line_geometry))));
+  }
+
+  void MapBuilder::AddRoadGeometryArc(
+      carla::road::Road *road,
+      const double s,
+      const double x,
+      const double y,
+      const double hdg,
+      const double length,
+      const double curvature) {
+
+    auto arc_geometry = std::make_unique<GeometryArc>(s,
+        length,
+        hdg,
+        geom::Location(x, y, 0.0f),
+        curvature);
+
+    _road_info[road].emplace_back(std::unique_ptr<RoadInfo>(new RoadInfoGeometry(s,
+        std::move(arc_geometry))));
+  }
+
+  void MapBuilder::AddRoadGeometrySpiral(
+      carla::road::Road * /*road*/,
+      const double /*s*/,
+      const double /*x*/,
+      const double /*y*/,
+      const double /*hdg*/,
+      const double /*length*/,
+      const double /*curvStart*/,
+      const double /*curvEnd*/) {}
+
+  void MapBuilder::AddRoadGeometryPoly3(
+      carla::road::Road * /*road*/,
+      const double /*s*/,
+      const double /*x*/,
+      const double /*y*/,
+      const double /*hdg*/,
+      const double /*length*/,
+      const double /*a*/,
+      const double /*b*/,
+      const double /*c*/,
+      const double /*d*/) {}
+
+  void MapBuilder::AddRoadGeometryParamPoly3(
+      carla::road::Road * /*road*/,
+      const double /*s*/,
+      const double /*x*/,
+      const double /*y*/,
+      const double /*hdg*/,
+      const double /*length*/,
+      const double /*aU*/,
+      const double /*bU*/,
+      const double /*cU*/,
+      const double /*dU*/,
+      const double /*aV*/,
+      const double /*bV*/,
+      const double /*cV*/,
+      const double /*dV*/,
+      const std::string /*p_range*/) {}
+
   void MapBuilder::AddJunction(const int32_t id, const std::string name) {
     _map_data.GetJunctions().emplace(id, Junction(id, name));
   }
@@ -370,5 +446,9 @@ namespace road {
     return _map_data.GetLane(road_id, lane_id, s);
   }
 
+  Road *MapBuilder::GetRoad(
+      const RoadId road_id) {
+    return _map_data.GetRoad(road_id);
+  }
 }   // namespace road
 } // namespace carla
