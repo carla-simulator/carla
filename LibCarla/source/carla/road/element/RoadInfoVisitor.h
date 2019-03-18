@@ -28,6 +28,7 @@ namespace element {
   class RoadInfoMarkRecord;
   class RoadInfoMarkTypeLine;
   class RoadInfoVelocity;
+  class RoadInfoGeometry;
 
   class RoadInfoVisitor {
   public:
@@ -46,6 +47,7 @@ namespace element {
     virtual void Visit(RoadInfoMarkRecord &) {}
     virtual void Visit(RoadInfoMarkTypeLine &) {}
     virtual void Visit(RoadInfoVelocity &) {}
+    virtual void Visit(RoadInfoGeometry &) {}
   };
 
   template <typename T, typename IT>
