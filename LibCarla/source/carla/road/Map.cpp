@@ -63,7 +63,63 @@ namespace road {
   // -- Map --------------------------------------------------------------------
   // ===========================================================================
 
-  Waypoint Map::GetClosestWaypointOnRoad(const geom::Location &) const {
+  Waypoint Map::GetClosestWaypointOnRoad(const geom::Location &pos) const {
+    // max_nearests represents the max nearests roads
+    // where we will search for nearests lanes
+    constexpr int max_nearests = 10;
+    // in case that map has less than max_nearests lanes,
+    // we will use the maximum lanes
+    const int max_nearest_allowed = _data.GetRoadCount() < max_nearests ?
+        _data.GetRoadCount() : max_nearests;
+
+    double nearest_dist[max_nearests];
+    std::fill(nearest_dist, nearest_dist + max_nearest_allowed,
+        std::numeric_limits<double>::max());
+
+    RoadId ids[max_nearests];
+    std::fill(ids, ids + max_nearest_allowed, 0);
+
+    double dists[max_nearests];
+    std::fill(dists, dists + max_nearest_allowed, 0.0);
+
+    for (const auto &road_pair : _data.GetRoads()) {
+      const auto road = &road_pair.second;
+      const auto current_dist = road->GetNearestPoint(pos);
+
+      for (int i = 0; i < max_nearest_allowed; ++i) {
+        if (current_dist.second < nearest_dist[i]) {
+          // reorder nearest_dist
+          for (int j = max_nearest_allowed - 1; j > i; --j) {
+            nearest_dist[j] = nearest_dist[j - 1];
+            ids[j] = ids[j - 1];
+            dists[j] = dists[j - 1];
+          }
+          nearest_dist[i] = current_dist.second;
+          ids[i] = road->GetId();
+          dists[i] = current_dist.first;
+
+          break;
+        }
+      }
+    }
+
+    // search for the nearest lane in nearest_dist
+    // Waypoint waypoint;
+    // float nearest_lane_dist = std::numeric_limits<float>::max();
+    // for (int i = 0; i < max_nearest_allowed; ++i) {
+    //   auto lane_dist = _data.GetRoad(ids[i])->GetNearestLane(dists[i], pos);
+
+    //   if (lane_dist.second < nearest_lane_dist) {
+    //     nearest_lane_dist = lane_dist.second;
+    //     waypoint.lane_id = lane_dist.first;
+    //     waypoint.road_id = ids[i];
+    //     waypoint.dist = dists[i];
+    //   }
+    // }
+
+    // DEBUG_ASSERT(_dist <= _map->GetData().GetRoad(_road_id)->GetLength());
+    // DEBUG_ASSERT(_lane_id != 0);
+
     return {}; //Waypoint(shared_from_this(), loc);
   }
 

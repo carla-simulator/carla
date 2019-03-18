@@ -7,8 +7,11 @@
 #include "carla/road/Road.h"
 #include "carla/road/Lane.h"
 #include "carla/road/MapData.h"
+#include "carla/geom/Math.h"
 #include "carla/Logging.h"
 #include "carla/ListView.h"
+#include "carla/geom/Location.h"
+#include "carla/road/element/RoadInfoGeometry.h"
 
 #include <boost/optional.hpp>
 
@@ -56,8 +59,7 @@ namespace road {
   }
 
   Lane *Road::GetLane(const LaneId id, const float s) {
-    Road *me = this;
-    for (auto &lane_section : me->GetLaneSectionsAt(s)) {
+    for (auto &lane_section : GetLaneSectionsAt(s)) {
       auto search = lane_section.GetLanes().find(id);
       if (search != lane_section.GetLanes().end()) {
         return &search->second;
@@ -75,7 +77,7 @@ namespace road {
     return nullptr;
   }
 
-  carla::road::signal::SignalReference* Road::GetSignalRef(const SignRefId id) {
+  carla::road::signal::SignalReference *Road::GetSignalRef(const SignRefId id) {
     const auto search = _sign_ref.find(id);
     if (search != _sign_ref.end()) {
       return &search->second;
@@ -83,12 +85,47 @@ namespace road {
     return nullptr;
   }
 
-  std::unordered_map<SignId, signal::Signal>* Road::getSignals() {
+  std::unordered_map<SignId, signal::Signal> *Road::getSignals() {
     return &_signals;
   }
 
-  std::unordered_map<SignId, signal::SignalReference>* Road::getSignalReferences() {
+  std::unordered_map<SignId, signal::SignalReference> *Road::getSignalReferences() {
     return &_sign_ref;
+  }
+
+  element::DirectedPoint Road::GetDirectedPointIn(const float s) const {
+    const float clamped_s = geom::Math::clamp(s, 0.0f, _length);
+    const auto geometry = _info.GetInfo<element::RoadInfoGeometry>(clamped_s);
+
+    if (clamped_s == 0.0f) {
+      return element::DirectedPoint(
+          geometry->_geom->GetStartPosition(),
+          geometry->_geom->GetHeading());
+    }
+    return geometry->_geom->PosFromDist(clamped_s);
+  }
+
+  std::pair<float, float> Road::GetNearestPoint(const geom::Location &loc) const {
+    std::pair<float, float> last = { 0.0, std::numeric_limits<float>::max() };
+
+    auto geom_info_list = _info.GetInfos<element::RoadInfoGeometry>();
+    decltype(geom_info_list)::iterator nearest_geom = geom_info_list.end();
+
+    for (auto g = geom_info_list.begin(); g != geom_info_list.end(); ++g) {
+      auto dist = (*g)->_geom->DistanceTo(loc);
+      if (dist.second < last.second) {
+        last = dist;
+        nearest_geom = g;
+      }
+    }
+
+    for (auto g = geom_info_list.begin();
+        g != geom_info_list.end() && g != nearest_geom;
+        ++g) {
+      last.first += (*g)->_geom->GetLength();
+    }
+
+    return last;
   }
 
 } // road
