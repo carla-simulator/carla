@@ -13,7 +13,7 @@ namespace carla {
 namespace road {
 namespace element {
 
-  class RoadElevationInfo;
+  class RoadInfoElevation;
   class RoadGeneralInfo;
   class RoadInfo;
   class RoadInfoLane;
@@ -28,12 +28,11 @@ namespace element {
   class RoadInfoMarkRecord;
   class RoadInfoMarkTypeLine;
   class RoadInfoVelocity;
-  class RoadInfoGeometry;
 
   class RoadInfoVisitor {
   public:
 
-    virtual void Visit(RoadElevationInfo &) {}
+    virtual void Visit(RoadInfoElevation &) {}
     virtual void Visit(RoadGeneralInfo &) {}
     virtual void Visit(RoadInfoLane &) {}
     virtual void Visit(RoadInfoLaneAccess &) {}
@@ -47,14 +46,13 @@ namespace element {
     virtual void Visit(RoadInfoMarkRecord &) {}
     virtual void Visit(RoadInfoMarkTypeLine &) {}
     virtual void Visit(RoadInfoVelocity &) {}
-    virtual void Visit(RoadInfoGeometry &) {}
   };
 
   template <typename T, typename IT>
   class RoadInfoIterator : private RoadInfoVisitor {
   public:
 
-    static_assert(std::is_same<std::shared_ptr<RoadInfo>, typename IT::value_type>::value, "Not compatible.");
+    static_assert(std::is_same<std::unique_ptr<RoadInfo>, typename IT::value_type>::value, "Not compatible.");
 
     RoadInfoIterator(IT begin, IT end)
       : _it(begin),
@@ -81,12 +79,12 @@ namespace element {
     }
 
     /// @todo to fix
-    std::shared_ptr<T> operator*() const {
-      return std::static_pointer_cast<T>(*_it);
+    T* operator*() const {
+      return static_cast<T*>((*_it).get());
     }
 
-    std::shared_ptr<T> operator->() const {
-      return std::static_pointer_cast<T>(*_it);
+    T* operator->() const {
+      return static_cast<T*>((*_it).get());
     }
 
     bool operator!=(const RoadInfoIterator &rhs) const {

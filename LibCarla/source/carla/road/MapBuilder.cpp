@@ -6,7 +6,7 @@
 
 #include "carla/StringUtil.h"
 #include "carla/road/MapBuilder.h"
-#include "carla/road/element/RoadElevationInfo.h"
+#include "carla/road/element/RoadInfoElevation.h"
 #include "carla/road/element/RoadInfoLaneAccess.h"
 #include "carla/road/element/RoadInfoLaneBorder.h"
 #include "carla/road/element/RoadInfoLaneHeight.h"
@@ -48,7 +48,7 @@ namespace road {
       const double b,
       const double c,
       const double d) {
-    auto elevation = std::unique_ptr<RoadElevationInfo>(new RoadElevationInfo(s, a, b, c, d));
+    auto elevation = std::unique_ptr<RoadInfoElevation>(new RoadInfoElevation(s, a, b, c, d));
   }
 
   // called from lane parser
@@ -166,12 +166,15 @@ namespace road {
       const float s,
       const std::string rule,
       const float width) {
-    _temp_lane_info_container[lane].emplace_back(std::make_unique<RoadInfoMarkTypeLine>(s, road_mark_id,
-        length, space,
+
+    auto it = MakeRoadInfoIterator<RoadInfoMarkRecord>(_temp_lane_info_container[lane]);
+    for (; !it.IsAtEnd(); ++it) {
+      if(it->GetRoadMarkId() == road_mark_id) {
+        it->GetLines().emplace_back(std::make_unique<RoadInfoMarkTypeLine>(s, road_mark_id, length, space,
         tOffset, rule, width));
-    // Find the parent road mark record using the ids provided and then add this
-    // line to its lise of lines
-    // road_mark.GetLines().push_back(std::move(line);
+        break;
+      }
+    }
 
   }
 
