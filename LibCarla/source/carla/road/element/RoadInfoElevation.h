@@ -13,14 +13,14 @@ namespace carla {
 namespace road {
 namespace element {
 
-  class RoadElevationInfo : public RoadInfo {
+  class RoadInfoElevation : public RoadInfo {
   public:
 
     void AcceptVisitor(RoadInfoVisitor &v) final {
       v.Visit(*this);
     }
 
-    RoadElevationInfo(
+    RoadInfoElevation(
         float s,
         float a, // elevation
         float b, // slope
