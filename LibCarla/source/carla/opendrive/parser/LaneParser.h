@@ -24,7 +24,7 @@ namespace parser {
   private:
 
     static void ParseLanes(
-        int road_id,
+        RoadId road_id,
         int lane_section_id,
         const pugi::xml_node &parent_node,
         carla::road::MapBuilder &map_builder);
