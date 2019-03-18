@@ -63,8 +63,8 @@ namespace detail {
 
     auto GetActorIds() const {
       return MakeListView(
-          iterator::make_map_keys_iterator(_actors.begin()),
-          iterator::make_map_keys_iterator(_actors.end()));
+          iterator::make_map_keys_const_iterator(_actors.begin()),
+          iterator::make_map_keys_const_iterator(_actors.end()));
     }
 
   private:
