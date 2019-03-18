@@ -68,6 +68,7 @@ namespace road {
 
     InformationSet _info;
 
+    /// @todo: change to enum, see 6.5 of OpenDRIVEFormatSpecRev1.4H.pdf
     std::string _type;
 
     bool _level;
