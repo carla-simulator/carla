@@ -6,15 +6,17 @@
 
 #pragma once
 
+#include "carla/Iterator.h"
+#include "carla/ListView.h"
 #include "carla/NonCopyable.h"
 #include "carla/road/InformationSet.h"
 #include "carla/road/Junction.h"
 #include "carla/road/LaneSection.h"
-#include "carla/road/RoadTypes.h"
 #include "carla/road/RoadElementSet.h"
+#include "carla/road/RoadTypes.h"
+#include "carla/road/element/RoadInfo.h"
 #include "carla/road/signal/Signal.h"
 #include "carla/road/signal/SignalReference.h"
-#include "carla/road/element/RoadInfo.h"
 
 #include <vector>
 #include <map>
@@ -64,6 +66,12 @@ namespace road {
     template <typename T>
     std::shared_ptr<const T> GetInfo (const float s) {
       return _info.GetInfo<T>(s);
+    }
+
+    auto GetLaneSections() const {
+      return MakeListView(
+          iterator::make_map_values_const_iterator(_lane_sections.begin()),
+          iterator::make_map_values_const_iterator(_lane_sections.end()));
     }
 
   private:
