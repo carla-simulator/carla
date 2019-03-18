@@ -12,7 +12,7 @@ namespace carla {
 namespace road {
 namespace element {
 
-  class RoadInfoVelocity : public RoadInfo {
+  class RoadInfoSpeed : public RoadInfo {
 
   public:
 
@@ -20,18 +20,18 @@ namespace element {
       v.Visit(*this);
     }
 
-    RoadInfoVelocity(float vel) : velocity(vel) {}
-    RoadInfoVelocity(float s, float vel)
+    RoadInfoSpeed(float speed) : _speed(speed) {}
+    RoadInfoSpeed(float s, float speed)
       : RoadInfo(s),
-        velocity(vel) {}
+        _speed(speed) {}
 
-    float GetVelocity() {
-      return velocity;
+    float GetSpeed() {
+      return _speed;
     }
 
   private:
 
-    float velocity;
+    float _speed;
   };
 
 } // namespace element

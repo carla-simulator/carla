@@ -30,9 +30,13 @@ namespace parser {
     LaneId successor;
   };
 
-  struct LaneSection {
+  struct LaneOffset {
     float s;
     float a, b, c, d;
+  };
+
+  struct LaneSection {
+    float s;
     std::vector<Lane> lanes;
   };
 
@@ -51,6 +55,7 @@ namespace parser {
     RoadId predecessor;
     RoadId successor;
     std::vector<RoadTypeSpeed> speed;
+    std::vector<LaneOffset> section_offsets;
     std::vector<LaneSection> sections;
   };
 
@@ -61,7 +66,7 @@ namespace parser {
       std::vector<Road> roads;
 
       for (pugi::xml_node node_road : xml.child("OpenDRIVE").children("road")) {
-        Road road { 0, "", 0.0, -1, -1, -1, {}, {} };
+        Road road { 0, "", 0.0, -1, -1, -1, {}, {}, {} };
 
         // attributes
         road.id = node_road.attribute("id").as_int();
@@ -97,29 +102,21 @@ namespace parser {
         }
 
         // section offsets
-        std::deque<Polynomial> lane_offsets;
         for (pugi::xml_node node_offset : node_road.child("lanes").children("laneOffset")) {
-          Polynomial offset { 0.0, 0.0, 0.0, 0.0, 0.0 } ;
+          LaneOffset offset { 0.0, 0.0, 0.0, 0.0, 0.0 } ;
           offset.s = node_offset.attribute("s").as_float();
           offset.a = node_offset.attribute("a").as_float();
           offset.b = node_offset.attribute("b").as_float();
           offset.c = node_offset.attribute("c").as_float();
           offset.d = node_offset.attribute("d").as_float();
-          lane_offsets.emplace_back(offset);
+          road.section_offsets.emplace_back(offset);
         }
 
         // lane sections
         for (pugi::xml_node node_section : node_road.child("lanes").children("laneSection")) {
-          LaneSection section { 0.0, 0.0, 0.0, 0.0, 0.0, {} };
+          LaneSection section { 0.0, {} };
 
           section.s = node_section.attribute("s").as_float();
-
-          // section offsets
-          section.a = lane_offsets[0].a;
-          section.b = lane_offsets[0].b;
-          section.c = lane_offsets[0].c;
-          section.d = lane_offsets[0].d;
-          lane_offsets.pop_front();
 
           // left lanes
           for (pugi::xml_node node_lane : node_section.child("left").children("lane")) {
@@ -209,23 +206,26 @@ namespace parser {
 
     // map_builder calls
     for (auto const r : roads) {
-      map_builder.AddRoad(r.id, r.name, r.length, r.junction_id, r.predecessor, r.successor);
+      carla::road::Road *road = map_builder.AddRoad(r.id, r.name, r.length, r.junction_id, r.predecessor, r.successor);
 
       // type speed
       for (auto const s : r.speed) {
-        map_builder.SetRoadTypeSpeed(r.id, s.s, s.type, s.max, s.unit);
+        map_builder.AddRoadSpeed(road, s.s, s.type, s.max, s.unit);
       }
 
-      int i = 0;
+      // section offsets
+      for (auto const s : r.section_offsets) {
+        map_builder.AddLaneOffset(road, s.s, s.a, s.b, s.c, s.d);
+      }
+
+      // lane sections
       for (auto const s : r.sections) {
-        map_builder.AddRoadSection(r.id, geom::CubicPolynomial(s.a, s.b, s.c, s.d, s.s));
+        carla::road::LaneSection *section = map_builder.AddRoadSection(road, s.s);
 
         // lanes
         for (auto const l : s.lanes) {
-          map_builder.AddRoadSectionLane(r.id, i, l.id, l.type, l.level, l.predecessor, l.successor);
+          /*carla::road::Lane *lane = */map_builder.AddRoadSectionLane(section, l.id, l.type, l.level, l.predecessor, l.successor);
         }
-
-        ++i;
       }
     }
   }

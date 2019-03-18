@@ -21,7 +21,7 @@ namespace road {
     boost::optional<Map> Build();
 
     // called from road parser
-    void AddRoad(
+    carla::road::Road *AddRoad(
         const uint32_t road_id,
         const std::string name,
         const double length,
@@ -29,24 +29,23 @@ namespace road {
         const int32_t predecessor,
         const int32_t successor);
 
-    void AddRoadSection(
-        const uint32_t road_id,
-        geom::CubicPolynomial section);
+    carla::road::LaneSection *AddRoadSection(
+        carla::road::Road *road,
+        const double s);
 
-    void AddRoadSectionLane(
-        const uint32_t road_id,
-        const uint32_t section_index,
+    carla::road::Lane *AddRoadSectionLane(
+        carla::road::LaneSection *section,
         const int32_t lane_id,
         const std::string lane_type,
         const bool lane_level,
         const int32_t predecessor,
         const int32_t successor);
 
-    void SetRoadTypeSpeed(
-        const uint32_t road_id,
-        const double s,
+    void AddRoadSpeed(
+        carla::road::Road * road,
+        const float s,
         const std::string type,
-        const double max,
+        const float max,
         const std::string unit);
 
     // called from geometry parser
@@ -237,10 +236,8 @@ namespace road {
         const float friction,
         const float roughness);
 
-    void CreateLaneOffset(
-        const int32_t road_id,
-        const int32_t lane_section_id,
-        const int32_t lane_id,
+    void AddLaneOffset(
+        carla::road::Road *road,
         const float s,
         const float a,
         const float b,
@@ -338,6 +335,8 @@ namespace road {
   private:
 
     MapData _map_data;
+
+    std::unordered_map<carla::road::Road *, std::vector<std::unique_ptr<carla::road::element::RoadInfo>>> _road_info;
 
     /// Set the total length of each road based on the geometries
     void SetTotalRoadSegmentLength();
