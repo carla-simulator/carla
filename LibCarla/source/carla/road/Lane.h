@@ -50,6 +50,14 @@ namespace road {
       return _info.GetInfo<T>(s);
     }
 
+    const std::vector<Lane *> &GetNextLanes() const {
+      return _next_lanes;
+    }
+
+    const std::vector<Lane *> &GetPreviousLanes() const {
+      return _prev_lanes;
+    }
+
   private:
 
     friend MapBuilder;
