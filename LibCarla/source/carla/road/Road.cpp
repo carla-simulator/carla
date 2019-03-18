@@ -80,31 +80,29 @@ namespace road {
   }
 
 
-    //carla::road::signal::Signal* Road::GetSignal(const SignId /*id*/) const {
-      /// @todo: Fix this so it can return an specific Signal
-      /*const auto search = _signals.find(id);
+    carla::road::signal::Signal* Road::GetSignal(const SignId id) {
+      auto search = _signals.find(id);
       if (search != _signals.end()) {
         return &search->second;
-      }*/
-    /*  return nullptr;
+      }
+      return nullptr;
     }
 
-    carla::road::signal::SignalReference* Road::GetSignalRef(const SignRefId id) const {*/
-      /// @todo: Fix this so it can return an specific SignalReference
-      /*const auto search = _sign_ref.find(id);
+    carla::road::signal::SignalReference* Road::GetSignalRef(const SignRefId id) {
+      const auto search = _sign_ref.find(id);
       if (search != _sign_ref.end()) {
         return &search->second;
-      }*/
-    //  return nullptr;
-    //}
+      }
+      return nullptr;
+    }
 
-    //std::unordered_map<SignId, signal::Signal> Road::getSignals() const {
-    //  return _signals;
-    //}
+    std::unordered_map<SignId, signal::Signal>* Road::getSignals() {
+      return &_signals;
+    }
 
-    //std::unordered_map<SignId, signal::SignalReference> Road::getSignalReferences() const {
-    //  return _sign_ref;
-    //}
+    std::unordered_map<SignId, signal::SignalReference>* Road::getSignalReferences() {
+      return &_sign_ref;
+    }
 
 } // road
 } // carla
