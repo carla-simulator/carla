@@ -80,7 +80,7 @@ PythonAPI.3: LibCarla.client.release
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py3
 
 .PHONY: LibCarla
-LibCarla: LibCarla.server LibCarla.client
+LibCarla: LibCarla.release LibCarla.debug
 
 LibCarla.debug: LibCarla.server.debug LibCarla.client.debug
 LibCarla.release: LibCarla.server.release LibCarla.client.release
