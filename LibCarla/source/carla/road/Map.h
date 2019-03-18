@@ -106,6 +106,8 @@ namespace road {
 
   private:
 
+    const Lane *GetLane(const Waypoint &waypoint) const;
+
     MapData _data;
   };
 

@@ -45,6 +45,8 @@ namespace road {
 
     Lane *GetLane(const RoadId road_id, LaneId lane_id, float s);
 
+    const Lane *GetLane(const RoadId road_id, LaneId lane_id, float s) const;
+
     template <typename T>
     const std::shared_ptr<const T> GetRoadInfo(
         const RoadId id,

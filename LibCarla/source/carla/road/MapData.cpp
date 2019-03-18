@@ -45,5 +45,12 @@ namespace road {
     return nullptr;
   }
 
+  const Lane *MapData::GetLane(
+      const RoadId road_id,
+      const LaneId lane_id,
+      const float s) const {
+    return const_cast<MapData *>(this)->GetLane(road_id, lane_id, s);
+  }
+
 } // namespace road
 } // namespace carla

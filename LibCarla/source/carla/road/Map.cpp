@@ -87,34 +87,27 @@ namespace road {
     return {};
   }
 
-  std::vector<Waypoint> Map::GetSuccessors(const Waypoint &/* waypoint */) const {
-    // auto &map = waypoint._map;
-    // const auto this_lane_id = waypoint.GetLaneId();
-    // const auto this_road_id = waypoint.GetRoadId();
+  std::vector<Waypoint> Map::GetSuccessors(const Waypoint &waypoint) const {
+    auto *lane = GetLane(waypoint);
+    DEBUG_ASSERT(lane != nullptr);
 
-    // const auto &next_lanes =
-    //     this_lane_id <= 0 ?
-    //         waypoint.GetRoadSegment().GetNextLane(this_lane_id) :
-    //         waypoint.GetRoadSegment().GetPrevLane(this_lane_id);
+    const auto &next_lanes =
+        lane->GetId() <= 0 ?
+            lane->GetNextLanes() :
+            lane->GetPreviousLanes();
 
-    // if (next_lanes.empty()) {
-    //   log_error("road id =", this_road_id, "lane id =", this_lane_id, ": missing next lanes");
-    // }
-
-    // std::vector<Waypoint> result;
-    // result.reserve(next_lanes.size());
-    // for (auto &&pair : next_lanes) {
-    //   const auto lane_id = pair.first;
-    //   const auto road_id = pair.second;
-    //   const auto road = map->GetData().GetRoad(road_id);
-    //   DEBUG_ASSERT(lane_id != 0);
-    //   DEBUG_ASSERT(road != nullptr);
-    //   const auto distance = lane_id < 0 ? 0.0 : road->GetLength();
-    //   result.push_back(Waypoint(map, road_id, lane_id, distance));
-    // }
-    // return result;
-    throw_exception(std::runtime_error("not implemented"));
-    return {};
+    std::vector<Waypoint> result;
+    result.reserve(next_lanes.size());
+    for (auto *next_lane : next_lanes) {
+      DEBUG_ASSERT(next_lane != nullptr);
+      const auto lane_id = next_lane->GetId();
+      DEBUG_ASSERT(lane_id != 0);
+      const auto *road = next_lane->GetRoad();
+      DEBUG_ASSERT(road != nullptr);
+      const auto distance = lane_id < 0 ? 0.0f : road->GetLength();
+      result.emplace_back(Waypoint{road->GetId(), lane_id, distance});
+    }
+    return result;
   }
 
   std::vector<Waypoint> Map::GetNext(
@@ -267,6 +260,10 @@ namespace road {
       });
     }
     return result;
+  }
+
+  const Lane *Map::GetLane(const Waypoint &waypoint) const {
+    return _data.GetLane(waypoint.road_id, waypoint.lane_id, waypoint.s);
   }
 
 } // namespace road
