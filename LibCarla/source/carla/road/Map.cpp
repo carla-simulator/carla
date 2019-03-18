@@ -32,16 +32,30 @@ namespace road {
     return dst;
   }
 
+  /// Return a waypoint for each drivable lane on @a lane_section.
+  template <typename FuncT>
+  static void ForEachDrivableLane(RoadId road_id, const LaneSection &lane_section, FuncT &&func) {
+    for (const auto &pair : lane_section.GetLanes()) {
+      const auto &lane = pair.second;
+      if (lane.GetType() == "driving") {
+        func(Waypoint{road_id, lane.GetId(), lane_section.GetDistance()});
+      }
+    }
+  }
+
   /// Return a waypoint for each drivable lane on each lane section of @a road.
   template <typename FuncT>
   static void ForEachDrivableLane(const Road &road, FuncT &&func) {
     for (const auto &lane_section : road.GetLaneSections()) {
-      for (const auto &pair : lane_section.GetLanes()) {
-        const auto &lane = pair.second;
-        if (lane.GetType() == "driving") {
-          func(Waypoint{road.GetId(), lane.GetId(), lane_section.GetDistance()});
-        }
-      }
+      ForEachDrivableLane(road.GetId(), lane_section, std::forward<FuncT>(func));
+    }
+  }
+
+  /// Return a waypoint for each drivable lane at @a distance on @a road.
+  template <typename FuncT>
+  static void ForEachDrivableLaneAt(const Road &road, float distance, FuncT &&func) {
+    for (const auto &lane_section : road.GetLaneSectionsAt(distance)) {
+      ForEachDrivableLane(road.GetId(), lane_section, std::forward<FuncT>(func));
     }
   }
 
@@ -193,20 +207,17 @@ namespace road {
     return {};
   }
 
-  std::vector<Waypoint> Map::GenerateWaypoints(
-      const float /* distance */) const {
-    // std::vector<Waypoint> result;
-    // for (auto &&road_segment : map.GetData().GetRoadSegments()) {
-    //   /// @todo Should distribute them equally along the segment?
-    //   for (float s = 0.0; s < road_segment.GetLength(); s += distance) {
-    //     ForEachDrivableLane(road_segment, s, [&](auto lane_id) {
-    //       result.push_back(Waypoint(map.shared_from_this(), road_segment.GetId(), lane_id, s));
-    //     });
-    //   }
-    // }
-    // return result;
-    throw_exception(std::runtime_error("not implemented"));
-    return {};
+  std::vector<Waypoint> Map::GenerateWaypoints(const float distance) const {
+    std::vector<Waypoint> result;
+    for (const auto &pair : _data.GetRoads()) {
+      const auto &road = pair.second;
+      for (float s = 0.0f; s < road.GetLength(); s += distance) {
+        ForEachDrivableLaneAt(road, s, [&](auto &&waypoint) {
+          result.emplace_back(waypoint);
+        });
+      }
+    }
+    return result;
   }
 
   std::vector<Waypoint> Map::GenerateLaneBegin() const {
