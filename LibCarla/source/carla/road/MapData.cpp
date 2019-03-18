@@ -26,6 +26,10 @@ namespace road {
     return nullptr;
   }
 
+  const Road *MapData::GetRoad(const RoadId id) const {
+    return const_cast<MapData *>(this)->GetRoad(id);
+  }
+
   Junction *MapData::GetJunction(JuncId id) {
     const auto search = _junctions.find(id);
     if (search != _junctions.end()) {
