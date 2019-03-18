@@ -225,7 +225,7 @@ namespace road {
       const float pitch,
       const float roll) {
 
-    _map_data.GetRoad(road_id)->getSignals().emplace(signal_id,
+    _map_data.GetRoad(road_id)->getSignals()->emplace(signal_id,
         signal::Signal(road_id, signal_id, s, t, name, dynamic,
         orientation, zOffset, country, type, subtype, value, unit, height, width,
         text, hOffset, pitch, roll));
@@ -367,7 +367,7 @@ namespace road {
       const float s_position,
       const float t_position,
       const std::string signal_reference_orientation) {
-    _map_data.GetRoad(road_id)->getSignalReferences().emplace(signal_reference_id,
+    _map_data.GetRoad(road_id)->getSignalReferences()->emplace(signal_reference_id,
         signal::SignalReference(road_id, signal_reference_id, s_position, t_position,
         signal_reference_orientation));
   }

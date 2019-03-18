@@ -52,13 +52,13 @@ namespace road {
 
     std::vector<const Road *> GetPrevs() const;
 
-    carla::road::signal::Signal* GetSignal(const SignId id) const;
+    carla::road::signal::Signal* GetSignal(const SignId id);
 
-    carla::road::signal::SignalReference* GetSignalRef(const SignRefId id) const;
+    carla::road::signal::SignalReference* GetSignalRef(const SignRefId id);
 
-    std::unordered_map<SignId, signal::Signal> getSignals() const;
+    std::unordered_map<SignId, signal::Signal>* getSignals();
 
-    std::unordered_map<SignId, signal::SignalReference> getSignalReferences() const;
+    std::unordered_map<SignId, signal::SignalReference>* getSignalReferences();
 
   private:
 
