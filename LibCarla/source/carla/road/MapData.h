@@ -33,6 +33,10 @@ namespace road {
 
     std::unordered_map<RoadId, Road> &GetRoads();
 
+    const std::unordered_map<RoadId, Road> &GetRoads() const {
+      return _roads;
+    }
+
     std::unordered_map<JuncId, Junction> &GetJunctions();
 
     Road *GetRoad(const RoadId id);

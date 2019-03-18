@@ -21,28 +21,28 @@ namespace road {
   // ===========================================================================
 
   template <typename T>
-  static std::vector<T> ConcatVectors(std::vector<T> /* dst */, std::vector<T> /* src */) {
-    // if (src.size() > dst.size()) {
-    //   return ConcatVectors(src, dst);
-    // }
-    // dst.insert(
-    //     dst.end(),
-    //     std::make_move_iterator(src.begin()),
-    //     std::make_move_iterator(src.end()));
-    // return dst;
-    return {};
+  static std::vector<T> ConcatVectors(std::vector<T> dst, std::vector<T> src) {
+    if (src.size() > dst.size()) {
+      return ConcatVectors(src, dst);
+    }
+    dst.insert(
+        dst.end(),
+        std::make_move_iterator(src.begin()),
+        std::make_move_iterator(src.end()));
+    return dst;
   }
 
+  /// Return a waypoint for each drivable lane on each lane section of @a road.
   template <typename FuncT>
-  static void ForEachDrivableLane(/*const RoadSegment & road ,*/ float /* s */, FuncT &&/* func */) {
-    throw_exception(std::runtime_error("not implemented"));
-    // const auto info = road.GetInfo<RoadInfoLane>(s);
-    // DEBUG_ASSERT(info != nullptr);
-    // for (auto &&lane_id : info->getLanesIDs(RoadInfoLane::which_lane_e::Both)) {
-    //   if (info->getLane(lane_id)->_type == "driving") {
-    //     func(lane_id);
-    //   }
-    // }
+  static void ForEachDrivableLane(const Road &road, FuncT &&func) {
+    for (const auto &lane_section : road.GetLaneSections()) {
+      for (const auto &pair : lane_section.GetLanes()) {
+        const auto &lane = pair.second;
+        if (lane.GetType() == "driving") {
+          func(Waypoint{road.GetId(), lane.GetId(), lane_section.GetDistance()});
+        }
+      }
+    }
   }
 
   // ===========================================================================
@@ -246,23 +246,17 @@ namespace road {
   }
 
   std::vector<std::pair<Waypoint, Waypoint>> Map::GenerateTopology() const {
-    // std::vector<std::pair<Waypoint, Waypoint>> result;
-    // for (auto &&road_segment : map.GetData().GetRoadSegments()) {
-    //   ForEachDrivableLane(road_segment, 0.0, [&](auto lane_id) {
-    //     auto distance = lane_id < 0 ? 0.0 : road_segment.GetLength();
-    //     auto this_waypoint = Waypoint(
-    //         map.shared_from_this(),
-    //         road_segment.GetId(),
-    //         lane_id,
-    //         distance);
-    //     for (auto &&successor : GetSuccessors(this_waypoint)) {
-    //       result.push_back({this_waypoint, successor});
-    //     }
-    //   });
-    // }
-    // return result;
-    throw_exception(std::runtime_error("not implemented"));
-    return {};
+    std::vector<std::pair<Waypoint, Waypoint>> result;
+    for (const auto &pair : _data.GetRoads()) {
+      const auto &road = pair.second;
+      ForEachDrivableLane(road, [&](auto &&waypoint) {
+        for (auto &&successor : GetSuccessors(waypoint)) {
+          result.push_back({waypoint, successor});
+        }
+      });
+    }
+    return result;
   }
+
 } // namespace road
 } // namespace carla
