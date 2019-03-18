@@ -56,53 +56,40 @@ namespace road {
   }
 
   Lane *Road::GetLane(const LaneId id, const float s) {
-    // Get a reversed list of elements that have key
-    // value GetDistance() <= s
-    auto sections = MakeListView(
-        std::make_reverse_iterator(_lane_sections.upper_bound(s)),
-        _lane_sections.rend());
-
-    auto validate = [&sections](auto &&it) {
-      return
-          it != sections.end() &&
-          it->second.GetDistance() == sections.begin()->second.GetDistance();
-    };
-
-    for (auto i = sections.begin(); validate(i); ++i) {
-      auto search = i->second.GetLanes().find(id);
-      if (search != i->second.GetLanes().end()) {
+    Road *me = this;
+    for (auto &lane_section : me->GetLaneSectionsAt(s)) {
+      auto search = lane_section.GetLanes().find(id);
+      if (search != lane_section.GetLanes().end()) {
         return &search->second;
       }
     }
-
     log_warning("id", id, "at distance", s, "not found in road", _id);
     return nullptr;
   }
 
-
-    carla::road::signal::Signal* Road::GetSignal(const SignId id) {
-      auto search = _signals.find(id);
-      if (search != _signals.end()) {
-        return &search->second;
-      }
-      return nullptr;
+  carla::road::signal::Signal* Road::GetSignal(const SignId id) {
+    auto search = _signals.find(id);
+    if (search != _signals.end()) {
+      return &search->second;
     }
+    return nullptr;
+  }
 
-    carla::road::signal::SignalReference* Road::GetSignalRef(const SignRefId id) {
-      const auto search = _sign_ref.find(id);
-      if (search != _sign_ref.end()) {
-        return &search->second;
-      }
-      return nullptr;
+  carla::road::signal::SignalReference* Road::GetSignalRef(const SignRefId id) {
+    const auto search = _sign_ref.find(id);
+    if (search != _sign_ref.end()) {
+      return &search->second;
     }
+    return nullptr;
+  }
 
-    std::unordered_map<SignId, signal::Signal>* Road::getSignals() {
-      return &_signals;
-    }
+  std::unordered_map<SignId, signal::Signal>* Road::getSignals() {
+    return &_signals;
+  }
 
-    std::unordered_map<SignId, signal::SignalReference>* Road::getSignalReferences() {
-      return &_sign_ref;
-    }
+  std::unordered_map<SignId, signal::SignalReference>* Road::getSignalReferences() {
+    return &_sign_ref;
+  }
 
 } // road
 } // carla

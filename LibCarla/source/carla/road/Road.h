@@ -74,6 +74,18 @@ namespace road {
           iterator::make_map_values_const_iterator(_lane_sections.end()));
     }
 
+    auto GetLaneSectionsAt(float s) {
+      return MakeListView(
+          iterator::make_map_values_iterator(_lane_sections.lower_bound(s)),
+          iterator::make_map_values_iterator(_lane_sections.upper_bound(s)));
+    }
+
+    auto GetLaneSectionsAt(float s) const {
+      return MakeListView(
+          iterator::make_map_values_const_iterator(_lane_sections.lower_bound(s)),
+          iterator::make_map_values_const_iterator(_lane_sections.upper_bound(s)));
+    }
+
   private:
 
     friend MapBuilder;
