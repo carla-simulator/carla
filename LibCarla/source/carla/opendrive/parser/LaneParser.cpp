@@ -15,13 +15,13 @@ namespace opendrive {
 namespace parser {
 
   void LaneParser::ParseLanes(
-      int32_t road_id,
+      RoadId road_id,
       int32_t lane_section_id,
       const pugi::xml_node &parent_node,
       carla::road::MapBuilder &map_builder) {
     for (pugi::xml_node lane_node : parent_node.children("lane")) {
 
-      int32_t lane_id = lane_node.attribute("id").as_int();
+      LaneId lane_id = lane_node.attribute("id").as_int();
 
       // Lane Width
       for (pugi::xml_node lane_width_node : lane_node.children("width")) {
@@ -185,14 +185,14 @@ namespace parser {
 
     // Lanes
     for (pugi::xml_node road_node : open_drive_node.children("road")) {
-      int32_t road_id = road_node.attribute("id").as_uint();
+      RoadId road_id = road_node.attribute("id").as_uint();
 
       for (pugi::xml_node lanes_node : road_node.children("lanes")) {
         int32_t lane_section_id = 0;
         for (pugi::xml_node lane_section_node : lanes_node.children("laneSection")) {
 
           pugi::xml_node left_node = lane_section_node.child("left");
-          if (left_node != nullptr) {
+          if (left_node) {
             ParseLanes(road_id, lane_section_id, left_node, map_builder);
           }
 
