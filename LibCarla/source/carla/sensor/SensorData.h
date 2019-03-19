@@ -40,7 +40,7 @@ namespace sensor {
       return _frame_number;
     }
 
-    /// Time the data was generated.
+    /// Simulation-time when the data was generated.
     double GetTimestamp() const {
       return _timestamp;
     }

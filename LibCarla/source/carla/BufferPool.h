@@ -43,7 +43,7 @@ namespace carla {
 
     friend class Buffer;
 
-    void Push(Buffer buffer) {
+    void Push(Buffer &&buffer) {
       _queue.enqueue(std::move(buffer));
     }
 

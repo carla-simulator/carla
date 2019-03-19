@@ -32,7 +32,7 @@ namespace tcp {
   class IncomingMessage {
   public:
 
-    explicit IncomingMessage(Buffer buffer) : _message(std::move(buffer)) {}
+    explicit IncomingMessage(Buffer &&buffer) : _message(std::move(buffer)) {}
 
     boost::asio::mutable_buffer size_as_buffer() {
       return boost::asio::buffer(&_size, sizeof(_size));

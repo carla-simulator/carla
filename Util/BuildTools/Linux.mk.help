@@ -77,6 +77,10 @@ for developers:
 
         Build LibCarla, "Server" and/or "Client" configurations.
 
+    clean.(LibCarla|PythonAPI|CarlaUE4Editor)
+
+        Remove intermediate build files for the specific module.
+
     setup:
 
         Run the setup step only.
