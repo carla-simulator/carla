@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "carla/road/Lane.h"
+#include "carla/road/LaneSection.h"
 #include "carla/road/Road.h"
 
 namespace carla {
@@ -28,6 +29,10 @@ namespace road {
 
   bool Lane::GetLevel() const {
     return _level;
+  }
+
+  float Lane::GetDistance() const {
+    return _lane_section->GetDistance();
   }
 
 } // road

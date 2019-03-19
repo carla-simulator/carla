@@ -46,8 +46,11 @@ namespace road {
     bool GetLevel() const;
 
     template <typename T>
-    std::shared_ptr<const T> GetInfo (const float s) {
-      return _info.GetInfo<T>(s);
+    const T *GetInfo (const float s) const {
+      if (_lane_section != nullptr) {
+        return _info.GetInfo<T>(s - GetDistance());
+      }
+      return nullptr;
     }
 
     const std::vector<Lane *> &GetNextLanes() const {
@@ -57,6 +60,8 @@ namespace road {
     const std::vector<Lane *> &GetPreviousLanes() const {
       return _prev_lanes;
     }
+
+    float GetDistance() const;
 
   private:
 

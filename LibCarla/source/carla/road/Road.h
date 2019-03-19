@@ -21,7 +21,6 @@
 
 #include <vector>
 #include <map>
-#include <memory>
 
 namespace carla {
 namespace road {
@@ -72,18 +71,19 @@ namespace road {
     /// - @b second: Euclidean distance from the nearest point in
     ///              this road segment to p.
     ///   @param loc point to calculate the distance
-    std::pair<float, float> GetNearestPoint(
+    const std::pair<float, float> GetNearestPoint(
         const geom::Location &loc) const;
 
-    /// Returns a pointer to the nearest lane.
+    /// Returns a pointer to the nearest lane, given s relative to Road and
+    /// a location
     ///   @param dist distance from the begining of the road to the point you
     ///          want to calculate the distance
     ///   @param loc point to calculate the distance
-    std::pair<Lane *, float> GetNearestLane(
+    const std::pair<const Lane *, float> GetNearestLane(
         const float s, const geom::Location &loc) const;
 
     template <typename T>
-    std::shared_ptr<const T> GetInfo (const float s) {
+    const T *GetInfo (const float s) const {
       return _info.GetInfo<T>(s);
     }
 
@@ -106,7 +106,7 @@ namespace road {
     }
 
     /// Get all lanes at a given s
-    std::map<LaneId, Lane *> GetLanesAt(const float s);
+    std::map<LaneId, const Lane *> GetLanesAt(const float s) const;
 
   private:
 
