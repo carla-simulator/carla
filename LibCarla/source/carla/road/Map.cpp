@@ -6,15 +6,25 @@
 
 #include "carla/road/Map.h"
 
-#include <stdexcept>
 #include "carla/Exception.h"
-
 #include "carla/road/element/LaneCrossingCalculator.h"
+
+#include <stdexcept>
 
 namespace carla {
 namespace road {
 
   using namespace carla::road::element;
+
+  // ===========================================================================
+  // -- Error handling ---------------------------------------------------------
+  // ===========================================================================
+
+  [[ noreturn ]] static void throw_invalid_input(const char *message) {
+    throw_exception(std::invalid_argument(message));
+  }
+
+#define THROW_INVALID_INPUT_ASSERT(pred) if (!(pred)) { throw_invalid_input("assert failed: " #pred); }
 
   // ===========================================================================
   // -- Static local methods ---------------------------------------------------
@@ -117,8 +127,8 @@ namespace road {
     //   }
     // }
 
-    // DEBUG_ASSERT(_dist <= _map->GetData().GetRoad(_road_id)->GetLength());
-    // DEBUG_ASSERT(_lane_id != 0);
+    // THROW_INVALID_INPUT_ASSERT(_dist <= _map->GetData().GetRoad(_road_id)->GetLength());
+    // THROW_INVALID_INPUT_ASSERT(_lane_id != 0);
 
     return {}; //Waypoint(shared_from_this(), loc);
   }
@@ -145,7 +155,7 @@ namespace road {
 
   std::vector<Waypoint> Map::GetSuccessors(const Waypoint &waypoint) const {
     auto *lane = GetLane(waypoint);
-    DEBUG_ASSERT(lane != nullptr);
+    THROW_INVALID_INPUT_ASSERT(lane != nullptr);
 
     const auto &next_lanes =
         lane->GetId() <= 0 ?
@@ -155,11 +165,11 @@ namespace road {
     std::vector<Waypoint> result;
     result.reserve(next_lanes.size());
     for (auto *next_lane : next_lanes) {
-      DEBUG_ASSERT(next_lane != nullptr);
+      THROW_INVALID_INPUT_ASSERT(next_lane != nullptr);
       const auto lane_id = next_lane->GetId();
-      DEBUG_ASSERT(lane_id != 0);
+      THROW_INVALID_INPUT_ASSERT(lane_id != 0);
       const auto *road = next_lane->GetRoad();
-      DEBUG_ASSERT(road != nullptr);
+      THROW_INVALID_INPUT_ASSERT(road != nullptr);
       const auto distance = lane_id < 0 ? 0.0f : road->GetLength();
       result.emplace_back(Waypoint{road->GetId(), lane_id, distance});
     }
@@ -169,7 +179,7 @@ namespace road {
   std::vector<Waypoint> Map::GetNext(
       const Waypoint &waypoint,
       float distance) const {
-    DEBUG_ASSERT(waypoint.lane_id != 0);
+    THROW_INVALID_INPUT_ASSERT(waypoint.lane_id != 0);
 
     float distance_on_next_segment;
 
@@ -177,7 +187,7 @@ namespace road {
       // road goes forward.
       const auto total_distance = waypoint.s + distance;
       const auto *road = _data.GetRoad(waypoint.road_id);
-      DEBUG_ASSERT(road != nullptr);
+      THROW_INVALID_INPUT_ASSERT(road != nullptr);
       const auto road_length = road->GetLength();
       if (total_distance <= road_length) {
         return { Waypoint{waypoint.road_id, waypoint.lane_id, total_distance} };
@@ -204,7 +214,7 @@ namespace road {
     // const auto this_road_id = waypoint.GetRoadId();
     // const auto this_lane_id = waypoint.GetLaneId();
 
-    // DEBUG_ASSERT(this_lane_id != 0);
+    // THROW_INVALID_INPUT_ASSERT(this_lane_id != 0);
 
     // const int new_lane_id = (this_lane_id <= 0) ? this_lane_id - 1 : this_lane_id + 1;
 
@@ -227,7 +237,7 @@ namespace road {
     // const auto this_road_id = waypoint.GetRoadId();
     // const auto this_lane_id = waypoint.GetLaneId();
 
-    // DEBUG_ASSERT(this_lane_id != 0);
+    // THROW_INVALID_INPUT_ASSERT(this_lane_id != 0);
 
     // int new_lane_id;
     // if (this_lane_id > 0) {
@@ -320,3 +330,5 @@ namespace road {
 
 } // namespace road
 } // namespace carla
+
+#undef THROW_INVALID_INPUT_ASSERT
