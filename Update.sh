@@ -60,7 +60,7 @@ function download_content {
   mkdir -p Content
   if hash aria2c 2>/dev/null; then
     echo -e "${CONTENT_LINK}\n\tout=Content.tar.gz" > .aria2c.input
-    aria2c -j12 -x12 --input-file=.aria2c.input
+    aria2c -j16 -x16 --input-file=.aria2c.input
     rm -f .aria2c.input
   else
     wget ${CONTENT_LINK} Content.tar.gz
