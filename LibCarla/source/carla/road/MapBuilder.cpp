@@ -7,7 +7,6 @@
 #include "carla/StringUtil.h"
 #include "carla/road/MapBuilder.h"
 #include "carla/road/element/RoadInfoElevation.h"
-#include "carla/road/element/RoadInfoElevation.h"
 #include "carla/road/element/RoadInfoGeometry.h"
 #include "carla/road/element/RoadInfoLaneAccess.h"
 #include "carla/road/element/RoadInfoLaneBorder.h"
@@ -32,9 +31,11 @@ namespace road {
 
   boost::optional<Map> MapBuilder::Build() {
 
-    SetTotalRoadSegmentLength();
-
     CreatePointersBetweenRoadSegments();
+
+    // Delete all the unneeded temporal data once used
+    _temp_road_info_container.empty();
+    _temp_lane_info_container.empty();
 
     // _map_data is a memeber of MapBuilder so you must especify if
     // you want to keep it (will return copy -> Map(const Map &))
@@ -319,7 +320,7 @@ namespace road {
         hdg,
         geom::Location(x, y, 0.0f));
 
-    _road_info[road].emplace_back(std::unique_ptr<RoadInfo>(new RoadInfoGeometry(s,
+    _temp_road_info_container[road].emplace_back(std::unique_ptr<RoadInfo>(new RoadInfoGeometry(s,
         std::move(line_geometry))));
   }
 
@@ -338,7 +339,7 @@ namespace road {
         geom::Location(x, y, 0.0f),
         curvature);
 
-    _road_info[road].emplace_back(std::unique_ptr<RoadInfo>(new RoadInfoGeometry(s,
+    _temp_road_info_container[road].emplace_back(std::unique_ptr<RoadInfo>(new RoadInfoGeometry(s,
         std::move(arc_geometry))));
   }
 
