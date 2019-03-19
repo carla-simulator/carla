@@ -16,6 +16,8 @@
 namespace carla {
 namespace road {
 
+  class MapBuilder;
+
   class Junction : private MovableNonCopyable {
   public:
 
@@ -63,6 +65,8 @@ namespace road {
     }
 
   private:
+
+    friend MapBuilder;
 
     road::JuncId _id;
     std::string _name;

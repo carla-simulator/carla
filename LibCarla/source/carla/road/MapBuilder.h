@@ -345,8 +345,12 @@ namespace road {
     void CreatePointersBetweenRoadSegments();
 
     // return the pointer to a lane object
-    Lane *GetLaneAddress(RoadId road_id, bool from_start, LaneId lane_id);
-    Lane *GetLaneAddress(RoadId road_id, uint32_t section_index, LaneId lane_id);
+    Lane *GetEdgeLanePointer(RoadId road_id, bool from_start, LaneId lane_id);
+
+    // return a list of pointers to all lanes from a lane (using road and junction info)
+    std::vector<Lane *> GetLaneNext(RoadId road_id, float s, LaneId lane_id);
+
+    std::vector<std::pair<RoadId, LaneId>> GetJunctionLanes(RoadId junction_id, RoadId road_id, LaneId lane_id);
 
     // try to get pointers to the next and previous lanes
     void ProcessLaneLinks(void);

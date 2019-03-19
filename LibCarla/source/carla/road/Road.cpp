@@ -79,6 +79,66 @@ namespace road {
     return nullptr;
   }
 
+  // get the lane on a section next to 's'
+  Lane *Road::GetNextLane(const float s, const LaneId lane_id) {
+
+    auto upper = _lane_sections.upper_bound(s);
+
+    while (upper != _lane_sections.end()) {
+      // check id
+      Lane *ptr = upper->second.GetLane(lane_id);
+      if (ptr != nullptr)
+        return ptr;
+      ++upper;
+    }
+
+    return nullptr;
+  }
+
+  // get the lane on a section previous to 's'
+  Lane *Road::GetPrevLane(const float s, const LaneId lane_id) {
+
+    auto lower = _lane_sections.lower_bound(s);
+    auto rlower = std::make_reverse_iterator(lower);
+
+    while (rlower != _lane_sections.rend()) {
+      // check id
+      Lane *ptr = rlower->second.GetLane(lane_id);
+      if (ptr != nullptr)
+        return ptr;
+      ++rlower;
+    }
+
+    return nullptr;
+  }
+
+  // get the start and end section with a lan id
+  LaneSection *Road::GetStartSection(LaneId id) {
+    auto it = _lane_sections.begin();
+    while (it != _lane_sections.end()) {
+      // check id
+      Lane *ptr = it->second.GetLane(id);
+      if (ptr != nullptr)
+        return &(it->second);
+      ++it;
+    }
+
+    return nullptr;
+  }
+
+
+  LaneSection *Road::GetEndSection(LaneId id) {
+    auto it = _lane_sections.rbegin();
+    while (it != _lane_sections.rend()) {
+      // check id
+      Lane *ptr = it->second.GetLane(id);
+      if (ptr != nullptr)
+        return &(it->second);
+      ++it;
+    }
+
+    return nullptr;
+  }
 
     //carla::road::signal::Signal* Road::GetSignal(const SignId /*id*/) const {
       /// @todo: Fix this so it can return an specific Signal

@@ -13,12 +13,12 @@ namespace road {
     return _s;
   }
 
-  const Road *LaneSection::GetRoad() const {
+  Road *LaneSection::GetRoad() const {
     return _road;
   }
 
-  const Lane *LaneSection::GetLane(const LaneId id) const {
-    const auto search = _lanes.find(id);
+  Lane *LaneSection::GetLane(const LaneId id) {
+    auto search = _lanes.find(id);
     if (search != _lanes.end()) {
       return &search->second;
     }
