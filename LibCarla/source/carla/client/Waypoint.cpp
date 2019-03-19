@@ -22,7 +22,7 @@ namespace client {
   Waypoint::~Waypoint() = default;
 
   bool Waypoint::IsIntersection() const {
-    return _parent->GetMap().IsIntersection(_waypoint.road_id);
+    return _parent->GetMap().IsJunction(_waypoint.road_id);
   }
 
   float Waypoint::GetLaneWidth() const {
@@ -30,7 +30,7 @@ namespace client {
   }
 
   std::string Waypoint::GetType() const {
-    return _parent->GetMap().GetType(_waypoint);
+    return _parent->GetMap().GetLaneType(_waypoint);
   }
 
   std::vector<SharedPtr<Waypoint>> Waypoint::Next(double distance) const {

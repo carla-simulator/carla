@@ -65,7 +65,6 @@ namespace road {
         return &search->second;
       }
     }
-    log_warning("id", id, "at distance", s, "not found in road", _id);
     return nullptr;
   }
 

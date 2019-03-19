@@ -47,7 +47,7 @@ namespace element {
       /// @todo This case should also be handled.
       return {};
     }
-    if (map.IsIntersection(w0.road_id) || map.IsIntersection(w1.road_id)) {
+    if (map.IsJunction(w0.road_id) || map.IsJunction(w1.road_id)) {
       return {};
     }
     return CrossingAtSameSection(
