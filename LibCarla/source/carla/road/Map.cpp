@@ -153,7 +153,7 @@ namespace road {
     return {};
   }
 
-  std::vector<Waypoint> Map::GetSuccessors(const Waypoint &waypoint) const {
+  std::vector<Waypoint> Map::GetSuccessors(Waypoint waypoint) const {
     auto *lane = GetLane(waypoint);
     THROW_INVALID_INPUT_ASSERT(lane != nullptr);
 
@@ -177,7 +177,7 @@ namespace road {
   }
 
   std::vector<Waypoint> Map::GetNext(
-      const Waypoint &waypoint,
+      Waypoint waypoint,
       float distance) const {
     THROW_INVALID_INPUT_ASSERT(waypoint.lane_id != 0);
 
@@ -209,7 +209,7 @@ namespace road {
     return result;
   }
 
-  boost::optional<Waypoint> Map::GetRight(const Waypoint &/* waypoint */) const {
+  boost::optional<Waypoint> Map::GetRight(Waypoint waypoint) const {
     // auto &map = waypoint._map;
     // const auto this_road_id = waypoint.GetRoadId();
     // const auto this_lane_id = waypoint.GetLaneId();
@@ -232,7 +232,7 @@ namespace road {
     return {};
   }
 
-  boost::optional<Waypoint> Map::GetLeft(const Waypoint &/* waypoint */) const {
+  boost::optional<Waypoint> Map::GetLeft(Waypoint waypoint) const {
     // auto &map = waypoint._map;
     // const auto this_road_id = waypoint.GetRoadId();
     // const auto this_lane_id = waypoint.GetLaneId();
@@ -324,7 +324,7 @@ namespace road {
     return result;
   }
 
-  const Lane *Map::GetLane(const Waypoint &waypoint) const {
+  const Lane *Map::GetLane(Waypoint waypoint) const {
     return _data.GetLane(waypoint.road_id, waypoint.lane_id, waypoint.s);
   }
 
