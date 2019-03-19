@@ -7,6 +7,7 @@
 #include "carla/opendrive/parser/RoadParser.h"
 #include "carla/opendrive/parser/pugixml/pugixml.hpp"
 #include "carla/road/MapBuilder.h"
+#include "carla/road/RoadTypes.h"
 #include "carla/Logging.h"
 #include <deque>
 
@@ -14,8 +15,9 @@ namespace carla {
 namespace opendrive {
 namespace parser {
 
-  using RoadId = int;
-  using LaneId = int;
+  using RoadId = road::RoadId;
+  using LaneId = road::LaneId;
+  using JuncId = road::JuncId;
 
   struct Polynomial {
     float s;
@@ -47,7 +49,7 @@ namespace parser {
     RoadId id;
     std::string name;
     float length;
-    RoadId junction_id;
+    JuncId junction_id;
     RoadId predecessor;
     RoadId successor;
     std::vector<RoadTypeSpeed> speed;
@@ -61,7 +63,7 @@ namespace parser {
       std::vector<Road> roads;
 
       for (pugi::xml_node node_road : xml.child("OpenDRIVE").children("road")) {
-        Road road { 0, "", 0.0, -1, -1, -1, {}, {} };
+        Road road { 0, "", 0.0, -1, 0, 0, {}, {} };
 
         // attributes
         road.id = node_road.attribute("id").as_int();
