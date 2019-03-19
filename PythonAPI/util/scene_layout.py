@@ -24,9 +24,6 @@ except IndexError:
     pass
 
 import carla
-from carla import TrafficLightState as tls
-
-import argparse
 import logging
 import random
 
@@ -265,85 +262,3 @@ def get_dynamic_objects(carla_world, carla_map):
         'stop_signs': get_stop_signals(stops),
         'speed_limits': get_speed_limits(speed_limits)
     }
-
-
-# ==============================================================================
-# -- TESTING Map Generation ---------------------------------------------------------------------
-# ==============================================================================
-
-
-class World(object):
-    def __init__(self, host, port, timeout):
-        self.world, self.town_map = self._get_data_from_carla(host, port, timeout)
-        # print(get_scene_layout(self.world, self.town_map))
-
-    def _get_data_from_carla(self, host, port, timeout):
-        try:
-            self.client = carla.Client(host, port)
-            self.client.set_timeout(timeout)
-
-            world = self.client.get_world()
-            town_map = world.get_map()
-            return (world, town_map)
-
-        except Exception as ex:
-            logging.error(ex)
-
-    def tick(self):
-        # print(get_dynamic_objects(self.world, self.town_map))
-        pass
-
-
-# ==============================================================================
-# -- main() --------------------------------------------------------------------
-# ==============================================================================
-
-def main():
-    argparser = argparse.ArgumentParser(
-        description='CARLA Map Data Extractor')
-    argparser.add_argument(
-        '-v', '--verbose',
-        action='store_true',
-        dest='debug',
-        help='print debug information')
-    argparser.add_argument(
-        '--host',
-        metavar='H',
-        default='127.0.0.1',
-        help='IP of the host server (default: 127.0.0.1)')
-    argparser.add_argument(
-        '-p', '--port',
-        metavar='P',
-        default=2000,
-        type=int,
-        help='TCP port to listen to (default: 2000)')
-    argparser.add_argument(
-        '--filter',
-        metavar='PATTERN',
-        default='vehicle.*',
-        help='actor filter (default: "vehicle.*")')
-    argparser.add_argument(
-        '--res',
-        metavar='WIDTHxHEIGHT',
-        default='1280x720',
-        help='window resolution (default: 1280x720)')
-    args = argparser.parse_args()
-    args.width, args.height = [int(x) for x in args.res.split('x')]
-
-    log_level = logging.DEBUG if args.debug else logging.INFO
-    logging.basicConfig(format='%(levelname)s: %(message)s', level=log_level)
-    logging.info('listening to server %s:%s', args.host, args.port)
-
-    client = carla.Client(args.host, args.port)
-    client.set_timeout(2.0)
-
-    world = World(args.host, args.port, 2.0)
-
-    while True:
-        world.tick()
-
-    print(__doc__)
-
-
-if __name__ == '__main__':
-    main()
