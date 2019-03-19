@@ -100,7 +100,7 @@ static carla::geom::Vector3D FWorldObserver_GetAcceleration(
 }
 
 static carla::Buffer FWorldObserver_Serialize(
-    carla::Buffer buffer,
+    carla::Buffer &&buffer,
     const UCarlaEpisode &Episode,
     float DeltaSeconds)
 {
@@ -121,7 +121,6 @@ static carla::Buffer FWorldObserver_Serialize(
   // Write header.
   Serializer::Header header;
   header.episode_id = Episode.GetId();
-  header.game_timestamp = Episode.GetElapsedGameTime();
   header.platform_timestamp = FPlatformTime::Seconds();
   header.delta_seconds = DeltaSeconds;
   write_data(header);
@@ -145,12 +144,12 @@ static carla::Buffer FWorldObserver_Serialize(
   }
 
   check(begin == buffer.end());
-  return buffer;
+  return std::move(buffer);
 }
 
 void FWorldObserver::BroadcastTick(const UCarlaEpisode &Episode, float DeltaSeconds)
 {
-  auto AsyncStream = Stream.MakeAsyncDataStream(*this, Episode.GetWorld()->GetTimeSeconds());
+  auto AsyncStream = Stream.MakeAsyncDataStream(*this, Episode.GetElapsedGameTime());
 
   auto buffer = FWorldObserver_Serialize(
       AsyncStream.PopBufferFromPool(),

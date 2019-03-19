@@ -16,10 +16,13 @@ docs:
 	@doxygen
 	@echo "Documentation index at ./Doxygen/html/index.html"
 
-clean:
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --clean
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --clean
+clean.LibCarla:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --clean
+clean.PythonAPI:
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --clean
+clean.CarlaUE4Editor:
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --clean
+clean: clean.CarlaUE4Editor clean.PythonAPI clean.LibCarla
 
 rebuild: setup
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --rebuild
@@ -60,6 +63,9 @@ benchmark: LibCarla.release
 	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --benchmark $(ARGS)
 	@cat profiler.csv
 
+smoke_tests:
+	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --smoke-2 --smoke-3 $(ARGS)
+
 CarlaUE4Editor: LibCarla.server.release
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --build
 
@@ -74,7 +80,7 @@ PythonAPI.3: LibCarla.client.release
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py3
 
 .PHONY: LibCarla
-LibCarla: LibCarla.server LibCarla.client
+LibCarla: LibCarla.release LibCarla.debug
 
 LibCarla.debug: LibCarla.server.debug LibCarla.client.debug
 LibCarla.release: LibCarla.server.release LibCarla.client.release

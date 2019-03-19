@@ -30,7 +30,6 @@ namespace s11n {
 #pragma pack(push, 1)
     struct Header {
       uint64_t episode_id;
-      double game_timestamp;
       double platform_timestamp;
       float delta_seconds;
     };
@@ -43,8 +42,8 @@ namespace s11n {
     }
 
     template <typename SensorT>
-    static Buffer Serialize(const SensorT &, Buffer buffer) {
-      return buffer;
+    static Buffer Serialize(const SensorT &, Buffer &&buffer) {
+      return std::move(buffer);
     }
 
     static SharedPtr<SensorData> Deserialize(RawData data);
