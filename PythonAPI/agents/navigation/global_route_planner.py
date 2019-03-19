@@ -6,12 +6,10 @@ This module provides GlobalRoutePlanner implementation.
 """
 
 import math
-from enum import Enum
 
 import numpy as np
 import networkx as nx
 
-import carla
 from agents.navigation.local_planner import RoadOption
 
 
@@ -65,17 +63,17 @@ class GlobalRoutePlanner(object):
             num_edges = 0
             cross_list = []
             # Accumulating cross products of all other paths
-            for neighbor in self._graph.neighbors(route[i+1]):
-                num_edges+=1
+            for neighbor in self._graph.neighbors(route[i + 1]):
+                num_edges += 1
                 if neighbor != route[i + 2]:
-                    select_edge = self._graph.edges[route[i+1], neighbor]
+                    select_edge = self._graph.edges[route[i + 1], neighbor]
                     sv = select_edge['net_vector']
                     cross_list.append(np.cross(cv, sv)[2])
             # Calculating turn decision
             if next_edge['intersection'] and num_edges > 1:
                 next_cross = np.cross(cv, nv)[2]
-                deviation = math.acos(np.dot(cv, nv) /\
-                    (np.linalg.norm(cv)*np.linalg.norm(nv)))
+                deviation = math.acos(np.dot(cv, nv) /
+                                      (np.linalg.norm(cv) * np.linalg.norm(nv)))
                 if deviation < threshold:
                     action = RoadOption.STRAIGHT
                 elif next_cross < min(cross_list):
@@ -222,5 +220,3 @@ class GlobalRoutePlanner(object):
         return      :   dot porduct scalar between vector1 and vector2
         """
         return vector1[0] * vector2[0] + vector1[1] * vector2[1]
-
-    pass

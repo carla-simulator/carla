@@ -2,7 +2,7 @@ language: cpp
 compiler: clang
 
 os: linux
-dist: trusty
+dist: xenial
 sudo: false
 
 matrix:
@@ -13,7 +13,6 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-6.0
           packages:
             - g++-7 # we need this one for the libstdc++.
             - clang-6.0
@@ -27,7 +26,8 @@ matrix:
             - libjpeg-dev
       install:
         - pip2 install -q --user setuptools nose2
-        - pip3 install -q --user setuptools nose2
+        - pip3 install -q --user setuptools
+        - pip3 install -q --user nose2
       script:
         - while sleep 2m; do echo "still building..."; done &
         - make setup >> build.log 2>&1
@@ -37,6 +37,33 @@ matrix:
         - make check ARGS="--all --gtest_args=--gtest_filter=-*_mt"
       after_failure:
         - tail --lines=2000 build.log
+
+    - env: TEST="Pylint 2"
+      addons:
+        apt:
+          packages:
+            - python
+            - python-pip
+      install:
+        - pip2 install -q --user pylint
+        - pip2 install -q --user -r PythonAPI/requirements.txt
+      script:
+        - shopt -s globstar
+        - pylint --disable=R,C --rcfile=PythonAPI/.pylintrc PythonAPI/**/*.py
+
+    - env: TEST="Pylint 3"
+      addons:
+        apt:
+          packages:
+            - python3
+            - python3-pip
+      install:
+        - pip3 install -q --user setuptools
+        - pip3 install -q pylint
+        - pip3 install -q --user -r PythonAPI/requirements.txt
+      script:
+        - shopt -s globstar
+        - pylint --disable=R,C --rcfile=PythonAPI/.pylintrc PythonAPI/**/*.py
 
     - env: TEST="MkDocs"
       install:

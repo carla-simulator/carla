@@ -21,8 +21,6 @@ except IndexError:
 import carla
 
 import argparse
-import random
-import time
 
 
 def main():
@@ -74,6 +72,7 @@ def main():
 
     finally:
         pass
+
 
 if __name__ == '__main__':
 

@@ -20,7 +20,7 @@ except IndexError:
 import carla
 
 
-TESTING_ADDRESS=('localhost', 3654)
+TESTING_ADDRESS = ('localhost', 3654)
 
 
 class SmokeTest(unittest.TestCase):

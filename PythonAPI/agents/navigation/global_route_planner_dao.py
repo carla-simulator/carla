@@ -5,8 +5,6 @@
 This module provides implementation for GlobalRoutePlannerDAO
 """
 
-import carla
-
 
 class GlobalRoutePlannerDAO(object):
     """

@@ -22,11 +22,18 @@ elif os.name == 'posix':
 
 
 def main():
-    if(args.force):
-        generate_all_maps_but_list([])
-    else:
-        maps = get_map_names()
-        generate_all_maps_but_list(maps)
+    try:
+        args = parse_arguments()
+        if(args.force):
+            generate_all_maps_but_list([], args)
+        else:
+            maps = get_map_names()
+            generate_all_maps_but_list(maps, args)
+        dirname = os.path.dirname(os.path.abspath(__file__))
+        relative_path = os.path.join(dirname, "..", "..", "Unreal", "CarlaUE4", "Content", "Carla", "ExportedMaps")
+        print('Map(s) exported to %s' % os.path.abspath(relative_path))
+    finally:
+        print('\ndone.')
 
 
 def get_map_names():
@@ -38,7 +45,8 @@ def get_map_names():
             maps.append(filename)
     return maps
 
-def generate_all_maps_but_list(existent_maps):
+
+def generate_all_maps_but_list(existent_maps, args):
     map_name = ""
     dirname = os.getcwd()
     fbx_place = os.path.join(dirname, "..", "..", "RoadRunnerFiles")
@@ -48,14 +56,15 @@ def generate_all_maps_but_list(existent_maps):
             if not any(ext in "%s.umap" % map_name for ext in existent_maps):
                 print("Found map in fbx folder: %s" % map_name)
                 import_assets_commandlet(map_name)
-                #move_uassets(map_name)
+                # move_uassets(map_name)
                 print("Generating map asset for %s" % map_name)
-                generate_map(map_name)
+                generate_map(map_name, args)
                 print("Cleaning up directories")
                 cleanup_assets(map_name)
                 print("Finished %s" % map_name)
             else:
                 print("WARNING: Found %s map in Content folder, skipping. Use \"--force\" to override\n" % map_name)
+
 
 def parse_arguments():
     argparser = argparse.ArgumentParser(
@@ -78,7 +87,7 @@ def parse_arguments():
 
 def cleanup_assets(map_name):
     dirname = os.getcwd()
-    content_folder = os.path.join(dirname, "..", "..", "Unreal", "CarlaUE4" , "Content", "Carla")
+    content_folder = os.path.join(dirname, "..", "..", "Unreal", "CarlaUE4", "Content", "Carla")
     origin_folder = os.path.join(content_folder, "Static", "Imported", map_name)
     for filename in os.listdir(origin_folder):
         if map_name in filename:
@@ -94,24 +103,38 @@ def import_assets_commandlet(map_name):
     commandlet_arguments = "-importSettings=\"%s\" -AllowCommandletRendering -nosourcecontrol -replaceexisting" % import_settings
 
     file_xodr_origin = os.path.join(dirname, "..", "..", "RoadRunnerFiles", map_name, "%s.xodr" % map_name)
-    file_xodr_dest = os.path.join(dirname, "..", "..", "Unreal", "CarlaUE4", "Content", "Carla", "Maps", "OpenDrive", "%s.xodr" % map_name)
+    file_xodr_dest = os.path.join(
+        dirname,
+        "..",
+        "..",
+        "Unreal",
+        "CarlaUE4",
+        "Content",
+        "Carla",
+        "Maps",
+        "OpenDrive",
+        "%s.xodr" %
+        map_name)
 
     shutil.copy2(file_xodr_origin, file_xodr_dest)
     invoke_commandlet(commandlet_name, commandlet_arguments)
-    #Clean up
+    # Clean up
     os.remove("importsetting.json")
 
-def generate_map(map_name):
+
+def generate_map(map_name, args):
     commandlet_name = "MapProcess"
     commandlet_arguments = "-mapname=\"%s\"" % map_name
     if args.usecarlamats:
         commandlet_arguments += " -use-carla-materials"
     invoke_commandlet(commandlet_name, commandlet_arguments)
+# This line might be needed if Epic tells us anything about the current
+# way of doing the movement. It shouldn't but just in case...
 
-#This line might be needed if Epic tells us anything about the current way of doing the movement. It shouldn't but just in case...
+
 def move_uassets(map_name):
     dirname = os.getcwd()
-    content_folder = os.path.join(dirname, "..", "..", "Unreal", "CarlaUE4" , "Content", "Carla")
+    content_folder = os.path.join(dirname, "..", "..", "Unreal", "CarlaUE4", "Content", "Carla")
     origin_folder = os.path.join(content_folder, "Static", map_name)
     dest_path = ""
     src_path = ""
@@ -135,7 +158,6 @@ def move_uassets(map_name):
         os.rename(src_path, dest_path)
 
 
-
 def invoke_commandlet(name, arguments):
     ue4_path = os.environ['UE4_ROOT']
     dirname = os.getcwd()
@@ -154,41 +176,34 @@ def generate_json(map_name, json_file):
         file_names.append(fbx_path)
 
         import_settings.append({
-        "bImportMesh": 1,
-        "bConvertSceneUnit": 1,
-        "bConvertScene": 1,
-        "bCombineMeshes": 1,
-        "bImportTextures": 1,
-        "bImportMaterials": 1,
-        "bRemoveDegenerates":1,
-        "AnimSequenceImportData": {},
-        "SkeletalMeshImportData": {},
-        "TextureImportData": {},
-        "StaticMeshImportData": {
+            "bImportMesh": 1,
+            "bConvertSceneUnit": 1,
+            "bConvertScene": 1,
+            "bCombineMeshes": 1,
+            "bImportTextures": 1,
+            "bImportMaterials": 1,
             "bRemoveDegenerates": 1,
-            "bAutoGenerateCollision": 0,
-            "bCombineMeshes":0
+            "AnimSequenceImportData": {},
+            "SkeletalMeshImportData": {},
+            "TextureImportData": {},
+            "StaticMeshImportData": {
+                "bRemoveDegenerates": 1,
+                "bAutoGenerateCollision": 0,
+                "bCombineMeshes": 0
             }
         })
         dest_path = "/Game/Carla/Static/Imported/%s" % map_name
         import_groups.append({
-        "ImportSettings": import_settings,
-        "FactoryName": "FbxFactory",
-        "DestinationPath": dest_path,
-        "bReplaceExisting": "true",
-        "FileNames": file_names
+            "ImportSettings": import_settings,
+            "FactoryName": "FbxFactory",
+            "DestinationPath": dest_path,
+            "bReplaceExisting": "true",
+            "FileNames": file_names
         })
         fh.write(json.dumps({"ImportGroups": import_groups}))
         fh.close()
 
 
-
 if __name__ == '__main__':
-    try:
-        args = parse_arguments()
-        main()
-        dirname = os.path.dirname(os.path.abspath(__file__))
-        relative_path = os.path.join(dirname, "..", "..", "Unreal", "CarlaUE4", "Content", "Carla", "ExportedMaps")
-        print('Map(s) exported to %s' % os.path.abspath(relative_path))
-    finally:
-        print('\ndone.')
+
+    main()

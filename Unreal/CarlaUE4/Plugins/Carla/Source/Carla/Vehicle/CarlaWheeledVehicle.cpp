@@ -220,13 +220,25 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
   Vehicle4W->SteeringCurve.EditorCurveData = PhysicsControl.SteeringCurve;
 
   // Wheels Setup
-  for (int32 i = 0; i < PhysicsControl.Wheels.Num(); ++i)
+  TArray<FWheelSetup> NewWheelSetups = Vehicle4W->WheelSetups;
+
+  for (int32 i = 0; i < Vehicle4W->WheelSetups.Num(); ++i)
   {
-    Vehicle4W->Wheels[i]->DampingRate = PhysicsControl.Wheels[i].DampingRate;
-    Vehicle4W->Wheels[i]->SteerAngle = PhysicsControl.Wheels[i].SteerAngle;
-    Vehicle4W->Wheels[i]->GetWheelSetup().bDisableSteering = PhysicsControl.Wheels[i].bDisableSteering;
-    Vehicle4W->Wheels[i]->TireConfig->SetFrictionScale(PhysicsControl.Wheels[i].TireFriction);
+    UVehicleWheel *Wheel = NewWheelSetups[i].WheelClass.GetDefaultObject();
+
+    Wheel->DampingRate = PhysicsControl.Wheels[i].DampingRate;
+    Wheel->SteerAngle = PhysicsControl.Wheels[i].SteerAngle;
+    NewWheelSetups[i].bDisableSteering = PhysicsControl.Wheels[i].bDisableSteering;
+
+    // Assigning new tire config
+    Wheel->TireConfig = NewObject<UTireConfig>();
+
+    // Setting a new value to friction
+    Wheel->TireConfig->SetFrictionScale(PhysicsControl.Wheels[i].TireFriction);
+
   }
+
+  Vehicle4W->WheelSetups = NewWheelSetups;
 
   Vehicle4W->RecreatePhysicsState();
 }
