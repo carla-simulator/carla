@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "carla/road/RoadTypes.h"
+
 namespace pugi {
   class xml_document;
   class xml_node;
@@ -24,8 +26,8 @@ namespace parser {
   private:
 
     static void ParseLanes(
-        int road_id,
-        int lane_section_id,
+        road::RoadId road_id,
+        float s,
         const pugi::xml_node &parent_node,
         carla::road::MapBuilder &map_builder);
 

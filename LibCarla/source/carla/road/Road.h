@@ -6,14 +6,18 @@
 
 #pragma once
 
+#include "carla/Iterator.h"
+#include "carla/ListView.h"
 #include "carla/NonCopyable.h"
 #include "carla/road/InformationSet.h"
 #include "carla/road/Junction.h"
 #include "carla/road/LaneSection.h"
-#include "carla/road/RoadTypes.h"
 #include "carla/road/RoadElementSet.h"
+#include "carla/road/RoadTypes.h"
+#include "carla/road/element/RoadInfo.h"
 #include "carla/road/signal/Signal.h"
 #include "carla/road/signal/SignalReference.h"
+#include "carla/road/element/Geometry.h"
 
 #include <vector>
 #include <map>
@@ -60,13 +64,52 @@ namespace road {
 
     std::vector<const Road *> GetPrevs() const;
 
-    carla::road::signal::Signal* GetSignal(const SignId id) const;
+    carla::road::signal::Signal* GetSignal(const SignId id);
 
-    carla::road::signal::SignalReference* GetSignalRef(const SignRefId id) const;
+    carla::road::signal::SignalReference* GetSignalRef(const SignRefId id);
 
-    std::unordered_map<SignId, signal::Signal> getSignals() const;
+    std::unordered_map<SignId, signal::Signal>* getSignals();
 
-    std::unordered_map<SignId, signal::SignalReference> getSignalReferences() const;
+    std::unordered_map<SignId, signal::SignalReference>* getSignalReferences();
+
+    element::DirectedPoint GetDirectedPointIn (const float s) const;
+
+    /// Returns a pair containing:
+    /// - @b first:  distance to the nearest point on the center in
+    ///              this road segment from the begining of it (s).
+    /// - @b second: Euclidean distance from the nearest point in
+    ///              this road segment to p.
+    ///   @param loc point to calculate the distance
+    std::pair<float, float> GetNearestPoint(const geom::Location &loc) const;
+
+    /// Returns a the nearest lane id.
+    ///   @param dist distance from the begining of the road to the point you
+    ///          want to calculate the distance
+    ///   @param loc point to calculate the distance
+    std::pair<int, double> GetNearestLane(double dist, const geom::Location &loc) const;
+
+    template <typename T>
+    std::shared_ptr<const T> GetInfo (const float s) {
+      return _info.GetInfo<T>(s);
+    }
+
+    auto GetLaneSections() const {
+      return MakeListView(
+          iterator::make_map_values_const_iterator(_lane_sections.begin()),
+          iterator::make_map_values_const_iterator(_lane_sections.end()));
+    }
+
+    auto GetLaneSectionsAt(float s) {
+      return MakeListView(
+          iterator::make_map_values_iterator(_lane_sections.lower_bound(s)),
+          iterator::make_map_values_iterator(_lane_sections.upper_bound(s)));
+    }
+
+    auto GetLaneSectionsAt(float s) const {
+      return MakeListView(
+          iterator::make_map_values_const_iterator(_lane_sections.lower_bound(s)),
+          iterator::make_map_values_const_iterator(_lane_sections.upper_bound(s)));
+    }
 
   private:
 

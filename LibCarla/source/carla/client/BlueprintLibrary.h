@@ -31,7 +31,7 @@ namespace client {
     using key_type = map_type::key_type;
     using value_type = map_type::mapped_type;
     using size_type = map_type::size_type;
-    using const_iterator = decltype(carla::iterator::make_map_values_iterator<map_type::const_iterator>(map_type::const_iterator{}));
+    using const_iterator = decltype(carla::iterator::make_map_values_const_iterator<map_type::const_iterator>(map_type::const_iterator{}));
     using const_reference = const value_type &;
     using const_pointer = const value_type *;
 
@@ -59,11 +59,11 @@ namespace client {
     const_reference at(size_type pos) const;
 
     const_iterator begin() const /*noexcept*/ {
-      return iterator::make_map_values_iterator(_blueprints.begin());
+      return iterator::make_map_values_const_iterator(_blueprints.begin());
     }
 
     const_iterator end() const /*noexcept*/ {
-      return iterator::make_map_values_iterator(_blueprints.end());
+      return iterator::make_map_values_const_iterator(_blueprints.end());
     }
 
     bool empty() const /*noexcept*/ {

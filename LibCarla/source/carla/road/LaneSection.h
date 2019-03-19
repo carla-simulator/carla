@@ -28,11 +28,17 @@ namespace road {
 
     float GetDistance() const;
 
-    Road *GetRoad() const;
+    Road *GetRoad();
 
     Lane *GetLane(const LaneId id);
 
     std::unordered_map<LaneId, Lane> &GetLanes();
+
+    const std::unordered_map<LaneId, Lane> &GetLanes() const {
+      return _lanes;
+    }
+
+    std::vector<Lane *> GetLanesOfType(const std::string &type);
 
   private:
 

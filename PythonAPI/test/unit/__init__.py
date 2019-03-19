@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
@@ -9,7 +9,7 @@ import os
 import sys
 
 try:
-    sys.path.append(glob.glob('../dist/carla-*%d.%d-%s.egg' % (
+    sys.path.append(glob.glob('../../dist/carla-*%d.%d-%s.egg' % (
         sys.version_info.major,
         sys.version_info.minor,
         'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])

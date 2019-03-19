@@ -39,22 +39,22 @@ namespace detail {
       : _episode_id(other._episode_id),
         _simulator(other._simulator) {}
 
-    auto GetId() const {
+    auto GetId() const noexcept {
       return _episode_id;
     }
 
-    SharedPtrType TryLock() const;
+    SharedPtrType TryLock() const noexcept;
 
     /// Same as TryLock but never return nullptr.
     ///
     /// @throw std::runtime_error if episode is gone.
     SharedPtrType Lock() const;
 
-    bool IsValid() const {
+    bool IsValid() const noexcept {
       return TryLock() != nullptr;
     }
 
-    void Clear();
+    void Clear() noexcept;
 
   private:
 
