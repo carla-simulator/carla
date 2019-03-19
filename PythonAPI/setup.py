@@ -13,6 +13,7 @@ import os
 import platform
 import sys
 
+
 def get_libcarla_extensions():
     include_dirs = ['dependencies/include']
     library_dirs = ['dependencies/lib']
