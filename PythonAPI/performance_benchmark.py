@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright (c) 2019 Intel Labs.
 # authors: German Ros (german.ros@intel.com)
@@ -19,19 +19,29 @@ Please, make sure you install the following dependencies:
 
 """
 
+# @todo Include this file in the Pylint checks.
+# pylint: skip-file
+
+import sys
+
+
+if sys.version_info[0] < 3:
+    print('This script is only available for Python 3')
+    sys.exit(1)
+
+
+from tr import tr
 import argparse
 import cpuinfo
+import glob
 import math
 import numpy as np
-import pygame
+import os
 import psutil
+import pygame
 import shutil
 import subprocess
-from tr import tr
 import threading
-import glob
-import os
-import sys
 
 try:
     sys.path.append(glob.glob('**/carla-*%d.%d-%s.egg' % (
