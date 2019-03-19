@@ -210,12 +210,12 @@ namespace parser {
 
       // type speed
       for (auto const s : r.speed) {
-        map_builder.AddRoadSpeed(road, s.s, s.type, s.max, s.unit);
+        map_builder.CreateRoadSpeed(road, s.s, s.type, s.max, s.unit);
       }
 
       // section offsets
       for (auto const s : r.section_offsets) {
-        map_builder.AddLaneOffset(road, s.s, s.a, s.b, s.c, s.d);
+        map_builder.CreateSectionOffset(road, s.s, s.a, s.b, s.c, s.d);
       }
 
       // lane sections

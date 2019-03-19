@@ -90,14 +90,14 @@ namespace road {
         roughness));
   }
 
-  void MapBuilder::CreateLaneOffset(
-      const Lane *lane,
+  void MapBuilder::CreateSectionOffset(
+      const Road *road,
       const float s,
       const float a,
       const float b,
       const float c,
       const float d) {
-    _temp_lane_info_container[lane].emplace_back(std::make_unique<RoadInfoLaneOffset>(s, a, b, c, d));
+    _temp_road_info_container[road].emplace_back(std::make_unique<RoadInfoLaneOffset>(s, a, b, c, d));
   }
 
   void MapBuilder::CreateLaneRule(
@@ -181,13 +181,21 @@ namespace road {
 
   }
 
-  void MapBuilder::CreateLaneSpeed(
-      const Lane *lane,
-      const float s,
+  void MapBuilder::CreateRoadSpeed(
+      Road *road,
+      const double s,
       const std::string /*type*/,
       const float max,
       const std::string /*unit*/) {
-    _temp_lane_info_container[lane].emplace_back(std::make_unique<RoadInfoVelocity>(s, max));
+    _temp_road_info_container[road].emplace_back(std::make_unique<RoadInfoSpeed>(s, max));
+  }
+
+  void MapBuilder::CreateLaneSpeed(
+      const Lane *lane,
+      const float s,
+      const float max,
+      const std::string /*unit*/) {
+    _temp_lane_info_container[lane].emplace_back(std::make_unique<RoadInfoSpeed>(s, max));
   }
 
   void MapBuilder::AddSignal(

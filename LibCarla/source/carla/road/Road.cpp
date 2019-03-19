@@ -110,7 +110,6 @@ namespace road {
         return &(it->second);
       ++it;
     }
-
     return nullptr;
   }
 
@@ -124,6 +123,8 @@ namespace road {
         return &(it->second);
       ++it;
     }
+    return nullptr;
+  }
 
   carla::road::signal::Signal* Road::GetSignal(const SignId id) {
     auto search = _signals.find(id);

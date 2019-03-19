@@ -41,7 +41,7 @@ namespace road {
         const int32_t predecessor,
         const int32_t successor);
 
-    void AddRoadSpeed(
+    void CreateRoadSpeed(
         carla::road::Road * road,
         const float s,
         const std::string type,
@@ -228,8 +228,8 @@ namespace road {
         const float friction,
         const float roughness);
 
-    void CreateLaneOffset(
-        const Lane* lane,
+    void CreateSectionOffset(
+        const Road* road,
         const float s,
         const float a,
         const float b,
@@ -280,6 +280,13 @@ namespace road {
         const float s,
         const std::string rule,
         const float width);
+
+    void CreateRoadSpeed(
+        Road *road,
+        const double s,
+        const std::string type,
+        const float max,
+        const std::string unit);
 
     void CreateLaneSpeed(
         const Lane* lane,
@@ -335,9 +342,6 @@ namespace road {
     std::vector<Lane *> GetLaneNext(RoadId road_id, float s, LaneId lane_id);
 
     std::vector<std::pair<RoadId, LaneId>> GetJunctionLanes(RoadId junction_id, RoadId road_id, LaneId lane_id);
-
-    // try to get pointers to the next and previous lanes
-    void ProcessLaneLinks(void);
 
 
   private:
