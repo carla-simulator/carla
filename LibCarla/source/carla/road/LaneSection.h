@@ -28,9 +28,9 @@ namespace road {
 
     float GetDistance() const;
 
-    const Road *GetRoad() const;
+    Road *GetRoad() const;
 
-    const Lane *GetLane(const LaneId id) const;
+    Lane *GetLane(const LaneId id);
 
     std::unordered_map<LaneId, Lane> &GetLanes();
 
