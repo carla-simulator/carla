@@ -5,6 +5,7 @@
 This module provides implementation for GlobalRoutePlannerDAO
 """
 
+
 class GlobalRoutePlannerDAO(object):
     """
     This class is the data access layer for fetching data

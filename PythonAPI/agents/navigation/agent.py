@@ -15,6 +15,7 @@ from enum import Enum
 import carla
 from agents.tools.misc import is_within_distance_ahead, compute_magnitude_angle
 
+
 class AgentState(Enum):
     """
     AGENT_STATE represents the possible states of a roaming agent
@@ -35,12 +36,11 @@ class Agent(object):
         :param vehicle: actor to apply to local planner logic onto
         """
         self._vehicle = vehicle
-        self._proximity_threshold = 10.0 # meters
+        self._proximity_threshold = 10.0  # meters
         self._local_planner = None
         self._world = self._vehicle.get_world()
         self._map = self._vehicle.get_world().get_map()
         self._last_traffic_light = None
-
 
     def run_step(self, debug=False):
         """
@@ -57,7 +57,6 @@ class Agent(object):
             control.manual_gear_shift = False
 
         return control
-
 
     def _is_light_red(self, lights_list):
         """
@@ -93,7 +92,7 @@ class Agent(object):
         for traffic_light in lights_list:
             object_waypoint = self._map.get_waypoint(traffic_light.get_location())
             if object_waypoint.road_id != ego_vehicle_waypoint.road_id or \
-                            object_waypoint.lane_id != ego_vehicle_waypoint.lane_id:
+                    object_waypoint.lane_id != ego_vehicle_waypoint.lane_id:
                 continue
 
             loc = traffic_light.get_location()
@@ -140,7 +139,8 @@ class Agent(object):
 
                 if sel_traffic_light is not None:
                     if debug:
-                        print('=== Magnitude = {} | Angle = {} | ID = {}'.format(sel_magnitude, min_angle, sel_traffic_light.id))
+                        print('=== Magnitude = {} | Angle = {} | ID = {}'.format(
+                            sel_magnitude, min_angle, sel_traffic_light.id))
 
                     if self._last_traffic_light is None:
                         self._last_traffic_light = sel_traffic_light
@@ -181,7 +181,7 @@ class Agent(object):
             # if the object is not in our lane it's not an obstacle
             target_vehicle_waypoint = self._map.get_waypoint(target_vehicle.get_location())
             if target_vehicle_waypoint.road_id != ego_vehicle_waypoint.road_id or \
-                            target_vehicle_waypoint.lane_id != ego_vehicle_waypoint.lane_id:
+                    target_vehicle_waypoint.lane_id != ego_vehicle_waypoint.lane_id:
                 continue
 
             loc = target_vehicle.get_location()
@@ -191,7 +191,6 @@ class Agent(object):
                 return (True, target_vehicle)
 
         return (False, None)
-
 
     def emergency_stop(self):
         """

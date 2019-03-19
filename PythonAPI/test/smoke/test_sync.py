@@ -30,7 +30,6 @@ class TestSynchronousMode(SmokeTest):
         self.world = None
         super(TestSynchronousMode, self).tearDown()
 
-
     def test_camera_on_synchronous_mode(self):
         cam_bp = self.world.get_blueprint_library().find('sensor.camera.rgb')
         t = carla.Transform(carla.Location(z=10))
