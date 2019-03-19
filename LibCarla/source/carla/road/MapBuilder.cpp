@@ -44,15 +44,34 @@ namespace road {
   }
 
   // called from profiles parser
-  void AddRoadElevationProfile(
-      const int32_t /*road_id*/,
+  void MapBuilder::AddRoadElevationProfile(
+      const Road* road,
       const float s,
       const float a,
       const float b,
       const float c,
       const float d) {
-    auto elevation = std::unique_ptr<RoadInfoElevation>(new RoadInfoElevation(s, a, b, c, d));
+
+    auto elevation = std::make_unique<RoadInfoElevation>(s, a, b, c, d);
+    _temp_road_info_container[road].emplace_back(std::move(elevation));
   }
+
+  // void MapBuilder::AddRoadLateralSuperElevation(
+  //     const Road* road,
+  //     const float s,
+  //     const float a,
+  //     const float b,
+  //     const float c,
+  //     const float d) {}
+
+  // void MapBuilder::AddRoadLateralCrossfall(
+  //     const Road* road,
+  //     const float s,
+  //     const float a,
+  //     const float b,
+  //     const float c,
+  //     const float d,
+  //     const std::string side) {}
 
   // called from lane parser
   void MapBuilder::CreateLaneAccess(
