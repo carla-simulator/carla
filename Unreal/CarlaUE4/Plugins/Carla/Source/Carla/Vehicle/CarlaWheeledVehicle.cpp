@@ -230,14 +230,11 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
     Wheel->SteerAngle = PhysicsControl.Wheels[i].SteerAngle;
     NewWheelSetups[i].bDisableSteering = PhysicsControl.Wheels[i].bDisableSteering;
 
-    // Creating TireConfig
-    UTireConfig *newTireConfig = NewObject<UTireConfig>();
-
-    // Assigning to component
-    Wheel->TireConfig = newTireConfig;
+    // Assigning new tire config
+    Wheel->TireConfig = NewObject<UTireConfig>();
 
     // Setting a new value to friction
-    newTireConfig->SetFrictionScale(PhysicsControl.Wheels[i].TireFriction);
+    Wheel->TireConfig->SetFrictionScale(PhysicsControl.Wheels[i].TireFriction);
 
   }
 
