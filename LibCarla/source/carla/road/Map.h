@@ -49,7 +49,7 @@ namespace road {
 
     boost::optional<element::Waypoint> GetWaypoint(const geom::Location &location) const;
 
-    geom::Transform ComputeTransform(const Waypoint &waypoint) const;
+    geom::Transform ComputeTransform(Waypoint waypoint) const;
 
     /// ========================================================================
     /// -- Road information ----------------------------------------------------
@@ -57,14 +57,14 @@ namespace road {
 
     const std::string &GetType(RoadId road_id, RoadDistance s) const;
 
-    const std::string &GetType(const Waypoint &waypoint) const;
+    const std::string &GetType(Waypoint waypoint) const;
 
-    double GetLaneWidth(const Waypoint &waypoint) const;
+    double GetLaneWidth(Waypoint waypoint) const;
 
     bool IsIntersection(RoadId road_id) const;
 
     std::pair<element::RoadInfoMarkRecord *, element::RoadInfoMarkRecord *>
-        GetMarkRecord(const Waypoint &waypoint) const;
+        GetMarkRecord(Waypoint waypoint) const;
 
     /// ========================================================================
     /// -- Waypoint generation -------------------------------------------------
@@ -73,26 +73,20 @@ namespace road {
     /// Return the list of waypoints placed at the entrance of each drivable
     /// successor lane; i.e., the list of each waypoint in the next road segment
     /// that a vehicle could drive from @a waypoint.
-    std::vector<Waypoint> GetSuccessors(
-        const Waypoint &waypoint) const;
+    std::vector<Waypoint> GetSuccessors(Waypoint waypoint) const;
 
     /// Return the list of waypoints at @a distance such that a vehicle at @a
     /// waypoint could drive to.
-    std::vector<Waypoint> GetNext(
-        const Waypoint &waypoint,
-        RoadDistance distance) const;
+    std::vector<Waypoint> GetNext(Waypoint waypoint, RoadDistance distance) const;
 
     /// Return a waypoint at the lane of @a waypoint's right lane.
-    boost::optional<Waypoint> GetRight(
-        const Waypoint &waypoint) const;
+    boost::optional<Waypoint> GetRight(Waypoint waypoint) const;
 
     /// Return a waypoint at the lane of @a waypoint's left lane.
-    boost::optional<Waypoint> GetLeft(
-        const Waypoint &waypoint) const;
+    boost::optional<Waypoint> GetLeft(Waypoint waypoint) const;
 
     /// Generate all the waypoints in @a map separated by @a approx_distance.
-    std::vector<Waypoint> GenerateWaypoints(
-        RoadDistance approx_distance) const;
+    std::vector<Waypoint> GenerateWaypoints(RoadDistance approx_distance) const;
 
     /// Returns a list of waypoints at the beginning of each lane of the map.
     // std::vector<Waypoint> GenerateLaneBegin() const;
@@ -106,7 +100,7 @@ namespace road {
 
   private:
 
-    const Lane *GetLane(const Waypoint &waypoint) const;
+    const Lane *GetLane(Waypoint waypoint) const;
 
     MapData _data;
   };
