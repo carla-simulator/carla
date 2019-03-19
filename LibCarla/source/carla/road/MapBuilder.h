@@ -326,19 +326,18 @@ namespace road {
 
     MapData _map_data;
 
-    /// Set the total length of each road based on the geometries
-    void SetTotalRoadSegmentLength();
-
     /// Create the pointers between RoadSegments based on the ids
     void CreatePointersBetweenRoadSegments();
 
   private:
-    /// Map to temporary store all the lane infos until the map is built, so they
-    /// can be added all together
+
+    /// Map to temporary store all the road and lane infos until the map is built,
+    /// so they can be added all together
+    std::unordered_map<const Road *, std::vector<std::unique_ptr<element::RoadInfo>>>
+        _temp_road_info_container;
+
     std::unordered_map<const Lane *, std::vector<std::unique_ptr<element::RoadInfo>>>
         _temp_lane_info_container;
-
-    std::unordered_map<carla::road::Road *, std::vector<std::unique_ptr<carla::road::element::RoadInfo>>> _road_info;
 
   };
 

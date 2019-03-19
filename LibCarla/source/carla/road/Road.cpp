@@ -13,8 +13,6 @@
 #include "carla/geom/Location.h"
 #include "carla/road/element/RoadInfoGeometry.h"
 
-#include <boost/optional.hpp>
-
 namespace carla {
 namespace road {
 
