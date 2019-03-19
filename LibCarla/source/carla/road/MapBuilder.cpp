@@ -46,11 +46,11 @@ namespace road {
   // called from profiles parser
   void AddRoadElevationProfile(
       const int32_t /*road_id*/,
-      const double s,
-      const double a,
-      const double b,
-      const double c,
-      const double d) {
+      const float s,
+      const float a,
+      const float b,
+      const float c,
+      const float d) {
     auto elevation = std::unique_ptr<RoadInfoElevation>(new RoadInfoElevation(s, a, b, c, d));
   }
 
@@ -183,7 +183,7 @@ namespace road {
 
   void MapBuilder::CreateRoadSpeed(
       Road *road,
-      const double s,
+      const float s,
       const std::string /*type*/,
       const float max,
       const std::string /*unit*/) {
@@ -238,7 +238,7 @@ namespace road {
   carla::road::Road *MapBuilder::AddRoad(
       const uint32_t road_id,
       const std::string name,
-      const double length,
+      const float length,
       const int32_t junction_id,
       const int32_t predecessor,
       const int32_t successor) {
@@ -261,7 +261,7 @@ namespace road {
 
   carla::road::LaneSection *MapBuilder::AddRoadSection(
       carla::road::Road *road,
-      const double s) {
+      const float s) {
 
     // add it
     carla::road::LaneSection *sec = &(road->_lane_sections.emplace(std::make_pair(float(s), LaneSection())))->second;
@@ -299,11 +299,11 @@ namespace road {
 
   void MapBuilder::AddRoadGeometryLine(
       carla::road::Road *road,
-      const double s,
-      const double x,
-      const double y,
-      const double hdg,
-      const double length) {
+      const float s,
+      const float x,
+      const float y,
+      const float hdg,
+      const float length) {
 
     auto line_geometry = std::make_unique<GeometryLine>(s,
         length,
@@ -316,12 +316,12 @@ namespace road {
 
   void MapBuilder::AddRoadGeometryArc(
       carla::road::Road *road,
-      const double s,
-      const double x,
-      const double y,
-      const double hdg,
-      const double length,
-      const double curvature) {
+      const float s,
+      const float x,
+      const float y,
+      const float hdg,
+      const float length,
+      const float curvature) {
 
     auto arc_geometry = std::make_unique<GeometryArc>(s,
         length,
@@ -335,41 +335,41 @@ namespace road {
 
   void MapBuilder::AddRoadGeometrySpiral(
       carla::road::Road * /*road*/,
-      const double /*s*/,
-      const double /*x*/,
-      const double /*y*/,
-      const double /*hdg*/,
-      const double /*length*/,
-      const double /*curvStart*/,
-      const double /*curvEnd*/) {}
+      const float /*s*/,
+      const float /*x*/,
+      const float /*y*/,
+      const float /*hdg*/,
+      const float /*length*/,
+      const float /*curvStart*/,
+      const float /*curvEnd*/) {}
 
   void MapBuilder::AddRoadGeometryPoly3(
       carla::road::Road * /*road*/,
-      const double /*s*/,
-      const double /*x*/,
-      const double /*y*/,
-      const double /*hdg*/,
-      const double /*length*/,
-      const double /*a*/,
-      const double /*b*/,
-      const double /*c*/,
-      const double /*d*/) {}
+      const float /*s*/,
+      const float /*x*/,
+      const float /*y*/,
+      const float /*hdg*/,
+      const float /*length*/,
+      const float /*a*/,
+      const float /*b*/,
+      const float /*c*/,
+      const float /*d*/) {}
 
   void MapBuilder::AddRoadGeometryParamPoly3(
       carla::road::Road * /*road*/,
-      const double /*s*/,
-      const double /*x*/,
-      const double /*y*/,
-      const double /*hdg*/,
-      const double /*length*/,
-      const double /*aU*/,
-      const double /*bU*/,
-      const double /*cU*/,
-      const double /*dU*/,
-      const double /*aV*/,
-      const double /*bV*/,
-      const double /*cV*/,
-      const double /*dV*/,
+      const float /*s*/,
+      const float /*x*/,
+      const float /*y*/,
+      const float /*hdg*/,
+      const float /*length*/,
+      const float /*aU*/,
+      const float /*bU*/,
+      const float /*cU*/,
+      const float /*dU*/,
+      const float /*aV*/,
+      const float /*bV*/,
+      const float /*cV*/,
+      const float /*dV*/,
       const std::string /*p_range*/) {}
 
   void MapBuilder::AddJunction(const int32_t id, const std::string name) {
