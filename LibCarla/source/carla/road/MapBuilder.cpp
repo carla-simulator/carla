@@ -20,6 +20,10 @@
 #include "carla/road/element/RoadInfoMarkTypeLine.h"
 #include "carla/road/element/RoadInfoSpeed.h"
 #include "carla/road/element/RoadInfoVisitor.h"
+#include "carla/road/general/Validity.h"
+#include "carla/road/signal/Signal.h"
+#include "carla/road/signal/SignalReference.h"
+#include "carla/road/signal/SignalDependency.h"
 
 #include <iterator>
 #include <memory>
@@ -245,12 +249,11 @@ namespace road {
   }
 
   void MapBuilder::AddValidityToLastAddedSignal(
-      uint32_t road_id,
-      uint32_t signal_id,
-      int32_t from_lane,
-      int32_t to_lane) {
-    _map_data.GetRoad(road_id)->GetSignal(signal_id)->AddValidity(general::Validity(signal_id, from_lane,
-        to_lane));
+      const uint32_t road_id,
+      const uint32_t signal_id,
+      const int32_t from_lane,
+      const int32_t to_lane) {
+    _map_data.GetRoad(road_id)->GetSignal(signal_id)->AddValidity(general::Validity(signal_id, from_lane, to_lane));
   }
 
   // build road objects
@@ -413,10 +416,10 @@ namespace road {
   }
 
   void MapBuilder::AddValidityToSignal(
-      uint32_t road_id,
-      uint32_t signal_id,
-      int32_t from_lane,
-      int32_t to_lane) {
+      const uint32_t road_id,
+      const uint32_t signal_id,
+      const int32_t from_lane,
+      const int32_t to_lane) {
     _map_data.GetRoad(road_id)->GetSignal(signal_id)->AddValidity(general::Validity(signal_id, from_lane,
         to_lane));
   }

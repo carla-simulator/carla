@@ -156,10 +156,10 @@ namespace road {
         const float roll);
 
     void AddValidityToLastAddedSignal(
-        uint32_t road_id,
-        uint32_t signal_id,
-        int32_t from_lane,
-        int32_t to_lane);
+        const uint32_t road_id,
+        const uint32_t signal_id,
+        const int32_t from_lane,
+        const int32_t to_lane);
 
     // called from junction parser
     void AddJunction(const int32_t id, const std::string name);
