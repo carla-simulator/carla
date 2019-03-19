@@ -1,4 +1,5 @@
 future
+networkx
 nose2
 numpy
 pygame
