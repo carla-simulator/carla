@@ -12,6 +12,8 @@
 #include "carla/ListView.h"
 #include "carla/geom/Location.h"
 #include "carla/road/element/RoadInfoGeometry.h"
+#include "carla/road/element/RoadInfoLaneOffset.h"
+#include "carla/road/element/RoadInfoLaneWidth.h"
 
 namespace carla {
 namespace road {
@@ -94,17 +96,17 @@ namespace road {
   element::DirectedPoint Road::GetDirectedPointIn(const float s) const {
     const float clamped_s = geom::Math::clamp(s, 0.0f, _length);
     const auto geometry = _info.GetInfo<element::RoadInfoGeometry>(clamped_s);
-    //const auto lane_off = _info.GetInfo<element::RoadInfoLaneOffset>(clamped_s);
 
-    if (clamped_s == 0.0f) {
-      return element::DirectedPoint(
-          geometry->_geom->GetStartPosition(),
-          geometry->_geom->GetHeading());
-    }
-    return geometry->_geom->PosFromDist(clamped_s);
+    const auto lane_offset = _info.GetInfo<element::RoadInfoLaneOffset>(clamped_s);
+    const float offset = lane_offset->GetPolynomial().Evaluate(clamped_s);
+
+    element::DirectedPoint p = geometry->_geom->PosFromDist(clamped_s);
+    p.ApplyLateralOffset(offset);
+
+    return p;
   }
 
-  std::pair<float, float> Road::GetNearestPoint(const geom::Location &loc) const {
+  const std::pair<float, float> Road::GetNearestPoint(const geom::Location &loc) const {
     std::pair<float, float> last = { 0.0, std::numeric_limits<float>::max() };
 
     auto geom_info_list = _info.GetInfos<element::RoadInfoGeometry>();
@@ -127,11 +129,63 @@ namespace road {
     return last;
   }
 
-  std::map<LaneId, Lane *> Road::GetLanesAt(const float s) {
-    std::map<LaneId, Lane *> map;
+  const std::pair<const Lane *, float> Road::GetNearestLane(
+      const float s, const geom::Location &loc) const {
+    using namespace carla::road::element;
+    std::map<LaneId, const Lane *> lanes(GetLanesAt(s));
+    // negative right lanes
+    auto right_lanes = MakeListView(
+        std::make_reverse_iterator(lanes.lower_bound(0)), lanes.rend());
+    // positive left lanes
+    auto left_lanes = MakeListView(
+        lanes.lower_bound(1), lanes.end());
+
+    DirectedPoint dp_lane_zero = GetDirectedPointIn(s);
+    std::pair<const Lane *, float> result =
+        std::make_pair(nullptr, std::numeric_limits<float>::max());
+
+    DirectedPoint current_dp = dp_lane_zero;
+    for (const auto &lane : right_lanes) {
+      const auto lane_width_info = lane.second->GetInfo<RoadInfoLaneWidth>(s);
+      const auto half_width = lane_width_info->GetPolynomial().Evaluate(s) / 2.0f;
+      current_dp.ApplyLateralOffset(half_width);
+      const auto current_dist = geom::Math::Distance(current_dp.location, loc);
+      // if the current_dp is near to loc, we are in the right way
+      if (current_dist <= result.second) {
+        result.first = &(*lane.second);
+        result.second = current_dist;
+      } else {
+        // elsewhere, we are be moving away
+        break;
+      }
+      current_dp.ApplyLateralOffset(half_width);
+    }
+
+    current_dp = dp_lane_zero;
+    for (auto &&lane : left_lanes) {
+      const auto lane_width_info = lane.second->GetInfo<RoadInfoLaneWidth>(s);
+      const auto half_width = lane_width_info->GetPolynomial().Evaluate(s) / 2.0f;
+      current_dp.ApplyLateralOffset(-half_width);
+      const auto current_dist = geom::Math::Distance(current_dp.location, loc);
+      // if the current_dp is near to loc, we are in the right way
+      if (current_dist <= result.second) {
+        result.first = &(*lane.second);
+        result.second = current_dist;
+      } else {
+        // elsewhere, we are be moving away
+        break;
+      }
+      current_dp.ApplyLateralOffset(-half_width);
+    }
+
+    return result;
+  }
+
+  std::map<LaneId, const Lane *> Road::GetLanesAt(const float s) const {
+    std::map<LaneId, const Lane *> map;
     for (auto &&lane_section : GetLaneSectionsAt(s)) {
       for (auto &&lane : lane_section.GetLanes()) {
-        map[lane.first] = &lane.second;
+        map[lane.first] = &(lane.second);
       }
     }
     return map;

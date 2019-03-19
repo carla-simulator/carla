@@ -38,13 +38,6 @@ namespace element {
     geom::Location location = {0, 0, 0};
     double tangent = 0.0; // [radians]
     double pitch = 0.0;   // [radians]
-    bool valid = true;
-
-    static DirectedPoint Invalid() {
-      DirectedPoint d;
-      d.valid = false;
-      return d;
-    }
 
     void ApplyLateralOffset(double lateral_offset) {
       /// @todo Z axis??
