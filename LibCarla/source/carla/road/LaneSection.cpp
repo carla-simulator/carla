@@ -18,7 +18,7 @@ namespace road {
   }
 
   Lane *LaneSection::GetLane(const LaneId id) {
-    const auto search = _lanes.find(id);
+    auto search = _lanes.find(id);
     if (search != _lanes.end()) {
       return &search->second;
     }

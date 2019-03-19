@@ -21,125 +21,117 @@ namespace road {
     boost::optional<Map> Build();
 
     // called from road parser
-    void AddRoad(
+    carla::road::Road *AddRoad(
         const uint32_t road_id,
         const std::string name,
-        const double length,
+        const float length,
         const int32_t junction_id,
         const int32_t predecessor,
         const int32_t successor);
 
-    void AddRoadSection(
-        const uint32_t road_id,
-        geom::CubicPolynomial section);
+    carla::road::LaneSection *AddRoadSection(
+        carla::road::Road *road,
+        const float s);
 
-    void AddRoadSectionLane(
-        const uint32_t road_id,
-        const uint32_t section_index,
+    carla::road::Lane *AddRoadSectionLane(
+        carla::road::LaneSection *section,
         const int32_t lane_id,
         const std::string lane_type,
         const bool lane_level,
         const int32_t predecessor,
         const int32_t successor);
 
-    void SetRoadTypeSpeed(
-        const uint32_t road_id,
-        const double s,
-        const std::string type,
-        const double max,
-        const std::string unit);
-
     // called from geometry parser
     void AddRoadGeometryLine(
         carla::road::Road *road,
-        const double s,
-        const double x,
-        const double y,
-        const double hdg,
-        const double length);
+        const float s,
+        const float x,
+        const float y,
+        const float hdg,
+        const float length);
 
     void AddRoadGeometryArc(
         carla::road::Road *road,
-        const double s,
-        const double x,
-        const double y,
-        const double hdg,
-        const double length,
-        const double curvature);
+        const float s,
+        const float x,
+        const float y,
+        const float hdg,
+        const float length,
+        const float curvature);
 
     void AddRoadGeometrySpiral(
         carla::road::Road *road,
-        const double s,
-        const double x,
-        const double y,
-        const double hdg,
-        const double length,
-        const double curvStart,
-        const double curvEnd);
+        const float s,
+        const float x,
+        const float y,
+        const float hdg,
+        const float length,
+        const float curvStart,
+        const float curvEnd);
 
     void AddRoadGeometryPoly3(
         carla::road::Road *road,
-        const double s,
-        const double x,
-        const double y,
-        const double hdg,
-        const double length,
-        const double a,
-        const double b,
-        const double c,
-        const double d);
+        const float s,
+        const float x,
+        const float y,
+        const float hdg,
+        const float length,
+        const float a,
+        const float b,
+        const float c,
+        const float d);
 
     void AddRoadGeometryParamPoly3(
         carla::road::Road *road,
-        const double s,
-        const double x,
-        const double y,
-        const double hdg,
-        const double length,
-        const double aU,
-        const double bU,
-        const double cU,
-        const double dU,
-        const double aV,
-        const double bV,
-        const double cV,
-        const double dV,
+        const float s,
+        const float x,
+        const float y,
+        const float hdg,
+        const float length,
+        const float aU,
+        const float bU,
+        const float cU,
+        const float dU,
+        const float aV,
+        const float bV,
+        const float cV,
+        const float dV,
         const std::string p_range);
 
     // called from profiles parser
     void AddRoadElevationProfile(
-        const int32_t road_id,
-        const double s,
-        const double a,
-        const double b,
-        const double c,
-        const double d);
+        const Road* road,
+        const float s,
+        const float a,
+        const float b,
+        const float c,
+        const float d);
 
-    void AddRoadLateralSuperelevation(
-        const int32_t road_id,
-        const double s,
-        const double a,
-        const double b,
-        const double c,
-        const double d);
+    // void AddRoadLateralSuperElevation(
+    //     const Road* road,
+    //     const float s,
+    //     const float a,
+    //     const float b,
+    //     const float c,
+    //     const float d);
 
-    void AddRoadLateralCrossfall(
-        const int32_t road_id,
-        const double s,
-        const double a,
-        const double b,
-        const double c,
-        const double d,
-        const std::string side);
+    // void AddRoadLateralCrossfall(
+    //     const Road* road,
+    //     const float s,
+    //     const float a,
+    //     const float b,
+    //     const float c,
+    //     const float d,
+    //     const std::string side);
 
-    void AddRoadLateralShape(
-        const int32_t road_id,
-        const double s,
-        const double a,
-        const double b,
-        const double c,
-        const double d,
-        const double t);
+    // void AddRoadLateralShape(
+    //     const Road* road,
+    //     const float s,
+    //     const float a,
+    //     const float b,
+    //     const float c,
+    //     const float d,
+    //     const float t);
 
     // Signal methods
     void AddSignal(
@@ -164,10 +156,10 @@ namespace road {
         const float roll);
 
     void AddValidityToLastAddedSignal(
-        uint32_t road_id,
-        uint32_t signal_id,
-        int32_t from_lane,
-        int32_t to_lane);
+        const uint32_t road_id,
+        const uint32_t signal_id,
+        const int32_t from_lane,
+        const int32_t to_lane);
 
     // called from junction parser
     void AddJunction(const int32_t id, const std::string name);
@@ -187,11 +179,11 @@ namespace road {
     void AddRoadSection(
         const uint32_t road_id,
         const uint32_t section_index,
-        const double s,
-        const double a,
-        const double b,
-        const double c,
-        const double d);
+        const float s,
+        const float a,
+        const float b,
+        const float c,
+        const float d);
 
     void SetRoadLaneLink(
         const uint32_t road_id,
@@ -229,8 +221,8 @@ namespace road {
         const float friction,
         const float roughness);
 
-    void CreateLaneOffset(
-        const Lane* lane,
+    void CreateSectionOffset(
+        const Road* road,
         const float s,
         const float a,
         const float b,
@@ -282,6 +274,13 @@ namespace road {
         const std::string rule,
         const float width);
 
+    void CreateRoadSpeed(
+        Road *road,
+        const float s,
+        const std::string type,
+        const float max,
+        const std::string unit);
+
     void CreateLaneSpeed(
         const Lane* lane,
         const float s,
@@ -328,6 +327,15 @@ namespace road {
 
     /// Create the pointers between RoadSegments based on the ids
     void CreatePointersBetweenRoadSegments();
+
+    // return the pointer to a lane object
+    Lane *GetEdgeLanePointer(RoadId road_id, bool from_start, LaneId lane_id);
+
+    // return a list of pointers to all lanes from a lane (using road and junction info)
+    std::vector<Lane *> GetLaneNext(RoadId road_id, float s, LaneId lane_id);
+
+    std::vector<std::pair<RoadId, LaneId>> GetJunctionLanes(RoadId junction_id, RoadId road_id, LaneId lane_id);
+
 
   private:
 

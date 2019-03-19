@@ -18,8 +18,12 @@
 #include "carla/road/element/RoadInfoLaneWidth.h"
 #include "carla/road/element/RoadInfoMarkRecord.h"
 #include "carla/road/element/RoadInfoMarkTypeLine.h"
-#include "carla/road/element/RoadInfoVelocity.h"
+#include "carla/road/element/RoadInfoSpeed.h"
 #include "carla/road/element/RoadInfoVisitor.h"
+#include "carla/road/general/Validity.h"
+#include "carla/road/signal/Signal.h"
+#include "carla/road/signal/SignalReference.h"
+#include "carla/road/signal/SignalDependency.h"
 
 #include <iterator>
 #include <memory>
@@ -44,15 +48,34 @@ namespace road {
   }
 
   // called from profiles parser
-  void AddRoadElevationProfile(
-      const int32_t /*road_id*/,
-      const double s,
-      const double a,
-      const double b,
-      const double c,
-      const double d) {
-    auto elevation = std::unique_ptr<RoadInfoElevation>(new RoadInfoElevation(s, a, b, c, d));
+  void MapBuilder::AddRoadElevationProfile(
+      const Road* road,
+      const float s,
+      const float a,
+      const float b,
+      const float c,
+      const float d) {
+
+    auto elevation = std::make_unique<RoadInfoElevation>(s, a, b, c, d);
+    _temp_road_info_container[road].emplace_back(std::move(elevation));
   }
+
+  // void MapBuilder::AddRoadLateralSuperElevation(
+  //     const Road* road,
+  //     const float s,
+  //     const float a,
+  //     const float b,
+  //     const float c,
+  //     const float d) {}
+
+  // void MapBuilder::AddRoadLateralCrossfall(
+  //     const Road* road,
+  //     const float s,
+  //     const float a,
+  //     const float b,
+  //     const float c,
+  //     const float d,
+  //     const std::string side) {}
 
   // called from lane parser
   void MapBuilder::CreateLaneAccess(
@@ -90,14 +113,14 @@ namespace road {
         roughness));
   }
 
-  void MapBuilder::CreateLaneOffset(
-      const Lane *lane,
+  void MapBuilder::CreateSectionOffset(
+      const Road *road,
       const float s,
       const float a,
       const float b,
       const float c,
       const float d) {
-    _temp_lane_info_container[lane].emplace_back(std::make_unique<RoadInfoLaneOffset>(s, a, b, c, d));
+    _temp_road_info_container[road].emplace_back(std::make_unique<RoadInfoLaneOffset>(s, a, b, c, d));
   }
 
   void MapBuilder::CreateLaneRule(
@@ -181,12 +204,21 @@ namespace road {
 
   }
 
+  void MapBuilder::CreateRoadSpeed(
+      Road *road,
+      const float s,
+      const std::string /*type*/,
+      const float max,
+      const std::string /*unit*/) {
+    _temp_road_info_container[road].emplace_back(std::make_unique<RoadInfoSpeed>(s, max));
+  }
+
   void MapBuilder::CreateLaneSpeed(
       const Lane *lane,
       const float s,
       const float max,
       const std::string /*unit*/) {
-    _temp_lane_info_container[lane].emplace_back(std::make_unique<RoadInfoVelocity>(s, max));
+    _temp_lane_info_container[lane].emplace_back(std::make_unique<RoadInfoSpeed>(s, max));
   }
 
   void MapBuilder::AddSignal(
@@ -217,19 +249,18 @@ namespace road {
   }
 
   void MapBuilder::AddValidityToLastAddedSignal(
-      uint32_t road_id,
-      uint32_t signal_id,
-      int32_t from_lane,
-      int32_t to_lane) {
-    _map_data.GetRoad(road_id)->GetSignal(signal_id)->AddValidity(general::Validity(signal_id, from_lane,
-        to_lane));
+      const uint32_t road_id,
+      const uint32_t signal_id,
+      const int32_t from_lane,
+      const int32_t to_lane) {
+    _map_data.GetRoad(road_id)->GetSignal(signal_id)->AddValidity(general::Validity(signal_id, from_lane, to_lane));
   }
 
   // build road objects
-  void MapBuilder::AddRoad(
+  carla::road::Road *MapBuilder::AddRoad(
       const uint32_t road_id,
       const std::string name,
-      const double length,
+      const float length,
       const int32_t junction_id,
       const int32_t predecessor,
       const int32_t successor) {
@@ -246,52 +277,31 @@ namespace road {
     (junction_id != -1) ? road->_is_junction = true : road->_is_junction = false;
     road->_nexts.push_back(successor);
     road->_prevs.push_back(predecessor);
+
+    return road;
   }
 
-  void MapBuilder::AddRoadSection(
-      const uint32_t road_id,
-      geom::CubicPolynomial cubic) {
-
-    // get the road
-    Road *road = _map_data.GetRoad(road_id);
-    if (road == nullptr) {
-      log_warning("Road %d not found (Mapbuilder adding section)", road_id);
-      return;
-    }
+  carla::road::LaneSection *MapBuilder::AddRoadSection(
+      carla::road::Road *road,
+      const float s) {
 
     // add it
-    LaneSection *sec = &(road->_lane_sections.emplace(cubic.GetS(), LaneSection()))->second;
+    carla::road::LaneSection *sec = &(road->_lane_sections.emplace(std::make_pair(float(s), LaneSection())))->second;
 
     // set section data
-    sec->_road = road;
-    sec->_s = cubic.GetS();
-    sec->_lane_offset = cubic;
+    sec->_road = const_cast<Road *>(road);
+    sec->_s = s;
+
+    return sec;
   }
 
-  void MapBuilder::AddRoadSectionLane(
-      const uint32_t road_id,
-      const uint32_t section_index,
+  carla::road::Lane *MapBuilder::AddRoadSectionLane(
+      carla::road::LaneSection *section,
       const int32_t lane_id,
       const std::string lane_type,
       const bool lane_level,
       const int32_t predecessor,
       const int32_t successor) {
-
-    // get the road
-    Road *road = _map_data.GetRoad(road_id);
-    if (road == nullptr) {
-      log_warning("Road %d not found (Mapbuilder adding lane)", road_id);
-      return;
-    }
-
-    // get the section
-    if (section_index >= road->_lane_sections.size()) {
-      log_warning("LaneSection %d not found (Mapbuilder adding lane)", section_index);
-      return;
-    }
-    auto it = road->_lane_sections.begin();
-    std::advance(it, section_index);
-    LaneSection *section = &(it->second);
 
     // add the lane
     auto *lane = &((section->_lanes.emplace(lane_id, Lane()).first)->second);
@@ -305,15 +315,17 @@ namespace road {
     // way
     lane->_next_lanes.emplace_back(reinterpret_cast<Lane *>(successor));
     lane->_prev_lanes.emplace_back(reinterpret_cast<Lane *>(predecessor));
+
+    return lane;
   }
 
   void MapBuilder::AddRoadGeometryLine(
       carla::road::Road *road,
-      const double s,
-      const double x,
-      const double y,
-      const double hdg,
-      const double length) {
+      const float s,
+      const float x,
+      const float y,
+      const float hdg,
+      const float length) {
 
     auto line_geometry = std::make_unique<GeometryLine>(s,
         length,
@@ -326,12 +338,12 @@ namespace road {
 
   void MapBuilder::AddRoadGeometryArc(
       carla::road::Road *road,
-      const double s,
-      const double x,
-      const double y,
-      const double hdg,
-      const double length,
-      const double curvature) {
+      const float s,
+      const float x,
+      const float y,
+      const float hdg,
+      const float length,
+      const float curvature) {
 
     auto arc_geometry = std::make_unique<GeometryArc>(s,
         length,
@@ -345,41 +357,41 @@ namespace road {
 
   void MapBuilder::AddRoadGeometrySpiral(
       carla::road::Road * /*road*/,
-      const double /*s*/,
-      const double /*x*/,
-      const double /*y*/,
-      const double /*hdg*/,
-      const double /*length*/,
-      const double /*curvStart*/,
-      const double /*curvEnd*/) {}
+      const float /*s*/,
+      const float /*x*/,
+      const float /*y*/,
+      const float /*hdg*/,
+      const float /*length*/,
+      const float /*curvStart*/,
+      const float /*curvEnd*/) {}
 
   void MapBuilder::AddRoadGeometryPoly3(
       carla::road::Road * /*road*/,
-      const double /*s*/,
-      const double /*x*/,
-      const double /*y*/,
-      const double /*hdg*/,
-      const double /*length*/,
-      const double /*a*/,
-      const double /*b*/,
-      const double /*c*/,
-      const double /*d*/) {}
+      const float /*s*/,
+      const float /*x*/,
+      const float /*y*/,
+      const float /*hdg*/,
+      const float /*length*/,
+      const float /*a*/,
+      const float /*b*/,
+      const float /*c*/,
+      const float /*d*/) {}
 
   void MapBuilder::AddRoadGeometryParamPoly3(
       carla::road::Road * /*road*/,
-      const double /*s*/,
-      const double /*x*/,
-      const double /*y*/,
-      const double /*hdg*/,
-      const double /*length*/,
-      const double /*aU*/,
-      const double /*bU*/,
-      const double /*cU*/,
-      const double /*dU*/,
-      const double /*aV*/,
-      const double /*bV*/,
-      const double /*cV*/,
-      const double /*dV*/,
+      const float /*s*/,
+      const float /*x*/,
+      const float /*y*/,
+      const float /*hdg*/,
+      const float /*length*/,
+      const float /*aU*/,
+      const float /*bU*/,
+      const float /*cU*/,
+      const float /*dU*/,
+      const float /*aV*/,
+      const float /*bV*/,
+      const float /*cV*/,
+      const float /*dV*/,
       const std::string /*p_range*/) {}
 
   void MapBuilder::AddJunction(const int32_t id, const std::string name) {
@@ -404,10 +416,10 @@ namespace road {
   }
 
   void MapBuilder::AddValidityToSignal(
-      uint32_t road_id,
-      uint32_t signal_id,
-      int32_t from_lane,
-      int32_t to_lane) {
+      const uint32_t road_id,
+      const uint32_t signal_id,
+      const int32_t from_lane,
+      const int32_t to_lane) {
     _map_data.GetRoad(road_id)->GetSignal(signal_id)->AddValidity(general::Validity(signal_id, from_lane,
         to_lane));
   }
@@ -455,5 +467,105 @@ namespace road {
       const RoadId road_id) {
     return _map_data.GetRoad(road_id);
   }
-}   // namespace road
+  // return the pointer to a lane object
+  Lane *MapBuilder::GetEdgeLanePointer(RoadId road_id, bool from_start, LaneId lane_id) {
+
+    // get the road
+    Road *road = _map_data.GetRoad(road_id);
+    if (road == nullptr)
+      return nullptr;
+
+    // get the lane section
+    LaneSection *section;
+    if (from_start)
+      section = road->GetStartSection(lane_id);
+    else
+      section = road->GetEndSection(lane_id);
+
+    // get the lane
+    return section->GetLane(lane_id);
+  }
+
+  // return a list of pointers to all lanes from a lane (using road and junction info)
+  std::vector<Lane *> MapBuilder::GetLaneNext(RoadId road_id, float s, LaneId lane_id) {
+    std::vector<Lane *> result;
+
+    // get the road
+    Road *road = _map_data.GetRoad(road_id);
+    if (road == nullptr)
+      return result;
+
+    // get the lane
+    Lane *lane = road->GetLane(lane_id, s);
+
+    // successor and predecessor
+    int64_t next = reinterpret_cast<int64_t>(lane->_next_lanes[0]);
+    // int32_t prev = reinterpret_cast<int32_t>(lane->_prev_lanes[0]);
+
+    if (s > 0 and road->_lane_sections.upper_bound(s) != road->_lane_sections.end()) {
+      // change to next / prev section
+      if (lane->_id < 0)
+        result.push_back(road->GetNextLane(s, next));
+      else
+        result.push_back(road->GetPrevLane(s, next));
+    }
+    else {
+      // change to another road / junction
+      if (next != 0) {
+        // single road
+        result.push_back(GetEdgeLanePointer(road->_nexts[0], next < 0, next));
+      }
+      else {
+        // several roads (junction)
+        auto options = GetJunctionLanes(road->_nexts[0], road_id, lane_id);
+        for (auto opt : options) {
+          result.push_back(GetEdgeLanePointer(opt.first, opt.second < 0, opt.second));
+        }
+      }
+    }
+
+    return result;
+  }
+
+  std::vector<std::pair<RoadId, LaneId>> MapBuilder::GetJunctionLanes(RoadId junction_id, RoadId road_id, LaneId lane_id) {
+    std::vector<std::pair<RoadId, LaneId>> result;
+
+    // get the junction
+    Junction *junction = _map_data.GetJunction(junction_id);
+    if (junction == nullptr)
+      return result;
+
+    // check all connections
+    for (auto con : junction->_connections) {
+      // only connections for our road
+      if (con.second.incoming_road == road_id) {
+        // check all lane links
+        for (auto link : con.second.lane_links) {
+          // is our lane id ?
+          if (link.from == lane_id) {
+            // add as option
+            result.push_back(std::make_pair(con.second.connecting_road, link.to));
+          }
+        }
+      }
+    }
+
+    return result;
+  }
+
+  // assign pointers to the next lanes
+  void MapBuilder::CreatePointersBetweenRoadSegments(void) {
+    // for all roads
+    for (auto &road : _map_data._roads) {
+      // for each section
+      for (auto &section : road.second._lane_sections) {
+        // for each lane
+        for (auto &lane : section.second._lanes) {
+          // assign the next lane pointers
+          lane.second._next_lanes = GetLaneNext(road.first, section.second._s, lane.second._id);
+        }
+      }
+    }
+  }
+} // namespace road
 } // namespace carla
