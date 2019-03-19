@@ -4,7 +4,6 @@ CARLA Simulator
 [![Build Status](https://travis-ci.org/carla-simulator/carla.svg?branch=master)](https://travis-ci.org/carla-simulator/carla)
 [![Documentation](https://readthedocs.org/projects/carla/badge/?version=latest)](http://carla.readthedocs.io)
 
-
 [![carla.org](Docs/img/btn/web.png)](http://carla.org)
 [![download](Docs/img/btn/download.png)](https://github.com/carla-simulator/carla/blob/master/Docs/download.md)
 [![documentation](Docs/img/btn/docs.png)](http://carla.readthedocs.io)
@@ -24,6 +23,8 @@ environmental conditions.
 If you want to benchmark your model in the same conditions as in our CoRL’17
 paper, check out
 [Benchmarking](https://github.com/carla-simulator/driving-benchmarks).
+
+[**Get CARLA overnight build**](http://158.109.9.218:8080/job/carla/job/master/25/artifact/Dist/CARLA_eff21e2.tar.gz)
 
 
 ## CARLA Ecosystem
