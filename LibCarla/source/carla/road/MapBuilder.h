@@ -100,38 +100,38 @@ namespace road {
 
     // called from profiles parser
     void AddRoadElevationProfile(
-        const int32_t road_id,
+        const Road* road,
         const float s,
         const float a,
         const float b,
         const float c,
         const float d);
 
-    void AddRoadLateralSuperelevation(
-        const int32_t road_id,
-        const float s,
-        const float a,
-        const float b,
-        const float c,
-        const float d);
+    // void AddRoadLateralSuperElevation(
+    //     const Road* road,
+    //     const float s,
+    //     const float a,
+    //     const float b,
+    //     const float c,
+    //     const float d);
 
-    void AddRoadLateralCrossfall(
-        const int32_t road_id,
-        const float s,
-        const float a,
-        const float b,
-        const float c,
-        const float d,
-        const std::string side);
+    // void AddRoadLateralCrossfall(
+    //     const Road* road,
+    //     const float s,
+    //     const float a,
+    //     const float b,
+    //     const float c,
+    //     const float d,
+    //     const std::string side);
 
-    void AddRoadLateralShape(
-        const int32_t road_id,
-        const float s,
-        const float a,
-        const float b,
-        const float c,
-        const float d,
-        const float t);
+    // void AddRoadLateralShape(
+    //     const Road* road,
+    //     const float s,
+    //     const float a,
+    //     const float b,
+    //     const float c,
+    //     const float d,
+    //     const float t);
 
     // Signal methods
     void AddSignal(
