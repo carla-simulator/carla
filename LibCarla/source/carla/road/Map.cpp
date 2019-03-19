@@ -38,7 +38,7 @@ namespace road {
     for (const auto &pair : lane_section.GetLanes()) {
       const auto &lane = pair.second;
       if (lane.GetType() == "driving") {
-        func(Waypoint{road_id, lane.GetId(), lane_section.GetDistance()});
+        std::forward<FuncT>(func)(Waypoint{road_id, lane.GetId(), lane_section.GetDistance()});
       }
     }
   }
