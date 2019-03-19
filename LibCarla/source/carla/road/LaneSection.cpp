@@ -25,7 +25,11 @@ namespace road {
     return nullptr;
   }
 
-  std::unordered_map<LaneId, Lane> &LaneSection::GetLanes() {
+  std::map<LaneId, Lane> &LaneSection::GetLanes() {
+    return _lanes;
+  }
+
+  const std::map<LaneId, Lane> &LaneSection::GetLanes() const {
     return _lanes;
   }
 

@@ -94,6 +94,7 @@ namespace road {
   element::DirectedPoint Road::GetDirectedPointIn(const float s) const {
     const float clamped_s = geom::Math::clamp(s, 0.0f, _length);
     const auto geometry = _info.GetInfo<element::RoadInfoGeometry>(clamped_s);
+    //const auto lane_off = _info.GetInfo<element::RoadInfoLaneOffset>(clamped_s);
 
     if (clamped_s == 0.0f) {
       return element::DirectedPoint(
@@ -124,6 +125,16 @@ namespace road {
     }
 
     return last;
+  }
+
+  std::map<LaneId, Lane *> Road::GetLanesAt(const float s) {
+    std::map<LaneId, Lane *> map;
+    for (auto &&lane_section : GetLaneSectionsAt(s)) {
+      for (auto &&lane : lane_section.GetLanes()) {
+        map[lane.first] = &lane.second;
+      }
+    }
+    return map;
   }
 
 } // road
