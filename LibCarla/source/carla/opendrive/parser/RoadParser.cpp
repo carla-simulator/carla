@@ -68,7 +68,7 @@ namespace parser {
       std::vector<Road> roads;
 
       for (pugi::xml_node node_road : xml.child("OpenDRIVE").children("road")) {
-        Road road { 0, "", 0.0, -1, 0, 0, {}, {} };
+        Road road { 0, "", 0.0, -1, 0, 0, {}, {}, {} };
 
         // attributes
         road.id = node_road.attribute("id").as_int();
