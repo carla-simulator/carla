@@ -50,7 +50,7 @@ def main():
         # at random.
         bp = random.choice(blueprint_library.filter('vehicle'))
 
-        # A blueprint contains the list of attributes that define a vehicle
+        # A blueprint contains the list of attributes that define a vehicle's
         # instance, we can read them and modify some of them. For instance,
         # let's randomize its color.
         if bp.has_attribute('color'):
