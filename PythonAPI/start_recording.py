@@ -133,6 +133,7 @@ def main():
         print("Stop recording")
         client.stop_recorder()
 
+
 if __name__ == '__main__':
 
     try:

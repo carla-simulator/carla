@@ -16,6 +16,7 @@ import carla
 from agents.navigation.controller import VehiclePIDController
 from agents.tools.misc import distance_vehicle, draw_waypoints
 
+
 class RoadOption(Enum):
     """
     RoadOption represents the possible topological configurations when moving from a segment of lane to other.
@@ -83,7 +84,6 @@ class LocalPlanner(object):
             self._vehicle.destroy()
         print("Destroying ego-vehicle!")
 
-
     def reset_vehicle(self):
         self._vehicle = None
         print("Resetting ego-vehicle!")
@@ -127,18 +127,17 @@ class LocalPlanner(object):
 
         self.current_waypoint = self._map.get_waypoint(self._vehicle.get_location())
         self.vehicle_controller = VehiclePIDController(self._vehicle,
-                                                        args_lateral=args_lateral_dict,
-                                                        args_longitudinal=args_longitudinal_dict)
+                                                       args_lateral=args_lateral_dict,
+                                                       args_longitudinal=args_longitudinal_dict)
 
         self.global_plan = False
 
         # compute initial waypoints
-        self.waypoints_queue.append( (self.current_waypoint.next(self.sampling_radius)[0], RoadOption.LANEFOLLOW))
+        self.waypoints_queue.append((self.current_waypoint.next(self.sampling_radius)[0], RoadOption.LANEFOLLOW))
 
         self.target_road_option = RoadOption.LANEFOLLOW
         # fill waypoint trajectory queue
         self._compute_next_waypoints(k=200)
-
 
     def set_speed(self, speed):
         """
@@ -177,7 +176,6 @@ class LocalPlanner(object):
                     road_option)]
 
             self.waypoints_queue.append((next_waypoint, road_option))
-
 
     def set_global_plan(self, current_plan):
         self.waypoints_queue.clear()

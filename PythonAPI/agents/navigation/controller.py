@@ -16,6 +16,7 @@ import numpy as np
 import carla
 from agents.tools.misc import get_speed
 
+
 class VehiclePIDController():
     """
     VehiclePIDController is the combination of two PID controllers (lateral and longitudinal) to perform the
@@ -170,7 +171,7 @@ class PIDLateralController():
                           v_begin.x, waypoint.transform.location.y -
                           v_begin.y, 0.0])
         _dot = math.acos(np.clip(np.dot(w_vec, v_vec) /
-                         (np.linalg.norm(w_vec) * np.linalg.norm(v_vec)), -1.0, 1.0))
+                                 (np.linalg.norm(w_vec) * np.linalg.norm(v_vec)), -1.0, 1.0))
 
         _cross = np.cross(v_vec, w_vec)
         if _cross[2] < 0:

@@ -22,6 +22,7 @@ from agents.navigation.global_route_planner import GlobalRoutePlanner
 from agents.navigation.global_route_planner_dao import GlobalRoutePlannerDAO
 from agents.tools.misc import vector
 
+
 class BasicAgent(Agent):
     """
     BasicAgent implements a basic agent that navigates scenes to reach a given
@@ -35,9 +36,9 @@ class BasicAgent(Agent):
         """
         super(BasicAgent, self).__init__(vehicle)
 
-        self._proximity_threshold = 10.0 # meters
+        self._proximity_threshold = 10.0  # meters
         self._state = AgentState.NAVIGATING
-        self._local_planner = LocalPlanner(self._vehicle, opt_dict={'target_speed' : target_speed})
+        self._local_planner = LocalPlanner(self._vehicle, opt_dict={'target_speed': target_speed})
         self._hop_resolution = 2.0
 
         # setting up global router
@@ -73,8 +74,10 @@ class BasicAgent(Agent):
                 wp_choice = current_waypoint.next(self._hop_resolution)
                 #   Stop at destination
                 if current_waypoint.transform.location.distance(
-                    end_waypoint.transform.location) < self._hop_resolution: break
-            if action == RoadOption.VOID: break
+                        end_waypoint.transform.location) < self._hop_resolution:
+                    break
+            if action == RoadOption.VOID:
+                break
 
             #   Select appropriate path at the junction
             if len(wp_choice) > 1:
@@ -105,7 +108,7 @@ class BasicAgent(Agent):
                     if direction == 0:
                         cross = abs(np.cross(v_current, v_select)[-1])
                     else:
-                        cross = direction*np.cross(v_current, v_select)[-1]
+                        cross = direction * np.cross(v_current, v_select)[-1]
                     if cross < select_criteria:
                         select_criteria = cross
                         current_waypoint = wp_select
