@@ -70,7 +70,7 @@ namespace road {
   }
 
   // ===========================================================================
-  // -- Map --------------------------------------------------------------------
+  // -- Map: Geometry ----------------------------------------------------------
   // ===========================================================================
 
   Waypoint Map::GetClosestWaypointOnRoad(const geom::Location &pos) const {
@@ -145,13 +145,45 @@ namespace road {
     return {};
   }
 
+  // ===========================================================================
+  // -- Map: Road information --------------------------------------------------
+  // ===========================================================================
+
+  std::string Map::GetLaneType(const Waypoint waypoint) const {
+    const auto *lane = GetLane(waypoint);
+    THROW_INVALID_INPUT_ASSERT(lane != nullptr);
+    return lane->GetType();
+  }
+
+  double Map::GetLaneWidth(const Waypoint waypoint) const {
+    const auto *lane = GetLane(waypoint);
+    THROW_INVALID_INPUT_ASSERT(lane != nullptr);
+
+    throw_exception(std::runtime_error("not implemented"));
+  }
+
+  bool Map::IsJunction(const RoadId road_id) const {
+    const auto *road = _data.GetRoad(road_id);
+    THROW_INVALID_INPUT_ASSERT(road != nullptr);
+    return road->IsJunction();
+  }
+
+  std::pair<element::RoadInfoMarkRecord *, element::RoadInfoMarkRecord *>
+  Map::GetMarkRecord(const Waypoint /*waypoint*/) const {
+    throw_exception(std::runtime_error("not implemented"));
+  }
+
   std::vector<element::LaneMarking> Map::CalculateCrossedLanes(
       const geom::Location &origin,
       const geom::Location &destination) const {
     return element::LaneCrossingCalculator::Calculate(*this, origin, destination);
   }
 
-  std::vector<Waypoint> Map::GetSuccessors(Waypoint waypoint) const {
+  // ===========================================================================
+  // -- Map: Waypoint generation -----------------------------------------------
+  // ===========================================================================
+
+  std::vector<Waypoint> Map::GetSuccessors(const Waypoint waypoint) const {
     auto *lane = GetLane(waypoint);
     THROW_INVALID_INPUT_ASSERT(lane != nullptr);
 
@@ -175,7 +207,7 @@ namespace road {
   }
 
   std::vector<Waypoint> Map::GetNext(
-      Waypoint waypoint,
+      const Waypoint waypoint,
       float distance) const {
     THROW_INVALID_INPUT_ASSERT(waypoint.lane_id != 0);
 
@@ -290,6 +322,10 @@ namespace road {
     }
     return result;
   }
+
+  // ===========================================================================
+  // -- Map: Private functions -------------------------------------------------
+  // ===========================================================================
 
   const Lane *Map::GetLane(Waypoint waypoint) const {
     return _data.GetLane(waypoint.road_id, waypoint.lane_id, waypoint.s);
