@@ -6,10 +6,18 @@
 
 #include "Signal.h"
 
-void carla::road::signal::Signal::AddValidity(carla::road::general::Validity &&validity) {
+namespace carla {
+namespace road {
+namespace signal {
+
+void Signal::AddValidity(general::Validity &&validity) {
   _validities.push_back(std::move(validity));
 }
 
-void carla::road::signal::Signal::AddDependency(carla::road::signal::SignalDependency &&dependency) {
+void Signal::AddDependency(SignalDependency &&dependency) {
   _dependencies.push_back(std::move(dependency));
+}
+
+}
+}
 }
