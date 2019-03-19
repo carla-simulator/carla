@@ -9,6 +9,7 @@
 #include "carla/NonCopyable.h"
 #include "carla/geom/Transform.h"
 #include "carla/road/MapData.h"
+#include "carla/road/RoadTypes.h"
 #include "carla/road/element/LaneMarking.h"
 #include "carla/road/element/RoadInfoMarkRecord.h"
 #include "carla/road/element/Waypoint.h"
@@ -23,19 +24,17 @@ namespace road {
   class Map : private MovableNonCopyable {
   public:
 
-    /// @todo Don't define here.
-    using RoadId = uint32_t;
-    using LaneId = int32_t;
-    using RoadDistance = float;
-
     using Waypoint = element::Waypoint;
 
-    Map(MapData m)
-      : _data(std::move(m)) {}
+    /// ========================================================================
+    /// -- Constructor ---------------------------------------------------------
+    /// ========================================================================
 
-    std::vector<element::LaneMarking> CalculateCrossedLanes(
-        const geom::Location &origin,
-        const geom::Location &destination) const;
+    Map(MapData m) : _data(std::move(m)) {}
+
+    /// ========================================================================
+    /// -- Georeference --------------------------------------------------------
+    /// ========================================================================
 
     const geom::GeoLocation &GetGeoReference() const {
       return _data.GetGeoReference();
@@ -49,22 +48,24 @@ namespace road {
 
     boost::optional<element::Waypoint> GetWaypoint(const geom::Location &location) const;
 
-    geom::Transform ComputeTransform(const Waypoint &waypoint) const;
+    geom::Transform ComputeTransform(Waypoint waypoint) const;
 
     /// ========================================================================
     /// -- Road information ----------------------------------------------------
     /// ========================================================================
 
-    const std::string &GetType(RoadId road_id, RoadDistance s) const;
+    std::string GetLaneType(Waypoint waypoint) const;
 
-    const std::string &GetType(const Waypoint &waypoint) const;
+    double GetLaneWidth(Waypoint waypoint) const;
 
-    double GetLaneWidth(const Waypoint &waypoint) const;
-
-    bool IsIntersection(RoadId road_id) const;
+    bool IsJunction(RoadId road_id) const;
 
     std::pair<element::RoadInfoMarkRecord *, element::RoadInfoMarkRecord *>
-        GetMarkRecord(const Waypoint &waypoint) const;
+        GetMarkRecord(Waypoint waypoint) const;
+
+    std::vector<element::LaneMarking> CalculateCrossedLanes(
+        const geom::Location &origin,
+        const geom::Location &destination) const;
 
     /// ========================================================================
     /// -- Waypoint generation -------------------------------------------------
@@ -73,26 +74,20 @@ namespace road {
     /// Return the list of waypoints placed at the entrance of each drivable
     /// successor lane; i.e., the list of each waypoint in the next road segment
     /// that a vehicle could drive from @a waypoint.
-    std::vector<Waypoint> GetSuccessors(
-        const Waypoint &waypoint) const;
+    std::vector<Waypoint> GetSuccessors(Waypoint waypoint) const;
 
     /// Return the list of waypoints at @a distance such that a vehicle at @a
     /// waypoint could drive to.
-    std::vector<Waypoint> GetNext(
-        const Waypoint &waypoint,
-        RoadDistance distance) const;
+    std::vector<Waypoint> GetNext(Waypoint waypoint, float distance) const;
 
     /// Return a waypoint at the lane of @a waypoint's right lane.
-    boost::optional<Waypoint> GetRight(
-        const Waypoint &waypoint) const;
+    boost::optional<Waypoint> GetRight(Waypoint waypoint) const;
 
     /// Return a waypoint at the lane of @a waypoint's left lane.
-    boost::optional<Waypoint> GetLeft(
-        const Waypoint &waypoint) const;
+    boost::optional<Waypoint> GetLeft(Waypoint waypoint) const;
 
     /// Generate all the waypoints in @a map separated by @a approx_distance.
-    std::vector<Waypoint> GenerateWaypoints(
-        RoadDistance approx_distance) const;
+    std::vector<Waypoint> GenerateWaypoints(float approx_distance) const;
 
     /// Returns a list of waypoints at the beginning of each lane of the map.
     // std::vector<Waypoint> GenerateLaneBegin() const;
@@ -106,7 +101,7 @@ namespace road {
 
   private:
 
-    const Lane *GetLane(const Waypoint &waypoint) const;
+    const Lane *GetLane(Waypoint waypoint) const;
 
     MapData _data;
   };

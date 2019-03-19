@@ -6,15 +6,25 @@
 
 #include "carla/road/Map.h"
 
-#include <stdexcept>
 #include "carla/Exception.h"
-
 #include "carla/road/element/LaneCrossingCalculator.h"
+
+#include <stdexcept>
 
 namespace carla {
 namespace road {
 
   using namespace carla::road::element;
+
+  // ===========================================================================
+  // -- Error handling ---------------------------------------------------------
+  // ===========================================================================
+
+  [[ noreturn ]] static void throw_invalid_input(const char *message) {
+    throw_exception(std::invalid_argument(message));
+  }
+
+#define THROW_INVALID_INPUT_ASSERT(pred) if (!(pred)) { throw_invalid_input("assert failed: " #pred); }
 
   // ===========================================================================
   // -- Static local methods ---------------------------------------------------
@@ -38,7 +48,7 @@ namespace road {
     for (const auto &pair : lane_section.GetLanes()) {
       const auto &lane = pair.second;
       if (lane.GetType() == "driving") {
-        func(Waypoint{road_id, lane.GetId(), lane_section.GetDistance()});
+        std::forward<FuncT>(func)(Waypoint{road_id, lane.GetId(), lane_section.GetDistance()});
       }
     }
   }
@@ -60,7 +70,7 @@ namespace road {
   }
 
   // ===========================================================================
-  // -- Map --------------------------------------------------------------------
+  // -- Map: Geometry ----------------------------------------------------------
   // ===========================================================================
 
   Waypoint Map::GetClosestWaypointOnRoad(const geom::Location &pos) const {
@@ -117,8 +127,8 @@ namespace road {
     //   }
     // }
 
-    // DEBUG_ASSERT(_dist <= _map->GetData().GetRoad(_road_id)->GetLength());
-    // DEBUG_ASSERT(_lane_id != 0);
+    // THROW_INVALID_INPUT_ASSERT(_dist <= _map->GetData().GetRoad(_road_id)->GetLength());
+    // THROW_INVALID_INPUT_ASSERT(_lane_id != 0);
 
     return {}; //Waypoint(shared_from_this(), loc);
   }
@@ -135,17 +145,47 @@ namespace road {
     return {};
   }
 
-  std::vector<element::LaneMarking> Map::CalculateCrossedLanes(
-      const geom::Location &/* origin */,
-      const geom::Location &/* destination */) const {
-    // return element::LaneCrossingCalculator::Calculate(*this, origin, destination);
-    throw_exception(std::runtime_error("not implemented"));
-    return {};
+  // ===========================================================================
+  // -- Map: Road information --------------------------------------------------
+  // ===========================================================================
+
+  std::string Map::GetLaneType(const Waypoint waypoint) const {
+    const auto *lane = GetLane(waypoint);
+    THROW_INVALID_INPUT_ASSERT(lane != nullptr);
+    return lane->GetType();
   }
 
-  std::vector<Waypoint> Map::GetSuccessors(const Waypoint &waypoint) const {
+  double Map::GetLaneWidth(const Waypoint waypoint) const {
+    const auto *lane = GetLane(waypoint);
+    THROW_INVALID_INPUT_ASSERT(lane != nullptr);
+
+    throw_exception(std::runtime_error("not implemented"));
+  }
+
+  bool Map::IsJunction(const RoadId road_id) const {
+    const auto *road = _data.GetRoad(road_id);
+    THROW_INVALID_INPUT_ASSERT(road != nullptr);
+    return road->IsJunction();
+  }
+
+  std::pair<element::RoadInfoMarkRecord *, element::RoadInfoMarkRecord *>
+  Map::GetMarkRecord(const Waypoint /*waypoint*/) const {
+    throw_exception(std::runtime_error("not implemented"));
+  }
+
+  std::vector<element::LaneMarking> Map::CalculateCrossedLanes(
+      const geom::Location &origin,
+      const geom::Location &destination) const {
+    return element::LaneCrossingCalculator::Calculate(*this, origin, destination);
+  }
+
+  // ===========================================================================
+  // -- Map: Waypoint generation -----------------------------------------------
+  // ===========================================================================
+
+  std::vector<Waypoint> Map::GetSuccessors(const Waypoint waypoint) const {
     auto *lane = GetLane(waypoint);
-    DEBUG_ASSERT(lane != nullptr);
+    THROW_INVALID_INPUT_ASSERT(lane != nullptr);
 
     const auto &next_lanes =
         lane->GetId() <= 0 ?
@@ -155,11 +195,11 @@ namespace road {
     std::vector<Waypoint> result;
     result.reserve(next_lanes.size());
     for (auto *next_lane : next_lanes) {
-      DEBUG_ASSERT(next_lane != nullptr);
+      THROW_INVALID_INPUT_ASSERT(next_lane != nullptr);
       const auto lane_id = next_lane->GetId();
-      DEBUG_ASSERT(lane_id != 0);
+      THROW_INVALID_INPUT_ASSERT(lane_id != 0);
       const auto *road = next_lane->GetRoad();
-      DEBUG_ASSERT(road != nullptr);
+      THROW_INVALID_INPUT_ASSERT(road != nullptr);
       const auto distance = lane_id < 0 ? 0.0f : road->GetLength();
       result.emplace_back(Waypoint{road->GetId(), lane_id, distance});
     }
@@ -167,9 +207,9 @@ namespace road {
   }
 
   std::vector<Waypoint> Map::GetNext(
-      const Waypoint &waypoint,
+      const Waypoint waypoint,
       float distance) const {
-    DEBUG_ASSERT(waypoint.lane_id != 0);
+    THROW_INVALID_INPUT_ASSERT(waypoint.lane_id != 0);
 
     float distance_on_next_segment;
 
@@ -177,7 +217,7 @@ namespace road {
       // road goes forward.
       const auto total_distance = waypoint.s + distance;
       const auto *road = _data.GetRoad(waypoint.road_id);
-      DEBUG_ASSERT(road != nullptr);
+      THROW_INVALID_INPUT_ASSERT(road != nullptr);
       const auto road_length = road->GetLength();
       if (total_distance <= road_length) {
         return { Waypoint{waypoint.road_id, waypoint.lane_id, total_distance} };
@@ -199,57 +239,26 @@ namespace road {
     return result;
   }
 
-  boost::optional<Waypoint> Map::GetRight(const Waypoint &/* waypoint */) const {
-    // auto &map = waypoint._map;
-    // const auto this_road_id = waypoint.GetRoadId();
-    // const auto this_lane_id = waypoint.GetLaneId();
-
-    // DEBUG_ASSERT(this_lane_id != 0);
-
-    // const int new_lane_id = (this_lane_id <= 0) ? this_lane_id - 1 : this_lane_id + 1;
-
-    // // check if that lane id exists on this distance
-    // const auto road = map->GetData().GetRoad(this_road_id);
-    // const auto mark_record_vector = road->GetRoadInfoMarkRecord(waypoint._dist);
-    // for (auto &&mark_record : mark_record_vector) {
-    //   // find if the lane id exists
-    //   if (mark_record->GetLaneId() == new_lane_id) {
-    //     return Waypoint(map, this_road_id, new_lane_id, waypoint._dist);
-    //   }
-    // }
-    // return boost::optional<Waypoint>();
-    throw_exception(std::runtime_error("not implemented"));
-    return {};
+  boost::optional<Waypoint> Map::GetRight(Waypoint waypoint) const {
+    THROW_INVALID_INPUT_ASSERT(waypoint.lane_id != 0);
+    if (waypoint.lane_id > 0) {
+      ++waypoint.lane_id;
+    } else {
+      --waypoint.lane_id;
+    }
+    return GetLane(waypoint) != nullptr ? waypoint : boost::optional<Waypoint>{};
   }
 
-  boost::optional<Waypoint> Map::GetLeft(const Waypoint &/* waypoint */) const {
-    // auto &map = waypoint._map;
-    // const auto this_road_id = waypoint.GetRoadId();
-    // const auto this_lane_id = waypoint.GetLaneId();
-
-    // DEBUG_ASSERT(this_lane_id != 0);
-
-    // int new_lane_id;
-    // if (this_lane_id > 0) {
-    //   // road goes backward: decrease the lane id while avoiding returning lane 0
-    //   new_lane_id = this_lane_id - 1 == 0 ? -1 : this_lane_id - 1;
-    // } else {
-    //   // road goes forward: increasing the lane id while avoiding returning lane 0
-    //   new_lane_id = this_lane_id + 1 == 0 ? 1 : this_lane_id + 1;
-    // }
-
-    // // check if that lane id exists on this distance
-    // const auto road = map->GetData().GetRoad(this_road_id);
-    // const auto mark_record_vector = road->GetRoadInfoMarkRecord(waypoint._dist);
-    // for (auto &&mark_record : mark_record_vector) {
-    //   // find if the lane id exists
-    //   if (mark_record->GetLaneId() == new_lane_id) {
-    //     return Waypoint(map, this_road_id, new_lane_id, waypoint._dist);
-    //   }
-    // }
-    // return boost::optional<Waypoint>();
-    throw_exception(std::runtime_error("not implemented"));
-    return {};
+  boost::optional<Waypoint> Map::GetLeft(Waypoint waypoint) const {
+    THROW_INVALID_INPUT_ASSERT(waypoint.lane_id != 0);
+    if (std::abs(waypoint.lane_id) == 1) {
+      waypoint.lane_id *= -1;
+    } else if (waypoint.lane_id > 0) {
+      --waypoint.lane_id;
+    } else {
+      ++waypoint.lane_id;
+    }
+    return GetLane(waypoint) != nullptr ? waypoint : boost::optional<Waypoint>{};
   }
 
   std::vector<Waypoint> Map::GenerateWaypoints(const float distance) const {
@@ -314,9 +323,15 @@ namespace road {
     return result;
   }
 
-  const Lane *Map::GetLane(const Waypoint &waypoint) const {
+  // ===========================================================================
+  // -- Map: Private functions -------------------------------------------------
+  // ===========================================================================
+
+  const Lane *Map::GetLane(Waypoint waypoint) const {
     return _data.GetLane(waypoint.road_id, waypoint.lane_id, waypoint.s);
   }
 
 } // namespace road
 } // namespace carla
+
+#undef THROW_INVALID_INPUT_ASSERT
