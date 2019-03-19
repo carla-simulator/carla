@@ -7,6 +7,7 @@
   * Added `id` property to waypoints, uniquely identifying waypoints up to half centimetre precision
   * Added OpenDrive's road offset `s` as property to waypoints
   * Fixed python client DLL error on Windows
+  * Fixed wheel's tire friction from physics control parameters.
   * Fixed cleanup of local_planner when used by other modules
 
 ## CARLA 0.9.4
