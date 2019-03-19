@@ -106,6 +106,7 @@ if $DO_COPY_FILES ; then
   copy_if_changed "./PythonAPI/dynamic_weather.py" "${DESTINATION}/dynamic_weather.py"
   copy_if_changed "./PythonAPI/manual_control.py" "${DESTINATION}/manual_control.py"
   copy_if_changed "./PythonAPI/no_rendering_mode.py" "${DESTINATION}/no_rendering_mode.py"
+  copy_if_changed "./PythonAPI/performance_benchmark.py" "${DESTINATION}/performance_benchmark.py"
   copy_if_changed "./PythonAPI/spawn_npc.py" "${DESTINATION}/spawn_npc.py"
   copy_if_changed "./PythonAPI/synchronous_mode.py" "${DESTINATION}/synchronous_mode.py"
   copy_if_changed "./PythonAPI/tutorial.py" "${DESTINATION}/tutorial.py"
