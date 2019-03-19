@@ -146,11 +146,9 @@ namespace road {
   }
 
   std::vector<element::LaneMarking> Map::CalculateCrossedLanes(
-      const geom::Location &/* origin */,
-      const geom::Location &/* destination */) const {
-    // return element::LaneCrossingCalculator::Calculate(*this, origin, destination);
-    throw_exception(std::runtime_error("not implemented"));
-    return {};
+      const geom::Location &origin,
+      const geom::Location &destination) const {
+    return element::LaneCrossingCalculator::Calculate(*this, origin, destination);
   }
 
   std::vector<Waypoint> Map::GetSuccessors(Waypoint waypoint) const {
