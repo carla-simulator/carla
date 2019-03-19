@@ -233,11 +233,12 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
     // Creating TireConfig
     UTireConfig *newTireConfig = NewObject<UTireConfig>();
 
+    // Assigning to component
+    Wheel->TireConfig = newTireConfig;
+
     // Setting a new value to friction
     newTireConfig->SetFrictionScale(PhysicsControl.Wheels[i].TireFriction);
 
-    // Assigning to component
-    Wheel->TireConfig = newTireConfig;
   }
 
   Vehicle4W->WheelSetups = NewWheelSetups;
