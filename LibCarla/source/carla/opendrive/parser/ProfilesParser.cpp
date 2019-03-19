@@ -14,10 +14,8 @@ namespace carla {
 namespace opendrive {
 namespace parser {
 
-  using RoadId = int;
-
   struct ElevationProfile {
-    RoadId road_id      { -1 };
+    carla::road::Road* road { nullptr };
     float s            { 0.0 };
     float a            { 0.0 };
     float b            { 0.0 };
@@ -34,7 +32,7 @@ namespace parser {
   };
 
   struct LateralProfile {
-    RoadId road_id      { -1 };
+    carla::road::Road* road { nullptr };
     float s            { 0.0 };
     float a            { 0.0 };
     float b            { 0.0 };
@@ -62,7 +60,8 @@ namespace parser {
             ElevationProfile elev;
 
             // get road id
-            elev.road_id = node_road.attribute("id").as_int();
+            road::RoadId road_id = node_road.attribute("id").as_int();
+            elev.road = map_builder.GetRoad(road_id);
 
             // get common properties
             elev.s = node_elevation.attribute("s").as_float();
@@ -83,7 +82,8 @@ namespace parser {
             LateralProfile lateral;
 
             // get road id
-            lateral.road_id = node_road.attribute("id").as_int();
+            road::RoadId road_id = node_road.attribute("id").as_int();
+            lateral.road = map_builder.GetRoad(road_id);
 
             // get common properties
             lateral.s = node.attribute("s").as_float();
@@ -108,16 +108,17 @@ namespace parser {
 
       // map_builder calls
       for (auto const pro : elevation_profile) {
-        map_builder.AddRoadElevationProfile(pro.road_id, pro.s, pro.a, pro.b, pro.c, pro.d);
+        map_builder.AddRoadElevationProfile(pro.road, pro.s, pro.a, pro.b, pro.c, pro.d);
       }
-      for (auto const pro : lateral_profile) {
-        if (pro.type == "superelevation")
-          map_builder.AddRoadLateralSuperelevation(pro.road_id, pro.s, pro.a, pro.b, pro.c, pro.d);
-        else if (pro.type == "crossfall")
-          map_builder.AddRoadLateralCrossfall(pro.road_id, pro.s, pro.a, pro.b, pro.c, pro.d, pro.cross.side);
-        else if (pro.type == "shape")
-          map_builder.AddRoadLateralShape(pro.road_id, pro.s, pro.a, pro.b, pro.c, pro.d, pro.shape.t);
-      }
+      /// @todo: RoadInfo classes must be created to fit this information
+      // for (auto const pro : lateral_profile) {
+      //   if (pro.type == "superelevation")
+      //     map_builder.AddRoadLateralSuperElevation(pro.road, pro.s, pro.a, pro.b, pro.c, pro.d);
+      //   else if (pro.type == "crossfall")
+      //     map_builder.AddRoadLateralCrossfall(pro.road, pro.s, pro.a, pro.b, pro.c, pro.d, pro.cross.side);
+      //   else if (pro.type == "shape")
+      //     map_builder.AddRoadLateralShape(pro.road, pro.s, pro.a, pro.b, pro.c, pro.d, pro.shape.t);
+      // }
   }
 
 } // namespace parser
