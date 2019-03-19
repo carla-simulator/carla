@@ -1,5 +1,7 @@
 ## Latest Changes
-  * Adding a parser to represent the map as a connected graph of waypoints. 
+
+  * Migrate Content to AWS
+  * Adding a parser to represent the map as a connected graph of waypoints.
   * Allow user to disable rendering and set the server timeout from the command line
   * Add timestamp to SensorData
   * Allow usage of hostname for carla::Client and resolve them to IP address

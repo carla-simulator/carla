@@ -28,6 +28,7 @@ Install
 *.workspace
 *CodeCompletionFolders.txt
 *CodeLitePreProcessor.txt
+.aria2c.input
 .codelite
 .gdb_history
 .gtest
