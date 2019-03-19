@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright (c) 2019 Intel Labs.
 # authors: German Ros (german.ros@intel.com)
@@ -19,19 +19,29 @@ Please, make sure you install the following dependencies:
 
 """
 
+# @todo Include this file in the Pylint checks.
+# pylint: skip-file
+
+import sys
+
+
+if sys.version_info[0] < 3:
+    print('This script is only available for Python 3')
+    sys.exit(1)
+
+
+from tr import tr
 import argparse
 import cpuinfo
+import glob
 import math
 import numpy as np
-import pygame
+import os
 import psutil
+import pygame
 import shutil
 import subprocess
-from tr import tr
 import threading
-import glob
-import os
-import sys
 
 try:
     sys.path.append(glob.glob('**/carla-*%d.%d-%s.egg' % (
@@ -57,10 +67,10 @@ actor_list = ['vehicle.*']
 
 
 def weathers():
-    list_weathers = [ carla.WeatherParameters.ClearNoon,
-                      carla.WeatherParameters.CloudyNoon,
-                      carla.WeatherParameters.SoftRainSunset
-                      ]
+    list_weathers = [carla.WeatherParameters.ClearNoon,
+                     carla.WeatherParameters.CloudyNoon,
+                     carla.WeatherParameters.SoftRainSunset
+                     ]
 
     return list_weathers
 
@@ -68,14 +78,14 @@ def weathers():
 def define_sensors():
     list_sensor_specs = []
 
-    sensors00 = [{'type':'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-                  'width': 300, 'height': 200, 'fov': 100, 'label':'1. cam-300x200'}]
+    sensors00 = [{'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
+                  'width': 300, 'height': 200, 'fov': 100, 'label': '1. cam-300x200'}]
 
-    sensors01 = [{'type':'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-                  'width': 800, 'height': 600, 'fov': 100, 'label':'2. cam-800x600'}]
+    sensors01 = [{'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
+                  'width': 800, 'height': 600, 'fov': 100, 'label': '2. cam-800x600'}]
 
-    sensors02 = [{'type':'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-                  'width': 1900, 'height': 1080, 'fov': 100, 'label':'3. cam-1900x1080'}]
+    sensors02 = [{'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
+                  'width': 1900, 'height': 1080, 'fov': 100, 'label': '3. cam-1900x1080'}]
 
     sensors03 = [{'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
                   'width': 300, 'height': 200, 'fov': 100, 'label': '4. cam-300x200'},
@@ -107,7 +117,7 @@ class CallBack(object):
 
     def get_fps(self):
         with self._lock:
-         return self._current_fps
+            return self._current_fps
 
 
 def create_ego_vehicle(world, ego_vehicle, spawn_point, list_sensor_spec):
@@ -130,7 +140,10 @@ def create_ego_vehicle(world, ego_vehicle, spawn_point, list_sensor_spec):
                 bp.set_attribute('image_size_y', str(sensor_spec['height']))
                 bp.set_attribute('fov', str(sensor_spec['fov']))
                 sensor_location = carla.Location(x=sensor_spec['x'], y=sensor_spec['y'], z=sensor_spec['z'])
-                sensor_rotation = carla.Rotation(pitch=sensor_spec['pitch'], roll=sensor_spec['roll'], yaw=sensor_spec['yaw'])
+                sensor_rotation = carla.Rotation(
+                    pitch=sensor_spec['pitch'],
+                    roll=sensor_spec['roll'],
+                    yaw=sensor_spec['yaw'])
             elif sensor_spec['type'].startswith('sensor.lidar'):
                 bp.set_attribute('range', '200')
                 bp.set_attribute('rotation_frequency', '10')
@@ -140,7 +153,10 @@ def create_ego_vehicle(world, ego_vehicle, spawn_point, list_sensor_spec):
                 bp.set_attribute('points_per_second', '500000')
 
                 sensor_location = carla.Location(x=sensor_spec['x'], y=sensor_spec['y'], z=sensor_spec['z'])
-                sensor_rotation = carla.Rotation(pitch=sensor_spec['pitch'], roll=sensor_spec['roll'], yaw=sensor_spec['yaw'])
+                sensor_rotation = carla.Rotation(
+                    pitch=sensor_spec['pitch'],
+                    roll=sensor_spec['roll'],
+                    yaw=sensor_spec['yaw'])
             elif sensor_spec['type'].startswith('sensor.other.gnss'):
                 sensor_location = carla.Location(x=sensor_spec['x'], y=sensor_spec['y'], z=sensor_spec['z'])
                 sensor_rotation = carla.Rotation()
@@ -183,7 +199,7 @@ def run_benchmark(world, sensor_specs_list, number_locations, number_ticks, acto
         while ticks < number_ticks:
             _ = world.wait_for_tick(1000.0)
             if debug:
-                print("== Samples {} / {}".format(ticks+1, number_ticks))
+                print("== Samples {} / {}".format(ticks + 1, number_ticks))
 
             min_fps = float('inf')
             for sc in sensors_callback:
@@ -224,11 +240,11 @@ def serialize_records(records, system_specs, filename):
             list_records = records[sensor_key]
             for record in list_records:
                 s = "| {} | {} | {} | {} | {:03.2f} | {:03.2f} |\n".format(record['sensors'],
-                                                                       record['town'],
-                                                                       record['weather'],
-                                                                       record['samples'],
-                                                                       record['fps_mean'],
-                                                                       record['fps_std'])
+                                                                           record['town'],
+                                                                           record['weather'],
+                                                                           record['samples'],
+                                                                           record['fps_mean'],
+                                                                           record['fps_std'])
                 fd.write(s)
 
         s = "Table: {}.\n".format(system_specs)
@@ -241,7 +257,7 @@ def get_system_specs():
     str_system += "CPU {} {}. ".format(cpu_info['brand'], cpu_info['family'])
 
     memory_info = psutil.virtual_memory()
-    str_system += "{:03.2f} GB RAM memory. ".format(memory_info.total / (1024*1024*1024))
+    str_system += "{:03.2f} GB RAM memory. ".format(memory_info.total / (1024 * 1024 * 1024))
 
     nvidia_cmd = shutil.which("nvidia-smi")
     if nvidia_cmd:
@@ -286,7 +302,7 @@ def main(args):
                 record = {'sensors': sensor_str,
                           'weather': weather,
                           'town': town,
-                          'samples': number_locations*number_ticks,
+                          'samples': number_locations * number_ticks,
                           'fps_mean': mean,
                           'fps_std': std}
 
@@ -310,5 +326,3 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     main(args)
-
-

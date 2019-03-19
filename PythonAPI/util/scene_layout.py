@@ -24,15 +24,13 @@ except IndexError:
     pass
 
 import carla
-import logging
 import random
 
 
-def get_scene_layout(world, carla_map):
+def get_scene_layout(carla_map):
     """
     Function to extract the full scene layout to be used as a full scene description to be
     given to the user
-    :param world: the world object from CARLA
     :return: a dictionary describing the scene.
     """
 

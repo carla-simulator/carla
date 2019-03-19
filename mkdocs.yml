@@ -3,7 +3,7 @@ repo_url: https://github.com/carla-simulator/carla
 docs_dir: Docs
 theme: readthedocs
 
-pages:
+nav:
 - Home: 'index.md'
 - Quick start:
   - 'Getting started': 'getting_started.md'
