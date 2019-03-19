@@ -72,13 +72,15 @@ namespace road {
     /// - @b second: Euclidean distance from the nearest point in
     ///              this road segment to p.
     ///   @param loc point to calculate the distance
-    std::pair<float, float> GetNearestPoint(const geom::Location &loc) const;
+    std::pair<float, float> GetNearestPoint(
+        const geom::Location &loc) const;
 
-    /// Returns a the nearest lane id.
+    /// Returns a pointer to the nearest lane.
     ///   @param dist distance from the begining of the road to the point you
     ///          want to calculate the distance
     ///   @param loc point to calculate the distance
-    std::pair<int, double> GetNearestLane(double dist, const geom::Location &loc) const;
+    std::pair<Lane *, float> GetNearestLane(
+        const float s, const geom::Location &loc) const;
 
     template <typename T>
     std::shared_ptr<const T> GetInfo (const float s) {
@@ -91,17 +93,20 @@ namespace road {
           iterator::make_map_values_const_iterator(_lane_sections.end()));
     }
 
-    auto GetLaneSectionsAt(float s) {
+    auto GetLaneSectionsAt(const float s) {
       return MakeListView(
           iterator::make_map_values_iterator(_lane_sections.lower_bound(s)),
           iterator::make_map_values_iterator(_lane_sections.upper_bound(s)));
     }
 
-    auto GetLaneSectionsAt(float s) const {
+    auto GetLaneSectionsAt(const float s) const {
       return MakeListView(
           iterator::make_map_values_const_iterator(_lane_sections.lower_bound(s)),
           iterator::make_map_values_const_iterator(_lane_sections.upper_bound(s)));
     }
+
+    /// Get all lanes at a given s
+    std::map<LaneId, Lane *> GetLanesAt(const float s);
 
   private:
 

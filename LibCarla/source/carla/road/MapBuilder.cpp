@@ -33,9 +33,9 @@ namespace road {
 
     CreatePointersBetweenRoadSegments();
 
-    // Delete all the unneeded temporal data once used
-    _temp_road_info_container.empty();
-    _temp_lane_info_container.empty();
+    // remove temporal already used information
+    _temp_road_info_container.clear();
+    _temp_lane_info_container.clear();
 
     // _map_data is a memeber of MapBuilder so you must especify if
     // you want to keep it (will return copy -> Map(const Map &))

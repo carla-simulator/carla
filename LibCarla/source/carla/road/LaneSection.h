@@ -12,7 +12,7 @@
 #include "carla/road/RoadTypes.h"
 #include "carla/geom/CubicPolynomial.h"
 
-#include <unordered_map>
+#include <map>
 #include <vector>
 
 namespace carla {
@@ -32,11 +32,9 @@ namespace road {
 
     Lane *GetLane(const LaneId id);
 
-    std::unordered_map<LaneId, Lane> &GetLanes();
+    std::map<LaneId, Lane> &GetLanes();
 
-    const std::unordered_map<LaneId, Lane> &GetLanes() const {
-      return _lanes;
-    }
+    const std::map<LaneId, Lane> &GetLanes() const;
 
     std::vector<Lane *> GetLanesOfType(const std::string &type);
 
@@ -48,7 +46,7 @@ namespace road {
 
     float _s;
 
-    std::unordered_map<LaneId, Lane> _lanes;
+    std::map<LaneId, Lane> _lanes;
 
     geom::CubicPolynomial _lane_offset;
 
