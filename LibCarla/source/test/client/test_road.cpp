@@ -5,35 +5,26 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "test.h"
+#include "OpenDrive.h"
 
 #include <carla/road/MapBuilder.h>
 #include <carla/geom/Location.h>
 #include <carla/geom/Math.h>
 #include <carla/road/element/RoadInfoVisitor.h>
 #include <carla/opendrive/OpenDriveParser.h>
-#include <sstream>
-#include <fstream>
 
 using namespace carla::road;
 using namespace carla::road::element;
 using namespace carla::geom;
 using namespace carla::opendrive;
 
-TEST(road, parse_file) {
-
-  // read
-  std::ostringstream content;
-  std::ifstream file;
-  file.open("opentest.xodr", std::ios::in);
-  content << file.rdbuf();
-  file.close();
-
-  auto map = OpenDriveParser::Load(content.str());
-
-
-  ASSERT_TRUE(map.has_value());
-
+TEST(road, parse_files) {
+  for (const auto &file : util::OpenDrive::GetAvailableFiles()) {
+    auto map = OpenDriveParser::Load(util::OpenDrive::Load(file));
+    ASSERT_TRUE(map.has_value());
+  }
 }
+
 /*
 TEST(road, add_geometry) {
 

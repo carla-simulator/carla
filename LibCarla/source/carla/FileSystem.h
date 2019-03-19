@@ -7,6 +7,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 namespace carla {
 
@@ -24,6 +25,10 @@ namespace carla {
     static void ValidateFilePath(
         std::string &filepath,
         const std::string &default_extension = "");
+
+    static std::vector<std::string> ListFolder(
+        const std::string &folder_path,
+        const std::string &wildcard_pattern);
   };
 
 } // namespace carla

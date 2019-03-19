@@ -102,6 +102,28 @@ if ! { ${LIBCARLA_RELEASE} || ${LIBCARLA_DEBUG} || ${PYTHON_API_2} || ${PYTHON_A
 fi
 
 # ==============================================================================
+# -- Download Content need it by the tests -------------------------------------
+# ==============================================================================
+
+if { ${LIBCARLA_RELEASE} || ${LIBCARLA_DEBUG}; }; then
+
+  CONTENT_TAG=0.1.0
+
+  mkdir -p ${LIBCARLA_TEST_CONTENT_FOLDER}
+  pushd "${LIBCARLA_TEST_CONTENT_FOLDER}" >/dev/null
+
+  if [ "$(get_git_repository_version)" != "${CONTENT_TAG}" ]; then
+    pushd .. >/dev/null
+    rm -Rf ${LIBCARLA_TEST_CONTENT_FOLDER}
+    git clone -b ${CONTENT_TAG} https://github.com/carla-simulator/opendrive-test-files.git ${LIBCARLA_TEST_CONTENT_FOLDER}
+    popd >/dev/null
+  fi
+
+  popd >/dev/null
+
+fi
+
+# ==============================================================================
 # -- Run LibCarla tests --------------------------------------------------------
 # ==============================================================================
 
