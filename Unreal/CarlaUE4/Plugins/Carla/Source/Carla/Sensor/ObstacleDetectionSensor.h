@@ -27,8 +27,6 @@ public:
 
   void Set(const FActorDescription &Description) override;
 
-  void BeginPlay() override;
-
   void Tick(float DeltaSeconds) override;
 
 private:
@@ -38,11 +36,7 @@ private:
       AActor *Actor,
       AActor *OtherActor,
       float Distance,
-      const FHitResult &Hit,
-      float Timestamp);
-
-  UPROPERTY()
-  const UCarlaEpisode *Episode = nullptr;
+      const FHitResult &Hit);
 
 private:
 

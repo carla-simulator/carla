@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
@@ -12,7 +12,7 @@ import unittest
 from subprocess import check_output
 
 
-class testClient(unittest.TestCase):
+class TestClient(unittest.TestCase):
     def test_client_version(self):
         c = carla.Client('localhost', 8080)
         v = c.get_client_version()

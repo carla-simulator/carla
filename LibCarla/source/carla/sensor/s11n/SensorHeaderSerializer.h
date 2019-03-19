@@ -28,7 +28,11 @@ namespace s11n {
 
     constexpr static auto header_offset = sizeof(Header);
 
-    static Buffer Serialize(uint64_t index, uint64_t frame, double timestamp, rpc::Transform transform);
+    static Buffer Serialize(
+        uint64_t index,
+        uint64_t frame,
+        double timestamp,
+        rpc::Transform transform);
 
     static const Header &Deserialize(const Buffer &message) {
       return *reinterpret_cast<const Header *>(message.data());

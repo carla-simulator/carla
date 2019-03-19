@@ -13,9 +13,9 @@ namespace carla {
 namespace road {
 namespace element {
 
-  class RoadElevationInfo;
-  class RoadGeneralInfo;
   class RoadInfo;
+  class RoadInfoElevation;
+  class RoadInfoGeometry;
   class RoadInfoLane;
   class RoadInfoLaneAccess;
   class RoadInfoLaneBorder;
@@ -32,8 +32,8 @@ namespace element {
   class RoadInfoVisitor {
   public:
 
-    virtual void Visit(RoadElevationInfo &) {}
-    virtual void Visit(RoadGeneralInfo &) {}
+    virtual void Visit(RoadInfoElevation &) {}
+    virtual void Visit(RoadInfoGeometry &) {}
     virtual void Visit(RoadInfoLane &) {}
     virtual void Visit(RoadInfoLaneAccess &) {}
     virtual void Visit(RoadInfoLaneBorder &) {}
@@ -52,7 +52,12 @@ namespace element {
   class RoadInfoIterator : private RoadInfoVisitor {
   public:
 
-    static_assert(std::is_same<std::shared_ptr<RoadInfo>, typename IT::value_type>::value, "Not compatible.");
+    static_assert(std::is_same<std::unique_ptr<RoadInfo>, typename IT::value_type>::value, "Not compatible.");
+
+    using value_type = T;
+    using difference_type = typename IT::difference_type;
+    using pointer = T *;
+    using reference = T &;
 
     RoadInfoIterator(IT begin, IT end)
       : _it(begin),
@@ -79,12 +84,12 @@ namespace element {
     }
 
     /// @todo to fix
-    std::shared_ptr<T> operator*() const {
-      return std::static_pointer_cast<T>(*_it);
+    reference operator*() const {
+      return static_cast<T &>(**_it);
     }
 
-    std::shared_ptr<T> operator->() const {
-      return std::static_pointer_cast<T>(*_it);
+    pointer operator->() const {
+      return static_cast<T *>(_it->get());
     }
 
     bool operator!=(const RoadInfoIterator &rhs) const {

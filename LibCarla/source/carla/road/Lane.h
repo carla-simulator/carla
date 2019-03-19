@@ -45,6 +45,19 @@ namespace road {
 
     bool GetLevel() const;
 
+    template <typename T>
+    std::shared_ptr<const T> GetInfo (const float s) {
+      return _info.GetInfo<T>(s);
+    }
+
+    const std::vector<Lane *> &GetNextLanes() const {
+      return _next_lanes;
+    }
+
+    const std::vector<Lane *> &GetPreviousLanes() const {
+      return _prev_lanes;
+    }
+
   private:
 
     friend MapBuilder;
@@ -55,6 +68,7 @@ namespace road {
 
     InformationSet _info;
 
+    /// @todo: change to enum, see 6.5 of OpenDRIVEFormatSpecRev1.4H.pdf
     std::string _type;
 
     bool _level;

@@ -92,12 +92,12 @@ public:
 
   auto begin() const noexcept
   {
-    return carla::iterator::make_map_values_iterator(ActorDatabase.begin());
+    return carla::iterator::make_map_values_const_iterator(ActorDatabase.begin());
   }
 
   auto end() const noexcept
   {
-    return carla::iterator::make_map_values_iterator(ActorDatabase.end());
+    return carla::iterator::make_map_values_const_iterator(ActorDatabase.end());
   }
 
   /// @}
