@@ -51,9 +51,19 @@ namespace road {
 
     Lane *GetLane(const LaneId id, const float s);
 
+    Lane *GetNextLane(const float s, const LaneId lane_id);
+
+    Lane *GetPrevLane(const float s, const LaneId lane_id);
+
+    // get the start and end section with a lan id
+    LaneSection *GetStartSection(LaneId id);
+    LaneSection *GetEndSection(LaneId id);
+
     std::vector<const Road *> GetNexts() const;
 
     std::vector<const Road *> GetPrevs() const;
+
+    const geom::CubicPolynomial &GetElevationOn(const float s) const;
 
     carla::road::signal::Signal* GetSignal(const SignId id);
 
