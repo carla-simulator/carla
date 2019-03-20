@@ -217,6 +217,8 @@
 - `brake`
 - `hand_brake`
 - `reverse`
+- `gear`
+- `manual_gear_shift`
 - `__eq__(other)`
 - `__ne__(other)`
 
