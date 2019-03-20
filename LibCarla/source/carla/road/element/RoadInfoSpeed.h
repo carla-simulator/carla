@@ -12,26 +12,24 @@ namespace carla {
 namespace road {
 namespace element {
 
-  class RoadInfoSpeed : public RoadInfo {
-
+  class RoadInfoSpeed final : public RoadInfo {
   public:
 
-    void AcceptVisitor(RoadInfoVisitor &v) override final {
-      v.Visit(*this);
-    }
-
-    RoadInfoSpeed(float speed) : _speed(speed) {}
     RoadInfoSpeed(float s, float speed)
       : RoadInfo(s),
         _speed(speed) {}
 
-    float GetSpeed() {
+    void AcceptVisitor(RoadInfoVisitor &v) final {
+      v.Visit(*this);
+    }
+
+    float GetSpeed() const {
       return _speed;
     }
 
   private:
 
-    float _speed;
+    const float _speed;
   };
 
 } // namespace element

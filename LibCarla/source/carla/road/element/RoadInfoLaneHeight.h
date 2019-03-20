@@ -13,16 +13,14 @@ namespace carla {
 namespace road {
 namespace element {
 
-  // The surface of a lane may be offset from the plane defined by the reference line and the
-  // corresponding elevation and crossfall entries (e.g. pedestrian walkways are typically a few centimeters
-  // above road level). The height record provides a simplified method to describe this offset by setting an
-  // inner and outer offset from road level at discrete positions along the lane profile.
-  class RoadInfoLaneHeight : public RoadInfo {
+  /// The surface of a lane may be offset from the plane defined by the
+  /// reference line and the corresponding elevation and crossfall entries (e.g.
+  /// pedestrian walkways are typically a few centimeters above road level). The
+  /// height record provides a simplified method to describe this offset by
+  /// setting an inner and outer offset from road level at discrete positions
+  /// along the lane profile.
+  class RoadInfoLaneHeight final : public RoadInfo {
   public:
-
-    void AcceptVisitor(RoadInfoVisitor &v) final {
-      v.Visit(*this);
-    }
 
     RoadInfoLaneHeight(
         float s, // start position relative to the position of the preceding lane section
@@ -32,20 +30,25 @@ namespace element {
         _inner(inner),
         _outer(outer) {}
 
+    void AcceptVisitor(RoadInfoVisitor &v) final {
+      v.Visit(*this);
+    }
+
+    /// Inner offset from road level.
     float GetInner() const {
       return _inner;
     }
 
+    /// Outer offset from road level.
     float GetOuter() const {
       return _outer;
     }
 
   private:
 
-    float _inner; // inner offset from road level
+    const float _inner;
 
-    float _outer; // outer offset from road level
-
+    const float _outer;
   };
 
 } // namespace element

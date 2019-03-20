@@ -13,26 +13,25 @@ namespace carla {
 namespace road {
 namespace element {
 
-  class RoadInfoLaneMaterial : public RoadInfo {
-
+  class RoadInfoLaneMaterial final : public RoadInfo {
   public:
+
+    RoadInfoLaneMaterial(
+        float s,   // start position relative to the position of the preceding
+                   // lane section
+        std::string surface,
+        float friction,
+        float roughness)
+      : RoadInfo(s),
+        _surface(std::move(surface)),
+        _friction(friction),
+        _roughness(roughness) {}
 
     void AcceptVisitor(RoadInfoVisitor &v) override final {
       v.Visit(*this);
     }
 
-    RoadInfoLaneMaterial(
-        float s,   // start position relative to the position of the preceding
-                    // lane section
-        std::string surface,
-        float friction,
-        float roughness)
-      : RoadInfo(s),
-        _surface(surface),
-        _friction(friction),
-        _roughness(roughness) {}
-
-    const std::string& GetSurface() const {
+    const std::string &GetSurface() const {
       return _surface;
     }
 
@@ -46,11 +45,11 @@ namespace element {
 
   private:
 
-    std::string _surface;
+    const std::string _surface;
 
-    float _friction;
+    const float _friction;
 
-    float _roughness;
+    const float _roughness;
   };
 
 } // namespace element
