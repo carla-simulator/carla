@@ -63,6 +63,8 @@ namespace road {
 
     std::vector<const Road *> GetPrevs() const;
 
+    const geom::CubicPolynomial &GetElevationOn(const float s) const;
+
     carla::road::signal::Signal* GetSignal(const SignId id);
 
     carla::road::signal::SignalReference* GetSignalRef(const SignRefId id);

@@ -8,6 +8,9 @@
 
 #include "carla/Exception.h"
 #include "carla/road/element/LaneCrossingCalculator.h"
+#include "carla/road/element/RoadInfoGeometry.h"
+#include "carla/road/element/RoadInfoLaneWidth.h"
+#include "carla/geom/Math.h"
 
 #include <stdexcept>
 
@@ -69,6 +72,29 @@ namespace road {
     }
   }
 
+  /// returns a pair containing first = width, second = tangent
+  template <typename T>
+  static std::pair<float, float> ComputeTotalLaneWidth(
+    const T container, const float s, const LaneId lane_id) {
+    const bool negative_lane_id = lane_id < 0;
+    float dist = 0.0;
+    float tangent = 0.0;
+    for (const auto &lane : container) {
+      const auto current_polynomial =
+          lane.second->template GetInfo<element::RoadInfoLaneWidth>(s)->GetPolynomial();
+      float current_dist = current_polynomial.Evaluate(s);
+      if (lane.first != lane_id) {
+        dist += negative_lane_id ? current_dist : - current_dist;
+      } else if (lane.first == lane_id) {
+        current_dist *= 0.5;
+        dist += negative_lane_id ? current_dist : - current_dist;
+        tangent = current_polynomial.Tangent(s);
+        break;
+      }
+    }
+    return std::make_pair(dist, tangent);
+  }
+
   // ===========================================================================
   // -- Map: Geometry ----------------------------------------------------------
   // ===========================================================================
@@ -107,30 +133,30 @@ namespace road {
           nearest_dist[i] = current_dist.second;
           ids[i] = road->GetId();
           dists[i] = current_dist.first;
-
           break;
         }
       }
     }
 
     // search for the nearest lane in nearest_dist
-    // Waypoint waypoint;
-    // float nearest_lane_dist = std::numeric_limits<float>::max();
-    // for (int i = 0; i < max_nearest_allowed; ++i) {
-    //   auto lane_dist = _data.GetRoad(ids[i])->GetNearestLane(dists[i], pos);
+    Waypoint waypoint;
+    auto nearest_lane_dist = std::numeric_limits<float>::max();
+    for (int i = 0; i < max_nearest_allowed; ++i) {
+      auto lane_dist = _data.GetRoad(ids[i])->GetNearestLane(dists[i], pos);
 
-    //   if (lane_dist.second < nearest_lane_dist) {
-    //     nearest_lane_dist = lane_dist.second;
-    //     waypoint.lane_id = lane_dist.first;
-    //     waypoint.road_id = ids[i];
-    //     waypoint.dist = dists[i];
-    //   }
-    // }
+      if (lane_dist.second < nearest_lane_dist) {
+        nearest_lane_dist = lane_dist.second;
+        waypoint.lane_id = lane_dist.first->GetId();
+        waypoint.road_id = ids[i];
+        waypoint.s = dists[i];
+      }
+    }
 
-    // THROW_INVALID_INPUT_ASSERT(_dist <= _map->GetData().GetRoad(_road_id)->GetLength());
-    // THROW_INVALID_INPUT_ASSERT(_lane_id != 0);
+    THROW_INVALID_INPUT_ASSERT(
+        waypoint.s <= _data.GetRoad(waypoint.road_id)->GetLength());
+    THROW_INVALID_INPUT_ASSERT(waypoint.lane_id != 0);
 
-    return {}; //Waypoint(shared_from_this(), loc);
+    return waypoint;
   }
 
   boost::optional<Waypoint> Map::GetWaypoint(const geom::Location &/* loc */) const {
@@ -143,6 +169,61 @@ namespace road {
     // }
     throw_exception(std::runtime_error("not implemented"));
     return {};
+  }
+
+  geom::Transform Map::ComputeTransform(Waypoint waypoint) const {
+    // lane_id can't be 0
+    THROW_INVALID_INPUT_ASSERT(waypoint.lane_id != 0);
+
+    const auto road = _data.GetRoad(waypoint.road_id);
+    // road cannot be nullptr
+    THROW_INVALID_INPUT_ASSERT(road != nullptr);
+    // must s be smaller (or eq) than road lenght and bigger (or eq) than 0?
+    // THROW_INVALID_INPUT_ASSERT(waypoint.s <= road->GetLength());
+    // THROW_INVALID_INPUT_ASSERT(waypoint.s >= 0.0f);
+
+    const std::map<LaneId, const Lane *> lanes = road->GetLanesAt(waypoint.s);
+    // check that lane_id exists on the current s
+    THROW_INVALID_INPUT_ASSERT(waypoint.lane_id > lanes.begin()->first);
+    THROW_INVALID_INPUT_ASSERT(waypoint.lane_id <= lanes.end()->first);
+
+    float lane_width = 0;
+    float lane_tangent = 0;
+    if (waypoint.lane_id < 0) {
+      // right lane
+      const auto side_lanes = MakeListView(
+          std::make_reverse_iterator(lanes.lower_bound(0)), lanes.rend());
+      const auto computed_width =
+          ComputeTotalLaneWidth(side_lanes, waypoint.s, waypoint.lane_id);
+      lane_width = computed_width.first;
+      lane_tangent = computed_width.second;
+    } else {
+      // left lane
+      const auto side_lanes = MakeListView(lanes.lower_bound(1), lanes.end());
+      const auto computed_width =
+          ComputeTotalLaneWidth(side_lanes, waypoint.s, waypoint.lane_id);
+      lane_width = computed_width.first;
+      lane_tangent = computed_width.second;
+    }
+
+    // get a directed pooint in s and apply the computed lateral offet
+    element::DirectedPoint dp = road->GetDirectedPointIn(waypoint.s);
+
+    geom::Rotation rot(
+        geom::Math::to_degrees(dp.pitch),
+        geom::Math::to_degrees(dp.tangent),
+        0.0);
+
+    dp.ApplyLateralOffset(lane_width);
+
+    if (waypoint.lane_id > 0) {
+      rot.yaw += 180.0f + lane_tangent;
+      rot.pitch = 360.0f - rot.pitch;
+    } else {
+      rot.yaw -= lane_tangent;
+    }
+
+    return geom::Transform(dp.location, rot);
   }
 
   // ===========================================================================
