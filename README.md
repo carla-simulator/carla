@@ -24,8 +24,7 @@ If you want to benchmark your model in the same conditions as in our CoRL’17
 paper, check out
 [Benchmarking](https://github.com/carla-simulator/driving-benchmarks).
 
-[**Get CARLA overnight build**](http://158.109.9.218:8080/job/carla/job/master/25/artifact/Dist/CARLA_eff21e2.tar.gz)
-
+[**Get CARLA overnight build**](http://carla-assets-internal.s3.amazonaws.com/Releases/Linux/Dev/CARLA_Latest.tar.gz)
 
 ## CARLA Ecosystem
 Repositories associated to the CARLA simulation platform:
