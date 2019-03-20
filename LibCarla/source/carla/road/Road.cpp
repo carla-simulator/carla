@@ -11,9 +11,11 @@
 #include "carla/Logging.h"
 #include "carla/ListView.h"
 #include "carla/geom/Location.h"
+#include "carla/geom/CubicPolynomial.h"
 #include "carla/road/element/RoadInfoGeometry.h"
 #include "carla/road/element/RoadInfoLaneOffset.h"
 #include "carla/road/element/RoadInfoLaneWidth.h"
+#include "carla/road/element/RoadInfoElevation.h"
 
 namespace carla {
 namespace road {
@@ -56,6 +58,10 @@ namespace road {
       vec.emplace_back(_map_data->GetRoad(prev));
     }
     return vec;
+  }
+
+  const geom::CubicPolynomial &Road::GetElevationOn(const float s) const {
+    return GetInfo<element::RoadInfoElevation>(s)->GetPolynomial();
   }
 
   Lane *Road::GetLane(const LaneId id, const float s) {
@@ -160,6 +166,10 @@ namespace road {
 
     element::DirectedPoint p = geometry->_geom->PosFromDist(clamped_s);
     p.ApplyLateralOffset(offset);
+
+    const auto elevation_info = GetElevationOn(s);
+    p.location.z = elevation_info.Evaluate(s);
+    p.pitch = elevation_info.Tangent(s);
 
     return p;
   }
