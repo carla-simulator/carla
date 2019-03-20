@@ -13,30 +13,31 @@ namespace carla {
 namespace road {
 namespace element {
 
-  // This record defines rules that can be applied to lanes to describe additonal properties
-  // not covered by the other attributes.
-  class RoadInfoLaneRule : public RoadInfo {
-
+  /// This record defines rules that can be applied to lanes to describe
+  /// additonal properties not covered by the other attributes.
+  class RoadInfoLaneRule final : public RoadInfo {
   public:
+
+    RoadInfoLaneRule(
+        float s,   // start position relative to the position of the preceding
+                   // lane section
+        std::string value)
+      : RoadInfo(s),
+        _value(std::move(value)) {}
 
     void AcceptVisitor(RoadInfoVisitor &v) override final {
       v.Visit(*this);
     }
 
-    RoadInfoLaneRule(
-        float s,   // start position relative to the position of the preceding lane section
-        std::string value)
-      : RoadInfo(s),
-        _value(value) {}
-
-    std::string GetValue() const {
+    /// Recommended values: No Stopping At Any Time, Disabled Parking, and Car
+    /// Pool.
+    const std::string &GetValue() const {
       return _value;
     }
 
   private:
 
-    std::string _value; // Recommended values: No Stopping At Any Time, Disabled Parking and Car Pool
-
+    const std::string _value;
   };
 
 } // namespace element
