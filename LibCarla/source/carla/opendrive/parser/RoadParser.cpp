@@ -141,8 +141,26 @@ namespace parser {
             section.lanes.emplace_back(lane);
           }
 
-          // center lane (we don't need this info, the Id is always 0 and has no pre. and successor)
-          // section.lanes.emplace_back( { 0, 0, 0 });
+          // center lane
+          for (pugi::xml_node node_lane : node_section.child("center").children("lane")) {
+            Lane lane { 0, "none", false, 0, 0 };
+
+            lane.id = node_lane.attribute("id").as_int();
+            lane.type = node_lane.attribute("type").value();
+            lane.level = node_lane.attribute("level").as_bool();
+
+            // link (probably it never exists)
+            pugi::xml_node link2 = node_lane.child("link");
+            if (link2) {
+              if (link2.child("predecessor"))
+                lane.predecessor = link2.child("predecessor").attribute("id").as_int();
+              if (link2.child("successor"))
+                lane.successor = link2.child("successor").attribute("id").as_int();
+            }
+
+            // add it
+            section.lanes.emplace_back(lane);
+          }
 
           // right lane
           for (pugi::xml_node node_lane : node_section.child("right").children("lane")) {
