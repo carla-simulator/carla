@@ -38,7 +38,7 @@ void test_geometry(const pugi::xml_document &xml, boost::optional<Map>& map)
       size_t total_geometries = 0;
       for (pugi::xml_node geometry_node : plan_view_nodes.children("geometry")){
         float s = geometry_node.attribute("s").as_float();
-        auto geometry = map->_data.GetRoad(road_id)->GetInfo<RoadInfoGeometry>(s);
+        auto geometry = map->GetMap().GetRoad(road_id)->GetInfo<RoadInfoGeometry>(s);
         if (geometry != nullptr)
           ++total_geometries;
       }
@@ -55,7 +55,7 @@ void test_roads(const pugi::xml_document &xml, boost::optional<Map>& map)
   // Check total Roads
   auto roads_parser = open_drive_node.children("road");
   size_t total_roads_parser = std::distance(roads_parser.begin(), roads_parser.end());
-  size_t total_roads = map->_data.GetRoads().size();
+  size_t total_roads = map->GetMap().GetRoads().size();
   ASSERT_EQ(total_roads, total_roads_parser);
 
   for (pugi::xml_node road_node : roads_parser) {
@@ -66,7 +66,7 @@ void test_roads(const pugi::xml_document &xml, boost::optional<Map>& map)
       // Check total Lane Sections
       auto lane_sections_parser = lanes_node.children("laneSection");
       size_t total_lane_sections_parser = std::distance(lane_sections_parser.begin(), lane_sections_parser.end());
-      size_t total_lane_sections = map->_data.GetRoad(road_id)->GetLaneSections().size();
+      size_t total_lane_sections = map->GetMap().GetRoad(road_id)->GetLaneSections().size();
       ASSERT_EQ(total_lane_sections, total_lane_sections_parser);
 
       for (pugi::xml_node lane_section_node : lane_sections_parser) {
@@ -74,8 +74,8 @@ void test_roads(const pugi::xml_document &xml, boost::optional<Map>& map)
         // Check total Lanes
         float s = lane_section_node.attribute("s").as_float();
 
-        auto ls_begin = map->_data.GetRoad(road_id)->GetLaneSectionsAt(s).begin();
-        auto ls_end = map->_data.GetRoad(road_id)->GetLaneSectionsAt(s).end();
+        auto ls_begin = map->GetMap().GetRoad(road_id)->GetLaneSectionsAt(s).begin();
+        auto ls_end = map->GetMap().GetRoad(road_id)->GetLaneSectionsAt(s).end();
         size_t total_lanes = 0u;
         for (auto& it = ls_begin; it != ls_end; ++it) {
           total_lanes = it->GetLanes().size();
@@ -98,7 +98,7 @@ void test_junctions(const pugi::xml_document &xml, boost::optional<Map>& map)
   pugi::xml_node open_drive_node = xml.child("OpenDRIVE");
 
   // Check total number of junctions
-  auto& junctions = map->_data.GetJunctions();
+  auto& junctions = map->GetMap().GetJunctions();
   size_t total_junctions_parser = std::distance(open_drive_node.children("junction").begin(), open_drive_node.children("junction").end());
 
   ASSERT_EQ(junctions.size(), total_junctions_parser);
@@ -132,7 +132,7 @@ void print_roads(boost::optional<Map>& map) {
   std::ofstream file;
   file.open("roads.txt", std::ios::out | std::ios::trunc);
 
-  for (auto &road : map->_data.GetRoads()) {
+  for (auto &road : map->GetMap().GetRoads()) {
     file << "Road: " << road.second.GetId() << std::endl;
     for (auto &section : road.second.GetLaneSections()) {
       file << " Section: " << section.GetDistance() << std::endl;
@@ -184,7 +184,7 @@ void test_junctions(boost::optional<Map>& map) {
 
   Junction junction_1 {80u, {connection} };
 
-  auto& junctions = map->_data.GetJunctions();
+  auto& junctions = map->GetMap().GetJunctions();
   for (auto& junction : junctions) {
     ASSERT_EQ(junction.second.GetId(), junction_1.id);
     ASSERT_EQ(junction.second.GetConnection(1)->id, 1u);
