@@ -39,15 +39,15 @@ namespace road {
 
     std::unordered_map<JuncId, Junction> &GetJunctions();
 
-    Road *GetRoad(RoadId id);
+    Road *GetRoad(const RoadId id);
 
-    const Road *GetRoad(RoadId id) const;
+    const Road *GetRoad(const RoadId id) const;
 
     Junction *GetJunction(JuncId id);
 
-    Lane *GetLane(RoadId road_id, LaneId lane_id, float s);
+    Lane *GetLane(const RoadId road_id, LaneId lane_id, float s);
 
-    const Lane *GetLane(RoadId road_id, LaneId lane_id, float s) const;
+    const Lane *GetLane(const RoadId road_id, LaneId lane_id, float s) const;
 
     template <typename T>
     const std::shared_ptr<const T> GetRoadInfo(
