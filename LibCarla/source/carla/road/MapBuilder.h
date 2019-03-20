@@ -333,9 +333,9 @@ namespace road {
 
     // return a list of pointers to all lanes from a lane (using road and junction info)
     std::vector<Lane *> GetLaneNext(RoadId road_id, float s, LaneId lane_id);
+    std::vector<Lane *> GetLanePrevious(RoadId road_id, float s, LaneId lane_id);
 
     std::vector<std::pair<RoadId, LaneId>> GetJunctionLanes(RoadId junction_id, RoadId road_id, LaneId lane_id);
-
 
   private:
 

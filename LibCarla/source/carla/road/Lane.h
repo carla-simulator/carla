@@ -61,6 +61,14 @@ namespace road {
       return _prev_lanes;
     }
 
+    LaneId GetSuccessor() const {
+      return _successor;
+    }
+
+    LaneId GetPredecessor() const {
+      return _predecessor;
+    }
+
     float GetDistance() const;
 
   private:
@@ -77,6 +85,9 @@ namespace road {
     std::string _type;
 
     bool _level;
+
+    LaneId _successor;
+    LaneId _predecessor;
 
     std::vector<Lane *> _next_lanes;
 

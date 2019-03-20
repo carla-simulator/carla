@@ -99,6 +99,10 @@ namespace road {
     /// map. The waypoints are placed at the entrance of each lane.
     std::vector<std::pair<Waypoint, Waypoint>> GenerateTopology() const;
 
+    MapData &GetMap() {
+      return _data;
+    }
+
   private:
 
     const Lane *GetLane(Waypoint waypoint) const;
