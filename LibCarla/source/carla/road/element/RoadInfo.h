@@ -24,16 +24,18 @@ namespace element {
 
     virtual void AcceptVisitor(RoadInfoVisitor &) = 0;
 
+    /// Distance from road's start location.
     float GetDistance() const {
-      return s;
+      return _s;
     }
-
-    // distance from road's start location
-    float s;
 
   protected:
 
-    RoadInfo(float distance = 0) : s(distance) {}
+    RoadInfo(float distance = 0.0f) : _s(distance) {}
+
+  private:
+
+    float _s;
   };
 
 } // namespace element
