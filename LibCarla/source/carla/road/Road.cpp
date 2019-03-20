@@ -164,7 +164,7 @@ namespace road {
     const auto lane_offset = _info.GetInfo<element::RoadInfoLaneOffset>(clamped_s);
     const float offset = lane_offset->GetPolynomial().Evaluate(clamped_s);
 
-    element::DirectedPoint p = geometry->_geom->PosFromDist(clamped_s);
+    element::DirectedPoint p = geometry->GetGeometry().PosFromDist(clamped_s);
     p.ApplyLateralOffset(offset);
 
     const auto elevation_info = GetElevationOn(s);
@@ -181,7 +181,7 @@ namespace road {
     decltype(geom_info_list)::iterator nearest_geom = geom_info_list.end();
 
     for (auto g = geom_info_list.begin(); g != geom_info_list.end(); ++g) {
-      auto dist = (*g)->_geom->DistanceTo(loc);
+      auto dist = (*g)->GetGeometry().DistanceTo(loc);
       if (dist.second < last.second) {
         last = dist;
         nearest_geom = g;
@@ -191,7 +191,7 @@ namespace road {
     for (auto g = geom_info_list.begin();
         g != geom_info_list.end() && g != nearest_geom;
         ++g) {
-      last.first += (*g)->_geom->GetLength();
+      last.first += (*g)->GetGeometry().GetLength();
     }
 
     return last;

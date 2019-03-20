@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "carla/Debug.h"
+
 #include <iterator>
 #include <memory>
 
@@ -64,6 +66,7 @@ namespace element {
         _end(end) {
       _success = false;
       for (; !IsAtEnd(); ++_it) {
+        DEBUG_ASSERT((*_it) != nullptr);
         (*_it)->AcceptVisitor(*this);
         if (_success) {
           break;
@@ -78,17 +81,19 @@ namespace element {
         if (IsAtEnd()) {
           break;
         }
+        DEBUG_ASSERT((*_it) != nullptr);
         (*_it)->AcceptVisitor(*this);
       }
       return *this;
     }
 
-    /// @todo to fix
     reference operator*() const {
+      DEBUG_ASSERT((*_it) != nullptr);
       return static_cast<T &>(**_it);
     }
 
     pointer operator->() const {
+      DEBUG_ASSERT((*_it) != nullptr);
       return static_cast<T *>(_it->get());
     }
 
