@@ -311,10 +311,8 @@ namespace road {
     lane->_lane_section = section;
     lane->_level = lane_level;
     lane->_type = lane_type;
-    // we save id as pointers temporally, later will be processed in the right
-    // way
-    lane->_next_lanes.emplace_back(reinterpret_cast<Lane *>(successor));
-    lane->_prev_lanes.emplace_back(reinterpret_cast<Lane *>(predecessor));
+    lane->_successor = successor;
+    lane->_predecessor = predecessor;
 
     return lane;
   }
@@ -498,28 +496,91 @@ namespace road {
     // get the lane
     Lane *lane = road->GetLane(lane_id, s);
 
-    // successor and predecessor
-    int64_t next = reinterpret_cast<int64_t>(lane->_next_lanes[0]);
-    // int32_t prev = reinterpret_cast<int32_t>(lane->_prev_lanes[0]);
+    // successor and predecessor (road and lane)
+    LaneId next;
+    RoadId next_road;
+    if (lane_id < 0) {
+      next_road = road->_nexts[0];
+      next = lane->GetSuccessor();
+    } else {
+      next_road = road->_prevs[0];
+      next = lane->GetPredecessor();
+    }
 
-    if (s > 0 and road->_lane_sections.upper_bound(s) != road->_lane_sections.end()) {
-      // change to next / prev section
-      if (lane->_id < 0)
-        result.push_back(road->GetNextLane(s, next));
-      else
-        result.push_back(road->GetPrevLane(s, next));
+    // check if we are in a lane section in the middle
+    if ((lane_id > 0 && s > 0) || (lane_id < 0 && road->_lane_sections.upper_bound(s) != road->_lane_sections.end())) {
+      // check if lane has a next link (if not, it deads in the middle section)
+      if (next != 0) {
+        // change to next / prev section
+        if (lane->_id < 0) {
+          result.push_back(road->GetNextLane(s, next));
+        } else {
+          result.push_back(road->GetPrevLane(s, next));
+        }
+      }
     }
     else {
       // change to another road / junction
       if (next != 0) {
         // single road
-        result.push_back(GetEdgeLanePointer(road->_nexts[0], next < 0, next));
-      }
-      else {
+        result.push_back(GetEdgeLanePointer(next_road, (next * lane_id > 0), next));
+      } else {
         // several roads (junction)
-        auto options = GetJunctionLanes(road->_nexts[0], road_id, lane_id);
+        auto options = GetJunctionLanes(next_road, road_id, lane_id);
         for (auto opt : options) {
-          result.push_back(GetEdgeLanePointer(opt.first, opt.second < 0, opt.second));
+          result.push_back(GetEdgeLanePointer(opt.first, (opt.second * lane_id > 0), opt.second));
+        }
+      }
+    }
+
+    return result;
+  }
+
+  // return a list of pointers to all lanes from a lane (using road and junction info)
+  std::vector<Lane *> MapBuilder::GetLanePrevious(RoadId road_id, float s, LaneId lane_id) {
+    std::vector<Lane *> result;
+
+    // get the road
+    Road *road = _map_data.GetRoad(road_id);
+    if (road == nullptr)
+      return result;
+
+    // get the lane
+    Lane *lane = road->GetLane(lane_id, s);
+
+    // successor and predecessor (road and lane)
+    LaneId prev;
+    RoadId prev_road;
+    if (lane_id < 0) {
+      prev_road = road->_prevs[0];
+      prev = lane->GetPredecessor();
+    } else {
+      prev_road = road->_nexts[0];
+      prev = lane->GetSuccessor();
+    }
+
+    // check if we are in a lane section in the middle
+    if ((lane_id < 0 && s > 0) || (lane_id > 0 && road->_lane_sections.upper_bound(s) != road->_lane_sections.end())) {
+      // check if lane has a prev link (if not, it deads in the middle section)
+      if (prev != 0) {
+        // change to next / prev section
+        if (lane->_id < 0) {
+          result.push_back(road->GetPrevLane(s, prev));
+        } else {
+          result.push_back(road->GetNextLane(s, prev));
+        }
+      }
+    }
+    else {
+      // change to another road / junction
+      if (prev != 0) {
+        // single road
+        result.push_back(GetEdgeLanePointer(prev_road, (prev * lane_id > 0), prev));
+      } else {
+        // several roads (junction)
+        auto options = GetJunctionLanes(prev_road, road_id, lane_id);
+        for (auto opt : options) {
+          result.push_back(GetEdgeLanePointer(opt.first, (opt.second * lane_id > 0), opt.second));
         }
       }
     }
@@ -563,6 +624,7 @@ namespace road {
         for (auto &lane : section.second._lanes) {
           // assign the next lane pointers
           lane.second._next_lanes = GetLaneNext(road.first, section.second._s, lane.second._id);
+          lane.second._prev_lanes = GetLanePrevious(road.first, section.second._s, lane.second._id);
         }
       }
     }
