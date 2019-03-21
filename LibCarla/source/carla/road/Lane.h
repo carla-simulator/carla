@@ -71,6 +71,8 @@ namespace road {
 
     float GetDistance() const;
 
+    float GetLength() const;
+
   private:
 
     friend MapBuilder;
