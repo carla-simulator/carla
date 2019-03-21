@@ -263,11 +263,11 @@ TEST(road, iterate_waypoints) {
         ASSERT_TRUE(map.IsValid(next));
         auto right = map.GetRight(next);
         if (right.has_value()) {
-          ASSERT_TRUE(map.IsValid(right));
+          ASSERT_TRUE(map.IsValid(*right));
         }
         auto left = map.GetLeft(next);
         if (left.has_value()) {
-          ASSERT_TRUE(map.IsValid(left));
+          ASSERT_TRUE(map.IsValid(*left));
         }
       }
     }
