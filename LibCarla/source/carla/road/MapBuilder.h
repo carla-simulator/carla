@@ -31,6 +31,7 @@ namespace road {
 
     carla::road::LaneSection *AddRoadSection(
         carla::road::Road *road,
+        const SectionId id,
         const float s);
 
     carla::road::Lane *AddRoadSectionLane(

@@ -17,6 +17,8 @@ namespace road {
 
   using LaneId = int32_t;
 
+  using SectionId = uint32_t;
+
   using ObjId = uint32_t;
 
   using SignId = uint32_t;
