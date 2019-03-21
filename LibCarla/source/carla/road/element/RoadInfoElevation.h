@@ -13,12 +13,8 @@ namespace carla {
 namespace road {
 namespace element {
 
-  class RoadInfoElevation : public RoadInfo {
+  class RoadInfoElevation final : public RoadInfo {
   public:
-
-    void AcceptVisitor(RoadInfoVisitor &v) final {
-      v.Visit(*this);
-    }
 
     RoadInfoElevation(
         float s,
@@ -29,8 +25,13 @@ namespace element {
       : RoadInfo(s),
         _elevation(a, b, c, d, s) {}
 
-    float Evaluate(const float dist, float *out_tan) const {
-      *out_tan = _elevation.Tangent(dist);
+    void AcceptVisitor(RoadInfoVisitor &v) final {
+      v.Visit(*this);
+    }
+
+    /// @todo unused? you can use the polynomial directly.
+    float Evaluate(const float dist, float &out_tan) const {
+      out_tan = _elevation.Tangent(dist);
       return _elevation.Evaluate(dist);
     }
 
@@ -41,7 +42,6 @@ namespace element {
   private:
 
     const geom::CubicPolynomial _elevation;
-
   };
 
 } // namespace element

@@ -20,6 +20,7 @@
 #include "carla/road/element/RoadInfoMarkTypeLine.h"
 #include "carla/road/element/RoadInfoSpeed.h"
 #include "carla/road/element/RoadInfoVisitor.h"
+#include "carla/road/InformationSet.h"
 #include "carla/road/general/Validity.h"
 #include "carla/road/signal/Signal.h"
 #include "carla/road/signal/SignalReference.h"
@@ -37,6 +38,14 @@ namespace road {
 
     CreatePointersBetweenRoadSegments();
 
+    for (auto &&info : _temp_road_info_container) {
+      info.first->_info = InformationSet(std::move(info.second));
+    }
+
+    for (auto &&info : _temp_lane_info_container) {
+      info.first->_info = InformationSet(std::move(info.second));
+    }
+
     // remove temporal already used information
     _temp_road_info_container.clear();
     _temp_lane_info_container.clear();
@@ -49,7 +58,7 @@ namespace road {
 
   // called from profiles parser
   void MapBuilder::AddRoadElevationProfile(
-      const Road* road,
+      Road* road,
       const float s,
       const float a,
       const float b,
@@ -61,7 +70,7 @@ namespace road {
   }
 
   // void MapBuilder::AddRoadLateralSuperElevation(
-  //     const Road* road,
+  //     Road* road,
   //     const float s,
   //     const float a,
   //     const float b,
@@ -69,7 +78,7 @@ namespace road {
   //     const float d) {}
 
   // void MapBuilder::AddRoadLateralCrossfall(
-  //     const Road* road,
+  //     Road* road,
   //     const float s,
   //     const float a,
   //     const float b,
@@ -79,14 +88,14 @@ namespace road {
 
   // called from lane parser
   void MapBuilder::CreateLaneAccess(
-      const Lane *lane,
+      Lane *lane,
       const float s,
       const std::string restriction) {
     _temp_lane_info_container[lane].emplace_back(std::make_unique<RoadInfoLaneAccess>(s, restriction));
   }
 
   void MapBuilder::CreateLaneBorder(
-      const Lane *lane,
+      Lane *lane,
       const float s,
       const float a,
       const float b,
@@ -96,7 +105,7 @@ namespace road {
   }
 
   void MapBuilder::CreateLaneHeight(
-      const Lane *lane,
+      Lane *lane,
       const float s,
       const float inner,
       const float outer) {
@@ -104,7 +113,7 @@ namespace road {
   }
 
   void MapBuilder::CreateLaneMaterial(
-      const Lane *lane,
+      Lane *lane,
       const float s,
       const std::string surface,
       const float friction,
@@ -113,26 +122,15 @@ namespace road {
         roughness));
   }
 
-  void MapBuilder::CreateSectionOffset(
-      const Road *road,
-      const float s,
-      const float a,
-      const float b,
-      const float c,
-      const float d) {
-    _temp_road_info_container[road].emplace_back(std::make_unique<RoadInfoLaneOffset>(s, a, b, c, d));
-  }
-
   void MapBuilder::CreateLaneRule(
-      const Lane *lane,
+      Lane *lane,
       const float s,
       const std::string value) {
-
     _temp_lane_info_container[lane].emplace_back(std::make_unique<RoadInfoLaneRule>(s, value));
   }
 
   void MapBuilder::CreateLaneVisibility(
-      const Lane *lane,
+      Lane *lane,
       const float s,
       const float forward,
       const float back,
@@ -143,7 +141,7 @@ namespace road {
   }
 
   void MapBuilder::CreateLaneWidth(
-      const Lane *lane,
+      Lane *lane,
       const float s,
       const float a,
       const float b,
@@ -153,7 +151,7 @@ namespace road {
   }
 
   void MapBuilder::CreateRoadMark(
-      const Lane *lane,
+      Lane *lane,
       const int road_mark_id,
       const float s,
       const std::string type,
@@ -184,7 +182,7 @@ namespace road {
   }
 
   void MapBuilder::CreateRoadMarkTypeLine(
-      const Lane *lane,
+      Lane *lane,
       const int road_mark_id,
       const float length,
       const float space,
@@ -192,7 +190,6 @@ namespace road {
       const float s,
       const std::string rule,
       const float width) {
-
     auto it = MakeRoadInfoIterator<RoadInfoMarkRecord>(_temp_lane_info_container[lane]);
     for (; !it.IsAtEnd(); ++it) {
       if(it->GetRoadMarkId() == road_mark_id) {
@@ -204,17 +201,8 @@ namespace road {
 
   }
 
-  void MapBuilder::CreateRoadSpeed(
-      Road *road,
-      const float s,
-      const std::string /*type*/,
-      const float max,
-      const std::string /*unit*/) {
-    _temp_road_info_container[road].emplace_back(std::make_unique<RoadInfoSpeed>(s, max));
-  }
-
   void MapBuilder::CreateLaneSpeed(
-      const Lane *lane,
+      Lane *lane,
       const float s,
       const float max,
       const std::string /*unit*/) {
@@ -282,7 +270,7 @@ namespace road {
   }
 
   carla::road::LaneSection *MapBuilder::AddRoadSection(
-      carla::road::Road *road,
+      Road *road,
       const float s) {
 
     // add it
@@ -318,7 +306,7 @@ namespace road {
   }
 
   void MapBuilder::AddRoadGeometryLine(
-      carla::road::Road *road,
+      Road *road,
       const float s,
       const float x,
       const float y,
@@ -334,8 +322,27 @@ namespace road {
         std::move(line_geometry))));
   }
 
+  void MapBuilder::CreateRoadSpeed(
+      Road *road,
+      const float s,
+      const std::string /*type*/,
+      const float max,
+      const std::string /*unit*/) {
+    _temp_road_info_container[road].emplace_back(std::make_unique<RoadInfoSpeed>(s, max));
+  }
+
+  void MapBuilder::CreateSectionOffset(
+      Road *road,
+      const float s,
+      const float a,
+      const float b,
+      const float c,
+      const float d) {
+    _temp_road_info_container[road].emplace_back(std::make_unique<RoadInfoLaneOffset>(s, a, b, c, d));
+  }
+
   void MapBuilder::AddRoadGeometryArc(
-      carla::road::Road *road,
+      Road *road,
       const float s,
       const float x,
       const float y,

@@ -13,13 +13,8 @@ namespace carla {
 namespace road {
 namespace element {
 
-  class RoadInfoMarkTypeLine : public RoadInfo {
-
+  class RoadInfoMarkTypeLine final : public RoadInfo {
   public:
-
-    void AcceptVisitor(RoadInfoVisitor &v) override final {
-      v.Visit(*this);
-    }
 
     RoadInfoMarkTypeLine(
         float s,
@@ -36,6 +31,10 @@ namespace element {
         _tOffset(tOffset),
         _rule(rule),
         _width(width) {}
+
+    void AcceptVisitor(RoadInfoVisitor &v) final {
+      v.Visit(*this);
+    }
 
     int GetRoadMarkId() const {
       return _road_mark_id;
@@ -63,18 +62,17 @@ namespace element {
 
   private:
 
-    int _road_mark_id;
+    const int _road_mark_id;
 
-    float _length;
+    const float _length;
 
-    float _space;
+    const float _space;
 
-    float _tOffset;
+    const float _tOffset;
 
-    std::string _rule;
+    const std::string _rule;
 
-    float _width;
-
+    const float _width;
   };
 
 } // namespace element

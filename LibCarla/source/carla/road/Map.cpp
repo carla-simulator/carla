@@ -159,16 +159,18 @@ namespace road {
     return waypoint;
   }
 
-  boost::optional<Waypoint> Map::GetWaypoint(const geom::Location &/* loc */) const {
-    // Waypoint w = Waypoint(shared_from_this(), loc);
-    // auto d = geom::Math::Distance2D(w.ComputeTransform().location, loc);
-    // const auto inf = _data.GetRoad(w._road_id)->GetInfo<RoadInfoLane>(w._dist);
+  boost::optional<Waypoint> Map::GetWaypoint(const geom::Location &pos) const {
+    Waypoint w = GetClosestWaypointOnRoad(pos);
+    const auto dist = geom::Math::Distance2D(ComputeTransform(w).location, pos);
+    const auto lane_width_info = GetLane(w)->GetInfo<RoadInfoLaneWidth>(w.s);
+    const auto half_lane_width =
+        lane_width_info->GetPolynomial().Evaluate(w.s) * 0.5f;
 
-    // if (d < inf->getLane(w._lane_id)->_width * 0.5) {
-    //   return w;
-    // }
-    throw_exception(std::runtime_error("not implemented"));
-    return {};
+    if (dist < half_lane_width) {
+      return w;
+    }
+
+    return boost::optional<Waypoint>{};
   }
 
   geom::Transform Map::ComputeTransform(Waypoint waypoint) const {
@@ -178,9 +180,10 @@ namespace road {
     const auto road = _data.GetRoad(waypoint.road_id);
     // road cannot be nullptr
     THROW_INVALID_INPUT_ASSERT(road != nullptr);
+
     // must s be smaller (or eq) than road lenght and bigger (or eq) than 0?
-    // THROW_INVALID_INPUT_ASSERT(waypoint.s <= road->GetLength());
-    // THROW_INVALID_INPUT_ASSERT(waypoint.s >= 0.0f);
+    THROW_INVALID_INPUT_ASSERT(waypoint.s <= road->GetLength());
+    THROW_INVALID_INPUT_ASSERT(waypoint.s >= 0.0f);
 
     const std::map<LaneId, const Lane *> lanes = road->GetLanesAt(waypoint.s);
     // check that lane_id exists on the current s

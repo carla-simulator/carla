@@ -16,17 +16,14 @@ namespace carla {
 namespace road {
 namespace element {
 
-  // Each lane within a road cross section can be provided with several road
-  // markentries. The road mark information defines the style of the line at the
-  // lane’s outer border. For left lanes, this is the left border, for right
-  // lanes the right one. The style of the line separating left and right lanes
-  // is determined by the road mark entry for lane zero (i.e. the center lane)
-  class RoadInfoMarkRecord : public RoadInfo {
+  /// Each lane within a road cross section can be provided with several road
+  /// markentries. The road mark information defines the style of the line at
+  /// the lane’s outer border. For left lanes, this is the left border, for
+  /// right lanes the right one. The style of the line separating left and right
+  /// lanes is determined by the road mark entry for lane zero (i.e. the center
+  /// lane)
+  class RoadInfoMarkRecord final : public RoadInfo {
   public:
-
-    void AcceptVisitor(RoadInfoVisitor &v) final {
-      v.Visit(*this);
-    }
 
     /// Can be used as flags
     enum class LaneChange : uint8_t {
@@ -75,42 +72,60 @@ namespace element {
         _type_name(type_name),
         _type_width(type_width) {}
 
+    void AcceptVisitor(RoadInfoVisitor &v) final {
+      v.Visit(*this);
+    }
+
+    /// Unique identifer for the road mark.
     int GetRoadMarkId() const {
       return _road_mark_id;
     }
 
+    /// Type of the road mark.
     const std::string &GetType() const {
       return _type;
     }
 
+    /// Weight of the road mark.
     const std::string &GetWeight() const {
       return _weight;
     }
 
+    /// Color of the road mark.
     const std::string &GetColor() const {
       return _color;
     }
 
+    /// Material of the road mark (identifiers to be defined, use "standard" for
+    /// the moment.
     const std::string &GetMaterial() const {
       return _material;
     }
 
+    /// Width of the road mark –optional.
     float GetWidth() const {
       return _width;
     }
 
+    /// Allow a lane change in the indicated direction taking into account that
+    /// lanes are numbered in ascending order from right to left. If the
+    /// attributeis missing, “both” is assumed to be valid.
     LaneChange GetLaneChange() const {
       return _lane_change;
     }
 
+    /// Physical distance of top edge of road mark from reference plane of the
+    /// lane.
     float GetHeight() const {
       return _height;
     }
 
+    /// Name of the road mark type if it has one.
     const std::string &GetTypeName() const {
       return _type_name;
     }
 
+    /// Width of the road mark type if it has one.
     float GetTypeWidth() const {
       return _type_width;
     }
@@ -121,24 +136,25 @@ namespace element {
 
   private:
 
-    int _road_mark_id;       // Unique identifer for the road mark
-    std::string _type;       // Type of the road mark
-    std::string _weight;     // Weight of the road mark
-    std::string _color;      // Color of the road mark
-    std::string _material;   // Material of the road mark (identifiers to be
-                             // defined, use "standard" for the moment
-    float _width;            // Width of the road mark –optional
-    LaneChange _lane_change; // Allow a lane change in the indicated direction
-                             // taking into account that lanes are numbered in
-                             // ascending order from right to left. If the
-                             // attributeis missing, “both” is assumed to be
-                             // valid.
-    float _height;           // Physical distance of top edge of road mark from
-                             // reference plane of the lane
+    const int _road_mark_id;
 
-    std::string _type_name;  // Name of the road mark type if it has one
+    const std::string _type;
 
-    float _type_width;       // Width of the road mark type if it has one
+    const std::string _weight;
+
+    const std::string _color;
+
+    const std::string _material;
+
+    const float _width;
+
+    const LaneChange _lane_change;
+
+    const float _height;
+
+    const std::string _type_name;
+
+    const float _type_width;
 
     std::vector<std::unique_ptr<RoadInfoMarkTypeLine>> _lines;
   };
