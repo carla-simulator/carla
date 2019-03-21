@@ -214,7 +214,7 @@ namespace road {
       lane_tangent = computed_width.second;
     }
 
-    // get a directed pooint in s and apply the computed lateral offet
+    // get a directed point in s and apply the computed lateral offet
     DirectedPoint dp = road->GetDirectedPointIn(waypoint.s);
 
     geom::Rotation rot(
