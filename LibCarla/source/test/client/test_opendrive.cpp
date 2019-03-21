@@ -258,14 +258,16 @@ TEST(road, iterate_waypoints) {
     ASSERT_TRUE(m.has_value());
     auto &map = *m;
     for (auto &&wp : map.GenerateWaypoints(5.0f)) {
+      ASSERT_TRUE(map.IsValid(wp));
       for (auto &&next : map.GetNext(wp, 4.0f)) {
+        ASSERT_TRUE(map.IsValid(next));
         auto right = map.GetRight(next);
         if (right.has_value()) {
-          ASSERT_LT(right->lane_id, next.lane_id);
+          ASSERT_TRUE(map.IsValid(right));
         }
         auto left = map.GetLeft(next);
         if (left.has_value()) {
-          ASSERT_GT(left->lane_id, next.lane_id);
+          ASSERT_TRUE(map.IsValid(left));
         }
       }
     }
