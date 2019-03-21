@@ -103,16 +103,34 @@ namespace road {
           iterator::make_map_values_const_iterator(_lane_sections.end()));
     }
 
+  private:
+
+    template <typename MultiMapT>
+    static auto GetLessEqualRange(MultiMapT &map, float s) {
+      if (map.find(s) == map.end()) {
+        auto it = map.lower_bound(s);
+        if (it == map.begin()) {
+          return std::make_pair(map.end(), map.end());
+        }
+        s = (--it)->first;
+      }
+      return std::make_pair(map.lower_bound(s), map.upper_bound(s));
+    }
+
+  public:
+
     auto GetLaneSectionsAt(const float s) {
+      auto pair = GetLessEqualRange(_lane_sections, s);
       return MakeListView(
-          iterator::make_map_values_iterator(_lane_sections.lower_bound(s)),
-          iterator::make_map_values_iterator(_lane_sections.upper_bound(s)));
+          iterator::make_map_values_iterator(pair.first),
+          iterator::make_map_values_iterator(pair.second));
     }
 
     auto GetLaneSectionsAt(const float s) const {
+      auto pair = GetLessEqualRange(_lane_sections, s);
       return MakeListView(
-          iterator::make_map_values_const_iterator(_lane_sections.lower_bound(s)),
-          iterator::make_map_values_const_iterator(_lane_sections.upper_bound(s)));
+          iterator::make_map_values_const_iterator(pair.first),
+          iterator::make_map_values_const_iterator(pair.second));
     }
 
     /// Get all lanes at a given s
