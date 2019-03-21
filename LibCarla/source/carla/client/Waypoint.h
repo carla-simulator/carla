@@ -84,8 +84,8 @@ namespace client {
 
     // Mark record right and left respectively.
     std::pair<
-        road::element::RoadInfoMarkRecord *,
-        road::element::RoadInfoMarkRecord *> _mark_record;
+        const road::element::RoadInfoMarkRecord *,
+        const road::element::RoadInfoMarkRecord *> _mark_record;
   };
 
 } // namespace client

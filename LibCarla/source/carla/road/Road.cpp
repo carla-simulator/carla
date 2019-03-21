@@ -74,6 +74,16 @@ namespace road {
     return nullptr;
   }
 
+  const Lane *Road::GetLane(const LaneId id, const float s) const {
+    for (auto &lane_section : GetLaneSectionsAt(s)) {
+      auto search = lane_section.GetLanes().find(id);
+      if (search != lane_section.GetLanes().end()) {
+        return &search->second;
+      }
+    }
+    return nullptr;
+  }
+
   // get the lane on a section next to 's'
   Lane *Road::GetNextLane(const float s, const LaneId lane_id) {
 
@@ -82,8 +92,9 @@ namespace road {
     while (upper != _lane_sections.end()) {
       // check id
       Lane *ptr = upper->second.GetLane(lane_id);
-      if (ptr != nullptr)
+      if (ptr != nullptr) {
         return ptr;
+      }
       ++upper;
     }
 
@@ -99,8 +110,9 @@ namespace road {
     while (rlower != _lane_sections.rend()) {
       // check id
       Lane *ptr = rlower->second.GetLane(lane_id);
-      if (ptr != nullptr)
+      if (ptr != nullptr) {
         return ptr;
+      }
       ++rlower;
     }
 
@@ -113,27 +125,28 @@ namespace road {
     while (it != _lane_sections.end()) {
       // check id
       Lane *ptr = it->second.GetLane(id);
-      if (ptr != nullptr)
+      if (ptr != nullptr) {
         return &(it->second);
+      }
       ++it;
     }
     return nullptr;
   }
-
 
   LaneSection *Road::GetEndSection(LaneId id) {
     auto it = _lane_sections.rbegin();
     while (it != _lane_sections.rend()) {
       // check id
       Lane *ptr = it->second.GetLane(id);
-      if (ptr != nullptr)
+      if (ptr != nullptr) {
         return &(it->second);
+      }
       ++it;
     }
     return nullptr;
   }
 
-  carla::road::signal::Signal* Road::GetSignal(const SignId id) {
+  carla::road::signal::Signal *Road::GetSignal(const SignId id) {
     auto search = _signals.find(id);
     if (search != _signals.end()) {
       return &search->second;
@@ -198,7 +211,8 @@ namespace road {
   }
 
   const std::pair<const Lane *, float> Road::GetNearestLane(
-      const float s, const geom::Location &loc) const {
+      const float s,
+      const geom::Location &loc) const {
     using namespace carla::road::element;
     std::map<LaneId, const Lane *> lanes(GetLanesAt(s));
     // negative right lanes
