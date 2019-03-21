@@ -188,7 +188,7 @@ namespace road {
 
     const std::map<LaneId, const Lane *> lanes = road->GetLanesAt(waypoint.s);
     // check that lane_id exists on the current s
-    THROW_INVALID_INPUT_ASSERT(waypoint.lane_id > lanes.begin()->first);
+    THROW_INVALID_INPUT_ASSERT(waypoint.lane_id >= lanes.begin()->first);
     THROW_INVALID_INPUT_ASSERT(waypoint.lane_id <= lanes.end()->first);
 
     float lane_width = 0;
@@ -242,7 +242,6 @@ namespace road {
 
   double Map::GetLaneWidth(const Waypoint waypoint) const {
     const auto s = waypoint.s;
-    THROW_INVALID_INPUT_ASSERT(s != 0.0f);
 
     const auto *lane = GetLane(waypoint);
     THROW_INVALID_INPUT_ASSERT(lane != nullptr);
@@ -263,7 +262,6 @@ namespace road {
   std::pair<const RoadInfoMarkRecord *, const RoadInfoMarkRecord *>
   Map::GetMarkRecord(const Waypoint waypoint) const {
     const auto s = waypoint.s;
-    THROW_INVALID_INPUT_ASSERT(s != 0.0f);
 
     const auto *current_lane = GetLane(waypoint);
     THROW_INVALID_INPUT_ASSERT(current_lane != nullptr);
