@@ -7,14 +7,31 @@
 #include "test.h"
 #include "OpenDrive.h"
 
-#include <carla/road/MapBuilder.h>
 #include <carla/geom/Location.h>
 #include <carla/geom/Math.h>
-#include <carla/road/element/RoadInfoGeometry.h>
-#include <carla/road/element/RoadInfoVisitor.h>
 #include <carla/opendrive/OpenDriveParser.h>
 #include <carla/opendrive/parser/pugixml/pugixml.hpp>
+#include <carla/road/MapBuilder.h>
+#include <carla/road/element/RoadInfoGeometry.h>
+#include <carla/road/element/RoadInfoVisitor.h>
+
 #include <fstream>
+#include <ostream>
+
+namespace carla {
+namespace road {
+namespace element {
+
+  static std::ostream &operator<<(std::ostream &out, Waypoint waypoint) {
+    out << "Waypoint{road_id=" << waypoint.road_id
+        << ", lane_id=" << waypoint.lane_id
+        << ", s=" << waypoint.s << '}';
+    return out;
+  }
+
+} // namespace element
+} // namespace road
+} // namespace carla
 
 using namespace carla::road;
 using namespace carla::road::element;
@@ -258,16 +275,16 @@ TEST(road, iterate_waypoints) {
     ASSERT_TRUE(m.has_value());
     auto &map = *m;
     for (auto &&wp : map.GenerateWaypoints(5.0f)) {
-      ASSERT_TRUE(map.IsValid(wp));
+      ASSERT_TRUE(map.IsValid(wp)) << wp;
       for (auto &&next : map.GetNext(wp, 4.0f)) {
-        ASSERT_TRUE(map.IsValid(next));
+        ASSERT_TRUE(map.IsValid(next)) << next;
         auto right = map.GetRight(next);
         if (right.has_value()) {
-          ASSERT_TRUE(map.IsValid(*right));
+          ASSERT_TRUE(map.IsValid(*right)) << *right;
         }
         auto left = map.GetLeft(next);
         if (left.has_value()) {
-          ASSERT_TRUE(map.IsValid(*left));
+          ASSERT_TRUE(map.IsValid(*left)) << *left;
         }
       }
     }
