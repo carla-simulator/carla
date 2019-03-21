@@ -32,6 +32,8 @@ namespace road {
 
     Lane *GetLane(const LaneId id);
 
+    SectionId GetId() const;
+
     std::map<LaneId, Lane> &GetLanes();
 
     const std::map<LaneId, Lane> &GetLanes() const;
@@ -43,6 +45,8 @@ namespace road {
     friend MapBuilder;
 
     Road *_road;
+
+    SectionId _id;
 
     float _s;
 

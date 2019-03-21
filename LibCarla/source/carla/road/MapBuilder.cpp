@@ -271,6 +271,7 @@ namespace road {
 
   carla::road::LaneSection *MapBuilder::AddRoadSection(
       Road *road,
+      const SectionId id,
       const float s) {
 
     // add it
@@ -278,6 +279,7 @@ namespace road {
 
     // set section data
     sec->_road = const_cast<Road *>(road);
+    sec->_id = id;
     sec->_s = s;
 
     return sec;

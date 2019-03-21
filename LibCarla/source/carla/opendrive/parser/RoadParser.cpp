@@ -239,8 +239,9 @@ namespace parser {
       }
 
       // lane sections
+      road::SectionId i = 0;
       for (auto const s : r.sections) {
-        carla::road::LaneSection *section = map_builder.AddRoadSection(road, s.s);
+        carla::road::LaneSection *section = map_builder.AddRoadSection(road, i++, s.s);
 
         // lanes
         for (auto const l : s.lanes) {
