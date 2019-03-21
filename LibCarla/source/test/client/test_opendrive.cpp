@@ -292,44 +292,6 @@ void print_roads(boost::optional<Map>& map, std::string filename) {
   file.close();
 }
 
-void test_junctions(boost::optional<Map>& map) {
-
-  struct LaneLink {
-    LaneId from;
-    LaneId to;
-  };
-
-  struct Connection {
-    ConId id;
-    RoadId incoming_road;
-    RoadId connecting_road;
-    std::vector<LaneLink> lane_links;
-  };
-
-  struct Junction {
-    JuncId id;
-    std::vector<Connection> connections;
-  };
-
-  // Lane Links
-  LaneLink lane_link { -1, -1};
-
-  // Connection
-  Connection connection { 1u, 0u, 82u, {lane_link} };
-
-  Junction junction_1 {80u, {connection} };
-
-  auto& junctions = map->GetMap().GetJunctions();
-  for (auto& junction : junctions) {
-    ASSERT_EQ(junction.second.GetId(), junction_1.id);
-    ASSERT_EQ(junction.second.GetConnection(1)->id, 1u);
-    ASSERT_EQ(junction.second.GetConnection(1)->incoming_road, 0u);
-    ASSERT_EQ(junction.second.GetConnection(1)->connecting_road, 82u);
-    ASSERT_EQ(junction.second.GetConnection(1)->lane_links[0].from, -1);
-    ASSERT_EQ(junction.second.GetConnection(1)->lane_links[0].from, -1);
-  }
-}
-
 TEST(road, parse_files) {
   for (const auto &file : util::OpenDrive::GetAvailableFiles()) {
     // std::cerr << file << std::endl;
