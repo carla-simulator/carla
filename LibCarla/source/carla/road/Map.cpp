@@ -109,6 +109,10 @@ namespace road {
     const int max_nearest_allowed = _data.GetRoadCount() < max_nearests ?
         _data.GetRoadCount() : max_nearests;
 
+    // Unreal's Y axis hack
+    // const auto pos_inverted_y = geom::Location(pos.x, -pos.y, pos.z);
+    const auto pos_inverted_y = geom::Location(pos.x, pos.y, pos.z);
+
     double nearest_dist[max_nearests];
     std::fill(nearest_dist, nearest_dist + max_nearest_allowed,
         std::numeric_limits<double>::max());
@@ -121,7 +125,7 @@ namespace road {
 
     for (const auto &road_pair : _data.GetRoads()) {
       const auto road = &road_pair.second;
-      const auto current_dist = road->GetNearestPoint(pos);
+      const auto current_dist = road->GetNearestPoint(pos_inverted_y);
 
       for (int i = 0; i < max_nearest_allowed; ++i) {
         if (current_dist.second < nearest_dist[i]) {
@@ -215,17 +219,22 @@ namespace road {
 
     geom::Rotation rot(
         geom::Math::to_degrees(dp.pitch),
+        // Unreal's Y axis hack
+        // geom::Math::to_degrees(-dp.tangent),
         geom::Math::to_degrees(dp.tangent),
         0.0);
 
     dp.ApplyLateralOffset(lane_width);
 
     if (waypoint.lane_id > 0) {
-      rot.yaw += 180.0f + lane_tangent;
+      rot.yaw += 180.0f + geom::Math::to_degrees(lane_tangent);
       rot.pitch = 360.0f - rot.pitch;
     } else {
-      rot.yaw -= lane_tangent;
+      rot.yaw -= geom::Math::to_degrees(lane_tangent);
     }
+
+    // Unreal's Y axis hack
+    // dp.location.y *= -1;
 
     return geom::Transform(dp.location, rot);
   }
