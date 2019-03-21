@@ -99,9 +99,11 @@ namespace road {
     /// map. The waypoints are placed at the entrance of each lane.
     std::vector<std::pair<Waypoint, Waypoint>> GenerateTopology() const;
 
+#ifdef LIBCARLA_WITH_GTEST
     MapData &GetMap() {
       return _data;
     }
+#endif // LIBCARLA_WITH_GTEST
 
   private:
 
