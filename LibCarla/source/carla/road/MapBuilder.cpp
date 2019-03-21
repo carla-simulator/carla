@@ -506,7 +506,7 @@ namespace road {
     // successor and predecessor (road and lane)
     LaneId next;
     RoadId next_road;
-    if (lane_id < 0) {
+    if (lane_id <= 0) {
       next_road = road->_nexts[0];
       next = lane->GetSuccessor();
     } else {
@@ -514,29 +514,31 @@ namespace road {
       next = lane->GetPredecessor();
     }
 
+    // check to see if next is a road or a junction
+    bool next_is_junction = (_map_data.GetRoad(next_road) == nullptr);
+
     // check if we are in a lane section in the middle
-    if ((lane_id > 0 && s > 0) || (lane_id < 0 && road->_lane_sections.upper_bound(s) != road->_lane_sections.end())) {
+    if ((lane_id > 0 && s > 0) || (lane_id <= 0 && road->_lane_sections.upper_bound(s) != road->_lane_sections.end())) {
       // check if lane has a next link (if not, it deads in the middle section)
-      if (next != 0) {
+      if (next != 0 || (lane_id == 0 && next == 0)) {
         // change to next / prev section
-        if (lane->_id < 0) {
+        if (lane_id <= 0) {
           result.push_back(road->GetNextLane(s, next));
         } else {
           result.push_back(road->GetPrevLane(s, next));
         }
       }
-    }
-    else {
+    } else if (!next_is_junction) {
       // change to another road / junction
-      if (next != 0) {
+      if (next != 0 || (lane_id == 0 && next == 0)) {
         // single road
-        result.push_back(GetEdgeLanePointer(next_road, (next * lane_id > 0), next));
-      } else {
-        // several roads (junction)
-        auto options = GetJunctionLanes(next_road, road_id, lane_id);
-        for (auto opt : options) {
-          result.push_back(GetEdgeLanePointer(opt.first, (opt.second * lane_id > 0), opt.second));
-        }
+        result.push_back(GetEdgeLanePointer(next_road, (next * lane_id >= 0), next));
+      }
+    } else {
+      // several roads (junction)
+      auto options = GetJunctionLanes(next_road, road_id, lane_id);
+      for (auto opt : options) {
+        result.push_back(GetEdgeLanePointer(opt.first, (opt.second * lane_id >= 0), opt.second));
       }
     }
 
@@ -558,7 +560,7 @@ namespace road {
     // successor and predecessor (road and lane)
     LaneId prev;
     RoadId prev_road;
-    if (lane_id < 0) {
+    if (lane_id <= 0) {
       prev_road = road->_prevs[0];
       prev = lane->GetPredecessor();
     } else {
@@ -566,31 +568,34 @@ namespace road {
       prev = lane->GetSuccessor();
     }
 
+    // check to see if next is a road or a junction
+    bool prev_is_junction = (_map_data.GetRoad(prev_road) == nullptr);
+
     // check if we are in a lane section in the middle
-    if ((lane_id < 0 && s > 0) || (lane_id > 0 && road->_lane_sections.upper_bound(s) != road->_lane_sections.end())) {
+    if ((lane_id <= 0 && s > 0) || (lane_id > 0 && road->_lane_sections.upper_bound(s) != road->_lane_sections.end())) {
       // check if lane has a prev link (if not, it deads in the middle section)
-      if (prev != 0) {
+      if ((prev != 0) || (lane_id == 0 && prev == 0)) {
         // change to next / prev section
-        if (lane->_id < 0) {
+        if (lane_id <= 0) {
           result.push_back(road->GetPrevLane(s, prev));
         } else {
           result.push_back(road->GetNextLane(s, prev));
         }
       }
-    }
-    else {
+    } else if (!prev_is_junction) {
       // change to another road / junction
-      if (prev != 0) {
+      if ((prev != 0) || (lane_id == 0 && prev == 0)) {
         // single road
-        result.push_back(GetEdgeLanePointer(prev_road, (prev * lane_id > 0), prev));
-      } else {
-        // several roads (junction)
-        auto options = GetJunctionLanes(prev_road, road_id, lane_id);
-        for (auto opt : options) {
-          result.push_back(GetEdgeLanePointer(opt.first, (opt.second * lane_id > 0), opt.second));
-        }
+        result.push_back(GetEdgeLanePointer(prev_road, (prev * lane_id >= 0), prev));
+      }
+    } else {
+      // several roads (junction)
+      auto options = GetJunctionLanes(prev_road, road_id, lane_id);
+      for (auto opt : options) {
+        result.push_back(GetEdgeLanePointer(opt.first, (opt.second * lane_id >= 0), opt.second));
       }
     }
+
 
     return result;
   }
@@ -607,12 +612,17 @@ namespace road {
     for (auto con : junction->_connections) {
       // only connections for our road
       if (con.second.incoming_road == road_id) {
-        // check all lane links
-        for (auto link : con.second.lane_links) {
-          // is our lane id ?
-          if (link.from == lane_id) {
-            // add as option
-            result.push_back(std::make_pair(con.second.connecting_road, link.to));
+        // we need to differentiate from center lane and the rest
+        if (lane_id == 0) {
+          result.push_back(std::make_pair(con.second.connecting_road, 0));
+        } else {
+          // check all lane links
+          for (auto link : con.second.lane_links) {
+            // is our lane id ?
+            if (link.from == lane_id) {
+              // add as option
+              result.push_back(std::make_pair(con.second.connecting_road, link.to));
+            }
           }
         }
       }
