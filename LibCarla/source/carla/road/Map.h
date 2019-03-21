@@ -71,6 +71,9 @@ namespace road {
     /// -- Waypoint generation -------------------------------------------------
     /// ========================================================================
 
+    /// Return whether @a waypoint represents a valid point on the map.
+    bool IsValid(Waypoint waypoint) const;
+
     /// Return the list of waypoints placed at the entrance of each drivable
     /// successor lane; i.e., the list of each waypoint in the next road segment
     /// that a vehicle could drive from @a waypoint.

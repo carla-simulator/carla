@@ -267,6 +267,11 @@ namespace road {
   // -- Map: Waypoint generation -----------------------------------------------
   // ===========================================================================
 
+  bool Map::IsValid(Waypoint waypoint) const {
+    /// @todo Check if it's inside the road length.
+    return GetLane(waypoint) != nullptr;
+  }
+
   std::vector<Waypoint> Map::GetSuccessors(const Waypoint waypoint) const {
     auto *lane = GetLane(waypoint);
     THROW_INVALID_INPUT_ASSERT(lane != nullptr);
@@ -292,7 +297,7 @@ namespace road {
 
   std::vector<Waypoint> Map::GetNext(
       const Waypoint waypoint,
-      float distance) const {
+      const float distance) const {
     THROW_INVALID_INPUT_ASSERT(waypoint.lane_id != 0);
 
     float distance_on_next_segment;
