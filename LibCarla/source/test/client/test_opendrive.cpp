@@ -16,7 +16,7 @@
 #include <carla/road/element/RoadInfoGeometry.h>
 #include "carla/road/element/RoadInfoMarkRecord.h"
 #include <carla/road/element/RoadInfoVisitor.h>
-
+#include <string>
 #include <fstream>
 #include <ostream>
 
@@ -205,10 +205,32 @@ void test_junctions(const pugi::xml_document &xml, boost::optional<Map>& map)
   }
 }
 
-void print_roads(boost::optional<Map>& map) {
-  std::ofstream file;
-  file.open("roads.txt", std::ios::out | std::ios::trunc);
+void test_road_links(boost::optional<Map>& map) {
 
+  // process all roads, sections and lanes
+  for (auto &road : map->GetMap().GetRoads()) {
+    for (auto &section : road.second.GetLaneSections()) {
+      for (auto &lane : section.GetLanes()) {
+        // check all nexts
+        for (auto link : lane.second.GetNextLanes()) {
+          ASSERT_TRUE(link != nullptr);
+        }
+        // check all prevs
+        for (auto link : lane.second.GetPreviousLanes()) {
+          ASSERT_TRUE(link != nullptr);
+        }
+      }
+    }
+  }
+}
+
+void print_roads(boost::optional<Map>& map, std::string filename) {
+  std::ofstream file;
+  std::string name;
+
+  // write TXT with road links
+  name = filename + ".txt";
+  file.open(name, std::ios::out | std::ios::trunc);
   for (auto &road : map->GetMap().GetRoads()) {
     file << "Road: " << road.second.GetId() << std::endl;
     for (auto &section : road.second.GetLaneSections()) {
@@ -218,19 +240,55 @@ void print_roads(boost::optional<Map>& map) {
         file << "     Next: " << lane.second.GetNextLanes().size() << std::endl;
         file << "       ";
         for (auto link : lane.second.GetNextLanes()) {
-          file << " (" << link->GetRoad()->GetId() << "," << link->GetId() << ")";
+          if (link != nullptr) {
+            file << " (" << link->GetRoad()->GetId() << "," << link->GetId() << ")";
+          } else {
+            file << " (error, null lane)";
+          }
         }
         file << std::endl;
         file << "     Prev: " << lane.second.GetPreviousLanes().size() << std::endl;
         file << "       ";
         for (auto link : lane.second.GetPreviousLanes()) {
-          file << " (" << link->GetRoad()->GetId() << "," << link->GetId() << ")";
+          if (link != nullptr) {
+            file << " (" << link->GetRoad()->GetId() << "," << link->GetId() << ")";
+          } else {
+            file << " (error, null lane)";
+          }
         }
         file << std::endl;
       }
     }
   }
+  file.close();
 
+  // write TGF with nodes links to be imported in Yed
+  // 1 a                    ; node 1 with label 'a'
+  // 2 b                    ; node 2 with label 'b'
+  // #
+  // 2 1 c                  ; edge from node 2 to 1 with label 'c'
+  name = filename + ".tgf";
+  file.open(name, std::ios::out | std::ios::trunc);
+  for (auto &road : map->GetMap().GetRoads()) {
+    file << road.second.GetId() << " " << road.second.GetId() << std::endl;
+  }
+  file << "#" << std::endl;
+  for (auto &road : map->GetMap().GetRoads()) {
+    for (auto &section : road.second.GetLaneSections()) {
+      for (auto &lane : section.GetLanes()) {
+        for (auto link : lane.second.GetNextLanes()) {
+          if (link->GetRoad()->GetId() != road.second.GetId()) {
+            file << road.second.GetId() << " " << link->GetRoad()->GetId() << " (" << lane.second.GetId() << "," << link->GetId() << ")" << std::endl;
+          }
+        }
+        // for (auto link : lane.second.GetPreviousLanes()) {
+        //   if (link->GetRoad()->GetId() != road.second.GetId()) {
+        //     file << road.second.GetId() << " " << link->GetRoad()->GetId() << " (" << lane.second.GetId() << "," << link->GetId() << ")" << std::endl;
+        //   }
+        // }
+      }
+    }
+  }
   file.close();
 }
 
@@ -274,13 +332,23 @@ void test_junctions(boost::optional<Map>& map) {
 
 TEST(road, parse_files) {
   for (const auto &file : util::OpenDrive::GetAvailableFiles()) {
-    std::cerr << file << std::endl;
+    // std::cerr << file << std::endl;
     auto map = OpenDriveParser::Load(util::OpenDrive::Load(file));
     ASSERT_TRUE(map);
+    // print_roads(map, file);
   }
 }
 
-TEST(road, parse_junction) {
+TEST(road, parse_road_links) {
+  for (const auto &file : util::OpenDrive::GetAvailableFiles()) {
+    std::cerr << file << std::endl;
+    auto map = OpenDriveParser::Load(util::OpenDrive::Load(file));
+    ASSERT_TRUE(map);
+    test_road_links(map);
+  }
+}
+
+TEST(road, parse_junctions) {
   for (const auto& file : util::OpenDrive::GetAvailableFiles()) {
     auto map = OpenDriveParser::Load(util::OpenDrive::Load(file));
     ASSERT_TRUE(map.has_value());
