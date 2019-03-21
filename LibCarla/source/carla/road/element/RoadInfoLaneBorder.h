@@ -13,22 +13,15 @@ namespace carla {
 namespace road {
 namespace element {
 
-  // Instead of describing lanes by their width entries and, thus, invariably
-  // depending on influences of inner
-  // lanes on outer lanes, it might be more convenient to just describe the
-  // outer border of each lane
-  // independent of any inner lanes’ parameters. Especially in cases where road
-  // data is derived from
-  // measurements, this type of definition will provide a more convenient method
-  // without the need to
-  // tesselate road sections into too many parts. Note. Lane borders and widths
-  // are mutually exclusive.
-  class RoadInfoLaneBorder : public RoadInfo {
+  /// Instead of describing lanes by their width entries and, thus, invariably
+  /// depending on influences of inner lanes on outer lanes, it might be more
+  /// convenient to just describe the outer border of each lane independent of
+  /// any inner lanes’ parameters. Especially in cases where road data is
+  /// derived from measurements, this type of definition will provide a more
+  /// convenient method without the need to tesselate road sections into too
+  /// many parts. Note. Lane borders and widths are mutually exclusive.
+  class RoadInfoLaneBorder final : public RoadInfo {
   public:
-
-    void AcceptVisitor(RoadInfoVisitor &v) final {
-      v.Visit(*this);
-    }
 
     RoadInfoLaneBorder(
         float s,
@@ -39,14 +32,17 @@ namespace element {
       : RoadInfo(s),
         _border(a, b, c, d, s) {}
 
+    void AcceptVisitor(RoadInfoVisitor &v) final {
+      v.Visit(*this);
+    }
+
     const geom::CubicPolynomial &GetPolynomial() const {
       return _border;
     }
 
   private:
 
-    geom::CubicPolynomial _border;
-
+    const geom::CubicPolynomial _border;
   };
 
 } // namespace element

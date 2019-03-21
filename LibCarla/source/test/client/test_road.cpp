@@ -81,9 +81,11 @@ void test_roads(const pugi::xml_document &xml, boost::optional<Map>& map)
           total_lanes = it->GetLanes().size();
         }
         auto left_nodes = lane_section_node.child("left").children("lane");
+        auto center_nodes = lane_section_node.child("center").children("lane");
         auto right_nodes = lane_section_node.child("right").children("lane");
         size_t total_lanes_parser = std::distance(left_nodes.begin(), left_nodes.end());
         total_lanes_parser += std::distance(right_nodes.begin(), right_nodes.end());
+        total_lanes_parser += std::distance(center_nodes.begin(), center_nodes.end());
 
         ASSERT_EQ(total_lanes, total_lanes_parser);
       }

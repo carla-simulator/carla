@@ -7,11 +7,13 @@
 #pragma once
 
 #include "carla/Debug.h"
+#include "carla/Exception.h"
 #include "carla/geom/Location.h"
 #include "carla/geom/Math.h"
 #include "carla/road/element/cephes/fresnel.h"
 
 #include <cmath>
+#include <stdexcept>
 
 namespace carla {
 namespace road {
@@ -74,7 +76,7 @@ namespace element {
 
     virtual ~Geometry() = default;
 
-    virtual const DirectedPoint PosFromDist(double dist) const = 0;
+    virtual DirectedPoint PosFromDist(double dist) const = 0;
 
     virtual std::pair<double, double> DistanceTo(const geom::Location &p) const = 0;
 
@@ -104,7 +106,7 @@ namespace element {
     geom::Location _start_position; // [meters]
   };
 
-  class GeometryLine : public Geometry {
+  class GeometryLine final : public Geometry {
   public:
 
     GeometryLine(
@@ -114,7 +116,7 @@ namespace element {
         const geom::Location &start_pos)
       : Geometry(GeometryType::LINE, start_offset, length, heading, start_pos) {}
 
-    const DirectedPoint PosFromDist(const double dist) const override {
+    DirectedPoint PosFromDist(const double dist) const override {
       assert(dist > 0);
       assert(_length > 0.0);
       DirectedPoint p(_start_position, _heading);
@@ -137,7 +139,7 @@ namespace element {
 
   };
 
-  class GeometryArc : public Geometry {
+  class GeometryArc final : public Geometry {
   public:
 
     GeometryArc(
@@ -149,7 +151,7 @@ namespace element {
       : Geometry(GeometryType::ARC, start_offset, length, heading, start_pos),
         _curvature(curv) {}
 
-    const DirectedPoint PosFromDist(double dist) const override {
+    DirectedPoint PosFromDist(double dist) const override {
       assert(dist > 0);
       assert(_length > 0.0);
       assert(std::fabs(_curvature) > 1e-15);
@@ -177,7 +179,7 @@ namespace element {
           _curvature);
     }
 
-    double GetCurvature() {
+    double GetCurvature() const {
       return _curvature;
     }
 
@@ -186,7 +188,7 @@ namespace element {
     double _curvature;
   };
 
-  class GeometrySpiral : public Geometry {
+  class GeometrySpiral final : public Geometry {
   public:
 
     GeometrySpiral(
@@ -208,7 +210,7 @@ namespace element {
       return _curve_end;
     }
 
-    const DirectedPoint PosFromDist(double dist) const override {
+    DirectedPoint PosFromDist(double dist) const override {
       // not working yet with negative values
       assert(dist > 0);
       assert(_length > 0.0);
@@ -233,8 +235,7 @@ namespace element {
 
     /// @todo
     std::pair<double, double> DistanceTo(const geom::Location &) const override {
-      DEBUG_ERROR;
-      return {0.0, 0.0};
+      throw_exception(std::runtime_error("not implemented"));
     }
 
   private:
