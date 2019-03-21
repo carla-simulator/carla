@@ -226,6 +226,9 @@ namespace road {
     std::pair<const Lane *, float> result =
         std::make_pair(nullptr, std::numeric_limits<float>::max());
 
+    // Unreal's Y axis hack
+    // dp_lane_zero.location.y *= -1;
+
     DirectedPoint current_dp = dp_lane_zero;
     for (const auto &lane : right_lanes) {
       const auto lane_width_info = lane.second->GetInfo<RoadInfoLaneWidth>(s);
@@ -244,10 +247,10 @@ namespace road {
     }
 
     current_dp = dp_lane_zero;
-    for (auto &&lane : left_lanes) {
+    for (const auto &lane : left_lanes) {
       const auto lane_width_info = lane.second->GetInfo<RoadInfoLaneWidth>(s);
-      const auto half_width = lane_width_info->GetPolynomial().Evaluate(s) / 2.0f;
-      current_dp.ApplyLateralOffset(-half_width);
+      const auto half_width = -lane_width_info->GetPolynomial().Evaluate(s) / 2.0f;
+      current_dp.ApplyLateralOffset(half_width);
       const auto current_dist = geom::Math::Distance(current_dp.location, loc);
       // if the current_dp is near to loc, we are in the right way
       if (current_dist <= result.second) {
@@ -257,7 +260,7 @@ namespace road {
         // elsewhere, we are be moving away
         break;
       }
-      current_dp.ApplyLateralOffset(-half_width);
+      current_dp.ApplyLateralOffset(half_width);
     }
 
     return result;
