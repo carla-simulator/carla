@@ -251,6 +251,27 @@ TEST(road, parse_geometry) {
 
 }
 
+TEST(road, iterate_waypoints) {
+  for (const auto& file : util::OpenDrive::GetAvailableFiles()) {
+    carla::logging::log("Parsing", file);
+    auto m = OpenDriveParser::Load(util::OpenDrive::Load(file));
+    ASSERT_TRUE(m.has_value());
+    auto &map = *m;
+    for (auto &&wp : map.GenerateWaypoints(5.0f)) {
+      for (auto &&next : map.GetNext(wp, 4.0f)) {
+        auto right = map.GetRight(next);
+        if (right.has_value()) {
+          ASSERT_LT(right->lane_id, next.lane_id);
+        }
+        auto left = map.GetLeft(next);
+        if (left.has_value()) {
+          ASSERT_GT(left->lane_id, next.lane_id);
+        }
+      }
+    }
+  }
+}
+
 /*
 TEST(road, add_geometry) {
 
