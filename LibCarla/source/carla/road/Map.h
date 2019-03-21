@@ -60,7 +60,7 @@ namespace road {
 
     bool IsJunction(RoadId road_id) const;
 
-    std::pair<element::RoadInfoMarkRecord *, element::RoadInfoMarkRecord *>
+    std::pair<const element::RoadInfoMarkRecord *, const element::RoadInfoMarkRecord *>
         GetMarkRecord(Waypoint waypoint) const;
 
     std::vector<element::LaneMarking> CalculateCrossedLanes(

@@ -51,6 +51,8 @@ namespace road {
 
     Lane *GetLane(const LaneId id, const float s);
 
+    const Lane *GetLane(const LaneId id, const float s) const;
+
     Lane *GetNextLane(const float s, const LaneId lane_id);
 
     Lane *GetPrevLane(const float s, const LaneId lane_id);

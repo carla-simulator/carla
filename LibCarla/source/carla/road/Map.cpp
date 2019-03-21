@@ -10,6 +10,7 @@
 #include "carla/road/element/LaneCrossingCalculator.h"
 #include "carla/road/element/RoadInfoGeometry.h"
 #include "carla/road/element/RoadInfoLaneWidth.h"
+#include "carla/road/element/RoadInfoMarkRecord.h"
 #include "carla/geom/Math.h"
 
 #include <stdexcept>
@@ -81,7 +82,7 @@ namespace road {
     float tangent = 0.0;
     for (const auto &lane : container) {
       const auto current_polynomial =
-          lane.second->template GetInfo<element::RoadInfoLaneWidth>(s)->GetPolynomial();
+          lane.second->template GetInfo<RoadInfoLaneWidth>(s)->GetPolynomial();
       float current_dist = current_polynomial.Evaluate(s);
       if (lane.first != lane_id) {
         dist += negative_lane_id ? current_dist : - current_dist;
@@ -210,7 +211,7 @@ namespace road {
     }
 
     // get a directed pooint in s and apply the computed lateral offet
-    element::DirectedPoint dp = road->GetDirectedPointIn(waypoint.s);
+    DirectedPoint dp = road->GetDirectedPointIn(waypoint.s);
 
     geom::Rotation rot(
         geom::Math::to_degrees(dp.pitch),
@@ -240,10 +241,17 @@ namespace road {
   }
 
   double Map::GetLaneWidth(const Waypoint waypoint) const {
+    const auto s = waypoint.s;
+    THROW_INVALID_INPUT_ASSERT(s != 0.0f);
+
     const auto *lane = GetLane(waypoint);
     THROW_INVALID_INPUT_ASSERT(lane != nullptr);
+    THROW_INVALID_INPUT_ASSERT(s <= lane->GetRoad()->GetLength());
 
-    throw_exception(std::runtime_error("not implemented"));
+    const auto lane_width_info = lane->GetInfo<RoadInfoLaneWidth>(s);
+    THROW_INVALID_INPUT_ASSERT(lane_width_info != nullptr);
+
+    return lane_width_info->GetPolynomial().Evaluate(s);
   }
 
   bool Map::IsJunction(const RoadId road_id) const {
@@ -252,15 +260,34 @@ namespace road {
     return road->IsJunction();
   }
 
-  std::pair<element::RoadInfoMarkRecord *, element::RoadInfoMarkRecord *>
-  Map::GetMarkRecord(const Waypoint /*waypoint*/) const {
-    throw_exception(std::runtime_error("not implemented"));
+  std::pair<const RoadInfoMarkRecord *, const RoadInfoMarkRecord *>
+  Map::GetMarkRecord(const Waypoint waypoint) const {
+    const auto s = waypoint.s;
+    THROW_INVALID_INPUT_ASSERT(s != 0.0f);
+
+    const auto *current_lane = GetLane(waypoint);
+    THROW_INVALID_INPUT_ASSERT(current_lane != nullptr);
+    THROW_INVALID_INPUT_ASSERT(s <= current_lane->GetRoad()->GetLength());
+
+    const auto inner_lane_id = waypoint.lane_id < 0 ?
+        waypoint.lane_id + 1 :
+        waypoint.lane_id - 1;
+
+    const auto *inner_lane = current_lane->GetRoad()->GetLane(inner_lane_id, s);
+    THROW_INVALID_INPUT_ASSERT(inner_lane != nullptr);
+
+    auto current_lane_info = current_lane->GetInfo<RoadInfoMarkRecord>(s);
+    THROW_INVALID_INPUT_ASSERT(current_lane_info != nullptr);
+    auto inner_lane_info = inner_lane->GetInfo<RoadInfoMarkRecord>(s);
+    THROW_INVALID_INPUT_ASSERT(inner_lane_info != nullptr);
+
+    return std::make_pair(current_lane_info, inner_lane_info);
   }
 
-  std::vector<element::LaneMarking> Map::CalculateCrossedLanes(
+  std::vector<LaneMarking> Map::CalculateCrossedLanes(
       const geom::Location &origin,
       const geom::Location &destination) const {
-    return element::LaneCrossingCalculator::Calculate(*this, origin, destination);
+    return LaneCrossingCalculator::Calculate(*this, origin, destination);
   }
 
   // ===========================================================================
