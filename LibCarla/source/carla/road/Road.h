@@ -135,6 +135,12 @@ namespace road {
           iterator::make_map_values_const_iterator(pair.second));
     }
 
+    /// @todo Give a better name to this function.
+    float UpperBound(float s) const {
+      auto it = _lane_sections.upper_bound(s);
+      return it != _lane_sections.end() ? it->first : _length;
+    }
+
     /// Get all lanes at a given s
     std::map<LaneId, const Lane *> GetLanesAt(const float s) const;
 
