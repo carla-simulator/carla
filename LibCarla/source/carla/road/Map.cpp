@@ -110,8 +110,7 @@ namespace road {
         _data.GetRoadCount() : max_nearests;
 
     // Unreal's Y axis hack
-    // const auto pos_inverted_y = geom::Location(pos.x, -pos.y, pos.z);
-    const auto pos_inverted_y = geom::Location(pos.x, pos.y, pos.z);
+    const auto pos_inverted_y = geom::Location(pos.x, -pos.y, pos.z);
 
     double nearest_dist[max_nearests];
     std::fill(nearest_dist, nearest_dist + max_nearest_allowed,
@@ -147,7 +146,7 @@ namespace road {
     Waypoint waypoint;
     auto nearest_lane_dist = std::numeric_limits<float>::max();
     for (int i = 0; i < max_nearest_allowed; ++i) {
-      auto lane_dist = _data.GetRoad(ids[i])->GetNearestLane(dists[i], pos);
+      auto lane_dist = _data.GetRoad(ids[i])->GetNearestLane(dists[i], pos_inverted_y);
 
       if (lane_dist.second < nearest_lane_dist) {
         nearest_lane_dist = lane_dist.second;
@@ -214,14 +213,15 @@ namespace road {
       lane_tangent = computed_width.second;
     }
 
+    // Unreal's Y axis hack
+    lane_tangent *= -1;
+
     // get a directed point in s and apply the computed lateral offet
     DirectedPoint dp = road->GetDirectedPointIn(waypoint.s);
 
     geom::Rotation rot(
         geom::Math::to_degrees(dp.pitch),
-        // Unreal's Y axis hack
-        // geom::Math::to_degrees(-dp.tangent),
-        geom::Math::to_degrees(dp.tangent),
+        geom::Math::to_degrees(-dp.tangent), // Unreal's Y axis hack
         0.0);
 
     dp.ApplyLateralOffset(lane_width);
@@ -234,7 +234,7 @@ namespace road {
     }
 
     // Unreal's Y axis hack
-    // dp.location.y *= -1;
+    dp.location.y *= -1;
 
     return geom::Transform(dp.location, rot);
   }
