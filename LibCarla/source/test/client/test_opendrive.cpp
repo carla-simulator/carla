@@ -12,7 +12,9 @@
 #include <carla/opendrive/OpenDriveParser.h>
 #include <carla/opendrive/parser/pugixml/pugixml.hpp>
 #include <carla/road/MapBuilder.h>
+#include <carla/road/element/RoadInfoElevation.h>
 #include <carla/road/element/RoadInfoGeometry.h>
+#include "carla/road/element/RoadInfoMarkRecord.h"
 #include <carla/road/element/RoadInfoVisitor.h>
 
 #include <fstream>
@@ -40,6 +42,30 @@ using namespace carla::opendrive;
 
 const std::string BASE_PATH = LIBCARLA_TEST_CONTENT_FOLDER "/OpenDrive/";
 
+// Road Elevation
+void test_road_elevation(const pugi::xml_document &xml, boost::optional<Map>& map ) {
+  pugi::xml_node open_drive_node = xml.child("OpenDRIVE");
+
+  for (pugi::xml_node road_node : open_drive_node.children("road")) {
+    RoadId road_id = road_node.attribute("id").as_int();
+    auto elevation_profile_nodes = road_node.children("elevationProfile");
+
+    for (pugi::xml_node elevation_profile_node : elevation_profile_nodes) {
+      size_t total_elevations = 0;
+      auto elevation_nodes = elevation_profile_node.children("elevation");
+      size_t total_elevation_parser = std::distance(elevation_nodes.begin(), elevation_nodes.end());
+
+      for (pugi::xml_node elevation_node : elevation_nodes) {
+        float s = elevation_node.attribute("s").as_float();
+        const auto elevation = map->GetMap().GetRoad(road_id)->GetInfo<RoadInfoElevation>(s);
+        if (elevation != nullptr)
+          ++total_elevations;
+      }
+      ASSERT_EQ(total_elevations, total_elevation_parser);
+    }
+  }
+}
+
 // Geometry
 void test_geometry(const pugi::xml_document &xml, boost::optional<Map>& map)
 {
@@ -64,6 +90,28 @@ void test_geometry(const pugi::xml_document &xml, boost::optional<Map>& map)
   }
 }
 
+// Road test
+auto get_total_road_marks (pugi::xml_object_range<pugi::xml_named_node_iterator> &lane_nodes, LaneSection& lane_section, float s) {
+  size_t total_road_mark = 0;
+  size_t total_road_mark_parser = 0;
+  for (pugi::xml_node lane_node : lane_nodes) {
+    // Check Road Mark
+    auto road_mark_nodes = lane_node.children("roadMark");
+    total_road_mark_parser += std::distance(road_mark_nodes.begin(), road_mark_nodes.end());
+
+    int lane_id = lane_node.attribute("id").as_int();
+    Lane* lane = nullptr;
+    lane = lane_section.GetLane(lane_id);
+
+    for (pugi::xml_node road_mark_node : road_mark_nodes) {
+      float s_offset = road_mark_node.attribute("sOffset").as_float();
+      const auto road_mark = lane->GetInfo<RoadInfoMarkRecord>(s + s_offset);
+      if (road_mark != nullptr)
+        ++total_road_mark;
+    }
+  }
+  return std::make_pair(total_road_mark, total_road_mark_parser);
+}
 
 void test_roads(const pugi::xml_document &xml, boost::optional<Map>& map)
 {
@@ -90,11 +138,9 @@ void test_roads(const pugi::xml_document &xml, boost::optional<Map>& map)
 
         // Check total Lanes
         float s = lane_section_node.attribute("s").as_float();
-
-        auto ls_begin = map->GetMap().GetRoad(road_id)->GetLaneSectionsAt(s).begin();
-        auto ls_end = map->GetMap().GetRoad(road_id)->GetLaneSectionsAt(s).end();
+        auto lane_section = map->GetMap().GetRoad(road_id)->GetLaneSectionsAt(s);
         size_t total_lanes = 0u;
-        for (auto& it = ls_begin; it != ls_end; ++it) {
+        for (auto it = lane_section.begin(); it != lane_section.end(); ++it) {
           total_lanes = it->GetLanes().size();
         }
         auto left_nodes = lane_section_node.child("left").children("lane");
@@ -105,6 +151,18 @@ void test_roads(const pugi::xml_document &xml, boost::optional<Map>& map)
         total_lanes_parser += std::distance(center_nodes.begin(), center_nodes.end());
 
         ASSERT_EQ(total_lanes, total_lanes_parser);
+
+
+        size_t total_road_mark = 0;
+        size_t total_road_mark_parser = 0;
+        for (auto it = lane_section.begin(); it != lane_section.end(); ++it) {
+          auto total_left = get_total_road_marks(left_nodes, *it, s);
+          auto total_center = get_total_road_marks(center_nodes, *it, s);
+          auto total_right = get_total_road_marks(right_nodes, *it, s);
+          total_road_mark = total_left.first + total_center.first + total_right.first;
+          total_road_mark_parser = total_left.first + total_center.first + total_right.first;
+        }
+        ASSERT_EQ(total_road_mark, total_road_mark_parser);
       }
     }
   }
@@ -222,7 +280,7 @@ TEST(road, parse_files) {
   }
 }
 
-TEST(road, parse_junctions) {
+TEST(road, parse_junction) {
   for (const auto& file : util::OpenDrive::GetAvailableFiles()) {
     auto map = OpenDriveParser::Load(util::OpenDrive::Load(file));
     ASSERT_TRUE(map.has_value());
@@ -238,7 +296,7 @@ TEST(road, parse_junctions) {
 
 }
 
-TEST(road, parse_lanes) {
+TEST(road, parse_road) {
   for (const auto& file : util::OpenDrive::GetAvailableFiles()) {
     auto map = OpenDriveParser::Load(util::OpenDrive::Load(file));
     ASSERT_TRUE(map.has_value());
@@ -249,6 +307,21 @@ TEST(road, parse_lanes) {
     ASSERT_TRUE(result);
 
     test_roads(xml, map);
+  }
+
+}
+
+TEST(road, parse_road_elevation) {
+  for (const auto& file : util::OpenDrive::GetAvailableFiles()) {
+    auto map = OpenDriveParser::Load(util::OpenDrive::Load(file));
+    ASSERT_TRUE(map.has_value());
+
+    const std::string full_path = BASE_PATH + file;
+    pugi::xml_document xml;
+    pugi::xml_parse_result result = xml.load_file( full_path.c_str());
+    ASSERT_TRUE(result);
+
+    test_road_elevation(xml, map);
   }
 
 }
