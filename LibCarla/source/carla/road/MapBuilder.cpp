@@ -612,7 +612,7 @@ namespace road {
     for (auto con : junction->_connections) {
       // only connections for our road
       if (con.second.incoming_road == road_id) {
-        // we need to differentiate from center lane and the rest
+        // for center lane it is always next lane id 0, we don't need to search because it is not in the junction
         if (lane_id == 0) {
           result.push_back(std::make_pair(con.second.connecting_road, 0));
         } else {
@@ -633,15 +633,13 @@ namespace road {
 
   // assign pointers to the next lanes
   void MapBuilder::CreatePointersBetweenRoadSegments(void) {
-    // for all roads
+    // process each lane
     for (auto &road : _map_data._roads) {
-      // for each section
       for (auto &section : road.second._lane_sections) {
-        // for each lane
         for (auto &lane : section.second._lanes) {
           // assign the next lane pointers
-          lane.second._next_lanes = GetLaneNext(road.first, section.second._s, lane.second._id);
-          lane.second._prev_lanes = GetLanePrevious(road.first, section.second._s, lane.second._id);
+          lane.second._next_lanes = GetLaneNext(road.first, section.second._s, lane.first);
+          lane.second._prev_lanes = GetLanePrevious(road.first, section.second._s, lane.first);
         }
       }
     }

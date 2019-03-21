@@ -17,6 +17,7 @@
 #include "carla/road/element/RoadInfoMarkRecord.h"
 #include <carla/road/element/RoadInfoVisitor.h>
 #include <string>
+#include <sstream>
 #include <fstream>
 #include <ostream>
 
@@ -237,8 +238,7 @@ void print_roads(boost::optional<Map>& map, std::string filename) {
       file << " Section: " << section.GetDistance() << std::endl;
       for (auto &lane : section.GetLanes()) {
         file << "   Lane: " << lane.second.GetId() << std::endl;
-        file << "     Next: " << lane.second.GetNextLanes().size() << std::endl;
-        file << "       ";
+        file << "     Nexts: ";
         for (auto link : lane.second.GetNextLanes()) {
           if (link != nullptr) {
             file << " (" << link->GetRoad()->GetId() << "," << link->GetId() << ")";
@@ -247,8 +247,7 @@ void print_roads(boost::optional<Map>& map, std::string filename) {
           }
         }
         file << std::endl;
-        file << "     Prev: " << lane.second.GetPreviousLanes().size() << std::endl;
-        file << "       ";
+        file << "     Prevs: ";
         for (auto link : lane.second.GetPreviousLanes()) {
           if (link != nullptr) {
             file << " (" << link->GetRoad()->GetId() << "," << link->GetId() << ")";
@@ -270,7 +269,13 @@ void print_roads(boost::optional<Map>& map, std::string filename) {
   name = filename + ".tgf";
   file.open(name, std::ios::out | std::ios::trunc);
   for (auto &road : map->GetMap().GetRoads()) {
-    file << road.second.GetId() << " " << road.second.GetId() << std::endl;
+    std::stringstream road_name;
+    if (road.second.IsJunction()) {
+      road_name << "." << road.second.GetId() << ".";
+    } else {
+      road_name << road.second.GetId();
+    }
+    file << road.second.GetId() << " " << road_name.str() << std::endl;
   }
   file << "#" << std::endl;
   for (auto &road : map->GetMap().GetRoads()) {
@@ -303,7 +308,7 @@ TEST(road, parse_files) {
 
 TEST(road, parse_road_links) {
   for (const auto &file : util::OpenDrive::GetAvailableFiles()) {
-    std::cerr << file << std::endl;
+    // std::cerr << file << std::endl;
     auto map = OpenDriveParser::Load(util::OpenDrive::Load(file));
     ASSERT_TRUE(map);
     test_road_links(map);
