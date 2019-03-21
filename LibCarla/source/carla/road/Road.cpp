@@ -177,7 +177,7 @@ namespace road {
     const auto lane_offset = _info.GetInfo<element::RoadInfoLaneOffset>(clamped_s);
     const float offset = lane_offset->GetPolynomial().Evaluate(clamped_s);
 
-    element::DirectedPoint p = geometry->GetGeometry().PosFromDist(clamped_s);
+    element::DirectedPoint p = geometry->GetGeometry().PosFromDist(clamped_s - geometry->GetDistance());
     p.ApplyLateralOffset(offset);
 
     const auto elevation_info = GetElevationOn(s);

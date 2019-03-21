@@ -157,11 +157,11 @@ namespace element {
       assert(std::fabs(_curvature) > 1e-15);
       const double radius = 1.0 / _curvature;
       DirectedPoint p(_start_position, _heading);
-      p.location.x -= radius * std::cos(p.tangent + geom::Math::pi_half());
-      p.location.y -= radius * std::sin(p.tangent + geom::Math::pi_half());
-      p.tangent -= dist * _curvature;
       p.location.x += radius * std::cos(p.tangent + geom::Math::pi_half());
       p.location.y += radius * std::sin(p.tangent + geom::Math::pi_half());
+      p.tangent += dist * _curvature;
+      p.location.x -= radius * std::cos(p.tangent + geom::Math::pi_half());
+      p.location.y -= radius * std::sin(p.tangent + geom::Math::pi_half());
       return p;
     }
 
