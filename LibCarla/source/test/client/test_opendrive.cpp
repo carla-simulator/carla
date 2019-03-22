@@ -413,8 +413,8 @@ TEST(road, iterate_waypoints) {
     ASSERT_TRUE(m.has_value());
     auto &map = *m;
     auto count = 0u;
-    auto waypoints = map.GenerateWaypoints(5.0f);
-    // std::vector<Waypoint> waypoints = {Waypoint{270u, 2, 0.0f}};
+    auto waypoints = map.GenerateWaypoints(5.0);
+    // std::vector<Waypoint> waypoints = {Waypoint{270u, 2, 0.0}};
     for (auto &&wp : waypoints) {
       std::cout << "origin: " << wp << ", type = " << map.GetLaneType(wp) << '\n';
       for (auto &&successor : map.GetSuccessors(wp)) {
@@ -425,7 +425,7 @@ TEST(road, iterate_waypoints) {
             successor.lane_id != wp.lane_id ||
             successor.s != wp.s);
       }
-      for (auto &&next : map.GetNext(wp, 4.0f)) {
+      for (auto &&next : map.GetNext(wp, 4.0)) {
         std::cout << "- next: " << next << ", type = " << map.GetLaneType(next) << '\n';
         ++count;
         auto right = map.GetRight(next);

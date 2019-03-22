@@ -32,7 +32,7 @@ namespace road {
     return _name;
   }
 
-  float Road::GetLength() const {
+  double Road::GetLength() const {
     return _length;
   }
 
@@ -60,11 +60,11 @@ namespace road {
     return _prevs;
   }
 
-  const geom::CubicPolynomial &Road::GetElevationOn(const float s) const {
+  const geom::CubicPolynomial &Road::GetElevationOn(const double s) const {
     return GetInfo<element::RoadInfoElevation>(s)->GetPolynomial();
   }
 
-  Lane &Road::GetLaneByDistance(float s, LaneId lane_id) {
+  Lane &Road::GetLaneByDistance(double s, LaneId lane_id) {
     for (auto &section : GetLaneSectionsAt(s)) {
       auto *lane = section.GetLane(lane_id);
       if (lane != nullptr) {
@@ -74,14 +74,11 @@ namespace road {
     throw_exception(std::runtime_error("lane not found"));
   }
 
-  const Lane &Road::GetLaneByDistance(float s, LaneId lane_id) const {
+  const Lane &Road::GetLaneByDistance(double s, LaneId lane_id) const {
     return const_cast<Road *>(this)->GetLaneByDistance(s, lane_id);
   }
 
   Lane &Road::GetLaneById(SectionId section_id, LaneId lane_id) {
-    std::cout << "[DEBUG] at() road_id: " << GetId() << std::endl;
-    std::cout << "[DEBUG] at() section_id: " << section_id << std::endl;
-    std::cout << "[DEBUG] at() lane_id: " << lane_id << std::endl << std::endl;
     return GetLaneSectionById(section_id).GetLanes().at(lane_id);
   }
 
@@ -90,7 +87,7 @@ namespace road {
   }
 
   // get the lane on a section next to 's'
-  Lane *Road::GetNextLane(const float s, const LaneId lane_id) {
+  Lane *Road::GetNextLane(const double s, const LaneId lane_id) {
 
     auto upper = _lane_sections.upper_bound(s);
 
@@ -107,7 +104,7 @@ namespace road {
   }
 
   // get the lane on a section previous to 's'
-  Lane *Road::GetPrevLane(const float s, const LaneId lane_id) {
+  Lane *Road::GetPrevLane(const double s, const LaneId lane_id) {
 
     auto lower = _lane_sections.lower_bound(s);
     auto rlower = std::make_reverse_iterator(lower);
@@ -175,12 +172,12 @@ namespace road {
     return &_sign_ref;
   }
 
-  element::DirectedPoint Road::GetDirectedPointIn(const float s) const {
-    const float clamped_s = geom::Math::clamp(s, 0.0f, _length);
+  element::DirectedPoint Road::GetDirectedPointIn(const double s) const {
+    const auto clamped_s = geom::Math::clamp<double>(s, 0.0, _length);
     const auto geometry = _info.GetInfo<element::RoadInfoGeometry>(clamped_s);
 
     const auto lane_offset = _info.GetInfo<element::RoadInfoLaneOffset>(clamped_s);
-    const float offset = lane_offset->GetPolynomial().Evaluate(clamped_s);
+    const auto offset = lane_offset->GetPolynomial().Evaluate(clamped_s);
 
     // Apply road's lane offset record
     element::DirectedPoint p = geometry->GetGeometry().PosFromDist(clamped_s - geometry->GetDistance());
@@ -195,8 +192,8 @@ namespace road {
     return p;
   }
 
-  const std::pair<float, float> Road::GetNearestPoint(const geom::Location &loc) const {
-    std::pair<float, float> last = { 0.0, std::numeric_limits<float>::max() };
+  const std::pair<double, double> Road::GetNearestPoint(const geom::Location &loc) const {
+    std::pair<double, double> last = { 0.0, std::numeric_limits<double>::max() };
 
     auto geom_info_list = _info.GetInfos<element::RoadInfoGeometry>();
     decltype(geom_info_list)::iterator nearest_geom = geom_info_list.end();
@@ -218,8 +215,8 @@ namespace road {
     return last;
   }
 
-  const std::pair<const Lane *, float> Road::GetNearestLane(
-      const float s,
+  const std::pair<const Lane *, double> Road::GetNearestLane(
+      const double s,
       const geom::Location &loc) const {
     using namespace carla::road::element;
     std::map<LaneId, const Lane *> lanes(GetLanesAt(s));
@@ -231,23 +228,16 @@ namespace road {
         lanes.lower_bound(1), lanes.end());
 
     DirectedPoint dp_lane_zero = GetDirectedPointIn(s);
-    std::pair<const Lane *, float> result =
-        std::make_pair(nullptr, std::numeric_limits<float>::max());
+    std::pair<const Lane *, double> result =
+        std::make_pair(nullptr, std::numeric_limits<double>::max());
 
     // Unreal's Y axis hack
     // dp_lane_zero.location.y *= -1;
 
     DirectedPoint current_dp = dp_lane_zero;
-    std::cout << "[DEBUG] GetNearestLane (road_id " << GetId() << ")" << std::endl;
     for (const auto &lane : right_lanes) {
-      std::cout << "[DEBUG]      lane_id " << std::hex << (uint64_t)lane.second << std::endl;
-      std::cout << "[DEBUG]      lane_id " << std::dec << lane.first << std::endl;
-      std::cout << "[DEBUG]      s       " << s << std::endl;
-
       const auto lane_width_info = lane.second->GetInfo<RoadInfoLaneWidth>(s);
-      std::cout << "[DEBUG]      lane_id " << std::hex << lane_width_info << std::dec << std::endl;
-
-      const auto half_width = lane_width_info->GetPolynomial().Evaluate(s) / 2.0f;
+      const auto half_width = lane_width_info->GetPolynomial().Evaluate(s) / 2.0;
       current_dp.ApplyLateralOffset(half_width);
       const auto current_dist = geom::Math::Distance(current_dp.location, loc);
       // if the current_dp is near to loc, we are in the right way
@@ -264,7 +254,7 @@ namespace road {
     current_dp = dp_lane_zero;
     for (const auto &lane : left_lanes) {
       const auto lane_width_info = lane.second->GetInfo<RoadInfoLaneWidth>(s);
-      const auto half_width = -lane_width_info->GetPolynomial().Evaluate(s) / 2.0f;
+      const auto half_width = -lane_width_info->GetPolynomial().Evaluate(s) / 2.0;
       current_dp.ApplyLateralOffset(half_width);
       const auto current_dist = geom::Math::Distance(current_dp.location, loc);
       // if the current_dp is near to loc, we are in the right way
@@ -281,7 +271,7 @@ namespace road {
     return result;
   }
 
-  std::map<LaneId, const Lane *> Road::GetLanesAt(const float s) const {
+  std::map<LaneId, const Lane *> Road::GetLanesAt(const double s) const {
     std::map<LaneId, const Lane *> map;
     for (auto &&lane_section : GetLaneSectionsAt(s)) {
       for (auto &&lane : lane_section.GetLanes()) {

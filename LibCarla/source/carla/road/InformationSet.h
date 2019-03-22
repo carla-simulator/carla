@@ -39,7 +39,7 @@ namespace road {
     /// Return all previous infos given a type and a distance (s) from
     /// the start of the road
     template <typename T>
-    std::vector<const T *> GetPreviousInfos(const float s) const {
+    std::vector<const T *> GetPreviousInfos(const double s) const {
       std::vector<const T *> vec;
       auto it = element::MakeRoadInfoIterator<T>(_road_set.GetSubset(s));
       for (; !it.IsAtEnd(); ++it) {
@@ -51,7 +51,7 @@ namespace road {
     /// Returns single info given a type and a distance (s) from
     /// the start of the road
     template <typename T>
-    const T *GetInfo(const float s) const {
+    const T *GetInfo(const double s) const {
       auto it = element::MakeRoadInfoIterator<T>(_road_set.GetReverseSubset(s));
       return it.IsAtEnd() ? nullptr : &*it;
     }

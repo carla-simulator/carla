@@ -19,7 +19,7 @@ namespace element {
   public:
 
     RoadInfoLaneRule(
-        float s,   // start position relative to the position of the preceding
+        double s,   // start position relative to the position of the preceding
                    // lane section
         std::string value)
       : RoadInfo(s),

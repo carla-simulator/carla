@@ -17,13 +17,13 @@ namespace element {
   public:
 
     RoadInfoMarkTypeLine(
-        float s,
+        double s,
         int road_mark_id,
-        float length,
-        float space,
-        float tOffset,
+        double length,
+        double space,
+        double tOffset,
         std::string rule,
-        float width)
+        double width)
       : RoadInfo(s),
         _road_mark_id(road_mark_id),
         _length(length),
@@ -40,15 +40,15 @@ namespace element {
       return _road_mark_id;
     }
 
-    float GetLength() const {
+    double GetLength() const {
       return _length;
     }
 
-    float GetSpace() const {
+    double GetSpace() const {
       return _space;
     }
 
-    float GetTOffset() const {
+    double GetTOffset() const {
       return _tOffset;
     }
 
@@ -56,7 +56,7 @@ namespace element {
       return _rule;
     }
 
-    float GetWidth() const {
+    double GetWidth() const {
       return _width;
     }
 
@@ -64,15 +64,15 @@ namespace element {
 
     const int _road_mark_id;
 
-    const float _length;
+    const double _length;
 
-    const float _space;
+    const double _space;
 
-    const float _tOffset;
+    const double _tOffset;
 
     const std::string _rule;
 
-    const float _width;
+    const double _width;
   };
 
 } // namespace element

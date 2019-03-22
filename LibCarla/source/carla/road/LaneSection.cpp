@@ -9,7 +9,7 @@
 namespace carla {
 namespace road {
 
-  float LaneSection::GetDistance() const {
+  double LaneSection::GetDistance() const {
     return _s;
   }
 

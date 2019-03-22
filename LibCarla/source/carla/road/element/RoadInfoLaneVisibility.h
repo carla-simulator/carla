@@ -24,12 +24,12 @@ namespace element {
   public:
 
     RoadInfoLaneVisibility(
-        float s, // start position relative to the position of the preceding
+        double s, // start position relative to the position of the preceding
                  // lane section
-        float forward,
-        float back,
-        float left,
-        float right)
+        double forward,
+        double back,
+        double left,
+        double right)
       : RoadInfo(s),
         _forward(forward),
         _back(back),
@@ -40,31 +40,31 @@ namespace element {
       v.Visit(*this);
     }
 
-    float GetForward() const {
+    double GetForward() const {
       return _forward;
     }
 
-    float GetBack() const {
+    double GetBack() const {
       return _back;
     }
 
-    float GetLeft() const {
+    double GetLeft() const {
       return _left;
     }
 
-    float GetRight() const {
+    double GetRight() const {
       return _right;
     }
 
   private:
 
-    const float _forward;
+    const double _forward;
 
-    const float _back;
+    const double _back;
 
-    const float _left;
+    const double _left;
 
-    const float _right;
+    const double _right;
   };
 
 } // namespace element

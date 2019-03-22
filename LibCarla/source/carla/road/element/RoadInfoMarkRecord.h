@@ -34,7 +34,7 @@ namespace element {
     };
 
     RoadInfoMarkRecord(
-        float s,
+        double s,
         int road_mark_id)
       : RoadInfo(s),
         _road_mark_id(road_mark_id),
@@ -49,17 +49,17 @@ namespace element {
         _type_width(0.0) {}
 
     RoadInfoMarkRecord(
-        float s,
+        double s,
         int road_mark_id,
         std::string type,
         std::string weight,
         std::string color,
         std::string material,
-        float width,
+        double width,
         LaneChange lane_change,
-        float height,
+        double height,
         std::string type_name,
-        float type_width)
+        double type_width)
       : RoadInfo(s),
         _road_mark_id(road_mark_id),
         _type(type),
@@ -103,7 +103,7 @@ namespace element {
     }
 
     /// Width of the road mark –optional.
-    float GetWidth() const {
+    double GetWidth() const {
       return _width;
     }
 
@@ -116,7 +116,7 @@ namespace element {
 
     /// Physical distance of top edge of road mark from reference plane of the
     /// lane.
-    float GetHeight() const {
+    double GetHeight() const {
       return _height;
     }
 
@@ -126,7 +126,7 @@ namespace element {
     }
 
     /// Width of the road mark type if it has one.
-    float GetTypeWidth() const {
+    double GetTypeWidth() const {
       return _type_width;
     }
 
@@ -146,15 +146,15 @@ namespace element {
 
     const std::string _material;
 
-    const float _width;
+    const double _width;
 
     const LaneChange _lane_change;
 
-    const float _height;
+    const double _height;
 
     const std::string _type_name;
 
-    const float _type_width;
+    const double _type_width;
 
     std::vector<std::unique_ptr<RoadInfoMarkTypeLine>> _lines;
   };

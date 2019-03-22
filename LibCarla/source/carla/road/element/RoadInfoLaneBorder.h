@@ -24,11 +24,11 @@ namespace element {
   public:
 
     RoadInfoLaneBorder(
-        float s,
-        float a,
-        float b,
-        float c,
-        float d)
+        double s,
+        double a,
+        double b,
+        double c,
+        double d)
       : RoadInfo(s),
         _border(a, b, c, d, s) {}
 

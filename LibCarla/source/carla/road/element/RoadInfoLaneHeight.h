@@ -23,9 +23,9 @@ namespace element {
   public:
 
     RoadInfoLaneHeight(
-        float s, // start position relative to the position of the preceding lane section
-        float inner,
-        float outer)
+        double s, // start position relative to the position of the preceding lane section
+        double inner,
+        double outer)
       : RoadInfo(s),
         _inner(inner),
         _outer(outer) {}
@@ -35,20 +35,20 @@ namespace element {
     }
 
     /// Inner offset from road level.
-    float GetInner() const {
+    double GetInner() const {
       return _inner;
     }
 
     /// Outer offset from road level.
-    float GetOuter() const {
+    double GetOuter() const {
       return _outer;
     }
 
   private:
 
-    const float _inner;
+    const double _inner;
 
-    const float _outer;
+    const double _outer;
   };
 
 } // namespace element
