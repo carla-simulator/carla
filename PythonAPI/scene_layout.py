@@ -251,7 +251,7 @@ def get_dynamic_objects(carla_world, carla_map):
         return speed_limits_dict
 
     def get_static_obstacles(static_obstacles):
-        static_obstacles = dict()
+        static_obstacles_dict = dict()
         for speed_limit in static_obstacles:
             sl_transform = static_obstacles.get_transform()
             location_gnss = carla_map.transform_to_geolocation(sl_transform.location)
@@ -259,8 +259,8 @@ def get_dynamic_objects(carla_world, carla_map):
                 "id": speed_limit.id,
                 "position": [location_gnss.latitude, location_gnss.longitude, location_gnss.altitude]
             }
-            static_obstacles[speed_limit.id] = sl_dict
-        return static_obstacles
+            static_obstacles_dict[speed_limit.id] = sl_dict
+        return static_obstacles_dict
 
     actors = carla_world.get_actors()
     vehicles, traffic_lights, speed_limits, walkers, stops, static_obstacles = _split_actors(actors)
