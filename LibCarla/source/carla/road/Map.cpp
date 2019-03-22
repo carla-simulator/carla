@@ -174,9 +174,15 @@ namespace road {
       }
     }
 
-    // Make sure 0.0 < waipoint.s < Road's lenght
-    const auto road_len = _data.GetRoad(waypoint.road_id).GetLength();
-    waypoint.s = geom::Math::clamp<float>(waypoint.s, 0.0, road_len);
+    const auto &road = _data.GetRoad(waypoint.road_id);
+
+    // Make sure 0.0 < waipoint.s < Road's length
+    waypoint.s = geom::Math::clamp<float>(waypoint.s, 0.0, road.GetLength());
+
+    auto &lane = road.GetLaneByDistance(waypoint.s, waypoint.lane_id);
+
+    const auto lane_section_id = lane.GetLaneSection()->GetId();
+    waypoint.section_id = lane_section_id;
 
     return waypoint;
   }
@@ -288,6 +294,11 @@ namespace road {
   std::pair<const RoadInfoMarkRecord *, const RoadInfoMarkRecord *>
   Map::GetMarkRecord(const Waypoint waypoint) const {
     const auto s = waypoint.s;
+
+    std::cout << "[DEBUG] GetMarkRecord: road_id:    " << waypoint.road_id << std::endl;
+    std::cout << "[DEBUG] GetMarkRecord: section_id: " << waypoint.section_id << std::endl;
+    std::cout << "[DEBUG] GetMarkRecord: lane_id:    " << waypoint.lane_id << std::endl;
+    std::cout << "[DEBUG] GetMarkRecord: s:          " << waypoint.s << std::endl << std::endl;
 
     const auto &current_lane = GetLane(waypoint);
     THROW_INVALID_INPUT_ASSERT(s <= current_lane.GetRoad()->GetLength());

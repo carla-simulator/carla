@@ -58,8 +58,6 @@ namespace road {
 
     RoadId GetPredecessor() const;
 
-    Lane *GetLane(const LaneId id, const float s);
-
     Lane &GetLaneById(SectionId section_id, LaneId lane_id);
 
     const Lane &GetLaneById(SectionId section_id, LaneId lane_id) const;

@@ -10,6 +10,7 @@
 #include "carla/road/RoadTypes.h"
 
 #include <vector>
+#include <iostream>
 #include <memory>
 
 namespace carla {
@@ -50,6 +51,8 @@ namespace road {
       if (_lane_section != nullptr) {
         return _info.GetInfo<T>(s - GetDistance());
       }
+
+      std::cout << "[DEBUG] info is null!" << std::endl;
       return nullptr;
     }
 
