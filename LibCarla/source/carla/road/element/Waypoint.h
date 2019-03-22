@@ -19,6 +19,8 @@ namespace element {
 
     RoadId road_id = 0u;
 
+    SectionId section_id = 0u;
+
     LaneId lane_id = 0;
 
     float s = 0.0f;
