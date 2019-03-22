@@ -39,40 +39,28 @@ namespace road {
 
     std::unordered_map<JuncId, Junction> &GetJunctions();
 
-    Road *GetRoad(const RoadId id);
+    bool ContainsRoad(RoadId id) const {
+      return (_roads.find(id) != _roads.end());
+    }
 
-    const Road *GetRoad(const RoadId id) const;
+    Road &GetRoad(const RoadId id);
+
+    const Road &GetRoad(const RoadId id) const;
 
     Junction *GetJunction(JuncId id);
 
-    Lane *GetLane(const RoadId road_id, LaneId lane_id, float s);
-
-    const Lane *GetLane(const RoadId road_id, LaneId lane_id, float s) const;
-
     template <typename T>
-    const std::shared_ptr<const T> GetRoadInfo(
-        const RoadId id,
-        const float s) {
-      auto road = GetRoad(id);
-      if (road != nullptr) {
-        return road->GetInfo<T>(s);
-      }
-      return nullptr;
+    auto GetRoadInfo(const RoadId id, const float s) {
+      return GetRoad(id).template GetInfo<T>(s);
     }
 
     template <typename T>
-    const std::shared_ptr<const T> GetLaneInfo(
+    auto GetLaneInfo(
         const RoadId road_id,
+        const SectionId section_id,
         const LaneId lane_id,
         const float s) {
-      auto road = GetRoad(road_id);
-      if (road != nullptr) {
-        auto lane = road->GetLane(lane_id, s);
-        if (lane != nullptr) {
-          return lane->GetInfo<T>(s);
-        }
-      }
-      return nullptr;
+      return GetRoad(road_id).GetLaneById(section_id, lane_id).template GetInfo<T>(s);
     }
 
     auto GetRoadCount() const {

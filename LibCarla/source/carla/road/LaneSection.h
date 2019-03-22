@@ -24,13 +24,17 @@ namespace road {
   class LaneSection : private MovableNonCopyable {
   public:
 
-    LaneSection() = default;
+    explicit LaneSection(SectionId id, float s) : _id(id), _s(s) {}
 
     float GetDistance() const;
 
     Road *GetRoad();
 
     Lane *GetLane(const LaneId id);
+
+    bool ContainsLane(LaneId id) const {
+      return (_lanes.find(id) != _lanes.end());
+    }
 
     SectionId GetId() const;
 
@@ -44,16 +48,15 @@ namespace road {
 
     friend MapBuilder;
 
+    const SectionId _id;
+
+    const float _s;
+
     Road *_road;
-
-    SectionId _id;
-
-    float _s;
 
     std::map<LaneId, Lane> _lanes;
 
     geom::CubicPolynomial _lane_offset;
-
   };
 
 } // road

@@ -12,15 +12,16 @@
 #include "carla/road/InformationSet.h"
 #include "carla/road/Junction.h"
 #include "carla/road/LaneSection.h"
+#include "carla/road/LaneSectionMap.h"
 #include "carla/road/RoadElementSet.h"
 #include "carla/road/RoadTypes.h"
+#include "carla/road/element/Geometry.h"
 #include "carla/road/element/RoadInfo.h"
 #include "carla/road/signal/Signal.h"
 #include "carla/road/signal/SignalReference.h"
-#include "carla/road/element/Geometry.h"
 
+#include <unordered_map>
 #include <vector>
-#include <map>
 
 namespace carla {
 namespace road {
@@ -49,9 +50,13 @@ namespace road {
 
     JuncId GetJunction() const;
 
-    Lane *GetLane(const LaneId id, const float s);
+    Lane &GetLaneByDistance(float s, LaneId lane_id);
 
-    const Lane *GetLane(const LaneId id, const float s) const;
+    const Lane &GetLaneByDistance(float s, LaneId lane_id) const;
+
+    Lane &GetLaneById(SectionId section_id, LaneId lane_id);
+
+    const Lane &GetLaneById(SectionId section_id, LaneId lane_id) const;
 
     Lane *GetNextLane(const float s, const LaneId lane_id);
 
@@ -139,6 +144,20 @@ namespace road {
           iterator::make_map_values_const_iterator(pair.second));
     }
 
+    LaneSection &GetLaneSectionById(SectionId id) {
+      return _lane_sections.GetById(id);
+    }
+
+    const LaneSection &GetLaneSectionById(SectionId id) const {
+      return _lane_sections.GetById(id);
+    }
+
+    /// @todo Give a better name to this function.
+    float UpperBound(float s) const {
+      auto it = _lane_sections.upper_bound(s);
+      return it != _lane_sections.end() ? it->first : _length;
+    }
+
     /// Get all lanes at a given s
     std::map<LaneId, const Lane *> GetLanesAt(const float s) const;
 
@@ -158,7 +177,7 @@ namespace road {
 
     JuncId _junction_id { -1 };
 
-    std::multimap<float, LaneSection> _lane_sections;
+    LaneSectionMap _lane_sections;
 
     InformationSet _info;
 
@@ -169,7 +188,6 @@ namespace road {
     std::unordered_map<SignId, signal::Signal> _signals;
 
     std::unordered_map<SignRefId, signal::SignalReference> _sign_ref;
-
   };
 
 } // road

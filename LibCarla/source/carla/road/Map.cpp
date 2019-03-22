@@ -52,7 +52,7 @@ namespace road {
     for (const auto &pair : lane_section.GetLanes()) {
       const auto &lane = pair.second;
       if (lane.GetType() == "driving") {
-        std::forward<FuncT>(func)(Waypoint{road_id, lane.GetId(), lane_section.GetDistance()});
+        std::forward<FuncT>(func)(Waypoint{road_id, lane_section.GetId(), lane.GetId(), lane_section.GetDistance()});
       }
     }
   }
@@ -100,6 +100,20 @@ namespace road {
       }
     }
     return std::make_pair(dist, tangent);
+  }
+
+  /// Assumes road_id and section_id are valid.
+  static bool IsLanePresent(const MapData &data, Waypoint waypoint) {
+    const auto &section = data.GetRoad(waypoint.road_id).GetLaneSectionById(waypoint.section_id);
+    return section.ContainsLane(waypoint.lane_id);
+  }
+
+  static float GetDistanceAtStartOfLane(const Lane &lane) {
+    if (lane.GetId() <= 0) {
+      return lane.GetDistance();
+    } else {
+      return lane.GetDistance() + lane.GetLength();
+    }
   }
 
   // ===========================================================================
@@ -152,7 +166,7 @@ namespace road {
     Waypoint waypoint;
     auto nearest_lane_dist = std::numeric_limits<float>::max();
     for (int i = 0; i < max_nearest_allowed; ++i) {
-      auto lane_dist = _data.GetRoad(ids[i])->GetNearestLane(dists[i], pos_inverted_y);
+      auto lane_dist = _data.GetRoad(ids[i]).GetNearestLane(dists[i], pos_inverted_y);
 
       if (lane_dist.second < nearest_lane_dist) {
         nearest_lane_dist = lane_dist.second;
@@ -163,7 +177,7 @@ namespace road {
     }
 
     THROW_INVALID_INPUT_ASSERT(
-        waypoint.s <= _data.GetRoad(waypoint.road_id)->GetLength());
+        waypoint.s <= _data.GetRoad(waypoint.road_id).GetLength());
     THROW_INVALID_INPUT_ASSERT(waypoint.lane_id != 0);
 
     return waypoint;
@@ -172,7 +186,7 @@ namespace road {
   boost::optional<Waypoint> Map::GetWaypoint(const geom::Location &pos) const {
     Waypoint w = GetClosestWaypointOnRoad(pos);
     const auto dist = geom::Math::Distance2D(ComputeTransform(w).location, pos);
-    const auto lane_width_info = GetLane(w)->GetInfo<RoadInfoLaneWidth>(w.s);
+    const auto lane_width_info = GetLane(w).GetInfo<RoadInfoLaneWidth>(w.s);
     const auto half_lane_width =
         lane_width_info->GetPolynomial().Evaluate(w.s) * 0.5f;
 
@@ -187,15 +201,13 @@ namespace road {
     // lane_id can't be 0
     THROW_INVALID_INPUT_ASSERT(waypoint.lane_id != 0);
 
-    const auto road = _data.GetRoad(waypoint.road_id);
-    // road cannot be nullptr
-    THROW_INVALID_INPUT_ASSERT(road != nullptr);
+    const auto &road = _data.GetRoad(waypoint.road_id);
 
     // must s be smaller (or eq) than road lenght and bigger (or eq) than 0?
-    THROW_INVALID_INPUT_ASSERT(waypoint.s <= road->GetLength());
+    THROW_INVALID_INPUT_ASSERT(waypoint.s <= road.GetLength());
     THROW_INVALID_INPUT_ASSERT(waypoint.s >= 0.0f);
 
-    const std::map<LaneId, const Lane *> lanes = road->GetLanesAt(waypoint.s);
+    const std::map<LaneId, const Lane *> lanes = road.GetLanesAt(waypoint.s);
     // check that lane_id exists on the current s
     THROW_INVALID_INPUT_ASSERT(waypoint.lane_id >= lanes.begin()->first);
     THROW_INVALID_INPUT_ASSERT(waypoint.lane_id <= lanes.end()->first);
@@ -223,7 +235,7 @@ namespace road {
     lane_tangent *= -1;
 
     // get a directed point in s and apply the computed lateral offet
-    DirectedPoint dp = road->GetDirectedPointIn(waypoint.s);
+    DirectedPoint dp = road.GetDirectedPointIn(waypoint.s);
 
     geom::Rotation rot(
         geom::Math::to_degrees(dp.pitch),
@@ -250,48 +262,41 @@ namespace road {
   // ===========================================================================
 
   std::string Map::GetLaneType(const Waypoint waypoint) const {
-    const auto *lane = GetLane(waypoint);
-    THROW_INVALID_INPUT_ASSERT(lane != nullptr);
-    return lane->GetType();
+    return GetLane(waypoint).GetType();
   }
 
   double Map::GetLaneWidth(const Waypoint waypoint) const {
     const auto s = waypoint.s;
 
-    const auto *lane = GetLane(waypoint);
-    THROW_INVALID_INPUT_ASSERT(lane != nullptr);
-    THROW_INVALID_INPUT_ASSERT(s <= lane->GetRoad()->GetLength());
+    const auto &lane = GetLane(waypoint);
+    THROW_INVALID_INPUT_ASSERT(s <= lane.GetRoad()->GetLength());
 
-    const auto lane_width_info = lane->GetInfo<RoadInfoLaneWidth>(s);
+    const auto lane_width_info = lane.GetInfo<RoadInfoLaneWidth>(s);
     THROW_INVALID_INPUT_ASSERT(lane_width_info != nullptr);
 
     return lane_width_info->GetPolynomial().Evaluate(s);
   }
 
   bool Map::IsJunction(const RoadId road_id) const {
-    const auto *road = _data.GetRoad(road_id);
-    THROW_INVALID_INPUT_ASSERT(road != nullptr);
-    return road->IsJunction();
+    return _data.GetRoad(road_id).IsJunction();
   }
 
   std::pair<const RoadInfoMarkRecord *, const RoadInfoMarkRecord *>
   Map::GetMarkRecord(const Waypoint waypoint) const {
     const auto s = waypoint.s;
 
-    const auto *current_lane = GetLane(waypoint);
-    THROW_INVALID_INPUT_ASSERT(current_lane != nullptr);
-    THROW_INVALID_INPUT_ASSERT(s <= current_lane->GetRoad()->GetLength());
+    const auto &current_lane = GetLane(waypoint);
+    THROW_INVALID_INPUT_ASSERT(s <= current_lane.GetRoad()->GetLength());
 
     const auto inner_lane_id = waypoint.lane_id < 0 ?
         waypoint.lane_id + 1 :
         waypoint.lane_id - 1;
 
-    const auto *inner_lane = current_lane->GetRoad()->GetLane(inner_lane_id, s);
-    THROW_INVALID_INPUT_ASSERT(inner_lane != nullptr);
+    const auto &inner_lane = current_lane.GetRoad()->GetLaneById(waypoint.section_id, inner_lane_id);
 
-    auto current_lane_info = current_lane->GetInfo<RoadInfoMarkRecord>(s);
+    auto current_lane_info = current_lane.GetInfo<RoadInfoMarkRecord>(s);
     THROW_INVALID_INPUT_ASSERT(current_lane_info != nullptr);
-    auto inner_lane_info = inner_lane->GetInfo<RoadInfoMarkRecord>(s);
+    auto inner_lane_info = inner_lane.GetInfo<RoadInfoMarkRecord>(s);
     THROW_INVALID_INPUT_ASSERT(inner_lane_info != nullptr);
 
     return std::make_pair(current_lane_info, inner_lane_info);
@@ -307,30 +312,20 @@ namespace road {
   // -- Map: Waypoint generation -----------------------------------------------
   // ===========================================================================
 
-  bool Map::IsValid(Waypoint waypoint) const {
-    /// @todo Check if it's inside the road length.
-    return GetLane(waypoint) != nullptr;
-  }
-
   std::vector<Waypoint> Map::GetSuccessors(const Waypoint waypoint) const {
-    auto *lane = GetLane(waypoint);
-    THROW_INVALID_INPUT_ASSERT(lane != nullptr);
-
-    const auto &next_lanes =
-        lane->GetId() <= 0 ?
-            lane->GetNextLanes() :
-            lane->GetPreviousLanes();
-
+    const auto &next_lanes = GetLane(waypoint).GetNextLanes();
     std::vector<Waypoint> result;
     result.reserve(next_lanes.size());
     for (auto *next_lane : next_lanes) {
       THROW_INVALID_INPUT_ASSERT(next_lane != nullptr);
       const auto lane_id = next_lane->GetId();
       THROW_INVALID_INPUT_ASSERT(lane_id != 0);
+      const auto *section = next_lane->GetLaneSection();
+      THROW_INVALID_INPUT_ASSERT(section != nullptr);
       const auto *road = next_lane->GetRoad();
       THROW_INVALID_INPUT_ASSERT(road != nullptr);
-      const auto distance = lane_id < 0 ? 0.0f : road->GetLength();
-      result.emplace_back(Waypoint{road->GetId(), lane_id, distance});
+      const auto distance = GetDistanceAtStartOfLane(*next_lane);
+      result.emplace_back(Waypoint{road->GetId(), section->GetId(), lane_id, distance});
     }
     return result;
   }
@@ -338,32 +333,31 @@ namespace road {
   std::vector<Waypoint> Map::GetNext(
       const Waypoint waypoint,
       const float distance) const {
-    THROW_INVALID_INPUT_ASSERT(waypoint.lane_id != 0);
+    THROW_INVALID_INPUT_ASSERT(distance > 0.0f);
+    const auto &lane = GetLane(waypoint);
+    const bool forward = (waypoint.lane_id <= 0);
+    const float signed_distance = forward ? distance : -distance;
+    const float relative_s = waypoint.s - lane.GetDistance();
+    const float remaining_lane_length = forward ? lane.GetLength() - relative_s : relative_s;
+    DEBUG_ASSERT(remaining_lane_length >= 0.0f);
 
-    float distance_on_next_segment;
-
-    if (waypoint.lane_id <= 0) {
-      // road goes forward.
-      const auto total_distance = waypoint.s + distance;
-      const auto *road = _data.GetRoad(waypoint.road_id);
-      THROW_INVALID_INPUT_ASSERT(road != nullptr);
-      const auto road_length = road->GetLength();
-      if (total_distance <= road_length) {
-        return { Waypoint{waypoint.road_id, waypoint.lane_id, total_distance} };
-      }
-      distance_on_next_segment = total_distance - road_length;
-    } else {
-      // road goes backward.
-      const auto total_distance = waypoint.s - distance;
-      if (total_distance >= 0.0f) {
-        return { Waypoint{waypoint.road_id, waypoint.lane_id, total_distance} };
-      }
-      distance_on_next_segment = std::abs(total_distance);
+    // If after subtracting the distance we are still in the same lane, return
+    // same waypoint with the extra distance.
+    if (distance < remaining_lane_length) {
+      Waypoint result = waypoint;
+      result.s += signed_distance;
+      return { result };
     }
 
+    // If we run out of remaining_lane_length we have to go to the successors.
     std::vector<Waypoint> result;
-    for (const auto &next_waypoint : GetSuccessors(waypoint)) {
-      result = ConcatVectors(result, GetNext(next_waypoint, distance_on_next_segment));
+    for (const auto &successor : GetSuccessors(waypoint)) {
+      DEBUG_ASSERT(
+          successor.road_id != waypoint.road_id ||
+          successor.section_id != waypoint.section_id ||
+          successor.lane_id != waypoint.lane_id ||
+          successor.s != waypoint.s);
+      result = ConcatVectors(result, GetNext(successor, distance - remaining_lane_length));
     }
     return result;
   }
@@ -375,7 +369,7 @@ namespace road {
     } else {
       --waypoint.lane_id;
     }
-    return GetLane(waypoint) != nullptr ? waypoint : boost::optional<Waypoint>{};
+    return IsLanePresent(_data, waypoint) ? waypoint : boost::optional<Waypoint>{};
   }
 
   boost::optional<Waypoint> Map::GetLeft(Waypoint waypoint) const {
@@ -387,7 +381,7 @@ namespace road {
     } else {
       ++waypoint.lane_id;
     }
-    return GetLane(waypoint) != nullptr ? waypoint : boost::optional<Waypoint>{};
+    return IsLanePresent(_data, waypoint) ? waypoint : boost::optional<Waypoint>{};
   }
 
   std::vector<Waypoint> Map::GenerateWaypoints(const float distance) const {
@@ -456,8 +450,8 @@ namespace road {
   // -- Map: Private functions -------------------------------------------------
   // ===========================================================================
 
-  const Lane *Map::GetLane(Waypoint waypoint) const {
-    return _data.GetLane(waypoint.road_id, waypoint.lane_id, waypoint.s);
+  const Lane &Map::GetLane(Waypoint waypoint) const {
+    return _data.GetRoad(waypoint.road_id).GetLaneById(waypoint.section_id, waypoint.lane_id);
   }
 
 } // namespace road

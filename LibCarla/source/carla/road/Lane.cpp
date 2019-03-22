@@ -4,9 +4,12 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include "carla/Debug.h"
 #include "carla/road/Lane.h"
 #include "carla/road/LaneSection.h"
 #include "carla/road/Road.h"
+
+#include <limits>
 
 namespace carla {
 namespace road {
@@ -16,6 +19,7 @@ namespace road {
   }
 
   const Road *Lane::GetRoad() const {
+    DEBUG_ASSERT(_lane_section != nullptr);
     return _lane_section->GetRoad();
   }
 
@@ -32,7 +36,15 @@ namespace road {
   }
 
   float Lane::GetDistance() const {
+    DEBUG_ASSERT(_lane_section != nullptr);
     return _lane_section->GetDistance();
+  }
+
+  float Lane::GetLength() const {
+    const auto *road = GetRoad();
+    DEBUG_ASSERT(road != nullptr);
+    const auto s = GetDistance();
+    return road->UpperBound(s) - s;
   }
 
 } // road
