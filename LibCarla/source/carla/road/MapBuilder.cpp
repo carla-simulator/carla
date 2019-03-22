@@ -230,7 +230,7 @@ namespace road {
       const float pitch,
       const float roll) {
 
-    _map_data.GetRoad(road_id)->getSignals()->emplace(signal_id,
+    _map_data.GetRoad(road_id).getSignals()->emplace(signal_id,
         signal::Signal(road_id, signal_id, s, t, name, dynamic,
         orientation, zOffset, country, type, subtype, value, unit, height, width,
         text, hOffset, pitch, roll));
@@ -241,7 +241,7 @@ namespace road {
       const uint32_t signal_id,
       const int32_t from_lane,
       const int32_t to_lane) {
-    _map_data.GetRoad(road_id)->GetSignal(signal_id)->AddValidity(general::Validity(signal_id, from_lane, to_lane));
+    _map_data.GetRoad(road_id).GetSignal(signal_id)->AddValidity(general::Validity(signal_id, from_lane, to_lane));
   }
 
   // build road objects
@@ -273,16 +273,9 @@ namespace road {
       Road *road,
       const SectionId id,
       const float s) {
-
-    // add it
-    carla::road::LaneSection *sec = &(road->_lane_sections.emplace(std::make_pair(float(s), LaneSection())))->second;
-
-    // set section data
-    sec->_road = const_cast<Road *>(road);
-    sec->_id = id;
-    sec->_s = s;
-
-    return sec;
+    carla::road::LaneSection &sec = road->_lane_sections.Emplace(id, s);
+    sec._road = const_cast<Road *>(road);
+    return &sec;
   }
 
   carla::road::Lane *MapBuilder::AddRoadSectionLane(
@@ -427,7 +420,7 @@ namespace road {
       const uint32_t signal_id,
       const int32_t from_lane,
       const int32_t to_lane) {
-    _map_data.GetRoad(road_id)->GetSignal(signal_id)->AddValidity(general::Validity(signal_id, from_lane,
+    _map_data.GetRoad(road_id).GetSignal(signal_id)->AddValidity(general::Validity(signal_id, from_lane,
         to_lane));
   }
 
@@ -436,7 +429,7 @@ namespace road {
       const uint32_t signal_reference_id,
       const int32_t from_lane,
       const int32_t to_lane) {
-    _map_data.GetRoad(road_id)->GetSignalRef(signal_reference_id)->AddValidity(general::Validity(
+    _map_data.GetRoad(road_id).GetSignalRef(signal_reference_id)->AddValidity(general::Validity(
         signal_reference_id, from_lane, to_lane));
   }
 
@@ -446,7 +439,7 @@ namespace road {
       const float s_position,
       const float t_position,
       const std::string signal_reference_orientation) {
-    _map_data.GetRoad(road_id)->getSignalReferences()->emplace(signal_reference_id,
+    _map_data.GetRoad(road_id).getSignalReferences()->emplace(signal_reference_id,
         signal::SignalReference(road_id, signal_reference_id, s_position, t_position,
         signal_reference_orientation));
   }
@@ -456,7 +449,7 @@ namespace road {
       const uint32_t signal_id,
       const uint32_t dependency_id,
       const std::string dependency_type) {
-    _map_data.GetRoad(road_id)->GetSignal(signal_id)->AddDependency(signal::SignalDependency(
+    _map_data.GetRoad(road_id).GetSignal(signal_id)->AddDependency(signal::SignalDependency(
         road_id,
         signal_id,
         dependency_id,
@@ -467,27 +460,28 @@ namespace road {
       const RoadId road_id,
       const LaneId lane_id,
       const float s) {
-    return _map_data.GetLane(road_id, lane_id, s);
+    return &_map_data.GetRoad(road_id).GetLaneByDistance(s, lane_id);
   }
 
   Road *MapBuilder::GetRoad(
       const RoadId road_id) {
-    return _map_data.GetRoad(road_id);
+    return &_map_data.GetRoad(road_id);
   }
+
   // return the pointer to a lane object
   Lane *MapBuilder::GetEdgeLanePointer(RoadId road_id, bool from_start, LaneId lane_id) {
 
-    // get the road
-    Road *road = _map_data.GetRoad(road_id);
-    if (road == nullptr)
+    if (!_map_data.ContainsRoad(road_id)) {
       return nullptr;
+    }
+    Road &road = _map_data.GetRoad(road_id);
 
     // get the lane section
     LaneSection *section;
     if (from_start)
-      section = road->GetStartSection(lane_id);
+      section = road.GetStartSection(lane_id);
     else
-      section = road->GetEndSection(lane_id);
+      section = road.GetEndSection(lane_id);
 
     // get the lane
     return section->GetLane(lane_id);
@@ -497,37 +491,37 @@ namespace road {
   std::vector<Lane *> MapBuilder::GetLaneNext(RoadId road_id, float s, LaneId lane_id) {
     std::vector<Lane *> result;
 
-    // get the road
-    Road *road = _map_data.GetRoad(road_id);
-    if (road == nullptr)
+    if (!_map_data.ContainsRoad(road_id)) {
       return result;
+    }
+    Road &road = _map_data.GetRoad(road_id);
 
     // get the lane
-    Lane *lane = road->GetLane(lane_id, s);
+    Lane &lane = road.GetLaneByDistance(s, lane_id);
 
     // successor and predecessor (road and lane)
     LaneId next;
     RoadId next_road;
     if (lane_id <= 0) {
-      next_road = road->_nexts[0];
-      next = lane->GetSuccessor();
+      next_road = road._nexts[0];
+      next = lane.GetSuccessor();
     } else {
-      next_road = road->_prevs[0];
-      next = lane->GetPredecessor();
+      next_road = road._prevs[0];
+      next = lane.GetPredecessor();
     }
 
     // check to see if next is a road or a junction
-    bool next_is_junction = (_map_data.GetRoad(next_road) == nullptr);
+    bool next_is_junction = !_map_data.ContainsRoad(next_road);
 
     // check if we are in a lane section in the middle
-    if ((lane_id > 0 && s > 0) || (lane_id <= 0 && road->_lane_sections.upper_bound(s) != road->_lane_sections.end())) {
+    if ((lane_id > 0 && s > 0) || (lane_id <= 0 && road._lane_sections.upper_bound(s) != road._lane_sections.end())) {
       // check if lane has a next link (if not, it deads in the middle section)
       if (next != 0 || (lane_id == 0 && next == 0)) {
         // change to next / prev section
         if (lane_id <= 0) {
-          result.push_back(road->GetNextLane(s, next));
+          result.push_back(road.GetNextLane(s, next));
         } else {
-          result.push_back(road->GetPrevLane(s, next));
+          result.push_back(road.GetPrevLane(s, next));
         }
       }
     } else if (!next_is_junction) {
@@ -551,37 +545,37 @@ namespace road {
   std::vector<Lane *> MapBuilder::GetLanePrevious(RoadId road_id, float s, LaneId lane_id) {
     std::vector<Lane *> result;
 
-    // get the road
-    Road *road = _map_data.GetRoad(road_id);
-    if (road == nullptr)
+    if (!_map_data.ContainsRoad(road_id)) {
       return result;
+    }
+    Road &road = _map_data.GetRoad(road_id);
 
     // get the lane
-    Lane *lane = road->GetLane(lane_id, s);
+    Lane &lane = road.GetLaneByDistance(s, lane_id);
 
     // successor and predecessor (road and lane)
     LaneId prev;
     RoadId prev_road;
     if (lane_id <= 0) {
-      prev_road = road->_prevs[0];
-      prev = lane->GetPredecessor();
+      prev_road = road._prevs[0];
+      prev = lane.GetPredecessor();
     } else {
-      prev_road = road->_nexts[0];
-      prev = lane->GetSuccessor();
+      prev_road = road._nexts[0];
+      prev = lane.GetSuccessor();
     }
 
     // check to see if next is a road or a junction
-    bool prev_is_junction = (_map_data.GetRoad(prev_road) == nullptr);
+    bool prev_is_junction = !_map_data.ContainsRoad(prev_road);
 
     // check if we are in a lane section in the middle
-    if ((lane_id <= 0 && s > 0) || (lane_id > 0 && road->_lane_sections.upper_bound(s) != road->_lane_sections.end())) {
+    if ((lane_id <= 0 && s > 0) || (lane_id > 0 && road._lane_sections.upper_bound(s) != road._lane_sections.end())) {
       // check if lane has a prev link (if not, it deads in the middle section)
       if ((prev != 0) || (lane_id == 0 && prev == 0)) {
         // change to next / prev section
         if (lane_id <= 0) {
-          result.push_back(road->GetPrevLane(s, prev));
+          result.push_back(road.GetPrevLane(s, prev));
         } else {
-          result.push_back(road->GetNextLane(s, prev));
+          result.push_back(road.GetNextLane(s, prev));
         }
       }
     } else if (!prev_is_junction) {

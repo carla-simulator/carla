@@ -58,7 +58,7 @@ void test_road_elevation(const pugi::xml_document &xml, boost::optional<Map>& ma
 
       for (pugi::xml_node elevation_node : elevation_nodes) {
         float s = elevation_node.attribute("s").as_float();
-        const auto elevation = map->GetMap().GetRoad(road_id)->GetInfo<RoadInfoElevation>(s);
+        const auto elevation = map->GetMap().GetRoad(road_id).GetInfo<RoadInfoElevation>(s);
         if (elevation != nullptr)
           ++total_elevations;
       }
@@ -82,7 +82,7 @@ void test_geometry(const pugi::xml_document &xml, boost::optional<Map>& map)
       size_t total_geometries = 0;
       for (pugi::xml_node geometry_node : plan_view_nodes.children("geometry")){
         float s = geometry_node.attribute("s").as_float();
-        auto geometry = map->GetMap().GetRoad(road_id)->GetInfo<RoadInfoGeometry>(s);
+        auto geometry = map->GetMap().GetRoad(road_id).GetInfo<RoadInfoGeometry>(s);
         if (geometry != nullptr)
           ++total_geometries;
       }
@@ -132,14 +132,14 @@ void test_roads(const pugi::xml_document &xml, boost::optional<Map>& map)
       // Check total Lane Sections
       auto lane_sections_parser = lanes_node.children("laneSection");
       size_t total_lane_sections_parser = std::distance(lane_sections_parser.begin(), lane_sections_parser.end());
-      size_t total_lane_sections = map->GetMap().GetRoad(road_id)->GetLaneSections().size();
+      size_t total_lane_sections = map->GetMap().GetRoad(road_id).GetLaneSections().size();
       ASSERT_EQ(total_lane_sections, total_lane_sections_parser);
 
       for (pugi::xml_node lane_section_node : lane_sections_parser) {
 
         // Check total Lanes
         float s = lane_section_node.attribute("s").as_float();
-        auto lane_section = map->GetMap().GetRoad(road_id)->GetLaneSectionsAt(s);
+        auto lane_section = map->GetMap().GetRoad(road_id).GetLaneSectionsAt(s);
         size_t total_lanes = 0u;
         for (auto it = lane_section.begin(); it != lane_section.end(); ++it) {
           total_lanes = it->GetLanes().size();
@@ -382,20 +382,33 @@ TEST(road, iterate_waypoints) {
     auto m = OpenDriveParser::Load(util::OpenDrive::Load(file));
     ASSERT_TRUE(m.has_value());
     auto &map = *m;
-    for (auto &&wp : map.GenerateWaypoints(5.0f)) {
-      ASSERT_TRUE(map.IsValid(wp)) << wp;
+    auto count = 0u;
+    auto waypoints = map.GenerateWaypoints(5.0f);
+    // std::vector<Waypoint> waypoints = {Waypoint{270u, 2, 0.0f}};
+    for (auto &&wp : waypoints) {
+      std::cout << "origin: " << wp << ", type = " << map.GetLaneType(wp) << '\n';
+      for (auto &&successor : map.GetSuccessors(wp)) {
+        std::cout << "- successor: " << successor << ", type = " << map.GetLaneType(successor) << '\n';
+        ASSERT_TRUE(
+            successor.road_id != wp.road_id ||
+            successor.section_id != wp.section_id ||
+            successor.lane_id != wp.lane_id ||
+            successor.s != wp.s);
+      }
       for (auto &&next : map.GetNext(wp, 4.0f)) {
-        ASSERT_TRUE(map.IsValid(next)) << next;
+        std::cout << "- next: " << next << ", type = " << map.GetLaneType(next) << '\n';
+        ++count;
         auto right = map.GetRight(next);
         if (right.has_value()) {
-          ASSERT_TRUE(map.IsValid(*right)) << *right;
+          std::cout << "  * right: " << *right << ", type = " << map.GetLaneType(*right) << '\n';
         }
         auto left = map.GetLeft(next);
         if (left.has_value()) {
-          ASSERT_TRUE(map.IsValid(*left)) << *left;
+          std::cout << "  * left: " << *left << ", type = " << map.GetLaneType(*left) << '\n';
         }
       }
     }
+    ASSERT_GT(count, 0u);
   }
 }
 
