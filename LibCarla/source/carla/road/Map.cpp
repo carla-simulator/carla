@@ -11,6 +11,7 @@
 #include "carla/road/element/RoadInfoGeometry.h"
 #include "carla/road/element/RoadInfoLaneWidth.h"
 #include "carla/road/element/RoadInfoMarkRecord.h"
+#include "carla/road/element/RoadInfoLaneOffset.h"
 #include "carla/geom/Math.h"
 
 #include <stdexcept>
@@ -77,25 +78,22 @@ namespace road {
   /// for an specific Lane given an s and a iterator over lanes
   template <typename T>
   static std::pair<float, float> ComputeTotalLaneWidth(
-      const T container,
-      const float s, const
-      LaneId lane_id) {
+    const T container, const float s, const LaneId lane_id) {
     const bool negative_lane_id = lane_id < 0;
-    auto dist = 0.0;
-    auto tangent = 0.0;
+    float dist = 0.0;
+    float tangent = 0.0;
     for (const auto &lane : container) {
       const auto current_polynomial =
           lane.second->template GetInfo<RoadInfoLaneWidth>(s)->GetPolynomial();
       auto current_dist = current_polynomial.Evaluate(s);
-      auto current_tangent = current_polynomial.Tangent(s);
+      auto current_tang = current_polynomial.Tangent(s);
       if (lane.first != lane_id) {
         dist += negative_lane_id ? current_dist : - current_dist;
-        tangent += current_tangent;
+        tangent += current_tang;
       } else if (lane.first == lane_id) {
         current_dist *= 0.5;
-        current_tangent *= 0.5;
         dist += negative_lane_id ? current_dist : - current_dist;
-        tangent += current_tangent;
+        tangent += current_tang * 0.5;
         break;
       }
     }
@@ -231,11 +229,17 @@ namespace road {
       lane_tangent = computed_width.second;
     }
 
-    // Unreal's Y axis hack
-    lane_tangent *= -1;
-
     // get a directed point in s and apply the computed lateral offet
     DirectedPoint dp = road.GetDirectedPointIn(waypoint.s);
+
+    // compute the tangent of the laneOffset
+    const auto lane_offset_info = road.GetInfo<RoadInfoLaneOffset>(waypoint.s);
+    const auto lane_offset_tangent = lane_offset_info->GetPolynomial().Tangent(waypoint.s);
+
+    lane_tangent -= lane_offset_tangent;
+
+    // Unreal's Y axis hack
+    lane_tangent *= -1;
 
     geom::Rotation rot(
         geom::Math::to_degrees(dp.pitch),
