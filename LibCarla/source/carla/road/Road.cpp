@@ -44,20 +44,20 @@ namespace road {
     return _junction_id;
   }
 
-  std::vector<const Road *> Road::GetNexts() const {
-    std::vector<const Road *> vec;
-    for (auto &&next : _nexts) {
-      vec.emplace_back(&_map_data->GetRoad(next));
-    }
-    return vec;
+  RoadId Road::GetSuccessor() const {
+    return _successor;
   }
 
-  std::vector<const Road *> Road::GetPrevs() const {
-    std::vector<const Road *> vec;
-    for (auto &&prev : _prevs) {
-      vec.emplace_back(&_map_data->GetRoad(prev));
-    }
-    return vec;
+  RoadId Road::GetPredecessor() const {
+    return _predecessor;
+  }
+
+  std::vector<Road *> Road::GetNexts() const {
+    return _nexts;
+  }
+
+  std::vector<Road *> Road::GetPrevs() const {
+    return _prevs;
   }
 
   const geom::CubicPolynomial &Road::GetElevationOn(const float s) const {

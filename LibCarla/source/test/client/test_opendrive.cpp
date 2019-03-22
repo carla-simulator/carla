@@ -234,10 +234,28 @@ void print_roads(boost::optional<Map>& map, std::string filename) {
   file.open(name, std::ios::out | std::ios::trunc);
   for (auto &road : map->GetMap().GetRoads()) {
     file << "Road: " << road.second.GetId() << std::endl;
+    file << "     Nexts: ";
+    for (auto next : road.second.GetNexts()) {
+      if (next != nullptr) {
+        file << next->GetId() << " ";
+      } else {
+        file << " (error, null road)";
+      }
+    }
+    file << std::endl;
+    file << "     Prevs: ";
+    for (auto prev : road.second.GetPrevs()) {
+      if (prev != nullptr) {
+        file << prev->GetId() << " ";
+      } else {
+        file << " (error, null road)";
+      }
+    }
+    file << std::endl;
     for (auto &section : road.second.GetLaneSections()) {
-      file << " Section: " << section.GetDistance() << std::endl;
+      file << " Section: " << section.GetId() << " " << section.GetDistance() << std::endl;
       for (auto &lane : section.GetLanes()) {
-        file << "   Lane: " << lane.second.GetId() << std::endl;
+        file << "   Lane: " << lane.second.GetId() << " (" << lane.second.GetType() << ")" << std::endl;
         file << "     Nexts: ";
         for (auto link : lane.second.GetNextLanes()) {
           if (link != nullptr) {
@@ -278,6 +296,17 @@ void print_roads(boost::optional<Map>& map, std::string filename) {
     file << road.second.GetId() << " " << road_name.str() << std::endl;
   }
   file << "#" << std::endl;
+  // by roads
+  for (auto &road : map->GetMap().GetRoads()) {
+    for (auto next : road.second.GetNexts()) {
+      if (next != nullptr) {
+        file << road.second.GetId() << " " << next->GetId() << std::endl;
+      } else {
+        file << " (error, null road)";
+      }
+    }
+  }
+  /* by lanes
   for (auto &road : map->GetMap().GetRoads()) {
     for (auto &section : road.second.GetLaneSections()) {
       for (auto &lane : section.GetLanes()) {
@@ -294,6 +323,7 @@ void print_roads(boost::optional<Map>& map, std::string filename) {
       }
     }
   }
+  */
   file.close();
 }
 

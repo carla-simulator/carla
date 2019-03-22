@@ -54,6 +54,12 @@ namespace road {
 
     const Lane &GetLaneByDistance(float s, LaneId lane_id) const;
 
+    RoadId GetSuccessor() const;
+
+    RoadId GetPredecessor() const;
+
+    Lane *GetLane(const LaneId id, const float s);
+
     Lane &GetLaneById(SectionId section_id, LaneId lane_id);
 
     const Lane &GetLaneById(SectionId section_id, LaneId lane_id) const;
@@ -66,9 +72,9 @@ namespace road {
     LaneSection *GetStartSection(LaneId id);
     LaneSection *GetEndSection(LaneId id);
 
-    std::vector<const Road *> GetNexts() const;
+    std::vector<Road *> GetNexts() const;
 
-    std::vector<const Road *> GetPrevs() const;
+    std::vector<Road *> GetPrevs() const;
 
     const geom::CubicPolynomial &GetElevationOn(const float s) const;
 
@@ -179,11 +185,17 @@ namespace road {
 
     LaneSectionMap _lane_sections;
 
+    RoadId _successor { 0 };
+
+    RoadId _predecessor { 0 };
+
+    // std::multimap<float, LaneSection> _lane_sections;
+
     InformationSet _info;
 
-    std::vector<RoadId> _nexts;
+    std::vector<Road *> _nexts;
 
-    std::vector<RoadId> _prevs;
+    std::vector<Road *> _prevs;
 
     std::unordered_map<SignId, signal::Signal> _signals;
 
