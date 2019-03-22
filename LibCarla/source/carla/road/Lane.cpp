@@ -15,7 +15,7 @@ namespace road {
     return _lane_section;
   }
 
-  const Road *Lane::GetRoad() const {
+  Road *Lane::GetRoad() const {
     return _lane_section->GetRoad();
   }
 
