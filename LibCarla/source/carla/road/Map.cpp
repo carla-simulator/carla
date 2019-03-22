@@ -213,9 +213,6 @@ namespace road {
       lane_tangent = computed_width.second;
     }
 
-    // Unreal's Y axis hack
-    lane_tangent *= -1;
-
     // get a directed point in s and apply the computed lateral offet
     DirectedPoint dp = road->GetDirectedPointIn(waypoint.s);
 
