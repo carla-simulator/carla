@@ -178,7 +178,8 @@ namespace road {
     const float offset = lane_offset->GetPolynomial().Evaluate(clamped_s);
 
     element::DirectedPoint p = geometry->GetGeometry().PosFromDist(clamped_s - geometry->GetDistance());
-    p.ApplyLateralOffset(offset);
+    // Unreal's Y axis hack
+    p.ApplyLateralOffset(-offset);
 
     const auto elevation_info = GetElevationOn(s);
     p.location.z = elevation_info.Evaluate(s);
