@@ -44,15 +44,15 @@ namespace road {
 
     std::string GetName() const;
 
-    float GetLength() const;
+    double GetLength() const;
 
     bool IsJunction() const;
 
     JuncId GetJunction() const;
 
-    Lane &GetLaneByDistance(float s, LaneId lane_id);
+    Lane &GetLaneByDistance(double s, LaneId lane_id);
 
-    const Lane &GetLaneByDistance(float s, LaneId lane_id) const;
+    const Lane &GetLaneByDistance(double s, LaneId lane_id) const;
 
     RoadId GetSuccessor() const;
 
@@ -62,9 +62,9 @@ namespace road {
 
     const Lane &GetLaneById(SectionId section_id, LaneId lane_id) const;
 
-    Lane *GetNextLane(const float s, const LaneId lane_id);
+    Lane *GetNextLane(const double s, const LaneId lane_id);
 
-    Lane *GetPrevLane(const float s, const LaneId lane_id);
+    Lane *GetPrevLane(const double s, const LaneId lane_id);
 
     // get the start and end section with a lan id
     LaneSection *GetStartSection(LaneId id);
@@ -74,7 +74,7 @@ namespace road {
 
     std::vector<Road *> GetPrevs() const;
 
-    const geom::CubicPolynomial &GetElevationOn(const float s) const;
+    const geom::CubicPolynomial &GetElevationOn(const double s) const;
 
     carla::road::signal::Signal* GetSignal(const SignId id);
 
@@ -88,7 +88,7 @@ namespace road {
     /// with the corresponding laneOffset and elevation records applied,
     /// on distance "s".
     /// - @ param s distance regarding the road to compute the point
-    element::DirectedPoint GetDirectedPointIn (const float s) const;
+    element::DirectedPoint GetDirectedPointIn (const double s) const;
 
     /// Returns a pair containing:
     /// - @b first:  distance to the nearest point on the center in
@@ -96,7 +96,7 @@ namespace road {
     /// - @b second: Euclidean distance from the nearest point in
     ///              this road segment to p.
     ///   @param loc point to calculate the distance
-    const std::pair<float, float> GetNearestPoint(
+    const std::pair<double, double> GetNearestPoint(
         const geom::Location &loc) const;
 
     /// Returns a pointer to the nearest lane, given s relative to Road and
@@ -104,11 +104,11 @@ namespace road {
     ///   @param dist distance from the begining of the road to the point you
     ///          want to calculate the distance
     ///   @param loc point to calculate the distance
-    const std::pair<const Lane *, float> GetNearestLane(
-        const float s, const geom::Location &loc) const;
+    const std::pair<const Lane *, double> GetNearestLane(
+        const double s, const geom::Location &loc) const;
 
     template <typename T>
-    const T *GetInfo (const float s) const {
+    const T *GetInfo (const double s) const {
       return _info.GetInfo<T>(s);
     }
 
@@ -121,7 +121,7 @@ namespace road {
   private:
 
     template <typename MultiMapT>
-    static auto GetLessEqualRange(MultiMapT &map, float s) {
+    static auto GetLessEqualRange(MultiMapT &map, double s) {
       if (map.find(s) == map.end()) {
         auto it = map.lower_bound(s);
         if (it == map.begin()) {
@@ -134,14 +134,14 @@ namespace road {
 
   public:
 
-    auto GetLaneSectionsAt(const float s) {
+    auto GetLaneSectionsAt(const double s) {
       auto pair = GetLessEqualRange(_lane_sections, s);
       return MakeListView(
           iterator::make_map_values_iterator(pair.first),
           iterator::make_map_values_iterator(pair.second));
     }
 
-    auto GetLaneSectionsAt(const float s) const {
+    auto GetLaneSectionsAt(const double s) const {
       auto pair = GetLessEqualRange(_lane_sections, s);
       return MakeListView(
           iterator::make_map_values_const_iterator(pair.first),
@@ -157,13 +157,13 @@ namespace road {
     }
 
     /// @todo Give a better name to this function.
-    float UpperBound(float s) const {
+    double UpperBound(double s) const {
       auto it = _lane_sections.upper_bound(s);
       return it != _lane_sections.end() ? it->first : _length;
     }
 
     /// Get all lanes at a given s
-    std::map<LaneId, const Lane *> GetLanesAt(const float s) const;
+    std::map<LaneId, const Lane *> GetLanesAt(const double s) const;
 
   private:
 
@@ -175,7 +175,7 @@ namespace road {
 
     std::string _name;
 
-    float _length { 0.0f };
+    double _length { 0.0 };
 
     bool _is_junction { false };
 
@@ -187,7 +187,7 @@ namespace road {
 
     RoadId _predecessor { 0 };
 
-    // std::multimap<float, LaneSection> _lane_sections;
+    // std::multimap<double, LaneSection> _lane_sections;
 
     InformationSet _info;
 

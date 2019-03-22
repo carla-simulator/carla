@@ -58,7 +58,7 @@ namespace client {
 
     bool IsIntersection() const;
 
-    float GetLaneWidth() const;
+    double GetLaneWidth() const;
 
     std::string GetType() const;
 

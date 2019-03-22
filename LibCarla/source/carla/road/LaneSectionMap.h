@@ -16,12 +16,12 @@ namespace carla {
 namespace road {
 
   class LaneSectionMap
-    : private std::multimap<float, LaneSection>,
+    : private std::multimap<double, LaneSection>,
       private MovableNonCopyable {
-    using Super = std::multimap<float, LaneSection>;
+    using Super = std::multimap<double, LaneSection>;
   public:
 
-    LaneSection &Emplace(SectionId id, float s) {
+    LaneSection &Emplace(SectionId id, double s) {
       LaneSection &result = Super::emplace(s, LaneSection{id, s})->second;
       _by_id.emplace(result.GetId(), &result);
       return result;

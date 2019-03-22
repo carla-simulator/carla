@@ -17,11 +17,11 @@ namespace element {
   public:
 
     RoadInfoElevation(
-        float s,
-        float a, // elevation
-        float b, // slope
-        float c, // vertical_curvature
-        float d) // curvature_change
+        double s,
+        double a, // elevation
+        double b, // slope
+        double c, // vertical_curvature
+        double d) // curvature_change
       : RoadInfo(s),
         _elevation(a, b, c, d, s) {}
 
@@ -30,7 +30,7 @@ namespace element {
     }
 
     /// @todo unused? you can use the polynomial directly.
-    float Evaluate(const float dist, float &out_tan) const {
+    double Evaluate(const double dist, double &out_tan) const {
       out_tan = _elevation.Tangent(dist);
       return _elevation.Evaluate(dist);
     }

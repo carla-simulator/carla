@@ -47,12 +47,11 @@ namespace road {
     bool GetLevel() const;
 
     template <typename T>
-    const T *GetInfo (const float s) const {
+    const T *GetInfo (const double s) const {
       if (_lane_section != nullptr) {
         return _info.GetInfo<T>(s - GetDistance());
       }
 
-      std::cout << "[DEBUG] info is null!" << std::endl;
       return nullptr;
     }
 
@@ -72,9 +71,9 @@ namespace road {
       return _predecessor;
     }
 
-    float GetDistance() const;
+    double GetDistance() const;
 
-    float GetLength() const;
+    double GetLength() const;
 
   private:
 

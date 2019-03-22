@@ -68,7 +68,7 @@ namespace road {
 
   /// Return a waypoint for each drivable lane at @a distance on @a road.
   template <typename FuncT>
-  static void ForEachDrivableLaneAt(const Road &road, float distance, FuncT &&func) {
+  static void ForEachDrivableLaneAt(const Road &road, double distance, FuncT &&func) {
     for (const auto &lane_section : road.GetLaneSectionsAt(distance)) {
       ForEachDrivableLane(road.GetId(), lane_section, std::forward<FuncT>(func));
     }
@@ -77,11 +77,11 @@ namespace road {
   /// Returns a pair containing first = width, second = tangent,
   /// for an specific Lane given an s and a iterator over lanes
   template <typename T>
-  static std::pair<float, float> ComputeTotalLaneWidth(
-    const T container, const float s, const LaneId lane_id) {
+  static std::pair<double, double> ComputeTotalLaneWidth(
+    const T container, const double s, const LaneId lane_id) {
     const bool negative_lane_id = lane_id < 0;
-    float dist = 0.0;
-    float tangent = 0.0;
+    double dist = 0.0;
+    double tangent = 0.0;
     for (const auto &lane : container) {
       const auto current_polynomial =
           lane.second->template GetInfo<RoadInfoLaneWidth>(s)->GetPolynomial();
@@ -106,7 +106,7 @@ namespace road {
     return section.ContainsLane(waypoint.lane_id);
   }
 
-  static float GetDistanceAtStartOfLane(const Lane &lane) {
+  static double GetDistanceAtStartOfLane(const Lane &lane) {
     if (lane.GetId() <= 0) {
       return lane.GetDistance();
     } else {
@@ -162,7 +162,7 @@ namespace road {
 
     // search for the nearest lane in nearest_dist
     Waypoint waypoint;
-    auto nearest_lane_dist = std::numeric_limits<float>::max();
+    auto nearest_lane_dist = std::numeric_limits<double>::max();
     for (int i = 0; i < max_nearest_allowed; ++i) {
       auto lane_dist = _data.GetRoad(ids[i]).GetNearestLane(dists[i], pos_inverted_y);
 
@@ -177,7 +177,7 @@ namespace road {
     const auto &road = _data.GetRoad(waypoint.road_id);
 
     // Make sure 0.0 < waipoint.s < Road's length
-    waypoint.s = geom::Math::clamp<float>(waypoint.s, 0.0, road.GetLength());
+    waypoint.s = geom::Math::clamp<double>(waypoint.s, 0.0, road.GetLength());
 
     auto &lane = road.GetLaneByDistance(waypoint.s, waypoint.lane_id);
 
@@ -192,7 +192,7 @@ namespace road {
     const auto dist = geom::Math::Distance2D(ComputeTransform(w).location, pos);
     const auto lane_width_info = GetLane(w).GetInfo<RoadInfoLaneWidth>(w.s);
     const auto half_lane_width =
-        lane_width_info->GetPolynomial().Evaluate(w.s) * 0.5f;
+        lane_width_info->GetPolynomial().Evaluate(w.s) * 0.5;
 
     if (dist < half_lane_width) {
       return w;
@@ -209,15 +209,30 @@ namespace road {
 
     // must s be smaller (or eq) than road lenght and bigger (or eq) than 0?
     THROW_INVALID_INPUT_ASSERT(waypoint.s <= road.GetLength());
-    THROW_INVALID_INPUT_ASSERT(waypoint.s >= 0.0f);
-
+    THROW_INVALID_INPUT_ASSERT(waypoint.s >= 0.0);
+    //            int32_t
     const std::map<LaneId, const Lane *> lanes = road.GetLanesAt(waypoint.s);
+
+    // Non sense
     // check that lane_id exists on the current s
+
+    if (waypoint.lane_id > lanes.end()->first || waypoint.lane_id < lanes.begin()->first) {
+      std::cout << "[DEBUG] road_id:    " << waypoint.road_id << std::endl;
+      std::cout << "[DEBUG] lane_id:    " << waypoint.lane_id << std::endl;
+      std::cout << "[DEBUG] section_id: " << waypoint.section_id << std::endl;
+      std::cout << "[DEBUG] s         : " << waypoint.s << std::endl;
+      std::cout << "[DEBUG] lanes.begin()->first: " << lanes.begin()->first << std::endl;
+      std::cout << "[DEBUG]                   id: " << lanes.begin()->second->GetId() << std::endl;
+      std::cout << "[DEBUG] lanes.end()->first: " << lanes.end()->first << std::endl;
+      std::cout << "[DEBUG]                   id: " << lanes.end()->second->GetId() << std::endl;
+      std::cout << std::endl;
+    }
+
     THROW_INVALID_INPUT_ASSERT(waypoint.lane_id >= lanes.begin()->first);
     THROW_INVALID_INPUT_ASSERT(waypoint.lane_id <= lanes.end()->first);
 
-    float lane_width = 0;
-    float lane_tangent = 0;
+    double lane_width = 0;
+    double lane_tangent = 0;
     if (waypoint.lane_id < 0) {
       // right lane
       const auto side_lanes = MakeListView(
@@ -255,8 +270,8 @@ namespace road {
     dp.ApplyLateralOffset(lane_width);
 
     if (waypoint.lane_id > 0) {
-      rot.yaw += 180.0f + geom::Math::to_degrees(lane_tangent);
-      rot.pitch = 360.0f - rot.pitch;
+      rot.yaw += 180.0 + geom::Math::to_degrees(lane_tangent);
+      rot.pitch = 360.0 - rot.pitch;
     } else {
       rot.yaw -= geom::Math::to_degrees(lane_tangent);
     }
@@ -294,11 +309,6 @@ namespace road {
   std::pair<const RoadInfoMarkRecord *, const RoadInfoMarkRecord *>
   Map::GetMarkRecord(const Waypoint waypoint) const {
     const auto s = waypoint.s;
-
-    std::cout << "[DEBUG] GetMarkRecord: road_id:    " << waypoint.road_id << std::endl;
-    std::cout << "[DEBUG] GetMarkRecord: section_id: " << waypoint.section_id << std::endl;
-    std::cout << "[DEBUG] GetMarkRecord: lane_id:    " << waypoint.lane_id << std::endl;
-    std::cout << "[DEBUG] GetMarkRecord: s:          " << waypoint.s << std::endl << std::endl;
 
     const auto &current_lane = GetLane(waypoint);
     THROW_INVALID_INPUT_ASSERT(s <= current_lane.GetRoad()->GetLength());
@@ -347,14 +357,14 @@ namespace road {
 
   std::vector<Waypoint> Map::GetNext(
       const Waypoint waypoint,
-      const float distance) const {
-    THROW_INVALID_INPUT_ASSERT(distance > 0.0f);
+      const double distance) const {
+    THROW_INVALID_INPUT_ASSERT(distance > 0.0);
     const auto &lane = GetLane(waypoint);
     const bool forward = (waypoint.lane_id <= 0);
-    const float signed_distance = forward ? distance : -distance;
-    const float relative_s = waypoint.s - lane.GetDistance();
-    const float remaining_lane_length = forward ? lane.GetLength() - relative_s : relative_s;
-    DEBUG_ASSERT(remaining_lane_length >= 0.0f);
+    const double signed_distance = forward ? distance : -distance;
+    const double relative_s = waypoint.s - lane.GetDistance();
+    const double remaining_lane_length = forward ? lane.GetLength() - relative_s : relative_s;
+    DEBUG_ASSERT(remaining_lane_length >= 0.0);
 
     // If after subtracting the distance we are still in the same lane, return
     // same waypoint with the extra distance.
@@ -399,11 +409,11 @@ namespace road {
     return IsLanePresent(_data, waypoint) ? waypoint : boost::optional<Waypoint>{};
   }
 
-  std::vector<Waypoint> Map::GenerateWaypoints(const float distance) const {
+  std::vector<Waypoint> Map::GenerateWaypoints(const double distance) const {
     std::vector<Waypoint> result;
     for (const auto &pair : _data.GetRoads()) {
       const auto &road = pair.second;
-      for (float s = 0.0f; s < road.GetLength(); s += distance) {
+      for (double s = 0.0; s < road.GetLength(); s += distance) {
         ForEachDrivableLaneAt(road, s, [&](auto &&waypoint) {
           result.emplace_back(waypoint);
         });

@@ -23,7 +23,7 @@ namespace element {
   public:
 
     RoadInfoLaneAccess(
-        float s,   // start position relative to the position of the preceding lane section
+        double s,   // start position relative to the position of the preceding lane section
         std::string restriction)
       : RoadInfo(s),
         _restriction(restriction) {}

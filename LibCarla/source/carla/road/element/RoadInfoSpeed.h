@@ -15,7 +15,7 @@ namespace element {
   class RoadInfoSpeed final : public RoadInfo {
   public:
 
-    RoadInfoSpeed(float s, float speed)
+    RoadInfoSpeed(double s, double speed)
       : RoadInfo(s),
         _speed(speed) {}
 
@@ -23,13 +23,13 @@ namespace element {
       v.Visit(*this);
     }
 
-    float GetSpeed() const {
+    double GetSpeed() const {
       return _speed;
     }
 
   private:
 
-    const float _speed;
+    const double _speed;
   };
 
 } // namespace element
