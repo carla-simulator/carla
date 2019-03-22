@@ -1,5 +1,6 @@
 ## Latest Changes
 
+  * Add --rolename to manual_control.py
   * Migrate Content to AWS
   * Adding a parser to represent the map as a connected graph of waypoints.
   * Allow user to disable rendering and set the server timeout from the command line
