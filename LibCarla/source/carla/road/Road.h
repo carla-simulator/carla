@@ -75,6 +75,10 @@ namespace road {
 
     std::unordered_map<SignId, signal::SignalReference>* getSignalReferences();
 
+    /// Returns a directed point on the center of the road (lane 0),
+    /// with the corresponding laneOffset and elevation records applied,
+    /// on distance "s".
+    /// - @ param s distance regarding the road to compute the point
     element::DirectedPoint GetDirectedPointIn (const float s) const;
 
     /// Returns a pair containing:

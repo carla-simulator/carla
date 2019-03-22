@@ -176,11 +176,15 @@ namespace road {
 
     const auto lane_offset = _info.GetInfo<element::RoadInfoLaneOffset>(clamped_s);
     const float offset = lane_offset->GetPolynomial().Evaluate(clamped_s);
+    const float tangent = lane_offset->GetPolynomial().Tangent(clamped_s);
 
+    // Apply road's lane offset record
     element::DirectedPoint p = geometry->GetGeometry().PosFromDist(clamped_s - geometry->GetDistance());
-    // Unreal's Y axis hack
+    // Unreal's Y axis hack (the minus on the offset)
     p.ApplyLateralOffset(-offset);
+    p.tangent += tangent;
 
+    // Apply road's elevation record
     const auto elevation_info = GetElevationOn(s);
     p.location.z = elevation_info.Evaluate(s);
     p.pitch = elevation_info.Tangent(s);
