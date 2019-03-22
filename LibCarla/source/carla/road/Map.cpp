@@ -73,23 +73,29 @@ namespace road {
     }
   }
 
-  /// returns a pair containing first = width, second = tangent
+  /// Returns a pair containing first = width, second = tangent,
+  /// for an specific Lane given an s and a iterator over lanes
   template <typename T>
   static std::pair<float, float> ComputeTotalLaneWidth(
-    const T container, const float s, const LaneId lane_id) {
+      const T container,
+      const float s, const
+      LaneId lane_id) {
     const bool negative_lane_id = lane_id < 0;
-    float dist = 0.0;
-    float tangent = 0.0;
+    auto dist = 0.0;
+    auto tangent = 0.0;
     for (const auto &lane : container) {
       const auto current_polynomial =
           lane.second->template GetInfo<RoadInfoLaneWidth>(s)->GetPolynomial();
-      float current_dist = current_polynomial.Evaluate(s);
+      auto current_dist = current_polynomial.Evaluate(s);
+      auto current_tangent = current_polynomial.Tangent(s);
       if (lane.first != lane_id) {
         dist += negative_lane_id ? current_dist : - current_dist;
+        tangent += current_tangent;
       } else if (lane.first == lane_id) {
         current_dist *= 0.5;
+        current_tangent *= 0.5;
         dist += negative_lane_id ? current_dist : - current_dist;
-        tangent = current_polynomial.Tangent(s);
+        tangent += current_tangent;
         break;
       }
     }
@@ -212,6 +218,9 @@ namespace road {
       lane_width = computed_width.first;
       lane_tangent = computed_width.second;
     }
+
+    // Unreal's Y axis hack
+    lane_tangent *= -1;
 
     // get a directed point in s and apply the computed lateral offet
     DirectedPoint dp = road->GetDirectedPointIn(waypoint.s);
