@@ -263,8 +263,8 @@ namespace road {
     road->_length = length;
     road->_junction_id = junction_id;
     (junction_id != -1) ? road->_is_junction = true : road->_is_junction = false;
-    road->_nexts.push_back(successor);
-    road->_prevs.push_back(predecessor);
+    road->_successor = successor;
+    road->_predecessor = predecessor;
 
     return road;
   }
@@ -509,10 +509,10 @@ namespace road {
     LaneId next;
     RoadId next_road;
     if (lane_id <= 0) {
-      next_road = road->_nexts[0];
+      next_road = road->GetSuccessor();
       next = lane->GetSuccessor();
     } else {
-      next_road = road->_prevs[0];
+      next_road = road->GetPredecessor();
       next = lane->GetPredecessor();
     }
 
@@ -586,13 +586,45 @@ namespace road {
     for (auto &road : _map_data._roads) {
       for (auto &section : road.second._lane_sections) {
         for (auto &lane : section.second._lanes) {
+
           // assign the next lane pointers
           lane.second._next_lanes = GetLaneNext(road.first, section.second._s, lane.first);
+
           // add to each lane found, this as its predecessor
           for (auto next_lane : lane.second._next_lanes) {
             // add as previous
             next_lane->_prev_lanes.push_back(&lane.second);
           }
+
+        }
+      }
+    }
+
+    // process each lane to define its nexts
+    for (auto &road : _map_data._roads) {
+      for (auto &section : road.second._lane_sections) {
+        for (auto &lane : section.second._lanes) {
+
+          // add next roads
+          for (auto next_lane : lane.second._next_lanes) {
+            // avoid same road
+            if (next_lane->GetRoad() != &road.second) {
+              if (std::find(road.second._nexts.begin(), road.second._nexts.end(), next_lane->GetRoad()) == road.second._nexts.end()) {
+                road.second._nexts.push_back(next_lane->GetRoad());
+              }
+            }
+          }
+
+          // add prev roads
+          for (auto prev_lane : lane.second._prev_lanes) {
+            // avoid same road
+            if (prev_lane->GetRoad() != &road.second) {
+              if (std::find(road.second._prevs.begin(), road.second._prevs.end(), prev_lane->GetRoad()) == road.second._prevs.end()) {
+                road.second._prevs.push_back(prev_lane->GetRoad());
+              }
+            }
+          }
+
         }
       }
     }
