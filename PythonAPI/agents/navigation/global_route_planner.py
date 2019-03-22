@@ -254,6 +254,7 @@ class GlobalRoutePlanner(object):
         route_trace = []
         route = self._path_search(origin, destination)
         current_waypoint = self._dao.get_waypoint(origin)
+        resolution = self._dao.get_resolution()
 
         for i in range(len(route) - 1):
             road_option = self._turn_decision(i, route)
@@ -272,8 +273,10 @@ class GlobalRoutePlanner(object):
                 path = path + [edge['entry_waypoint']] + edge['path'] + [edge['exit_waypoint']]
                 closest_index = self._find_closest_in_list(current_waypoint, path)
                 for waypoint in path[closest_index:]:
-                    route_trace.append((waypoint, road_option))
-                current_waypoint = path[-1]
+                    current_waypoint = waypoint
+                    route_trace.append((current_waypoint, road_option))
+                    if waypoint.transform.location.distance(destination) < 2*resolution:
+                        break
 
         return route_trace
 

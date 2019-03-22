@@ -64,3 +64,7 @@ class GlobalRoutePlannerDAO(object):
         """
         waypoint = self._wmap.get_waypoint(location)
         return waypoint
+
+    def get_resolution(self):
+        """ Accessor for self._sampling_resolution """
+        return self._sampling_resolution
