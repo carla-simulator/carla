@@ -174,9 +174,9 @@ namespace road {
       }
     }
 
-    THROW_INVALID_INPUT_ASSERT(
-        waypoint.s <= _data.GetRoad(waypoint.road_id).GetLength());
-    THROW_INVALID_INPUT_ASSERT(waypoint.lane_id != 0);
+    // Make sure 0.0 < waipoint.s < Road's lenght
+    const auto road_len = _data.GetRoad(waypoint.road_id).GetLength();
+    waypoint.s = geom::Math::clamp<float>(waypoint.s, 0.0, road_len);
 
     return waypoint;
   }
