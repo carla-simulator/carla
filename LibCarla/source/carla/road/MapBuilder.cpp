@@ -43,6 +43,7 @@ namespace road {
     }
 
     for (auto &&info : _temp_lane_info_container) {
+      if (info.first->GetRoad()->GetId() == 65 && info.first->GetId() == -1) {std::cout << "[DEBUG] " << std::hex << info.first << std::dec << std::endl;}
       info.first->_info = InformationSet(std::move(info.second));
     }
 

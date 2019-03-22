@@ -79,6 +79,9 @@ namespace road {
   }
 
   Lane &Road::GetLaneById(SectionId section_id, LaneId lane_id) {
+    std::cout << "[DEBUG] at() road_id: " << GetId() << std::endl;
+    std::cout << "[DEBUG] at() section_id: " << section_id << std::endl;
+    std::cout << "[DEBUG] at() lane_id: " << lane_id << std::endl << std::endl;
     return GetLaneSectionById(section_id).GetLanes().at(lane_id);
   }
 
@@ -235,8 +238,15 @@ namespace road {
     // dp_lane_zero.location.y *= -1;
 
     DirectedPoint current_dp = dp_lane_zero;
+    std::cout << "[DEBUG] GetNearestLane (road_id " << GetId() << ")" << std::endl;
     for (const auto &lane : right_lanes) {
+      std::cout << "[DEBUG]      lane_id " << std::hex << (uint64_t)lane.second << std::endl;
+      std::cout << "[DEBUG]      lane_id " << std::dec << lane.first << std::endl;
+      std::cout << "[DEBUG]      s       " << s << std::endl;
+
       const auto lane_width_info = lane.second->GetInfo<RoadInfoLaneWidth>(s);
+      std::cout << "[DEBUG]      lane_id " << std::hex << lane_width_info << std::dec << std::endl;
+
       const auto half_width = lane_width_info->GetPolynomial().Evaluate(s) / 2.0f;
       current_dp.ApplyLateralOffset(half_width);
       const auto current_dist = geom::Math::Distance(current_dp.location, loc);
