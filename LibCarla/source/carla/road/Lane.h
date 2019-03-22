@@ -37,7 +37,7 @@ namespace road {
 
     const LaneSection *GetLaneSection() const;
 
-    const Road *GetRoad() const;
+    Road *GetRoad() const;
 
     LaneId GetId() const;
 

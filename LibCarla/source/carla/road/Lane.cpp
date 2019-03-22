@@ -18,7 +18,7 @@ namespace road {
     return _lane_section;
   }
 
-  const Road *Lane::GetRoad() const {
+  Road *Lane::GetRoad() const {
     DEBUG_ASSERT(_lane_section != nullptr);
     return _lane_section->GetRoad();
   }
