@@ -18,15 +18,11 @@ namespace road {
     return _junctions;
   }
 
-  Road *MapData::GetRoad(const RoadId id) {
-    const auto search = _roads.find(id);
-    if (search != _roads.end()) {
-      return &search->second;
-    }
-    return nullptr;
+  Road &MapData::GetRoad(const RoadId id) {
+    return _roads.at(id);
   }
 
-  const Road *MapData::GetRoad(const RoadId id) const {
+  const Road &MapData::GetRoad(const RoadId id) const {
     return const_cast<MapData *>(this)->GetRoad(id);
   }
 
@@ -36,24 +32,6 @@ namespace road {
       return &search->second;
     }
     return nullptr;
-  }
-
-  Lane *MapData::GetLane(
-      const RoadId road_id,
-      const LaneId lane_id,
-      const float s) {
-    auto road = GetRoad(road_id);
-    if (road != nullptr) {
-      return road->GetLane(lane_id, s);
-    }
-    return nullptr;
-  }
-
-  const Lane *MapData::GetLane(
-      const RoadId road_id,
-      const LaneId lane_id,
-      const float s) const {
-    return const_cast<MapData *>(this)->GetLane(road_id, lane_id, s);
   }
 
 } // namespace road
