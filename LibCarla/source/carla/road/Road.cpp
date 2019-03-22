@@ -47,7 +47,7 @@ namespace road {
   std::vector<const Road *> Road::GetNexts() const {
     std::vector<const Road *> vec;
     for (auto &&next : _nexts) {
-      vec.emplace_back(_map_data->GetRoad(next));
+      vec.emplace_back(&_map_data->GetRoad(next));
     }
     return vec;
   }
@@ -55,7 +55,7 @@ namespace road {
   std::vector<const Road *> Road::GetPrevs() const {
     std::vector<const Road *> vec;
     for (auto &&prev : _prevs) {
-      vec.emplace_back(_map_data->GetRoad(prev));
+      vec.emplace_back(&_map_data->GetRoad(prev));
     }
     return vec;
   }
@@ -64,24 +64,26 @@ namespace road {
     return GetInfo<element::RoadInfoElevation>(s)->GetPolynomial();
   }
 
-  Lane *Road::GetLane(const LaneId id, const float s) {
-    for (auto &lane_section : GetLaneSectionsAt(s)) {
-      auto search = lane_section.GetLanes().find(id);
-      if (search != lane_section.GetLanes().end()) {
-        return &search->second;
+  Lane &Road::GetLaneByDistance(float s, LaneId lane_id) {
+    for (auto &section : GetLaneSectionsAt(s)) {
+      auto *lane = section.GetLane(lane_id);
+      if (lane != nullptr) {
+        return *lane;
       }
     }
-    return nullptr;
+    throw_exception(std::runtime_error("lane not found"));
   }
 
-  const Lane *Road::GetLane(const LaneId id, const float s) const {
-    for (auto &lane_section : GetLaneSectionsAt(s)) {
-      auto search = lane_section.GetLanes().find(id);
-      if (search != lane_section.GetLanes().end()) {
-        return &search->second;
-      }
-    }
-    return nullptr;
+  const Lane &Road::GetLaneByDistance(float s, LaneId lane_id) const {
+    return const_cast<Road *>(this)->GetLaneByDistance(s, lane_id);
+  }
+
+  Lane &Road::GetLaneById(SectionId section_id, LaneId lane_id) {
+    return GetLaneSectionById(section_id).GetLanes().at(lane_id);
+  }
+
+  const Lane &Road::GetLaneById(SectionId section_id, LaneId lane_id) const {
+    return const_cast<Road *>(this)->GetLaneById(section_id, lane_id);
   }
 
   // get the lane on a section next to 's'
