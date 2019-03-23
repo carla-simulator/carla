@@ -158,6 +158,7 @@ namespace road {
 
     /// @todo Give a better name to this function.
     double UpperBound(double s) const {
+      /// @todo can this fail with multiple lane sections sharing s?
       auto it = _lane_sections.upper_bound(s);
       return it != _lane_sections.end() ? it->first : _length;
     }
