@@ -217,13 +217,14 @@ namespace road {
     // check that lane_id exists on the current s
 
     if (waypoint.lane_id > lanes.end()->first || waypoint.lane_id < lanes.begin()->first) {
+      std::cout.precision(17);
       std::cout << "[DEBUG] road_id:    " << waypoint.road_id << std::endl;
       std::cout << "[DEBUG] lane_id:    " << waypoint.lane_id << std::endl;
       std::cout << "[DEBUG] section_id: " << waypoint.section_id << std::endl;
-      std::cout << "[DEBUG] s         : " << waypoint.s << std::endl;
+      std::cout << "[DEBUG] s         : " << std::fixed << waypoint.s << std::endl;
       std::cout << "[DEBUG] lanes.begin()->first: " << lanes.begin()->first << std::endl;
       std::cout << "[DEBUG]                   id: " << lanes.begin()->second->GetId() << std::endl;
-      std::cout << "[DEBUG] lanes.end()->first: " << lanes.end()->first << std::endl;
+      std::cout << "[DEBUG] lanes.end()->first:   " << lanes.end()->first << std::endl;
       std::cout << "[DEBUG]                   id: " << lanes.end()->second->GetId() << std::endl;
       std::cout << std::endl;
     }
