@@ -23,7 +23,7 @@ namespace element {
 
     LaneId lane_id = 0;
 
-    float s = 0.0f;
+    double s = 0.0;
   };
 
 } // namespace element

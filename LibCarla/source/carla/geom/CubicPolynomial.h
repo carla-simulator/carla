@@ -18,7 +18,7 @@ namespace geom {
   class CubicPolynomial {
   public:
 
-    using value_type = float;
+    using value_type = double;
 
     // =========================================================================
     // -- Constructors ---------------------------------------------------------

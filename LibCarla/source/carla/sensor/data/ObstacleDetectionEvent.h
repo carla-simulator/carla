@@ -49,7 +49,7 @@ namespace data {
     }
 
     /// Normal impulse result of the collision.
-    float GetDistance() const {
+    double GetDistance() const {
       return _distance;
     }
 

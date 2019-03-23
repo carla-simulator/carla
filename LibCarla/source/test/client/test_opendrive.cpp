@@ -138,7 +138,7 @@ void test_roads(const pugi::xml_document &xml, boost::optional<Map>& map)
       for (pugi::xml_node lane_section_node : lane_sections_parser) {
 
         // Check total Lanes
-        float s = lane_section_node.attribute("s").as_float();
+        const double s = lane_section_node.attribute("s").as_double();
         auto lane_section = map->GetMap().GetRoad(road_id).GetLaneSectionsAt(s);
         size_t total_lanes = 0u;
         for (auto it = lane_section.begin(); it != lane_section.end(); ++it) {
@@ -234,10 +234,28 @@ void print_roads(boost::optional<Map>& map, std::string filename) {
   file.open(name, std::ios::out | std::ios::trunc);
   for (auto &road : map->GetMap().GetRoads()) {
     file << "Road: " << road.second.GetId() << std::endl;
+    file << "     Nexts: ";
+    for (auto next : road.second.GetNexts()) {
+      if (next != nullptr) {
+        file << next->GetId() << " ";
+      } else {
+        file << " (error, null road)";
+      }
+    }
+    file << std::endl;
+    file << "     Prevs: ";
+    for (auto prev : road.second.GetPrevs()) {
+      if (prev != nullptr) {
+        file << prev->GetId() << " ";
+      } else {
+        file << " (error, null road)";
+      }
+    }
+    file << std::endl;
     for (auto &section : road.second.GetLaneSections()) {
-      file << " Section: " << section.GetDistance() << std::endl;
+      file << " Section: " << section.GetId() << " " << section.GetDistance() << std::endl;
       for (auto &lane : section.GetLanes()) {
-        file << "   Lane: " << lane.second.GetId() << std::endl;
+        file << "   Lane: " << lane.second.GetId() << " (" << lane.second.GetType() << ")" << std::endl;
         file << "     Nexts: ";
         for (auto link : lane.second.GetNextLanes()) {
           if (link != nullptr) {
@@ -278,6 +296,17 @@ void print_roads(boost::optional<Map>& map, std::string filename) {
     file << road.second.GetId() << " " << road_name.str() << std::endl;
   }
   file << "#" << std::endl;
+  // by roads
+  for (auto &road : map->GetMap().GetRoads()) {
+    for (auto next : road.second.GetNexts()) {
+      if (next != nullptr) {
+        file << road.second.GetId() << " " << next->GetId() << std::endl;
+      } else {
+        file << " (error, null road)";
+      }
+    }
+  }
+  /* by lanes
   for (auto &road : map->GetMap().GetRoads()) {
     for (auto &section : road.second.GetLaneSections()) {
       for (auto &lane : section.GetLanes()) {
@@ -294,6 +323,7 @@ void print_roads(boost::optional<Map>& map, std::string filename) {
       }
     }
   }
+  */
   file.close();
 }
 
@@ -383,8 +413,8 @@ TEST(road, iterate_waypoints) {
     ASSERT_TRUE(m.has_value());
     auto &map = *m;
     auto count = 0u;
-    auto waypoints = map.GenerateWaypoints(5.0f);
-    // std::vector<Waypoint> waypoints = {Waypoint{270u, 2, 0.0f}};
+    auto waypoints = map.GenerateWaypoints(5.0);
+    // std::vector<Waypoint> waypoints = {Waypoint{270u, 2, 0.0}};
     for (auto &&wp : waypoints) {
       std::cout << "origin: " << wp << ", type = " << map.GetLaneType(wp) << '\n';
       for (auto &&successor : map.GetSuccessors(wp)) {
@@ -395,7 +425,7 @@ TEST(road, iterate_waypoints) {
             successor.lane_id != wp.lane_id ||
             successor.s != wp.s);
       }
-      for (auto &&next : map.GetNext(wp, 4.0f)) {
+      for (auto &&next : map.GetNext(wp, 4.0)) {
         std::cout << "- next: " << next << ", type = " << map.GetLaneType(next) << '\n';
         ++count;
         auto right = map.GetRight(next);

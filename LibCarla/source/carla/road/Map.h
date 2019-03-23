@@ -78,7 +78,7 @@ namespace road {
 
     /// Return the list of waypoints at @a distance such that a vehicle at @a
     /// waypoint could drive to.
-    std::vector<Waypoint> GetNext(Waypoint waypoint, float distance) const;
+    std::vector<Waypoint> GetNext(Waypoint waypoint, double distance) const;
 
     /// Return a waypoint at the lane of @a waypoint's right lane.
     boost::optional<Waypoint> GetRight(Waypoint waypoint) const;
@@ -87,7 +87,7 @@ namespace road {
     boost::optional<Waypoint> GetLeft(Waypoint waypoint) const;
 
     /// Generate all the waypoints in @a map separated by @a approx_distance.
-    std::vector<Waypoint> GenerateWaypoints(float approx_distance) const;
+    std::vector<Waypoint> GenerateWaypoints(double approx_distance) const;
 
     /// Returns a list of waypoints at the beginning of each lane of the map.
     // std::vector<Waypoint> GenerateLaneBegin() const;
