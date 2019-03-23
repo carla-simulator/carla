@@ -25,7 +25,7 @@ namespace client {
     return _parent->GetMap().IsJunction(_waypoint.road_id);
   }
 
-  float Waypoint::GetLaneWidth() const {
+  double Waypoint::GetLaneWidth() const {
     return _parent->GetMap().GetLaneWidth(_waypoint);
   }
 

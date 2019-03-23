@@ -24,7 +24,7 @@ namespace road {
   public:
 
     using mapped_type = T;
-    using key_type = float;
+    using key_type = double;
 
     RoadElementSet() = default;
 

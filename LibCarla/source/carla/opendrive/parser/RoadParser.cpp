@@ -20,8 +20,8 @@ namespace parser {
   using JuncId = road::JuncId;
 
   struct Polynomial {
-    float s;
-    float a, b, c, d;
+    double s;
+    double a, b, c, d;
   };
 
   struct Lane {
@@ -33,26 +33,26 @@ namespace parser {
   };
 
   struct LaneOffset {
-    float s;
-    float a, b, c, d;
+    double s;
+    double a, b, c, d;
   };
 
   struct LaneSection {
-    float s;
+    double s;
     std::vector<Lane> lanes;
   };
 
   struct RoadTypeSpeed {
-    float s;
+    double s;
     std::string type;
-    float max;
+    double max;
     std::string unit;
   };
 
   struct Road {
     RoadId id;
     std::string name;
-    float length;
+    double length;
     JuncId junction_id;
     RoadId predecessor;
     RoadId successor;
@@ -73,7 +73,7 @@ namespace parser {
         // attributes
         road.id = node_road.attribute("id").as_int();
         road.name = node_road.attribute("name").value();
-        road.length = node_road.attribute("length").as_float();
+        road.length = node_road.attribute("length").as_double();
         road.junction_id = node_road.attribute("junction").as_int();
 
         // link
@@ -89,13 +89,13 @@ namespace parser {
         for (pugi::xml_node node_type : node_road.children("type")) {
           RoadTypeSpeed type { 0.0, "", 0.0, "" };
 
-          type.s = node_type.attribute("s").as_float();
+          type.s = node_type.attribute("s").as_double();
           type.type = node_type.attribute("type").value();
 
           // speed type
           pugi::xml_node speed = node_type.child("speed");
           if (speed) {
-            type.max = speed.attribute("max").as_float();
+            type.max = speed.attribute("max").as_double();
             type.unit = speed.attribute("unit").value();
           }
 
@@ -106,11 +106,11 @@ namespace parser {
         // section offsets
         for (pugi::xml_node node_offset : node_road.child("lanes").children("laneOffset")) {
           LaneOffset offset { 0.0, 0.0, 0.0, 0.0, 0.0 } ;
-          offset.s = node_offset.attribute("s").as_float();
-          offset.a = node_offset.attribute("a").as_float();
-          offset.b = node_offset.attribute("b").as_float();
-          offset.c = node_offset.attribute("c").as_float();
-          offset.d = node_offset.attribute("d").as_float();
+          offset.s = node_offset.attribute("s").as_double();
+          offset.a = node_offset.attribute("a").as_double();
+          offset.b = node_offset.attribute("b").as_double();
+          offset.c = node_offset.attribute("c").as_double();
+          offset.d = node_offset.attribute("d").as_double();
           road.section_offsets.emplace_back(offset);
         }
 
@@ -118,7 +118,7 @@ namespace parser {
         for (pugi::xml_node node_section : node_road.child("lanes").children("laneSection")) {
           LaneSection section { 0.0, {} };
 
-          section.s = node_section.attribute("s").as_float();
+          section.s = node_section.attribute("s").as_double();
 
           // left lanes
           for (pugi::xml_node node_lane : node_section.child("left").children("lane")) {

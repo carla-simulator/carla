@@ -10,6 +10,7 @@
 #include "carla/road/RoadTypes.h"
 
 #include <vector>
+#include <iostream>
 #include <memory>
 
 namespace carla {
@@ -37,7 +38,7 @@ namespace road {
 
     const LaneSection *GetLaneSection() const;
 
-    const Road *GetRoad() const;
+    Road *GetRoad() const;
 
     LaneId GetId() const;
 
@@ -46,10 +47,11 @@ namespace road {
     bool GetLevel() const;
 
     template <typename T>
-    const T *GetInfo (const float s) const {
+    const T *GetInfo (const double s) const {
       if (_lane_section != nullptr) {
         return _info.GetInfo<T>(s - GetDistance());
       }
+
       return nullptr;
     }
 
@@ -69,9 +71,9 @@ namespace road {
       return _predecessor;
     }
 
-    float GetDistance() const;
+    double GetDistance() const;
 
-    float GetLength() const;
+    double GetLength() const;
 
   private:
 

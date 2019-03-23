@@ -24,9 +24,9 @@ namespace road {
   class LaneSection : private MovableNonCopyable {
   public:
 
-    explicit LaneSection(SectionId id, float s) : _id(id), _s(s) {}
+    explicit LaneSection(SectionId id, double s) : _id(id), _s(s) {}
 
-    float GetDistance() const;
+    double GetDistance() const;
 
     Road *GetRoad();
 
@@ -50,7 +50,7 @@ namespace road {
 
     const SectionId _id;
 
-    const float _s;
+    const double _s;
 
     Road *_road;
 

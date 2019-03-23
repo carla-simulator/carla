@@ -17,11 +17,11 @@ namespace element {
   public:
 
     RoadInfoLaneMaterial(
-        float s,   // start position relative to the position of the preceding
+        double s,   // start position relative to the position of the preceding
                    // lane section
         std::string surface,
-        float friction,
-        float roughness)
+        double friction,
+        double roughness)
       : RoadInfo(s),
         _surface(std::move(surface)),
         _friction(friction),
@@ -35,11 +35,11 @@ namespace element {
       return _surface;
     }
 
-    float GetFriction() const {
+    double GetFriction() const {
       return _friction;
     }
 
-    float GetRoughness() const {
+    double GetRoughness() const {
       return _roughness;
     }
 
@@ -47,9 +47,9 @@ namespace element {
 
     const std::string _surface;
 
-    const float _friction;
+    const double _friction;
 
-    const float _roughness;
+    const double _roughness;
   };
 
 } // namespace element

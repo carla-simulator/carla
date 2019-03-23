@@ -50,7 +50,7 @@ namespace road {
     Junction *GetJunction(JuncId id);
 
     template <typename T>
-    auto GetRoadInfo(const RoadId id, const float s) {
+    auto GetRoadInfo(const RoadId id, const double s) {
       return GetRoad(id).template GetInfo<T>(s);
     }
 
@@ -59,7 +59,7 @@ namespace road {
         const RoadId road_id,
         const SectionId section_id,
         const LaneId lane_id,
-        const float s) {
+        const double s) {
       return GetRoad(road_id).GetLaneById(section_id, lane_id).template GetInfo<T>(s);
     }
 

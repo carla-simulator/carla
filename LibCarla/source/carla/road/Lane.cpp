@@ -18,7 +18,7 @@ namespace road {
     return _lane_section;
   }
 
-  const Road *Lane::GetRoad() const {
+  Road *Lane::GetRoad() const {
     DEBUG_ASSERT(_lane_section != nullptr);
     return _lane_section->GetRoad();
   }
@@ -35,12 +35,12 @@ namespace road {
     return _level;
   }
 
-  float Lane::GetDistance() const {
+  double Lane::GetDistance() const {
     DEBUG_ASSERT(_lane_section != nullptr);
     return _lane_section->GetDistance();
   }
 
-  float Lane::GetLength() const {
+  double Lane::GetLength() const {
     const auto *road = GetRoad();
     DEBUG_ASSERT(road != nullptr);
     const auto s = GetDistance();

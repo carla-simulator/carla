@@ -17,7 +17,7 @@ namespace element {
   class RoadInfoGeometry final : public RoadInfo {
   public:
 
-    RoadInfoGeometry(float s, std::unique_ptr<Geometry> &&geom)
+    RoadInfoGeometry(double s, std::unique_ptr<Geometry> &&geom)
       : RoadInfo(s),
         _geom(std::move(geom)) {
       DEBUG_ASSERT(_geom != nullptr);

@@ -23,11 +23,11 @@ namespace element {
   public:
 
     RoadInfoLaneOffset(
-        float s,
-        float a,
-        float b,
-        float c,
-        float d)
+        double s,
+        double a,
+        double b,
+        double c,
+        double d)
       : RoadInfo(s),
         _offset(a, b, c, d, s) {}
 
