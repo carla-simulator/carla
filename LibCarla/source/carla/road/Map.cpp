@@ -84,7 +84,7 @@ namespace road {
     double tangent = 0.0;
     for (const auto &lane : container) {
       const auto current_polynomial =
-          lane.second->template GetInfo<RoadInfoLaneWidth>(s)->GetPolynomial();
+          lane.second.template GetInfo<RoadInfoLaneWidth>(s)->GetPolynomial();
       auto current_dist = current_polynomial.Evaluate(s);
       auto current_tang = current_polynomial.Tangent(s);
       if (lane.first != lane_id) {
@@ -211,26 +211,13 @@ namespace road {
     THROW_INVALID_INPUT_ASSERT(waypoint.s <= road.GetLength());
     THROW_INVALID_INPUT_ASSERT(waypoint.s >= 0.0);
     //            int32_t
-    const std::map<LaneId, const Lane *> lanes = road.GetLanesAt(waypoint.s);
+    // const std::map<LaneId, const Lane *> lanes = road.GetLanesAt(waypoint.s);
+    const auto &lane_section = road.GetLaneSectionById(waypoint.section_id);
+    const std::map<LaneId, Lane> &lanes = lane_section.GetLanes();
 
-    // Non sense
     // check that lane_id exists on the current s
-
-    if (waypoint.lane_id > lanes.end()->first || waypoint.lane_id < lanes.begin()->first) {
-      std::cout.precision(17);
-      std::cout << "[DEBUG] road_id:    " << waypoint.road_id << std::endl;
-      std::cout << "[DEBUG] lane_id:    " << waypoint.lane_id << std::endl;
-      std::cout << "[DEBUG] section_id: " << waypoint.section_id << std::endl;
-      std::cout << "[DEBUG] s         : " << std::fixed << waypoint.s << std::endl;
-      std::cout << "[DEBUG] lanes.begin()->first: " << lanes.begin()->first << std::endl;
-      std::cout << "[DEBUG]                   id: " << lanes.begin()->second->GetId() << std::endl;
-      std::cout << "[DEBUG] lanes.end()->first:   " << lanes.end()->first << std::endl;
-      std::cout << "[DEBUG]                   id: " << lanes.end()->second->GetId() << std::endl;
-      std::cout << std::endl;
-    }
-
     THROW_INVALID_INPUT_ASSERT(waypoint.lane_id >= lanes.begin()->first);
-    THROW_INVALID_INPUT_ASSERT(waypoint.lane_id <= lanes.end()->first);
+    THROW_INVALID_INPUT_ASSERT(waypoint.lane_id <= lanes.rbegin()->first);
 
     double lane_width = 0;
     double lane_tangent = 0;
