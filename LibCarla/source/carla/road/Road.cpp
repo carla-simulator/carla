@@ -278,6 +278,7 @@ namespace road {
         map[lane.first] = &(lane.second);
       }
     }
+    std::cout << std::endl <<"[DEBUG] size: " << map.size() << std::endl << std::endl;
     return map;
   }
 
