@@ -138,7 +138,7 @@ void test_roads(const pugi::xml_document &xml, boost::optional<Map>& map)
       for (pugi::xml_node lane_section_node : lane_sections_parser) {
 
         // Check total Lanes
-        float s = lane_section_node.attribute("s").as_float();
+        const double s = lane_section_node.attribute("s").as_double();
         auto lane_section = map->GetMap().GetRoad(road_id).GetLaneSectionsAt(s);
         size_t total_lanes = 0u;
         for (auto it = lane_section.begin(); it != lane_section.end(); ++it) {
