@@ -16,10 +16,12 @@
 #include <carla/road/element/RoadInfoGeometry.h>
 #include "carla/road/element/RoadInfoMarkRecord.h"
 #include <carla/road/element/RoadInfoVisitor.h>
-#include <string>
-#include <sstream>
+
 #include <fstream>
 #include <ostream>
+#include <random>
+#include <sstream>
+#include <string>
 
 namespace carla {
 namespace road {
@@ -42,6 +44,12 @@ using namespace carla::geom;
 using namespace carla::opendrive;
 
 const std::string BASE_PATH = LIBCARLA_TEST_CONTENT_FOLDER "/OpenDrive/";
+
+static auto GetRandomLocation(float min, float max) {
+  static thread_local std::mt19937_64 engine((std::random_device())());
+  std::uniform_real_distribution<float> distribution(min, max);
+  return Location(distribution(engine), distribution(engine), distribution(engine));
+}
 
 // Road Elevation
 void test_road_elevation(const pugi::xml_document &xml, boost::optional<Map>& map ) {
@@ -414,7 +422,6 @@ TEST(road, iterate_waypoints) {
     auto &map = *m;
     auto count = 0u;
     auto waypoints = map.GenerateWaypoints(5.0);
-    // std::vector<Waypoint> waypoints = {Waypoint{270u, 2, 0.0}};
     for (auto &&wp : waypoints) {
       std::cout << "origin: " << wp << ", type = " << map.GetLaneType(wp) << '\n';
       for (auto &&successor : map.GetSuccessors(wp)) {
@@ -439,6 +446,19 @@ TEST(road, iterate_waypoints) {
       }
     }
     ASSERT_GT(count, 0u);
+  }
+}
+
+TEST(road, get_waypoint) {
+  for (const auto& file : util::OpenDrive::GetAvailableFiles()) {
+    carla::logging::log("Parsing", file);
+    auto m = OpenDriveParser::Load(util::OpenDrive::Load(file));
+    ASSERT_TRUE(m.has_value());
+    auto &map = *m;
+    for (auto i = 0u; i < 1'000u; ++i) {
+      const auto location = GetRandomLocation(-500.0f, 500.0f);
+      map.GetClosestWaypointOnRoad(location);
+    }
   }
 }
 
