@@ -116,8 +116,8 @@ namespace element {
         const geom::Location &start_pos)
       : Geometry(GeometryType::LINE, start_offset, length, heading, start_pos) {}
 
-    DirectedPoint PosFromDist(const double dist) const override {
-      assert(dist > 0);
+    DirectedPoint PosFromDist(double dist) const override {
+      dist = geom::Math::clamp<double>(dist, 0.0, _length);
       assert(_length > 0.0);
       DirectedPoint p(_start_position, _heading);
       p.location.x += dist * std::cos(p.tangent);
@@ -152,7 +152,7 @@ namespace element {
         _curvature(curv) {}
 
     DirectedPoint PosFromDist(double dist) const override {
-      assert(dist > 0);
+      dist = geom::Math::clamp<double>(dist, 0.0, _length);
       assert(_length > 0.0);
       assert(std::fabs(_curvature) > 1e-15);
       const double radius = 1.0 / _curvature;
@@ -212,7 +212,7 @@ namespace element {
 
     DirectedPoint PosFromDist(double dist) const override {
       // not working yet with negative values
-      assert(dist > 0);
+      dist = geom::Math::clamp<double>(dist, 0.0, _length);
       assert(_length > 0.0);
       assert(std::fabs(_curve_end) > 1e-15);
       const double radius = 1.0 / _curve_end;
