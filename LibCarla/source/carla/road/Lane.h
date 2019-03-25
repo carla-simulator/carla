@@ -23,6 +23,34 @@ namespace road {
   class Lane : private MovableNonCopyable {
   public:
 
+    /// Can be used as flags
+    enum class LaneType : uint32_t {
+      None          = 0x1,
+      Driving       = 0x1 << 1,
+      Stop          = 0x1 << 2,
+      Shoulder      = 0x1 << 3,
+      Biking        = 0x1 << 4,
+      Sidewalk      = 0x1 << 5,
+      Border        = 0x1 << 6,
+      Restricted    = 0x1 << 7,
+      Parking       = 0x1 << 8,
+      Bidirectional = 0x1 << 9,
+      Median        = 0x1 << 10,
+      Special1      = 0x1 << 11,
+      Special2      = 0x1 << 12,
+      Special3      = 0x1 << 13,
+      RoadWorks     = 0x1 << 14,
+      Tram          = 0x1 << 15,
+      Rail          = 0x1 << 16,
+      Entry         = 0x1 << 17,
+      Exit          = 0x1 << 18,
+      OffRamp       = 0x1 << 19,
+      OnRamp        = 0x1 << 20,
+      Any           = 0xFFFFFFFF
+    };
+
+  public:
+
     Lane() = default;
 
     Lane(
@@ -42,7 +70,7 @@ namespace road {
 
     LaneId GetId() const;
 
-    std::string GetType() const;
+    LaneType GetType() const;
 
     bool GetLevel() const;
 
@@ -85,8 +113,7 @@ namespace road {
 
     InformationSet _info;
 
-    /// @todo: change to enum, see 6.5 of OpenDRIVEFormatSpecRev1.4H.pdf
-    std::string _type;
+    LaneType _type;
 
     bool _level;
 

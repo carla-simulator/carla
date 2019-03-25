@@ -27,9 +27,10 @@ namespace client {
 
   double Waypoint::GetLaneWidth() const {
     return _parent->GetMap().GetLaneWidth(_waypoint);
+
   }
 
-  std::string Waypoint::GetType() const {
+  road::Lane::LaneType Waypoint::GetType() const {
     return _parent->GetMap().GetLaneType(_waypoint);
   }
 

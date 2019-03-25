@@ -11,6 +11,7 @@
 #include "carla/road/Map.h"
 #include "carla/road/element/LaneMarking.h"
 #include "carla/rpc/MapInfo.h"
+#include "carla/road/Lane.h"
 
 #include <string>
 
@@ -47,7 +48,8 @@ namespace client {
 
     SharedPtr<Waypoint> GetWaypoint(
         const geom::Location &location,
-        bool project_to_road = true) const;
+        bool project_to_road = true,
+        uint32_t lane_type = static_cast<uint32_t>(road::Lane::LaneType::Driving)) const;
 
     using TopologyList = std::vector<std::pair<SharedPtr<Waypoint>, SharedPtr<Waypoint>>>;
 

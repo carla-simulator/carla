@@ -37,10 +37,10 @@ namespace road {
     return _lanes;
   }
 
-  std::vector<Lane *> LaneSection::GetLanesOfType(const std::string &type) {
+  std::vector<Lane *> LaneSection::GetLanesOfType(Lane::LaneType lane_type) {
     std::vector<Lane *> drivable_lanes;
     for (auto &&lane : _lanes) {
-      if (lane.second.GetType() == type) {
+      if ((static_cast<uint32_t>(lane.second.GetType()) & static_cast<uint32_t>(lane_type)) > 0) {
         drivable_lanes.emplace_back(&lane.second);
       }
     }

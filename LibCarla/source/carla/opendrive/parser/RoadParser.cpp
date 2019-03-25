@@ -9,6 +9,7 @@
 #include "carla/road/MapBuilder.h"
 #include "carla/road/RoadTypes.h"
 #include "carla/Logging.h"
+#include "carla/StringUtil.h"
 #include <deque>
 
 namespace carla {
@@ -26,7 +27,7 @@ namespace parser {
 
   struct Lane {
     LaneId id;
-    std::string type;
+    road::Lane::LaneType type;
     bool level;
     LaneId predecessor;
     LaneId successor;
@@ -60,6 +61,52 @@ namespace parser {
     std::vector<LaneOffset> section_offsets;
     std::vector<LaneSection> sections;
   };
+
+  static road::Lane::LaneType StringToLaneType(const std::string &str) {
+    if (str == "driving") {
+      return road::Lane::LaneType::Driving;
+    } else if (str == "stop") {
+      return road::Lane::LaneType::Stop;
+    } else if (str == "shoulder") {
+      return road::Lane::LaneType::Shoulder;
+    } else if (str == "biking") {
+      return road::Lane::LaneType::Biking;
+    } else if (str == "sidewalk") {
+      return road::Lane::LaneType::Sidewalk;
+    } else if (str == "border") {
+      return road::Lane::LaneType::Border;
+    } else if (str == "restricted") {
+      return road::Lane::LaneType::Restricted;
+    } else if (str == "parking") {
+      return road::Lane::LaneType::Parking;
+    } else if (str == "bidirectional") {
+      return road::Lane::LaneType::Bidirectional;
+    } else if (str == "median") {
+      return road::Lane::LaneType::Median;
+    } else if (str == "special1") {
+      return road::Lane::LaneType::Special1;
+    } else if (str == "special2") {
+      return road::Lane::LaneType::Special2;
+    } else if (str == "special3") {
+      return road::Lane::LaneType::Special3;
+    } else if (str == "roadWorks") {
+      return road::Lane::LaneType::RoadWorks;
+    } else if (str == "tram") {
+      return road::Lane::LaneType::Tram;
+    } else if (str == "rail") {
+      return road::Lane::LaneType::Rail;
+    } else if (str == "entry") {
+      return road::Lane::LaneType::Entry;
+    } else if (str == "exit") {
+      return road::Lane::LaneType::Exit;
+    } else if (str == "offRamp") {
+      return road::Lane::LaneType::OffRamp;
+    } else if (str == "onRamp") {
+      return road::Lane::LaneType::OnRamp;
+    } else {
+      return road::Lane::LaneType::None;
+    }
+  }
 
   void RoadParser::Parse(
       const pugi::xml_document &xml,
@@ -122,10 +169,10 @@ namespace parser {
 
           // left lanes
           for (pugi::xml_node node_lane : node_section.child("left").children("lane")) {
-            Lane lane { 0, "none", false, 0, 0 };
+            Lane lane { 0, road::Lane::LaneType::None, false, 0, 0 };
 
             lane.id = node_lane.attribute("id").as_int();
-            lane.type = node_lane.attribute("type").value();
+            lane.type = StringToLaneType(node_lane.attribute("type").value());
             lane.level = node_lane.attribute("level").as_bool();
 
             // link
@@ -143,10 +190,10 @@ namespace parser {
 
           // center lane
           for (pugi::xml_node node_lane : node_section.child("center").children("lane")) {
-            Lane lane { 0, "none", false, 0, 0 };
+            Lane lane { 0, road::Lane::LaneType::None, false, 0, 0 };
 
             lane.id = node_lane.attribute("id").as_int();
-            lane.type = node_lane.attribute("type").value();
+            lane.type = StringToLaneType(node_lane.attribute("type").value());
             lane.level = node_lane.attribute("level").as_bool();
 
             // link (probably it never exists)
@@ -164,10 +211,10 @@ namespace parser {
 
           // right lane
           for (pugi::xml_node node_lane : node_section.child("right").children("lane")) {
-            Lane lane { 0, "none", false, 0, 0 };
+            Lane lane { 0, road::Lane::LaneType::None, false, 0, 0 };
 
             lane.id = node_lane.attribute("id").as_int();
-            lane.type = node_lane.attribute("type").value();
+            lane.type = StringToLaneType(node_lane.attribute("type").value());
             lane.level = node_lane.attribute("level").as_bool();
 
             // link
@@ -245,7 +292,7 @@ namespace parser {
 
         // lanes
         for (auto const l : s.lanes) {
-          /*carla::road::Lane *lane = */map_builder.AddRoadSectionLane(section, l.id, l.type, l.level, l.predecessor, l.successor);
+          /*carla::road::Lane *lane = */map_builder.AddRoadSectionLane(section, l.id, static_cast<uint32_t>(l.type), l.level, l.predecessor, l.successor);
         }
       }
     }

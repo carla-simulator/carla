@@ -11,6 +11,7 @@
 #include "carla/geom/Transform.h"
 #include "carla/road/element/RoadInfoMarkRecord.h"
 #include "carla/road/element/Waypoint.h"
+#include "carla/road/Lane.h"
 
 namespace carla {
 namespace client {
@@ -64,7 +65,7 @@ namespace client {
 
     double GetLaneWidth() const;
 
-    std::string GetType() const;
+    road::Lane::LaneType GetType() const;
 
     std::vector<SharedPtr<Waypoint>> Next(double distance) const;
 

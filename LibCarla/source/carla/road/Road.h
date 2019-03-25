@@ -105,7 +105,9 @@ namespace road {
     ///          want to calculate the distance
     ///   @param loc point to calculate the distance
     const std::pair<const Lane *, double> GetNearestLane(
-        const double s, const geom::Location &loc) const;
+        const double s,
+        const geom::Location &loc,
+        uint32_t type = static_cast<uint32_t>(Lane::LaneType::Any)) const;
 
     template <typename T>
     const T *GetInfo (const double s) const {
