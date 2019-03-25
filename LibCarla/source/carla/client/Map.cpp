@@ -29,6 +29,12 @@ namespace client {
     : _description(std::move(description)),
       _map(MakeMap(_description.open_drive_file)) {}
 
+  Map::Map(std::string name, std::string xodr_content)
+    : Map(rpc::MapInfo{
+          std::move(name),
+          std::move(xodr_content),
+          std::vector<geom::Transform>{}}) {}
+
   Map::~Map() = default;
 
   SharedPtr<Waypoint> Map::GetWaypoint(
