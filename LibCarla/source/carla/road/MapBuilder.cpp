@@ -488,7 +488,7 @@ namespace road {
   }
 
   // return a list of pointers to all lanes from a lane (using road and junction info)
-  std::vector<Lane *> MapBuilder::GetLaneNext(RoadId road_id, double s, LaneId lane_id) {
+  std::vector<Lane *> MapBuilder::GetLaneNext(RoadId road_id, int section_id, LaneId lane_id) {
     std::vector<Lane *> result;
 
     if (!_map_data.ContainsRoad(road_id)) {
@@ -496,22 +496,26 @@ namespace road {
     }
     Road &road = _map_data.GetRoad(road_id);
 
+    // get the section
+    LaneSection &section = road._lane_sections.GetById(section_id);
+
     // get the lane
-    Lane &lane = road.GetLaneByDistance(s, lane_id);
+    Lane *lane = section.GetLane(lane_id);
 
     // successor and predecessor (road and lane)
     LaneId next;
     RoadId next_road;
     if (lane_id <= 0) {
       next_road = road.GetSuccessor();
-      next = lane.GetSuccessor();
+      next = lane->GetSuccessor();
     } else {
       next_road = road.GetPredecessor();
-      next = lane.GetPredecessor();
+      next = lane->GetPredecessor();
     }
 
     // check to see if next is a road or a junction
     bool next_is_junction = !_map_data.ContainsRoad(next_road);
+    double s = section.GetDistance();
 
     // check if we are in a lane section in the middle
     if ((lane_id > 0 && s > 0) || (lane_id <= 0 && road._lane_sections.upper_bound(s) != road._lane_sections.end())) {
@@ -528,75 +532,20 @@ namespace road {
       // change to another road / junction
       if (next != 0 || (lane_id == 0 && next == 0)) {
         // single road
-        result.push_back(GetEdgeLanePointer(next_road, (next * lane_id >= 0), next));
+        result.push_back(GetEdgeLanePointer(next_road, (next <= 0), next));
       }
     } else {
       // several roads (junction)
       auto options = GetJunctionLanes(next_road, road_id, lane_id);
       for (auto opt : options) {
-        result.push_back(GetEdgeLanePointer(opt.first, (opt.second * lane_id >= 0), opt.second));
+        result.push_back(GetEdgeLanePointer(opt.first, (opt.second <= 0), opt.second));
       }
     }
 
     return result;
   }
 
-  // return a list of pointers to all lanes from a lane (using road and junction info)
-  std::vector<Lane *> MapBuilder::GetLanePrevious(RoadId road_id, double s, LaneId lane_id) {
-    std::vector<Lane *> result;
-
-    if (!_map_data.ContainsRoad(road_id)) {
-      return result;
-    }
-    Road &road = _map_data.GetRoad(road_id);
-
-    // get the lane
-    Lane &lane = road.GetLaneByDistance(s, lane_id);
-
-    // successor and predecessor (road and lane)
-    LaneId prev;
-    RoadId prev_road;
-    if (lane_id <= 0) {
-      prev_road = road.GetPredecessor();
-      prev = lane.GetPredecessor();
-    } else {
-      prev_road = road.GetSuccessor();
-      prev = lane.GetSuccessor();
-    }
-
-    // check to see if next is a road or a junction
-    bool prev_is_junction = !_map_data.ContainsRoad(prev_road);
-
-    // check if we are in a lane section in the middle
-    if ((lane_id <= 0 && s > 0) || (lane_id > 0 && road._lane_sections.upper_bound(s) != road._lane_sections.end())) {
-      // check if lane has a prev link (if not, it deads in the middle section)
-      if ((prev != 0) || (lane_id == 0 && prev == 0)) {
-        // change to next / prev section
-        if (lane_id <= 0) {
-          result.push_back(road.GetPrevLane(s, prev));
-        } else {
-          result.push_back(road.GetNextLane(s, prev));
-        }
-      }
-    } else if (!prev_is_junction) {
-      // change to another road / junction
-      if ((prev != 0) || (lane_id == 0 && prev == 0)) {
-        // single road
-        result.push_back(GetEdgeLanePointer(prev_road, (prev * lane_id >= 0), prev));
-      }
-    } else {
-      // several roads (junction)
-      auto options = GetJunctionLanes(prev_road, road_id, lane_id);
-      for (auto opt : options) {
-        result.push_back(GetEdgeLanePointer(opt.first, (opt.second * lane_id >= 0), opt.second));
-      }
-    }
-
-
-    return result;
-  }
-
-  std::vector<std::pair<RoadId, LaneId>> MapBuilder::GetJunctionLanes(RoadId junction_id, RoadId road_id, LaneId lane_id) {
+ std::vector<std::pair<RoadId, LaneId>> MapBuilder::GetJunctionLanes(RoadId junction_id, RoadId road_id, LaneId lane_id) {
     std::vector<std::pair<RoadId, LaneId>> result;
 
     // get the junction
@@ -636,7 +585,7 @@ namespace road {
         for (auto &lane : section.second._lanes) {
 
           // assign the next lane pointers
-          lane.second._next_lanes = GetLaneNext(road.first, section.second._s, lane.first);
+          lane.second._next_lanes = GetLaneNext(road.first, section.second._id, lane.first);
 
           // add to each lane found, this as its predecessor
           for (auto next_lane : lane.second._next_lanes) {
