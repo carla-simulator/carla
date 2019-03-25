@@ -83,6 +83,7 @@ void export_map() {
     .add_property("is_intersection", &cc::Waypoint::IsIntersection)
     .add_property("lane_width", &cc::Waypoint::GetLaneWidth)
     .add_property("road_id", &cc::Waypoint::GetRoadId)
+    .add_property("section_id", &cc::Waypoint::GetSectionId)
     .add_property("lane_id", &cc::Waypoint::GetLaneId)
     .add_property("s", &cc::Waypoint::GetDistance)
     .add_property("lane_change", &cc::Waypoint::GetLaneChange)

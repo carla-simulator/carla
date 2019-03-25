@@ -44,6 +44,10 @@ namespace client {
       return _waypoint.road_id;
     }
 
+    auto GetSectionId() const {
+      return _waypoint.section_id;
+    }
+
     auto GetLaneId() const {
       return _waypoint.lane_id;
     }
