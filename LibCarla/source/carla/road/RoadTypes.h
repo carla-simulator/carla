@@ -22,6 +22,7 @@ namespace road {
   using ObjId = uint32_t;
 
   using SignId = uint32_t;
+
   using SignRefId = uint32_t;
 
   using ConId = uint32_t;

@@ -263,7 +263,7 @@ void print_roads(boost::optional<Map>& map, std::string filename) {
     for (auto &section : road.second.GetLaneSections()) {
       file << " Section: " << section.GetId() << " " << section.GetDistance() << std::endl;
       for (auto &lane : section.GetLanes()) {
-        file << "   Lane: " << lane.second.GetId() << " (" << lane.second.GetType() << ")" << std::endl;
+        file << "   Lane: " << lane.second.GetId() << " (" << static_cast<uint32_t>(lane.second.GetType()) << ")" << std::endl;
         file << "     Nexts: ";
         for (auto link : lane.second.GetNextLanes()) {
           if (link != nullptr) {

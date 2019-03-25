@@ -281,7 +281,7 @@ namespace road {
   carla::road::Lane *MapBuilder::AddRoadSectionLane(
       carla::road::LaneSection *section,
       const int32_t lane_id,
-      const std::string lane_type,
+      const uint32_t lane_type,
       const bool lane_level,
       const int32_t predecessor,
       const int32_t successor) {
@@ -293,7 +293,7 @@ namespace road {
     lane->_id = lane_id;
     lane->_lane_section = section;
     lane->_level = lane_level;
-    lane->_type = lane_type;
+    lane->_type = static_cast<carla::road::Lane::LaneType>(lane_type);
     lane->_successor = successor;
     lane->_predecessor = predecessor;
 
