@@ -257,7 +257,8 @@ def get_dynamic_objects(carla_world, carla_map):
             location_gnss = carla_map.transform_to_geolocation(sl_transform.location)
             sl_dict = {
                 "id": static_prop.id,
-                "position": [location_gnss.latitude, location_gnss.longitude, location_gnss.altitude]
+                "position": [location_gnss.latitude, location_gnss.longitude, location_gnss.altitude],
+                "type": static_prop.type_id
             }
             static_obstacles_dict[static_prop.id] = sl_dict
         return static_obstacles_dict
