@@ -355,7 +355,7 @@ namespace road {
 
     // If after subtracting the distance we are still in the same lane, return
     // same waypoint with the extra distance.
-    if (distance < remaining_lane_length) {
+    if (distance <= remaining_lane_length) {
       Waypoint result = waypoint;
       result.s += signed_distance;
       return { result };
