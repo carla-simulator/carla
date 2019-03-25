@@ -59,6 +59,7 @@ void export_map() {
   namespace cg = carla::geom;
 
   class_<cc::Map, boost::noncopyable, boost::shared_ptr<cc::Map>>("Map", no_init)
+    .def(init<std::string, std::string>((arg("name"), arg("xodr_content"))))
     .add_property("name", CALL_RETURNING_COPY(cc::Map, GetName))
     .def("get_spawn_points", CALL_RETURNING_LIST(cc::Map, GetRecommendedSpawnPoints))
     .def("get_waypoint", &cc::Map::GetWaypoint, (arg("location"), arg("project_to_road")=true))

@@ -27,6 +27,8 @@ namespace client {
 
     explicit Map(rpc::MapInfo description);
 
+    explicit Map(std::string name, std::string xodr_content);
+
     ~Map();
 
     const std::string &GetName() const {
