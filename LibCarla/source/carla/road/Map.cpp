@@ -47,13 +47,21 @@ namespace road {
     return dst;
   }
 
+  static double GetDistanceAtStartOfLane(const Lane &lane) {
+    if (lane.GetId() <= 0) {
+      return lane.GetDistance();
+    } else {
+      return lane.GetDistance() + lane.GetLength();
+    }
+  }
+
   /// Return a waypoint for each drivable lane on @a lane_section.
   template <typename FuncT>
   static void ForEachDrivableLane(RoadId road_id, const LaneSection &lane_section, FuncT &&func) {
     for (const auto &pair : lane_section.GetLanes()) {
       const auto &lane = pair.second;
       if (lane.GetType() == "driving") {
-        std::forward<FuncT>(func)(Waypoint{road_id, lane_section.GetId(), lane.GetId(), lane_section.GetDistance()});
+        std::forward<FuncT>(func)(Waypoint{road_id, lane_section.GetId(), lane.GetId(), GetDistanceAtStartOfLane(lane)});
       }
     }
   }
@@ -104,14 +112,6 @@ namespace road {
   static bool IsLanePresent(const MapData &data, Waypoint waypoint) {
     const auto &section = data.GetRoad(waypoint.road_id).GetLaneSectionById(waypoint.section_id);
     return section.ContainsLane(waypoint.lane_id);
-  }
-
-  static double GetDistanceAtStartOfLane(const Lane &lane) {
-    if (lane.GetId() <= 0) {
-      return lane.GetDistance();
-    } else {
-      return lane.GetDistance() + lane.GetLength();
-    }
   }
 
   // ===========================================================================
