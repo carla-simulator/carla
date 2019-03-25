@@ -252,14 +252,14 @@ def get_dynamic_objects(carla_world, carla_map):
 
     def get_static_obstacles(static_obstacles):
         static_obstacles_dict = dict()
-        for speed_limit in static_obstacles:
-            sl_transform = static_obstacles.get_transform()
+        for static_prop in static_obstacles:
+            sl_transform = static_prop.get_transform()
             location_gnss = carla_map.transform_to_geolocation(sl_transform.location)
             sl_dict = {
-                "id": speed_limit.id,
+                "id": static_prop.id,
                 "position": [location_gnss.latitude, location_gnss.longitude, location_gnss.altitude]
             }
-            static_obstacles_dict[speed_limit.id] = sl_dict
+            static_obstacles_dict[static_prop.id] = sl_dict
         return static_obstacles_dict
 
     actors = carla_world.get_actors()
