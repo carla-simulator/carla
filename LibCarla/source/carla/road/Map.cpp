@@ -57,11 +57,19 @@ namespace road {
 
   /// Return a waypoint for each drivable lane on @a lane_section.
   template <typename FuncT>
-  static void ForEachDrivableLane(RoadId road_id, const LaneSection &lane_section, FuncT &&func) {
+  static void ForEachDrivableLaneImpl(
+      RoadId road_id,
+      const LaneSection &lane_section,
+      double distance,
+      FuncT &&func) {
     for (const auto &pair : lane_section.GetLanes()) {
       const auto &lane = pair.second;
       if (lane.GetType() == "driving") {
-        std::forward<FuncT>(func)(Waypoint{road_id, lane_section.GetId(), lane.GetId(), GetDistanceAtStartOfLane(lane)});
+        std::forward<FuncT>(func)(Waypoint{
+            road_id,
+            lane_section.GetId(),
+            lane.GetId(),
+            distance < 0.0 ? GetDistanceAtStartOfLane(lane) : distance});
       }
     }
   }
@@ -70,7 +78,11 @@ namespace road {
   template <typename FuncT>
   static void ForEachDrivableLane(const Road &road, FuncT &&func) {
     for (const auto &lane_section : road.GetLaneSections()) {
-      ForEachDrivableLane(road.GetId(), lane_section, std::forward<FuncT>(func));
+      ForEachDrivableLaneImpl(
+          road.GetId(),
+          lane_section,
+          -1.0,
+          std::forward<FuncT>(func));
     }
   }
 
@@ -78,7 +90,11 @@ namespace road {
   template <typename FuncT>
   static void ForEachDrivableLaneAt(const Road &road, double distance, FuncT &&func) {
     for (const auto &lane_section : road.GetLaneSectionsAt(distance)) {
-      ForEachDrivableLane(road.GetId(), lane_section, std::forward<FuncT>(func));
+      ForEachDrivableLaneImpl(
+          road.GetId(),
+          lane_section,
+          distance,
+          std::forward<FuncT>(func));
     }
   }
 
