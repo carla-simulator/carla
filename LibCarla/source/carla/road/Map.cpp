@@ -210,8 +210,7 @@ namespace road {
     // must s be smaller (or eq) than road lenght and bigger (or eq) than 0?
     THROW_INVALID_INPUT_ASSERT(waypoint.s <= road.GetLength());
     THROW_INVALID_INPUT_ASSERT(waypoint.s >= 0.0);
-    //            int32_t
-    // const std::map<LaneId, const Lane *> lanes = road.GetLanesAt(waypoint.s);
+
     const auto &lane_section = road.GetLaneSectionById(waypoint.section_id);
     const std::map<LaneId, Lane> &lanes = lane_section.GetLanes();
 
