@@ -429,6 +429,11 @@ TEST(road, iterate_waypoints) {
           std::min<size_t>(2000u, waypoints.size());
       for (auto i = 0u; i < number_of_waypoints_to_explore; ++i) {
         auto wp = waypoints[i];
+        if (i != 0u) {
+          float distance = map.ComputeTransform(wp).location.Distance(
+              map.ComputeTransform(waypoints[0u]).location);
+          ASSERT_GT(distance, 0.001f);
+        }
         for (auto &&successor : map.GetSuccessors(wp)) {
           ASSERT_TRUE(
               successor.road_id != wp.road_id ||
