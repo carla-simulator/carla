@@ -27,12 +27,12 @@ namespace carla {
 namespace road {
 namespace element {
 
-  static std::ostream &operator<<(std::ostream &out, Waypoint waypoint) {
-    out << "Waypoint{road_id=" << waypoint.road_id
-        << ", lane_id=" << waypoint.lane_id
-        << ", s=" << waypoint.s << '}';
-    return out;
-  }
+  // static std::ostream &operator<<(std::ostream &out, Waypoint waypoint) {
+  //   out << "Waypoint{road_id=" << waypoint.road_id
+  //       << ", lane_id=" << waypoint.lane_id
+  //       << ", s=" << waypoint.s << '}';
+  //   return out;
+  // }
 
 } // namespace element
 } // namespace road
@@ -423,9 +423,9 @@ TEST(road, iterate_waypoints) {
     auto count = 0u;
     auto waypoints = map.GenerateWaypoints(5.0);
     for (auto &&wp : waypoints) {
-      std::cout << "origin: " << wp << ", type = " << map.GetLaneType(wp) << '\n';
+      // std::cout << "origin: " << wp << ", type = " << map.GetLaneType(wp) << '\n';
       for (auto &&successor : map.GetSuccessors(wp)) {
-        std::cout << "- successor: " << successor << ", type = " << map.GetLaneType(successor) << '\n';
+        // std::cout << "- successor: " << successor << ", type = " << map.GetLaneType(successor) << '\n';
         ASSERT_TRUE(
             successor.road_id != wp.road_id ||
             successor.section_id != wp.section_id ||
@@ -433,15 +433,15 @@ TEST(road, iterate_waypoints) {
             successor.s != wp.s);
       }
       for (auto &&next : map.GetNext(wp, 4.0)) {
-        std::cout << "- next: " << next << ", type = " << map.GetLaneType(next) << '\n';
+        // std::cout << "- next: " << next << ", type = " << map.GetLaneType(next) << '\n';
         ++count;
         auto right = map.GetRight(next);
         if (right.has_value()) {
-          std::cout << "  * right: " << *right << ", type = " << map.GetLaneType(*right) << '\n';
+          // std::cout << "  * right: " << *right << ", type = " << map.GetLaneType(*right) << '\n';
         }
         auto left = map.GetLeft(next);
         if (left.has_value()) {
-          std::cout << "  * left: " << *left << ", type = " << map.GetLaneType(*left) << '\n';
+          // std::cout << "  * left: " << *left << ", type = " << map.GetLaneType(*left) << '\n';
         }
       }
     }
