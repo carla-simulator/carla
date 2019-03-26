@@ -107,8 +107,9 @@ namespace road {
     double dist = 0.0;
     double tangent = 0.0;
     for (const auto &lane : container) {
-      const auto current_polynomial =
-          lane.second.template GetInfo<RoadInfoLaneWidth>(s)->GetPolynomial();
+      auto info = lane.second.template GetInfo<RoadInfoLaneWidth>(s);
+      THROW_INVALID_INPUT_ASSERT(info != nullptr);
+      const auto current_polynomial = info->GetPolynomial();
       auto current_dist = current_polynomial.Evaluate(s);
       auto current_tang = current_polynomial.Tangent(s);
       if (lane.first != lane_id) {
@@ -197,7 +198,9 @@ namespace road {
 
     auto &lane = road.GetLaneByDistance(waypoint.s, waypoint.lane_id);
 
-    const auto lane_section_id = lane.GetLaneSection()->GetId();
+    const auto lane_section = lane.GetLaneSection();
+    THROW_INVALID_INPUT_ASSERT(lane_section != nullptr);
+    const auto lane_section_id = lane_section->GetId();
     waypoint.section_id = lane_section_id;
 
     return waypoint;
@@ -231,6 +234,7 @@ namespace road {
     const std::map<LaneId, Lane> &lanes = lane_section.GetLanes();
 
     // check that lane_id exists on the current s
+    THROW_INVALID_INPUT_ASSERT(!lanes.empty());
     THROW_INVALID_INPUT_ASSERT(waypoint.lane_id >= lanes.begin()->first);
     THROW_INVALID_INPUT_ASSERT(waypoint.lane_id <= lanes.rbegin()->first);
 
@@ -297,6 +301,7 @@ namespace road {
     const auto s = waypoint.s;
 
     const auto &lane = GetLane(waypoint);
+    THROW_INVALID_INPUT_ASSERT(lane.GetRoad() != nullptr);
     THROW_INVALID_INPUT_ASSERT(s <= lane.GetRoad()->GetLength());
 
     const auto lane_width_info = lane.GetInfo<RoadInfoLaneWidth>(s);
@@ -314,6 +319,7 @@ namespace road {
     const auto s = waypoint.s;
 
     const auto &current_lane = GetLane(waypoint);
+    THROW_INVALID_INPUT_ASSERT(current_lane.GetRoad() != nullptr);
     THROW_INVALID_INPUT_ASSERT(s <= current_lane.GetRoad()->GetLength());
 
     const auto inner_lane_id = waypoint.lane_id < 0 ?

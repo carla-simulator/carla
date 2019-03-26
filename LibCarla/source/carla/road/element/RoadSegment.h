@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "carla/Debug.h"
+#include "carla/Exception.h"
 #include "carla/NonCopyable.h"
 #include "carla/geom/Location.h"
 #include "carla/road/element/RoadElevationInfo.h"
@@ -15,11 +17,12 @@
 #include "carla/road/element/RoadInfoMarkRecord.h"
 #include "carla/road/element/Types.h"
 
+#include <algorithm>
 #include <limits>
 #include <memory>
 #include <set>
+#include <stdexcept>
 #include <vector>
-#include <algorithm>
 
 namespace carla {
 namespace road {
@@ -236,8 +239,10 @@ namespace element {
 
     // Search for the last geometry with less start_offset before 'dist'
     DirectedPoint GetDirectedPointIn(double dist) const {
-      assert(_length > 0.0);
+      DEBUG_ASSERT(!_geom.empty());
+      DEBUG_ASSERT(_length > 0.0);
       if (dist <= 0.0) {
+        DEBUG_ASSERT(_geom.front() != nullptr);
         return DirectedPointWithElevation(
             dist, DirectedPoint(
                 _geom.front()->GetStartPosition(),
@@ -245,6 +250,7 @@ namespace element {
       }
 
       if (dist >= _length) {
+        DEBUG_ASSERT(_geom.back() != nullptr);
         return DirectedPointWithElevation(
             dist,
             _geom.back()->PosFromDist(_length - _geom.back()->GetStartOffset()));
@@ -258,9 +264,7 @@ namespace element {
         }
       }
 
-      return DirectedPointWithElevation(
-          dist,
-          _geom.back()->PosFromDist(dist - _geom.back()->GetStartOffset()));
+      throw_exception(std::runtime_error("failed to find geometry."));
     }
 
     /// Returns a pair containing:
@@ -274,6 +278,7 @@ namespace element {
       std::pair<double, double> last = {0.0, std::numeric_limits<double>::max()};
 
       for (auto g = _geom.begin(); g != _geom.end(); ++g) {
+        DEBUG_ASSERT(*g != nullptr);
         auto d = (*g)->DistanceTo(loc);
         if (d.second < last.second) {
           last = d;
@@ -282,6 +287,7 @@ namespace element {
       }
 
       for (auto g = _geom.begin(); g != nearest_geom; ++g) {
+        DEBUG_ASSERT(*g != nullptr);
         last.first += (*g)->GetLength();
       }
 

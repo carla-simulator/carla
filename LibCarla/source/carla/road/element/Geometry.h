@@ -118,7 +118,7 @@ namespace element {
 
     DirectedPoint PosFromDist(double dist) const override {
       dist = geom::Math::clamp<double>(dist, 0.0, _length);
-      assert(_length > 0.0);
+      DEBUG_ASSERT(_length > 0.0);
       DirectedPoint p(_start_position, _heading);
       p.location.x += dist * std::cos(p.tangent);
       p.location.y += dist * std::sin(p.tangent);
@@ -153,8 +153,8 @@ namespace element {
 
     DirectedPoint PosFromDist(double dist) const override {
       dist = geom::Math::clamp<double>(dist, 0.0, _length);
-      assert(_length > 0.0);
-      assert(std::fabs(_curvature) > 1e-15);
+      DEBUG_ASSERT(_length > 0.0);
+      DEBUG_ASSERT(std::fabs(_curvature) > 1e-15);
       const double radius = 1.0 / _curvature;
       DirectedPoint p(_start_position, _heading);
       p.location.x += radius * std::cos(p.tangent + geom::Math::pi_half());
@@ -213,8 +213,8 @@ namespace element {
     DirectedPoint PosFromDist(double dist) const override {
       // not working yet with negative values
       dist = geom::Math::clamp<double>(dist, 0.0, _length);
-      assert(_length > 0.0);
-      assert(std::fabs(_curve_end) > 1e-15);
+      DEBUG_ASSERT(_length > 0.0);
+      DEBUG_ASSERT(std::fabs(_curve_end) > 1e-15);
       const double radius = 1.0 / _curve_end;
       const double extra_norm = 1.0 / std::sqrt(geom::Math::pi_half());
       const double norm = 1.0 / std::sqrt(2.0 * radius * _length);
