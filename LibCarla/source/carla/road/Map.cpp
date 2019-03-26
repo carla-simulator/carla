@@ -55,6 +55,7 @@ namespace road {
     }
   }
 
+
   /// Return a waypoint for each drivable lane on @a lane_section.
   template <typename FuncT>
   static void ForEachDrivableLaneImpl(
@@ -64,7 +65,7 @@ namespace road {
       FuncT &&func) {
     for (const auto &pair : lane_section.GetLanes()) {
       const auto &lane = pair.second;
-      if (lane.GetType() == "driving") {
+      if ((static_cast<uint32_t>(lane.GetType()) & static_cast<uint32_t>(Lane::LaneType::Driving)) > 0) {
         std::forward<FuncT>(func)(Waypoint{
             road_id,
             lane_section.GetId(),
@@ -135,10 +136,10 @@ namespace road {
   // -- Map: Geometry ----------------------------------------------------------
   // ===========================================================================
 
-  Waypoint Map::GetClosestWaypointOnRoad(const geom::Location &pos) const {
+  boost::optional<Waypoint> Map::GetClosestWaypointOnRoad(const geom::Location &pos, uint32_t lane_type) const {
     // max_nearests represents the max nearests roads
     // where we will search for nearests lanes
-    constexpr int max_nearests = 10;
+    constexpr int max_nearests = 15;
     // in case that map has less than max_nearests lanes,
     // we will use the maximum lanes
     const int max_nearest_allowed = _data.GetRoadCount() < max_nearests ?
@@ -181,7 +182,7 @@ namespace road {
     Waypoint waypoint;
     auto nearest_lane_dist = std::numeric_limits<double>::max();
     for (int i = 0; i < max_nearest_allowed; ++i) {
-      auto lane_dist = _data.GetRoad(ids[i]).GetNearestLane(dists[i], pos_inverted_y);
+      auto lane_dist = _data.GetRoad(ids[i]).GetNearestLane(dists[i], pos_inverted_y, lane_type);
 
       if (lane_dist.second < nearest_lane_dist) {
         nearest_lane_dist = lane_dist.second;
@@ -189,6 +190,10 @@ namespace road {
         waypoint.road_id = ids[i];
         waypoint.s = dists[i];
       }
+    }
+
+    if (nearest_lane_dist == std::numeric_limits<double>::max()) {
+      return boost::optional<Waypoint>{};
     }
 
     const auto &road = _data.GetRoad(waypoint.road_id);
@@ -206,12 +211,19 @@ namespace road {
     return waypoint;
   }
 
-  boost::optional<Waypoint> Map::GetWaypoint(const geom::Location &pos) const {
-    Waypoint w = GetClosestWaypointOnRoad(pos);
-    const auto dist = geom::Math::Distance2D(ComputeTransform(w).location, pos);
-    const auto lane_width_info = GetLane(w).GetInfo<RoadInfoLaneWidth>(w.s);
+  boost::optional<Waypoint> Map::GetWaypoint(
+      const geom::Location &pos,
+      uint32_t lane_type) const {
+    boost::optional<Waypoint> w = GetClosestWaypointOnRoad(pos, lane_type);
+
+    if (!w.has_value()) {
+      return w;
+    }
+
+    const auto dist = geom::Math::Distance2D(ComputeTransform(*w).location, pos);
+    const auto lane_width_info = GetLane(*w).GetInfo<RoadInfoLaneWidth>(w->s);
     const auto half_lane_width =
-        lane_width_info->GetPolynomial().Evaluate(w.s) * 0.5;
+        lane_width_info->GetPolynomial().Evaluate(w->s) * 0.5;
 
     if (dist < half_lane_width) {
       return w;
@@ -293,7 +305,7 @@ namespace road {
   // -- Map: Road information --------------------------------------------------
   // ===========================================================================
 
-  std::string Map::GetLaneType(const Waypoint waypoint) const {
+  Lane::LaneType Map::GetLaneType(const Waypoint waypoint) const {
     return GetLane(waypoint).GetType();
   }
 

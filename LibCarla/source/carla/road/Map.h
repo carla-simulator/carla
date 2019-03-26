@@ -44,9 +44,13 @@ namespace road {
     /// -- Geometry ------------------------------------------------------------
     /// ========================================================================
 
-    element::Waypoint GetClosestWaypointOnRoad(const geom::Location &location) const;
+    boost::optional<element::Waypoint> GetClosestWaypointOnRoad(
+        const geom::Location &location,
+        uint32_t lane_type = static_cast<uint32_t>(Lane::LaneType::Driving)) const;
 
-    boost::optional<element::Waypoint> GetWaypoint(const geom::Location &location) const;
+    boost::optional<element::Waypoint> GetWaypoint(
+        const geom::Location &location,
+        uint32_t lane_type = static_cast<uint32_t>(Lane::LaneType::Driving)) const;
 
     geom::Transform ComputeTransform(Waypoint waypoint) const;
 
@@ -54,7 +58,7 @@ namespace road {
     /// -- Road information ----------------------------------------------------
     /// ========================================================================
 
-    std::string GetLaneType(Waypoint waypoint) const;
+    Lane::LaneType GetLaneType(Waypoint waypoint) const;
 
     double GetLaneWidth(Waypoint waypoint) const;
 

@@ -39,12 +39,13 @@ namespace client {
 
   SharedPtr<Waypoint> Map::GetWaypoint(
       const geom::Location &location,
-      bool project_to_road) const {
+      bool project_to_road,
+      uint32_t lane_type) const {
     boost::optional<road::element::Waypoint> waypoint;
     if (project_to_road) {
-      waypoint = _map.GetClosestWaypointOnRoad(location);
+      waypoint = _map.GetClosestWaypointOnRoad(location, lane_type);
     } else {
-      waypoint = _map.GetWaypoint(location);
+      waypoint = _map.GetWaypoint(location, lane_type);
     }
     return waypoint.has_value() ?
         SharedPtr<Waypoint>(new Waypoint{shared_from_this(), *waypoint}) :
