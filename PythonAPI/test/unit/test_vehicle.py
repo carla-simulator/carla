@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
@@ -9,7 +9,7 @@ import carla
 import unittest
 
 
-class testVehicleControl(unittest.TestCase):
+class TestVehicleControl(unittest.TestCase):
     def test_default_values(self):
         c = carla.VehicleControl()
         self.assertEqual(c.throttle, 0.0)
@@ -38,7 +38,7 @@ class testVehicleControl(unittest.TestCase):
         self.assertEqual(c.reverse, True)
 
 
-class testVehiclePhysicsControl(unittest.TestCase):
+class TestVehiclePhysicsControl(unittest.TestCase):
     def test_named_args(self):
 
         torque_curve = [[0, 400],
@@ -77,7 +77,7 @@ class testVehiclePhysicsControl(unittest.TestCase):
             wheels=wheels)
 
         error = .001
-        for i in range(0,len(torque_curve)):
+        for i in range(0, len(torque_curve)):
             self.assertTrue(abs(pc.torque_curve[i].x - torque_curve[i][0]) <= error)
             self.assertTrue(abs(pc.torque_curve[i].y - torque_curve[i][1]) <= error)
 
@@ -98,11 +98,11 @@ class testVehiclePhysicsControl(unittest.TestCase):
         self.assertTrue(abs(pc.center_of_mass.y - 1) <= error)
         self.assertTrue(abs(pc.center_of_mass.z - 1) <= error)
 
-        for i in range(0,len(steering_curve)):
+        for i in range(0, len(steering_curve)):
             self.assertTrue(abs(pc.steering_curve[i].x - steering_curve[i].x) <= error)
             self.assertTrue(abs(pc.steering_curve[i].y - steering_curve[i].y) <= error)
 
-        for i in range(0,len(wheels)):
+        for i in range(0, len(wheels)):
             self.assertTrue(abs(pc.wheels[i].tire_friction - wheels[i].tire_friction) <= error)
             self.assertTrue(abs(pc.wheels[i].damping_rate - wheels[i].damping_rate) <= error)
             self.assertTrue(abs(pc.wheels[i].steer_angle - wheels[i].steer_angle) <= error)

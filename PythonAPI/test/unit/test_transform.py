@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
@@ -9,7 +9,7 @@ import carla
 import unittest
 
 
-class testLocation(unittest.TestCase):
+class TestLocation(unittest.TestCase):
     def test_default_values(self):
         location = carla.Location()
         self.assertEqual(location.x, 0.0)
@@ -47,7 +47,7 @@ class testLocation(unittest.TestCase):
         self.assertEqual(location.z, 3.0)
 
 
-class testRotation(unittest.TestCase):
+class TestRotation(unittest.TestCase):
     def test_default_values(self):
         rotation = carla.Rotation()
         self.assertEqual(rotation.pitch, 0.0)
@@ -85,7 +85,7 @@ class testRotation(unittest.TestCase):
         self.assertEqual(rotation.roll, 3.0)
 
 
-class testTransform(unittest.TestCase):
+class TestTransform(unittest.TestCase):
     def test_values(self):
         t = carla.Transform()
         self.assertEqual(t.location.x, 0.0)

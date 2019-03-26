@@ -165,17 +165,17 @@ namespace carla {
     /// @warning Boost.Asio buffers do not own the data, it's up to the caller
     /// to not delete the memory that this buffer holds until the asio buffer is
     /// no longer used.
-    boost::asio::const_buffer cbuffer() const {
+    boost::asio::const_buffer cbuffer() const noexcept {
       return {data(), size()};
     }
 
     /// @copydoc cbuffer()
-    boost::asio::const_buffer buffer() const {
+    boost::asio::const_buffer buffer() const noexcept {
       return cbuffer();
     }
 
     /// @copydoc cbuffer()
-    boost::asio::mutable_buffer buffer() {
+    boost::asio::mutable_buffer buffer() noexcept {
       return {data(), size()};
     }
 
@@ -195,7 +195,7 @@ namespace carla {
       return _size;
     }
 
-    static constexpr size_type max_size() {
+    static constexpr size_type max_size() noexcept {
       return std::numeric_limits<size_type>::max();
     }
 

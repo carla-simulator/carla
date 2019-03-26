@@ -1,30 +1,33 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
+
+"""Blocks until the simulator is ready or the time-out is met."""
 
 import glob
 import os
 import sys
 
 try:
-    sys.path.append(glob.glob('**/*%d.%d-%s.egg' % (
+    sys.path.append(glob.glob('../dist/carla-*%d.%d-%s.egg' % (
         sys.version_info.major,
         sys.version_info.minor,
         'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
 except IndexError:
     pass
 
+
 import carla
 
 import argparse
+import time
 
 
 def main():
-
     argparser = argparse.ArgumentParser(
         description=__doc__)
     argparser.add_argument(
@@ -39,40 +42,28 @@ def main():
         type=int,
         help='TCP port to listen to (default: 2000)')
     argparser.add_argument(
-        '-f', '--recorder_filename',
-        metavar='F',
-        default="test1.rec",
-        help='recorder filename (test1.rec)')
-    argparser.add_argument(
-        '-t', '--time',
+        '--timeout',
         metavar='T',
-        default="30",
+        default=10.0,
         type=float,
-        help='minimum time to consider it is blocked')
-    argparser.add_argument(
-        '-d', '--distance',
-        metavar='D',
-        default="100",
-        type=float,
-        help='minimum distance to consider it is not moving (in cm)')
+        help='time-out in seconds (default: 10)')
     args = argparser.parse_args()
 
-    try:
+    t0 = time.time()
 
-        client = carla.Client(args.host, args.port)
-        client.set_timeout(60.0)
+    while args.timeout > (time.time() - t0):
+        try:
+            client = carla.Client(args.host, args.port)
+            client.set_timeout(0.1)
+            print('CARLA %s connected at %s:%d.' % (client.get_server_version(), args.host, args.port))
+            return 0
+        except RuntimeError:
+            pass
 
-        print(client.show_recorder_actors_blocked(args.recorder_filename, args.time, args.distance))
-
-    finally:
-        pass
+    print('Failed to connect to %s:%d.' % (args.host, args.port))
+    return 1
 
 
 if __name__ == '__main__':
 
-    try:
-        main()
-    except KeyboardInterrupt:
-        pass
-    finally:
-        print('\ndone.')
+    sys.exit(main())
