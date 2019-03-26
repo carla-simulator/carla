@@ -228,46 +228,52 @@ namespace road {
     auto left_lanes = MakeListView(
         lanes.lower_bound(1), lanes.end());
 
-    DirectedPoint dp_lane_zero = GetDirectedPointIn(s);
+    const DirectedPoint dp_lane_zero = GetDirectedPointIn(s);
     std::pair<const Lane *, double> result =
         std::make_pair(nullptr, std::numeric_limits<double>::max());
 
     DirectedPoint current_dp = dp_lane_zero;
     for (const auto &lane : right_lanes) {
-      if ((static_cast<uint32_t>(lane.second->GetType()) & static_cast<uint32_t>(lane_type)) > 0) {
-        const auto lane_width_info = lane.second->GetInfo<RoadInfoLaneWidth>(s);
-        const auto half_width = lane_width_info->GetPolynomial().Evaluate(s) / 2.0;
-        current_dp.ApplyLateralOffset(half_width);
-        const auto current_dist = geom::Math::Distance(current_dp.location, loc);
-        // if the current_dp is near to loc, we are in the right way
-        if (current_dist <= result.second) {
+      const auto lane_width_info = lane.second->GetInfo<RoadInfoLaneWidth>(s);
+      const auto half_width = lane_width_info->GetPolynomial().Evaluate(s) * 0.5;
+
+      current_dp.ApplyLateralOffset(half_width);
+      const auto current_dist = geom::Math::Distance(current_dp.location, loc);
+
+      // if the current_dp is near to loc, we are in the right way
+      if (current_dist <= result.second) {
+        // only consider the lanes that match the type flag for result candidates
+        if ((static_cast<uint32_t>(lane.second->GetType()) & lane_type) > 0) {
           result.first = &(*lane.second);
           result.second = current_dist;
-        } else {
-          // elsewhere, we are be moving away
-          break;
         }
-        current_dp.ApplyLateralOffset(half_width);
+      } else {
+        // elsewhere, we are be moving away
+        break;
       }
+      current_dp.ApplyLateralOffset(half_width);
     }
 
     current_dp = dp_lane_zero;
     for (const auto &lane : left_lanes) {
-      if ((static_cast<uint32_t>(lane.second->GetType()) & static_cast<uint32_t>(lane_type)) > 0) {
-        const auto lane_width_info = lane.second->GetInfo<RoadInfoLaneWidth>(s);
-        const auto half_width = -lane_width_info->GetPolynomial().Evaluate(s) / 2.0;
-        current_dp.ApplyLateralOffset(half_width);
-        const auto current_dist = geom::Math::Distance(current_dp.location, loc);
-        // if the current_dp is near to loc, we are in the right way
-        if (current_dist <= result.second) {
+      const auto lane_width_info = lane.second->GetInfo<RoadInfoLaneWidth>(s);
+      const auto half_width = -lane_width_info->GetPolynomial().Evaluate(s) * 0.5;
+
+      current_dp.ApplyLateralOffset(half_width);
+      const auto current_dist = geom::Math::Distance(current_dp.location, loc);
+
+      // if the current_dp is near to loc, we are in the right way
+      if (current_dist <= result.second) {
+        // only consider the lanes that match the type flag for result candidates
+        if ((static_cast<uint32_t>(lane.second->GetType()) & lane_type) > 0) {
           result.first = &(*lane.second);
           result.second = current_dist;
-        } else {
-          // elsewhere, we are be moving away
-          break;
         }
-        current_dp.ApplyLateralOffset(half_width);
+      } else {
+        // elsewhere, we are be moving away
+        break;
       }
+      current_dp.ApplyLateralOffset(half_width);
     }
 
     return result;
