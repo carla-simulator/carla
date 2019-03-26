@@ -60,7 +60,7 @@ void export_map() {
   namespace cg = carla::geom;
 
   enum_<cr::Lane::LaneType>("LaneType")
-    .value("None", cr::Lane::LaneType::None)
+    .value("NONE", cr::Lane::LaneType::None) // None is reserved in Python3
     .value("Driving", cr::Lane::LaneType::Driving)
     .value("Stop", cr::Lane::LaneType::Stop)
     .value("Shoulder", cr::Lane::LaneType::Shoulder)
@@ -97,7 +97,7 @@ void export_map() {
   ;
 
   enum_<cc::Waypoint::LaneChange>("LaneChange")
-    .value("None", cc::Waypoint::LaneChange::None)
+    .value("NONE", cc::Waypoint::LaneChange::None) // None is reserved in Python3
     .value("Right", cc::Waypoint::LaneChange::Right)
     .value("Left", cc::Waypoint::LaneChange::Left)
     .value("Both", cc::Waypoint::LaneChange::Both)
