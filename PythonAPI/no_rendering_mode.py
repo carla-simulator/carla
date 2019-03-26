@@ -494,7 +494,7 @@ class MapImage(object):
 
         def does_cross_solid_line(waypoint, shift):
             w = carla_map.get_waypoint(lateral_shift(waypoint.transform, shift), project_to_road=False)
-            if w is None or w.lane_change == carla.LaneChange.None or w.road_id != waypoint.road_id:
+            if w is None or w.road_id != waypoint.road_id or w.lane_type != 'driving':
                 return True
             else:
                 return (w.lane_id * waypoint.lane_id < 0) or w.lane_id == waypoint.lane_id
