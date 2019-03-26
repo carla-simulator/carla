@@ -401,8 +401,7 @@ namespace road {
       DEBUG_ASSERT(
           successor.road_id != waypoint.road_id ||
           successor.section_id != waypoint.section_id ||
-          successor.lane_id != waypoint.lane_id ||
-          successor.s != waypoint.s);
+          successor.lane_id != waypoint.lane_id);
       result = ConcatVectors(result, GetNext(successor, distance - remaining_lane_length));
     }
     return result;
