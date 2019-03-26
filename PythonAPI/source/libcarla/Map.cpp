@@ -8,7 +8,7 @@
 #include <carla/PythonUtil.h>
 #include <carla/client/Map.h>
 #include <carla/client/Waypoint.h>
-
+#include "carla/road/element/WaypointInformationTypes.h"
 #include <fstream>
 
 namespace carla {
@@ -58,6 +58,7 @@ void export_map() {
   namespace cc = carla::client;
   namespace cr = carla::road;
   namespace cg = carla::geom;
+  namespace cre = carla::road::element;
 
   enum_<cr::Lane::LaneType>("LaneType")
     .value("NONE", cr::Lane::LaneType::None) // None is reserved in Python3
@@ -97,11 +98,42 @@ void export_map() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  enum_<cc::Waypoint::LaneChange>("LaneChange")
-    .value("NONE", cc::Waypoint::LaneChange::None) // None is reserved in Python3
-    .value("Right", cc::Waypoint::LaneChange::Right)
-    .value("Left", cc::Waypoint::LaneChange::Left)
-    .value("Both", cc::Waypoint::LaneChange::Both)
+  enum_<cre::LaneMarking>("LaneMarking")
+    .value("Other", cre::LaneMarking::Other)
+    .value("Broken", cre::LaneMarking::Broken)
+    .value("Solid", cre::LaneMarking::Solid)
+    .value("SolidSolid", cre::LaneMarking::SolidSolid)
+    .value("SolidBroken", cre::LaneMarking::SolidBroken)
+    .value("BrokenSolid", cre::LaneMarking::BrokenSolid)
+    .value("BrokenBroken", cre::LaneMarking::BrokenBroken)
+    .value("BottsDots", cre::LaneMarking::BottsDots)
+    .value("Grass", cre::LaneMarking::Grass)
+    .value("Curb", cre::LaneMarking::Curb)
+    .value("NONE", cre::LaneMarking::None) // None is reserved in Python3
+  ;
+
+  enum_<cre::WaypointInfoRoadMark::LaneChange>("RoadMarkLaneChange")
+    .value("Increase", cre::WaypointInfoRoadMark::LaneChange::Increase)
+    .value("Decrease", cre::WaypointInfoRoadMark::LaneChange::Decrease)
+    .value("Both", cre::WaypointInfoRoadMark::LaneChange::Both)
+    .value("NONE", cre::WaypointInfoRoadMark::LaneChange::None) // None is reserved in Python3
+  ;
+
+  enum_<cre::WaypointInfoRoadMark::Color>("RoadMarkColor")
+    .value("Standard", cre::WaypointInfoRoadMark::Color::Standard)
+    .value("Blue", cre::WaypointInfoRoadMark::Color::Blue)
+    .value("Green", cre::WaypointInfoRoadMark::Color::Green)
+    .value("Red", cre::WaypointInfoRoadMark::Color::Red)
+    .value("White", cre::WaypointInfoRoadMark::Color::White)
+    .value("Yellow", cre::WaypointInfoRoadMark::Color::Yellow)
+    .value("Other", cre::WaypointInfoRoadMark::Color::Other)
+  ;
+
+  class_<cre::WaypointInfoRoadMark>("WaypointInfoRoadMark", no_init)
+    .add_property("width", &cre::WaypointInfoRoadMark::width)
+    .add_property("color", &cre::WaypointInfoRoadMark::color)
+    .add_property("lane_change", &cre::WaypointInfoRoadMark::lane_change)
+    .add_property("type", &cre::WaypointInfoRoadMark::type)
   ;
 
   class_<cc::Waypoint, boost::noncopyable, boost::shared_ptr<cc::Waypoint>>("Waypoint", no_init)
@@ -115,6 +147,8 @@ void export_map() {
     .add_property("s", &cc::Waypoint::GetDistance)
     .add_property("lane_change", &cc::Waypoint::GetLaneChange)
     .add_property("lane_type", &cc::Waypoint::GetType)
+    .def("get_right_road_mark", &cc::Waypoint::GetRightRoadMark)
+    .def("get_left_road_mark", &cc::Waypoint::GetLeftRoadMark)
     .def("next", CALL_RETURNING_LIST_1(cc::Waypoint, Next, double), (args("distance")))
     .def("get_right_lane", &cc::Waypoint::Right)
     .def("get_left_lane", &cc::Waypoint::Left)

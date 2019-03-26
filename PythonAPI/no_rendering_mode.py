@@ -492,12 +492,17 @@ class MapImage(object):
             transform.rotation.yaw += 90
             return transform.location + shift * transform.get_forward_vector()
 
-        def does_cross_solid_line(waypoint, shift):
-            w = carla_map.get_waypoint(lateral_shift(waypoint.transform, shift), project_to_road=False)
-            if w is None or w.road_id != waypoint.road_id or w.lane_type != carla.LaneType.Driving:
-                return True
-            else:
-                return (w.lane_id * waypoint.lane_id < 0) or w.lane_id == waypoint.lane_id
+        def does_cross_solid_line_left(waypoint):
+            return (waypoint.get_left_road_mark().type == carla.LaneMarking.Solid)
+
+        def does_cross_solid_line_right(waypoint):
+            return (waypoint.get_right_road_mark().type == carla.LaneMarking.Solid)
+
+        def has_line_left(waypoint):
+            return (waypoint.get_left_road_mark().type != carla.LaneMarking.NONE)
+
+        def has_line_right(waypoint):
+            return (waypoint.get_right_road_mark().type != carla.LaneMarking.NONE)
 
         def draw_topology (carla_topology, index):
             topology = [x[index] for x in carla_topology]
@@ -531,11 +536,11 @@ class MapImage(object):
                     draw_lane_marking(
                         map_surface,
                         [world_to_pixel(x) for x in left_marking],
-                        does_cross_solid_line(sample, -sample.lane_width * 1.2))
+                        does_cross_solid_line_left(sample) and has_line_left(sample))
                     draw_lane_marking(
                         map_surface,
                         [world_to_pixel(x) for x in right_marking],
-                        does_cross_solid_line(sample, sample.lane_width * 1.2))
+                        does_cross_solid_line_right(sample) and has_line_right(sample))
                     for n, wp in enumerate(waypoints):
                         if (n % 400) == 0:
                             draw_arrow(map_surface, wp.transform)

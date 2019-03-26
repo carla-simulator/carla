@@ -74,9 +74,9 @@ namespace client {
 
     SharedPtr<Waypoint> Left() const;
 
-    const road::element::WaypointInfoRoadMark GetRightRoadMark() const;
+    road::element::WaypointInfoRoadMark GetRightRoadMark() const;
 
-    const road::element::WaypointInfoRoadMark GetLeftRoadMark() const;
+    road::element::WaypointInfoRoadMark GetLeftRoadMark() const;
 
     Waypoint::LaneChange GetLaneChange() const;
 

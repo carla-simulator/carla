@@ -76,11 +76,11 @@ namespace client {
         static_cast<typename std::underlying_type<EnumT>::type>(rhs));
   }
 
-  const road::element::WaypointInfoRoadMark Waypoint::GetRightRoadMark() const {
+  road::element::WaypointInfoRoadMark Waypoint::GetRightRoadMark() const {
     return road::element::WaypointInfoRoadMark(*_mark_record.first);
   }
 
-  const road::element::WaypointInfoRoadMark Waypoint::GetLeftRoadMark() const {
+  road::element::WaypointInfoRoadMark Waypoint::GetLeftRoadMark() const {
     return road::element::WaypointInfoRoadMark(*_mark_record.second);
   }
 
