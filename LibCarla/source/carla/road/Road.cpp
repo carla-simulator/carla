@@ -4,18 +4,21 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "carla/road/Road.h"
+#include "carla/Exception.h"
+#include "carla/ListView.h"
+#include "carla/Logging.h"
+#include "carla/geom/CubicPolynomial.h"
+#include "carla/geom/Location.h"
+#include "carla/geom/Math.h"
 #include "carla/road/Lane.h"
 #include "carla/road/MapData.h"
-#include "carla/geom/Math.h"
-#include "carla/Logging.h"
-#include "carla/ListView.h"
-#include "carla/geom/Location.h"
-#include "carla/geom/CubicPolynomial.h"
+#include "carla/road/Road.h"
+#include "carla/road/element/RoadInfoElevation.h"
 #include "carla/road/element/RoadInfoGeometry.h"
 #include "carla/road/element/RoadInfoLaneOffset.h"
 #include "carla/road/element/RoadInfoLaneWidth.h"
-#include "carla/road/element/RoadInfoElevation.h"
+
+#include <stdexcept>
 
 namespace carla {
 namespace road {
@@ -61,7 +64,11 @@ namespace road {
   }
 
   const geom::CubicPolynomial &Road::GetElevationOn(const double s) const {
-    return GetInfo<element::RoadInfoElevation>(s)->GetPolynomial();
+    auto info = GetInfo<element::RoadInfoElevation>(s);
+    if (info == nullptr) {
+      throw_exception(std::runtime_error("failed to find road elevation."));
+    }
+    return info->GetPolynomial();
   }
 
   Lane &Road::GetLaneByDistance(double s, LaneId lane_id) {
@@ -199,6 +206,7 @@ namespace road {
     decltype(geom_info_list)::iterator nearest_geom = geom_info_list.end();
 
     for (auto g = geom_info_list.begin(); g != geom_info_list.end(); ++g) {
+      DEBUG_ASSERT(*g != nullptr);
       auto dist = (*g)->GetGeometry().DistanceTo(loc);
       if (dist.second < last.second) {
         last = dist;
@@ -209,6 +217,7 @@ namespace road {
     for (auto g = geom_info_list.begin();
         g != geom_info_list.end() && g != nearest_geom;
         ++g) {
+      DEBUG_ASSERT(*g != nullptr);
       last.first += (*g)->GetGeometry().GetLength();
     }
 
