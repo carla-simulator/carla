@@ -67,8 +67,6 @@ void AObstacleDetectionSensor::Tick(float DeltaSeconds)
   // Struct in which the result of the scan will be saved
   FHitResult HitOut = FHitResult();
 
-  bDebugLineTrace = true;
-
   // Initialization of Query Parameters
   FCollisionQueryParams TraceParams(FName(TEXT("ObstacleDetection Trace")), true, this);
 
