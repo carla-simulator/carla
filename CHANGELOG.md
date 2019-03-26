@@ -1,5 +1,6 @@
 ## Latest Changes
 
+  * Fix ActorList returned by ActorList.Filter(...)
   * Add --rolename to manual_control.py
   * Migrate Content to AWS
   * Adding a parser to represent the map as a connected graph of waypoints.
