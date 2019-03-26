@@ -21,6 +21,10 @@ namespace road {
 
   using namespace carla::road::element;
 
+  /// We use this epsilon to shift the waypoints away from the edges of the lane
+  /// sections to avoid floating point precision errors.
+  static constexpr double EPSILON = 2.0 * std::numeric_limits<double>::epsilon();
+
   // ===========================================================================
   // -- Error handling ---------------------------------------------------------
   // ===========================================================================
@@ -49,9 +53,9 @@ namespace road {
 
   static double GetDistanceAtStartOfLane(const Lane &lane) {
     if (lane.GetId() <= 0) {
-      return lane.GetDistance();
+      return lane.GetDistance() + EPSILON;
     } else {
-      return lane.GetDistance() + lane.GetLength();
+      return lane.GetDistance() + lane.GetLength() - EPSILON;
     }
   }
 
@@ -139,7 +143,7 @@ namespace road {
   boost::optional<Waypoint> Map::GetClosestWaypointOnRoad(const geom::Location &pos, uint32_t lane_type) const {
     // max_nearests represents the max nearests roads
     // where we will search for nearests lanes
-    constexpr int max_nearests = 15;
+    constexpr int max_nearests = 50;
     // in case that map has less than max_nearests lanes,
     // we will use the maximum lanes
     const int max_nearest_allowed = _data.GetRoadCount() < max_nearests ?
@@ -199,7 +203,9 @@ namespace road {
     const auto &road = _data.GetRoad(waypoint.road_id);
 
     // Make sure 0.0 < waipoint.s < Road's length
-    waypoint.s = geom::Math::clamp<double>(waypoint.s, 0.0, road.GetLength());
+    constexpr double margin = 5.0 * EPSILON;
+    DEBUG_ASSERT(margin < road.GetLength() - margin);
+    waypoint.s = geom::Math::clamp<double>(waypoint.s, margin, road.GetLength() - margin);
 
     auto &lane = road.GetLaneByDistance(waypoint.s, waypoint.lane_id);
 
@@ -383,7 +389,7 @@ namespace road {
     const auto &lane = GetLane(waypoint);
     const bool forward = (waypoint.lane_id <= 0);
     const double signed_distance = forward ? distance : -distance;
-    const double relative_s = waypoint.s - lane.GetDistance();
+    const double relative_s = waypoint.s - lane.GetDistance() + EPSILON;
     const double remaining_lane_length = forward ? lane.GetLength() - relative_s : relative_s;
     DEBUG_ASSERT(remaining_lane_length >= 0.0);
 
@@ -392,6 +398,8 @@ namespace road {
     if (distance <= remaining_lane_length) {
       Waypoint result = waypoint;
       result.s += signed_distance;
+      result.s += forward ? -EPSILON : EPSILON;
+      THROW_INVALID_INPUT_ASSERT(result.s > 0.0);
       return { result };
     }
 
@@ -433,7 +441,7 @@ namespace road {
     std::vector<Waypoint> result;
     for (const auto &pair : _data.GetRoads()) {
       const auto &road = pair.second;
-      for (double s = 0.0; s < road.GetLength(); s += distance) {
+      for (double s = EPSILON; s < (road.GetLength() - EPSILON); s += distance) {
         ForEachDrivableLaneAt(road, s, [&](auto &&waypoint) {
           result.emplace_back(waypoint);
         });
