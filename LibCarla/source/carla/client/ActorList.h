@@ -31,7 +31,7 @@ namespace client {
     SharedPtr<Actor> Find(ActorId actor_id) const;
 
     /// Filters a list of Actor with type id matching @a wildcard_pattern.
-    ActorList Filter(const std::string &wildcard_pattern) const;
+    SharedPtr<ActorList> Filter(const std::string &wildcard_pattern) const;
 
     SharedPtr<Actor> operator[](size_t pos) const {
       return _actors[pos].Get(_episode, shared_from_this());
