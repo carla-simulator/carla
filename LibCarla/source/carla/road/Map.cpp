@@ -443,42 +443,6 @@ namespace road {
     return result;
   }
 
-  // std::vector<Waypoint> Map::GenerateLaneBegin() const {
-  //   // std::vector<Waypoint> result;
-  //   // for (auto &&road_segment : map.GetData().GetRoadSegments()) {
-  //   //   ForEachDrivableLane(road_segment, 0.0, [&](auto lane_id) {
-  //   //     auto distance = lane_id < 0 ? 0.0 : road_segment.GetLength();
-  //   //     auto this_waypoint = Waypoint(
-  //   //         map.shared_from_this(),
-  //   //         road_segment.GetId(),
-  //   //         lane_id,
-  //   //         distance);
-  //   //     result.push_back(this_waypoint);
-  //   //   });
-  //   // }
-  //   // return result;
-  //   throw_exception(std::runtime_error("not implemented"));
-  //   return {};
-  // }
-
-  // std::vector<Waypoint> Map::GenerateLaneEnd() const {
-  //   // std::vector<Waypoint> result;
-  //   // for (auto &&road_segment : map.GetData().GetRoadSegments()) {
-  //   //   ForEachDrivableLane(road_segment, 0.0, [&](auto lane_id) {
-  //   //     auto distance = lane_id > 0 ? 0.0 : road_segment.GetLength();
-  //   //     auto this_waypoint = Waypoint(
-  //   //         map.shared_from_this(),
-  //   //         road_segment.GetId(),
-  //   //         lane_id,
-  //   //         distance);
-  //   //     result.push_back(this_waypoint);
-  //   //   });
-  //   // }
-  //   // return result;
-  //   throw_exception(std::runtime_error("not implemented"));
-  //   return {};
-  // }
-
   std::vector<std::pair<Waypoint, Waypoint>> Map::GenerateTopology() const {
     std::vector<std::pair<Waypoint, Waypoint>> result;
     for (const auto &pair : _data.GetRoads()) {
