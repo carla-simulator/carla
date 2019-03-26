@@ -18,7 +18,7 @@
 
   * Added recording and playback functionality
   * Added synchronous mode, simulator waits until a client sends a "tick" cue, `client.tick()`
-  * Allow changing map from client-side, added `client.load_map(name)`, `client.reload_map()`, and `client.get_available_maps()`
+  * Allow changing map from client-side, added `client.load_world(name)`, `client.reload_world()`, and `client.get_available_maps()`
   * Added scripts and tools to import maps directly from .fbx and .xodr files into the simulator
   * Exposed minimum physics control parameters for vehicles' engine and wheels
   * Allow controlling multiple actors in "batch mode"
