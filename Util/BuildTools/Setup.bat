@@ -201,9 +201,8 @@ set CMAKE_CONFIG_FILE="%INSTALLATION_DIR%CMakeLists.txt.in"
 >>"%CMAKE_CONFIG_FILE%" echo.
 >>"%CMAKE_CONFIG_FILE%" echo if (CMAKE_BUILD_TYPE STREQUAL "Server")
 >>"%CMAKE_CONFIG_FILE%" echo   # Prevent exceptions
->>"%CMAKE_CONFIG_FILE%" echo   add_compile_options(-fno-rtti)
 >>"%CMAKE_CONFIG_FILE%" echo   add_compile_options(/GR-)
->>"%CMAKE_CONFIG_FILE%" echo   add_compile_options(-fno-exceptions)
+>>"%CMAKE_CONFIG_FILE%" echo   add_compile_options(/EHsc)
 >>"%CMAKE_CONFIG_FILE%" echo   add_definitions(-DASIO_NO_EXCEPTIONS)
 >>"%CMAKE_CONFIG_FILE%" echo   add_definitions(-DBOOST_NO_EXCEPTIONS)
 >>"%CMAKE_CONFIG_FILE%" echo   add_definitions(-DLIBCARLA_NO_EXCEPTIONS)
