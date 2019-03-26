@@ -4,49 +4,123 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "ProfilesParser.h"
+#include "carla/opendrive/parser/ProfilesParser.h"
 
-void carla::opendrive::parser::ProfilesParser::ParseElevation(
-    const pugi::xml_node &xmlNode,
-    std::vector<carla::opendrive::types::ElevationProfile> &out_elevation_profile) {
-  for (pugi::xml_node laneSection = xmlNode.child("elevation");
-      laneSection;
-      laneSection = laneSection.next_sibling("elevation")) {
-    carla::opendrive::types::ElevationProfile elevationProfile;
+#include "carla/opendrive/parser/pugixml/pugixml.hpp"
 
-    elevationProfile.start_position = std::stod(laneSection.attribute("s").value());
-    elevationProfile.elevation = std::stod(laneSection.attribute("a").value());
-    elevationProfile.slope = std::stod(laneSection.attribute("b").value());
-    elevationProfile.vertical_curvature = std::stod(laneSection.attribute("c").value());
-    elevationProfile.curvature_change = std::stod(laneSection.attribute("d").value());
+#include "carla/road/MapBuilder.h"
 
-    out_elevation_profile.emplace_back(elevationProfile);
+namespace carla {
+namespace opendrive {
+namespace parser {
+
+  struct ElevationProfile {
+    carla::road::Road* road { nullptr };
+    float s            { 0.0 };
+    float a            { 0.0 };
+    float b            { 0.0 };
+    float c            { 0.0 };
+    float d            { 0.0 };
+  };
+
+  struct LateralCrossfall {
+    std::string side      { "both" };
+  };
+
+  struct LateralShape {
+    float t      { 0.0 };
+  };
+
+  struct LateralProfile {
+    carla::road::Road* road { nullptr };
+    float s            { 0.0 };
+    float a            { 0.0 };
+    float b            { 0.0 };
+    float c            { 0.0 };
+    float d            { 0.0 };
+    std::string type    { "superelevation" };
+    LateralCrossfall cross;
+    LateralShape shape;
+  };
+
+  void ProfilesParser::Parse(
+      const pugi::xml_document &xml,
+      carla::road::MapBuilder &map_builder) {
+
+      std::vector<ElevationProfile> elevation_profile;
+      std::vector<LateralProfile> lateral_profile;
+
+      for (pugi::xml_node node_road : xml.child("OpenDRIVE").children("road")) {
+
+        // parse elevation profile
+        pugi::xml_node node_profile = node_road.child("elevationProfile");
+        if (node_profile) {
+          // all geometry
+          for (pugi::xml_node node_elevation : node_profile.children("elevation")) {
+            ElevationProfile elev;
+
+            // get road id
+            road::RoadId road_id = node_road.attribute("id").as_int();
+            elev.road = map_builder.GetRoad(road_id);
+
+            // get common properties
+            elev.s = node_elevation.attribute("s").as_float();
+            elev.a = node_elevation.attribute("a").as_float();
+            elev.b = node_elevation.attribute("b").as_float();
+            elev.c = node_elevation.attribute("c").as_float();
+            elev.d = node_elevation.attribute("d").as_float();
+
+            // add it
+            elevation_profile.emplace_back(elev);
+          }
+        }
+
+        // parse lateral profile
+        node_profile = node_road.child("lateralProfile");
+        if (node_profile) {
+          for (pugi::xml_node node : node_profile.children()) {
+            LateralProfile lateral;
+
+            // get road id
+            road::RoadId road_id = node_road.attribute("id").as_int();
+            lateral.road = map_builder.GetRoad(road_id);
+
+            // get common properties
+            lateral.s = node.attribute("s").as_float();
+            lateral.a = node.attribute("a").as_float();
+            lateral.b = node.attribute("b").as_float();
+            lateral.c = node.attribute("c").as_float();
+            lateral.d = node.attribute("d").as_float();
+
+            // handle different types
+            lateral.type = node.name();
+            if (lateral.type == "crossfall") {
+                lateral.cross.side = node.attribute("side").value();
+            } else if (lateral.type == "shape") {
+                lateral.shape.t = node.attribute("t").as_float();
+            }
+
+            // add it
+            lateral_profile.emplace_back(lateral);
+          }
+        }
+      }
+
+      // map_builder calls
+      for (auto const pro : elevation_profile) {
+        map_builder.AddRoadElevationProfile(pro.road, pro.s, pro.a, pro.b, pro.c, pro.d);
+      }
+      /// @todo: RoadInfo classes must be created to fit this information
+      // for (auto const pro : lateral_profile) {
+      //   if (pro.type == "superelevation")
+      //     map_builder.AddRoadLateralSuperElevation(pro.road, pro.s, pro.a, pro.b, pro.c, pro.d);
+      //   else if (pro.type == "crossfall")
+      //     map_builder.AddRoadLateralCrossfall(pro.road, pro.s, pro.a, pro.b, pro.c, pro.d, pro.cross.side);
+      //   else if (pro.type == "shape")
+      //     map_builder.AddRoadLateralShape(pro.road, pro.s, pro.a, pro.b, pro.c, pro.d, pro.shape.t);
+      // }
   }
-}
 
-void carla::opendrive::parser::ProfilesParser::ParseLateral(
-    const pugi::xml_node &xmlNode,
-    std::vector<carla::opendrive::types::LateralProfile> &out_lateral_profile) {
-  for (pugi::xml_node laneSection = xmlNode.child("superelevation");
-      laneSection;
-      laneSection = laneSection.next_sibling("superelevation")) {
-    carla::opendrive::types::LateralProfile lateralProfile;
-
-    lateralProfile.start_position = std::stod(laneSection.attribute("s").value());
-    lateralProfile.elevation = std::stod(laneSection.attribute("a").value());
-    lateralProfile.slope = std::stod(laneSection.attribute("b").value());
-    lateralProfile.vertical_curvature = std::stod(laneSection.attribute("c").value());
-    lateralProfile.curvature_change = std::stod(laneSection.attribute("d").value());
-
-    out_lateral_profile.emplace_back(lateralProfile);
-  }
-}
-
-void carla::opendrive::parser::ProfilesParser::Parse(
-    const pugi::xml_node &xmlNode,
-    carla::opendrive::types::RoadProfiles &out_road_profiles) {
-  carla::opendrive::parser::ProfilesParser profilesParser;
-
-  profilesParser.ParseElevation(xmlNode.child("elevationProfile"), out_road_profiles.elevation_profile);
-  profilesParser.ParseLateral(xmlNode.child("lateralProfile"), out_road_profiles.lateral_profile);
-}
+} // namespace parser
+} // namespace opendrive
+} // namespace carla

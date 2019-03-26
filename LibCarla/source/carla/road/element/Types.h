@@ -33,7 +33,7 @@ namespace element {
         _prev_lane(std::move(rsd._prev_lane)) {}
 
     RoadSegmentDefinition(id_type id) {
-      assert(id >= 0);
+      DEBUG_ASSERT(id >= 0);
       _id = id;
     }
 

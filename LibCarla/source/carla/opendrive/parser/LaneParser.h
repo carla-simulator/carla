@@ -6,48 +6,39 @@
 
 #pragma once
 
-#include "../types.h"
+#include "carla/road/RoadTypes.h"
 
-#include "./pugixml/pugixml.hpp"
+namespace pugi {
+  class xml_document;
+  class xml_node;
+} // namespace pugi
 
 namespace carla {
+
+namespace road {
+  class MapBuilder;
+} // namespace road
+
 namespace opendrive {
 namespace parser {
 
   class LaneParser {
   private:
 
-    void ParseLane(
-        const pugi::xml_node &xmlNode,
-        std::vector<types::LaneInfo> &out_lane);
-
-    void ParseLaneSpeed(
-        const pugi::xml_node &xmlNode,
-        std::vector<types::LaneSpeed> &out_lane_speed);
-
-    void ParseLaneLink(
-        const pugi::xml_node &xmlNode,
-        std::unique_ptr<types::LaneLink> &out_lane_link);
-
-    void ParseLaneOffset(
-        const pugi::xml_node &xmlNode,
-        std::vector<types::LaneOffset> &out_lane_offset);
-
-    void ParseLaneWidth(
-        const pugi::xml_node &xmlNode,
-        std::vector<types::LaneWidth> &out_lane_width);
-
-    void ParseLaneRoadMark(
-        const pugi::xml_node &xmlNode,
-        std::vector<types::LaneRoadMark> &out_lane_mark);
+    static void ParseLanes(
+        road::RoadId road_id,
+        double s,
+        const pugi::xml_node &parent_node,
+        carla::road::MapBuilder &map_builder);
 
   public:
 
     static void Parse(
-        const pugi::xml_node &xmlNode,
-        types::Lanes &out_lanes);
+        const pugi::xml_document &xml,
+        carla::road::MapBuilder &map_builder);
+
   };
 
-} // parser
-} // opendrive
-} // carla
+} // namespace parser
+} // namespace opendrive
+} // namespace carla

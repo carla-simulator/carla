@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "carla/Debug.h"
+
 #include <iterator>
 #include <memory>
 
@@ -14,43 +16,57 @@ namespace road {
 namespace element {
 
   class RoadInfo;
+  class RoadInfoElevation;
+  class RoadInfoGeometry;
   class RoadInfoLane;
-  class RoadGeneralInfo;
-  class RoadInfoVelocity;
-  class RoadElevationInfo;
+  class RoadInfoLaneAccess;
+  class RoadInfoLaneBorder;
+  class RoadInfoLaneHeight;
+  class RoadInfoLaneMaterial;
+  class RoadInfoLaneOffset;
+  class RoadInfoLaneRule;
+  class RoadInfoLaneVisibility;
   class RoadInfoLaneWidth;
   class RoadInfoMarkRecord;
-  class RoadInfoLaneOffset;
+  class RoadInfoMarkTypeLine;
+  class RoadInfoSpeed;
 
   class RoadInfoVisitor {
   public:
 
+    virtual void Visit(RoadInfoElevation &) {}
+    virtual void Visit(RoadInfoGeometry &) {}
     virtual void Visit(RoadInfoLane &) {}
-
-    virtual void Visit(RoadGeneralInfo &) {}
-
-    virtual void Visit(RoadInfoVelocity &) {}
-
-    virtual void Visit(RoadElevationInfo &) {}
-
-    virtual void Visit(RoadInfoLaneWidth &) {}
-
-    virtual void Visit(RoadInfoMarkRecord &) {}
-
+    virtual void Visit(RoadInfoLaneAccess &) {}
+    virtual void Visit(RoadInfoLaneBorder &) {}
+    virtual void Visit(RoadInfoLaneHeight &) {}
+    virtual void Visit(RoadInfoLaneMaterial &) {}
     virtual void Visit(RoadInfoLaneOffset &) {}
+    virtual void Visit(RoadInfoLaneRule &) {}
+    virtual void Visit(RoadInfoLaneVisibility &) {}
+    virtual void Visit(RoadInfoLaneWidth &) {}
+    virtual void Visit(RoadInfoMarkRecord &) {}
+    virtual void Visit(RoadInfoMarkTypeLine &) {}
+    virtual void Visit(RoadInfoSpeed &) {}
   };
 
   template <typename T, typename IT>
   class RoadInfoIterator : private RoadInfoVisitor {
   public:
 
-    static_assert(std::is_same<std::shared_ptr<RoadInfo>, typename IT::value_type>::value, "Not compatible.");
+    static_assert(std::is_same<std::unique_ptr<RoadInfo>, typename IT::value_type>::value, "Not compatible.");
+
+    using value_type = T;
+    using difference_type = typename IT::difference_type;
+    using pointer = T *;
+    using reference = T &;
 
     RoadInfoIterator(IT begin, IT end)
       : _it(begin),
         _end(end) {
       _success = false;
       for (; !IsAtEnd(); ++_it) {
+        DEBUG_ASSERT((*_it) != nullptr);
         (*_it)->AcceptVisitor(*this);
         if (_success) {
           break;
@@ -65,18 +81,20 @@ namespace element {
         if (IsAtEnd()) {
           break;
         }
+        DEBUG_ASSERT((*_it) != nullptr);
         (*_it)->AcceptVisitor(*this);
       }
       return *this;
     }
 
-    /// @todo to fix
-    std::shared_ptr<T> operator*() const {
-      return std::static_pointer_cast<T>(*_it);
+    reference operator*() const {
+      DEBUG_ASSERT((*_it) != nullptr);
+      return static_cast<T &>(**_it);
     }
 
-    std::shared_ptr<T> operator->() const {
-      return std::static_pointer_cast<T>(*_it);
+    pointer operator->() const {
+      DEBUG_ASSERT((*_it) != nullptr);
+      return static_cast<T *>(_it->get());
     }
 
     bool operator!=(const RoadInfoIterator &rhs) const {

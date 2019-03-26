@@ -8,9 +8,10 @@
 
 #include "carla/Memory.h"
 #include "carla/NonCopyable.h"
+#include "carla/geom/Transform.h"
 #include "carla/road/element/RoadInfoMarkRecord.h"
 #include "carla/road/element/Waypoint.h"
-#include "carla/road/element/WaypointHash.h"
+#include "carla/road/Lane.h"
 
 namespace carla {
 namespace client {
@@ -37,36 +38,34 @@ namespace client {
     /// The Id takes into account OpenDrive's road Id, lane Id, and s distance
     /// on its road segment up to half-centimetre precision.
     uint64_t GetId() const {
-      return road::element::WaypointHash()(_waypoint);
+      return std::hash<road::element::Waypoint>()(_waypoint);
+    }
+
+    auto GetRoadId() const {
+      return _waypoint.road_id;
+    }
+
+    auto GetSectionId() const {
+      return _waypoint.section_id;
+    }
+
+    auto GetLaneId() const {
+      return _waypoint.lane_id;
+    }
+
+    auto GetDistance() const {
+      return _waypoint.s;
     }
 
     const geom::Transform &GetTransform() const {
       return _transform;
     }
 
-    bool IsIntersection() const {
-      return _waypoint.IsIntersection();
-    }
+    bool IsIntersection() const;
 
-    double GetLaneWidth() const {
-      return _waypoint.GetLaneWidth();
-    }
+    double GetLaneWidth() const;
 
-    road::element::id_type GetRoadId() const {
-      return _waypoint.GetRoadId();
-    }
-
-    int GetLaneId() const {
-      return _waypoint.GetLaneId();
-    }
-
-    double GetDistance() const {
-      return _waypoint.GetDistance();
-    }
-
-    std::string GetType() const {
-      return _waypoint.GetType();
-    }
+    road::Lane::LaneType GetType() const;
 
     std::vector<SharedPtr<Waypoint>> Next(double distance) const;
 
@@ -88,10 +87,10 @@ namespace client {
 
     geom::Transform _transform;
 
-    // Mark record right and left respectively
+    // Mark record right and left respectively.
     std::pair<
-        road::element::RoadInfoMarkRecord,
-        road::element::RoadInfoMarkRecord> _mark_record;
+        const road::element::RoadInfoMarkRecord *,
+        const road::element::RoadInfoMarkRecord *> _mark_record;
   };
 
 } // namespace client

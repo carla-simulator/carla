@@ -4,52 +4,89 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "JunctionParser.h"
+#include "carla/opendrive/parser/JunctionParser.h"
 
-void carla::opendrive::parser::JunctionParser::Parse(
-    const pugi::xml_node &xmlNode,
-    std::vector<carla::opendrive::types::Junction> &out_junction) {
-  carla::opendrive::parser::JunctionParser parser;
-  carla::opendrive::types::Junction junction;
+#include "carla/opendrive/parser/pugixml/pugixml.hpp"
 
-  junction.attributes.id = std::atoi(xmlNode.attribute("id").value());
-  junction.attributes.name = xmlNode.attribute("name").value();
+#include "carla/road/MapBuilder.h"
 
-  parser.ParseConnection(xmlNode, junction.connections);
-  out_junction.emplace_back(junction);
-}
+namespace carla {
+namespace opendrive {
+namespace parser {
 
-void carla::opendrive::parser::JunctionParser::ParseConnection(
-    const pugi::xml_node &xmlNode,
-    std::vector<carla::opendrive::types::JunctionConnection> &out_connections) {
-  for (pugi::xml_node junctionConnection = xmlNode.child("connection");
-      junctionConnection;
-      junctionConnection = junctionConnection.next_sibling("connection")) {
-    carla::opendrive::types::JunctionConnection jConnection;
+  void JunctionParser::Parse(
+      const pugi::xml_document &xml,
+      carla::road::MapBuilder &map_builder) {
 
-    jConnection.attributes.id = std::atoi(junctionConnection.attribute("id").value());
-    jConnection.attributes.contact_point = junctionConnection.attribute("contactPoint").value();
 
-    jConnection.attributes.incoming_road = std::atoi(junctionConnection.attribute("incomingRoad").value());
-    jConnection.attributes.connecting_road =
-        std::atoi(junctionConnection.attribute("connectingRoad").value());
+    struct LaneLink {
+      road::LaneId from;
+      road::LaneId to;
+    };
 
-    ParseLaneLink(junctionConnection, jConnection.links);
-    out_connections.emplace_back(jConnection);
+    struct Connection {
+      road::ConId id;
+      road::RoadId incoming_road;
+      road::RoadId connecting_road;
+      std::vector<LaneLink> lane_links;
+    };
+
+    struct Junction {
+      road::JuncId id;
+      std::string name;
+      std::vector<Connection> connections;
+    };
+
+    pugi::xml_node open_drive_node = xml.child("OpenDRIVE");
+
+    // Junctions
+    std::vector<Junction> junctions;
+    for (pugi::xml_node junction_node : open_drive_node.children("junction")) {
+      Junction junction;
+      junction.id = junction_node.attribute("id").as_int();
+      junction.name = junction_node.attribute("name").value();
+
+      // Connections
+      for (pugi::xml_node connection_node : junction_node.children("connection")) {
+
+        Connection connection;
+        connection.id = connection_node.attribute("id").as_int();
+        connection.incoming_road = connection_node.attribute("incomingRoad").as_int();
+        connection.connecting_road = connection_node.attribute("connectingRoad").as_int();
+
+        // Lane Links
+        for (pugi::xml_node lane_link_node : connection_node.children("laneLink")) {
+
+          LaneLink lane_link;
+          lane_link.from = lane_link_node.attribute("from").as_int();
+          lane_link.to = lane_link_node.attribute("to").as_int();
+
+          connection.lane_links.push_back(lane_link);
+        }
+
+        junction.connections.push_back(connection);
+      }
+
+      junctions.push_back(junction);
+    }
+
+    // Fill Map Builder
+    for (auto &junction : junctions) {
+      map_builder.AddJunction(junction.id, junction.name);
+      for (auto &connection : junction.connections) {
+        map_builder.AddConnection(junction.id,
+            connection.id,
+            connection.incoming_road,
+            connection.connecting_road);
+        for (auto &lane_link : connection.lane_links) {
+          map_builder.AddLaneLink(junction.id,
+              connection.id,
+              lane_link.from,
+              lane_link.to);
+        }
+      }
+    }
   }
-}
-
-void carla::opendrive::parser::JunctionParser::ParseLaneLink(
-    const pugi::xml_node &xmlNode,
-    std::vector<carla::opendrive::types::JunctionLaneLink> &out_lane_link) {
-  for (pugi::xml_node junctionLaneLink = xmlNode.child("laneLink");
-      junctionLaneLink;
-      junctionLaneLink = junctionLaneLink.next_sibling("laneLink")) {
-    carla::opendrive::types::JunctionLaneLink jLaneLink;
-
-    jLaneLink.from = std::atoi(junctionLaneLink.attribute("from").value());
-    jLaneLink.to = std::atoi(junctionLaneLink.attribute("to").value());
-
-    out_lane_link.emplace_back(jLaneLink);
-  }
-}
+} // namespace parser
+} // namespace opendrive
+} // namespace carla

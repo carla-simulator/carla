@@ -56,12 +56,39 @@ static carla::geom::GeoLocation ToGeolocation(
 void export_map() {
   using namespace boost::python;
   namespace cc = carla::client;
+  namespace cr = carla::road;
   namespace cg = carla::geom;
 
+  enum_<cr::Lane::LaneType>("LaneType")
+    .value("NONE", cr::Lane::LaneType::None) // None is reserved in Python3
+    .value("Driving", cr::Lane::LaneType::Driving)
+    .value("Stop", cr::Lane::LaneType::Stop)
+    .value("Shoulder", cr::Lane::LaneType::Shoulder)
+    .value("Biking", cr::Lane::LaneType::Biking)
+    .value("Sidewalk", cr::Lane::LaneType::Sidewalk)
+    .value("Border", cr::Lane::LaneType::Border)
+    .value("Restricted", cr::Lane::LaneType::Restricted)
+    .value("Parking", cr::Lane::LaneType::Parking)
+    .value("Bidirectional", cr::Lane::LaneType::Bidirectional)
+    .value("Median", cr::Lane::LaneType::Median)
+    .value("Special1", cr::Lane::LaneType::Special1)
+    .value("Special2", cr::Lane::LaneType::Special2)
+    .value("Special3", cr::Lane::LaneType::Special3)
+    .value("RoadWorks", cr::Lane::LaneType::RoadWorks)
+    .value("Tram", cr::Lane::LaneType::Tram)
+    .value("Rail", cr::Lane::LaneType::Rail)
+    .value("Entry", cr::Lane::LaneType::Entry)
+    .value("Exit", cr::Lane::LaneType::Exit)
+    .value("OffRamp", cr::Lane::LaneType::OffRamp)
+    .value("OnRamp", cr::Lane::LaneType::OnRamp)
+    .value("Any", cr::Lane::LaneType::Any)
+  ;
+
   class_<cc::Map, boost::noncopyable, boost::shared_ptr<cc::Map>>("Map", no_init)
+    .def(init<std::string, std::string>((arg("name"), arg("xodr_content"))))
     .add_property("name", CALL_RETURNING_COPY(cc::Map, GetName))
     .def("get_spawn_points", CALL_RETURNING_LIST(cc::Map, GetRecommendedSpawnPoints))
-    .def("get_waypoint", &cc::Map::GetWaypoint, (arg("location"), arg("project_to_road")=true))
+    .def("get_waypoint", &cc::Map::GetWaypoint, (arg("location"), arg("project_to_road")=true, arg("lane_type")=cr::Lane::LaneType::Driving))
     .def("get_topology", &GetTopology)
     .def("generate_waypoints", CALL_RETURNING_LIST_1(cc::Map, GenerateWaypoints, double), (args("distance")))
     .def("transform_to_geolocation", &ToGeolocation, (arg("location")))
@@ -71,7 +98,7 @@ void export_map() {
   ;
 
   enum_<cc::Waypoint::LaneChange>("LaneChange")
-    .value("None", cc::Waypoint::LaneChange::None)
+    .value("NONE", cc::Waypoint::LaneChange::None) // None is reserved in Python3
     .value("Right", cc::Waypoint::LaneChange::Right)
     .value("Left", cc::Waypoint::LaneChange::Left)
     .value("Both", cc::Waypoint::LaneChange::Both)
@@ -83,6 +110,7 @@ void export_map() {
     .add_property("is_intersection", &cc::Waypoint::IsIntersection)
     .add_property("lane_width", &cc::Waypoint::GetLaneWidth)
     .add_property("road_id", &cc::Waypoint::GetRoadId)
+    .add_property("section_id", &cc::Waypoint::GetSectionId)
     .add_property("lane_id", &cc::Waypoint::GetLaneId)
     .add_property("s", &cc::Waypoint::GetDistance)
     .add_property("lane_change", &cc::Waypoint::GetLaneChange)

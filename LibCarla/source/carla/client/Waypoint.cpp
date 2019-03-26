@@ -7,7 +7,6 @@
 #include "carla/client/Waypoint.h"
 
 #include "carla/client/Map.h"
-#include "carla/road/WaypointGenerator.h"
 
 #include <boost/optional.hpp>
 
@@ -17,13 +16,26 @@ namespace client {
   Waypoint::Waypoint(SharedPtr<const Map> parent, road::element::Waypoint waypoint)
     : _parent(std::move(parent)),
       _waypoint(std::move(waypoint)),
-      _transform(_waypoint.ComputeTransform()),
-      _mark_record(_waypoint.GetMarkRecord()) {}
+      _transform(_parent->GetMap().ComputeTransform(_waypoint)),
+      _mark_record(_parent->GetMap().GetMarkRecord(_waypoint)) {}
 
   Waypoint::~Waypoint() = default;
 
+  bool Waypoint::IsIntersection() const {
+    return _parent->GetMap().IsJunction(_waypoint.road_id);
+  }
+
+  double Waypoint::GetLaneWidth() const {
+    return _parent->GetMap().GetLaneWidth(_waypoint);
+
+  }
+
+  road::Lane::LaneType Waypoint::GetType() const {
+    return _parent->GetMap().GetLaneType(_waypoint);
+  }
+
   std::vector<SharedPtr<Waypoint>> Waypoint::Next(double distance) const {
-    auto waypoints = road::WaypointGenerator::GetNext(_waypoint, distance);
+    auto waypoints = _parent->GetMap().GetNext(_waypoint, distance);
     std::vector<SharedPtr<Waypoint>> result;
     result.reserve(waypoints.size());
     for (auto &waypoint : waypoints) {
@@ -34,7 +46,7 @@ namespace client {
 
   SharedPtr<Waypoint> Waypoint::Right() const {
     auto right_lane_waypoint =
-        road::WaypointGenerator::GetRight(_waypoint);
+        _parent->GetMap().GetRight(_waypoint);
     if (right_lane_waypoint.has_value()) {
       return SharedPtr<Waypoint>(new Waypoint(_parent, std::move(*right_lane_waypoint)));
     }
@@ -43,7 +55,7 @@ namespace client {
 
   SharedPtr<Waypoint> Waypoint::Left() const {
     auto left_lane_waypoint =
-        road::WaypointGenerator::GetLeft(_waypoint);
+        _parent->GetMap().GetLeft(_waypoint);
     if (left_lane_waypoint.has_value()) {
       return SharedPtr<Waypoint>(new Waypoint(_parent, std::move(*left_lane_waypoint)));
     }
@@ -65,13 +77,13 @@ namespace client {
   }
 
   Waypoint::LaneChange Waypoint::GetLaneChange() const {
-    const auto lane_change_right = _mark_record.first.GetLaneChange();
-    const auto lane_change_left = _mark_record.second.GetLaneChange();
+    const auto lane_change_right = _mark_record.first->GetLaneChange();
+    const auto lane_change_left = _mark_record.second->GetLaneChange();
 
     auto c_right = static_cast<Waypoint::LaneChange>(lane_change_right);
     auto c_left = static_cast<Waypoint::LaneChange>(lane_change_left);
 
-    if (_mark_record.first.GetLaneId() > 0) {
+    if (_waypoint.lane_id > 0) {
       // if road goes backward
       if (c_right == Waypoint::LaneChange::Right) {
         c_right = Waypoint::LaneChange::Left;
@@ -80,7 +92,7 @@ namespace client {
       }
     }
 
-    if (_mark_record.second.GetLaneId() > 0) {
+    if (((_waypoint.lane_id > 0) ? _waypoint.lane_id - 1 : _waypoint.lane_id + 1) > 0) {
       // if road goes backward
       if (c_left == Waypoint::LaneChange::Right) {
         c_left = Waypoint::LaneChange::Left;

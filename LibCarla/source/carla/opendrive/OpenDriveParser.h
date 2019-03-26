@@ -8,28 +8,19 @@
 
 #include "carla/Memory.h"
 #include "carla/road/Map.h"
-#include "parser/OpenDriveParser.h"
 
-#include <istream>
-#include <ostream>
+#include <boost/optional.hpp>
+
 #include <string>
 
 namespace carla {
 namespace opendrive {
 
-  class OpenDrive {
+  class OpenDriveParser {
   public:
 
-    static SharedPtr<road::Map> Load(
-        std::istream &input,
-        std::string *out_error = nullptr);
+    static boost::optional<road::Map> Load(const std::string &opendrive);
 
-    static SharedPtr<road::Map> Load(
-        const std::string &xml,
-        XmlInputType inputType,
-        std::string *out_error = nullptr);
-
-    static void Dump(const road::Map &map, std::ostream &output);
   };
 
 } // namespace opendrive

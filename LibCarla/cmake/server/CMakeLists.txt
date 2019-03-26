@@ -53,6 +53,15 @@ install(FILES ${libcarla_carla_road_headers} DESTINATION include/carla/road)
 file(GLOB libcarla_carla_road_element_headers "${libcarla_source_path}/carla/road/element/*.h")
 install(FILES ${libcarla_carla_road_element_headers} DESTINATION include/carla/road/element)
 
+file(GLOB libcarla_carla_road_signal_headers "${libcarla_source_path}/carla/road/signal/*.h")
+install(FILES ${libcarla_carla_road_signal_headers} DESTINATION include/carla/road/signal)
+
+file(GLOB libcarla_carla_road_object_headers "${libcarla_source_path}/carla/road/object/*.h")
+install(FILES ${libcarla_carla_road_object_headers} DESTINATION include/carla/road/object)
+
+file(GLOB libcarla_carla_road_general_headers "${libcarla_source_path}/carla/road/general/*.h")
+install(FILES ${libcarla_carla_road_general_headers} DESTINATION include/carla/road/general)
+
 file(GLOB libcarla_carla_road_element_cephes_headers "${libcarla_source_path}/carla/road/element/cephes/*.h")
 install(FILES ${libcarla_carla_road_element_cephes_headers} DESTINATION include/carla/road/element/cephes)
 
@@ -95,6 +104,12 @@ file(GLOB libcarla_server_sources
     "${libcarla_source_path}/carla/road/element/*.h"
     "${libcarla_source_path}/carla/road/element/cephes/*.cpp"
     "${libcarla_source_path}/carla/road/element/cephes/*.h"
+    "${libcarla_source_path}/carla/road/general/*.cpp"
+    "${libcarla_source_path}/carla/road/general/*.h"
+    "${libcarla_source_path}/carla/road/object/*.cpp"
+    "${libcarla_source_path}/carla/road/object/*.h"
+    "${libcarla_source_path}/carla/road/signal/*.cpp"
+    "${libcarla_source_path}/carla/road/signal/*.h"
     "${libcarla_source_path}/carla/rpc/*.cpp"
     "${libcarla_source_path}/carla/rpc/*.h"
     "${libcarla_source_path}/carla/sensor/*.h"

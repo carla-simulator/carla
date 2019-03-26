@@ -6,28 +6,32 @@
 
 #pragma once
 
-#include "../types.h"
+#include <vector>
+#include <string>
 
-#include "./pugixml/pugixml.hpp"
+namespace pugi {
+  class xml_document;
+} // namespace pugi
 
 namespace carla {
+
+namespace road {
+  class MapBuilder;
+} // namespace road
+
 namespace opendrive {
 namespace parser {
 
-  class RoadLinkParser {
-  private:
 
-    void ParseLink(
-        const pugi::xml_node &xmlNode,
-        carla::opendrive::types::RoadLinkInformation *out_link_information);
-
+  class RoadParser {
   public:
 
     static void Parse(
-        const pugi::xml_node &xmlNode,
-        carla::opendrive::types::RoadLink &out_road_link);
+        const pugi::xml_document &xml,
+        carla::road::MapBuilder &map_builder);
+
   };
 
-}
-}
-}
+} // namespace parser
+} // namespace opendrive
+} // namespace carla

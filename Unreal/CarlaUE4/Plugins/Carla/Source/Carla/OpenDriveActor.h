@@ -19,7 +19,7 @@
 #include "Runtime/Core/Public/Misc/OutputDeviceNull.h"
 
 #include <compiler/disable-ue4-macros.h>
-#include <carla/opendrive/OpenDrive.h>
+#include <carla/opendrive/OpenDriveParser.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include "OpenDriveActor.generated.h"

@@ -55,11 +55,12 @@ namespace geom {
     p.y = -p.y;
     start_pos.y = -start_pos.y;
     heading = -heading;
+    curvature = -curvature;
 
     // since this algorithm is working for positive curvatures,
     // and we are only calculating distances, we can invert the y
     // axis (along with the curvature and the heading), so if the
-    // curvature is negative, so the algorithm will work as expected
+    // curvature is negative, the algorithm will work as expected
     if (curvature < 0.0) {
       p.y = -p.y;
       start_pos.y = -start_pos.y;
