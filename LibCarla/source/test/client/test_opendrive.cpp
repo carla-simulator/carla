@@ -430,13 +430,11 @@ TEST(road, iterate_waypoints) {
       Random::Shuffle(waypoints);
       const auto number_of_waypoints_to_explore =
           std::min<size_t>(2000u, waypoints.size());
-      const auto first_location = map.ComputeTransform(waypoints[0u]).location;
       for (auto i = 0u; i < number_of_waypoints_to_explore; ++i) {
         auto wp = waypoints[i];
-        const auto wp_location = map.ComputeTransform(wp).location;
+        map.ComputeTransform(wp);
         if (i != 0u) {
-          const float distance = wp_location.Distance(first_location);
-          ASSERT_GT(distance, 0.001f);
+          ASSERT_NE(wp, waypoints[0u]);
         }
         for (auto &&successor : map.GetSuccessors(wp)) {
           ASSERT_TRUE(
