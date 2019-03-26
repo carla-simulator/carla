@@ -489,14 +489,47 @@ TEST(road, iterate_waypoints) {
 }
 
 TEST(road, get_waypoint) {
+  ThreadPool pool;
+  std::vector<std::future<void>> results;
   for (const auto& file : util::OpenDrive::GetAvailableFiles()) {
     carla::logging::log("Parsing", file);
-    auto m = OpenDriveParser::Load(util::OpenDrive::Load(file));
-    ASSERT_TRUE(m.has_value());
-    auto &map = *m;
-    for (auto i = 0u; i < 1'000u; ++i) {
-      const auto location = Random::Location(-500.0f, 500.0f);
-      map.GetClosestWaypointOnRoad(location);
-    }
+    results.push_back(pool.Post<void>([file]() {
+      carla::StopWatch stop_watch;
+      auto m = OpenDriveParser::Load(util::OpenDrive::Load(file));
+      ASSERT_TRUE(m.has_value());
+      auto &map = *m;
+      for (auto i = 0u; i < 10'000u; ++i) {
+        const auto location = Random::Location(-500.0f, 500.0f);
+        auto owp = map.GetClosestWaypointOnRoad(location);
+        ASSERT_TRUE(owp.has_value());
+        auto &wp = *owp;
+        for (auto &next : map.GetNext(wp, 0.5)) {
+          ASSERT_TRUE(
+              next.road_id != wp.road_id ||
+              next.section_id != wp.section_id ||
+              next.lane_id != wp.lane_id ||
+              next.s != wp.s);
+        }
+        auto left = map.GetLeft(wp);
+        if (left.has_value()) {
+          ASSERT_EQ(left->road_id, wp.road_id);
+          ASSERT_EQ(left->section_id, wp.section_id);
+          ASSERT_NE(left->lane_id, wp.lane_id);
+          ASSERT_EQ(left->s, wp.s);
+        }
+        auto right = map.GetRight(wp);
+        if (right.has_value()) {
+          ASSERT_EQ(right->road_id, wp.road_id);
+          ASSERT_EQ(right->section_id, wp.section_id);
+          ASSERT_NE(right->lane_id, wp.lane_id);
+          ASSERT_EQ(right->s, wp.s);
+        }
+      }
+      float seconds = 1e-3f * stop_watch.GetElapsedTime();
+      carla::logging::log(file, "done in", seconds, "seconds.");
+    }));
+  }
+  for (auto &result : results) {
+    result.get();
   }
 }
