@@ -6,11 +6,12 @@
 
 #pragma once
 
+#include "carla/geom/Transform.h"
 #include "carla/Memory.h"
 #include "carla/NonCopyable.h"
-#include "carla/geom/Transform.h"
 #include "carla/road/element/RoadInfoMarkRecord.h"
 #include "carla/road/element/Waypoint.h"
+#include "carla/road/element/WaypointInformationTypes.h"
 #include "carla/road/Lane.h"
 
 namespace carla {
@@ -72,6 +73,10 @@ namespace client {
     SharedPtr<Waypoint> Right() const;
 
     SharedPtr<Waypoint> Left() const;
+
+    const road::element::WaypointInfoRoadMark GetRightRoadMark() const;
+
+    const road::element::WaypointInfoRoadMark GetLeftRoadMark() const;
 
     Waypoint::LaneChange GetLaneChange() const;
 
