@@ -93,12 +93,6 @@ namespace road {
     /// Generate all the waypoints in @a map separated by @a approx_distance.
     std::vector<Waypoint> GenerateWaypoints(double approx_distance) const;
 
-    /// Returns a list of waypoints at the beginning of each lane of the map.
-    // std::vector<Waypoint> GenerateLaneBegin() const;
-
-    /// Returns a list of waypoints at the end of each lane of the map.
-    // std::vector<Waypoint> GenerateLaneEnd() const;
-
     /// Generate the minimum set of waypoints that define the topology of @a
     /// map. The waypoints are placed at the entrance of each lane.
     std::vector<std::pair<Waypoint, Waypoint>> GenerateTopology() const;
