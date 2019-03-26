@@ -422,16 +422,20 @@ TEST(road, iterate_waypoints) {
       auto m = OpenDriveParser::Load(util::OpenDrive::Load(file));
       ASSERT_TRUE(m.has_value());
       auto &map = *m;
+      const auto topology = map.GenerateTopology();
+      ASSERT_FALSE(topology.empty());
       auto count = 0u;
-      auto waypoints = map.GenerateWaypoints(0.1);
+      auto waypoints = map.GenerateWaypoints(0.5);
+      ASSERT_FALSE(waypoints.empty());
       Random::Shuffle(waypoints);
       const auto number_of_waypoints_to_explore =
           std::min<size_t>(2000u, waypoints.size());
+      const auto first_location = map.ComputeTransform(waypoints[0u]).location;
       for (auto i = 0u; i < number_of_waypoints_to_explore; ++i) {
         auto wp = waypoints[i];
+        const auto wp_location = map.ComputeTransform(wp).location;
         if (i != 0u) {
-          float distance = map.ComputeTransform(wp).location.Distance(
-              map.ComputeTransform(waypoints[0u]).location);
+          const float distance = wp_location.Distance(first_location);
           ASSERT_GT(distance, 0.001f);
         }
         for (auto &&successor : map.GetSuccessors(wp)) {
