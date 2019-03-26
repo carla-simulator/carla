@@ -17,19 +17,49 @@ Controls:
 
     ESC          : quit
 """
-import weakref
-import random
-import numpy as np
 
-import pygame
-from pygame.locals import K_ESCAPE
-from pygame.locals import K_SPACE
-from pygame.locals import K_a
-from pygame.locals import K_d
-from pygame.locals import K_s
-from pygame.locals import K_w
+# ==============================================================================
+# -- find carla module ---------------------------------------------------------
+# ==============================================================================
+
+
+import glob
+import os
+import sys
+
+try:
+    sys.path.append(glob.glob('**/carla-*%d.%d-%s.egg' % (
+        sys.version_info.major,
+        sys.version_info.minor,
+        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
+except IndexError:
+    pass
+
+
+# ==============================================================================
+# -- imports -------------------------------------------------------------------
+# ==============================================================================
 
 import carla
+
+import weakref
+import random
+
+try:
+    import pygame
+    from pygame.locals import K_ESCAPE
+    from pygame.locals import K_SPACE
+    from pygame.locals import K_a
+    from pygame.locals import K_d
+    from pygame.locals import K_s
+    from pygame.locals import K_w
+except ImportError:
+    raise RuntimeError('cannot import pygame, make sure pygame package is installed')
+
+try:
+    import numpy as np
+except ImportError:
+    raise RuntimeError('cannot import numpy, make sure numpy package is installed')
 
 VIEW_WIDTH = 1920//2
 VIEW_HEIGHT = 1080//2

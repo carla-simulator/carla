@@ -1,5 +1,6 @@
 ## Latest Changes
 
+  * Added `client_bounding_boxes.py` to show bounding boxes client-side
   * Add --rolename to manual_control.py
   * Migrate Content to AWS
   * Adding a parser to represent the map as a connected graph of waypoints.
