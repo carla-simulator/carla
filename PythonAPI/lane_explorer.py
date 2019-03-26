@@ -130,13 +130,13 @@ def main():
             # check for available right driving lanes
             if current_w.lane_change & carla.LaneChange.Right:
                 right_w = current_w.get_right_lane()
-                if right_w and right_w.lane_type == 'driving':
+                if right_w and right_w.lane_type == carla.LaneType.Driving:
                     potential_w += list(right_w.next(waypoint_separation))
 
             # check for available left driving lanes
             if current_w.lane_change & carla.LaneChange.Left:
                 left_w = current_w.get_left_lane()
-                if left_w and left_w.lane_type == 'driving':
+                if left_w and left_w.lane_type == carla.LaneType.Driving:
                     potential_w += list(left_w.next(waypoint_separation))
 
             # choose a random waypoint to be the next
