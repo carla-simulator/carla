@@ -42,7 +42,7 @@ namespace road {
 
     const std::map<LaneId, Lane> &GetLanes() const;
 
-    std::vector<Lane *> GetLanesOfType(const std::string &type);
+    std::vector<Lane *> GetLanesOfType(Lane::LaneType type);
 
   private:
 

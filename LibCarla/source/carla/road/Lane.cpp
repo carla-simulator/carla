@@ -27,7 +27,7 @@ namespace road {
     return _id;
   }
 
-  std::string Lane::GetType() const {
+  Lane::LaneType Lane::GetType() const {
     return _type;
   }
 

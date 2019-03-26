@@ -37,7 +37,7 @@ namespace road {
     carla::road::Lane *AddRoadSectionLane(
         carla::road::LaneSection *section,
         const int32_t lane_id,
-        const std::string lane_type,
+        const uint32_t lane_type,
         const bool lane_level,
         const int32_t predecessor,
         const int32_t successor);
@@ -190,7 +190,7 @@ namespace road {
         const uint32_t road_id,
         const int32_t section_index,
         const int32_t lane_id,
-        const std::string lane_type,
+        const Lane::LaneType lane_type,
         const bool lane_level,
         const int32_t predecessor,
         const int32_t successor);

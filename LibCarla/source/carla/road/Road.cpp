@@ -226,7 +226,8 @@ namespace road {
 
   const std::pair<const Lane *, double> Road::GetNearestLane(
       const double s,
-      const geom::Location &loc) const {
+      const geom::Location &loc,
+      uint32_t lane_type) const {
     using namespace carla::road::element;
     std::map<LaneId, const Lane *> lanes(GetLanesAt(s));
     // negative right lanes
@@ -236,23 +237,25 @@ namespace road {
     auto left_lanes = MakeListView(
         lanes.lower_bound(1), lanes.end());
 
-    DirectedPoint dp_lane_zero = GetDirectedPointIn(s);
+    const DirectedPoint dp_lane_zero = GetDirectedPointIn(s);
     std::pair<const Lane *, double> result =
         std::make_pair(nullptr, std::numeric_limits<double>::max());
-
-    // Unreal's Y axis hack
-    // dp_lane_zero.location.y *= -1;
 
     DirectedPoint current_dp = dp_lane_zero;
     for (const auto &lane : right_lanes) {
       const auto lane_width_info = lane.second->GetInfo<RoadInfoLaneWidth>(s);
-      const auto half_width = lane_width_info->GetPolynomial().Evaluate(s) / 2.0;
+      const auto half_width = lane_width_info->GetPolynomial().Evaluate(s) * 0.5;
+
       current_dp.ApplyLateralOffset(half_width);
       const auto current_dist = geom::Math::Distance(current_dp.location, loc);
+
       // if the current_dp is near to loc, we are in the right way
       if (current_dist <= result.second) {
-        result.first = &(*lane.second);
-        result.second = current_dist;
+        // only consider the lanes that match the type flag for result candidates
+        if ((static_cast<uint32_t>(lane.second->GetType()) & lane_type) > 0) {
+          result.first = &(*lane.second);
+          result.second = current_dist;
+        }
       } else {
         // elsewhere, we are be moving away
         break;
@@ -263,13 +266,18 @@ namespace road {
     current_dp = dp_lane_zero;
     for (const auto &lane : left_lanes) {
       const auto lane_width_info = lane.second->GetInfo<RoadInfoLaneWidth>(s);
-      const auto half_width = -lane_width_info->GetPolynomial().Evaluate(s) / 2.0;
+      const auto half_width = -lane_width_info->GetPolynomial().Evaluate(s) * 0.5;
+
       current_dp.ApplyLateralOffset(half_width);
       const auto current_dist = geom::Math::Distance(current_dp.location, loc);
+
       // if the current_dp is near to loc, we are in the right way
       if (current_dist <= result.second) {
-        result.first = &(*lane.second);
-        result.second = current_dist;
+        // only consider the lanes that match the type flag for result candidates
+        if ((static_cast<uint32_t>(lane.second->GetType()) & lane_type) > 0) {
+          result.first = &(*lane.second);
+          result.second = current_dist;
+        }
       } else {
         // elsewhere, we are be moving away
         break;
