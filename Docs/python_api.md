@@ -114,20 +114,25 @@
 - `get_location()`
 - `get_transform()`
 - `get_velocity()`
+- `get_angular_velocity()`
 - `get_acceleration()`
 - `set_location(location)`
 - `set_transform(transform)`
+- `set_velocity(vector)`
+- `set_angular_velocity(vector)`
+- `add_impulse(vector)`
 - `set_simulate_physics(enabled=True)`
 - `destroy()`
+- `__str__()`
 
 ## `carla.Vehicle(carla.Actor)`
 
 - `bounding_box`
 - `apply_control(vehicle_control)`
 - `get_control()`
-- `set_autopilot(enabled=True)`
 - `get_physics_control()`
 - `apply_physics_control(vehicle_physics_control)`
+- `set_autopilot(enabled=True)`
 - `get_speed_limit()`
 - `get_traffic_light_state()`
 - `is_at_traffic_light()`
@@ -217,6 +222,8 @@
 - `brake`
 - `hand_brake`
 - `reverse`
+- `gear`
+- `manual_gear_shift`
 - `__eq__(other)`
 - `__ne__(other)`
 
