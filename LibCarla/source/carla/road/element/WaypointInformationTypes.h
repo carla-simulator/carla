@@ -24,13 +24,13 @@ namespace element {
     LaneMarking type = LaneMarking::None;
 
     enum class Color : uint8_t {
-      Standard, // (equivalent to "white")
-      Blue,
-      Green,
-      Red,
+      Standard = 0, // (equivalent to "white")
+      Blue = 1,
+      Green = 2,
+      Red = 3,
       White = Standard,
-      Yellow,
-      Other
+      Yellow = 4,
+      Other = 5
     } color = Color::Standard;
 
     /// Can be used as flags
