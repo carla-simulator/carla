@@ -8,8 +8,6 @@
 
 #include "carla/client/Map.h"
 
-#include <boost/optional.hpp>
-
 namespace carla {
 namespace client {
 
@@ -76,40 +74,60 @@ namespace client {
         static_cast<typename std::underlying_type<EnumT>::type>(rhs));
   }
 
-  road::element::WaypointInfoRoadMark Waypoint::GetRightRoadMark() const {
-    return road::element::WaypointInfoRoadMark(*_mark_record.first);
+  boost::optional<road::element::WaypointInfoRoadMark> Waypoint::GetRightRoadMark() const {
+    if (_mark_record.first != nullptr) {
+      return road::element::WaypointInfoRoadMark(*_mark_record.first);
+    }
+    return boost::optional<road::element::WaypointInfoRoadMark>{};
   }
 
-  road::element::WaypointInfoRoadMark Waypoint::GetLeftRoadMark() const {
-    return road::element::WaypointInfoRoadMark(*_mark_record.second);
+  boost::optional<road::element::WaypointInfoRoadMark> Waypoint::GetLeftRoadMark() const {
+    if (_mark_record.first != nullptr) {
+      return road::element::WaypointInfoRoadMark(*_mark_record.second);
+    }
+    return boost::optional<road::element::WaypointInfoRoadMark>{};
   }
 
-  Waypoint::LaneChange Waypoint::GetLaneChange() const {
-    const auto lane_change_right = _mark_record.first->GetLaneChange();
-    const auto lane_change_left = _mark_record.second->GetLaneChange();
+  road::element::WaypointInfoRoadMark::LaneChange Waypoint::GetLaneChange() const {
+  using lane_change_type = road::element::WaypointInfoRoadMark::LaneChange;
 
-    auto c_right = static_cast<Waypoint::LaneChange>(lane_change_right);
-    auto c_left = static_cast<Waypoint::LaneChange>(lane_change_left);
+    const auto lane_change_right_info = _mark_record.first;
+    lane_change_type c_right;
+    if (lane_change_right_info != nullptr) {
+      const auto lane_change_right = lane_change_right_info->GetLaneChange();
+      c_right = static_cast<lane_change_type>(lane_change_right);
+    } else {
+      c_right = lane_change_type::Both;
+    }
+
+    const auto lane_change_left_info = _mark_record.second;
+    lane_change_type c_left;
+    if (lane_change_left_info != nullptr) {
+      const auto lane_change_left = lane_change_left_info->GetLaneChange();
+      c_left = static_cast<lane_change_type>(lane_change_left);
+    } else {
+      c_left = lane_change_type::Both;
+    }
 
     if (_waypoint.lane_id > 0) {
       // if road goes backward
-      if (c_right == Waypoint::LaneChange::Right) {
-        c_right = Waypoint::LaneChange::Left;
-      } else if (c_right == Waypoint::LaneChange::Left) {
-        c_right = Waypoint::LaneChange::Right;
+      if (c_right == lane_change_type::Right) {
+        c_right = lane_change_type::Left;
+      } else if (c_right == lane_change_type::Left) {
+        c_right = lane_change_type::Right;
       }
     }
 
     if (((_waypoint.lane_id > 0) ? _waypoint.lane_id - 1 : _waypoint.lane_id + 1) > 0) {
       // if road goes backward
-      if (c_left == Waypoint::LaneChange::Right) {
-        c_left = Waypoint::LaneChange::Left;
-      } else if (c_left == Waypoint::LaneChange::Left) {
-        c_left = Waypoint::LaneChange::Right;
+      if (c_left == lane_change_type::Right) {
+        c_left = lane_change_type::Left;
+      } else if (c_left == lane_change_type::Left) {
+        c_left = lane_change_type::Right;
       }
     }
 
-    return (c_right & Waypoint::LaneChange::Right) | (c_left & Waypoint::LaneChange::Left);
+    return (c_right & lane_change_type::Right) | (c_left & lane_change_type::Left);
   }
 
 } // namespace client

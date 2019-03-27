@@ -53,6 +53,25 @@ static carla::geom::GeoLocation ToGeolocation(
   return self.GetGeoReference().Transform(location);
 }
 
+template <typename T>
+static boost::python::object OptionalToPythonObject(const T opt) {
+  namespace py = boost::python;
+  if (opt.has_value()) {
+    py::object(opt.value());
+  }
+  return py::object();
+}
+
+static boost::python::object MakeRightWaypointInfoRoadMark(
+    const carla::client::Waypoint &self) {
+  return OptionalToPythonObject(self.GetRightRoadMark());
+}
+
+static boost::python::object MakeLeftWaypointInfoRoadMark(
+    const carla::client::Waypoint &self) {
+  return OptionalToPythonObject(self.GetLeftRoadMark());
+}
+
 void export_map() {
   using namespace boost::python;
   namespace cc = carla::client;
@@ -112,11 +131,11 @@ void export_map() {
     .value("NONE", cre::LaneMarking::None) // None is reserved in Python3
   ;
 
-  enum_<cre::WaypointInfoRoadMark::LaneChange>("RoadMarkLaneChange")
-    .value("Increase", cre::WaypointInfoRoadMark::LaneChange::Increase)
-    .value("Decrease", cre::WaypointInfoRoadMark::LaneChange::Decrease)
-    .value("Both", cre::WaypointInfoRoadMark::LaneChange::Both)
+  enum_<cre::WaypointInfoRoadMark::LaneChange>("LaneChange")
     .value("NONE", cre::WaypointInfoRoadMark::LaneChange::None) // None is reserved in Python3
+    .value("Right", cre::WaypointInfoRoadMark::LaneChange::Right)
+    .value("Left", cre::WaypointInfoRoadMark::LaneChange::Left)
+    .value("Both", cre::WaypointInfoRoadMark::LaneChange::Both)
   ;
 
   enum_<cre::WaypointInfoRoadMark::Color>("RoadMarkColor")
@@ -147,8 +166,8 @@ void export_map() {
     .add_property("s", &cc::Waypoint::GetDistance)
     .add_property("lane_change", &cc::Waypoint::GetLaneChange)
     .add_property("lane_type", &cc::Waypoint::GetType)
-    .def("get_right_road_mark", &cc::Waypoint::GetRightRoadMark)
-    .def("get_left_road_mark", &cc::Waypoint::GetLeftRoadMark)
+    .def("get_right_road_mark", &MakeRightWaypointInfoRoadMark)
+    .def("get_left_road_mark", &MakeLeftWaypointInfoRoadMark)
     .def("next", CALL_RETURNING_LIST_1(cc::Waypoint, Next, double), (args("distance")))
     .def("get_right_lane", &cc::Waypoint::Right)
     .def("get_left_lane", &cc::Waypoint::Left)

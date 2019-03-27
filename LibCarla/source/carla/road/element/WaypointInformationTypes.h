@@ -33,11 +33,12 @@ namespace element {
       Other
     } color = Color::Standard;
 
+    /// Can be used as flags
     enum class LaneChange : uint8_t {
-      Increase,
-      Decrease,
-      Both,
-      None
+      None  = 0x00, //00
+      Right = 0x01, //01
+      Left  = 0x02, //10
+      Both  = 0x03  //11
     } lane_change = LaneChange::None;
 
     float width = 0.0f;

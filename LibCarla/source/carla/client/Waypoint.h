@@ -14,6 +14,8 @@
 #include "carla/road/element/WaypointInformationTypes.h"
 #include "carla/road/Lane.h"
 
+#include <boost/optional.hpp>
+
 namespace carla {
 namespace client {
 
@@ -23,14 +25,6 @@ namespace client {
     : public EnableSharedFromThis<Waypoint>,
       private NonCopyable {
   public:
-
-    /// Can be used as flags
-    enum class LaneChange : uint8_t {
-      None  = 0x00, //00
-      Right = 0x01, //01
-      Left  = 0x02, //10
-      Both  = 0x03  //11
-    };
 
     ~Waypoint();
 
@@ -74,11 +68,11 @@ namespace client {
 
     SharedPtr<Waypoint> Left() const;
 
-    road::element::WaypointInfoRoadMark GetRightRoadMark() const;
+    boost::optional<road::element::WaypointInfoRoadMark> GetRightRoadMark() const;
 
-    road::element::WaypointInfoRoadMark GetLeftRoadMark() const;
+    boost::optional<road::element::WaypointInfoRoadMark> GetLeftRoadMark() const;
 
-    Waypoint::LaneChange GetLaneChange() const;
+    road::element::WaypointInfoRoadMark::LaneChange GetLaneChange() const;
 
   private:
 
