@@ -48,7 +48,7 @@ This is the list of sensors currently available
   * [sensor.camera.semantic_segmentation](#sensorcamerasemantic_segmentation)
   * [sensor.lidar.ray_cast](#sensorlidarray_cast)
   * [sensor.other.collision](#sensorothercollision)
-  * [sensor.other.lane_detector](#sensorotherlane_detector)
+  * [sensor.other.lane_invasion](#sensorotherlane_invasion)
   * [sensor.other.obstacle](#sensorotherobstacle)
 
 sensor.camera.rgb
@@ -268,14 +268,14 @@ object for each collision registered
 Note that several collision events might be registered during a single
 simulation update.
 
-sensor.other.lane_detector
+sensor.other.lane_invasion
 --------------------------
 
 > _This sensor is a work in progress, currently very limited._
 
 This sensor, when attached to an actor, it registers an event each time the
 actor crosses a lane marking. This sensor is somehow special as it works fully
-on the client-side. The lane detector uses the road data of the active map to
+on the client-side. The lane invasion uses the road data of the active map to
 determine whether a vehicle is invading another lane. This information is based
 on the OpenDrive file provided by the map, therefore it is subject to the
 fidelity of the OpenDrive description. In some places there might be

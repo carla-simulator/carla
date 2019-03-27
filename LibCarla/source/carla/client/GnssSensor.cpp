@@ -60,7 +60,7 @@ namespace client {
                _geo_reference.Transform(GetLocation()));
     } catch (const std::exception &e) {
       /// @todo We need to unsubscribe the sensor.
-      // log_error("LaneDetector:", e.what());
+      // log_error("GnssSensor:", e.what());
       return nullptr;
     }
   }

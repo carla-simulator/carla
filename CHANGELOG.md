@@ -1,5 +1,8 @@
 ## Latest Changes
 
+  * LaneInvasionSensor stabilization
+    - Fix naming: Use 'LaneInvasionSensor'/'lane_invasion' instead of mixture with 'LaneDetector'/'lane_detector'
+    - Create server-side LaneInvasionSensor (to be able to access it via ROS bridge)
   * Fix ActorList returned by ActorList.Filter(...)
   * Add --rolename to manual_control.py
   * Migrate Content to AWS

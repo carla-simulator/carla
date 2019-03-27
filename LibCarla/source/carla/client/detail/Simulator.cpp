@@ -111,12 +111,6 @@ namespace detail {
 
   SharedPtr<BlueprintLibrary> Simulator::GetBlueprintLibrary() {
     auto defs = _client.GetActorDefinitions();
-    { /// @todo
-      rpc::ActorDefinition def;
-      def.id = "sensor.other.lane_detector";
-      def.tags = "sensor,other,lane_detector";
-      defs.emplace_back(def);
-    }
     return MakeShared<BlueprintLibrary>(std::move(defs));
   }
 
@@ -138,9 +132,7 @@ namespace detail {
       Actor *parent,
       GarbageCollectionPolicy gc) {
     rpc::Actor actor;
-    if (blueprint.GetId() == "sensor.other.lane_detector") { /// @todo
-      actor.description = blueprint.MakeActorDescription();
-    } else if (parent != nullptr) {
+    if (parent != nullptr) {
       actor = _client.SpawnActorWithParent(
           blueprint.MakeActorDescription(),
           transform,
@@ -165,9 +157,7 @@ namespace detail {
 
   bool Simulator::DestroyActor(Actor &actor) {
     bool success = true;
-    if (actor.GetTypeId() != "sensor.other.lane_detector") { /// @todo
-      success = _client.DestroyActor(actor.GetId());
-    }
+    success = _client.DestroyActor(actor.GetId());
     if (success) {
       // Remove it's persistent state so it cannot access the client anymore.
       actor.GetEpisode().Clear();
