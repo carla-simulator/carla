@@ -8,6 +8,9 @@
 
 #include "carla/Logging.h"
 #include "carla/StringUtil.h"
+#include "carla/geom/GeoLocation.h"
+#include "carla/opendrive/parser/pugixml/pugixml.hpp"
+#include "carla/road/MapBuilder.h"
 
 #include <limits>
 #include <sstream>
@@ -28,7 +31,7 @@ namespace parser {
     return value;
   }
 
-  geom::GeoLocation GeoReferenceParser::Parse(const std::string &geo_reference_string) {
+  static geom::GeoLocation ParseGeoReference(const std::string &geo_reference_string) {
     geom::GeoLocation result{
         std::numeric_limits<double>::quiet_NaN(),
         std::numeric_limits<double>::quiet_NaN(),
@@ -60,6 +63,13 @@ namespace parser {
     log_debug("map geo reference: latitude ", result.latitude, ", longitude ", result.longitude);
 
     return result;
+  }
+
+  void GeoReferenceParser::Parse(
+      const pugi::xml_document &xml,
+      carla::road::MapBuilder &map_builder) {
+    map_builder.SetGeoReference(ParseGeoReference(
+        xml.child("OpenDRIVE").child("header").child_value("geoReference")));
   }
 
 } // parser

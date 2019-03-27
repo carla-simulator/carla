@@ -7,19 +7,17 @@
 #include "carla/opendrive/OpenDriveParser.h"
 
 #include "carla/Logging.h"
-#include "carla/road/MapBuilder.h"
-
 #include "carla/opendrive/parser/GeoReferenceParser.h"
 #include "carla/opendrive/parser/GeometryParser.h"
 #include "carla/opendrive/parser/JunctionParser.h"
 #include "carla/opendrive/parser/LaneParser.h"
+#include "carla/opendrive/parser/ObjectParser.h"
 #include "carla/opendrive/parser/ProfilesParser.h"
 #include "carla/opendrive/parser/RoadParser.h"
-#include "carla/opendrive/parser/TrafficGroupParser.h"
 #include "carla/opendrive/parser/SignalParser.h"
-#include "carla/opendrive/parser/ObjectParser.h"
-
+#include "carla/opendrive/parser/TrafficGroupParser.h"
 #include "carla/opendrive/parser/pugixml/pugixml.hpp"
+#include "carla/road/MapBuilder.h"
 
 namespace carla {
 namespace opendrive {
@@ -35,7 +33,7 @@ namespace opendrive {
 
     carla::road::MapBuilder map_builder;
 
-    // GeoReferenceParser::Parse(xml, map_builder):
+    parser::GeoReferenceParser::Parse(xml, map_builder);
     parser::RoadParser::Parse(xml, map_builder);
     parser::JunctionParser::Parse(xml, map_builder);
     parser::GeometryParser::Parse(xml, map_builder);
