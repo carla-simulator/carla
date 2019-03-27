@@ -35,7 +35,7 @@ namespace carla {
       const std::string &wildcard_pattern) {
     fs::path root(folder_path);
     if (!fs::exists(root) || !fs::is_directory(root)) {
-      throw_exception(std::invalid_argument(folder_path + ": not such folder"));
+      throw_exception(std::invalid_argument(folder_path + ": no such folder"));
     }
 
     std::vector<std::string> results;
