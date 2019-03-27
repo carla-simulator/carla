@@ -6,10 +6,10 @@
 
 #pragma once
 
+#include "carla/NonCopyable.h"
 #include "carla/road/RoadElementSet.h"
 #include "carla/road/element/RoadInfo.h"
-#include "carla/road/element/RoadInfoVisitor.h"
-#include "carla/NonCopyable.h"
+#include "carla/road/element/RoadInfoIterator.h"
 
 #include <vector>
 #include <memory>
@@ -47,7 +47,6 @@ namespace road {
   private:
 
     RoadElementSet<std::unique_ptr<element::RoadInfo>> _road_set;
-
   };
 
 } // road
