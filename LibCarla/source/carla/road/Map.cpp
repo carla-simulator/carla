@@ -347,9 +347,7 @@ namespace road {
     const auto &inner_lane = current_lane.GetRoad()->GetLaneById(waypoint.section_id, inner_lane_id);
 
     auto current_lane_info = current_lane.GetInfo<RoadInfoMarkRecord>(s);
-    THROW_INVALID_INPUT_ASSERT(current_lane_info != nullptr);
     auto inner_lane_info = inner_lane.GetInfo<RoadInfoMarkRecord>(s);
-    THROW_INVALID_INPUT_ASSERT(inner_lane_info != nullptr);
 
     return std::make_pair(current_lane_info, inner_lane_info);
   }

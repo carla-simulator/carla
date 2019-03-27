@@ -57,13 +57,13 @@ namespace element {
     }
 
     if (lc == RoadInfoMarkRecord::LaneChange::Increase) {
-      lane_change = WaypointInfoRoadMark::LaneChange::Increase;
+      lane_change = LaneChange::Right;
     } else if (lc == RoadInfoMarkRecord::LaneChange::Decrease) {
-      lane_change = WaypointInfoRoadMark::LaneChange::Decrease;
+      lane_change = LaneChange::Left;
     } else if (lc == RoadInfoMarkRecord::LaneChange::Both) {
-      lane_change = WaypointInfoRoadMark::LaneChange::Both;
+      lane_change = LaneChange::Both;
     } else if (lc == RoadInfoMarkRecord::LaneChange::None) {
-      lane_change = WaypointInfoRoadMark::LaneChange::None;
+      lane_change = LaneChange::None;
     }
 
     width = info.GetWidth();
