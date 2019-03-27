@@ -29,7 +29,3 @@ endif ()
 if ((LIBCARLA_BUILD_TEST) AND (NOT WIN32))
   add_subdirectory("test")
 endif()
-
-unset(LIBCARLA_BUILD_TEST CACHE)
-unset(LIBCARLA_BUILD_RELEASE CACHE)
-unset(LIBCARLA_BUILD_DEBUG CACHE)

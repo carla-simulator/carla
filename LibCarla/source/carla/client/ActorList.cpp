@@ -29,11 +29,11 @@ namespace client {
     return nullptr;
   }
 
-  ActorList ActorList::Filter(const std::string &wildcard_pattern) const {
-    ActorList filtered{_episode, {}};
+  SharedPtr<ActorList> ActorList::Filter(const std::string &wildcard_pattern) const {
+    SharedPtr<ActorList> filtered (new ActorList(_episode, {}));
     for (auto &&actor : _actors) {
       if (StringUtil::Match(actor.GetTypeId(), wildcard_pattern)) {
-        filtered._actors.push_back(actor);
+        filtered->_actors.push_back(actor);
       }
     }
     return filtered;

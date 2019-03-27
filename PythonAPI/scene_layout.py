@@ -16,7 +16,7 @@ import os
 import sys
 
 try:
-    sys.path.append(glob.glob('../**/carla-*%d.%d-%s.egg' % (
+    sys.path.append(glob.glob('**/carla-*%d.%d-%s.egg' % (
         sys.version_info.major,
         sys.version_info.minor,
         'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
@@ -157,6 +157,7 @@ def get_dynamic_objects(carla_world, carla_map):
         speed_limits = []
         walkers = []
         stops = []
+        static_obstacles = []
         for actor in actors:
             if 'vehicle' in actor.type_id:
                 vehicles.append(actor)
@@ -168,7 +169,11 @@ def get_dynamic_objects(carla_world, carla_map):
                 walkers.append(actor)
             elif 'stop' in actor.type_id:
                 stops.append(actor)
-        return (vehicles, traffic_lights, speed_limits, walkers, stops)
+            elif 'static.prop' in actor.type_id:
+                static_obstacles.append(actor)
+
+
+        return (vehicles, traffic_lights, speed_limits, walkers, stops, static_obstacles)
 
     # Public functions
     def get_stop_signals(stops):
@@ -255,8 +260,20 @@ def get_dynamic_objects(carla_world, carla_map):
             speed_limits_dict[speed_limit.id] = sl_dict
         return speed_limits_dict
 
+    def get_static_obstacles(static_obstacles):
+        static_obstacles_dict = dict()
+        for static_prop in static_obstacles:
+            sl_transform = static_prop.get_transform()
+            location_gnss = carla_map.transform_to_geolocation(sl_transform.location)
+            sl_dict = {
+                "id": static_prop.id,
+                "position": [location_gnss.latitude, location_gnss.longitude, location_gnss.altitude]
+            }
+            static_obstacles_dict[static_prop.id] = sl_dict
+        return static_obstacles_dict
+
     actors = carla_world.get_actors()
-    vehicles, traffic_lights, speed_limits, walkers, stops = _split_actors(actors)
+    vehicles, traffic_lights, speed_limits, walkers, stops, static_obstacles = _split_actors(actors)
 
     hero_vehicles = [vehicle for vehicle in vehicles if
                      'vehicle' in vehicle.type_id and vehicle.attributes['role_name'] == 'hero']
@@ -268,5 +285,6 @@ def get_dynamic_objects(carla_world, carla_map):
         'walkers': get_walkers(walkers),
         'traffic_lights': get_traffic_lights(traffic_lights),
         'stop_signs': get_stop_signals(stops),
-        'speed_limits': get_speed_limits(speed_limits)
+        'speed_limits': get_speed_limits(speed_limits),
+        'static_obstacles': get_static_obstacles(static_obstacles)
     }

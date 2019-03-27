@@ -4,7 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "carla/client/LaneDetector.h"
+#include "carla/client/LaneInvasionSensor.h"
 
 #include "carla/Logging.h"
 #include "carla/client/Map.h"
@@ -40,9 +40,9 @@ namespace client {
         location + Rotate(yaw, geom::Location(-box.extent.x, -box.extent.y, 0.0f))};
   }
 
-  LaneDetector::~LaneDetector() = default;
+  LaneInvasionSensor::~LaneInvasionSensor() = default;
 
-  void LaneDetector::Listen(CallbackFunctionType callback) {
+  void LaneInvasionSensor::Listen(CallbackFunctionType callback) {
     if (_is_listening) {
       log_error(GetDisplayId(), ": already listening");
       return;
@@ -57,15 +57,15 @@ namespace client {
     _map = GetWorld().GetMap();
     DEBUG_ASSERT(_map != nullptr);
 
-    auto self = boost::static_pointer_cast<LaneDetector>(shared_from_this());
+    auto self = boost::static_pointer_cast<LaneInvasionSensor>(shared_from_this());
 
     log_debug(GetDisplayId(), ": subscribing to tick event");
     GetEpisode().Lock()->RegisterOnTickEvent([
         cb=std::move(callback),
-        weak_self=WeakPtr<LaneDetector>(self)](const auto &timestamp) {
+        weak_self=WeakPtr<LaneInvasionSensor>(self)](const auto &timestamp) {
       auto self = weak_self.lock();
       if (self != nullptr) {
-        auto data = self->TickLaneDetector(timestamp);
+        auto data = self->TickLaneInvasionSensor(timestamp);
         if (data != nullptr) {
           cb(std::move(data));
         }
@@ -74,11 +74,12 @@ namespace client {
     _is_listening = true;
   }
 
-  void LaneDetector::Stop() {
-    throw_exception(std::runtime_error("LaneDetector::Stop(): not implemented."));
+  void LaneInvasionSensor::Stop() {
+    /// @todo We need unsubscribe from the world on tick.
+    _is_listening = false;
   }
 
-  SharedPtr<sensor::SensorData> LaneDetector::TickLaneDetector(
+  SharedPtr<sensor::SensorData> LaneInvasionSensor::TickLaneInvasionSensor(
       const Timestamp &timestamp) {
     try {
       const auto new_bounds = GetVehicleBounds(*_vehicle);
@@ -98,7 +99,7 @@ namespace client {
               crossed_lanes);
     } catch (const std::exception &e) {
       /// @todo We need to unsubscribe the sensor.
-      // log_error("LaneDetector:", e.what());
+      // log_error("LaneInvasionSensor:", e.what());
       return nullptr;
     }
   }

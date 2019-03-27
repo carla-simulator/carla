@@ -10,7 +10,7 @@
 #include "carla/StringUtil.h"
 #include "carla/client/Actor.h"
 #include "carla/client/GnssSensor.h"
-#include "carla/client/LaneDetector.h"
+#include "carla/client/LaneInvasionSensor.h"
 #include "carla/client/ServerSideSensor.h"
 #include "carla/client/TrafficLight.h"
 #include "carla/client/TrafficSign.h"
@@ -73,8 +73,8 @@ namespace detail {
       SharedPtr<Actor> parent,
       GarbageCollectionPolicy gc) {
     auto init = ActorInitializer{description, episode, parent};
-    if (description.description.id == "sensor.other.lane_detector") { /// @todo
-      return MakeActorImpl<LaneDetector>(std::move(init), gc);
+    if (description.description.id == "sensor.other.lane_invasion") { /// @todo
+      return MakeActorImpl<LaneInvasionSensor>(std::move(init), gc);
     } else if (description.description.id == "sensor.other.gnss") { /// @todo
       return MakeActorImpl<GnssSensor>(std::move(init), gc);
     } else if (description.HasAStream()) {

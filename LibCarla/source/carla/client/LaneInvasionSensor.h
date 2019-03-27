@@ -17,12 +17,12 @@ namespace client {
   class Map;
   class Vehicle;
 
-  class LaneDetector final : public ClientSideSensor {
+  class LaneInvasionSensor final : public ClientSideSensor {
   public:
 
     using ClientSideSensor::ClientSideSensor;
 
-    ~LaneDetector();
+    ~LaneInvasionSensor();
 
     /// Register a @a callback to be executed each time a new measurement is
     /// received.
@@ -43,7 +43,7 @@ namespace client {
 
   private:
 
-    SharedPtr<sensor::SensorData> TickLaneDetector(const Timestamp &timestamp);
+    SharedPtr<sensor::SensorData> TickLaneInvasionSensor(const Timestamp &timestamp);
 
     bool _is_listening = false;
 
