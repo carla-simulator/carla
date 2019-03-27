@@ -23,7 +23,7 @@ namespace road {
 
   /// We use this epsilon to shift the waypoints away from the edges of the lane
   /// sections to avoid floating point precision errors.
-  static constexpr double EPSILON = 2.0 * std::numeric_limits<double>::epsilon();
+  static constexpr double EPSILON = 10.0 * std::numeric_limits<double>::epsilon();
 
   // ===========================================================================
   // -- Error handling ---------------------------------------------------------
@@ -53,9 +53,9 @@ namespace road {
 
   static double GetDistanceAtStartOfLane(const Lane &lane) {
     if (lane.GetId() <= 0) {
-      return lane.GetDistance() + EPSILON;
+      return lane.GetDistance() + 10.0 * EPSILON;
     } else {
-      return lane.GetDistance() + lane.GetLength() - EPSILON;
+      return lane.GetDistance() + lane.GetLength() - 10.0 * EPSILON;
     }
   }
 
