@@ -20,8 +20,35 @@ install(FILES ${libcarla_carla_headers} DESTINATION include/carla)
 file(GLOB libcarla_carla_geom_headers "${libcarla_source_path}/carla/geom/*.h")
 install(FILES ${libcarla_carla_geom_headers} DESTINATION include/carla/geom)
 
+file(GLOB libcarla_carla_opendrive "${libcarla_source_path}/carla/opendrive/*.h")
+install(FILES ${libcarla_carla_opendrive} DESTINATION include/carla/opendrive)
+
+file(GLOB libcarla_carla_opendrive_parser "${libcarla_source_path}/carla/opendrive/parser/*.h")
+install(FILES ${libcarla_carla_opendrive_parser} DESTINATION include/carla/opendrive/parser)
+
+file(GLOB libcarla_carla_opendrive_parser_pugixml "${libcarla_source_path}/carla/opendrive/parser/pugixml/*.hpp")
+install(FILES ${libcarla_carla_opendrive_parser_pugixml} DESTINATION include/carla/opendrive/parser/pugixml)
+
 file(GLOB libcarla_carla_profiler_headers "${libcarla_source_path}/carla/profiler/*.h")
 install(FILES ${libcarla_carla_profiler_headers} DESTINATION include/carla/profiler)
+
+file(GLOB libcarla_carla_road_headers "${libcarla_source_path}/carla/road/*.h")
+install(FILES ${libcarla_carla_road_headers} DESTINATION include/carla/road)
+
+file(GLOB libcarla_carla_road_element_headers "${libcarla_source_path}/carla/road/element/*.h")
+install(FILES ${libcarla_carla_road_element_headers} DESTINATION include/carla/road/element)
+
+file(GLOB libcarla_carla_road_element_cephes_headers "${libcarla_source_path}/carla/road/element/cephes/*.h")
+install(FILES ${libcarla_carla_road_element_cephes_headers} DESTINATION include/carla/road/element/cephes)
+
+file(GLOB libcarla_carla_road_general_headers "${libcarla_source_path}/carla/road/general/*.h")
+install(FILES ${libcarla_carla_road_general_headers} DESTINATION include/carla/road/general)
+
+file(GLOB libcarla_carla_road_object_headers "${libcarla_source_path}/carla/road/object/*.h")
+install(FILES ${libcarla_carla_road_object_headers} DESTINATION include/carla/road/object)
+
+file(GLOB libcarla_carla_road_signal_headers "${libcarla_source_path}/carla/road/signal/*.h")
+install(FILES ${libcarla_carla_road_signal_headers} DESTINATION include/carla/road/signal)
 
 file(GLOB libcarla_carla_rpc_headers "${libcarla_source_path}/carla/rpc/*.h")
 install(FILES ${libcarla_carla_rpc_headers} DESTINATION include/carla/rpc)
@@ -46,33 +73,6 @@ install(FILES ${libcarla_carla_streaming_detail_tcp_headers} DESTINATION include
 
 file(GLOB libcarla_carla_streaming_low_level_headers "${libcarla_source_path}/carla/streaming/low_level/*.h")
 install(FILES ${libcarla_carla_streaming_low_level_headers} DESTINATION include/carla/streaming/low_level)
-
-file(GLOB libcarla_carla_road_headers "${libcarla_source_path}/carla/road/*.h")
-install(FILES ${libcarla_carla_road_headers} DESTINATION include/carla/road)
-
-file(GLOB libcarla_carla_road_element_headers "${libcarla_source_path}/carla/road/element/*.h")
-install(FILES ${libcarla_carla_road_element_headers} DESTINATION include/carla/road/element)
-
-file(GLOB libcarla_carla_road_signal_headers "${libcarla_source_path}/carla/road/signal/*.h")
-install(FILES ${libcarla_carla_road_signal_headers} DESTINATION include/carla/road/signal)
-
-file(GLOB libcarla_carla_road_object_headers "${libcarla_source_path}/carla/road/object/*.h")
-install(FILES ${libcarla_carla_road_object_headers} DESTINATION include/carla/road/object)
-
-file(GLOB libcarla_carla_road_general_headers "${libcarla_source_path}/carla/road/general/*.h")
-install(FILES ${libcarla_carla_road_general_headers} DESTINATION include/carla/road/general)
-
-file(GLOB libcarla_carla_road_element_cephes_headers "${libcarla_source_path}/carla/road/element/cephes/*.h")
-install(FILES ${libcarla_carla_road_element_cephes_headers} DESTINATION include/carla/road/element/cephes)
-
-file(GLOB libcarla_carla_opendrive "${libcarla_source_path}/carla/opendrive/*.h")
-install(FILES ${libcarla_carla_opendrive} DESTINATION include/carla/opendrive)
-
-file(GLOB libcarla_carla_opendrive_parser "${libcarla_source_path}/carla/opendrive/parser/*.h")
-install(FILES ${libcarla_carla_opendrive_parser} DESTINATION include/carla/opendrive/parser)
-
-file(GLOB libcarla_carla_opendrive_parser_pugixml "${libcarla_source_path}/carla/opendrive/parser/pugixml/*.hpp")
-install(FILES ${libcarla_carla_opendrive_parser_pugixml} DESTINATION include/carla/opendrive/parser/pugixml)
 
 install(DIRECTORY "${BOOST_INCLUDE_PATH}/boost" DESTINATION include)
 
