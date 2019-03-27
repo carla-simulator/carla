@@ -57,7 +57,7 @@ template <typename T>
 static boost::python::object OptionalToPythonObject(const T opt) {
   namespace py = boost::python;
   if (opt.has_value()) {
-    py::object(opt.value());
+    return py::object(opt.value());
   }
   return py::object();
 }
