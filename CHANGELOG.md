@@ -17,6 +17,22 @@
   * Fixed wheel's tire friction from physics control parameters.
   * Fixed cleanup of local_planner when used by other modules
   * Fixed Obstacle Detector
+  * New Town07, rural environment with narrow roads
+  * Added new pack of assets
+    - Windmill, different farm houses, silo
+    - Plants corn, dandelion, poppy, and grass
+    - Yield traffic sign
+  * Added modular buildings New York style
+  * Added marking lanes in Town03
+  * Improved performance in Town01 and Town02
+  * Changed yellow marking lane from Town01 and Town02 to dashed yellow marking lane
+  * Fixed semantic segmentation tags in Town04, Town05, Town06
+  * Fixed tree collision in Town01
+  * Fixed VehicleSpawnPoint in Town01
+  * Fixed geo-reference of Town01 and Town07
+  * Fixed floating pillars in Town04
+  * Fixed floating building in Town03
+  * Enhanced stop triggers options
 
 ## CARLA 0.9.4
 
