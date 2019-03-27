@@ -6,21 +6,27 @@
 
 #pragma once
 
-#include "carla/geom/GeoLocation.h"
-
-#include <string>
+namespace pugi {
+  class xml_document;
+} // namespace pugi
 
 namespace carla {
+
+namespace road {
+  class MapBuilder;
+} // namespace road
+
 namespace opendrive {
 namespace parser {
 
   class GeoReferenceParser {
   public:
 
-    static geom::GeoLocation Parse(const std::string &geo_reference_string);
-
+    static void Parse(
+        const pugi::xml_document &xml,
+        carla::road::MapBuilder &map_builder);
   };
 
-} // parser
-} // opendrive
-} // carla
+} // namespace parser
+} // namespace opendrive
+} // namespace carla

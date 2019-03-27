@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "carla/Memory.h"
 #include "carla/road/Map.h"
 
 #include <boost/optional.hpp>
@@ -20,7 +19,6 @@ namespace opendrive {
   public:
 
     static boost::optional<road::Map> Load(const std::string &opendrive);
-
   };
 
 } // namespace opendrive

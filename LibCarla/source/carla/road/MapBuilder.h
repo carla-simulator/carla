@@ -322,6 +322,10 @@ namespace road {
         const LaneId lane_id,
         const double s);
 
+    void SetGeoReference(const geom::GeoLocation &geo_reference) {
+      _map_data._geo_reference = geo_reference;
+    }
+
   private:
 
     MapData _map_data;
@@ -336,8 +340,6 @@ namespace road {
     std::vector<Lane *> GetLaneNext(RoadId road_id, int section_id, LaneId lane_id);
 
     std::vector<std::pair<RoadId, LaneId>> GetJunctionLanes(RoadId junction_id, RoadId road_id, LaneId lane_id);
-
-  private:
 
     /// Map to temporary store all the road and lane infos until the map is built,
     /// so they can be added all together
