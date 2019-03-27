@@ -1,5 +1,10 @@
 ## Latest Changes
 
+  * LaneInvasionSensor stabilization
+    - Fix naming: Use 'LaneInvasionSensor'/'lane_invasion' instead of mixture with 'LaneDetector'/'lane_detector'
+    - Create server-side LaneInvasionSensor (to be able to access it via ROS bridge)
+  * Fix ActorList returned by ActorList.Filter(...)
+  * Add --rolename to manual_control.py
   * Migrate Content to AWS
   * Adding a parser to represent the map as a connected graph of waypoints.
   * Allow user to disable rendering and set the server timeout from the command line
@@ -11,12 +16,29 @@
   * Fixed python client DLL error on Windows
   * Fixed wheel's tire friction from physics control parameters.
   * Fixed cleanup of local_planner when used by other modules
+  * Fixed Obstacle Detector
+  * New Town07, rural environment with narrow roads
+  * Added new pack of assets
+    - Windmill, different farm houses, silo
+    - Plants corn, dandelion, poppy, and grass
+    - Yield traffic sign
+  * Added modular buildings New York style
+  * Added marking lanes in Town03
+  * Improved performance in Town01 and Town02
+  * Changed yellow marking lane from Town01 and Town02 to dashed yellow marking lane
+  * Fixed semantic segmentation tags in Town04, Town05, Town06
+  * Fixed tree collision in Town01
+  * Fixed VehicleSpawnPoint in Town01
+  * Fixed geo-reference of Town01 and Town07
+  * Fixed floating pillars in Town04
+  * Fixed floating building in Town03
+  * Enhanced stop triggers options
 
 ## CARLA 0.9.4
 
   * Added recording and playback functionality
   * Added synchronous mode, simulator waits until a client sends a "tick" cue, `client.tick()`
-  * Allow changing map from client-side, added `client.load_map(name)`, `client.reload_map()`, and `client.get_available_maps()`
+  * Allow changing map from client-side, added `client.load_world(name)`, `client.reload_world()`, and `client.get_available_maps()`
   * Added scripts and tools to import maps directly from .fbx and .xodr files into the simulator
   * Exposed minimum physics control parameters for vehicles' engine and wheels
   * Allow controlling multiple actors in "batch mode"

@@ -63,11 +63,12 @@ function download_content {
     aria2c -j16 -x16 --input-file=.aria2c.input
     rm -f .aria2c.input
   else
-    wget ${CONTENT_LINK} Content.tar.gz
+    wget ${CONTENT_LINK} -O Content.tar.gz
   fi
   tar -xvzf Content.tar.gz -C Content
   rm Content.tar.gz
   mv Content/* $CONTENT_FOLDER
+  rm -rf Content
   echo "$CONTENT_ID" > "$VERSION_FILE"
   echo "Content updated successfully."
 }

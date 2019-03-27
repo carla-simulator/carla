@@ -24,8 +24,7 @@ If you want to benchmark your model in the same conditions as in our CoRL’17
 paper, check out
 [Benchmarking](https://github.com/carla-simulator/driving-benchmarks).
 
-[**Get CARLA overnight build**](http://158.109.9.218:8080/job/carla/job/master/25/artifact/Dist/CARLA_eff21e2.tar.gz)
-
+[**Get CARLA overnight build**](http://carla-assets-internal.s3.amazonaws.com/Releases/Linux/Dev/CARLA_Latest.tar.gz)
 
 ## CARLA Ecosystem
 Repositories associated to the CARLA simulation platform:
@@ -33,7 +32,7 @@ Repositories associated to the CARLA simulation platform:
 * [**Scenario_Runner**](https://github.com/carla-simulator/scenario_runner): Engine to execute traffic scenarios in CARLA 0.9.X
 * [**ROS-bridge**](https://github.com/carla-simulator/ros-bridge): Interface to connect CARLA 0.9.X to ROS
 * [**Driving-benchmarks**](https://github.com/carla-simulator/driving-benchmarks): Benchmark tools for Autonomous Driving tasks
-* [**Conditional Imitation-Learning**](https://github.com/felipecode/coiltraine): Training and testing Conditional Imitation Learning models in CARLA [README](https://github.com/felipecode/coiltraine/blob/master/docs/view_agents.md)
+* [**Conditional Imitation-Learning**](https://github.com/felipecode/coiltraine): Training and testing Conditional Imitation Learning models in CARLA
 * [**AutoWare AV stack**](https://github.com/carla-simulator/carla-autoware): Bridge to connect AutoWare AV stack to CARLA
 * [**Reinforcement-Learning**](https://github.com/carla-simulator/reinforcement-learning): Code for running Conditional Reinforcement Learning models in CARLA
 * [**Map Editor**](https://github.com/carla-simulator/carla-map-editor): Standalone GUI application to enhance RoadRunner maps with traffic lights and traffic signs information
