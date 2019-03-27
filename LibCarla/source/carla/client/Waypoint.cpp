@@ -89,7 +89,7 @@ namespace client {
   }
 
   road::element::WaypointInfoRoadMark::LaneChange Waypoint::GetLaneChange() const {
-  using lane_change_type = road::element::WaypointInfoRoadMark::LaneChange;
+    using lane_change_type = road::element::WaypointInfoRoadMark::LaneChange;
 
     const auto lane_change_right_info = _mark_record.first;
     lane_change_type c_right;
