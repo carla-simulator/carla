@@ -607,13 +607,25 @@ class MapImage(object):
         draw_topology(topology, 1)
 
         actors = carla_world.get_actors()
-        stops_transform = [actor.get_transform() for actor in actors if 'stop' in actor.type_id]
+
+        # Draw Traffic Signs
         font_size = world_to_pixel_width(1)
         font = pygame.font.SysFont('Arial', font_size, True)
-        font_surface = font.render("STOP", False, COLOR_ALUMINIUM_2)
-        font_surface = pygame.transform.scale(font_surface, (font_surface.get_width(), font_surface.get_height() * 2))
-        for stop in stops_transform:
-            draw_stop(map_surface, font_surface, stop)
+
+        stops_transform = [actor.get_transform() for actor in actors if 'stop' in actor.type_id]
+        yields_transform = [actor.get_transform() for actor in actors if 'yield' in actor.type_id]
+
+        stop_font_surface = font.render("STOP", False, COLOR_ALUMINIUM_2)
+        stop_font_surface = pygame.transform.scale(stop_font_surface, (stop_font_surface.get_width(), stop_font_surface.get_height() * 2))
+
+        yield_font_surface = font.render("YIELD", False, COLOR_ALUMINIUM_2)
+        yield_font_surface = pygame.transform.scale(yield_font_surface, (yield_font_surface.get_width(), yield_font_surface.get_height() * 2))
+
+        for ts_stop in stops_transform:
+            draw_stop(map_surface, stop_font_surface, ts_stop)
+
+        for ts_yield in yields_transform:
+            draw_stop(map_surface, yield_font_surface, ts_yield)
 
     def world_to_pixel(self, location, offset=(0, 0)):
         x = self.scale * self._pixels_per_meter * (location.x - self._world_offset[0])
