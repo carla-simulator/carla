@@ -114,6 +114,8 @@ if $DO_COPY_FILES ; then
   copy_if_changed "./PythonAPI/vehicle_gallery.py" "${DESTINATION}/vehicle_gallery.py"
   copy_if_changed "./Util/ImportMaps.sh" "${DESTINATION}/ImportMaps.sh"
 
+  echo "${REPOSITORY_TAG}" > ${DESTINATION}/VERSION
+
   popd >/dev/null
 
 fi
