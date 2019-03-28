@@ -79,26 +79,6 @@ void export_map() {
   namespace cg = carla::geom;
   namespace cre = carla::road::element;
 
-  class_<cc::Map, boost::noncopyable, boost::shared_ptr<cc::Map>>("Map", no_init)
-    .def(init<std::string, std::string>((arg("name"), arg("xodr_content"))))
-    .add_property("name", CALL_RETURNING_COPY(cc::Map, GetName))
-    .def("get_spawn_points", CALL_RETURNING_LIST(cc::Map, GetRecommendedSpawnPoints))
-    .def("get_waypoint", &cc::Map::GetWaypoint, (arg("location"), arg("project_to_road")=true, arg("lane_type")=cr::Lane::LaneType::Driving))
-    .def("get_topology", &GetTopology)
-    .def("generate_waypoints", CALL_RETURNING_LIST_1(cc::Map, GenerateWaypoints, double), (args("distance")))
-    .def("transform_to_geolocation", &ToGeolocation, (arg("location")))
-    .def("to_opendrive", CALL_RETURNING_COPY(cc::Map, GetOpenDrive))
-    .def("save_to_disk", &SaveOpenDriveToDisk, (arg("path")=""))
-    .def(self_ns::str(self_ns::self))
-  ;
-
-  enum_<cre::WaypointInfoRoadMark::LaneChange>("LaneChange")
-    .value("NONE", cre::WaypointInfoRoadMark::LaneChange::None) // None is reserved in Python3
-    .value("Right", cre::WaypointInfoRoadMark::LaneChange::Right)
-    .value("Left", cre::WaypointInfoRoadMark::LaneChange::Left)
-    .value("Both", cre::WaypointInfoRoadMark::LaneChange::Both)
-  ;
-
   enum_<cr::Lane::LaneType>("LaneType")
     .value("NONE", cr::Lane::LaneType::None) // None is reserved in Python3
     .value("Driving", cr::Lane::LaneType::Driving)
@@ -122,6 +102,26 @@ void export_map() {
     .value("OffRamp", cr::Lane::LaneType::OffRamp)
     .value("OnRamp", cr::Lane::LaneType::OnRamp)
     .value("Any", cr::Lane::LaneType::Any)
+  ;
+
+  class_<cc::Map, boost::noncopyable, boost::shared_ptr<cc::Map>>("Map", no_init)
+    .def(init<std::string, std::string>((arg("name"), arg("xodr_content"))))
+    .add_property("name", CALL_RETURNING_COPY(cc::Map, GetName))
+    .def("get_spawn_points", CALL_RETURNING_LIST(cc::Map, GetRecommendedSpawnPoints))
+    .def("get_waypoint", &cc::Map::GetWaypoint, (arg("location"), arg("project_to_road")=true, arg("lane_type")=cr::Lane::LaneType::Driving))
+    .def("get_topology", &GetTopology)
+    .def("generate_waypoints", CALL_RETURNING_LIST_1(cc::Map, GenerateWaypoints, double), (args("distance")))
+    .def("transform_to_geolocation", &ToGeolocation, (arg("location")))
+    .def("to_opendrive", CALL_RETURNING_COPY(cc::Map, GetOpenDrive))
+    .def("save_to_disk", &SaveOpenDriveToDisk, (arg("path")=""))
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  enum_<cre::WaypointInfoRoadMark::LaneChange>("LaneChange")
+    .value("NONE", cre::WaypointInfoRoadMark::LaneChange::None) // None is reserved in Python3
+    .value("Right", cre::WaypointInfoRoadMark::LaneChange::Right)
+    .value("Left", cre::WaypointInfoRoadMark::LaneChange::Left)
+    .value("Both", cre::WaypointInfoRoadMark::LaneChange::Both)
   ;
 
   enum_<cre::WaypointInfoRoadMark::Color>("RoadMarkColor")
