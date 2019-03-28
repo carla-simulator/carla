@@ -75,7 +75,7 @@ private:
 
   /// Distance between waypoints where the cars will drive
   UPROPERTY(Category = "Generate", EditAnywhere, meta = (ClampMin = "0.01", UIMin = "0.01"))
-  float RoadAccuracy = 2.f;
+  float RoadAccuracy = 0.5f;
 
   /// Trigger elevantion
   UPROPERTY(Category = "Generate", EditAnywhere, meta = (ClampMin = "0.01", UIMin = "0.01"))

@@ -58,6 +58,8 @@ namespace road {
     /// -- Road information ----------------------------------------------------
     /// ========================================================================
 
+    const Lane &GetLane(Waypoint waypoint) const;
+
     Lane::LaneType GetLaneType(Waypoint waypoint) const;
 
     double GetLaneWidth(Waypoint waypoint) const;
@@ -103,9 +105,7 @@ namespace road {
     }
 #endif // LIBCARLA_WITH_GTEST
 
-  private:
-
-    const Lane &GetLane(Waypoint waypoint) const;
+private:
 
     MapData _data;
   };
