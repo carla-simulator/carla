@@ -174,7 +174,7 @@ namespace detail {
 
     void StopRecorder();
 
-    std::string ShowRecorderFileInfo(std::string name);
+    std::string ShowRecorderFileInfo(std::string name, bool show_all);
 
     std::string ShowRecorderCollisions(std::string name, char type1, char type2);
 

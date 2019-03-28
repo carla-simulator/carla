@@ -277,8 +277,8 @@ namespace detail {
       _client.StopRecorder();
     }
 
-    std::string ShowRecorderFileInfo(std::string name) {
-      return _client.ShowRecorderFileInfo(std::move(name));
+    std::string ShowRecorderFileInfo(std::string name, bool show_all) {
+      return _client.ShowRecorderFileInfo(std::move(name), show_all);
     }
 
     std::string ShowRecorderCollisions(std::string name, char type1, char type2) {
