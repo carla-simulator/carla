@@ -9,8 +9,8 @@ Install the build tools and dependencies
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test
 sudo apt-get update
 sudo apt-get install build-essential clang-6.0 lld-6.0 g++-7 cmake ninja-build python python-pip python-dev python3-dev python3-pip libpng16-dev libtiff5-dev libjpeg-dev tzdata sed curl wget unzip autoconf libtool
-pip2 install --user setuptools nose2
-pip3 install --user setuptools nose2
+pip2 install --user setuptools
+pip3 install --user setuptools
 ```
 
 To avoid compatibility issues between Unreal Engine and the CARLA dependencies,
