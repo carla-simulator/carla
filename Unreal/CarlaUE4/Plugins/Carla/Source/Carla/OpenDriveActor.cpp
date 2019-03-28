@@ -6,9 +6,11 @@
 
 #include "Carla.h"
 
+
 #include "OpenDriveActor.h"
 
 #include "Util/OpenDrive.h"
+#include <carla/road/element/Types.h>
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/geom/Math.h>
@@ -16,6 +18,8 @@
 #include <carla/road/element/Waypoint.h>
 #include <carla/rpc/String.h>
 #include <compiler/enable-ue4-macros.h>
+
+#include <unordered_set>
 
 /*static TArray<FVector> WaypointVector2FVectorArray(
     const std::vector<carla::road::element::Waypoint> &Waypoints,
@@ -176,7 +180,7 @@ void AOpenDriveActor::BuildRoutes()
 void AOpenDriveActor::BuildRoutes(FString MapName)
 {
   using CarlaMath = carla::geom::Math;
-  //using IdType = carla::road::element::id_type;
+  using IdType = carla::road::element::id_type;
   using Waypoint = carla::road::element::Waypoint;
   // using WaypointGen = carla::road::WaypointGenerator;
   // using TrafficGroup = carla::opendrive::types::TrafficLightGroup;
@@ -198,85 +202,95 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
     return;
   }
 
-  //const auto &map = map_ptr->GetData();
-
   // List with waypoints, each one at the end of each lane of the map
-  /*const std::vector<Waypoint> MapLaneBeginWaypoint =
-      WaypointGen::GenerateLaneEnd(*map_ptr);
+  const std::vector<std::pair<Waypoint, Waypoint>> Topology =
+      map_ptr->GenerateTopology();
 
   // Since we are going to iterate all the successors of all the lanes, we need
   // a vector to store the already visited lanes. Lanes can be successors of
   // multiple other lanes
-  std::vector<std::pair<IdType, int>> AlreadyVisited;
+  std::vector<Waypoint> AlreadyVisited;
 
-  for (auto &&EndLaneWaypoint : MapLaneBeginWaypoint)
+  std::unordered_set<Waypoint> WpLaneStartList;
+  for (auto &&WpPair : Topology)
   {
-    std::vector<Waypoint> Successors = WaypointGen::GetSuccessors(EndLaneWaypoint);
+    WpLaneStartList.emplace(WpPair.first);
+    WpLaneStartList.emplace(WpPair.second);
+  }
 
-    // The RoutePlanner will be created only if some route must be added to it
-    // so no one will be created unnecessarily
+  for (auto &&Wp : WpLaneStartList)
+  {
+
+    std::vector<Waypoint> Successors = map_ptr->GetSuccessors(Wp);
+
+    // // The RoutePlanner will be created only if some route must be added to it
+    // // so no one will be created unnecessarily
     ARoutePlanner *RoutePlanner = nullptr;
 
-    // Fill the RoutePlanner with all the needed roads
+    // // Fill the RoutePlanner with all the needed roads
     for (auto &&Successor : Successors)
-    {
-      const IdType RoadId = Successor.GetRoadId();
-      const int LaneId = Successor.GetLaneId();
+     {
+        const IdType RoadId = Successor.road_id;
+        const int LaneId = Successor.lane_id;
 
-      // Create an identifier of the current lane
-      const auto Identifier = std::make_pair(RoadId, LaneId);
+    //   // Create an identifier of the current lane
+        //const auto Identifier = std::make_pair(RoadId, LaneId);
 
-      // If Identifier does not exist in AlreadyVisited we haven't visited the
-      // lane
-      if (!std::any_of(AlreadyVisited.begin(), AlreadyVisited.end(), [&Identifier](auto i) {
-        return (i.first == Identifier.first && i.second == Identifier.second);
-      }))
-      {
-        // Add the identifier as visited
-        AlreadyVisited.emplace_back(Identifier);
-
-        // const float MaxDist = map.GetRoad(RoadId)->GetLength();
-        const float MaxDist = 0; // workarround while changing the WaypointAPI
-
-        std::vector<Waypoint> Waypoints;
-        Waypoints.emplace_back(Successor);
-
-        for (float Dist = RoadAccuracy; Dist < MaxDist; Dist += RoadAccuracy)
+    //   // If Identifier does not exist in AlreadyVisited we haven't visited the
+    //   // lane
+        if (!std::any_of(AlreadyVisited.begin(), AlreadyVisited.end(), [&](auto i) {
+          return (i.road_id == Successor.road_id && i.lane_id == Successor.lane_id  && i.section_id == Successor.section_id);
+        }))
         {
-          const auto NewWaypoint = WaypointGen::GetNext(Successor, Dist);
+          // Add the identifier as visited
+          AlreadyVisited.emplace_back(Successor);
 
-          check(Dist < MaxDist);
-          check(NewWaypoint.size() == 1);
+          const double MaxDist = map_ptr->GetLane(Successor).GetLength();
+          //const double MaxDist = 0; // workarround while changing the WaypointAPI
 
-          Waypoints.emplace_back(NewWaypoint[0]);
-        }
+          std::vector<Waypoint> Waypoints;
+          //Waypoints.emplace_back(Wp);
+          Waypoints.emplace_back(Successor);
 
-        // Merge with the first waypoint of the next lane if needed
-        Waypoints.emplace_back(WaypointGen::GetNext(
-            Successor, CarlaMath::clamp(MaxDist - 0.1f, 0.f, MaxDist))[0]);
+          double Dist = RoadAccuracy;
+          while (Dist < MaxDist) {
+            Dist += RoadAccuracy;
+            auto NewWaypointList = map_ptr->GetNext(Successor, Dist);
+            for(Waypoint distWP : NewWaypointList) {
+                Waypoints.emplace_back(distWP);
+            }
+          }
+          if(Waypoints.size() >= 2) {
 
-        check(Waypoints.size() >= 2);
+            TArray<FVector> Positions;
+            Positions.Reserve(Waypoints.size());
+            for (int i = 0; i < Waypoints.size(); ++i)
+            {
+              // Add the trigger height because the z position of the points does not
+              // influence on the driver AI and is easy to visualize in the editor
+              Positions.Add(map_ptr->ComputeTransform(Waypoints[i]).location +
+                  FVector(0.f, 0.f, TriggersHeight));
+            }
 
-        TArray<FVector> Positions = WaypointVector2FVectorArray(Waypoints, TriggersHeight);
+            // If the route planner does not exist, create it
+            if (RoutePlanner == nullptr)
+            {
+              RoutePlanner = GetWorld()->SpawnActor<ARoutePlanner>();
+              RoutePlanner->bIsIntersection = std::any_of(Successors.begin(), Successors.end(), [&map_ptr](auto w) {
+                return map_ptr->IsJunction(w.road_id);
+              });
+              RoutePlanner->SetBoxExtent(FVector(70.f, 70.f, 50.f));
+              RoutePlanner->SetActorRotation(map_ptr->ComputeTransform(Successor).rotation);
+              RoutePlanner->SetActorLocation(map_ptr->ComputeTransform(Successor).location +
+                  FVector(0.f, 0.f, TriggersHeight));
+            }
 
-        // If the route planner does not exist, create it
-        if (RoutePlanner == nullptr)
-        {
-          RoutePlanner = GetWorld()->SpawnActor<ARoutePlanner>();
-          RoutePlanner->bIsIntersection = std::any_of(Successors.begin(), Successors.end(), [](auto w) {
-            return w.IsIntersection();
-          });
-          RoutePlanner->SetBoxExtent(FVector(70.f, 70.f, 50.f));
-          RoutePlanner->SetActorRotation(EndLaneWaypoint.ComputeTransform().rotation);
-          RoutePlanner->SetActorLocation(EndLaneWaypoint.ComputeTransform().location +
-              FVector(0.f, 0.f, TriggersHeight));
-        }
-
-        RoutePlanner->AddRoute(1.f, Positions);
-        RoutePlanners.Add(RoutePlanner);
+            RoutePlanner->AddRoute(1.f, Positions);
+            RoutePlanners.Add(RoutePlanner);
+          }
       }
     }
-  }*/
+  }
 
   // const std::vector<TrafficGroup> TrafficLightGroup = map.GetTrafficGroups();
   // for (TrafficGroup CurrentTrafficLightGroup : TrafficLightGroup)
