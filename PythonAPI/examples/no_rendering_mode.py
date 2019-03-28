@@ -168,6 +168,20 @@ class Util(object):
     @staticmethod
     def length(v):
         return math.sqrt(v.x**2 + v.y**2 + v.z**2)
+
+    @staticmethod
+    def get_bounding_box(actor):
+        bb = actor.trigger_volume.extent
+        corners = [carla.Location(x=-bb.x, y=-bb.y),
+                   carla.Location(x=bb.x, y=-bb.y),
+                   carla.Location(x=bb.x, y=bb.y),
+                   carla.Location(x=-bb.x, y=bb.y),
+                   carla.Location(x=-bb.x, y=-bb.y)]
+        corners = [x + actor.trigger_volume.location for x in corners]
+        t = actor.get_transform()
+        t.transform(corners)
+        return corners
+
 # ==============================================================================
 # -- ModuleManager -------------------------------------------------------------
 # ==============================================================================
@@ -417,9 +431,10 @@ class TrafficLightSurfaces(object):
 
 
 class MapImage(object):
-    def __init__(self, carla_world, carla_map, pixels_per_meter=10):
+    def __init__(self, carla_world, carla_map, pixels_per_meter=10, show_triggers=False):
         self._pixels_per_meter = pixels_per_meter
         self.scale = 1.0
+        self.show_triggers = show_triggers
 
         waypoints = carla_map.generate_waypoints(2)
         margin = 50
@@ -533,7 +548,8 @@ class MapImage(object):
                     world_to_pixel(x) for x in [
                         left, start, right]], 4)
 
-        def draw_stop(surface, font_surface, transform, color=COLOR_ALUMINIUM_2):
+        def draw_traffic_signs(surface, font_surface, actor, color=COLOR_ALUMINIUM_2, trigger_color=COLOR_CHAMELEON_0):
+            transform = actor.get_transform()
             waypoint = carla_map.get_waypoint(transform.location)
 
             angle = -waypoint.transform.rotation.yaw - 90.0
@@ -552,6 +568,13 @@ class MapImage(object):
 
             line_pixel = [world_to_pixel(p) for p in line]
             pygame.draw.lines(surface, color, True, line_pixel, 2)
+
+            # draw bounding box
+            if self.show_triggers:
+                corners = Util.get_bounding_box(actor)
+                corners = [world_to_pixel(p) for p in corners]
+                pygame.draw.lines(surface, trigger_color, True, corners, 2)
+
 
         def lateral_shift(transform, shift):
             transform.rotation.yaw += 90
@@ -612,8 +635,8 @@ class MapImage(object):
         font_size = world_to_pixel_width(1)
         font = pygame.font.SysFont('Arial', font_size, True)
 
-        stops_transform = [actor.get_transform() for actor in actors if 'stop' in actor.type_id]
-        yields_transform = [actor.get_transform() for actor in actors if 'yield' in actor.type_id]
+        stops = [actor for actor in actors if 'stop' in actor.type_id]
+        yields = [actor for actor in actors if 'yield' in actor.type_id]
 
         stop_font_surface = font.render("STOP", False, COLOR_ALUMINIUM_2)
         stop_font_surface = pygame.transform.scale(stop_font_surface, (stop_font_surface.get_width(), stop_font_surface.get_height() * 2))
@@ -621,11 +644,11 @@ class MapImage(object):
         yield_font_surface = font.render("YIELD", False, COLOR_ALUMINIUM_2)
         yield_font_surface = pygame.transform.scale(yield_font_surface, (yield_font_surface.get_width(), yield_font_surface.get_height() * 2))
 
-        for ts_stop in stops_transform:
-            draw_stop(map_surface, stop_font_surface, ts_stop)
+        for ts_stop in stops:
+            draw_traffic_signs(map_surface, stop_font_surface, ts_stop)
 
-        for ts_yield in yields_transform:
-            draw_stop(map_surface, yield_font_surface, ts_yield)
+        for ts_yield in yields:
+            draw_traffic_signs(map_surface, yield_font_surface, ts_yield)
 
     def world_to_pixel(self, location, offset=(0, 0)):
         x = self.scale * self._pixels_per_meter * (location.x - self._world_offset[0])
@@ -643,7 +666,7 @@ class MapImage(object):
 
 
 class ModuleWorld(object):
-    def __init__(self, name, host, port, map_name, timeout, actor_filter, no_rendering=True):
+    def __init__(self, name, host, port, map_name, timeout, actor_filter, no_rendering=True, show_triggers=False):
         self.client = None
         self.name = name
         self.host = host
@@ -654,7 +677,7 @@ class ModuleWorld(object):
         self.no_rendering = no_rendering
         self.server_fps = 0.0
         self.simulation_time = 0
-
+        self.show_triggers = show_triggers
         self.server_clock = pygame.time.Clock()
 
         # World data
@@ -712,7 +735,7 @@ class ModuleWorld(object):
         self.world.apply_settings(settings)
 
         # Create Surfaces
-        self.map_image = MapImage(self.world, self.town_map, PIXELS_PER_METER)
+        self.map_image = MapImage(self.world, self.town_map, PIXELS_PER_METER, self.show_triggers)
 
         # Store necessary modules
         self.module_hud = module_manager.get_module(MODULE_HUD)
@@ -873,26 +896,14 @@ class ModuleWorld(object):
 
         return (vehicles, traffic_lights, speed_limits, walkers)
 
-    def get_bounding_box(self, actor):
-        bb = actor.trigger_volume.extent
-        corners = [carla.Location(x=-bb.x, y=-bb.y),
-                   carla.Location(x=bb.x, y=-bb.y),
-                   carla.Location(x=bb.x, y=bb.y),
-                   carla.Location(x=-bb.x, y=bb.y),
-                   carla.Location(x=-bb.x, y=-bb.y)]
-        corners = [x + actor.trigger_volume.location for x in corners]
-        t = actor.get_transform()
-        t.transform(corners)
-        return corners
-
     def _render_traffic_lights(self, surface, list_tl, world_to_pixel):
         self.affected_traffic_light = None
 
         for tl in list_tl:
             world_pos = tl.get_location()
             pos = world_to_pixel(world_pos)
-            if self.hero_actor is not None and hasattr(tl, 'trigger_volume'):
-                corners = self.get_bounding_box(tl)
+            if self.hero_actor is not None:
+                corners = Util.get_bounding_box(tl)
                 corners = [world_to_pixel(p) for p in corners]
                 tl_t = tl.get_transform()
 
@@ -1253,7 +1264,8 @@ def game_loop(args):
         args.map,
         2.0,
         args.filter,
-        args.no_rendering)
+        args.no_rendering,
+        args.show_triggers)
 
     # Register Modules
     module_manager.register_module(world_module)
@@ -1321,6 +1333,10 @@ def main():
         '--no-rendering',
         action='store_true',
         help='switch off server rendering')
+    argparser.add_argument(
+        '--show-triggers',
+        action='store_true',
+        help='show trigger boxes of traffic signs')
 
     args = argparser.parse_args()
     args.description = argparser.description
