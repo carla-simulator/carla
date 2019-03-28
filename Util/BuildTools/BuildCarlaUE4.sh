@@ -25,7 +25,9 @@ HARD_CLEAN=false
 BUILD_CARLAUE4=false
 LAUNCH_UE4_EDITOR=false
 
-OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean -n 'parse-options' -- "$@"`
+GDB=
+
+OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb -n 'parse-options' -- "$@"`
 
 if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
 
@@ -33,6 +35,9 @@ eval set -- "$OPTS"
 
 while true; do
   case "$1" in
+    --gdb )
+      GDB="gdb --args";
+      shift ;;
     --build )
       BUILD_CARLAUE4=true;
       shift ;;
@@ -133,7 +138,7 @@ fi
 if ${LAUNCH_UE4_EDITOR} ; then
 
   log "Launching UE4Editor..."
-  ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${PWD}/CarlaUE4.uproject"
+  ${GDB} ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${PWD}/CarlaUE4.uproject"
 
 else
 
