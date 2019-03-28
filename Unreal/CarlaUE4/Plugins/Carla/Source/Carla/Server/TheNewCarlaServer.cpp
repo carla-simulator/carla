@@ -722,11 +722,12 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
-  BIND_SYNC(show_recorder_file_info) << [this](std::string name) -> R<std::string>
+  BIND_SYNC(show_recorder_file_info) << [this](std::string name, bool show_all) -> R<std::string>
   {
     REQUIRE_CARLA_EPISODE();
     return R<std::string>(Episode->GetRecorder()->ShowFileInfo(
-        name));
+        name,
+        show_all));
   };
 
   BIND_SYNC(show_recorder_collisions) << [this](std::string name, char type1, char type2) -> R<std::string>

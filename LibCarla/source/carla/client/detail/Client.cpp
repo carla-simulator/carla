@@ -275,8 +275,8 @@ namespace detail {
     return _pimpl->AsyncCall("stop_recorder");
   }
 
-  std::string Client::ShowRecorderFileInfo(std::string name) {
-    return _pimpl->CallAndWait<std::string>("show_recorder_file_info", name);
+  std::string Client::ShowRecorderFileInfo(std::string name, bool show_all) {
+    return _pimpl->CallAndWait<std::string>("show_recorder_file_info", name, show_all);
   }
 
   std::string Client::ShowRecorderCollisions(std::string name, char type1, char type2) {
