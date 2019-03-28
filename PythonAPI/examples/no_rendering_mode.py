@@ -643,12 +643,12 @@ class MapImage(object):
 
 
 class ModuleWorld(object):
-
-    def __init__(self, name, host, port, timeout, actor_filter, no_rendering=True):
+    def __init__(self, name, host, port, map_name, timeout, actor_filter, no_rendering=True):
         self.client = None
         self.name = name
         self.host = host
         self.port = port
+        self.map_name = map_name
         self.timeout = timeout
         self.actor_filter = actor_filter
         self.no_rendering = no_rendering
@@ -687,12 +687,16 @@ class ModuleWorld(object):
         self.hero_surface = None
         self.actors_surface = None
 
-    def _get_data_from_carla(self, host, port, timeout):
+    def _get_data_from_carla(self):
         try:
-            self.client = carla.Client(host, port)
-            self.client.set_timeout(timeout)
+            self.client = carla.Client(self.host, self.port)
+            self.client.set_timeout(self.timeout)
 
-            world = self.client.get_world()
+            if self.map_name is None:
+                world = self.client.get_world()
+            else:
+                world = self.client.load_world(self.map_name)
+
             town_map = world.get_map()
             return (world, town_map)
 
@@ -701,7 +705,7 @@ class ModuleWorld(object):
             exit_game()
 
     def start(self):
-        self.world, self.town_map = self._get_data_from_carla(self.host, self.port, self.timeout)
+        self.world, self.town_map = self._get_data_from_carla()
 
         settings = self.world.get_settings()
         settings.no_rendering_mode = self.no_rendering
@@ -1242,7 +1246,14 @@ def game_loop(args):
     # Init modules
     input_module = ModuleInput(MODULE_INPUT)
     hud_module = ModuleHUD(MODULE_HUD, args.width, args.height)
-    world_module = ModuleWorld(MODULE_WORLD, args.host, args.port, 2.0, args.filter, args.no_rendering)
+    world_module = ModuleWorld(
+        MODULE_WORLD,
+        args.host,
+        args.port,
+        args.map,
+        2.0,
+        args.filter,
+        args.no_rendering)
 
     # Register Modules
     module_manager.register_module(world_module)
@@ -1284,8 +1295,7 @@ def main():
         '--host',
         metavar='H',
         default='127.0.0.1',
-        help='IP of the host server (default: 127.0.0.1)'
-    )
+        help='IP of the host server (default: 127.0.0.1)')
     argparser.add_argument(
         '-p', '--port',
         metavar='P',
@@ -1303,10 +1313,14 @@ def main():
         default='vehicle.*',
         help='actor filter (default: "vehicle.*")')
     argparser.add_argument(
+        '--map',
+        metavar='TOWN',
+        default=None,
+        help='start a new episode at the given TOWN')
+    argparser.add_argument(
         '--no-rendering',
-        type=bool,
-        default=False,
-        help='Switch off server rendering?')
+        action='store_true',
+        help='switch off server rendering')
 
     args = argparser.parse_args()
     args.description = argparser.description
