@@ -95,26 +95,25 @@ if $DO_COPY_FILES ; then
 
   mkdir -p "${DESTINATION}/ExportedMaps"
 
+  echo "${REPOSITORY_TAG}" > ${DESTINATION}/VERSION
+
   copy_if_changed "./LICENSE" "${DESTINATION}/LICENSE"
   copy_if_changed "./CHANGELOG.md" "${DESTINATION}/CHANGELOG"
   copy_if_changed "./Docs/release_readme.md" "${DESTINATION}/README"
   copy_if_changed "./Docs/python_api.md" "${DESTINATION}/python_api.md"
   copy_if_changed "./Util/Docker/Release.Dockerfile" "${DESTINATION}/Dockerfile"
-  copy_if_changed "./PythonAPI/dist/*.egg" "${DESTINATION}/PythonAPI/"
-  copy_if_changed "./PythonAPI/agents/" "${DESTINATION}/PythonAPI/agents"
-  copy_if_changed "./PythonAPI/automatic_control.py" "${DESTINATION}/automatic_control.py"
-  copy_if_changed "./PythonAPI/dynamic_weather.py" "${DESTINATION}/dynamic_weather.py"
-  copy_if_changed "./PythonAPI/manual_control.py" "${DESTINATION}/manual_control.py"
-  copy_if_changed "./PythonAPI/no_rendering_mode.py" "${DESTINATION}/no_rendering_mode.py"
-  copy_if_changed "./PythonAPI/performance_benchmark.py" "${DESTINATION}/performance_benchmark.py"
-  copy_if_changed "./PythonAPI/scene_layout.py" "${DESTINATION}/scene_layout.py"
-  copy_if_changed "./PythonAPI/spawn_npc.py" "${DESTINATION}/spawn_npc.py"
-  copy_if_changed "./PythonAPI/synchronous_mode.py" "${DESTINATION}/synchronous_mode.py"
-  copy_if_changed "./PythonAPI/tutorial.py" "${DESTINATION}/tutorial.py"
-  copy_if_changed "./PythonAPI/vehicle_gallery.py" "${DESTINATION}/vehicle_gallery.py"
   copy_if_changed "./Util/ImportMaps.sh" "${DESTINATION}/ImportMaps.sh"
 
-  echo "${REPOSITORY_TAG}" > ${DESTINATION}/VERSION
+  copy_if_changed "./PythonAPI/carla/dist/*.egg" "${DESTINATION}/PythonAPI/carla/dist/"
+  copy_if_changed "./PythonAPI/carla/agents/" "${DESTINATION}/PythonAPI/carla/agents"
+  copy_if_changed "./PythonAPI/carla/scene_layout.py" "${DESTINATION}/PythonAPI/carla/"
+  copy_if_changed "./PythonAPI/carla/requirements.txt" "${DESTINATION}/PythonAPI/carla/"
+
+  copy_if_changed "./PythonAPI/examples/*.py" "${DESTINATION}/PythonAPI/examples/"
+  copy_if_changed "./PythonAPI/examples/requirements.txt" "${DESTINATION}/PythonAPI/examples/"
+
+  copy_if_changed "./PythonAPI/util/*.py" "${DESTINATION}/PythonAPI/util/"
+  copy_if_changed "./PythonAPI/util/requirements.txt" "${DESTINATION}/PythonAPI/util/"
 
   popd >/dev/null
 

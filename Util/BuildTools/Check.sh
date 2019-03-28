@@ -210,7 +210,7 @@ popd >/dev/null
 # ==============================================================================
 
 if ${SMOKE_TESTS_2} || ${SMOKE_TESTS_3} ; then
-  pushd "${CARLA_PYTHONAPI_ROOT_FOLDER}/test" >/dev/null
+  pushd "${CARLA_PYTHONAPI_ROOT_FOLDER}/util" >/dev/null
     log "Checking connection with the simulator."
     ./test_connection.py -p 3654 --timeout=60.0
   popd >/dev/null

@@ -25,6 +25,7 @@
 			],
 			"folder_exclude_patterns":
 			[
+				"*.egg-info",
 				".clang",
 				".codelite",
 				".kdev4",
@@ -36,9 +37,9 @@
 				"Dist",
 				"Doxygen",
 				"Intermediate",
-				"PythonAPI/build",
-				"PythonAPI/dependencies",
-				"PythonAPI/dist",
+				"PythonAPI/carla/build",
+				"PythonAPI/carla/dependencies",
+				"PythonAPI/carla/dist",
 				"Saved",
 				"Unreal/CarlaUE4/Content*",
 				"Unreal/CarlaUE4/Plugins/Carla/CarlaDependencies",

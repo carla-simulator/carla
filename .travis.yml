@@ -25,9 +25,10 @@ matrix:
             - libtiff5-dev
             - libjpeg-dev
       install:
-        - pip2 install -q --user setuptools nose2
+        - pip2 install -q --user setuptools
+        - pip2 install -q --user -r PythonAPI/test/requirements.txt
         - pip3 install -q --user setuptools
-        - pip3 install -q --user nose2
+        - pip3 install -q --user -r PythonAPI/test/requirements.txt
       script:
         - while sleep 2m; do echo "still building..."; done &
         - make setup >> build.log 2>&1
@@ -46,7 +47,10 @@ matrix:
             - python-pip
       install:
         - pip2 install -q --user pylint
-        - pip2 install -q --user -r PythonAPI/requirements.txt
+        - pip2 install -q --user -r PythonAPI/carla/requirements.txt
+        - pip2 install -q --user -r PythonAPI/examples/requirements.txt
+        - pip2 install -q --user -r PythonAPI/test/requirements.txt
+        - pip2 install -q --user -r PythonAPI/util/requirements.txt
       script:
         - shopt -s globstar
         - pylint --disable=R,C --rcfile=PythonAPI/.pylintrc PythonAPI/**/*.py
@@ -60,7 +64,10 @@ matrix:
       install:
         - pip3 install -q --user setuptools
         - pip3 install -q pylint
-        - pip3 install -q --user -r PythonAPI/requirements.txt
+        - pip3 install -q --user -r PythonAPI/carla/requirements.txt
+        - pip3 install -q --user -r PythonAPI/examples/requirements.txt
+        - pip3 install -q --user -r PythonAPI/test/requirements.txt
+        - pip3 install -q --user -r PythonAPI/util/requirements.txt
       script:
         - shopt -s globstar
         - pylint --disable=R,C --rcfile=PythonAPI/.pylintrc PythonAPI/**/*.py

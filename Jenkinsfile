@@ -25,7 +25,7 @@ pipeline {
             }
             post {
                 always {
-                    archiveArtifacts 'PythonAPI/dist/*.egg'
+                    archiveArtifacts 'PythonAPI/carla/dist/*.egg'
                 }
             }
         }
