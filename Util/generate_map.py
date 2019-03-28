@@ -30,7 +30,7 @@ def main():
             maps = get_map_names()
             generate_all_maps_but_list(maps, args)
         dirname = os.path.dirname(os.path.abspath(__file__))
-        relative_path = os.path.join(dirname, "..", "..", "Unreal", "CarlaUE4", "Content", "Carla", "ExportedMaps")
+        relative_path = os.path.join(dirname, "..", "Unreal", "CarlaUE4", "Content", "Carla", "ExportedMaps")
         print('Map(s) exported to %s' % os.path.abspath(relative_path))
     finally:
         print('\ndone.')
@@ -39,7 +39,7 @@ def main():
 def get_map_names():
     maps = []
     dirname = os.getcwd()
-    map_place = os.path.join(dirname, "..", "..", "Unreal", "CarlaUE4", "Content", "Carla", "ExportedMaps")
+    map_place = os.path.join(dirname, "..", "Unreal", "CarlaUE4", "Content", "Carla", "ExportedMaps")
     for filename in os.listdir(map_place):
         if filename.endswith('.umap'):
             maps.append(filename)
@@ -49,7 +49,7 @@ def get_map_names():
 def generate_all_maps_but_list(existent_maps, args):
     map_name = ""
     dirname = os.getcwd()
-    fbx_place = os.path.join(dirname, "..", "..", "RoadRunnerFiles")
+    fbx_place = os.path.join(dirname, "..", "RoadRunnerFiles")
     for x in os.walk(fbx_place):
         map_name = os.path.basename(x[0])
         if map_name != "RoadRunnerFiles":
@@ -87,7 +87,7 @@ def parse_arguments():
 
 def cleanup_assets(map_name):
     dirname = os.getcwd()
-    content_folder = os.path.join(dirname, "..", "..", "Unreal", "CarlaUE4", "Content", "Carla")
+    content_folder = os.path.join(dirname, "..", "Unreal", "CarlaUE4", "Content", "Carla")
     origin_folder = os.path.join(content_folder, "Static", "Imported", map_name)
     for filename in os.listdir(origin_folder):
         if map_name in filename:
@@ -102,7 +102,7 @@ def import_assets_commandlet(map_name):
     import_settings = os.path.join(dirname, "importsetting.json")
     commandlet_arguments = "-importSettings=\"%s\" -AllowCommandletRendering -nosourcecontrol -replaceexisting" % import_settings
 
-    file_xodr_origin = os.path.join(dirname, "..", "..", "RoadRunnerFiles", map_name, "%s.xodr" % map_name)
+    file_xodr_origin = os.path.join(dirname, "..", "RoadRunnerFiles", map_name, "%s.xodr" % map_name)
     file_xodr_dest = os.path.join(
         dirname,
         "..",
@@ -134,7 +134,7 @@ def generate_map(map_name, args):
 
 def move_uassets(map_name):
     dirname = os.getcwd()
-    content_folder = os.path.join(dirname, "..", "..", "Unreal", "CarlaUE4", "Content", "Carla")
+    content_folder = os.path.join(dirname, "..", "Unreal", "CarlaUE4", "Content", "Carla")
     origin_folder = os.path.join(content_folder, "Static", map_name)
     dest_path = ""
     src_path = ""
@@ -162,7 +162,7 @@ def invoke_commandlet(name, arguments):
     ue4_path = os.environ['UE4_ROOT']
     dirname = os.getcwd()
     editor_path = "%s/Engine/Binaries/%s/UE4Editor" % (ue4_path, sys_name)
-    uproject_path = os.path.join(dirname, "..", "..", "Unreal", "CarlaUE4", "CarlaUE4.uproject")
+    uproject_path = os.path.join(dirname, "..", "Unreal", "CarlaUE4", "CarlaUE4.uproject")
     full_command = "%s %s -run=%s %s" % (editor_path, uproject_path, name, arguments)
     subprocess.check_call([full_command], shell=True)
 
@@ -172,7 +172,7 @@ def generate_json(map_name, json_file):
         import_groups = []
         file_names = []
         import_settings = []
-        fbx_path = os.path.join("..", "..", "RoadRunnerFiles", map_name, "%s.fbx" % map_name)
+        fbx_path = os.path.join("..", "RoadRunnerFiles", map_name, "%s.fbx" % map_name)
         file_names.append(fbx_path)
 
         import_settings.append({
