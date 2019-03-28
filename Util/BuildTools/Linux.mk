@@ -4,10 +4,10 @@ help:
 	@less ${CARLA_BUILD_TOOLS_FOLDER}/Linux.mk.help
 
 launch: LibCarla.server.release
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --build --launch
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --build --launch $(ARGS)
 
 launch-only:
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --launch
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --launch $(ARGS)
 
 package: CarlaUE4Editor PythonAPI
 	@${CARLA_BUILD_TOOLS_FOLDER}/Package.sh $(ARGS)
