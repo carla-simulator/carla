@@ -120,25 +120,34 @@ class GlobalRoutePlanner(object):
 
                 if bool(waypoint.lane_change & carla.LaneChange.Right) and not right_found:
                     next_waypoint = waypoint.get_right_lane()
-                    if next_waypoint is not None and next_waypoint.lane_type == 'driving':
+                    if next_waypoint is not None and next_waypoint.lane_type == carla.LaneType.Driving:
                         next_road_option = RoadOption.CHANGELANERIGHT
-                        next_segment = self._localize(next_waypoint.transform.location)
-                        self._graph.add_edge(
-                            self._id_map[segment['entryxyz']], next_segment[0], entry_waypoint=segment['entry'],
-                            exit_waypoint=self._graph.edges[next_segment[0], next_segment[1]]['entry_waypoint'],
-                            path=[], length=0, type=next_road_option, change_waypoint = waypoint)
-                        right_found = True
+                        next_segment = None
+                        try:
+                            next_segment = self._localize(next_waypoint.transform.location)
+                        except KeyError:
+                            print("Failed to localize! : ", next_waypoint.road_id, next_waypoint.lane_id)
+                        if next_segment is not None:
+                            self._graph.add_edge(
+                                self._id_map[segment['entryxyz']], next_segment[0], entry_waypoint=segment['entry'],
+                                exit_waypoint=self._graph.edges[next_segment[0], next_segment[1]]['entry_waypoint'],
+                                path=[], length=0, type=next_road_option, change_waypoint = waypoint)
+                            right_found = True
 
                 if bool(waypoint.lane_change & carla.LaneChange.Left) and not left_found:
                     next_waypoint = waypoint.get_left_lane()
-                    if next_waypoint is not None and next_waypoint.lane_type == 'driving':
+                    if next_waypoint is not None and next_waypoint.lane_type == carla.LaneType.Driving:
                         next_road_option = RoadOption.CHANGELANELEFT
-                        next_segment = self._localize(next_waypoint.transform.location)
-                        self._graph.add_edge(
-                            self._id_map[segment['entryxyz']], next_segment[0], entry_waypoint=segment['entry'],
-                            exit_waypoint=self._graph.edges[next_segment[0], next_segment[1]]['entry_waypoint'],
-                            path=[], length=0, type=next_road_option, change_waypoint = waypoint)
-                        left_found = True
+                        try:
+                            next_segment = self._localize(next_waypoint.transform.location)
+                        except KeyError:
+                            print("Failed to localize! : ", next_waypoint.road_id, next_waypoint.lane_id)
+                        if next_segment is not None:
+                            self._graph.add_edge(
+                                self._id_map[segment['entryxyz']], next_segment[0], entry_waypoint=segment['entry'],
+                                exit_waypoint=self._graph.edges[next_segment[0], next_segment[1]]['entry_waypoint'],
+                                path=[], length=0, type=next_road_option, change_waypoint = waypoint)
+                            left_found = True
 
                 if left_found and right_found:
                     break
@@ -183,16 +192,16 @@ class GlobalRoutePlanner(object):
         next_edge = self._graph.edges[current_node, next_node]
         if index > 0:
             current_edge = self._graph.edges[previous_node, current_node]
-            calculate_turn = current_edge['type'] == RoadOption.LANEFOLLOW and \
+            calculate_turn = current_edge['type'].value == RoadOption.LANEFOLLOW.value and \
                 not current_edge['intersection'] and \
-                    next_edge['type'] == RoadOption.LANEFOLLOW and \
+                    next_edge['type'].value == RoadOption.LANEFOLLOW.value and \
                         next_edge['intersection']
             if calculate_turn:
                 cv, nv = current_edge['exit_vector'], next_edge['net_vector']
                 cross_list = []
                 for neighbor in self._graph.successors(current_node):
                     select_edge = self._graph.edges[current_node, neighbor]
-                    if select_edge['type'] == RoadOption.LANEFOLLOW:
+                    if select_edge['type'].value == RoadOption.LANEFOLLOW.value:
                         if neighbor != route[index+1]:
                             sv = select_edge['net_vector']
                             cross_list.append(np.cross(cv, sv)[2])
@@ -236,7 +245,7 @@ class GlobalRoutePlanner(object):
 
     def _find_closest_in_list(self, current_waypoint, waypoint_list):
         min_distance = float('inf')
-        closest_index = 0
+        closest_index = -1
         for i, waypoint in enumerate(waypoint_list):
             distance = waypoint.transform.location.distance(
                 current_waypoint.transform.location)
@@ -261,12 +270,15 @@ class GlobalRoutePlanner(object):
             edge = self._graph.edges[route[i], route[i+1]]
             path = []
 
-            if edge['type'] != RoadOption.LANEFOLLOW and edge['type'] != RoadOption.VOID:
+            if edge['type'].value != RoadOption.LANEFOLLOW.value and edge['type'].value != RoadOption.VOID.value:
                 n1, n2 = self._road_id_to_edge[edge['exit_waypoint'].road_id][edge['exit_waypoint'].lane_id]
                 next_edge = self._graph.edges[n1, n2]
-                closest_index = self._find_closest_in_list(current_waypoint, next_edge['path'])
-                closest_index = min(len(next_edge['path'])-1, closest_index+5)
-                current_waypoint = next_edge['path'][closest_index]
+                if next_edge['path']:
+                    closest_index = self._find_closest_in_list(current_waypoint, next_edge['path'])
+                    closest_index = min(len(next_edge['path'])-1, closest_index+5)
+                    current_waypoint = next_edge['path'][closest_index]
+                else:
+                    current_waypoint = next_edge['exit_waypoint']
                 route_trace.append((current_waypoint, road_option))
 
             else:
