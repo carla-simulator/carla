@@ -13,7 +13,7 @@
 #include "carla/road/MapBuilder.h"
 
 #include <limits>
-#include <sstream>
+#include <string>
 #include <vector>
 
 namespace carla {
@@ -21,14 +21,7 @@ namespace opendrive {
 namespace parser {
 
   static double ParseDouble(const std::string &string_value) {
-    double value;
-    std::istringstream istr(string_value);
-    istr.imbue(std::locale("C"));
-    istr >> value;
-    if (istr.fail() || !istr.eof()) {
-      value = std::numeric_limits<double>::quiet_NaN();
-    }
-    return value;
+    return std::stod(string_value);
   }
 
   static geom::GeoLocation ParseGeoReference(const std::string &geo_reference_string) {
