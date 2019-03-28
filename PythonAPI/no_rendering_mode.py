@@ -478,10 +478,10 @@ class MapImage(object):
 
             if is_left:
                 sign = -1
-                road_mark = sample.get_left_road_mark()
+                road_mark = sample.left_road_mark
             else:
                 sign = 1
-                road_mark = sample.get_right_road_mark()
+                road_mark = sample.right_road_mark
 
             if road_mark is not None:
                 marking_type = road_mark.type

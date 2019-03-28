@@ -229,6 +229,7 @@
 
 
 ## `carla.WheelsPhysicsControl`
+
 - `tire_friction`
 - `damping_rate`
 - `steer_angle`
@@ -259,31 +260,93 @@
 
 - `name`
 - `get_spawn_points()`
-- `get_waypoint(location, project_to_road=True)`
+- `get_waypoint(location, project_to_road=True, lane_type=carla.LaneType.Driving)`
 - `get_topology()`
 - `generate_waypoints(distance)`
 - `transform_to_geolocation(location)`
 - `to_opendrive()`
 - `save_to_disk(path=self.name)`
 
+## `carla.LaneChange`
+
+- `NONE`
+- `Right`
+- `Left`
+- `Both`
+
+## `carla.LaneType`
+
+- `NONE`
+- `Driving`
+- `Stop`
+- `Shoulder`
+- `Biking`
+- `Sidewalk`
+- `Border`
+- `Restricted`
+- `Parking`
+- `Bidirectional`
+- `Median`
+- `Special1`
+- `Special2`
+- `Special3`
+- `RoadWorks`
+- `Tram`
+- `Rail`
+- `Entry`
+- `Exit`
+- `OffRamp`
+- `OnRamp`
+- `Any`
+
+## `carla.RoadMarkColor`
+
+- `Standard`
+- `Blue`
+- `Green`
+- `Red`
+- `White`
+- `Yellow`
+- `Other`
+
+## `carla.LaneMarking`
+
+- `NONE`
+- `Other`
+- `Broken`
+- `Solid`
+- `SolidSolid`
+- `SolidBroken`
+- `BrokenSolid`
+- `BrokenBroken`
+- `BottsDots`
+- `Grass`
+- `Curb`
+
+## `carla.WaypointInfoRoadMark`
+
+- `type -> carla.LaneMarking`
+- `color -> carla.RoadMarkColor`
+- `lane_change -> carla.LaneChange`
+- `width`
+
 ## `carla.Waypoint`
 
+- `id`
 - `transform`
 - `is_intersection`
 - `lane_width`
 - `road_id`
+- `section_id`
 - `lane_id`
-- `lane_change`
-- `lane_type`
-- `next(distance)`
-- `get_right_lane()`
-- `get_left_lane()`
-
-## `carla.LaneChange`
-- `None`
-- `Right`
-- `Left`
-- `Both`
+- `s`
+- `lane_change -> carla.LaneChange`
+- `lane_type -> carla.LaneType`
+- `right_road_mark -> carla.WaypointInfoRoadMark`
+- `left_road_mark -> carla.WaypointInfoRoadMark`
+- `next(distance) -> list(carla.Waypoint)`
+- `get_right_lane() -> carla.Waypoint`
+- `get_left_lane() -> carla.Waypoint`
 
 ## `carla.WeatherParameters`
 
