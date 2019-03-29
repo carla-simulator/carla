@@ -159,19 +159,19 @@ namespace road {
       const std::string color,
       const std::string material,
       const double width,
-      const std::string lane_change,
+      std::string lane_change,
       const double height,
       const std::string type_name,
       const double type_width) {
     RoadInfoMarkRecord::LaneChange lc;
 
-    auto ToLower = [](auto str) { return StringUtil::ToLowerCopy(str); };
+    StringUtil::ToLower(lane_change);
 
-    if (ToLower(lane_change) == "increase") {
+    if (lane_change == "increase") {
       lc = RoadInfoMarkRecord::LaneChange::Increase;
-    } else if (ToLower(lane_change) == "decrease") {
+    } else if (lane_change == "decrease") {
       lc = RoadInfoMarkRecord::LaneChange::Decrease;
-    } else if (ToLower(lane_change) == "both") {
+    } else if (lane_change == "both") {
       lc = RoadInfoMarkRecord::LaneChange::Both;
     } else {
       lc = RoadInfoMarkRecord::LaneChange::None;
