@@ -6,21 +6,15 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 
-#include "Components/SceneComponent.h"
-#include "Components/BillboardComponent.h"
-
 #include "Traffic/RoutePlanner.h"
-
 #include "Vehicle/VehicleSpawnPoint.h"
 
-#include "Runtime/Core/Public/Misc/OutputDeviceNull.h"
+#include "Components/BillboardComponent.h"
+#include "Components/SceneComponent.h"
+#include "CoreMinimal.h"
 
-#include <compiler/disable-ue4-macros.h>
-#include <carla/opendrive/OpenDriveParser.h>
-#include <compiler/enable-ue4-macros.h>
 
 #include "OpenDriveActor.generated.h"
 
