@@ -71,6 +71,7 @@ def main():
         if args.safe:
             blueprints = [x for x in blueprints if int(x.get_attribute('number_of_wheels')) == 4]
             blueprints = [x for x in blueprints if not x.id.endswith('isetta')]
+            blueprints = [x for x in blueprints if not x.id.endswith('carlacola')]
 
         def try_spawn_random_vehicle_at(transform):
             blueprint = random.choice(blueprints)
