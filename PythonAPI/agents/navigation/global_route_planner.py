@@ -116,38 +116,40 @@ class GlobalRoutePlanner(object):
             left_found, right_found = False, False
 
             for waypoint in segment['path']:
-                next_waypoint, next_road_option, next_segment = None, None, None
+                if not segment['entry'].is_intersection:
+                    next_waypoint, next_road_option, next_segment = None, None, None
 
-                if bool(waypoint.lane_change & carla.LaneChange.Right) and not right_found:
-                    next_waypoint = waypoint.get_right_lane()
-                    if next_waypoint is not None and next_waypoint.lane_type == carla.LaneType.Driving:
-                        next_road_option = RoadOption.CHANGELANERIGHT
-                        next_segment = None
-                        try:
-                            next_segment = self._localize(next_waypoint.transform.location)
-                        except KeyError:
-                            print("Failed to localize! : ", next_waypoint.road_id, next_waypoint.lane_id)
-                        if next_segment is not None:
-                            self._graph.add_edge(
-                                self._id_map[segment['entryxyz']], next_segment[0], entry_waypoint=segment['entry'],
-                                exit_waypoint=self._graph.edges[next_segment[0], next_segment[1]]['entry_waypoint'],
-                                path=[], length=0, type=next_road_option, change_waypoint = waypoint)
-                            right_found = True
+                    if bool(waypoint.lane_change & carla.LaneChange.Right) and not right_found:
+                        next_waypoint = waypoint.get_right_lane()
+                        if next_waypoint is not None and next_waypoint.lane_type == carla.LaneType.Driving and \
+                            waypoint.road_id == next_waypoint.road_id:
+                            next_road_option = RoadOption.CHANGELANERIGHT
+                            try:
+                                next_segment = self._localize(next_waypoint.transform.location)
+                            except KeyError:
+                                print("Failed to localize! : ", next_waypoint.road_id, next_waypoint.lane_id)
+                            if next_segment is not None:
+                                self._graph.add_edge(
+                                    self._id_map[segment['entryxyz']], next_segment[0], entry_waypoint=segment['entry'],
+                                    exit_waypoint=self._graph.edges[next_segment[0], next_segment[1]]['entry_waypoint'],
+                                    path=[], length=0, type=next_road_option, change_waypoint = waypoint)
+                                right_found = True
 
-                if bool(waypoint.lane_change & carla.LaneChange.Left) and not left_found:
-                    next_waypoint = waypoint.get_left_lane()
-                    if next_waypoint is not None and next_waypoint.lane_type == carla.LaneType.Driving:
-                        next_road_option = RoadOption.CHANGELANELEFT
-                        try:
-                            next_segment = self._localize(next_waypoint.transform.location)
-                        except KeyError:
-                            print("Failed to localize! : ", next_waypoint.road_id, next_waypoint.lane_id)
-                        if next_segment is not None:
-                            self._graph.add_edge(
-                                self._id_map[segment['entryxyz']], next_segment[0], entry_waypoint=segment['entry'],
-                                exit_waypoint=self._graph.edges[next_segment[0], next_segment[1]]['entry_waypoint'],
-                                path=[], length=0, type=next_road_option, change_waypoint = waypoint)
-                            left_found = True
+                    if bool(waypoint.lane_change & carla.LaneChange.Left) and not left_found:
+                        next_waypoint = waypoint.get_left_lane()
+                        if next_waypoint is not None and next_waypoint.lane_type == carla.LaneType.Driving and \
+                            waypoint.road_id == next_waypoint.road_id:
+                            next_road_option = RoadOption.CHANGELANELEFT
+                            try:
+                                next_segment = self._localize(next_waypoint.transform.location)
+                            except KeyError:
+                                print("Failed to localize! : ", next_waypoint.road_id, next_waypoint.lane_id)
+                            if next_segment is not None:
+                                self._graph.add_edge(
+                                    self._id_map[segment['entryxyz']], next_segment[0], entry_waypoint=segment['entry'],
+                                    exit_waypoint=self._graph.edges[next_segment[0], next_segment[1]]['entry_waypoint'],
+                                    path=[], length=0, type=next_road_option, change_waypoint = waypoint)
+                                left_found = True
 
                 if left_found and right_found:
                     break
@@ -287,7 +289,7 @@ class GlobalRoutePlanner(object):
                 for waypoint in path[closest_index:]:
                     current_waypoint = waypoint
                     route_trace.append((current_waypoint, road_option))
-                    if waypoint.transform.location.distance(destination) < 2*resolution:
+                    if len(route)-i <= 2 and waypoint.transform.location.distance(destination) < 2*resolution:
                         break
 
         return route_trace
