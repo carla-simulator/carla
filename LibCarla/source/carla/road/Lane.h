@@ -77,7 +77,7 @@ namespace road {
     template <typename T>
     const T *GetInfo (const double s) const {
       if (_lane_section != nullptr) {
-        return _info.GetInfo<T>(s - GetDistance());
+        return _info.GetInfo<T>(s);
       }
 
       return nullptr;
@@ -118,6 +118,7 @@ namespace road {
     bool _level;
 
     LaneId _successor;
+
     LaneId _predecessor;
 
     std::vector<Lane *> _next_lanes;
