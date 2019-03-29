@@ -7,11 +7,12 @@
 #pragma once
 
 #include "carla/NonCopyable.h"
-#include <string>
-#include <vector>
 #include "carla/road/RoadTypes.h"
 #include "carla/road/general/Validity.h"
 #include "carla/road/signal/SignalDependency.h"
+
+#include <string>
+#include <vector>
 
 namespace carla {
 namespace road {
@@ -23,51 +24,50 @@ namespace signal {
     Signal(
         int32_t road_id,
         int32_t signal_id,
-        float s,
-        float t,
+        double s,
+        double t,
         std::string name,
         std::string dynamic,
         std::string orientation,
-        float zOffset,
+        double zOffset,
         std::string country,
         std::string type,
         std::string subtype,
-        float value,
+        double value,
         std::string unit,
-        float height,
-        float width,
+        double height,
+        double width,
         std::string text,
-        float hOffset,
-        float pitch,
-        float roll)
-        : _road_id(road_id),
-          _signal_id(signal_id),
-          _s(s),
-          _t(t),
-          _name(name),
-          _dynamic(dynamic),
-          _orientation(orientation),
-          _zOffset(zOffset),
-          _country(country),
-          _type(type),
-          _subtype(subtype),
-          _value(value),
-          _unit(unit),
-          _height(height),
-          _width(width),
-          _text(text),
-          _hOffset(hOffset),
-          _pitch(pitch),
-          _roll(roll) {
-            _validities = std::vector<general::Validity>();
-            _dependencies = std::vector<signal::SignalDependency>();
-          }
+        double hOffset,
+        double pitch,
+        double roll)
+      : _road_id(road_id),
+        _signal_id(signal_id),
+        _s(s),
+        _t(t),
+        _name(name),
+        _dynamic(dynamic),
+        _orientation(orientation),
+        _zOffset(zOffset),
+        _country(country),
+        _type(type),
+        _subtype(subtype),
+        _value(value),
+        _unit(unit),
+        _height(height),
+        _width(width),
+        _text(text),
+        _hOffset(hOffset),
+        _pitch(pitch),
+        _roll(roll) {}
 
-    void AddValidity(general::Validity &&validity);
+    void AddValidity(general::Validity &&validity) {
+      _validities.push_back(std::move(validity));
+    }
 
-    void AddDependency(signal::SignalDependency &&dependency);
-
-    std::string GimmeRandomStuff();
+    void AddDependency(signal::SignalDependency &&dependency) {
+      _dependencies.push_back(std::move(dependency));
+    }
 
   private:
 
@@ -77,31 +77,29 @@ namespace signal {
 #endif
     int32_t _road_id;
     int32_t _signal_id;
-    float _s;
-    float _t;
+    double _s;
+    double _t;
     std::string _name;
     std::string _dynamic;
     std::string _orientation;
-    float _zOffset;
+    double _zOffset;
     std::string _country;
     std::string _type;
     std::string _subtype;
-    float _value;
+    double _value;
     std::string _unit;
-    float _height;
-    float _width;
+    double _height;
+    double _width;
     std::string _text;
-    float _hOffset;
-    float _pitch;
-    float _roll;
+    double _hOffset;
+    double _pitch;
+    double _roll;
     std::vector<general::Validity> _validities;
     std::vector<signal::SignalDependency> _dependencies;
 #if defined(__clang__)
 #  pragma clang diagnostic pop
 #endif
   };
-
-
 
 } // object
 } // road

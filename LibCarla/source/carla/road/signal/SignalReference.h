@@ -22,8 +22,8 @@ namespace signal {
     SignalReference(
         int32_t road_id,
         uint32_t id,
-        float s,
-        float t,
+        double s,
+        double t,
         std::string orientation)
         : _road_id(road_id),
           _signal_id(id),
@@ -43,8 +43,8 @@ namespace signal {
 #endif
     int32_t _road_id;
     int32_t _signal_id;
-    float _s;
-    float _t;
+    double _s;
+    double _t;
     std::string _orientation;
     std::vector<general::Validity> _validities;
 #if defined(__clang__)
