@@ -74,7 +74,7 @@ class LocalPlanner(object):
         self._vehicle_controller = None
         self._global_plan = None
         # queue with tuples of (waypoint, RoadOption)
-        self._waypoints_queue = deque(maxlen=10000)
+        self._waypoints_queue = deque(maxlen=20000)
         self._buffer_size = 5
         self._waypoint_buffer = deque(maxlen=self._buffer_size)
 
