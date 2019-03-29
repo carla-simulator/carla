@@ -454,7 +454,7 @@ class MapImage(object):
 
     def draw_road_map(self, map_surface, carla_world, carla_map, world_to_pixel, world_to_pixel_width):
         map_surface.fill(COLOR_ALUMINIUM_4)
-        precision = 0.2
+        precision = 0.05
 
         def lane_marking_color_to_tango(lane_marking_color):
             tango_color = COLOR_BLACK
@@ -481,7 +481,7 @@ class MapImage(object):
                 pygame.draw.lines(surface, color, closed, points, width)
 
         def draw_broken_line (surface, color, closed, points, width):
-            broken_lines = [x for n, x in enumerate(zip(*(iter(points),) * 20)) if n % 2 == 0]
+            broken_lines = [x for n, x in enumerate(zip(*(iter(points),) * 20)) if n % 3 == 0]
             for line in broken_lines:
                 pygame.draw.lines(surface, color, closed, line, width)
 
@@ -626,7 +626,7 @@ class MapImage(object):
                 polygon = [world_to_pixel(x) for x in polygon]
 
                 if len(polygon) > 2:
-                    pygame.draw.polygon(map_surface, COLOR_ALUMINIUM_5, polygon, 2)
+                    pygame.draw.polygon(map_surface, COLOR_ALUMINIUM_5, polygon, 5)
                     pygame.draw.polygon(map_surface, COLOR_ALUMINIUM_5, polygon)
 
                 # Draw Lane Markings and Arrows
