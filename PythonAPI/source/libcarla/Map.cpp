@@ -8,7 +8,9 @@
 #include <carla/PythonUtil.h>
 #include <carla/client/Map.h>
 #include <carla/client/Waypoint.h>
-#include "carla/road/element/WaypointInformationTypes.h"
+#include <carla/road/element/WaypointInformationTypes.h>
+
+#include <ostream>
 #include <fstream>
 
 namespace carla {

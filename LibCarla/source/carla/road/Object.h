@@ -10,7 +10,6 @@
 #include "carla/road/RoadTypes.h"
 
 #include <string>
-#include <vector>
 
 namespace carla {
 namespace road {

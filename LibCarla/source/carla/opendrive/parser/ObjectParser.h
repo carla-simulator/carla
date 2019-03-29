@@ -8,7 +8,6 @@
 
 namespace pugi {
   class xml_document;
-  class xml_node;
 } // namespace pugi
 
 namespace carla {

@@ -44,14 +44,6 @@ namespace road {
       return _vec;
     }
 
-    /// Return a list of elements that have key
-    /// value GetDistance() <= s
-    auto GetSubset(const key_type k) const {
-      return MakeListView(
-          _vec.begin(),
-          std::lower_bound(_vec.begin(), _vec.end(), k, LessComp()));
-    }
-
     /// Return a reversed list of elements that have key
     /// value GetDistance() <= s
     auto GetReverseSubset(const key_type k) const {
