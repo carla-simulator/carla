@@ -273,8 +273,9 @@ namespace road {
       Road *road,
       const SectionId id,
       const double s) {
+    DEBUG_ASSERT(road != nullptr);
     carla::road::LaneSection &sec = road->_lane_sections.Emplace(id, s);
-    sec._road = const_cast<Road *>(road);
+    sec._road = road;
     return &sec;
   }
 
