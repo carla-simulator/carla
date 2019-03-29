@@ -233,6 +233,7 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
         const IdType RoadId = Successor.road_id;
         const int LaneId = Successor.lane_id;
 
+
     //   // Create an identifier of the current lane
         //const auto Identifier = std::make_pair(RoadId, LaneId);
 
@@ -249,17 +250,27 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
           //const double MaxDist = 0; // workarround while changing the WaypointAPI
 
           std::vector<Waypoint> Waypoints;
-          //Waypoints.emplace_back(Wp);
+          // if(RoutePlanner==nullptr) {
+          //   AlreadyVisited.emplace_back(Wp);
+          //   Waypoints.emplace_back(Wp);
+          // }
           Waypoints.emplace_back(Successor);
 
           double Dist = RoadAccuracy;
           while (Dist < MaxDist) {
-            Dist += RoadAccuracy;
             auto NewWaypointList = map_ptr->GetNext(Successor, Dist);
             for(Waypoint distWP : NewWaypointList) {
                 Waypoints.emplace_back(distWP);
+                AlreadyVisited.emplace_back(distWP);
             }
+            Dist += RoadAccuracy;
           }
+          auto NewWaypointList = map_ptr->GetNext(Successor, MaxDist);
+          // if((map_ptr->IsJunction(Successor.road_id) && NewWaypointList.size()>1) || (!map_ptr->IsJunction(Successor.road_id) && NewWaypointList.size()==1))
+          for(Waypoint distWP : NewWaypointList) {
+            Waypoints.emplace_back(NewWaypointList[0]);
+           }
+
           if(Waypoints.size() >= 2) {
 
             TArray<FVector> Positions;
@@ -273,7 +284,7 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
             }
 
             // If the route planner does not exist, create it
-            if (RoutePlanner == nullptr)
+            if (RoutePlanner == nullptr )
             {
               RoutePlanner = GetWorld()->SpawnActor<ARoutePlanner>();
               RoutePlanner->bIsIntersection = std::any_of(Successors.begin(), Successors.end(), [&map_ptr](auto w) {
@@ -285,8 +296,8 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
                   FVector(0.f, 0.f, TriggersHeight));
             }
 
-            RoutePlanner->AddRoute(1.f, Positions);
-            RoutePlanners.Add(RoutePlanner);
+            if(RoutePlanner!=nullptr) RoutePlanner->AddRoute(1.f, Positions);
+            if(RoutePlanner!=nullptr) RoutePlanners.Add(RoutePlanner);
           }
       }
     }
