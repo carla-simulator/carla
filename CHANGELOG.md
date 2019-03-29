@@ -1,4 +1,7 @@
 ## Latest Changes
+
+  * Basic agent integrated with global router
+  * Fixed local planner to avoid premature route pruning at path overlaps
   * Fixed global router behavior to be consistent with new Waypoint API
   * LaneInvasionSensor stabilization
     - Fix naming: Use 'LaneInvasionSensor'/'lane_invasion' instead of mixture with 'LaneDetector'/'lane_detector'
@@ -80,8 +83,6 @@
 
 ## CARLA 0.9.3
 
-  * Basic agent integrated with global router
-  * Fixed local planner to avoid premature route pruning at path overlaps
   * Upgraded to Unreal Engine 4.21
   * Upgraded Boost to 1.69.0
   * New Town04 (biggest so far), includes a freeway, new bridge and road barrier, a nicer landscape based on height-map, and new street props
