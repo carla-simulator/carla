@@ -7,9 +7,10 @@
 #pragma once
 
 #include "carla/NonCopyable.h"
+#include "carla/road/RoadTypes.h"
+
 #include <string>
 #include <vector>
-#include "carla/road/RoadTypes.h"
 
 namespace carla {
 namespace road {
@@ -17,24 +18,23 @@ namespace road {
   class Object : private MovableNonCopyable {
   public:
 
-    Object() {}
+    Object() = default;
 
   private:
 
-    ObjId _id;
+    ObjId _id = 0u;
     std::string _type;
     std::string _name;
-    float _s;
-    float _t;
-    float _zOffset;
-    float _validLength;
+    double _s = 0.0;
+    double _t = 0.0;
+    double _zOffset = 0.0;
+    double _validLength = 0.0;
     std::string _orientation;
-    float _lenght;
-    float _width;
-    float _hdg;
-    float _pitch;
-    float _roll;
-
+    double _lenght = 0.0;
+    double _width = 0.0;
+    double _hdg = 0.0;
+    double _pitch = 0.0;
+    double _roll = 0.0;
   };
 
 } // road
