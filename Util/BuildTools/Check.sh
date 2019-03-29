@@ -107,7 +107,7 @@ fi
 
 if { ${LIBCARLA_RELEASE} || ${LIBCARLA_DEBUG}; }; then
 
-  CONTENT_TAG=0.1.2
+  CONTENT_TAG=0.1.3
 
   mkdir -p ${LIBCARLA_TEST_CONTENT_FOLDER}
   pushd "${LIBCARLA_TEST_CONTENT_FOLDER}" >/dev/null
