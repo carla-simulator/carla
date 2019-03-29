@@ -60,7 +60,7 @@ namespace road {
 
   // called from profiles parser
   void MapBuilder::AddRoadElevationProfile(
-      Road* road,
+      Road *road,
       const double s,
       const double a,
       const double b,
@@ -70,23 +70,6 @@ namespace road {
     auto elevation = std::make_unique<RoadInfoElevation>(s, a, b, c, d);
     _temp_road_info_container[road].emplace_back(std::move(elevation));
   }
-
-  // void MapBuilder::AddRoadLateralSuperElevation(
-  //     Road* road,
-  //     const double s,
-  //     const double a,
-  //     const double b,
-  //     const double c,
-  //     const double d) {}
-
-  // void MapBuilder::AddRoadLateralCrossfall(
-  //     Road* road,
-  //     const double s,
-  //     const double a,
-  //     const double b,
-  //     const double c,
-  //     const double d,
-  //     const std::string side) {}
 
   // called from lane parser
   void MapBuilder::CreateLaneAccess(
@@ -203,9 +186,9 @@ namespace road {
     DEBUG_ASSERT(lane != nullptr);
     auto it = MakeRoadInfoIterator<RoadInfoMarkRecord>(_temp_lane_info_container[lane]);
     for (; !it.IsAtEnd(); ++it) {
-      if(it->GetRoadMarkId() == road_mark_id) {
+      if (it->GetRoadMarkId() == road_mark_id) {
         it->GetLines().emplace_back(std::make_unique<RoadInfoMarkTypeLine>(s, road_mark_id, length, space,
-        tOffset, rule, width));
+            tOffset, rule, width));
         break;
       }
     }
@@ -254,7 +237,8 @@ namespace road {
       const uint32_t signal_id,
       const int32_t from_lane,
       const int32_t to_lane) {
-    _map_data.GetRoad(road_id).GetSignal(signal_id)->AddValidity(general::Validity(signal_id, from_lane, to_lane));
+    _map_data.GetRoad(road_id).GetSignal(signal_id)->AddValidity(general::Validity(signal_id, from_lane,
+        to_lane));
   }
 
   // build road objects
@@ -509,17 +493,19 @@ namespace road {
 
     // get the lane section
     LaneSection *section;
-    if (from_start)
+    if (from_start) {
       section = road.GetStartSection(lane_id);
-    else
+    } else {
       section = road.GetEndSection(lane_id);
+    }
 
     // get the lane
     DEBUG_ASSERT(section != nullptr);
     return section->GetLane(lane_id);
   }
 
-  // return a list of pointers to all lanes from a lane (using road and junction info)
+  // return a list of pointers to all lanes from a lane (using road and junction
+  // info)
   std::vector<Lane *> MapBuilder::GetLaneNext(RoadId road_id, int section_id, LaneId lane_id) {
     std::vector<Lane *> result;
 
@@ -551,7 +537,8 @@ namespace road {
     double s = section.GetDistance();
 
     // check if we are in a lane section in the middle
-    if ((lane_id > 0 && s > 0) || (lane_id <= 0 && road._lane_sections.upper_bound(s) != road._lane_sections.end())) {
+    if ((lane_id > 0 && s > 0) ||
+        (lane_id <= 0 && road._lane_sections.upper_bound(s) != road._lane_sections.end())) {
       // check if lane has a next link (if not, it deads in the middle section)
       if (next != 0 || (lane_id == 0 && next == 0)) {
         // change to next / prev section
@@ -578,19 +565,24 @@ namespace road {
     return result;
   }
 
- std::vector<std::pair<RoadId, LaneId>> MapBuilder::GetJunctionLanes(RoadId junction_id, RoadId road_id, LaneId lane_id) {
+  std::vector<std::pair<RoadId, LaneId>> MapBuilder::GetJunctionLanes(
+      RoadId junction_id,
+      RoadId road_id,
+      LaneId lane_id) {
     std::vector<std::pair<RoadId, LaneId>> result;
 
     // get the junction
     Junction *junction = _map_data.GetJunction(junction_id);
-    if (junction == nullptr)
+    if (junction == nullptr) {
       return result;
+    }
 
     // check all connections
     for (auto con : junction->_connections) {
       // only connections for our road
       if (con.second.incoming_road == road_id) {
-        // for center lane it is always next lane id 0, we don't need to search because it is not in the junction
+        // for center lane it is always next lane id 0, we don't need to search
+        // because it is not in the junction
         if (lane_id == 0) {
           result.push_back(std::make_pair(con.second.connecting_road, 0));
         } else {
@@ -611,7 +603,6 @@ namespace road {
 
   // assign pointers to the next lanes
   void MapBuilder::CreatePointersBetweenRoadSegments(void) {
-
     // process each lane to define its nexts
     for (auto &road : _map_data._roads) {
       for (auto &section : road.second._lane_sections) {
@@ -640,7 +631,8 @@ namespace road {
             DEBUG_ASSERT(next_lane != nullptr);
             // avoid same road
             if (next_lane->GetRoad() != &road.second) {
-              if (std::find(road.second._nexts.begin(), road.second._nexts.end(), next_lane->GetRoad()) == road.second._nexts.end()) {
+              if (std::find(road.second._nexts.begin(), road.second._nexts.end(),
+                  next_lane->GetRoad()) == road.second._nexts.end()) {
                 road.second._nexts.push_back(next_lane->GetRoad());
               }
             }
@@ -651,7 +643,8 @@ namespace road {
             DEBUG_ASSERT(prev_lane != nullptr);
             // avoid same road
             if (prev_lane->GetRoad() != &road.second) {
-              if (std::find(road.second._prevs.begin(), road.second._prevs.end(), prev_lane->GetRoad()) == road.second._prevs.end()) {
+              if (std::find(road.second._prevs.begin(), road.second._prevs.end(),
+                  prev_lane->GetRoad()) == road.second._prevs.end()) {
                 road.second._prevs.push_back(prev_lane->GetRoad());
               }
             }
@@ -661,5 +654,6 @@ namespace road {
       }
     }
   }
+
 } // namespace road
 } // namespace carla
