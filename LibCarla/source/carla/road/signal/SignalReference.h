@@ -25,15 +25,15 @@ namespace signal {
         double s,
         double t,
         std::string orientation)
-        : _road_id(road_id),
-          _signal_id(id),
-          _s(s),
-          _t(t),
-          _orientation(orientation) {
-            _validities = std::vector<general::Validity>();
-          }
+      : _road_id(road_id),
+        _signal_id(id),
+        _s(s),
+        _t(t),
+        _orientation(orientation) {}
 
-    void AddValidity(general::Validity &&validity);
+    void AddValidity(general::Validity &&validity) {
+      _validities.push_back(std::move(validity));
+    }
 
   private:
 
@@ -51,8 +51,6 @@ namespace signal {
 #  pragma clang diagnostic pop
 #endif
   };
-
-
 
 } // object
 } // road
