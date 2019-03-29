@@ -80,7 +80,8 @@ void test_geometry(const pugi::xml_document &xml, boost::optional<Map>& map)
 }
 
 // Road test
-auto get_total_road_marks (pugi::xml_object_range<pugi::xml_named_node_iterator> &lane_nodes, LaneSection& lane_section, float s) {
+auto get_total_road_marks (pugi::xml_object_range<pugi::xml_named_node_iterator> &lane_nodes, LaneSection& lane_section, float) {
+  constexpr auto error = 1e-5;
   size_t total_road_mark = 0;
   size_t total_road_mark_parser = 0;
   for (pugi::xml_node lane_node : lane_nodes) {
@@ -88,15 +89,25 @@ auto get_total_road_marks (pugi::xml_object_range<pugi::xml_named_node_iterator>
     auto road_mark_nodes = lane_node.children("roadMark");
     total_road_mark_parser += std::distance(road_mark_nodes.begin(), road_mark_nodes.end());
 
-    int lane_id = lane_node.attribute("id").as_int();
+    const int lane_id = lane_node.attribute("id").as_int();
     Lane* lane = nullptr;
     lane = lane_section.GetLane(lane_id);
+    EXPECT_NE(lane, nullptr);
 
+    // <roadMark sOffset="0.0000000000000000e+0" type="none" material="standard" color="white" laneChange="none"/>
     for (pugi::xml_node road_mark_node : road_mark_nodes) {
-      float s_offset = road_mark_node.attribute("sOffset").as_float();
-      const auto road_mark = lane->GetInfo<RoadInfoMarkRecord>(s + s_offset);
-      if (road_mark != nullptr)
+      const auto s_offset = road_mark_node.attribute("sOffset").as_double();
+      const auto type = road_mark_node.attribute("type").as_string();
+      const auto material = road_mark_node.attribute("material").as_string();
+      const auto color = road_mark_node.attribute("color").as_string();
+      const auto road_mark = lane->GetInfo<RoadInfoMarkRecord>(lane->GetDistance() + s_offset);
+      if (road_mark != nullptr) {
+        EXPECT_NEAR(lane->GetDistance() + s_offset, road_mark->GetDistance(), error);
+        EXPECT_EQ(type, road_mark->GetType());
+        EXPECT_EQ(material, road_mark->GetMaterial());
+        EXPECT_EQ(color, road_mark->GetColor());
         ++total_road_mark;
+      }
     }
   }
   return std::make_pair(total_road_mark, total_road_mark_parser);
