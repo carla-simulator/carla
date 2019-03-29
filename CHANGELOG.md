@@ -1,5 +1,8 @@
 ## Latest Changes
 
+  * Basic agent integrated with global router
+  * Fixed local planner to avoid premature route pruning at path overlaps
+  * Fixed global router behavior to be consistent with new Waypoint API
   * LaneInvasionSensor stabilization
     - Fix naming: Use 'LaneInvasionSensor'/'lane_invasion' instead of mixture with 'LaneDetector'/'lane_detector'
     - Create server-side LaneInvasionSensor (to be able to access it via ROS bridge)
