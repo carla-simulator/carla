@@ -39,10 +39,12 @@ namespace road {
     CreatePointersBetweenRoadSegments();
 
     for (auto &&info : _temp_road_info_container) {
+      DEBUG_ASSERT(info.first != nullptr);
       info.first->_info = InformationSet(std::move(info.second));
     }
 
     for (auto &&info : _temp_lane_info_container) {
+      DEBUG_ASSERT(info.first != nullptr);
       info.first->_info = InformationSet(std::move(info.second));
     }
 
@@ -64,7 +66,7 @@ namespace road {
       const double b,
       const double c,
       const double d) {
-
+    DEBUG_ASSERT(road != nullptr);
     auto elevation = std::make_unique<RoadInfoElevation>(s, a, b, c, d);
     _temp_road_info_container[road].emplace_back(std::move(elevation));
   }
@@ -91,6 +93,7 @@ namespace road {
       Lane *lane,
       const double s,
       const std::string restriction) {
+    DEBUG_ASSERT(lane != nullptr);
     _temp_lane_info_container[lane].emplace_back(std::make_unique<RoadInfoLaneAccess>(s, restriction));
   }
 
@@ -101,6 +104,7 @@ namespace road {
       const double b,
       const double c,
       const double d) {
+    DEBUG_ASSERT(lane != nullptr);
     _temp_lane_info_container[lane].emplace_back(std::make_unique<RoadInfoLaneBorder>(s, a, b, c, d));
   }
 
@@ -109,6 +113,7 @@ namespace road {
       const double s,
       const double inner,
       const double outer) {
+    DEBUG_ASSERT(lane != nullptr);
     _temp_lane_info_container[lane].emplace_back(std::make_unique<RoadInfoLaneHeight>(s, inner, outer));
   }
 
@@ -118,6 +123,7 @@ namespace road {
       const std::string surface,
       const double friction,
       const double roughness) {
+    DEBUG_ASSERT(lane != nullptr);
     _temp_lane_info_container[lane].emplace_back(std::make_unique<RoadInfoLaneMaterial>(s, surface, friction,
         roughness));
   }
@@ -126,6 +132,7 @@ namespace road {
       Lane *lane,
       const double s,
       const std::string value) {
+    DEBUG_ASSERT(lane != nullptr);
     _temp_lane_info_container[lane].emplace_back(std::make_unique<RoadInfoLaneRule>(s, value));
   }
 
@@ -136,6 +143,7 @@ namespace road {
       const double back,
       const double left,
       const double right) {
+    DEBUG_ASSERT(lane != nullptr);
     _temp_lane_info_container[lane].emplace_back(std::make_unique<RoadInfoLaneVisibility>(s, forward, back,
         left, right));
   }
@@ -147,6 +155,7 @@ namespace road {
       const double b,
       const double c,
       const double d) {
+    DEBUG_ASSERT(lane != nullptr);
     _temp_lane_info_container[lane].emplace_back(std::make_unique<RoadInfoLaneWidth>(s, a, b, c, d));
   }
 
@@ -163,6 +172,7 @@ namespace road {
       const double height,
       const std::string type_name,
       const double type_width) {
+    DEBUG_ASSERT(lane != nullptr);
     RoadInfoMarkRecord::LaneChange lc;
 
     StringUtil::ToLower(lane_change);
@@ -190,6 +200,7 @@ namespace road {
       const double s,
       const std::string rule,
       const double width) {
+    DEBUG_ASSERT(lane != nullptr);
     auto it = MakeRoadInfoIterator<RoadInfoMarkRecord>(_temp_lane_info_container[lane]);
     for (; !it.IsAtEnd(); ++it) {
       if(it->GetRoadMarkId() == road_mark_id) {
@@ -206,6 +217,7 @@ namespace road {
       const double s,
       const double max,
       const std::string /*unit*/) {
+    DEBUG_ASSERT(lane != nullptr);
     _temp_lane_info_container[lane].emplace_back(std::make_unique<RoadInfoSpeed>(s, max));
   }
 
@@ -229,8 +241,9 @@ namespace road {
       const double hOffset,
       const double pitch,
       const double roll) {
-
-    _map_data.GetRoad(road_id).getSignals()->emplace(signal_id,
+    auto signals = _map_data.GetRoad(road_id).getSignals();
+    DEBUG_ASSERT(signals != nullptr);
+    signals->emplace(signal_id,
         signal::Signal(road_id, signal_id, s, t, name, dynamic,
         orientation, zOffset, country, type, subtype, value, unit, height, width,
         text, hOffset, pitch, roll));
@@ -286,6 +299,7 @@ namespace road {
       const bool lane_level,
       const int32_t predecessor,
       const int32_t successor) {
+    DEBUG_ASSERT(section != nullptr);
 
     // add the lane
     auto *lane = &((section->_lanes.emplace(lane_id, Lane()).first)->second);
@@ -308,6 +322,7 @@ namespace road {
       const double y,
       const double hdg,
       const double length) {
+    DEBUG_ASSERT(road != nullptr);
 
     auto line_geometry = std::make_unique<GeometryLine>(s,
         length,
@@ -324,6 +339,7 @@ namespace road {
       const std::string /*type*/,
       const double max,
       const std::string /*unit*/) {
+    DEBUG_ASSERT(road != nullptr);
     _temp_road_info_container[road].emplace_back(std::make_unique<RoadInfoSpeed>(s, max));
   }
 
@@ -334,6 +350,7 @@ namespace road {
       const double b,
       const double c,
       const double d) {
+    DEBUG_ASSERT(road != nullptr);
     _temp_road_info_container[road].emplace_back(std::make_unique<RoadInfoLaneOffset>(s, a, b, c, d));
   }
 
@@ -345,6 +362,7 @@ namespace road {
       const double hdg,
       const double length,
       const double curvature) {
+    DEBUG_ASSERT(road != nullptr);
 
     auto arc_geometry = std::make_unique<GeometryArc>(s,
         length,
@@ -364,7 +382,9 @@ namespace road {
       const double /*hdg*/,
       const double /*length*/,
       const double /*curvStart*/,
-      const double /*curvEnd*/) {}
+      const double /*curvEnd*/) {
+    throw_exception(std::runtime_error("geometry spiral not supported"));
+  }
 
   void MapBuilder::AddRoadGeometryPoly3(
       carla::road::Road * /*road*/,
@@ -376,7 +396,9 @@ namespace road {
       const double /*a*/,
       const double /*b*/,
       const double /*c*/,
-      const double /*d*/) {}
+      const double /*d*/) {
+    throw_exception(std::runtime_error("geometry poly3 not supported"));
+  }
 
   void MapBuilder::AddRoadGeometryParamPoly3(
       carla::road::Road * /*road*/,
@@ -393,7 +415,9 @@ namespace road {
       const double /*bV*/,
       const double /*cV*/,
       const double /*dV*/,
-      const std::string /*p_range*/) {}
+      const std::string /*p_range*/) {
+    throw_exception(std::runtime_error("geometry poly3 not supported"));
+  }
 
   void MapBuilder::AddJunction(const int32_t id, const std::string name) {
     _map_data.GetJunctions().emplace(id, Junction(id, name));
@@ -404,6 +428,7 @@ namespace road {
       const int32_t connection_id,
       const int32_t incoming_road,
       const int32_t connecting_road) {
+    DEBUG_ASSERT(_map_data.GetJunction(junction_id) != nullptr);
     _map_data.GetJunction(junction_id)->GetConnections().emplace(connection_id,
         Junction::Connection(connection_id, incoming_road, connecting_road));
   }
@@ -413,6 +438,7 @@ namespace road {
       const int32_t connection_id,
       const int32_t from,
       const int32_t to) {
+    DEBUG_ASSERT(_map_data.GetJunction(junction_id) != nullptr);
     _map_data.GetJunction(junction_id)->GetConnection(connection_id)->AddLaneLink(from, to);
   }
 
@@ -421,6 +447,7 @@ namespace road {
       const uint32_t signal_id,
       const int32_t from_lane,
       const int32_t to_lane) {
+    DEBUG_ASSERT(_map_data.GetRoad(road_id).GetSignal(signal_id) != nullptr);
     _map_data.GetRoad(road_id).GetSignal(signal_id)->AddValidity(general::Validity(signal_id, from_lane,
         to_lane));
   }
@@ -430,6 +457,7 @@ namespace road {
       const uint32_t signal_reference_id,
       const int32_t from_lane,
       const int32_t to_lane) {
+    DEBUG_ASSERT(_map_data.GetRoad(road_id).GetSignalRef(signal_reference_id) != nullptr);
     _map_data.GetRoad(road_id).GetSignalRef(signal_reference_id)->AddValidity(general::Validity(
         signal_reference_id, from_lane, to_lane));
   }
@@ -440,6 +468,7 @@ namespace road {
       const double s_position,
       const double t_position,
       const std::string signal_reference_orientation) {
+    DEBUG_ASSERT(_map_data.GetRoad(road_id).getSignalReferences() != nullptr);
     _map_data.GetRoad(road_id).getSignalReferences()->emplace(signal_reference_id,
         signal::SignalReference(road_id, signal_reference_id, s_position, t_position,
         signal_reference_orientation));
@@ -450,6 +479,7 @@ namespace road {
       const uint32_t signal_id,
       const uint32_t dependency_id,
       const std::string dependency_type) {
+    DEBUG_ASSERT(_map_data.GetRoad(road_id).GetSignal(signal_id) != nullptr);
     _map_data.GetRoad(road_id).GetSignal(signal_id)->AddDependency(signal::SignalDependency(
         road_id,
         signal_id,
@@ -485,6 +515,7 @@ namespace road {
       section = road.GetEndSection(lane_id);
 
     // get the lane
+    DEBUG_ASSERT(section != nullptr);
     return section->GetLane(lane_id);
   }
 
@@ -502,6 +533,7 @@ namespace road {
 
     // get the lane
     Lane *lane = section.GetLane(lane_id);
+    DEBUG_ASSERT(lane != nullptr);
 
     // successor and predecessor (road and lane)
     LaneId next;
@@ -605,6 +637,7 @@ namespace road {
 
           // add next roads
           for (auto next_lane : lane.second._next_lanes) {
+            DEBUG_ASSERT(next_lane != nullptr);
             // avoid same road
             if (next_lane->GetRoad() != &road.second) {
               if (std::find(road.second._nexts.begin(), road.second._nexts.end(), next_lane->GetRoad()) == road.second._nexts.end()) {
@@ -615,6 +648,7 @@ namespace road {
 
           // add prev roads
           for (auto prev_lane : lane.second._prev_lanes) {
+            DEBUG_ASSERT(prev_lane != nullptr);
             // avoid same road
             if (prev_lane->GetRoad() != &road.second) {
               if (std::find(road.second._prevs.begin(), road.second._prevs.end(), prev_lane->GetRoad()) == road.second._prevs.end()) {
