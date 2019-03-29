@@ -5,12 +5,9 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
+#include "Carla/OpenDriveActor.h"
 
-
-#include "OpenDriveActor.h"
-
-#include "Util/OpenDrive.h"
-#include <carla/road/element/Types.h>
+#include "Carla/Util/OpenDrive.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/geom/Math.h>
@@ -179,32 +176,23 @@ void AOpenDriveActor::BuildRoutes()
 
 void AOpenDriveActor::BuildRoutes(FString MapName)
 {
-  using CarlaMath = carla::geom::Math;
-  using IdType = carla::road::element::id_type;
   using Waypoint = carla::road::element::Waypoint;
-  // using WaypointGen = carla::road::WaypointGenerator;
-  // using TrafficGroup = carla::opendrive::types::TrafficLightGroup;
-  // using TrafficLight = carla::opendrive::types::TrafficLight;
-  // using TrafficBoxComponent = carla::opendrive::types::BoxComponent;
-  // using TrafficSign = carla::opendrive::types::TrafficSign;
-
-  std::string ParseError;
 
   // As the OpenDrive file has the same name as level, build the path to the
   // xodr file using the lavel name and the game content directory.
   const FString XodrContent = FOpenDrive::Load(MapName);
 
-  auto map_ptr = carla::opendrive::OpenDriveParser::Load(TCHAR_TO_UTF8(*XodrContent));
+  auto map = carla::opendrive::OpenDriveParser::Load(carla::rpc::FromFString(XodrContent));
 
-  if (ParseError.size())
+  if (!map.has_value())
   {
-    UE_LOG(LogCarla, Error, TEXT("OpenDrive parsing error: '%s'."), *carla::rpc::ToFString(ParseError));
+    UE_LOG(LogCarla, Error, TEXT("Failed to parse OpenDrive file."));
     return;
   }
 
   // List with waypoints, each one at the end of each lane of the map
   const std::vector<std::pair<Waypoint, Waypoint>> Topology =
-      map_ptr->GenerateTopology();
+      map->GenerateTopology();
 
   // Since we are going to iterate all the successors of all the lanes, we need
   // a vector to store the already visited lanes. Lanes can be successors of
@@ -221,7 +209,7 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
   for (auto &&Wp : WpLaneStartList)
   {
 
-    std::vector<Waypoint> Successors = map_ptr->GetSuccessors(Wp);
+    std::vector<Waypoint> Successors = map->GetSuccessors(Wp);
 
     // // The RoutePlanner will be created only if some route must be added to it
     // // so no one will be created unnecessarily
@@ -230,8 +218,8 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
     // // Fill the RoutePlanner with all the needed roads
     for (auto &&Successor : Successors)
      {
-        const IdType RoadId = Successor.road_id;
-        const int LaneId = Successor.lane_id;
+        const auto RoadId = Successor.road_id;
+        const auto LaneId = Successor.lane_id;
 
 
     //   // Create an identifier of the current lane
@@ -246,7 +234,7 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
           // Add the identifier as visited
           AlreadyVisited.emplace_back(Successor);
 
-          const double MaxDist = map_ptr->GetLane(Successor).GetLength();
+          const double MaxDist = map->GetLane(Successor).GetLength();
           //const double MaxDist = 0; // workarround while changing the WaypointAPI
 
           std::vector<Waypoint> Waypoints;
@@ -258,15 +246,15 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
 
           double Dist = RoadAccuracy;
           while (Dist < MaxDist) {
-            auto NewWaypointList = map_ptr->GetNext(Successor, Dist);
+            auto NewWaypointList = map->GetNext(Successor, Dist);
             for(Waypoint distWP : NewWaypointList) {
                 Waypoints.emplace_back(distWP);
                 AlreadyVisited.emplace_back(distWP);
             }
             Dist += RoadAccuracy;
           }
-          auto NewWaypointList = map_ptr->GetNext(Successor, MaxDist);
-          // if((map_ptr->IsJunction(Successor.road_id) && NewWaypointList.size()>1) || (!map_ptr->IsJunction(Successor.road_id) && NewWaypointList.size()==1))
+          auto NewWaypointList = map->GetNext(Successor, MaxDist);
+          // if((map->IsJunction(Successor.road_id) && NewWaypointList.size()>1) || (!map->IsJunction(Successor.road_id) && NewWaypointList.size()==1))
           for(Waypoint distWP : NewWaypointList) {
             Waypoints.emplace_back(NewWaypointList[0]);
            }
@@ -279,7 +267,7 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
             {
               // Add the trigger height because the z position of the points does not
               // influence on the driver AI and is easy to visualize in the editor
-              Positions.Add(map_ptr->ComputeTransform(Waypoints[i]).location +
+              Positions.Add(map->ComputeTransform(Waypoints[i]).location +
                   FVector(0.f, 0.f, TriggersHeight));
             }
 
@@ -287,12 +275,12 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
             if (RoutePlanner == nullptr )
             {
               RoutePlanner = GetWorld()->SpawnActor<ARoutePlanner>();
-              RoutePlanner->bIsIntersection = std::any_of(Successors.begin(), Successors.end(), [&map_ptr](auto w) {
-                return map_ptr->IsJunction(w.road_id);
+              RoutePlanner->bIsIntersection = std::any_of(Successors.begin(), Successors.end(), [&map](auto w) {
+                return map->IsJunction(w.road_id);
               });
               RoutePlanner->SetBoxExtent(FVector(70.f, 70.f, 50.f));
-              RoutePlanner->SetActorRotation(map_ptr->ComputeTransform(Successor).rotation);
-              RoutePlanner->SetActorLocation(map_ptr->ComputeTransform(Successor).location +
+              RoutePlanner->SetActorRotation(map->ComputeTransform(Successor).rotation);
+              RoutePlanner->SetActorLocation(map->ComputeTransform(Successor).location +
                   FVector(0.f, 0.f, TriggersHeight));
             }
 
