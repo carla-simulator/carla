@@ -614,6 +614,7 @@ namespace road {
           // add to each lane found, this as its predecessor
           for (auto next_lane : lane.second._next_lanes) {
             // add as previous
+            DEBUG_ASSERT(next_lane != nullptr);
             next_lane->_prev_lanes.push_back(&lane.second);
           }
 
