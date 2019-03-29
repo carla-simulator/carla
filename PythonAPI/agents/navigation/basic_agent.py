@@ -10,18 +10,12 @@
 waypoints and avoiding other vehicles.
 The agent also responds to traffic lights. """
 
-import math
-
-import numpy as np
 
 import carla
 from agents.navigation.agent import Agent, AgentState
 from agents.navigation.local_planner import LocalPlanner
-from agents.navigation.local_planner import RoadOption
 from agents.navigation.global_route_planner import GlobalRoutePlanner
 from agents.navigation.global_route_planner_dao import GlobalRoutePlannerDAO
-from agents.tools.misc import vector
-
 
 class BasicAgent(Agent):
     """
