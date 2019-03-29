@@ -6,11 +6,8 @@
 
 #pragma once
 
-#include "carla/road/RoadTypes.h"
-
 namespace pugi {
   class xml_document;
-  class xml_node;
 } // namespace pugi
 
 namespace carla {
@@ -23,20 +20,11 @@ namespace opendrive {
 namespace parser {
 
   class LaneParser {
-  private:
-
-    static void ParseLanes(
-        road::RoadId road_id,
-        double s,
-        const pugi::xml_node &parent_node,
-        carla::road::MapBuilder &map_builder);
-
   public:
 
     static void Parse(
         const pugi::xml_document &xml,
         carla::road::MapBuilder &map_builder);
-
   };
 
 } // namespace parser

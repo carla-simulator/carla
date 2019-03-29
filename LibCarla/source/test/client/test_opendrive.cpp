@@ -21,25 +21,7 @@
 #include <carla/road/element/RoadInfoVisitor.h>
 
 #include <fstream>
-#include <ostream>
-#include <random>
-#include <sstream>
 #include <string>
-
-namespace carla {
-namespace road {
-namespace element {
-
-  // static std::ostream &operator<<(std::ostream &out, Waypoint waypoint) {
-  //   out << "Waypoint{road_id=" << waypoint.road_id
-  //       << ", lane_id=" << waypoint.lane_id
-  //       << ", s=" << waypoint.s << '}';
-  //   return out;
-  // }
-
-} // namespace element
-} // namespace road
-} // namespace carla
 
 using namespace carla::road;
 using namespace carla::road::element;

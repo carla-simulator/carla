@@ -14,7 +14,7 @@ namespace carla {
 namespace opendrive {
 namespace parser {
 
-  void LaneParser::ParseLanes(
+  static void ParseLanes(
       road::RoadId road_id,
       double s,
       const pugi::xml_node &parent_node,
