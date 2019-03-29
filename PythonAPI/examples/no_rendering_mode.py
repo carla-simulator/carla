@@ -129,6 +129,7 @@ COLOR_ALUMINIUM_1 = pygame.Color(211, 215, 207)
 COLOR_ALUMINIUM_2 = pygame.Color(186, 189, 182)
 COLOR_ALUMINIUM_3 = pygame.Color(136, 138, 133)
 COLOR_ALUMINIUM_4 = pygame.Color(85, 87, 83)
+COLOR_ALUMINIUM_4_5 = pygame.Color(66, 62, 64)
 COLOR_ALUMINIUM_5 = pygame.Color(46, 52, 54)
 
 
@@ -628,6 +629,61 @@ class MapImage(object):
                 if len(polygon) > 2:
                     pygame.draw.polygon(map_surface, COLOR_ALUMINIUM_5, polygon, 5)
                     pygame.draw.polygon(map_surface, COLOR_ALUMINIUM_5, polygon)
+
+                # Draw Shoulders and Parkings
+                PARKING_COLOR = COLOR_ALUMINIUM_4_5
+                SHOULDER_COLOR = COLOR_ALUMINIUM_5
+
+                final_color = SHOULDER_COLOR
+
+                # Draw Right
+                shoulder = []
+                for w in waypoints:
+                  r = w.get_right_lane()
+                  if r is not None and (r.lane_type == carla.LaneType.Shoulder or r.lane_type == carla.LaneType.Parking):
+                    if r.lane_type == carla.LaneType.Parking:
+                        final_color = PARKING_COLOR
+                    shoulder.append(r)
+
+                shoulder_left_side = [lateral_shift(w.transform, -w.lane_width * 0.5) for w in shoulder]
+                shoulder_right_side = [lateral_shift(w.transform, w.lane_width * 0.5) for w in shoulder]
+
+                polygon = shoulder_left_side + [x for x in reversed(shoulder_right_side)]
+                polygon = [world_to_pixel(x) for x in polygon]
+
+                if len(polygon) > 2:
+                    pygame.draw.polygon(map_surface, final_color, polygon, 5)
+                    pygame.draw.polygon(map_surface, final_color, polygon)
+
+
+                draw_lane_marking(
+                    map_surface,
+                    shoulder,
+                    False)
+
+                # Draw Left
+                shoulder = []
+                for w in waypoints:
+                  r = w.get_left_lane()
+                  if r is not None and (r.lane_type == carla.LaneType.Shoulder or r.lane_type == carla.LaneType.Parking):
+                    if r.lane_type == carla.LaneType.Parking:
+                        final_color = PARKING_COLOR
+                    shoulder.append(r)
+
+                shoulder_left_side = [lateral_shift(w.transform, -w.lane_width * 0.5) for w in shoulder]
+                shoulder_right_side = [lateral_shift(w.transform, w.lane_width * 0.5) for w in shoulder]
+
+                polygon = shoulder_left_side + [x for x in reversed(shoulder_right_side)]
+                polygon = [world_to_pixel(x) for x in polygon]
+
+                if len(polygon) > 2:
+                    pygame.draw.polygon(map_surface, final_color, polygon, 5)
+                    pygame.draw.polygon(map_surface, final_color, polygon)
+
+                draw_lane_marking(
+                    map_surface,
+                    shoulder,
+                    True)
 
                 # Draw Lane Markings and Arrows
                 if not waypoint.is_intersection:
