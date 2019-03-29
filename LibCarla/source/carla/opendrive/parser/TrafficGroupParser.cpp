@@ -38,7 +38,7 @@ namespace parser {
                 uint16_t redTime = trafficgroup_node.attribute("redTime").as_int(0);
                 uint16_t yellowTime = trafficgroup_node.attribute("yellowTime").as_int(0);
                 uint16_t greenTime = trafficgroup_node.attribute("greenTime").as_int(0);
-                logging::log("Found TrafficGroup with ID: ", id, "Times (", redTime, ", ", yellowTime, ", ", greenTime, ")");
+                log_debug("Found TrafficGroup with ID: ", id, "Times (", redTime, ", ", yellowTime, ", ", greenTime, ")");
               }
               //map_builder.AddTrafficGroup(id, redTime, yellowTime, greenTime);
       }

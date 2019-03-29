@@ -31,7 +31,7 @@ namespace parser {
                     validity_node = validity_node.next_sibling("validity")) {
                       const int from_lane = validity_node.attribute("fromLane").as_int();
                       const int to_lane = validity_node.attribute("toLane").as_int();
-                      logging::log("Added validity to signal ", objectID, ":", from_lane, to_lane);
+                      log_debug("Added validity to signal ", objectID, ":", from_lane, to_lane);
                       function(objectID, from_lane, to_lane);
                     }
   }
@@ -68,7 +68,7 @@ namespace parser {
                   const double roll = object_node.attribute("roll").as_double();
                   /*map_builder.AddObjectInRoad(road_id, type, name, object_id, s_position, t_position, z_offset, valid_length,
                     orientation, lenght, width, radius, height, hdg, pitch, roll);*/
-                  logging::log("AddObjectInRoad", road_id, type, name, object_id, s_position, t_position, z_offset, valid_length,
+                  log_debug("AddObjectInRoad", road_id, type, name, object_id, s_position, t_position, z_offset, valid_length,
                     orientation, lenght, width, radius, height, hdg, pitch, roll);
                   for (pugi::xml_node repeat_node = object_node.child("repeat");
                       repeat_node;
@@ -87,7 +87,7 @@ namespace parser {
                             t_start_rep, t_end_rep, width_start_rep, width_end_rep, height_start_rep, z_offset_start_rep,
                               z_offset_end_rep);
                         */
-                        logging::log("AddRepeatRecordInObject", object_id, s_position_rep, lenght_rep, distance_rep,
+                        log_debug("AddRepeatRecordInObject", object_id, s_position_rep, lenght_rep, distance_rep,
                             t_start_rep, t_end_rep, width_start_rep, width_end_rep, height_start_rep, z_offset_start_rep,
                               z_offset_end_rep);
 
@@ -104,7 +104,7 @@ namespace parser {
                         map_builder.AddCornerRoadToObject(object_id, s_position_corner_road, t_position_corner_road,
                           dz_position_corner_road, height_position_corner_road);
                         */
-                        logging::log("AddCornerRoadToObject", object_id, s_position_corner_road, t_position_corner_road,
+                        log_debug("AddCornerRoadToObject", object_id, s_position_corner_road, t_position_corner_road,
                           dz_position_corner_road, height_position_corner_road);
                       }
                   for (pugi::xml_node corner_local_node = outline_node.child("cornerLocal");
@@ -118,7 +118,7 @@ namespace parser {
                         map_builder.AddCornerLocalToObject(object_id, u_coordinate_corner_local, v_coordinate_corner_local,
                           z_coordinate_corner_local, height_corner_local);
                         */
-                        logging::log("AddCornerLocalToObject", object_id, u_coordinate_corner_local, v_coordinate_corner_local,
+                        log_debug("AddCornerLocalToObject", object_id, u_coordinate_corner_local, v_coordinate_corner_local,
                           z_coordinate_corner_local, height_corner_local);
                     }
                   pugi::xml_node material_node = object_node.child("material");
@@ -129,7 +129,7 @@ namespace parser {
                     /*
                     map_builder.AddMaterialToObject(object_id, surface_material, friction_material, roughness_material);
                     */
-                    logging::log("AddMaterialToObject",object_id, surface_material, friction_material, roughness_material);
+                    log_debug("AddMaterialToObject",object_id, surface_material, friction_material, roughness_material);
                   }
 
                   /* AddValidity(object_node, "validity", object_id,
@@ -143,7 +143,7 @@ namespace parser {
                     /*
                     map_builder.AddParkingSpaceToObject(object_id, access_parking, restrictions_parking);
                     */
-                    logging::log("AddParkingSpaceToObject",object_id, access_parking, restrictions_parking);
+                    log_debug("AddParkingSpaceToObject",object_id, access_parking, restrictions_parking);
                   }
                   for (pugi::xml_node marking_node = parking_space_node.child("marking");
                       marking_node;
@@ -157,7 +157,7 @@ namespace parser {
                         map_builder.AddMarkingToParkingSpace(side_marking, type_marking,
                           width_marking, color_marking);
                         */
-                        logging::log("AddMarkingToParkingSpace",side_marking, type_marking,
+                        log_debug("AddMarkingToParkingSpace",side_marking, type_marking,
                           width_marking, color_marking);
                     }
                   for (pugi::xml_node obj_reference_node = object_node.child("objectReference");
@@ -173,7 +173,7 @@ namespace parser {
                         map_builder.AddObjectReferenceToObject(object_id, s_position_obj_ref, t_position_obj_ref,
                           id_obj_ref, z_offset_obj_ref, valid_lenght_obj_ref, orientation_obj_ref);
                         */
-                        logging::log("AddObjectReferenceToObject",object_id, s_position_obj_ref, t_position_obj_ref,
+                        log_debug("AddObjectReferenceToObject",object_id, s_position_obj_ref, t_position_obj_ref,
                           id_obj_ref, z_offset_obj_ref, valid_lenght_obj_ref, orientation_obj_ref);
                         /* AddValidity(obj_reference_node, "validity", id_obj_ref,
                           ([&map_builder](const ObjectID &id_obj_ref, const int16_t from_lane, const int16_t to_lane)
@@ -195,7 +195,7 @@ namespace parser {
                         map_builder.AddTunnel(s_position_tunnel, lenght_tunnel, name_tunnel, id_tunnel,
                           type_tunnel, lightning_tunnel, daylight_tunnel);
                         */
-                        logging::log("AddTunnel", s_position_tunnel, lenght_tunnel, name_tunnel, id_tunnel,
+                        log_debug("AddTunnel", s_position_tunnel, lenght_tunnel, name_tunnel, id_tunnel,
                           type_tunnel, lightning_tunnel, daylight_tunnel);
                         /* AddValidity(tunnel_node, "validity", id_tunnel,
                           ([&map_builder](const ObjectID &id_tunnel, const int16_t from_lane, const int16_t to_lane)
@@ -213,7 +213,7 @@ namespace parser {
                         map_builder.AddBridge(s_position_bridge, lenght_bridge, name_bridge, id_bridge,
                           type_bridge);
                         */
-                        logging::log("AddTunnel", s_position_bridge, lenght_bridge, name_bridge, id_bridge,
+                        log_debug("AddTunnel", s_position_bridge, lenght_bridge, name_bridge, id_bridge,
                           type_bridge);
                         /*AddValidity(bridge_node, "validity", id_bridge,
                           ([&map_builder](const ObjectID &id_bridge, const int16_t from_lane, const int16_t to_lane)
