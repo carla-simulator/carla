@@ -976,11 +976,15 @@ class ModuleWorld(object):
         for tl in list_tl:
             world_pos = tl.get_location()
             pos = world_to_pixel(world_pos)
+
+            if self.show_triggers:
+                corners = Util.get_bounding_box(tl)
+                corners = [world_to_pixel(p) for p in corners]
+                pygame.draw.lines(surface, COLOR_CHAMELEON_0, True, corners, 2)
+
             if self.hero_actor is not None:
                 corners = Util.get_bounding_box(tl)
                 corners = [world_to_pixel(p) for p in corners]
-                if self.show_triggers:
-                    pygame.draw.lines(surface, COLOR_CHAMELEON_0, True, corners, 2)
                 tl_t = tl.get_transform()
 
                 transformed_tv = tl_t.transform(tl.trigger_volume.location)
