@@ -48,11 +48,11 @@ namespace road {
 
     friend MapBuilder;
 
-    const SectionId _id;
+    const SectionId _id = 0u;
 
-    const double _s;
+    const double _s = 0.0;
 
-    Road *_road;
+    Road *_road = nullptr;
 
     std::map<LaneId, Lane> _lanes;
 

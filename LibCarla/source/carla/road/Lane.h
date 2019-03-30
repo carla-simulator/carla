@@ -54,15 +54,14 @@ namespace road {
     Lane() = default;
 
     Lane(
-      LaneSection *lane_section,
-      LaneId id,
-      std::vector<std::unique_ptr<element::RoadInfo>> &&info)
+        LaneSection *lane_section,
+        LaneId id,
+        std::vector<std::unique_ptr<element::RoadInfo>> &&info)
       : _lane_section(lane_section),
         _id(id),
-        _info(std::move(info)) {}
-
-    Lane(Lane &&) = default;
-    Lane &operator=(Lane &&) = default;
+        _info(std::move(info)) {
+      DEBUG_ASSERT(lane_section != nullptr);
+    }
 
     const LaneSection *GetLaneSection() const;
 
@@ -75,12 +74,9 @@ namespace road {
     bool GetLevel() const;
 
     template <typename T>
-    const T *GetInfo (const double s) const {
-      if (_lane_section != nullptr) {
-        return _info.GetInfo<T>(s);
-      }
-
-      return nullptr;
+    const T *GetInfo(const double s) const {
+      DEBUG_ASSERT(_lane_section != nullptr);
+      return _info.GetInfo<T>(s);
     }
 
     const std::vector<Lane *> &GetNextLanes() const {
@@ -107,24 +103,23 @@ namespace road {
 
     friend MapBuilder;
 
-    LaneSection *_lane_section;
+    LaneSection *_lane_section = nullptr;
 
-    LaneId _id;
+    LaneId _id = 0;
 
     InformationSet _info;
 
-    LaneType _type;
+    LaneType _type = LaneType::None;
 
-    bool _level;
+    bool _level = false;
 
-    LaneId _successor;
+    LaneId _successor = 0;
 
-    LaneId _predecessor;
+    LaneId _predecessor = 0;
 
     std::vector<Lane *> _next_lanes;
 
     std::vector<Lane *> _prev_lanes;
-
   };
 
 } // road
