@@ -1,4 +1,4 @@
-## Latest Changes
+## CARLA 0.9.5
 
   * New Town07, rural environment with narrow roads
   * Reworked OpenDRIVE parser and waypoints API
