@@ -18,7 +18,7 @@ namespace element {
 
     RoadInfoLaneMaterial(
         double s,   // start position relative to the position of the preceding
-                   // lane section
+                    // lane section
         std::string surface,
         double friction,
         double roughness)

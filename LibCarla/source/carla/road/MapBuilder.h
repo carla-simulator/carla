@@ -101,7 +101,7 @@ namespace road {
 
     // called from profiles parser
     void AddRoadElevationProfile(
-        Road* road,
+        Road *road,
         const double s,
         const double a,
         const double b,
@@ -197,12 +197,12 @@ namespace road {
 
     // called from lane parser
     void CreateLaneAccess(
-        Lane* lane,
+        Lane *lane,
         const double s,
         const std::string restriction);
 
     void CreateLaneBorder(
-        Lane* lane,
+        Lane *lane,
         const double s,
         const double a,
         const double b,
@@ -210,20 +210,20 @@ namespace road {
         const double d);
 
     void CreateLaneHeight(
-        Lane* lane,
+        Lane *lane,
         const double s,
         const double inner,
         const double outer);
 
     void CreateLaneMaterial(
-        Lane* lane,
+        Lane *lane,
         const double s,
         const std::string surface,
         const double friction,
         const double roughness);
 
     void CreateSectionOffset(
-        Road* road,
+        Road *road,
         const double s,
         const double a,
         const double b,
@@ -231,12 +231,12 @@ namespace road {
         const double d);
 
     void CreateLaneRule(
-        Lane* lane,
+        Lane *lane,
         const double s,
         const std::string value);
 
     void CreateLaneVisibility(
-        Lane* lane,
+        Lane *lane,
         const double s,
         const double forward,
         const double back,
@@ -244,7 +244,7 @@ namespace road {
         const double right);
 
     void CreateLaneWidth(
-        Lane* lane,
+        Lane *lane,
         const double s,
         const double a,
         const double b,
@@ -252,7 +252,7 @@ namespace road {
         const double d);
 
     void CreateRoadMark(
-        Lane* lane,
+        Lane *lane,
         const int road_mark_id,
         const double s,
         const std::string type,
@@ -266,7 +266,7 @@ namespace road {
         const double type_width);
 
     void CreateRoadMarkTypeLine(
-        Lane* lane,
+        Lane *lane,
         const int road_mark_id,
         const double length,
         const double space,
@@ -283,7 +283,7 @@ namespace road {
         const std::string unit);
 
     void CreateLaneSpeed(
-        Lane* lane,
+        Lane *lane,
         const double s,
         const double max,
         const std::string unit);
@@ -314,8 +314,7 @@ namespace road {
         const std::string dependency_type);
 
     Road *GetRoad(
-        const RoadId road_id
-    );
+        const RoadId road_id);
 
     Lane *GetLane(
         const RoadId road_id,
@@ -330,24 +329,28 @@ namespace road {
 
     MapData _map_data;
 
-    /// Create the pointers between RoadSegments based on the ids
+    /// Create the pointers between RoadSegments based on the ids.
     void CreatePointersBetweenRoadSegments();
 
-    // return the pointer to a lane object
+    /// Return the pointer to a lane object.
     Lane *GetEdgeLanePointer(RoadId road_id, bool from_start, LaneId lane_id);
 
-    // return a list of pointers to all lanes from a lane (using road and junction info)
+    /// Return a list of pointers to all lanes from a lane (using road and
+    /// junction info).
     std::vector<Lane *> GetLaneNext(RoadId road_id, int section_id, LaneId lane_id);
 
-    std::vector<std::pair<RoadId, LaneId>> GetJunctionLanes(RoadId junction_id, RoadId road_id, LaneId lane_id);
+    std::vector<std::pair<RoadId, LaneId>> GetJunctionLanes(
+        RoadId junction_id,
+        RoadId road_id,
+        LaneId lane_id);
 
-    /// Map to temporary store all the road and lane infos until the map is built,
-    /// so they can be added all together
+    /// Map to temporary store all the road and lane infos until the map is
+    /// built, so they can be added all together.
     std::unordered_map<Road *, std::vector<std::unique_ptr<element::RoadInfo>>>
-        _temp_road_info_container;
+    _temp_road_info_container;
 
     std::unordered_map<Lane *, std::vector<std::unique_ptr<element::RoadInfo>>>
-        _temp_lane_info_container;
+    _temp_lane_info_container;
 
   };
 

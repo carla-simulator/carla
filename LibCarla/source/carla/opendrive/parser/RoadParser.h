@@ -22,14 +22,12 @@ namespace road {
 namespace opendrive {
 namespace parser {
 
-
   class RoadParser {
   public:
 
     static void Parse(
         const pugi::xml_document &xml,
         carla::road::MapBuilder &map_builder);
-
   };
 
 } // namespace parser

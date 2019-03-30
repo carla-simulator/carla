@@ -22,9 +22,9 @@ namespace general {
         int32_t parent_id,
         int32_t from_lane,
         int32_t to_lane)
-        : _parent_id(parent_id),
-          _from_lane(from_lane),
-          _to_lane(to_lane) {}
+      : _parent_id(parent_id),
+        _from_lane(from_lane),
+        _to_lane(to_lane) {}
 
   private:
 
@@ -39,8 +39,6 @@ namespace general {
 #  pragma clang diagnostic pop
 #endif
   };
-
-
 
 } // general
 } // road

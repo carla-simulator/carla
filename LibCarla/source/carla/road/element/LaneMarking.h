@@ -14,12 +14,17 @@ namespace element {
     Other,
     Broken,
     Solid,
-    SolidSolid, // (for double solid line)
-    SolidBroken, // (from inside to outside, exception: center lane -from left to right)
-    BrokenSolid, // (from inside to outside, exception: center lane -from left to right)
-    BrokenBroken, // (from inside to outside, exception: center lane -from left to right)
+    // (for double solid line)
+    SolidSolid,
+    // (from inside to outside, exception: center lane -from left to right)
+    SolidBroken,
+    // (from inside to outside, exception: center lane -from left to right)
+    BrokenSolid,
+    // (from inside to outside, exception: center lane -from left to right)
+    BrokenBroken,
     BottsDots,
-    Grass, // (meaning a grass edge)
+    // (meaning a grass edge)
+    Grass,
     Curb,
     None
   };

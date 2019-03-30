@@ -18,7 +18,6 @@ namespace parser {
       const pugi::xml_document &xml,
       carla::road::MapBuilder &map_builder) {
 
-
     struct LaneLink {
       road::LaneId from;
       road::LaneId to;

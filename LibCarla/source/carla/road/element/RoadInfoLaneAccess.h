@@ -23,7 +23,8 @@ namespace element {
   public:
 
     RoadInfoLaneAccess(
-        double s,   // start position relative to the position of the preceding lane section
+        double s,   // start position relative to the position of the preceding
+                    // lane section
         std::string restriction)
       : RoadInfo(s),
         _restriction(restriction) {}
@@ -38,7 +39,8 @@ namespace element {
 
   private:
 
-    const std::string _restriction; // Examples: Simulator, Autonomous Traffic, Pedestrian and None
+    const std::string _restriction; // Examples: Simulator, Autonomous Traffic,
+                                    // Pedestrian and None
   };
 
 } // namespace element

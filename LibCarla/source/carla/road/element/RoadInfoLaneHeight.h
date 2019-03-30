@@ -23,7 +23,8 @@ namespace element {
   public:
 
     RoadInfoLaneHeight(
-        double s, // start position relative to the position of the preceding lane section
+        double s, // start position relative to the position of the preceding
+                  // lane section
         double inner,
         double outer)
       : RoadInfo(s),

@@ -25,7 +25,7 @@ namespace element {
 
     RoadInfoLaneVisibility(
         double s, // start position relative to the position of the preceding
-                 // lane section
+                  // lane section
         double forward,
         double back,
         double left,

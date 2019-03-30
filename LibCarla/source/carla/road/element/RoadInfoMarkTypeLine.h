@@ -52,7 +52,7 @@ namespace element {
       return _tOffset;
     }
 
-    const std::string& GetRule() const {
+    const std::string &GetRule() const {
       return _rule;
     }
 

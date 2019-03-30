@@ -43,12 +43,12 @@ namespace road {
           lane_links() {}
     };
 
-    Junction(const road::JuncId id, const std::string name)
+    Junction(const JuncId id, const std::string name)
       : _id(id),
         _name(name),
         _connections() {}
 
-    road::JuncId GetId() const {
+    JuncId GetId() const {
       return _id;
     }
 
@@ -68,8 +68,10 @@ namespace road {
 
     friend MapBuilder;
 
-    road::JuncId _id;
+    JuncId _id;
+
     std::string _name;
+
     std::unordered_map<ConId, Connection> _connections;
   };
 

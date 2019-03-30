@@ -24,10 +24,10 @@ namespace signal {
         uint32_t signal_id,
         uint32_t dependency_id,
         std::string type)
-        : _road_id(road_id),
-          _signal_id(signal_id),
-          _dependency_id(dependency_id),
-          _type(type) {}
+      : _road_id(road_id),
+        _signal_id(signal_id),
+        _dependency_id(dependency_id),
+        _type(type) {}
 
   private:
 
@@ -43,8 +43,6 @@ namespace signal {
 #  pragma clang diagnostic pop
 #endif
   };
-
-
 
 } // object
 } // road
