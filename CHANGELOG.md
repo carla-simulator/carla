@@ -20,6 +20,13 @@
   * Fixed wheel's tire friction from physics control parameters.
   * Fixed cleanup of local_planner when used by other modules
   * Fixed Obstacle Detector
+  * Reworked OpenDRIVE parser and waypoints API
+    - Fixed several situations in which the XODR was incorrectly parsed
+    - Exposed more information: lane marking, lane type, lane section id
+    - API change: waypoint's `lane_type` is now an enum, `carla.LaneType`
+    - API change: `carla.LaneMarking` is not an enum anymore, extended with color, type, lane change, and width
+    - API extension: `map.get_waypoint` accepts an extra optional flag argument `lane_type` for filtering lane types
+    - API extension: `carla.Map` can be constructed off-line out of XODR files, `carla.Map(town_name, xodr_content)`
   * New Town07, rural environment with narrow roads
   * Added new pack of assets
     - Windmill, different farm houses, silo

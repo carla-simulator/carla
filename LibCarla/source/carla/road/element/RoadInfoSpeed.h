@@ -6,24 +6,30 @@
 
 #pragma once
 
-#include <cstdint>
+#include "carla/road/element/RoadInfo.h"
 
 namespace carla {
 namespace road {
 namespace element {
 
-  class Waypoint;
+  class RoadInfoSpeed final : public RoadInfo {
+  public:
 
-  struct WaypointHash {
+    RoadInfoSpeed(double s, double speed)
+      : RoadInfo(s),
+        _speed(speed) {}
 
-    using argument_type = Waypoint;
+    void AcceptVisitor(RoadInfoVisitor &v) final {
+      v.Visit(*this);
+    }
 
-    using result_type = uint64_t;
+    double GetSpeed() const {
+      return _speed;
+    }
 
-    /// Generates an unique id for @a waypoint based on its road_id, lane_id,
-    /// and "s" offset. The "s" offset is truncated to half centimetre
-    /// precision.
-    uint64_t operator()(const Waypoint &waypoint) const;
+  private:
+
+    const double _speed;
   };
 
 } // namespace element

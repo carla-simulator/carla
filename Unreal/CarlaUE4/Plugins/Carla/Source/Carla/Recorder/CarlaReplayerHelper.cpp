@@ -307,7 +307,7 @@ bool CarlaReplayerHelper::ProcessReplayerFinish(bool bApplyAutopilot)
   }
   // set autopilot to all AI vehicles
   auto registry = Episode->GetActorRegistry();
-  for (auto &&ActorView : registry)
+  for (auto ActorView : registry)
   {
     SetActorAutopilot(ActorView, true);
   }

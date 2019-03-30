@@ -32,7 +32,7 @@ else
 
 fi
 
-function get_carla_version {
+function get_git_repository_version {
   git describe --tags --dirty --always
 }
 

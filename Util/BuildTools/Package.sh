@@ -46,7 +46,7 @@ done
 # -- Package project -----------------------------------------------------------
 # ==============================================================================
 
-REPOSITORY_TAG=$(get_carla_version)
+REPOSITORY_TAG=$(get_git_repository_version)
 
 BUILD_FOLDER=${CARLA_DIST_FOLDER}/${REPOSITORY_TAG}
 
