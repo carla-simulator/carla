@@ -18,17 +18,18 @@
 namespace carla {
 namespace road {
 
-  /// A set of elements ordered by its position on the road
+  /// A set of elements ordered by its position on the road.
   template <typename T>
   class RoadElementSet : private MovableNonCopyable {
   public:
 
     using mapped_type = T;
+
     using key_type = double;
 
     RoadElementSet() = default;
 
-    /// Explicit move constructor
+    /// Explicit move constructor.
     template <typename InputTypeT>
     RoadElementSet(std::vector<InputTypeT> &&range)
       : _vec([](auto &&input) {
@@ -39,13 +40,13 @@ namespace road {
               std::make_move_iterator(std::end(input))};
         }(std::move(range))) {}
 
-    /// Return all values from the set
+    /// Return all values from the set.
     const std::vector<mapped_type> &GetAll() const {
       return _vec;
     }
 
     /// Return a reversed list of elements that have key
-    /// value GetDistance() <= s
+    /// value GetDistance() <= s.
     auto GetReverseSubset(const key_type k) const {
       return MakeListView(
           std::make_reverse_iterator(std::upper_bound(_vec.begin(), _vec.end(), k, LessComp())),

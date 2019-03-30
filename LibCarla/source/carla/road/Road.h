@@ -34,9 +34,6 @@ namespace road {
   public:
 
     Road() = default;
-    /// @todo: remove the move constructors
-    Road(Road&&) = default;
-    Road &operator=(Road&&) = default;
 
     const MapData *GetMap() const;
 
@@ -68,6 +65,7 @@ namespace road {
 
     // get the start and end section with a lan id
     LaneSection *GetStartSection(LaneId id);
+
     LaneSection *GetEndSection(LaneId id);
 
     std::vector<Road *> GetNexts() const;
@@ -76,19 +74,19 @@ namespace road {
 
     const geom::CubicPolynomial &GetElevationOn(const double s) const;
 
-    carla::road::signal::Signal* GetSignal(const SignId id);
+    carla::road::signal::Signal *GetSignal(const SignId id);
 
-    carla::road::signal::SignalReference* GetSignalRef(const SignRefId id);
+    carla::road::signal::SignalReference *GetSignalRef(const SignRefId id);
 
-    std::unordered_map<SignId, signal::Signal>* getSignals();
+    std::unordered_map<SignId, signal::Signal> *getSignals();
 
-    std::unordered_map<SignId, signal::SignalReference>* getSignalReferences();
+    std::unordered_map<SignId, signal::SignalReference> *getSignalReferences();
 
     /// Returns a directed point on the center of the road (lane 0),
     /// with the corresponding laneOffset and elevation records applied,
     /// on distance "s".
     /// - @ param s distance regarding the road to compute the point
-    element::DirectedPoint GetDirectedPointIn (const double s) const;
+    element::DirectedPoint GetDirectedPointIn(const double s) const;
 
     /// Returns a pair containing:
     /// - @b first:  distance to the nearest point on the center in
@@ -110,7 +108,7 @@ namespace road {
         uint32_t type = static_cast<uint32_t>(Lane::LaneType::Any)) const;
 
     template <typename T>
-    const T *GetInfo (const double s) const {
+    const T *GetInfo(const double s) const {
       return _info.GetInfo<T>(s);
     }
 
@@ -189,8 +187,6 @@ namespace road {
     RoadId _successor { 0 };
 
     RoadId _predecessor { 0 };
-
-    // std::multimap<double, LaneSection> _lane_sections;
 
     InformationSet _info;
 

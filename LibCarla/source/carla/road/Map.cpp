@@ -59,7 +59,6 @@ namespace road {
     }
   }
 
-
   /// Return a waypoint for each drivable lane on @a lane_section.
   template <typename FuncT>
   static void ForEachDrivableLaneImpl(
@@ -107,7 +106,9 @@ namespace road {
   /// for an specific Lane given an s and a iterator over lanes
   template <typename T>
   static std::pair<double, double> ComputeTotalLaneWidth(
-    const T container, const double s, const LaneId lane_id) {
+      const T container,
+      const double s,
+      const LaneId lane_id) {
     const bool negative_lane_id = lane_id < 0;
     double dist = 0.0;
     double tangent = 0.0;
@@ -118,11 +119,11 @@ namespace road {
       auto current_dist = current_polynomial.Evaluate(s);
       auto current_tang = current_polynomial.Tangent(s);
       if (lane.first != lane_id) {
-        dist += negative_lane_id ? current_dist : - current_dist;
+        dist += negative_lane_id ? current_dist : -current_dist;
         tangent += current_tang;
       } else if (lane.first == lane_id) {
         current_dist *= 0.5;
-        dist += negative_lane_id ? current_dist : - current_dist;
+        dist += negative_lane_id ? current_dist : -current_dist;
         tangent += current_tang * 0.5;
         break;
       }
@@ -140,7 +141,9 @@ namespace road {
   // -- Map: Geometry ----------------------------------------------------------
   // ===========================================================================
 
-  boost::optional<Waypoint> Map::GetClosestWaypointOnRoad(const geom::Location &pos, uint32_t lane_type) const {
+  boost::optional<Waypoint> Map::GetClosestWaypointOnRoad(
+      const geom::Location &pos,
+      uint32_t lane_type) const {
     // max_nearests represents the max nearests roads
     // where we will search for nearests lanes
     constexpr int max_nearests = 50;

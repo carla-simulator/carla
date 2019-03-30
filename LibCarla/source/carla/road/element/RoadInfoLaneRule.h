@@ -20,7 +20,7 @@ namespace element {
 
     RoadInfoLaneRule(
         double s,   // start position relative to the position of the preceding
-                   // lane section
+                    // lane section
         std::string value)
       : RoadInfo(s),
         _value(std::move(value)) {}

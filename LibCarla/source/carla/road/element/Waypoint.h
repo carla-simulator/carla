@@ -43,6 +43,7 @@ namespace std {
     /// section_id, and "s" offset. The "s" offset is truncated to half
     /// centimetre precision.
     result_type operator()(const argument_type &waypoint) const;
+
   };
 
 } // namespace std

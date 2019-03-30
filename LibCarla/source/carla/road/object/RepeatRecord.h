@@ -23,8 +23,6 @@ namespace object {
   private:
 
     ObjId _id;
-
-
   };
 
 } // object

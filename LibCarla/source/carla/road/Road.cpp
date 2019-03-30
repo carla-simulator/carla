@@ -251,7 +251,8 @@ namespace road {
 
       // if the current_dp is near to loc, we are in the right way
       if (current_dist <= result.second) {
-        // only consider the lanes that match the type flag for result candidates
+        // only consider the lanes that match the type flag for result
+        // candidates
         if ((static_cast<uint32_t>(lane.second->GetType()) & lane_type) > 0) {
           result.first = &(*lane.second);
           result.second = current_dist;
@@ -273,7 +274,8 @@ namespace road {
 
       // if the current_dp is near to loc, we are in the right way
       if (current_dist <= result.second) {
-        // only consider the lanes that match the type flag for result candidates
+        // only consider the lanes that match the type flag for result
+        // candidates
         if ((static_cast<uint32_t>(lane.second->GetType()) & lane_type) > 0) {
           result.first = &(*lane.second);
           result.second = current_dist;

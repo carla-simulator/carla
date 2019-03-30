@@ -112,122 +112,130 @@ namespace parser {
       const pugi::xml_document &xml,
       carla::road::MapBuilder &map_builder) {
 
-      std::vector<Road> roads;
+    std::vector<Road> roads;
 
-      for (pugi::xml_node node_road : xml.child("OpenDRIVE").children("road")) {
-        Road road { 0, "", 0.0, -1, 0, 0, {}, {}, {} };
+    for (pugi::xml_node node_road : xml.child("OpenDRIVE").children("road")) {
+      Road road { 0, "", 0.0, -1, 0, 0, {}, {}, {} };
 
-        // attributes
-        road.id = node_road.attribute("id").as_int();
-        road.name = node_road.attribute("name").value();
-        road.length = node_road.attribute("length").as_double();
-        road.junction_id = node_road.attribute("junction").as_int();
+      // attributes
+      road.id = node_road.attribute("id").as_int();
+      road.name = node_road.attribute("name").value();
+      road.length = node_road.attribute("length").as_double();
+      road.junction_id = node_road.attribute("junction").as_int();
 
-        // link
-        pugi::xml_node link = node_road.child("link");
-        if (link) {
-          if (link.child("predecessor"))
-            road.predecessor = link.child("predecessor").attribute("elementId").as_int();
-          if (link.child("successor"))
-            road.successor = link.child("successor").attribute("elementId").as_int();
+      // link
+      pugi::xml_node link = node_road.child("link");
+      if (link) {
+        if (link.child("predecessor")) {
+          road.predecessor = link.child("predecessor").attribute("elementId").as_int();
+        }
+        if (link.child("successor")) {
+          road.successor = link.child("successor").attribute("elementId").as_int();
+        }
+      }
+
+      // types
+      for (pugi::xml_node node_type : node_road.children("type")) {
+        RoadTypeSpeed type { 0.0, "", 0.0, "" };
+
+        type.s = node_type.attribute("s").as_double();
+        type.type = node_type.attribute("type").value();
+
+        // speed type
+        pugi::xml_node speed = node_type.child("speed");
+        if (speed) {
+          type.max = speed.attribute("max").as_double();
+          type.unit = speed.attribute("unit").value();
         }
 
-        // types
-        for (pugi::xml_node node_type : node_road.children("type")) {
-          RoadTypeSpeed type { 0.0, "", 0.0, "" };
+        // add it
+        road.speed.emplace_back(type);
+      }
 
-          type.s = node_type.attribute("s").as_double();
-          type.type = node_type.attribute("type").value();
+      // section offsets
+      for (pugi::xml_node node_offset : node_road.child("lanes").children("laneOffset")) {
+        LaneOffset offset { 0.0, 0.0, 0.0, 0.0, 0.0 };
+        offset.s = node_offset.attribute("s").as_double();
+        offset.a = node_offset.attribute("a").as_double();
+        offset.b = node_offset.attribute("b").as_double();
+        offset.c = node_offset.attribute("c").as_double();
+        offset.d = node_offset.attribute("d").as_double();
+        road.section_offsets.emplace_back(offset);
+      }
 
-          // speed type
-          pugi::xml_node speed = node_type.child("speed");
-          if (speed) {
-            type.max = speed.attribute("max").as_double();
-            type.unit = speed.attribute("unit").value();
+      // lane sections
+      for (pugi::xml_node node_section : node_road.child("lanes").children("laneSection")) {
+        LaneSection section { 0.0, {} };
+
+        section.s = node_section.attribute("s").as_double();
+
+        // left lanes
+        for (pugi::xml_node node_lane : node_section.child("left").children("lane")) {
+          Lane lane { 0, road::Lane::LaneType::None, false, 0, 0 };
+
+          lane.id = node_lane.attribute("id").as_int();
+          lane.type = StringToLaneType(node_lane.attribute("type").value());
+          lane.level = node_lane.attribute("level").as_bool();
+
+          // link
+          pugi::xml_node link2 = node_lane.child("link");
+          if (link2) {
+            if (link2.child("predecessor")) {
+              lane.predecessor = link2.child("predecessor").attribute("id").as_int();
+            }
+            if (link2.child("successor")) {
+              lane.successor = link2.child("successor").attribute("id").as_int();
+            }
           }
 
           // add it
-          road.speed.emplace_back(type);
+          section.lanes.emplace_back(lane);
         }
 
-        // section offsets
-        for (pugi::xml_node node_offset : node_road.child("lanes").children("laneOffset")) {
-          LaneOffset offset { 0.0, 0.0, 0.0, 0.0, 0.0 } ;
-          offset.s = node_offset.attribute("s").as_double();
-          offset.a = node_offset.attribute("a").as_double();
-          offset.b = node_offset.attribute("b").as_double();
-          offset.c = node_offset.attribute("c").as_double();
-          offset.d = node_offset.attribute("d").as_double();
-          road.section_offsets.emplace_back(offset);
+        // center lane
+        for (pugi::xml_node node_lane : node_section.child("center").children("lane")) {
+          Lane lane { 0, road::Lane::LaneType::None, false, 0, 0 };
+
+          lane.id = node_lane.attribute("id").as_int();
+          lane.type = StringToLaneType(node_lane.attribute("type").value());
+          lane.level = node_lane.attribute("level").as_bool();
+
+          // link (probably it never exists)
+          pugi::xml_node link2 = node_lane.child("link");
+          if (link2) {
+            if (link2.child("predecessor")) {
+              lane.predecessor = link2.child("predecessor").attribute("id").as_int();
+            }
+            if (link2.child("successor")) {
+              lane.successor = link2.child("successor").attribute("id").as_int();
+            }
+          }
+
+          // add it
+          section.lanes.emplace_back(lane);
         }
 
-        // lane sections
-        for (pugi::xml_node node_section : node_road.child("lanes").children("laneSection")) {
-          LaneSection section { 0.0, {} };
+        // right lane
+        for (pugi::xml_node node_lane : node_section.child("right").children("lane")) {
+          Lane lane { 0, road::Lane::LaneType::None, false, 0, 0 };
 
-          section.s = node_section.attribute("s").as_double();
+          lane.id = node_lane.attribute("id").as_int();
+          lane.type = StringToLaneType(node_lane.attribute("type").value());
+          lane.level = node_lane.attribute("level").as_bool();
 
-          // left lanes
-          for (pugi::xml_node node_lane : node_section.child("left").children("lane")) {
-            Lane lane { 0, road::Lane::LaneType::None, false, 0, 0 };
-
-            lane.id = node_lane.attribute("id").as_int();
-            lane.type = StringToLaneType(node_lane.attribute("type").value());
-            lane.level = node_lane.attribute("level").as_bool();
-
-            // link
-            pugi::xml_node link2 = node_lane.child("link");
-            if (link2) {
-              if (link2.child("predecessor"))
-                lane.predecessor = link2.child("predecessor").attribute("id").as_int();
-              if (link2.child("successor"))
-                lane.successor = link2.child("successor").attribute("id").as_int();
+          // link
+          pugi::xml_node link2 = node_lane.child("link");
+          if (link2) {
+            if (link2.child("predecessor")) {
+              lane.predecessor = link2.child("predecessor").attribute("id").as_int();
             }
-
-            // add it
-            section.lanes.emplace_back(lane);
+            if (link2.child("successor")) {
+              lane.successor = link2.child("successor").attribute("id").as_int();
+            }
           }
 
-          // center lane
-          for (pugi::xml_node node_lane : node_section.child("center").children("lane")) {
-            Lane lane { 0, road::Lane::LaneType::None, false, 0, 0 };
-
-            lane.id = node_lane.attribute("id").as_int();
-            lane.type = StringToLaneType(node_lane.attribute("type").value());
-            lane.level = node_lane.attribute("level").as_bool();
-
-            // link (probably it never exists)
-            pugi::xml_node link2 = node_lane.child("link");
-            if (link2) {
-              if (link2.child("predecessor"))
-                lane.predecessor = link2.child("predecessor").attribute("id").as_int();
-              if (link2.child("successor"))
-                lane.successor = link2.child("successor").attribute("id").as_int();
-            }
-
-            // add it
-            section.lanes.emplace_back(lane);
-          }
-
-          // right lane
-          for (pugi::xml_node node_lane : node_section.child("right").children("lane")) {
-            Lane lane { 0, road::Lane::LaneType::None, false, 0, 0 };
-
-            lane.id = node_lane.attribute("id").as_int();
-            lane.type = StringToLaneType(node_lane.attribute("type").value());
-            lane.level = node_lane.attribute("level").as_bool();
-
-            // link
-            pugi::xml_node link2 = node_lane.child("link");
-            if (link2) {
-              if (link2.child("predecessor"))
-                lane.predecessor = link2.child("predecessor").attribute("id").as_int();
-              if (link2.child("successor"))
-                lane.successor = link2.child("successor").attribute("id").as_int();
-            }
-
-            // add it
-            section.lanes.emplace_back(lane);
+          // add it
+          section.lanes.emplace_back(lane);
         }
 
         // add section
@@ -240,23 +248,23 @@ namespace parser {
 
     // test print
     /*
-    printf("Roads: %d\n", roads.size());
-    for (auto const r : roads) {
-      printf("Road: %d\n", r.id);
-      printf("  Name: %s\n", r.name.c_str());
-      printf("  Length: %e\n", r.length);
-      printf("  JunctionId: %d\n", r.junction_id);
-      printf("  Predecessor: %d\n", r.predecessor);
-      printf("  Successor: %d\n", r.successor);
-      printf("  Speed: %d\n", r.speed.size());
-      for (auto const s : r.speed) {
+       printf("Roads: %d\n", roads.size());
+       for (auto const r : roads) {
+       printf("Road: %d\n", r.id);
+       printf("  Name: %s\n", r.name.c_str());
+       printf("  Length: %e\n", r.length);
+       printf("  JunctionId: %d\n", r.junction_id);
+       printf("  Predecessor: %d\n", r.predecessor);
+       printf("  Successor: %d\n", r.successor);
+       printf("  Speed: %d\n", r.speed.size());
+       for (auto const s : r.speed) {
         printf("    S offset: %e\n", s.s);
         printf("    Type: %s\n", s.type.c_str());
         printf("    Max: %e\n", s.max);
         printf("    Unit: %s\n", s.unit.c_str());
-      }
-      printf("LaneSections: %d\n", r.sections.size());
-      for (auto const s : r.sections) {
+       }
+       printf("LaneSections: %d\n", r.sections.size());
+       for (auto const s : r.sections) {
         printf("    S offset: %e\n", s.s);
         printf("    a,b,c,d: %e,%e,%e,%e\n", s.a, s.b, s.c, s.d);
         printf("    Lanes: %d\n", s.lanes.size());
@@ -267,13 +275,18 @@ namespace parser {
           printf("      Predecessor: %d\n", l.predecessor);
           printf("      Successor: %d\n", l.successor);
         }
-      }
-    }
-    */
+       }
+       }
+     */
 
     // map_builder calls
     for (auto const r : roads) {
-      carla::road::Road *road = map_builder.AddRoad(r.id, r.name, r.length, r.junction_id, r.predecessor, r.successor);
+      carla::road::Road *road = map_builder.AddRoad(r.id,
+          r.name,
+          r.length,
+          r.junction_id,
+          r.predecessor,
+          r.successor);
 
       // type speed
       for (auto const s : r.speed) {
@@ -292,7 +305,8 @@ namespace parser {
 
         // lanes
         for (auto const l : s.lanes) {
-          /*carla::road::Lane *lane = */map_builder.AddRoadSectionLane(section, l.id, static_cast<uint32_t>(l.type), l.level, l.predecessor, l.successor);
+          /*carla::road::Lane *lane = */ map_builder.AddRoadSectionLane(section, l.id,
+              static_cast<uint32_t>(l.type), l.level, l.predecessor, l.successor);
         }
       }
     }
