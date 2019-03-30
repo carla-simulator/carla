@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include "carla/geom/Transform.h"
 #include "carla/Memory.h"
 #include "carla/NonCopyable.h"
+#include "carla/geom/Transform.h"
+#include "carla/road/Lane.h"
+#include "carla/road/element/LaneMarking.h"
 #include "carla/road/element/RoadInfoMarkRecord.h"
 #include "carla/road/element/Waypoint.h"
-#include "carla/road/element/WaypointInformationTypes.h"
-#include "carla/road/Lane.h"
 
 #include <boost/optional.hpp>
 
@@ -62,17 +62,17 @@ namespace client {
 
     road::Lane::LaneType GetType() const;
 
-    std::vector<SharedPtr<Waypoint>> Next(double distance) const;
+    std::vector<SharedPtr<Waypoint>> GetNext(double distance) const;
 
-    SharedPtr<Waypoint> Right() const;
+    SharedPtr<Waypoint> GetRight() const;
 
-    SharedPtr<Waypoint> Left() const;
+    SharedPtr<Waypoint> GetLeft() const;
 
-    boost::optional<road::element::WaypointInfoRoadMark> GetRightRoadMark() const;
+    boost::optional<road::element::LaneMarking> GetRightLaneMarking() const;
 
-    boost::optional<road::element::WaypointInfoRoadMark> GetLeftRoadMark() const;
+    boost::optional<road::element::LaneMarking> GetLeftLaneMarking() const;
 
-    road::element::WaypointInfoRoadMark::LaneChange GetLaneChange() const;
+    road::element::LaneMarking::LaneChange GetLaneChange() const;
 
   private:
 
