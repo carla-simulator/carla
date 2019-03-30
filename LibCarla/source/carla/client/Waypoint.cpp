@@ -32,7 +32,7 @@ namespace client {
     return _parent->GetMap().GetLaneType(_waypoint);
   }
 
-  std::vector<SharedPtr<Waypoint>> Waypoint::Next(double distance) const {
+  std::vector<SharedPtr<Waypoint>> Waypoint::GetNext(double distance) const {
     auto waypoints = _parent->GetMap().GetNext(_waypoint, distance);
     std::vector<SharedPtr<Waypoint>> result;
     result.reserve(waypoints.size());
@@ -42,7 +42,7 @@ namespace client {
     return result;
   }
 
-  SharedPtr<Waypoint> Waypoint::Right() const {
+  SharedPtr<Waypoint> Waypoint::GetRight() const {
     auto right_lane_waypoint =
         _parent->GetMap().GetRight(_waypoint);
     if (right_lane_waypoint.has_value()) {
@@ -51,13 +51,27 @@ namespace client {
     return nullptr;
   }
 
-  SharedPtr<Waypoint> Waypoint::Left() const {
+  SharedPtr<Waypoint> Waypoint::GetLeft() const {
     auto left_lane_waypoint =
         _parent->GetMap().GetLeft(_waypoint);
     if (left_lane_waypoint.has_value()) {
       return SharedPtr<Waypoint>(new Waypoint(_parent, std::move(*left_lane_waypoint)));
     }
     return nullptr;
+  }
+
+  boost::optional<road::element::LaneMarking> Waypoint::GetRightLaneMarking() const {
+    if (_mark_record.first != nullptr) {
+      return road::element::LaneMarking(*_mark_record.first);
+    }
+    return boost::optional<road::element::LaneMarking>{};
+  }
+
+  boost::optional<road::element::LaneMarking> Waypoint::GetLeftLaneMarking() const {
+    if (_mark_record.first != nullptr) {
+      return road::element::LaneMarking(*_mark_record.second);
+    }
+    return boost::optional<road::element::LaneMarking>{};
   }
 
   template <typename EnumT>
@@ -74,22 +88,8 @@ namespace client {
         static_cast<typename std::underlying_type<EnumT>::type>(rhs));
   }
 
-  boost::optional<road::element::WaypointInfoRoadMark> Waypoint::GetRightRoadMark() const {
-    if (_mark_record.first != nullptr) {
-      return road::element::WaypointInfoRoadMark(*_mark_record.first);
-    }
-    return boost::optional<road::element::WaypointInfoRoadMark>{};
-  }
-
-  boost::optional<road::element::WaypointInfoRoadMark> Waypoint::GetLeftRoadMark() const {
-    if (_mark_record.first != nullptr) {
-      return road::element::WaypointInfoRoadMark(*_mark_record.second);
-    }
-    return boost::optional<road::element::WaypointInfoRoadMark>{};
-  }
-
-  road::element::WaypointInfoRoadMark::LaneChange Waypoint::GetLaneChange() const {
-    using lane_change_type = road::element::WaypointInfoRoadMark::LaneChange;
+  road::element::LaneMarking::LaneChange Waypoint::GetLaneChange() const {
+    using lane_change_type = road::element::LaneMarking::LaneChange;
 
     const auto lane_change_right_info = _mark_record.first;
     lane_change_type c_right;

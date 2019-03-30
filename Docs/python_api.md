@@ -267,13 +267,6 @@
 - `to_opendrive()`
 - `save_to_disk(path=self.name)`
 
-## `carla.LaneChange`
-
-- `NONE`
-- `Right`
-- `Left`
-- `Both`
-
 ## `carla.LaneType`
 
 - `NONE`
@@ -299,9 +292,16 @@
 - `OnRamp`
 - `Any`
 
-## `carla.RoadMarkColor`
+## `carla.LaneChange`
 
-- `Standard`
+- `NONE`
+- `Right`
+- `Left`
+- `Both`
+
+## `carla.LaneMarkingColor`
+
+- `Standard = White`
 - `Blue`
 - `Green`
 - `Red`
@@ -309,7 +309,7 @@
 - `Yellow`
 - `Other`
 
-## `carla.LaneMarking`
+## `carla.LaneMarkingType`
 
 - `NONE`
 - `Other`
@@ -323,7 +323,7 @@
 - `Grass`
 - `Curb`
 
-## `carla.WaypointInfoRoadMark`
+## `carla.LaneMarking`
 
 - `type -> carla.LaneMarking`
 - `color -> carla.RoadMarkColor`
@@ -342,8 +342,8 @@
 - `s`
 - `lane_change -> carla.LaneChange`
 - `lane_type -> carla.LaneType`
-- `right_road_mark -> carla.WaypointInfoRoadMark`
-- `left_road_mark -> carla.WaypointInfoRoadMark`
+- `right_lane_marking -> carla.LaneMarking`
+- `left_lane_marking -> carla.LaneMarking`
 - `next(distance) -> list(carla.Waypoint)`
 - `get_right_lane() -> carla.Waypoint`
 - `get_left_lane() -> carla.Waypoint`

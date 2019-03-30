@@ -78,6 +78,16 @@
       return result; \
     }
 
+#define CALL_RETURNING_OPTIONAL(cls, fn) +[](const cls &self) { \
+      auto optional = self.fn(); \
+      return optional.has_value() ? boost::python::object(*optional) : boost::python::object(); \
+    }
+
+#define CALL_RETURNING_OPTIONAL_1(cls, fn, T1_) +[](const cls &self, T1_) { \
+      auto optional = self.fn(std::forward<T1_>(t1)); \
+      return optional.has_value() ? boost::python::object(*optional) : boost::python::object(); \
+    }
+
 template <typename T>
 static void PrintListItem_(std::ostream &out, const T &item) {
   out << item;

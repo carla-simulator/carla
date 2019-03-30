@@ -23,13 +23,13 @@ namespace element {
       const bool origin_is_offroad,
       const bool destination_is_offroad) {
     if (origin_is_offroad != destination_is_offroad) {
-      return { LaneMarking::Solid };
+      return { LaneMarking::Type::Solid };
     } else if (lane_id_origin == lane_id_destination) {
       return {};
     } else if (lane_id_origin * lane_id_destination < 0) {
-      return { LaneMarking::Solid };
+      return { LaneMarking::Type::Solid };
     } else {
-      return { LaneMarking::Broken };
+      return { LaneMarking::Type::Broken };
     }
   }
 
