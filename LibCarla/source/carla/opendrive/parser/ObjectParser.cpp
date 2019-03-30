@@ -38,8 +38,7 @@ namespace parser {
   void ObjectParser::Parse(
       const pugi::xml_document &xml,
       carla::road::MapBuilder &  /* map_builder */) {
-    /// @todo: uncomment this return
-    return;
+    throw_exception(std::runtime_error("ObjectParser not ready"));
     // Extracting the OpenDRIVE
     pugi::xml_node opendrive_node = xml.child("OpenDRIVE");
     for (pugi::xml_node road_node = opendrive_node.child("road");
