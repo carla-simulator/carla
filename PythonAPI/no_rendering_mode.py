@@ -441,13 +441,79 @@ class MapImage(object):
         map_surface.fill(COLOR_ALUMINIUM_4)
         precision = 0.05
 
-        def draw_lane_marking(surface, points, solid=True):
-            if solid:
-                pygame.draw.lines(surface, COLOR_ORANGE_0, False, points, 2)
+        def lane_marking_color_to_tango(lane_marking_color):
+            tango_color = COLOR_BLACK
+
+            if lane_marking_color == carla.LaneMarkingColor.White:
+                tango_color = COLOR_ALUMINIUM_2
+
+            elif lane_marking_color == carla.LaneMarkingColor.Blue:
+                tango_color = COLOR_SKY_BLUE_0
+
+            elif lane_marking_color == carla.LaneMarkingColor.Green:
+                tango_color = COLOR_CHAMELEON_0
+
+            elif lane_marking_color == carla.LaneMarkingColor.Red:
+                tango_color = COLOR_SCARLET_RED_0
+
+            elif lane_marking_color == carla.LaneMarkingColor.Yellow:
+                tango_color = COLOR_ORANGE_0
+
+            return tango_color
+
+        def draw_solid_line (surface, color, closed, points, width):
+            if len(points) >= 2:
+                pygame.draw.lines(surface, color, closed, points, width)
+
+        def draw_broken_line (surface, color, closed, points, width):
+            broken_lines = [x for n, x in enumerate(zip(*(iter(points),) * 20)) if n % 3 == 0]
+            for line in broken_lines:
+                pygame.draw.lines(surface, color, closed, line, width)
+
+        def draw_lane_marking(surface, waypoints, is_left, sample):
+            sign = 0.0
+            marking_type = carla.LaneMarkingType.NONE
+            marking_color = carla.LaneMarkingColor.Other
+            lane_marking = None
+
+            if is_left:
+                sign = -1
+                lane_marking = sample.left_lane_marking
             else:
-                broken_lines = [x for n, x in enumerate(zip(*(iter(points),) * 20)) if n % 3 == 0]
-                for line in broken_lines:
-                    pygame.draw.lines(surface, COLOR_ORANGE_0, False, line, 2)
+                sign = 1
+                lane_marking = sample.right_lane_marking
+
+            if lane_marking is not None:
+                marking_type = lane_marking.type
+                marking_color = lane_marking.color
+
+            margin = 0.20
+            w = carla_map.get_waypoint(lateral_shift(sample.transform, sign * sample.lane_width), project_to_road=False)
+
+            tango_color = lane_marking_color_to_tango(marking_color)
+
+            if marking_type == carla.LaneMarkingType.SolidSolid:
+                marking = [world_to_pixel(lateral_shift(w.transform, sign * ( (w.lane_width * 0.5) - margin))) for w in waypoints]
+                draw_solid_line(surface, tango_color, False, marking, 2)
+
+            elif marking_type == carla.LaneMarkingType.BrokenBroken:
+                marking = [world_to_pixel(lateral_shift(w.transform, sign *(w.lane_width * 0.5 - margin))) for w in waypoints]
+                draw_broken_line(surface, tango_color, False, marking, 2)
+
+            elif marking_type == carla.LaneMarkingType.SolidBroken or marking_type == carla.LaneMarkingType.BrokenSolid:
+                marking = [world_to_pixel(lateral_shift(w.transform, sign * w.lane_width * 0.5)) for w in waypoints]
+                draw_solid_line(surface, tango_color, False, marking, 2)
+
+                marking = [world_to_pixel(lateral_shift(w.transform, sign * (w.lane_width * 0.5 + margin))) for w in waypoints]
+                draw_broken_line(surface, tango_color, False, marking, 2)
+
+            elif marking_type == carla.LaneMarkingType.Broken:
+                marking = [world_to_pixel(lateral_shift(w.transform, sign * w.lane_width * 0.5)) for w in waypoints]
+                draw_broken_line(surface, tango_color, False, marking, 2)
+
+            elif (marking_type == carla.LaneMarkingType.Solid or w is None) and marking_type != carla.LaneMarkingType.NONE:
+                marking = [world_to_pixel(lateral_shift(w.transform, sign * w.lane_width * 0.5)) for w in waypoints]
+                draw_solid_line(surface, tango_color, False, marking, 2)
 
         def draw_arrow(surface, transform, color=COLOR_ALUMINIUM_2):
             transform.rotation.yaw += 180
@@ -491,54 +557,75 @@ class MapImage(object):
             transform.rotation.yaw += 90
             return transform.location + shift * transform.get_forward_vector()
 
-        def does_cross_solid_line(waypoint, shift):
-            w = carla_map.get_waypoint(lateral_shift(waypoint.transform, shift), project_to_road=False)
-            if w is None or w.road_id != waypoint.road_id:
-                return True
-            else:
-                return (w.lane_id * waypoint.lane_id < 0) or w.lane_id == waypoint.lane_id
+        def draw_topology (carla_topology, index):
+            topology = [x[index] for x in carla_topology]
+            topology = sorted(topology, key=lambda w: w.transform.location.z)
+            for waypoint in topology:
+                waypoints = [waypoint]
 
-        topology = [x[0] for x in carla_map.get_topology()]
-        topology = sorted(topology, key=lambda w: w.transform.location.z)
+                nxt = waypoint.next(precision)
+                if len(nxt) > 0:
+                    nxt = nxt[0]
+                    while nxt.road_id == waypoint.road_id:
+                        waypoints.append(nxt)
+                        nxt = nxt.next(precision)
+                        if len(nxt) > 0:
+                            nxt = nxt[0]
+                        else:
+                            break
 
-        for waypoint in topology:
-            waypoints = [waypoint]
-            nxt = waypoint.next(precision)[0]
-            while nxt.road_id == waypoint.road_id:
-                waypoints.append(nxt)
-                nxt = nxt.next(precision)[0]
+                # Draw Road
+                road_left_side = [lateral_shift(w.transform, -w.lane_width * 0.5) for w in waypoints]
+                road_right_side= [lateral_shift(w.transform, w.lane_width * 0.5) for w in waypoints]
 
-            left_marking = [lateral_shift(w.transform, -w.lane_width * 0.5) for w in waypoints]
-            right_marking = [lateral_shift(w.transform, w.lane_width * 0.5) for w in waypoints]
+                polygon = road_left_side + [x for x in reversed(road_right_side)]
+                polygon = [world_to_pixel(x) for x in polygon]
 
-            polygon = left_marking + [x for x in reversed(right_marking)]
-            polygon = [world_to_pixel(x) for x in polygon]
+                if len(polygon) > 2:
+                    pygame.draw.polygon(map_surface, COLOR_ALUMINIUM_5, polygon, 2)
+                    pygame.draw.polygon(map_surface, COLOR_ALUMINIUM_5, polygon)
 
-            pygame.draw.polygon(map_surface, COLOR_ALUMINIUM_5, polygon, 10)
-            pygame.draw.polygon(map_surface, COLOR_ALUMINIUM_5, polygon)
+                # Draw Lane Markings and Arrows
+                if not waypoint.is_intersection:
+                    sample = waypoints[int(len(waypoints) / 2)]
+                    draw_lane_marking(
+                        map_surface,
+                        waypoints,
+                        True,
+                        sample)
+                    draw_lane_marking(
+                        map_surface,
+                        waypoints,
+                        False,
+                        sample)
+                    for n, wp in enumerate(waypoints):
+                        if ((n+1) % 400) == 0:
+                            draw_arrow(map_surface, wp.transform)
 
-            if not waypoint.is_intersection:
-                sample = waypoints[int(len(waypoints) / 2)]
-                draw_lane_marking(
-                    map_surface,
-                    [world_to_pixel(x) for x in left_marking],
-                    does_cross_solid_line(sample, -sample.lane_width * 1.1))
-                draw_lane_marking(
-                    map_surface,
-                    [world_to_pixel(x) for x in right_marking],
-                    does_cross_solid_line(sample, sample.lane_width * 1.1))
-                for n, wp in enumerate(waypoints):
-                    if (n % 400) == 0:
-                        draw_arrow(map_surface, wp.transform)
+        topology = carla_map.get_topology()
+        draw_topology(topology, 0)
+        draw_topology(topology, 1)
 
         actors = carla_world.get_actors()
-        stops_transform = [actor.get_transform() for actor in actors if 'stop' in actor.type_id]
+
+        # Draw Traffic Signs
         font_size = world_to_pixel_width(1)
         font = pygame.font.SysFont('Arial', font_size, True)
-        font_surface = font.render("STOP", False, COLOR_ALUMINIUM_2)
-        font_surface = pygame.transform.scale(font_surface, (font_surface.get_width(), font_surface.get_height() * 2))
-        for stop in stops_transform:
-            draw_stop(map_surface, font_surface, stop)
+
+        stops_transform = [actor.get_transform() for actor in actors if 'stop' in actor.type_id]
+        yields_transform = [actor.get_transform() for actor in actors if 'yield' in actor.type_id]
+
+        stop_font_surface = font.render("STOP", False, COLOR_ALUMINIUM_2)
+        stop_font_surface = pygame.transform.scale(stop_font_surface, (stop_font_surface.get_width(), stop_font_surface.get_height() * 2))
+
+        yield_font_surface = font.render("YIELD", False, COLOR_ALUMINIUM_2)
+        yield_font_surface = pygame.transform.scale(yield_font_surface, (yield_font_surface.get_width(), yield_font_surface.get_height() * 2))
+
+        for ts_stop in stops_transform:
+            draw_stop(map_surface, stop_font_surface, ts_stop)
+
+        for ts_yield in yields_transform:
+            draw_stop(map_surface, yield_font_surface, ts_yield)
 
     def world_to_pixel(self, location, offset=(0, 0)):
         x = self.scale * self._pixels_per_meter * (location.x - self._world_offset[0])

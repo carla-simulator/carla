@@ -6,11 +6,14 @@
 
 #pragma once
 
+#include "carla/geom/GeoLocation.h"
 #include "carla/Iterator.h"
+#include "carla/road/Junction.h"
 #include "carla/ListView.h"
 #include "carla/NonCopyable.h"
-#include "carla/road/element/RoadSegment.h"
-#include "carla/opendrive/types.h"
+#include "carla/road/Road.h"
+#include "carla/road/RoadTypes.h"
+#include "carla/road/element/RoadInfo.h"
 
 #include <boost/iterator/transform_iterator.hpp>
 
@@ -19,58 +22,49 @@
 namespace carla {
 namespace road {
 
-  struct lane_junction_t {
-    std::string contact_point = "start";
-    int junction_id = -1;
+  class Lane;
 
-    int connection_road = -1;
-    int incomming_road = -1;
-
-    std::vector<int> from_lane;
-    std::vector<int> to_lane;
-  };
-
-  class MapData
-    : private MovableNonCopyable {
+  class MapData : private MovableNonCopyable {
   public:
-
-    const element::RoadSegment *GetRoad(element::id_type id) const {
-      auto it = _elements.find(id);
-      return it != _elements.end() ? it->second.get() : nullptr;
-    }
-
-    auto GetAllIds() const {
-      return MakeListView(
-          iterator::make_map_keys_iterator(_elements.begin()),
-          iterator::make_map_keys_iterator(_elements.end()));
-    }
-
-    size_t GetRoadCount() const {
-      return _elements.size();
-    }
-
-    const std::vector<lane_junction_t> &GetJunctionInformation() const {
-      return _junction_information;
-    }
 
     const geom::GeoLocation &GetGeoReference() const {
       return _geo_reference;
     }
 
-    const std::vector<opendrive::types::TrafficLightGroup> &GetTrafficGroups() const {
-      return _traffic_groups;
+    std::unordered_map<RoadId, Road> &GetRoads();
+
+    const std::unordered_map<RoadId, Road> &GetRoads() const {
+      return _roads;
     }
 
-    const std::vector<opendrive::types::TrafficSign> &GetTrafficSigns() const {
-      return _traffic_signs;
+    std::unordered_map<JuncId, Junction> &GetJunctions();
+
+    bool ContainsRoad(RoadId id) const {
+      return (_roads.find(id) != _roads.end());
     }
 
-    auto GetRoadSegments() const {
-      using const_ref = const element::RoadSegment &;
-      auto get = [](auto &pair) -> const_ref { return *pair.second; };
-      return MakeListView(
-          boost::make_transform_iterator(_elements.begin(), get),
-          boost::make_transform_iterator(_elements.end(), get));
+    Road &GetRoad(const RoadId id);
+
+    const Road &GetRoad(const RoadId id) const;
+
+    Junction *GetJunction(JuncId id);
+
+    template <typename T>
+    auto GetRoadInfo(const RoadId id, const double s) {
+      return GetRoad(id).template GetInfo<T>(s);
+    }
+
+    template <typename T>
+    auto GetLaneInfo(
+        const RoadId road_id,
+        const SectionId section_id,
+        const LaneId lane_id,
+        const double s) {
+      return GetRoad(road_id).GetLaneById(section_id, lane_id).template GetInfo<T>(s);
+    }
+
+    auto GetRoadCount() const {
+      return _roads.size();
     }
 
   private:
@@ -79,33 +73,11 @@ namespace road {
 
     MapData() = default;
 
-    void SetJunctionInformation(const std::vector<lane_junction_t> &junctionInfo) {
-      _junction_information = junctionInfo;
-    }
-
-    void SetGeoReference(const geom::GeoLocation &geoReference) {
-      _geo_reference = geoReference;
-    }
-
-    void SetTrafficLightData(const std::vector<opendrive::types::TrafficLightGroup> &trafficLightData) {
-      _traffic_groups = trafficLightData;
-    }
-
-    void SetTrafficSignData(const std::vector<opendrive::types::TrafficSign> &trafficSignData) {
-      _traffic_signs = trafficSignData;
-    }
-
     geom::GeoLocation _geo_reference;
 
-    std::vector<lane_junction_t> _junction_information;
+    std::unordered_map<RoadId, Road> _roads;
 
-    std::unordered_map<
-        element::id_type,
-        std::unique_ptr<element::RoadSegment>> _elements;
-
-    std::vector<opendrive::types::TrafficLightGroup> _traffic_groups;
-
-    std::vector<opendrive::types::TrafficSign> _traffic_signs;
+    std::unordered_map<JuncId, Junction> _junctions;
   };
 
 } // namespace road

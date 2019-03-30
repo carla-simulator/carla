@@ -59,7 +59,7 @@ namespace data {
   }
 
   std::ostream &operator<<(std::ostream &out, const LaneInvasionEvent &meas) {
-    out << "LaneInvasionEvent(frame=" << meas.GetFrameNumber() 
+    out << "LaneInvasionEvent(frame=" << meas.GetFrameNumber()
         << ", timestamp=" << meas.GetTimestamp()
         << ')';
     return out;
@@ -159,7 +159,6 @@ void export_sensor_data() {
   namespace cr = carla::rpc;
   namespace cs = carla::sensor;
   namespace csd = carla::sensor::data;
-  namespace cre = carla::road::element;
 
   class_<cs::SensorData, boost::noncopyable, boost::shared_ptr<cs::SensorData>>("SensorData", no_init)
     .add_property("frame_number", &cs::SensorData::GetFrameNumber)
@@ -221,12 +220,6 @@ void export_sensor_data() {
     .add_property("other_actor", &csd::ObstacleDetectionEvent::GetOtherActor)
     .add_property("distance", CALL_RETURNING_COPY(csd::ObstacleDetectionEvent, GetDistance))
     .def(self_ns::str(self_ns::self))
-  ;
-
-  enum_<cre::LaneMarking>("LaneMarking")
-    .value("Other", cre::LaneMarking::Other)
-    .value("Broken", cre::LaneMarking::Broken)
-    .value("Solid", cre::LaneMarking::Solid)
   ;
 
   class_<csd::LaneInvasionEvent, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::LaneInvasionEvent>>("LaneInvasionEvent", no_init)

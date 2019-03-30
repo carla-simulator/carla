@@ -46,10 +46,16 @@ def get_scene_layout(carla_map):
     precision = 0.05
     for waypoint in topology:
         waypoints = [waypoint]
-        nxt = waypoint.next(precision)[0]
-        while nxt.road_id == waypoint.road_id:
-            waypoints.append(nxt)
-            nxt = nxt.next(precision)[0]
+        nxt = waypoint.next(precision)
+        if len(nxt) > 0:
+            nxt = nxt[0]
+            while nxt.road_id == waypoint.road_id:
+                waypoints.append(nxt)
+                nxt = nxt.next(precision)
+                if len(nxt) > 0:
+                    nxt = nxt[0]
+                else:
+                    break
 
         left_marking = [_lateral_shift(w.transform, -w.lane_width * 0.5) for w in waypoints]
         right_marking = [_lateral_shift(w.transform, w.lane_width * 0.5) for w in waypoints]
@@ -81,11 +87,15 @@ def get_scene_layout(carla_map):
                 # Get left and right waypoint ids only if they are valid
                 left_lane_waypoint_id = -1
                 if left_lane_key in map_dict[road_key]:
-                    left_lane_waypoint_id = map_dict[road_key][left_lane_key]["waypoints"][i].id
+                    left_lane_waypoints = map_dict[road_key][left_lane_key]["waypoints"]
+                    if i < len(left_lane_waypoints):
+                        left_lane_waypoint_id = left_lane_waypoints[i].id
 
                 right_lane_waypoint_id = -1
                 if right_lane_key in map_dict[road_key]:
-                    right_lane_waypoint_id = map_dict[road_key][right_lane_key]["waypoints"][i].id
+                    right_lane_waypoints = map_dict[road_key][right_lane_key]["waypoints"]
+                    if i < len(right_lane_waypoints):
+                        right_lane_waypoint_id = right_lane_waypoints[i].id
 
                 # Get left and right margins (aka markings)
                 lm = carla_map.transform_to_geolocation(lane["left_marking"][i])

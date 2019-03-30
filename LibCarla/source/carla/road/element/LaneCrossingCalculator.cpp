@@ -23,13 +23,13 @@ namespace element {
       const bool origin_is_offroad,
       const bool destination_is_offroad) {
     if (origin_is_offroad != destination_is_offroad) {
-      return { LaneMarking::Solid };
+      return { LaneMarking::Type::Solid };
     } else if (lane_id_origin == lane_id_destination) {
       return {};
     } else if (lane_id_origin * lane_id_destination < 0) {
-      return { LaneMarking::Solid };
+      return { LaneMarking::Type::Solid };
     } else {
-      return { LaneMarking::Broken };
+      return { LaneMarking::Type::Broken };
     }
   }
 
@@ -43,16 +43,16 @@ namespace element {
       const geom::Location &destination) {
     auto w0 = map.GetClosestWaypointOnRoad(origin);
     auto w1 = map.GetClosestWaypointOnRoad(destination);
-    if (w0.GetRoadId() != w1.GetRoadId()) {
+    if (w0->road_id != w1->road_id) {
       /// @todo This case should also be handled.
       return {};
     }
-    if (w0.IsIntersection() || w1.IsIntersection()) {
+    if (map.IsJunction(w0->road_id) || map.IsJunction(w1->road_id)) {
       return {};
     }
     return CrossingAtSameSection(
-        w0.GetLaneId(),
-        w1.GetLaneId(),
+        w0->lane_id,
+        w1->lane_id,
         IsOffRoad(map, origin),
         IsOffRoad(map, destination));
   }
