@@ -5,6 +5,8 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "carla/road/element/WaypointInformationTypes.h"
+
+#include "carla/StringUtil.h"
 #include "carla/road/element/RoadInfoMarkRecord.h"
 
 namespace carla {
@@ -12,8 +14,8 @@ namespace road {
 namespace element {
 
   WaypointInfoRoadMark::WaypointInfoRoadMark(const RoadInfoMarkRecord &info) {
-    const auto &t = info.GetType();
-    const auto &c = info.GetColor();
+    const auto &t = StringUtil::ToLowerCopy(info.GetType());
+    const auto &c = StringUtil::ToLowerCopy(info.GetColor());
     const auto &lc = info.GetLaneChange();
 
     if (t == "broken") {

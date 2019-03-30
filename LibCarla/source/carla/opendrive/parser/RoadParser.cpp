@@ -5,12 +5,12 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "carla/opendrive/parser/RoadParser.h"
+
+#include "carla/Logging.h"
+#include "carla/StringUtil.h"
 #include "carla/opendrive/parser/pugixml/pugixml.hpp"
 #include "carla/road/MapBuilder.h"
 #include "carla/road/RoadTypes.h"
-#include "carla/Logging.h"
-#include "carla/StringUtil.h"
-#include <deque>
 
 namespace carla {
 namespace opendrive {
@@ -62,7 +62,8 @@ namespace parser {
     std::vector<LaneSection> sections;
   };
 
-  static road::Lane::LaneType StringToLaneType(const std::string &str) {
+  static road::Lane::LaneType StringToLaneType(std::string &&str) {
+    StringUtil::ToLower(str);
     if (str == "driving") {
       return road::Lane::LaneType::Driving;
     } else if (str == "stop") {
@@ -89,7 +90,7 @@ namespace parser {
       return road::Lane::LaneType::Special2;
     } else if (str == "special3") {
       return road::Lane::LaneType::Special3;
-    } else if (str == "roadWorks") {
+    } else if (str == "roadworks") {
       return road::Lane::LaneType::RoadWorks;
     } else if (str == "tram") {
       return road::Lane::LaneType::Tram;
@@ -99,9 +100,9 @@ namespace parser {
       return road::Lane::LaneType::Entry;
     } else if (str == "exit") {
       return road::Lane::LaneType::Exit;
-    } else if (str == "offRamp") {
+    } else if (str == "offramp") {
       return road::Lane::LaneType::OffRamp;
-    } else if (str == "onRamp") {
+    } else if (str == "onramp") {
       return road::Lane::LaneType::OnRamp;
     } else {
       return road::Lane::LaneType::None;
