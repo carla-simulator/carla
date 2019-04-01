@@ -1,56 +1,54 @@
 ## Latest Changes
-  * Fixed small float bug in misc.py
-  * Basic agent integrated with global router
-  * Fixed local planner to avoid premature route pruning at path overlaps
-  * Fixed global router behavior to be consistent with new Waypoint API
-  * LaneInvasionSensor stabilization
-    - Fix naming: Use 'LaneInvasionSensor'/'lane_invasion' instead of mixture with 'LaneDetector'/'lane_detector'
-    - Create server-side LaneInvasionSensor (to be able to access it via ROS bridge)
-  * Fix ActorList returned by ActorList.Filter(...)
-  * Add --rolename to manual_control.py
-  * Added options to no_rendering_mode.py to draw extra road information
-  * Migrate Content to AWS
-  * Adding a parser to represent the map as a connected graph of waypoints.
-  * Allow user to disable rendering and set the server timeout from the command line
-  * Add timestamp to SensorData
-  * Allow usage of hostname for carla::Client and resolve them to IP address
-  * Added `map.transform_to_geolocation` to transform Location to GNSS GeoLocation
-  * Added `id` property to waypoints, uniquely identifying waypoints up to half centimetre precision
-  * Added OpenDrive's road offset `s` as property to waypoints
-  * Fixed python client DLL error on Windows
-  * Fixed wheel's tire friction from physics control parameters.
-  * Fixed cleanup of local_planner when used by other modules
-  * Fixed Obstacle Detector
+
+  * New Town07, rural environment with narrow roads
   * Reworked OpenDRIVE parser and waypoints API
     - Fixed several situations in which the XODR was incorrectly parsed
-    - Exposed more information: lane marking, lane type, lane section id
+    - Exposed more information: lane marking, lane type, lane section id, s
     - API change: waypoint's `lane_type` is now an enum, `carla.LaneType`
     - API change: `carla.LaneMarking` is not an enum anymore, extended with color, type, lane change, and width
     - API extension: `map.get_waypoint` accepts an extra optional flag argument `lane_type` for filtering lane types
     - API extension: `carla.Map` can be constructed off-line out of XODR files, `carla.Map(town_name, xodr_content)`
-  * New Town07, rural environment with narrow roads
+    - API extension: `id` property to waypoints, uniquely identifying waypoints up to half centimetre precision
+  * API change: Renamed "lane_invasion" to "lane_detector", added too its server-side sensor to be visible to other clients
+  * API extension: new carla.command.SpawnActor to spawn actors in batch
+  * API extension: `map.transform_to_geolocation` to transform Location to GNSS GeoLocation
+  * API extension: added timestamp (elapsed simulation seconds) to SensorData
+  * API extension: method `client.apply_batch_sync` that sends commands in batch and waits for server response
+  * API extension: optional argument "actor_ids" to world.get_actors to request only the actors with the ids provided
+  * Migrated Content to AWS
+  * Updated `spawn_npc.py` to spawn vehicles in batch
+  * Added --rolename to "manual_control.py"
+  * Added options to "no_rendering_mode.py" to draw extra road information
+  * Added "scene_layout.py" to retrieve the whole information in the scene as Python dict
+  * Basic agent integrated with global router
+  * Allow usage of hostname for carla::Client and resolve them to IP addresses
   * Added new pack of assets
     - Windmill, different farm houses, silo
     - Plants corn, dandelion, poppy, and grass
     - Yield traffic sign
   * Added modular buildings New York style
   * Added marking lanes in Town03
+  * Added command-line arguments to simulator to disable rendering and set the server timeout
   * Improved performance in Town01 and Town02
   * Changed yellow marking lane from Town01 and Town02 to dashed yellow marking lane
   * Improved lane cross detection to use the new Waypoint API
+  * Enhanced stop triggers options
   * Fixed semantic segmentation tags in Town04, Town05, Town06
   * Fixed tree collision in Town01
-  * Fixed VehicleSpawnPoint in Town01
+  * Fixed VehicleSpawnPoint out of the road in Town01
   * Fixed geo-reference of Town01 and Town07
   * Fixed floating pillars in Town04
   * Fixed floating building in Town03
   * Fixed vehicles missing the route if autopilot enabled too late
-  * Enhanced stop triggers options
   * Fixed division by zero in is_within_distance_ahead()
-  * Added new carla.command.SpawnActor to spawn actors in batch
-  * Added method `client.apply_batch_sync` that waits for server response
-  * Added optional argument "actor_ids" to world.get_actors to request only the actors with the ids provided
-  * Updated `spawn_npc.py` to spawn vehicles in batch
+  * Fixed local planner to avoid premature route pruning at path overlaps
+  * Fixed global router behavior to be consistent with new Waypoint API
+  * Fixed clean up of local_planner when used by other modules
+  * Fixed python client DLL error on Windows
+  * Fixed wrong type returned by `ActorList.Filter(...)`
+  * Fixed wheel's tire friction affecting all vehicles from physics control parameters
+  * Fixed obstacle detector not working
+  * Fixed small float bug in misc.py
 
 ## CARLA 0.9.4
 
