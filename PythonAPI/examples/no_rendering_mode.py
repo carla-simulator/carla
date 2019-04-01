@@ -798,6 +798,7 @@ class ModuleWorld(object):
         self.scaled_size = 0
         # Hero actor
         self.hero_actor = None
+        self.spawned_hero = None
         self.hero_transform = None
 
         self.scale_offset = [0, 0]
@@ -910,6 +911,9 @@ class ModuleWorld(object):
             spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
             self.hero_actor = self.world.try_spawn_actor(blueprint, spawn_point)
         self.hero_transform = self.hero_actor.get_transform()
+
+        # Save it in order to destroy it when closing program
+        self.spawned_hero = self.hero_actor
 
     def tick(self, clock):
         actors = self.world.get_actors()
@@ -1232,7 +1236,9 @@ class ModuleWorld(object):
             display.blit(self.result_surface, (translation_offset[0] + center_offset[0],
                                                translation_offset[1]))
 
-
+    def destroy(self):
+        if self.spawned_hero is not None:
+            self.spawned_hero.destroy()
 # ==============================================================================
 # -- Input -----------------------------------------------------------
 # ==============================================================================
@@ -1372,39 +1378,46 @@ module_manager = ModuleManager()
 
 
 def game_loop(args):
-    # Init Pygame
-    pygame.init()
-    display = pygame.display.set_mode(
-        (args.width, args.height),
-        pygame.HWSURFACE | pygame.DOUBLEBUF)
-    pygame.display.set_caption(args.description)
+    try:
+        # Init Pygame
+        pygame.init()
+        display = pygame.display.set_mode(
+            (args.width, args.height),
+            pygame.HWSURFACE | pygame.DOUBLEBUF)
+        pygame.display.set_caption(args.description)
 
-    font = pygame.font.Font(pygame.font.get_default_font(), 20)
-    text_surface = font.render('Rendering map...', True, COLOR_WHITE)
-    display.blit(text_surface, text_surface.get_rect(center=(args.width / 2, args.height / 2)))
-    pygame.display.flip()
-
-    # Init modules
-    input_module = ModuleInput(MODULE_INPUT)
-    hud_module = ModuleHUD(MODULE_HUD, args.width, args.height)
-    world_module = ModuleWorld(MODULE_WORLD, args, timeout=2.0)
-
-    # Register Modules
-    module_manager.register_module(world_module)
-    module_manager.register_module(hud_module)
-    module_manager.register_module(input_module)
-
-    module_manager.start_modules()
-
-    clock = pygame.time.Clock()
-    while True:
-        clock.tick_busy_loop(60)
-
-        module_manager.tick(clock)
-        module_manager.render(display)
-
+        font = pygame.font.Font(pygame.font.get_default_font(), 20)
+        text_surface = font.render('Rendering map...', True, COLOR_WHITE)
+        display.blit(text_surface, text_surface.get_rect(center=(args.width / 2, args.height / 2)))
         pygame.display.flip()
 
+        # Init modules
+        input_module = ModuleInput(MODULE_INPUT)
+        hud_module = ModuleHUD(MODULE_HUD, args.width, args.height)
+        world_module = ModuleWorld(MODULE_WORLD, args, timeout=2.0)
+
+        # Register Modules
+        module_manager.register_module(world_module)
+        module_manager.register_module(hud_module)
+        module_manager.register_module(input_module)
+
+        module_manager.start_modules()
+
+        clock = pygame.time.Clock()
+        while True:
+            clock.tick_busy_loop(60)
+
+            module_manager.tick(clock)
+            module_manager.render(display)
+
+            pygame.display.flip()
+
+    except KeyboardInterrupt:
+        print('\nCancelled by user. Bye!')
+
+    finally:
+        if world_module is not None:
+            world_module.destroy()
 
 def exit_game():
     module_manager.clear_modules()
@@ -1478,11 +1491,7 @@ def main():
     logging.info('listening to server %s:%s', args.host, args.port)
     print(__doc__)
 
-    try:
-        game_loop(args)
-    except KeyboardInterrupt:
-        print('\nCancelled by user. Bye!')
-
+    game_loop(args)
 
 if __name__ == '__main__':
     main()
