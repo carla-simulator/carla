@@ -136,6 +136,7 @@ if $DO_TARBALL ; then
   log "Packaging build."
 
   rm -f ./Manifest_NonUFSFiles_Linux.txt
+  rm -f ./Manifest_UFSFiles_Linux.txt
   rm -Rf ./CarlaUE4/Saved
   rm -Rf ./Engine/Saved
 
