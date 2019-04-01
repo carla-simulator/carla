@@ -8,6 +8,7 @@
     - Create server-side LaneInvasionSensor (to be able to access it via ROS bridge)
   * Fix ActorList returned by ActorList.Filter(...)
   * Add --rolename to manual_control.py
+  * Added options to no_rendering_mode.py to draw extra road information
   * Migrate Content to AWS
   * Adding a parser to represent the map as a connected graph of waypoints.
   * Allow user to disable rendering and set the server timeout from the command line
