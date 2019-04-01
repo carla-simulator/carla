@@ -432,11 +432,12 @@ class TrafficLightSurfaces(object):
 
 
 class MapImage(object):
-    def __init__(self, carla_world, carla_map, pixels_per_meter, show_triggers, show_connections):
+    def __init__(self, carla_world, carla_map, pixels_per_meter, show_triggers, show_connections, show_spawn_points):
         self._pixels_per_meter = pixels_per_meter
         self.scale = 1.0
         self.show_triggers = show_triggers
         self.show_connections = show_connections
+        self.show_spawn_points = show_spawn_points
 
         waypoints = carla_map.generate_waypoints(2)
         margin = 50
@@ -569,8 +570,8 @@ class MapImage(object):
             forward = transform.get_forward_vector()
             transform.rotation.yaw += 90
             right_dir = transform.get_forward_vector()
-            start = transform.location
-            end = start + 2.0 * forward
+            end = transform.location
+            start = end - 2.0 * forward
             right = start + 0.8 * forward + 0.4 * right_dir
             left = start + 0.8 * forward - 0.4 * right_dir
             pygame.draw.lines(
@@ -716,6 +717,10 @@ class MapImage(object):
         draw_topology(topology, 0)
         draw_topology(topology, 1)
 
+        if self.show_spawn_points:
+            for sp in carla_map.get_spawn_points():
+                draw_arrow(map_surface, sp, color=COLOR_CHOCOLATE_0)
+
         if self.show_connections:
             dist = 1.5
             to_pixel = lambda wp: world_to_pixel(wp.transform.location)
@@ -840,7 +845,8 @@ class ModuleWorld(object):
             carla_map=self.town_map,
             pixels_per_meter=PIXELS_PER_METER,
             show_triggers=self.args.show_triggers,
-            show_connections=self.args.show_connections)
+            show_connections=self.args.show_connections,
+            show_spawn_points=self.args.show_spawn_points)
 
         # Store necessary modules
         self.module_hud = module_manager.get_module(MODULE_HUD)
@@ -1457,6 +1463,10 @@ def main():
         '--show-connections',
         action='store_true',
         help='show waypoint connections')
+    argparser.add_argument(
+        '--show-spawn-points',
+        action='store_true',
+        help='show recommended spawn points')
 
     args = argparser.parse_args()
     args.description = argparser.description
