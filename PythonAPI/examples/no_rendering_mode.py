@@ -1062,7 +1062,7 @@ class ModuleWorld(object):
             if self.args.show_triggers:
                 corners = Util.get_bounding_box(sl)
                 corners = [world_to_pixel(p) for p in corners]
-                pygame.draw.lines(surface, COLOR_SKY_BLUE_0, True, corners, 2)
+                pygame.draw.lines(surface, COLOR_PLUM_2, True, corners, 2)
 
             # Blit
             if self.hero_actor is not None:
