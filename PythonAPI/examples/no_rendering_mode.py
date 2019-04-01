@@ -582,7 +582,7 @@ class MapImage(object):
                     world_to_pixel(x) for x in [
                         left, start, right]], 4)
 
-        def draw_traffic_signs(surface, font_surface, actor, color=COLOR_ALUMINIUM_2, trigger_color=COLOR_CHAMELEON_0):
+        def draw_traffic_signs(surface, font_surface, actor, color=COLOR_ALUMINIUM_2, trigger_color=COLOR_PLUM_0):
             transform = actor.get_transform()
             waypoint = carla_map.get_waypoint(transform.location)
 
@@ -750,10 +750,10 @@ class MapImage(object):
             yield_font_surface, (yield_font_surface.get_width(), yield_font_surface.get_height() * 2))
 
         for ts_stop in stops:
-            draw_traffic_signs(map_surface, stop_font_surface, ts_stop)
+            draw_traffic_signs(map_surface, stop_font_surface, ts_stop, trigger_color=COLOR_SCARLET_RED_1)
 
         for ts_yield in yields:
-            draw_traffic_signs(map_surface, yield_font_surface, ts_yield)
+            draw_traffic_signs(map_surface, yield_font_surface, ts_yield, trigger_color=COLOR_ORANGE_1)
 
     def world_to_pixel(self, location, offset=(0, 0)):
         x = self.scale * self._pixels_per_meter * (location.x - self._world_offset[0])
@@ -1010,7 +1010,7 @@ class ModuleWorld(object):
             if self.args.show_triggers:
                 corners = Util.get_bounding_box(tl)
                 corners = [world_to_pixel(p) for p in corners]
-                pygame.draw.lines(surface, COLOR_CHAMELEON_0, True, corners, 2)
+                pygame.draw.lines(surface, COLOR_BUTTER_1, True, corners, 2)
 
             if self.hero_actor is not None:
                 corners = Util.get_bounding_box(tl)
@@ -1052,7 +1052,7 @@ class ModuleWorld(object):
             if self.args.show_triggers:
                 corners = Util.get_bounding_box(sl)
                 corners = [world_to_pixel(p) for p in corners]
-                pygame.draw.lines(surface, COLOR_CHAMELEON_0, True, corners, 2)
+                pygame.draw.lines(surface, COLOR_SKY_BLUE_0, True, corners, 2)
 
             # Blit
             if self.hero_actor is not None:
