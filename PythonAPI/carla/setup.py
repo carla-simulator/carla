@@ -70,7 +70,7 @@ def get_libcarla_extensions():
             'rpc.lib', 'carla_client.lib',
             'libpng.lib', 'zlib.lib']
 
-        # Search for files in 'PythonAPI\dependencies\lib' that contains
+        # Search for files in 'PythonAPI\carla\dependencies\lib' that contains
         # the names listed in required_libs in it's file name
         libs = [x for x in os.listdir('dependencies/lib') if any(d in x for d in required_libs)]
 
