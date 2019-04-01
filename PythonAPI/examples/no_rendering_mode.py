@@ -1049,6 +1049,11 @@ class ModuleWorld(object):
             limit = sl.type_id.split('.')[2]
             font_surface = font.render(limit, True, COLOR_ALUMINIUM_5)
 
+            if self.args.show_triggers:
+                corners = Util.get_bounding_box(sl)
+                corners = [world_to_pixel(p) for p in corners]
+                pygame.draw.lines(surface, COLOR_CHAMELEON_0, True, corners, 2)
+
             # Blit
             if self.hero_actor is not None:
                 # Rotate font surface with respect to hero vehicle front
