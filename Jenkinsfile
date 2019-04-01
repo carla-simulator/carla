@@ -25,7 +25,7 @@ pipeline {
             }
             post {
                 always {
-                    archiveArtifacts 'PythonAPI/dist/*.egg'
+                    archiveArtifacts 'PythonAPI/carla/dist/*.egg'
                 }
             }
         }
@@ -52,6 +52,7 @@ pipeline {
             steps {
                 sh 'make package'
                 sh 'make export-maps ARGS="--map=/Game/Carla/Maps/Town06 --file=Town06"'
+                sh 'make export-maps ARGS="--map=/Game/Carla/Maps/Town07 --file=Town07"'
             }
             post {
                 always {

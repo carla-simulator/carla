@@ -53,7 +53,7 @@ if ! { ${REMOVE_INTERMEDIATE} || ${BUILD_FOR_PYTHON2} || ${BUILD_FOR_PYTHON3}; }
   fatal_error "Nothing selected to be done."
 fi
 
-pushd "${CARLA_PYTHONAPI_ROOT_FOLDER}" >/dev/null
+pushd "${CARLA_PYTHONAPI_SOURCE_FOLDER}" >/dev/null
 
 # ==============================================================================
 # -- Clean intermediate files --------------------------------------------------

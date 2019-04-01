@@ -1,5 +1,12 @@
 ## Latest Changes
 
+  * Basic agent integrated with global router
+  * Fixed local planner to avoid premature route pruning at path overlaps
+  * Fixed global router behavior to be consistent with new Waypoint API
+  * LaneInvasionSensor stabilization
+    - Fix naming: Use 'LaneInvasionSensor'/'lane_invasion' instead of mixture with 'LaneDetector'/'lane_detector'
+    - Create server-side LaneInvasionSensor (to be able to access it via ROS bridge)
+  * Fix ActorList returned by ActorList.Filter(...)
   * Added `client_bounding_boxes.py` to show bounding boxes client-side
   * Add --rolename to manual_control.py
   * Migrate Content to AWS
@@ -13,12 +20,36 @@
   * Fixed python client DLL error on Windows
   * Fixed wheel's tire friction from physics control parameters.
   * Fixed cleanup of local_planner when used by other modules
+  * Fixed Obstacle Detector
+  * Reworked OpenDRIVE parser and waypoints API
+    - Fixed several situations in which the XODR was incorrectly parsed
+    - Exposed more information: lane marking, lane type, lane section id
+    - API change: waypoint's `lane_type` is now an enum, `carla.LaneType`
+    - API change: `carla.LaneMarking` is not an enum anymore, extended with color, type, lane change, and width
+    - API extension: `map.get_waypoint` accepts an extra optional flag argument `lane_type` for filtering lane types
+    - API extension: `carla.Map` can be constructed off-line out of XODR files, `carla.Map(town_name, xodr_content)`
+  * New Town07, rural environment with narrow roads
+  * Added new pack of assets
+    - Windmill, different farm houses, silo
+    - Plants corn, dandelion, poppy, and grass
+    - Yield traffic sign
+  * Added modular buildings New York style
+  * Added marking lanes in Town03
+  * Improved performance in Town01 and Town02
+  * Changed yellow marking lane from Town01 and Town02 to dashed yellow marking lane
+  * Fixed semantic segmentation tags in Town04, Town05, Town06
+  * Fixed tree collision in Town01
+  * Fixed VehicleSpawnPoint in Town01
+  * Fixed geo-reference of Town01 and Town07
+  * Fixed floating pillars in Town04
+  * Fixed floating building in Town03
+  * Enhanced stop triggers options
 
 ## CARLA 0.9.4
 
   * Added recording and playback functionality
   * Added synchronous mode, simulator waits until a client sends a "tick" cue, `client.tick()`
-  * Allow changing map from client-side, added `client.load_map(name)`, `client.reload_map()`, and `client.get_available_maps()`
+  * Allow changing map from client-side, added `client.load_world(name)`, `client.reload_world()`, and `client.get_available_maps()`
   * Added scripts and tools to import maps directly from .fbx and .xodr files into the simulator
   * Exposed minimum physics control parameters for vehicles' engine and wheels
   * Allow controlling multiple actors in "batch mode"

@@ -8,14 +8,15 @@
 
 #include "carla/Memory.h"
 #include "carla/NonCopyable.h"
+#include "carla/road/Map.h"
 #include "carla/road/element/LaneMarking.h"
 #include "carla/rpc/MapInfo.h"
+#include "carla/road/Lane.h"
 
 #include <string>
 
 namespace carla {
 namespace geom { class GeoLocation; }
-namespace road { class Map; }
 namespace client {
 
   class Waypoint;
@@ -27,10 +28,16 @@ namespace client {
 
     explicit Map(rpc::MapInfo description);
 
+    explicit Map(std::string name, std::string xodr_content);
+
     ~Map();
 
     const std::string &GetName() const {
       return _description.name;
+    }
+
+    const road::Map &GetMap() const {
+      return _map;
     }
 
     const std::string &GetOpenDrive() const {
@@ -43,7 +50,8 @@ namespace client {
 
     SharedPtr<Waypoint> GetWaypoint(
         const geom::Location &location,
-        bool project_to_road = true) const;
+        bool project_to_road = true,
+        uint32_t lane_type = static_cast<uint32_t>(road::Lane::LaneType::Driving)) const;
 
     using TopologyList = std::vector<std::pair<SharedPtr<Waypoint>, SharedPtr<Waypoint>>>;
 
@@ -61,7 +69,7 @@ namespace client {
 
     const rpc::MapInfo _description;
 
-    const SharedPtr<const road::Map> _map;
+    const road::Map _map;
   };
 
 } // namespace client

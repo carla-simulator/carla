@@ -102,6 +102,28 @@ if ! { ${LIBCARLA_RELEASE} || ${LIBCARLA_DEBUG} || ${PYTHON_API_2} || ${PYTHON_A
 fi
 
 # ==============================================================================
+# -- Download Content need it by the tests -------------------------------------
+# ==============================================================================
+
+if { ${LIBCARLA_RELEASE} || ${LIBCARLA_DEBUG}; }; then
+
+  CONTENT_TAG=0.1.3
+
+  mkdir -p ${LIBCARLA_TEST_CONTENT_FOLDER}
+  pushd "${LIBCARLA_TEST_CONTENT_FOLDER}" >/dev/null
+
+  if [ "$(get_git_repository_version)" != "${CONTENT_TAG}" ]; then
+    pushd .. >/dev/null
+    rm -Rf ${LIBCARLA_TEST_CONTENT_FOLDER}
+    git clone -b ${CONTENT_TAG} https://github.com/carla-simulator/opendrive-test-files.git ${LIBCARLA_TEST_CONTENT_FOLDER}
+    popd >/dev/null
+  fi
+
+  popd >/dev/null
+
+fi
+
+# ==============================================================================
 # -- Run LibCarla tests --------------------------------------------------------
 # ==============================================================================
 
@@ -188,7 +210,7 @@ popd >/dev/null
 # ==============================================================================
 
 if ${SMOKE_TESTS_2} || ${SMOKE_TESTS_3} ; then
-  pushd "${CARLA_PYTHONAPI_ROOT_FOLDER}/test" >/dev/null
+  pushd "${CARLA_PYTHONAPI_ROOT_FOLDER}/util" >/dev/null
     log "Checking connection with the simulator."
     ./test_connection.py -p 3654 --timeout=60.0
   popd >/dev/null

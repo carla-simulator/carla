@@ -99,7 +99,7 @@ void ARoutePlanner::AddRoute(float probability, const TArray<FVector> &routePoin
   NewSpline->bHiddenInGame = true;
 
   #if WITH_EDITOR
-  NewSpline->EditorUnselectedSplineSegmentColor = FLinearColor(0.15f, 0.15f, 0.15f);
+  NewSpline->EditorUnselectedSplineSegmentColor = FLinearColor(1.f, 0.15f, 0.15f);
   #endif // WITH_EDITOR
 
   NewSpline->SetLocationAtSplinePoint(0, routePoints[0], ESplineCoordinateSpace::World, true);

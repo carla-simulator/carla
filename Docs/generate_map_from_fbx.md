@@ -54,7 +54,7 @@ folder obtained from RoadRunner and rename it with the name of the map to be imp
 It have to match the <b>.fbx</b>
 and <b>.xodr</b> files.
 
-Now, simply go into the PythonAPI/util folder and run <b>generate_map.py</b>
+Now, simply go into the _"Util"_ folder and run <b>generate_map.py</b>
 
 !!! important
     The script, by default, checks the <i>/Unreal/CarlaUE4/Content/Carla/ExportedMaps</i> for matching names.
