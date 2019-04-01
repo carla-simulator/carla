@@ -432,10 +432,11 @@ class TrafficLightSurfaces(object):
 
 
 class MapImage(object):
-    def __init__(self, carla_world, carla_map, pixels_per_meter=10, show_triggers=False):
+    def __init__(self, carla_world, carla_map, pixels_per_meter, show_triggers, show_connections):
         self._pixels_per_meter = pixels_per_meter
         self.scale = 1.0
         self.show_triggers = show_triggers
+        self.show_connections = show_connections
 
         waypoints = carla_map.generate_waypoints(2)
         margin = 50
@@ -715,6 +716,22 @@ class MapImage(object):
         draw_topology(topology, 0)
         draw_topology(topology, 1)
 
+        if self.show_connections:
+            dist = 1.5
+            to_pixel = lambda wp: world_to_pixel(wp.transform.location)
+            for wp in carla_map.generate_waypoints(dist):
+                col = (0, 255, 255) if wp.is_intersection else (0, 255, 0)
+                for nxt in wp.next(dist):
+                    pygame.draw.line(map_surface, col, to_pixel(wp), to_pixel(nxt), 2)
+                if wp.lane_change & carla.LaneChange.Right:
+                    r = wp.get_right_lane()
+                    if r and r.lane_type == carla.LaneType.Driving:
+                        pygame.draw.line(map_surface, col, to_pixel(wp), to_pixel(r), 2)
+                if wp.lane_change & carla.LaneChange.Left:
+                    l = wp.get_left_lane()
+                    if l and l.lane_type == carla.LaneType.Driving:
+                        pygame.draw.line(map_surface, col, to_pixel(wp), to_pixel(l), 2)
+
         actors = carla_world.get_actors()
 
         # Draw Traffic Signs
@@ -754,18 +771,13 @@ class MapImage(object):
 
 
 class ModuleWorld(object):
-    def __init__(self, name, host, port, map_name, timeout, actor_filter, no_rendering=True, show_triggers=False):
+    def __init__(self, name, args, timeout):
         self.client = None
         self.name = name
-        self.host = host
-        self.port = port
-        self.map_name = map_name
+        self.args = args
         self.timeout = timeout
-        self.actor_filter = actor_filter
-        self.no_rendering = no_rendering
         self.server_fps = 0.0
         self.simulation_time = 0
-        self.show_triggers = show_triggers
         self.server_clock = pygame.time.Clock()
 
         # World data
@@ -800,13 +812,13 @@ class ModuleWorld(object):
 
     def _get_data_from_carla(self):
         try:
-            self.client = carla.Client(self.host, self.port)
+            self.client = carla.Client(self.args.host, self.args.port)
             self.client.set_timeout(self.timeout)
 
-            if self.map_name is None:
+            if self.args.map is None:
                 world = self.client.get_world()
             else:
-                world = self.client.load_world(self.map_name)
+                world = self.client.load_world(self.args.map)
 
             town_map = world.get_map()
             return (world, town_map)
@@ -819,11 +831,16 @@ class ModuleWorld(object):
         self.world, self.town_map = self._get_data_from_carla()
 
         settings = self.world.get_settings()
-        settings.no_rendering_mode = self.no_rendering
+        settings.no_rendering_mode = self.args.no_rendering
         self.world.apply_settings(settings)
 
         # Create Surfaces
-        self.map_image = MapImage(self.world, self.town_map, PIXELS_PER_METER, self.show_triggers)
+        self.map_image = MapImage(
+            carla_world=self.world,
+            carla_map=self.town_map,
+            pixels_per_meter=PIXELS_PER_METER,
+            show_triggers=self.args.show_triggers,
+            show_connections=self.args.show_connections)
 
         # Store necessary modules
         self.module_hud = module_manager.get_module(MODULE_HUD)
@@ -875,9 +892,8 @@ class ModuleWorld(object):
             self._spawn_hero()
 
     def _spawn_hero(self):
-
         # Get a random blueprint.
-        blueprint = random.choice(self.world.get_blueprint_library().filter(self.actor_filter))
+        blueprint = random.choice(self.world.get_blueprint_library().filter(self.args.filter))
         blueprint.set_attribute('role_name', 'hero')
         if blueprint.has_attribute('color'):
             color = random.choice(blueprint.get_attribute('color').recommended_values)
@@ -905,9 +921,9 @@ class ModuleWorld(object):
             affected_traffic_light_text = 'None'
             if self.affected_traffic_light is not None:
                 state = self.affected_traffic_light.state
-                if state == carla.libcarla.TrafficLightState.Green:
+                if state == carla.TrafficLightState.Green:
                     affected_traffic_light_text = 'GREEN'
-                elif state == carla.libcarla.TrafficLightState.Yellow:
+                elif state == carla.TrafficLightState.Yellow:
                     affected_traffic_light_text = 'YELLOW'
                 else:
                     affected_traffic_light_text = 'RED'
@@ -991,7 +1007,7 @@ class ModuleWorld(object):
             world_pos = tl.get_location()
             pos = world_to_pixel(world_pos)
 
-            if self.show_triggers:
+            if self.args.show_triggers:
                 corners = Util.get_bounding_box(tl)
                 corners = [world_to_pixel(p) for p in corners]
                 pygame.draw.lines(surface, COLOR_CHAMELEON_0, True, corners, 2)
@@ -1360,15 +1376,7 @@ def game_loop(args):
     # Init modules
     input_module = ModuleInput(MODULE_INPUT)
     hud_module = ModuleHUD(MODULE_HUD, args.width, args.height)
-    world_module = ModuleWorld(
-        MODULE_WORLD,
-        args.host,
-        args.port,
-        args.map,
-        2.0,
-        args.filter,
-        args.no_rendering,
-        args.show_triggers)
+    world_module = ModuleWorld(MODULE_WORLD, args, timeout=2.0)
 
     # Register Modules
     module_manager.register_module(world_module)
@@ -1440,6 +1448,10 @@ def main():
         '--show-triggers',
         action='store_true',
         help='show trigger boxes of traffic signs')
+    argparser.add_argument(
+        '--show-connections',
+        action='store_true',
+        help='show waypoint connections')
 
     args = argparser.parse_args()
     args.description = argparser.description
