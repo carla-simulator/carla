@@ -43,6 +43,7 @@
   * Fixed floating pillars in Town04
   * Fixed floating building in Town03
   * Enhanced stop triggers options
+  * Fixed division by zero in is_within_distance_ahead()
 
 ## CARLA 0.9.4
 
