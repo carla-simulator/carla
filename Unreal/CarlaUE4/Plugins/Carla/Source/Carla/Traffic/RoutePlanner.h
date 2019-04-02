@@ -13,6 +13,8 @@
 
 #include "RoutePlanner.generated.h"
 
+class AWheeledVehicleAIController;
+
 /// Assign a random route to every ACarlaWheeledVehicle entering the trigger
 /// volume. Routes must be added in editor after placing this actor into the
 /// world. Spline tangents are ignored, only locations are taken into account
@@ -40,6 +42,8 @@ public:
   void AddRoute(float probability, const TArray<FVector> &routePoints);
 
   void CleanRoute();
+
+  void AssignRandomRoute(AWheeledVehicleAIController &Controller) const;
 
 protected:
 
