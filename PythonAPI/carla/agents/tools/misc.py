@@ -54,6 +54,11 @@ def is_within_distance_ahead(target_location, current_location, orientation, max
     """
     target_vector = np.array([target_location.x - current_location.x, target_location.y - current_location.y])
     norm_target = np.linalg.norm(target_vector)
+
+    # If the vector is too short, we can simply stop here
+    if norm_target < 0.001:
+        return True
+
     if norm_target > max_distance:
         return False
 
