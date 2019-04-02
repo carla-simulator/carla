@@ -44,6 +44,7 @@
   * Fixed geo-reference of Town01 and Town07
   * Fixed floating pillars in Town04
   * Fixed floating building in Town03
+  * Fixed vehicles missing the route if autopilot enabled too late
   * Enhanced stop triggers options
 
 ## CARLA 0.9.4
