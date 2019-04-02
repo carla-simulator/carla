@@ -14,7 +14,12 @@ namespace carla {
 namespace road {
 namespace element {
 
-  constexpr uint32_t FLAGS =
+  /// @todo Temporary flags to search lanes where we can find road marks.
+  /// This needs to be expanded searching in shoulders too, but since
+  /// shouders have a small width, they can cause problems while finding
+  /// the nearest center of a lane given a location that are in a road,
+  /// but very close to a shoulder.
+  static constexpr uint32_t FLAGS =
       static_cast<uint32_t>(Lane::LaneType::Driving) |
       static_cast<uint32_t>(Lane::LaneType::Bidirectional) |
       static_cast<uint32_t>(Lane::LaneType::Biking) |
@@ -22,8 +27,6 @@ namespace element {
 
   /// Calculate the lane markings that need to be crossed from @a lane_id_origin
   /// to @a lane_id_destination.
-  ///
-  /// @todo This should use the info in the OpenDrive instead.
   static std::vector<LaneMarking> CrossingAtSameSection(
       const Map &map,
       const Waypoint *w0,
