@@ -37,6 +37,7 @@
   * Added marking lanes in Town03
   * Improved performance in Town01 and Town02
   * Changed yellow marking lane from Town01 and Town02 to dashed yellow marking lane
+  * Improved lane cross detection to use the new Waypoint API
   * Fixed semantic segmentation tags in Town04, Town05, Town06
   * Fixed tree collision in Town01
   * Fixed VehicleSpawnPoint in Town01
