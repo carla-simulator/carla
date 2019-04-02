@@ -53,9 +53,6 @@ namespace element {
       Both  = 0x03  // 11
     };
 
-    /// @todo Temporary constructor until LaneCrossingCalculator is fixed.
-    LaneMarking(Type type);
-
     explicit LaneMarking(const RoadInfoMarkRecord &info);
 
     Type type = Type::None;

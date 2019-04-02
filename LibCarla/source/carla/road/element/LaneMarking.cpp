@@ -73,20 +73,6 @@ namespace element {
     }
   }
 
-  LaneMarking::LaneMarking(Type in_type)
-    : type(in_type) {
-    switch (type) {
-      case Type::Broken:
-        lane_change = LaneChange::Both;
-        break;
-      case Type::Solid:
-        lane_change = LaneChange::None;
-        break;
-      default:
-        throw_exception(std::runtime_error("lane type not supported"));
-    }
-  }
-
   LaneMarking::LaneMarking(const RoadInfoMarkRecord &info)
     : type(GetType(info.GetType())),
       color(GetColor(info.GetColor())),
