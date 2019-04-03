@@ -103,6 +103,6 @@ def vector(location_1, location_2):
     x = location_2.x - location_1.x
     y = location_2.y - location_1.y
     z = location_2.z - location_1.z
-    norm = np.linalg.norm([x, y, z])
+    norm = np.linalg.norm([x, y, z]) + np.finfo(float).eps
 
     return [x / norm, y / norm, z / norm]
