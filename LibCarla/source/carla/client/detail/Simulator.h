@@ -350,6 +350,10 @@ namespace detail {
       _client.ApplyBatch(std::move(commands), do_tick_cue);
     }
 
+    auto ApplyBatchSync(std::vector<rpc::Command> commands, bool do_tick_cue) {
+      return _client.ApplyBatchSync(std::move(commands), do_tick_cue);
+    }
+
     /// @}
 
   private:

@@ -19,6 +19,7 @@
 #include <carla/rpc/ActorDefinition.h>
 #include <carla/rpc/ActorDescription.h>
 #include <carla/rpc/Command.h>
+#include <carla/rpc/CommandResponse.h>
 #include <carla/rpc/DebugShape.h>
 #include <carla/rpc/EpisodeInfo.h>
 #include <carla/rpc/EpisodeSettings.h>
@@ -775,14 +776,22 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   // ~~ Apply commands in batch ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   using C = cr::Command;
+  using CR = cr::CommandResponse;
+  using ActorId = carla::ActorId;
+
+  auto parse_result = [](ActorId id, const auto &response) {
+    return response.HasError() ? CR{response.GetError()} : CR{id};
+  };
+
+#define MAKE_RESULT(operation) return parse_result(c.actor, operation);
 
   auto command_visitor = carla::MakeRecursiveOverload(
-      [=](auto self, const C::SpawnActor &c) -> void {
+      [=](auto self, const C::SpawnActor &c) -> CR {
         auto result = c.parent.has_value() ?
             spawn_actor_with_parent(c.description, c.transform, *c.parent) :
             spawn_actor(c.description, c.transform);
         if (!result.HasError()) {
-          carla::ActorId id = result.Get().id;
+          ActorId id = result.Get().id;
           auto set_id = carla::MakeOverload(
               [](C::SpawnActor &) {},
               [id](auto &s) { s.actor = id; });
@@ -790,30 +799,35 @@ void FTheNewCarlaServer::FPimpl::BindActions()
             boost::apply_visitor(set_id, command.command);
             boost::apply_visitor(self, command.command);
           }
+          return id;
         }
+        return result.GetError();
       },
-      [=](auto, const C::DestroyActor &c) { destroy_actor(c.actor); },
-      [=](auto, const C::ApplyVehicleControl &c) { apply_control_to_vehicle(c.actor, c.control); },
-      [=](auto, const C::ApplyWalkerControl &c) { apply_control_to_walker(c.actor, c.control); },
-      [=](auto, const C::ApplyTransform &c) { set_actor_transform(c.actor, c.transform); },
-      [=](auto, const C::ApplyVelocity &c) { set_actor_velocity(c.actor, c.velocity); },
-      [=](auto, const C::ApplyAngularVelocity &c) { set_actor_angular_velocity(c.actor, c.angular_velocity); },
-      [=](auto, const C::ApplyImpulse &c) { add_actor_impulse(c.actor, c.impulse); },
-      [=](auto, const C::SetSimulatePhysics &c) { set_actor_simulate_physics(c.actor, c.enabled); },
-      [=](auto, const C::SetAutopilot &c) { set_actor_autopilot(c.actor, c.enabled); },
-      [](const auto &) { UE_LOG(LogCarla, Fatal, TEXT("Invalid command!")); });
+      [=](auto, const C::DestroyActor &c) {         MAKE_RESULT(destroy_actor(c.actor)); },
+      [=](auto, const C::ApplyVehicleControl &c) {  MAKE_RESULT(apply_control_to_vehicle(c.actor, c.control)); },
+      [=](auto, const C::ApplyWalkerControl &c) {   MAKE_RESULT(apply_control_to_walker(c.actor, c.control)); },
+      [=](auto, const C::ApplyTransform &c) {       MAKE_RESULT(set_actor_transform(c.actor, c.transform)); },
+      [=](auto, const C::ApplyVelocity &c) {        MAKE_RESULT(set_actor_velocity(c.actor, c.velocity)); },
+      [=](auto, const C::ApplyAngularVelocity &c) { MAKE_RESULT(set_actor_angular_velocity(c.actor, c.angular_velocity)); },
+      [=](auto, const C::ApplyImpulse &c) {         MAKE_RESULT(add_actor_impulse(c.actor, c.impulse)); },
+      [=](auto, const C::SetSimulatePhysics &c) {   MAKE_RESULT(set_actor_simulate_physics(c.actor, c.enabled)); },
+      [=](auto, const C::SetAutopilot &c) {         MAKE_RESULT(set_actor_autopilot(c.actor, c.enabled)); });
 
-  BIND_SYNC(apply_batch) << [=](const std::vector<cr::Command> &commands, bool do_tick_cue) -> R<void>
+#undef MAKE_RESULT
+
+  BIND_SYNC(apply_batch) << [=](const std::vector<cr::Command> &commands, bool do_tick_cue)
   {
+    std::vector<CR> result;
+    result.reserve(commands.size());
     for (const auto &command : commands)
     {
-      boost::apply_visitor(command_visitor, command.command);
+      result.emplace_back(boost::apply_visitor(command_visitor, command.command));
     }
     if (do_tick_cue)
     {
       tick_cue();
     }
-    return R<void>::Success();
+    return result;
   };
 }
 
