@@ -776,16 +776,31 @@ void FTheNewCarlaServer::FPimpl::BindActions()
 
   using C = cr::Command;
 
-  auto command_visitor = carla::MakeOverload(
-      [=](const C::DestroyActor &c) { destroy_actor(c.actor); },
-      [=](const C::ApplyVehicleControl &c) { apply_control_to_vehicle(c.actor, c.control); },
-      [=](const C::ApplyWalkerControl &c) { apply_control_to_walker(c.actor, c.control); },
-      [=](const C::ApplyTransform &c) { set_actor_transform(c.actor, c.transform); },
-      [=](const C::ApplyVelocity &c) { set_actor_velocity(c.actor, c.velocity); },
-      [=](const C::ApplyAngularVelocity &c) { set_actor_angular_velocity(c.actor, c.angular_velocity); },
-      [=](const C::ApplyImpulse &c) { add_actor_impulse(c.actor, c.impulse); },
-      [=](const C::SetSimulatePhysics &c) { set_actor_simulate_physics(c.actor, c.enabled); },
-      [=](const C::SetAutopilot &c) { set_actor_autopilot(c.actor, c.enabled); },
+  auto command_visitor = carla::MakeRecursiveOverload(
+      [=](auto self, const C::SpawnActor &c) -> void {
+        auto result = c.parent.has_value() ?
+            spawn_actor_with_parent(c.description, c.transform, *c.parent) :
+            spawn_actor(c.description, c.transform);
+        if (!result.HasError()) {
+          carla::ActorId id = result.Get().id;
+          auto set_id = carla::MakeOverload(
+              [](C::SpawnActor &) {},
+              [id](auto &s) { s.actor = id; });
+          for (auto command : c.do_after) {
+            boost::apply_visitor(set_id, command.command);
+            boost::apply_visitor(self, command.command);
+          }
+        }
+      },
+      [=](auto, const C::DestroyActor &c) { destroy_actor(c.actor); },
+      [=](auto, const C::ApplyVehicleControl &c) { apply_control_to_vehicle(c.actor, c.control); },
+      [=](auto, const C::ApplyWalkerControl &c) { apply_control_to_walker(c.actor, c.control); },
+      [=](auto, const C::ApplyTransform &c) { set_actor_transform(c.actor, c.transform); },
+      [=](auto, const C::ApplyVelocity &c) { set_actor_velocity(c.actor, c.velocity); },
+      [=](auto, const C::ApplyAngularVelocity &c) { set_actor_angular_velocity(c.actor, c.angular_velocity); },
+      [=](auto, const C::ApplyImpulse &c) { add_actor_impulse(c.actor, c.impulse); },
+      [=](auto, const C::SetSimulatePhysics &c) { set_actor_simulate_physics(c.actor, c.enabled); },
+      [=](auto, const C::SetAutopilot &c) { set_actor_autopilot(c.actor, c.enabled); },
       [](const auto &) { UE_LOG(LogCarla, Fatal, TEXT("Invalid command!")); });
 
   BIND_SYNC(apply_batch) << [=](const std::vector<cr::Command> &commands, bool do_tick_cue) -> R<void>
