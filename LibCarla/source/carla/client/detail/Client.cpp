@@ -39,17 +39,6 @@ namespace detail {
   // ===========================================================================
 
   class Client::Pimpl {
-  private:
-
-    template <typename... Args>
-    auto Call(const std::string &function, Args &&... args) {
-      try {
-        return rpc_client.call(function, std::forward<Args>(args)...);
-      } catch (const ::rpc::timeout &) {
-        throw_exception(TimeoutException(endpoint, GetTimeout()));
-      }
-    }
-
   public:
 
     Pimpl(const std::string &host, uint16_t port, size_t worker_threads)
@@ -61,9 +50,18 @@ namespace detail {
           worker_threads > 0u ? worker_threads : std::thread::hardware_concurrency());
     }
 
+    template <typename... Args>
+    auto RawCall(const std::string &function, Args &&... args) {
+      try {
+        return rpc_client.call(function, std::forward<Args>(args)...);
+      } catch (const ::rpc::timeout &) {
+        throw_exception(TimeoutException(endpoint, GetTimeout()));
+      }
+    }
+
     template <typename T, typename... Args>
     auto CallAndWait(const std::string &function, Args &&... args) {
-      auto object = Call(function, std::forward<Args>(args)...);
+      auto object = RawCall(function, std::forward<Args>(args)...);
       using R = typename carla::rpc::Response<T>;
       auto response = object.template as<R>();
       if (response.HasError()) {
@@ -309,6 +307,13 @@ namespace detail {
 
   void Client::ApplyBatch(std::vector<rpc::Command> commands, bool do_tick_cue) {
     _pimpl->AsyncCall("apply_batch", std::move(commands), do_tick_cue);
+  }
+
+  std::vector<rpc::CommandResponse> Client::ApplyBatchSync(
+      std::vector<rpc::Command> commands,
+      bool do_tick_cue) {
+    auto result = _pimpl->RawCall("apply_batch", std::move(commands), do_tick_cue);
+    return result.as<std::vector<rpc::CommandResponse>>();
   }
 
   void Client::SendTickCue() {

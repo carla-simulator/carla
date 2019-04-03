@@ -28,10 +28,25 @@ static void ApplyBatchCommands(
     const boost::python::object &commands,
     bool do_tick) {
   using CommandType = carla::rpc::Command;
-  std::vector<CommandType> result{
+  std::vector<CommandType> cmds{
       boost::python::stl_input_iterator<CommandType>(commands),
       boost::python::stl_input_iterator<CommandType>()};
-  self.ApplyBatch(std::move(result), do_tick);
+  self.ApplyBatch(std::move(cmds), do_tick);
+}
+
+static auto ApplyBatchCommandsSync(
+    const carla::client::Client &self,
+    const boost::python::object &commands,
+    bool do_tick) {
+  using CommandType = carla::rpc::Command;
+  std::vector<CommandType> cmds{
+      boost::python::stl_input_iterator<CommandType>(commands),
+      boost::python::stl_input_iterator<CommandType>()};
+  boost::python::list result;
+  for (auto &response : self.ApplyBatchSync(std::move(cmds), do_tick)) {
+    result.append(std::move(response));
+  }
+  return result;
 }
 
 void export_client() {
@@ -54,5 +69,6 @@ void export_client() {
     .def("show_recorder_actors_blocked", CALL_WITHOUT_GIL_3(cc::Client, ShowRecorderActorsBlocked, std::string, float, float), (arg("name"), arg("min_time"), arg("min_distance")))
     .def("replay_file", CALL_WITHOUT_GIL_4(cc::Client, ReplayFile, std::string, float, float, int), (arg("name"), arg("time_start"), arg("duration"), arg("follow_id")))
     .def("apply_batch", &ApplyBatchCommands, (arg("commands"), arg("do_tick")=false))
+    .def("apply_batch_sync", &ApplyBatchCommandsSync, (arg("commands"), arg("do_tick")=false))
   ;
 }

@@ -6,6 +6,7 @@
 
 #include <carla/PythonUtil.h>
 #include <carla/rpc/Command.h>
+#include <carla/rpc/CommandResponse.h>
 
 namespace command_impl {
 
@@ -55,6 +56,16 @@ void export_commands() {
 
   // This is a handler for passing to "SpawnActor.then" commands.
   submodule_scope.attr("FutureActor") = 0u;
+
+  class_<cr::CommandResponse>("Response", no_init)
+    .add_property("actor_id", +[](const cr::CommandResponse &self) {
+      return self.HasError() ? 0u : self.Get();
+    })
+    .add_property("error", +[](const cr::CommandResponse &self) {
+      return self.HasError() ? self.GetError().What() : std::string("");
+    })
+    .def("has_error", &cr::CommandResponse::HasError)
+  ;
 
   class_<cr::Command::SpawnActor>("SpawnActor")
     .def(
