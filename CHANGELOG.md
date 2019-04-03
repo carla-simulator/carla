@@ -1,5 +1,5 @@
 ## Latest Changes
-
+  * Fixed small float bug in misc.py
   * Basic agent integrated with global router
   * Fixed local planner to avoid premature route pruning at path overlaps
   * Fixed global router behavior to be consistent with new Waypoint API
