@@ -21,6 +21,7 @@
 - `show_recorder_collisions(string filename, char category1, char category2)`
 - `show_recorder_actors_blocked(string filename, float min_time, float min_distance)`
 - `apply_batch(commands, do_tick=False)`
+- `apply_batch_sync(commands, do_tick=False) -> list(carla.command.Response)`
 
 ## `carla.World`
 
@@ -470,47 +471,69 @@ Static presets
 
 # module `carla.command`
 
+`carla.command.FutureActor` (not yet spawned actor handler)
+
+## `carla.command.Response`
+
+- `actor_id`
+- `error` -> str|empty
+- `has_error()`
+
+## `carla.command.SpawnActor`
+
+- `__init__(blueprint, transform, parent=None)`
+- `then(command)`
+
 ## `carla.command.DestroyActor`
 
+- `__init__(actor)`
 - `actor_id`
 
 ## `carla.command.ApplyVehicleControl`
 
+- `__init__(actor, control)`
 - `actor_id`
 - `control`
 
 ## `carla.command.ApplyWalkerControl`
 
+- `__init__(actor, control)`
 - `actor_id`
 - `control`
 
 ## `carla.command.ApplyTransform`
 
+- `__init__(actor, transform)`
 - `actor_id`
 - `transform`
 
 ## `carla.command.ApplyVelocity`
 
+- `__init__(actor, velocity)`
 - `actor_id`
 - `velocity`
 
 ## `carla.command.ApplyAngularVelocity`
 
+- `__init__(actor, angular_velocity)`
 - `actor_id`
 - `angular_velocity`
 
 
 ## `carla.command.ApplyImpulse`
 
+- `__init__(actor, impulse)`
 - `actor_id`
 - `impulse`
 
 ## `carla.command.SetSimulatePhysics`
 
+- `__init__(actor, bool)`
 - `actor_id`
 - `enabled`
 
 ## `carla.command.SetAutopilot`
 
+- `__init__(actor, bool)`
 - `actor_id`
 - `enabled`

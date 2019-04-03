@@ -47,6 +47,9 @@
   * Fixed vehicles missing the route if autopilot enabled too late
   * Enhanced stop triggers options
   * Fixed division by zero in is_within_distance_ahead()
+  * Added new carla.command.SpawnActor to spawn actors in batch
+  * Added method `client.apply_batch_sync` that waits for server response
+  * Updated `spawn_npc.py` to spawn vehicles in batch
 
 ## CARLA 0.9.4
 
