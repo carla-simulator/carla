@@ -27,6 +27,18 @@ namespace command_impl {
     return self.attr("__init__")(Convert(args)...);
   }
 
+  template <typename... ArgsT>
+  static boost::python::object CustomSpawnActorInit(boost::python::object self, ArgsT... args) {
+    return self.attr("__init__")(carla::rpc::Command::SpawnActor{Convert(args)...});
+  }
+
+  static carla::rpc::Command::SpawnActor Then(
+      carla::rpc::Command::SpawnActor &self,
+      carla::rpc::Command command) {
+    self.do_after.push_back(command);
+    return self;
+  }
+
 } // namespace command_impl
 
 void export_commands() {
@@ -39,7 +51,29 @@ void export_commands() {
 
   object command_module(handle<>(borrowed(PyImport_AddModule("libcarla.command"))));
   scope().attr("command") = command_module;
-  scope io_scope = command_module;
+  scope submodule_scope = command_module;
+
+  // This is a handler for passing to "SpawnActor.then" commands.
+  submodule_scope.attr("FutureActor") = 0u;
+
+  class_<cr::Command::SpawnActor>("SpawnActor")
+    .def(
+        "__init__",
+        &command_impl::CustomSpawnActorInit<cc::ActorBlueprint, cg::Transform>,
+        (arg("blueprint"), arg("transform")))
+    .def(
+        "__init__",
+        &command_impl::CustomSpawnActorInit<cc::ActorBlueprint, cg::Transform, const cr::ActorId &>,
+        (arg("blueprint"), arg("transform"), arg("parent_id")))
+    .def(
+        "__init__",
+        &command_impl::CustomSpawnActorInit<cc::ActorBlueprint, cg::Transform, ActorPtr>,
+        (arg("blueprint"), arg("transform"), arg("parent")))
+    .def(init<cr::Command::SpawnActor>())
+    .def_readwrite("transform", &cr::Command::SpawnActor::transform)
+    .def_readwrite("parent_id", &cr::Command::SpawnActor::parent)
+    .def("then", &command_impl::Then, (arg("command")))
+  ;
 
   class_<cr::Command::DestroyActor>("DestroyActor")
     .def("__init__", &command_impl::CustomInit<ActorPtr>, (arg("actor")))
@@ -103,6 +137,7 @@ void export_commands() {
     .def_readwrite("enabled", &cr::Command::SetAutopilot::enabled)
   ;
 
+  implicitly_convertible<cr::Command::SpawnActor, cr::Command>();
   implicitly_convertible<cr::Command::DestroyActor, cr::Command>();
   implicitly_convertible<cr::Command::ApplyVehicleControl, cr::Command>();
   implicitly_convertible<cr::Command::ApplyWalkerControl, cr::Command>();
