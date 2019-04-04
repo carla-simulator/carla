@@ -15,6 +15,8 @@
 #include "carla/client/detail/EpisodeState.h"
 #include "carla/rpc/EpisodeInfo.h"
 
+#include <vector>
+
 namespace carla {
 namespace client {
 namespace detail {
@@ -48,6 +50,8 @@ namespace detail {
     void RegisterActor(rpc::Actor actor) {
       _actors.Insert(std::move(actor));
     }
+
+    std::vector<rpc::Actor> GetActorsById(const std::vector<ActorId> &actor_ids);
 
     std::vector<rpc::Actor> GetActors();
 
