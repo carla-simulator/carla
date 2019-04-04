@@ -66,6 +66,9 @@ namespace client {
     /// Return a list with all the actors currently present in the world.
     SharedPtr<ActorList> GetActors() const;
 
+    /// Return a list with the actors requested by ActorId.
+    SharedPtr<ActorList> GetActors(const std::vector<ActorId> &actor_ids) const;
+
     /// Spawn an actor into the world based on the @a blueprint provided at @a
     /// transform. If a @a parent is provided, the actor is attached to
     /// @a parent.

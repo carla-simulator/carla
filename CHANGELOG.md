@@ -49,6 +49,7 @@
   * Fixed division by zero in is_within_distance_ahead()
   * Added new carla.command.SpawnActor to spawn actors in batch
   * Added method `client.apply_batch_sync` that waits for server response
+  * Added optional argument "actor_ids" to world.get_actors to request only the actors with the ids provided
   * Updated `spawn_npc.py` to spawn vehicles in batch
 
 ## CARLA 0.9.4
