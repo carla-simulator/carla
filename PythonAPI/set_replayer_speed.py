@@ -9,6 +9,7 @@
 import glob
 import os
 import sys
+import argparse
 
 try:
     sys.path.append(glob.glob('**/*%d.%d-%s.egg' % (
@@ -20,9 +21,6 @@ except IndexError:
 
 import carla
 
-import argparse
-import random
-import time
 
 
 def main():
