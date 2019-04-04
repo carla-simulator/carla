@@ -171,6 +171,11 @@ namespace detail {
     // =========================================================================
     /// @{
 
+    std::vector<rpc::Actor> GetActorsById(const std::vector<ActorId> &actor_ids) const {
+      DEBUG_ASSERT(_episode != nullptr);
+      return _episode->GetActorsById(actor_ids);
+    }
+
     std::vector<rpc::Actor> GetAllTheActorsInTheEpisode() const {
       DEBUG_ASSERT(_episode != nullptr);
       return _episode->GetActors();

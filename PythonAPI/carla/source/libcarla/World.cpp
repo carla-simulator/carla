@@ -56,6 +56,14 @@ static void OnTick(carla::client::World &self, boost::python::object callback) {
   self.OnTick(MakeCallback(std::move(callback)));
 }
 
+static auto GetActorsById(carla::client::World &self, const boost::python::list &actor_ids) {
+  std::vector<carla::ActorId> ids{
+      boost::python::stl_input_iterator<carla::ActorId>(actor_ids),
+      boost::python::stl_input_iterator<carla::ActorId>()};
+  carla::PythonUtil::ReleaseGIL unlock;
+  return self.GetActors(ids);
+}
+
 void export_world() {
   using namespace boost::python;
   namespace cc = carla::client;
@@ -118,6 +126,7 @@ void export_world() {
     .def("get_weather", CONST_CALL_WITHOUT_GIL(cc::World, GetWeather))
     .def("set_weather", &cc::World::SetWeather)
     .def("get_actors", CONST_CALL_WITHOUT_GIL(cc::World, GetActors))
+    .def("get_actors", &GetActorsById, (arg("actor_ids")))
     .def("spawn_actor", SPAWN_ACTOR_WITHOUT_GIL(SpawnActor))
     .def("try_spawn_actor", SPAWN_ACTOR_WITHOUT_GIL(TrySpawnActor))
     .def("wait_for_tick", &WaitForTick, (arg("seconds")=10.0))

@@ -21,6 +21,15 @@ namespace detail {
     return static_cast<target_t &>(data);
   }
 
+  template <typename RangeT>
+  static auto GetActorsById_Impl(Client &client, CachedActorList &actors, const RangeT &actor_ids) {
+    auto missing_ids = actors.GetMissingIds(actor_ids);
+    if (!missing_ids.empty()) {
+      actors.InsertRange(client.GetActorsById(missing_ids));
+    }
+    return actors.GetActorsById(actor_ids);
+  }
+
   Episode::Episode(Client &client)
     : Episode(client, client.GetEpisodeInfo()) {}
 
@@ -64,14 +73,12 @@ namespace detail {
     });
   }
 
+  std::vector<rpc::Actor> Episode::GetActorsById(const std::vector<ActorId> &actor_ids) {
+    return GetActorsById_Impl(_client, _actors, actor_ids);
+  }
+
   std::vector<rpc::Actor> Episode::GetActors() {
-    const auto state = GetState();
-    const auto actor_ids = state->GetActorIds();
-    auto missing_ids = _actors.GetMissingIds(actor_ids);
-    if (!missing_ids.empty()) {
-      _actors.InsertRange(_client.GetActorsById(missing_ids));
-    }
-    return _actors.GetActorsById(actor_ids);
+    return GetActorsById_Impl(_client, _actors, GetState()->GetActorIds());
   }
 
   void Episode::OnEpisodeStarted() {
