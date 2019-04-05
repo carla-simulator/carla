@@ -377,6 +377,15 @@ Static presets
 - `carla.WeatherParameters.HardRainSunset`
 - `carla.WeatherParameters.SoftRainSunset`
 
+## `carla.Vector2D`
+
+- `x`
+- `y`
+- `__add__(other)`
+- `__sub__(other)`
+- `__eq__(other)`
+- `__ne__(other)`
+
 ## `carla.Vector3D`
 
 - `x`
@@ -395,6 +404,14 @@ Static presets
 - `distance(other)`
 - `__add__(other)`
 - `__sub__(other)`
+- `__eq__(other)`
+- `__ne__(other)`
+
+## `carla.GeoLocation`
+
+- `latitude`
+- `longitude`
+- `altitude`
 - `__eq__(other)`
 - `__ne__(other)`
 
