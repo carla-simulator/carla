@@ -331,6 +331,10 @@ namespace road {
     return lane_width_info->GetPolynomial().Evaluate(s);
   }
 
+  JuncId Map::GetJunctionId(const RoadId road_id) const {
+    return _data.GetRoad(road_id).GetJunctionId();
+  }
+
   bool Map::IsJunction(const RoadId road_id) const {
     return _data.GetRoad(road_id).IsJunction();
   }

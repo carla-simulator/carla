@@ -21,7 +21,7 @@
 - `show_recorder_collisions(string filename, char category1, char category2)`
 - `show_recorder_actors_blocked(string filename, float min_time, float min_distance)`
 - `apply_batch(commands, do_tick=False)`
-- `apply_batch_sync(commands, do_tick=False) -> list(carla.command.Response)`
+- `apply_batch_sync(commands, do_tick=False)` -> list(carla.command.Response)
 
 ## `carla.World`
 
@@ -326,28 +326,30 @@
 
 ## `carla.LaneMarking`
 
-- `type -> carla.LaneMarking`
-- `color -> carla.RoadMarkColor`
-- `lane_change -> carla.LaneChange`
+- `type` -> carla.LaneMarking
+- `color` -> carla.RoadMarkColor
+- `lane_change` -> carla.LaneChange
 - `width`
 
 ## `carla.Waypoint`
 
 - `id`
 - `transform`
-- `is_intersection`
+- `is_intersection` _deprecated, use `is_junction` instead_
+- `is_junction`
 - `lane_width`
 - `road_id`
 - `section_id`
 - `lane_id`
+- `junction_id`
 - `s`
-- `lane_change -> carla.LaneChange`
-- `lane_type -> carla.LaneType`
-- `right_lane_marking -> carla.LaneMarking`
-- `left_lane_marking -> carla.LaneMarking`
-- `next(distance) -> list(carla.Waypoint)`
-- `get_right_lane() -> carla.Waypoint`
-- `get_left_lane() -> carla.Waypoint`
+- `lane_change` -> carla.LaneChange
+- `lane_type` -> carla.LaneType
+- `right_lane_marking` -> carla.LaneMarking
+- `left_lane_marking` -> carla.LaneMarking
+- `next(distance)` -> list(carla.Waypoint)
+- `get_right_lane()` -> carla.Waypoint
+- `get_left_lane()` -> carla.Waypoint
 
 ## `carla.WeatherParameters`
 
