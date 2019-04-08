@@ -39,6 +39,7 @@ class GlobalRoutePlanner(object):
         """
         self._topology = self._dao.get_topology()
         self._graph, self._id_map, self._road_id_to_edge = self._build_graph()
+        self._find_loose_ends()
         self._lane_change_link()
 
     def _build_graph(self):
@@ -67,7 +68,7 @@ class GlobalRoutePlanner(object):
             path = segment['path']
             entry_wp, exit_wp = segment['entry'], segment['exit']
             intersection = entry_wp.is_intersection
-            road_id, lane_id = entry_wp.road_id, entry_wp.lane_id
+            road_id, section_id, lane_id = entry_wp.road_id, entry_wp.section_id, entry_wp.lane_id
 
             for vertex in entry_xyz, exit_xyz:
                 # Adding unique nodes and populating id_map
@@ -79,7 +80,9 @@ class GlobalRoutePlanner(object):
             n2 = id_map[exit_xyz]
             if road_id not in road_id_to_edge:
                 road_id_to_edge[road_id] = dict()
-            road_id_to_edge[road_id][lane_id] = (n1, n2)
+            if section_id not in road_id_to_edge[road_id]:
+                road_id_to_edge[road_id][section_id] = dict()
+            road_id_to_edge[road_id][section_id][lane_id] = (n1, n2)
 
             # Adding edge with attributes
             graph.add_edge(
@@ -97,6 +100,49 @@ class GlobalRoutePlanner(object):
 
         return graph, id_map, road_id_to_edge
 
+    def _find_loose_ends(self):
+        """
+        This method finds road segments that have an unconnected end and
+        adds them to the internal graph representation
+        """
+        count_loose_ends = 0
+        hop_resolution = self._dao.get_resolution()
+        for segment in self._topology:
+            end_wp = segment['exit']
+            exit_xyz = segment['exitxyz']
+            road_id, section_id, lane_id = end_wp.road_id, end_wp.section_id, end_wp.lane_id
+            if road_id in self._road_id_to_edge and \
+                section_id in self._road_id_to_edge[road_id] and \
+                    lane_id in self._road_id_to_edge[road_id][section_id]:
+                pass
+            else:
+                count_loose_ends += 1
+                if road_id not in self._road_id_to_edge:
+                    self._road_id_to_edge[road_id] = dict()
+                if section_id not in self._road_id_to_edge[road_id]:
+                    self._road_id_to_edge[road_id][section_id] = dict()
+                n1 = self._id_map[exit_xyz]
+                n2 = -1*count_loose_ends
+                self._road_id_to_edge[road_id][section_id][lane_id] = (n1, n2)
+                next_wp = end_wp.next(hop_resolution)
+                path = []
+                while next_wp is not None and next_wp and \
+                    next_wp[0].road_id == road_id and \
+                        next_wp[0].section_id == section_id and \
+                            next_wp[0].lane_id == lane_id:
+                    path.append(next_wp[0])
+                    next_wp = next_wp[0].next(hop_resolution)
+                n2_xyz = (path[-1].transform.location.x,
+                          path[-1].transform.location.y,
+                          path[-1].transform.location.z)
+                self._graph.add_node(n2, vertex=n2_xyz)
+                self._graph.add_edge(
+                    n1, n2,
+                    length=len(path) + 1, path=path,
+                    entry_waypoint=end_wp, exit_waypoint=path[-1],
+                    entry_vector=None, exit_vector=None, net_vector=None,
+                    intersection=end_wp.is_intersection, type=RoadOption.LANEFOLLOW)
+
     def _localize(self, location):
         """
         This function finds the road segment closest to given location
@@ -104,7 +150,18 @@ class GlobalRoutePlanner(object):
         return          :   pair node ids representing an edge in the graph
         """
         waypoint = self._dao.get_waypoint(location)
-        return self._road_id_to_edge[waypoint.road_id][waypoint.lane_id]
+        edge = None
+        try:
+            edge = self._road_id_to_edge[waypoint.road_id][waypoint.section_id][waypoint.lane_id]
+        except KeyError:
+            print(
+                "Failed to localize! : ",
+                "Road id : ", waypoint.road_id,
+                "Section id : ", waypoint.section_id,
+                "Lane id : ", waypoint.lane_id,
+                "Location : ", waypoint.transform.location.x,
+                waypoint.transform.location.y)
+        return edge
 
     def _lane_change_link(self):
         """
@@ -121,13 +178,11 @@ class GlobalRoutePlanner(object):
 
                     if bool(waypoint.lane_change & carla.LaneChange.Right) and not right_found:
                         next_waypoint = waypoint.get_right_lane()
-                        if next_waypoint is not None and next_waypoint.lane_type == carla.LaneType.Driving and \
-                            waypoint.road_id == next_waypoint.road_id:
+                        if next_waypoint is not None and \
+                            next_waypoint.lane_type == carla.LaneType.Driving and \
+                                waypoint.road_id == next_waypoint.road_id:
                             next_road_option = RoadOption.CHANGELANERIGHT
-                            try:
-                                next_segment = self._localize(next_waypoint.transform.location)
-                            except KeyError:
-                                print("Failed to localize! : ", next_waypoint.road_id, next_waypoint.lane_id)
+                            next_segment = self._localize(next_waypoint.transform.location)
                             if next_segment is not None:
                                 self._graph.add_edge(
                                     self._id_map[segment['entryxyz']], next_segment[0], entry_waypoint=segment['entry'],
@@ -140,10 +195,7 @@ class GlobalRoutePlanner(object):
                         if next_waypoint is not None and next_waypoint.lane_type == carla.LaneType.Driving and \
                             waypoint.road_id == next_waypoint.road_id:
                             next_road_option = RoadOption.CHANGELANELEFT
-                            try:
-                                next_segment = self._localize(next_waypoint.transform.location)
-                            except KeyError:
-                                print("Failed to localize! : ", next_waypoint.road_id, next_waypoint.lane_id)
+                            next_segment = self._localize(next_waypoint.transform.location)
                             if next_segment is not None:
                                 self._graph.add_edge(
                                     self._id_map[segment['entryxyz']], next_segment[0], entry_waypoint=segment['entry'],
@@ -272,8 +324,10 @@ class GlobalRoutePlanner(object):
             edge = self._graph.edges[route[i], route[i+1]]
             path = []
 
-            if edge['type'].value != RoadOption.LANEFOLLOW.value and edge['type'].value != RoadOption.VOID.value:
-                n1, n2 = self._road_id_to_edge[edge['exit_waypoint'].road_id][edge['exit_waypoint'].lane_id]
+            if edge['type'].value != RoadOption.LANEFOLLOW.value and \
+                edge['type'].value != RoadOption.VOID.value:
+                exit_wp = edge['exit_waypoint']
+                n1, n2 = self._road_id_to_edge[exit_wp.road_id][exit_wp.section_id][exit_wp.lane_id]
                 next_edge = self._graph.edges[n1, n2]
                 if next_edge['path']:
                     closest_index = self._find_closest_in_list(current_waypoint, next_edge['path'])
@@ -289,7 +343,8 @@ class GlobalRoutePlanner(object):
                 for waypoint in path[closest_index:]:
                     current_waypoint = waypoint
                     route_trace.append((current_waypoint, road_option))
-                    if len(route)-i <= 2 and waypoint.transform.location.distance(destination) < 2*resolution:
+                    if len(route)-i <= 2 and \
+                        waypoint.transform.location.distance(destination) < 2*resolution:
                         break
 
         return route_trace
