@@ -96,7 +96,7 @@ class ClientSideBoundingBoxes(object):
         """
 
         bb_surface = pygame.Surface((VIEW_WIDTH, VIEW_HEIGHT))
-        # bb_surface.set_colorkey((0, 0, 0))
+        bb_surface.set_colorkey((0, 0, 0))
         for bbox in bounding_boxes:
             points = [(int(bbox[i, 0]), int(bbox[i, 1])) for i in range(8)]
             # draw lines
@@ -125,7 +125,8 @@ class ClientSideBoundingBoxes(object):
         """
 
         bb_cords = ClientSideBoundingBoxes._create_bb_points(vehicle)
-        cords_x_y_z = ClientSideBoundingBoxes._vehicle_to_sensor(bb_cords, vehicle, camera)[:3, :]
+        veh_to_sensor = ClientSideBoundingBoxes._vehicle_to_sensor(bb_cords, vehicle, camera)
+        cords_x_y_z = veh_to_sensor[:3, :]
         cords_y_minus_z_x = np.concatenate([cords_x_y_z[1, :], -cords_x_y_z[2, :], cords_x_y_z[0, :]])
         bbox = np.transpose(np.dot(camera.calibration, cords_y_minus_z_x))
         camera_bbox = np.concatenate([bbox[:, 0] / bbox[:, 2], bbox[:, 1] / bbox[:, 2], bbox[:, 2]], axis=1)
