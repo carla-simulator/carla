@@ -5,9 +5,9 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
-#include "Carla/Game/TheNewCarlaGameModeBase.h"
+#include "Carla/Game/CarlaGameModeBase.h"
 
-ATheNewCarlaGameModeBase::ATheNewCarlaGameModeBase(const FObjectInitializer& ObjectInitializer)
+ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer)
 {
   PrimaryActorTick.bCanEverTick = true;
@@ -22,7 +22,7 @@ ATheNewCarlaGameModeBase::ATheNewCarlaGameModeBase(const FObjectInitializer& Obj
   CarlaSettingsDelegate = CreateDefaultSubobject<UCarlaSettingsDelegate>(TEXT("CarlaSettingsDelegate"));
 }
 
-void ATheNewCarlaGameModeBase::InitGame(
+void ACarlaGameModeBase::InitGame(
     const FString &MapName,
     const FString &Options,
     FString &ErrorMessage)
@@ -86,7 +86,7 @@ void ATheNewCarlaGameModeBase::InitGame(
   Episode->SetRecorder(Recorder);
 }
 
-void ATheNewCarlaGameModeBase::RestartPlayer(AController *NewPlayer)
+void ACarlaGameModeBase::RestartPlayer(AController *NewPlayer)
 {
   if (CarlaSettingsDelegate != nullptr)
   {
@@ -96,7 +96,7 @@ void ATheNewCarlaGameModeBase::RestartPlayer(AController *NewPlayer)
   Super::RestartPlayer(NewPlayer);
 }
 
-void ATheNewCarlaGameModeBase::BeginPlay()
+void ACarlaGameModeBase::BeginPlay()
 {
   Super::BeginPlay();
 
@@ -110,7 +110,7 @@ void ATheNewCarlaGameModeBase::BeginPlay()
   GameInstance->NotifyBeginEpisode(*Episode);
 }
 
-void ATheNewCarlaGameModeBase::Tick(float DeltaSeconds)
+void ACarlaGameModeBase::Tick(float DeltaSeconds)
 {
   Super::Tick(DeltaSeconds);
 
@@ -118,7 +118,7 @@ void ATheNewCarlaGameModeBase::Tick(float DeltaSeconds)
   if (Recorder) Recorder->Tick(DeltaSeconds);
 }
 
-void ATheNewCarlaGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+void ACarlaGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
   Episode->EndPlay();
   GameInstance->NotifyEndEpisode();
@@ -131,7 +131,7 @@ void ATheNewCarlaGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
   }
 }
 
-void ATheNewCarlaGameModeBase::SpawnActorFactories()
+void ACarlaGameModeBase::SpawnActorFactories()
 {
   auto *World = GetWorld();
   check(World != nullptr);

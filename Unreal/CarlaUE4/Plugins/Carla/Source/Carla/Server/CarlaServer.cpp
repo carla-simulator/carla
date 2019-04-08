@@ -5,7 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
-#include "Carla/Server/TheNewCarlaServer.h"
+#include "Carla/Server/CarlaServer.h"
 
 #include "Carla/Util/DebugShapeDrawer.h"
 #include "Carla/Util/OpenDrive.h"
@@ -53,10 +53,10 @@ static std::vector<T> MakeVectorFromTArray(const TArray<Other> &Array)
 }
 
 // =============================================================================
-// -- FTheNewCarlaServer::FPimpl -----------------------------------------------
+// -- FCarlaServer::FPimpl -----------------------------------------------
 // =============================================================================
 
-class FTheNewCarlaServer::FPimpl
+class FCarlaServer::FPimpl
 {
 public:
 
@@ -140,7 +140,7 @@ private:
 // -- Bind Actions -------------------------------------------------------------
 // =============================================================================
 
-void FTheNewCarlaServer::FPimpl::BindActions()
+void FCarlaServer::FPimpl::BindActions()
 {
   namespace cr = carla::rpc;
   namespace cg = carla::geom;
@@ -847,14 +847,14 @@ void FTheNewCarlaServer::FPimpl::BindActions()
 #undef CARLA_ENSURE_GAME_THREAD
 
 // =============================================================================
-// -- FTheNewCarlaServer -------------------------------------------------------
+// -- FCarlaServer -------------------------------------------------------
 // =============================================================================
 
-FTheNewCarlaServer::FTheNewCarlaServer() : Pimpl(nullptr) {}
+FCarlaServer::FCarlaServer() : Pimpl(nullptr) {}
 
-FTheNewCarlaServer::~FTheNewCarlaServer() {}
+FCarlaServer::~FCarlaServer() {}
 
-FDataMultiStream FTheNewCarlaServer::Start(uint16_t RPCPort, uint16_t StreamingPort)
+FDataMultiStream FCarlaServer::Start(uint16_t RPCPort, uint16_t StreamingPort)
 {
   Pimpl = MakeUnique<FPimpl>(RPCPort, StreamingPort);
   StreamingPort = Pimpl->StreamingServer.GetLocalEndpoint().port();
@@ -862,20 +862,20 @@ FDataMultiStream FTheNewCarlaServer::Start(uint16_t RPCPort, uint16_t StreamingP
   return Pimpl->BroadcastStream;
 }
 
-void FTheNewCarlaServer::NotifyBeginEpisode(UCarlaEpisode &Episode)
+void FCarlaServer::NotifyBeginEpisode(UCarlaEpisode &Episode)
 {
   check(Pimpl != nullptr);
   UE_LOG(LogCarlaServer, Log, TEXT("New episode '%s' started"), *Episode.GetMapName());
   Pimpl->Episode = &Episode;
 }
 
-void FTheNewCarlaServer::NotifyEndEpisode()
+void FCarlaServer::NotifyEndEpisode()
 {
   check(Pimpl != nullptr);
   Pimpl->Episode = nullptr;
 }
 
-void FTheNewCarlaServer::AsyncRun(uint32 NumberOfWorkerThreads)
+void FCarlaServer::AsyncRun(uint32 NumberOfWorkerThreads)
 {
   check(Pimpl != nullptr);
   /// @todo Define better the number of threads each server gets.
@@ -885,12 +885,12 @@ void FTheNewCarlaServer::AsyncRun(uint32 NumberOfWorkerThreads)
   Pimpl->StreamingServer.AsyncRun(std::max(2u, StreamingThreads));
 }
 
-void FTheNewCarlaServer::RunSome(uint32 Milliseconds)
+void FCarlaServer::RunSome(uint32 Milliseconds)
 {
   Pimpl->Server.SyncRunFor(carla::time_duration::milliseconds(Milliseconds));
 }
 
-bool FTheNewCarlaServer::TickCueReceived()
+bool FCarlaServer::TickCueReceived()
 {
   if (Pimpl->TickCuesReceived > 0u)
   {
@@ -900,13 +900,13 @@ bool FTheNewCarlaServer::TickCueReceived()
   return false;
 }
 
-void FTheNewCarlaServer::Stop()
+void FCarlaServer::Stop()
 {
   check(Pimpl != nullptr);
   Pimpl->Server.Stop();
 }
 
-FDataStream FTheNewCarlaServer::OpenStream() const
+FDataStream FCarlaServer::OpenStream() const
 {
   check(Pimpl != nullptr);
   return Pimpl->StreamingServer.MakeStream();

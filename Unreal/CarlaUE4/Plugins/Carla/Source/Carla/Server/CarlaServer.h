@@ -13,13 +13,13 @@
 
 class UCarlaEpisode;
 
-class FTheNewCarlaServer
+class FCarlaServer
 {
 public:
 
-  FTheNewCarlaServer();
+  FCarlaServer();
 
-  ~FTheNewCarlaServer();
+  ~FCarlaServer();
 
   FDataMultiStream Start(uint16_t RPCPort, uint16_t StreamingPort);
 
