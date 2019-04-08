@@ -1,3 +1,8 @@
+## Latest Changes
+
+  * API extension: waypoint's `junction_id` that returns de OpenDrive identifier of the current junction
+  * API change: deprecated waypoint's `is_intersection`, now is `is_junction`
+
 ## CARLA 0.9.5
 
   * New Town07, rural environment with narrow roads
