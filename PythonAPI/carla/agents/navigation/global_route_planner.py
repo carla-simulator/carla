@@ -132,16 +132,17 @@ class GlobalRoutePlanner(object):
                             next_wp[0].lane_id == lane_id:
                     path.append(next_wp[0])
                     next_wp = next_wp[0].next(hop_resolution)
-                n2_xyz = (path[-1].transform.location.x,
-                          path[-1].transform.location.y,
-                          path[-1].transform.location.z)
-                self._graph.add_node(n2, vertex=n2_xyz)
-                self._graph.add_edge(
-                    n1, n2,
-                    length=len(path) + 1, path=path,
-                    entry_waypoint=end_wp, exit_waypoint=path[-1],
-                    entry_vector=None, exit_vector=None, net_vector=None,
-                    intersection=end_wp.is_intersection, type=RoadOption.LANEFOLLOW)
+                if path:
+                    n2_xyz = (path[-1].transform.location.x,
+                              path[-1].transform.location.y,
+                              path[-1].transform.location.z)
+                    self._graph.add_node(n2, vertex=n2_xyz)
+                    self._graph.add_edge(
+                        n1, n2,
+                        length=len(path) + 1, path=path,
+                        entry_waypoint=end_wp, exit_waypoint=path[-1],
+                        entry_vector=None, exit_vector=None, net_vector=None,
+                        intersection=end_wp.is_intersection, type=RoadOption.LANEFOLLOW)
 
     def _localize(self, location):
         """
