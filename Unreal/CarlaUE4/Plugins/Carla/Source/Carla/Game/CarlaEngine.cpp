@@ -33,8 +33,8 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
 {
   if (!bIsRunning)
   {
-    const auto StreamingPort = Settings.StreamingPort.Get(Settings.WorldPort + 1u);
-    auto BroadcastStream = Server.Start(Settings.WorldPort, StreamingPort);
+    const auto StreamingPort = Settings.StreamingPort.Get(Settings.RPCPort + 1u);
+    auto BroadcastStream = Server.Start(Settings.RPCPort, StreamingPort);
     Server.AsyncRun(GetNumberOfThreadsForRPCServer());
 
     WorldObserver.SetStream(BroadcastStream);
