@@ -9,14 +9,11 @@
 #include "Engine/GameInstance.h"
 
 #include "Carla/Game/CarlaEngine.h"
-#include "Carla/Game/CarlaGameControllerBase.h"
-#include "Carla/Game/DataRouter.h"
 #include "Carla/Server/TheNewCarlaServer.h"
 
 #include "CarlaGameInstance.generated.h"
 
 class UCarlaSettings;
-struct FMockGameControllerSettings;
 
 /// The game instance contains elements that must be kept alive in between
 /// levels. It is instantiate once per game.
@@ -30,15 +27,6 @@ public:
   UCarlaGameInstance();
 
   ~UCarlaGameInstance();
-
-  void InitializeGameControllerIfNotPresent(
-      const FMockGameControllerSettings &MockControllerSettings);
-
-  ICarlaGameControllerBase &GetGameController()
-  {
-    check(GameController != nullptr);
-    return *GameController;
-  }
 
   UCarlaSettings &GetCarlaSettings()
   {
@@ -65,11 +53,6 @@ public:
     return CarlaEngine.GetCurrentEpisode();
   }
 
-  FDataRouter &GetDataRouter()
-  {
-    return DataRouter;
-  }
-
   void NotifyInitGame()
   {
     CarlaEngine.NotifyInitGame(GetCarlaSettings());
@@ -94,10 +77,6 @@ private:
 
   UPROPERTY(Category = "CARLA Settings", EditAnywhere)
   UCarlaSettings *CarlaSettings = nullptr;
-
-  FDataRouter DataRouter;
-
-  TUniquePtr<ICarlaGameControllerBase> GameController;
 
   FCarlaEngine CarlaEngine;
 };
