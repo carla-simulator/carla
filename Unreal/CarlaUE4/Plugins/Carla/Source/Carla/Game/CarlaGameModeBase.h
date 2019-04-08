@@ -17,17 +17,17 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 
-#include "TheNewCarlaGameModeBase.generated.h"
+#include "CarlaGameModeBase.generated.h"
 
 /// Base class for the CARLA Game Mode.
 UCLASS(HideCategories=(ActorTick))
-class CARLA_API ATheNewCarlaGameModeBase : public AGameModeBase
+class CARLA_API ACarlaGameModeBase : public AGameModeBase
 {
   GENERATED_BODY()
 
 public:
 
-  ATheNewCarlaGameModeBase(const FObjectInitializer& ObjectInitializer);
+  ACarlaGameModeBase(const FObjectInitializer& ObjectInitializer);
 
   const UCarlaEpisode &GetCarlaEpisode() const
   {

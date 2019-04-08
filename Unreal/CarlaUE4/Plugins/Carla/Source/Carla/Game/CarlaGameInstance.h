@@ -9,7 +9,7 @@
 #include "Engine/GameInstance.h"
 
 #include "Carla/Game/CarlaEngine.h"
-#include "Carla/Server/TheNewCarlaServer.h"
+#include "Carla/Server/CarlaServer.h"
 
 #include "CarlaGameInstance.generated.h"
 
@@ -68,7 +68,7 @@ public:
     CarlaEngine.NotifyEndEpisode();
   }
 
-  const FTheNewCarlaServer &GetServer() const
+  const FCarlaServer &GetServer() const
   {
     return CarlaEngine.GetServer();
   }
