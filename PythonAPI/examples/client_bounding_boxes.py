@@ -96,7 +96,7 @@ class ClientSideBoundingBoxes(object):
         """
 
         bb_surface = pygame.Surface((VIEW_WIDTH, VIEW_HEIGHT))
-        bb_surface.set_colorkey((0, 0, 0))
+        # bb_surface.set_colorkey((0, 0, 0))
         for bbox in bounding_boxes:
             points = [(int(bbox[i, 0]), int(bbox[i, 1])) for i in range(8)]
             # draw lines
