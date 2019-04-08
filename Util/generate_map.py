@@ -106,7 +106,6 @@ def import_assets_commandlet(map_name):
     file_xodr_dest = os.path.join(
         dirname,
         "..",
-        "..",
         "Unreal",
         "CarlaUE4",
         "Content",
@@ -168,11 +167,11 @@ def invoke_commandlet(name, arguments):
 
 
 def generate_json(map_name, json_file):
-    with open(json_file, "a+") as fh:
+    with open(json_file, "w+") as fh:
         import_groups = []
         file_names = []
         import_settings = []
-        fbx_path = os.path.join("..", "RoadRunnerFiles", map_name, "%s.fbx" % map_name)
+        fbx_path = os.path.join("..", "..", "RoadRunnerFiles", map_name, "%s.fbx" % map_name)
         file_names.append(fbx_path)
 
         import_settings.append({

@@ -30,6 +30,22 @@ namespace rpc {
 
   public:
 
+    struct SpawnActor : CommandBase<SpawnActor> {
+      SpawnActor() = default;
+      SpawnActor(ActorDescription description, const geom::Transform &transform)
+        : description(std::move(description)),
+          transform(transform) {}
+      SpawnActor(ActorDescription description, const geom::Transform &transform, ActorId parent)
+        : description(std::move(description)),
+          transform(transform),
+          parent(parent) {}
+      ActorDescription description;
+      geom::Transform transform;
+      boost::optional<ActorId> parent;
+      std::vector<Command> do_after;
+      MSGPACK_DEFINE_ARRAY(description, transform, parent, do_after);
+    };
+
     struct DestroyActor : CommandBase<DestroyActor> {
       DestroyActor() = default;
       DestroyActor(ActorId id) : actor(id) {}
@@ -102,6 +118,7 @@ namespace rpc {
     };
 
     using CommandType = boost::variant<
+        SpawnActor,
         DestroyActor,
         ApplyVehicleControl,
         ApplyWalkerControl,

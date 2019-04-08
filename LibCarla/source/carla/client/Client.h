@@ -84,8 +84,16 @@ namespace client {
       return _simulator->ReplayFile(name, start, duration, follow_id);
     }
 
-    void ApplyBatch(std::vector<rpc::Command> commands, bool do_tick_cue = false) const {
+    void ApplyBatch(
+        std::vector<rpc::Command> commands,
+        bool do_tick_cue = false) const {
       _simulator->ApplyBatch(std::move(commands), do_tick_cue);
+    }
+
+    std::vector<rpc::CommandResponse> ApplyBatchSync(
+        std::vector<rpc::Command> commands,
+        bool do_tick_cue = false) const {
+      return _simulator->ApplyBatchSync(std::move(commands), do_tick_cue);
     }
 
   private:

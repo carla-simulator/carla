@@ -13,6 +13,7 @@
 #include "carla/rpc/Actor.h"
 #include "carla/rpc/ActorDefinition.h"
 #include "carla/rpc/Command.h"
+#include "carla/rpc/CommandResponse.h"
 #include "carla/rpc/EpisodeInfo.h"
 #include "carla/rpc/EpisodeSettings.h"
 #include "carla/rpc/MapInfo.h"
@@ -189,7 +190,13 @@ namespace detail {
 
     void DrawDebugShape(const rpc::DebugShape &shape);
 
-    void ApplyBatch(std::vector<rpc::Command> commands, bool do_tick_cue);
+    void ApplyBatch(
+        std::vector<rpc::Command> commands,
+        bool do_tick_cue);
+
+    std::vector<rpc::CommandResponse> ApplyBatchSync(
+        std::vector<rpc::Command> commands,
+        bool do_tick_cue);
 
     void SendTickCue();
 

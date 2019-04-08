@@ -51,6 +51,12 @@ namespace client {
                                   _episode.Lock()->GetAllTheActorsInTheEpisode()}};
   }
 
+  SharedPtr<ActorList> World::GetActors(const std::vector<ActorId> &actor_ids) const {
+    return SharedPtr<ActorList>{new ActorList{
+                                  _episode,
+                                  _episode.Lock()->GetActorsById(actor_ids)}};
+  }
+
   SharedPtr<Actor> World::SpawnActor(
       const ActorBlueprint &blueprint,
       const geom::Transform &transform,

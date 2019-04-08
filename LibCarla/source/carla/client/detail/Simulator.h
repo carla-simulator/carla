@@ -171,6 +171,11 @@ namespace detail {
     // =========================================================================
     /// @{
 
+    std::vector<rpc::Actor> GetActorsById(const std::vector<ActorId> &actor_ids) const {
+      DEBUG_ASSERT(_episode != nullptr);
+      return _episode->GetActorsById(actor_ids);
+    }
+
     std::vector<rpc::Actor> GetAllTheActorsInTheEpisode() const {
       DEBUG_ASSERT(_episode != nullptr);
       return _episode->GetActors();
@@ -348,6 +353,10 @@ namespace detail {
 
     void ApplyBatch(std::vector<rpc::Command> commands, bool do_tick_cue) {
       _client.ApplyBatch(std::move(commands), do_tick_cue);
+    }
+
+    auto ApplyBatchSync(std::vector<rpc::Command> commands, bool do_tick_cue) {
+      return _client.ApplyBatchSync(std::move(commands), do_tick_cue);
     }
 
     /// @}

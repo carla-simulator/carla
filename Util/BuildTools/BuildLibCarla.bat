@@ -69,7 +69,7 @@ rem
 set LIBCARLA_VSPROJECT_PATH=%INSTALLATION_DIR%libcarla-visualstudio
 
 set LIBCARLA_SERVER_INSTALL_PATH=%ROOT_PATH%Unreal\CarlaUE4\Plugins\Carla\CarlaDependencies
-set LIBCARLA_CLIENT_INSTALL_PATH=%ROOT_PATH%PythonAPI\dependencies
+set LIBCARLA_CLIENT_INSTALL_PATH=%ROOT_PATH%PythonAPI\carla\dependencies
 
 if %REMOVE_INTERMEDIATE% == true (
     rem Remove directories
