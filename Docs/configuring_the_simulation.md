@@ -83,6 +83,21 @@ in multi-GPU environments, it's not possible to select the GPU that the
 simulator will use for rendering. To do so, follow the instruction in
 [Running without display and selecting GPUs](carla_headless.md).
 
+No-rendering mode
+-----------------
+
+It is possible to completely disable rendering in the simulator by enabling
+_no-rendering mode_ in the world settings. This way is possible to simulate
+traffic and road behaviours at very high frequencies without the rendering
+overhead. Note that in this mode, cameras and other GPU-based sensors return
+empty data.
+
+```py
+settings = world.get_settings()
+settings.no_rendering_mode = True
+world.apply_settings(settings)
+```
+
 Synchronous mode
 ----------------
 
