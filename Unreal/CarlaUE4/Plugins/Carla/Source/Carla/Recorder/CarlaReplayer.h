@@ -73,7 +73,10 @@ public:
   }
 
   // playback speed (time factor)
-  void SetSpeed(double NewTimeFactor);
+  void SetTimeFactor(double NewTimeFactor)
+  {
+    TimeFactor = NewTimeFactor;
+  }
 
   // check if after a map is loaded, we need to replay
   void CheckPlayAfterMapLoaded(void);
