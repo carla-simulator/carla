@@ -168,8 +168,8 @@ std::string CarlaReplayer::ReplayFile(std::string Filename, double TimeStart, do
   else
     TimeToStop = TotalTime;
 
-  Info << "Replaying from " << TimeStart << " s - " << TimeToStop << " s (" << TotalTime << " s)" <<
-      std::endl;
+  Info << "Replaying from " << TimeStart << " s - " << TimeToStop << " s (" << TotalTime << " s) at " <<
+      std::setprecision(1) << std::fixed << TimeFactor << "x" << std::endl;
 
   // set the follow Id
   FollowId = ThisFollowId;
