@@ -97,12 +97,12 @@ def main():
         spawn_points = world.get_map().get_spawn_points()
         number_of_spawn_points = len(spawn_points)
 
-        if args.number_of_vehicles < number_of_spawn_points:
+        if count < number_of_spawn_points:
             random.shuffle(spawn_points)
-        elif args.number_of_vehicles > number_of_spawn_points:
+        elif count > number_of_spawn_points:
             msg = 'requested %d vehicles, but could only find %d spawn points'
-            logging.warning(msg, args.number_of_vehicles, number_of_spawn_points)
-            args.number_of_vehicles = number_of_spawn_points
+            logging.warning(msg, count, number_of_spawn_points)
+            count = number_of_spawn_points
 
         # @todo cannot import these directly.
         SpawnActor = carla.command.SpawnActor
@@ -111,7 +111,7 @@ def main():
 
         batch = []
         for n, transform in enumerate(spawn_points):
-            if n >= args.number_of_vehicles:
+            if n >= count:
                 break
             blueprint = random.choice(blueprints)
             if blueprint.has_attribute('color'):
