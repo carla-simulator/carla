@@ -758,10 +758,10 @@ void FTheNewCarlaServer::FPimpl::BindActions()
         follow_id));
   };
 
-  BIND_SYNC(set_replayer_speed) << [this](double time_factor) -> R<void>
+  BIND_SYNC(set_replayer_time_factor) << [this](double time_factor) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
-    Episode->GetRecorder()->SetReplayerSpeed(time_factor);
+    Episode->GetRecorder()->SetReplayerTimeFactor(time_factor);
     return R<void>::Success();
   };
 

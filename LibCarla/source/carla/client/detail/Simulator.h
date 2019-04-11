@@ -293,8 +293,8 @@ namespace detail {
       return _client.ReplayFile(std::move(name), start, duration, follow_id);
     }
 
-    void SetReplayerSpeed(double time_factor) {
-      _client.SetReplayerSpeed(time_factor);
+    void SetReplayerTimeFactor(double time_factor) {
+      _client.SetReplayerTimeFactor(time_factor);
     }
 
     /// @}

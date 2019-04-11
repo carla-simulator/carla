@@ -103,7 +103,7 @@ public:
   std::string ShowFileCollisions(std::string Name, char Type1, char Type2);
   std::string ShowFileActorsBlocked(std::string Name, double MinTime = 30, double MinDistance = 10);
   std::string ReplayFile(std::string Name, double TimeStart, double Duration, uint32_t FollowId);
-  void SetReplayerSpeed(double TimeFactor);
+  void SetReplayerTimeFactor(double TimeFactor);
 
   void Tick(float DeltaSeconds) final;
 

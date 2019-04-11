@@ -46,9 +46,9 @@ std::string ACarlaRecorder::ReplayFile(std::string Name, double TimeStart, doubl
   return Replayer.ReplayFile(Name, TimeStart, Duration, FollowId);
 }
 
-inline void ACarlaRecorder::SetReplayerSpeed(double TimeFactor)
+inline void ACarlaRecorder::SetReplayerTimeFactor(double TimeFactor)
 {
-  Replayer.SetSpeed(TimeFactor);
+  Replayer.SetTimeFactor(TimeFactor);
 }
 
 void ACarlaRecorder::Tick(float DeltaSeconds)

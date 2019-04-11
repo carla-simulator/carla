@@ -587,9 +587,3 @@ void CarlaReplayer::Tick(float Delta)
 
   // UE_LOG(LogCarla, Log, TEXT("Replayer tick"));
 }
-
-// speed (time factor)
-inline void CarlaReplayer::SetSpeed(double NewTimeFactor)
-{
-  TimeFactor = NewTimeFactor;
-}
