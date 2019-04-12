@@ -49,6 +49,7 @@
   * Fixed wheel's tire friction affecting all vehicles from physics control parameters
   * Fixed obstacle detector not working
   * Fixed small float bug in misc.py
+  * Fixed Lidar effectiveness bug in manual_control.py
 
 ## CARLA 0.9.4
 
