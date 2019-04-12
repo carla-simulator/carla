@@ -9,7 +9,7 @@
 #include "Carla/Actor/ActorDescription.h"
 
 // create or reuse an actor for replaying
-std::pair<int, FActorView &>CarlaReplayerHelper::TryToCreateReplayerActor(
+std::pair<int, FActorView>CarlaReplayerHelper::TryToCreateReplayerActor(
     FVector &Location,
     FVector &Rotation,
     FActorDescription &ActorDesc,
@@ -29,13 +29,13 @@ std::pair<int, FActorView &>CarlaReplayerHelper::TryToCreateReplayerActor(
       auto view = Episode->GetActorRegistry().Find(Actor);
       // reuse that actor
       // UE_LOG(LogCarla, Log, TEXT("TrafficLight found with id: %d"), view.GetActorId());
-      return std::pair<int, FActorView &>(2, view);
+      return std::pair<int, FActorView>(2, view);
     }
     else
     {
       // actor not found
       UE_LOG(LogCarla, Log, TEXT("TrafficLight not found"));
-      return std::pair<int, FActorView &>(0, view_empty);
+      return std::pair<int, FActorView>(0, view_empty);
     }
   }
   else if (!ActorDesc.Id.StartsWith("sensor."))
@@ -50,7 +50,7 @@ std::pair<int, FActorView &>CarlaReplayerHelper::TryToCreateReplayerActor(
       if (desc->Id == ActorDesc.Id)
       {
         // we don't need to create, actor of same type already exist
-        return std::pair<int, FActorView &>(2, view);
+        return std::pair<int, FActorView>(2, view);
       }
     }
     // create the transform
@@ -66,18 +66,18 @@ std::pair<int, FActorView &>CarlaReplayerHelper::TryToCreateReplayerActor(
       FTransform Trans2(Rot, Location, FVector(1, 1, 1));
       Result.Value.GetActor()->SetActorTransform(Trans2, false, nullptr, ETeleportType::TeleportPhysics);
       // Result.Value.GetActor()->SetLocation(Trans2);
-      return std::pair<int, FActorView &>(1, Result.Value);
+      return std::pair<int, FActorView>(1, Result.Value);
     }
     else
     {
       UE_LOG(LogCarla, Log, TEXT("Actor could't be created by replayer"));
-      return std::pair<int, FActorView &>(0, Result.Value);
+      return std::pair<int, FActorView>(0, Result.Value);
     }
   }
   else
   {
     // actor ignored
-    return std::pair<int, FActorView &>(0, view_empty);
+    return std::pair<int, FActorView>(0, view_empty);
   }
 }
 
@@ -228,11 +228,21 @@ bool CarlaReplayerHelper::ProcessReplayerPosition(CarlaRecorderPosition Pos1, Ca
   AActor *Actor = Episode->GetActorRegistry().Find(Pos1.DatabaseId).GetActor();
   if (Actor  && !Actor->IsPendingKill())
   {
-    // interpolate transform
-    FVector Location = FMath::Lerp(FVector(Pos1.Location), FVector(Pos2.Location), Per);
-    FRotator Rotation = FMath::Lerp(FRotator::MakeFromEuler(Pos1.Rotation), FRotator::MakeFromEuler(Pos2.Rotation), Per);
-    FTransform Trans(Rotation, Location, FVector(1, 1, 1));
-    Actor->SetActorTransform(Trans, false, nullptr, ETeleportType::TeleportPhysics);
+    // check to assign first position or interpolate between both
+    if (Per == 0.0)
+    {
+      // assign position 1
+      FTransform Trans(FRotator::MakeFromEuler(Pos1.Rotation), FVector(Pos1.Location), FVector(1, 1, 1));
+      Actor->SetActorTransform(Trans, false, nullptr, ETeleportType::TeleportPhysics);
+    }
+    else
+    {
+      // interpolate positions
+      FVector Location = FMath::Lerp(FVector(Pos1.Location), FVector(Pos2.Location), Per);
+      FRotator Rotation = FMath::Lerp(FRotator::MakeFromEuler(Pos1.Rotation), FRotator::MakeFromEuler(Pos2.Rotation), Per);
+      FTransform Trans(Rotation, Location, FVector(1, 1, 1));
+      Actor->SetActorTransform(Trans, false, nullptr, ETeleportType::TeleportPhysics);
+    }
     // reset velocities
     ResetVelocities(Actor);
     return true;
