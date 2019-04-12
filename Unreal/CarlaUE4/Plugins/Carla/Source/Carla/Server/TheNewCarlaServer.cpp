@@ -722,19 +722,18 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
-  BIND_SYNC(show_recorder_file_info) << [this](std::string name) -> R<std::string>
+  BIND_SYNC(show_recorder_file_info) << [this](std::string name, bool show_all) -> R<std::string>
   {
     REQUIRE_CARLA_EPISODE();
     return R<std::string>(Episode->GetRecorder()->ShowFileInfo(
-        carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
-        name));
+        name,
+        show_all));
   };
 
   BIND_SYNC(show_recorder_collisions) << [this](std::string name, char type1, char type2) -> R<std::string>
   {
     REQUIRE_CARLA_EPISODE();
     return R<std::string>(Episode->GetRecorder()->ShowFileCollisions(
-        carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
         name,
         type1,
         type2));
@@ -744,7 +743,6 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
     return R<std::string>(Episode->GetRecorder()->ShowFileActorsBlocked(
-        carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
         name,
         min_time,
         min_distance));
@@ -754,11 +752,17 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
     return R<std::string>(Episode->GetRecorder()->ReplayFile(
-        carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
         name,
         start,
         duration,
         follow_id));
+  };
+
+  BIND_SYNC(set_replayer_time_factor) << [this](double time_factor) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    Episode->GetRecorder()->SetReplayerTimeFactor(time_factor);
+    return R<void>::Success();
   };
 
   // ~~ Draw debug shapes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
