@@ -159,6 +159,25 @@ void ACarlaWheeledVehicle::SetHandbrakeInput(const bool Value)
   ApplyVehicleControl(Control, EVehicleInputPriority::User);
 }
 
+TArray<float> ACarlaWheeledVehicle::GetWheelsFrictionScale() {
+  UWheeledVehicleMovementComponent4W *Vehicle4W = CastChecked<UWheeledVehicleMovementComponent4W>(GetVehicleMovement());
+
+  TArray<float> WheelsFrictionScale;
+  for (auto& Wheel : Vehicle4W->Wheels)
+  {
+    WheelsFrictionScale.Add(Wheel->TireConfig->GetFrictionScale());
+  }
+  return WheelsFrictionScale;
+}
+
+void ACarlaWheeledVehicle::SetWheelsFrictionScale(TArray<float> &WheelsFrictionScale) {
+  UWheeledVehicleMovementComponent4W *Vehicle4W = CastChecked<UWheeledVehicleMovementComponent4W>(GetVehicleMovement());
+  for (int32 i = 0; i < Vehicle4W->Wheels.Num(); ++i)
+  {
+    Vehicle4W->Wheels[i]->TireConfig->SetFrictionScale(WheelsFrictionScale[i]);
+  }
+}
+
 FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl()
 {
   UWheeledVehicleMovementComponent4W *Vehicle4W = CastChecked<UWheeledVehicleMovementComponent4W>(
