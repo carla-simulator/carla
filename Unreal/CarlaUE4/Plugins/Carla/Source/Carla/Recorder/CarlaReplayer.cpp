@@ -22,7 +22,7 @@ void CarlaReplayer::Stop(bool bKeepActors)
     // destroy actors if event was recorded?
     if (!bKeepActors)
     {
-      ProcessToTime(TotalTime);
+      ProcessToTime(TotalTime, false);
     }
 
     // callback
@@ -146,7 +146,7 @@ std::string CarlaReplayer::ReplayFile(std::string Filename, double TimeStart, do
     Autoplay.Mapfile = RecInfo.Mapfile;
     Autoplay.TimeStart = TimeStart;
     Autoplay.Duration = Duration;
-    Autoplay.FollowId = FollowId;
+    Autoplay.FollowId = ThisFollowId;
     Autoplay.TimeFactor = TimeFactor;
   }
 
@@ -178,7 +178,7 @@ std::string CarlaReplayer::ReplayFile(std::string Filename, double TimeStart, do
   if (!Autoplay.Enabled)
   {
     // process all events until the time
-    ProcessToTime(TimeStart);
+    ProcessToTime(TimeStart, true);
     // mark as enabled
     Enabled = true;
   }
@@ -237,13 +237,13 @@ void CarlaReplayer::CheckPlayAfterMapLoaded(void)
   TimeFactor = Autoplay.TimeFactor;
 
   // process all events until the time
-  ProcessToTime(TimeStart);
+  ProcessToTime(TimeStart, true);
 
   // mark as enabled
   Enabled = true;
 }
 
-void CarlaReplayer::ProcessToTime(double Time)
+void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
 {
   double Per = 0.0f;
   double NewTime = CurrentTime + Time;
@@ -305,7 +305,7 @@ void CarlaReplayer::ProcessToTime(double Time)
       // positions
       case static_cast<char>(CarlaRecorderPacketId::Position):
         if (bFrameFound)
-          ProcessPositions();
+          ProcessPositions(IsFirstTime);
         else
           SkipPacket();
         break;
@@ -485,7 +485,7 @@ void CarlaReplayer::ProcessStates(void)
   }
 }
 
-void CarlaReplayer::ProcessPositions(void)
+void CarlaReplayer::ProcessPositions(bool IsFirstTime)
 {
   uint16_t i, Total;
 
@@ -509,6 +509,12 @@ void CarlaReplayer::ProcessPositions(void)
     else
       UE_LOG(LogCarla, Log, TEXT("Actor not found when trying to move from replayer (id. %d)"), Pos.DatabaseId);
     CurrPos.push_back(std::move(Pos));
+  }
+
+  // check to copy positions the first time
+  if (IsFirstTime)
+  {
+    PrevPos.clear();
   }
 }
 
@@ -582,7 +588,7 @@ void CarlaReplayer::Tick(float Delta)
   // check if there are events to process
   if (Enabled)
   {
-    ProcessToTime(Delta * TimeFactor);
+    ProcessToTime(Delta * TimeFactor, false);
   }
 
   // UE_LOG(LogCarla, Log, TEXT("Replayer tick"));
