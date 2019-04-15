@@ -277,8 +277,8 @@ namespace detail {
       _client.StopRecorder();
     }
 
-    std::string ShowRecorderFileInfo(std::string name) {
-      return _client.ShowRecorderFileInfo(std::move(name));
+    std::string ShowRecorderFileInfo(std::string name, bool show_all) {
+      return _client.ShowRecorderFileInfo(std::move(name), show_all);
     }
 
     std::string ShowRecorderCollisions(std::string name, char type1, char type2) {
@@ -291,6 +291,10 @@ namespace detail {
 
     std::string ReplayFile(std::string name, double start, double duration, uint32_t follow_id) {
       return _client.ReplayFile(std::move(name), start, duration, follow_id);
+    }
+
+    void SetReplayerTimeFactor(double time_factor) {
+      _client.SetReplayerTimeFactor(time_factor);
     }
 
     /// @}

@@ -1,3 +1,10 @@
+## Latest
+
+  * New recorder features:
+    - Added optional parameter to show more details about a recorder file (related to `show_recorder_file_info.py`)
+    - Added playback speed (slow/fast motion) for the replayer
+    - We can use an absolute path for the recorded files (to choose where to 'write to' or 'read from')
+
 ## CARLA 0.9.5
 
   * New Town07, rural environment with narrow roads

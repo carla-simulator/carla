@@ -415,7 +415,9 @@ converted to OpenDrive format, and saved to disk as such.
 
 CARLA includes now a recording and replaying API, that allows to record a simulation in a file and later replay that simulation. The file is written on server side only, and it includes which **actors are created or destroyed** in the simulation, the **state of the traffic lights** and the **position/orientation** of all vehicles and walkers.
 
-All data is written in a binary file on the server, on folder **CarlaUE4/Saved**. As estimation, a simulation with about 150 actors (50 traffic lights, 100 vehicles) for 1h of recording takes around 200 Mb in size.
+All data is written in a binary file on the server. We can use filenames with or without a path. If we specify a filename without any of '\\', '/' or ':' characters, then it is considered to be only a filename and will be saved on folder **CarlaUE4/Saved**. If we use any of the previous characters then the filename will be considered as an absolute filename with path (for example: '/home/carla/recording01.log' or 'c:\\records\\recording01.log').
+
+As estimation, a simulation with about 150 actors (50 traffic lights, 100 vehicles) for 1h of recording takes around 200 Mb in size.
 
 To start recording we only need to supply a file name:
 
@@ -448,6 +450,16 @@ client.replay_file("recording01.log", start, duration, camera)
   Ex: a value of -10 will replay only the last 10 seconds of the simulation.
 * **duration**: we can say how many seconds we want to play. If the simulation has not reached the end, then all actors will have autopilot enabled automatically. The intention here is to allow for replaying a piece of a simulation and then let all actors start driving in autopilot again.
 * **camera**: we can specify the Id of an actor and then the camera will follow that actor while replaying. Continue reading to know which Id has an actor.
+
+We can specify the time factor (speed) for the replayer at any moment, using the next API:
+
+```py
+client.set_replayer_time_factor(2.0)
+```
+A value greater than 1.0 will play in fast motion, and a value below 1.0 will play in slow motion, being 1.0 the default value for normal playback.
+As a performance trick, with values over 2.0 the interpolation of positions is disabled.
+
+The call of this API will not stop the replayer in course, it will change just the speed, so you can change that several times while the replayer is running.
 
 We can know details about a recorded simulation, using this API:
 
