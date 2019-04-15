@@ -172,6 +172,9 @@ public:
     SetHandbrakeInput(false);
   }
 
+  TArray<float> GetWheelsFrictionScale();
+
+  void SetWheelsFrictionScale(TArray<float> &WheelsFrictionScale);
   /// @}
   // ===========================================================================
   /// @name Overriden from AActor
