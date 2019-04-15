@@ -152,7 +152,7 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
         for (i = 0; i < Total; ++i)
         {
           EventParent.Read(File);
-          Info << " Parenting " << EventParent.DatabaseId << " with " << EventParent.DatabaseId <<
+          Info << " Parenting " << EventParent.DatabaseId << " with " << EventParent.DatabaseIdParent <<
             " (parent)\n";
         }
         break;
