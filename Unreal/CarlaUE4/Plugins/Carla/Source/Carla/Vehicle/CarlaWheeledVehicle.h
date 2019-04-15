@@ -172,6 +172,15 @@ public:
     SetHandbrakeInput(false);
   }
 
+  /// @}
+  // ===========================================================================
+  /// @name Overriden from AActor
+  // ===========================================================================
+  /// @{
+protected:
+
+  virtual void BeginPlay() override;
+
 private:
 
   /// Current state of the vehicle controller (for debugging purposes).
