@@ -8,14 +8,14 @@ In summary, the file format has a small header with general info (version, magic
 
 ![global file format](img/RecorderFileFormat3.png)
 
-### Strings in binary
+### 1. Strings in binary
 
 Strings are saved with the length of the string first, and then the characters, without ending with a null. For example the string 'Town06' will be saved as hex values: 06 00 54 6f 77 6e 30 36
 
 
 ![binary dynamic string](img/RecorderString.png)
 
-### Info header
+### 2. Info header
 
 
 The info header only has general information about the recorded file, like the version and a magic string to identify the file as a recorder file. If the header changes then the version will change also. Next is a date timestamp, with the number of seconds from the Epoch 1900, and then a string with the name of the map used, like 'Town04'.
@@ -27,7 +27,7 @@ A sample info header is:
 ![info header sample](img/RecorderHeader.png)
 
 
-### Packets
+### 3. Packets
 
 Each packet starts with a little header of two fields (5 bytes):
 
@@ -49,7 +49,7 @@ The types of packets are:
 
 I suggest to use **id** over 100 for user custom packets, because this list will grow in the future in sequence.
 
-#### Packet 0: Frame Start
+#### 3.1 Packet 0: Frame Start
 
 This packet marks the start of a new frame, so it will need to be the first one to start each frame. All packets need to be placed between a **Frame Start** and a **Frame End**.
 
@@ -57,14 +57,14 @@ This packet marks the start of a new frame, so it will need to be the first one 
 
 So, elapsed + durationThis = elapsed time for next frame
 
-#### Packet 1: Frame End
+#### 3.2 Packet 1: Frame End
 
 This frame has no data and it only marks the end of the current frame. That helps replayer to know the end of each frame just before the new one starts.
 Usually the next frame should be a Frame Start packet to start a new frame.
 
 ![frame end](img/RecorderFrameEnd.png)
 
-#### Packet 2: Event Add
+#### 3.3 Packet 2: Event Add
 
 This packet sais how many actors we need to create at current frame.
 
@@ -89,7 +89,7 @@ Then comes a collection of its **attributes** (like the color, number of wheels,
 * color = 79,33,85
 * role_name = autopilot
 
-#### Packet 3: Event Del
+#### 3.4 Packet 3: Event Del
 
 This packet sais how many actors need to be destroyed this frame.
 
@@ -104,7 +104,7 @@ For example, this packet could be like this:
 The 3 identify the packet as (Event Del). The 16 is the size of the data of the packet (4 fields of 4 bytes each). So if we don't want to process this packet, we could skip the next 16 bytes and will be directly to the start of the next packet.
 The next 3 sais the total records that follows, and each record is the id of the actor to remove. So, we need to remove at this frame the actors 100, 101 and 120.
 
-#### Packet 4: Event Parent
+#### 3.5 Packet 4: Event Parent
 
 This packet sais which actor is the child of another (the parent).
 
@@ -112,7 +112,7 @@ This packet sais which actor is the child of another (the parent).
 
 The first id is the child actor, and the second one will be the parent actor.
 
-#### Packet 5: Event Collision
+#### 3.6 Packet 5: Event Collision
 
 If a collision happens between two actors, it will be registered in this packet. Currently only actors with a collision sensor will report collisions, so currently only hero vehicles has that sensor attached automatically.
 
@@ -121,20 +121,20 @@ If a collision happens between two actors, it will be registered in this packet.
 The **id** is just a sequence to identify each collision internally.
 Several collisions between the same pair of actors can happen in the same frame, because physics frame rate is fixed and usually there are several in the same render frame.
 
-#### Packet 6: Position
+#### 3.7 Packet 6: Position
 
 This packet records the position and orientation of all actors of type **vehicle** and **walker** that exist in the scene.
 
 ![position](img/RecorderPosition.png)
 
-#### Packet 7: TrafficLight
+#### 3.8 Packet 7: TrafficLight
 
 This packet records the state of all **traffic lights** in the scene. That means to store the state (red, orange or green) and the time it is waitting to change to a new state.
 
 ![state](img/RecorderTrafficLight.png)
 
 
-#### File Layout
+### 4. File Layout
 
 The layout of the file starts with the **info header** and then follows a collection of packets in groups. The first in each group is the **Frame Start** packet, and the last in the group is the **Frame End** packet. In the middle can go all other packets.
 
@@ -146,6 +146,3 @@ The events packets are optional, only appears when they happen, so we could have
 
 ![layout](img/RecorderLayoutSample.png)
 
-In frame 1 some actors are created and reparented.
-In frame 2 some collisions has been detected.
-In frame 3 some actors are removed.
