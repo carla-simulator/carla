@@ -86,17 +86,17 @@ class GlobalRoutePlanner(object):
                 road_id_to_edge[road_id][section_id] = dict()
             road_id_to_edge[road_id][section_id][lane_id] = (n1, n2)
 
+            entry_carla_vector = entry_wp.transform.rotation.get_forward_vector()
+            exit_carla_vector = exit_wp.transform.rotation.get_forward_vector()
             # Adding edge with attributes
             graph.add_edge(
                 n1, n2,
                 length=len(path) + 1, path=path,
                 entry_waypoint=entry_wp, exit_waypoint=exit_wp,
-                entry_vector=vector(
-                    entry_wp.transform.location,
-                    path[0].transform.location if len(path) > 0 else exit_wp.transform.location),
-                exit_vector=vector(
-                    path[-1].transform.location if len(path) > 0 else entry_wp.transform.location,
-                    exit_wp.transform.location),
+                entry_vector=np.array(
+                    [entry_carla_vector.x, entry_carla_vector.y, entry_carla_vector.z]),
+                exit_vector=np.array(
+                    [exit_carla_vector.x, exit_carla_vector.y, exit_carla_vector.z]),
                 net_vector=vector(entry_wp.transform.location, exit_wp.transform.location),
                 intersection=intersection, type=RoadOption.LANEFOLLOW)
 
@@ -308,6 +308,10 @@ class GlobalRoutePlanner(object):
                     elif cross_list and next_cross < min(cross_list):
                         decision = RoadOption.LEFT
                     elif cross_list and next_cross > max(cross_list):
+                        decision = RoadOption.RIGHT
+                    elif next_cross < 0:
+                        decision = RoadOption.LEFT
+                    elif next_cross > 0:
                         decision = RoadOption.RIGHT
                 else:
                     decision = next_edge['type']
