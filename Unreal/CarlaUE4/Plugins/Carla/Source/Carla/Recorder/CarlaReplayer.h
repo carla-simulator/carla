@@ -130,8 +130,8 @@ private:
   void ProcessStates(void);
 
   // positions
-  void UpdatePositions(double Per);
+  void UpdatePositions(double Per, double DeltaTime);
 
-  void InterpolatePosition(const CarlaRecorderPosition &Start, const CarlaRecorderPosition &End, double Per);
+  void InterpolatePosition(const CarlaRecorderPosition &Start, const CarlaRecorderPosition &End, double Per, double DeltaTime);
 
 };

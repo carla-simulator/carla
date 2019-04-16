@@ -35,7 +35,7 @@ public:
   bool ProcessReplayerEventParent(uint32_t ChildId, uint32_t ParentId);
 
   // reposition actors
-  bool ProcessReplayerPosition(CarlaRecorderPosition Pos1, CarlaRecorderPosition Pos2, double Per);
+  bool ProcessReplayerPosition(CarlaRecorderPosition Pos1, CarlaRecorderPosition Pos2, double Per, double DeltaTime);
 
   // replay event for traffic light state
   bool ProcessReplayerStateTrafficLight(CarlaRecorderStateTrafficLight State);
@@ -64,5 +64,9 @@ private:
   bool SetActorAutopilot(FActorView &ActorView, bool bEnabled);
   // reset velocity vectors on actor
   void ResetVelocities(AActor *Actor);
+  // apply new velocities
+  void SetVelocities(AActor *Actor, FVector Linear, FVector Angular);
+  // set speed of walker to force animation to play
+  void SetWalkerSpeedForAnimation(AActor *Actor, FVector Linear);
 
 };
