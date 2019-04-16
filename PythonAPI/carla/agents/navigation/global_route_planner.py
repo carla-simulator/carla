@@ -362,6 +362,7 @@ class GlobalRoutePlanner(object):
         route_trace = []
         route = self._path_search(origin, destination)
         current_waypoint = self._dao.get_waypoint(origin)
+        destination_waypoint = self._dao.get_waypoint(destination)
         resolution = self._dao.get_resolution()
 
         for i in range(len(route) - 1):
@@ -371,6 +372,7 @@ class GlobalRoutePlanner(object):
 
             if edge['type'].value != RoadOption.LANEFOLLOW.value and \
                 edge['type'].value != RoadOption.VOID.value:
+                route_trace.append((current_waypoint, road_option))
                 exit_wp = edge['exit_waypoint']
                 n1, n2 = self._road_id_to_edge[exit_wp.road_id][exit_wp.section_id][exit_wp.lane_id]
                 next_edge = self._graph.edges[n1, n2]
@@ -391,5 +393,12 @@ class GlobalRoutePlanner(object):
                     if len(route)-i <= 2 and \
                         waypoint.transform.location.distance(destination) < 2*resolution:
                         break
+                    elif len(route)-i <= 2 and \
+                        current_waypoint.road_id == destination_waypoint.road_id and \
+                            current_waypoint.section_id == destination_waypoint.section_id and \
+                                current_waypoint.lane_id == destination_waypoint.lane_id:
+                        destination_index = self._find_closest_in_list(destination_waypoint, path)
+                        if closest_index > destination_index:
+                            break
 
         return route_trace
