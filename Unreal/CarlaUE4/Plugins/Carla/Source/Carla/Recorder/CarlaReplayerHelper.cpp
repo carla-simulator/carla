@@ -7,6 +7,8 @@
 #include "CarlaReplayerHelper.h"
 #include "Carla/Actor/ActorView.h"
 #include "Carla/Actor/ActorDescription.h"
+#include "Carla/Walker/WalkerController.h"
+#include "Carla/Walker/WalkerControl.h"
 
 // create or reuse an actor for replaying
 std::pair<int, FActorView>CarlaReplayerHelper::TryToCreateReplayerActor(
@@ -179,7 +181,7 @@ std::pair<int, uint32_t> CarlaReplayerHelper::ProcessReplayerEventAdd(
   if (result.first != 0)
   {
     // disable physics
-    // SetActorSimulatePhysics(result.second, false);
+    SetActorSimulatePhysics(result.second, false);
     // disable autopilot
     SetActorAutopilot(result.second, false);
   }
@@ -222,29 +224,40 @@ bool CarlaReplayerHelper::ProcessReplayerEventParent(uint32_t ChildId, uint32_t 
 }
 
 // reposition actors
-bool CarlaReplayerHelper::ProcessReplayerPosition(CarlaRecorderPosition Pos1, CarlaRecorderPosition Pos2, double Per)
+bool CarlaReplayerHelper::ProcessReplayerPosition(CarlaRecorderPosition Pos1, CarlaRecorderPosition Pos2, double Per, double DeltaTime)
 {
   check(Episode != nullptr);
   AActor *Actor = Episode->GetActorRegistry().Find(Pos1.DatabaseId).GetActor();
+  FVector Location;
+  FRotator Rotation;
   if (Actor  && !Actor->IsPendingKill())
   {
     // check to assign first position or interpolate between both
     if (Per == 0.0)
     {
       // assign position 1
-      FTransform Trans(FRotator::MakeFromEuler(Pos1.Rotation), FVector(Pos1.Location), FVector(1, 1, 1));
-      Actor->SetActorTransform(Trans, false, nullptr, ETeleportType::TeleportPhysics);
+      Location = FVector(Pos1.Location);
+      Rotation = FRotator::MakeFromEuler(Pos1.Rotation);
+      // reset velocities
+      // ResetVelocities(Actor);
     }
     else
     {
       // interpolate positions
-      FVector Location = FMath::Lerp(FVector(Pos1.Location), FVector(Pos2.Location), Per);
-      FRotator Rotation = FMath::Lerp(FRotator::MakeFromEuler(Pos1.Rotation), FRotator::MakeFromEuler(Pos2.Rotation), Per);
-      FTransform Trans(Rotation, Location, FVector(1, 1, 1));
-      Actor->SetActorTransform(Trans, false, nullptr, ETeleportType::TeleportPhysics);
+      Location = FMath::Lerp(FVector(Pos1.Location), FVector(Pos2.Location), Per);
+      Rotation = FMath::Lerp(FRotator::MakeFromEuler(Pos1.Rotation), FRotator::MakeFromEuler(Pos2.Rotation), Per);
+      // apply new velocities
+      // FVector Vel((Location - FVector(Pos1.Location)) / DeltaTime);
+      // FVector Rot((Rotation - FRotator::MakeFromEuler(Pos1.Rotation)).Euler() / DeltaTime);
+      // SetVelocities(Actor, Vel, Rot);
+      // UE_LOG(LogCarla, Log, TEXT("Set velocities for %d at [%f,%f,%f] [%f,%f,%f]"), Pos1.DatabaseId, Vel.X, Vel.Y, Vel.Z, Rot.X, Rot.Y, Rot.Z);
     }
-    // reset velocities
-    ResetVelocities(Actor);
+    // set new transform
+    FTransform Trans(Rotation, Location, FVector(1, 1, 1));
+    Actor->SetActorTransform(Trans, false, nullptr, ETeleportType::None);
+    // play walker animation
+    FVector Vel((Location - FVector(Pos1.Location)) / DeltaTime);
+    SetWalkerSpeedForAnimation(Actor, Vel);
     return true;
   }
   return false;
@@ -253,7 +266,7 @@ bool CarlaReplayerHelper::ProcessReplayerPosition(CarlaRecorderPosition Pos1, Ca
 // reset velocity vectors on actor
 void CarlaReplayerHelper::ResetVelocities(AActor *Actor)
 {
-  if (Actor  && !Actor->IsPendingKill())
+  if (Actor && !Actor->IsPendingKill())
   {
     auto RootComponent = Cast<UPrimitiveComponent>(Actor->GetRootComponent());
     if (RootComponent != nullptr)
@@ -262,6 +275,42 @@ void CarlaReplayerHelper::ResetVelocities(AActor *Actor)
       // reset velocities
       RootComponent->SetPhysicsLinearVelocity(Vector, false, "None");
       RootComponent->SetPhysicsAngularVelocityInDegrees(Vector, false, "None");
+    }
+  }
+}
+
+// apply new velocities
+void CarlaReplayerHelper::SetVelocities(AActor *Actor, FVector Linear, FVector Angular)
+{
+  if (Actor && !Actor->IsPendingKill())
+  {
+    auto RootComponent = Cast<UPrimitiveComponent>(Actor->GetRootComponent());
+    if (RootComponent != nullptr)
+    {
+      // velocities
+      RootComponent->SetPhysicsLinearVelocity(Linear, false, "None");
+      RootComponent->SetPhysicsAngularVelocityInDegrees(Angular, false, "None");
+    }
+  }
+}
+
+// set speed of walker to force animation to play
+void CarlaReplayerHelper::SetWalkerSpeedForAnimation(AActor *Actor, FVector Linear)
+{
+  if (Actor && !Actor->IsPendingKill())
+  {
+    // check to set speed in walkers
+    auto Walker = Cast<APawn>(Actor);
+    if (Walker)
+    {
+      auto Controller = Cast<AWalkerController>(Walker->GetController());
+      if (Controller != nullptr)
+      {
+        FWalkerControl Control;
+        Control.Speed = Linear.Size();
+        Controller->ApplyWalkerControl(Control);
+        // UE_LOG(LogCarla, Log, TEXT("Set Speed for %f"), Control.Speed);
+     }
     }
   }
 }
@@ -311,15 +360,15 @@ bool CarlaReplayerHelper::ProcessReplayerStateTrafficLight(CarlaRecorderStateTra
 // replay finish
 bool CarlaReplayerHelper::ProcessReplayerFinish(bool bApplyAutopilot)
 {
-  if (!bApplyAutopilot)
-  {
-    return false;
-  }
-  // set autopilot to all AI vehicles
+  // set autopilot and physics to all AI vehicles
   auto registry = Episode->GetActorRegistry();
   for (auto ActorView : registry)
   {
-    SetActorAutopilot(ActorView, true);
+    // enable physics
+    SetActorSimulatePhysics(ActorView, true);
+    // autopilot
+    if (bApplyAutopilot)
+      SetActorAutopilot(ActorView, true);
   }
   return true;
 }

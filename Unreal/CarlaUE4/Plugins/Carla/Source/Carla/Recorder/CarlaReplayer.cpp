@@ -246,6 +246,7 @@ void CarlaReplayer::CheckPlayAfterMapLoaded(void)
 void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
 {
   double Per = 0.0f;
+  double DeltaTime = 0.0f;
   double NewTime = CurrentTime + Time;
   bool bFrameFound = false;
   bool bExitAtNextFrame = false;
@@ -255,6 +256,7 @@ void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
   if (NewTime >= Frame.Elapsed && NewTime < Frame.Elapsed + Frame.DurationThis)
   {
     Per = (NewTime - Frame.Elapsed) / Frame.DurationThis;
+    DeltaTime = Frame.DurationThis * Per;
     bFrameFound = true;
     bExitLoop = true;
     // UE_LOG(LogCarla, Log, TEXT("Frame %f (%f) now %f per %f"), Frame.Elapsed, Frame.Elapsed + Frame.DurationThis, NewTime, Per);
@@ -277,6 +279,7 @@ void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
         if (NewTime < Frame.Elapsed + Frame.DurationThis)
         {
           Per = (NewTime - Frame.Elapsed) / Frame.DurationThis;
+          DeltaTime = Frame.DurationThis * Per;
           bFrameFound = true;
           // UE_LOG(LogCarla, Log, TEXT("Frame %f (%f) now %f per %f"), Frame.Elapsed, Frame.Elapsed + Frame.DurationThis, NewTime, Per);
         }
@@ -336,7 +339,7 @@ void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
   // update all positions
   if (Enabled && bFrameFound)
   {
-    UpdatePositions(Per);
+    UpdatePositions(Per, DeltaTime);
   }
 
   // save current time
@@ -518,7 +521,7 @@ void CarlaReplayer::ProcessPositions(bool IsFirstTime)
   }
 }
 
-void CarlaReplayer::UpdatePositions(double Per)
+void CarlaReplayer::UpdatePositions(double Per, double DeltaTime)
 {
   unsigned int i;
   uint32_t NewFollowId = 0;
@@ -551,15 +554,15 @@ void CarlaReplayer::UpdatePositions(double Per)
       // check if time factor is high
       if (TimeFactor >= 2.0)
         // assign first position
-        InterpolatePosition(PrevPos[Result->second], CurrPos[i], 0.0);
+        InterpolatePosition(PrevPos[Result->second], CurrPos[i], 0.0, DeltaTime);
       else
         // interpolate
-        InterpolatePosition(PrevPos[Result->second], CurrPos[i], Per);
+        InterpolatePosition(PrevPos[Result->second], CurrPos[i], Per, DeltaTime);
     }
     else
     {
       // assign last position (we don't have previous one)
-      InterpolatePosition(CurrPos[i], CurrPos[i], 0.0);
+      InterpolatePosition(CurrPos[i], CurrPos[i], 0.0, DeltaTime);
     }
 
     // move the camera to follow this actor if required
@@ -576,10 +579,11 @@ void CarlaReplayer::UpdatePositions(double Per)
 void CarlaReplayer::InterpolatePosition(
     const CarlaRecorderPosition &Pos1,
     const CarlaRecorderPosition &Pos2,
-    double Per)
+    double Per,
+    double DeltaTime)
 {
   // call the callback
-  Helper.ProcessReplayerPosition(Pos1, Pos2, Per);
+  Helper.ProcessReplayerPosition(Pos1, Pos2, Per, DeltaTime);
 }
 
 // tick for the replayer
