@@ -2,7 +2,9 @@
 #include <random>
 #include <sstream>
 #include <stdexcept>
+#include <string>
 #include <thread>
+#include <tuple>
 
 #include <carla/client/ActorBlueprint.h>
 #include <carla/client/BlueprintLibrary.h>
@@ -47,12 +49,24 @@ static void SaveSemSegImageToDisk(const csd::Image &image) {
   ImageIO::WriteView(filename, view);
 }
 
-int main() {
+static auto ParseArguments(int argc, const char *argv[]) {
+  EXPECT_TRUE((argc == 1u) || (argc == 3u));
+  using ResultType = std::tuple<std::string, uint16_t>;
+  return argc == 3u ?
+      ResultType{argv[1u], std::stoi(argv[2u])} :
+      ResultType{"localhost", 2000u};
+}
+
+int main(int argc, const char *argv[]) {
   try {
+
+    std::string host;
+    uint16_t port;
+    std::tie(host, port) = ParseArguments(argc, argv);
 
     std::mt19937_64 rng((std::random_device())());
 
-    auto client = cc::Client("localhost", 2000);
+    auto client = cc::Client(host, port);
     client.SetTimeout(10s);
 
     std::cout << "Client API version : " << client.GetClientVersion() << '\n';
