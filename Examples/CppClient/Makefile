@@ -20,7 +20,7 @@ clean:
 
 run: build
 	$(call log,Running C++ Client...)
-	@$(BINDIR)/cpp_client
+	@$(BINDIR)/cpp_client $(ARGS)
 
 build: $(BINDIR)/cpp_client
 

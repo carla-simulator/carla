@@ -22,6 +22,7 @@ pipeline {
                 sh 'make LibCarla'
                 sh 'make PythonAPI'
                 sh 'make CarlaUE4Editor'
+                sh 'make examples'
             }
             post {
                 always {
@@ -66,6 +67,7 @@ pipeline {
             steps {
                 sh 'DISPLAY= ./Dist/*/LinuxNoEditor/CarlaUE4.sh --carla-rpc-port=3654 --carla-streaming-port=0 > CarlaUE4.log &'
                 sh 'make smoke_tests ARGS="--xml"'
+                sh 'make run-examples ARGS="localhost 3654"'
             }
             post {
                 always {
