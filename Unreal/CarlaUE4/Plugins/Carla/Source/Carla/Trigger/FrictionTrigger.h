@@ -1,22 +1,26 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB). This work is licensed under the terms of the MIT license. For a copy, see <https://opensource.org/licenses/MIT>.
+// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB). This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
 
 #include "GameFramework/Actor.h"
+#include "Components/BoxComponent.h"
 
-#include "FrictionLayer.generated.h"
+#include "FrictionTrigger.generated.h"
 
 UCLASS()
-class CARLA_API AFrictionLayer : public AActor
+class CARLA_API AFrictionTrigger : public AActor
 {
   GENERATED_BODY()
 
 private:
+
   void Init();
 
 public:
 
-  AFrictionLayer(const FObjectInitializer &ObjectInitializer);
+  AFrictionTrigger(const FObjectInitializer &ObjectInitializer);
 
   UFUNCTION()
   void OnTriggerBeginOverlap(
@@ -34,9 +38,16 @@ public:
       UPrimitiveComponent *OtherComp,
       int32 OtherBodyIndex);
 
+  void SetEpisode(const UCarlaEpisode &InEpisode)
+  {
+    Episode = &InEpisode;
+  }
+
 protected:
 
   virtual void BeginPlay() override;
+
+  virtual void EndPlay(EEndPlayReason::Type EndPlayReason) override;
 
 public:
 
@@ -45,6 +56,5 @@ public:
 
   virtual void Tick(float DeltaTime) override;
 
-
-
+  const UCarlaEpisode *Episode = nullptr;
 };
