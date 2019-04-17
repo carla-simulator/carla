@@ -1,8 +1,13 @@
-## CARLA 0.9.6
+## Latest
   * Improved visual quality of the screen capture for the rgb sensor
     - Enabled Temporal AA for screen captures with no post-processing to prevent jaggies during motion
     - Reduced the target gamma of render target to 1.4 to minimize brightness differences with main camera 
-
+  * New recorder features:
+    - Added optional parameter to show more details about a recorder file (related to `show_recorder_file_info.py`)
+    - Added playback speed (slow/fast motion) for the replayer
+    - We can use an absolute path for the recorded files (to choose where to 'write to' or 'read from')
+  * Fixed Lidar effectiveness bug in manual_control.py
+  
 ## CARLA 0.9.5
 
   * New Town07, rural environment with narrow roads
