@@ -180,10 +180,14 @@ std::pair<int, uint32_t> CarlaReplayerHelper::ProcessReplayerEventAdd(
 
   if (result.first != 0)
   {
-    // disable physics
-    SetActorSimulatePhysics(result.second, false);
-    // disable autopilot
-    SetActorAutopilot(result.second, false);
+    // disable physics and autopilot on vehicles
+    if (result.second.GetActorType() == FActorView::ActorType::Vehicle)
+    {
+      // disable physics
+      SetActorSimulatePhysics(result.second, false);
+      // disable autopilot
+      SetActorAutopilot(result.second, false);
+    }
   }
 
   return std::make_pair(result.first, result.second.GetActorId());
@@ -364,11 +368,14 @@ bool CarlaReplayerHelper::ProcessReplayerFinish(bool bApplyAutopilot)
   auto registry = Episode->GetActorRegistry();
   for (auto ActorView : registry)
   {
-    // enable physics
-    SetActorSimulatePhysics(ActorView, true);
-    // autopilot
-    if (bApplyAutopilot)
-      SetActorAutopilot(ActorView, true);
+    // enable physics only on vehicles
+    if (ActorView.GetActorType() == FActorView::ActorType::Vehicle)
+    {
+      SetActorSimulatePhysics(ActorView, true);
+      // autopilot
+      if (bApplyAutopilot)
+        SetActorAutopilot(ActorView, true);
+    }
   }
   return true;
 }
