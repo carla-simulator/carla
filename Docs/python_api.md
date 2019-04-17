@@ -260,6 +260,7 @@
 
 ## `carla.Map`
 
+- `__init__(name, xodr_content)`
 - `name`
 - `get_spawn_points()`
 - `get_waypoint(location, project_to_road=True, lane_type=carla.LaneType.Driving)`
