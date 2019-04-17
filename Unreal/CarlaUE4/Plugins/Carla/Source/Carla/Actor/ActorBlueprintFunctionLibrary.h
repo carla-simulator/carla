@@ -93,6 +93,11 @@ public:
       TArray<FActorDefinition> &Definitions);
 
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakeTriggerDefinition(
+      const FString &Id,
+      FActorDefinition &Definition);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static void MakePropDefinition(
       const FPropParameters &Parameters,
       bool &Success,
