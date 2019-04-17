@@ -1,3 +1,8 @@
+## CARLA 0.9.6
+  * Improved visual quality of the screen capture for the rgb sensor
+    - Enabled Temporal AA for screen captures with no post-processing to prevent jaggies during motion
+    - Reduced the target gamma of render target to 1.4 to minimize brightness differences with main camera 
+
 ## CARLA 0.9.5
 
   * New Town07, rural environment with narrow roads
