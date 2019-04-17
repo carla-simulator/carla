@@ -13,7 +13,7 @@
 #include "Carla/Walker/WalkerController.h"
 
 #include <compiler/disable-ue4-macros.h>
-#include <carla/Overload.h>
+#include <carla/Functional.h>
 #include <carla/Version.h>
 #include <carla/rpc/Actor.h>
 #include <carla/rpc/ActorDefinition.h>
@@ -789,14 +789,14 @@ void FTheNewCarlaServer::FPimpl::BindActions()
 
 #define MAKE_RESULT(operation) return parse_result(c.actor, operation);
 
-  auto command_visitor = carla::MakeRecursiveOverload(
+  auto command_visitor = carla::Functional::MakeRecursiveOverload(
       [=](auto self, const C::SpawnActor &c) -> CR {
         auto result = c.parent.has_value() ?
             spawn_actor_with_parent(c.description, c.transform, *c.parent) :
             spawn_actor(c.description, c.transform);
         if (!result.HasError()) {
           ActorId id = result.Get().id;
-          auto set_id = carla::MakeOverload(
+          auto set_id = carla::Functional::MakeOverload(
               [](C::SpawnActor &) {},
               [id](auto &s) { s.actor = id; });
           for (auto command : c.do_after) {
