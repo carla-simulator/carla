@@ -26,7 +26,7 @@ namespace SceneCaptureSensor_local_ns {
 
   static void SetCameraDefaultOverrides(USceneCaptureComponent2D &CaptureComponent2D);
 
-  static void RemoveShowFlags(FEngineShowFlags &ShowFlags);
+  static void ConfigureShowFlags(FEngineShowFlags &ShowFlags, bool bPostProcessing = true);
 
   static auto GetQualitySettings(UWorld *World)
   {
@@ -133,11 +133,29 @@ void ASceneCaptureSensor::BeginPlay()
   using namespace SceneCaptureSensor_local_ns;
 
   // Setup render target.
-  const bool bInForceLinearGamma = !bEnablePostProcessingEffects;
-  if (bEnablePostProcessingEffects) {
-    CaptureRenderTarget->TargetGamma = 2.4f;
+
+  // Determine the gamma of the player.
+
+  float DisplayGamma = 0.0f;
+
+  auto PlayerController = GetWorld()->GetFirstPlayerController();
+
+  UGameViewportClient* ViewportClient = PlayerController->PlayerCameraManager->PCOwner->GetLocalPlayer()->ViewportClient;
+  if (ViewportClient != nullptr)
+  {
+    FSceneViewport* SceneViewport = ViewportClient->GetGameViewport();
+    DisplayGamma = SceneViewport ? SceneViewport->GetDisplayGamma() : 0.0f;
   }
+
+  const bool bInForceLinearGamma = !bEnablePostProcessingEffects;
+  
   CaptureRenderTarget->InitCustomFormat(ImageWidth, ImageHeight, PF_B8G8R8A8, bInForceLinearGamma);
+  
+  if (bEnablePostProcessingEffects) {
+    CaptureRenderTarget->TargetGamma = 1.4;
+  }
+
+  UE_LOG(LogCarla, Log, TEXT("Player Display Gamma is %f but need to target %f"), DisplayGamma, CaptureRenderTarget->TargetGamma);
 
   check(IsValid(CaptureComponent2D) && !CaptureComponent2D->IsPendingKill());
 
@@ -157,11 +175,8 @@ void ASceneCaptureSensor::BeginPlay()
     // LDR is faster than HDR (smaller bitmap array).
     CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
   }
-
-  if (!bEnablePostProcessingEffects)
-  {
-    SceneCaptureSensor_local_ns::RemoveShowFlags(CaptureComponent2D->ShowFlags);
-  }
+ 
+  SceneCaptureSensor_local_ns::ConfigureShowFlags(CaptureComponent2D->ShowFlags, bEnablePostProcessingEffects);
 
   CaptureComponent2D->UpdateContent();
   CaptureComponent2D->Activate();
@@ -205,20 +220,26 @@ namespace SceneCaptureSensor_local_ns {
   static void SetCameraDefaultOverrides(USceneCaptureComponent2D &CaptureComponent2D)
   {
     auto &PostProcessSettings = CaptureComponent2D.PostProcessSettings;
-    PostProcessSettings.bOverride_AutoExposureMethod = true;
+    PostProcessSettings.bOverride_AutoExposureMethod = false;
     PostProcessSettings.AutoExposureMethod = AEM_Histogram;
-    PostProcessSettings.bOverride_AutoExposureMinBrightness = true;
+    PostProcessSettings.bOverride_AutoExposureMinBrightness = false;
     PostProcessSettings.AutoExposureMinBrightness = 0.27f;
-    PostProcessSettings.bOverride_AutoExposureMaxBrightness = true;
+    PostProcessSettings.bOverride_AutoExposureMaxBrightness = false;
     PostProcessSettings.AutoExposureMaxBrightness = 5.0f;
-    PostProcessSettings.bOverride_AutoExposureBias = true;
+    PostProcessSettings.bOverride_AutoExposureBias = false;
     PostProcessSettings.AutoExposureBias = -3.5f;
   }
 
   // Remove the show flags that might interfere with post-processing effects like
   // depth and semantic segmentation.
-  static void RemoveShowFlags(FEngineShowFlags &ShowFlags)
+  static void ConfigureShowFlags(FEngineShowFlags &ShowFlags, bool bPostProcessing)
   {
+    if (bPostProcessing)
+    {
+      ShowFlags.EnableAdvancedFeatures();
+      return;
+    }
+
     ShowFlags.SetAmbientOcclusion(false);
     ShowFlags.SetAntiAliasing(false);
     ShowFlags.SetAtmosphericFog(false);
