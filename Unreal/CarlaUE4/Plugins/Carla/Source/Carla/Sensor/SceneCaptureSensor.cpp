@@ -152,7 +152,7 @@ void ASceneCaptureSensor::BeginPlay()
   CaptureRenderTarget->InitCustomFormat(ImageWidth, ImageHeight, PF_B8G8R8A8, bInForceLinearGamma);
   
   if (bEnablePostProcessingEffects) {
-    CaptureRenderTarget->TargetGamma = 1.4;
+    CaptureRenderTarget->TargetGamma = 1.4f;
   }
 
   UE_LOG(LogCarla, Log, TEXT("Player Display Gamma is %f but need to target %f"), DisplayGamma, CaptureRenderTarget->TargetGamma);
