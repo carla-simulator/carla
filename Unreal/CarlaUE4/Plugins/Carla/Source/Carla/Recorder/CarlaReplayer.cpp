@@ -246,7 +246,6 @@ void CarlaReplayer::CheckPlayAfterMapLoaded(void)
 void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
 {
   double Per = 0.0f;
-  double DeltaTime = 0.0f;
   double NewTime = CurrentTime + Time;
   bool bFrameFound = false;
   bool bExitAtNextFrame = false;
@@ -256,7 +255,6 @@ void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
   if (NewTime >= Frame.Elapsed && NewTime < Frame.Elapsed + Frame.DurationThis)
   {
     Per = (NewTime - Frame.Elapsed) / Frame.DurationThis;
-    DeltaTime = Frame.DurationThis * Per;
     bFrameFound = true;
     bExitLoop = true;
     // UE_LOG(LogCarla, Log, TEXT("Frame %f (%f) now %f per %f"), Frame.Elapsed, Frame.Elapsed + Frame.DurationThis, NewTime, Per);
@@ -279,7 +277,6 @@ void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
         if (NewTime < Frame.Elapsed + Frame.DurationThis)
         {
           Per = (NewTime - Frame.Elapsed) / Frame.DurationThis;
-          DeltaTime = Frame.DurationThis * Per;
           bFrameFound = true;
           // UE_LOG(LogCarla, Log, TEXT("Frame %f (%f) now %f per %f"), Frame.Elapsed, Frame.Elapsed + Frame.DurationThis, NewTime, Per);
         }
@@ -321,6 +318,14 @@ void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
           SkipPacket();
         break;
 
+      // walker animation
+      case static_cast<char>(CarlaRecorderPacketId::AnimWalker):
+        if (bFrameFound)
+          ProcessAnimWalker();
+        else
+          SkipPacket();
+        break;
+
       // frame end
       case static_cast<char>(CarlaRecorderPacketId::FrameEnd):
         if (bFrameFound)
@@ -339,7 +344,7 @@ void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
   // update all positions
   if (Enabled && bFrameFound)
   {
-    UpdatePositions(Per, DeltaTime);
+    UpdatePositions(Per, Time);
   }
 
   // save current time
@@ -485,6 +490,22 @@ void CarlaReplayer::ProcessStates(void)
           TEXT("callback state traffic light %d called but didn't work"),
           StateTrafficLight.DatabaseId);
     }
+  }
+}
+
+void CarlaReplayer::ProcessAnimWalker(void)
+{
+  uint16_t i, Total;
+  CarlaRecorderAnimWalker Walker;
+  std::stringstream Info;
+
+  // read Total walkers
+  ReadValue<uint16_t>(File, Total);
+  for (i = 0; i < Total; ++i)
+  {
+    Walker.Read(File);
+    Walker.DatabaseId = MappedId[Walker.DatabaseId];
+    Helper.ProcessReplayerAnimWalker(Walker);
   }
 }
 

@@ -259,9 +259,6 @@ bool CarlaReplayerHelper::ProcessReplayerPosition(CarlaRecorderPosition Pos1, Ca
     // set new transform
     FTransform Trans(Rotation, Location, FVector(1, 1, 1));
     Actor->SetActorTransform(Trans, false, nullptr, ETeleportType::None);
-    // play walker animation
-    FVector Vel((Location - FVector(Pos1.Location)) / DeltaTime);
-    SetWalkerSpeedForAnimation(Actor, Vel);
     return true;
   }
   return false;
@@ -294,27 +291,6 @@ void CarlaReplayerHelper::SetVelocities(AActor *Actor, FVector Linear, FVector A
       // velocities
       RootComponent->SetPhysicsLinearVelocity(Linear, false, "None");
       RootComponent->SetPhysicsAngularVelocityInDegrees(Angular, false, "None");
-    }
-  }
-}
-
-// set speed of walker to force animation to play
-void CarlaReplayerHelper::SetWalkerSpeedForAnimation(AActor *Actor, FVector Linear)
-{
-  if (Actor && !Actor->IsPendingKill())
-  {
-    // check to set speed in walkers
-    auto Walker = Cast<APawn>(Actor);
-    if (Walker)
-    {
-      auto Controller = Cast<AWalkerController>(Walker->GetController());
-      if (Controller != nullptr)
-      {
-        FWalkerControl Control;
-        Control.Speed = Linear.Size();
-        Controller->ApplyWalkerControl(Control);
-        // UE_LOG(LogCarla, Log, TEXT("Set Speed for %f"), Control.Speed);
-     }
     }
   }
 }
@@ -359,6 +335,28 @@ bool CarlaReplayerHelper::ProcessReplayerStateTrafficLight(CarlaRecorderStateTra
     return true;
   }
   return false;
+}
+
+// set the animation for walkers
+void CarlaReplayerHelper::ProcessReplayerAnimWalker(CarlaRecorderAnimWalker Walker)
+{
+  check(Episode != nullptr);
+  AActor *Actor = Episode->GetActorRegistry().Find(Walker.DatabaseId).GetActor();
+  if (Actor && !Actor->IsPendingKill())
+  {
+    auto Wal = Cast<APawn>(Actor);
+    if (Wal)
+    {
+      auto Controller = Cast<AWalkerController>(Wal->GetController());
+      if (Controller != nullptr)
+      {
+        FWalkerControl Control;
+        Control.Speed = Walker.Speed;
+        Controller->ApplyWalkerControl(Control);
+        // UE_LOG(LogCarla, Log, TEXT("Set Speed for %f"), Control.Speed);
+     }
+    }
+  }
 }
 
 // replay finish

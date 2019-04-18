@@ -16,6 +16,7 @@
 #include "CarlaRecorderCollision.h"
 #include "CarlaRecorderPosition.h"
 #include "CarlaRecorderState.h"
+#include "CarlaRecorderAnimWalker.h"
 #include "CarlaRecorderQuery.h"
 #include "CarlaReplayer.h"
 #include "Carla/Actor/ActorDescription.h"
@@ -34,7 +35,9 @@ enum class CarlaRecorderPacketId : uint8_t
   EventParent,
   Collision,
   Position,
-  State
+  State,
+  AnimVehicle,
+  AnimWalker
 };
 
 /// Recorder for the simulation
@@ -78,6 +81,8 @@ public:
   void AddPosition(const CarlaRecorderPosition &Position);
 
   void AddState(const CarlaRecorderStateTrafficLight &State);
+
+  void AddAnimWalker(const CarlaRecorderAnimWalker &Walker);
 
   // set episode
   void SetEpisode(UCarlaEpisode *ThisEpisode)
@@ -127,6 +132,7 @@ private:
   CarlaRecorderCollisions Collisions;
   CarlaRecorderPositions Positions;
   CarlaRecorderStates States;
+  CarlaRecorderAnimWalkers Walkers;
 
   // replayer
   CarlaReplayer Replayer;
@@ -135,5 +141,7 @@ private:
   CarlaRecorderQuery Query;
 
   void AddExistingActors(void);
-
+  void AddActorPosition(FActorView &View);
+  void AddWalkerAnimation(FActorView &View);
+  void AddTrafficLightState(FActorView &View);
 };
