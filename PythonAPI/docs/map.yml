@@ -1,0 +1,56 @@
+---
+- module_name: map
+  doc: >
+
+  # - CLASSES ------------------------------
+  classes:
+  - class_name: Map
+    doc: >
+      Map description that provides a waypoint query system
+
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: name
+      doc: >
+        Map name
+
+    # - METHODS ----------------------------
+    methods:
+    - def_name: get_spawn_points
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: get_waypoint
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: get_topology
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: generate_waypoints
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: transform_to_geolocation
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: to_opendrive
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: save_to_disk
+      params:
+      - param_name: self
+      - param_name: path
+        doc: >
+          Path where will be saved
+      doc: >
+        Save the OpenDrive of the current map to disk
