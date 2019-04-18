@@ -15,6 +15,7 @@
 #include "CarlaRecorderCollision.h"
 #include "CarlaRecorderPosition.h"
 #include "CarlaRecorderState.h"
+#include "CarlaRecorderAnimWalker.h"
 
 class CarlaRecorderQuery
 {
@@ -48,6 +49,7 @@ private:
   CarlaRecorderPosition Position;
   CarlaRecorderCollision Collision;
   CarlaRecorderStateTrafficLight StateTraffic;
+  CarlaRecorderAnimWalker Walker;
 
   // read next header packet
   bool ReadHeader(void);

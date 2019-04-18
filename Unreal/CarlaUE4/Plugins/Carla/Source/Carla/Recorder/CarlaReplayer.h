@@ -129,6 +129,8 @@ private:
 
   void ProcessStates(void);
 
+  void ProcessAnimWalker(void);
+
   // positions
   void UpdatePositions(double Per, double DeltaTime);
 

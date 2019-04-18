@@ -40,6 +40,9 @@ public:
   // replay event for traffic light state
   bool ProcessReplayerStateTrafficLight(CarlaRecorderStateTrafficLight State);
 
+  // set the animation for walkers
+  void ProcessReplayerAnimWalker(CarlaRecorderAnimWalker Walker);
+
   // replay finish
   bool ProcessReplayerFinish(bool bApplyAutopilot);
 
@@ -66,7 +69,4 @@ private:
   void ResetVelocities(AActor *Actor);
   // apply new velocities
   void SetVelocities(AActor *Actor, FVector Linear, FVector Angular);
-  // set speed of walker to force animation to play
-  void SetWalkerSpeedForAnimation(AActor *Actor, FVector Linear);
-
 };
