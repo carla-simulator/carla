@@ -43,8 +43,8 @@ void AFrictionTrigger::OnTriggerBeginOverlap(
     bool /*bFromSweep*/,
     const FHitResult & /*SweepResult*/)
 {
-  ACarlaWheeledVehicle *Vehicle = CastChecked<ACarlaWheeledVehicle>(OtherActor);
-  if (Vehicle)
+  ACarlaWheeledVehicle *Vehicle = Cast<ACarlaWheeledVehicle>(OtherActor);
+  if (Vehicle != nullptr)
   {
     TArray<float> WheelsFrictionScale = Vehicle->GetWheelsFrictionScale();
     for (auto &FrictionScale : WheelsFrictionScale)
@@ -62,8 +62,8 @@ void AFrictionTrigger::OnTriggerEndOverlap(
     UPrimitiveComponent * /*OtherComp*/,
     int32 /*OtherBodyIndex*/)
 {
-  ACarlaWheeledVehicle *Vehicle = CastChecked<ACarlaWheeledVehicle>(OtherActor);
-  if (Vehicle)
+  ACarlaWheeledVehicle *Vehicle = Cast<ACarlaWheeledVehicle>(OtherActor);
+  if (Vehicle != nullptr)
   {
     TArray<float> WheelsFrictionScale = Vehicle->GetWheelsFrictionScale();
     for (auto &FrictionScale : WheelsFrictionScale)

@@ -65,6 +65,28 @@ FActorSpawnResult ATriggerFactory::SpawnActor(
     auto *Episode = GameInstance->GetCarlaEpisode();
     check(Episode != nullptr);
     Trigger->SetEpisode(*Episode);
+
+    FVector Extent {100.0f, 100.0f, 100.0f};
+
+    auto *ExtentX = Description.Variations.Find("extent_x");
+    if (ExtentX != nullptr)
+    {
+      Extent.X = std::atof(TCHAR_TO_UTF8(*ExtentX->Value));
+    }
+
+    auto *ExtentY = Description.Variations.Find("extent_y");
+    if (ExtentY != nullptr)
+    {
+      Extent.Y = std::atof(TCHAR_TO_UTF8(*ExtentY->Value));
+    }
+
+    auto *ExtentZ = Description.Variations.Find("extent_z");
+    if (ExtentZ != nullptr)
+    {
+      Extent.Z = std::atof(TCHAR_TO_UTF8(*ExtentZ->Value));
+    }
+
+    Trigger->SetBoxExtent(Extent);
   }
   UGameplayStatics::FinishSpawningActor(Trigger, Transform);
   return FActorSpawnResult{Trigger};
