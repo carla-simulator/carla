@@ -1,0 +1,132 @@
+---
+- module_name: client
+  doc: >
+
+  # - CLASSES ------------------------------
+  classes:
+  - class_name: Client
+    doc: >
+      Client used to connect to a Carla server
+
+    # - PROPERTIES -------------------------
+    instance_variables:
+
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: self
+      - param_name: host
+        type: str
+        doc: >
+          IP where Carla is running
+      - param_name: port
+        type: int
+        doc: >
+          Port where Carla is running
+      - param_name: worker_threads
+        type: int
+        default: 0
+        doc: >
+          Number of working threads
+      doc: >
+        Client constructor
+    # --------------------------------------
+    - def_name: set_timeout
+      params:
+      - param_name: self
+      - param_name: seconds
+        type: float
+        doc: >
+          New timeout value in seconds
+      doc: >
+        Sets the server timeout in seconds
+    # --------------------------------------
+    - def_name: get_client_version
+      params:
+      - param_name: self
+      return: str
+      doc: >
+        Get the client version as a string
+    # --------------------------------------
+    - def_name: get_server_version
+      params:
+      - param_name: self
+      return: str
+      doc: >
+        Get the server version as a string
+    # --------------------------------------
+    - def_name: get_world
+      params:
+      - param_name: self
+      doc: >
+        Get the server version as a string
+    # --------------------------------------
+    - def_name: get_available_maps
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: reload_world
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: load_world
+      params:
+      - param_name: self
+      - param_name: map_name
+        type: str
+        doc: >
+          Name of the map to load
+      doc: >
+    # --------------------------------------
+    - def_name: start_recorder
+      params:
+      - param_name: self
+      - param_name: filename
+        type: str
+        doc: >
+          Name of the recorder file to load
+      doc: >
+    # --------------------------------------
+    - def_name: stop_recorder
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: show_recorder_file_info
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: show_recorder_collisions
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: show_recorder_actors_blocked
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: replay_file
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: set_replayer_time_factor
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: apply_batch
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: apply_batch_sync
+      params:
+      - param_name: self
+      doc: >
+...
