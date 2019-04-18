@@ -18,6 +18,8 @@ private:
 
   void Init();
 
+  void UpdateWheelsFriction(AActor *OtherActor, float NewFriction);
+
 public:
 
   AFrictionTrigger(const FObjectInitializer &ObjectInitializer);
@@ -48,6 +50,11 @@ public:
     TriggerVolume->SetBoxExtent(Extent);
   }
 
+  void SetFriction(float NewFriction)
+  {
+    Friction = NewFriction;
+  }
+
 protected:
 
   virtual void BeginPlay() override;
@@ -55,6 +62,9 @@ protected:
   virtual void EndPlay(EEndPlayReason::Type EndPlayReason) override;
 
 public:
+
+  UPROPERTY(EditAnywhere)
+  float Friction = 0.0f;
 
   UPROPERTY(EditAnywhere)
   UBoxComponent *TriggerVolume;

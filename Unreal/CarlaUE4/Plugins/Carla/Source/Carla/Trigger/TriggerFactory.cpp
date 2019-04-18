@@ -62,29 +62,29 @@ FActorSpawnResult ATriggerFactory::SpawnActor(
   }
   else
   {
+    // Retrieve Episode
     auto *Episode = GameInstance->GetCarlaEpisode();
     check(Episode != nullptr);
     Trigger->SetEpisode(*Episode);
 
+    // Retrieve Friction
+    float Friction = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat("friction",
+        Description.Variations,
+        0.0f);
+    Trigger->SetFriction(Friction);
+
+    // Retrieve Extent
     FVector Extent {100.0f, 100.0f, 100.0f};
 
-    auto *ExtentX = Description.Variations.Find("extent_x");
-    if (ExtentX != nullptr)
-    {
-      Extent.X = std::atof(TCHAR_TO_UTF8(*ExtentX->Value));
-    }
-
-    auto *ExtentY = Description.Variations.Find("extent_y");
-    if (ExtentY != nullptr)
-    {
-      Extent.Y = std::atof(TCHAR_TO_UTF8(*ExtentY->Value));
-    }
-
-    auto *ExtentZ = Description.Variations.Find("extent_z");
-    if (ExtentZ != nullptr)
-    {
-      Extent.Z = std::atof(TCHAR_TO_UTF8(*ExtentZ->Value));
-    }
+    Extent.X = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat("extent_x",
+        Description.Variations,
+        Extent.X);
+    Extent.Y = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat("extent_y",
+        Description.Variations,
+        Extent.Y);
+    Extent.Z = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat("extent_z",
+        Description.Variations,
+        Extent.Z);
 
     Trigger->SetBoxExtent(Extent);
   }
