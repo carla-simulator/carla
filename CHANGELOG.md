@@ -29,6 +29,8 @@
   * Register user props in fbx format, make them available in Carla Blueprint Library and spawnable.
   * Exposed 'is_invincible' for pedestrians
   * Fixed bug related with Pygame error of surface too large, added sidewalks and improved lane markings in `no_rendering_mode.py`
+  * Physics:
+    - Added Friction Trigger Boxes for simulating, for example, slippery surfaces in any region of the map defined by users.
 
 ## CARLA 0.9.5
 
