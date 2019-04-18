@@ -7,9 +7,9 @@
 #include "test.h"
 #include "OpenDrive.h"
 #include "Random.h"
-#include "ThreadPool.h"
 
 #include <carla/StopWatch.h>
+#include <carla/ThreadPool.h>
 #include <carla/geom/Location.h>
 #include <carla/geom/Math.h>
 #include <carla/opendrive/OpenDriveParser.h>
@@ -301,7 +301,8 @@ TEST(road, parse_geometry) {
 }
 
 TEST(road, iterate_waypoints) {
-  ThreadPool pool;
+  carla::ThreadPool pool;
+  pool.AsyncRun();
   std::vector<std::future<void>> results;
   for (const auto& file : util::OpenDrive::GetAvailableFiles()) {
     carla::logging::log("Parsing", file);
@@ -377,7 +378,8 @@ TEST(road, iterate_waypoints) {
 }
 
 TEST(road, get_waypoint) {
-  ThreadPool pool;
+  carla::ThreadPool pool;
+  pool.AsyncRun();
   std::vector<std::future<void>> results;
   for (const auto& file : util::OpenDrive::GetAvailableFiles()) {
     carla::logging::log("Parsing", file);
