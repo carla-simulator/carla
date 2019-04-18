@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include <carla/MoveHandler.h>
 #include <carla/streaming/detail/AsioThreadPool.h>
 
-#include <functional>
 #include <future>
 #include <memory>
 #include <thread>
@@ -23,11 +23,11 @@ namespace util {
           worker_threads > 0u ? worker_threads : std::thread::hardware_concurrency());
     }
 
-    template <typename ResultT>
-    std::future<ResultT> Post(std::function<ResultT()> functor) {
-      auto task = std::make_shared<std::packaged_task<ResultT()>>(std::move(functor));
-      auto future = task->get_future();
-      _pool.service().post([t=std::move(task)]() mutable { (*t)(); });
+    template <typename ResultT, typename FunctorT>
+    std::future<ResultT> Post(FunctorT &&functor) {
+      auto task = std::packaged_task<ResultT()>(std::forward<FunctorT>(functor));
+      auto future = task.get_future();
+      _pool.service().post(carla::MoveHandler(task));
       return future;
     }
 

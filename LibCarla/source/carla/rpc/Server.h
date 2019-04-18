@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "carla/MoveHandler.h"
 #include "carla/Time.h"
 #include "carla/rpc/Metadata.h"
 #include "carla/rpc/Response.h"
@@ -70,23 +71,6 @@ namespace rpc {
   // ===========================================================================
 
 namespace detail {
-
-  /// Hack to trick asio into accepting move-only handlers, if the handler were
-  /// actually copied it would result in a link error.
-  ///
-  /// @see https://stackoverflow.com/a/22891509.
-  template <typename FunctorT>
-  auto MoveHandler(FunctorT &&func) {
-    using F = typename std::decay<FunctorT>::type;
-    struct MoveWrapper : F {
-      MoveWrapper(F&& f) : F(std::move(f)) {}
-      MoveWrapper(MoveWrapper&&) = default;
-      MoveWrapper& operator=(MoveWrapper&&) = default;
-      MoveWrapper(const MoveWrapper&);
-      MoveWrapper& operator=(const MoveWrapper&);
-    };
-    return MoveWrapper{std::move(func)};
-  }
 
   template <typename T>
   struct FunctionWrapper : FunctionWrapper<decltype(&T::operator())> {};
