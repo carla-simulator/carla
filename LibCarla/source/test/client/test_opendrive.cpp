@@ -306,7 +306,7 @@ TEST(road, iterate_waypoints) {
   std::vector<std::future<void>> results;
   for (const auto& file : util::OpenDrive::GetAvailableFiles()) {
     carla::logging::log("Parsing", file);
-    results.push_back(pool.Post<void>([file]() {
+    results.push_back(pool.Post([file]() {
       carla::StopWatch stop_watch;
       auto m = OpenDriveParser::Load(util::OpenDrive::Load(file));
       ASSERT_TRUE(m.has_value());
@@ -383,7 +383,7 @@ TEST(road, get_waypoint) {
   std::vector<std::future<void>> results;
   for (const auto& file : util::OpenDrive::GetAvailableFiles()) {
     carla::logging::log("Parsing", file);
-    results.push_back(pool.Post<void>([file]() {
+    results.push_back(pool.Post([file]() {
       carla::StopWatch stop_watch;
       auto m = OpenDriveParser::Load(util::OpenDrive::Load(file));
       ASSERT_TRUE(m.has_value());

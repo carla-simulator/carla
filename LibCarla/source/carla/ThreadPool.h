@@ -15,6 +15,7 @@
 
 #include <future>
 #include <thread>
+#include <type_traits>
 
 namespace carla {
 
@@ -35,7 +36,7 @@ namespace carla {
     }
 
     /// Post a task to the pool.
-    template <typename ResultT, typename FunctorT>
+    template <typename FunctorT, typename ResultT = typename std::result_of<FunctorT()>::type>
     std::future<ResultT> Post(FunctorT &&functor) {
       auto task = std::packaged_task<ResultT()>(std::forward<FunctorT>(functor));
       auto future = task.get_future();
