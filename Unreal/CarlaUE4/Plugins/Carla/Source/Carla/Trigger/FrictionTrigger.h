@@ -43,6 +43,11 @@ public:
     Episode = &InEpisode;
   }
 
+  void SetBoxExtent(const FVector &Extent)
+  {
+    TriggerVolume->SetBoxExtent(Extent);
+  }
+
 protected:
 
   virtual void BeginPlay() override;
