@@ -232,6 +232,15 @@ static void AddVariationsForSensor(FActorDefinition &Def)
 
 static void AddVariationsForTrigger(FActorDefinition &Def)
 {
+  // Friction
+  FActorVariation Friction;
+  Friction.Id = FString("friction");
+  Friction.Type = EActorAttributeType::Float;
+  Friction.RecommendedValues = { TEXT("0.0f") };
+  Friction.bRestrictToRecommended = false;
+  Def.Variations.Emplace(Friction);
+
+  // Extent
   FString Extent("extent");
   FString Coordinates[3] = {FString("x"), FString("y"), FString("z")};
 
