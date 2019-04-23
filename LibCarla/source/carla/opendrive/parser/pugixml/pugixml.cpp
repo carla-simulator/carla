@@ -40,6 +40,12 @@
 // For placement new
 #include <new>
 
+#if defined(__clang__)
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wconversion"
+# pragma clang diagnostic ignored "-Wdouble-promotion"
+#endif
+
 #ifdef _MSC_VER
 #	pragma warning(push)
 #	pragma warning(disable: 4127) // conditional expression is constant
@@ -12735,6 +12741,10 @@ namespace pugi
 
 #if defined(_MSC_VER) && defined(__c2__)
 #	pragma clang diagnostic pop
+#endif
+
+#if defined(__clang__)
+#  pragma clang diagnostic pop
 #endif
 
 // Undefine all local macros (makes sure we're not leaking macros in header-only mode)

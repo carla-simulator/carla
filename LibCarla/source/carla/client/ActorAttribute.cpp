@@ -57,7 +57,7 @@ namespace client {
         (x < std::numeric_limits<float>::lowest())) {
       LIBCARLA_THROW_INVALID_VALUE("float overflow");
     }
-    return x;
+    return static_cast<float>(x);
   }
 
   template <>

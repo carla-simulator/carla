@@ -63,7 +63,7 @@ namespace road {
       return GetRoad(road_id).GetLaneById(section_id, lane_id).template GetInfo<T>(s);
     }
 
-    auto GetRoadCount() const {
+    size_t GetRoadCount() const {
       return _roads.size();
     }
 
