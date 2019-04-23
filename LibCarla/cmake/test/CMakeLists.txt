@@ -40,10 +40,12 @@ foreach(target ${build_targets})
       -DLIBCARLA_ENABLE_PROFILER
       -DLIBCARLA_WITH_GTEST)
 
-  target_include_directories(${target} PRIVATE
+  target_include_directories(${target} SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}"
-      "${GTEST_INCLUDE_PATH}"
+      "${GTEST_INCLUDE_PATH}")
+
+  target_include_directories(${target} PRIVATE
       "${libcarla_source_path}/test")
 
   if (WIN32)

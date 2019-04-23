@@ -27,7 +27,7 @@ build: $(BINDIR)/cpp_client
 $(BINDIR)/cpp_client: build_libcarla
 	$(call log,Compiling C++ Client...)
 	@mkdir -p $(BINDIR)
-	@$(CXX) $(CXXFLAGS) -I$(INSTALLDIR)/include -L$(INSTALLDIR)/lib \
+	@$(CXX) $(CXXFLAGS) -I$(INSTALLDIR)/include -isystem $(INSTALLDIR)/include/system -L$(INSTALLDIR)/lib \
 		-o $(BINDIR)/cpp_client main.cpp \
 		-Wl,-Bstatic -lcarla_client -lrpc -lboost_filesystem -Wl,-Bdynamic \
 		-lpng -ltiff -ljpeg
