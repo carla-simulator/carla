@@ -51,7 +51,6 @@ void ACarlaWheeledVehicle::BeginPlay()
   }
 
   Vehicle4W->WheelSetups = NewWheelSetups;
-
   Vehicle4W->VehicleSetupTag++;
 }
 
@@ -273,7 +272,6 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
     Wheel->TireConfig->SetFrictionScale(PhysicsControl.Wheels[i].TireFriction);
 
     NewWheelSetups[i].bDisableSteering = PhysicsControl.Wheels[i].bDisableSteering;
-
   }
 
   Vehicle4W->WheelSetups = NewWheelSetups;

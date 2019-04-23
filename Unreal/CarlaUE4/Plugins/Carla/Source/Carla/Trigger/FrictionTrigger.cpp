@@ -93,5 +93,4 @@ void AFrictionTrigger::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void AFrictionTrigger::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
-
 }
