@@ -7,10 +7,11 @@
 #pragma once
 
 #include "carla/NonCopyable.h"
-#include <string>
-#include <vector>
 #include "carla/road/RoadTypes.h"
 #include "carla/road/general/Validity.h"
+
+#include <string>
+#include <vector>
 
 namespace carla {
 namespace road {
@@ -20,8 +21,8 @@ namespace signal {
   public:
 
     SignalDependency(
-        int32_t road_id,
-        uint32_t signal_id,
+        road::RoadId road_id,
+        road::SignId signal_id,
         uint32_t dependency_id,
         std::string type)
       : _road_id(road_id),
@@ -35,9 +36,9 @@ namespace signal {
 #  pragma clang diagnostic push
 #  pragma clang diagnostic ignored "-Wunused-private-field"
 #endif
-    int32_t _road_id;
-    int32_t _signal_id;
-    int32_t _dependency_id;
+    road::RoadId _road_id;
+    road::SignId _signal_id;
+    uint32_t _dependency_id;
     std::string _type;
 #if defined(__clang__)
 #  pragma clang diagnostic pop

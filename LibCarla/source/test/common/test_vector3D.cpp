@@ -20,6 +20,6 @@ TEST(vector3D, make_unit_vec) {
   ASSERT_NE(Vector3D(0,1,512).MakeUnitVector(), Vector3D(0,0,1));
 #ifndef NDEBUG
   ASSERT_DEATH_IF_SUPPORTED(
-    Vector3D().MakeUnitVector(), "len > std::numeric_limits<double>::epsilon()");
+    Vector3D().MakeUnitVector(), "length > 2.0f \\* std::numeric_limits<float>::epsilon()");
 #endif // NDEBUG
 }

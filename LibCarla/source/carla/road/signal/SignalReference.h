@@ -20,8 +20,8 @@ namespace signal {
   public:
 
     SignalReference(
-        int32_t road_id,
-        uint32_t id,
+        road::RoadId road_id,
+        road::SignId id,
         double s,
         double t,
         std::string orientation)
@@ -41,8 +41,8 @@ namespace signal {
 #  pragma clang diagnostic push
 #  pragma clang diagnostic ignored "-Wunused-private-field"
 #endif
-    int32_t _road_id;
-    int32_t _signal_id;
+    road::RoadId _road_id;
+    road::SignId _signal_id;
     double _s;
     double _t;
     std::string _orientation;

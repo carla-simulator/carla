@@ -60,7 +60,7 @@ namespace parser {
           ElevationProfile elev;
 
           // get road id
-          road::RoadId road_id = node_road.attribute("id").as_int();
+          road::RoadId road_id = node_road.attribute("id").as_uint();
           elev.road = map_builder.GetRoad(road_id);
 
           // get common properties
@@ -82,7 +82,7 @@ namespace parser {
           LateralProfile lateral;
 
           // get road id
-          road::RoadId road_id = node_road.attribute("id").as_int();
+          road::RoadId road_id = node_road.attribute("id").as_uint();
           lateral.road = map_builder.GetRoad(road_id);
 
           // get common properties

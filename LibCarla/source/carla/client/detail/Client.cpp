@@ -79,7 +79,7 @@ namespace detail {
     time_duration GetTimeout() const {
       auto timeout = rpc_client.get_timeout();
       DEBUG_ASSERT(timeout.has_value());
-      return time_duration::milliseconds(*timeout);
+      return time_duration::milliseconds(static_cast<size_t>(*timeout));
     }
 
     const std::string endpoint;
@@ -102,7 +102,7 @@ namespace detail {
   Client::~Client() = default;
 
   void Client::SetTimeout(time_duration timeout) {
-    _pimpl->rpc_client.set_timeout(timeout.milliseconds());
+    _pimpl->rpc_client.set_timeout(static_cast<int64_t>(timeout.milliseconds()));
   }
 
   time_duration Client::GetTimeout() const {

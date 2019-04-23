@@ -119,7 +119,7 @@ namespace parser {
       Road road { 0, "", 0.0, -1, 0, 0, {}, {}, {} };
 
       // attributes
-      road.id = node_road.attribute("id").as_int();
+      road.id = node_road.attribute("id").as_uint();
       road.name = node_road.attribute("name").value();
       road.length = node_road.attribute("length").as_double();
       road.junction_id = node_road.attribute("junction").as_int();
@@ -128,10 +128,10 @@ namespace parser {
       pugi::xml_node link = node_road.child("link");
       if (link) {
         if (link.child("predecessor")) {
-          road.predecessor = link.child("predecessor").attribute("elementId").as_int();
+          road.predecessor = link.child("predecessor").attribute("elementId").as_uint();
         }
         if (link.child("successor")) {
-          road.successor = link.child("successor").attribute("elementId").as_int();
+          road.successor = link.child("successor").attribute("elementId").as_uint();
         }
       }
 

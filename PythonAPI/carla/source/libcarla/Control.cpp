@@ -68,7 +68,7 @@ static auto GetVectorOfVector2DFromList(const boost::python::list &list) {
   std::vector<carla::geom::Vector2D> v;
 
   auto length = boost::python::len(list);
-  v.reserve(length);
+  v.reserve(static_cast<size_t>(length));
   for (auto i = 0u; i < length; ++i) {
     boost::python::extract<carla::geom::Vector2D> ext(list[i]);
     if (ext.check()) {

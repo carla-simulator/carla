@@ -146,11 +146,10 @@ namespace road {
       uint32_t lane_type) const {
     // max_nearests represents the max nearests roads
     // where we will search for nearests lanes
-    constexpr int max_nearests = 50;
+    constexpr size_t max_nearests = 50u;
     // in case that map has less than max_nearests lanes,
     // we will use the maximum lanes
-    const int max_nearest_allowed = _data.GetRoadCount() < max_nearests ?
-        _data.GetRoadCount() : max_nearests;
+    const size_t max_nearest_allowed = std::min(_data.GetRoadCount(), max_nearests);
 
     // Unreal's Y axis hack
     const auto pos_inverted_y = geom::Location(pos.x, -pos.y, pos.z);
@@ -169,10 +168,11 @@ namespace road {
       const auto road = &road_pair.second;
       const auto current_dist = road->GetNearestPoint(pos_inverted_y);
 
-      for (int i = 0; i < max_nearest_allowed; ++i) {
+      for (size_t i = 0u; i < max_nearest_allowed; ++i) {
         if (current_dist.second < nearest_dist[i]) {
           // reorder nearest_dist
-          for (int j = max_nearest_allowed - 1; j > i; --j) {
+          for (size_t j = max_nearest_allowed - 1u; j > i; --j) {
+            DEBUG_ASSERT(j > 0u);
             nearest_dist[j] = nearest_dist[j - 1];
             ids[j] = ids[j - 1];
             dists[j] = dists[j - 1];
@@ -188,7 +188,7 @@ namespace road {
     // search for the nearest lane in nearest_dist
     Waypoint waypoint;
     auto nearest_lane_dist = std::numeric_limits<double>::max();
-    for (int i = 0; i < max_nearest_allowed; ++i) {
+    for (size_t i = 0u; i < max_nearest_allowed; ++i) {
       auto lane_dist = _data.GetRoad(ids[i]).GetNearestLane(dists[i], pos_inverted_y, lane_type);
 
       if (lane_dist.second < nearest_lane_dist) {
@@ -208,7 +208,7 @@ namespace road {
     // Make sure 0.0 < waipoint.s < Road's length
     constexpr double margin = 5.0 * EPSILON;
     DEBUG_ASSERT(margin < road.GetLength() - margin);
-    waypoint.s = geom::Math::clamp<double>(waypoint.s, margin, road.GetLength() - margin);
+    waypoint.s = geom::Math::Clamp(waypoint.s, margin, road.GetLength() - margin);
 
     auto &lane = road.GetLaneByDistance(waypoint.s, waypoint.lane_id);
 
@@ -291,17 +291,17 @@ namespace road {
     lane_tangent *= -1;
 
     geom::Rotation rot(
-        geom::Math::to_degrees(dp.pitch),
-        geom::Math::to_degrees(-dp.tangent), // Unreal's Y axis hack
-        0.0);
+        geom::Math::ToDegrees(static_cast<float>(dp.pitch)),
+        geom::Math::ToDegrees(-static_cast<float>(dp.tangent)), // Unreal's Y axis hack
+        0.0f);
 
     dp.ApplyLateralOffset(lane_width);
 
     if (waypoint.lane_id > 0) {
-      rot.yaw += 180.0 + geom::Math::to_degrees(lane_tangent);
-      rot.pitch = 360.0 - rot.pitch;
+      rot.yaw += 180.0f + geom::Math::ToDegrees(lane_tangent);
+      rot.pitch = 360.0f - rot.pitch;
     } else {
-      rot.yaw -= geom::Math::to_degrees(lane_tangent);
+      rot.yaw -= geom::Math::ToDegrees(lane_tangent);
     }
 
     // Unreal's Y axis hack

@@ -29,22 +29,22 @@ namespace geom {
   /// @note when converting from lat/lon -> mercator and back again,
   ///        or vice versa, use the same scale in both transformations!
   static double LatToScale(double lat) {
-    return std::cos(Math::to_radians(lat));
+    return std::cos(Math::ToRadians(lat));
   }
 
   /// Converts lat/lon/scale to mx/my (mx/my in meters if correct scale
   /// is given).
   template <class float_type>
   static void LatLonToMercator(double lat, double lon, double scale, float_type &mx, float_type &my) {
-    mx = scale * Math::to_radians(lon) * EARTH_RADIUS_EQUA;
-    my = scale * EARTH_RADIUS_EQUA * std::log(std::tan((90.0 + lat) * Math::pi() / 360.0));
+    mx = scale * Math::ToRadians(lon) * EARTH_RADIUS_EQUA;
+    my = scale * EARTH_RADIUS_EQUA * std::log(std::tan((90.0 + lat) * Math::Pi<double>() / 360.0));
   }
 
   /// Converts mx/my/scale to lat/lon (mx/my in meters if correct scale
   /// is given).
   static void MercatorToLatLon(double mx, double my, double scale, double &lat, double &lon) {
-    lon = mx * 180.0 / (Math::pi() * EARTH_RADIUS_EQUA * scale);
-    lat = 360.0 * std::atan(std::exp(my / (EARTH_RADIUS_EQUA * scale))) / Math::pi() - 90.0;
+    lon = mx * 180.0 / (Math::Pi<double>() * EARTH_RADIUS_EQUA * scale);
+    lat = 360.0 * std::atan(std::exp(my / (EARTH_RADIUS_EQUA * scale))) / Math::Pi<double>() - 90.0;
   }
 
   /// Adds meters dx/dy to given lat/lon and returns new lat/lon.

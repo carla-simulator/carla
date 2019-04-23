@@ -185,7 +185,7 @@ namespace parser {
 
     // Lanes
     for (pugi::xml_node road_node : open_drive_node.children("road")) {
-      road::RoadId road_id = road_node.attribute("id").as_int();
+      road::RoadId road_id = road_node.attribute("id").as_uint();
 
       for (pugi::xml_node lanes_node : road_node.children("lanes")) {
 

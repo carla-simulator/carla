@@ -19,7 +19,7 @@ namespace carla {
 namespace client {
 
   static geom::Location Rotate(float yaw, const geom::Location &location) {
-    yaw *= geom::Math::pi() / 180.0f;
+    yaw *= geom::Math::Pi<float>() / 180.0f;
     const float c = std::cos(yaw);
     const float s = std::sin(yaw);
     return {

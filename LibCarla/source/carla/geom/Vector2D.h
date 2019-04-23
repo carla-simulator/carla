@@ -39,18 +39,18 @@ namespace geom {
     // -- Other methods --------------------------------------------------------
     // =========================================================================
 
-    double SquaredLength() const {
+    float SquaredLength() const {
       return x * x + y * y;
     }
 
-    double Length() const {
+    float Length() const {
        return std::sqrt(SquaredLength());
     }
 
     Vector2D MakeUnitVector() const {
-      const double len = Length();
-      DEBUG_ASSERT(len > std::numeric_limits<double>::epsilon());
-      double k = 1.0 / len;
+      const float len = Length();
+      DEBUG_ASSERT(len > 2.0f * std::numeric_limits<float>::epsilon());
+      const float k = 1.0f / len;
       return Vector2D(x * k, y * k);
     }
 
@@ -80,34 +80,34 @@ namespace geom {
       return lhs;
     }
 
-    Vector2D &operator*=(const double &rhs) {
+    Vector2D &operator*=(float rhs) {
       x *= rhs;
       y *= rhs;
       return *this;
     }
 
-    friend Vector2D operator*(Vector2D lhs, const double &rhs) {
+    friend Vector2D operator*(Vector2D lhs, float rhs) {
       lhs *= rhs;
       return lhs;
     }
 
-    friend Vector2D operator*(const double &lhs, Vector2D rhs) {
+    friend Vector2D operator*(float lhs, Vector2D rhs) {
       rhs *= lhs;
       return rhs;
     }
 
-    Vector2D &operator/=(const double &rhs) {
+    Vector2D &operator/=(float rhs) {
       x /= rhs;
       y /= rhs;
       return *this;
     }
 
-    friend Vector2D operator/(Vector2D lhs, const double &rhs) {
+    friend Vector2D operator/(Vector2D lhs, float rhs) {
       lhs /= rhs;
       return lhs;
     }
 
-    friend Vector2D operator/(const double &lhs, Vector2D rhs) {
+    friend Vector2D operator/(float lhs, Vector2D rhs) {
       rhs /= lhs;
       return rhs;
     }

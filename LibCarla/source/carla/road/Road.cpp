@@ -180,7 +180,7 @@ namespace road {
   }
 
   element::DirectedPoint Road::GetDirectedPointIn(const double s) const {
-    const auto clamped_s = geom::Math::clamp<double>(s, 0.0, _length);
+    const auto clamped_s = geom::Math::Clamp(s, 0.0, _length);
     const auto geometry = _info.GetInfo<element::RoadInfoGeometry>(clamped_s);
 
     const auto lane_offset = _info.GetInfo<element::RoadInfoLaneOffset>(clamped_s);
@@ -193,7 +193,7 @@ namespace road {
 
     // Apply road's elevation record
     const auto elevation_info = GetElevationOn(s);
-    p.location.z = elevation_info.Evaluate(s);
+    p.location.z = static_cast<float>(elevation_info.Evaluate(s));
     p.pitch = elevation_info.Tangent(s);
 
     return p;

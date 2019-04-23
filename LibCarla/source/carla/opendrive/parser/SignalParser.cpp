@@ -28,8 +28,8 @@ namespace parser {
     for (pugi::xml_node validity_node = parent_node.child(node_name.c_str());
         validity_node;
         validity_node = validity_node.next_sibling("validity")) {
-      const int from_lane = validity_node.attribute("fromLane").as_int();
-      const int to_lane = validity_node.attribute("toLane").as_int();
+      const auto from_lane = static_cast<int16_t>(validity_node.attribute("fromLane").as_int());
+      const auto to_lane = static_cast<int16_t>(validity_node.attribute("toLane").as_int());
       log_debug("Added validity to signal ", signalID, ":", from_lane, to_lane);
       function(roadID, signalID, from_lane, to_lane);
     }
@@ -108,15 +108,14 @@ namespace parser {
             pitch,
             roll);
         AddValidity(signal_node, "validity", road_id, signal_id,
-            ([&map_builder](const RoadID roadID, const SignalID &signal_id, const int16_t from_lane,
-            const int16_t to_lane)
-            { map_builder.AddValidityToSignal(roadID, signal_id, from_lane, to_lane);
+            ([&map_builder](auto &&... args)
+            { map_builder.AddValidityToSignal(args...);
             }));
 
         for (pugi::xml_node dependency_node = signal_node.child("dependency");
             dependency_node;
             dependency_node = dependency_node.next_sibling("validity")) {
-          const DependencyID dependency_id = dependency_node.attribute("id").as_int();
+          const DependencyID dependency_id = dependency_node.attribute("id").as_uint();
           const std::string dependency_type = dependency_node.attribute("type").value();
           log_debug("Added dependency to signal ", signal_id, ":", dependency_id, dependency_type);
           map_builder.AddDependencyToSignal(road_id, signal_id, dependency_id, dependency_type);
@@ -127,7 +126,7 @@ namespace parser {
           signalreference_node = signalreference_node.next_sibling("signalReference")) {
         const double s_position = signalreference_node.attribute("s").as_double();
         const double t_position = signalreference_node.attribute("t").as_double();
-        const SignalID signal_reference_id = signalreference_node.attribute("id").as_int();
+        const SignalID signal_reference_id = signalreference_node.attribute("id").as_uint();
         const std::string signal_reference_orientation =
             signalreference_node.attribute("orientation").value();
         log_debug("Road: ",

@@ -33,7 +33,7 @@ namespace geom {
     // -- Other methods --------------------------------------------------------
     // =========================================================================
 
-    double Distance(const Location &loc) const {
+    auto Distance(const Location &loc) const {
       return Math::Distance(*this, loc);
     }
 
@@ -62,17 +62,17 @@ namespace geom {
     }
 
     /// @todo Do we need to multiply locations?
-    Location &operator*=(const double &rhs) {
+    Location &operator*=(float rhs) {
       static_cast<Vector3D &>(*this) *= rhs;
       return *this;
     }
 
-    friend Location operator*(Location lhs, double rhs) {
+    friend Location operator*(Location lhs, float rhs) {
       lhs *= rhs;
       return lhs;
     }
 
-    friend Location operator*(double lhs, Location rhs) {
+    friend Location operator*(float lhs, Location rhs) {
       rhs *= lhs;
       return rhs;
     }

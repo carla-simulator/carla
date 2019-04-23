@@ -9,8 +9,9 @@
 #include "carla/Debug.h"
 #include "carla/geom/Vector3D.h"
 
-#include <utility>
 #include <cmath>
+#include <type_traits>
+#include <utility>
 
 namespace carla {
 namespace geom {
@@ -20,41 +21,31 @@ namespace geom {
   class Math {
   public:
 
-    static constexpr auto pi() {
-      return 3.14159265358979323846264338327950288;
-    }
-
-    static constexpr auto pi_double() {
-      return 2.0 * pi();
-    }
-
-    static constexpr auto pi_half() {
-      return 0.5 * pi();
-    }
-
-    static constexpr auto to_degrees(double rad) {
-      return rad * (180.0 / pi());
-    }
-
-    static constexpr auto to_radians(double deg) {
-      return deg * (pi() / 180.0);
+    template <typename T>
+    static constexpr T Pi() {
+      static_assert(std::is_floating_point<T>::value, "type must be floating point");
+      return static_cast<T>(3.14159265358979323846264338327950288);
     }
 
     template <typename T>
-    static T clamp(
-        const T &a,
-        const T &min,
-        const T &max) {
+    static constexpr T ToDegrees(T rad) {
+      static_assert(std::is_floating_point<T>::value, "type must be floating point");
+      return rad * (T(180.0) / Pi<T>());
+    }
+
+    template <typename T>
+    static constexpr T ToRadians(T deg) {
+      static_assert(std::is_floating_point<T>::value, "type must be floating point");
+      return deg * (Pi<T>() / T(180.0));
+    }
+
+    template <typename T>
+    static T Clamp(T a, T min = T(0), T max = T(1)) {
       return std::min(std::max(a, min), max);
     }
 
     template <typename T>
-    static T clamp01(T a) {
-      return clamp(a, 0.0, 1.0);
-    }
-
-    template <typename T>
-    static T sqr(const T &a) {
+    static T Square(const T &a) {
       return a * a;
     }
 
@@ -67,11 +58,11 @@ namespace geom {
     }
 
     static auto DistanceSquared(const Vector3D &a, const Vector3D &b) {
-      return sqr(b.x - a.x) + sqr(b.y - a.y) + sqr(b.z - a.z);
+      return Square(b.x - a.x) + Square(b.y - a.y) + Square(b.z - a.z);
     }
 
     static auto DistanceSquared2D(const Vector3D &a, const Vector3D &b) {
-      return sqr(b.x - a.x) + sqr(b.y - a.y);
+      return Square(b.x - a.x) + Square(b.y - a.y);
     }
 
     static auto Distance(const Vector3D &a, const Vector3D &b) {
@@ -82,25 +73,30 @@ namespace geom {
       return std::sqrt(DistanceSquared2D(a, b));
     }
 
-    static std::pair<double, double> DistSegmentPoint(
-        const Vector3D &,
-        const Vector3D &,
-        const Vector3D &);
+    /// Returns a pair containing:
+    /// - @b first:  distance from v to p' where p' = p projected on segment
+    ///   (w - v)
+    /// - @b second: Euclidean distance from p to p'
+    ///   @param p point to calculate distance
+    ///   @param v first point of the segment
+    ///   @param w second point of the segment
+    static std::pair<float, float> DistanceSegmentToPoint(
+        const Vector3D &p,
+        const Vector3D &v,
+        const Vector3D &w);
 
-    static Vector3D RotatePointOnOrigin2D(Vector3D p, double angle);
+    /// Returns a pair containing:
+    /// - @b first:  distance across the arc from start_pos to p' where p' = p
+    /// projected on Arc
+    /// - @b second: Euclidean distance from p to p'
+    static std::pair<float, float> DistanceArcToPoint(
+        Vector3D p,
+        Vector3D start_pos,
+        float length,
+        float heading,   // [radians]
+        float curvature);
 
-    static std::pair<double, double> DistArcPoint(
-        Vector3D,
-        Vector3D,
-        double,
-        double, // [radians]
-        double);
-
-    static bool PointInRectangle(
-        const Vector3D &,
-        const Vector3D &,
-        double, // [radians]
-        const Vector3D &);
+    static Vector3D RotatePointOnOrigin2D(Vector3D p, float angle);
 
     /// Compute the unit vector pointing towards the X-axis of @a rotation.
     static Vector3D GetForwardVector(const Rotation &rotation);

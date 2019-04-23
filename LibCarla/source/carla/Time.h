@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "carla/Debug.h"
+
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
 #include <chrono>
@@ -29,7 +31,11 @@ namespace carla {
 
     template <typename Rep, typename Period>
     time_duration(std::chrono::duration<Rep, Period> duration)
-      : _milliseconds(std::chrono::duration_cast<std::chrono::milliseconds>(duration).count()) {}
+      : _milliseconds([=]() {
+          const auto count = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+          DEBUG_ASSERT(count >= 0);
+          return static_cast<size_t>(count);
+        }()) {}
 
     time_duration(boost::posix_time::time_duration timeout)
       : time_duration(std::chrono::milliseconds(timeout.total_milliseconds())) {}
