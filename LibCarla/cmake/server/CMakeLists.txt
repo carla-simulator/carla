@@ -130,7 +130,7 @@ if (LIBCARLA_BUILD_RELEASE)
 
   add_library(carla_server STATIC ${libcarla_server_sources})
 
-  target_include_directories(carla_server PRIVATE
+  target_include_directories(carla_server SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}")
 
@@ -144,7 +144,7 @@ if (LIBCARLA_BUILD_DEBUG)
 
   add_library(carla_server_debug STATIC ${libcarla_server_sources})
 
-  target_include_directories(carla_server_debug PRIVATE
+  target_include_directories(carla_server_debug SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}")
 
