@@ -12,6 +12,7 @@
 #include <algorithm>
 
 using namespace carla::streaming;
+using namespace std::chrono_literals;
 
 static auto make_special_message(size_t size) {
   std::vector<uint32_t> v(size/sizeof(uint32_t), 42u);

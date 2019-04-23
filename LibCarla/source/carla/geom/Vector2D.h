@@ -31,8 +31,6 @@ namespace geom {
 
     Vector2D() = default;
 
-    Vector2D(const Vector2D &) = default;
-
     Vector2D(float ix, float iy)
       : x(ix),
         y(iy) {}
@@ -152,7 +150,7 @@ namespace geom {
     }
 
 #endif // LIBCARLA_INCLUDED_FROM_UE4
-  
+
     MSGPACK_DEFINE_ARRAY(x, y)
   };
 

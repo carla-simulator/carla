@@ -80,8 +80,6 @@ namespace detail {
   class SharedException : public std::exception {
   public:
 
-    SharedException(const SharedException &) = default;
-
     SharedException(std::shared_ptr<std::exception> e)
       : _exception(std::move(e)) {}
 

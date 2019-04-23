@@ -9,6 +9,8 @@
 #include <carla/RecurrentSharedFuture.h>
 #include <carla/ThreadGroup.h>
 
+using namespace std::chrono_literals;
+
 TEST(recurrent_shared_future, use_case) {
   using namespace carla;
   ThreadGroup threads;

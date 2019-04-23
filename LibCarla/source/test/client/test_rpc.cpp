@@ -16,6 +16,7 @@
 #include <thread>
 
 using namespace carla::rpc;
+using namespace std::chrono_literals;
 
 TEST(rpc, compilation_tests) {
   Server server(TESTING_PORT);
