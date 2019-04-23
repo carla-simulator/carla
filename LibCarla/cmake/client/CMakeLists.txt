@@ -193,12 +193,12 @@ if (LIBCARLA_BUILD_RELEASE)
   install(TARGETS carla_client DESTINATION lib)
 
   if (WIN32) # @todo Fix PythonAPI build on Windows.
-    set_target_properties(carla_client PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})
+    set_target_properties(carla_client PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_RELEASE}")
   else ()
     if (NOT DEFINED CMAKE_CXX_FLAGS_RELEASE_CLIENT)
       set(CMAKE_CXX_FLAGS_RELEASE_CLIENT ${CMAKE_CXX_FLAGS_RELEASE})
     endif()
-    set_target_properties(carla_client PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_RELEASE_CLIENT})
+    set_target_properties(carla_client PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_RELEASE_CLIENT}")
   endif (WIN32)
 
 endif()
@@ -213,7 +213,7 @@ if (LIBCARLA_BUILD_DEBUG)
 
   install(TARGETS carla_client_debug DESTINATION lib)
 
-  set_target_properties(carla_client_debug PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_DEBUG})
+  set_target_properties(carla_client_debug PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_DEBUG}")
   target_compile_definitions(carla_client_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
 
 endif()
