@@ -52,40 +52,42 @@ namespace parser {
       // Lane Road Mark
       int road_mark_id = 0;
       for (pugi::xml_node lane_road_mark : lane_node.children("roadMark")) {
+        pugi::xml_node road_mark_type;
+        {
+          const double s_offset = lane_road_mark.attribute("sOffset").as_double();
+          const std::string type = lane_road_mark.attribute("type").value();
+          const std::string weight = lane_road_mark.attribute("weight").value();
+          const std::string color = lane_road_mark.attribute("color").value();
+          const std::string material = lane_road_mark.attribute("material").value();
+          const double width = lane_road_mark.attribute("width").as_double();
+          const std::string lane_change = lane_road_mark.attribute("laneChange").value();
+          const double height = lane_road_mark.attribute("height").as_double();
 
-        const double s_offset = lane_road_mark.attribute("sOffset").as_double();
-        const std::string type = lane_road_mark.attribute("type").value();
-        const std::string weight = lane_road_mark.attribute("weight").value();
-        const std::string color = lane_road_mark.attribute("color").value();
-        const std::string material = lane_road_mark.attribute("material").value();
-        const double width = lane_road_mark.attribute("width").as_double();
-        const std::string lane_change = lane_road_mark.attribute("laneChange").value();
-        const double height = lane_road_mark.attribute("height").as_double();
+          // Call map builder for LaneRoadMarkType
 
-        // Call map builder for LaneRoadMarkType
+          std::string type_name = "";
+          double type_width = 0.0;
+          road_mark_type = lane_road_mark.child("type");
+          if (road_mark_type) {
+            type_name = road_mark_type.attribute("name").value();
+            type_width = road_mark_type.attribute("width").as_double();
+          }
 
-        std::string type_name = "";
-        double type_width = 0.0;
-        pugi::xml_node road_mark_type = lane_road_mark.child("type");
-        if (road_mark_type) {
-          type_name = road_mark_type.attribute("name").value();
-          type_width = road_mark_type.attribute("width").as_double();
+          // Call map builder for LaneRoadMark
+          map_builder.CreateRoadMark(
+              lane,
+              road_mark_id,
+              s_offset + s,
+              type,
+              weight,
+              color,
+              material,
+              width,
+              lane_change,
+              height,
+              type_name,
+              type_width);
         }
-
-        // Call map builder for LaneRoadMark
-        map_builder.CreateRoadMark(
-            lane,
-            road_mark_id,
-            s_offset + s,
-            type,
-            weight,
-            color,
-            material,
-            width,
-            lane_change,
-            height,
-            type_name,
-            type_width);
 
         for (pugi::xml_node road_mark_type_line_node : road_mark_type.children("line")) {
 

@@ -44,14 +44,14 @@ namespace parser {
     for (pugi::xml_node road_node = opendrive_node.child("road");
         road_node;
         road_node = road_node.next_sibling("road")) {
-      const RoadID road_id = (RoadID) road_node.attribute("id").as_int();
+      const RoadID road_id = static_cast<RoadID>(road_node.attribute("id").as_int());
       const pugi::xml_node signals_node = road_node.child("signals");
       for (pugi::xml_node signal_node = signals_node.child("signal");
           signal_node;
           signal_node = signal_node.next_sibling("signal")) {
         const double s_position = signal_node.attribute("s").as_double();
         const double t_position = signal_node.attribute("t").as_double();
-        const SignalID signal_id = (SignalID) signal_node.attribute("id").as_int();
+        const SignalID signal_id = static_cast<SignalID>(signal_node.attribute("id").as_int());
         const std::string name = signal_node.attribute("name").value();
         const std::string dynamic =  signal_node.attribute("dynamic").value();
         const std::string orientation =  signal_node.attribute("orientation").value();
