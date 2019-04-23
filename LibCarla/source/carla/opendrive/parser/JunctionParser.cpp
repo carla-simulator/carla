@@ -49,9 +49,9 @@ namespace parser {
       for (pugi::xml_node connection_node : junction_node.children("connection")) {
 
         Connection connection;
-        connection.id = connection_node.attribute("id").as_int();
-        connection.incoming_road = connection_node.attribute("incomingRoad").as_int();
-        connection.connecting_road = connection_node.attribute("connectingRoad").as_int();
+        connection.id = connection_node.attribute("id").as_uint();
+        connection.incoming_road = connection_node.attribute("incomingRoad").as_uint();
+        connection.connecting_road = connection_node.attribute("connectingRoad").as_uint();
 
         // Lane Links
         for (pugi::xml_node lane_link_node : connection_node.children("laneLink")) {
@@ -73,7 +73,8 @@ namespace parser {
     for (auto &junction : junctions) {
       map_builder.AddJunction(junction.id, junction.name);
       for (auto &connection : junction.connections) {
-        map_builder.AddConnection(junction.id,
+        map_builder.AddConnection(
+            junction.id,
             connection.id,
             connection.incoming_road,
             connection.connecting_road);

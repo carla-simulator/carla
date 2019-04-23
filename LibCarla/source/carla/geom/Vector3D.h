@@ -42,18 +42,18 @@ namespace geom {
     // -- Other methods --------------------------------------------------------
     // =========================================================================
 
-    double SquaredLength() const {
+    float SquaredLength() const {
       return x * x + y * y + z * z;
     }
 
-    double Length() const {
+    float Length() const {
        return std::sqrt(SquaredLength());
     }
 
     Vector3D MakeUnitVector() const {
-      const double len = Length();
-      DEBUG_ASSERT(len > std::numeric_limits<double>::epsilon());
-      double k = 1.0 / len;
+      const float length = Length();
+      DEBUG_ASSERT(length > 2.0f * std::numeric_limits<float>::epsilon());
+      const float k = 1.0f / length;
       return Vector3D(x * k, y * k, z * k);
     }
 
@@ -85,36 +85,36 @@ namespace geom {
       return lhs;
     }
 
-    Vector3D &operator*=(const double &rhs) {
+    Vector3D &operator*=(float rhs) {
       x *= rhs;
       y *= rhs;
       z *= rhs;
       return *this;
     }
 
-    friend Vector3D operator*(Vector3D lhs, const double &rhs) {
+    friend Vector3D operator*(Vector3D lhs, float rhs) {
       lhs *= rhs;
       return lhs;
     }
 
-    friend Vector3D operator*(const double &lhs, Vector3D rhs) {
+    friend Vector3D operator*(float lhs, Vector3D rhs) {
       rhs *= lhs;
       return rhs;
     }
 
-    Vector3D &operator/=(const double &rhs) {
+    Vector3D &operator/=(float rhs) {
       x /= rhs;
       y /= rhs;
       z /= rhs;
       return *this;
     }
 
-    friend Vector3D operator/(Vector3D lhs, const double &rhs) {
+    friend Vector3D operator/(Vector3D lhs, float rhs) {
       lhs /= rhs;
       return lhs;
     }
 
-    friend Vector3D operator/(const double &lhs, Vector3D rhs) {
+    friend Vector3D operator/(float lhs, Vector3D rhs) {
       rhs /= lhs;
       return rhs;
     }
@@ -140,14 +140,14 @@ namespace geom {
     Vector3D(const FVector &vector)
       : Vector3D(vector.X, vector.Y, vector.Z) {}
 
-    Vector3D &ToMeters(void) { // from centimeters to meters.
+    Vector3D &ToMeters() { // from centimeters to meters.
        x *= 0.001f;
        y *= 0.001f;
        z *= 0.001f;
        return *this;
     }
 
-    Vector3D &ToCentimeters(void) { // from meters to centimeters.
+    Vector3D &ToCentimeters() { // from meters to centimeters.
        x *= 100.0f;
        y *= 100.0f;
        z *= 100.0f;

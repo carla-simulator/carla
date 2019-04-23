@@ -91,7 +91,7 @@ TEST(buffer, copy_with_offset) {
   const char str0[] = "Hello";
   const char str1[] = "buffer!";
   Buffer buffer;
-  auto offset = sizeof(str0);
+  auto offset = static_cast<Buffer::size_type>(sizeof(str0));
   buffer.copy_from(
       offset,
       reinterpret_cast<const unsigned char *>(&str1),

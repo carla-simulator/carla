@@ -14,6 +14,7 @@
 #include "carla/StopWatch.h"
 
 #include <algorithm>
+#include <limits>
 #include <string>
 
 namespace carla {
@@ -30,8 +31,7 @@ namespace detail {
     ~ProfilerData();
 
     void Annotate(const StopWatch &stop_watch) {
-      const size_t elapsed_microseconds =
-          stop_watch.GetElapsedTime<std::chrono::microseconds>();
+      const auto elapsed_microseconds = stop_watch.GetElapsedTime<std::chrono::microseconds>();
       ++_count;
       _total_microseconds += elapsed_microseconds;
       _max_elapsed = std::max(elapsed_microseconds, _max_elapsed);
@@ -70,7 +70,7 @@ namespace detail {
 
     size_t _max_elapsed = 0u;
 
-    size_t _min_elapsed = -1;
+    size_t _min_elapsed = std::numeric_limits<size_t>::max();
   };
 
   class ScopedProfiler {

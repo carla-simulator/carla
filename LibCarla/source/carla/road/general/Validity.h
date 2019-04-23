@@ -19,9 +19,9 @@ namespace general {
   public:
 
     Validity(
-        int32_t parent_id,
-        int32_t from_lane,
-        int32_t to_lane)
+        uint32_t parent_id,
+        road::LaneId from_lane,
+        road::LaneId to_lane)
       : _parent_id(parent_id),
         _from_lane(from_lane),
         _to_lane(to_lane) {}
@@ -32,9 +32,9 @@ namespace general {
 #  pragma clang diagnostic push
 #  pragma clang diagnostic ignored "-Wunused-private-field"
 #endif
-    int32_t _parent_id;
-    int32_t _from_lane;
-    int32_t _to_lane;
+    uint32_t _parent_id;
+    road::LaneId _from_lane;
+    road::LaneId _to_lane;
 #if defined(__clang__)
 #  pragma clang diagnostic pop
 #endif
