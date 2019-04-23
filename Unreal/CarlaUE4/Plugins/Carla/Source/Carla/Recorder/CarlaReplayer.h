@@ -129,6 +129,7 @@ private:
 
   void ProcessStates(void);
 
+  void ProcessAnimVehicle(void);
   void ProcessAnimWalker(void);
 
   // positions

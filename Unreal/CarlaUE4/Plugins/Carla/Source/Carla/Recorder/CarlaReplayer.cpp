@@ -318,6 +318,14 @@ void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
           SkipPacket();
         break;
 
+      // vehicle animation
+      case static_cast<char>(CarlaRecorderPacketId::AnimVehicle):
+        if (bFrameFound)
+          ProcessAnimVehicle();
+        else
+          SkipPacket();
+        break;
+
       // walker animation
       case static_cast<char>(CarlaRecorderPacketId::AnimWalker):
         if (bFrameFound)
@@ -490,6 +498,22 @@ void CarlaReplayer::ProcessStates(void)
           TEXT("callback state traffic light %d called but didn't work"),
           StateTrafficLight.DatabaseId);
     }
+  }
+}
+
+void CarlaReplayer::ProcessAnimVehicle(void)
+{
+  uint16_t i, Total;
+  CarlaRecorderAnimVehicle Vehicle;
+  std::stringstream Info;
+
+  // read Total Vehicles
+  ReadValue<uint16_t>(File, Total);
+  for (i = 0; i < Total; ++i)
+  {
+    Vehicle.Read(File);
+    Vehicle.DatabaseId = MappedId[Vehicle.DatabaseId];
+    Helper.ProcessReplayerAnimVehicle(Vehicle);
   }
 }
 

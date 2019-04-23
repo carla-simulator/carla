@@ -16,6 +16,7 @@
 #include "CarlaRecorderCollision.h"
 #include "CarlaRecorderPosition.h"
 #include "CarlaRecorderState.h"
+#include "CarlaRecorderAnimVehicle.h"
 #include "CarlaRecorderAnimWalker.h"
 #include "CarlaRecorderQuery.h"
 #include "CarlaReplayer.h"
@@ -82,6 +83,8 @@ public:
 
   void AddState(const CarlaRecorderStateTrafficLight &State);
 
+  void AddAnimVehicle(const CarlaRecorderAnimVehicle &Vehicle);
+
   void AddAnimWalker(const CarlaRecorderAnimWalker &Walker);
 
   // set episode
@@ -132,6 +135,7 @@ private:
   CarlaRecorderCollisions Collisions;
   CarlaRecorderPositions Positions;
   CarlaRecorderStates States;
+  CarlaRecorderAnimVehicles Vehicles;
   CarlaRecorderAnimWalkers Walkers;
 
   // replayer
@@ -143,5 +147,6 @@ private:
   void AddExistingActors(void);
   void AddActorPosition(FActorView &View);
   void AddWalkerAnimation(FActorView &View);
+  void AddVehicleAnimation(FActorView &View);
   void AddTrafficLightState(FActorView &View);
 };
