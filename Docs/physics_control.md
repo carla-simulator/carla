@@ -37,6 +37,9 @@ Physics control properties can be tuned for vehicles and its wheels. These chang
 
 These properties are controlled through a `carla.VehiclePhysicsControl` object, which also provides the control of each wheel's physics through a `carla.WheelPhysicsControl` object.
 
+## `carla.VehiclePhysicsControl`
+The vehicle properties that can be changed from a `carla.VehiclePhysicsControl` are the following:
+
 - *torque_curve*: Curve that indicates the torque measured in Nm for a specific RPM of the vehicle's engine.
 - *max_rpm*: The maximum RPM of the vehicle's engine.
 - *moi*: The moment of inertia of the vehicle's engine.
@@ -54,7 +57,7 @@ These properties are controlled through a `carla.VehiclePhysicsControl` object, 
 
 
 ## `carla.WheelPhysicsControl`
-The properties that can be changed from a `carla.WheelPhysicsControl` are the following:
+The wheels properties that can be changed from a `carla.WheelPhysicsControl` are the following:
 
 - *tire_friction*: Scalar value that indicates the friction of the wheel.
 - *damping_rate*: The damping rate of the wheel.
