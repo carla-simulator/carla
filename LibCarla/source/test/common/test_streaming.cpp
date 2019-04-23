@@ -17,6 +17,8 @@
 
 #include <atomic>
 
+using namespace std::chrono_literals;
+
 // This is required for low level to properly stop the threads in case of
 // exception/assert.
 class io_service_running {
@@ -242,7 +244,7 @@ TEST(streaming, multi_stream) {
     }
 
     std::this_thread::sleep_for(6ms);
-    for (auto i = 0u; i < number_of_messages; ++i) {
+    for (auto j = 0u; j < number_of_messages; ++j) {
       std::this_thread::sleep_for(6ms);
       stream << message;
     }

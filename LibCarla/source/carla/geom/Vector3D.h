@@ -33,8 +33,6 @@ namespace geom {
 
     Vector3D() = default;
 
-    Vector3D(const Vector3D &) = default;
-
     Vector3D(float ix, float iy, float iz)
       : x(ix),
         y(iy),
