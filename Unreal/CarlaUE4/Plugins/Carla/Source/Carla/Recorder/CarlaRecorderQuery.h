@@ -49,6 +49,7 @@ private:
   CarlaRecorderPosition Position;
   CarlaRecorderCollision Collision;
   CarlaRecorderStateTrafficLight StateTraffic;
+  CarlaRecorderAnimVehicle Vehicle;
   CarlaRecorderAnimWalker Walker;
 
   // read next header packet

@@ -219,6 +219,27 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
           SkipPacket();
         break;
 
+      // vehicle animations
+      case static_cast<char>(CarlaRecorderPacketId::AnimVehicle):
+        if (bShowAll)
+        {
+          ReadValue<uint16_t>(File, Total);
+          if (Total > 0 && !bFramePrinted)
+          {
+            PrintFrame(Info);
+            bFramePrinted = true;
+          }
+          Info << " Vehicle animations: " << Total << std::endl;
+          for (i = 0; i < Total; ++i)
+          {
+            Vehicle.Read(File);
+            Info << "  Vehicle id " << Vehicle.DatabaseId << ": Steering " << Vehicle.Steering << " Throttle " << Vehicle.Throttle << " Brake " << Vehicle.Brake << " Handbrake " << Vehicle.bHandbrake << " Gear " << Vehicle.Gear << std::endl;
+          }
+        }
+        else
+          SkipPacket();
+        break;
+
       // walker animations
       case static_cast<char>(CarlaRecorderPacketId::AnimWalker):
         if (bShowAll)

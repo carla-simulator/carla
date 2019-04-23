@@ -40,6 +40,9 @@ public:
   // replay event for traffic light state
   bool ProcessReplayerStateTrafficLight(CarlaRecorderStateTrafficLight State);
 
+  // set the animation for Vehicles
+  void ProcessReplayerAnimVehicle(CarlaRecorderAnimVehicle Vehicle);
+
   // set the animation for walkers
   void ProcessReplayerAnimWalker(CarlaRecorderAnimWalker Walker);
 

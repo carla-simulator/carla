@@ -259,6 +259,7 @@ bool CarlaReplayerHelper::ProcessReplayerPosition(CarlaRecorderPosition Pos1, Ca
     // set new transform
     FTransform Trans(Rotation, Location, FVector(1, 1, 1));
     Actor->SetActorTransform(Trans, false, nullptr, ETeleportType::None);
+    // Actor->SetActorTransform(Trans, false, nullptr, ETeleportType::TeleportPhysics);
     return true;
   }
   return false;
@@ -335,6 +336,31 @@ bool CarlaReplayerHelper::ProcessReplayerStateTrafficLight(CarlaRecorderStateTra
     return true;
   }
   return false;
+}
+
+// set the animation for Vehicles
+void CarlaReplayerHelper::ProcessReplayerAnimVehicle(CarlaRecorderAnimVehicle Vehicle)
+{
+  check(Episode != nullptr);
+  AActor *Actor = Episode->GetActorRegistry().Find(Vehicle.DatabaseId).GetActor();
+  if (Actor && !Actor->IsPendingKill())
+  {
+    auto Veh = Cast<ACarlaWheeledVehicle>(Actor);
+    if (Veh == nullptr)
+    {
+      return;
+    }
+
+    FVehicleControl Control;
+    Control.Throttle = Vehicle.Throttle;
+    Control.Steer = Vehicle.Steering;
+    Control.Brake = Vehicle.Brake;
+    Control.bHandBrake = Vehicle.bHandbrake;
+    Control.bReverse = (Vehicle.Gear < 0);
+    Control.Gear = Vehicle.Gear;
+    Control.bManualGearShift = false;
+    Veh->ApplyVehicleControl(Control, EVehicleInputPriority::User);
+  }
 }
 
 // set the animation for walkers

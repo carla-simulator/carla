@@ -75,6 +75,7 @@ void ACarlaRecorder::Tick(float DeltaSeconds)
         // save the transform of all vehicles
         case FActorView::ActorType::Vehicle:
           AddActorPosition(View);
+          AddVehicleAnimation(View);
           break;
 
         // save the transform of all walkers
@@ -124,6 +125,35 @@ void ACarlaRecorder::AddActorPosition(FActorView &View)
     Actor->GetTransform().GetTranslation(),
     Actor->GetTransform().GetRotation().Euler()
   });
+}
+
+void ACarlaRecorder::AddVehicleAnimation(FActorView &View)
+{
+  AActor *Actor = View.GetActor();
+  check(Actor != nullptr);
+
+  if (Actor->IsPendingKill())
+  {
+    return;
+  }
+
+  auto Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
+  if (Vehicle == nullptr)
+  {
+    return;
+  }
+
+  FVehicleControl Control = Vehicle->GetVehicleControl();
+
+  // save
+  CarlaRecorderAnimVehicle Record;
+  Record.DatabaseId = View.GetActorId();
+  Record.Steering = Control.Steer;
+  Record.Throttle = Control.Throttle;
+  Record.Brake = Control.Brake;
+  Record.bHandbrake = Control.bHandBrake;
+  Record.Gear = Control.Gear;
+  AddAnimVehicle(Record);
 }
 
 void ACarlaRecorder::AddWalkerAnimation(FActorView &View)
@@ -232,6 +262,7 @@ void ACarlaRecorder::Clear(void)
   Collisions.Clear();
   Positions.Clear();
   States.Clear();
+  Vehicles.Clear();
   Walkers.Clear();
 }
 
@@ -254,6 +285,7 @@ void ACarlaRecorder::Write(double DeltaSeconds)
   States.Write(File);
 
   // animations
+  Vehicles.Write(File);
   Walkers.Write(File);
 
   // end
@@ -332,6 +364,14 @@ void ACarlaRecorder::AddState(const CarlaRecorderStateTrafficLight &State)
   if (Enabled)
   {
     States.Add(State);
+  }
+}
+
+void ACarlaRecorder::AddAnimVehicle(const CarlaRecorderAnimVehicle &Vehicle)
+{
+  if (Enabled)
+  {
+    Vehicles.Add(Vehicle);
   }
 }
 
