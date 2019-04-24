@@ -39,8 +39,8 @@ namespace rpc {
   std::ostream &operator<<(std::ostream &out, const WheelPhysicsControl &control) {
     out << "WheelPhysicsControl(tire_friction=" << control.tire_friction
         << ", damping_rate=" << control.damping_rate
-        << ", steer_angle=" << control.steer_angle
-        << ", disable_steering=" << boolalpha(control.disable_steering) << ')';
+        << ", max_steer_angle=" << control.max_steer_angle
+        << ", is_steerable=" << boolalpha(control.is_steerable) << ')';
     return out;
   }
 
@@ -209,12 +209,12 @@ void export_control() {
     .def(init<float, float, float, bool>(
         (arg("tire_friction")=2.0f,
          arg("damping_rate")=0.25f,
-         arg("steer_angle")=70.0f,
-         arg("disable_steering")=false)))
+         arg("max_steer_angle")=70.0f,
+         arg("is_steerable")=false)))
     .def_readwrite("tire_friction", &cr::WheelPhysicsControl::tire_friction)
     .def_readwrite("damping_rate", &cr::WheelPhysicsControl::damping_rate)
-    .def_readwrite("steer_angle", &cr::WheelPhysicsControl::steer_angle)
-    .def_readwrite("disable_steering", &cr::WheelPhysicsControl::disable_steering)
+    .def_readwrite("max_steer_angle", &cr::WheelPhysicsControl::max_steer_angle)
+    .def_readwrite("is_steerable", &cr::WheelPhysicsControl::is_steerable)
     .def("__eq__", &cr::WheelPhysicsControl::operator==)
     .def("__ne__", &cr::WheelPhysicsControl::operator!=)
     .def(self_ns::str(self_ns::self))

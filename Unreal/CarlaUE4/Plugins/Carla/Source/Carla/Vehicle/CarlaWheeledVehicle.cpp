@@ -219,8 +219,8 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl()
 
     MyWheel.TireFriction = Wheel->TireConfig->GetFrictionScale();
     MyWheel.DampingRate = Wheel->DampingRate;
-    MyWheel.SteerAngle = Wheel->SteerAngle;
-    MyWheel.bDisableSteering = Wheel->GetWheelSetup().bDisableSteering;
+    MyWheel.MaxSteerAngle = Wheel->SteerAngle;
+    MyWheel.IsSteerable = !Wheel->GetWheelSetup().bDisableSteering;
 
     Wheels.Add(MyWheel);
   }
@@ -261,17 +261,18 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
   Vehicle4W->SteeringCurve.EditorCurveData = PhysicsControl.SteeringCurve;
 
   // Wheels Setup
-  TArray<FWheelSetup> NewWheelSetups = Vehicle4W->WheelSetups;
+  TArray<FWheelSetup> NewWheelSetups;
 
   for (int32 i = 0; i < Vehicle4W->WheelSetups.Num(); ++i)
   {
-    UVehicleWheel *Wheel = NewWheelSetups[i].WheelClass.GetDefaultObject();
+    FWheelSetup WheelSetup = Vehicle4W->WheelSetups[i];
+    UVehicleWheel *Wheel = WheelSetup.WheelClass.GetDefaultObject();
 
     Wheel->DampingRate = PhysicsControl.Wheels[i].DampingRate;
-    Wheel->SteerAngle = PhysicsControl.Wheels[i].SteerAngle;
+    Wheel->SteerAngle = PhysicsControl.Wheels[i].MaxSteerAngle;
+    WheelSetup.bDisableSteering = PhysicsControl.Wheels[i].IsSteerable;
     Wheel->TireConfig->SetFrictionScale(PhysicsControl.Wheels[i].TireFriction);
 
-    NewWheelSetups[i].bDisableSteering = PhysicsControl.Wheels[i].bDisableSteering;
   }
 
   Vehicle4W->WheelSetups = NewWheelSetups;
