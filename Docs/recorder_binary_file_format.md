@@ -133,10 +133,21 @@ This packet records the state of all **traffic lights** in the scene. That means
 
 ![state](img/RecorderTrafficLight.png)
 
+#### 3.9 Packet 8: Vehicle animation
+
+This packet records the animation of the vehicles, bikes and cycles. This packet store the **throttle**, **sterring**, **brake**, **handbrake** and **gear** inputs, and then set them at playback.
+
+![state](img/RecorderVehicle.png)
+
+#### 3.10 Packet 9: Walker animation
+
+This packet records the animation for the walker. It just saves the **speed** of the walker that is used for the animation.
+
+![state](img/RecorderWalker.png)
 
 ### 4. File Layout
 
-The layout of the file starts with the **info header** and then follows a collection of packets in groups. The first in each group is the **Frame Start** packet, and the last in the group is the **Frame End** packet. In the middle can go all other packets.
+The layout of the file starts with the **info header** and then follows a collection of packets in groups. The first in each group is the **Frame Start** packet, and the last in the group is the **Frame End** packet. In the middle can go all other packets, some of them are optional.
 
 ![layout](img/RecorderLayout.png)
 
@@ -145,4 +156,7 @@ Usually it is a good idea to have all packets about events first, and then the p
 The events packets are optional, only appears when they happen, so we could have a layout like this:
 
 ![layout](img/RecorderLayoutSample.png)
+
+In **frame 1** some actors are created and reparented, so the events are there. In **frame 2** there are no events. In **frame 3** some actors have collided so the collision event appears with that info. In **frame 4** the actors are destroyed.
+
 
