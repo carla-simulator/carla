@@ -130,22 +130,17 @@ namespace geom {
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
-    Vector2D(const FVector2D &vector)
-      : Vector2D(vector.X, vector.Y) {}
-
-    Vector2D &ToMeters(void) { // from centimeters to meters.
-       x *= 0.001f;
-       y *= 0.001f;
-       return *this;
+    /// Return a Vector2D converted from centimeters to meters.
+    [[ nodiscard ]] Vector2D ToMeters() const {
+      return *this * 1e-2f;
     }
 
-    Vector2D &ToCentimeters(void) { // from meters to centimeters.
-       x *= 100.0f;
-       y *= 100.0f;
-       return *this;
+    /// Return a Vector2D converted from meters to centimeters.
+    [[ nodiscard ]] Vector2D ToCentimeters() const {
+      return *this * 1e2f;
     }
 
-    operator FVector2D() const {
+    FVector2D ToFVector2D() const {
       return FVector2D{x, y};
     }
 
