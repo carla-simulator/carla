@@ -52,10 +52,10 @@ class TestVehiclePhysicsControl(unittest.TestCase):
                           carla.Vector2D(x=63.0868, y=0.703473),
                           carla.Vector2D(x=119.12, y=0.573047)]
 
-        wheels = [carla.WheelPhysicsControl(tire_friction=2, damping_rate=0, steer_angle=30, disable_steering=1),
-                  carla.WheelPhysicsControl(tire_friction=2, damping_rate=0, steer_angle=30, disable_steering=1),
-                  carla.WheelPhysicsControl(tire_friction=2, damping_rate=0, steer_angle=30, disable_steering=1),
-                  carla.WheelPhysicsControl(tire_friction=2, damping_rate=0, steer_angle=30, disable_steering=1)]
+        wheels = [carla.WheelPhysicsControl(tire_friction=2, damping_rate=0, max_steer_angle=30, is_steerable=True),
+                  carla.WheelPhysicsControl(tire_friction=2, damping_rate=0, max_steer_angle=30, is_steerable=True),
+                  carla.WheelPhysicsControl(tire_friction=2, damping_rate=0, max_steer_angle=30, is_steerable=True),
+                  carla.WheelPhysicsControl(tire_friction=2, damping_rate=0, max_steer_angle=30, is_steerable=True)]
 
         pc = carla.VehiclePhysicsControl(
             torque_curve=torque_curve,
@@ -105,5 +105,5 @@ class TestVehiclePhysicsControl(unittest.TestCase):
         for i in range(0, len(wheels)):
             self.assertTrue(abs(pc.wheels[i].tire_friction - wheels[i].tire_friction) <= error)
             self.assertTrue(abs(pc.wheels[i].damping_rate - wheels[i].damping_rate) <= error)
-            self.assertTrue(abs(pc.wheels[i].steer_angle - wheels[i].steer_angle) <= error)
-            self.assertEqual(pc.wheels[i].disable_steering, wheels[i].disable_steering)
+            self.assertTrue(abs(pc.wheels[i].max_steer_angle - wheels[i].max_steer_angle) <= error)
+            self.assertEqual(pc.wheels[i].is_steerable, wheels[i].is_steerable)
