@@ -19,9 +19,9 @@ struct CARLA_API FWheelPhysicsControl
   UPROPERTY(Category = "Wheel Damping Rate", EditAnywhere, BlueprintReadWrite)
   float DampingRate = 0.0f;
 
-  UPROPERTY(Category = "Wheel Steer Angle", EditAnywhere, BlueprintReadWrite)
-  float SteerAngle = 0.0f;
+  UPROPERTY(Category = "Wheel Max Steer Angle", EditAnywhere, BlueprintReadWrite)
+  float MaxSteerAngle = 0.0f;
 
-  UPROPERTY(Category = "Wheel Disable Steering", EditAnywhere, BlueprintReadWrite)
-  bool bDisableSteering = 0.0f;
+  UPROPERTY(Category = "Wheel Is Steerable", EditAnywhere, BlueprintReadWrite)
+  bool IsSteerable = true;
 };

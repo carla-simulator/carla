@@ -234,8 +234,8 @@
 
 - `tire_friction`
 - `damping_rate`
-- `steer_angle`
-- `disable_steering`
+- `max_steer_angle`
+- `is_steerable`
 - `__eq__(other)`
 - `__ne__(other)`
 
