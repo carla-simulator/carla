@@ -407,9 +407,9 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("unable to set actor velocity: not supported by actor");
     }
     RootComponent->SetPhysicsLinearVelocity(
-    vector.ToCentimeters(),
-    false,
-    "None");
+        vector.ToCentimeters().ToFVector(),
+        false,
+        "None");
     return R<void>::Success();
   };
 
@@ -429,9 +429,9 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("unable to set actor angular velocity: not supported by actor");
     }
     RootComponent->SetPhysicsAngularVelocityInDegrees(
-    vector,
-    false,
-    "None");
+        vector.ToFVector(),
+        false,
+        "None");
     return R<void>::Success();
   };
 
@@ -451,9 +451,9 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("unable to add actor impulse: not supported by actor");
     }
     RootComponent->AddImpulse(
-    vector.ToCentimeters(),
-    "None",
-    false);
+        vector.ToCentimeters().ToFVector(),
+        "None",
+        false);
     return R<void>::Success();
   };
 

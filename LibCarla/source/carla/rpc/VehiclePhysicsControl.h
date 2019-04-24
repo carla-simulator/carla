@@ -7,8 +7,10 @@
 #pragma once
 
 #include "carla/MsgPack.h"
-#include "carla/rpc/Vector2D.h"
+#include "carla/geom/Location.h"
+#include "carla/geom/Vector2D.h"
 #include "carla/rpc/WheelPhysicsControl.h"
+
 #include <string>
 #include <vector>
 
@@ -33,7 +35,7 @@ namespace rpc {
 
         float in_mass,
         float in_drag_coefficient,
-        geom::Vector3D in_center_of_mass,
+        geom::Location in_center_of_mass,
         const std::vector<carla::geom::Vector2D> &in_steering_curve,
         std::vector<WheelPhysicsControl> &in_wheels)
       : torque_curve(in_torque_curve),
@@ -88,7 +90,7 @@ namespace rpc {
 
     float mass = 1000.0f;
     float drag_coefficient = 0.3f;
-    geom::Vector3D center_of_mass;
+    geom::Location center_of_mass;
 
     std::vector<geom::Vector2D> steering_curve = {geom::Vector2D(0.0f, 1.0f), geom::Vector2D(10.0f, 0.5f)};
     std::vector<WheelPhysicsControl> wheels;
