@@ -138,7 +138,7 @@ def main():
     finally:
 
         print('\ndestroying %d actors' % len(actor_list))
-        client.apply_batch([carla.command.DestroyActor(x) for x in actor_list])
+        client.apply_batch_sync([carla.command.DestroyActor(x) for x in actor_list])
 
         print("Stop recording")
         client.stop_recorder()
