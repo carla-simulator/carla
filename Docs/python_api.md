@@ -20,11 +20,11 @@
         - [**load_world**(**self**, **map_name**)](#carla.Client.load_world) <sub>_Method_</sub>
         - [**start_recorder**(**self**, **filename**)](#carla.Client.start_recorder) <sub>_Method_</sub>
         - [**stop_recorder**(**self**)](#carla.Client.stop_recorder) <sub>_Method_</sub>
-        - [**show_recorder_file_info**(**self**)](#carla.Client.show_recorder_file_info) <sub>_Method_</sub>
-        - [**show_recorder_collisions**(**self**)](#carla.Client.show_recorder_collisions) <sub>_Method_</sub>
-        - [**show_recorder_actors_blocked**(**self**)](#carla.Client.show_recorder_actors_blocked) <sub>_Method_</sub>
-        - [**replay_file**(**self**)](#carla.Client.replay_file) <sub>_Method_</sub>
-        - [**set_replayer_time_factor**(**self**)](#carla.Client.set_replayer_time_factor) <sub>_Method_</sub>
+        - [**show_recorder_file_info**(**self**, **filename**, **show_all**=False)](#carla.Client.show_recorder_file_info) <sub>_Method_</sub>
+        - [**show_recorder_collisions**(**self**, **filename**, **category1**='a', **category2**='a')](#carla.Client.show_recorder_collisions) <sub>_Method_</sub>
+        - [**show_recorder_actors_blocked**(**self**, **filename**, **min_time**=60.0, **min_distance**=100.0)](#carla.Client.show_recorder_actors_blocked) <sub>_Method_</sub>
+        - [**replay_file**(**self**, **filename**, **start**=0.0, **duration**=0.0, **camera**=0)](#carla.Client.replay_file) <sub>_Method_</sub>
+        - [**set_replayer_time_factor**(**self**, **time_factor**)](#carla.Client.set_replayer_time_factor) <sub>_Method_</sub>
         - [**apply_batch**(**self**)](#carla.Client.apply_batch) <sub>_Method_</sub>
         - [**apply_batch_sync**(**self**)](#carla.Client.apply_batch_sync) <sub>_Method_</sub>
 
@@ -74,14 +74,46 @@
     - **Parameters:**
         - `map_name` (_str_) –             Name of the map to load.  
 - <a name="carla.Client.start_recorder"></a>**<font color="#64BA2E">start_recorder</font>**(<font color="#2980B9">**self**</font>, <font color="#2980B9">**filename**</font>)  
+    If we use a simple name like 'recording.log' then it will be saved at server folder 'CarlaUE4/Saved/recording.log'. If we use some folder in the name, then it will be considered to be an absolute path, like '/home/carla/recording.log'.  
     - **Parameters:**
-        - `filename` (_str_) –             Name of the recorder file to load.  
+        - `filename` (_str_) –             Name of the file to create.  
 - <a name="carla.Client.stop_recorder"></a>**<font color="#64BA2E">stop_recorder</font>**(<font color="#2980B9">**self**</font>)  
-- <a name="carla.Client.show_recorder_file_info"></a>**<font color="#64BA2E">show_recorder_file_info</font>**(<font color="#2980B9">**self**</font>)  
-- <a name="carla.Client.show_recorder_collisions"></a>**<font color="#64BA2E">show_recorder_collisions</font>**(<font color="#2980B9">**self**</font>)  
-- <a name="carla.Client.show_recorder_actors_blocked"></a>**<font color="#64BA2E">show_recorder_actors_blocked</font>**(<font color="#2980B9">**self**</font>)  
-- <a name="carla.Client.replay_file"></a>**<font color="#64BA2E">replay_file</font>**(<font color="#2980B9">**self**</font>)  
-- <a name="carla.Client.set_replayer_time_factor"></a>**<font color="#64BA2E">set_replayer_time_factor</font>**(<font color="#2980B9">**self**</font>)  
+    Stops the recording in curse.  
+- <a name="carla.Client.show_recorder_file_info"></a>**<font color="#64BA2E">show_recorder_file_info</font>**(<font color="#2980B9">**self**</font>, <font color="#2980B9">**filename**</font>, <font color="#2980B9">**show_all**=False</font>)  
+    Will show info about the recorded file. We have the option to show all the details per frame, that includes all the traffic light states, position of all actors, and animations data.  
+    - **Parameters:**
+        - `filename` (_str_) –             Name of the recorded file to load.  
+        - `show_all` (_bool_) –             Show all detailed info, or just a summary.  
+- <a name="carla.Client.show_recorder_collisions"></a>**<font color="#64BA2E">show_recorder_collisions</font>**(<font color="#2980B9">**self**</font>, <font color="#2980B9">**filename**</font>, <font color="#2980B9">**category1**='a'</font>, <font color="#2980B9">**category2**='a'</font>)  
+    This will show which collisions were recorded in the file. We can use a filter for the collisions we want, using two categories. The categories can be:
+  'h' = Hero
+  'v' = Vehicle
+  'w' = Walker
+  't' = Traffic light
+  'o' = Other
+  'a' = Any
+So, if you want to see only collisions about a vehicle and a walker, we would use for category1 'v' and category2 'w'. Or if you want all the collisions (filter off) you can use 'a' as categories.  
+    - **Parameters:**
+        - `filename` (_str_) –             Name of the recorded file to load.  
+        - `category1` (_single char_) –             Character specifying the category of the first actor.  
+        - `category2` (_single char_) –             Character specifying the category of the second actor.  
+- <a name="carla.Client.show_recorder_actors_blocked"></a>**<font color="#64BA2E">show_recorder_actors_blocked</font>**(<font color="#2980B9">**self**</font>, <font color="#2980B9">**filename**</font>, <font color="#2980B9">**min_time**=60.0</font>, <font color="#2980B9">**min_distance**=100.0</font>)  
+    Shows which actors seems blocked by some reason. The idea is to calculate which actors are not moving as much as 'min_distance' for a period of 'min_time'. By default min_time = 60 seconds (1 min) and min_distance = 100 centimeters (1 m).  
+    - **Parameters:**
+        - `filename` (_str_) –             Name of the recorded file to load.  
+        - `min_time` (_float_) –             How many seconds has to be stoped an actor to be considered as blocked.  
+        - `min_distance` (_float_) –             How many centimeters needs to displace an actor in order to not be considered as blocked.  
+- <a name="carla.Client.replay_file"></a>**<font color="#64BA2E">replay_file</font>**(<font color="#2980B9">**self**</font>, <font color="#2980B9">**filename**</font>, <font color="#2980B9">**start**=0.0</font>, <font color="#2980B9">**duration**=0.0</font>, <font color="#2980B9">**camera**=0</font>)  
+    Playback a file.  
+    - **Parameters:**
+        - `filename` (_str_) –             Name of the recorded file to play.  
+        - `start` (_float_) –             Time in seconds where to start the playback. If it is negative, then it starts from the end.  
+        - `duration` (_float_) –             Time of playback, after that time the playback stops and all the actors are left driving in autopilot. A value of 0 means playback until the end.  
+        - `camera` (_int_) –             Id of the actor to follow. If this is 0 then camera is disabled.  
+- <a name="carla.Client.set_replayer_time_factor"></a>**<font color="#64BA2E">set_replayer_time_factor</font>**(<font color="#2980B9">**self**</font>, <font color="#2980B9">**time_factor**</font>)  
+    Apply a different playback speed to current playback. Can be used several times while a playback is in curse.  
+    - **Parameters:**
+        - `time_factor` (_float_) –             A value of 1.0 means normal time factor. A value < 1.0 means slow motion (for example 0.5 is half speed) A value > 1.0 means fast motion (for example 2.0 is double speed).  
 - <a name="carla.Client.apply_batch"></a>**<font color="#64BA2E">apply_batch</font>**(<font color="#2980B9">**self**</font>)  
 - <a name="carla.Client.apply_batch_sync"></a>**<font color="#64BA2E">apply_batch_sync</font>**(<font color="#2980B9">**self**</font>)  
 
