@@ -80,7 +80,6 @@
         type: str
         doc: >
           Name of the map to load
-      doc: >
     # --------------------------------------
     - def_name: start_recorder
       params:
@@ -88,38 +87,113 @@
       - param_name: filename
         type: str
         doc: >
-          Name of the recorder file to load
+          Name of the file to create
       doc: >
+        If we use a simple name like 'recording.log' then it will be saved at server folder 'CarlaUE4/Saved/recording.log'.
+        If we use some folder in the name, then it will be considered to be an absolute path, like '/home/carla/recording.log'.
     # --------------------------------------
     - def_name: stop_recorder
       params:
       - param_name: self
       doc: >
+        Stops the recording in curse.
     # --------------------------------------
     - def_name: show_recorder_file_info
       params:
       - param_name: self
+      - param_name: filename
+        type: str
+        doc: >
+          Name of the recorded file to load
+      - param_name: show_all
+        type: bool
+        doc: >
+          Show all detailed info, or just a summary
       doc: >
+        Will show info about the recorded file.
+        We have the option to show all the details per frame, that includes all the traffic light states, position of all actors, and animations data.
     # --------------------------------------
     - def_name: show_recorder_collisions
       params:
       - param_name: self
+      - param_name: filename
+        type: str
+        doc: >
+          Name of the recorded file to load
+      - param_name: category1
+        type: single char
+        doc: >
+          Character specifying the category of the first actor
+      - param_name: category2
+        type: single char
+        doc: >
+          Character specifying the category of the second actor
       doc: >
+        This will show which collisions were recorded in the file. We can use a filter for the collisions we want, using two categories.
+        The categories can be:
+          'h' = Hero
+          'v' = Vehicle
+          'w' = Walker
+          't' = Traffic light
+          'o' = Other
+          'a' = Any
+        So, if you want to see only collisions about a vehicle and a walker, we would use for category1 'v' and category2 'w'.
+        Or if you want all the collisions (filter off) you can use 'a' as categories.
     # --------------------------------------
     - def_name: show_recorder_actors_blocked
       params:
       - param_name: self
+      - param_name: filename
+        type: str
+        doc: >
+          Name of the recorded file to load
+      - param_name: min_time
+        type: float
+        doc: >
+          How many seconds has to be stoped an actor to be considered as blocked
+      - param_name: min_distance
+        type: float
+        doc: >
+          How many centimeters needs to displace an actor in order to not be considered as blocked
       doc: >
+        Shows which actors seems blocked by some reason.
+        The idea is to calculate which actors are not moving as much as 'min_distance' for a period of 'min_time'.
+        By default min_time = 60 seconds (1 min) and min_distance = 100 centimeters (1 m).
     # --------------------------------------
     - def_name: replay_file
       params:
       - param_name: self
+      - param_name: filename
+        type: str
+        doc: >
+          Name of the recorded file to play
+      - param_name: start
+        type: float
+        doc: >
+          Time in seconds where to start the playback. If it is negative, then it starts from the end.
+      - param_name: duration
+        type: float
+        doc: >
+          Time of playback, after that time the playback stops and all the actors are left driving in autopilot.
+          A value of 0 means playback until the end
+      - param_name: camera
+        type: int
+        doc: >
+          Id of the actor to follow. If this is 0 then camera is disabled
       doc: >
+        Playback a file
     # --------------------------------------
     - def_name: set_replayer_time_factor
       params:
       - param_name: self
+      - param_name: time_factor
+        type: float
+        doc: >
+          A value of 1.0 means normal time factor.
+          A value < 1.0 means slow motion (for example 0.5 is half speed)
+          A value > 1.0 means fast motion (for example 2.0 is double speed)
       doc: >
+        Apply a different playback speed to current playback. Can be used several times while a playback is in curse.
     # --------------------------------------
     - def_name: apply_batch
       params:
