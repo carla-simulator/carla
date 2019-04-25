@@ -107,6 +107,7 @@
           Name of the recorded file to load
       - param_name: show_all
         type: bool
+        default: False
         doc: >
           Show all detailed info, or just a summary
       doc: >
@@ -122,10 +123,12 @@
           Name of the recorded file to load
       - param_name: category1
         type: single char
+        default: "'a'"
         doc: >
           Character specifying the category of the first actor
       - param_name: category2
         type: single char
+        default: "'a'"
         doc: >
           Character specifying the category of the second actor
       doc: >
@@ -149,10 +152,12 @@
           Name of the recorded file to load
       - param_name: min_time
         type: float
+        default: 60.0
         doc: >
           How many seconds has to be stoped an actor to be considered as blocked
       - param_name: min_distance
         type: float
+        default: 100.0
         doc: >
           How many centimeters needs to displace an actor in order to not be considered as blocked
       doc: >
@@ -169,15 +174,18 @@
           Name of the recorded file to play
       - param_name: start
         type: float
+        default: 0.0
         doc: >
           Time in seconds where to start the playback. If it is negative, then it starts from the end.
       - param_name: duration
         type: float
+        default: 0.0
         doc: >
           Time of playback, after that time the playback stops and all the actors are left driving in autopilot.
           A value of 0 means playback until the end
       - param_name: camera
         type: int
+        default: 0
         doc: >
           Id of the actor to follow. If this is 0 then camera is disabled
       doc: >
