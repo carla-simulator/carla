@@ -49,7 +49,7 @@ namespace geom {
 
     Vector2D MakeUnitVector() const {
       const float len = Length();
-      DEBUG_ASSERT(len > 2.0f * std::numeric_limits<float>::epsilon());
+      DEVELOPMENT_ASSERT(len > 2.0f * std::numeric_limits<float>::epsilon());
       const float k = 1.0f / len;
       return Vector2D(x * k, y * k);
     }
