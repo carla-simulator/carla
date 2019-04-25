@@ -68,8 +68,4 @@ private:
   bool SetActorSimulatePhysics(FActorView &ActorView, bool bEnabled);
   // enable / disable autopilot for an actor
   bool SetActorAutopilot(FActorView &ActorView, bool bEnabled);
-  // reset velocity vectors on actor
-  void ResetVelocities(AActor *Actor);
-  // apply new velocities
-  void SetVelocities(AActor *Actor, FVector Linear, FVector Angular);
 };

@@ -4,11 +4,11 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "CarlaReplayerHelper.h"
-#include "Carla/Actor/ActorView.h"
 #include "Carla/Actor/ActorDescription.h"
-#include "Carla/Walker/WalkerController.h"
+#include "Carla/Actor/ActorView.h"
 #include "Carla/Walker/WalkerControl.h"
+#include "Carla/Walker/WalkerController.h"
+#include "CarlaReplayerHelper.h"
 
 // create or reuse an actor for replaying
 std::pair<int, FActorView>CarlaReplayerHelper::TryToCreateReplayerActor(
@@ -242,58 +242,19 @@ bool CarlaReplayerHelper::ProcessReplayerPosition(CarlaRecorderPosition Pos1, Ca
       // assign position 1
       Location = FVector(Pos1.Location);
       Rotation = FRotator::MakeFromEuler(Pos1.Rotation);
-      // reset velocities
-      // ResetVelocities(Actor);
     }
     else
     {
       // interpolate positions
       Location = FMath::Lerp(FVector(Pos1.Location), FVector(Pos2.Location), Per);
       Rotation = FMath::Lerp(FRotator::MakeFromEuler(Pos1.Rotation), FRotator::MakeFromEuler(Pos2.Rotation), Per);
-      // apply new velocities
-      // FVector Vel((Location - FVector(Pos1.Location)) / DeltaTime);
-      // FVector Rot((Rotation - FRotator::MakeFromEuler(Pos1.Rotation)).Euler() / DeltaTime);
-      // SetVelocities(Actor, Vel, Rot);
-      // UE_LOG(LogCarla, Log, TEXT("Set velocities for %d at [%f,%f,%f] [%f,%f,%f]"), Pos1.DatabaseId, Vel.X, Vel.Y, Vel.Z, Rot.X, Rot.Y, Rot.Z);
     }
     // set new transform
     FTransform Trans(Rotation, Location, FVector(1, 1, 1));
     Actor->SetActorTransform(Trans, false, nullptr, ETeleportType::None);
-    // Actor->SetActorTransform(Trans, false, nullptr, ETeleportType::TeleportPhysics);
     return true;
   }
   return false;
-}
-
-// reset velocity vectors on actor
-void CarlaReplayerHelper::ResetVelocities(AActor *Actor)
-{
-  if (Actor && !Actor->IsPendingKill())
-  {
-    auto RootComponent = Cast<UPrimitiveComponent>(Actor->GetRootComponent());
-    if (RootComponent != nullptr)
-    {
-      FVector Vector(0, 0, 0);
-      // reset velocities
-      RootComponent->SetPhysicsLinearVelocity(Vector, false, "None");
-      RootComponent->SetPhysicsAngularVelocityInDegrees(Vector, false, "None");
-    }
-  }
-}
-
-// apply new velocities
-void CarlaReplayerHelper::SetVelocities(AActor *Actor, FVector Linear, FVector Angular)
-{
-  if (Actor && !Actor->IsPendingKill())
-  {
-    auto RootComponent = Cast<UPrimitiveComponent>(Actor->GetRootComponent());
-    if (RootComponent != nullptr)
-    {
-      // velocities
-      RootComponent->SetPhysicsLinearVelocity(Linear, false, "None");
-      RootComponent->SetPhysicsAngularVelocityInDegrees(Angular, false, "None");
-    }
-  }
 }
 
 // reposition the camera
@@ -379,7 +340,6 @@ void CarlaReplayerHelper::ProcessReplayerAnimWalker(CarlaRecorderAnimWalker Walk
         FWalkerControl Control;
         Control.Speed = Walker.Speed;
         Controller->ApplyWalkerControl(Control);
-        // UE_LOG(LogCarla, Log, TEXT("Set Speed for %f"), Control.Speed);
      }
     }
   }
