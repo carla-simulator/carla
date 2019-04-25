@@ -7,15 +7,16 @@
 #pragma once
 
 #include <fstream>
-#include "CarlaRecorderInfo.h"
-#include "CarlaRecorderFrames.h"
+
+#include "CarlaRecorderAnimWalker.h"
+#include "CarlaRecorderCollision.h"
 #include "CarlaRecorderEventAdd.h"
 #include "CarlaRecorderEventDel.h"
 #include "CarlaRecorderEventParent.h"
-#include "CarlaRecorderCollision.h"
+#include "CarlaRecorderFrames.h"
+#include "CarlaRecorderInfo.h"
 #include "CarlaRecorderPosition.h"
 #include "CarlaRecorderState.h"
-#include "CarlaRecorderAnimWalker.h"
 
 class CarlaRecorderQuery
 {

@@ -8,19 +8,21 @@
 
 // #include "GameFramework/Actor.h"
 #include <fstream>
-#include "CarlaRecorderInfo.h"
-#include "CarlaRecorderFrames.h"
+
+#include "Carla/Actor/ActorDescription.h"
+
+#include "CarlaRecorderAnimVehicle.h"
+#include "CarlaRecorderAnimWalker.h"
+#include "CarlaRecorderCollision.h"
 #include "CarlaRecorderEventAdd.h"
 #include "CarlaRecorderEventDel.h"
 #include "CarlaRecorderEventParent.h"
-#include "CarlaRecorderCollision.h"
+#include "CarlaRecorderFrames.h"
+#include "CarlaRecorderInfo.h"
 #include "CarlaRecorderPosition.h"
-#include "CarlaRecorderState.h"
-#include "CarlaRecorderAnimVehicle.h"
-#include "CarlaRecorderAnimWalker.h"
 #include "CarlaRecorderQuery.h"
+#include "CarlaRecorderState.h"
 #include "CarlaReplayer.h"
-#include "Carla/Actor/ActorDescription.h"
 
 #include "CarlaRecorder.generated.h"
 
