@@ -26,16 +26,6 @@ namespace road {
   static constexpr double EPSILON = 10.0 * std::numeric_limits<double>::epsilon();
 
   // ===========================================================================
-  // -- Error handling ---------------------------------------------------------
-  // ===========================================================================
-
-  [[ noreturn ]] static void throw_invalid_input(const char *message) {
-    throw_exception(std::invalid_argument(message));
-  }
-
-#define THROW_INVALID_INPUT_ASSERT(pred) if (!(pred)) { throw_invalid_input("assert failed: " #pred); }
-
-  // ===========================================================================
   // -- Static local methods ---------------------------------------------------
   // ===========================================================================
 
@@ -114,7 +104,7 @@ namespace road {
     double tangent = 0.0;
     for (const auto &lane : container) {
       auto info = lane.second.template GetInfo<RoadInfoLaneWidth>(s);
-      THROW_INVALID_INPUT_ASSERT(info != nullptr);
+      RELEASE_ASSERT(info != nullptr);
       const auto current_polynomial = info->GetPolynomial();
       auto current_dist = current_polynomial.Evaluate(s);
       auto current_tang = current_polynomial.Tangent(s);
@@ -213,7 +203,7 @@ namespace road {
     auto &lane = road.GetLaneByDistance(waypoint.s, waypoint.lane_id);
 
     const auto lane_section = lane.GetLaneSection();
-    THROW_INVALID_INPUT_ASSERT(lane_section != nullptr);
+    RELEASE_ASSERT(lane_section != nullptr);
     const auto lane_section_id = lane_section->GetId();
     waypoint.section_id = lane_section_id;
 
@@ -243,21 +233,21 @@ namespace road {
 
   geom::Transform Map::ComputeTransform(Waypoint waypoint) const {
     // lane_id can't be 0
-    THROW_INVALID_INPUT_ASSERT(waypoint.lane_id != 0);
+    RELEASE_ASSERT(waypoint.lane_id != 0);
 
     const auto &road = _data.GetRoad(waypoint.road_id);
 
     // must s be smaller (or eq) than road lenght and bigger (or eq) than 0?
-    THROW_INVALID_INPUT_ASSERT(waypoint.s <= road.GetLength());
-    THROW_INVALID_INPUT_ASSERT(waypoint.s >= 0.0);
+    RELEASE_ASSERT(waypoint.s <= road.GetLength());
+    RELEASE_ASSERT(waypoint.s >= 0.0);
 
     const auto &lane_section = road.GetLaneSectionById(waypoint.section_id);
     const std::map<LaneId, Lane> &lanes = lane_section.GetLanes();
 
     // check that lane_id exists on the current s
-    THROW_INVALID_INPUT_ASSERT(!lanes.empty());
-    THROW_INVALID_INPUT_ASSERT(waypoint.lane_id >= lanes.begin()->first);
-    THROW_INVALID_INPUT_ASSERT(waypoint.lane_id <= lanes.rbegin()->first);
+    RELEASE_ASSERT(!lanes.empty());
+    RELEASE_ASSERT(waypoint.lane_id >= lanes.begin()->first);
+    RELEASE_ASSERT(waypoint.lane_id <= lanes.rbegin()->first);
 
     double lane_width = 0;
     double lane_tangent = 0;
@@ -322,11 +312,11 @@ namespace road {
     const auto s = waypoint.s;
 
     const auto &lane = GetLane(waypoint);
-    THROW_INVALID_INPUT_ASSERT(lane.GetRoad() != nullptr);
-    THROW_INVALID_INPUT_ASSERT(s <= lane.GetRoad()->GetLength());
+    RELEASE_ASSERT(lane.GetRoad() != nullptr);
+    RELEASE_ASSERT(s <= lane.GetRoad()->GetLength());
 
     const auto lane_width_info = lane.GetInfo<RoadInfoLaneWidth>(s);
-    THROW_INVALID_INPUT_ASSERT(lane_width_info != nullptr);
+    RELEASE_ASSERT(lane_width_info != nullptr);
 
     return lane_width_info->GetPolynomial().Evaluate(s);
   }
@@ -340,8 +330,8 @@ namespace road {
     const auto s = waypoint.s;
 
     const auto &current_lane = GetLane(waypoint);
-    THROW_INVALID_INPUT_ASSERT(current_lane.GetRoad() != nullptr);
-    THROW_INVALID_INPUT_ASSERT(s <= current_lane.GetRoad()->GetLength());
+    RELEASE_ASSERT(current_lane.GetRoad() != nullptr);
+    RELEASE_ASSERT(s <= current_lane.GetRoad()->GetLength());
 
     const auto inner_lane_id = waypoint.lane_id < 0 ?
         waypoint.lane_id + 1 :
@@ -370,13 +360,13 @@ namespace road {
     std::vector<Waypoint> result;
     result.reserve(next_lanes.size());
     for (auto *next_lane : next_lanes) {
-      THROW_INVALID_INPUT_ASSERT(next_lane != nullptr);
+      RELEASE_ASSERT(next_lane != nullptr);
       const auto lane_id = next_lane->GetId();
-      THROW_INVALID_INPUT_ASSERT(lane_id != 0);
+      RELEASE_ASSERT(lane_id != 0);
       const auto *section = next_lane->GetLaneSection();
-      THROW_INVALID_INPUT_ASSERT(section != nullptr);
+      RELEASE_ASSERT(section != nullptr);
       const auto *road = next_lane->GetRoad();
-      THROW_INVALID_INPUT_ASSERT(road != nullptr);
+      RELEASE_ASSERT(road != nullptr);
       const auto distance = GetDistanceAtStartOfLane(*next_lane);
       result.emplace_back(Waypoint{road->GetId(), section->GetId(), lane_id, distance});
     }
@@ -386,7 +376,7 @@ namespace road {
   std::vector<Waypoint> Map::GetNext(
       const Waypoint waypoint,
       const double distance) const {
-    THROW_INVALID_INPUT_ASSERT(distance > 0.0);
+    RELEASE_ASSERT(distance > 0.0);
     const auto &lane = GetLane(waypoint);
     const bool forward = (waypoint.lane_id <= 0);
     const double signed_distance = forward ? distance : -distance;
@@ -400,7 +390,7 @@ namespace road {
       Waypoint result = waypoint;
       result.s += signed_distance;
       result.s += forward ? -EPSILON : EPSILON;
-      THROW_INVALID_INPUT_ASSERT(result.s > 0.0);
+      RELEASE_ASSERT(result.s > 0.0);
       return { result };
     }
 
@@ -417,7 +407,7 @@ namespace road {
   }
 
   boost::optional<Waypoint> Map::GetRight(Waypoint waypoint) const {
-    THROW_INVALID_INPUT_ASSERT(waypoint.lane_id != 0);
+    RELEASE_ASSERT(waypoint.lane_id != 0);
     if (waypoint.lane_id > 0) {
       ++waypoint.lane_id;
     } else {
@@ -427,7 +417,7 @@ namespace road {
   }
 
   boost::optional<Waypoint> Map::GetLeft(Waypoint waypoint) const {
-    THROW_INVALID_INPUT_ASSERT(waypoint.lane_id != 0);
+    RELEASE_ASSERT(waypoint.lane_id != 0);
     if (std::abs(waypoint.lane_id) == 1) {
       waypoint.lane_id *= -1;
     } else if (waypoint.lane_id > 0) {
@@ -474,5 +464,3 @@ namespace road {
 
 } // namespace road
 } // namespace carla
-
-#undef THROW_INVALID_INPUT_ASSERT
