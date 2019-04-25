@@ -1,5 +1,5 @@
 ---
-- module_name: client
+- module_name: carla
   doc: >
 
   # - CLASSES ------------------------------
@@ -70,6 +70,7 @@
     - def_name: reload_world
       params:
       - param_name: self
+      raises: RuntimeError
       doc: >
     # --------------------------------------
     - def_name: load_world
