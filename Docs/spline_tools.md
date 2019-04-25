@@ -4,13 +4,13 @@ We've improved our worldbuilding assets with new options and better overall perf
 
 <h5> Shared variables:</h5>
   
-  - StaticMesh: The mesh to use/repeat. Can be any mesh for the RepSpline but Wall and Spline blueprints have some specifications to work properly: Walls meshes to be used for those blueprints need their origin set into the start of the wall and be facing to the positive X (Standar Unreal facing direction)  
+  - StaticMesh: The mesh to use/repeat. Can be any mesh for the RepSpline but Wall and Spline blueprints have some specifications to work properly: Wall meshes to be used for those blueprints need their origin set into the start of the wall and be facing to the positive X (Standar Unreal facing direction)  
 
   
 
 <h2>BP_Spline</h2>
 
- is our old SplineMeshRepeater. Las Release we made this asset to hierarchically Instance each mesh but we noticed this caused some problems in Linux so we stepped back and now uses standard meshes again.
+ is our old SplineMeshRepeater. Last Release we made this asset to hierarchically Instance each mesh but we noticed this caused some problems in Linux so we stepped back and now uses standard meshes again.
 
 !!! Bug
     See [#35 SplineMeshRepeater loses its collider mesh](https://github.com/carla-simulator/carla/issues/35)
@@ -35,8 +35,8 @@ actor is defined by the following parameters:
   - Gap distance: Places a Gap between each repeated mesh, for repetitive non continuous walls: bush chains, bollards...
 
 (Last three variables are specific for some particular assets to be defined in
-the next point) A requisite to create assets compatibles with this component is
-that all the meshes have their pivot placed wherever the repetition starts in
+the next point) A requisite to create assets compatible with this component is
+that all the meshes have their pivot point placed wherever the repetition starts in
 the lower point possible with the rest of the mesh pointing positive (Preferably
 by the X axis)
 
@@ -69,22 +69,22 @@ that won't be modified in this instance but in the blueprint that will be
 launched into the world.
 
 <h2>BP_Wall</h2>
-This blueprint Is a much simpler verion of the BP_Spline With a usefull added feature. Instead of placing a mesh in each point of the intersection it calculates the number of meshes required to fill all space between two points of the spline and even scales the meshes if needed, very usefull for any kind of urban fences or wall that doesn't need much customization.
+This blueprint Is a much simpler version of the BP_Spline With a useful added feature. Instead of placing a mesh in each point of the intersection it calculates the number of meshes required to fill all space between two points of the spline and even scales the meshes if needed, very useful for any kind of urban fences or wall that doesn't need much customization.
 
-  - Vertically. Aligned Wether to vertically allign the meshes
-  - Scale Offset. Adds an Offset to the scale of the meshes lenghtwise. 
+  - Vertically. Aligned Whether to vertically align the meshes.
+  - Scale Offset. Adds an Offset to the scale of the meshes lengthwise.
 
 
 <h2>BP_RepSpline</h2>
-This blueprint specializes in instancing and repeating a mesh over a straight line given a fixed Gap. works well with things like lines of trees, bushes, benches or streetlights. Its Rotation and translation offsets allow for some level of randomization.  
+This blueprint specializes in instancing and repeating a mesh over a straight line given a fixed Gap. works well with things like lines of trees, bushes, benches or streetlights. Its Rotation and translation offsets allow for some level of randomization. 
 
-  - Distance Between Meshes: The distance between each mesh spawned origin. Is not aware of the mesh lenght.
+  - Distance Between Meshes: The distance between each mesh spawned origin. Is not aware of the mesh length.
   - Fixed Rotation Offset: Add the chosen fixed rotation to every mesh.
   - Random Rotation: Rotates randomly over this given threshold.
   - Random Translation: Once "Real" position is set adds a random translation to each mesh.
-  - Max Number of Meshes: Security number, the actor wont add more meshes once it reachs this number of meshes.
-  - World Aligned ZY: Wether to vertically allign the meshes
-  - Place Meshes on points: wether to place a mesh on each point of the spline.
+  - Max Number of Meshes: Security number, the actor wont add more meshes once it reaches this number of meshes.
+  - World Aligned ZY: Whether to vertically align the meshes.
+  - Place Meshes on points: Whether to place a mesh on each point of the spline.
 
 
 
