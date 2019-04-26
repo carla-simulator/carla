@@ -6,18 +6,18 @@ This is a small collection of assets not primordial to building the world but th
 
 This blueprint is composed of a mesh that when hit by any car will drop another mesh assigned to it the number of times required.
 
-  - PropGenerator: The position relative to the root from whitch the spawning props will spawn
+  - PropGenerator: The position relative to the root from which the spawning props will spawn.
   - PropToDispense: The prop that will be dispensed once the vehicle hits the item.
-  - PropWeight: Physical weight of the dispensed Items
-  - EjectionMultiplyer: The force with Whitch the items will be ejected once spawned
-  - MaximumItemsDispensed: Maximum number of items dispensed
-  - MinimumItemsDispensed: Minimum number of items dispensed
+  - PropWeight: Physical weight of the dispensed Items.
+  - EjectionMultiplyer: The force with which the items will be ejected once spawned.
+  - MaximumItemsDispensed: Maximum number of items dispensed.
+  - MinimumItemsDispensed: Minimum number of items dispensed.
 
 <h4>Bp_Terrain</h4>
 
-This blueprint simulates a far mountain region procedurally and very cheaply it's composed of an enormous cilinder with a material simulating a far mountain line.
+This blueprint simulates a far mountain region procedurally and cheaply it's composed of an enormous cylinder with a material simulating a far mountain line.
 
-  - GradientHeightZ: The lenght of the fog gradient.
+  - GradientHeightZ: The length of the fog gradient.
   - GradientZ: The Z position of the fog effect.
   - Seed: Seed for the mountain line.
   - Random: Gives you a random seed.
