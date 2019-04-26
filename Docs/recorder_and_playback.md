@@ -50,6 +50,8 @@ client.set_replayer_time_factor(2.0)
 A value greater than 1.0 will play in fast motion, and a value below 1.0 will play in slow motion, being 1.0 the default value for normal playback.
 As a performance trick, with values over 2.0 the interpolation of positions is disabled.
 
+Also the animations can remain at normal speed, because they don't replicate the state of the animation at that exact frame. So animations are not accurate right now.
+
 The call of this API will not stop the replayer in course, it will change just the speed, so you can change that several times while the replayer is running.
 
 #### Info about the recorded file
