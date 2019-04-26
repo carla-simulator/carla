@@ -35,12 +35,13 @@
   * API update: solve the problem of RuntimeError: std::bad_cast described here: #1125 (comment)
   * Removed deprecated code and content
   * New recorder features:
+    - Recorded system is documented, and binary file system is described.
     - Added optional parameter to show more details about a recorder file (related to `show_recorder_file_info.py`)
     - Added playback speed (slow/fast motion) for the replayer
     - We can use an absolute path for the recorded files (to choose where to 'write to' or 'read from')
     - New data recorded to replay animations:
-      - Wheels of vehicles are animated (steering, throttle, handbrake), also bikes and cycles
-      - Walkers animation is simulated in playback (through speed of walker), so they walk properly.
+      + Wheels of vehicles are animated (steering, throttle, handbrake), also bikes and cycles
+      + Walkers animation is simulated in playback (through speed of walker), so they walk properly.
   * Fixed Lidar effectiveness bug in manual_control.py
   * Fixed dead-lock when loading a new map in synchronous mode
   * Fixed get_actors may produce actors without parent
@@ -62,7 +63,7 @@
   * New Vehicle Audi Etron. With 25.000 Tris and their Lods.
   * New material for Mustang. New material that will allow us to improve all the materials of the cars.
   * New custom weather for each map
-  * Improve weather - Tweak values 
+  * Improve weather - Tweak values
   * Change the weight of cars. All cars have been compared with the real to have a feedback more real.
   * Add Navigations maps for pedestrian
   * Fixed invisible wall
