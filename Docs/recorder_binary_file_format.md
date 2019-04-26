@@ -49,6 +49,7 @@ The types of packets are:
 
 I suggest to use **id** over 100 for user custom packets, because this list will grow in the future in sequence.
 
+
 #### 3.1 Packet 0: Frame Start
 
 This packet marks the start of a new frame, so it will need to be the first one to start each frame. All packets need to be placed between a **Frame Start** and a **Frame End**.
@@ -145,9 +146,21 @@ This packet records the animation for the walker. It just saves the **speed** of
 
 ![state](img/RecorderWalker.png)
 
-### 4. File Layout
+### 4. Frame Layout
 
-The layout of the file starts with the **info header** and then follows a collection of packets in groups. The first in each group is the **Frame Start** packet, and the last in the group is the **Frame End** packet. In the middle can go all other packets, some of them are optional.
+A frame consist on several packets, all of them optional, unless the packets that **start** and **end** the frame, that must be there always.
+
+![layout](img/RecorderFrameLayout.png)
+
+**Event** packets exist only in the frame where happens.
+
+**Position** and **traffic light** packets should exist in all frames, because they are required to move all actors and set the traffic lights to its state. They are optional but if they are not present then the replayer will not be able to move or set the state of traffic lights.
+
+The **animation** packets are also optional, but by default they are recorded. That way the walkers are animated and also the wheels follow the direction of the vehicles.
+
+### 5. File Layout
+
+The layout of the file starts with the **info header** and then follows a collection of packets in groups. The first in each group is the **Frame Start** packet, and the last in the group is the **Frame End** packet. In the middle can go all other packets.
 
 ![layout](img/RecorderLayout.png)
 
