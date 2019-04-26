@@ -13,6 +13,8 @@
 
 #include "RoutePlanner.generated.h"
 
+class AWheeledVehicleAIController;
+
 /// Assign a random route to every ACarlaWheeledVehicle entering the trigger
 /// volume. Routes must be added in editor after placing this actor into the
 /// world. Spline tangents are ignored, only locations are taken into account
@@ -35,21 +37,19 @@ public:
     TriggerVolume->SetBoxExtent(Extent);
   }
 
-  void SetSplineColor(FColor Color)
-  {
-    SplineColor = Color;
-  }
-
   void DrawRoutes();
 
   void AddRoute(float probability, const TArray<FVector> &routePoints);
 
   void CleanRoute();
 
+  void AssignRandomRoute(AWheeledVehicleAIController &Controller) const;
+
 protected:
 
 #if WITH_EDITOR
   virtual void PostEditChangeProperty(FPropertyChangedEvent &PropertyChangedEvent) override;
+
 #endif // WITH_EDITOR
 
   virtual void BeginPlay() override;
@@ -76,7 +76,6 @@ public:
   UPROPERTY(BlueprintReadWrite, Category = "Traffic Routes", EditAnywhere, EditFixedSize)
   TArray<float> Probabilities;
 
-private:
-
-  FColor SplineColor;
+  UPROPERTY(BlueprintReadWrite, Category = "Traffic Routes", EditAnywhere, EditFixedSize)
+  bool bIsIntersection = false;
 };

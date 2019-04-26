@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/Debug.h"
+#include "carla/Exception.h"
 #include "carla/sensor/SensorData.h"
 
 #include <exception>
@@ -107,14 +108,14 @@ namespace data {
 
     reference at(size_type pos) {
       if (!(pos < size())) {
-        throw std::out_of_range("Array index out of range");
+        throw_exception(std::out_of_range("Array index out of range"));
       }
       return operator[](pos);
     }
 
     const_reference at(size_type pos) const {
       if (!(pos < size())) {
-        throw std::out_of_range("Array index out of range");
+        throw_exception(std::out_of_range("Array index out of range"));
       }
       return operator[](pos);
     }

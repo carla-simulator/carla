@@ -6,13 +6,14 @@
 
 #pragma once
 
-#include "GameFramework/Actor.h"
-
-#include "Carla/Actor/ActorDescription.h"
-#include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+#include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Sensor/DataStream.h"
 
+#include "GameFramework/Actor.h"
+
 #include "Sensor.generated.h"
+
+struct FActorDescription;
 
 /// Base class for sensors.
 UCLASS(Abstract, hidecategories = (Collision, Attachment, Actor))
@@ -22,16 +23,12 @@ class CARLA_API ASensor : public AActor
 
 public:
 
-  virtual void Set(const FActorDescription &Description)
+  void SetEpisode(const UCarlaEpisode &InEpisode)
   {
-    // set the tick interval of the sensor
-    if (Description.Variations.Contains("sensor_tick"))
-    {
-      SetActorTickInterval(
-          UActorBlueprintFunctionLibrary::ActorAttributeToFloat(Description.Variations["sensor_tick"],
-          0.0f));
-    }
+    Episode = &InEpisode;
   }
+
+  virtual void Set(const FActorDescription &Description);
 
   /// Replace the FDataStream associated with this sensor.
   ///
@@ -41,15 +38,35 @@ public:
     Stream = std::move(InStream);
   }
 
+  /// Return the token that allows subscribing to this sensor's stream.
+  auto GetToken() const
+  {
+    return Stream.GetToken();
+  }
+
 protected:
 
-  /// Return the FDataStream associated with this sensor.
-  FDataStream &GetDataStream()
+  void EndPlay(EEndPlayReason::Type EndPlayReason) override;
+
+  const UCarlaEpisode &GetEpisode() const
   {
-    return Stream;
+    check(Episode != nullptr);
+    return *Episode;
+  }
+
+  /// Return the FDataStream associated with this sensor.
+  ///
+  /// You need to provide a reference to self, this is necessary for template
+  /// deduction.
+  template <typename SensorT>
+  FAsyncDataStream GetDataStream(const SensorT &Self)
+  {
+    return Stream.MakeAsyncDataStream(Self, GetEpisode().GetElapsedGameTime());
   }
 
 private:
 
   FDataStream Stream;
+
+  const UCarlaEpisode *Episode = nullptr;
 };

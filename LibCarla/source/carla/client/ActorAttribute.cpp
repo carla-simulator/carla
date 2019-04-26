@@ -6,16 +6,17 @@
 
 #include "carla/client/ActorAttribute.h"
 
+#include "carla/Exception.h"
 #include "carla/Logging.h"
 #include "carla/StringUtil.h"
 
 namespace carla {
 namespace client {
 
-#define LIBCARLA_THROW_INVALID_VALUE(message) throw InvalidAttributeValue(GetId() + ": " + message);
+#define LIBCARLA_THROW_INVALID_VALUE(message) throw_exception(InvalidAttributeValue(GetId() + ": " + message));
 #define LIBCARLA_THROW_BAD_VALUE_CAST(type) \
     if (GetType() != rpc::ActorAttributeType:: type) { \
-      throw BadAttributeCast(GetId() + ": bad attribute cast: cannot convert to " #type); \
+      throw_exception(BadAttributeCast(GetId() + ": bad attribute cast: cannot convert to " #type)); \
     }
 
   void ActorAttribute::Set(std::string value) {

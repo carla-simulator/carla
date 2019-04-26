@@ -72,7 +72,7 @@ namespace s11n {
     static Buffer Serialize(
         const Sensor &sensor,
         const LidarMeasurement &measurement,
-        Buffer bitmap);
+        Buffer &&bitmap);
 
     static SharedPtr<SensorData> Deserialize(RawData data);
   };
@@ -85,12 +85,12 @@ namespace s11n {
   inline Buffer LidarSerializer::Serialize(
       const Sensor &,
       const LidarMeasurement &measurement,
-      Buffer output) {
+      Buffer &&output) {
     std::array<boost::asio::const_buffer, 2u> seq = {
         boost::asio::buffer(measurement._header),
         boost::asio::buffer(measurement._points)};
     output.copy_from(seq);
-    return output;
+    return std::move(output);
   }
 
 } // namespace s11n

@@ -8,6 +8,7 @@
 #include "Carla/Sensor/WorldObserver.h"
 
 #include "Carla/Traffic/TrafficLightBase.h"
+#include "Carla/Walker/WalkerController.h"
 
 #include "CoreGlobals.h"
 
@@ -16,7 +17,7 @@
 #include <carla/sensor/data/ActorDynamicState.h>
 #include <compiler/enable-ue4-macros.h>
 
-static auto AWorldObserver_GetActorState(const FActorView &View)
+static auto FWorldObserver_GetActorState(const FActorView &View, const FActorRegistry &Registry)
 {
   using AType = FActorView::ActorType;
 
@@ -27,7 +28,35 @@ static auto AWorldObserver_GetActorState(const FActorView &View)
     auto Vehicle = Cast<ACarlaWheeledVehicle>(View.GetActor());
     if (Vehicle != nullptr)
     {
-      state.vehicle_control = carla::rpc::VehicleControl{Vehicle->GetVehicleControl()};
+      state.vehicle_data.control = carla::rpc::VehicleControl{Vehicle->GetVehicleControl()};
+      auto Controller = Cast<AWheeledVehicleAIController>(Vehicle->GetController());
+      if (Controller != nullptr)
+      {
+        using TLS = carla::rpc::TrafficLightState;
+        state.vehicle_data.traffic_light_state = static_cast<TLS>(Controller->GetTrafficLightState());
+        state.vehicle_data.speed_limit = Controller->GetSpeedLimit();
+        auto TrafficLight = Controller->GetTrafficLight();
+        if (TrafficLight != nullptr)
+        {
+          state.vehicle_data.has_traffic_light = true;
+          auto TrafficLightView = Registry.Find(TrafficLight);
+          state.vehicle_data.traffic_light_id = TrafficLightView.GetActorId();
+        }
+        else
+        {
+          state.vehicle_data.has_traffic_light = false;
+        }
+      }
+    }
+  }
+
+  else if (AType::Walker == View.GetActorType())
+  {
+    auto Walker = Cast<APawn>(View.GetActor());
+    auto Controller = Walker != nullptr ? Cast<AWalkerController>(Walker->GetController()) : nullptr;
+    if (Controller != nullptr)
+    {
+      state.walker_control = carla::rpc::WalkerControl{Controller->GetWalkerControl()};
     }
   }
   else if (AType::TrafficLight == View.GetActorType())
@@ -36,72 +65,96 @@ static auto AWorldObserver_GetActorState(const FActorView &View)
     if (TrafficLight != nullptr)
     {
       using TLS = carla::rpc::TrafficLightState;
-      state.traffic_light_state = static_cast<TLS>(TrafficLight->GetTrafficSignState());
+      state.traffic_light_data.state = static_cast<TLS>(TrafficLight->GetTrafficLightState());
+      state.traffic_light_data.green_time = TrafficLight->GetGreenTime();
+      state.traffic_light_data.yellow_time = TrafficLight->GetYellowTime();
+      state.traffic_light_data.red_time = TrafficLight->GetRedTime();
+      state.traffic_light_data.elapsed_time = TrafficLight->GetElapsedTime();
+      state.traffic_light_data.time_is_frozen = TrafficLight->GetTimeIsFrozen();
+      state.traffic_light_data.pole_index = TrafficLight->GetPoleIndex();
     }
   }
 
   return state;
 }
 
-static carla::Buffer AWorldObserver_Serialize(
-    carla::Buffer buffer,
-    double game_timestamp,
-    double platform_timestamp,
-    const FActorRegistry &Registry)
+static carla::geom::Vector3D FWorldObserver_GetAngularVelocity(const AActor &Actor)
+{
+  const auto RootComponent = Cast<UPrimitiveComponent>(Actor.GetRootComponent());
+  const FVector AngularVelocity =
+      RootComponent != nullptr ?
+          RootComponent->GetPhysicsAngularVelocityInDegrees() :
+          FVector{0.0f, 0.0f, 0.0f};
+  return {AngularVelocity.X, AngularVelocity.Y, AngularVelocity.Z};
+}
+
+static carla::geom::Vector3D FWorldObserver_GetAcceleration(
+    const FActorView &View,
+    const FVector &Velocity,
+    const float DeltaSeconds)
+{
+  FVector &PreviousVelocity = View.GetActorInfo()->Velocity;
+  const FVector Acceleration = (Velocity - PreviousVelocity) / DeltaSeconds;
+  PreviousVelocity = Velocity;
+  return {Acceleration.X, Acceleration.Y, Acceleration.Z};
+}
+
+static carla::Buffer FWorldObserver_Serialize(
+    carla::Buffer &&buffer,
+    const UCarlaEpisode &Episode,
+    float DeltaSeconds)
 {
   using Serializer = carla::sensor::s11n::EpisodeStateSerializer;
   using ActorDynamicState = carla::sensor::data::ActorDynamicState;
 
+  const auto &Registry = Episode.GetActorRegistry();
+
   // Set up buffer for writing.
   buffer.reset(sizeof(Serializer::Header) + sizeof(ActorDynamicState) * Registry.Num());
   auto begin = buffer.begin();
-  auto write_data = [&begin](const auto &data) {
+  auto write_data = [&begin](const auto &data)
+  {
     std::memcpy(begin, &data, sizeof(data));
     begin += sizeof(data);
   };
 
   // Write header.
-  Serializer::Header header = {game_timestamp, platform_timestamp};
+  Serializer::Header header;
+  header.episode_id = Episode.GetId();
+  header.platform_timestamp = FPlatformTime::Seconds();
+  header.delta_seconds = DeltaSeconds;
   write_data(header);
 
   // Write every actor.
-  for (auto &&pair : Registry) {
-    auto &&actor_view = pair.second;
-    check(actor_view.GetActor() != nullptr);
+  for (auto &&View : Registry)
+  {
+    check(View.IsValid());
     constexpr float TO_METERS = 1e-2;
-    const auto velocity = TO_METERS * actor_view.GetActor()->GetVelocity();
+    const auto Velocity = TO_METERS * View.GetActor()->GetVelocity();
+
     ActorDynamicState info = {
-      actor_view.GetActorId(),
-      actor_view.GetActor()->GetActorTransform(),
-      carla::geom::Vector3D{velocity.X, velocity.Y, velocity.Z},
-      AWorldObserver_GetActorState(actor_view)
+      View.GetActorId(),
+      View.GetActor()->GetActorTransform(),
+      carla::geom::Vector3D{Velocity.X, Velocity.Y, Velocity.Z},
+      FWorldObserver_GetAngularVelocity(*View.GetActor()),
+      FWorldObserver_GetAcceleration(View, Velocity, DeltaSeconds),
+      FWorldObserver_GetActorState(View, Registry)
     };
     write_data(info);
   }
 
   check(begin == buffer.end());
-  return buffer;
+  return std::move(buffer);
 }
 
-AWorldObserver::AWorldObserver(const FObjectInitializer& ObjectInitializer)
-  : Super(ObjectInitializer)
+void FWorldObserver::BroadcastTick(const UCarlaEpisode &Episode, float DeltaSeconds)
 {
-  PrimaryActorTick.bCanEverTick = true;
-  PrimaryActorTick.TickGroup = TG_PrePhysics;
-}
+  auto AsyncStream = Stream.MakeAsyncDataStream(*this, Episode.GetElapsedGameTime());
 
-void AWorldObserver::Tick(float DeltaSeconds)
-{
-  check(Episode != nullptr);
-  Super::Tick(DeltaSeconds);
+  auto buffer = FWorldObserver_Serialize(
+      AsyncStream.PopBufferFromPool(),
+      Episode,
+      DeltaSeconds);
 
-  GameTimeStamp += DeltaSeconds;
-
-  auto buffer = AWorldObserver_Serialize(
-      Stream.PopBufferFromPool(),
-      GameTimeStamp,
-      FPlatformTime::Seconds(),
-      Episode->GetActorRegistry());
-
-  Stream.Send_GameThread(*this, std::move(buffer));
+  AsyncStream.Send(*this, std::move(buffer));
 }

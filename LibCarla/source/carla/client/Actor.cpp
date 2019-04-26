@@ -24,6 +24,14 @@ namespace client {
     return GetEpisode().Lock()->GetActorVelocity(*this);
   }
 
+  geom::Vector3D Actor::GetAngularVelocity() const {
+    return GetEpisode().Lock()->GetActorAngularVelocity(*this);
+  }
+
+  void Actor::SetAngularVelocity(const geom::Vector3D &vector) {
+    GetEpisode().Lock()->SetActorAngularVelocity(*this, vector);
+  }
+
   geom::Vector3D Actor::GetAcceleration() const {
     return GetEpisode().Lock()->GetActorAcceleration(*this);
   }
@@ -36,18 +44,27 @@ namespace client {
     GetEpisode().Lock()->SetActorTransform(*this, transform);
   }
 
+  void Actor::SetVelocity(const geom::Vector3D &vector) {
+    GetEpisode().Lock()->SetActorVelocity(*this, vector);
+  }
+
+  void Actor::AddImpulse(const geom::Vector3D &vector) {
+    GetEpisode().Lock()->AddActorImpulse(*this, vector);
+  }
+
   void Actor::SetSimulatePhysics(const bool enabled) {
     GetEpisode().Lock()->SetActorSimulatePhysics(*this, enabled);
   }
 
   bool Actor::Destroy() {
-    if (_is_alive) {
+    if (IsAlive()) {
       // Let the exceptions leave the function, IsAlive() will still be true.
       _is_alive = !GetEpisode().Lock()->DestroyActor(*this);
     } else {
       log_warning(
           "attempting to destroy an actor that is already dead:",
           GetDisplayId());
+      _is_alive = false;
     }
     return _is_alive;
   }

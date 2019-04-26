@@ -6,6 +6,7 @@
 
 #include "carla/client/ActorBlueprint.h"
 
+#include "carla/Exception.h"
 #include "carla/StringUtil.h"
 
 #include <algorithm>
@@ -41,7 +42,7 @@ namespace client {
     auto it = _attributes.find(id);
     if (it == _attributes.end()) {
       using namespace std::string_literals;
-      throw std::out_of_range("attribute '"s + id + "' not found");
+      throw_exception(std::out_of_range("attribute '"s + id + "' not found"));
     }
     return it->second;
   }

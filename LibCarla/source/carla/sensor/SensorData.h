@@ -23,12 +23,13 @@ namespace sensor {
       private NonCopyable {
   protected:
 
-    SensorData(size_t frame_number, const rpc::Transform &sensor_transform)
+    SensorData(size_t frame_number, double timestamp, const rpc::Transform &sensor_transform)
       : _frame_number(frame_number),
+        _timestamp(timestamp),
         _sensor_transform(sensor_transform) {}
 
     explicit SensorData(const RawData &data)
-      : SensorData(data.GetFrameNumber(), data.GetSensorTransform()) {}
+      : SensorData(data.GetFrameNumber(), data.GetTimestamp(), data.GetSensorTransform()) {}
 
   public:
 
@@ -37,6 +38,11 @@ namespace sensor {
     /// Frame count when the data was generated.
     size_t GetFrameNumber() const {
       return _frame_number;
+    }
+
+    /// Simulation-time when the data was generated.
+    double GetTimestamp() const {
+      return _timestamp;
     }
 
     /// Sensor's transform when the data was generated.
@@ -57,6 +63,8 @@ namespace sensor {
     client::detail::WeakEpisodeProxy _episode;
 
     const size_t _frame_number;
+
+    const double _timestamp;
 
     const rpc::Transform _sensor_transform;
   };

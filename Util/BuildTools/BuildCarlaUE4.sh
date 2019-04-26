@@ -25,7 +25,9 @@ HARD_CLEAN=false
 BUILD_CARLAUE4=false
 LAUNCH_UE4_EDITOR=false
 
-OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean -n 'parse-options' -- "$@"`
+GDB=
+
+OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb -n 'parse-options' -- "$@"`
 
 if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
 
@@ -33,6 +35,9 @@ eval set -- "$OPTS"
 
 while true; do
   case "$1" in
+    --gdb )
+      GDB="gdb --args";
+      shift ;;
     --build )
       BUILD_CARLAUE4=true;
       shift ;;
@@ -90,11 +95,11 @@ if ${REMOVE_INTERMEDIATE} ; then
 
   rm -Rf ${UE4_INTERMEDIATE_FOLDERS}
 
+  rm -f Makefile
+
   pushd "${CARLAUE4_PLUGIN_ROOT_FOLDER}" >/dev/null
 
   rm -Rf ${UE4_INTERMEDIATE_FOLDERS}
-
-  rm -f Makefile
 
   popd >/dev/null
 
@@ -119,6 +124,11 @@ if ${BUILD_CARLAUE4} ; then
   log "Build CarlaUE4 project."
   make CarlaUE4Editor
 
+  #Providing the user with the ExportedMaps folder
+  EXPORTED_MAPS="${CARLAUE4_ROOT_FOLDER}/Content/Carla/ExportedMaps"
+  mkdir -p "${EXPORTED_MAPS}"
+
+
 fi
 
 # ==============================================================================
@@ -128,7 +138,7 @@ fi
 if ${LAUNCH_UE4_EDITOR} ; then
 
   log "Launching UE4Editor..."
-  ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${PWD}/CarlaUE4.uproject"
+  ${GDB} ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${PWD}/CarlaUE4.uproject"
 
 else
 

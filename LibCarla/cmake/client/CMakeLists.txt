@@ -7,14 +7,28 @@ file(GLOB libcarla_carla_rpclib "${RPCLIB_LIB_PATH}/*.*")
 install(FILES ${libcarla_carla_rpclib} DESTINATION lib)
 
 # Install boost headers.
-
 install(DIRECTORY "${BOOST_INCLUDE_PATH}/boost" DESTINATION include)
-
 file(GLOB boost_libraries "${BOOST_LIB_PATH}/*")
 install(FILES ${boost_libraries} DESTINATION lib)
 
-# Add sources.
+# Windows need libpng alongside with zlib to be installed
+if (WIN32)
+    # Install zlib headers.
+    file(GLOB zlib_includes "${ZLIB_INCLUDE_PATH}/*")
+    install(FILES ${zlib_includes} DESTINATION include)
+    # Install zlib lib.
+    file(GLOB zlib_libraries "${ZLIB_LIB_PATH}/*")
+    install(FILES ${zlib_libraries} DESTINATION lib)
 
+    # Install libpng headers.
+    file(GLOB pnglib_includes "${LIBPNG_INCLUDE_PATH}/*")
+    install(FILES ${pnglib_includes} DESTINATION include)
+    # Install zlib lib.
+    file(GLOB libpng_libraries "${LIBPNG_LIB_PATH}/*")
+    install(FILES ${libpng_libraries} DESTINATION lib)
+endif (WIN32)
+
+# Add sources.
 file(GLOB libcarla_carla_sources
     "${libcarla_source_path}/carla/*.cpp"
     "${libcarla_source_path}/carla/*.h")
@@ -70,11 +84,9 @@ file(GLOB libcarla_carla_pointcloud_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_pointcloud_sources}")
 install(FILES ${libcarla_carla_pointcloud_sources} DESTINATION include/carla/pointcloud)
 
-file(GLOB libcarla_carla_profiler_sources
-    "${libcarla_source_path}/carla/profiler/*.cpp"
+file(GLOB libcarla_carla_profiler_headers
     "${libcarla_source_path}/carla/profiler/*.h")
-set(libcarla_sources "${libcarla_sources};${libcarla_carla_profiler_sources}")
-install(FILES ${libcarla_carla_profiler_sources} DESTINATION include/carla/profiler)
+install(FILES ${libcarla_carla_profiler_headers} DESTINATION include/carla/profiler)
 
 file(GLOB libcarla_carla_road_sources
     "${libcarla_source_path}/carla/road/*.cpp"
@@ -93,6 +105,24 @@ file(GLOB libcarla_carla_road_element_cephes_sources
     "${libcarla_source_path}/carla/road/element/cephes/*.h")
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_road_element_cephes_sources}")
 install(FILES ${libcarla_carla_road_element_cephes_sources} DESTINATION include/carla/road/element/cephes)
+
+file(GLOB libcarla_carla_road_general_sources
+    "${libcarla_source_path}/carla/road/general/*.cpp"
+    "${libcarla_source_path}/carla/road/general/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_road_general_sources}")
+install(FILES ${libcarla_carla_road_general_sources} DESTINATION include/carla/road/general)
+
+file(GLOB libcarla_carla_road_object_sources
+    "${libcarla_source_path}/carla/road/object/*.cpp"
+    "${libcarla_source_path}/carla/road/object/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_road_object_sources}")
+install(FILES ${libcarla_carla_road_object_sources} DESTINATION include/carla/road/object)
+
+file(GLOB libcarla_carla_road_signal_sources
+    "${libcarla_source_path}/carla/road/signal/*.cpp"
+    "${libcarla_source_path}/carla/road/signal/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_road_signal_sources}")
+install(FILES ${libcarla_carla_road_signal_sources} DESTINATION include/carla/road/signal)
 
 file(GLOB libcarla_carla_rpc_sources
     "${libcarla_source_path}/carla/rpc/*.cpp"
@@ -151,23 +181,38 @@ install(FILES ${libcarla_moodycamel_sources} DESTINATION include/moodycamel)
 # Create targets for debug and release in the same build type.
 # ==============================================================================
 
-foreach(target carla_client_debug carla_client)
-  add_library(${target} STATIC ${libcarla_sources})
+if (LIBCARLA_BUILD_RELEASE)
 
-  target_include_directories(${target} PRIVATE
+  add_library(carla_client STATIC ${libcarla_sources})
+
+  target_include_directories(carla_client PRIVATE
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}")
 
-  install(TARGETS ${target} DESTINATION lib)
-endforeach(target)
+  install(TARGETS carla_client DESTINATION lib)
 
-# Specific options for debug.
-set_target_properties(carla_client_debug PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_DEBUG})
-target_compile_definitions(carla_client_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
+  if (WIN32) # @todo Fix PythonAPI build on Windows.
+    set_target_properties(carla_client PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})
+  else ()
+    if (NOT DEFINED CMAKE_CXX_FLAGS_RELEASE_CLIENT)
+      set(CMAKE_CXX_FLAGS_RELEASE_CLIENT ${CMAKE_CXX_FLAGS_RELEASE})
+    endif()
+    set_target_properties(carla_client PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_RELEASE_CLIENT})
+  endif (WIN32)
 
-# Specific options for release.
-if (WIN32) # @todo Fix PythonAPI build on Windows.
-  set_target_properties(carla_client PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})
-else ()
-  set_target_properties(carla_client PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_RELEASE_CLIENT})
-endif (WIN32)
+endif()
+
+if (LIBCARLA_BUILD_DEBUG)
+
+  add_library(carla_client_debug STATIC ${libcarla_sources})
+
+  target_include_directories(carla_client_debug PRIVATE
+      "${BOOST_INCLUDE_PATH}"
+      "${RPCLIB_INCLUDE_PATH}")
+
+  install(TARGETS carla_client_debug DESTINATION lib)
+
+  set_target_properties(carla_client_debug PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_DEBUG})
+  target_compile_definitions(carla_client_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
+
+endif()

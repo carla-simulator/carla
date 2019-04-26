@@ -20,7 +20,7 @@ namespace client {
     : _episode(std::move(episode)),
       _actors(std::make_move_iterator(actors.begin()), std::make_move_iterator(actors.end())) {}
 
-  SharedPtr<Actor> ActorList::Find(actor_id_type const actor_id) const {
+  SharedPtr<Actor> ActorList::Find(const ActorId actor_id) const {
     for (auto &actor : _actors) {
       if (actor_id == actor.GetId()) {
         return actor.Get(_episode, shared_from_this());
@@ -29,11 +29,11 @@ namespace client {
     return nullptr;
   }
 
-  ActorList ActorList::Filter(const std::string &wildcard_pattern) const {
-    ActorList filtered{_episode, {}};
+  SharedPtr<ActorList> ActorList::Filter(const std::string &wildcard_pattern) const {
+    SharedPtr<ActorList> filtered (new ActorList(_episode, {}));
     for (auto &&actor : _actors) {
       if (StringUtil::Match(actor.GetTypeId(), wildcard_pattern)) {
-        filtered._actors.push_back(actor);
+        filtered->_actors.push_back(actor);
       }
     }
     return filtered;

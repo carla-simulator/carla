@@ -22,7 +22,7 @@ if [ -n "${CARLA_BUILD_NO_COLOR}" ]; then
 else
 
   function log {
-      echo -e "\033[1;35m`basename "$0"`: $1\033[0m"
+    echo -e "\033[1;35m`basename "$0"`: $1\033[0m"
   }
 
   function fatal_error {
@@ -32,7 +32,7 @@ else
 
 fi
 
-function get_carla_version {
+function get_git_repository_version {
   git describe --tags --dirty --always
 }
 

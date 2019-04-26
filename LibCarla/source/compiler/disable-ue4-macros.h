@@ -7,31 +7,21 @@
 #ifndef LIBCARLA_INCLUDED_DISABLE_UE4_MACROS_HEADER
 #define LIBCARLA_INCLUDED_DISABLE_UE4_MACROS_HEADER
 
+#include "Carla.h"
+
 #ifndef BOOST_ERROR_CODE_HEADER_ONLY
 #  define BOOST_ERROR_CODE_HEADER_ONLY
 #endif // BOOST_ERROR_CODE_HEADER_ONLY
 
 #ifndef BOOST_NO_EXCEPTIONS
-#  define BOOST_NO_EXCEPTIONS
+#  error LibCarla should be compiled with -DBOOST_NO_EXCEPTIONS inside UE4.
 #endif // BOOST_NO_EXCEPTIONS
-
-// Suppress clang warning.
-#if defined(__clang__)
-#  ifndef __cpp_coroutines
-#    define __cpp_coroutines 0
-#  endif // __cpp_coroutines
-#  ifndef __cpp_noexcept_function_type
-#    define __cpp_noexcept_function_type 0
-#  endif // __cpp_noexcept_function_type
-#endif // defined(__clang__)
-
-namespace boost {
-
-  static inline void throw_exception(const std::exception &e) {
-    UE_LOG(LogCarla, Fatal, TEXT("Exception thrown on Boost libraries: %s"), UTF8_TO_TCHAR(e.what()));
-  }
-
-} // namespace boost
+#ifndef ASIO_NO_EXCEPTIONS
+#  error LibCarla should be compiled with -DASIO_NO_EXCEPTIONS inside UE4.
+#endif // ASIO_NO_EXCEPTIONS
+#ifndef LIBCARLA_NO_EXCEPTIONS
+#  error LibCarla should be compiled with -DLIBCARLA_NO_EXCEPTIONS inside UE4.
+#endif // LIBCARLA_NO_EXCEPTIONS
 
 #endif // LIBCARLA_INCLUDED_DISABLE_UE4_MACROS_HEADER
 
@@ -50,12 +40,14 @@ namespace boost {
 // http://nadeausoftware.com/articles/2012/10/c_c_tip_how_detect_compiler_name_and_version_using_compiler_predefined_macros
 #if defined(_MSC_VER)
 #  pragma warning(push)
-#  pragma warning(disable: 4668 4191)
+#  pragma warning(disable: 4668 4191 4647)
 #endif
 
 #if defined(__clang__)
 #  pragma clang diagnostic push
 #  pragma clang diagnostic ignored "-Wmissing-braces"
+#  pragma clang diagnostic ignored "-Wunusable-partial-specialization"
+#  pragma clang diagnostic ignored "-Wundef"
 #endif
 
 #pragma push_macro("TEXT")

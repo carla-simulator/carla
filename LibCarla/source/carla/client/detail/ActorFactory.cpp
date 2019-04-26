@@ -9,10 +9,13 @@
 #include "carla/Logging.h"
 #include "carla/StringUtil.h"
 #include "carla/client/Actor.h"
-#include "carla/client/LaneDetector.h"
+#include "carla/client/GnssSensor.h"
+#include "carla/client/LaneInvasionSensor.h"
 #include "carla/client/ServerSideSensor.h"
 #include "carla/client/TrafficLight.h"
+#include "carla/client/TrafficSign.h"
 #include "carla/client/Vehicle.h"
+#include "carla/client/Walker.h"
 #include "carla/client/World.h"
 #include "carla/client/detail/Client.h"
 
@@ -70,14 +73,20 @@ namespace detail {
       SharedPtr<Actor> parent,
       GarbageCollectionPolicy gc) {
     auto init = ActorInitializer{description, episode, parent};
-    if (description.description.id == "sensor.other.lane_detector") { /// @todo
-      return MakeActorImpl<LaneDetector>(std::move(init), gc);
+    if (description.description.id == "sensor.other.lane_invasion") { /// @todo
+      return MakeActorImpl<LaneInvasionSensor>(std::move(init), gc);
+    } else if (description.description.id == "sensor.other.gnss") { /// @todo
+      return MakeActorImpl<GnssSensor>(std::move(init), gc);
     } else if (description.HasAStream()) {
       return MakeActorImpl<ServerSideSensor>(std::move(init), gc);
     } else if (StringUtil::StartsWith(description.description.id, "vehicle.")) {
       return MakeActorImpl<Vehicle>(std::move(init), gc);
+    } else if (StringUtil::StartsWith(description.description.id, "walker.")) {
+      return MakeActorImpl<Walker>(std::move(init), gc);
     } else if (StringUtil::StartsWith(description.description.id, "traffic.traffic_light")) {
       return MakeActorImpl<TrafficLight>(std::move(init), gc);
+    } else if (StringUtil::StartsWith(description.description.id, "traffic.")) {
+      return MakeActorImpl<TrafficSign>(std::move(init), gc);
     }
     return MakeActorImpl<Actor>(std::move(init), gc);
   }

@@ -108,8 +108,6 @@ namespace detail {
       _server.stop();
     }
 
-    static void RespondError(std::string error_message);
-
   private:
 
     boost::asio::io_service _sync_io_service;

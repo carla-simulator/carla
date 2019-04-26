@@ -38,13 +38,13 @@ namespace s11n {
     }
 
     template <typename Sensor>
-    static Buffer Serialize(const Sensor &sensor, Buffer bitmap);
+    static Buffer Serialize(const Sensor &sensor, Buffer &&bitmap);
 
     static SharedPtr<SensorData> Deserialize(RawData data);
   };
 
   template <typename Sensor>
-  inline Buffer ImageSerializer::Serialize(const Sensor &sensor, Buffer bitmap) {
+  inline Buffer ImageSerializer::Serialize(const Sensor &sensor, Buffer &&bitmap) {
     DEBUG_ASSERT(bitmap.size() > sizeof(ImageHeader));
     ImageHeader header = {
       sensor.GetImageWidth(),
@@ -52,7 +52,7 @@ namespace s11n {
       sensor.GetFOVAngle()
     };
     std::memcpy(bitmap.data(), reinterpret_cast<const void *>(&header), sizeof(header));
-    return bitmap;
+    return std::move(bitmap);
   }
 
 } // namespace s11n

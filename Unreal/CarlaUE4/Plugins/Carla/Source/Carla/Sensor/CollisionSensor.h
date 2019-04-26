@@ -6,11 +6,13 @@
 
 #pragma once
 
+#include "Carla/Actor/ActorDefinition.h"
 #include "Carla/Sensor/Sensor.h"
 
 #include "CollisionSensor.generated.h"
 
 class UCarlaEpisode;
+class UCarlaGameInstance;
 
 /// A sensor to register collisions.
 UCLASS()
@@ -26,8 +28,6 @@ public:
 
   void SetOwner(AActor *NewOwner) override;
 
-  void BeginPlay() override;
-
 private:
 
   UFUNCTION()
@@ -36,10 +36,4 @@ private:
       AActor *OtherActor,
       FVector NormalImpulse,
       const FHitResult &Hit);
-
-  UPROPERTY()
-  const UCarlaEpisode *Episode = nullptr;
-
-  UPROPERTY()
-  const UCarlaGameInstance *GameInstance = nullptr;
 };

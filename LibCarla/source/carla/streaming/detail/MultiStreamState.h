@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "carla/AtomicSharedPtr.h"
 #include "carla/streaming/detail/StreamStateBase.h"
 
 #include <mutex>
@@ -25,7 +24,7 @@ namespace detail {
     using StreamStateBase::StreamStateBase;
 
     template <typename... Buffers>
-    void Write(Buffers... buffers) {
+    void Write(Buffers &&... buffers) {
       auto message = Session::MakeMessage(std::move(buffers)...);
       std::lock_guard<std::mutex> lock(_mutex);
       for (auto &session : _sessions) {

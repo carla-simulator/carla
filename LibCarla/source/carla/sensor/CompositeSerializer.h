@@ -40,7 +40,7 @@ namespace sensor {
 
     /// Deserializes a Buffer by calling the "Deserialize" function of the
     /// serializer that generated the Buffer.
-    static interpreted_type Deserialize(Buffer data);
+    static interpreted_type Deserialize(Buffer &&data);
 
   private:
 
@@ -85,7 +85,7 @@ namespace sensor {
 
   template <typename... Items>
   inline typename CompositeSerializer<Items...>::interpreted_type
-  CompositeSerializer<Items...>::Deserialize(Buffer data) {
+  CompositeSerializer<Items...>::Deserialize(Buffer &&data) {
     RawData message{std::move(data)};
     size_t index = message.GetSensorTypeId();
     return Deserialize(index, std::move(message));

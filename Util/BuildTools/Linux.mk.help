@@ -41,6 +41,11 @@ Use the following commands:
         modified since the precompiled header" errors. Beware, recompilation
         takes a long time!
 
+    export-maps:
+
+        Export maps from /Game/Carla/ExportedMaps to the ExportedMaps folder
+        at the root of the Carla project.
+
 
 There are also some lower level commands for building individual modules helpful
 for developers:
@@ -61,6 +66,10 @@ for developers:
 
         Run the benchmark tests for LibCarla.
 
+    (run-)examples:
+
+        Build (and run) the C++ client examples.
+
     CarlaUE4Editor:
 
         Build CarlaUE4 project, but do not launch the editor.
@@ -69,9 +78,13 @@ for developers:
 
         Build and package the Python API module for Python 2 and/or 3.
 
-    LibCarla(.server|.client):
+    LibCarla(.server|.client)(.debug|.release):
 
         Build LibCarla, "Server" and/or "Client" configurations.
+
+    clean.(LibCarla|PythonAPI|CarlaUE4Editor)
+
+        Remove intermediate build files for the specific module.
 
     setup:
 

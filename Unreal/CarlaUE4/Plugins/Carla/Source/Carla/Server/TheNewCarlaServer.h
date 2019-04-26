@@ -7,12 +7,9 @@
 #pragma once
 
 #include "Carla/Actor/ActorView.h"
+#include "Carla/Sensor/DataStream.h"
 
 #include "CoreMinimal.h"
-
-#include <compiler/disable-ue4-macros.h>
-#include <carla/rpc/Actor.h>
-#include <compiler/enable-ue4-macros.h>
 
 class UCarlaEpisode;
 
@@ -24,7 +21,7 @@ public:
 
   ~FTheNewCarlaServer();
 
-  void Start(uint16_t Port);
+  FDataMultiStream Start(uint16_t RPCPort, uint16_t StreamingPort);
 
   void NotifyBeginEpisode(UCarlaEpisode &Episode);
 
@@ -34,10 +31,11 @@ public:
 
   void RunSome(uint32 Milliseconds);
 
+  bool TickCueReceived();
+
   void Stop();
 
-  // This is necessary for serializing sensors properly.
-  carla::rpc::Actor SerializeActor(FActorView View) const;
+  FDataStream OpenStream() const;
 
 private:
 

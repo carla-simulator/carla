@@ -13,7 +13,7 @@
 #  pragma clang diagnostic ignored "-Wunused-local-typedef"
 #endif
 
-#include <boost/gil/gil_all.hpp>
+#include <boost/gil.hpp>
 
 #if defined(__clang__)
 #  pragma clang diagnostic pop

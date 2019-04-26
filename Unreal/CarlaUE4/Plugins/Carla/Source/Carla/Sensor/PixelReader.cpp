@@ -8,6 +8,8 @@
 #include "Carla/Sensor/PixelReader.h"
 
 #include "Engine/TextureRenderTarget2D.h"
+#include "HighResScreenshot.h"
+#include "Runtime/ImageWriteQueue/Public/ImageWriteQueue.h"
 
 // For now we only support Vulkan on Windows.
 #if PLATFORM_WINDOWS
@@ -91,21 +93,38 @@ bool FPixelReader::WritePixelsToArray(
   return RTResource->ReadPixels(BitMap, ReadPixelFlags);
 }
 
-bool FPixelReader::SavePixelsToDisk(
+TUniquePtr<TImagePixelData<FColor>> FPixelReader::DumpPixels(
+    UTextureRenderTarget2D &RenderTarget)
+{
+  const FIntPoint DestSize(RenderTarget.GetSurfaceWidth(), RenderTarget.GetSurfaceHeight());
+  TUniquePtr<TImagePixelData<FColor>> PixelData = MakeUnique<TImagePixelData<FColor>>(DestSize);
+  if (!WritePixelsToArray(RenderTarget, PixelData->Pixels)) {
+    return nullptr;
+  }
+  return PixelData;
+}
+
+TFuture<bool> FPixelReader::SavePixelsToDisk(
     UTextureRenderTarget2D &RenderTarget,
     const FString &FilePath)
 {
-  TArray<FColor> OutBMP;
-  if (!WritePixelsToArray(RenderTarget, OutBMP)) {
-    return false;
-  }
-  for (FColor &color : OutBMP) {
-    color.A = 255u;
-  }
-  const FIntPoint DestSize(RenderTarget.GetSurfaceWidth(), RenderTarget.GetSurfaceHeight());
-  FString ResultPath;
+  return SavePixelsToDisk(DumpPixels(RenderTarget), FilePath);
+}
+
+TFuture<bool> FPixelReader::SavePixelsToDisk(
+      TUniquePtr<TImagePixelData<FColor>> PixelData,
+      const FString &FilePath)
+{
+  TUniquePtr<FImageWriteTask> ImageTask = MakeUnique<FImageWriteTask>();
+  ImageTask->PixelData = MoveTemp(PixelData);
+  ImageTask->Filename = FilePath;
+  ImageTask->Format = EImageFormat::PNG;
+  ImageTask->CompressionQuality = (int32)EImageCompressionQuality::Default;
+  ImageTask->bOverwriteFile = true;
+  ImageTask->PixelPreProcessors.Add(TAsyncAlphaWrite<FColor>(255));
+
   FHighResScreenshotConfig &HighResScreenshotConfig = GetHighResScreenshotConfig();
-  return HighResScreenshotConfig.SaveImage(FilePath, OutBMP, DestSize, &ResultPath);
+  return HighResScreenshotConfig.ImageWriteQueue->Enqueue(MoveTemp(ImageTask));
 }
 
 void FPixelReader::WritePixelsToBuffer(

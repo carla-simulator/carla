@@ -6,8 +6,20 @@ using UnrealBuildTool;
 
 public class Carla : ModuleRules
 {
+  private bool IsWindows(ReadOnlyTargetRules Target)
+  {
+    return (Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32);
+  }
+
   public Carla(ReadOnlyTargetRules Target) : base(Target)
   {
+    PrivatePCHHeaderFile = "Carla.h";
+
+    if (IsWindows(Target))
+    {
+      bEnableExceptions = true;
+    }
+
     PublicIncludePaths.AddRange(
       new string[] {
         // ... add public include paths required here ...
@@ -34,13 +46,15 @@ public class Carla : ModuleRules
       new string[]
       {
         "AIModule",
+        "AssetRegistry",
         "CoreUObject",
         "Engine",
+        "Foliage",
+        "ImageWriteQueue",
+        "Landscape",
         "PhysXVehicles",
         "Slate",
-        "SlateCore",
-        "Landscape",
-        "Foliage"
+        "SlateCore"
         // ... add private dependencies that you statically link with here ...
       }
       );
@@ -53,11 +67,6 @@ public class Carla : ModuleRules
       );
 
     AddCarlaServerDependency(Target);
-  }
-
-  private bool IsWindows(ReadOnlyTargetRules Target)
-  {
-    return (Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32);
   }
 
   private bool UseDebugLibs(ReadOnlyTargetRules Target)
@@ -115,7 +124,6 @@ public class Carla : ModuleRules
     }
     else
     {
-      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("c++abi")));
       PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("rpc")));
       if (UseDebugLibs(Target))
       {
@@ -133,7 +141,9 @@ public class Carla : ModuleRules
     PublicIncludePaths.Add(LibCarlaIncludePath);
     PrivateIncludePaths.Add(LibCarlaIncludePath);
 
-    /// @todo This is necessary because rpclib uses exceptions to notify errors.
-    bEnableExceptions = true;
+    PublicDefinitions.Add("ASIO_NO_EXCEPTIONS");
+    PublicDefinitions.Add("BOOST_NO_EXCEPTIONS");
+    PublicDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
+    PublicDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
   }
 }

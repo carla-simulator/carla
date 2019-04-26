@@ -11,10 +11,10 @@
 namespace carla {
 namespace rpc {
 
-  using actor_id_type = uint32_t;
+  using ActorId = uint32_t;
 
 } // namespace rpc
 
-  using actor_id_type = rpc::actor_id_type;
+  using ActorId = rpc::ActorId;
 
 } // namespace carla

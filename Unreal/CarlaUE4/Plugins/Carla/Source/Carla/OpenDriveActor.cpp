@@ -5,72 +5,112 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
+#include "Carla/OpenDriveActor.h"
 
-#include "OpenDriveActor.h"
-
-#include "Util/OpenDrive.h"
+#include "Carla/Util/OpenDrive.h"
 
 #include <compiler/disable-ue4-macros.h>
-#include <carla/rpc/String.h>
 #include <carla/geom/Math.h>
+#include <carla/opendrive/OpenDriveParser.h>
+#include <carla/road/element/Waypoint.h>
+#include <carla/rpc/String.h>
 #include <compiler/enable-ue4-macros.h>
 
-#include <functional>
+#include <unordered_set>
 
-TArray<FVector> DirectedPointArray2FVectorArray(
-  const TArray<AOpenDriveActor::DirectedPoint> &DirectedPoints)
+/*static TArray<FVector> WaypointVector2FVectorArray(
+    const std::vector<carla::road::element::Waypoint> &Waypoints,
+    const float TriggersHeight)
 {
   TArray<FVector> Positions;
-  Positions.Reserve(DirectedPoints.Num());
-  for (int i = 0; i < DirectedPoints.Num(); ++i)
+  Positions.Reserve(Waypoints.size());
+  for (int i = 0; i < Waypoints.size(); ++i)
   {
-    Positions.Add(DirectedPoints[i].location);
+    // Add the trigger height because the z position of the points does not
+    // influence on the driver AI and is easy to visualize in the editor
+    Positions.Add(Waypoints[i].ComputeTransform().location +
+        FVector(0.f, 0.f, TriggersHeight));
   }
   return Positions;
-}
+}*/
 
-AOpenDriveActor::AOpenDriveActor(const FObjectInitializer& ObjectInitializer) :
-  Super(ObjectInitializer)
+AOpenDriveActor::AOpenDriveActor(const FObjectInitializer &ObjectInitializer)
+  : Super(ObjectInitializer)
 {
   PrimaryActorTick.bCanEverTick = false;
+  #if WITH_EDITORONLY_DATA
+  static ConstructorHelpers::FObjectFinder<UBlueprint> TrafficLightBP(TEXT(
+      "Blueprint'/Game/Carla/Static/TrafficSigns/Streetlights_01/BP_TrafficLightPole.BP_TrafficLightPole'"));
+  TrafficLightBlueprintClass = (UClass *) TrafficLightBP.Object->GeneratedClass;
+
+  static ConstructorHelpers::FObjectFinder<UBlueprint> TrafficGroupBP(TEXT(
+      "Blueprint'/Game/Carla/Static/TrafficSigns/Streetlights_01/BP_TrafficLightPoleGroup.BP_TrafficLightPoleGroup'"));
+  TrafficGroupBlueprintClass = (UClass *) TrafficGroupBP.Object->GeneratedClass;
+
+  static ConstructorHelpers::FObjectFinder<UBlueprint> TrafficSign30BP(TEXT(
+      "Blueprint'/Game/Carla/Static/TrafficSigns/PostSigns/Round/SpeedLimiters/BP_SpeedLimit30.BP_SpeedLimit30'"));
+  TrafficSign30BlueprintClass = (UClass *) TrafficSign30BP.Object->GeneratedClass;
+
+  /*static ConstructorHelpers::FObjectFinder<UBlueprint> TrafficSign40BP(TEXT(
+      "Blueprint'/Game/Carla/Static/TrafficSigns/PostSigns/Round/SpeedLimiters/BP_SpeedLimit40.BP_SpeedLimit40'"));
+  TrafficSign40BlueprintClass = (UClass *) TrafficSign40BP.Object->GeneratedClass;*/
+
+  static ConstructorHelpers::FObjectFinder<UBlueprint> TrafficSign60BP(TEXT(
+      "Blueprint'/Game/Carla/Static/TrafficSigns/PostSigns/Round/SpeedLimiters/BP_SpeedLimit60.BP_SpeedLimit60'"));
+  TrafficSign60BlueprintClass = (UClass *) TrafficSign60BP.Object->GeneratedClass;
+
+  static ConstructorHelpers::FObjectFinder<UBlueprint> TrafficSign90BP(TEXT(
+      "Blueprint'/Game/Carla/Static/TrafficSigns/PostSigns/Round/SpeedLimiters/BP_SpeedLimit90.BP_SpeedLimit90'"));
+  TrafficSign90BlueprintClass = (UClass *) TrafficSign90BP.Object->GeneratedClass;
+
+  static ConstructorHelpers::FObjectFinder<UBlueprint> TrafficSign100BP(TEXT(
+      "Blueprint'/Game/Carla/Static/TrafficSigns/PostSigns/Round/SpeedLimiters/BP_SpeedLimit100.BP_SpeedLimit100'"));
+  TrafficSign100BlueprintClass = (UClass *) TrafficSign100BP.Object->GeneratedClass;
+  #endif // WITH_EDITORONLY_DATA
 
   // Structure to hold one-time initialization
   static struct FConstructorStatics
   {
-    // A helper class object we use to find target UTexture2D object in resource package
+    // A helper class object we use to find target UTexture2D object in resource
+    // package
     ConstructorHelpers::FObjectFinderOptional<UTexture2D> TextureObject;
     FName Category;
     FText Name;
     FConstructorStatics()
-      // Use helper class object to find the texture resource path
-      : TextureObject(TEXT("/Carla/Icons/OpenDriveActorIcon"))
-      , Category(TEXT("OpenDriveActor"))
-      , Name(NSLOCTEXT("SpriteCategory", "OpenDriveActor", "OpenDriveActor"))
-      {
-      }
+    // Use helper class object to find the texture resource path
+      : TextureObject(TEXT("/Carla/Icons/OpenDriveActorIcon")),
+        Category(TEXT("OpenDriveActor")),
+        Name(NSLOCTEXT("SpriteCategory", "OpenDriveActor", "OpenDriveActor"))
+    {}
   } ConstructorStatics;
 
   // We need a scene component to attach Icon sprite
-  USceneComponent* SceneComponent = ObjectInitializer.CreateDefaultSubobject<USceneComponent>(this, TEXT("SceneComp"));
+  USceneComponent *SceneComponent =
+      ObjectInitializer.CreateDefaultSubobject<USceneComponent>(this, TEXT("SceneComp"));
   RootComponent = SceneComponent;
   RootComponent->Mobility = EComponentMobility::Static;
 
 #if WITH_EDITORONLY_DATA
-  SpriteComponent = ObjectInitializer.CreateEditorOnlyDefaultSubobject<UBillboardComponent>(this, TEXT("Sprite"));
+  SpriteComponent =
+      ObjectInitializer.CreateEditorOnlyDefaultSubobject<UBillboardComponent>(this, TEXT("Sprite"));
   if (SpriteComponent)
   {
-    SpriteComponent->Sprite = ConstructorStatics.TextureObject.Get();    // Get the sprite texture from helper class object
-    SpriteComponent->SpriteInfo.Category = ConstructorStatics.Category;  // Assign sprite category name
-    SpriteComponent->SpriteInfo.DisplayName = ConstructorStatics.Name;   // Assign sprite display name
-    SpriteComponent->SetupAttachment(RootComponent); // Attach sprite to scene component
+    // Get the sprite texture from helper class object
+    SpriteComponent->Sprite = ConstructorStatics.TextureObject.Get();
+    // Assign sprite category name
+    SpriteComponent->SpriteInfo.Category = ConstructorStatics.Category;
+    // Assign sprite display name
+    SpriteComponent->SpriteInfo.DisplayName = ConstructorStatics.Name;
+    // Attach sprite to scene component
+    SpriteComponent->SetupAttachment(RootComponent);
     SpriteComponent->Mobility = EComponentMobility::Static;
-    SpriteComponent->SetEditorScale(1.0f);
+    SpriteComponent->SetEditorScale(1.f);
   }
 #endif // WITH_EDITORONLY_DATA
 }
 
 #if WITH_EDITOR
-void AOpenDriveActor::PostEditChangeProperty(struct FPropertyChangedEvent& Event)
+void AOpenDriveActor::PostEditChangeProperty(struct FPropertyChangedEvent &Event)
 {
   Super::PostEditChangeProperty(Event);
 
@@ -129,102 +169,243 @@ void AOpenDriveActor::PostEditChangeProperty(struct FPropertyChangedEvent& Event
 }
 #endif // WITH_EDITOR
 
-ARoutePlanner *AOpenDriveActor::GenerateRoutePlanner(const TArray<DirectedPoint> &DirectedPoints)
-{
-  using CarlaMath = carla::geom::Math;
-
-  TArray<FVector> Positions = DirectedPointArray2FVectorArray(DirectedPoints);
-  ARoutePlanner *RoutePlanner = GetWorld()->SpawnActor<ARoutePlanner>();
-
-  RoutePlanner->SetActorRotation(FRotator(0.0f, CarlaMath::to_degrees(DirectedPoints[0].tangent), 0.0f));
-  RoutePlanner->SetActorLocation(DirectedPoints[0].location);
-  RoutePlanner->SetBoxExtent(FVector(70.0f, 70.0f, 50.0f));
-  RoutePlanner->AddRoute(1.0f, Positions);
-  RoutePlanner->Init();
-  RoutePlanners.Add(RoutePlanner);
-  return RoutePlanner;
-}
-
 void AOpenDriveActor::BuildRoutes()
 {
-  using IdType = carla::road::element::id_type;
+  BuildRoutes(GetWorld()->GetMapName());
+}
 
-  std::string ParseError;
+void AOpenDriveActor::BuildRoutes(FString MapName)
+{
+  using Waypoint = carla::road::element::Waypoint;
 
-  // NOTE(Andrei): As the OpenDrive file has the same name as level,
-  // build the path to the xodr file using the lavel name and the
-  // game content directory.
-  FString MapName = GetWorld()->GetMapName();
-  FString XodrContent = FOpenDrive::Load(MapName);
+  // As the OpenDrive file has the same name as level, build the path to the
+  // xodr file using the lavel name and the game content directory.
+  const FString XodrContent = FOpenDrive::Load(MapName);
 
-  auto map_ptr = carla::opendrive::OpenDrive::Load(TCHAR_TO_UTF8(*XodrContent),
-      XmlInputType::CONTENT,
-      &ParseError);
+  auto map = carla::opendrive::OpenDriveParser::Load(carla::rpc::FromFString(XodrContent));
 
-  if (ParseError.size())
+  if (!map.has_value())
   {
-    UE_LOG(LogCarla, Error, TEXT("OpenDrive parsing error: '%s'."), *carla::rpc::ToFString(ParseError));
+    UE_LOG(LogCarla, Error, TEXT("Failed to parse OpenDrive file."));
     return;
   }
 
-  const auto &map = map_ptr->GetData();
-  std::vector<carla::road::lane_junction_t> JunctionInfo = map.GetJunctionInformation();
+  // List with waypoints, each one at the end of each lane of the map
+  const std::vector<std::pair<Waypoint, Waypoint>> Topology =
+      map->GenerateTopology();
 
-  // NOTE(Andrei): Build the roads that are not junctions
-  auto RoadIDsView = map.GetAllIds();
-  std::vector<IdType> roadIDs(RoadIDsView.begin(), RoadIDsView.end());
-  std::sort(roadIDs.begin(), roadIDs.end());
+  // Since we are going to iterate all the successors of all the lanes, we need
+  // a vector to store the already visited lanes. Lanes can be successors of
+  // multiple other lanes
+  std::vector<Waypoint> AlreadyVisited;
 
-  for (auto &&id : roadIDs)
+  std::unordered_set<Waypoint> WpLaneStartList;
+  for (auto &&WpPair : Topology)
   {
-    GenerateWaypointsRoad(map.GetRoad(id));
+    WpLaneStartList.emplace(WpPair.first);
+    WpLaneStartList.emplace(WpPair.second);
   }
 
-  // NOTE(Andrei): Build the roads that are junctions as one RoutePlanner
-  // can have more than one path that can be taken
-
-  //       junctionId    roadID        laneID
-  std::map<int, std::map<int, std::map<int, ARoutePlanner *>>> Junctions;
-
-  for (auto && Junction : JunctionInfo)
+  for (auto &&Wp : WpLaneStartList)
   {
-    TArray<TArray<DirectedPoint>> Waypoints;
 
-    int FromRoadID = Junction.incomming_road;
-    int ToRoadID = Junction.connection_road;
-    int JunctonID = Junction.junction_id;
+    std::vector<Waypoint> Successors = map->GetSuccessors(Wp);
 
-    GenerateWaypointsJunction(map.GetRoad(ToRoadID), Waypoints);
-    ARoutePlanner *routePlanner = nullptr;
+    // // The RoutePlanner will be created only if some route must be added to it
+    // // so no one will be created unnecessarily
+    ARoutePlanner *RoutePlanner = nullptr;
 
-    std::sort(Junction.from_lane.begin(), Junction.from_lane.end(), std::greater<int>());
+    // // Fill the RoutePlanner with all the needed roads
+    for (auto &&Successor : Successors)
+     {
+        const auto RoadId = Successor.road_id;
+        const auto LaneId = Successor.lane_id;
 
-    if (Junction.from_lane[0] < 0)
-    {
-      std::reverse(Junction.from_lane.begin(), Junction.from_lane.end());
-    }
 
-    for (size_t n = 0; n < Junction.from_lane.size(); ++n)
-    {
-      int FromLaneID = Junction.from_lane[n];
-      routePlanner = Junctions[JunctonID][FromRoadID][FromLaneID];
+    //   // Create an identifier of the current lane
+        //const auto Identifier = std::make_pair(RoadId, LaneId);
 
-      if (routePlanner == nullptr)
-      {
-        routePlanner = GenerateRoutePlanner(Waypoints[n]);
-        routePlanner->SetSplineColor(FColor::MakeRandomColor());
-        Junctions[JunctonID][FromRoadID][FromLaneID] = routePlanner;
-      }
-      else
-      {
-        routePlanner->AddRoute(1.0, DirectedPointArray2FVectorArray(Waypoints[n]));
+    //   // If Identifier does not exist in AlreadyVisited we haven't visited the
+    //   // lane
+        if (!std::any_of(AlreadyVisited.begin(), AlreadyVisited.end(), [&](auto i) {
+          return (i.road_id == Successor.road_id && i.lane_id == Successor.lane_id  && i.section_id == Successor.section_id);
+        }))
+        {
+          // Add the identifier as visited
+          AlreadyVisited.emplace_back(Successor);
+
+          const double MaxDist = map->GetLane(Successor).GetLength();
+          //const double MaxDist = 0; // workarround while changing the WaypointAPI
+
+          std::vector<Waypoint> Waypoints;
+          // if(RoutePlanner==nullptr) {
+          //   AlreadyVisited.emplace_back(Wp);
+          //   Waypoints.emplace_back(Wp);
+          // }
+          Waypoints.emplace_back(Successor);
+
+          double Dist = RoadAccuracy;
+          while (Dist < MaxDist) {
+            auto NewWaypointList = map->GetNext(Successor, Dist);
+            for(Waypoint distWP : NewWaypointList) {
+                Waypoints.emplace_back(distWP);
+                AlreadyVisited.emplace_back(distWP);
+            }
+            Dist += RoadAccuracy;
+          }
+          auto NewWaypointList = map->GetNext(Successor, MaxDist);
+          // if((map->IsJunction(Successor.road_id) && NewWaypointList.size()>1) || (!map->IsJunction(Successor.road_id) && NewWaypointList.size()==1))
+          for(Waypoint distWP : NewWaypointList) {
+            Waypoints.emplace_back(NewWaypointList[0]);
+           }
+
+          if(Waypoints.size() >= 2) {
+
+            TArray<FVector> Positions;
+            Positions.Reserve(Waypoints.size());
+            for (int i = 0; i < Waypoints.size(); ++i)
+            {
+              // Add the trigger height because the z position of the points does not
+              // influence on the driver AI and is easy to visualize in the editor
+              Positions.Add(map->ComputeTransform(Waypoints[i]).location +
+                  FVector(0.f, 0.f, TriggersHeight));
+            }
+
+            // If the route planner does not exist, create it
+            if (RoutePlanner == nullptr )
+            {
+              RoutePlanner = GetWorld()->SpawnActor<ARoutePlanner>();
+              RoutePlanner->bIsIntersection = std::any_of(Successors.begin(), Successors.end(), [&map](auto w) {
+                return map->IsJunction(w.road_id);
+              });
+              RoutePlanner->SetBoxExtent(FVector(70.f, 70.f, 50.f));
+              RoutePlanner->SetActorRotation(map->ComputeTransform(Successor).rotation);
+              RoutePlanner->SetActorLocation(map->ComputeTransform(Successor).location +
+                  FVector(0.f, 0.f, TriggersHeight));
+            }
+
+            if(RoutePlanner!=nullptr) RoutePlanner->AddRoute(1.f, Positions);
+            if(RoutePlanner!=nullptr) RoutePlanners.Add(RoutePlanner);
+          }
       }
     }
   }
+
+  // const std::vector<TrafficGroup> TrafficLightGroup = map.GetTrafficGroups();
+  // for (TrafficGroup CurrentTrafficLightGroup : TrafficLightGroup)
+  // {
+  //   double RedTime = CurrentTrafficLightGroup.red_time;
+  //   double YellowTime = CurrentTrafficLightGroup.yellow_time;
+  //   double GreenTime = CurrentTrafficLightGroup.green_time;
+  //   FActorSpawnParameters SpawnParams;
+  //   FOutputDeviceNull ar;
+  //   AActor *SpawnedTrafficGroup = GetWorld()->SpawnActor<AActor>(TrafficGroupBlueprintClass,
+  //       FVector(0, 0, 0),
+  //       FRotator(0, 0, 0),
+  //       SpawnParams);
+  //   FString SetTrafficTimesCommand = FString::Printf(TEXT("SetTrafficTimes %f %f %f"),
+  //           RedTime, YellowTime, GreenTime);
+  //   SpawnedTrafficGroup->CallFunctionByNameWithArguments(*SetTrafficTimesCommand, ar, NULL, true);
+  //   for (TrafficLight CurrentTrafficLight : CurrentTrafficLightGroup.traffic_lights)
+  //   {
+  //     FVector TLPos =
+  //         FVector(CurrentTrafficLight.x_pos, CurrentTrafficLight.y_pos, CurrentTrafficLight.z_pos);
+  //     FRotator TLRot = FRotator(CurrentTrafficLight.x_rot,
+  //         CurrentTrafficLight.z_rot,
+  //         CurrentTrafficLight.y_rot);
+  //     AActor *SpawnedTrafficLight = GetWorld()->SpawnActor<AActor>(TrafficLightBlueprintClass,
+  //         TLPos,
+  //         TLRot,
+  //         SpawnParams);
+  //     FString AddTrafficLightCommand = FString::Printf(TEXT("AddTrafficLightPole %s"),
+  //           *SpawnedTrafficLight->GetName());
+  //     SpawnedTrafficGroup->CallFunctionByNameWithArguments(*AddTrafficLightCommand, ar, NULL, true);
+  //     PersistentTrafficLights.Push(SpawnedTrafficGroup);
+  //     SpawnedTrafficLight->CallFunctionByNameWithArguments(TEXT("InitData"), ar, NULL, true);
+  //     for (TrafficBoxComponent TfBoxComponent : CurrentTrafficLight.box_areas)
+  //     {
+  //       FVector TLBoxPos = FVector(TfBoxComponent.x_pos,
+  //           TfBoxComponent.y_pos,
+  //           TfBoxComponent.z_pos);
+  //       FRotator TLBoxRot = FRotator(TfBoxComponent.x_rot,
+  //           TfBoxComponent.z_rot,
+  //           TfBoxComponent.y_rot);
+
+  //       FString BoxCommand = FString::Printf(TEXT("SetBoxLocationAndRotation %f %f %f %f %f %f"),
+  //           TLBoxPos.X,
+  //           TLBoxPos.Y,
+  //           TLBoxPos.Z,
+  //           TLBoxRot.Pitch,
+  //           TLBoxRot.Roll,
+  //           TLBoxRot.Yaw);
+  //       SpawnedTrafficLight->CallFunctionByNameWithArguments(*BoxCommand, ar, NULL, true);
+  //       PersistentTrafficLights.Push(SpawnedTrafficLight);
+  //     }
+  //   }
+  // }
+
+  // const std::vector<TrafficSign> TrafficSigns = map.GetTrafficSigns();
+  // for (TrafficSign CurrentTrafficSign : TrafficSigns)
+  // {
+  //   //switch()
+  //   AActor* SignActor;
+  //   FOutputDeviceNull ar;
+
+  //   FVector TSLoc = FVector(CurrentTrafficSign.x_pos, CurrentTrafficSign.y_pos, CurrentTrafficSign.z_pos);
+  //   FRotator TSRot = FRotator(CurrentTrafficSign.x_rot, CurrentTrafficSign.z_rot, CurrentTrafficSign.y_rot);
+  //   FActorSpawnParameters SpawnParams;
+  //   switch(CurrentTrafficSign.speed) {
+  //     case 30:
+  //       SignActor = GetWorld()->SpawnActor<AActor>(TrafficSign30BlueprintClass,
+  //         TSLoc,
+  //         TSRot,
+  //         SpawnParams);
+  //       break;
+  //     case 60:
+  //       SignActor = GetWorld()->SpawnActor<AActor>(TrafficSign60BlueprintClass,
+  //         TSLoc,
+  //         TSRot,
+  //         SpawnParams);
+  //       break;
+  //     case 90:
+  //       SignActor = GetWorld()->SpawnActor<AActor>(TrafficSign90BlueprintClass,
+  //         TSLoc,
+  //         TSRot,
+  //         SpawnParams);
+  //       break;
+  //     case 100:
+  //       SignActor = GetWorld()->SpawnActor<AActor>(TrafficSign100BlueprintClass,
+  //         TSLoc,
+  //         TSRot,
+  //         SpawnParams);
+  //         break;
+  //     default:
+  //       FString errorMessage = "Traffic Sign not found. Posibilities: 30, 60, 90, 100";
+  //       UE_LOG(LogCarla, Warning, TEXT("%s"), *errorMessage);
+  //     break;
+  //   }
+  //   PersistentTrafficSigns.Push(SignActor);
+  //   for (TrafficBoxComponent TfBoxComponent : CurrentTrafficSign.box_areas)
+  //   {
+  //     FVector TLBoxPos = FVector(TfBoxComponent.x_pos,
+  //         TfBoxComponent.y_pos,
+  //         TfBoxComponent.z_pos);
+  //     FRotator TLBoxRot = FRotator(TfBoxComponent.x_rot,
+  //         TfBoxComponent.z_rot,
+  //         TfBoxComponent.y_rot);
+
+  //     FString BoxCommand = FString::Printf(TEXT("SetBoxLocationAndRotation %f %f %f %f %f %f"),
+  //         TLBoxPos.X,
+  //         TLBoxPos.Y,
+  //         TLBoxPos.Z,
+  //         TLBoxRot.Pitch,
+  //         TLBoxRot.Roll,
+  //         TLBoxRot.Yaw);
+  //     SignActor->CallFunctionByNameWithArguments(*BoxCommand, ar, NULL, true);
+  //   }
+  // }
 }
 
-/// Remove all the existing ARoutePlanner and VehicleSpawners previously
-/// generated by this class to avoid overlapping
 void AOpenDriveActor::RemoveRoutes()
 {
   const int rp_num = RoutePlanners.Num();
@@ -236,171 +417,22 @@ void AOpenDriveActor::RemoveRoutes()
     }
   }
   RoutePlanners.Empty();
-}
-
-TArray<AOpenDriveActor::DirectedPoint> AOpenDriveActor::GenerateLaneZeroPoints(
-    const RoadSegment *road)
-{
-  using RoadElevationInfo = carla::road::element::RoadElevationInfo;
-
-  size_t LanesOffsetIndex = 0;
-  TArray<DirectedPoint> LaneZeroPoints;
-
-  const RoadGeneralInfo *generalInfo =
-      road->GetInfo<RoadGeneralInfo>(0.0);
-  std::vector<std::pair<double, double>> LanesOffset = generalInfo->GetLanesOffset();
-
-  for (float WaypointsOffset = 0.0f; WaypointsOffset < road->GetLength() + RoadAccuracy; WaypointsOffset += RoadAccuracy)
+  const int tl_num = PersistentTrafficLights.Num();
+  for (int i = 0; i < tl_num; i++)
   {
-    // NOTE(Andrei): Calculate the which laneOffset has to be used
-    if (LanesOffsetIndex < LanesOffset.size() - 1 &&
-        WaypointsOffset >= LanesOffset[LanesOffsetIndex + 1].first)
-    {
-      ++LanesOffsetIndex;
+    if(PersistentTrafficLights[i] != nullptr) {
+      PersistentTrafficLights[i]->Destroy();
     }
-
-    // NOTE(Andrei): Get waypoin at the offset, and invert the y axis
-    DirectedPoint Waypoint = road->GetDirectedPointIn(WaypointsOffset);
-
-    // Elevate the generated road 1m because the triggers and visualization
-    Waypoint.location.z += 1;
-
-    // NOTE(Andrei): Applyed the laneOffset of the lane section
-    Waypoint.ApplyLateralOffset(LanesOffset[LanesOffsetIndex].second);
-
-    LaneZeroPoints.Add(Waypoint);
   }
-
-  return LaneZeroPoints;
-}
-
-TArray<TArray<AOpenDriveActor::DirectedPoint>> AOpenDriveActor::GenerateRightLaneWaypoints(
-    const RoadSegment *road,
-    const TArray<DirectedPoint> &laneZeroPoints)
-{
-  const RoadInfoLane *lanesInfo =
-      road->GetInfo<RoadInfoLane>(0.0);
-  std::vector<int> rightLanes =
-      lanesInfo->getLanesIDs(RoadInfoLane::which_lane_e::Right);
-
-  TArray<TArray<DirectedPoint>> retWaypoints;
-  double currentOffset = 0.0;
-
-  for (size_t j = 0; j < rightLanes.size(); ++j)
+  PersistentTrafficLights.Empty();
+  const int ts_num = PersistentTrafficSigns.Num();
+  for (int i = 0; i < ts_num; i++)
   {
-    const LaneInfo *laneInfo = lanesInfo->getLane(rightLanes[j]);
-    const float HalfWidth = laneInfo->_width * 0.5;
-
-    currentOffset += HalfWidth;
-    if (laneInfo->_type == "driving")
-    {
-      TArray<DirectedPoint> roadWaypoints;
-      for (int i = 0; i < laneZeroPoints.Num(); ++i)
-      {
-        DirectedPoint currentPoint = laneZeroPoints[i];
-        currentPoint.ApplyLateralOffset(-currentOffset);
-        roadWaypoints.Add(currentPoint);
-      }
-      if (roadWaypoints.Num() >= 2)
-      {
-        retWaypoints.Add(roadWaypoints);
-      }
+    if(PersistentTrafficSigns[i] != nullptr) {
+      PersistentTrafficSigns[i]->Destroy();
     }
-    currentOffset += HalfWidth;
   }
-  return retWaypoints;
-}
-
-TArray<TArray<AOpenDriveActor::DirectedPoint>> AOpenDriveActor::GenerateLeftLaneWaypoints(
-    const RoadSegment *road,
-    const TArray<DirectedPoint> &laneZeroPoints)
-{
-  using CarlaMath = carla::geom::Math;
-
-  const RoadInfoLane *lanesInfo =
-      road->GetInfo<RoadInfoLane>(0.0);
-  std::vector<int> leftLanes = lanesInfo->getLanesIDs(RoadInfoLane::which_lane_e::Left);
-
-  TArray<TArray<DirectedPoint>> retWaypoints;
-  double currentOffset = 0.0;
-
-  for (size_t j = 0; j < leftLanes.size(); ++j)
-  {
-    const LaneInfo *laneInfo = lanesInfo->getLane(leftLanes[j]);
-    const float HalfWidth = laneInfo->_width * 0.5;
-
-    currentOffset += HalfWidth;
-    if (laneInfo->_type == "driving")
-    {
-      TArray<DirectedPoint> roadWaypoints;
-      for (int i = 0; i < laneZeroPoints.Num(); ++i)
-      {
-        DirectedPoint currentPoint = laneZeroPoints[i];
-        currentPoint.ApplyLateralOffset(currentOffset);
-        if (currentPoint.tangent + CarlaMath::pi() < CarlaMath::pi_double())
-        {
-          currentPoint.tangent += CarlaMath::pi();
-        }
-        else
-        {
-          currentPoint.tangent -= CarlaMath::pi();
-        }
-        roadWaypoints.Add(currentPoint);
-      }
-      if (roadWaypoints.Num() >= 2)
-      {
-        Algo::Reverse(roadWaypoints);
-        retWaypoints.Add(roadWaypoints);
-      }
-    }
-    currentOffset += HalfWidth;
-  }
-  return retWaypoints;
-}
-
-void AOpenDriveActor::GenerateWaypointsRoad(const RoadSegment *road)
-{
-  const RoadGeneralInfo *generalInfo =
-      road->GetInfo<RoadGeneralInfo>(0.0);
-  if (generalInfo->GetJunctionId() > -1)
-  {
-    return;
-  }
-
-  TArray<DirectedPoint> laneZeroPoints = GenerateLaneZeroPoints(road);
-
-  TArray<TArray<DirectedPoint>> rightLaneWaypoints = GenerateRightLaneWaypoints(road, laneZeroPoints);
-  TArray<TArray<DirectedPoint>> leftLaneWaypoints = GenerateLeftLaneWaypoints(road, laneZeroPoints);
-
-  for (int i = 0; i < rightLaneWaypoints.Num(); ++i)
-  {
-    GenerateRoutePlanner(rightLaneWaypoints[i]);
-  }
-
-  for (int i = 0; i < leftLaneWaypoints.Num(); ++i)
-  {
-    GenerateRoutePlanner(leftLaneWaypoints[i]);
-  }
-}
-
-void AOpenDriveActor::GenerateWaypointsJunction(
-    const RoadSegment *road,
-    TArray<TArray<DirectedPoint>> &out_waypoints)
-{
-  const RoadGeneralInfo *generalInfo =
-      road->GetInfo<RoadGeneralInfo>(0.0);
-  if (generalInfo->GetJunctionId() == -1)
-  {
-    return;
-  }
-
-  TArray<DirectedPoint> laneZeroPoints = GenerateLaneZeroPoints(road);
-  out_waypoints = GenerateRightLaneWaypoints(road, laneZeroPoints);
-
-  if (out_waypoints.Num() == 0)
-  {
-    out_waypoints = GenerateLeftLaneWaypoints(road, laneZeroPoints);
-  }
+  PersistentTrafficSigns.Empty();
 }
 
 void AOpenDriveActor::DebugRoutes() const
@@ -416,9 +448,9 @@ void AOpenDriveActor::DebugRoutes() const
 
 void AOpenDriveActor::RemoveDebugRoutes() const
 {
-  #if WITH_EDITOR
+#if WITH_EDITOR
   FlushPersistentDebugLines(GetWorld());
-  #endif // WITH_EDITOR
+#endif   // WITH_EDITOR
 }
 
 void AOpenDriveActor::AddSpawners()
@@ -427,11 +459,18 @@ void AOpenDriveActor::AddSpawners()
   {
     if (RoutePlanners[i] != nullptr)
     {
-      FTransform Trans = RoutePlanners[i]->GetActorTransform();
-      AVehicleSpawnPoint *Spawner = GetWorld()->SpawnActor<AVehicleSpawnPoint>();
-      Spawner->SetActorRotation(Trans.GetRotation());
-      Spawner->SetActorLocation(Trans.GetTranslation() + FVector(0.0f, 0.0f, SpawnersHeight));
-      VehicleSpawners.Add(Spawner);
+      if (!bOnIntersections && RoutePlanners[i]->bIsIntersection)
+      {
+        continue;
+      }
+      else
+      {
+        FTransform Trans = RoutePlanners[i]->GetActorTransform();
+        AVehicleSpawnPoint *Spawner = GetWorld()->SpawnActor<AVehicleSpawnPoint>();
+        Spawner->SetActorRotation(Trans.GetRotation());
+        Spawner->SetActorLocation(Trans.GetTranslation() + FVector(0.f, 0.f, SpawnersHeight));
+        VehicleSpawners.Add(Spawner);
+      }
     }
   }
 }

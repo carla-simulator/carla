@@ -12,6 +12,9 @@
 #include "carla/client/Timestamp.h"
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/geom/Transform.h"
+#include "carla/rpc/Actor.h"
+#include "carla/rpc/EpisodeSettings.h"
+#include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/WeatherParameters.h"
 
 namespace carla {
@@ -35,10 +38,9 @@ namespace client {
     World &operator=(World &&) = default;
 
     /// Get the id of the episode associated with this world.
-    uint32_t GetId() const;
-
-    /// Return the map name of this world. E.g., Town01.
-    const std::string &GetMapName() const;
+    uint64_t GetId() const {
+      return _episode.GetId();
+    }
 
     /// Return the map that describes this world.
     SharedPtr<Map> GetMap() const;
@@ -51,6 +53,10 @@ namespace client {
     /// simulator window.
     SharedPtr<Actor> GetSpectator() const;
 
+    rpc::EpisodeSettings GetSettings() const;
+
+    void ApplySettings(const rpc::EpisodeSettings &settings);
+
     /// Retrieve the weather parameters currently active in the world.
     rpc::WeatherParameters GetWeather() const;
 
@@ -59,6 +65,9 @@ namespace client {
 
     /// Return a list with all the actors currently present in the world.
     SharedPtr<ActorList> GetActors() const;
+
+    /// Return a list with the actors requested by ActorId.
+    SharedPtr<ActorList> GetActors(const std::vector<ActorId> &actor_ids) const;
 
     /// Spawn an actor into the world based on the @a blueprint provided at @a
     /// transform. If a @a parent is provided, the actor is attached to
@@ -80,6 +89,10 @@ namespace client {
 
     /// Register a @a callback to be called every time a world tick is received.
     void OnTick(std::function<void(Timestamp)> callback);
+
+    /// Signal the simulator to continue to next tick (only has effect on
+    /// synchronous mode).
+    void Tick();
 
     DebugHelper MakeDebugHelper() const {
       return DebugHelper{_episode};

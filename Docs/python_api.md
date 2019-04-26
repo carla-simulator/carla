@@ -12,22 +12,42 @@
 - `get_client_version()`
 - `get_server_version()`
 - `get_world()`
+- `get_available_maps()`
+- `reload_world()`
+- `load_world(map_name)`
+- `start_recorder(string filename)`
+- `replay_file(string filename, float start, float duration, int camera_follow_id)`
+- `show_recorder_file_info(string filename)`
+- `show_recorder_collisions(string filename, char category1, char category2)`
+- `show_recorder_actors_blocked(string filename, float min_time, float min_distance)`
+- `set_replayer_speed(float time_factor)`
+- `apply_batch(commands, do_tick=False)`
+- `apply_batch_sync(commands, do_tick=False) -> list(carla.command.Response)`
 
 ## `carla.World`
 
 - `id`
-- `map_name`
 - `debug`
 - `get_blueprint_library()`
 - `get_map()`
 - `get_spectator()`
+- `get_settings()`
+- `apply_settings(world_settings)`
 - `get_weather()`
 - `set_weather(weather_parameters)`
-- `get_actors()`
+- `get_actors(actor_ids=None) -> carla.ActorList`
 - `spawn_actor(blueprint, transform, attach_to=None)`
 - `try_spawn_actor(blueprint, transform, attach_to=None)`
 - `wait_for_tick(seconds=1.0)`
 - `on_tick(callback)`
+- `tick()`
+
+## `carla.WorldSettings`
+
+- `synchronous_mode`
+- `no_rendering_mode`
+- `__eq__(other)`
+- `__ne__(other)`
 
 ## `carla.DebugHelper`
 
@@ -96,22 +116,46 @@
 - `get_location()`
 - `get_transform()`
 - `get_velocity()`
+- `get_angular_velocity()`
 - `get_acceleration()`
 - `set_location(location)`
 - `set_transform(transform)`
+- `set_velocity(vector)`
+- `set_angular_velocity(vector)`
+- `add_impulse(vector)`
 - `set_simulate_physics(enabled=True)`
 - `destroy()`
+- `__str__()`
 
 ## `carla.Vehicle(carla.Actor)`
 
 - `bounding_box`
 - `apply_control(vehicle_control)`
-- `get_vehicle_control()`
+- `get_control()`
+- `get_physics_control()`
+- `apply_physics_control(vehicle_physics_control)`
 - `set_autopilot(enabled=True)`
+- `get_speed_limit()`
+- `get_traffic_light_state()`
+- `is_at_traffic_light()`
+- `get_traffic_light()`
 
 ## `carla.TrafficLight(carla.Actor)`
 
 - `state`
+- `set_state(traffic_light_state)`
+- `get_state()`
+- `set_green_time(green_time)`
+- `get_green_time()`
+- `set_yellow_time(yellow_time)`
+- `get_yellow_time()`
+- `set_red_time(red_time)`
+- `get_red_time()`
+- `get_elapsed_time()`
+- `freeze(True)`
+- `is_frozen()`
+- `get_pole_index()`
+- `get_group_traffic_lights()`
 
 ## `carla.Sensor(carla.Actor)`
 
@@ -122,6 +166,7 @@
 ## `carla.SensorData`
 
 - `frame_number`
+- `timestamp`
 - `transform`
 
 ## `carla.Image(carla.SensorData)`
@@ -160,6 +205,18 @@
 - `actor`
 - `crossed_lane_markings`
 
+## `carla.GnssEvent(carla.SensorData)`
+
+- `latitude`
+- `longitude`
+- `altitude`
+
+## `carla.ObstacleDetectionSensorEvent(carla.SensorData)`
+
+- `actor`
+- `other_actor`
+- `distance`
+
 ## `carla.VehicleControl`
 
 - `throttle`
@@ -167,27 +224,132 @@
 - `brake`
 - `hand_brake`
 - `reverse`
+- `gear`
+- `manual_gear_shift`
+- `__eq__(other)`
+- `__ne__(other)`
+
+
+## `carla.WheelsPhysicsControl`
+
+- `tire_friction`
+- `damping_rate`
+- `steer_angle`
+- `disable_steering`
+- `__eq__(other)`
+- `__ne__(other)`
+
+## `carla.VehiclePhysicsControl`
+
+- `torque_curve`
+- `max_rpm`
+- `moi`
+- `damping_rate_full_throttle`
+- `damping_rate_zero_throttle_clutch_engaged`
+- `damping_rate_zero_throttle_clutch_disengaged`
+- `use_gear_autobox`
+- `gear_switch_time`
+- `clutch_strength`
+- `mass`
+- `drag_coefficient`
+- `center_of_mass`
+- `steering_curve`
+- `wheels`
 - `__eq__(other)`
 - `__ne__(other)`
 
 ## `carla.Map`
 
+- `__init__(name, xodr_content)`
 - `name`
 - `get_spawn_points()`
-- `get_waypoint(location, project_to_road=True)`
+- `get_waypoint(location, project_to_road=True, lane_type=carla.LaneType.Driving)`
 - `get_topology()`
 - `generate_waypoints(distance)`
+- `transform_to_geolocation(location)`
 - `to_opendrive()`
 - `save_to_disk(path=self.name)`
 
+## `carla.LaneType`
+
+- `NONE`
+- `Driving`
+- `Stop`
+- `Shoulder`
+- `Biking`
+- `Sidewalk`
+- `Border`
+- `Restricted`
+- `Parking`
+- `Bidirectional`
+- `Median`
+- `Special1`
+- `Special2`
+- `Special3`
+- `RoadWorks`
+- `Tram`
+- `Rail`
+- `Entry`
+- `Exit`
+- `OffRamp`
+- `OnRamp`
+- `Any`
+
+## `carla.LaneChange`
+
+- `NONE`
+- `Right`
+- `Left`
+- `Both`
+
+## `carla.LaneMarkingColor`
+
+- `Standard = White`
+- `Blue`
+- `Green`
+- `Red`
+- `White`
+- `Yellow`
+- `Other`
+
+## `carla.LaneMarkingType`
+
+- `NONE`
+- `Other`
+- `Broken`
+- `Solid`
+- `SolidSolid`
+- `SolidBroken`
+- `BrokenSolid`
+- `BrokenBroken`
+- `BottsDots`
+- `Grass`
+- `Curb`
+
+## `carla.LaneMarking`
+
+- `type -> carla.LaneMarking`
+- `color -> carla.RoadMarkColor`
+- `lane_change -> carla.LaneChange`
+- `width`
+
 ## `carla.Waypoint`
 
+- `id`
 - `transform`
 - `is_intersection`
 - `lane_width`
 - `road_id`
+- `section_id`
 - `lane_id`
-- `next(distance)`
+- `s`
+- `lane_change -> carla.LaneChange`
+- `lane_type -> carla.LaneType`
+- `right_lane_marking -> carla.LaneMarking`
+- `left_lane_marking -> carla.LaneMarking`
+- `next(distance) -> list(carla.Waypoint)`
+- `get_right_lane() -> carla.Waypoint`
+- `get_left_lane() -> carla.Waypoint`
 
 ## `carla.WeatherParameters`
 
@@ -217,6 +379,15 @@ Static presets
 - `carla.WeatherParameters.HardRainSunset`
 - `carla.WeatherParameters.SoftRainSunset`
 
+## `carla.Vector2D`
+
+- `x`
+- `y`
+- `__add__(other)`
+- `__sub__(other)`
+- `__eq__(other)`
+- `__ne__(other)`
+
 ## `carla.Vector3D`
 
 - `x`
@@ -235,6 +406,14 @@ Static presets
 - `distance(other)`
 - `__add__(other)`
 - `__sub__(other)`
+- `__eq__(other)`
+- `__ne__(other)`
+
+## `carla.GeoLocation`
+
+- `latitude`
+- `longitude`
+- `altitude`
 - `__eq__(other)`
 - `__ne__(other)`
 
@@ -297,10 +476,10 @@ Static presets
 
 ## `carla.TrafficLightState`
 
-- `Off`
 - `Red`
 - `Yellow`
 - `Green`
+- `Off`
 - `Unknown`
 
 ## `carla.LaneMarking`
@@ -308,3 +487,72 @@ Static presets
 - `Other`
 - `Broken`
 - `Solid`
+
+# module `carla.command`
+
+`carla.command.FutureActor` (not yet spawned actor handler)
+
+## `carla.command.Response`
+
+- `actor_id`
+- `error` -> str|empty
+- `has_error()`
+
+## `carla.command.SpawnActor`
+
+- `__init__(blueprint, transform, parent=None)`
+- `then(command)`
+
+## `carla.command.DestroyActor`
+
+- `__init__(actor)`
+- `actor_id`
+
+## `carla.command.ApplyVehicleControl`
+
+- `__init__(actor, control)`
+- `actor_id`
+- `control`
+
+## `carla.command.ApplyWalkerControl`
+
+- `__init__(actor, control)`
+- `actor_id`
+- `control`
+
+## `carla.command.ApplyTransform`
+
+- `__init__(actor, transform)`
+- `actor_id`
+- `transform`
+
+## `carla.command.ApplyVelocity`
+
+- `__init__(actor, velocity)`
+- `actor_id`
+- `velocity`
+
+## `carla.command.ApplyAngularVelocity`
+
+- `__init__(actor, angular_velocity)`
+- `actor_id`
+- `angular_velocity`
+
+
+## `carla.command.ApplyImpulse`
+
+- `__init__(actor, impulse)`
+- `actor_id`
+- `impulse`
+
+## `carla.command.SetSimulatePhysics`
+
+- `__init__(actor, bool)`
+- `actor_id`
+- `enabled`
+
+## `carla.command.SetAutopilot`
+
+- `__init__(actor, bool)`
+- `actor_id`
+- `enabled`

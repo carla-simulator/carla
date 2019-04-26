@@ -27,6 +27,7 @@
 // TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+// Notice: This file has been slightly adapted for its use by CARLA.
 
 #pragma once
 
@@ -156,17 +157,28 @@ namespace moodycamel { namespace details {
 #define MOODYCAMEL_EXCEPTIONS_ENABLED
 #endif
 #endif
+
+// ~~~ @begin Modified for CARLA ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#include <carla/Exception.h>
+
+#if (defined(LIBCARLA_NO_EXCEPTIONS) && defined(MOODYCAMEL_EXCEPTIONS_ENABLED))
+#  undef MOODYCAMEL_EXCEPTIONS_ENABLED
+#endif
+
 #ifdef MOODYCAMEL_EXCEPTIONS_ENABLED
 #define MOODYCAMEL_TRY try
 #define MOODYCAMEL_CATCH(...) catch(__VA_ARGS__)
 #define MOODYCAMEL_RETHROW throw
-#define MOODYCAMEL_THROW(expr) throw (expr)
+#define MOODYCAMEL_THROW(expr) ::carla::throw_exception(expr)
 #else
 #define MOODYCAMEL_TRY if (true)
 #define MOODYCAMEL_CATCH(...) else if (false)
 #define MOODYCAMEL_RETHROW
-#define MOODYCAMEL_THROW(expr)
+#define MOODYCAMEL_THROW(expr) ::carla::throw_exception(expr)
 #endif
+
+// ~~~ @end Modified for CARLA ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 #ifndef MOODYCAMEL_NOEXCEPT
 #if !defined(MOODYCAMEL_EXCEPTIONS_ENABLED)

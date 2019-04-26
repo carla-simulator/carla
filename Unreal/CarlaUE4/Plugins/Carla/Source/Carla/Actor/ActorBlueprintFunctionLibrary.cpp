@@ -370,6 +370,13 @@ void UActorBlueprintFunctionLibrary::MakeVehicleDefinition(
     Definition.Variations.Emplace(Colors);
   }
 
+  FActorVariation StickyControl;
+  StickyControl.Id = TEXT("sticky_control");
+  StickyControl.Type = EActorAttributeType::Bool;
+  StickyControl.bRestrictToRecommended = false;
+  StickyControl.RecommendedValues.Emplace(TEXT("true"));
+  Definition.Variations.Emplace(StickyControl);
+
   Definition.Attributes.Emplace(FActorAttribute{
     TEXT("object_type"),
     EActorAttributeType::String,
@@ -407,6 +414,116 @@ void UActorBlueprintFunctionLibrary::MakeVehicleDefinitions(
   FillActorDefinitionArray(ParameterArray, Definitions, &MakeVehicleDefinition);
 }
 
+void UActorBlueprintFunctionLibrary::MakePedestrianDefinition(
+    const FPedestrianParameters &Parameters,
+    bool &Success,
+    FActorDefinition &Definition)
+{
+  /// @todo We need to validate here the params.
+  FillIdAndTags(Definition, TEXT("walker"),  TEXT("pedestrian"), Parameters.Id);
+  AddRecommendedValuesForActorRoleName(Definition, {TEXT("pedestrian")});
+  Definition.Class = Parameters.Class;
+
+  auto GetGender = [](EPedestrianGender Value) {
+    switch (Value)
+    {
+      case EPedestrianGender::Female: return TEXT("female");
+      case EPedestrianGender::Male:   return TEXT("male");
+      default:                        return TEXT("other");
+    }
+  };
+
+  Definition.Attributes.Emplace(FActorAttribute{
+    TEXT("gender"),
+    EActorAttributeType::String,
+    GetGender(Parameters.Gender)});
+
+  Success = CheckActorDefinition(Definition);
+}
+
+void UActorBlueprintFunctionLibrary::MakePedestrianDefinitions(
+    const TArray<FPedestrianParameters> &ParameterArray,
+    TArray<FActorDefinition> &Definitions)
+{
+  FillActorDefinitionArray(ParameterArray, Definitions, &MakePedestrianDefinition);
+}
+
+void UActorBlueprintFunctionLibrary::MakePropDefinition(
+    const FPropParameters &Parameters,
+    bool &Success,
+    FActorDefinition &Definition)
+{
+  /// @todo We need to validate here the params.
+  FillIdAndTags(Definition, TEXT("static"),  TEXT("prop"), Parameters.Name);
+  AddRecommendedValuesForActorRoleName(Definition, {TEXT("prop")});
+
+  auto GetSize = [](EPropSize Value) {
+    switch (Value)
+    {
+      case EPropSize::Tiny:    return TEXT("tiny");
+      case EPropSize::Small:   return TEXT("small");
+      case EPropSize::Medium:  return TEXT("medium");
+      case EPropSize::Big:     return TEXT("big");
+      case EPropSize::Huge:    return TEXT("huge");
+      default:                 return TEXT("unknown");
+    }
+  };
+
+  Definition.Attributes.Emplace(FActorAttribute{
+    TEXT("size"),
+    EActorAttributeType::String,
+    GetSize(Parameters.Size)});
+
+  Success = CheckActorDefinition(Definition);
+}
+
+void UActorBlueprintFunctionLibrary::MakePropDefinitions(
+    const TArray<FPropParameters> &ParameterArray,
+    TArray<FActorDefinition> &Definitions)
+{
+  FillActorDefinitionArray(ParameterArray, Definitions, &MakePropDefinition);
+}
+
+void UActorBlueprintFunctionLibrary::MakeObstacleDetectorDefinitions(
+    const FString &Type,
+    const FString &Id,
+    FActorDefinition &Definition)
+{
+  Definition = MakeGenericSensorDefinition(TEXT("other"), TEXT("obstacle"));
+  AddVariationsForSensor(Definition);
+  // Distance.
+  FActorVariation distance;
+  distance.Id = TEXT("distance");
+  distance.Type = EActorAttributeType::Float;
+  distance.RecommendedValues = { TEXT("5.0") };
+  distance.bRestrictToRecommended = false;
+  // HitRadius.
+  FActorVariation hitradius;
+  hitradius.Id = TEXT("hit_radius");
+  hitradius.Type = EActorAttributeType::Float;
+  hitradius.RecommendedValues = { TEXT("0.5") };
+  hitradius.bRestrictToRecommended = false;
+  // Only Dynamics
+  FActorVariation onlydynamics;
+  onlydynamics.Id = TEXT("only_dynamics");
+  onlydynamics.Type = EActorAttributeType::Bool;
+  onlydynamics.RecommendedValues = { TEXT("false") };
+  onlydynamics.bRestrictToRecommended = false;
+  // Debug Line Trace
+  FActorVariation debuglinetrace;
+  debuglinetrace.Id = TEXT("debug_linetrace");
+  debuglinetrace.Type = EActorAttributeType::Bool;
+  debuglinetrace.RecommendedValues = { TEXT("false") };
+  debuglinetrace.bRestrictToRecommended = false;
+
+  Definition.Variations.Append({
+    distance,
+    hitradius,
+    onlydynamics,
+    debuglinetrace
+  });
+
+}
 /// ============================================================================
 /// -- Helpers to retrieve attribute values ------------------------------------
 /// ============================================================================

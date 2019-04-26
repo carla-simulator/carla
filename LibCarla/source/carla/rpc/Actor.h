@@ -22,9 +22,10 @@ namespace rpc {
 
     Actor() = default;
 
-    actor_id_type id = 0u;
+    ActorId id = 0u;
 
-    actor_id_type parent_id;
+    /// @todo parent should not be here as it may change during the simulation.
+    ActorId parent_id = 0u;
 
     ActorDescription description;
 

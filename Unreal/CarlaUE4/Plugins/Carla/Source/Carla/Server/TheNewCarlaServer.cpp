@@ -7,29 +7,40 @@
 #include "Carla.h"
 #include "Carla/Server/TheNewCarlaServer.h"
 
-#include "Carla/Sensor/Sensor.h"
 #include "Carla/Util/DebugShapeDrawer.h"
 #include "Carla/Util/OpenDrive.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
-
-#include "GameFramework/SpectatorPawn.h"
+#include "Carla/Walker/WalkerController.h"
 
 #include <compiler/disable-ue4-macros.h>
+#include <carla/Overload.h>
 #include <carla/Version.h>
 #include <carla/rpc/Actor.h>
 #include <carla/rpc/ActorDefinition.h>
 #include <carla/rpc/ActorDescription.h>
+#include <carla/rpc/Command.h>
+#include <carla/rpc/CommandResponse.h>
 #include <carla/rpc/DebugShape.h>
 #include <carla/rpc/EpisodeInfo.h>
+#include <carla/rpc/EpisodeSettings.h>
 #include <carla/rpc/MapInfo.h>
+#include <carla/rpc/Response.h>
 #include <carla/rpc/Server.h>
+#include <carla/rpc/String.h>
 #include <carla/rpc/Transform.h>
+#include <carla/rpc/Vector2D.h>
+#include <carla/rpc/Vector3D.h>
 #include <carla/rpc/VehicleControl.h>
+#include <carla/rpc/VehiclePhysicsControl.h>
+#include <carla/rpc/WalkerControl.h>
 #include <carla/rpc/WeatherParameters.h>
 #include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include <vector>
+
+template <typename T>
+using R = carla::rpc::Response<T>;
 
 // =============================================================================
 // -- Static local functions ---------------------------------------------------
@@ -41,12 +52,6 @@ static std::vector<T> MakeVectorFromTArray(const TArray<Other> &Array)
   return {Array.GetData(), Array.GetData() + Array.Num()};
 }
 
-static void AttachActors(AActor *Child, AActor *Parent)
-{
-  Child->AttachToActor(Parent, FAttachmentTransformRules::KeepRelativeTransform);
-  Child->SetOwner(Parent);
-}
-
 // =============================================================================
 // -- FTheNewCarlaServer::FPimpl -----------------------------------------------
 // =============================================================================
@@ -55,9 +60,11 @@ class FTheNewCarlaServer::FPimpl
 {
 public:
 
-  FPimpl(uint16_t port)
-    : Server(port),
-      StreamingServer(port + 1u) {
+  FPimpl(uint16_t RPCPort, uint16_t StreamingPort)
+    : Server(RPCPort),
+      StreamingServer(StreamingPort),
+      BroadcastStream(StreamingServer.MakeMultiStream())
+  {
     BindActions();
   }
 
@@ -65,335 +72,779 @@ public:
 
   carla::streaming::Server StreamingServer;
 
+  carla::streaming::MultiStream BroadcastStream;
+
   UCarlaEpisode *Episode = nullptr;
+
+  size_t TickCuesReceived = 0u;
 
 private:
 
   void BindActions();
 
-  void RespondErrorStr(const std::string &ErrorMessage) {
-    UE_LOG(LogCarlaServer, Log, TEXT("Responding error, %s"), *carla::rpc::ToFString(ErrorMessage));
-    carla::rpc::Server::RespondError(ErrorMessage);
-  }
+};
 
-  void RespondError(const FString &ErrorMessage) {
-    RespondErrorStr(carla::rpc::FromFString(ErrorMessage));
-  }
+// =============================================================================
+// -- Define helper macros -----------------------------------------------------
+// =============================================================================
 
-  void RequireEpisode()
-  {
-    if (Episode == nullptr)
-    {
-      RespondErrorStr("episode not ready");
-    }
-  }
+#if WITH_EDITOR
+#  define CARLA_ENSURE_GAME_THREAD() check(IsInGameThread());
+#else
+#  define CARLA_ENSURE_GAME_THREAD()
+#endif // WITH_EDITOR
 
-  auto SpawnActor(const FTransform &Transform, FActorDescription Description)
-  {
-    auto Result = Episode->SpawnActorWithInfo(Transform, std::move(Description));
-    if (Result.Key != EActorSpawnResultStatus::Success)
-    {
-      RespondError(FActorSpawnResult::StatusToString(Result.Key));
-    }
-    check(Result.Value.IsValid());
-    return Result.Value;
-  }
+#define RESPOND_ERROR(str) {                                              \
+    UE_LOG(LogCarlaServer, Log, TEXT("Responding error: %s"), TEXT(str)); \
+    return carla::rpc::ResponseError(str); }
 
-  void AttachActors(FActorView Child, FActorView Parent)
-  {
-    if (!Child.IsValid())
-    {
-      RespondErrorStr("unable to attach actor: child actor not found");
-    }
-    if (!Parent.IsValid())
-    {
-      RespondErrorStr("unable to attach actor: parent actor not found");
-    }
-    ::AttachActors(Child.GetActor(), Parent.GetActor());
-  }
+#define RESPOND_ERROR_FSTRING(fstr) {                                 \
+    UE_LOG(LogCarlaServer, Log, TEXT("Responding error: %s"), *fstr); \
+    return carla::rpc::ResponseError(carla::rpc::FromFString(fstr)); }
 
-  carla::geom::BoundingBox GetActorBoundingBox(const AActor &Actor)
-  {
-    /// @todo Bounding boxes only available for vehicles.
-    auto Vehicle = Cast<ACarlaWheeledVehicle>(&Actor);
-    if (Vehicle != nullptr)
-    {
-      FVector Location = Vehicle->GetVehicleBoundingBoxTransform().GetTranslation();
-      FVector Extent = Vehicle->GetVehicleBoundingBoxExtent();
-      return {Location, Extent};
-    }
-    return {};
-  }
+#define REQUIRE_CARLA_EPISODE() \
+  CARLA_ENSURE_GAME_THREAD();   \
+  if (Episode == nullptr) { RESPOND_ERROR("episode not ready"); }
 
+class ServerBinder {
 public:
 
-  carla::rpc::Actor SerializeActor(FActorView ActorView)
-  {
-    carla::rpc::Actor Actor;
-    Actor.id = ActorView.GetActorId();
-    if (ActorView.IsValid())
-    {
-      Actor.parent_id = Episode->GetActorRegistry().Find(ActorView.GetActor()->GetOwner()).GetActorId();
-      Actor.description = *ActorView.GetActorDescription();
-      Actor.bounding_box = GetActorBoundingBox(*ActorView.GetActor());
-      Actor.semantic_tags.reserve(ActorView.GetSemanticTags().Num());
-      using tag_t = decltype(Actor.semantic_tags)::value_type;
-      for (auto &&Tag : ActorView.GetSemanticTags())
-      {
-        Actor.semantic_tags.emplace_back(static_cast<tag_t>(Tag));
-      }
-      auto *Sensor = Cast<ASensor>(ActorView.GetActor());
-      if (Sensor != nullptr)
-      {
-        auto Stream = GetSensorStream(ActorView, *Sensor);
-        const auto &Token = Stream.token();
-        Actor.stream_token = decltype(Actor.stream_token)(std::begin(Token.data), std::end(Token.data));
-      }
+  constexpr ServerBinder(const char *name, carla::rpc::Server &srv, bool sync)
+    : _name(name),
+      _server(srv),
+      _sync(sync) {}
+
+  template <typename FuncT>
+  auto operator<<(FuncT func) {
+    if (_sync) {
+      _server.BindSync(_name, func);
     } else {
-      UE_LOG(LogCarla, Warning, TEXT("Trying to serialize invalid actor"));
+      _server.BindAsync(_name, func);
     }
-    return Actor;
+    return func;
   }
 
 private:
 
-  carla::streaming::Stream GetSensorStream(FActorView ActorView, ASensor &Sensor) {
-    auto id = ActorView.GetActorId();
-    auto it = _StreamMap.find(id);
-    if (it == _StreamMap.end()) {
-      UE_LOG(LogCarlaServer, Log, TEXT("Making a new sensor stream for '%s'"), *ActorView.GetActorDescription()->Id);
-      auto result = _StreamMap.emplace(id, StreamingServer.MakeStream());
-      check(result.second);
-      it = result.first;
-      Sensor.SetDataStream(it->second);
-    }
-    return it->second;
-  }
+  const char *_name;
 
-  std::unordered_map<FActorView::IdType, carla::streaming::Stream> _StreamMap;
+  carla::rpc::Server &_server;
+
+  bool _sync;
 };
 
+#define BIND_SYNC(name) auto name = ServerBinder(#name, Server, true)
+#define BIND_ASYNC(name) auto name = ServerBinder(#name, Server, false)
+
 // =============================================================================
-// -- FTheNewCarlaServer::FPimpl Bind Actions ----------------------------------
+// -- Bind Actions -------------------------------------------------------------
 // =============================================================================
 
 void FTheNewCarlaServer::FPimpl::BindActions()
 {
   namespace cr = carla::rpc;
+  namespace cg = carla::geom;
 
-  Server.BindAsync("ping", []() { return true; });
+  BIND_ASYNC(version) << []() -> R<std::string>
+  {
+    return carla::version();
+  };
 
-  Server.BindAsync("version", []() -> std::string { return carla::version(); });
+  // ~~ Tick ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  Server.BindSync("get_episode_info", [this]() -> cr::EpisodeInfo {
-    RequireEpisode();
-    auto WorldObserver = Episode->GetWorldObserver();
-    if (WorldObserver == nullptr) {
-      WorldObserver = Episode->StartWorldObserver(StreamingServer.MakeMultiStream());
-    }
-    return {Episode->GetId(), cr::FromFString(Episode->GetMapName()), WorldObserver->GetStreamToken()};
-  });
+  BIND_SYNC(tick_cue) << [this]() -> R<void>
+  {
+    ++TickCuesReceived;
+    return R<void>::Success();
+  };
 
-  Server.BindSync("get_map_info", [this]() -> cr::MapInfo {
-    RequireEpisode();
-    auto FileContents = FOpenDrive::Load(Episode->GetMapName());
-    const auto &SpawnPoints = Episode->GetRecommendedStartTransforms();
-    std::vector<carla::geom::Transform> spawn_points;
-    spawn_points.reserve(SpawnPoints.Num());
-    for (const auto &Transform : SpawnPoints)
+  // ~~ Load new episode ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  BIND_ASYNC(get_available_maps) << [this]() -> R<std::vector<std::string>>
+  {
+    const auto MapNames = UCarlaStatics::GetAllMapNames();
+    std::vector<std::string> result;
+    result.reserve(MapNames.Num());
+    for (const auto &MapName : MapNames)
     {
-      spawn_points.emplace_back(Transform);
+      result.emplace_back(cr::FromFString(MapName));
     }
-    return {
-        cr::FromFString(Episode->GetMapName()),
-        cr::FromFString(FileContents),
-        spawn_points};
-  });
+    return result;
+  };
 
-  Server.BindSync("get_actor_definitions", [this]() {
-    RequireEpisode();
+  BIND_SYNC(load_new_episode) << [this](const std::string &map_name) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    if (!Episode->LoadNewEpisode(cr::ToFString(map_name)))
+    {
+      RESPOND_ERROR("map not found");
+    }
+    return R<void>::Success();
+  };
+
+  // ~~ Episode settings and info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  BIND_SYNC(get_episode_info) << [this]() -> R<cr::EpisodeInfo>
+  {
+    REQUIRE_CARLA_EPISODE();
+    return cr::EpisodeInfo{
+      Episode->GetId(),
+      BroadcastStream.token()};
+  };
+
+  BIND_SYNC(get_map_info) << [this]() -> R<cr::MapInfo>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto FileContents = FOpenDrive::Load(Episode->GetMapName());
+    const auto &SpawnPoints = Episode->GetRecommendedSpawnPoints();
+    return cr::MapInfo{
+      cr::FromFString(Episode->GetMapName()),
+      cr::FromFString(FileContents),
+      MakeVectorFromTArray<cg::Transform>(SpawnPoints)};
+  };
+
+  BIND_SYNC(get_episode_settings) << [this]() -> R<cr::EpisodeSettings>
+  {
+    REQUIRE_CARLA_EPISODE();
+    return cr::EpisodeSettings{Episode->GetSettings()};
+  };
+
+  BIND_SYNC(set_episode_settings) << [this](const cr::EpisodeSettings &settings) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    Episode->ApplySettings(settings);
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(get_actor_definitions) << [this]() -> R<std::vector<cr::ActorDefinition>>
+  {
+    REQUIRE_CARLA_EPISODE();
     return MakeVectorFromTArray<cr::ActorDefinition>(Episode->GetActorDefinitions());
-  });
+  };
 
-  Server.BindSync("get_spectator", [this]() -> cr::Actor {
-    RequireEpisode();
-    auto ActorView = Episode->GetActorRegistry().Find(Episode->GetSpectatorPawn());
-    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
-      RespondErrorStr("unable to find spectator");
+  BIND_SYNC(get_spectator) << [this]() -> R<cr::Actor>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(Episode->GetSpectatorPawn());
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("internal error: unable to find spectator");
     }
-    return SerializeActor(ActorView);
-  });
+    return Episode->SerializeActor(ActorView);
+  };
 
-  Server.BindSync("get_weather_parameters", [this]() -> cr::WeatherParameters {
-    RequireEpisode();
+  // ~~ Weather ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  BIND_SYNC(get_weather_parameters) << [this]() -> R<cr::WeatherParameters>
+  {
+    REQUIRE_CARLA_EPISODE();
     auto *Weather = Episode->GetWeather();
-    if (Weather == nullptr) {
-      RespondErrorStr("unable to find weather");
+    if (Weather == nullptr)
+    {
+      RESPOND_ERROR("internal error: unable to find weather");
     }
     return Weather->GetCurrentWeather();
-  });
+  };
 
-  Server.BindSync("set_weather_parameters", [this](const cr::WeatherParameters &weather) {
-    RequireEpisode();
+  BIND_SYNC(set_weather_parameters) << [this](
+      const cr::WeatherParameters &weather) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
     auto *Weather = Episode->GetWeather();
-    if (Weather == nullptr) {
-      RespondErrorStr("unable to find weather");
+    if (Weather == nullptr)
+    {
+      RESPOND_ERROR("internal error: unable to find weather");
     }
     Weather->ApplyWeather(weather);
-  });
+    return R<void>::Success();
+  };
 
-  Server.BindSync("get_actors_by_id", [this](const std::vector<FActorView::IdType> &ids) {
-    RequireEpisode();
+  // ~~ Actor operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  BIND_SYNC(get_actors_by_id) << [this](
+      const std::vector<FActorView::IdType> &ids) -> R<std::vector<cr::Actor>>
+  {
+    REQUIRE_CARLA_EPISODE();
     std::vector<cr::Actor> Result;
     Result.reserve(ids.size());
-    const auto &Registry = Episode->GetActorRegistry();
-    for (auto &&Id : ids) {
-      auto View = Registry.Find(Id);
-      if (View.IsValid()) {
-        Result.emplace_back(SerializeActor(View));
+    for (auto &&Id : ids)
+    {
+      auto View = Episode->FindActor(Id);
+      if (View.IsValid())
+      {
+        Result.emplace_back(Episode->SerializeActor(View));
       }
     }
     return Result;
-  });
+  };
 
-  Server.BindSync("spawn_actor", [this](
+  BIND_SYNC(spawn_actor) << [this](
       cr::ActorDescription Description,
-      const cr::Transform &Transform) -> cr::Actor {
-    RequireEpisode();
-    return SerializeActor(SpawnActor(Transform, Description));
-  });
+      const cr::Transform &Transform) -> R<cr::Actor>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto Result = Episode->SpawnActorWithInfo(Transform, std::move(Description));
+    if (Result.Key != EActorSpawnResultStatus::Success)
+    {
+      RESPOND_ERROR_FSTRING(FActorSpawnResult::StatusToString(Result.Key));
+    }
+    if (!Result.Value.IsValid())
+    {
+      RESPOND_ERROR("internal error: actor could not be spawned");
+    }
+    return Episode->SerializeActor(Result.Value);
+  };
 
-  Server.BindSync("spawn_actor_with_parent", [this](
+  BIND_SYNC(spawn_actor_with_parent) << [this](
       cr::ActorDescription Description,
       const cr::Transform &Transform,
-      cr::Actor Parent) -> cr::Actor {
-    RequireEpisode();
-    auto ActorView = SpawnActor(Transform, Description);
-    auto ParentActorView = Episode->GetActorRegistry().Find(Parent.id);
-    AttachActors(ActorView, ParentActorView);
-    return SerializeActor(ActorView);
-  });
-
-  Server.BindSync("destroy_actor", [this](cr::Actor Actor) {
-    RequireEpisode();
-    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
-    if (!ActorView.IsValid()) {
-      UE_LOG(LogCarlaServer, Warning, TEXT("unable to destroy actor: not found"));
-      return false;
+      cr::ActorId ParentId) -> R<cr::Actor>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto Result = Episode->SpawnActorWithInfo(Transform, std::move(Description));
+    if (Result.Key != EActorSpawnResultStatus::Success)
+    {
+      RESPOND_ERROR_FSTRING(FActorSpawnResult::StatusToString(Result.Key));
     }
-    return Episode->DestroyActor(ActorView.GetActor());
-  });
-
-  Server.BindSync("attach_actors", [this](cr::Actor Child, cr::Actor Parent) {
-    RequireEpisode();
-    auto &Registry = Episode->GetActorRegistry();
-    AttachActors(Registry.Find(Child.id), Registry.Find(Parent.id));
-  });
-
-  Server.BindSync("get_actor_location", [this](cr::Actor Actor) -> cr::Location {
-    RequireEpisode();
-    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
-    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
-      RespondErrorStr("unable to get actor location: actor not found");
+    if (!Result.Value.IsValid())
+    {
+      RESPOND_ERROR("internal error: actor could not be spawned");
     }
-    return {ActorView.GetActor()->GetActorLocation()};
-  });
-
-  Server.BindSync("get_actor_transform", [this](cr::Actor Actor) -> cr::Transform {
-    RequireEpisode();
-    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
-    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
-      RespondErrorStr("unable to get actor transform: actor not found");
+    auto ParentActorView = Episode->FindActor(ParentId);
+    if (!ParentActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to attach actor: parent actor not found");
     }
-    return {ActorView.GetActor()->GetActorTransform()};
-  });
+    Episode->AttachActors(Result.Value.GetActor(), ParentActorView.GetActor());
+    return Episode->SerializeActor(Result.Value);
+  };
 
-  Server.BindSync("set_actor_location", [this](
-      cr::Actor Actor,
-      cr::Location Location) {
-    RequireEpisode();
-    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
-    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
-      RespondErrorStr("unable to set actor location: actor not found");
+  BIND_SYNC(destroy_actor) << [this](cr::ActorId ActorId) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to destroy actor: not found");
     }
-    // This function only works with teleport physics, to reset speeds we need
-    // another method.
-    /// @todo print error instead of returning false.
+    if (!Episode->DestroyActor(ActorView.GetActor()))
+    {
+      RESPOND_ERROR("internal error: unable to destroy actor");
+    }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(attach_actors) << [this](
+      cr::ActorId ChildId,
+      cr::ActorId ParentId) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ChildView = Episode->FindActor(ChildId);
+    if (!ChildView.IsValid())
+    {
+      RESPOND_ERROR("unable to attach actor: child actor not found");
+    }
+    auto ParentView = Episode->FindActor(ParentId);
+    if (!ParentView.IsValid())
+    {
+      RESPOND_ERROR("unable to attach actor: parent actor not found");
+    }
+    Episode->AttachActors(ChildView.GetActor(), ParentView.GetActor());
+    return R<void>::Success();
+  };
+
+  // ~~ Actor physics ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  BIND_SYNC(set_actor_location) << [this](
+      cr::ActorId ActorId,
+      cr::Location Location) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to set actor location: actor not found");
+    }
     ActorView.GetActor()->SetActorRelativeLocation(
-        Location,
-        false,
-        nullptr,
-        ETeleportType::TeleportPhysics);
-  });
+    Location,
+    false,
+    nullptr,
+    ETeleportType::TeleportPhysics);
+    return R<void>::Success();
+  };
 
-  Server.BindSync("set_actor_transform", [this](
-      cr::Actor Actor,
-      cr::Transform Transform) {
-    RequireEpisode();
-    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
-    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
-      RespondErrorStr("unable to set actor transform: actor not found");
+  BIND_SYNC(set_actor_transform) << [this](
+      cr::ActorId ActorId,
+      cr::Transform Transform) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to set actor transform: actor not found");
     }
-    // This function only works with teleport physics, to reset speeds we need
-    // another method.
     ActorView.GetActor()->SetActorRelativeTransform(
-        Transform,
-        false,
-        nullptr,
-        ETeleportType::TeleportPhysics);
-  });
+    Transform,
+    false,
+    nullptr,
+    ETeleportType::TeleportPhysics);
+    return R<void>::Success();
+  };
 
-  Server.BindSync("set_actor_simulate_physics", [this](cr::Actor Actor, bool bEnabled) {
-    RequireEpisode();
-    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
-    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
-      RespondErrorStr("unable to set actor simulate physics: actor not found");
+  BIND_SYNC(set_actor_velocity) << [this](
+      cr::ActorId ActorId,
+      cr::Vector3D vector) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to set actor velocity: actor not found");
     }
     auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
-    if (RootComponent == nullptr) {
-      RespondErrorStr("unable to set actor simulate physics: not supported by actor");
+    if (RootComponent == nullptr)
+    {
+      RESPOND_ERROR("unable to set actor velocity: not supported by actor");
+    }
+    RootComponent->SetPhysicsLinearVelocity(
+    vector.ToCentimeters(),
+    false,
+    "None");
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(set_actor_angular_velocity) << [this](
+      cr::ActorId ActorId,
+      cr::Vector3D vector) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to set actor angular velocity: actor not found");
+    }
+    auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+    if (RootComponent == nullptr)
+    {
+      RESPOND_ERROR("unable to set actor angular velocity: not supported by actor");
+    }
+    RootComponent->SetPhysicsAngularVelocityInDegrees(
+    vector,
+    false,
+    "None");
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(add_actor_impulse) << [this](
+      cr::ActorId ActorId,
+      cr::Vector3D vector) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to add actor impulse: actor not found");
+    }
+    auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+    if (RootComponent == nullptr)
+    {
+      RESPOND_ERROR("unable to add actor impulse: not supported by actor");
+    }
+    RootComponent->AddImpulse(
+    vector.ToCentimeters(),
+    "None",
+    false);
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(get_physics_control) << [this](
+      cr::ActorId ActorId) -> R<cr::VehiclePhysicsControl>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to get actor physics control: actor not found");
+    }
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    if (Vehicle == nullptr)
+    {
+      RESPOND_ERROR("unable to get actor physics control: actor is not a vehicle");
+    }
+
+    return cr::VehiclePhysicsControl(Vehicle->GetVehiclePhysicsControl());
+  };
+
+  BIND_SYNC(apply_physics_control) << [this](
+      cr::ActorId ActorId,
+      cr::VehiclePhysicsControl PhysicsControl) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to apply actor physics control: actor not found");
+    }
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    if (Vehicle == nullptr)
+    {
+      RESPOND_ERROR("unable to apply actor physics control: actor is not a vehicle");
+    }
+
+    Vehicle->ApplyVehiclePhysicsControl(FVehiclePhysicsControl(PhysicsControl));
+
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(set_actor_simulate_physics) << [this](
+      cr::ActorId ActorId,
+      bool bEnabled) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to set actor simulate physics: actor not found");
+    }
+    auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+    if (RootComponent == nullptr)
+    {
+      RESPOND_ERROR("unable to set actor simulate physics: not supported by actor");
     }
     RootComponent->SetSimulatePhysics(bEnabled);
-  });
+    return R<void>::Success();
+  };
 
-  Server.BindSync("apply_control_to_actor", [this](cr::Actor Actor, cr::VehicleControl Control) {
-    RequireEpisode();
-    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
-    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
-      RespondErrorStr("unable to apply control: actor not found");
+  // ~~ Apply control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  BIND_SYNC(apply_control_to_vehicle) << [this](
+      cr::ActorId ActorId,
+      cr::VehicleControl Control) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to apply control: actor not found");
     }
     auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
-    if (Vehicle == nullptr) {
-      RespondErrorStr("unable to apply control: actor is not a vehicle");
+    if (Vehicle == nullptr)
+    {
+      RESPOND_ERROR("unable to apply control: actor is not a vehicle");
     }
-    Vehicle->ApplyVehicleControl(Control);
-  });
+    Vehicle->ApplyVehicleControl(Control, EVehicleInputPriority::Client);
+    return R<void>::Success();
+  };
 
-  Server.BindSync("set_actor_autopilot", [this](cr::Actor Actor, bool bEnabled) {
-    RequireEpisode();
-    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
-    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill()) {
-      RespondErrorStr("unable to set autopilot: actor not found");
+  BIND_SYNC(apply_control_to_walker) << [this](
+      cr::ActorId ActorId,
+      cr::WalkerControl Control) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to apply control: actor not found");
+    }
+    auto Pawn = Cast<APawn>(ActorView.GetActor());
+    if (Pawn == nullptr)
+    {
+      RESPOND_ERROR("unable to apply control: actor is not a walker");
+    }
+    auto Controller = Cast<AWalkerController>(Pawn->GetController());
+    if (Controller == nullptr)
+    {
+      RESPOND_ERROR("unable to apply control: walker has an incompatible controller");
+    }
+    Controller->ApplyWalkerControl(Control);
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(set_actor_autopilot) << [this](
+      cr::ActorId ActorId,
+      bool bEnabled) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to set autopilot: actor not found");
     }
     auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
-    if (Vehicle == nullptr) {
-      RespondErrorStr("unable to set autopilot: actor is not a vehicle");
+    if (Vehicle == nullptr)
+    {
+      RESPOND_ERROR("unable to set autopilot: actor does not support autopilot");
     }
     auto Controller = Cast<AWheeledVehicleAIController>(Vehicle->GetController());
-    if (Controller == nullptr) {
-      RespondErrorStr("unable to set autopilot: vehicle has an incompatible controller");
+    if (Controller == nullptr)
+    {
+      RESPOND_ERROR("unable to set autopilot: vehicle controller does not support autopilot");
     }
     Controller->SetAutopilot(bEnabled);
-  });
+    return R<void>::Success();
+  };
 
-  Server.BindSync("draw_debug_shape", [this](const cr::DebugShape &shape) {
-    RequireEpisode();
+  // ~~ Traffic lights ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  BIND_SYNC(set_traffic_light_state) << [this](
+      cr::ActorId ActorId,
+      cr::TrafficLightState trafficLightState) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->GetActorRegistry().Find(ActorId);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill())
+    {
+      RESPOND_ERROR("unable to set state: actor not found");
+    }
+    auto TrafficLight = Cast<ATrafficLightBase>(ActorView.GetActor());
+    if (TrafficLight == nullptr)
+    {
+      RESPOND_ERROR("unable to set state: actor is not a traffic light");
+    }
+    TrafficLight->SetTrafficLightState(static_cast<ETrafficLightState>(trafficLightState));
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(set_traffic_light_green_time) << [this](
+      cr::ActorId ActorId,
+      float GreenTime) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->GetActorRegistry().Find(ActorId);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill())
+    {
+      RESPOND_ERROR("unable to set green time: actor not found");
+    }
+    auto TrafficLight = Cast<ATrafficLightBase>(ActorView.GetActor());
+    if (TrafficLight == nullptr)
+    {
+      RESPOND_ERROR("unable to set green time: actor is not a traffic light");
+    }
+    TrafficLight->SetGreenTime(GreenTime);
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(set_traffic_light_yellow_time) << [this](
+      cr::ActorId ActorId,
+      float YellowTime) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->GetActorRegistry().Find(ActorId);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill())
+    {
+      RESPOND_ERROR("unable to set yellow time: actor not found");
+    }
+    auto TrafficLight = Cast<ATrafficLightBase>(ActorView.GetActor());
+    if (TrafficLight == nullptr)
+    {
+      RESPOND_ERROR("unable to set yellow time: actor is not a traffic light");
+    }
+    TrafficLight->SetYellowTime(YellowTime);
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(set_traffic_light_red_time) << [this](
+      cr::ActorId ActorId,
+      float RedTime) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->GetActorRegistry().Find(ActorId);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill())
+    {
+      RESPOND_ERROR("unable to set red time: actor not found");
+    }
+    auto TrafficLight = Cast<ATrafficLightBase>(ActorView.GetActor());
+    if (TrafficLight == nullptr)
+    {
+      RESPOND_ERROR("unable to set red time: actor is not a traffic light");
+    }
+    TrafficLight->SetRedTime(RedTime);
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(freeze_traffic_light) << [this](
+      cr::ActorId ActorId,
+      bool Freeze) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->GetActorRegistry().Find(ActorId);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill())
+    {
+      RESPOND_ERROR("unable to alter frozen state: actor not found");
+    }
+    auto TrafficLight = Cast<ATrafficLightBase>(ActorView.GetActor());
+    if (TrafficLight == nullptr)
+    {
+      RESPOND_ERROR("unable to alter frozen state: actor is not a traffic light");
+    }
+    TrafficLight->SetTimeIsFrozen(Freeze);
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(get_group_traffic_lights) << [this](
+      const cr::ActorId ActorId) -> R<std::vector<cr::ActorId>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->GetActorRegistry().Find(ActorId);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill())
+    {
+      RESPOND_ERROR("unable to get group traffic lights: actor not found");
+    }
+    auto TrafficLight = Cast<ATrafficLightBase>(ActorView.GetActor());
+    if (TrafficLight == nullptr)
+    {
+      RESPOND_ERROR("unable to get group traffic lights: actor is not a traffic light");
+    }
+    std::vector<cr::ActorId> Result;
+    for (auto TLight : TrafficLight->GetGroupTrafficLights())
+    {
+      auto View = Episode->FindActor(TLight);
+      if (View.IsValid())
+      {
+        Result.push_back(View.GetActorId());
+      }
+    }
+    return Result;
+  };
+
+  // ~~ Logging and playback ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  BIND_SYNC(start_recorder) << [this](std::string name) -> R<std::string>
+  {
+    REQUIRE_CARLA_EPISODE();
+    return R<std::string>(Episode->StartRecorder(name));
+  };
+
+  BIND_SYNC(stop_recorder) << [this]() -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    Episode->GetRecorder()->Stop();
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(show_recorder_file_info) << [this](std::string name, bool show_all) -> R<std::string>
+  {
+    REQUIRE_CARLA_EPISODE();
+    return R<std::string>(Episode->GetRecorder()->ShowFileInfo(
+        name,
+        show_all));
+  };
+
+  BIND_SYNC(show_recorder_collisions) << [this](std::string name, char type1, char type2) -> R<std::string>
+  {
+    REQUIRE_CARLA_EPISODE();
+    return R<std::string>(Episode->GetRecorder()->ShowFileCollisions(
+        name,
+        type1,
+        type2));
+  };
+
+  BIND_SYNC(show_recorder_actors_blocked) << [this](std::string name, double min_time, double min_distance) -> R<std::string>
+  {
+    REQUIRE_CARLA_EPISODE();
+    return R<std::string>(Episode->GetRecorder()->ShowFileActorsBlocked(
+        name,
+        min_time,
+        min_distance));
+  };
+
+  BIND_SYNC(replay_file) << [this](std::string name, double start, double duration, uint32_t follow_id) -> R<std::string>
+  {
+    REQUIRE_CARLA_EPISODE();
+    return R<std::string>(Episode->GetRecorder()->ReplayFile(
+        name,
+        start,
+        duration,
+        follow_id));
+  };
+
+  BIND_SYNC(set_replayer_time_factor) << [this](double time_factor) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    Episode->GetRecorder()->SetReplayerTimeFactor(time_factor);
+    return R<void>::Success();
+  };
+
+  // ~~ Draw debug shapes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  BIND_SYNC(draw_debug_shape) << [this](const cr::DebugShape &shape) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
     auto *World = Episode->GetWorld();
     check(World != nullptr);
     FDebugShapeDrawer Drawer(*World);
     Drawer.Draw(shape);
-  });
+    return R<void>::Success();
+  };
+
+  // ~~ Apply commands in batch ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  using C = cr::Command;
+  using CR = cr::CommandResponse;
+  using ActorId = carla::ActorId;
+
+  auto parse_result = [](ActorId id, const auto &response) {
+    return response.HasError() ? CR{response.GetError()} : CR{id};
+  };
+
+#define MAKE_RESULT(operation) return parse_result(c.actor, operation);
+
+  auto command_visitor = carla::MakeRecursiveOverload(
+      [=](auto self, const C::SpawnActor &c) -> CR {
+        auto result = c.parent.has_value() ?
+            spawn_actor_with_parent(c.description, c.transform, *c.parent) :
+            spawn_actor(c.description, c.transform);
+        if (!result.HasError()) {
+          ActorId id = result.Get().id;
+          auto set_id = carla::MakeOverload(
+              [](C::SpawnActor &) {},
+              [id](auto &s) { s.actor = id; });
+          for (auto command : c.do_after) {
+            boost::apply_visitor(set_id, command.command);
+            boost::apply_visitor(self, command.command);
+          }
+          return id;
+        }
+        return result.GetError();
+      },
+      [=](auto, const C::DestroyActor &c) {         MAKE_RESULT(destroy_actor(c.actor)); },
+      [=](auto, const C::ApplyVehicleControl &c) {  MAKE_RESULT(apply_control_to_vehicle(c.actor, c.control)); },
+      [=](auto, const C::ApplyWalkerControl &c) {   MAKE_RESULT(apply_control_to_walker(c.actor, c.control)); },
+      [=](auto, const C::ApplyTransform &c) {       MAKE_RESULT(set_actor_transform(c.actor, c.transform)); },
+      [=](auto, const C::ApplyVelocity &c) {        MAKE_RESULT(set_actor_velocity(c.actor, c.velocity)); },
+      [=](auto, const C::ApplyAngularVelocity &c) { MAKE_RESULT(set_actor_angular_velocity(c.actor, c.angular_velocity)); },
+      [=](auto, const C::ApplyImpulse &c) {         MAKE_RESULT(add_actor_impulse(c.actor, c.impulse)); },
+      [=](auto, const C::SetSimulatePhysics &c) {   MAKE_RESULT(set_actor_simulate_physics(c.actor, c.enabled)); },
+      [=](auto, const C::SetAutopilot &c) {         MAKE_RESULT(set_actor_autopilot(c.actor, c.enabled)); });
+
+#undef MAKE_RESULT
+
+  BIND_SYNC(apply_batch) << [=](const std::vector<cr::Command> &commands, bool do_tick_cue)
+  {
+    std::vector<CR> result;
+    result.reserve(commands.size());
+    for (const auto &command : commands)
+    {
+      result.emplace_back(boost::apply_visitor(command_visitor, command.command));
+    }
+    if (do_tick_cue)
+    {
+      tick_cue();
+    }
+    return result;
+  };
 }
+
+// =============================================================================
+// -- Undef helper macros ------------------------------------------------------
+// =============================================================================
+
+#undef BIND_ASYNC
+#undef BIND_SYNC
+#undef REQUIRE_CARLA_EPISODE
+#undef RESPOND_ERROR_FSTRING
+#undef RESPOND_ERROR
+#undef CARLA_ENSURE_GAME_THREAD
 
 // =============================================================================
 // -- FTheNewCarlaServer -------------------------------------------------------
@@ -403,25 +854,30 @@ FTheNewCarlaServer::FTheNewCarlaServer() : Pimpl(nullptr) {}
 
 FTheNewCarlaServer::~FTheNewCarlaServer() {}
 
-void FTheNewCarlaServer::Start(uint16_t Port)
+FDataMultiStream FTheNewCarlaServer::Start(uint16_t RPCPort, uint16_t StreamingPort)
 {
-  UE_LOG(LogCarlaServer, Log, TEXT("Initializing rpc-server at port %d"), Port);
-  Pimpl = MakeUnique<FPimpl>(Port);
+  Pimpl = MakeUnique<FPimpl>(RPCPort, StreamingPort);
+  StreamingPort = Pimpl->StreamingServer.GetLocalEndpoint().port();
+  UE_LOG(LogCarlaServer, Log, TEXT("Initialized CarlaServer: Ports(rpc=%d, streaming=%d)"), RPCPort, StreamingPort);
+  return Pimpl->BroadcastStream;
 }
 
 void FTheNewCarlaServer::NotifyBeginEpisode(UCarlaEpisode &Episode)
 {
+  check(Pimpl != nullptr);
   UE_LOG(LogCarlaServer, Log, TEXT("New episode '%s' started"), *Episode.GetMapName());
   Pimpl->Episode = &Episode;
 }
 
 void FTheNewCarlaServer::NotifyEndEpisode()
 {
+  check(Pimpl != nullptr);
   Pimpl->Episode = nullptr;
 }
 
 void FTheNewCarlaServer::AsyncRun(uint32 NumberOfWorkerThreads)
 {
+  check(Pimpl != nullptr);
   /// @todo Define better the number of threads each server gets.
   auto RPCThreads = NumberOfWorkerThreads / 2u;
   auto StreamingThreads = NumberOfWorkerThreads - RPCThreads;
@@ -434,12 +890,24 @@ void FTheNewCarlaServer::RunSome(uint32 Milliseconds)
   Pimpl->Server.SyncRunFor(carla::time_duration::milliseconds(Milliseconds));
 }
 
+bool FTheNewCarlaServer::TickCueReceived()
+{
+  if (Pimpl->TickCuesReceived > 0u)
+  {
+    --(Pimpl->TickCuesReceived);
+    return true;
+  }
+  return false;
+}
+
 void FTheNewCarlaServer::Stop()
 {
+  check(Pimpl != nullptr);
   Pimpl->Server.Stop();
 }
 
-carla::rpc::Actor FTheNewCarlaServer::SerializeActor(FActorView View) const
+FDataStream FTheNewCarlaServer::OpenStream() const
 {
-  return Pimpl->SerializeActor(View);
+  check(Pimpl != nullptr);
+  return Pimpl->StreamingServer.MakeStream();
 }

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/address.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/ip/udp.hpp>
@@ -71,14 +72,18 @@ namespace detail {
     return boost::asio::ip::make_address("127.0.0.1");
   }
 
-  static inline auto make_address(const char *address) {
-    return std::strcmp("localhost", address) == 0 ?
-        make_localhost_address() :
-        boost::asio::ip::make_address(address);
-  }
-
   static inline auto make_address(const std::string &address) {
-    return make_address(address.c_str());
+    boost::asio::io_service io_service;
+    boost::asio::ip::tcp::resolver resolver(io_service);
+    boost::asio::ip::tcp::resolver::query query(boost::asio::ip::tcp::v4(), address, "", boost::asio::ip::tcp::resolver::query::canonical_name);
+    boost::asio::ip::tcp::resolver::iterator iter = resolver.resolve(query);
+    boost::asio::ip::tcp::resolver::iterator end;
+    while (iter != end)
+    {
+      boost::asio::ip::tcp::endpoint endpoint = *iter++;
+      return endpoint.address();
+    }
+    return boost::asio::ip::make_address(address);
   }
 
   template <typename Protocol>

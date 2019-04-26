@@ -3,7 +3,7 @@ repo_url: https://github.com/carla-simulator/carla
 docs_dir: Docs
 theme: readthedocs
 
-pages:
+nav:
 - Home: 'index.md'
 - Quick start:
   - 'Getting started': 'getting_started.md'
@@ -20,6 +20,8 @@ pages:
   - 'Running without display and selecting GPUs': 'carla_headless.md'
   - 'Running in a Docker': 'carla_docker.md'
   - "How to link Epic's Automotive Materials": 'epic_automotive_materials.md'
+  - "How to automatically generate a map from RoadRunner": 'generate_map_from_fbx.md'
+  - "How to export and import maps to distribution builds": 'export_import_dist.md'
 - Map generation tools:
   - "How to make a new map with RoadRunner": 'how_to_make_a_new_map.md'
   - 'Building block generator': 'building_block_generator.md'

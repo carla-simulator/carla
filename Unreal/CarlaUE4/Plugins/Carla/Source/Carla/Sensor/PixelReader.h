@@ -8,6 +8,7 @@
 
 #include "CoreGlobals.h"
 #include "Engine/TextureRenderTarget2D.h"
+#include "Runtime/ImageWriteQueue/Public/ImagePixelData.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Buffer.h>
@@ -32,21 +33,25 @@ public:
       UTextureRenderTarget2D &RenderTarget,
       TArray<FColor> &BitMap);
 
-  /// Save the pixels in @a RenderTarget to disk.
+  /// Dump the pixels in @a RenderTarget.
   ///
   /// @pre To be called from game-thread.
-  static bool SavePixelsToDisk(
+  static TUniquePtr<TImagePixelData<FColor>> DumpPixels(
+      UTextureRenderTarget2D &RenderTarget);
+
+  /// Asynchronously save the pixels in @a RenderTarget to disk.
+  ///
+  /// @pre To be called from game-thread.
+  static TFuture<bool> SavePixelsToDisk(
       UTextureRenderTarget2D &RenderTarget,
       const FString &FilePath);
 
-  /// Copy the pixels in @a RenderTarget into @a Buffer.
+  /// Asynchronously save the pixels in @a PixelData to disk.
   ///
-  /// @pre To be called from render-thread.
-  static void WritePixelsToBuffer(
-      UTextureRenderTarget2D &RenderTarget,
-      carla::Buffer &Buffer,
-      uint32 Offset,
-      FRHICommandListImmediate &InRHICmdList);
+  /// @pre To be called from game-thread.
+  static TFuture<bool> SavePixelsToDisk(
+      TUniquePtr<TImagePixelData<FColor>> PixelData,
+      const FString &FilePath);
 
   /// Convenience function to enqueue a render command that sends the pixels
   /// down the @a Sensor's data stream. It expects a sensor derived from
@@ -58,6 +63,17 @@ public:
   /// @pre To be called from game-thread.
   template <typename TSensor>
   static void SendPixelsInRenderThread(TSensor &Sensor);
+
+private:
+
+  /// Copy the pixels in @a RenderTarget into @a Buffer.
+  ///
+  /// @pre To be called from render-thread.
+  static void WritePixelsToBuffer(
+      UTextureRenderTarget2D &RenderTarget,
+      carla::Buffer &Buffer,
+      uint32 Offset,
+      FRHICommandListImmediate &InRHICmdList);
 };
 
 // =============================================================================
@@ -71,26 +87,31 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor)
 
   // First we create the message header (needs to be created in the
   // game-thread).
-  auto Header = Sensor.GetDataStream().MakeHeader(Sensor);
+  auto AsyncStream = Sensor.GetDataStream(Sensor);
+
   // We need a shared ptr here because UE4 macros do not move the arguments -_-
-  auto HeaderPtr = MakeShared<decltype(Header)>(std::move(Header));
+  auto StreamPtr = std::make_shared<decltype(AsyncStream)>(std::move(AsyncStream));
 
   // Then we enqueue commands in the render-thread that will write the image
   // buffer to the data stream.
 
-  auto WriteAndSend = [&Sensor, Hdr=std::move(HeaderPtr)](auto &InRHICmdList) mutable {
-    auto &Stream = Sensor.GetDataStream();
-    auto Buffer = Stream.PopBufferFromPool();
-    WritePixelsToBuffer(
-        *Sensor.CaptureRenderTarget,
-        Buffer,
-        carla::sensor::SensorRegistry::get<TSensor *>::type::header_offset,
-        InRHICmdList);
-    Stream.Send_Async(std::move(*Hdr), Sensor, std::move(Buffer));
+  auto WriteAndSend = [&Sensor, Stream=std::move(StreamPtr)](auto &InRHICmdList) mutable
+  {
+    /// @todo Can we make sure the sensor is not going to be destroyed?
+    if (!Sensor.IsPendingKill())
+    {
+      auto Buffer = Stream->PopBufferFromPool();
+      WritePixelsToBuffer(
+          *Sensor.CaptureRenderTarget,
+          Buffer,
+          carla::sensor::SensorRegistry::get<TSensor *>::type::header_offset,
+          InRHICmdList);
+      Stream->Send(Sensor, std::move(Buffer));
+    }
   };
 
   ENQUEUE_UNIQUE_RENDER_COMMAND_ONEPARAMETER(
-      FWritePixels_Vulkan,
+      FWritePixels_SendPixelsInRenderThread,
       std::function<void(FRHICommandListImmediate &)>, WriteAndSendFunction, std::move(WriteAndSend),
   {
     WriteAndSendFunction(RHICmdList);

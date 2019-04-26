@@ -14,11 +14,10 @@ namespace carla {
 namespace rpc {
 
   enum class TrafficLightState : uint8_t {
-    Off,
     Red,
     Yellow,
     Green,
-
+    Off,
     Unknown,
     SIZE
   };

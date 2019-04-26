@@ -90,11 +90,11 @@ namespace client {
     }
 
     auto begin() const {
-      return iterator::make_map_values_iterator(_attributes.begin());
+      return iterator::make_map_values_const_iterator(_attributes.begin());
     }
 
     auto end() const {
-      return iterator::make_map_values_iterator(_attributes.end());
+      return iterator::make_map_values_const_iterator(_attributes.end());
     }
 
     /// @}

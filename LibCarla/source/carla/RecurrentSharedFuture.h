@@ -6,8 +6,10 @@
 
 #pragma once
 
+#include "carla/Exception.h"
 #include "carla/Time.h"
 
+#include <boost/optional.hpp>
 #include <boost/variant.hpp>
 
 #include <condition_variable>
@@ -18,7 +20,9 @@
 namespace carla {
 
 namespace detail {
+
   class SharedException;
+
 } // namespace detail
 
   // ===========================================================================
@@ -35,7 +39,9 @@ namespace detail {
 
     /// Wait until the next value is set. Any number of threads can be waiting
     /// simultaneously.
-    T WaitFor(time_duration timeout);
+    ///
+    /// @return empty optional if the timeout is met.
+    boost::optional<T> WaitFor(time_duration timeout);
 
     /// Set the value and notify all waiting threads.
     template <typename T2>
@@ -95,14 +101,16 @@ namespace detail {
 } // namespace detail
 
   template <typename T>
-  T RecurrentSharedFuture<T>::WaitFor(time_duration timeout) {
+  boost::optional<T> RecurrentSharedFuture<T>::WaitFor(time_duration timeout) {
     std::unique_lock<std::mutex> lock(_mutex);
     auto &r = _map[&detail::thread_tag];
     r.should_wait = true;
-    if (!_cv.wait_for(lock, timeout.to_chrono(), [&]() { return !r.should_wait; }))
-      throw std::runtime_error("RecurrentSharedFuture.WaitFor: time-out");
-    if (r.value.which() == 1)
-      throw boost::get<SharedException>(r.value);
+    if (!_cv.wait_for(lock, timeout.to_chrono(), [&]() { return !r.should_wait; })) {
+      return {};
+    }
+    if (r.value.which() == 1) {
+      throw_exception(boost::get<SharedException>(r.value));
+    }
     return boost::get<T>(std::move(r.value));
   }
 

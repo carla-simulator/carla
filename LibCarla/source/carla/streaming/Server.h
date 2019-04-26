@@ -40,6 +40,10 @@ namespace streaming {
       _service.Stop();
     }
 
+    auto GetLocalEndpoint() const {
+      return _server.GetLocalEndpoint();
+    }
+
     void SetTimeout(time_duration timeout) {
       _server.SetTimeout(timeout);
     }

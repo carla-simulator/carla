@@ -23,10 +23,11 @@ namespace data {
 
     explicit LaneInvasionEvent(
         size_t frame_number,
+        double timestamp,
         const rpc::Transform &sensor_transform,
         SharedPtr<client::Actor> self_actor,
         std::vector<LaneMarking> crossed_lane_markings)
-      : SensorData(frame_number, sensor_transform),
+      : SensorData(frame_number, timestamp, sensor_transform),
         _self_actor(std::move(self_actor)),
         _crossed_lane_markings(std::move(crossed_lane_markings)) {}
 

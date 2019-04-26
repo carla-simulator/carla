@@ -8,6 +8,7 @@
 
 #include "Engine/GameInstance.h"
 
+#include "Carla/Game/CarlaEngine.h"
 #include "Carla/Game/CarlaGameControllerBase.h"
 #include "Carla/Game/DataRouter.h"
 #include "Carla/Server/TheNewCarlaServer.h"
@@ -58,29 +59,38 @@ public:
     return CarlaSettings;
   }
 
+  UFUNCTION(BlueprintCallable)
+  UCarlaEpisode *GetCarlaEpisode()
+  {
+    return CarlaEngine.GetCurrentEpisode();
+  }
+
   FDataRouter &GetDataRouter()
   {
     return DataRouter;
   }
 
-  void NotifyBeginEpisode(UCarlaEpisode &Episode);
-
-  void Tick(float /*DeltaSeconds*/)
+  void NotifyInitGame()
   {
-    Server.RunSome(10u); /// @todo
+    CarlaEngine.NotifyInitGame(GetCarlaSettings());
   }
 
-  void NotifyEndEpisode();
+  void NotifyBeginEpisode(UCarlaEpisode &Episode)
+  {
+    CarlaEngine.NotifyBeginEpisode(Episode);
+  }
+
+  void NotifyEndEpisode()
+  {
+    CarlaEngine.NotifyEndEpisode();
+  }
 
   const FTheNewCarlaServer &GetServer() const
   {
-    return Server;
+    return CarlaEngine.GetServer();
   }
 
 private:
-
-  UPROPERTY(VisibleAnywhere)
-  bool bServerIsRunning = false;
 
   UPROPERTY(Category = "CARLA Settings", EditAnywhere)
   UCarlaSettings *CarlaSettings = nullptr;
@@ -89,5 +99,5 @@ private:
 
   TUniquePtr<ICarlaGameControllerBase> GameController;
 
-  FTheNewCarlaServer Server;
+  FCarlaEngine CarlaEngine;
 };

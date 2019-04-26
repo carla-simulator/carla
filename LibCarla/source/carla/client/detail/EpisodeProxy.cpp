@@ -6,6 +6,7 @@
 
 #include "carla/client/detail/EpisodeProxy.h"
 
+#include "carla/Exception.h"
 #include "carla/client/detail/Simulator.h"
 
 #include <exception>
@@ -28,7 +29,7 @@ namespace detail {
       _simulator(std::move(simulator)) {}
 
   template <typename T>
-  typename EpisodeProxyImpl<T>::SharedPtrType EpisodeProxyImpl<T>::TryLock() const {
+  typename EpisodeProxyImpl<T>::SharedPtrType EpisodeProxyImpl<T>::TryLock() const noexcept {
     auto ptr = Load(_simulator);
     const bool is_valid = (ptr != nullptr) && (_episode_id == ptr->GetCurrentEpisodeId());
     return is_valid ? ptr : nullptr;
@@ -38,20 +39,20 @@ namespace detail {
   typename EpisodeProxyImpl<T>::SharedPtrType EpisodeProxyImpl<T>::Lock() const {
     auto ptr = Load(_simulator);
     if (ptr == nullptr) {
-      throw std::runtime_error(
+      throw_exception(std::runtime_error(
           "trying to operate on a destroyed actor; an actor's function "
-          "was called, but the actor is already destroyed.");
+          "was called, but the actor is already destroyed."));
     }
     if (_episode_id != ptr->GetCurrentEpisodeId()) {
-      throw std::runtime_error(
+      throw_exception(std::runtime_error(
           "trying to access an expired episode; a new episode was started "
-          "in the simulation but an object tried accessing the old one.");
+          "in the simulation but an object tried accessing the old one."));
     }
     return ptr;
   }
 
   template <typename T>
-  void EpisodeProxyImpl<T>::Clear() {
+  void EpisodeProxyImpl<T>::Clear() noexcept {
     _simulator.reset();
   }
 

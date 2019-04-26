@@ -3,11 +3,11 @@ default: help
 help:
 	@less ${CARLA_BUILD_TOOLS_FOLDER}/Linux.mk.help
 
-launch: LibCarla.server
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --build --launch
+launch: LibCarla.server.release
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --build --launch $(ARGS)
 
 launch-only:
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --launch
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --launch $(ARGS)
 
 package: CarlaUE4Editor PythonAPI
 	@${CARLA_BUILD_TOOLS_FOLDER}/Package.sh $(ARGS)
@@ -16,10 +16,13 @@ docs:
 	@doxygen
 	@echo "Documentation index at ./Doxygen/html/index.html"
 
-clean:
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --clean
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --clean
+clean.LibCarla:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --clean
+clean.PythonAPI:
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --clean
+clean.CarlaUE4Editor:
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --clean
+clean: clean.CarlaUE4Editor clean.PythonAPI clean.LibCarla
 
 rebuild: setup
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --rebuild
@@ -32,16 +35,19 @@ hard-clean:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --clean
 	@echo "To force recompiling dependencies run: rm -Rf ${CARLA_BUILD_FOLDER}"
 
-check: LibCarla.server PythonAPI
+export-maps:
+	@${CARLA_BUILD_TOOLS_FOLDER}/ExportMaps.sh ${ARGS}
+
+check: LibCarla PythonAPI
 	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --all $(ARGS)
 
-check.LibCarla: LibCarla.server
+check.LibCarla: LibCarla
 	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --libcarla-debug --libcarla-release $(ARGS)
 
-check.LibCarla.debug: LibCarla.server
+check.LibCarla.debug: LibCarla.debug
 	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --libcarla-debug $(ARGS)
 
-check.LibCarla.release: LibCarla.server
+check.LibCarla.release: LibCarla.release
 	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --libcarla-release $(ARGS)
 
 check.PythonAPI: PythonAPI
@@ -53,31 +59,49 @@ check.PythonAPI.2: PythonAPI.2
 check.PythonAPI.3: PythonAPI.3
 	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --python-api-3 $(ARGS)
 
-benchmark: LibCarla.server
+benchmark: LibCarla.release
 	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --benchmark $(ARGS)
 	@cat profiler.csv
 
-CarlaUE4Editor: LibCarla.server
+smoke_tests:
+	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --smoke-2 --smoke-3 $(ARGS)
+
+examples:
+	@for D in ${CARLA_EXAMPLES_FOLDER}/*; do [ -d "$${D}" ] && make -C $${D} build; done
+
+run-examples:
+	@for D in ${CARLA_EXAMPLES_FOLDER}/*; do [ -d "$${D}" ] && make -C $${D} run; done
+
+CarlaUE4Editor: LibCarla.server.release
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --build
 
 .PHONY: PythonAPI
-PythonAPI: LibCarla.client
+PythonAPI: LibCarla.client.release
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py2 --py3
 
-PythonAPI.2: LibCarla.client
+PythonAPI.2: LibCarla.client.release
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py2
 
-PythonAPI.3: LibCarla.client
+PythonAPI.3: LibCarla.client.release
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py3
 
 .PHONY: LibCarla
-LibCarla: LibCarla.server LibCarla.client
+LibCarla: LibCarla.release LibCarla.debug
 
-LibCarla.server: setup
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --server
+LibCarla.debug: LibCarla.server.debug LibCarla.client.debug
+LibCarla.release: LibCarla.server.release LibCarla.client.release
 
-LibCarla.client: setup
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --client
+LibCarla.server: LibCarla.server.debug LibCarla.server.release
+LibCarla.server.debug: setup
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --server --debug
+LibCarla.server.release: setup
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --server --release
+
+LibCarla.client: LibCarla.client.debug LibCarla.client.release
+LibCarla.client.debug: setup
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --client --debug
+LibCarla.client.release: setup
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --client --release
 
 setup:
 	@${CARLA_BUILD_TOOLS_FOLDER}/Setup.sh

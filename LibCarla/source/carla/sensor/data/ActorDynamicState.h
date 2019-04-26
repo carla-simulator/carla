@@ -11,6 +11,7 @@
 #include "carla/rpc/ActorId.h"
 #include "carla/rpc/TrafficLightState.h"
 #include "carla/rpc/VehicleControl.h"
+#include "carla/rpc/WalkerControl.h"
 
 #include <cstdint>
 
@@ -49,8 +50,58 @@ namespace detail {
     bool manual_gear_shift;
     int32_t gear;
   };
+
 #pragma pack(pop)
 
+#pragma pack(push, 1)
+  struct VehicleData {
+    VehicleData() = default;
+
+    PackedVehicleControl control;
+    float speed_limit;
+    rpc::TrafficLightState traffic_light_state;
+    bool has_traffic_light;
+    rpc::ActorId traffic_light_id;
+  };
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+  class PackedWalkerControl {
+  public:
+
+    PackedWalkerControl() = default;
+
+    PackedWalkerControl(const rpc::WalkerControl &control)
+      : direction{control.direction.x, control.direction.y, control.direction.z},
+        speed(control.speed),
+        jump(control.jump) {}
+
+    operator rpc::WalkerControl() const {
+      return {geom::Vector3D{direction[0u], direction[1u], direction[2u]}, speed, jump};
+    }
+
+  private:
+
+    float direction[3u];
+    float speed;
+    bool jump;
+  };
+
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+  struct TrafficLightData {
+    TrafficLightData() = default;
+
+    rpc::TrafficLightState state;
+    float green_time;
+    float yellow_time;
+    float red_time;
+    float elapsed_time;
+    bool time_is_frozen;
+    uint32_t pole_index;
+  };
+#pragma pack(pop)
 } // namespace detail
 
 #pragma pack(push, 1)
@@ -58,22 +109,27 @@ namespace detail {
   /// Dynamic state of an actor at a certain frame.
   struct ActorDynamicState {
 
-    actor_id_type id;
+    ActorId id;
 
     geom::Transform transform;
 
     geom::Vector3D velocity;
 
+    geom::Vector3D angular_velocity;
+
+    geom::Vector3D acceleration;
+
     union TypeDependentState {
-      rpc::TrafficLightState traffic_light_state;
-      detail::PackedVehicleControl vehicle_control;
+      detail::TrafficLightData traffic_light_data;
+      detail::VehicleData vehicle_data;
+      detail::PackedWalkerControl walker_control;
     } state;
   };
 
 #pragma pack(pop)
 
   static_assert(
-      sizeof(ActorDynamicState) == 10u * sizeof(uint32_t) + sizeof(detail::PackedVehicleControl),
+      sizeof(ActorDynamicState) == 16u * sizeof(uint32_t) + sizeof(detail::VehicleData),
       "Invalid ActorDynamicState size!");
 
 } // namespace data

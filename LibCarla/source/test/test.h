@@ -10,7 +10,7 @@
 #  define LIBCARLA_LOG_LEVEL LIBCARLA_LOG_LEVEL_INFO
 #endif // NDEBUG
 
-#include "test/util/Buffer.h"
+#include "test/Buffer.h"
 
 #include <carla/Logging.h>
 #include <carla/profiler/Profiler.h>
@@ -21,6 +21,6 @@
 #include <cstdint>
 #include <iostream>
 
-constexpr uint16_t TESTING_PORT = 2017u;
+constexpr uint16_t TESTING_PORT = 0u;
 
 using namespace std::chrono_literals;

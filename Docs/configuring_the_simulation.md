@@ -83,58 +83,67 @@ in multi-GPU environments, it's not possible to select the GPU that the
 simulator will use for rendering. To do so, follow the instruction in
 [Running without display and selecting GPUs](carla_headless.md).
 
+No-rendering mode
+-----------------
+
+It is possible to completely disable rendering in the simulator by enabling
+_no-rendering mode_ in the world settings. This way is possible to simulate
+traffic and road behaviours at very high frequencies without the rendering
+overhead. Note that in this mode, cameras and other GPU-based sensors return
+empty data.
+
+```py
+settings = world.get_settings()
+settings.no_rendering_mode = True
+world.apply_settings(settings)
+```
+
+Synchronous mode
+----------------
+
+!!! important
+    **Always run the simulator at fixed time-step when using the synchronous
+    mode**. Otherwise the physics engine will try to recompute at once all the
+    time spent waiting for the client, this usually results in inconsistent or
+    not very realistic physics.
+
+The client-simulator communication can be synchronized by using the _synchronous
+mode_. When the synchronous mode is enabled, the simulation is halted each
+update until a _tick_ message is received.
+
+This is very useful when dealing with slow client applications, as the simulator
+waits until the client is ready to continue. This mode can also be used to
+synchronize data among sensors by waiting until all the data is received. Note
+that data coming from GPU-based sensors (cameras) is usually generated with a
+delay of a couple of frames respect to data coming from CPU-based sensors.
+
+The synchronous mode can be enabled at any time in the world settings.
+
+```py
+# Example: Synchronizing a camera with synchronous mode.
+
+settings = world.get_settings()
+settings.synchronous_mode = True
+world.apply_settings(settings)
+
+camera = world.spawn_actor(blueprint, transform)
+image_queue = queue.Queue()
+camera.listen(image_queue.put)
+
+while True:
+    world.tick()
+    timestamp = world.wait_for_tick()
+
+    image = image_queue.get()
+```
+
 Other command-line options
 --------------------------
 
   * `-carla-port=N` Listen for client connections at port N, streaming port is set to N+1.
   * `-quality-level={Low,Epic}` Change graphics quality level, "Low" mode runs significantly faster.
+  * `-carla-server-timeout=10000ms` Set server timeout.
+  * `-no-rendering` Disable rendering.
   * [Full list of UE4 command-line arguments][ue4clilink].
 
 [ue4clilink]: https://docs.unrealengine.com/en-US/Programming/Basics/CommandLineArguments
-
-<!-- Disabled for now...
-
-Synchronous vs Asynchronous mode
---------------------------------
-
-The client-simulator communication can be synchronized by using the _synchronous
-mode_. The synchronous mode enables two things
-
-  * The simulator waits for the sensor data to be ready before sending the
-    measurements.
-  * The simulator halts each frame until a control message is received.
-
-This is very useful when dealing with slow client applications, as the
-simulation is halted until the client is ready to continue. This also ensures
-that the generated data of every sensor is received every frame by the client.
-As opposed to _asynchronous mode_, in which the sensor data may arrive a couple
-of frames later or even be lost if the client is not fast enough.
-
-However, there are a couple of caveats to bear in mind when using the
-synchronous mode. First of all, **it is very important to run the simulator at
-fixed time-step when using the synchronous mode**. Otherwise the physics engine
-will try to recompute at once all the time spent waiting for the client, this
-usually results in inconsistent or not very realistic physics.
-
-Secondly, the synchronous mode imposes a significant performance penalty. There
-is a price in waiting for the render thread to have the images ready and halting
-the simulation when the client is slow. There is a trade-off in using the
-synchronous mode.
-
-The synchronous mode can be enabled at the beginning of each episode both in the
-INI file or the Python API
-
-**Python**
-
-```py
-settings = CarlaSettings()
-settings.set(SynchronousMode=True)
-```
-
-**CarlaSettings.ini**
-
-```ini
-[CARLA/Server]
-SynchronousMode=true
-```
- -->

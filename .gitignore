@@ -5,6 +5,9 @@ Deprecated/PythonClient/dist
 Util/Build
 Install
 
+/ExportedMaps
+/RoadRunnerFiles/*/
+
 *.VC.db
 *.VC.opendb
 *.a
@@ -25,11 +28,14 @@ Install
 *.workspace
 *CodeCompletionFolders.txt
 *CodeLitePreProcessor.txt
+.aria2c.input
 .codelite
 .gdb_history
 .gtest
+.idea
 .tags*
 .vs
+.vscode
 __pycache__
 _benchmarks_results
 _images*

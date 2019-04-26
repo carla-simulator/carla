@@ -6,65 +6,60 @@
 
 #pragma once
 
-#include "carla/geom/Transform.h"
-#include "carla/Memory.h"
-#include "carla/road/element/RoadInfoList.h"
-#include "carla/road/element/Types.h"
+#include "carla/road/RoadTypes.h"
+
+#include <cstdint>
+#include <functional>
 
 namespace carla {
 namespace road {
-
-  class Map;
-  class WaypointGenerator;
-
 namespace element {
 
-  class RoadSegment;
+  struct Waypoint {
 
-  class Waypoint {
-  public:
+    RoadId road_id = 0u;
 
-    ~Waypoint();
+    SectionId section_id = 0u;
 
-    geom::Transform ComputeTransform() const;
+    LaneId lane_id = 0;
 
-    id_type GetRoadId() const {
-      return _road_id;
-    }
-
-    int GetLaneId() const {
-      return _lane_id;
-    }
-
-    RoadInfoList GetRoadInfo() const;
-
-    const RoadSegment &GetRoadSegment() const;
-
-    bool IsIntersection() const;
-
-    double GetLaneWidth() const;
-
-  private:
-
-    friend carla::road::Map;
-    friend carla::road::WaypointGenerator;
-
-    Waypoint(SharedPtr<const Map>, const geom::Location &location);
-
-    Waypoint(
-        SharedPtr<const Map> map,
-        id_type road_id,
-        id_type lane_id,
-        double distance);
-
-    SharedPtr<const Map> _map;
-
-    id_type _road_id = 0;
-
-    int _lane_id = 0;
-
-    double _dist = 0.0;
+    double s = 0.0;
   };
+
+} // namespace element
+} // namespace road
+} // namespace carla
+
+namespace std {
+
+  template <>
+  struct hash<carla::road::element::Waypoint> {
+
+    using argument_type = carla::road::element::Waypoint;
+
+    using result_type = uint64_t;
+
+    /// Generates an unique id for @a waypoint based on its road_id, lane_id,
+    /// section_id, and "s" offset. The "s" offset is truncated to half
+    /// centimetre precision.
+    result_type operator()(const argument_type &waypoint) const;
+
+  };
+
+} // namespace std
+
+namespace carla {
+namespace road {
+namespace element {
+
+  inline bool operator==(const Waypoint &lhs, const Waypoint &rhs) {
+    auto hasher = std::hash<Waypoint>();
+    return hasher(lhs) == hasher(rhs);
+  }
+
+  inline bool operator!=(const Waypoint &lhs, const Waypoint &rhs) {
+    return !operator==(lhs, rhs);
+  }
 
 } // namespace element
 } // namespace road

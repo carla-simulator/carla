@@ -46,7 +46,7 @@ done
 # -- Package project -----------------------------------------------------------
 # ==============================================================================
 
-REPOSITORY_TAG=$(get_carla_version)
+REPOSITORY_TAG=$(get_git_repository_version)
 
 BUILD_FOLDER=${CARLA_DIST_FOLDER}/${REPOSITORY_TAG}
 
@@ -69,8 +69,8 @@ if $DO_PACKAGE ; then
       -project="${PWD}/CarlaUE4.uproject" \
       -nocompileeditor -nop4 -cook -stage -archive -package \
       -clientconfig=Development -ue4exe=UE4Editor \
-      -pak -prereqs -nodebuginfo \
-      -targetplatform=Linux -build -CrashReporter -utf8output \
+      -prereqs -nodebuginfo \
+      -targetplatform=Linux -build -utf8output \
       -archivedirectory="${BUILD_FOLDER}"
 
   popd >/dev/null
@@ -93,20 +93,30 @@ if $DO_COPY_FILES ; then
 
   pushd ${CARLA_ROOT_FOLDER} >/dev/null
 
+  mkdir -p "${DESTINATION}/ExportedMaps"
+
+  echo "${REPOSITORY_TAG}" > ${DESTINATION}/VERSION
+
   copy_if_changed "./LICENSE" "${DESTINATION}/LICENSE"
   copy_if_changed "./CHANGELOG.md" "${DESTINATION}/CHANGELOG"
   copy_if_changed "./Docs/release_readme.md" "${DESTINATION}/README"
-  copy_if_changed "./Docs/python_api.md" "${DESTINATION}/python_api.md"
-  # copy_if_changed "./Docs/Example.CarlaSettings.ini" "${DESTINATION}/Example.CarlaSettings.ini"
+  copy_if_changed "./Docs/python_api.md" "${DESTINATION}/PythonAPI/python_api.md"
   copy_if_changed "./Util/Docker/Release.Dockerfile" "${DESTINATION}/Dockerfile"
-  copy_if_changed "./PythonAPI/dist/*.egg" "${DESTINATION}/PythonAPI/"
-  copy_if_changed "./PythonAPI/agents/" "${DESTINATION}/PythonAPI/agents"
-  copy_if_changed "./PythonAPI/automatic_control.py" "${DESTINATION}/automatic_control.py"
-  copy_if_changed "./PythonAPI/dynamic_weather.py" "${DESTINATION}/dynamic_weather.py"
-  copy_if_changed "./PythonAPI/manual_control.py" "${DESTINATION}/manual_control.py"
-  copy_if_changed "./PythonAPI/spawn_npc.py" "${DESTINATION}/spawn_npc.py"
-  copy_if_changed "./PythonAPI/tutorial.py" "${DESTINATION}/tutorial.py"
-  copy_if_changed "./PythonAPI/vehicle_gallery.py" "${DESTINATION}/vehicle_gallery.py"
+  copy_if_changed "./Util/ImportMaps.sh" "${DESTINATION}/ImportMaps.sh"
+
+  copy_if_changed "./PythonAPI/carla/dist/*.egg" "${DESTINATION}/PythonAPI/carla/dist/"
+  copy_if_changed "./PythonAPI/carla/agents/" "${DESTINATION}/PythonAPI/carla/agents"
+  copy_if_changed "./PythonAPI/carla/scene_layout.py" "${DESTINATION}/PythonAPI/carla/"
+  copy_if_changed "./PythonAPI/carla/requirements.txt" "${DESTINATION}/PythonAPI/carla/"
+
+  copy_if_changed "./PythonAPI/examples/*.py" "${DESTINATION}/PythonAPI/examples/"
+  copy_if_changed "./PythonAPI/examples/requirements.txt" "${DESTINATION}/PythonAPI/examples/"
+
+  copy_if_changed "./PythonAPI/util/*.py" "${DESTINATION}/PythonAPI/util/"
+  copy_if_changed "./PythonAPI/util/requirements.txt" "${DESTINATION}/PythonAPI/util/"
+
+  copy_if_changed "./Unreal/CarlaUE4/Content/Carla/HDMaps/*.pcd" "${DESTINATION}/HDMaps/"
+  copy_if_changed "./Unreal/CarlaUE4/Content/Carla/HDMaps/Readme.md" "${DESTINATION}/HDMaps/README"
 
   popd >/dev/null
 
@@ -126,6 +136,7 @@ if $DO_TARBALL ; then
   log "Packaging build."
 
   rm -f ./Manifest_NonUFSFiles_Linux.txt
+  rm -f ./Manifest_UFSFiles_Linux.txt
   rm -Rf ./CarlaUE4/Saved
   rm -Rf ./Engine/Saved
 

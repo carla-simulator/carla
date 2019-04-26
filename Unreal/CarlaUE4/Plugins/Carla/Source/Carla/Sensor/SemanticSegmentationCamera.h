@@ -8,6 +8,8 @@
 
 #include "Carla/Sensor/ShaderBasedSensor.h"
 
+#include "Carla/Actor/ActorDefinition.h"
+
 #include "SemanticSegmentationCamera.generated.h"
 
 /// Sensor that produces "semantic segmentation" images.

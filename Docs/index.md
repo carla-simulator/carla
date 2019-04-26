@@ -25,6 +25,8 @@
   * [Running without display and selecting GPUs](carla_headless.md)
   * [Running in a Docker](carla_docker.md)
   * [How to link Epic's Automotive Materials](epic_automotive_materials.md)
+  * [How to automatically generate a map from RoadRunner](generate_map_from_fbx.md)
+  * [How to export and import maps to distribution builds](export_import_dist.md)
 
 <h3>Map generation tools</h3>
 

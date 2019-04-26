@@ -6,8 +6,10 @@
 
 #pragma once
 
-#include "Carla/Sensor/PixelReader.h"
 #include "Carla/Sensor/SceneCaptureSensor.h"
+
+#include "Carla/Actor/ActorDefinition.h"
+#include "Carla/Sensor/PixelReader.h"
 
 #include "SceneCaptureCamera.generated.h"
 

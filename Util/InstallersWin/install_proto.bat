@@ -27,7 +27,7 @@ if not "%1"=="" (
     goto :arg-parse
 )
 
-if [%BUILD_DIR%] == [] set BUILD_DIR=.
+if [%BUILD_DIR%] == [] set BUILD_DIR=%~dp0
 if [%NUMBER_OF_ASYNC_JOBS%] == [] set NUMBER_OF_ASYNC_JOBS=1
 
 set LOCAL_PATH=%~dp0

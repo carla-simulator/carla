@@ -53,7 +53,7 @@ namespace tcp {
     }
 
     template <typename... Buffers>
-    static auto MakeMessage(Buffers... buffers) {
+    static auto MakeMessage(Buffers &&... buffers) {
       static_assert(
           are_same<Buffer, Buffers...>::value,
           "This function only accepts arguments of type Buffer.");
@@ -65,7 +65,7 @@ namespace tcp {
 
     /// Writes some data to the socket.
     template <typename... Buffers>
-    void Write(Buffers... buffers) {
+    void Write(Buffers &&... buffers) {
       Write(MakeMessage(std::move(buffers)...));
     }
 

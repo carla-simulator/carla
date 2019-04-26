@@ -44,7 +44,7 @@ namespace tcp {
     MessageTmpl(size_t) {}
 
     template <typename... Buffers>
-    MessageTmpl(size_t size, Buffer buffer, Buffers... buffers)
+    MessageTmpl(size_t size, Buffer &&buffer, Buffers &&... buffers)
       : MessageTmpl(size, std::move(buffers)...) {
       ++_number_of_buffers;
       _total_size += buffer.size();
@@ -55,7 +55,7 @@ namespace tcp {
   public:
 
     template <typename... Buffers>
-    MessageTmpl(Buffer buf, Buffers... buffers)
+    MessageTmpl(Buffer &&buf, Buffers &&... buffers)
       : MessageTmpl(sizeof...(Buffers) + 1u, std::move(buf), std::move(buffers)...) {
       static_assert(sizeof...(Buffers) < max_size(), "Too many buffers!");
       _buffer_views[0u] = boost::asio::buffer(&_total_size, sizeof(_total_size));

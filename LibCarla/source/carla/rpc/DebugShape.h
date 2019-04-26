@@ -6,15 +6,14 @@
 
 #pragma once
 
+#include "carla/MsgPack.h"
+#include "carla/MsgPackAdaptors.h"
 #include "carla/geom/BoundingBox.h"
 #include "carla/geom/Location.h"
 #include "carla/geom/Rotation.h"
 #include "carla/rpc/Color.h"
-#include "carla/rpc/Variant.h"
 
-// #include <rpc/msgpack/adaptor/boost/msgpack_variant.hpp>
-
-// #include <boost/variant.hpp>
+#include <boost/variant.hpp>
 
 namespace carla {
 namespace rpc {
@@ -55,7 +54,7 @@ namespace rpc {
       MSGPACK_DEFINE_ARRAY(location, text, draw_shadow);
     };
 
-    Variant<Point, Line, Arrow, Box, String> primitive;
+    boost::variant<Point, Line, Arrow, Box, String> primitive;
 
     Color color = {255u, 0u, 0u};
 

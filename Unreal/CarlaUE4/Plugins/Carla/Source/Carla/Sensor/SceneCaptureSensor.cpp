@@ -7,6 +7,8 @@
 #include "Carla.h"
 #include "Carla/Sensor/SceneCaptureSensor.h"
 
+#include "Carla/Game/CarlaStatics.h"
+
 #include "Components/DrawFrustumComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Components/StaticMeshComponent.h"
@@ -28,10 +30,9 @@ namespace SceneCaptureSensor_local_ns {
 
   static auto GetQualitySettings(UWorld *World)
   {
-    check(World != nullptr);
-    const auto *GameInstance = Cast<UCarlaGameInstance>(World->GetGameInstance());
-    check(GameInstance != nullptr);
-    return GameInstance->GetCarlaSettings().GetQualityLevel();
+    auto Settings = UCarlaStatics::GetCarlaSettings(World);
+    check(Settings != nullptr);
+    return Settings->GetQualityLevel();
   }
 
 } // namespace SceneCaptureSensor_local_ns
