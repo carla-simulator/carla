@@ -49,6 +49,14 @@ namespace road {
     }
   }
 
+  static double GetDistanceAtEndOfLane(const Lane &lane) {
+    if (lane.GetId() > 0) {
+      return lane.GetDistance() + 10.0 * EPSILON;
+    } else {
+      return lane.GetDistance() + lane.GetLength() - 10.0 * EPSILON;
+    }
+  }
+
   /// Return a waypoint for each drivable lane on @a lane_section.
   template <typename FuncT>
   static void ForEachDrivableLaneImpl(
@@ -377,6 +385,24 @@ namespace road {
     return result;
   }
 
+  std::vector<Waypoint> Map::GetPredecessors(const Waypoint waypoint) const {
+    const auto &prev_lanes = GetLane(waypoint).GetPreviousLanes();
+    std::vector<Waypoint> result;
+    result.reserve(prev_lanes.size());
+    for (auto *next_lane : prev_lanes) {
+      THROW_INVALID_INPUT_ASSERT(next_lane != nullptr);
+      const auto lane_id = next_lane->GetId();
+      THROW_INVALID_INPUT_ASSERT(lane_id != 0);
+      const auto *section = next_lane->GetLaneSection();
+      THROW_INVALID_INPUT_ASSERT(section != nullptr);
+      const auto *road = next_lane->GetRoad();
+      THROW_INVALID_INPUT_ASSERT(road != nullptr);
+      const auto distance = GetDistanceAtEndOfLane(*next_lane);
+      result.emplace_back(Waypoint{road->GetId(), section->GetId(), lane_id, distance});
+    }
+    return result;
+  }
+
   std::vector<Waypoint> Map::GetNext(
       const Waypoint waypoint,
       const double distance) const {
@@ -440,6 +466,33 @@ namespace road {
         ForEachDrivableLaneAt(road, s, [&](auto &&waypoint) {
           result.emplace_back(waypoint);
         });
+      }
+    }
+    return result;
+  }
+
+  std::vector<Waypoint> Map::GenerateWaypointsOnRoadEntries() const {
+    std::vector<Waypoint> result;
+    for (const auto &pair : _data.GetRoads()) {
+      const auto &road = pair.second;
+      // right lanes start at s 0
+      for (const auto &lane_section : road.GetLaneSectionsAt(0.0)) {
+        for (const auto &lane : lane_section.GetLanes()) {
+          // add only the right (negative) lanes
+          if (lane.first < 0 && lane.second.GetType() == Lane::LaneType::Driving) {
+            result.emplace_back(Waypoint{ road.GetId(), lane_section.GetId(), lane.second.GetId(), 0.0 });
+          }
+        }
+      }
+      // left lanes start at s max
+      const auto road_len = road.GetLength();
+      for (const auto &lane_section : road.GetLaneSectionsAt(road_len)) {
+        for (const auto &lane : lane_section.GetLanes()) {
+          // add only the left (positive) lanes
+          if (lane.first > 0 && lane.second.GetType() == Lane::LaneType::Driving) {
+            result.emplace_back(Waypoint{ road.GetId(), lane_section.GetId(), lane.second.GetId(), road_len });
+          }
+        }
       }
     }
     return result;
