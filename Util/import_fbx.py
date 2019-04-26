@@ -6,7 +6,7 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-"""Generate map from FBX"""
+"""Bulk Import FBX"""
 
 import os
 import json
@@ -36,12 +36,6 @@ def import_all_fbx_in_folder(fbx_folder):
         if file.endswith(".PropRegistry.json"):
             with open(os.path.join(dirname, "..", fbx_folder, file)) as json_file:
                 data = json.load(json_file)
-                for prop in data['definitions']:
-                    print("Name: " + prop["name"])
-                    print("Size: " + prop["size"])
-                    print("Source: " + prop["source"])
-                    print("Path: " + prop["path"])
-                    #import_assets_commandlet(prop["source"], fbx_folder, prop["path"])
                 import_assets_commandlet(data, fbx_folder)
 
 
@@ -55,16 +49,6 @@ def parse_arguments():
         default="FBXImporter",
         help='FBX containing folder')
     return argparser.parse_args()
-
-
-def cleanup_assets(map_name):
-    dirname = os.getcwd()
-    content_folder = os.path.join(dirname, "..", "Unreal", "CarlaUE4", "Content", "Carla")
-    origin_folder = os.path.join(content_folder, "Static", "Imported", map_name)
-    for filename in os.listdir(origin_folder):
-        if map_name in filename:
-            removal_path = os.path.join(origin_folder, filename)
-            os.remove(removal_path)
 
 
 def import_assets_commandlet(json_data, fbx_folder):
@@ -81,42 +65,6 @@ def import_assets_commandlet(json_data, fbx_folder):
     os.remove(importfile)
 
 
-def generate_map(map_name, args):
-    commandlet_name = "MapProcess"
-    commandlet_arguments = "-mapname=\"%s\"" % map_name
-    if args.usecarlamats:
-        commandlet_arguments += " -use-carla-materials"
-    invoke_commandlet(commandlet_name, commandlet_arguments)
-# This line might be needed if Epic tells us anything about the current
-# way of doing the movement. It shouldn't but just in case...
-
-
-def move_uassets(map_name):
-    dirname = os.getcwd()
-    content_folder = os.path.join(dirname, "..", "Unreal", "CarlaUE4", "Content", "Carla")
-    origin_folder = os.path.join(content_folder, "Static", map_name)
-    dest_path = ""
-    src_path = ""
-    marking_dir = os.path.join(content_folder, "Static", "RoadLines", "%sLaneMarking" % map_name)
-    road_dir = os.path.join(content_folder, "Static", "Road", "Roads%s" % map_name)
-    terrain_dir = os.path.join(content_folder, "Static", "Terrain", "%sTerrain" % map_name)
-    if not os.path.exists(marking_dir):
-        os.makedirs(marking_dir)
-    if not os.path.exists(road_dir):
-        os.makedirs(road_dir)
-    if not os.path.exists(terrain_dir):
-        os.makedirs(terrain_dir)
-    for filename in os.listdir(origin_folder):
-        if "MarkingNode" in filename:
-            dest_path = os.path.join(marking_dir, filename)
-        if "RoadNode" in filename:
-            dest_path = os.path.join(road_dir, filename)
-        if "TerrainNode" in filename:
-            dest_path = os.path.join(terrain_dir, filename)
-        src_path = os.path.join(content_folder, "Static", map_name, filename)
-        os.rename(src_path, dest_path)
-
-
 def invoke_commandlet(name, arguments):
     ue4_path = os.environ['UE4_ROOT']
     dirname = os.getcwd()
@@ -131,10 +79,6 @@ def generate_json(json_data, fbx_folder, json_file):
         import_groups = []
         file_names = []
         import_settings = []
-        #print("Name: " + prop["name"])
-        #print("Size: " + prop["size"])
-        #print("Source: " + prop["source"])
-        #print("Path: " + prop["path"])
         import_settings.append({
             "bImportMesh": 1,
             "bConvertSceneUnit": 1,
