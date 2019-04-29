@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -17,8 +17,10 @@ class UCarlaBlueprintRegistry : public UBlueprintFunctionLibrary
 
 private:
 
-  UPROPERTY()
-  TSet<FString> PropNames;
+  // Prop Attributes
+  const FString PROP_NAME = FString("name");
+  const FString PROP_PATH = FString("path");
+  const FString PROP_SIZE = FString("size");
 
 public:
 

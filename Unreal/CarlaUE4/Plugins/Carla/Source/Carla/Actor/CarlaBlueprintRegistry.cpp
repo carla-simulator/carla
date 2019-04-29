@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -20,24 +20,43 @@ void UCarlaBlueprintRegistry::AddToCarlaBlueprintRegistry(const TArray<FPropPara
   TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject());
   TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(JsonString);
 
-  TArray<TSharedPtr<FJsonValue>> PropJsonArray;
-
-  // Populate definitions array if correspoding field exists in file
+  // Populate default file definitions array if corresponding field exists in
+  // file
+  TMap<FString, int> PropIndexes;
+  TArray<TSharedPtr<FJsonValue>> ResultPropJsonArray;
   if (FJsonSerializer::Deserialize(JsonReader, JsonObject) && JsonObject.IsValid())
   {
-    PropJsonArray = JsonObject->GetArrayField("definitions");
+    ResultPropJsonArray = JsonObject->GetArrayField("definitions");
+    for (int i = 0; i < ResultPropJsonArray.Num(); ++i)
+    {
+      TSharedPtr<FJsonObject> PropJsonObject = ResultPropJsonArray[i]->AsObject();
+
+      FString Name = PropJsonObject->GetStringField(PROP_NAME);
+
+      PropIndexes.Add(Name, i);
+    }
   }
 
   // Add Input Prop Parameters
   for (auto &PropParameter : PropParametersArray)
   {
-    TSharedPtr<FJsonObject> PropJsonObject = MakeShareable(new FJsonObject);
+    TSharedPtr<FJsonObject> PropJsonObject;
+
+    int *PropIndex = PropIndexes.Find(PropParameter.Name);
+    if (PropIndex)
+    {
+      PropJsonObject = ResultPropJsonArray[*PropIndex]->AsObject();
+    }
+    else
+    {
+      PropJsonObject = MakeShareable(new FJsonObject);
+    }
 
     // Name
-    PropJsonObject->SetStringField("name", PropParameter.Name);
+    PropJsonObject->SetStringField(PROP_NAME, PropParameter.Name);
 
     // Path
-    PropJsonObject->SetStringField("path", PropParameter.Mesh->GetPathName());
+    PropJsonObject->SetStringField(PROP_PATH, PropParameter.Mesh->GetPathName());
 
     // Size
     auto GetSize = [](EPropSize Value) {
@@ -51,14 +70,22 @@ void UCarlaBlueprintRegistry::AddToCarlaBlueprintRegistry(const TArray<FPropPara
         default:                 return TEXT("unknown");
       }
     };
-    PropJsonObject->SetStringField("size", GetSize(PropParameter.Size));
+    PropJsonObject->SetStringField(PROP_SIZE, GetSize(PropParameter.Size));
 
-    // Add Json Prop to array
     TSharedRef<FJsonValue> PropJsonValue = MakeShareable(new FJsonValueObject(PropJsonObject));
-    PropJsonArray.Add(PropJsonValue);
+    if (PropIndex)
+    {
+      ResultPropJsonArray[*PropIndex] = PropJsonValue;
+    }
+    else
+    {
+      ResultPropJsonArray.Add(PropJsonValue);
+
+      PropIndexes.Add(PropParameter.Name, ResultPropJsonArray.Num() - 1);
+    }
   }
 
-  JsonObject->SetArrayField("definitions", PropJsonArray);
+  JsonObject->SetArrayField("definitions", ResultPropJsonArray);
 
   // Serialize file
   FString OutputString;
@@ -74,19 +101,42 @@ void UCarlaBlueprintRegistry::LoadPropDefinitions(TArray<FActorDefinition> &Defi
 {
   // Loads prop registry json files
   const FString PropsFolderPath = FPaths::ProjectContentDir() + "/Carla/Config/";
-  TArray<FString> PropNameList;
-  IFileManager::Get().FindFilesRecursive(PropNameList,
+  const FString Extension = ".PropRegistry.json";
+  const FString WildCard = (FString("*").Append(Extension));
+
+  TArray<FString> PropFileNames;
+  IFileManager::Get().FindFilesRecursive(PropFileNames,
       *PropsFolderPath,
-      TEXT("*.PropRegistry.json"),
+      *WildCard,
       true,
       false,
       false);
 
-  // Make prop definition for each prop registry file
-  for (auto &PropFilePath : PropNameList)
+  // Sort and place Default File First
+  PropFileNames.Sort();
+  FString DefaultFileName;
+  bool bDefaultFileFound = false;
+  for (int i = 0; i < PropFileNames.Num() && !bDefaultFileFound; ++i)
+  {
+    if (PropFileNames[i].Contains("Default"))
+    {
+      DefaultFileName = PropFileNames[i];
+      PropFileNames.RemoveAt(i);
+      bDefaultFileFound = true;
+    }
+  }
+  if (bDefaultFileFound)
+  {
+    PropFileNames.Insert(DefaultFileName, 0);
+  }
+
+  // Read all registry files and overwrite default registry values with user
+  // registry files
+  TMap<FString, TMap<FString, FString>> PropParametersMap;
+  for (uint32_t i = 0; i < PropFileNames.Num(); ++i)
   {
     FString FileJsonContent;
-    if (FFileHelper::LoadFileToString(FileJsonContent, *PropFilePath))
+    if (FFileHelper::LoadFileToString(FileJsonContent, *PropFileNames[i]))
     {
       TSharedPtr<FJsonObject> JsonParsed;
       TSharedRef<TJsonReader<TCHAR>> JsonReader = TJsonReaderFactory<TCHAR>::Create(FileJsonContent);
@@ -99,37 +149,41 @@ void UCarlaBlueprintRegistry::LoadPropDefinitions(TArray<FActorDefinition> &Defi
           // Read Prop Json
           TSharedPtr<FJsonObject> PropJsonObject = PropJsonValue->AsObject();
 
-          FString PropName = PropJsonObject->GetStringField("name");
-          FString PropPath = PropJsonObject->GetStringField("path");
-          FString PropSize = PropJsonObject->GetStringField("size");
+          FString PropName = PropJsonObject->GetStringField(PROP_NAME);
+          FString PropPath = PropJsonObject->GetStringField(PROP_PATH);
+          FString PropSize = PropJsonObject->GetStringField(PROP_SIZE);
 
-          // Create Definition if not repeated
-          if (!PropNames.Contains(PropName))
-          {
-            FActorDefinition Definition;
-            FillIdAndTags(Definition, TEXT("static"),  TEXT("prop"), PropName);
-            AddRecommendedValuesForActorRoleName(Definition, {TEXT("prop")});
+          TMap<FString, FString> Params;
+          Params.Add(PROP_PATH, PropPath);
+          Params.Add(PROP_SIZE, PropSize);
 
-            Definition.Attributes.Emplace(FActorAttribute{
-              TEXT("path"),
-              EActorAttributeType::String,
-              *PropPath});
-
-            Definition.Attributes.Emplace(FActorAttribute{
-              TEXT("size"),
-              EActorAttributeType::String,
-              *PropSize});
-
-            bool Success = UActorBlueprintFunctionLibrary::CheckActorDefinition(Definition);
-            if (Success)
-            {
-              Definitions.Emplace(std::move(Definition));
-              PropNames.Add(PropName);
-            }
-          }
-
+          PropParametersMap.Add(PropName, Params);
         }
       }
+    }
+  }
+
+  // Make Definitions from resulting registry parameters
+  for (auto &PropParameters : PropParametersMap)
+  {
+    FActorDefinition Definition;
+    FillIdAndTags(Definition, TEXT("static"),  TEXT("prop"), PropParameters.Key);
+    AddRecommendedValuesForActorRoleName(Definition, {TEXT("prop")});
+
+    Definition.Attributes.Emplace(FActorAttribute{
+      PROP_PATH,
+      EActorAttributeType::String,
+      *PropParameters.Value[PROP_PATH]});
+
+    Definition.Attributes.Emplace(FActorAttribute{
+      PROP_SIZE,
+      EActorAttributeType::String,
+      *PropParameters.Value[PROP_SIZE]});
+
+    bool Success = UActorBlueprintFunctionLibrary::CheckActorDefinition(Definition);
+    if (Success)
+    {
+      Definitions.Emplace(std::move(Definition));
     }
   }
 }
