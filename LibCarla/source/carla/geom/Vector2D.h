@@ -131,12 +131,12 @@ namespace geom {
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
     /// Return a Vector2D converted from centimeters to meters.
-    [[ nodiscard ]] Vector2D ToMeters() const {
+    Vector2D ToMeters() const {
       return *this * 1e-2f;
     }
 
     /// Return a Vector2D converted from meters to centimeters.
-    [[ nodiscard ]] Vector2D ToCentimeters() const {
+    Vector2D ToCentimeters() const {
       return *this * 1e2f;
     }
 
