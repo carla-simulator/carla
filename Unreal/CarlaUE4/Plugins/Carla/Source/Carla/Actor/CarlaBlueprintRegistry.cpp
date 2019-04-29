@@ -8,11 +8,25 @@
 #include "Carla/Actor/CarlaBlueprintRegistry.h"
 #include "Carla/Game/CarlaStatics.h"
 
+namespace CommonAttributes {
+  static const FString PATH = FPaths::ProjectContentDir() + FString("/Carla/Config/");
+  static const FString DEFAULT = TEXT("Default");
+  static const FString DEFINITIONS = TEXT("definitions");
+}
+
+namespace PropAttributes {
+  static const FString REGISTRY_FORMAT = TEXT(".PropRegistry.json");
+  static const FString NAME = TEXT("name");
+  static const FString PATH = TEXT("path");
+  static const FString SIZE = TEXT("size");
+}
+
 void UCarlaBlueprintRegistry::AddToCarlaBlueprintRegistry(const TArray<FPropParameters> &PropParametersArray)
 {
   // Load default props file
-  const FString PropsFolderPath = FPaths::ProjectContentDir() + "/Carla/Config";
-  const FString DefaultPropFilePath = PropsFolderPath + "/" + "Default.PropRegistry.json";
+  const FString PropsFolderPath = CommonAttributes::PATH;
+  const FString DefaultPropFilePath = PropsFolderPath + CommonAttributes::DEFAULT +
+      PropAttributes::REGISTRY_FORMAT;
 
   FString JsonString;
   FFileHelper::LoadFileToString(JsonString, *DefaultPropFilePath);
@@ -26,13 +40,11 @@ void UCarlaBlueprintRegistry::AddToCarlaBlueprintRegistry(const TArray<FPropPara
   TArray<TSharedPtr<FJsonValue>> ResultPropJsonArray;
   if (FJsonSerializer::Deserialize(JsonReader, JsonObject) && JsonObject.IsValid())
   {
-    ResultPropJsonArray = JsonObject->GetArrayField("definitions");
-    for (int i = 0; i < ResultPropJsonArray.Num(); ++i)
+    ResultPropJsonArray = JsonObject->GetArrayField(CommonAttributes::DEFINITIONS);
+    for (auto i = 0u; i < ResultPropJsonArray.Num(); ++i)
     {
       TSharedPtr<FJsonObject> PropJsonObject = ResultPropJsonArray[i]->AsObject();
-
-      FString Name = PropJsonObject->GetStringField(PROP_NAME);
-
+      FString Name = PropJsonObject->GetStringField(PropAttributes::NAME);
       PropIndexes.Add(Name, i);
     }
   }
@@ -53,24 +65,20 @@ void UCarlaBlueprintRegistry::AddToCarlaBlueprintRegistry(const TArray<FPropPara
     }
 
     // Name
-    PropJsonObject->SetStringField(PROP_NAME, PropParameter.Name);
+    PropJsonObject->SetStringField(PropAttributes::NAME, PropParameter.Name);
 
     // Path
-    PropJsonObject->SetStringField(PROP_PATH, PropParameter.Mesh->GetPathName());
+    PropJsonObject->SetStringField(PropAttributes::PATH, PropParameter.Mesh->GetPathName());
 
     // Size
-    auto GetSize = [](EPropSize Value) {
-      switch (Value)
-      {
-        case EPropSize::Tiny:    return TEXT("tiny");
-        case EPropSize::Small:   return TEXT("small");
-        case EPropSize::Medium:  return TEXT("medium");
-        case EPropSize::Big:     return TEXT("big");
-        case EPropSize::Huge:    return TEXT("huge");
-        default:                 return TEXT("unknown");
-      }
-    };
-    PropJsonObject->SetStringField(PROP_SIZE, GetSize(PropParameter.Size));
+    FString PropSize = FString("unknown");
+    const UEnum *ptr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EPropSize"), true);
+    if (ptr)
+    {
+      PropSize = ptr->GetNameStringByIndex(static_cast<int32>(PropParameter.Size));
+    }
+
+    PropJsonObject->SetStringField(PropAttributes::SIZE, PropSize);
 
     TSharedRef<FJsonValue> PropJsonValue = MakeShareable(new FJsonValueObject(PropJsonObject));
     if (PropIndex)
@@ -85,7 +93,7 @@ void UCarlaBlueprintRegistry::AddToCarlaBlueprintRegistry(const TArray<FPropPara
     }
   }
 
-  JsonObject->SetArrayField("definitions", ResultPropJsonArray);
+  JsonObject->SetArrayField(CommonAttributes::DEFINITIONS, ResultPropJsonArray);
 
   // Serialize file
   FString OutputString;
@@ -100,9 +108,8 @@ void UCarlaBlueprintRegistry::AddToCarlaBlueprintRegistry(const TArray<FPropPara
 void UCarlaBlueprintRegistry::LoadPropDefinitions(TArray<FActorDefinition> &Definitions)
 {
   // Loads prop registry json files
-  const FString PropsFolderPath = FPaths::ProjectContentDir() + "/Carla/Config/";
-  const FString Extension = ".PropRegistry.json";
-  const FString WildCard = (FString("*").Append(Extension));
+  const FString PropsFolderPath = CommonAttributes::PATH;
+  const FString WildCard = FString("*").Append(PropAttributes::REGISTRY_FORMAT);
 
   TArray<FString> PropFileNames;
   IFileManager::Get().FindFilesRecursive(PropFileNames,
@@ -116,9 +123,9 @@ void UCarlaBlueprintRegistry::LoadPropDefinitions(TArray<FActorDefinition> &Defi
   PropFileNames.Sort();
   FString DefaultFileName;
   bool bDefaultFileFound = false;
-  for (int i = 0; i < PropFileNames.Num() && !bDefaultFileFound; ++i)
+  for (auto i = 0u; i < PropFileNames.Num() && !bDefaultFileFound; ++i)
   {
-    if (PropFileNames[i].Contains("Default"))
+    if (PropFileNames[i].Contains(CommonAttributes::DEFAULT))
     {
       DefaultFileName = PropFileNames[i];
       PropFileNames.RemoveAt(i);
@@ -132,8 +139,10 @@ void UCarlaBlueprintRegistry::LoadPropDefinitions(TArray<FActorDefinition> &Defi
 
   // Read all registry files and overwrite default registry values with user
   // registry files
-  TMap<FString, TMap<FString, FString>> PropParametersMap;
-  for (uint32_t i = 0; i < PropFileNames.Num(); ++i)
+  TArray<FPropParameters> PropParametersArray;
+  TMap<FString, int> PropIndexes;
+
+  for (auto i = 0u; i < PropFileNames.Num(); ++i)
   {
     FString FileJsonContent;
     if (FFileHelper::LoadFileToString(FileJsonContent, *PropFileNames[i]))
@@ -142,48 +151,42 @@ void UCarlaBlueprintRegistry::LoadPropDefinitions(TArray<FActorDefinition> &Defi
       TSharedRef<TJsonReader<TCHAR>> JsonReader = TJsonReaderFactory<TCHAR>::Create(FileJsonContent);
       if (FJsonSerializer::Deserialize(JsonReader, JsonParsed))
       {
-        auto PropJsonArray = JsonParsed->GetArrayField("definitions");
+        auto PropJsonArray = JsonParsed->GetArrayField(CommonAttributes::DEFINITIONS);
 
         for (auto &PropJsonValue : PropJsonArray)
         {
           // Read Prop Json
           TSharedPtr<FJsonObject> PropJsonObject = PropJsonValue->AsObject();
 
-          FString PropName = PropJsonObject->GetStringField(PROP_NAME);
-          FString PropPath = PropJsonObject->GetStringField(PROP_PATH);
-          FString PropSize = PropJsonObject->GetStringField(PROP_SIZE);
+          FString PropName = PropJsonObject->GetStringField(PropAttributes::NAME);
 
-          TMap<FString, FString> Params;
-          Params.Add(PROP_PATH, PropPath);
-          Params.Add(PROP_SIZE, PropSize);
+          FString PropMeshPath = PropJsonObject->GetStringField(PropAttributes::PATH);
+          UStaticMesh *PropMesh = LoadObject<UStaticMesh>(nullptr, *PropMeshPath);
 
-          PropParametersMap.Add(PropName, Params);
+          FString PropSize = PropJsonObject->GetStringField(PropAttributes::SIZE);
+
+          EPropSize EnumSize = EPropSize::INVALID;
+          const UEnum *EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EPropSize"), true);
+          if (EnumPtr)
+          {
+            EnumSize = (EPropSize) EnumPtr->GetIndexByName(FName(*PropSize));
+          }
+
+          FPropParameters Params {PropName, PropMesh, EnumSize};
+
+          if (PropIndexes.Contains(PropName))
+          {
+            PropParametersArray[PropIndexes[PropName]] = Params;
+          }
+          else
+          {
+            PropParametersArray.Add(Params);
+            PropIndexes.Add(Params.Name, PropParametersArray.Num() - 1);
+          }
         }
       }
     }
   }
 
-  // Make Definitions from resulting registry parameters
-  for (auto &PropParameters : PropParametersMap)
-  {
-    FActorDefinition Definition;
-    FillIdAndTags(Definition, TEXT("static"),  TEXT("prop"), PropParameters.Key);
-    AddRecommendedValuesForActorRoleName(Definition, {TEXT("prop")});
-
-    Definition.Attributes.Emplace(FActorAttribute{
-      PROP_PATH,
-      EActorAttributeType::String,
-      *PropParameters.Value[PROP_PATH]});
-
-    Definition.Attributes.Emplace(FActorAttribute{
-      PROP_SIZE,
-      EActorAttributeType::String,
-      *PropParameters.Value[PROP_SIZE]});
-
-    bool Success = UActorBlueprintFunctionLibrary::CheckActorDefinition(Definition);
-    if (Success)
-    {
-      Definitions.Emplace(std::move(Definition));
-    }
-  }
+  UActorBlueprintFunctionLibrary::MakePropDefinitions(PropParametersArray, Definitions);
 }

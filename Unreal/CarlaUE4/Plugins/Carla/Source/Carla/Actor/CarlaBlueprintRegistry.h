@@ -15,13 +15,6 @@ class UCarlaBlueprintRegistry : public UBlueprintFunctionLibrary
 {
   GENERATED_BODY()
 
-private:
-
-  // Prop Attributes
-  const FString PROP_NAME = FString("name");
-  const FString PROP_PATH = FString("path");
-  const FString PROP_SIZE = FString("size");
-
 public:
 
   UFUNCTION(Category = "Carla Blueprint Registry", BlueprintCallable)
