@@ -110,6 +110,15 @@ def get_libcarla_extensions():
 
     return [make_extension('carla.libcarla', sources)]
 
+# Prepare long description using existing docs 
+long_description = ""
+this_dir = os.path.abspath(os.path.dirname(__file__))
+doc_files = ["README.md", "../../Docs/python_api_tutorial.md", 
+        "../../Docs/python_api.md"]
+for doc in doc_files:
+    with open(os.path.join(this_dir, doc), 'r') as f:
+        long_description = "\n".join([long_description, f.read()])
+long_description = long_description.replace("img/", os.path.join(this_dir, "../../Docs/img/"))
 
 setup(
     name='carla',
@@ -119,6 +128,8 @@ setup(
     ext_modules=get_libcarla_extensions(),
     license='MIT License',
     description='Python API for communicating with the CARLA server.',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     url='https://github.com/carla-simulator/carla',
     author='The CARLA team',
     author_email='carla.simulator@gmail.com',
