@@ -118,7 +118,9 @@ doc_files = ["README.md", "../../Docs/python_api_tutorial.md",
 for doc in doc_files:
     with open(os.path.join(this_dir, doc), 'r') as f:
         long_description = "\n".join([long_description, f.read()])
-long_description = long_description.replace("img/", os.path.join(this_dir, "../../Docs/img/"))
+# Replace relative path to images with Github URI
+long_description = long_description.replace("(img/",
+        "(https://raw.githubusercontent.com/carla-simulator/carla/master/Docs/img/")
 
 setup(
     name='carla',
