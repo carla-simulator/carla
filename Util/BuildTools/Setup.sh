@@ -82,7 +82,10 @@ else
   rm -Rf ${BOOST_BASENAME}-source
 
   log "Retrieving boost."
-  wget "https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/boost_${BOOST_VERSION//./_}.tar.gz"
+  if [ ! -e boost_${BOOST_VERSION//./_}.tar.gz ]
+  then
+    wget "https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/boost_${BOOST_VERSION//./_}.tar.gz"
+  fi
   log "Extracting boost."
   tar -xzf ${BOOST_BASENAME//[-.]/_}.tar.gz
   mkdir -p ${BOOST_BASENAME}-install/include
@@ -92,62 +95,53 @@ else
 
   BOOST_TOOLSET="clang-6.0"
   BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
+  
+  # POP
+  PYTHONS=("cp27-cp27mu"
+		   "cp34-cp34m"
+		   "cp35-cp35m"
+		   "cp36-cp36m"
+		   "cp37-cp37m")
+  # Remove the default old Python 2.4.3 executable, and point it to a newer/desired version
+  rm -f /usr/bin/python2
+  ln -s /opt/python/cp27-cp27m/bin/python2 /usr/bin/python2
 
-  py2="/usr/bin/env python2"
-  py2_root=`${py2} -c "import sys; print(sys.prefix)"`
-  pyv=`$py2 -c "import sys;x='{v[0]}.{v[1]}'.format(v=list(sys.version_info[:2]));sys.stdout.write(x)";`
+  # Build boost for each PYTHONS
+  for ((i=0; i<${#PYTHONS[@]}; ++i)); do
+	  PYTHON=${PYTHONS[i]}
+	  PATH=/opt/python/${PYTHON}/bin:$PATH
+	  py=/opt/python/${PYTHON}/bin/python
+	  py_root=`${py} -c "import sys; print(sys.prefix)"`
+	  pyv=`${py} -c "import sys;x='{v[0]}.{v[1]}'.format(v=list(sys.version_info[:2]));sys.stdout.write(x)";`
   ./bootstrap.sh \
       --with-toolset=clang \
       --prefix=../boost-install \
       --with-libraries=python,filesystem \
-      --with-python=${py2} --with-python-root=${py2_root}
+      --with-python=${py} --with-python-root=${py_root}
 
-  if ${TRAVIS}
-  then
-    echo "using python : ${pyv} : ${py2_root}/bin/python2 ;" > ${HOME}/user-config.jam
-  else
-    echo "using python : ${pyv} : ${py2_root}/bin/python2 ;" > project-config.jam
-  fi
+	  if ${TRAVIS}
+	  then
+		echo "using python : ${pyv} : ${py_root}/bin/python ;" > ${HOME}/user-config.jam
+	  else
+		echo "using python : ${pyv} : ${py_root}/bin/python ;" > project-config.jam
+	  fi
 
-  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
-  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
-  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} --clean-all
+	  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
+	  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
+	  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} --clean-all
 
-  # Get rid of  python2 build artifacts completely & do a clean build for python3
-  popd >/dev/null
-  rm -Rf ${BOOST_BASENAME}-source
-  tar -xzf ${BOOST_BASENAME//[-.]/_}.tar.gz
-  mkdir -p ${BOOST_BASENAME}-install/include
-  mv ${BOOST_BASENAME//[-.]/_} ${BOOST_BASENAME}-source
-  pushd ${BOOST_BASENAME}-source >/dev/null
-
-  py3="/usr/bin/env python3"
-  py3_root=`${py3} -c "import sys; print(sys.prefix)"`
-  pyv=`$py3 -c "import sys;x='{v[0]}.{v[1]}'.format(v=list(sys.version_info[:2]));sys.stdout.write(x)";`
-  ./bootstrap.sh \
-      --with-toolset=clang \
-      --prefix=../boost-install \
-      --with-libraries=python \
-      --with-python=${py3} --with-python-root=${py3_root}
-
-  if ${TRAVIS}
-  then
-    echo "using python : ${pyv} : ${py3_root}/bin/python3 ;" > ${HOME}/user-config.jam
-  else
-    echo "using python : ${pyv} : ${py3_root}/bin/python3 ;" > project-config.jam
-  fi
-
-  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
-  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
-
-  popd >/dev/null
-
-  rm -Rf ${BOOST_BASENAME}-source
-  rm ${BOOST_BASENAME//[-.]/_}.tar.gz
+	  # Get rid of  build artifacts
+	  popd >/dev/null
+	  rm -Rf ${BOOST_BASENAME}-source
+	  tar -xzf ${BOOST_BASENAME//[-.]/_}.tar.gz
+	  mkdir -p ${BOOST_BASENAME}-install/include
+	  mv ${BOOST_BASENAME//[-.]/_} ${BOOST_BASENAME}-source
+	  pushd ${BOOST_BASENAME}-source >/dev/null
+  done
+  unset BOOST_BASENAME
 
 fi
 
-unset BOOST_BASENAME
 
 # ==============================================================================
 # -- Get rpclib and compile it with libc++ and libstdc++ -----------------------
