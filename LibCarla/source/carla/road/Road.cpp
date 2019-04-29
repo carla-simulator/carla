@@ -43,7 +43,7 @@ namespace road {
     return _is_junction;
   }
 
-  JuncId Road::GetJunction() const {
+  JuncId Road::GetJunctionId() const {
     return _junction_id;
   }
 

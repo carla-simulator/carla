@@ -19,7 +19,11 @@ namespace client {
 
   Waypoint::~Waypoint() = default;
 
-  bool Waypoint::IsIntersection() const {
+  road::JuncId Waypoint::GetJunctionId() const {
+    return _parent->GetMap().GetJunctionId(_waypoint.road_id);
+  }
+
+  bool Waypoint::IsJunction() const {
     return _parent->GetMap().IsJunction(_waypoint.road_id);
   }
 

@@ -143,7 +143,7 @@ def main():
 
             # Render some nice information, notice that you can't see the strings if you are using an editor camera
             draw_waypoint_info(debug, current_w, trail_life_time)
-            draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_intersection else green, trail_life_time)
+            draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else green, trail_life_time)
             draw_transform(debug, current_w.transform, white, trail_life_time)
 
             # print the remaining waypoints

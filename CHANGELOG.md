@@ -5,6 +5,8 @@
     - Camera following in playback was not working if a new map was needed to load.
     - API function 'show_recorder_file_info' was showing the wrong parent id.
     - Script 'start_recording.py' now properly saves destruction of actors at stop.
+  * API extension: waypoint's `junction_id` that returns de OpenDrive identifier of the current junction
+  * API change: deprecated waypoint's `is_intersection`, now is `is_junction`
   * New recorder features:
     - Added optional parameter to show more details about a recorder file (related to `show_recorder_file_info.py`)
     - Added playback speed (slow/fast motion) for the replayer
