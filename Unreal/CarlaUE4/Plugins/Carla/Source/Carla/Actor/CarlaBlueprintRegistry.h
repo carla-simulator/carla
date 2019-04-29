@@ -15,6 +15,12 @@ class UCarlaBlueprintRegistry : public UBlueprintFunctionLibrary
 {
   GENERATED_BODY()
 
+private:
+
+  static FString PropSizeTypeToString(EPropSize PropSizeType);
+
+  static EPropSize StringToPropSizeType(FString PropSize);
+
 public:
 
   UFUNCTION(Category = "Carla Blueprint Registry", BlueprintCallable)
