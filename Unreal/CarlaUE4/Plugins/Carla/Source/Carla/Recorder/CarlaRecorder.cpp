@@ -4,9 +4,12 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-// #include "Carla.h"
-#include "CarlaRecorder.h"
 #include "Carla/Actor/ActorDescription.h"
+#include "Carla/Walker/WalkerControl.h"
+#include "Carla/Walker/WalkerController.h"
+
+#include "CarlaRecorder.h"
+#include "CarlaReplayerHelper.h"
 
 #include <ctime>
 #include <sstream>
@@ -24,25 +27,30 @@ ACarlaRecorder::ACarlaRecorder(const FObjectInitializer &ObjectInitializer)
   Disable();
 }
 
-std::string ACarlaRecorder::ShowFileInfo(std::string Path, std::string Name)
+std::string ACarlaRecorder::ShowFileInfo(std::string Name, bool bShowAll)
 {
-  return Query.QueryInfo(Path + Name);
+  return Query.QueryInfo(Name, bShowAll);
 }
 
-std::string ACarlaRecorder::ShowFileCollisions(std::string Path, std::string Name, char Type1, char Type2)
+std::string ACarlaRecorder::ShowFileCollisions(std::string Name, char Type1, char Type2)
 {
-  return Query.QueryCollisions(Path + Name, Type1, Type2);
+  return Query.QueryCollisions(Name, Type1, Type2);
 }
 
-std::string ACarlaRecorder::ShowFileActorsBlocked(std::string Path, std::string Name, double MinTime, double MinDistance)
+std::string ACarlaRecorder::ShowFileActorsBlocked(std::string Name, double MinTime, double MinDistance)
 {
-  return Query.QueryBlocked(Path + Name, MinTime, MinDistance);
+  return Query.QueryBlocked(Name, MinTime, MinDistance);
 }
 
-std::string ACarlaRecorder::ReplayFile(std::string Path, std::string Name, double TimeStart, double Duration, uint32_t FollowId)
+std::string ACarlaRecorder::ReplayFile(std::string Name, double TimeStart, double Duration, uint32_t FollowId)
 {
   Stop();
-  return Replayer.ReplayFile(Path + Name, TimeStart, Duration, FollowId);
+  return Replayer.ReplayFile(Name, TimeStart, Duration, FollowId);
+}
+
+inline void ACarlaRecorder::SetReplayerTimeFactor(double TimeFactor)
+{
+  Replayer.SetTimeFactor(TimeFactor);
 }
 
 void ACarlaRecorder::Tick(float DeltaSeconds)
@@ -61,39 +69,24 @@ void ACarlaRecorder::Tick(float DeltaSeconds)
     for (auto It = Registry.begin(); It != Registry.end(); ++It)
     {
       FActorView View = *It;
-      AActor *Actor;
+
       switch (View.GetActorType())
       {
-        // save the transform of all vehicles and walkers
+        // save the transform of all vehicles
         case FActorView::ActorType::Vehicle:
+          AddActorPosition(View);
+          AddVehicleAnimation(View);
+          break;
+
+        // save the transform of all walkers
         case FActorView::ActorType::Walker:
-          // get position of the vehicle
-          Actor = View.GetActor();
-          check(Actor != nullptr);
-          AddPosition(CarlaRecorderPosition
-          {
-            View.GetActorId(),
-            Actor->GetTransform().GetTranslation(),
-            Actor->GetTransform().GetRotation().Euler()
-          });
+          AddActorPosition(View);
+          AddWalkerAnimation(View);
           break;
 
         // save the state of each traffic light
         case FActorView::ActorType::TrafficLight:
-          // get states
-          Actor = View.GetActor();
-          check(Actor != nullptr);
-          auto TrafficLight = Cast<ATrafficLightBase>(Actor);
-          if (TrafficLight != nullptr)
-          {
-            AddState(CarlaRecorderStateTrafficLight
-            {
-              View.GetActorId(),
-              TrafficLight->GetTimeIsFrozen(),
-              TrafficLight->GetElapsedTime(),
-              static_cast<char>(TrafficLight->GetTrafficLightState())
-            });
-          }
+          AddTrafficLightState(View);
           break;
       }
     }
@@ -120,7 +113,93 @@ void ACarlaRecorder::Disable(void)
   Enabled = false;
 }
 
-std::string ACarlaRecorder::Start(FString Path, FString Name, FString MapName)
+void ACarlaRecorder::AddActorPosition(FActorView &View)
+{
+  AActor *Actor = View.GetActor();
+  check(Actor != nullptr);
+
+  // get position of the vehicle
+  AddPosition(CarlaRecorderPosition
+  {
+    View.GetActorId(),
+    Actor->GetTransform().GetTranslation(),
+    Actor->GetTransform().GetRotation().Euler()
+  });
+}
+
+void ACarlaRecorder::AddVehicleAnimation(FActorView &View)
+{
+  AActor *Actor = View.GetActor();
+  check(Actor != nullptr);
+
+  if (Actor->IsPendingKill())
+  {
+    return;
+  }
+
+  auto Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
+  if (Vehicle == nullptr)
+  {
+    return;
+  }
+
+  FVehicleControl Control = Vehicle->GetVehicleControl();
+
+  // save
+  CarlaRecorderAnimVehicle Record;
+  Record.DatabaseId = View.GetActorId();
+  Record.Steering = Control.Steer;
+  Record.Throttle = Control.Throttle;
+  Record.Brake = Control.Brake;
+  Record.bHandbrake = Control.bHandBrake;
+  Record.Gear = Control.Gear;
+  AddAnimVehicle(Record);
+}
+
+void ACarlaRecorder::AddWalkerAnimation(FActorView &View)
+{
+  AActor *Actor = View.GetActor();
+  check(Actor != nullptr);
+
+  if (!Actor->IsPendingKill())
+  {
+    // check to set speed in walkers
+    auto Walker = Cast<APawn>(Actor);
+    if (Walker)
+    {
+      auto Controller = Cast<AWalkerController>(Walker->GetController());
+      if (Controller != nullptr)
+      {
+        AddAnimWalker(CarlaRecorderAnimWalker
+        {
+          View.GetActorId(),
+          Controller->GetWalkerControl().Speed
+        });
+      }
+    }
+  }
+}
+
+void ACarlaRecorder::AddTrafficLightState(FActorView &View)
+{
+  AActor *Actor = View.GetActor();
+  check(Actor != nullptr);
+
+  // get states
+  auto TrafficLight = Cast<ATrafficLightBase>(Actor);
+  if (TrafficLight != nullptr)
+  {
+    AddState(CarlaRecorderStateTrafficLight
+    {
+      View.GetActorId(),
+      TrafficLight->GetTimeIsFrozen(),
+      TrafficLight->GetElapsedTime(),
+      static_cast<char>(TrafficLight->GetTrafficLightState())
+    });
+  }
+}
+
+std::string ACarlaRecorder::Start(std::string Name, FString MapName)
 {
   // stop replayer if any in course
   if (Replayer.IsEnabled())
@@ -129,13 +208,16 @@ std::string ACarlaRecorder::Start(FString Path, FString Name, FString MapName)
   // stop recording
   Stop();
 
+  // reset collisions Id
   NextCollisionId = 0;
-  FString Filename = Path + Name;
+
+  // get the final path + filename
+  std::string Filename = GetRecorderFilename(Name);
 
   // binary file
   // file.open(filename.str(), std::ios::binary | std::ios::trunc |
   // std::ios::out);
-  File.open(TCHAR_TO_UTF8(*Filename), std::ios::binary);
+  File.open(Filename, std::ios::binary);
   if (!File.is_open())
   {
     return "";
@@ -157,7 +239,7 @@ std::string ACarlaRecorder::Start(FString Path, FString Name, FString MapName)
   // add all existing actors
   AddExistingActors();
 
-  return std::string(TCHAR_TO_UTF8(*Filename));
+  return std::string(Filename);
 }
 
 void ACarlaRecorder::Stop(void)
@@ -180,6 +262,8 @@ void ACarlaRecorder::Clear(void)
   Collisions.Clear();
   Positions.Clear();
   States.Clear();
+  Vehicles.Clear();
+  Walkers.Clear();
 }
 
 void ACarlaRecorder::Write(double DeltaSeconds)
@@ -190,13 +274,19 @@ void ACarlaRecorder::Write(double DeltaSeconds)
   // start
   Frames.WriteStart(File);
 
-  // write data
+  // events
   EventsAdd.Write(File);
   EventsDel.Write(File);
   EventsParent.Write(File);
   Collisions.Write(File);
+
+  // positions and states
   Positions.Write(File);
   States.Write(File);
+
+  // animations
+  Vehicles.Write(File);
+  Walkers.Write(File);
 
   // end
   Frames.WriteEnd(File);
@@ -274,6 +364,22 @@ void ACarlaRecorder::AddState(const CarlaRecorderStateTrafficLight &State)
   if (Enabled)
   {
     States.Add(State);
+  }
+}
+
+void ACarlaRecorder::AddAnimVehicle(const CarlaRecorderAnimVehicle &Vehicle)
+{
+  if (Enabled)
+  {
+    Vehicles.Add(Vehicle);
+  }
+}
+
+void ACarlaRecorder::AddAnimWalker(const CarlaRecorderAnimWalker &Walker)
+{
+  if (Enabled)
+  {
+    Walkers.Add(Walker);
   }
 }
 

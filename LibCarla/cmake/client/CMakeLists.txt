@@ -194,6 +194,9 @@ if (LIBCARLA_BUILD_RELEASE)
   if (WIN32) # @todo Fix PythonAPI build on Windows.
     set_target_properties(carla_client PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})
   else ()
+    if (NOT DEFINED CMAKE_CXX_FLAGS_RELEASE_CLIENT)
+      set(CMAKE_CXX_FLAGS_RELEASE_CLIENT ${CMAKE_CXX_FLAGS_RELEASE})
+    endif()
     set_target_properties(carla_client PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_RELEASE_CLIENT})
   endif (WIN32)
 

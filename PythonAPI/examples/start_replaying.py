@@ -61,6 +61,12 @@ def main():
         default=0,
         type=int,
         help='camera follows an actor (ex: 82)')
+    argparser.add_argument(
+        '-x', '--time_factor',
+        metavar='X',
+        default=1.0,
+        type=float,
+        help='time factor (default 1.0)')
     args = argparser.parse_args()
 
     try:
@@ -68,6 +74,7 @@ def main():
         client = carla.Client(args.host, args.port)
         client.set_timeout(60.0)
 
+        client.set_replayer_time_factor(args.time_factor)
         print(client.replay_file(args.recorder_filename, args.start, args.duration, args.camera))
 
     finally:

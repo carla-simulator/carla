@@ -54,11 +54,14 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
 {
   std::stringstream Info;
 
+  // get the final path + filename
+  std::string Filename2 = GetRecorderFilename(Filename);
+
   // try to open
-  File.open(Filename, std::ios::binary);
+  File.open(Filename2, std::ios::binary);
   if (!File.is_open())
   {
-    Info << "File " << Filename << " not found on server\n";
+    Info << "File " << Filename2 << " not found on server\n";
     return Info.str();
   }
 
@@ -91,7 +94,13 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
       // frame
       case static_cast<char>(CarlaRecorderPacketId::FrameStart):
         Frame.Read(File);
-        bFramePrinted = false;
+        if (bShowAll)
+        {
+          PrintFrame(Info);
+          bFramePrinted = true;
+        }
+        else
+          bFramePrinted = false;
         break;
 
       // events add
@@ -143,7 +152,7 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
         for (i = 0; i < Total; ++i)
         {
           EventParent.Read(File);
-          Info << " Parenting " << EventParent.DatabaseId << " with " << EventParent.DatabaseId <<
+          Info << " Parenting " << EventParent.DatabaseId << " with " << EventParent.DatabaseIdParent <<
             " (parent)\n";
         }
         break;
@@ -170,8 +179,23 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
         break;
 
       case static_cast<char>(CarlaRecorderPacketId::Position):
-        // Info << "Positions\n";
-        SkipPacket();
+        if (bShowAll)
+        {
+          ReadValue<uint16_t>(File, Total);
+          if (Total > 0 && !bFramePrinted)
+          {
+            PrintFrame(Info);
+            bFramePrinted = true;
+          }
+          Info << " Positions: " << Total << std::endl;
+          for (i = 0; i < Total; ++i)
+          {
+            Position.Read(File);
+            Info << "  Id: " << Position.DatabaseId << " Location (" << Position.Location.X << ", " << Position.Location.Y << ", " << Position.Location.Z << ") Rotation (" <<  Position.Rotation.X << ", " << Position.Rotation.Y << ", " << Position.Rotation.Z << ")" << std::endl;
+          }
+        }
+        else
+          SkipPacket();
         break;
 
       case static_cast<char>(CarlaRecorderPacketId::State):
@@ -189,6 +213,48 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
             StateTraffic.Read(File);
             Info << "  Id: " << StateTraffic.DatabaseId << " state: " << static_cast<char>(0x30 + StateTraffic.State) << " frozen: " <<
               StateTraffic.IsFrozen << " elapsedTime: " << StateTraffic.ElapsedTime << std::endl;
+          }
+        }
+        else
+          SkipPacket();
+        break;
+
+      // vehicle animations
+      case static_cast<char>(CarlaRecorderPacketId::AnimVehicle):
+        if (bShowAll)
+        {
+          ReadValue<uint16_t>(File, Total);
+          if (Total > 0 && !bFramePrinted)
+          {
+            PrintFrame(Info);
+            bFramePrinted = true;
+          }
+          Info << " Vehicle animations: " << Total << std::endl;
+          for (i = 0; i < Total; ++i)
+          {
+            Vehicle.Read(File);
+            Info << "  Vehicle id " << Vehicle.DatabaseId << ": Steering " << Vehicle.Steering << " Throttle " << Vehicle.Throttle << " Brake " << Vehicle.Brake << " Handbrake " << Vehicle.bHandbrake << " Gear " << Vehicle.Gear << std::endl;
+          }
+        }
+        else
+          SkipPacket();
+        break;
+
+      // walker animations
+      case static_cast<char>(CarlaRecorderPacketId::AnimWalker):
+        if (bShowAll)
+        {
+          ReadValue<uint16_t>(File, Total);
+          if (Total > 0 && !bFramePrinted)
+          {
+            PrintFrame(Info);
+            bFramePrinted = true;
+          }
+          Info << " Walker animations: " << Total << std::endl;
+          for (i = 0; i < Total; ++i)
+          {
+            Walker.Read(File);
+            Info << "  Walker id " << Walker.DatabaseId << ": speed " << Walker.Speed << std::endl;
           }
         }
         else
@@ -220,11 +286,14 @@ std::string CarlaRecorderQuery::QueryCollisions(std::string Filename, char Categ
 {
   std::stringstream Info;
 
+  // get the final path + filename
+  std::string Filename2 = GetRecorderFilename(Filename);
+
   // try to open
-  File.open(Filename, std::ios::binary);
+  File.open(Filename2, std::ios::binary);
   if (!File.is_open())
   {
-    Info << "File " << Filename << " not found on server\n";
+    Info << "File " << Filename2 << " not found on server\n";
     return Info.str();
   }
 
@@ -393,11 +462,14 @@ std::string CarlaRecorderQuery::QueryBlocked(std::string Filename, double MinTim
 {
   std::stringstream Info;
 
+  // get the final path + filename
+  std::string Filename2 = GetRecorderFilename(Filename);
+
   // try to open
-  File.open(Filename, std::ios::binary);
+  File.open(Filename2, std::ios::binary);
   if (!File.is_open())
   {
-    Info << "File " << Filename << " not found on server\n";
+    Info << "File " << Filename2 << " not found on server\n";
     return Info.str();
   }
 

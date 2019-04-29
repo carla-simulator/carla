@@ -8,6 +8,9 @@
 
 #include <fstream>
 
+// get the final path + filename
+std::string GetRecorderFilename(std::string Filename);
+
 // ---------
 // recorder
 // ---------

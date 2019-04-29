@@ -68,8 +68,8 @@ namespace client {
       _simulator->StopRecorder();
     }
 
-    std::string ShowRecorderFileInfo(std::string name) {
-      return _simulator->ShowRecorderFileInfo(name);
+    std::string ShowRecorderFileInfo(std::string name, bool show_all) {
+      return _simulator->ShowRecorderFileInfo(name, show_all);
     }
 
     std::string ShowRecorderCollisions(std::string name, char type1, char type2) {
@@ -82,6 +82,10 @@ namespace client {
 
     std::string ReplayFile(std::string name, double start, double duration, uint32_t follow_id) {
       return _simulator->ReplayFile(name, start, duration, follow_id);
+    }
+
+    void SetReplayerTimeFactor(double time_factor) {
+      _simulator->SetReplayerTimeFactor(time_factor);
     }
 
     void ApplyBatch(

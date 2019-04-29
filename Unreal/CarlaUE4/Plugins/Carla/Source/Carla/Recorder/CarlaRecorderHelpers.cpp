@@ -12,6 +12,23 @@
 // create a temporal buffer to convert from and to FString and bytes
 static std::vector<uint8_t> CarlaRecorderHelperBuffer;
 
+// get the final path + filename
+std::string GetRecorderFilename(std::string Filename)
+{
+  std::string Filename2;
+
+  // check if a relative path was specified
+  if (Filename.find("\\") != std::string::npos || Filename.find("/") != std::string::npos || Filename.find(":") != std::string::npos)
+    Filename2 = Filename;
+  else
+  {
+    FString Path = FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir());
+    Filename2 = TCHAR_TO_UTF8(*Path) + Filename;
+  }
+
+  return Filename2;
+}
+
 // ------
 // write
 // ------
