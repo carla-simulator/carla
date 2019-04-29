@@ -64,6 +64,8 @@ namespace road {
 
     double GetLaneWidth(Waypoint waypoint) const;
 
+    JuncId GetJunctionId(RoadId road_id) const;
+
     bool IsJunction(RoadId road_id) const;
 
     std::pair<const element::RoadInfoMarkRecord *, const element::RoadInfoMarkRecord *>

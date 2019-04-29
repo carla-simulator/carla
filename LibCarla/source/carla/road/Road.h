@@ -45,7 +45,7 @@ namespace road {
 
     bool IsJunction() const;
 
-    JuncId GetJunction() const;
+    JuncId GetJunctionId() const;
 
     Lane &GetLaneByDistance(double s, LaneId lane_id);
 
