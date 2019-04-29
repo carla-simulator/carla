@@ -74,21 +74,38 @@ fi
 # -- Build API -----------------------------------------------------------------
 # ==============================================================================
 
-if ${BUILD_FOR_PYTHON2} ; then
+PYTHONS=("cp27-cp27mu"
+		 "cp34-cp34m"
+		 "cp35-cp35m"
+		 "cp36-cp36m"
+		 "cp37-cp37m")
 
-  log "Building Python API for Python 2."
-
-  /usr/bin/env python2 setup.py bdist_egg
-
+# Create .whl if not existing
+mkdir -p .whl
+# Clear previously built wheels. Alternatively, the git clean ... command inside the for loop below can be enabled to take care of this
+if [ "$(ls -A .whl)" ]; then
+	rm .whl/*
 fi
 
-if ${BUILD_FOR_PYTHON3} ; then
+# Build wheels for each PYTHONS
+for ((i=0; i<${#PYTHONS[@]}; ++i)); do
+	PYTHON=${PYTHONS[i]}
+	# -f : clean untracked files
+	# -d : rm dirs
+	# -x : ignore .gitignore file
+	# -e : except .whl dir
+	# git clean -f -x -d -e .whl
+	log "Building Python API for: "${PYTHON}
+	PATH=/opt/python/${PYTHON}/bin:$PATH /opt/python/${PYTHON}/bin/python setup.py bdist_wheel --universal
 
-  log "Building Python API for Python 3."
+done
 
-  /usr/bin/env python3 setup.py bdist_egg
+cp dist/*.whl .whl/
 
-fi
+# Rename wheels (replace platform tag wit manylinux) to satisfy PyPI. TODO: Use auditwheel
+pushd .whl
+	find *.whl -exec bash -c 'mv $1 ${1//linux/manylinux1}' bash {} \;
+popd
 
 # ==============================================================================
 # -- ...and we are done --------------------------------------------------------

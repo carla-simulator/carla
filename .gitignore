@@ -43,3 +43,5 @@ _out*
 _site
 core
 profiler.csv
+*~
+*.sw?
