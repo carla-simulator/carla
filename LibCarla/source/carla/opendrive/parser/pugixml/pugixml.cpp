@@ -12744,7 +12744,7 @@ namespace pugi
 #endif
 
 #if defined(__clang__)
-#  pragma clang diagnostic pop
+#	pragma clang diagnostic pop
 #endif
 
 // Undefine all local macros (makes sure we're not leaking macros in header-only mode)
