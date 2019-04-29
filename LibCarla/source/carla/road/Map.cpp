@@ -390,13 +390,13 @@ namespace road {
     std::vector<Waypoint> result;
     result.reserve(prev_lanes.size());
     for (auto *next_lane : prev_lanes) {
-      THROW_INVALID_INPUT_ASSERT(next_lane != nullptr);
+      RELEASE_ASSERT(next_lane != nullptr);
       const auto lane_id = next_lane->GetId();
-      THROW_INVALID_INPUT_ASSERT(lane_id != 0);
+      RELEASE_ASSERT(lane_id != 0);
       const auto *section = next_lane->GetLaneSection();
-      THROW_INVALID_INPUT_ASSERT(section != nullptr);
+      RELEASE_ASSERT(section != nullptr);
       const auto *road = next_lane->GetRoad();
-      THROW_INVALID_INPUT_ASSERT(road != nullptr);
+      RELEASE_ASSERT(road != nullptr);
       const auto distance = GetDistanceAtEndOfLane(*next_lane);
       result.emplace_back(Waypoint{road->GetId(), section->GetId(), lane_id, distance});
     }
