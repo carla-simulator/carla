@@ -79,7 +79,7 @@ namespace detail {
     time_duration GetTimeout() const {
       auto timeout = rpc_client.get_timeout();
       DEBUG_ASSERT(timeout.has_value());
-      return time_duration::milliseconds(*timeout);
+      return time_duration::milliseconds(static_cast<size_t>(*timeout));
     }
 
     const std::string endpoint;
@@ -102,7 +102,7 @@ namespace detail {
   Client::~Client() = default;
 
   void Client::SetTimeout(time_duration timeout) {
-    _pimpl->rpc_client.set_timeout(timeout.milliseconds());
+    _pimpl->rpc_client.set_timeout(static_cast<int64_t>(timeout.milliseconds()));
   }
 
   time_duration Client::GetTimeout() const {
@@ -275,8 +275,8 @@ namespace detail {
     return _pimpl->AsyncCall("stop_recorder");
   }
 
-  std::string Client::ShowRecorderFileInfo(std::string name) {
-    return _pimpl->CallAndWait<std::string>("show_recorder_file_info", name);
+  std::string Client::ShowRecorderFileInfo(std::string name, bool show_all) {
+    return _pimpl->CallAndWait<std::string>("show_recorder_file_info", name, show_all);
   }
 
   std::string Client::ShowRecorderCollisions(std::string name, char type1, char type2) {
@@ -289,6 +289,10 @@ namespace detail {
 
   std::string Client::ReplayFile(std::string name, double start, double duration, uint32_t follow_id) {
     return _pimpl->CallAndWait<std::string>("replay_file", name, start, duration, follow_id);
+  }
+
+  void Client::SetReplayerTimeFactor(double time_factor) {
+    _pimpl->AsyncCall("set_replayer_time_factor", time_factor);
   }
 
   void Client::SubscribeToStream(

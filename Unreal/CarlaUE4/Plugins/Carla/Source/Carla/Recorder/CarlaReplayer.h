@@ -35,6 +35,18 @@ class CarlaReplayer
   #pragma pack(pop)
 
 public:
+  struct PlayAfterLoadMap
+  {
+    bool Enabled;
+    std::string Filename;
+    FString Mapfile;
+    double TimeStart;
+    double Duration;
+    uint32_t FollowId;
+    double TimeFactor;
+  };
+
+  static PlayAfterLoadMap Autoplay;
 
   CarlaReplayer() {};
   ~CarlaReplayer() { Stop(); };
@@ -59,6 +71,15 @@ public:
     Episode = ThisEpisode;
     Helper.SetEpisode(ThisEpisode);
   }
+
+  // playback speed (time factor)
+  void SetTimeFactor(double NewTimeFactor)
+  {
+    TimeFactor = NewTimeFactor;
+  }
+
+  // check if after a map is loaded, we need to replay
+  void CheckPlayAfterMapLoaded(void);
 
   // tick for the replayer
   void Tick(float Time);
@@ -85,6 +106,8 @@ private:
   CarlaReplayerHelper Helper;
   // follow camera
   uint32_t FollowId;
+  // speed (time factor)
+  double TimeFactor { 1.0 };
 
   // utils
   bool ReadHeader();
@@ -96,19 +119,22 @@ private:
   void Rewind(void);
 
   // processing packets
-  void ProcessToTime(double Time);
+  void ProcessToTime(double Time, bool IsFirstTime = false);
 
   void ProcessEventsAdd(void);
   void ProcessEventsDel(void);
   void ProcessEventsParent(void);
 
-  void ProcessPositions(void);
+  void ProcessPositions(bool IsFirstTime = false);
 
   void ProcessStates(void);
 
-  // positions
-  void UpdatePositions(double Per);
+  void ProcessAnimVehicle(void);
+  void ProcessAnimWalker(void);
 
-  void InterpolatePosition(const CarlaRecorderPosition &Start, const CarlaRecorderPosition &End, double Per);
+  // positions
+  void UpdatePositions(double Per, double DeltaTime);
+
+  void InterpolatePosition(const CarlaRecorderPosition &Start, const CarlaRecorderPosition &End, double Per, double DeltaTime);
 
 };

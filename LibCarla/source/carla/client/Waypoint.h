@@ -9,10 +9,11 @@
 #include "carla/Memory.h"
 #include "carla/NonCopyable.h"
 #include "carla/geom/Transform.h"
-#include "carla/road/Lane.h"
 #include "carla/road/element/LaneMarking.h"
 #include "carla/road/element/RoadInfoMarkRecord.h"
 #include "carla/road/element/Waypoint.h"
+#include "carla/road/Lane.h"
+#include "carla/road/RoadTypes.h"
 
 #include <boost/optional.hpp>
 
@@ -56,7 +57,9 @@ namespace client {
       return _transform;
     }
 
-    bool IsIntersection() const;
+    road::JuncId GetJunctionId() const;
+
+    bool IsJunction() const;
 
     double GetLaneWidth() const;
 

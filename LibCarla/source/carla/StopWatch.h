@@ -7,6 +7,7 @@
 #pragma once
 
 #include <chrono>
+#include <cstdint>
 
 namespace carla {
 namespace detail {
@@ -35,8 +36,8 @@ namespace detail {
     }
 
     template <class RESOLUTION=std::chrono::milliseconds>
-    typename RESOLUTION::rep GetElapsedTime() const {
-      return std::chrono::duration_cast<RESOLUTION>(GetDuration()).count();
+    size_t GetElapsedTime() const {
+      return static_cast<size_t>(std::chrono::duration_cast<RESOLUTION>(GetDuration()).count());
     }
 
     bool IsRunning() const {

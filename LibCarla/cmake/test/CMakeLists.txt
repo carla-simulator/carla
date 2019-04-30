@@ -40,10 +40,12 @@ foreach(target ${build_targets})
       -DLIBCARLA_ENABLE_PROFILER
       -DLIBCARLA_WITH_GTEST)
 
-  target_include_directories(${target} PRIVATE
+  target_include_directories(${target} SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}"
-      "${GTEST_INCLUDE_PATH}"
+      "${GTEST_INCLUDE_PATH}")
+
+  target_include_directories(${target} PRIVATE
       "${libcarla_source_path}/test")
 
   if (WIN32)
@@ -61,7 +63,7 @@ endforeach(target)
 
 if (LIBCARLA_BUILD_DEBUG)
   # Specific options for debug.
-  set_target_properties(libcarla_test_${carla_config}_debug PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_DEBUG})
+  set_target_properties(libcarla_test_${carla_config}_debug PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_DEBUG}")
   target_link_libraries(libcarla_test_${carla_config}_debug "carla_${carla_config}_debug")
   target_compile_definitions(libcarla_test_${carla_config}_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
   if (CMAKE_BUILD_TYPE STREQUAL "Client")
@@ -71,7 +73,7 @@ endif()
 
 if (LIBCARLA_BUILD_RELEASE)
   # Specific options for release.
-  set_target_properties(libcarla_test_${carla_config}_release PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})
+  set_target_properties(libcarla_test_${carla_config}_release PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_RELEASE}")
   target_link_libraries(libcarla_test_${carla_config}_release "carla_${carla_config}")
   if (CMAKE_BUILD_TYPE STREQUAL "Client")
       target_link_libraries(libcarla_test_${carla_config}_release "${BOOST_LIB_PATH}/libboost_filesystem.a")

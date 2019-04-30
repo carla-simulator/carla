@@ -13,7 +13,7 @@
 #include "Carla/Walker/WalkerController.h"
 
 #include <compiler/disable-ue4-macros.h>
-#include <carla/Overload.h>
+#include <carla/Functional.h>
 #include <carla/Version.h>
 #include <carla/rpc/Actor.h>
 #include <carla/rpc/ActorDefinition.h>
@@ -407,9 +407,9 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("unable to set actor velocity: not supported by actor");
     }
     RootComponent->SetPhysicsLinearVelocity(
-    vector.ToCentimeters(),
-    false,
-    "None");
+        vector.ToCentimeters().ToFVector(),
+        false,
+        "None");
     return R<void>::Success();
   };
 
@@ -429,9 +429,9 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("unable to set actor angular velocity: not supported by actor");
     }
     RootComponent->SetPhysicsAngularVelocityInDegrees(
-    vector,
-    false,
-    "None");
+        vector.ToFVector(),
+        false,
+        "None");
     return R<void>::Success();
   };
 
@@ -451,9 +451,9 @@ void FTheNewCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("unable to add actor impulse: not supported by actor");
     }
     RootComponent->AddImpulse(
-    vector.ToCentimeters(),
-    "None",
-    false);
+        vector.ToCentimeters().ToFVector(),
+        "None",
+        false);
     return R<void>::Success();
   };
 
@@ -722,19 +722,18 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
-  BIND_SYNC(show_recorder_file_info) << [this](std::string name) -> R<std::string>
+  BIND_SYNC(show_recorder_file_info) << [this](std::string name, bool show_all) -> R<std::string>
   {
     REQUIRE_CARLA_EPISODE();
     return R<std::string>(Episode->GetRecorder()->ShowFileInfo(
-        carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
-        name));
+        name,
+        show_all));
   };
 
   BIND_SYNC(show_recorder_collisions) << [this](std::string name, char type1, char type2) -> R<std::string>
   {
     REQUIRE_CARLA_EPISODE();
     return R<std::string>(Episode->GetRecorder()->ShowFileCollisions(
-        carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
         name,
         type1,
         type2));
@@ -744,7 +743,6 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
     return R<std::string>(Episode->GetRecorder()->ShowFileActorsBlocked(
-        carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
         name,
         min_time,
         min_distance));
@@ -754,11 +752,17 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
     return R<std::string>(Episode->GetRecorder()->ReplayFile(
-        carla::rpc::FromFString(FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir())),
         name,
         start,
         duration,
         follow_id));
+  };
+
+  BIND_SYNC(set_replayer_time_factor) << [this](double time_factor) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    Episode->GetRecorder()->SetReplayerTimeFactor(time_factor);
+    return R<void>::Success();
   };
 
   // ~~ Draw debug shapes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -785,14 +789,14 @@ void FTheNewCarlaServer::FPimpl::BindActions()
 
 #define MAKE_RESULT(operation) return parse_result(c.actor, operation);
 
-  auto command_visitor = carla::MakeRecursiveOverload(
+  auto command_visitor = carla::Functional::MakeRecursiveOverload(
       [=](auto self, const C::SpawnActor &c) -> CR {
         auto result = c.parent.has_value() ?
             spawn_actor_with_parent(c.description, c.transform, *c.parent) :
             spawn_actor(c.description, c.transform);
         if (!result.HasError()) {
           ActorId id = result.Get().id;
-          auto set_id = carla::MakeOverload(
+          auto set_id = carla::Functional::MakeOverload(
               [](C::SpawnActor &) {},
               [id](auto &s) { s.actor = id; });
           for (auto command : c.do_after) {

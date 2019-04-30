@@ -6,7 +6,10 @@
 
 #pragma once
 
+#include "carla/MoveHandler.h"
 #include "carla/Time.h"
+#include "carla/rpc/Metadata.h"
+#include "carla/rpc/Response.h"
 
 #include <boost/asio/io_service.hpp>
 
@@ -17,52 +20,9 @@
 namespace carla {
 namespace rpc {
 
-namespace detail {
-
-  /// Function traits based on http://rpclib.net implementation.
-  /// MIT Licensed, Copyright (c) 2015-2017, Tamás Szelei
-  template <typename T>
-  struct wrapper_function_traits : wrapper_function_traits<decltype(&T::operator())> {};
-
-  template <typename C, typename R, typename... Args>
-  struct wrapper_function_traits<R (C::*)(Args...)> : wrapper_function_traits<R (*)(Args...)> {};
-
-  template <typename C, typename R, typename... Args>
-  struct wrapper_function_traits<R (C::*)(Args...) const> : wrapper_function_traits<R (*)(Args...)> {};
-
-  template <typename R, typename... Args> struct wrapper_function_traits<R (*)(Args...)> {
-    using result_type = R;
-    using function_type = std::function<R(Args...)>;
-    using packaged_task_type = std::packaged_task<R()>;
-  };
-
-  /// Wraps @a functor into a function type with equivalent signature. The wrap
-  /// function returned, when called, posts @a functor into the io_service and
-  /// waits for it to finish.
-  ///
-  /// This way, no matter from which thread the wrap function is called, the
-  /// @a functor provided is always called from the context of the io_service.
-  ///
-  /// @warning The wrap function blocks until @a functor is executed by the
-  /// io_service.
-  template <typename F>
-  inline auto WrapSyncCall(boost::asio::io_service &io, F functor) {
-    using func_t = typename wrapper_function_traits<F>::function_type;
-    using task_t = typename wrapper_function_traits<F>::packaged_task_type;
-
-    return func_t([&io, functor=std::move(functor)](auto && ... args) {
-      // We can pass arguments by ref to the lambda because the task will be
-      // executed before this function exits.
-      task_t task([functor=std::move(functor), &args...]() {
-        return functor(std::forward<decltype(args)>(args)...);
-      });
-      auto result = task.get_future();
-      io.post([&]() mutable { task(); });
-      return result.get();
-    });
-  }
-
-} // namespace detail
+  // ===========================================================================
+  // -- Server -----------------------------------------------------------------
+  // ===========================================================================
 
   /// An RPC server in which functions can be bind to run synchronously or
   /// asynchronously.
@@ -76,23 +36,14 @@ namespace detail {
   class Server {
   public:
 
-    template <typename ... Args>
-    explicit Server(Args && ... args)
-      : _server(std::forward<Args>(args) ...) {
-      _server.suppress_exceptions(true);
-    }
+    template <typename... Args>
+    explicit Server(Args &&... args);
 
-    template <typename Functor>
-    void BindAsync(const std::string &name, Functor &&functor) {
-      _server.bind(name, std::forward<Functor>(functor));
-    }
+    template <typename FunctorT>
+    void BindSync(const std::string &name, FunctorT &&functor);
 
-    template <typename Functor>
-    void BindSync(const std::string &name, Functor functor) {
-      _server.bind(
-          name,
-          detail::WrapSyncCall(_sync_io_service, std::move(functor)));
-    }
+    template <typename FunctorT>
+    void BindAsync(const std::string &name, FunctorT &&functor);
 
     void AsyncRun(size_t worker_threads) {
       _server.async_run(worker_threads);
@@ -114,6 +65,98 @@ namespace detail {
 
     ::rpc::server _server;
   };
+
+  // ===========================================================================
+  // -- Server implementation --------------------------------------------------
+  // ===========================================================================
+
+namespace detail {
+
+  template <typename T>
+  struct FunctionWrapper : FunctionWrapper<decltype(&T::operator())> {};
+
+  template <typename C, typename R, typename... Args>
+  struct FunctionWrapper<R (C::*)(Args...)> : FunctionWrapper<R (*)(Args...)> {};
+
+  template <typename C, typename R, typename... Args>
+  struct FunctionWrapper<R (C::*)(Args...) const> : FunctionWrapper<R (*)(Args...)> {};
+
+  template<class T>
+  struct FunctionWrapper<T &> : public FunctionWrapper<T> {};
+
+  template<class T>
+  struct FunctionWrapper<T &&> : public FunctionWrapper<T> {};
+
+  template <typename R, typename... Args>
+  struct FunctionWrapper<R (*)(Args...)> {
+
+    /// Wraps @a functor into a function type with equivalent signature. The
+    /// wrap function returned. When called, posts @a functor into the
+    /// io_service; if the client called this method synchronously, waits for
+    /// the posted task to finish, otherwise returns immediately.
+    ///
+    /// This way, no matter from which thread the wrap function is called, the
+    /// @a functor provided is always called from the context of the io_service.
+    /// I.e., we can use the io_service to run tasks on a specific thread (e.g.
+    /// game thread).
+    template <typename FuncT>
+    static auto WrapSyncCall(boost::asio::io_service &io, FuncT &&functor) {
+      return [&io, functor=std::forward<FuncT>(functor)](Metadata metadata, Args... args) -> R {
+        auto task = std::packaged_task<R()>([functor=std::move(functor), args...]() {
+          return functor(args...);
+        });
+        if (metadata.IsResponseIgnored()) {
+          // Post task and ignore result.
+          io.post(MoveHandler(task));
+          return R();
+        } else {
+          // Post task and wait for result.
+          auto result = task.get_future();
+          io.post(MoveHandler(task));
+          return result.get();
+        }
+      };
+    }
+
+    /// Wraps @a functor into a function type with equivalent signature that
+    /// handles the metadata sent by the client. If the client called this
+    /// method asynchronously, the result is ignored.
+    template <typename FuncT>
+    static auto WrapAsyncCall(FuncT &&functor) {
+      return [functor=std::forward<FuncT>(functor)](::carla::rpc::Metadata metadata, Args... args) -> R {
+        if (metadata.IsResponseIgnored()) {
+          functor(args...);
+          return R();
+        } else {
+          return functor(args...);
+        }
+      };
+    }
+  };
+
+} // namespace detail
+
+  template <typename ... Args>
+  inline Server::Server(Args && ... args)
+    : _server(std::forward<Args>(args) ...) {
+    _server.suppress_exceptions(true);
+  }
+
+  template <typename FunctorT>
+  inline void Server::BindSync(const std::string &name, FunctorT &&functor) {
+    using Wrapper = detail::FunctionWrapper<FunctorT>;
+    _server.bind(
+        name,
+        Wrapper::WrapSyncCall(_sync_io_service, std::forward<FunctorT>(functor)));
+  }
+
+  template <typename FunctorT>
+  inline void Server::BindAsync(const std::string &name, FunctorT &&functor) {
+    using Wrapper = detail::FunctionWrapper<FunctorT>;
+    _server.bind(
+        name,
+        Wrapper::WrapAsyncCall(std::forward<FunctorT>(functor)));
+  }
 
 } // namespace rpc
 } // namespace carla

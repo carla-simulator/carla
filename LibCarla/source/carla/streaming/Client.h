@@ -7,8 +7,8 @@
 #pragma once
 
 #include "carla/Logging.h"
+#include "carla/ThreadPool.h"
 #include "carla/streaming/Token.h"
-#include "carla/streaming/detail/AsioThreadPool.h"
 #include "carla/streaming/detail/tcp/Client.h"
 #include "carla/streaming/low_level/Client.h"
 
@@ -56,7 +56,7 @@ namespace streaming {
 
     // The order of these two arguments is very important.
 
-    detail::AsioThreadPool _service;
+    ThreadPool _service;
 
     underlying_client _client;
   };
