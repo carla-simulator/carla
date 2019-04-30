@@ -13,6 +13,7 @@
 #include "carla/rpc/Actor.h"
 #include "carla/rpc/ActorDefinition.h"
 #include "carla/rpc/Command.h"
+#include "carla/rpc/CommandResponse.h"
 #include "carla/rpc/EpisodeInfo.h"
 #include "carla/rpc/EpisodeSettings.h"
 #include "carla/rpc/MapInfo.h"
@@ -173,13 +174,15 @@ namespace detail {
 
     void StopRecorder();
 
-    std::string ShowRecorderFileInfo(std::string name);
+    std::string ShowRecorderFileInfo(std::string name, bool show_all);
 
     std::string ShowRecorderCollisions(std::string name, char type1, char type2);
 
     std::string ShowRecorderActorsBlocked(std::string name, double min_time, double min_distance);
 
     std::string ReplayFile(std::string name, double start, double duration, uint32_t follow_id);
+
+    void SetReplayerTimeFactor(double time_factor);
 
     void SubscribeToStream(
         const streaming::Token &token,
@@ -189,7 +192,13 @@ namespace detail {
 
     void DrawDebugShape(const rpc::DebugShape &shape);
 
-    void ApplyBatch(std::vector<rpc::Command> commands, bool do_tick_cue);
+    void ApplyBatch(
+        std::vector<rpc::Command> commands,
+        bool do_tick_cue);
+
+    std::vector<rpc::CommandResponse> ApplyBatchSync(
+        std::vector<rpc::Command> commands,
+        bool do_tick_cue);
 
     void SendTickCue();
 

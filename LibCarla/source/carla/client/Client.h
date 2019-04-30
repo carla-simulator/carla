@@ -68,8 +68,8 @@ namespace client {
       _simulator->StopRecorder();
     }
 
-    std::string ShowRecorderFileInfo(std::string name) {
-      return _simulator->ShowRecorderFileInfo(name);
+    std::string ShowRecorderFileInfo(std::string name, bool show_all) {
+      return _simulator->ShowRecorderFileInfo(name, show_all);
     }
 
     std::string ShowRecorderCollisions(std::string name, char type1, char type2) {
@@ -84,8 +84,20 @@ namespace client {
       return _simulator->ReplayFile(name, start, duration, follow_id);
     }
 
-    void ApplyBatch(std::vector<rpc::Command> commands, bool do_tick_cue = false) const {
+    void SetReplayerTimeFactor(double time_factor) {
+      _simulator->SetReplayerTimeFactor(time_factor);
+    }
+
+    void ApplyBatch(
+        std::vector<rpc::Command> commands,
+        bool do_tick_cue = false) const {
       _simulator->ApplyBatch(std::move(commands), do_tick_cue);
+    }
+
+    std::vector<rpc::CommandResponse> ApplyBatchSync(
+        std::vector<rpc::Command> commands,
+        bool do_tick_cue = false) const {
+      return _simulator->ApplyBatchSync(std::move(commands), do_tick_cue);
     }
 
   private:

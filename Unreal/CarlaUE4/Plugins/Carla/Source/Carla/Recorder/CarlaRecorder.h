@@ -8,17 +8,21 @@
 
 // #include "GameFramework/Actor.h"
 #include <fstream>
-#include "CarlaRecorderInfo.h"
-#include "CarlaRecorderFrames.h"
+
+#include "Carla/Actor/ActorDescription.h"
+
+#include "CarlaRecorderAnimVehicle.h"
+#include "CarlaRecorderAnimWalker.h"
+#include "CarlaRecorderCollision.h"
 #include "CarlaRecorderEventAdd.h"
 #include "CarlaRecorderEventDel.h"
 #include "CarlaRecorderEventParent.h"
-#include "CarlaRecorderCollision.h"
+#include "CarlaRecorderFrames.h"
+#include "CarlaRecorderInfo.h"
 #include "CarlaRecorderPosition.h"
-#include "CarlaRecorderState.h"
 #include "CarlaRecorderQuery.h"
+#include "CarlaRecorderState.h"
 #include "CarlaReplayer.h"
-#include "Carla/Actor/ActorDescription.h"
 
 #include "CarlaRecorder.generated.h"
 
@@ -34,7 +38,9 @@ enum class CarlaRecorderPacketId : uint8_t
   EventParent,
   Collision,
   Position,
-  State
+  State,
+  AnimVehicle,
+  AnimWalker
 };
 
 /// Recorder for the simulation
@@ -58,7 +64,7 @@ public:
   void Disable(void);
 
   // start / stop
-  std::string Start(FString Path, FString Name, FString MapName);
+  std::string Start(std::string Name, FString MapName);
 
   void Stop(void);
 
@@ -79,6 +85,10 @@ public:
 
   void AddState(const CarlaRecorderStateTrafficLight &State);
 
+  void AddAnimVehicle(const CarlaRecorderAnimVehicle &Vehicle);
+
+  void AddAnimWalker(const CarlaRecorderAnimWalker &Walker);
+
   // set episode
   void SetEpisode(UCarlaEpisode *ThisEpisode)
   {
@@ -98,11 +108,12 @@ public:
     return &Replayer;
   }
 
-  // forwarded to replayer
-  std::string ShowFileInfo(std::string Path, std::string Name);
-  std::string ShowFileCollisions(std::string Path, std::string Name, char Type1, char Type2);
-  std::string ShowFileActorsBlocked(std::string Path, std::string Name, double MinTime = 30, double MinDistance = 10);
-  std::string ReplayFile(std::string Path, std::string Name, double TimeStart, double Duration, uint32_t FollowId);
+  // queries
+  std::string ShowFileInfo(std::string Name, bool bShowAll = false);
+  std::string ShowFileCollisions(std::string Name, char Type1, char Type2);
+  std::string ShowFileActorsBlocked(std::string Name, double MinTime = 30, double MinDistance = 10);
+  std::string ReplayFile(std::string Name, double TimeStart, double Duration, uint32_t FollowId);
+  void SetReplayerTimeFactor(double TimeFactor);
 
   void Tick(float DeltaSeconds) final;
 
@@ -126,6 +137,8 @@ private:
   CarlaRecorderCollisions Collisions;
   CarlaRecorderPositions Positions;
   CarlaRecorderStates States;
+  CarlaRecorderAnimVehicles Vehicles;
+  CarlaRecorderAnimWalkers Walkers;
 
   // replayer
   CarlaReplayer Replayer;
@@ -134,5 +147,8 @@ private:
   CarlaRecorderQuery Query;
 
   void AddExistingActors(void);
-
+  void AddActorPosition(FActorView &View);
+  void AddWalkerAnimation(FActorView &View);
+  void AddVehicleAnimation(FActorView &View);
+  void AddTrafficLightState(FActorView &View);
 };

@@ -30,11 +30,36 @@ namespace detail {
     using T::operator();
   };
 
+  template<typename T>
+  struct Recursive {
+
+    explicit Recursive(T &&func) : _func(std::move(func)) {}
+
+    template<typename... Ts>
+    auto operator()(Ts &&... arguments) const {
+      return _func(*this, std::forward<Ts>(arguments)...);
+    }
+
+  private:
+
+    T _func;
+  };
+
 } // namespace detail
+
+  template <typename FuncT>
+  inline static auto MakeRecursive(FuncT &&func) {
+    return detail::Recursive<FuncT>(std::forward<FuncT>(func));
+  }
 
   template <typename... FuncTs>
   inline static auto MakeOverload(FuncTs &&... fs) {
     return detail::Overload<FuncTs...>(std::forward<FuncTs>(fs)...);
+  }
+
+  template <typename... FuncTs>
+  inline static auto MakeRecursiveOverload(FuncTs &&... fs) {
+    return MakeRecursive(MakeOverload(std::forward<FuncTs>(fs)...));
   }
 
 } // namespace carla

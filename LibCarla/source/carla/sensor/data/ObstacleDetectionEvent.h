@@ -27,7 +27,6 @@ namespace data {
 
     explicit ObstacleDetectionEvent(const RawData &data)
       : Super(data),
-        //_deserialized_data(),
         _self_actor(nullptr),
         _other_actor(nullptr) {
       auto ddata = Serializer::DeserializeRawData(data);
@@ -48,7 +47,7 @@ namespace data {
       return _other_actor.Get(GetEpisode());
     }
 
-    /// Normal impulse result of the collision.
+    /// Get obstacle distance.
     float GetDistance() const {
       return _distance;
     }
@@ -60,7 +59,6 @@ namespace data {
     client::detail::ActorVariant _other_actor;
 
     float _distance;
-
   };
 
 } // namespace data

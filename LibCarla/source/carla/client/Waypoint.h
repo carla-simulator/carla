@@ -8,9 +8,14 @@
 
 #include "carla/Memory.h"
 #include "carla/NonCopyable.h"
+#include "carla/geom/Transform.h"
+#include "carla/road/element/LaneMarking.h"
 #include "carla/road/element/RoadInfoMarkRecord.h"
 #include "carla/road/element/Waypoint.h"
-#include "carla/road/element/WaypointHash.h"
+#include "carla/road/Lane.h"
+#include "carla/road/RoadTypes.h"
+
+#include <boost/optional.hpp>
 
 namespace carla {
 namespace client {
@@ -22,14 +27,6 @@ namespace client {
       private NonCopyable {
   public:
 
-    /// Can be used as flags
-    enum class LaneChange : uint8_t {
-      None  = 0x00, //00
-      Right = 0x01, //01
-      Left  = 0x02, //10
-      Both  = 0x03  //11
-    };
-
     ~Waypoint();
 
     /// Returns an unique Id identifying this waypoint.
@@ -37,44 +34,48 @@ namespace client {
     /// The Id takes into account OpenDrive's road Id, lane Id, and s distance
     /// on its road segment up to half-centimetre precision.
     uint64_t GetId() const {
-      return road::element::WaypointHash()(_waypoint);
+      return std::hash<road::element::Waypoint>()(_waypoint);
+    }
+
+    auto GetRoadId() const {
+      return _waypoint.road_id;
+    }
+
+    auto GetSectionId() const {
+      return _waypoint.section_id;
+    }
+
+    auto GetLaneId() const {
+      return _waypoint.lane_id;
+    }
+
+    auto GetDistance() const {
+      return _waypoint.s;
     }
 
     const geom::Transform &GetTransform() const {
       return _transform;
     }
 
-    bool IsIntersection() const {
-      return _waypoint.IsIntersection();
-    }
+    road::JuncId GetJunctionId() const;
 
-    double GetLaneWidth() const {
-      return _waypoint.GetLaneWidth();
-    }
+    bool IsJunction() const;
 
-    road::element::id_type GetRoadId() const {
-      return _waypoint.GetRoadId();
-    }
+    double GetLaneWidth() const;
 
-    int GetLaneId() const {
-      return _waypoint.GetLaneId();
-    }
+    road::Lane::LaneType GetType() const;
 
-    double GetDistance() const {
-      return _waypoint.GetDistance();
-    }
+    std::vector<SharedPtr<Waypoint>> GetNext(double distance) const;
 
-    std::string GetType() const {
-      return _waypoint.GetType();
-    }
+    SharedPtr<Waypoint> GetRight() const;
 
-    std::vector<SharedPtr<Waypoint>> Next(double distance) const;
+    SharedPtr<Waypoint> GetLeft() const;
 
-    SharedPtr<Waypoint> Right() const;
+    boost::optional<road::element::LaneMarking> GetRightLaneMarking() const;
 
-    SharedPtr<Waypoint> Left() const;
+    boost::optional<road::element::LaneMarking> GetLeftLaneMarking() const;
 
-    Waypoint::LaneChange GetLaneChange() const;
+    road::element::LaneMarking::LaneChange GetLaneChange() const;
 
   private:
 
@@ -88,10 +89,10 @@ namespace client {
 
     geom::Transform _transform;
 
-    // Mark record right and left respectively
+    // Mark record right and left respectively.
     std::pair<
-        road::element::RoadInfoMarkRecord,
-        road::element::RoadInfoMarkRecord> _mark_record;
+        const road::element::RoadInfoMarkRecord *,
+        const road::element::RoadInfoMarkRecord *> _mark_record;
   };
 
 } // namespace client

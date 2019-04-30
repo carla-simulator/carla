@@ -59,7 +59,7 @@ if not "%1"=="" (
     goto :arg-parse
 )
 
-set PYTHON_LIB_PATH=%ROOT_PATH%PythonAPI\
+set PYTHON_LIB_PATH=%ROOT_PATH%PythonAPI\carla
 
 if %REMOVE_INTERMEDIATE% == false (
     if %BUILD_FOR_PYTHON3% == false (

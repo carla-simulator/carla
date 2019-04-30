@@ -22,3 +22,11 @@ namespace carla {
 } // namespace carla
 
 #endif // LIBCARLA_NO_EXCEPTIONS
+
+#include "Random.h"
+
+namespace util {
+
+  thread_local std::mt19937_64 Random::_engine((std::random_device())());
+
+} // namespace util

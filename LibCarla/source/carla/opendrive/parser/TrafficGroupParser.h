@@ -6,33 +6,28 @@
 
 #pragma once
 
-#include "../types.h"
-
-#include "./pugixml/pugixml.hpp"
+namespace pugi {
+  class xml_document;
+} // namespace pugi
 
 namespace carla {
+
+namespace road {
+  class MapBuilder;
+} // namespace road
+
 namespace opendrive {
 namespace parser {
 
   class TrafficGroupParser {
-  private:
-
-    void ParseTrafficLight(
-        const pugi::xml_node &xmlNode,
-        std::vector<carla::opendrive::types::TrafficLight> &out_trafficLights);
-
-    void ParseBoxAreas(
-        const pugi::xml_node &xmlNode,
-        std::vector<carla::opendrive::types::BoxComponent> &out_boxareas);
-
   public:
 
     static void Parse(
-        const pugi::xml_node &xmlNode,
-        std::vector<carla::opendrive::types::TrafficLightGroup> &out_trafficlightgroup);
+        const pugi::xml_document &xml,
+        carla::road::MapBuilder &map_builder);
 
   };
 
-}
-}
-}
+} // namespace parser
+} // namespace opendrive
+} // namespace carla

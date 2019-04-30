@@ -35,10 +35,16 @@ public:
   bool ProcessReplayerEventParent(uint32_t ChildId, uint32_t ParentId);
 
   // reposition actors
-  bool ProcessReplayerPosition(CarlaRecorderPosition Pos1, CarlaRecorderPosition Pos2, double Per);
+  bool ProcessReplayerPosition(CarlaRecorderPosition Pos1, CarlaRecorderPosition Pos2, double Per, double DeltaTime);
 
   // replay event for traffic light state
   bool ProcessReplayerStateTrafficLight(CarlaRecorderStateTrafficLight State);
+
+  // set the animation for Vehicles
+  void ProcessReplayerAnimVehicle(CarlaRecorderAnimVehicle Vehicle);
+
+  // set the animation for walkers
+  void ProcessReplayerAnimWalker(CarlaRecorderAnimWalker Walker);
 
   // replay finish
   bool ProcessReplayerFinish(bool bApplyAutopilot);
@@ -50,7 +56,7 @@ private:
 
   UCarlaEpisode *Episode {nullptr};
 
-  std::pair<int, FActorView &>TryToCreateReplayerActor(
+  std::pair<int, FActorView>TryToCreateReplayerActor(
     FVector &Location,
     FVector &Rotation,
     FActorDescription &ActorDesc,
@@ -62,7 +68,4 @@ private:
   bool SetActorSimulatePhysics(FActorView &ActorView, bool bEnabled);
   // enable / disable autopilot for an actor
   bool SetActorAutopilot(FActorView &ActorView, bool bEnabled);
-  // reset velocity vectors on actor
-  void ResetVelocities(AActor *Actor);
-
 };

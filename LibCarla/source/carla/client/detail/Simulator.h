@@ -171,6 +171,11 @@ namespace detail {
     // =========================================================================
     /// @{
 
+    std::vector<rpc::Actor> GetActorsById(const std::vector<ActorId> &actor_ids) const {
+      DEBUG_ASSERT(_episode != nullptr);
+      return _episode->GetActorsById(actor_ids);
+    }
+
     std::vector<rpc::Actor> GetAllTheActorsInTheEpisode() const {
       DEBUG_ASSERT(_episode != nullptr);
       return _episode->GetActors();
@@ -272,8 +277,8 @@ namespace detail {
       _client.StopRecorder();
     }
 
-    std::string ShowRecorderFileInfo(std::string name) {
-      return _client.ShowRecorderFileInfo(std::move(name));
+    std::string ShowRecorderFileInfo(std::string name, bool show_all) {
+      return _client.ShowRecorderFileInfo(std::move(name), show_all);
     }
 
     std::string ShowRecorderCollisions(std::string name, char type1, char type2) {
@@ -286,6 +291,10 @@ namespace detail {
 
     std::string ReplayFile(std::string name, double start, double duration, uint32_t follow_id) {
       return _client.ReplayFile(std::move(name), start, duration, follow_id);
+    }
+
+    void SetReplayerTimeFactor(double time_factor) {
+      _client.SetReplayerTimeFactor(time_factor);
     }
 
     /// @}
@@ -348,6 +357,10 @@ namespace detail {
 
     void ApplyBatch(std::vector<rpc::Command> commands, bool do_tick_cue) {
       _client.ApplyBatch(std::move(commands), do_tick_cue);
+    }
+
+    auto ApplyBatchSync(std::vector<rpc::Command> commands, bool do_tick_cue) {
+      return _client.ApplyBatchSync(std::move(commands), do_tick_cue);
     }
 
     /// @}
