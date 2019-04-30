@@ -43,6 +43,8 @@ EPropSize UCarlaBlueprintRegistry::StringToPropSizeType(FString PropSize)
 
 void UCarlaBlueprintRegistry::AddToCarlaBlueprintRegistry(const TArray<FPropParameters> &PropParametersArray)
 {
+  TArray<TSharedPtr<FJsonValue>> ResultPropJsonArray;
+
   // Load default props file
   FString DefaultPropFilePath = CommonAttributes::PATH + CommonAttributes::DEFAULT +
       PropAttributes::REGISTRY_FORMAT;
@@ -52,9 +54,8 @@ void UCarlaBlueprintRegistry::AddToCarlaBlueprintRegistry(const TArray<FPropPara
   TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject());
   TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(JsonString);
 
-  // Get Array of Props and save indexes of each prop in PropIndexes Map
+  // Fill Array of Props and save indexes of each prop in PropIndexes Map
   TMap<FString, int> PropIndexes;
-  TArray<TSharedPtr<FJsonValue>> ResultPropJsonArray;
   if (FJsonSerializer::Deserialize(JsonReader, JsonObject) && JsonObject.IsValid())
   {
     ResultPropJsonArray = JsonObject->GetArrayField(CommonAttributes::DEFINITIONS);
@@ -68,11 +69,12 @@ void UCarlaBlueprintRegistry::AddToCarlaBlueprintRegistry(const TArray<FPropPara
     }
   }
 
-  // Add Input Prop or Update Prop if already exists
+  // Add Input Props or Update them if already exists
   for (auto &PropParameter : PropParametersArray)
   {
     TSharedPtr<FJsonObject> PropJsonObject;
 
+    // Create object or update existing one
     int *PropIndex = PropIndexes.Find(PropParameter.Name);
     if (PropIndex)
     {
@@ -86,9 +88,7 @@ void UCarlaBlueprintRegistry::AddToCarlaBlueprintRegistry(const TArray<FPropPara
     // Fill Prop Json
     PropJsonObject->SetStringField(PropAttributes::NAME, PropParameter.Name);
     PropJsonObject->SetStringField(PropAttributes::MESH_PATH, PropParameter.Mesh->GetPathName());
-
-    FString PropSize = PropSizeTypeToString(PropParameter.Size);
-    PropJsonObject->SetStringField(PropAttributes::SIZE, PropSize);
+    PropJsonObject->SetStringField(PropAttributes::SIZE, PropSizeTypeToString(PropParameter.Size));
 
     // Add or Update
     TSharedRef<FJsonValue> PropJsonValue = MakeShareable(new FJsonValueObject(PropJsonObject));
@@ -104,6 +104,7 @@ void UCarlaBlueprintRegistry::AddToCarlaBlueprintRegistry(const TArray<FPropPara
     }
   }
 
+  // Update Json Object
   JsonObject->SetArrayField(CommonAttributes::DEFINITIONS, ResultPropJsonArray);
 
   // Serialize file
@@ -129,20 +130,18 @@ void UCarlaBlueprintRegistry::LoadPropDefinitions(TArray<FActorDefinition> &Defi
       false,
       false);
 
-  // Sort and place Default File First
+  // Sort and place Default File First if it exists
   PropFileNames.Sort();
   FString DefaultFileName;
-  bool bDefaultFileFound = false;
-  for (auto i = 0u; i < PropFileNames.Num() && !bDefaultFileFound; ++i)
+  for (auto i = 0u; i < PropFileNames.Num() && DefaultFileName.IsEmpty(); ++i)
   {
     if (PropFileNames[i].Contains(CommonAttributes::DEFAULT))
     {
       DefaultFileName = PropFileNames[i];
       PropFileNames.RemoveAt(i);
-      bDefaultFileFound = true;
     }
   }
-  if (bDefaultFileFound)
+  if (!DefaultFileName.IsEmpty())
   {
     PropFileNames.Insert(DefaultFileName, 0);
   }
@@ -165,17 +164,17 @@ void UCarlaBlueprintRegistry::LoadPropDefinitions(TArray<FActorDefinition> &Defi
 
         for (auto &PropJsonValue : PropJsonArray)
         {
-          // Build Prop Parameter from Json
+          // Read Prop Json
           TSharedPtr<FJsonObject> PropJsonObject = PropJsonValue->AsObject();
 
           FString PropName = PropJsonObject->GetStringField(PropAttributes::NAME);
-
           FString PropMeshPath = PropJsonObject->GetStringField(PropAttributes::MESH_PATH);
+          FString PropSize = PropJsonObject->GetStringField(PropAttributes::SIZE);
+
+          // Build Prop Parameter
           UStaticMesh *PropMesh = LoadObject<UStaticMesh>(nullptr, *PropMeshPath);
-
-          EPropSize PropSize = StringToPropSizeType(PropJsonObject->GetStringField(PropAttributes::SIZE));
-
-          FPropParameters Params {PropName, PropMesh, PropSize};
+          EPropSize PropSizeType = StringToPropSizeType(PropSize);
+          FPropParameters Params {PropName, PropMesh, PropSizeType};
 
           // Add or Update
           if (PropIndexes.Contains(PropName))
