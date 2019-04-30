@@ -25,6 +25,6 @@ enum class EVehicleInputPriority : uint8
 
 inline static bool operator<=(EVehicleInputPriority Lhs, EVehicleInputPriority Rhs)
 {
-  constexpr auto Cast = [](auto e) { return static_cast<typename std::underlying_type<decltype(e)>::type>(e); };
+  auto Cast = [](auto e) { return static_cast<typename std::underlying_type<decltype(e)>::type>(e); };
   return Cast(Lhs) <= Cast(Rhs);
 }
