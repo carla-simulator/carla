@@ -13,6 +13,7 @@ import json
 import subprocess
 import shutil
 import argparse
+import re
 
 
 if os.name == 'nt':
@@ -24,20 +25,38 @@ elif os.name == 'posix':
 def main():
     try:
         args = parse_arguments()
-        import_all_fbx_in_folder(args.folder)
+        folder_list = []
+        import_all_fbx_in_folder(args.folder, folder_list)
     finally:
         print('\ndone.')
 
 
-def import_all_fbx_in_folder(fbx_folder):
+def import_all_fbx_in_folder(fbx_folder, folder_list):
     dirname = os.getcwd()
     fbx_place = os.path.join(dirname, "..", fbx_folder)
     for file in os.listdir(fbx_place):
         if file.endswith(".PropRegistry.json"):
             with open(os.path.join(dirname, "..", fbx_folder, file)) as json_file:
                 data = json.load(json_file)
-                import_assets_commandlet(data, fbx_folder)
-
+                # This will take all the fbx registerd in the provided json files
+                # and place it inside unreal in the provided path (by the json file)
+                import_assets_commandlet(data, fbx_folder, folder_list)
+    # This part will just gather all the folders in which an fbx has been placed
+    if(len(folder_list)>0):
+        final_list = ""
+        for folder in folder_list:
+            if folder not in final_list:
+                final_list += folder + "+"
+        final_list = final_list[:-1]
+        print(final_list)
+        #Destination map (the one that will be cooked)
+        dest_map_path = "/Game/Carla/Maps/BaseMap"
+        dest_map_name = "TEMPMAP"
+        # This should be a folder, because the commandlet will take anything inside.
+        # It is better if there is only one map inside
+        src_map_folder = "/Game/Carla/Maps/EmptyMap"
+        prepare_cook_commandlet(final_list, src_map_folder, dest_map_path, dest_map_name)
+        launch_bash_script("BuildTools/ExportFBX.sh", "--maps=%s/%s" % (dest_map_path, dest_map_name))
 
 def parse_arguments():
     argparser = argparse.ArgumentParser(
@@ -50,12 +69,17 @@ def parse_arguments():
         help='FBX containing folder')
     return argparser.parse_args()
 
+def prepare_cook_commandlet(folder_list, source_map, dest_map_path, dest_map_name):
+    commandlet_name = "FBXExporterPreparator"
+    commandlet_arguments = "-MeshesDir=%s -SourceMap=%s -DestMapPath=%s -DestMapName=%s" % (folder_list, source_map, dest_map_path, dest_map_name)
+    invoke_commandlet(commandlet_name, commandlet_arguments)
 
-def import_assets_commandlet(json_data, fbx_folder):
+
+def import_assets_commandlet(json_data, fbx_folder, folder_list):
     importfile = "importsetting.json"
     if os.path.exists(importfile):
         os.remove(importfile)
-    generate_json(json_data, fbx_folder, importfile)
+    populate_json_and_data(json_data, fbx_folder, importfile, folder_list)
     dirname = os.getcwd()
     commandlet_name = "ImportAssets"
     import_settings = os.path.join(dirname, importfile)
@@ -73,8 +97,13 @@ def invoke_commandlet(name, arguments):
     full_command = "%s %s -run=%s %s" % (editor_path, uproject_path, name, arguments)
     subprocess.check_call([full_command], shell=True)
 
+def launch_bash_script(script_path, arguments):
+    dirname = os.getcwd()
+    full_command = "%s %s" % (os.path.join(dirname, script_path), arguments)
+    print("Executing: " + full_command)
+    subprocess.check_call([full_command], shell=True)
 
-def generate_json(json_data, fbx_folder, json_file):
+def populate_json_and_data(json_data, fbx_folder, json_file, folder_list):
     with open(json_file, "w+") as fh:
         import_groups = []
         file_names = []
@@ -104,12 +133,18 @@ def generate_json(json_data, fbx_folder, json_file):
             import_groups.append({
                 "ImportSettings": import_settings,
                 "FactoryName": "FbxFactory",
-                "DestinationPath": os.path.dirname(prop["path"]),
+                "DestinationPath": prop["path"],
                 "bReplaceExisting": "true",
                 "FileNames": file_names
             })
+            #second_folder = os.path.dirname(prop["path"]).split("/Game")[1].split("/")[1]
+            #folder_list.append("/Game/" + second_folder)
+            folder_list.append(prop["path"])
         fh.write(json.dumps({"ImportGroups": import_groups}))
         fh.close()
+        #result = re.search('/Game(.*)', os.path.dirname(prop["path"]))
+
+        #print(result)
 
 
 if __name__ == '__main__':
