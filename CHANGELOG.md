@@ -19,6 +19,7 @@
       - Walkers animation is simulated in playback (through speed of walker), so they walk properly.
   * Added C++ client example using LibCarla
   * Fixed wrong units in VehiclePhysicsControl's center of mass
+  * Several optimizations to the RPC server, now supports a bigger load of async messages
 
 ## CARLA 0.9.5
 
