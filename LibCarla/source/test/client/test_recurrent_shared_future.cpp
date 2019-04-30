@@ -31,10 +31,10 @@ TEST(recurrent_shared_future, use_case) {
     }
   });
 
-  std::this_thread::sleep_for(12ms);
+  std::this_thread::sleep_for(100ms);
   for (auto i = 0u; i < number_of_openings - 1u; ++i) {
     future.SetValue(42);
-    std::this_thread::sleep_for(4ms);
+    std::this_thread::sleep_for(10ms);
   }
   done = true;
   future.SetValue(42);

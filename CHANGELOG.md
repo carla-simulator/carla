@@ -18,6 +18,7 @@
   * Added C++ client example using LibCarla
   * Updated OpenDriveActor to use the new Waypoint API
   * Fixed wrong units in VehiclePhysicsControl's center of mass
+  * Several optimizations to the RPC server, now supports a bigger load of async messages
 
 ## CARLA 0.9.5
 
