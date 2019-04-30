@@ -85,35 +85,24 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor)
 {
   check(Sensor.CaptureRenderTarget != nullptr);
 
-  // First we create the message header (needs to be created in the
-  // game-thread).
-  auto AsyncStream = Sensor.GetDataStream(Sensor);
-
-  // We need a shared ptr here because UE4 macros do not move the arguments -_-
-  auto StreamPtr = std::make_shared<decltype(AsyncStream)>(std::move(AsyncStream));
-
-  // Then we enqueue commands in the render-thread that will write the image
-  // buffer to the data stream.
-
-  auto WriteAndSend = [&Sensor, Stream=std::move(StreamPtr)](auto &InRHICmdList) mutable
-  {
-    /// @todo Can we make sure the sensor is not going to be destroyed?
-    if (!Sensor.IsPendingKill())
+  // Enqueue a command in the render-thread that will write the image buffer to
+  // the data stream. The stream is created in the capture thus executed in the
+  // game-thread.
+  ENQUEUE_RENDER_COMMAND(FWritePixels_SendPixelsInRenderThread)
+  (
+    [&Sensor, Stream=Sensor.GetDataStream(Sensor)](auto &InRHICmdList) mutable
     {
-      auto Buffer = Stream->PopBufferFromPool();
-      WritePixelsToBuffer(
-          *Sensor.CaptureRenderTarget,
-          Buffer,
-          carla::sensor::SensorRegistry::get<TSensor *>::type::header_offset,
-          InRHICmdList);
-      Stream->Send(Sensor, std::move(Buffer));
+      /// @todo Can we make sure the sensor is not going to be destroyed?
+      if (!Sensor.IsPendingKill())
+      {
+        auto Buffer = Stream.PopBufferFromPool();
+        WritePixelsToBuffer(
+            *Sensor.CaptureRenderTarget,
+            Buffer,
+            carla::sensor::SensorRegistry::get<TSensor *>::type::header_offset,
+            InRHICmdList);
+        Stream.Send(Sensor, std::move(Buffer));
+      }
     }
-  };
-
-  ENQUEUE_UNIQUE_RENDER_COMMAND_ONEPARAMETER(
-      FWritePixels_SendPixelsInRenderThread,
-      std::function<void(FRHICommandListImmediate &)>, WriteAndSendFunction, std::move(WriteAndSend),
-  {
-    WriteAndSendFunction(RHICmdList);
-  });
+  );
 }

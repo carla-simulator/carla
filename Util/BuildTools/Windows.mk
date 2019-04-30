@@ -15,14 +15,14 @@ launch: LibCarla
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --launch
 
 package: PythonAPI
-	@"${CARLA_BUILD_TOOLS_FOLDER}/Package.bat" --ue-version 4.21
+	@"${CARLA_BUILD_TOOLS_FOLDER}/Package.bat" --ue-version 4.22
 
 docs:
 	@doxygen
 	@echo "Documentation index at ./Doxygen/html/index.html"
 
 clean:
-	@"${CARLA_BUILD_TOOLS_FOLDER}/Package.bat" --clean --ue-version 4.21
+	@"${CARLA_BUILD_TOOLS_FOLDER}/Package.bat" --clean --ue-version 4.22
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --clean
 
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.bat" --clean

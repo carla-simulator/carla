@@ -24,7 +24,7 @@ set DO_COPY_FILES=true
 set DO_TARBALL=true
 set DO_CLEAN=false
 
-set UE_VERSION=4.21
+set UE_VERSION=4.22
 
 :arg-parse
 if not "%1"=="" (
