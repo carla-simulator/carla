@@ -130,13 +130,13 @@ if (LIBCARLA_BUILD_RELEASE)
 
   add_library(carla_server STATIC ${libcarla_server_sources})
 
-  target_include_directories(carla_server PRIVATE
+  target_include_directories(carla_server SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}")
 
   install(TARGETS carla_server DESTINATION lib OPTIONAL)
 
-  set_target_properties(carla_server PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})
+  set_target_properties(carla_server PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_RELEASE}")
 
 endif()
 
@@ -144,13 +144,13 @@ if (LIBCARLA_BUILD_DEBUG)
 
   add_library(carla_server_debug STATIC ${libcarla_server_sources})
 
-  target_include_directories(carla_server_debug PRIVATE
+  target_include_directories(carla_server_debug SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}")
 
   install(TARGETS carla_server_debug DESTINATION lib OPTIONAL)
 
-  set_target_properties(carla_server_debug PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_DEBUG})
+  set_target_properties(carla_server_debug PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_DEBUG}")
   target_compile_definitions(carla_server_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
 
 endif()

@@ -119,19 +119,22 @@ private:
   void Rewind(void);
 
   // processing packets
-  void ProcessToTime(double Time);
+  void ProcessToTime(double Time, bool IsFirstTime = false);
 
   void ProcessEventsAdd(void);
   void ProcessEventsDel(void);
   void ProcessEventsParent(void);
 
-  void ProcessPositions(void);
+  void ProcessPositions(bool IsFirstTime = false);
 
   void ProcessStates(void);
 
-  // positions
-  void UpdatePositions(double Per);
+  void ProcessAnimVehicle(void);
+  void ProcessAnimWalker(void);
 
-  void InterpolatePosition(const CarlaRecorderPosition &Start, const CarlaRecorderPosition &End, double Per);
+  // positions
+  void UpdatePositions(double Per, double DeltaTime);
+
+  void InterpolatePosition(const CarlaRecorderPosition &Start, const CarlaRecorderPosition &End, double Per, double DeltaTime);
 
 };

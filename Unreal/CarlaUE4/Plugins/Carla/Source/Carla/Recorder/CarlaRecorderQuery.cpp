@@ -152,7 +152,7 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
         for (i = 0; i < Total; ++i)
         {
           EventParent.Read(File);
-          Info << " Parenting " << EventParent.DatabaseId << " with " << EventParent.DatabaseId <<
+          Info << " Parenting " << EventParent.DatabaseId << " with " << EventParent.DatabaseIdParent <<
             " (parent)\n";
         }
         break;
@@ -213,6 +213,48 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
             StateTraffic.Read(File);
             Info << "  Id: " << StateTraffic.DatabaseId << " state: " << static_cast<char>(0x30 + StateTraffic.State) << " frozen: " <<
               StateTraffic.IsFrozen << " elapsedTime: " << StateTraffic.ElapsedTime << std::endl;
+          }
+        }
+        else
+          SkipPacket();
+        break;
+
+      // vehicle animations
+      case static_cast<char>(CarlaRecorderPacketId::AnimVehicle):
+        if (bShowAll)
+        {
+          ReadValue<uint16_t>(File, Total);
+          if (Total > 0 && !bFramePrinted)
+          {
+            PrintFrame(Info);
+            bFramePrinted = true;
+          }
+          Info << " Vehicle animations: " << Total << std::endl;
+          for (i = 0; i < Total; ++i)
+          {
+            Vehicle.Read(File);
+            Info << "  Vehicle id " << Vehicle.DatabaseId << ": Steering " << Vehicle.Steering << " Throttle " << Vehicle.Throttle << " Brake " << Vehicle.Brake << " Handbrake " << Vehicle.bHandbrake << " Gear " << Vehicle.Gear << std::endl;
+          }
+        }
+        else
+          SkipPacket();
+        break;
+
+      // walker animations
+      case static_cast<char>(CarlaRecorderPacketId::AnimWalker):
+        if (bShowAll)
+        {
+          ReadValue<uint16_t>(File, Total);
+          if (Total > 0 && !bFramePrinted)
+          {
+            PrintFrame(Info);
+            bFramePrinted = true;
+          }
+          Info << " Walker animations: " << Total << std::endl;
+          for (i = 0; i < Total; ++i)
+          {
+            Walker.Read(File);
+            Info << "  Walker id " << Walker.DatabaseId << ": speed " << Walker.Speed << std::endl;
           }
         }
         else

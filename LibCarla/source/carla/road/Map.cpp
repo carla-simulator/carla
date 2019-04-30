@@ -26,16 +26,6 @@ namespace road {
   static constexpr double EPSILON = 10.0 * std::numeric_limits<double>::epsilon();
 
   // ===========================================================================
-  // -- Error handling ---------------------------------------------------------
-  // ===========================================================================
-
-  [[ noreturn ]] static void throw_invalid_input(const char *message) {
-    throw_exception(std::invalid_argument(message));
-  }
-
-#define THROW_INVALID_INPUT_ASSERT(pred) if (!(pred)) { throw_invalid_input("assert failed: " #pred); }
-
-  // ===========================================================================
   // -- Static local methods ---------------------------------------------------
   // ===========================================================================
 
@@ -114,7 +104,7 @@ namespace road {
     double tangent = 0.0;
     for (const auto &lane : container) {
       auto info = lane.second.template GetInfo<RoadInfoLaneWidth>(s);
-      THROW_INVALID_INPUT_ASSERT(info != nullptr);
+      RELEASE_ASSERT(info != nullptr);
       const auto current_polynomial = info->GetPolynomial();
       auto current_dist = current_polynomial.Evaluate(s);
       auto current_tang = current_polynomial.Tangent(s);
@@ -146,11 +136,10 @@ namespace road {
       uint32_t lane_type) const {
     // max_nearests represents the max nearests roads
     // where we will search for nearests lanes
-    constexpr int max_nearests = 50;
+    constexpr size_t max_nearests = 50u;
     // in case that map has less than max_nearests lanes,
     // we will use the maximum lanes
-    const int max_nearest_allowed = _data.GetRoadCount() < max_nearests ?
-        _data.GetRoadCount() : max_nearests;
+    const size_t max_nearest_allowed = std::min(_data.GetRoadCount(), max_nearests);
 
     // Unreal's Y axis hack
     const auto pos_inverted_y = geom::Location(pos.x, -pos.y, pos.z);
@@ -169,10 +158,11 @@ namespace road {
       const auto road = &road_pair.second;
       const auto current_dist = road->GetNearestPoint(pos_inverted_y);
 
-      for (int i = 0; i < max_nearest_allowed; ++i) {
+      for (size_t i = 0u; i < max_nearest_allowed; ++i) {
         if (current_dist.second < nearest_dist[i]) {
           // reorder nearest_dist
-          for (int j = max_nearest_allowed - 1; j > i; --j) {
+          for (size_t j = max_nearest_allowed - 1u; j > i; --j) {
+            DEBUG_ASSERT(j > 0u);
             nearest_dist[j] = nearest_dist[j - 1];
             ids[j] = ids[j - 1];
             dists[j] = dists[j - 1];
@@ -188,7 +178,7 @@ namespace road {
     // search for the nearest lane in nearest_dist
     Waypoint waypoint;
     auto nearest_lane_dist = std::numeric_limits<double>::max();
-    for (int i = 0; i < max_nearest_allowed; ++i) {
+    for (size_t i = 0u; i < max_nearest_allowed; ++i) {
       auto lane_dist = _data.GetRoad(ids[i]).GetNearestLane(dists[i], pos_inverted_y, lane_type);
 
       if (lane_dist.second < nearest_lane_dist) {
@@ -208,12 +198,12 @@ namespace road {
     // Make sure 0.0 < waipoint.s < Road's length
     constexpr double margin = 5.0 * EPSILON;
     DEBUG_ASSERT(margin < road.GetLength() - margin);
-    waypoint.s = geom::Math::clamp<double>(waypoint.s, margin, road.GetLength() - margin);
+    waypoint.s = geom::Math::Clamp(waypoint.s, margin, road.GetLength() - margin);
 
     auto &lane = road.GetLaneByDistance(waypoint.s, waypoint.lane_id);
 
     const auto lane_section = lane.GetLaneSection();
-    THROW_INVALID_INPUT_ASSERT(lane_section != nullptr);
+    RELEASE_ASSERT(lane_section != nullptr);
     const auto lane_section_id = lane_section->GetId();
     waypoint.section_id = lane_section_id;
 
@@ -243,21 +233,21 @@ namespace road {
 
   geom::Transform Map::ComputeTransform(Waypoint waypoint) const {
     // lane_id can't be 0
-    THROW_INVALID_INPUT_ASSERT(waypoint.lane_id != 0);
+    RELEASE_ASSERT(waypoint.lane_id != 0);
 
     const auto &road = _data.GetRoad(waypoint.road_id);
 
     // must s be smaller (or eq) than road lenght and bigger (or eq) than 0?
-    THROW_INVALID_INPUT_ASSERT(waypoint.s <= road.GetLength());
-    THROW_INVALID_INPUT_ASSERT(waypoint.s >= 0.0);
+    RELEASE_ASSERT(waypoint.s <= road.GetLength());
+    RELEASE_ASSERT(waypoint.s >= 0.0);
 
     const auto &lane_section = road.GetLaneSectionById(waypoint.section_id);
     const std::map<LaneId, Lane> &lanes = lane_section.GetLanes();
 
     // check that lane_id exists on the current s
-    THROW_INVALID_INPUT_ASSERT(!lanes.empty());
-    THROW_INVALID_INPUT_ASSERT(waypoint.lane_id >= lanes.begin()->first);
-    THROW_INVALID_INPUT_ASSERT(waypoint.lane_id <= lanes.rbegin()->first);
+    RELEASE_ASSERT(!lanes.empty());
+    RELEASE_ASSERT(waypoint.lane_id >= lanes.begin()->first);
+    RELEASE_ASSERT(waypoint.lane_id <= lanes.rbegin()->first);
 
     double lane_width = 0;
     double lane_tangent = 0;
@@ -291,17 +281,17 @@ namespace road {
     lane_tangent *= -1;
 
     geom::Rotation rot(
-        geom::Math::to_degrees(dp.pitch),
-        geom::Math::to_degrees(-dp.tangent), // Unreal's Y axis hack
-        0.0);
+        geom::Math::ToDegrees(static_cast<float>(dp.pitch)),
+        geom::Math::ToDegrees(-static_cast<float>(dp.tangent)), // Unreal's Y axis hack
+        0.0f);
 
     dp.ApplyLateralOffset(lane_width);
 
     if (waypoint.lane_id > 0) {
-      rot.yaw += 180.0 + geom::Math::to_degrees(lane_tangent);
-      rot.pitch = 360.0 - rot.pitch;
+      rot.yaw += 180.0f + geom::Math::ToDegrees(lane_tangent);
+      rot.pitch = 360.0f - rot.pitch;
     } else {
-      rot.yaw -= geom::Math::to_degrees(lane_tangent);
+      rot.yaw -= geom::Math::ToDegrees(lane_tangent);
     }
 
     // Unreal's Y axis hack
@@ -322,16 +312,20 @@ namespace road {
     const auto s = waypoint.s;
 
     const auto &lane = GetLane(waypoint);
-    THROW_INVALID_INPUT_ASSERT(lane.GetRoad() != nullptr);
-    THROW_INVALID_INPUT_ASSERT(s <= lane.GetRoad()->GetLength());
+    RELEASE_ASSERT(lane.GetRoad() != nullptr);
+    RELEASE_ASSERT(s <= lane.GetRoad()->GetLength());
 
     const auto lane_width_info = lane.GetInfo<RoadInfoLaneWidth>(s);
-    THROW_INVALID_INPUT_ASSERT(lane_width_info != nullptr);
+    RELEASE_ASSERT(lane_width_info != nullptr);
 
     return lane_width_info->GetPolynomial().Evaluate(s);
   }
 
-  bool Map::IsJunction(const RoadId road_id) const {
+  JuncId Map::GetJunctionId(RoadId road_id) const {
+    return _data.GetRoad(road_id).GetJunctionId();
+  }
+
+  bool Map::IsJunction(RoadId road_id) const {
     return _data.GetRoad(road_id).IsJunction();
   }
 
@@ -340,8 +334,8 @@ namespace road {
     const auto s = waypoint.s;
 
     const auto &current_lane = GetLane(waypoint);
-    THROW_INVALID_INPUT_ASSERT(current_lane.GetRoad() != nullptr);
-    THROW_INVALID_INPUT_ASSERT(s <= current_lane.GetRoad()->GetLength());
+    RELEASE_ASSERT(current_lane.GetRoad() != nullptr);
+    RELEASE_ASSERT(s <= current_lane.GetRoad()->GetLength());
 
     const auto inner_lane_id = waypoint.lane_id < 0 ?
         waypoint.lane_id + 1 :
@@ -370,13 +364,13 @@ namespace road {
     std::vector<Waypoint> result;
     result.reserve(next_lanes.size());
     for (auto *next_lane : next_lanes) {
-      THROW_INVALID_INPUT_ASSERT(next_lane != nullptr);
+      RELEASE_ASSERT(next_lane != nullptr);
       const auto lane_id = next_lane->GetId();
-      THROW_INVALID_INPUT_ASSERT(lane_id != 0);
+      RELEASE_ASSERT(lane_id != 0);
       const auto *section = next_lane->GetLaneSection();
-      THROW_INVALID_INPUT_ASSERT(section != nullptr);
+      RELEASE_ASSERT(section != nullptr);
       const auto *road = next_lane->GetRoad();
-      THROW_INVALID_INPUT_ASSERT(road != nullptr);
+      RELEASE_ASSERT(road != nullptr);
       const auto distance = GetDistanceAtStartOfLane(*next_lane);
       result.emplace_back(Waypoint{road->GetId(), section->GetId(), lane_id, distance});
     }
@@ -386,7 +380,7 @@ namespace road {
   std::vector<Waypoint> Map::GetNext(
       const Waypoint waypoint,
       const double distance) const {
-    THROW_INVALID_INPUT_ASSERT(distance > 0.0);
+    RELEASE_ASSERT(distance > 0.0);
     const auto &lane = GetLane(waypoint);
     const bool forward = (waypoint.lane_id <= 0);
     const double signed_distance = forward ? distance : -distance;
@@ -400,7 +394,7 @@ namespace road {
       Waypoint result = waypoint;
       result.s += signed_distance;
       result.s += forward ? -EPSILON : EPSILON;
-      THROW_INVALID_INPUT_ASSERT(result.s > 0.0);
+      RELEASE_ASSERT(result.s > 0.0);
       return { result };
     }
 
@@ -417,7 +411,7 @@ namespace road {
   }
 
   boost::optional<Waypoint> Map::GetRight(Waypoint waypoint) const {
-    THROW_INVALID_INPUT_ASSERT(waypoint.lane_id != 0);
+    RELEASE_ASSERT(waypoint.lane_id != 0);
     if (waypoint.lane_id > 0) {
       ++waypoint.lane_id;
     } else {
@@ -427,7 +421,7 @@ namespace road {
   }
 
   boost::optional<Waypoint> Map::GetLeft(Waypoint waypoint) const {
-    THROW_INVALID_INPUT_ASSERT(waypoint.lane_id != 0);
+    RELEASE_ASSERT(waypoint.lane_id != 0);
     if (std::abs(waypoint.lane_id) == 1) {
       waypoint.lane_id *= -1;
     } else if (waypoint.lane_id > 0) {
@@ -474,5 +468,3 @@ namespace road {
 
 } // namespace road
 } // namespace carla
-
-#undef THROW_INVALID_INPUT_ASSERT

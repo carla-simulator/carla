@@ -1,13 +1,14 @@
 cmake_minimum_required(VERSION 3.5.1)
 project(libcarla-client)
 
-# Install rpclib.
-install(DIRECTORY "${RPCLIB_INCLUDE_PATH}/rpc" DESTINATION include)
+# Install rpclib (install in system folder to avoid extra warnings).
+install(DIRECTORY "${RPCLIB_INCLUDE_PATH}/rpc" DESTINATION include/system)
 file(GLOB libcarla_carla_rpclib "${RPCLIB_LIB_PATH}/*.*")
 install(FILES ${libcarla_carla_rpclib} DESTINATION lib)
 
-# Install boost headers.
-install(DIRECTORY "${BOOST_INCLUDE_PATH}/boost" DESTINATION include)
+# Install boost headers (install in system folder to avoid extra warnings).
+# @todo Remove boost from public interface of LibCarla.client.
+install(DIRECTORY "${BOOST_INCLUDE_PATH}/boost" DESTINATION include/system)
 file(GLOB boost_libraries "${BOOST_LIB_PATH}/*")
 install(FILES ${boost_libraries} DESTINATION lib)
 
@@ -185,16 +186,19 @@ if (LIBCARLA_BUILD_RELEASE)
 
   add_library(carla_client STATIC ${libcarla_sources})
 
-  target_include_directories(carla_client PRIVATE
+  target_include_directories(carla_client SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}")
 
   install(TARGETS carla_client DESTINATION lib)
 
   if (WIN32) # @todo Fix PythonAPI build on Windows.
-    set_target_properties(carla_client PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})
+    set_target_properties(carla_client PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_RELEASE}")
   else ()
-    set_target_properties(carla_client PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_RELEASE_CLIENT})
+    if (NOT DEFINED CMAKE_CXX_FLAGS_RELEASE_CLIENT)
+      set(CMAKE_CXX_FLAGS_RELEASE_CLIENT ${CMAKE_CXX_FLAGS_RELEASE})
+    endif()
+    set_target_properties(carla_client PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_RELEASE_CLIENT}")
   endif (WIN32)
 
 endif()
@@ -203,13 +207,13 @@ if (LIBCARLA_BUILD_DEBUG)
 
   add_library(carla_client_debug STATIC ${libcarla_sources})
 
-  target_include_directories(carla_client_debug PRIVATE
+  target_include_directories(carla_client_debug SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}")
 
   install(TARGETS carla_client_debug DESTINATION lib)
 
-  set_target_properties(carla_client_debug PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_DEBUG})
+  set_target_properties(carla_client_debug PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_DEBUG}")
   target_compile_definitions(carla_client_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
 
 endif()

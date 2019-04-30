@@ -4,10 +4,12 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-// #include "Carla.h"
+#include "Carla/Actor/ActorDescription.h"
+#include "Carla/Walker/WalkerControl.h"
+#include "Carla/Walker/WalkerController.h"
+
 #include "CarlaRecorder.h"
 #include "CarlaReplayerHelper.h"
-#include "Carla/Actor/ActorDescription.h"
 
 #include <ctime>
 #include <sstream>
@@ -67,39 +69,24 @@ void ACarlaRecorder::Tick(float DeltaSeconds)
     for (auto It = Registry.begin(); It != Registry.end(); ++It)
     {
       FActorView View = *It;
-      AActor *Actor;
+
       switch (View.GetActorType())
       {
-        // save the transform of all vehicles and walkers
+        // save the transform of all vehicles
         case FActorView::ActorType::Vehicle:
+          AddActorPosition(View);
+          AddVehicleAnimation(View);
+          break;
+
+        // save the transform of all walkers
         case FActorView::ActorType::Walker:
-          // get position of the vehicle
-          Actor = View.GetActor();
-          check(Actor != nullptr);
-          AddPosition(CarlaRecorderPosition
-          {
-            View.GetActorId(),
-            Actor->GetTransform().GetTranslation(),
-            Actor->GetTransform().GetRotation().Euler()
-          });
+          AddActorPosition(View);
+          AddWalkerAnimation(View);
           break;
 
         // save the state of each traffic light
         case FActorView::ActorType::TrafficLight:
-          // get states
-          Actor = View.GetActor();
-          check(Actor != nullptr);
-          auto TrafficLight = Cast<ATrafficLightBase>(Actor);
-          if (TrafficLight != nullptr)
-          {
-            AddState(CarlaRecorderStateTrafficLight
-            {
-              View.GetActorId(),
-              TrafficLight->GetTimeIsFrozen(),
-              TrafficLight->GetElapsedTime(),
-              static_cast<char>(TrafficLight->GetTrafficLightState())
-            });
-          }
+          AddTrafficLightState(View);
           break;
       }
     }
@@ -124,6 +111,92 @@ void ACarlaRecorder::Disable(void)
 {
   PrimaryActorTick.bCanEverTick = false;
   Enabled = false;
+}
+
+void ACarlaRecorder::AddActorPosition(FActorView &View)
+{
+  AActor *Actor = View.GetActor();
+  check(Actor != nullptr);
+
+  // get position of the vehicle
+  AddPosition(CarlaRecorderPosition
+  {
+    View.GetActorId(),
+    Actor->GetTransform().GetTranslation(),
+    Actor->GetTransform().GetRotation().Euler()
+  });
+}
+
+void ACarlaRecorder::AddVehicleAnimation(FActorView &View)
+{
+  AActor *Actor = View.GetActor();
+  check(Actor != nullptr);
+
+  if (Actor->IsPendingKill())
+  {
+    return;
+  }
+
+  auto Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
+  if (Vehicle == nullptr)
+  {
+    return;
+  }
+
+  FVehicleControl Control = Vehicle->GetVehicleControl();
+
+  // save
+  CarlaRecorderAnimVehicle Record;
+  Record.DatabaseId = View.GetActorId();
+  Record.Steering = Control.Steer;
+  Record.Throttle = Control.Throttle;
+  Record.Brake = Control.Brake;
+  Record.bHandbrake = Control.bHandBrake;
+  Record.Gear = Control.Gear;
+  AddAnimVehicle(Record);
+}
+
+void ACarlaRecorder::AddWalkerAnimation(FActorView &View)
+{
+  AActor *Actor = View.GetActor();
+  check(Actor != nullptr);
+
+  if (!Actor->IsPendingKill())
+  {
+    // check to set speed in walkers
+    auto Walker = Cast<APawn>(Actor);
+    if (Walker)
+    {
+      auto Controller = Cast<AWalkerController>(Walker->GetController());
+      if (Controller != nullptr)
+      {
+        AddAnimWalker(CarlaRecorderAnimWalker
+        {
+          View.GetActorId(),
+          Controller->GetWalkerControl().Speed
+        });
+      }
+    }
+  }
+}
+
+void ACarlaRecorder::AddTrafficLightState(FActorView &View)
+{
+  AActor *Actor = View.GetActor();
+  check(Actor != nullptr);
+
+  // get states
+  auto TrafficLight = Cast<ATrafficLightBase>(Actor);
+  if (TrafficLight != nullptr)
+  {
+    AddState(CarlaRecorderStateTrafficLight
+    {
+      View.GetActorId(),
+      TrafficLight->GetTimeIsFrozen(),
+      TrafficLight->GetElapsedTime(),
+      static_cast<char>(TrafficLight->GetTrafficLightState())
+    });
+  }
 }
 
 std::string ACarlaRecorder::Start(std::string Name, FString MapName)
@@ -189,6 +262,8 @@ void ACarlaRecorder::Clear(void)
   Collisions.Clear();
   Positions.Clear();
   States.Clear();
+  Vehicles.Clear();
+  Walkers.Clear();
 }
 
 void ACarlaRecorder::Write(double DeltaSeconds)
@@ -199,13 +274,19 @@ void ACarlaRecorder::Write(double DeltaSeconds)
   // start
   Frames.WriteStart(File);
 
-  // write data
+  // events
   EventsAdd.Write(File);
   EventsDel.Write(File);
   EventsParent.Write(File);
   Collisions.Write(File);
+
+  // positions and states
   Positions.Write(File);
   States.Write(File);
+
+  // animations
+  Vehicles.Write(File);
+  Walkers.Write(File);
 
   // end
   Frames.WriteEnd(File);
@@ -283,6 +364,22 @@ void ACarlaRecorder::AddState(const CarlaRecorderStateTrafficLight &State)
   if (Enabled)
   {
     States.Add(State);
+  }
+}
+
+void ACarlaRecorder::AddAnimVehicle(const CarlaRecorderAnimVehicle &Vehicle)
+{
+  if (Enabled)
+  {
+    Vehicles.Add(Vehicle);
+  }
+}
+
+void ACarlaRecorder::AddAnimWalker(const CarlaRecorderAnimWalker &Walker)
+{
+  if (Enabled)
+  {
+    Walkers.Add(Walker);
   }
 }
 

@@ -39,7 +39,12 @@ def get_libcarla_extensions():
                 os.path.join(pwd, 'dependencies/lib/libboost_filesystem.a'),
                 os.path.join(pwd, 'dependencies/lib', pylib)]
             extra_compile_args = [
-                '-fPIC', '-std=c++14', '-Wno-missing-braces',
+                '-isystem', 'dependencies/include/system', '-fPIC', '-std=c++14',
+                '-Werror', '-Wall', '-Wextra', '-Wpedantic',
+                '-Wdeprecated', '-Wno-shadow', '-Wuninitialized', '-Wunreachable-code',
+                '-Wpessimizing-move', '-Wold-style-cast', '-Wnull-dereference',
+                '-Wduplicate-enum', '-Wnon-virtual-dtor', '-Wheader-hygiene',
+                '-Wconversion', '-Wfloat-overflow-conversion',
                 '-DBOOST_ERROR_CODE_HEADER_ONLY', '-DLIBCARLA_WITH_PYTHON_SUPPORT'
             ]
             if 'TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true':

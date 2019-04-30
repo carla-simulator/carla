@@ -8,17 +8,21 @@
 
 // #include "GameFramework/Actor.h"
 #include <fstream>
-#include "CarlaRecorderInfo.h"
-#include "CarlaRecorderFrames.h"
+
+#include "Carla/Actor/ActorDescription.h"
+
+#include "CarlaRecorderAnimVehicle.h"
+#include "CarlaRecorderAnimWalker.h"
+#include "CarlaRecorderCollision.h"
 #include "CarlaRecorderEventAdd.h"
 #include "CarlaRecorderEventDel.h"
 #include "CarlaRecorderEventParent.h"
-#include "CarlaRecorderCollision.h"
+#include "CarlaRecorderFrames.h"
+#include "CarlaRecorderInfo.h"
 #include "CarlaRecorderPosition.h"
-#include "CarlaRecorderState.h"
 #include "CarlaRecorderQuery.h"
+#include "CarlaRecorderState.h"
 #include "CarlaReplayer.h"
-#include "Carla/Actor/ActorDescription.h"
 
 #include "CarlaRecorder.generated.h"
 
@@ -34,7 +38,9 @@ enum class CarlaRecorderPacketId : uint8_t
   EventParent,
   Collision,
   Position,
-  State
+  State,
+  AnimVehicle,
+  AnimWalker
 };
 
 /// Recorder for the simulation
@@ -78,6 +84,10 @@ public:
   void AddPosition(const CarlaRecorderPosition &Position);
 
   void AddState(const CarlaRecorderStateTrafficLight &State);
+
+  void AddAnimVehicle(const CarlaRecorderAnimVehicle &Vehicle);
+
+  void AddAnimWalker(const CarlaRecorderAnimWalker &Walker);
 
   // set episode
   void SetEpisode(UCarlaEpisode *ThisEpisode)
@@ -127,6 +137,8 @@ private:
   CarlaRecorderCollisions Collisions;
   CarlaRecorderPositions Positions;
   CarlaRecorderStates States;
+  CarlaRecorderAnimVehicles Vehicles;
+  CarlaRecorderAnimWalkers Walkers;
 
   // replayer
   CarlaReplayer Replayer;
@@ -135,5 +147,8 @@ private:
   CarlaRecorderQuery Query;
 
   void AddExistingActors(void);
-
+  void AddActorPosition(FActorView &View);
+  void AddWalkerAnimation(FActorView &View);
+  void AddVehicleAnimation(FActorView &View);
+  void AddTrafficLightState(FActorView &View);
 };

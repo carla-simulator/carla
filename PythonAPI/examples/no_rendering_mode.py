@@ -700,7 +700,7 @@ class MapImage(object):
                     True)
 
                 # Draw Lane Markings and Arrows
-                if not waypoint.is_intersection:
+                if not waypoint.is_junction:
                     draw_lane_marking(
                         map_surface,
                         waypoints,
@@ -725,7 +725,7 @@ class MapImage(object):
             dist = 1.5
             to_pixel = lambda wp: world_to_pixel(wp.transform.location)
             for wp in carla_map.generate_waypoints(dist):
-                col = (0, 255, 255) if wp.is_intersection else (0, 255, 0)
+                col = (0, 255, 255) if wp.is_junction else (0, 255, 0)
                 for nxt in wp.next(dist):
                     pygame.draw.line(map_surface, col, to_pixel(wp), to_pixel(nxt), 2)
                 if wp.lane_change & carla.LaneChange.Right:

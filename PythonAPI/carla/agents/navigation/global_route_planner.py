@@ -69,7 +69,7 @@ class GlobalRoutePlanner(object):
             entry_xyz, exit_xyz = segment['entryxyz'], segment['exitxyz']
             path = segment['path']
             entry_wp, exit_wp = segment['entry'], segment['exit']
-            intersection = entry_wp.is_intersection
+            intersection = entry_wp.is_junction
             road_id, section_id, lane_id = entry_wp.road_id, entry_wp.section_id, entry_wp.lane_id
 
             for vertex in entry_xyz, exit_xyz:
@@ -176,7 +176,7 @@ class GlobalRoutePlanner(object):
             left_found, right_found = False, False
 
             for waypoint in segment['path']:
-                if not segment['entry'].is_intersection:
+                if not segment['entry'].is_junction:
                     next_waypoint, next_road_option, next_segment = None, None, None
 
                     if bool(waypoint.lane_change & carla.LaneChange.Right) and not right_found:

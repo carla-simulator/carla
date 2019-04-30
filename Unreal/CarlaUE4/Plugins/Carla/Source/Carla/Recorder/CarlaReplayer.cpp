@@ -22,7 +22,7 @@ void CarlaReplayer::Stop(bool bKeepActors)
     // destroy actors if event was recorded?
     if (!bKeepActors)
     {
-      ProcessToTime(TotalTime);
+      ProcessToTime(TotalTime, false);
     }
 
     // callback
@@ -146,7 +146,7 @@ std::string CarlaReplayer::ReplayFile(std::string Filename, double TimeStart, do
     Autoplay.Mapfile = RecInfo.Mapfile;
     Autoplay.TimeStart = TimeStart;
     Autoplay.Duration = Duration;
-    Autoplay.FollowId = FollowId;
+    Autoplay.FollowId = ThisFollowId;
     Autoplay.TimeFactor = TimeFactor;
   }
 
@@ -178,7 +178,7 @@ std::string CarlaReplayer::ReplayFile(std::string Filename, double TimeStart, do
   if (!Autoplay.Enabled)
   {
     // process all events until the time
-    ProcessToTime(TimeStart);
+    ProcessToTime(TimeStart, true);
     // mark as enabled
     Enabled = true;
   }
@@ -237,13 +237,13 @@ void CarlaReplayer::CheckPlayAfterMapLoaded(void)
   TimeFactor = Autoplay.TimeFactor;
 
   // process all events until the time
-  ProcessToTime(TimeStart);
+  ProcessToTime(TimeStart, true);
 
   // mark as enabled
   Enabled = true;
 }
 
-void CarlaReplayer::ProcessToTime(double Time)
+void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
 {
   double Per = 0.0f;
   double NewTime = CurrentTime + Time;
@@ -305,7 +305,7 @@ void CarlaReplayer::ProcessToTime(double Time)
       // positions
       case static_cast<char>(CarlaRecorderPacketId::Position):
         if (bFrameFound)
-          ProcessPositions();
+          ProcessPositions(IsFirstTime);
         else
           SkipPacket();
         break;
@@ -314,6 +314,22 @@ void CarlaReplayer::ProcessToTime(double Time)
       case static_cast<char>(CarlaRecorderPacketId::State):
         if (bFrameFound)
           ProcessStates();
+        else
+          SkipPacket();
+        break;
+
+      // vehicle animation
+      case static_cast<char>(CarlaRecorderPacketId::AnimVehicle):
+        if (bFrameFound)
+          ProcessAnimVehicle();
+        else
+          SkipPacket();
+        break;
+
+      // walker animation
+      case static_cast<char>(CarlaRecorderPacketId::AnimWalker):
+        if (bFrameFound)
+          ProcessAnimWalker();
         else
           SkipPacket();
         break;
@@ -336,7 +352,7 @@ void CarlaReplayer::ProcessToTime(double Time)
   // update all positions
   if (Enabled && bFrameFound)
   {
-    UpdatePositions(Per);
+    UpdatePositions(Per, Time);
   }
 
   // save current time
@@ -485,7 +501,39 @@ void CarlaReplayer::ProcessStates(void)
   }
 }
 
-void CarlaReplayer::ProcessPositions(void)
+void CarlaReplayer::ProcessAnimVehicle(void)
+{
+  uint16_t i, Total;
+  CarlaRecorderAnimVehicle Vehicle;
+  std::stringstream Info;
+
+  // read Total Vehicles
+  ReadValue<uint16_t>(File, Total);
+  for (i = 0; i < Total; ++i)
+  {
+    Vehicle.Read(File);
+    Vehicle.DatabaseId = MappedId[Vehicle.DatabaseId];
+    Helper.ProcessReplayerAnimVehicle(Vehicle);
+  }
+}
+
+void CarlaReplayer::ProcessAnimWalker(void)
+{
+  uint16_t i, Total;
+  CarlaRecorderAnimWalker Walker;
+  std::stringstream Info;
+
+  // read Total walkers
+  ReadValue<uint16_t>(File, Total);
+  for (i = 0; i < Total; ++i)
+  {
+    Walker.Read(File);
+    Walker.DatabaseId = MappedId[Walker.DatabaseId];
+    Helper.ProcessReplayerAnimWalker(Walker);
+  }
+}
+
+void CarlaReplayer::ProcessPositions(bool IsFirstTime)
 {
   uint16_t i, Total;
 
@@ -510,9 +558,15 @@ void CarlaReplayer::ProcessPositions(void)
       UE_LOG(LogCarla, Log, TEXT("Actor not found when trying to move from replayer (id. %d)"), Pos.DatabaseId);
     CurrPos.push_back(std::move(Pos));
   }
+
+  // check to copy positions the first time
+  if (IsFirstTime)
+  {
+    PrevPos.clear();
+  }
 }
 
-void CarlaReplayer::UpdatePositions(double Per)
+void CarlaReplayer::UpdatePositions(double Per, double DeltaTime)
 {
   unsigned int i;
   uint32_t NewFollowId = 0;
@@ -545,15 +599,15 @@ void CarlaReplayer::UpdatePositions(double Per)
       // check if time factor is high
       if (TimeFactor >= 2.0)
         // assign first position
-        InterpolatePosition(PrevPos[Result->second], CurrPos[i], 0.0);
+        InterpolatePosition(PrevPos[Result->second], CurrPos[i], 0.0, DeltaTime);
       else
         // interpolate
-        InterpolatePosition(PrevPos[Result->second], CurrPos[i], Per);
+        InterpolatePosition(PrevPos[Result->second], CurrPos[i], Per, DeltaTime);
     }
     else
     {
       // assign last position (we don't have previous one)
-      InterpolatePosition(CurrPos[i], CurrPos[i], 0.0);
+      InterpolatePosition(CurrPos[i], CurrPos[i], 0.0, DeltaTime);
     }
 
     // move the camera to follow this actor if required
@@ -570,10 +624,11 @@ void CarlaReplayer::UpdatePositions(double Per)
 void CarlaReplayer::InterpolatePosition(
     const CarlaRecorderPosition &Pos1,
     const CarlaRecorderPosition &Pos2,
-    double Per)
+    double Per,
+    double DeltaTime)
 {
   // call the callback
-  Helper.ProcessReplayerPosition(Pos1, Pos2, Per);
+  Helper.ProcessReplayerPosition(Pos1, Pos2, Per, DeltaTime);
 }
 
 // tick for the replayer
@@ -582,7 +637,7 @@ void CarlaReplayer::Tick(float Delta)
   // check if there are events to process
   if (Enabled)
   {
-    ProcessToTime(Delta * TimeFactor);
+    ProcessToTime(Delta * TimeFactor, false);
   }
 
   // UE_LOG(LogCarla, Log, TEXT("Replayer tick"));

@@ -63,7 +63,7 @@ function download_content {
     aria2c -j16 -x16 --input-file=.aria2c.input
     rm -f .aria2c.input
   else
-    wget ${CONTENT_LINK} -O Content.tar.gz
+    wget -c ${CONTENT_LINK} -O Content.tar.gz
   fi
   tar -xvzf Content.tar.gz -C Content
   rm Content.tar.gz
