@@ -18,6 +18,7 @@
   * Added C++ client example using LibCarla
   * Fixed wrong units in VehiclePhysicsControl's center of mass
   * Several optimizations to the RPC server, now supports a bigger load of async messages
+  * Corrected Latitude in WGS84 reprojection code such that Latitudes increase as one move north in Carla worlds
 
 ## CARLA 0.9.5
 
