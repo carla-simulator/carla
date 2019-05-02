@@ -50,11 +50,11 @@ def import_all_fbx_in_folder(fbx_folder, folder_list):
         final_list = final_list[:-1]
         print(final_list)
         #Destination map (the one that will be cooked)
-        dest_map_path = "/Game/Carla/Maps/BaseMap"
+        dest_map_path = "/Game/Carla/Maps/TestMaps"
         dest_map_name = "TEMPMAP"
         # This should be a folder, because the commandlet will take anything inside.
         # It is better if there is only one map inside
-        src_map_folder = "/Game/Carla/Maps/EmptyMap"
+        src_map_folder = "/Game/Carla/Maps/TestMaps"
         prepare_cook_commandlet(final_list, src_map_folder, dest_map_path, dest_map_name)
         launch_bash_script("BuildTools/ExportFBX.sh", "--maps=%s/%s" % (dest_map_path, dest_map_name))
 
