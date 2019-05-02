@@ -76,6 +76,13 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy') {
+            when { anyOf { branch "master"; buildingTag() } }
+            steps {
+                sh 'make deploy ARGS="--replace-latest"'
+            }
+        }
     }
 
     post {
