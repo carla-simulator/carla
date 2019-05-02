@@ -90,6 +90,10 @@ for developers:
 
         Run the setup step only.
 
+    deploy:
+
+        Upload nightly build.
+
     pretty:
 
         Prettify code files. Run uncrustify on C++ files or AutoPEP8 on Python
