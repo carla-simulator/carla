@@ -22,6 +22,7 @@
 
 ## CARLA 0.9.5
 
+  * Added `client_bounding_boxes.py` to show bounding boxes client-side
   * New Town07, rural environment with narrow roads
   * Reworked OpenDRIVE parser and waypoints API
     - Fixed several situations in which the XODR was incorrectly parsed
