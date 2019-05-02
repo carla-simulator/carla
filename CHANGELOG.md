@@ -16,11 +16,13 @@
       - Walkers animation is simulated in playback (through speed of walker), so they walk properly.
   * Fixed Lidar effectiveness bug in manual_control.py
   * Added C++ client example using LibCarla
+  * Updated OpenDriveActor to use the new Waypoint API
   * Fixed wrong units in VehiclePhysicsControl's center of mass
   * Several optimizations to the RPC server, now supports a bigger load of async messages
 
 ## CARLA 0.9.5
 
+  * Added `client_bounding_boxes.py` to show bounding boxes client-side
   * New Town07, rural environment with narrow roads
   * Reworked OpenDRIVE parser and waypoints API
     - Fixed several situations in which the XODR was incorrectly parsed
