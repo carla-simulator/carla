@@ -96,11 +96,11 @@ log "Packaging build."
 #rm -Rf ./Engine
 rm -Rf ./CarlaUE4/Metadata
 rm -Rf ./CarlaUE4/Plugins
-#@TODO: Instead of this hardcoded path, we need to pick the ${MAPS_TO_COOK} path
-#rm -Rf ./CarlaUE4/${MAPS_TO_COOK_But_instead_of_"game"_the_folder_is_content}.uexp
-#rm -Rf ./CarlaUE4/${MAPS_TO_COOK_But_instead_of_"game"_the_folder_is_content}.umap
-#rm -Rf ./CarlaUE4/Content/Carla/Maps/BaseMap/TEMPMAP.uexp
-#rm -Rf ./CarlaUE4/Content/Carla/Maps/BaseMap/TEMPMAP.umap
+
+# Remove TEMPMAP.umap and TEMPMAP.uexp
+TEMPMAP_BASE_PATH="$CARLAUE4_ROOT_FOLDER${MAP_TO_COOK/Game/"Content"}"
+rm -f $TEMPMAP_BASE_PATH.uexp
+rm $TEMPMAP_BASE_PATH.umap
 
 rm ./CarlaUE4/AssetRegistry.bin
 

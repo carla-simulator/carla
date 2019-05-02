@@ -24,9 +24,9 @@ private:
 public:
 
   UFUNCTION(Category = "Carla Blueprint Registry", BlueprintCallable)
-  void AddToCarlaBlueprintRegistry(const TArray<FPropParameters> &PropParametersArray);
+  static void AddToCarlaBlueprintRegistry(const TArray<FPropParameters> &PropParametersArray);
 
   UFUNCTION(Category = "Carla Blueprint Registry", BlueprintCallable)
-  void LoadPropDefinitions(TArray<FActorDefinition> &Definitions);
+  static void LoadPropDefinitions(TArray<FPropParameters> &PropParametersArray);
 
 };

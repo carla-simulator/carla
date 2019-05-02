@@ -117,7 +117,7 @@ void UCarlaBlueprintRegistry::AddToCarlaBlueprintRegistry(const TArray<FPropPara
 
 }
 
-void UCarlaBlueprintRegistry::LoadPropDefinitions(TArray<FActorDefinition> &Definitions)
+void UCarlaBlueprintRegistry::LoadPropDefinitions(TArray<FPropParameters> &PropParametersArray)
 {
   // Loads prop registry json files
   const FString WildCard = FString("*").Append(PropAttributes::REGISTRY_FORMAT);
@@ -148,7 +148,6 @@ void UCarlaBlueprintRegistry::LoadPropDefinitions(TArray<FActorDefinition> &Defi
 
   // Read all registry files and overwrite default registry values with user
   // registry files
-  TArray<FPropParameters> PropParametersArray;
   TMap<FString, int> PropIndexes;
 
   for (auto i = 0u; i < PropFileNames.Num(); ++i)
@@ -190,6 +189,4 @@ void UCarlaBlueprintRegistry::LoadPropDefinitions(TArray<FActorDefinition> &Defi
       }
     }
   }
-
-  UActorBlueprintFunctionLibrary::MakePropDefinitions(PropParametersArray, Definitions);
 }
