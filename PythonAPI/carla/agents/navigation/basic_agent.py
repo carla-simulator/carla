@@ -119,6 +119,6 @@ class BasicAgent(Agent):
         else:
             self._state = AgentState.NAVIGATING
             # standard local planner behavior
-            control = self._local_planner.run_step()
+            control = self._local_planner.run_step(debug=debug)
 
         return control
