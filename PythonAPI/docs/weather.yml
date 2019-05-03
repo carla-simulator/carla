@@ -1,4 +1,40 @@
 ---
 - module_name: carla
   doc: >
+  # - CLASSES ------------------------------
+  classes:
+  - class_name: WeatherParameters
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: cloudyness
+      doc: >
+    - var_name: precipitation
+      doc: >
+    - var_name: precipitation_deposits
+      doc: >
+    - var_name: wind_intensity
+      doc: >
+    - var_name: sun_azimuth_angle
+      doc: >
+    - var_name: sun_altitude_angle
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
 ...
