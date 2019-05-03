@@ -1,4 +1,197 @@
 ---
 - module_name: carla
   doc: >
+  # - CLASSES ------------------------------
+  classes:
+  - class_name: Timestamp
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: frame_count
+      doc: >
+    - var_name: elapsed_seconds
+      doc: >
+    - var_name: delta_seconds
+      doc: >
+    - var_name: platform_timestamp
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __eq__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+
+  - class_name: ActorList
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: find
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: filter
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __getitem__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __len__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __iter__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+
+  - class_name: WorldSettings
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: synchronous_mode
+      doc: >
+    - var_name: no_rendering_mode
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __eq__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+
+  - class_name: World
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: id
+      doc: >
+    - var_name: debug
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: get_blueprint_library
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: get_map
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: get_spectator
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: get_settings
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: apply_settings
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: get_weather
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: set_weather
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: get_actors
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: get_actors
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: spawn_actor
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: try_spawn_actor
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: wait_for_tick
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: on_tick
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: tick
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+
+  - class_name: DebugHelper
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: draw_point
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: draw_line
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: draw_arrow
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: draw_box
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: draw_string
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
 ...
