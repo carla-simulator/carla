@@ -9,8 +9,8 @@
 #include "Carla/Game/CarlaStatics.h"
 
 namespace CommonAttributes {
-  static const FString PATH = FPaths::ProjectContentDir() + FString("/Carla/Config/");
-  static const FString DEFAULT = TEXT("Default");
+  static const FString PATH = FPaths::ProjectContentDir();
+  static const FString DEFAULT = TEXT("/Carla/Config/Default");
   static const FString DEFINITIONS = TEXT("definitions");
 }
 
@@ -122,15 +122,15 @@ void UCarlaBlueprintRegistry::LoadPropDefinitions(TArray<FPropParameters> &PropP
   // Loads prop registry json files
   const FString WildCard = FString("*").Append(PropAttributes::REGISTRY_FORMAT);
 
-  FString PATH = FPaths::ProjectContentDir() + "/*";
+  // Get all Package names
   TArray<FString> PackageList;
-  IFileManager::Get().FindFiles(PackageList, *PATH, false, true);
+  IFileManager::Get().FindFiles(PackageList, *(CommonAttributes::PATH + "/*"), false, true);
 
   // Find all prop registry files inside package
   TArray<FString> PropFileNames;
   for (FString &PackageName : PackageList)
   {
-    FString FullPath = FPaths::ProjectContentDir() + "/" + PackageName + "/Config";
+    FString FullPath = CommonAttributes::PATH + "/" + PackageName + "/Config";
 
     TArray<FString> RegistryFileNames;
     IFileManager::Get().FindFilesRecursive(RegistryFileNames,
