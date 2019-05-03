@@ -36,11 +36,14 @@ def import_all_fbx_in_folder(fbx_folder, folder_list):
     fbx_place = os.path.join(dirname, "..", fbx_folder)
     for file in os.listdir(fbx_place):
         if file.endswith(".PropRegistry.json"):
+            print("MANISHHHH")
+            registry_name = file.replace(".PropRegistry.json", "")
+            print (registry_name)
             with open(os.path.join(dirname, "..", fbx_folder, file)) as json_file:
                 data = json.load(json_file)
                 # This will take all the fbx registerd in the provided json files
                 # and place it inside unreal in the provided path (by the json file)
-                import_assets_commandlet(data, fbx_folder, folder_list)
+                import_assets_commandlet(data, fbx_folder, registry_name, folder_list)
     # This part will just gather all the folders in which an fbx has been placed
     if(len(folder_list)>0):
         final_list = ""
@@ -75,11 +78,12 @@ def prepare_cook_commandlet(folder_list, source_map, dest_map_path, dest_map_nam
     invoke_commandlet(commandlet_name, commandlet_arguments)
 
 
-def import_assets_commandlet(json_data, fbx_folder, folder_list):
+def import_assets_commandlet(json_data, fbx_folder, registry_name, folder_list):
     importfile = "importsetting.json"
     if os.path.exists(importfile):
         os.remove(importfile)
-    populate_json_and_data(json_data, fbx_folder, importfile, folder_list)
+    populate_json_and_data(json_data, fbx_folder, importfile, registry_name, folder_list)
+    generate_prop_registry_file_for_unreal(json_data, registry_name)
     dirname = os.getcwd()
     commandlet_name = "ImportAssets"
     import_settings = os.path.join(dirname, importfile)
@@ -103,7 +107,7 @@ def launch_bash_script(script_path, arguments):
     print("Executing: " + full_command)
     subprocess.check_call([full_command], shell=True)
 
-def populate_json_and_data(json_data, fbx_folder, json_file, folder_list):
+def populate_json_and_data(json_data, fbx_folder, json_file, registry_name, folder_list):
     with open(json_file, "w+") as fh:
         import_groups = []
         file_names = []
@@ -125,26 +129,54 @@ def populate_json_and_data(json_data, fbx_folder, json_file, folder_list):
                 "bCombineMeshes": 0
             }
         })
-
         for prop in json_data['definitions']:
+            destination_path = "/Game/" + registry_name + "/Static/" + prop["tag"] + "/" + prop["name"]
+
             file_names = []
             fbx_path = os.path.join("..", "..", fbx_folder, "%s" % prop["source"])
             file_names.append(fbx_path)
             import_groups.append({
                 "ImportSettings": import_settings,
                 "FactoryName": "FbxFactory",
-                "DestinationPath": prop["path"],
+                "DestinationPath": destination_path,
                 "bReplaceExisting": "true",
                 "FileNames": file_names
             })
             #second_folder = os.path.dirname(prop["path"]).split("/Game")[1].split("/")[1]
             #folder_list.append("/Game/" + second_folder)
-            folder_list.append(prop["path"])
+            folder_list.append(destination_path)
         fh.write(json.dumps({"ImportGroups": import_groups}))
         fh.close()
         #result = re.search('/Game(.*)', os.path.dirname(prop["path"]))
 
         #print(result)
+
+def generate_prop_registry_file_for_unreal(json_data, registry_name):
+    data = {}
+    data["definitions"] = []
+    for prop in json_data['definitions']:
+        name = prop["name"]
+        size = prop["size"]
+
+        fbx_name = prop["source"].replace(".fbx", "")
+        path = "/Game/" + registry_name + "/Static/" + prop["tag"] + "/" + prop["name"] + "/" + fbx_name
+
+        data['definitions'].append({
+            "name" : name,
+            "size" : size,
+            "path" : path
+        })
+
+    registry_path = os.path.join("../Unreal/CarlaUE4/Content/" + registry_name + "/Config/")
+    if not os.path.exists(registry_path):
+        try:
+            os.makedirs(registry_path)
+        except OSError as exc:
+            if exc.errno != errno.EEXIST:
+                raise
+
+    with open(registry_path + registry_name + "_generated" + ".PropRegistry.json", 'w+') as fh:
+        json.dump(data, fh)
 
 
 if __name__ == '__main__':
