@@ -39,15 +39,9 @@ class MarkdownFile:
         self._data = ''.join([self._data, '\n'])
 
     def list_depth(self):
-        if self._list_depth == 0:
+        if self._data.strip()[-1:] != '\n' or self._list_depth == 0:
             return ''
         return ''.join(['    ' * self._list_depth])
-
-    def list_item(self, buf):
-        self._data = ''.join([self._data, self.list_depth()[:-2], '- ', buf])
-
-    def numeric_list_item(self, buf):
-        self._data = ''.join([self._data, self.list_depth(), '1. ', buf])
 
     def separator(self):
         self._data = ''.join([self._data, '\n---\n'])
@@ -68,6 +62,11 @@ class MarkdownFile:
     def code_block(self, buf, language=''):
         return ''.join(['```', language, '\n', self.list_depth(), buf, '\n', self.list_depth(), '```\n'])
 
+    def prettify_doc(self, doc):
+        doc = doc.strip()
+        doc += '' if doc[-1:] == '.' else '.'
+        # doc = doc.replace('\n', '\n' + ('    ' * self._list_depth) if self._list_depth != 0 else '\n')
+        return doc
 
 def italic(buf):
     return ''.join(['_', buf, '_'])
@@ -105,15 +104,41 @@ class YamlFile:
         self._path = path
         with open(path) as yaml_file:
             self.data = yaml.safe_load(yaml_file)
+        self.validate()
+
+    def validate(self):
+        # print('Validating ' + str(self._path.replace('\\', '/').split('/')[-1:][0]))
+        if self.data is None:
+            print('\n[ERROR] This file has no data:')
+            print(self._path)
+            exit(0)
+        for module in self.data:
+            if 'module_name' in module and module['module_name'] is None:
+                print('\n[ERROR] module_name is empty in:')
+                print(self._path)
+                exit(0)
+            if 'classes' in module:
+                for cl in module['classes']:
+                    if 'class_name' in cl and cl['class_name'] is None:
+                        print('\n[ERROR] class_name is empty in:')
+                        print(self._path)
+                        exit(0)
+                    if 'instance_variables' in cl and cl['instance_variables']:
+                        for iv in cl['instance_variables']:
+                            if 'var_name' in iv and iv['var_name'] is None:
+                                print('\n[ERROR] var_name is empty in:')
+                                print(self._path)
+                                exit(0)
+                    if 'methods' in cl and cl['methods']:
+                        for met in cl['methods']:
+                            if 'def_name' in met and met['def_name'] is None:
+                                print('\n[ERROR] def_name is empty in:')
+                                print(self._path)
+                                exit(0)
 
     def get_modules(self):
         return [module for module in self.data]
 
-
-def prettify_doc(doc):
-    doc = doc.strip()
-    doc += '' if doc[-1:] == '.' else '.'
-    return doc
 
 def gen_stub_method_def(method):
     """Return python def as it should be written in stub files"""
@@ -175,11 +200,15 @@ def add_doc_method_param(md, param):
     if valid_dic_val(param, 'type'):
         param_type = param['type']
     if valid_dic_val(param, 'doc'):
-        param_doc = prettify_doc(param['doc'])
+        param_doc = md.prettify_doc(param['doc'])
     param_type = '' if not param_type else parentheses(italic(param_type))
-    md.list_push(code(param_name) + ' ' + param_type + ' – ')
+    md.list_push(code(param_name))
+    if param_type:
+        md.text(' ' + param_type)
     if param_doc:
-        md.textn(param_doc)
+        md.textn(' – ' + param_doc)
+    else:
+        md.new_line()
     md.list_pop()
 
 
@@ -190,7 +219,7 @@ def add_doc_method(md, method, class_key):
     md.list_pushn(''.join([html_key(method_key), method_def]))
     # method doc
     if 'doc' in method and method['doc'] is not '':
-        md.textn(prettify_doc(method['doc']))
+        md.textn(md.prettify_doc(method['doc']))
     # ignore if only have the parameter self
     if valid_dic_val(method, 'params') and \
         len(method['params']) != 1 and \
@@ -212,7 +241,8 @@ def add_doc_inst_var(md, inst_var, class_key):
     var_name = inst_var['var_name']
     var_key = '.'.join([class_key, var_name])
     md.list_pushn(html_key(var_key) + bold(var_name))
-    md.textn(prettify_doc(inst_var['doc']))
+    if valid_dic_val(inst_var, 'doc'):
+        md.textn(md.prettify_doc(inst_var['doc']))
     md.list_pop()
 
 def dump_keys(d, lvl=0):
@@ -238,8 +268,11 @@ class Documentation:
                 module_name = module['module_name']
                 if module_name not in self.master_dict:
                     self.master_dict[module_name] = module
-                else:
+                elif valid_dic_val(module, 'classes'):
                     for new_module in module['classes']:
+                        # Create the 'classes' key if does not exist already
+                        if not valid_dic_val(self.master_dict[module_name], 'classes'):
+                            self.master_dict[module_name]['classes'] = []
                         self.master_dict[module_name]['classes'].append(new_module)
 
     def gen_overview(self):
