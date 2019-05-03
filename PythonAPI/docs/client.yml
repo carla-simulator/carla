@@ -1,16 +1,14 @@
 ---
 - module_name: carla
   doc: >
-
   # - CLASSES ------------------------------
   classes:
   - class_name: Client
+    # - DESCRIPTION ------------------------
     doc: >
       Client used to connect to a Carla server
-
     # - PROPERTIES -------------------------
     instance_variables:
-
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -133,13 +131,13 @@
           Character specifying the category of the second actor
       doc: >
         This will show which collisions were recorded in the file. We can use a filter for the collisions we want, using two categories.
-        The categories can be:
-          'h' = Hero
-          'v' = Vehicle
-          'w' = Walker
-          't' = Traffic light
-          'o' = Other
-          'a' = Any
+        The categories can be:  
+          \- `h` = Hero  
+          \- `v` = Vehicle  
+          \- `w` = Walker  
+          \- `t` = Traffic light  
+          \- `o` = Other  
+          \- `a` = Any  
         So, if you want to see only collisions about a vehicle and a walker, we would use for category1 'v' and category2 'w'.
         Or if you want all the collisions (filter off) you can use 'a' as categories.
     # --------------------------------------
@@ -197,9 +195,10 @@
       - param_name: time_factor
         type: float
         doc: >
-          A value of 1.0 means normal time factor.
-          A value < 1.0 means slow motion (for example 0.5 is half speed)
-          A value > 1.0 means fast motion (for example 2.0 is double speed)
+          These values means:  
+            \- A value of 1.0 means normal time factor.  
+            \- A value < 1.0 means slow motion (for example 0.5 is half speed)  
+            \- A value > 1.0 means fast motion (for example 2.0 is double speed)
       doc: >
         Apply a different playback speed to current playback. Can be used several times while a playback is in curse.
     # --------------------------------------

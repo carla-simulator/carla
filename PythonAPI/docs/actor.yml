@@ -1,0 +1,278 @@
+# ---
+# - module_name: carla
+#   doc: >
+#   classes:
+#   - class_name: ####
+#     # - DESCRIPTION ------------------------
+#     doc: >
+#     # - PROPERTIES -------------------------
+#     instance_variables:
+#     - var_name: ####
+#       doc: >
+#     # - METHODS ----------------------------
+#     methods:
+#     - def_name: ####
+#       params:
+#       - param_name: self
+#       doc: >
+#     # --------------------------------------
+# ...
+---
+- module_name: carla
+  doc: >
+  # - CLASSES ------------------------------
+  classes:
+  - class_name: Actor
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: id
+      doc: >
+    - var_name: type_id
+      doc: >
+    - var_name: parent
+      doc: >
+    - var_name: semantic_tags
+      doc: >
+    - var_name: is_alive
+      doc: >
+    - var_name: attributes
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: get_world
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: get_location
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: get_transform
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: get_velocity
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: get_angular_velocity
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: get_acceleration
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: set_location
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: set_transform
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: set_velocity
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: set_angular_velocity
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: add_impulse
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: set_simulate_physics
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: destroy
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+
+  - class_name: Vehicle
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: bounding_box
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: apply_control
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: get_control
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: apply_physics_control
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: get_physics_control
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: set_autopilot
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: get_speed_limit
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: get_traffic_light_state
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: is_at_traffic_light
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: get_traffic_light
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+
+  - class_name: Walker
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: bounding_box
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: apply_control
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: get_control
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+
+  - class_name: TrafficSign
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: trigger_volume
+      doc: >
+
+  - class_name: TrafficLightState
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: Red
+    - var_name: Yellow
+    - var_name: Green
+    - var_name: 'Off'
+    - var_name: Unknown
+
+  - class_name: TrafficLight
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: state
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: set_state
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: get_state
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: set_green_time
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: get_green_time
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: set_yellow_time
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: get_yellow_time
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: set_red_time
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: get_red_time
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: get_elapsed_time
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: freeze
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: is_frozen
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: get_pole_index
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: get_group_traffic_lights
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+...
