@@ -9,7 +9,7 @@
 #include "carla/streaming/detail/Token.h"
 #include "carla/streaming/detail/tcp/Client.h"
 
-#include <boost/asio/io_service.hpp>
+#include <boost/asio/io_context.hpp>
 
 #include <memory>
 #include <unordered_map>
@@ -19,9 +19,9 @@ namespace streaming {
 namespace low_level {
 
   /// A client able to subscribe to multiple streams. Accepts an external
-  /// io_service.
+  /// io_context.
   ///
-  /// @warning The client should not be destroyed before the @a io_service is
+  /// @warning The client should not be destroyed before the @a io_context is
   /// stopped.
   template <typename T>
   class Client {
@@ -50,7 +50,7 @@ namespace low_level {
     /// MultiStream).
     template <typename Functor>
     void Subscribe(
-        boost::asio::io_service &io_service,
+        boost::asio::io_context &io_context,
         token_type token,
         Functor &&callback) {
       DEBUG_ASSERT_EQ(_clients.find(token.get_stream_id()), _clients.end());
@@ -58,7 +58,7 @@ namespace low_level {
         token.set_address(_fallback_address);
       }
       auto client = std::make_shared<underlying_client>(
-          io_service,
+          io_context,
           token,
           std::forward<Functor>(callback));
       client->Connect();

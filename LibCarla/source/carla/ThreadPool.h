@@ -11,7 +11,7 @@
 #include "carla/ThreadGroup.h"
 #include "carla/Time.h"
 
-#include <boost/asio/io_service.hpp>
+#include <boost/asio/io_context.hpp>
 
 #include <future>
 #include <thread>
@@ -19,20 +19,20 @@
 
 namespace carla {
 
-  /// A thread pool based on Boost.Asio's io service.
+  /// A thread pool based on Boost.Asio's io context.
   class ThreadPool : private NonCopyable {
   public:
 
-    ThreadPool() : _work_to_do(_io_service) {}
+    ThreadPool() : _work_to_do(_io_context) {}
 
     /// Stops the ThreadPool and joins all its threads.
     ~ThreadPool() {
       Stop();
     }
 
-    /// Return the underlying io service.
-    auto &service() {
-      return _io_service;
+    /// Return the underlying io_context.
+    auto &io_context() {
+      return _io_context;
     }
 
     /// Post a task to the pool.
@@ -40,7 +40,7 @@ namespace carla {
     std::future<ResultT> Post(FunctorT &&functor) {
       auto task = std::packaged_task<ResultT()>(std::forward<FunctorT>(functor));
       auto future = task.get_future();
-      _io_service.post(carla::MoveHandler(task));
+      _io_context.post(carla::MoveHandler(task));
       return future;
     }
 
@@ -60,7 +60,7 @@ namespace carla {
     ///
     /// @warning This function blocks until the ThreadPool has been stopped.
     void Run() {
-      _io_service.run();
+      _io_context.run();
     }
 
     /// Run tasks in this thread for an specific @a duration.
@@ -68,20 +68,20 @@ namespace carla {
     /// @warning This function blocks until the ThreadPool has been stopped, or
     /// until the specified time duration has elapsed.
     void RunFor(time_duration duration) {
-      _io_service.run_for(duration.to_chrono());
+      _io_context.run_for(duration.to_chrono());
     }
 
     /// Stop the ThreadPool and join all its threads.
     void Stop() {
-      _io_service.stop();
+      _io_context.stop();
       _workers.JoinAll();
     }
 
   private:
 
-    boost::asio::io_service _io_service;
+    boost::asio::io_context _io_context;
 
-    boost::asio::io_service::work _work_to_do;
+    boost::asio::io_context::work _work_to_do;
 
     ThreadGroup _workers;
   };

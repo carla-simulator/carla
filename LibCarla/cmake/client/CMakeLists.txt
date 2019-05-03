@@ -9,7 +9,7 @@ install(FILES ${libcarla_carla_rpclib} DESTINATION lib)
 # Install boost headers (install in system folder to avoid extra warnings).
 # @todo Remove boost from public interface of LibCarla.client.
 install(DIRECTORY "${BOOST_INCLUDE_PATH}/boost" DESTINATION include/system)
-file(GLOB boost_libraries "${BOOST_LIB_PATH}/*")
+file(GLOB boost_libraries "${BOOST_LIB_PATH}/*.*")
 install(FILES ${boost_libraries} DESTINATION lib)
 
 # Windows need libpng alongside with zlib to be installed
