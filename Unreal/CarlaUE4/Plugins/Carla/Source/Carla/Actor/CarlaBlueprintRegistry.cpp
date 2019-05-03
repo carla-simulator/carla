@@ -122,13 +122,29 @@ void UCarlaBlueprintRegistry::LoadPropDefinitions(TArray<FPropParameters> &PropP
   // Loads prop registry json files
   const FString WildCard = FString("*").Append(PropAttributes::REGISTRY_FORMAT);
 
+  FString PATH = FPaths::ProjectContentDir() + "/*";
+  TArray<FString> PackageList;
+  IFileManager::Get().FindFiles(PackageList, *PATH, false, true);
+
+  // Find all prop registry files inside package
   TArray<FString> PropFileNames;
-  IFileManager::Get().FindFilesRecursive(PropFileNames,
-      *CommonAttributes::PATH,
-      *WildCard,
-      true,
-      false,
-      false);
+  for (FString &PackageName : PackageList)
+  {
+    FString FullPath = FPaths::ProjectContentDir() + "/" + PackageName + "/Config";
+
+    TArray<FString> RegistryFileNames;
+    IFileManager::Get().FindFilesRecursive(RegistryFileNames,
+        *FullPath,
+        *WildCard,
+        true,
+        false,
+        false);
+
+    for (const FString &RegistryFileName : RegistryFileNames)
+    {
+      PropFileNames.Add(RegistryFileName);
+    }
+  }
 
   // Sort and place Default File First if it exists
   PropFileNames.Sort();
