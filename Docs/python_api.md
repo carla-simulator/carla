@@ -1,8 +1,5 @@
 ### Overview
 - [**carla**](#carla) <sub>_Module_</sub>  
-    - [**Walker**](#carla.Walker) <sub>_Class_</sub>  
-        - [**bounding_box**](#carla.Walker.bounding_box) <sub>_Instance variable_</sub>
-        - [**apply_control**(**self**)](#carla.Walker.apply_control) <sub>_Method_</sub>
     - [**Actor**](#carla.Actor) <sub>_Class_</sub>  
         - [**id**](#carla.Actor.id) <sub>_Instance variable_</sub>
         - [**type_id**](#carla.Actor.type_id) <sub>_Instance variable_</sub>
@@ -123,6 +120,54 @@
         - [**set_replayer_time_factor**(**self**, **time_factor**)](#carla.Client.set_replayer_time_factor) <sub>_Method_</sub>
         - [**apply_batch**(**self**)](#carla.Client.apply_batch) <sub>_Method_</sub>
         - [**apply_batch_sync**(**self**)](#carla.Client.apply_batch_sync) <sub>_Method_</sub>
+    - [**LaneType**](#carla.LaneType) <sub>_Class_</sub>  
+        - [**NONE**](#carla.LaneType.NONE) <sub>_Instance variable_</sub>
+        - [**Driving**](#carla.LaneType.Driving) <sub>_Instance variable_</sub>
+        - [**Stop**](#carla.LaneType.Stop) <sub>_Instance variable_</sub>
+        - [**Shoulder**](#carla.LaneType.Shoulder) <sub>_Instance variable_</sub>
+        - [**Biking**](#carla.LaneType.Biking) <sub>_Instance variable_</sub>
+        - [**Sidewalk**](#carla.LaneType.Sidewalk) <sub>_Instance variable_</sub>
+        - [**Border**](#carla.LaneType.Border) <sub>_Instance variable_</sub>
+        - [**Restricted**](#carla.LaneType.Restricted) <sub>_Instance variable_</sub>
+        - [**Parking**](#carla.LaneType.Parking) <sub>_Instance variable_</sub>
+        - [**Bidirectional**](#carla.LaneType.Bidirectional) <sub>_Instance variable_</sub>
+        - [**Median**](#carla.LaneType.Median) <sub>_Instance variable_</sub>
+        - [**Special1**](#carla.LaneType.Special1) <sub>_Instance variable_</sub>
+        - [**Special2**](#carla.LaneType.Special2) <sub>_Instance variable_</sub>
+        - [**Special3**](#carla.LaneType.Special3) <sub>_Instance variable_</sub>
+        - [**RoadWorks**](#carla.LaneType.RoadWorks) <sub>_Instance variable_</sub>
+        - [**Tram**](#carla.LaneType.Tram) <sub>_Instance variable_</sub>
+        - [**Rail**](#carla.LaneType.Rail) <sub>_Instance variable_</sub>
+        - [**Entry**](#carla.LaneType.Entry) <sub>_Instance variable_</sub>
+        - [**Exit**](#carla.LaneType.Exit) <sub>_Instance variable_</sub>
+        - [**OffRamp**](#carla.LaneType.OffRamp) <sub>_Instance variable_</sub>
+        - [**OnRamp**](#carla.LaneType.OnRamp) <sub>_Instance variable_</sub>
+        - [**Any**](#carla.LaneType.Any) <sub>_Instance variable_</sub>
+    - [**LaneChange**](#carla.LaneChange) <sub>_Class_</sub>  
+        - [**NONE**](#carla.LaneChange.NONE) <sub>_Instance variable_</sub>
+        - [**Right**](#carla.LaneChange.Right) <sub>_Instance variable_</sub>
+        - [**Left**](#carla.LaneChange.Left) <sub>_Instance variable_</sub>
+        - [**Both**](#carla.LaneChange.Both) <sub>_Instance variable_</sub>
+    - [**LaneMarkingColor**](#carla.LaneMarkingColor) <sub>_Class_</sub>  
+        - [**Standard**](#carla.LaneMarkingColor.Standard) <sub>_Instance variable_</sub>
+        - [**Blue**](#carla.LaneMarkingColor.Blue) <sub>_Instance variable_</sub>
+        - [**Green**](#carla.LaneMarkingColor.Green) <sub>_Instance variable_</sub>
+        - [**Red**](#carla.LaneMarkingColor.Red) <sub>_Instance variable_</sub>
+        - [**White**](#carla.LaneMarkingColor.White) <sub>_Instance variable_</sub>
+        - [**Yellow**](#carla.LaneMarkingColor.Yellow) <sub>_Instance variable_</sub>
+        - [**Other**](#carla.LaneMarkingColor.Other) <sub>_Instance variable_</sub>
+    - [**LaneMarkingType**](#carla.LaneMarkingType) <sub>_Class_</sub>  
+        - [**NONE**](#carla.LaneMarkingType.NONE) <sub>_Instance variable_</sub>
+        - [**Other**](#carla.LaneMarkingType.Other) <sub>_Instance variable_</sub>
+        - [**Broken**](#carla.LaneMarkingType.Broken) <sub>_Instance variable_</sub>
+        - [**Solid**](#carla.LaneMarkingType.Solid) <sub>_Instance variable_</sub>
+        - [**SolidSolid**](#carla.LaneMarkingType.SolidSolid) <sub>_Instance variable_</sub>
+        - [**SolidBroken**](#carla.LaneMarkingType.SolidBroken) <sub>_Instance variable_</sub>
+        - [**BrokenSolid**](#carla.LaneMarkingType.BrokenSolid) <sub>_Instance variable_</sub>
+        - [**BrokenBroken**](#carla.LaneMarkingType.BrokenBroken) <sub>_Instance variable_</sub>
+        - [**BottsDots**](#carla.LaneMarkingType.BottsDots) <sub>_Instance variable_</sub>
+        - [**Grass**](#carla.LaneMarkingType.Grass) <sub>_Instance variable_</sub>
+        - [**Curb**](#carla.LaneMarkingType.Curb) <sub>_Instance variable_</sub>
     - [**Map**](#carla.Map) <sub>_Class_</sub>  
         - [**name**](#carla.Map.name) <sub>_Instance variable_</sub>
         - [**get_spawn_points**(**self**)](#carla.Map.get_spawn_points) <sub>_Method_</sub>
@@ -132,6 +177,27 @@
         - [**transform_to_geolocation**(**self**)](#carla.Map.transform_to_geolocation) <sub>_Method_</sub>
         - [**to_opendrive**(**self**)](#carla.Map.to_opendrive) <sub>_Method_</sub>
         - [**save_to_disk**(**self**, **path**)](#carla.Map.save_to_disk) <sub>_Method_</sub>
+    - [**LaneMarking**](#carla.LaneMarking) <sub>_Class_</sub>  
+        - [**type**](#carla.LaneMarking.type) <sub>_Instance variable_</sub>
+        - [**color**](#carla.LaneMarking.color) <sub>_Instance variable_</sub>
+        - [**lane_change**](#carla.LaneMarking.lane_change) <sub>_Instance variable_</sub>
+        - [**width**](#carla.LaneMarking.width) <sub>_Instance variable_</sub>
+    - [**Waypoint**](#carla.Waypoint) <sub>_Class_</sub>  
+        - [**id**](#carla.Waypoint.id) <sub>_Instance variable_</sub>
+        - [**transform**](#carla.Waypoint.transform) <sub>_Instance variable_</sub>
+        - [**is_intersection**](#carla.Waypoint.is_intersection) <sub>_Instance variable_</sub>
+        - [**lane_width**](#carla.Waypoint.lane_width) <sub>_Instance variable_</sub>
+        - [**road_id**](#carla.Waypoint.road_id) <sub>_Instance variable_</sub>
+        - [**section_id**](#carla.Waypoint.section_id) <sub>_Instance variable_</sub>
+        - [**lane_id**](#carla.Waypoint.lane_id) <sub>_Instance variable_</sub>
+        - [**s**](#carla.Waypoint.s) <sub>_Instance variable_</sub>
+        - [**lane_change**](#carla.Waypoint.lane_change) <sub>_Instance variable_</sub>
+        - [**lane_type**](#carla.Waypoint.lane_type) <sub>_Instance variable_</sub>
+        - [**right_lane_marking**](#carla.Waypoint.right_lane_marking) <sub>_Instance variable_</sub>
+        - [**left_lane_marking**](#carla.Waypoint.left_lane_marking) <sub>_Instance variable_</sub>
+        - [**next**(**self**)](#carla.Waypoint.next) <sub>_Method_</sub>
+        - [**get_right_lane**(**self**)](#carla.Waypoint.get_right_lane) <sub>_Method_</sub>
+        - [**get_left_lane**(**self**)](#carla.Waypoint.get_left_lane) <sub>_Method_</sub>
     - [**ActorAttributeType**](#carla.ActorAttributeType) <sub>_Class_</sub>  
         - [**Bool**](#carla.ActorAttributeType.Bool) <sub>_Instance variable_</sub>
         - [**Int**](#carla.ActorAttributeType.Int) <sub>_Instance variable_</sub>
@@ -188,6 +254,49 @@
         - [**\__getitem__**(**self**)](#carla.BlueprintLibrary.__getitem__) <sub>_Method_</sub>
         - [**\__len__**(**self**)](#carla.BlueprintLibrary.__len__) <sub>_Method_</sub>
         - [**\__iter__**(**self**)](#carla.BlueprintLibrary.__iter__) <sub>_Method_</sub>
+    - [**Vector2D**](#carla.Vector2D) <sub>_Class_</sub>  
+        - [**x**](#carla.Vector2D.x) <sub>_Instance variable_</sub>
+        - [**y**](#carla.Vector2D.y) <sub>_Instance variable_</sub>
+        - [**\__eq__**(**self**)](#carla.Vector2D.__eq__) <sub>_Method_</sub>
+        - [**\__ne__**(**self**)](#carla.Vector2D.__ne__) <sub>_Method_</sub>
+    - [**Vector3D**](#carla.Vector3D) <sub>_Class_</sub>  
+        - [**x**](#carla.Vector3D.x) <sub>_Instance variable_</sub>
+        - [**y**](#carla.Vector3D.y) <sub>_Instance variable_</sub>
+        - [**z**](#carla.Vector3D.z) <sub>_Instance variable_</sub>
+        - [**\__eq__**(**self**)](#carla.Vector3D.__eq__) <sub>_Method_</sub>
+        - [**\__ne__**(**self**)](#carla.Vector3D.__ne__) <sub>_Method_</sub>
+    - [**Location**](#carla.Location) <sub>_Class_</sub>  
+        - [**x**](#carla.Location.x) <sub>_Instance variable_</sub>
+        - [**y**](#carla.Location.y) <sub>_Instance variable_</sub>
+        - [**z**](#carla.Location.z) <sub>_Instance variable_</sub>
+        - [**distance**(**self**)](#carla.Location.distance) <sub>_Method_</sub>
+        - [**\__eq__**(**self**)](#carla.Location.__eq__) <sub>_Method_</sub>
+        - [**\__ne__**(**self**)](#carla.Location.__ne__) <sub>_Method_</sub>
+    - [**Rotation**](#carla.Rotation) <sub>_Class_</sub>  
+        - [**pitch**](#carla.Rotation.pitch) <sub>_Instance variable_</sub>
+        - [**yaw**](#carla.Rotation.yaw) <sub>_Instance variable_</sub>
+        - [**roll**](#carla.Rotation.roll) <sub>_Instance variable_</sub>
+        - [**get_forward_vector**(**self**)](#carla.Rotation.get_forward_vector) <sub>_Method_</sub>
+        - [**\__eq__**(**self**)](#carla.Rotation.__eq__) <sub>_Method_</sub>
+        - [**\__ne__**(**self**)](#carla.Rotation.__ne__) <sub>_Method_</sub>
+    - [**Transform**](#carla.Transform) <sub>_Class_</sub>  
+        - [**location**](#carla.Transform.location) <sub>_Instance variable_</sub>
+        - [**rotation**](#carla.Transform.rotation) <sub>_Instance variable_</sub>
+        - [**transform**(**self**)](#carla.Transform.transform) <sub>_Method_</sub>
+        - [**get_forward_vector**(**self**)](#carla.Transform.get_forward_vector) <sub>_Method_</sub>
+        - [**\__eq__**(**self**)](#carla.Transform.__eq__) <sub>_Method_</sub>
+        - [**\__ne__**(**self**)](#carla.Transform.__ne__) <sub>_Method_</sub>
+    - [**BoundingBox**](#carla.BoundingBox) <sub>_Class_</sub>  
+        - [**location**](#carla.BoundingBox.location) <sub>_Instance variable_</sub>
+        - [**extent**](#carla.BoundingBox.extent) <sub>_Instance variable_</sub>
+        - [**\__eq__**(**self**)](#carla.BoundingBox.__eq__) <sub>_Method_</sub>
+        - [**\__ne__**(**self**)](#carla.BoundingBox.__ne__) <sub>_Method_</sub>
+    - [**GeoLocation**](#carla.GeoLocation) <sub>_Class_</sub>  
+        - [**latitude**](#carla.GeoLocation.latitude) <sub>_Instance variable_</sub>
+        - [**longitude**](#carla.GeoLocation.longitude) <sub>_Instance variable_</sub>
+        - [**altitude**](#carla.GeoLocation.altitude) <sub>_Instance variable_</sub>
+        - [**\__eq__**(**self**)](#carla.GeoLocation.__eq__) <sub>_Method_</sub>
+        - [**\__ne__**(**self**)](#carla.GeoLocation.__ne__) <sub>_Method_</sub>
 - [**commands**](#commands) <sub>_Module_</sub>  
     - [**Response**](#commands.Response) <sub>_Class_</sub>  
         - [**actor_id**](#commands.Response.actor_id) <sub>_Instance variable_</sub>
@@ -233,16 +342,6 @@
         - [**actor_id**](#commands.SetAutopilot.actor_id) <sub>_Instance variable_</sub>
         - [**enabled**](#commands.SetAutopilot.enabled) <sub>_Instance variable_</sub>
         - [**\__init__**(**self**)](#commands.SetAutopilot.__init__) <sub>_Method_</sub>
-
-## <a name="carla.Walker"></a>Walker <sub><sup>_Class_</sup></sub>
-
-### Instance Variables
-- <a name="carla.Walker.bounding_box"></a>**bounding_box**  
-
-### Methods
-- <a name="carla.Walker.apply_control"></a>**<font color="#64BA2E">apply_control</font>**(<font color="#2980B9">**self**</font>)  
-
----
 
 ## <a name="carla.Actor"></a>Actor <sub><sup>_Class_</sup></sub>
 
@@ -486,6 +585,74 @@ Apply a different playback speed to current playback. Can be used several times 
 
 ---
 
+## <a name="carla.LaneType"></a>LaneType <sub><sup>_Class_</sup></sub>
+
+### Instance Variables
+- <a name="carla.LaneType.NONE"></a>**NONE**  
+- <a name="carla.LaneType.Driving"></a>**Driving**  
+- <a name="carla.LaneType.Stop"></a>**Stop**  
+- <a name="carla.LaneType.Shoulder"></a>**Shoulder**  
+- <a name="carla.LaneType.Biking"></a>**Biking**  
+- <a name="carla.LaneType.Sidewalk"></a>**Sidewalk**  
+- <a name="carla.LaneType.Border"></a>**Border**  
+- <a name="carla.LaneType.Restricted"></a>**Restricted**  
+- <a name="carla.LaneType.Parking"></a>**Parking**  
+- <a name="carla.LaneType.Bidirectional"></a>**Bidirectional**  
+- <a name="carla.LaneType.Median"></a>**Median**  
+- <a name="carla.LaneType.Special1"></a>**Special1**  
+- <a name="carla.LaneType.Special2"></a>**Special2**  
+- <a name="carla.LaneType.Special3"></a>**Special3**  
+- <a name="carla.LaneType.RoadWorks"></a>**RoadWorks**  
+- <a name="carla.LaneType.Tram"></a>**Tram**  
+- <a name="carla.LaneType.Rail"></a>**Rail**  
+- <a name="carla.LaneType.Entry"></a>**Entry**  
+- <a name="carla.LaneType.Exit"></a>**Exit**  
+- <a name="carla.LaneType.OffRamp"></a>**OffRamp**  
+- <a name="carla.LaneType.OnRamp"></a>**OnRamp**  
+- <a name="carla.LaneType.Any"></a>**Any**  
+
+---
+
+## <a name="carla.LaneChange"></a>LaneChange <sub><sup>_Class_</sup></sub>
+
+### Instance Variables
+- <a name="carla.LaneChange.NONE"></a>**NONE**  
+- <a name="carla.LaneChange.Right"></a>**Right**  
+- <a name="carla.LaneChange.Left"></a>**Left**  
+- <a name="carla.LaneChange.Both"></a>**Both**  
+
+---
+
+## <a name="carla.LaneMarkingColor"></a>LaneMarkingColor <sub><sup>_Class_</sup></sub>
+
+### Instance Variables
+- <a name="carla.LaneMarkingColor.Standard"></a>**Standard**  
+- <a name="carla.LaneMarkingColor.Blue"></a>**Blue**  
+- <a name="carla.LaneMarkingColor.Green"></a>**Green**  
+- <a name="carla.LaneMarkingColor.Red"></a>**Red**  
+- <a name="carla.LaneMarkingColor.White"></a>**White**  
+- <a name="carla.LaneMarkingColor.Yellow"></a>**Yellow**  
+- <a name="carla.LaneMarkingColor.Other"></a>**Other**  
+
+---
+
+## <a name="carla.LaneMarkingType"></a>LaneMarkingType <sub><sup>_Class_</sup></sub>
+
+### Instance Variables
+- <a name="carla.LaneMarkingType.NONE"></a>**NONE**  
+- <a name="carla.LaneMarkingType.Other"></a>**Other**  
+- <a name="carla.LaneMarkingType.Broken"></a>**Broken**  
+- <a name="carla.LaneMarkingType.Solid"></a>**Solid**  
+- <a name="carla.LaneMarkingType.SolidSolid"></a>**SolidSolid**  
+- <a name="carla.LaneMarkingType.SolidBroken"></a>**SolidBroken**  
+- <a name="carla.LaneMarkingType.BrokenSolid"></a>**BrokenSolid**  
+- <a name="carla.LaneMarkingType.BrokenBroken"></a>**BrokenBroken**  
+- <a name="carla.LaneMarkingType.BottsDots"></a>**BottsDots**  
+- <a name="carla.LaneMarkingType.Grass"></a>**Grass**  
+- <a name="carla.LaneMarkingType.Curb"></a>**Curb**  
+
+---
+
 ## <a name="carla.Map"></a>Map <sub><sup>_Class_</sup></sub>
 
 ### Instance Variables
@@ -503,6 +670,39 @@ Map name.
 Save the OpenDrive of the current map to disk.  
     - **Parameters:**
         - `path` – Path where will be saved.  
+
+---
+
+## <a name="carla.LaneMarking"></a>LaneMarking <sub><sup>_Class_</sup></sub>
+
+### Instance Variables
+- <a name="carla.LaneMarking.type"></a>**type**  
+- <a name="carla.LaneMarking.color"></a>**color**  
+- <a name="carla.LaneMarking.lane_change"></a>**lane_change**  
+- <a name="carla.LaneMarking.width"></a>**width**  
+
+---
+
+## <a name="carla.Waypoint"></a>Waypoint <sub><sup>_Class_</sup></sub>
+
+### Instance Variables
+- <a name="carla.Waypoint.id"></a>**id**  
+- <a name="carla.Waypoint.transform"></a>**transform**  
+- <a name="carla.Waypoint.is_intersection"></a>**is_intersection**  
+- <a name="carla.Waypoint.lane_width"></a>**lane_width**  
+- <a name="carla.Waypoint.road_id"></a>**road_id**  
+- <a name="carla.Waypoint.section_id"></a>**section_id**  
+- <a name="carla.Waypoint.lane_id"></a>**lane_id**  
+- <a name="carla.Waypoint.s"></a>**s**  
+- <a name="carla.Waypoint.lane_change"></a>**lane_change**  
+- <a name="carla.Waypoint.lane_type"></a>**lane_type**  
+- <a name="carla.Waypoint.right_lane_marking"></a>**right_lane_marking**  
+- <a name="carla.Waypoint.left_lane_marking"></a>**left_lane_marking**  
+
+### Methods
+- <a name="carla.Waypoint.next"></a>**<font color="#64BA2E">next</font>**(<font color="#2980B9">**self**</font>)  
+- <a name="carla.Waypoint.get_right_lane"></a>**<font color="#64BA2E">get_right_lane</font>**(<font color="#2980B9">**self**</font>)  
+- <a name="carla.Waypoint.get_left_lane"></a>**<font color="#64BA2E">get_left_lane</font>**(<font color="#2980B9">**self**</font>)  
 
 ---
 
@@ -594,6 +794,98 @@ Save the OpenDrive of the current map to disk.
 - <a name="carla.BlueprintLibrary.__getitem__"></a>**<font color="#64BA2E">\__getitem__</font>**(<font color="#2980B9">**self**</font>)  
 - <a name="carla.BlueprintLibrary.__len__"></a>**<font color="#64BA2E">\__len__</font>**(<font color="#2980B9">**self**</font>)  
 - <a name="carla.BlueprintLibrary.__iter__"></a>**<font color="#64BA2E">\__iter__</font>**(<font color="#2980B9">**self**</font>)  
+
+---
+
+## <a name="carla.Vector2D"></a>Vector2D <sub><sup>_Class_</sup></sub>
+
+### Instance Variables
+- <a name="carla.Vector2D.x"></a>**x**  
+- <a name="carla.Vector2D.y"></a>**y**  
+
+### Methods
+- <a name="carla.Vector2D.__eq__"></a>**<font color="#64BA2E">\__eq__</font>**(<font color="#2980B9">**self**</font>)  
+- <a name="carla.Vector2D.__ne__"></a>**<font color="#64BA2E">\__ne__</font>**(<font color="#2980B9">**self**</font>)  
+
+---
+
+## <a name="carla.Vector3D"></a>Vector3D <sub><sup>_Class_</sup></sub>
+
+### Instance Variables
+- <a name="carla.Vector3D.x"></a>**x**  
+- <a name="carla.Vector3D.y"></a>**y**  
+- <a name="carla.Vector3D.z"></a>**z**  
+
+### Methods
+- <a name="carla.Vector3D.__eq__"></a>**<font color="#64BA2E">\__eq__</font>**(<font color="#2980B9">**self**</font>)  
+- <a name="carla.Vector3D.__ne__"></a>**<font color="#64BA2E">\__ne__</font>**(<font color="#2980B9">**self**</font>)  
+
+---
+
+## <a name="carla.Location"></a>Location <sub><sup>_Class_</sup></sub>
+
+### Instance Variables
+- <a name="carla.Location.x"></a>**x**  
+- <a name="carla.Location.y"></a>**y**  
+- <a name="carla.Location.z"></a>**z**  
+
+### Methods
+- <a name="carla.Location.distance"></a>**<font color="#64BA2E">distance</font>**(<font color="#2980B9">**self**</font>)  
+- <a name="carla.Location.__eq__"></a>**<font color="#64BA2E">\__eq__</font>**(<font color="#2980B9">**self**</font>)  
+- <a name="carla.Location.__ne__"></a>**<font color="#64BA2E">\__ne__</font>**(<font color="#2980B9">**self**</font>)  
+
+---
+
+## <a name="carla.Rotation"></a>Rotation <sub><sup>_Class_</sup></sub>
+
+### Instance Variables
+- <a name="carla.Rotation.pitch"></a>**pitch**  
+- <a name="carla.Rotation.yaw"></a>**yaw**  
+- <a name="carla.Rotation.roll"></a>**roll**  
+
+### Methods
+- <a name="carla.Rotation.get_forward_vector"></a>**<font color="#64BA2E">get_forward_vector</font>**(<font color="#2980B9">**self**</font>)  
+- <a name="carla.Rotation.__eq__"></a>**<font color="#64BA2E">\__eq__</font>**(<font color="#2980B9">**self**</font>)  
+- <a name="carla.Rotation.__ne__"></a>**<font color="#64BA2E">\__ne__</font>**(<font color="#2980B9">**self**</font>)  
+
+---
+
+## <a name="carla.Transform"></a>Transform <sub><sup>_Class_</sup></sub>
+
+### Instance Variables
+- <a name="carla.Transform.location"></a>**location**  
+- <a name="carla.Transform.rotation"></a>**rotation**  
+
+### Methods
+- <a name="carla.Transform.transform"></a>**<font color="#64BA2E">transform</font>**(<font color="#2980B9">**self**</font>)  
+- <a name="carla.Transform.get_forward_vector"></a>**<font color="#64BA2E">get_forward_vector</font>**(<font color="#2980B9">**self**</font>)  
+- <a name="carla.Transform.__eq__"></a>**<font color="#64BA2E">\__eq__</font>**(<font color="#2980B9">**self**</font>)  
+- <a name="carla.Transform.__ne__"></a>**<font color="#64BA2E">\__ne__</font>**(<font color="#2980B9">**self**</font>)  
+
+---
+
+## <a name="carla.BoundingBox"></a>BoundingBox <sub><sup>_Class_</sup></sub>
+
+### Instance Variables
+- <a name="carla.BoundingBox.location"></a>**location**  
+- <a name="carla.BoundingBox.extent"></a>**extent**  
+
+### Methods
+- <a name="carla.BoundingBox.__eq__"></a>**<font color="#64BA2E">\__eq__</font>**(<font color="#2980B9">**self**</font>)  
+- <a name="carla.BoundingBox.__ne__"></a>**<font color="#64BA2E">\__ne__</font>**(<font color="#2980B9">**self**</font>)  
+
+---
+
+## <a name="carla.GeoLocation"></a>GeoLocation <sub><sup>_Class_</sup></sub>
+
+### Instance Variables
+- <a name="carla.GeoLocation.latitude"></a>**latitude**  
+- <a name="carla.GeoLocation.longitude"></a>**longitude**  
+- <a name="carla.GeoLocation.altitude"></a>**altitude**  
+
+### Methods
+- <a name="carla.GeoLocation.__eq__"></a>**<font color="#64BA2E">\__eq__</font>**(<font color="#2980B9">**self**</font>)  
+- <a name="carla.GeoLocation.__ne__"></a>**<font color="#64BA2E">\__ne__</font>**(<font color="#2980B9">**self**</font>)  
 
 ---
 

@@ -1,4 +1,186 @@
 ---
 - module_name: carla
   doc: >
+  classes:
+  - class_name: Vector2D
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: x
+      doc: >
+    - var_name: 'y'
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __eq__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+  
+  - class_name: Vector3D
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: x
+      doc: >
+    - var_name: 'y'
+      doc: >
+    - var_name: z
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __eq__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+
+  - class_name: Location
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: x
+      doc: >
+    - var_name: 'y'
+      doc: >
+    - var_name: z
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: distance
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+
+  - class_name: Rotation
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: pitch
+      doc: >
+    - var_name: yaw
+      doc: >
+    - var_name: roll
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: get_forward_vector
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+
+  - class_name: Transform
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: location
+      doc: >
+    - var_name: rotation
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: transform
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: get_forward_vector
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+
+  - class_name: BoundingBox
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: location
+      doc: >
+    - var_name: extent
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __eq__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+
+  - class_name: GeoLocation
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: latitude
+      doc: >
+    - var_name: longitude
+      doc: >
+    - var_name: altitude
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __eq__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
 ...
