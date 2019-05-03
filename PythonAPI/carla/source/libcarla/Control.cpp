@@ -201,6 +201,7 @@ void export_control() {
     .def(self_ns::str(self_ns::self))
   ;
 
+  /// @todo: delete?
   class_<std::vector<cr::WheelPhysicsControl>>("vector_of_wheels")
       .def(boost::python::vector_indexing_suite<std::vector<cr::WheelPhysicsControl>>())
       .def(self_ns::str(self_ns::self))
