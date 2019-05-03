@@ -1,0 +1,19 @@
+---
+- module_name: carla
+  doc: >
+  classes:
+  - class_name: Walker
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: bounding_box
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: apply_control
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+...
