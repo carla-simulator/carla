@@ -1,4 +1,25 @@
 ---
 - module_name: carla
   doc: >
+  # - CLASSES ------------------------------
+  classes:
+  - class_name: Sensor
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: is_listening
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: listen
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: stop
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
 ...
