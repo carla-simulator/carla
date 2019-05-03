@@ -64,16 +64,16 @@ namespace tcp {
   // ===========================================================================
 
   Client::Client(
-      boost::asio::io_service &io_service,
+      boost::asio::io_context &io_context,
       const token_type &token,
       callback_function_type callback)
     : LIBCARLA_INITIALIZE_LIFETIME_PROFILER(
           std::string("tcp client ") + std::to_string(token.get_stream_id())),
       _token(token),
       _callback(std::move(callback)),
-      _socket(io_service),
-      _strand(io_service),
-      _connection_timer(io_service),
+      _socket(io_context),
+      _strand(io_context),
+      _connection_timer(io_context),
       _buffer_pool(std::make_shared<BufferPool>()) {
     if (!_token.protocol_is_tcp()) {
       throw_exception(std::invalid_argument("invalid token, only TCP tokens supported"));
@@ -173,7 +173,7 @@ namespace tcp {
           // Move the buffer to the callback function and start reading the next
           // piece of data.
           log_debug("streaming client: success reading data, calling the callback");
-          _socket.get_io_service().post([self, message]() { self->_callback(message->pop()); });
+          _strand.context().post([self, message]() { self->_callback(message->pop()); });
           ReadData();
         } else {
           // As usual, if anything fails start over from the very top.

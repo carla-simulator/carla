@@ -22,15 +22,15 @@ namespace tcp {
   static std::atomic_size_t SESSION_COUNTER{0u};
 
   ServerSession::ServerSession(
-      boost::asio::io_service &io_service,
+      boost::asio::io_context &io_context,
       const time_duration timeout)
     : LIBCARLA_INITIALIZE_LIFETIME_PROFILER(
           std::string("tcp server session ") + std::to_string(SESSION_COUNTER)),
       _session_id(SESSION_COUNTER++),
-      _socket(io_service),
+      _socket(io_context),
       _timeout(timeout),
-      _deadline(io_service),
-      _strand(io_service) {}
+      _deadline(io_context),
+      _strand(io_context) {}
 
   void ServerSession::Open(
       callback_function_type on_opened,
@@ -47,7 +47,7 @@ namespace tcp {
         if (!ec) {
           DEBUG_ASSERT_EQ(bytes_received, sizeof(_stream_id));
           log_debug("session", _session_id, "for stream", _stream_id, " started");
-          _socket.get_io_service().post([=]() { callback(self); });
+          _strand.context().post([=]() { callback(self); });
         } else {
           log_error("session", _session_id, ": error retrieving stream id :", ec.message());
           CloseNow();
@@ -123,7 +123,7 @@ namespace tcp {
     if (_socket.is_open()) {
       _socket.close();
     }
-    _socket.get_io_service().post([self=shared_from_this()]() {
+    _strand.context().post([self=shared_from_this()]() {
       DEBUG_ASSERT(self->_on_closed);
       self->_on_closed(self);
     });

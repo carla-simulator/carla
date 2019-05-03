@@ -11,7 +11,7 @@
 #include "carla/rpc/Metadata.h"
 #include "carla/rpc/Response.h"
 
-#include <boost/asio/io_service.hpp>
+#include <boost/asio/io_context.hpp>
 
 #include <rpc/server.h>
 
@@ -50,8 +50,8 @@ namespace rpc {
     }
 
     void SyncRunFor(time_duration duration) {
-      _sync_io_service.reset();
-      _sync_io_service.run_for(duration.to_chrono());
+      _sync_io_context.reset();
+      _sync_io_context.run_for(duration.to_chrono());
     }
 
     /// @warning does not stop the game thread.
@@ -61,7 +61,7 @@ namespace rpc {
 
   private:
 
-    boost::asio::io_service _sync_io_service;
+    boost::asio::io_context _sync_io_context;
 
     ::rpc::server _server;
   };
@@ -92,15 +92,15 @@ namespace detail {
 
     /// Wraps @a functor into a function type with equivalent signature. The
     /// wrap function returned. When called, posts @a functor into the
-    /// io_service; if the client called this method synchronously, waits for
+    /// io_context; if the client called this method synchronously, waits for
     /// the posted task to finish, otherwise returns immediately.
     ///
     /// This way, no matter from which thread the wrap function is called, the
-    /// @a functor provided is always called from the context of the io_service.
-    /// I.e., we can use the io_service to run tasks on a specific thread (e.g.
+    /// @a functor provided is always called from the context of the io_context.
+    /// I.e., we can use the io_context to run tasks on a specific thread (e.g.
     /// game thread).
     template <typename FuncT>
-    static auto WrapSyncCall(boost::asio::io_service &io, FuncT &&functor) {
+    static auto WrapSyncCall(boost::asio::io_context &io, FuncT &&functor) {
       return [&io, functor=std::forward<FuncT>(functor)](Metadata metadata, Args... args) -> R {
         auto task = std::packaged_task<R()>([functor=std::move(functor), args...]() {
           return functor(args...);
@@ -147,7 +147,7 @@ namespace detail {
     using Wrapper = detail::FunctionWrapper<FunctorT>;
     _server.bind(
         name,
-        Wrapper::WrapSyncCall(_sync_io_service, std::forward<FunctorT>(functor)));
+        Wrapper::WrapSyncCall(_sync_io_context, std::forward<FunctorT>(functor)));
   }
 
   template <typename FunctorT>
