@@ -74,6 +74,10 @@ private:
       carla::Buffer &Buffer,
       uint32 Offset,
       FRHICommandListImmediate &InRHICmdList);
+
+  static void SetAlphaValuesToMax(
+      carla::Buffer &Buffer,
+      uint32 Offset)
 };
 
 // =============================================================================
@@ -95,7 +99,7 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor)
   // Then we enqueue commands in the render-thread that will write the image
   // buffer to the data stream.
 
-  auto WriteAndSend = [&Sensor, Stream=std::move(StreamPtr)](auto &InRHICmdList) mutable
+  auto WriteAndSend = [&Sensor, Stream = std::move(StreamPtr)](auto &InRHICmdList) mutable
   {
     /// @todo Can we make sure the sensor is not going to be destroyed?
     if (!Sensor.IsPendingKill())
