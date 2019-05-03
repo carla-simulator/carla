@@ -77,7 +77,7 @@ private:
 
   static void SetAlphaValuesToMax(
       carla::Buffer &Buffer,
-      uint32 Offset)
+      uint32 Offset);
 };
 
 // =============================================================================
