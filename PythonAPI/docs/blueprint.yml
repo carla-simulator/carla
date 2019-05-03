@@ -1,0 +1,253 @@
+---
+- module_name: carla
+  doc: >
+  # - CLASSES ------------------------------
+  classes:
+  - class_name: ActorAttributeType
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: Bool
+      doc: >
+    - var_name: Int
+      doc: >
+    - var_name: Float
+      doc: >
+    - var_name: String
+      doc: >
+    - var_name: RGBColor
+      doc: >
+
+  - class_name: Color
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: r
+      doc: >
+    - var_name: g
+      doc: >
+    - var_name: b
+      doc: >
+    - var_name: a
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __eq__
+      params:
+      - param_name: self
+      - param_name: other
+      doc: >
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: self
+      - param_name: other
+      doc: >
+    # --------------------------------------
+
+  - class_name: ActorAttribute
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: id
+      doc: >
+    - var_name: type
+      doc: >
+    - var_name: recommended_values
+      doc: >
+    - var_name: is_modifiable
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: as_bool
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: as_int
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: as_float
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: as_str
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: as_color
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __nonzero__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __bool__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __int__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __float__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __str__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+
+  - class_name: ActorBlueprint
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: id
+      doc: >
+    - var_name: tags
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: has_tag
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: match_tags
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: has_attribute
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: get_attribute
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: set_attribute
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __len__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __iter__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+
+  - class_name: BlueprintLibrary
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: find
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: filter
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __getitem__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __len__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __iter__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+...
