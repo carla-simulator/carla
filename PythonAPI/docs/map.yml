@@ -3,6 +3,118 @@
   doc: >
   # - CLASSES ------------------------------
   classes:
+  - class_name: LaneType
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: NONE
+      doc: >
+    - var_name: Driving
+      doc: >
+    - var_name: Stop
+      doc: >
+    - var_name: Shoulder
+      doc: >
+    - var_name: Biking
+      doc: >
+    - var_name: Sidewalk
+      doc: >
+    - var_name: Border
+      doc: >
+    - var_name: Restricted
+      doc: >
+    - var_name: Parking
+      doc: >
+    - var_name: Bidirectional
+      doc: >
+    - var_name: Median
+      doc: >
+    - var_name: Special1
+      doc: >
+    - var_name: Special2
+      doc: >
+    - var_name: Special3
+      doc: >
+    - var_name: RoadWorks
+      doc: >
+    - var_name: Tram
+      doc: >
+    - var_name: Rail
+      doc: >
+    - var_name: Entry
+      doc: >
+    - var_name: Exit
+      doc: >
+    - var_name: OffRamp
+      doc: >
+    - var_name: OnRamp
+      doc: >
+    - var_name: Any
+      doc: >
+
+  - class_name: LaneChange
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: NONE
+      doc: >
+    - var_name: Right
+      doc: >
+    - var_name: Left
+      doc: >
+    - var_name: Both
+      doc: >
+
+  - class_name: LaneMarkingColor
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: Standard
+      doc: >
+    - var_name: Blue
+      doc: >
+    - var_name: Green
+      doc: >
+    - var_name: Red
+      doc: >
+    - var_name: White
+      doc: >
+    - var_name: Yellow
+      doc: >
+    - var_name: Other
+      doc: >
+
+  - class_name: LaneMarkingType
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: NONE
+      doc: >
+    - var_name: Other
+      doc: >
+    - var_name: Broken
+      doc: >
+    - var_name: Solid
+      doc: >
+    - var_name: SolidSolid
+      doc: >
+    - var_name: SolidBroken
+      doc: >
+    - var_name: BrokenSolid
+      doc: >
+    - var_name: BrokenBroken
+      doc: >
+    - var_name: BottsDots
+      doc: >
+    - var_name: Grass
+      doc: >
+    - var_name: Curb
+      doc: >
+
   - class_name: Map
     # - DESCRIPTION ------------------------
     doc: >
@@ -52,3 +164,65 @@
           Path where will be saved
       doc: >
         Save the OpenDrive of the current map to disk
+
+  - class_name: LaneMarking
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: type
+      doc: >
+    - var_name: color
+      doc: >
+    - var_name: lane_change
+      doc: >
+    - var_name: width
+      doc: >
+
+  - class_name: Waypoint
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: id
+      doc: >
+    - var_name: transform
+      doc: >
+    - var_name: is_intersection
+      doc: >
+    - var_name: lane_width
+      doc: >
+    - var_name: road_id
+      doc: >
+    - var_name: section_id
+      doc: >
+    - var_name: lane_id
+      doc: >
+    - var_name: s
+      doc: >
+    - var_name: lane_change
+      doc: >
+    - var_name: lane_type
+      doc: >
+    - var_name: right_lane_marking
+      doc: >
+    - var_name: left_lane_marking
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: next
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: get_right_lane
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: get_left_lane
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+...

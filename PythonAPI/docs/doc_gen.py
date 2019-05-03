@@ -109,31 +109,35 @@ class YamlFile:
     def validate(self):
         # print('Validating ' + str(self._path.replace('\\', '/').split('/')[-1:][0]))
         if self.data is None:
-            print('\n[ERROR] This file has no data:')
-            print(self._path)
+            print('\n[ERROR] File: ' + self._path)
+            print("This file has no data:")
             exit(0)
         for module in self.data:
             if 'module_name' in module and module['module_name'] is None:
-                print('\n[ERROR] module_name is empty in:')
-                print(self._path)
+                print('\n[ERROR] File: ' + self._path)
+                print("'module_name' is empty in:")
                 exit(0)
             if 'classes' in module:
+                if not module['classes']:
+                    print('\n[ERROR] File: ' + self._path)
+                    print("'classes' is empty in:")
+                    exit(0)
                 for cl in module['classes']:
                     if 'class_name' in cl and cl['class_name'] is None:
-                        print('\n[ERROR] class_name is empty in:')
-                        print(self._path)
+                        print('\n[ERROR] File: ' + self._path)
+                        print("'class_name' is empty in:")
                         exit(0)
                     if 'instance_variables' in cl and cl['instance_variables']:
                         for iv in cl['instance_variables']:
                             if 'var_name' in iv and iv['var_name'] is None:
-                                print('\n[ERROR] var_name is empty in:')
-                                print(self._path)
+                                print('\n[ERROR] File: ' + self._path)
+                                print("'var_name' is empty in:")
                                 exit(0)
                     if 'methods' in cl and cl['methods']:
                         for met in cl['methods']:
                             if 'def_name' in met and met['def_name'] is None:
-                                print('\n[ERROR] def_name is empty in:')
-                                print(self._path)
+                                print('\n[ERROR] File: ' + self._path)
+                                print("'def_name' is empty in:")
                                 exit(0)
 
     def get_modules(self):
