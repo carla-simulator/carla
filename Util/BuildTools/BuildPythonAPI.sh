@@ -96,7 +96,7 @@ for ((i=0; i<${#PYTHONS[@]}; ++i)); do
 	# -e : except .whl dir
 	# git clean -f -x -d -e .whl
 	log "Building Python API for: "${PYTHON}
-	PATH=/opt/python/${PYTHON}/bin:$PATH /opt/python/${PYTHON}/bin/python setup.py bdist_wheel --universal
+	PATH=/opt/python/${PYTHON}/bin:$PATH /opt/python/${PYTHON}/bin/python setup.py bdist_egg bdist_wheel --universal
 
 done
 
