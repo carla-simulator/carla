@@ -1,0 +1,194 @@
+---
+- module_name: commands
+  doc: >
+  classes:
+  - class_name: Response
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      doc: >
+    - var_name: error
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: has_error
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+
+  - class_name: SpawnActor
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: transform
+      doc: >
+    - var_name: parent_id
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: then
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+
+  - class_name: DestroyActor
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+
+  - class_name: ApplyVehicleControl
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      doc: >
+    - var_name: control
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+  
+  - class_name: ApplyWalkerControl
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      doc: >
+    - var_name: control
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+
+  - class_name: ApplyTransform
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      doc: >
+    - var_name: transform
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+
+  - class_name: ApplyVelocity
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      doc: >
+    - var_name: velocity
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+
+  - class_name: ApplyAngularVelocity
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      doc: >
+    - var_name: angular_velocity
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+
+  - class_name: ApplyImpulse
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      doc: >
+    - var_name: impulse
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+
+  - class_name: SetSimulatePhysics
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      doc: >
+    - var_name: enabled
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+
+  - class_name: SetAutopilot
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      doc: >
+    - var_name: enabled
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+...

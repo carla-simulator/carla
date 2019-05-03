@@ -1,19 +1,17 @@
 ---
 - module_name: carla
   doc: >
-
   # - CLASSES ------------------------------
   classes:
   - class_name: Map
+    # - DESCRIPTION ------------------------
     doc: >
       Map description that provides a waypoint query system
-
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: name
       doc: >
         Map name
-
     # - METHODS ----------------------------
     methods:
     - def_name: get_spawn_points

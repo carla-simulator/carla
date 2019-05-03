@@ -1,0 +1,153 @@
+---
+- module_name: carla
+  doc: >
+  # - CLASSES ------------------------------
+  classes:
+  - class_name: VehicleControl
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: throttle
+      doc: >
+    - var_name: steer
+      doc: >
+    - var_name: brake
+      doc: >
+    - var_name: hand_brake
+      doc: >
+    - var_name: reverse
+      doc: >
+    - var_name: manual_gear_shift
+      doc: >
+    - var_name: gear
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+  
+  - class_name: WalkerControl
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: direction
+      doc: >
+    - var_name: speed
+      doc: >
+    - var_name: jump
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+  
+  - class_name: WheelPhysicsControl
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: tire_friction
+      doc: >
+    - var_name: damping_rate
+      doc: >
+    - var_name: steer_angle
+      doc: >
+    - var_name: disable_steering
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+
+  - class_name: VehiclePhysicsControl
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: torque_curve
+      doc: >
+    - var_name: max_rpm
+      doc: >
+    - var_name: moi
+      doc: >
+    - var_name: damping_rate_full_throttle
+      doc: >
+    - var_name: damping_rate_zero_throttle_clutch_engaged
+      doc: >
+    - var_name: damping_rate_zero_throttle_clutch_disengaged
+      doc: >
+    - var_name: use_gear_autobox
+      doc: >
+    - var_name: gear_switch_time
+      doc: >
+    - var_name: clutch_strength
+      doc: >
+    - var_name: mass
+      doc: >
+    - var_name: drag_coefficient
+      doc: >
+    - var_name: center_of_mass
+      doc: >
+    - var_name: steering_curve
+      doc: >
+    - var_name: wheels
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: self
+      doc: >
+    # --------------------------------------
+...
