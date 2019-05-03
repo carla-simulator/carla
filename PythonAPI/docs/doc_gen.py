@@ -283,7 +283,7 @@ class Documentation:
         """Generates a referenced index for markdown file"""
         md = MarkdownFile()
         md.title(3, 'Overview')
-        for module_name in self.master_dict:
+        for module_name in sorted(self.master_dict):
             module = self.master_dict[module_name]
             module_key = '#' + module_name
             md.list_pushn(
@@ -292,7 +292,7 @@ class Documentation:
                 sub(italic('Module')))
             # Generate class overview (if any)
             if 'classes' in module and module['classes']:
-                for cl in module['classes']:
+                for cl in sorted(module['classes']):
                     class_name = cl['class_name']
                     class_key = '.'.join([module_key, class_name])
                     md.list_pushn(
@@ -316,12 +316,12 @@ class Documentation:
     def gen_body(self):
         """Generates the documentaion body"""
         md = MarkdownFile()
-        for module_name in self.master_dict:
+        for module_name in sorted(self.master_dict):
             module = self.master_dict[module_name]
             module_key = module_name
             # Generate class doc (if any)
             if valid_dic_val(module, 'classes'):
-                for cl in module['classes']:
+                for cl in sorted(module['classes']):
                     class_name = cl['class_name']
                     class_key = '.'.join([module_key, class_name])
                     md.title(2,
