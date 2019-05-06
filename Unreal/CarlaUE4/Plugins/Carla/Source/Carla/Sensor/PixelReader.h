@@ -75,9 +75,6 @@ private:
       uint32 Offset,
       FRHICommandListImmediate &InRHICmdList);
 
-  static void SetAlphaValuesToMax(
-      carla::Buffer &Buffer,
-      uint32 Offset);
 };
 
 // =============================================================================

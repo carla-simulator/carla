@@ -13,6 +13,11 @@ namespace sensor {
 namespace s11n {
 
   SharedPtr<SensorData> ImageSerializer::Deserialize(RawData data) {
+    auto pixels = data.data();
+    // Set alpha of each pixel in the buffer to max to make it 100% opaque
+    for (size_t i = header_offset + 3; i < data.size(); i += 4) {
+      pixels[i] = 255;
+    }
     return SharedPtr<data::Image>(new data::Image{std::move(data)});
   }
 

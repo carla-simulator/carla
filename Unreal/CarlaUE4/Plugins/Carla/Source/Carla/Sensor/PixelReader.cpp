@@ -146,7 +146,6 @@ void FPixelReader::WritePixelsToBuffer(
   if (IsVulkanPlatform(GMaxRHIShaderPlatform))
   {
     WritePixelsToBuffer_Vulkan(RenderTarget, Buffer, Offset, InRHICmdList);
-    SetAlphaValuesToMax(Buffer, Offset);
     return;
   }
 #endif // CARLA_WITH_VULKAN_SUPPORT
@@ -183,18 +182,5 @@ void FPixelReader::WritePixelsToBuffer(
     check(ExpectedStride == SrcStride);
     const uint8 *Source = Lock.Source;
     Buffer.copy_from(Offset, Source, ExpectedStride * Height);
-  }
-
-  SetAlphaValuesToMax(Buffer, Offset);
-}
-
-void FPixelReader::SetAlphaValuesToMax(
-    carla::Buffer &Buffer,
-    uint32 Offset)
-{
-  for (uint32 i = Offset + 3; i < Buffer.size(); i += 4)
-  {
-    // Set alpha value of the pixel to max to make it 100% opaque
-    Buffer[i] = 255;
   }
 }
