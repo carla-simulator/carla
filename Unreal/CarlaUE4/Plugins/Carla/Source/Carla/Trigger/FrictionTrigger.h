@@ -61,6 +61,8 @@ protected:
 
   virtual void EndPlay(EEndPlayReason::Type EndPlayReason) override;
 
+  virtual void Tick(float DeltaTime) override;
+
 public:
 
   UPROPERTY(EditAnywhere)
@@ -68,8 +70,6 @@ public:
 
   UPROPERTY(EditAnywhere)
   UBoxComponent *TriggerVolume;
-
-  virtual void Tick(float DeltaTime) override;
 
   const UCarlaEpisode *Episode = nullptr;
 };

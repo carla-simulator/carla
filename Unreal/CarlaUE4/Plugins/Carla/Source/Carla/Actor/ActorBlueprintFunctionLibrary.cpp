@@ -236,7 +236,7 @@ static void AddVariationsForTrigger(FActorDefinition &Def)
   FActorVariation Friction;
   Friction.Id = FString("friction");
   Friction.Type = EActorAttributeType::Float;
-  Friction.RecommendedValues = { TEXT("0.0f") };
+  Friction.RecommendedValues = { TEXT("3.5f") };
   Friction.bRestrictToRecommended = false;
   Def.Variations.Emplace(Friction);
 
@@ -250,7 +250,7 @@ static void AddVariationsForTrigger(FActorDefinition &Def)
 
     ExtentCoordinate.Id = JoinStrings(TEXT("_"), Extent, Coordinate);
     ExtentCoordinate.Type = EActorAttributeType::Float;
-    ExtentCoordinate.RecommendedValues = { TEXT("0.0f") };
+    ExtentCoordinate.RecommendedValues = { TEXT("1.0f") };
     ExtentCoordinate.bRestrictToRecommended = false;
 
     Def.Variations.Emplace(ExtentCoordinate);

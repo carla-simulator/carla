@@ -11,8 +11,6 @@
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Trigger/FrictionTrigger.h"
 
-#include "Carla/Game/CarlaGameInstance.h"
-
 // =============================================================================
 // -- ASensorFactory -----------------------------------------------------------
 // =============================================================================
@@ -48,7 +46,6 @@ FActorSpawnResult ATriggerFactory::SpawnActor(
     return {};
   }
 
-  UE_LOG(LogCarla, Log, TEXT("%s"), *Description.Class->GetName());
   auto *Trigger = World->SpawnActorDeferred<AFrictionTrigger>(
       Description.Class,
       Transform,
@@ -70,7 +67,7 @@ FActorSpawnResult ATriggerFactory::SpawnActor(
     // Retrieve Friction
     float Friction = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat("friction",
         Description.Variations,
-        0.0f);
+        3.5f);
     Trigger->SetFriction(Friction);
 
     // Retrieve Extent

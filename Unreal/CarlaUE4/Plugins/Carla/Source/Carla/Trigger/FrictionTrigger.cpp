@@ -80,10 +80,15 @@ void AFrictionTrigger::BeginPlay()
 
 void AFrictionTrigger::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-  // Deregister the delegate
+  // Deregister delegates
   if (TriggerVolume->OnComponentBeginOverlap.IsAlreadyBound(this, &AFrictionTrigger::OnTriggerBeginOverlap))
   {
     TriggerVolume->OnComponentBeginOverlap.RemoveDynamic(this, &AFrictionTrigger::OnTriggerBeginOverlap);
+  }
+
+  if (TriggerVolume->OnComponentEndOverlap.IsAlreadyBound(this, &AFrictionTrigger::OnTriggerEndOverlap))
+  {
+    TriggerVolume->OnComponentEndOverlap.RemoveDynamic(this, &AFrictionTrigger::OnTriggerEndOverlap);
   }
 
   Super::EndPlay(EndPlayReason);
