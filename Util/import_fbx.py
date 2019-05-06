@@ -36,9 +36,7 @@ def import_all_fbx_in_folder(fbx_folder, folder_list):
     fbx_place = os.path.join(dirname, "..", fbx_folder)
     for file in os.listdir(fbx_place):
         if file.endswith(".PropRegistry.json"):
-            print("MANISHHHH")
             registry_name = file.replace(".PropRegistry.json", "")
-            print (registry_name)
             with open(os.path.join(dirname, "..", fbx_folder, file)) as json_file:
                 data = json.load(json_file)
                 # This will take all the fbx registerd in the provided json files
@@ -51,7 +49,6 @@ def import_all_fbx_in_folder(fbx_folder, folder_list):
             if folder not in final_list:
                 final_list += folder + "+"
         final_list = final_list[:-1]
-        print(final_list)
         #Destination map (the one that will be cooked)
         dest_map_path = "/Game/Carla/Maps/TestMaps"
         dest_map_name = "TEMPMAP"
