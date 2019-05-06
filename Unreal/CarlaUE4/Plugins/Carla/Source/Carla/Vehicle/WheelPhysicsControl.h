@@ -14,13 +14,13 @@ struct CARLA_API FWheelPhysicsControl
   GENERATED_BODY()
 
   UPROPERTY(Category = "Wheel Tire Friction", EditAnywhere, BlueprintReadWrite)
-  float TireFriction = 0.0f;
+  float TireFriction = 3.5f;
 
   UPROPERTY(Category = "Wheel Damping Rate", EditAnywhere, BlueprintReadWrite)
-  float DampingRate = 0.0f;
+  float DampingRate = 1.0f;
 
   UPROPERTY(Category = "Wheel Max Steer Angle", EditAnywhere, BlueprintReadWrite)
-  float MaxSteerAngle = 0.0f;
+  float MaxSteerAngle = 70.0f;
 
   UPROPERTY(Category = "Wheel Is Steerable", EditAnywhere, BlueprintReadWrite)
   bool IsSteerable = true;
