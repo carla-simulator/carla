@@ -489,29 +489,49 @@ class MapImage(object):
                 pygame.draw.lines(surface, color, closed, line, width)
 
         def get_lane_markings(lane_marking_type, lane_marking_color, waypoints, sign):
-            margin = 0.20
+            margin = 0.25
+            marking_1 = [world_to_pixel(lateral_shift(w.transform, sign * w.lane_width * 0.5)) for w in waypoints]
             if lane_marking_type == carla.LaneMarkingType.Broken or (lane_marking_type == carla.LaneMarkingType.Solid):
-                marking_1 = [world_to_pixel(lateral_shift(w.transform, sign * w.lane_width * 0.5)) for w in waypoints]
                 return [(lane_marking_type, lane_marking_color, marking_1)]
-            elif lane_marking_type == carla.LaneMarkingType.SolidBroken or lane_marking_type == carla.LaneMarkingType.BrokenSolid:
-                marking_1 = [world_to_pixel(lateral_shift(w.transform, sign * w.lane_width * 0.5)) for w in waypoints]
+            else:
                 marking_2 = [world_to_pixel(lateral_shift(w.transform,
                                                           sign * (w.lane_width * 0.5 + margin * 2))) for w in waypoints]
-                return [(carla.LaneMarkingType.Solid, lane_marking_color, marking_1),
-                        (carla.LaneMarkingType.Broken, lane_marking_color, marking_2)]
-            elif lane_marking_type == carla.LaneMarkingType.BrokenBroken:
-                marking = [world_to_pixel(lateral_shift(w.transform,
-                                                        sign * (w.lane_width * 0.5 - margin))) for w in waypoints]
-                return [(carla.LaneMarkingType.Broken, lane_marking_color, marking)]
-            elif lane_marking_type == carla.LaneMarkingType.SolidSolid:
-                marking = [world_to_pixel(lateral_shift(w.transform,
-                                                        sign * ((w.lane_width * 0.5) - margin))) for w in waypoints]
-                return [(carla.LaneMarkingType.Solid, lane_marking_color, marking)]
+                if lane_marking_type == carla.LaneMarkingType.SolidBroken:
+                    return [(carla.LaneMarkingType.Broken, lane_marking_color, marking_1),
+                            (carla.LaneMarkingType.Solid, lane_marking_color, marking_2)]
+                elif lane_marking_type == carla.LaneMarkingType.BrokenSolid:
+                    return [(carla.LaneMarkingType.Solid, lane_marking_color, marking_1),
+                            (carla.LaneMarkingType.Broken, lane_marking_color, marking_2)]
+                elif lane_marking_type == carla.LaneMarkingType.BrokenBroken:
+                    return [(carla.LaneMarkingType.Broken, lane_marking_color, marking_1),
+                            (carla.LaneMarkingType.Broken, lane_marking_color, marking_2)]
+
+                elif lane_marking_type == carla.LaneMarkingType.SolidSolid:
+                    return [(carla.LaneMarkingType.Solid, lane_marking_color, marking_1),
+                            (carla.LaneMarkingType.Solid, lane_marking_color, marking_2)]
 
             return [(carla.LaneMarkingType.NONE, carla.LaneMarkingColor.Other, [])]
 
-        def draw_lane_marking(surface, waypoints, is_left):
-            sign = -1 if is_left else 1
+        def draw_lane(surface, lane, color):
+            for side in lane:
+                lane_left_side = [lateral_shift(w.transform, -w.lane_width * 0.5) for w in side]
+                lane_right_side = [lateral_shift(w.transform, w.lane_width * 0.5) for w in side]
+
+                polygon = lane_left_side + [x for x in reversed(lane_right_side)]
+                polygon = [world_to_pixel(x) for x in polygon]
+
+                if len(polygon) > 2:
+                    pygame.draw.polygon(surface, color, polygon, 5)
+                    pygame.draw.polygon(surface, color, polygon)
+
+        def draw_lane_marking(surface, waypoints):
+            # Left Side
+            draw_lane_marking_single_side(surface, waypoints[0], -1)
+
+            # Right Side
+            draw_lane_marking_single_side(surface, waypoints[1], 1)
+
+        def draw_lane_marking_single_side(surface, waypoints, sign):
             lane_marking = None
 
             marking_type = carla.LaneMarkingType.NONE
@@ -520,7 +540,7 @@ class MapImage(object):
             marking_color = carla.LaneMarkingColor.Other
             previous_marking_color = carla.LaneMarkingColor.Other
 
-            waypoints_list = []
+            markings_list = []
             temp_waypoints = []
             current_lane_marking = carla.LaneMarkingType.NONE
             for sample in waypoints:
@@ -541,7 +561,7 @@ class MapImage(object):
                     current_lane_marking = marking_type
 
                     for marking in markings:
-                        waypoints_list.append(marking)
+                        markings_list.append(marking)
 
                     temp_waypoints = temp_waypoints[-1:]
 
@@ -557,9 +577,9 @@ class MapImage(object):
                 temp_waypoints,
                 sign)
             for marking in last_markings:
-                waypoints_list.append(marking)
+                markings_list.append(marking)
 
-            for markings in waypoints_list:
+            for markings in markings_list:
                 if markings[0] == carla.LaneMarkingType.Solid:
                     draw_solid_line(surface, markings[1], False, markings[2], 2)
                 elif markings[0] == carla.LaneMarkingType.Broken:
@@ -610,6 +630,37 @@ class MapImage(object):
                 corners = [world_to_pixel(p) for p in corners]
                 pygame.draw.lines(surface, trigger_color, True, corners, 2)
 
+        def draw_crosswalk(surface, transform=None, color=COLOR_ALUMINIUM_2):
+            # Given two points A and B, draw white parallel lines from A to B
+            a = carla.Location(0.0, 0.0, 0.0)
+            b = carla.Location(10.0, 10.0, 0.0)
+
+            ab = b - a
+            length_ab = math.sqrt(ab.x**2 + ab.y**2)
+            unit_ab = ab / length_ab
+            unit_perp_ab = carla.Location(-unit_ab.y, unit_ab.x, 0.0)
+
+            # Crosswalk lines params
+            space_between_lines = 0.5
+            line_width = 0.7
+            line_height = 2
+
+            current_length = 0
+            while current_length < length_ab:
+
+                center = a + unit_ab * current_length
+
+                width_offset = unit_ab * line_width
+                height_offset = unit_perp_ab * line_height
+                list_point = [center - width_offset - height_offset,
+                              center + width_offset - height_offset,
+                              center + width_offset + height_offset,
+                              center - width_offset + height_offset]
+
+                list_point = [world_to_pixel(p) for p in list_point]
+                pygame.draw.polygon(surface, color, list_point)
+                current_length += (line_width + space_between_lines) * 2
+
         def lateral_shift(transform, shift):
             transform.rotation.yaw += 90
             return transform.location + shift * transform.get_forward_vector()
@@ -617,6 +668,7 @@ class MapImage(object):
         def draw_topology(carla_topology, index):
             topology = [x[index] for x in carla_topology]
             topology = sorted(topology, key=lambda w: w.transform.location.z)
+            set_waypoints = []
             for waypoint in topology:
                 # if waypoint.road_id == 150 or waypoint.road_id == 16:
                 waypoints = [waypoint]
@@ -631,8 +683,57 @@ class MapImage(object):
                             nxt = nxt[0]
                         else:
                             break
+                set_waypoints.append(waypoints)
 
-                # Draw Road
+                # Draw Shoulders, Parkings and Sidewalks
+                PARKING_COLOR = COLOR_ALUMINIUM_4_5
+                SHOULDER_COLOR = COLOR_ALUMINIUM_5
+                SIDEWALK_COLOR = COLOR_ALUMINIUM_3
+
+                shoulder = [[], []]
+                parking = [[], []]
+                sidewalk = [[], []]
+
+                for w in waypoints:
+                    l = w.get_left_lane()
+                    while l and l.lane_type != carla.LaneType.Driving:
+
+                        if l.lane_type == carla.LaneType.Shoulder:
+                            shoulder[0].append(l)
+
+                        if l.lane_type == carla.LaneType.Parking:
+                            parking[0].append(l)
+
+                        if l.lane_type == carla.LaneType.Sidewalk:
+                            sidewalk[0].append(l)
+
+                        l = l.get_left_lane()
+
+                    r = w.get_right_lane()
+                    while r and r.lane_type != carla.LaneType.Driving:
+
+                        if r.lane_type == carla.LaneType.Shoulder:
+                            shoulder[1].append(r)
+
+                        if r.lane_type == carla.LaneType.Parking:
+                            parking[1].append(r)
+
+                        if r.lane_type == carla.LaneType.Sidewalk:
+                            sidewalk[1].append(r)
+
+                        r = r.get_right_lane()
+
+                draw_lane(map_surface, shoulder, SHOULDER_COLOR)
+                draw_lane(map_surface, parking, PARKING_COLOR)
+                draw_lane(map_surface, sidewalk, SIDEWALK_COLOR)
+
+                # draw_lane_marking(map_surface, shoulder)
+                # draw_lane_marking(map_surface, parking)
+                # draw_lane_marking(map_surface, sidewalk)
+
+            # Draw Roads
+            for waypoints in set_waypoints:
+                waypoint = waypoints[0]
                 road_left_side = [lateral_shift(w.transform, -w.lane_width * 0.5) for w in waypoints]
                 road_right_side = [lateral_shift(w.transform, w.lane_width * 0.5) for w in waypoints]
 
@@ -643,79 +744,15 @@ class MapImage(object):
                     pygame.draw.polygon(map_surface, COLOR_ALUMINIUM_5, polygon, 5)
                     pygame.draw.polygon(map_surface, COLOR_ALUMINIUM_5, polygon)
 
-                # Draw Shoulders and Parkings
-                PARKING_COLOR = COLOR_ALUMINIUM_4_5
-                SHOULDER_COLOR = COLOR_ALUMINIUM_5
-
-                final_color = SHOULDER_COLOR
-
-                # Draw Right
-                shoulder = []
-                for w in waypoints:
-                    r = w.get_right_lane()
-                    if r is not None and (
-                            r.lane_type == carla.LaneType.Shoulder or r.lane_type == carla.LaneType.Parking):
-                        if r.lane_type == carla.LaneType.Parking:
-                            final_color = PARKING_COLOR
-                        shoulder.append(r)
-
-                shoulder_left_side = [lateral_shift(w.transform, -w.lane_width * 0.5) for w in shoulder]
-                shoulder_right_side = [lateral_shift(w.transform, w.lane_width * 0.5) for w in shoulder]
-
-                polygon = shoulder_left_side + [x for x in reversed(shoulder_right_side)]
-                polygon = [world_to_pixel(x) for x in polygon]
-
-                if len(polygon) > 2:
-                    pygame.draw.polygon(map_surface, final_color, polygon, 5)
-                    pygame.draw.polygon(map_surface, final_color, polygon)
-
-                draw_lane_marking(
-                    map_surface,
-                    shoulder,
-                    False)
-
-                # Draw Left
-                shoulder = []
-                for w in waypoints:
-                    r = w.get_left_lane()
-                    if r is not None and (
-                            r.lane_type == carla.LaneType.Shoulder or r.lane_type == carla.LaneType.Parking):
-                        if r.lane_type == carla.LaneType.Parking:
-                            final_color = PARKING_COLOR
-                        shoulder.append(r)
-
-                shoulder_left_side = [lateral_shift(w.transform, -w.lane_width * 0.5) for w in shoulder]
-                shoulder_right_side = [lateral_shift(w.transform, w.lane_width * 0.5) for w in shoulder]
-
-                polygon = shoulder_left_side + [x for x in reversed(shoulder_right_side)]
-                polygon = [world_to_pixel(x) for x in polygon]
-
-                if len(polygon) > 2:
-                    pygame.draw.polygon(map_surface, final_color, polygon, 5)
-                    pygame.draw.polygon(map_surface, final_color, polygon)
-
-                draw_lane_marking(
-                    map_surface,
-                    shoulder,
-                    True)
-
                 # Draw Lane Markings and Arrows
                 if not waypoint.is_junction:
-                    draw_lane_marking(
-                        map_surface,
-                        waypoints,
-                        True)
-                    draw_lane_marking(
-                        map_surface,
-                        waypoints,
-                        False)
+                    draw_lane_marking(map_surface, [waypoints, waypoints])
                     for n, wp in enumerate(waypoints):
                         if ((n + 1) % 400) == 0:
                             draw_arrow(map_surface, wp.transform)
 
         topology = carla_map.get_topology()
         draw_topology(topology, 0)
-        draw_topology(topology, 1)
 
         if self.show_spawn_points:
             for sp in carla_map.get_spawn_points():
@@ -723,7 +760,8 @@ class MapImage(object):
 
         if self.show_connections:
             dist = 1.5
-            to_pixel = lambda wp: world_to_pixel(wp.transform.location)
+
+            def to_pixel(wp): return world_to_pixel(wp.transform.location)
             for wp in carla_map.generate_waypoints(dist):
                 col = (0, 255, 255) if wp.is_junction else (0, 255, 0)
                 for nxt in wp.next(dist):
@@ -1419,6 +1457,7 @@ def game_loop(args):
         if world_module is not None:
             world_module.destroy()
 
+
 def exit_game():
     module_manager.clear_modules()
     pygame.quit()
@@ -1492,6 +1531,7 @@ def main():
     print(__doc__)
 
     game_loop(args)
+
 
 if __name__ == '__main__':
     main()
