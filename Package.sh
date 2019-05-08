@@ -130,6 +130,7 @@ if $DO_COPY_FILES ; then
       --exclude "_images*" \
       --exclude "_out*" \
       --exclude "racetrack*" \
+      --exclude "semantic_birds_view*" \
       PythonClient/ ${DESTINATION}/PythonClient
 
   echo

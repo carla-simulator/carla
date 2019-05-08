@@ -9,8 +9,12 @@ import pandas as pd
 import numpy as np
 from scipy.interpolate import splprep, splev
 
+# I need to prepend `sys.path` with '..' to get to the carla module there.
+# I'm pre-pending `sys.path` because there are other carla modules specified
+# in PYTHONPATH already
 import sys
-sys.path.append('..')
+sys.path = ['..'] + sys.path
+
 from carla.client import make_carla_client
 from carla.sensor import Camera, Lidar
 from carla.settings import CarlaSettings
