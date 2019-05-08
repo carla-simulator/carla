@@ -5,14 +5,13 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
-#include "TireConfig.h"
-#include "CarlaWheeledVehicle.h"
-#include "VehicleWheel.h"
-
-#include "Agent/VehicleAgentComponent.h"
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
 #include "Components/BoxComponent.h"
 #include "Engine/CollisionProfile.h"
+#include "TireConfig.h"
+#include "VehicleWheel.h"
+
 // =============================================================================
 // -- Constructor and destructor -----------------------------------------------
 // =============================================================================
@@ -24,9 +23,6 @@ ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectIniti
   VehicleBounds->SetupAttachment(RootComponent);
   VehicleBounds->SetHiddenInGame(true);
   VehicleBounds->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
-
-  VehicleAgentComponent = CreateDefaultSubobject<UVehicleAgentComponent>(TEXT("VehicleAgentComponent"));
-  VehicleAgentComponent->SetupAttachment(RootComponent);
 
   GetVehicleMovementComponent()->bReverseAsBrake = false;
 }

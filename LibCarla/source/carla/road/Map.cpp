@@ -257,23 +257,23 @@ namespace road {
     RELEASE_ASSERT(waypoint.lane_id >= lanes.begin()->first);
     RELEASE_ASSERT(waypoint.lane_id <= lanes.rbegin()->first);
 
-    double lane_width = 0;
-    double lane_tangent = 0;
+    float lane_width = 0.0f;
+    float lane_tangent = 0.0f;
     if (waypoint.lane_id < 0) {
       // right lane
       const auto side_lanes = MakeListView(
           std::make_reverse_iterator(lanes.lower_bound(0)), lanes.rend());
       const auto computed_width =
           ComputeTotalLaneWidth(side_lanes, waypoint.s, waypoint.lane_id);
-      lane_width = computed_width.first;
-      lane_tangent = computed_width.second;
+      lane_width = static_cast<float>(computed_width.first);
+      lane_tangent = static_cast<float>(computed_width.second);
     } else {
       // left lane
       const auto side_lanes = MakeListView(lanes.lower_bound(1), lanes.end());
       const auto computed_width =
           ComputeTotalLaneWidth(side_lanes, waypoint.s, waypoint.lane_id);
-      lane_width = computed_width.first;
-      lane_tangent = computed_width.second;
+      lane_width = static_cast<float>(computed_width.first);
+      lane_tangent = static_cast<float>(computed_width.second);
     }
 
     // get a directed point in s and apply the computed lateral offet
@@ -281,7 +281,7 @@ namespace road {
 
     // compute the tangent of the laneOffset
     const auto lane_offset_info = road.GetInfo<RoadInfoLaneOffset>(waypoint.s);
-    const auto lane_offset_tangent = lane_offset_info->GetPolynomial().Tangent(waypoint.s);
+    const auto lane_offset_tangent = static_cast<float>(lane_offset_info->GetPolynomial().Tangent(waypoint.s));
 
     lane_tangent -= lane_offset_tangent;
 

@@ -40,7 +40,7 @@ def get_libcarla_extensions():
                 os.path.join(pwd, 'dependencies/lib', pylib)]
             extra_compile_args = [
                 '-isystem', 'dependencies/include/system', '-fPIC', '-std=c++14',
-                '-Werror', '-Wall', '-Wextra', '-Wpedantic',
+                '-Werror', '-Wall', '-Wextra', '-Wpedantic', '-Wno-self-assign-overloaded',
                 '-Wdeprecated', '-Wno-shadow', '-Wuninitialized', '-Wunreachable-code',
                 '-Wpessimizing-move', '-Wold-style-cast', '-Wnull-dereference',
                 '-Wduplicate-enum', '-Wnon-virtual-dtor', '-Wheader-hygiene',
@@ -84,6 +84,7 @@ def get_libcarla_extensions():
 
         # https://docs.microsoft.com/es-es/cpp/porting/modifying-winver-and-win32-winnt
         extra_compile_args = [
+            '/experimental:external', '/external:I', 'dependencies/include/system',
             '/DBOOST_ALL_NO_LIB', '/DBOOST_PYTHON_STATIC_LIB',
             '/DBOOST_ERROR_CODE_HEADER_ONLY', '/D_WIN32_WINNT=0x0501',
             '/DLIBCARLA_WITH_PYTHON_SUPPORT', '-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true']

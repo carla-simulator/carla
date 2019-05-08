@@ -19,7 +19,6 @@
 #include "CarlaWheeledVehicle.generated.h"
 
 class UBoxComponent;
-class UVehicleAgentComponent;
 
 /// Base class for CARLA wheeled vehicles.
 UCLASS()
@@ -181,9 +180,6 @@ private:
 
   UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere)
   UBoxComponent *VehicleBounds;
-
-  UPROPERTY(Category = "CARLA Wheeled Vehicle", VisibleAnywhere)
-  UVehicleAgentComponent *VehicleAgentComponent;
 
   struct
   {

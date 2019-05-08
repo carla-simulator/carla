@@ -10,6 +10,20 @@
 #include <utility>
 
 namespace carla {
+namespace detail {
+
+  template <typename FunctorT>
+  struct MoveWrapper : FunctorT {
+    MoveWrapper(FunctorT &&f) : FunctorT(std::move(f)) {}
+
+    MoveWrapper(MoveWrapper &&) = default;
+    MoveWrapper& operator=(MoveWrapper &&) = default;
+
+    MoveWrapper(const MoveWrapper &);
+    MoveWrapper& operator=(const MoveWrapper &);
+  };
+
+} // namespace detail
 
   /// Hack to trick asio into accepting move-only handlers, if the handler were
   /// actually copied it would result in a link error.
@@ -18,14 +32,7 @@ namespace carla {
   template <typename FunctorT>
   auto MoveHandler(FunctorT &&func) {
     using F = typename std::decay<FunctorT>::type;
-    struct MoveWrapper : F {
-      MoveWrapper(F&& f) : F(std::move(f)) {}
-      MoveWrapper(MoveWrapper&&) = default;
-      MoveWrapper& operator=(MoveWrapper&&) = default;
-      MoveWrapper(const MoveWrapper&);
-      MoveWrapper& operator=(const MoveWrapper&);
-    };
-    return MoveWrapper{std::move(func)};
+    return detail::MoveWrapper<F>{std::move(func)};
   }
 
 } // namespace carla

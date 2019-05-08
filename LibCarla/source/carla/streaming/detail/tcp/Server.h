@@ -10,7 +10,7 @@
 #include "carla/Time.h"
 #include "carla/streaming/detail/tcp/ServerSession.h"
 
-#include <boost/asio/io_service.hpp>
+#include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
 
 #include <atomic>
@@ -20,7 +20,7 @@ namespace streaming {
 namespace detail {
 namespace tcp {
 
-  /// @warning This server cannot be destructed before its @a io_service is
+  /// @warning This server cannot be destructed before its @a io_context is
   /// stopped.
   class Server : private NonCopyable {
   public:
@@ -28,7 +28,7 @@ namespace tcp {
     using endpoint = boost::asio::ip::tcp::endpoint;
     using protocol_type = endpoint::protocol_type;
 
-    explicit Server(boost::asio::io_service &io_service, endpoint ep);
+    explicit Server(boost::asio::io_context &io_context, endpoint ep);
 
     endpoint GetLocalEndpoint() const {
       return _acceptor.local_endpoint();
@@ -45,7 +45,7 @@ namespace tcp {
     /// is closed.
     template <typename FunctorT1, typename FunctorT2>
     void Listen(FunctorT1 on_session_opened, FunctorT2 on_session_closed) {
-      _acceptor.get_io_service().post([=]() {
+      _io_context.post([=]() {
         OpenSession(
             _timeout,
             std::move(on_session_opened),
@@ -59,6 +59,8 @@ namespace tcp {
         time_duration timeout,
         ServerSession::callback_function_type on_session_opened,
         ServerSession::callback_function_type on_session_closed);
+
+    boost::asio::io_context &_io_context;
 
     boost::asio::ip::tcp::acceptor _acceptor;
 

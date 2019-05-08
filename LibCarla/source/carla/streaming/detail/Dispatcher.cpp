@@ -29,7 +29,7 @@ namespace detail {
 
   Dispatcher::~Dispatcher() {
     // Disconnect all the sessions from their streams, this should kill any
-    // session remaining since at this point the io_service should be already
+    // session remaining since at this point the io_context should be already
     // stopped.
     for (auto &pair : _stream_map) {
 #ifndef LIBCARLA_NO_EXCEPTIONS

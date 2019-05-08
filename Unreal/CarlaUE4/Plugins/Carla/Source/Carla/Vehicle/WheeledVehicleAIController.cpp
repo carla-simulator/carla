@@ -97,9 +97,9 @@ AWheeledVehicleAIController::~AWheeledVehicleAIController() {}
 // -- APlayerController --------------------------------------------------------
 // =============================================================================
 
-void AWheeledVehicleAIController::Possess(APawn *aPawn)
+void AWheeledVehicleAIController::OnPossess(APawn *aPawn)
 {
-  Super::Possess(aPawn);
+  Super::OnPossess(aPawn);
 
   if (IsPossessingAVehicle())
   {
@@ -119,9 +119,9 @@ void AWheeledVehicleAIController::Possess(APawn *aPawn)
   }
 }
 
-void AWheeledVehicleAIController::UnPossess()
+void AWheeledVehicleAIController::OnUnPossess()
 {
-  Super::UnPossess();
+  Super::OnUnPossess();
 
   Vehicle = nullptr;
 }

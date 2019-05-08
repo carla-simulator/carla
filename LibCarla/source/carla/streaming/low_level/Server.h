@@ -9,7 +9,7 @@
 #include "carla/streaming/detail/Dispatcher.h"
 #include "carla/streaming/Stream.h"
 
-#include <boost/asio/io_service.hpp>
+#include <boost/asio/io_context.hpp>
 
 namespace carla {
 namespace streaming {
@@ -17,9 +17,9 @@ namespace low_level {
 
   /// A low-level streaming server. Each new stream has a token associated, this
   /// token can be used by a client to subscribe to the stream. This server
-  /// requires an external io_service running.
+  /// requires an external io_context running.
   ///
-  /// @warning This server cannot be destructed before its @a io_service is
+  /// @warning This server cannot be destructed before its @a io_context is
   /// stopped.
   template <typename T>
   class Server {
@@ -31,26 +31,26 @@ namespace low_level {
 
     template <typename InternalEPType, typename ExternalEPType>
     explicit Server(
-        boost::asio::io_service &io_service,
+        boost::asio::io_context &io_context,
         detail::EndPoint<protocol_type, InternalEPType> internal_ep,
         detail::EndPoint<protocol_type, ExternalEPType> external_ep)
-      : _server(io_service, std::move(internal_ep)),
+      : _server(io_context, std::move(internal_ep)),
         _dispatcher(std::move(external_ep)) {
       StartServer();
     }
 
     template <typename InternalEPType>
     explicit Server(
-        boost::asio::io_service &io_service,
+        boost::asio::io_context &io_context,
         detail::EndPoint<protocol_type, InternalEPType> internal_ep)
-      : _server(io_service, std::move(internal_ep)),
+      : _server(io_context, std::move(internal_ep)),
         _dispatcher(make_endpoint<protocol_type>(_server.GetLocalEndpoint().port())) {
       StartServer();
     }
 
     template <typename... EPArgs>
-    explicit Server(boost::asio::io_service &io_service, EPArgs &&... args)
-      : Server(io_service, make_endpoint<protocol_type>(std::forward<EPArgs>(args)...)) {}
+    explicit Server(boost::asio::io_context &io_context, EPArgs &&... args)
+      : Server(io_context, make_endpoint<protocol_type>(std::forward<EPArgs>(args)...)) {}
 
     typename underlying_server::endpoint GetLocalEndpoint() const {
       return _server.GetLocalEndpoint();
