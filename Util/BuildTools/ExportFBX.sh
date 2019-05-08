@@ -16,7 +16,7 @@ fi
 # -- Parse arguments -----------------------------------------------------------
 # ==============================================================================
 
-DOC_STRING="Build and packs CarlaUE4's ExportedMaps"
+DOC_STRING="Build and packs CarlaUE4's Imported FBX"
 
 USAGE_STRING="Usage: $0 [--help] [-d|--dir] <outdir> [-f|--file] <filename> [-p|--maps] <maps_to_cook>"
 
@@ -52,10 +52,10 @@ while true; do
 done
 
 if [ -z "${OUTPUT_DIRECTORY}" ]; then
-  OUTPUT_DIRECTORY="${PWD}/ExportedMaps"
+  OUTPUT_DIRECTORY="${PWD}/ExportedFBX"
 fi
 if [ -z "${FILE_NAME}" ]; then
-  FILE_NAME="CookedExportedMaps"
+  FILE_NAME="CookedExportedFBX"
 fi
 
 
@@ -98,7 +98,7 @@ rm -Rf ./CarlaUE4/Metadata
 rm -Rf ./CarlaUE4/Plugins
 
 # Remove TEMPMAP.umap and TEMPMAP.uexp
-TEMPMAP_BASE_PATH="$CARLAUE4_ROOT_FOLDER${MAP_TO_COOK/Game/"Content"}"
+TEMPMAP_BASE_PATH="./CarlaUE4/${MAP_TO_COOK/Game/"Content"}"
 rm -f $TEMPMAP_BASE_PATH.uexp
 rm $TEMPMAP_BASE_PATH.umap
 
@@ -121,5 +121,5 @@ rm -Rf ${BUILD_FOLDER}/Cooked
 # -- ...and we are done --------------------------------------------------------
 # ==============================================================================
 
-log "ExportedMaps created at ${DESTINATION}"
+log "FBX Package created at ${DESTINATION}"
 log "Success!"
