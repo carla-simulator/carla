@@ -12,7 +12,7 @@
 #include "Carla/Trigger/FrictionTrigger.h"
 
 // =============================================================================
-// -- ASensorFactory -----------------------------------------------------------
+// -- ATriggerFactory -----------------------------------------------------------
 // =============================================================================
 
 TArray<FActorDefinition> ATriggerFactory::GetDefinitions()
@@ -22,7 +22,9 @@ TArray<FActorDefinition> ATriggerFactory::GetDefinitions()
 
   TArray<FActorDefinition> TriggerDefinitions;
 
-  UActorBlueprintFunctionLibrary::MakeTriggerDefinition(TEXT("friction"), TriggerDefinition);
+  bool Success;
+  UActorBlueprintFunctionLibrary::MakeTriggerDefinition(TEXT("friction"), Success, TriggerDefinition);
+  check(Success);
   TriggerDefinitions.Add(TriggerDefinition);
 
   return TriggerDefinitions;

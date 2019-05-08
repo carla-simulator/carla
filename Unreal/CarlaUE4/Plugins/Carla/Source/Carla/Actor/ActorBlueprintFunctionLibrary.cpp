@@ -483,13 +483,21 @@ void UActorBlueprintFunctionLibrary::MakePedestrianDefinitions(
   FillActorDefinitionArray(ParameterArray, Definitions, &MakePedestrianDefinition);
 }
 
+void UActorBlueprintFunctionLibrary::MakeTriggerDefinitions(
+    const TArray<FString> &ParameterArray,
+    TArray<FActorDefinition> &Definitions)
+{
+  FillActorDefinitionArray(ParameterArray, Definitions, &MakeTriggerDefinition);
+}
+
 void UActorBlueprintFunctionLibrary::MakeTriggerDefinition(
     const FString &Id,
+    bool &Success,
     FActorDefinition &Definition)
 {
   FillIdAndTags(Definition, TEXT("trigger"), Id);
   AddVariationsForTrigger(Definition);
-  bool Success = CheckActorDefinition(Definition);
+  Success = CheckActorDefinition(Definition);
   check(Success);
 }
 
