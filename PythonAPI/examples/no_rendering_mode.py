@@ -630,36 +630,36 @@ class MapImage(object):
                 corners = [world_to_pixel(p) for p in corners]
                 pygame.draw.lines(surface, trigger_color, True, corners, 2)
 
-        def draw_crosswalk(surface, transform=None, color=COLOR_ALUMINIUM_2):
-            # Given two points A and B, draw white parallel lines from A to B
-            a = carla.Location(0.0, 0.0, 0.0)
-            b = carla.Location(10.0, 10.0, 0.0)
+        # def draw_crosswalk(surface, transform=None, color=COLOR_ALUMINIUM_2):
+        #     # Given two points A and B, draw white parallel lines from A to B
+        #     a = carla.Location(0.0, 0.0, 0.0)
+        #     b = carla.Location(10.0, 10.0, 0.0)
 
-            ab = b - a
-            length_ab = math.sqrt(ab.x**2 + ab.y**2)
-            unit_ab = ab / length_ab
-            unit_perp_ab = carla.Location(-unit_ab.y, unit_ab.x, 0.0)
+        #     ab = b - a
+        #     length_ab = math.sqrt(ab.x**2 + ab.y**2)
+        #     unit_ab = ab / length_ab
+        #     unit_perp_ab = carla.Location(-unit_ab.y, unit_ab.x, 0.0)
 
-            # Crosswalk lines params
-            space_between_lines = 0.5
-            line_width = 0.7
-            line_height = 2
+        #     # Crosswalk lines params
+        #     space_between_lines = 0.5
+        #     line_width = 0.7
+        #     line_height = 2
 
-            current_length = 0
-            while current_length < length_ab:
+        #     current_length = 0
+        #     while current_length < length_ab:
 
-                center = a + unit_ab * current_length
+        #         center = a + unit_ab * current_length
 
-                width_offset = unit_ab * line_width
-                height_offset = unit_perp_ab * line_height
-                list_point = [center - width_offset - height_offset,
-                              center + width_offset - height_offset,
-                              center + width_offset + height_offset,
-                              center - width_offset + height_offset]
+        #         width_offset = unit_ab * line_width
+        #         height_offset = unit_perp_ab * line_height
+        #         list_point = [center - width_offset - height_offset,
+        #                       center + width_offset - height_offset,
+        #                       center + width_offset + height_offset,
+        #                       center - width_offset + height_offset]
 
-                list_point = [world_to_pixel(p) for p in list_point]
-                pygame.draw.polygon(surface, color, list_point)
-                current_length += (line_width + space_between_lines) * 2
+        #         list_point = [world_to_pixel(p) for p in list_point]
+        #         pygame.draw.polygon(surface, color, list_point)
+        #         current_length += (line_width + space_between_lines) * 2
 
         def lateral_shift(transform, shift):
             transform.rotation.yaw += 90
