@@ -297,7 +297,10 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
 
   // Wheels Setup
   const int PhysicsWheelsNum = PhysicsControl.Wheels.Num();
-  check(PhysicsWheelsNum == 4);
+  if (PhysicsWheelsNum != 4) {
+    UE_LOG(LogCarla, Error, TEXT("Number of WheelPhysicsControl is not 4."));
+    return;
+  }
 
   TArray<FWheelSetup> NewWheelSetups;
   for (auto i = 0u; i < PhysicsWheelsNum; ++i)
