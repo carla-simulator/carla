@@ -21,6 +21,7 @@
   * Updated OpenDriveActor to use the new Waypoint API
   * Fixed wrong units in VehiclePhysicsControl's center of mass
   * Several optimizations to the RPC server, now supports a bigger load of async messages
+  * Exposed 'is_invincible' for pedestrians
 
 ## CARLA 0.9.5
 
@@ -74,6 +75,7 @@
   * Fixed wheel's tire friction affecting all vehicles from physics control parameters
   * Fixed obstacle detector not working
   * Fixed small float bug in misc.py
+
 
 ## CARLA 0.9.4
 
