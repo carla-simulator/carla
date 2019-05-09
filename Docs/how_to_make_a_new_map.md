@@ -158,8 +158,8 @@ for the meshes the last one was referencing.
 * Spawners must always be oriented as the road dictates. This must be done by
   hand but we will make some form of automation in the future.
 
-* Traffic lights must be placed in every crossing in whitch vehicles might
-  conflict. theese are the childs of "TrafficLightBase" and are stored inside
+* Traffic lights must be placed in every crossing in which vehicles might
+  conflict. These are the childs of "TrafficLightBase" and are stored inside
   Game/Carla/Static/TrafficSigns/Streetlights_01.
 
 Again, remember this is just needed to use the server autopilot. We recommend to start using new the client driving stack provided from 0.9.2 version.
