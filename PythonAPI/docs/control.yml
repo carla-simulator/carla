@@ -4,6 +4,135 @@
 
   # - CLASSES ------------------------------
   classes:
+  - class_name: VehicleControl
+    doc: >
+      VehicleControl is used for controlling the basic movement of a vehicle.
+
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: throttle
+      doc: >
+        Scalar value to control the vehicle throttle.
+    # --------------------------------------
+    - var_name: steer
+      doc: >
+        Scalar value to control the vehicle steering.
+    # --------------------------------------
+    - var_name: brake
+      doc: >
+        Scalar value to control the vehicle brake.
+    # --------------------------------------
+    - var_name: hand_brake
+      doc: >
+        If true, hand brake will be used.
+    # --------------------------------------
+    - var_name: reverse
+      doc: >
+        If true, vehicle will move reverse.
+    # --------------------------------------
+    - var_name: manual_gear_shift
+      doc: >
+        If true, the vehicle will be controlled by changing gears manually.
+    # --------------------------------------
+    - var_name: gear
+      doc: >
+        Controls the gear value of the vehicle.
+
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: self
+      - param_name: throttle
+        type: float
+        default: 0.0
+      - param_name: steer
+        type: float
+        default: 0.0
+      - param_name: brake
+        type: float
+        default: 0.0
+      - param_name: hand_brake
+        type: bool
+        default: True
+      - param_name: reverse
+        type: bool
+        default: True
+      - param_name: manual_gear_shift
+        type: bool
+        default: True
+      - param_name: gear
+        type: int
+        default: 0
+      doc: >
+        VehicleControl constructor
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: self
+      - param_name: other
+      return: bool
+      doc: >
+        Returns True if `self` and `other` are equal
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: self
+      - param_name: other
+      return: bool
+      doc: >
+        Returns True if `self` and `other` are not equal
+
+  - class_name: WalkerControl
+    doc: >
+      WalkerControl is used for controlling the basic movement of a walker.
+
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: direction
+      doc: >
+        Vector that indicates the direction of the walker.
+    # --------------------------------------
+    - var_name: speed
+      doc: >
+        Scalar value to control the walker speed.
+    # --------------------------------------
+    - var_name: jump
+      doc: >
+        If true, the walker will perform a jump.
+
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: self
+      - param_name: direction
+        type: carla.Vector3D
+        default: [1.0, 0.0, 0.0]
+      - param_name: speed
+        type: float
+        default: 0.0
+      - param_name: jump
+        type: bool
+        default: False
+      doc: >
+        VehicleControl constructor
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: self
+      - param_name: other
+      return: bool
+      doc: >
+        Returns True if `self` and `other` are equal
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: self
+      - param_name: other
+      return: bool
+      doc: >
+        Returns True if `self` and `other` are not equal
 
   - class_name: VehiclePhysicsControl
     doc: >
