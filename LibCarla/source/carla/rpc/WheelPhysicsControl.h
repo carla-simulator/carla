@@ -20,23 +20,27 @@ namespace rpc {
         float in_tire_friction,
         float in_damping_rate,
         float in_max_steer_angle,
-        bool in_is_steerable)
+        bool in_is_steerable,
+        float in_radius)
       : tire_friction(in_tire_friction),
         damping_rate(in_damping_rate),
         max_steer_angle(in_max_steer_angle),
-        is_steerable(in_is_steerable) {}
+        is_steerable(in_is_steerable),
+        radius(in_radius) {}
 
     float tire_friction = 2.0f;
     float damping_rate = 0.25f;
     float max_steer_angle = 70.0f;
     bool is_steerable = true;
+    float radius = 30.0f;
 
     bool operator!=(const WheelPhysicsControl &rhs) const {
       return
         tire_friction != rhs.tire_friction ||
         damping_rate != rhs.damping_rate ||
         max_steer_angle != rhs.max_steer_angle ||
-        is_steerable != rhs.is_steerable;
+        is_steerable != rhs.is_steerable ||
+        radius != rhs.radius;
     }
 
     bool operator==(const WheelPhysicsControl &rhs) const {
@@ -48,7 +52,8 @@ namespace rpc {
       : tire_friction(Wheel.TireFriction),
         damping_rate(Wheel.DampingRate),
         max_steer_angle(Wheel.MaxSteerAngle),
-        is_steerable(Wheel.IsSteerable) {}
+        is_steerable(Wheel.IsSteerable),
+        radius(Wheel.Radius) {}
 
     operator FWheelPhysicsControl() const {
       FWheelPhysicsControl Wheel;
@@ -56,6 +61,7 @@ namespace rpc {
       Wheel.DampingRate = damping_rate;
       Wheel.MaxSteerAngle = max_steer_angle;
       Wheel.IsSteerable = is_steerable;
+      Wheel.Radius = radius;
       return Wheel;
     }
 #endif
@@ -63,7 +69,8 @@ namespace rpc {
     MSGPACK_DEFINE_ARRAY(tire_friction,
         damping_rate,
         max_steer_angle,
-        is_steerable)
+        is_steerable,
+        radius)
   };
 
 }

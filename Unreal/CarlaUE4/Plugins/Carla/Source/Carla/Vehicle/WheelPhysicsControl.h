@@ -24,4 +24,7 @@ struct CARLA_API FWheelPhysicsControl
 
   UPROPERTY(Category = "Wheel Is Steerable", EditAnywhere, BlueprintReadWrite)
   bool IsSteerable = true;
+
+  UPROPERTY(Category = "Wheel Shape Radius", EditAnywhere, BlueprintReadWrite)
+  float Radius = 30.0f;
 };
