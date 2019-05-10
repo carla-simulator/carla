@@ -40,7 +40,8 @@ namespace rpc {
     out << "WheelPhysicsControl(tire_friction=" << control.tire_friction
         << ", damping_rate=" << control.damping_rate
         << ", max_steer_angle=" << control.max_steer_angle
-        << ", is_steerable=" << boolalpha(control.is_steerable) << ')';
+        << ", is_steerable=" << boolalpha(control.is_steerable)
+        << ", radius=" << control.radius << ')';
     return out;
   }
 
@@ -206,15 +207,17 @@ void export_control() {
   ;
 
   class_<cr::WheelPhysicsControl>("WheelPhysicsControl")
-    .def(init<float, float, float, bool>(
+    .def(init<float, float, float, bool, float>(
         (arg("tire_friction")=2.0f,
          arg("damping_rate")=0.25f,
          arg("max_steer_angle")=70.0f,
-         arg("is_steerable")=false)))
+         arg("is_steerable")=false,
+         arg("radius")=30.0f)))
     .def_readwrite("tire_friction", &cr::WheelPhysicsControl::tire_friction)
     .def_readwrite("damping_rate", &cr::WheelPhysicsControl::damping_rate)
     .def_readwrite("max_steer_angle", &cr::WheelPhysicsControl::max_steer_angle)
     .def_readwrite("is_steerable", &cr::WheelPhysicsControl::is_steerable)
+    .def_readwrite("radius", &cr::WheelPhysicsControl::radius)
     .def("__eq__", &cr::WheelPhysicsControl::operator==)
     .def("__ne__", &cr::WheelPhysicsControl::operator!=)
     .def(self_ns::str(self_ns::self))
