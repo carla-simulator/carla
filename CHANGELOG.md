@@ -17,6 +17,7 @@
       - Wheels of vehicles are animated (steering, throttle, handbrake), also bikes and cycles
       - Walkers animation is simulated in playback (through speed of walker), so they walk properly.
   * Fixed Lidar effectiveness bug in manual_control.py
+  * Fixed dead-lock when loading a new map in synchronous mode
   * Added C++ client example using LibCarla
   * Updated OpenDriveActor to use the new Waypoint API
   * Fixed wrong units in VehiclePhysicsControl's center of mass
