@@ -1,40 +1,79 @@
 ---
-- module_name: carla
+- module_name: weather
   doc: >
+
   # - CLASSES ------------------------------
   classes:
+
   - class_name: WeatherParameters
-    # - DESCRIPTION ------------------------
     doc: >
+      WeatherParameters class is used for controlling the weather inside the world.
+
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: cloudyness
       doc: >
+        Weather cloudyness.
+    # --------------------------------------
     - var_name: precipitation
       doc: >
+        Precipitation amount for controlling rain intensity.
+    # --------------------------------------
     - var_name: precipitation_deposits
       doc: >
+        Precipitation deposits for controlling the area of puddles.
+    # --------------------------------------
     - var_name: wind_intensity
       doc: >
+        Wind intensity.
+    # --------------------------------------
     - var_name: sun_azimuth_angle
       doc: >
+        Azimuth angle of the sun.
+    # --------------------------------------
     - var_name: sun_altitude_angle
       doc: >
+        Altitude angle of the sun.
+
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
       params:
       - param_name: self
+      - param_name: cloudyness
+        type: float
+        default: 0.0
+      - param_name: precipitation
+        type: float
+        default: 0.0
+      - param_name: precipitation_deposits
+        type: float
+        default: 0.0
+      - param_name: wind_intensity
+        type: float
+        default: 0.0
+      - param_name: sun_azimuth_angle
+        type: float
+        default: 0.0
+      - param_name: sun_altitude_angle
+        type: float
+        default: 0.0
       doc: >
+        WeatherParameters constructor
     # --------------------------------------
     - def_name: __eq__
       params:
       - param_name: self
+      - param_name: other
+      return: bool
       doc: >
+        Returns True if `self` and `other` are equal
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: self
+      - param_name: other
+      return: bool
       doc: >
-    # --------------------------------------
+        Returns True if `self` and `other` are not equal
 ...
