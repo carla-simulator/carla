@@ -2,6 +2,7 @@
   * Improved visual quality of the screen capture for the rgb sensor
     - Enabled Temporal AA for screen captures with no post-processing to prevent jaggies during motion
     - Reduced the target gamma of render target to 1.4 to minimize brightness differences with main camera 
+  * Upgraded to Unreal Engine 4.22
   * Recorder fixes:
     - Actors at start of playback could interpolate positions from its current position instead than the recorded position, making some fast sliding effect during 1 frame.
     - Camera following in playback was not working if a new map was needed to load.
@@ -9,6 +10,7 @@
     - Script 'start_recording.py' now properly saves destruction of actors at stop.
   * API extension: waypoint's `junction_id` that returns de OpenDrive identifier of the current junction
   * API change: deprecated waypoint's `is_intersection`, now is `is_junction`
+  * Removed deprecated code and content
   * New recorder features:
     - Added optional parameter to show more details about a recorder file (related to `show_recorder_file_info.py`)
     - Added playback speed (slow/fast motion) for the replayer
@@ -17,12 +19,17 @@
     - New data recorded to replay animations:
       - Wheels of vehicles are animated (steering, throttle, handbrake), also bikes and cycles
       - Walkers animation is simulated in playback (through speed of walker), so they walk properly.
+  * Fixed Lidar effectiveness bug in manual_control.py
+  * Fixed dead-lock when loading a new map in synchronous mode
   * Added C++ client example using LibCarla
+  * Updated OpenDriveActor to use the new Waypoint API
   * Fixed wrong units in VehiclePhysicsControl's center of mass
   * Several optimizations to the RPC server, now supports a bigger load of async messages
+  * Exposed 'is_invincible' for pedestrians
 
 ## CARLA 0.9.5
 
+  * Added `client_bounding_boxes.py` to show bounding boxes client-side
   * New Town07, rural environment with narrow roads
   * Reworked OpenDRIVE parser and waypoints API
     - Fixed several situations in which the XODR was incorrectly parsed
@@ -72,6 +79,7 @@
   * Fixed wheel's tire friction affecting all vehicles from physics control parameters
   * Fixed obstacle detector not working
   * Fixed small float bug in misc.py
+
 
 ## CARLA 0.9.4
 

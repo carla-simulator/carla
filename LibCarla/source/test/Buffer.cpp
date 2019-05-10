@@ -6,16 +6,7 @@
 
 #include "Buffer.h"
 
-/// @todo This header uses deprecated functionality, please re-enable
-/// pragma-messages after upgrading Boost 1.69 if possible.
-#if defined(__clang__)
-#  pragma clang diagnostic push
-#  pragma clang diagnostic ignored "-W#pragma-messages"
-#endif
-#  include <boost/random/independent_bits.hpp>
-#if defined(__clang__)
-#  pragma clang diagnostic pop
-#endif
+#include <boost/random/independent_bits.hpp>
 
 #include <climits>
 #include <random>

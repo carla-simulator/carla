@@ -9,7 +9,7 @@
 #include "Carla/Actor/ActorDispatcher.h"
 #include "Carla/Recorder/CarlaRecorder.h"
 #include "Carla/Sensor/WorldObserver.h"
-#include "Carla/Server/TheNewCarlaServer.h"
+#include "Carla/Server/CarlaServer.h"
 #include "Carla/Settings/EpisodeSettings.h"
 #include "Carla/Weather/Weather.h"
 
@@ -264,7 +264,7 @@ public:
 
 private:
 
-  friend class ATheNewCarlaGameModeBase;
+  friend class ACarlaGameModeBase;
   friend class FCarlaEngine;
 
   void InitializeAtBeginPlay();

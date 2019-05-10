@@ -8,8 +8,6 @@
 
 #include "GameFramework/Actor.h"
 
-#include "Carla/Agent/TrafficSignAgentComponent.h"
-
 #include "TrafficSignBase.generated.h"
 
 class UBoxComponent;
@@ -60,7 +58,4 @@ private:
 
   UPROPERTY(Category = "Traffic Sign", EditAnywhere)
   ETrafficSignState TrafficSignState = ETrafficSignState::UNKNOWN;
-
-  UPROPERTY(Category = "Traffic Sign", VisibleAnywhere)
-  UTrafficSignAgentComponent *TrafficSignAgentComponent;
 };

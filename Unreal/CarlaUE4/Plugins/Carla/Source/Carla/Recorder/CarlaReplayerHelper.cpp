@@ -4,11 +4,14 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include "Carla.h"
+#include "Carla/Recorder/CarlaReplayerHelper.h"
+
 #include "Carla/Actor/ActorDescription.h"
 #include "Carla/Actor/ActorView.h"
+#include "Carla/Vehicle/WheeledVehicleAIController.h"
 #include "Carla/Walker/WalkerControl.h"
 #include "Carla/Walker/WalkerController.h"
-#include "CarlaReplayerHelper.h"
 
 // create or reuse an actor for replaying
 std::pair<int, FActorView>CarlaReplayerHelper::TryToCreateReplayerActor(

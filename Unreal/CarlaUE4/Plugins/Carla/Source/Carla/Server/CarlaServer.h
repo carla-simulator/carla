@@ -6,55 +6,39 @@
 
 #pragma once
 
-#include "Containers/Array.h"
+#include "Carla/Actor/ActorView.h"
+#include "Carla/Sensor/DataStream.h"
 
-class ACarlaPlayerState;
-class APlayerStart;
-class FString;
-struct FVehicleControl;
+#include "CoreMinimal.h"
 
-/// Wrapper around carla_server API.
+class UCarlaEpisode;
+
 class FCarlaServer
 {
 public:
 
-  enum ErrorCode {
-    Success,
-    TryAgain,
-    Error
-  };
-
-  explicit FCarlaServer(uint32 WorldPort, uint32 TimeOutInMilliseconds);
+  FCarlaServer();
 
   ~FCarlaServer();
 
-  /// Connect with the client, block until the client connects or the time-out
-  /// is met.
-  ErrorCode Connect();
+  FDataMultiStream Start(uint16_t RPCPort, uint16_t StreamingPort);
 
-  ErrorCode ReadNewEpisode(FString &IniFile, bool bBlocking);
+  void NotifyBeginEpisode(UCarlaEpisode &Episode);
 
-  ErrorCode SendSceneDescription(
-      const FString &MapName,
-      const TArray<APlayerStart *> &AvailableStartSpots,
-      bool bBlocking);
+  void NotifyEndEpisode();
 
-  ErrorCode ReadEpisodeStart(uint32 &StartPositionIndex, bool bBlocking);
+  void AsyncRun(uint32 NumberOfWorkerThreads);
 
-  ErrorCode SendEpisodeReady(bool bBlocking);
+  void RunSome(uint32 Milliseconds);
 
-  ErrorCode ReadControl(FVehicleControl &Control, bool bBlocking);
+  bool TickCueReceived();
 
-  ErrorCode SendMeasurements(
-      const ACarlaPlayerState &PlayerState,
-      const TArray<const UAgentComponent *> &Agents,
-      bool bSendNonPlayerAgentsInfo);
+  void Stop();
+
+  FDataStream OpenStream() const;
 
 private:
 
-  const uint32 WorldPort;
-
-  const uint32 TimeOut;
-
-  void* const Server;
+  class FPimpl;
+  TUniquePtr<FPimpl> Pimpl;
 };

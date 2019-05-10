@@ -12,7 +12,7 @@
 #include "carla/streaming/detail/tcp/Client.h"
 #include "carla/streaming/low_level/Client.h"
 
-#include <boost/asio/io_service.hpp>
+#include <boost/asio/io_context.hpp>
 
 namespace carla {
 namespace streaming {
@@ -37,7 +37,7 @@ namespace streaming {
     /// MultiStream).
     template <typename Functor>
     void Subscribe(const Token &token, Functor &&callback) {
-      _client.Subscribe(_service.service(), token, std::forward<Functor>(callback));
+      _client.Subscribe(_service.io_context(), token, std::forward<Functor>(callback));
     }
 
     void UnSubscribe(const Token &token) {

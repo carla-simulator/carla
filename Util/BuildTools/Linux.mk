@@ -106,5 +106,8 @@ LibCarla.client.release: setup
 setup:
 	@${CARLA_BUILD_TOOLS_FOLDER}/Setup.sh
 
+deploy:
+	@${CARLA_BUILD_TOOLS_FOLDER}/Deploy.sh $(ARGS)
+
 pretty:
 	@${CARLA_BUILD_TOOLS_FOLDER}/Prettify.sh $(ARGS)
