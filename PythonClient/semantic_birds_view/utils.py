@@ -32,25 +32,23 @@ LABELS = {
     12: 'TrafficSigns',
 }
 
-
 REVERSE_LABELS = dict(zip(LABELS.values(), LABELS.keys()))
-
 
 IMAGE_SHAPE = (200, 300)
 
 
-def plot_semantic(x):
+def plot_semantic(x, cmap='gist_stern'):
     num_classes = x.shape[-1]
     plt.clf()
     plt.figure(figsize=(40, 10))
-    plt.imshow(np.argmax(x[0, ...], axis=2), vmin=0, vmax=num_classes, cmap='gist_stern')
+    plt.imshow(np.argmax(x[0, ...], axis=2), vmin=0, vmax=num_classes, cmap=cmap)
     plt.show()
 
 
-def class_names_to_class_numbers(classes_names):
+def class_names_to_class_numbers(class_names):
     return [
-        [REVERSE_LABELS[class_name] for class_name in classes]
-        for classes in classes_names
+        [REVERSE_LABELS[c] for c in classes]
+        for classes in class_names
     ]
 
 
@@ -64,24 +62,38 @@ def trim(x, trim_to_be_divisible_by):
     remainder = width % divisor
     left_trim, right_trim = floor(remainder / 2), ceil(remainder / 2)
 
-    return x[bottom_trim:(height-top_trim), left_trim:(width-right_trim)]
+    return x[bottom_trim:(height-top_trim), left_trim:(width-right_trim)].astype('uint8')
 
 
-def one_storage(camera_id, decimation, trim_to_be_divisible_by, episode_len, num_racetracks, num_episodes):
-    height = IMAGE_SHAPE[0] // decimation - IMAGE_SHAPE[0] // decimation % trim_to_be_divisible_by
-    width = IMAGE_SHAPE[1] // decimation - IMAGE_SHAPE[1] // decimation % trim_to_be_divisible_by
+def one_storage(
+    camera_id, decimation, trim_to_be_divisible_by,
+    episode_len, num_racetracks, num_episodes
+):
+    divisor = trim_to_be_divisible_by  # Easier to read
+    height = IMAGE_SHAPE[0] // decimation - IMAGE_SHAPE[0] // decimation % divisor
+    width = IMAGE_SHAPE[1] // decimation - IMAGE_SHAPE[1] // decimation % divisor
     if 'Top' in camera_id:
         height, width = width, height
+
+    # I've also experimented with RGB
     num_channels = 1 if 'SS' in camera_id else 3
-    return np.zeros((height, width, num_channels, episode_len * num_racetracks * num_episodes), 'uint8')
+    return np.zeros(
+        (height, width, num_channels, episode_len * num_racetracks * num_episodes),
+        'uint8'
+    )
 
 
-def get_X_and_Y_old(racetracks, episodes, decimation, camera_ids, storage=None, trim_to_be_divisible_by=8, episode_len=1000):
+def get_X_and_Y_old(
+    racetracks, episodes, decimation, camera_ids,
+    storage=None, trim_to_be_divisible_by=8, episode_len=1000
+):
     num_racetracks = len(racetracks)
     num_episodes = len(episodes)
-    if storage is None or storage[camera_ids[0]].shape[-1] != num_racetracks * num_episodes * episode_len:
+    expected_shape = num_racetracks*num_episodes*episode_len
+
+    if storage is None or storage[camera_ids[0]].shape[-1] != expected_shape:
         storage = {
-            id_: one_storage(id_, decimation, trim_to_be_divisible_by, episode_len, len(racetracks), len(episodes))
+            id_: one_storage(id_, decimation, trim_to_be_divisible_by, episode_len, num_racetracks, num_episodes)
             for id_ in camera_ids
         }
 
@@ -93,20 +105,26 @@ def get_X_and_Y_old(racetracks, episodes, decimation, camera_ids, storage=None, 
 
                 storage[id_][:, :, :, start:end] = trim(
                     np.load(
-                        'camera_storage/{}_{}_{}.npy'.format(id_, racetrack, episode)
+                        'camera_storage/{}_{}_{}.npy'
+                        .format(id_, racetrack, episode)
                     )[::decimation, ::decimation],
                     trim_to_be_divisible_by
-                ).astype('uint8')
+                )
 
     return storage
 
 
-def get_X_and_Y(racetracks, episodes, decimation, camera_ids, storage=None, trim_to_be_divisible_by=8, episode_len=1000):
+def get_X_and_Y(
+    racetracks, episodes, decimation, camera_ids,
+    storage=None, trim_to_be_divisible_by=8, episode_len=1000
+):
     num_racetracks = len(racetracks)
     num_episodes = len(episodes)
-    if storage is None or storage[camera_ids[0]].shape[-1] != num_racetracks * num_episodes * episode_len:
+    expected_shape = num_racetracks*num_episodes*episode_len
+
+    if storage is None or storage[camera_ids[0]].shape[-1] != expected_shape:
         storage = {
-            id_: one_storage(id_, decimation, trim_to_be_divisible_by, episode_len, len(racetracks), len(episodes))
+            id_: one_storage(id_, decimation, trim_to_be_divisible_by, episode_len, num_racetracks, num_episodes)
             for id_ in camera_ids
         }
 
@@ -120,10 +138,11 @@ def get_X_and_Y(racetracks, episodes, decimation, camera_ids, storage=None, trim
 
         to_store = trim(
             np.load(
-                'camera_storage/{}_{}_{}.npy'.format(camera_id, racetrack, episode)
+                'camera_storage/{}_{}_{}.npy'
+                .format(camera_id, racetrack, episode)
             )[::decimation, ::decimation],
             trim_to_be_divisible_by
-        ).astype('uint8')
+        )
 
         # To avoid a race condition (I'm not 100% sure if one would occur,
         # but it's better to be safe than sorry)
@@ -252,7 +271,11 @@ def sequential_batcher(
         yield X_out, y_out
 
 
-def make_movie(multi_model_path, racetrack, episode, decimation, classes_names, camera_ids, multi_model=None, episode_len=1000, fps=20, which_preds=5, batch_size=32):
+def make_movie(
+    multi_model_path, racetrack, episode, decimation, classes_names, camera_ids,
+    multi_model=None, episode_len=1000, fps=20, which_preds=5, batch_size=32,
+    cmap='gist_stern'
+):
     if multi_model is None:
         multi_model = load_model(multi_model_path)
 
@@ -262,7 +285,7 @@ def make_movie(multi_model_path, racetrack, episode, decimation, classes_names, 
 
     classes_numbers = class_names_to_class_numbers(classes_names)
 
-    X_final, y_final = [[] for _ in range(4)], []
+    X_final, y_final = [[] for _ in range(len(X))], []
     for index in range(episode_len):
         X_out, y_out = extract_observation_for_batch(X, Y, index, False, classes_numbers)
         for j in range(len(X_final)):
@@ -274,7 +297,7 @@ def make_movie(multi_model_path, racetrack, episode, decimation, classes_names, 
 
     preds = multi_model.predict(X_final + [y_final], batch_size=batch_size)
 
-    data = preds[which_preds]
+    data = preds[which_preds]  # Easier to read
 
     duration = data.shape[0] // fps
 
@@ -331,7 +354,7 @@ def make_movie(multi_model_path, racetrack, episode, decimation, classes_names, 
         ))
 
         ax.clear()
-        ax.imshow(frame, cmap='gist_stern', aspect='auto', vmin=0, vmax=data.shape[-1])
+        ax.imshow(frame, cmap=cmap, aspect='auto', vmin=0, vmax=data.shape[-1])
         ax.axis('off')
         return mplfig_to_npimage(fig)
 
@@ -357,14 +380,16 @@ def find_waypoints(
     grass_class=1, grass_class_weight=-0.5,
     car_class=2, car_class_weight=-1,
 ):
+    # This is the center of the frame and where the car is
     starting_point = np.array([frame.shape[0] // 2, frame.shape[1] // 2])
+
     waypoints = []
-    angle = 1.5 * np.pi
+    angle = 1.5 * np.pi  # "Go straight" angle
     point = starting_point
     for step in range(steps):
         scores = []
-
         for angle_idx in range(-num_angles, num_angles+1):
+            # We're iterating over candidate angles that for a cone of [-40, 40] degrees
             angle_i = angle + angle_idx * max_angle / num_angles
             vector = step_len * np.array([np.sin(angle_i), np.cos(angle_i)])
             new_position = point + vector
@@ -391,6 +416,9 @@ def find_waypoints(
 
             scores.append([score, -abs(angle_idx), angle_i, new_position])
 
+        # We choose the waypoint that has the best score, but if two waypoints
+        #  have the same score, we choose the one that's closest to going the
+        #  same direction as previously
         best_score, best_angle_idx, best_angle, best_new_position = max(
             scores, key=itemgetter(0, 1)
         )
@@ -400,6 +428,7 @@ def find_waypoints(
 
         if draw_waypoints:
             x_idx, y_idx = np.round(best_new_position).astype(int)
+            # FIXME: sometimes a waypoint goes around the frame
             frame[x_idx-1:x_idx+1, y_idx-1:y_idx+1] = [1, 1, 1]
 
     return waypoints, frame
@@ -475,5 +504,7 @@ def make_rgb_movie(
         lambda t: make_frame(t, preds, y_final),
         duration=duration
     )
-    file_name = Path('movies') / 'birds_view_model__racetrack={}_episode={}_RGB.mp4'.format(racetrack, episode)
-    animation.write_videofile(str(file_name), fps=fps)
+    file_name = 'birds_view_model__racetrack={}_episode={}_RGB.mp4'.format(racetrack, episode)
+    file_name = Path('movies') / file_name
+    file_name = str(file_name)
+    animation.write_videofile(file_name, fps=fps)

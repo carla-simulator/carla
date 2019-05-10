@@ -24,13 +24,17 @@ import config as CONFIG
 from gamepad_controller import PadController
 
 
+DTYPE = 'uint8'
+MIN_SPEED = 5
+
+
 def zero_frame(width, height, frames_per_episode, num_channels):
     return np.zeros((
         height,
         width,
         num_channels,
         frames_per_episode,
-    )).astype(CONFIG.DTYPE)
+    )).astype(DTYPE)
 
 
 def run_carla_client(args):
@@ -230,7 +234,7 @@ def run_episode(client, controller, storage, log_dicts, frames_per_episode):
         # Read the data produced by the server this frame.
         measurements, sensor_data = client.read_data()
 
-        if measurements.player_measurements.forward_speed * 3.6 < CONFIG.MIN_SPEED:
+        if measurements.player_measurements.forward_speed * 3.6 < MIN_SPEED:
             num_steps_below_min_speed += 1
         else:
             num_steps_below_min_speed = 0
@@ -272,7 +276,7 @@ def run_episode(client, controller, storage, log_dicts, frames_per_episode):
             data = sensor_data[id_].data
             if 'SS' in id_:
                 data = np.expand_dims(data, 3)
-            storage[id_][..., frame] = data 
+            storage[id_][..., frame] = data
         log_dicts[frame] = one_log_dict
 
     return 'SUCCESS', storage, log_dicts
