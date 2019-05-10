@@ -192,6 +192,7 @@ void ACarlaWheeledVehicle::SetWheelsFrictionScale(TArray<float> &WheelsFrictionS
   UWheeledVehicleMovementComponent4W *Vehicle4W = Cast<UWheeledVehicleMovementComponent4W>(
       GetVehicleMovement());
   check(Vehicle4W != nullptr);
+  check(Vehicle4W->Wheels.Num() == WheelsFrictionScale.Num());
 
   for (int32 i = 0; i < Vehicle4W->Wheels.Num(); ++i)
   {
