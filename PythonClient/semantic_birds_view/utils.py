@@ -441,7 +441,7 @@ def rgb_frame(preds, y_final, idx, draw_waypoints):
         _, predicted = find_waypoints(predicted)
         _, ground_truth = find_waypoints(ground_truth)
     gap = np.zeros_like(predicted)[:, ::5]
-    inside = np.concatenate([predicted, gap, ground_truth], axis=1)
+    inside = np.concatenate([ground_truth, gap, predicted], axis=1)
 
     width, height, num_channels = inside.shape
     _, margin, _ = gap.shape
@@ -492,8 +492,8 @@ def make_rgb_movie(
 
         ax.clear()
         ax.imshow(frame, aspect='auto')
-        ax.text(30, 177, 'predicted', color='white', fontsize=24, fontweight='bold')
-        ax.text(160, 177, 'actual', color='white', fontsize=24, fontweight='bold')
+        ax.text(40, 177, 'actual', color='white', fontsize=24, fontweight='bold')
+        ax.text(145, 177, 'predicted', color='white', fontsize=24, fontweight='bold')
         ax.axis('off')
         return mplfig_to_npimage(fig)
 
