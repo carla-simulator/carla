@@ -14,6 +14,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "HighResScreenshot.h"
+#include "Slate/SceneViewport.h"
 
 static auto SCENE_CAPTURE_COUNTER = 0u;
 
@@ -37,146 +38,7 @@ namespace SceneCaptureSensor_local_ns {
 
 } // namespace SceneCaptureSensor_local_ns
 
-// =============================================================================
-// -- ASceneCaptureSensor ------------------------------------------------------
-// =============================================================================
-
-ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer& ObjectInitializer)
-  : Super(ObjectInitializer)
-{
-  PrimaryActorTick.bCanEverTick = true;
-  PrimaryActorTick.TickGroup = TG_PrePhysics;
-
-  MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CamMesh"));
-
-  MeshComp->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
-
-  MeshComp->bHiddenInGame = true;
-  MeshComp->CastShadow = false;
-  MeshComp->PostPhysicsComponentTick.bCanEverTick = false;
-  RootComponent = MeshComp;
-
-  DrawFrustum = CreateDefaultSubobject<UDrawFrustumComponent>(TEXT("DrawFrust"));
-  DrawFrustum->bIsEditorOnly = true;
-  DrawFrustum->SetupAttachment(MeshComp);
-
-  CaptureRenderTarget = CreateDefaultSubobject<UTextureRenderTarget2D>(
-      FName(*FString::Printf(TEXT("CaptureRenderTarget_d%d"), SCENE_CAPTURE_COUNTER)));
-  CaptureRenderTarget->CompressionSettings = TextureCompressionSettings::TC_Default;
-  CaptureRenderTarget->SRGB = false;
-  CaptureRenderTarget->bAutoGenerateMips = false;
-  CaptureRenderTarget->AddressX = TextureAddress::TA_Clamp;
-  CaptureRenderTarget->AddressY = TextureAddress::TA_Clamp;
-
-  CaptureComponent2D = CreateDefaultSubobject<USceneCaptureComponent2D>(
-      FName(*FString::Printf(TEXT("SceneCaptureComponent2D_%d"), SCENE_CAPTURE_COUNTER)));
-  CaptureComponent2D->SetupAttachment(MeshComp);
-  SceneCaptureSensor_local_ns::SetCameraDefaultOverrides(*CaptureComponent2D);
-
-  ++SCENE_CAPTURE_COUNTER;
-}
-
-void ASceneCaptureSensor::Set(const FActorDescription &Description)
-{
-  Super::Set(Description);
-  UActorBlueprintFunctionLibrary::SetCamera(Description, this);
-}
-
-void ASceneCaptureSensor::SetImageSize(uint32 InWidth, uint32 InHeight)
-{
-  ImageWidth = InWidth;
-  ImageHeight = InHeight;
-}
-
-void ASceneCaptureSensor::SetFOVAngle(const float FOVAngle)
-{
-  check(CaptureComponent2D != nullptr);
-  CaptureComponent2D->FOVAngle = FOVAngle;
-}
-
-float ASceneCaptureSensor::GetFOVAngle() const
-{
-  check(CaptureComponent2D != nullptr);
-  return CaptureComponent2D->FOVAngle;
-}
-
-void ASceneCaptureSensor::PostActorCreated()
-{
-  Super::PostActorCreated();
-
-  // No need to load the editor mesh when there is no editor.
-#if WITH_EDITOR
-  if (MeshComp)
-  {
-    if (!IsRunningCommandlet())
-    {
-      if (!MeshComp->GetStaticMesh())
-      {
-        UStaticMesh *CamMesh = LoadObject<UStaticMesh>(
-            NULL,
-            TEXT("/Engine/EditorMeshes/MatineeCam_SM.MatineeCam_SM"),
-            NULL,
-            LOAD_None,
-            NULL);
-        MeshComp->SetStaticMesh(CamMesh);
-      }
-    }
-  }
-#endif // WITH_EDITOR
-
-  // Sync component with CameraActor frustum settings.
-  UpdateDrawFrustum();
-}
-
-void ASceneCaptureSensor::BeginPlay()
-{
-  using namespace SceneCaptureSensor_local_ns;
-
-  // Setup render target.
-
-  // Determine the gamma of the player.
-
-  float DisplayGamma = 0.0f;
-
-  auto PlayerController = GetWorld()->GetFirstPlayerController();
-
-  UGameViewportClient* ViewportClient = PlayerController->PlayerCameraManager->PCOwner->GetLocalPlayer()->ViewportClient;
-  if (ViewportClient != nullptr)
-  {
-    FSceneViewport* SceneViewport = ViewportClient->GetGameViewport();
-    DisplayGamma = SceneViewport ? SceneViewport->GetDisplayGamma() : 0.0f;
-  }
-
-  const bool bInForceLinearGamma = !bEnablePostProcessingEffects;
-  
-  CaptureRenderTarget->InitCustomFormat(ImageWidth, ImageHeight, PF_B8G8R8A8, bInForceLinearGamma);
-  
-  if (bEnablePostProcessingEffects) {
-    CaptureRenderTarget->TargetGamma = 1.4f;
-  }
-
-  UE_LOG(LogCarla, Log, TEXT("Player Display Gamma is %f but need to target %f"), DisplayGamma, CaptureRenderTarget->TargetGamma);
-
-  check(IsValid(CaptureComponent2D) && !CaptureComponent2D->IsPendingKill());
-
-  CaptureComponent2D->Deactivate();
-  CaptureComponent2D->TextureTarget = CaptureRenderTarget;
-
-  // Call derived classes to set up their things.
-  SetUpSceneCaptureComponent(*CaptureComponent2D);
-
-  if (bEnablePostProcessingEffects &&
-      (SceneCaptureSensor_local_ns::GetQualitySettings(GetWorld()) == EQualityLevel::Low))
-  {
-    CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_SceneColorHDRNoAlpha;
-  }
-  else
-  {
-    // LDR is faster than HDR (smaller bitmap array).
-    CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
-  }
- 
-  SceneCaptureSensor_local_ns::ConfigureShowFlags(CaptureComponent2D->ShowFlags, bEnablePostProcessingEffects);
+// =============================================   SceneCaptureSensor_local_ns::ConfigureShowFlags(CaptureComponent2D->ShowFlags, bEnablePostProcessingEffects);
 
   CaptureComponent2D->UpdateContent();
   CaptureComponent2D->Activate();
