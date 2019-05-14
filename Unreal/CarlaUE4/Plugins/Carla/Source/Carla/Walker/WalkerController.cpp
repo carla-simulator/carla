@@ -16,9 +16,9 @@ AWalkerController::AWalkerController(const FObjectInitializer& ObjectInitializer
   PrimaryActorTick.bCanEverTick = true;
 }
 
-void AWalkerController::Possess(APawn *InPawn)
+void AWalkerController::OnPossess(APawn *InPawn)
 {
-  Super::Possess(InPawn);
+  Super::OnPossess(InPawn);
 
   auto *Character = Cast<ACharacter>(InPawn);
   if (Character == nullptr)

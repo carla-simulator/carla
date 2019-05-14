@@ -6,23 +6,20 @@
 
 #pragma once
 
-#include "GameFramework/GameModeBase.h"
+#include "Carla/Actor/CarlaActorFactory.h"
+#include "Carla/Game/CarlaEpisode.h"
+#include "Carla/Game/CarlaGameInstance.h"
+#include "Carla/Recorder/CarlaRecorder.h"
+#include "Carla/Game/TaggerDelegate.h"
+#include "Carla/Settings/CarlaSettingsDelegate.h"
+#include "Carla/Weather/Weather.h"
 
-#include "DynamicWeather.h"
-#include "Game/CarlaGameControllerBase.h"
-#include "Game/CarlaGameInstance.h"
-#include "Game/MockGameControllerSettings.h"
-#include "Vehicle/VehicleSpawnerBase.h"
-#include "Walker/WalkerSpawnerBase.h"
+#include "CoreMinimal.h"
+#include "GameFramework/GameModeBase.h"
 
 #include "CarlaGameModeBase.generated.h"
 
-class ACarlaVehicleController;
-class APlayerStart;
-class ASceneCaptureCamera;
-class UCarlaGameInstance;
-class UTaggerDelegate;
-class UCarlaSettingsDelegate;
+/// Base class for the CARLA Game Mode.
 UCLASS(HideCategories=(ActorTick))
 class CARLA_API ACarlaGameModeBase : public AGameModeBase
 {
@@ -32,82 +29,52 @@ public:
 
   ACarlaGameModeBase(const FObjectInitializer& ObjectInitializer);
 
-  virtual void InitGame(const FString &MapName, const FString &Options, FString &ErrorMessage) override;
-
-  virtual void RestartPlayer(AController *NewPlayer) override;
-
-  virtual void BeginPlay() override;
-
-  virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-
-  virtual void Tick(float DeltaSeconds) override;
-
-  FDataRouter &GetDataRouter()
+  const UCarlaEpisode &GetCarlaEpisode() const
   {
-    check(GameInstance != nullptr);
-    return GameInstance->GetDataRouter();
-  }
-
-  UFUNCTION(BlueprintPure, Category="CARLA Settings")
-  UCarlaSettingsDelegate *GetCARLASettingsDelegate()
-  {
-    return CarlaSettingsDelegate;
+    check(Episode != nullptr);
+    return *Episode;
   }
 
 protected:
 
-  /** Used only when networking is disabled. */
-  UPROPERTY(Category = "Mock CARLA Controller", EditAnywhere, BlueprintReadOnly, meta = (ExposeFunctionCategories = "Mock CARLA Controller"))
-  FMockGameControllerSettings MockGameControllerSettings;
+  void InitGame(const FString &MapName, const FString &Options, FString &ErrorMessage) override;
 
-  /** The class of DynamicWeather to spawn. */
-  UPROPERTY(Category = "CARLA Classes", EditAnywhere, BlueprintReadOnly)
-  TSubclassOf<ADynamicWeather> DynamicWeatherClass;
+  void RestartPlayer(AController *NewPlayer) override;
 
-  /** The class of VehicleSpawner to spawn. */
-  UPROPERTY(Category = "CARLA Classes", EditAnywhere, BlueprintReadOnly)
-  TSubclassOf<AVehicleSpawnerBase> VehicleSpawnerClass;
+  void BeginPlay() override;
 
-  /** The class of WalkerSpawner to spawn. */
-  UPROPERTY(Category = "CARLA Classes", EditAnywhere, BlueprintReadOnly)
-  TSubclassOf<AWalkerSpawnerBase> WalkerSpawnerClass;
+  void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+  void Tick(float DeltaSeconds) override;
 
 private:
 
-  void RegisterPlayer(AController &NewPlayer);
-
-  void AttachSensorsToPlayer();
-
-  void TagActorsForSemanticSegmentation();
-
-  /// Iterate all the APlayerStart present in the world and add the ones with
-  /// unoccupied locations to @a UnOccupiedStartPoints.
-  ///
-  /// @return APlayerStart if "Play from Here" was used while in PIE mode.
-  APlayerStart *FindUnOccupiedStartPoints(
-      AController *Player,
-      TArray<APlayerStart *> &UnOccupiedStartPoints);
-
-  ICarlaGameControllerBase *GameController;
+  void SpawnActorFactories();
 
   UPROPERTY()
-  UCarlaGameInstance *GameInstance;
+  UCarlaGameInstance *GameInstance = nullptr;
 
   UPROPERTY()
-  ACarlaVehicleController *PlayerController;
+  UTaggerDelegate *TaggerDelegate = nullptr;
 
   UPROPERTY()
-  UTaggerDelegate *TaggerDelegate;
+  UCarlaSettingsDelegate *CarlaSettingsDelegate = nullptr;
 
   UPROPERTY()
-  UCarlaSettingsDelegate* CarlaSettingsDelegate;
+  UCarlaEpisode *Episode = nullptr;
 
   UPROPERTY()
-  ADynamicWeather *DynamicWeather;
+  ACarlaRecorder *Recorder = nullptr;
+
+  /// The class of Weather to spawn.
+  UPROPERTY(Category = "CARLA Game Mode", EditAnywhere)
+  TSubclassOf<AWeather> WeatherClass;
+
+  /// List of actor spawners that will be used to define and spawn the actors
+  /// available in game.
+  UPROPERTY(Category = "CARLA Game Mode", EditAnywhere)
+  TSet<TSubclassOf<ACarlaActorFactory>> ActorFactories;
 
   UPROPERTY()
-  AVehicleSpawnerBase *VehicleSpawner;
-
-  UPROPERTY()
-  AWalkerSpawnerBase *WalkerSpawner;
+  TArray<ACarlaActorFactory *> ActorFactoryInstances;
 };

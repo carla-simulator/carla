@@ -41,10 +41,10 @@ namespace element {
     double tangent = 0.0; // [radians]
     double pitch = 0.0;   // [radians]
 
-    void ApplyLateralOffset(double lateral_offset) {
+    void ApplyLateralOffset(float lateral_offset) {
       /// @todo Z axis??
-      auto normal_x =  std::sin(tangent);
-      auto normal_y = -std::cos(tangent);
+      auto normal_x =  std::sin(static_cast<float>(tangent));
+      auto normal_y = -std::cos(static_cast<float>(tangent));
       location.x += lateral_offset * normal_x;
       location.y += lateral_offset * normal_y;
     }
@@ -117,11 +117,11 @@ namespace element {
       : Geometry(GeometryType::LINE, start_offset, length, heading, start_pos) {}
 
     DirectedPoint PosFromDist(double dist) const override {
-      dist = geom::Math::Clamp(dist, 0.0, _length);
       DEBUG_ASSERT(_length > 0.0);
+      dist = geom::Math::Clamp(dist, 0.0, _length);
       DirectedPoint p(_start_position, _heading);
-      p.location.x += dist * std::cos(p.tangent);
-      p.location.y += dist * std::sin(p.tangent);
+      p.location.x += static_cast<float>(dist * std::cos(p.tangent));
+      p.location.y += static_cast<float>(dist * std::sin(p.tangent));
       return p;
     }
 
@@ -159,11 +159,11 @@ namespace element {
       const double radius = 1.0 / _curvature;
       constexpr double pi_half = geom::Math::Pi<double>() / 2.0;
       DirectedPoint p(_start_position, _heading);
-      p.location.x += radius * std::cos(p.tangent + pi_half);
-      p.location.y += radius * std::sin(p.tangent + pi_half);
+      p.location.x += static_cast<float>(radius * std::cos(p.tangent + pi_half));
+      p.location.y += static_cast<float>(radius * std::sin(p.tangent + pi_half));
       p.tangent += dist * _curvature;
-      p.location.x -= radius * std::cos(p.tangent + pi_half);
-      p.location.y -= radius * std::sin(p.tangent + pi_half);
+      p.location.x -= static_cast<float>(radius * std::cos(p.tangent + pi_half));
+      p.location.y -= static_cast<float>(radius * std::sin(p.tangent + pi_half));
       return p;
     }
 
@@ -228,8 +228,8 @@ namespace element {
       DirectedPoint p(_start_position, _heading);
       const double cos_a = std::cos(p.tangent);
       const double sin_a = std::sin(p.tangent);
-      p.location.x += C * cos_a - S * sin_a;
-      p.location.y += S * cos_a + C * sin_a;
+      p.location.x += static_cast<float>(C * cos_a - S * sin_a);
+      p.location.y += static_cast<float>(S * cos_a + C * sin_a);
       p.tangent += length * length;
 
       return p;

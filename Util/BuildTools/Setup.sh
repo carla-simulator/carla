@@ -4,14 +4,14 @@
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
 
-command -v /usr/bin/clang++-6.0 >/dev/null 2>&1 || {
-  echo >&2 "clang 6.0 is required, but it's not installed.";
-  echo >&2 "make sure you build Unreal Engine with clang 6.0 too.";
+command -v /usr/bin/clang++-7 >/dev/null 2>&1 || {
+  echo >&2 "clang 7 is required, but it's not installed.";
   exit 1;
 }
 
-export CC=/usr/bin/clang-6.0
-export CXX=/usr/bin/clang++-6.0
+CXX_TAG=c7
+export CC=/usr/bin/clang-7
+export CXX=/usr/bin/clang++-7
 
 source $(dirname "$0")/Environment.sh
 
@@ -22,7 +22,7 @@ pushd ${CARLA_BUILD_FOLDER} >/dev/null
 # -- Get and compile libc++ ----------------------------------------------------
 # ==============================================================================
 
-LLVM_BASENAME=llvm-6.0-ex
+LLVM_BASENAME=llvm-7.0
 
 LLVM_INCLUDE=${PWD}/${LLVM_BASENAME}-install/include/c++/v1
 LLVM_LIBPATH=${PWD}/${LLVM_BASENAME}-install/lib
@@ -34,9 +34,9 @@ else
 
   log "Retrieving libc++."
 
-  git clone --depth=1 -b release_60  https://github.com/llvm-mirror/llvm.git ${LLVM_BASENAME}-source
-  git clone --depth=1 -b release_60  https://github.com/llvm-mirror/libcxx.git ${LLVM_BASENAME}-source/projects/libcxx
-  git clone --depth=1 -b release_60  https://github.com/llvm-mirror/libcxxabi.git ${LLVM_BASENAME}-source/projects/libcxxabi
+  git clone --depth=1 -b release_70  https://github.com/llvm-mirror/llvm.git ${LLVM_BASENAME}-source
+  git clone --depth=1 -b release_70  https://github.com/llvm-mirror/libcxx.git ${LLVM_BASENAME}-source/projects/libcxx
+  git clone --depth=1 -b release_70  https://github.com/llvm-mirror/libcxxabi.git ${LLVM_BASENAME}-source/projects/libcxxabi
 
   log "Compiling libc++."
 
@@ -70,7 +70,7 @@ unset LLVM_BASENAME
 # ==============================================================================
 
 BOOST_VERSION=1.69.0
-BOOST_BASENAME="boost-${BOOST_VERSION}"
+BOOST_BASENAME="boost-${BOOST_VERSION}-${CXX_TAG}"
 
 BOOST_INCLUDE=${PWD}/${BOOST_BASENAME}-install/include
 BOOST_LIBPATH=${PWD}/${BOOST_BASENAME}-install/lib
@@ -81,16 +81,19 @@ else
 
   rm -Rf ${BOOST_BASENAME}-source
 
+  BOOST_PACKAGE_BASENAME=boost_${BOOST_VERSION//./_}
+
   log "Retrieving boost."
-  wget "https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/boost_${BOOST_VERSION//./_}.tar.gz"
-  log "Extracting boost."
-  tar -xzf ${BOOST_BASENAME//[-.]/_}.tar.gz
+  wget "https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz"
+
+  log "Extracting boost for Python 2."
+  tar -xzf ${BOOST_PACKAGE_BASENAME}.tar.gz
   mkdir -p ${BOOST_BASENAME}-install/include
-  mv ${BOOST_BASENAME//[-.]/_} ${BOOST_BASENAME}-source
+  mv ${BOOST_PACKAGE_BASENAME} ${BOOST_BASENAME}-source
 
   pushd ${BOOST_BASENAME}-source >/dev/null
 
-  BOOST_TOOLSET="clang-6.0"
+  BOOST_TOOLSET="clang-7.1"
   BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
 
   py2="/usr/bin/env python2"
@@ -102,8 +105,7 @@ else
       --with-libraries=python,filesystem \
       --with-python=${py2} --with-python-root=${py2_root}
 
-  if ${TRAVIS}
-  then
+  if ${TRAVIS} ; then
     echo "using python : ${pyv} : ${py2_root}/bin/python2 ;" > ${HOME}/user-config.jam
   else
     echo "using python : ${pyv} : ${py2_root}/bin/python2 ;" > project-config.jam
@@ -116,9 +118,12 @@ else
   # Get rid of  python2 build artifacts completely & do a clean build for python3
   popd >/dev/null
   rm -Rf ${BOOST_BASENAME}-source
-  tar -xzf ${BOOST_BASENAME//[-.]/_}.tar.gz
+
+  log "Extracting boost for Python 3."
+  tar -xzf ${BOOST_PACKAGE_BASENAME}.tar.gz
   mkdir -p ${BOOST_BASENAME}-install/include
-  mv ${BOOST_BASENAME//[-.]/_} ${BOOST_BASENAME}-source
+  mv ${BOOST_PACKAGE_BASENAME} ${BOOST_BASENAME}-source
+
   pushd ${BOOST_BASENAME}-source >/dev/null
 
   py3="/usr/bin/env python3"
@@ -130,8 +135,7 @@ else
       --with-libraries=python \
       --with-python=${py3} --with-python-root=${py3_root}
 
-  if ${TRAVIS}
-  then
+  if ${TRAVIS} ; then
     echo "using python : ${pyv} : ${py3_root}/bin/python3 ;" > ${HOME}/user-config.jam
   else
     echo "using python : ${pyv} : ${py3_root}/bin/python3 ;" > project-config.jam
@@ -143,7 +147,7 @@ else
   popd >/dev/null
 
   rm -Rf ${BOOST_BASENAME}-source
-  rm ${BOOST_BASENAME//[-.]/_}.tar.gz
+  rm ${BOOST_PACKAGE_BASENAME}.tar.gz
 
 fi
 
@@ -154,7 +158,7 @@ unset BOOST_BASENAME
 # ==============================================================================
 
 RPCLIB_PATCH=v2.2.1_c1
-RPCLIB_BASENAME=rpclib-${RPCLIB_PATCH}
+RPCLIB_BASENAME=rpclib-${RPCLIB_PATCH}-${CXX_TAG}
 
 RPCLIB_LIBCXX_INCLUDE=${PWD}/${RPCLIB_BASENAME}-libcxx-install/include
 RPCLIB_LIBCXX_LIBPATH=${PWD}/${RPCLIB_BASENAME}-libcxx-install/lib
@@ -221,7 +225,8 @@ unset RPCLIB_BASENAME
 # -- Get GTest and compile it with libc++ --------------------------------------
 # ==============================================================================
 
-GTEST_BASENAME=googletest-1.8.0-ex
+GTEST_VERSION=1.8.1
+GTEST_BASENAME=gtest-${GTEST_VERSION}-${CXX_TAG}
 
 GTEST_LIBCXX_INCLUDE=${PWD}/${GTEST_BASENAME}-libcxx-install/include
 GTEST_LIBCXX_LIBPATH=${PWD}/${GTEST_BASENAME}-libcxx-install/lib
@@ -238,7 +243,7 @@ else
 
   log "Retrieving Google Test."
 
-  git clone --depth=1 -b release-1.8.0 https://github.com/google/googletest.git ${GTEST_BASENAME}-source
+  git clone --depth=1 -b release-${GTEST_VERSION} https://github.com/google/googletest.git ${GTEST_BASENAME}-source
 
   log "Building Google Test with libc++."
 
