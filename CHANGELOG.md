@@ -1,5 +1,6 @@
 ## Latest
 
+  * Vulkan support: Changed project settings to make vulkan default but opengl can be selected using the make script
   * Upgraded to Unreal Engine 4.22
   * Recorder fixes:
     - Actors at start of playback could interpolate positions from its current position instead than the recorded position, making some fast sliding effect during 1 frame.
