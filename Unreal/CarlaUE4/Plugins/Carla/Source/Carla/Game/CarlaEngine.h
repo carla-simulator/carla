@@ -7,7 +7,7 @@
 #pragma once
 
 #include "Carla/Sensor/WorldObserver.h"
-#include "Carla/Server/TheNewCarlaServer.h"
+#include "Carla/Server/CarlaServer.h"
 #include "Carla/Util/NonCopyable.h"
 
 #include "Misc/CoreDelegates.h"
@@ -27,7 +27,7 @@ public:
 
   void NotifyEndEpisode();
 
-  const FTheNewCarlaServer &GetServer() const
+  const FCarlaServer &GetServer() const
   {
     return Server;
   }
@@ -49,7 +49,7 @@ private:
 
   bool bSynchronousMode = false;
 
-  FTheNewCarlaServer Server;
+  FCarlaServer Server;
 
   FWorldObserver WorldObserver;
 

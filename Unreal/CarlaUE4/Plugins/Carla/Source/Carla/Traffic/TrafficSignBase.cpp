@@ -14,9 +14,4 @@ ATrafficSignBase::ATrafficSignBase(const FObjectInitializer &ObjectInitializer)
   RootComponent =
       ObjectInitializer.CreateDefaultSubobject<USceneComponent>(this, TEXT("SceneRootComponent"));
   RootComponent->SetMobility(EComponentMobility::Static);
-
-  TrafficSignAgentComponent =
-      CreateDefaultSubobject<UTrafficSignAgentComponent>(TEXT("TrafficSignAgentComponent"));
-  TrafficSignAgentComponent->SetupAttachment(RootComponent);
-  TrafficSignAgentComponent->SetMobility(EComponentMobility::Static);
 }

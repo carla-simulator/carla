@@ -438,6 +438,15 @@ void UActorBlueprintFunctionLibrary::MakePedestrianDefinition(
     EActorAttributeType::String,
     GetGender(Parameters.Gender)});
 
+  FActorVariation IsInvincible;
+
+  IsInvincible.Id = TEXT("is_invincible");
+  IsInvincible.Type = EActorAttributeType::Bool;
+  IsInvincible.RecommendedValues = { TEXT("true") };
+  IsInvincible.bRestrictToRecommended = false;
+
+  Definition.Variations.Emplace(IsInvincible);
+
   Success = CheckActorDefinition(Definition);
 }
 

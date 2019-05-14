@@ -7,8 +7,10 @@ Install the build tools and dependencies
 
 ```
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -
+sudo apt-add-repository "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-7 main"
 sudo apt-get update
-sudo apt-get install build-essential clang-6.0 lld-6.0 g++-7 cmake ninja-build python python-pip python-dev python3-dev python3-pip libpng16-dev libtiff5-dev libjpeg-dev tzdata sed curl wget unzip autoconf libtool
+sudo apt-get install build-essential clang-7 lld-7 g++-7 cmake ninja-build python python-pip python-dev python3-dev python3-pip libpng16-dev libtiff5-dev libjpeg-dev tzdata sed curl wget unzip autoconf libtool
 pip2 install --user setuptools
 pip3 install --user setuptools
 ```
@@ -20,8 +22,8 @@ change your default clang version to compile Unreal Engine and the CARLA
 dependencies
 
 ```sh
-sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-6.0/bin/clang++ 102
-sudo update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-6.0/bin/clang 102
+sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-7/bin/clang++ 170
+sudo update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-7/bin/clang 170
 ```
 
 Build Unreal Engine
@@ -32,13 +34,13 @@ Build Unreal Engine
     need to add your GitHub username when you sign up at
     [www.unrealengine.com](https://www.unrealengine.com).
 
-Download and compile Unreal Engine 4.21. Here we will assume you install it at
-`~/UnrealEngine_4.21", but you can install it anywhere, just replace the path
+Download and compile Unreal Engine 4.22. Here we will assume you install it at
+`~/UnrealEngine_4.22", but you can install it anywhere, just replace the path
 where necessary.
 
 ```sh
-git clone --depth=1 -b 4.21 https://github.com/EpicGames/UnrealEngine.git ~/UnrealEngine_4.21
-cd ~/UnrealEngine_4.21
+git clone --depth=1 -b 4.22 https://github.com/EpicGames/UnrealEngine.git ~/UnrealEngine_4.22
+cd ~/UnrealEngine_4.22
 ./Setup.sh && ./GenerateProjectFiles.sh && make
 ```
 
@@ -71,7 +73,7 @@ For CARLA to find your Unreal Engine's installation folder you need to set the
 following environment variable
 
 ```sh
-export UE4_ROOT=~/UnrealEngine_4.21
+export UE4_ROOT=~/UnrealEngine_4.22
 ```
 
 You can also add this variable to your `~/.bashrc` or `~/.profile`.

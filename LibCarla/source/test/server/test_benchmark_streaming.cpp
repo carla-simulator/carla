@@ -111,9 +111,9 @@ private:
 
   const carla::Buffer _message;
 
-  boost::asio::io_service _client_callback;
+  boost::asio::io_context _client_callback;
 
-  boost::asio::io_service::work _work_to_do;
+  boost::asio::io_context::work _work_to_do;
 
   const double _success_ratio;
 

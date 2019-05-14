@@ -6,7 +6,8 @@
 
 #pragma once
 
-#include "CityMapDefinitions.h"
+#include "Carla/MapGen/CityMapDefinitions.h"
+#include "Carla/Util/NonCopyable.h"
 
 #include <vector>
 

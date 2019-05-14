@@ -13,7 +13,7 @@
 #include "carla/streaming/detail/Types.h"
 
 #include <boost/asio/deadline_timer.hpp>
-#include <boost/asio/io_service.hpp>
+#include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/strand.hpp>
 
@@ -44,7 +44,7 @@ namespace tcp {
     using callback_function_type = std::function<void (Buffer)>;
 
     Client(
-        boost::asio::io_service &io_service,
+        boost::asio::io_context &io_context,
         const token_type &token,
         callback_function_type callback);
 
@@ -70,7 +70,7 @@ namespace tcp {
 
     boost::asio::ip::tcp::socket _socket;
 
-    boost::asio::io_service::strand _strand;
+    boost::asio::io_context::strand _strand;
 
     boost::asio::deadline_timer _connection_timer;
 
