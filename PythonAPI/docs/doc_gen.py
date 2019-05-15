@@ -10,6 +10,10 @@
 import os
 import yaml
 
+COLOR_METHOD = '#7fb800'
+COLOR_PARAM = '#00a6ed'
+COLOR_INSTANCE_VAR = '#f8805a'
+
 def join(elem, separator = ''):
     return separator.join(elem)
 
@@ -167,13 +171,13 @@ def gen_doc_method_def(method, indx=False):
     if indx:
         method_name = bold(method_name)
     else:
-        method_name = bold(color('#64BA2E', method_name))
+        method_name = bold(color(COLOR_METHOD, method_name))
     for p in method['params']:
         default = ''.join(['=', str(p['default'])]) if 'default' in p else ''
         if indx:
             param = ''.join([param, bold(p['param_name']), default, ', '])
         else:
-            param = ''.join([param, '<font color="#2980B9">', bold(p['param_name']), default, '</font>', ', '])
+            param = ''.join([param, '<font color="', COLOR_PARAM, '">', bold(p['param_name']), default, '</font>', ', '])
     param = param[:-2] # delete the last ', '
     return ''.join([method_name, parentheses(param)])
 
@@ -244,7 +248,7 @@ def add_doc_method(md, method, class_key):
 def add_doc_inst_var(md, inst_var, class_key):
     var_name = inst_var['var_name']
     var_key = '.'.join([class_key, var_name])
-    md.list_pushn(html_key(var_key) + bold(var_name))
+    md.list_pushn(html_key(var_key) + bold(color(COLOR_INSTANCE_VAR, var_name)))
     if valid_dic_val(inst_var, 'doc'):
         md.textn(md.prettify_doc(inst_var['doc']))
     md.list_pop()
