@@ -8,6 +8,7 @@ source $(dirname "$0")/Environment.sh
 
 REPLACE_LATEST=false
 AWS_COPY="aws s3 cp"
+UPLOAD_MAPS=true
 
 # ==============================================================================
 # -- Parse arguments -----------------------------------------------------------
@@ -52,10 +53,8 @@ LATEST_DEPLOY_URI=${S3_PREFIX}/Dev/CARLA_Latest.tar.gz
 
 if [[ ${REPOSITORY_TAG} =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   log "Detected tag ${REPOSITORY_TAG}."
-  UPLOAD_MAPS=true
   DEPLOY_NAME=CARLA_${REPOSITORY_TAG}.tar.gz
 else
-  UPLOAD_MAPS=false
   S3_PREFIX=${S3_PREFIX}/Dev
   DEPLOY_NAME=$(git log --pretty=format:'%cd_%h' --date=format:'%Y%m%d' -n 1).tar.gz
 fi
