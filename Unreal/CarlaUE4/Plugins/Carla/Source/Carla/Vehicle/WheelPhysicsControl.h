@@ -27,4 +27,7 @@ struct CARLA_API FWheelPhysicsControl
 
   UPROPERTY(Category = "Wheel Shape Radius", EditAnywhere, BlueprintReadWrite)
   float Radius = 30.0f;
+
+  UPROPERTY(Category = "Wheel Position", EditAnywhere, BlueprintReadWrite)
+  FVector Position = FVector::ZeroVector;
 };

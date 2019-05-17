@@ -207,17 +207,19 @@ void export_control() {
   ;
 
   class_<cr::WheelPhysicsControl>("WheelPhysicsControl")
-    .def(init<float, float, float, bool, float>(
+    .def(init<float, float, float, bool, float, cg::Vector3D>(
         (arg("tire_friction")=2.0f,
          arg("damping_rate")=0.25f,
          arg("max_steer_angle")=70.0f,
          arg("is_steerable")=false,
-         arg("radius")=30.0f)))
+         arg("radius")=30.0f,
+         arg("position")=cg::Vector3D{0.0f, 0.0f, 0.0f})))
     .def_readwrite("tire_friction", &cr::WheelPhysicsControl::tire_friction)
     .def_readwrite("damping_rate", &cr::WheelPhysicsControl::damping_rate)
     .def_readwrite("max_steer_angle", &cr::WheelPhysicsControl::max_steer_angle)
     .def_readwrite("is_steerable", &cr::WheelPhysicsControl::is_steerable)
     .def_readwrite("radius", &cr::WheelPhysicsControl::radius)
+    .def_readwrite("position", &cr::WheelPhysicsControl::position)
     .def("__eq__", &cr::WheelPhysicsControl::operator==)
     .def("__ne__", &cr::WheelPhysicsControl::operator!=)
     .def(self_ns::str(self_ns::self))
