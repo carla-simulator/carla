@@ -9,6 +9,8 @@
 
 #include "Components/BoxComponent.h"
 #include "Engine/CollisionProfile.h"
+#include "PhysXVehicleManager.h"
+#include "PhysXPublic.h"
 #include "TireConfig.h"
 #include "VehicleWheel.h"
 
@@ -247,11 +249,14 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl()
     UVehicleWheel *Wheel = Vehicle4W->WheelSetups[i].WheelClass.GetDefaultObject();
     check(Wheel != nullptr);
 
-    PhysicsWheel.TireFriction = Wheel->TireConfig->GetFrictionScale();
-    PhysicsWheel.DampingRate = Wheel->DampingRate;
-    PhysicsWheel.MaxSteerAngle = Wheel->SteerAngle;
+    PxVehicleWheelData PWheelData = Vehicle4W->PVehicle->mWheelsSimData.getWheelData(i);
+
+    PhysicsWheel.TireFriction = Vehicle4W->Wheels[i]->TireConfig->GetFrictionScale();
+    PhysicsWheel.DampingRate = Cm2ToM2(PWheelData.mDampingRate);
+    PhysicsWheel.MaxSteerAngle = PWheelData.mMaxSteer;
     PhysicsWheel.IsSteerable = !Vehicle4W->WheelSetups[i].bDisableSteering;
-    PhysicsWheel.Radius = Wheel->ShapeRadius;
+    PhysicsWheel.Radius = PWheelData.mRadius;
+    PhysicsWheel.Position = Vehicle4W->Wheels[i]->Location;
 
     Wheels.Add(PhysicsWheel);
   }
@@ -308,20 +313,25 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
   for (auto i = 0u; i < PhysicsWheelsNum; ++i)
   {
     FWheelSetup WheelSetup = Vehicle4W->WheelSetups[i];
-
-    UVehicleWheel *Wheel = WheelSetup.WheelClass.GetDefaultObject();
-    check(Wheel != nullptr);
-
-    Wheel->DampingRate = PhysicsControl.Wheels[i].DampingRate;
-    Wheel->SteerAngle = PhysicsControl.Wheels[i].MaxSteerAngle;
-    Wheel->TireConfig->SetFrictionScale(PhysicsControl.Wheels[i].TireFriction);
-    Wheel->ShapeRadius = PhysicsControl.Wheels[i].Radius;
+    UVehicleWheel *Wheel = Vehicle4W->Wheels[i];
 
     WheelSetup.bDisableSteering = !PhysicsControl.Wheels[i].IsSteerable;
+
+    PxVehicleWheelData PWheelData = Vehicle4W->PVehicle->mWheelsSimData.getWheelData(i);
+    PWheelData.mRadius = PhysicsControl.Wheels[i].Radius;
+    PWheelData.mMaxSteer = PhysicsControl.Wheels[i].MaxSteerAngle;
+    PWheelData.mDampingRate = M2ToCm2(PhysicsControl.Wheels[i].DampingRate);
+
+    Vehicle4W->PVehicle->mWheelsSimData.setWheelData(i, PWheelData);
 
     NewWheelSetups.Add(std::move(WheelSetup));
   }
 
   Vehicle4W->WheelSetups = NewWheelSetups;
-  Vehicle4W->RecreatePhysicsState();
+  // Vehicle4W->VehicleSetupTag++;
+
+  for (auto i = 0u; i < PhysicsWheelsNum; ++i)
+  {
+    Vehicle4W->Wheels[i]->TireConfig->SetFrictionScale(PhysicsControl.Wheels[i].TireFriction);
+  }
 }
