@@ -35,8 +35,19 @@ void ACarlaWheeledVehicle::BeginPlay()
 {
   Super::BeginPlay();
 
-  // Check if it overlaps with a Friction trigger
   float FrictionScale = 3.5f;
+
+  // Setup Tire Configs
+  UWheeledVehicleMovementComponent4W *Vehicle4W = Cast<UWheeledVehicleMovementComponent4W>(
+      GetVehicleMovementComponent());
+  check(Vehicle4W != nullptr);
+
+  for (int32 i = 0; i < Vehicle4W->Wheels.Num(); ++i)
+  {
+    Vehicle4W->Wheels[i]->TireConfig->SetFrictionScale(FrictionScale);
+  }
+
+  // Check if it overlaps with a Friction trigger
   TArray<AActor *> OverlapActors;
   GetOverlappingActors(OverlapActors, AFrictionTrigger::StaticClass());
   for (const auto &Actor : OverlapActors)
@@ -47,11 +58,6 @@ void ACarlaWheeledVehicle::BeginPlay()
       FrictionScale = FrictionTrigger->Friction;
     }
   }
-
-  // Setup Tire Configs
-  UWheeledVehicleMovementComponent4W *Vehicle4W = Cast<UWheeledVehicleMovementComponent4W>(
-      GetVehicleMovementComponent());
-  check(Vehicle4W != nullptr);
 
   // Wheels Setup
   TArray<FWheelSetup> NewWheelSetups = Vehicle4W->WheelSetups;
@@ -69,7 +75,6 @@ void ACarlaWheeledVehicle::BeginPlay()
   }
 
   Vehicle4W->WheelSetups = NewWheelSetups;
-  Vehicle4W->RecreatePhysicsState();
 }
 
 // =============================================================================
@@ -246,9 +251,6 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl()
   {
     FWheelPhysicsControl PhysicsWheel;
 
-    UVehicleWheel *Wheel = Vehicle4W->WheelSetups[i].WheelClass.GetDefaultObject();
-    check(Wheel != nullptr);
-
     PxVehicleWheelData PWheelData = Vehicle4W->PVehicle->mWheelsSimData.getWheelData(i);
 
     PhysicsWheel.TireFriction = Vehicle4W->Wheels[i]->TireConfig->GetFrictionScale();
@@ -302,6 +304,9 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
   // Transmission Setup
   Vehicle4W->SteeringCurve.EditorCurveData = PhysicsControl.SteeringCurve;
 
+  // Recreate Physics State only for vehicle setup
+  Vehicle4W->RecreatePhysicsState();
+
   // Wheels Setup
   const int PhysicsWheelsNum = PhysicsControl.Wheels.Num();
   if (PhysicsWheelsNum != 4) {
@@ -313,7 +318,6 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
   for (auto i = 0u; i < PhysicsWheelsNum; ++i)
   {
     FWheelSetup WheelSetup = Vehicle4W->WheelSetups[i];
-    UVehicleWheel *Wheel = Vehicle4W->Wheels[i];
 
     WheelSetup.bDisableSteering = !PhysicsControl.Wheels[i].IsSteerable;
 
@@ -324,14 +328,11 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
     PWheelData.mDampingRate = M2ToCm2(PhysicsControl.Wheels[i].DampingRate);
 
     Vehicle4W->PVehicle->mWheelsSimData.setWheelData(i, PWheelData);
+    Vehicle4W->Wheels[i]->TireConfig->SetFrictionScale(PhysicsControl.Wheels[i].TireFriction);
 
     NewWheelSetups.Add(std::move(WheelSetup));
   }
 
   Vehicle4W->WheelSetups = NewWheelSetups;
 
-  for (auto i = 0u; i < PhysicsWheelsNum; ++i)
-  {
-    Vehicle4W->Wheels[i]->TireConfig->SetFrictionScale(PhysicsControl.Wheels[i].TireFriction);
-  }
 }
