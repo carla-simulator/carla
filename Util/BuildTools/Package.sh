@@ -69,8 +69,7 @@ if $DO_PACKAGE ; then
       -project="${PWD}/CarlaUE4.uproject" \
       -nocompileeditor -nop4 -cook -stage -archive -package \
       -clientconfig=Development -ue4exe=UE4Editor \
-      -prereqs -nodebuginfo \
-      -targetplatform=Linux -build -utf8output \
+      -prereqs -targetplatform=Linux -build -utf8output \
       -archivedirectory="${BUILD_FOLDER}"
 
   popd >/dev/null
