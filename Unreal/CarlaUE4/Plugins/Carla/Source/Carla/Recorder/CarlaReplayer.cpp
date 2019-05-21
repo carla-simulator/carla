@@ -386,55 +386,51 @@ void CarlaReplayer::ProcessEventsAdd(void)
   {
     EventAdd.Read(File);
 
-    // avoid sensor events
-    if (!EventAdd.Description.Id.StartsWith("sensor."))
+    // show log
+    // Info.str("");
+    // Info << " Create " << EventAdd.DatabaseId << ": " << TCHAR_TO_UTF8(*EventAdd.Description.Id) << " (" <<
+      // EventAdd.Description.UId << ") at (" << EventAdd.Location.X << ", " <<
+      // EventAdd.Location.Y << ", " << EventAdd.Location.Z << ")" << std::endl;
+    // for (auto &Att : EventAdd.Description.Attributes)
+    // {
+    //   Info << "  " << TCHAR_TO_UTF8(*Att.Id) << " = " << TCHAR_TO_UTF8(*Att.Value) << std::endl;
+    // }
+    // UE_LOG(LogCarla, Log, TEXT("%s"), Info.str().c_str());
+
+    // auto Result = CallbackEventAdd(
+    auto Result = Helper.ProcessReplayerEventAdd(
+        EventAdd.Location,
+        EventAdd.Rotation,
+        std::move(EventAdd.Description),
+        EventAdd.DatabaseId);
+
+    switch (Result.first)
     {
-      // show log
-      // Info.str("");
-      // Info << " Create " << EventAdd.DatabaseId << ": " << TCHAR_TO_UTF8(*EventAdd.Description.Id) << " (" <<
-        // EventAdd.Description.UId << ") at (" << EventAdd.Location.X << ", " <<
-        // EventAdd.Location.Y << ", " << EventAdd.Location.Z << ")" << std::endl;
-      // for (auto &Att : EventAdd.Description.Attributes)
-      // {
-      //   Info << "  " << TCHAR_TO_UTF8(*Att.Id) << " = " << TCHAR_TO_UTF8(*Att.Value) << std::endl;
-      // }
-      // UE_LOG(LogCarla, Log, TEXT("%s"), Info.str().c_str());
+      // actor not created
+      case 0:
+        UE_LOG(LogCarla, Log, TEXT("actor could not be created"));
+        break;
 
-      // auto Result = CallbackEventAdd(
-      auto Result = Helper.ProcessReplayerEventAdd(
-          EventAdd.Location,
-          EventAdd.Rotation,
-          std::move(EventAdd.Description),
-          EventAdd.DatabaseId);
+      // actor created but with different id
+      case 1:
+        // if (Result.second != EventAdd.DatabaseId)
+        // {
+        //   UE_LOG(LogCarla, Log, TEXT("actor created but with different id"));
+        // }
+        // else
+        // {
+        //   UE_LOG(LogCarla, Log, TEXT("actor created with same id"));
+        // }
+        // mapping id (recorded Id is a new Id in replayer)
+        MappedId[EventAdd.DatabaseId] = Result.second;
+        break;
 
-      switch (Result.first)
-      {
-        // actor not created
-        case 0:
-          UE_LOG(LogCarla, Log, TEXT("actor could not be created"));
-          break;
-
-        // actor created but with different id
-        case 1:
-          // if (Result.second != EventAdd.DatabaseId)
-          // {
-          //   UE_LOG(LogCarla, Log, TEXT("actor created but with different id"));
-          // }
-          // else
-          // {
-          //   UE_LOG(LogCarla, Log, TEXT("actor created with same id"));
-          // }
-          // mapping id (recorded Id is a new Id in replayer)
-          MappedId[EventAdd.DatabaseId] = Result.second;
-          break;
-
-        // actor reused from existing
-        case 2:
-          // UE_LOG(LogCarla, Log, TEXT("actor already exist, not created"));
-          // mapping id (say desired Id is mapped to what)
-          MappedId[EventAdd.DatabaseId] = Result.second;
-          break;
-      }
+      // actor reused from existing
+      case 2:
+        // UE_LOG(LogCarla, Log, TEXT("actor already exist, not created"));
+        // mapping id (say desired Id is mapped to what)
+        MappedId[EventAdd.DatabaseId] = Result.second;
+        break;
     }
   }
 }

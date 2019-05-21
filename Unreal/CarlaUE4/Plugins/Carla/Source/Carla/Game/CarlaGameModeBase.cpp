@@ -108,6 +108,10 @@ void ACarlaGameModeBase::BeginPlay()
 
   Episode->InitializeAtBeginPlay();
   GameInstance->NotifyBeginEpisode(*Episode);
+
+  /// @todo Recorder should not tick here, FCarlaEngine should do it.
+  // check if replayer is waiting to autostart
+  if (Recorder) Recorder->GetReplayer()->CheckPlayAfterMapLoaded();
 }
 
 void ACarlaGameModeBase::Tick(float DeltaSeconds)
