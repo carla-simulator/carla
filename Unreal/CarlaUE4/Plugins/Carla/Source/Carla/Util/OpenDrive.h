@@ -6,11 +6,21 @@
 
 #pragma once
 
-class FOpenDrive
+#include "Kismet/BlueprintFunctionLibrary.h"
+
+#include "OpenDrive.generated.h"
+
+UCLASS()
+class CARLA_API UOpenDrive : public UBlueprintFunctionLibrary
 {
+  GENERATED_BODY()
+
 public:
+
+  static FString FindPathToXODRFile(const FString &MapName);
 
   /// Return the OpenDrive XML associated to @a MapName, or empty if the file
   /// is not found.
-  static FString Load(const FString &MapName);
+  UFUNCTION(BlueprintCallable, Category="CARLA|OpenDrive")
+  static FString LoadXODR(const FString &MapName);
 };
