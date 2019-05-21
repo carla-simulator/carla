@@ -332,6 +332,9 @@ class Documentation:
                         html_key(class_key) +
                         class_name + ' ' +
                         small(italic('Class')))
+                    # Class main doc
+                    if valid_dic_val(cl, 'doc'):
+                        md.textn(cl['doc'])
                     # Generate instance variable doc (if any)
                     if valid_dic_val(cl, 'instance_variables'):
                         md.title(3, 'Instance Variables')
@@ -351,10 +354,12 @@ class Documentation:
 
 def main():
     """Main function"""
+    print("Generating PythonAPI documentation...")
     script_path = os.path.dirname(os.path.abspath(__file__))
     docs = Documentation(script_path)
     with open(os.path.join(script_path, '../../Docs/python_api.md'), 'w') as md_file:
         md_file.write(docs.gen_markdown())
+    print("Done!")
 
 if __name__ == "__main__":
     main()
