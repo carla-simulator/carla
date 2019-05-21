@@ -6,6 +6,7 @@
   - class_name: LaneType
     # - DESCRIPTION ------------------------
     doc: >
+      Defines the different lane types that Opendrive accepts
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: NONE
