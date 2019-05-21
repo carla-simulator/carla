@@ -201,9 +201,6 @@ void UCarlaEpisode::InitializeAtBeginPlay()
       ActorDispatcher->RegisterActor(*Actor, Description);
     }
   }
-
-  // check if replayer is waiting to autostart
-  Recorder->GetReplayer()->CheckPlayAfterMapLoaded();
 }
 
 void UCarlaEpisode::EndPlay(void)
