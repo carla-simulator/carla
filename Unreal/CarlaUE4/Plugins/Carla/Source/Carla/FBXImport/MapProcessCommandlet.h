@@ -7,7 +7,7 @@
 #include <Misc/PackageName.h>
 #include "CoreMinimal.h"
 #include <Runtime/Engine/Classes/Engine/ObjectLibrary.h>
-#include <OpenDriveActor.h>
+#include "Carla/OpenDrive/OpenDriveActor.h"
 #if WITH_EDITORONLY_DATA
 #include <Developer/AssetTools/Public/IAssetTools.h>
 #include <Developer/AssetTools/Public/AssetToolsModule.h>
