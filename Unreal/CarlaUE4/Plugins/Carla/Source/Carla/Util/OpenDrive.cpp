@@ -7,8 +7,11 @@
 #include "Carla.h"
 #include "Carla/Util/OpenDrive.h"
 
-FString FOpenDrive::Load(FString MapName)
+#include "Runtime/Core/Public/HAL/FileManagerGeneric.h"
+
+static FString FOpenDrive_FindPathToXODRFile(const FString &InMapName)
 {
+  FString MapName = InMapName;
 #if WITH_EDITOR
     {
       // When playing in editor the map name gets an extra prefix, here we
@@ -16,21 +19,52 @@ FString FOpenDrive::Load(FString MapName)
       FString CorrectedMapName = MapName;
       constexpr auto PIEPrefix = TEXT("UEDPIE_0_");
       CorrectedMapName.RemoveFromStart(PIEPrefix);
-      UE_LOG(LogCarla, Log, TEXT("FOpenDrive: Corrected map name from %s to %s"), *MapName, *CorrectedMapName);
+      UE_LOG(LogCarla, Log, TEXT("UOpenDrive: Corrected map name from %s to %s"), *MapName, *CorrectedMapName);
       MapName = CorrectedMapName;
     }
 #endif // WITH_EDITOR
 
-  const FString FilePath =
+  MapName += TEXT(".xodr");
+
+  const FString DefaultFilePath =
       FPaths::ProjectContentDir() +
       TEXT("Carla/Maps/OpenDrive/") +
-      MapName +
-      TEXT(".xodr");
+      MapName;
+
+  auto &FileManager = IFileManager::Get();
+
+  if (FileManager.FileExists(*DefaultFilePath))
+  {
+    return DefaultFilePath;
+  }
+
+  TArray<FString> FilesFound;
+  FileManager.FindFilesRecursive(
+      FilesFound,
+      *FPaths::ProjectContentDir(),
+      *MapName,
+      true,
+      false,
+      false);
+
+  return FilesFound.Num() > 0 ? FilesFound[0u] : FString{};
+}
+
+FString FOpenDrive::Load(const FString &MapName)
+{
+  const auto FilePath = FOpenDrive_FindPathToXODRFile(MapName);
 
   FString Content;
-  UE_LOG(LogCarla, Log, TEXT("Loading OpenDrive file '%s'"), *FilePath);
 
-  if (!FFileHelper::LoadFileToString(Content, *FilePath))
+  if (FilePath.IsEmpty())
+  {
+    UE_LOG(LogTemp, Error, TEXT("Failed to find OpenDrive file for map '%s'"), *MapName);
+  }
+  else if (FFileHelper::LoadFileToString(Content, *FilePath))
+  {
+    UE_LOG(LogTemp, Log, TEXT("Loaded OpenDrive file '%s'"), *FilePath);
+  }
+  else
   {
     UE_LOG(LogTemp, Error, TEXT("Failed to load OpenDrive file '%s'"), *FilePath);
   }
