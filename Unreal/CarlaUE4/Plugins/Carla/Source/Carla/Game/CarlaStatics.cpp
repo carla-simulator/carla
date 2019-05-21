@@ -7,6 +7,8 @@
 #include "Carla.h"
 #include "Carla/Game/CarlaStatics.h"
 
+#include "Runtime/Core/Public/HAL/FileManagerGeneric.h"
+
 TArray<FString> UCarlaStatics::GetAllMapNames()
 {
   TArray<FString> TmpStrList, MapNameList;

@@ -10,7 +10,7 @@ class FOpenDrive
 {
 public:
 
-  /// Return the OpenDrive XML associated to @a MapName, or empty if the such
-  /// file wasn't serialized.
-  static FString Load(FString MapName);
+  /// Return the OpenDrive XML associated to @a MapName, or empty if the file
+  /// is not found.
+  static FString Load(const FString &MapName);
 };
