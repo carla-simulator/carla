@@ -1,7 +1,7 @@
 ## Latest
-
   * Upgraded to Unreal Engine 4.22
   * Recorder fixes:
+    - Fixed a possible crash if an actor is respawned before the episode is ready when a new map is loaded automatically.
     - Actors at start of playback could interpolate positions from its current position instead than the recorded position, making some fast sliding effect during 1 frame.
     - Camera following in playback was not working if a new map was needed to load.
     - API function 'show_recorder_file_info' was showing the wrong parent id.

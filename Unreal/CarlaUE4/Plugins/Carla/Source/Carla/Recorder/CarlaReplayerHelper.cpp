@@ -33,7 +33,6 @@ std::pair<int, FActorView>CarlaReplayerHelper::TryToCreateReplayerActor(
       // actor found
       auto view = Episode->GetActorRegistry().Find(Actor);
       // reuse that actor
-      // UE_LOG(LogCarla, Log, TEXT("TrafficLight found with id: %d"), view.GetActorId());
       return std::pair<int, FActorView>(2, view);
     }
     else
@@ -46,12 +45,10 @@ std::pair<int, FActorView>CarlaReplayerHelper::TryToCreateReplayerActor(
   else if (!ActorDesc.Id.StartsWith("sensor."))
   {
     // check if an actor of that type already exist with same id
-    // UE_LOG(LogCarla, Log, TEXT("Trying to create actor: %s (%d)"), *ActorDesc.Id, DesiredId);
     if (Episode->GetActorRegistry().Contains(DesiredId))
     {
       auto view = Episode->GetActorRegistry().Find(DesiredId);
       const FActorDescription *desc = &view.GetActorInfo()->Description;
-      // UE_LOG(LogCarla, Log, TEXT("actor '%s' already exist with id %d"), *(desc->Id), view.GetActorId());
       if (desc->Id == ActorDesc.Id)
       {
         // we don't need to create, actor of same type already exist
@@ -60,17 +57,14 @@ std::pair<int, FActorView>CarlaReplayerHelper::TryToCreateReplayerActor(
     }
     // create the transform
     FRotator Rot = FRotator::MakeFromEuler(Rotation);
-    // FTransform Trans(Rot, Location, FVector(1, 1, 1));
     FTransform Trans(Rot, FVector(0, 0, 100000), FVector(1, 1, 1));
     // create as new actor
     TPair<EActorSpawnResultStatus, FActorView> Result = Episode->SpawnActorWithInfo(Trans, ActorDesc, DesiredId);
     if (Result.Key == EActorSpawnResultStatus::Success)
     {
-      // UE_LOG(LogCarla, Log, TEXT("Actor created by replayer with id %d"), Result.Value.GetActorId());
       // relocate
       FTransform Trans2(Rot, Location, FVector(1, 1, 1));
       Result.Value.GetActor()->SetActorTransform(Trans2, false, nullptr, ETeleportType::TeleportPhysics);
-      // Result.Value.GetActor()->SetLocation(Trans2);
       return std::pair<int, FActorView>(1, Result.Value);
     }
     else
@@ -96,7 +90,6 @@ AActor *CarlaReplayerHelper::FindTrafficLightAt(FVector Location)
   int x = static_cast<int>(Location.X);
   int y = static_cast<int>(Location.Y);
   int z = static_cast<int>(Location.Z);
-  // UE_LOG(LogCarla, Log, TEXT("Trying to find traffic: [%d,%d,%d]"), x, y, z);
 
   // search an "traffic." actor at that position
   for (TActorIterator<ATrafficSignBase> It(World); It; ++It)
@@ -107,7 +100,6 @@ AActor *CarlaReplayerHelper::FindTrafficLightAt(FVector Location)
     int x2 = static_cast<int>(vec.X);
     int y2 = static_cast<int>(vec.Y);
     int z2 = static_cast<int>(vec.Z);
-    // UE_LOG(LogCarla, Log, TEXT(" Checking with [%d,%d,%d]"), x2, y2, z2);
     if ((x2 == x) && (y2 == y) && (z2 == z))
     {
       // actor found
@@ -220,7 +212,6 @@ bool CarlaReplayerHelper::ProcessReplayerEventParent(uint32_t ChildId, uint32_t 
   {
     child->AttachToActor(parent, FAttachmentTransformRules::KeepRelativeTransform);
     child->SetOwner(parent);
-    // UE_LOG(LogCarla, Log, TEXT("Parenting Actor"));
     return true;
   }
   else
@@ -280,7 +271,6 @@ bool CarlaReplayerHelper::SetCameraPosition(uint32_t Id, FVector Offset, FQuat R
   Spectator->SetActorLocation(Pos);
   Spectator->SetActorRotation(ActorRot * Rotation);
 
-  // UE_LOG(LogCarla, Log, TEXT("Set camera at [%d,%d,%d]"), Pos.X, Pos.Y, Pos.Z);
   return true;
 }
 
