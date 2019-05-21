@@ -9,8 +9,8 @@
 
 #include "Components/BoxComponent.h"
 #include "Engine/CollisionProfile.h"
-#include "PhysXVehicleManager.h"
 #include "PhysXPublic.h"
+#include "PhysXVehicleManager.h"
 #include "TireConfig.h"
 #include "VehicleWheel.h"
 
@@ -37,17 +37,19 @@ void ACarlaWheeledVehicle::BeginPlay()
 
   float FrictionScale = 3.5f;
 
-  // Setup Tire Configs
   UWheeledVehicleMovementComponent4W *Vehicle4W = Cast<UWheeledVehicleMovementComponent4W>(
       GetVehicleMovementComponent());
   check(Vehicle4W != nullptr);
 
-  for (int32 i = 0; i < Vehicle4W->Wheels.Num(); ++i)
-  {
-    Vehicle4W->Wheels[i]->TireConfig->SetFrictionScale(FrictionScale);
-  }
+  // Setup Tire Configs with default value. This is needed to avoid getting
+  // friction values of previously created TireConfigs for the same vehicle
+  // blueprint.
+  TArray<float> OriginalFrictions;
+  OriginalFrictions.Init(FrictionScale, Vehicle4W->Wheels.Num());
+  SetWheelsFrictionScale(OriginalFrictions);
 
-  // Check if it overlaps with a Friction trigger
+  // Check if it overlaps with a Friction trigger, if so, update the friction
+  // scale.
   TArray<AActor *> OverlapActors;
   GetOverlappingActors(OverlapActors, AFrictionTrigger::StaticClass());
   for (const auto &Actor : OverlapActors)
@@ -59,7 +61,7 @@ void ACarlaWheeledVehicle::BeginPlay()
     }
   }
 
-  // Wheels Setup
+  // Set the friction scale to Wheel CDO and update wheel setups
   TArray<FWheelSetup> NewWheelSetups = Vehicle4W->WheelSetups;
 
   for (const auto &WheelSetup : NewWheelSetups)
@@ -309,7 +311,8 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
 
   // Wheels Setup
   const int PhysicsWheelsNum = PhysicsControl.Wheels.Num();
-  if (PhysicsWheelsNum != 4) {
+  if (PhysicsWheelsNum != 4)
+  {
     UE_LOG(LogCarla, Error, TEXT("Number of WheelPhysicsControl is not 4."));
     return;
   }
