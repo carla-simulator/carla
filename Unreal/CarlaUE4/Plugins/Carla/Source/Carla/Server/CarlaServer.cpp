@@ -195,7 +195,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(get_map_info) << [this]() -> R<cr::MapInfo>
   {
     REQUIRE_CARLA_EPISODE();
-    auto FileContents = FOpenDrive::Load(Episode->GetMapName());
+    auto FileContents = UOpenDrive::LoadXODR(Episode->GetMapName());
     const auto &SpawnPoints = Episode->GetRecommendedSpawnPoints();
     return cr::MapInfo{
       cr::FromFString(Episode->GetMapName()),
