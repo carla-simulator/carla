@@ -7,8 +7,8 @@
 #include "Carla.h"
 #include "Carla/Server/CarlaServer.h"
 
+#include "Carla/OpenDrive/OpenDrive.h"
 #include "Carla/Util/DebugShapeDrawer.h"
-#include "Carla/Util/OpenDrive.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Walker/WalkerController.h"
 
