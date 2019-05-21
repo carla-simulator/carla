@@ -1,33 +1,34 @@
 // Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
 
-
 #include "FBXExporterPreparatorCommandlet.h"
+#include "Engine/StaticMeshActor.h"
 #include "GameFramework/WorldSettings.h"
+#include "Misc/PackageName.h"
 #include "UObject/MetaData.h"
-//#include "CommandletPluginPrivate.h"
+#include "UObject/Package.h"
+
 
 UFBXExporterPreparatorCommandlet::UFBXExporterPreparatorCommandlet()
 {
   IsClient = false;
-  IsEditor = false;
+  IsEditor = true;
   IsServer = false;
   LogToConsole = true;
 }
 #if WITH_EDITORONLY_DATA
 
-bool UFBXExporterPreparatorCommandlet::ParseParams(const FString& InParams)
+bool UFBXExporterPreparatorCommandlet::ParseParams(const FString &InParams)
 {
-	Params = InParams;
-	ParseCommandLine(*Params, Tokens, Switches);
+  Params = InParams;
+  ParseCommandLine(*Params, Tokens, Switches);
 
-	return true;
+  return true;
 }
 
 void UFBXExporterPreparatorCommandlet::LoadWorld(FAssetData &AssetData)
 {
   FString SeedMap;
-	FParse::Value( *Params, TEXT("SourceMap="), SeedMap);
-  UE_LOG(LogTemp, Display, TEXT("DANIEL: %s"), *SeedMap);
+  FParse::Value(*Params, TEXT("SourceMap="), SeedMap);
 
   MapObjectLibrary = UObjectLibrary::CreateLibrary(UWorld::StaticClass(), false, GIsEditor);
   MapObjectLibrary->AddToRoot();
@@ -47,29 +48,28 @@ void UFBXExporterPreparatorCommandlet::AddMeshesToWorld()
 
   const FString CookDirPrefix = TEXT("MESHESDIR=");
   for (int32 SwitchIdx = 0; SwitchIdx < Switches.Num(); SwitchIdx++)
-	{
-    const FString& Switch = Switches[SwitchIdx];
+  {
+    const FString &Switch = Switches[SwitchIdx];
     if (Switch.StartsWith(CookDirPrefix))
     {
-          FString DirToCook = Switch.Right(Switch.Len() - 10);
+      FString DirToCook = Switch.Right(Switch.Len() - 10);
 
-      // Allow support for -COOKDIR=Dir1+Dir2+Dir3 as well as -COOKDIR=Dir1 -COOKDIR=Dir2
-      for (int32 PlusIdx = DirToCook.Find(TEXT("+")); PlusIdx != INDEX_NONE; PlusIdx = DirToCook.Find(TEXT("+")))
+      // Allow support for -COOKDIR=Dir1+Dir2+Dir3 as well as -COOKDIR=Dir1
+      // -COOKDIR=Dir2
+      for (int32 PlusIdx = DirToCook.Find(TEXT("+"));
+          PlusIdx != INDEX_NONE;
+          PlusIdx = DirToCook.Find(TEXT("+")))
       {
-          FString DirName = DirToCook.Left(PlusIdx);
+        FString DirName = DirToCook.Left(PlusIdx);
 
-          // The dir may be contained within quotes
-          DirName = DirName.TrimQuotes();
-          FPaths::NormalizeDirectoryName(DirName);
-          CmdLineDirEntries.Add(DirName);
+        // The dir may be contained within quotes
+        DirName = DirName.TrimQuotes();
+        FPaths::NormalizeDirectoryName(DirName);
+        CmdLineDirEntries.Add(DirName);
 
-          DirToCook = DirToCook.Right(DirToCook.Len() - (PlusIdx + 1));
-          DirToCook = DirToCook.TrimQuotes();
-          UE_LOG(LogTemp, Display, TEXT("DANIEL: %s"), *DirName);
+        DirToCook = DirToCook.Right(DirToCook.Len() - (PlusIdx + 1));
+        DirToCook = DirToCook.TrimQuotes();
       }
-
-      // The dir may be contained within quotes
-
     }
   }
 
@@ -102,19 +102,18 @@ void UFBXExporterPreparatorCommandlet::AddMeshesToWorld()
 
 bool UFBXExporterPreparatorCommandlet::SaveWorld(FAssetData &AssetData)
 {
-  FString DestPath;
-  FParse::Value( *Params, TEXT("DestMapPath="), DestPath);
-  FString WorldName;
-  FParse::Value( *Params, TEXT("DestMapName="), WorldName);
+  FString DestPath, WorldName, PackageName;
+  FParse::Value(*Params, TEXT("DestMapPath="), DestPath);
+  FParse::Value(*Params, TEXT("DestMapName="), WorldName);
 
-  FString PackageName = DestPath + "/" + WorldName;
+  PackageName = DestPath + "/" + WorldName;
   UPackage *Package = AssetData.GetPackage();
   Package->SetFolderName(*DestPath);
   Package->FullyLoad();
   Package->MarkPackageDirty();
   FAssetRegistryModule::AssetCreated(World);
 
-  // Renaming stuff for the map
+  // Notify the system about the map's name change
   World->Rename(*WorldName, World->GetOuter());
   FAssetRegistryModule::AssetRenamed(World, *PackageName);
   World->MarkPackageDirty();
