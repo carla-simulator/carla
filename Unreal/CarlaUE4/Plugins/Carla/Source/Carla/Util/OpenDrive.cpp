@@ -9,7 +9,7 @@
 
 #include "Runtime/Core/Public/HAL/FileManagerGeneric.h"
 
-static FString FOpenDrive_FindPathToXODRFile(const FString &InMapName)
+FString UOpenDrive::FindPathToXODRFile(const FString &InMapName)
 {
   FString MapName = InMapName;
 #if WITH_EDITOR
@@ -50,9 +50,9 @@ static FString FOpenDrive_FindPathToXODRFile(const FString &InMapName)
   return FilesFound.Num() > 0 ? FilesFound[0u] : FString{};
 }
 
-FString FOpenDrive::Load(const FString &MapName)
+FString UOpenDrive::LoadXODR(const FString &MapName)
 {
-  const auto FilePath = FOpenDrive_FindPathToXODRFile(MapName);
+  const auto FilePath = FindPathToXODRFile(MapName);
 
   FString Content;
 
