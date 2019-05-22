@@ -258,7 +258,6 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl()
     PhysicsWheel.TireFriction = Vehicle4W->Wheels[i]->TireConfig->GetFrictionScale();
     PhysicsWheel.DampingRate = Cm2ToM2(PWheelData.mDampingRate);
     PhysicsWheel.MaxSteerAngle = FMath::RadiansToDegrees(PWheelData.mMaxSteer);
-    PhysicsWheel.IsSteerable = !Vehicle4W->WheelSetups[i].bDisableSteering;
     PhysicsWheel.Radius = PWheelData.mRadius;
     PhysicsWheel.Position = Vehicle4W->Wheels[i]->Location;
 
