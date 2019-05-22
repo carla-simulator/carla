@@ -235,8 +235,8 @@
 - `tire_friction`
 - `damping_rate`
 - `max_steer_angle`
-- `is_steerable`
 - `radius`
+- `position`
 - `__eq__(other)`
 - `__ne__(other)`
 
