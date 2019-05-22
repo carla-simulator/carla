@@ -322,8 +322,6 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
   {
     FWheelSetup WheelSetup = Vehicle4W->WheelSetups[i];
 
-    WheelSetup.bDisableSteering = !PhysicsControl.Wheels[i].IsSteerable;
-
     PxVehicleWheelData PWheelData = Vehicle4W->PVehicle->mWheelsSimData.getWheelData(i);
 
     PWheelData.mRadius = PhysicsControl.Wheels[i].Radius;
