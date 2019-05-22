@@ -23,7 +23,7 @@
   * Fixed wrong units in VehiclePhysicsControl's center of mass
   * Several optimizations to the RPC server, now supports a bigger load of async messages
   * Exposed 'is_invincible' for pedestrians
-  * Added sidewalks and improved lane markings in `no_rendering_mode.py`
+  * Fixed bug related with Pygame error of surface too large, added sidewalks and improved lane markings in `no_rendering_mode.py`
 
 ## CARLA 0.9.5
 
