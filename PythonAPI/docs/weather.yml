@@ -7,33 +7,33 @@
 
   - class_name: WeatherParameters
     doc: >
-      WeatherParameters class is used for controlling the weather inside the world.
+      WeatherParameters class is used for requesting and changing the lighting and weather conditions inside the world.
 
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: cloudyness
       doc: >
-        Weather cloudyness.
+        Weather cloudyness. Values range from 0 to 100.
     # --------------------------------------
     - var_name: precipitation
       doc: >
-        Precipitation amount for controlling rain intensity.
+        Precipitation amount for controlling rain intensity. Values range from 0 to 100.
     # --------------------------------------
     - var_name: precipitation_deposits
       doc: >
-        Precipitation deposits for controlling the area of puddles.
+        Precipitation deposits for controlling the area of puddles on roads.
     # --------------------------------------
     - var_name: wind_intensity
       doc: >
-        Wind intensity.
+        Wind intensity. Values range from 0 to 100.
     # --------------------------------------
     - var_name: sun_azimuth_angle
       doc: >
-        Azimuth angle of the sun.
+        Azimuth angle of the sun in degrees. Values range from 0 to 360.
     # --------------------------------------
     - var_name: sun_altitude_angle
       doc: >
-        Altitude angle of the sun.
+        Altitude angle of the sun in degrees. Values range from -90 to 90.
 
     # - METHODS ----------------------------
     methods:
