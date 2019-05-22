@@ -71,3 +71,23 @@ FString UOpenDrive::LoadXODR(const FString &MapName)
 
   return Content;
 }
+
+UOpenDriveMap *UOpenDrive::LoadOpenDriveMap(const FString &MapName)
+{
+  UOpenDriveMap *Map = nullptr;
+  auto XODRContent = LoadXODR(MapName);
+  if (!XODRContent.IsEmpty())
+  {
+    Map = NewObject<UOpenDriveMap>();
+    Map->Load(XODRContent);
+  }
+  return Map;
+}
+
+UOpenDriveMap *UOpenDrive::LoadCurrentOpenDriveMap(const UObject *WorldContextObject)
+{
+  UWorld *World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
+  return World != nullptr ?
+      LoadOpenDriveMap(World->GetMapName()) :
+      nullptr;
+}
