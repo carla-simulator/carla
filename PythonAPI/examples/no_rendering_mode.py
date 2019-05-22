@@ -455,7 +455,7 @@ class MapImage(object):
         # Adapt Pixels per meter to make world fit in surface
         surface_pixel_per_meter = int(width_in_pixels / self.width)
         if surface_pixel_per_meter > PIXELS_PER_METER:
-          surface_pixel_per_meter = PIXELS_PER_METER
+            surface_pixel_per_meter = PIXELS_PER_METER
 
         self._pixels_per_meter = surface_pixel_per_meter
         width_in_pixels = int(self._pixels_per_meter * self.width)
