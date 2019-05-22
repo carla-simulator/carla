@@ -257,7 +257,6 @@ void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
     Per = (NewTime - Frame.Elapsed) / Frame.DurationThis;
     bFrameFound = true;
     bExitLoop = true;
-    // UE_LOG(LogCarla, Log, TEXT("Frame %f (%f) now %f per %f"), Frame.Elapsed, Frame.Elapsed + Frame.DurationThis, NewTime, Per);
   }
 
   // process all frames until time we want or end
@@ -278,7 +277,6 @@ void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
         {
           Per = (NewTime - Frame.Elapsed) / Frame.DurationThis;
           bFrameFound = true;
-          // UE_LOG(LogCarla, Log, TEXT("Frame %f (%f) now %f per %f"), Frame.Elapsed, Frame.Elapsed + Frame.DurationThis, NewTime, Per);
         }
         break;
 
@@ -378,7 +376,6 @@ void CarlaReplayer::ProcessEventsAdd(void)
 {
   uint16_t i, Total;
   CarlaRecorderEventAdd EventAdd;
-  // std::stringstream Info;
 
   // process creation events
   ReadValue<uint16_t>(File, Total);
@@ -386,55 +383,31 @@ void CarlaReplayer::ProcessEventsAdd(void)
   {
     EventAdd.Read(File);
 
-    // avoid sensor events
-    if (!EventAdd.Description.Id.StartsWith("sensor."))
+    // auto Result = CallbackEventAdd(
+    auto Result = Helper.ProcessReplayerEventAdd(
+        EventAdd.Location,
+        EventAdd.Rotation,
+        std::move(EventAdd.Description),
+        EventAdd.DatabaseId);
+
+    switch (Result.first)
     {
-      // show log
-      // Info.str("");
-      // Info << " Create " << EventAdd.DatabaseId << ": " << TCHAR_TO_UTF8(*EventAdd.Description.Id) << " (" <<
-        // EventAdd.Description.UId << ") at (" << EventAdd.Location.X << ", " <<
-        // EventAdd.Location.Y << ", " << EventAdd.Location.Z << ")" << std::endl;
-      // for (auto &Att : EventAdd.Description.Attributes)
-      // {
-      //   Info << "  " << TCHAR_TO_UTF8(*Att.Id) << " = " << TCHAR_TO_UTF8(*Att.Value) << std::endl;
-      // }
-      // UE_LOG(LogCarla, Log, TEXT("%s"), Info.str().c_str());
+      // actor not created
+      case 0:
+        UE_LOG(LogCarla, Log, TEXT("actor could not be created"));
+        break;
 
-      // auto Result = CallbackEventAdd(
-      auto Result = Helper.ProcessReplayerEventAdd(
-          EventAdd.Location,
-          EventAdd.Rotation,
-          std::move(EventAdd.Description),
-          EventAdd.DatabaseId);
+      // actor created but with different id
+      case 1:
+        // mapping id (recorded Id is a new Id in replayer)
+        MappedId[EventAdd.DatabaseId] = Result.second;
+        break;
 
-      switch (Result.first)
-      {
-        // actor not created
-        case 0:
-          UE_LOG(LogCarla, Log, TEXT("actor could not be created"));
-          break;
-
-        // actor created but with different id
-        case 1:
-          // if (Result.second != EventAdd.DatabaseId)
-          // {
-          //   UE_LOG(LogCarla, Log, TEXT("actor created but with different id"));
-          // }
-          // else
-          // {
-          //   UE_LOG(LogCarla, Log, TEXT("actor created with same id"));
-          // }
-          // mapping id (recorded Id is a new Id in replayer)
-          MappedId[EventAdd.DatabaseId] = Result.second;
-          break;
-
-        // actor reused from existing
-        case 2:
-          // UE_LOG(LogCarla, Log, TEXT("actor already exist, not created"));
-          // mapping id (say desired Id is mapped to what)
-          MappedId[EventAdd.DatabaseId] = Result.second;
-          break;
-      }
+      // actor reused from existing
+      case 2:
+        // mapping id (say desired Id is mapped to what)
+        MappedId[EventAdd.DatabaseId] = Result.second;
+        break;
     }
   }
 }
@@ -443,16 +416,12 @@ void CarlaReplayer::ProcessEventsDel(void)
 {
   uint16_t i, Total;
   CarlaRecorderEventDel EventDel;
-  // std::stringstream Info;
 
   // process destroy events
   ReadValue<uint16_t>(File, Total);
   for (i = 0; i < Total; ++i)
   {
     EventDel.Read(File);
-    // Info.str("");
-    // Info << "Destroy " << MappedId[EventDel.DatabaseId] << "\n";
-    // UE_LOG(LogCarla, Log, "%s", Info.str().c_str());
     Helper.ProcessReplayerEventDel(MappedId[EventDel.DatabaseId]);
     MappedId.erase(EventDel.DatabaseId);
   }
@@ -469,10 +438,6 @@ void CarlaReplayer::ProcessEventsParent(void)
   for (i = 0; i < Total; ++i)
   {
     EventParent.Read(File);
-    // Info.str("");
-    // Info << "Parenting " << MappedId[EventParent.DatabaseId] << " with " << MappedId[EventParent.DatabaseId] <<
-      // " (parent)\n";
-    // UE_LOG(LogCarla, Log, "%s", Info.str().c_str());
     Helper.ProcessReplayerEventParent(MappedId[EventParent.DatabaseId], MappedId[EventParent.DatabaseIdParent]);
   }
 }
@@ -489,7 +454,6 @@ void CarlaReplayer::ProcessStates(void)
   {
     StateTrafficLight.Read(File);
 
-    // UE_LOG(LogCarla, Log, TEXT("calling callback add"));
     StateTrafficLight.DatabaseId = MappedId[StateTrafficLight.DatabaseId];
     if (!Helper.ProcessReplayerStateTrafficLight(StateTrafficLight))
     {
@@ -585,7 +549,6 @@ void CarlaReplayer::UpdatePositions(double Per, double DeltaTime)
     if (NewId != MappedId.end())
     {
       NewFollowId = NewId->second;
-      // UE_LOG(LogCarla, Log, TEXT("Following %d (%d)"), NewFollowId, FollowId);
     }
   }
 
@@ -615,7 +578,6 @@ void CarlaReplayer::UpdatePositions(double Per, double DeltaTime)
     {
       if (NewFollowId == CurrPos[i].DatabaseId)
         Helper.SetCameraPosition(NewFollowId, FVector(-1000, 0, 500), FQuat::MakeFromEuler({0, -25, 0}));
-        // Helper.SetCameraPosition(NewFollowId, FVector(0, 0, 2000), FQuat::MakeFromEuler({0, -70, 0}));
     }
   }
 }
@@ -639,6 +601,4 @@ void CarlaReplayer::Tick(float Delta)
   {
     ProcessToTime(Delta * TimeFactor, false);
   }
-
-  // UE_LOG(LogCarla, Log, TEXT("Replayer tick"));
 }
