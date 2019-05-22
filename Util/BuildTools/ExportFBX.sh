@@ -98,7 +98,7 @@ rm -Rf ./CarlaUE4/Metadata
 rm -Rf ./CarlaUE4/Plugins
 
 # Remove TEMPMAP.umap and TEMPMAP.uexp
-TEMPMAP_BASE_PATH="./CarlaUE4/${MAP_TO_COOK/Game/"Content"}"
+TEMPMAP_BASE_PATH="$CARLAUE4_ROOT_FOLDER${MAP_TO_COOK/Game/"Content"}"
 rm -f $TEMPMAP_BASE_PATH.uexp
 rm $TEMPMAP_BASE_PATH.umap
 
