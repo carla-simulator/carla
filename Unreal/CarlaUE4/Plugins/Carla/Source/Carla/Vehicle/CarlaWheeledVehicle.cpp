@@ -316,11 +316,8 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
     return;
   }
 
-  TArray<FWheelSetup> NewWheelSetups;
   for (auto i = 0u; i < PhysicsWheelsNum; ++i)
   {
-    FWheelSetup WheelSetup = Vehicle4W->WheelSetups[i];
-
     PxVehicleWheelData PWheelData = Vehicle4W->PVehicle->mWheelsSimData.getWheelData(i);
 
     PWheelData.mRadius = PhysicsControl.Wheels[i].Radius;
@@ -329,10 +326,6 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
 
     Vehicle4W->PVehicle->mWheelsSimData.setWheelData(i, PWheelData);
     Vehicle4W->Wheels[i]->TireConfig->SetFrictionScale(PhysicsControl.Wheels[i].TireFriction);
-
-    NewWheelSetups.Add(std::move(WheelSetup));
   }
-
-  Vehicle4W->WheelSetups = NewWheelSetups;
 
 }
