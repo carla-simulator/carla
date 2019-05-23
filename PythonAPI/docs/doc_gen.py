@@ -238,6 +238,10 @@ def add_doc_method(md, method, class_key):
                 continue
             add_doc_method_param(md, param)
         md.list_pop()
+    if valid_dic_val(method, 'return'):
+        md.list_push(bold('Return:') + ' ')
+        md.textn(italic(method['return']))
+        md.list_pop()
     # raises error doc
     if valid_dic_val(method, 'raises'):
         md.list_pushn(bold('Raises:') + ' ' + method['raises'])
@@ -248,7 +252,13 @@ def add_doc_method(md, method, class_key):
 def add_doc_inst_var(md, inst_var, class_key):
     var_name = inst_var['var_name']
     var_key = '.'.join([class_key, var_name])
-    md.list_pushn(html_key(var_key) + bold(color(COLOR_INSTANCE_VAR, var_name)))
+    var_type = ''
+    if valid_dic_val(inst_var, 'type'):
+        var_type = ' ' + parentheses(italic(inst_var['type']))
+    md.list_pushn(
+        html_key(var_key) +
+        bold(color(COLOR_INSTANCE_VAR, var_name)) +
+        var_type)
     if valid_dic_val(inst_var, 'doc'):
         md.textn(md.prettify_doc(inst_var['doc']))
     md.list_pop()
@@ -334,7 +344,7 @@ class Documentation:
                         small(italic('Class')))
                     # Class main doc
                     if valid_dic_val(cl, 'doc'):
-                        md.textn(cl['doc'])
+                        md.textn(md.prettify_doc(cl['doc']))
                     # Generate instance variable doc (if any)
                     if valid_dic_val(cl, 'instance_variables'):
                         md.title(3, 'Instance Variables')
