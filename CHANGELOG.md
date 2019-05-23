@@ -4,6 +4,7 @@
     - Reduced the target gamma of render target to 1.4 to minimize brightness differences with main camera 
   * Upgraded to Unreal Engine 4.22
   * Recorder fixes:
+    - Fixed a possible crash if an actor is respawned before the episode is ready when a new map is loaded automatically.
     - Actors at start of playback could interpolate positions from its current position instead than the recorded position, making some fast sliding effect during 1 frame.
     - Camera following in playback was not working if a new map was needed to load.
     - API function 'show_recorder_file_info' was showing the wrong parent id.
@@ -15,7 +16,6 @@
     - Added optional parameter to show more details about a recorder file (related to `show_recorder_file_info.py`)
     - Added playback speed (slow/fast motion) for the replayer
     - We can use an absolute path for the recorded files (to choose where to 'write to' or 'read from')
-  * Fixed Lidar effectiveness bug in manual_control.py
     - New data recorded to replay animations:
       - Wheels of vehicles are animated (steering, throttle, handbrake), also bikes and cycles
       - Walkers animation is simulated in playback (through speed of walker), so they walk properly.
@@ -25,7 +25,9 @@
   * Updated OpenDriveActor to use the new Waypoint API
   * Fixed wrong units in VehiclePhysicsControl's center of mass
   * Several optimizations to the RPC server, now supports a bigger load of async messages
+  * Register user props in fbx format, make them available in Carla Blueprint Library and spawnable.
   * Exposed 'is_invincible' for pedestrians
+  * Fixed bug related with Pygame error of surface too large, added sidewalks and improved lane markings in `no_rendering_mode.py`
 
 ## CARLA 0.9.5
 
