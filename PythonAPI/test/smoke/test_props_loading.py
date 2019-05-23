@@ -36,6 +36,3 @@ class TestPropsLoading(SmokeTest):
             spawned_props.append(response.actor_id)
 
         self.assertEqual(len(spawned_props), len(props))
-
-        print('spawned %d props, press Ctrl+C to exit.' % len(spawned_props))
-
