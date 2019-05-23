@@ -72,6 +72,7 @@ ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer& ObjectInitial
   CaptureComponent2D = CreateDefaultSubobject<USceneCaptureComponent2D>(
       FName(*FString::Printf(TEXT("SceneCaptureComponent2D_%d"), SCENE_CAPTURE_COUNTER)));
   CaptureComponent2D->SetupAttachment(MeshComp);
+
   SceneCaptureSensor_local_ns::SetCameraDefaultOverrides(*CaptureComponent2D);
 
   ++SCENE_CAPTURE_COUNTER;
@@ -137,26 +138,13 @@ void ASceneCaptureSensor::BeginPlay()
 
   // Determine the gamma of the player.
 
-  float DisplayGamma = 0.0f;
-
-  auto PlayerController = GetWorld()->GetFirstPlayerController();
-
-  UGameViewportClient* ViewportClient = PlayerController->PlayerCameraManager->PCOwner->GetLocalPlayer()->ViewportClient;
-  if (ViewportClient != nullptr)
-  {
-    FSceneViewport* SceneViewport = ViewportClient->GetGameViewport();
-    DisplayGamma = SceneViewport ? SceneViewport->GetDisplayGamma() : 0.0f;
-  }
-
   const bool bInForceLinearGamma = !bEnablePostProcessingEffects;
 
   CaptureRenderTarget->InitCustomFormat(ImageWidth, ImageHeight, PF_B8G8R8A8, bInForceLinearGamma);
 
   if (bEnablePostProcessingEffects) {
-    CaptureRenderTarget->TargetGamma = 1.4f;
+    CaptureRenderTarget->TargetGamma = 2.2f;
   }
-
-  UE_LOG(LogCarla, Log, TEXT("Player Display Gamma is %f but need to target %f"), DisplayGamma, CaptureRenderTarget->TargetGamma);
 
   check(IsValid(CaptureComponent2D) && !CaptureComponent2D->IsPendingKill());
 
@@ -177,7 +165,7 @@ void ASceneCaptureSensor::BeginPlay()
     CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
   }
 
-  SceneCaptureSensor_local_ns::ConfigureShowFlags(CaptureComponent2D->ShowFlags, bEnablePostProcessingEffects);
+
 
   CaptureComponent2D->UpdateContent();
   CaptureComponent2D->Activate();
@@ -186,6 +174,8 @@ void ASceneCaptureSensor::BeginPlay()
   UKismetSystemLibrary::ExecuteConsoleCommand(
       GetWorld(),
       FString("g.TimeoutForBlockOnRenderFence 300000"));
+
+  SceneCaptureSensor_local_ns::ConfigureShowFlags(CaptureComponent2D->ShowFlags, bEnablePostProcessingEffects);
 
   Super::BeginPlay();
 }
@@ -221,14 +211,14 @@ namespace SceneCaptureSensor_local_ns {
   static void SetCameraDefaultOverrides(USceneCaptureComponent2D &CaptureComponent2D)
   {
     auto &PostProcessSettings = CaptureComponent2D.PostProcessSettings;
-    PostProcessSettings.bOverride_AutoExposureMethod = false;
-    PostProcessSettings.AutoExposureMethod = AEM_Histogram;
-    PostProcessSettings.bOverride_AutoExposureMinBrightness = false;
-    PostProcessSettings.AutoExposureMinBrightness = 0.27f;
-    PostProcessSettings.bOverride_AutoExposureMaxBrightness = false;
-    PostProcessSettings.AutoExposureMaxBrightness = 5.0f;
-    PostProcessSettings.bOverride_AutoExposureBias = false;
-    PostProcessSettings.AutoExposureBias = -3.5f;
+
+    // Set motion Blur settings
+    PostProcessSettings.bOverride_MotionBlurAmount = true;
+    PostProcessSettings.MotionBlurAmount = 1.0f;
+    PostProcessSettings.bOverride_MotionBlurMax = true;
+    PostProcessSettings.MotionBlurMax = 100.0f;
+    PostProcessSettings.bOverride_MotionBlurPerObjectSize = true;
+    PostProcessSettings.MotionBlurPerObjectSize = 0.5f;
   }
 
   // Remove the show flags that might interfere with post-processing effects like
@@ -238,6 +228,7 @@ namespace SceneCaptureSensor_local_ns {
     if (bPostProcessing)
     {
       ShowFlags.EnableAdvancedFeatures();
+      ShowFlags.SetMotionBlur(true);
       return;
     }
 
