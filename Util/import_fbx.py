@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
@@ -43,13 +43,13 @@ def import_all_fbx_in_folder(fbx_folder, folder_list):
                 # and place it inside unreal in the provided path (by the json file)
                 import_assets_commandlet(data, fbx_folder, registry_name, folder_list)
     # This part will just gather all the folders in which an fbx has been placed
-    if(len(folder_list)>0):
+    if(len(folder_list) > 0):
         final_list = ""
         for folder in folder_list:
             if folder not in final_list:
                 final_list += folder + "+"
         final_list = final_list[:-1]
-        #Destination map (the one that will be cooked)
+        # Destination map (the one that will be cooked)
         dest_map_path = "/Game/Carla/Maps/TestMaps"
         dest_map_name = "TEMPMAP"
         # This should be a folder, because the commandlet will take anything inside.
@@ -57,6 +57,7 @@ def import_all_fbx_in_folder(fbx_folder, folder_list):
         src_map_folder = "/Game/Carla/Maps/TestMaps"
         prepare_cook_commandlet(final_list, src_map_folder, dest_map_path, dest_map_name)
         launch_bash_script("BuildTools/ExportFBX.sh", "--maps=%s/%s" % (dest_map_path, dest_map_name))
+
 
 def parse_arguments():
     argparser = argparse.ArgumentParser(
@@ -69,9 +70,11 @@ def parse_arguments():
         help='FBX containing folder')
     return argparser.parse_args()
 
+
 def prepare_cook_commandlet(folder_list, source_map, dest_map_path, dest_map_name):
     commandlet_name = "FBXExporterPreparator"
-    commandlet_arguments = "-MeshesDir=%s -SourceMap=%s -DestMapPath=%s -DestMapName=%s" % (folder_list, source_map, dest_map_path, dest_map_name)
+    commandlet_arguments = "-MeshesDir=%s -SourceMap=%s -DestMapPath=%s -DestMapName=%s" % (
+        folder_list, source_map, dest_map_path, dest_map_name)
     invoke_commandlet(commandlet_name, commandlet_arguments)
 
 
@@ -98,11 +101,13 @@ def invoke_commandlet(name, arguments):
     full_command = "%s %s -run=%s %s" % (editor_path, uproject_path, name, arguments)
     subprocess.check_call([full_command], shell=True)
 
+
 def launch_bash_script(script_path, arguments):
     dirname = os.getcwd()
     full_command = "%s %s" % (os.path.join(dirname, script_path), arguments)
     print("Executing: " + full_command)
     subprocess.check_call([full_command], shell=True)
+
 
 def populate_json_and_data(json_data, fbx_folder, json_file, registry_name, folder_list):
     with open(json_file, "w+") as fh:
@@ -139,14 +144,10 @@ def populate_json_and_data(json_data, fbx_folder, json_file, registry_name, fold
                 "bReplaceExisting": "true",
                 "FileNames": file_names
             })
-            #second_folder = os.path.dirname(prop["path"]).split("/Game")[1].split("/")[1]
-            #folder_list.append("/Game/" + second_folder)
             folder_list.append(destination_path)
         fh.write(json.dumps({"ImportGroups": import_groups}))
         fh.close()
-        #result = re.search('/Game(.*)', os.path.dirname(prop["path"]))
 
-        #print(result)
 
 def generate_prop_registry_file_for_unreal(json_data, registry_name):
     data = {}
@@ -159,9 +160,9 @@ def generate_prop_registry_file_for_unreal(json_data, registry_name):
         path = "/Game/" + registry_name + "/Static/" + prop["tag"] + "/" + prop["name"] + "/" + fbx_name
 
         data['definitions'].append({
-            "name" : name,
-            "size" : size,
-            "path" : path
+            "name": name,
+            "size": size,
+            "path": path
         })
 
     registry_path = os.path.join("../Unreal/CarlaUE4/Content/" + registry_name + "/Config/")

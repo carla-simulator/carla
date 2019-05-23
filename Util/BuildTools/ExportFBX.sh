@@ -18,7 +18,7 @@ fi
 
 DOC_STRING="Build and packs CarlaUE4's Imported FBX"
 
-USAGE_STRING="Usage: $0 [--help] [-d|--dir] <outdir> [-f|--file] <filename> [-p|--maps] <maps_to_cook>"
+USAGE_STRING="Usage: $0 [--help] [--dir=outdir] [--file=filename] [--maps=maps_to_cook]"
 
 OUTPUT_DIRECTORY=""
 FILE_NAME=""

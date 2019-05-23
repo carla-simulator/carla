@@ -21,7 +21,7 @@ namespace PropAttributes {
   static const FString SIZE = TEXT("size");
 }
 
-FString PropSizeTypeToString(EPropSize PropSizeType)
+static FString PropSizeTypeToString(EPropSize PropSizeType)
 {
   const UEnum *ptr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EPropSize"), true);
   if (!ptr)
@@ -31,7 +31,7 @@ FString PropSizeTypeToString(EPropSize PropSizeType)
   return ptr->GetNameStringByIndex(static_cast<int32>(PropSizeType));
 }
 
-EPropSize StringToPropSizeType(FString PropSize)
+static EPropSize StringToPropSizeType(FString PropSize)
 {
   const UEnum *EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EPropSize"), true);
   if (EnumPtr)
