@@ -6,7 +6,7 @@
   - class_name: LaneType
     # - DESCRIPTION ------------------------
     doc: >
-      Defines the different lane types that Opendrive accepts
+      All the possible lane types that OpenDRIVE accepts
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: NONE
@@ -57,24 +57,31 @@
   - class_name: LaneChange
     # - DESCRIPTION ------------------------
     doc: >
+      Defines the lane change options
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: NONE
       doc: >
+        Traffic rules do not allow turning right or left, only going straight
     - var_name: Right
       doc: >
+        Traffic rules allow turning right
     - var_name: Left
       doc: >
+        Traffic rules allow turning left
     - var_name: Both
       doc: >
+        Traffic rules allow turning right or left
 
   - class_name: LaneMarkingColor
     # - DESCRIPTION ------------------------
     doc: >
+      Defines the lane marking colors
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: Standard
       doc: >
+        Same as white
     - var_name: Blue
       doc: >
     - var_name: Green
@@ -91,6 +98,7 @@
   - class_name: LaneMarkingType
     # - DESCRIPTION ------------------------
     doc: >
+      Defines the lane marking types
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: NONE
@@ -119,33 +127,69 @@
   - class_name: Map
     # - DESCRIPTION ------------------------
     doc: >
-      Map description that provides a waypoint query system
+      Map description that provides a waypoint query system, that extracts
+      the information from the OpenDRIVE file
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: name
       doc: >
-        Map name
+        Map name. Comes from the Unreal's UMap name
     # - METHODS ----------------------------
     methods:
     - def_name: get_spawn_points
       params:
       - param_name: self
+      return: 'list([carla.Transform](#carla.Transform))'
       doc: >
+        Returns a list of transformations corresponding to the recommended spawn
+        points over the map
     # --------------------------------------
     - def_name: get_waypoint
+      doc: >
+        Return the nearest [Waypoint](#carla.Waypoint) given a
+        [Location](#carla.Location)
       params:
       - param_name: self
-      doc: >
+      - param_name: location
+        type: "[Location](#carla.Location)"
+        doc: > 
+          Location where you want to get the [Waypoint](#carla.Waypoint)
+      - param_name: project_to_road
+        type: bool
+        default: "True"
+        doc: > 
+          If **True**, the waypoint will be at the center of the nearest lane.
+          If **False**, the waypoint will be at the given location. Also, in this case, the result may be `None` if the waypoint is not on a searched lane
+      - param_name: lane_type
+        type: "[carla.LaneType](#carla.LaneType)"
+        default: carla.LaneType.Driving
+        doc: > 
+          This parameter is used to limit the search on certain lane types. 
+          This can be used like a flag: `LaneType.Driving & LaneType.Shoulder`
+      return: "[Waypoint](#carla.Waypoint)"
     # --------------------------------------
     - def_name: get_topology
       params:
       - param_name: self
       doc: >
+
+        Provides a 
+        The format is a list of pairs of waypoints, where the first waypoint is the origin and the second
+        one is the destination, for instance, a valid output could be:
+        `[ (w0, w1), (w0, w2), (w1, w3), (w2, w3) ]`
+      return: list(tuple([Waypoint](#carla.Waypoint), [Waypoint](#carla.Waypoint)))
     # --------------------------------------
     - def_name: generate_waypoints
       params:
       - param_name: self
+      - param_name: distance
+        type: float
+        doc: >
+          Aproximate distance between the waypoints
+      return: list([Waypoint](#carla.Waypoint))
       doc: >
+        Returns a list of waypoints positioned on the center of the lanes 
+        all over the map with an approximate distance between them.
     # --------------------------------------
     - def_name: transform_to_geolocation
       params:
@@ -156,6 +200,8 @@
       params:
       - param_name: self
       doc: >
+        Returns the OpenDRIVE of the current map as string
+      return: str
     # --------------------------------------
     - def_name: save_to_disk
       params:
@@ -164,7 +210,7 @@
         doc: >
           Path where will be saved
       doc: >
-        Save the OpenDrive of the current map to disk
+        Save the OpenDRIVE of the current map to disk
 
   - class_name: LaneMarking
     # - DESCRIPTION ------------------------
