@@ -108,6 +108,13 @@ void ACarlaGameModeBase::BeginPlay()
 
   Episode->InitializeAtBeginPlay();
   GameInstance->NotifyBeginEpisode(*Episode);
+
+  /// @todo Recorder should not tick here, FCarlaEngine should do it.
+  // check if replayer is waiting to autostart
+  if (Recorder)
+  {
+    Recorder->GetReplayer()->CheckPlayAfterMapLoaded();
+  }
 }
 
 void ACarlaGameModeBase::Tick(float DeltaSeconds)
@@ -115,7 +122,10 @@ void ACarlaGameModeBase::Tick(float DeltaSeconds)
   Super::Tick(DeltaSeconds);
 
   /// @todo Recorder should not tick here, FCarlaEngine should do it.
-  if (Recorder) Recorder->Tick(DeltaSeconds);
+  if (Recorder)
+  {
+    Recorder->Tick(DeltaSeconds);
+  }
 }
 
 void ACarlaGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
