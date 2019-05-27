@@ -6,6 +6,7 @@
     - Camera following in playback was not working if a new map was needed to load.
     - API function 'show_recorder_file_info' was showing the wrong parent id.
     - Script 'start_recording.py' now properly saves destruction of actors at stop.
+  * API extension: add attachment type "SpringArm" for cinematic cameras
   * API extension: waypoint's `junction_id` that returns de OpenDrive identifier of the current junction
   * API change: deprecated waypoint's `is_intersection`, now is `is_junction`
   * Removed deprecated code and content
