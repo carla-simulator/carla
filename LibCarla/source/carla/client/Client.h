@@ -100,6 +100,12 @@ namespace client {
       return _simulator->ApplyBatchSync(std::move(commands), do_tick_cue);
     }
 
+    std::vector<carla::geom::Location> CreateWalker(
+      carla::geom::Location From,
+      carla::geom::Location To) const {
+      return _simulator->CreateWalker(From, To);
+    };
+
   private:
 
     std::shared_ptr<detail::Simulator> _simulator;

@@ -9,6 +9,7 @@
 #include "carla/Exception.h"
 #include "carla/Version.h"
 #include "carla/client/TimeoutException.h"
+#include "carla/nav/NavMesh.h"
 #include "carla/rpc/ActorDescription.h"
 #include "carla/rpc/BoneTransformData.h"
 #include "carla/rpc/Client.h"
@@ -134,6 +135,10 @@ namespace detail {
 
   rpc::MapInfo Client::GetMapInfo() {
     return _pimpl->CallAndWait<rpc::MapInfo>("get_map_info");
+  }
+
+  std::vector<uint8_t> Client::GetNavigationMesh() const {
+    return _pimpl->CallAndWait<std::vector<uint8_t>>("get_navigation_mesh");
   }
 
   std::vector<std::string> Client::GetAvailableMaps() {

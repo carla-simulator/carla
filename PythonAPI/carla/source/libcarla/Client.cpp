@@ -71,5 +71,6 @@ void export_client() {
     .def("set_replayer_time_factor", &cc::Client::SetReplayerTimeFactor, (arg("time_factor")))
     .def("apply_batch", &ApplyBatchCommands, (arg("commands"), arg("do_tick")=false))
     .def("apply_batch_sync", &ApplyBatchCommandsSync, (arg("commands"), arg("do_tick")=false))
+    .def("create_walker", CALL_RETURNING_LIST_2(cc::Client, CreateWalker, carla::geom::Location, carla::geom::Location), (arg("location"), arg("location")))
   ;
 }
