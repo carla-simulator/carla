@@ -14,7 +14,6 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "HighResScreenshot.h"
-#include "Slate/SceneViewport.h"
 
 static auto SCENE_CAPTURE_COUNTER = 0u;
 
@@ -164,8 +163,6 @@ void ASceneCaptureSensor::BeginPlay()
     // LDR is faster than HDR (smaller bitmap array).
     CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
   }
-
-
 
   CaptureComponent2D->UpdateContent();
   CaptureComponent2D->Activate();
