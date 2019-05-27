@@ -6,6 +6,10 @@ install(DIRECTORY "${RPCLIB_INCLUDE_PATH}/rpc" DESTINATION include/system)
 file(GLOB libcarla_carla_rpclib "${RPCLIB_LIB_PATH}/*.*")
 install(FILES ${libcarla_carla_rpclib} DESTINATION lib)
 
+# Install Recast&Detour libraries
+file(GLOB libcarla_carla_recastlib "${RECAST_LIB_PATH}/*.*")
+install(FILES ${libcarla_carla_recastlib} DESTINATION lib)
+
 # Install boost headers (install in system folder to avoid extra warnings).
 # @todo Remove boost from public interface of LibCarla.client.
 install(DIRECTORY "${BOOST_INCLUDE_PATH}/boost" DESTINATION include/system)
@@ -59,6 +63,17 @@ file(GLOB libcarla_carla_image_sources
     "${libcarla_source_path}/carla/image/*.h")
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_image_sources}")
 install(FILES ${libcarla_carla_image_sources} DESTINATION include/carla/image)
+
+file(GLOB libcarla_carla_nav_sources
+    "${libcarla_source_path}/carla/nav/*.cpp"
+    "${libcarla_source_path}/carla/nav/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_nav_sources}")
+install(FILES ${libcarla_carla_nav_sources} DESTINATION include/carla/nav)
+
+file(GLOB libcarla_carla_nav_recast_sources
+    "${libcarla_source_path}/carla/nav/recast/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_nav_recast_sources}")
+install(FILES ${libcarla_carla_nav_recast_sources} DESTINATION include/carla/nav/recast)
 
 file(GLOB libcarla_carla_opendrive_sources
     "${libcarla_source_path}/carla/opendrive/*.cpp"
@@ -179,7 +194,6 @@ install(FILES ${libcarla_moodycamel_sources} DESTINATION include/moodycamel)
 # ==============================================================================
 # Create targets for debug and release in the same build type.
 # ==============================================================================
-
 if (LIBCARLA_BUILD_RELEASE)
 
   add_library(carla_client STATIC ${libcarla_sources})
@@ -197,6 +211,10 @@ if (LIBCARLA_BUILD_RELEASE)
       set(CMAKE_CXX_FLAGS_RELEASE_CLIENT ${CMAKE_CXX_FLAGS_RELEASE})
     endif()
     set_target_properties(carla_client PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_RELEASE_CLIENT}")
+
+    target_link_libraries(carla_client "${RECAST_LIB_PATH}/libRecast.a")
+    target_link_libraries(carla_client "${RECAST_LIB_PATH}/libDetour.a")
+
   endif (WIN32)
 
 endif()
@@ -213,5 +231,8 @@ if (LIBCARLA_BUILD_DEBUG)
 
   set_target_properties(carla_client_debug PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_DEBUG}")
   target_compile_definitions(carla_client_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
+
+  target_link_libraries(carla_client "${RECAST_LIB_PATH}/libRecast.a")
+  target_link_libraries(carla_client "${RECAST_LIB_PATH}/libDetour.a")
 
 endif()
