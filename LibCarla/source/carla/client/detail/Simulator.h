@@ -342,6 +342,18 @@ namespace detail {
       _client.SetReplayerTimeFactor(time_factor);
     }
 
+    std::vector<carla::geom::Location> CreateWalker(
+      carla::geom::Location From,
+      carla::geom::Location To) const {
+      return _client.CreateWalker(From, To);
+    };
+
+    /// @}
+    // =========================================================================
+    /// @name Operations with walkers
+    // =========================================================================
+    /// @{
+
     /// @}
     // =========================================================================
     /// @name Operations with sensors
