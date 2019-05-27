@@ -1,11 +1,11 @@
-<h1>How to add custom props and define them in Carla Blueprint Library</h1>
+<h1>How to add custom props to the Blueprint Library</h1>
 
 Users can register their own props with `.fbx` format and make these props available through the existing Carla Blueprint Library API. Also, these props can be spawned, maintaining compatibility with semantic segmentation tags.
 
 To do so, the following steps should be done:
 
 1. Create a folder called `FBXImporter` inside Carla root folder.
-1. Place all your props in `.fbx` format inside `FBXImporter` folder and its textures.
+1. Place all your props in `.fbx` format and its textures inside `FBXImporter` folder.
 1. Inside the newly created `FBXImporter` folder, create a JSON File with the name of your package and with extension `.PropRegistry.json`. For example, `YourPackageName.PropRegistry.json`. It is also possible to define multiple prop registry files inside that folder if it is needed to organize props in separate packages.
 1. For each prop registry file, store a JSON Array called `definitions`, which will contain JSON Objects with relevant information for importing a prop such as:
     - name: The name of your prop, this name is the one that will be registered in the Carla Blueprint Library.
