@@ -663,9 +663,14 @@ class CameraManager(object):
         self._parent = parent_actor
         self.hud = hud
         self.recording = False
+        bound_y = 0.5 + self._parent.bounding_box.extent.y
+        Attachment = carla.AttachmentType
         self._camera_transforms = [
-            carla.Transform(carla.Location(x=-5.5, z=2.8), carla.Rotation(pitch=-15)),
-            carla.Transform(carla.Location(x=1.6, z=1.7))]
+            (carla.Transform(carla.Location(x=-5.5, z=2.5), carla.Rotation(pitch=8.0)), Attachment.SpringArm),
+            (carla.Transform(carla.Location(x=1.6, z=1.7)), Attachment.Rigid),
+            (carla.Transform(carla.Location(x=5.5, y=1.5, z=1.5)), Attachment.SpringArm),
+            (carla.Transform(carla.Location(x=-8.0, z=6.0), carla.Rotation(pitch=6.0)), Attachment.SpringArm),
+            (carla.Transform(carla.Location(x=-1, y=-bound_y, z=0.5)), Attachment.Rigid)]
         self.transform_index = 1
         self.sensors = [
             ['sensor.camera.rgb', cc.Raw, 'Camera RGB'],
@@ -690,20 +695,21 @@ class CameraManager(object):
 
     def toggle_camera(self):
         self.transform_index = (self.transform_index + 1) % len(self._camera_transforms)
-        self.sensor.set_transform(self._camera_transforms[self.transform_index])
+        self.set_sensor(self.index, notify=False, force_respawn=True)
 
-    def set_sensor(self, index, notify=True):
+    def set_sensor(self, index, notify=True, force_respawn=False):
         index = index % len(self.sensors)
-        needs_respawn = True if self.index is None \
-            else self.sensors[index][0] != self.sensors[self.index][0]
+        needs_respawn = True if self.index is None else \
+            (force_respawn or (self.sensors[index][0] != self.sensors[self.index][0]))
         if needs_respawn:
             if self.sensor is not None:
                 self.sensor.destroy()
                 self.surface = None
             self.sensor = self._parent.get_world().spawn_actor(
                 self.sensors[index][-1],
-                self._camera_transforms[self.transform_index],
-                attach_to=self._parent)
+                self._camera_transforms[self.transform_index][0],
+                attach_to=self._parent,
+                attachment_type=self._camera_transforms[self.transform_index][1])
             # We need to pass the lambda a weak reference to self to avoid
             # circular reference.
             weak_self = weakref.ref(self)

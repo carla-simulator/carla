@@ -37,7 +37,7 @@
 - `set_weather(weather_parameters)`
 - `get_actors(actor_ids=None) -> carla.ActorList`
 - `spawn_actor(blueprint, transform, attach_to=None)`
-- `try_spawn_actor(blueprint, transform, attach_to=None)`
+- `try_spawn_actor(blueprint, transform, attach_to=None, attachment_type=carla.AttachmentType.Rigid)`
 - `wait_for_tick(seconds=1.0)`
 - `on_tick(callback)`
 - `tick()`
@@ -468,6 +468,11 @@ Static presets
 - `Depth`
 - `LogarithmicDepth`
 - `CityScapesPalette`
+
+## `carla.AttachmentType`
+
+- `Rigid`
+- `SpringArm`
 
 ## `carla.ActorAttributeType`
 
