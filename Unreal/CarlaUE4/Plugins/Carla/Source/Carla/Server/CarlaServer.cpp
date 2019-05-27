@@ -9,6 +9,8 @@
 
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "Carla/Util/DebugShapeDrawer.h"
+#include "Carla/Util/OpenDrive.h"
+#include "Carla/Util/NavigationMesh.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Walker/WalkerController.h"
 
@@ -207,6 +209,17 @@ void FCarlaServer::FPimpl::BindActions()
       cr::FromFString(FileContents),
       MakeVectorFromTArray<cg::Transform>(SpawnPoints)};
   };
+
+  BIND_SYNC(get_navigation_mesh) << [this]() -> R<std::vector<uint8_t>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto FileContents = FNavigationMesh::Load(Episode->GetMapName());
+    // make a mem copy (from TArray to std::vector)
+    std::vector<uint8_t> Result(FileContents.Num());
+    memcpy(&Result[0], FileContents.GetData(), FileContents.Num());
+    return Result;
+  };
+
 
   BIND_SYNC(get_episode_settings) << [this]() -> R<cr::EpisodeSettings>
   {
