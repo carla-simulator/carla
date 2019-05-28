@@ -6,11 +6,10 @@
 
 #pragma once
 
-#include "carla/AtomicSharedPtr.h"
+#include "carla/AtomicList.h"
 #include "carla/NonCopyable.h"
 
 #include <functional>
-#include <vector>
 
 namespace carla {
 namespace client {
@@ -22,31 +21,24 @@ namespace detail {
 
     using CallbackType = std::function<void(InputsT...)>;
 
-    CallbackList() : _list(std::make_shared<ListType>()) {}
-
     void Call(InputsT... args) const {
-      auto list = _list.load();
+      auto list = _list.Load();
       for (auto &callback : *list) {
         callback(args...);
       }
     }
 
-    /// @todo This function cannot be called concurrently.
-    void RegisterCallback(CallbackType callback) {
-      auto new_list = std::make_shared<ListType>(*_list.load());
-      new_list->emplace_back(std::move(callback));
-      _list = new_list;
+    void RegisterCallback(CallbackType &&callback) {
+      _list.Push(std::move(callback));
     }
 
     void Clear() {
-      _list = std::make_shared<ListType>();
+      _list.Clear();
     }
 
   private:
 
-    using ListType = std::vector<CallbackType>;
-
-    AtomicSharedPtr<const ListType> _list;
+    AtomicList<CallbackType> _list;
   };
 
 } // namespace detail
