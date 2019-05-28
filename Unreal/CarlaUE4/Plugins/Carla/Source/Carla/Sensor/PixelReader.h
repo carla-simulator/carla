@@ -74,6 +74,7 @@ private:
       carla::Buffer &Buffer,
       uint32 Offset,
       FRHICommandListImmediate &InRHICmdList);
+
 };
 
 // =============================================================================
