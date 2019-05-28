@@ -59,7 +59,7 @@ void UCarlaBlueprintRegistry::AddToCarlaBlueprintRegistry(const TArray<FPropPara
   if (FJsonSerializer::Deserialize(JsonReader, JsonObject) && JsonObject.IsValid())
   {
     ResultPropJsonArray = JsonObject->GetArrayField(CommonAttributes::DEFINITIONS);
-    for (auto i = 0u; i < ResultPropJsonArray.Num(); ++i)
+    for (int32 i = 0; i < ResultPropJsonArray.Num(); ++i)
     {
       TSharedPtr<FJsonObject> PropJsonObject = ResultPropJsonArray[i]->AsObject();
 
@@ -149,7 +149,7 @@ void UCarlaBlueprintRegistry::LoadPropDefinitions(TArray<FPropParameters> &PropP
   // Sort and place Default File First if it exists
   PropFileNames.Sort();
   FString DefaultFileName;
-  for (auto i = 0u; i < PropFileNames.Num() && DefaultFileName.IsEmpty(); ++i)
+  for (int32 i = 0; i < PropFileNames.Num() && DefaultFileName.IsEmpty(); ++i)
   {
     if (PropFileNames[i].Contains(CommonAttributes::DEFAULT))
     {
@@ -166,7 +166,7 @@ void UCarlaBlueprintRegistry::LoadPropDefinitions(TArray<FPropParameters> &PropP
   // registry files
   TMap<FString, int> PropIndexes;
 
-  for (auto i = 0u; i < PropFileNames.Num(); ++i)
+  for (int32 i = 0; i < PropFileNames.Num(); ++i)
   {
     FString FileJsonContent;
     if (FFileHelper::LoadFileToString(FileJsonContent, *PropFileNames[i]))
