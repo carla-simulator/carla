@@ -55,31 +55,19 @@ def main():
         world = client.get_world()
         m = world.get_map()
         debug = world.debug
-        a = carla.Location(-141.789, -153.839, 0.139954)
+        a = carla.Location(-141.789, -143.839, 0.139954)
         b = carla.Location(-29.7504, -26.8764, 0.270432)
         points = []
         points = client.create_walker(a, b)
-        # points = [
-        #         (-141.789, -153.839, 0.139954),
-        #         (-119.9, -134.6, 0.178125),
-        #         (-112.1, -109.7, 0.178125),
-        #         (-71.6, -67.4, 0.178125),
-        #         (-40.1, -55.4, 0.178125),
-        #         (-39.8, -54.8, 0.178125),
-        #         (-29.7504, -26.8764, 0.270432)
-        #         ]
         for i in range(len(points)-1):
-            a1 = carla.Location(points[i][0], points[i][1], points[i][2])
-            b1 = carla.Location(points[i+1][0], points[i+1][1], points[i+1][2])
+            a1 = carla.Location(points[i].x, points[i].y, points[i].z)
+            b1 = carla.Location(points[i+1].x, points[i+1].y, points[i+1].z)
             # print(a.x, a.y, a.z)
             debug.draw_line(a1, b1, color=orange, thickness=0.5, life_time=12)
             # debug.draw_line(a, a+carla.Location(z=1000), color=orange, thickness=0.2, life_time=12)
             debug.draw_point(a1, 1, red, 12)
 
-        time.sleep(5)
-
     finally:
-        # print("Total: ", total)
         pass
 
 if __name__ == '__main__':

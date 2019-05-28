@@ -13,9 +13,6 @@
 #include "recast/DetourNavMeshQuery.h"
 #include "recast/DetourCommon.h"
 
-#include <stdio.h>
-#include <memory.h>
-
 namespace carla {
 namespace nav {
 
@@ -38,24 +35,24 @@ namespace nav {
   };
 
 
-  class NavMesh {
+  class Navigation {
 
     public:
-    NavMesh();
+    Navigation();
+    ~Navigation();
     // load navigation data
-    bool Load(const std::string filename);
+    bool Load(const std::string Filename);
     // load navigation data from memory
     bool Load(const std::vector<uint8_t> Content);
     // return the path points to go from one position to another
-    bool GetPath(const carla::geom::Location from, const carla::geom::Location to, dtQueryFilter* filter, std::vector<carla::geom::Location> path);
+    bool GetPath(const carla::geom::Location From, const carla::geom::Location To, dtQueryFilter* Filter, std::vector<carla::geom::Location> &Path);
 
     private:
+    std::vector<uint8_t> BinaryMesh;
     // meshes loaded
-    dtNavMesh* m_navMesh { nullptr };
-    dtNavMeshQuery* m_navQuery { nullptr };
+    dtNavMesh* NavMesh { nullptr };
+    dtNavMeshQuery* NavQuery { nullptr };
   };
-
-// NavMesh *navMesh2 = new NavMesh();
 
 } // namespace nav
 } // namespace carla

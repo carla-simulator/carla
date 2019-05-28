@@ -212,10 +212,10 @@ if (LIBCARLA_BUILD_RELEASE)
     endif()
     set_target_properties(carla_client PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_RELEASE_CLIENT}")
 
+    endif (WIN32)
+
     target_link_libraries(carla_client "${RECAST_LIB_PATH}/libRecast.a")
     target_link_libraries(carla_client "${RECAST_LIB_PATH}/libDetour.a")
-
-  endif (WIN32)
 
 endif()
 
@@ -232,7 +232,7 @@ if (LIBCARLA_BUILD_DEBUG)
   set_target_properties(carla_client_debug PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_DEBUG}")
   target_compile_definitions(carla_client_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
 
-  target_link_libraries(carla_client "${RECAST_LIB_PATH}/libRecast.a")
-  target_link_libraries(carla_client "${RECAST_LIB_PATH}/libDetour.a")
+  target_link_libraries(carla_client_debug "${RECAST_LIB_PATH}/libRecast.a")
+  target_link_libraries(carla_client_debug "${RECAST_LIB_PATH}/libDetour.a")
 
 endif()
