@@ -298,7 +298,8 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(spawn_actor_with_parent) << [this](
       cr::ActorDescription Description,
       const cr::Transform &Transform,
-      cr::ActorId ParentId) -> R<cr::Actor>
+      cr::ActorId ParentId,
+      cr::AttachmentType InAttachmentType) -> R<cr::Actor>
   {
     REQUIRE_CARLA_EPISODE();
     auto Result = Episode->SpawnActorWithInfo(Transform, std::move(Description));
@@ -315,7 +316,10 @@ void FCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("unable to attach actor: parent actor not found");
     }
-    Episode->AttachActors(Result.Value.GetActor(), ParentActorView.GetActor());
+    Episode->AttachActors(
+        Result.Value.GetActor(),
+        ParentActorView.GetActor(),
+        static_cast<EAttachmentType>(InAttachmentType));
     return Episode->SerializeActor(Result.Value);
   };
 
@@ -331,25 +335,6 @@ void FCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("internal error: unable to destroy actor");
     }
-    return R<void>::Success();
-  };
-
-  BIND_SYNC(attach_actors) << [this](
-      cr::ActorId ChildId,
-      cr::ActorId ParentId) -> R<void>
-  {
-    REQUIRE_CARLA_EPISODE();
-    auto ChildView = Episode->FindActor(ChildId);
-    if (!ChildView.IsValid())
-    {
-      RESPOND_ERROR("unable to attach actor: child actor not found");
-    }
-    auto ParentView = Episode->FindActor(ParentId);
-    if (!ParentView.IsValid())
-    {
-      RESPOND_ERROR("unable to attach actor: parent actor not found");
-    }
-    Episode->AttachActors(ChildView.GetActor(), ParentView.GetActor());
     return R<void>::Success();
   };
 
@@ -792,7 +777,11 @@ void FCarlaServer::FPimpl::BindActions()
   auto command_visitor = carla::Functional::MakeRecursiveOverload(
       [=](auto self, const C::SpawnActor &c) -> CR {
         auto result = c.parent.has_value() ?
-            spawn_actor_with_parent(c.description, c.transform, *c.parent) :
+            spawn_actor_with_parent(
+                c.description,
+                c.transform,
+                *c.parent,
+                cr::AttachmentType::Rigid) :
             spawn_actor(c.description, c.transform);
         if (!result.HasError()) {
           ActorId id = result.Get().id;

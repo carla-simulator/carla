@@ -28,4 +28,4 @@
 #     http://carla-assets-internal.s3.amazonaws.com/Content/PUT_FILE_ID_HERE.tar.gz
 
 0.9.5: 20190404_c7b464a
-Latest: 20190508_0a8dc5d
+Latest: 20190523_93bb78b

@@ -189,6 +189,7 @@ namespace detail {
         const ActorBlueprint &blueprint,
         const geom::Transform &transform,
         Actor *parent = nullptr,
+        rpc::AttachmentType attachment_type = rpc::AttachmentType::Rigid,
         GarbageCollectionPolicy gc = GarbageCollectionPolicy::Inherit);
 
     bool DestroyActor(Actor &actor);
