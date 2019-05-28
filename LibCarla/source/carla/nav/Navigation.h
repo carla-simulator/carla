@@ -6,8 +6,10 @@
 
 #pragma once
 
+#include "carla/rpc/ActorId.h"
 #include "carla/geom/Location.h"
 #include "recast/Recast.h"
+#include "recast/DetourCrowd.h"
 #include "recast/DetourNavMesh.h"
 #include "recast/DetourNavMeshBuilder.h"
 #include "recast/DetourNavMeshQuery.h"
@@ -34,6 +36,14 @@ namespace nav {
     SAMPLE_POLYFLAGS_ALL		    = 0xffff	// All abilities.
   };
 
+  enum UpdateFlags
+  {
+    DT_CROWD_ANTICIPATE_TURNS = 1,
+    DT_CROWD_OBSTACLE_AVOIDANCE = 2,
+    DT_CROWD_SEPARATION = 4,
+    DT_CROWD_OPTIMIZE_VIS = 8,			///< Use #dtPathCorridor::optimizePathVisibility() to optimize the agent path.
+    DT_CROWD_OPTIMIZE_TOPO = 16,		///< Use dtPathCorridor::optimizePathTopology() to optimize the agent path.
+  };
 
   class Navigation {
 
@@ -47,11 +57,24 @@ namespace nav {
     // return the path points to go from one position to another
     bool GetPath(const carla::geom::Location From, const carla::geom::Location To, dtQueryFilter* Filter, std::vector<carla::geom::Location> &Path);
 
+    // create the crowd object
+    void CreateCrowd(void);
+    // add a walker
+    bool AddWalker(ActorId Id, carla::geom::Location From);
+    // set a new target point to go
+    bool SetWalkerTarget(ActorId Id, carla::geom::Location To);
+    // update all walkers in crowd
+    void UpdateCrowd(float DeltaTime);
+
     private:
     std::vector<uint8_t> BinaryMesh;
-    // meshes loaded
-    dtNavMesh* NavMesh { nullptr };
-    dtNavMeshQuery* NavQuery { nullptr };
+    // meshes
+    dtNavMesh *NavMesh { nullptr };
+    dtNavMeshQuery *NavQuery { nullptr };
+    // crowd
+    dtCrowd *Crowd { nullptr };
+    // mapping Id
+    std::unordered_map<ActorId, int> MappedId;
   };
 
 } // namespace nav
