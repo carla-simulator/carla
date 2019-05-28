@@ -46,6 +46,11 @@ public:
   /// ==========================================================================
   /// @{
 
+  static FActorDefinition MakeGenericDefinition(
+      const FString &Category,
+      const FString &Type,
+      const FString &Id);
+
   static FActorDefinition MakeGenericSensorDefinition(
       const FString &Type,
       const FString &Id);

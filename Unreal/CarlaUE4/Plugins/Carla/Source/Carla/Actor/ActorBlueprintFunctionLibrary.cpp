@@ -262,12 +262,21 @@ static void AddVariationsForTrigger(FActorDefinition &Def)
   }
 }
 
-FActorDefinition UActorBlueprintFunctionLibrary::MakeGenericSensorDefinition(
+FActorDefinition UActorBlueprintFunctionLibrary::MakeGenericDefinition(
+    const FString &Category,
     const FString &Type,
     const FString &Id)
 {
   FActorDefinition Definition;
-  FillIdAndTags(Definition, TEXT("sensor"), Type, Id);
+  FillIdAndTags(Definition, Category, Type, Id);
+  return Definition;
+}
+
+FActorDefinition UActorBlueprintFunctionLibrary::MakeGenericSensorDefinition(
+    const FString &Type,
+    const FString &Id)
+{
+  auto Definition = MakeGenericDefinition(TEXT("sensor"), Type, Id);
   AddRecommendedValuesForSensorRoleNames(Definition);
   return Definition;
 }
