@@ -211,9 +211,9 @@ namespace SceneCaptureSensor_local_ns {
 
     // Set motion Blur settings
     PostProcessSettings.bOverride_MotionBlurAmount = true;
-    PostProcessSettings.MotionBlurAmount = 1.0f;
+    PostProcessSettings.MotionBlurAmount = 0.5f;
     PostProcessSettings.bOverride_MotionBlurMax = true;
-    PostProcessSettings.MotionBlurMax = 100.0f;
+    PostProcessSettings.MotionBlurMax = 10.0f;
     PostProcessSettings.bOverride_MotionBlurPerObjectSize = true;
     PostProcessSettings.MotionBlurPerObjectSize = 0.5f;
   }
