@@ -216,6 +216,7 @@ if (LIBCARLA_BUILD_RELEASE)
 
     target_link_libraries(carla_client "${RECAST_LIB_PATH}/libRecast.a")
     target_link_libraries(carla_client "${RECAST_LIB_PATH}/libDetour.a")
+    target_link_libraries(carla_client "${RECAST_LIB_PATH}/libDetourCrowd.a")
 
 endif()
 
@@ -234,5 +235,6 @@ if (LIBCARLA_BUILD_DEBUG)
 
   target_link_libraries(carla_client_debug "${RECAST_LIB_PATH}/libRecast.a")
   target_link_libraries(carla_client_debug "${RECAST_LIB_PATH}/libDetour.a")
+  target_link_libraries(carla_client_debug "${RECAST_LIB_PATH}/libDetourCrowd.a")
 
 endif()
