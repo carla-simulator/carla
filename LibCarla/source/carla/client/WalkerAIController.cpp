@@ -6,11 +6,17 @@
 
 #include "carla/client/WalkerAIController.h"
 
+#include "carla/client/detail/Simulator.h"
+
 namespace carla {
 namespace client {
 
   WalkerAIController::WalkerAIController(ActorInitializer init)
     : Actor(std::move(init)) {}
+
+  void WalkerAIController::Start() {
+    GetEpisode().Lock()->RegisterAIController(*this);
+  }
 
 } // namespace client
 } // namespace carla
