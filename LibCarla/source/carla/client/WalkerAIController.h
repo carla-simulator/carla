@@ -15,6 +15,8 @@ namespace client {
   public:
 
     explicit WalkerAIController(ActorInitializer init);
+
+    void Start();
   };
 
 } // namespace client
