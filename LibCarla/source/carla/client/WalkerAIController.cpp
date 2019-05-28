@@ -18,5 +18,15 @@ namespace client {
     GetEpisode().Lock()->RegisterAIController(*this);
   }
 
+  void WalkerAIController::GoToLocation(const carla::geom::Location &destination) {
+
+    logging::log("GO TO LOCATION:", destination.x, destination.y, destination.z);
+  }
+
+  void WalkerAIController::SetMaxSpeed(const float max_speed) {
+
+    logging::log("SET MAX SPEED: ", max_speed);
+  }
+
 } // namespace client
 } // namespace carla
