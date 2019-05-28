@@ -15,11 +15,15 @@ namespace carla {
 namespace nav {
 
   static const int MAX_POLYS = 256;
+  static const int MAX_AGENTS = 128;
+  static const float AGENT_RADIUS = 0.6f;
+  static const float AGENT_HEIGHT = 2.0f;
 
   Navigation::Navigation() {
   }
 
   Navigation::~Navigation() {
+    dtFreeCrowd(Crowd);
     dtFreeNavMeshQuery(NavQuery);
     dtFreeNavMesh(NavMesh);
   }
@@ -64,7 +68,6 @@ namespace nav {
 
     // check file magic and version
     if (header.magic != NAVMESHSET_MAGIC || header.version != NAVMESHSET_VERSION) {
-      logging::log("Nav: bad magic");
       return false;
     }
 
@@ -73,12 +76,10 @@ namespace nav {
     // set number of tiles and origin
     dtStatus status = mesh->init(&header.params);
     if (dtStatusFailed(status)) {
-      logging::log("Nav: bad status");
       return false;
     }
 
     // read the tiles data
-    logging::log("Nav: tiles.", header.numTiles);
     for (int i = 0; i < header.numTiles; ++i) {
       NavMeshTileHeader tileHeader;
 
@@ -86,7 +87,6 @@ namespace nav {
       memcpy(&tileHeader, &Content[Pos], sizeof(tileHeader));
       Pos += sizeof(tileHeader);
       if (Pos >= Content.size()) {
-        logging::log("Nav: pos great");
         dtFreeNavMesh(mesh);
         return false;
       }
@@ -104,7 +104,6 @@ namespace nav {
       memcpy(data, &Content[Pos], static_cast<size_t>(tileHeader.dataSize));
       Pos += static_cast<unsigned long>(tileHeader.dataSize);
       if (Pos > Content.size()) {
-        logging::log("Nav: pos great 2");
         dtFree(data);
         dtFreeNavMesh(mesh);
         return false;
@@ -123,10 +122,60 @@ namespace nav {
     NavQuery = dtAllocNavMeshQuery();
     NavQuery->init(NavMesh, 2048);
 
+    // create and init the crowd manager
+    CreateCrowd();
+
     // copy
     BinaryMesh = Content;
 
     return true;
+  }
+
+  void Navigation::CreateCrowd(void) {
+
+    if (Crowd != nullptr)
+      return;
+
+    // create and init
+    Crowd = dtAllocCrowd();
+    Crowd->init(MAX_AGENTS, AGENT_RADIUS, NavMesh);
+
+    // make polygons with 'disabled' flag invalid
+    Crowd->getEditableFilter(0)->setExcludeFlags(SAMPLE_POLYFLAGS_DISABLED);
+
+    // Setup local avoidance params to different qualities.
+    dtObstacleAvoidanceParams Params;
+    // Use mostly default settings, copy from dtCrowd.
+    memcpy(&Params, Crowd->getObstacleAvoidanceParams(0), sizeof(dtObstacleAvoidanceParams));
+
+    // Low (11)
+    Params.velBias = 0.5f;
+    Params.adaptiveDivs = 5;
+    Params.adaptiveRings = 2;
+    Params.adaptiveDepth = 1;
+    Crowd->setObstacleAvoidanceParams(0, &Params);
+
+    // Medium (22)
+    Params.velBias = 0.5f;
+    Params.adaptiveDivs = 5;
+    Params.adaptiveRings = 2;
+    Params.adaptiveDepth = 2;
+    Crowd->setObstacleAvoidanceParams(1, &Params);
+
+    // Good (45)
+    Params.velBias = 0.5f;
+    Params.adaptiveDivs = 7;
+    Params.adaptiveRings = 2;
+    Params.adaptiveDepth = 3;
+    Crowd->setObstacleAvoidanceParams(2, &Params);
+
+    // High (66)
+    Params.velBias = 0.5f;
+    Params.adaptiveDivs = 7;
+    Params.adaptiveRings = 3;
+    Params.adaptiveDepth = 3;
+
+    Crowd->setObstacleAvoidanceParams(3, &Params);
   }
 
   // return the path points to go from one position to another
@@ -201,6 +250,92 @@ namespace nav {
     }
 
     return true;
+  }
+
+  // create a new walker
+  bool Navigation::AddWalker(ActorId Id, carla::geom::Location From) {
+    dtCrowdAgentParams Params;
+
+    if (Crowd == nullptr) {
+      return false;
+    }
+
+    // set parameters
+    memset(&Params, 0, sizeof(Params));
+    Params.radius = AGENT_RADIUS;
+    Params.height = AGENT_HEIGHT;
+    Params.maxAcceleration = 8.0f;
+    Params.maxSpeed = 3.5f;
+    Params.collisionQueryRange = Params.radius * 12.0f;
+    Params.pathOptimizationRange = Params.radius * 30.0f;
+
+    // flags
+    Params.updateFlags = 0;
+    Params.updateFlags |= DT_CROWD_ANTICIPATE_TURNS;
+    Params.updateFlags |= DT_CROWD_OPTIMIZE_VIS;
+    Params.updateFlags |= DT_CROWD_OPTIMIZE_TOPO;
+    Params.updateFlags |= DT_CROWD_OBSTACLE_AVOIDANCE;
+    Params.updateFlags |= DT_CROWD_SEPARATION;
+    Params.obstacleAvoidanceType = 3;
+    Params.separationWeight = 2.0;
+
+    // add walker
+    float PointFrom[3] = { From.x, From.y, From.z };
+    int Index = Crowd->addAgent(PointFrom, &Params);
+    if (Index != -1) {
+      // save the id
+      MappedId[Id] = Index;
+    }
+
+    return true;
+  }
+
+  // set a new target point to go
+  bool Navigation::SetWalkerTarget(ActorId Id, carla::geom::Location To) {
+    // get the internal index
+    auto It = MappedId.find(Id);
+    if (It == MappedId.end())
+      return false;
+
+    // get the index found
+    int Index = It->second;
+    if (Index != -1) {
+
+      // set target position
+      float PointTo[3] = { To.x, To.y, To.z };
+      float Nearest[3];
+      const dtQueryFilter *Filter = Crowd->getFilter(0);
+      dtPolyRef TargetRef;
+      NavQuery->findNearestPoly(PointTo, Crowd->getQueryHalfExtents(), Filter, &TargetRef, Nearest);
+      if (TargetRef)
+        Crowd->requestMoveTarget(Index, TargetRef, PointTo);
+    }
+
+    return true;
+  }
+
+  // update all walkers in crowd
+  void Navigation::UpdateCrowd(float DeltaTime) {
+
+    if (!NavMesh || !Crowd) {
+      return;
+    }
+
+    // update all
+    Crowd->update(DeltaTime, nullptr);
+
+    // get all walker positions
+    for (int i = 0; i < Crowd->getAgentCount(); ++i)
+    {
+      const dtCrowdAgent* ag = Crowd->getAgent(i);
+      if (!ag->active)
+        continue;
+
+      // Update agent movement trail.
+      // AgentTrail* trail = &m_trails[i];
+      // trail->htrail = (trail->htrail + 1) % AGENT_MAX_TRAIL;
+      // dtVcopy(&trail->trail[trail->htrail*3], ag->npos);
+    }
   }
 
 } // namespace nav
