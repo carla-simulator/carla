@@ -105,15 +105,25 @@ void export_world() {
     .def(self_ns::str(self_ns::self))
   ;
 
+  enum_<cr::AttachmentType>("AttachmentType")
+    .value("Rigid", cr::AttachmentType::Rigid)
+    .value("SpringArm", cr::AttachmentType::SpringArm)
+  ;
+
 #define SPAWN_ACTOR_WITHOUT_GIL(fn) +[]( \
         cc::World &self, \
         const cc::ActorBlueprint &blueprint, \
         const cg::Transform &transform, \
-        cc::Actor *parent) { \
+        cc::Actor *parent, \
+        cr::AttachmentType attachment_type) { \
       carla::PythonUtil::ReleaseGIL unlock; \
-      return self.fn(blueprint, transform, parent); \
+      return self.fn(blueprint, transform, parent, attachment_type); \
     }, \
-    (arg("blueprint"), arg("transform"), arg("attach_to")=carla::SharedPtr<cc::Actor>())
+    ( \
+      arg("blueprint"), \
+      arg("transform"), \
+      arg("attach_to")=carla::SharedPtr<cc::Actor>(), \
+      arg("attachment_type")=cr::AttachmentType::Rigid)
 
   class_<cc::World>("World", no_init)
     .add_property("id", &cc::World::GetId)

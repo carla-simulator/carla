@@ -1,12 +1,13 @@
 ## Latest
-
-  * Vulkan support: Changed project settings to make vulkan default but opengl can be selected using the make script
+  * Vulkan support: Changed project settings to make vulkan default on linux and updated make script to allow user to select opengl
   * Upgraded to Unreal Engine 4.22
   * Recorder fixes:
+    - Fixed a possible crash if an actor is respawned before the episode is ready when a new map is loaded automatically.
     - Actors at start of playback could interpolate positions from its current position instead than the recorded position, making some fast sliding effect during 1 frame.
     - Camera following in playback was not working if a new map was needed to load.
     - API function 'show_recorder_file_info' was showing the wrong parent id.
     - Script 'start_recording.py' now properly saves destruction of actors at stop.
+  * API extension: add attachment type "SpringArm" for cinematic cameras
   * API extension: waypoint's `junction_id` that returns de OpenDrive identifier of the current junction
   * API change: deprecated waypoint's `is_intersection`, now is `is_junction`
   * Removed deprecated code and content
@@ -23,7 +24,9 @@
   * Updated OpenDriveActor to use the new Waypoint API
   * Fixed wrong units in VehiclePhysicsControl's center of mass
   * Several optimizations to the RPC server, now supports a bigger load of async messages
+  * Register user props in fbx format, make them available in Carla Blueprint Library and spawnable.
   * Exposed 'is_invincible' for pedestrians
+  * Fixed bug related with Pygame error of surface too large, added sidewalks and improved lane markings in `no_rendering_mode.py`
 
 ## CARLA 0.9.5
 

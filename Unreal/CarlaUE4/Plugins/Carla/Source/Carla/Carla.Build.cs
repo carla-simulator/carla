@@ -51,6 +51,8 @@ public class Carla : ModuleRules
         "Engine",
         "Foliage",
         "ImageWriteQueue",
+        "Json",
+        "JsonUtilities",
         "Landscape",
         "PhysXVehicles",
         "Slate",
