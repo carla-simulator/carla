@@ -22,13 +22,15 @@
 // -- Local variables and types ------------------------------------------------
 // =============================================================================
 
-struct LockTexture {
+struct LockTexture
+{
   LockTexture(FRHITexture2D *InTexture, uint32 &Stride)
     : Texture(InTexture),
       Source(reinterpret_cast<const uint8 *>(
-          RHILockTexture2D(Texture, 0, RLM_ReadOnly, Stride, false))) {}
+            RHILockTexture2D(Texture, 0, RLM_ReadOnly, Stride, false))) {}
 
-  ~LockTexture() {
+  ~LockTexture()
+  {
     RHIUnlockTexture2D(Texture, 0, false);
   }
 
@@ -98,7 +100,8 @@ TUniquePtr<TImagePixelData<FColor>> FPixelReader::DumpPixels(
 {
   const FIntPoint DestSize(RenderTarget.GetSurfaceWidth(), RenderTarget.GetSurfaceHeight());
   TUniquePtr<TImagePixelData<FColor>> PixelData = MakeUnique<TImagePixelData<FColor>>(DestSize);
-  if (!WritePixelsToArray(RenderTarget, PixelData->Pixels)) {
+  if (!WritePixelsToArray(RenderTarget, PixelData->Pixels))
+  {
     return nullptr;
   }
   return PixelData;
@@ -112,14 +115,14 @@ TFuture<bool> FPixelReader::SavePixelsToDisk(
 }
 
 TFuture<bool> FPixelReader::SavePixelsToDisk(
-      TUniquePtr<TImagePixelData<FColor>> PixelData,
-      const FString &FilePath)
+    TUniquePtr<TImagePixelData<FColor>> PixelData,
+    const FString &FilePath)
 {
   TUniquePtr<FImageWriteTask> ImageTask = MakeUnique<FImageWriteTask>();
   ImageTask->PixelData = MoveTemp(PixelData);
   ImageTask->Filename = FilePath;
   ImageTask->Format = EImageFormat::PNG;
-  ImageTask->CompressionQuality = (int32)EImageCompressionQuality::Default;
+  ImageTask->CompressionQuality = (int32) EImageCompressionQuality::Default;
   ImageTask->bOverwriteFile = true;
   ImageTask->PixelPreProcessors.Add(TAsyncAlphaWrite<FColor>(255));
 
@@ -133,9 +136,9 @@ void FPixelReader::WritePixelsToBuffer(
     uint32 Offset,
     FRHICommandListImmediate &
 #if CARLA_WITH_VULKAN_SUPPORT == 1
-      InRHICmdList
+    InRHICmdList
 #endif // CARLA_WITH_VULKAN_SUPPORT
-  )
+    )
 {
   check(IsInRenderingThread());
 
