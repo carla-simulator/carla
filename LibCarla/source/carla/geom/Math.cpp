@@ -111,8 +111,8 @@ namespace geom {
   }
 
   Vector3D Math::GetForwardVector(const Rotation &rotation) {
-    const float cp = std::cos(ToRadians(rotation.pitch));
-    const float sp = std::sin(ToRadians(rotation.pitch));
+    const float cp = std::cos(ToRadians(-rotation.pitch));
+    const float sp = std::sin(ToRadians(-rotation.pitch));
     const float cy = std::cos(ToRadians(rotation.yaw));
     const float sy = std::sin(ToRadians(rotation.yaw));
     return {cy * cp, sy * cp, -sp};
