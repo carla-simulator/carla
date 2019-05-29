@@ -1,10 +1,10 @@
 ### Recording and Replaying system
 
-CARLA includes now a recording and replaying API, that allows to record a simulation in a file and later replay that simulation. The file is written on server side only, and it includes which **actors are created or destroyed** in the simulation, the **state of the traffic lights** and the **position/orientation** of all vehicles and walkers.
+CARLA includes now a recording and replaying API, that allows to record a simulation in a file and later replay that simulation. The file is written on server side only, and it includes which **actors are created or destroyed** in the simulation, the **state of the traffic lights** and the **position/orientation** of all vehicles and pedestrians.
 
 All data is written in a binary file on the server. We can use filenames with or without a path. If we specify a filename without any of '\\', '/' or ':' characters, then it is considered to be only a filename and will be saved on folder **CarlaUE4/Saved**. If we use any of the previous characters then the filename will be considered as an absolute filename with path (for example: '/home/carla/recording01.log' or 'c:\\records\\recording01.log').
 
-As estimation, a simulation with about 150 actors (50 traffic lights, 100 vehicles) for 1h of recording takes around 200 Mb in size.
+As an estimate, a simulation with about 150 actors (50 traffic lights, 100 vehicles) for 1h of recording takes around 200 Mb in size.
 
 #### Recording
 To start recording we only need to supply a file name:
@@ -25,7 +25,7 @@ At any point we can replay a simulation, specifying the filename:
 ```py
 client.replay_file("recording01.log")
 ```
-The replayer will create and destroy all actors that were recorded, and move all actors and setting the traffic lights as they were working at that moment.
+The replayer replicates the actor and traffic light information of the recording each frame.
 
 When replaying we have some other options that we can use, the full API call is:
 
