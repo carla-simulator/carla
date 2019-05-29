@@ -165,7 +165,7 @@ TEST(geom, forward_vector) {
   compare({360.0f, 360.0f,   0.0f}, {1.0f, 0.0f, 0.0f});
   compare({  0.0f,  90.0f,   0.0f}, {0.0f, 1.0f, 0.0f});
   compare({  0.0f, -90.0f,   0.0f}, {0.0f,-1.0f, 0.0f});
-  compare({ 90.0f,   0.0f,   0.0f}, {0.0f, 0.0f, 1.0f});
+  compare({ 90.0f,   0.0f,   0.0f}, {0.0f, 0.0f,-1.0f});
   compare({180.0f, -90.0f,   0.0f}, {0.0f, 1.0f, 0.0f});
 }
 
