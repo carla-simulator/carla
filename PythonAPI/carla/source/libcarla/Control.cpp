@@ -39,8 +39,9 @@ namespace rpc {
   std::ostream &operator<<(std::ostream &out, const WheelPhysicsControl &control) {
     out << "WheelPhysicsControl(tire_friction=" << control.tire_friction
         << ", damping_rate=" << control.damping_rate
-        << ", steer_angle=" << control.steer_angle
-        << ", disable_steering=" << boolalpha(control.disable_steering) << ')';
+        << ", max_steer_angle=" << control.max_steer_angle
+        << ", radius=" << control.radius
+        << ", position=" << control.position << ')';
     return out;
   }
 
@@ -206,15 +207,17 @@ void export_control() {
   ;
 
   class_<cr::WheelPhysicsControl>("WheelPhysicsControl")
-    .def(init<float, float, float, bool>(
+    .def(init<float, float, float, float, cg::Vector3D>(
         (arg("tire_friction")=2.0f,
          arg("damping_rate")=0.25f,
-         arg("steer_angle")=70.0f,
-         arg("disable_steering")=false)))
+         arg("max_steer_angle")=70.0f,
+         arg("radius")=30.0f,
+         arg("position")=cg::Vector3D{0.0f, 0.0f, 0.0f})))
     .def_readwrite("tire_friction", &cr::WheelPhysicsControl::tire_friction)
     .def_readwrite("damping_rate", &cr::WheelPhysicsControl::damping_rate)
-    .def_readwrite("steer_angle", &cr::WheelPhysicsControl::steer_angle)
-    .def_readwrite("disable_steering", &cr::WheelPhysicsControl::disable_steering)
+    .def_readwrite("max_steer_angle", &cr::WheelPhysicsControl::max_steer_angle)
+    .def_readwrite("radius", &cr::WheelPhysicsControl::radius)
+    .def_readwrite("position", &cr::WheelPhysicsControl::position)
     .def("__eq__", &cr::WheelPhysicsControl::operator==)
     .def("__ne__", &cr::WheelPhysicsControl::operator!=)
     .def(self_ns::str(self_ns::self))

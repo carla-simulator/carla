@@ -172,6 +172,18 @@ public:
     SetHandbrakeInput(false);
   }
 
+  TArray<float> GetWheelsFrictionScale();
+
+  void SetWheelsFrictionScale(TArray<float> &WheelsFrictionScale);
+  /// @}
+  // ===========================================================================
+  /// @name Overriden from AActor
+  // ===========================================================================
+  /// @{
+protected:
+
+  virtual void BeginPlay() override;
+
 private:
 
   /// Current state of the vehicle controller (for debugging purposes).

@@ -14,14 +14,17 @@ struct CARLA_API FWheelPhysicsControl
   GENERATED_BODY()
 
   UPROPERTY(Category = "Wheel Tire Friction", EditAnywhere, BlueprintReadWrite)
-  float TireFriction = 0.0f;
+  float TireFriction = 3.5f;
 
   UPROPERTY(Category = "Wheel Damping Rate", EditAnywhere, BlueprintReadWrite)
-  float DampingRate = 0.0f;
+  float DampingRate = 1.0f;
 
-  UPROPERTY(Category = "Wheel Steer Angle", EditAnywhere, BlueprintReadWrite)
-  float SteerAngle = 0.0f;
+  UPROPERTY(Category = "Wheel Max Steer Angle", EditAnywhere, BlueprintReadWrite)
+  float MaxSteerAngle = 70.0f;
 
-  UPROPERTY(Category = "Wheel Disable Steering", EditAnywhere, BlueprintReadWrite)
-  bool bDisableSteering = 0.0f;
+  UPROPERTY(Category = "Wheel Shape Radius", EditAnywhere, BlueprintReadWrite)
+  float Radius = 30.0f;
+
+  UPROPERTY(Category = "Wheel Position", EditAnywhere, BlueprintReadWrite)
+  FVector Position = FVector::ZeroVector;
 };

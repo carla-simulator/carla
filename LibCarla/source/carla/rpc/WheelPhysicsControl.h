@@ -19,24 +19,28 @@ namespace rpc {
     WheelPhysicsControl(
         float in_tire_friction,
         float in_damping_rate,
-        float in_steer_angle,
-        bool in_disable_steering)
+        float in_max_steer_angle,
+        float in_radius,
+        geom::Vector3D in_position)
       : tire_friction(in_tire_friction),
         damping_rate(in_damping_rate),
-        steer_angle(in_steer_angle),
-        disable_steering(in_disable_steering) {}
+        max_steer_angle(in_max_steer_angle),
+        radius(in_radius),
+        position(in_position) {}
 
     float tire_friction = 2.0f;
     float damping_rate = 0.25f;
-    float steer_angle = 70.0f;
-    bool disable_steering = false;
+    float max_steer_angle = 70.0f;
+    float radius = 30.0f;
+    geom::Vector3D position = {0.0f, 0.0f, 0.0f};
 
     bool operator!=(const WheelPhysicsControl &rhs) const {
       return
         tire_friction != rhs.tire_friction ||
         damping_rate != rhs.damping_rate ||
-        steer_angle != rhs.steer_angle ||
-        disable_steering != rhs.disable_steering;
+        max_steer_angle != rhs.max_steer_angle ||
+        radius != rhs.radius ||
+        position != rhs.position;
     }
 
     bool operator==(const WheelPhysicsControl &rhs) const {
@@ -47,23 +51,26 @@ namespace rpc {
     WheelPhysicsControl(const FWheelPhysicsControl &Wheel)
       : tire_friction(Wheel.TireFriction),
         damping_rate(Wheel.DampingRate),
-        steer_angle(Wheel.SteerAngle),
-        disable_steering(Wheel.bDisableSteering) {}
+        max_steer_angle(Wheel.MaxSteerAngle),
+        radius(Wheel.Radius),
+        position(Wheel.Position.X, Wheel.Position.Y, Wheel.Position.Z) {}
 
     operator FWheelPhysicsControl() const {
       FWheelPhysicsControl Wheel;
       Wheel.TireFriction = tire_friction;
       Wheel.DampingRate = damping_rate;
-      Wheel.SteerAngle = steer_angle;
-      Wheel.bDisableSteering = disable_steering;
+      Wheel.MaxSteerAngle = max_steer_angle;
+      Wheel.Radius = radius;
+      Wheel.Position = {position.x, position.y, position.z};
       return Wheel;
     }
 #endif
 
     MSGPACK_DEFINE_ARRAY(tire_friction,
         damping_rate,
-        steer_angle,
-        disable_steering)
+        max_steer_angle,
+        radius,
+        position)
   };
 
 }

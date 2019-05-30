@@ -235,6 +235,33 @@ static void AddVariationsForSensor(FActorDefinition &Def)
   Def.Variations.Emplace(Tick);
 }
 
+static void AddVariationsForTrigger(FActorDefinition &Def)
+{
+  // Friction
+  FActorVariation Friction;
+  Friction.Id = FString("friction");
+  Friction.Type = EActorAttributeType::Float;
+  Friction.RecommendedValues = { TEXT("3.5f") };
+  Friction.bRestrictToRecommended = false;
+  Def.Variations.Emplace(Friction);
+
+  // Extent
+  FString Extent("extent");
+  FString Coordinates[3] = {FString("x"), FString("y"), FString("z")};
+
+  for (auto Coordinate : Coordinates)
+  {
+    FActorVariation ExtentCoordinate;
+
+    ExtentCoordinate.Id = JoinStrings(TEXT("_"), Extent, Coordinate);
+    ExtentCoordinate.Type = EActorAttributeType::Float;
+    ExtentCoordinate.RecommendedValues = { TEXT("1.0f") };
+    ExtentCoordinate.bRestrictToRecommended = false;
+
+    Def.Variations.Emplace(ExtentCoordinate);
+  }
+}
+
 FActorDefinition UActorBlueprintFunctionLibrary::MakeGenericSensorDefinition(
     const FString &Type,
     const FString &Id)
@@ -480,6 +507,24 @@ void UActorBlueprintFunctionLibrary::MakePedestrianDefinitions(
     TArray<FActorDefinition> &Definitions)
 {
   FillActorDefinitionArray(ParameterArray, Definitions, &MakePedestrianDefinition);
+}
+
+void UActorBlueprintFunctionLibrary::MakeTriggerDefinitions(
+    const TArray<FString> &ParameterArray,
+    TArray<FActorDefinition> &Definitions)
+{
+  FillActorDefinitionArray(ParameterArray, Definitions, &MakeTriggerDefinition);
+}
+
+void UActorBlueprintFunctionLibrary::MakeTriggerDefinition(
+    const FString &Id,
+    bool &Success,
+    FActorDefinition &Definition)
+{
+  FillIdAndTags(Definition, TEXT("trigger"), Id);
+  AddVariationsForTrigger(Definition);
+  Success = CheckActorDefinition(Definition);
+  check(Success);
 }
 
 void UActorBlueprintFunctionLibrary::MakePropDefinition(
