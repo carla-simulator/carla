@@ -1,5 +1,10 @@
 ## Latest
+
   * Vulkan support: Changed project settings to make vulkan default on linux and updated make script to allow user to select opengl
+  * Add ability to set motion blur settings for rgb camera in sensor python blueprint
+  * Improved visual quality of the screen capture for the rgb sensor
+    - Enabled Temporal AA for screen captures with no post-processing to prevent jaggies during motion
+    - Reduced the target gamma of render target to 1.4 to minimize brightness differences with main camera
   * Upgraded to Unreal Engine 4.22
   * Recorder fixes:
     - Fixed a possible crash if an actor is respawned before the episode is ready when a new map is loaded automatically.
@@ -27,6 +32,8 @@
   * Register user props in fbx format, make them available in Carla Blueprint Library and spawnable.
   * Exposed 'is_invincible' for pedestrians
   * Fixed bug related with Pygame error of surface too large, added sidewalks and improved lane markings in `no_rendering_mode.py`
+  * Physics:
+    - Added Friction Trigger Boxes for simulating, for example, slippery surfaces in any region of the map defined by users.
 
 ## CARLA 0.9.5
 
