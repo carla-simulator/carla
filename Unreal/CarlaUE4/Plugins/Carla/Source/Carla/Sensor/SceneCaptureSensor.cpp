@@ -109,6 +109,7 @@ void ASceneCaptureSensor::SetMotionBlurIntensity(float Intensity)
 
 float ASceneCaptureSensor::GetMotionBlurIntensity() const
 {
+  check(CaptureComponent2D != nullptr);
   return CaptureComponent2D->PostProcessSettings.MotionBlurAmount;
 }
 
@@ -120,6 +121,7 @@ void ASceneCaptureSensor::SetMotionBlurMaxDistortion(float MaxDistortion)
 
 float ASceneCaptureSensor::GetMotionBlurMaxDistortion() const
 {
+  check(CaptureComponent2D != nullptr);
   return CaptureComponent2D->PostProcessSettings.MotionBlurMax;
 }
 
@@ -131,6 +133,7 @@ void ASceneCaptureSensor::SetMotionBlurMinObjectScreenSize(float ScreenSize)
 
 float ASceneCaptureSensor::GetMotionBlurMinObjectScreenSize() const
 {
+  check(CaptureComponent2D != nullptr);
   return CaptureComponent2D->PostProcessSettings.MotionBlurPerObjectSize;
 }
 
