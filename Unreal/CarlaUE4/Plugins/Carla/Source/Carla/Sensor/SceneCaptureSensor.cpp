@@ -249,11 +249,11 @@ namespace SceneCaptureSensor_local_ns {
 
     // Set motion blur settings (defaults)
     PostProcessSettings.bOverride_MotionBlurAmount = true;
-    PostProcessSettings.MotionBlurAmount = 0.5f;
+    PostProcessSettings.MotionBlurAmount = 0.45f;
     PostProcessSettings.bOverride_MotionBlurMax = true;
-    PostProcessSettings.MotionBlurMax = 5.0f;
+    PostProcessSettings.MotionBlurMax = 0.35f;
     PostProcessSettings.bOverride_MotionBlurPerObjectSize = true;
-    PostProcessSettings.MotionBlurPerObjectSize = 0.5f;
+    PostProcessSettings.MotionBlurPerObjectSize = 0.1f;
   }
 
   // Remove the show flags that might interfere with post-processing effects

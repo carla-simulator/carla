@@ -324,19 +324,19 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation MBIntesity;
     MBIntesity.Id = TEXT("motion_blur_intensity");
     MBIntesity.Type = EActorAttributeType::Float;
-    MBIntesity.RecommendedValues = { TEXT("0.5") };
+    MBIntesity.RecommendedValues = { TEXT("0.45") };
     MBIntesity.bRestrictToRecommended = false;
 
     FActorVariation MBMaxDistortion;
     MBMaxDistortion.Id = TEXT("motion_blur_max_distortion");
     MBMaxDistortion.Type = EActorAttributeType::Float;
-    MBMaxDistortion.RecommendedValues = { TEXT("5.0") };
+    MBMaxDistortion.RecommendedValues = { TEXT("0.35") };
     MBMaxDistortion.bRestrictToRecommended = false;
 
     FActorVariation MBMinObjectScreenSize;
     MBMinObjectScreenSize.Id = TEXT("motion_blur_min_object_screen_size");
     MBMinObjectScreenSize.Type = EActorAttributeType::Float;
-    MBMinObjectScreenSize.RecommendedValues = { TEXT("0.5") };
+    MBMinObjectScreenSize.RecommendedValues = { TEXT("0.1") };
     MBMinObjectScreenSize.bRestrictToRecommended = false;
 
     Definition.Variations.Append({PostProccess, MBIntesity, MBMaxDistortion, MBMinObjectScreenSize});
