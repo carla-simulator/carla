@@ -81,7 +81,7 @@
     instance_variables:
     - var_name: Standard
       doc: >
-        Same as white
+        White by default
     - var_name: Blue
       doc: >
     - var_name: Green
@@ -98,7 +98,7 @@
   - class_name: LaneMarkingType
     # - DESCRIPTION ------------------------
     doc: >
-      Defines the lane marking types
+      Defines the lane marking types that OpenDRIVE accepts
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: NONE
@@ -139,21 +139,20 @@
     - def_name: get_spawn_points
       params:
       - param_name: self
-      return: 'list([carla.Transform](#carla.Transform))'
+      return: list(carla.Transform)
       doc: >
         Returns a list of transformations corresponding to the recommended spawn
         points over the map
     # --------------------------------------
     - def_name: get_waypoint
       doc: >
-        Return the nearest [Waypoint](#carla.Waypoint) given a
-        [Location](#carla.Location)
+        Return the nearest carla.Waypoint given a carla.Location
       params:
       - param_name: self
       - param_name: location
-        type: "[Location](#carla.Location)"
+        type: carla.Location
         doc: > 
-          Location where you want to get the [Waypoint](#carla.Waypoint)
+          Location where you want to get the carla.Waypoint
       - param_name: project_to_road
         type: bool
         default: "True"
@@ -161,12 +160,12 @@
           If **True**, the waypoint will be at the center of the nearest lane.
           If **False**, the waypoint will be at the given location. Also, in this case, the result may be `None` if the waypoint is not on a searched lane
       - param_name: lane_type
-        type: "[carla.LaneType](#carla.LaneType)"
+        type: carla.LaneType
         default: carla.LaneType.Driving
         doc: > 
           This parameter is used to limit the search on certain lane types. 
           This can be used like a flag: `LaneType.Driving & LaneType.Shoulder`
-      return: "[Waypoint](#carla.Waypoint)"
+      return: carla.Waypoint
     # --------------------------------------
     - def_name: get_topology
       params:
@@ -177,7 +176,7 @@
         The format is a list of pairs of waypoints, where the first waypoint is the origin and the second
         one is the destination, for instance, a valid output could be:
         `[ (w0, w1), (w0, w2), (w1, w3), (w2, w3) ]`
-      return: list(tuple([Waypoint](#carla.Waypoint), [Waypoint](#carla.Waypoint)))
+      return: list(tuple(carla.Waypoint, carla.Waypoint))
     # --------------------------------------
     - def_name: generate_waypoints
       params:
@@ -186,7 +185,7 @@
         type: float
         doc: >
           Aproximate distance between the waypoints
-      return: list([Waypoint](#carla.Waypoint))
+      return: list(carla.Waypoint)
       doc: >
         Returns a list of waypoints positioned on the center of the lanes 
         all over the map with an approximate distance between them.
@@ -215,16 +214,25 @@
   - class_name: LaneMarking
     # - DESCRIPTION ------------------------
     doc: >
+      Struct that defines a lane marking
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: type
+      type: carla.LaneMarkingType
       doc: >
+        Lane marking type
     - var_name: color
+      type: carla.Color
       doc: >
+        Actual color of the marking
     - var_name: lane_change
+      type: carla.LaneChange
       doc: >
+        Lane change availability
     - var_name: width
+      type: float
       doc: >
+        Horizontal lane marking thickness
 
   - class_name: Waypoint
     # - DESCRIPTION ------------------------
@@ -232,28 +240,57 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: id
+      type: int
       doc: >
+        Waypoint id, it's generated using a hash combination of its `road_id`, `section_id`, 
+        `lane_id` and `s` values, all them come from the OpenDRIVE. The `s` precision is set 
+        to 2 centimeters, so 2 waypoints at a distance `s` less than 2 centimeters in the same 
+        road, section and lane, will have the same `id`.
     - var_name: transform
+      type: carla.Transform
       doc: >
+        Transform indicating it's position and orientation according to the road.
     - var_name: is_intersection
+      type: bool
       doc: >
+        _Deprecated, use is_junction instead_
+    - var_name: is_junction
+      type: bool
+      doc: >
+        True if the current Waypoint is on a junction
     - var_name: lane_width
+      type: float
       doc: >
+        Horizontal size of the road at current `s`
     - var_name: road_id
+      type: int
       doc: >
+        OpenDRIVE road's id
     - var_name: section_id
+      type: int
       doc: >
+        OpenDRIVE section's id, based on the order that they are originally defined
     - var_name: lane_id
+      type: int
       doc: >
+        OpenDRIVE lane's id
     - var_name: s
+      type: float
       doc: >
+        OpenDRIVE `s` value of the current position
     - var_name: lane_change
+      type: carla.LaneChange
       doc: >
+        Lane change definition of the current Waypoint's location, based on the traffic rules defined in
+        the OpenDRIVE file. Basically it tells you if a lane change can be done and in which direction.
     - var_name: lane_type
+      type: carla.LaneType
       doc: >
     - var_name: right_lane_marking
+      type: carla.LaneMarking
       doc: >
     - var_name: left_lane_marking
+      type: carla.LaneMarking
       doc: >
     # - METHODS ----------------------------
     methods:
