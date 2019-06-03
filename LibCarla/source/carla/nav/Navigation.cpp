@@ -324,7 +324,7 @@ namespace nav {
 
   // update all walkers in crowd
   void Navigation::UpdateCrowd(const client::detail::EpisodeState &state) {
-
+    std::lock_guard<std::mutex> lock(_mutex);
     if (!_navMesh || !_crowd) {
       return;
     }
