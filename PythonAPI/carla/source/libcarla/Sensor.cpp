@@ -10,6 +10,9 @@
 #include <carla/client/LaneInvasionSensor.h>
 #include <carla/client/Sensor.h>
 #include <carla/client/ServerSideSensor.h>
+#ifdef LIBCARLA_RSS_ENABLED
+#include <carla/rss/RssSensor.h>
+#endif
 
 static void SubscribeToStream(carla::client::Sensor &self, boost::python::object callback) {
   self.Listen(MakeCallback(std::move(callback)));
@@ -45,4 +48,12 @@ void export_sensor() {
       ("GnssSensor", no_init)
     .def(self_ns::str(self_ns::self))
   ;
+
+#ifdef LIBCARLA_RSS_ENABLED
+  class_<cc::RssSensor, bases<cc::Sensor>, boost::noncopyable, boost::shared_ptr<cc::RssSensor>>
+      ("RssSensor", no_init)
+    .def_readwrite("visualize_results", &cc::RssSensor::visualize_results)
+    .def(self_ns::str(self_ns::self))
+  ;
+#endif
 }
