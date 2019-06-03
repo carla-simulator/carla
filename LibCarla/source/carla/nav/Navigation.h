@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "carla/AtomicList.h"
 #include "carla/client/detail/EpisodeState.h"
 #include "carla/geom/Location.h"
 #include "carla/geom/Transform.h"
@@ -82,6 +83,9 @@ namespace nav {
     dtCrowd *_crowd { nullptr };
     // mapping Id
     std::unordered_map<ActorId, int> _mappedId;
+
+    std::mutex _mutex;
+
   };
 
 } // namespace nav
