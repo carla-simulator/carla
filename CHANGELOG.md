@@ -1,4 +1,5 @@
 ## Latest
+  * Add build variant with AD RSS library integration with RSS sensor and result visualisation
   * Add ability to set motion blur settings for rgb camera in sensor python blueprint
   * Improved visual quality of the screen capture for the rgb sensor
     - Enabled Temporal AA for screen captures with no post-processing to prevent jaggies during motion

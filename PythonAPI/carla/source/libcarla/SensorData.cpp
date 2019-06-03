@@ -16,6 +16,8 @@
 #include <carla/sensor/data/LaneInvasionEvent.h>
 #include <carla/sensor/data/LidarMeasurement.h>
 #include <carla/sensor/data/GnssEvent.h>
+#include <carla/sensor/data/RssResponse.h>
+
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
@@ -71,6 +73,13 @@ namespace data {
         << ", lat=" << meas.GetLatitude()
         << ", lon=" << meas.GetLongitude()
         << ", alt=" << meas.GetAltitude()
+        << ')';
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const RssResponse &meas) {
+    out << "RssResponse(frame=" << meas.GetFrameNumber()
+        << ", timestamp=" << meas.GetTimestamp()
         << ')';
     return out;
   }
@@ -232,6 +241,24 @@ void export_sensor_data() {
     .add_property("latitude", &csd::GnssEvent::GetLatitude)
     .add_property("longitude", &csd::GnssEvent::GetLongitude)
     .add_property("altitude", &csd::GnssEvent::GetAltitude)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  enum_<csd::LateralResponse>("LateralResponse")
+    .value("None", csd::LateralResponse::None)
+    .value("BrakeMin", csd::LateralResponse::BrakeMin)
+  ;
+
+  enum_<csd::LongitudinalResponse>("LongitudinalResponse")
+    .value("None", csd::LongitudinalResponse::None)
+    .value("BrakeMinCorrect", csd::LongitudinalResponse::BrakeMinCorrect)
+    .value("BrakeMin", csd::LongitudinalResponse::BrakeMin)
+  ;
+
+  class_<csd::RssResponse, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::RssResponse>>("RssResponse", no_init)
+    .add_property("longitudinal_response", CALL_RETURNING_COPY(csd::RssResponse, GetLongitudinalResponse))
+    .add_property("lateral_response_right", CALL_RETURNING_COPY(csd::RssResponse, GetLateralResponseRight))
+    .add_property("lateral_response_left", CALL_RETURNING_COPY(csd::RssResponse, GetLateralResponseLeft))
     .def(self_ns::str(self_ns::self))
   ;
 }

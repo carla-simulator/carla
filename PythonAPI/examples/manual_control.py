@@ -2,6 +2,7 @@
 
 # Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
+# Copyright (c) 2019 Intel Corporation
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
@@ -143,15 +144,17 @@ def get_actor_display_name(actor, truncate=250):
 
 
 class World(object):
-    def __init__(self, carla_world, hud, actor_filter, actor_role_name='hero'):
+    def __init__(self, carla_world, hud, actor_filter, actor_role_name='hero', enable_rss=False):
         self.world = carla_world
         self.actor_role_name = actor_role_name
+        self.enable_rss = enable_rss
         self.map = self.world.get_map()
         self.hud = hud
         self.player = None
         self.collision_sensor = None
         self.lane_invasion_sensor = None
         self.gnss_sensor = None
+        self.rss_sensor = None
         self.camera_manager = None
         self._weather_presets = find_weather_presets()
         self._weather_index = 0
@@ -189,6 +192,8 @@ class World(object):
         self.collision_sensor = CollisionSensor(self.player, self.hud)
         self.lane_invasion_sensor = LaneInvasionSensor(self.player, self.hud)
         self.gnss_sensor = GnssSensor(self.player)
+        if self.enable_rss:
+            self.rss_sensor = RssSensor(self.player)
         self.camera_manager = CameraManager(self.player, self.hud)
         self.camera_manager.transform_index = cam_pos_index
         self.camera_manager.set_sensor(cam_index, notify=False)
@@ -219,8 +224,10 @@ class World(object):
             self.camera_manager.sensor,
             self.collision_sensor.sensor,
             self.lane_invasion_sensor.sensor,
-            self.gnss_sensor.sensor,
-            self.player]
+            self.gnss_sensor.sensor]
+        if self.rss_sensor:
+            actors.append(self.rss_sensor.sensor)
+        actors.append(self.player)
         for actor in actors:
             if actor is not None:
                 actor.destroy()
@@ -650,6 +657,36 @@ class GnssSensor(object):
         self.lat = event.latitude
         self.lon = event.longitude
 
+# ==============================================================================
+# -- RssSensor --------------------------------------------------------
+# ==============================================================================
+
+
+class RssSensor(object):
+    def __init__(self, parent_actor):
+        self.sensor = None
+        self._parent = parent_actor
+        self.lon_response = None
+        self.lat_response_right = None
+        self.lat_response_left = None
+        world = self._parent.get_world()
+        bp = world.get_blueprint_library().find('sensor.other.rss')
+        self.sensor = world.spawn_actor(bp, carla.Transform(carla.Location(x=0.0, z=0.0)), attach_to=self._parent)
+        # We need to pass the lambda a weak reference to self to avoid circular
+        # reference.
+        weak_self = weakref.ref(self)
+        self.sensor.visualize_results = True
+        self.sensor.listen(lambda event: RssSensor._on_rss_response(weak_self, event))
+
+    @staticmethod
+    def _on_rss_response(weak_self, response):
+        self = weak_self()
+        if not self:
+            return
+        self.lon_response = response.longitudinal_response
+        self.lat_response_right = response.lateral_response_right
+        self.lat_response_left = response.lateral_response_left
+
 
 # ==============================================================================
 # -- CameraManager -------------------------------------------------------------
@@ -777,7 +814,7 @@ def game_loop(args):
             pygame.HWSURFACE | pygame.DOUBLEBUF)
 
         hud = HUD(args.width, args.height)
-        world = World(client.get_world(), hud, args.filter, args.rolename)
+        world = World(client.get_world(), hud, args.filter, args.rolename, args.rss)
         controller = KeyboardControl(world, args.autopilot)
 
         clock = pygame.time.Clock()
@@ -843,6 +880,10 @@ def main():
         metavar='NAME',
         default='hero',
         help='actor role name (default: "hero")')
+    argparser.add_argument(
+        '--rss',
+        action='store_true',
+        help='enable RSS Sensor and visualization (requires RSS variant of PythonAPI!)')
     args = argparser.parse_args()
 
     args.width, args.height = [int(x) for x in args.res.split('x')]
