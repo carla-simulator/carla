@@ -16,7 +16,8 @@
 #include <stack>
 
 /// Checks validity of FActorDefinition.
-class FActorDefinitionValidator {
+class FActorDefinitionValidator
+{
 public:
 
   /// Iterate all actor definitions and their properties and display messages on
@@ -49,11 +50,11 @@ private:
         Message += String;
       }
       Message += TEXT(" ");
-      Message += FString::Printf(Format, std::forward<ARGS>(Args)...);
+      Message += FString::Printf(Format, std::forward<ARGS>(Args) ...);
 
       UE_LOG(LogCarla, Error, TEXT("%s"), *Message);
 #if WITH_EDITOR
-      if(GEngine)
+      if (GEngine)
       {
         GEngine->AddOnScreenDebugMessage(42, 15.0f, FColor::Red, Message);
       }
@@ -94,7 +95,7 @@ private:
   template <typename T>
   bool AreValid(const FString &Type, const TArray<T> &Array)
   {
-    return ForEach(Type, Array, [this](const auto &Item){ return IsValid(Item); });
+    return ForEach(Type, Array, [this](const auto &Item) { return IsValid(Item); });
   }
 
   bool IsIdValid(const FString &Id)
@@ -124,38 +125,39 @@ private:
   bool IsValid(const FActorVariation &Variation)
   {
     return
-        IsIdValid(Variation.Id) &&
-        IsValid(Variation.Type) &&
-        OnScreenAssert(Variation.RecommendedValues.Num() > 0, TEXT("Recommended values cannot be empty")) &&
-        ForEach(TEXT("Recommended Value"), Variation.RecommendedValues, [&](auto &Value) {
-          return ValueIsValid(Variation.Type, Value);
-        });
+      IsIdValid(Variation.Id) &&
+      IsValid(Variation.Type) &&
+      OnScreenAssert(Variation.RecommendedValues.Num() > 0, TEXT("Recommended values cannot be empty")) &&
+      ForEach(TEXT("Recommended Value"), Variation.RecommendedValues, [&](auto &Value) {
+      return ValueIsValid(Variation.Type, Value);
+    });
   }
 
   bool IsValid(const FActorAttribute &Attribute)
   {
     return
-        IsIdValid(Attribute.Id) &&
-        IsValid(Attribute.Type) &&
-        ValueIsValid(Attribute.Type, Attribute.Value);
+      IsIdValid(Attribute.Id) &&
+      IsValid(Attribute.Type) &&
+      ValueIsValid(Attribute.Type, Attribute.Value);
   }
 
   bool IsValid(const FActorDefinition &ActorDefinition)
   {
     /// @todo Validate Class and make sure IDs are not repeated.
     return
-        IsIdValid(ActorDefinition.Id) &&
-        AreTagsValid(ActorDefinition.Tags) &&
-        AreValid(TEXT("Variation"), ActorDefinition.Variations) &&
-        AreValid(TEXT("Attribute"), ActorDefinition.Attributes);
+      IsIdValid(ActorDefinition.Id) &&
+      AreTagsValid(ActorDefinition.Tags) &&
+      AreValid(TEXT("Variation"), ActorDefinition.Variations) &&
+      AreValid(TEXT("Attribute"), ActorDefinition.Attributes);
   }
 
   FScopedStack<FString> Stack;
 };
 
 template <typename ... ARGS>
-static FString JoinStrings(const FString &Separator, ARGS && ... Args) {
-  return FString::Join(TArray<FString>{std::forward<ARGS>(Args)...}, *Separator);
+static FString JoinStrings(const FString &Separator, ARGS && ... Args)
+{
+  return FString::Join(TArray<FString>{std::forward<ARGS>(Args) ...}, *Separator);
 }
 
 static FString ColorToFString(const FColor &Color)
@@ -187,11 +189,11 @@ bool UActorBlueprintFunctionLibrary::CheckActorDefinitions(const TArray<FActorDe
 /// -- Helpers to create actor definitions -------------------------------------
 /// ============================================================================
 
-template <typename... TStrs>
-static void FillIdAndTags(FActorDefinition &Def, TStrs &&... Strings)
+template <typename ... TStrs>
+static void FillIdAndTags(FActorDefinition &Def, TStrs && ... Strings)
 {
-  Def.Id = JoinStrings(TEXT("."), std::forward<TStrs>(Strings)...).ToLower();
-  Def.Tags = JoinStrings(TEXT(","), std::forward<TStrs>(Strings)...).ToLower();
+  Def.Id = JoinStrings(TEXT("."), std::forward<TStrs>(Strings) ...).ToLower();
+  Def.Tags = JoinStrings(TEXT(","), std::forward<TStrs>(Strings) ...).ToLower();
   // each actor gets an actor role name attribute (empty by default)
   FActorVariation ActorRole;
   ActorRole.Id = TEXT("role_name");
@@ -201,11 +203,13 @@ static void FillIdAndTags(FActorDefinition &Def, TStrs &&... Strings)
   Def.Variations.Emplace(ActorRole);
 }
 
-static void AddRecommendedValuesForActorRoleName(FActorDefinition &Definition, TArray<FString> &&RecommendedValues)
+static void AddRecommendedValuesForActorRoleName(
+    FActorDefinition &Definition,
+    TArray<FString> &&RecommendedValues)
 {
   for (auto &&ActorVariation: Definition.Variations)
   {
-    if ( ActorVariation.Id == "role_name"  )
+    if (ActorVariation.Id == "role_name")
     {
       ActorVariation.RecommendedValues = RecommendedValues;
       return;
@@ -215,7 +219,8 @@ static void AddRecommendedValuesForActorRoleName(FActorDefinition &Definition, T
 
 static void AddRecommendedValuesForSensorRoleNames(FActorDefinition &Definition)
 {
-  AddRecommendedValuesForActorRoleName(Definition, {TEXT("front"), TEXT("back"), TEXT("left"), TEXT("right"), TEXT("front_left"), TEXT("front_right"), TEXT("back_left"), TEXT("back_right")});
+  AddRecommendedValuesForActorRoleName(Definition, {TEXT("front"), TEXT("back"), TEXT("left"), TEXT(
+      "right"), TEXT("front_left"), TEXT("front_right"), TEXT("back_left"), TEXT("back_right")});
 }
 
 static void AddVariationsForSensor(FActorDefinition &Def)
@@ -314,7 +319,27 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     PostProccess.Type = EActorAttributeType::Bool;
     PostProccess.RecommendedValues = { TEXT("true") };
     PostProccess.bRestrictToRecommended = false;
-    Definition.Variations.Add(PostProccess);
+
+    // Motion Blur
+    FActorVariation MBIntesity;
+    MBIntesity.Id = TEXT("motion_blur_intensity");
+    MBIntesity.Type = EActorAttributeType::Float;
+    MBIntesity.RecommendedValues = { TEXT("0.45") };
+    MBIntesity.bRestrictToRecommended = false;
+
+    FActorVariation MBMaxDistortion;
+    MBMaxDistortion.Id = TEXT("motion_blur_max_distortion");
+    MBMaxDistortion.Type = EActorAttributeType::Float;
+    MBMaxDistortion.RecommendedValues = { TEXT("0.35") };
+    MBMaxDistortion.bRestrictToRecommended = false;
+
+    FActorVariation MBMinObjectScreenSize;
+    MBMinObjectScreenSize.Id = TEXT("motion_blur_min_object_screen_size");
+    MBMinObjectScreenSize.Type = EActorAttributeType::Float;
+    MBMinObjectScreenSize.RecommendedValues = { TEXT("0.1") };
+    MBMinObjectScreenSize.bRestrictToRecommended = false;
+
+    Definition.Variations.Append({PostProccess, MBIntesity, MBMaxDistortion, MBMinObjectScreenSize});
   }
 
   Success = CheckActorDefinition(Definition);
@@ -381,7 +406,8 @@ void UActorBlueprintFunctionLibrary::MakeVehicleDefinition(
 {
   /// @todo We need to validate here the params.
   FillIdAndTags(Definition, TEXT("vehicle"), Parameters.Make, Parameters.Model);
-  AddRecommendedValuesForActorRoleName(Definition, {TEXT("autopilot"), TEXT("scenario"), TEXT("ego_vehicle")});
+  AddRecommendedValuesForActorRoleName(Definition,
+      {TEXT("autopilot"), TEXT("scenario"), TEXT("ego_vehicle")});
   Definition.Class = Parameters.Class;
   if (Parameters.RecommendedColors.Num() > 0)
   {
@@ -409,9 +435,9 @@ void UActorBlueprintFunctionLibrary::MakeVehicleDefinition(
     Parameters.ObjectType});
 
   Definition.Attributes.Emplace(FActorAttribute{
-      TEXT("number_of_wheels"),
-      EActorAttributeType::Int,
-      FString::FromInt(Parameters.NumberOfWheels)});
+    TEXT("number_of_wheels"),
+    EActorAttributeType::Int,
+    FString::FromInt(Parameters.NumberOfWheels)});
   Success = CheckActorDefinition(Definition);
 }
 
@@ -642,7 +668,11 @@ FColor UActorBlueprintFunctionLibrary::ActorAttributeToColor(
   ActorAttribute.Value.ParseIntoArray(Channels, TEXT(","), false);
   if (Channels.Num() != 3)
   {
-    UE_LOG(LogCarla, Error, TEXT("ActorAttribute '%s': invalid color '%s'"), *ActorAttribute.Id, *ActorAttribute.Value);
+    UE_LOG(LogCarla,
+        Error,
+        TEXT("ActorAttribute '%s': invalid color '%s'"),
+        *ActorAttribute.Id,
+        *ActorAttribute.Value);
     return Default;
   }
   TArray<uint8> Colors;
@@ -651,7 +681,11 @@ FColor UActorBlueprintFunctionLibrary::ActorAttributeToColor(
     auto Val = FCString::Atoi(*Str);
     if ((Val < 0) || (Val > std::numeric_limits<uint8>::max()))
     {
-      UE_LOG(LogCarla, Error, TEXT("ActorAttribute '%s': invalid color '%s'"), *ActorAttribute.Id, *ActorAttribute.Value);
+      UE_LOG(LogCarla,
+          Error,
+          TEXT("ActorAttribute '%s': invalid color '%s'"),
+          *ActorAttribute.Id,
+          *ActorAttribute.Value);
       return Default;
     }
     Colors.Add(Val);
@@ -669,8 +703,8 @@ bool UActorBlueprintFunctionLibrary::RetrieveActorAttributeToBool(
     bool Default)
 {
   return Attributes.Contains(Id) ?
-      ActorAttributeToBool(Attributes[Id], Default) :
-      Default;
+         ActorAttributeToBool(Attributes[Id], Default) :
+         Default;
 }
 
 int32 UActorBlueprintFunctionLibrary::RetrieveActorAttributeToInt(
@@ -679,8 +713,8 @@ int32 UActorBlueprintFunctionLibrary::RetrieveActorAttributeToInt(
     int32 Default)
 {
   return Attributes.Contains(Id) ?
-      ActorAttributeToInt(Attributes[Id], Default) :
-      Default;
+         ActorAttributeToInt(Attributes[Id], Default) :
+         Default;
 }
 
 float UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat(
@@ -689,8 +723,8 @@ float UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat(
     float Default)
 {
   return Attributes.Contains(Id) ?
-      ActorAttributeToFloat(Attributes[Id], Default) :
-      Default;
+         ActorAttributeToFloat(Attributes[Id], Default) :
+         Default;
 }
 
 FString UActorBlueprintFunctionLibrary::RetrieveActorAttributeToString(
@@ -699,8 +733,8 @@ FString UActorBlueprintFunctionLibrary::RetrieveActorAttributeToString(
     const FString &Default)
 {
   return Attributes.Contains(Id) ?
-      ActorAttributeToString(Attributes[Id], Default) :
-      Default;
+         ActorAttributeToString(Attributes[Id], Default) :
+         Default;
 }
 
 FColor UActorBlueprintFunctionLibrary::RetrieveActorAttributeToColor(
@@ -709,8 +743,8 @@ FColor UActorBlueprintFunctionLibrary::RetrieveActorAttributeToColor(
     const FColor &Default)
 {
   return Attributes.Contains(Id) ?
-      ActorAttributeToColor(Attributes[Id], Default) :
-      Default;
+         ActorAttributeToColor(Attributes[Id], Default) :
+         Default;
 }
 
 /// ============================================================================
@@ -720,15 +754,15 @@ FColor UActorBlueprintFunctionLibrary::RetrieveActorAttributeToColor(
 // Here we do different checks when we are in editor, because we don't want the
 // editor crashing while people is testing new actor definitions.
 #if WITH_EDITOR
-#  define CARLA_ABFL_CHECK_ACTOR(ActorPtr) \
-        if ((ActorPtr == nullptr) || ActorPtr->IsPendingKill()) \
-        { \
-          UE_LOG(LogCarla, Error, TEXT("Cannot set empty actor!")); \
-          return; \
-        }
+#  define CARLA_ABFL_CHECK_ACTOR(ActorPtr)                    \
+  if ((ActorPtr == nullptr) || ActorPtr->IsPendingKill())     \
+  {                                                           \
+    UE_LOG(LogCarla, Error, TEXT("Cannot set empty actor!")); \
+    return;                                                   \
+  }
 #else
 #  define CARLA_ABFL_CHECK_ACTOR(ActorPtr) \
-        check((ActorPtr != nullptr) && !ActorPtr->IsPendingKill());
+  check((ActorPtr != nullptr) && !ActorPtr->IsPendingKill());
 #endif // WITH_EDITOR
 
 void UActorBlueprintFunctionLibrary::SetCamera(
@@ -745,8 +779,14 @@ void UActorBlueprintFunctionLibrary::SetCamera(
   {
     Camera->EnablePostProcessingEffects(
         ActorAttributeToBool(
-            Description.Variations["enable_postprocess_effects"],
-            true));
+        Description.Variations["enable_postprocess_effects"],
+        true));
+    Camera->SetMotionBlurIntensity(
+        RetrieveActorAttributeToFloat("motion_blur_intensity", Description.Variations, 0.5f));
+    Camera->SetMotionBlurMaxDistortion(
+        RetrieveActorAttributeToFloat("motion_blur_max_distortion", Description.Variations, 5.0f));
+    Camera->SetMotionBlurMinObjectScreenSize(
+        RetrieveActorAttributeToFloat("motion_blur_min_object_screen_size", Description.Variations, 0.5f));
   }
 }
 

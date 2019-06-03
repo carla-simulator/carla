@@ -67,6 +67,24 @@ public:
   UFUNCTION(BlueprintCallable)
   float GetFOVAngle() const;
 
+  UFUNCTION(BlueprintCallable)
+  void SetMotionBlurIntensity(float Intensity);
+
+  UFUNCTION(BlueprintCallable)
+  float GetMotionBlurIntensity() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetMotionBlurMaxDistortion(float MaxDistortion);
+
+  UFUNCTION(BlueprintCallable)
+  float GetMotionBlurMaxDistortion() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetMotionBlurMinObjectScreenSize(float ScreenSize);
+
+  UFUNCTION(BlueprintCallable)
+  float GetMotionBlurMinObjectScreenSize() const;
+
   /// Use for debugging purposes only.
   UFUNCTION(BlueprintCallable)
   bool ReadPixels(TArray<FColor> &BitMap) const
