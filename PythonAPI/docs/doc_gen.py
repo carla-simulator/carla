@@ -9,10 +9,16 @@
 
 import os
 import yaml
+import re
 
 COLOR_METHOD = '#7fb800'
 COLOR_PARAM = '#00a6ed'
 COLOR_INSTANCE_VAR = '#f8805a'
+
+QUERY = re.compile(r'([cC]arla\.[a-zA-Z]+)')
+
+def create_hyperlinks(text):
+    return re.sub(QUERY, r'[\1](#\1)', text)
 
 def join(elem, separator = ''):
     return separator.join(elem)
@@ -69,7 +75,6 @@ class MarkdownFile:
     def prettify_doc(self, doc):
         doc = doc.strip()
         doc += '' if doc[-1:] == '.' else '.'
-        # doc = doc.replace('\n', '\n' + ('    ' * self._list_depth) if self._list_depth != 0 else '\n')
         return doc
 
 def italic(buf):
@@ -206,9 +211,9 @@ def add_doc_method_param(md, param):
     param_type = ''
     param_doc = ''
     if valid_dic_val(param, 'type'):
-        param_type = param['type']
+        param_type = create_hyperlinks(param['type'])
     if valid_dic_val(param, 'doc'):
-        param_doc = md.prettify_doc(param['doc'])
+        param_doc = create_hyperlinks(md.prettify_doc(param['doc']))
     param_type = '' if not param_type else parentheses(italic(param_type))
     md.list_push(code(param_name))
     if param_type:
@@ -227,7 +232,7 @@ def add_doc_method(md, method, class_key):
     md.list_pushn(''.join([html_key(method_key), method_def]))
     # method doc
     if 'doc' in method and method['doc'] is not '':
-        md.textn(md.prettify_doc(method['doc']))
+        md.textn(create_hyperlinks(md.prettify_doc(method['doc'])))
     # ignore if only have the parameter self
     if valid_dic_val(method, 'params') and \
         len(method['params']) != 1 and \
@@ -240,7 +245,7 @@ def add_doc_method(md, method, class_key):
         md.list_pop()
     if valid_dic_val(method, 'return'):
         md.list_push(bold('Return:') + ' ')
-        md.textn(italic(method['return']))
+        md.textn(italic(create_hyperlinks(method['return'])))
         md.list_pop()
     # raises error doc
     if valid_dic_val(method, 'raises'):
@@ -254,21 +259,14 @@ def add_doc_inst_var(md, inst_var, class_key):
     var_key = '.'.join([class_key, var_name])
     var_type = ''
     if valid_dic_val(inst_var, 'type'):
-        var_type = ' ' + parentheses(italic(inst_var['type']))
+        var_type = ' ' + parentheses(italic(create_hyperlinks(inst_var['type'])))
     md.list_pushn(
         html_key(var_key) +
         bold(color(COLOR_INSTANCE_VAR, var_name)) +
         var_type)
     if valid_dic_val(inst_var, 'doc'):
-        md.textn(md.prettify_doc(inst_var['doc']))
+        md.textn(create_hyperlinks(md.prettify_doc(inst_var['doc'])))
     md.list_pop()
-
-def dump_keys(d, lvl=0):
-    for k, v in d.iteritems():
-        print '%s%s' % (lvl * ' ', k)
-        if type(v) == dict:
-            dump_keys(v, lvl+1)
-
 
 class Documentation:
     """Main documentation class"""
@@ -344,7 +342,7 @@ class Documentation:
                         small(italic('Class')))
                     # Class main doc
                     if valid_dic_val(cl, 'doc'):
-                        md.textn(md.prettify_doc(cl['doc']))
+                        md.textn(create_hyperlinks(md.prettify_doc(cl['doc'])))
                     # Generate instance variable doc (if any)
                     if valid_dic_val(cl, 'instance_variables'):
                         md.title(3, 'Instance Variables')
