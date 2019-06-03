@@ -19,7 +19,8 @@ namespace client {
   }
 
   void WalkerAIController::GoToLocation(const carla::geom::Location &destination) {
-
+    auto nav = GetEpisode().Lock()->GetNavigation();
+    nav->SetWalkerTarget(GetParent()->GetId(), destination);
     logging::log("GO TO LOCATION:", destination.x, destination.y, destination.z);
   }
 

@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/client/Actor.h"
+#include "carla/client/detail/WalkerNavigation.h"
 #include "carla/geom/Vector3D.h"
 
 namespace carla {
@@ -22,7 +23,6 @@ namespace client {
     void GoToLocation(const carla::geom::Location &destination);
 
     void SetMaxSpeed(const float max_speed);
-
   };
 
 } // namespace client

@@ -6,8 +6,10 @@
 
 #pragma once
 
-#include "carla/rpc/ActorId.h"
+#include "carla/client/detail/EpisodeState.h"
 #include "carla/geom/Location.h"
+#include "carla/geom/Transform.h"
+#include "carla/rpc/ActorId.h"
 #include "recast/Recast.h"
 #include "recast/DetourCrowd.h"
 #include "recast/DetourNavMesh.h"
@@ -51,30 +53,35 @@ namespace nav {
     Navigation();
     ~Navigation();
     // load navigation data
-    bool Load(const std::string Filename);
+    bool Load(const std::string filename);
     // load navigation data from memory
-    bool Load(const std::vector<uint8_t> Content);
+    bool Load(const std::vector<uint8_t> content);
     // return the path points to go from one position to another
-    bool GetPath(const carla::geom::Location From, const carla::geom::Location To, dtQueryFilter* Filter, std::vector<carla::geom::Location> &Path);
+    bool GetPath(const carla::geom::Location from, const carla::geom::Location to, dtQueryFilter* filter, std::vector<carla::geom::Location> &path);
 
     // create the crowd object
     void CreateCrowd(void);
-    // add a walker
-    bool AddWalker(ActorId Id, carla::geom::Location From);
+    // create a new walker but not yet add in crowd
+    void AddWalker(ActorId id);
+    // create a new walker in crowd
+    bool AddWalkerInCrowd(ActorId id, carla::geom::Location from);
     // set a new target point to go
-    bool SetWalkerTarget(ActorId Id, carla::geom::Location To);
+    bool SetWalkerTarget(ActorId id, carla::geom::Location to);
+    // get the walker current transform
+    bool GetWalkerTransform(ActorId id, carla::geom::Transform &trans);
     // update all walkers in crowd
-    void UpdateCrowd(float DeltaTime);
+    void UpdateCrowd(const client::detail::EpisodeState &state);
 
     private:
-    std::vector<uint8_t> BinaryMesh;
+    std::vector<uint8_t> _binaryMesh;
+    std::vector<ActorId> _walkersQueueToAdd;
     // meshes
-    dtNavMesh *NavMesh { nullptr };
-    dtNavMeshQuery *NavQuery { nullptr };
+    dtNavMesh *_navMesh { nullptr };
+    dtNavMeshQuery *_navQuery { nullptr };
     // crowd
-    dtCrowd *Crowd { nullptr };
+    dtCrowd *_crowd { nullptr };
     // mapping Id
-    std::unordered_map<ActorId, int> MappedId;
+    std::unordered_map<ActorId, int> _mappedId;
   };
 
 } // namespace nav

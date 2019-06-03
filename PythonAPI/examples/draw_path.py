@@ -55,17 +55,42 @@ def main():
         world = client.get_world()
         m = world.get_map()
         debug = world.debug
-        a = carla.Location(-141.789, -143.839, 0.139954)
-        b = carla.Location(-29.7504, -26.8764, 0.270432)
-        points = []
-        points = client.create_walker(a, b)
-        for i in range(len(points)-1):
-            a1 = carla.Location(points[i].x, points[i].y, points[i].z)
-            b1 = carla.Location(points[i+1].x, points[i+1].y, points[i+1].z)
-            # print(a.x, a.y, a.z)
-            debug.draw_line(a1, b1, color=orange, thickness=0.5, life_time=12)
-            # debug.draw_line(a, a+carla.Location(z=1000), color=orange, thickness=0.2, life_time=12)
-            debug.draw_point(a1, 1, red, 12)
+
+        spawn_point = carla.Transform()
+        spawn_point.location.x = -18
+        spawn_point.location.y = 1.2
+        spawn_point.location.z = 18
+        spawn_point.rotation.roll = 0.0
+        spawn_point.rotation.pitch = 0.0
+
+        # player
+        # print(world.get_blueprint_library())
+        # exit(1)
+        blueprint = random.choice(world.get_blueprint_library().filter('walker.pedestrian.0002'))
+        player = world.spawn_actor(blueprint, spawn_point)
+
+        # controller
+        blueprint = random.choice(world.get_blueprint_library().filter('controller.ai.walker'))
+        walker_controller = world.spawn_actor(blueprint, spawn_point, attach_to=player)
+        walker_controller.start()
+        time.sleep(0.5)
+        walker_controller.go_to_location(carla.Location(-48, 1.2, 27))
+        # walker_controller.set_max_speed(40)
+
+        while (1):
+            time.sleep(1);
+
+        # a = carla.Location(-141.789, -143.839, 0.139954)
+        # b = carla.Location(-29.7504, -26.8764, 0.270432)
+        # points = []
+        # points = client.create_walker(a, b)
+        # for i in range(len(points)-1):
+        #     a1 = carla.Location(points[i].x, points[i].y, points[i].z)
+        #     b1 = carla.Location(points[i+1].x, points[i+1].y, points[i+1].z)
+        #     # print(a.x, a.y, a.z)
+        #     debug.draw_line(a1, b1, color=orange, thickness=0.5, life_time=12)
+        #     # debug.draw_line(a, a+carla.Location(z=1000), color=orange, thickness=0.2, life_time=12)
+        #     debug.draw_point(a1, 1, red, 12)
 
     finally:
         pass
