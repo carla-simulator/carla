@@ -521,7 +521,7 @@ void UActorBlueprintFunctionLibrary::MakeTriggerDefinition(
     bool &Success,
     FActorDefinition &Definition)
 {
-  FillIdAndTags(Definition, TEXT("trigger"), Id);
+  FillIdAndTags(Definition, TEXT("static"), TEXT("trigger"), Id);
   AddVariationsForTrigger(Definition);
   Success = CheckActorDefinition(Definition);
   check(Success);

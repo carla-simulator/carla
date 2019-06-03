@@ -316,7 +316,7 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
     return;
   }
 
-  for (auto i = 0u; i < PhysicsWheelsNum; ++i)
+  for (int32 i = 0; i < PhysicsWheelsNum; ++i)
   {
     PxVehicleWheelData PWheelData = Vehicle4W->PVehicle->mWheelsSimData.getWheelData(i);
 

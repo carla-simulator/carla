@@ -54,7 +54,9 @@ public class Carla : ModuleRules
         "Json",
         "JsonUtilities",
         "Landscape",
+        "PhysX",
         "PhysXVehicles",
+        "PhysXVehicleLib",
         "Slate",
         "SlateCore"
         // ... add private dependencies that you statically link with here ...
