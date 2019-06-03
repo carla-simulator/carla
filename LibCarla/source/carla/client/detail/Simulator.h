@@ -19,6 +19,7 @@
 #include "carla/client/detail/Client.h"
 #include "carla/client/detail/Episode.h"
 #include "carla/client/detail/EpisodeProxy.h"
+#include "carla/client/detail/WalkerNavigation.h"
 #include "carla/profiler/LifetimeProfiled.h"
 #include "carla/rpc/TrafficLightState.h"
 
@@ -181,6 +182,10 @@ namespace detail {
 
     void RegisterAIController(const WalkerAIController &controller);
 
+    std::shared_ptr<WalkerNavigation> GetNavigation() {
+      return _episode->GetNavigation();
+    }
+
     /// @}
     // =========================================================================
     /// @name General operations with actors
@@ -341,12 +346,6 @@ namespace detail {
     void SetReplayerTimeFactor(double time_factor) {
       _client.SetReplayerTimeFactor(time_factor);
     }
-
-    std::vector<carla::geom::Location> CreateWalker(
-      carla::geom::Location From,
-      carla::geom::Location To) const {
-      return _client.CreateWalker(From, To);
-    };
 
     /// @}
     // =========================================================================
