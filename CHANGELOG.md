@@ -1,4 +1,5 @@
 ## Latest
+  * Add build variant with AD RSS library integration with RSS sensor and result visualisation
   * Added new sensor: Inertial measurement unit (IMU)
   * Now all the camera-based sensors are provided with an additional parametrized lens distortion shader
   * API changes:

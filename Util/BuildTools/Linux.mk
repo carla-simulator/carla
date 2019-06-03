@@ -91,6 +91,15 @@ PythonAPI.2: LibCarla.client.release
 PythonAPI.3: LibCarla.client.release
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py3
 
+PythonAPI.rss: LibCarla.client.rss.release
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py2 --py3 --rss
+
+PythonAPI.rss.2: LibCarla.client.rss.release
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py2 --rss
+
+PythonAPI.rss.3: LibCarla.client.rss.release
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py3 --rss
+
 PythonAPI.docs:
 	@python PythonAPI/docs/doc_gen.py
 
@@ -112,8 +121,17 @@ LibCarla.client.debug: setup
 LibCarla.client.release: setup
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --client --release
 
+LibCarla.client.rss: LibCarla.client.rss.debug LibCarla.client.rss.release
+LibCarla.client.rss.debug: setup ad-rss
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --client --debug --rss
+LibCarla.client.rss.release: setup ad-rss
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --client --release --rss
+
 setup:
 	@${CARLA_BUILD_TOOLS_FOLDER}/Setup.sh
+
+ad-rss:
+	@${CARLA_BUILD_TOOLS_FOLDER}/Ad-rss.sh
 
 deploy:
 	@${CARLA_BUILD_TOOLS_FOLDER}/Deploy.sh $(ARGS)

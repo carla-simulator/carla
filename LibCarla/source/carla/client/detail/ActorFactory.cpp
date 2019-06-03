@@ -12,6 +12,9 @@
 #include "carla/client/GnssSensor.h"
 #include "carla/client/LaneInvasionSensor.h"
 #include "carla/client/ServerSideSensor.h"
+#ifdef RSS_ENABLED
+#include "carla/rss/RssSensor.h"
+#endif
 #include "carla/client/TrafficLight.h"
 #include "carla/client/TrafficSign.h"
 #include "carla/client/Vehicle.h"
@@ -77,6 +80,10 @@ namespace detail {
       return MakeActorImpl<LaneInvasionSensor>(std::move(init), gc);
     } else if (description.description.id == "sensor.other.gnss") {
       return MakeActorImpl<GnssSensor>(std::move(init), gc);
+#ifdef RSS_ENABLED
+    } else if (description.description.id == "sensor.other.rss") {
+      return MakeActorImpl<RssSensor>(std::move(init), gc);
+#endif
     } else if (description.HasAStream()) {
       return MakeActorImpl<ServerSideSensor>(std::move(init), gc);
     } else if (StringUtil::StartsWith(description.description.id, "vehicle.")) {
