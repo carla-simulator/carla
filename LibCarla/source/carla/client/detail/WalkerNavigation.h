@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/AtomicList.h"
+#include "carla/nav/Navigation.h"
 #include "carla/NonCopyable.h"
 #include "carla/client/Timestamp.h"
 #include "carla/client/detail/EpisodeProxy.h"
@@ -29,14 +30,25 @@ namespace detail {
     explicit WalkerNavigation(Client &client);
 
     void RegisterWalker(ActorId walker_id, ActorId controller_id) {
-      _walkers.Push(WalkerHandle{walker_id, controller_id});
+      // add to list
+      _walkers.Push(WalkerHandle { walker_id, controller_id });
+
+      // create the walker in the crowd (to manage its movement in Detour)
+      _nav.AddWalker(walker_id);
     }
 
-    void Tick(const EpisodeState &episode_state) const;
+    void Tick(const EpisodeState &episode_state);
+
+    // set a new target point to go
+    bool SetWalkerTarget(ActorId id, carla::geom::Location to) {
+      return _nav.SetWalkerTarget(id, to);
+    }
 
   private:
 
     Client &_client;
+
+    carla::nav::Navigation _nav;
 
     struct WalkerHandle {
       ActorId walker;

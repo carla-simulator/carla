@@ -14,34 +14,38 @@ namespace carla {
 namespace client {
 namespace detail {
 
-  static geom::Transform TickWalker(
-      const float delta_seconds,
-      geom::Transform transform) {
-    transform.location += delta_seconds * 2.778f * transform.GetForwardVector();
-    return transform;
-  }
-
   WalkerNavigation::WalkerNavigation(Client &client) : _client(client) {
     // Here call the server to retrieve the navmesh data.
+    _nav.Load(_client.GetNavigationMesh());
+
+    // query the navigation to find a path of points
+    // std::vector<carla::geom::Location> Path;
+    // if (!_nav.GetPath(From, To, nullptr, Path)) {
+    //   logging::log("NAV: Path not found");
+    // }
+    // return Path;
+
   }
 
-  void WalkerNavigation::Tick(const EpisodeState &state) const {
+  void WalkerNavigation::Tick(const EpisodeState &state) {
     auto walkers = _walkers.Load();
     if (walkers->empty()) {
       return;
     }
 
+    // update crowd in navigation module
+    _nav.UpdateCrowd(state);
+
+    carla::geom::Transform trans;
     using Cmd = rpc::Command;
     std::vector<Cmd> commands;
     commands.reserve(walkers->size());
-
     for (auto handle : *walkers) {
-      commands.emplace_back(
-          Cmd::ApplyTransform{
-              handle.walker,
-              TickWalker(
-                  static_cast<float>(state.GetTimestamp().delta_seconds),
-                  state.GetActorState(handle.walker).transform)});
+      // get the transform of the walker
+      if (_nav.GetWalkerTransform(handle.walker, trans)) {
+        // logging::log("Nav: walker at ", trans.location.x, trans.location.y, trans.location.z);
+        commands.emplace_back(Cmd::ApplyTransform{ handle.walker, trans });
+      }
     }
 
     _client.ApplyBatch(std::move(commands), false);

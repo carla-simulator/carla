@@ -52,6 +52,12 @@ namespace detail {
 
     std::shared_ptr<WalkerNavigation> CreateNavigationIfMissing();
 
+    std::shared_ptr<WalkerNavigation> GetNavigation() const {
+      auto nav = _navigation.load();
+      DEBUG_ASSERT(nav != nullptr);
+      return nav;
+    }
+
     void RegisterActor(rpc::Actor actor) {
       _actors.Insert(std::move(actor));
     }
