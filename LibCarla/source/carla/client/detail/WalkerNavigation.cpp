@@ -43,6 +43,8 @@ namespace detail {
     for (auto handle : *walkers) {
       // get the transform of the walker
       if (_nav.GetWalkerTransform(handle.walker, trans)) {
+        // set current height of the walker, ignoring height from recast
+        trans.location.z = state.GetActorState(handle.walker).transform.location.z;
         // logging::log("Nav: walker at ", trans.location.x, trans.location.y, trans.location.z);
         commands.emplace_back(Cmd::ApplyTransform{ handle.walker, trans });
       }
