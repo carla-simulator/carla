@@ -135,11 +135,9 @@ void AWheeledVehicleAIController::Tick(const float DeltaTime)
     return;
   }
 
-  TickAutopilotController();
-
   if (bAutopilotEnabled)
   {
-    Vehicle->ApplyVehicleControl(AutopilotControl, EVehicleInputPriority::Autopilot);
+    Vehicle->ApplyVehicleControl(TickAutopilotController(), EVehicleInputPriority::Autopilot);
   }
   else if (!bControlIsSticky)
   {
@@ -215,13 +213,13 @@ void AWheeledVehicleAIController::SetFixedRoute(
 // -- AI -----------------------------------------------------------------------
 // =============================================================================
 
-void AWheeledVehicleAIController::TickAutopilotController()
+FVehicleControl AWheeledVehicleAIController::TickAutopilotController()
 {
 #if WITH_EDITOR // This happens in simulation mode in editor.
   if (Vehicle == nullptr)
   {
     bAutopilotEnabled = false;
-    return;
+    return {};
   }
 #endif // WITH_EDITOR
 
@@ -259,6 +257,8 @@ void AWheeledVehicleAIController::TickAutopilotController()
     Throttle = Move(Speed);
   }
 
+  FVehicleControl AutopilotControl;
+
   if (Throttle < 0.001f)
   {
     AutopilotControl.Brake = 1.0f;
@@ -270,6 +270,8 @@ void AWheeledVehicleAIController::TickAutopilotController()
     AutopilotControl.Throttle = Throttle;
   }
   AutopilotControl.Steer = Steering;
+
+  return AutopilotControl;
 }
 
 float AWheeledVehicleAIController::GoToNextTargetLocation(FVector &Direction)
