@@ -8,7 +8,7 @@
 
 #include <queue>
 
-#include "GameFramework/PlayerController.h"
+#include "GameFramework/Controller.h"
 
 #include "Traffic/TrafficLightState.h"
 #include "Vehicle/VehicleControl.h"
@@ -21,7 +21,7 @@ class URoadMap;
 
 /// Wheeled vehicle controller with optional AI.
 UCLASS()
-class CARLA_API AWheeledVehicleAIController : public APlayerController
+class CARLA_API AWheeledVehicleAIController final : public AController
 {
   GENERATED_BODY()
 
@@ -38,7 +38,7 @@ public:
 
   /// @}
   // ===========================================================================
-  /// @name APlayerController overrides
+  /// @name Controller overrides
   // ===========================================================================
   /// @{
 
@@ -73,12 +73,6 @@ public:
   const ACarlaWheeledVehicle *GetPossessedVehicle() const
   {
     return Vehicle;
-  }
-
-  UFUNCTION(Category = "Wheeled Vehicle Controller", BlueprintCallable)
-  virtual bool IsPossessingThePlayer() const
-  {
-    return false;
   }
 
   /// @}

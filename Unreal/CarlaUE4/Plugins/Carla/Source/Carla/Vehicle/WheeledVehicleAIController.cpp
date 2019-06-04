@@ -94,7 +94,7 @@ AWheeledVehicleAIController::AWheeledVehicleAIController(const FObjectInitialize
 AWheeledVehicleAIController::~AWheeledVehicleAIController() {}
 
 // =============================================================================
-// -- APlayerController --------------------------------------------------------
+// -- AController --------------------------------------------------------------
 // =============================================================================
 
 void AWheeledVehicleAIController::OnPossess(APawn *aPawn)
