@@ -65,7 +65,7 @@ pipeline {
 
         stage('Smoke Tests') {
             steps {
-                sh 'DISPLAY= ./Dist/*/LinuxNoEditor/CarlaUE4.sh --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
+                sh 'DISPLAY= ./Dist/*/LinuxNoEditor/CarlaUE4.sh -opengl --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
                 sh 'make smoke_tests ARGS="--xml"'
                 sh 'make run-examples ARGS="localhost 3654"'
             }

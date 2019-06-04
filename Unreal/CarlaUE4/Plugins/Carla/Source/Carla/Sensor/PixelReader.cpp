@@ -15,7 +15,7 @@
 #if PLATFORM_WINDOWS
 #  define CARLA_WITH_VULKAN_SUPPORT 1
 #else
-#  define CARLA_WITH_VULKAN_SUPPORT 0
+#  define CARLA_WITH_VULKAN_SUPPORT 1
 #endif
 
 // =============================================================================
