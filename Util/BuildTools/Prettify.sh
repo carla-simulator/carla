@@ -59,7 +59,7 @@ fi
 mkdir -p ${CARLA_BUILD_FOLDER}
 pushd ${CARLA_BUILD_FOLDER} >/dev/null
 
-UNCRUSTIFY_BASENAME=uncrustify-0.67
+UNCRUSTIFY_BASENAME=uncrustify-0.69.0
 
 UNCRUSTIFY=${PWD}/${UNCRUSTIFY_BASENAME}-install/bin/uncrustify
 
@@ -70,7 +70,7 @@ else
 
   log "Retrieving Uncrustify."
 
-  git clone --depth=1 -b uncrustify-0.67 https://github.com/uncrustify/uncrustify.git ${UNCRUSTIFY_BASENAME}-source
+  git clone --depth=1 -b ${UNCRUSTIFY_BASENAME} https://github.com/uncrustify/uncrustify.git ${UNCRUSTIFY_BASENAME}-source
 
   log "Building Uncrustify."
 
