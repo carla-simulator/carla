@@ -18,6 +18,11 @@ namespace client {
     GetEpisode().Lock()->RegisterAIController(*this);
   }
 
+  geom::Location WalkerAIController::GetRandomLocation() {
+    auto nav = GetEpisode().Lock()->GetNavigation();
+    return nav->GetRandomLocation();
+  }
+
   void WalkerAIController::GoToLocation(const carla::geom::Location &destination) {
     auto nav = GetEpisode().Lock()->GetNavigation();
     nav->SetWalkerTarget(GetParent()->GetId(), destination);

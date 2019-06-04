@@ -16,7 +16,7 @@ namespace nav {
 
   static const int MAX_POLYS = 256;
   static const int MAX_AGENTS = 128;
-  static const float AGENT_RADIUS = 0.6f;
+  static const float AGENT_RADIUS = 0.3f;
   static const float AGENT_HEIGHT = 2.0f;
   static const float AGENT_HEIGHT_HALF = AGENT_HEIGHT / 2.0f;
 
@@ -271,10 +271,6 @@ namespace nav {
       return false;
     }
 
-    // random location
-    GetRandomLocation(from, 1.0f);
-    // logging::log("Nav: from ", from.x, from.y, from.z);
-
     // set from Unreal coordinates (and adjust center of walker, from middle to bottom)
     float y = from.y;
     from.y = from.z;
@@ -297,7 +293,7 @@ namespace nav {
     params.updateFlags |= DT_CROWD_OBSTACLE_AVOIDANCE;
     params.updateFlags |= DT_CROWD_SEPARATION;
     params.obstacleAvoidanceType = 3;
-    params.separationWeight = 0.1f;
+    params.separationWeight = 0.5f;
 
     // add walker
     float PointFrom[3] = { from.x, from.y, from.z };
@@ -326,8 +322,6 @@ namespace nav {
   bool Navigation::SetWalkerTargetIndex(int index, carla::geom::Location to) {
     if (index == -1)
       return false;
-
-    GetRandomLocation(to, 1.0f);
 
     // set target position
     float pointTo[3] = { to.x, to.z, to.y };
@@ -380,7 +374,7 @@ namespace nav {
       if (dist.SquaredLength() <= 2) {
         // set a new random target
         carla::geom::Location location;
-        GetRandomLocation(location, 1);
+        GetRandomLocationWithoutLock(location, 1);
         SetWalkerTargetIndex(i, location);
       }
     }
@@ -436,8 +430,12 @@ namespace nav {
         agent->vel[2]);
   }
 
-  // get a random location for navigation
   bool Navigation::GetRandomLocation(carla::geom::Location &location, float maxHeight, dtQueryFilter *filter) {
+    std::lock_guard<std::mutex> lock(_mutex);
+    return GetRandomLocationWithoutLock(location, maxHeight, filter);
+  }
+  // get a random location for navigation
+  bool Navigation::GetRandomLocationWithoutLock(carla::geom::Location &location, float maxHeight, dtQueryFilter *filter) {
     DEBUG_ASSERT(_navQuery != nullptr);
 
     // filter

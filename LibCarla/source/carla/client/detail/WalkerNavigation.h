@@ -39,6 +39,13 @@ namespace detail {
 
     void Tick(const EpisodeState &episode_state);
 
+    // Get Random location in nav mesh
+    geom::Location GetRandomLocation() {
+      geom::Location random_location;
+      _nav.GetRandomLocation(random_location, 1.0f);
+      return random_location;
+    }
+
     // set a new target point to go
     bool SetWalkerTarget(ActorId id, carla::geom::Location to) {
       return _nav.SetWalkerTarget(id, to);
