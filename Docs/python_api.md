@@ -232,6 +232,7 @@
         - [**\__ne__**(**self**)](#carla.Location.__ne__) <sub>_Method_</sub>
     - [**Map**](#carla.Map) <sub>_Class_</sub>  
         - [**name**](#carla.Map.name) <sub>_Instance variable_</sub>
+        - [**\__init__**(**self**, **name**, **xodr_content**)](#carla.Map.__init__) <sub>_Method_</sub>
         - [**get_spawn_points**(**self**)](#carla.Map.get_spawn_points) <sub>_Method_</sub>
         - [**get_waypoint**(**self**, **location**, **project_to_road**=True, **lane_type**=carla.LaneType.Driving)](#carla.Map.get_waypoint) <sub>_Method_</sub>
         - [**get_topology**(**self**)](#carla.Map.get_topology) <sub>_Method_</sub>
@@ -355,7 +356,7 @@
         - [**lane_type**](#carla.Waypoint.lane_type) <sub>_Instance variable_</sub>
         - [**right_lane_marking**](#carla.Waypoint.right_lane_marking) <sub>_Instance variable_</sub>
         - [**left_lane_marking**](#carla.Waypoint.left_lane_marking) <sub>_Instance variable_</sub>
-        - [**next**(**self**)](#carla.Waypoint.next) <sub>_Method_</sub>
+        - [**next**(**self**, **distance**)](#carla.Waypoint.next) <sub>_Method_</sub>
         - [**get_right_lane**(**self**)](#carla.Waypoint.get_right_lane) <sub>_Method_</sub>
         - [**get_left_lane**(**self**)](#carla.Waypoint.get_left_lane) <sub>_Method_</sub>
     - [**WeatherParameters**](#carla.WeatherParameters) <sub>_Class_</sub>  
@@ -900,13 +901,19 @@ Apply a different playback speed to current playback. Can be used several times 
 ---
 
 ## <a name="carla.Map"></a>Map <sub><sup>_Class_</sup></sub>
-Map description that provides a waypoint query system, that extracts the information from the OpenDRIVE file.  
+Map description that provides a Waypoint query system, that extracts the information from the OpenDRIVE file.  
 
 ### Instance Variables
 - <a name="carla.Map.name"></a>**<font color="#f8805a">name</font>**  
-Map name. Comes from the Unreal's UMap name.  
+Map name. Comes from the Unreal's UMap name if loaded from a Carla server.  
 
 ### Methods
+- <a name="carla.Map.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**name**</font>, <font color="#00a6ed">**xodr_content**</font>)  
+Constructor for this class useful if you want to use a `XODR` (OpenDRIVE) file without importing it from any Carla server running.  
+    - **Parameters:**
+        - `name` (_str_) – Name of the current map.  
+        - `xodr_content` (_str_) – XODR content as string.  
+    - **Return:** _list([carla.Transform](#carla.Transform))_  
 - <a name="carla.Map.get_spawn_points"></a>**<font color="#7fb800">get_spawn_points</font>**(<font color="#00a6ed">**self**</font>)  
 Returns a list of transformations corresponding to the recommended spawn points over the map.  
     - **Return:** _list([carla.Transform](#carla.Transform))_  
@@ -914,11 +921,11 @@ Returns a list of transformations corresponding to the recommended spawn points 
 Return the nearest [carla.Waypoint](#carla.Waypoint) given a [carla.Location](#carla.Location).  
     - **Parameters:**
         - `location` (_[carla.Location](#carla.Location)_) – Location where you want to get the [carla.Waypoint](#carla.Waypoint).  
-        - `project_to_road` (_bool_) – If **True**, the waypoint will be at the center of the nearest lane. If **False**, the waypoint will be at the given location. Also, in this case, the result may be `None` if the waypoint is not on a searched lane.  
-        - `lane_type` (_[carla.LaneType](#carla.LaneType)_) – This parameter is used to limit the search on certain lane types.  This can be used like a flag: `LaneType.Driving & LaneType.Shoulder`.  
+        - `project_to_road` (_bool_) – If **True**, the waypoint will be at the center of the nearest lane. If **False**, the waypoint will be at the given location. Also, in this second case, the result may be `None` if the waypoint is not found.  
+        - `lane_type` (_[carla.LaneType](#carla.LaneType)_) – This parameter is used to limit the search on a certain lane types. This can be used like a flag: `LaneType.Driving & LaneType.Shoulder`.  
     - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
 - <a name="carla.Map.get_topology"></a>**<font color="#7fb800">get_topology</font>**(<font color="#00a6ed">**self**</font>)  
-Provides a  The format is a list of pairs of waypoints, where the first waypoint is the origin and the second one is the destination, for instance, a valid output could be: `[ (w0, w1), (w0, w2), (w1, w3), (w2, w3) ]`.  
+Provides a minimal graph of the topology of the current OpenDRIVE file. It is constituted by a list of pairs of waypoints, where the first waypoint is the origin and the second one is the destination. It can be loaded into [NetworkX](https://networkx.github.io/). A valid output could be: `[ (w0, w1), (w0, w2), (w1, w3), (w2, w3), (w0, w4) ]`.  
     - **Return:** _list(tuple([carla.Waypoint](#carla.Waypoint), [carla.Waypoint](#carla.Waypoint)))_  
 - <a name="carla.Map.generate_waypoints"></a>**<font color="#7fb800">generate_waypoints</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  
 Returns a list of waypoints positioned on the center of the lanes  all over the map with an approximate distance between them.  
@@ -1123,12 +1130,13 @@ Save the OpenDRIVE of the current map to disk.
 ---
 
 ## <a name="carla.Waypoint"></a>Waypoint <sub><sup>_Class_</sup></sub>
+3D directed point that stores information about the road definition that OpenDRIVE provides.  
 
 ### Instance Variables
 - <a name="carla.Waypoint.id"></a>**<font color="#f8805a">id</font>** (_int_)  
 Waypoint id, it's generated using a hash combination of its `road_id`, `section_id`,  `lane_id` and `s` values, all them come from the OpenDRIVE. The `s` precision is set  to 2 centimeters, so 2 waypoints at a distance `s` less than 2 centimeters in the same  road, section and lane, will have the same `id`.  
 - <a name="carla.Waypoint.transform"></a>**<font color="#f8805a">transform</font>** (_[carla.Transform](#carla.Transform)_)  
-Transform indicating it's position and orientation according to the road.  
+Transform indicating it's position and orientation according to the current lane information.  
 - <a name="carla.Waypoint.is_intersection"></a>**<font color="#f8805a">is_intersection</font>** (_bool_)  
 _Deprecated, use is_junction instead_.  
 - <a name="carla.Waypoint.is_junction"></a>**<font color="#f8805a">is_junction</font>** (_bool_)  
@@ -1140,19 +1148,30 @@ OpenDRIVE road's id.
 - <a name="carla.Waypoint.section_id"></a>**<font color="#f8805a">section_id</font>** (_int_)  
 OpenDRIVE section's id, based on the order that they are originally defined.  
 - <a name="carla.Waypoint.lane_id"></a>**<font color="#f8805a">lane_id</font>** (_int_)  
-OpenDRIVE lane's id.  
+OpenDRIVE lane's id, this value can be positive or negative which means the direction of the  current lane with respect to the road. For more information refer to OpenDRIVE [documentaion](http://www.opendrive.org/docs/OpenDRIVEFormatSpecRev1.4H.pdf#page=20).  
 - <a name="carla.Waypoint.s"></a>**<font color="#f8805a">s</font>** (_float_)  
 OpenDRIVE `s` value of the current position.  
 - <a name="carla.Waypoint.lane_change"></a>**<font color="#f8805a">lane_change</font>** (_[carla.LaneChange](#carla.LaneChange)_)  
 Lane change definition of the current Waypoint's location, based on the traffic rules defined in the OpenDRIVE file. Basically it tells you if a lane change can be done and in which direction.  
 - <a name="carla.Waypoint.lane_type"></a>**<font color="#f8805a">lane_type</font>** (_[carla.LaneType](#carla.LaneType)_)  
+The lane type of the current Waypoint, based on OpenDRIVE types.  
 - <a name="carla.Waypoint.right_lane_marking"></a>**<font color="#f8805a">right_lane_marking</font>** (_[carla.LaneMarking](#carla.LaneMarking)_)  
+The right lane marking information based on the directin of the Waypoint.  
 - <a name="carla.Waypoint.left_lane_marking"></a>**<font color="#f8805a">left_lane_marking</font>** (_[carla.LaneMarking](#carla.LaneMarking)_)  
+The left lane marking information based on the directin of the Waypoint.  
 
 ### Methods
-- <a name="carla.Waypoint.next"></a>**<font color="#7fb800">next</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Waypoint.next"></a>**<font color="#7fb800">next</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  
+Returns a list of Waypoints at a certain approximate distance from the current Waypoint, taking into account the shape of the road and its possible deviations, without performing any lane change. The list may be empty if the road ends before the specified distance, for instance, a lane ending with the only option of incorporating to another road.  
+    - **Parameters:**
+        - `distance` (_float_) – The approximate distance where to get the next Waypoints.  
+    - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
 - <a name="carla.Waypoint.get_right_lane"></a>**<font color="#7fb800">get_right_lane</font>**(<font color="#00a6ed">**self**</font>)  
+Generates a Waypoint at the center of the right lane based on the direction of the current Waypoint, regardless if the lane change is allowed in this location. Can return `None` if there the lane does not exist.  
+    - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
 - <a name="carla.Waypoint.get_left_lane"></a>**<font color="#7fb800">get_left_lane</font>**(<font color="#00a6ed">**self**</font>)  
+Generates a Waypoint at the center of the left lane based on the direction of the current Waypoint, regardless if the lane change is allowed in this location. Can return `None` if there the lane does not exist.  
+    - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
 
 ---
 
