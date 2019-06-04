@@ -90,8 +90,6 @@ DESTINATION=${BUILD_FOLDER}/${FILE_NAME}.tar.gz
 SOURCE=${BUILD_FOLDER}/Cooked
 
 FILES=$(find ${CARLAUE4_ROOT_FOLDER}/Content -type f -name "*PropRegistry.json")
-echo $FILES
-#mkdir -p testfolder
 
 mkdir -p ${SOURCE}/CarlaUE4/Content/Carla/Config
 for file in $FILES
