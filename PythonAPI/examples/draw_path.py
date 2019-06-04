@@ -56,26 +56,41 @@ def main():
         m = world.get_map()
         debug = world.debug
 
-        spawn_point = carla.Transform()
-        spawn_point.location.x = -18
-        spawn_point.location.y = 1.2
-        spawn_point.location.z = 18
-        spawn_point.rotation.roll = 0.0
-        spawn_point.rotation.pitch = 0.0
+        # spawn_point1 = carla.Transform()
+        # spawn_point1.location.x = -18
+        # spawn_point1.location.y = 1.2
+        # spawn_point1.location.z = 18
+        # spawn_point1.rotation.roll = 0.0
+        # spawn_point1.rotation.pitch = 0.0
+
+        # spawn_point2 = carla.Transform()
+        # spawn_point2.location.x = -20
+        # spawn_point2.location.y = 1.2
+        # spawn_point2.location.z = 18
+        # spawn_point2.rotation.roll = 0.0
+        # spawn_point2.rotation.pitch = 0.0
 
         # player
         # print(world.get_blueprint_library())
         # exit(1)
-        blueprint = random.choice(world.get_blueprint_library().filter('walker.pedestrian.0002'))
-        player = world.spawn_actor(blueprint, spawn_point)
 
-        # controller
-        blueprint = random.choice(world.get_blueprint_library().filter('controller.ai.walker'))
-        walker_controller = world.spawn_actor(blueprint, spawn_point, attach_to=player)
-        walker_controller.start()
-        time.sleep(0.5)
-        walker_controller.go_to_location(carla.Location(-48, 1.2, 27))
-        # walker_controller.set_max_speed(40)
+
+        for i in range(10):
+            spawn_point = carla.Transform()
+            spawn_point.location.x = -25 + random.randint(-5, 5)
+            spawn_point.location.y = 12 + random.randint(-5, 5)
+            spawn_point.location.z = 1.2
+            spawn_point.rotation.roll = 0.0
+            spawn_point.rotation.pitch = 0.0
+
+            blueprint = random.choice(world.get_blueprint_library().filter('walker.pedestrian.*'))
+            player = world.spawn_actor(blueprint, spawn_point)
+            blueprint = random.choice(world.get_blueprint_library().filter('controller.ai.walker'))
+            walker_controller = world.spawn_actor(blueprint, spawn_point, attach_to=player)
+            walker_controller.start()
+            time.sleep(0.5)
+            walker_controller.go_to_location(carla.Location(-15, 32, 1.2))
+            time.sleep(0.5)
 
         while (1):
             time.sleep(1);
