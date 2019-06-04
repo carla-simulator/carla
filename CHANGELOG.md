@@ -41,6 +41,7 @@
   * API update: solve the problem of RuntimeError: std::bad_cast described here: #1125 (comment)
   * Added camera gamma correction as command-line argument to manual_control.py
   * Removed deprecated code and content
+  * Added PythonAPI documentation generator
   * New recorder features:
     - Recorded system is documented, and binary file system is described.
     - Added optional parameter to show more details about a recorder file (related to `show_recorder_file_info.py`)
