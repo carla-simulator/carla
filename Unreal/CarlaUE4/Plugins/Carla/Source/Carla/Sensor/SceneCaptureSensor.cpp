@@ -179,7 +179,7 @@ void ASceneCaptureSensor::BeginPlay()
 
   if (bEnablePostProcessingEffects)
   {
-    CaptureRenderTarget->TargetGamma = 2.2f;
+    CaptureRenderTarget->TargetGamma = TargetGamma;
   }
 
   check(IsValid(CaptureComponent2D) && !CaptureComponent2D->IsPendingKill());

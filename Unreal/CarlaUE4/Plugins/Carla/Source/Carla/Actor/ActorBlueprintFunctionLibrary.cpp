@@ -320,6 +320,12 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     PostProccess.RecommendedValues = { TEXT("true") };
     PostProccess.bRestrictToRecommended = false;
 
+    FActorVariation Gamma;
+    Gamma.Id = TEXT("gamma");
+    Gamma.Type = EActorAttributeType::Float;
+    Gamma.RecommendedValues = { TEXT("2.2") };
+    Gamma.bRestrictToRecommended = false;
+
     // Motion Blur
     FActorVariation MBIntesity;
     MBIntesity.Id = TEXT("motion_blur_intensity");
@@ -339,7 +345,8 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     MBMinObjectScreenSize.RecommendedValues = { TEXT("0.1") };
     MBMinObjectScreenSize.bRestrictToRecommended = false;
 
-    Definition.Variations.Append({PostProccess, MBIntesity, MBMaxDistortion, MBMinObjectScreenSize});
+    Definition.Variations.Append(
+        {PostProccess, Gamma, MBIntesity, MBMaxDistortion, MBMinObjectScreenSize});
   }
 
   Success = CheckActorDefinition(Definition);
@@ -781,6 +788,8 @@ void UActorBlueprintFunctionLibrary::SetCamera(
         ActorAttributeToBool(
         Description.Variations["enable_postprocess_effects"],
         true));
+    Camera->SetTargetGamma(
+        RetrieveActorAttributeToFloat("gamma", Description.Variations, 2.2f));
     Camera->SetMotionBlurIntensity(
         RetrieveActorAttributeToFloat("motion_blur_intensity", Description.Variations, 0.5f));
     Camera->SetMotionBlurMaxDistortion(
