@@ -29,6 +29,7 @@
   * Updated OpenDriveActor to use the new Waypoint API
   * Fixed wrong units in VehiclePhysicsControl's center of mass
   * Several optimizations to the RPC server, now supports a bigger load of async messages
+  * Corrected Latitude in WGS84 reprojection code such that Latitudes increase as one move north in Carla worlds
   * Register user props in fbx format, make them available in Carla Blueprint Library and spawnable.
   * Exposed 'is_invincible' for pedestrians
   * Fixed bug related with Pygame error of surface too large, added sidewalks and improved lane markings in `no_rendering_mode.py`
