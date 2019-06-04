@@ -20,6 +20,11 @@ namespace nav {
   static const float AGENT_HEIGHT = 2.0f;
   static const float AGENT_HEIGHT_HALF = AGENT_HEIGHT / 2.0f;
 
+  // return a random float
+  float frand() {
+    return static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+  }
+
   Navigation::Navigation() {
   }
 
@@ -192,7 +197,6 @@ namespace nav {
     int m_npolys;
 
     // check to load the binary _navMesh from server
-    logging::log("Nav: ", _binaryMesh.size());
     if (_binaryMesh.size() == 0) {
       return false;
     }
@@ -257,7 +261,6 @@ namespace nav {
   void Navigation::AddWalker(ActorId id) {
     // add to the queue to be added later and next tick where we can access the transform
     _walkersQueueToAdd.push_back(id);
-    logging::log("Nav: Added new walker in queue");
   }
 
   // create a new walker in crowd
@@ -267,6 +270,10 @@ namespace nav {
     if (_crowd == nullptr) {
       return false;
     }
+
+    // random location
+    // GetRandomLocation(from);
+    // logging::log("Nav: from ", from.x, from.y, from.z);
 
     // set from Unreal coordinates (and adjust center of walker, from middle to bottom)
     float y = from.y;
@@ -290,7 +297,7 @@ namespace nav {
     params.updateFlags |= DT_CROWD_OBSTACLE_AVOIDANCE;
     params.updateFlags |= DT_CROWD_SEPARATION;
     params.obstacleAvoidanceType = 3;
-    params.separationWeight = 0.5;
+    params.separationWeight = 0.1f;
 
     // add walker
     float PointFrom[3] = { from.x, from.y, from.z };
@@ -301,17 +308,8 @@ namespace nav {
 
     // save the id
     _mappedId[id] = index;
-    logging::log("Nav: Set index ", index, " to id ", id);
-
-    int total = 0;
-    for (int i=0; i<_crowd->getAgentCount(); ++i) {
-      if (_crowd->getAgent(i)->active)
-        ++total;
-    }
-    logging::log("Nav: agents now ", total);
 
     return true;
-
   }
 
   // set a new target point to go
@@ -321,12 +319,13 @@ namespace nav {
     if (it == _mappedId.end())
       return false;
 
-    // get the index found
-    int index = it->second;
+    return SetWalkerTargetIndex(it->second, to);
+  }
+
+  // set a new target point to go
+  bool Navigation::SetWalkerTargetIndex(int index, carla::geom::Location to) {
     if (index == -1)
       return false;
-
-    logging::log("Nav: Found index ", index, " with id ", it->first);
 
     // set target position
     float pointTo[3] = { to.x, to.z, to.y };
@@ -334,10 +333,10 @@ namespace nav {
     const dtQueryFilter *filter = _crowd->getFilter(0);
     dtPolyRef targetRef;
     _navQuery->findNearestPoly(pointTo, _crowd->getQueryHalfExtents(), filter, &targetRef, nearest);
-    if (targetRef)
-      _crowd->requestMoveTarget(index, targetRef, pointTo);
+    if (!targetRef)
+      return false;
 
-    return true;
+    return _crowd->requestMoveTarget(index, targetRef, pointTo);
   }
 
   // update all walkers in crowd
@@ -365,6 +364,24 @@ namespace nav {
     // update all
     double deltaTime = state.GetTimestamp().delta_seconds;
     _crowd->update(static_cast<float>(deltaTime), nullptr);
+
+    // check if walker has finished
+    for (int i = 0; i<_crowd->getAgentCount(); ++i)
+    {
+      const dtCrowdAgent* ag = _crowd->getAgent(i);
+      if (!ag->active)
+        continue;
+
+      // check distance to the target point
+      const float *end = &ag->cornerVerts[(ag->ncorners-1)*3];
+      carla::geom::Vector3D dist(end[0] - ag->npos[0], end[1] - ag->npos[1], end[2] - ag->npos[2]);
+      if (dist.SquaredLength() <= 2) {
+        // set a new random target
+        carla::geom::Location location;
+        GetRandomLocation(location);
+        SetWalkerTargetIndex(i, location);
+      }
+    }
   }
 
   // get the walker current transform
@@ -415,6 +432,35 @@ namespace nav {
     const dtCrowdAgent *agent = _crowd->getAgent(index);
     return sqrt(agent->vel[0] * agent->vel[0] + agent->vel[1] * agent->vel[1] + agent->vel[2] *
         agent->vel[2]);
+  }
+
+  // get a random location for navigation
+  bool Navigation::GetRandomLocation(carla::geom::Location &location, dtQueryFilter *filter) {
+    DEBUG_ASSERT(_navQuery != nullptr);
+
+    // filter
+    dtQueryFilter filter2;
+    if (filter == nullptr) {
+      filter2.setIncludeFlags(SAMPLE_POLYFLAGS_ALL ^ SAMPLE_POLYFLAGS_DISABLED);
+      filter2.setExcludeFlags(0);
+      filter = &filter2;
+    }
+
+    // search
+    dtPolyRef randomRef { 0 };
+    float point[3] { 0.0f, 0.0f, 0.0f };
+
+    dtStatus status = _navQuery->findRandomPoint(filter, &frand, &randomRef, point);
+
+    if (status == DT_SUCCESS) {
+      // set the location in Unreal coords
+      location.x = point[0];
+      location.y = point[2];
+      location.z = point[1];
+      return true;
+    }
+
+    return false;
   }
 
 } // namespace nav
