@@ -33,7 +33,7 @@ if not "%1"=="" (
     goto :arg-parse
 )
 
-set GT_VERSION=release-1.8.0
+set GT_VERSION=release-1.8.1
 set GT_SRC=gtest-src
 set GT_SRC_DIR=%BUILD_DIR%%GT_SRC%\
 set GT_INSTALL=gtest-install

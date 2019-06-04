@@ -49,6 +49,14 @@ namespace road {
     }
   }
 
+  static double GetDistanceAtEndOfLane(const Lane &lane) {
+    if (lane.GetId() > 0) {
+      return lane.GetDistance() + 10.0 * EPSILON;
+    } else {
+      return lane.GetDistance() + lane.GetLength() - 10.0 * EPSILON;
+    }
+  }
+
   /// Return a waypoint for each drivable lane on @a lane_section.
   template <typename FuncT>
   static void ForEachDrivableLaneImpl(
@@ -249,23 +257,23 @@ namespace road {
     RELEASE_ASSERT(waypoint.lane_id >= lanes.begin()->first);
     RELEASE_ASSERT(waypoint.lane_id <= lanes.rbegin()->first);
 
-    double lane_width = 0;
-    double lane_tangent = 0;
+    float lane_width = 0.0f;
+    float lane_tangent = 0.0f;
     if (waypoint.lane_id < 0) {
       // right lane
       const auto side_lanes = MakeListView(
           std::make_reverse_iterator(lanes.lower_bound(0)), lanes.rend());
       const auto computed_width =
           ComputeTotalLaneWidth(side_lanes, waypoint.s, waypoint.lane_id);
-      lane_width = computed_width.first;
-      lane_tangent = computed_width.second;
+      lane_width = static_cast<float>(computed_width.first);
+      lane_tangent = static_cast<float>(computed_width.second);
     } else {
       // left lane
       const auto side_lanes = MakeListView(lanes.lower_bound(1), lanes.end());
       const auto computed_width =
           ComputeTotalLaneWidth(side_lanes, waypoint.s, waypoint.lane_id);
-      lane_width = computed_width.first;
-      lane_tangent = computed_width.second;
+      lane_width = static_cast<float>(computed_width.first);
+      lane_tangent = static_cast<float>(computed_width.second);
     }
 
     // get a directed point in s and apply the computed lateral offet
@@ -273,7 +281,7 @@ namespace road {
 
     // compute the tangent of the laneOffset
     const auto lane_offset_info = road.GetInfo<RoadInfoLaneOffset>(waypoint.s);
-    const auto lane_offset_tangent = lane_offset_info->GetPolynomial().Tangent(waypoint.s);
+    const auto lane_offset_tangent = static_cast<float>(lane_offset_info->GetPolynomial().Tangent(waypoint.s));
 
     lane_tangent -= lane_offset_tangent;
 
@@ -377,6 +385,24 @@ namespace road {
     return result;
   }
 
+  std::vector<Waypoint> Map::GetPredecessors(const Waypoint waypoint) const {
+    const auto &prev_lanes = GetLane(waypoint).GetPreviousLanes();
+    std::vector<Waypoint> result;
+    result.reserve(prev_lanes.size());
+    for (auto *next_lane : prev_lanes) {
+      RELEASE_ASSERT(next_lane != nullptr);
+      const auto lane_id = next_lane->GetId();
+      RELEASE_ASSERT(lane_id != 0);
+      const auto *section = next_lane->GetLaneSection();
+      RELEASE_ASSERT(section != nullptr);
+      const auto *road = next_lane->GetRoad();
+      RELEASE_ASSERT(road != nullptr);
+      const auto distance = GetDistanceAtEndOfLane(*next_lane);
+      result.emplace_back(Waypoint{road->GetId(), section->GetId(), lane_id, distance});
+    }
+    return result;
+  }
+
   std::vector<Waypoint> Map::GetNext(
       const Waypoint waypoint,
       const double distance) const {
@@ -440,6 +466,33 @@ namespace road {
         ForEachDrivableLaneAt(road, s, [&](auto &&waypoint) {
           result.emplace_back(waypoint);
         });
+      }
+    }
+    return result;
+  }
+
+  std::vector<Waypoint> Map::GenerateWaypointsOnRoadEntries() const {
+    std::vector<Waypoint> result;
+    for (const auto &pair : _data.GetRoads()) {
+      const auto &road = pair.second;
+      // right lanes start at s 0
+      for (const auto &lane_section : road.GetLaneSectionsAt(0.0)) {
+        for (const auto &lane : lane_section.GetLanes()) {
+          // add only the right (negative) lanes
+          if (lane.first < 0 && lane.second.GetType() == Lane::LaneType::Driving) {
+            result.emplace_back(Waypoint{ road.GetId(), lane_section.GetId(), lane.second.GetId(), 0.0 });
+          }
+        }
+      }
+      // left lanes start at s max
+      const auto road_len = road.GetLength();
+      for (const auto &lane_section : road.GetLaneSectionsAt(road_len)) {
+        for (const auto &lane : lane_section.GetLanes()) {
+          // add only the left (positive) lanes
+          if (lane.first > 0 && lane.second.GetType() == Lane::LaneType::Driving) {
+            result.emplace_back(Waypoint{ road.GetId(), lane_section.GetId(), lane.second.GetId(), road_len });
+          }
+        }
       }
     }
     return result;

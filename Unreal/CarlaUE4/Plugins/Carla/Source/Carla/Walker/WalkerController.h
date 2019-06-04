@@ -22,7 +22,7 @@ public:
 
   AWalkerController(const FObjectInitializer& ObjectInitializer);
 
-  void Possess(APawn *InPawn) override;
+  void OnPossess(APawn *InPawn) override;
 
   void Tick(float DeltaSeconds) override;
 

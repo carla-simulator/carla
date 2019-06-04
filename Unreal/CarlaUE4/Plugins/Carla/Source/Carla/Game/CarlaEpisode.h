@@ -9,8 +9,9 @@
 #include "Carla/Actor/ActorDispatcher.h"
 #include "Carla/Recorder/CarlaRecorder.h"
 #include "Carla/Sensor/WorldObserver.h"
-#include "Carla/Server/TheNewCarlaServer.h"
+#include "Carla/Server/CarlaServer.h"
 #include "Carla/Settings/EpisodeSettings.h"
+#include "Carla/Util/ActorAttacher.h"
 #include "Carla/Weather/Weather.h"
 
 #include "GameFramework/Pawn.h"
@@ -213,7 +214,10 @@ public:
   ///
   /// @pre Actors cannot be null.
   UFUNCTION(BlueprintCallable)
-  void AttachActors(AActor *Child, AActor *Parent);
+  void AttachActors(
+      AActor *Child,
+      AActor *Parent,
+      EAttachmentType InAttachmentType = EAttachmentType::Rigid);
 
   /// @copydoc FActorDispatcher::DestroyActor(AActor*)
   UFUNCTION(BlueprintCallable)
@@ -264,7 +268,7 @@ public:
 
 private:
 
-  friend class ATheNewCarlaGameModeBase;
+  friend class ACarlaGameModeBase;
   friend class FCarlaEngine;
 
   void InitializeAtBeginPlay();

@@ -44,9 +44,9 @@ public:
 
 public:
 
-  void Possess(APawn *aPawn) override;
+  void OnPossess(APawn *aPawn) override;
 
-  void UnPossess() override;
+  void OnUnPossess() override;
 
   void Tick(float DeltaTime) override;
 

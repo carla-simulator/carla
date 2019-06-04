@@ -21,23 +21,23 @@ using namespace std::chrono_literals;
 
 // This is required for low level to properly stop the threads in case of
 // exception/assert.
-class io_service_running {
+class io_context_running {
 public:
 
-  boost::asio::io_service service;
+  boost::asio::io_context service;
 
-  explicit io_service_running(size_t threads = 2u)
+  explicit io_context_running(size_t threads = 2u)
     : _work_to_do(service) {
     _threads.CreateThreads(threads, [this]() { service.run(); });
   }
 
-  ~io_service_running() {
+  ~io_context_running() {
     service.stop();
   }
 
 private:
 
-  boost::asio::io_service::work _work_to_do;
+  boost::asio::io_context::work _work_to_do;
 
   carla::ThreadGroup _threads;
 };
@@ -53,7 +53,7 @@ TEST(streaming, low_level_sending_strings) {
 
   std::atomic_size_t message_count{0u};
 
-  io_service_running io;
+  io_context_running io;
 
   Server<tcp::Server> srv(io.service, TESTING_PORT);
   srv.SetTimeout(1s);
@@ -86,7 +86,7 @@ TEST(streaming, low_level_unsubscribing) {
   constexpr auto number_of_messages = 50u;
   const std::string message_text = "Hello client!";
 
-  io_service_running io;
+  io_context_running io;
 
   Server<tcp::Server> srv(io.service, TESTING_PORT);
   srv.SetTimeout(1s);
@@ -124,10 +124,10 @@ TEST(streaming, low_level_tcp_small_message) {
   using namespace carla::streaming;
   using namespace carla::streaming::detail;
 
-  boost::asio::io_service io_service;
+  boost::asio::io_context io_context;
   tcp::Server::endpoint ep(boost::asio::ip::tcp::v4(), TESTING_PORT);
 
-  tcp::Server srv(io_service, ep);
+  tcp::Server srv(io_context, ep);
   srv.SetTimeout(1s);
   std::atomic_bool done{false};
   std::atomic_size_t message_count{0u};
@@ -145,7 +145,7 @@ TEST(streaming, low_level_tcp_small_message) {
 
   Dispatcher dispatcher{make_endpoint<tcp::Client::protocol_type>(srv.GetLocalEndpoint())};
   auto stream = dispatcher.MakeStream();
-  auto c = std::make_shared<tcp::Client>(io_service, stream.token(), [&](carla::Buffer message) {
+  auto c = std::make_shared<tcp::Client>(io_context, stream.token(), [&](carla::Buffer message) {
     ++message_count;
     ASSERT_FALSE(message.empty());
     ASSERT_EQ(message.size(), 5u);
@@ -158,10 +158,10 @@ TEST(streaming, low_level_tcp_small_message) {
   carla::ThreadGroup threads;
   threads.CreateThreads(
       std::max(2u, std::thread::hardware_concurrency()),
-      [&]() { io_service.run(); });
+      [&]() { io_context.run(); });
 
   std::this_thread::sleep_for(2s);
-  io_service.stop();
+  io_context.stop();
   done = true;
   std::cout << "client received " << message_count << " messages\n";
   ASSERT_GT(message_count, 10u);

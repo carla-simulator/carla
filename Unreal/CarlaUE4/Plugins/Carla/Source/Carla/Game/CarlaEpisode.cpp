@@ -95,6 +95,7 @@ bool UCarlaEpisode::LoadNewEpisode(const FString &MapString)
   {
     UE_LOG(LogCarla, Warning, TEXT("Loading a new episode: %s"), *FinalPath);
     UGameplayStatics::OpenLevel(GetWorld(), *FinalPath, true);
+    ApplySettings(FEpisodeSettings{});
   }
   return bIsFileFound;
 }
@@ -134,12 +135,12 @@ carla::rpc::Actor UCarlaEpisode::SerializeActor(FActorView ActorView) const
   return Actor;
 }
 
-void UCarlaEpisode::AttachActors(AActor *Child, AActor *Parent)
+void UCarlaEpisode::AttachActors(
+    AActor *Child,
+    AActor *Parent,
+    EAttachmentType InAttachmentType)
 {
-  check(Child != nullptr);
-  check(Parent != nullptr);
-  Child->AttachToActor(Parent, FAttachmentTransformRules::KeepRelativeTransform);
-  Child->SetOwner(Parent);
+  UActorAttacher::AttachActors(Child, Parent, InAttachmentType);
 
   // recorder event
   if (Recorder->IsEnabled())
@@ -200,9 +201,6 @@ void UCarlaEpisode::InitializeAtBeginPlay()
       ActorDispatcher->RegisterActor(*Actor, Description);
     }
   }
-
-  // check if replayer is waiting to autostart
-  Recorder->GetReplayer()->CheckPlayAfterMapLoaded();
 }
 
 void UCarlaEpisode::EndPlay(void)

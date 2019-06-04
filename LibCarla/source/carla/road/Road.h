@@ -63,9 +63,10 @@ namespace road {
 
     Lane *GetPrevLane(const double s, const LaneId lane_id);
 
-    // get the start and end section with a lan id
+    /// Get the start section (from road coordinates s) given a @a lane id
     LaneSection *GetStartSection(LaneId id);
 
+    /// Get the end section (from road coordinates s) given a @a lane id
     LaneSection *GetEndSection(LaneId id);
 
     std::vector<Road *> GetNexts() const;

@@ -19,7 +19,6 @@
 #include "CarlaWheeledVehicle.generated.h"
 
 class UBoxComponent;
-class UVehicleAgentComponent;
 
 /// Base class for CARLA wheeled vehicles.
 UCLASS()
@@ -173,6 +172,18 @@ public:
     SetHandbrakeInput(false);
   }
 
+  TArray<float> GetWheelsFrictionScale();
+
+  void SetWheelsFrictionScale(TArray<float> &WheelsFrictionScale);
+  /// @}
+  // ===========================================================================
+  /// @name Overriden from AActor
+  // ===========================================================================
+  /// @{
+protected:
+
+  virtual void BeginPlay() override;
+
 private:
 
   /// Current state of the vehicle controller (for debugging purposes).
@@ -181,9 +192,6 @@ private:
 
   UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere)
   UBoxComponent *VehicleBounds;
-
-  UPROPERTY(Category = "CARLA Wheeled Vehicle", VisibleAnywhere)
-  UVehicleAgentComponent *VehicleAgentComponent;
 
   struct
   {

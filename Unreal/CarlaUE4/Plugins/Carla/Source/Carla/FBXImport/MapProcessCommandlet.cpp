@@ -9,7 +9,7 @@
 UMapProcessCommandlet::UMapProcessCommandlet()
 {
   IsClient = false;
-  IsEditor = false;
+  IsEditor = true;
   IsServer = false;
   LogToConsole = true;
   #if WITH_EDITORONLY_DATA

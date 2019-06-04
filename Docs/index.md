@@ -10,7 +10,6 @@
   * [Getting started](getting_started.md)
   * [Python API tutorial](python_api_tutorial.md)
   * [Configuring the simulation](configuring_the_simulation.md)
-  <!-- * [Measurements](measurements.md) -->
   * [Cameras and sensors](cameras_and_sensors.md)
   * [F.A.Q.](faq.md)
 
@@ -28,6 +27,7 @@
   * [How to link Epic's Automotive Materials](epic_automotive_materials.md)
   * [How to automatically generate a map from RoadRunner](generate_map_from_fbx.md)
   * [How to export and import maps to distribution builds](export_import_dist.md)
+  * [How to add custom props to the Blueprint Library](define_custom_props.md)
 
 <h3>Contributing</h3>
 
