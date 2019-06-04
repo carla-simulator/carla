@@ -391,8 +391,8 @@ namespace nav {
     trans.location.y = agent->npos[2];
     trans.location.z = agent->npos[1] + AGENT_HEIGHT_HALF;
     // set its rotation
-    trans.rotation.pitch = 0; // asin(agent->nvel[2]) * 360;
-    trans.rotation.yaw = asin(agent->nvel[0]) * (180.0f / 3.14159265f);
+    trans.rotation.pitch = 0;
+    trans.rotation.yaw = atan(agent->vel[2] / agent->vel[0]) * (180.0f / 3.14159265f);
     trans.rotation.roll = 0;
 
     return true;
