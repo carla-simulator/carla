@@ -76,26 +76,26 @@ def main():
 
 
         for i in range(50):
+            print ("-----------------------------------------")
             spawn_point = carla.Transform()
-            spawn_point.location.x = -25 + random.randint(-5, 5)
-            spawn_point.location.y = 12 + random.randint(-5, 5)
-            spawn_point.location.z = 1.2
-            spawn_point.rotation.roll = 0.0
-            spawn_point.rotation.pitch = 0.0
-
+            spawn_point.location = world.get_random_location_from_navigation()
+            print ("SPAWN AT:", spawn_point.location.x, spawn_point.location.y, spawn_point.location.z)
             blueprint = random.choice(world.get_blueprint_library().filter('walker.pedestrian.*'))
-            while 1:
-                try:
-                    player = world.spawn_actor(blueprint, spawn_point)
-                except:
-                    pass
-                if (player):
-                    break
+            player = None
+            while player is None:
+                player = world.try_spawn_actor(blueprint, spawn_point)
+
             blueprint = random.choice(world.get_blueprint_library().filter('controller.ai.walker'))
-            walker_controller = world.spawn_actor(blueprint, spawn_point, attach_to=player)
+            walker_controller = world.spawn_actor(blueprint, carla.Transform(), attach_to=player)
             walker_controller.start()
+
             time.sleep(0.4)
-            walker_controller.go_to_location(carla.Location(-15, 32, 1.2))
+
+
+            target = world.get_random_location_from_navigation()
+            print ("TARGET AT:", target.x, target.y, target.z)
+
+            walker_controller.go_to_location(target)
             # time.sleep(0.5)
 
         while (1):

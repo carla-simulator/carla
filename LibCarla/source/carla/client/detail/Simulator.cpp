@@ -157,6 +157,13 @@ namespace detail {
     navigation->RegisterWalker(walker->GetId(), controller.GetId());
   }
 
+  geom::Location Simulator::GetRandomLocationFromNavigation() {
+    DEBUG_ASSERT(_episode != nullptr);
+    auto navigation = _episode->CreateNavigationIfMissing();
+    DEBUG_ASSERT(navigation != nullptr);
+    return navigation->GetRandomLocation();
+  }
+
   // ===========================================================================
   // -- General operations with actors -----------------------------------------
   // ===========================================================================
