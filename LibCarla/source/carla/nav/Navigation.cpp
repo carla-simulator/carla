@@ -272,7 +272,7 @@ namespace nav {
     }
 
     // random location
-    // GetRandomLocation(from);
+    GetRandomLocation(from, 1.0f);
     // logging::log("Nav: from ", from.x, from.y, from.z);
 
     // set from Unreal coordinates (and adjust center of walker, from middle to bottom)
@@ -327,6 +327,8 @@ namespace nav {
     if (index == -1)
       return false;
 
+    GetRandomLocation(to, 1.0f);
+
     // set target position
     float pointTo[3] = { to.x, to.z, to.y };
     float nearest[3];
@@ -378,7 +380,7 @@ namespace nav {
       if (dist.SquaredLength() <= 2) {
         // set a new random target
         carla::geom::Location location;
-        GetRandomLocation(location);
+        GetRandomLocation(location, 1);
         SetWalkerTargetIndex(i, location);
       }
     }
@@ -435,7 +437,7 @@ namespace nav {
   }
 
   // get a random location for navigation
-  bool Navigation::GetRandomLocation(carla::geom::Location &location, dtQueryFilter *filter) {
+  bool Navigation::GetRandomLocation(carla::geom::Location &location, float maxHeight, dtQueryFilter *filter) {
     DEBUG_ASSERT(_navQuery != nullptr);
 
     // filter
@@ -450,17 +452,20 @@ namespace nav {
     dtPolyRef randomRef { 0 };
     float point[3] { 0.0f, 0.0f, 0.0f };
 
-    dtStatus status = _navQuery->findRandomPoint(filter, &frand, &randomRef, point);
-
-    if (status == DT_SUCCESS) {
-      // set the location in Unreal coords
-      location.x = point[0];
-      location.y = point[2];
-      location.z = point[1];
-      return true;
+    do {
+      dtStatus status = _navQuery->findRandomPoint(filter, &frand, &randomRef, point);
+      if (status == DT_SUCCESS) {
+        // set the location in Unreal coords
+        location.x = point[0];
+        location.y = point[2];
+        location.z = point[1];
+        if (maxHeight == -1.0f || (maxHeight >= 0.0f && location.z <= maxHeight))
+          break;
+      }
     }
+    while (1);
 
-    return false;
+    return true;
   }
 
 } // namespace nav
