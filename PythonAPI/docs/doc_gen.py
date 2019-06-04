@@ -15,7 +15,7 @@ COLOR_METHOD = '#7fb800'
 COLOR_PARAM = '#00a6ed'
 COLOR_INSTANCE_VAR = '#f8805a'
 
-QUERY = re.compile(r'([cC]arla\.[a-zA-Z]+)')
+QUERY = re.compile(r'([cC]arla(\.[a-zA-Z0-9_]+)+)')
 
 def create_hyperlinks(text):
     return re.sub(QUERY, r'[\1](#\1)', text)

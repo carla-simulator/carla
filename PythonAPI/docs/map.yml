@@ -127,22 +127,37 @@
   - class_name: Map
     # - DESCRIPTION ------------------------
     doc: >
-      Map description that provides a waypoint query system, that extracts
+      Map description that provides a Waypoint query system, that extracts
       the information from the OpenDRIVE file
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: name
       doc: >
-        Map name. Comes from the Unreal's UMap name
+        Map name. Comes from the Unreal's UMap name if loaded from a Carla server
     # - METHODS ----------------------------
     methods:
+    - def_name: __init__
+      params:
+      - param_name: self
+      - param_name: name
+        type: str
+        doc: > 
+          Name of the current map
+      - param_name: xodr_content
+        type: str
+        doc: >
+          XODR content as string
+      return: list(carla.Transform)
+      doc: >
+        Constructor for this class useful if you want to use a `XODR` (OpenDRIVE) file without
+        importing it from any Carla server running
+    # --------------------------------------
     - def_name: get_spawn_points
       params:
       - param_name: self
       return: list(carla.Transform)
       doc: >
-        Returns a list of transformations corresponding to the recommended spawn
-        points over the map
+        Returns a list of transformations corresponding to the recommended spawn points over the map
     # --------------------------------------
     - def_name: get_waypoint
       doc: >
@@ -158,12 +173,13 @@
         default: "True"
         doc: > 
           If **True**, the waypoint will be at the center of the nearest lane.
-          If **False**, the waypoint will be at the given location. Also, in this case, the result may be `None` if the waypoint is not on a searched lane
+          If **False**, the waypoint will be at the given location. Also, in this second case, the result may be
+          `None` if the waypoint is not found
       - param_name: lane_type
         type: carla.LaneType
         default: carla.LaneType.Driving
         doc: > 
-          This parameter is used to limit the search on certain lane types. 
+          This parameter is used to limit the search on a certain lane types.
           This can be used like a flag: `LaneType.Driving & LaneType.Shoulder`
       return: carla.Waypoint
     # --------------------------------------
@@ -171,11 +187,10 @@
       params:
       - param_name: self
       doc: >
-
-        Provides a 
-        The format is a list of pairs of waypoints, where the first waypoint is the origin and the second
-        one is the destination, for instance, a valid output could be:
-        `[ (w0, w1), (w0, w2), (w1, w3), (w2, w3) ]`
+        Provides a minimal graph of the topology of the current OpenDRIVE file.
+        It is constituted by a list of pairs of waypoints, where the first waypoint is the origin and the second
+        one is the destination. It can be loaded into [NetworkX](https://networkx.github.io/). A valid output could be:
+        `[ (w0, w1), (w0, w2), (w1, w3), (w2, w3), (w0, w4) ]`
       return: list(tuple(carla.Waypoint, carla.Waypoint))
     # --------------------------------------
     - def_name: generate_waypoints
@@ -237,6 +252,7 @@
   - class_name: Waypoint
     # - DESCRIPTION ------------------------
     doc: >
+      3D directed point that stores information about the road definition that OpenDRIVE provides.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: id
@@ -249,7 +265,7 @@
     - var_name: transform
       type: carla.Transform
       doc: >
-        Transform indicating it's position and orientation according to the road.
+        Transform indicating it's position and orientation according to the current lane information.
     - var_name: is_intersection
       type: bool
       doc: >
@@ -273,7 +289,9 @@
     - var_name: lane_id
       type: int
       doc: >
-        OpenDRIVE lane's id
+        OpenDRIVE lane's id, this value can be positive or negative which means the direction of the 
+        current lane with respect to the road. For more information refer to OpenDRIVE
+        [documentaion](http://www.opendrive.org/docs/OpenDRIVEFormatSpecRev1.4H.pdf#page=20)
     - var_name: s
       type: float
       doc: >
@@ -286,27 +304,48 @@
     - var_name: lane_type
       type: carla.LaneType
       doc: >
+        The lane type of the current Waypoint, based on OpenDRIVE types.
     - var_name: right_lane_marking
       type: carla.LaneMarking
       doc: >
+        The right lane marking information based on the directin of the Waypoint
     - var_name: left_lane_marking
       type: carla.LaneMarking
       doc: >
+        The left lane marking information based on the directin of the Waypoint
     # - METHODS ----------------------------
     methods:
     - def_name: next
       params:
       - param_name: self
+      - param_name: distance
+        type: float
+        doc: >
+          The approximate distance where to get the next Waypoints
+      return: list(carla.Waypoint)
       doc: >
+        Returns a list of Waypoints at a certain approximate distance from the current Waypoint,
+        taking into account the shape of the road and its possible deviations, without performing
+        any lane change.
+        The list may be empty if the road ends before the specified distance, for instance,
+        a lane ending with the only option of incorporating to another road.
     # --------------------------------------
     - def_name: get_right_lane
       params:
       - param_name: self
+      return: carla.Waypoint
       doc: >
+        Generates a Waypoint at the center of the right lane based on the direction of the current
+        Waypoint, regardless if the lane change is allowed in this location.
+        Can return `None` if there the lane does not exist
     # --------------------------------------
     - def_name: get_left_lane
       params:
       - param_name: self
+      return: carla.Waypoint
       doc: >
+        Generates a Waypoint at the center of the left lane based on the direction of the current
+        Waypoint, regardless if the lane change is allowed in this location.
+        Can return `None` if there the lane does not exist
     # --------------------------------------
 ...
