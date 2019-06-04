@@ -18,7 +18,7 @@ fi
 
 DOC_STRING="Build and launch CarlaUE4."
 
-USAGE_STRING="Usage: $0 [-h|--help] [--build] [--rebuild] [--launch] [--clean] [--hard-clean] [--use-opengl]"
+USAGE_STRING="Usage: $0 [-h|--help] [--build] [--rebuild] [--launch] [--clean] [--hard-clean] [--opengl]"
 
 REMOVE_INTERMEDIATE=false
 HARD_CLEAN=false
@@ -28,7 +28,7 @@ LAUNCH_UE4_EDITOR=false
 GDB=
 RHI="-vulkan"
 
-OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,use-opengl -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl -n 'parse-options' -- "$@"`
 
 if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
 
@@ -56,7 +56,7 @@ while true; do
       REMOVE_INTERMEDIATE=true;
       HARD_CLEAN=true;
       shift ;;
-    --use-opengl )
+    --opengl )
       RHI="-opengl";
       shift ;;
     -h | --help )
