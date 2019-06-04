@@ -50,18 +50,18 @@ namespace detail {
           worker_threads > 0u ? worker_threads : std::thread::hardware_concurrency());
     }
 
-    template <typename... Args>
-    auto RawCall(const std::string &function, Args &&... args) {
+    template <typename ... Args>
+    auto RawCall(const std::string &function, Args && ... args) {
       try {
-        return rpc_client.call(function, std::forward<Args>(args)...);
+        return rpc_client.call(function, std::forward<Args>(args) ...);
       } catch (const ::rpc::timeout &) {
         throw_exception(TimeoutException(endpoint, GetTimeout()));
       }
     }
 
-    template <typename T, typename... Args>
-    auto CallAndWait(const std::string &function, Args &&... args) {
-      auto object = RawCall(function, std::forward<Args>(args)...);
+    template <typename T, typename ... Args>
+    auto CallAndWait(const std::string &function, Args && ... args) {
+      auto object = RawCall(function, std::forward<Args>(args) ...);
       using R = typename carla::rpc::Response<T>;
       auto response = object.template as<R>();
       if (response.HasError()) {
@@ -70,10 +70,10 @@ namespace detail {
       return Get(response);
     }
 
-    template <typename... Args>
-    void AsyncCall(const std::string &function, Args &&... args) {
+    template <typename ... Args>
+    void AsyncCall(const std::string &function, Args && ... args) {
       // Discard returned future.
-      rpc_client.async_call(function, std::forward<Args>(args)...);
+      rpc_client.async_call(function, std::forward<Args>(args) ...);
     }
 
     time_duration GetTimeout() const {
@@ -240,6 +240,22 @@ namespace detail {
 
   void Client::ApplyControlToWalker(rpc::ActorId walker, const rpc::WalkerControl &control) {
     _pimpl->AsyncCall("apply_control_to_walker", walker, control);
+  }
+
+  void Client::ApplyBoneControlToWalker(rpc::ActorId walker, const rpc::WalkerBoneControl &control) {
+    _pimpl->AsyncCall("apply_bone_control_to_walker", walker, control);
+  }
+
+  void Client::SetManualBonesMode(
+      rpc::ActorId walker,
+      bool enabled) {
+    _pimpl->AsyncCall("set_manual_bones_mode", walker, enabled);
+  }
+
+  void Client::SendBonesPosition(
+      rpc::ActorId walker,
+      rpc::WalkerBoneControl &control) {
+    _pimpl->AsyncCall("send_bones_position", walker, control);
   }
 
   void Client::SetTrafficLightState(

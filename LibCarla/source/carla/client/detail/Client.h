@@ -13,6 +13,8 @@
 #include "carla/rpc/Actor.h"
 #include "carla/rpc/ActorDefinition.h"
 #include "carla/rpc/AttachmentType.h"
+#include "carla/rpc/BoneTransformData.h"
+#include "carla/rpc/WalkerBoneControl.h"
 #include "carla/rpc/Command.h"
 #include "carla/rpc/CommandResponse.h"
 #include "carla/rpc/EpisodeInfo.h"
@@ -35,6 +37,7 @@ namespace rpc {
   class DebugShape;
   class VehicleControl;
   class WalkerControl;
+  class WalkerBoneControl;
 }
 namespace sensor {
   class SensorData;
@@ -148,6 +151,18 @@ namespace detail {
     void ApplyControlToWalker(
         rpc::ActorId walker,
         const rpc::WalkerControl &control);
+
+    void ApplyBoneControlToWalker(
+        rpc::ActorId walker,
+        const rpc::WalkerBoneControl &control);
+
+    void SetManualBonesMode(
+        rpc::ActorId walker,
+        bool enabled);
+
+    void SendBonesPosition(
+        rpc::ActorId walker,
+        rpc::WalkerBoneControl &control);
 
     void SetTrafficLightState(
         rpc::ActorId traffic_light,

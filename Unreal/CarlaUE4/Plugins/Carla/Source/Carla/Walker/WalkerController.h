@@ -7,9 +7,14 @@
 #pragma once
 
 #include "Carla/Walker/WalkerControl.h"
+#include "Carla/Walker/WalkerBoneControl.h"
 
 #include "CoreMinimal.h"
 #include "GameFramework/Controller.h"
+
+#include <compiler/disable-ue4-macros.h>
+#include <boost/variant.hpp>
+#include <compiler/enable-ue4-macros.h>
 
 #include "WalkerController.generated.h"
 
@@ -18,9 +23,11 @@ class CARLA_API AWalkerController : public AController
 {
   GENERATED_BODY()
 
+private:
+
 public:
 
-  AWalkerController(const FObjectInitializer& ObjectInitializer);
+  AWalkerController(const FObjectInitializer &ObjectInitializer);
 
   void OnPossess(APawn *InPawn) override;
 
@@ -39,14 +46,29 @@ public:
     Control = InControl;
   }
 
-  UFUNCTION(BlueprintCallable)
-  const FWalkerControl &GetWalkerControl() const
+  void ApplyWalkerControl(const FWalkerBoneControl &InBoneControl)
   {
-    return Control;
+    Control = InBoneControl;
   }
+
+  UFUNCTION(BlueprintCallable)
+  const FWalkerControl GetWalkerControl() const
+  {
+    return Control.which() == 0u ? boost::get<FWalkerControl>(Control) : FWalkerControl{};
+  }
+
+  UFUNCTION(BlueprintCallable)
+  const FWalkerBoneControl GetBoneWalkerControl() const
+  {
+    return Control.which() == 1u ? boost::get<FWalkerBoneControl>(Control) : FWalkerBoneControl{};
+  }
+
+  UFUNCTION(BlueprintCallable)
+  void SetManualBones(const bool bIsEnabled);
 
 private:
 
-  UPROPERTY(VisibleAnywhere)
-  FWalkerControl Control;
+  mutable boost::variant<FWalkerControl, FWalkerBoneControl> Control;
+
+  bool bManualBones;
 };
