@@ -77,7 +77,7 @@ namespace nav {
     // update all walkers in crowd
     void UpdateCrowd(const client::detail::EpisodeState &state);
     // get a random location for navigation
-    bool GetRandomLocation(carla::geom::Location &location, dtQueryFilter *filter = nullptr);
+    bool GetRandomLocation(carla::geom::Location &location, float maxHeight = -1.0f, dtQueryFilter *filter = nullptr);
 
     private:
     std::vector<uint8_t> _binaryMesh;
