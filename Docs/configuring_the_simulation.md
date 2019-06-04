@@ -81,7 +81,7 @@ environment variable `DISPLAY` to empty
 
 ```sh
 # Linux
-DISPLAY= ./CarlaUE4.sh
+DISPLAY= ./CarlaUE4.sh --use-opengl
 ```
 
 This launches the simulator without simulator window, of course you can still
