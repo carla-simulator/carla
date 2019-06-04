@@ -77,7 +77,7 @@ environment variable `DISPLAY` to empty
     Vulkan is now the default graphics API used by Unreal Engine and CARLA on
     Linux. Unreal Engine currently crashes when Vulkan is used when running off-screen.
     Therefore the -opengl flag must be added to force the engine to use OpenGL instead.
-    We hope that this is issue is addressed by Epic in the near future.
+    We hope that this issue is addressed by Epic in the near future.
 
 ```sh
 # Linux
