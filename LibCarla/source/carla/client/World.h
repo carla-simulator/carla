@@ -51,6 +51,9 @@ namespace client {
     /// can be used to spawning actor into the world.
     SharedPtr<BlueprintLibrary> GetBlueprintLibrary() const;
 
+    /// Get a random location from the pedestrians navigation mesh
+    geom::Location GetRandomLocationFromNavigation() const;
+
     /// Return the spectator actor. The spectator controls the view in the
     /// simulator window.
     SharedPtr<Actor> GetSpectator() const;

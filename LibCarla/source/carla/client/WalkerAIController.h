@@ -20,6 +20,8 @@ namespace client {
 
     void Start();
 
+    geom::Location GetRandomLocation();
+
     void GoToLocation(const carla::geom::Location &destination);
 
     void SetMaxSpeed(const float max_speed);
