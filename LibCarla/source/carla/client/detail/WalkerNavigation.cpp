@@ -9,6 +9,7 @@
 #include "carla/client/detail/Client.h"
 #include "carla/client/detail/EpisodeState.h"
 #include "carla/rpc/Command.h"
+#include "carla/rpc/WalkerControl.h"
 
 namespace carla {
 namespace client {
@@ -45,8 +46,10 @@ namespace detail {
       if (_nav.GetWalkerTransform(handle.walker, trans)) {
         // set current height of the walker, ignoring height from recast
         trans.location.z = state.GetActorState(handle.walker).transform.location.z;
-        // logging::log("Nav: walker at ", trans.location.x, trans.location.y, trans.location.z);
+        float speed = _nav.GetWalkerSpeed(handle.walker);
+
         commands.emplace_back(Cmd::ApplyTransform{ handle.walker, trans });
+        commands.emplace_back(Cmd::ApplyWalkerControl{ handle.walker, rpc::WalkerControl(trans.GetForwardVector(), speed , false)});
       }
     }
 

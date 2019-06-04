@@ -70,6 +70,8 @@ namespace nav {
     bool SetWalkerTarget(ActorId id, carla::geom::Location to);
     // get the walker current transform
     bool GetWalkerTransform(ActorId id, carla::geom::Transform &trans);
+    // get the walker current transform
+    float GetWalkerSpeed(ActorId id);
     // update all walkers in crowd
     void UpdateCrowd(const client::detail::EpisodeState &state);
 

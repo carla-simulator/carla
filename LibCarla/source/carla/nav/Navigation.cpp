@@ -398,5 +398,24 @@ namespace nav {
     return true;
   }
 
+  float Navigation::GetWalkerSpeed(ActorId id) {
+    // get the internal index
+    auto it = _mappedId.find(id);
+    if (it == _mappedId.end()) {
+      return false;
+    }
+
+    // get the index found
+    int index = it->second;
+    if (index == -1) {
+      return false;
+    }
+
+    // get the walker
+    const dtCrowdAgent *agent = _crowd->getAgent(index);
+    return sqrt(agent->vel[0] * agent->vel[0] + agent->vel[1] * agent->vel[1] + agent->vel[2] *
+        agent->vel[2]);
+  }
+
 } // namespace nav
 } // namespace carla
