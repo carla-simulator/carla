@@ -72,9 +72,16 @@ Running off-screen
 In Linux, you can force the simulator to run off-screen by setting the
 environment variable `DISPLAY` to empty
 
+!!! important
+    **DISPLAY= only works with OpenGL**<br>
+    Vulkan is now the default graphics API used by Unreal Engine and CARLA on
+    Linux. Unreal Engine currently crashes when Vulkan is used when running off-screen.
+    Therefore the -opengl flag must be added to force the engine to use OpenGL instead.
+    We hope that this issue is addressed by Epic in the near future.
+
 ```sh
 # Linux
-DISPLAY= ./CarlaUE4.sh
+DISPLAY= ./CarlaUE4.sh -opengl
 ```
 
 This launches the simulator without simulator window, of course you can still
