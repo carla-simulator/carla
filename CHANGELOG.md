@@ -3,6 +3,7 @@
   * Bugfix about recorder query system
   * Fixed problem when vehicles enable autopilot after a replayer, now it works better.
   * Vulkan support: Changed project settings to make vulkan default on linux and updated make script to allow user to select opengl
+  * Updated scene capture sensor to add it's camera as a view to unreal's texture streamer each tick to enable texture streaming
   * Add ability to set motion blur settings for rgb camera in sensor python blueprint
   * Improved visual quality of the screen capture for the rgb sensor
     - Enabled Temporal AA for screen captures with no post-processing to prevent jaggies during motion
