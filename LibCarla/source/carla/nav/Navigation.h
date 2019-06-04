@@ -53,6 +53,7 @@ namespace nav {
     public:
     Navigation();
     ~Navigation();
+
     // load navigation data
     bool Load(const std::string filename);
     // load navigation data from memory
@@ -68,12 +69,15 @@ namespace nav {
     bool AddWalkerInCrowd(ActorId id, carla::geom::Location from);
     // set a new target point to go
     bool SetWalkerTarget(ActorId id, carla::geom::Location to);
+    bool SetWalkerTargetIndex(int index, carla::geom::Location to);
     // get the walker current transform
     bool GetWalkerTransform(ActorId id, carla::geom::Transform &trans);
     // get the walker current transform
     float GetWalkerSpeed(ActorId id);
     // update all walkers in crowd
     void UpdateCrowd(const client::detail::EpisodeState &state);
+    // get a random location for navigation
+    bool GetRandomLocation(carla::geom::Location &location, dtQueryFilter *filter = nullptr);
 
     private:
     std::vector<uint8_t> _binaryMesh;
