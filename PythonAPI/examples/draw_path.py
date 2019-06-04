@@ -24,6 +24,7 @@ import argparse
 import math
 import random
 import time
+import logging
 
 red = carla.Color(255, 0, 0)
 green = carla.Color(0, 255, 0)
@@ -56,62 +57,89 @@ def main():
         m = world.get_map()
         debug = world.debug
 
-        # spawn_point1 = carla.Transform()
-        # spawn_point1.location.x = -18
-        # spawn_point1.location.y = 1.2
-        # spawn_point1.location.z = 18
-        # spawn_point1.rotation.roll = 0.0
-        # spawn_point1.rotation.pitch = 0.0
-
-        # spawn_point2 = carla.Transform()
-        # spawn_point2.location.x = -20
-        # spawn_point2.location.y = 1.2
-        # spawn_point2.location.z = 18
-        # spawn_point2.rotation.roll = 0.0
-        # spawn_point2.rotation.pitch = 0.0
-
-        # player
-        # print(world.get_blueprint_library())
-        # exit(1)
-
-
+        # FOR SPAWNING WALKERS IN BATCH
+        spawn_points = []
         for i in range(50):
-            print ("-----------------------------------------")
             spawn_point = carla.Transform()
             spawn_point.location = world.get_random_location_from_navigation()
-            print ("SPAWN AT:", spawn_point.location.x, spawn_point.location.y, spawn_point.location.z)
-            blueprint = random.choice(world.get_blueprint_library().filter('walker.pedestrian.*'))
-            player = None
-            while player is None:
-                player = world.try_spawn_actor(blueprint, spawn_point)
+            spawn_points.append(spawn_point)
 
-            blueprint = random.choice(world.get_blueprint_library().filter('controller.ai.walker'))
-            walker_controller = world.spawn_actor(blueprint, carla.Transform(), attach_to=player)
-            walker_controller.start()
 
-            time.sleep(0.4)
+        SpawnActor = carla.command.SpawnActor
+        SetAutopilot = carla.command.SetAutopilot
+        FutureActor = carla.command.FutureActor
 
+
+        # Spawn walker
+        print ("SPAWNING WALKERS")
+        actor_list = []
+        batch = []
+        for spawn_point in spawn_points:
+            walker_bp = random.choice(world.get_blueprint_library().filter('walker.pedestrian.*'))
+            batch.append(SpawnActor(walker_bp, spawn_point))
+
+        for response in client.apply_batch_sync(batch):
+            if response.error:
+                logging.error(response.error)
+            else:
+                actor_list.append(response.actor_id)
+
+
+        # Spawn walker controller
+        time.sleep(2.0)
+        print ("SPAWNING CONTROLLERS")
+        del batch[:]
+        batch = []
+        controller_list = []
+        walker_controller_bp = random.choice(world.get_blueprint_library().filter('controller.ai.walker'))
+        for actor_id in actor_list:
+            batch.append(SpawnActor(walker_controller_bp, carla.Transform(), actor_id))
+
+        for response in client.apply_batch_sync(batch):
+            if response.error:
+                logging.error(response.error)
+            else:
+                controller_list.append(response.actor_id)
+        time.sleep(2.0)
+
+        # Set a target for each pedestrian
+        # walkers = world.get_actors(actor_list)
+        walker_controllers = world.get_actors(controller_list)
+        for controller in walker_controllers:
+            print ("Starting controller: ", controller.id)
+            controller.start()
 
             target = world.get_random_location_from_navigation()
-            print ("TARGET AT:", target.x, target.y, target.z)
+            controller.go_to_location(target)
 
-            walker_controller.go_to_location(target)
-            # time.sleep(0.5)
+        print('spawned %d walkers, press Ctrl+C to exit.' % len(actor_list))
+
+        # FOR SPAWNING WALKERS SEQUENTIALLY
+        # for i in range(50):
+        #     print ("-----------------------------------------")
+        #     spawn_point = carla.Transform()
+        #     spawn_point.location = world.get_random_location_from_navigation()
+        #     print (i, " SPAWN AT:", spawn_point.location.x, spawn_point.location.y, spawn_point.location.z)
+        #     blueprint = random.choice(world.get_blueprint_library().filter('walker.pedestrian.*'))
+        #     player = None
+        #     while player is None:
+        #         player = world.try_spawn_actor(blueprint, spawn_point)
+
+        #     blueprint = random.choice(world.get_blueprint_library().filter('controller.ai.walker'))
+        #     walker_controller = world.spawn_actor(blueprint, carla.Transform(), attach_to=player)
+        #     walker_controller.start()
+
+        #     time.sleep(0.4)
+
+
+        #     target = world.get_random_location_from_navigation()
+        #     print ("TARGET AT:", target.x, target.y, target.z)
+
+        #     walker_controller.go_to_location(target)
+        #     time.sleep(0.5)
 
         while (1):
             time.sleep(1);
-
-        # a = carla.Location(-141.789, -143.839, 0.139954)
-        # b = carla.Location(-29.7504, -26.8764, 0.270432)
-        # points = []
-        # points = client.create_walker(a, b)
-        # for i in range(len(points)-1):
-        #     a1 = carla.Location(points[i].x, points[i].y, points[i].z)
-        #     b1 = carla.Location(points[i+1].x, points[i+1].y, points[i+1].z)
-        #     # print(a.x, a.y, a.z)
-        #     debug.draw_line(a1, b1, color=orange, thickness=0.5, life_time=12)
-        #     # debug.draw_line(a, a+carla.Location(z=1000), color=orange, thickness=0.2, life_time=12)
-        #     debug.draw_point(a1, 1, red, 12)
 
     finally:
         pass
