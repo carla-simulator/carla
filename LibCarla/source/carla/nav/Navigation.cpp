@@ -18,6 +18,7 @@ namespace nav {
   static const int MAX_AGENTS = 128;
   static const float AGENT_RADIUS = 0.6f;
   static const float AGENT_HEIGHT = 2.0f;
+  static const float AGENT_HEIGHT_HALF = AGENT_HEIGHT / 2.0f;
 
   Navigation::Navigation() {
   }
@@ -256,6 +257,7 @@ namespace nav {
   void Navigation::AddWalker(ActorId id) {
     // add to the queue to be added later and next tick where we can access the transform
     _walkersQueueToAdd.push_back(id);
+    logging::log("Nav: Added new walker in queue");
   }
 
   // create a new walker in crowd
@@ -266,12 +268,17 @@ namespace nav {
       return false;
     }
 
+    // set from Unreal coordinates (and adjust center of walker, from middle to bottom)
+    float y = from.y;
+    from.y = from.z;
+    from.z = y - AGENT_HEIGHT_HALF;
+
     // set parameters
     memset(&params, 0, sizeof(params));
     params.radius = AGENT_RADIUS;
     params.height = AGENT_HEIGHT;
     params.maxAcceleration = 8.0f;
-    params.maxSpeed = 3.5f;
+    params.maxSpeed = 2.5f;
     params.collisionQueryRange = params.radius * 12.0f;
     params.pathOptimizationRange = params.radius * 30.0f;
 
@@ -283,17 +290,28 @@ namespace nav {
     params.updateFlags |= DT_CROWD_OBSTACLE_AVOIDANCE;
     params.updateFlags |= DT_CROWD_SEPARATION;
     params.obstacleAvoidanceType = 3;
-    params.separationWeight = 2.0;
+    params.separationWeight = 0.5;
 
     // add walker
     float PointFrom[3] = { from.x, from.y, from.z };
     int index = _crowd->addAgent(PointFrom, &params);
-    if (index != -1) {
-      // save the id
-      _mappedId[id] = index;
+    if (index == -1) {
+      return false;
     }
 
+    // save the id
+    _mappedId[id] = index;
+    logging::log("Nav: Set index ", index, " to id ", id);
+
+    int total = 0;
+    for (int i=0; i<_crowd->getAgentCount(); ++i) {
+      if (_crowd->getAgent(i)->active)
+        ++total;
+    }
+    logging::log("Nav: agents now ", total);
+
     return true;
+
   }
 
   // set a new target point to go
@@ -308,10 +326,10 @@ namespace nav {
     if (index == -1)
       return false;
 
-    logging::log("Nav: ", index, it->first);
+    logging::log("Nav: Found index ", index, " with id ", it->first);
 
     // set target position
-    float pointTo[3] = { to.x, to.y, to.z };
+    float pointTo[3] = { to.x, to.z, to.y };
     float nearest[3];
     const dtQueryFilter *filter = _crowd->getFilter(0);
     dtPolyRef targetRef;
@@ -324,17 +342,19 @@ namespace nav {
 
   // update all walkers in crowd
   void Navigation::UpdateCrowd(const client::detail::EpisodeState &state) {
-    std::lock_guard<std::mutex> lock(_mutex);
+
     if (!_navMesh || !_crowd) {
       return;
     }
 
+    // force single thread running this
+    std::lock_guard<std::mutex> lock(_mutex);
+
     // check if we have more walkers in the queue to add
-    while (_walkersQueueToAdd.size() > 0) {
+    while (!_walkersQueueToAdd.empty()) {
       // add it
       ActorId id = _walkersQueueToAdd.back();
       carla::geom::Transform trans = state.GetActorState(id).transform;
-      trans.location.z -= (AGENT_HEIGHT / 2.0f);
       if (!AddWalkerInCrowd(id, trans.location)) {
         break;
       }
@@ -345,20 +365,6 @@ namespace nav {
     // update all
     double deltaTime = state.GetTimestamp().delta_seconds;
     _crowd->update(static_cast<float>(deltaTime), nullptr);
-/*
-    // get all walker positions
-    for (int i = 0; i < _crowd->getAgentCount(); ++i)
-    {
-      const dtCrowdAgent* ag = _crowd->getAgent(i);
-      if (!ag->active)
-        continue;
-
-      // Update agent movement trail.
-      // AgentTrail* trail = &m_trails[i];
-      // trail->htrail = (trail->htrail + 1) % AGENT_MAX_TRAIL;
-      // dtVcopy(&trail->trail[trail->htrail*3], ag->npos);
-    }
-*/
   }
 
   // get the walker current transform
@@ -375,13 +381,18 @@ namespace nav {
 
     // get the walker
     const dtCrowdAgent *agent = _crowd->getAgent(index);
-    // set its position
+
+    if (!agent->active) {
+      return false;
+    }
+
+    // set its position in Unreal coordinates
     trans.location.x = agent->npos[0];
     trans.location.y = agent->npos[2];
-    trans.location.z = agent->npos[1] + (AGENT_HEIGHT / 2.0f);
+    trans.location.z = agent->npos[1] + AGENT_HEIGHT_HALF;
     // set its rotation
-    trans.rotation.pitch = asin(agent->nvel[2]);
-    trans.rotation.yaw = asin(agent->nvel[0]);
+    trans.rotation.pitch = 0; // asin(agent->nvel[2]) * 360;
+    trans.rotation.yaw = asin(agent->nvel[0]) * (180.0f / 3.14159265f);
     trans.rotation.roll = 0;
 
     return true;
