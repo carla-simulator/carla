@@ -257,14 +257,8 @@ namespace nav {
     return true;
   }
 
-  // create a new walker but not yet add in crowd
-  void Navigation::AddWalker(ActorId id) {
-    // add to the queue to be added later and next tick where we can access the transform
-    _walkersQueueToAdd.push_back(id);
-  }
-
   // create a new walker in crowd
-  bool Navigation::AddWalkerInCrowd(ActorId id, carla::geom::Location from) {
+  bool Navigation::AddWalker(ActorId id, carla::geom::Location from) {
     dtCrowdAgentParams params;
 
     if (_crowd == nullptr) {
@@ -344,18 +338,6 @@ namespace nav {
 
     // force single thread running this
     std::lock_guard<std::mutex> lock(_mutex);
-
-    // check if we have more walkers in the queue to add
-    while (!_walkersQueueToAdd.empty()) {
-      // add it
-      ActorId id = _walkersQueueToAdd.back();
-      carla::geom::Transform trans = state.GetActorState(id).transform;
-      if (!AddWalkerInCrowd(id, trans.location)) {
-        break;
-      }
-      // remove it
-      _walkersQueueToAdd.pop_back();
-    }
 
     // update all
     double deltaTime = state.GetTimestamp().delta_seconds;

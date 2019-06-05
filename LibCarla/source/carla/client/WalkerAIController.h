@@ -18,7 +18,7 @@ namespace client {
 
     explicit WalkerAIController(ActorInitializer init);
 
-    void Start();
+    void Start(carla::geom::Location location);
 
     geom::Location GetRandomLocation();
 
