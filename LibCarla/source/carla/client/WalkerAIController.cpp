@@ -14,8 +14,15 @@ namespace client {
   WalkerAIController::WalkerAIController(ActorInitializer init)
     : Actor(std::move(init)) {}
 
-  void WalkerAIController::Start() {
+  void WalkerAIController::Start(carla::geom::Location location) {
     GetEpisode().Lock()->RegisterAIController(*this);
+
+    // add the walker in the Recast & Detour
+    auto walker = GetParent();
+    if (walker != nullptr) {
+      auto nav = GetEpisode().Lock()->GetNavigation();
+      nav->AddWalker(walker->GetId(), location);
+    }
   }
 
   geom::Location WalkerAIController::GetRandomLocation() {

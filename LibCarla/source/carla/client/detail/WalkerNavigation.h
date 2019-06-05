@@ -32,9 +32,11 @@ namespace detail {
     void RegisterWalker(ActorId walker_id, ActorId controller_id) {
       // add to list
       _walkers.Push(WalkerHandle { walker_id, controller_id });
+    }
 
+    void AddWalker(ActorId walker_id, carla::geom::Location location) {
       // create the walker in the crowd (to manage its movement in Detour)
-      _nav.AddWalker(walker_id);
+      _nav.AddWalker(walker_id, location);
     }
 
     void Tick(const EpisodeState &episode_state);
