@@ -63,10 +63,8 @@ namespace nav {
 
     // create the crowd object
     void CreateCrowd(void);
-    // create a new walker but not yet add in crowd
-    void AddWalker(ActorId id);
-    // create a new walker in crowd
-    bool AddWalkerInCrowd(ActorId id, carla::geom::Location from);
+    // create a new walker
+    bool AddWalker(ActorId id, carla::geom::Location from);
     // set a new target point to go
     bool SetWalkerTarget(ActorId id, carla::geom::Location to);
     bool SetWalkerTargetIndex(int index, carla::geom::Location to);
@@ -82,7 +80,6 @@ namespace nav {
 
     private:
     std::vector<uint8_t> _binaryMesh;
-    std::vector<ActorId> _walkersQueueToAdd;
     // meshes
     dtNavMesh *_navMesh { nullptr };
     dtNavMeshQuery *_navQuery { nullptr };
