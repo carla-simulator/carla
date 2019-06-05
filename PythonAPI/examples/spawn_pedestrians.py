@@ -47,6 +47,12 @@ def main():
         default=2000,
         type=int,
         help='TCP port to listen to (default: 2000)')
+    argparser.add_argument(
+        '-n', '--number-of-vehicles',
+        metavar='N',
+        default=50,
+        type=int,
+        help='number of vehicles (default: 10)')
     args = argparser.parse_args()
 
     try:
@@ -59,7 +65,7 @@ def main():
 
         # get random points to spawn
         spawn_points = []
-        for i in range(50):
+        for i in range(args.number_of_vehicles):
             spawn_point = carla.Transform()
             spawn_point.location = world.get_random_location_from_navigation()
             spawn_points.append(spawn_point)
