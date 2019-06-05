@@ -206,6 +206,10 @@ if (LIBCARLA_BUILD_RELEASE)
 
   if (WIN32) # @todo Fix PythonAPI build on Windows.
     set_target_properties(carla_client PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_RELEASE}")
+
+    target_link_libraries(carla_client "${RECAST_LIB_PATH}/Recast.lib")
+    target_link_libraries(carla_client "${RECAST_LIB_PATH}/Detour.lib")
+    target_link_libraries(carla_client "${RECAST_LIB_PATH}/DetourCrowd.lib")
   else ()
     if (NOT DEFINED CMAKE_CXX_FLAGS_RELEASE_CLIENT)
       set(CMAKE_CXX_FLAGS_RELEASE_CLIENT ${CMAKE_CXX_FLAGS_RELEASE})
