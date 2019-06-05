@@ -265,11 +265,6 @@ namespace nav {
       return false;
     }
 
-    // set from Unreal coordinates (and adjust center of walker, from middle to bottom)
-    float y = from.y;
-    from.y = from.z;
-    from.z = y - AGENT_HEIGHT_HALF;
-
     // set parameters
     memset(&params, 0, sizeof(params));
     params.radius = AGENT_RADIUS;
@@ -289,8 +284,10 @@ namespace nav {
     params.obstacleAvoidanceType = 3;
     params.separationWeight = 0.5f;
 
+
+    // set from Unreal coordinates (and adjust center of walker, from middle to bottom)
+    float PointFrom[3] = { from.x, from.z, from.y };
     // add walker
-    float PointFrom[3] = { from.x, from.y, from.z };
     int index = _crowd->addAgent(PointFrom, &params);
     if (index == -1) {
       return false;
