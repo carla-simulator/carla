@@ -4,6 +4,7 @@
   # - CLASSES ------------------------------
   classes:
   - class_name: Sensor
+    parent: carla.Actor
     # - DESCRIPTION ------------------------
     doc: >
     # - PROPERTIES -------------------------

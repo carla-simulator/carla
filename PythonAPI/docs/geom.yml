@@ -5,6 +5,7 @@
   - class_name: Vector2D
     # - DESCRIPTION ------------------------
     doc: >
+      Vector 2D helper class
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: x
@@ -13,20 +14,41 @@
       doc: >
     # - METHODS ----------------------------
     methods:
+    - def_name: __add__
+      params:
+      - param_name: self
+      - param_name: other
+    # --------------------------------------
+    - def_name: __mul__
+      params:
+      - param_name: self
+      - param_name: other
+    # --------------------------------------
+    - def_name: __sub__
+      params:
+      - param_name: self
+      - param_name: other
+    # --------------------------------------
+    - def_name: __truediv__
+      params:
+      - param_name: self
+      - param_name: other
+    # --------------------------------------
     - def_name: __eq__
       params:
       - param_name: self
-      doc: >
+      - param_name: other
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: self
-      doc: >
+      - param_name: other
     # --------------------------------------
-  
+
   - class_name: Vector3D
     # - DESCRIPTION ------------------------
     doc: >
+      Vector 3D helper class
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: x
@@ -37,20 +59,42 @@
       doc: >
     # - METHODS ----------------------------
     methods:
+    - def_name: __add__
+      params:
+      - param_name: self
+      - param_name: other
+    # --------------------------------------
+    - def_name: __mul__
+      params:
+      - param_name: self
+      - param_name: other
+    # --------------------------------------
+    - def_name: __sub__
+      params:
+      - param_name: self
+      - param_name: other
+    # --------------------------------------
+    - def_name: __truediv__
+      params:
+      - param_name: self
+      - param_name: other
+    # --------------------------------------
     - def_name: __eq__
       params:
       - param_name: self
-      doc: >
+      - param_name: other
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: self
-      doc: >
+      - param_name: other
     # --------------------------------------
 
   - class_name: Location
-    # - DESCRIPTION ------------------------
+    parent: carla.Vector3D
+  # - DESCRIPTION ------------------------
     doc: >
+      Class that represents a location
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: x

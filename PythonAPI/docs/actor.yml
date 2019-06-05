@@ -89,6 +89,7 @@
     # --------------------------------------
 
   - class_name: Vehicle
+    parent: carla.Actor
     # - DESCRIPTION ------------------------
     doc: >
     # - PROPERTIES -------------------------
@@ -144,6 +145,7 @@
     # --------------------------------------
 
   - class_name: Walker
+    parent: carla.Actor
     # - DESCRIPTION ------------------------
     doc: >
     # - PROPERTIES -------------------------
@@ -164,6 +166,7 @@
     # --------------------------------------
 
   - class_name: TrafficSign
+    parent: carla.Actor
     # - DESCRIPTION ------------------------
     doc: >
     # - PROPERTIES -------------------------
@@ -183,6 +186,7 @@
     - var_name: Unknown
 
   - class_name: TrafficLight
+    parent: carla.TrafficSign
     # - DESCRIPTION ------------------------
     doc: >
     # - PROPERTIES -------------------------
