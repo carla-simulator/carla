@@ -71,7 +71,7 @@ def get_libcarla_extensions():
             sys.version_info.major,
             sys.version_info.minor)
 
-        extra_link_args = ['shlwapi.lib']
+        extra_link_args = ['shlwapi.lib', 'Recast.lib', 'RecastDetour.lib', 'RecastDetourCrowd.lib' ]
 
         required_libs = [
             pylib, 'libboost_filesystem',
