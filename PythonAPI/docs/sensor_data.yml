@@ -30,6 +30,7 @@
       doc: >
 
   - class_name: Image
+    parent: carla.SensorData
     # - DESCRIPTION ------------------------
     doc: >
     # - PROPERTIES -------------------------
@@ -76,6 +77,7 @@
     # --------------------------------------
 
   - class_name: LidarMeasurement
+    parent: carla.SensorData
     # - DESCRIPTION ------------------------
     doc: >
     # - PROPERTIES -------------------------
@@ -120,6 +122,7 @@
     # --------------------------------------
 
   - class_name: CollisionEvent
+    parent: carla.SensorData
     # - DESCRIPTION ------------------------
     doc: >
     # - PROPERTIES -------------------------
@@ -132,6 +135,7 @@
       doc: >
 
   - class_name: ObstacleDetectionEvent
+    parent: carla.SensorData
     # - DESCRIPTION ------------------------
     doc: >
     # - PROPERTIES -------------------------
@@ -144,6 +148,7 @@
       doc: >
 
   - class_name: LaneInvasionEvent
+    parent: carla.SensorData
     # - DESCRIPTION ------------------------
     doc: >
     # - PROPERTIES -------------------------
@@ -154,6 +159,7 @@
       doc: >
 
   - class_name: GnssEvent
+    parent: carla.SensorData
     # - DESCRIPTION ------------------------
     doc: >
     # - PROPERTIES -------------------------
