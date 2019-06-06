@@ -45,7 +45,7 @@ namespace detail {
       // get the transform of the walker
       if (_nav.GetWalkerTransform(handle.walker, trans)) {
         // set current height of the walker, ignoring height from recast
-        trans.location.z = state.GetActorState(handle.walker).transform.location.z;
+        // trans.location.z = state.GetActorState(handle.walker).transform.location.z;
         float speed = _nav.GetWalkerSpeed(handle.walker);
 
         commands.emplace_back(Cmd::ApplyTransform{ handle.walker, trans });
