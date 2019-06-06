@@ -28,6 +28,8 @@
   * [How to automatically generate a map from RoadRunner](generate_map_from_fbx.md)
   * [How to export and import maps to distribution builds](export_import_dist.md)
   * [How to add custom props to the Blueprint Library](define_custom_props.md)
+  * [How to add friction triggers](how_to_add_friction_triggers.md)
+  * [How to control vehicle physics](how_to_control_vehicle_physics.md)
   * [How to record and replay](recorder_and_playback.md)
   * [Recorder binary file format](recorder_binary_file_format.md)
   * [How to upgrade content](how_to_upgrade_content.md)
