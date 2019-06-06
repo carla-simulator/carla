@@ -80,6 +80,7 @@ namespace nav {
 
     private:
     std::vector<uint8_t> _binaryMesh;
+    double _delta_seconds;
     // meshes
     dtNavMesh *_navMesh { nullptr };
     dtNavMeshQuery *_navQuery { nullptr };
@@ -87,6 +88,8 @@ namespace nav {
     dtCrowd *_crowd { nullptr };
     // mapping Id
     std::unordered_map<ActorId, int> _mappedId;
+    // Store walkers yaw angle from previous tick
+    std::unordered_map<ActorId, float> yaw_walkers;
 
     std::mutex _mutex;
 
