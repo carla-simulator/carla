@@ -1,5 +1,5 @@
 ---
-- module_name: control
+- module_name: carla
   doc: >
   # - CLASSES ------------------------------
   classes:
