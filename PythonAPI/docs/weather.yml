@@ -4,11 +4,10 @@
 
   # - CLASSES ------------------------------
   classes:
-
   - class_name: WeatherParameters
+    # - DESCRIPTION ------------------------
     doc: >
       WeatherParameters class is used for requesting and changing the lighting and weather conditions inside the world.
-
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: cloudyness
