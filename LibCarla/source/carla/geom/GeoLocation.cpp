@@ -67,7 +67,7 @@ namespace geom {
     GeoLocation result{0.0, 0.0, altitude + location.z};
     LatLonAddMeters(
         latitude, longitude,
-        location.x, location.y,
+        location.x, -location.y,  // Invert y axis to have increasing latitudes northward
         result.latitude, result.longitude);
     return result;
   }

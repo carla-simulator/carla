@@ -18,7 +18,7 @@ fi
 
 DOC_STRING="Build and launch CarlaUE4."
 
-USAGE_STRING="Usage: $0 [-h|--help] [--build] [--rebuild] [--launch] [--clean] [--hard-clean]"
+USAGE_STRING="Usage: $0 [-h|--help] [--build] [--rebuild] [--launch] [--clean] [--hard-clean] [--opengl]"
 
 REMOVE_INTERMEDIATE=false
 HARD_CLEAN=false
@@ -26,8 +26,9 @@ BUILD_CARLAUE4=false
 LAUNCH_UE4_EDITOR=false
 
 GDB=
+RHI="-vulkan"
 
-OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl -n 'parse-options' -- "$@"`
 
 if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
 
@@ -54,6 +55,9 @@ while true; do
     --hard-clean )
       REMOVE_INTERMEDIATE=true;
       HARD_CLEAN=true;
+      shift ;;
+    --opengl )
+      RHI="-opengl";
       shift ;;
     -h | --help )
       echo "$DOC_STRING"
@@ -138,7 +142,7 @@ fi
 if ${LAUNCH_UE4_EDITOR} ; then
 
   log "Launching UE4Editor..."
-  ${GDB} ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${PWD}/CarlaUE4.uproject"
+  ${GDB} ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${PWD}/CarlaUE4.uproject" ${RHI}
 
 else
 

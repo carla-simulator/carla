@@ -68,6 +68,18 @@ public:
   float GetFOVAngle() const;
 
   UFUNCTION(BlueprintCallable)
+  void SetTargetGamma(float InTargetGamma)
+  {
+    TargetGamma = InTargetGamma;
+  }
+
+  UFUNCTION(BlueprintCallable)
+  float GetTargetGamma() const
+  {
+    return TargetGamma;
+  }
+
+  UFUNCTION(BlueprintCallable)
   void SetMotionBlurIntensity(float Intensity);
 
   UFUNCTION(BlueprintCallable)
@@ -128,6 +140,9 @@ private:
   /// Whether to render the post-processing effects present in the scene.
   UPROPERTY(EditAnywhere)
   bool bEnablePostProcessingEffects = true;
+
+  UPROPERTY(EditAnywhere)
+  float TargetGamma = 2.2f;
 
   /// Render target necessary for scene capture.
   UPROPERTY(EditAnywhere)
