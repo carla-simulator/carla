@@ -15,7 +15,7 @@ namespace carla {
 namespace nav {
 
   static const int MAX_POLYS = 256;
-  static const int MAX_AGENTS = 128;
+  static const int MAX_AGENTS = 300;
   static const float AGENT_RADIUS = 0.3f;
   static const float AGENT_HEIGHT = 1.8f;
   static const float AGENT_HEIGHT_HALF = AGENT_HEIGHT / 2.0f;
