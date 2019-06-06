@@ -1,13 +1,12 @@
 ---
 - module_name: control
   doc: >
-
   # - CLASSES ------------------------------
   classes:
   - class_name: VehicleControl
+    # - DESCRIPTION ------------------------
     doc: >
       VehicleControl is used for controlling the basic movement of a vehicle.
-
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: throttle
@@ -91,7 +90,7 @@
     instance_variables:
     - var_name: direction
       doc: >
-        Vector that indicates the direction of the walker.
+        Vector that control the direction of the walker.
     # --------------------------------------
     - var_name: speed
       doc: >
@@ -278,9 +277,13 @@
       doc: >
         The maximum angle in degrees that the wheel can steer.
     # --------------------------------------
-    - var_name: is_steerable
+    - var_name: radius
       doc: >
-        If true, the wheel will steer.
+        The radius of the wheel in centimeters.
+    # --------------------------------------
+    - var_name: position
+      doc: >
+        World position of the wheel. Note that it is a read-only parameter.
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -295,9 +298,9 @@
       - param_name: max_steer_angle
         type: float
         default: 70.0
-      - param_name: is_steerable
-        type: bool
-        default: True
+      - param_name: radius
+        type: float
+        default: 30.0
       doc: >
         WheelPhysicsControl constructor
     # --------------------------------------
@@ -308,6 +311,7 @@
       return: bool
       doc: >
         Returns True if `self` and `other` are equal
+    # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: self
