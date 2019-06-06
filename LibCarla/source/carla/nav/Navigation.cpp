@@ -17,7 +17,7 @@ namespace nav {
   static const int MAX_POLYS = 256;
   static const int MAX_AGENTS = 128;
   static const float AGENT_RADIUS = 0.3f;
-  static const float AGENT_HEIGHT = 2.0f;
+  static const float AGENT_HEIGHT = 1.8f;
   static const float AGENT_HEIGHT_HALF = AGENT_HEIGHT / 2.0f;
 
   // return a random float
@@ -383,8 +383,7 @@ namespace nav {
     // set its position in Unreal coordinates
     trans.location.x = agent->npos[0];
     trans.location.y = agent->npos[2];
-    trans.location.z = agent->npos[1] + AGENT_HEIGHT_HALF;
-
+    trans.location.z = agent->npos[1] + AGENT_HEIGHT_HALF - 0.1f;
     // set its rotation
     float yaw =  atan2f(agent->dvel[2] , agent->dvel[0]) * (180.0f / static_cast<float>(M_PI));
     float shortest_angle = fmod(yaw - yaw_walkers[id] + 540.0f, 360.0f) - 180.0f;
