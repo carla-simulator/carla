@@ -296,6 +296,8 @@ namespace nav {
     // save the id
     _mappedId[id] = index;
 
+    yaw_walkers[id] = 0.0f;
+
     return true;
   }
 
@@ -337,8 +339,8 @@ namespace nav {
     std::lock_guard<std::mutex> lock(_mutex);
 
     // update all
-    double deltaTime = state.GetTimestamp().delta_seconds;
-    _crowd->update(static_cast<float>(deltaTime), nullptr);
+    _delta_seconds = state.GetTimestamp().delta_seconds;
+    _crowd->update(static_cast<float>(_delta_seconds), nullptr);
 
     // check if walker has finished
     for (int i = 0; i<_crowd->getAgentCount(); ++i)
@@ -382,11 +384,14 @@ namespace nav {
     trans.location.x = agent->npos[0];
     trans.location.y = agent->npos[2];
     trans.location.z = agent->npos[1] + AGENT_HEIGHT_HALF;
-    // set its rotation
-    trans.rotation.pitch = 0;
-    trans.rotation.yaw = atan2f(agent->vel[2] , agent->vel[0]) * (180.0f / 3.14159265f);
-    trans.rotation.roll = 0;
 
+    // set its rotation
+    float yaw =  atan2f(agent->dvel[2] , agent->dvel[0]) * (180.0f / static_cast<float>(M_PI));
+    float shortest_angle = fmod(yaw - yaw_walkers[id] + 540.0f, 360.0f) - 180.0f;
+    float rotation_speed = 2.0f;
+    trans.rotation.yaw = yaw_walkers[id] + (shortest_angle * rotation_speed * static_cast<float>(_delta_seconds));
+
+    yaw_walkers[id] = trans.rotation.yaw;
     return true;
   }
 
