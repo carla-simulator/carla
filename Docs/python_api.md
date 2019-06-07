@@ -152,8 +152,8 @@
     - [**BoundingBox**](#carla.BoundingBox) <sub>_Class_</sub>  
         - [**location**](#carla.BoundingBox.location) <sub>_Instance variable_</sub>
         - [**extent**](#carla.BoundingBox.extent) <sub>_Instance variable_</sub>
-        - [**\__eq__**(**self**)](#carla.BoundingBox.__eq__) <sub>_Method_</sub>
-        - [**\__ne__**(**self**)](#carla.BoundingBox.__ne__) <sub>_Method_</sub>
+        - [**\__eq__**(**self**, **other**)](#carla.BoundingBox.__eq__) <sub>_Method_</sub>
+        - [**\__ne__**(**self**, **other**)](#carla.BoundingBox.__ne__) <sub>_Method_</sub>
     - [**Client**](#carla.Client) <sub>_Class_</sub>  
         - [**\__init__**(**self**, **host**, **port**, **worker_threads**=0)](#carla.Client.__init__) <sub>_Method_</sub>
         - [**set_timeout**(**self**, **seconds**)](#carla.Client.set_timeout) <sub>_Method_</sub>
@@ -187,8 +187,7 @@
         - [**latitude**](#carla.GeoLocation.latitude) <sub>_Instance variable_</sub>
         - [**longitude**](#carla.GeoLocation.longitude) <sub>_Instance variable_</sub>
         - [**altitude**](#carla.GeoLocation.altitude) <sub>_Instance variable_</sub>
-        - [**\__eq__**(**self**)](#carla.GeoLocation.__eq__) <sub>_Method_</sub>
-        - [**\__ne__**(**self**)](#carla.GeoLocation.__ne__) <sub>_Method_</sub>
+        - [**\__str__**(**self**)](#carla.GeoLocation.__str__) <sub>_Method_</sub>
     - [**GnssEvent**](#carla.GnssEvent) <sub>_Class_</sub>  
         - [**latitude**](#carla.GnssEvent.latitude) <sub>_Instance variable_</sub>
         - [**longitude**](#carla.GnssEvent.longitude) <sub>_Instance variable_</sub>
@@ -203,7 +202,7 @@
         - [**get_waypoint**(**self**, **location**, **project_to_road**=True, **lane_type**=carla.LaneType.Driving)](#carla.Map.get_waypoint) <sub>_Method_</sub>
         - [**get_topology**(**self**)](#carla.Map.get_topology) <sub>_Method_</sub>
         - [**generate_waypoints**(**self**, **distance**)](#carla.Map.generate_waypoints) <sub>_Method_</sub>
-        - [**transform_to_geolocation**(**self**)](#carla.Map.transform_to_geolocation) <sub>_Method_</sub>
+        - [**transform_to_geolocation**(**self**, **location**)](#carla.Map.transform_to_geolocation) <sub>_Method_</sub>
         - [**to_opendrive**(**self**)](#carla.Map.to_opendrive) <sub>_Method_</sub>
         - [**save_to_disk**(**self**, **path**)](#carla.Map.save_to_disk) <sub>_Method_</sub>
     - [**ObstacleDetectionEvent**](#carla.ObstacleDetectionEvent) <sub>_Class_</sub>  
@@ -215,8 +214,8 @@
         - [**yaw**](#carla.Rotation.yaw) <sub>_Instance variable_</sub>
         - [**roll**](#carla.Rotation.roll) <sub>_Instance variable_</sub>
         - [**get_forward_vector**(**self**)](#carla.Rotation.get_forward_vector) <sub>_Method_</sub>
-        - [**\__eq__**(**self**)](#carla.Rotation.__eq__) <sub>_Method_</sub>
-        - [**\__ne__**(**self**)](#carla.Rotation.__ne__) <sub>_Method_</sub>
+        - [**\__eq__**(**self**, **other**)](#carla.Rotation.__eq__) <sub>_Method_</sub>
+        - [**\__ne__**(**self**, **other**)](#carla.Rotation.__ne__) <sub>_Method_</sub>
     - [**Timestamp**](#carla.Timestamp) <sub>_Class_</sub>  
         - [**frame_count**](#carla.Timestamp.frame_count) <sub>_Instance variable_</sub>
         - [**elapsed_seconds**](#carla.Timestamp.elapsed_seconds) <sub>_Instance variable_</sub>
@@ -229,10 +228,10 @@
     - [**Transform**](#carla.Transform) <sub>_Class_</sub>  
         - [**location**](#carla.Transform.location) <sub>_Instance variable_</sub>
         - [**rotation**](#carla.Transform.rotation) <sub>_Instance variable_</sub>
-        - [**transform**(**self**)](#carla.Transform.transform) <sub>_Method_</sub>
+        - [**transform**(**self**, **in_point**)](#carla.Transform.transform) <sub>_Method_</sub>
         - [**get_forward_vector**(**self**)](#carla.Transform.get_forward_vector) <sub>_Method_</sub>
-        - [**\__eq__**(**self**)](#carla.Transform.__eq__) <sub>_Method_</sub>
-        - [**\__ne__**(**self**)](#carla.Transform.__ne__) <sub>_Method_</sub>
+        - [**\__eq__**(**self**, **other**)](#carla.Transform.__eq__) <sub>_Method_</sub>
+        - [**\__ne__**(**self**, **other**)](#carla.Transform.__ne__) <sub>_Method_</sub>
     - [**Vector2D**](#carla.Vector2D) <sub>_Class_</sub>  
         - [**x**](#carla.Vector2D.x) <sub>_Instance variable_</sub>
         - [**y**](#carla.Vector2D.y) <sub>_Instance variable_</sub>
@@ -260,9 +259,9 @@
         - [**reverse**](#carla.VehicleControl.reverse) <sub>_Instance variable_</sub>
         - [**manual_gear_shift**](#carla.VehicleControl.manual_gear_shift) <sub>_Instance variable_</sub>
         - [**gear**](#carla.VehicleControl.gear) <sub>_Instance variable_</sub>
-        - [**\__init__**(**self**)](#carla.VehicleControl.__init__) <sub>_Method_</sub>
-        - [**\__eq__**(**self**)](#carla.VehicleControl.__eq__) <sub>_Method_</sub>
-        - [**\__ne__**(**self**)](#carla.VehicleControl.__ne__) <sub>_Method_</sub>
+        - [**\__init__**(**self**, **throttle**=0.0, **steer**=0.0, **brake**=0.0, **hand_brake**=True, **reverse**=True, **manual_gear_shift**=True, **gear**=0)](#carla.VehicleControl.__init__) <sub>_Method_</sub>
+        - [**\__eq__**(**self**, **other**)](#carla.VehicleControl.__eq__) <sub>_Method_</sub>
+        - [**\__ne__**(**self**, **other**)](#carla.VehicleControl.__ne__) <sub>_Method_</sub>
     - [**VehiclePhysicsControl**](#carla.VehiclePhysicsControl) <sub>_Class_</sub>  
         - [**torque_curve**](#carla.VehiclePhysicsControl.torque_curve) <sub>_Instance variable_</sub>
         - [**max_rpm**](#carla.VehiclePhysicsControl.max_rpm) <sub>_Instance variable_</sub>
@@ -278,16 +277,16 @@
         - [**center_of_mass**](#carla.VehiclePhysicsControl.center_of_mass) <sub>_Instance variable_</sub>
         - [**steering_curve**](#carla.VehiclePhysicsControl.steering_curve) <sub>_Instance variable_</sub>
         - [**wheels**](#carla.VehiclePhysicsControl.wheels) <sub>_Instance variable_</sub>
-        - [**\__init__**(**self**)](#carla.VehiclePhysicsControl.__init__) <sub>_Method_</sub>
-        - [**\__eq__**(**self**)](#carla.VehiclePhysicsControl.__eq__) <sub>_Method_</sub>
-        - [**\__ne__**(**self**)](#carla.VehiclePhysicsControl.__ne__) <sub>_Method_</sub>
+        - [**\__init__**(**self**, **torque_curve**=[[0.0, 500.0], [5000.0, 500.0]], **max_rpm**=5000.0, **moi**=1.0, **damping_rate_full_throttle**=0.15, **damping_rate_zero_throttle_clutch_engaged**=2.0, **damping_rate_zero_throttle_clutch_disengaged**=0.35, **use_gear_autobox**=True, **gear_switch_time**=0.5, **clutch_strength**=10.0, **mass**=1000.0, **drag_coefficient**=0.3, **center_of_mass**=[0.0, 0.0, 0.0], **steering_curve**=[0.0, 0.0, 0.0], **wheels**=list())](#carla.VehiclePhysicsControl.__init__) <sub>_Method_</sub>
+        - [**\__eq__**(**self**, **other**)](#carla.VehiclePhysicsControl.__eq__) <sub>_Method_</sub>
+        - [**\__ne__**(**self**, **other**)](#carla.VehiclePhysicsControl.__ne__) <sub>_Method_</sub>
     - [**WalkerControl**](#carla.WalkerControl) <sub>_Class_</sub>  
         - [**direction**](#carla.WalkerControl.direction) <sub>_Instance variable_</sub>
         - [**speed**](#carla.WalkerControl.speed) <sub>_Instance variable_</sub>
         - [**jump**](#carla.WalkerControl.jump) <sub>_Instance variable_</sub>
-        - [**\__init__**(**self**)](#carla.WalkerControl.__init__) <sub>_Method_</sub>
-        - [**\__eq__**(**self**)](#carla.WalkerControl.__eq__) <sub>_Method_</sub>
-        - [**\__ne__**(**self**)](#carla.WalkerControl.__ne__) <sub>_Method_</sub>
+        - [**\__init__**(**self**, **direction**=[1.0, 0.0, 0.0], **speed**=0.0, **jump**=False)](#carla.WalkerControl.__init__) <sub>_Method_</sub>
+        - [**\__eq__**(**self**, **other**)](#carla.WalkerControl.__eq__) <sub>_Method_</sub>
+        - [**\__ne__**(**self**, **other**)](#carla.WalkerControl.__ne__) <sub>_Method_</sub>
     - [**Waypoint**](#carla.Waypoint) <sub>_Class_</sub>  
         - [**id**](#carla.Waypoint.id) <sub>_Instance variable_</sub>
         - [**transform**](#carla.Waypoint.transform) <sub>_Instance variable_</sub>
@@ -313,16 +312,17 @@
         - [**sun_azimuth_angle**](#carla.WeatherParameters.sun_azimuth_angle) <sub>_Instance variable_</sub>
         - [**sun_altitude_angle**](#carla.WeatherParameters.sun_altitude_angle) <sub>_Instance variable_</sub>
         - [**\__init__**(**self**)](#carla.WeatherParameters.__init__) <sub>_Method_</sub>
-        - [**\__eq__**(**self**)](#carla.WeatherParameters.__eq__) <sub>_Method_</sub>
-        - [**\__ne__**(**self**)](#carla.WeatherParameters.__ne__) <sub>_Method_</sub>
+        - [**\__eq__**(**self**, **other**)](#carla.WeatherParameters.__eq__) <sub>_Method_</sub>
+        - [**\__ne__**(**self**, **other**)](#carla.WeatherParameters.__ne__) <sub>_Method_</sub>
     - [**WheelPhysicsControl**](#carla.WheelPhysicsControl) <sub>_Class_</sub>  
         - [**tire_friction**](#carla.WheelPhysicsControl.tire_friction) <sub>_Instance variable_</sub>
         - [**damping_rate**](#carla.WheelPhysicsControl.damping_rate) <sub>_Instance variable_</sub>
-        - [**steer_angle**](#carla.WheelPhysicsControl.steer_angle) <sub>_Instance variable_</sub>
-        - [**disable_steering**](#carla.WheelPhysicsControl.disable_steering) <sub>_Instance variable_</sub>
-        - [**\__init__**(**self**)](#carla.WheelPhysicsControl.__init__) <sub>_Method_</sub>
-        - [**\__eq__**(**self**)](#carla.WheelPhysicsControl.__eq__) <sub>_Method_</sub>
-        - [**\__ne__**(**self**)](#carla.WheelPhysicsControl.__ne__) <sub>_Method_</sub>
+        - [**max_steer_angle**](#carla.WheelPhysicsControl.max_steer_angle) <sub>_Instance variable_</sub>
+        - [**radius**](#carla.WheelPhysicsControl.radius) <sub>_Instance variable_</sub>
+        - [**position**](#carla.WheelPhysicsControl.position) <sub>_Instance variable_</sub>
+        - [**\__init__**(**self**, **tire_friction**=2.0, **damping_rate**=0.25, **max_steer_angle**=70.0, **radius**=30.0)](#carla.WheelPhysicsControl.__init__) <sub>_Method_</sub>
+        - [**\__eq__**(**self**, **other**)](#carla.WheelPhysicsControl.__eq__) <sub>_Method_</sub>
+        - [**\__ne__**(**self**, **other**)](#carla.WheelPhysicsControl.__ne__) <sub>_Method_</sub>
     - [**World**](#carla.World) <sub>_Class_</sub>  
         - [**id**](#carla.World.id) <sub>_Instance variable_</sub>
         - [**debug**](#carla.World.debug) <sub>_Instance variable_</sub>
@@ -370,9 +370,9 @@
         - [**x**](#carla.Location.x) <sub>_Instance variable_</sub>
         - [**y**](#carla.Location.y) <sub>_Instance variable_</sub>
         - [**z**](#carla.Location.z) <sub>_Instance variable_</sub>
-        - [**distance**(**self**)](#carla.Location.distance) <sub>_Method_</sub>
-        - [**\__eq__**(**self**)](#carla.Location.__eq__) <sub>_Method_</sub>
-        - [**\__ne__**(**self**)](#carla.Location.__ne__) <sub>_Method_</sub>
+        - [**distance**(**self**, **location**)](#carla.Location.distance) <sub>_Method_</sub>
+        - [**\__eq__**(**self**, **other**)](#carla.Location.__eq__) <sub>_Method_</sub>
+        - [**\__ne__**(**self**, **other**)](#carla.Location.__ne__) <sub>_Method_</sub>
     - [**Sensor**](#carla.Sensor) <sub>_Class_</sub>  
         - [**is_listening**](#carla.Sensor.is_listening) <sub>_Instance variable_</sub>
         - [**listen**(**self**)](#carla.Sensor.listen) <sub>_Method_</sub>
@@ -698,14 +698,18 @@ All the possible lane types that OpenDRIVE accepts.
 ---
 
 ## carla.BoundingBox<a name="carla.BoundingBox"></a> <sub><sup>_class_</sup></sub>
+Bounding box helper class.  
 
 <h3>Instance Variables</h3>
-- <a name="carla.BoundingBox.location"></a>**<font color="#f8805a">location</font>**  
-- <a name="carla.BoundingBox.extent"></a>**<font color="#f8805a">extent</font>**  
+- <a name="carla.BoundingBox.location"></a>**<font color="#f8805a">location</font>** (_[carla.Location](#carla.Location)_)  
+The center of the bounding box in the world.  
+- <a name="carla.BoundingBox.extent"></a>**<font color="#f8805a">extent</font>** (_[carla.Vector3D](#carla.Vector3D)_)  
+Contains the vector from the center of the bounding box to one of the vertex of the box.  
+So, if you want to know the _X bounding box size_, you can just do `extent.x * 2`.  
 
 <h3>Methods</h3>
-- <a name="carla.BoundingBox.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>)  
-- <a name="carla.BoundingBox.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.BoundingBox.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
+- <a name="carla.BoundingBox.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
 
 ---
 
@@ -735,6 +739,8 @@ Get the server version as a string.
 - <a name="carla.Client.reload_world"></a>**<font color="#7fb800">reload_world</font>**(<font color="#00a6ed">**self**</font>)  
     - **Raises:** RuntimeError  
 - <a name="carla.Client.load_world"></a>**<font color="#7fb800">load_world</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**map_name**</font>)  
+    - **Parameters:**
+        - `map_name` (_str_) – Name of the map to load.  
 - <a name="carla.Client.start_recorder"></a>**<font color="#7fb800">start_recorder</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>)  
 If we use a simple name like 'recording.log' then it will be saved at server folder 'CarlaUE4/Saved/recording.log'. If we use some folder in the name, then it will be considered to be an absolute path, like '/home/carla/recording.log'.  
     - **Parameters:**
@@ -808,15 +814,15 @@ Apply a different playback speed to current playback. Can be used several times 
 ---
 
 ## carla.GeoLocation<a name="carla.GeoLocation"></a> <sub><sup>_class_</sup></sub>
+Contains geolocation simulated data.  
 
 <h3>Instance Variables</h3>
-- <a name="carla.GeoLocation.latitude"></a>**<font color="#f8805a">latitude</font>**  
-- <a name="carla.GeoLocation.longitude"></a>**<font color="#f8805a">longitude</font>**  
-- <a name="carla.GeoLocation.altitude"></a>**<font color="#f8805a">altitude</font>**  
+- <a name="carla.GeoLocation.latitude"></a>**<font color="#f8805a">latitude</font>** (_float_)  
+- <a name="carla.GeoLocation.longitude"></a>**<font color="#f8805a">longitude</font>** (_float_)  
+- <a name="carla.GeoLocation.altitude"></a>**<font color="#f8805a">altitude</font>** (_float_)  
 
 <h3>Methods</h3>
-- <a name="carla.GeoLocation.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>)  
-- <a name="carla.GeoLocation.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.GeoLocation.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
@@ -854,11 +860,11 @@ Constructor for this class useful if you want to use a `XODR` (OpenDRIVE) file w
 - <a name="carla.Map.get_spawn_points"></a>**<font color="#7fb800">get_spawn_points</font>**(<font color="#00a6ed">**self**</font>)  
 Returns a list of transformations corresponding to the recommended spawn points over the map.  
     - **Return:** _list([carla.Transform](#carla.Transform))_  
-- <a name="carla.Map.get_waypoint"></a>**<font color="#7fb800">get_waypoint</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>, <font color="#00a6ed">**project_to_road**=True</font>, <font color="#00a6ed">**lane_type**=carla.LaneType.Driving</font>)  
-Return the nearest [carla.Waypoint](#carla.Waypoint) given a [carla.Location](#carla.Location).  
+- <a name="carla.Map.get_waypoint"></a>**<font color="#7fb800">get_waypoint</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>, <font color="#00a6ed">**project_to_road**=True</font>, <font color="#00a6ed">**lane_type**=[carla.LaneType.Driving](#carla.LaneType.Driving)</font>)  
     - **Parameters:**
         - `location` (_[carla.Location](#carla.Location)_) – Location where you want to get the [carla.Waypoint](#carla.Waypoint).  
-        - `project_to_road` (_bool_) – If **True**, the waypoint will be at the center of the nearest lane. If **False**, the waypoint will be at the given location. Also, in this second case, the result may be `None` if the waypoint is not found.  
+        - `project_to_road` (_bool_) – If **True**, the waypoint will be at the center of the nearest lane.  
+If **False**, the waypoint will be at the given location. Also, in this second case, the result may be `None` if the waypoint is not found.  
         - `lane_type` (_[carla.LaneType](#carla.LaneType)_) – This parameter is used to limit the search on a certain lane types. This can be used like a flag: `LaneType.Driving & LaneType.Shoulder`.  
     - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
 - <a name="carla.Map.get_topology"></a>**<font color="#7fb800">get_topology</font>**(<font color="#00a6ed">**self**</font>)  
@@ -869,14 +875,18 @@ Returns a list of waypoints positioned on the center of the lanes  all over the 
     - **Parameters:**
         - `distance` (_float_) – Aproximate distance between the waypoints.  
     - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
-- <a name="carla.Map.transform_to_geolocation"></a>**<font color="#7fb800">transform_to_geolocation</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Map.transform_to_geolocation"></a>**<font color="#7fb800">transform_to_geolocation</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>)  
+Converts a given [carla.Location](#carla.Location) `(x, y, z)` to a [carla.GeoLocation](#carla.GeoLocation) `(lat, lon, alt)`.  
+    - **Parameters:**
+        - `location` (_[carla.Location](#carla.Location)_) – Location to convert.  
+    - **Return:** _[carla.GeoLocation](#carla.GeoLocation)_  
 - <a name="carla.Map.to_opendrive"></a>**<font color="#7fb800">to_opendrive</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the OpenDRIVE of the current map as string.  
     - **Return:** _str_  
 - <a name="carla.Map.save_to_disk"></a>**<font color="#7fb800">save_to_disk</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**path**</font>)  
 Save the OpenDRIVE of the current map to disk.  
     - **Parameters:**
-        - `path` – Path where will be saved.  
+        - `path` – Path where it will be saved.  
 
 ---
 
@@ -890,16 +900,21 @@ Save the OpenDRIVE of the current map to disk.
 ---
 
 ## carla.Rotation<a name="carla.Rotation"></a> <sub><sup>_class_</sup></sub>
+Class that represents a 3D rotation.  
+
+![UE4_Rotation](https://d26ilriwvtzlb.cloudfront.net/8/83/BRMC_9.jpg)   _Unreal Engine's standard (from [UE4 docs](https://wiki.unrealengine.com/Blueprint_Rotating_Movement_Component))_.  
 
 <h3>Instance Variables</h3>
-- <a name="carla.Rotation.pitch"></a>**<font color="#f8805a">pitch</font>**  
-- <a name="carla.Rotation.yaw"></a>**<font color="#f8805a">yaw</font>**  
-- <a name="carla.Rotation.roll"></a>**<font color="#f8805a">roll</font>**  
+- <a name="carla.Rotation.pitch"></a>**<font color="#f8805a">pitch</font>** (_float_)  
+- <a name="carla.Rotation.yaw"></a>**<font color="#f8805a">yaw</font>** (_float_)  
+- <a name="carla.Rotation.roll"></a>**<font color="#f8805a">roll</font>** (_float_)  
 
 <h3>Methods</h3>
 - <a name="carla.Rotation.get_forward_vector"></a>**<font color="#7fb800">get_forward_vector</font>**(<font color="#00a6ed">**self**</font>)  
-- <a name="carla.Rotation.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>)  
-- <a name="carla.Rotation.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>)  
+Computes a forward vector using the current rotation.  
+    - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
+- <a name="carla.Rotation.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
+- <a name="carla.Rotation.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
 
 ---
 
@@ -925,16 +940,21 @@ Save the OpenDRIVE of the current map to disk.
 ---
 
 ## carla.Transform<a name="carla.Transform"></a> <sub><sup>_class_</sup></sub>
+Defines a transformation without scaling.  
 
 <h3>Instance Variables</h3>
-- <a name="carla.Transform.location"></a>**<font color="#f8805a">location</font>**  
-- <a name="carla.Transform.rotation"></a>**<font color="#f8805a">rotation</font>**  
+- <a name="carla.Transform.location"></a>**<font color="#f8805a">location</font>** (_[carla.Location](#carla.Location)_)  
+- <a name="carla.Transform.rotation"></a>**<font color="#f8805a">rotation</font>** (_[carla.Rotation](#carla.Rotation)_)  
 
 <h3>Methods</h3>
-- <a name="carla.Transform.transform"></a>**<font color="#7fb800">transform</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Transform.transform"></a>**<font color="#7fb800">transform</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**in_point**</font>)  
+Transform a 3D point using the current transformation.  
+    - **Parameters:**
+        - `in_point` (_[carla.Location](#carla.Location)_) – Location in the space to which the transformation will be applied.  
 - <a name="carla.Transform.get_forward_vector"></a>**<font color="#7fb800">get_forward_vector</font>**(<font color="#00a6ed">**self**</font>)  
-- <a name="carla.Transform.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>)  
-- <a name="carla.Transform.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>)  
+Computes a forward vector using the rotation of the current transformation.  
+- <a name="carla.Transform.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
+- <a name="carla.Transform.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
 
 ---
 
@@ -942,8 +962,8 @@ Save the OpenDRIVE of the current map to disk.
 Vector 2D helper class.  
 
 <h3>Instance Variables</h3>
-- <a name="carla.Vector2D.x"></a>**<font color="#f8805a">x</font>**  
-- <a name="carla.Vector2D.y"></a>**<font color="#f8805a">y</font>**  
+- <a name="carla.Vector2D.x"></a>**<font color="#f8805a">x</font>** (_float_)  
+- <a name="carla.Vector2D.y"></a>**<font color="#f8805a">y</font>** (_float_)  
 
 <h3>Methods</h3>
 - <a name="carla.Vector2D.__add__"></a>**<font color="#7fb800">\__add__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
@@ -959,9 +979,9 @@ Vector 2D helper class.
 Vector 3D helper class.  
 
 <h3>Instance Variables</h3>
-- <a name="carla.Vector3D.x"></a>**<font color="#f8805a">x</font>**  
-- <a name="carla.Vector3D.y"></a>**<font color="#f8805a">y</font>**  
-- <a name="carla.Vector3D.z"></a>**<font color="#f8805a">z</font>**  
+- <a name="carla.Vector3D.x"></a>**<font color="#f8805a">x</font>** (_float_)  
+- <a name="carla.Vector3D.y"></a>**<font color="#f8805a">y</font>** (_float_)  
+- <a name="carla.Vector3D.z"></a>**<font color="#f8805a">z</font>** (_float_)  
 
 <h3>Methods</h3>
 - <a name="carla.Vector3D.__add__"></a>**<font color="#7fb800">\__add__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
@@ -974,59 +994,99 @@ Vector 3D helper class.
 ---
 
 ## carla.VehicleControl<a name="carla.VehicleControl"></a> <sub><sup>_class_</sup></sub>
+VehicleControl is used for controlling the basic movement of a vehicle.  
 
 <h3>Instance Variables</h3>
-- <a name="carla.VehicleControl.throttle"></a>**<font color="#f8805a">throttle</font>**  
-- <a name="carla.VehicleControl.steer"></a>**<font color="#f8805a">steer</font>**  
-- <a name="carla.VehicleControl.brake"></a>**<font color="#f8805a">brake</font>**  
-- <a name="carla.VehicleControl.hand_brake"></a>**<font color="#f8805a">hand_brake</font>**  
-- <a name="carla.VehicleControl.reverse"></a>**<font color="#f8805a">reverse</font>**  
-- <a name="carla.VehicleControl.manual_gear_shift"></a>**<font color="#f8805a">manual_gear_shift</font>**  
-- <a name="carla.VehicleControl.gear"></a>**<font color="#f8805a">gear</font>**  
+- <a name="carla.VehicleControl.throttle"></a>**<font color="#f8805a">throttle</font>** (_float_)  
+Scalar value to control the vehicle throttle.  
+- <a name="carla.VehicleControl.steer"></a>**<font color="#f8805a">steer</font>** (_float_)  
+Scalar value to control the vehicle steering.  
+- <a name="carla.VehicleControl.brake"></a>**<font color="#f8805a">brake</font>** (_float_)  
+Scalar value to control the vehicle brake.  
+- <a name="carla.VehicleControl.hand_brake"></a>**<font color="#f8805a">hand_brake</font>** (_bool_)  
+If true, hand brake will be used.  
+- <a name="carla.VehicleControl.reverse"></a>**<font color="#f8805a">reverse</font>** (_bool_)  
+If true, vehicle will move reverse.  
+- <a name="carla.VehicleControl.manual_gear_shift"></a>**<font color="#f8805a">manual_gear_shift</font>** (_bool_)  
+If true, the vehicle will be controlled by changing gears manually.  
+- <a name="carla.VehicleControl.gear"></a>**<font color="#f8805a">gear</font>** (_int_)  
+Controls the gear value of the vehicle.  
 
 <h3>Methods</h3>
-- <a name="carla.VehicleControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>)  
-- <a name="carla.VehicleControl.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>)  
-- <a name="carla.VehicleControl.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.VehicleControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**throttle**=0.0</font>, <font color="#00a6ed">**steer**=0.0</font>, <font color="#00a6ed">**brake**=0.0</font>, <font color="#00a6ed">**hand_brake**=True</font>, <font color="#00a6ed">**reverse**=True</font>, <font color="#00a6ed">**manual_gear_shift**=True</font>, <font color="#00a6ed">**gear**=0</font>)  
+VehicleControl constructor.  
+- <a name="carla.VehicleControl.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
+Returns True if `self` and `other` are equal.  
+    - **Return:** _bool_  
+- <a name="carla.VehicleControl.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
 
 ---
 
 ## carla.VehiclePhysicsControl<a name="carla.VehiclePhysicsControl"></a> <sub><sup>_class_</sup></sub>
+VehiclePhysicsControl is used for controlling the physics parameters of a vehicle.  
 
 <h3>Instance Variables</h3>
-- <a name="carla.VehiclePhysicsControl.torque_curve"></a>**<font color="#f8805a">torque_curve</font>**  
-- <a name="carla.VehiclePhysicsControl.max_rpm"></a>**<font color="#f8805a">max_rpm</font>**  
-- <a name="carla.VehiclePhysicsControl.moi"></a>**<font color="#f8805a">moi</font>**  
-- <a name="carla.VehiclePhysicsControl.damping_rate_full_throttle"></a>**<font color="#f8805a">damping_rate_full_throttle</font>**  
-- <a name="carla.VehiclePhysicsControl.damping_rate_zero_throttle_clutch_engaged"></a>**<font color="#f8805a">damping_rate_zero_throttle_clutch_engaged</font>**  
-- <a name="carla.VehiclePhysicsControl.damping_rate_zero_throttle_clutch_disengaged"></a>**<font color="#f8805a">damping_rate_zero_throttle_clutch_disengaged</font>**  
-- <a name="carla.VehiclePhysicsControl.use_gear_autobox"></a>**<font color="#f8805a">use_gear_autobox</font>**  
-- <a name="carla.VehiclePhysicsControl.gear_switch_time"></a>**<font color="#f8805a">gear_switch_time</font>**  
-- <a name="carla.VehiclePhysicsControl.clutch_strength"></a>**<font color="#f8805a">clutch_strength</font>**  
-- <a name="carla.VehiclePhysicsControl.mass"></a>**<font color="#f8805a">mass</font>**  
-- <a name="carla.VehiclePhysicsControl.drag_coefficient"></a>**<font color="#f8805a">drag_coefficient</font>**  
-- <a name="carla.VehiclePhysicsControl.center_of_mass"></a>**<font color="#f8805a">center_of_mass</font>**  
-- <a name="carla.VehiclePhysicsControl.steering_curve"></a>**<font color="#f8805a">steering_curve</font>**  
-- <a name="carla.VehiclePhysicsControl.wheels"></a>**<font color="#f8805a">wheels</font>**  
+- <a name="carla.VehiclePhysicsControl.torque_curve"></a>**<font color="#f8805a">torque_curve</font>** (_list([carla.Vector2D](#carla.Vector2D))_)  
+Curve that indicates the torque measured in Nm for a specific RPM of the vehicle's engine.  
+- <a name="carla.VehiclePhysicsControl.max_rpm"></a>**<font color="#f8805a">max_rpm</font>** (_float_)  
+The maximum RPM of the vehicle's engine.  
+- <a name="carla.VehiclePhysicsControl.moi"></a>**<font color="#f8805a">moi</font>** (_float_)  
+The moment of inertia of the vehicle's engine.  
+- <a name="carla.VehiclePhysicsControl.damping_rate_full_throttle"></a>**<font color="#f8805a">damping_rate_full_throttle</font>** (_float_)  
+Damping rate when the throttle is maximum.  
+- <a name="carla.VehiclePhysicsControl.damping_rate_zero_throttle_clutch_engaged"></a>**<font color="#f8805a">damping_rate_zero_throttle_clutch_engaged</font>** (_float_)  
+Damping rate when the thottle is zero with clutch engaged.  
+- <a name="carla.VehiclePhysicsControl.damping_rate_zero_throttle_clutch_disengaged"></a>**<font color="#f8805a">damping_rate_zero_throttle_clutch_disengaged</font>** (_float_)  
+Damping rate when the throttle is zero with clutch disengaged.  
+- <a name="carla.VehiclePhysicsControl.use_gear_autobox"></a>**<font color="#f8805a">use_gear_autobox</font>** (_bool_)  
+If true, the vehicle will have automatic transmission.  
+- <a name="carla.VehiclePhysicsControl.gear_switch_time"></a>**<font color="#f8805a">gear_switch_time</font>** (_float_)  
+Switching time between gears.  
+- <a name="carla.VehiclePhysicsControl.clutch_strength"></a>**<font color="#f8805a">clutch_strength</font>** (_float_)  
+The clutch strength of the vehicle. Measured in Kgm^2/s.  
+- <a name="carla.VehiclePhysicsControl.mass"></a>**<font color="#f8805a">mass</font>** (_float_)  
+The mass of the vehicle measured in Kg.  
+- <a name="carla.VehiclePhysicsControl.drag_coefficient"></a>**<font color="#f8805a">drag_coefficient</font>** (_float_)  
+Drag coefficient of the vehicle's chassis.  
+- <a name="carla.VehiclePhysicsControl.center_of_mass"></a>**<font color="#f8805a">center_of_mass</font>** (_[carla.Vector3D](#carla.Vector3D)_)  
+The center of mass of the vehicle.  
+- <a name="carla.VehiclePhysicsControl.steering_curve"></a>**<font color="#f8805a">steering_curve</font>** (_list([carla.Vector2D](#carla.Vector2D))_)  
+Curve that indicates the maximum steering for a specific forward speed.  
+- <a name="carla.VehiclePhysicsControl.wheels"></a>**<font color="#f8805a">wheels</font>** (_list([carla.WheelPhysicsControl](#carla.WheelPhysicsControl))_)  
+List of `[carla.WheelPhysicsControl](#carla.WheelPhysicsControl)` objects.  
 
 <h3>Methods</h3>
-- <a name="carla.VehiclePhysicsControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>)  
-- <a name="carla.VehiclePhysicsControl.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>)  
-- <a name="carla.VehiclePhysicsControl.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.VehiclePhysicsControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**torque_curve**=[[0.0, 500.0], [5000.0, 500.0]]</font>, <font color="#00a6ed">**max_rpm**=5000.0</font>, <font color="#00a6ed">**moi**=1.0</font>, <font color="#00a6ed">**damping_rate_full_throttle**=0.15</font>, <font color="#00a6ed">**damping_rate_zero_throttle_clutch_engaged**=2.0</font>, <font color="#00a6ed">**damping_rate_zero_throttle_clutch_disengaged**=0.35</font>, <font color="#00a6ed">**use_gear_autobox**=True</font>, <font color="#00a6ed">**gear_switch_time**=0.5</font>, <font color="#00a6ed">**clutch_strength**=10.0</font>, <font color="#00a6ed">**mass**=1000.0</font>, <font color="#00a6ed">**drag_coefficient**=0.3</font>, <font color="#00a6ed">**center_of_mass**=[0.0, 0.0, 0.0]</font>, <font color="#00a6ed">**steering_curve**=[0.0, 0.0, 0.0]</font>, <font color="#00a6ed">**wheels**=list()</font>)  
+VehiclePhysicsControl constructor.  
+- <a name="carla.VehiclePhysicsControl.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
+Returns True if `self` and `other` are equal.  
+    - **Return:** _bool_  
+- <a name="carla.VehiclePhysicsControl.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
 
 ---
 
 ## carla.WalkerControl<a name="carla.WalkerControl"></a> <sub><sup>_class_</sup></sub>
+WalkerControl is used for controlling the basic movement of a walker.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.WalkerControl.direction"></a>**<font color="#f8805a">direction</font>**  
+Vector that control the direction of the walker.  
 - <a name="carla.WalkerControl.speed"></a>**<font color="#f8805a">speed</font>**  
+Scalar value to control the walker speed.  
 - <a name="carla.WalkerControl.jump"></a>**<font color="#f8805a">jump</font>**  
+If true, the walker will perform a jump.  
 
 <h3>Methods</h3>
-- <a name="carla.WalkerControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>)  
-- <a name="carla.WalkerControl.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>)  
-- <a name="carla.WalkerControl.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.WalkerControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**direction**=[1.0, 0.0, 0.0]</font>, <font color="#00a6ed">**speed**=0.0</font>, <font color="#00a6ed">**jump**=False</font>)  
+VehicleControl constructor.  
+    - **Parameters:**
+        - `direction` (_[carla.Vector3D](#carla.Vector3D)_)  
+        - `speed` (_float_)  
+        - `jump` (_bool_)  
+- <a name="carla.WalkerControl.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
+Returns True if `self` and `other` are equal.  
+    - **Return:** _bool_  
+- <a name="carla.WalkerControl.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
 
 ---
 
@@ -1049,7 +1109,7 @@ OpenDRIVE road's id.
 - <a name="carla.Waypoint.section_id"></a>**<font color="#f8805a">section_id</font>** (_int_)  
 OpenDRIVE section's id, based on the order that they are originally defined.  
 - <a name="carla.Waypoint.lane_id"></a>**<font color="#f8805a">lane_id</font>** (_int_)  
-OpenDRIVE lane's id, this value can be positive or negative which means the direction of the  current lane with respect to the road. For more information refer to OpenDRIVE [documentaion](http://www.opendrive.org/docs/OpenDRIVEFormatSpecRev1.4H.pdf#page=20).  
+OpenDRIVE lane's id, this value can be positive or negative which represents the direction of the  current lane with respect to the road. For more information refer to OpenDRIVE [documentaion](http://www.opendrive.org/docs/OpenDRIVEFormatSpecRev1.4H.pdf#page=20).  
 - <a name="carla.Waypoint.s"></a>**<font color="#f8805a">s</font>** (_float_)  
 OpenDRIVE `s` value of the current position.  
 - <a name="carla.Waypoint.lane_change"></a>**<font color="#f8805a">lane_change</font>** (_[carla.LaneChange](#carla.LaneChange)_)  
@@ -1063,48 +1123,74 @@ The left lane marking information based on the directin of the Waypoint.
 
 <h3>Methods</h3>
 - <a name="carla.Waypoint.next"></a>**<font color="#7fb800">next</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  
-Returns a list of Waypoints at a certain approximate distance from the current Waypoint, taking into account the shape of the road and its possible deviations, without performing any lane change. The list may be empty if the road ends before the specified distance, for instance, a lane ending with the only option of incorporating to another road.  
+Returns a list of Waypoints at a certain approximate distance from the current Waypoint, taking into account the shape of the road and its possible deviations, without performing any lane change.  
+The list may be empty if the road ends before the specified distance, for instance, a lane ending with the only option of incorporating to another road.  
     - **Parameters:**
         - `distance` (_float_) – The approximate distance where to get the next Waypoints.  
     - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
 - <a name="carla.Waypoint.get_right_lane"></a>**<font color="#7fb800">get_right_lane</font>**(<font color="#00a6ed">**self**</font>)  
-Generates a Waypoint at the center of the right lane based on the direction of the current Waypoint, regardless if the lane change is allowed in this location. Can return `None` if there the lane does not exist.  
+Generates a Waypoint at the center of the right lane based on the direction of the current Waypoint, regardless if the lane change is allowed in this location.  
+Can return `None` if the lane does not exist.  
     - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
 - <a name="carla.Waypoint.get_left_lane"></a>**<font color="#7fb800">get_left_lane</font>**(<font color="#00a6ed">**self**</font>)  
-Generates a Waypoint at the center of the left lane based on the direction of the current Waypoint, regardless if the lane change is allowed in this location. Can return `None` if there the lane does not exist.  
+Generates a Waypoint at the center of the left lane based on the direction of the current Waypoint, regardless if the lane change is allowed in this location.  
+Can return `None` if the lane does not exist.  
     - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
 
 ---
 
 ## carla.WeatherParameters<a name="carla.WeatherParameters"></a> <sub><sup>_class_</sup></sub>
+WeatherParameters class is used for requesting and changing the lighting and weather conditions inside the world.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.WeatherParameters.cloudyness"></a>**<font color="#f8805a">cloudyness</font>**  
+Weather cloudyness. Values range from 0 to 100.  
 - <a name="carla.WeatherParameters.precipitation"></a>**<font color="#f8805a">precipitation</font>**  
+Precipitation amount for controlling rain intensity. Values range from 0 to 100.  
 - <a name="carla.WeatherParameters.precipitation_deposits"></a>**<font color="#f8805a">precipitation_deposits</font>**  
+Precipitation deposits for controlling the area of puddles on roads.  
 - <a name="carla.WeatherParameters.wind_intensity"></a>**<font color="#f8805a">wind_intensity</font>**  
+Wind intensity. Values range from 0 to 100.  
 - <a name="carla.WeatherParameters.sun_azimuth_angle"></a>**<font color="#f8805a">sun_azimuth_angle</font>**  
+Azimuth angle of the sun in degrees. Values range from 0 to 360.  
 - <a name="carla.WeatherParameters.sun_altitude_angle"></a>**<font color="#f8805a">sun_altitude_angle</font>**  
+Altitude angle of the sun in degrees. Values range from -90 to 90.  
 
 <h3>Methods</h3>
 - <a name="carla.WeatherParameters.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>)  
-- <a name="carla.WeatherParameters.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>)  
-- <a name="carla.WeatherParameters.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>)  
+WeatherParameters constructor.  
+- <a name="carla.WeatherParameters.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
+    - **Return:** _bool_  
+- <a name="carla.WeatherParameters.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
+    - **Return:** _bool_  
 
 ---
 
 ## carla.WheelPhysicsControl<a name="carla.WheelPhysicsControl"></a> <sub><sup>_class_</sup></sub>
+WheelPhysicsControl is used for controlling the physics parameters of a vehicle's wheel.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.WheelPhysicsControl.tire_friction"></a>**<font color="#f8805a">tire_friction</font>**  
+Scalar value that indicates the friction of the wheel.  
 - <a name="carla.WheelPhysicsControl.damping_rate"></a>**<font color="#f8805a">damping_rate</font>**  
-- <a name="carla.WheelPhysicsControl.steer_angle"></a>**<font color="#f8805a">steer_angle</font>**  
-- <a name="carla.WheelPhysicsControl.disable_steering"></a>**<font color="#f8805a">disable_steering</font>**  
+The damping rate of the wheel.  
+- <a name="carla.WheelPhysicsControl.max_steer_angle"></a>**<font color="#f8805a">max_steer_angle</font>**  
+The maximum angle in degrees that the wheel can steer.  
+- <a name="carla.WheelPhysicsControl.radius"></a>**<font color="#f8805a">radius</font>**  
+The radius of the wheel in centimeters.  
+- <a name="carla.WheelPhysicsControl.position"></a>**<font color="#f8805a">position</font>**  
+World position of the wheel. Note that it is a read-only parameter.  
 
 <h3>Methods</h3>
-- <a name="carla.WheelPhysicsControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>)  
-- <a name="carla.WheelPhysicsControl.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>)  
-- <a name="carla.WheelPhysicsControl.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.WheelPhysicsControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**tire_friction**=2.0</font>, <font color="#00a6ed">**damping_rate**=0.25</font>, <font color="#00a6ed">**max_steer_angle**=70.0</font>, <font color="#00a6ed">**radius**=30.0</font>)  
+WheelPhysicsControl constructor.  
+    - **Parameters:**
+        - `tire_friction` (_float_)  
+        - `damping_rate` (_float_)  
+        - `max_steer_angle` (_float_)  
+        - `radius` (_float_)  
+- <a name="carla.WheelPhysicsControl.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
+- <a name="carla.WheelPhysicsControl.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
 
 ---
 
@@ -1180,17 +1266,21 @@ Generates a Waypoint at the center of the left lane based on the direction of th
 ---
 
 ## carla.Location<a name="carla.Location"></a><sub><sup>([carla.Vector3D](#carla.Vector3D))</sup></sub> <sub><sup>_class_</sup></sub>
-Class that represents a location.  
+Represents a location in the world.  
 
 <h3>Instance Variables</h3>
-- <a name="carla.Location.x"></a>**<font color="#f8805a">x</font>**  
-- <a name="carla.Location.y"></a>**<font color="#f8805a">y</font>**  
-- <a name="carla.Location.z"></a>**<font color="#f8805a">z</font>**  
+- <a name="carla.Location.x"></a>**<font color="#f8805a">x</font>** (_float_)  
+- <a name="carla.Location.y"></a>**<font color="#f8805a">y</font>** (_float_)  
+- <a name="carla.Location.z"></a>**<font color="#f8805a">z</font>** (_float_)  
 
 <h3>Methods</h3>
-- <a name="carla.Location.distance"></a>**<font color="#7fb800">distance</font>**(<font color="#00a6ed">**self**</font>)  
-- <a name="carla.Location.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>)  
-- <a name="carla.Location.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Location.distance"></a>**<font color="#7fb800">distance</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>)  
+Computes the Euclidean distance between the current location to another one.  
+    - **Parameters:**
+        - `location` (_[carla.Location](#carla.Location)_) – The Location from where to compute the distance.  
+    - **Return:** _float_  
+- <a name="carla.Location.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
+- <a name="carla.Location.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
 
 ---
 
