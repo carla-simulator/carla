@@ -6,124 +6,305 @@
   - class_name: VehicleControl
     # - DESCRIPTION ------------------------
     doc: >
+      VehicleControl is used for controlling the basic movement of a vehicle.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: throttle
+      type: float
       doc: >
+        Scalar value to control the vehicle throttle.
+    # --------------------------------------
     - var_name: steer
+      type: float
       doc: >
+        Scalar value to control the vehicle steering.
+    # --------------------------------------
     - var_name: brake
+      type: float
       doc: >
+        Scalar value to control the vehicle brake.
+    # --------------------------------------
     - var_name: hand_brake
+      type: bool
       doc: >
+        If true, hand brake will be used.
+    # --------------------------------------
     - var_name: reverse
+      type: bool
       doc: >
+        If true, vehicle will move reverse.
+    # --------------------------------------
     - var_name: manual_gear_shift
+      type: bool
       doc: >
+        If true, the vehicle will be controlled by changing gears manually.
+    # --------------------------------------
     - var_name: gear
+      type: int
       doc: >
+        Controls the gear value of the vehicle.
+
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
+      params:
+      - param_name: throttle
+        default: 0.0
+      - param_name: steer
+        default: 0.0
+      - param_name: brake
+        default: 0.0
+      - param_name: hand_brake
+        default: True
+      - param_name: reverse
+        default: True
+      - param_name: manual_gear_shift
+        default: True
+      - param_name: gear
+        default: 0
       doc: >
+        VehicleControl constructor
     # --------------------------------------
     - def_name: __eq__
+      params:
+      - param_name: other
+      return: bool
       doc: >
+        Returns True if `self` and `other` are equal
     # --------------------------------------
     - def_name: __ne__
+      params:
+      - param_name: other
+      return: bool
       doc: >
-    # --------------------------------------
-  
+        Returns True if `self` and `other` are not equal
+
   - class_name: WalkerControl
-    # - DESCRIPTION ------------------------
     doc: >
+      WalkerControl is used for controlling the basic movement of a walker.
+
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: direction
       doc: >
+        Vector that control the direction of the walker.
+    # --------------------------------------
     - var_name: speed
       doc: >
+        Scalar value to control the walker speed.
+    # --------------------------------------
     - var_name: jump
       doc: >
+        If true, the walker will perform a jump.
+
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
+      params:
+      - param_name: direction
+        type: carla.Vector3D
+        default: [1.0, 0.0, 0.0]
+      - param_name: speed
+        type: float
+        default: 0.0
+      - param_name: jump
+        type: bool
+        default: False
       doc: >
+        VehicleControl constructor
     # --------------------------------------
     - def_name: __eq__
+      params:
+      - param_name: other
+      return: bool
       doc: >
+        Returns True if `self` and `other` are equal
     # --------------------------------------
     - def_name: __ne__
+      params:
+      - param_name: other
+      return: bool
       doc: >
-    # --------------------------------------
-  
-  - class_name: WheelPhysicsControl
-    # - DESCRIPTION ------------------------
-    doc: >
-    # - PROPERTIES -------------------------
-    instance_variables:
-    - var_name: tire_friction
-      doc: >
-    - var_name: damping_rate
-      doc: >
-    - var_name: steer_angle
-      doc: >
-    - var_name: disable_steering
-      doc: >
-    # - METHODS ----------------------------
-    methods:
-    - def_name: __init__
-      doc: >
-    # --------------------------------------
-    - def_name: __eq__
-      doc: >
-    # --------------------------------------
-    - def_name: __ne__
-      doc: >
-    # --------------------------------------
+        Returns True if `self` and `other` are not equal
 
   - class_name: VehiclePhysicsControl
-    # - DESCRIPTION ------------------------
     doc: >
+      VehiclePhysicsControl is used for controlling the physics parameters of a vehicle.
+
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: torque_curve
       doc: >
+        Curve that indicates the torque measured in Nm for a specific RPM of the vehicle's engine.
+    # --------------------------------------
     - var_name: max_rpm
       doc: >
+        The maximum RPM of the vehicle's engine.
+    # --------------------------------------
     - var_name: moi
       doc: >
+        The moment of inertia of the vehicle's engine.
+    # --------------------------------------
     - var_name: damping_rate_full_throttle
       doc: >
+        Damping rate when the throttle is maximum.
+    # --------------------------------------
     - var_name: damping_rate_zero_throttle_clutch_engaged
       doc: >
+        Damping rate when the thottle is zero with clutch engaged.
+    # --------------------------------------
     - var_name: damping_rate_zero_throttle_clutch_disengaged
       doc: >
+        Damping rate when the throttle is zero with clutch disengaged.
+    # --------------------------------------
     - var_name: use_gear_autobox
       doc: >
+        If true, the vehicle will have automatic transmission.
+    # --------------------------------------
     - var_name: gear_switch_time
       doc: >
+        Switching time between gears.
+    # --------------------------------------
     - var_name: clutch_strength
       doc: >
+        The clutch strength of the vehicle. Measured in Kgm^2/s.
+    # --------------------------------------
     - var_name: mass
       doc: >
+        The mass of the vehicle measured in Kg.
+    # --------------------------------------
     - var_name: drag_coefficient
       doc: >
+        Drag coefficient of the vehicle's chassis.
+    # --------------------------------------
     - var_name: center_of_mass
       doc: >
+        The center of mass of the vehicle.
+    # --------------------------------------
     - var_name: steering_curve
       doc: >
+        Curve that indicates the maximum steering for a specific forward speed.
+    # --------------------------------------
     - var_name: wheels
       doc: >
+        List of `carla.WheelPhysicsControl` objects.
+
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
+      params:
+      - param_name: torque_curve
+        type: List of carla.Vector2D
+        default: [[0.0,500.0], [5000.0, 500.0]]
+      - param_name: max_rpm
+        type: float
+        default: 5000.0
+      - param_name: moi
+        type: float
+        default: 1.0
+      - param_name: damping_rate_full_throttle
+        type: float
+        default: 0.15
+      - param_name: damping_rate_zero_throttle_clutch_engaged
+        type: float
+        default: 2.0
+      - param_name: damping_rate_zero_throttle_clutch_disengaged
+        type: float
+        default: 0.35
+      - param_name: use_gear_autobox
+        type: bool
+        default: True
+      - param_name: gear_switch_time
+        type: float
+        default: 0.5
+      - param_name: clutch_strength
+        type: float
+        default: 10.0
+      - param_name: mass
+        type: float
+        default: 1000.0
+      - param_name: drag_coefficient
+        type: float
+        default: 0.3
+      - param_name: center_of_mass
+        type: carla.Vector3D
+        default: [0.0, 0.0, 0.0]
+      - param_name: steering_curve
+        type: carla.Vector3D
+        default: [0.0, 0.0, 0.0]
+      - param_name: wheels
+        type: List of carla.WheelPhysicsControl
       doc: >
+        VehiclePhysicsControl constructor
     # --------------------------------------
     - def_name: __eq__
+      params:
+      - param_name: other
+      return: bool
       doc: >
+        Returns True if `self` and `other` are equal
+    - def_name: __ne__
+      params:
+      - param_name: other
+      return: bool
+      doc: >
+        Returns True if `self` and `other` are not equal
+
+  - class_name: WheelPhysicsControl
+    doc: >
+      WheelPhysicsControl is used for controlling the physics parameters of a vehicle's wheel.
+
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: tire_friction
+      doc: >
+        Scalar value that indicates the friction of the wheel.
+    # --------------------------------------
+    - var_name: damping_rate
+      doc: >
+        The damping rate of the wheel.
+    # --------------------------------------
+    - var_name: max_steer_angle
+      doc: >
+        The maximum angle in degrees that the wheel can steer.
+    # --------------------------------------
+    - var_name: radius
+      doc: >
+        The radius of the wheel in centimeters.
+    # --------------------------------------
+    - var_name: position
+      doc: >
+        World position of the wheel. Note that it is a read-only parameter.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: tire_friction
+        type: float
+        default: 2.0
+      - param_name: damping_rate
+        type: float
+        default: 0.25
+      - param_name: max_steer_angle
+        type: float
+        default: 70.0
+      - param_name: radius
+        type: float
+        default: 30.0
+      doc: >
+        WheelPhysicsControl constructor
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: other
+      return: bool
+      doc: >
+        Returns True if `self` and `other` are equal
     # --------------------------------------
     - def_name: __ne__
+      params:
+      - param_name: other
+      return: bool
       doc: >
-    # --------------------------------------
+        Returns True if `self` and `other` are not equal
 ...

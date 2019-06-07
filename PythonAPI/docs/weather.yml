@@ -1,34 +1,52 @@
 ---
 - module_name: carla
   doc: >
+
   # - CLASSES ------------------------------
   classes:
   - class_name: WeatherParameters
     # - DESCRIPTION ------------------------
     doc: >
+      WeatherParameters class is used for requesting and changing the lighting and weather conditions inside the world.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: cloudyness
       doc: >
+        Weather cloudyness. Values range from 0 to 100.
+    # --------------------------------------
     - var_name: precipitation
       doc: >
+        Precipitation amount for controlling rain intensity. Values range from 0 to 100.
+    # --------------------------------------
     - var_name: precipitation_deposits
       doc: >
+        Precipitation deposits for controlling the area of puddles on roads.
+    # --------------------------------------
     - var_name: wind_intensity
       doc: >
+        Wind intensity. Values range from 0 to 100.
+    # --------------------------------------
     - var_name: sun_azimuth_angle
       doc: >
+        Azimuth angle of the sun in degrees. Values range from 0 to 360.
+    # --------------------------------------
     - var_name: sun_altitude_angle
       doc: >
+        Altitude angle of the sun in degrees. Values range from -90 to 90.
+
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
       doc: >
+        WeatherParameters constructor
     # --------------------------------------
     - def_name: __eq__
-      doc: >
+      params:
+      - param_name: other
+      return: bool
     # --------------------------------------
     - def_name: __ne__
-      doc: >
-    # --------------------------------------
+      params:
+      - param_name: other
+      return: bool
 ...
