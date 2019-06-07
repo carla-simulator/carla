@@ -46,33 +46,21 @@
     # - METHODS ----------------------------
     methods:
     - def_name: convert
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: save_to_disk
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __len__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __iter__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __getitem__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __setitem__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
 
@@ -91,33 +79,21 @@
     # - METHODS ----------------------------
     methods:
     - def_name: get_point_count
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: save_to_disk
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __len__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __iter__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __getitem__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __setitem__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
 

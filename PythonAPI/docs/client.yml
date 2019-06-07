@@ -13,7 +13,6 @@
     methods:
     - def_name: __init__
       params:
-      - param_name: self
       - param_name: host
         type: str
         doc: >
@@ -32,7 +31,6 @@
     # --------------------------------------
     - def_name: set_timeout
       params:
-      - param_name: self
       - param_name: seconds
         type: float
         doc: >
@@ -42,38 +40,32 @@
     # --------------------------------------
     - def_name: get_client_version
       params:
-      - param_name: self
       return: str
       doc: >
         Get the client version as a string
     # --------------------------------------
     - def_name: get_server_version
       params:
-      - param_name: self
       return: str
       doc: >
         Get the server version as a string
     # --------------------------------------
     - def_name: get_world
       params:
-      - param_name: self
       doc: >
         Get the server version as a string
     # --------------------------------------
     - def_name: get_available_maps
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: reload_world
       params:
-      - param_name: self
       raises: RuntimeError
       doc: >
     # --------------------------------------
     - def_name: load_world
       params:
-      - param_name: self
       - param_name: map_name
         type: str
         doc: >
@@ -81,7 +73,6 @@
     # --------------------------------------
     - def_name: start_recorder
       params:
-      - param_name: self
       - param_name: filename
         type: str
         doc: >
@@ -92,13 +83,11 @@
     # --------------------------------------
     - def_name: stop_recorder
       params:
-      - param_name: self
       doc: >
         Stops the recording in curse.
     # --------------------------------------
     - def_name: show_recorder_file_info
       params:
-      - param_name: self
       - param_name: filename
         type: str
         doc: >
@@ -114,7 +103,6 @@
     # --------------------------------------
     - def_name: show_recorder_collisions
       params:
-      - param_name: self
       - param_name: filename
         type: str
         doc: >
@@ -143,7 +131,6 @@
     # --------------------------------------
     - def_name: show_recorder_actors_blocked
       params:
-      - param_name: self
       - param_name: filename
         type: str
         doc: >
@@ -165,7 +152,6 @@
     # --------------------------------------
     - def_name: replay_file
       params:
-      - param_name: self
       - param_name: filename
         type: str
         doc: >
@@ -191,7 +177,6 @@
     # --------------------------------------
     - def_name: set_replayer_time_factor
       params:
-      - param_name: self
       - param_name: time_factor
         type: float
         doc: >
@@ -204,11 +189,9 @@
     # --------------------------------------
     - def_name: apply_batch
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: apply_batch_sync
       params:
-      - param_name: self
       doc: >
 ...
