@@ -39,7 +39,7 @@ def main():
     # Find Trigger Friction Blueprint
     friction_bp = world.get_blueprint_library().find('static.trigger.friction')
 
-    extent = carla.Location(7.0, 7.0, 7.0)
+    extent = carla.Location(700.0, 700.0, 700.0)
 
     friction_bp.set_attribute('friction', str(0.0))
     friction_bp.set_attribute('extent_x', str(extent.x))
@@ -52,7 +52,7 @@ def main():
     world.spawn_actor(friction_bp, transform)
 
     # Optional for visualizing trigger
-    world.debug.draw_box(box=carla.BoundingBox(transform.location, extent), rotation=transform.rotation, life_time=100, thickness=0.5, color=carla.Color(r=255,g=0,b=0))
+    world.debug.draw_box(box=carla.BoundingBox(transform.location, extent * 1e-2), rotation=transform.rotation, life_time=100, thickness=0.5, color=carla.Color(r=255,g=0,b=0))
 
 if __name__ == '__main__':
     main()
