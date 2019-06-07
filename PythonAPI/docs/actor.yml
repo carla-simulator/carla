@@ -24,67 +24,54 @@
     methods:
     - def_name: get_world
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: get_location
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: get_transform
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: get_velocity
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: get_angular_velocity
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: get_acceleration
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: set_location
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: set_transform
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: set_velocity
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: set_angular_velocity
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: add_impulse
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: set_simulate_physics
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: destroy
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
 
@@ -100,47 +87,38 @@
     methods:
     - def_name: apply_control
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: get_control
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: apply_physics_control
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: get_physics_control
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: set_autopilot
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: get_speed_limit
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: get_traffic_light_state
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: is_at_traffic_light
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: get_traffic_light
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
 
@@ -156,12 +134,10 @@
     methods:
     - def_name: apply_control
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: get_control
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
 
@@ -197,67 +173,54 @@
     methods:
     - def_name: set_state
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: get_state
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: set_green_time
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: get_green_time
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: set_yellow_time
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: get_yellow_time
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: set_red_time
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: get_red_time
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: get_elapsed_time
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: freeze
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: is_frozen
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: get_pole_index
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: get_group_traffic_lights
       params:
-      - param_name: self
       doc: >
     # --------------------------------------
 ...

@@ -14,13 +14,9 @@
     # - METHODS ----------------------------
     methods:
     - def_name: listen
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: stop
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
 ...

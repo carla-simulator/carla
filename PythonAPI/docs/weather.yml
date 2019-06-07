@@ -23,18 +23,12 @@
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __eq__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __ne__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
 ...

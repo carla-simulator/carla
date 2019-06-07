@@ -14,7 +14,8 @@ import re
 COLOR_METHOD = '#7fb800'
 COLOR_PARAM = '#00a6ed'
 COLOR_INSTANCE_VAR = '#f8805a'
-COLOR_NOTE = '#ED2F2F'
+COLOR_NOTE = '#8E8E8E'
+COLOR_WARNING = '#ED2F2F'
 
 QUERY = re.compile(r'([cC]arla(\.[a-zA-Z0-9_]+)+)')
 
@@ -174,23 +175,39 @@ def gen_stub_method_def(method):
     return join([method_name, parentheses(param), return_type])
 
 
-def gen_doc_method_def(method, indx=False):
+def gen_doc_method_def(method, is_indx=False, with_self=True):
     """Return python def as it should be written in docs"""
     param = ''
     method_name = method['def_name']
+    if valid_dic_val(method, 'static'):
+        with_self = False
+
     # to correclty render methods like __init__ in md
     if method_name[0] == '_':
         method_name = '\\' + method_name
-    if indx:
+    if is_indx:
         method_name = bold(method_name)
     else:
         method_name = bold(color(COLOR_METHOD, method_name))
-    for p in method['params']:
-        default = join(['=', str(p['default'])]) if 'default' in p else ''
-        if indx:
-            param = join([param, bold(p['param_name']), default, ', '])
-        else:
-            param = join([param, '<font color="', COLOR_PARAM, '">', bold(p['param_name']), default, '</font>', ', '])
+
+    if with_self:
+        if not 'params' in method or method['params'] == None:
+            method['params'] = []
+        method['params'].insert(0, {'param_name': 'self'})
+
+    if valid_dic_val(method, 'params'):
+        for p in method['params']:
+            default = join(['=', str(p['default'])]) if 'default' in p else ''
+            if is_indx:
+                param = join([param, bold(p['param_name']), default, ', '])
+            else:
+                param = join([param, color(COLOR_PARAM, bold(p['param_name']) + create_hyperlinks(default)), ', '])
+
+    if with_self:
+        method['params'] = method['params'][1:]
+        if not method['params']: # if is empty delete it
+            del method['params']
+
     param = param[:-2] # delete the last ', '
     return join([method_name, parentheses(param)])
 
@@ -236,25 +253,29 @@ def add_doc_method_param(md, param):
 def add_doc_method(md, method, class_key):
     method_name = method['def_name']
     method_key = join([class_key, method_name], '.')
-    method_def = gen_doc_method_def(method)
+    method_def = gen_doc_method_def(method, False)
     md.list_pushn(join([html_key(method_key), method_def]))
-    # method doc
-    if 'doc' in method and method['doc'] is not '':
+
+    # Method doc
+    if valid_dic_val(method, 'doc'):
         md.textn(create_hyperlinks(md.prettify_doc(method['doc'])))
-        printed_title = False
-        for actual_param in method['params']:
-            is_self = valid_dic_val(actual_param, 'param_name') and actual_param['param_name'] == 'self'
-            have_doc = valid_dic_val(actual_param, 'doc')
-            have_type = valid_dic_val(actual_param, 'type')
-            if is_self or not have_doc and not have_type:
+
+    printed_title = False
+    if valid_dic_val(method, 'params'):
+        for param in method['params']:
+            # is_self = valid_dic_val(param, 'param_name') and param['param_name'] == 'self'
+            have_doc = valid_dic_val(param, 'doc')
+            have_type = valid_dic_val(param, 'type')
+            if not have_doc and not have_type:
                 continue
             # Print the 'Parameters' title once
             if not printed_title:
                 printed_title = True
                 md.list_push(bold('Parameters:') + '\n')
-            add_doc_method_param(md, actual_param)
-        if printed_title:
-            md.list_pop()
+            add_doc_method_param(md, param)
+    if printed_title:
+        md.list_pop()
+
     # Return doc
     if valid_dic_val(method, 'return'):
         md.list_push(bold('Return:') + ' ')
@@ -265,6 +286,12 @@ def add_doc_method(md, method, class_key):
     if valid_dic_val(method, 'note'):
         md.list_push(bold('Note:') + ' ')
         md.textn(color(COLOR_NOTE, italic(create_hyperlinks(method['note']))))
+        md.list_pop()
+
+    # Warning doc
+    if valid_dic_val(method, 'warning'):
+        md.list_push(bold('Warning:') + ' ')
+        md.textn(color(COLOR_WARNING, italic(create_hyperlinks(method['warning']))))
         md.list_pop()
 
     # Raises error doc
@@ -279,14 +306,32 @@ def add_doc_inst_var(md, inst_var, class_key):
     var_name = inst_var['var_name']
     var_key = join([class_key, var_name], '.')
     var_type = ''
+
+    # Instance variable type
     if valid_dic_val(inst_var, 'type'):
         var_type = ' ' + parentheses(italic(create_hyperlinks(inst_var['type'])))
+
     md.list_pushn(
         html_key(var_key) +
         bold(color(COLOR_INSTANCE_VAR, var_name)) +
         var_type)
+
+    # Instance variable doc
     if valid_dic_val(inst_var, 'doc'):
         md.textn(create_hyperlinks(md.prettify_doc(inst_var['doc'])))
+
+    # Note doc
+    if valid_dic_val(inst_var, 'note'):
+        md.list_push(bold('Note:') + ' ')
+        md.textn(color(COLOR_NOTE, italic(create_hyperlinks(inst_var['note']))))
+        md.list_pop()
+
+    # Warning doc
+    if valid_dic_val(inst_var, 'warning'):
+        md.list_push(bold('Warning:') + ' ')
+        md.textn(color(COLOR_WARNING, italic(create_hyperlinks(inst_var['warning']))))
+        md.list_pop()
+
     md.list_pop()
 
 class Documentation:
@@ -298,7 +343,7 @@ class Documentation:
         self._yamls = list()
         for yaml_file in self._files:
             self._yamls.append(YamlFile(os.path.join(path, yaml_file)))
-        # merge modules
+        # Merge same modules of different files
         self.master_dict = dict()
         for yaml_file in self._yamls:
             for module in yaml_file.get_modules():
