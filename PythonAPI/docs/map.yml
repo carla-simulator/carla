@@ -138,7 +138,6 @@
     methods:
     - def_name: __init__
       params:
-      - param_name: self
       - param_name: name
         type: str
         doc: > 
@@ -153,17 +152,12 @@
         importing it from any Carla server running
     # --------------------------------------
     - def_name: get_spawn_points
-      params:
-      - param_name: self
       return: list(carla.Transform)
       doc: >
         Returns a list of transformations corresponding to the recommended spawn points over the map
     # --------------------------------------
     - def_name: get_waypoint
-      doc: >
-        Return the nearest carla.Waypoint given a carla.Location
       params:
-      - param_name: self
       - param_name: location
         type: carla.Location
         doc: > 
@@ -172,7 +166,8 @@
         type: bool
         default: "True"
         doc: > 
-          If **True**, the waypoint will be at the center of the nearest lane.
+          If **True**, the waypoint will be at the center of the nearest lane.  
+
           If **False**, the waypoint will be at the given location. Also, in this second case, the result may be
           `None` if the waypoint is not found
       - param_name: lane_type
@@ -184,8 +179,6 @@
       return: carla.Waypoint
     # --------------------------------------
     - def_name: get_topology
-      params:
-      - param_name: self
       doc: >
         Provides a minimal graph of the topology of the current OpenDRIVE file.
         It is constituted by a list of pairs of waypoints, where the first waypoint is the origin and the second
@@ -195,7 +188,6 @@
     # --------------------------------------
     - def_name: generate_waypoints
       params:
-      - param_name: self
       - param_name: distance
         type: float
         doc: >
@@ -207,22 +199,24 @@
     # --------------------------------------
     - def_name: transform_to_geolocation
       params:
-      - param_name: self
+      - param_name: location
+        type: carla.Location
+        doc: >
+          Location to convert
+      return: carla.GeoLocation
       doc: >
+        Converts a given carla.Location `(x, y, z)` to a carla.GeoLocation `(lat, lon, alt)`.
     # --------------------------------------
     - def_name: to_opendrive
-      params:
-      - param_name: self
       doc: >
         Returns the OpenDRIVE of the current map as string
       return: str
     # --------------------------------------
     - def_name: save_to_disk
       params:
-      - param_name: self
       - param_name: path
         doc: >
-          Path where will be saved
+          Path where it will be saved
       doc: >
         Save the OpenDRIVE of the current map to disk
 
@@ -289,7 +283,7 @@
     - var_name: lane_id
       type: int
       doc: >
-        OpenDRIVE lane's id, this value can be positive or negative which means the direction of the 
+        OpenDRIVE lane's id, this value can be positive or negative which represents the direction of the 
         current lane with respect to the road. For more information refer to OpenDRIVE
         [documentaion](http://www.opendrive.org/docs/OpenDRIVEFormatSpecRev1.4H.pdf#page=20)
     - var_name: s
@@ -317,7 +311,6 @@
     methods:
     - def_name: next
       params:
-      - param_name: self
       - param_name: distance
         type: float
         doc: >
@@ -326,26 +319,25 @@
       doc: >
         Returns a list of Waypoints at a certain approximate distance from the current Waypoint,
         taking into account the shape of the road and its possible deviations, without performing
-        any lane change.
+        any lane change.  
+
         The list may be empty if the road ends before the specified distance, for instance,
         a lane ending with the only option of incorporating to another road.
     # --------------------------------------
     - def_name: get_right_lane
-      params:
-      - param_name: self
       return: carla.Waypoint
       doc: >
         Generates a Waypoint at the center of the right lane based on the direction of the current
-        Waypoint, regardless if the lane change is allowed in this location.
-        Can return `None` if there the lane does not exist
+        Waypoint, regardless if the lane change is allowed in this location.  
+
+        Can return `None` if the lane does not exist.
     # --------------------------------------
     - def_name: get_left_lane
-      params:
-      - param_name: self
       return: carla.Waypoint
       doc: >
         Generates a Waypoint at the center of the left lane based on the direction of the current
-        Waypoint, regardless if the lane change is allowed in this location.
-        Can return `None` if there the lane does not exist
+        Waypoint, regardless if the lane change is allowed in this location.  
+
+        Can return `None` if the lane does not exist
     # --------------------------------------
 ...

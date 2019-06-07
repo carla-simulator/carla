@@ -36,13 +36,11 @@
     methods:
     - def_name: __eq__
       params:
-      - param_name: self
       - param_name: other
       doc: >
     # --------------------------------------
     - def_name: __ne__
       params:
-      - param_name: self
       - param_name: other
       doc: >
     # --------------------------------------
@@ -63,113 +61,69 @@
     # - METHODS ----------------------------
     methods:
     - def_name: as_bool
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: as_int
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: as_float
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: as_str
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: as_color
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __eq__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __eq__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __eq__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __eq__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __eq__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __eq__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __ne__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __ne__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __ne__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __ne__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __ne__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __ne__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __nonzero__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __bool__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __int__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __float__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __str__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
 
@@ -185,38 +139,24 @@
     # - METHODS ----------------------------
     methods:
     - def_name: has_tag
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: match_tags
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: has_attribute
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: get_attribute
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: set_attribute
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __len__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __iter__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
 
@@ -226,28 +166,18 @@
     # - METHODS ----------------------------
     methods:
     - def_name: find
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: filter
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __getitem__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __len__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __iter__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
 ...

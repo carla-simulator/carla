@@ -19,13 +19,9 @@
     # - METHODS ----------------------------
     methods:
     - def_name: __eq__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __ne__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
 
@@ -35,28 +31,18 @@
     # - METHODS ----------------------------
     methods:
     - def_name: find
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: filter
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __getitem__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __len__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __iter__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
 
@@ -72,13 +58,9 @@
     # - METHODS ----------------------------
     methods:
     - def_name: __eq__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: __ne__
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
 
@@ -94,73 +76,45 @@
     # - METHODS ----------------------------
     methods:
     - def_name: get_blueprint_library
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: get_map
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: get_spectator
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: get_settings
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: apply_settings
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: get_weather
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: set_weather
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: get_actors
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: get_actors
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: spawn_actor
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: try_spawn_actor
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: wait_for_tick
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: on_tick
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: tick
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
 
@@ -170,28 +124,18 @@
     # - METHODS ----------------------------
     methods:
     - def_name: draw_point
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: draw_line
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: draw_arrow
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: draw_box
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
     - def_name: draw_string
-      params:
-      - param_name: self
       doc: >
     # --------------------------------------
 ...
