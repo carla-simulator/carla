@@ -78,9 +78,7 @@
       params:
       - param_name: self
       - param_name: other
-      return: bool
-      doc: >
-        Returns True if `self` and `other` are not equal
+    # --------------------------------------
 
   - class_name: WalkerControl
     doc: >
@@ -129,9 +127,7 @@
       params:
       - param_name: self
       - param_name: other
-      return: bool
-      doc: >
-        Returns True if `self` and `other` are not equal
+    # --------------------------------------
 
   - class_name: VehiclePhysicsControl
     doc: >
@@ -140,58 +136,72 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: torque_curve
+      type: list(carla.Vector2D)
       doc: >
         Curve that indicates the torque measured in Nm for a specific RPM of the vehicle's engine.
     # --------------------------------------
     - var_name: max_rpm
+      type: float
       doc: >
         The maximum RPM of the vehicle's engine.
     # --------------------------------------
     - var_name: moi
+      type: float
       doc: >
         The moment of inertia of the vehicle's engine.
     # --------------------------------------
     - var_name: damping_rate_full_throttle
+      type: float
       doc: >
         Damping rate when the throttle is maximum.
     # --------------------------------------
     - var_name: damping_rate_zero_throttle_clutch_engaged
+      type: float
       doc: >
         Damping rate when the thottle is zero with clutch engaged.
     # --------------------------------------
     - var_name: damping_rate_zero_throttle_clutch_disengaged
+      type: float
       doc: >
         Damping rate when the throttle is zero with clutch disengaged.
     # --------------------------------------
     - var_name: use_gear_autobox
+      type: bool
       doc: >
         If true, the vehicle will have automatic transmission.
     # --------------------------------------
     - var_name: gear_switch_time
+      type: float
       doc: >
         Switching time between gears.
     # --------------------------------------
     - var_name: clutch_strength
+      type: float
       doc: >
         The clutch strength of the vehicle. Measured in Kgm^2/s.
     # --------------------------------------
     - var_name: mass
+      type: float
       doc: >
         The mass of the vehicle measured in Kg.
     # --------------------------------------
     - var_name: drag_coefficient
+      type: float
       doc: >
         Drag coefficient of the vehicle's chassis.
     # --------------------------------------
     - var_name: center_of_mass
+      type: carla.Vector3D
       doc: >
         The center of mass of the vehicle.
     # --------------------------------------
     - var_name: steering_curve
+      type: list(carla.Vector2D)
       doc: >
         Curve that indicates the maximum steering for a specific forward speed.
     # --------------------------------------
     - var_name: wheels
+      type: list(carla.WheelPhysicsControl)
       doc: >
         List of `carla.WheelPhysicsControl` objects.
 
@@ -201,46 +211,33 @@
       params:
       - param_name: self
       - param_name: torque_curve
-        type: List of carla.Vector2D
         default: [[0.0,500.0], [5000.0, 500.0]]
       - param_name: max_rpm
-        type: float
         default: 5000.0
       - param_name: moi
-        type: float
         default: 1.0
       - param_name: damping_rate_full_throttle
-        type: float
         default: 0.15
       - param_name: damping_rate_zero_throttle_clutch_engaged
-        type: float
         default: 2.0
       - param_name: damping_rate_zero_throttle_clutch_disengaged
-        type: float
         default: 0.35
       - param_name: use_gear_autobox
-        type: bool
         default: True
       - param_name: gear_switch_time
-        type: float
         default: 0.5
       - param_name: clutch_strength
-        type: float
         default: 10.0
       - param_name: mass
-        type: float
         default: 1000.0
       - param_name: drag_coefficient
-        type: float
         default: 0.3
       - param_name: center_of_mass
-        type: carla.Vector3D
         default: [0.0, 0.0, 0.0]
       - param_name: steering_curve
-        type: carla.Vector3D
         default: [0.0, 0.0, 0.0]
       - param_name: wheels
-        type: List of carla.WheelPhysicsControl
+        default: list()
       doc: >
         VehiclePhysicsControl constructor
     # --------------------------------------
@@ -251,13 +248,12 @@
       return: bool
       doc: >
         Returns True if `self` and `other` are equal
+    # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: self
       - param_name: other
-      return: bool
-      doc: >
-        Returns True if `self` and `other` are not equal
+    # --------------------------------------
 
   - class_name: WheelPhysicsControl
     doc: >
@@ -308,15 +304,10 @@
       params:
       - param_name: self
       - param_name: other
-      return: bool
-      doc: >
-        Returns True if `self` and `other` are equal
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: self
       - param_name: other
-      return: bool
-      doc: >
-        Returns True if `self` and `other` are not equal
+    # --------------------------------------
 ...
