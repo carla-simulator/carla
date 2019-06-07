@@ -9,39 +9,33 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: x
-      doc: >
+      type: float
     - var_name: 'y'
-      doc: >
+      type: float
     # - METHODS ----------------------------
     methods:
     - def_name: __add__
       params:
-      - param_name: self
       - param_name: other
     # --------------------------------------
     - def_name: __mul__
       params:
-      - param_name: self
       - param_name: other
     # --------------------------------------
     - def_name: __sub__
       params:
-      - param_name: self
       - param_name: other
     # --------------------------------------
     - def_name: __truediv__
       params:
-      - param_name: self
       - param_name: other
     # --------------------------------------
     - def_name: __eq__
       params:
-      - param_name: self
       - param_name: other
     # --------------------------------------
     - def_name: __ne__
       params:
-      - param_name: self
       - param_name: other
     # --------------------------------------
 
@@ -52,41 +46,35 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: x
-      doc: >
+      type: float
     - var_name: 'y'
-      doc: >
+      type: float
     - var_name: z
-      doc: >
+      type: float
     # - METHODS ----------------------------
     methods:
     - def_name: __add__
       params:
-      - param_name: self
       - param_name: other
     # --------------------------------------
     - def_name: __mul__
       params:
-      - param_name: self
       - param_name: other
     # --------------------------------------
     - def_name: __sub__
       params:
-      - param_name: self
       - param_name: other
     # --------------------------------------
     - def_name: __truediv__
       params:
-      - param_name: self
       - param_name: other
     # --------------------------------------
     - def_name: __eq__
       params:
-      - param_name: self
       - param_name: other
     # --------------------------------------
     - def_name: __ne__
       params:
-      - param_name: self
       - param_name: other
     # --------------------------------------
 
@@ -94,137 +82,160 @@
     parent: carla.Vector3D
   # - DESCRIPTION ------------------------
     doc: >
-      Class that represents a location
+      Represents a location in the world
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: x
-      doc: >
+      type: float
     - var_name: 'y'
-      doc: >
+      type: float
     - var_name: z
-      doc: >
+      type: float
     # - METHODS ----------------------------
     methods:
     - def_name: distance
       params:
-      - param_name: self
+      - param_name: location
+        type: carla.Location
+        doc: >
+          The Location from where to compute the distance
+      return: float
       doc: >
+        Computes the Euclidean distance between the current location to another one
     # --------------------------------------
     - def_name: __eq__
       params:
-      - param_name: self
-      doc: >
+      - param_name: other
     # --------------------------------------
     - def_name: __ne__
       params:
-      - param_name: self
-      doc: >
+      - param_name: other
     # --------------------------------------
 
   - class_name: Rotation
     # - DESCRIPTION ------------------------
     doc: >
+      Class that represents a 3D rotation.  
+
+
+      ![UE4_Rotation](https://d26ilriwvtzlb.cloudfront.net/8/83/BRMC_9.jpg)  
+      _Unreal Engine's standard (from [UE4 docs](https://wiki.unrealengine.com/Blueprint_Rotating_Movement_Component))_
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: pitch
-      doc: >
+      type: float
     - var_name: yaw
-      doc: >
+      type: float
     - var_name: roll
-      doc: >
+      type: float
     # - METHODS ----------------------------
     methods:
     - def_name: get_forward_vector
       params:
-      - param_name: self
+      return: carla.Vector3D
       doc: >
+        Computes a forward vector using the current rotation
     # --------------------------------------
     - def_name: __eq__
       params:
-      - param_name: self
+      - param_name: other
       doc: >
     # --------------------------------------
     - def_name: __ne__
       params:
-      - param_name: self
+      - param_name: other
       doc: >
     # --------------------------------------
 
   - class_name: Transform
     # - DESCRIPTION ------------------------
     doc: >
+      Defines a transformation without scaling.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: location
-      doc: >
+      type: carla.Location
     - var_name: rotation
-      doc: >
+      type: carla.Rotation
     # - METHODS ----------------------------
     methods:
     - def_name: transform
       params:
-      - param_name: self
+      - param_name: in_point
+        type: carla.Location
+        doc: >
+          Location in the space to which the transformation will be applied
       doc: >
+        Transform a 3D point using the current transformation
     # --------------------------------------
     - def_name: get_forward_vector
-      params:
-      - param_name: self
       doc: >
+        Computes a forward vector using the rotation of the current transformation
     # --------------------------------------
     - def_name: __eq__
       params:
-      - param_name: self
+      - param_name: other
       doc: >
     # --------------------------------------
     - def_name: __ne__
       params:
-      - param_name: self
+      - param_name: other
       doc: >
     # --------------------------------------
 
   - class_name: BoundingBox
     # - DESCRIPTION ------------------------
     doc: >
+      Bounding box helper class.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: location
+      type: carla.Location
       doc: >
+        The center of the bounding box in the world
     - var_name: extent
+      type: carla.Vector3D
       doc: >
+        Contains the vector from the center of the bounding box to one of the vertex of the box.  
+
+        So, if you want to know the _X bounding box size_, you can just do `extent.x * 2`
     # - METHODS ----------------------------
     methods:
     - def_name: __eq__
       params:
-      - param_name: self
+      - param_name: other
       doc: >
     # --------------------------------------
     - def_name: __ne__
       params:
-      - param_name: self
+      - param_name: other
       doc: >
     # --------------------------------------
 
   - class_name: GeoLocation
     # - DESCRIPTION ------------------------
     doc: >
+      Contains geolocation simulated data 
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: latitude
-      doc: >
+      type: float
     - var_name: longitude
-      doc: >
+      type: float
     - var_name: altitude
-      doc: >
+      type: float
     # - METHODS ----------------------------
     methods:
     - def_name: __eq__
       params:
-      - param_name: self
-      doc: >
+      - param_name: other
     # --------------------------------------
     - def_name: __ne__
       params:
-      - param_name: self
-      doc: >
+      - param_name: other
+    # --------------------------------------
+    methods:
+    - def_name: __str__
+      params:
     # --------------------------------------
 ...
