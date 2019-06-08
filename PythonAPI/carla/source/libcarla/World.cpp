@@ -19,12 +19,11 @@ namespace client {
   }
 
   std::ostream &operator<<(std::ostream &out, const Timestamp &timestamp) {
-    std::ostringstream oss;
-    oss << "Timestamp(frame_count=" << std::to_string(timestamp.frame_count)
-        << ",elapsed_seconds=" << std::to_string(timestamp.elapsed_seconds)
-        << ",delta_seconds=" << std::to_string(timestamp.delta_seconds)
-        << ",platform_timestamp=" << std::to_string(timestamp.platform_timestamp) << ')';
-    return out << oss.str();
+    out << "Timestamp(frame_count=" << timestamp.frame_count
+        << ",elapsed_seconds=" << timestamp.elapsed_seconds
+        << ",delta_seconds=" << timestamp.delta_seconds
+        << ",platform_timestamp=" << timestamp.platform_timestamp << ')';
+    return out;
   }
 
   std::ostream &operator<<(std::ostream &out, const World &world) {
