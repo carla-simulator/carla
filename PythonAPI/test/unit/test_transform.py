@@ -113,8 +113,8 @@ class TestTransform(unittest.TestCase):
         t = carla.Transform(
             carla.Location(x=1.0, y=2.0, z=3.0),
             carla.Rotation(pitch=4.0, yaw=5.0, roll=6.0))
-        s = 'Transform(Location(x=1.000000, y=2.000000, z=3.000000), \
-                       Rotation(pitch=4.000000, yaw=5.000000, roll=6.000000))'
+        s = 'Transform(Location(x=1.000000, y=2.000000, z=3.000000), ' +
+                      'Rotation(pitch=4.000000, yaw=5.000000, roll=6.000000))'
         self.assertEqual(str(t), s)
 
     def test_translation(self):
