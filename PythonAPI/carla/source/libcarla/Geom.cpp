@@ -22,17 +22,21 @@ namespace geom {
 
   template <typename T>
   static void WriteVector2D(std::ostream &out, const char *name, const T &vector2D) {
-    out << name
-        << "(x=" << vector2D.x
-        << ", y=" << vector2D.y << ')';
+    std::ostringstream oss;
+    oss << name
+        << "(x=" << std::to_string(vector2D.x)
+        << ", y=" << std::to_string(vector2D.y) << ')';
+    out << oss.str();
   }
 
   template <typename T>
   static void WriteVector3D(std::ostream &out, const char *name, const T &vector3D) {
-    out << name
-        << "(x=" << vector3D.x
-        << ", y=" << vector3D.y
-        << ", z=" << vector3D.z << ')';
+    std::ostringstream oss;
+    oss << name
+        << "(x=" << std::to_string(vector3D.x)
+        << ", y=" << std::to_string(vector3D.y)
+        << ", z=" << std::to_string(vector3D.z) << ')';
+    out << oss.str();
   }
 
   std::ostream &operator<<(std::ostream &out, const Vector2D &vector2D) {
@@ -51,10 +55,11 @@ namespace geom {
   }
 
   std::ostream &operator<<(std::ostream &out, const Rotation &rotation) {
-    out << "Rotation(pitch=" << rotation.pitch
-        << ", yaw=" << rotation.yaw
-        << ", roll=" << rotation.roll << ')';
-    return out;
+    std::ostringstream oss;
+    oss << "Rotation(pitch=" << std::to_string(rotation.pitch)
+        << ", yaw=" << std::to_string(rotation.yaw)
+        << ", roll=" << std::to_string(rotation.roll) << ')';
+    return out << oss.str();
   }
 
   std::ostream &operator<<(std::ostream &out, const Transform &transform) {
@@ -70,10 +75,11 @@ namespace geom {
   }
 
   std::ostream &operator<<(std::ostream &out, const GeoLocation &geo_location) {
-    out << "GeoLocation(latitude=" << geo_location.latitude
-        << ", longitude=" << geo_location.longitude
-        << ", altitude=" << geo_location.altitude << ')';
-    return out;
+    std::ostringstream oss;
+    oss << "GeoLocation(latitude=" << std::to_string(geo_location.latitude)
+        << ", longitude=" << std::to_string(geo_location.longitude)
+        << ", altitude=" << std::to_string(geo_location.altitude) << ')';
+    return out << oss.str();
   }
 
 } // namespace geom

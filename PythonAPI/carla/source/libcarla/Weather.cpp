@@ -12,13 +12,14 @@ namespace carla {
 namespace rpc {
 
   std::ostream &operator<<(std::ostream &out, const WeatherParameters &weather) {
-    out << "WeatherParameters(cloudyness=" << weather.cloudyness
-        << ", precipitation=" << weather.precipitation
-        << ", precipitation_deposits=" << weather.precipitation_deposits
-        << ", wind_intensity=" << weather.wind_intensity
-        << ", sun_azimuth_angle=" << weather.sun_azimuth_angle
-        << ", sun_altitude_angle=" << weather.sun_altitude_angle << ')';
-    return out;
+    std::ostringstream oss;
+    oss << "WeatherParameters(cloudyness=" << std::to_string(weather.cloudyness)
+        << ", precipitation=" << std::to_string(weather.precipitation)
+        << ", precipitation_deposits=" << std::to_string(weather.precipitation_deposits)
+        << ", wind_intensity=" << std::to_string(weather.wind_intensity)
+        << ", sun_azimuth_angle=" << std::to_string(weather.sun_azimuth_angle)
+        << ", sun_altitude_angle=" << std::to_string(weather.sun_altitude_angle) << ')';
+    return out << oss.str();
   }
 
 } // namespace rpc
