@@ -425,7 +425,30 @@ class MapImage(object):
         width_in_pixels = int(self._pixels_per_meter * self.width)
 
         self.big_map_surface = pygame.Surface((width_in_pixels, width_in_pixels)).convert()
-        self.draw_road_map(self.big_map_surface, carla_world, carla_map, self.world_to_pixel, self.world_to_pixel_width)
+
+        opendrive_content = carla_map.to_opendrive()
+        opendrive_hash = hash(opendrive_content)
+        dirname = "./cache/no_rendering_mode/"
+        filename = carla_map.name + "_" + str(opendrive_hash) + ".tga"
+        if os.path.isfile(dirname + filename):
+            # Load Image
+            self.big_map_surface = pygame.image.load(dirname + filename)
+        else:
+            # Render map
+            self.draw_road_map(self.big_map_surface, carla_world, carla_map, self.world_to_pixel, self.world_to_pixel_width)
+
+            # If folders path does not exist, create it
+            if not os.path.exists(dirname):
+                os.makedirs(dirname)
+
+            # Remove files if selected town had a previous version saved
+            list_filenames = glob.glob(dirname + carla_map.name + "*")
+            for town_filename in list_filenames:
+                os.remove(town_filename)
+
+            # Save rendered map
+            pygame.image.save(self.big_map_surface, dirname + filename)
+
         self.surface = self.big_map_surface
 
     def draw_road_map(self, map_surface, carla_world, carla_map, world_to_pixel, world_to_pixel_width):
