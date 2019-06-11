@@ -492,18 +492,31 @@ void UActorBlueprintFunctionLibrary::MakePedestrianDefinition(
     }
   };
 
+  auto GetAge = [](EPedestrianAge Value) {
+    switch (Value)
+    {
+      case EPedestrianAge::Child:     return TEXT("child");
+      case EPedestrianAge::Teenager:  return TEXT("teenager");
+      case EPedestrianAge::Elderly:   return TEXT("elderly");
+      default:                        return TEXT("adult");
+    }
+  };
+
   Definition.Attributes.Emplace(FActorAttribute{
     TEXT("gender"),
     EActorAttributeType::String,
     GetGender(Parameters.Gender)});
 
-  FActorVariation IsInvincible;
+  Definition.Attributes.Emplace(FActorAttribute{
+    TEXT("age"),
+    EActorAttributeType::String,
+    GetAge(Parameters.Age)});
 
+  FActorVariation IsInvincible;
   IsInvincible.Id = TEXT("is_invincible");
   IsInvincible.Type = EActorAttributeType::Bool;
   IsInvincible.RecommendedValues = { TEXT("true") };
   IsInvincible.bRestrictToRecommended = false;
-
   Definition.Variations.Emplace(IsInvincible);
 
   Success = CheckActorDefinition(Definition);
