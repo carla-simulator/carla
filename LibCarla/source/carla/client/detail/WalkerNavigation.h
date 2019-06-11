@@ -10,6 +10,7 @@
 #include "carla/nav/Navigation.h"
 #include "carla/NonCopyable.h"
 #include "carla/client/Timestamp.h"
+#include "carla/client/detail/Client.h"
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/rpc/ActorId.h"
 
@@ -35,8 +36,10 @@ namespace detail {
     }
 
     void AddWalker(ActorId walker_id, carla::geom::Location location) {
+      float h = _client.GetWalkerBaseOffset(walker_id) / 100.0f;
+
       // create the walker in the crowd (to manage its movement in Detour)
-      _nav.AddWalker(walker_id, location);
+      _nav.AddWalker(walker_id, location, h);
     }
 
     void Tick(const EpisodeState &episode_state);

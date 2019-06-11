@@ -44,10 +44,9 @@ namespace detail {
     for (auto handle : *walkers) {
       // get the transform of the walker
       if (_nav.GetWalkerTransform(handle.walker, trans)) {
-        // set current height of the walker, ignoring height from recast
-        // trans.location.z = state.GetActorState(handle.walker).transform.location.z;
+        // adjust current height of the walker taking care of the position Unreal forces after collision
+        trans.location.z -= (trans.location.z - state.GetActorState(handle.walker).transform.location.z) * 0.25f;
         float speed = _nav.GetWalkerSpeed(handle.walker);
-
         commands.emplace_back(Cmd::ApplyTransform{ handle.walker, trans });
         commands.emplace_back(Cmd::ApplyWalkerControl{ handle.walker, rpc::WalkerControl(trans.GetForwardVector(), speed , false)});
       }

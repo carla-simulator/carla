@@ -18,7 +18,6 @@ namespace nav {
   static const int MAX_AGENTS = 300;
   static const float AGENT_RADIUS = 0.3f;
   static const float AGENT_HEIGHT = 1.8f;
-  static const float AGENT_HEIGHT_HALF = AGENT_HEIGHT / 2.0f;
 
   // return a random float
   float frand() {
@@ -258,7 +257,7 @@ namespace nav {
   }
 
   // create a new walker in crowd
-  bool Navigation::AddWalker(ActorId id, carla::geom::Location from) {
+  bool Navigation::AddWalker(ActorId id, carla::geom::Location from, float base_offset) {
     dtCrowdAgentParams params;
 
     if (_crowd == nullptr) {
@@ -295,6 +294,9 @@ namespace nav {
 
     // save the id
     _mappedId[id] = index;
+
+    // save the base offset of this walker
+    _baseHeight[id] = base_offset;
 
     yaw_walkers[id] = 0.0f;
 
@@ -363,6 +365,7 @@ namespace nav {
 
   // get the walker current transform
   bool Navigation::GetWalkerTransform(ActorId id, carla::geom::Transform &trans) {
+
     // get the internal index
     auto it = _mappedId.find(id);
     if (it == _mappedId.end())
@@ -380,14 +383,22 @@ namespace nav {
       return false;
     }
 
+    float baseOffset = 0.0f;
+    auto it2 = _baseHeight.find(id);
+    if (it2 != _baseHeight.end())
+      baseOffset = it2->second;
+    else
+      logging::log("Nav: base offset of walker ", id, " not found");
+
     // set its position in Unreal coordinates
     trans.location.x = agent->npos[0];
     trans.location.y = agent->npos[2];
-    trans.location.z = agent->npos[1] + AGENT_HEIGHT_HALF - 0.1f;
+    trans.location.z = agent->npos[1] + baseOffset - 0.08f;   // 0.08f is a hardcoded value to get rid of some empty space
+
     // set its rotation
     float yaw =  atan2f(agent->dvel[2] , agent->dvel[0]) * (180.0f / static_cast<float>(M_PI));
     float shortest_angle = fmod(yaw - yaw_walkers[id] + 540.0f, 360.0f) - 180.0f;
-    float rotation_speed = 2.0f;
+    float rotation_speed = 4.0f;
     trans.rotation.yaw = yaw_walkers[id] + (shortest_angle * rotation_speed * static_cast<float>(_delta_seconds));
 
     yaw_walkers[id] = trans.rotation.yaw;
