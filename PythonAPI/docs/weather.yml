@@ -1,7 +1,6 @@
 ---
 - module_name: carla
   doc: >
-
   # - CLASSES ------------------------------
   classes:
   - class_name: WeatherParameters
@@ -11,26 +10,32 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: cloudyness
+      type: float
       doc: >
         Weather cloudyness. Values range from 0 to 100.
     # --------------------------------------
     - var_name: precipitation
+      type: float
       doc: >
         Precipitation amount for controlling rain intensity. Values range from 0 to 100.
     # --------------------------------------
     - var_name: precipitation_deposits
+      type: float
       doc: >
         Precipitation deposits for controlling the area of puddles on roads.
     # --------------------------------------
     - var_name: wind_intensity
+      type: float
       doc: >
         Wind intensity. Values range from 0 to 100.
     # --------------------------------------
     - var_name: sun_azimuth_angle
+      type: float
       doc: >
         Azimuth angle of the sun in degrees. Values range from 0 to 360.
     # --------------------------------------
     - var_name: sun_altitude_angle
+      type: float
       doc: >
         Altitude angle of the sun in degrees. Values range from -90 to 90.
 
