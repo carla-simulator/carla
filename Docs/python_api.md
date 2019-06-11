@@ -311,7 +311,7 @@
         - [**wind_intensity**](#carla.WeatherParameters.wind_intensity) <sub>_Instance variable_</sub>
         - [**sun_azimuth_angle**](#carla.WeatherParameters.sun_azimuth_angle) <sub>_Instance variable_</sub>
         - [**sun_altitude_angle**](#carla.WeatherParameters.sun_altitude_angle) <sub>_Instance variable_</sub>
-        - [**\__init__**(**self**)](#carla.WeatherParameters.__init__) <sub>_Method_</sub>
+        - [**\__init__**(**self**, **cloudyness**=0.0, **precipitation**=0.0, **precipitation_deposits**=0.0, **wind_intensity**=0.0, **sun_azimuth_angle**=0.0, **sun_altitude_angle**=0.0)](#carla.WeatherParameters.__init__) <sub>_Method_</sub>
         - [**\__eq__**(**self**, **other**)](#carla.WeatherParameters.__eq__) <sub>_Method_</sub>
         - [**\__ne__**(**self**, **other**)](#carla.WeatherParameters.__ne__) <sub>_Method_</sub>
     - [**WheelPhysicsControl**](#carla.WheelPhysicsControl) <sub>_Class_</sub>  
@@ -1016,8 +1016,6 @@ Controls the gear value of the vehicle.
 - <a name="carla.VehicleControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**throttle**=0.0</font>, <font color="#00a6ed">**steer**=0.0</font>, <font color="#00a6ed">**brake**=0.0</font>, <font color="#00a6ed">**hand_brake**=True</font>, <font color="#00a6ed">**reverse**=True</font>, <font color="#00a6ed">**manual_gear_shift**=True</font>, <font color="#00a6ed">**gear**=0</font>)  
 VehicleControl constructor.  
 - <a name="carla.VehicleControl.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
-Returns True if `self` and `other` are equal.  
-    - **Return:** _bool_  
 - <a name="carla.VehicleControl.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
 
 ---
@@ -1053,14 +1051,12 @@ The center of mass of the vehicle.
 - <a name="carla.VehiclePhysicsControl.steering_curve"></a>**<font color="#f8805a">steering_curve</font>** (_list([carla.Vector2D](#carla.Vector2D))_)  
 Curve that indicates the maximum steering for a specific forward speed.  
 - <a name="carla.VehiclePhysicsControl.wheels"></a>**<font color="#f8805a">wheels</font>** (_list([carla.WheelPhysicsControl](#carla.WheelPhysicsControl))_)  
-List of `[carla.WheelPhysicsControl](#carla.WheelPhysicsControl)` objects.  
+List of [carla.WheelPhysicsControl](#carla.WheelPhysicsControl) objects. This list should have 4 elements, where index 0 corresponds to front left wheel, index 1 corresponds to front right wheel, index 2 corresponds to back left wheel and index 3 corresponds to back right wheel. For 2 wheeled vehicles, set same values for both front and back wheels.  
 
 <h3>Methods</h3>
 - <a name="carla.VehiclePhysicsControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**torque_curve**=[[0.0, 500.0], [5000.0, 500.0]]</font>, <font color="#00a6ed">**max_rpm**=5000.0</font>, <font color="#00a6ed">**moi**=1.0</font>, <font color="#00a6ed">**damping_rate_full_throttle**=0.15</font>, <font color="#00a6ed">**damping_rate_zero_throttle_clutch_engaged**=2.0</font>, <font color="#00a6ed">**damping_rate_zero_throttle_clutch_disengaged**=0.35</font>, <font color="#00a6ed">**use_gear_autobox**=True</font>, <font color="#00a6ed">**gear_switch_time**=0.5</font>, <font color="#00a6ed">**clutch_strength**=10.0</font>, <font color="#00a6ed">**mass**=1000.0</font>, <font color="#00a6ed">**drag_coefficient**=0.3</font>, <font color="#00a6ed">**center_of_mass**=[0.0, 0.0, 0.0]</font>, <font color="#00a6ed">**steering_curve**=[0.0, 0.0, 0.0]</font>, <font color="#00a6ed">**wheels**=list()</font>)  
 VehiclePhysicsControl constructor.  
 - <a name="carla.VehiclePhysicsControl.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
-Returns True if `self` and `other` are equal.  
-    - **Return:** _bool_  
 - <a name="carla.VehiclePhysicsControl.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
 
 ---
@@ -1069,23 +1065,17 @@ Returns True if `self` and `other` are equal.
 WalkerControl is used for controlling the basic movement of a walker.  
 
 <h3>Instance Variables</h3>
-- <a name="carla.WalkerControl.direction"></a>**<font color="#f8805a">direction</font>**  
+- <a name="carla.WalkerControl.direction"></a>**<font color="#f8805a">direction</font>** (_[carla.Vector3D](#carla.Vector3D)_)  
 Vector that control the direction of the walker.  
-- <a name="carla.WalkerControl.speed"></a>**<font color="#f8805a">speed</font>**  
+- <a name="carla.WalkerControl.speed"></a>**<font color="#f8805a">speed</font>** (_float_)  
 Scalar value to control the walker speed.  
-- <a name="carla.WalkerControl.jump"></a>**<font color="#f8805a">jump</font>**  
+- <a name="carla.WalkerControl.jump"></a>**<font color="#f8805a">jump</font>** (_bool_)  
 If true, the walker will perform a jump.  
 
 <h3>Methods</h3>
 - <a name="carla.WalkerControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**direction**=[1.0, 0.0, 0.0]</font>, <font color="#00a6ed">**speed**=0.0</font>, <font color="#00a6ed">**jump**=False</font>)  
 VehicleControl constructor.  
-    - **Parameters:**
-        - `direction` (_[carla.Vector3D](#carla.Vector3D)_)  
-        - `speed` (_float_)  
-        - `jump` (_bool_)  
 - <a name="carla.WalkerControl.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
-Returns True if `self` and `other` are equal.  
-    - **Return:** _bool_  
 - <a name="carla.WalkerControl.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
 
 ---
@@ -1143,26 +1133,24 @@ Can return `None` if the lane does not exist.
 WeatherParameters class is used for requesting and changing the lighting and weather conditions inside the world.  
 
 <h3>Instance Variables</h3>
-- <a name="carla.WeatherParameters.cloudyness"></a>**<font color="#f8805a">cloudyness</font>**  
+- <a name="carla.WeatherParameters.cloudyness"></a>**<font color="#f8805a">cloudyness</font>** (_float_)  
 Weather cloudyness. Values range from 0 to 100.  
-- <a name="carla.WeatherParameters.precipitation"></a>**<font color="#f8805a">precipitation</font>**  
+- <a name="carla.WeatherParameters.precipitation"></a>**<font color="#f8805a">precipitation</font>** (_float_)  
 Precipitation amount for controlling rain intensity. Values range from 0 to 100.  
-- <a name="carla.WeatherParameters.precipitation_deposits"></a>**<font color="#f8805a">precipitation_deposits</font>**  
+- <a name="carla.WeatherParameters.precipitation_deposits"></a>**<font color="#f8805a">precipitation_deposits</font>** (_float_)  
 Precipitation deposits for controlling the area of puddles on roads.  
-- <a name="carla.WeatherParameters.wind_intensity"></a>**<font color="#f8805a">wind_intensity</font>**  
+- <a name="carla.WeatherParameters.wind_intensity"></a>**<font color="#f8805a">wind_intensity</font>** (_float_)  
 Wind intensity. Values range from 0 to 100.  
-- <a name="carla.WeatherParameters.sun_azimuth_angle"></a>**<font color="#f8805a">sun_azimuth_angle</font>**  
+- <a name="carla.WeatherParameters.sun_azimuth_angle"></a>**<font color="#f8805a">sun_azimuth_angle</font>** (_float_)  
 Azimuth angle of the sun in degrees. Values range from 0 to 360.  
-- <a name="carla.WeatherParameters.sun_altitude_angle"></a>**<font color="#f8805a">sun_altitude_angle</font>**  
+- <a name="carla.WeatherParameters.sun_altitude_angle"></a>**<font color="#f8805a">sun_altitude_angle</font>** (_float_)  
 Altitude angle of the sun in degrees. Values range from -90 to 90.  
 
 <h3>Methods</h3>
-- <a name="carla.WeatherParameters.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.WeatherParameters.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**cloudyness**=0.0</font>, <font color="#00a6ed">**precipitation**=0.0</font>, <font color="#00a6ed">**precipitation_deposits**=0.0</font>, <font color="#00a6ed">**wind_intensity**=0.0</font>, <font color="#00a6ed">**sun_azimuth_angle**=0.0</font>, <font color="#00a6ed">**sun_altitude_angle**=0.0</font>)  
 WeatherParameters constructor.  
 - <a name="carla.WeatherParameters.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
-    - **Return:** _bool_  
 - <a name="carla.WeatherParameters.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
-    - **Return:** _bool_  
 
 ---
 
@@ -1170,25 +1158,20 @@ WeatherParameters constructor.
 WheelPhysicsControl is used for controlling the physics parameters of a vehicle's wheel.  
 
 <h3>Instance Variables</h3>
-- <a name="carla.WheelPhysicsControl.tire_friction"></a>**<font color="#f8805a">tire_friction</font>**  
+- <a name="carla.WheelPhysicsControl.tire_friction"></a>**<font color="#f8805a">tire_friction</font>** (_float_)  
 Scalar value that indicates the friction of the wheel.  
-- <a name="carla.WheelPhysicsControl.damping_rate"></a>**<font color="#f8805a">damping_rate</font>**  
+- <a name="carla.WheelPhysicsControl.damping_rate"></a>**<font color="#f8805a">damping_rate</font>** (_float_)  
 The damping rate of the wheel.  
-- <a name="carla.WheelPhysicsControl.max_steer_angle"></a>**<font color="#f8805a">max_steer_angle</font>**  
+- <a name="carla.WheelPhysicsControl.max_steer_angle"></a>**<font color="#f8805a">max_steer_angle</font>** (_float_)  
 The maximum angle in degrees that the wheel can steer.  
-- <a name="carla.WheelPhysicsControl.radius"></a>**<font color="#f8805a">radius</font>**  
+- <a name="carla.WheelPhysicsControl.radius"></a>**<font color="#f8805a">radius</font>** (_float_)  
 The radius of the wheel in centimeters.  
-- <a name="carla.WheelPhysicsControl.position"></a>**<font color="#f8805a">position</font>**  
+- <a name="carla.WheelPhysicsControl.position"></a>**<font color="#f8805a">position</font>** (_[carla.Location](#carla.Location)_)  
 World position of the wheel. Note that it is a read-only parameter.  
 
 <h3>Methods</h3>
 - <a name="carla.WheelPhysicsControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**tire_friction**=2.0</font>, <font color="#00a6ed">**damping_rate**=0.25</font>, <font color="#00a6ed">**max_steer_angle**=70.0</font>, <font color="#00a6ed">**radius**=30.0</font>)  
 WheelPhysicsControl constructor.  
-    - **Parameters:**
-        - `tire_friction` (_float_)  
-        - `damping_rate` (_float_)  
-        - `max_steer_angle` (_float_)  
-        - `radius` (_float_)  
 - <a name="carla.WheelPhysicsControl.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
 - <a name="carla.WheelPhysicsControl.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
 
