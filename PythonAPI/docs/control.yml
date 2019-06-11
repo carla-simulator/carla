@@ -68,9 +68,6 @@
     - def_name: __eq__
       params:
       - param_name: other
-      return: bool
-      doc: >
-        Returns True if `self` and `other` are equal
     # --------------------------------------
     - def_name: __ne__
       params:
@@ -84,14 +81,17 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: direction
+      type: carla.Vector3D
       doc: >
         Vector that control the direction of the walker.
     # --------------------------------------
     - var_name: speed
+      type: float
       doc: >
         Scalar value to control the walker speed.
     # --------------------------------------
     - var_name: jump
+      type: bool
       doc: >
         If true, the walker will perform a jump.
 
@@ -100,13 +100,10 @@
     - def_name: __init__
       params:
       - param_name: direction
-        type: carla.Vector3D
         default: [1.0, 0.0, 0.0]
       - param_name: speed
-        type: float
         default: 0.0
       - param_name: jump
-        type: bool
         default: False
       doc: >
         VehicleControl constructor
@@ -114,9 +111,6 @@
     - def_name: __eq__
       params:
       - param_name: other
-      return: bool
-      doc: >
-        Returns True if `self` and `other` are equal
     # --------------------------------------
     - def_name: __ne__
       params:
@@ -197,7 +191,7 @@
     - var_name: wheels
       type: list(carla.WheelPhysicsControl)
       doc: >
-        List of `carla.WheelPhysicsControl` objects.
+        List of carla.WheelPhysicsControl objects. This list should have 4 elements, where index 0 corresponds to front left wheel, index 1 corresponds to front right wheel, index 2 corresponds to back left wheel and index 3 corresponds to back right wheel. For 2 wheeled vehicles, set same values for both front and back wheels.
 
     # - METHODS ----------------------------
     methods:
@@ -237,9 +231,6 @@
     - def_name: __eq__
       params:
       - param_name: other
-      return: bool
-      doc: >
-        Returns True if `self` and `other` are equal
     # --------------------------------------
     - def_name: __ne__
       params:
@@ -253,22 +244,27 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: tire_friction
+      type: float
       doc: >
         Scalar value that indicates the friction of the wheel.
     # --------------------------------------
     - var_name: damping_rate
+      type: float
       doc: >
         The damping rate of the wheel.
     # --------------------------------------
     - var_name: max_steer_angle
+      type: float
       doc: >
         The maximum angle in degrees that the wheel can steer.
     # --------------------------------------
     - var_name: radius
+      type: float
       doc: >
         The radius of the wheel in centimeters.
     # --------------------------------------
     - var_name: position
+      type: carla.Location
       doc: >
         World position of the wheel. Note that it is a read-only parameter.
     # - METHODS ----------------------------
@@ -276,16 +272,12 @@
     - def_name: __init__
       params:
       - param_name: tire_friction
-        type: float
         default: 2.0
       - param_name: damping_rate
-        type: float
         default: 0.25
       - param_name: max_steer_angle
-        type: float
         default: 70.0
       - param_name: radius
-        type: float
         default: 30.0
       doc: >
         WheelPhysicsControl constructor
