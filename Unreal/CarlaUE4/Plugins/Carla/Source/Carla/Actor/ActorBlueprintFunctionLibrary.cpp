@@ -416,6 +416,7 @@ void UActorBlueprintFunctionLibrary::MakeVehicleDefinition(
   AddRecommendedValuesForActorRoleName(Definition,
       {TEXT("autopilot"), TEXT("scenario"), TEXT("ego_vehicle")});
   Definition.Class = Parameters.Class;
+
   if (Parameters.RecommendedColors.Num() > 0)
   {
     FActorVariation Colors;
@@ -427,6 +428,19 @@ void UActorBlueprintFunctionLibrary::MakeVehicleDefinition(
       Colors.RecommendedValues.Emplace(ColorToFString(Color));
     }
     Definition.Variations.Emplace(Colors);
+  }
+
+  if (Parameters.SupportedDrivers.Num() > 0)
+  {
+    FActorVariation Drivers;
+    Drivers.Id = TEXT("driver_id");
+    Drivers.Type = EActorAttributeType::Int;
+    Drivers.bRestrictToRecommended = true;
+    for (auto &Id : Parameters.SupportedDrivers)
+    {
+      Drivers.RecommendedValues.Emplace(FString::FromInt(Id));
+    }
+    Definition.Variations.Emplace(Drivers);
   }
 
   FActorVariation StickyControl;
