@@ -13,6 +13,7 @@
 #include "Carla/Util/NavigationMesh.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Walker/WalkerController.h"
+#include "Carla/Walker/WalkerParent.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Functional.h>
