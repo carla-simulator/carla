@@ -16,6 +16,7 @@
   * API extension: waypoint's `junction_id` that returns de OpenDrive identifier of the current junction
   * API extension: add gamma value as attribute to RGB camera
   * API change: deprecated waypoint's `is_intersection`, now is `is_junction`
+  * API update: solve the problem of RuntimeError: std::bad_cast described here: #1125 (comment)
   * Removed deprecated code and content
   * New recorder features:
     - Added optional parameter to show more details about a recorder file (related to `show_recorder_file_info.py`)
