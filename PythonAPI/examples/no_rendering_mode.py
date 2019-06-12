@@ -59,6 +59,7 @@ import datetime
 import weakref
 import math
 import random
+import hashlib
 
 try:
     import pygame
@@ -135,7 +136,6 @@ COLOR_ALUMINIUM_5 = pygame.Color(46, 52, 54)
 
 COLOR_WHITE = pygame.Color(255, 255, 255)
 COLOR_BLACK = pygame.Color(0, 0, 0)
-
 
 # Module Defines
 TITLE_WORLD = 'WORLD'
@@ -427,12 +427,18 @@ class MapImage(object):
         self.big_map_surface = pygame.Surface((width_in_pixels, width_in_pixels)).convert()
 
         opendrive_content = carla_map.to_opendrive()
-        opendrive_hash = hash(opendrive_content)
-        dirname = "./cache/no_rendering_mode/"
-        filename = carla_map.name + "_" + str(opendrive_hash) + ".tga"
-        if os.path.isfile(dirname + filename):
+
+        hash_func = hashlib.sha1()
+        hash_func.update(opendrive_content.encode("UTF-8"))
+        opendrive_hash = str(hash_func.hexdigest())
+
+        filename = carla_map.name + "_" + opendrive_hash + ".tga"
+        dirname = os.path.join("cache","no_rendering_mode")
+        full_path = str(os.path.join(dirname,filename))
+
+        if os.path.isfile(full_path):
             # Load Image
-            self.big_map_surface = pygame.image.load(dirname + filename)
+            self.big_map_surface = pygame.image.load(full_path)
         else:
             # Render map
             self.draw_road_map(self.big_map_surface, carla_world, carla_map, self.world_to_pixel, self.world_to_pixel_width)
@@ -442,12 +448,12 @@ class MapImage(object):
                 os.makedirs(dirname)
 
             # Remove files if selected town had a previous version saved
-            list_filenames = glob.glob(dirname + carla_map.name + "*")
+            list_filenames = glob.glob(os.path.join(dirname,carla_map.name) + "*")
             for town_filename in list_filenames:
                 os.remove(town_filename)
 
             # Save rendered map
-            pygame.image.save(self.big_map_surface, dirname + filename)
+            pygame.image.save(self.big_map_surface, full_path)
 
         self.surface = self.big_map_surface
 
@@ -972,7 +978,8 @@ class World(object):
                     affected_traffic_light_text = 'RED'
 
             affected_speed_limit_text = self.hero_actor.get_speed_limit()
-
+            if math.isnan(affected_speed_limit_text):
+                affected_speed_limit_text = 0.0
             hero_mode_text = [
                 'Hero Mode:                 ON',
                 'Hero ID:              %7d' % self.hero_actor.id,
