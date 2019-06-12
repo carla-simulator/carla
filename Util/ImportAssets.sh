@@ -4,7 +4,7 @@
 # -- Parse arguments -----------------------------------------------------------
 # ==============================================================================
 
-DOC_STRING="Unpack and copy over CarlaUE4's Exported Maps"
+DOC_STRING="Unpack and copy over CarlaUE4's Exported Assets"
 
 USAGE_STRING="Usage: $0 [-h|--help] [-d|--dir] <outdir>"
 
@@ -32,7 +32,7 @@ while true; do
 done
 
 #Tar.gz the stuff
-for filepath in `find ExportedMaps/ -type f -name "*.tar.gz"`; do
+for filepath in `find ExportedAssets/ -type f -name "*.tar.gz"`; do
   tar --keep-newer-files -xvf ${filepath}
 done
 
