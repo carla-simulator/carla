@@ -19,38 +19,34 @@ namespace rpc {
   };
 
   std::ostream &operator<<(std::ostream &out, const VehicleControl &control) {
-    std::ostringstream oss;
-    oss << "VehicleControl(throttle=" << std::to_string(control.throttle)
+    out << "VehicleControl(throttle=" << std::to_string(control.throttle)
         << ", steer=" << std::to_string(control.steer)
         << ", brake=" << std::to_string(control.brake)
         << ", hand_brake=" << boolalpha(control.hand_brake)
         << ", reverse=" << boolalpha(control.reverse)
         << ", manual_gear_shift=" << boolalpha(control.manual_gear_shift)
         << ", gear=" << std::to_string(control.gear) << ')';
-    return out << oss.str();
+    return out;
   }
 
   std::ostream &operator<<(std::ostream &out, const WalkerControl &control) {
-    std::ostringstream oss;
-    oss << "WalkerControl(direction=" << control.direction
+    out << "WalkerControl(direction=" << control.direction
         << ", speed=" << std::to_string(control.speed)
         << ", jump=" << boolalpha(control.jump) << ')';
-    return out << oss.str();
+    return out;
   }
 
   std::ostream &operator<<(std::ostream &out, const WheelPhysicsControl &control) {
-    std::ostringstream oss;
-    oss << "WheelPhysicsControl(tire_friction=" << std::to_string(control.tire_friction)
+    out << "WheelPhysicsControl(tire_friction=" << std::to_string(control.tire_friction)
         << ", damping_rate=" << std::to_string(control.damping_rate)
         << ", max_steer_angle=" << std::to_string(control.max_steer_angle)
         << ", radius=" << std::to_string(control.radius)
         << ", position=" << control.position << ')';
-    return out << oss.str();
+    return out;
   }
 
   std::ostream &operator<<(std::ostream &out, const VehiclePhysicsControl &control) {
-    std::ostringstream oss;
-    oss << "VehiclePhysicsControl(torque_curve=" << control.torque_curve
+    out << "VehiclePhysicsControl(torque_curve=" << control.torque_curve
     << ", max_rpm=" << std::to_string(control.max_rpm)
     << ", moi=" << std::to_string(control.moi)
     << ", damping_rate_full_throttle=" << std::to_string(control.damping_rate_full_throttle)
@@ -64,7 +60,7 @@ namespace rpc {
     << ", center_of_mass=" << control.center_of_mass
     << ", steering_curve=" << control.steering_curve
     << ", wheels=" << control.wheels << ')';
-    return out << oss.str();
+    return out;
   }
 } // namespace rpc
 } // namespace carla
