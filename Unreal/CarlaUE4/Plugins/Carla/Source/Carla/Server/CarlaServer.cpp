@@ -13,7 +13,6 @@
 #include "Carla/Util/NavigationMesh.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Walker/WalkerController.h"
-#include "Carla/Walker/WalkerParent.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Functional.h>
@@ -40,6 +39,8 @@
 #include <carla/rpc/WeatherParameters.h>
 #include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
+
+#include "Components/CapsuleComponent.h"
 
 #include <vector>
 
@@ -573,12 +574,12 @@ void FCarlaServer::FPimpl::BindActions()
     auto ActorView = Episode->FindActor(ActorId);
     if (!ActorView.IsValid())
     {
-      RESPOND_ERROR("unable to apply control: actor not found");
+      RESPOND_ERROR("unable to get bounding box: actor view is invalid");
     }
-    auto Pawn = Cast<APawn>(ActorView.GetActor());
-    if (Pawn == nullptr)
+    auto Actor = Cast<AActor>(ActorView.GetActor());
+    if (Actor == nullptr)
     {
-      RESPOND_ERROR("unable to apply control: actor is not a walker");
+      RESPOND_ERROR("unable to get bounding box: actor not found");
     }
     auto Controller = Cast<AWalkerController>(Pawn->GetController());
     if (Controller == nullptr)
