@@ -17,10 +17,10 @@ namespace sensor {
 namespace data {
 
   std::ostream &operator<<(std::ostream &out, const Color &color) {
-    out << "Color(" << int(color.r)
-        << ',' << int(color.g)
-        << ',' << int(color.b)
-        << ',' << int(color.a) << ')';
+    out << "Color(" << std::to_string(color.r)
+        << ',' << std::to_string(color.g)
+        << ',' << std::to_string(color.b)
+        << ',' << std::to_string(color.a) << ')';
     return out;
   }
 
