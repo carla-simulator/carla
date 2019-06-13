@@ -8,6 +8,9 @@
   * Bugfix about recorder query system
   * Fixed problem when vehicles enable autopilot after a replayer, now it works better.
     - When a recorded session finish replaying, all vehicles will continue in autopilot, and all pedestrians will stop.
+  * Added pedestrian support:
+    - We can spawn pedestrians that will walk over sidewalks at random points continually.
+    - The script 'spawn_npc.py' now can spawn pedestrians with the flag '-w' and the number of pedestrians.
   * Vulkan support: Changed project settings to make vulkan default on linux and updated make script to allow user to select opengl
   * Add ability to set motion blur settings for rgb camera in sensor python blueprint
   * Improved visual quality of the screen capture for the rgb sensor
