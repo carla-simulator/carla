@@ -73,6 +73,18 @@ namespace detail {
     });
   }
 
+  boost::optional<rpc::Actor> Episode::GetActorById(ActorId id) {
+    auto actor = _actors.GetActorById(id);
+    if (!actor.has_value()) {
+      auto actor_list = _client.GetActorsById({id});
+      if (!actor_list.empty()) {
+        actor = std::move(actor_list.front());
+        _actors.Insert(*actor);
+      }
+    }
+    return actor;
+  }
+
   std::vector<rpc::Actor> Episode::GetActorsById(const std::vector<ActorId> &actor_ids) {
     return GetActorsById_Impl(_client, _actors, actor_ids);
   }

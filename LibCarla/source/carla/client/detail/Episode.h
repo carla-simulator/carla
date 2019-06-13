@@ -51,6 +51,8 @@ namespace detail {
       _actors.Insert(std::move(actor));
     }
 
+    boost::optional<rpc::Actor> GetActorById(ActorId id);
+
     std::vector<rpc::Actor> GetActorsById(const std::vector<ActorId> &actor_ids);
 
     std::vector<rpc::Actor> GetActors();

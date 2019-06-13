@@ -14,6 +14,7 @@
 #include "carla/client/TrafficLight.h"
 #include "carla/client/Vehicle.h"
 #include "carla/client/Walker.h"
+#include "carla/client/detail/ActorFactory.h"
 #include "carla/client/detail/Client.h"
 #include "carla/client/detail/Episode.h"
 #include "carla/client/detail/EpisodeProxy.h"
@@ -171,6 +172,11 @@ namespace detail {
     // =========================================================================
     /// @{
 
+    boost::optional<rpc::Actor> GetActorById(ActorId id) const {
+      DEBUG_ASSERT(_episode != nullptr);
+      return _episode->GetActorById(id);
+    }
+
     std::vector<rpc::Actor> GetActorsById(const std::vector<ActorId> &actor_ids) const {
       DEBUG_ASSERT(_episode != nullptr);
       return _episode->GetActorsById(actor_ids);
@@ -181,9 +187,24 @@ namespace detail {
       return _episode->GetActors();
     }
 
+    /// Creates an actor instance out of a description of an existing actor.
+    /// Note that this does not spawn an actor.
+    ///
     /// If @a gc is GarbageCollectionPolicy::Enabled, the shared pointer
     /// returned is provided with a custom deleter that calls Destroy() on the
-    /// actor. If @gc is GarbageCollectionPolicy::Enabled, the default garbage
+    /// actor. This method does not support GarbageCollectionPolicy::Inherit.
+    SharedPtr<Actor> MakeActor(
+        rpc::Actor actor_description,
+        GarbageCollectionPolicy gc = GarbageCollectionPolicy::Disabled) {
+      RELEASE_ASSERT(gc != GarbageCollectionPolicy::Inherit);
+      return ActorFactory::MakeActor(GetCurrentEpisode(), std::move(actor_description), gc);
+    }
+
+    /// Spawns an actor into the simulation.
+    ///
+    /// If @a gc is GarbageCollectionPolicy::Enabled, the shared pointer
+    /// returned is provided with a custom deleter that calls Destroy() on the
+    /// actor. If @gc is GarbageCollectionPolicy::Inherit, the default garbage
     /// collection policy is used.
     SharedPtr<Actor> SpawnActor(
         const ActorBlueprint &blueprint,

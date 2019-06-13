@@ -64,6 +64,9 @@ namespace client {
     /// Change the weather in the simulation.
     void SetWeather(const rpc::WeatherParameters &weather);
 
+    /// Find actor by id, return nullptr if not found.
+    SharedPtr<Actor> GetActor(ActorId id) const;
+
     /// Return a list with all the actors currently present in the world.
     SharedPtr<ActorList> GetActors() const;
 
