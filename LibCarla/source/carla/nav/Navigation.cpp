@@ -4,7 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#define _USE_MATH_DEFINES   // to avoid undefined error (bug in Visual Studio 2015 and 2017)
+#define _USE_MATH_DEFINES   // to avoid undefined error of M_PI (bug in Visual Studio 2015 and 2017)
 #include <cmath>
 
 #include "carla/Logging.h"
@@ -30,6 +30,10 @@ namespace nav {
   }
 
   Navigation::~Navigation() {
+    _mappedId.clear();
+    _baseHeight.clear();
+    _yaw_walkers.clear();
+    _binaryMesh.clear();
     dtFreeCrowd(_crowd);
     dtFreeNavMeshQuery(_navQuery);
     dtFreeNavMesh(_navMesh);
@@ -300,7 +304,7 @@ namespace nav {
     // save the base offset of this walker
     _baseHeight[id] = base_offset;
 
-    yaw_walkers[id] = 0.0f;
+    _yaw_walkers[id] = 0.0f;
 
     return true;
   }
@@ -395,15 +399,16 @@ namespace nav {
     // set its position in Unreal coordinates
     trans.location.x = agent->npos[0];
     trans.location.y = agent->npos[2];
-    trans.location.z = agent->npos[1] + baseOffset - 0.08f;   // 0.08f is a hardcoded value to get rid of some empty space
+    // trans.location.z = agent->npos[1] + baseOffset - 0.08f;   // 0.08f is a hardcoded value to get rid of some empty space
+    trans.location.z = agent->npos[1] + baseOffset;
 
     // set its rotation
     float yaw =  atan2f(agent->dvel[2] , agent->dvel[0]) * (180.0f / static_cast<float>(M_PI));
-    float shortest_angle = fmod(yaw - yaw_walkers[id] + 540.0f, 360.0f) - 180.0f;
+    float shortest_angle = fmod(yaw - _yaw_walkers[id] + 540.0f, 360.0f) - 180.0f;
     float rotation_speed = 4.0f;
-    trans.rotation.yaw = yaw_walkers[id] + (shortest_angle * rotation_speed * static_cast<float>(_delta_seconds));
+    trans.rotation.yaw = _yaw_walkers[id] + (shortest_angle * rotation_speed * static_cast<float>(_delta_seconds));
 
-    yaw_walkers[id] = trans.rotation.yaw;
+    _yaw_walkers[id] = trans.rotation.yaw;
     return true;
   }
 

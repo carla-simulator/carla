@@ -91,7 +91,7 @@ namespace nav {
     // base height of each walker
     std::unordered_map<ActorId, float> _baseHeight;
     // Store walkers yaw angle from previous tick
-    std::unordered_map<ActorId, float> yaw_walkers;
+    std::unordered_map<ActorId, float> _yaw_walkers;
 
     std::mutex _mutex;
 

@@ -31,13 +31,6 @@ if (WIN32)
     # Install zlib lib.
     file(GLOB libpng_libraries "${LIBPNG_LIB_PATH}/*")
     install(FILES ${libpng_libraries} DESTINATION lib)
-
-    # Install recast headers.
-    file(GLOB recast_includes "${RECAST_INCLUDE_PATH}/*")
-    install(FILES ${recast_includes} DESTINATION include)
-    # Install recast lib.
-    file(GLOB recast_libraries "${RECAST_LIB_PATH}/*")
-    install(FILES ${recast_libraries} DESTINATION lib)
 endif (WIN32)
 
 # Add sources.
