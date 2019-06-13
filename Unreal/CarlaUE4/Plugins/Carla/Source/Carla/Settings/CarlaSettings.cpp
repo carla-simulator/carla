@@ -70,7 +70,6 @@ static void LoadSettingsFromConfig(
   {
     ConfigFile.GetInt(S_CARLA_SERVER, TEXT("WorldPort"), Settings.RPCPort);
     ConfigFile.GetInt(S_CARLA_SERVER, TEXT("RPCPort"), Settings.RPCPort);
-    ConfigFile.GetInt(S_CARLA_SERVER, TEXT("ServerTimeOut"), Settings.ServerTimeOut);
   }
   ConfigFile.GetBool(S_CARLA_SERVER, TEXT("SynchronousMode"), Settings.bSynchronousMode);
   ConfigFile.GetBool(S_CARLA_SERVER, TEXT("DisableRendering"), Settings.bDisableRendering);
@@ -129,10 +128,6 @@ void UCarlaSettings::LoadSettings()
     {
       QualityLevel = QualityLevelFromString(StringQualityLevel, EQualityLevel::Epic);
     }
-    if (FParse::Value(FCommandLine::Get(), TEXT("-carla-server-timeout="), Value))
-    {
-      ServerTimeOut = Value;
-    }
     if (FParse::Param(FCommandLine::Get(), TEXT("-no-rendering")))
     {
       bDisableRendering = true;
@@ -159,7 +154,6 @@ void UCarlaSettings::LogSettings() const
   UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_SERVER);
   UE_LOG(LogCarla, Log, TEXT("RPC Port = %d"), RPCPort);
   UE_LOG(LogCarla, Log, TEXT("Streaming Port = %d"), StreamingPort.Get(RPCPort + 1u));
-  UE_LOG(LogCarla, Log, TEXT("Server Time-out = %d ms"), ServerTimeOut);
   UE_LOG(LogCarla, Log, TEXT("Synchronous Mode = %s"), EnabledDisabled(bSynchronousMode));
   UE_LOG(LogCarla, Log, TEXT("Rendering = %s"), EnabledDisabled(!bDisableRendering));
   UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_QUALITYSETTINGS);
