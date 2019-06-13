@@ -4,6 +4,9 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#define _USE_MATH_DEFINES   // to avoid undefined error (bug in Visual Studio 2015 and 2017)
+#include <cmath>
+
 #include "carla/Logging.h"
 #include "carla/nav/Navigation.h"
 
@@ -15,9 +18,8 @@ namespace carla {
 namespace nav {
 
   static const int MAX_POLYS = 256;
-  static const int MAX_AGENTS = 300;
+  static const int MAX_AGENTS = 500;
   static const float AGENT_RADIUS = 0.3f;
-  static const float AGENT_HEIGHT = 1.8f;
 
   // return a random float
   float frand() {
@@ -267,9 +269,9 @@ namespace nav {
     // set parameters
     memset(&params, 0, sizeof(params));
     params.radius = AGENT_RADIUS;
-    params.height = AGENT_HEIGHT;
+    params.height = base_offset * 2.0f;
     params.maxAcceleration = 8.0f;
-    params.maxSpeed = 2.5f;
+    params.maxSpeed = 1.47f;
     params.collisionQueryRange = params.radius * 12.0f;
     params.pathOptimizationRange = params.radius * 30.0f;
 
