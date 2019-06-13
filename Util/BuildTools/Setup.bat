@@ -153,6 +153,8 @@ if not defined install_recast (
 
     echo %FILE_N% Failed while installing "Recast & Detour".
     goto failed
+) else (
+    set RECAST_INSTALL_DIR=%install_recast:\=/%
 )
 
 rem ============================================================================
