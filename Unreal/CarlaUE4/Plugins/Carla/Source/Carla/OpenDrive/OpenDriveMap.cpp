@@ -73,6 +73,11 @@ FWaypoint UOpenDriveMap::GetClosestWaypointOnRoad(FVector Location, bool &Succes
 
 TArray<FWaypoint> UOpenDriveMap::GenerateWaypoints(float ApproxDistance) const
 {
+  if (ApproxDistance < 1.0f)
+  {
+    UE_LOG(LogCarla, Error, TEXT("GenerateWaypoints: Please provide an ApproxDistance greater than 1 centimetre."));
+    return {};
+  }
   check(HasMap());
   using namespace UOpenDriveMap_Private;
   return TransformToTArray<FWaypoint>(Map->GenerateWaypoints(1e2f * ApproxDistance));
@@ -124,6 +129,11 @@ TArray<FTransform> UOpenDriveMap::ComputeTransforms(const TArray<FWaypoint> &Way
 
 TArray<FWaypoint> UOpenDriveMap::GetNext(FWaypoint Waypoint, float Distance) const
 {
+  if (Distance < 1.0f)
+  {
+    UE_LOG(LogCarla, Error, TEXT("GetNext: Please provide a Distance greater than 1 centimetre."));
+    return {};
+  }
   check(HasMap());
   using namespace UOpenDriveMap_Private;
   return TransformToTArray<FWaypoint>(Map->GetNext(Waypoint.Waypoint, 1e2f * Distance));
