@@ -16,7 +16,7 @@ install(DIRECTORY "${BOOST_INCLUDE_PATH}/boost" DESTINATION include/system)
 file(GLOB boost_libraries "${BOOST_LIB_PATH}/*.*")
 install(FILES ${boost_libraries} DESTINATION lib)
 
-# Windows need libpng alongside with zlib to be installed
+# Windows need libpng alongside with zlib to be installed, and also recast&detour libs
 if (WIN32)
     # Install zlib headers.
     file(GLOB zlib_includes "${ZLIB_INCLUDE_PATH}/*")
@@ -31,6 +31,13 @@ if (WIN32)
     # Install zlib lib.
     file(GLOB libpng_libraries "${LIBPNG_LIB_PATH}/*")
     install(FILES ${libpng_libraries} DESTINATION lib)
+
+    # Install recast headers.
+    file(GLOB recast_includes "${RECAST_INCLUDE_PATH}/*")
+    install(FILES ${recast_includes} DESTINATION include)
+    # Install recast lib.
+    file(GLOB recast_libraries "${RECAST_LIB_PATH}/*")
+    install(FILES ${recast_libraries} DESTINATION lib)
 endif (WIN32)
 
 # Add sources.
