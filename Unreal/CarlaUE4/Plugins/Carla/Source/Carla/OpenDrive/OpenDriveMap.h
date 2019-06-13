@@ -59,7 +59,7 @@ public:
 
   /// Generate waypoints all over the map at an approximated distance.
   UFUNCTION(BlueprintCallable)
-  TArray<FWaypoint> GenerateWaypoints(float ApproxDistance) const;
+  TArray<FWaypoint> GenerateWaypoints(float ApproxDistance = 100.0f) const;
 
   /// Generate the minimum set of waypoints that define the topology of this
   /// map. The waypoints are placed at the entrance of each lane.
@@ -90,7 +90,7 @@ public:
   /// Return the list of waypoints at a given distance such that a vehicle at
   /// waypoint could drive to.
   UFUNCTION(BlueprintCallable)
-  TArray<FWaypoint> GetNext(FWaypoint Waypoint, float Distance) const;
+  TArray<FWaypoint> GetNext(FWaypoint Waypoint, float Distance = 100.0f) const;
 
 private:
 
