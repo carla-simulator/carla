@@ -160,10 +160,6 @@ namespace detail {
         rpc::ActorId walker,
         bool enabled);
 
-    void SendBonesPosition(
-        rpc::ActorId walker,
-        rpc::WalkerBoneControl &control);
-
     void SetTrafficLightState(
         rpc::ActorId traffic_light,
         const rpc::TrafficLightState trafficLightState);

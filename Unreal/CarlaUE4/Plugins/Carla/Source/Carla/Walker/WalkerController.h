@@ -68,7 +68,7 @@ public:
 
 private:
 
-  mutable boost::variant<FWalkerControl, FWalkerBoneControl> Control;
+  boost::variant<FWalkerControl, FWalkerBoneControl> Control;
 
   bool bManualBones;
 };

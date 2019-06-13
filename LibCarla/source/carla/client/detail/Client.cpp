@@ -252,12 +252,6 @@ namespace detail {
     _pimpl->AsyncCall("set_manual_bones_mode", walker, enabled);
   }
 
-  void Client::SendBonesPosition(
-      rpc::ActorId walker,
-      rpc::WalkerBoneControl &control) {
-    _pimpl->AsyncCall("send_bones_position", walker, control);
-  }
-
   void Client::SetTrafficLightState(
       rpc::ActorId traffic_light,
       const rpc::TrafficLightState traffic_light_state) {

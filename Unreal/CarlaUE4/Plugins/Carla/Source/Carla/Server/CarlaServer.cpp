@@ -152,14 +152,14 @@ void FCarlaServer::FPimpl::BindActions()
   namespace cg = carla::geom;
 
   BIND_ASYNC(version) <<[] ()->R<std::string>
-      {
+    {
       return carla::version();
     };
 
   // ~~ Tick ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   BIND_SYNC(tick_cue) <<[this]()->R<void>
-      {
+    {
       ++TickCuesReceived;
       return R<void>::Success();
     };
@@ -167,7 +167,7 @@ void FCarlaServer::FPimpl::BindActions()
   // ~~ Load new episode ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   BIND_ASYNC(get_available_maps) <<[this]()->R<std::vector<std::string>>
-      {
+    {
       const auto MapNames = UCarlaStatics::GetAllMapNames();
       std::vector<std::string> result;
       result.reserve(MapNames.Num());
@@ -179,7 +179,7 @@ void FCarlaServer::FPimpl::BindActions()
     };
 
   BIND_SYNC(load_new_episode) <<[this](const std::string &map_name)->R<void>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       if (!Episode->LoadNewEpisode(cr::ToFString(map_name)))
       {
@@ -191,7 +191,7 @@ void FCarlaServer::FPimpl::BindActions()
   // ~~ Episode settings and info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   BIND_SYNC(get_episode_info) <<[this]()->R<cr::EpisodeInfo>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       return cr::EpisodeInfo{
                Episode->GetId(),
@@ -199,7 +199,7 @@ void FCarlaServer::FPimpl::BindActions()
     };
 
   BIND_SYNC(get_map_info) <<[this]()->R<cr::MapInfo>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       auto FileContents = FOpenDrive::Load(Episode->GetMapName());
       const auto &SpawnPoints = Episode->GetRecommendedSpawnPoints();
@@ -210,26 +210,26 @@ void FCarlaServer::FPimpl::BindActions()
     };
 
   BIND_SYNC(get_episode_settings) <<[this]()->R<cr::EpisodeSettings>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       return cr::EpisodeSettings{Episode->GetSettings()};
     };
 
   BIND_SYNC(set_episode_settings) <<[this](const cr::EpisodeSettings &settings)->R<void>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       Episode->ApplySettings(settings);
       return R<void>::Success();
     };
 
   BIND_SYNC(get_actor_definitions) <<[this]()->R<std::vector<cr::ActorDefinition>>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       return MakeVectorFromTArray<cr::ActorDefinition>(Episode->GetActorDefinitions());
     };
 
   BIND_SYNC(get_spectator) <<[this]()->R<cr::Actor>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       auto ActorView = Episode->FindActor(Episode->GetSpectatorPawn());
       if (!ActorView.IsValid())
@@ -242,7 +242,7 @@ void FCarlaServer::FPimpl::BindActions()
   // ~~ Weather ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   BIND_SYNC(get_weather_parameters) <<[this]()->R<cr::WeatherParameters>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       auto *Weather = Episode->GetWeather();
       if (Weather == nullptr)
@@ -254,7 +254,7 @@ void FCarlaServer::FPimpl::BindActions()
 
   BIND_SYNC(set_weather_parameters) <<[this](
     const cr::WeatherParameters &weather)->R<void>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       auto *Weather = Episode->GetWeather();
       if (Weather == nullptr)
@@ -269,7 +269,7 @@ void FCarlaServer::FPimpl::BindActions()
 
   BIND_SYNC(get_actors_by_id) <<[this](
     const std::vector<FActorView::IdType> &ids)->R<std::vector<cr::Actor>>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       std::vector<cr::Actor> Result;
       Result.reserve(ids.size());
@@ -287,7 +287,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(spawn_actor) <<[this](
     cr::ActorDescription Description,
     const cr::Transform &Transform)->R<cr::Actor>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       auto Result = Episode->SpawnActorWithInfo(Transform, std::move(Description));
       if (Result.Key != EActorSpawnResultStatus::Success)
@@ -306,7 +306,7 @@ void FCarlaServer::FPimpl::BindActions()
     const cr::Transform &Transform,
     cr::ActorId ParentId,
     cr::AttachmentType InAttachmentType)->R<cr::Actor>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       auto Result = Episode->SpawnActorWithInfo(Transform, std::move(Description));
       if (Result.Key != EActorSpawnResultStatus::Success)
@@ -330,7 +330,7 @@ void FCarlaServer::FPimpl::BindActions()
     };
 
   BIND_SYNC(destroy_actor) <<[this](cr::ActorId ActorId)->R<void>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       auto ActorView = Episode->FindActor(ActorId);
       if (!ActorView.IsValid())
@@ -349,7 +349,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(set_actor_location) <<[this](
     cr::ActorId ActorId,
     cr::Location Location)->R<void>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       auto ActorView = Episode->FindActor(ActorId);
       if (!ActorView.IsValid())
@@ -367,7 +367,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(set_actor_transform) <<[this](
     cr::ActorId ActorId,
     cr::Transform Transform)->R<void>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       auto ActorView = Episode->FindActor(ActorId);
       if (!ActorView.IsValid())
@@ -385,7 +385,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(set_actor_velocity) <<[this](
     cr::ActorId ActorId,
     cr::Vector3D vector)->R<void>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       auto ActorView = Episode->FindActor(ActorId);
       if (!ActorView.IsValid())
@@ -407,7 +407,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(set_actor_angular_velocity) <<[this](
     cr::ActorId ActorId,
     cr::Vector3D vector)->R<void>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       auto ActorView = Episode->FindActor(ActorId);
       if (!ActorView.IsValid())
@@ -429,7 +429,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(add_actor_impulse) <<[this](
     cr::ActorId ActorId,
     cr::Vector3D vector)->R<void>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       auto ActorView = Episode->FindActor(ActorId);
       if (!ActorView.IsValid())
@@ -450,7 +450,7 @@ void FCarlaServer::FPimpl::BindActions()
 
   BIND_SYNC(get_physics_control) <<[this](
     cr::ActorId ActorId)->R<cr::VehiclePhysicsControl>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       auto ActorView = Episode->FindActor(ActorId);
       if (!ActorView.IsValid())
@@ -469,7 +469,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(apply_physics_control) <<[this](
     cr::ActorId ActorId,
     cr::VehiclePhysicsControl PhysicsControl)->R<void>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       auto ActorView = Episode->FindActor(ActorId);
       if (!ActorView.IsValid())
@@ -490,7 +490,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(set_actor_simulate_physics) <<[this](
     cr::ActorId ActorId,
     bool bEnabled)->R<void>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       auto ActorView = Episode->FindActor(ActorId);
       if (!ActorView.IsValid())
@@ -511,7 +511,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(apply_control_to_vehicle) <<[this](
     cr::ActorId ActorId,
     cr::VehicleControl Control)->R<void>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       auto ActorView = Episode->FindActor(ActorId);
       if (!ActorView.IsValid())
@@ -530,7 +530,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(apply_control_to_walker) <<[this](
     cr::ActorId ActorId,
     cr::WalkerControl Control)->R<void>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       auto ActorView = Episode->FindActor(ActorId);
       if (!ActorView.IsValid())
@@ -554,7 +554,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(apply_bone_control_to_walker) <<[this](
     cr::ActorId ActorId,
     cr::WalkerBoneControl Control)->R<void>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       auto ActorView = Episode->FindActor(ActorId);
       if (!ActorView.IsValid())
@@ -578,7 +578,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(set_actor_autopilot) <<[this](
     cr::ActorId ActorId,
     bool bEnabled)->R<void>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       auto ActorView = Episode->FindActor(ActorId);
       if (!ActorView.IsValid())
@@ -602,7 +602,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(set_manual_bones_mode) <<[this](
     cr::ActorId ActorId,
     bool bEnabled)->R<void>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       auto ActorView = Episode->FindActor(ActorId);
       if (!ActorView.IsValid())
@@ -627,7 +627,7 @@ void FCarlaServer::FPimpl::BindActions()
     cr::ActorId ActorId,
     cr::WalkerBoneControl Control
       )->R<void>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       auto ActorView = Episode->FindActor(ActorId);
       if (!ActorView.IsValid())
@@ -653,7 +653,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(set_traffic_light_state) <<[this](
     cr::ActorId ActorId,
     cr::TrafficLightState trafficLightState)->R<void>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       auto ActorView = Episode->GetActorRegistry().Find(ActorId);
       if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill())
@@ -672,7 +672,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(set_traffic_light_green_time) <<[this](
     cr::ActorId ActorId,
     float GreenTime)->R<void>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       auto ActorView = Episode->GetActorRegistry().Find(ActorId);
       if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill())
@@ -691,7 +691,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(set_traffic_light_yellow_time) <<[this](
     cr::ActorId ActorId,
     float YellowTime)->R<void>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       auto ActorView = Episode->GetActorRegistry().Find(ActorId);
       if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill())
@@ -710,7 +710,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(set_traffic_light_red_time) <<[this](
     cr::ActorId ActorId,
     float RedTime)->R<void>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       auto ActorView = Episode->GetActorRegistry().Find(ActorId);
       if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill())
@@ -729,7 +729,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(freeze_traffic_light) <<[this](
     cr::ActorId ActorId,
     bool Freeze)->R<void>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       auto ActorView = Episode->GetActorRegistry().Find(ActorId);
       if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill())
@@ -747,7 +747,7 @@ void FCarlaServer::FPimpl::BindActions()
 
   BIND_SYNC(get_group_traffic_lights) <<[this](
     const cr::ActorId ActorId)->R<std::vector<cr::ActorId>>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       auto ActorView = Episode->GetActorRegistry().Find(ActorId);
       if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill())
@@ -774,20 +774,20 @@ void FCarlaServer::FPimpl::BindActions()
   // ~~ Logging and playback ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   BIND_SYNC(start_recorder) <<[this](std::string name)->R<std::string>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       return R<std::string>(Episode->StartRecorder(name));
     };
 
   BIND_SYNC(stop_recorder) <<[this]()->R<void>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       Episode->GetRecorder()->Stop();
       return R<void>::Success();
     };
 
   BIND_SYNC(show_recorder_file_info) <<[this](std::string name, bool show_all)->R<std::string>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       return R<std::string>(Episode->GetRecorder()->ShowFileInfo(
           name,
@@ -795,7 +795,7 @@ void FCarlaServer::FPimpl::BindActions()
     };
 
   BIND_SYNC(show_recorder_collisions) <<[this](std::string name, char type1, char type2)->R<std::string>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       return R<std::string>(Episode->GetRecorder()->ShowFileCollisions(
           name,
@@ -805,7 +805,7 @@ void FCarlaServer::FPimpl::BindActions()
 
   BIND_SYNC(show_recorder_actors_blocked) <<[this](std::string name, double min_time,
       double min_distance)->R<std::string>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       return R<std::string>(Episode->GetRecorder()->ShowFileActorsBlocked(
           name,
@@ -815,7 +815,7 @@ void FCarlaServer::FPimpl::BindActions()
 
   BIND_SYNC(replay_file) <<[this](std::string name, double start, double duration,
       uint32_t follow_id)->R<std::string>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       return R<std::string>(Episode->GetRecorder()->ReplayFile(
           name,
@@ -825,7 +825,7 @@ void FCarlaServer::FPimpl::BindActions()
     };
 
   BIND_SYNC(set_replayer_time_factor) <<[this](double time_factor)->R<void>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       Episode->GetRecorder()->SetReplayerTimeFactor(time_factor);
       return R<void>::Success();
@@ -834,7 +834,7 @@ void FCarlaServer::FPimpl::BindActions()
   // ~~ Draw debug shapes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   BIND_SYNC(draw_debug_shape) <<[this](const cr::DebugShape &shape)->R<void>
-      {
+    {
       REQUIRE_CARLA_EPISODE();
       auto *World = Episode->GetWorld();
       check(World != nullptr);
@@ -900,7 +900,7 @@ void FCarlaServer::FPimpl::BindActions()
 #undef MAKE_RESULT
 
   BIND_SYNC(apply_batch) <<[ = ](const std::vector<cr::Command> &commands, bool do_tick_cue)
-      {
+    {
       std::vector<CR> result;
       result.reserve(commands.size());
       for (const auto &command : commands)
