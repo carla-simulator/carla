@@ -65,8 +65,7 @@ namespace client {
 
   SharedPtr<TrafficLight> Vehicle::GetTrafficLight() const {
     auto id = GetEpisode().Lock()->GetActorDynamicState(*this).state.vehicle_data.traffic_light_id;
-    SharedPtr<Actor> actor = GetWorld().GetActors()->Find(id);
-    return boost::static_pointer_cast<TrafficLight>(actor);
+    return boost::static_pointer_cast<TrafficLight>(GetWorld().GetActor(id));
   }
 
 } // namespace client
