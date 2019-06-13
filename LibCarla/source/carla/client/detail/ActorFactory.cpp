@@ -70,9 +70,8 @@ namespace detail {
   SharedPtr<Actor> ActorFactory::MakeActor(
       EpisodeProxy episode,
       rpc::Actor description,
-      SharedPtr<Actor> parent,
       GarbageCollectionPolicy gc) {
-    auto init = ActorInitializer{description, episode, parent};
+    auto init = ActorInitializer{description, episode};
     if (description.description.id == "sensor.other.lane_invasion") { /// @todo
       return MakeActorImpl<LaneInvasionSensor>(std::move(init), gc);
     } else if (description.description.id == "sensor.other.gnss") { /// @todo

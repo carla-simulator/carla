@@ -38,11 +38,11 @@ the project's root.
 
 <h4>How to import a map</h4>
 In order to do so, the file generated in the import phase has to be placed in a folder
-at the root of the distributed folder called "ExportedMaps". Once the zip is placed there,
+at the root of the distributed folder called "ExportedAssets". Once the zip is placed there,
 by running
 
 ```sh
-./ImportMaps.sh
+./ImportAssets.sh
 ```
 
 the content will get extracted and located properly where the executable can reach it. All

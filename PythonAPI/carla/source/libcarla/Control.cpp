@@ -20,79 +20,60 @@ namespace rpc {
   }
 
   std::ostream &operator<<(std::ostream &out, const VehicleControl &control) {
-    out << "VehicleControl(throttle=" << control.throttle <<
-      ", steer=" << control.steer <<
-      ", brake=" << control.brake <<
-      ", hand_brake=" << boolalpha(control.hand_brake) <<
-      ", reverse=" << boolalpha(control.reverse) <<
-      ", manual_gear_shift=" << boolalpha(control.manual_gear_shift) <<
-      ", gear=" << control.gear << ')';
+    out << "VehicleControl(throttle=" << std::to_string(control.throttle)
+        << ", steer=" << std::to_string(control.steer)
+        << ", brake=" << std::to_string(control.brake)
+        << ", hand_brake=" << boolalpha(control.hand_brake)
+        << ", reverse=" << boolalpha(control.reverse)
+        << ", manual_gear_shift=" << boolalpha(control.manual_gear_shift)
+        << ", gear=" << std::to_string(control.gear) << ')';
     return out;
   }
 
   std::ostream &operator<<(std::ostream &out, const WalkerControl &control) {
+    out << "WalkerControl(direction=" << control.direction
+        << ", speed=" << std::to_string(control.speed)
+        << ", jump=" << boolalpha(control.jump) << ')';
     out << "WalkerControl(direction=" << control.direction <<
       ", speed=" << control.speed <<
       ", jump=" << boolalpha(control.jump) << ')';
     return out;
   }
 
-  // std::ostream &operator<<(std::ostream &out, const geom::Transform
-  // transform) {
-  //   out << "Transform(location=("
-  //         << transform.location.x << ", "
-  //         << transform.location.y << ", "
-  //         << transform.location.z << ")"
-  //       << ", rotation=("
-  //         << transform.rotation.yaw   << ", "
-  //         << transform.rotation.pitch << ", "
-  //         << transform.rotation.roll  << ")"
-  //       << ")";
-  //   return out;
-  // }
-
-  // std::ostream &operator<<(std::ostream &out, const std::pair<std::string,
-  // carla::geom::Transform> &pair) {
-  //   out << "Pair<string, transform>(first="
-  //       << pair.first << ", "
-  //       << pair.second << ")";
-  //   return out;
-  // }
-
   std::ostream &operator<<(std::ostream &out, const WalkerBoneControl &control) {
     out << "WalkerBoneControl(bone_transforms(";
     for (auto bone_transform : control.bone_transforms) {
       out << "(first="  << bone_transform.first <<
-        ", second" << bone_transform.second << ')';
+        ", second = " << bone_transform.second << ')';
     }
     out << ")";
     return out;
   }
 
   std::ostream &operator<<(std::ostream &out, const WheelPhysicsControl &control) {
-    out << "WheelPhysicsControl(tire_friction=" << control.tire_friction <<
-      ", damping_rate=" << control.damping_rate <<
-      ", steer_angle=" << control.steer_angle <<
-      ", disable_steering=" << boolalpha(control.disable_steering) << ')';
+    out << "WheelPhysicsControl(tire_friction=" << std::to_string(control.tire_friction)
+        << ", damping_rate=" << std::to_string(control.damping_rate)
+        << ", max_steer_angle=" << std::to_string(control.max_steer_angle)
+        << ", radius=" << std::to_string(control.radius)
+        << ", position=" << control.position << ')';
     return out;
   }
 
   std::ostream &operator<<(std::ostream &out, const VehiclePhysicsControl &control) {
-    out << "VehiclePhysicsControl(torque_curve=" << control.torque_curve <<
-      ", max_rpm=" << control.max_rpm <<
-      ", moi=" << control.moi <<
-      ", damping_rate_full_throttle=" << control.damping_rate_full_throttle <<
-      ", damping_rate_zero_throttle_clutch_engaged=" << control.damping_rate_zero_throttle_clutch_engaged <<
-      ", damping_rate_zero_throttle_clutch_disengaged=" <<
-      control.damping_rate_zero_throttle_clutch_disengaged <<
-      ", use_gear_autobox=" << boolalpha(control.use_gear_autobox) <<
-      ", gear_switch_time=" << control.gear_switch_time <<
-      ", clutch_strength=" << control.clutch_strength <<
-      ", mass=" << control.mass <<
-      ", drag_coefficient=" << control.drag_coefficient <<
-      ", center_of_mass=" << control.center_of_mass <<
-      ", steering_curve=" << control.steering_curve <<
-      ", wheels=" << control.wheels << ')';
+    out << "VehiclePhysicsControl(torque_curve=" << control.torque_curve
+    << ", max_rpm=" << std::to_string(control.max_rpm)
+    << ", moi=" << std::to_string(control.moi)
+    << ", damping_rate_full_throttle=" << std::to_string(control.damping_rate_full_throttle)
+    << ", damping_rate_zero_throttle_clutch_engaged=" << std::to_string(control.damping_rate_zero_throttle_clutch_engaged)
+    << ", damping_rate_zero_throttle_clutch_disengaged=" << std::to_string(control.damping_rate_zero_throttle_clutch_disengaged)
+    << ", use_gear_autobox=" << boolalpha(control.use_gear_autobox)
+    << ", gear_switch_time=" << std::to_string(control.gear_switch_time)
+    << ", clutch_strength=" << std::to_string(control.clutch_strength)
+    << ", mass=" << std::to_string(control.mass)
+    << ", drag_coefficient=" << std::to_string(control.drag_coefficient)
+    << ", center_of_mass=" << control.center_of_mass
+    << ", steering_curve=" << control.steering_curve
+    << ", wheels=" << control.wheels << ')';
     return out;
   }
 } // namespace rpc
@@ -306,18 +287,20 @@ void export_control() {
   ;
 
   class_<cr::WheelPhysicsControl>("WheelPhysicsControl")
-      .def(init<float, float, float, bool>(
-      (arg("tire_friction") = 2.0f,
-      arg("damping_rate") = 0.25f,
-      arg("steer_angle") = 70.0f,
-      arg("disable_steering") = false)))
-      .def_readwrite("tire_friction", &cr::WheelPhysicsControl::tire_friction)
-      .def_readwrite("damping_rate", &cr::WheelPhysicsControl::damping_rate)
-      .def_readwrite("steer_angle", &cr::WheelPhysicsControl::steer_angle)
-      .def_readwrite("disable_steering", &cr::WheelPhysicsControl::disable_steering)
-      .def("__eq__", &cr::WheelPhysicsControl::operator==)
-      .def("__ne__", &cr::WheelPhysicsControl::operator!=)
-      .def(self_ns::str(self_ns::self))
+    .def(init<float, float, float, float, cg::Vector3D>(
+        (arg("tire_friction")=2.0f,
+         arg("damping_rate")=0.25f,
+         arg("max_steer_angle")=70.0f,
+         arg("radius")=30.0f,
+         arg("position")=cg::Vector3D{0.0f, 0.0f, 0.0f})))
+    .def_readwrite("tire_friction", &cr::WheelPhysicsControl::tire_friction)
+    .def_readwrite("damping_rate", &cr::WheelPhysicsControl::damping_rate)
+    .def_readwrite("max_steer_angle", &cr::WheelPhysicsControl::max_steer_angle)
+    .def_readwrite("radius", &cr::WheelPhysicsControl::radius)
+    .def_readwrite("position", &cr::WheelPhysicsControl::position)
+    .def("__eq__", &cr::WheelPhysicsControl::operator==)
+    .def("__ne__", &cr::WheelPhysicsControl::operator!=)
+    .def(self_ns::str(self_ns::self))
   ;
 
   class_<cr::VehiclePhysicsControl>("VehiclePhysicsControl", no_init)

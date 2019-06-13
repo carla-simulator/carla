@@ -35,6 +35,7 @@
 - `apply_settings(world_settings)`
 - `get_weather()`
 - `set_weather(weather_parameters)`
+- `get_actor(actor_id) -> carla.Actor`
 - `get_actors(actor_ids=None) -> carla.ActorList`
 - `spawn_actor(blueprint, transform, attach_to=None)`
 - `try_spawn_actor(blueprint, transform, attach_to=None, attachment_type=carla.AttachmentType.Rigid)`
@@ -234,8 +235,9 @@
 
 - `tire_friction`
 - `damping_rate`
-- `steer_angle`
-- `disable_steering`
+- `max_steer_angle`
+- `radius`
+- `position`
 - `__eq__(other)`
 - `__ne__(other)`
 

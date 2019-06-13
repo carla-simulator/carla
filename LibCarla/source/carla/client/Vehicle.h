@@ -31,7 +31,7 @@ namespace client {
     /// Apply @a control to this vehicle.
     void ApplyControl(const Control &control);
 
-    /// Apply physics control to this vehicle
+    /// Apply physics control to this vehicle.
     void ApplyPhysicsControl(const PhysicsControl &physics_control);
 
     /// Return the control last applied to this vehicle.
@@ -39,6 +39,10 @@ namespace client {
     /// @note This function does not call the simulator, it returns the data
     /// received in the last tick.
     Control GetControl() const;
+
+    /// Return the physics control last applied to this vehicle.
+    ///
+    /// @warning This function does call the simulator.
     PhysicsControl GetPhysicsControl() const;
 
     /// Return the speed limit currently affecting this vehicle.
@@ -62,11 +66,7 @@ namespace client {
     bool IsAtTrafficLight();
 
     /// Retrieve the traffic light actor currently affecting this vehicle.
-    ///
-    /// @note This function does not call the simulator, it returns the data
-    /// received in the last tick.
     SharedPtr<TrafficLight> GetTrafficLight() const;
-
 
   private:
 
