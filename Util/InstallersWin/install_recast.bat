@@ -86,6 +86,9 @@ if %DEL_SRC% == true (
     rd /s /q "%RECAST_SRC_DIR%"
 )
 
+md "%RECAST_INSTALL_DIR%/include/recast"
+move "%RECAST_INSTALL_DIR%/include/*.*" "%RECAST_INSTALL_DIR%/include/recast"
+
 goto success
 
 rem ============================================================================
@@ -130,7 +133,6 @@ rem ============================================================================
 
 :good_exit
     echo %FILE_N% Exiting...
-    endlocal
     endlocal & set install_recast=%RECAST_INSTALL_DIR%
     exit /b 0
 

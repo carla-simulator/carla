@@ -399,7 +399,6 @@ namespace nav {
     // set its position in Unreal coordinates
     trans.location.x = agent->npos[0];
     trans.location.y = agent->npos[2];
-    // trans.location.z = agent->npos[1] + baseOffset - 0.08f;   // 0.08f is a hardcoded value to get rid of some empty space
     trans.location.z = agent->npos[1] + baseOffset;
 
     // set its rotation
