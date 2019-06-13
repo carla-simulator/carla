@@ -23,7 +23,7 @@ namespace client {
   SharedPtr<Actor> ActorList::Find(const ActorId actor_id) const {
     for (auto &actor : _actors) {
       if (actor_id == actor.GetId()) {
-        return actor.Get(_episode, shared_from_this());
+        return actor.Get(_episode);
       }
     }
     return nullptr;
