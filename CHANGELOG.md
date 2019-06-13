@@ -15,6 +15,7 @@
   * API extension: add attachment type "SpringArm" for cinematic cameras
   * API extension: waypoint's `junction_id` that returns de OpenDrive identifier of the current junction
   * API extension: add gamma value as attribute to RGB camera
+  * API extension: add `world.get_actor(id)` to find a single actor by id
   * API change: deprecated waypoint's `is_intersection`, now is `is_junction`
   * API update: solve the problem of RuntimeError: std::bad_cast described here: #1125 (comment)
   * Removed deprecated code and content
@@ -27,6 +28,7 @@
       - Walkers animation is simulated in playback (through speed of walker), so they walk properly.
   * Fixed Lidar effectiveness bug in manual_control.py
   * Fixed dead-lock when loading a new map in synchronous mode
+  * Fixed get_actors may produce actors without parent
   * Added C++ client example using LibCarla
   * Updated OpenDriveActor to use the new Waypoint API
   * Fixed wrong units in VehiclePhysicsControl's center of mass
