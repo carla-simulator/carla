@@ -86,8 +86,8 @@ if %DEL_SRC% == true (
     rd /s /q "%RECAST_SRC_DIR%"
 )
 
-md "%RECAST_INSTALL_DIR%/include/recast"
-move "%RECAST_INSTALL_DIR%/include/*.*" "%RECAST_INSTALL_DIR%/include/recast"
+md "%RECAST_INSTALL_DIR%include\\recast"
+move "%RECAST_INSTALL_DIR%include\\*.h" "%RECAST_INSTALL_DIR%include\\recast"
 
 goto success
 
