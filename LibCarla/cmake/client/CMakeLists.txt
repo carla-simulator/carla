@@ -1,14 +1,15 @@
 cmake_minimum_required(VERSION 3.5.1)
 project(libcarla-client)
 
+# Install Recast&Detour libraries
+install(DIRECTORY "${RECAST_INCLUDE_PATH}/recast" DESTINATION include/system)
+file(GLOB libcarla_carla_recastlib "${RECAST_LIB_PATH}/*.*")
+install(FILES ${libcarla_carla_recastlib} DESTINATION lib)
+
 # Install rpclib (install in system folder to avoid extra warnings).
 install(DIRECTORY "${RPCLIB_INCLUDE_PATH}/rpc" DESTINATION include/system)
 file(GLOB libcarla_carla_rpclib "${RPCLIB_LIB_PATH}/*.*")
 install(FILES ${libcarla_carla_rpclib} DESTINATION lib)
-
-# Install Recast&Detour libraries
-file(GLOB libcarla_carla_recastlib "${RECAST_LIB_PATH}/*.*")
-install(FILES ${libcarla_carla_recastlib} DESTINATION lib)
 
 # Install boost headers (install in system folder to avoid extra warnings).
 # @todo Remove boost from public interface of LibCarla.client.
@@ -69,11 +70,6 @@ file(GLOB libcarla_carla_nav_sources
     "${libcarla_source_path}/carla/nav/*.h")
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_nav_sources}")
 install(FILES ${libcarla_carla_nav_sources} DESTINATION include/carla/nav)
-
-file(GLOB libcarla_carla_nav_recast_sources
-    "${libcarla_source_path}/carla/nav/recast/*.h")
-set(libcarla_sources "${libcarla_sources};${libcarla_carla_nav_recast_sources}")
-install(FILES ${libcarla_carla_nav_recast_sources} DESTINATION include/carla/nav/recast)
 
 file(GLOB libcarla_carla_opendrive_sources
     "${libcarla_source_path}/carla/opendrive/*.cpp"
@@ -200,7 +196,8 @@ if (LIBCARLA_BUILD_RELEASE)
 
   target_include_directories(carla_client SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
-      "${RPCLIB_INCLUDE_PATH}")
+      "${RPCLIB_INCLUDE_PATH}"
+      "${RECAST_INCLUDE_PATH}")
 
   install(TARGETS carla_client DESTINATION lib)
 
@@ -222,7 +219,7 @@ if (LIBCARLA_BUILD_RELEASE)
     target_link_libraries(carla_client "${RECAST_LIB_PATH}/libDetour.a")
     target_link_libraries(carla_client "${RECAST_LIB_PATH}/libDetourCrowd.a")
 
-endif()
+  endif()
 
 if (LIBCARLA_BUILD_DEBUG)
 
@@ -230,7 +227,8 @@ if (LIBCARLA_BUILD_DEBUG)
 
   target_include_directories(carla_client_debug SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
-      "${RPCLIB_INCLUDE_PATH}")
+      "${RPCLIB_INCLUDE_PATH}"
+      "${RECAST_INCLUDE_PATH}")
 
   install(TARGETS carla_client_debug DESTINATION lib)
 
