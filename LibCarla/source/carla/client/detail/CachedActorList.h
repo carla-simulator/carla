@@ -42,6 +42,10 @@ namespace detail {
     template <typename RangeT>
     std::vector<ActorId> GetMissingIds(const RangeT &range) const;
 
+    /// Retrieve the actor matching @a id, or empty optional if actor is not
+    /// cached.
+    boost::optional<rpc::Actor> GetActorById(ActorId id) const;
+
     /// Retrieve the actors matching the ids in @a range.
     template <typename RangeT>
     std::vector<rpc::Actor> GetActorsById(const RangeT &range) const;
@@ -87,6 +91,15 @@ namespace detail {
       return _actors.find(id) == _actors.end();
     });
     return result;
+  }
+
+  inline boost::optional<rpc::Actor> CachedActorList::GetActorById(ActorId id) const {
+    std::lock_guard<std::mutex> lock(_mutex);
+    auto it = _actors.find(id);
+    if (it != _actors.end()) {
+      return it->second;
+    }
+    return boost::none;
   }
 
   template <typename RangeT>

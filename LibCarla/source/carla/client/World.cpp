@@ -45,6 +45,14 @@ namespace client {
     _episode.Lock()->SetWeatherParameters(weather);
   }
 
+  SharedPtr<Actor> World::GetActor(ActorId id) const {
+    auto simulator = _episode.Lock();
+    auto description = simulator->GetActorById(id);
+    return description.has_value() ?
+        simulator->MakeActor(std::move(*description)) :
+        nullptr;
+  }
+
   SharedPtr<ActorList> World::GetActors() const {
     return SharedPtr<ActorList>{new ActorList{
                                   _episode,

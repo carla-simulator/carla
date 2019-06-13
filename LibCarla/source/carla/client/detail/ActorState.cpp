@@ -15,11 +15,9 @@ namespace detail {
 
   ActorState::ActorState(
       rpc::Actor description,
-      EpisodeProxy episode,
-      SharedPtr<Actor> parent)
+      EpisodeProxy episode)
     : _description(std::move(description)),
       _episode(std::move(episode)),
-      _parent(std::move(parent)),
       _display_id([](const auto &desc) {
         using namespace std::string_literals;
         return
@@ -29,6 +27,11 @@ namespace detail {
       }(_description)),
       _attributes(_description.description.attributes.begin(), _description.description.attributes.end())
   {}
+
+  SharedPtr<Actor> ActorState::GetParent() const {
+    auto parent_id = GetParentId();
+    return parent_id != 0u ? GetWorld().GetActor(parent_id) : nullptr;
+  }
 
 } // namespace detail
 } // namespace client
