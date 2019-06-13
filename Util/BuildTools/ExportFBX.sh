@@ -89,6 +89,16 @@ popd >/dev/null
 DESTINATION=${BUILD_FOLDER}/${FILE_NAME}.tar.gz
 SOURCE=${BUILD_FOLDER}/Cooked
 
+FILES=$(find ${CARLAUE4_ROOT_FOLDER}/Content -type f -name "*PropRegistry.json")
+
+mkdir -p ${SOURCE}/CarlaUE4/Content/Carla/Config
+for file in $FILES
+do
+  A="$(echo $file | grep -o 'Content\/.*' | cut -f2 -d/)"
+  mkdir -p ${SOURCE}/CarlaUE4/Content/${A}/Config
+  cp -rf $file ${SOURCE}/CarlaUE4/Content/${A}/Config
+done
+
 pushd "${SOURCE}" >/dev/null
 
 log "Packaging build."
