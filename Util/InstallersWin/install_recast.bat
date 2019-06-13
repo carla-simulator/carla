@@ -131,7 +131,7 @@ rem ============================================================================
 :good_exit
     echo %FILE_N% Exiting...
     endlocal
-    set install_recast=done
+    endlocal & set install_recast=%RECAST_INSTALL_DIR%
     exit /b 0
 
 :bad_exit
