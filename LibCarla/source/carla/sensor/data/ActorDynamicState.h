@@ -97,22 +97,14 @@ namespace detail {
     PackedWalkerBoneControl() = default;
 
     PackedWalkerBoneControl(const rpc::WalkerBoneControl &control)
-      : modify_bones(control.modify_bones),
-        world_position{control.world_position.x, control.world_position.y, control.world_position.z},
-        world_rotation{control.world_rotation.yaw, control.world_rotation.pitch, control.world_rotation.roll},
-        bone_transforms(control.bone_transforms) {}
+      : bone_transforms(control.bone_transforms) {}
 
     operator rpc::WalkerBoneControl() const {
-      return {modify_bones, geom::Location{world_position[0u], world_position[1u], world_position[2u]},
-              geom::Rotation{world_rotation[0u], world_rotation[1u], world_rotation[2u]},
-              bone_transforms};
+      return {bone_transforms};
     }
 
   private:
 
-    bool modify_bones;
-    float world_position[3u];
-    float world_rotation[3u];
     std::vector<rpc::BoneTransformData> bone_transforms;
   };
 

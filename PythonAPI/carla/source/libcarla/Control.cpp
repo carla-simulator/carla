@@ -60,10 +60,7 @@ namespace rpc {
   // }
 
   std::ostream &operator<<(std::ostream &out, const WalkerBoneControl &control) {
-    out << "WalkerBoneControl(modify_bones=" << boolalpha(control.modify_bones) <<
-      ", world_position=" << control.world_position <<
-      ", world_rotation=" << control.world_rotation <<
-      ", bone_transforms(";
+    out << "WalkerBoneControl(bone_transforms(";
     for (auto bone_transform : control.bone_transforms) {
       out << "(first="  << bone_transform.first <<
         ", second" << bone_transform.second << ')';
@@ -87,7 +84,7 @@ namespace rpc {
       ", damping_rate_full_throttle=" << control.damping_rate_full_throttle <<
       ", damping_rate_zero_throttle_clutch_engaged=" << control.damping_rate_zero_throttle_clutch_engaged <<
       ", damping_rate_zero_throttle_clutch_disengaged=" <<
-          control.damping_rate_zero_throttle_clutch_disengaged <<
+      control.damping_rate_zero_throttle_clutch_disengaged <<
       ", use_gear_autobox=" << boolalpha(control.use_gear_autobox) <<
       ", gear_switch_time=" << control.gear_switch_time <<
       ", clutch_strength=" << control.clutch_strength <<
@@ -231,11 +228,8 @@ static void SetBonesTransform(carla::rpc::WalkerBoneControl &self, const boost::
 
 boost::python::object WalkerBoneControl_init(boost::python::tuple args, boost::python::dict kwargs) {
   // Args names
-  const uint32_t NUM_ARGUMENTS = 4;
+  const uint32_t NUM_ARGUMENTS = 1;
   const char *args_names[NUM_ARGUMENTS] = {
-    "modify_bones",
-    "world_position",
-    "world_rotation",
     "bone_transforms"
   };
 
@@ -298,14 +292,9 @@ void export_control() {
   ;
 
   class_<cr::WalkerBoneControl>("WalkerBoneControl")
-      .def("__init__", raw_function(WalkerBoneControl_init), "raw ctor")
+      .def("__init__", raw_function(WalkerBoneControl_init), "raw actor")
       .def(init<>())
-
       .add_property("bone_transforms", &GetBonesTransform, &SetBonesTransform)
-
-      .def_readwrite("modify_bones", &cr::WalkerBoneControl::modify_bones)
-      .def_readwrite("world_position", &cr::WalkerBoneControl::world_position)
-      .def_readwrite("world_rotation", &cr::WalkerBoneControl::world_rotation)
       .def("__eq__", &cr::WalkerBoneControl::operator==)
       .def("__ne__", &cr::WalkerBoneControl::operator!=)
       .def(self_ns::str(self_ns::self))
@@ -332,7 +321,7 @@ void export_control() {
   ;
 
   class_<cr::VehiclePhysicsControl>("VehiclePhysicsControl", no_init)
-      .def("__init__", raw_function(VehiclePhysicsControl_init), "raw ctor")
+      .def("__init__", raw_function(VehiclePhysicsControl_init), "raw actor")
       .def(init<>())
 
       .add_property("torque_curve", &GetTorqueCurve, &SetTorqueCurve)

@@ -59,21 +59,30 @@ UPoseableMeshComponent *AddNewBoneComponent(AActor *InActor, FVector inLocation,
 void AWalkerController::SetManualBones(const bool bIsEnabled)
 {
   bManualBones = bIsEnabled;
-  if (bManualBones)
+
+  auto *Character = GetCharacter();
+  TArray<UPoseableMeshComponent *> PoseableMeshes;
+  TArray<USkeletalMeshComponent *> SkeletalMeshes;
+  Character->GetComponents<UPoseableMeshComponent>(PoseableMeshes, false);
+  Character->GetComponents<USkeletalMeshComponent>(SkeletalMeshes, false);
+  USkeletalMeshComponent *SkeletalMesh = SkeletalMeshes.IsValidIndex(0) ? SkeletalMeshes[0] : nullptr;
+  if (SkeletalMesh)
   {
-    auto *Character = GetCharacter();
-    TArray<UPoseableMeshComponent *> PoseableMeshes;
-    TArray<USkeletalMeshComponent *> SkeletalMeshes;
-    Character->GetComponents<UPoseableMeshComponent>(PoseableMeshes, false);
-    Character->GetComponents<USkeletalMeshComponent>(SkeletalMeshes, false);
-    USkeletalMeshComponent *SkeletalMesh = SkeletalMeshes.IsValidIndex(0) ? SkeletalMeshes[0] : nullptr;
-    if (SkeletalMesh)
+    if (bManualBones)
     {
       UPoseableMeshComponent *PoseableMesh =
           PoseableMeshes.IsValidIndex(0) ? PoseableMeshes[0] : AddNewBoneComponent(Character,
           SkeletalMesh->GetRelativeTransform().GetLocation(),
           SkeletalMesh->GetRelativeTransform().GetRotation().Rotator());
       PoseableMesh->SetSkeletalMesh(SkeletalMesh->SkeletalMesh);
+      PoseableMesh->SetVisibility(true);
+      SkeletalMesh->SetVisibility(false);
+    }
+    else
+    {
+      UPoseableMeshComponent *PoseableMesh = PoseableMeshes.IsValidIndex(0) ? PoseableMeshes[0] : nullptr;
+      PoseableMesh->SetVisibility(false);
+      SkeletalMesh->SetVisibility(true);
     }
   }
 }
