@@ -149,7 +149,6 @@ Other command-line options
 
   * `-carla-port=N` Listen for client connections at port N, streaming port is set to N+1.
   * `-quality-level={Low,Epic}` Change graphics quality level, "Low" mode runs significantly faster.
-  * `-carla-server-timeout=10000ms` Set server timeout.
   * `-no-rendering` Disable rendering.
   * [Full list of UE4 command-line arguments][ue4clilink].
 
