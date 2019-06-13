@@ -91,26 +91,6 @@ namespace detail {
 #pragma pack(pop)
 
 #pragma pack(push, 1)
-  class PackedWalkerBoneControl {
-  public:
-
-    PackedWalkerBoneControl() = default;
-
-    PackedWalkerBoneControl(const rpc::WalkerBoneControl &control)
-      : bone_transforms(control.bone_transforms) {}
-
-    operator rpc::WalkerBoneControl() const {
-      return {bone_transforms};
-    }
-
-  private:
-
-    std::vector<rpc::BoneTransformData> bone_transforms;
-  };
-
-#pragma pack(pop)
-
-#pragma pack(push, 1)
   struct TrafficLightData {
     TrafficLightData() = default;
 

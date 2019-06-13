@@ -20,7 +20,6 @@ namespace client {
 
   void Walker::ApplyControl(const BoneControl &bone_control) {
     GetEpisode().Lock()->ApplyBoneControlToWalker(*this, bone_control);
-    _bone_control = bone_control;
   }
 
   Walker::Control Walker::GetWalkerControl() const {

@@ -39,7 +39,6 @@ namespace client {
   private:
 
     Control _control;
-    BoneControl _bone_control;
   };
 
 } // namespace client
