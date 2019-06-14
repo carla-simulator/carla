@@ -269,7 +269,7 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
 
       default:
         // skip packet
-        Info << "Unknown packet id: " << Header.Id << " at offset " << File.tellg() << std::endl;
+        // Info << "Unknown packet id: " << Header.Id << " at offset " << File.tellg() << std::endl;
         SkipPacket();
         break;
     }
@@ -442,7 +442,7 @@ std::string CarlaRecorderQuery::QueryCollisions(std::string Filename, char Categ
 
       default:
         // skip packet
-        Info << "Unknown packet id: " << Header.Id << " at offset " << File.tellg() << std::endl;
+        // Info << "Unknown packet id: " << Header.Id << " at offset " << File.tellg() << std::endl;
         SkipPacket();
         break;
     }
@@ -520,7 +520,7 @@ std::string CarlaRecorderQuery::QueryBlocked(std::string Filename, double MinTim
         {
           // add
           EventAdd.Read(File);
-          Actors[EventAdd.DatabaseId] = ReplayerActorInfo { EventAdd.Type, EventAdd.Description.Id };
+          Actors[EventAdd.DatabaseId] = ReplayerActorInfo { EventAdd.Type, EventAdd.Description.Id, FVector(0, 0, 0), 0.0, 0.0 };
         }
         break;
 
@@ -591,7 +591,7 @@ std::string CarlaRecorderQuery::QueryBlocked(std::string Filename, double MinTim
 
       default:
         // skip packet
-        Info << "Unknown packet id: " << Header.Id << " at offset " << File.tellg() << std::endl;
+        // Info << "Unknown packet id: " << Header.Id << " at offset " << File.tellg() << std::endl;
         SkipPacket();
         break;
     }
