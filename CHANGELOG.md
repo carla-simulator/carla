@@ -16,6 +16,7 @@
   * API extension: waypoint's `junction_id` that returns de OpenDrive identifier of the current junction
   * API extension: add gamma value as attribute to RGB camera
   * API extension: add `world.get_actor(id)` to find a single actor by id
+  * API extension: add `carla.WeatherParameters.Default` for a default (tailor-made for each town) weather profile
   * API change: deprecated waypoint's `is_intersection`, now is `is_junction`
   * API update: solve the problem of RuntimeError: std::bad_cast described here: #1125 (comment)
   * Removed deprecated code and content
