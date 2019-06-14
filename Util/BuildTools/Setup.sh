@@ -322,6 +322,8 @@ else
   cmake -G "Ninja" \
       -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC" \
       -DCMAKE_INSTALL_PREFIX="../${RECAST_BASENAME}-install" \
+      -DRECASTNAVIGATION_DEMO=False \
+      -DRECASTNAVIGATION_TEST=False \
       ../${RECAST_BASENAME}-source
 
   ninja
