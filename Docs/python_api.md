@@ -594,6 +594,12 @@ Static presets
 - `actor_id`
 - `transform`
 
+## `carla.command.ApplyTransform2D`
+
+- `__init__(actor, transform)`
+- `actor_id`
+- `transform`
+
 ## `carla.command.ApplyVelocity`
 
 - `__init__(actor, velocity)`
