@@ -397,6 +397,34 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+  BIND_SYNC(set_actor_transform_2D) << [this] (
+      cr::ActorId ActorId,
+      cr::Transform Transform) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to set actor transform: actor not found");
+    }
+    FTransform NewTransform = Transform;
+    FVector NewLocation = NewTransform.GetLocation();
+
+    FTransform CurrentTransform = ActorView.GetActor()->GetTransform();
+    FVector CurrentLocation = CurrentTransform.GetLocation();
+
+    NewLocation.Z = CurrentLocation.Z;
+
+    NewTransform.SetLocation(NewLocation);
+
+    ActorView.GetActor()->SetActorRelativeTransform(
+    NewTransform,
+    false,
+    nullptr,
+    ETeleportType::TeleportPhysics);
+    return R<void>::Success();
+  };
+
   BIND_SYNC(set_actor_velocity) << [this](
       cr::ActorId ActorId,
       cr::Vector3D vector) -> R<void>
@@ -859,6 +887,7 @@ void FCarlaServer::FPimpl::BindActions()
       [=](auto, const C::ApplyVehicleControl &c) {  MAKE_RESULT(apply_control_to_vehicle(c.actor, c.control)); },
       [=](auto, const C::ApplyWalkerControl &c) {   MAKE_RESULT(apply_control_to_walker(c.actor, c.control)); },
       [=](auto, const C::ApplyTransform &c) {       MAKE_RESULT(set_actor_transform(c.actor, c.transform)); },
+      [=](auto, const C::ApplyTransform2D &c) {     MAKE_RESULT(set_actor_transform_2D(c.actor, c.transform)); },
       [=](auto, const C::ApplyVelocity &c) {        MAKE_RESULT(set_actor_velocity(c.actor, c.velocity)); },
       [=](auto, const C::ApplyAngularVelocity &c) { MAKE_RESULT(set_actor_angular_velocity(c.actor, c.angular_velocity)); },
       [=](auto, const C::ApplyImpulse &c) {         MAKE_RESULT(add_actor_impulse(c.actor, c.impulse)); },
