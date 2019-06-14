@@ -128,7 +128,7 @@ bool CarlaReplayerHelper::SetActorSimulatePhysics(FActorView &ActorView, bool bE
 }
 
 // enable / disable autopilot for an actor
-bool CarlaReplayerHelper::SetActorAutopilot(FActorView &ActorView, bool bEnabled)
+bool CarlaReplayerHelper::SetActorAutopilot(FActorView &ActorView, bool bEnabled, bool bKeepState)
 {
   if (!ActorView.IsValid())
   {
@@ -144,7 +144,7 @@ bool CarlaReplayerHelper::SetActorAutopilot(FActorView &ActorView, bool bEnabled
   {
     return false;
   }
-  Controller->SetAutopilot(bEnabled);
+  Controller->SetAutopilot(bEnabled, bKeepState);
 
   return true;
 }
@@ -181,7 +181,7 @@ std::pair<int, uint32_t> CarlaReplayerHelper::ProcessReplayerEventAdd(
       // disable physics
       SetActorSimulatePhysics(result.second, false);
       // disable autopilot
-      SetActorAutopilot(result.second, false);
+      SetActorAutopilot(result.second, false, false);
     }
   }
 
@@ -351,9 +351,29 @@ bool CarlaReplayerHelper::ProcessReplayerFinish(bool bApplyAutopilot)
       SetActorSimulatePhysics(ActorView, true);
       // autopilot
       if (bApplyAutopilot)
-        SetActorAutopilot(ActorView, true);
+        SetActorAutopilot(ActorView, true, true);
     }
   }
   return true;
 }
+
+void CarlaReplayerHelper::SetActorVelocity(uint32_t Id, FVector Velocity)
+{
+  auto registry = Episode->GetActorRegistry();
+  FActorView ActorView = registry.Find(Id);
+  if (!ActorView.IsValid())
+  {
+    return;
+  }
+  auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+  if (RootComponent == nullptr)
+  {
+    return;
+  }
+  RootComponent->SetPhysicsLinearVelocity(
+      Velocity,
+      false,
+      "None");
+}
+
 

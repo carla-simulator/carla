@@ -143,11 +143,11 @@ public:
   }
 
   UFUNCTION(Category = "Wheeled Vehicle Controller", BlueprintCallable)
-  void SetAutopilot(bool Enable)
+  void SetAutopilot(bool Enable, bool KeepState = false)
   {
     if (IsAutopilotEnabled() != Enable)
     {
-      ConfigureAutopilot(Enable);
+      ConfigureAutopilot(Enable, KeepState);
     }
   }
 
@@ -159,7 +159,7 @@ public:
 
 private:
 
-  void ConfigureAutopilot(bool Enable);
+  void ConfigureAutopilot(const bool Enable, const bool KeepState = false);
 
   /// @}
   // ===========================================================================

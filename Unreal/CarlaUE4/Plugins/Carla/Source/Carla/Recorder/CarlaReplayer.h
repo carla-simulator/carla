@@ -137,4 +137,5 @@ private:
 
   void InterpolatePosition(const CarlaRecorderPosition &Start, const CarlaRecorderPosition &End, double Per, double DeltaTime);
 
+  void SetCurrentVelocities(double DeltaTime);
 };
