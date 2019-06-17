@@ -9,8 +9,8 @@
 #include "carla/Iterator.h"
 #include "carla/ListView.h"
 #include "carla/NonCopyable.h"
+#include "carla/client/ActorSnapshot.h"
 #include "carla/client/Timestamp.h"
-#include "carla/sensor/data/ActorDynamicState.h"
 #include "carla/sensor/data/RawEpisodeState.h"
 
 #include <memory>
@@ -25,14 +25,6 @@ namespace detail {
     : std::enable_shared_from_this<EpisodeState>,
       private NonCopyable {
   public:
-
-    struct ActorState {
-      geom::Transform transform;
-      geom::Vector3D velocity;
-      geom::Vector3D angular_velocity;
-      geom::Vector3D acceleration;
-      sensor::data::ActorDynamicState::TypeDependentState state;
-    };
 
     explicit EpisodeState(uint64_t episode_id) : _episode_id(episode_id) {}
 
@@ -50,8 +42,8 @@ namespace detail {
       return _timestamp;
     }
 
-    ActorState GetActorState(ActorId id) const {
-      ActorState state;
+    ActorSnapshot GetActorSnapshot(ActorId id) const {
+      ActorSnapshot state;
       auto it = _actors.find(id);
       if (it != _actors.end()) {
         state = it->second;
@@ -73,7 +65,7 @@ namespace detail {
 
     const Timestamp _timestamp;
 
-    std::unordered_map<ActorId, ActorState> _actors;
+    std::unordered_map<ActorId, ActorSnapshot> _actors;
   };
 
 } // namespace detail

@@ -215,21 +215,25 @@ namespace detail {
 
     bool DestroyActor(Actor &actor);
 
-    auto GetActorDynamicState(const Actor &actor) const {
+    ActorSnapshot GetActorSnapshot(ActorId actor_id) const {
       DEBUG_ASSERT(_episode != nullptr);
-      return _episode->GetState()->GetActorState(actor.GetId());
+      return _episode->GetState()->GetActorSnapshot(actor_id);
+    }
+
+    ActorSnapshot GetActorSnapshot(const Actor &actor) const {
+      return GetActorSnapshot(actor.GetId());
     }
 
     geom::Location GetActorLocation(const Actor &actor) const {
-      return GetActorDynamicState(actor).transform.location;
+      return GetActorSnapshot(actor).transform.location;
     }
 
     geom::Transform GetActorTransform(const Actor &actor) const {
-      return GetActorDynamicState(actor).transform;
+      return GetActorSnapshot(actor).transform;
     }
 
     geom::Vector3D GetActorVelocity(const Actor &actor) const {
-      return GetActorDynamicState(actor).velocity;
+      return GetActorSnapshot(actor).velocity;
     }
 
     void SetActorVelocity(const Actor &actor, const geom::Vector3D &vector) {
@@ -237,7 +241,7 @@ namespace detail {
     }
 
     geom::Vector3D GetActorAngularVelocity(const Actor &actor) const {
-      return GetActorDynamicState(actor).angular_velocity;
+      return GetActorSnapshot(actor).angular_velocity;
     }
 
     void SetActorAngularVelocity(const Actor &actor, const geom::Vector3D &vector) {
@@ -249,7 +253,7 @@ namespace detail {
     }
 
     geom::Vector3D GetActorAcceleration(const Actor &actor) const {
-      return GetActorDynamicState(actor).acceleration;
+      return GetActorSnapshot(actor).acceleration;
     }
 
     void SetActorLocation(Actor &actor, const geom::Location &location) {

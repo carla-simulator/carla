@@ -19,7 +19,7 @@ namespace client {
   }
 
   Walker::Control Walker::GetWalkerControl() const {
-    return GetEpisode().Lock()->GetActorDynamicState(*this).state.walker_control;
+    return GetEpisode().Lock()->GetActorSnapshot(*this).state.walker_control;
   }
 
 } // namespace client
