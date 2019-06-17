@@ -46,14 +46,19 @@ namespace detail {
 
     // Get Random location in nav mesh
     geom::Location GetRandomLocation() {
-      geom::Location random_location;
+      geom::Location random_location(0, 0, 0);
       _nav.GetRandomLocation(random_location, 1.0f);
       return random_location;
     }
 
     // set a new target point to go
-    bool SetWalkerTarget(ActorId id, carla::geom::Location to) {
+    bool SetWalkerTarget(ActorId id, const carla::geom::Location to) {
       return _nav.SetWalkerTarget(id, to);
+    }
+
+    // set new max speed
+    bool SetWalkerMaxSpeed(ActorId id, float max_speed) {
+      return _nav.SetWalkerMaxSpeed(id, max_speed);
     }
 
   private:

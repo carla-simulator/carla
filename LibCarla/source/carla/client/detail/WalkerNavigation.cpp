@@ -18,14 +18,6 @@ namespace detail {
   WalkerNavigation::WalkerNavigation(Client &client) : _client(client) {
     // Here call the server to retrieve the navmesh data.
     _nav.Load(_client.GetNavigationMesh());
-
-    // query the navigation to find a path of points
-    // std::vector<carla::geom::Location> Path;
-    // if (!_nav.GetPath(From, To, nullptr, Path)) {
-    //   logging::log("NAV: Path not found");
-    // }
-    // return Path;
-
   }
 
   void WalkerNavigation::Tick(const EpisodeState &state) {
