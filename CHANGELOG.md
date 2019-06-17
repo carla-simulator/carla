@@ -1,4 +1,6 @@
 ## Latest
+  * Bugfix about recorder query system
+  * Fixed problem when vehicles enable autopilot after a replayer, now it works better.
   * Upgraded to Unreal Engine 4.22
   * Recorder fixes:
     - Fixed a possible crash if an actor is respawned before the episode is ready when a new map is loaded automatically.
