@@ -137,9 +137,9 @@ namespace detail {
     // =========================================================================
     /// @{
 
-    Timestamp WaitForTick(time_duration timeout);
+    WorldSnapshot WaitForTick(time_duration timeout);
 
-    void RegisterOnTickEvent(std::function<void(Timestamp)> callback) {
+    void RegisterOnTickEvent(std::function<void(WorldSnapshot)> callback) {
       DEBUG_ASSERT(_episode != nullptr);
       _episode->RegisterOnTickEvent(std::move(callback));
     }
