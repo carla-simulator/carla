@@ -23,6 +23,8 @@ class CARLA_API ASensor : public AActor
 
 public:
 
+  ASensor(const FObjectInitializer &ObjectInitializer);
+
   void SetEpisode(const UCarlaEpisode &InEpisode)
   {
     Episode = &InEpisode;
@@ -45,6 +47,8 @@ public:
   }
 
 protected:
+
+  void PostActorCreated() override;
 
   void EndPlay(EEndPlayReason::Type EndPlayReason) override;
 

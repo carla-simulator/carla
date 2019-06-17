@@ -5,7 +5,6 @@
 
 #include "Carla.h"
 #include "Carla/Sensor/GnssSensor.h"
-#include "StaticMeshResources.h"
 
 FActorDefinition AGnssSensor::GetSensorDefinition()
 {
@@ -16,11 +15,4 @@ AGnssSensor::AGnssSensor(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
 {
   PrimaryActorTick.bCanEverTick = false;
-
-  auto MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RootComponent"));
-  MeshComp->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
-  MeshComp->bHiddenInGame = true;
-  MeshComp->CastShadow = false;
-  MeshComp->PostPhysicsComponentTick.bCanEverTick = false;
-  RootComponent = MeshComp;
 }
