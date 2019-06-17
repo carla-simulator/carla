@@ -10,23 +10,47 @@
 #include "carla/Logging.h"
 #include "carla/nav/Navigation.h"
 
-#include <iostream>
 #include <iterator>
 #include <fstream>
 
 namespace carla {
 namespace nav {
 
+  enum SamplePolyAreas {
+    SAMPLE_POLYAREA_GROUND,
+    SAMPLE_POLYAREA_WATER,
+    SAMPLE_POLYAREA_ROAD,
+    SAMPLE_POLYAREA_DOOR,
+    SAMPLE_POLYAREA_GRASS,
+    SAMPLE_POLYAREA_JUMP,
+  };
+
+  enum SamplePolyFlags {
+    SAMPLE_POLYFLAGS_WALK		    = 0x01,		// Ability to walk (ground, grass, road)
+    SAMPLE_POLYFLAGS_SWIM		    = 0x02,		// Ability to swim (water).
+    SAMPLE_POLYFLAGS_DOOR		    = 0x04,		// Ability to move through doors.
+    SAMPLE_POLYFLAGS_JUMP		    = 0x08,		// Ability to jump.
+    SAMPLE_POLYFLAGS_DISABLED	  = 0x10,		// Disabled polygon
+    SAMPLE_POLYFLAGS_ALL		    = 0xffff	// All abilities.
+  };
+
+  enum UpdateFlags
+  {
+    DT_CROWD_ANTICIPATE_TURNS = 1,
+    DT_CROWD_OBSTACLE_AVOIDANCE = 2,
+    DT_CROWD_SEPARATION = 4,
+    DT_CROWD_OPTIMIZE_VIS = 8,			///< Use #dtPathCorridor::optimizePathVisibility() to optimize the agent path.
+    DT_CROWD_OPTIMIZE_TOPO = 16,		///< Use dtPathCorridor::optimizePathTopology() to optimize the agent path.
+  };
+
   static const int MAX_POLYS = 256;
   static const int MAX_AGENTS = 500;
+  static const int MAX_QUERY_SEARCH_NODES = 2048;
   static const float AGENT_RADIUS = 0.3f;
 
   // return a random float
   float frand() {
     return static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-  }
-
-  Navigation::Navigation() {
   }
 
   Navigation::~Navigation() {
@@ -84,6 +108,10 @@ namespace nav {
 
     // allocate object
     dtNavMesh* mesh = dtAllocNavMesh();
+    if (!mesh) {
+      return false;
+    }
+
     // set number of tiles and origin
     dtStatus status = mesh->init(&header.params);
     if (dtStatusFailed(status)) {
@@ -131,7 +159,7 @@ namespace nav {
     // prepare the query object
     dtFreeNavMeshQuery(_navQuery);
     _navQuery = dtAllocNavMeshQuery();
-    _navQuery->init(_navMesh, 2048);
+    _navQuery->init(_navMesh, MAX_QUERY_SEARCH_NODES);
 
     // create and init the crowd manager
     CreateCrowd();
@@ -309,6 +337,23 @@ namespace nav {
     return true;
   }
 
+  // set new max speed
+  bool Navigation::SetWalkerMaxSpeed(ActorId id, float max_speed) {
+    // get the internal index
+    auto it = _mappedId.find(id);
+    if (it == _mappedId.end())
+      return false;
+
+    // get the agent
+    dtCrowdAgent *agent = _crowd->getEditableAgent(it->second);
+    if (agent) {
+      agent->params.maxSpeed = max_speed;
+      return true;
+    }
+
+    return false;
+  }
+
   // set a new target point to go
   bool Navigation::SetWalkerTarget(ActorId id, carla::geom::Location to) {
     // get the internal index
@@ -459,6 +504,8 @@ namespace nav {
         location.z = point[1];
         if (maxHeight == -1.0f || (maxHeight >= 0.0f && location.z <= maxHeight))
           break;
+      } else {
+        throw_exception(std::runtime_error("no valid random point from navigation could be found, check filter or mesh."));
       }
     }
     while (1);

@@ -21,37 +21,10 @@
 namespace carla {
 namespace nav {
 
-  enum SamplePolyAreas {
-    SAMPLE_POLYAREA_GROUND,
-    SAMPLE_POLYAREA_WATER,
-    SAMPLE_POLYAREA_ROAD,
-    SAMPLE_POLYAREA_DOOR,
-    SAMPLE_POLYAREA_GRASS,
-    SAMPLE_POLYAREA_JUMP,
-  };
-
-  enum SamplePolyFlags {
-    SAMPLE_POLYFLAGS_WALK		    = 0x01,		// Ability to walk (ground, grass, road)
-    SAMPLE_POLYFLAGS_SWIM		    = 0x02,		// Ability to swim (water).
-    SAMPLE_POLYFLAGS_DOOR		    = 0x04,		// Ability to move through doors.
-    SAMPLE_POLYFLAGS_JUMP		    = 0x08,		// Ability to jump.
-    SAMPLE_POLYFLAGS_DISABLED	  = 0x10,		// Disabled polygon
-    SAMPLE_POLYFLAGS_ALL		    = 0xffff	// All abilities.
-  };
-
-  enum UpdateFlags
-  {
-    DT_CROWD_ANTICIPATE_TURNS = 1,
-    DT_CROWD_OBSTACLE_AVOIDANCE = 2,
-    DT_CROWD_SEPARATION = 4,
-    DT_CROWD_OPTIMIZE_VIS = 8,			///< Use #dtPathCorridor::optimizePathVisibility() to optimize the agent path.
-    DT_CROWD_OPTIMIZE_TOPO = 16,		///< Use dtPathCorridor::optimizePathTopology() to optimize the agent path.
-  };
-
   class Navigation {
 
     public:
-    Navigation();
+    Navigation() = default;
     ~Navigation();
 
     // load navigation data
@@ -65,6 +38,8 @@ namespace nav {
     void CreateCrowd(void);
     // create a new walker
     bool AddWalker(ActorId id, carla::geom::Location from, float base_offset);
+    // set new max speed
+    bool SetWalkerMaxSpeed(ActorId id, float max_speed);
     // set a new target point to go
     bool SetWalkerTarget(ActorId id, carla::geom::Location to);
     bool SetWalkerTargetIndex(int index, carla::geom::Location to);

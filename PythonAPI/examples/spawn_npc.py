@@ -178,6 +178,7 @@ def main():
                 # walk to random point
                 target = world.get_random_location_from_navigation()
                 all_actors[i].go_to_location(target)
+                all_actors[i].set_max_speed(1.3 + random.random() * 0.5)
 
         print('spawned %d walkers, press Ctrl+C to exit.' % len(info))
 
