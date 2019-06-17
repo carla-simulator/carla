@@ -359,16 +359,8 @@ void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
   // stop replay?
   if (CurrentTime >= TimeToStop)
   {
-    // check if we need to stop the replayer and let it continue in simulation
-    // mode
-    if (TimeToStop < TotalTime)
-    {
-      Stop(true); // keep actors in scene so they continue with AI
-    }
-    else
-    {
-      Stop();
-    }
+    // keep actors in scene and let them continue with autopilot
+    Stop(true);
   }
 }
 
@@ -600,31 +592,5 @@ void CarlaReplayer::Tick(float Delta)
   if (Enabled)
   {
     ProcessToTime(Delta * TimeFactor, false);
-  }
-}
-
-void CarlaReplayer::SetCurrentVelocities(double DeltaTime)
-{
-  unsigned int i;
-  std::unordered_map<int, int> TempMap;
-
-  // map the id of all previous positions to its index
-  for (i = 0; i < PrevPos.size(); ++i)
-  {
-    TempMap[PrevPos[i].DatabaseId] = i;
-  }
-
-  // go through each actor and update
-  for (i = 0; i < CurrPos.size(); ++i)
-  {
-    // check if exist a previous position
-    auto Result = TempMap.find(CurrPos[i].DatabaseId);
-    if (Result != TempMap.end())
-    {
-        // calculate velocity
-        FVector Veloc = (CurrPos[i].Location - PrevPos[Result->second].Location) / DeltaTime;
-        // assign velocity
-        Helper.SetActorVelocity(CurrPos[i].DatabaseId, Veloc);
-    }
   }
 }

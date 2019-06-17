@@ -357,23 +357,4 @@ bool CarlaReplayerHelper::ProcessReplayerFinish(bool bApplyAutopilot)
   return true;
 }
 
-void CarlaReplayerHelper::SetActorVelocity(uint32_t Id, FVector Velocity)
-{
-  auto registry = Episode->GetActorRegistry();
-  FActorView ActorView = registry.Find(Id);
-  if (!ActorView.IsValid())
-  {
-    return;
-  }
-  auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
-  if (RootComponent == nullptr)
-  {
-    return;
-  }
-  RootComponent->SetPhysicsLinearVelocity(
-      Velocity,
-      false,
-      "None");
-}
-
 

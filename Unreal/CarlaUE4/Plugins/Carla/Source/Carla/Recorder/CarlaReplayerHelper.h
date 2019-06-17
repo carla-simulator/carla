@@ -52,9 +52,6 @@ public:
   // set the camera position to follow an actor
   bool SetCameraPosition(uint32_t Id, FVector Offset, FQuat Rotation);
 
-  // set the velocity of the actor
-  void SetActorVelocity(uint32_t Id, FVector Velocity);
-
 private:
 
   UCarlaEpisode *Episode {nullptr};
