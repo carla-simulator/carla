@@ -34,8 +34,6 @@ namespace client {
 namespace detail {
 
   /// Connects and controls a CARLA Simulator.
-  ///
-  /// @todo Make sure this class is really thread-safe.
   class Simulator
     : public std::enable_shared_from_this<Simulator>,
       private profiler::LifetimeProfiled,
@@ -393,7 +391,7 @@ namespace detail {
 
     std::shared_ptr<Episode> _episode;
 
-    GarbageCollectionPolicy _gc_policy;
+    const GarbageCollectionPolicy _gc_policy;
   };
 
 } // namespace detail
