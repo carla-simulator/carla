@@ -43,6 +43,12 @@ void export_snapshot() {
   class_<cc::WorldSnapshot>("WorldSnapshot", no_init)
     .add_property("id", &cc::WorldSnapshot::GetId)
     .add_property("timestamp", CALL_RETURNING_COPY(cc::WorldSnapshot, GetTimestamp))
+    /// Deprecated, use timestamp @{
+    .add_property("frame_count", +[](const cc::WorldSnapshot &self) { return self.GetTimestamp().frame_count; })
+    .add_property("elapsed_seconds", +[](const cc::WorldSnapshot &self) { return self.GetTimestamp().elapsed_seconds; })
+    .add_property("delta_seconds", +[](const cc::WorldSnapshot &self) { return self.GetTimestamp().delta_seconds; })
+    .add_property("platform_timestamp", +[](const cc::WorldSnapshot &self) { return self.GetTimestamp().platform_timestamp; })
+    /// @}
     .def("has_actor", &cc::WorldSnapshot::Contains, (arg("actor_id")))
     .def("find", CALL_RETURNING_OPTIONAL_1(cc::WorldSnapshot, Find, carla::ActorId), (arg("actor_id")))
     .def("__len__", &cc::WorldSnapshot::size)

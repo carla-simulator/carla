@@ -51,7 +51,7 @@ class TestSynchronousMode(SmokeTest):
 
             for _ in range(0, 100):
                 self.world.tick()
-                ts = self.world.wait_for_tick()
+                ts = self.world.wait_for_tick().timestamp
 
                 if frame is not None:
                     self.assertEqual(ts.frame_count, frame + 1)

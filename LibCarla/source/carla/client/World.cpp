@@ -89,11 +89,11 @@ namespace client {
     }
   }
 
-  Timestamp World::WaitForTick(time_duration timeout) const {
+  WorldSnapshot World::WaitForTick(time_duration timeout) const {
     return _episode.Lock()->WaitForTick(timeout);
   }
 
-  void World::OnTick(std::function<void(Timestamp)> callback) {
+  void World::OnTick(std::function<void(WorldSnapshot)> callback) {
     return _episode.Lock()->RegisterOnTickEvent(std::move(callback));
   }
 

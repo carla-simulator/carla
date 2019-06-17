@@ -62,10 +62,10 @@ namespace client {
     log_debug(GetDisplayId(), ": subscribing to tick event");
     GetEpisode().Lock()->RegisterOnTickEvent([
         cb=std::move(callback),
-        weak_self=WeakPtr<LaneInvasionSensor>(self)](const auto &timestamp) {
+        weak_self=WeakPtr<LaneInvasionSensor>(self)](const auto &snapshot) {
       auto self = weak_self.lock();
       if (self != nullptr) {
-        auto data = self->TickLaneInvasionSensor(timestamp);
+        auto data = self->TickLaneInvasionSensor(snapshot.GetTimestamp());
         if (data != nullptr) {
           cb(std::move(data));
         }

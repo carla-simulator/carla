@@ -63,7 +63,7 @@ namespace detail {
 
     struct mapped_type {
       bool should_wait;
-      boost::variant<T, SharedException> value;
+      boost::variant<SharedException, T> value;
     };
 
     std::map<const char *, mapped_type> _map;
@@ -79,6 +79,9 @@ namespace detail {
 
   class SharedException : public std::exception {
   public:
+
+    SharedException()
+      : _exception(std::make_shared<std::runtime_error>("uninitialized SharedException")) {}
 
     SharedException(std::shared_ptr<std::exception> e)
       : _exception(std::move(e)) {}
@@ -106,7 +109,7 @@ namespace detail {
     if (!_cv.wait_for(lock, timeout.to_chrono(), [&]() { return !r.should_wait; })) {
       return {};
     }
-    if (r.value.which() == 1) {
+    if (r.value.which() == 0) {
       throw_exception(boost::get<SharedException>(r.value));
     }
     return boost::get<T>(std::move(r.value));

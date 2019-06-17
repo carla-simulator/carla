@@ -18,6 +18,9 @@ namespace client {
   class WorldSnapshot {
   public:
 
+    WorldSnapshot(std::shared_ptr<const detail::EpisodeState> state)
+      : _state(std::move(state)) {}
+
     /// Get the id of the episode associated with this world.
     uint64_t GetId() const {
       return _state->GetEpisodeId();
@@ -62,11 +65,6 @@ namespace client {
     }
 
   private:
-
-    friend class detail::Simulator;
-
-    explicit WorldSnapshot(std::shared_ptr<const detail::EpisodeState> &&state)
-      : _state(std::move(state)) {}
 
     std::shared_ptr<const detail::EpisodeState> _state;
   };

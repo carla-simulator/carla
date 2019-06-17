@@ -95,10 +95,10 @@ namespace client {
         rpc::AttachmentType attachment_type = rpc::AttachmentType::Rigid) noexcept;
 
     /// Block calling thread until a world tick is received.
-    Timestamp WaitForTick(time_duration timeout) const;
+    WorldSnapshot WaitForTick(time_duration timeout) const;
 
     /// Register a @a callback to be called every time a world tick is received.
-    void OnTick(std::function<void(Timestamp)> callback);
+    void OnTick(std::function<void(WorldSnapshot)> callback);
 
     /// Signal the simulator to continue to next tick (only has effect on
     /// synchronous mode).
