@@ -14,6 +14,7 @@
 #include "carla/client/TrafficLight.h"
 #include "carla/client/Vehicle.h"
 #include "carla/client/Walker.h"
+#include "carla/client/WorldSnapshot.h"
 #include "carla/client/detail/ActorFactory.h"
 #include "carla/client/detail/Client.h"
 #include "carla/client/detail/Episode.h"
@@ -78,6 +79,17 @@ namespace detail {
     }
 
     EpisodeProxy GetCurrentEpisode();
+
+    /// @}
+    // =========================================================================
+    /// @name World snapshot
+    // =========================================================================
+    /// @{
+
+    WorldSnapshot GetWorldSnapshot() const {
+      DEBUG_ASSERT(_episode != nullptr);
+      return WorldSnapshot{_episode->GetState()};
+    }
 
     /// @}
     // =========================================================================
