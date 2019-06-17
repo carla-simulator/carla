@@ -50,6 +50,21 @@
 - `__eq__(other)`
 - `__ne__(other)`
 
+## `carla.WorldSnapshot`
+
+- `id`
+- `timestamp`
+- `frame_count [deprecated: use timestamp]`
+- `elapsed_seconds [deprecated: use timestamp]`
+- `delta_seconds [deprecated: use timestamp]`
+- `platform_timestamp [deprecated: use timestamp]`
+- `has_actor(actor_id) -> bool`
+- `find(actor_id) -> carla.ActorSnapshot`
+- `__len()__`
+- `__iter()__`
+- `__eq(other)__`
+- `__ne(other)__`
+
 ## `carla.DebugHelper`
 
 - `draw_point(location, size=0.1, color=carla.Color(), life_time=-1.0, persistent_lines=True)`
@@ -126,6 +141,16 @@
 - `add_impulse(vector)`
 - `set_simulate_physics(enabled=True)`
 - `destroy()`
+- `__str__()`
+
+## `carla.ActorSnapshot`
+
+- `id`
+- `get_location()`
+- `get_transform()`
+- `get_velocity()`
+- `get_angular_velocity()`
+- `get_acceleration()`
 - `__str__()`
 
 ## `carla.Vehicle(carla.Actor)`
