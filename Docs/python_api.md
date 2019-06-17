@@ -368,6 +368,7 @@
 
 Static presets
 
+- `carla.WeatherParameters.Default`
 - `carla.WeatherParameters.ClearNoon`
 - `carla.WeatherParameters.CloudyNoon`
 - `carla.WeatherParameters.WetNoon`
