@@ -50,8 +50,6 @@ namespace detail {
 
   /// Provides communication with the rpc and streaming servers of a CARLA
   /// simulator.
-  ///
-  /// @todo Make sure this class is really thread-safe.
   class Client : private NonCopyable {
   public:
 
