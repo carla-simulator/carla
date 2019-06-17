@@ -21,24 +21,34 @@ namespace client {
     auto walker = GetParent();
     if (walker != nullptr) {
       auto nav = GetEpisode().Lock()->GetNavigation();
-      nav->AddWalker(walker->GetId(), location);
+      if (nav != nullptr) {
+        nav->AddWalker(walker->GetId(), location);
+      }
     }
   }
 
   geom::Location WalkerAIController::GetRandomLocation() {
     auto nav = GetEpisode().Lock()->GetNavigation();
-    return nav->GetRandomLocation();
+    if (nav != nullptr) {
+      return nav->GetRandomLocation();
+    }
+    return geom::Location(0, 0, 0);
   }
 
   void WalkerAIController::GoToLocation(const carla::geom::Location &destination) {
     auto nav = GetEpisode().Lock()->GetNavigation();
-    if (!nav->SetWalkerTarget(GetParent()->GetId(), destination))
-      logging::log("NAV: Failed to set request to go to ", destination.x, destination.y, destination.z);
+    if (nav != nullptr) {
+      if (!nav->SetWalkerTarget(GetParent()->GetId(), destination))
+        logging::log("NAV: Failed to set request to go to ", destination.x, destination.y, destination.z);
+    }
   }
 
   void WalkerAIController::SetMaxSpeed(const float max_speed) {
-
-    logging::log("SET MAX SPEED: ", max_speed);
+  auto nav = GetEpisode().Lock()->GetNavigation();
+    if (nav != nullptr) {
+      if (!nav->SetWalkerMaxSpeed(GetParent()->GetId(), max_speed))
+        logging::log("NAV: failed to set max speed");
+    }
   }
 
 } // namespace client
