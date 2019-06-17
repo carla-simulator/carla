@@ -449,6 +449,15 @@ class MapImage(object):
         self.width = max(max_x - min_x, max_y - min_y)
         self._world_offset = (min_x, min_y)
 
+        # Maximum size of a Pygame surface
+        width_in_pixels = (1 << 14) - 1
+
+        # Adapt Pixels per meter to make world fit in surface
+        surface_pixel_per_meter = int(width_in_pixels / self.width)
+        if surface_pixel_per_meter > PIXELS_PER_METER:
+            surface_pixel_per_meter = PIXELS_PER_METER
+
+        self._pixels_per_meter = surface_pixel_per_meter
         width_in_pixels = int(self._pixels_per_meter * self.width)
 
         self.big_map_surface = pygame.Surface((width_in_pixels, width_in_pixels)).convert()

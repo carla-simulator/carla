@@ -21,6 +21,7 @@ namespace rpc {
     /// @name Weather presets
     /// @{
 
+    static WeatherParameters Default;
     static WeatherParameters ClearNoon;
     static WeatherParameters CloudyNoon;
     static WeatherParameters WetNoon;

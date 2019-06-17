@@ -11,6 +11,7 @@
 #include "Carla/Sensor/WorldObserver.h"
 #include "Carla/Server/CarlaServer.h"
 #include "Carla/Settings/EpisodeSettings.h"
+#include "Carla/Util/ActorAttacher.h"
 #include "Carla/Weather/Weather.h"
 
 #include "GameFramework/Pawn.h"
@@ -213,7 +214,10 @@ public:
   ///
   /// @pre Actors cannot be null.
   UFUNCTION(BlueprintCallable)
-  void AttachActors(AActor *Child, AActor *Parent);
+  void AttachActors(
+      AActor *Child,
+      AActor *Parent,
+      EAttachmentType InAttachmentType = EAttachmentType::Rigid);
 
   /// @copydoc FActorDispatcher::DestroyActor(AActor*)
   UFUNCTION(BlueprintCallable)

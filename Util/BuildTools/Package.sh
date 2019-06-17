@@ -69,8 +69,7 @@ if $DO_PACKAGE ; then
       -project="${PWD}/CarlaUE4.uproject" \
       -nocompileeditor -nop4 -cook -stage -archive -package \
       -clientconfig=Development -ue4exe=UE4Editor \
-      -prereqs -nodebuginfo \
-      -targetplatform=Linux -build -utf8output \
+      -prereqs -targetplatform=Linux -build -utf8output \
       -archivedirectory="${BUILD_FOLDER}"
 
   popd >/dev/null
@@ -93,7 +92,7 @@ if $DO_COPY_FILES ; then
 
   pushd ${CARLA_ROOT_FOLDER} >/dev/null
 
-  mkdir -p "${DESTINATION}/ExportedMaps"
+  mkdir -p "${DESTINATION}/ExportedAssets"
 
   echo "${REPOSITORY_TAG}" > ${DESTINATION}/VERSION
 
@@ -102,7 +101,7 @@ if $DO_COPY_FILES ; then
   copy_if_changed "./Docs/release_readme.md" "${DESTINATION}/README"
   copy_if_changed "./Docs/python_api.md" "${DESTINATION}/PythonAPI/python_api.md"
   copy_if_changed "./Util/Docker/Release.Dockerfile" "${DESTINATION}/Dockerfile"
-  copy_if_changed "./Util/ImportMaps.sh" "${DESTINATION}/ImportMaps.sh"
+  copy_if_changed "./Util/ImportAssets.sh" "${DESTINATION}/ImportAssets.sh"
 
   copy_if_changed "./PythonAPI/carla/dist/*.egg" "${DESTINATION}/PythonAPI/carla/dist/"
   copy_if_changed "./PythonAPI/carla/agents/" "${DESTINATION}/PythonAPI/carla/agents"

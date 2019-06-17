@@ -13,7 +13,6 @@
 #include "carla/client/Map.h"
 #include "carla/client/Sensor.h"
 #include "carla/client/TimeoutException.h"
-#include "carla/client/detail/ActorFactory.h"
 #include "carla/sensor/Deserializer.h"
 
 #include <exception>
@@ -115,11 +114,7 @@ namespace detail {
   }
 
   SharedPtr<Actor> Simulator::GetSpectator() {
-    return ActorFactory::MakeActor(
-        GetCurrentEpisode(),
-        _client.GetSpectator(),
-        nullptr,
-        GarbageCollectionPolicy::Disabled);
+    return MakeActor(_client.GetSpectator());
   }
 
   // ===========================================================================
@@ -130,13 +125,15 @@ namespace detail {
       const ActorBlueprint &blueprint,
       const geom::Transform &transform,
       Actor *parent,
+      rpc::AttachmentType attachment_type,
       GarbageCollectionPolicy gc) {
     rpc::Actor actor;
     if (parent != nullptr) {
       actor = _client.SpawnActorWithParent(
           blueprint.MakeActorDescription(),
           transform,
-          parent->GetId());
+          parent->GetId(),
+          attachment_type);
     } else {
       actor = _client.SpawnActor(
           blueprint.MakeActorDescription(),
@@ -145,8 +142,7 @@ namespace detail {
     DEBUG_ASSERT(_episode != nullptr);
     _episode->RegisterActor(actor);
     const auto gca = (gc == GarbageCollectionPolicy::Inherit ? _gc_policy : gc);
-    auto parent_ptr = parent != nullptr ? parent->shared_from_this() : SharedPtr<Actor>();
-    auto result = ActorFactory::MakeActor(GetCurrentEpisode(), actor, parent_ptr, gca);
+    auto result = ActorFactory::MakeActor(GetCurrentEpisode(), actor, gca);
     log_debug(
         result->GetDisplayId(),
         "created",

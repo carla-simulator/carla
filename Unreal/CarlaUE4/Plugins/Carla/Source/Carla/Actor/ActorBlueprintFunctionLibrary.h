@@ -93,6 +93,17 @@ public:
       TArray<FActorDefinition> &Definitions);
 
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakeTriggerDefinitions(
+      const TArray<FString> &ParameterArray,
+      TArray<FActorDefinition> &Definitions);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakeTriggerDefinition(
+      const FString &Id,
+      bool &Success,
+      FActorDefinition &Definition);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static void MakePropDefinition(
       const FPropParameters &Parameters,
       bool &Success,
@@ -105,9 +116,9 @@ public:
 
   UFUNCTION()
   static void MakeObstacleDetectorDefinitions(
-    const FString &Type,
-    const FString &Id,
-    FActorDefinition &Definition);
+      const FString &Type,
+      const FString &Id,
+      FActorDefinition &Definition);
 
   /// @}
   /// ==========================================================================

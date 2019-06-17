@@ -45,6 +45,14 @@ namespace client {
     _episode.Lock()->SetWeatherParameters(weather);
   }
 
+  SharedPtr<Actor> World::GetActor(ActorId id) const {
+    auto simulator = _episode.Lock();
+    auto description = simulator->GetActorById(id);
+    return description.has_value() ?
+        simulator->MakeActor(std::move(*description)) :
+        nullptr;
+  }
+
   SharedPtr<ActorList> World::GetActors() const {
     return SharedPtr<ActorList>{new ActorList{
                                   _episode,
@@ -60,16 +68,18 @@ namespace client {
   SharedPtr<Actor> World::SpawnActor(
       const ActorBlueprint &blueprint,
       const geom::Transform &transform,
-      Actor *parent_actor) {
-    return _episode.Lock()->SpawnActor(blueprint, transform, parent_actor);
+      Actor *parent_actor,
+      rpc::AttachmentType attachment_type) {
+    return _episode.Lock()->SpawnActor(blueprint, transform, parent_actor, attachment_type);
   }
 
   SharedPtr<Actor> World::TrySpawnActor(
       const ActorBlueprint &blueprint,
       const geom::Transform &transform,
-      Actor *parent_actor) noexcept {
+      Actor *parent_actor,
+      rpc::AttachmentType attachment_type) noexcept {
     try {
-      return SpawnActor(blueprint, transform, parent_actor);
+      return SpawnActor(blueprint, transform, parent_actor, attachment_type);
     } catch (const std::exception &e) {
       return nullptr;
     }

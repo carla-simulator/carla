@@ -459,6 +459,7 @@ namespace road {
   }
 
   std::vector<Waypoint> Map::GenerateWaypoints(const double distance) const {
+    RELEASE_ASSERT(distance > 0.0);
     std::vector<Waypoint> result;
     for (const auto &pair : _data.GetRoads()) {
       const auto &road = pair.second;

@@ -67,6 +67,36 @@ public:
   UFUNCTION(BlueprintCallable)
   float GetFOVAngle() const;
 
+  UFUNCTION(BlueprintCallable)
+  void SetTargetGamma(float InTargetGamma)
+  {
+    TargetGamma = InTargetGamma;
+  }
+
+  UFUNCTION(BlueprintCallable)
+  float GetTargetGamma() const
+  {
+    return TargetGamma;
+  }
+
+  UFUNCTION(BlueprintCallable)
+  void SetMotionBlurIntensity(float Intensity);
+
+  UFUNCTION(BlueprintCallable)
+  float GetMotionBlurIntensity() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetMotionBlurMaxDistortion(float MaxDistortion);
+
+  UFUNCTION(BlueprintCallable)
+  float GetMotionBlurMaxDistortion() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetMotionBlurMinObjectScreenSize(float ScreenSize);
+
+  UFUNCTION(BlueprintCallable)
+  float GetMotionBlurMinObjectScreenSize() const;
+
   /// Use for debugging purposes only.
   UFUNCTION(BlueprintCallable)
   bool ReadPixels(TArray<FColor> &BitMap) const
@@ -110,6 +140,9 @@ private:
   /// Whether to render the post-processing effects present in the scene.
   UPROPERTY(EditAnywhere)
   bool bEnablePostProcessingEffects = true;
+
+  UPROPERTY(EditAnywhere)
+  float TargetGamma = 2.2f;
 
   /// Render target necessary for scene capture.
   UPROPERTY(EditAnywhere)

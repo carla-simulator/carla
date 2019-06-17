@@ -26,7 +26,7 @@ namespace SceneCaptureSensor_local_ns {
 
   static void SetCameraDefaultOverrides(USceneCaptureComponent2D &CaptureComponent2D);
 
-  static void RemoveShowFlags(FEngineShowFlags &ShowFlags);
+  static void ConfigureShowFlags(FEngineShowFlags &ShowFlags, bool bPostProcessing = true);
 
   static auto GetQualitySettings(UWorld *World)
   {
@@ -41,7 +41,7 @@ namespace SceneCaptureSensor_local_ns {
 // -- ASceneCaptureSensor ------------------------------------------------------
 // =============================================================================
 
-ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer& ObjectInitializer)
+ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
 {
   PrimaryActorTick.bCanEverTick = true;
@@ -71,6 +71,7 @@ ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer& ObjectInitial
   CaptureComponent2D = CreateDefaultSubobject<USceneCaptureComponent2D>(
       FName(*FString::Printf(TEXT("SceneCaptureComponent2D_%d"), SCENE_CAPTURE_COUNTER)));
   CaptureComponent2D->SetupAttachment(MeshComp);
+
   SceneCaptureSensor_local_ns::SetCameraDefaultOverrides(*CaptureComponent2D);
 
   ++SCENE_CAPTURE_COUNTER;
@@ -98,6 +99,42 @@ float ASceneCaptureSensor::GetFOVAngle() const
 {
   check(CaptureComponent2D != nullptr);
   return CaptureComponent2D->FOVAngle;
+}
+
+void ASceneCaptureSensor::SetMotionBlurIntensity(float Intensity)
+{
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->PostProcessSettings.MotionBlurAmount = Intensity;
+}
+
+float ASceneCaptureSensor::GetMotionBlurIntensity() const
+{
+  check(CaptureComponent2D != nullptr);
+  return CaptureComponent2D->PostProcessSettings.MotionBlurAmount;
+}
+
+void ASceneCaptureSensor::SetMotionBlurMaxDistortion(float MaxDistortion)
+{
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->PostProcessSettings.MotionBlurMax = MaxDistortion;
+}
+
+float ASceneCaptureSensor::GetMotionBlurMaxDistortion() const
+{
+  check(CaptureComponent2D != nullptr);
+  return CaptureComponent2D->PostProcessSettings.MotionBlurMax;
+}
+
+void ASceneCaptureSensor::SetMotionBlurMinObjectScreenSize(float ScreenSize)
+{
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->PostProcessSettings.MotionBlurPerObjectSize = ScreenSize;
+}
+
+float ASceneCaptureSensor::GetMotionBlurMinObjectScreenSize() const
+{
+  check(CaptureComponent2D != nullptr);
+  return CaptureComponent2D->PostProcessSettings.MotionBlurPerObjectSize;
 }
 
 void ASceneCaptureSensor::PostActorCreated()
@@ -133,11 +170,17 @@ void ASceneCaptureSensor::BeginPlay()
   using namespace SceneCaptureSensor_local_ns;
 
   // Setup render target.
+
+  // Determine the gamma of the player.
+
   const bool bInForceLinearGamma = !bEnablePostProcessingEffects;
-  if (bEnablePostProcessingEffects) {
-    CaptureRenderTarget->TargetGamma = 2.4f;
-  }
+
   CaptureRenderTarget->InitCustomFormat(ImageWidth, ImageHeight, PF_B8G8R8A8, bInForceLinearGamma);
+
+  if (bEnablePostProcessingEffects)
+  {
+    CaptureRenderTarget->TargetGamma = TargetGamma;
+  }
 
   check(IsValid(CaptureComponent2D) && !CaptureComponent2D->IsPendingKill());
 
@@ -158,11 +201,6 @@ void ASceneCaptureSensor::BeginPlay()
     CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
   }
 
-  if (!bEnablePostProcessingEffects)
-  {
-    SceneCaptureSensor_local_ns::RemoveShowFlags(CaptureComponent2D->ShowFlags);
-  }
-
   CaptureComponent2D->UpdateContent();
   CaptureComponent2D->Activate();
 
@@ -170,6 +208,9 @@ void ASceneCaptureSensor::BeginPlay()
   UKismetSystemLibrary::ExecuteConsoleCommand(
       GetWorld(),
       FString("g.TimeoutForBlockOnRenderFence 300000"));
+
+  SceneCaptureSensor_local_ns::ConfigureShowFlags(CaptureComponent2D->ShowFlags,
+      bEnablePostProcessingEffects);
 
   Super::BeginPlay();
 }
@@ -189,8 +230,8 @@ void ASceneCaptureSensor::UpdateDrawFrustum()
     // 1000 is the default frustum distance, ideally this would be infinite but
     // that might cause rendering issues.
     DrawFrustum->FrustumEndDist =
-      (CaptureComponent2D->MaxViewDistanceOverride > DrawFrustum->FrustumStartDist)
-      ? CaptureComponent2D->MaxViewDistanceOverride : 1000.0f;
+        (CaptureComponent2D->MaxViewDistanceOverride > DrawFrustum->FrustumStartDist)
+        ? CaptureComponent2D->MaxViewDistanceOverride : 1000.0f;
 
     DrawFrustum->FrustumAngle = CaptureComponent2D->FOVAngle;
   }
@@ -205,20 +246,28 @@ namespace SceneCaptureSensor_local_ns {
   static void SetCameraDefaultOverrides(USceneCaptureComponent2D &CaptureComponent2D)
   {
     auto &PostProcessSettings = CaptureComponent2D.PostProcessSettings;
-    PostProcessSettings.bOverride_AutoExposureMethod = true;
-    PostProcessSettings.AutoExposureMethod = AEM_Histogram;
-    PostProcessSettings.bOverride_AutoExposureMinBrightness = true;
-    PostProcessSettings.AutoExposureMinBrightness = 0.27f;
-    PostProcessSettings.bOverride_AutoExposureMaxBrightness = true;
-    PostProcessSettings.AutoExposureMaxBrightness = 5.0f;
-    PostProcessSettings.bOverride_AutoExposureBias = true;
-    PostProcessSettings.AutoExposureBias = -3.5f;
+
+    // Set motion blur settings (defaults)
+    PostProcessSettings.bOverride_MotionBlurAmount = true;
+    PostProcessSettings.MotionBlurAmount = 0.45f;
+    PostProcessSettings.bOverride_MotionBlurMax = true;
+    PostProcessSettings.MotionBlurMax = 0.35f;
+    PostProcessSettings.bOverride_MotionBlurPerObjectSize = true;
+    PostProcessSettings.MotionBlurPerObjectSize = 0.1f;
   }
 
-  // Remove the show flags that might interfere with post-processing effects like
+  // Remove the show flags that might interfere with post-processing effects
+  // like
   // depth and semantic segmentation.
-  static void RemoveShowFlags(FEngineShowFlags &ShowFlags)
+  static void ConfigureShowFlags(FEngineShowFlags &ShowFlags, bool bPostProcessing)
   {
+    if (bPostProcessing)
+    {
+      ShowFlags.EnableAdvancedFeatures();
+      ShowFlags.SetMotionBlur(true);
+      return;
+    }
+
     ShowFlags.SetAmbientOcclusion(false);
     ShowFlags.SetAntiAliasing(false);
     ShowFlags.SetAtmosphericFog(false);

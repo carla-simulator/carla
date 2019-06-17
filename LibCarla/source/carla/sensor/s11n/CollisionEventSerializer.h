@@ -50,7 +50,7 @@ namespace s11n {
       return MsgPack::Pack(Data{self_actor, other_actor, normal_impulse});
     }
 
-    static SharedPtr<SensorData> Deserialize(RawData data);
+    static SharedPtr<SensorData> Deserialize(RawData &&data);
   };
 
 } // namespace s11n

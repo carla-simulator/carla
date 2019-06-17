@@ -51,8 +51,12 @@ public class Carla : ModuleRules
         "Engine",
         "Foliage",
         "ImageWriteQueue",
+        "Json",
+        "JsonUtilities",
         "Landscape",
+        "PhysX",
         "PhysXVehicles",
+        "PhysXVehicleLib",
         "Slate",
         "SlateCore"
         // ... add private dependencies that you statically link with here ...

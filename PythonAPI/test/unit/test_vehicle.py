@@ -52,10 +52,10 @@ class TestVehiclePhysicsControl(unittest.TestCase):
                           carla.Vector2D(x=63.0868, y=0.703473),
                           carla.Vector2D(x=119.12, y=0.573047)]
 
-        wheels = [carla.WheelPhysicsControl(tire_friction=2, damping_rate=0, steer_angle=30, disable_steering=1),
-                  carla.WheelPhysicsControl(tire_friction=2, damping_rate=0, steer_angle=30, disable_steering=1),
-                  carla.WheelPhysicsControl(tire_friction=2, damping_rate=0, steer_angle=30, disable_steering=1),
-                  carla.WheelPhysicsControl(tire_friction=2, damping_rate=0, steer_angle=30, disable_steering=1)]
+        wheels = [carla.WheelPhysicsControl(tire_friction=2, damping_rate=0, max_steer_angle=30, radius=10),
+                  carla.WheelPhysicsControl(tire_friction=3, damping_rate=1, max_steer_angle=40, radius=20),
+                  carla.WheelPhysicsControl(tire_friction=4, damping_rate=2, max_steer_angle=50, radius=30),
+                  carla.WheelPhysicsControl(tire_friction=5, damping_rate=3, max_steer_angle=60, radius=40)]
 
         pc = carla.VehiclePhysicsControl(
             torque_curve=torque_curve,
@@ -105,5 +105,9 @@ class TestVehiclePhysicsControl(unittest.TestCase):
         for i in range(0, len(wheels)):
             self.assertTrue(abs(pc.wheels[i].tire_friction - wheels[i].tire_friction) <= error)
             self.assertTrue(abs(pc.wheels[i].damping_rate - wheels[i].damping_rate) <= error)
-            self.assertTrue(abs(pc.wheels[i].steer_angle - wheels[i].steer_angle) <= error)
-            self.assertEqual(pc.wheels[i].disable_steering, wheels[i].disable_steering)
+            self.assertTrue(abs(pc.wheels[i].max_steer_angle - wheels[i].max_steer_angle) <= error)
+            self.assertTrue(abs(pc.wheels[i].radius - wheels[i].radius) <= error)
+
+            self.assertTrue(abs(pc.wheels[i].position.x - wheels[i].position.x) <= error)
+            self.assertTrue(abs(pc.wheels[i].position.y - wheels[i].position.y) <= error)
+            self.assertTrue(abs(pc.wheels[i].position.z - wheels[i].position.z) <= error)

@@ -60,11 +60,15 @@ The "RGB" camera acts as a regular camera capturing images from the scene.
 
 | Blueprint attribute | Type  | Default | Description |
 | ------------------- | ----  | ------- | ----------- |
+| `sensor_tick`       | float | 0.0     | Seconds between sensor captures (ticks) |
 | `image_size_x`      | int   | 800     | Image width in pixels |
 | `image_size_y`      | int   | 600     | Image height in pixels  |
 | `fov`               | float | 90.0    | Horizontal field of view in degrees |
 | `enable_postprocess_effects` | bool | True | Whether the post-process effect in the scene affect the image |
-| `sensor_tick`       | float | 0.0     | Seconds between sensor captures (ticks) |
+| `gamma`             | float | 2.2     | Target gamma value of the camera |
+| `motion_blur_intensity`       | float | 0.45 | Strength of motion blur. 1 is max and 0 is off |
+| `motion_blur_max_distortion`  | float | 0.35 | Max distortion caused by motion blur, in percent of the screen width, 0 is off |
+| `motion_blur_min_object_screen_size`  | float | 0.1 | Percentage of screen width objects must have for motion blur, lower value means less draw calls
 
 `sensor_tick` tells how fast we want the sensor to capture the data. A value of 1.5 means that we want the sensor to capture data each second and a half. By default a value of 0.0 means as fast as possible.
 

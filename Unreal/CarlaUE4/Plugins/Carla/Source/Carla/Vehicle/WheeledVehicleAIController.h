@@ -8,7 +8,7 @@
 
 #include <queue>
 
-#include "GameFramework/PlayerController.h"
+#include "GameFramework/Controller.h"
 
 #include "Traffic/TrafficLightState.h"
 #include "Vehicle/VehicleControl.h"
@@ -21,7 +21,7 @@ class URoadMap;
 
 /// Wheeled vehicle controller with optional AI.
 UCLASS()
-class CARLA_API AWheeledVehicleAIController : public APlayerController
+class CARLA_API AWheeledVehicleAIController final : public AController
 {
   GENERATED_BODY()
 
@@ -38,7 +38,7 @@ public:
 
   /// @}
   // ===========================================================================
-  /// @name APlayerController overrides
+  /// @name Controller overrides
   // ===========================================================================
   /// @{
 
@@ -73,12 +73,6 @@ public:
   const ACarlaWheeledVehicle *GetPossessedVehicle() const
   {
     return Vehicle;
-  }
-
-  UFUNCTION(Category = "Wheeled Vehicle Controller", BlueprintCallable)
-  virtual bool IsPossessingThePlayer() const
-  {
-    return false;
   }
 
   /// @}
@@ -216,20 +210,10 @@ public:
   void SetFixedRoute(const TArray<FVector> &Locations, bool bOverwriteCurrent = true);
 
   /// @}
-  // ===========================================================================
-  /// @name AI
-  // ===========================================================================
-  /// @{
-
-  UFUNCTION(Category = "Wheeled Vehicle Controller", BlueprintCallable)
-  const FVehicleControl &GetAutopilotControl() const
-  {
-    return AutopilotControl;
-  }
 
 private:
 
-  void TickAutopilotController();
+  FVehicleControl TickAutopilotController();
 
   /// Returns steering value.
   float GoToNextTargetLocation(FVector &Direction);
@@ -277,8 +261,6 @@ private:
 
   UPROPERTY()
   ATrafficLightBase *TrafficLight;
-
-  FVehicleControl AutopilotControl;
 
   std::queue<FVector> TargetLocations;
 };

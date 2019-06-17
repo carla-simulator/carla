@@ -13,6 +13,7 @@
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/geom/Transform.h"
 #include "carla/rpc/Actor.h"
+#include "carla/rpc/AttachmentType.h"
 #include "carla/rpc/EpisodeSettings.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/WeatherParameters.h"
@@ -63,6 +64,9 @@ namespace client {
     /// Change the weather in the simulation.
     void SetWeather(const rpc::WeatherParameters &weather);
 
+    /// Find actor by id, return nullptr if not found.
+    SharedPtr<Actor> GetActor(ActorId id) const;
+
     /// Return a list with all the actors currently present in the world.
     SharedPtr<ActorList> GetActors() const;
 
@@ -75,14 +79,16 @@ namespace client {
     SharedPtr<Actor> SpawnActor(
         const ActorBlueprint &blueprint,
         const geom::Transform &transform,
-        Actor *parent = nullptr);
+        Actor *parent = nullptr,
+        rpc::AttachmentType attachment_type = rpc::AttachmentType::Rigid);
 
     /// Same as SpawnActor but return nullptr on failure instead of throwing an
     /// exception.
     SharedPtr<Actor> TrySpawnActor(
         const ActorBlueprint &blueprint,
         const geom::Transform &transform,
-        Actor *parent = nullptr) noexcept;
+        Actor *parent = nullptr,
+        rpc::AttachmentType attachment_type = rpc::AttachmentType::Rigid) noexcept;
 
     /// Block calling thread until a world tick is received.
     Timestamp WaitForTick(time_duration timeout) const;

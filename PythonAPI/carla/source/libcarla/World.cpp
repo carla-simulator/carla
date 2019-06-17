@@ -19,10 +19,10 @@ namespace client {
   }
 
   std::ostream &operator<<(std::ostream &out, const Timestamp &timestamp) {
-    out << "Timestamp(frame_count=" << timestamp.frame_count
-        << ",elapsed_seconds=" << timestamp.elapsed_seconds
-        << ",delta_seconds=" << timestamp.delta_seconds
-        << ",platform_timestamp=" << timestamp.platform_timestamp << ')';
+    out << "Timestamp(frame_count=" << std::to_string(timestamp.frame_count)
+        << ",elapsed_seconds=" << std::to_string(timestamp.elapsed_seconds)
+        << ",delta_seconds=" << std::to_string(timestamp.delta_seconds)
+        << ",platform_timestamp=" << std::to_string(timestamp.platform_timestamp) << ')';
     return out;
   }
 
@@ -105,15 +105,25 @@ void export_world() {
     .def(self_ns::str(self_ns::self))
   ;
 
+  enum_<cr::AttachmentType>("AttachmentType")
+    .value("Rigid", cr::AttachmentType::Rigid)
+    .value("SpringArm", cr::AttachmentType::SpringArm)
+  ;
+
 #define SPAWN_ACTOR_WITHOUT_GIL(fn) +[]( \
         cc::World &self, \
         const cc::ActorBlueprint &blueprint, \
         const cg::Transform &transform, \
-        cc::Actor *parent) { \
+        cc::Actor *parent, \
+        cr::AttachmentType attachment_type) { \
       carla::PythonUtil::ReleaseGIL unlock; \
-      return self.fn(blueprint, transform, parent); \
+      return self.fn(blueprint, transform, parent, attachment_type); \
     }, \
-    (arg("blueprint"), arg("transform"), arg("attach_to")=carla::SharedPtr<cc::Actor>())
+    ( \
+      arg("blueprint"), \
+      arg("transform"), \
+      arg("attach_to")=carla::SharedPtr<cc::Actor>(), \
+      arg("attachment_type")=cr::AttachmentType::Rigid)
 
   class_<cc::World>("World", no_init)
     .add_property("id", &cc::World::GetId)
@@ -125,6 +135,7 @@ void export_world() {
     .def("apply_settings", &cc::World::ApplySettings)
     .def("get_weather", CONST_CALL_WITHOUT_GIL(cc::World, GetWeather))
     .def("set_weather", &cc::World::SetWeather)
+    .def("get_actor", CONST_CALL_WITHOUT_GIL_1(cc::World, GetActor, carla::ActorId), (arg("actor_id")))
     .def("get_actors", CONST_CALL_WITHOUT_GIL(cc::World, GetActors))
     .def("get_actors", &GetActorsById, (arg("actor_ids")))
     .def("spawn_actor", SPAWN_ACTOR_WITHOUT_GIL(SpawnActor))

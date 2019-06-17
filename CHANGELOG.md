@@ -1,6 +1,12 @@
 ## Latest
+
   * Bugfix about recorder query system
   * Fixed problem when vehicles enable autopilot after a replayer, now it works better.
+  * Vulkan support: Changed project settings to make vulkan default on linux and updated make script to allow user to select opengl
+  * Add ability to set motion blur settings for rgb camera in sensor python blueprint
+  * Improved visual quality of the screen capture for the rgb sensor
+    - Enabled Temporal AA for screen captures with no post-processing to prevent jaggies during motion
+    - Reduced the target gamma of render target to 1.4 to minimize brightness differences with main camera
   * Upgraded to Unreal Engine 4.22
   * Recorder fixes:
     - Fixed a possible crash if an actor is respawned before the episode is ready when a new map is loaded automatically.
@@ -8,8 +14,13 @@
     - Camera following in playback was not working if a new map was needed to load.
     - API function 'show_recorder_file_info' was showing the wrong parent id.
     - Script 'start_recording.py' now properly saves destruction of actors at stop.
+  * API extension: add attachment type "SpringArm" for cinematic cameras
   * API extension: waypoint's `junction_id` that returns de OpenDrive identifier of the current junction
+  * API extension: add gamma value as attribute to RGB camera
+  * API extension: add `world.get_actor(id)` to find a single actor by id
+  * API extension: add `carla.WeatherParameters.Default` for a default (tailor-made for each town) weather profile
   * API change: deprecated waypoint's `is_intersection`, now is `is_junction`
+  * API update: solve the problem of RuntimeError: std::bad_cast described here: #1125 (comment)
   * Removed deprecated code and content
   * New recorder features:
     - Added optional parameter to show more details about a recorder file (related to `show_recorder_file_info.py`)
@@ -20,12 +31,19 @@
       - Walkers animation is simulated in playback (through speed of walker), so they walk properly.
   * Fixed Lidar effectiveness bug in manual_control.py
   * Fixed dead-lock when loading a new map in synchronous mode
+  * Fixed get_actors may produce actors without parent
   * Added C++ client example using LibCarla
   * Updated OpenDriveActor to use the new Waypoint API
   * Fixed wrong units in VehiclePhysicsControl's center of mass
   * Several optimizations to the RPC server, now supports a bigger load of async messages
+  * Corrected Latitude in WGS84 reprojection code such that Latitudes increase as one move north in Carla worlds
+  * Register user props in fbx format, make them available in Carla Blueprint Library and spawnable.
   * Exposed 'is_invincible' for pedestrians
-  * Added sidewalks and improved lane markings in `no_rendering_mode.py`
+  * Exposed waypoints and OpenDrive map to UE4 Blueprints
+  * Fixed XODR files can be found now anywhere in content
+  * Fixed bug related with Pygame error of surface too large, added sidewalks and improved lane markings in `no_rendering_mode.py`
+  * Physics:
+    - Added Friction Trigger Boxes for simulating, for example, slippery surfaces in any region of the map defined by users.
 
 ## CARLA 0.9.5
 

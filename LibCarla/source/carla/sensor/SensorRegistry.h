@@ -18,6 +18,7 @@
 #include "carla/sensor/s11n/EpisodeStateSerializer.h"
 #include "carla/sensor/s11n/ImageSerializer.h"
 #include "carla/sensor/s11n/LidarSerializer.h"
+#include "carla/sensor/s11n/NoopSerializer.h"
 #include "carla/sensor/s11n/ObstacleDetectionEventSerializer.h"
 
 // 2. Add a forward-declaration of the sensor here.
@@ -38,6 +39,9 @@ namespace sensor {
 
   /// Contains a registry of all the sensors available and allows serializing
   /// and deserializing sensor data for the types registered.
+  ///
+  /// Use s11n::NoopSerializer if the sensor does not send data (sensors that
+  /// work only on client-side).
   using SensorRegistry = CompositeSerializer<
     std::pair<FWorldObserver *, s11n::EpisodeStateSerializer>,
     std::pair<ASceneCaptureCamera *, s11n::ImageSerializer>,
@@ -45,8 +49,8 @@ namespace sensor {
     std::pair<ASemanticSegmentationCamera *, s11n::ImageSerializer>,
     std::pair<ARayCastLidar *, s11n::LidarSerializer>,
     std::pair<ACollisionSensor *, s11n::CollisionEventSerializer>,
-    std::pair<AGnssSensor *, s11n::ImageSerializer>,
-    std::pair<ALaneInvasionSensor *, s11n::ImageSerializer>,
+    std::pair<AGnssSensor *, s11n::NoopSerializer>,
+    std::pair<ALaneInvasionSensor *, s11n::NoopSerializer>,
     std::pair<AObstacleDetectionSensor *, s11n::ObstacleDetectionEventSerializer>
   >;
 
