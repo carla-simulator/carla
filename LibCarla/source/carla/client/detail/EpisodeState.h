@@ -13,6 +13,8 @@
 #include "carla/client/Timestamp.h"
 #include "carla/sensor/data/RawEpisodeState.h"
 
+#include <boost/optional.hpp>
+
 #include <memory>
 #include <unordered_map>
 
@@ -42,14 +44,19 @@ namespace detail {
       return _timestamp;
     }
 
+    bool ContainsActorSnapshot(ActorId actor_id) const {
+      return _actors.find(actor_id) != _actors.end();
+    }
+
     ActorSnapshot GetActorSnapshot(ActorId id) const {
       ActorSnapshot state;
-      auto it = _actors.find(id);
-      if (it != _actors.end()) {
-        state = it->second;
-      } else {
-        log_debug("actor", id, "not found in episode");
-      }
+      CopyActorSnapshotIfPresent(id, state);
+      return state;
+    }
+
+    boost::optional<ActorSnapshot> GetActorSnapshotIfPresent(ActorId id) const {
+      boost::optional<ActorSnapshot> state;
+      CopyActorSnapshotIfPresent(id, state);
       return state;
     }
 
@@ -59,7 +66,27 @@ namespace detail {
           iterator::make_map_keys_const_iterator(_actors.end()));
     }
 
+    size_t size() const {
+      return _actors.size();
+    }
+
+    auto begin() const {
+      return iterator::make_map_values_const_iterator(_actors.begin());
+    }
+
+    auto end() const {
+      return iterator::make_map_values_const_iterator(_actors.end());
+    }
+
   private:
+
+    template <typename T>
+    void CopyActorSnapshotIfPresent(ActorId id, T &value) const {
+      auto it = _actors.find(id);
+      if (it != _actors.end()) {
+        value = it->second;
+      }
+    }
 
     const uint64_t _episode_id;
 
