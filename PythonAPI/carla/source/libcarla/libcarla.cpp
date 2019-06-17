@@ -83,7 +83,7 @@
       return optional.has_value() ? boost::python::object(*optional) : boost::python::object(); \
     }
 
-#define CALL_RETURNING_OPTIONAL_1(cls, fn, T1_) +[](const cls &self, T1_) { \
+#define CALL_RETURNING_OPTIONAL_1(cls, fn, T1_) +[](const cls &self, T1_ t1) { \
       auto optional = self.fn(std::forward<T1_>(t1)); \
       return optional.has_value() ? boost::python::object(*optional) : boost::python::object(); \
     }
@@ -163,6 +163,7 @@ static auto MakeCallback(boost::python::object callback) {
 #include "Map.cpp"
 #include "Sensor.cpp"
 #include "SensorData.cpp"
+#include "Snapshot.cpp"
 #include "Weather.cpp"
 #include "World.cpp"
 #include "Commands.cpp"
@@ -177,6 +178,7 @@ BOOST_PYTHON_MODULE(libcarla) {
   export_actor();
   export_sensor();
   export_sensor_data();
+  export_snapshot();
   export_weather();
   export_world();
   export_map();
