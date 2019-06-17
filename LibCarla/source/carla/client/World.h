@@ -10,6 +10,7 @@
 #include "carla/Time.h"
 #include "carla/client/DebugHelper.h"
 #include "carla/client/Timestamp.h"
+#include "carla/client/WorldSnapshot.h"
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/geom/Transform.h"
 #include "carla/rpc/Actor.h"
@@ -63,6 +64,9 @@ namespace client {
 
     /// Change the weather in the simulation.
     void SetWeather(const rpc::WeatherParameters &weather);
+
+    /// Return a snapshot of the world at this moment.
+    WorldSnapshot GetSnapshot() const;
 
     /// Find actor by id, return nullptr if not found.
     SharedPtr<Actor> GetActor(ActorId id) const;

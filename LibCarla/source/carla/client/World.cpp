@@ -45,6 +45,10 @@ namespace client {
     _episode.Lock()->SetWeatherParameters(weather);
   }
 
+  WorldSnapshot World::GetSnapshot() const {
+    return _episode.Lock()->GetWorldSnapshot();
+  }
+
   SharedPtr<Actor> World::GetActor(ActorId id) const {
     auto simulator = _episode.Lock();
     auto description = simulator->GetActorById(id);
