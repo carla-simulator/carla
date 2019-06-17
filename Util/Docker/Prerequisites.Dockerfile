@@ -32,10 +32,9 @@ RUN apt-get update ; \
     unzip \
     autoconf \
     libtool \
-    rsync \
-    aria2 && \
-  pip2 install setuptools && \
-  pip3 install setuptools && \
+    rsync && \
+  pip2 install --user setuptools && \
+  pip3 install --user setuptools && \
   update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-7/bin/clang++ 170 && \
   update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-7/bin/clang 170
 
