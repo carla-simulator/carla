@@ -30,7 +30,7 @@ $(BINDIR)/cpp_client: build_libcarla
 	@$(CXX) $(CXXFLAGS) -I$(INSTALLDIR)/include -isystem $(INSTALLDIR)/include/system -L$(INSTALLDIR)/lib \
 		-o $(BINDIR)/cpp_client main.cpp \
 		-Wl,-Bstatic -lcarla_client -lrpc -lboost_filesystem -Wl,-Bdynamic \
-		-lpng -ltiff -ljpeg
+		-lpng -ltiff -ljpeg -lRecast -lDetour -lDetourCrowd
 
 build_libcarla: $(TOOLCHAIN)
 	@cd $(CARLADIR); make setup
