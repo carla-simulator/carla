@@ -47,5 +47,4 @@ private:
   bool bOnlyDynamics = false;
 
   bool bDebugLineTrace = false;
-
 };
