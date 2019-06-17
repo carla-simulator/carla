@@ -75,8 +75,6 @@ void ACarlaGameModeBase::InitGame(
 
   if (WeatherClass != nullptr) {
     Episode->Weather = World->SpawnActor<AWeather>(WeatherClass);
-    // Apply default weather.
-    Episode->Weather->ApplyWeather(carla::rpc::WeatherParameters::Default);
   } else {
     UE_LOG(LogCarla, Error, TEXT("Missing weather class!"));
   }
@@ -112,6 +110,11 @@ void ACarlaGameModeBase::BeginPlay()
 
   Episode->InitializeAtBeginPlay();
   GameInstance->NotifyBeginEpisode(*Episode);
+
+  if (Episode->Weather != nullptr)
+  {
+    Episode->Weather->ApplyWeather(carla::rpc::WeatherParameters::Default);
+  }
 
   /// @todo Recorder should not tick here, FCarlaEngine should do it.
   // check if replayer is waiting to autostart
