@@ -12,7 +12,6 @@
 #include "carla/rpc/TrafficLightState.h"
 #include "carla/rpc/VehicleControl.h"
 #include "carla/rpc/WalkerControl.h"
-#include "carla/rpc/WalkerBoneControl.h"
 
 #include <cstdint>
 

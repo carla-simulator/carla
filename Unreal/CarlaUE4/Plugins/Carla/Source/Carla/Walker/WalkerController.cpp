@@ -12,6 +12,7 @@
 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Pawn.h"
+#include <boost/variant/apply_visitor.hpp>
 
 AWalkerController::AWalkerController(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
@@ -87,42 +88,45 @@ void AWalkerController::SetManualBones(const bool bIsEnabled)
   }
 }
 
+void AWalkerController::ControlTickVisitor::operator()(FWalkerControl &WalkerControl)
+{
+  auto *Character = Controller->GetCharacter();
+  if (Character != nullptr)
+  {
+    Character->AddMovementInput(WalkerControl.Direction,
+        WalkerControl.Speed / Controller->GetMaximumWalkSpeed());
+    if (WalkerControl.Jump)
+    {
+      Character->Jump();
+    }
+  }
+}
+
+void AWalkerController::ControlTickVisitor::operator()(FWalkerBoneControl &WalkerBoneControl)
+{
+  auto *Character = Controller->GetCharacter();
+  if (Character == nullptr)
+  {
+    return;
+  }
+  TArray<UPoseableMeshComponent *> PoseableMeshes;
+  Character->GetComponents<UPoseableMeshComponent>(PoseableMeshes, false);
+  UPoseableMeshComponent *PoseableMesh = PoseableMeshes.IsValidIndex(0) ? PoseableMeshes[0] : nullptr;
+  if (PoseableMesh)
+  {
+    for (const TPair<FString,
+        FTransform> &pair : WalkerBoneControl.BoneTransforms)
+    {
+      FName BoneName = FName(*pair.Key);
+      PoseableMesh->SetBoneTransformByName(BoneName, pair.Value, EBoneSpaces::Type::ComponentSpace);
+    }
+    WalkerBoneControl.BoneTransforms.Empty();
+  }
+}
+
 void AWalkerController::Tick(float DeltaSeconds)
 {
   Super::Tick(DeltaSeconds);
-
-  auto *Character = GetCharacter();
-  switch (Control.which())
-  {
-    case 0: // FWalkerControl
-      if (Character != nullptr)
-      {
-        Character->AddMovementInput(boost::get<FWalkerControl>(Control).Direction,
-            boost::get<FWalkerControl>(Control).Speed / GetMaximumWalkSpeed());
-        if (boost::get<FWalkerControl>(Control).Jump)
-        {
-          Character->Jump();
-        }
-      }
-      break;   // End of FWalkerControl case
-
-    case 1: // FWalkerBoneControl
-      if (boost::get<FWalkerBoneControl>(Control).BoneTransforms.Num() != 0)
-      {
-        TArray<UPoseableMeshComponent *> PoseableMeshes;
-        Character->GetComponents<UPoseableMeshComponent>(PoseableMeshes, false);
-        UPoseableMeshComponent *PoseableMesh = PoseableMeshes.IsValidIndex(0) ? PoseableMeshes[0] : nullptr;
-        if (PoseableMesh)
-        {
-          for (const TPair<FString,
-              FTransform> &pair : boost::get<FWalkerBoneControl>(Control).BoneTransforms)
-          {
-            FName BoneName = FName(*pair.Key);
-            PoseableMesh->SetBoneTransformByName(BoneName, pair.Value, EBoneSpaces::Type::ComponentSpace);
-          }
-          boost::get<FWalkerBoneControl>(Control).BoneTransforms.Empty();
-        }
-      }
-      break;   // End of FWalkerBoneControl case
-  }
+  AWalkerController::ControlTickVisitor ControlTickVisitor(this);
+  boost::apply_visitor(ControlTickVisitor, Control);
 }

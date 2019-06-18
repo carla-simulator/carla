@@ -25,6 +25,23 @@ class CARLA_API AWalkerController : public AController
 
 private:
 
+  class ControlTickVisitor : public boost::static_visitor<>
+  {
+public:
+
+    ControlTickVisitor(AWalkerController *Controller)
+      : Controller(Controller)
+    {}
+
+    void operator()(FWalkerControl &WalkerControl);
+
+    void operator()(FWalkerBoneControl &WalkerBoneControl);
+
+private:
+
+    AWalkerController *Controller;
+  };
+
 public:
 
   AWalkerController(const FObjectInitializer &ObjectInitializer);

@@ -39,7 +39,7 @@ namespace rpc {
     operator FWalkerBoneControl() const {
       FWalkerBoneControl Control;
       for (auto bone_transform : bone_transforms) {
-        Control.BoneTransforms.Add(bone_transform.first.c_str(), bone_transform.second);
+        Control.BoneTransforms.Add(ToFString(bone_transform.first), bone_transform.second);
       }
       return Control;
     }

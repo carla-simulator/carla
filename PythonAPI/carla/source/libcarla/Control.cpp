@@ -34,19 +34,16 @@ namespace rpc {
     out << "WalkerControl(direction=" << control.direction
         << ", speed=" << std::to_string(control.speed)
         << ", jump=" << boolalpha(control.jump) << ')';
-    out << "WalkerControl(direction=" << control.direction <<
-      ", speed=" << control.speed <<
-      ", jump=" << boolalpha(control.jump) << ')';
     return out;
   }
 
   std::ostream &operator<<(std::ostream &out, const WalkerBoneControl &control) {
     out << "WalkerBoneControl(bone_transforms(";
     for (auto bone_transform : control.bone_transforms) {
-      out << "(first="  << bone_transform.first <<
-        ", second = " << bone_transform.second << ')';
+      out << "(name="  << bone_transform.first
+          << ", transform=" << bone_transform.second << ')';
     }
-    out << ")";
+    out << "))";
     return out;
   }
 
