@@ -111,7 +111,7 @@ AActor *CarlaReplayerHelper::FindTrafficLightAt(FVector Location)
 }
 
 // enable / disable physics for an actor
-bool CarlaReplayerHelper::SetActorSimulatePhysics(FActorView &ActorView, bool bEnabled)
+bool CarlaReplayerHelper::SetActorSimulatePhysics(const FActorView &ActorView, bool bEnabled)
 {
   if (!ActorView.IsValid())
   {
@@ -128,7 +128,7 @@ bool CarlaReplayerHelper::SetActorSimulatePhysics(FActorView &ActorView, bool bE
 }
 
 // enable / disable autopilot for an actor
-bool CarlaReplayerHelper::SetActorAutopilot(FActorView &ActorView, bool bEnabled, bool bKeepState)
+bool CarlaReplayerHelper::SetActorAutopilot(const FActorView &ActorView, bool bEnabled, bool bKeepState)
 {
   if (!ActorView.IsValid())
   {
@@ -328,7 +328,7 @@ bool CarlaReplayerHelper::ProcessReplayerFinish(bool bApplyAutopilot)
 {
   // set autopilot and physics to all AI vehicles
   auto registry = Episode->GetActorRegistry();
-  for (auto ActorView : registry)
+  for (const FActorView &ActorView : registry)
   {
     // enable physics only on vehicles
     switch (ActorView.GetActorType())
@@ -353,7 +353,7 @@ bool CarlaReplayerHelper::ProcessReplayerFinish(bool bApplyAutopilot)
   return true;
 }
 
-void CarlaReplayerHelper::SetActorVelocity(FActorView ActorView, FVector Velocity)
+void CarlaReplayerHelper::SetActorVelocity(const FActorView &ActorView, FVector Velocity)
 {
   if (!ActorView.IsValid())
   {
