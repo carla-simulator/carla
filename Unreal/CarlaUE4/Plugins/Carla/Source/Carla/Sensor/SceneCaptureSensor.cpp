@@ -179,7 +179,7 @@ void ASceneCaptureSensor::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
   // Add the view information every tick. Its only used for one tick and then removed by the streamer.
-  IStreamingManager::Get().AddViewInformation( DrawFrustum->GetComponentLocation(), ImageWidth, ImageWidth / FMath::Tan( CaptureComponent2D->FOVAngle ) );
+  IStreamingManager::Get().AddViewInformation( CaptureComponent2D->GetComponentLocation(), ImageWidth, ImageWidth / FMath::Tan( CaptureComponent2D->FOVAngle ) );
 }
 
 void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
