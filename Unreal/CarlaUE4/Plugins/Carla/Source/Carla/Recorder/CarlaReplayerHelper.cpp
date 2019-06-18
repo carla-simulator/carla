@@ -320,22 +320,7 @@ void CarlaReplayerHelper::ProcessReplayerAnimVehicle(CarlaRecorderAnimVehicle Ve
 // set the animation for walkers
 void CarlaReplayerHelper::ProcessReplayerAnimWalker(CarlaRecorderAnimWalker Walker)
 {
-  check(Episode != nullptr);
-  AActor *Actor = Episode->GetActorRegistry().Find(Walker.DatabaseId).GetActor();
-  if (Actor && !Actor->IsPendingKill())
-  {
-    auto Wal = Cast<APawn>(Actor);
-    if (Wal)
-    {
-      auto Controller = Cast<AWalkerController>(Wal->GetController());
-      if (Controller != nullptr)
-      {
-        FWalkerControl Control;
-        Control.Speed = Walker.Speed;
-        Controller->ApplyWalkerControl(Control);
-     }
-    }
-  }
+  SetWalkerSpeed(Walker.DatabaseId, Walker.Speed);
 }
 
 // replay finish
@@ -346,15 +331,62 @@ bool CarlaReplayerHelper::ProcessReplayerFinish(bool bApplyAutopilot)
   for (auto ActorView : registry)
   {
     // enable physics only on vehicles
-    if (ActorView.GetActorType() == FActorView::ActorType::Vehicle)
+    switch (ActorView.GetActorType())
     {
-      SetActorSimulatePhysics(ActorView, true);
-      // autopilot
-      if (bApplyAutopilot)
-        SetActorAutopilot(ActorView, true, true);
+
+      // vehicles
+      case FActorView::ActorType::Vehicle:
+        SetActorSimulatePhysics(ActorView, true);
+        // autopilot
+        if (bApplyAutopilot)
+          SetActorAutopilot(ActorView, true);
+        break;
+
+      // walkers
+      case FActorView::ActorType::Walker:
+        // stop walker
+        SetActorVelocity(ActorView, FVector(0, 0, 0));
+        SetWalkerSpeed(ActorView.GetActorId(), 0.0f);
+        break;
     }
   }
   return true;
 }
 
+void CarlaReplayerHelper::SetActorVelocity(FActorView ActorView, FVector Velocity)
+{
+  if (!ActorView.IsValid())
+  {
+    return;
+  }
+  auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+  if (RootComponent == nullptr)
+  {
+    return;
+  }
+  RootComponent->SetPhysicsLinearVelocity(
+      Velocity,
+      false,
+      "None");
+}
 
+// set the animation speed for walkers
+void CarlaReplayerHelper::SetWalkerSpeed(uint32_t ActorId, float Speed)
+{
+  check(Episode != nullptr);
+  AActor *Actor = Episode->GetActorRegistry().Find(ActorId).GetActor();
+  if (Actor && !Actor->IsPendingKill())
+  {
+    auto Wal = Cast<APawn>(Actor);
+    if (Wal)
+    {
+      auto Controller = Cast<AWalkerController>(Wal->GetController());
+      if (Controller != nullptr)
+      {
+        FWalkerControl Control;
+        Control.Speed = Speed;
+        Controller->ApplyWalkerControl(Control);
+     }
+    }
+  }
+}
