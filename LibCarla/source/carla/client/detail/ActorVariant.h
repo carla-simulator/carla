@@ -38,9 +38,9 @@ namespace detail {
       return *this;
     }
 
-    SharedPtr<client::Actor> Get(EpisodeProxy episode, SharedPtr<const client::ActorList> actor_list = nullptr) const {
+    SharedPtr<client::Actor> Get(EpisodeProxy episode) const {
       if (_value.which() == 0u) {
-        MakeActor(episode, actor_list);
+        MakeActor(episode);
       }
       DEBUG_ASSERT(_value.which() == 1u);
       return boost::get<SharedPtr<client::Actor>>(_value);
@@ -81,7 +81,7 @@ namespace detail {
       }
     };
 
-    void MakeActor(EpisodeProxy episode, SharedPtr<const client::ActorList> actor_list) const;
+    void MakeActor(EpisodeProxy episode) const;
 
     mutable boost::variant<rpc::Actor, SharedPtr<client::Actor>> _value;
   };

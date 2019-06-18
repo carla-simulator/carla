@@ -7,8 +7,8 @@
 #include "Carla.h"
 #include "Carla/Server/CarlaServer.h"
 
+#include "Carla/OpenDrive/OpenDrive.h"
 #include "Carla/Util/DebugShapeDrawer.h"
-#include "Carla/Util/OpenDrive.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Walker/WalkerController.h"
 
@@ -195,7 +195,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(get_map_info) << [this]() -> R<cr::MapInfo>
   {
     REQUIRE_CARLA_EPISODE();
-    auto FileContents = FOpenDrive::Load(Episode->GetMapName());
+    auto FileContents = UOpenDrive::LoadXODR(Episode->GetMapName());
     const auto &SpawnPoints = Episode->GetRecommendedSpawnPoints();
     return cr::MapInfo{
       cr::FromFString(Episode->GetMapName()),

@@ -1,5 +1,7 @@
 ## Latest
 
+  * Bugfix about recorder query system
+  * Fixed problem when vehicles enable autopilot after a replayer, now it works better.
   * Vulkan support: Changed project settings to make vulkan default on linux and updated make script to allow user to select opengl
   * Add ability to set motion blur settings for rgb camera in sensor python blueprint
   * Improved visual quality of the screen capture for the rgb sensor
@@ -15,6 +17,8 @@
   * API extension: add attachment type "SpringArm" for cinematic cameras
   * API extension: waypoint's `junction_id` that returns de OpenDrive identifier of the current junction
   * API extension: add gamma value as attribute to RGB camera
+  * API extension: add `world.get_actor(id)` to find a single actor by id
+  * API extension: add `carla.WeatherParameters.Default` for a default (tailor-made for each town) weather profile
   * API change: deprecated waypoint's `is_intersection`, now is `is_junction`
   * API update: solve the problem of RuntimeError: std::bad_cast described here: #1125 (comment)
   * Removed deprecated code and content
@@ -27,6 +31,7 @@
       - Walkers animation is simulated in playback (through speed of walker), so they walk properly.
   * Fixed Lidar effectiveness bug in manual_control.py
   * Fixed dead-lock when loading a new map in synchronous mode
+  * Fixed get_actors may produce actors without parent
   * Added C++ client example using LibCarla
   * Updated OpenDriveActor to use the new Waypoint API
   * Fixed wrong units in VehiclePhysicsControl's center of mass
@@ -34,6 +39,8 @@
   * Corrected Latitude in WGS84 reprojection code such that Latitudes increase as one move north in Carla worlds
   * Register user props in fbx format, make them available in Carla Blueprint Library and spawnable.
   * Exposed 'is_invincible' for pedestrians
+  * Exposed waypoints and OpenDrive map to UE4 Blueprints
+  * Fixed XODR files can be found now anywhere in content
   * Fixed bug related with Pygame error of surface too large, added sidewalks and improved lane markings in `no_rendering_mode.py`
   * Physics:
     - Added Friction Trigger Boxes for simulating, for example, slippery surfaces in any region of the map defined by users.

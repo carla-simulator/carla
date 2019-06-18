@@ -47,6 +47,7 @@ void export_weather() {
     .def(self_ns::str(self_ns::self))
   ;
 
+  cls.attr("Default") = cr::WeatherParameters::Default;
   cls.attr("ClearNoon") = cr::WeatherParameters::ClearNoon;
   cls.attr("CloudyNoon") = cr::WeatherParameters::CloudyNoon;
   cls.attr("WetNoon") = cr::WeatherParameters::WetNoon;

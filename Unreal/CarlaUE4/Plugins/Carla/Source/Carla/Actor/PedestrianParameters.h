@@ -21,6 +21,18 @@ enum class EPedestrianGender : uint8
   INVALID     UMETA(Hidden)
 };
 
+UENUM(BlueprintType)
+enum class EPedestrianAge : uint8
+{
+  Child       UMETA(DisplayName = "Child"),
+  Teenager    UMETA(DisplayName = "Teenager"),
+  Adult       UMETA(DisplayName = "Adult"),
+  Elderly     UMETA(DisplayName = "Elderly"),
+
+  SIZE        UMETA(Hidden),
+  INVALID     UMETA(Hidden)
+};
+
 USTRUCT(BlueprintType)
 struct CARLA_API FPedestrianParameters
 {
@@ -34,4 +46,7 @@ struct CARLA_API FPedestrianParameters
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   EPedestrianGender Gender = EPedestrianGender::Other;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  EPedestrianAge Age = EPedestrianAge::Adult;
 };
