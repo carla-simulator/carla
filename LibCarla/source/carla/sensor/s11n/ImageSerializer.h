@@ -40,7 +40,7 @@ namespace s11n {
     template <typename Sensor>
     static Buffer Serialize(const Sensor &sensor, Buffer &&bitmap);
 
-    static SharedPtr<SensorData> Deserialize(RawData data);
+    static SharedPtr<SensorData> Deserialize(RawData &&data);
   };
 
   template <typename Sensor>

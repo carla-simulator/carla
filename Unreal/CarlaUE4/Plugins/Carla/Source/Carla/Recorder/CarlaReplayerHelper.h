@@ -67,5 +67,5 @@ private:
   // enable / disable physics for an actor
   bool SetActorSimulatePhysics(FActorView &ActorView, bool bEnabled);
   // enable / disable autopilot for an actor
-  bool SetActorAutopilot(FActorView &ActorView, bool bEnabled);
+  bool SetActorAutopilot(FActorView &ActorView, bool bEnabled, bool bKeepState = false);
 };
