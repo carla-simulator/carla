@@ -35,6 +35,25 @@ namespace detail {
       _walkers.Push(WalkerHandle { walker_id, controller_id });
     }
 
+    void UnregisterWalker(ActorId walker_id, ActorId controller_id) {
+      // remove from list
+      auto list = _walkers.Load();
+      unsigned int i = 0;
+      while (i < (*list).size()) {
+        if ((*list)[i].walker == walker_id &&
+            (*list)[i].controller == controller_id) {
+          _walkers.Delete(i);
+          break;
+        }
+        ++i;
+      }
+    }
+
+    void RemoveWalker(ActorId walker_id) {
+      // remove the walker in the crowd
+      _nav.RemoveWalker(walker_id);
+    }
+
     void AddWalker(ActorId walker_id, carla::geom::Location location) {
       float h = _client.GetWalkerBaseOffset(walker_id) / 100.0f;
 

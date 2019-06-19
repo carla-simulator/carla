@@ -114,6 +114,7 @@ void export_actor() {
 
   class_<cc::WalkerAIController, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::WalkerAIController>>("WalkerAIController", no_init)
     .def("start", &cc::WalkerAIController::Start)
+    .def("stop", &cc::WalkerAIController::Stop)
     .def("go_to_location", &cc::WalkerAIController::GoToLocation, (arg("destination")))
     .def("set_max_speed", &cc::WalkerAIController::SetMaxSpeed, (arg("speed")))
     .def(self_ns::str(self_ns::self))

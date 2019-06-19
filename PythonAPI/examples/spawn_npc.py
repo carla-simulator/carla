@@ -157,28 +157,22 @@ def main():
             else:
                 info[i]["con"] = results[i].actor_id
 
-        # get whole list of actors (child and parents)
+        # get whole list of actors (child and parents in same list so world.get_actors() can find parents also)
         all_id = []
         for i in range(len(info)):
-            all_id.append(info[i]["id"])
             all_id.append(info[i]["con"])
+            all_id.append(info[i]["id"])
         all_actors = world.get_actors(all_id)
 
-        # initialize each controller and set target to walk to
-        for i in range(len(all_id)):
-            # check it if it is a controller or a walker
-            index = -1
-            for j in range(len(info)):
-                if (info[j]["con"] == all_id[i]):
-                    index = j
-                    break
-            if (index != -1):
-                # init
-                all_actors[i].start(info[index]["trans"].location)
-                # walk to random point
-                target = world.get_random_location_from_navigation()
-                all_actors[i].go_to_location(target)
-                all_actors[i].set_max_speed(1 + random.random())
+        # initialize each controller and set target to walk to (list is [controler, actor, controller, actor ...])
+        for i in range(0, len(all_id), 2):
+            # index in the info list
+            index = int(i / 2)
+            all_actors[i].start(info[index]["trans"].location)
+            # walk to random point
+            target = world.get_random_location_from_navigation()
+            all_actors[i].go_to_location(target)
+            all_actors[i].set_max_speed(1 + random.random())    # max speed between 1 and 2
 
         print('spawned %d walkers, press Ctrl+C to exit.' % len(info))
 
@@ -189,6 +183,10 @@ def main():
 
         print('\ndestroying %d vehicles' % len(actor_list))
         client.apply_batch([carla.command.DestroyActor(x) for x in actor_list])
+
+        # stop walker controllers (list is [controler, actor, controller, actor ...])
+        for i in range(0, len(all_id), 2):
+            all_actors[i].stop()
 
         print('\ndestroying %d walkers' % len(info))
         client.apply_batch([carla.command.DestroyActor(x) for x in all_id])

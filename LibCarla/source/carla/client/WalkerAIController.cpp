@@ -27,6 +27,19 @@ namespace client {
     }
   }
 
+  void WalkerAIController::Stop() {
+    GetEpisode().Lock()->UnregisterAIController(*this);
+
+    // remove the walker from the Recast & Detour
+    auto walker = GetParent();
+    if (walker != nullptr) {
+      auto nav = GetEpisode().Lock()->GetNavigation();
+      if (nav != nullptr) {
+        nav->RemoveWalker(walker->GetId());
+      }
+    }
+  }
+
   geom::Location WalkerAIController::GetRandomLocation() {
     auto nav = GetEpisode().Lock()->GetNavigation();
     if (nav != nullptr) {
