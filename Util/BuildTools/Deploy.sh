@@ -7,6 +7,7 @@
 source $(dirname "$0")/Environment.sh
 
 REPLACE_LATEST=false
+DOCKER_PUSH=false
 AWS_COPY="aws s3 cp"
 UPLOAD_MAPS=true
 
@@ -16,9 +17,9 @@ UPLOAD_MAPS=true
 
 DOC_STRING="Upload latest build to S3."
 
-USAGE_STRING="Usage: $0 [-h|--help] [--replace-latest] [--dry-run]"
+USAGE_STRING="Usage: $0 [-h|--help] [--replace-latest] [--docker-push] [--dry-run]"
 
-OPTS=`getopt -o h --long help,replace-latest,dry-run -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,replace-latest,docker-push,dry-run -n 'parse-options' -- "$@"`
 
 if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
 
@@ -28,6 +29,9 @@ while true; do
   case "$1" in
     --replace-latest )
       REPLACE_LATEST=true;
+      shift ;;
+    --docker-push )
+      DOCKER_PUSH=true;
       shift ;;
     --dry-run )
       AWS_COPY="echo ${AWS_COPY}";
@@ -54,9 +58,11 @@ LATEST_DEPLOY_URI=${S3_PREFIX}/Dev/CARLA_Latest.tar.gz
 if [[ ${REPOSITORY_TAG} =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   log "Detected tag ${REPOSITORY_TAG}."
   DEPLOY_NAME=CARLA_${REPOSITORY_TAG}.tar.gz
+  DOCKER_TAG=${REPOSITORY_TAG}
 else
   S3_PREFIX=${S3_PREFIX}/Dev
   DEPLOY_NAME=$(git log --pretty=format:'%cd_%h' --date=format:'%Y%m%d' -n 1).tar.gz
+  DOCKER_TAG=latest
 fi
 
 log "Using package ${LATEST_PACKAGE} as ${DEPLOY_NAME}."
@@ -102,6 +108,33 @@ if ${UPLOAD_MAPS} ; then
   popd >/dev/null
 
 fi
+
+# ==============================================================================
+# -- Docker build and push -----------------------------------------------------
+# ==============================================================================
+
+if ${DOCKER_PUSH} ; then
+
+  DOCKER_BUILD_FOLDER=${CARLA_BUILD_FOLDER}/${REPOSITORY_TAG}.Docker
+  DOCKER_NAME=carlasim/carla:${DOCKER_TAG}
+
+  mkdir -p ${DOCKER_BUILD_FOLDER}
+
+  tar -xvzf ${LATEST_PACKAGE_PATH} -C ${DOCKER_BUILD_FOLDER}/
+
+  pushd "${DOCKER_BUILD_FOLDER}" >/dev/null
+
+  log "Building Docker image ${DOCKER_NAME}."
+
+  docker build -t ${DOCKER_NAME} -f Dockerfile .
+
+  log "Pushing Docker image."
+
+  docker push carlasim/carla
+
+  popd >/dev/null
+
+fi;
 
 # ==============================================================================
 # -- ...and we are done --------------------------------------------------------

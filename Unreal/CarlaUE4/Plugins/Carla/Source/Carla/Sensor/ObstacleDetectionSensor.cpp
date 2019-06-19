@@ -17,13 +17,6 @@ AObstacleDetectionSensor::AObstacleDetectionSensor(const FObjectInitializer &Obj
   : Super(ObjectInitializer)
 {
   PrimaryActorTick.bCanEverTick = true;
-
-  auto MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RootComponent"));
-  MeshComp->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
-  MeshComp->bHiddenInGame = true;
-  MeshComp->CastShadow = false;
-  MeshComp->PostPhysicsComponentTick.bCanEverTick = false;
-  RootComponent = MeshComp;
 }
 
 FActorDefinition AObstacleDetectionSensor::GetSensorDefinition()
