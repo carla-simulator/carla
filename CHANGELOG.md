@@ -19,6 +19,9 @@
   * API extension: add gamma value as attribute to RGB camera
   * API extension: add `world.get_actor(id)` to find a single actor by id
   * API extension: add `carla.WeatherParameters.Default` for a default (tailor-made for each town) weather profile
+  * API extension: added `WorldSnapshot` that contains a list of `ActorSnapshot`, allows capturings a "still image" of the world at a single frame
+  * API change: `world.wait_for_tick()` now returns a `carla.WorldSnapshot`
+  * API change: the callback of `world.on_tick(callback)` now receives a `carla.WorldSnapshot`
   * API change: deprecated waypoint's `is_intersection`, now is `is_junction`
   * API update: solve the problem of RuntimeError: std::bad_cast described here: #1125 (comment)
   * Removed deprecated code and content
