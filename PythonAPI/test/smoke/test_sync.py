@@ -4,7 +4,7 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-from . import SmokeTest
+from . import SyncSmokeTest
 
 import carla
 
@@ -14,22 +14,7 @@ except ImportError:
     import Queue as queue
 
 
-class TestSynchronousMode(SmokeTest):
-    def setUp(self):
-        super(TestSynchronousMode, self).setUp()
-        self.world = self.client.get_world()
-        self.settings = self.world.get_settings()
-        settings = carla.WorldSettings(
-            no_rendering_mode=False,
-            synchronous_mode=True)
-        self.world.apply_settings(settings)
-
-    def tearDown(self):
-        self.world.apply_settings(self.settings)
-        self.settings = None
-        self.world = None
-        super(TestSynchronousMode, self).tearDown()
-
+class TestSynchronousMode(SyncSmokeTest):
     def test_reloading_map(self):
         settings = carla.WorldSettings(
             no_rendering_mode=False,
