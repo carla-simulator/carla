@@ -38,6 +38,8 @@ namespace nav {
     void CreateCrowd(void);
     // create a new walker
     bool AddWalker(ActorId id, carla::geom::Location from, float base_offset);
+    // remove a walker
+    bool RemoveWalker(ActorId id);
     // set new max speed
     bool SetWalkerMaxSpeed(ActorId id, float max_speed);
     // set a new target point to go

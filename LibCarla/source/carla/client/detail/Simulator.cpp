@@ -157,6 +157,18 @@ namespace detail {
     navigation->RegisterWalker(walker->GetId(), controller.GetId());
   }
 
+  void Simulator::UnregisterAIController(const WalkerAIController &controller) {
+    auto walker = controller.GetParent();
+    if (walker == nullptr) {
+      throw_exception(std::runtime_error(controller.GetDisplayId() + ": not attached to walker"));
+      return;
+    }
+    DEBUG_ASSERT(_episode != nullptr);
+    auto navigation = _episode->CreateNavigationIfMissing();
+    DEBUG_ASSERT(navigation != nullptr);
+    navigation->UnregisterWalker(walker->GetId(), controller.GetId());
+  }
+
   geom::Location Simulator::GetRandomLocationFromNavigation() {
     DEBUG_ASSERT(_episode != nullptr);
     auto navigation = _episode->CreateNavigationIfMissing();
