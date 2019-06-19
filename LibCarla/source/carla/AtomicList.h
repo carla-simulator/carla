@@ -34,6 +34,13 @@ namespace detail {
       _list = new_list;
     }
 
+    void Delete(unsigned int index) {
+      std::lock_guard<std::mutex> lock(_mutex);
+      auto new_list = std::make_shared<ListT>(*Load());
+      new_list->erase(new_list->begin() + index);
+      _list = new_list;
+    }
+
     void Clear() {
       std::lock_guard<std::mutex> lock(_mutex);
       _list = std::make_shared<ListT>();

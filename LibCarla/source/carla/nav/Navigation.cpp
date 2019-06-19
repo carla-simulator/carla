@@ -318,7 +318,7 @@ namespace nav {
     params.separationWeight = 0.5f;
 
 
-    // set from Unreal coordinates (and adjust center of walker, from middle to bottom)
+    // from Unreal coordinates
     float PointFrom[3] = { from.x, from.z, from.y };
     // add walker
     int index = _crowd->addAgent(PointFrom, &params);
@@ -333,6 +333,22 @@ namespace nav {
     _baseHeight[id] = base_offset;
 
     _yaw_walkers[id] = 0.0f;
+
+    return true;
+  }
+
+  // remove a walker
+  bool Navigation::RemoveWalker(ActorId id) {
+    // get the internal index
+    auto it = _mappedId.find(id);
+    if (it == _mappedId.end())
+      return false;
+
+    // remove from crowd
+    _crowd->removeAgent(it->second);
+
+    // remove from mapping
+    _mappedId.erase(it);
 
     return true;
   }

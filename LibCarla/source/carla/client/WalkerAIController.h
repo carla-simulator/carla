@@ -20,6 +20,8 @@ namespace client {
 
     void Start(carla::geom::Location location);
 
+    void Stop();
+
     geom::Location GetRandomLocation();
 
     void GoToLocation(const carla::geom::Location &destination);
