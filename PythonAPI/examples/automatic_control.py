@@ -753,7 +753,7 @@ def game_loop(args):
                 return
 
             # as soon as the server is ready continue!
-            world.world.wait_for_tick(10.0):
+            world.world.wait_for_tick(10.0)
 
             world.tick(clock)
             world.render(display)
