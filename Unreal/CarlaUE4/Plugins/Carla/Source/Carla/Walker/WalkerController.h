@@ -33,7 +33,7 @@ public:
       : Controller(Controller)
     {}
 
-    void operator()(FWalkerControl &WalkerControl);
+    void operator()(const FWalkerControl &WalkerControl);
 
     void operator()(FWalkerBoneControl &WalkerBoneControl);
 

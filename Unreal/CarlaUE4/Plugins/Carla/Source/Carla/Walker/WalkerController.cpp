@@ -88,7 +88,7 @@ void AWalkerController::SetManualBones(const bool bIsEnabled)
   }
 }
 
-void AWalkerController::ControlTickVisitor::operator()(FWalkerControl &WalkerControl)
+void AWalkerController::ControlTickVisitor::operator()(const FWalkerControl &WalkerControl)
 {
   auto *Character = Controller->GetCharacter();
   if (Character != nullptr)
