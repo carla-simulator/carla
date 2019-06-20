@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "Carla/Walker/WalkerControl.h"
 #include "Carla/Walker/WalkerBoneControl.h"
+#include "Carla/Walker/WalkerControl.h"
 
 #include "CoreMinimal.h"
 #include "GameFramework/Controller.h"
@@ -27,17 +27,16 @@ private:
 
   class ControlTickVisitor : public boost::static_visitor<>
   {
-public:
+  public:
 
     ControlTickVisitor(AWalkerController *Controller)
-      : Controller(Controller)
-    {}
+      : Controller(Controller) {}
 
     void operator()(const FWalkerControl &WalkerControl);
 
     void operator()(FWalkerBoneControl &WalkerBoneControl);
 
-private:
+  private:
 
     AWalkerController *Controller;
   };

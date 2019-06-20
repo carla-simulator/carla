@@ -8,9 +8,13 @@
 
 #include "carla/rpc/Transform.h"
 
+#include <string>
+#include <utility>
+
 namespace carla {
 namespace rpc {
 
   using BoneTransformData = std::pair<std::string, geom::Transform>;
+
 } // namespace rpc
 } // namespace carla

@@ -13,8 +13,6 @@
 #include "carla/rpc/Actor.h"
 #include "carla/rpc/ActorDefinition.h"
 #include "carla/rpc/AttachmentType.h"
-#include "carla/rpc/BoneTransformData.h"
-#include "carla/rpc/WalkerBoneControl.h"
 #include "carla/rpc/Command.h"
 #include "carla/rpc/CommandResponse.h"
 #include "carla/rpc/EpisodeInfo.h"
