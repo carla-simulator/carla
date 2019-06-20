@@ -11,7 +11,6 @@
 #include "carla/sensor/RawData.h"
 
 /// @todo This shouldn't be exposed in this namespace.
-#include "carla/client/World.h"
 #include "carla/client/detail/EpisodeProxy.h"
 
 namespace carla {

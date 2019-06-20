@@ -118,7 +118,7 @@ def main():
 
             clock.tick()
             world.tick()
-            ts = world.wait_for_tick()
+            ts = world.wait_for_tick().timestamp
 
             if frame is not None:
                 if ts.frame_count != frame + 1:

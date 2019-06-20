@@ -22,7 +22,8 @@ namespace detail {
       DEBUG_ONLY(auto result = )
       _actors.emplace(
           actor.id,
-          ActorState{
+          ActorSnapshot{
+              actor.id,
               actor.transform,
               actor.velocity,
               actor.angular_velocity,

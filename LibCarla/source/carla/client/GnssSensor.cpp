@@ -37,10 +37,10 @@ namespace client {
     log_debug(GetDisplayId(), ": subscribing to tick event");
     GetEpisode().Lock()->RegisterOnTickEvent([
         cb=std::move(callback),
-        weak_self=WeakPtr<GnssSensor>(self)](const auto &timestamp) {
+        weak_self=WeakPtr<GnssSensor>(self)](const auto &snapshot) {
       auto self = weak_self.lock();
       if (self != nullptr) {
-        auto data = self->TickGnssSensor(timestamp);
+        auto data = self->TickGnssSensor(snapshot.GetTimestamp());
         if (data != nullptr) {
           cb(std::move(data));
         }

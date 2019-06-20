@@ -95,7 +95,7 @@ namespace detail {
   // -- Tick -------------------------------------------------------------------
   // ===========================================================================
 
-  Timestamp Simulator::WaitForTick(time_duration timeout) {
+  WorldSnapshot Simulator::WaitForTick(time_duration timeout) {
     DEBUG_ASSERT(_episode != nullptr);
     auto result = _episode->WaitForState(timeout);
     if (!result.has_value()) {
