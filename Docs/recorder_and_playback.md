@@ -37,8 +37,10 @@ client.replay_file("recording01.log", start, duration, camera)
   Ex: a value of 10 will start the simulation at second 10.
   * If the value is negative, it means the number of seconds from the end.
   Ex: a value of -10 will replay only the last 10 seconds of the simulation.
-* **duration**: we can say how many seconds we want to play. If the simulation has not reached the end, then all actors will have autopilot enabled automatically. The intention here is to allow for replaying a piece of a simulation and then let all actors start driving in autopilot again.
+* **duration**: we can say how many seconds we want to play. When the simulation reach the end, then all actors remaining will have autopilot enabled automatically. The intention here is to allow for replaying a piece of a simulation and then let all actors start driving in autopilot again.
 * **camera**: we can specify the Id of an actor and then the camera will follow that actor while replaying. Continue reading to know which Id has an actor.
+
+It is good to note that all vehicles at the end of the playback will be set in autopilot to let them continue driving by themselves, and all pedestrians will be stopped at their current place (we plan to set  autopilot for pedestrians also, to walk at random places). This behaviour let's you for example replay a piece of simulation and test how they continue after some changes in the environment.
 
 #### Playback time factor (speed)
 
@@ -50,7 +52,11 @@ client.set_replayer_time_factor(2.0)
 A value greater than 1.0 will play in fast motion, and a value below 1.0 will play in slow motion, being 1.0 the default value for normal playback.
 As a performance trick, with values over 2.0 the interpolation of positions is disabled.
 
-Also the animations can remain at normal speed, because they don't replicate the state of the animation at that exact frame. So animations are not accurate right now.
+With a time factor of 20x we can see the flow of traffic for example:
+
+![flow](img/RecorderFlow2.gif)
+
+The animations about pedestrians will not be affected by this time factor and will remain at normal speed. So animations are not accurate right now.
 
 The call of this API will not stop the replayer in course, it will change just the speed, so you can change that several times while the replayer is running.
 
@@ -193,8 +199,8 @@ client.show_recorder_actors_blocked("recording01.log", min_time, min_distance)
 ```
 
 The parameters are:
-* **min_time**: the minimum time that an actor needs to be stopped to be considered as blocked (in seconds).
-* **min_distance**: the minimum distance to consider an actor to be stopped (in cm).
+* **min_time**: the minimum time that an actor needs to be stopped to be considered as blocked (in seconds, by default 30).
+* **min_distance**: the minimum distance to consider an actor to be stopped (in cm, by default 10).
 
 So, if we want to know which actor is stopped (moving less than 1 meter during 60 seconds), we could use something like:
 
