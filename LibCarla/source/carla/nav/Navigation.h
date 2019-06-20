@@ -44,7 +44,7 @@ namespace nav {
     bool SetWalkerMaxSpeed(ActorId id, float max_speed);
     // set a new target point to go
     bool SetWalkerTarget(ActorId id, carla::geom::Location to);
-    bool SetWalkerTargetIndex(int index, carla::geom::Location to);
+    bool SetWalkerTargetIndex(int index, carla::geom::Location to, bool use_lock = true);
     // get the walker current transform
     bool GetWalkerTransform(ActorId id, carla::geom::Transform &trans);
     // get the walker current transform
@@ -52,10 +52,10 @@ namespace nav {
     // update all walkers in crowd
     void UpdateCrowd(const client::detail::EpisodeState &state);
     // get a random location for navigation
-    bool GetRandomLocationWithoutLock(carla::geom::Location &location, float maxHeight = -1.0f, dtQueryFilter *filter = nullptr);
-    bool GetRandomLocation(carla::geom::Location &location, float maxHeight = -1.0f, dtQueryFilter *filter = nullptr);
+    bool GetRandomLocation(carla::geom::Location &location, float maxHeight = -1.0f, dtQueryFilter *filter = nullptr, bool use_lock = true);
 
     private:
+    bool _ready { false };
     std::vector<uint8_t> _binaryMesh;
     double _delta_seconds;
     // meshes

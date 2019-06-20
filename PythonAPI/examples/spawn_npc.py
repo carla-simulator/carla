@@ -124,7 +124,6 @@ def main():
         print('spawned %d vehicles, press Ctrl+C to exit.' % len(actor_list))
 
         # Spawn Walkers
-        print (args.number_of_walkers)
         spawn_points = []
         for i in range(args.number_of_walkers):
             spawn_point = carla.Transform()
@@ -163,7 +162,6 @@ def main():
             all_id.append(info[i]["con"])
             all_id.append(info[i]["id"])
         all_actors = world.get_actors(all_id)
-
         # initialize each controller and set target to walk to (list is [controler, actor, controller, actor ...])
         for i in range(0, len(all_id), 2):
             # index in the info list
