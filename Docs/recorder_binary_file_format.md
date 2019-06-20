@@ -4,7 +4,7 @@ The recorder system saves all the info needed to replay the simulation in a bina
 
 ![file format 1](img/RecorderFileFormat1.png)
 
-In summary, the file format has a small header with general info (version, magic string, date and the map used) and a collection of packets of different types (currently we use 8 types, but that will be growing in the future).
+In summary, the file format has a small header with general info (version, magic string, date and the map used) and a collection of packets of different types (currently we use 10 types, but that will be growing up in the future).
 
 ![global file format](img/RecorderFileFormat3.png)
 
@@ -35,9 +35,10 @@ Each packet starts with a little header of two fields (5 bytes):
 
 * **id**: is the type of the packet
 * **size**: is the size of the data that has the packet
-* **data**: data bytes of the packet (optional)
 
-If the **size** is greater than 0 means that the packet has **data** bytes. The **data** is optional, and it needs to be reinterpreted in function of the type of the packet.
+Following the header comes the **data**, as many bytes as **size** field sais.
+The **data** is optional, si if the **size** is 0 means there is no **data** in this packet.
+If the **size** is greater than 0 means that the packet has **data** bytes. The **data** needs to be reinterpreted in function of the type of the packet.
 
 The header of the packet is useful because we can just ignore those packets we are not interested in when doing playback. We only need to read the header (first 5 bytes) of the packet and jump to the next packet just skipping the data of the packet:
 
@@ -47,12 +48,12 @@ The types of packets are:
 
 ![packets type list](img/RecorderPacketsList.png)
 
-I suggest to use **id** over 100 for user custom packets, because this list will grow in the future in sequence.
+I suggest to use **id** over 100 for user custom packets, because this list will grow up in sequence in the future.
 
 
 #### 3.1 Packet 0: Frame Start
 
-This packet marks the start of a new frame, so it will need to be the first one to start each frame. All packets need to be placed between a **Frame Start** and a **Frame End**.
+This packet marks the start of a new frame, and it will be the first one to start each frame. All packets need to be placed between a **Frame Start** and a **Frame End**.
 
 ![frame start](img/RecorderFrameStart.png)
 
@@ -152,11 +153,11 @@ A frame consist on several packets, all of them optional, unless the packets tha
 
 ![layout](img/RecorderFrameLayout.png)
 
-**Event** packets exist only in the frame where happens.
+**Event** packets exist only in the frame where they happens.
 
 **Position** and **traffic light** packets should exist in all frames, because they are required to move all actors and set the traffic lights to its state. They are optional but if they are not present then the replayer will not be able to move or set the state of traffic lights.
 
-The **animation** packets are also optional, but by default they are recorded. That way the walkers are animated and also the wheels follow the direction of the vehicles.
+The **animation** packets are also optional, but by default they are recorded. That way the walkers are animated and also the vehicle wheels follow the direction of the vehicles.
 
 ### 5. File Layout
 
