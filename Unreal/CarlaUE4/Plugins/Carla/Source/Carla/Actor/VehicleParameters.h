@@ -33,4 +33,9 @@ struct CARLA_API FVehicleParameters
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   TArray<FColor> RecommendedColors;
+
+  /// List of IDs of the drivers (pedestrians) supported by this vehicle, leave
+  /// empty if no driver is supported.
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  TArray<int32> SupportedDrivers;
 };

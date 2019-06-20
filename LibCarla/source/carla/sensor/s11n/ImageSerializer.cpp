@@ -12,7 +12,7 @@ namespace carla {
 namespace sensor {
 namespace s11n {
 
-  SharedPtr<SensorData> ImageSerializer::Deserialize(RawData data) {
+  SharedPtr<SensorData> ImageSerializer::Deserialize(RawData &&data) {
     auto image = SharedPtr<data::Image>(new data::Image{std::move(data)});
     // Set alpha of each pixel in the buffer to max to make it 100% opaque
     for (auto &pixel : *image) {

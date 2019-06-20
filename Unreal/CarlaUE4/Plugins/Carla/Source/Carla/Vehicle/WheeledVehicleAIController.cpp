@@ -151,21 +151,25 @@ void AWheeledVehicleAIController::Tick(const float DeltaTime)
 // -- Autopilot ----------------------------------------------------------------
 // =============================================================================
 
-void AWheeledVehicleAIController::ConfigureAutopilot(const bool Enable)
+void AWheeledVehicleAIController::ConfigureAutopilot(const bool Enable, const bool KeepState)
 {
   bAutopilotEnabled = Enable;
-  // Reset state.
-  Vehicle->SetSteeringInput(0.0f);
-  Vehicle->SetThrottleInput(0.0f);
-  Vehicle->SetBrakeInput(0.0f);
-  Vehicle->SetReverse(false);
-  Vehicle->SetHandbrakeInput(false);
+  if (!KeepState)
+  {
+    // Reset state.
+    Vehicle->SetSteeringInput(0.0f);
+    Vehicle->SetThrottleInput(0.0f);
+    Vehicle->SetBrakeInput(0.0f);
+    Vehicle->SetReverse(false);
+    Vehicle->SetHandbrakeInput(false);
+    ClearQueue(TargetLocations);
+    Vehicle->SetAIVehicleState(
+        bAutopilotEnabled ?
+        ECarlaWheeledVehicleState::FreeDriving :
+        ECarlaWheeledVehicleState::AutopilotOff);
+  }
+
   TrafficLightState = ETrafficLightState::Green;
-  ClearQueue(TargetLocations);
-  Vehicle->SetAIVehicleState(
-      bAutopilotEnabled ?
-      ECarlaWheeledVehicleState::FreeDriving :
-      ECarlaWheeledVehicleState::AutopilotOff);
 
   /// @todo Workaround for a race condition between client and server when
   /// enabling autopilot right after initializing a vehicle.

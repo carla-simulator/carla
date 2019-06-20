@@ -74,7 +74,7 @@ namespace s11n {
         const LidarMeasurement &measurement,
         Buffer &&bitmap);
 
-    static SharedPtr<SensorData> Deserialize(RawData data);
+    static SharedPtr<SensorData> Deserialize(RawData &&data);
   };
 
   // ===========================================================================
