@@ -6,12 +6,13 @@
 
 #include "Carla.h"
 #include "Carla/Walker/WalkerController.h"
-#include "Components/PrimitiveComponent.h"
-#include "Components/PoseableMeshComponent.h"
-#include "Containers/Map.h"
 
+#include "Components/PoseableMeshComponent.h"
+#include "Components/PrimitiveComponent.h"
+#include "Containers/Map.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Pawn.h"
+
 #include <boost/variant/apply_visitor.hpp>
 
 AWalkerController::AWalkerController(const FObjectInitializer &ObjectInitializer)
@@ -132,8 +133,7 @@ void AWalkerController::ControlTickVisitor::operator()(FWalkerBoneControl &Walke
   UPoseableMeshComponent *PoseableMesh = PoseableMeshes.IsValidIndex(0) ? PoseableMeshes[0] : nullptr;
   if (PoseableMesh)
   {
-    for (const TPair<FString,
-        FTransform> &pair : WalkerBoneControl.BoneTransforms)
+    for (const TPair<FString, FTransform> &pair : WalkerBoneControl.BoneTransforms)
     {
       FName BoneName = FName(*pair.Key);
       PoseableMesh->SetBoneTransformByName(BoneName, pair.Value, EBoneSpaces::Type::ComponentSpace);

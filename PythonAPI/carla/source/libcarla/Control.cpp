@@ -193,7 +193,7 @@ boost::python::object VehiclePhysicsControl_init(boost::python::tuple args, boos
 }
 
 static auto GetBonesTransform(const carla::rpc::WalkerBoneControl &self) {
-  const std::vector<carla::rpc::BoneTransformData> &bone_transform_data = self.GetBoneTransformData();
+  const std::vector<carla::rpc::BoneTransformData> &bone_transform_data = self.bone_transforms;
   boost::python::object get_iter =
       boost::python::iterator<const std::vector<carla::rpc::BoneTransformData>>();
   boost::python::object iter = get_iter(bone_transform_data);
@@ -236,7 +236,7 @@ void export_control() {
   namespace cg = carla::geom;
 
   class_<cr::VehicleControl>("VehicleControl")
-      .def(init<float, float, float, bool, bool, bool, int>(
+    .def(init<float, float, float, bool, bool, bool, int>(
       (arg("throttle") = 0.0f,
       arg("steer") = 0.0f,
       arg("brake") = 0.0f,
@@ -244,43 +244,41 @@ void export_control() {
       arg("reverse") = false,
       arg("manual_gear_shift") = false,
       arg("gear") = 0)))
-      .def_readwrite("throttle", &cr::VehicleControl::throttle)
-      .def_readwrite("steer", &cr::VehicleControl::steer)
-      .def_readwrite("brake", &cr::VehicleControl::brake)
-      .def_readwrite("hand_brake", &cr::VehicleControl::hand_brake)
-      .def_readwrite("reverse", &cr::VehicleControl::reverse)
-      .def_readwrite("manual_gear_shift", &cr::VehicleControl::manual_gear_shift)
-      .def_readwrite("gear", &cr::VehicleControl::gear)
-      .def("__eq__", &cr::VehicleControl::operator==)
-      .def("__ne__", &cr::VehicleControl::operator!=)
-      .def(self_ns::str(self_ns::self))
+    .def_readwrite("throttle", &cr::VehicleControl::throttle)
+    .def_readwrite("steer", &cr::VehicleControl::steer)
+    .def_readwrite("brake", &cr::VehicleControl::brake)
+    .def_readwrite("hand_brake", &cr::VehicleControl::hand_brake)
+    .def_readwrite("reverse", &cr::VehicleControl::reverse)
+    .def_readwrite("manual_gear_shift", &cr::VehicleControl::manual_gear_shift)
+    .def_readwrite("gear", &cr::VehicleControl::gear)
+    .def("__eq__", &cr::VehicleControl::operator==)
+    .def("__ne__", &cr::VehicleControl::operator!=)
+    .def(self_ns::str(self_ns::self))
   ;
 
   class_<cr::WalkerControl>("WalkerControl")
-      .def(init<cg::Vector3D, float, bool>(
-      (arg("direction") = cg::Vector3D{1.0f, 0.0f, 0.0f},
-      arg("speed") = 0.0f,
-      arg("jump") = false)))
-      .def_readwrite("direction", &cr::WalkerControl::direction)
-      .def_readwrite("speed", &cr::WalkerControl::speed)
-      .def_readwrite("jump", &cr::WalkerControl::jump)
-      .def("__eq__", &cr::WalkerControl::operator==)
-      .def("__ne__", &cr::WalkerControl::operator!=)
-      .def(self_ns::str(self_ns::self))
+    .def(init<cg::Vector3D, float, bool>(
+       (arg("direction") = cg::Vector3D{1.0f, 0.0f, 0.0f},
+       arg("speed") = 0.0f,
+       arg("jump") = false)))
+    .def_readwrite("direction", &cr::WalkerControl::direction)
+    .def_readwrite("speed", &cr::WalkerControl::speed)
+    .def_readwrite("jump", &cr::WalkerControl::jump)
+    .def("__eq__", &cr::WalkerControl::operator==)
+    .def("__ne__", &cr::WalkerControl::operator!=)
+    .def(self_ns::str(self_ns::self))
   ;
 
   class_<cr::WalkerBoneControl>("WalkerBoneControl")
-      .def("__init__", raw_function(WalkerBoneControl_init), "raw actor")
-      .def(init<>())
-      .add_property("bone_transforms", &GetBonesTransform, &SetBonesTransform)
-      .def("__eq__", &cr::WalkerBoneControl::operator==)
-      .def("__ne__", &cr::WalkerBoneControl::operator!=)
-      .def(self_ns::str(self_ns::self))
+    .def("__init__", raw_function(WalkerBoneControl_init))
+    .def(init<>())
+    .add_property("bone_transforms", &GetBonesTransform, &SetBonesTransform)
+    .def(self_ns::str(self_ns::self))
   ;
 
   class_<std::vector<cr::WheelPhysicsControl>>("vector_of_wheels")
-      .def(boost::python::vector_indexing_suite<std::vector<cr::WheelPhysicsControl>>())
-      .def(self_ns::str(self_ns::self))
+    .def(boost::python::vector_indexing_suite<std::vector<cr::WheelPhysicsControl>>())
+    .def(self_ns::str(self_ns::self))
   ;
 
   class_<cr::WheelPhysicsControl>("WheelPhysicsControl")
@@ -301,32 +299,27 @@ void export_control() {
   ;
 
   class_<cr::VehiclePhysicsControl>("VehiclePhysicsControl", no_init)
-      .def("__init__", raw_function(VehiclePhysicsControl_init), "raw actor")
-      .def(init<>())
-
-      .add_property("torque_curve", &GetTorqueCurve, &SetTorqueCurve)
-      .def_readwrite("max_rpm", &cr::VehiclePhysicsControl::max_rpm)
-      .def_readwrite("moi", &cr::VehiclePhysicsControl::moi)
-      .def_readwrite("damping_rate_full_throttle", &cr::VehiclePhysicsControl::damping_rate_full_throttle)
-      .def_readwrite("damping_rate_zero_throttle_clutch_engaged",
-      &cr::VehiclePhysicsControl::damping_rate_zero_throttle_clutch_engaged)
-      .def_readwrite("damping_rate_zero_throttle_clutch_disengaged",
-      &cr::VehiclePhysicsControl::damping_rate_zero_throttle_clutch_disengaged)
-
-      .def_readwrite("use_gear_autobox", &cr::VehiclePhysicsControl::use_gear_autobox)
-      .def_readwrite("gear_switch_time", &cr::VehiclePhysicsControl::gear_switch_time)
-      .def_readwrite("clutch_strength", &cr::VehiclePhysicsControl::clutch_strength)
-
-      .def_readwrite("mass", &cr::VehiclePhysicsControl::mass)
-      .def_readwrite("drag_coefficient", &cr::VehiclePhysicsControl::drag_coefficient)
-
-      .def_readwrite("center_of_mass", &cr::VehiclePhysicsControl::center_of_mass)
-
-      .add_property("steering_curve", &GetSteeringCurve, &SetSteeringCurve)
-      .add_property("wheels", &GetWheels, &SetWheels)
-
-      .def("__eq__", &cr::VehiclePhysicsControl::operator==)
-      .def("__ne__", &cr::VehiclePhysicsControl::operator!=)
-      .def(self_ns::str(self_ns::self))
+    .def("__init__", raw_function(VehiclePhysicsControl_init))
+    .def(init<>())
+    .add_property("torque_curve", &GetTorqueCurve, &SetTorqueCurve)
+    .def_readwrite("max_rpm", &cr::VehiclePhysicsControl::max_rpm)
+    .def_readwrite("moi", &cr::VehiclePhysicsControl::moi)
+    .def_readwrite("damping_rate_full_throttle",
+        &cr::VehiclePhysicsControl::damping_rate_full_throttle)
+    .def_readwrite("damping_rate_zero_throttle_clutch_engaged",
+        &cr::VehiclePhysicsControl::damping_rate_zero_throttle_clutch_engaged)
+    .def_readwrite("damping_rate_zero_throttle_clutch_disengaged",
+        &cr::VehiclePhysicsControl::damping_rate_zero_throttle_clutch_disengaged)
+    .def_readwrite("use_gear_autobox", &cr::VehiclePhysicsControl::use_gear_autobox)
+    .def_readwrite("gear_switch_time", &cr::VehiclePhysicsControl::gear_switch_time)
+    .def_readwrite("clutch_strength", &cr::VehiclePhysicsControl::clutch_strength)
+    .def_readwrite("mass", &cr::VehiclePhysicsControl::mass)
+    .def_readwrite("drag_coefficient", &cr::VehiclePhysicsControl::drag_coefficient)
+    .def_readwrite("center_of_mass", &cr::VehiclePhysicsControl::center_of_mass)
+    .add_property("steering_curve", &GetSteeringCurve, &SetSteeringCurve)
+    .add_property("wheels", &GetWheels, &SetWheels)
+    .def("__eq__", &cr::VehiclePhysicsControl::operator==)
+    .def("__ne__", &cr::VehiclePhysicsControl::operator!=)
+    .def(self_ns::str(self_ns::self))
   ;
 }

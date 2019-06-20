@@ -10,10 +10,12 @@
 #include "carla/Version.h"
 #include "carla/client/TimeoutException.h"
 #include "carla/rpc/ActorDescription.h"
+#include "carla/rpc/BoneTransformData.h"
 #include "carla/rpc/Client.h"
 #include "carla/rpc/DebugShape.h"
 #include "carla/rpc/Response.h"
 #include "carla/rpc/VehicleControl.h"
+#include "carla/rpc/WalkerBoneControl.h"
 #include "carla/rpc/WalkerControl.h"
 #include "carla/streaming/Client.h"
 
