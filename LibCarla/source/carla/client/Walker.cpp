@@ -25,10 +25,5 @@ namespace client {
   Walker::Control Walker::GetWalkerControl() const {
     return GetEpisode().Lock()->GetActorDynamicState(*this).state.walker_control;
   }
-
-  void Walker::SetManualBonesMode(bool enabled) {
-    GetEpisode().Lock()->SetManualBonesMode(*this, enabled);
-  }
-
 } // namespace client
 } // namespace carla

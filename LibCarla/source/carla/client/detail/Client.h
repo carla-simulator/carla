@@ -156,10 +156,6 @@ namespace detail {
         rpc::ActorId walker,
         const rpc::WalkerBoneControl &control);
 
-    void SetManualBonesMode(
-        rpc::ActorId walker,
-        bool enabled);
-
     void SetTrafficLightState(
         rpc::ActorId traffic_light,
         const rpc::TrafficLightState trafficLightState);

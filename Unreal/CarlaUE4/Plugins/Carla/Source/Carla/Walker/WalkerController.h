@@ -58,15 +58,9 @@ public:
   }
 
   UFUNCTION(BlueprintCallable)
-  void ApplyWalkerControl(const FWalkerControl &InControl)
-  {
-    Control = InControl;
-  }
+  void ApplyWalkerControl(const FWalkerControl &InControl);
 
-  void ApplyWalkerControl(const FWalkerBoneControl &InBoneControl)
-  {
-    Control = InBoneControl;
-  }
+  void ApplyWalkerControl(const FWalkerBoneControl &InBoneControl);
 
   UFUNCTION(BlueprintCallable)
   const FWalkerControl GetWalkerControl() const

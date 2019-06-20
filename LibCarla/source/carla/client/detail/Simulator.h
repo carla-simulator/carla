@@ -286,10 +286,6 @@ namespace detail {
       _client.ApplyBoneControlToWalker(walker.GetId(), control);
     }
 
-    void SetManualBonesMode(Walker &walker, bool enabled = true) {
-      _client.SetManualBonesMode(walker.GetId(), enabled);
-    }
-
     void ApplyPhysicsControlToVehicle(Vehicle &vehicle, const rpc::VehiclePhysicsControl &physicsControl) {
       _client.ApplyPhysicsControlToVehicle(vehicle.GetId(), physicsControl);
     }

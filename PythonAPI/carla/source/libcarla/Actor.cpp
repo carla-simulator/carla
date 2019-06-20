@@ -108,7 +108,6 @@ void export_actor() {
       .def("apply_control", &ApplyControl<cr::WalkerControl>, (arg("control")))
       .def("apply_control", &ApplyControl<cr::WalkerBoneControl>, (arg("control")))
       .def("get_control", &cc::Walker::GetWalkerControl)
-      .def("set_manual_bones_mode", &cc::Walker::SetManualBonesMode, (arg("enabled") = false))
       .def(self_ns::str(self_ns::self))
   ;
 

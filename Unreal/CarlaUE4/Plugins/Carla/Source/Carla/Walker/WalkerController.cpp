@@ -57,6 +57,24 @@ UPoseableMeshComponent *AddNewBoneComponent(AActor *InActor, FVector inLocation,
   return NewComp;
 }
 
+void AWalkerController::ApplyWalkerControl(const FWalkerControl &InControl)
+{
+  Control = InControl;
+  if (bManualBones)
+  {
+    SetManualBones(false);
+  }
+}
+
+void AWalkerController::ApplyWalkerControl(const FWalkerBoneControl &InBoneControl)
+{
+  Control = InBoneControl;
+  if (!bManualBones)
+  {
+    SetManualBones(true);
+  }
+}
+
 void AWalkerController::SetManualBones(const bool bIsEnabled)
 {
   bManualBones = bIsEnabled;

@@ -34,8 +34,6 @@ namespace client {
     /// received in the last tick.
     Control GetWalkerControl() const;
 
-    void SetManualBonesMode(bool enabled);
-
   private:
 
     Control _control;
