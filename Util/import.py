@@ -14,6 +14,9 @@ import json
 import ntpath
 import subprocess
 
+# Global variables
+IMPORT_SETTING_FILENAME = "importsetting.json"
+
 # Returns a list with the paths of each package's json files that has been found recursively in the input folder
 def get_packages_json_list(folder):
     json_files = []
@@ -38,7 +41,7 @@ def invoke_commandlet(name, arguments):
 
 # Creates the PROPS and MAPS import_setting.json file needed as an argument for using the ImportAssets commandlet
 def generate_import_setting_file(package_name, json_dirname, props, maps):
-    importfile = os.path.join(os.getcwd(), "importsetting.json")
+    importfile = os.path.join(os.getcwd(), IMPORT_SETTING_FILENAME)
     if os.path.exists(importfile):
         os.remove(importfile)
 
@@ -93,45 +96,44 @@ def generate_import_setting_file(package_name, json_dirname, props, maps):
         fh.close()
     return importfile
 
-# Creates the PackageName.Props.json file for the package
-def generate_prop_file(package_name, props):
+# Creates the PackageName.Package.json file for the package
+def generate_package_file(package_name, props, maps):
     output_json = {}
+
     output_json["props"] = []
     for prop in props:
         name = prop["name"]
         size = prop["size"]
 
         fbx_name = ntpath.basename(prop["source"]).replace(".fbx", "")
-        path = os.path.join("Game", package_name, "Static", prop["tag"], prop["name"], fbx_name)
+        path = "/" + "/".join(["Game", package_name, "Static", prop["tag"], prop["name"]])
 
         output_json["props"].append({
             "name": name,
+            "path": path,
             "size": size,
-            "path": path
         })
 
-    prop_file_path = os.path.join(os.getcwd(), "..", "Unreal", "CarlaUE4", "Content", package_name, "Config")
-    if not os.path.exists(prop_file_path):
-        try:
-            os.makedirs(prop_file_path)
-        except OSError as exc:
-            if exc.errno != errno.EEXIST:
-                raise
-
-    with open(os.path.join(prop_file_path, package_name + ".Props.json"), 'w+') as fh:
-        json.dump(output_json, fh)
-
-# Creates the PackageName.Package.json file for the package
-def generate_package_file(package_name, props):
-    output_json = {}
     output_json["maps"] = []
-    output_json["props"] = []
+    for map in maps:
+        fbx_name = ntpath.basename(map["source"]).replace(".fbx", "")
+        path = "/" + "/".join(["Game", package_name, "Maps", map["name"], fbx_name])
+        use_carla_materials = map["use_carla_materials"] if "use_carla_materials" in map else False
+        output_json["maps"].append( {
+            "name" : map["name"],
+            "path" : path,
+            "use_carla_materials": use_carla_materials
+        })
 
-    prop_json_dir = os.path.join(os.getcwd(), "..", "Unreal", "CarlaUE4", "Content", package_name, "Config")
+    package_config_path = os.path.join(os.getcwd(), "..", "Unreal", "CarlaUE4", "Content", package_name, "Config")
+    if not os.path.exists(package_config_path):
+      try:
+        os.makedirs(package_config_path)
+      except OSError as exc:
+        if exc.errno != errno.EEXISTS:
+          raise
 
-    output_json["props"].append(os.path.join(prop_json_dir, package_name + ".Props.json"))
-
-    with open(os.path.join(prop_json_dir, package_name + ".Package.json"), 'w+') as fh:
+    with open(os.path.join(package_config_path, package_name + ".Package.json"), "w+") as fh:
         json.dump(output_json, fh)
 
 
@@ -142,16 +144,13 @@ def import_assets(package_name, json_dirname, props, maps):
     # Import Props
     import_setting_file = generate_import_setting_file(package_name, json_dirname, props, maps)
     commandlet_arguments = "-importSettings=\"%s\" -AllowCommandletRendering -nosourcecontrol -replaceexisting" % import_setting_file
-    # invoke_commandlet(commandlet_name, commandlet_arguments)
+    invoke_commandlet(commandlet_name, commandlet_arguments)
     os.remove(import_setting_file)
 
     # TODO: Move maps XODR files if any
 
-    # Create files
-    generate_prop_file (package_name, props)
-    generate_package_file (package_name, props)
-
-    # Clean up
+    # Create package file
+    generate_package_file (package_name, props, maps)
 
 
 def import_assets_from_json_list(json_list):
@@ -167,6 +166,13 @@ def import_assets_from_json_list(json_list):
 
             import_assets(package_name, dirname, props, maps)
 
+    prepare_cook_commandlet(package_name)
+
+def prepare_cook_commandlet(package_name):
+    commandlet_name = "CookAssets"
+    commandlet_arguments = "-PackageName=%s" % package_name
+
+    invoke_commandlet(commandlet_name, commandlet_arguments)
 
 def main():
     import_folder = os.path.join(os.getcwd(), "..", "Import")
