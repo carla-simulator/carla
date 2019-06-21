@@ -145,7 +145,7 @@ def main():
             if results[i].error:
                 logging.error(results[i].error)
             else:
-                info.append({ "id":results[i].actor_id, "trans":spawn_points[i], "con":None })
+                info.append({"id": results[i].actor_id, "trans": spawn_points[i], "con": None})
 
         # Spawn walker controller
         batch = []
@@ -192,6 +192,7 @@ def main():
 
         print('\ndestroying %d walkers' % len(info))
         client.apply_batch([carla.command.DestroyActor(x) for x in all_id])
+
 
 if __name__ == '__main__':
 
