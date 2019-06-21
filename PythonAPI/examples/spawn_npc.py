@@ -101,6 +101,7 @@ def main():
         SetAutopilot = carla.command.SetAutopilot
         FutureActor = carla.command.FutureActor
 
+        # Spawn vehicles
         batch = []
         for n, transform in enumerate(spawn_points):
             if n >= args.number_of_vehicles:
@@ -133,6 +134,9 @@ def main():
         info = []
         for spawn_point in spawn_points:
             walker_bp = random.choice(world.get_blueprint_library().filter('walker.pedestrian.*'))
+            # set as not invencible
+            if walker_bp.has_attribute('is_invincible'):
+                walker_bp.set_attribute('is_invincible', 'false')
             batch.append(SpawnActor(walker_bp, spawn_point))
 
         # apply
