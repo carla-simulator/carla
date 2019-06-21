@@ -29,11 +29,23 @@ struct CARLA_API FPackageParams
 };
 
 USTRUCT()
+struct CARLA_API FMapData
+{
+  GENERATED_USTRUCT_BODY()
+
+  FString Name;
+
+  FString Path;
+
+  bool bUseCarlaMapMaterials;
+};
+
+USTRUCT()
 struct CARLA_API FAssetsPaths
 {
   GENERATED_USTRUCT_BODY()
 
-  TPair<TArray<FString>, bool> MapsPaths;
+  TArray<FMapData> MapsPaths;
 
   TArray<FString> PropsPaths;
 };
@@ -55,17 +67,6 @@ public:
    * @param InParams - The parameters to parse
    */
   FPackageParams ParseParams(const FString &InParams) const;
-
-  /**
-   * Move meshes from one folder to another. It only works with StaticMeshes
-   * @param SrcPath - Source folder from which the StaticMeshes will be obtained
-   * @param DestPath - Posible folder in which the Meshes will be ordered
-   *following
-   * the semantic segmentation. It follows ROAD_INDEX, MARKINGLINE_INDEX,
-   *TERRAIN_INDEX
-   * for the position in which each path will be stored.
-   */
-  void MoveMeshesToMap(const FString &SrcPath, const TArray<FString> &DestPath);
 
   /**
    * Loads a UWorld object from a given path into a asset data structure.
@@ -110,6 +111,9 @@ public:
 private:
 
   UPROPERTY()
+  UObjectLibrary* MapObjectLibrary;
+
+  UPROPERTY()
   UObjectLibrary *AssetsObjectLibrary;
 
   UPROPERTY()
@@ -120,4 +124,27 @@ private:
 
   UPROPERTY()
   TArray<FAssetData> MapContents;
+
+
+  /** Materials for the workaround */
+  /**
+   * Workaround material for MarkingNodes mesh
+   */
+  UMaterial* MarkingNodeMaterial;
+
+  /**
+   * Workaround material for the RoadNode mesh
+   */
+  UMaterial* RoadNodeMaterial;
+
+  /**
+   * Workaround material for the second material for the MarkingNodes
+   */
+  UMaterial* MarkingNodeMaterialAux;
+
+  /**
+   * Workaround material for the TerrainNodes
+   */
+  UMaterial* TerrainNodeMaterial;
+
 };

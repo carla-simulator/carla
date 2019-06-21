@@ -101,11 +101,11 @@ def generate_import_setting_file(package_name, json_dirname, props, maps):
                 "FileNames": file_names
             })
 
-        for carla_map in maps:
-            maps_dest = "/" + "/".join(["Game", package_name, "Maps", carla_map["name"]])
-            print(maps_dest)
+        for map in maps:
+            maps_dest = "/" + "/".join(["Game", package_name, "Maps", map["name"]])
+            print (maps_dest)
 
-            file_names = [os.path.join(json_dirname, carla_map["source"])]
+            file_names = [os.path.join(json_dirname, map["source"])]
             import_groups.append({
                 "ImportSettings": import_settings,
                 "FactoryName": "FbxFactory",
@@ -128,7 +128,7 @@ def generate_package_file(package_name, props, maps):
         name = prop["name"]
         size = prop["size"]
 
-        fbx_name = ntpath.basename(prop["source"]).replace(".fbx", "")
+        # fbx_name = ntpath.basename(prop["source"]).replace(".fbx", "")
         path = "/" + "/".join(["Game", package_name, "Static", prop["tag"], prop["name"]])
 
         output_json["props"].append({
@@ -139,8 +139,8 @@ def generate_package_file(package_name, props, maps):
 
     output_json["maps"] = []
     for map in maps:
-        fbx_name = ntpath.basename(map["source"]).replace(".fbx", "")
-        path = "/" + "/".join(["Game", package_name, "Maps", map["name"], fbx_name])
+        # fbx_name = ntpath.basename(map["source"]).replace(".fbx", "")
+        path = "/" + "/".join(["Game", package_name, "Maps", map["name"]])
         use_carla_materials = map["use_carla_materials"] if "use_carla_materials" in map else False
         output_json["maps"].append({
             "name": map["name"],
@@ -194,6 +194,7 @@ def import_assets(package_name, json_dirname, props, maps):
 
 
 def import_assets_from_json_list(json_list):
+    maps = []
     for dirname, filename in json_list:
         # Read json file
         with open(os.path.join(dirname, filename)) as json_file:
@@ -205,8 +206,40 @@ def import_assets_from_json_list(json_list):
             package_name = filename.replace(".json", "")
 
             import_assets(package_name, dirname, props, maps)
+            move_uassets(package_name, maps)
 
+    # Prepare cooking of package
     prepare_cook_commandlet(package_name)
+
+
+def move_uassets(package_name, maps):
+    dirname = os.path.dirname(os.path.realpath(__file__))
+    for map in maps:
+        origin_path = os.path.join(dirname, "..", "Unreal", "CarlaUE4", "Content", package_name, "Maps", map["name"])
+        dest_base_path = os.path.join(dirname, "..", "Unreal", "CarlaUE4", "Content", package_name, "Static")
+
+        # Create the 3 posible destination folder path
+        marking_dir = os.path.join(dest_base_path, "MarkingNode", map["name"])
+        road_dir = os.path.join(dest_base_path, "RoadNode", map["name"])
+        terrain_dir = os.path.join(dest_base_path, "TerrainNode", map["name"])
+
+        # Create folders if they do not exist
+        if not os.path.exists(marking_dir):
+            os.makedirs(marking_dir)
+        if not os.path.exists(road_dir):
+            os.makedirs(road_dir)
+        if not os.path.exists(terrain_dir):
+            os.makedirs(terrain_dir)
+
+        # Move uassets to correspoding folder
+        for filename in os.listdir(origin_path):
+            if "MarkingNode" in filename:
+                shutil.move(os.path.join(origin_path, filename), marking_dir)
+            if "RoadNode" in filename:
+                shutil.move(os.path.join(origin_path, filename), road_dir)
+            if "TerrainNode" in filename:
+                shutil.move(os.path.join(origin_path, filename), terrain_dir)
+
 
 
 def prepare_cook_commandlet(package_name):
