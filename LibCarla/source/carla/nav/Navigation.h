@@ -23,7 +23,8 @@ namespace nav {
 
   class Navigation {
 
-    public:
+  public:
+
     Navigation() = default;
     ~Navigation();
 
@@ -32,7 +33,8 @@ namespace nav {
     // load navigation data from memory
     bool Load(const std::vector<uint8_t> content);
     // return the path points to go from one position to another
-    bool GetPath(const carla::geom::Location from, const carla::geom::Location to, dtQueryFilter* filter, std::vector<carla::geom::Location> &path);
+    bool GetPath(const carla::geom::Location from, const carla::geom::Location to, dtQueryFilter * filter,
+    std::vector<carla::geom::Location> &path);
 
     // create the crowd object
     void CreateCrowd(void);
@@ -52,9 +54,11 @@ namespace nav {
     // update all walkers in crowd
     void UpdateCrowd(const client::detail::EpisodeState &state);
     // get a random location for navigation
-    bool GetRandomLocation(carla::geom::Location &location, float maxHeight = -1.0f, dtQueryFilter *filter = nullptr, bool use_lock = true);
+    bool GetRandomLocation(carla::geom::Location &location, float maxHeight = -1.0f,
+    dtQueryFilter * filter = nullptr, bool use_lock = true);
 
-    private:
+  private:
+
     bool _ready { false };
     std::vector<uint8_t> _binaryMesh;
     double _delta_seconds;

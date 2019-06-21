@@ -25,10 +25,10 @@ namespace detail {
 
   class WalkerNavigation
     : public std::enable_shared_from_this<WalkerNavigation>,
-      private NonCopyable {
+    private NonCopyable {
   public:
 
-    explicit WalkerNavigation(Client &client);
+    explicit WalkerNavigation(Client & client);
 
     void RegisterWalker(ActorId walker_id, ActorId controller_id) {
       // add to list
@@ -41,7 +41,7 @@ namespace detail {
       unsigned int i = 0;
       while (i < (*list).size()) {
         if ((*list)[i].walker == walker_id &&
-            (*list)[i].controller == controller_id) {
+        (*list)[i].controller == controller_id) {
           _walkers.Delete(i);
           break;
         }
