@@ -72,8 +72,12 @@ namespace detail {
       EpisodeProxy episode,
       rpc::Actor description,
       GarbageCollectionPolicy gc) {
-    auto init = ActorInitializer{description, episode, parent};
-    if (description.HasAStream()) {
+    auto init = ActorInitializer{description, episode};
+    if (description.description.id == "sensor.other.lane_invasion") {
+      return MakeActorImpl<LaneInvasionSensor>(std::move(init), gc);
+    } else if (description.description.id == "sensor.other.gnss") {
+      return MakeActorImpl<GnssSensor>(std::move(init), gc);
+    } else if (description.HasAStream()) {
       return MakeActorImpl<ServerSideSensor>(std::move(init), gc);
     } else if (StringUtil::StartsWith(description.description.id, "vehicle.")) {
       return MakeActorImpl<Vehicle>(std::move(init), gc);
@@ -83,10 +87,6 @@ namespace detail {
       return MakeActorImpl<TrafficLight>(std::move(init), gc);
     } else if (StringUtil::StartsWith(description.description.id, "traffic.")) {
       return MakeActorImpl<TrafficSign>(std::move(init), gc);
-    } else if (description.description.id == "sensor.other.lane_invasion") {
-      return MakeActorImpl<LaneInvasionSensor>(std::move(init), gc);
-    } else if (description.description.id == "sensor.other.gnss") {
-      return MakeActorImpl<GnssSensor>(std::move(init), gc);
     } else if (description.description.id == "controller.ai.walker") {
       return MakeActorImpl<WalkerAIController>(std::move(init), gc);
     }

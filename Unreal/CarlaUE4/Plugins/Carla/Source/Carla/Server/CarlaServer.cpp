@@ -9,7 +9,6 @@
 
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "Carla/Util/DebugShapeDrawer.h"
-#include "Carla/Util/OpenDrive.h"
 #include "Carla/Util/NavigationMesh.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Walker/WalkerController.h"
