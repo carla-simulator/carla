@@ -2,7 +2,11 @@
 
 #include "CookAssetsCommandlet.h"
 #include "GameFramework/WorldSettings.h"
+#include "HAL/PlatformFilemanager.h"
+#include "HAL/PlatformFile.h"
+
 #include "UObject/MetaData.h"
+
 // #include "CommandletPluginPrivate.h"
 
 UCookAssetsCommandlet::UCookAssetsCommandlet()
@@ -12,7 +16,7 @@ UCookAssetsCommandlet::UCookAssetsCommandlet()
   IsServer = false;
   LogToConsole = true;
 
-  #if WITH_EDITORONLY_DATA
+#if WITH_EDITORONLY_DATA
   static ConstructorHelpers::FObjectFinder<UMaterial> MarkingNode(TEXT(
       "Material'/Game/Carla/Static/GenericMaterials/LaneMarking/M_MarkingLane_W.M_MarkingLane_W'"));
   static ConstructorHelpers::FObjectFinder<UMaterial> RoadNode(TEXT(
@@ -25,7 +29,7 @@ UCookAssetsCommandlet::UCookAssetsCommandlet()
   MarkingNodeMaterial = (UMaterial *) MarkingNode.Object;
   RoadNodeMaterial = (UMaterial *) RoadNode.Object;
   MarkingNodeMaterialAux = (UMaterial *) RoadNodeAux.Object;
-  #endif
+#endif
 }
 #if WITH_EDITORONLY_DATA
 
@@ -60,13 +64,12 @@ void UCookAssetsCommandlet::LoadWorld(FAssetData &AssetData)
   }
 }
 
-void UCookAssetsCommandlet::AddMeshesToWorld(
+TArray<AStaticMeshActor *> UCookAssetsCommandlet::AddMeshesToWorld(
     const TArray<FString> &AssetsPaths,
     bool bUseCarlaMaterials)
 {
-  for (auto s : AssetsPaths) {
-    UE_LOG(LogTemp, Log, TEXT("MESH: %s"), *s)
-  }
+  TArray<AStaticMeshActor *> SpawnedMeshes;
+
   AssetsObjectLibrary = UObjectLibrary::CreateLibrary(UStaticMesh::StaticClass(), false, GIsEditor);
   AssetsObjectLibrary->AddToRoot();
   AssetsObjectLibrary->LoadAssetDataFromPaths(AssetsPaths);
@@ -82,19 +85,14 @@ void UCookAssetsCommandlet::AddMeshesToWorld(
   UStaticMesh *MeshAsset;
   AStaticMeshActor *MeshActor;
 
-  if(MapContents.Num() <= 0) {
-    UE_LOG(LogTemp, Log, TEXT("EMPTY MAP CONTENTS FOUND"));
-  }
-
   for (auto MapAsset : MapContents)
   {
-    UE_LOG(LogTemp, Log, TEXT("ADDING MESHES"));
     MeshAsset = CastChecked<UStaticMesh>(MapAsset.GetAsset());
     MeshActor = World->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(),
         initialVector,
         initialRotator);
     MeshActor->GetStaticMeshComponent()->SetStaticMesh(CastChecked<UStaticMesh>(MeshAsset));
-
+    SpawnedMeshes.Add(MeshActor);
     if (bUseCarlaMaterials)
     {
       FString AssetName;
@@ -120,6 +118,17 @@ void UCookAssetsCommandlet::AddMeshesToWorld(
   }
 
   World->MarkPackageDirty();
+  return SpawnedMeshes;
+}
+
+void UCookAssetsCommandlet::DestroyWorldSpawnedActors(TArray<AStaticMeshActor *> &SpawnedActors)
+{
+  for (auto Actor : SpawnedActors)
+  {
+    Actor->Destroy();
+  }
+
+  World->MarkPackageDirty();
 }
 
 bool UCookAssetsCommandlet::SaveWorld(FAssetData &AssetData, FString &DestPath, FString &WorldName)
@@ -138,13 +147,11 @@ bool UCookAssetsCommandlet::SaveWorld(FAssetData &AssetData, FString &DestPath, 
   World->GetOuter()->MarkPackageDirty();
 
   // Filling the map stuff (Code only applied for maps)
-  // AOpenDriveActor *OpenWorldActor =
-  //
-  //
-  // CastChecked<AOpenDriveActor>(World->SpawnActor(AOpenDriveActor::StaticClass(),
-  // new FVector(), NULL));
-  // OpenWorldActor->BuildRoutes(WorldName);
-  // OpenWorldActor->AddSpawners();
+  AOpenDriveActor *OpenWorldActor =
+      CastChecked<AOpenDriveActor>(World->SpawnActor(AOpenDriveActor::StaticClass(),
+      new FVector(), NULL));
+  OpenWorldActor->BuildRoutes(WorldName);
+  OpenWorldActor->AddSpawners();
 
   // Saving the package
   FString PackageFileName = FPackageName::LongPackageNameToFilename(PackageName,
@@ -200,60 +207,79 @@ FAssetsPaths UCookAssetsCommandlet::GetAssetsPathFromPackage(const FString &Pack
   return AssetsPaths;
 }
 
+bool SaveStringTextToFile(
+    FString SaveDirectory,
+    FString FileName,
+    FString SaveText,
+    bool bAllowOverWriting)
+{
+  IPlatformFile &PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+
+  // CreateDirectoryTree returns true if the destination
+  // directory existed prior to call or has been created
+  // during the call.
+  if (PlatformFile.CreateDirectoryTree(*SaveDirectory))
+  {
+    // Get absolute file path
+    FString AbsoluteFilePath = SaveDirectory + "/" + FileName;
+
+    // Allow overwriting or file doesn't already exist
+    if (bAllowOverWriting || !PlatformFile.FileExists(*AbsoluteFilePath))
+    {
+      FFileHelper::SaveStringToFile(SaveText, *AbsoluteFilePath);
+    }
+  }
+  return true;
+}
+
 int32 UCookAssetsCommandlet::Main(const FString &Params)
 {
   FPackageParams PackageParams = ParseParams(Params);
-  UE_LOG(LogTemp, Log, TEXT("Call to Cook Assets Commandlet"));
-  UE_LOG(LogTemp, Log, TEXT("Package Name: %s"), *PackageParams.Name);
 
   // Get Props and Maps Path
-  UE_LOG(LogTemp, Log, TEXT("------ GET ASSETS PATH ------"));
   FAssetsPaths AssetsPaths = GetAssetsPathFromPackage(PackageParams.Name);
 
-  UE_LOG(LogTemp, Log, TEXT("------ ADDING MAPS TO WORLD ------"));
+  // Load World
+  FAssetData AssetData;
+  LoadWorld(AssetData);
+  World = CastChecked<UWorld>(AssetData.GetAsset());
+
+  FString MapPathData;
   for (auto Map : AssetsPaths.MapsPaths)
   {
-    UE_LOG(LogTemp, Log, TEXT("MAP NAME: %s"), *Map.Name);
-    UE_LOG(LogTemp, Log, TEXT("MAP PATH: %s"), *Map.Path);
 
-    // Load World
     FString RoadsPath = TEXT("/Game/") + PackageParams.Name + TEXT("/Static/RoadNode/") + Map.Name;
     FString MarkingLinePath = TEXT("/Game/") + PackageParams.Name + TEXT("/Static/MarkingNode/") + Map.Name;
     FString TerrainPath = TEXT("/Game/") + PackageParams.Name + TEXT("/Static/TerrainNode/") + Map.Name;
 
-    UE_LOG(LogTemp, Log, TEXT("ROADS PATH: %s"), *RoadsPath);
-    UE_LOG(LogTemp, Log, TEXT("MARKING PATH: %s"), *MarkingLinePath);
-    UE_LOG(LogTemp, Log, TEXT("TERRAIN PATH: %s"), *TerrainPath);
-
     TArray<FString> DataPath = {RoadsPath, MarkingLinePath, TerrainPath};
 
-    FAssetData AssetData;
-    LoadWorld(AssetData);
-    World = CastChecked<UWorld>(AssetData.GetAsset());
+    // Add Map Meshes to World
+    TArray<AStaticMeshActor *> SpawnedActors = AddMeshesToWorld(DataPath, Map.bUseCarlaMapMaterials);
 
-    UE_LOG(LogTemp, Log, TEXT("------ ADD MESHES TO MAP ------"));
-    // MoveMapMeshes(Map.Path, DataPath);
-    // FString Path = TEXT("/Game/") + PackageParams.Name + TEXT("/Maps/") + Map.Name;
-    // TArray<FString> Paths;
-    // Paths.Add(Path);
-    AddMeshesToWorld(DataPath, Map.bUseCarlaMapMaterials);
-    UE_LOG(LogTemp, Log, TEXT("-------------------------------"));
-
+    // Save the World in specified path
     SaveWorld(AssetData, Map.Path, Map.Name);
+
+    // Remove spawned actors from world to keep equal as BaseMap
+    DestroyWorldSpawnedActors(SpawnedActors);
+
+    MapPathData.Append(Map.Path + TEXT("\n"));
   }
 
-  // UE_LOG(LogTemp, Log, TEXT("------ ADDING PROPS TO WORLD ------"));
-  // FAssetData AssetData;
-  // LoadWorld(AssetData);
-  // World = CastChecked<UWorld>(AssetData.GetAsset());
-  // // Add props in a single base map
-  // AddMeshesToWorld(AssetsPaths.PropsPaths, false);
+  // Save Map Path File for further use
+  FString SaveDirectory = FString("/Game/") + PackageParams.Name + TEXT("/Config");
+  FString FileName = FString("MapPaths.txt");
 
-  // UE_LOG(LogTemp, Log, TEXT("------ SAVING BASEMAP WORLD ------"));
-  // FString WorldDestPath = TEXT("/Game/") + PackageParams.Name +
-  // "/Maps/MapName";
-  // FString MapName("MapName");
-  // SaveWorld(AssetData, WorldDestPath, MapName);
+  // TODO: This throws a weird error when saving, we need to fix it
+  // SaveStringTextToFile(SaveDirectory, FileName, MapPathData, true);
+
+  // Add props in a single Base Map
+  AddMeshesToWorld(AssetsPaths.PropsPaths, false);
+
+  FString MapName("PropsMap");
+  FString WorldDestPath = TEXT("/Game/") + PackageParams.Name +
+      TEXT("/Maps/") + MapName;
+  SaveWorld(AssetData, WorldDestPath, MapName);
 
   return 0;
 }
