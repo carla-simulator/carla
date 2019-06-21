@@ -76,81 +76,85 @@ namespace rpc {
 } // namespace rpc
 } // namespace carla
 
-static auto GetVectorOfVector2DFromList(const boost::python::list &list) {
+namespace bp = boost::python;
+namespace cr = carla::rpc;
+
+
+static auto GetVectorOfVector2DFromList(const bp::list &list) {
   std::vector<carla::geom::Vector2D> v;
 
-  auto length = boost::python::len(list);
+  auto length = bp::len(list);
   v.reserve(static_cast<size_t>(length));
   for (auto i = 0u; i < length; ++i) {
-    boost::python::extract<carla::geom::Vector2D> ext(list[i]);
+    bp::extract<carla::geom::Vector2D> ext(list[i]);
     if (ext.check()) {
       v.push_back(ext);
     } else {
       v.push_back(carla::geom::Vector2D{
-        boost::python::extract<float>(list[i][0u]),
-        boost::python::extract<float>(list[i][1u])});
+        bp::extract<float>(list[i][0u]),
+        bp::extract<float>(list[i][1u])});
     }
   }
   return v;
 }
 
-static auto GetVectorOfBoneTransformFromList(const boost::python::list &list) {
-  std::vector<carla::rpc::BoneTransformData> v;
+static auto GetVectorOfBoneTransformFromList(const bp::list &list) {
+  std::vector<cr::BoneTransformData> v;
 
-  auto lenght = boost::python::len(list);
+  auto length = bp::len(list);
   v.reserve(static_cast<size_t>(lenght));
   for (auto i = 0u; i < lenght; ++i) {
-    boost::python::extract<carla::rpc::BoneTransformData> ext(list[i]);
+    bp::extract<cr::BoneTransformData> ext(list[i]);
     if (ext.check()) {
       v.push_back(ext);
     } else {
-      v.push_back(carla::rpc::BoneTransformData{
-        boost::python::extract<std::string>(list[i][0u]),
-        boost::python::extract<carla::geom::Transform>(list[i][1u])});
+      v.push_back(cr::BoneTransformData{
+        bp::extract<std::string>(list[i][0u]),
+        bp::extract<carla::geom::Transform>(list[i][1u])});
     }
   }
   return v;
 }
 
-static auto GetWheels(const carla::rpc::VehiclePhysicsControl &self) {
+static auto GetWheels(const cr::VehiclePhysicsControl &self) {
   const auto &wheels = self.GetWheels();
-  boost::python::object get_iter = boost::python::iterator<std::vector<carla::rpc::WheelPhysicsControl>>();
-  boost::python::object iter = get_iter(wheels);
-  return boost::python::list(iter);
+  bp::object get_iter = bp::iterator<std::vector<cr::WheelPhysicsControl>>();
+  bp::object iter = get_iter(wheels);
+  return bp::list(iter);
 }
 
-static void SetWheels(carla::rpc::VehiclePhysicsControl &self, const boost::python::list &list) {
-  std::vector<carla::rpc::WheelPhysicsControl> wheels;
-  auto length = boost::python::len(list);
+static void SetWheels(cr::VehiclePhysicsControl &self, const bp::list &list) {
+  std::vector<cr::WheelPhysicsControl> wheels;
+  auto length = bp::len(list);
   for (auto i = 0u; i < length; ++i) {
-    wheels.push_back(boost::python::extract<carla::rpc::WheelPhysicsControl &>(list[i]));
+    wheels.push_back(bp::extract<cr::WheelPhysicsControl &>(list[i]));
   }
   self.wheels = wheels;
 }
 
-static auto GetTorqueCurve(const carla::rpc::VehiclePhysicsControl &self) {
+static auto GetTorqueCurve(const cr::VehiclePhysicsControl &self) {
   const std::vector<carla::geom::Vector2D> &torque_curve = self.GetTorqueCurve();
-  boost::python::object get_iter = boost::python::iterator<const std::vector<carla::geom::Vector2D>>();
-  boost::python::object iter = get_iter(torque_curve);
-  return boost::python::list(iter);
+  bp::object get_iter = bp::iterator<const std::vector<carla::geom::Vector2D>>();
+  bp::object iter = get_iter(torque_curve);
+  return bp::list(iter);
 }
 
-static void SetTorqueCurve(carla::rpc::VehiclePhysicsControl &self, const boost::python::list &list) {
+static void SetTorqueCurve(cr::VehiclePhysicsControl &self, const bp::list &list) {
   self.torque_curve = GetVectorOfVector2DFromList(list);
 }
 
-static auto GetSteeringCurve(const carla::rpc::VehiclePhysicsControl &self) {
+static auto GetSteeringCurve(const cr::VehiclePhysicsControl &self) {
   const std::vector<carla::geom::Vector2D> &steering_curve = self.GetSteeringCurve();
-  boost::python::object get_iter = boost::python::iterator<const std::vector<carla::geom::Vector2D>>();
-  boost::python::object iter = get_iter(steering_curve);
-  return boost::python::list(iter);
+  bp::object get_iter = bp::iterator<const std::vector<carla::geom::Vector2D>>();
+  bp::object iter = get_iter(steering_curve);
+  return bp::list(iter);
 }
 
-static void SetSteeringCurve(carla::rpc::VehiclePhysicsControl &self, const boost::python::list &list) {
+static void SetSteeringCurve(cr::VehiclePhysicsControl &self, const bp::list &list) {
   self.steering_curve = GetVectorOfVector2DFromList(list);
 }
 
-boost::python::object VehiclePhysicsControl_init(boost::python::tuple args, boost::python::dict kwargs) {
+bp::object VehiclePhysicsControl_init(bp::tuple args, bp::dict kwargs) {
   // Args names
   const uint32_t NUM_ARGUMENTS = 16;
   const char *args_names[NUM_ARGUMENTS] = {
@@ -173,8 +177,8 @@ boost::python::object VehiclePhysicsControl_init(boost::python::tuple args, boos
     "wheels"
   };
 
-  boost::python::object self = args[0];
-  args = boost::python::tuple(args.slice(1, boost::python::_));
+  bp::object self = args[0];
+  args = bp::tuple(args.slice(1, bp::_));
 
   auto res = self.attr("__init__")();
   if (len(args) > 0) {
@@ -192,27 +196,27 @@ boost::python::object VehiclePhysicsControl_init(boost::python::tuple args, boos
   return res;
 }
 
-static auto GetBonesTransform(const carla::rpc::WalkerBoneControl &self) {
-  const std::vector<carla::rpc::BoneTransformData> &bone_transform_data = self.bone_transforms;
-  boost::python::object get_iter =
-      boost::python::iterator<const std::vector<carla::rpc::BoneTransformData>>();
-  boost::python::object iter = get_iter(bone_transform_data);
-  return boost::python::list(iter);
+static auto GetBonesTransform(const cr::WalkerBoneControl &self) {
+  const std::vector<cr::BoneTransformData> &bone_transform_data = self.bone_transforms;
+  bp::object get_iter =
+      bp::iterator<const std::vector<cr::BoneTransformData>>();
+  bp::object iter = get_iter(bone_transform_data);
+  return bp::list(iter);
 }
 
-static void SetBonesTransform(carla::rpc::WalkerBoneControl &self, const boost::python::list &list) {
+static void SetBonesTransform(cr::WalkerBoneControl &self, const bp::list &list) {
   self.bone_transforms = GetVectorOfBoneTransformFromList(list);
 }
 
-boost::python::object WalkerBoneControl_init(boost::python::tuple args, boost::python::dict kwargs) {
+bp::object WalkerBoneControl_init(bp::tuple args, bp::dict kwargs) {
   // Args names
   const uint32_t NUM_ARGUMENTS = 1;
   const char *args_names[NUM_ARGUMENTS] = {
     "bone_transforms"
   };
 
-  boost::python::object self = args[0];
-  args = boost::python::tuple(args.slice(1, boost::python::_));
+  bp::object self = args[0];
+  args = bp::tuple(args.slice(1, bp::_));
 
   auto res = self.attr("__init__")();
   if (len(args) > 0) {
@@ -232,7 +236,6 @@ boost::python::object WalkerBoneControl_init(boost::python::tuple args, boost::p
 
 void export_control() {
   using namespace boost::python;
-  namespace cr = carla::rpc;
   namespace cg = carla::geom;
 
   class_<cr::VehicleControl>("VehicleControl")
