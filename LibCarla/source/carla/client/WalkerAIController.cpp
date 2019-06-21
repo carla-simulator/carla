@@ -51,16 +51,18 @@ namespace client {
   void WalkerAIController::GoToLocation(const carla::geom::Location &destination) {
     auto nav = GetEpisode().Lock()->GetNavigation();
     if (nav != nullptr) {
-      if (!nav->SetWalkerTarget(GetParent()->GetId(), destination))
+      if (!nav->SetWalkerTarget(GetParent()->GetId(), destination)) {
         logging::log("NAV: Failed to set request to go to ", destination.x, destination.y, destination.z);
+      }
     }
   }
 
   void WalkerAIController::SetMaxSpeed(const float max_speed) {
-  auto nav = GetEpisode().Lock()->GetNavigation();
+    auto nav = GetEpisode().Lock()->GetNavigation();
     if (nav != nullptr) {
-      if (!nav->SetWalkerMaxSpeed(GetParent()->GetId(), max_speed))
+      if (!nav->SetWalkerMaxSpeed(GetParent()->GetId(), max_speed)) {
         logging::log("NAV: failed to set max speed");
+      }
     }
   }
 

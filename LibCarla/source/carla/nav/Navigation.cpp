@@ -4,7 +4,8 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#define _USE_MATH_DEFINES   // to avoid undefined error of M_PI (bug in Visual Studio 2015 and 2017)
+#define _USE_MATH_DEFINES // to avoid undefined error of M_PI (bug in Visual
+                          // Studio 2015 and 2017)
 #include <cmath>
 
 #include "carla/Logging.h"
@@ -26,21 +27,25 @@ namespace nav {
   };
 
   enum SamplePolyFlags {
-    SAMPLE_POLYFLAGS_WALK		    = 0x01,		// Ability to walk (ground, grass, road)
-    SAMPLE_POLYFLAGS_SWIM		    = 0x02,		// Ability to swim (water).
-    SAMPLE_POLYFLAGS_DOOR		    = 0x04,		// Ability to move through doors.
-    SAMPLE_POLYFLAGS_JUMP		    = 0x08,		// Ability to jump.
-    SAMPLE_POLYFLAGS_DISABLED	  = 0x10,		// Disabled polygon
-    SAMPLE_POLYFLAGS_ALL		    = 0xffff	// All abilities.
+    SAMPLE_POLYFLAGS_WALK       = 0x01,   // Ability to walk (ground, grass,
+                                          // road)
+    SAMPLE_POLYFLAGS_SWIM       = 0x02,   // Ability to swim (water).
+    SAMPLE_POLYFLAGS_DOOR       = 0x04,   // Ability to move through doors.
+    SAMPLE_POLYFLAGS_JUMP       = 0x08,   // Ability to jump.
+    SAMPLE_POLYFLAGS_DISABLED   = 0x10,   // Disabled polygon
+    SAMPLE_POLYFLAGS_ALL        = 0xffff  // All abilities.
   };
 
-  enum UpdateFlags
-  {
-    DT_CROWD_ANTICIPATE_TURNS = 1,
+  enum UpdateFlags {
+    DT_CROWD_ANTICIPATE_TURNS   = 1,
     DT_CROWD_OBSTACLE_AVOIDANCE = 2,
-    DT_CROWD_SEPARATION = 4,
-    DT_CROWD_OPTIMIZE_VIS = 8,			///< Use #dtPathCorridor::optimizePathVisibility() to optimize the agent path.
-    DT_CROWD_OPTIMIZE_TOPO = 16,		///< Use dtPathCorridor::optimizePathTopology() to optimize the agent path.
+    DT_CROWD_SEPARATION         = 4,
+    DT_CROWD_OPTIMIZE_VIS       = 8, ///< Use
+                                     ///< #dtPathCorridor::optimizePathVisibility()
+                                     ///< to optimize the agent path.
+    DT_CROWD_OPTIMIZE_TOPO      = 16, ///< Use
+                                      ///< dtPathCorridor::optimizePathTopology()
+                                      ///< to optimize the agent path.
   };
 
   static const int MAX_POLYS = 256;
@@ -71,8 +76,9 @@ namespace nav {
 
     // read the whole file
     f.open(filename, std::ios::binary);
-    if (!f.is_open())
+    if (!f.is_open()) {
       return false;
+    }
     std::vector<uint8_t> content(start, end);
     f.close();
 
@@ -82,9 +88,9 @@ namespace nav {
 
   // load navigation data from memory
   bool Navigation::Load(const std::vector<uint8_t> content) {
-    const int NAVMESHSET_MAGIC = 'M'<<24 | 'S'<<16 | 'E'<<8 | 'T'; //'MSET';
+    const int NAVMESHSET_MAGIC = 'M' << 24 | 'S' << 16 | 'E' << 8 | 'T'; // 'MSET';
     const int NAVMESHSET_VERSION = 1;
-    #pragma pack(push, 1)
+#pragma pack(push, 1)
     struct NavMeshSetHeader {
       int magic;
       int version;
@@ -95,7 +101,7 @@ namespace nav {
       dtTileRef tileRef;
       int dataSize;
     };
-    #pragma pack(pop)
+#pragma pack(pop)
 
     // check size for header
     if (content.size() < sizeof(header)) {
@@ -114,7 +120,7 @@ namespace nav {
     }
 
     // allocate object
-    dtNavMesh* mesh = dtAllocNavMesh();
+    dtNavMesh *mesh = dtAllocNavMesh();
     if (!mesh) {
       return false;
     }
@@ -138,12 +144,15 @@ namespace nav {
       }
 
       // check for valid tile
-      if (!tileHeader.tileRef || !tileHeader.dataSize)
+      if (!tileHeader.tileRef || !tileHeader.dataSize) {
         break;
+      }
 
       // allocate the buffer
-      char* data = static_cast<char*>(dtAlloc(static_cast<size_t>(tileHeader.dataSize), DT_ALLOC_PERM));
-      if (!data) break;
+      char *data = static_cast<char *>(dtAlloc(static_cast<size_t>(tileHeader.dataSize), DT_ALLOC_PERM));
+      if (!data) {
+        break;
+      }
 
       // read the tile
       memset(data, 0, static_cast<size_t>(tileHeader.dataSize));
@@ -156,7 +165,8 @@ namespace nav {
       }
 
       // add the tile data
-      mesh->addTile(reinterpret_cast<unsigned char*>(data), tileHeader.dataSize, DT_TILE_FREE_DATA, tileHeader.tileRef, 0);
+      mesh->addTile(reinterpret_cast<unsigned char *>(data), tileHeader.dataSize, DT_TILE_FREE_DATA,
+      tileHeader.tileRef, 0);
     }
 
     // exchange
@@ -181,8 +191,9 @@ namespace nav {
   void Navigation::CreateCrowd(void) {
 
     // check if all is ready
-    if (!_ready)
+    if (!_ready) {
       return;
+    }
 
     DEBUG_ASSERT(_crowd != nullptr);
 
@@ -232,9 +243,10 @@ namespace nav {
   }
 
   // return the path points to go from one position to another
-  bool Navigation::GetPath(const carla::geom::Location from, const carla::geom::Location to, dtQueryFilter* filter, std::vector<carla::geom::Location> &path) {
+  bool Navigation::GetPath(const carla::geom::Location from, const carla::geom::Location to,
+  dtQueryFilter * filter, std::vector<carla::geom::Location> &path) {
     // path found
-    float m_straightPath[MAX_POLYS*3];
+    float m_straightPath[MAX_POLYS * 3];
     unsigned char m_straightPathFlags[MAX_POLYS];
     dtPolyRef m_straightPathPolys[MAX_POLYS];
     int m_nstraightPath;
@@ -267,11 +279,11 @@ namespace nav {
       filter = &filter2;
     }
 
-  	// set the points
+    // set the points
     dtPolyRef m_startRef = 0;
     dtPolyRef m_endRef = 0;
     float m_spos[3] = { from.x, from.z, from.y };
-	  float m_epos[3] = { to.x, to.z, to.y };
+    float m_epos[3] = { to.x, to.z, to.y };
     _navQuery->findNearestPoly(m_spos, m_polyPickExt, filter, &m_startRef, 0);
     _navQuery->findNearestPoly(m_epos, m_polyPickExt, filter, &m_endRef, 0);
     if (!m_startRef || !m_endRef) {
@@ -279,7 +291,7 @@ namespace nav {
     }
 
     // get the path of nodes
-	  _navQuery->findPath(m_startRef, m_endRef, m_spos, m_epos, filter, m_polys, &m_npolys, MAX_POLYS);
+    _navQuery->findPath(m_startRef, m_endRef, m_spos, m_epos, filter, m_polys, &m_npolys, MAX_POLYS);
 
     // get the path of points
     m_nstraightPath = 0;
@@ -287,23 +299,25 @@ namespace nav {
       return false;
     }
 
-    // in case of partial path, make sure the end point is clamped to the last polygon
+    // in case of partial path, make sure the end point is clamped to the last
+    // polygon
     float epos[3];
     dtVcopy(epos, m_epos);
-    if (m_polys[m_npolys-1] != m_endRef)
-      _navQuery->closestPointOnPoly(m_polys[m_npolys-1], m_epos, epos, 0);
+    if (m_polys[m_npolys - 1] != m_endRef) {
+      _navQuery->closestPointOnPoly(m_polys[m_npolys - 1], m_epos, epos, 0);
+    }
 
     // get the points
     _navQuery->findStraightPath(m_spos, epos, m_polys, m_npolys,
-                                 m_straightPath, m_straightPathFlags,
-                                 m_straightPathPolys, &m_nstraightPath, MAX_POLYS, m_straightPathOptions);
+    m_straightPath, m_straightPathFlags,
+    m_straightPathPolys, &m_nstraightPath, MAX_POLYS, m_straightPathOptions);
 
     // copy the path to the output buffer
     path.clear();
     path.reserve(static_cast<unsigned long>(m_nstraightPath));
-    for (int i=0; i<m_nstraightPath*3; i+=3) {
+    for (int i = 0; i < m_nstraightPath * 3; i += 3) {
       // export for Unreal axis (x, z, y)
-      path.emplace_back(m_straightPath[i], m_straightPath[i+2], m_straightPath[i+1]);
+      path.emplace_back(m_straightPath[i], m_straightPath[i + 2], m_straightPath[i + 1]);
     }
 
     return true;
@@ -373,8 +387,9 @@ namespace nav {
 
     // get the internal index
     auto it = _mappedId.find(id);
-    if (it == _mappedId.end())
+    if (it == _mappedId.end()) {
       return false;
+    }
 
     // force single thread running this
     std::lock_guard<std::mutex> lock(_mutex);
@@ -400,8 +415,9 @@ namespace nav {
 
     // get the internal index
     auto it = _mappedId.find(id);
-    if (it == _mappedId.end())
+    if (it == _mappedId.end()) {
       return false;
+    }
 
     // force single thread running this
     std::lock_guard<std::mutex> lock(_mutex);
@@ -426,8 +442,9 @@ namespace nav {
 
     // get the internal index
     auto it = _mappedId.find(id);
-    if (it == _mappedId.end())
+    if (it == _mappedId.end()) {
       return false;
+    }
 
     return SetWalkerTargetIndex(it->second, to);
   }
@@ -443,8 +460,9 @@ namespace nav {
     DEBUG_ASSERT(_crowd != nullptr);
     DEBUG_ASSERT(_navQuery != nullptr);
 
-    if (index == -1)
+    if (index == -1) {
       return false;
+    }
 
     if (use_lock) {
       // force single thread running this
@@ -457,8 +475,9 @@ namespace nav {
     const dtQueryFilter *filter = _crowd->getFilter(0);
     dtPolyRef targetRef;
     _navQuery->findNearestPoly(pointTo, _crowd->getQueryHalfExtents(), filter, &targetRef, nearest);
-    if (!targetRef)
+    if (!targetRef) {
       return false;
+    }
 
     return _crowd->requestMoveTarget(index, targetRef, pointTo);
   }
@@ -481,14 +500,14 @@ namespace nav {
     _crowd->update(static_cast<float>(_delta_seconds), nullptr);
 
     // check if walker has finished
-    for (int i = 0; i<_crowd->getAgentCount(); ++i)
-    {
-      const dtCrowdAgent* ag = _crowd->getAgent(i);
-      if (!ag->active)
+    for (int i = 0; i < _crowd->getAgentCount(); ++i) {
+      const dtCrowdAgent *ag = _crowd->getAgent(i);
+      if (!ag->active) {
         continue;
+      }
 
       // check distance to the target point
-      const float *end = &ag->cornerVerts[(ag->ncorners-1)*3];
+      const float *end = &ag->cornerVerts[(ag->ncorners - 1) * 3];
       carla::geom::Vector3D dist(end[0] - ag->npos[0], end[1] - ag->npos[1], end[2] - ag->npos[2]);
       if (dist.SquaredLength() <= 2) {
         // set a new random target
@@ -511,13 +530,15 @@ namespace nav {
 
     // get the internal index
     auto it = _mappedId.find(id);
-    if (it == _mappedId.end())
+    if (it == _mappedId.end()) {
       return false;
+    }
 
     // get the index found
     int index = it->second;
-    if (index == -1)
+    if (index == -1) {
       return false;
+    }
 
     // force single thread running this
     std::lock_guard<std::mutex> lock(_mutex);
@@ -531,10 +552,11 @@ namespace nav {
 
     float baseOffset = 0.0f;
     auto it2 = _baseHeight.find(id);
-    if (it2 != _baseHeight.end())
+    if (it2 != _baseHeight.end()) {
       baseOffset = it2->second;
-    else
+    } else {
       logging::log("Nav: base offset of walker ", id, " not found");
+    }
 
     // set its position in Unreal coordinates
     trans.location.x = agent->npos[0];
@@ -542,10 +564,11 @@ namespace nav {
     trans.location.z = agent->npos[1] + baseOffset;
 
     // set its rotation
-    float yaw =  atan2f(agent->dvel[2] , agent->dvel[0]) * (180.0f / static_cast<float>(M_PI));
+    float yaw =  atan2f(agent->dvel[2], agent->dvel[0]) * (180.0f / static_cast<float>(M_PI));
     float shortest_angle = fmod(yaw - _yaw_walkers[id] + 540.0f, 360.0f) - 180.0f;
     float rotation_speed = 4.0f;
-    trans.rotation.yaw = _yaw_walkers[id] + (shortest_angle * rotation_speed * static_cast<float>(_delta_seconds));
+    trans.rotation.yaw = _yaw_walkers[id] +
+    (shortest_angle * rotation_speed * static_cast<float>(_delta_seconds));
 
     _yaw_walkers[id] = trans.rotation.yaw;
 
@@ -579,11 +602,12 @@ namespace nav {
     // get the walker
     const dtCrowdAgent *agent = _crowd->getAgent(index);
     return sqrt(agent->vel[0] * agent->vel[0] + agent->vel[1] * agent->vel[1] + agent->vel[2] *
-        agent->vel[2]);
+    agent->vel[2]);
   }
 
   // get a random location for navigation
-  bool Navigation::GetRandomLocation(carla::geom::Location &location, float maxHeight, dtQueryFilter *filter, bool use_lock) {
+  bool Navigation::GetRandomLocation(carla::geom::Location &location, float maxHeight, dtQueryFilter * filter,
+  bool use_lock) {
 
     // check if all is ready
     if (!_ready) {
@@ -616,13 +640,14 @@ namespace nav {
         location.x = point[0];
         location.y = point[2];
         location.z = point[1];
-        if (maxHeight == -1.0f || (maxHeight >= 0.0f && location.z <= maxHeight))
+        if (maxHeight == -1.0f || (maxHeight >= 0.0f && location.z <= maxHeight)) {
           break;
+        }
       } else {
-        throw_exception(std::runtime_error("no valid random point from navigation could be found, check filter or mesh."));
+        throw_exception(std::runtime_error(
+            "no valid random point from navigation could be found, check filter or mesh."));
       }
-    }
-    while (1);
+    } while (1);
 
     return true;
   }
