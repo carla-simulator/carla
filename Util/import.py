@@ -234,11 +234,11 @@ def move_uassets(package_name, maps):
         # Move uassets to correspoding folder
         for filename in os.listdir(origin_path):
             if "MarkingNode" in filename:
-                shutil.move(os.path.join(origin_path, filename), marking_dir)
+                shutil.move(os.path.join(origin_path, filename), os.path.join(marking_dir, filename))
             if "RoadNode" in filename:
-                shutil.move(os.path.join(origin_path, filename), road_dir)
+                shutil.move(os.path.join(origin_path, filename), os.path.join(road_dir, filename))
             if "TerrainNode" in filename:
-                shutil.move(os.path.join(origin_path, filename), terrain_dir)
+                shutil.move(os.path.join(origin_path, filename), os.path.join(terrain_dir, filename))
 
 
 
