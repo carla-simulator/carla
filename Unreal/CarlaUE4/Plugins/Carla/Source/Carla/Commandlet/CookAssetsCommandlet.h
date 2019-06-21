@@ -77,12 +77,12 @@ public:
   /**
    * Add StaticMeshes from a folder into the World loaded as UPROPERTY.
    * @param SrcPath - Array containing the folders from which the Assets will be
-   *loaded
+   * loaded
    * @param bMaterialWorkaround - Flag that will trigger a change in the
-   *materials to fix a known bug
+   * materials to fix a known bug
    * in RoadRunner.
    */
-  void AddMeshesToWorld(const TArray<FString> &AssetsPaths, bool bUseCarlaMaterials);
+  TArray<AStaticMeshActor *> AddMeshesToWorld(const TArray<FString> &AssetsPaths, bool bUseCarlaMaterials);
 
   /**
    * Save a given Asset containing a World into a given path with a given name.
@@ -91,6 +91,8 @@ public:
    * @param WorldName - Name for the saved world.
    */
   bool SaveWorld(FAssetData &AssetData, FString &DestPath, FString &WorldName);
+
+  void DestroyWorldSpawnedActors(TArray<AStaticMeshActor *> &SpawnedActors);
 
   /**
    * Get Path of all the Assets contained in the package to cook
@@ -111,7 +113,7 @@ public:
 private:
 
   UPROPERTY()
-  UObjectLibrary* MapObjectLibrary;
+  UObjectLibrary *MapObjectLibrary;
 
   UPROPERTY()
   UObjectLibrary *AssetsObjectLibrary;
@@ -125,26 +127,25 @@ private:
   UPROPERTY()
   TArray<FAssetData> MapContents;
 
-
   /** Materials for the workaround */
   /**
    * Workaround material for MarkingNodes mesh
    */
-  UMaterial* MarkingNodeMaterial;
+  UMaterial *MarkingNodeMaterial;
 
   /**
    * Workaround material for the RoadNode mesh
    */
-  UMaterial* RoadNodeMaterial;
+  UMaterial *RoadNodeMaterial;
 
   /**
    * Workaround material for the second material for the MarkingNodes
    */
-  UMaterial* MarkingNodeMaterialAux;
+  UMaterial *MarkingNodeMaterialAux;
 
   /**
    * Workaround material for the TerrainNodes
    */
-  UMaterial* TerrainNodeMaterial;
+  UMaterial *TerrainNodeMaterial;
 
 };
