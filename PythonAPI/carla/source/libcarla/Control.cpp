@@ -102,8 +102,8 @@ static auto GetVectorOfBoneTransformFromList(const bp::list &list) {
   std::vector<cr::BoneTransformData> v;
 
   auto length = bp::len(list);
-  v.reserve(static_cast<size_t>(lenght));
-  for (auto i = 0u; i < lenght; ++i) {
+  v.reserve(static_cast<size_t>(length));
+  for (auto i = 0u; i < length; ++i) {
     bp::extract<cr::BoneTransformData> ext(list[i]);
     if (ext.check()) {
       v.push_back(ext);
