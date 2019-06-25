@@ -6,6 +6,7 @@
 
 #include "carla/client/detail/Simulator.h"
 
+#include "carla/Debug.h"
 #include "carla/Exception.h"
 #include "carla/Logging.h"
 #include "carla/RecurrentSharedFuture.h"
@@ -16,6 +17,7 @@
 #include "carla/sensor/Deserializer.h"
 
 #include <exception>
+#include <thread>
 
 using namespace std::string_literals;
 
@@ -37,6 +39,13 @@ namespace detail {
       log_warning("Client API version     =", vc);
       log_warning("Simulator API version  =", vs);
     }
+  }
+
+  static void SynchronizeFrame(uint64_t frame, const Episode &episode) {
+    while (frame > episode.GetState()->GetTimestamp().frame) {
+      std::this_thread::yield();
+    }
+    RELEASE_ASSERT(frame == episode.GetState()->GetTimestamp().frame);
   }
 
   // ===========================================================================
@@ -104,6 +113,13 @@ namespace detail {
     return *result;
   }
 
+  uint64_t Simulator::Tick() {
+    DEBUG_ASSERT(_episode != nullptr);
+    const auto frame = _client.SendTickCue();
+    SynchronizeFrame(frame, *_episode);
+    return frame;
+  }
+
   // ===========================================================================
   // -- Access to global objects in the episode --------------------------------
   // ===========================================================================
@@ -115,6 +131,12 @@ namespace detail {
 
   SharedPtr<Actor> Simulator::GetSpectator() {
     return MakeActor(_client.GetSpectator());
+  }
+
+  uint64_t Simulator::SetEpisodeSettings(const rpc::EpisodeSettings &settings) {
+    const auto frame = _client.SetEpisodeSettings(settings);
+    SynchronizeFrame(frame, *_episode);
+    return frame;
   }
 
   // ===========================================================================
