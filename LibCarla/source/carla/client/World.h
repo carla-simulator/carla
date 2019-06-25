@@ -57,7 +57,8 @@ namespace client {
 
     rpc::EpisodeSettings GetSettings() const;
 
-    void ApplySettings(const rpc::EpisodeSettings &settings);
+    /// @return The id of the frame when the settings were applied.
+    uint64_t ApplySettings(const rpc::EpisodeSettings &settings);
 
     /// Retrieve the weather parameters currently active in the world.
     rpc::WeatherParameters GetWeather() const;
@@ -102,7 +103,9 @@ namespace client {
 
     /// Signal the simulator to continue to next tick (only has effect on
     /// synchronous mode).
-    void Tick();
+    ///
+    /// @return The id of the frame that this call started.
+    uint64_t Tick();
 
     DebugHelper MakeDebugHelper() const {
       return DebugHelper{_episode};
