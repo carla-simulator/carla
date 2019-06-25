@@ -23,10 +23,9 @@ class TestSnapshot(SyncSmokeTest):
         ids = [x.actor_id for x in response]
         self.assertEqual(len(ids), len(spawn_points))
 
-        self.world.tick()
-        snapshot = self.world.wait_for_tick()
-
-        self.assertTrue(snapshot == self.world.get_snapshot())
+        frame = self.world.tick()
+        snapshot = self.world.get_snapshot()
+        self.assertEqual(frame, snapshot.timestamp.frame)
 
         actors = self.world.get_actors()
         self.assertTrue(all(snapshot.has_actor(x.id) for x in actors))
@@ -35,9 +34,9 @@ class TestSnapshot(SyncSmokeTest):
             actor_snapshot = snapshot.find(actor_id)
             self.assertIsNotNone(actor_snapshot)
             t1 = actor_snapshot.get_transform()
+            # Ignore Z cause vehicle is falling.
             self.assertAlmostEqual(t0.location.x, t1.location.x, places=2)
             self.assertAlmostEqual(t0.location.y, t1.location.y, places=2)
-            self.assertAlmostEqual(t0.location.z, t1.location.z, places=2)
             self.assertAlmostEqual(t0.rotation.pitch, t1.rotation.pitch, places=2)
             self.assertAlmostEqual(t0.rotation.yaw, t1.rotation.yaw, places=2)
             self.assertAlmostEqual(t0.rotation.roll, t1.rotation.roll, places=2)

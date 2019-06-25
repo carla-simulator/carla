@@ -33,8 +33,8 @@ namespace client {
     return _episode.Lock()->GetEpisodeSettings();
   }
 
-  void World::ApplySettings(const rpc::EpisodeSettings &settings) {
-    _episode.Lock()->SetEpisodeSettings(settings);
+  uint64_t World::ApplySettings(const rpc::EpisodeSettings &settings) {
+    return _episode.Lock()->SetEpisodeSettings(settings);
   }
 
   rpc::WeatherParameters World::GetWeather() const {
@@ -97,8 +97,8 @@ namespace client {
     return _episode.Lock()->RegisterOnTickEvent(std::move(callback));
   }
 
-  void World::Tick() {
-    _episode.Lock()->Tick();
+  uint64_t World::Tick() {
+    return _episode.Lock()->Tick();
   }
 
 } // namespace client

@@ -133,7 +133,7 @@ void export_world() {
     .def("get_map", CONST_CALL_WITHOUT_GIL(cc::World, GetMap))
     .def("get_spectator", CONST_CALL_WITHOUT_GIL(cc::World, GetSpectator))
     .def("get_settings", CONST_CALL_WITHOUT_GIL(cc::World, GetSettings))
-    .def("apply_settings", &cc::World::ApplySettings)
+    .def("apply_settings", CALL_WITHOUT_GIL_1(cc::World, ApplySettings, cr::EpisodeSettings), arg("settings"))
     .def("get_weather", CONST_CALL_WITHOUT_GIL(cc::World, GetWeather))
     .def("set_weather", &cc::World::SetWeather)
     .def("get_snapshot", &cc::World::GetSnapshot)
@@ -144,7 +144,7 @@ void export_world() {
     .def("try_spawn_actor", SPAWN_ACTOR_WITHOUT_GIL(TrySpawnActor))
     .def("wait_for_tick", &WaitForTick, (arg("seconds")=10.0))
     .def("on_tick", &OnTick, (arg("callback")))
-    .def("tick", &cc::World::Tick)
+    .def("tick", CALL_WITHOUT_GIL(cc::World, Tick))
     .def(self_ns::str(self_ns::self))
   ;
 

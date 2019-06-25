@@ -157,10 +157,10 @@ void FCarlaServer::FPimpl::BindActions()
 
   // ~~ Tick ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  BIND_SYNC(tick_cue) << [this]() -> R<void>
+  BIND_SYNC(tick_cue) << [this]() -> R<uint64_t>
   {
     ++TickCuesReceived;
-    return R<void>::Success();
+    return GFrameCounter + 1u;
   };
 
   // ~~ Load new episode ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -214,11 +214,12 @@ void FCarlaServer::FPimpl::BindActions()
     return cr::EpisodeSettings{Episode->GetSettings()};
   };
 
-  BIND_SYNC(set_episode_settings) << [this](const cr::EpisodeSettings &settings) -> R<void>
+  BIND_SYNC(set_episode_settings) << [this](
+      const cr::EpisodeSettings &settings) -> R<uint64_t>
   {
     REQUIRE_CARLA_EPISODE();
     Episode->ApplySettings(settings);
-    return R<void>::Success();
+    return GFrameCounter;
   };
 
   BIND_SYNC(get_actor_definitions) << [this]() -> R<std::vector<cr::ActorDefinition>>

@@ -32,7 +32,7 @@
 - `get_map()`
 - `get_spectator()`
 - `get_settings()`
-- `apply_settings(world_settings)`
+- `apply_settings(world_settings) -> int (id of the frame when the settings took effect)`
 - `get_weather()`
 - `set_weather(weather_parameters)`
 - `get_snapshot() -> carla.WorldSnapshot`
@@ -42,7 +42,7 @@
 - `try_spawn_actor(blueprint, transform, attach_to=None, attachment_type=carla.AttachmentType.Rigid)`
 - `wait_for_tick(seconds=1.0) -> carla.WorldSnapshot`
 - `on_tick(callback)`
-- `tick()`
+- `tick() -> int (id of the newly started frame)`
 
 ## `carla.WorldSettings`
 
