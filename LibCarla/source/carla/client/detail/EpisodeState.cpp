@@ -13,7 +13,7 @@ namespace detail {
   EpisodeState::EpisodeState(const sensor::data::RawEpisodeState &state)
     : _episode_id(state.GetEpisodeId()),
       _timestamp(
-          state.GetFrameNumber(),
+          state.GetFrame(),
           state.GetGameTimeStamp(),
           state.GetDeltaSeconds(),
           state.GetPlatformTimeStamp()) {

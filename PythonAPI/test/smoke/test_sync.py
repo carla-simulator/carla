@@ -39,12 +39,12 @@ class TestSynchronousMode(SyncSmokeTest):
                 ts = self.world.wait_for_tick().timestamp
 
                 if frame is not None:
-                    self.assertEqual(ts.frame_count, frame + 1)
+                    self.assertEqual(ts.frame, frame + 1)
 
-                frame = ts.frame_count
+                frame = ts.frame
 
                 image = image_queue.get()
-                self.assertEqual(image.frame_number, ts.frame_count)
+                self.assertEqual(image.frame, ts.frame)
                 self.assertEqual(image.timestamp, ts.elapsed_seconds)
 
         finally:

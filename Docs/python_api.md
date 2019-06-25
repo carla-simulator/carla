@@ -54,11 +54,12 @@
 ## `carla.WorldSnapshot`
 
 - `id`
+- `frame`
 - `timestamp`
-- `frame_count [deprecated: use timestamp]`
-- `elapsed_seconds [deprecated: use timestamp]`
-- `delta_seconds [deprecated: use timestamp]`
-- `platform_timestamp [deprecated: use timestamp]`
+- `frame_count` _deprecated, use timestamp instead_
+- `elapsed_seconds` _deprecated, use timestamp instead_
+- `delta_seconds` _deprecated, use timestamp instead_
+- `platform_timestamp` _deprecated, use timestamp instead_
 - `has_actor(actor_id) -> bool`
 - `find(actor_id) -> carla.ActorSnapshot`
 - `__len()__`
@@ -196,7 +197,8 @@
 
 ## `carla.SensorData`
 
-- `frame_number`
+- `frame`
+- `frame_number` _deprecated, use `frame` instead_
 - `timestamp`
 - `transform`
 
@@ -492,7 +494,8 @@ Static presets
 
 ## `carla.Timestamp`
 
-- `frame_count`
+- `frame`
+- `frame_count` _deprecated, use `frame` instead_
 - `elapsed_seconds`
 - `delta_seconds`
 - `platform_timestamp`
