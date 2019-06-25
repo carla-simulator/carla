@@ -276,7 +276,7 @@ limit ourselves to show a small example of how sensors work
 ```py
 camera_bp = blueprint_library.find('sensor.camera.rgb')
 camera = world.spawn_actor(camera_bp, relative_transform, attach_to=my_vehicle)
-camera.listen(lambda image: image.save_to_disk('output/%06d.png' % image.frame_number))
+camera.listen(lambda image: image.save_to_disk('output/%06d.png' % image.frame))
 ```
 
 In this example we have attached a camera to a vehicle, and told the camera to

@@ -15,12 +15,12 @@ namespace carla {
 namespace client {
 
   std::ostream &operator<<(std::ostream &out, const ActorSnapshot &snapshot) {
-    out << "ActorSnapshot(id=" << std::to_string(snapshot.id);
+    out << "ActorSnapshot(id=" << std::to_string(snapshot.id) << ')';
     return out;
   }
 
   std::ostream &operator<<(std::ostream &out, const WorldSnapshot &snapshot) {
-    out << "WorldSnapshot(id=" << std::to_string(snapshot.GetId());
+    out << "WorldSnapshot(frame=" << std::to_string(snapshot.GetTimestamp().frame) << ')';
     return out;
   }
 
@@ -42,9 +42,10 @@ void export_snapshot() {
 
   class_<cc::WorldSnapshot>("WorldSnapshot", no_init)
     .add_property("id", &cc::WorldSnapshot::GetId)
+    .add_property("frame", +[](const cc::WorldSnapshot &self) { return self.GetTimestamp().frame; })
     .add_property("timestamp", CALL_RETURNING_COPY(cc::WorldSnapshot, GetTimestamp))
     /// Deprecated, use timestamp @{
-    .add_property("frame_count", +[](const cc::WorldSnapshot &self) { return self.GetTimestamp().frame_count; })
+    .add_property("frame_count", +[](const cc::WorldSnapshot &self) { return self.GetTimestamp().frame; })
     .add_property("elapsed_seconds", +[](const cc::WorldSnapshot &self) { return self.GetTimestamp().elapsed_seconds; })
     .add_property("delta_seconds", +[](const cc::WorldSnapshot &self) { return self.GetTimestamp().delta_seconds; })
     .add_property("platform_timestamp", +[](const cc::WorldSnapshot &self) { return self.GetTimestamp().platform_timestamp; })

@@ -28,7 +28,7 @@ namespace s11n {
       const rpc::Transform transform) {
     Header h;
     h.sensor_type = index;
-    h.frame_number = frame;
+    h.frame = frame;
     h.timestamp = timestamp;
     h.sensor_transform = transform;
     auto buffer = PopBufferFromPool();
