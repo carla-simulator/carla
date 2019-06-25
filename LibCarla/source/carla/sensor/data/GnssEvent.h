@@ -17,11 +17,11 @@ namespace data {
   public:
 
     explicit GnssEvent(
-        size_t frame_number,
+        size_t frame,
         double timestamp,
         const rpc::Transform &sensor_transform,
         const geom::GeoLocation &geo_location)
-      : SensorData(frame_number, timestamp, sensor_transform),
+      : SensorData(frame, timestamp, sensor_transform),
         _geo_location(geo_location) {}
 
     const geom::GeoLocation &GetGeoLocation() const {

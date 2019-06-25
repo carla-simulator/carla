@@ -24,6 +24,7 @@
   * API extension: add `world.get_actor(id)` to find a single actor by id
   * API extension: add `carla.WeatherParameters.Default` for a default (tailor-made for each town) weather profile
   * API extension: added `WorldSnapshot` that contains a list of `ActorSnapshot`, allows capturings a "still image" of the world at a single frame
+  * API change: Rename `frame_count` and `frame_number` as `frame`, old members are kept as deprecated
   * API change: `world.wait_for_tick()` now returns a `carla.WorldSnapshot`
   * API change: the callback of `world.on_tick(callback)` now receives a `carla.WorldSnapshot`
   * API change: deprecated waypoint's `is_intersection`, now is `is_junction`

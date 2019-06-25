@@ -92,7 +92,7 @@ namespace client {
       return crossed_lanes.empty() ?
           nullptr :
           MakeShared<sensor::data::LaneInvasionEvent>(
-              timestamp.frame_count,
+              timestamp.frame,
               timestamp.elapsed_seconds,
               _vehicle->GetTransform(),
               _vehicle,
