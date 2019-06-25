@@ -10,6 +10,7 @@
 #include "carla/Time.h"
 #include "carla/client/DebugHelper.h"
 #include "carla/client/Timestamp.h"
+#include "carla/client/WorldSnapshot.h"
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/geom/Transform.h"
 #include "carla/rpc/Actor.h"
@@ -64,6 +65,9 @@ namespace client {
     /// Change the weather in the simulation.
     void SetWeather(const rpc::WeatherParameters &weather);
 
+    /// Return a snapshot of the world at this moment.
+    WorldSnapshot GetSnapshot() const;
+
     /// Find actor by id, return nullptr if not found.
     SharedPtr<Actor> GetActor(ActorId id) const;
 
@@ -91,10 +95,10 @@ namespace client {
         rpc::AttachmentType attachment_type = rpc::AttachmentType::Rigid) noexcept;
 
     /// Block calling thread until a world tick is received.
-    Timestamp WaitForTick(time_duration timeout) const;
+    WorldSnapshot WaitForTick(time_duration timeout) const;
 
     /// Register a @a callback to be called every time a world tick is received.
-    void OnTick(std::function<void(Timestamp)> callback);
+    void OnTick(std::function<void(WorldSnapshot)> callback);
 
     /// Signal the simulator to continue to next tick (only has effect on
     /// synchronous mode).
