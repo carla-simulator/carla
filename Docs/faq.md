@@ -4,7 +4,7 @@
   <details>
     <summary><h5 style="display:inline">
     What is the recommended hardware to run CARLA?
-    </h4></summary>
+    </h5></summary>
 
   CARLA is a very performance demanding software, at the very minimum you would
   need a computer with a dedicated GPU capable of running Unreal Engine. See
@@ -16,7 +16,7 @@
   <details>
     <summary><h5 style="display:inline">
     What is the expected disk space needed for building CARLA?
-    </h4></summary>
+    </h5></summary>
 
   Building CARLA from source requires about 15GB of disk space, not counting
   Unreal Engine installation.
@@ -31,7 +31,7 @@
   <details>
     <summary><h5 style="display:inline">
     I downloaded CARLA source from GitHub, where is the "CarlaUE4.sh" script?
-    </h4></summary>
+    </h5></summary>
 
   There is no "CarlaUE4.sh" script in the source version of CARLA, you need to
   follow the instructions in the [documentation](http://carla.readthedocs.io) for
@@ -45,7 +45,7 @@
   <details>
     <summary><h5 style="display:inline">
     Can I connect to the simulator while running within Unreal Editor?
-    </h4></summary>
+    </h5></summary>
 
   Yes, you can connect a Python client to a simulator running within Unreal
   Editor. Press the "Play" button and wait until the scene is loaded, at that
@@ -57,7 +57,7 @@
   <details>
     <summary><h5 style="display:inline">
     How can I create a binary version of CARLA?
-    </h4></summary>
+    </h5></summary>
 
   In Linux, the recommended way is to run `make package` in the project folder.
   This method makes a packaged version of the project, including the Python API
@@ -74,7 +74,7 @@
   <details>
     <summary><h5 style="display:inline">
     Why do I have very low FPS when running the server in Unreal Editor?
-    </h4></summary>
+    </h5></summary>
 
   UE4 Editor goes to a low performance mode when out of focus. It can be disabled
   in the editor preferences. Go to "Edit->Editor Preferences->Performance" and
@@ -86,7 +86,7 @@
   <details>
     <summary><h5 style="display:inline">
     Is it possible to dump images from the CARLA simulator view?
-    </h4></summary>
+    </h5></summary>
 
   Yes, this is an Unreal Engine feature. You can dump the images of the spectator
   camera (simulator view) by running CARLA with
@@ -101,7 +101,7 @@
   <details>
     <summary><h5 style="display:inline">
     Fatal error: 'version.h' has been modified since the precompiled header.
-    </h4></summary>
+    </h5></summary>
 
   This happens from time to time due to Linux updates, and for that we have a
   special target in our Makefile
