@@ -1001,8 +1001,6 @@ class World(object):
             'Map Name:          %10s' % self.town_map.name,
         ]
 
-        info_text = info_text
-
         self._hud.add_info(self.name, info_text)
         self._hud.add_info('HERO', hero_mode_text)
 
