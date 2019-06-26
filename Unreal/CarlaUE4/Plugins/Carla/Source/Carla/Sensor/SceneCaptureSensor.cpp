@@ -47,19 +47,6 @@ ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer &ObjectInitial
   PrimaryActorTick.bCanEverTick = true;
   PrimaryActorTick.TickGroup = TG_PrePhysics;
 
-  MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CamMesh"));
-
-  MeshComp->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
-
-  MeshComp->bHiddenInGame = true;
-  MeshComp->CastShadow = false;
-  MeshComp->PostPhysicsComponentTick.bCanEverTick = false;
-  RootComponent = MeshComp;
-
-  DrawFrustum = CreateDefaultSubobject<UDrawFrustumComponent>(TEXT("DrawFrust"));
-  DrawFrustum->bIsEditorOnly = true;
-  DrawFrustum->SetupAttachment(MeshComp);
-
   CaptureRenderTarget = CreateDefaultSubobject<UTextureRenderTarget2D>(
       FName(*FString::Printf(TEXT("CaptureRenderTarget_d%d"), SCENE_CAPTURE_COUNTER)));
   CaptureRenderTarget->CompressionSettings = TextureCompressionSettings::TC_Default;
@@ -70,7 +57,7 @@ ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer &ObjectInitial
 
   CaptureComponent2D = CreateDefaultSubobject<USceneCaptureComponent2D>(
       FName(*FString::Printf(TEXT("SceneCaptureComponent2D_%d"), SCENE_CAPTURE_COUNTER)));
-  CaptureComponent2D->SetupAttachment(MeshComp);
+  CaptureComponent2D->SetupAttachment(RootComponent);
 
   SceneCaptureSensor_local_ns::SetCameraDefaultOverrides(*CaptureComponent2D);
 
@@ -137,34 +124,6 @@ float ASceneCaptureSensor::GetMotionBlurMinObjectScreenSize() const
   return CaptureComponent2D->PostProcessSettings.MotionBlurPerObjectSize;
 }
 
-void ASceneCaptureSensor::PostActorCreated()
-{
-  Super::PostActorCreated();
-
-  // No need to load the editor mesh when there is no editor.
-#if WITH_EDITOR
-  if (MeshComp)
-  {
-    if (!IsRunningCommandlet())
-    {
-      if (!MeshComp->GetStaticMesh())
-      {
-        UStaticMesh *CamMesh = LoadObject<UStaticMesh>(
-            NULL,
-            TEXT("/Engine/EditorMeshes/MatineeCam_SM.MatineeCam_SM"),
-            NULL,
-            LOAD_None,
-            NULL);
-        MeshComp->SetStaticMesh(CamMesh);
-      }
-    }
-  }
-#endif // WITH_EDITOR
-
-  // Sync component with CameraActor frustum settings.
-  UpdateDrawFrustum();
-}
-
 void ASceneCaptureSensor::BeginPlay()
 {
   using namespace SceneCaptureSensor_local_ns;
@@ -219,22 +178,6 @@ void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
   Super::EndPlay(EndPlayReason);
   SCENE_CAPTURE_COUNTER = 0u;
-}
-
-void ASceneCaptureSensor::UpdateDrawFrustum()
-{
-  if (DrawFrustum && CaptureComponent2D)
-  {
-    DrawFrustum->FrustumStartDist = GNearClippingPlane;
-
-    // 1000 is the default frustum distance, ideally this would be infinite but
-    // that might cause rendering issues.
-    DrawFrustum->FrustumEndDist =
-        (CaptureComponent2D->MaxViewDistanceOverride > DrawFrustum->FrustumStartDist)
-        ? CaptureComponent2D->MaxViewDistanceOverride : 1000.0f;
-
-    DrawFrustum->FrustumAngle = CaptureComponent2D->FOVAngle;
-  }
 }
 
 // =============================================================================

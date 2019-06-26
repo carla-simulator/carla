@@ -21,7 +21,6 @@ class TestMap(SmokeTest):
         random.shuffle(map_names)
         for map_name in map_names:
             if map_name != '/Game/Carla/Maps/BaseMap/BaseMap':
-                print(map_name)
                 world = self.client.load_world(map_name)
                 m = world.get_map()
                 self.assertEqual(map_name.split('/')[-1], m.name)
