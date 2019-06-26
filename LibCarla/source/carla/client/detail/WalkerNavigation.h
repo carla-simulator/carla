@@ -55,10 +55,8 @@ namespace detail {
     }
 
     void AddWalker(ActorId walker_id, carla::geom::Location location) {
-      float h = _client.GetWalkerBaseOffset(walker_id) / 100.0f;
-
       // create the walker in the crowd (to manage its movement in Detour)
-      _nav.AddWalker(walker_id, location, h);
+      _nav.AddWalker(walker_id, location);
     }
 
     void Tick(const EpisodeState &episode_state);

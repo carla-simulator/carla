@@ -587,29 +587,6 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
-  BIND_SYNC(get_walker_base_offset) << [this](
-      cr::ActorId ActorId) -> R<float>
-  {
-    REQUIRE_CARLA_EPISODE();
-    auto ActorView = Episode->FindActor(ActorId);
-    if (!ActorView.IsValid())
-    {
-      RESPOND_ERROR("unable to get bounding box: actor view is invalid");
-    }
-    auto Actor = Cast<AActor>(ActorView.GetActor());
-    if (Actor == nullptr)
-    {
-      RESPOND_ERROR("unable to get bounding box: actor not found");
-    }
-    UCapsuleComponent *Capsule;
-    Capsule = Actor->FindComponentByClass<UCapsuleComponent>();
-    if (Capsule == nullptr)
-    {
-      RESPOND_ERROR("unable to get bounding box: no capsule component");
-    }
-    return R<float>(Capsule->GetScaledCapsuleHalfHeight());
-  };
-
   BIND_SYNC(set_actor_autopilot) << [this](
       cr::ActorId ActorId,
       bool bEnabled) -> R<void>
