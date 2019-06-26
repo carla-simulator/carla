@@ -30,3 +30,20 @@ class SmokeTest(unittest.TestCase):
 
     def tearDown(self):
         self.client = None
+
+
+class SyncSmokeTest(SmokeTest):
+    def setUp(self):
+        super(SyncSmokeTest, self).setUp()
+        self.world = self.client.get_world()
+        self.settings = self.world.get_settings()
+        settings = carla.WorldSettings(
+            no_rendering_mode=False,
+            synchronous_mode=True)
+        self.world.apply_settings(settings)
+
+    def tearDown(self):
+        self.world.apply_settings(self.settings)
+        self.settings = None
+        self.world = None
+        super(SyncSmokeTest, self).tearDown()
