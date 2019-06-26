@@ -39,7 +39,7 @@ namespace nav {
     // create the crowd object
     void CreateCrowd(void);
     // create a new walker
-    bool AddWalker(ActorId id, carla::geom::Location from, float base_offset);
+    bool AddWalker(ActorId id, carla::geom::Location from);
     // remove a walker
     bool RemoveWalker(ActorId id);
     // set new max speed
@@ -69,8 +69,6 @@ namespace nav {
     dtCrowd *_crowd { nullptr };
     // mapping Id
     std::unordered_map<ActorId, int> _mappedId;
-    // base height of each walker
-    std::unordered_map<ActorId, float> _baseHeight;
     // Store walkers yaw angle from previous tick
     std::unordered_map<ActorId, float> _yaw_walkers;
 

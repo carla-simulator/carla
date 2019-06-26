@@ -357,10 +357,6 @@ namespace detail {
     // =========================================================================
     /// @{
 
-    float GetWalkerBaseOffset(ActorId walker) {
-      return _client.GetWalkerBaseOffset(walker);
-    }
-
     /// @}
     // =========================================================================
     /// @name Operations with sensors
