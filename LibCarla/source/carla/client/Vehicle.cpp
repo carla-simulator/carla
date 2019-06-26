@@ -44,7 +44,7 @@ namespace client {
   }
 
   Vehicle::Control Vehicle::GetControl() const {
-    return GetEpisode().Lock()->GetActorDynamicState(*this).state.vehicle_data.control;
+    return GetEpisode().Lock()->GetActorSnapshot(*this).state.vehicle_data.control;
   }
 
   Vehicle::PhysicsControl Vehicle::GetPhysicsControl() const {
@@ -52,19 +52,19 @@ namespace client {
   }
 
   float Vehicle::GetSpeedLimit() const {
-    return GetEpisode().Lock()->GetActorDynamicState(*this).state.vehicle_data.speed_limit;
+    return GetEpisode().Lock()->GetActorSnapshot(*this).state.vehicle_data.speed_limit;
   }
 
   rpc::TrafficLightState Vehicle::GetTrafficLightState() const {
-    return GetEpisode().Lock()->GetActorDynamicState(*this).state.vehicle_data.traffic_light_state;
+    return GetEpisode().Lock()->GetActorSnapshot(*this).state.vehicle_data.traffic_light_state;
   }
 
   bool Vehicle::IsAtTrafficLight() {
-    return GetEpisode().Lock()->GetActorDynamicState(*this).state.vehicle_data.has_traffic_light;
+    return GetEpisode().Lock()->GetActorSnapshot(*this).state.vehicle_data.has_traffic_light;
   }
 
   SharedPtr<TrafficLight> Vehicle::GetTrafficLight() const {
-    auto id = GetEpisode().Lock()->GetActorDynamicState(*this).state.vehicle_data.traffic_light_id;
+    auto id = GetEpisode().Lock()->GetActorSnapshot(*this).state.vehicle_data.traffic_light_id;
     return boost::static_pointer_cast<TrafficLight>(GetWorld().GetActor(id));
   }
 
