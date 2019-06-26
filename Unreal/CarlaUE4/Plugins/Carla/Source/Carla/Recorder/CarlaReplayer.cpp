@@ -26,7 +26,7 @@ void CarlaReplayer::Stop(bool bKeepActors)
     }
 
     // callback
-    Helper.ProcessReplayerFinish(bKeepActors, IgnoreHero, IsHero);
+    Helper.ProcessReplayerFinish(bKeepActors, IgnoreHero, IsHeroMap);
   }
 
   File.close();
@@ -64,7 +64,7 @@ void CarlaReplayer::Rewind(void)
   Frame.DurationThis = 0.0f;
 
   MappedId.clear();
-  IsHero.clear();
+  IsHeroMap.clear();
 
   // read geneal Info
   RecInfo.Read(File);
@@ -408,13 +408,13 @@ void CarlaReplayer::ProcessEventsAdd(void)
     if (Result.first > 0)
     {
       // init
-      IsHero[Result.second] = false;
+      IsHeroMap[Result.second] = false;
       for (const auto &Item : EventAdd.Description.Attributes)
       {
         if (Item.Id == "role_name" && Item.Value == "hero")
         {
           // mark as hero
-          IsHero[Result.second] = true;
+          IsHeroMap[Result.second] = true;
           break;
         }
       }
@@ -488,7 +488,7 @@ void CarlaReplayer::ProcessAnimVehicle(void)
     Vehicle.Read(File);
     Vehicle.DatabaseId = MappedId[Vehicle.DatabaseId];
     // check if ignore this actor
-    if (!(IgnoreHero && IsHero[Vehicle.DatabaseId]))
+    if (!(IgnoreHero && IsHeroMap[Vehicle.DatabaseId]))
     {
       Helper.ProcessReplayerAnimVehicle(Vehicle);
     }
@@ -508,7 +508,7 @@ void CarlaReplayer::ProcessAnimWalker(void)
     Walker.Read(File);
     Walker.DatabaseId = MappedId[Walker.DatabaseId];
     // check if ignore this actor
-    if (!(IgnoreHero && IsHero[Walker.DatabaseId]))
+    if (!(IgnoreHero && IsHeroMap[Walker.DatabaseId]))
     {
       Helper.ProcessReplayerAnimWalker(Walker);
     }
@@ -571,34 +571,34 @@ void CarlaReplayer::UpdatePositions(double Per, double DeltaTime)
   }
 
   // go through each actor and update
-  for (i = 0; i < CurrPos.size(); ++i)
+  for (auto &Pos : CurrPos)
   {
     // check if ignore this actor
-    if (!(IgnoreHero && IsHero[CurrPos[i].DatabaseId]))
+    if (!(IgnoreHero && IsHeroMap[Pos.DatabaseId]))
     {
       // check if exist a previous position
-      auto Result = TempMap.find(CurrPos[i].DatabaseId);
+      auto Result = TempMap.find(Pos.DatabaseId);
       if (Result != TempMap.end())
       {
         // check if time factor is high
         if (TimeFactor >= 2.0)
           // assign first position
-          InterpolatePosition(PrevPos[Result->second], CurrPos[i], 0.0, DeltaTime);
+          InterpolatePosition(PrevPos[Result->second], Pos, 0.0, DeltaTime);
         else
           // interpolate
-          InterpolatePosition(PrevPos[Result->second], CurrPos[i], Per, DeltaTime);
+          InterpolatePosition(PrevPos[Result->second], Pos, Per, DeltaTime);
       }
       else
       {
         // assign last position (we don't have previous one)
-        InterpolatePosition(CurrPos[i], CurrPos[i], 0.0, DeltaTime);
+        InterpolatePosition(Pos, Pos, 0.0, DeltaTime);
       }
     }
 
     // move the camera to follow this actor if required
     if (NewFollowId != 0)
     {
-      if (NewFollowId == CurrPos[i].DatabaseId)
+      if (NewFollowId == Pos.DatabaseId)
         Helper.SetCameraPosition(NewFollowId, FVector(-1000, 0, 500), FQuat::MakeFromEuler({0, -25, 0}));
     }
   }
