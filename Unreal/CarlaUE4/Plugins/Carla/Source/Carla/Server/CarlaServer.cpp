@@ -396,16 +396,19 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
-  BIND_SYNC(set_actor_transform_2D) << [this] (
+  BIND_SYNC(set_walker_state) << [this] (
       cr::ActorId ActorId,
-      cr::Transform Transform) -> R<void>
+      cr::Transform Transform,
+      float Speed) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->FindActor(ActorId);
     if (!ActorView.IsValid())
     {
-      RESPOND_ERROR("unable to set actor transform: actor not found");
+      RESPOND_ERROR("unable to set walker state: actor not found");
     }
+
+    // apply walker transform
     FTransform NewTransform = Transform;
     FVector NewLocation = NewTransform.GetLocation();
 
@@ -421,6 +424,21 @@ void FCarlaServer::FPimpl::BindActions()
     false,
     nullptr,
     ETeleportType::TeleportPhysics);
+
+    // apply walker speed
+    auto Pawn = Cast<APawn>(ActorView.GetActor());
+    if (Pawn == nullptr)
+    {
+      RESPOND_ERROR("unable to set walker state: actor is not a walker");
+    }
+    auto Controller = Cast<AWalkerController>(Pawn->GetController());
+    if (Controller == nullptr)
+    {
+      RESPOND_ERROR("unable to set walker state: walker has an incompatible controller");
+    }
+    cr::WalkerControl Control(Transform.GetForwardVector(), Speed, false);
+    Controller->ApplyWalkerControl(Control);
+
     return R<void>::Success();
   };
 
@@ -886,12 +904,12 @@ void FCarlaServer::FPimpl::BindActions()
       [=](auto, const C::ApplyVehicleControl &c) {  MAKE_RESULT(apply_control_to_vehicle(c.actor, c.control)); },
       [=](auto, const C::ApplyWalkerControl &c) {   MAKE_RESULT(apply_control_to_walker(c.actor, c.control)); },
       [=](auto, const C::ApplyTransform &c) {       MAKE_RESULT(set_actor_transform(c.actor, c.transform)); },
-      [=](auto, const C::ApplyTransform2D &c) {     MAKE_RESULT(set_actor_transform_2D(c.actor, c.transform)); },
       [=](auto, const C::ApplyVelocity &c) {        MAKE_RESULT(set_actor_velocity(c.actor, c.velocity)); },
       [=](auto, const C::ApplyAngularVelocity &c) { MAKE_RESULT(set_actor_angular_velocity(c.actor, c.angular_velocity)); },
       [=](auto, const C::ApplyImpulse &c) {         MAKE_RESULT(add_actor_impulse(c.actor, c.impulse)); },
       [=](auto, const C::SetSimulatePhysics &c) {   MAKE_RESULT(set_actor_simulate_physics(c.actor, c.enabled)); },
-      [=](auto, const C::SetAutopilot &c) {         MAKE_RESULT(set_actor_autopilot(c.actor, c.enabled)); });
+      [=](auto, const C::SetAutopilot &c) {         MAKE_RESULT(set_actor_autopilot(c.actor, c.enabled)); },
+      [=](auto, const C::ApplyWalkerState &c) {     MAKE_RESULT(set_walker_state(c.actor, c.transform, c.speed)); });
 
 #undef MAKE_RESULT
 
