@@ -67,6 +67,10 @@ def main():
         default=1.0,
         type=float,
         help='time factor (default 1.0)')
+    argparser.add_argument(
+        '-i', '--ignore_hero',
+        action='store_true',
+        help='ignore hero vehicles')
     args = argparser.parse_args()
 
     try:
@@ -74,7 +78,13 @@ def main():
         client = carla.Client(args.host, args.port)
         client.set_timeout(60.0)
 
+        # set the time factor for the replayer
         client.set_replayer_time_factor(args.time_factor)
+
+        # set to ignore the hero vehicles or not
+        client.set_replayer_ignore_hero(args.ignore_hero)
+
+        # replay the session
         print(client.replay_file(args.recorder_filename, args.start, args.duration, args.camera))
 
     finally:

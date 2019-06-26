@@ -26,7 +26,8 @@ public:
       FVector Location,
       FVector Rotation,
       CarlaRecorderActorDescription Description,
-      uint32_t DesiredId);
+      uint32_t DesiredId,
+      bool bIgnoreHero);
 
   // replay event for removing actor
   bool ProcessReplayerEventDel(uint32_t DatabaseId);
@@ -47,7 +48,7 @@ public:
   void ProcessReplayerAnimWalker(CarlaRecorderAnimWalker Walker);
 
   // replay finish
-  bool ProcessReplayerFinish(bool bApplyAutopilot);
+  bool ProcessReplayerFinish(bool bApplyAutopilot, bool bIgnoreHero, std::unordered_map<uint32_t, bool> &IsHero);
 
   // set the camera position to follow an actor
   bool SetCameraPosition(uint32_t Id, FVector Offset, FQuat Rotation);
